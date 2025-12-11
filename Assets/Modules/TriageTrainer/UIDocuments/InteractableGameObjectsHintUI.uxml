@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ui="UnityEngine.UIElements"
+    xmlns:uie="UnityEditor.UIElements"
+>
+  <Style src="./InteractableGameObjectsHintUI.uss" />
+  <ui:VisualElement class="interactable-views-root">
+    <ui:Label class="views-header" text="Nearby"/>
+    <ui:VisualElement name="InteractivesContainer" class="interactables"/>
+    <ui:VisualElement class="interactables-footer">
+      <ui:Label class="interactables-key" text="Scroll Wheel + F"/>
+      <ui:Label name="SelectedLabel" class="interactables-selected-text" text=""/>
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

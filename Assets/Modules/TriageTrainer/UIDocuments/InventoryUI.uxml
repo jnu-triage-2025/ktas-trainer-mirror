@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ui="UnityEngine.UIElements"
+    xmlns:uie="UnityEditor.UIElements"
+>
+  <Style src="./InventoryStyles.uss" />
+  <ui:VisualElement name="InventoryRoot" class="inventory-root">
+    <ui:VisualElement name="HeldItemContainer" class="held-item-container">
+      <ui:VisualElement name="HeldItemIcon" class="held-item-icon" />
+      <ui:Label name="HeldItemCount" class="held-item-count" text="" />
+    </ui:VisualElement>
+
+    <ui:VisualElement name="InventoryGrid" class="inventory-grid">
+      <!-- Slots generated at runtime; this placeholder ensures layout -->
+      <ui:VisualElement class="inventory-slot-template" />
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

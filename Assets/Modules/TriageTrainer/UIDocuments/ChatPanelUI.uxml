@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:ui="UnityEngine.UIElements"
+  xmlns:uie="UnityEditor.UIElements"
+>
+  <ui:Style src="./ChatPanelUI.uss" />
+  <ui:VisualElement name="chat-root" class="chat-root" style="visibility: hidden;">
+    <ui:VisualElement class="chat-layout">
+      <ui:ScrollView name="chat-log"
+                     class="chat-log"
+                     mode="Vertical"
+                     vertical-scroller-visibility="Auto"
+                     horizontal-scroller-visibility="Hidden"
+                     show-horizontal-scroller="false"
+                     show-vertical-scroller="true" />
+
+      <ui:VisualElement class="chat-input-row">
+        <ui:VisualElement class="chat-input-bg">
+          <ui:TextField name="chat-input"
+                        class="chat-input"
+                        picking-mode="Ignore"
+                        multiline="false"
+                        is-delayed="false"
+                        max-length="256"
+                        placeholder-text="Type a message or /command"/>
+        </ui:VisualElement>
+      </ui:VisualElement>
+    </ui:VisualElement>
+  </ui:VisualElement>
+  <ui:VisualElement name="chat-toast-container" class="chat-toast-container" picking-mode="Ignore" />
+</ui:UXML>

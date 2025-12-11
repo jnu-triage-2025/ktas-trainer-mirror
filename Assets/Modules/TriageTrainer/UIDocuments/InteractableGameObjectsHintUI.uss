@@ -1,0 +1,78 @@
+:root {
+  --bg: rgba(10, 20, 35, 0.85);
+  --accent: #7ecbff;
+  --text: #f1f8ff;
+  --muted: rgba(255, 255, 255, 0.5);
+  --radius: 18px;
+}
+
+.interactable-views-root {
+  width: 260px;
+  min-height: 120px;
+  padding: 12px;
+  background-color: var(--bg);
+  border-radius: var(--radius);
+  border-left: 2px solid var(--accent);
+  flex-direction: column;
+  gap: 8px;
+}
+
+.views-header {
+  color: var(--text);
+  unity-font-style: bold;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+.interactables {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.interactive-item {
+  height: 40px;
+  border-radius: 12px;
+  padding: 4px 8px;
+  flex-direction: row;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.05);
+  transition-property: background-color, scale;
+  transition-duration: 0.1s;
+}
+
+.interactive-item.selected {
+  background-color: rgba(255, 255, 255, 0.18);
+  scale: 1.02;
+}
+
+.interactive-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 8px;
+  background-size: cover;
+  background-position: center;
+}
+
+.interactable-label {
+  color: var(--text);
+  unity-font-style: bold;
+  font-size: 14px;
+}
+
+.interactables-footer {
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.interactables-key {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.interactables-selected-text {
+  font-size: 14px;
+  color: var(--text);
+}
