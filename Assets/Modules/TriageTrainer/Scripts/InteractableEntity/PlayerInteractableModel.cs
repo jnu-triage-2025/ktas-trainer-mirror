@@ -1,8 +1,10 @@
+using System;
 using UnityEngine;
 
-namespace Modules.TriageTrainer.Scripts.PlayerInteractiveGameObject
+namespace TriageTrainer.Scripts.InteractableEntity
 {
-  public class PlayerInteractiveModel : MonoBehaviour
+  [Serializable]
+  public class PlayerInteractableModel
   {
     [SerializeField] private string displayText;
     [SerializeField] private Sprite icon;
@@ -12,7 +14,7 @@ namespace Modules.TriageTrainer.Scripts.PlayerInteractiveGameObject
     public Sprite Icon => icon;
     public Color Color => color;
     
-    public PlayerInteractiveModel(string displayText, Sprite icon, Color? color = null)
+    public PlayerInteractableModel(string displayText, Sprite icon, Color? color = null)
     {
       this.displayText = displayText;
       this.icon = icon;

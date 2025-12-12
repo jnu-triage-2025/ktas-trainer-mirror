@@ -1,8 +1,8 @@
 using System.Linq;
 using FishNet.Connection;
-using Modules.TriageTrainer.Scripts.Chat;
+using TriageTrainer.Scripts.Chat;
 
-namespace Modules.TriageTrainer.Scripts.Command
+namespace TriageTrainer.Scripts.Command
 {
   public class CommandDefinition_Help : IChatCommandModel
   {

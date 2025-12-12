@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 3429170387630489083}
   - component: {fileID: 3332462076176395838}
   - component: {fileID: 4330671119527608109}
+  - component: {fileID: 2332744075007367283}
+  - component: {fileID: 1193226015883832250}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -70,21 +72,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 5999811471713420081}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c6f71c46b790b4c59b421f355e82c0a9, type: 3}
+  m_Script: {fileID: 11500000, guid: f477b65c256f4cdf871532cc731c1dac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   _componentIndexCache: 255
   _addedNetworkObject: {fileID: 3332462076176395838}
   _networkObjectCache: {fileID: 0}
-  walkingSpeed: 7.5
-  runningSpeed: 11.5
-  jumpSpeed: 8
-  gravity: 20
-  lookSpeed: 2
-  lookXLimit: 45
+  _walkingSpeed: 7.5
+  _runningSpeed: 11.5
+  _jumpSpeed: 8
+  _gravity: 20
+  _rotatingSpeed: 2
+  _cameraHolderPositionYOffset: 1
+  _minLookXAngle: -45
+  _maxLookXAngle: 45
+  _runningKey: 306
+  _moveDirection: {x: 0, y: 0, z: 0}
+  _rotationX: 0
   canMove: 1
-  cameraYOffset: 0.4
-  anim: {fileID: 0}
+  _isRunning: 0
+  _isCursorLocked: 0
+  _characterController: {fileID: 0}
+  _cameraHolderTransform: {fileID: 0}
 --- !u!114 &3332462076176395838
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -184,6 +193,36 @@ MonoBehaviour:
     X: 0
     Y: 0
     Z: 0
+--- !u!114 &2332744075007367283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5999811471713420081}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3aa07c5186ca4ee7875c9988a2b1a015, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scripts.InteractableEntity.InteractableEntityResolver
+  handlerSources: []
+--- !u!114 &1193226015883832250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5999811471713420081}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23e388920944473c9761a91b0446f0e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scripts.Camera.PlayerInteractiveDetector
+  detectionRedius: 6
+  interactionLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  queryInterval: 0.05
 --- !u!1 &7085176929477758218
 GameObject:
   m_ObjectHideFlags: 0
@@ -212,7 +251,7 @@ Transform:
   m_GameObject: {fileID: 7085176929477758218}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.41, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -1,4 +1,5 @@
 using FishNet.Object;
+using TriageTrainer.Scripts.InteractableEntity;
 using UnityEngine;
 
 /// <remarks>
@@ -10,7 +11,7 @@ using UnityEngine;
 /// 
 /// Item Instance Model은 모든 필드가 채워져야 유효합니다.
 /// </remarks>
-public class GroundedItem : NetworkBehaviour
+public partial class GroundedItem : NetworkBehaviour, IInteractable
 {
   [Header("Item Data")]
   [SerializeField] private ItemBaseModelSO _itemBaseModel;
@@ -18,6 +19,14 @@ public class GroundedItem : NetworkBehaviour
 
   [SerializeField] private string _itemIdentifier;
   public string ItemIdentifier => _itemIdentifier;
+
+  public Sprite Icon
+  {
+    get
+    {
+      return ItemRegistry.Instance.GetItemIcon(_itemInstanceModel.identifier);
+    }
+  }
 
   void Awake()
   {

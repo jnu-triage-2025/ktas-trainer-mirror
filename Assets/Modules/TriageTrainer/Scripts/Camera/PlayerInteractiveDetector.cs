@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Modules.TriageTrainer.Scripts.PlayerInteractiveGameObject;
+using TriageTrainer.Scripts.InteractableEntity;
 using UnityEngine;
 
-namespace Modules.TriageTrainer.Scripts.Camera
+namespace TriageTrainer.Scripts.Camera
 {
   /// <summary>
   /// PlayerInteractiveDetector는 플레이어가 상호작용할 수 있는 물체를 감지해 사용자의 로컬 UI에 표시하도록 지시합니다.
@@ -21,11 +21,11 @@ namespace Modules.TriageTrainer.Scripts.Camera
     [SerializeField] private LayerMask interactionLayerMask = ~0;
     [SerializeField, Min(.02f)] private float queryInterval = .05f;
 
-    private readonly List<PlayerInteractiveModel> nearby = new();
+    private readonly List<IInteractable> nearby = new();
     private readonly Collider[] overlapColliderBuf = new Collider[32];
     private float nextQueryTime;
     
-    public IReadOnlyList<PlayerInteractiveModel> Nearby => nearby;
+    public IReadOnlyList<IInteractable> Nearby => nearby;
 
     void Update()
     {
@@ -49,8 +49,8 @@ namespace Modules.TriageTrainer.Scripts.Camera
       {
         var collider = overlapColliderBuf[i];
         if (collider == null) continue;
-        if (collider.TryGetComponent(out PlayerInteractiveModel model) && !nearby.Contains(model))
-          nearby.Add(model);
+        if (collider.TryGetComponent(out IInteractable interactable) && !nearby.Contains(interactable))
+          nearby.Add(interactable);
       }
     }
 #if UNITY_EDITOR

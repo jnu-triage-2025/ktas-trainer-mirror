@@ -1,31 +1,31 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Modules.TriageTrainer.Scripts.PlayerInteractiveGameObject
+namespace TriageTrainer.Scripts.InteractableEntity
 {
   /// <summary>
   /// </summary>
   [DisallowMultipleComponent]
-  public class PlayerInteractionResolver : MonoBehaviour
+  public class InteractableEntityResolver : MonoBehaviour
   {
     [SerializeField] private List<MonoBehaviour> handlerSources = new List<MonoBehaviour>();
-    private readonly List<IPlayerInteractive> handlers = new List<IPlayerInteractive>();
+    private readonly List<IInteractable> handlers = new List<IInteractable>();
 
     void Awake()
     {
       handlers.Clear();
       foreach (var eachSource in handlerSources)
       {
-        if (eachSource is IPlayerInteractive handler)
+        if (eachSource is IInteractable handler)
           handlers.Add(handler);
         else if (eachSource != null)
           Debug.LogWarning($"{eachSource.name} does not implement IPlayerInteractive interface", eachSource);
       }
     }
 
-    public void Resolve(PlayerInteractiveModel model, Transform interactor)
+    public void Resolve(IInteractable interactable, Transform interactor)
     {
-      if (model == null)
+      if (interactable == null)
       {
         Debug.LogWarning($"TriageTrainer.Scripts.PlayerInteractiveResolver.Resolve: model is null", this);
         return;
@@ -33,11 +33,11 @@ namespace Modules.TriageTrainer.Scripts.PlayerInteractiveGameObject
 
       foreach (var handler in handlers)
       {
-        handler.Interact(model, interactor);
+        handler.Interact(interactor);
         return;
       }
     
-      Debug.LogWarning($"No handler processed {model.DisplayText}.", model);
+      Debug.LogWarning($"No handler processed {interactable.DisplayText}. {interactable}");
     }
   }
 }

@@ -1,11 +1,12 @@
 using System;
-using Modules.TriageTrainer.Scripts.Connection;
-using Modules.TriageTrainer.Scripts.HIDInput;
+using TriageTrainer.Scripts.Connection;
+using TriageTrainer.Scripts.HIDInput;
 using TriageTrainer.Definitions;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Modules.TriageTrainer.Scripts.UI
+namespace TriageTrainer.Scripts.UI
 {
   [RequireComponent(typeof(UIDocument))]
   public class ChatUIController : MonoBehaviour, IUIOverlay
@@ -107,13 +108,13 @@ namespace Modules.TriageTrainer.Scripts.UI
       }
     }
     
-    private void ToggleRoot(bool expanded)
+    private void ToggleRoot(bool expanding)
     {
       if (_chatRoot == null)
         return;
 
-      _chatRoot.style.visibility = expanded ? Visibility.Visible : Visibility.Hidden;
-      _chatLogView?.OnChatVisibilityChanged(expanded);
+      _chatRoot.style.visibility = expanding ? Visibility.Visible : Visibility.Hidden;
+      _chatLogView?.OnChatVisibilityChanged(expanding);
       
 
       /*
@@ -128,16 +129,16 @@ namespace Modules.TriageTrainer.Scripts.UI
         참고: 설정된 초기값에 의해 HideInstantly()가 호출되지 않더라도 문제되지는 않으나, 명확한 처리를 위해
         이 함수가 호출되도록 하였다.
       */
-      if (CurrentSessionPlayInfoRegistry.Instance.PlayerController != null)
+      if (!CurrentSessionPlayInfoRegistry.Instance.PlayerController.IsUnityNull())
       {
-        CurrentSessionPlayInfoRegistry.Instance.PlayerController.LockPlayerCamera(expanded == false);
-        CurrentSessionPlayInfoRegistry.Instance.PlayerController.canMove = expanded == false;
+        if (expanding) CurrentSessionPlayInfoRegistry.Instance.PlayerController.EnterUIOverlayMode();
+        else  CurrentSessionPlayInfoRegistry.Instance.PlayerController.ExitUIOverlayMode();
       }
     }
 
     public void HideInstantly()
     {
-      ToggleRoot(expanded: false);
+      ToggleRoot(expanding: false);
       _inputField?.SetValueWithoutNotify(string.Empty);
     }
     
@@ -153,9 +154,9 @@ namespace Modules.TriageTrainer.Scripts.UI
 
     // IUIOverlay
     public void OnOverlayPushed() {
-      ToggleRoot(expanded: true);
+      ToggleRoot(expanding: true);
       FocusInput();
     }
-    public void OnOverlayPopped() { ToggleRoot(expanded: false); }
+    public void OnOverlayPopped() { ToggleRoot(expanding: false); }
   }
 }

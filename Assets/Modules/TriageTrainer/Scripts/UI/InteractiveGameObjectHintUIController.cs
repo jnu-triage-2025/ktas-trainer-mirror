@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using FishNet.Object;
-using Modules.TriageTrainer.Scripts.Camera;
-using Modules.TriageTrainer.Scripts.Connection;
-using Modules.TriageTrainer.Scripts.PlayerInteractiveGameObject;
+using TriageTrainer.Scripts.Camera;
+using TriageTrainer.Scripts.Connection;
 using TriageTrainer.Definitions;
+using TriageTrainer.Scripts.InteractableEntity;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
-namespace Modules.TriageTrainer.Scripts.UI
+namespace TriageTrainer.Scripts.UI
 {
   /// <summary>
   /// InteractiveGameObjectHintUIController는 플레이어가 상호작용할 수 있는 오브젝트가 근처에 있을 때,
@@ -22,7 +22,7 @@ namespace Modules.TriageTrainer.Scripts.UI
     private bool _isPlayerStarted = false;
     
     [SerializeField] private PlayerInteractiveDetector _detector;
-    [SerializeField] private PlayerInteractionResolver _interactionResolver;
+    [SerializeField] private InteractableEntityResolver _interactionResolver;
     [SerializeField] private float _hideDelay = .5f;
     [SerializeField] private KeyCode _interactKey = DefaultsKeyConfiguration.InteractInteractiveGameObject;
     [SerializeField] private Transform _interactorTransform;
@@ -104,7 +104,7 @@ namespace Modules.TriageTrainer.Scripts.UI
       }
     }
 
-    void HandleInteractionInput(IReadOnlyList<PlayerInteractiveModel> nearby)
+    void HandleInteractionInput(IReadOnlyList<IInteractable> nearby)
     {
       if (nearby.Count == 0) return;
 
@@ -160,7 +160,7 @@ namespace Modules.TriageTrainer.Scripts.UI
       RefreshSelection();
     }
 
-    void UpdateInteractableContent(IReadOnlyList<PlayerInteractiveModel> nearby)
+    void UpdateInteractableContent(IReadOnlyList<IInteractable> nearby)
     {
       for (int i = 0; i < nearby.Count; i++)
       {
@@ -168,8 +168,8 @@ namespace Modules.TriageTrainer.Scripts.UI
         var eachRow = _interactableViews[i];
         
         var icon = eachRow.Q<VisualElement>(className: DefaultsInteractInteractiveGameObject.VisualElementIdentifierInteractableIcon);
-        icon.style.backgroundImage = new StyleBackground(eachInteractable.Icon);
-        icon.style.unityBackgroundImageTintColor = eachInteractable.Color;
+        icon.style.backgroundImage = new StyleBackground(eachInteractable.DisplayIcon);
+        icon.style.unityBackgroundImageTintColor = eachInteractable.DisplayColor;
         
         var text = eachRow.Q<Label>(className: DefaultsInteractInteractiveGameObject.VisualElementIdentifierInteractableLabel);
         text.text = eachInteractable.DisplayText;

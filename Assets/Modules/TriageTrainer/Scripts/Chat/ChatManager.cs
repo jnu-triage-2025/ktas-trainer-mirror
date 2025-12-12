@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using FishNet.Connection;
 using FishNet.Object;
-using Modules.TriageTrainer.Scripts.Command;
-using Modules.TriageTrainer.Scripts.HIDInput;
-using Modules.TriageTrainer.Scripts.UI;
+using TriageTrainer.Scripts.Command;
+using TriageTrainer.Scripts.HIDInput;
+using TriageTrainer.Scripts.UI;
 using TriageTrainer.Definitions;
 using UnityEngine;
 
-namespace Modules.TriageTrainer.Scripts.Chat
+namespace TriageTrainer.Scripts.Chat
 {
   [RequireComponent(typeof(ChatUIController))]
   [RequireComponent(typeof(ChatUIController_ChatLogView))]
@@ -123,7 +123,7 @@ namespace Modules.TriageTrainer.Scripts.Chat
         return;
       }
 
-      string[] parts = commandLine.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+      string[] parts = commandLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
       if (parts.Length == 0)
       {
         SendSystemMessage(sender, "Usage: /help");
@@ -131,7 +131,7 @@ namespace Modules.TriageTrainer.Scripts.Chat
       }
 
       string command = parts[0];
-      string[] args = parts.Length > 1 ? parts[1..] : System.Array.Empty<string>();
+      string[] args = parts.Length > 1 ? parts[1..] : Array.Empty<string>();
 
       if (_commandService.TryExecute(command, args, sender))
         return;

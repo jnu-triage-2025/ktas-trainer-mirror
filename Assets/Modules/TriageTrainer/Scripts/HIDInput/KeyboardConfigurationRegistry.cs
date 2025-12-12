@@ -2,7 +2,7 @@ using TriageTrainer.Definitions;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Modules.TriageTrainer.Scripts.HIDInput
+namespace TriageTrainer.Scripts.HIDInput
 {
   public class KeyboardConfigurationRegistry : MonoBehaviour
   {

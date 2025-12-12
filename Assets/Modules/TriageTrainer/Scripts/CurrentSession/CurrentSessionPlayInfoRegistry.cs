@@ -1,8 +1,9 @@
 using System;
+using TriageTrainer.Scripts.Player;
 using TriageTrainer.Definitions;
 using UnityEngine;
 
-namespace Modules.TriageTrainer.Scripts.Connection
+namespace TriageTrainer.Scripts.Connection
 {
   /// <summary>
   /// SessionConnectionRegistry는 인게임 씬의 초기화 과정, 혹은 서버 접속 과정에서 접속을 시도할 서버 정보를 담습니다.
