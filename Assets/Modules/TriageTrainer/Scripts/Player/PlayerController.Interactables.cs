@@ -45,7 +45,7 @@ namespace TriageTrainer.Player
       if (_interactKey != KeyCode.None && Input.GetKeyDown(_interactKey))
         TryInteractWithSelection();
 
-      // _interactableHintUI.PrintoutForDebug();
+      HandleSelectionInput();
     }
 
     void OnDestroy()
@@ -72,6 +72,22 @@ namespace TriageTrainer.Player
       if (interactable == null) return;
 
       interactable.Interact(transform);
+    }
+
+    private void HandleSelectionInput()
+    {
+      if (_interactableHintUI == null) return;
+
+      float scroll = Input.GetAxis("Mouse ScrollWheel");
+      if (scroll > 0.01f)
+        _interactableHintUI.MoveSelected(-1);
+      else if (scroll < -0.01f)
+        _interactableHintUI.MoveSelected(1);
+
+      if (Input.GetKeyDown(KeyCode.Minus) || Input.GetKeyDown(KeyCode.KeypadMinus))
+        _interactableHintUI.MoveSelected(-1);
+      if (Input.GetKeyDown(KeyCode.Equals) || Input.GetKeyDown(KeyCode.Plus) || Input.GetKeyDown(KeyCode.KeypadPlus))
+        _interactableHintUI.MoveSelected(1);
     }
   }
 }

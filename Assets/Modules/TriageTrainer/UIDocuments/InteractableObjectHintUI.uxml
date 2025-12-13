@@ -1,6 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/Modules/TriageTrainer/UIDocuments/InteractableObjectHintUI.uss" />
-    <ui:Label text="INTERACTABLEOBJECTHINTUI" />
     <ui:ScrollView name="interactable-scroll"
                    class="interactable-scroll"
                    horizontal-scroller-visibility="Hidden"

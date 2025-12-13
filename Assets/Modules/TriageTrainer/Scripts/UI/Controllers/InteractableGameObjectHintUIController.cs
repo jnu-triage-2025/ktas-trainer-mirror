@@ -26,14 +26,72 @@ namespace TriageTrainer.UI
   public class InteractableObjectHintUIController : UIControllerABC
   {
     [SerializeField] private int _nowSelected = -1;
-    [SerializeField] private List<IInteractable> _interactables = new List<IInteractable>();
+    [SerializeField] private List<IInteractable> _interactables = new();
     [SerializeField] private UIDocument _uiDocument;
     [SerializeField] private ScrollView _scrollView;
-    [SerializeField] private VisualElement _scrollViewContent;
 
-    public UnityEvent OnNewInteractableAdded = new UnityEvent();
-    public UnityEvent OnNewInteractableRemoved = new UnityEvent();
+    public UnityEvent OnNewInteractableAdded = new();
+    public UnityEvent OnNewInteractableRemoved = new();
 
+    void OnEnable()
+    {
+      CacheVisualReferences();
+
+      OnNewInteractableAdded.AddListener(RefreshUI);
+      OnNewInteractableRemoved.AddListener(RefreshUI);
+
+      RefreshUI();
+    }
+
+    void OnDisable()
+    {
+      OnNewInteractableAdded.RemoveListener(RefreshUI);
+      OnNewInteractableRemoved.RemoveListener(RefreshUI);
+    }
+
+    private void CacheVisualReferences()
+    {
+      if (_uiDocument == null)
+        _uiDocument = GetComponent<UIDocument>();
+
+      _scrollView = _uiDocument?.rootVisualElement?.Q<ScrollView>("interactable-scroll");
+
+      if (_scrollView == null)
+        Debug.LogError("[InteractableGameObjectHintUI] ScrollView with name 'interactable-scroll' was not found.");
+    }
+
+    private VisualElement GetContentContainer()
+    {
+      if (_scrollView == null)
+      {
+        CacheVisualReferences();
+        if (_scrollView == null) return null;
+      }
+
+      var content = _scrollView.contentContainer;
+      if (content == null)
+        Debug.LogError("[InteractableGameObjectHintUI] ScrollView content container is null (panel not ready yet?).");
+
+      return content;
+    }
+
+    private void RefreshUI()
+    {
+      var content = GetContentContainer();
+      if (content == null) return;
+
+      content.Clear();
+
+      if (_interactables == null || _interactables.Count == 0)
+        return;
+
+      for (var i = 0; i < _interactables.Count; i++)
+      {
+        var element = CreateInteractableHintElement(_interactables[i], i == _nowSelected);
+        content.Add(element);
+      }
+    }
+    
     protected override void Awake()
     {
       base.Awake();
@@ -47,20 +105,9 @@ namespace TriageTrainer.UI
       if (_scrollView == null && _uiDocument != null)
       {
         _scrollView = _uiDocument.rootVisualElement.Q<ScrollView>();
-        _scrollViewContent = _scrollView.contentContainer;
       }
 
-      OnNewInteractableAdded.AddListener(RefreshUI);
-      OnNewInteractableRemoved.AddListener(RefreshUI);
-
       ValidateRequirementsAndWarn();
-      RefreshUI();
-    }
-
-    void OnDestroy()
-    {
-      OnNewInteractableAdded.RemoveListener(RefreshUI);
-      OnNewInteractableRemoved.RemoveListener(RefreshUI);
     }
 
     /// <summary>
@@ -175,32 +222,6 @@ namespace TriageTrainer.UI
       RefreshUI();
     }
 
-    private void RefreshUI()
-    {
-      if (_scrollView == null) return;
-      if (_scrollViewContent.IsUnityNull())
-      {
-        if (_scrollView.IsUnityNull())
-        {
-          Debug.Log($"[InteractableObjectHintUI] Bacause content is null, Tried to load content wrapper, but scrollview also null. refresh ui cancelled");
-          return;
-        }
-        _scrollViewContent = _scrollView.contentContainer;
-      }
-      _scrollViewContent.Clear();
-
-      if (_interactables == null || _interactables.Count == 0)
-        return;
-
-      for (int i = 0; i < _interactables.Count; i++)
-      {
-        var interactable = _interactables[i];
-        var element = CreateInteractableHintElement(interactable, i == _nowSelected);
-        _scrollViewContent.Add(element);
-        Debug.Log($"[InteractableObjectHintUI] element generated, and attached into scroll {element}");
-      }
-    }
-
     private VisualElement CreateInteractableHintElement(IInteractable interactable, bool isSelected)
     {
       var root = new VisualElement();
@@ -241,16 +262,6 @@ namespace TriageTrainer.UI
     {
       if (_uiDocument.IsUnityNull()) Debug.LogError("[InteractableGameObjectHintUI] Controller cannot find UIDocument.");
       if (_scrollView.IsUnityNull()) Debug.LogError("[InteractableGameObjectHintUI] Controller cannot find ScrollView.");
-    }
-
-    public void PrintoutForDebug()
-    {
-      List<string> outbuf = new();
-      outbuf.Add($"[Interactable] _interactables {_interactables.Count}");
-      foreach (var each in _interactables) {
-        outbuf.Add($"each {each}");
-      }
-      Debug.Log(String.Join("\n", outbuf));
     }
   }
 }

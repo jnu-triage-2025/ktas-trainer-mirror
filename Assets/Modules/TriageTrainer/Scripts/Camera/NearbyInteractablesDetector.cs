@@ -20,7 +20,7 @@ namespace TriageTrainer.Camera
   public class NearbyInteractablesDetector : MonoBehaviour
   {
     [Header("Detection Settings")] [SerializeField, Min(.5f)]
-    private float detectionRedius = 6f;
+    private float detectionRedius = 1.3f;
 
     [SerializeField] private LayerMask interactionLayerMask = ~0;
     [SerializeField, Min(.02f)] private float queryInterval = .05f;
