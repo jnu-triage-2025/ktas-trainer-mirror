@@ -1,6 +1,5 @@
 using System;
 using TriageTrainer.Registry;
-using TriageTrainer.HIDInput;
 using TriageTrainer.Definitions;
 using TriageTrainer.Player;
 using Unity.VisualScripting;
@@ -65,7 +64,7 @@ namespace TriageTrainer.UI
     
     private void OnKeyDown(KeyDownEvent evt)
     {
-      if (evt.keyCode == KeyboardConfigurationRegistry.Instance.SendChat)
+      if (evt.keyCode == KeyboardConfigurationRegistry.SendChat)
       {
         evt.StopImmediatePropagation();
         string text = ExtractCurrentInput();

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using FishNet.Connection;
 using FishNet.Object;
 using TriageTrainer.Command;
-using TriageTrainer.HIDInput;
 using TriageTrainer.UI;
 using TriageTrainer.Definitions;
+using TriageTrainer.Registry;
 using UnityEngine;
 
 namespace TriageTrainer.Chat
@@ -42,9 +42,9 @@ namespace TriageTrainer.Chat
 
     void Start()
     {
-      _toggleChatUIKey = KeyboardConfigurationRegistry.Instance.OpenChatUI;
-      _sendChatUIKey = KeyboardConfigurationRegistry.Instance.SendChat;
-      _cancelChatUIKey = KeyboardConfigurationRegistry.Instance.CloseChatUI;
+      _toggleChatUIKey = KeyboardConfigurationRegistry.OpenChatUI;
+      _sendChatUIKey = KeyboardConfigurationRegistry.SendChat;
+      _cancelChatUIKey = KeyboardConfigurationRegistry.CloseChatUI;
     }
 
     void Update()

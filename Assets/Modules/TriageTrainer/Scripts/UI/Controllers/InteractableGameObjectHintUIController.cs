@@ -8,6 +8,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using UnityEngine.Events;
+using Unity.VisualScripting;
+using System;
 
 namespace TriageTrainer.UI
 {
@@ -25,9 +27,41 @@ namespace TriageTrainer.UI
   {
     [SerializeField] private int _nowSelected = -1;
     [SerializeField] private List<IInteractable> _interactables = new List<IInteractable>();
+    [SerializeField] private UIDocument _uiDocument;
+    [SerializeField] private ScrollView _scrollView;
+    [SerializeField] private VisualElement _scrollViewContent;
 
     public UnityEvent OnNewInteractableAdded = new UnityEvent();
     public UnityEvent OnNewInteractableRemoved = new UnityEvent();
+
+    protected override void Awake()
+    {
+      base.Awake();
+
+      if (_uiDocument == null)
+        _uiDocument = GetComponent<UIDocument>();
+
+      _scrollView = _uiDocument != null
+        ? _uiDocument.rootVisualElement.Q<ScrollView>("interactable-scroll")
+        : null;
+      if (_scrollView == null && _uiDocument != null)
+      {
+        _scrollView = _uiDocument.rootVisualElement.Q<ScrollView>();
+        _scrollViewContent = _scrollView.contentContainer;
+      }
+
+      OnNewInteractableAdded.AddListener(RefreshUI);
+      OnNewInteractableRemoved.AddListener(RefreshUI);
+
+      ValidateRequirementsAndWarn();
+      RefreshUI();
+    }
+
+    void OnDestroy()
+    {
+      OnNewInteractableAdded.RemoveListener(RefreshUI);
+      OnNewInteractableRemoved.RemoveListener(RefreshUI);
+    }
 
     /// <summary>
     /// Clear InteractableObjects List
@@ -137,7 +171,86 @@ namespace TriageTrainer.UI
       if (idx < 0) idx = (_interactables.Count + (idx % _interactables.Count)) % _interactables.Count;
       else idx = idx % _interactables.Count;
       _nowSelected = Mathf.Clamp(idx, 0, _interactables.Count - 1);
+
+      RefreshUI();
     }
 
+    private void RefreshUI()
+    {
+      if (_scrollView == null) return;
+      if (_scrollViewContent.IsUnityNull())
+      {
+        if (_scrollView.IsUnityNull())
+        {
+          Debug.Log($"[InteractableObjectHintUI] Bacause content is null, Tried to load content wrapper, but scrollview also null. refresh ui cancelled");
+          return;
+        }
+        _scrollViewContent = _scrollView.contentContainer;
+      }
+      _scrollViewContent.Clear();
+
+      if (_interactables == null || _interactables.Count == 0)
+        return;
+
+      for (int i = 0; i < _interactables.Count; i++)
+      {
+        var interactable = _interactables[i];
+        var element = CreateInteractableHintElement(interactable, i == _nowSelected);
+        _scrollViewContent.Add(element);
+        Debug.Log($"[InteractableObjectHintUI] element generated, and attached into scroll {element}");
+      }
+    }
+
+    private VisualElement CreateInteractableHintElement(IInteractable interactable, bool isSelected)
+    {
+      var root = new VisualElement();
+      root.AddToClassList("interactable-hint");
+      if (isSelected) root.AddToClassList("selected");
+
+      var keyHint = new VisualElement();
+      keyHint.AddToClassList("interact-key-hint");
+      var keyLabel = new Label(GetInteractKeyText());
+      keyLabel.AddToClassList("interact-key-text");
+      keyHint.Add(keyLabel);
+
+      var contentWrapper = new VisualElement();
+      contentWrapper.AddToClassList("interactable-content-wrapper");
+
+      var iconHolder = new VisualElement();
+      iconHolder.AddToClassList("interactable-icon-holder");
+      iconHolder.style.backgroundColor = interactable != null ? interactable.DisplayColor : Color.white;
+
+      var textLabel = new Label(interactable != null ? interactable.DisplayText : string.Empty);
+      textLabel.AddToClassList("interactable-content-text");
+
+      contentWrapper.Add(iconHolder);
+      contentWrapper.Add(textLabel);
+
+      root.Add(keyHint);
+      root.Add(contentWrapper);
+
+      return root;
+    }
+
+    private static string GetInteractKeyText()
+    {
+      return KeyboardConfigurationRegistry.InteractInteractableObject.ToString();
+    }
+
+    private void ValidateRequirementsAndWarn()
+    {
+      if (_uiDocument.IsUnityNull()) Debug.LogError("[InteractableGameObjectHintUI] Controller cannot find UIDocument.");
+      if (_scrollView.IsUnityNull()) Debug.LogError("[InteractableGameObjectHintUI] Controller cannot find ScrollView.");
+    }
+
+    public void PrintoutForDebug()
+    {
+      List<string> outbuf = new();
+      outbuf.Add($"[Interactable] _interactables {_interactables.Count}");
+      foreach (var each in _interactables) {
+        outbuf.Add($"each {each}");
+      }
+      Debug.Log(String.Join("\n", outbuf));
+    }
   }
 }

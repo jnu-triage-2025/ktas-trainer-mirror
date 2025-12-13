@@ -1,5 +1,6 @@
 using TriageTrainer.Camera;
 using TriageTrainer.Player;
+using TriageTrainer.Registry;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -9,6 +10,7 @@ namespace TriageTrainer.System.Prefabs.Camera
   /// 메인 카메라 컨트롤러는 메인 카메라 제어를 위해 작성되었습니다.
   /// 이 컨트롤러는 게임 시작 시 자동으로 인스턴스화하여 싱글톤 오브젝트로 동작합니다.
   /// </summary>
+  [RequireComponent(typeof(NearbyInteractablesDetector))]
   public class MainCameraController : MonoBehaviour
   {
     [Header("Configuration")]
@@ -21,6 +23,7 @@ namespace TriageTrainer.System.Prefabs.Camera
     [Header("References")]
     [SerializeField] private Transform _followingCameraHolder;
     [SerializeField] private UnityEngine.Camera _camera;
+    [SerializeField] private NearbyInteractablesDetector _nearbyInteractablesDetector;
 
     [Header("State")]
     [SerializeField] private float _currentDistance;
@@ -62,6 +65,8 @@ namespace TriageTrainer.System.Prefabs.Camera
     void Awake()
     {
       _camera = UnityEngine.Camera.main;
+      _nearbyInteractablesDetector = GetComponent<NearbyInteractablesDetector>();
+      CurrentSessionPlayInfoRegistry.Register(this);
     }
 
     void Start()

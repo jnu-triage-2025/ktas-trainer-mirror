@@ -6,11 +6,10 @@ using UnityEngine;
 namespace TriageTrainer.Player
 {
   [RequireComponent(typeof(InteractableEntityResolver))]
-  [RequireComponent(typeof(PlayerInteractiveDetector))]
   public partial class PlayerController : NetworkBehaviour
   {
-    PlayerInteractiveDetector _interactiveDetector;
-    public PlayerInteractiveDetector InteractiveDetector => _interactiveDetector;
+    NearbyInteractablesDetector _interactiveDetector;
+    public NearbyInteractablesDetector InteractiveDetector => _interactiveDetector;
     InteractableEntityResolver _interactionResolver;
     public InteractableEntityResolver InteractionResolver => _interactionResolver;
     
@@ -19,13 +18,18 @@ namespace TriageTrainer.Player
       Awake_Movement();
       Awake_Camera();
       
-      _interactiveDetector = GetComponent<PlayerInteractiveDetector>();
       _interactionResolver = GetComponent<InteractableEntityResolver>();
+    }
+
+    void Start()
+    {
+      Start_Interactables();
     }
 
     void Update()
     {
       Update_Movement();
+      Update_Interactables();
     }
     
     public override void OnStartClient()
