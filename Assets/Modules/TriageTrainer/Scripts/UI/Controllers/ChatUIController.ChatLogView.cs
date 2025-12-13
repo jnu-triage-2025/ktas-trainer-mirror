@@ -3,7 +3,7 @@ using TriageTrainer.Definitions;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace TriageTrainer.Scripts.UI
+namespace TriageTrainer.UI
 {
   [RequireComponent((typeof(UIDocument)))]
   public class ChatUIController_ChatLogView : MonoBehaviour

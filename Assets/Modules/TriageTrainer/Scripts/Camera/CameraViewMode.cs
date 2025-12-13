@@ -1,4 +1,4 @@
-namespace TriageTrainer.Scripts.Camera
+namespace TriageTrainer.Camera
 {
   public enum CameraViewMode
   {

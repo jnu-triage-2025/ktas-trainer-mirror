@@ -1,8 +1,9 @@
 using TriageTrainer.Definitions;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace TriageTrainer.Scripts.HIDInput
+namespace TriageTrainer.HIDInput
 {
   public class KeyboardConfigurationRegistry : MonoBehaviour
   {
@@ -16,7 +17,7 @@ namespace TriageTrainer.Scripts.HIDInput
     {
       get
       {
-        if (_instance == null)
+        if (_instance.IsUnityNull())
         {
           GameObject go = new GameObject("KeyboardConfigurationRegistry");
           DontDestroyOnLoad(go);

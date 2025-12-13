@@ -1,4 +1,4 @@
-namespace TriageTrainer.Scripts.UI
+namespace TriageTrainer.UI
 {
   public interface IUIOverlay
   {

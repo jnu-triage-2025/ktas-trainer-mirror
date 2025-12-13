@@ -2,7 +2,7 @@ using FishNet.Object;
 using Unity.VisualScripting;
 using UnityEngine;
 
-namespace TriageTrainer.Scripts.Player
+namespace TriageTrainer.Player
 {
   [RequireComponent(typeof(CharacterController))]
   public partial class PlayerController : NetworkBehaviour

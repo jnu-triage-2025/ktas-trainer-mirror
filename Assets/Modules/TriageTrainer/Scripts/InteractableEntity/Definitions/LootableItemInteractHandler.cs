@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace TriageTrainer.Scripts.InteractableEntity.Definitions
+namespace TriageTrainer.InteractableEntity.Definitions
 {
   public class LootableItemInteractHandler : MonoBehaviour, IInteractable
   {

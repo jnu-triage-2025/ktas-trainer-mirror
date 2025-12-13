@@ -2,14 +2,13 @@ using System;
 using System.Collections.Generic;
 using TriageTrainer.Definitions;
 using UnityEngine;
+using TriageTrainer.Registry;
 
-[Serializable]
-public struct ItemRegistryRequirement
-{
-  public ItemBaseModelSO itemDataModel;
-  public GameObject itemPrefab;
-}
+// TODO: 네임스페이스는 이후에 추가
 
+/// <summary>
+/// 다른 레지스트리와는 달리 ItemRegistry는 유니티 에디터 상에서 아이템을 직접 등록하는 편이 구현 상 간단한 것으로 판단하고 있으므로, 유니티의 MonoBehaviour를 상속받아 구현되었습니다.
+/// </summary>
 public class ItemRegistry : MonoBehaviour
 {
   private static ItemRegistry _instance;
@@ -176,3 +175,4 @@ public class ItemRegistry : MonoBehaviour
     return _itemBaseModelCache.ContainsKey(id);
   }
 }
+

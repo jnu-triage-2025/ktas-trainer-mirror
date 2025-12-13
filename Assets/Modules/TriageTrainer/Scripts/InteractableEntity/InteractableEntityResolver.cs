@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace TriageTrainer.Scripts.InteractableEntity
+namespace TriageTrainer.InteractableEntity
 {
   /// <summary>
   /// </summary>
@@ -27,7 +27,7 @@ namespace TriageTrainer.Scripts.InteractableEntity
     {
       if (interactable == null)
       {
-        Debug.LogWarning($"TriageTrainer.Scripts.PlayerInteractiveResolver.Resolve: model is null", this);
+        Debug.LogWarning($"TriageTrainer.PlayerInteractiveResolver.Resolve: model is null", this);
         return;
       }
 

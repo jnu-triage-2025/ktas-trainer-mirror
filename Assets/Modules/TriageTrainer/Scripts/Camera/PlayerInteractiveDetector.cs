@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
-using TriageTrainer.Scripts.InteractableEntity;
+using TriageTrainer.InteractableEntity;
+using Unity.VisualScripting;
 using UnityEngine;
 
-namespace TriageTrainer.Scripts.Camera
+namespace TriageTrainer.Camera
 {
   /// <summary>
   /// PlayerInteractiveDetector는 플레이어가 상호작용할 수 있는 물체를 감지해 사용자의 로컬 UI에 표시하도록 지시합니다.
@@ -21,11 +22,11 @@ namespace TriageTrainer.Scripts.Camera
     [SerializeField] private LayerMask interactionLayerMask = ~0;
     [SerializeField, Min(.02f)] private float queryInterval = .05f;
 
-    private readonly List<IInteractable> nearby = new();
+    private readonly List<IInteractable> _nearby = new();
     private readonly Collider[] overlapColliderBuf = new Collider[32];
     private float nextQueryTime;
     
-    public IReadOnlyList<IInteractable> Nearby => nearby;
+    public IReadOnlyList<IInteractable> Nearby => _nearby;
 
     void Update()
     {
@@ -44,13 +45,13 @@ namespace TriageTrainer.Scripts.Camera
         interactionLayerMask,
         QueryTriggerInteraction.Collide
       );
-      nearby.Clear();
+      _nearby.Clear();
       for (int i = 0; i < count; i++)
       {
         var collider = overlapColliderBuf[i];
-        if (collider == null) continue;
-        if (collider.TryGetComponent(out IInteractable interactable) && !nearby.Contains(interactable))
-          nearby.Add(interactable);
+        if (collider.IsUnityNull()) continue;
+        if (collider.TryGetComponent(out IInteractable interactable) && !_nearby.Contains(interactable))
+          _nearby.Add(interactable);
       }
     }
 #if UNITY_EDITOR

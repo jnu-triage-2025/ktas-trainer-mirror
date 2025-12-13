@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using FishNet.Object;
-using TriageTrainer.Scripts.Camera;
-using TriageTrainer.Scripts.Connection;
+using TriageTrainer.Camera;
+using TriageTrainer.Registry;
 using TriageTrainer.Definitions;
-using TriageTrainer.Scripts.InteractableEntity;
+using TriageTrainer.InteractableEntity;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
-namespace TriageTrainer.Scripts.UI
+namespace TriageTrainer.UI
 {
   /// <summary>
   /// InteractiveGameObjectHintUIController는 플레이어가 상호작용할 수 있는 오브젝트가 근처에 있을 때,
@@ -17,31 +17,35 @@ namespace TriageTrainer.Scripts.UI
   /// 이 컴포넌트는 UIDocument를 필요로 하며, UI 요소들은 USS 스타일시트를 통해 꾸며집니다.
   /// </summary>
   [RequireComponent(typeof(UIDocument))]
-  public class InteractiveGameObjectHintUIController : NetworkBehaviour
+  public class InteractiveGameObjectHintUIControllerLegacy : NetworkBehaviour
   {
     private bool _isPlayerStarted = false;
     
     [SerializeField] private PlayerInteractiveDetector _detector;
     [SerializeField] private InteractableEntityResolver _interactionResolver;
-    [SerializeField] private float _hideDelay = .5f;
     [SerializeField] private KeyCode _interactKey = DefaultsKeyConfiguration.InteractInteractiveGameObject;
     [SerializeField] private Transform _interactorTransform;
     
     private UIDocument _uiDocument;
     private VisualElement _documentRoot;
-    private VisualElement _interactablesContainer;
-    private Label _selectedLabel;
+    private ScrollView _interactablesContainer;
 
     private readonly List<VisualElement> _interactableViews = new();
     private int selectedIndex;
-    private float _lastVisibleTime;
+    private string _interactKeyText;
     
     void Awake()
     {
       _uiDocument = GetComponent<UIDocument>();
       _documentRoot = _uiDocument.rootVisualElement;
-      _interactablesContainer = _documentRoot.Q<VisualElement>(DefaultsInteractInteractiveGameObject.VisualElementIdentifierInteractivesContainer);
-      _selectedLabel = _documentRoot.Q<Label>(DefaultsInteractInteractiveGameObject.VisualElementIdentifierSelectedInteractableLabel);
+      _interactablesContainer = _documentRoot.Q<ScrollView>("interactable-scroll");
+      _interactKeyText = _interactKey.ToString();
+
+      if (_interactablesContainer != null)
+        _interactablesContainer.Clear();
+      else
+        Debug.LogWarning("Interactable ScrollView not found in UI document", this);
+
       _documentRoot.style.display = DisplayStyle.None;
     }
 
@@ -59,25 +63,27 @@ namespace TriageTrainer.Scripts.UI
     void Update()
     {
       if (!_isPlayerStarted) return;
+      if (_detector == null) return;
+      if (_interactablesContainer == null) return;
       
       var nearby = _detector.Nearby;
 
       if (nearby.Count == 0)
       {
-        if (Time.time - _lastVisibleTime > _hideDelay)
-          _documentRoot.style.display = DisplayStyle.None;
+        ClearInteractableViews();
+        _documentRoot.style.display = DisplayStyle.None;
+        selectedIndex = 0;
         return;
       }
       
       _documentRoot.style.display = DisplayStyle.Flex;
-      _lastVisibleTime = Time.time;
-
-      HandleScrollInput(nearby.Count);
-      HandleInteractionInput(nearby);
 
       if (_interactableViews.Count != nearby.Count)
         RebuildInteractableViews(nearby.Count);
 
+      selectedIndex = Mathf.Clamp(selectedIndex, 0, nearby.Count - 1);
+      HandleScrollInput(nearby.Count);
+      HandleInteractionInput(nearby);
       UpdateInteractableContent(nearby);
     }
 
@@ -107,6 +113,7 @@ namespace TriageTrainer.Scripts.UI
     void HandleInteractionInput(IReadOnlyList<IInteractable> nearby)
     {
       if (nearby.Count == 0) return;
+      if (_interactionResolver == null) return;
 
       if (!IsInteractorTransform()) return;
 
@@ -136,22 +143,14 @@ namespace TriageTrainer.Scripts.UI
 
     void RebuildInteractableViews(int count)
     {
+      if (_interactablesContainer == null) return;
+
       _interactablesContainer.Clear();
       _interactableViews.Clear();
 
       for (int i = 0; i < count; i++)
       {
-        var row = new VisualElement { name = $"Interactive-{i}" };
-        row.AddToClassList(DefaultsInteractInteractiveGameObject.VisualElementIdentifierInteractive);
-
-        var icon = new VisualElement();
-        icon.AddToClassList(DefaultsInteractInteractiveGameObject.VisualElementIdentifierInteractableIcon);
-        row.Add(icon);
-
-        var label = new Label();
-        label.AddToClassList(DefaultsInteractInteractiveGameObject.VisualElementIdentifierInteractableLabel);
-        row.Add(label);
-
+        var row = CreateInteractableRow(i);
         _interactablesContainer.Add(row);
         _interactableViews.Add(row);
       }
@@ -166,28 +165,67 @@ namespace TriageTrainer.Scripts.UI
       {
         var eachInteractable = nearby[i];
         var eachRow = _interactableViews[i];
-        
-        var icon = eachRow.Q<VisualElement>(className: DefaultsInteractInteractiveGameObject.VisualElementIdentifierInteractableIcon);
-        icon.style.backgroundImage = new StyleBackground(eachInteractable.DisplayIcon);
-        icon.style.unityBackgroundImageTintColor = eachInteractable.DisplayColor;
-        
-        var text = eachRow.Q<Label>(className: DefaultsInteractInteractiveGameObject.VisualElementIdentifierInteractableLabel);
-        text.text = eachInteractable.DisplayText;
+        var icon = eachRow.Q<VisualElement>(className: "interactable-icon-holder");
+        if (icon != null)
+        {
+          icon.style.backgroundImage = eachInteractable.DisplayIcon != null
+            ? new StyleBackground(eachInteractable.DisplayIcon)
+            : StyleKeyword.Null;
+          icon.style.unityBackgroundImageTintColor = eachInteractable.DisplayColor;
+        }
+
+        var text = eachRow.Q<Label>(className: "interactable-content-text");
+        if (text != null)
+        {
+          text.text = eachInteractable.DisplayText;
+          text.style.color = eachInteractable.DisplayColor;
+        }
       }
-      
-      if (nearby.Count > 0)
-        _selectedLabel.text = nearby[selectedIndex].DisplayText;
     }
 
     void RefreshSelection()
     {
       for (int i = 0; i < _interactableViews.Count; i++)
       {
-        if (i == selectedIndex)
-          _interactableViews[i].AddToClassList(DefaultsInteractInteractiveGameObject.VisualElementClassNameSelectedInteractable);
-        else
-          _interactableViews[i].RemoveFromClassList(DefaultsInteractInteractiveGameObject.VisualElementClassNameSelectedInteractable);
+        bool isSelected = i == selectedIndex;
+        _interactableViews[i].EnableInClassList("selected", isSelected);
       }
+    }
+
+    VisualElement CreateInteractableRow(int index)
+    {
+      var row = new VisualElement { name = $"Interactive-{index}" };
+      row.AddToClassList("interactable-hint");
+
+      var keyHint = new VisualElement();
+      keyHint.AddToClassList("interact-key-hint");
+
+      var keyLabel = new Label(_interactKeyText);
+      keyLabel.AddToClassList("interact-key-text");
+      keyHint.Add(keyLabel);
+
+      var contentWrapper = new VisualElement();
+      contentWrapper.AddToClassList("interactable-content-wrapper");
+
+      var icon = new VisualElement();
+      icon.AddToClassList("interactable-icon-holder");
+      contentWrapper.Add(icon);
+
+      var contentText = new Label();
+      contentText.AddToClassList("interactable-content-text");
+      contentWrapper.Add(contentText);
+
+      row.Add(keyHint);
+      row.Add(contentWrapper);
+
+      return row;
+    }
+
+    void ClearInteractableViews()
+    {
+      if (_interactablesContainer == null) return;
+      _interactablesContainer.Clear();
+      _interactableViews.Clear();
     }
   }
 }

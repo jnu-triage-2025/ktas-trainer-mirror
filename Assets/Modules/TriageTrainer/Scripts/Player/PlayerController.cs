@@ -1,9 +1,9 @@
 using FishNet.Object;
-using TriageTrainer.Scripts.Camera;
-using TriageTrainer.Scripts.InteractableEntity;
+using TriageTrainer.Camera;
+using TriageTrainer.InteractableEntity;
 using UnityEngine;
 
-namespace TriageTrainer.Scripts.Player
+namespace TriageTrainer.Player
 {
   [RequireComponent(typeof(InteractableEntityResolver))]
   [RequireComponent(typeof(PlayerInteractiveDetector))]

@@ -1,6 +1,6 @@
 using FishNet.Connection;
 
-namespace TriageTrainer.Scripts.Command
+namespace TriageTrainer.Command
 {
   public interface IChatCommandModel
   {

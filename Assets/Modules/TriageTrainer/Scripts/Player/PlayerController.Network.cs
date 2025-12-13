@@ -1,8 +1,8 @@
 using FishNet.Object;
-using TriageTrainer.Scripts.Connection;
+using TriageTrainer.Registry;
 using UnityEngine;
 
-namespace TriageTrainer.Scripts.Player
+namespace TriageTrainer.Player
 {
   public partial class PlayerController : NetworkBehaviour
   {
@@ -10,9 +10,8 @@ namespace TriageTrainer.Scripts.Player
     {
       if (!IsOwner) gameObject.GetComponent<PlayerController>().enabled = false;
       
-      CurrentSessionPlayInfoRegistry.Instance.RegisterPlayerController(this);
-      CurrentSessionPlayInfoRegistry.Instance.RegisterLocalCameraHolder(this.transform);
-      Debug.Log($"PlayerController OnStartClient_Network registered: {this}", this);
+      CurrentSessionPlayInfoRegistry.Register<PlayerController>(this);
+      Debug.Log($"[PlayerController] registered into CurrentSessionRegistry: {this}", this);
     }
   }
 }

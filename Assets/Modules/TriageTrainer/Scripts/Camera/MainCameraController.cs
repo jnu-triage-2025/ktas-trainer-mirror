@@ -1,5 +1,5 @@
-using TriageTrainer.Scripts.Camera;
-using TriageTrainer.Scripts.Player;
+using TriageTrainer.Camera;
+using TriageTrainer.Player;
 using Unity.VisualScripting;
 using UnityEngine;
 

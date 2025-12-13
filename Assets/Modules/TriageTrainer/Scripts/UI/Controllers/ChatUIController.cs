@@ -1,15 +1,16 @@
 using System;
-using TriageTrainer.Scripts.Connection;
-using TriageTrainer.Scripts.HIDInput;
+using TriageTrainer.Registry;
+using TriageTrainer.HIDInput;
 using TriageTrainer.Definitions;
+using TriageTrainer.Player;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace TriageTrainer.Scripts.UI
+namespace TriageTrainer.UI
 {
   [RequireComponent(typeof(UIDocument))]
-  public class ChatUIController : MonoBehaviour, IUIOverlay
+  public class ChatUIController : UIControllerABC, IUIOverlay
   {
     [Header("UXML references")]
     [SerializeField] private string _chatRootName = DefaultsChatControl.ChatRootName;
@@ -29,8 +30,10 @@ namespace TriageTrainer.Scripts.UI
     public event Action<string> OnSubmitted;
     public event Action OnCancelled;
 
-    void Awake()
+    protected override void Awake()
     {
+      base.Awake();
+
       _chatLogView = GetComponent<ChatUIController_ChatLogView>();
     }
 
@@ -118,7 +121,7 @@ namespace TriageTrainer.Scripts.UI
       
 
       /*
-        대부분의 상황에서 이 함수는 CurrentSessionPlayerInfoRegistry.Instance.PlayerController가
+        대부분의 상황에서 이 함수는 CurrentSessionPlayInfoRegistry.Instance.PlayerController가
         등록되고 난 후에 호출되므로, 아래의 조건문에 의해 카메라 처리가 수행되지 않게 되지는 않는다.
 
         다음 조건문에 의해 카메라 처리가 수행되지 않는 것은, 이 클래스 인스턴스가 MonoBehaviour 오브젝트로서
@@ -129,10 +132,11 @@ namespace TriageTrainer.Scripts.UI
         참고: 설정된 초기값에 의해 HideInstantly()가 호출되지 않더라도 문제되지는 않으나, 명확한 처리를 위해
         이 함수가 호출되도록 하였다.
       */
-      if (!CurrentSessionPlayInfoRegistry.Instance.PlayerController.IsUnityNull())
+      var playerController = CurrentSessionPlayInfoRegistry.Get<PlayerController>();
+      if (!playerController.IsUnityNull())
       {
-        if (expanding) CurrentSessionPlayInfoRegistry.Instance.PlayerController.EnterUIOverlayMode();
-        else  CurrentSessionPlayInfoRegistry.Instance.PlayerController.ExitUIOverlayMode();
+        if (expanding) playerController.EnterUIOverlayMode();
+        else playerController.ExitUIOverlayMode();
       }
     }
 

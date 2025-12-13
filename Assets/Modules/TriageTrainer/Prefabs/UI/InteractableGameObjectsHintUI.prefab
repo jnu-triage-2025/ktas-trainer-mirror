@@ -10,8 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 299339377912732540}
   - component: {fileID: 6459219643970656466}
-  - component: {fileID: 737695554377901490}
   - component: {fileID: 8710062563985953287}
+  - component: {fileID: -7846075331557413692}
   m_Layer: 5
   m_Name: InteractableGameObjectsHintUI
   m_TagString: Untagged
@@ -57,26 +57,6 @@ MonoBehaviour:
   m_PivotReferenceSize: 0
   m_Pivot: 0
   m_WorldSpaceCollider: {fileID: 0}
---- !u!114 &737695554377901490
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 606519395701022315}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bfcc8731b7124417ba00856e5fa1b522, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Modules.TriageTrainer.Scripts.UI.InteractiveGameObjectHintUIController
-  _componentIndexCache: 255
-  _addedNetworkObject: {fileID: 8710062563985953287}
-  _networkObjectCache: {fileID: 0}
-  _detector: {fileID: 0}
-  _interactionResolver: {fileID: 0}
-  _hideDelay: 0.5
-  _interactKey: 20
-  _interactorTransform: {fileID: 0}
 --- !u!114 &8710062563985953287
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -95,7 +75,8 @@ MonoBehaviour:
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours: []
+  NetworkBehaviours:
+  - {fileID: -7846075331557413692}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -106,7 +87,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: 0
+  _initializedTimestamp: -8584359964746243378
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -121,12 +102,27 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 65535
+  <PrefabId>k__BackingField: 6
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 12771996163502547783
   SceneId: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
-    Rotation: {x: 0, y: 0, z: 0, w: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    IsValid: 0
+    Rotation: {x: 0, y: 0, z: 0, w: 1}
+    Scale: {x: 1, y: 1, z: 1}
+    IsValid: 1
+--- !u!114 &-7846075331557413692
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 606519395701022315}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a6a39c46bf52104ba8efe3100bce3f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FishNet.Runtime::FishNet.Object.EmptyNetworkBehaviour
+  _componentIndexCache: 0
+  _addedNetworkObject: {fileID: 8710062563985953287}
+  _networkObjectCache: {fileID: 8710062563985953287}

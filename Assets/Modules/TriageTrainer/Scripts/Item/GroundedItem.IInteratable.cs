@@ -1,5 +1,5 @@
 using FishNet.Object;
-using TriageTrainer.Scripts.InteractableEntity;
+using TriageTrainer.InteractableEntity;
 using UnityEngine;
 
 /// <remarks>

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using FishNet.Connection;
-using TriageTrainer.Scripts.Chat;
+using TriageTrainer.Chat;
 using UnityEngine;
 
-namespace TriageTrainer.Scripts.Command
+namespace TriageTrainer.Command
 {
   public class ChatCommandService : MonoBehaviour
   {

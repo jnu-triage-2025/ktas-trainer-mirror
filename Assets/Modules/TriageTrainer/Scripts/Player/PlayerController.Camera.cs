@@ -1,7 +1,7 @@
 using FishNet.Object;
 using TriageTrainer.System.Prefabs.Camera;
 
-namespace TriageTrainer.Scripts.Player
+namespace TriageTrainer.Player
 {
   /// <summary>
   /// PlayerController의 카메라 및 카메라 홀더 처리 부분 구현

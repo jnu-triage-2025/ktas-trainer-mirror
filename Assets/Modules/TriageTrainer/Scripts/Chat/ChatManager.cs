@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using FishNet.Connection;
 using FishNet.Object;
-using TriageTrainer.Scripts.Command;
-using TriageTrainer.Scripts.HIDInput;
-using TriageTrainer.Scripts.UI;
+using TriageTrainer.Command;
+using TriageTrainer.HIDInput;
+using TriageTrainer.UI;
 using TriageTrainer.Definitions;
 using UnityEngine;
 
-namespace TriageTrainer.Scripts.Chat
+namespace TriageTrainer.Chat
 {
   [RequireComponent(typeof(ChatUIController))]
   [RequireComponent(typeof(ChatUIController_ChatLogView))]

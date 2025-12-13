@@ -1,6 +1,6 @@
 using System;
 
-namespace TriageTrainer.Scripts.Connection
+namespace TriageTrainer.Registry
 {
   [Serializable]
   public class SessionInformationModel

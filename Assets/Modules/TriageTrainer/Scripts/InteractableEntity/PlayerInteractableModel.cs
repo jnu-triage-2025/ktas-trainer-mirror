@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace TriageTrainer.Scripts.InteractableEntity
+namespace TriageTrainer.InteractableEntity
 {
   [Serializable]
   public class PlayerInteractableModel

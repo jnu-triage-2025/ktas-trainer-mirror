@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace TriageTrainer.Scripts.UI
+namespace TriageTrainer.UI
 {
   public class UIOverlayStackManager : MonoBehaviour
   {

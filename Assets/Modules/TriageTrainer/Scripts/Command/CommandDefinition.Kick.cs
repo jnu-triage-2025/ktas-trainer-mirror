@@ -1,7 +1,7 @@
 using FishNet.Connection;
-using TriageTrainer.Scripts.Chat;
+using TriageTrainer.Chat;
 
-namespace TriageTrainer.Scripts.Command
+namespace TriageTrainer.Command
 {
   public class CommandDefinition_Kick : IChatCommandModel
   {
