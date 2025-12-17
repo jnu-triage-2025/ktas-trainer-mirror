@@ -66,7 +66,7 @@ public class ItemRegistry : MonoBehaviour
 
     foreach (var entry in registeredItems)
     {
-      if (entry.itemDataModel == null) continue;
+      if (entry == null || entry.itemDataModel == null) continue;
 
       var id = entry.itemDataModel.identifier;
       if (string.IsNullOrWhiteSpace(id)) continue;

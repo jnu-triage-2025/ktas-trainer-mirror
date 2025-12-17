@@ -1,22 +1,32 @@
 using System;
+using UnityEngine;
 
 #nullable enable
 
+/// <summary>
+/// InventorySlotModelDTO는 플레이어의 각 인벤토리 칸을 표현하는 데이터 모델입니다.
+/// 하지만 아직 InventorySlotModelDTO에 별도로 정의한 기능이 없으므로, 단순히 아이템 데이터 모델을
+/// 래핑하는 용도로만 의도되어있습니다.
+/// </summary>
 [Serializable]
 public class InventorySlotModelDTO
 {
-  public ItemInstanceModelDTO? itemInstance;
+  #region Properties
+  [SerializeField] private ItemInstanceModelDTO? _itemInstance;
   public ItemInstanceModelDTO? ItemInstance
   {
-    get => itemInstance;
-    set => itemInstance = value;
+    get => _itemInstance;
+    set => _itemInstance = value;
   }
+  #endregion
 
+  #region Constructors
   public InventorySlotModelDTO() { }
   public InventorySlotModelDTO(ItemInstanceModelDTO itemInstance)
   {
-    this.itemInstance = itemInstance;
+    this._itemInstance = itemInstance;
   }
+  #endregion
 
   public bool IsEmpty => ItemInstance == null || !ItemInstance.IsValid();
 
@@ -24,6 +34,13 @@ public class InventorySlotModelDTO
   {
     ItemInstance = null;
   }
+
+  public void SetItem(ItemInstanceModelDTO? item)
+  {
+    ItemInstance = item;
+  }
+
+  public ItemInstanceModelDTO? Push(ItemInstanceModelDTO item) => ItemInstance.Merge(item);
 
   public ItemInstanceModelDTO? Push(InventorySlotModelDTO other)
   {
@@ -59,6 +76,15 @@ public class InventorySlotModelDTO
     return null;
   }
 
+  public ItemInstanceModelDTO? TakeAll()
+  {
+    if (IsEmpty) return null;
+    
+    ItemInstanceModelDTO taken = ItemInstance!;
+    ItemInstance = null;
+    return taken;
+  }
+
   public ItemInstanceModelDTO? Pop(int count)
   {
     if (IsEmpty || count <= 0)
@@ -75,5 +101,12 @@ public class InventorySlotModelDTO
       Clear();
     }
     return popped;
+  }
+
+  public ItemInstanceModelDTO? SwapWith(ItemInstanceModelDTO? incoming)
+  {
+    ItemInstanceModelDTO? previous = ItemInstance;
+    ItemInstance = incoming;
+    return previous;
   }
 }

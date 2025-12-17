@@ -51,8 +51,13 @@ namespace TriageTrainer.Chat
     {
       if (Input.GetKeyDown(_toggleChatUIKey))
       {
-        if (!_uiController.IsOpened) _uiController.OpenInput();
-        if (!_uiController.IsFocused) _uiController.FocusInput();
+        if (_uiController.IsOpened)
+          HandleCancel();
+        else
+        {
+          _uiController.OpenInput();
+          _uiController.FocusInput();
+        }
       }
       if (Input.GetKeyDown(_sendChatUIKey) && _uiController.IsFocused)
         HandleLocalSubmission(_uiController.ExtractCurrentInput());

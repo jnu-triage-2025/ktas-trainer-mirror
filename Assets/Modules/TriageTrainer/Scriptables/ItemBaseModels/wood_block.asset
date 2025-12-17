@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 491b1e9631db04480aeb3638f973098a, type: 3}
-  m_Name: StoneBlock
+  m_Name: wood_block
   m_EditorClassIdentifier: Assembly-CSharp::ItemBaseModelSO
-  identifier: stone_block
-  displayName: "\uB3CC \uBE14\uB85D"
+  identifier: wood_block
+  displayName: "\uB098\uBB34 \uBE14\uB85D"
   description: 
   hasDurability: 0
   maxDurability: 1

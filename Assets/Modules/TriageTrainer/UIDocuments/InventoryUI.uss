@@ -1,68 +1,58 @@
 .inventory-root {
-  width: 100%;
-  height: 100%;
-  justify-content: center;
-  align-items: center;
+  width: 420px;
+  padding: 12px;
+  background-color: #c6c6c6;
+  border: 2px solid #000;
+  gap: 8px;
+}
+
+.inventory-title {
+  unity-font-style: bold;
+  font-size: 18px;
+  color: #222;
+  margin-bottom: 4px;
 }
 
 .inventory-grid {
-  display: flex;
+  border: 2px solid #555;
+  padding: 8px;
+  gap: 6px;
   flex-wrap: wrap;
-  width: 540px;
-  gap: 4px;
+  flex-direction: column;
+  background-color: #bdbdbd;
+  min-height: 120px;
 }
 
-.inventory-slot {
-  width: 58px;
-  height: 58px;
-  background-color: #161616;
-  border: 2px solid #555;
+.slot-row {
+  flex-direction: row;
+}
+
+.slot {
+  width: 54px;
+  height: 54px;
+  border: 2px solid #777;
+  background-color: #d9d9d9;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding: 2px;
   position: relative;
 }
 
-.inventory-slot.hover {
-  border-color: #fff;
-}
-
-.inventory-slot.occupied {
-  border-color: #8fc954;
-}
-
-.slot-icon {
-  width: 100%;
-  height: 100%;
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.slot-count {
+.slot__icon {
   position: absolute;
-  bottom: 2px;
+  left: 4px;
   right: 4px;
-  font-size: 14px;
+  top: 4px;
+  bottom: 4px;
+  scale-mode: scale-to-fit;
+  tint-color: white;
+}
+
+.slot__count {
+  background-color: rgba(0, 0, 0, 0.55);
   color: #fff;
-  -unity-font-style: bold;
-}
-
-.held-item-container {
-  position: absolute;
-  pointer-events: none;
-}
-
-.held-item-icon {
-  width: 64px;
-  height: 64px;
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.held-item-count {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  font-size: 16px;
-  color: #fff;
-  -unity-font-style: bold;
+  font-size: 11px;
+  padding: 1px 3px;
+  border-radius: 2px;
+  unity-text-align: middle-right;
 }

@@ -24,12 +24,15 @@ namespace TriageTrainer.Player
     void Start()
     {
       Start_Interactables();
+      Start_Inventory();
     }
 
     void Update()
     {
+      Update_Input();
       Update_Movement();
       Update_Interactables();
+      Update_Inventory();
     }
     
     public override void OnStartClient()

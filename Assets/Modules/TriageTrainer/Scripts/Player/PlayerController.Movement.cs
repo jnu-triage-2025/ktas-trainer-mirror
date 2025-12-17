@@ -20,9 +20,7 @@ namespace TriageTrainer.Player
 
     [SerializeField] private float _minLookXAngle = -45.0f;
     [SerializeField] private float _maxLookXAngle = 45.0f;
-    
-    [Header("KeyConfiguration")]
-    [SerializeField] private KeyCode _runningKey = KeyCode.LeftControl;
+
     
     [Header("State Descriptions")]
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
@@ -112,7 +110,7 @@ namespace TriageTrainer.Player
 
     public void EnterUIOverlayMode()
     {
-      LockCursor();
+      UnlockCursor();
       canMove = false;
     }
 
