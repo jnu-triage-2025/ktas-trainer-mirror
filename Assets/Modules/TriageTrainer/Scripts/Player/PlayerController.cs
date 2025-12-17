@@ -25,6 +25,7 @@ namespace TriageTrainer.Player
     {
       Start_Interactables();
       Start_Inventory();
+      Start_Camera();
     }
 
     void Update()

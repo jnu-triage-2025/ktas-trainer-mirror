@@ -1,4 +1,6 @@
 using FishNet.Object;
+using TriageTrainer.Camera;
+using TriageTrainer.Registry;
 using TriageTrainer.System.Prefabs.Camera;
 
 namespace TriageTrainer.Player
@@ -14,9 +16,28 @@ namespace TriageTrainer.Player
   /// </summary>
   public partial class PlayerController : NetworkBehaviour
   {
+    private MainCameraController _camControl;
     void Awake_Camera()
     {
       MainCameraController.Instance.FollowingCameraHolder = _cameraHolderTransform;
+    }
+
+    void Start_Camera()
+    {
+      _camControl = CurrentSessionPlayInfoRegistry.Get<MainCameraController>();
+    }
+
+    void SwitchCameraViewMode()
+    {
+      switch (_camControl.CurrentViewMode)
+      {
+        case CameraViewMode.FirstPerson:
+          _camControl.CurrentViewMode = CameraViewMode.ThirdPerson;
+          break;
+        case CameraViewMode.ThirdPerson:
+          _camControl.CurrentViewMode = CameraViewMode.FirstPerson;
+          break;
+      }
     }
   }
 }

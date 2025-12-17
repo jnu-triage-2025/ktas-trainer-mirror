@@ -8,11 +8,13 @@ namespace TriageTrainer.Player
   {
     [Header("Key Configuration")]
     [SerializeField] private KeyCode _runningKey = KeyCode.LeftControl;
-    [SerializeField] private KeyCode _toggleInventory = KeyCode.E;
+    [SerializeField] private KeyCode _keyToggleInventory = KeyCode.E;
+    [SerializeField] private KeyCode _keySwitchCameraViewMode = KeyCode.P;
     public void Update_Input()
     {
       HandleToggleInventory();
       HandleCloseWithEscape();
+      HandleSwitchCameraViewMode();
     }
 
     private void HandleToggleInventory()
@@ -20,7 +22,7 @@ namespace TriageTrainer.Player
       var inventory = UIControlRegistry.Get<InventoryUIController>();
       if (inventory == null) return;
 
-      if (Input.GetKeyDown(_toggleInventory))
+      if (Input.GetKeyDown(_keyToggleInventory))
       {
         if (UIOverlayStackManager.Instance.IsTop(inventory))
           UIOverlayStackManager.Instance.Pop(inventory);
@@ -36,6 +38,11 @@ namespace TriageTrainer.Player
 
       if (Input.GetKeyDown(KeyCode.Escape) && UIOverlayStackManager.Instance.IsTop(inventory))
         UIOverlayStackManager.Instance.Pop(inventory);
+    }
+
+    private void HandleSwitchCameraViewMode()
+    {
+      if (Input.GetKeyDown(_keySwitchCameraViewMode)) SwitchCameraViewMode();
     }
   }
 }
