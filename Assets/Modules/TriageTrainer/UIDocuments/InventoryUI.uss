@@ -6,6 +6,14 @@
   gap: 8px;
   z-index: 30;
 }
+/*
+.inventory-root--visible {
+  visibility: visible;
+}
+.inventory-root--hidden {
+  visibility: hidden;
+}
+*/
 
 .inventory-title {
   unity-font-style: bold;

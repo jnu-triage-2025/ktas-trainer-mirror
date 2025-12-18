@@ -25,6 +25,7 @@ public class InventoryUIController : UIControllerABC, IUIOverlay
   #region Private Fields
   private UIDocument _uiDocument;
   private VisualElement _documentRoot;
+  private VisualElement _inventoryRoot;
   private VisualElement _inventoryGrid;
 
   private readonly List<VisualElement> _slotElements = new();
@@ -38,9 +39,7 @@ public class InventoryUIController : UIControllerABC, IUIOverlay
   private Label _heldItemGhostCount;
   #endregion
 
-  #region Public API
-  public bool IsOpened => _documentRoot != null && _documentRoot.style.display != DisplayStyle.None;
-  #endregion
+  public bool IsOpened => _documentRoot != null && _inventoryRoot.style.display != DisplayStyle.None;
 
   #region Unity Lifecycle
   protected virtual void Awake()
@@ -49,6 +48,7 @@ public class InventoryUIController : UIControllerABC, IUIOverlay
 
     _uiDocument = GetComponent<UIDocument>();
     _documentRoot = _uiDocument.rootVisualElement;
+    _inventoryRoot = _documentRoot.Q<VisualElement>("InventoryRoot");
     _inventoryGrid = _documentRoot.Q<VisualElement>("InventoryGrid");
 
     CreateHeldItemGhost();
@@ -169,10 +169,10 @@ public class InventoryUIController : UIControllerABC, IUIOverlay
   #region Overlay Controls
   public void ToggleRoot(bool visible)
   {
-    if (_documentRoot == null) return;
+    if (_inventoryRoot == null) return;
 
-    _documentRoot.style.visibility = visible ? Visibility.Visible : Visibility.Hidden;
-    _documentRoot.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+    _inventoryRoot.style.visibility = visible ? Visibility.Visible : Visibility.Hidden;
+    _inventoryRoot.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
   }
 
   public void OnOverlayPushed()

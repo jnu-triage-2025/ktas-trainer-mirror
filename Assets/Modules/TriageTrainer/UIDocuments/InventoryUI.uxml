@@ -5,7 +5,7 @@
   xmlns:uie="UnityEditor.UIElements"
 >
   <Style src="./InventoryUI.uss" />
-  <ui:VisualElement class="inventory-root">
+  <ui:VisualElement name="InventoryRoot" class="inventory-root" style="visibility: hidden;">
     <ui:Label text="Inventory" class="inventory-title" />
     <ui:VisualElement name="InventoryGrid" class="inventory-grid" />
   </ui:VisualElement>
