@@ -1,4 +1,7 @@
 using System;
+using NUnit.Framework;
+using TriageTrainer.Definitions;
+using UnityEngine;
 
 [Serializable]
 public class ItemInstanceModelDTO
@@ -6,12 +9,43 @@ public class ItemInstanceModelDTO
   #region Properties
   public string identifier;
   public string displayName;
-  public string itemTextureIdentifier;
+
+  /// <summary>
+  /// _itemTextureIdentifier는 아이템의 겉보기 텍스쳐에 대해 설정합니다.
+  /// 동일한 식별자의 아이템이어도 겉보기 텍스쳐를 다르게 하는 것이 가능합니다.
+  /// 이 값은 ItemTextureIdentifier에 의해 변경되는 것이 의도되었는데,
+  /// ItemTextureIdentifier의 수정 타이밍에 아이템의 텍스쳐를 다시 로드하기 위함입니다.
+  /// </summary>
+  [SerializeField] private string _itemTextureIdentifier;
+  public string ItemTextureIdentifier
+  {
+    get => _itemTextureIdentifier;
+    set
+    {
+      _itemTextureIdentifier = value;
+      ResolveItemTexture();
+    }
+  }
   public int currCount;
   public int maxCount;
   public bool hasDurability;
   public int currentDurability;
   #endregion
+
+  /// <summary>
+  /// _itemTexture는 아이템의 겉보기 텍스쳐입니다. ItemTextureIdentifier setter가 호출하는
+  /// ResolveItemTexture()에 의해 값이 설정되는 것이 의도되었습니다.
+  /// ResolveItemTexture 과정에서 리소스 로드가 실패하면 fallback 이미지를 설정합니다.
+  /// </summary>
+  [SerializeField] private Sprite _itemTexture;
+  public Sprite ItemTexture
+  {
+    get
+    {
+      if (_itemTexture == null) ResolveItemTexture();
+      return _itemTexture;
+    }
+  }
 
   #region Constructors
   public ItemInstanceModelDTO() { }
@@ -29,7 +63,7 @@ public class ItemInstanceModelDTO
   {
     this.identifier = identifier ?? string.Empty;
     this.displayName = displayName ?? string.Empty;
-    this.itemTextureIdentifier = !string.IsNullOrEmpty(itemTextureIdentifier) ? itemTextureIdentifier : this.identifier;
+    this.ItemTextureIdentifier = !string.IsNullOrEmpty(itemTextureIdentifier) ? itemTextureIdentifier : this.identifier;
     this.currCount = currCount < 0 ? 0 : currCount;
     this.maxCount = maxCount < 1 ? 1 : maxCount;
     this.hasDurability = hasDurability;
@@ -42,7 +76,7 @@ public class ItemInstanceModelDTO
 
     identifier = other.identifier;
     displayName = other.displayName;
-    itemTextureIdentifier = other.itemTextureIdentifier;
+    ItemTextureIdentifier = other.ItemTextureIdentifier;
     currCount = other.currCount;
     maxCount = other.maxCount;
     hasDurability = other.hasDurability;
@@ -55,7 +89,7 @@ public class ItemInstanceModelDTO
 
     identifier = baseModel.identifier;
     displayName = baseModel.displayName;
-    itemTextureIdentifier = baseModel.identifier;
+    ItemTextureIdentifier = baseModel.identifier;
     currCount = 1;
     maxCount = baseModel.maxStackCount;
     hasDurability = baseModel.hasDurability;
@@ -190,7 +224,7 @@ public class ItemInstanceModelDTO
       operand.maxCount,
       operand.hasDurability,
       operand.currentDurability,
-      operand.itemTextureIdentifier
+      operand.ItemTextureIdentifier
     );
   
   public static ItemInstanceModelDTO operator +(ItemInstanceModelDTO left, int right)
@@ -202,7 +236,7 @@ public class ItemInstanceModelDTO
       left.maxCount,
       left.hasDurability,
       left.currentDurability,
-      left.itemTextureIdentifier
+      left.ItemTextureIdentifier
     );
 
   public static ItemInstanceModelDTO operator -(ItemInstanceModelDTO left, int right)
@@ -214,7 +248,7 @@ public class ItemInstanceModelDTO
       left.maxCount,
       left.hasDurability,
       left.currentDurability,
-      left.itemTextureIdentifier
+      left.ItemTextureIdentifier
     );
   
   public static ItemInstanceModelDTO operator *(ItemInstanceModelDTO left, int right)
@@ -226,7 +260,7 @@ public class ItemInstanceModelDTO
       left.maxCount,
       left.hasDurability,
       left.currentDurability,
-      left.itemTextureIdentifier
+      left.ItemTextureIdentifier
     );
 
   public static ItemInstanceModelDTO operator /(ItemInstanceModelDTO left, int right)
@@ -238,7 +272,7 @@ public class ItemInstanceModelDTO
       left.maxCount,
       left.hasDurability,
       left.currentDurability,
-      left.itemTextureIdentifier
+      left.ItemTextureIdentifier
     );
 
   public static ItemInstanceModelDTO operator %(ItemInstanceModelDTO left, int right)
@@ -250,7 +284,7 @@ public class ItemInstanceModelDTO
       left.maxCount,
       left.hasDurability,
       left.currentDurability,
-      left.itemTextureIdentifier
+      left.ItemTextureIdentifier
     );
 
   public static ItemInstanceModelDTO operator ++(ItemInstanceModelDTO operand)
@@ -262,7 +296,7 @@ public class ItemInstanceModelDTO
       operand.maxCount,
       operand.hasDurability,
       operand.currentDurability,
-      operand.itemTextureIdentifier
+      operand.ItemTextureIdentifier
     );
 
   public static ItemInstanceModelDTO operator --(ItemInstanceModelDTO operand)
@@ -274,7 +308,7 @@ public class ItemInstanceModelDTO
       operand.maxCount,
       operand.hasDurability,
       operand.currentDurability,
-      operand.itemTextureIdentifier
+      operand.ItemTextureIdentifier
     );
   #endregion
 
@@ -295,5 +329,21 @@ public class ItemInstanceModelDTO
   public void ApplyRestriction()
   {
     currCount = Math.Max(0, Math.Min(maxCount, currCount));
+  }
+
+  public void ResolveItemTexture()
+  {
+    try
+    {
+      Sprite _queried = ItemRegistry.Instance.GetItemIcon(ItemTextureIdentifier);
+      _itemTexture = _queried;
+    }
+    catch (Exception ex)
+    {
+      if (_itemTexture == null)
+      {
+        _itemTexture = DefaultsResource.FallbackSprite;
+      }
+    }
   }
 }

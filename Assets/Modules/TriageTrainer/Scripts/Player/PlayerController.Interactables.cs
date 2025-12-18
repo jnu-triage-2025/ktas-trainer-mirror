@@ -40,14 +40,6 @@ namespace TriageTrainer.Player
       }
     }
 
-    void Update_Interactables()
-    {
-      if (_interactKey != KeyCode.None && Input.GetKeyDown(_interactKey))
-        TryInteractWithSelection();
-
-      HandleSelectionInput();
-    }
-
     void OnDestroy()
     {
       if (_detector != null)
@@ -66,6 +58,7 @@ namespace TriageTrainer.Player
         _interactableHintUI.Add(nearby[i]);
     }
 
+    // called from PlayerController.Input
     private void TryInteractWithSelection()
     {
       var interactable = _interactableHintUI?.GetSelected();
@@ -74,7 +67,8 @@ namespace TriageTrainer.Player
       interactable.Interact(transform);
     }
 
-    private void HandleSelectionInput()
+    // called from PlayerController.Input
+    private void HandleInteractablesSelectionInput()
     {
       if (_interactableHintUI == null) return;
 

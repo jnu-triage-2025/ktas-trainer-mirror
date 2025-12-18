@@ -70,7 +70,7 @@ namespace TriageTrainer.Player
     
     void ComputeMovementPlayerObject()
     {
-      _isRunning = Input.GetKey(_runningKey);
+      _isRunning = Input.GetKey(_keyMovingRunning);
 
       _forwardSpeed = transform.TransformDirection(Vector3.forward);
       _rightSpeed = transform.TransformDirection(Vector3.right);

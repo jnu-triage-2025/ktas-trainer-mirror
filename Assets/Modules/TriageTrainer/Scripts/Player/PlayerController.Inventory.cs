@@ -84,6 +84,9 @@ namespace TriageTrainer.Player
     private bool OnInventoryChangedAndReturn(bool result)
     {
       _inventoryRenderRequired = true;
+
+      // Keep the hotbar visuals in sync with inventory mutations
+      _hotbarUI?.BindInventory(_slots);
       return result;
     }
   }

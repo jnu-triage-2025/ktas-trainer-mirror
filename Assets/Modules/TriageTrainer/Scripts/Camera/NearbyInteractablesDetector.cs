@@ -33,6 +33,7 @@ namespace TriageTrainer.Camera
     public event Action<IReadOnlyList<IInteractable>> NearbyUpdated;
     
     public IReadOnlyList<IInteractable> Nearby => _nearby;
+    public bool InteractableNearbyExists => _nearby.Count > 0;
 
     void Awake()
     {

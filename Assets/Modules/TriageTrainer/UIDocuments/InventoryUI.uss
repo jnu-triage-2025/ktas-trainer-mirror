@@ -4,6 +4,7 @@
   background-color: #c6c6c6;
   border: 2px solid #000;
   gap: 8px;
+  z-index: 30;
 }
 
 .inventory-title {

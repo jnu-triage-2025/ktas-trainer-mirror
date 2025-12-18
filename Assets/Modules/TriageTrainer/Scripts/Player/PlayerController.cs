@@ -26,13 +26,13 @@ namespace TriageTrainer.Player
       Start_Interactables();
       Start_Inventory();
       Start_Camera();
+      Start_Hotbar();
     }
 
     void Update()
     {
       Update_Input();
       Update_Movement();
-      Update_Interactables();
       Update_Inventory();
     }
     
