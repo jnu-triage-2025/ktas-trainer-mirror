@@ -15,11 +15,6 @@ namespace TriageTrainer.Chat
   [RequireComponent(typeof(ChatCommandService))]
   public class ChatManager : NetworkBehaviour
   {
-    [Header("Key Bindings")]
-    [SerializeField] private KeyCode _toggleChatUIKey;
-    [SerializeField] private KeyCode _sendChatUIKey;
-    [SerializeField] private KeyCode _cancelChatUIKey;
-
     [Header("ChatSettings")] [SerializeField, Min(0f)]
     private float _messageCooldownSeconds = DefaultsChatControl.MessageCooldownSeconds;
 
@@ -38,32 +33,6 @@ namespace TriageTrainer.Chat
 
       _uiController.OnSubmitted += HandleLocalSubmission;
       _uiController.OnCancelled += HandleCancel;
-    }
-
-    void Start()
-    {
-      _toggleChatUIKey = KeyboardConfigurationRegistry.OpenChatUI;
-      _sendChatUIKey = KeyboardConfigurationRegistry.SendChat;
-      _cancelChatUIKey = KeyboardConfigurationRegistry.CloseChatUI;
-    }
-
-    void Update()
-    {
-      if (Input.GetKeyDown(_toggleChatUIKey))
-      {
-        if (_uiController.IsOpened)
-          HandleCancel();
-        else
-        {
-          _uiController.OpenInput();
-          _uiController.FocusInput();
-        }
-      }
-      if (Input.GetKeyDown(_sendChatUIKey) && _uiController.IsFocused)
-        HandleLocalSubmission(_uiController.ExtractCurrentInput());
-
-      if (Input.GetKeyDown(_cancelChatUIKey) && _uiController.IsOpened)
-        HandleCancel();
     }
     
     private void HandleLocalSubmission(string raw)

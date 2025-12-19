@@ -29,6 +29,8 @@ namespace TriageTrainer.UI
     [SerializeField] private List<IInteractable> _interactables = new();
     [SerializeField] private UIDocument _uiDocument;
     [SerializeField] private ScrollView _scrollView;
+    [Header("Visuals")]
+    [SerializeField] private Sprite _fallbackIcon;
 
     public UnityEvent OnNewInteractableAdded = new();
     public UnityEvent OnNewInteractableRemoved = new();
@@ -236,10 +238,25 @@ namespace TriageTrainer.UI
 
       var contentWrapper = new VisualElement();
       contentWrapper.AddToClassList("interactable-content-wrapper");
+      contentWrapper.AddToClassList("interactable-content-row");
 
       var iconHolder = new VisualElement();
       iconHolder.AddToClassList("interactable-icon-holder");
-      iconHolder.style.backgroundColor = interactable != null ? interactable.DisplayColor : Color.white;
+
+      var displayColor = interactable != null ? interactable.DisplayColor : new Color(1f, 1f, 1f, 0f);
+      var iconSprite = interactable != null ? interactable.DisplayIcon : null;
+      if (iconSprite == null) iconSprite = _fallbackIcon;
+
+      if (iconSprite != null)
+      {
+        iconHolder.style.backgroundImage = new StyleBackground(iconSprite);
+        iconHolder.style.backgroundColor = Color.clear; // let sprite alpha show through
+      }
+      else
+      {
+        iconHolder.style.backgroundImage = StyleKeyword.None;
+        iconHolder.style.backgroundColor = displayColor;
+      }
 
       var textLabel = new Label(interactable != null ? interactable.DisplayText : string.Empty);
       textLabel.AddToClassList("interactable-content-text");

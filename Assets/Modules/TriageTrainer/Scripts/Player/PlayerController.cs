@@ -23,6 +23,7 @@ namespace TriageTrainer.Player
 
     void Start()
     {
+      Start_Input();
       Start_Interactables();
       Start_Inventory();
       Start_Camera();

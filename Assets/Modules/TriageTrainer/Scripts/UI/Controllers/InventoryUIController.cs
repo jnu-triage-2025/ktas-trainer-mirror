@@ -41,6 +41,9 @@ public class InventoryUIController : UIControllerABC, IUIOverlay
 
   public bool IsOpened => _documentRoot != null && _inventoryRoot.style.display != DisplayStyle.None;
 
+  public event Action OverlayPushed;
+  public event Action OverlayPopped;
+
   #region Unity Lifecycle
   protected virtual void Awake()
   {
@@ -180,6 +183,7 @@ public class InventoryUIController : UIControllerABC, IUIOverlay
     ToggleRoot(true);
     var player = CurrentSessionPlayInfoRegistry.Get<PlayerController>();
     player?.EnterUIOverlayMode();
+    OverlayPushed?.Invoke();
   }
 
   public void OnOverlayPopped()
@@ -188,6 +192,7 @@ public class InventoryUIController : UIControllerABC, IUIOverlay
     var player = CurrentSessionPlayInfoRegistry.Get<PlayerController>();
     player?.ExitUIOverlayMode();
     ClearHeldItem();
+    OverlayPopped?.Invoke();
   }
   #endregion
 

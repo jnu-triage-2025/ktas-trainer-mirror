@@ -22,7 +22,9 @@ namespace TriageTrainer.Player
       {
         if (Input.GetKeyDown(KeyCode.Alpha1 + i))
         {
+#if UNITY_EDITOR
           Debug.Log($"[PlayerController] Hotbar slot {i} selected via numkey");
+#endif
           _hotbarUI.SetSelectedIndex(i);
           break;
         }

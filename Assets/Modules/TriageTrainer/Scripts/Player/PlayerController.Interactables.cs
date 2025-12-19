@@ -19,8 +19,6 @@ namespace TriageTrainer.Player
   /// </summary>
   public partial class PlayerController
   {
-    [Header("Interactable Configuration")]
-    [SerializeField] private KeyCode _interactKey = KeyboardConfigurationRegistry.InteractInteractableObject;
     [Header("References")]
     [SerializeField] private InteractableObjectHintUIController _interactableHintUI;
     [SerializeField] private NearbyInteractablesDetector _detector;

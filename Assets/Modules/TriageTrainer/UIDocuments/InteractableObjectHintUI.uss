@@ -68,6 +68,25 @@
   padding-right: 10px;
 }
 
+.interactable-hint .interactable-content-row {
+  flex-direction: row;
+  align-items: center;
+  column-gap: 8px;
+}
+
+.interactable-hint .interactable-icon-holder {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 6px;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.95;
+  box-shadow: 0 0 6px rgba(0,0,0,0.25);
+}
+
 .interactable-hint .interactable-content-text {
   color: white;
   font-size: 18px;

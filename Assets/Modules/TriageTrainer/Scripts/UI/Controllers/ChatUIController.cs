@@ -28,6 +28,8 @@ namespace TriageTrainer.UI
 
     public event Action<string> OnSubmitted;
     public event Action OnCancelled;
+    public event Action OverlayPushed;
+    public event Action OverlayPopped;
 
     protected override void Awake()
     {
@@ -79,14 +81,14 @@ namespace TriageTrainer.UI
 
     public void OpenInput()
     {
-      if (!UIOverlayStackManager.Instance.IsTop(this))
-        UIOverlayStackManager.Instance.Push(this); 
+      if (!UIOverlayStack.IsTop(this))
+        UIOverlayStack.Push(this); 
     }
 
     public void FocusInput()
     {
-      if (!UIOverlayStackManager.Instance.IsTop(this))
-        UIOverlayStackManager.Instance.Push(this);
+      if (!UIOverlayStack.IsTop(this))
+        UIOverlayStack.Push(this);
 
       if (_inputField == null) return;
       
@@ -100,8 +102,8 @@ namespace TriageTrainer.UI
 
     public void UnfocusInput()
     {
-      if (UIOverlayStackManager.Instance.IsTop(this))
-        UIOverlayStackManager.Instance.Pop(this);
+      if (UIOverlayStack.IsTop(this))
+        UIOverlayStack.Pop();
       
       if (_inputField != null)
       {
@@ -156,10 +158,17 @@ namespace TriageTrainer.UI
     }
 
     // IUIOverlay
-    public void OnOverlayPushed() {
+    public void OnOverlayPushed()
+    {
       ToggleRoot(expanding: true);
       FocusInput();
+      OverlayPushed?.Invoke();
     }
-    public void OnOverlayPopped() { ToggleRoot(expanding: false); }
+    public void OnOverlayPopped()
+    {
+      ToggleRoot(expanding: false);
+      _inputField?.SetValueWithoutNotify(string.Empty);
+      OverlayPopped?.Invoke();
+    }
   }
 }

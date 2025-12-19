@@ -1,6 +1,8 @@
+using System;
 using TriageTrainer.Registry;
 using UnityEngine;
 using TriageTrainer.UI;
+using Unity.VisualScripting;
 
 namespace TriageTrainer.Player
 {
@@ -13,52 +15,62 @@ namespace TriageTrainer.Player
     [SerializeField] private KeyCode _keyOpenEscMenu = KeyCode.Escape;
     [SerializeField] private KeyCode _keyToggleChat = KeyCode.T;
     [SerializeField] private KeyCode _keyInteractInteractableObject = KeyboardConfigurationRegistry.InteractInteractableObject;
-    [SerializeField] private KeyCode _keyCloseUI = KeyCode.Escape;
+    [SerializeField] private KeyCode _keyEscape = KeyCode.Escape;
 
     /**
      * 키 입력 핸들링을 막아야 하는 상황에서 이 플래그를 참으로 설정할 것
      * i.e. 채팅창 오픈
      */
     [SerializeField] private bool _keyHandlingLockedByChatUI = false;
-    private bool _KeyHandlingLocked
+    [SerializeField] private bool _keyHandlingLockedByInventoryUI = false;
+    private bool _KeyHandlingLocked => _keyHandlingLockedByChatUI || _keyHandlingLockedByInventoryUI;
+
+    void Start_Input()
     {
-      // And operation in keyHandlingLocked*
-      get => _keyHandlingLockedByChatUI;
+      RegisterOverlayLock(UIControlRegistry.Get<ChatUIController>(), locked => _keyHandlingLockedByChatUI = locked);
+      RegisterOverlayLock(UIControlRegistry.Get<InventoryUIController>(), locked => _keyHandlingLockedByInventoryUI = locked);
+    }
+
+    private void RegisterOverlayLock(IUIOverlay overlay, Action<bool> setLocked)
+    {
+      if (overlay == null || setLocked == null) return;
+
+      overlay.OverlayPushed += () => setLocked(true);
+      overlay.OverlayPopped += () => setLocked(false);
     }
 
     public void Update_Input()
     {
+      HandleEscape();
       HandleToggleChat();
       if (_KeyHandlingLocked) return;
 
       HandleInteractInteractableObject();
       HandleHotbarControlInput();
       HandleToggleInventory();
-      HandleCloseWithEscape();
       HandleSwitchCameraViewMode();
+    }
+
+    private void HandleEscape()
+    {
+      if (!Input.GetKeyDown(_keyEscape)) return;
+      if (UIOverlayStack.IsEmpty()) return;
+
+      UIOverlayStack.Pop();
     }
 
     private void HandleToggleInventory()
     {
       var inventory = UIControlRegistry.Get<InventoryUIController>();
-      if (inventory == null) return;
+      if (inventory.IsUnityNull()) return;
 
       if (Input.GetKeyDown(_keyToggleInventory))
       {
-        if (UIOverlayStackManager.Instance.IsTop(inventory))
-          UIOverlayStackManager.Instance.Pop(inventory);
+        if (UIOverlayStack.IsTop(inventory))
+          UIOverlayStack.Pop();
         else
-          UIOverlayStackManager.Instance.Push(inventory);
+          UIOverlayStack.Push(inventory);
       }
-    }
-
-    private void HandleCloseWithEscape()
-    {
-      var inventory = UIControlRegistry.Get<InventoryUIController>();
-      if (inventory == null) return;
-
-      if (Input.GetKeyDown(KeyCode.Escape) && UIOverlayStackManager.Instance.IsTop(inventory))
-        UIOverlayStackManager.Instance.Pop(inventory);
     }
 
     private void HandleSwitchCameraViewMode()
@@ -74,9 +86,15 @@ namespace TriageTrainer.Player
 
     private void HandleToggleChat()
     {
-      if (Input.GetKeyDown(_keyToggleChat))
+      if (!Input.GetKeyDown(_keyToggleChat)) return;
+
+      var chat = UIControlRegistry.Get<ChatUIController>();
+      if (chat.IsUnityNull()) return;
+
+      if (!chat.IsOpened)
       {
-        
+        chat.OpenInput();
+        chat.FocusInput();
       }
     }
 

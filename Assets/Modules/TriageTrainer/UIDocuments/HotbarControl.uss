@@ -47,7 +47,6 @@
   -unity-font-style: bold;
   -unity-text-outline-color: rgba(0, 0, 0, 0.9);
   -unity-text-outline-width: 1px;
-  z-index: 30;
   padding: 0 2px;
 }
 
@@ -61,6 +60,6 @@
   left: 4px;
   font-size: 10px;
   color: rgba(255,255,255,0.65);
-  z-index: 20;
+  z-index: 3;
   -unity-font-definition: var(--unity-default-font);
 }
