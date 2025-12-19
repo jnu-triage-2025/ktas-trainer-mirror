@@ -17,6 +17,7 @@ namespace TriageTrainer.Player
     {
       Awake_Movement();
       Awake_Camera();
+      Awake_Visibility();
       
       _interactionResolver = GetComponent<InteractableEntityResolver>();
     }
@@ -35,6 +36,7 @@ namespace TriageTrainer.Player
       Update_Input();
       Update_Movement();
       Update_Inventory();
+      LateUpdate_Camera();
     }
     
     public override void OnStartClient()

@@ -9,9 +9,9 @@ namespace TriageTrainer.Command
     public string Description => "Kick a player by name or ID.";
     public bool RequiresAdmin => true;
 
-    private readonly ChatManager _manager;
+    private readonly ChatService _manager;
 
-    public CommandDefinition_Kick(ChatManager manager)
+    public CommandDefinition_Kick(ChatService manager)
     {
       _manager = manager;
     }

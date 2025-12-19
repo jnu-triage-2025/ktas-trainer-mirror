@@ -16,6 +16,7 @@ namespace TriageTrainer.Player
     [SerializeField] private KeyCode _keyToggleChat = KeyCode.T;
     [SerializeField] private KeyCode _keyInteractInteractableObject = KeyboardConfigurationRegistry.InteractInteractableObject;
     [SerializeField] private KeyCode _keyEscape = KeyCode.Escape;
+    [SerializeField] private KeyCode _keySpectatorFlyDown = KeyCode.LeftShift;
 
     /**
      * 키 입력 핸들링을 막아야 하는 상황에서 이 플래그를 참으로 설정할 것
@@ -44,6 +45,12 @@ namespace TriageTrainer.Player
       HandleEscape();
       HandleToggleChat();
       if (_KeyHandlingLocked) return;
+
+      if (IsSpectator)
+      {
+        HandleSpectatorInput();
+        return;
+      }
 
       HandleInteractInteractableObject();
       HandleHotbarControlInput();
@@ -82,6 +89,36 @@ namespace TriageTrainer.Player
     {
       if (Input.GetKeyDown(_keyInteractInteractableObject)) TryInteractWithSelection();
       HandleInteractablesSelectionInput();
+    }
+
+    private void HandleSpectatorInput()
+    {
+      HandleSpectatorFollowInput();
+      HandleSwitchCameraViewMode();
+    }
+
+    private void HandleSpectatorFollowInput()
+    {
+      if (Input.GetMouseButtonDown(1))
+        TryStartSpectateFollowUnderCursor();
+
+      if (_isSpectateFollowing && Input.GetKeyDown(_keySpectatorFlyDown))
+        StopSpectateFollow();
+    }
+
+    private void TryStartSpectateFollowUnderCursor()
+    {
+      var cam = UnityEngine.Camera.main;
+      if (cam == null) return;
+
+      Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+      if (!Physics.Raycast(ray, out RaycastHit hit, 150f)) return;
+      if (hit.collider == null) return;
+
+      var target = hit.collider.GetComponentInParent<PlayerController>();
+      if (target == null || target == this) return;
+
+      BeginSpectateFollow(target);
     }
 
     private void HandleToggleChat()

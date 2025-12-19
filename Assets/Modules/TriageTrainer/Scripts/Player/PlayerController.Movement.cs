@@ -13,6 +13,8 @@ namespace TriageTrainer.Player
     [SerializeField] private float _runningSpeed = 11.5f;
     [SerializeField] private float _jumpSpeed = 8.0f;
     [SerializeField] private float _gravity = 20.0f;
+    [SerializeField] private float _spectatorMoveSpeed = 10.0f;
+    [SerializeField] private float _spectatorVerticalSpeed = 10.0f;
 
     [Header("CameraHolder Configuration")]
     [SerializeField] private float _rotatingSpeed = 2.0f;
@@ -48,6 +50,7 @@ namespace TriageTrainer.Player
     void Update_Movement()
     {
       ComputeMovement();
+      UpdateSpectateFollowTarget();
     }
 
     Vector3 _forwardSpeed;
@@ -64,7 +67,11 @@ namespace TriageTrainer.Player
 
     void ComputeMovement()
     {
-      ComputeMovementPlayerObject();
+      if (IsSpectator)
+        ComputeSpectatorMovement();
+      else
+        ComputeMovementPlayerObject();
+
       ComputeMovementCameraHolder();
     }
     
@@ -97,15 +104,43 @@ namespace TriageTrainer.Player
       _characterController.Move(_moveDirection * Time.deltaTime);
     }
 
+    void ComputeSpectatorMovement()
+    {
+      if (!canMove) return;
+      if (_isSpectateFollowing) return;
+
+      _forwardSpeed = transform.TransformDirection(Vector3.forward);
+      _rightSpeed = transform.TransformDirection(Vector3.right);
+
+      float curSpeedX = _spectatorMoveSpeed * Input.GetAxis("Vertical");
+      float curSpeedY = _spectatorMoveSpeed * Input.GetAxis("Horizontal");
+
+      float vertical = 0f;
+      if (Input.GetKey(KeyCode.Space)) vertical += 1f;
+      if (Input.GetKey(_keySpectatorFlyDown)) vertical -= 1f;
+
+      Vector3 velocity = (_forwardSpeed * curSpeedX) + (_rightSpeed * curSpeedY) + (Vector3.up * (_spectatorVerticalSpeed * vertical));
+      _characterController.Move(velocity * Time.deltaTime);
+    }
+
     void ComputeMovementCameraHolder()
     {
       if (_cameraHolderTransform.IsUnityNull()) return;
       if (!canMove) return;
+      if (_isSpectateFollowing) return;
       
       _rotationX += -Input.GetAxis("Mouse Y") * _rotatingSpeed;
       _rotationX = Mathf.Clamp(_rotationX, _minLookXAngle, _maxLookXAngle);
       _cameraHolderTransform.localRotation = Quaternion.Euler(_rotationX, 0, 0);
       transform.Rotate(0, Input.GetAxis("Mouse X") * _rotatingSpeed, 0);
+    }
+
+    void UpdateSpectateFollowTarget()
+    {
+      if (!_isSpectateFollowing) return;
+
+      if (_spectateFollowTarget == null)
+        StopSpectateFollow();
     }
 
     public void EnterUIOverlayMode()

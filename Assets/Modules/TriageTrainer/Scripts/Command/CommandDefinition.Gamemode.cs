@@ -1,5 +1,6 @@
 using FishNet.Connection;
 using TriageTrainer.Chat;
+using TriageTrainer.Player;
 
 namespace TriageTrainer.Command
 {
@@ -16,9 +17,9 @@ namespace TriageTrainer.Command
 
     public bool RequiresAdmin => false;
 
-    private readonly ChatManager _manager;
+    private readonly ChatService _manager;
 
-    public CammandDefinition_Gamemode(ChatManager manager)
+    public CammandDefinition_Gamemode(ChatService manager)
     {
       _manager = manager;
     }
@@ -31,22 +32,52 @@ namespace TriageTrainer.Command
         return;
       }
 
-      string mode = args[0].ToLower();
-      switch (mode)
+      if (sender == null || sender.FirstObject == null || !sender.FirstObject.TryGetComponent(out PlayerController controller))
+      {
+        _manager.SendSystemMessage(sender, "Unable to locate your player.");
+        return;
+      }
+
+      if (!TryParseGamemode(args[0], out PlayerGamemode targetMode, out string parseError))
+      {
+        _manager.SendSystemMessage(sender, parseError);
+        return;
+      }
+
+      if (!PlayerGamemodeService.TrySetGamemode(sender, controller, targetMode, out string error))
+      {
+        _manager.SendSystemMessage(sender, error);
+        return;
+      }
+
+      _manager.SendSystemMessage(sender, $"Set gamemode to '{targetMode}'.");
+    }
+
+    private bool TryParseGamemode(string raw, out PlayerGamemode mode, out string error)
+    {
+      error = string.Empty;
+      mode = PlayerGamemode.Player;
+
+      if (string.IsNullOrWhiteSpace(raw))
+      {
+        error = "Usage: /gamemode <player|spectator>";
+        return false;
+      }
+
+      string lowered = raw.ToLower();
+      switch (lowered)
       {
         case "0":
         case "player":
-          // _manager.SetPlayerGamemode(target, Gamemode.Player);
-          _manager.SendSystemMessage(sender, $"Set gamemode to 'Player'.");
-          break;
+          mode = PlayerGamemode.Player;
+          return true;
         case "1":
         case "spectator":
-          // _manager.SetPlayerGamemode(target, Gamemode.Spectator);
-          _manager.SendSystemMessage(sender, $"Set gamemode to 'Spectator'.");
-          break;
+          mode = PlayerGamemode.Spectator;
+          return true;
         default:
-          _manager.SendSystemMessage(sender, $"Unknown gamemode '{mode}'. Valid modes are: player (0), spectator (1).");
-          break;
+          error = "Unknown gamemode. Use 'player' (0) or 'spectator' (1).";
+          return false;
       }
     }
   }

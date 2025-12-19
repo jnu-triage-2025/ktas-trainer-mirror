@@ -3,32 +3,39 @@ using System.Collections.Generic;
 using FishNet.Connection;
 using FishNet.Object;
 using TriageTrainer.Command;
-using TriageTrainer.UI;
 using TriageTrainer.Definitions;
-using TriageTrainer.Registry;
+using TriageTrainer.UI;
 using UnityEngine;
 
 namespace TriageTrainer.Chat
 {
-  [RequireComponent(typeof(ChatUIController))]
-  [RequireComponent(typeof(ChatUIController_ChatLogView))]
-  [RequireComponent(typeof(ChatCommandService))]
-  public class ChatManager : NetworkBehaviour
+  public class ChatService : NetworkBehaviour
   {
     [Header("ChatSettings")] [SerializeField, Min(0f)]
     private float _messageCooldownSeconds = DefaultsChatControl.MessageCooldownSeconds;
 
-    private ChatUIController _uiController;
-    private ChatUIController_ChatLogView _chatLogView;
-    private ChatCommandService _commandService;
+    [Header("References")]
+    [SerializeField] private ChatUIController _uiController;
+    [SerializeField] private ChatUIController_ChatLogView _chatLogView;
+    [SerializeField] private ChatCommandService _commandService;
     
     private readonly Dictionary<int, float> _lastMessageTimes = new();
 
     void Awake()
     {
-      _uiController = GetComponent<ChatUIController>();
-      _chatLogView = GetComponent<ChatUIController_ChatLogView>();
-      _commandService = GetComponent<ChatCommandService>();
+      if (_uiController == null)
+        _uiController = GetComponent<ChatUIController>();
+      if (_chatLogView == null)
+        _chatLogView = GetComponent<ChatUIController_ChatLogView>();
+      if (_commandService == null)
+        _commandService = GetComponent<ChatCommandService>();
+
+      if (_uiController == null || _chatLogView == null || _commandService == null)
+      {
+        Debug.LogError("ChatService missing required references (UI or CommandService).", this);
+        enabled = false;
+        return;
+      }
       _commandService.Initialize(this);
 
       _uiController.OnSubmitted += HandleLocalSubmission;
@@ -81,7 +88,7 @@ namespace TriageTrainer.Chat
     [ObserversRpc(BufferLast = true)]
     private void ReceiveChatObserversRpc(string formattedLine)
     {
-      Debug.Log($"[ChatManager] Received chat message: {formattedLine}");
+      Debug.Log($"[ChatService] Received chat message: {formattedLine}");
       _chatLogView.AddLine(formattedLine);
     }
 

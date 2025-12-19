@@ -1,7 +1,7 @@
 using FishNet.Object;
 using TriageTrainer.Camera;
 using TriageTrainer.Registry;
-using TriageTrainer.System.Prefabs.Camera;
+using TriageTrainer.Camera;
 
 namespace TriageTrainer.Player
 {
@@ -19,12 +19,26 @@ namespace TriageTrainer.Player
     private MainCameraController _camControl;
     void Awake_Camera()
     {
-      MainCameraController.Instance.FollowingCameraHolder = _cameraHolderTransform;
+      // Camera attachment is deferred to owner check in OnStartClient to avoid other players overwriting
+      // the global main camera target.
     }
 
     void Start_Camera()
     {
-      _camControl = CurrentSessionPlayInfoRegistry.Get<MainCameraController>();
+      _camControl = MainCameraController.Instance ?? CurrentSessionPlayInfoRegistry.Get<MainCameraController>();
+
+      if (IsOwner && _camControl != null)
+        _camControl.SetTarget(this);
+    }
+
+    void LateUpdate_Camera()
+    {
+      if (!IsOwner) return;
+      if (_camControl == null) return;
+
+      // Ensure camera sticks to the local owner's holder even if other events tried to retarget.
+      if (_camControl.FollowingCameraHolder != _cameraHolderTransform)
+        _camControl.SetTarget(this);
     }
 
     void SwitchCameraViewMode()

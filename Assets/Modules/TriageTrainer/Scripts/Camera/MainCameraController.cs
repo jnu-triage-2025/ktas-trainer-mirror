@@ -4,7 +4,7 @@ using TriageTrainer.Registry;
 using Unity.VisualScripting;
 using UnityEngine;
 
-namespace TriageTrainer.System.Prefabs.Camera
+namespace TriageTrainer.Camera
 {
   /// <summary>
   /// 메인 카메라 컨트롤러는 메인 카메라 제어를 위해 작성되었습니다.
@@ -24,10 +24,13 @@ namespace TriageTrainer.System.Prefabs.Camera
     [SerializeField] private Transform _followingCameraHolder;
     [SerializeField] private UnityEngine.Camera _camera;
     [SerializeField] private NearbyInteractablesDetector _nearbyInteractablesDetector;
+    [SerializeField] private string _spectatorLayerName = "Spectator";
 
     [Header("State")]
     [SerializeField] private float _currentDistance;
     [SerializeField] private float _targetDistance;
+    [SerializeField] private int _baseCullingMask;
+    [SerializeField] private bool _baseMaskInitialized = false;
     
     private static MainCameraController _instance;
 
@@ -64,20 +67,23 @@ namespace TriageTrainer.System.Prefabs.Camera
     
     void Awake()
     {
-      _camera = UnityEngine.Camera.main;
+      EnsureCamera();
       _nearbyInteractablesDetector = GetComponent<NearbyInteractablesDetector>();
       CurrentSessionPlayInfoRegistry.Register(this);
     }
 
     void Start()
     {
-      UpdateCameraDistance();
       _currentDistance = _targetDistance;
+      UpdateCameraDistance();
     }
 
     void LateUpdate()
     {
       if (_followingCameraHolder.IsUnityNull()) return;
+
+      EnsureCamera();
+      if (_camera.IsUnityNull()) return;
 
       _camera.transform.position = _followingCameraHolder.position;
       _camera.transform.rotation = _followingCameraHolder.rotation;
@@ -89,6 +95,8 @@ namespace TriageTrainer.System.Prefabs.Camera
     void OnValidate()
     {
       if (!Application.isPlaying) return;
+      EnsureCamera();
+      if (_camera.IsUnityNull()) return;
       UpdateCameraDistance();
       SmoothDistanceTransition();
       ApplyDistanceOffset();
@@ -112,17 +120,52 @@ namespace TriageTrainer.System.Prefabs.Camera
     
     private void ApplyDistanceOffset()
     {
+      if (_camera.IsUnityNull()) return;
       if (_currentDistance > 0.01f)
       {
         _camera.transform.position -= _camera.transform.forward * _currentDistance;
       }
     }
+
+    /// <summary>
+    /// Toggle spectator layer visibility on the local camera.
+    /// Players should not see spectators; spectators should.
+    /// </summary>
+    public void SetSpectatorLayerCulling(bool enableSpectator)
+    {
+      EnsureCamera();
+      if (_camera == null) return;
+
+      int spectatorLayer = LayerMask.NameToLayer(_spectatorLayerName);
+      if (spectatorLayer < 0) return;
+
+      int mask = _baseCullingMask;
+      if (enableSpectator)
+        mask |= 1 << spectatorLayer;
+      else
+        mask &= ~(1 << spectatorLayer);
+
+      _camera.cullingMask = mask;
+    }
     
     public void SetTarget(PlayerController playerController)
     {
       if (playerController.IsUnityNull()) return;
+      if (!playerController.IsOwner) return; // Only bind to the local owner's player
       if (playerController.CameraHolderTransform.IsUnityNull()) return;
       _followingCameraHolder = playerController.CameraHolderTransform;
+    }
+
+    private void EnsureCamera()
+    {
+      if (_camera == null)
+        _camera = UnityEngine.Camera.main ?? FindObjectOfType<UnityEngine.Camera>();
+
+      if (_camera != null && !_baseMaskInitialized)
+      {
+        _baseCullingMask = _camera.cullingMask;
+        _baseMaskInitialized = true;
+      }
     }
   }
 }

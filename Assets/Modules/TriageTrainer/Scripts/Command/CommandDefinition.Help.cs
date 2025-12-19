@@ -10,10 +10,10 @@ namespace TriageTrainer.Command
     public string Description => "Show available commands or details for one.";
     public bool RequiresAdmin => false;
 
-    private readonly ChatManager _manager;
+    private readonly ChatService _manager;
     private readonly ChatCommandService _service;
 
-    public CommandDefinition_Help(ChatManager manager, ChatCommandService service)
+    public CommandDefinition_Help(ChatService manager, ChatCommandService service)
     {
       _manager = manager;
       _service = service;

@@ -40,6 +40,8 @@ namespace TriageTrainer.Player
 
     void OnDestroy()
     {
+      StopSpectateFollow();
+
       if (_detector != null)
         _detector.NearbyUpdated -= HandleNearbyUpdated;
     }

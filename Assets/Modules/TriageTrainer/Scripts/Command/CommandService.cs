@@ -9,9 +9,9 @@ namespace TriageTrainer.Command
   public class ChatCommandService : MonoBehaviour
   {
     private readonly Dictionary<string, IChatCommandModel> _commands = new();
-    private ChatManager _chatManager;
+    private ChatService _chatManager;
 
-    public void Initialize(ChatManager manager)
+    public void Initialize(ChatService manager)
     {
       _chatManager = manager;
 
