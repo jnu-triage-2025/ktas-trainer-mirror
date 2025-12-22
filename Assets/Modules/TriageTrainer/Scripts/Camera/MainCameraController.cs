@@ -1,3 +1,4 @@
+using FishNet.Object;
 using TriageTrainer.Camera;
 using TriageTrainer.Player;
 using TriageTrainer.Registry;
@@ -11,7 +12,7 @@ namespace TriageTrainer.Camera
   /// 이 컨트롤러는 게임 시작 시 자동으로 인스턴스화하여 싱글톤 오브젝트로 동작합니다.
   /// </summary>
   [RequireComponent(typeof(NearbyInteractablesDetector))]
-  public class MainCameraController : MonoBehaviour
+  public class MainCameraController : NetworkBehaviour
   {
     [Header("Configuration")]
     [SerializeField] private CameraViewMode _currentViewMode = CameraViewMode.ThirdPerson;
@@ -23,6 +24,15 @@ namespace TriageTrainer.Camera
     [Header("References")]
     [SerializeField] private Transform _followingCameraHolder;
     [SerializeField] private UnityEngine.Camera _camera;
+    public UnityEngine.Camera Camera
+    {
+      get
+      {
+        EnsureCamera();
+        return _camera;
+      }
+    }
+
     [SerializeField] private NearbyInteractablesDetector _nearbyInteractablesDetector;
     [SerializeField] private string _spectatorLayerName = "Spectator";
 
@@ -34,21 +44,25 @@ namespace TriageTrainer.Camera
     
     private static MainCameraController _instance;
 
-    public static MainCameraController Instance
-    {
-      get
-      {
-        if (_instance.IsUnityNull())
-        {
-          GameObject go = new GameObject("MainCameraController");
-          DontDestroyOnLoad(go);
-          _instance = go.AddComponent<MainCameraController>();
-        }
+    public static MainCameraController Instance => _instance;
 
-        return _instance;
-      }
+    void Awake()
+    {
+      CurrentSessionPlayInfoRegistry.Register(this);
     }
-    
+
+    public override void OnStartClient()
+    {
+      base.OnStartClient();
+
+      if (!IsOwner) return;
+
+      _nearbyInteractablesDetector = GetComponent<NearbyInteractablesDetector>();
+
+      _currentDistance = _targetDistance;
+      UpdateCameraDistance();
+    }
+
     public CameraViewMode CurrentViewMode
     {
       get => _currentViewMode;
@@ -63,19 +77,6 @@ namespace TriageTrainer.Camera
     {
       get => _followingCameraHolder;
       set => _followingCameraHolder = value;
-    }
-    
-    void Awake()
-    {
-      EnsureCamera();
-      _nearbyInteractablesDetector = GetComponent<NearbyInteractablesDetector>();
-      CurrentSessionPlayInfoRegistry.Register(this);
-    }
-
-    void Start()
-    {
-      _currentDistance = _targetDistance;
-      UpdateCameraDistance();
     }
 
     void LateUpdate()
@@ -157,11 +158,11 @@ namespace TriageTrainer.Camera
     }
 
     private void EnsureCamera()
-    {
-      if (_camera == null)
-        _camera = UnityEngine.Camera.main ?? FindObjectOfType<UnityEngine.Camera>();
+  {
+      if (_camera.IsUnityNull())
+        _camera = UnityEngine.Camera.main ?? FindFirstObjectByType<UnityEngine.Camera>();
 
-      if (_camera != null && !_baseMaskInitialized)
+      if (!_camera.IsUnityNull() && !_baseMaskInitialized)
       {
         _baseCullingMask = _camera.cullingMask;
         _baseMaskInitialized = true;

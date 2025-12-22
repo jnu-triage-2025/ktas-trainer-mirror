@@ -2,6 +2,7 @@ using FishNet.Object;
 using TriageTrainer.Camera;
 using TriageTrainer.Registry;
 using TriageTrainer.Camera;
+using Unity.VisualScripting;
 
 namespace TriageTrainer.Player
 {
@@ -23,12 +24,14 @@ namespace TriageTrainer.Player
       // the global main camera target.
     }
 
-    void Start_Camera()
+    void OnStartClient_Camera()
     {
+      if (!IsOwner) return;
       _camControl = MainCameraController.Instance ?? CurrentSessionPlayInfoRegistry.Get<MainCameraController>();
 
-      if (IsOwner && _camControl != null)
-        _camControl.SetTarget(this);
+      if (_camControl.IsUnityNull()) return;
+      
+      _camControl.SetTarget(this);
     }
 
     void LateUpdate_Camera()

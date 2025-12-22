@@ -27,7 +27,6 @@ namespace TriageTrainer.Player
       Start_Input();
       Start_Interactables();
       Start_Inventory();
-      Start_Camera();
       Start_Hotbar();
     }
 
@@ -44,6 +43,7 @@ namespace TriageTrainer.Player
       base.OnStartClient();
       
       OnStartClient_Network();
+      OnStartClient_Camera();
     }
   }
 }
