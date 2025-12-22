@@ -23,10 +23,23 @@ public partial class GroundedItem : NetworkBehaviour, IInteractable
       return;
     }
 
-    var player = interactor.GetComponentInParent<PlayerController>();
+    var interactorNob = interactor.GetComponentInParent<NetworkObject>();
+    if (interactorNob == null)
+    {
+      Debug.LogWarning("GroundedItem.Interact could not find NetworkObject on interactor", this);
+      return;
+    }
+
+    ServerHandlePickup(interactorNob);
+  }
+
+  [ServerRpc(RequireOwnership = false)]
+  public void ServerHandlePickup(NetworkObject interactorNob)
+  {
+    var player = interactorNob.GetComponent<PlayerController>();
     if (player == null)
     {
-      Debug.LogWarning("GroundedItem.Interact could not find PlayerController on interactor", this);
+      Debug.LogWarning("GroundedItem.ServerHandlePickup could not find PlayerController on interactor", this);
       return;
     }
 
@@ -37,9 +50,7 @@ public partial class GroundedItem : NetworkBehaviour, IInteractable
       return;
     }
 
-    if (IsServer && IsSpawned)
+    if (IsSpawned)
       Despawn();
-    else
-      Destroy(gameObject);
   }
 }

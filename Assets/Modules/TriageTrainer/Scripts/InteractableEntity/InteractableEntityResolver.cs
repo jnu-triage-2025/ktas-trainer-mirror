@@ -19,7 +19,7 @@ namespace TriageTrainer.InteractableEntity
         if (eachSource is IInteractable handler)
           handlers.Add(handler);
         else if (eachSource != null)
-          Debug.LogWarning($"{eachSource.name} does not implement IPlayerInteractive interface", eachSource);
+          Debug.LogWarning($"{eachSource.name} does not implement IInteractable interface", eachSource);
       }
     }
 
@@ -27,17 +27,11 @@ namespace TriageTrainer.InteractableEntity
     {
       if (interactable == null)
       {
-        Debug.LogWarning($"TriageTrainer.PlayerInteractiveResolver.Resolve: model is null", this);
+        Debug.LogWarning($"InteractableEntityResolver.Resolve: interactable is null", this);
         return;
       }
 
-      foreach (var handler in handlers)
-      {
-        handler.Interact(interactor);
-        return;
-      }
-    
-      Debug.LogWarning($"No handler processed {interactable.DisplayText}. {interactable}");
+      interactable.Interact(interactor);
     }
   }
 }
