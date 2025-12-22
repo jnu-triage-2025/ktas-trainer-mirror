@@ -25,13 +25,13 @@ namespace TriageTrainer.Player
     void Start()
     {
       Start_Input();
-      Start_Interactables();
       Start_Inventory();
       Start_Hotbar();
     }
 
     void Update()
     {
+      if (!IsOwner) return;
       Update_Input();
       Update_Movement();
       Update_Inventory();
@@ -40,10 +40,12 @@ namespace TriageTrainer.Player
     
     public override void OnStartClient()
     {
+      if (!IsOwner) return;
       base.OnStartClient();
       
       OnStartClient_Network();
       OnStartClient_Camera();
+      OnStartClient_Interactables();
     }
   }
 }

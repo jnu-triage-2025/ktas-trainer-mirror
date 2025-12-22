@@ -2,6 +2,7 @@ using FishNet.Object;
 using TriageTrainer.Camera;
 using TriageTrainer.Player;
 using TriageTrainer.Registry;
+using TriageTrainer.UI;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -34,6 +35,7 @@ namespace TriageTrainer.Camera
     }
 
     [SerializeField] private NearbyInteractablesDetector _nearbyInteractablesDetector;
+    [SerializeField] private InteractableObjectHintUIController _interactableHintUIController;
     [SerializeField] private string _spectatorLayerName = "Spectator";
 
     [Header("State")]
@@ -49,6 +51,18 @@ namespace TriageTrainer.Camera
     void Awake()
     {
       CurrentSessionPlayInfoRegistry.Register(this);
+
+      if (_instance != null && _instance != this)
+      {
+        Destroy(this.gameObject);
+        return;
+      }
+    }
+
+    void Start()
+    {
+      _nearbyInteractablesDetector = GetComponent<NearbyInteractablesDetector>();
+      _interactableHintUIController = GetComponent<InteractableObjectHintUIController>();
     }
 
     public override void OnStartClient()
@@ -56,8 +70,6 @@ namespace TriageTrainer.Camera
       base.OnStartClient();
 
       if (!IsOwner) return;
-
-      _nearbyInteractablesDetector = GetComponent<NearbyInteractablesDetector>();
 
       _currentDistance = _targetDistance;
       UpdateCameraDistance();
@@ -127,6 +139,7 @@ namespace TriageTrainer.Camera
         _camera.transform.position -= _camera.transform.forward * _currentDistance;
       }
     }
+
 
     /// <summary>
     /// Toggle spectator layer visibility on the local camera.

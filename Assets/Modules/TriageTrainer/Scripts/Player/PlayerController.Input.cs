@@ -140,6 +140,7 @@ namespace TriageTrainer.Player
       // Selection using numkey
       HandleHotbarInputNumkey();
 
+      if (_detector.IsUnityNull()) return;
       // Selection using mouse wheel
       if (_detector.InteractableNearbyExists) return;
       HandleHotbarInputMouseWheel();

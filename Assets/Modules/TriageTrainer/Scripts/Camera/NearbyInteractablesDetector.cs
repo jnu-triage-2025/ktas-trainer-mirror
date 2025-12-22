@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using FishNet.Object;
 using TriageTrainer.InteractableEntity;
 using TriageTrainer.Registry;
 using Unity.VisualScripting;
@@ -17,7 +18,7 @@ namespace TriageTrainer.Camera
   /// (카메라 홀더를 기준으로 하면, 관전자 모드 상황에서는 카메라만 다른 카메라 홀더에 붙으므로 적절히 표시되지 않음)
   /// (+ 이와 관련한 개선 구현 방안이 있으나 후순위로 변경: TODO.md 참고)
   /// </summary>
-  public class NearbyInteractablesDetector : MonoBehaviour
+  public class NearbyInteractablesDetector : NetworkBehaviour
   {
     [Header("Detection Settings")] [SerializeField, Min(.5f)]
     private float detectionRedius = 1.3f;
@@ -25,33 +26,38 @@ namespace TriageTrainer.Camera
     [SerializeField] private LayerMask interactionLayerMask = ~0;
     [SerializeField, Min(.02f)] private float queryInterval = .05f;
 
-    private readonly List<IInteractable> _nearby = new();
-    private readonly List<IInteractable> _scratch = new();
+    [SerializeField] private List<IInteractable> _nearby = new List<IInteractable>();
+    [SerializeField] private List<IInteractable> _scratch = new List<IInteractable>();
     private readonly Collider[] overlapColliderBuf = new Collider[32];
     private float nextQueryTime;
 
     public event Action<IReadOnlyList<IInteractable>> NearbyUpdated;
+
+    // must be allocated from outside to set position
+    [SerializeField] Transform detectBased;
     
     public IReadOnlyList<IInteractable> Nearby => _nearby;
     public bool InteractableNearbyExists => _nearby.Count > 0;
-
-    void Awake()
-    {
-      CurrentSessionPlayInfoRegistry.Register(this);
-    }
 
     void Update()
     {
       QueryNearbyAndUpdate();
     }
 
+    // must be allocated from outside to set position
+    public void RegisterDetectBased(Transform _transform)
+    {
+      detectBased = _transform;
+    }
+
     private void QueryNearbyAndUpdate()
     {
+      if (detectBased.IsUnityNull()) return;
       if (Time.time < nextQueryTime) return;
       nextQueryTime = Time.time + queryInterval;
       
       int count = Physics.OverlapSphereNonAlloc(
-        transform.position, 
+        detectBased.position, 
         detectionRedius,
         overlapColliderBuf,
         interactionLayerMask,
@@ -88,8 +94,9 @@ namespace TriageTrainer.Camera
 #if UNITY_EDITOR
     private void OnDrawGizmosSelected()
     {
+      if (detectBased.IsUnityNull()) return;
       Gizmos.color = Color.cyan;
-      Gizmos.DrawWireSphere(transform.position, detectionRedius);
+      Gizmos.DrawWireSphere(detectBased.position, detectionRedius);
     }
 #endif
   }

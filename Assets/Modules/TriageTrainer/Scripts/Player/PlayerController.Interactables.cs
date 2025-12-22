@@ -19,17 +19,16 @@ namespace TriageTrainer.Player
   /// </summary>
   public partial class PlayerController
   {
-    [Header("References")]
-    [SerializeField] private InteractableObjectHintUIController _interactableHintUI;
     [SerializeField] private NearbyInteractablesDetector _detector;
+    [SerializeField] private InteractableObjectHintUIController _interactableHintUI;
 
-    void Start_Interactables()
+    void OnStartClient_Interactables()
     {
-      if (_interactableHintUI == null)
-        _interactableHintUI = UIControlRegistry.Get<InteractableObjectHintUIController>();
-
-      if (_detector.IsUnityNull())
-        _detector = CurrentSessionPlayInfoRegistry.Get<NearbyInteractablesDetector>();
+      if (!IsOwner) return;
+      // PlayerController.Camera must be initialized first
+      _detector = _camControl.GetComponent<NearbyInteractablesDetector>();
+      _interactableHintUI = _camControl.GetComponent<InteractableObjectHintUIController>();
+      _detector.RegisterDetectBased(transform);
 
       if (_detector != null)
       {
@@ -48,6 +47,7 @@ namespace TriageTrainer.Player
 
     private void HandleNearbyUpdated(IReadOnlyList<IInteractable> nearby)
     {
+      Debug.Log($"[PlayerController] Nearby interactables updated: {nearby.Count} items found.");
       if (_interactableHintUI == null) return;
 
       _interactableHintUI.Clear();

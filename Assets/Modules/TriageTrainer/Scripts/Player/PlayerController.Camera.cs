@@ -2,6 +2,7 @@ using FishNet.Object;
 using TriageTrainer.Camera;
 using TriageTrainer.Registry;
 using TriageTrainer.Camera;
+using UnityEngine;
 using Unity.VisualScripting;
 
 namespace TriageTrainer.Player
@@ -17,7 +18,7 @@ namespace TriageTrainer.Player
   /// </summary>
   public partial class PlayerController : NetworkBehaviour
   {
-    private MainCameraController _camControl;
+    [SerializeField] private MainCameraController _camControl;
     void Awake_Camera()
     {
       // Camera attachment is deferred to owner check in OnStartClient to avoid other players overwriting
