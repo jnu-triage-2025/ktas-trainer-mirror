@@ -4,6 +4,8 @@ using System.Linq;
 using UnityEngine;
 using TriageTrainer.InteractableEntity;
 using TriageTrainer.UI;
+using TriageTrainer.Camera;
+using FishNet.Object;
 
 namespace TriageTrainer.Dialogue
 {
@@ -15,8 +17,12 @@ namespace TriageTrainer.Dialogue
   {
     #region Serialized Fields
 
+    private static DialogueController _instance;
+    public static DialogueController Instance => _instance;
+
     [Header("References")]
     [SerializeField] private DialoguePanelUIController _uiController;
+    [SerializeField] private MainCameraController _camController;
     [SerializeField] private InteractableObjectHintUIController _hintUIController;
 
     #endregion
@@ -39,7 +45,7 @@ namespace TriageTrainer.Dialogue
       WaitingForSelection
     }
 
-    private State _state = State.Inactive;
+    [SerializeField] private State _state = State.Inactive;
 
     #endregion
 
@@ -62,6 +68,29 @@ namespace TriageTrainer.Dialogue
     #endregion
 
     #region Unity Lifecycle
+
+    void Awake()
+    {
+      if (_instance != null && _instance != this)
+      {
+        Destroy(this.gameObject);
+        return;
+      }
+
+      _instance = this;
+    }
+
+    public void RegisterReferences
+    (
+      DialoguePanelUIController uiController,
+      MainCameraController camController,
+      InteractableObjectHintUIController hintUIController
+    )
+    {
+      _uiController = uiController;
+      _camController = camController;
+      _hintUIController = hintUIController;
+    }
 
     private void OnEnable()
     {
@@ -161,6 +190,12 @@ namespace TriageTrainer.Dialogue
         entryNode = session.GetFirstNode();
       }
 
+      // Push dialogue UI as overlay: unlock cursor, disable movement, and allow overlay-aware input handling.
+      if (_uiController != null && !UIOverlayStack.IsTop(_uiController))
+      {
+        UIOverlayStack.Push(_uiController);
+      }
+
       // Make sure the dialogue panel is visible before displaying content.
       _uiController?.ShowPanel();
       EnterDialogueMode();
@@ -179,6 +214,11 @@ namespace TriageTrainer.Dialogue
 
       _uiController?.Hide();
       ExitDialogueMode();
+
+      if (_uiController != null && UIOverlayStack.IsTop(_uiController))
+      {
+        UIOverlayStack.Pop();
+      }
 
       OnDialogueEnded?.Invoke();
     }

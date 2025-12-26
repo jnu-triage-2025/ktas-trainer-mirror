@@ -19,7 +19,7 @@ namespace TriageTrainer.Player
 
     [Header("Dialogue")]
     [Tooltip("씬에 배치된 DialoguePanelUIController 참조 (Inspector에서 할당하거나 태그/이름으로 검색)")]
-    [SerializeField] private DialoguePanelUIController _DialoguePanelUIController;
+    [SerializeField] private DialoguePanelUIController _dialoguePanelUIController;
 
     void OnStartClient_Interactables()
     {
@@ -38,15 +38,15 @@ namespace TriageTrainer.Player
       }
 
       // DialoguePanelUIController 찾기 (Inspector에서 할당되지 않은 경우)
-      if (_DialoguePanelUIController.IsUnityNull())
+      if (_dialoguePanelUIController.IsUnityNull())
       {
-        _DialoguePanelUIController = FindDialoguePanelUIController();
+        _dialoguePanelUIController = FindDialoguePanelUIController();
       }
 
       // DialoguePanelUIController에 InteractableHintUI 연결
-      if (_DialoguePanelUIController != null && _interactableHintUI != null)
+      if (_dialoguePanelUIController != null && _interactableHintUI != null)
       {
-        _DialoguePanelUIController.SetInteractableHintUI(_interactableHintUI);
+        _dialoguePanelUIController.SetInteractableHintUI(_interactableHintUI);
       }
     }
 
@@ -108,9 +108,9 @@ namespace TriageTrainer.Player
       // 다이얼로그 모드에서는 DialoguePanelUIController를 통해 선택 처리
       if (_interactableHintUI != null && _interactableHintUI.IsDialogueMode)
       {
-        if (_DialoguePanelUIController != null)
+        if (_dialoguePanelUIController != null)
         {
-          _DialoguePanelUIController.TrySelectCurrentOption();
+          _dialoguePanelUIController.TrySelectCurrentOption();
         }
         return;
       }

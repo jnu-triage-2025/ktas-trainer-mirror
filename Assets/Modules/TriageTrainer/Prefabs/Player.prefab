@@ -75,18 +75,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f477b65c256f4cdf871532cc731c1dac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 3332462076176395838}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 3332462076176395838}
+  _camControl: {fileID: 0}
+  _gamemode: 0
+  _isSpectateFollowing: 0
+  _spectateFollowTarget: {fileID: 0}
+  _hotbarUI: {fileID: 0}
+  _keyMovingRunning: 306
+  _keyToggleInventory: 101
+  _keySwitchCameraViewMode: 112
+  _keyOpenEscMenu: 27
+  _keyToggleChat: 116
+  _keyInteractInteractableObject: 102
+  _keyEscape: 27
+  _keySpectatorFlyDown: 304
+  _keyHandlingLockedByChatUI: 0
+  _keyHandlingLockedByInventoryUI: 0
+  _keyHandlingLockedByDialogueUI: 0
+  _detector: {fileID: 0}
+  _interactableHintUI: {fileID: 0}
+  _DialoguePanelUIController: {fileID: 0}
+  _inventoryUI: {fileID: 0}
+  _slots: []
   _walkingSpeed: 7.5
   _runningSpeed: 11.5
   _jumpSpeed: 8
   _gravity: 20
+  _spectatorMoveSpeed: 10
+  _spectatorVerticalSpeed: 10
   _rotatingSpeed: 2
   _cameraHolderPositionYOffset: 1
   _minLookXAngle: -45
   _maxLookXAngle: 45
-  _runningKey: 306
   _moveDirection: {x: 0, y: 0, z: 0}
   _rotationX: 0
   canMove: 1
@@ -94,6 +116,8 @@ MonoBehaviour:
   _isCursorLocked: 0
   _characterController: {fileID: 0}
   _cameraHolderTransform: {fileID: 0}
+  _spectatorAlpha: 0.5
+  _spectatorLayerName: Spectator
 --- !u!114 &3332462076176395838
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -112,7 +136,10 @@ MonoBehaviour:
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours: []
+  NetworkBehaviours:
+  - {fileID: 3429170387630489083}
+  - {fileID: 4330671119527608109}
+  - {fileID: 1193226015883832250}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -123,7 +150,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: 0
+  _initializedTimestamp: -8584348706467528948
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -138,15 +165,15 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 65535
+  <PrefabId>k__BackingField: 2
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 4441621910902256851
   SceneId: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
-    Rotation: {x: 0, y: 0, z: 0, w: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    IsValid: 0
+    Rotation: {x: 0, y: 0, z: 0, w: 1}
+    Scale: {x: 1, y: 1, z: 1}
+    IsValid: 1
 --- !u!114 &4330671119527608109
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -159,9 +186,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: FishNet.Runtime::FishNet.Component.Transforming.NetworkTransform
-  _componentIndexCache: 255
+  _componentIndexCache: 1
   _addedNetworkObject: {fileID: 3332462076176395838}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 3332462076176395838}
   _componentConfiguration: 0
   _synchronizeParent: 0
   _packing:
@@ -218,11 +245,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23e388920944473c9761a91b0446f0e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scripts.Camera.PlayerInteractiveDetector
+  _componentIndexCache: 2
+  _addedNetworkObject: {fileID: 3332462076176395838}
+  _networkObjectCache: {fileID: 3332462076176395838}
   detectionRedius: 6
   interactionLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
   queryInterval: 0.05
+  detectBased: {fileID: 0}
 --- !u!1 &7085176929477758218
 GameObject:
   m_ObjectHideFlags: 0

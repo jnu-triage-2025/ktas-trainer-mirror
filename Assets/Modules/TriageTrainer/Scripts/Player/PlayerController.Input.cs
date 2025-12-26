@@ -24,12 +24,14 @@ namespace TriageTrainer.Player
      */
     [SerializeField] private bool _keyHandlingLockedByChatUI = false;
     [SerializeField] private bool _keyHandlingLockedByInventoryUI = false;
-    private bool _KeyHandlingLocked => _keyHandlingLockedByChatUI || _keyHandlingLockedByInventoryUI;
+    [SerializeField] private bool _keyHandlingLockedByDialogueUI = false;
+    private bool _KeyHandlingLocked => _keyHandlingLockedByChatUI || _keyHandlingLockedByInventoryUI || _keyHandlingLockedByDialogueUI;
 
     void Start_Input()
     {
       RegisterOverlayLock(UIControlRegistry.Get<ChatUIController>(), locked => _keyHandlingLockedByChatUI = locked);
       RegisterOverlayLock(UIControlRegistry.Get<InventoryUIController>(), locked => _keyHandlingLockedByInventoryUI = locked);
+      RegisterOverlayLock(UIControlRegistry.Get<DialoguePanelUIController>(), locked => _keyHandlingLockedByDialogueUI = locked);
     }
 
     private void RegisterOverlayLock(IUIOverlay overlay, Action<bool> setLocked)
@@ -44,6 +46,8 @@ namespace TriageTrainer.Player
     {
       HandleEscape();
       HandleToggleChat();
+      HandleDialogueInput();
+
       if (_KeyHandlingLocked) return;
 
       if (IsSpectator)
@@ -144,6 +148,22 @@ namespace TriageTrainer.Player
       // Selection using mouse wheel
       if (_detector.InteractableNearbyExists) return;
       HandleHotbarInputMouseWheel();
+    }
+
+    private void HandleDialogueInput()
+    {
+      if (_dialoguePanelUIController.IsUnityNull()) return;
+      if (!UIOverlayStack.IsTop(_dialoguePanelUIController)) return;
+
+      if (
+        Input.GetKeyDown(_keyInteractInteractableObject) ||
+        Input.GetMouseButtonDown(0)
+      )
+      {
+        _dialoguePanelUIController.TrySelectCurrentOption();
+      }
+
+      HandleInteractablesSelectionInput();
     }
   }
 }

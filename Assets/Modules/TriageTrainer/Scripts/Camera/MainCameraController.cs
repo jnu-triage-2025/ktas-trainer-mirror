@@ -50,13 +50,14 @@ namespace TriageTrainer.Camera
 
     void Awake()
     {
-      CurrentSessionPlayInfoRegistry.Register(this);
-
       if (_instance != null && _instance != this)
       {
         Destroy(this.gameObject);
         return;
       }
+
+      _instance = this;
+      CurrentSessionPlayInfoRegistry.Register(this);
     }
 
     void Start()

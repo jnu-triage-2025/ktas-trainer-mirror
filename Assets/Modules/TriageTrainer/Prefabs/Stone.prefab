@@ -132,7 +132,8 @@ MonoBehaviour:
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours: []
+  NetworkBehaviours:
+  - {fileID: 4777632959028820417}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -143,7 +144,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: 0
+  _initializedTimestamp: -8584348706467528948
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -158,15 +159,15 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 65535
+  <PrefabId>k__BackingField: 15
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 17981138271160646609
   SceneId: 0
   SerializedTransformProperties:
-    Position: {x: 0, y: 0, z: 0}
-    Rotation: {x: 0, y: 0, z: 0, w: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    IsValid: 0
+    Position: {x: 2.4, y: 0.85, z: -0.45}
+    Rotation: {x: 0, y: 0.3855034, z: 0, w: 0.9227064}
+    Scale: {x: 0.2, y: 0.2, z: 0.3}
+    IsValid: 1
 --- !u!54 &8487261724365643408
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -206,15 +207,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d2a96766688f402897e4c08aeb96a0a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GroundedItem
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 3258920315798757537}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 3258920315798757537}
   _itemBaseModel: {fileID: 11400000, guid: 4a42a57a077034cb4bfc84db417e855f, type: 2}
   _itemInstanceModel:
     identifier: 
     displayName: 
-    itemTextureIdentifier: 
-    count: 0
+    _itemTextureIdentifier: 
+    currCount: 0
+    maxCount: 0
     hasDurability: 0
     currentDurability: 0
+    _itemTexture: {fileID: 0}
   _itemIdentifier: 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TriageTrainer.InteractableEntity;
 using TriageTrainer.Dialogue;
 using TriageTrainer.UIDocuments;
+using TriageTrainer.Registry;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
@@ -15,7 +16,7 @@ namespace TriageTrainer.UI
   /// InteractableObjectHintUIController와 연동하여 대화 선택지를 표시합니다.
   /// </summary>
   [RequireComponent(typeof(UIDocument))]
-  public class DialoguePanelUIController : MonoBehaviour
+  public class DialoguePanelUIController : UIControllerABC, IUIOverlay
   {
     #region Serialized Fields
 
@@ -38,15 +39,15 @@ namespace TriageTrainer.UI
     private VisualElement _portraitImage;
     private VisualElement _waitingIndicator;
 
-    private InteractableObjectHintUIController _interactableHintUI;
-    private DialogueRunner _currentRunner;
-    private DialogueNodeData _currentNode;
+    [SerializeField] private InteractableObjectHintUIController _interactableHintUI;
+    [SerializeField] private DialogueRunner _currentRunner;
+    [SerializeField] private DialogueNodeData _currentNode;
 
-    private bool _isTyping;
-    private bool _isWaitingForInput;
-    private string _fullText;
-    private int _currentCharIndex;
-    private float _lastTypeTime;
+    [SerializeField] private bool _isTyping;
+    [SerializeField] private bool _isWaitingForInput;
+    [SerializeField] private string _fullText;
+    [SerializeField] private int _currentCharIndex;
+    [SerializeField] private float _lastTypeTime;
 
     // 현재 선택지들을 IInteractable로 래핑
     private List<DialogueSelectionInteractable> _currentSelections = new();
@@ -69,6 +70,9 @@ namespace TriageTrainer.UI
     /// 다음 진행이 요청되었을 때 발생 (선택지 없이 진행할 때)
     /// </summary>
     public UnityEvent OnAdvanceRequested = new();
+
+    public event Action OverlayPushed;
+    public event Action OverlayPopped;
 
     #endregion
 
@@ -98,8 +102,10 @@ namespace TriageTrainer.UI
 
     #region Unity Lifecycle
 
-    private void Awake()
+    protected virtual void Awake()
     {
+      base.Awake();
+
       if (_uiDocument == null)
         _uiDocument = GetComponent<UIDocument>();
 
@@ -161,6 +167,7 @@ namespace TriageTrainer.UI
       if (_dialogueElement != null)
       {
         _dialogueElement.Hide();
+        _dialogueElement.OnDialogueClicked += HandleDialogueClicked;
       }
     }
 
@@ -193,6 +200,10 @@ namespace TriageTrainer.UI
         ShowPanel();
       }
 
+      // Treat dialogue UI as an overlay so player input/camera lock is paused and cursor is free.
+      if (!UIOverlayStack.IsTop(this))
+        UIOverlayStack.Push(this);
+
       OnDialogueStarted?.Invoke();
       Debug.Log("[DialoguePanelUI] Dialogue started");
     }
@@ -221,6 +232,10 @@ namespace TriageTrainer.UI
 
       OnDialogueEnded?.Invoke();
       Debug.Log("[DialoguePanelUI] Dialogue ended");
+
+      // Remove overlay when dialogue ends.
+      if (UIOverlayStack.IsTop(this))
+        UIOverlayStack.Pop();
     }
 
     /// <summary>
@@ -293,6 +308,7 @@ namespace TriageTrainer.UI
       // InteractableHintUI에 선택지 설정
       if (_interactableHintUI != null && _interactableHintUI.IsDialogueMode)
       {
+        Debug.Log($"[DialoguePanelUI] Setting {_currentSelections.Count} dialogue selections in InteractableHintUI");
         var interactables = new List<IInteractable>(_currentSelections);
         _interactableHintUI.SetDialogueSelections(interactables);
       }
@@ -504,7 +520,6 @@ namespace TriageTrainer.UI
       if (_dialoguePanel != null)
       {
         _dialoguePanel.style.display = DisplayStyle.Flex;
-        Debug.Log("[DialoguePanelUI] Show() set display to Flex");
       }
       else
       {
@@ -533,6 +548,34 @@ namespace TriageTrainer.UI
       }
 
       _dialogueElement?.Hide();
+    }
+
+    // IUIOverlay
+
+    public void OnOverlayPushed()
+    {
+      var player = CurrentSessionPlayInfoRegistry.Get<Player.PlayerController>();
+      Debug.Log($"[DialoguePanelUI] OnOverlayPushed: PlayerController found: {player != null}");
+      player?.EnterUIOverlayMode();
+      Debug.Log("[DialoguePanelUI] OnOverlayPushed: Entered UI overlay mode for player");
+      OverlayPushed?.Invoke();
+    }
+
+    public void OnOverlayPopped()
+    {
+      var player = CurrentSessionPlayInfoRegistry.Get<Player.PlayerController>();
+      player?.ExitUIOverlayMode();
+      OverlayPopped?.Invoke();
+    }
+
+    #endregion
+
+    #region DialogueElement Interaction
+
+    private void HandleDialogueClicked()
+    {
+      // Clicking on the dialogue area should behave like advancing/confirming.
+      TrySelectCurrentOption();
     }
 
     /// <summary>

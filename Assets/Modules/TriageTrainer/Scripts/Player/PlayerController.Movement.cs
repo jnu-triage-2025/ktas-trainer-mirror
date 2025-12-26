@@ -145,6 +145,7 @@ namespace TriageTrainer.Player
 
     public void EnterUIOverlayMode()
     {
+      Debug.Log($"[PlayerController] Entering UI overlay mode:");
       UnlockCursor();
       canMove = false;
     }

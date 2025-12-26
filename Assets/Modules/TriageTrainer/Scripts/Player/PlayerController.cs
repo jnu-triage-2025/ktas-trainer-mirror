@@ -46,6 +46,7 @@ namespace TriageTrainer.Player
       OnStartClient_Network();
       OnStartClient_Camera();
       OnStartClient_Interactables();
+      OnStartClient_Dialogue();
     }
   }
 }

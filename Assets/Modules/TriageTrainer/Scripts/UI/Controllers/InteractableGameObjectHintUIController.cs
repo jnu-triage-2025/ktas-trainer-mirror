@@ -13,12 +13,6 @@ using System;
 
 namespace TriageTrainer.UI
 {
-  public enum InteractableHintUIMode
-  {
-    Normal,     // 일반 모드: 주변 상호작용 객체 표시
-    Dialogue    // 다이얼로그 모드: 대화 선택지만 표시
-  }
-
   /// <summary>
   /// InteractableObjectHintUIController는 InteractableObjectHintUI를 사용하는 데 필요한
   /// 컨트롤을 제공합니다. PlayerController등에서 이 컨트롤을 제어하는 것이 의도됩니다.
@@ -219,8 +213,6 @@ namespace TriageTrainer.UI
 
       RefreshUI();
       OnModeChanged?.Invoke(_currentMode);
-
-      Debug.Log("[InteractableHintUI] Entered dialogue mode");
     }
 
     /// <summary>
@@ -260,6 +252,7 @@ namespace TriageTrainer.UI
     /// <param name="selections">표시할 선택지 목록</param>
     public void SetDialogueSelections(List<IInteractable> selections)
     {
+      Debug.Log($"[InteractableHintUI] SetDialogueSelections called with {selections?.Count ?? 0} selections");
       if (_currentMode != InteractableHintUIMode.Dialogue)
       {
         Debug.LogWarning("[InteractableHintUI] SetDialogueSelections called but not in dialogue mode");
