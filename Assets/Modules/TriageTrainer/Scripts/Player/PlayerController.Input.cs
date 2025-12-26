@@ -155,6 +155,8 @@ namespace TriageTrainer.Player
       if (_dialoguePanelUIController.IsUnityNull()) return;
       if (!UIOverlayStack.IsTop(_dialoguePanelUIController)) return;
 
+      // TODO: 더 고려할 사항:
+      // 다이얼로그를 빠르게 넘기려고 하다가 첫 번째 선택지가 선택됨
       if (
         Input.GetKeyDown(_keyInteractInteractableObject) ||
         Input.GetMouseButtonDown(0)
