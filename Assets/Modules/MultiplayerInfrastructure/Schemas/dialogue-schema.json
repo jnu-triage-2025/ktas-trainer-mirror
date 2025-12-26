@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://triage-trainer/schemas/dialogue-schema.json",
+  "title": "MultiplayerInfrastructure Dialogue Schema",
+  "description": "트리아지 트레이너 다이얼로그 데이터 스키마",
+  "type": "object",
+  "required": ["dialogueId", "dialogues"],
+  "properties": {
+    "dialogueId": {
+      "type": "string",
+      "description": "대화 시나리오의 고유 식별자",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "metadata": {
+      "$ref": "#/definitions/Metadata"
+    },
+    "dialogues": {
+      "type": "array",
+      "description": "대화 노드 목록",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/DialogueNode"
+      }
+    }
+  },
+  "definitions": {
+    "Metadata": {
+      "type": "object",
+      "properties": {
+        "author": {
+          "type": "string",
+          "description": "작성자"
+        },
+        "version": {
+          "type": "string",
+          "description": "버전",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "description": {
+          "type": "string",
+          "description": "시나리오 설명"
+        }
+      }
+    },
+    "DialogueNode": {
+      "type": "object",
+      "required": ["identifier", "dialogueText"],
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "description": "노드 고유 ID"
+        },
+        "speakerName": {
+          "type": "string",
+          "description": "화자 이름"
+        },
+        "dialogueText": {
+          "type": "string",
+          "description": "대사 내용"
+        },
+        "nextDialogueIdentifier": {
+          "type": ["string", "null"],
+          "description": "다음 노드 ID (null이면 종료 또는 선택지 사용)"
+        },
+        "customTypingSpeed": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 1.0,
+          "default": 0.05,
+          "description": "타이핑 속도 (초 단위)"
+        },
+        "selections": {
+          "type": "array",
+          "description": "선택지 목록",
+          "items": {
+            "$ref": "#/definitions/SelectionNode"
+          }
+        }
+      }
+    },
+    "SelectionNode": {
+      "type": "object",
+      "required": ["identifier", "displayText"],
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "description": "선택지 고유 ID"
+        },
+        "displayText": {
+          "type": "string",
+          "description": "선택지에 표시될 텍스트"
+        },
+        "nextDialogueIdentifier": {
+          "type": ["string", "null"],
+          "description": "선택 시 이동할 노드 ID"
+        }
+      }
+    }
+  }
+}

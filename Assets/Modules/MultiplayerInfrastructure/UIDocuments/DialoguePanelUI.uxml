@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements"
+         xmlns:mpinfra="MultiplayerInfrastructure.UIDocuments"
+>
+  <Style src="DialogueElement.uss" />
+  <mpinfra:DialogueElement name="dialogue-element"
+                   Title=""
+                   SpeakerName=""
+                   DialogueText=""
+                   EnableRichText="true"
+                   HighlightKeywords="true" />
+</ui:UXML>

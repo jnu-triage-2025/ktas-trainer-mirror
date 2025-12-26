@@ -1,0 +1,27 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Modules/MultiplayerInfrastructure/UIDocuments/InteractableObjectHintUI.uss" />
+    <ui:ScrollView name="interactable-scroll"
+                   class="interactable-scroll"
+                   horizontal-scroller-visibility="Hidden"
+                   vertical-scroller-visibility="Auto"
+                   >
+        <!--<ui:VisualElement class="interactable-hint">
+            <ui:VisualElement class="interact-key-hint">
+                <ui:Label text="F" class="interact-key-text" />
+            </ui:VisualElement>
+            <ui:VisualElement class="interactable-content-wrapper">
+                <ui:VisualElement class="interactable-icon-holder" />
+                <ui:Label text="asdf" class="interactable-content-text" />
+            </ui:VisualElement>
+        </ui:VisualElement>-->
+        <!--<ui:VisualElement class="interactable-hint selected">
+            <ui:VisualElement class="interact-key-hint">
+                <ui:Label text="F" class="interact-key-text" />
+            </ui:VisualElement>
+            <ui:VisualElement class="interactable-content-wrapper">
+                <ui:VisualElement class="interactable-icon-holder" />
+                <ui:Label text="asdf" class="interactable-content-text" />
+            </ui:VisualElement>
+        </ui:VisualElement>-->
+    </ui:ScrollView>
+</ui:UXML>
