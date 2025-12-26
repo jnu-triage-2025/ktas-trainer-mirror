@@ -1,0 +1,64 @@
+{
+  "dialogueId": "npc_nurse_001",
+  "metadata": {
+    "author": "GameDesigner",
+    "version": "1.0.0",
+    "description": "응급실 간호사 첫 대화"
+  },
+  "dialogues": [
+    {
+      "identifier": "intro",
+      "speakerName": "간호사 김서연",
+      "dialogueText": "안녕하세요, 선생님. 오늘 처음 오셨군요.",
+      "nextDialogueIdentifier": "ask_help",
+      "customTypingSpeed": 0.05
+    },
+    {
+      "identifier": "ask_help",
+      "speakerName": "간호사 김서연",
+      "dialogueText": "무엇을 도와드릴까요?",
+      "nextDialogueIdentifier": null,
+      "selections": [
+        {
+          "identifier": "sel_patient_info",
+          "displayText": "환자 정보를 알려주세요.",
+          "nextDialogueIdentifier": "patient_info"
+        },
+        {
+          "identifier": "sel_triage_guide",
+          "displayText": "트리아지 절차가 궁금합니다.",
+          "nextDialogueIdentifier": "triage_guide"
+        },
+        {
+          "identifier": "sel_goodbye",
+          "displayText": "아무것도 아닙니다.",
+          "nextDialogueIdentifier": "goodbye"
+        }
+      ]
+    },
+    {
+      "identifier": "patient_info",
+      "speakerName": "간호사 김서연",
+      "dialogueText": "현재 대기 중인 환자는 3명입니다. 자세한 정보는 환자 차트를 확인해주세요.",
+      "nextDialogueIdentifier": null
+    },
+    {
+      "identifier": "triage_guide",
+      "speakerName": "간호사 김서연",
+      "dialogueText": "트리아지는 환자의 중증도에 따라 치료 우선순위를 결정하는 과정입니다.",
+      "nextDialogueIdentifier": "triage_guide_2"
+    },
+    {
+      "identifier": "triage_guide_2",
+      "speakerName": "간호사 김서연",
+      "dialogueText": "1단계 즉시, 2단계 긴급, 3단계 응급, 4단계 준응급, 5단계 비응급으로 분류됩니다.",
+      "nextDialogueIdentifier": null
+    },
+    {
+      "identifier": "goodbye",
+      "speakerName": "간호사 김서연",
+      "dialogueText": "네, 필요하시면 언제든 말씀해주세요.",
+      "nextDialogueIdentifier": null
+    }
+  ]
+}

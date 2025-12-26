@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using TriageTrainer.Camera;
+using TriageTrainer.Dialogue;
 using TriageTrainer.InteractableEntity;
 using TriageTrainer.Registry;
 using TriageTrainer.UI;
@@ -10,24 +11,24 @@ namespace TriageTrainer.Player
 {
   /// <summary>
   /// Interactables과의 상호작용을 정의합니다.
-  ///
-  /// 의존:
-  /// - 주위의 Interactable 객체를 감지:
-  ///     - InteractableDetector(카메라를 기준으로 상호작용하므로, Camera 디렉토리에 배치됨)
-  /// - Interactable 감지 결과를 UI에 반영:
-  ///     - InteractableObjectHintUIController
   /// </summary>
   public partial class PlayerController
   {
     [SerializeField] private NearbyInteractablesDetector _detector;
     [SerializeField] private InteractableObjectHintUIController _interactableHintUI;
 
+    [Header("Dialogue")]
+    [Tooltip("씬에 배치된 DialoguePanelUIController 참조 (Inspector에서 할당하거나 태그/이름으로 검색)")]
+    [SerializeField] private DialoguePanelUIController _DialoguePanelUIController;
+
     void OnStartClient_Interactables()
     {
       if (!IsOwner) return;
-      // PlayerController.Camera must be initialized first
+
+      // Camera components
       _detector = _camControl.GetComponent<NearbyInteractablesDetector>();
       _interactableHintUI = _camControl.GetComponent<InteractableObjectHintUIController>();
+
       _detector.RegisterDetectBased(transform);
 
       if (_detector != null)
@@ -35,6 +36,53 @@ namespace TriageTrainer.Player
         _detector.NearbyUpdated += HandleNearbyUpdated;
         HandleNearbyUpdated(_detector.Nearby);
       }
+
+      // DialoguePanelUIController 찾기 (Inspector에서 할당되지 않은 경우)
+      if (_DialoguePanelUIController.IsUnityNull())
+      {
+        _DialoguePanelUIController = FindDialoguePanelUIController();
+      }
+
+      // DialoguePanelUIController에 InteractableHintUI 연결
+      if (_DialoguePanelUIController != null && _interactableHintUI != null)
+      {
+        _DialoguePanelUIController.SetInteractableHintUI(_interactableHintUI);
+      }
+    }
+
+    /// <summary>
+    /// DialoguePanelUIController를 씬에서 찾습니다.
+    /// Inspector에서 직접 할당하는 것을 권장합니다.
+    /// </summary>
+    private DialoguePanelUIController FindDialoguePanelUIController()
+    {
+      GameObject dialogueGO;
+      // 방법 1: 태그로 찾기
+      //var dialogueGO = GameObject.FindGameObjectWithTag("DialoguePanelUI");
+      //if (dialogueGO != null)
+      //{
+      //  var controller = dialogueGO.GetComponent<DialoguePanelUIController>();
+      //  if (controller != null) return controller;
+      //}
+
+      // 방법 2: 이름으로 찾기
+      dialogueGO = GameObject.Find("DialoguePanelUI");
+      if (dialogueGO != null)
+      {
+        var controller = dialogueGO.GetComponent<DialoguePanelUIController>();
+        if (controller != null) return controller;
+      }
+
+      // 방법 3: FindObjectOfType (성능상 권장하지 않음)
+      var found = FindObjectOfType<DialoguePanelUIController>();
+      if (found != null)
+      {
+        Debug.LogWarning("[PlayerController] DialoguePanelUIController found via FindObjectOfType. Consider assigning it directly in Inspector.");
+        return found;
+      }
+
+      Debug.LogWarning("[PlayerController] DialoguePanelUIController not found in scene.");
+      return null;
     }
 
     void OnDestroy()
@@ -50,17 +98,24 @@ namespace TriageTrainer.Player
       Debug.Log($"[PlayerController] Nearby interactables updated: {nearby.Count} items found.");
       if (_interactableHintUI == null) return;
 
-      _interactableHintUI.Clear();
-
-      if (nearby == null) return;
-
-      for (int i = 0; i < nearby.Count; i++)
-        _interactableHintUI.Add(nearby[i]);
+      // UpdateInteractables를 사용하여 모드에 따라 적절히 처리
+      _interactableHintUI.UpdateInteractables(nearby);
     }
 
     // called from PlayerController.Input
     private void TryInteractWithSelection()
     {
+      // 다이얼로그 모드에서는 DialoguePanelUIController를 통해 선택 처리
+      if (_interactableHintUI != null && _interactableHintUI.IsDialogueMode)
+      {
+        if (_DialoguePanelUIController != null)
+        {
+          _DialoguePanelUIController.TrySelectCurrentOption();
+        }
+        return;
+      }
+
+      // 일반 모드에서는 기존 로직
       var interactable = _interactableHintUI?.GetSelected();
       if (interactable == null) return;
 
