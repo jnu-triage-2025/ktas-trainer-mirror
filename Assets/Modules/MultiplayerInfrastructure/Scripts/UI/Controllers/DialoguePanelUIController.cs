@@ -322,7 +322,7 @@ namespace MultiplayerInfrastructure.UI
       }
 
       // InteractableHintUI에 선택지 설정
-      if (_interactableHintUI != null && _interactableHintUI.IsDialogueMode)
+      if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.IsDialogueMode)
       {
         Debug.Log($"[DialoguePanelUI] Setting {_currentSelections.Count} scenario selections in InteractableHintUI");
         var interactables = new List<IInteractable>(_currentSelections);
@@ -346,7 +346,7 @@ namespace MultiplayerInfrastructure.UI
       }
 
       // 선택지가 있으면 현재 선택된 것을 실행
-      if (_interactableHintUI != null && _interactableHintUI.HasDialogueSelection())
+      if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.HasDialogueSelection())
       {
         _interactableHintUI.ExecuteSelectedDialogueSelection(null);
         return;
@@ -357,7 +357,7 @@ namespace MultiplayerInfrastructure.UI
       {
         OnAdvanceRequested?.Invoke();
 
-        if (_currentController != null)
+        if (!_currentController.IsUnityNull())
         {
           _currentController.Advance();
         }
@@ -394,7 +394,7 @@ namespace MultiplayerInfrastructure.UI
       ClearSelections();
 
       // ScenarioController에 선택 전달
-      if (_currentController != null)
+      if (!_currentController.IsUnityNull())
       {
         _currentController.SelectOption(index);
       }

@@ -290,7 +290,7 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingDialogue;
 
-      if (_uiController != null)
+      if (!_uiController.IsUnityNull())
       {
         _uiController.DisplayDialogue(node.SpeakerName, node.DialogueContent, node.PortraitSpriteIdentifier);
       }
@@ -305,7 +305,7 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingChoice;
 
-      if (_uiController != null)
+      if (!_uiController.IsUnityNull())
       {
         _uiController.DisplayChoice(node.SpeakerName, node.DialogueContent, node.PortraitSpriteIdentifier, node.Options);
       }
