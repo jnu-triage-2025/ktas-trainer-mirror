@@ -122,7 +122,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void CacheVisualReferences()
     {
-      if (_uiDocument == null)
+      if (_uiDocument.IsUnityNull())
         _uiDocument = GetComponent<UIDocument>();
 
       _scrollView = _uiDocument?.rootVisualElement?.Q<ScrollView>("interactable-scroll");

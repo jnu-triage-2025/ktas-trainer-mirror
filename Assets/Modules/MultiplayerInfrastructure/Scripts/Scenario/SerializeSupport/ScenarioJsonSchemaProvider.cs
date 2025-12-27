@@ -3,15 +3,8 @@ using UnityEngine;
 
 namespace MultiplayerInfrastructure.Scenario
 {
-  /// <summary>
-  /// 시나리오 JSON 스키마(TextAsset)를 로드하고 캐시합니다.
-  /// </summary>
   internal static class ScenarioJsonSchemaProvider
   {
-    /// <summary>
-    /// Resources 폴더 기준 경로 (확장자 제외).
-    /// 예: Assets/Resources/Scenario/scenario_schema.json → "Scenario/scenario_schema"
-    /// </summary>
     private const string SchemaResourcePath = "Schema/scenario.schema";
 
     private static string _cachedSchemaText;

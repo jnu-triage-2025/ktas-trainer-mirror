@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Camera;
-using MultiplayerInfrastructure.Dialogue;
 using MultiplayerInfrastructure.InteractableEntity;
-using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using Unity.VisualScripting;
 using UnityEngine;

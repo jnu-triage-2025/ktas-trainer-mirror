@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
-using MultiplayerInfrastructure.Dialogue;
+using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UIDocuments;
 using MultiplayerInfrastructure.Registry;
 using Unity.VisualScripting;
@@ -12,8 +12,8 @@ using UnityEngine.UIElements;
 namespace MultiplayerInfrastructure.UI
 {
   /// <summary>
-  /// 대화 UI 패널을 제어하는 컨트롤러.
-  /// InteractableObjectHintUIController와 연동하여 대화 선택지를 표시합니다.
+  /// 시나리오 UI 패널을 제어하는 컨트롤러.
+  /// InteractableObjectHintUIController와 연동하여 시나리오 선택지를 표시합니다.
   /// </summary>
   [RequireComponent(typeof(UIDocument))]
   public class DialoguePanelUIController : UIControllerABC, IUIOverlay
@@ -25,7 +25,7 @@ namespace MultiplayerInfrastructure.UI
 
     [Header("Settings")]
     [SerializeField] private float _typingSpeed = 0.05f;
-    [SerializeField] private bool _autoShowOnDialogueStart = true;
+    [SerializeField] private bool _autoShowOnScenarioStart = true;
 
     #endregion
 
@@ -40,8 +40,8 @@ namespace MultiplayerInfrastructure.UI
     private VisualElement _waitingIndicator;
 
     [SerializeField] private InteractableObjectHintUIController _interactableHintUI;
-    [SerializeField] private DialogueRunner _currentRunner;
-    [SerializeField] private DialogueNodeData _currentNode;
+    [SerializeField] private ScenarioController _currentController;
+    [SerializeField] private IScenarioNode _currentNode;
 
     [SerializeField] private bool _isTyping;
     [SerializeField] private bool _isWaitingForInput;
@@ -50,15 +50,15 @@ namespace MultiplayerInfrastructure.UI
     [SerializeField] private float _lastTypeTime;
 
     // 현재 선택지들을 IInteractable로 래핑
-    private List<DialogueSelectionInteractable> _currentSelections = new();
+    private List<ScenarioSelectionInteractable> _currentSelections = new();
 
     #endregion
 
     #region Events
 
-    public UnityEvent OnDialogueStarted = new();
-    public UnityEvent OnDialogueEnded = new();
-    public UnityEvent<DialogueNodeData> OnNodeDisplayed = new();
+    public UnityEvent OnScenarioStarted = new();
+    public UnityEvent OnScenarioEnded = new();
+    public UnityEvent<IScenarioNode> OnNodeDisplayed = new();
     public UnityEvent<int> OnSelectionMade = new();
 
     /// <summary>
@@ -79,9 +79,9 @@ namespace MultiplayerInfrastructure.UI
     #region Properties
 
     /// <summary>
-    /// 대화가 진행 중인지 여부
+    /// 시나리오가 진행 중인지 여부
     /// </summary>
-    public bool IsDialogueActive => _currentRunner != null;
+    public bool IsScenarioActive => _currentController != null;
 
     /// <summary>
     /// 현재 텍스트 타이핑 중인지 여부
@@ -131,7 +131,7 @@ namespace MultiplayerInfrastructure.UI
 
     /// <summary>
     /// InteractableHintUI 컨트롤러를 설정합니다.
-    /// PlayerController에서 호출됩니다.
+    /// ScenarioController에서 호출됩니다.
     /// </summary>
     public void SetInteractableHintUI(InteractableObjectHintUIController hintUI)
     {
@@ -173,47 +173,47 @@ namespace MultiplayerInfrastructure.UI
 
     #endregion
 
-    #region Dialogue Control
+    #region Scenario Control
 
     /// <summary>
-    /// 대화를 시작합니다.
+    /// 시나리오 시작
     /// </summary>
-    public void StartDialogue(DialogueRunner runner)
+    public void StartScenario(ScenarioController controller)
     {
-      if (runner == null)
+      if (controller.IsUnityNull())
       {
-        Debug.LogError("[DialoguePanelUI] Cannot start dialogue with null runner");
+        Debug.LogError("[DialoguePanelUI] Cannot start scenario with null controller");
         return;
       }
 
-      _currentRunner = runner;
+      _currentController = controller;
 
-      // InteractableHintUI를 대화 모드로 전환
-      if (_interactableHintUI != null)
+      // InteractableHintUI를 시나리오 모드로 전환
+      if (!_interactableHintUI.IsUnityNull())
       {
         _interactableHintUI.EnterDialogueMode();
       }
 
       // 패널 표시
-      if (_autoShowOnDialogueStart)
+      if (_autoShowOnScenarioStart)
       {
         ShowPanel();
       }
 
-      // Treat dialogue UI as an overlay so player input/camera lock is paused and cursor is free.
+      // Treat scenario UI as an overlay so player input/camera lock is paused and cursor is free.
       if (!UIOverlayStack.IsTop(this))
         UIOverlayStack.Push(this);
 
-      OnDialogueStarted?.Invoke();
-      Debug.Log("[DialoguePanelUI] Dialogue started");
+      OnScenarioStarted?.Invoke();
+      Debug.Log("[DialoguePanelUI] Scenario started");
     }
 
     /// <summary>
-    /// 대화를 종료합니다.
+    /// 시나리오 종료
     /// </summary>
-    public void EndDialogue()
+    public void EndScenario()
     {
-      _currentRunner = null;
+      _currentController = null;
       _currentNode = null;
       _isTyping = false;
       _isWaitingForInput = false;
@@ -222,7 +222,7 @@ namespace MultiplayerInfrastructure.UI
       ClearSelections();
 
       // InteractableHintUI를 일반 모드로 복원
-      if (_interactableHintUI != null)
+      if (!_interactableHintUI.IsUnityNull())
       {
         _interactableHintUI.ExitDialogueMode();
       }
@@ -230,35 +230,40 @@ namespace MultiplayerInfrastructure.UI
       // 패널 숨김
       HidePanel();
 
-      OnDialogueEnded?.Invoke();
-      Debug.Log("[DialoguePanelUI] Dialogue ended");
+      OnScenarioEnded?.Invoke();
+      Debug.Log("[DialoguePanelUI] Scenario ended");
 
-      // Remove overlay when dialogue ends.
+      // Remove overlay when scenario ends.
       if (UIOverlayStack.IsTop(this))
         UIOverlayStack.Pop();
     }
 
     /// <summary>
-    /// 대화 노드를 표시합니다.
+    /// 대화 노드 표시
     /// </summary>
-    public void DisplayNode(DialogueNodeData node)
+    public void DisplayDialogue(string speakerName, string dialogueContent, string portraitIdentifier)
     {
-      if (node == null) return;
-
-      _currentNode = node;
       _isWaitingForInput = false;
 
       // 화자 이름 설정
       if (_speakerNameLabel != null)
       {
-        _speakerNameLabel.text = node.SpeakerName ?? "";
+        _speakerNameLabel.text = speakerName ?? "";
       }
 
       // 초상화 설정
-      if (_portraitImage != null && node.Portrait != null)
+      if (_portraitImage != null && !string.IsNullOrEmpty(portraitIdentifier))
       {
-        _portraitImage.style.backgroundImage = new StyleBackground(node.Portrait);
-        _portraitImage.style.display = DisplayStyle.Flex;
+        var portrait = Resources.Load<Sprite>(portraitIdentifier);
+        if (portrait != null)
+        {
+          _portraitImage.style.backgroundImage = new StyleBackground(portrait);
+          _portraitImage.style.display = DisplayStyle.Flex;
+        }
+        else
+        {
+          _portraitImage.style.display = DisplayStyle.None;
+        }
       }
       else if (_portraitImage != null)
       {
@@ -266,39 +271,50 @@ namespace MultiplayerInfrastructure.UI
       }
 
       // 대화 텍스트 타이핑 시작
-      StartTyping(node.DialogueText ?? "");
+      StartTyping(dialogueContent ?? "");
 
-      // 선택지는 타이핑 완료 후 표시
-      OnNodeDisplayed?.Invoke(node);
+      OnNodeDisplayed?.Invoke(null); // TODO: pass node if needed
     }
 
     /// <summary>
-    /// 대화 노드를 표시합니다. (DialogueController 호환용 별칭)
+    /// 선택지 표시
     /// </summary>
-    public void ShowNode(DialogueNodeData node)
+    public void DisplayChoice(string speakerName, string dialogueContent, string portraitIdentifier, IReadOnlyList<ScenarioChoiceOption> options)
     {
-      DisplayNode(node);
+      // 먼저 대화 표시
+      DisplayDialogue(speakerName, dialogueContent, portraitIdentifier);
+
+      // 타이핑 완료 후 선택지 표시
+      StartCoroutine(WaitForTypingThenShowChoices(options));
     }
 
-    /// <summary>
-    /// 선택지를 표시합니다.
-    /// </summary>
-    public void DisplaySelections(List<DialogueSelectionData> selections)
+    private System.Collections.IEnumerator WaitForTypingThenShowChoices(IReadOnlyList<ScenarioChoiceOption> options)
+    {
+      while (_isTyping)
+      {
+        yield return null;
+      }
+
+      ShowChoices(options);
+    }
+
+    private void ShowChoices(IReadOnlyList<ScenarioChoiceOption> options)
     {
       ClearSelections();
 
-      if (selections == null || selections.Count == 0)
+      if (options == null || options.Count == 0)
       {
-        Debug.Log("[DialoguePanelUI] No selections to display");
+        Debug.Log("[DialoguePanelUI] No options to display");
+        SetWaitingForInput(true);
         return;
       }
 
       // 선택지를 IInteractable로 래핑
-      for (int i = 0; i < selections.Count; i++)
+      for (int i = 0; i < options.Count; i++)
       {
-        var selectionData = selections[i];
-        var interactable = new DialogueSelectionInteractable(
-            selectionData,
+        var option = options[i];
+        var interactable = new ScenarioSelectionInteractable(
+            option,
             i,
             OnSelectionInteracted
         );
@@ -308,17 +324,17 @@ namespace MultiplayerInfrastructure.UI
       // InteractableHintUI에 선택지 설정
       if (_interactableHintUI != null && _interactableHintUI.IsDialogueMode)
       {
-        Debug.Log($"[DialoguePanelUI] Setting {_currentSelections.Count} dialogue selections in InteractableHintUI");
+        Debug.Log($"[DialoguePanelUI] Setting {_currentSelections.Count} scenario selections in InteractableHintUI");
         var interactables = new List<IInteractable>(_currentSelections);
         _interactableHintUI.SetDialogueSelections(interactables);
       }
 
-      Debug.Log($"[DialoguePanelUI] Displayed {selections.Count} selections");
+      Debug.Log($"[DialoguePanelUI] Displayed {options.Count} options");
     }
 
     /// <summary>
     /// 현재 선택된 옵션을 선택합니다.
-    /// PlayerController에서 호출됩니다.
+    /// ScenarioController에서 호출됩니다.
     /// </summary>
     public void TrySelectCurrentOption()
     {
@@ -341,9 +357,9 @@ namespace MultiplayerInfrastructure.UI
       {
         OnAdvanceRequested?.Invoke();
 
-        if (_currentRunner != null)
+        if (_currentController != null)
         {
-          _currentRunner.Advance();
+          _currentController.Advance();
         }
       }
     }
@@ -360,19 +376,16 @@ namespace MultiplayerInfrastructure.UI
       }
 
       var selection = _currentSelections[index];
-      OnSelectionInteracted(selection.SelectionData, index);
+      OnSelectionInteracted(selection.Option, index);
     }
 
     #endregion
 
     #region Selection Handling
 
-    private void OnSelectionInteracted(DialogueSelectionData selectionData, int index)
+    private void OnSelectionInteracted(ScenarioChoiceOption option, int index)
     {
-      Debug.Log($"[DialoguePanelUI] Selection made: {index} - {selectionData.SelectionText}");
-
-      // 선택지 콜백 실행
-      selectionData.InvokeCallback();
+      Debug.Log($"[DialoguePanelUI] Option selected: {index} - {option.DisplayText}");
 
       // 선택 이벤트 발생
       OnSelectionMade?.Invoke(index);
@@ -380,10 +393,10 @@ namespace MultiplayerInfrastructure.UI
       // 선택지 정리
       ClearSelections();
 
-      // DialogueRunner에 선택 전달
-      if (_currentRunner != null)
+      // ScenarioController에 선택 전달
+      if (_currentController != null)
       {
-        _currentRunner.SelectOption(index);
+        _currentController.SelectOption(index);
       }
     }
 
@@ -391,7 +404,7 @@ namespace MultiplayerInfrastructure.UI
     {
       _currentSelections.Clear();
 
-      if (_interactableHintUI != null && _interactableHintUI.IsDialogueMode)
+      if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.IsDialogueMode)
       {
         _interactableHintUI.ClearDialogueSelections();
       }
@@ -450,14 +463,9 @@ namespace MultiplayerInfrastructure.UI
       // 타이핑 완료 이벤트
       OnTypingCompleted?.Invoke();
 
-      // 타이핑 완료 후 선택지 표시
-      if (_currentNode != null && _currentNode.Selections != null && _currentNode.Selections.Count > 0)
+      // 선택지가 있으면 표시 (이미 WaitForTypingThenShowChoices에서 처리됨)
+      if (!HasActiveSelections)
       {
-        DisplaySelections(_currentNode.Selections);
-      }
-      else
-      {
-        // 선택지가 없으면 입력 대기 상태로
         SetWaitingForInput(true);
       }
     }
@@ -594,39 +602,49 @@ namespace MultiplayerInfrastructure.UI
     #endregion
   }
 
-  #region DialogueSelectionInteractable
+  #region ScenarioSelectionInteractable
 
   /// <summary>
-  /// 대화 선택지를 IInteractable로 래핑하는 클래스.
+  /// 시나리오 선택지를 IInteractable로 래핑하는 클래스.
   /// InteractableObjectHintUIController에서 표시할 수 있도록 합니다.
   /// </summary>
-  public class DialogueSelectionInteractable : IInteractable
+  public class ScenarioSelectionInteractable : IInteractable
   {
-    private readonly DialogueSelectionData _selectionData;
+    private readonly ScenarioChoiceOption _option;
     private readonly int _index;
-    private readonly Action<DialogueSelectionData, int> _onInteract;
+    private readonly Action<ScenarioChoiceOption, int> _onInteract;
 
-    public DialogueSelectionInteractable(
-        DialogueSelectionData selectionData,
+    public ScenarioSelectionInteractable(
+        ScenarioChoiceOption option,
         int index,
-        Action<DialogueSelectionData, int> onInteract)
+        Action<ScenarioChoiceOption, int> onInteract)
     {
-      _selectionData = selectionData;
+      _option = option;
       _index = index;
       _onInteract = onInteract;
     }
 
-    public DialogueSelectionData SelectionData => _selectionData;
+    public ScenarioChoiceOption Option => _option;
     public int Index => _index;
 
     // IInteractable 구현
-    public string DisplayText => _selectionData?.SelectionText ?? $"선택지 {_index + 1}";
-    public Sprite DisplayIcon => _selectionData?.Icon;
-    public Color DisplayColor => _selectionData?.DisplayColor ?? Color.white;
+    public string DisplayText => _option?.DisplayText ?? $"선택지 {_index + 1}";
+    public Sprite DisplayIcon
+    {
+      get
+      {
+        if (_option != null && !string.IsNullOrEmpty(_option.DisplayIconIdentifier))
+        {
+          return Resources.Load<Sprite>(_option.DisplayIconIdentifier);
+        }
+        return null;
+      }
+    }
+    public Color DisplayColor => _option?.DisplayColor ?? Color.white;
 
     public void Interact(Transform interactor)
     {
-      _onInteract?.Invoke(_selectionData, _index);
+      _onInteract?.Invoke(_option, _index);
     }
 
     // IInteractable의 다른 필수 멤버들

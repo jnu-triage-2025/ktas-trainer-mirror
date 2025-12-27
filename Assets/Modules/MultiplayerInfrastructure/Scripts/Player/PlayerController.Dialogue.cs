@@ -1,17 +1,17 @@
-using MultiplayerInfrastructure.Dialogue;
+using MultiplayerInfrastructure.Scenario;
 
 namespace MultiplayerInfrastructure.Player
 {
   public partial class PlayerController
   {
-    private DialogueController _dialogueController;
+    private ScenarioController _scenarioController;
     
     private void OnStartClient_Dialogue()
     {
       if (!IsOwner) return;
 
-      _dialogueController = DialogueController.Instance;
-      _dialogueController.RegisterReferences(
+      _scenarioController = ScenarioController.Instance;
+      _scenarioController.RegisterReferences(
         _dialoguePanelUIController,
         _camControl,
         _interactableHintUI

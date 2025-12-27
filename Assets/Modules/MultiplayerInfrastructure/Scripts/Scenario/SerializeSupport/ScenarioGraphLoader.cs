@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Text.Encodings.Web;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Scenario
@@ -15,7 +16,9 @@ namespace MultiplayerInfrastructure.Scenario
       {
         PropertyNameCaseInsensitive = true,
         ReadCommentHandling = JsonCommentHandling.Skip,
-        AllowTrailingCommas = true
+        AllowTrailingCommas = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        WriteIndented = true
       };
 
       SerializerOptions.Converters.Add(new ScenarioNodeDTOConverter());
@@ -255,6 +258,155 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       throw new JsonException($"Unknown ScenarioMoveDestinationType '{destinationTypeText}'.");
+    }
+
+    public static string SaveToJson(ScenarioGraph graph, bool validateWithSchema = true)
+    {
+      if (graph == null)
+      {
+        throw new ArgumentNullException(nameof(graph));
+      }
+
+      var dto = ToDTO(graph);
+      var json = JsonSerializer.Serialize(dto, SerializerOptions);
+
+      if (validateWithSchema)
+      {
+        ScenarioJsonSchemaValidator.Validate(json);
+      }
+
+      return json;
+    }
+
+    private static ScenarioGraphDTO ToDTO(ScenarioGraph graph)
+    {
+      if (graph == null)
+      {
+        throw new ArgumentNullException(nameof(graph));
+      }
+
+      var dto = new ScenarioGraphDTO
+      {
+        Nodes = new Dictionary<string, ScenarioNodeDTO>()
+      };
+
+      foreach (var node in graph.Nodes.Values)
+      {
+        dto.Nodes[node.Identifier] = ConvertToDTO(node);
+      }
+
+      return dto;
+    }
+
+    private static ScenarioNodeDTO ConvertToDTO(IScenarioNode node) =>
+        node switch
+        {
+          ScenarioDialogueNode dialogue => ConvertToDTO(dialogue),
+          ScenarioChoiceNode choice => ConvertToDTO(choice),
+          ScenarioSoundNode sound => ConvertToDTO(sound),
+          ScenarioPlayerMoveNode move => ConvertToDTO(move),
+          ScenarioCameraTargetNode camera => ConvertToDTO(camera),
+          ScenarioParallelNode parallel => ConvertToDTO(parallel),
+          _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
+        };
+
+    private static ScenarioDialogueNodeDTO ConvertToDTO(ScenarioDialogueNode node) =>
+        new ScenarioDialogueNodeDTO
+        {
+          NodeType = "Dialogue",
+          Identifier = node.Identifier,
+          SpeakerName = node.SpeakerName,
+          DialogueContent = node.DialogueContent,
+          PortraitSpriteIdentifier = node.PortraitSpriteIdentifier,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioChoiceNodeDTO ConvertToDTO(ScenarioChoiceNode node)
+    {
+      var dto = new ScenarioChoiceNodeDTO
+      {
+        NodeType = "Choice",
+        Identifier = node.Identifier,
+        SpeakerName = node.SpeakerName,
+        DialogueContent = node.DialogueContent,
+        PortraitSpriteIdentifier = node.PortraitSpriteIdentifier,
+        NextIdentifier = null,
+        Options = new List<ScenarioChoiceOptionDTO>()
+      };
+
+      foreach (var option in node.Options)
+      {
+        dto.Options.Add(new ScenarioChoiceOptionDTO
+        {
+          DisplayText = option.DisplayText,
+          DisplayIconIdentifier = option.DisplayIconIdentifier,
+          DisplayColor = new ScenarioColorDTO { R = option.DisplayColor.r, G = option.DisplayColor.g, B = option.DisplayColor.b, A = option.DisplayColor.a },
+          NextNodeIdentifier = option.NextNodeIdentifier
+        });
+      }
+
+      return dto;
+    }
+
+    private static ScenarioSoundNodeDTO ConvertToDTO(ScenarioSoundNode node) =>
+        new ScenarioSoundNodeDTO
+        {
+          NodeType = "Sound",
+          Identifier = node.Identifier,
+          SoundResourceIdentifier = node.SoundResourceIdentifier,
+          WaitUntilFinished = node.WaitUntilFinished,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioPlayerMoveNodeDTO ConvertToDTO(ScenarioPlayerMoveNode node) =>
+        new ScenarioPlayerMoveNodeDTO
+        {
+          NodeType = "PlayerMove",
+          Identifier = node.Identifier,
+          DestinationType = node.DestinationType.ToString(),
+          DestinationIdentifier = node.DestinationIdentifier,
+          DestinationX = node.DestinationX,
+          DestinationY = node.DestinationY,
+          DestinationZ = node.DestinationZ,
+          IgnoreGroundCheck = node.IgnoreGroundCheck,
+          MoveMode = node.MoveMode.ToString(),
+          MoveSpeed = node.MoveSpeed,
+          MoveDuration = node.MoveDuration,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioCameraTargetNodeDTO ConvertToDTO(ScenarioCameraTargetNode node) =>
+        new ScenarioCameraTargetNodeDTO
+        {
+          NodeType = "CameraTarget",
+          Identifier = node.Identifier,
+          TargetObjectIdentifier = node.TargetObjectIdentifier,
+          OffsetX = node.OffsetX,
+          OffsetY = node.OffsetY,
+          OffsetZ = node.OffsetZ,
+          BlendTime = node.BlendTime,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioParallelNodeDTO ConvertToDTO(ScenarioParallelNode node)
+    {
+      var dto = new ScenarioParallelNodeDTO
+      {
+        NodeType = "Parallel",
+        Identifier = node.Identifier,
+        NextIdentifier = node.NextIdentifier,
+        Branches = new List<ScenarioParallelBranchDTO>()
+      };
+
+      foreach (var branch in node.Branches)
+      {
+        dto.Branches.Add(new ScenarioParallelBranchDTO
+        {
+          Identifier = branch.Identifier
+        });
+      }
+
+      return dto;
     }
   }
 }
