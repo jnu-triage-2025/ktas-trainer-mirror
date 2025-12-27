@@ -1,0 +1,195 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Json.More</name>
+    </assembly>
+    <members>
+        <!-- Badly formed XML comment ignored for member "T:Json.More.EnumStringConverter`1" -->
+        <member name="M:Json.More.EnumStringConverter`1.Read(System.Text.Json.Utf8JsonReader@,System.Type,System.Text.Json.JsonSerializerOptions)">
+            <summary>Reads and converts the JSON to type <typeparamref name="T" />.</summary>
+            <param name="reader">The reader.</param>
+            <param name="typeToConvert">The type to convert.</param>
+            <param name="options">An object that specifies serialization options to use.</param>
+            <returns>The converted value.</returns>
+            <exception cref="T:System.Text.Json.JsonException">Element was not a string or could not identify the JSON value as a known enum value.</exception>
+        </member>
+        <member name="M:Json.More.EnumStringConverter`1.ReadAsPropertyName(System.Text.Json.Utf8JsonReader@,System.Type,System.Text.Json.JsonSerializerOptions)">
+            <summary>Reads a dictionary key from a JSON property name.</summary>
+            <param name="reader">The <see cref="T:System.Text.Json.Utf8JsonReader" /> to read from.</param>
+            <param name="typeToConvert">The type to convert.</param>
+            <param name="options">The options to use when reading the value.</param>
+            <returns>The value that was converted.</returns>
+        </member>
+        <member name="M:Json.More.EnumStringConverter`1.Write(System.Text.Json.Utf8JsonWriter,`0,System.Text.Json.JsonSerializerOptions)">
+            <summary>Writes a specified value as JSON.</summary>
+            <param name="writer">The writer to write to.</param>
+            <param name="value">The value to convert to JSON.</param>
+            <param name="options">An object that specifies serialization options to use.</param>
+        </member>
+        <member name="M:Json.More.EnumStringConverter`1.WriteAsPropertyName(System.Text.Json.Utf8JsonWriter,`0,System.Text.Json.JsonSerializerOptions)">
+            <summary>Writes a dictionary key as a JSON property name.</summary>
+            <param name="writer">The <see cref="T:System.Text.Json.Utf8JsonWriter" /> to write to.</param>
+            <param name="value">The value to convert. The value of <see cref="P:System.Text.Json.Serialization.JsonConverter`1.HandleNull" /> determines if the converter handles <see langword="null" /> values.</param>
+            <param name="options">The options to use when writing the value.</param>
+        </member>
+        <member name="T:Json.More.JsonArrayTupleConverter">
+            <summary>
+            Provides JSON serialization for the <see cref="T:System.ValueTuple`1"/> family of types.
+            </summary>
+            <remarks>
+            WARNING: This converter is not AOT-friendly.
+            </remarks>
+        </member>
+        <member name="M:Json.More.JsonArrayTupleConverter.CanConvert(System.Type)">
+            <summary>When overridden in a derived class, determines whether the converter instance can convert the specified object type.</summary>
+            <param name="typeToConvert">The type of the object to check whether it can be converted by this converter instance.</param>
+            <returns>
+            <see langword="true" /> if the instance can convert the specified object type; otherwise, <see langword="false" />.</returns>
+        </member>
+        <member name="M:Json.More.JsonArrayTupleConverter.CreateConverter(System.Type,System.Text.Json.JsonSerializerOptions)">
+            <summary>Creates a converter for a specified type.</summary>
+            <param name="typeToConvert">The type handled by the converter.</param>
+            <param name="options">The serialization options to use.</param>
+            <returns>A converter which is compatible with <paramref name="typeToConvert" />.</returns>
+        </member>
+        <member name="T:Json.More.JsonDocumentEqualityComparer">
+             <summary>
+             Calculates equality between two <see cref="T:System.Text.Json.JsonDocument"/>s.
+             </summary>
+             <remarks>
+             This comparison is compliant with the ideals expressed by JSON:
+            
+             - Objects are unordered.
+             - Arrays are ordered.
+             </remarks>
+        </member>
+        <member name="P:Json.More.JsonDocumentEqualityComparer.Instance">
+            <summary>
+            A singleton instance for convenience.
+            </summary>
+        </member>
+        <member name="M:Json.More.JsonDocumentEqualityComparer.Equals(System.Text.Json.JsonDocument,System.Text.Json.JsonDocument)">
+            <summary>Determines whether the specified objects are equal.</summary>
+            <param name="x">The first object of type T to compare.</param>
+            <param name="y">The second object of type T to compare.</param>
+            <returns>true if the specified objects are equal; otherwise, false.</returns>
+        </member>
+        <member name="M:Json.More.JsonDocumentEqualityComparer.GetHashCode(System.Text.Json.JsonDocument)">
+            <summary>Returns a hash code for the specified object.</summary>
+            <param name="obj">The <see cref="T:System.Object"></see> for which a hash code is to be returned.</param>
+            <returns>A hash code for the specified object.</returns>
+            <exception cref="T:System.ArgumentNullException">The type of <paramref name="obj">obj</paramref> is a reference type and <paramref name="obj">obj</paramref> is null.</exception>
+        </member>
+        <member name="T:Json.More.JsonDocumentExtensions">
+            <summary>
+            Provides extension functionality for <see cref="T:System.Text.Json.JsonDocument"/>.
+            </summary>
+        </member>
+        <member name="M:Json.More.JsonDocumentExtensions.IsEquivalentTo(System.Text.Json.JsonDocument,System.Text.Json.JsonDocument)">
+            <summary>
+            Determines JSON-compatible equivalence.
+            </summary>
+            <param name="a">The first document.</param>
+            <param name="b">The second document.</param>
+            <returns>`true` if the documents are equivalent; `false` otherwise.</returns>
+        </member>
+        <member name="M:Json.More.JsonDocumentExtensions.ToJsonDocument``1(``0,System.Text.Json.JsonSerializerOptions)">
+            <summary>
+            Converts an object to a <see cref="T:System.Text.Json.JsonDocument"/>.
+            </summary>
+            <typeparam name="T">The type of the object.</typeparam>
+            <param name="value">The value to convert.</param>
+            <param name="options">(optional) JSON serialization options.</param>
+            <returns>A <see cref="T:System.Text.Json.JsonDocument"/> representing the vale.</returns>
+        </member>
+        <member name="T:Json.More.JsonElementEqualityComparer">
+             <summary>
+             Calculates equality between two <see cref="T:System.Text.Json.JsonElement"/>s.
+             </summary>
+             <remarks>
+             This comparison is compliant with the ideals expressed by JSON:
+            
+             - Objects are unordered.
+             - Arrays are ordered.
+             </remarks>
+        </member>
+        <member name="P:Json.More.JsonElementEqualityComparer.Instance">
+            <summary>
+            A singleton instance for convenience.
+            </summary>
+        </member>
+        <member name="M:Json.More.JsonElementEqualityComparer.Equals(System.Text.Json.JsonElement,System.Text.Json.JsonElement)">
+            <summary>Determines whether the specified objects are equal.</summary>
+            <param name="x">The first object of type T to compare.</param>
+            <param name="y">The second object of type T to compare.</param>
+            <returns>true if the specified objects are equal; otherwise, false.</returns>
+        </member>
+        <member name="M:Json.More.JsonElementEqualityComparer.GetHashCode(System.Text.Json.JsonElement)">
+            <summary>Returns a hash code for the specified object.</summary>
+            <param name="obj">The <see cref="T:System.Object"></see> for which a hash code is to be returned.</param>
+            <returns>A hash code for the specified object.</returns>
+            <exception cref="T:System.ArgumentNullException">The type of <paramref name="obj">obj</paramref> is a reference type and <paramref name="obj">obj</paramref> is null.</exception>
+        </member>
+        <member name="T:Json.More.JsonElementExtensions">
+            <summary>
+            Provides extension functionality for <see cref="T:System.Text.Json.JsonElement"/>.
+            </summary>
+        </member>
+        <member name="M:Json.More.JsonElementExtensions.IsEquivalentTo(System.Text.Json.JsonElement,System.Text.Json.JsonElement)">
+            <summary>
+            Determines JSON-compatible equivalence.
+            </summary>
+            <param name="a">The first element.</param>
+            <param name="b">The second element.</param>
+            <returns>`true` if the element are equivalent; `false` otherwise.</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">The <see cref="P:System.Text.Json.JsonElement.ValueKind"/> is not valid.</exception>
+        </member>
+        <member name="M:Json.More.JsonElementExtensions.GetEquivalenceHashCode(System.Text.Json.JsonElement,System.Int32)">
+             <summary>
+             Generate a consistent JSON-value-based hash code for the element.
+             </summary>
+             <param name="element">The element.</param>
+             <param name="maxHashDepth">Maximum depth to calculate.  Default is -1 which utilizes the entire structure without limitation.</param>
+             <returns>The hash code.</returns>
+             <remarks>
+             See the following for discussion on why the default implementation is insufficient:
+            
+             - https://github.com/json-everything/json-everything/issues/76
+             - https://github.com/dotnet/runtime/issues/33388
+             </remarks>
+        </member>
+        <member name="M:Json.More.JsonElementExtensions.ToJsonString(System.Text.Json.JsonElement)">
+            <summary>
+            Just a shortcut for calling `JsonSerializer.Serialize()` because `.ToString()` doesn't do what you might expect.
+            </summary>
+            <param name="element">The value to convert.</param>
+            <returns>A JSON string.</returns>
+            <remarks>
+            See https://github.com/dotnet/runtime/issues/42502
+            </remarks>
+        </member>
+        <member name="M:Json.More.JsonElementExtensions.AsJsonElement(System.Int64)">
+            <summary>
+            Converts a <see cref="T:System.Int64"/> to a <see cref="T:System.Text.Json.JsonElement"/>.
+            </summary>
+            <param name="value">The value to convert.</param>
+            <returns>A <see cref="T:System.Text.Json.JsonElement"/> representing the value.</returns>
+            <remarks>This is a workaround for lack of native support in the System.Text.Json namespace.</remarks>
+        </member>
+        <member name="M:Json.More.JsonElementExtensions.AsJsonElement(System.Int32)">
+            <summary>
+            Converts a <see cref="T:System.Int32"/> to a <see cref="T:System.Text.Json.JsonElement"/>.
+            </summary>
+            <param name="value">The value to convert.</param>
+            <returns>A <see cref="T:System.Text.Json.JsonElement"/> representing the value.</returns>
+            <remarks>This is a workaround for lack of native support in the System.Text.Json namespace.</remarks>
+        </member>
+        <member name="M:Json.More.JsonElementExtensions.AsJsonElement(System.Int16)">
+            <summary>
+            Converts a <see cref="T:System.Int16"/> to a <see cref="T:System.Text.Json.JsonElement"/>.
+            </summary>
+            <param name="value">The value to convert.</param>
+            <returns>A <see cref="T:System.Text.Json.JsonElement"/> representing the value.</returns>
+            <remarks>This is a workaround for lack of native support in the System.Text.Json namespace.</remarks>
+        </member>
+        <member name="M:Jso

@@ -1,0 +1,441 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schema/multiplayer-scenario.schema.json",
+  "title": "ScenarioGraph",
+  "type": "object",
+  "properties": {
+    "nodes": {
+      "type": "object",
+      "description": "Dictionary<string, IScenarioNode>",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/ScenarioNode"
+      }
+    }
+  },
+  "required": [
+    "nodes"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "ScenarioNode": {
+      "type": "object",
+      "required": [
+        "identifier",
+        "nodeType"
+      ],
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ScenarioDialogueNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioChoiceNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioSoundNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioPlayerMoveNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioCameraTargetNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioParallelNode"
+        }
+      ]
+    },
+    "ScenarioBaseNode": {
+      "type": "object",
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nextIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "identifier"
+      ],
+      "additionalProperties": true
+    },
+    "ScenarioDialogueNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "Dialogue"
+            },
+            "speakerName": {
+              "type": "string"
+            },
+            "dialogueContent": {
+              "type": "string"
+            },
+            "portraitSpriteIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "speakerName",
+            "dialogueContent"
+          ]
+        }
+      ]
+    },
+    "ScenarioChoiceNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "Choice"
+            },
+            "speakerName": {
+              "type": "string"
+            },
+            "dialogueContent": {
+              "type": "string"
+            },
+            "portraitSpriteIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "options": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/ScenarioChoiceOption"
+              }
+            },
+            "nextIdentifier": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "speakerName",
+            "dialogueContent",
+            "options"
+          ]
+        }
+      ]
+    },
+    "ScenarioChoiceOption": {
+      "type": "object",
+      "properties": {
+        "displayText": {
+          "type": "string"
+        },
+        "displayIconIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "displayColor": {
+          "$ref": "#/$defs/ScenarioColor"
+        },
+        "nextNodeIdentifier": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "displayText",
+        "nextNodeIdentifier"
+      ],
+      "additionalProperties": false
+    },
+    "ScenarioColor": {
+      "type": "object",
+      "properties": {
+        "r": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "g": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "b": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "a": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "r",
+        "g",
+        "b",
+        "a"
+      ],
+      "additionalProperties": false
+    },
+    "ScenarioSoundNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "Sound"
+            },
+            "soundResourceIdentifier": {
+              "type": "string"
+            },
+            "waitUntilFinished": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "required": [
+            "soundResourceIdentifier"
+          ]
+        }
+      ]
+    },
+    "ScenarioPlayerMoveNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "PlayerMove"
+            },
+            "destinationType": {
+              "type": "string",
+              "enum": [
+                "Position",
+                "Waypoint"
+              ]
+            },
+            "destinationIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "destinationX": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "destinationY": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "destinationZ": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ignoreGroundCheck": {
+              "type": "boolean",
+              "default": false
+            },
+            "moveMode": {
+              "type": "string",
+              "enum": [
+                "Instant",
+                "BySpeed",
+                "ByDuration"
+              ],
+              "default": "BySpeed"
+            },
+            "moveSpeed": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "moveDuration": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "destinationType"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "destinationType": {
+                    "const": "Position"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "destinationX",
+                  "destinationY",
+                  "destinationZ"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "destinationType": {
+                    "const": "Waypoint"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "destinationIdentifier"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "moveMode": {
+                    "const": "BySpeed"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "moveSpeed"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "moveMode": {
+                    "const": "ByDuration"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "moveDuration"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "ScenarioCameraTargetNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "CameraTarget"
+            },
+            "targetObjectIdentifier": {
+              "type": "string"
+            },
+            "offsetX": {
+              "type": "number",
+              "default": 0
+            },
+            "offsetY": {
+              "type": "number",
+              "default": 0
+            },
+            "offsetZ": {
+              "type": "number",
+              "default": 0
+            },
+            "blendTime": {
+              "type": "number",
+              "minimum": 0,
+              "default": 1
+            }
+          },
+          "required": [
+            "targetObjectIdentifier"
+          ]
+        }
+      ]
+    },
+    "ScenarioParallelNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "Parallel"
+            },
+            "waitMode": {
+              "type": "string",
+              "enum": [
+                "All",
+                "Any",
+                "None"
+              ],
+              "default": "All"
+            },
+            "branches": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "$ref": "#/$defs/ScenarioParallelBranch"
+              }
+            }
+          },
+          "required": [
+            "branches"
+          ]
+        }
+      ]
+    },
+    "ScenarioParallelBranch": {
+      "type": "object",
+      "properties": {
+        "identifier": {
+          "type": "string"
+        },
+        "completionConditionIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "identifier"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,16 @@
+using System.Text.Json.Serialization;
+
+namespace MultiplayerInfrastructure.Scenario
+{
+  internal sealed class ScenarioDialogueNodeDTO : ScenarioNodeDTO
+  {
+    [JsonPropertyName("speakerName")]
+    public string SpeakerName { get; set; }
+
+    [JsonPropertyName("dialogueContent")]
+    public string DialogueContent { get; set; }
+
+    [JsonPropertyName("portraitSpriteIdentifier")]
+    public string PortraitSpriteIdentifier { get; set; }
+  }
+}

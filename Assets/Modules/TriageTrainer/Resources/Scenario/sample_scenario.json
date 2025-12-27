@@ -1,0 +1,81 @@
+{
+  "nodes": {
+    "intro": {
+      "identifier": "intro",
+      "nodeType": "Dialogue",
+      "speakerName": "Guide",
+      "dialogueContent": "Welcome to the arena! Let me show you around.",
+      "portraitSpriteIdentifier": "guide_portrait",
+      "nextIdentifier": "choice_join"
+    },
+    "choice_join": {
+      "identifier": "choice_join",
+      "nodeType": "Choice",
+      "speakerName": "Guide",
+      "dialogueContent": "Do you want to jump straight into the exercise?",
+      "portraitSpriteIdentifier": null,
+      "options": [
+        {
+          "displayText": "Let's go!",
+          "displayIconIdentifier": "icon_check",
+          "displayColor": {
+            "r": 0.2,
+            "g": 0.8,
+            "b": 0.3,
+            "a": 1.0
+          },
+          "nextNodeIdentifier": "player_move"
+        },
+        {
+          "displayText": "Give me a sec…",
+          "displayIconIdentifier": "icon_clock",
+          "displayColor": {
+            "r": 0.9,
+            "g": 0.6,
+            "b": 0.1,
+            "a": 1.0
+          },
+          "nextNodeIdentifier": "wait_sound"
+        }
+      ],
+      "nextIdentifier": null
+    },
+    "player_move": {
+      "identifier": "player_move",
+      "nodeType": "PlayerMove",
+      "destinationType": "Position",
+      "destinationX": 12.5,
+      "destinationY": 0.0,
+      "destinationZ": -3.25,
+      "ignoreGroundCheck": false,
+      "moveMode": "BySpeed",
+      "moveSpeed": 6.5,
+      "nextIdentifier": "camera_focus"
+    },
+    "wait_sound": {
+      "identifier": "wait_sound",
+      "nodeType": "Sound",
+      "soundResourceIdentifier": "sfx_wait_chime",
+      "waitUntilFinished": true,
+      "nextIdentifier": "camera_focus"
+    },
+    "camera_focus": {
+      "identifier": "camera_focus",
+      "nodeType": "CameraTarget",
+      "targetObjectIdentifier": "training_dummy",
+      "offsetX": 0.0,
+      "offsetY": 1.2,
+      "offsetZ": 0.0,
+      "blendTime": 1.5,
+      "nextIdentifier": "outro"
+    },
+    "outro": {
+      "identifier": "outro",
+      "nodeType": "Dialogue",
+      "speakerName": "Guide",
+      "dialogueContent": "Great! You're all set to start the multiplayer tutorial.",
+      "portraitSpriteIdentifier": "guide_smile",
+      "nextIdentifier": null
+    }
+  }
+}
