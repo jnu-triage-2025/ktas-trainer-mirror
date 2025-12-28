@@ -34,6 +34,27 @@ namespace MultiplayerInfrastructure.Editor
       graphViewChanged = OnGraphViewChanged;
     }
 
+    public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
+    {
+      var compatible = new List<Port>();
+
+      ports.ForEach(port =>
+      {
+        if (port == startPort)
+          return;
+
+        if (port.node == startPort.node)
+          return;
+
+        if (port.direction == startPort.direction)
+          return;
+
+        compatible.Add(port);
+      });
+
+      return compatible;
+    }
+
     public void ClearGraph()
     {
       graphElements.ForEach(RemoveElement);

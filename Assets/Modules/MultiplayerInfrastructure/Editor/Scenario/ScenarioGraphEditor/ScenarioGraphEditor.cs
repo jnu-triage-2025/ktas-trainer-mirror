@@ -261,6 +261,7 @@ namespace MultiplayerInfrastructure.Editor
     public void RemoveNode(ScenarioNodeView nodeView)
     {
       if (nodeView == null || nodeView.Data == null) return;
+      if (graphData == null || graphData.Nodes == null) return;
 
       var id = nodeView.Data.Identifier;
       if (graphData.Nodes.ContainsKey(id))
@@ -449,9 +450,38 @@ namespace MultiplayerInfrastructure.Editor
       var path = EditorUtility.SaveFilePanel("Save Scenario JSON", Application.dataPath, "scenario_graph.json", "json");
       if (string.IsNullOrEmpty(path)) return;
 
+      string json;
+
       try
       {
-        var json = ScenarioGraphLoader.SaveToJson(graphData, true);
+        json = ScenarioGraphLoader.SaveToJson(graphData, true);
+      }
+      catch (Exception ex)
+      {
+        var dialogMessage =
+          "이 시나리오는 무결성 검증에 실패했습니다. 각 노드의 필수 속성을 입력했는지 확인하세요.\n" +
+          "검증에 실패하더라도 파일을 저장할 수 있습니다. 계속하시겠습니까?\n\n" +
+          ex.Message;
+        var choice = EditorUtility.DisplayDialogComplex("검증 실패", dialogMessage, "예", "아니오", null);
+        if (choice != 0)
+        {
+          return;
+        }
+
+        try
+        {
+          json = ScenarioGraphLoader.SaveToJson(graphData, false);
+        }
+        catch (Exception saveEx)
+        {
+          EditorUtility.DisplayDialog("Save Failed", saveEx.Message, "확인");
+          Debug.LogException(saveEx);
+          return;
+        }
+      }
+
+      try
+      {
         File.WriteAllText(path, json);
 
         // Save editor data

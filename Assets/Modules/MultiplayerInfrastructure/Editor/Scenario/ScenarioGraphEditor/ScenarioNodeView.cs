@@ -64,6 +64,7 @@ namespace MultiplayerInfrastructure.Editor
 
     public new void RefreshPorts()
     {
+      base.RefreshPorts();
       RefreshExpandedState();
       RefreshPortsInternal();
     }
@@ -117,7 +118,11 @@ namespace MultiplayerInfrastructure.Editor
 
         case ScenarioNodeType.Choice:
           var choiceData = Data as ScenarioChoiceNode;
-          if (choiceData != null && choiceData.Options.Count == 0)
+          if (choiceData == null)
+            break;
+
+          choiceData.Options ??= new List<ScenarioChoiceOption>();
+          if (choiceData.Options.Count == 0)
           {
             choiceData.Options.Add(new ScenarioChoiceOption());
           }
@@ -141,18 +146,29 @@ namespace MultiplayerInfrastructure.Editor
 
         case ScenarioNodeType.Parallel:
           var parallelData = Data as ScenarioParallelNode;
-          if (parallelData != null && parallelData.Branches.Count < 2)
+          if (parallelData == null)
+            break;
+
+          if (parallelData.Branches == null)
           {
-            while (parallelData.Branches.Count < 2)
+            parallelData.Branches = new List<ScenarioParallelBranch>();
+          }
+
+          var branchList = parallelData.Branches as List<ScenarioParallelBranch> ?? new List<ScenarioParallelBranch>(parallelData.Branches);
+          parallelData.Branches = branchList;
+
+          if (branchList.Count < 2)
+          {
+            while (branchList.Count < 2)
             {
-              mutableBranches?.Add(new ScenarioParallelBranch
+              branchList.Add(new ScenarioParallelBranch
               {
-                Identifier = $"branch_{parallelData.Branches.Count + 1}"
+                Identifier = $"branch_{branchList.Count + 1}"
               });
             }
           }
 
-          foreach (var branch in parallelData.Branches)
+          foreach (var branch in branchList)
           {
             AddParallelBranchPort(branch);
           }
@@ -161,9 +177,9 @@ namespace MultiplayerInfrastructure.Editor
           {
             var branch = new ScenarioParallelBranch
             {
-              Identifier = $"branch_{parallelData.Branches.Count + 1}"
+              Identifier = $"branch_{branchList.Count + 1}"
             };
-            mutableBranches?.Add(branch);
+            branchList.Add(branch);
             AddParallelBranchPort(branch);
           })
           { text = "Add Branch" });
