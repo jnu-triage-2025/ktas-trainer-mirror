@@ -89,6 +89,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.PlayerMove:
           DrawPlayerMoveFields((ScenarioPlayerMoveNode)data);
           break;
+        case ScenarioNodeType.NPCMove:
+          DrawNPCMoveFields((ScenarioNPCMoveNode)data);
+          break;
         case ScenarioNodeType.CameraTarget:
           DrawCameraTargetFields((ScenarioCameraTargetNode)data);
           break;
@@ -101,14 +104,16 @@ namespace MultiplayerInfrastructure.Editor
     private void DrawDialogueFields(ScenarioDialogueNode data)
     {
       data.SpeakerName = EditorGUILayout.TextField("Speaker", data.SpeakerName);
-      data.DialogueContent = EditorGUILayout.TextField("Dialogue", data.DialogueContent);
+      EditorGUILayout.PrefixLabel("Dialogue");
+      data.DialogueContent = EditorGUILayout.TextArea(data.DialogueContent, GUILayout.Height(60));
       data.PortraitSpriteIdentifier = EditorGUILayout.TextField("Portrait Sprite", data.PortraitSpriteIdentifier);
     }
 
     private void DrawChoiceFields(ScenarioChoiceNode data)
     {
       data.SpeakerName = EditorGUILayout.TextField("Speaker", data.SpeakerName);
-      data.DialogueContent = EditorGUILayout.TextField("Dialogue", data.DialogueContent);
+      EditorGUILayout.PrefixLabel("Dialogue");
+      data.DialogueContent = EditorGUILayout.TextArea(data.DialogueContent, GUILayout.Height(60));
       data.PortraitSpriteIdentifier = EditorGUILayout.TextField("Portrait Sprite", data.PortraitSpriteIdentifier);
 
       EditorGUILayout.Space();
@@ -158,6 +163,39 @@ namespace MultiplayerInfrastructure.Editor
 
     private void DrawPlayerMoveFields(ScenarioPlayerMoveNode data)
     {
+      data.DestinationType = (ScenarioMoveDestinationType)EditorGUILayout.EnumPopup("Destination Type", data.DestinationType);
+      if (data.DestinationType == ScenarioMoveDestinationType.Position)
+      {
+        data.DestinationX = EditorGUILayout.FloatField("Destination X", data.DestinationX);
+        data.DestinationY = EditorGUILayout.FloatField("Destination Y", data.DestinationY);
+        data.DestinationZ = EditorGUILayout.FloatField("Destination Z", data.DestinationZ);
+      }
+      else
+      {
+        data.DestinationIdentifier = EditorGUILayout.TextField("Waypoint Identifier", data.DestinationIdentifier);
+      }
+
+      data.IgnoreGroundCheck = EditorGUILayout.Toggle("Ignore Ground Check", data.IgnoreGroundCheck);
+      data.MoveMode = (ScenarioMoveMode)EditorGUILayout.EnumPopup("Move Mode", data.MoveMode);
+
+      switch (data.MoveMode)
+      {
+        case ScenarioMoveMode.BySpeed:
+          data.MoveSpeed = EditorGUILayout.FloatField("Move Speed", data.MoveSpeed);
+          break;
+        case ScenarioMoveMode.ByDuration:
+          data.MoveDuration = EditorGUILayout.FloatField("Move Duration", data.MoveDuration);
+          break;
+        default:
+          break;
+      }
+
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawNPCMoveFields(ScenarioNPCMoveNode data)
+    {
+      data.NPCIdentifier = EditorGUILayout.TextField("NPC Identifier", data.NPCIdentifier);
       data.DestinationType = (ScenarioMoveDestinationType)EditorGUILayout.EnumPopup("Destination Type", data.DestinationType);
       if (data.DestinationType == ScenarioMoveDestinationType.Position)
       {

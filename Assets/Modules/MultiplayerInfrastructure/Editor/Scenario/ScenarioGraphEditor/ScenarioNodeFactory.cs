@@ -11,6 +11,7 @@ namespace MultiplayerInfrastructure.Editor
       ScenarioNodeType.Choice => new ScenarioChoiceNode(),
       ScenarioNodeType.Sound => new ScenarioSoundNode(),
       ScenarioNodeType.PlayerMove => new ScenarioPlayerMoveNode(),
+      ScenarioNodeType.NPCMove => new ScenarioNPCMoveNode(),
       ScenarioNodeType.CameraTarget => new ScenarioCameraTargetNode(),
       ScenarioNodeType.Parallel => new ScenarioParallelNode(),
       _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)

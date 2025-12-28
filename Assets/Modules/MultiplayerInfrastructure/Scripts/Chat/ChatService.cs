@@ -16,7 +16,6 @@ namespace MultiplayerInfrastructure.Chat
 
     [Header("References")]
     [SerializeField] private ChatUIController _uiController;
-    [SerializeField] private ChatUIController_ChatLogView _chatLogView;
     [SerializeField] private ChatCommandService _commandService;
     
     private readonly Dictionary<int, float> _lastMessageTimes = new();
@@ -25,12 +24,10 @@ namespace MultiplayerInfrastructure.Chat
     {
       if (_uiController == null)
         _uiController = GetComponent<ChatUIController>();
-      if (_chatLogView == null)
-        _chatLogView = GetComponent<ChatUIController_ChatLogView>();
       if (_commandService == null)
         _commandService = GetComponent<ChatCommandService>();
 
-      if (_uiController == null || _chatLogView == null || _commandService == null)
+      if (_uiController == null || _commandService == null)
       {
         Debug.LogError("ChatService missing required references (UI or CommandService).", this);
         enabled = false;
@@ -39,18 +36,12 @@ namespace MultiplayerInfrastructure.Chat
       _commandService.Initialize(this);
 
       _uiController.OnSubmitted += HandleLocalSubmission;
-      _uiController.OnCancelled += HandleCancel;
     }
     
     private void HandleLocalSubmission(string raw)
     {
       if (string.IsNullOrWhiteSpace(raw))
-      {
-        _uiController.UnfocusInput();
         return;
-      }
-
-      _uiController.UnfocusInput();
 
       if (raw.StartsWith("/"))
       {
@@ -61,11 +52,6 @@ namespace MultiplayerInfrastructure.Chat
       SendChatServerRpc(raw);
     }
 
-    private void HandleCancel()
-    {
-      _uiController.UnfocusInput();
-    }
-    
 #region Networking
 
     [ServerRpc(RequireOwnership = false)]
@@ -89,7 +75,7 @@ namespace MultiplayerInfrastructure.Chat
     private void ReceiveChatObserversRpc(string formattedLine)
     {
       Debug.Log($"[ChatService] Received chat message: {formattedLine}");
-      _chatLogView.AddLine(formattedLine);
+      _uiController.AppendMessage(formattedLine, showToastWhenHidden: true);
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -123,7 +109,7 @@ namespace MultiplayerInfrastructure.Chat
     [TargetRpc]
     private void TargetReceiveSystemMessage(NetworkConnection conn, string message)
     {
-      _chatLogView.AddLine($"<color=#FFD700>[System]</color> {message}");
+      _uiController.AppendMessage($"<color=#FFD700>[System]</color> {message}", showToastWhenHidden: true);
     }
 
 #endregion

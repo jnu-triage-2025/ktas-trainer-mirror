@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.Json;
 using System.Linq;
 using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.Registry;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
@@ -427,6 +428,8 @@ namespace MultiplayerInfrastructure.Editor
         graphView.RestoreEdges(nodeViews);
         inspectorView.SetTarget(null);
         currentFilePath = path;
+
+        ValidateResources(graphData);
       }
       catch (Exception ex)
       {
@@ -601,6 +604,56 @@ namespace MultiplayerInfrastructure.Editor
         {
           if (!string.IsNullOrEmpty(branch.Identifier)) yield return branch.Identifier;
         }
+      }
+    }
+
+    private void ValidateResources(ScenarioGraph graph)
+    {
+      var npcNodes = graph.Nodes.Values.OfType<ScenarioNPCMoveNode>();
+      var missingNPCs = new List<string>();
+      foreach (var node in npcNodes)
+      {
+        if (!string.IsNullOrEmpty(node.NPCIdentifier) && (NPCRegistry.Instance == null || NPCRegistry.Instance.GetNPC(node.NPCIdentifier) == null))
+        {
+          missingNPCs.Add(node.NPCIdentifier);
+        }
+      }
+      var playerMoveNodes = graph.Nodes.Values.OfType<ScenarioPlayerMoveNode>().Where(n => n.DestinationType == ScenarioMoveDestinationType.Waypoint);
+      var missingWaypoints = new List<string>();
+      foreach (var node in playerMoveNodes)
+      {
+        if (!string.IsNullOrEmpty(node.DestinationIdentifier) && (WaypointRegistry.Instance == null || !WaypointRegistry.Instance.GetWaypointPosition(node.DestinationIdentifier).HasValue))
+        {
+          missingWaypoints.Add(node.DestinationIdentifier);
+        }
+      }
+      var npcMoveNodes = graph.Nodes.Values.OfType<ScenarioNPCMoveNode>().Where(n => n.DestinationType == ScenarioMoveDestinationType.Waypoint);
+      foreach (var node in npcMoveNodes)
+      {
+        if (!string.IsNullOrEmpty(node.DestinationIdentifier) && (WaypointRegistry.Instance == null || !WaypointRegistry.Instance.GetWaypointPosition(node.DestinationIdentifier).HasValue))
+        {
+          if (!missingWaypoints.Contains(node.DestinationIdentifier))
+          {
+            missingWaypoints.Add(node.DestinationIdentifier);
+          }
+        }
+      }
+      if (missingNPCs.Any() || missingWaypoints.Any())
+      {
+        var message = "";
+        if (missingNPCs.Any())
+        {
+          message += "다음 NPC들이 등록되지 않았습니다:\n" + string.Join("\n", missingNPCs) + "\n";
+        }
+        if (missingWaypoints.Any())
+        {
+          message += "다음 Waypoint들이 등록되지 않았습니다:\n" + string.Join("\n", missingWaypoints);
+        }
+        EditorUtility.DisplayDialog("검증 실패", message, "확인");
+      }
+      else
+      {
+        EditorUtility.DisplayDialog("검증 성공", "모든 NPC와 Waypoint가 등록되었습니다.", "확인");
       }
     }
   }

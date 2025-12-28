@@ -5,6 +5,7 @@ using UnityEngine;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.UI;
 using MultiplayerInfrastructure.Camera;
+using MultiplayerInfrastructure.Registry;
 using FishNet.Object;
 using Unity.VisualScripting;
 
@@ -45,6 +46,7 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingChoice,
       ExecutingSound,
       ExecutingPlayerMove,
+      ExecutingNPCMove,
       ExecutingCameraTarget,
       ExecutingParallel
     }
@@ -273,6 +275,9 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioPlayerMoveNode move:
           StartCoroutine(ExecutePlayerMoveNode(move));
           break;
+        case ScenarioNPCMoveNode npcMove:
+          StartCoroutine(ExecuteNPCMoveNode(npcMove));
+          break;
         case ScenarioCameraTargetNode camera:
           StartCoroutine(ExecuteCameraTargetNode(camera));
           break;
@@ -335,8 +340,80 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingPlayerMove;
 
+      Vector3 destination;
+      if (node.DestinationType == ScenarioMoveDestinationType.Position)
+      {
+        destination = new Vector3(node.DestinationX, node.DestinationY, node.DestinationZ);
+      }
+      else
+      {
+        var waypointPos = WaypointRegistry.Instance?.GetWaypointPosition(node.DestinationIdentifier);
+        if (waypointPos.HasValue)
+        {
+          destination = waypointPos.Value;
+        }
+        else
+        {
+          Debug.LogWarning($"[ScenarioController] Waypoint '{node.DestinationIdentifier}' not found. Fallback to no move.");
+          // Fallback: MoveDuration이 있으면 기다리고, 없으면 바로 스킵
+          if (node.MoveMode == ScenarioMoveMode.ByDuration && node.MoveDuration > 0)
+          {
+            yield return new WaitForSeconds(node.MoveDuration);
+          }
+          Advance();
+          yield break;
+        }
+      }
+
       // TODO: 플레이어 이동 로직 구현
-      Debug.Log($"[ScenarioController] Moving player to: {node.DestinationX}, {node.DestinationY}, {node.DestinationZ}");
+      Debug.Log($"[ScenarioController] Moving player to: {destination}");
+
+      // 임시 대기
+      yield return new WaitForSeconds(1f);
+
+      Advance();
+    }
+
+    private IEnumerator ExecuteNPCMoveNode(ScenarioNPCMoveNode node)
+    {
+      _state = State.ExecutingNPCMove;
+
+      // NPC 확인
+      var npc = NPCRegistry.Instance?.GetNPC(node.NPCIdentifier);
+      if (npc == null)
+      {
+        Debug.LogWarning($"[ScenarioController] NPC '{node.NPCIdentifier}' not found. Skipping move.");
+        Advance();
+        yield break;
+      }
+
+      Vector3 destination;
+      if (node.DestinationType == ScenarioMoveDestinationType.Position)
+      {
+        destination = new Vector3(node.DestinationX, node.DestinationY, node.DestinationZ);
+      }
+      else
+      {
+        var waypointPos = WaypointRegistry.Instance?.GetWaypointPosition(node.DestinationIdentifier);
+        if (waypointPos.HasValue)
+        {
+          destination = waypointPos.Value;
+        }
+        else
+        {
+          Debug.LogWarning($"[ScenarioController] Waypoint '{node.DestinationIdentifier}' not found. Fallback to no move.");
+          // Fallback: MoveDuration이 있으면 기다리고, 없으면 바로 스킵
+          if (node.MoveMode == ScenarioMoveMode.ByDuration && node.MoveDuration > 0)
+          {
+            yield return new WaitForSeconds(node.MoveDuration);
+          }
+          Advance();
+          yield break;
+        }
+      }
+
+      // TODO: NPC 이동 로직 구현
+      Debug.Log($"[ScenarioController] Moving NPC '{node.NPCIdentifier}' to: {destination}");
 
       // 임시 대기
       yield return new WaitForSeconds(1f);

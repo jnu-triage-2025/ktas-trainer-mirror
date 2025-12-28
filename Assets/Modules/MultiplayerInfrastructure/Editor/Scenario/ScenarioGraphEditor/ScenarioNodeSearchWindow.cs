@@ -26,6 +26,7 @@ namespace MultiplayerInfrastructure.Editor
             new SearchTreeEntry(new GUIContent("Choice")) { level = 1, userData = ScenarioNodeType.Choice },
             new SearchTreeEntry(new GUIContent("Sound")) { level = 1, userData = ScenarioNodeType.Sound },
             new SearchTreeEntry(new GUIContent("Player Move")) { level = 1, userData = ScenarioNodeType.PlayerMove },
+            new SearchTreeEntry(new GUIContent("NPC Move")) { level = 1, userData = ScenarioNodeType.NPCMove },
             new SearchTreeEntry(new GUIContent("Camera Target")) { level = 1, userData = ScenarioNodeType.CameraTarget },
             new SearchTreeEntry(new GUIContent("Parallel")) { level = 1, userData = ScenarioNodeType.Parallel }
         };

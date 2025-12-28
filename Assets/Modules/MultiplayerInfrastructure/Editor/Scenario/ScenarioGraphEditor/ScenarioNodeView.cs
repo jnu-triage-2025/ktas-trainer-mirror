@@ -110,6 +110,7 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.Dialogue:
         case ScenarioNodeType.Sound:
         case ScenarioNodeType.PlayerMove:
+        case ScenarioNodeType.NPCMove:
         case ScenarioNodeType.CameraTarget:
           DefaultOutputPort = CreateStandardOutput("Next");
           break;

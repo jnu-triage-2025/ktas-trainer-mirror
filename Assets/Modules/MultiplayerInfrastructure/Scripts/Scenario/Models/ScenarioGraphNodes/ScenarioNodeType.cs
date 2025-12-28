@@ -6,6 +6,7 @@ namespace MultiplayerInfrastructure.Scenario
     Choice,
     Sound,
     PlayerMove,
+    NPCMove,
     CameraTarget,
     Parallel
   }

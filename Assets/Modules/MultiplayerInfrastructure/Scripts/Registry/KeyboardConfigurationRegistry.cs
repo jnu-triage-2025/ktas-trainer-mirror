@@ -9,6 +9,7 @@ namespace MultiplayerInfrastructure.Registry
   {
     public static KeyCode InteractInteractableObject = DefaultsKeyConfiguration.InteractInteractableObject;
     public static KeyCode OpenChatUI = DefaultsKeyConfiguration.OpenChatUI;
+    public static KeyCode OpenChatUIWithCommand = DefaultsKeyConfiguration.OpenChatUIWithCommand;
     public static KeyCode SendChat = DefaultsKeyConfiguration.SendChat;
     public static KeyCode CloseChatUI = DefaultsKeyConfiguration.CloseChatUI;
   }

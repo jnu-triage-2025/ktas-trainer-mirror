@@ -44,8 +44,8 @@ namespace MultiplayerInfrastructure.Player
 
     public void Update_Input()
     {
+      HandleChatInput();
       HandleEscape();
-      HandleToggleChat();
       HandleDialogueInput();
 
       if (_KeyHandlingLocked) return;
@@ -125,17 +125,29 @@ namespace MultiplayerInfrastructure.Player
       BeginSpectateFollow(target);
     }
 
-    private void HandleToggleChat()
+    private void HandleChatInput()
     {
-      if (!Input.GetKeyDown(_keyToggleChat)) return;
-
       var chat = UIControlRegistry.Get<ChatUIController>();
       if (chat.IsUnityNull()) return;
 
-      if (!chat.IsOpened)
+      if (Input.GetKeyDown(_keyToggleChat) || Input.GetKeyDown(KeyboardConfigurationRegistry.OpenChatUI))
       {
-        chat.OpenInput();
-        chat.FocusInput();
+        chat.Open();
+        return;
+      }
+
+      if (!chat.IsOpen)
+        return;
+
+      if (Input.GetKeyDown(KeyboardConfigurationRegistry.SendChat))
+      {
+        chat.HandleSubmitKey();
+        return;
+      }
+
+      if (Input.GetKeyDown(KeyboardConfigurationRegistry.CloseChatUI))
+      {
+        chat.HandleCancelKey();
       }
     }
 
