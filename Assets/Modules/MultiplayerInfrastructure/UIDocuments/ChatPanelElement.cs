@@ -3,7 +3,7 @@ using MultiplayerInfrastructure.Definitions;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace MultiplayerInfrastructure.UI
+namespace MultiplayerInfrastructure.UIDocuments
 {
   [UxmlElement]
   public partial class ChatPanelElement : VisualElement
@@ -25,6 +25,7 @@ namespace MultiplayerInfrastructure.UI
     private int _maxLogEntries = DefaultMaxLogEntries;
 
     private static Color StyleColorBackground = new Color(0f, 0f, 0f, 0.82f);
+    private static Color StyleColorText = Color.white;
 
     private class ToastEntry
     {
@@ -90,6 +91,7 @@ namespace MultiplayerInfrastructure.UI
       _logView.style.borderTopRightRadius = 6;
       _logView.style.borderBottomLeftRadius = 6;
       _logView.style.borderBottomRightRadius = 6;
+      _logView.style.color = StyleColorText;
       _panel.Add(_logView);
 
       var inputRow = new VisualElement();
@@ -126,7 +128,7 @@ namespace MultiplayerInfrastructure.UI
         pickingMode = PickingMode.Position
       };
       _inputField.AddToClassList("chat-input");
-      _inputField.style.color = Color.white;
+      _inputField.style.color = StyleColorText;
       
       var _textInputField = _inputField.Q("unity-text-input");
       _textInputField.style.backgroundColor = Color.clear;
@@ -151,6 +153,8 @@ namespace MultiplayerInfrastructure.UI
       _toastContainer.style.visibility = Visibility.Hidden;
       _toastContainer.style.flexDirection = FlexDirection.Column;
       _toastContainer.style.alignItems = Align.FlexStart;
+      _toastContainer.style.backgroundColor = StyleColorBackground;
+      _toastContainer.style.color = StyleColorText;
       Add(_toastContainer);
     }
 
@@ -380,6 +384,15 @@ namespace MultiplayerInfrastructure.UI
       }
 
       _toastSchedule?.Pause();
+    }
+
+    public void PushInput(string text)
+    {
+      if (_inputField == null || string.IsNullOrEmpty(text))
+        return;
+
+      _inputField.SetValueWithoutNotify(text);
+      FocusInput();
     }
   }
 }

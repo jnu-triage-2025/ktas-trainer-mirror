@@ -3,10 +3,12 @@
          xmlns:mpinfra="MultiplayerInfrastructure.UIDocuments"
 >
   <Style src="DialogueElement.uss" />
-  <mpinfra:DialogueElement name="dialogue-element"
-                   Title=""
-                   SpeakerName=""
-                   DialogueText=""
-                   EnableRichText="true"
-                   HighlightKeywords="true" />
+  <mpinfra:DialogueElement
+    name="dialogue-element"
+    Title=""
+    SpeakerName=""
+    DialogueText=""
+    EnableRichText="true"
+    HighlightKeywords="true"
+  />
 </ui:UXML>

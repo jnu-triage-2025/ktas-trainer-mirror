@@ -13,7 +13,8 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private KeyCode _keyToggleInventory = KeyCode.E;
     [SerializeField] private KeyCode _keySwitchCameraViewMode = KeyCode.P;
     [SerializeField] private KeyCode _keyOpenEscMenu = KeyCode.Escape;
-    [SerializeField] private KeyCode _keyToggleChat = KeyCode.T;
+    [SerializeField] private KeyCode _keyToggleChat = KeyboardConfigurationRegistry.OpenChatUI;
+    [SerializeField] private KeyCode _keyToggleCommand = KeyboardConfigurationRegistry.OpenChatUIWithCommand;
     [SerializeField] private KeyCode _keyInteractInteractableObject = KeyboardConfigurationRegistry.InteractInteractableObject;
     [SerializeField] private KeyCode _keyEscape = KeyCode.Escape;
     [SerializeField] private KeyCode _keySpectatorFlyDown = KeyCode.LeftShift;
@@ -130,9 +131,15 @@ namespace MultiplayerInfrastructure.Player
       var chat = UIControlRegistry.Get<ChatUIController>();
       if (chat.IsUnityNull()) return;
 
-      if (Input.GetKeyDown(_keyToggleChat) || Input.GetKeyDown(KeyboardConfigurationRegistry.OpenChatUI))
+      if (Input.GetKeyDown(_keyToggleChat))
       {
         chat.Open();
+        return;
+      }
+
+      if (Input.GetKeyDown(_keyToggleCommand))
+      {
+        chat.OpenWithCommandStart();
         return;
       }
 

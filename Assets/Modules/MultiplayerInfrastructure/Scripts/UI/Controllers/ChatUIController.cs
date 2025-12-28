@@ -2,6 +2,7 @@ using System;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.UIDocuments;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -84,6 +85,11 @@ namespace MultiplayerInfrastructure.UI
       ShowPanel();
     }
 
+    public void OpenWithCommandStart()
+    {
+      Open();
+      _chatPanel?.PushInput("/");
+    }
     public void Close()
     {
       if (UIOverlayStack.IsTop(this))
