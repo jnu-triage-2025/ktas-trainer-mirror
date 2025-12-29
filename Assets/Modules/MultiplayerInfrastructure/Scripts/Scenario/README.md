@@ -68,6 +68,7 @@
 | InvokeEvent        | `ScenarioInvokeEventNodeDTO` | `ScenarioInvokeEventNode`   |
 | Validator          | `ScenarioValidatorNodeDTO`   | `ScenarioValidatorNode`     |
 | Parallel           | `ScenarioParallelNodeDTO`    | `ScenarioParallelNode`      |
+| QuestControl       | `ScenarioQuestControlNodeDTO`| `ScenarioQuestControlNode`  |
 
 ### 3. 주요 노드 필드 설명
 
@@ -153,6 +154,27 @@
 | `onFailure`              | string  | `Panic` \| `Branching` \| `Ignore`                                 |
 | `failureNextIdentifier`  | string  | `Branching`일 때 이동할 노드 ID                                    |
 | `nextIdentifier`         | string  | 검증 성공 시 이동할 노드 ID                                        |
+
+#### 3.9 QuestControl (`ScenarioQuestControlNodeDTO`)
+
+| 필드              | 타입    | 설명                                                                                           |
+|-------------------|---------|------------------------------------------------------------------------------------------------|
+| `operation`       | string  | `Add` \| `Update` \| `Remove`                                                                  |
+| `failureStrategy` | string  | `Overwrite`(기존 덮어쓰기) \| `Ignore`(무시) \| `Panic`(예외 발생)                              |
+| `quest`           | object  | 퀘스트 페이로드. `ScenarioQuestDataDTO` 구조를 사용하며 `Id` 필수                             |
+| `nextIdentifier`  | string  | 다음 노드 ID                                                                                    |
+
+`ScenarioQuestDataDTO` 필드
+
+| 필드           | 타입              | 설명                    |
+|----------------|-------------------|-------------------------|
+| `Id`           | string            | 퀘스트 고유 ID (필수)    |
+| `Title`        | string \| null    | 제목                    |
+| `Description`  | string \| null    | 설명                    |
+| `QuestContent` | string \| null    | 상세 내용 또는 본문      |
+| `IsTracked`    | boolean           | 추적 여부 (기본 `false`) |
+
+동작 요약: `Add`는 새 퀘스트를 추가하고, `Update`는 ID가 존재할 때 필드를 갱신합니다. `Remove`는 ID 일치 퀘스트를 제거합니다. `failureStrategy`가 `Panic`일 때 실패 시 예외로 중단되고, `Ignore`는 실패를 무시하며, `Overwrite`는 추가/업데이트 시 동일 ID가 있을 경우 덮어씁니다.
 
 ### 4. C# DTO & 도메인 모델 관계
 
@@ -272,3 +294,34 @@
 ```
 
 이 JSON을 `ScenarioGraphLoader.LoadFromJson(jsonText)`로 읽으면, 각 노드가 도메인 객체로 변환되어 게임에서 순차/분기 실행이 가능합니다.
+
+#### 추가 예시: QuestControl로 퀘스트 추가/제거
+
+```json
+{
+  "nodes": {
+    "add-quest": {
+      "identifier": "add-quest",
+      "nodeType": "QuestControl",
+      "operation": "Add",
+      "failureStrategy": "Overwrite",
+      "quest": {
+        "Id": "quest_intro",
+        "Title": "마을 사람과 대화",
+        "Description": "광장에서 안내인과 대화하기",
+        "IsTracked": true
+      },
+      "nextIdentifier": "remove-quest"
+    },
+    "remove-quest": {
+      "identifier": "remove-quest",
+      "nodeType": "QuestControl",
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "quest": { "Id": "quest_intro" }
+    }
+  }
+}
+```
+
+`Add`는 동일 ID가 존재해도 `Overwrite`로 덮어쓰며, `Remove`는 없을 경우 `Ignore` 덕분에 실패를 무시합니다. 실패를 에러로 처리하려면 `failureStrategy`를 `Panic`으로 두면 됩니다.
