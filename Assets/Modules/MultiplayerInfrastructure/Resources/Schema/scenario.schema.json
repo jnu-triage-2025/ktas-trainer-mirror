@@ -41,6 +41,12 @@
           "$ref": "#/$defs/ScenarioCameraTargetNode"
         },
         {
+          "$ref": "#/$defs/ScenarioInvokeEventNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioValidatorNode"
+        },
+        {
           "$ref": "#/$defs/ScenarioParallelNode"
         }
       ]
@@ -386,6 +392,82 @@
         }
       ]
     },
+    "ScenarioInvokeEventNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "InvokeEvent"
+            },
+            "eventIdentifier": {
+              "type": "string"
+            },
+            "moveNextBehavior": {
+              "type": "string",
+              "enum": [
+                "False",
+                "Immediately",
+                "WaitUntilDone"
+              ],
+              "default": "WaitUntilDone"
+            }
+          },
+          "required": [
+            "eventIdentifier"
+          ]
+        }
+      ]
+    },
+    "ScenarioValidatorNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "Validator"
+            },
+            "condition": {
+              "type": "string",
+              "enum": [
+                "PlayerCountEqual",
+                "PlayerCountNotEqual",
+                "PlayerCountLessThan",
+                "PlayerCountLessThanOrEqual",
+                "PlayerCountGreaterThan",
+                "PlayerCountGreaterThanOrEqual"
+              ]
+            },
+            "targetCount": {
+              "type": "integer"
+            },
+            "onFailure": {
+              "type": "string",
+              "enum": [
+                "Panic",
+                "Branching",
+                "Ignore"
+              ],
+              "default": "Panic"
+            },
+            "failureNextIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "condition",
+            "targetCount"
+          ]
+        }
+      ]
+    },
     "ScenarioParallelNode": {
       "allOf": [
         {
@@ -404,6 +486,25 @@
                 "None"
               ],
               "default": "All"
+            },
+            "allocationType": {
+              "type": "string",
+              "enum": [
+                "SelfAll",
+                "RandomOneAll",
+                "SpreadRandom",
+                "SpreadOrdinary"
+              ],
+              "default": "SelfAll"
+            },
+            "whenBranchingPlayerNotMatched": {
+              "type": "string",
+              "enum": [
+                "Panic",
+                "Ignore",
+                "Reallocation"
+              ],
+              "default": "Panic"
             },
             "branches": {
               "type": "array",

@@ -20,6 +20,8 @@ namespace MultiplayerInfrastructure.Editor
       {
         Branches = new System.Collections.Generic.List<ScenarioParallelBranch>()
       },
+      ScenarioNodeType.InvokeEvent => new ScenarioInvokeEventNode(),
+      ScenarioNodeType.Validator => new ScenarioValidatorNode(),
       _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
   }

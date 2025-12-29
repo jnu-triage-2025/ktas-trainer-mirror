@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using FishNet.Object;
 
 namespace MultiplayerInfrastructure.Scenario
 {
@@ -32,7 +33,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     #region Events
 
-    public static event Action<ScenarioGraph, string> OnScenarioRequested;
+    public static event Action<ScenarioGraph, string, int?> OnScenarioRequested;
 
     #endregion
 
@@ -80,17 +81,27 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
-      ExecuteTrigger();
+      ExecuteTrigger(other);
     }
 
-    private void ExecuteTrigger()
+    private void ExecuteTrigger(GameObject triggeringObject = null)
     {
       _hasTriggered = true;
       _lastTriggerTime = Time.time;
 
       Debug.Log("[ScenarioTriggerZone] Triggering scenario");
 
-      OnScenarioRequested?.Invoke(_cachedGraph, _startNodeIdentifier);
+      int? clientId = null;
+      if (triggeringObject != null)
+      {
+        var netObj = triggeringObject.GetComponent<NetworkObject>();
+        if (netObj != null)
+        {
+          clientId = (int)netObj.Owner.ClientId;
+        }
+      }
+
+      OnScenarioRequested?.Invoke(_cachedGraph, _startNodeIdentifier, clientId);
 
       if (_disableAfterTrigger)
       {

@@ -91,6 +91,8 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioSoundNodeDTO sound => ConvertSound(sound),
           ScenarioPlayerMoveNodeDTO move => ConvertPlayerMove(move),
           ScenarioCameraTargetNodeDTO camera => ConvertCameraTarget(camera),
+          ScenarioInvokeEventNodeDTO invoke => ConvertInvokeEvent(invoke),
+          ScenarioValidatorNodeDTO validator => ConvertValidator(validator),
           ScenarioParallelNodeDTO parallel => ConvertParallel(parallel),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
@@ -185,6 +187,26 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = dto.NextIdentifier
         };
 
+    private static ScenarioInvokeEventNode ConvertInvokeEvent(ScenarioInvokeEventNodeDTO dto) =>
+        new ScenarioInvokeEventNode
+        {
+          Identifier = dto.Identifier,
+          EventIdentifier = dto.EventIdentifier,
+          MoveNextBehavior = ParseInvokeEventMoveNext(dto.MoveNextBehavior),
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioValidatorNode ConvertValidator(ScenarioValidatorNodeDTO dto) =>
+        new ScenarioValidatorNode
+        {
+          Identifier = dto.Identifier,
+          Condition = ParseValidatorCondition(dto.Condition),
+          TargetCount = dto.TargetCount ?? 0,
+          OnFailure = ParseValidatorOnFailure(dto.OnFailure),
+          FailureNextIdentifier = dto.FailureNextIdentifier,
+          NextIdentifier = dto.NextIdentifier
+        };
+
     private static ScenarioParallelNode ConvertParallel(ScenarioParallelNodeDTO dto)
     {
       var branches = new List<ScenarioParallelBranch>(dto.Branches?.Count ?? 0);
@@ -210,6 +232,8 @@ namespace MultiplayerInfrastructure.Scenario
       {
         Identifier = dto.Identifier,
         WaitMode = ParseWaitMode(dto.WaitMode),
+        AllocationType = ParseParallelAllocationType(dto.AllocationType),
+        WhenBranchingPlayerNotMatched = ParseParallelMismatchHandling(dto.WhenBranchingPlayerNotMatched),
         Branches = branches,
         NextIdentifier = dto.NextIdentifier
       };
@@ -306,6 +330,8 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioSoundNode sound => ConvertToDTO(sound),
           ScenarioPlayerMoveNode move => ConvertToDTO(move),
           ScenarioCameraTargetNode camera => ConvertToDTO(camera),
+          ScenarioInvokeEventNode invoke => ConvertToDTO(invoke),
+          ScenarioValidatorNode validator => ConvertToDTO(validator),
           ScenarioParallelNode parallel => ConvertToDTO(parallel),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
@@ -388,12 +414,77 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = node.NextIdentifier
         };
 
+    private static ScenarioInvokeEventNodeDTO ConvertToDTO(ScenarioInvokeEventNode node) =>
+        new ScenarioInvokeEventNodeDTO
+        {
+          NodeType = "InvokeEvent",
+          Identifier = node.Identifier,
+          EventIdentifier = node.EventIdentifier,
+          MoveNextBehavior = node.MoveNextBehavior.ToString(),
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioValidatorNodeDTO ConvertToDTO(ScenarioValidatorNode node) =>
+        new ScenarioValidatorNodeDTO
+        {
+          NodeType = "Validator",
+          Identifier = node.Identifier,
+          Condition = node.Condition.ToString(),
+          TargetCount = node.TargetCount,
+          OnFailure = node.OnFailure.ToString(),
+          FailureNextIdentifier = node.FailureNextIdentifier,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioInvokeEventMoveNextBehavior ParseInvokeEventMoveNext(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioInvokeEventMoveNextBehavior.WaitUntilDone;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioInvokeEventMoveNextBehavior parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioInvokeEventMoveNextBehavior '{value}'.");
+    }
+
+    private static ScenarioValidatorCondition ParseValidatorCondition(string value)
+    {
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioValidatorCondition parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioValidatorCondition '{value}'.");
+    }
+
+    private static ScenarioValidatorOnFailure ParseValidatorOnFailure(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioValidatorOnFailure.Panic;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioValidatorOnFailure parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioValidatorOnFailure '{value}'.");
+    }
+
     private static ScenarioParallelNodeDTO ConvertToDTO(ScenarioParallelNode node)
     {
       var dto = new ScenarioParallelNodeDTO
       {
         NodeType = "Parallel",
         Identifier = node.Identifier,
+        WaitMode = node.WaitMode.ToString(),
+        AllocationType = node.AllocationType.ToString(),
+        WhenBranchingPlayerNotMatched = node.WhenBranchingPlayerNotMatched.ToString(),
         NextIdentifier = node.NextIdentifier,
         Branches = new List<ScenarioParallelBranchDTO>()
       };
@@ -407,6 +498,36 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       return dto;
+    }
+
+    private static ScenarioParallelAllocationType ParseParallelAllocationType(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioParallelAllocationType.SelfAll;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioParallelAllocationType parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioParallelAllocationType '{value}'.");
+    }
+
+    private static ScenarioParallelMismatchHandling ParseParallelMismatchHandling(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioParallelMismatchHandling.Panic;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioParallelMismatchHandling parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioParallelMismatchHandling '{value}'.");
     }
   }
 }

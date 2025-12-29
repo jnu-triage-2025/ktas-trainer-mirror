@@ -65,6 +65,8 @@
 | Sound              | `ScenarioSoundNodeDTO`       | `ScenarioSoundNode`         |
 | PlayerMove         | `ScenarioPlayerMoveNodeDTO`  | `ScenarioPlayerMoveNode`    |
 | CameraTarget       | `ScenarioCameraTargetNodeDTO`| `ScenarioCameraTargetNode`  |
+| InvokeEvent        | `ScenarioInvokeEventNodeDTO` | `ScenarioInvokeEventNode`   |
+| Validator          | `ScenarioValidatorNodeDTO`   | `ScenarioValidatorNode`     |
 | Parallel           | `ScenarioParallelNodeDTO`    | `ScenarioParallelNode`      |
 
 ### 3. 주요 노드 필드 설명
@@ -125,10 +127,32 @@
 | 필드              | 타입     | 설명                                                      |
 |-------------------|----------|-----------------------------------------------------------|
 | `waitMode`        | string   | `ScenarioWaitMode` enum 이름 (`"All"`, `"Any"`, 등)       |
+| `allocationType`  | string   | `SelfAll` \| `RandomOneAll` \| `SpreadRandom` \| `SpreadOrdinary` |
+| `whenBranchingPlayerNotMatched` | string | `Panic` \| `Ignore` \| `Reallocation` |
 | `branches`        | 배열     | 병렬 분기 목록                                            |
 | `branches[].identifier` | string | 브랜치 고유 ID                                        |
 | `branches[].completionConditionIdentifier` | string | 완료 조건 식별자   |
 | `nextIdentifier`  | string   | 병렬 완료 후 다음 노드                                   |
+
+#### 3.7 InvokeEvent (`ScenarioInvokeEventNodeDTO`)
+
+| 필드              | 타입    | 설명                                                             |
+|-------------------|---------|------------------------------------------------------------------|
+| `eventIdentifier` | string  | `ScenarioEventIdentifierRegistry`에 등록된 이벤트 식별자          |
+| `moveNextBehavior`| string  | `False` \| `Immediately` \| `WaitUntilDone`                      |
+| `nextIdentifier`  | string  | 이벤트 실행 후 이동할 다음 노드 ID (`moveNextBehavior`가 False면 사용 안함) |
+
+> 핸들러가 코루틴을 반환하면 완료까지 대기하고, `null`을 반환하면 즉시 다음 노드로 진행합니다.
+
+#### 3.8 Validator (`ScenarioValidatorNodeDTO`)
+
+| 필드                     | 타입    | 설명                                                              |
+|--------------------------|---------|-------------------------------------------------------------------|
+| `condition`              | string  | 플레이어 수 비교: `PlayerCountEqual`, `PlayerCountNotEqual`, `<`, `<=`, `>`, `>=` 대응 |
+| `targetCount`            | int     | 비교 대상 값                                                       |
+| `onFailure`              | string  | `Panic` \| `Branching` \| `Ignore`                                 |
+| `failureNextIdentifier`  | string  | `Branching`일 때 이동할 노드 ID                                    |
+| `nextIdentifier`         | string  | 검증 성공 시 이동할 노드 ID                                        |
 
 ### 4. C# DTO & 도메인 모델 관계
 

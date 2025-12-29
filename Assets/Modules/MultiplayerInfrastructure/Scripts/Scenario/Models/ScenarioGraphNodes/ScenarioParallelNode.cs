@@ -20,5 +20,15 @@ namespace MultiplayerInfrastructure.Scenario
     /// 브랜치 완료 감시 정책
     /// </summary>
     public ScenarioWaitMode WaitMode { get; set; } = ScenarioWaitMode.All;
+
+    /// <summary>
+    /// 병렬 브랜치를 플레이어에게 어떻게 할당할지 결정합니다.
+    /// </summary>
+    public ScenarioParallelAllocationType AllocationType { get; set; } = ScenarioParallelAllocationType.SelfAll;
+
+    /// <summary>
+    /// 플레이어 수와 브랜치 수가 일치하지 않을 때의 처리 방식입니다.
+    /// </summary>
+    public ScenarioParallelMismatchHandling WhenBranchingPlayerNotMatched { get; set; } = ScenarioParallelMismatchHandling.Panic;
   }
 }

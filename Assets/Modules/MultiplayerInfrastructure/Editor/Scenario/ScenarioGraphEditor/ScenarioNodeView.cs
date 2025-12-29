@@ -113,6 +113,8 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.PlayerMove:
         case ScenarioNodeType.NPCMove:
         case ScenarioNodeType.CameraTarget:
+        case ScenarioNodeType.InvokeEvent:
+        case ScenarioNodeType.Validator:
           DefaultOutputPort = CreateStandardOutput("Next");
           break;
 

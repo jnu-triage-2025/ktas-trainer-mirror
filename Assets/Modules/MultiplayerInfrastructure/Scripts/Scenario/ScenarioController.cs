@@ -1,12 +1,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.UI;
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.Registry;
 using FishNet.Object;
+using FishNet;
+using FishNet.Connection;
 using Unity.VisualScripting;
 
 namespace MultiplayerInfrastructure.Scenario
@@ -34,6 +37,7 @@ namespace MultiplayerInfrastructure.Scenario
     private ScenarioGraph _currentGraph;
     private IScenarioNode _currentNode;
     private List<ScenarioChoiceOption> _activeOptions = new();
+    private int? _scenarioOwnerClientId;
 
     #endregion
 
@@ -48,7 +52,9 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingPlayerMove,
       ExecutingNPCMove,
       ExecutingCameraTarget,
-      ExecutingParallel
+      ExecutingInvokeEvent,
+      ExecutingValidator,
+      ExecutingParallel,
     }
 
     [SerializeField] private State _state = State.Inactive;
@@ -95,6 +101,15 @@ namespace MultiplayerInfrastructure.Scenario
       _hintUIController = hintUIController;
     }
 
+    private void ResolveUIControllers()
+    {
+      if (_uiController.IsUnityNull())
+        _uiController = UIControlRegistry.Get<DialoguePanelUIController>();
+
+      if (_hintUIController.IsUnityNull())
+        _hintUIController = UIControlRegistry.Get<InteractableObjectHintUIController>();
+    }
+
     private void Start()
     {
       // 이벤트 구독
@@ -118,6 +133,11 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public void StartScenario(ScenarioGraph graph, string startNodeIdentifier = null)
     {
+      StartScenario(graph, startNodeIdentifier, null);
+    }
+
+    public void StartScenario(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId)
+    {
       if (graph == null)
       {
         Debug.LogError("[ScenarioController] Cannot start scenario with null graph");
@@ -125,6 +145,9 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       _currentGraph = graph;
+      _scenarioOwnerClientId = ownerClientId;
+
+      ResolveUIControllers();
 
       // 시작 노드 찾기
       string startId = startNodeIdentifier;
@@ -173,7 +196,7 @@ namespace MultiplayerInfrastructure.Scenario
       ClearOptions();
 
       // UI 종료
-      if (_uiController.IsUnityNull())
+      if (!_uiController.IsUnityNull())
       {
         _uiController.EndScenario();
       }
@@ -242,7 +265,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     #region Event Handlers
 
-    private void HandleScenarioRequested(ScenarioGraph graph, string startNodeIdentifier)
+    private void HandleScenarioRequested(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId)
     {
       if (IsActive)
       {
@@ -250,7 +273,7 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
-      StartScenario(graph, startNodeIdentifier);
+      StartScenario(graph, startNodeIdentifier, ownerClientId);
     }
 
     #endregion
@@ -280,6 +303,12 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioCameraTargetNode camera:
           StartCoroutine(ExecuteCameraTargetNode(camera));
+          break;
+        case ScenarioInvokeEventNode invoke:
+          StartCoroutine(ExecuteInvokeEventNode(invoke));
+          break;
+        case ScenarioValidatorNode validator:
+          StartCoroutine(ExecuteValidatorNode(validator));
           break;
         case ScenarioParallelNode parallel:
           StartCoroutine(ExecuteParallelNode(parallel));
@@ -439,19 +468,131 @@ namespace MultiplayerInfrastructure.Scenario
       Advance();
     }
 
+    private IEnumerator ExecuteInvokeEventNode(ScenarioInvokeEventNode node)
+    {
+      _state = State.ExecutingInvokeEvent;
+
+      if (string.IsNullOrWhiteSpace(node.EventIdentifier))
+      {
+        Debug.LogWarning("[ScenarioController] InvokeEvent node has no eventIdentifier.");
+      }
+      else if (ScenarioEventIdentifierRegistry.TryGetHandler(node.EventIdentifier, out var handler))
+      {
+        System.Collections.IEnumerator routine = null;
+        try
+        {
+          routine = handler?.Invoke();
+        }
+        catch (Exception ex)
+        {
+          Debug.LogException(ex);
+        }
+
+        switch (node.MoveNextBehavior)
+        {
+          case ScenarioInvokeEventMoveNextBehavior.WaitUntilDone:
+            if (routine != null)
+            {
+              yield return StartCoroutine(routine);
+            }
+            break;
+          case ScenarioInvokeEventMoveNextBehavior.Immediately:
+            if (routine != null)
+            {
+              StartCoroutine(routine);
+            }
+            break;
+          case ScenarioInvokeEventMoveNextBehavior.False:
+            // Do nothing; do not advance.
+            break;
+        }
+      }
+      else
+      {
+        Debug.LogWarning($"[ScenarioController] No handler registered for event '{node.EventIdentifier}'.");
+      }
+
+      if (node.MoveNextBehavior != ScenarioInvokeEventMoveNextBehavior.False)
+      {
+        Advance();
+      }
+    }
+
+    private IEnumerator ExecuteValidatorNode(ScenarioValidatorNode node)
+    {
+      _state = State.ExecutingValidator;
+
+      bool passed = EvaluateValidator(node);
+
+      if (passed)
+      {
+        Advance();
+        yield break;
+      }
+
+      switch (node.OnFailure)
+      {
+        case ScenarioValidatorOnFailure.Panic:
+          Debug.LogWarning($"[ScenarioController] Validator failed at node '{node.Identifier}'.");
+          EndScenario();
+          break;
+        case ScenarioValidatorOnFailure.Branching:
+          if (!string.IsNullOrEmpty(node.FailureNextIdentifier) && _currentGraph.TryGetNode(node.FailureNextIdentifier, out var failureNode))
+          {
+            _currentNode = failureNode;
+            ExecuteNode(failureNode);
+          }
+          else
+          {
+            Debug.LogWarning($"[ScenarioController] Validator branching failed: next '{node.FailureNextIdentifier}' not found.");
+            EndScenario();
+          }
+          break;
+        case ScenarioValidatorOnFailure.Ignore:
+          Advance();
+          break;
+      }
+
+      yield break;
+    }
+
     private IEnumerator ExecuteParallelNode(ScenarioParallelNode node)
     {
       _state = State.ExecutingParallel;
 
       var runningCoroutines = new List<Coroutine>();
+      var players = GetActivePlayerIds();
+      var allocation = new Dictionary<ScenarioParallelBranch, int?>();
+
+      if (!TryAllocateParallel(node, players, allocation))
+      {
+        EndScenario();
+        yield break;
+      }
 
       foreach (var branch in node.Branches)
       {
-        if (_currentGraph.TryGetNode(branch.Identifier, out var branchNode))
+        if (!_currentGraph.TryGetNode(branch.Identifier, out var branchNode))
         {
-          var coroutine = StartCoroutine(ExecuteBranch(branchNode, branch.CompletionConditionIdentifier));
-          runningCoroutines.Add(coroutine);
+          Debug.LogWarning($"[ScenarioController] Parallel branch target '{branch.Identifier}' not found.");
+          continue;
         }
+
+        allocation.TryGetValue(branch, out var assignedClientId);
+
+        if (assignedClientId == null && node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Ignore)
+        {
+          continue; // skipped branch
+        }
+
+        if (assignedClientId == null && node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
+        {
+          EndScenario();
+          yield break;
+        }
+
+        var coroutine = StartCoroutine(ExecuteBranch(branchNode, branch.CompletionConditionIdentifier, assignedClientId));
+        runningCoroutines.Add(coroutine);
       }
 
       // WaitMode에 따라 대기
@@ -474,10 +615,33 @@ namespace MultiplayerInfrastructure.Scenario
       Advance();
     }
 
-    private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition)
+    private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, int? branchOwnerClientId)
     {
+      var previousOwner = _scenarioOwnerClientId;
+      _scenarioOwnerClientId = branchOwnerClientId ?? previousOwner;
+
       // 브랜치 실행 (간단히 재귀 호출)
-      ExecuteNode(node);
+      if (node is ScenarioInvokeEventNode invoke)
+      {
+        if (invoke.MoveNextBehavior == ScenarioInvokeEventMoveNextBehavior.Immediately)
+        {
+          StartCoroutine(ExecuteInvokeEventNode(invoke));
+        }
+        else if (invoke.MoveNextBehavior == ScenarioInvokeEventMoveNextBehavior.WaitUntilDone)
+        {
+          yield return ExecuteInvokeEventNode(invoke);
+        }
+        else
+        {
+          ExecuteNode(node);
+        }
+      }
+      else
+      {
+        ExecuteNode(node);
+      }
+
+      _scenarioOwnerClientId = previousOwner;
 
       // TODO: completionCondition 체크 로직
       yield return null; // 임시
@@ -496,6 +660,193 @@ namespace MultiplayerInfrastructure.Scenario
           }
         }
         yield return null;
+      }
+    }
+
+    private List<int> GetActivePlayerIds()
+    {
+      var ids = new List<int>();
+
+      var serverClients = InstanceFinder.ServerManager?.Clients;
+      if (serverClients != null)
+      {
+        foreach (var kvp in serverClients)
+        {
+          if (kvp.Value != null)
+          {
+            ids.Add((int)kvp.Value.ClientId);
+          }
+        }
+      }
+      else if (InstanceFinder.ClientManager != null)
+      {
+        var localConn = InstanceFinder.ClientManager.Connection;
+        if (localConn != null)
+        {
+          ids.Add((int)localConn.ClientId);
+        }
+      }
+
+      return ids;
+    }
+
+    private bool TryAllocateParallel(ScenarioParallelNode node, List<int> players, Dictionary<ScenarioParallelBranch, int?> allocation)
+    {
+      allocation.Clear();
+
+      var branches = node.Branches?.ToList() ?? new List<ScenarioParallelBranch>();
+      if (branches.Count == 0)
+      {
+        return true;
+      }
+
+      var playerPool = players?.ToList() ?? new List<int>();
+
+      switch (node.AllocationType)
+      {
+        case ScenarioParallelAllocationType.SelfAll:
+        {
+          int? target = _scenarioOwnerClientId;
+          if (target == null && playerPool.Count > 0)
+          {
+            target = playerPool[0];
+          }
+
+          if (target == null)
+          {
+            return HandleParallelMismatch(node, branches.Count, playerPool.Count, playerPool, allocation, assignNull: true);
+          }
+
+          foreach (var branch in branches)
+          {
+            allocation[branch] = target;
+          }
+          return true;
+        }
+        case ScenarioParallelAllocationType.RandomOneAll:
+        {
+          if (playerPool.Count == 0)
+          {
+            return HandleParallelMismatch(node, branches.Count, 0, playerPool, allocation, assignNull: true);
+          }
+
+          var pick = playerPool[UnityEngine.Random.Range(0, playerPool.Count)];
+          foreach (var branch in branches)
+          {
+            allocation[branch] = pick;
+          }
+          return true;
+        }
+        case ScenarioParallelAllocationType.SpreadRandom:
+        {
+          Shuffle(playerPool);
+          goto case ScenarioParallelAllocationType.SpreadOrdinary;
+        }
+        case ScenarioParallelAllocationType.SpreadOrdinary:
+        {
+          if (playerPool.Count == 0)
+          {
+            return HandleParallelMismatch(node, branches.Count, 0, playerPool, allocation, assignNull: true);
+          }
+
+          int playerCount = playerPool.Count;
+          bool playersFewer = playerCount < branches.Count;
+
+          if (playersFewer && node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
+          {
+            Debug.LogWarning($"[ScenarioController] Parallel allocation panic: branches {branches.Count}, players {playerCount}.");
+            return false;
+          }
+
+          for (int i = 0; i < branches.Count; i++)
+          {
+            int? assigned;
+
+            if (playersFewer && node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Ignore && i >= playerCount)
+            {
+              assigned = null;
+            }
+            else
+            {
+              assigned = playerPool[i % playerCount];
+            }
+
+            allocation[branches[i]] = assigned;
+          }
+
+          return true;
+        }
+        default:
+          return false;
+      }
+    }
+
+    private bool HandleParallelMismatch(ScenarioParallelNode node, int branchCount, int playerCount, List<int> playerPool, Dictionary<ScenarioParallelBranch, int?> allocation, bool assignNull)
+    {
+      switch (node.WhenBranchingPlayerNotMatched)
+      {
+        case ScenarioParallelMismatchHandling.Panic:
+          Debug.LogWarning($"[ScenarioController] Parallel allocation failed: branches {branchCount}, players {playerCount}.");
+          return false;
+        case ScenarioParallelMismatchHandling.Ignore:
+          if (assignNull)
+          {
+            foreach (var branch in node.Branches ?? Array.Empty<ScenarioParallelBranch>())
+            {
+              allocation[branch] = null;
+            }
+          }
+          Debug.LogWarning($"[ScenarioController] Parallel allocation ignored mismatch: branches {branchCount}, players {playerCount}.");
+          return true;
+        case ScenarioParallelMismatchHandling.Reallocation:
+          if (playerCount == 0)
+          {
+            Debug.LogWarning($"[ScenarioController] Parallel allocation cannot reallocate with zero players. branches {branchCount}.");
+            return false;
+          }
+
+          for (int i = 0; i < node.Branches.Count; i++)
+          {
+            allocation[node.Branches[i]] = playerPool[i % playerCount];
+          }
+
+          Debug.LogWarning($"[ScenarioController] Parallel allocation reallocated with round-robin. branches {branchCount}, players {playerCount}.");
+          return true;
+        default:
+          return false;
+      }
+    }
+
+    private static void Shuffle(IList<int> list)
+    {
+      for (int i = list.Count - 1; i > 0; i--)
+      {
+        int j = UnityEngine.Random.Range(0, i + 1);
+        (list[i], list[j]) = (list[j], list[i]);
+      }
+    }
+
+    private bool EvaluateValidator(ScenarioValidatorNode node)
+    {
+      var clientCount = InstanceFinder.ClientManager?.Clients?.Count ?? 0;
+      var value = clientCount;
+
+      switch (node.Condition)
+      {
+        case ScenarioValidatorCondition.PlayerCountEqual:
+          return value == node.TargetCount;
+        case ScenarioValidatorCondition.PlayerCountNotEqual:
+          return value != node.TargetCount;
+        case ScenarioValidatorCondition.PlayerCountLessThan:
+          return value < node.TargetCount;
+        case ScenarioValidatorCondition.PlayerCountLessThanOrEqual:
+          return value <= node.TargetCount;
+        case ScenarioValidatorCondition.PlayerCountGreaterThan:
+          return value > node.TargetCount;
+        case ScenarioValidatorCondition.PlayerCountGreaterThanOrEqual:
+          return value >= node.TargetCount;
+        default:
+          return false;
       }
     }
 

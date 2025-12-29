@@ -10,5 +10,11 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("branches")]
     public List<ScenarioParallelBranchDTO> Branches { get; set; }
+
+    [JsonPropertyName("allocationType")]
+    public string AllocationType { get; set; }
+
+    [JsonPropertyName("whenBranchingPlayerNotMatched")]
+    public string WhenBranchingPlayerNotMatched { get; set; }
   }
 }

@@ -48,41 +48,6 @@ namespace MultiplayerInfrastructure.Player
       }
     }
 
-    /// <summary>
-    /// DialoguePanelUIController를 씬에서 찾습니다.
-    /// Inspector에서 직접 할당하는 것을 권장합니다.
-    /// </summary>
-    private DialoguePanelUIController FindDialoguePanelUIController()
-    {
-      GameObject dialogueGO;
-      // 방법 1: 태그로 찾기
-      //var dialogueGO = GameObject.FindGameObjectWithTag("DialoguePanelUI");
-      //if (dialogueGO != null)
-      //{
-      //  var controller = dialogueGO.GetComponent<DialoguePanelUIController>();
-      //  if (controller != null) return controller;
-      //}
-
-      // 방법 2: 이름으로 찾기
-      dialogueGO = GameObject.Find("DialoguePanelUI");
-      if (dialogueGO != null)
-      {
-        var controller = dialogueGO.GetComponent<DialoguePanelUIController>();
-        if (controller != null) return controller;
-      }
-
-      // 방법 3: FindObjectOfType (성능상 권장하지 않음)
-      var found = FindObjectOfType<DialoguePanelUIController>();
-      if (found != null)
-      {
-        Debug.LogWarning("[PlayerController] DialoguePanelUIController found via FindObjectOfType. Consider assigning it directly in Inspector.");
-        return found;
-      }
-
-      Debug.LogWarning("[PlayerController] DialoguePanelUIController not found in scene.");
-      return null;
-    }
-
     void OnDestroy()
     {
       StopSpectateFollow();

@@ -32,7 +32,6 @@ namespace MultiplayerInfrastructure.Player
     {
       RegisterOverlayLock(UIControlRegistry.Get<ChatUIController>(), locked => _keyHandlingLockedByChatUI = locked);
       RegisterOverlayLock(UIControlRegistry.Get<InventoryUIController>(), locked => _keyHandlingLockedByInventoryUI = locked);
-      RegisterOverlayLock(UIControlRegistry.Get<DialoguePanelUIController>(), locked => _keyHandlingLockedByDialogueUI = locked);
     }
 
     private void RegisterOverlayLock(IUIOverlay overlay, Action<bool> setLocked)

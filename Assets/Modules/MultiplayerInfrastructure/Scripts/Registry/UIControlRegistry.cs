@@ -38,5 +38,6 @@ namespace MultiplayerInfrastructure.Registry
       Debug.LogWarning($"UIControlRegistry: no instance registered for type {typeof(T).Name}");
       return null;
     }
+
   }
 }

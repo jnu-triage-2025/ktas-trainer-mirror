@@ -95,6 +95,12 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.CameraTarget:
           DrawCameraTargetFields((ScenarioCameraTargetNode)data);
           break;
+        case ScenarioNodeType.InvokeEvent:
+          DrawInvokeEventFields((ScenarioInvokeEventNode)data);
+          break;
+        case ScenarioNodeType.Validator:
+          DrawValidatorFields((ScenarioValidatorNode)data);
+          break;
         case ScenarioNodeType.Parallel:
           DrawParallelFields((ScenarioParallelNode)data);
           break;
@@ -236,9 +242,32 @@ namespace MultiplayerInfrastructure.Editor
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
 
+    private void DrawInvokeEventFields(ScenarioInvokeEventNode data)
+    {
+      data.EventIdentifier = EditorGUILayout.TextField("Event Identifier", data.EventIdentifier);
+      data.MoveNextBehavior = (ScenarioInvokeEventMoveNextBehavior)EditorGUILayout.EnumPopup("Move Next", data.MoveNextBehavior);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawValidatorFields(ScenarioValidatorNode data)
+    {
+      data.Condition = (ScenarioValidatorCondition)EditorGUILayout.EnumPopup("Condition", data.Condition);
+      data.TargetCount = EditorGUILayout.IntField("Target Count", data.TargetCount);
+      data.OnFailure = (ScenarioValidatorOnFailure)EditorGUILayout.EnumPopup("On Failure", data.OnFailure);
+
+      if (data.OnFailure == ScenarioValidatorOnFailure.Branching)
+      {
+        data.FailureNextIdentifier = EditorGUILayout.TextField("Failure Next", data.FailureNextIdentifier);
+      }
+
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
     private void DrawParallelFields(ScenarioParallelNode data)
     {
       data.WaitMode = (ScenarioWaitMode)EditorGUILayout.EnumPopup("Wait Mode", data.WaitMode);
+      data.AllocationType = (ScenarioParallelAllocationType)EditorGUILayout.EnumPopup("Allocation Type", data.AllocationType);
+      data.WhenBranchingPlayerNotMatched = (ScenarioParallelMismatchHandling)EditorGUILayout.EnumPopup("On Mismatch", data.WhenBranchingPlayerNotMatched);
 
       EditorGUILayout.Space();
       EditorGUILayout.LabelField("Branches", EditorStyles.boldLabel);

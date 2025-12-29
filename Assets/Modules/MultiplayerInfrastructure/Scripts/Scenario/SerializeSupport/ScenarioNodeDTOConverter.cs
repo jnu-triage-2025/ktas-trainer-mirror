@@ -28,6 +28,8 @@ namespace MultiplayerInfrastructure.Scenario
         "Sound" => Deserialize<ScenarioSoundNodeDTO>(root, options),
         "PlayerMove" => Deserialize<ScenarioPlayerMoveNodeDTO>(root, options),
         "CameraTarget" => Deserialize<ScenarioCameraTargetNodeDTO>(root, options),
+        "InvokeEvent" => Deserialize<ScenarioInvokeEventNodeDTO>(root, options),
+        "Validator" => Deserialize<ScenarioValidatorNodeDTO>(root, options),
         "Parallel" => Deserialize<ScenarioParallelNodeDTO>(root, options),
         _ => throw new JsonException($"Unknown nodeType '{nodeType}'.")
       };

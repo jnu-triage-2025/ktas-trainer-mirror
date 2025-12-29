@@ -40,7 +40,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     #region Events
 
-    public static event Action<ScenarioGraph, string> OnScenarioRequested;
+    public static event Action<ScenarioGraph, string, int?> OnScenarioRequested;
 
     #endregion
 
@@ -58,7 +58,14 @@ namespace MultiplayerInfrastructure.Scenario
 
       Debug.Log($"[ScenarioInteractable] {gameObject.name}: 시나리오 그래프를 시작합니다.");
 
-      OnScenarioRequested?.Invoke(graph, _startNodeIdentifier);
+      int? clientId = null;
+      var interactorNetworkObject = interactor.GetComponent<NetworkObject>();
+      if (interactorNetworkObject != null)
+      {
+        clientId = (int)interactorNetworkObject.Owner.ClientId;
+      }
+
+      OnScenarioRequested?.Invoke(graph, _startNodeIdentifier, clientId);
     }
 
     #endregion

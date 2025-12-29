@@ -8,6 +8,8 @@ namespace MultiplayerInfrastructure.Scenario
     PlayerMove,
     NPCMove,
     CameraTarget,
-    Parallel
+    Parallel,
+    InvokeEvent,
+    Validator
   }
 }

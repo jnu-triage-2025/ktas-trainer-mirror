@@ -28,6 +28,8 @@ namespace MultiplayerInfrastructure.Editor
             new SearchTreeEntry(new GUIContent("Player Move")) { level = 1, userData = ScenarioNodeType.PlayerMove },
             new SearchTreeEntry(new GUIContent("NPC Move")) { level = 1, userData = ScenarioNodeType.NPCMove },
             new SearchTreeEntry(new GUIContent("Camera Target")) { level = 1, userData = ScenarioNodeType.CameraTarget },
+            new SearchTreeEntry(new GUIContent("Invoke Event")) { level = 1, userData = ScenarioNodeType.InvokeEvent },
+            new SearchTreeEntry(new GUIContent("Validator")) { level = 1, userData = ScenarioNodeType.Validator },
             new SearchTreeEntry(new GUIContent("Parallel")) { level = 1, userData = ScenarioNodeType.Parallel }
         };
     }
