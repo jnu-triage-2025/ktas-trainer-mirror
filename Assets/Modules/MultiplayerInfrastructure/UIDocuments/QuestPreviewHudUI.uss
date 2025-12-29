@@ -1,0 +1,3 @@
+:root {
+  /* Styling is defined inline in QuestPreviewHudElement. This file exists for UI Builder compatibility. */
+}

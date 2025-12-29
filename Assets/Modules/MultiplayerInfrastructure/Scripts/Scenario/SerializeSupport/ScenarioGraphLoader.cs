@@ -94,6 +94,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioInvokeEventNodeDTO invoke => ConvertInvokeEvent(invoke),
           ScenarioValidatorNodeDTO validator => ConvertValidator(validator),
           ScenarioParallelNodeDTO parallel => ConvertParallel(parallel),
+          ScenarioQuestControlNodeDTO questControl => ConvertQuestControl(questControl),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -196,6 +197,16 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = dto.NextIdentifier
         };
 
+    private static ScenarioQuestControlNode ConvertQuestControl(ScenarioQuestControlNodeDTO dto) =>
+        new ScenarioQuestControlNode
+        {
+          Identifier = dto.Identifier,
+          Operation = ParseQuestOperation(dto.Operation),
+          FailureStrategy = ParseQuestFailureStrategy(dto.FailureStrategy),
+          Quest = dto.Quest,
+          NextIdentifier = dto.NextIdentifier
+        };
+
     private static ScenarioValidatorNode ConvertValidator(ScenarioValidatorNodeDTO dto) =>
         new ScenarioValidatorNode
         {
@@ -252,6 +263,28 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       throw new JsonException($"Unknown ScenarioWaitMode '{waitModeText}'.");
+    }
+
+    private static ScenarioQuestOperationType ParseQuestOperation(string text)
+    {
+      if (string.IsNullOrWhiteSpace(text))
+        return ScenarioQuestOperationType.Add;
+
+      if (Enum.TryParse(text, ignoreCase: true, out ScenarioQuestOperationType parsed))
+        return parsed;
+
+      throw new JsonException($"Unknown ScenarioQuestOperationType '{text}'.");
+    }
+
+    private static ScenarioQuestFailureStrategy ParseQuestFailureStrategy(string text)
+    {
+      if (string.IsNullOrWhiteSpace(text))
+        return ScenarioQuestFailureStrategy.Overwrite;
+
+      if (Enum.TryParse(text, ignoreCase: true, out ScenarioQuestFailureStrategy parsed))
+        return parsed;
+
+      throw new JsonException($"Unknown ScenarioQuestFailureStrategy '{text}'.");
     }
 
     private static ScenarioMoveMode ParseMoveMode(string moveModeText)
@@ -333,6 +366,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioInvokeEventNode invoke => ConvertToDTO(invoke),
           ScenarioValidatorNode validator => ConvertToDTO(validator),
           ScenarioParallelNode parallel => ConvertToDTO(parallel),
+          ScenarioQuestControlNode questControl => ConvertToDTO(questControl),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 
@@ -381,6 +415,17 @@ namespace MultiplayerInfrastructure.Scenario
           Identifier = node.Identifier,
           SoundResourceIdentifier = node.SoundResourceIdentifier,
           WaitUntilFinished = node.WaitUntilFinished,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioQuestControlNodeDTO ConvertToDTO(ScenarioQuestControlNode node) =>
+        new ScenarioQuestControlNodeDTO
+        {
+          NodeType = "QuestControl",
+          Identifier = node.Identifier,
+          Operation = node.Operation.ToString(),
+          FailureStrategy = node.FailureStrategy.ToString(),
+          Quest = node.Quest,
           NextIdentifier = node.NextIdentifier
         };
 

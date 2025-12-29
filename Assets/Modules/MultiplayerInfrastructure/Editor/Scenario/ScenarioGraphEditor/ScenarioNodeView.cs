@@ -115,6 +115,7 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.CameraTarget:
         case ScenarioNodeType.InvokeEvent:
         case ScenarioNodeType.Validator:
+        case ScenarioNodeType.QuestControl:
           DefaultOutputPort = CreateStandardOutput("Next");
           break;
 

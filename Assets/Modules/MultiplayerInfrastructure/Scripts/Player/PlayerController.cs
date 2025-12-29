@@ -36,9 +36,13 @@ namespace MultiplayerInfrastructure.Player
       Update_Input();
       Update_Movement();
       Update_Inventory();
-      LateUpdate_Camera();
     }
-    
+
+    void LateUpdate()
+    {
+      LateUpdate_Camera();  
+    }
+
     public override void OnStartClient()
     {
       if (!IsOwner) return;
@@ -48,6 +52,7 @@ namespace MultiplayerInfrastructure.Player
       OnStartClient_Camera();
       OnStartClient_Interactables();
       OnStartClient_Dialogue();
+      OnStartClient_Quest();
     }
   }
 }

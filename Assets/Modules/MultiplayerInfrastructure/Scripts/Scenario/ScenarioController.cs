@@ -7,6 +7,7 @@ using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.UI;
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Quest;
 using FishNet.Object;
 using FishNet;
 using FishNet.Connection;
@@ -55,6 +56,7 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingInvokeEvent,
       ExecutingValidator,
       ExecutingParallel,
+      ExecutingQuestControl,
     }
 
     [SerializeField] private State _state = State.Inactive;
@@ -313,6 +315,9 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioParallelNode parallel:
           StartCoroutine(ExecuteParallelNode(parallel));
           break;
+        case ScenarioQuestControlNode questControl:
+          ExecuteQuestControlNode(questControl);
+          break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type: {node.GetType().Name}");
           Advance();
@@ -363,6 +368,102 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Advance();
+    }
+
+    private void ExecuteQuestControlNode(ScenarioQuestControlNode node)
+    {
+      _state = State.ExecutingQuestControl;
+
+      var manager = CurrentSessionPlayInfoRegistry.Get<QuestManager>();
+      if (manager == null)
+      {
+        Debug.LogWarning("[ScenarioController] QuestManager not found; skipping quest control node.");
+        Advance();
+        return;
+      }
+
+      bool success = ApplyQuestOperation(manager, node);
+      if (!success && node.FailureStrategy == ScenarioQuestFailureStrategy.Panic)
+      {
+        Debug.LogError($"[ScenarioController] Quest control node failed with panic strategy (questId: {node.Quest?.Id}). Ending scenario.");
+        EndScenario();
+        return;
+      }
+
+      Advance();
+    }
+
+    private bool ApplyQuestOperation(QuestManager manager, ScenarioQuestControlNode node)
+    {
+      string questId = node.Quest?.Id;
+
+      switch (node.Operation)
+      {
+        case ScenarioQuestOperationType.Add:
+          if (manager.HasQuest(questId))
+          {
+            return HandleConflict(node, () => manager.AddOrUpdateQuest(node.Quest));
+          }
+
+          if (node.Quest == null)
+          {
+            Debug.LogWarning("[ScenarioController] Add quest operation missing quest data.");
+            return node.FailureStrategy != ScenarioQuestFailureStrategy.Panic;
+          }
+
+          manager.AddOrUpdateQuest(node.Quest);
+          return true;
+
+        case ScenarioQuestOperationType.Update:
+          if (manager.HasQuest(questId))
+          {
+            if (node.Quest == null)
+            {
+              Debug.LogWarning("[ScenarioController] Update quest operation missing quest data.");
+              return node.FailureStrategy != ScenarioQuestFailureStrategy.Panic;
+            }
+
+            manager.AddOrUpdateQuest(node.Quest);
+            return true;
+          }
+
+          if (node.FailureStrategy == ScenarioQuestFailureStrategy.Overwrite)
+          {
+            manager.AddOrUpdateQuest(node.Quest);
+            return true;
+          }
+
+          return node.FailureStrategy != ScenarioQuestFailureStrategy.Panic;
+
+        case ScenarioQuestOperationType.Remove:
+          if (manager.HasQuest(questId))
+          {
+            manager.RemoveQuest(questId);
+            return true;
+          }
+
+          return node.FailureStrategy != ScenarioQuestFailureStrategy.Panic;
+
+        default:
+          Debug.LogWarning($"[ScenarioController] Unknown quest operation {node.Operation}.");
+          return node.FailureStrategy != ScenarioQuestFailureStrategy.Panic;
+      }
+    }
+
+    private bool HandleConflict(ScenarioQuestControlNode node, Action overwriteAction)
+    {
+      switch (node.FailureStrategy)
+      {
+        case ScenarioQuestFailureStrategy.Overwrite:
+          overwriteAction?.Invoke();
+          return true;
+        case ScenarioQuestFailureStrategy.Ignore:
+          return true;
+        case ScenarioQuestFailureStrategy.Panic:
+          return false;
+        default:
+          return true;
+      }
     }
 
     private IEnumerator ExecutePlayerMoveNode(ScenarioPlayerMoveNode node)

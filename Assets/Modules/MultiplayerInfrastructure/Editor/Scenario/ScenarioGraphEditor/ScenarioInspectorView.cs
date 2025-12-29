@@ -1,4 +1,5 @@
 using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.Quest;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -103,6 +104,9 @@ namespace MultiplayerInfrastructure.Editor
           break;
         case ScenarioNodeType.Parallel:
           DrawParallelFields((ScenarioParallelNode)data);
+          break;
+        case ScenarioNodeType.QuestControl:
+          DrawQuestControlFields((ScenarioQuestControlNode)data);
           break;
       }
     }
@@ -309,6 +313,29 @@ namespace MultiplayerInfrastructure.Editor
 
         EditorGUILayout.EndVertical();
       }
+    }
+
+    private void DrawQuestControlFields(ScenarioQuestControlNode data)
+    {
+      data.Operation = (ScenarioQuestOperationType)EditorGUILayout.EnumPopup("Operation", data.Operation);
+      data.FailureStrategy = (ScenarioQuestFailureStrategy)EditorGUILayout.EnumPopup("Failure Strategy", data.FailureStrategy);
+
+      if (data.Quest == null)
+      {
+        data.Quest = new QuestData();
+      }
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("Quest", EditorStyles.boldLabel);
+      data.Quest.Id = EditorGUILayout.TextField("Id", data.Quest.Id);
+      data.Quest.Title = EditorGUILayout.TextField("Title", data.Quest.Title);
+      EditorGUILayout.LabelField("Description");
+      data.Quest.Description = EditorGUILayout.TextArea(data.Quest.Description, GUILayout.Height(60));
+      EditorGUILayout.LabelField("Quest Content");
+      data.Quest.QuestContent = EditorGUILayout.TextArea(data.Quest.QuestContent, GUILayout.Height(40));
+      data.Quest.IsTracked = EditorGUILayout.Toggle("Track", data.Quest.IsTracked);
+
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
   }
 }

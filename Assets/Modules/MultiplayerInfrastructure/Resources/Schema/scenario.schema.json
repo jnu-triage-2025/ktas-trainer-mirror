@@ -48,6 +48,9 @@
         },
         {
           "$ref": "#/$defs/ScenarioParallelNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioQuestControlNode"
         }
       ]
     },
@@ -536,6 +539,57 @@
       "required": [
         "identifier"
       ],
+      "additionalProperties": false
+    },
+    "ScenarioQuestControlNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "QuestControl"
+            },
+            "operation": {
+              "type": "string",
+              "enum": [
+                "Add",
+                "Update",
+                "Remove"
+              ]
+            },
+            "failureStrategy": {
+              "type": "string",
+              "enum": [
+                "Overwrite",
+                "Ignore",
+                "Panic"
+              ],
+              "default": "Overwrite"
+            },
+            "quest": {
+              "$ref": "#/$defs/ScenarioQuestData"
+            }
+          },
+          "required": [
+            "operation",
+            "failureStrategy",
+            "quest"
+          ]
+        }
+      ]
+    },
+    "ScenarioQuestData": {
+      "type": "object",
+      "properties": {
+        "Id": { "type": "string" },
+        "Title": { "type": ["string", "null"] },
+        "Description": { "type": ["string", "null"] },
+        "QuestContent": { "type": ["string", "null"] },
+        "IsTracked": { "type": "boolean", "default": false }
+      },
+      "required": [ "Id" ],
       "additionalProperties": false
     }
   }

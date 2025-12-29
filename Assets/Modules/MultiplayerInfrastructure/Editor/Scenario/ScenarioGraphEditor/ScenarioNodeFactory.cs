@@ -22,6 +22,7 @@ namespace MultiplayerInfrastructure.Editor
       },
       ScenarioNodeType.InvokeEvent => new ScenarioInvokeEventNode(),
       ScenarioNodeType.Validator => new ScenarioValidatorNode(),
+      ScenarioNodeType.QuestControl => new ScenarioQuestControlNode(),
       _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
   }

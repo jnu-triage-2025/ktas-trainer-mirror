@@ -9,5 +9,6 @@ namespace MultiplayerInfrastructure.Definitions
     public const KeyCode OpenChatUIWithCommand = KeyCode.Slash;
     public const KeyCode SendChat = KeyCode.Return;
     public const KeyCode CloseChatUI = KeyCode.Escape;
+    public const KeyCode OpenQuestUI = KeyCode.J;
   }
 }

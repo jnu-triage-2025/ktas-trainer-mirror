@@ -1,0 +1,160 @@
+{
+	"nodes": {
+		"dialogue_start": {
+			"nodeType": "Dialogue",
+			"identifier": "dialogue_start",
+			"speakerName": "Narrator",
+			"dialogueContent": "Debug scenario starting.",
+			"portraitSpriteIdentifier": null,
+			"nextIdentifier": "choice_intro"
+		},
+		"choice_intro": {
+			"nodeType": "Choice",
+			"identifier": "choice_intro",
+			"speakerName": "Narrator",
+			"dialogueContent": "Pick a branch to exercise nodes.",
+			"portraitSpriteIdentifier": null,
+			"options": [
+				{
+					"displayText": "Full path (sound/move/etc)",
+					"displayIconIdentifier": null,
+					"displayColor": { "r": 0.1, "g": 0.8, "b": 0.2, "a": 1.0 },
+					"nextNodeIdentifier": "sound_fx"
+				},
+				{
+					"displayText": "Skip to validator",
+					"displayIconIdentifier": null,
+					"displayColor": { "r": 0.9, "g": 0.7, "b": 0.1, "a": 1.0 },
+					"nextNodeIdentifier": "validator_players"
+				}
+			],
+			"nextIdentifier": null
+		},
+		"sound_fx": {
+			"nodeType": "Sound",
+			"identifier": "sound_fx",
+			"soundResourceIdentifier": "Audio/Debug/Sample",
+			"waitUntilFinished": true,
+			"nextIdentifier": "player_move"
+		},
+		"player_move": {
+			"nodeType": "PlayerMove",
+			"identifier": "player_move",
+			"destinationType": "Position",
+			"destinationIdentifier": null,
+			"destinationX": 0.0,
+			"destinationY": 0.0,
+			"destinationZ": 5.0,
+			"ignoreGroundCheck": false,
+			"moveMode": "BySpeed",
+			"moveSpeed": 4.0,
+			"moveDuration": null,
+			"nextIdentifier": "camera_focus"
+		},
+		"camera_focus": {
+			"nodeType": "CameraTarget",
+			"identifier": "camera_focus",
+			"targetObjectIdentifier": "NPC_Debug",
+			"offsetX": 0.0,
+			"offsetY": 1.5,
+			"offsetZ": -3.0,
+			"blendTime": 0.6,
+			"nextIdentifier": "invoke_event"
+		},
+		"invoke_event": {
+			"nodeType": "InvokeEvent",
+			"identifier": "invoke_event",
+			"eventIdentifier": "DebugEvent",
+			"moveNextBehavior": "Immediately",
+			"nextIdentifier": "validator_players"
+		},
+		"validator_players": {
+			"nodeType": "Validator",
+			"identifier": "validator_players",
+			"condition": "PlayerCountGreaterThanOrEqual",
+			"targetCount": 1,
+			"onFailure": "Branching",
+			"failureNextIdentifier": "validator_fail",
+			"nextIdentifier": "parallel_main"
+		},
+		"validator_fail": {
+			"nodeType": "Dialogue",
+			"identifier": "validator_fail",
+			"speakerName": "System",
+			"dialogueContent": "Validator failed: not enough players.",
+			"portraitSpriteIdentifier": null,
+			"nextIdentifier": null
+		},
+		"parallel_main": {
+			"nodeType": "Parallel",
+			"identifier": "parallel_main",
+			"waitMode": "All",
+			"allocationType": "SpreadOrdinary",
+			"whenBranchingPlayerNotMatched": "Ignore",
+			"branches": [
+				{
+					"identifier": "branch_moveA_start",
+					"completionConditionIdentifier": "branch_moveA_done"
+				},
+				{
+					"identifier": "branch_moveB_start",
+					"completionConditionIdentifier": "branch_moveB_done"
+				}
+			],
+			"nextIdentifier": "dialogue_post_parallel"
+		},
+		"branch_moveA_start": {
+			"nodeType": "NPCMove",
+			"identifier": "branch_moveA_start",
+			"npcIdentifier": "NPC_Debug",
+			"destinationType": "Waypoint",
+			"destinationIdentifier": "Waypoint_A",
+			"destinationX": null,
+			"destinationY": null,
+			"destinationZ": null,
+			"ignoreGroundCheck": false,
+			"moveMode": "BySpeed",
+			"moveSpeed": 2.5,
+			"moveDuration": null,
+			"nextIdentifier": "branch_moveA_done"
+		},
+		"branch_moveA_done": {
+			"nodeType": "Dialogue",
+			"identifier": "branch_moveA_done",
+			"speakerName": "NPC A",
+			"dialogueContent": "Branch A completed.",
+			"portraitSpriteIdentifier": null,
+			"nextIdentifier": null
+		},
+		"branch_moveB_start": {
+			"nodeType": "PlayerMove",
+			"identifier": "branch_moveB_start",
+			"destinationType": "Position",
+			"destinationIdentifier": null,
+			"destinationX": 3.0,
+			"destinationY": 0.0,
+			"destinationZ": -2.0,
+			"ignoreGroundCheck": true,
+			"moveMode": "ByDuration",
+			"moveSpeed": null,
+			"moveDuration": 1.2,
+			"nextIdentifier": "branch_moveB_done"
+		},
+		"branch_moveB_done": {
+			"nodeType": "Dialogue",
+			"identifier": "branch_moveB_done",
+			"speakerName": "Player",
+			"dialogueContent": "Branch B completed.",
+			"portraitSpriteIdentifier": null,
+			"nextIdentifier": null
+		},
+		"dialogue_post_parallel": {
+			"nodeType": "Dialogue",
+			"identifier": "dialogue_post_parallel",
+			"speakerName": "Narrator",
+			"dialogueContent": "Debug scenario finished.",
+			"portraitSpriteIdentifier": null,
+			"nextIdentifier": null
+		}
+	}
+}

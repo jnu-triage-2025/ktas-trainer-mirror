@@ -12,5 +12,6 @@ namespace MultiplayerInfrastructure.Registry
     public static KeyCode OpenChatUIWithCommand = DefaultsKeyConfiguration.OpenChatUIWithCommand;
     public static KeyCode SendChat = DefaultsKeyConfiguration.SendChat;
     public static KeyCode CloseChatUI = DefaultsKeyConfiguration.CloseChatUI;
+    public static KeyCode OpenQuestUI = DefaultsKeyConfiguration.OpenQuestUI;
   }
 }

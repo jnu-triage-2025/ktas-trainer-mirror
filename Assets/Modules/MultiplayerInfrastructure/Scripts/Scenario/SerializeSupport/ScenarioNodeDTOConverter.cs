@@ -31,6 +31,7 @@ namespace MultiplayerInfrastructure.Scenario
         "InvokeEvent" => Deserialize<ScenarioInvokeEventNodeDTO>(root, options),
         "Validator" => Deserialize<ScenarioValidatorNodeDTO>(root, options),
         "Parallel" => Deserialize<ScenarioParallelNodeDTO>(root, options),
+        "QuestControl" => Deserialize<ScenarioQuestControlNodeDTO>(root, options),
         _ => throw new JsonException($"Unknown nodeType '{nodeType}'.")
       };
     }

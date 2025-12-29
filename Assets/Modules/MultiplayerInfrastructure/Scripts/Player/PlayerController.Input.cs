@@ -18,6 +18,7 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private KeyCode _keyInteractInteractableObject = KeyboardConfigurationRegistry.InteractInteractableObject;
     [SerializeField] private KeyCode _keyEscape = KeyCode.Escape;
     [SerializeField] private KeyCode _keySpectatorFlyDown = KeyCode.LeftShift;
+    [SerializeField] private KeyCode _keyOpenQuestUI = KeyboardConfigurationRegistry.OpenQuestUI;
 
     /**
      * 키 입력 핸들링을 막아야 하는 상황에서 이 플래그를 참으로 설정할 것
@@ -47,6 +48,7 @@ namespace MultiplayerInfrastructure.Player
       HandleChatInput();
       HandleEscape();
       HandleDialogueInput();
+      HandleOpenQuestUIInput();
 
       if (_KeyHandlingLocked) return;
 
@@ -184,6 +186,21 @@ namespace MultiplayerInfrastructure.Player
       }
 
       HandleInteractablesSelectionInput();
+    }
+
+    private void HandleOpenQuestUIInput()
+    {
+      if (Input.GetKeyDown(_keyOpenQuestUI))
+      {
+        if (_questUIController.IsUnityNull())
+          _questUIController = FindQuestUIController();
+        if (_questUIController.IsUnityNull()) return;
+
+        if (UIOverlayStack.IsTop(_questUIController))
+          UIOverlayStack.Pop();
+        else
+          UIOverlayStack.Push(_questUIController);
+      }
     }
   }
 }

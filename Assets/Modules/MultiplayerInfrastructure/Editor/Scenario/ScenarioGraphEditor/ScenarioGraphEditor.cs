@@ -76,6 +76,9 @@ namespace MultiplayerInfrastructure.Editor
       var saveButton = new ToolbarButton(SaveGraphToJson) { text = "Save File" };
       toolbar.Add(saveButton);
 
+      var saveAsButton = new ToolbarButton(SaveGraphToJsonAs) { text = "Save File As..." };
+      toolbar.Add(saveAsButton);
+
       var validateButton = new ToolbarButton(ValidateGraphUsingRuntimeValidator) { text = "Validate" };
       toolbar.Add(validateButton);
 
@@ -447,7 +450,32 @@ namespace MultiplayerInfrastructure.Editor
         return;
       }
 
+      // If we have a current path, save directly; otherwise fall back to Save As.
+      if (string.IsNullOrEmpty(currentFilePath))
+      {
+        SaveGraphToJsonAs();
+        return;
+      }
+
+      SaveGraphToPath(currentFilePath);
+    }
+
+    private void SaveGraphToJsonAs()
+    {
+      if (graphData == null || graphData.Nodes.Count == 0)
+      {
+        EditorUtility.DisplayDialog("Save Failed", "저장할 노드가 없습니다.", "확인");
+        return;
+      }
+
       var path = EditorUtility.SaveFilePanel("Save Scenario JSON", Application.dataPath, "scenario_graph.json", "json");
+      if (string.IsNullOrEmpty(path)) return;
+
+      SaveGraphToPath(path);
+    }
+
+    private void SaveGraphToPath(string path)
+    {
       if (string.IsNullOrEmpty(path)) return;
 
       string json;
