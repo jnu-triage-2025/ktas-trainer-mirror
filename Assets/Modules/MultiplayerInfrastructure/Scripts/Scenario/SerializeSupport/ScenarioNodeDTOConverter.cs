@@ -27,6 +27,7 @@ namespace MultiplayerInfrastructure.Scenario
         "Choice" => Deserialize<ScenarioChoiceNodeDTO>(root, options),
         "Sound" => Deserialize<ScenarioSoundNodeDTO>(root, options),
         "PlayerMove" => Deserialize<ScenarioPlayerMoveNodeDTO>(root, options),
+        "NPCMove" => Deserialize<ScenarioNPCMoveNodeDTO>(root, options),
         "CameraTarget" => Deserialize<ScenarioCameraTargetNodeDTO>(root, options),
         "InvokeEvent" => Deserialize<ScenarioInvokeEventNodeDTO>(root, options),
         "Validator" => Deserialize<ScenarioValidatorNodeDTO>(root, options),

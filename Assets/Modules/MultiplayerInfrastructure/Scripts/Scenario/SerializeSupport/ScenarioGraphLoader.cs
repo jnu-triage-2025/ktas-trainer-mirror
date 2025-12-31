@@ -90,6 +90,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioChoiceNodeDTO choice => ConvertChoice(choice),
           ScenarioSoundNodeDTO sound => ConvertSound(sound),
           ScenarioPlayerMoveNodeDTO move => ConvertPlayerMove(move),
+          ScenarioNPCMoveNodeDTO npcMove => ConvertNPCMove(npcMove),
           ScenarioCameraTargetNodeDTO camera => ConvertCameraTarget(camera),
           ScenarioInvokeEventNodeDTO invoke => ConvertInvokeEvent(invoke),
           ScenarioValidatorNodeDTO validator => ConvertValidator(validator),
@@ -164,6 +165,23 @@ namespace MultiplayerInfrastructure.Scenario
         new ScenarioPlayerMoveNode
         {
           Identifier = dto.Identifier,
+          DestinationType = ParseDestinationType(dto.DestinationType),
+          DestinationIdentifier = dto.DestinationIdentifier,
+          DestinationX = dto.DestinationX ?? 0f,
+          DestinationY = dto.DestinationY ?? 0f,
+          DestinationZ = dto.DestinationZ ?? 0f,
+          IgnoreGroundCheck = dto.IgnoreGroundCheck ?? false,
+          MoveMode = ParseMoveMode(dto.MoveMode),
+          MoveSpeed = dto.MoveSpeed ?? 0f,
+          MoveDuration = dto.MoveDuration ?? 0f,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioNPCMoveNode ConvertNPCMove(ScenarioNPCMoveNodeDTO dto) =>
+        new ScenarioNPCMoveNode
+        {
+          Identifier = dto.Identifier,
+          NPCIdentifier = dto.NPCIdentifier,
           DestinationType = ParseDestinationType(dto.DestinationType),
           DestinationIdentifier = dto.DestinationIdentifier,
           DestinationX = dto.DestinationX ?? 0f,
@@ -362,6 +380,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioChoiceNode choice => ConvertToDTO(choice),
           ScenarioSoundNode sound => ConvertToDTO(sound),
           ScenarioPlayerMoveNode move => ConvertToDTO(move),
+          ScenarioNPCMoveNode npcMove => ConvertToDTO(npcMove),
           ScenarioCameraTargetNode camera => ConvertToDTO(camera),
           ScenarioInvokeEventNode invoke => ConvertToDTO(invoke),
           ScenarioValidatorNode validator => ConvertToDTO(validator),
@@ -434,6 +453,24 @@ namespace MultiplayerInfrastructure.Scenario
         {
           NodeType = "PlayerMove",
           Identifier = node.Identifier,
+          DestinationType = node.DestinationType.ToString(),
+          DestinationIdentifier = node.DestinationIdentifier,
+          DestinationX = node.DestinationX,
+          DestinationY = node.DestinationY,
+          DestinationZ = node.DestinationZ,
+          IgnoreGroundCheck = node.IgnoreGroundCheck,
+          MoveMode = node.MoveMode.ToString(),
+          MoveSpeed = node.MoveSpeed,
+          MoveDuration = node.MoveDuration,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioNPCMoveNodeDTO ConvertToDTO(ScenarioNPCMoveNode node) =>
+        new ScenarioNPCMoveNodeDTO
+        {
+          NodeType = "NPCMove",
+          Identifier = node.Identifier,
+          NPCIdentifier = node.NPCIdentifier,
           DestinationType = node.DestinationType.ToString(),
           DestinationIdentifier = node.DestinationIdentifier,
           DestinationX = node.DestinationX,

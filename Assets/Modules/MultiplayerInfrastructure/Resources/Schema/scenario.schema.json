@@ -38,6 +38,9 @@
           "$ref": "#/$defs/ScenarioPlayerMoveNode"
         },
         {
+          "$ref": "#/$defs/ScenarioNPCMoveNode"
+        },
+        {
           "$ref": "#/$defs/ScenarioCameraTargetNode"
         },
         {
@@ -293,6 +296,143 @@
             }
           },
           "required": [
+            "destinationType"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "destinationType": {
+                    "const": "Position"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "destinationX",
+                  "destinationY",
+                  "destinationZ"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "destinationType": {
+                    "const": "Waypoint"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "destinationIdentifier"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "moveMode": {
+                    "const": "BySpeed"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "moveSpeed"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "moveMode": {
+                    "const": "ByDuration"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "moveDuration"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "ScenarioNPCMoveNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "NPCMove"
+            },
+            "npcIdentifier": {
+              "type": "string"
+            },
+            "destinationType": {
+              "type": "string",
+              "enum": [
+                "Position",
+                "Waypoint"
+              ]
+            },
+            "destinationIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "destinationX": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "destinationY": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "destinationZ": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ignoreGroundCheck": {
+              "type": "boolean",
+              "default": false
+            },
+            "moveMode": {
+              "type": "string",
+              "enum": [
+                "Instant",
+                "BySpeed",
+                "ByDuration"
+              ],
+              "default": "BySpeed"
+            },
+            "moveSpeed": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "moveDuration": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "npcIdentifier",
             "destinationType"
           ],
           "allOf": [

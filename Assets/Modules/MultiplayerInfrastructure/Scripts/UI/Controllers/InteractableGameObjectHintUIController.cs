@@ -1,15 +1,11 @@
 using System.Collections.Generic;
-using FishNet.Object;
-using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.Registry;
-using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.UIDocuments;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using UnityEngine.Events;
 using Unity.VisualScripting;
-using System;
 
 namespace MultiplayerInfrastructure.UI
 {
@@ -28,7 +24,7 @@ namespace MultiplayerInfrastructure.UI
     [SerializeField] private int _nowSelected = -1;
     [SerializeField] private List<IInteractable> _interactables = new();
     [SerializeField] private UIDocument _uiDocument;
-    [SerializeField] private ScrollView _scrollView;
+    [SerializeField] private InteractableObjectHintList _hintList;
 
     [Header("Visuals")]
     [SerializeField] private Sprite _fallbackIcon;
@@ -88,13 +84,33 @@ namespace MultiplayerInfrastructure.UI
       if (_uiDocument == null)
         _uiDocument = GetComponent<UIDocument>();
 
-      _scrollView = _uiDocument != null
-          ? _uiDocument.rootVisualElement.Q<ScrollView>("interactable-scroll")
+      _hintList = _uiDocument != null
+          ? _uiDocument.rootVisualElement.Q<InteractableObjectHintList>("interactable-scroll")
           : null;
 
-      if (_scrollView == null && _uiDocument != null)
+      if (_hintList == null && _uiDocument != null)
       {
-        _scrollView = _uiDocument.rootVisualElement.Q<ScrollView>();
+        _hintList = _uiDocument.rootVisualElement.Q<InteractableObjectHintList>();
+      }
+
+      if (_hintList == null && _uiDocument != null)
+      {
+        var legacyScroll = _uiDocument.rootVisualElement.Q<ScrollView>("interactable-scroll");
+        if (legacyScroll != null)
+        {
+          _hintList = new InteractableObjectHintList();
+          var parent = legacyScroll.parent;
+          if (parent != null)
+          {
+            var index = parent.IndexOf(legacyScroll);
+            legacyScroll.RemoveFromHierarchy();
+            parent.Insert(index, _hintList);
+          }
+          else
+          {
+            _uiDocument.rootVisualElement.Add(_hintList);
+          }
+        }
       }
 
       ValidateRequirementsAndWarn();
@@ -125,25 +141,13 @@ namespace MultiplayerInfrastructure.UI
       if (_uiDocument.IsUnityNull())
         _uiDocument = GetComponent<UIDocument>();
 
-      _scrollView = _uiDocument?.rootVisualElement?.Q<ScrollView>("interactable-scroll");
+      _hintList = _uiDocument?.rootVisualElement?.Q<InteractableObjectHintList>("interactable-scroll");
 
-      if (_scrollView == null)
-        Debug.LogError("[InteractableHintUI] ScrollView with name 'interactable-scroll' was not found.");
-    }
+      if (_hintList == null)
+        _hintList = _uiDocument?.rootVisualElement?.Q<InteractableObjectHintList>();
 
-    private VisualElement GetContentContainer()
-    {
-      if (_scrollView == null)
-      {
-        CacheVisualReferences();
-        if (_scrollView == null) return null;
-      }
-
-      var content = _scrollView.contentContainer;
-      if (content == null)
-        Debug.LogError("[InteractableHintUI] ScrollView content container is null (panel not ready yet?).");
-
-      return content;
+      if (_hintList == null)
+        Debug.LogError("[InteractableHintUI] InteractableObjectHintList with name 'interactable-scroll' was not found.");
     }
 
     #endregion
@@ -152,36 +156,16 @@ namespace MultiplayerInfrastructure.UI
 
     private void RefreshUI()
     {
-      var content = GetContentContainer();
-      if (content == null) return;
+      if (_hintList == null) return;
 
-      content.Clear();
-
-      if (_interactables == null || _interactables.Count == 0)
-        return;
-
-      for (var i = 0; i < _interactables.Count; i++)
-      {
-        var element = CreateInteractableHintElement(_interactables[i], i == _nowSelected);
-        content.Add(element);
-      }
-
-      // 선택된 항목이 보이도록 스크롤
-      ScrollToSelected();
+      _hintList.Rebuild(_interactables, _nowSelected, _currentMode, GetInteractKeyText(), _fallbackIcon, _dialogueSelectionIcon);
     }
 
     private void ScrollToSelected()
     {
-      if (_scrollView == null || _nowSelected < 0) return;
+      if (_hintList == null || _nowSelected < 0) return;
 
-      var content = GetContentContainer();
-      if (content == null || content.childCount <= _nowSelected) return;
-
-      var selectedElement = content[_nowSelected];
-      if (selectedElement != null)
-      {
-        _scrollView.ScrollTo(selectedElement);
-      }
+      _hintList.ScrollToSelected(_nowSelected);
     }
 
     #endregion
@@ -623,76 +607,7 @@ namespace MultiplayerInfrastructure.UI
 
     #endregion
 
-    #region UI Creation
-
-    private VisualElement CreateInteractableHintElement(IInteractable interactable, bool isSelected)
-    {
-      var root = new VisualElement();
-      root.AddToClassList("interactable-hint");
-      if (isSelected) root.AddToClassList("selected");
-
-      // 다이얼로그 모드에서는 다른 스타일 적용
-      if (_currentMode == InteractableHintUIMode.Dialogue)
-      {
-        root.AddToClassList("dialogue-selection");
-      }
-
-      // 키 힌트
-      var keyHint = new VisualElement();
-      keyHint.AddToClassList("interact-key-hint");
-      var keyLabel = new Label(GetInteractKeyText());
-      keyLabel.AddToClassList("interact-key-text");
-      keyHint.Add(keyLabel);
-
-      // 콘텐츠 래퍼
-      var contentWrapper = new VisualElement();
-      contentWrapper.AddToClassList("interactable-content-wrapper");
-      contentWrapper.AddToClassList("interactable-content-row");
-
-      // 아이콘
-      var iconHolder = new VisualElement();
-      iconHolder.AddToClassList("interactable-icon-holder");
-
-      var displayColor = interactable != null ? interactable.DisplayColor : new Color(1f, 1f, 1f, 0f);
-      var iconSprite = interactable != null ? interactable.DisplayIcon : null;
-
-      // 다이얼로그 모드에서 아이콘이 없으면 기본 대화 아이콘 사용
-      if (iconSprite == null)
-      {
-        iconSprite = _currentMode == InteractableHintUIMode.Dialogue
-            ? _dialogueSelectionIcon
-            : _fallbackIcon;
-      }
-
-      if (iconSprite != null)
-      {
-        iconHolder.style.backgroundImage = new StyleBackground(iconSprite);
-        iconHolder.style.backgroundColor = Color.clear;
-      }
-      else
-      {
-        iconHolder.style.backgroundImage = StyleKeyword.None;
-        iconHolder.style.backgroundColor = displayColor;
-      }
-
-      // 텍스트
-      var textLabel = new Label(interactable != null ? interactable.DisplayText : string.Empty);
-      textLabel.AddToClassList("interactable-content-text");
-
-      // 다이얼로그 모드에서 텍스트 스타일 추가
-      if (_currentMode == InteractableHintUIMode.Dialogue)
-      {
-        textLabel.AddToClassList("dialogue-selection-text");
-      }
-
-      contentWrapper.Add(iconHolder);
-      contentWrapper.Add(textLabel);
-
-      root.Add(keyHint);
-      root.Add(contentWrapper);
-
-      return root;
-    }
+    #region UI Helpers
 
     private string GetInteractKeyText()
     {
@@ -713,8 +628,8 @@ namespace MultiplayerInfrastructure.UI
     {
       if (_uiDocument.IsUnityNull())
         Debug.LogError("[InteractableHintUI] Controller cannot find UIDocument.");
-      if (_scrollView.IsUnityNull())
-        Debug.LogError("[InteractableHintUI] Controller cannot find ScrollView.");
+      if (_hintList.IsUnityNull())
+        Debug.LogError("[InteractableHintUI] Controller cannot find InteractableObjectHintList.");
     }
 
     #endregion

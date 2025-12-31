@@ -73,7 +73,7 @@
       "portraitSpriteIdentifier": null,
       "identifier": "start_training",
       "nodeType": "Dialogue",
-      "nextIdentifier": "questcontrol_2"
+      "nextIdentifier": "npcmove_1"
     },
     "goodbye": {
       "speakerName": "의사",
@@ -110,6 +110,21 @@
       "identifier": "questcontrol_2",
       "nodeType": "QuestControl",
       "nextIdentifier": null
+    },
+    "npcmove_1": {
+      "npcIdentifier": "doctor_1",
+      "destinationType": "Waypoint",
+      "destinationIdentifier": "waypoint-test1",
+      "destinationX": 0,
+      "destinationY": 0,
+      "destinationZ": 0,
+      "ignoreGroundCheck": false,
+      "moveMode": "BySpeed",
+      "moveSpeed": 1,
+      "moveDuration": 0,
+      "identifier": "npcmove_1",
+      "nodeType": "NPCMove",
+      "nextIdentifier": "questcontrol_2"
     }
   }
 }
