@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.UI;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace MultiplayerInfrastructure.Player
 {

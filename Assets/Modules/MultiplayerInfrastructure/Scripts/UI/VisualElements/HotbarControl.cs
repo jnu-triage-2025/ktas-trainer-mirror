@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace MultiplayerInfrastructure.UIDocuments
+namespace MultiplayerInfrastructure.UI
 {
   [UxmlElement("HotbarControl")]
   public partial class HotbarControl : VisualElement

@@ -1,4 +1,4 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:infra="MultiplayerInfrastructure.UIDocuments" editor-extension-mode="False">
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:infra="MultiplayerInfrastructure.UI" editor-extension-mode="False">
     <Style src="project://database/Assets/Modules/MultiplayerInfrastructure/UIDocuments/InteractableObjectHintUI.uss" />
     <infra:InteractableObjectHintList name="interactable-scroll"
                                       class="interactable-scroll">

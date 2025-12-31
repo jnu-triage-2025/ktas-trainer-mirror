@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Scenario;
-using MultiplayerInfrastructure.UIDocuments;
 using MultiplayerInfrastructure.Registry;
 using Unity.VisualScripting;
 using UnityEngine;

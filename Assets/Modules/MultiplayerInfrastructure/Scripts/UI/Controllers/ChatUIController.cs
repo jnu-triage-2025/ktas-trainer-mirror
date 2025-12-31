@@ -2,7 +2,6 @@ using System;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
-using MultiplayerInfrastructure.UIDocuments;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;

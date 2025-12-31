@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Registry;
-using MultiplayerInfrastructure.UIDocuments;
 using UnityEngine;
 using UnityEngine.UIElements;
 

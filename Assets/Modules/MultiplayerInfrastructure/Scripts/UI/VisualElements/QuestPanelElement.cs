@@ -5,7 +5,7 @@ using MultiplayerInfrastructure.Quest;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace MultiplayerInfrastructure.UIDocuments
+namespace MultiplayerInfrastructure.UI
 {
   [UxmlElement]
   public partial class QuestPanelElement : VisualElement

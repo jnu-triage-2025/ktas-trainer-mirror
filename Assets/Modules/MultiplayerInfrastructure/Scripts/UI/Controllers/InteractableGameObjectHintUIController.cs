@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.InteractableEntity;
-using MultiplayerInfrastructure.UIDocuments;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.Events;

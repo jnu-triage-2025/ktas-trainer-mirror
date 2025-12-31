@@ -3,7 +3,7 @@ using MultiplayerInfrastructure.Definitions;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace MultiplayerInfrastructure.UIDocuments
+namespace MultiplayerInfrastructure.UI
 {
   [UxmlElement]
   public partial class ChatPanelElement : VisualElement

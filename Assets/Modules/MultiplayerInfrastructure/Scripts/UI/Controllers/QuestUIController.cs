@@ -4,7 +4,6 @@ using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Registry;
-using MultiplayerInfrastructure.UIDocuments;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;

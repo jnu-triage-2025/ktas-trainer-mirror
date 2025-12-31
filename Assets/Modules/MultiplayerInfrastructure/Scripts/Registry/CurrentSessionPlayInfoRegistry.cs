@@ -1,6 +1,7 @@
 using System;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.Session;
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -9,10 +10,38 @@ namespace MultiplayerInfrastructure.Registry
   public class CurrentSessionPlayInfoRegistry
   {
     private static readonly Dictionary<Type, UnityEngine.Object> _registry = new Dictionary<Type, UnityEngine.Object>();
-    public SessionInformationModel sessionInformation = new SessionInformationModel
+    private static SessionInformationModel _sessionInformation = new SessionInformationModel
     (
       DefaultsSessionInformationModel.address, DefaultsSessionInformationModel.port
     );
+    public static SessionInformationModel SessionInformation
+    {
+      get => _sessionInformation;
+      set
+      {
+        _sessionInformation = value;
+        if (_sessionInformation.Name == null) _sessionInformation.Name = "Unknown Session";
+        if (_sessionInformation.LastSeenUtc == null) _sessionInformation.LastSeenUtc = DateTime.UtcNow;
+      }
+    }
+
+    public static bool IsOpeningServer { get; set; } = false;
+    public static bool UseLanDiscovery { get; set; } = false;
+    public static bool LoadedFromIntroScene { get; set; } = false;
+
+    public static void SetSession
+    (
+      SessionInformationModel sessionInfo,
+      bool isOpeningServer,
+      bool useLanDiscovery,
+      bool loadedFromIntroScene = true
+    )
+    {
+      SessionInformation = sessionInfo;
+      IsOpeningServer = isOpeningServer;
+      UseLanDiscovery = useLanDiscovery;
+      LoadedFromIntroScene = loadedFromIntroScene;
+    }
 
     /// <example>
     /// CurrentSessionPlayInfoRegistry.OnRegistryRegistered += ~~

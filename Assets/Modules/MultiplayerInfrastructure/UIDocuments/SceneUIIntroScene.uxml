@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML
+  xmlns:ui="UnityEngine.UIElements"
+  xsi="http://www.w3.org/2001/XMLSchema-instance"
+>
+  <Style src="./SceneUIIntroScene.uss" />
+  <ui:VisualElement class="root">
+    <ui:Label text="Multiplayer Session Intro" class="title" />
+
+    <ui:VisualElement class="row">
+      <ui:VisualElement class="card">
+        <ui:VisualElement class="stack gap">
+          <ui:Button name="btnCreateAndJoin" class="btn primary" text="Create a Session and Join" />
+          <ui:Button name="btnSearchLAN" class="btn secondary" text="Search opened session on LAN" />
+          <ui:Button name="btnJoinSelected" class="btn accent" text="Join Selected Server" />
+        </ui:VisualElement>
+
+        <ui:Label text="Discovered Sessions" class="section-title" />
+        <ui:ListView name="sessionList"
+                     class="session-list"
+                     selection-type="Single"
+                     fixed-item-height="48" />
+        <ui:Label name="emptyState" class="empty-state" text="No sessions discovered yet. Click “Search opened session on LAN”." />
+      </ui:VisualElement>
+
+      <ui:VisualElement class="card direct-card">
+        <ui:Label text="Direct Join" class="section-title" />
+        <ui:VisualElement class="form-row">
+          <ui:Label text="Address" class="field-label" />
+          <ui:TextField name="addrField" class="text-field" value="127.0.0.1" />
+        </ui:VisualElement>
+        <ui:VisualElement class="form-row">
+          <ui:Label text="Port" class="field-label" />
+          <ui:TextField name="portField" class="text-field" value="7777" />
+        </ui:VisualElement>
+        <ui:Button name="btnDirectJoin" class="btn accent" text="Join" />
+      </ui:VisualElement>
+    </ui:VisualElement>
+
+    <ui:Label name="statusLabel" class="status" text="Ready." />
+  </ui:VisualElement>
+</ui:UXML>

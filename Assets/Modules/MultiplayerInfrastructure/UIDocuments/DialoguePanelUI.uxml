@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ui:UXML xmlns:ui="UnityEngine.UIElements"
-         xmlns:mpinfra="MultiplayerInfrastructure.UIDocuments"
+         xmlns:mpinfra="MultiplayerInfrastructure.UI"
 >
   <Style src="DialogueElement.uss" />
   <mpinfra:DialogueElement
