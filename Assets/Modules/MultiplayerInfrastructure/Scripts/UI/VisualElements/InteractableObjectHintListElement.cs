@@ -1,3 +1,4 @@
+using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
@@ -104,7 +105,6 @@ namespace MultiplayerInfrastructure.UI
         IInteractable interactable,
         string keyLabel,
         InteractableHintUIMode mode,
-        Sprite fallbackIcon,
         Sprite dialogueIcon,
         bool isSelected)
     {
@@ -113,7 +113,7 @@ namespace MultiplayerInfrastructure.UI
 
       var iconSprite = interactable?.DisplayIcon;
       if (iconSprite == null)
-        iconSprite = mode == InteractableHintUIMode.Dialogue ? dialogueIcon : fallbackIcon;
+        iconSprite = mode == InteractableHintUIMode.Dialogue ? dialogueIcon : DefaultsResource.FallbackSprite;
 
       if (iconSprite != null)
       {

@@ -9,7 +9,7 @@ namespace MultiplayerInfrastructure.Player
   public partial class PlayerController
   {
     [Header("PlayerController.Inventory:")]
-    [SerializeField] private InventoryUIController _inventoryUI;
+    private InventoryUIController _inventoryUI;
 
     [SerializeField] private PlayerControllerInventoryConfiguration _inventoryConf = new PlayerControllerInventoryConfiguration
     {
@@ -31,6 +31,9 @@ namespace MultiplayerInfrastructure.Player
 
     void Update_Inventory()
     {
+      if (_inventoryUI == null)
+        _inventoryUI = UIControlRegistry.Get<InventoryUIController>();
+
       if (_inventoryRenderRequired && _inventoryUI != null && _inventoryUI.IsOpened)
       {
         _inventoryUI.UpdateInventory(_slots);
@@ -40,6 +43,12 @@ namespace MultiplayerInfrastructure.Player
 
     private void ToggleInventory()
     {
+      if (_inventoryUI == null)
+        _inventoryUI = UIControlRegistry.Get<InventoryUIController>();
+
+      if (_inventoryUI == null)
+        return;
+
       _inventoryVisible = !_inventoryVisible;
       _inventoryUI.ToggleRoot(_inventoryVisible);
 

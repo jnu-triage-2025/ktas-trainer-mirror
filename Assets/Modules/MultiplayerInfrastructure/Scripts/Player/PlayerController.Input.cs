@@ -75,7 +75,7 @@ namespace MultiplayerInfrastructure.Player
     private void HandleToggleInventory()
     {
       var inventory = UIControlRegistry.Get<InventoryUIController>();
-      if (inventory.IsUnityNull()) return;
+      if (inventory == null) return;
 
       if (Input.GetKeyDown(_keyToggleInventory))
       {

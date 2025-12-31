@@ -2,10 +2,11 @@
 <ui:UXML
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:ui="UnityEngine.UIElements"
+  xmlns:infra="MultiplayerInfrastructure.UI"
 >
   <Style src="./InventoryUI.uss" />
-  <ui:VisualElement name="InventoryRoot" class="inventory-root" style="visibility: hidden;">
+  <infra:InventoryUIView name="InventoryRoot" class="inventory-root" style="visibility: hidden;">
     <ui:Label text="Inventory" class="inventory-title" />
     <ui:VisualElement name="InventoryGrid" class="inventory-grid" />
-  </ui:VisualElement>
+  </infra:InventoryUIView>
 </ui:UXML>

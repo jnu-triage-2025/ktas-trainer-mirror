@@ -31,7 +31,6 @@ namespace MultiplayerInfrastructure.UI
         int selectedIndex,
         InteractableHintUIMode mode,
         string keyLabel,
-        Sprite fallbackIcon,
         Sprite dialogueIcon)
     {
       contentContainer.Clear();
@@ -42,7 +41,7 @@ namespace MultiplayerInfrastructure.UI
       for (int i = 0; i < interactables.Count; i++)
       {
         var element = new InteractableObjectHintListElement();
-        element.Bind(interactables[i], keyLabel, mode, fallbackIcon, dialogueIcon, i == selectedIndex);
+        element.Bind(interactables[i], keyLabel, mode, dialogueIcon, i == selectedIndex);
         contentContainer.Add(element);
       }
 

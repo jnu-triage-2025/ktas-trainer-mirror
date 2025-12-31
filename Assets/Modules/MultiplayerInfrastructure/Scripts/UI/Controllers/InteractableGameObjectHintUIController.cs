@@ -26,7 +26,6 @@ namespace MultiplayerInfrastructure.UI
     [SerializeField] private InteractableObjectHintList _hintList;
 
     [Header("Visuals")]
-    [SerializeField] private Sprite _fallbackIcon;
     [SerializeField] private Sprite _dialogueSelectionIcon;
 
     [Header("Mode")]
@@ -157,7 +156,7 @@ namespace MultiplayerInfrastructure.UI
     {
       if (_hintList == null) return;
 
-      _hintList.Rebuild(_interactables, _nowSelected, _currentMode, GetInteractKeyText(), _fallbackIcon, _dialogueSelectionIcon);
+      _hintList.Rebuild(_interactables, _nowSelected, _currentMode, GetInteractKeyText(), _dialogueSelectionIcon);
     }
 
     private void ScrollToSelected()
