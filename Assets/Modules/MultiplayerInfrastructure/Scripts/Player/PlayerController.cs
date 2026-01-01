@@ -28,6 +28,7 @@ namespace MultiplayerInfrastructure.Player
       Start_Input();
       Start_Inventory();
       Start_Hotbar();
+      Start_EscapeMenu();
     }
 
     void Update()

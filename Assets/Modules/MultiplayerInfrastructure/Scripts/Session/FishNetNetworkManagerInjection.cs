@@ -22,6 +22,9 @@ namespace MultiplayerInfrastructure.Session
 
     private List<GameObject> _disabledHuds = new List<GameObject>();
 
+    private static FishNetNetworkManagerInjection _instance;
+    public static FishNetNetworkManagerInjection Instance => _instance;
+
     /// <summary>
     /// 이 컴포넌트는 NetworkManager 프리팹에 부착되는 것이 의도되었습니다.
     /// 하지만 NetworkManager 프리팹에 부착하는 것을 지양하고자 하여 별도의 게임 오브젝트에
@@ -30,6 +33,13 @@ namespace MultiplayerInfrastructure.Session
     /// </summary>
     void Awake()
     {
+      if (_instance != null && _instance != this)
+      {
+        Destroy(gameObject);
+        return;
+      }
+      _instance = this;
+
       _networkManager = GetComponent<NetworkManager>();
       if (_networkManager.IsUnityNull())
         _networkManager = FindAnyObjectByType<NetworkManager>();
@@ -84,7 +94,7 @@ namespace MultiplayerInfrastructure.Session
       _disabledHuds.Clear();
     }
 
-    private void StartServer()
+    public void StartServer()
     {
       if (_networkManager.IsUnityNull()) return;
       if (_serverStateAssumed == LocalConnectionState.Started)
@@ -92,7 +102,7 @@ namespace MultiplayerInfrastructure.Session
       _networkManager.ServerManager.StartConnection();
     }
 
-    private void StopServer()
+    public void StopServer()
     {
       if (_networkManager.IsUnityNull()) return;
       if (_serverStateAssumed == LocalConnectionState.Stopped)
@@ -100,7 +110,7 @@ namespace MultiplayerInfrastructure.Session
       _networkManager.ServerManager.StopConnection(true);
     }
     
-    private void StartClient()
+    public void StartClient()
     {
       if (_networkManager.IsUnityNull()) return;
       if (_clientStateAssumed == LocalConnectionState.Started)
@@ -108,7 +118,7 @@ namespace MultiplayerInfrastructure.Session
       _networkManager.ClientManager.StartConnection();
     }
 
-    private void StopClient()
+    public void StopClient()
     {
       if (_networkManager.IsUnityNull()) return;
       if (_clientStateAssumed == LocalConnectionState.Stopped)

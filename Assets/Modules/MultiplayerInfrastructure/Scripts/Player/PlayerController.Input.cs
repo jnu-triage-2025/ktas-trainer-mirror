@@ -24,15 +24,17 @@ namespace MultiplayerInfrastructure.Player
      * 키 입력 핸들링을 막아야 하는 상황에서 이 플래그를 참으로 설정할 것
      * i.e. 채팅창 오픈
      */
+    [SerializeField] private bool _keyHandlingLockedByEscapeUI = false;
     [SerializeField] private bool _keyHandlingLockedByChatUI = false;
     [SerializeField] private bool _keyHandlingLockedByInventoryUI = false;
     [SerializeField] private bool _keyHandlingLockedByDialogueUI = false;
-    private bool _KeyHandlingLocked => _keyHandlingLockedByChatUI || _keyHandlingLockedByInventoryUI || _keyHandlingLockedByDialogueUI;
+    private bool _KeyHandlingLocked => _keyHandlingLockedByEscapeUI || _keyHandlingLockedByChatUI || _keyHandlingLockedByInventoryUI || _keyHandlingLockedByDialogueUI;
 
     void Start_Input()
     {
       RegisterOverlayLock(UIControlRegistry.Get<ChatUIController>(), locked => _keyHandlingLockedByChatUI = locked);
       RegisterOverlayLock(UIControlRegistry.Get<InventoryUIController>(), locked => _keyHandlingLockedByInventoryUI = locked);
+      RegisterOverlayLock(UIControlRegistry.Get<GameEscapeMenuUIController>(), locked => _keyHandlingLockedByEscapeUI = locked);
     }
 
     private void RegisterOverlayLock(IUIOverlay overlay, Action<bool> setLocked)
@@ -46,7 +48,7 @@ namespace MultiplayerInfrastructure.Player
     public void Update_Input()
     {
       HandleChatInput();
-      HandleEscape();
+      var escapeConsumed = HandleEscape();
       HandleDialogueInput();
       HandleOpenQuestUIInput();
 
@@ -55,6 +57,9 @@ namespace MultiplayerInfrastructure.Player
           return;
 
       if (_KeyHandlingLocked) return;
+
+      if (!escapeConsumed)
+        HandleEscapeMenuInput();
 
       if (IsSpectator)
       {
@@ -68,12 +73,13 @@ namespace MultiplayerInfrastructure.Player
       HandleSwitchCameraViewMode();
     }
 
-    private void HandleEscape()
+    private bool HandleEscape()
     {
-      if (!Input.GetKeyDown(_keyEscape)) return;
-      if (UIOverlayStack.IsEmpty()) return;
+      if (!Input.GetKeyDown(_keyEscape)) return false;
+      if (UIOverlayStack.IsEmpty()) return false;
 
       UIOverlayStack.Pop();
+      return true;
     }
 
     /// <summary>
@@ -172,6 +178,18 @@ namespace MultiplayerInfrastructure.Player
       if (Input.GetKeyDown(KeyboardConfigurationRegistry.CloseChatUI))
       {
         chat.HandleCancelKey();
+      }
+    }
+
+    private void HandleEscapeMenuInput()
+    {
+      if (Input.GetKeyDown(_keyOpenEscMenu))
+      {
+        if (UIOverlayStack.IsTop(EscapeMenuUIController))
+          UIOverlayStack.Pop();
+        else
+          if (UIOverlayStack.IsEmpty())
+            UIOverlayStack.Push(EscapeMenuUIController);
       }
     }
 
