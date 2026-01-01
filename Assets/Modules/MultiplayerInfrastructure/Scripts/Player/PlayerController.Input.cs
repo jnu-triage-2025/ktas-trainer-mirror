@@ -50,7 +50,6 @@ namespace MultiplayerInfrastructure.Player
       HandleChatInput();
       var escapeConsumed = HandleEscape();
       HandleDialogueInput();
-      HandleOpenQuestUIInput();
 
       if (_keyHandlingLockedByInventoryUI) 
         if (HandleToggleInventory())
@@ -66,6 +65,8 @@ namespace MultiplayerInfrastructure.Player
         HandleSpectatorInput();
         return;
       }
+      
+      HandleOpenQuestUIInput();
 
       HandleInteractInteractableObject();
       HandleHotbarControlInput();

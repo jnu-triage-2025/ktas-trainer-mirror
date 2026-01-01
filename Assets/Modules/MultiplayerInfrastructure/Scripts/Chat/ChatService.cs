@@ -4,6 +4,7 @@ using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Command;
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
@@ -17,6 +18,7 @@ namespace MultiplayerInfrastructure.Chat
     [Header("References")]
     [SerializeField] private ChatUIController _uiController;
     [SerializeField] private ChatCommandService _commandService;
+    [SerializeField] private ScenarioCommandRunner _scenarioRunner;
     
     private readonly Dictionary<int, float> _lastMessageTimes = new();
 
@@ -26,6 +28,9 @@ namespace MultiplayerInfrastructure.Chat
         _uiController = GetComponent<ChatUIController>();
       if (_commandService == null)
         _commandService = GetComponent<ChatCommandService>();
+      // TODO: 다른 참조 방식 강구해보기
+      if (_scenarioRunner == null)
+        _scenarioRunner = FindFirstObjectByType<ScenarioCommandRunner>();
 
       if (_uiController == null || _commandService == null)
       {
@@ -33,7 +38,7 @@ namespace MultiplayerInfrastructure.Chat
         enabled = false;
         return;
       }
-      _commandService.Initialize(this);
+      _commandService.Initialize(this, _scenarioRunner);
 
       _uiController.OnSubmitted += HandleLocalSubmission;
     }

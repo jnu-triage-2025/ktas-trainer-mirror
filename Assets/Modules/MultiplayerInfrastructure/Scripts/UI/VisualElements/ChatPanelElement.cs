@@ -18,6 +18,7 @@ namespace MultiplayerInfrastructure.UI
 
     private ScrollView _logView;
     private TextField _inputField;
+    private VisualElement _toastPanel;
     private VisualElement _toastContainer;
     private VisualElement _panel;
     private IVisualElementScheduledItem _toastSchedule;
@@ -26,6 +27,13 @@ namespace MultiplayerInfrastructure.UI
 
     private static Color StyleColorBackground = new Color(0f, 0f, 0f, 0.82f);
     private static Color StyleColorText = Color.white;
+
+    const float styleLeft = 0f;
+    const float styleRight = 0f;
+    const float styleBottom = 0f;
+    const float stylePaddingLeft = 12f;
+    const float stylePaddingBottom = 12f;
+    const float stylePaddingRight = 12f;
 
     private class ToastEntry
     {
@@ -139,31 +147,52 @@ namespace MultiplayerInfrastructure.UI
 
       inputBg.Add(_inputField);
 
+      _toastPanel = new VisualElement
+      {
+        name = "chat-toast-panel",
+        pickingMode = PickingMode.Ignore
+      };
+      _toastPanel.AddToClassList("chat-toast-panel");
+      _toastPanel.style.position = Position.Absolute;
+      _toastPanel.style.left = styleLeft;
+      _toastPanel.style.bottom = styleBottom;
+      _toastPanel.style.right = styleRight;
+      _toastPanel.style.paddingLeft = stylePaddingLeft;
+      _toastPanel.style.paddingBottom = stylePaddingBottom;
+      _toastPanel.style.paddingRight = stylePaddingRight;
+      _toastPanel.style.width = Length.Percent(100);
+      _toastPanel.style.flexDirection = FlexDirection.Column;
+      _toastPanel.style.alignItems = Align.FlexStart;
+      _toastPanel.style.justifyContent = Justify.FlexEnd;
+
       _toastContainer = new VisualElement
       {
         name = "chat-toast-container",
         pickingMode = PickingMode.Ignore
       };
       _toastContainer.AddToClassList("chat-toast-container");
-      _toastContainer.style.position = Position.Absolute;
-      _toastContainer.style.left = 0;
-      _toastContainer.style.bottom = 0;
-      _toastContainer.style.width = Length.Percent(100);
       _toastContainer.style.display = DisplayStyle.None;
       _toastContainer.style.visibility = Visibility.Hidden;
+      _toastContainer.style.width = Length.Percent(100);
       _toastContainer.style.flexDirection = FlexDirection.Column;
       _toastContainer.style.alignItems = Align.FlexStart;
       _toastContainer.style.backgroundColor = StyleColorBackground;
       _toastContainer.style.color = StyleColorText;
-      Add(_toastContainer);
+
+      _toastPanel.Add(_toastContainer);
+      Add(_toastPanel);
     }
 
     private void ApplyInlineStyles()
     {
       style.position = Position.Absolute;
-      style.left = 18;
-      style.bottom = 18;
-      style.width = 420;
+      style.left = styleLeft;
+      style.right = styleRight;
+      style.bottom = styleBottom;
+      style.paddingLeft = stylePaddingLeft;
+      style.paddingBottom = stylePaddingBottom;
+      style.paddingRight = stylePaddingRight;
+      style.width = Length.Percent(100);
       style.flexDirection = FlexDirection.Column;
       style.alignItems = Align.FlexStart;
       style.justifyContent = Justify.FlexEnd;
@@ -240,6 +269,9 @@ namespace MultiplayerInfrastructure.UI
         pickingMode = PickingMode.Ignore
       };
       entry.AddToClassList("chat-log__entry");
+      entry.style.whiteSpace = WhiteSpace.Normal;
+      entry.style.flexShrink = 1;
+      entry.style.width = Length.Percent(100);
 
       _logView.contentContainer.Add(entry);
       _logEntries.Enqueue(entry);
@@ -297,7 +329,7 @@ namespace MultiplayerInfrastructure.UI
 
       var toastRoot = new VisualElement { pickingMode = PickingMode.Ignore };
       // Provide spacing between toasts via margin since `gap` is not available on IStyle here.
-      toastRoot.style.marginTop = 6;
+      toastRoot.style.marginTop = _toasts.Count > 0 ? 6 : 0;
       toastRoot.AddToClassList("chat-toast");
       toastRoot.style.opacity = 1f;
 
@@ -307,6 +339,9 @@ namespace MultiplayerInfrastructure.UI
         pickingMode = PickingMode.Ignore
       };
       label.AddToClassList("chat-toast__label");
+      label.style.whiteSpace = WhiteSpace.Normal;
+      label.style.flexShrink = 1;
+      label.style.width = Length.Percent(100);
 
       toastRoot.Add(label);
       _toastContainer.Add(toastRoot);
