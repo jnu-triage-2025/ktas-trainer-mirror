@@ -9,17 +9,8 @@ namespace MultiplayerInfrastructure.Player
   {
     [SerializeField] private GameEscapeMenuUIController _escapeMenuUIController;
     [SerializeField] private bool _escapeMenuEventsRegistered = false;
-    private GameEscapeMenuUIController EscapeMenuUIController
-    {
-      get
-      {
-        EnsureEscapeMenuController();
 
-        return _escapeMenuUIController;
-      }
-    }
-
-    private void Start_EscapeMenu()
+    private void OnClientStart_EscapeMenu()
     {
       EnsureEscapeMenuController();
     }

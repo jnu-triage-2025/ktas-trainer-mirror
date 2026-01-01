@@ -185,11 +185,11 @@ namespace MultiplayerInfrastructure.Player
     {
       if (Input.GetKeyDown(_keyOpenEscMenu))
       {
-        if (UIOverlayStack.IsTop(EscapeMenuUIController))
+        if (UIOverlayStack.IsTop(_escapeMenuUIController))
           UIOverlayStack.Pop();
         else
           if (UIOverlayStack.IsEmpty())
-            UIOverlayStack.Push(EscapeMenuUIController);
+            UIOverlayStack.Push(_escapeMenuUIController);
       }
     }
 

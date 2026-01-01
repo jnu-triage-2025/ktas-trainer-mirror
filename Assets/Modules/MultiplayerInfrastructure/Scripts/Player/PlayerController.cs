@@ -28,7 +28,6 @@ namespace MultiplayerInfrastructure.Player
       Start_Input();
       Start_Inventory();
       Start_Hotbar();
-      Start_EscapeMenu();
     }
 
     void Update()
@@ -54,6 +53,7 @@ namespace MultiplayerInfrastructure.Player
       OnStartClient_Interactables();
       OnStartClient_Dialogue();
       OnStartClient_Quest();
+      OnClientStart_EscapeMenu();
     }
   }
 }
