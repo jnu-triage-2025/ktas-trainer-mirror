@@ -25,6 +25,7 @@ namespace MultiplayerInfrastructure.UI
 
     private UIDocument _document;
     private InventoryUIView _view;
+    private HotbarUIController _hotbarUI;
 
     public bool IsOpened => _view != null && _view.IsVisible;
 
@@ -44,6 +45,7 @@ namespace MultiplayerInfrastructure.UI
       _document.sortingOrder = _sortingOrder;
 
       EnsureView();
+      EnsureHotbar();
     }
 
     private void EnsureView()
@@ -60,6 +62,13 @@ namespace MultiplayerInfrastructure.UI
       _view.AddToClassList("inventory-root");
       _view.name = string.IsNullOrEmpty(_view.name) ? "InventoryRoot" : _view.name;
       _view.Initialize(columns, rows, slotTemplate, defaultIcon);
+      _view.SlotsMutated += HandleSlotsMutated;
+    }
+
+    private void OnDestroy()
+    {
+      if (_view != null)
+        _view.SlotsMutated -= HandleSlotsMutated;
     }
 
     public void UpdateInventory(IReadOnlyList<InventorySlotModelDTO> slots) => _view?.UpdateInventory(slots);
@@ -86,6 +95,18 @@ namespace MultiplayerInfrastructure.UI
       columns = Mathf.Max(1, newColumns);
       rows = Mathf.Max(1, newRows);
       _view?.RebuildGrid(columns, rows);
+    }
+
+    private void EnsureHotbar()
+    {
+      if (_hotbarUI == null)
+        _hotbarUI = UIControlRegistry.Get<HotbarUIController>();
+    }
+
+    private void HandleSlotsMutated()
+    {
+      EnsureHotbar();
+      _hotbarUI?.BindInventory(_view?.BoundSlots);
     }
   }
 }

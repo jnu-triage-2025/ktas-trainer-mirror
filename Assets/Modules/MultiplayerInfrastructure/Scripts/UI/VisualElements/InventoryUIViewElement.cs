@@ -22,7 +22,9 @@ namespace MultiplayerInfrastructure.UI
 
     private readonly List<VisualElement> _slotElements = new();
     private readonly List<InventorySlotModelDTO> _slotDataBuffer = new();
-    private IList<InventorySlotModelDTO> _boundSlots;
+    private IReadOnlyList<InventorySlotModelDTO> _boundSlots;
+
+    public event Action SlotsMutated;
 
     private InventorySlotModelDTO _heldItem;
     private VisualElement _heldItemGhost;
@@ -30,6 +32,7 @@ namespace MultiplayerInfrastructure.UI
     private Label _heldItemGhostCount;
 
     public bool IsVisible => style.display != DisplayStyle.None;
+    public IReadOnlyList<InventorySlotModelDTO> BoundSlots => _boundSlots ?? _slotDataBuffer;
 
     public void Initialize(int columns, int rows, VisualTreeAsset slotTemplate, Texture2D defaultIcon)
     {
@@ -60,7 +63,7 @@ namespace MultiplayerInfrastructure.UI
     {
       if (_slotElements.Count == 0 || slots == null) return;
 
-      _boundSlots = slots as IList<InventorySlotModelDTO>;
+      _boundSlots = slots;
 
       // Ensure backing buffers cover both the visual grid and incoming data size to avoid out-of-range issues when the counts diverge.
       int incomingCount = slots.Count;
@@ -104,6 +107,7 @@ namespace MultiplayerInfrastructure.UI
           slot.SetItem(_heldItem.ItemInstance);
           RefreshSlotVisual(i);
           ClearHeldItem();
+          NotifySlotsMutated();
           return;
         }
 
@@ -115,10 +119,12 @@ namespace MultiplayerInfrastructure.UI
           if (leftover == null || _heldItem.ItemInstance == null || _heldItem.ItemInstance.currCount <= 0)
           {
             ClearHeldItem();
+            NotifySlotsMutated();
             return;
           }
 
           _heldItem.ItemInstance = leftover;
+          NotifySlotsMutated();
         }
       }
 
@@ -241,6 +247,7 @@ namespace MultiplayerInfrastructure.UI
 
       RefreshSlotVisual(slotIndex);
       UpdateHeldItemGhostVisual(_heldItem);
+      NotifySlotsMutated();
     }
 
     private void TryPlaceHeldItemIntoSlot(int slotIndex)
@@ -260,6 +267,7 @@ namespace MultiplayerInfrastructure.UI
         target.SetItem(_heldItem.ItemInstance);
         RefreshSlotVisual(slotIndex);
         ClearHeldItem();
+        NotifySlotsMutated();
         return;
       }
 
@@ -278,6 +286,7 @@ namespace MultiplayerInfrastructure.UI
           UpdateHeldItemGhostVisual(_heldItem);
         }
 
+        NotifySlotsMutated();
         return;
       }
 
@@ -286,6 +295,7 @@ namespace MultiplayerInfrastructure.UI
 
       _heldItem = previous != null ? new InventorySlotModelDTO(previous) : null;
       UpdateHeldItemGhostVisual(_heldItem);
+      NotifySlotsMutated();
     }
 
     private void OnPointerMoveWhileHolding(PointerMoveEvent evt)
@@ -414,6 +424,11 @@ namespace MultiplayerInfrastructure.UI
     {
       _heldItem = null;
       UpdateHeldItemGhostVisual(null);
+    }
+
+    private void NotifySlotsMutated()
+    {
+      SlotsMutated?.Invoke();
     }
   }
 }

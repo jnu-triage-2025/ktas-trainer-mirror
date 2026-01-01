@@ -50,6 +50,10 @@ namespace MultiplayerInfrastructure.Player
       HandleDialogueInput();
       HandleOpenQuestUIInput();
 
+      if (_keyHandlingLockedByInventoryUI) 
+        if (HandleToggleInventory())
+          return;
+
       if (_KeyHandlingLocked) return;
 
       if (IsSpectator)
@@ -72,10 +76,20 @@ namespace MultiplayerInfrastructure.Player
       UIOverlayStack.Pop();
     }
 
-    private void HandleToggleInventory()
+    /// <summary>
+    /// 인벤토리를 인벤토리 토글 키를 이용해 열거나 닫으려고 시도할 때의 처리를 대응합니다.
+    /// 
+    /// 이 메서드는 몇 개 로직이 중첩되어있습니다:
+    /// 이 메서드는 인벤토리 UI 표시에 변화가 있을 때 true를 반환합니다.
+    /// 이것은 Update_Input 메서드에서 인벤토리 토글 메서드를 재활용할 수 있게 하기 위함입니다.
+    /// 다른 비슷한 유형의 메서드와의 일관성을 떨어뜨리고, 코드 이해에 혼란을 줄 수 있으므로
+    /// Open/Close 메서드를 분리하여 따로 대응할 것인지는 이후에 고려해야 합니다.
+    /// </summary>
+    /// <returns>bool 인벤토리 UI 표시에 변화가 있는가?</returns>
+    private bool HandleToggleInventory()
     {
       var inventory = UIControlRegistry.Get<InventoryUIController>();
-      if (inventory == null) return;
+      if (inventory == null) return false;
 
       if (Input.GetKeyDown(_keyToggleInventory))
       {
@@ -83,7 +97,9 @@ namespace MultiplayerInfrastructure.Player
           UIOverlayStack.Pop();
         else
           UIOverlayStack.Push(inventory);
+        return true;
       }
+      return false;
     }
 
     private void HandleSwitchCameraViewMode()

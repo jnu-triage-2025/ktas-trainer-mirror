@@ -5,8 +5,11 @@
   xmlns:infra="MultiplayerInfrastructure.UI"
 >
   <Style src="./InventoryUI.uss" />
-  <infra:InventoryUIView name="InventoryRoot" class="inventory-root" style="visibility: hidden;">
-    <ui:Label text="Inventory" class="inventory-title" />
-    <ui:VisualElement name="InventoryGrid" class="inventory-grid" />
-  </infra:InventoryUIView>
+  
+  <ui:VisualElement name="InventoryUIWrapper" class="inventory-ui-wrapper">
+    <infra:InventoryUIView name="InventoryRoot" class="inventory-root" style="visibility: hidden;">
+      <ui:Label text="Inventory" class="inventory-title" />
+      <ui:VisualElement name="InventoryGrid" class="inventory-grid" />
+    </infra:InventoryUIView>
+  </ui:VisualElement>
 </ui:UXML>
