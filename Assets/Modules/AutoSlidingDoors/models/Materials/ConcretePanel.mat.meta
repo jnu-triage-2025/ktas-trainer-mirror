@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2b09fa9cb356c6044b178ef14c0b0426
+timeCreated: 1546867364
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 136802
+  packageName: Automatic Sliding Doors
+  packageVersion: 1.0
+  assetPath: Assets/Assets_AutoSlidingDoors/models/Materials/ConcretePanel.mat
+  uploadId: 286981

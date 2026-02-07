@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 92e18398ac23cdd43b4b8878086525fa
+timeCreated: 1546904757
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 136802
+  packageName: Automatic Sliding Doors
+  packageVersion: 1.0
+  assetPath: Assets/Assets_AutoSlidingDoors/prefabs/autoDoor_6.prefab
+  uploadId: 286981

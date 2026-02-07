@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 62154cdea20836a4b92bc142c9662798
+timeCreated: 1546867364
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 136802
+  packageName: Automatic Sliding Doors
+  packageVersion: 1.0
+  assetPath: Assets/Assets_AutoSlidingDoors/models/Materials/windows.mat
+  uploadId: 286981

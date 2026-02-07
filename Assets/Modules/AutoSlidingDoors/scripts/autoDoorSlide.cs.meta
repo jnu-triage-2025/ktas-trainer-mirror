@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 1bc6fdd14fcdbb24fa6699cb0829a974
+timeCreated: 1546946942
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 136802
+  packageName: Automatic Sliding Doors
+  packageVersion: 1.0
+  assetPath: Assets/Assets_AutoSlidingDoors/scripts/autoDoorSlide.cs
+  uploadId: 286981
