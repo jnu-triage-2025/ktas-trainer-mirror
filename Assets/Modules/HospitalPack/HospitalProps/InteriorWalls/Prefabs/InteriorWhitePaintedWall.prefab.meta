@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f3686444701220b43820a78fec6dee63
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80725
+  packageName: Hospital Recovery Room
+  packageVersion: 3.0
+  assetPath: Assets/HospitalPack/HospitalProps/InteriorWalls/Prefabs/InteriorWhitePaintedWall.prefab
+  uploadId: 822420

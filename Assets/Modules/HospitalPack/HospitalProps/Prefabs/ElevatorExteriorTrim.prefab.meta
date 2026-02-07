@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: bf63c9d3ea14f984eb80339fa001b617
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80725
+  packageName: Hospital Recovery Room
+  packageVersion: 3.0
+  assetPath: Assets/HospitalPack/HospitalProps/Prefabs/ElevatorExteriorTrim.prefab
+  uploadId: 822420

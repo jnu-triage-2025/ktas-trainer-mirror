@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6c59e5aefd7063447bfc8ea7f51876bb
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 253910
+  packageName: Hospital Equipments
+  packageVersion: 1.0
+  assetPath: Assets/Hospital Equipments/Models/Materials/ECG_Monitor_BaseMap.mat
+  uploadId: 581211

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5358f8e1e02ee02458984c6811c75466
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80725
+  packageName: Hospital Recovery Room
+  packageVersion: 3.0
+  assetPath: Assets/HospitalPack/HospitalProps/InteriorWalls/Prefabs/RoofTrim2M.prefab
+  uploadId: 822420

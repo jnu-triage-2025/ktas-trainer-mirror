@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ba098cfd283e2d640baa36dbeb0c9b01
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80725
+  packageName: Hospital Recovery Room
+  packageVersion: 3.0
+  assetPath: Assets/HospitalPack/HospitalProps/Prefabs/MachineC.prefab
+  uploadId: 822420

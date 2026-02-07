@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ccce786cc0706ea4d884f0fd51370705
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80725
+  packageName: Hospital Recovery Room
+  packageVersion: 3.0
+  assetPath: Assets/HospitalPack/HospitalProps/Prefabs/Headboard.prefab
+  uploadId: 822420

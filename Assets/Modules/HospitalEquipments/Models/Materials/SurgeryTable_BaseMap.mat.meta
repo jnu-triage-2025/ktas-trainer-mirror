@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: af57fbd9eab866d4a9bd71c5b51c3a6c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 253910
+  packageName: Hospital Equipments
+  packageVersion: 1.0
+  assetPath: Assets/Hospital Equipments/Models/Materials/SurgeryTable_BaseMap.mat
+  uploadId: 581211

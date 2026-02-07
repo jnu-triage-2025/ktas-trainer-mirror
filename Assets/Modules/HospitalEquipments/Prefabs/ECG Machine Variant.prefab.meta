@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: af0fa4ddb082cd846b4ae947d500200d
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 253910
+  packageName: Hospital Equipments
+  packageVersion: 1.0
+  assetPath: Assets/Hospital Equipments/Prefabs/ECG Machine Variant.prefab
+  uploadId: 581211

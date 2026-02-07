@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 698e132caa14ef745a2cedc037a2672c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80725
+  packageName: Hospital Recovery Room
+  packageVersion: 3.0
+  assetPath: Assets/HospitalPack/HospitalProps/TiledTextures/Materials/PolishedConcrte.mat
+  uploadId: 822420
