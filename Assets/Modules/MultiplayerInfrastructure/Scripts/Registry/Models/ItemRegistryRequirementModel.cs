@@ -8,6 +8,7 @@ namespace MultiplayerInfrastructure.Registry
   {
     public ItemBaseModelSO itemDataModel;
     public GameObject itemPrefab;
+    public Sprite itemSprite;
   }
 }
 

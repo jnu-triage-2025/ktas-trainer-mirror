@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &452677398093970061
+--- !u!1 &2912012519658388360
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,50 +8,50 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 9106092618968048272}
-  - component: {fileID: 7113312736649426871}
-  - component: {fileID: 8659435258608165579}
-  - component: {fileID: 3367965260160765280}
-  - component: {fileID: 5222283261293885003}
-  - component: {fileID: 6075091924054892046}
-  - component: {fileID: 7921378683002130857}
+  - component: {fileID: 7468357655197197059}
+  - component: {fileID: 93214837378217980}
+  - component: {fileID: 6134161816337337143}
+  - component: {fileID: 2435698059751314216}
+  - component: {fileID: 3258920315798757537}
+  - component: {fileID: 8487261724365643408}
+  - component: {fileID: 4777632959028820417}
   m_Layer: 0
-  m_Name: Wood
+  m_Name: Stone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &9106092618968048272
+--- !u!4 &7468357655197197059
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 452677398093970061}
+  m_GameObject: {fileID: 2912012519658388360}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.653, y: 1.122, z: 0.5}
+  m_LocalRotation: {x: 0, y: 0.3855034, z: 0, w: 0.9227064}
+  m_LocalPosition: {x: 2.4, y: 0.85, z: -0.45}
   m_LocalScale: {x: 0.2, y: 0.2, z: 0.3}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &7113312736649426871
+  m_LocalEulerAnglesHint: {x: 0, y: 45.35, z: 0}
+--- !u!33 &93214837378217980
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 452677398093970061}
+  m_GameObject: {fileID: 2912012519658388360}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &8659435258608165579
+--- !u!23 &6134161816337337143
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 452677398093970061}
+  m_GameObject: {fileID: 2912012519658388360}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -70,7 +70,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a7978ec564b0e4f6a86f1d3c6f36585d, type: 2}
+  - {fileID: 2100000, guid: 909b798d754b04234a7a430871f538c7, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -93,13 +93,13 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &3367965260160765280
+--- !u!65 &2435698059751314216
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 452677398093970061}
+  m_GameObject: {fileID: 2912012519658388360}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -114,13 +114,13 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &5222283261293885003
+--- !u!114 &3258920315798757537
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 452677398093970061}
+  m_GameObject: {fileID: 2912012519658388360}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
@@ -133,7 +133,7 @@ MonoBehaviour:
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
-  - {fileID: 7921378683002130857}
+  - {fileID: 4777632959028820417}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -159,22 +159,22 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 10
+  <PrefabId>k__BackingField: 15
   <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 2723388950411988893
+  <AssetPathHash>k__BackingField: 9507699062331182747
   SceneId: 0
   SerializedTransformProperties:
-    Position: {x: 2.653, y: 1.122, z: 0.5}
-    Rotation: {x: -0, y: -0, z: -0, w: 1}
+    Position: {x: 2.4, y: 0.85, z: -0.45}
+    Rotation: {x: 0, y: 0.3855034, z: 0, w: 0.9227064}
     Scale: {x: 0.2, y: 0.2, z: 0.3}
     IsValid: 1
---- !u!54 &6075091924054892046
+--- !u!54 &8487261724365643408
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 452677398093970061}
+  m_GameObject: {fileID: 2912012519658388360}
   serializedVersion: 5
   m_Mass: 1
   m_LinearDamping: 0
@@ -195,22 +195,22 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &7921378683002130857
+--- !u!114 &4777632959028820417
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 452677398093970061}
+  m_GameObject: {fileID: 2912012519658388360}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4d2a96766688f402897e4c08aeb96a0a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GroundedItem
   _componentIndexCache: 0
-  _addedNetworkObject: {fileID: 5222283261293885003}
-  _networkObjectCache: {fileID: 5222283261293885003}
-  _itemBaseModel: {fileID: 11400000, guid: ba29daefc5a3448adbbffe3dd60092d0, type: 2}
+  _addedNetworkObject: {fileID: 3258920315798757537}
+  _networkObjectCache: {fileID: 3258920315798757537}
+  _itemBaseModel: {fileID: 11400000, guid: 4a42a57a077034cb4bfc84db417e855f, type: 2}
   _itemInstanceModel:
     identifier: 
     displayName: 

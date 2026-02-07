@@ -16,8 +16,8 @@ public class ItemRegistry : MonoBehaviour
 
   [Header("Icon Loading")]
   [Tooltip("Resources-relative folder (recommended), or a project path containing '/Resources/'. " +
-           "Example (recommended): 'Textures/ItemTextures'. " +
-           "Example (also accepted): 'Assets/Modules/MultiplayerInfrastructure/Resources/Textures/ItemTextures'")]
+           "Example (recommended): 'Textures/Items'. " +
+           "Example (also accepted): 'Assets/Modules/TriageTrainer/Resources/Textures/Items'")]
   public string iconResourcesPath = DefaultsItemRegistry.ItemTexturesPath;
 
   [Tooltip("If true, will start async preloading of registered item icons on Awake.")]
@@ -73,9 +73,15 @@ public class ItemRegistry : MonoBehaviour
 
       _itemBaseModelCache[id] = entry.itemDataModel;
       _itemPrefabCache[id] = entry.itemPrefab;
+      _itemIconCache[id] = entry.itemSprite;
 
       _debugRegisteredItemModels.Add(entry.itemDataModel);
       _debugRegisteredItemPrefabs.Add(entry.itemPrefab);
+      _debugRegisteredItemIcons.Add(entry.itemSprite);
+
+      // If a sprite was explicitly registered, skip preload attempts.
+      if (entry.itemSprite != null)
+        continue;
 
       // Don’t block startup unless you want sync preload.
       if (preloadIconsOnAwakeAsync)
@@ -311,9 +317,9 @@ public class ItemRegistry : MonoBehaviour
 
   /// <summary>
   /// Accepts:
-  /// - "Textures/ItemTextures"
-  /// - "Assets/Modules/MultiplayerInfrastructure/Resources/Textures/ItemTextures"
-  /// - ".../Resources/Textures/ItemTextures"
+  /// - "Textures/Items"
+  /// - "Assets/Modules/TriageTrainer/Resources/Textures/Items"
+  /// - ".../Resources/Textures/Items"
   /// Returns a Resources-relative folder without leading/trailing slashes.
   /// </summary>
   private static string NormalizeToResourcesRelativeFolder(string input)
@@ -339,7 +345,7 @@ public class ItemRegistry : MonoBehaviour
     if (path.EndsWith("/Resources", StringComparison.OrdinalIgnoreCase))
       return string.Empty;
 
-    // If they wrote just "Resources/Textures/ItemTextures"
+    // If they wrote just "Resources/Textures/Items"
     if (path.StartsWith("Resources/", StringComparison.OrdinalIgnoreCase))
       return path.Substring("Resources/".Length).Trim('/');
 
