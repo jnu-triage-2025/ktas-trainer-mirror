@@ -5,6 +5,7 @@
 | 전 | 후 |
 | :-: | :-: |
 | `/generted files by us` | `/Modules/ChonnamNatlUnivCustomizedModels/Models` |
+| `/Prefab` | `/Modules/ChonnamNatlUnivCustomizedModels/Prefabs` |
 | `/Assets_AutoSlidingDoors` | `/Modules/AutoSlidingDoors` |
-| `Hospital Equipment Packages` | `/Modules/HospitalEquipmentPackages` |
-| `HospitalEquments` | `/Modules/Hospital` |
+| `/Hospital Equipment Packages` | `/Modules/HospitalEquipmentPackages` |
+| `/HospitalEquments` | `/Modules/Hospital` |
