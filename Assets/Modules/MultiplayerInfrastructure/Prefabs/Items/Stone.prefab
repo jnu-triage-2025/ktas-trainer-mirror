@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 2435698059751314216}
   - component: {fileID: 3258920315798757537}
   - component: {fileID: 8487261724365643408}
-  - component: {fileID: 4777632959028820417}
+  - component: {fileID: 8979993436514125133}
   m_Layer: 0
   m_Name: Stone
   m_TagString: Untagged
@@ -133,7 +133,7 @@ MonoBehaviour:
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
-  - {fileID: 4777632959028820417}
+  - {fileID: 8979993436514125133}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -144,7 +144,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584348706467528948
+  _initializedTimestamp: -8584309080420666728
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -159,9 +159,9 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 15
+  <PrefabId>k__BackingField: 16
   <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 9507699062331182747
+  <AssetPathHash>k__BackingField: 15138896661289097365
   SceneId: 0
   SerializedTransformProperties:
     Position: {x: 2.4, y: 0.85, z: -0.45}
@@ -195,7 +195,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &4777632959028820417
+--- !u!114 &8979993436514125133
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -204,14 +204,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 2912012519658388360}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4d2a96766688f402897e4c08aeb96a0a, type: 3}
+  m_Script: {fileID: 11500000, guid: 39ca54023b690445f911216cad48a54b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GroundedItem
+  m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Item.Item
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 3258920315798757537}
   _networkObjectCache: {fileID: 3258920315798757537}
   _itemBaseModel: {fileID: 11400000, guid: 4a42a57a077034cb4bfc84db417e855f, type: 2}
-  _itemInstanceModel:
+  _itemData:
     identifier: 
     displayName: 
     _itemTextureIdentifier: 
@@ -220,4 +220,5 @@ MonoBehaviour:
     hasDurability: 0
     currentDurability: 0
     _itemTexture: {fileID: 0}
+  _itemIcon: {fileID: 0}
   _itemIdentifier: 

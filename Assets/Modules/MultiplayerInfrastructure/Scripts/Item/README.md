@@ -1,6 +1,6 @@
 # Item
 
-아이템은 인벤토리 상에 존재하는 데이터 값(`ItemBaseModelSO`, `ItemInstanceModelDTO`)과 인게임 상에 실제로 배치/상호작용 가능한 3D 오브젝트(`GroundedItem`)로 구성됩니다. 모든 구성 요소는 완벽히 정의되어 있어야 시스템에서 의도대로 처리될 수 있습니다.  
+아이템은 인벤토리 상에 존재하는 데이터 값(`ItemBaseModelSO`, `ItemData`)과 인게임 상에 실제로 배치/상호작용 가능한 3D 오브젝트(`Item`)로 구성됩니다. 모든 구성 요소는 완벽히 정의되어 있어야 시스템에서 의도대로 처리될 수 있습니다.  
 
 사전 정의된 아이템은 `ItemBaseModelSO`와 아이템 스프라이트 이미지, 그리고 유니티 게임 오브젝트 프리팹이 필요합니다.  
 
@@ -28,9 +28,9 @@ Project 패널의 + (추가) 버튼에서 `Triage Trainer > Item Data Model`을 
 
 ![](./_static/register-item-grounded-item.png)
 
-프리팹에는 게임 시스템과 상호작용 가능하도록 `GroundedItem` 컴포넌트를 추가해야 합니다. `GroundedItem` 컴포넌트에는 `ItemDataModelSO` 타입의 `BaseItemDataModelSO` 필드와 `ItemSerializableDTO` 타입의 `ItemData` 필드가 있습니다.  
+프리팹에는 게임 시스템과 상호작용 가능하도록 `Item` 컴포넌트를 추가해야 합니다. `Item` 컴포넌트에는 `ItemDataModelSO` 타입의 `BaseItemDataModelSO` 필드와 `ItemData` 필드가 있습니다.  
 
-이 타입은 모두 채우지 않고, 한 개만 채우는 것이 의도되었습니다. 런타임에서는 `BaseItemDataModelSO` 필드의 데이터를 기반으로 `ItemData` 필드가 자동으로 채워집니다. 이렇게 함으로써, 같은 아이템(식별자가 같은)의 기본값을 `ItemDataModelSO`를 통해 설정하고, 개별 아이템의 상태를 `ItemSerializableDTO`를 통해 관리하는 것이 의도되었습니다.  
+이 타입은 모두 채우지 않고, 한 개만 채우는 것이 의도되었습니다. 런타임에서는 `BaseItemDataModelSO` 필드의 데이터를 기반으로 `ItemData` 필드가 자동으로 채워집니다. 이렇게 함으로써, 같은 아이템(식별자가 같은)의 기본값을 `ItemDataModelSO`를 통해 설정하고, 개별 아이템의 상태를 `ItemData`를 통해 관리하는 것이 의도되었습니다.  
 
 ![](./_static/register-item-prefab-layer.png)  
 

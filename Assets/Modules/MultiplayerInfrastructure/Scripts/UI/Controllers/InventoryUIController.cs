@@ -32,6 +32,8 @@ namespace MultiplayerInfrastructure.UI
     public event Action OverlayPushed;
     public event Action OverlayPopped;
 
+    public event Action OnItemAtSelectedSlotChanged;
+
     protected override void Awake()
     {
       base.Awake();
@@ -107,6 +109,7 @@ namespace MultiplayerInfrastructure.UI
     {
       EnsureHotbar();
       _hotbarUI?.BindInventory(_view?.BoundSlots);
+      OnItemAtSelectedSlotChanged?.Invoke();
     }
   }
 }

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
 {
-  public partial class PlayerController : NetworkBehaviour
+  public partial class PlayerController
   {
     [Header("Gamemode State")]
     [SerializeField] private PlayerGamemode _gamemode = PlayerGamemode.Player;

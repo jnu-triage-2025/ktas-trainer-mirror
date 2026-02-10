@@ -131,7 +131,7 @@ public class ItemRegistry : MonoBehaviour
     }
 
     LogMissingIconOnce(identifier);
-    return null;
+    return DefaultsResource.FallbackSprite;
   }
 
   /// <summary>
@@ -158,7 +158,7 @@ public class ItemRegistry : MonoBehaviour
     }
 
     LogMissingIconOnce(identifier);
-    return null;
+    return DefaultsResource.FallbackSprite;
   }
 
   /// <summary>
@@ -204,7 +204,9 @@ public class ItemRegistry : MonoBehaviour
     if (_itemIconCache.TryGetValue(originalKeyToAlsoCache, out var existing) && existing != null)
       yield break;
 
-    var path = BuildResourcesSpritePath(attemptKey);
+    var path = BuildResourcesSpritePath(attemptKey, iconResourcesPath);
+    if (string.IsNullOrEmpty(path))
+      path = BuildResourcesSpritePath(attemptKey, DefaultsItemRegistry.ItemTexturesPath);
     if (string.IsNullOrEmpty(path))
       yield break;
 
@@ -251,6 +253,10 @@ public class ItemRegistry : MonoBehaviour
     var sprite = LoadSpriteFromResourcesSync(identifier);
     if (sprite != null) return sprite;
 
+    // 1.1) exact in default folder (any module Resources/Textures/Items)
+    sprite = LoadSpriteFromResourcesSync(identifier, DefaultsItemRegistry.ItemTexturesPath);
+    if (sprite != null) return sprite;
+
     // 2) lowercase fallback
     var lower = identifier.ToLowerInvariant();
     if (lower == identifier) return null;
@@ -262,12 +268,27 @@ public class ItemRegistry : MonoBehaviour
       return sprite;
     }
 
+    // 2.1) lowercase in default folder
+    sprite = LoadSpriteFromResourcesSync(lower, DefaultsItemRegistry.ItemTexturesPath);
+    if (sprite != null)
+    {
+      resolvedIdentifier = lower;
+      return sprite;
+    }
+
     return null;
   }
 
   private Sprite LoadSpriteFromResourcesSync(string identifier)
   {
-    var path = BuildResourcesSpritePath(identifier);
+    var path = BuildResourcesSpritePath(identifier, iconResourcesPath);
+    if (string.IsNullOrEmpty(path)) return null;
+    return Resources.Load<Sprite>(path);
+  }
+
+  private Sprite LoadSpriteFromResourcesSync(string identifier, string resourcesPath)
+  {
+    var path = BuildResourcesSpritePath(identifier, resourcesPath);
     if (string.IsNullOrEmpty(path)) return null;
     return Resources.Load<Sprite>(path);
   }
@@ -301,12 +322,12 @@ public class ItemRegistry : MonoBehaviour
     Debug.LogWarning($"ItemRegistry: Sprite not found for identifier '{identifier}' at Resources path '{requested}'. Also tried lowercase.");
   }
 
-  private string BuildResourcesSpritePath(string identifier)
+  private string BuildResourcesSpritePath(string identifier, string resourcesPath)
   {
     identifier = NormalizeIdentifier(identifier);
     if (string.IsNullOrEmpty(identifier)) return null;
 
-    string folder = NormalizeToResourcesRelativeFolder(iconResourcesPath);
+    string folder = NormalizeToResourcesRelativeFolder(resourcesPath);
 
     // If inspector points *directly* at a sprite file path by mistake, strip extension from identifier anyway.
     // Resources.Load expects no extension.

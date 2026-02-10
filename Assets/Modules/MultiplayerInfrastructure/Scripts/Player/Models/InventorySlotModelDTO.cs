@@ -1,4 +1,5 @@
 using System;
+using MultiplayerInfrastructure.Item;
 using UnityEngine;
 
 #nullable enable
@@ -12,8 +13,8 @@ using UnityEngine;
 public class InventorySlotModelDTO
 {
   #region Properties
-  [SerializeField] private ItemInstanceModelDTO? _itemInstance;
-  public ItemInstanceModelDTO? ItemInstance
+  [SerializeField] private ItemData? _itemInstance;
+  public ItemData? ItemInstance
   {
     get => _itemInstance;
     set => _itemInstance = value;
@@ -22,7 +23,7 @@ public class InventorySlotModelDTO
 
   #region Constructors
   public InventorySlotModelDTO() { }
-  public InventorySlotModelDTO(ItemInstanceModelDTO itemInstance)
+  public InventorySlotModelDTO(ItemData itemInstance)
   {
     this._itemInstance = itemInstance;
   }
@@ -35,14 +36,14 @@ public class InventorySlotModelDTO
     ItemInstance = null;
   }
 
-  public void SetItem(ItemInstanceModelDTO? item)
+  public void SetItem(ItemData? item)
   {
     ItemInstance = item;
   }
 
-  public ItemInstanceModelDTO? Push(ItemInstanceModelDTO item) => ItemInstance.Merge(item);
+  public ItemData? Push(ItemData item) => ItemInstance.Merge(item);
 
-  public ItemInstanceModelDTO? Push(InventorySlotModelDTO other)
+  public ItemData? Push(InventorySlotModelDTO other)
   {
     if (IsEmpty)
     {
@@ -76,16 +77,16 @@ public class InventorySlotModelDTO
     return null;
   }
 
-  public ItemInstanceModelDTO? TakeAll()
+  public ItemData? TakeAll()
   {
     if (IsEmpty) return null;
     
-    ItemInstanceModelDTO taken = ItemInstance!;
+    ItemData taken = ItemInstance!;
     ItemInstance = null;
     return taken;
   }
 
-  public ItemInstanceModelDTO? Pop(int count)
+  public ItemData? Pop(int count)
   {
     if (IsEmpty || count <= 0)
     {
@@ -93,7 +94,7 @@ public class InventorySlotModelDTO
     }
 
     int toPop = Math.Min(count, ItemInstance!.currCount);
-    ItemInstanceModelDTO popped = new ItemInstanceModelDTO(ItemInstance!);
+    ItemData popped = new ItemData(ItemInstance!);
     popped.currCount = toPop;
     ItemInstance!.currCount -= toPop;
     if (ItemInstance!.currCount <= 0)
@@ -103,9 +104,9 @@ public class InventorySlotModelDTO
     return popped;
   }
 
-  public ItemInstanceModelDTO? SwapWith(ItemInstanceModelDTO? incoming)
+  public ItemData? SwapWith(ItemData? incoming)
   {
-    ItemInstanceModelDTO? previous = ItemInstance;
+    ItemData? previous = ItemInstance;
     ItemInstance = incoming;
     return previous;
   }

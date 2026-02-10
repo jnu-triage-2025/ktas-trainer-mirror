@@ -19,6 +19,8 @@ namespace MultiplayerInfrastructure.UI
     [Header("State")]
     [SerializeField] private int _selectedSlot = 0;
 
+    public event Action OnSelectedSlotChanged;
+
     public int SelectedSlot
     {
       get { return _selectedSlot; }
@@ -56,6 +58,7 @@ namespace MultiplayerInfrastructure.UI
     private void OnHotbarSlotSelected(int slot)
     {
       _selectedSlot = slot;
+      OnSelectedSlotChanged?.Invoke();
     }
 
     private void SyncHotbar()

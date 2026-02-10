@@ -16,7 +16,7 @@ namespace MultiplayerInfrastructure.Player
   /// 
   /// 이렇게 함으로서, 관전자 모드를 두 가지 방향 (자유 이동, 시점 추종)으로 구현할 수 있습니다.
   /// </summary>
-  public partial class PlayerController : NetworkBehaviour
+  public partial class PlayerController
   {
     [SerializeField] private MainCameraController _camControl;
     void Awake_Camera()

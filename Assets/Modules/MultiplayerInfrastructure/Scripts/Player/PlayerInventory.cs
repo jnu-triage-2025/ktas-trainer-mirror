@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using FishNet.Object;
-using UnityEngine;
 using MultiplayerInfrastructure.Definitions;
-using NUnit.Framework;
+using MultiplayerInfrastructure.Item;
+using UnityEngine;
 
 class PlayerInventory : NetworkBehaviour
 {
@@ -30,7 +30,7 @@ class PlayerInventory : NetworkBehaviour
     }
   }
 
-  public ItemInstanceModelDTO Push(ItemInstanceModelDTO itemInstance)
+  public ItemData Push(ItemData itemInstance)
   {
     for (int i = 0; i < inventorySlots.Count; i++)
     {

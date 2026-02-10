@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using MultiplayerInfrastructure.Item;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
@@ -17,6 +18,8 @@ namespace MultiplayerInfrastructure.Player
       sizeHeight = 4
     };
     [SerializeField] private List<InventorySlotModelDTO> _slots = new();
+    public ItemData HandlingItem = null;
+    
     private bool _inventoryVisible;
     private bool _inventoryRenderRequired = true;  // like a dirty bit
 
@@ -59,12 +62,12 @@ namespace MultiplayerInfrastructure.Player
       }
     }
 
-    public bool TryAddItemToInventory(ItemInstanceModelDTO item)
+    public bool TryAddItemToInventory(ItemData item)
     {
       if (item == null || !item.IsValid()) return false;
 
       // Work on a copy to avoid mutating the source reference passed by callers
-      ItemInstanceModelDTO remaining = new ItemInstanceModelDTO(item);
+      ItemData remaining = new ItemData(item);
 
       // Pass 1: stack onto existing slots of the same item
       foreach (var slot in _slots)
@@ -73,7 +76,7 @@ namespace MultiplayerInfrastructure.Player
         if (!slot.ItemInstance!.CanStackWith(remaining)) continue;
 
         var leftover = slot.Push(remaining);
-        remaining = leftover ?? new ItemInstanceModelDTO { identifier = remaining.identifier, displayName = remaining.displayName, currCount = 0, maxCount = remaining.maxCount };
+        remaining = leftover ?? new ItemData { identifier = remaining.identifier, displayName = remaining.displayName, currCount = 0, maxCount = remaining.maxCount };
         if (remaining.currCount <= 0)
           return OnInventoryChangedAndReturn(true);
       }
@@ -82,7 +85,7 @@ namespace MultiplayerInfrastructure.Player
       foreach (var slot in _slots)
       {
         if (!slot.IsEmpty) continue;
-        slot.SetItem(new ItemInstanceModelDTO(remaining));
+        slot.SetItem(new ItemData(remaining));
         return OnInventoryChangedAndReturn(true);
       }
 

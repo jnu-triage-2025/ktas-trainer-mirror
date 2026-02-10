@@ -128,7 +128,7 @@ namespace MultiplayerInfrastructure.UI
         }
       }
 
-      Debug.Log("[InventoryUIView] No space to return held item. TODO: spawn GroundedItem instance.");
+      Debug.Log("[InventoryUIView] No space to return held item. TODO: spawn Item world instance.");
       ClearHeldItem();
     }
 

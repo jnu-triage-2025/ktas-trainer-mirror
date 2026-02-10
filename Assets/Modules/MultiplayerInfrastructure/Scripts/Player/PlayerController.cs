@@ -8,6 +8,9 @@ namespace MultiplayerInfrastructure.Player
   [RequireComponent(typeof(InteractableEntityResolver))]
   public partial class PlayerController : NetworkBehaviour
   {
+    [SerializeField] private Entity.Entity _playerEntity;
+    public Entity.Entity PlayerEntity => _playerEntity;
+
     NearbyInteractablesDetector _interactiveDetector;
     public NearbyInteractablesDetector InteractiveDetector => _interactiveDetector;
     InteractableEntityResolver _interactionResolver;
@@ -19,6 +22,9 @@ namespace MultiplayerInfrastructure.Player
       Awake_Movement();
       Awake_Camera();
       Awake_Visibility();
+
+      if (_playerEntity == null)
+        _playerEntity = new Entity.Entity();
       
       _interactionResolver = GetComponent<InteractableEntityResolver>();
     }
@@ -28,6 +34,7 @@ namespace MultiplayerInfrastructure.Player
       Start_Input();
       Start_Inventory();
       Start_Hotbar();
+      Start_Item();
     }
 
     void Update()
@@ -36,6 +43,7 @@ namespace MultiplayerInfrastructure.Player
       Update_Input();
       Update_Movement();
       Update_Inventory();
+      Update_Item();
     }
 
     void LateUpdate()

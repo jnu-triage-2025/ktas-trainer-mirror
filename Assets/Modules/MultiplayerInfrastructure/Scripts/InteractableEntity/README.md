@@ -64,11 +64,11 @@ public class InteractableEntityResolver : MonoBehaviour {
 
 ### 기본 구현 예제 (떨어진 아이템)
 ```csharp
-public class GroundedItem : MonoBehaviour, IInteractable {
+public class Item : MonoBehaviour, IInteractable {
     [SerializeField] private ItemData itemData;
     
-    public string DisplayText => itemData.ItemName;
-    public Sprite DisplayIcon => itemData.Icon;
+    public string DisplayText => itemData.displayName;
+    public Sprite DisplayIcon => itemData.ItemTexture;
     public Color DisplayColor => Color.white;
 
     public void Interact(Transform interactor) {
@@ -122,7 +122,7 @@ classDiagram
         +void Interact(Transform)
     }
     
-    class GroundedItem {
+    class Item {
         +ItemData itemData
         +void Interact(Transform)
     }
@@ -137,7 +137,7 @@ classDiagram
         +void Interact(Transform)
     }
     
-    IInteractable <|-- GroundedItem
+    IInteractable <|-- Item
     IInteractable <|-- MedicalEquipment
     IInteractable <|-- PatientBed
 ```
