@@ -14,8 +14,8 @@ GameObject:
   - component: {fileID: 3367965260160765280}
   - component: {fileID: 5222283261293885003}
   - component: {fileID: 6075091924054892046}
-  - component: {fileID: 8175857732231102239}
-  m_Layer: 0
+  - component: {fileID: 7921378683002130857}
+  m_Layer: 6
   m_Name: Wood
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -133,7 +133,7 @@ MonoBehaviour:
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
-  - {fileID: 8175857732231102239}
+  - {fileID: 7921378683002130857}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -144,7 +144,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584309080420666728
+  _initializedTimestamp: -8584348706467528948
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -159,7 +159,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 14
+  <PrefabId>k__BackingField: 10
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 14896375906554942567
   SceneId: 0
@@ -195,7 +195,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &8175857732231102239
+--- !u!114 &7921378683002130857
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -204,14 +204,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 452677398093970061}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 39ca54023b690445f911216cad48a54b, type: 3}
+  m_Script: {fileID: 11500000, guid: 4d2a96766688f402897e4c08aeb96a0a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Item.Item
+  m_EditorClassIdentifier: Assembly-CSharp::GroundedItem
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 5222283261293885003}
   _networkObjectCache: {fileID: 5222283261293885003}
   _itemBaseModel: {fileID: 11400000, guid: ba29daefc5a3448adbbffe3dd60092d0, type: 2}
-  _itemData:
+  _itemInstanceModel:
     identifier: 
     displayName: 
     _itemTextureIdentifier: 
@@ -220,5 +220,4 @@ MonoBehaviour:
     hasDurability: 0
     currentDurability: 0
     _itemTexture: {fileID: 0}
-  _itemIcon: {fileID: 0}
   _itemIdentifier: 
