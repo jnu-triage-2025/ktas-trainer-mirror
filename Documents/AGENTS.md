@@ -27,3 +27,7 @@ In particular, the modules under /Assets/Modules/MultiplayerInfrastructure/ serv
 If modifications to this system become necessary, prepare a feature proposal and example implementation in accordance with .gitlab/issue_templates/Feature Proposal - detailed.md, and create a new directory under /Agents/Proposals/ to store them. The proposal must describe in detail the necessity of the change, the contents of the change, and the expected impact.
 
 Only create and push a commit for the contents written as part of this proposal. In many cases, security policies may prevent direct Git operations. If this happens, provide the human user with guidance on how to commit the changes manually. The human user is expected to use SourceTree, git commands, or similar tools.
+
+## CHECK CURRENT BRANCH
+
+Before starting any work, always check which branch you are currently on. Never perform work directly on the `main` branch or on branches that other team members are working on. Always create or switch to a dedicated branch for your work.

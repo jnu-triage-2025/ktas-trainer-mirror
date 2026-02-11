@@ -1,9 +1,9 @@
 # Documents
 
-- [일반적인 사항들, General](./general.md)
-- [작업 상황 동기화 및 공유](./sync-progress.md)
-- [온보딩 가이드](./onboarding.md)
-- [AI 작업 흐름 가이드](./ai-workflow.md)
+- [일반적인 사항들, General](./general.md): 프로젝트 전반에 걸쳐 알아두어야 할 일반적인 사항들
+- [작업 상황 동기화 및 공유](./sync-progress.md): 프로젝트 다운받기, 작업물을 다른 사람과 공유하기
+- [온보딩 가이드](./onboarding.md): 프로젝트 시작 시 참고
+- [AI 작업 흐름 가이드](./ai-workflow.md): AI를 활용해 작업할 때의 흐름과 주의사항
 
 ### for 개발자/AI:
 
