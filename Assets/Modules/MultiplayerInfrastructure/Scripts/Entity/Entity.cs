@@ -1,3 +1,5 @@
+using MultiplayerInfrastructure.Item;
+
 namespace MultiplayerInfrastructure.Entity
 {
   public class Entity
@@ -15,5 +17,7 @@ namespace MultiplayerInfrastructure.Entity
     {
       _health -= damageAmount;
     }
+
+    public void OnItemUsed(Entity user, Item.Item itemUsing) {}
   }
 }
