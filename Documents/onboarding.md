@@ -18,6 +18,22 @@
 - 기반 시스템인 `Assets/Modules/MultiplayerInfrastructure/`는 원칙적으로 수정하지 않습니다.
 - 기반 시스템 변경이 필요하면 `Agents/Proposals/`에 기능 제안서를 작성합니다.
 
+## 작업 시 유니티 테스트
+
+![](./_static/onboarding__indev-hierarchy.png)
+
+- AI가 생성한 결과물이 런타임(실제 실행 상황을 지칭)에서 의도대로 동작하는지 확인해야 합니다. 테스트는 IndevScene에서 수행하는 것을 권장합니다. AI의 지시대로 인게임 씬에 오브젝트를 배치하고 컴포넌트를 추가한 뒤 플레이 모드로 실행하여 테스트합니다.
+
+![](./_static/onboarding__ingamescene-scene.png)
+
+- 인게임에서 테스트하기 위해서는 씬을 플레이하고, 이어서 인게임 화면 좌측 상단의 FishNet의 Start Server, Start Client 버튼을 차례로 클릭합니다.
+
+<br />
+
+![](./_static/onboarding__console-tab.png)
+
+- AI가 생성한 C# 스크립트에 오류가 없는지 확인합니다. 유니티 에디터의 Console 탭에서 오류 메시지가 없는지 확인합니다.
+
 ## 무엇을 어디에 작성하나요
 
 | 작업 유형 | 주로 수정/추가하는 문서 | 산출물 위치 |
