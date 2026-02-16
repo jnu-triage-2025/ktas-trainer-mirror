@@ -20,7 +20,7 @@ namespace MultiplayerInfrastructure.Player
       if (!_dialoguePanelUIController.IsUnityNull())
       {
         // Ensure registry has the instance so other systems can resolve it without warnings.
-        UIControlRegistry.Register(_dialoguePanelUIController);
+        Registry.Registry.Register(RegistryType.UI, Registry.Registry.TypeKey<DialoguePanelUIController>(), _dialoguePanelUIController);
       }
 
       _scenarioController = ScenarioController.Instance;

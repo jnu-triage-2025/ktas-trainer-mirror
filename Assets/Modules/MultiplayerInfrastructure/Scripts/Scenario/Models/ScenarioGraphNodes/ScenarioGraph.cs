@@ -5,6 +5,8 @@ namespace MultiplayerInfrastructure.Scenario
 {
   public sealed class ScenarioGraph
   {
+    public string Identifier { get; set; } = string.Empty;
+
     public Dictionary<string, IScenarioNode> Nodes { get; } = new Dictionary<string, IScenarioNode>();
 
     public void Add(IScenarioNode node)

@@ -7,6 +7,7 @@ namespace MultiplayerInfrastructure.Item
 {
   public partial class Item
   {
+    public IInteract[] Interacts => new IInteract[] { this };
     public string DisplayText => _itemData != null ? _itemData.displayName : string.Empty;
     public Sprite DisplayIcon => Icon;
     public Color DisplayColor => Color.white;

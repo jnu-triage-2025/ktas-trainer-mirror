@@ -1,4 +1,5 @@
 {
+  "identifier": "scenario_graph_quest",
   "nodes": {
     "intro_1": {
       "speakerName": "의사",

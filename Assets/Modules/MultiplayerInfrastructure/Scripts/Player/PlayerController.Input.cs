@@ -1,4 +1,5 @@
 using System;
+using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 using MultiplayerInfrastructure.UI;
@@ -13,12 +14,12 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private KeyCode _keyToggleInventory = KeyCode.E;
     [SerializeField] private KeyCode _keySwitchCameraViewMode = KeyCode.P;
     [SerializeField] private KeyCode _keyOpenEscMenu = KeyCode.Escape;
-    [SerializeField] private KeyCode _keyToggleChat = KeyboardConfigurationRegistry.OpenChatUI;
-    [SerializeField] private KeyCode _keyToggleCommand = KeyboardConfigurationRegistry.OpenChatUIWithCommand;
-    [SerializeField] private KeyCode _keyInteractInteractableObject = KeyboardConfigurationRegistry.InteractInteractableObject;
+    [SerializeField] private KeyCode _keyToggleChat = DefaultsKeyConfiguration.OpenChatUI;
+    [SerializeField] private KeyCode _keyToggleCommand = DefaultsKeyConfiguration.OpenChatUIWithCommand;
+    [SerializeField] private KeyCode _keyInteractInteractableObject = DefaultsKeyConfiguration.InteractInteractableObject;
     [SerializeField] private KeyCode _keyEscape = KeyCode.Escape;
     [SerializeField] private KeyCode _keySpectatorFlyDown = KeyCode.LeftShift;
-    [SerializeField] private KeyCode _keyOpenQuestUI = KeyboardConfigurationRegistry.OpenQuestUI;
+    [SerializeField] private KeyCode _keyOpenQuestUI = DefaultsKeyConfiguration.OpenQuestUI;
 
     /**
      * 키 입력 핸들링을 막아야 하는 상황에서 이 플래그를 참으로 설정할 것
@@ -32,9 +33,9 @@ namespace MultiplayerInfrastructure.Player
 
     void Start_Input()
     {
-      RegisterOverlayLock(UIControlRegistry.Get<ChatUIController>(), locked => _keyHandlingLockedByChatUI = locked);
-      RegisterOverlayLock(UIControlRegistry.Get<InventoryUIController>(), locked => _keyHandlingLockedByInventoryUI = locked);
-      RegisterOverlayLock(UIControlRegistry.Get<GameEscapeMenuUIController>(), locked => _keyHandlingLockedByEscapeUI = locked);
+      RegisterOverlayLock(Registry.Registry.Get<ChatUIController>(RegistryType.UI, Registry.Registry.TypeKey<ChatUIController>()), locked => _keyHandlingLockedByChatUI = locked);
+      RegisterOverlayLock(Registry.Registry.Get<InventoryUIController>(RegistryType.UI, Registry.Registry.TypeKey<InventoryUIController>()), locked => _keyHandlingLockedByInventoryUI = locked);
+      RegisterOverlayLock(Registry.Registry.Get<GameEscapeMenuUIController>(RegistryType.UI, Registry.Registry.TypeKey<GameEscapeMenuUIController>()), locked => _keyHandlingLockedByEscapeUI = locked);
     }
 
     private void RegisterOverlayLock(IUIOverlay overlay, Action<bool> setLocked)
@@ -95,7 +96,7 @@ namespace MultiplayerInfrastructure.Player
     /// <returns>bool 인벤토리 UI 표시에 변화가 있는가?</returns>
     private bool HandleToggleInventory()
     {
-      var inventory = UIControlRegistry.Get<InventoryUIController>();
+      var inventory = Registry.Registry.Get<InventoryUIController>(RegistryType.UI, Registry.Registry.TypeKey<InventoryUIController>());
       if (inventory == null) return false;
 
       if (Input.GetKeyDown(_keyToggleInventory))
@@ -152,7 +153,7 @@ namespace MultiplayerInfrastructure.Player
 
     private void HandleChatInput()
     {
-      var chat = UIControlRegistry.Get<ChatUIController>();
+      var chat = Registry.Registry.Get<ChatUIController>(RegistryType.UI, Registry.Registry.TypeKey<ChatUIController>());
       if (chat.IsUnityNull()) return;
 
       if (Input.GetKeyDown(_keyToggleChat))
@@ -170,13 +171,13 @@ namespace MultiplayerInfrastructure.Player
       if (!chat.IsOpen)
         return;
 
-      if (Input.GetKeyDown(KeyboardConfigurationRegistry.SendChat))
+      if (Input.GetKeyDown(DefaultsKeyConfiguration.SendChat))
       {
         chat.HandleSubmitKey();
         return;
       }
 
-      if (Input.GetKeyDown(KeyboardConfigurationRegistry.CloseChatUI))
+      if (Input.GetKeyDown(DefaultsKeyConfiguration.CloseChatUI))
       {
         chat.HandleCancelKey();
       }

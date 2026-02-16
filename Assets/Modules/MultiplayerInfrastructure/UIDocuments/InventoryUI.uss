@@ -11,7 +11,6 @@
   background-color: #c6c6c6;
   border: 2px solid #000;
   gap: 8px;
-  z-index: 30;
 }
 
 /*
@@ -24,7 +23,7 @@
 */
 
 .inventory-title {
-  unity-font-style: bold;
+  -unity-font-style: bold;
   font-size: 18px;
   color: #222;
   margin-bottom: 4px;
@@ -61,7 +60,6 @@
   right: 4px;
   top: 4px;
   bottom: 4px;
-  scale-mode: scale-to-fit;
   tint-color: white;
 }
 
@@ -71,7 +69,7 @@
   font-size: 11px;
   padding: 1px 3px;
   border-radius: 2px;
-  unity-text-align: middle-right;
+  -unity-text-align: middle-right;
 }
 
 .held-item-ghost {
@@ -87,7 +85,6 @@
   right: 0;
   top: 0;
   bottom: 0;
-  scale-mode: scale-to-fit;
   tint-color: white;
 }
 
@@ -100,5 +97,5 @@
   font-size: 11px;
   padding: 1px 3px;
   border-radius: 2px;
-  unity-text-align: middle-right;
+  -unity-text-align: middle-right;
 }

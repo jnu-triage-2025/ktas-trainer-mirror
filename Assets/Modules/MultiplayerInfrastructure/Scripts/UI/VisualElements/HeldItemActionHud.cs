@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 
 namespace MultiplayerInfrastructure.UI
 {
-  [UxmlElement("HeldItemActionHud")]
+  [UxmlElement]
   public partial class HeldItemActionHud : VisualElement
   {
     private const string AttackClass = "held-item-hud--attack";

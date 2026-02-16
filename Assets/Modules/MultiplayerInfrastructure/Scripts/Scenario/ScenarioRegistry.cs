@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Scenario
@@ -19,7 +20,7 @@ namespace MultiplayerInfrastructure.Scenario
     [SerializeField] private List<ScenarioRegistryEntry> _scenarios = new();
 
     private readonly Dictionary<string, ScenarioRegistryEntry> _byId = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, ScenarioGraph> _graphCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _registeredIds = new(StringComparer.OrdinalIgnoreCase);
 
     void Awake()
     {
@@ -32,6 +33,11 @@ namespace MultiplayerInfrastructure.Scenario
       RebuildLookup();
     }
 #endif
+
+    void OnDestroy()
+    {
+      UnregisterFromGlobalRegistry();
+    }
 
     public bool TryGetScenarioJson(string identifier, out string json, out string error)
     {
@@ -55,23 +61,46 @@ namespace MultiplayerInfrastructure.Scenario
       graph = null;
       error = string.Empty;
 
-      string key = identifier?.Trim() ?? string.Empty;
-      if (_graphCache.TryGetValue(key, out graph))
-        return true;
-
-      if (!TryGetScenarioJson(identifier, out string json, out error))
+      if (!TryGetEntry(identifier, out ScenarioRegistryEntry entry, out error))
         return false;
 
-      try
+      string key = entry.Identifier?.Trim();
+      if (!Registry.Registry.PreloadScenarioGraph(key, validateWithSchema: true))
       {
-        graph = ScenarioGraphLoader.LoadFromJson(json);
-        _graphCache[key] = graph;
-        return true;
+        error = $"Scenario '{identifier}' failed to load from registered text resource.";
+        return false;
       }
-      catch (Exception ex)
+
+      graph = Registry.Registry.Get<ScenarioGraph>(RegistryType.ScenarioGraph, key);
+      if (graph == null)
       {
-        error = $"Scenario '{identifier}' failed to load: {ex.Message}";
+        error = $"Scenario '{identifier}' failed to load from registered text resource.";
         return false;
+      }
+
+      return true;
+    }
+
+    public bool PreloadScenario(string identifier, out string error)
+    {
+      error = string.Empty;
+
+      if (!TryGetEntry(identifier, out ScenarioRegistryEntry entry, out error))
+        return false;
+
+      string key = entry.Identifier?.Trim();
+      if (Registry.Registry.PreloadScenarioGraph(key, validateWithSchema: true))
+        return true;
+
+      error = $"Scenario '{identifier}' preload failed.";
+      return false;
+    }
+
+    public void PreloadAllScenarios()
+    {
+      foreach (var key in _registeredIds)
+      {
+        Registry.Registry.PreloadScenarioGraph(key, validateWithSchema: true);
       }
     }
 
@@ -96,6 +125,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void RebuildLookup()
     {
+      UnregisterFromGlobalRegistry();
       _byId.Clear();
 
       foreach (var scenario in _scenarios)
@@ -103,14 +133,56 @@ namespace MultiplayerInfrastructure.Scenario
         if (scenario == null)
           continue;
 
-        string key = scenario.Identifier?.Trim();
+        string key = ResolveScenarioIdentifier(scenario);
         if (string.IsNullOrWhiteSpace(key))
           continue;
 
+        scenario.Identifier = key;
         _byId[key] = scenario;
+        if (scenario.ScenarioJson != null)
+        {
+          Registry.Registry.Register(RegistryType.ScenarioGraph, key, scenario.ScenarioJson);
+          _registeredIds.Add(key);
+        }
+      }
+    }
+
+    private string ResolveScenarioIdentifier(ScenarioRegistryEntry entry)
+    {
+      if (entry.ScenarioJson == null || string.IsNullOrWhiteSpace(entry.ScenarioJson.text))
+      {
+        string fallbackIdentifier = entry.Identifier?.Trim();
+        return fallbackIdentifier ?? string.Empty;
       }
 
-      _graphCache.Clear();
+      try
+      {
+        var graph = ScenarioGraphLoader.LoadFromJson(entry.ScenarioJson.text, validateWithSchema: false);
+        if (!string.IsNullOrWhiteSpace(graph.Identifier))
+          return graph.Identifier.Trim();
+      }
+      catch
+      {
+      }
+
+      string explicitIdentifier = entry.Identifier?.Trim();
+      if (!string.IsNullOrWhiteSpace(explicitIdentifier))
+        return explicitIdentifier;
+
+      return string.Empty;
+    }
+
+    private void UnregisterFromGlobalRegistry()
+    {
+      if (_registeredIds.Count == 0)
+        return;
+
+      foreach (var id in _registeredIds)
+      {
+        Registry.Registry.Unregister(RegistryType.ScenarioGraph, id);
+      }
+
+      _registeredIds.Clear();
     }
   }
 }

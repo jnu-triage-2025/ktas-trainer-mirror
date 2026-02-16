@@ -3,6 +3,8 @@ using MultiplayerInfrastructure.UI;
 using Unity.VisualScripting;
 using UnityEngine;
 
+using MI = MultiplayerInfrastructure;
+
 namespace MultiplayerInfrastructure.Player
 {
   public partial class PlayerController
@@ -20,7 +22,7 @@ namespace MultiplayerInfrastructure.Player
       if (_escapeMenuUIController.IsUnityNull())
       {
         _escapeMenuEventsRegistered = false;
-        _escapeMenuUIController = UIControlRegistry.Get<GameEscapeMenuUIController>();
+        _escapeMenuUIController = Registry.Registry.Get<GameEscapeMenuUIController>(RegistryType.UI, Registry.Registry.TypeKey<GameEscapeMenuUIController>());
       }
 
       if (_escapeMenuUIController.IsUnityNull()) return;

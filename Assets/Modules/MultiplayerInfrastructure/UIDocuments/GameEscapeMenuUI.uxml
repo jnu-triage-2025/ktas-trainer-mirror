@@ -1,5 +1,7 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xmlns:mpinfra="MultiplayerInfrastructure.UI">
-  <Style src="./GameEscapeMenuUI.uss" />
+<ui:UXML
+  xmlns:ui="UnityEngine.UIElements"
+>
+  <ui:Style src="GameEscapeMenuUI.uss" />
   <ui:VisualElement name="game-menu-root" class="game-menu__root">
     <ui:VisualElement class="game-menu__panel">
       <ui:Label name="menu-title" class="game-menu__title" text="메뉴" />

@@ -82,7 +82,7 @@ namespace MultiplayerInfrastructure.UI
     private void HandleTitleClicked()
     {
       FishNetNetworkManagerInjection.Instance.StopClient();
-      if (CurrentSessionPlayInfoRegistry.IsOpeningServer)
+      if (Registry.Registry.Get<bool>(RegistryType.Entity, RegistryGlobalKeys.IsOpeningServer))
         FishNetNetworkManagerInjection.Instance.StopServer();
       SceneManager.LoadScene(introSceneName);
     }

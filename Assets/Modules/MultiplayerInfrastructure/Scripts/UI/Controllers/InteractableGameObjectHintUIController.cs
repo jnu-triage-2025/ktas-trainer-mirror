@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.InteractableEntity;
 using UnityEngine;
@@ -21,7 +22,7 @@ namespace MultiplayerInfrastructure.UI
     #region Serialized Fields
 
     [SerializeField] private int _nowSelected = -1;
-    [SerializeField] private List<IInteractable> _interactables = new();
+    [SerializeField] private List<IInteract> _interacts = new();
     [SerializeField] private UIDocument _uiDocument;
     [SerializeField] private InteractableObjectHintList _hintList;
 
@@ -36,7 +37,7 @@ namespace MultiplayerInfrastructure.UI
     #region Private Fields
 
     // 다이얼로그 모드 진입 시 백업할 상호작용 객체 목록
-    private List<IInteractable> _cachedInteractables = new();
+    private List<IInteract> _cachedInteracts = new();
     private int _cachedSelectedIndex = -1;
 
     #endregion
@@ -69,7 +70,7 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>
     /// 현재 선택 가능한 항목이 있는지 여부
     /// </summary>
-    public bool HasAnySelections => _interactables != null && _interactables.Count > 0;
+    public bool HasAnySelections => _interacts != null && _interacts.Count > 0;
 
     #endregion
 
@@ -156,7 +157,7 @@ namespace MultiplayerInfrastructure.UI
     {
       if (_hintList == null) return;
 
-      _hintList.Rebuild(_interactables, _nowSelected, _currentMode, GetInteractKeyText(), _dialogueSelectionIcon);
+      _hintList.Rebuild(_interacts, _nowSelected, _currentMode, GetInteractKeyText(), _dialogueSelectionIcon);
     }
 
     private void ScrollToSelected()
@@ -183,12 +184,12 @@ namespace MultiplayerInfrastructure.UI
       }
 
       // 현재 상태 백업
-      _cachedInteractables.Clear();
-      _cachedInteractables.AddRange(_interactables);
+      _cachedInteracts.Clear();
+      _cachedInteracts.AddRange(_interacts);
       _cachedSelectedIndex = _nowSelected;
 
       // UI 초기화
-      _interactables.Clear();
+      _interacts.Clear();
       _nowSelected = -1;
 
       _currentMode = InteractableHintUIMode.Dialogue;
@@ -210,14 +211,14 @@ namespace MultiplayerInfrastructure.UI
       }
 
       // 다이얼로그 선택지 정리
-      _interactables.Clear();
+      _interacts.Clear();
 
       // 백업된 상태 복원
-      _interactables.AddRange(_cachedInteractables);
+      _interacts.AddRange(_cachedInteracts);
       _nowSelected = _cachedSelectedIndex;
 
       // 백업 초기화
-      _cachedInteractables.Clear();
+      _cachedInteracts.Clear();
       _cachedSelectedIndex = -1;
 
       _currentMode = InteractableHintUIMode.Normal;
@@ -232,7 +233,7 @@ namespace MultiplayerInfrastructure.UI
     /// 다이얼로그 선택지 설정 (다이얼로그 모드에서만 동작)
     /// </summary>
     /// <param name="selections">표시할 선택지 목록</param>
-    public void SetDialogueSelections(List<IInteractable> selections)
+    public void SetDialogueSelections(List<IInteract> selections)
     {
       Debug.Log($"[InteractableHintUI] SetDialogueSelections called with {selections?.Count ?? 0} selections");
       if (_currentMode != InteractableHintUIMode.Dialogue)
@@ -241,12 +242,12 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      _interactables.Clear();
+      _interacts.Clear();
       _nowSelected = -1;
 
       if (selections != null && selections.Count > 0)
       {
-        _interactables.AddRange(selections);
+        _interacts.AddRange(selections);
         _nowSelected = 0;
       }
 
@@ -257,7 +258,7 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>
     /// 다이얼로그 선택지 설정 (IReadOnlyList 버전)
     /// </summary>
-    public void SetDialogueSelections(IReadOnlyList<IInteractable> selections)
+    public void SetDialogueSelections(IReadOnlyList<IInteract> selections)
     {
       if (_currentMode != InteractableHintUIMode.Dialogue)
       {
@@ -265,14 +266,14 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      _interactables.Clear();
+      _interacts.Clear();
       _nowSelected = -1;
 
       if (selections != null && selections.Count > 0)
       {
         for (int i = 0; i < selections.Count; i++)
         {
-          _interactables.Add(selections[i]);
+          _interacts.Add(selections[i]);
         }
         _nowSelected = 0;
       }
@@ -290,7 +291,7 @@ namespace MultiplayerInfrastructure.UI
       if (_currentMode != InteractableHintUIMode.Dialogue)
         return;
 
-      _interactables.Clear();
+      _interacts.Clear();
       _nowSelected = -1;
       RefreshUI();
       OnDialogueSelectionsChanged?.Invoke();
@@ -302,10 +303,10 @@ namespace MultiplayerInfrastructure.UI
     public bool HasDialogueSelection()
     {
       return _currentMode == InteractableHintUIMode.Dialogue
-          && _interactables != null
-          && _interactables.Count > 0
+          && _interacts != null
+          && _interacts.Count > 0
           && _nowSelected >= 0
-          && _nowSelected < _interactables.Count;
+          && _nowSelected < _interacts.Count;
     }
 
     /// <summary>
@@ -318,7 +319,7 @@ namespace MultiplayerInfrastructure.UI
       if (!HasDialogueSelection())
         return false;
 
-      var selected = _interactables[_nowSelected];
+      var selected = _interacts[_nowSelected];
       if (selected != null)
       {
         selected.Interact(interactor);
@@ -344,8 +345,8 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      if (_interactables == null) _interactables = new List<IInteractable>();
-      _interactables.Clear();
+      if (_interacts == null) _interacts = new List<IInteract>();
+      _interacts.Clear();
       _nowSelected = -1;
       OnNewInteractableRemoved?.Invoke();
     }
@@ -354,24 +355,24 @@ namespace MultiplayerInfrastructure.UI
     /// 상호작용 객체 추가
     /// 다이얼로그 모드에서는 캐시에 추가됩니다.
     /// </summary>
-    public void Add(IInteractable interactable)
+    public void Add(IInteract interact)
     {
-      if (interactable == null) return;
+      if (interact == null) return;
 
       if (_currentMode == InteractableHintUIMode.Dialogue)
       {
         // 다이얼로그 모드에서는 캐시에 추가
-        if (_cachedInteractables == null) _cachedInteractables = new List<IInteractable>();
-        if (!_cachedInteractables.Contains(interactable))
+        if (_cachedInteracts == null) _cachedInteracts = new List<IInteract>();
+        if (!_cachedInteracts.Contains(interact))
         {
-          _cachedInteractables.Add(interactable);
+          _cachedInteracts.Add(interact);
           if (_cachedSelectedIndex < 0) _cachedSelectedIndex = 0;
         }
         return;
       }
 
-      if (_interactables == null) _interactables = new List<IInteractable>();
-      _interactables.Add(interactable);
+      if (_interacts == null) _interacts = new List<IInteract>();
+      _interacts.Add(interact);
       if (_nowSelected < 0) _nowSelected = 0;
       OnNewInteractableAdded?.Invoke();
     }
@@ -380,24 +381,24 @@ namespace MultiplayerInfrastructure.UI
     /// 상호작용 객체 제거
     /// 다이얼로그 모드에서는 캐시에서 제거됩니다.
     /// </summary>
-    public void Remove(IInteractable interactable)
+    public void Remove(IInteract interact)
     {
-      if (interactable == null) return;
+      if (interact == null) return;
 
       if (_currentMode == InteractableHintUIMode.Dialogue)
       {
         // 다이얼로그 모드에서는 캐시에서 제거
-        int cachedIdx = _cachedInteractables.IndexOf(interactable);
+        int cachedIdx = _cachedInteracts.IndexOf(interact);
         if (cachedIdx >= 0)
         {
-          _cachedInteractables.RemoveAt(cachedIdx);
-          if (_cachedInteractables.Count == 0) _cachedSelectedIndex = -1;
-          else _cachedSelectedIndex = Mathf.Clamp(_cachedSelectedIndex, 0, _cachedInteractables.Count - 1);
+          _cachedInteracts.RemoveAt(cachedIdx);
+          if (_cachedInteracts.Count == 0) _cachedSelectedIndex = -1;
+          else _cachedSelectedIndex = Mathf.Clamp(_cachedSelectedIndex, 0, _cachedInteracts.Count - 1);
         }
         return;
       }
 
-      int idx = _interactables.IndexOf(interactable);
+      int idx = _interacts.IndexOf(interact);
       if (idx >= 0)
       {
         Remove(idx);
@@ -412,11 +413,11 @@ namespace MultiplayerInfrastructure.UI
     {
       if (_currentMode == InteractableHintUIMode.Dialogue) return;
 
-      if (_interactables == null || _interactables.Count == 0) return;
-      if (_nowSelected < 0 || _nowSelected >= _interactables.Count) return;
-      _interactables.RemoveAt(_nowSelected);
-      if (_interactables.Count == 0) _nowSelected = -1;
-      else _nowSelected = Mathf.Clamp(_nowSelected, 0, _interactables.Count - 1);
+      if (_interacts == null || _interacts.Count == 0) return;
+      if (_nowSelected < 0 || _nowSelected >= _interacts.Count) return;
+      _interacts.RemoveAt(_nowSelected);
+      if (_interacts.Count == 0) _nowSelected = -1;
+      else _nowSelected = Mathf.Clamp(_nowSelected, 0, _interacts.Count - 1);
       OnNewInteractableRemoved?.Invoke();
     }
 
@@ -428,11 +429,11 @@ namespace MultiplayerInfrastructure.UI
     {
       if (_currentMode == InteractableHintUIMode.Dialogue) return;
 
-      if (_interactables == null) return;
-      if (idx < 0 || idx >= _interactables.Count) return;
-      _interactables.RemoveAt(idx);
-      if (_interactables.Count == 0) _nowSelected = -1;
-      else _nowSelected = Mathf.Clamp(_nowSelected, 0, _interactables.Count - 1);
+      if (_interacts == null) return;
+      if (idx < 0 || idx >= _interacts.Count) return;
+      _interacts.RemoveAt(idx);
+      if (_interacts.Count == 0) _nowSelected = -1;
+      else _nowSelected = Mathf.Clamp(_nowSelected, 0, _interacts.Count - 1);
       OnNewInteractableRemoved?.Invoke();
     }
 
@@ -440,16 +441,16 @@ namespace MultiplayerInfrastructure.UI
     /// 현재 선택된 요소를 interactables 목록에서 제거하고 반환합니다.
     /// 다이얼로그 모드에서는 null을 반환합니다.
     /// </summary>
-    public IInteractable Pop()
+    public IInteract Pop()
     {
       if (_currentMode == InteractableHintUIMode.Dialogue) return null;
 
-      if (_interactables == null || _interactables.Count == 0) return null;
-      if (_nowSelected < 0 || _nowSelected >= _interactables.Count) return null;
-      var item = _interactables[_nowSelected];
-      _interactables.RemoveAt(_nowSelected);
-      if (_interactables.Count == 0) _nowSelected = -1;
-      else _nowSelected = Mathf.Clamp(_nowSelected, 0, _interactables.Count - 1);
+      if (_interacts == null || _interacts.Count == 0) return null;
+      if (_nowSelected < 0 || _nowSelected >= _interacts.Count) return null;
+      var item = _interacts[_nowSelected];
+      _interacts.RemoveAt(_nowSelected);
+      if (_interacts.Count == 0) _nowSelected = -1;
+      else _nowSelected = Mathf.Clamp(_nowSelected, 0, _interacts.Count - 1);
       OnNewInteractableRemoved?.Invoke();
       return item;
     }
@@ -458,16 +459,16 @@ namespace MultiplayerInfrastructure.UI
     /// idx 위치의 요소를 interactables 목록에서 제거하고 반환합니다.
     /// 다이얼로그 모드에서는 null을 반환합니다.
     /// </summary>
-    public IInteractable Pop(int idx)
+    public IInteract Pop(int idx)
     {
       if (_currentMode == InteractableHintUIMode.Dialogue) return null;
 
-      if (_interactables == null) return null;
-      if (idx < 0 || idx >= _interactables.Count) return null;
-      var item = _interactables[idx];
-      _interactables.RemoveAt(idx);
-      if (_interactables.Count == 0) _nowSelected = -1;
-      else _nowSelected = Mathf.Clamp(_nowSelected, 0, _interactables.Count - 1);
+      if (_interacts == null) return null;
+      if (idx < 0 || idx >= _interacts.Count) return null;
+      var item = _interacts[idx];
+      _interacts.RemoveAt(idx);
+      if (_interacts.Count == 0) _nowSelected = -1;
+      else _nowSelected = Mathf.Clamp(_nowSelected, 0, _interacts.Count - 1);
       OnNewInteractableRemoved?.Invoke();
       return item;
     }
@@ -476,33 +477,33 @@ namespace MultiplayerInfrastructure.UI
     /// 상호작용 객체 목록 일괄 업데이트
     /// 다이얼로그 모드에서는 캐시가 업데이트됩니다.
     /// </summary>
-    public void UpdateInteractables(IReadOnlyList<IInteractable> newInteractables)
+    public void UpdateInteractables(IReadOnlyList<IInteract> newInteracts)
     {
       if (_currentMode == InteractableHintUIMode.Dialogue)
       {
         // 다이얼로그 모드에서는 캐시 업데이트
-        _cachedInteractables.Clear();
-        if (newInteractables != null)
+        _cachedInteracts.Clear();
+        if (newInteracts != null)
         {
-          for (int i = 0; i < newInteractables.Count; i++)
-            _cachedInteractables.Add(newInteractables[i]);
+          for (int i = 0; i < newInteracts.Count; i++)
+            _cachedInteracts.Add(newInteracts[i]);
         }
-        if (_cachedInteractables.Count == 0) _cachedSelectedIndex = -1;
+        if (_cachedInteracts.Count == 0) _cachedSelectedIndex = -1;
         else if (_cachedSelectedIndex < 0) _cachedSelectedIndex = 0;
-        else _cachedSelectedIndex = Mathf.Clamp(_cachedSelectedIndex, 0, _cachedInteractables.Count - 1);
+        else _cachedSelectedIndex = Mathf.Clamp(_cachedSelectedIndex, 0, _cachedInteracts.Count - 1);
         return;
       }
 
-      _interactables.Clear();
-      if (newInteractables != null)
+      _interacts.Clear();
+      if (newInteracts != null)
       {
-        for (int i = 0; i < newInteractables.Count; i++)
-          _interactables.Add(newInteractables[i]);
+        for (int i = 0; i < newInteracts.Count; i++)
+          _interacts.Add(newInteracts[i]);
       }
 
-      if (_interactables.Count == 0) _nowSelected = -1;
+      if (_interacts.Count == 0) _nowSelected = -1;
       else if (_nowSelected < 0) _nowSelected = 0;
-      else _nowSelected = Mathf.Clamp(_nowSelected, 0, _interactables.Count - 1);
+      else _nowSelected = Mathf.Clamp(_nowSelected, 0, _interacts.Count - 1);
 
       RefreshUI();
     }
@@ -514,17 +515,17 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>
     /// 인덱스로 상호작용 객체 가져오기
     /// </summary>
-    public IInteractable Get(int idx)
+    public IInteract Get(int idx)
     {
-      if (_interactables == null || _interactables.Count == 0) return null;
-      if (idx < 0 || idx >= _interactables.Count) return null;
-      return _interactables[idx];
+      if (_interacts == null || _interacts.Count == 0) return null;
+      if (idx < 0 || idx >= _interacts.Count) return null;
+      return _interacts[idx];
     }
 
     /// <summary>
     /// 현재 선택된 상호작용 객체 가져오기
     /// </summary>
-    public IInteractable GetSelected()
+    public IInteract GetSelected()
     {
       return Get(_nowSelected);
     }
@@ -542,16 +543,16 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void SetSelected(int idx)
     {
-      if (_interactables == null || _interactables.Count == 0)
+      if (_interacts == null || _interacts.Count == 0)
       {
         _nowSelected = -1;
         return;
       }
 
       // wrap-around selection
-      if (idx < 0) idx = (_interactables.Count + (idx % _interactables.Count)) % _interactables.Count;
-      else idx = idx % _interactables.Count;
-      _nowSelected = Mathf.Clamp(idx, 0, _interactables.Count - 1);
+      if (idx < 0) idx = (_interacts.Count + (idx % _interacts.Count)) % _interacts.Count;
+      else idx = idx % _interacts.Count;
+      _nowSelected = Mathf.Clamp(idx, 0, _interacts.Count - 1);
 
       RefreshUI();
     }
@@ -580,12 +581,12 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>
     /// 현재 목록의 항목 수
     /// </summary>
-    public int GetCount() => _interactables?.Count ?? 0;
+    public int GetCount() => _interacts?.Count ?? 0;
 
     /// <summary>
     /// 선택 가능한 항목이 있는지 여부
     /// </summary>
-    public bool HasSelections() => _interactables != null && _interactables.Count > 0;
+    public bool HasSelections() => _interacts != null && _interacts.Count > 0;
 
     /// <summary>
     /// 현재 선택된 상호작용 객체를 실행합니다.
@@ -612,10 +613,10 @@ namespace MultiplayerInfrastructure.UI
       // 다이얼로그 모드에서는 선택 키 표시
       if (_currentMode == InteractableHintUIMode.Dialogue)
       {
-        return KeyboardConfigurationRegistry.InteractInteractableObject.ToString();
+        return DefaultsKeyConfiguration.InteractInteractableObject.ToString();
       }
 
-      return KeyboardConfigurationRegistry.InteractInteractableObject.ToString();
+      return DefaultsKeyConfiguration.InteractInteractableObject.ToString();
     }
 
     #endregion
@@ -639,8 +640,8 @@ namespace MultiplayerInfrastructure.UI
     private void DebugPrintState()
     {
       Debug.Log($"[InteractableHintUI] Mode: {_currentMode}");
-      Debug.Log($"[InteractableHintUI] Selected: {_nowSelected}/{_interactables?.Count ?? 0}");
-      Debug.Log($"[InteractableHintUI] Cached: {_cachedSelectedIndex}/{_cachedInteractables?.Count ?? 0}");
+      Debug.Log($"[InteractableHintUI] Selected: {_nowSelected}/{_interacts?.Count ?? 0}");
+      Debug.Log($"[InteractableHintUI] Cached: {_cachedSelectedIndex}/{_cachedInteracts?.Count ?? 0}");
     }
 
     [ContextMenu("Debug - Force Refresh")]

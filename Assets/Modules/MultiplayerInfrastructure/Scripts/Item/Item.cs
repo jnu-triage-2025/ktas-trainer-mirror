@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace MultiplayerInfrastructure.Item
 {
-  public partial class Item : NetworkBehaviour, IInteractable
+  public partial class Item : NetworkBehaviour, IInteractable, IInteract
   {
     [Header("Item Data")]
     [SerializeField] private ItemBaseModelSO _itemBaseModel;

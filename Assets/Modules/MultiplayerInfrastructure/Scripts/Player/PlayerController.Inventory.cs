@@ -26,7 +26,7 @@ namespace MultiplayerInfrastructure.Player
     void Start_Inventory()
     {
       if (_inventoryUI == null)
-        _inventoryUI = UIControlRegistry.Get<InventoryUIController>();
+        _inventoryUI = Registry.Registry.Get<InventoryUIController>(RegistryType.UI, Registry.Registry.TypeKey<InventoryUIController>());
 
       for (int i = 0; i < _inventoryConf.sizeWidth * _inventoryConf.sizeHeight; i++)
         _slots.Add(new InventorySlotModelDTO());
@@ -35,7 +35,7 @@ namespace MultiplayerInfrastructure.Player
     void Update_Inventory()
     {
       if (_inventoryUI == null)
-        _inventoryUI = UIControlRegistry.Get<InventoryUIController>();
+        _inventoryUI = Registry.Registry.Get<InventoryUIController>(RegistryType.UI, Registry.Registry.TypeKey<InventoryUIController>());
 
       if (_inventoryRenderRequired && _inventoryUI != null && _inventoryUI.IsOpened)
       {
@@ -47,7 +47,7 @@ namespace MultiplayerInfrastructure.Player
     private void ToggleInventory()
     {
       if (_inventoryUI == null)
-        _inventoryUI = UIControlRegistry.Get<InventoryUIController>();
+        _inventoryUI = Registry.Registry.Get<InventoryUIController>(RegistryType.UI, Registry.Registry.TypeKey<InventoryUIController>());
 
       if (_inventoryUI == null)
         return;

@@ -4,6 +4,10 @@
   "title": "ScenarioGraph",
   "type": "object",
   "properties": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1
+    },
     "nodes": {
       "type": "object",
       "description": "Dictionary<string, IScenarioNode>",
@@ -14,6 +18,7 @@
     }
   },
   "required": [
+    "identifier",
     "nodes"
   ],
   "additionalProperties": false,

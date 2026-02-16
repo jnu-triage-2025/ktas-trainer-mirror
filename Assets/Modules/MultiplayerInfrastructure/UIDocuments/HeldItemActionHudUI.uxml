@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:infra="MultiplayerInfrastructure.UI" editor-extension-mode="False">
-  <Style src="project://database/Assets/Modules/MultiplayerInfrastructure/UIDocuments/HeldItemActionHudUI.uss" />
-  <infra:HeldItemActionHud name="held-item-hud" class="held-item-hud">
+<ui:UXML
+  xmlns:ui="UnityEngine.UIElements"
+  xmlns:mi="MultiplayerInfrastructure.UI"
+  editor-extension-mode="False"
+>
+  <ui:Style src="HeldItemActionHudUI.uss" />
+  <mi:HeldItemActionHud name="held-item-hud" class="held-item-hud">
     <ui:VisualElement name="held-item-icon" class="held-item-hud__icon" />
     <ui:Label name="held-item-count" class="held-item-hud__count" />
-  </infra:HeldItemActionHud>
+  </mi:HeldItemActionHud>
 </ui:UXML>

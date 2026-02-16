@@ -25,7 +25,6 @@
 }
 
 .interactable-hint .interact-key-hint {
-  text-align: center;
   align-items: center;
   justify-content: center;
   -unity-text-align: middle-center;
@@ -36,7 +35,6 @@
   -unity-text-align: middle-center;
   white-space: normal;
   font-size: 80%;
-  font-weight: bold;
   -unity-font-style: bold;
 
   background-color: #fff;
@@ -51,9 +49,6 @@
   border-top-left-radius: 15px;
   border-bottom-left-radius: 15px;
   
-  /*background: rgba(18, 22, 28, .78);*/
-  background: linear-gradient(90deg, rgba(18, 22, 28, .78) 0%, rgba(18, 22, 28, .78) 80%, rgba(18, 22, 28, 0) 100%);
-
   border-left-width: 1px;
   border-right-width: 1px;
   border-top-width: 1px;
@@ -84,13 +79,12 @@
   background-position: center;
   background-repeat: no-repeat;
   opacity: 0.95;
-  box-shadow: 0 0 6px rgba(0,0,0,0.25);
 }
 
 .interactable-hint .interactable-content-text {
   color: white;
   font-size: 18px;
-  unity-font-style: bold;
+  -unity-font-style: bold;
   -unity-text-outline-width: 0.75px;
   -unity-text-outline-color: rgba(0, 0, 0, 0.70);
 }

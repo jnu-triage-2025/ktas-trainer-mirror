@@ -23,7 +23,18 @@ namespace MultiplayerInfrastructure.InteractableEntity
       }
     }
 
-    public void Resolve(IInteractable interactable, Transform interactor)
+    public void Resolve(IInteract interact, Transform interactor)
+    {
+      if (interact == null)
+      {
+        Debug.LogWarning($"InteractableEntityResolver.Resolve: interact is null", this);
+        return;
+      }
+
+      interact.Interact(interactor);
+    }
+
+    public void Resolve(IInteractable interactable, Transform interactor, int interactIndex = 0)
     {
       if (interactable == null)
       {
@@ -31,7 +42,20 @@ namespace MultiplayerInfrastructure.InteractableEntity
         return;
       }
 
-      interactable.Interact(interactor);
+      var interacts = interactable.Interacts;
+      if (interacts == null || interacts.Length == 0)
+      {
+        Debug.LogWarning($"InteractableEntityResolver.Resolve: interactable has no interacts", this);
+        return;
+      }
+
+      if (interactIndex < 0 || interactIndex >= interacts.Length)
+      {
+        Debug.LogWarning($"InteractableEntityResolver.Resolve: invalid interact index {interactIndex}", this);
+        return;
+      }
+
+      Resolve(interacts[interactIndex], interactor);
     }
   }
 }

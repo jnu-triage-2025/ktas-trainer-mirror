@@ -11,6 +11,8 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
+using MI = MultiplayerInfrastructure;
+
 namespace MultiplayerInfrastructure.Editor
 {
   public class ScenarioGraphAuthoringWindow : EditorWindow
@@ -26,8 +28,9 @@ namespace MultiplayerInfrastructure.Editor
 
     private Vector2 cachedMousePosition;
     private string currentFilePath;
+    private TextField graphIdentifierField;
 
-    [MenuItem("TriageTrainer/Multiplayer Infrastructure/Multiplayer Scenario/Scenario Graph Authoring")]
+    [MenuItem("Tools/Multiplayer Infrastructure/Multiplayer Scenario/Scenario Graph Authoring")]
     public static void Open()
     {
       var window = GetWindow<ScenarioGraphAuthoringWindow>();
@@ -82,9 +85,22 @@ namespace MultiplayerInfrastructure.Editor
       var validateButton = new ToolbarButton(ValidateGraphUsingRuntimeValidator) { text = "Validate" };
       toolbar.Add(validateButton);
 
+      graphIdentifierField = new TextField
+      {
+        label = "Graph ID"
+      };
+      graphIdentifierField.style.width = 340f;
+      graphIdentifierField.RegisterValueChangedCallback(evt =>
+      {
+        EnsureGraphData();
+        graphData.Identifier = evt.newValue?.Trim() ?? string.Empty;
+      });
+      toolbar.Add(graphIdentifierField);
+
       rootVisualElement.Add(toolbar);
 
       EnsureGraphData();
+      RefreshGraphIdentifierField();
     }
 
     private void CreateGraphView()
@@ -227,19 +243,33 @@ namespace MultiplayerInfrastructure.Editor
 
     private void LoadBlankGraph()
     {
-      graphData = new ScenarioGraph();
+      graphData = new ScenarioGraph { Identifier = "new_scenario_graph" };
       nodeViews.Clear();
       graphView.ClearGraph();
       inspectorView.SetTarget(null);
       currentFilePath = null;
+      RefreshGraphIdentifierField();
     }
 
     private void EnsureGraphData()
     {
       if (graphData == null)
       {
-        graphData = new ScenarioGraph();
+        graphData = new ScenarioGraph { Identifier = "new_scenario_graph" };
       }
+
+      if (string.IsNullOrWhiteSpace(graphData.Identifier))
+      {
+        graphData.Identifier = "new_scenario_graph";
+      }
+    }
+
+    private void RefreshGraphIdentifierField()
+    {
+      if (graphIdentifierField == null)
+        return;
+
+      graphIdentifierField.SetValueWithoutNotify(graphData?.Identifier ?? string.Empty);
     }
 
     private string GetUniqueIdentifier(string prefix)
@@ -388,6 +418,9 @@ namespace MultiplayerInfrastructure.Editor
         }
 
         graphData = loaded;
+        if (string.IsNullOrWhiteSpace(graphData.Identifier))
+          graphData.Identifier = Path.GetFileNameWithoutExtension(path);
+
         nodeViews.Clear();
         graphView.ClearGraph();
 
@@ -432,6 +465,7 @@ namespace MultiplayerInfrastructure.Editor
         graphView.RestoreEdges(nodeViews);
         inspectorView.SetTarget(null);
         currentFilePath = path;
+        RefreshGraphIdentifierField();
 
         ValidateResources(graphData);
       }
@@ -477,6 +511,13 @@ namespace MultiplayerInfrastructure.Editor
     private void SaveGraphToPath(string path)
     {
       if (string.IsNullOrEmpty(path)) return;
+
+      EnsureGraphData();
+      if (string.IsNullOrWhiteSpace(graphData.Identifier))
+      {
+        graphData.Identifier = Path.GetFileNameWithoutExtension(path);
+        RefreshGraphIdentifierField();
+      }
 
       string json;
 
@@ -671,7 +712,9 @@ namespace MultiplayerInfrastructure.Editor
       var missingNPCs = new List<string>();
       foreach (var node in npcNodes)
       {
-        if (!string.IsNullOrEmpty(node.NPCIdentifier) && (NPCRegistry.Instance == null || NPCRegistry.Instance.GetNPC(node.NPCIdentifier) == null))
+        if (!string.IsNullOrEmpty(node.NPCIdentifier)
+            && Registry.Registry.Get<GameObject>(RegistryType.Npc, node.NPCIdentifier) == null
+            && Registry.Registry.Get<GameObject>(RegistryType.Entity, node.NPCIdentifier) == null)
         {
           missingNPCs.Add(node.NPCIdentifier);
         }
@@ -680,7 +723,9 @@ namespace MultiplayerInfrastructure.Editor
       var missingWaypoints = new List<string>();
       foreach (var node in playerMoveNodes)
       {
-        if (!string.IsNullOrEmpty(node.DestinationIdentifier) && (WaypointRegistry.Instance == null || !WaypointRegistry.Instance.GetWaypointPosition(node.DestinationIdentifier).HasValue))
+        if (!string.IsNullOrEmpty(node.DestinationIdentifier)
+            && !Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, node.DestinationIdentifier, out _)
+            && !Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, node.DestinationIdentifier, out _))
         {
           missingWaypoints.Add(node.DestinationIdentifier);
         }
@@ -688,7 +733,9 @@ namespace MultiplayerInfrastructure.Editor
       var npcMoveNodes = graph.Nodes.Values.OfType<ScenarioNPCMoveNode>().Where(n => n.DestinationType == ScenarioMoveDestinationType.Waypoint);
       foreach (var node in npcMoveNodes)
       {
-        if (!string.IsNullOrEmpty(node.DestinationIdentifier) && (WaypointRegistry.Instance == null || !WaypointRegistry.Instance.GetWaypointPosition(node.DestinationIdentifier).HasValue))
+        if (!string.IsNullOrEmpty(node.DestinationIdentifier)
+            && !Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, node.DestinationIdentifier, out _)
+            && !Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, node.DestinationIdentifier, out _))
         {
           if (!missingWaypoints.Contains(node.DestinationIdentifier))
           {

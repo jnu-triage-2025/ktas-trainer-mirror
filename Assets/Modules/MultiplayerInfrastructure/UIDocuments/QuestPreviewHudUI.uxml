@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ui:UXML xmlns:ui="UnityEngine.UIElements"
-         xmlns:mpinfra="MultiplayerInfrastructure.UI">
+<ui:UXML
+  xmlns:ui="UnityEngine.UIElements"
+  xmlns:mi="MultiplayerInfrastructure.UI"
+>
   <ui:Style src="QuestPreviewHudUI.uss" />
-  <mpinfra:QuestPreviewHudElement
+  <mi:QuestPreviewHudElement
     name="quest-preview-root"
     class="quest-preview-root" />
 </ui:UXML>

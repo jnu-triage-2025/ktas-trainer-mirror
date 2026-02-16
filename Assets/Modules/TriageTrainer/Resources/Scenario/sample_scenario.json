@@ -1,4 +1,5 @@
 {
+  "identifier": "sample_scenario",
   "nodes": {
     "intro": {
       "identifier": "intro",

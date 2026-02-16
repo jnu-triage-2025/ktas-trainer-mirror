@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ui:UXML
   xmlns:ui="UnityEngine.UIElements"
-  xsi="http://www.w3.org/2001/XMLSchema-instance"
 >
-  <Style src="./SceneUIIntroScene.uss" />
+  <ui:Style src="SceneUIIntroScene.uss" />
   <ui:VisualElement class="root">
     <ui:Label text="Multiplayer Session Intro" class="title" />
 

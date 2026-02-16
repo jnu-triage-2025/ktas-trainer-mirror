@@ -60,7 +60,7 @@
 
 .btn {
   height: 40px;
-  unity-text-align: middle-center;
+  -unity-text-align: middle-center;
   color: #ffffff;
   border-radius: 8px;
   border-width: 0px;

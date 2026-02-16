@@ -487,8 +487,17 @@ namespace FishNet.Object
                 return;
             _disabledNetworkBehavioursInitialized = true;
 
+            if (NetworkBehaviours == null)
+                return;
+
             for (int i = 0; i < NetworkBehaviours.Count; i++)
-                NetworkBehaviours[i].InitializeIfDisabled();
+            {
+                NetworkBehaviour networkBehaviour = NetworkBehaviours[i];
+                if (networkBehaviour == null)
+                    continue;
+
+                networkBehaviour.InitializeIfDisabled();
+            }
         }
 
         /// <summary>
@@ -1122,9 +1131,18 @@ namespace FishNet.Object
         /// </summary>
         public void ResetState(bool asServer)
         {
-            int count = NetworkBehaviours.Count;
+            int count = NetworkBehaviours == null ? 0 : NetworkBehaviours.Count;
             for (int i = 0; i < count; i++)
-                NetworkBehaviours[i].ResetState(asServer);
+            {
+                NetworkBehaviour networkBehaviour = NetworkBehaviours[i];
+                if (networkBehaviour == null)
+                {
+                    Debug.LogWarning($"NetworkObject {name} has a null NetworkBehaviour reference at index {i}. This typically indicates a missing or stale script reference on the object/prefab.", this);
+                    continue;
+                }
+
+                networkBehaviour.ResetState(asServer);
+            }
 
             ResetState_Prediction(asServer);
             ResetState_Observers(asServer);

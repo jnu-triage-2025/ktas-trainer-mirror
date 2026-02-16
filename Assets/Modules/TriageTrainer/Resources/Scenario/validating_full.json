@@ -1,4 +1,5 @@
 {
+	"identifier": "validating_full",
 	"nodes": {
 		"dialogue_start": {
 			"nodeType": "Dialogue",

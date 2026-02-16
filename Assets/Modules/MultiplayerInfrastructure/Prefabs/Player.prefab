@@ -250,6 +250,8 @@ MonoBehaviour:
   _cameraHolderTransform: {fileID: 0}
   _questUIController: {fileID: 0}
   _questPreviewHudUIController: {fileID: 0}
+  _reposableCarryAnchor: {fileID: 0}
+  _carriedReposableComponent: {fileID: 0}
   _spectatorAlpha: 0.5
   _spectatorLayerName: Spectator
 --- !u!114 &3332462076176395838

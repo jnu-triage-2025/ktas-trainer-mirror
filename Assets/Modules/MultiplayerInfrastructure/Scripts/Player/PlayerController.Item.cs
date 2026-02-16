@@ -29,10 +29,10 @@ namespace MultiplayerInfrastructure.Player
     void Start_Item()
     {
       if (_hotbarUI == null)
-        _hotbarUI = UIControlRegistry.Get<HotbarUIController>();
+        _hotbarUI = Registry.Registry.Get<HotbarUIController>(RegistryType.UI, Registry.Registry.TypeKey<HotbarUIController>());
 
       if (_inventoryUI == null)
-        _inventoryUI = UIControlRegistry.Get<InventoryUIController>();
+        _inventoryUI = Registry.Registry.Get<InventoryUIController>(RegistryType.UI, Registry.Registry.TypeKey<InventoryUIController>());
 
       if (_hotbarUI != null)
         _hotbarUI.OnSelectedSlotChanged += ResolveHandledItem;
@@ -85,7 +85,7 @@ namespace MultiplayerInfrastructure.Player
       }
 
       if (_hotbarUI == null)
-        _hotbarUI = UIControlRegistry.Get<HotbarUIController>();
+        _hotbarUI = Registry.Registry.Get<HotbarUIController>(RegistryType.UI, Registry.Registry.TypeKey<HotbarUIController>());
 
       int selectedIndex = _hotbarUI != null ? _hotbarUI.SelectedSlot : 0;
       if (selectedIndex < 0 || selectedIndex >= _slots.Count)
@@ -210,7 +210,7 @@ namespace MultiplayerInfrastructure.Player
       ClearViewmodel();
       _viewmodelItem = HandlingItem;
 
-      var prefab = ItemRegistry.Instance != null ? ItemRegistry.Instance.GetItemPrefab(HandlingItem.identifier) : null;
+      var prefab = Registry.Registry.Get<GameObject>(RegistryType.Item, HandlingItem.identifier);
       if (prefab == null)
         return;
 

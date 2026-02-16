@@ -62,6 +62,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       var graph = new ScenarioGraph();
+      graph.Identifier = ResolveGraphIdentifier(dto);
 
       foreach (var pair in dto.Nodes)
       {
@@ -81,6 +82,23 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       return graph;
+    }
+
+    private static string ResolveGraphIdentifier(ScenarioGraphDTO dto)
+    {
+      if (!string.IsNullOrWhiteSpace(dto.Identifier))
+        return dto.Identifier.Trim();
+
+      if (dto.Nodes != null)
+      {
+        foreach (var pair in dto.Nodes)
+        {
+          if (!string.IsNullOrWhiteSpace(pair.Key))
+            return $"scenario_{pair.Key.Trim()}";
+        }
+      }
+
+      return "scenario_graph";
     }
 
     private static IScenarioNode ConvertNode(ScenarioNodeDTO dto) =>
@@ -362,6 +380,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       var dto = new ScenarioGraphDTO
       {
+        Identifier = string.IsNullOrWhiteSpace(graph.Identifier) ? "scenario_graph" : graph.Identifier.Trim(),
         Nodes = new Dictionary<string, ScenarioNodeDTO>()
       };
 

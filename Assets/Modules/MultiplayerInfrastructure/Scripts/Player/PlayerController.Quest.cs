@@ -25,7 +25,7 @@ namespace MultiplayerInfrastructure.Player
 
     private QuestUIController FindQuestUIController()
     {
-      var controller = UIControlRegistry.Get<QuestUIController>();
+      var controller = Registry.Registry.Get<QuestUIController>(RegistryType.UI, Registry.Registry.TypeKey<QuestUIController>());
       if (!controller.IsUnityNull())
         return controller;
 
@@ -34,7 +34,7 @@ namespace MultiplayerInfrastructure.Player
 
     private QuestPreviewHudUIController FindQuestPreviewHudUIController()
     {
-      var controller = UIControlRegistry.Get<QuestPreviewHudUIController>();
+      var controller = Registry.Registry.Get<QuestPreviewHudUIController>(RegistryType.UI, Registry.Registry.TypeKey<QuestPreviewHudUIController>());
       if (!controller.IsUnityNull())
         return controller;
 

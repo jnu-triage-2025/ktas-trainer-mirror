@@ -10,6 +10,7 @@
 - [상호작용 기능 구현 가이드](./interaction-implementation-guide.md)
 - [코딩 스타일 컨벤션](./coding-style-conventions.md)
 - [아이템 정의](./item.md)
+- [NPC 멀티 인터랙트 & 아이콘 참조 API](./api-references/entities/npc-multi-interact-and-icon-reference.md)
 
 <br />
 
@@ -17,3 +18,7 @@
 - [시나리오 작성 가이드](./scenario-authoring.md)
 - [시나리오 이벤트 레지스트리](./scenario/event-registry.md)
 - [시나리오 이벤트-구현 매핑](./scenario/event-mapping.md)
+
+### 변경 기록:
+
+- [2026-02-16: Interactable/NPC/Icon 구조 개편](./update-notes/2026-02-16-interactable-npc-icon-refactor.md)

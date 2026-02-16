@@ -1,24 +1,34 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:infra="MultiplayerInfrastructure.UI" editor-extension-mode="False">
-    <Style src="project://database/Assets/Modules/MultiplayerInfrastructure/UIDocuments/InteractableObjectHintUI.uss" />
-    <infra:InteractableObjectHintList name="interactable-scroll"
-                                      class="interactable-scroll">
-        <!--<ui:VisualElement class="interactable-hint">
-            <ui:VisualElement class="interact-key-hint">
-                <ui:Label text="F" class="interact-key-text" />
-            </ui:VisualElement>
-            <ui:VisualElement class="interactable-content-wrapper">
-                <ui:VisualElement class="interactable-icon-holder" />
-                <ui:Label text="asdf" class="interactable-content-text" />
-            </ui:VisualElement>
-        </ui:VisualElement>-->
-        <!--<ui:VisualElement class="interactable-hint selected">
-            <ui:VisualElement class="interact-key-hint">
-                <ui:Label text="F" class="interact-key-text" />
-            </ui:VisualElement>
-            <ui:VisualElement class="interactable-content-wrapper">
-                <ui:VisualElement class="interactable-icon-holder" />
-                <ui:Label text="asdf" class="interactable-content-text" />
-            </ui:VisualElement>
-        </ui:VisualElement>-->
-    </infra:InteractableObjectHintList>
+<ui:UXML
+  xmlns:ui="UnityEngine.UIElements"
+  xmlns:mi="MultiplayerInfrastructure.UI"
+  editor-extension-mode="False"
+>
+  <ui:Style src="InteractableObjectHintUI.uss" />
+  <mi:InteractableObjectHintList
+    name="interactable-scroll"
+    class="interactable-scroll"
+  >
+    <!--
+    <ui:VisualElement class="interactable-hint">
+      <ui:VisualElement class="interact-key-hint">
+        <ui:Label text="F" class="interact-key-text" />
+      </ui:VisualElement>
+      <ui:VisualElement class="interactable-content-wrapper">
+        <ui:VisualElement class="interactable-icon-holder" />
+        <ui:Label text="asdf" class="interactable-content-text" />
+      </ui:VisualElement>
+    </ui:VisualElement>
+    -->
+    <!--
+    <ui:VisualElement class="interactable-hint selected">
+      <ui:VisualElement class="interact-key-hint">
+        <ui:Label text="F" class="interact-key-text" />
+      </ui:VisualElement>
+      <ui:VisualElement class="interactable-content-wrapper">
+        <ui:VisualElement class="interactable-icon-holder" />
+        <ui:Label text="asdf" class="interactable-content-text" />
+      </ui:VisualElement>
+    </ui:VisualElement>
+    -->
+  </mi:InteractableObjectHintList>
 </ui:UXML>

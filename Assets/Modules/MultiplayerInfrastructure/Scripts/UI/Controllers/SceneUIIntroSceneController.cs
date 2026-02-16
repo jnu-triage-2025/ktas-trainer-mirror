@@ -121,15 +121,15 @@ namespace MultiplayerInfrastructure.UI
 
     private void OnCreateAndJoin()
     {
-      CurrentSessionPlayInfoRegistry.SetSession(
+      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.SessionInformation,
         new SessionInformationModel
         (
           address: DefaultsSessionInformationModel.address,
           port: DefaultsSessionInformationModel.port
-        ),
-        isOpeningServer: true,
-        useLanDiscovery: true
-      );
+        ));
+      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.IsOpeningServer, true);
+      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.UseLanDiscovery, true);
+      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.LoadedFromIntroScene, true);
       SetStatus("Hosting intent set. Load your gameplay scene to start FishNet server.");
       SwitchIngameScene();
     }
@@ -150,16 +150,16 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      CurrentSessionPlayInfoRegistry.SetSession(
+      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.SessionInformation,
         new SessionInformationModel
         (
           address: _selected.Address,
           port: _selected.Port,
           sessionName: _selected.Name
-        ),
-        isOpeningServer: false,
-        useLanDiscovery: true
-      );
+        ));
+      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.IsOpeningServer, false);
+      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.UseLanDiscovery, true);
+      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.LoadedFromIntroScene, true);
       SetStatus($"Join intent set: {_selected.Address}:{_selected.Port}");
       SwitchIngameScene();
     }
@@ -173,16 +173,16 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      CurrentSessionPlayInfoRegistry.SetSession(
+      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.SessionInformation,
         new SessionInformationModel
         (
           address: ip,
           port: port,
           sessionName: "Direct"
-        ),
-        isOpeningServer: false,
-        useLanDiscovery: false
-      );
+        ));
+      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.IsOpeningServer, false);
+      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.UseLanDiscovery, false);
+      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.LoadedFromIntroScene, true);
       SetStatus($"Direct join intent set: {ip}:{port}");
       SwitchIngameScene();
     }

@@ -6,10 +6,12 @@ using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 using UnityEngine.UIElements;
 
+using MI = MultiplayerInfrastructure;
+
 namespace MultiplayerInfrastructure.UI
 {
   /// <summary>
-  /// MonoBehaviour controller that owns the view, handles overlay lifecycle, and is accessed via registry.
+  /// MonoBehaviour controller that owns the view, handles overlay lifecycle, and is accessed via Registry.Registry.
   /// </summary>
   [RequireComponent(typeof(UIDocument))]
   public class InventoryUIController : UIControllerABC, IUIOverlay
@@ -80,7 +82,7 @@ namespace MultiplayerInfrastructure.UI
     public void OnOverlayPushed()
     {
       _view?.SetVisible(true);
-      CurrentSessionPlayInfoRegistry.Get<PlayerController>()?.EnterUIOverlayMode();
+      Registry.Registry.Get<PlayerController>(RegistryType.Entity, Registry.Registry.TypeKey<PlayerController>())?.EnterUIOverlayMode();
       OverlayPushed?.Invoke();
     }
 
@@ -88,7 +90,7 @@ namespace MultiplayerInfrastructure.UI
     {
       _view?.SetVisible(false);
       _view?.ReturnHeldItemToInventoryOnClose();
-      CurrentSessionPlayInfoRegistry.Get<PlayerController>()?.ExitUIOverlayMode();
+      Registry.Registry.Get<PlayerController>(RegistryType.Entity, Registry.Registry.TypeKey<PlayerController>())?.ExitUIOverlayMode();
       OverlayPopped?.Invoke();
     }
 
@@ -102,7 +104,7 @@ namespace MultiplayerInfrastructure.UI
     private void EnsureHotbar()
     {
       if (_hotbarUI == null)
-        _hotbarUI = UIControlRegistry.Get<HotbarUIController>();
+        _hotbarUI = Registry.Registry.Get<HotbarUIController>(RegistryType.UI, Registry.Registry.TypeKey<HotbarUIController>());
     }
 
     private void HandleSlotsMutated()

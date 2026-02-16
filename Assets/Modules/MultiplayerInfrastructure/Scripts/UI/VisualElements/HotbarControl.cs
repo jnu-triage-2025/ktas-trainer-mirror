@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 
 namespace MultiplayerInfrastructure.UI
 {
-  [UxmlElement("HotbarControl")]
+  [UxmlElement]
   public partial class HotbarControl : VisualElement
   {
     public const int MinSlotSize = 1;

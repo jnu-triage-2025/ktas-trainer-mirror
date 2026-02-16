@@ -1,0 +1,114 @@
+/* ===== Base ===== */
+.dialogue {
+  position: absolute;
+  bottom: 50px;
+  left: 0;
+  right: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialogue--visible {
+  display: flex;
+  opacity: 1;
+}
+
+.dialogue--hidden {
+  display: none;
+  opacity: 0;
+}
+
+/* ===== Container ===== */
+.dialogue__container {
+  width: 80%;
+  max-width: 900px;
+  flex-direction: column;
+}
+
+/* ===== Header ===== */
+.dialogue__header {
+  flex-direction: row;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: rgba(20, 20, 40, 0.85);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border-width: 1px;
+  border-color: rgba(100, 150, 255, 0.3);
+  border-bottom-width: 0;
+}
+
+.dialogue__icon-container {
+  width: 28px;
+  height: 28px;
+  margin-right: 10px;
+  background-color: rgba(80, 120, 200, 0.5);
+  border-radius: 4px;
+  justify-content: center;
+  align-items: center;
+}
+
+.dialogue__icon {
+  width: 20px;
+  height: 20px;
+  background-color: rgba(150, 200, 255, 0.8);
+  border-radius: 2px;
+}
+
+.dialogue__title {
+  font-size: 16px;
+  color: rgb(200, 220, 255);
+  -unity-font-style: bold;
+}
+
+/* ===== Content Panel ===== */
+.dialogue__content-panel {
+  background-color: rgba(10, 15, 30, 0.9);
+  padding: 0;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border-width: 1px;
+  border-color: rgba(100, 150, 255, 0.3);
+  border-top-width: 0;
+}
+
+/* ===== Speaker ===== */
+.dialogue__speaker-container {
+  background-color: rgba(60, 80, 120, 0.6);
+  padding: 8px 20px;
+  align-self: flex-start;
+  border-bottom-right-radius: 12px;
+  margin-bottom: 5px;
+}
+
+.dialogue__speaker-name {
+  font-size: 18px;
+  color: rgb(255, 255, 255);
+  -unity-font-style: bold;
+  letter-spacing: 1px;
+}
+
+/* ===== Dialogue Text ===== */
+.dialogue__text-container {
+  padding: 12px 20px 20px 20px;
+}
+
+.dialogue__dialogue-text {
+  font-size: 16px;
+  color: rgb(230, 235, 245);
+  white-space: normal;
+  -unity-text-align: upper-left;
+}
+
+/* ===== Hover Effects ===== */
+.dialogue__container:hover {
+  border-color: rgba(120, 170, 255, 0.5);
+}
+
+.dialogue__container:hover .dialogue__header {
+  border-color: rgba(120, 170, 255, 0.5);
+}
+
+.dialogue__container:hover .dialogue__content-panel {
+  border-color: rgba(120, 170, 255, 0.5);
+}

@@ -10,7 +10,7 @@ namespace MultiplayerInfrastructure.UI
   /// Pure view responsible for inventory slot visuals and interactions.
   /// Intended to be instantiated from UXML; controller owns lifecycle and data binding.
   /// </summary>
-  [UxmlElement("InventoryUIView")]
+  [UxmlElement]
   public partial class InventoryUIView : VisualElement
   {
     private int _columns = 9;

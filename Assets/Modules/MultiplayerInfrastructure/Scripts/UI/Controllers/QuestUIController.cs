@@ -124,7 +124,7 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       if (_questManager == null)
-        _questManager = CurrentSessionPlayInfoRegistry.Get<QuestManager>();
+        _questManager = Registry.Registry.Get<QuestManager>(RegistryType.Entity, Registry.Registry.TypeKey<QuestManager>());
 
       if (_questManager == null)
         return;
@@ -187,7 +187,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void NotifyPlayerOverlay(bool expanding)
     {
-      var playerController = CurrentSessionPlayInfoRegistry.Get<PlayerController>();
+      var playerController = Registry.Registry.Get<PlayerController>(RegistryType.Entity, Registry.Registry.TypeKey<PlayerController>());
       if (!playerController.IsUnityNull())
       {
         if (expanding) playerController.EnterUIOverlayMode();

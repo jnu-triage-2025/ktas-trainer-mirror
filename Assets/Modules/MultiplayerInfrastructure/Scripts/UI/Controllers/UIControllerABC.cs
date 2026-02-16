@@ -18,7 +18,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void Register()
     {
-      UIControlRegistry.Register(this);
+      Registry.Registry.Register(RegistryType.UI, Registry.Registry.TypeKey(GetType()), this);
     }
   }
 }

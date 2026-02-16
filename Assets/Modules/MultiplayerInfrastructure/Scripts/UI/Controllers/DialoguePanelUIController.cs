@@ -48,7 +48,7 @@ namespace MultiplayerInfrastructure.UI
     [SerializeField] private int _currentCharIndex;
     [SerializeField] private float _lastTypeTime;
 
-    // 현재 선택지들을 IInteractable로 래핑
+    // 현재 선택지들을 IInteract로 래핑
     private List<ScenarioSelectionInteractable> _currentSelections = new();
 
     #endregion
@@ -308,7 +308,7 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      // 선택지를 IInteractable로 래핑
+      // 선택지를 IInteract로 래핑
       for (int i = 0; i < options.Count; i++)
       {
         var option = options[i];
@@ -324,8 +324,8 @@ namespace MultiplayerInfrastructure.UI
       if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.IsDialogueMode)
       {
         Debug.Log($"[DialoguePanelUI] Setting {_currentSelections.Count} scenario selections in InteractableHintUI");
-        var interactables = new List<IInteractable>(_currentSelections);
-        _interactableHintUI.SetDialogueSelections(interactables);
+        var interacts = new List<IInteract>(_currentSelections);
+        _interactableHintUI.SetDialogueSelections(interacts);
       }
 
       Debug.Log($"[DialoguePanelUI] Displayed {options.Count} options");
@@ -561,7 +561,7 @@ namespace MultiplayerInfrastructure.UI
 
     public void OnOverlayPushed()
     {
-      var player = CurrentSessionPlayInfoRegistry.Get<Player.PlayerController>();
+      var player = Registry.Registry.Get<Player.PlayerController>(RegistryType.Entity, Registry.Registry.TypeKey<Player.PlayerController>());
       Debug.Log($"[DialoguePanelUI] OnOverlayPushed: PlayerController found: {player != null}");
       player?.EnterUIOverlayMode();
       Debug.Log("[DialoguePanelUI] OnOverlayPushed: Entered UI overlay mode for player");
@@ -570,7 +570,7 @@ namespace MultiplayerInfrastructure.UI
 
     public void OnOverlayPopped()
     {
-      var player = CurrentSessionPlayInfoRegistry.Get<Player.PlayerController>();
+      var player = Registry.Registry.Get<Player.PlayerController>(RegistryType.Entity, Registry.Registry.TypeKey<Player.PlayerController>());
       player?.ExitUIOverlayMode();
       OverlayPopped?.Invoke();
     }
@@ -604,10 +604,10 @@ namespace MultiplayerInfrastructure.UI
   #region ScenarioSelectionInteractable
 
   /// <summary>
-  /// 시나리오 선택지를 IInteractable로 래핑하는 클래스.
+  /// 시나리오 선택지를 IInteract로 래핑하는 클래스.
   /// InteractableObjectHintUIController에서 표시할 수 있도록 합니다.
   /// </summary>
-  public class ScenarioSelectionInteractable : IInteractable
+  public class ScenarioSelectionInteractable : IInteract
   {
     private readonly ScenarioChoiceOption _option;
     private readonly int _index;
@@ -626,7 +626,7 @@ namespace MultiplayerInfrastructure.UI
     public ScenarioChoiceOption Option => _option;
     public int Index => _index;
 
-    // IInteractable 구현
+    // IInteract 구현
     public string DisplayText => _option?.DisplayText ?? $"선택지 {_index + 1}";
     public Sprite DisplayIcon
     {
@@ -645,11 +645,6 @@ namespace MultiplayerInfrastructure.UI
     {
       _onInteract?.Invoke(_option, _index);
     }
-
-    // IInteractable의 다른 필수 멤버들
-    public bool CanInteract(Transform interactor) => true;
-    public float InteractionDistance => float.MaxValue;
-    public Transform Transform => null;
   }
 
   #endregion

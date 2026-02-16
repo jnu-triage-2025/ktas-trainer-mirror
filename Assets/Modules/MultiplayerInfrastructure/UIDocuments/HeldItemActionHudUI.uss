@@ -11,9 +11,6 @@
   border-radius: 12px;
   opacity: 0.9;
   pointer-events: none;
-  transition-property: transform, opacity;
-  transition-duration: 120ms;
-  transition-timing-function: ease-out;
   transform: rotate(-12deg);
   -unity-font-definition: var(--unity-default-font);
 }
@@ -32,7 +29,6 @@
   bottom: 6px;
   font-size: 14px;
   color: #f5f5f5;
-  font-weight: bold;
   -unity-font-definition: var(--unity-default-font);
   -unity-text-outline-color: rgba(0, 0, 0, 0.85);
   -unity-text-outline-width: 1px;

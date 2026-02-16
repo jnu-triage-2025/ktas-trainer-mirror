@@ -57,7 +57,7 @@ namespace MultiplayerInfrastructure.Camera
       }
 
       _instance = this;
-      CurrentSessionPlayInfoRegistry.Register(this);
+      Registry.Registry.Register(RegistryType.Entity, Registry.Registry.TypeKey<MainCameraController>(), this);
     }
 
     void Start()

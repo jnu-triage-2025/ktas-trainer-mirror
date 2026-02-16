@@ -23,12 +23,10 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
 }
 
 .game-menu__title {
   font-size: 20px;
-  font-weight: 700;
   color: #f4f4f7;
   margin-bottom: 4px;
 }
@@ -36,7 +34,6 @@
 .game-menu__button {
   height: 36px;
   font-size: 14px;
-  font-weight: 600;
   color: #f4f4f7;
   background-color: #2d7cf4;
   border-radius: 6px;

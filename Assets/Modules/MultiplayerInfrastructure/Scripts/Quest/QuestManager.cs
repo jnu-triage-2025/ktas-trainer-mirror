@@ -5,6 +5,8 @@ using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
+using MI = MultiplayerInfrastructure;
+
 namespace MultiplayerInfrastructure.Quest
 {
   /// <summary>
@@ -48,12 +50,12 @@ namespace MultiplayerInfrastructure.Quest
 
     private void Awake()
     {
-      CurrentSessionPlayInfoRegistry.Register(this);
+      Registry.Registry.Register(RegistryType.Entity, Registry.Registry.TypeKey<QuestManager>(), this);
     }
 
     private void OnDestroy()
     {
-      CurrentSessionPlayInfoRegistry.Unregister<QuestManager>();
+      Registry.Registry.Unregister(RegistryType.Entity, Registry.Registry.TypeKey<QuestManager>());
     }
 
     public void SetQuests(IEnumerable<QuestData> quests, bool clearExisting = true)

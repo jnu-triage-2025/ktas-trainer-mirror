@@ -61,8 +61,28 @@ namespace MultiplayerInfrastructure.Player
       Debug.Log($"[PlayerController] Nearby interactables updated: {nearby.Count} items found.");
       if (_interactableHintUI == null) return;
 
+      var interacts = new List<IInteract>();
+      if (nearby != null)
+      {
+        for (int i = 0; i < nearby.Count; i++)
+        {
+          var interactable = nearby[i];
+          if (interactable == null) continue;
+
+          var eachInteracts = interactable.Interacts;
+          if (eachInteracts == null || eachInteracts.Length == 0) continue;
+
+          for (int j = 0; j < eachInteracts.Length; j++)
+          {
+            var interact = eachInteracts[j];
+            if (interact != null)
+              interacts.Add(interact);
+          }
+        }
+      }
+
       // UpdateInteractables를 사용하여 모드에 따라 적절히 처리
-      _interactableHintUI.UpdateInteractables(nearby);
+      _interactableHintUI.UpdateInteractables(interacts);
     }
 
     // called from PlayerController.Input
@@ -79,10 +99,10 @@ namespace MultiplayerInfrastructure.Player
       }
 
       // 일반 모드에서는 기존 로직
-      var interactable = _interactableHintUI?.GetSelected();
-      if (interactable == null) return;
+      var interact = _interactableHintUI?.GetSelected();
+      if (interact == null) return;
 
-      interactable.Interact(transform);
+      interact.Interact(transform);
     }
 
     // called from PlayerController.Input

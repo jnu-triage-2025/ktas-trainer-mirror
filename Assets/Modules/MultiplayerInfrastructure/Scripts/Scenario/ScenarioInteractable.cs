@@ -9,7 +9,7 @@ namespace MultiplayerInfrastructure.Scenario
   /// 상호작용 시 시나리오를 시작하는 컴포넌트입니다.
   /// NPC 또는 오브젝트에 부착합니다.
   /// </summary>
-  public class ScenarioInteractable : NetworkBehaviour, IInteractable
+  public class ScenarioInteractable : NetworkBehaviour, IInteractable, IInteract
   {
     #region Serialized Fields
 
@@ -30,7 +30,9 @@ namespace MultiplayerInfrastructure.Scenario
 
     #endregion
 
-    #region IInteractable
+    #region IInteractable / IInteract
+
+    public IInteract[] Interacts => new IInteract[] { this };
 
     public string DisplayText => _displayText;
     public Sprite DisplayIcon => _displayIcon;
@@ -44,7 +46,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     #endregion
 
-    #region IInteractable.Interact
+    #region IInteract.Interact
 
     public void Interact(Transform interactor)
     {

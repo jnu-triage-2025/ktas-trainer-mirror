@@ -106,10 +106,10 @@ namespace MultiplayerInfrastructure.Scenario
     private void ResolveUIControllers()
     {
       if (_uiController.IsUnityNull())
-        _uiController = UIControlRegistry.Get<DialoguePanelUIController>();
+        _uiController = Registry.Registry.Get<DialoguePanelUIController>(RegistryType.UI, Registry.Registry.TypeKey<DialoguePanelUIController>());
 
       if (_hintUIController.IsUnityNull())
-        _hintUIController = UIControlRegistry.Get<InteractableObjectHintUIController>();
+        _hintUIController = Registry.Registry.Get<InteractableObjectHintUIController>(RegistryType.UI, Registry.Registry.TypeKey<InteractableObjectHintUIController>());
     }
 
     private void Start()
@@ -374,7 +374,7 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingQuestControl;
 
-      var manager = CurrentSessionPlayInfoRegistry.Get<QuestManager>();
+      var manager = Registry.Registry.Get<QuestManager>(RegistryType.Entity, Registry.Registry.TypeKey<QuestManager>());
       if (manager == null)
       {
         Debug.LogWarning("[ScenarioController] QuestManager not found; skipping quest control node.");
@@ -477,10 +477,10 @@ namespace MultiplayerInfrastructure.Scenario
       }
       else
       {
-        var waypointPos = WaypointRegistry.Instance?.GetWaypointPosition(node.DestinationIdentifier);
-        if (waypointPos.HasValue)
+        if (Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, node.DestinationIdentifier, out var waypointPos)
+            || Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, node.DestinationIdentifier, out waypointPos))
         {
-          destination = waypointPos.Value;
+          destination = waypointPos;
         }
         else
         {
@@ -509,7 +509,8 @@ namespace MultiplayerInfrastructure.Scenario
       _state = State.ExecutingNPCMove;
 
       // NPC 확인
-      var npc = NPCRegistry.Instance?.GetNPC(node.NPCIdentifier);
+      var npc = Registry.Registry.Get<GameObject>(RegistryType.Npc, node.NPCIdentifier)
+                ?? Registry.Registry.Get<GameObject>(RegistryType.Entity, node.NPCIdentifier);
       if (npc == null)
       {
         Debug.LogWarning($"[ScenarioController] NPC '{node.NPCIdentifier}' not found. Skipping move.");
@@ -524,10 +525,10 @@ namespace MultiplayerInfrastructure.Scenario
       }
       else
       {
-        var waypointPos = WaypointRegistry.Instance?.GetWaypointPosition(node.DestinationIdentifier);
-        if (waypointPos.HasValue)
+        if (Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, node.DestinationIdentifier, out var waypointPos)
+            || Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, node.DestinationIdentifier, out waypointPos))
         {
-          destination = waypointPos.Value;
+          destination = waypointPos;
         }
         else
         {

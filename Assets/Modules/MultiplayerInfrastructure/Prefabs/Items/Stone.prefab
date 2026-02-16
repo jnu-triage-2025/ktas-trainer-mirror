@@ -133,7 +133,7 @@ MonoBehaviour:
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
-  - {fileID: 4777632959028820417}
+  - {fileID: 0}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -204,14 +204,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 2912012519658388360}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4d2a96766688f402897e4c08aeb96a0a, type: 3}
+  m_Script: {fileID: 11500000, guid: 39ca54023b690445f911216cad48a54b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GroundedItem
-  _componentIndexCache: 0
+  _componentIndexCache: 255
   _addedNetworkObject: {fileID: 3258920315798757537}
-  _networkObjectCache: {fileID: 3258920315798757537}
+  _networkObjectCache: {fileID: 0}
   _itemBaseModel: {fileID: 11400000, guid: 4a42a57a077034cb4bfc84db417e855f, type: 2}
-  _itemInstanceModel:
+  _itemData:
     identifier: 
     displayName: 
     _itemTextureIdentifier: 
@@ -220,4 +220,5 @@ MonoBehaviour:
     hasDurability: 0
     currentDurability: 0
     _itemTexture: {fileID: 0}
+  _itemIcon: {fileID: 0}
   _itemIdentifier: 

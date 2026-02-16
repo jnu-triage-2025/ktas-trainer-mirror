@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ui:UXML
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:ui="UnityEngine.UIElements"
-  xmlns:infra="MultiplayerInfrastructure.UI"
+  xmlns:mi="MultiplayerInfrastructure.UI"
 >
-  <Style src="./InventoryUI.uss" />
-  
+  <ui:Style src="InventoryUI.uss" />
   <ui:VisualElement name="InventoryUIWrapper" class="inventory-ui-wrapper">
-    <infra:InventoryUIView name="InventoryRoot" class="inventory-root" style="visibility: hidden;">
+    <mi:InventoryUIView name="InventoryRoot" class="inventory-root" style="visibility: hidden;">
       <ui:Label text="Inventory" class="inventory-title" />
       <ui:VisualElement name="InventoryGrid" class="inventory-grid" />
-    </infra:InventoryUIView>
+    </mi:InventoryUIView>
   </ui:VisualElement>
 </ui:UXML>

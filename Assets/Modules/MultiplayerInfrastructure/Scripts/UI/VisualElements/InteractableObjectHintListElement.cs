@@ -17,7 +17,7 @@ namespace MultiplayerInfrastructure.UI
     private readonly VisualElement _iconHolder;
     private readonly Label _contentText;
 
-    public IInteractable Interactable { get; private set; }
+    public IInteract Interact { get; private set; }
 
     public InteractableObjectHintListElement()
     {
@@ -102,16 +102,16 @@ namespace MultiplayerInfrastructure.UI
     }
 
     public void Bind(
-        IInteractable interactable,
+        IInteract interact,
         string keyLabel,
         InteractableHintUIMode mode,
         Sprite dialogueIcon,
         bool isSelected)
     {
-      Interactable = interactable;
+      Interact = interact;
       _keyText.text = keyLabel ?? string.Empty;
 
-      var iconSprite = interactable?.DisplayIcon;
+      var iconSprite = interact?.DisplayIcon;
       if (iconSprite == null)
         iconSprite = mode == InteractableHintUIMode.Dialogue ? dialogueIcon : DefaultsResource.FallbackSprite;
 
@@ -123,10 +123,10 @@ namespace MultiplayerInfrastructure.UI
       else
       {
         _iconHolder.style.backgroundImage = StyleKeyword.None;
-        _iconHolder.style.backgroundColor = interactable?.DisplayColor ?? Color.clear;
+        _iconHolder.style.backgroundColor = interact?.DisplayColor ?? Color.clear;
       }
 
-      _contentText.text = interactable?.DisplayText ?? string.Empty;
+      _contentText.text = interact?.DisplayText ?? string.Empty;
 
       EnableInClassList("selected", isSelected);
       EnableInClassList("dialogue-selection", mode == InteractableHintUIMode.Dialogue);

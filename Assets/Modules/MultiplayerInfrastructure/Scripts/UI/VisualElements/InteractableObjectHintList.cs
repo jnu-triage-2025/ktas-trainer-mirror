@@ -27,7 +27,7 @@ namespace MultiplayerInfrastructure.UI
     }
 
     public void Rebuild(
-        IReadOnlyList<IInteractable> interactables,
+        IReadOnlyList<IInteract> interacts,
         int selectedIndex,
         InteractableHintUIMode mode,
         string keyLabel,
@@ -35,13 +35,13 @@ namespace MultiplayerInfrastructure.UI
     {
       contentContainer.Clear();
 
-      if (interactables == null || interactables.Count == 0)
+      if (interacts == null || interacts.Count == 0)
         return;
 
-      for (int i = 0; i < interactables.Count; i++)
+      for (int i = 0; i < interacts.Count; i++)
       {
         var element = new InteractableObjectHintListElement();
-        element.Bind(interactables[i], keyLabel, mode, dialogueIcon, i == selectedIndex);
+        element.Bind(interacts[i], keyLabel, mode, dialogueIcon, i == selectedIndex);
         contentContainer.Add(element);
       }
 

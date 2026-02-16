@@ -13,10 +13,10 @@ namespace MultiplayerInfrastructure.Player
 
       if (IsOwner)
       {
-        CurrentSessionPlayInfoRegistry.Register<PlayerController>(this);
-        Debug.Log($"[PlayerController] registered into CurrentSessionRegistry (owner): {this}", this);
+        Registry.Registry.Register(RegistryType.Entity, Registry.Registry.TypeKey<PlayerController>(), this);
+        Debug.Log($"[PlayerController] registered into Registry (owner): {this}", this);
 
-        var cam = MainCameraController.Instance ?? CurrentSessionPlayInfoRegistry.Get<MainCameraController>();
+        var cam = MainCameraController.Instance ?? Registry.Registry.Get<MainCameraController>(RegistryType.Entity, Registry.Registry.TypeKey<MainCameraController>());
         if (cam != null)
           cam.SetTarget(this);
       }

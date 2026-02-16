@@ -11,7 +11,7 @@ namespace MultiplayerInfrastructure.Player
     void Start_Hotbar()
     {
       if (_hotbarUI == null)
-        _hotbarUI = UIControlRegistry.Get<HotbarUIController>();
+        _hotbarUI = Registry.Registry.Get<HotbarUIController>(RegistryType.UI, Registry.Registry.TypeKey<HotbarUIController>());
       _hotbarUI.SetupHotbarUI();
       _hotbarUI.BindInventory(_slots);
     }
