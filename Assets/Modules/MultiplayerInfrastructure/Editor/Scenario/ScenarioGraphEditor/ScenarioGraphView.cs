@@ -106,6 +106,30 @@ namespace MultiplayerInfrastructure.Editor
             }
           }
         }
+
+        if (node.Data is ScenarioQuizNode quiz)
+        {
+          foreach (var port in node.outputContainer.Children().OfType<Port>())
+          {
+            if (port.userData is not string marker)
+              continue;
+
+            var targetIdentifier = marker switch
+            {
+              "quiz.correct" => quiz.OnCorrectNextIdentifier,
+              "quiz.incorrect" => quiz.OnIncorrectNextIdentifier,
+              _ => null
+            };
+
+            if (string.IsNullOrEmpty(targetIdentifier))
+              continue;
+
+            if (!nodeViews.TryGetValue(targetIdentifier, out var targetView))
+              continue;
+
+            CreateEdge(port, targetView.InputPort);
+          }
+        }
       }
     }
 

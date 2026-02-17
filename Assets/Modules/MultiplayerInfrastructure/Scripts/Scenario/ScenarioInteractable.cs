@@ -36,6 +36,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     public string DisplayText => _displayText;
     public Sprite DisplayIcon => _displayIcon;
+    public bool AllowDisplayIconFallback => true;
     public Color DisplayColor => _displayColor;
 
     #endregion

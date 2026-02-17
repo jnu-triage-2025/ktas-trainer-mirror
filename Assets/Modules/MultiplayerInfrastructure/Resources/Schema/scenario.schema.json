@@ -59,6 +59,27 @@
         },
         {
           "$ref": "#/$defs/ScenarioQuestControlNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioNotificationNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioDelayNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioInteractionNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioCombineItemNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioQuizNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioStateUpdateNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioRoleAssignmentNode"
         }
       ]
     },
@@ -679,12 +700,293 @@
             "string",
             "null"
           ]
+        },
+        "requiredRoleIdentifiers": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       },
       "required": [
         "identifier"
       ],
       "additionalProperties": false
+    },
+    "ScenarioNotificationNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "Notification"
+            },
+            "message": {
+              "type": "string"
+            },
+            "displayMode": {
+              "type": "string",
+              "enum": [
+                "Overlay",
+                "Toast",
+                "Subtitle"
+              ],
+              "default": "Overlay"
+            },
+            "duration": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            }
+          },
+          "required": [
+            "message"
+          ]
+        }
+      ]
+    },
+    "ScenarioDelayNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "Delay"
+            },
+            "durationSeconds": {
+              "type": "number",
+              "minimum": 0
+            },
+            "waitUntil": {
+              "type": "string",
+              "enum": [
+                "Immediately",
+                "WaitUntilDone"
+              ],
+              "default": "WaitUntilDone"
+            }
+          },
+          "required": [
+            "durationSeconds"
+          ]
+        }
+      ]
+    },
+    "ScenarioInteractionNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "Interaction"
+            },
+            "actorScope": {
+              "type": "string",
+              "enum": [
+                "Player",
+                "Role",
+                "Any"
+              ],
+              "default": "Player"
+            },
+            "targetIdentifier": {
+              "type": "string"
+            },
+            "requiredItemIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "interactionType": {
+              "type": "string",
+              "enum": [
+                "Use",
+                "Inspect",
+                "Attach",
+                "Detach"
+              ],
+              "default": "Use"
+            },
+            "completionConditionIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "actorScope",
+            "targetIdentifier",
+            "interactionType"
+          ]
+        }
+      ]
+    },
+    "ScenarioCombineItemNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "CombineItem"
+            },
+            "inputItemIdentifiers": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "outputItemIdentifier": {
+              "type": "string"
+            },
+            "autoCombine": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "required": [
+            "inputItemIdentifiers",
+            "outputItemIdentifier"
+          ]
+        }
+      ]
+    },
+    "ScenarioQuizNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "Quiz"
+            },
+            "question": {
+              "type": "string"
+            },
+            "options": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "string"
+              }
+            },
+            "correctIndex": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "onCorrectNextIdentifier": {
+              "type": "string"
+            },
+            "onIncorrectNextIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "feedbackCorrect": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "feedbackIncorrect": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "nextIdentifier": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "question",
+            "options",
+            "correctIndex",
+            "onCorrectNextIdentifier"
+          ]
+        }
+      ]
+    },
+    "ScenarioStateUpdateNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "StateUpdate"
+            },
+            "targetEntityIdentifier": {
+              "type": "string"
+            },
+            "stateKey": {
+              "type": "string"
+            },
+            "stateValue": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "targetEntityIdentifier",
+            "stateKey",
+            "stateValue"
+          ]
+        }
+      ]
+    },
+    "ScenarioRoleAssignmentNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "RoleAssignment"
+            },
+            "roleOptions": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "assignmentMode": {
+              "type": "string",
+              "enum": [
+                "Select",
+                "Auto"
+              ],
+              "default": "Select"
+            }
+          },
+          "required": [
+            "roleOptions",
+            "assignmentMode"
+          ]
+        }
+      ]
     },
     "ScenarioQuestControlNode": {
       "allOf": [

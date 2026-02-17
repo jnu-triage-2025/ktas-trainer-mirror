@@ -48,6 +48,7 @@ namespace TriageTrainer.Entity
     public IInteract[] Interacts => new IInteract[] { this };
     public string DisplayText => _displayText;
     public Sprite DisplayIcon => _displayIcon;
+    public bool AllowDisplayIconFallback => true;
     public Color DisplayColor => Color.white;
     public int Weight => Mathf.Max(0, _weight);
 

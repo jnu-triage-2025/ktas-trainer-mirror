@@ -33,6 +33,13 @@
 | E___ | InvokeEvent | EventIdentifier를 호출한다. MoveNextBehavior에 따른 진행 방식을 서술한다. | ___ |
 | V___ | Validator | Condition과 TargetCount로 검증한다. 실패 시 OnFailure 흐름과 FailureNextIdentifier(Branching)를 서술한다. | ___ |
 | Q___ | QuestControl | Quest에 대해 Operation을 수행한다. FailureStrategy에 따른 처리 방식을 서술한다. | ___ |
+| N___ | Notification | 시스템 메시지를 표시한다. Message, DisplayMode, Duration을 서술한다. | ___ |
+| DL___ | Delay | DurationSeconds 동안 대기한다. WaitUntil 정책을 서술한다. | ___ |
+| I___ | Interaction | ActorScope가 TargetIdentifier와 상호작용한다. RequiredItemIdentifier/CompletionConditionIdentifier를 서술한다. | ___ |
+| CI___ | CombineItem | InputItemIdentifiers를 OutputItemIdentifier로 조합한다. AutoCombine 여부를 서술한다. | ___ |
+| Z___ | Quiz | Question, Options, CorrectIndex, OnCorrect/OnIncorrect 흐름을 서술한다. | (분기) |
+| SU___ | StateUpdate | TargetEntityIdentifier의 StateKey를 StateValue로 갱신한다. | ___ |
+| RA___ | RoleAssignment | RoleOptions와 AssignmentMode를 서술한다. | ___ |
 
 ## 종료 조건
 

@@ -16,6 +16,11 @@ namespace MultiplayerInfrastructure.InteractableEntity
     /// 플레이어의 화면에 상호 작용 가능한 물체로서 표시될 때, 표시되는 아이콘에 해당합니다.
     /// </summary>
     public Sprite DisplayIcon { get; }
+
+    /// <summary>
+    /// DisplayIcon이 null일 때 기본 fallback 아이콘을 표시할지 여부입니다.
+    /// </summary>
+    public bool AllowDisplayIconFallback { get; }
     
     /// <summary>
     /// 플레이어의 화면에 상호 작용 가능한 물체로서 표시될 때, 강조하고자 싶다면 이 색을 설정합니다.

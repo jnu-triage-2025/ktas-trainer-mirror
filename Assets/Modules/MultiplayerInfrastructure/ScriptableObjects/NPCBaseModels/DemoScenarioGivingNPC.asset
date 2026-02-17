@@ -20,7 +20,7 @@ MonoBehaviour:
     _displayIcon:
       _sprite: {fileID: 0}
       _iconRegistryIdentifier: 
-      _iconDefinition: 1
+      _iconDefinition: 0
     _displayColor: {r: 0, g: 0, b: 0, a: 0}
     _scenarioIdentifier: scenario_graph_quest
     _scenarioStartNodeIdentifier: intro_1

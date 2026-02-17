@@ -639,6 +639,7 @@ namespace MultiplayerInfrastructure.UI
         return null;
       }
     }
+    public bool AllowDisplayIconFallback => true;
     public Color DisplayColor => _option?.DisplayColor ?? Color.white;
 
     public void Interact(Transform interactor)

@@ -33,6 +33,13 @@ namespace MultiplayerInfrastructure.Scenario
         "Validator" => Deserialize<ScenarioValidatorNodeDTO>(root, options),
         "Parallel" => Deserialize<ScenarioParallelNodeDTO>(root, options),
         "QuestControl" => Deserialize<ScenarioQuestControlNodeDTO>(root, options),
+        "Notification" => Deserialize<ScenarioNotificationNodeDTO>(root, options),
+        "Delay" => Deserialize<ScenarioDelayNodeDTO>(root, options),
+        "Interaction" => Deserialize<ScenarioInteractionNodeDTO>(root, options),
+        "CombineItem" => Deserialize<ScenarioCombineItemNodeDTO>(root, options),
+        "Quiz" => Deserialize<ScenarioQuizNodeDTO>(root, options),
+        "StateUpdate" => Deserialize<ScenarioStateUpdateNodeDTO>(root, options),
+        "RoleAssignment" => Deserialize<ScenarioRoleAssignmentNodeDTO>(root, options),
         _ => throw new JsonException($"Unknown nodeType '{nodeType}'.")
       };
     }

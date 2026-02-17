@@ -38,6 +38,11 @@ namespace MultiplayerInfrastructure.Scenario
     private ScenarioGraph _currentGraph;
     private IScenarioNode _currentNode;
     private List<ScenarioChoiceOption> _activeOptions = new();
+    private ScenarioQuizNode _activeQuizNode;
+    private ScenarioRoleAssignmentNode _activeRoleAssignmentNode;
+    private List<string> _activeRoleOptions = new List<string>();
+    private readonly Dictionary<int, string> _assignedRolesByClientId = new Dictionary<int, string>();
+    private readonly Dictionary<string, string> _stateStore = new Dictionary<string, string>();
     private int? _scenarioOwnerClientId;
 
     #endregion
@@ -57,6 +62,13 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingValidator,
       ExecutingParallel,
       ExecutingQuestControl,
+      ExecutingNotification,
+      ExecutingDelay,
+      ExecutingInteraction,
+      ExecutingCombineItem,
+      ExecutingQuiz,
+      ExecutingStateUpdate,
+      ExecutingRoleAssignment,
     }
 
     [SerializeField] private State _state = State.Inactive;
@@ -196,6 +208,8 @@ namespace MultiplayerInfrastructure.Scenario
       _state = State.Inactive;
 
       ClearOptions();
+      _assignedRolesByClientId.Clear();
+      _stateStore.Clear();
 
       // UI 종료
       if (!_uiController.IsUnityNull())
@@ -234,6 +248,18 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public void SelectOption(int index)
     {
+      if (_state == State.ExecutingQuiz && _activeQuizNode != null)
+      {
+        HandleQuizSelection(index, _activeQuizNode);
+        return;
+      }
+
+      if (_state == State.ExecutingRoleAssignment && _activeRoleAssignmentNode != null)
+      {
+        HandleRoleSelection(index);
+        return;
+      }
+
       if (index < 0 || index >= _activeOptions.Count)
       {
         Debug.LogWarning($"[ScenarioController] Invalid option index: {index}");
@@ -318,6 +344,27 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioQuestControlNode questControl:
           ExecuteQuestControlNode(questControl);
           break;
+        case ScenarioNotificationNode notification:
+          StartCoroutine(ExecuteNotificationNode(notification));
+          break;
+        case ScenarioDelayNode delay:
+          StartCoroutine(ExecuteDelayNode(delay));
+          break;
+        case ScenarioInteractionNode interaction:
+          StartCoroutine(ExecuteInteractionNode(interaction));
+          break;
+        case ScenarioCombineItemNode combineItem:
+          StartCoroutine(ExecuteCombineItemNode(combineItem));
+          break;
+        case ScenarioQuizNode quiz:
+          ExecuteQuizNode(quiz);
+          break;
+        case ScenarioStateUpdateNode stateUpdate:
+          ExecuteStateUpdateNode(stateUpdate);
+          break;
+        case ScenarioRoleAssignmentNode roleAssignment:
+          ExecuteRoleAssignmentNode(roleAssignment);
+          break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type: {node.GetType().Name}");
           Advance();
@@ -391,6 +438,249 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Advance();
+    }
+
+    private IEnumerator ExecuteNotificationNode(ScenarioNotificationNode node)
+    {
+      _state = State.ExecutingNotification;
+
+      if (!_uiController.IsUnityNull())
+      {
+        _uiController.DisplayDialogue("System", node.Message ?? string.Empty, null);
+      }
+      else
+      {
+        Debug.Log($"[ScenarioController] Notification({node.DisplayMode}): {node.Message}");
+      }
+
+      if (node.Duration.HasValue && node.Duration.Value > 0f)
+      {
+        yield return new WaitForSeconds(node.Duration.Value);
+      }
+
+      Advance();
+    }
+
+    private IEnumerator ExecuteDelayNode(ScenarioDelayNode node)
+    {
+      _state = State.ExecutingDelay;
+
+      if (node.WaitUntil == ScenarioDelayWaitUntil.WaitUntilDone && node.DurationSeconds > 0f)
+      {
+        yield return new WaitForSeconds(node.DurationSeconds);
+      }
+
+      Advance();
+    }
+
+    private IEnumerator ExecuteInteractionNode(ScenarioInteractionNode node)
+    {
+      _state = State.ExecutingInteraction;
+
+      Debug.Log($"[ScenarioController] Interaction requested: actorScope={node.ActorScope}, target={node.TargetIdentifier}, item={node.RequiredItemIdentifier}, type={node.InteractionType}");
+
+      if (!string.IsNullOrWhiteSpace(node.CompletionConditionIdentifier)
+          && ScenarioEventIdentifierRegistry.TryGetHandler(node.CompletionConditionIdentifier, out var handler))
+      {
+        var routine = handler?.Invoke();
+        if (routine != null)
+        {
+          yield return StartCoroutine(routine);
+        }
+      }
+
+      Advance();
+    }
+
+    private IEnumerator ExecuteCombineItemNode(ScenarioCombineItemNode node)
+    {
+      _state = State.ExecutingCombineItem;
+
+      Debug.Log($"[ScenarioController] Combine item: inputs={string.Join(",", node.InputItemIdentifiers ?? Array.Empty<string>())}, output={node.OutputItemIdentifier}, auto={node.AutoCombine}");
+
+      if (!node.AutoCombine && !string.IsNullOrWhiteSpace(node.OutputItemIdentifier)
+          && ScenarioEventIdentifierRegistry.TryGetHandler(node.OutputItemIdentifier, out var handler))
+      {
+        var routine = handler?.Invoke();
+        if (routine != null)
+        {
+          yield return StartCoroutine(routine);
+        }
+      }
+
+      Advance();
+    }
+
+    private void ExecuteQuizNode(ScenarioQuizNode node)
+    {
+      _state = State.ExecutingQuiz;
+      _activeQuizNode = node;
+
+      var options = (node.Options ?? Array.Empty<string>())
+          .Select(text => new ScenarioChoiceOption
+          {
+            DisplayText = text,
+            DisplayColor = Color.white,
+            NextNodeIdentifier = null
+          })
+          .ToList();
+
+      _activeOptions = options;
+
+      if (!_uiController.IsUnityNull())
+      {
+        _uiController.DisplayChoice("Quiz", node.Question ?? string.Empty, null, options);
+      }
+      else
+      {
+        Debug.LogWarning($"[ScenarioController] Quiz node '{node.Identifier}' cannot render choices because UI controller is missing.");
+        ResolveQuizNext(node, false);
+      }
+    }
+
+    private void ExecuteStateUpdateNode(ScenarioStateUpdateNode node)
+    {
+      _state = State.ExecutingStateUpdate;
+
+      var key = $"{node.TargetEntityIdentifier}.{node.StateKey}";
+      _stateStore[key] = node.StateValue;
+      Debug.Log($"[ScenarioController] State updated: {key}={node.StateValue}");
+
+      Advance();
+    }
+
+    private void ExecuteRoleAssignmentNode(ScenarioRoleAssignmentNode node)
+    {
+      _state = State.ExecutingRoleAssignment;
+      _activeRoleAssignmentNode = node;
+
+      if (node.AssignmentMode == ScenarioRoleAssignmentMode.Auto)
+      {
+        AutoAssignRoles(node);
+        Advance();
+        return;
+      }
+
+      var roleOptions = node.RoleOptions?.Where(role => !string.IsNullOrWhiteSpace(role)).ToList() ?? new List<string>();
+      if (roleOptions.Count == 0)
+      {
+        Debug.LogWarning($"[ScenarioController] RoleAssignment node '{node.Identifier}' has no role options.");
+        Advance();
+        return;
+      }
+
+      var options = roleOptions.Select(role => new ScenarioChoiceOption
+      {
+        DisplayText = role,
+        DisplayColor = Color.white,
+        NextNodeIdentifier = null
+      }).ToList();
+
+      _activeRoleOptions = roleOptions;
+      _activeOptions = options;
+
+      if (!_uiController.IsUnityNull())
+      {
+        _uiController.DisplayChoice("System", "역할을 선택하세요.", null, options);
+      }
+      else
+      {
+        AssignRoleToOwnerOrFirst(roleOptions[0]);
+        Advance();
+      }
+    }
+
+    private void HandleQuizSelection(int index, ScenarioQuizNode node)
+    {
+      if (node.Options == null || index < 0 || index >= node.Options.Count)
+      {
+        Debug.LogWarning($"[ScenarioController] Invalid quiz option index: {index}");
+        return;
+      }
+
+      bool isCorrect = index == node.CorrectIndex;
+      ResolveQuizNext(node, isCorrect);
+    }
+
+    private void ResolveQuizNext(ScenarioQuizNode node, bool isCorrect)
+    {
+      var feedback = isCorrect ? node.FeedbackCorrect : node.FeedbackIncorrect;
+      if (!string.IsNullOrWhiteSpace(feedback) && !_uiController.IsUnityNull())
+      {
+        _uiController.DisplayDialogue("Quiz", feedback, null);
+      }
+
+      var target = isCorrect
+          ? node.OnCorrectNextIdentifier
+          : string.IsNullOrWhiteSpace(node.OnIncorrectNextIdentifier) ? node.NextIdentifier : node.OnIncorrectNextIdentifier;
+
+      _activeQuizNode = null;
+      ClearOptions();
+
+      if (string.IsNullOrWhiteSpace(target))
+      {
+        EndScenario();
+        return;
+      }
+
+      if (!_currentGraph.TryGetNode(target, out var nextNode))
+      {
+        Debug.LogError($"[ScenarioController] Quiz next node '{target}' not found");
+        EndScenario();
+        return;
+      }
+
+      _currentNode = nextNode;
+      ExecuteNode(nextNode);
+    }
+
+    private void HandleRoleSelection(int index)
+    {
+      if (index < 0 || index >= _activeRoleOptions.Count)
+      {
+        Debug.LogWarning($"[ScenarioController] Invalid role option index: {index}");
+        return;
+      }
+
+      AssignRoleToOwnerOrFirst(_activeRoleOptions[index]);
+      _activeRoleAssignmentNode = null;
+      ClearOptions();
+      Advance();
+    }
+
+    private void AutoAssignRoles(ScenarioRoleAssignmentNode node)
+    {
+      var roles = node.RoleOptions?.Where(role => !string.IsNullOrWhiteSpace(role)).ToList() ?? new List<string>();
+      if (roles.Count == 0)
+      {
+        return;
+      }
+
+      var players = GetActivePlayerIds();
+      if (players.Count == 0)
+      {
+        return;
+      }
+
+      for (int i = 0; i < players.Count; i++)
+      {
+        _assignedRolesByClientId[players[i]] = roles[i % roles.Count];
+      }
+    }
+
+    private void AssignRoleToOwnerOrFirst(string role)
+    {
+      var players = GetActivePlayerIds();
+      if (_scenarioOwnerClientId.HasValue)
+      {
+        _assignedRolesByClientId[_scenarioOwnerClientId.Value] = role;
+        return;
+      }
+
+      if (players.Count > 0)
+      {
+        _assignedRolesByClientId[players[0]] = role;
+      }
     }
 
     private bool ApplyQuestOperation(QuestManager manager, ScenarioQuestControlNode node)
@@ -809,9 +1099,17 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioParallelAllocationType.SelfAll:
         {
           int? target = _scenarioOwnerClientId;
+          if (target != null && !IsPlayerEligibleForBranch(branches[0], target.Value))
+          {
+            target = null;
+          }
+
           if (target == null && playerPool.Count > 0)
           {
-            target = playerPool[0];
+            target = playerPool
+                .Where(clientId => IsPlayerEligibleForBranch(branches[0], clientId))
+                .Select(clientId => (int?)clientId)
+                .FirstOrDefault();
           }
 
           if (target == null)
@@ -827,12 +1125,13 @@ namespace MultiplayerInfrastructure.Scenario
         }
         case ScenarioParallelAllocationType.RandomOneAll:
         {
-          if (playerPool.Count == 0)
+          var eligiblePlayers = playerPool.Where(clientId => branches.All(branch => IsPlayerEligibleForBranch(branch, clientId))).ToList();
+          if (eligiblePlayers.Count == 0)
           {
             return HandleParallelMismatch(node, branches.Count, 0, playerPool, allocation, assignNull: true);
           }
 
-          var pick = playerPool[UnityEngine.Random.Range(0, playerPool.Count)];
+          var pick = eligiblePlayers[UnityEngine.Random.Range(0, eligiblePlayers.Count)];
           foreach (var branch in branches)
           {
             allocation[branch] = pick;
@@ -862,18 +1161,31 @@ namespace MultiplayerInfrastructure.Scenario
 
           for (int i = 0; i < branches.Count; i++)
           {
+            var branch = branches[i];
+            var eligiblePlayers = playerPool.Where(clientId => IsPlayerEligibleForBranch(branch, clientId)).ToList();
+
             int? assigned;
 
-            if (playersFewer && node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Ignore && i >= playerCount)
+            if (eligiblePlayers.Count == 0)
+            {
+              if (node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
+              {
+                Debug.LogWarning($"[ScenarioController] Parallel allocation panic: branch '{branch.Identifier}' has no eligible player.");
+                return false;
+              }
+
+              assigned = null;
+            }
+            else if (playersFewer && node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Ignore && i >= playerCount)
             {
               assigned = null;
             }
             else
             {
-              assigned = playerPool[i % playerCount];
+              assigned = eligiblePlayers[i % eligiblePlayers.Count];
             }
 
-            allocation[branches[i]] = assigned;
+            allocation[branch] = assigned;
           }
 
           return true;
@@ -919,6 +1231,22 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
+    private bool IsPlayerEligibleForBranch(ScenarioParallelBranch branch, int clientId)
+    {
+      if (branch?.RequiredRoleIdentifiers == null || branch.RequiredRoleIdentifiers.Count == 0)
+      {
+        return true;
+      }
+
+      if (!_assignedRolesByClientId.TryGetValue(clientId, out var role) || string.IsNullOrWhiteSpace(role))
+      {
+        return false;
+      }
+
+      return branch.RequiredRoleIdentifiers.Any(requiredRole =>
+          string.Equals(requiredRole, role, StringComparison.OrdinalIgnoreCase));
+    }
+
     private static void Shuffle(IList<int> list)
     {
       for (int i = list.Count - 1; i > 0; i--)
@@ -959,6 +1287,9 @@ namespace MultiplayerInfrastructure.Scenario
     private void ClearOptions()
     {
       _activeOptions.Clear();
+      _activeQuizNode = null;
+      _activeRoleAssignmentNode = null;
+      _activeRoleOptions.Clear();
 
       if (_hintUIController != null)
       {

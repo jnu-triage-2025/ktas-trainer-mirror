@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace MultiplayerInfrastructure.Scenario
@@ -9,5 +10,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("completionConditionIdentifier")]
     public string CompletionConditionIdentifier { get; set; }
+
+    [JsonPropertyName("requiredRoleIdentifiers")]
+    public List<string> RequiredRoleIdentifiers { get; set; }
   }
 }

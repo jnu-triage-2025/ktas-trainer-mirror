@@ -30,7 +30,7 @@ namespace MultiplayerInfrastructure.Editor
     private string currentFilePath;
     private TextField graphIdentifierField;
 
-    [MenuItem("Tools/Multiplayer Infrastructure/Multiplayer Scenario/Scenario Graph Authoring")]
+    [MenuItem("Tools/Multiplayer Infrastructure/Scenario Graph Authoring")]
     public static void Open()
     {
       var window = GetWindow<ScenarioGraphAuthoringWindow>();
@@ -332,6 +332,19 @@ namespace MultiplayerInfrastructure.Editor
             }
           }
         }
+
+        if (other is ScenarioQuizNode quiz)
+        {
+          if (quiz.OnCorrectNextIdentifier == id)
+          {
+            quiz.OnCorrectNextIdentifier = null;
+          }
+
+          if (quiz.OnIncorrectNextIdentifier == id)
+          {
+            quiz.OnIncorrectNextIdentifier = null;
+          }
+        }
       }
 
       inspectorView.SetTarget(null);
@@ -390,6 +403,19 @@ namespace MultiplayerInfrastructure.Editor
             {
               branch.Identifier = trimmed;
             }
+          }
+        }
+
+        if (node is ScenarioQuizNode quiz)
+        {
+          if (quiz.OnCorrectNextIdentifier == oldId)
+          {
+            quiz.OnCorrectNextIdentifier = trimmed;
+          }
+
+          if (quiz.OnIncorrectNextIdentifier == oldId)
+          {
+            quiz.OnIncorrectNextIdentifier = trimmed;
           }
         }
       }
