@@ -116,7 +116,18 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.InvokeEvent:
         case ScenarioNodeType.Validator:
         case ScenarioNodeType.QuestControl:
+        case ScenarioNodeType.Notification:
+        case ScenarioNodeType.Delay:
+        case ScenarioNodeType.Interaction:
+        case ScenarioNodeType.CombineItem:
+        case ScenarioNodeType.StateUpdate:
+        case ScenarioNodeType.RoleAssignment:
           DefaultOutputPort = CreateStandardOutput("Next");
+          break;
+
+        case ScenarioNodeType.Quiz:
+          AddQuizOutput("Correct", "quiz.correct");
+          AddQuizOutput("Incorrect", "quiz.incorrect");
           break;
 
         case ScenarioNodeType.Choice:
@@ -223,12 +234,32 @@ namespace MultiplayerInfrastructure.Editor
       branchPorts[branch] = port;
     }
 
+    private void AddQuizOutput(string name, string marker)
+    {
+      var port = InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(bool));
+      port.portName = name;
+      port.userData = marker;
+      outputContainer.Add(port);
+    }
+
     public void HandlePortConnection(Port port, ScenarioNodeView target)
     {
       switch (port.userData)
       {
         case "next":
           Data.NextIdentifier = target.Data.Identifier;
+          break;
+        case "quiz.correct":
+          if (Data is ScenarioQuizNode quizCorrect)
+          {
+            quizCorrect.OnCorrectNextIdentifier = target.Data.Identifier;
+          }
+          break;
+        case "quiz.incorrect":
+          if (Data is ScenarioQuizNode quizIncorrect)
+          {
+            quizIncorrect.OnIncorrectNextIdentifier = target.Data.Identifier;
+          }
           break;
         case ScenarioChoiceOption option:
           option.NextNodeIdentifier = target.Data.Identifier;
@@ -245,6 +276,18 @@ namespace MultiplayerInfrastructure.Editor
       {
         case "next":
           Data.NextIdentifier = null;
+          break;
+        case "quiz.correct":
+          if (Data is ScenarioQuizNode quizCorrect)
+          {
+            quizCorrect.OnCorrectNextIdentifier = null;
+          }
+          break;
+        case "quiz.incorrect":
+          if (Data is ScenarioQuizNode quizIncorrect)
+          {
+            quizIncorrect.OnIncorrectNextIdentifier = null;
+          }
           break;
         case ScenarioChoiceOption option:
           option.NextNodeIdentifier = null;

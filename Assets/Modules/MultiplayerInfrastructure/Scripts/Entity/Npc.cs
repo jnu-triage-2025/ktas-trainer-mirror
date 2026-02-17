@@ -241,6 +241,7 @@ namespace MultiplayerInfrastructure.Entity
       }
 
       public Sprite DisplayIcon => _definition.DisplayIcon;
+      public bool AllowDisplayIconFallback => _definition.AllowDisplayIconFallback;
       public Color DisplayColor => _definition.DisplayColor;
 
       public void Interact(Transform interactor)

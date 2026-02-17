@@ -11,6 +11,13 @@ namespace MultiplayerInfrastructure.Scenario
     Parallel,
     InvokeEvent,
     Validator,
-    QuestControl
+    QuestControl,
+    Notification,
+    Delay,
+    Interaction,
+    CombineItem,
+    Quiz,
+    StateUpdate,
+    RoleAssignment
   }
 }

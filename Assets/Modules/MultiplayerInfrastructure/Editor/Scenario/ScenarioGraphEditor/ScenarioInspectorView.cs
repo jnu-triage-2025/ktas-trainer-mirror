@@ -108,6 +108,27 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.QuestControl:
           DrawQuestControlFields((ScenarioQuestControlNode)data);
           break;
+        case ScenarioNodeType.Notification:
+          DrawNotificationFields((ScenarioNotificationNode)data);
+          break;
+        case ScenarioNodeType.Delay:
+          DrawDelayFields((ScenarioDelayNode)data);
+          break;
+        case ScenarioNodeType.Interaction:
+          DrawInteractionFields((ScenarioInteractionNode)data);
+          break;
+        case ScenarioNodeType.CombineItem:
+          DrawCombineItemFields((ScenarioCombineItemNode)data);
+          break;
+        case ScenarioNodeType.Quiz:
+          DrawQuizFields((ScenarioQuizNode)data);
+          break;
+        case ScenarioNodeType.StateUpdate:
+          DrawStateUpdateFields((ScenarioStateUpdateNode)data);
+          break;
+        case ScenarioNodeType.RoleAssignment:
+          DrawRoleAssignmentFields((ScenarioRoleAssignmentNode)data);
+          break;
       }
     }
 
@@ -292,6 +313,16 @@ namespace MultiplayerInfrastructure.Editor
         branch.CompletionConditionIdentifier =
             EditorGUILayout.TextField("Completion Condition", branch.CompletionConditionIdentifier);
 
+        var currentRoles = branch.RequiredRoleIdentifiers == null || branch.RequiredRoleIdentifiers.Count == 0
+          ? string.Empty
+          : string.Join(",", branch.RequiredRoleIdentifiers);
+        var roleText = EditorGUILayout.TextField("Required Roles(csv)", currentRoles);
+        branch.RequiredRoleIdentifiers = roleText
+          .Split(',')
+          .Select(each => each.Trim())
+          .Where(each => !string.IsNullOrEmpty(each))
+          .ToList();
+
         EditorGUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
         if (GUILayout.Button("Remove Branch"))
@@ -335,6 +366,154 @@ namespace MultiplayerInfrastructure.Editor
       data.Quest.QuestContent = EditorGUILayout.TextArea(data.Quest.QuestContent, GUILayout.Height(40));
       data.Quest.IsTracked = EditorGUILayout.Toggle("Track", data.Quest.IsTracked);
 
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawNotificationFields(ScenarioNotificationNode data)
+    {
+      data.Message = EditorGUILayout.TextField("Message", data.Message);
+      data.DisplayMode = (ScenarioNotificationDisplayMode)EditorGUILayout.EnumPopup("Display Mode", data.DisplayMode);
+      var duration = data.Duration ?? 0f;
+      data.Duration = EditorGUILayout.Toggle("Use Duration", data.Duration.HasValue)
+          ? EditorGUILayout.FloatField("Duration", duration)
+          : null;
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawDelayFields(ScenarioDelayNode data)
+    {
+      data.DurationSeconds = EditorGUILayout.FloatField("Duration Seconds", data.DurationSeconds);
+      data.WaitUntil = (ScenarioDelayWaitUntil)EditorGUILayout.EnumPopup("Wait Until", data.WaitUntil);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawInteractionFields(ScenarioInteractionNode data)
+    {
+      data.ActorScope = (ScenarioInteractionActorScope)EditorGUILayout.EnumPopup("Actor Scope", data.ActorScope);
+      data.TargetIdentifier = EditorGUILayout.TextField("Target Identifier", data.TargetIdentifier);
+      data.RequiredItemIdentifier = EditorGUILayout.TextField("Required Item", data.RequiredItemIdentifier);
+      data.InteractionType = (ScenarioInteractionType)EditorGUILayout.EnumPopup("Interaction Type", data.InteractionType);
+      data.CompletionConditionIdentifier = EditorGUILayout.TextField("Completion Condition", data.CompletionConditionIdentifier);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawCombineItemFields(ScenarioCombineItemNode data)
+    {
+      if (data.InputItemIdentifiers == null)
+      {
+        data.InputItemIdentifiers = new System.Collections.Generic.List<string>();
+      }
+
+      var inputItems = data.InputItemIdentifiers.ToList();
+
+      EditorGUILayout.LabelField("Input Items", EditorStyles.boldLabel);
+      for (int i = 0; i < inputItems.Count; i++)
+      {
+        EditorGUILayout.BeginHorizontal();
+        inputItems[i] = EditorGUILayout.TextField($"Item {i + 1}", inputItems[i]);
+        if (GUILayout.Button("-", GUILayout.Width(22)))
+        {
+          inputItems.RemoveAt(i);
+          i--;
+        }
+        EditorGUILayout.EndHorizontal();
+      }
+
+      if (GUILayout.Button("Add Input Item"))
+      {
+        inputItems.Add(string.Empty);
+      }
+
+      data.InputItemIdentifiers = inputItems;
+
+      data.OutputItemIdentifier = EditorGUILayout.TextField("Output Item", data.OutputItemIdentifier);
+      data.AutoCombine = EditorGUILayout.Toggle("Auto Combine", data.AutoCombine);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawQuizFields(ScenarioQuizNode data)
+    {
+      data.Question = EditorGUILayout.TextField("Question", data.Question);
+
+      if (data.Options == null)
+      {
+        data.Options = new System.Collections.Generic.List<string>();
+      }
+
+      var options = data.Options.ToList();
+      EditorGUILayout.LabelField("Options", EditorStyles.boldLabel);
+      for (int i = 0; i < options.Count; i++)
+      {
+        EditorGUILayout.BeginHorizontal();
+        options[i] = EditorGUILayout.TextField($"Option {i}", options[i]);
+        if (GUILayout.Button("-", GUILayout.Width(22)))
+        {
+          options.RemoveAt(i);
+          i--;
+        }
+        EditorGUILayout.EndHorizontal();
+      }
+
+      if (GUILayout.Button("Add Option"))
+      {
+        options.Add(string.Empty);
+      }
+
+      data.Options = options;
+
+      if (data.CorrectIndex < 0)
+      {
+        data.CorrectIndex = 0;
+      }
+
+      if (data.Options.Count > 0 && data.CorrectIndex >= data.Options.Count)
+      {
+        data.CorrectIndex = data.Options.Count - 1;
+      }
+
+      data.CorrectIndex = EditorGUILayout.IntField("Correct Index", data.CorrectIndex);
+      data.FeedbackCorrect = EditorGUILayout.TextField("Feedback Correct", data.FeedbackCorrect);
+      data.FeedbackIncorrect = EditorGUILayout.TextField("Feedback Incorrect", data.FeedbackIncorrect);
+      EditorGUILayout.LabelField("On Correct", data.OnCorrectNextIdentifier ?? "(미연결)");
+      EditorGUILayout.LabelField("On Incorrect", data.OnIncorrectNextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawStateUpdateFields(ScenarioStateUpdateNode data)
+    {
+      data.TargetEntityIdentifier = EditorGUILayout.TextField("Target Entity", data.TargetEntityIdentifier);
+      data.StateKey = EditorGUILayout.TextField("State Key", data.StateKey);
+      data.StateValue = EditorGUILayout.TextField("State Value", data.StateValue);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawRoleAssignmentFields(ScenarioRoleAssignmentNode data)
+    {
+      if (data.RoleOptions == null)
+      {
+        data.RoleOptions = new System.Collections.Generic.List<string>();
+      }
+
+      var options = data.RoleOptions.ToList();
+      EditorGUILayout.LabelField("Role Options", EditorStyles.boldLabel);
+      for (int i = 0; i < options.Count; i++)
+      {
+        EditorGUILayout.BeginHorizontal();
+        options[i] = EditorGUILayout.TextField($"Role {i + 1}", options[i]);
+        if (GUILayout.Button("-", GUILayout.Width(22)))
+        {
+          options.RemoveAt(i);
+          i--;
+        }
+        EditorGUILayout.EndHorizontal();
+      }
+
+      if (GUILayout.Button("Add Role"))
+      {
+        options.Add(string.Empty);
+      }
+
+      data.RoleOptions = options;
+      data.AssignmentMode = (ScenarioRoleAssignmentMode)EditorGUILayout.EnumPopup("Assignment Mode", data.AssignmentMode);
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
   }

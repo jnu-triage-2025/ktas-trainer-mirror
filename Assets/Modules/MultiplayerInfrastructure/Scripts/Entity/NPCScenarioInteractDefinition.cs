@@ -15,6 +15,7 @@ namespace MultiplayerInfrastructure.Entity
 
     public string DisplayText => _displayText;
     public Sprite DisplayIcon => _displayIcon?.Resolve();
+    public bool AllowDisplayIconFallback => !(_displayIcon?.IsExplicitNone ?? false);
     public Color DisplayColor => _displayColor;
     public string ScenarioIdentifier => _scenarioIdentifier;
     public string ScenarioStartNodeIdentifier => _scenarioStartNodeIdentifier;

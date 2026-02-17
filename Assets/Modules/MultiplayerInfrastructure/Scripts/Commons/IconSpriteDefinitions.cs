@@ -5,8 +5,9 @@ namespace MultiplayerInfrastructure.Commons
   [Serializable]
   public enum IconSpriteDefinitions
   {
-    None,
-    NPCMessage,
-    NPCMessageQuest,
+    None = 0,
+    NPCMessage = 1,
+    NPCMessageQuest = 2,
+    Undefined = 100,
   }
 }

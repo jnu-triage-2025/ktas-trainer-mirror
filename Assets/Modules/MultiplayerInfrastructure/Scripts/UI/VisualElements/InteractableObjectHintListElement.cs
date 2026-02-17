@@ -112,7 +112,7 @@ namespace MultiplayerInfrastructure.UI
       _keyText.text = keyLabel ?? string.Empty;
 
       var iconSprite = interact?.DisplayIcon;
-      if (iconSprite == null)
+      if (iconSprite == null && (interact?.AllowDisplayIconFallback ?? true))
         iconSprite = mode == InteractableHintUIMode.Dialogue ? dialogueIcon : DefaultsResource.FallbackSprite;
 
       if (iconSprite != null)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Encodings.Web;
 using UnityEngine;
@@ -114,6 +115,13 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioValidatorNodeDTO validator => ConvertValidator(validator),
           ScenarioParallelNodeDTO parallel => ConvertParallel(parallel),
           ScenarioQuestControlNodeDTO questControl => ConvertQuestControl(questControl),
+          ScenarioNotificationNodeDTO notification => ConvertNotification(notification),
+          ScenarioDelayNodeDTO delay => ConvertDelay(delay),
+          ScenarioInteractionNodeDTO interaction => ConvertInteraction(interaction),
+          ScenarioCombineItemNodeDTO combineItem => ConvertCombineItem(combineItem),
+          ScenarioQuizNodeDTO quiz => ConvertQuiz(quiz),
+          ScenarioStateUpdateNodeDTO stateUpdate => ConvertStateUpdate(stateUpdate),
+          ScenarioRoleAssignmentNodeDTO roleAssignment => ConvertRoleAssignment(roleAssignment),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -254,6 +262,80 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = dto.NextIdentifier
         };
 
+    private static ScenarioNotificationNode ConvertNotification(ScenarioNotificationNodeDTO dto) =>
+        new ScenarioNotificationNode
+        {
+          Identifier = dto.Identifier,
+          Message = dto.Message,
+          DisplayMode = ParseNotificationDisplayMode(dto.DisplayMode),
+          Duration = dto.Duration,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioDelayNode ConvertDelay(ScenarioDelayNodeDTO dto) =>
+        new ScenarioDelayNode
+        {
+          Identifier = dto.Identifier,
+          DurationSeconds = dto.DurationSeconds ?? 0f,
+          WaitUntil = ParseDelayWaitUntil(dto.WaitUntil),
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioInteractionNode ConvertInteraction(ScenarioInteractionNodeDTO dto) =>
+        new ScenarioInteractionNode
+        {
+          Identifier = dto.Identifier,
+          ActorScope = ParseInteractionActorScope(dto.ActorScope),
+          TargetIdentifier = dto.TargetIdentifier,
+          RequiredItemIdentifier = dto.RequiredItemIdentifier,
+          InteractionType = ParseInteractionType(dto.InteractionType),
+          CompletionConditionIdentifier = dto.CompletionConditionIdentifier,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioCombineItemNode ConvertCombineItem(ScenarioCombineItemNodeDTO dto) =>
+        new ScenarioCombineItemNode
+        {
+          Identifier = dto.Identifier,
+          InputItemIdentifiers = dto.InputItemIdentifiers ?? new List<string>(),
+          OutputItemIdentifier = dto.OutputItemIdentifier,
+          AutoCombine = dto.AutoCombine ?? false,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioQuizNode ConvertQuiz(ScenarioQuizNodeDTO dto) =>
+        new ScenarioQuizNode
+        {
+          Identifier = dto.Identifier,
+          Question = dto.Question,
+          Options = dto.Options ?? new List<string>(),
+          CorrectIndex = dto.CorrectIndex ?? 0,
+          OnCorrectNextIdentifier = dto.OnCorrectNextIdentifier,
+          OnIncorrectNextIdentifier = dto.OnIncorrectNextIdentifier,
+          FeedbackCorrect = dto.FeedbackCorrect,
+          FeedbackIncorrect = dto.FeedbackIncorrect,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioStateUpdateNode ConvertStateUpdate(ScenarioStateUpdateNodeDTO dto) =>
+        new ScenarioStateUpdateNode
+        {
+          Identifier = dto.Identifier,
+          TargetEntityIdentifier = dto.TargetEntityIdentifier,
+          StateKey = dto.StateKey,
+          StateValue = dto.StateValue,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioRoleAssignmentNode ConvertRoleAssignment(ScenarioRoleAssignmentNodeDTO dto) =>
+        new ScenarioRoleAssignmentNode
+        {
+          Identifier = dto.Identifier,
+          RoleOptions = dto.RoleOptions ?? new List<string>(),
+          AssignmentMode = ParseRoleAssignmentMode(dto.AssignmentMode),
+          NextIdentifier = dto.NextIdentifier
+        };
+
     private static ScenarioParallelNode ConvertParallel(ScenarioParallelNodeDTO dto)
     {
       var branches = new List<ScenarioParallelBranch>(dto.Branches?.Count ?? 0);
@@ -270,7 +352,8 @@ namespace MultiplayerInfrastructure.Scenario
           branches.Add(new ScenarioParallelBranch
           {
             Identifier = branchDTO.Identifier,
-            CompletionConditionIdentifier = branchDTO.CompletionConditionIdentifier
+            CompletionConditionIdentifier = branchDTO.CompletionConditionIdentifier,
+            RequiredRoleIdentifiers = branchDTO.RequiredRoleIdentifiers ?? new List<string>()
           });
         }
       }
@@ -353,6 +436,81 @@ namespace MultiplayerInfrastructure.Scenario
       throw new JsonException($"Unknown ScenarioMoveDestinationType '{destinationTypeText}'.");
     }
 
+    private static ScenarioNotificationDisplayMode ParseNotificationDisplayMode(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioNotificationDisplayMode.Overlay;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioNotificationDisplayMode parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioNotificationDisplayMode '{value}'.");
+    }
+
+    private static ScenarioDelayWaitUntil ParseDelayWaitUntil(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioDelayWaitUntil.WaitUntilDone;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioDelayWaitUntil parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioDelayWaitUntil '{value}'.");
+    }
+
+    private static ScenarioInteractionActorScope ParseInteractionActorScope(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioInteractionActorScope.Player;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioInteractionActorScope parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioInteractionActorScope '{value}'.");
+    }
+
+    private static ScenarioInteractionType ParseInteractionType(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioInteractionType.Use;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioInteractionType parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioInteractionType '{value}'.");
+    }
+
+    private static ScenarioRoleAssignmentMode ParseRoleAssignmentMode(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioRoleAssignmentMode.Select;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioRoleAssignmentMode parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioRoleAssignmentMode '{value}'.");
+    }
+
     public static string SaveToJson(ScenarioGraph graph, bool validateWithSchema = true)
     {
       if (graph == null)
@@ -405,6 +563,13 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioValidatorNode validator => ConvertToDTO(validator),
           ScenarioParallelNode parallel => ConvertToDTO(parallel),
           ScenarioQuestControlNode questControl => ConvertToDTO(questControl),
+          ScenarioNotificationNode notification => ConvertToDTO(notification),
+          ScenarioDelayNode delay => ConvertToDTO(delay),
+          ScenarioInteractionNode interaction => ConvertToDTO(interaction),
+          ScenarioCombineItemNode combineItem => ConvertToDTO(combineItem),
+          ScenarioQuizNode quiz => ConvertToDTO(quiz),
+          ScenarioStateUpdateNode stateUpdate => ConvertToDTO(stateUpdate),
+          ScenarioRoleAssignmentNode roleAssignment => ConvertToDTO(roleAssignment),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 
@@ -537,6 +702,87 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = node.NextIdentifier
         };
 
+    private static ScenarioNotificationNodeDTO ConvertToDTO(ScenarioNotificationNode node) =>
+        new ScenarioNotificationNodeDTO
+        {
+          NodeType = "Notification",
+          Identifier = node.Identifier,
+          Message = node.Message,
+          DisplayMode = node.DisplayMode.ToString(),
+          Duration = node.Duration,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioDelayNodeDTO ConvertToDTO(ScenarioDelayNode node) =>
+        new ScenarioDelayNodeDTO
+        {
+          NodeType = "Delay",
+          Identifier = node.Identifier,
+          DurationSeconds = node.DurationSeconds,
+          WaitUntil = node.WaitUntil.ToString(),
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioInteractionNodeDTO ConvertToDTO(ScenarioInteractionNode node) =>
+        new ScenarioInteractionNodeDTO
+        {
+          NodeType = "Interaction",
+          Identifier = node.Identifier,
+          ActorScope = node.ActorScope.ToString(),
+          TargetIdentifier = node.TargetIdentifier,
+          RequiredItemIdentifier = node.RequiredItemIdentifier,
+          InteractionType = node.InteractionType.ToString(),
+          CompletionConditionIdentifier = node.CompletionConditionIdentifier,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioCombineItemNodeDTO ConvertToDTO(ScenarioCombineItemNode node) =>
+        new ScenarioCombineItemNodeDTO
+        {
+          NodeType = "CombineItem",
+          Identifier = node.Identifier,
+          InputItemIdentifiers = node.InputItemIdentifiers?.ToList() ?? new List<string>(),
+          OutputItemIdentifier = node.OutputItemIdentifier,
+          AutoCombine = node.AutoCombine,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioQuizNodeDTO ConvertToDTO(ScenarioQuizNode node) =>
+        new ScenarioQuizNodeDTO
+        {
+          NodeType = "Quiz",
+          Identifier = node.Identifier,
+          Question = node.Question,
+          Options = node.Options?.ToList() ?? new List<string>(),
+          CorrectIndex = node.CorrectIndex,
+          OnCorrectNextIdentifier = node.OnCorrectNextIdentifier,
+          OnIncorrectNextIdentifier = node.OnIncorrectNextIdentifier,
+          FeedbackCorrect = node.FeedbackCorrect,
+          FeedbackIncorrect = node.FeedbackIncorrect,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioStateUpdateNodeDTO ConvertToDTO(ScenarioStateUpdateNode node) =>
+        new ScenarioStateUpdateNodeDTO
+        {
+          NodeType = "StateUpdate",
+          Identifier = node.Identifier,
+          TargetEntityIdentifier = node.TargetEntityIdentifier,
+          StateKey = node.StateKey,
+          StateValue = node.StateValue,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioRoleAssignmentNodeDTO ConvertToDTO(ScenarioRoleAssignmentNode node) =>
+        new ScenarioRoleAssignmentNodeDTO
+        {
+          NodeType = "RoleAssignment",
+          Identifier = node.Identifier,
+          RoleOptions = node.RoleOptions?.ToList() ?? new List<string>(),
+          AssignmentMode = node.AssignmentMode.ToString(),
+          NextIdentifier = node.NextIdentifier
+        };
+
     private static ScenarioInvokeEventMoveNextBehavior ParseInvokeEventMoveNext(string value)
     {
       if (string.IsNullOrWhiteSpace(value))
@@ -594,7 +840,9 @@ namespace MultiplayerInfrastructure.Scenario
       {
         dto.Branches.Add(new ScenarioParallelBranchDTO
         {
-          Identifier = branch.Identifier
+          Identifier = branch.Identifier,
+          CompletionConditionIdentifier = branch.CompletionConditionIdentifier,
+          RequiredRoleIdentifiers = branch.RequiredRoleIdentifiers?.ToList() ?? new List<string>()
         });
       }
 

@@ -23,6 +23,30 @@ namespace MultiplayerInfrastructure.Editor
       ScenarioNodeType.InvokeEvent => new ScenarioInvokeEventNode(),
       ScenarioNodeType.Validator => new ScenarioValidatorNode(),
       ScenarioNodeType.QuestControl => new ScenarioQuestControlNode(),
+      ScenarioNodeType.Notification => new ScenarioNotificationNode(),
+      ScenarioNodeType.Delay => new ScenarioDelayNode(),
+      ScenarioNodeType.Interaction => new ScenarioInteractionNode(),
+      ScenarioNodeType.CombineItem => new ScenarioCombineItemNode
+      {
+        InputItemIdentifiers = new System.Collections.Generic.List<string>()
+      },
+      ScenarioNodeType.Quiz => new ScenarioQuizNode
+      {
+        Options = new System.Collections.Generic.List<string>
+        {
+          "Option 1",
+          "Option 2"
+        }
+      },
+      ScenarioNodeType.StateUpdate => new ScenarioStateUpdateNode(),
+      ScenarioNodeType.RoleAssignment => new ScenarioRoleAssignmentNode
+      {
+        RoleOptions = new System.Collections.Generic.List<string>
+        {
+          "RoleA",
+          "RoleB"
+        }
+      },
       _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
   }

@@ -114,6 +114,7 @@ ScenarioNode는 표현하고자 하는 내용에 따라 다양하게 데이터�
 |---|---|---|
 | Identifier | 문자열 | 브랜치의 시작 노드 식별자 |
 | CompletionConditionIdentifier | 문자열 | 브랜치 완료 조건 식별자 |
+| RequiredRoleIdentifiers | 문자열 목록 | (optional) 브랜치 실행 대상 역할 식별자 목록 |
 
 ### InvokeEventNode
 
@@ -146,6 +147,86 @@ ScenarioNode는 표현하고자 하는 내용에 따라 다양하게 데이터�
 | Operation | ScenarioQuestOperationType | Add / Update / Remove |
 | FailureStrategy | ScenarioQuestFailureStrategy | Overwrite / Ignore / Panic |
 | Quest | QuestData | 대상 퀘스트 데이터 |
+| NextIdentifier | 문자열 | 다음 노드의 식별자 |
+
+### NotificationNode
+
+| 속성 | 타입 | 설명 |
+|---|---|---|
+| Identifier | 문자열 | 노드의 고유 식별자 |
+| NodeType | ScenarioNodeType | ScenarioNodeType.Notification |
+| Message | 문자열 | 표시할 시스템 메시지 |
+| DisplayMode | ScenarioNotificationDisplayMode | Overlay / Toast / Subtitle |
+| Duration | float | (optional) 메시지 표시 시간 |
+| NextIdentifier | 문자열 | 다음 노드의 식별자 |
+
+### DelayNode
+
+| 속성 | 타입 | 설명 |
+|---|---|---|
+| Identifier | 문자열 | 노드의 고유 식별자 |
+| NodeType | ScenarioNodeType | ScenarioNodeType.Delay |
+| DurationSeconds | float | 대기 시간(초) |
+| WaitUntil | ScenarioDelayWaitUntil | Immediately / WaitUntilDone |
+| NextIdentifier | 문자열 | 다음 노드의 식별자 |
+
+### InteractionNode
+
+| 속성 | 타입 | 설명 |
+|---|---|---|
+| Identifier | 문자열 | 노드의 고유 식별자 |
+| NodeType | ScenarioNodeType | ScenarioNodeType.Interaction |
+| ActorScope | ScenarioInteractionActorScope | Player / Role / Any |
+| TargetIdentifier | 문자열 | 상호작용 대상 식별자 |
+| RequiredItemIdentifier | 문자열 | (optional) 필요한 아이템 식별자 |
+| InteractionType | ScenarioInteractionType | Use / Inspect / Attach / Detach |
+| CompletionConditionIdentifier | 문자열 | (optional) 완료 이벤트 식별자 |
+| NextIdentifier | 문자열 | 다음 노드의 식별자 |
+
+### CombineItemNode
+
+| 속성 | 타입 | 설명 |
+|---|---|---|
+| Identifier | 문자열 | 노드의 고유 식별자 |
+| NodeType | ScenarioNodeType | ScenarioNodeType.CombineItem |
+| InputItemIdentifiers | 문자열 목록 | 조합 입력 아이템 식별자 목록 |
+| OutputItemIdentifier | 문자열 | 조합 결과 아이템 식별자 |
+| AutoCombine | bool | 자동 조합 여부 |
+| NextIdentifier | 문자열 | 다음 노드의 식별자 |
+
+### QuizNode
+
+| 속성 | 타입 | 설명 |
+|---|---|---|
+| Identifier | 문자열 | 노드의 고유 식별자 |
+| NodeType | ScenarioNodeType | ScenarioNodeType.Quiz |
+| Question | 문자열 | 문제 문항 |
+| Options | 문자열 목록 | 객관식 보기 |
+| CorrectIndex | int | 정답 인덱스(0-base) |
+| OnCorrectNextIdentifier | 문자열 | 정답 시 다음 노드 식별자 |
+| OnIncorrectNextIdentifier | 문자열 | (optional) 오답 시 다음 노드 식별자 |
+| FeedbackCorrect | 문자열 | (optional) 정답 피드백 |
+| FeedbackIncorrect | 문자열 | (optional) 오답 피드백 |
+
+### StateUpdateNode
+
+| 속성 | 타입 | 설명 |
+|---|---|---|
+| Identifier | 문자열 | 노드의 고유 식별자 |
+| NodeType | ScenarioNodeType | ScenarioNodeType.StateUpdate |
+| TargetEntityIdentifier | 문자열 | 상태를 갱신할 대상 식별자 |
+| StateKey | 문자열 | 상태 키(예: vitals.rhythm) |
+| StateValue | 문자열 | 저장할 상태 값 |
+| NextIdentifier | 문자열 | 다음 노드의 식별자 |
+
+### RoleAssignmentNode
+
+| 속성 | 타입 | 설명 |
+|---|---|---|
+| Identifier | 문자열 | 노드의 고유 식별자 |
+| NodeType | ScenarioNodeType | ScenarioNodeType.RoleAssignment |
+| RoleOptions | 문자열 목록 | 선택 가능한 역할 목록 |
+| AssignmentMode | ScenarioRoleAssignmentMode | Select / Auto |
 | NextIdentifier | 문자열 | 다음 노드의 식별자 |
 
 ## ScenarioGraph

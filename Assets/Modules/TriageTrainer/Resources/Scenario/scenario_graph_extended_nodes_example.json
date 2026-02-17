@@ -1,0 +1,131 @@
+{
+  "identifier": "scenario_graph_extended_nodes_example",
+  "nodes": {
+    "intro_notification": {
+      "identifier": "intro_notification",
+      "nodeType": "Notification",
+      "message": "재난 현장 초기 대응을 시작합니다.",
+      "displayMode": "Overlay",
+      "duration": 2.0,
+      "nextIdentifier": "assign_roles"
+    },
+    "assign_roles": {
+      "identifier": "assign_roles",
+      "nodeType": "RoleAssignment",
+      "roleOptions": [
+        "Doctor",
+        "Nurse",
+        "EMT"
+      ],
+      "assignmentMode": "Select",
+      "nextIdentifier": "staging_delay"
+    },
+    "staging_delay": {
+      "identifier": "staging_delay",
+      "nodeType": "Delay",
+      "durationSeconds": 1.5,
+      "waitUntil": "WaitUntilDone",
+      "nextIdentifier": "inspect_patient_a"
+    },
+    "inspect_patient_a": {
+      "identifier": "inspect_patient_a",
+      "nodeType": "Interaction",
+      "actorScope": "Role",
+      "targetIdentifier": "patient_a_eye",
+      "requiredItemIdentifier": null,
+      "interactionType": "Inspect",
+      "completionConditionIdentifier": "interaction.inspect.patient_a_eye",
+      "nextIdentifier": "combine_laryngoscope"
+    },
+    "combine_laryngoscope": {
+      "identifier": "combine_laryngoscope",
+      "nodeType": "CombineItem",
+      "inputItemIdentifiers": [
+        "laryngoscope_handle",
+        "laryngoscope_blade"
+      ],
+      "outputItemIdentifier": "laryngoscope",
+      "autoCombine": true,
+      "nextIdentifier": "quiz_cpr"
+    },
+    "quiz_cpr": {
+      "identifier": "quiz_cpr",
+      "nodeType": "Quiz",
+      "question": "성인 CPR에서 권장되는 가슴 압박 깊이는?",
+      "options": [
+        "약 2cm",
+        "약 5~6cm",
+        "약 8~10cm"
+      ],
+      "correctIndex": 1,
+      "onCorrectNextIdentifier": "update_state_rhythm",
+      "onIncorrectNextIdentifier": "retry_notification",
+      "feedbackCorrect": "정답입니다. 다음 처치를 진행하세요.",
+      "feedbackIncorrect": "오답입니다. 기본 술기를 다시 확인하세요.",
+      "nextIdentifier": null
+    },
+    "retry_notification": {
+      "identifier": "retry_notification",
+      "nodeType": "Notification",
+      "message": "다시 시도합니다.",
+      "displayMode": "Toast",
+      "duration": 1.2,
+      "nextIdentifier": "quiz_cpr"
+    },
+    "update_state_rhythm": {
+      "identifier": "update_state_rhythm",
+      "nodeType": "StateUpdate",
+      "targetEntityIdentifier": "patient_a",
+      "stateKey": "vitals.rhythm",
+      "stateValue": "PEA",
+      "nextIdentifier": "team_parallel"
+    },
+    "team_parallel": {
+      "identifier": "team_parallel",
+      "nodeType": "Parallel",
+      "waitMode": "All",
+      "allocationType": "SpreadOrdinary",
+      "whenBranchingPlayerNotMatched": "Ignore",
+      "branches": [
+        {
+          "identifier": "branch_airway",
+          "completionConditionIdentifier": "done.airway",
+          "requiredRoleIdentifiers": [
+            "Doctor"
+          ]
+        },
+        {
+          "identifier": "branch_oxygen",
+          "completionConditionIdentifier": "done.oxygen",
+          "requiredRoleIdentifiers": [
+            "Nurse",
+            "EMT"
+          ]
+        }
+      ],
+      "nextIdentifier": "finish_notification"
+    },
+    "branch_airway": {
+      "identifier": "branch_airway",
+      "nodeType": "InvokeEvent",
+      "eventIdentifier": "workflow.airway",
+      "moveNextBehavior": "WaitUntilDone",
+      "nextIdentifier": "finish_notification"
+    },
+    "branch_oxygen": {
+      "identifier": "branch_oxygen",
+      "nodeType": "InvokeEvent",
+      "eventIdentifier": "workflow.oxygen",
+      "moveNextBehavior": "WaitUntilDone",
+      "nextIdentifier": "finish_notification"
+    },
+    "finish_notification": {
+      "identifier": "finish_notification",
+      "nodeType": "Notification",
+      "message": "중증 환자 1차 처치 단계 완료",
+      "displayMode": "Subtitle",
+      "duration": 2.0,
+      "nextIdentifier": null
+    }
+  }
+}

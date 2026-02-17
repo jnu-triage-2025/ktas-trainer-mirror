@@ -11,6 +11,7 @@ namespace MultiplayerInfrastructure.InteractableEntity
 
     public virtual string DisplayText => _displayText;
     public virtual Sprite DisplayIcon => _displayIcon;
+    public virtual bool AllowDisplayIconFallback => true;
     public virtual Color DisplayColor => _displayColor;
     public virtual IInteract[] Interacts => new IInteract[] { this };
 
