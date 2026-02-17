@@ -456,7 +456,9 @@ namespace MultiplayerInfrastructure.Editor
         if (File.Exists(editorPath))
         {
           var editorJson = File.ReadAllText(editorPath);
-          editorData = JsonSerializer.Deserialize<ScenarioGraphEditorData>(editorJson);
+          editorData = JsonSerializer.Deserialize<ScenarioGraphEditorData>(
+              editorJson,
+              new JsonSerializerOptions { IncludeFields = true });
         }
 
         var orderedNodes = graphData.Nodes.Values.OrderBy(n => n.Identifier).ToList();
@@ -587,7 +589,13 @@ namespace MultiplayerInfrastructure.Editor
           var rect = nodeView.GetPosition();
           editorData.NodePositions[pair.Key] = new SerializableVector2(rect.position);
         }
-        var editorJson = JsonSerializer.Serialize(editorData, new JsonSerializerOptions { WriteIndented = true });
+        var editorJson = JsonSerializer.Serialize(
+            editorData,
+            new JsonSerializerOptions
+            {
+              WriteIndented = true,
+              IncludeFields = true
+            });
         var editorPath = path.Replace(".json", ".editor.json");
         File.WriteAllText(editorPath, editorJson);
 

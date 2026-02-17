@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schema/multiplayer-scenario-editor.schema.json",
+  "title": "ScenarioGraphEditorData",
+  "type": "object",
+  "properties": {
+    "NodePositions": {
+      "type": "object",
+      "description": "Dictionary<string, SerializableVector2>",
+      "additionalProperties": {
+        "$ref": "#/$defs/SerializableVector2"
+      }
+    }
+  },
+  "required": ["NodePositions"],
+  "additionalProperties": false,
+  "$defs": {
+    "SerializableVector2": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      },
+      "required": ["x", "y"],
+      "additionalProperties": false
+    }
+  }
+}

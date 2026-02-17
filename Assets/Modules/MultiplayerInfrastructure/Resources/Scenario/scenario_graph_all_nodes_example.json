@@ -1,0 +1,218 @@
+{
+  "identifier": "scenario_graph_all_nodes_example",
+  "nodes": {
+    "dialogue_intro": {
+      "identifier": "dialogue_intro",
+      "nodeType": "Dialogue",
+      "speakerName": "Guide",
+      "dialogueContent": "모든 노드 예제 시나리오를 시작합니다.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "choice_route"
+    },
+    "choice_route": {
+      "identifier": "choice_route",
+      "nodeType": "Choice",
+      "speakerName": "Guide",
+      "dialogueContent": "어떤 경로를 먼저 진행할까요?",
+      "portraitSpriteIdentifier": null,
+      "options": [
+        {
+          "displayText": "A경로(기본 노드)",
+          "displayIconIdentifier": null,
+          "displayColor": { "r": 0.2, "g": 0.8, "b": 0.3, "a": 1.0 },
+          "nextNodeIdentifier": "sound_alert"
+        },
+        {
+          "displayText": "B경로(확장 노드)",
+          "displayIconIdentifier": null,
+          "displayColor": { "r": 0.2, "g": 0.4, "b": 0.9, "a": 1.0 },
+          "nextNodeIdentifier": "player_move_point"
+        }
+      ],
+      "nextIdentifier": null
+    },
+    "sound_alert": {
+      "identifier": "sound_alert",
+      "nodeType": "Sound",
+      "soundResourceIdentifier": "sfx_alarm_short",
+      "waitUntilFinished": true,
+      "nextIdentifier": "npc_move_waypoint"
+    },
+    "npc_move_waypoint": {
+      "identifier": "npc_move_waypoint",
+      "nodeType": "NPCMove",
+      "npcIdentifier": "doctor_1",
+      "destinationType": "Waypoint",
+      "destinationIdentifier": "wp_triage_room",
+      "ignoreGroundCheck": false,
+      "moveMode": "BySpeed",
+      "moveSpeed": 2.5,
+      "moveDuration": null,
+      "nextIdentifier": "camera_focus_patient"
+    },
+    "camera_focus_patient": {
+      "identifier": "camera_focus_patient",
+      "nodeType": "CameraTarget",
+      "targetObjectIdentifier": "patient_a",
+      "offsetX": 0,
+      "offsetY": 1.2,
+      "offsetZ": 0,
+      "blendTime": 0.8,
+      "nextIdentifier": "invoke_prepare"
+    },
+    "invoke_prepare": {
+      "identifier": "invoke_prepare",
+      "nodeType": "InvokeEvent",
+      "eventIdentifier": "workflow.prepare",
+      "moveNextBehavior": "WaitUntilDone",
+      "nextIdentifier": "validator_players"
+    },
+    "validator_players": {
+      "identifier": "validator_players",
+      "nodeType": "Validator",
+      "condition": "PlayerCountGreaterThanOrEqual",
+      "targetCount": 1,
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "nextIdentifier": "parallel_merge"
+    },
+    "player_move_point": {
+      "identifier": "player_move_point",
+      "nodeType": "PlayerMove",
+      "destinationType": "Position",
+      "destinationX": 12.5,
+      "destinationY": 0,
+      "destinationZ": -3.5,
+      "ignoreGroundCheck": false,
+      "moveMode": "ByDuration",
+      "moveSpeed": null,
+      "moveDuration": 1.5,
+      "nextIdentifier": "quest_add"
+    },
+    "quest_add": {
+      "identifier": "quest_add",
+      "nodeType": "QuestControl",
+      "operation": "Add",
+      "failureStrategy": "Overwrite",
+      "quest": {
+        "Id": "all_nodes_quest",
+        "Title": "All Nodes",
+        "Description": "모든 노드 확인",
+        "QuestContent": "각 노드를 순서대로 확인",
+        "IsTracked": true
+      },
+      "nextIdentifier": "notification_info"
+    },
+    "notification_info": {
+      "identifier": "notification_info",
+      "nodeType": "Notification",
+      "message": "확장 노드 경로를 시작합니다.",
+      "displayMode": "Overlay",
+      "duration": 1.0,
+      "nextIdentifier": "delay_wait"
+    },
+    "delay_wait": {
+      "identifier": "delay_wait",
+      "nodeType": "Delay",
+      "durationSeconds": 1.2,
+      "waitUntil": "WaitUntilDone",
+      "nextIdentifier": "interaction_inspect"
+    },
+    "interaction_inspect": {
+      "identifier": "interaction_inspect",
+      "nodeType": "Interaction",
+      "actorScope": "Any",
+      "targetIdentifier": "patient_a_eye",
+      "requiredItemIdentifier": null,
+      "interactionType": "Inspect",
+      "completionConditionIdentifier": "interaction.patient_a_eye.done",
+      "nextIdentifier": "combine_items"
+    },
+    "combine_items": {
+      "identifier": "combine_items",
+      "nodeType": "CombineItem",
+      "inputItemIdentifiers": ["laryngoscope_handle", "laryngoscope_blade"],
+      "outputItemIdentifier": "laryngoscope",
+      "autoCombine": true,
+      "nextIdentifier": "quiz_cpr"
+    },
+    "quiz_cpr": {
+      "identifier": "quiz_cpr",
+      "nodeType": "Quiz",
+      "question": "성인 CPR 압박 깊이로 적절한 것은?",
+      "options": ["2cm", "5~6cm", "8~10cm"],
+      "correctIndex": 1,
+      "onCorrectNextIdentifier": "state_update_rhythm",
+      "onIncorrectNextIdentifier": "notification_retry",
+      "feedbackCorrect": "정답입니다.",
+      "feedbackIncorrect": "오답입니다. 다시 확인하세요.",
+      "nextIdentifier": null
+    },
+    "notification_retry": {
+      "identifier": "notification_retry",
+      "nodeType": "Notification",
+      "message": "퀴즈를 다시 시도합니다.",
+      "displayMode": "Toast",
+      "duration": 1.0,
+      "nextIdentifier": "quiz_cpr"
+    },
+    "state_update_rhythm": {
+      "identifier": "state_update_rhythm",
+      "nodeType": "StateUpdate",
+      "targetEntityIdentifier": "patient_a",
+      "stateKey": "vitals.rhythm",
+      "stateValue": "PEA",
+      "nextIdentifier": "role_assignment"
+    },
+    "role_assignment": {
+      "identifier": "role_assignment",
+      "nodeType": "RoleAssignment",
+      "roleOptions": ["Doctor", "Nurse", "EMT"],
+      "assignmentMode": "Select",
+      "nextIdentifier": "parallel_merge"
+    },
+    "parallel_merge": {
+      "identifier": "parallel_merge",
+      "nodeType": "Parallel",
+      "waitMode": "All",
+      "allocationType": "SpreadOrdinary",
+      "whenBranchingPlayerNotMatched": "Ignore",
+      "branches": [
+        {
+          "identifier": "branch_invoke",
+          "completionConditionIdentifier": "branch.invoke.done",
+          "requiredRoleIdentifiers": ["Doctor"]
+        },
+        {
+          "identifier": "branch_dialogue",
+          "completionConditionIdentifier": null,
+          "requiredRoleIdentifiers": ["Nurse", "EMT"]
+        }
+      ],
+      "nextIdentifier": "dialogue_outro"
+    },
+    "branch_invoke": {
+      "identifier": "branch_invoke",
+      "nodeType": "InvokeEvent",
+      "eventIdentifier": "workflow.branch.invoke",
+      "moveNextBehavior": "WaitUntilDone",
+      "nextIdentifier": "dialogue_outro"
+    },
+    "branch_dialogue": {
+      "identifier": "branch_dialogue",
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "병렬 브랜치 대화 노드입니다.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "dialogue_outro"
+    },
+    "dialogue_outro": {
+      "identifier": "dialogue_outro",
+      "nodeType": "Dialogue",
+      "speakerName": "Guide",
+      "dialogueContent": "모든 노드 타입 예제가 완료되었습니다.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": null
+    }
+  }
+}

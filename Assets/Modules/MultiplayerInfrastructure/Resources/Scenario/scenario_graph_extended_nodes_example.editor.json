@@ -1,0 +1,16 @@
+{
+  "NodePositions": {
+    "intro_notification": { "x": 0, "y": 0 },
+    "assign_roles": { "x": 320, "y": 0 },
+    "staging_delay": { "x": 640, "y": 0 },
+    "inspect_patient_a": { "x": 960, "y": 0 },
+    "combine_laryngoscope": { "x": 1280, "y": 0 },
+    "quiz_cpr": { "x": 1600, "y": 0 },
+    "retry_notification": { "x": 1600, "y": 220 },
+    "update_state_rhythm": { "x": 1920, "y": 0 },
+    "team_parallel": { "x": 2240, "y": 0 },
+    "branch_airway": { "x": 2560, "y": -140 },
+    "branch_oxygen": { "x": 2560, "y": 140 },
+    "finish_notification": { "x": 2880, "y": 0 }
+  }
+}

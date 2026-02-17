@@ -1,0 +1,25 @@
+{
+  "NodePositions": {
+    "dialogue_intro": { "x": 0, "y": 0 },
+    "choice_route": { "x": 320, "y": 0 },
+    "sound_alert": { "x": 640, "y": -140 },
+    "npc_move_waypoint": { "x": 960, "y": -140 },
+    "camera_focus_patient": { "x": 1280, "y": -140 },
+    "invoke_prepare": { "x": 1600, "y": -140 },
+    "validator_players": { "x": 1920, "y": -140 },
+    "player_move_point": { "x": 640, "y": 160 },
+    "quest_add": { "x": 960, "y": 160 },
+    "notification_info": { "x": 1280, "y": 160 },
+    "delay_wait": { "x": 1600, "y": 160 },
+    "interaction_inspect": { "x": 1920, "y": 160 },
+    "combine_items": { "x": 2240, "y": 160 },
+    "quiz_cpr": { "x": 2560, "y": 160 },
+    "notification_retry": { "x": 2560, "y": 340 },
+    "state_update_rhythm": { "x": 2880, "y": 160 },
+    "role_assignment": { "x": 3200, "y": 160 },
+    "parallel_merge": { "x": 3520, "y": 20 },
+    "branch_invoke": { "x": 3840, "y": -120 },
+    "branch_dialogue": { "x": 3840, "y": 180 },
+    "dialogue_outro": { "x": 4160, "y": 20 }
+  }
+}
