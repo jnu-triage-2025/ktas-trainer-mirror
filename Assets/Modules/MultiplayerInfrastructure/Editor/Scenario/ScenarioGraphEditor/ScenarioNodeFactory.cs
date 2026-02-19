@@ -23,6 +23,7 @@ namespace MultiplayerInfrastructure.Editor
       ScenarioNodeType.InvokeEvent => new ScenarioInvokeEventNode(),
       ScenarioNodeType.Validator => new ScenarioValidatorNode(),
       ScenarioNodeType.QuestControl => new ScenarioQuestControlNode(),
+      ScenarioNodeType.QuestWaypointHighlight => new ScenarioQuestWaypointHighlightNode(),
       ScenarioNodeType.Notification => new ScenarioNotificationNode(),
       ScenarioNodeType.Delay => new ScenarioDelayNode(),
       ScenarioNodeType.Interaction => new ScenarioInteractionNode(),

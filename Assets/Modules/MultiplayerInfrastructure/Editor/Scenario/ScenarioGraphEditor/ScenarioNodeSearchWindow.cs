@@ -32,6 +32,7 @@ namespace MultiplayerInfrastructure.Editor
             new SearchTreeEntry(new GUIContent("Validator")) { level = 1, userData = ScenarioNodeType.Validator },
             new SearchTreeEntry(new GUIContent("Parallel")) { level = 1, userData = ScenarioNodeType.Parallel },
             new SearchTreeEntry(new GUIContent("Quest Control")) { level = 1, userData = ScenarioNodeType.QuestControl },
+            new SearchTreeEntry(new GUIContent("Quest Waypoint Highlight")) { level = 1, userData = ScenarioNodeType.QuestWaypointHighlight },
             new SearchTreeEntry(new GUIContent("Notification")) { level = 1, userData = ScenarioNodeType.Notification },
             new SearchTreeEntry(new GUIContent("Delay")) { level = 1, userData = ScenarioNodeType.Delay },
             new SearchTreeEntry(new GUIContent("Interaction")) { level = 1, userData = ScenarioNodeType.Interaction },

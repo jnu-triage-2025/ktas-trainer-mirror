@@ -1,0 +1,16 @@
+{
+  "packId": "sample-default-pack",
+  "periodicCommands": [
+    {
+      "command": "/help",
+      "intervalSeconds": 30.0,
+      "runImmediately": false
+    }
+  ],
+  "eventHandlers": [
+    {
+      "eventIdentifier": "sample:on-start",
+      "command": "/help"
+    }
+  ]
+}

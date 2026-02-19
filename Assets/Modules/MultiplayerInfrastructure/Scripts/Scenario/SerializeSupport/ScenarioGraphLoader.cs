@@ -115,6 +115,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioValidatorNodeDTO validator => ConvertValidator(validator),
           ScenarioParallelNodeDTO parallel => ConvertParallel(parallel),
           ScenarioQuestControlNodeDTO questControl => ConvertQuestControl(questControl),
+          ScenarioQuestWaypointHighlightNodeDTO highlight => ConvertQuestWaypointHighlight(highlight),
           ScenarioNotificationNodeDTO notification => ConvertNotification(notification),
           ScenarioDelayNodeDTO delay => ConvertDelay(delay),
           ScenarioInteractionNodeDTO interaction => ConvertInteraction(interaction),
@@ -248,6 +249,14 @@ namespace MultiplayerInfrastructure.Scenario
           Operation = ParseQuestOperation(dto.Operation),
           FailureStrategy = ParseQuestFailureStrategy(dto.FailureStrategy),
           Quest = dto.Quest,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioQuestWaypointHighlightNode ConvertQuestWaypointHighlight(ScenarioQuestWaypointHighlightNodeDTO dto) =>
+        new ScenarioQuestWaypointHighlightNode
+        {
+          Identifier = dto.Identifier,
+          WaypointIdentifier = dto.WaypointIdentifier,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -563,6 +572,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioValidatorNode validator => ConvertToDTO(validator),
           ScenarioParallelNode parallel => ConvertToDTO(parallel),
           ScenarioQuestControlNode questControl => ConvertToDTO(questControl),
+          ScenarioQuestWaypointHighlightNode waypointHighlight => ConvertToDTO(waypointHighlight),
           ScenarioNotificationNode notification => ConvertToDTO(notification),
           ScenarioDelayNode delay => ConvertToDTO(delay),
           ScenarioInteractionNode interaction => ConvertToDTO(interaction),
@@ -629,6 +639,15 @@ namespace MultiplayerInfrastructure.Scenario
           Operation = node.Operation.ToString(),
           FailureStrategy = node.FailureStrategy.ToString(),
           Quest = node.Quest,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioQuestWaypointHighlightNodeDTO ConvertToDTO(ScenarioQuestWaypointHighlightNode node) =>
+        new ScenarioQuestWaypointHighlightNodeDTO
+        {
+          NodeType = "QuestWaypointHighlight",
+          Identifier = node.Identifier,
+          WaypointIdentifier = node.WaypointIdentifier,
           NextIdentifier = node.NextIdentifier
         };
 

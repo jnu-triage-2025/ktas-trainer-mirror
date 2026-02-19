@@ -33,6 +33,7 @@ namespace MultiplayerInfrastructure.Scenario
         "Validator" => Deserialize<ScenarioValidatorNodeDTO>(root, options),
         "Parallel" => Deserialize<ScenarioParallelNodeDTO>(root, options),
         "QuestControl" => Deserialize<ScenarioQuestControlNodeDTO>(root, options),
+        "QuestWaypointHighlight" => Deserialize<ScenarioQuestWaypointHighlightNodeDTO>(root, options),
         "Notification" => Deserialize<ScenarioNotificationNodeDTO>(root, options),
         "Delay" => Deserialize<ScenarioDelayNodeDTO>(root, options),
         "Interaction" => Deserialize<ScenarioInteractionNodeDTO>(root, options),

@@ -62,6 +62,7 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingValidator,
       ExecutingParallel,
       ExecutingQuestControl,
+      ExecutingQuestWaypointHighlight,
       ExecutingNotification,
       ExecutingDelay,
       ExecutingInteraction,
@@ -344,6 +345,9 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioQuestControlNode questControl:
           ExecuteQuestControlNode(questControl);
           break;
+        case ScenarioQuestWaypointHighlightNode waypointHighlight:
+          ExecuteQuestWaypointHighlightNode(waypointHighlight);
+          break;
         case ScenarioNotificationNode notification:
           StartCoroutine(ExecuteNotificationNode(notification));
           break;
@@ -435,6 +439,29 @@ namespace MultiplayerInfrastructure.Scenario
         Debug.LogError($"[ScenarioController] Quest control node failed with panic strategy (questId: {node.Quest?.Id}). Ending scenario.");
         EndScenario();
         return;
+      }
+
+      Advance();
+    }
+
+    private void ExecuteQuestWaypointHighlightNode(ScenarioQuestWaypointHighlightNode node)
+    {
+      _state = State.ExecutingQuestWaypointHighlight;
+
+      if (string.IsNullOrWhiteSpace(node.WaypointIdentifier))
+      {
+        Debug.LogWarning("[ScenarioController] Quest waypoint highlight node has no waypoint identifier.");
+        Advance();
+        return;
+      }
+
+      if (WaypointAnchor.TryGet(node.WaypointIdentifier, out var anchor))
+      {
+        anchor.Highlight();
+      }
+      else
+      {
+        Debug.LogWarning($"[ScenarioController] Waypoint '{node.WaypointIdentifier}' not found for highlight node '{node.Identifier}'.");
       }
 
       Advance();

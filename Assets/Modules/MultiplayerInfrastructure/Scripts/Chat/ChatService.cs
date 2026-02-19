@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Command;
+using MultiplayerInfrastructure.Datapack;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
@@ -19,6 +20,7 @@ namespace MultiplayerInfrastructure.Chat
     [SerializeField] private ChatUIController _uiController;
     [SerializeField] private ChatCommandService _commandService;
     [SerializeField] private ScenarioCommandRunner _scenarioRunner;
+    [SerializeField] private DatapackRuntimeService _datapackRuntime;
     
     private readonly Dictionary<int, float> _lastMessageTimes = new();
 
@@ -28,9 +30,14 @@ namespace MultiplayerInfrastructure.Chat
         _uiController = GetComponent<ChatUIController>();
       if (_commandService == null)
         _commandService = GetComponent<ChatCommandService>();
+      if (_datapackRuntime == null)
+        _datapackRuntime = GetComponent<DatapackRuntimeService>();
       // TODO: 다른 참조 방식 강구해보기
       if (_scenarioRunner == null)
         _scenarioRunner = FindFirstObjectByType<ScenarioCommandRunner>();
+
+      if (_datapackRuntime == null)
+        _datapackRuntime = gameObject.AddComponent<DatapackRuntimeService>();
 
       if (_uiController == null || _commandService == null)
       {
@@ -89,26 +96,7 @@ namespace MultiplayerInfrastructure.Chat
       if (sender == null)
         return;
 
-      if (string.IsNullOrWhiteSpace(commandLine))
-      {
-        SendSystemMessage(sender, "Usage: /help");
-        return;
-      }
-
-      string[] parts = commandLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-      if (parts.Length == 0)
-      {
-        SendSystemMessage(sender, "Usage: /help");
-        return;
-      }
-
-      string command = parts[0];
-      string[] args = parts.Length > 1 ? parts[1..] : Array.Empty<string>();
-
-      if (_commandService.TryExecute(command, args, sender))
-        return;
-
-      SendSystemMessage(sender, $"Unknown command: {command}");
+      TryExecuteCommandInternal(commandLine, sender, out _);
     }
     
     [TargetRpc]
@@ -145,6 +133,46 @@ namespace MultiplayerInfrastructure.Chat
     {
       if (conn != null)
         TargetReceiveSystemMessage(conn, message);
+      else
+        Debug.Log($"[System] {message}");
+    }
+
+    public bool TryExecuteSystemCommand(string commandLine, out string result)
+    {
+      return TryExecuteCommandInternal(commandLine, null, out result);
+    }
+
+    private bool TryExecuteCommandInternal(string commandLine, NetworkConnection sender, out string result)
+    {
+      result = string.Empty;
+
+      if (string.IsNullOrWhiteSpace(commandLine))
+      {
+        result = "Usage: /help";
+        SendSystemMessage(sender, result);
+        return false;
+      }
+
+      string[] parts = commandLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+      if (parts.Length == 0)
+      {
+        result = "Usage: /help";
+        SendSystemMessage(sender, result);
+        return false;
+      }
+
+      string command = parts[0];
+      string[] args = parts.Length > 1 ? parts[1..] : Array.Empty<string>();
+
+      if (_commandService.TryExecute(command, args, sender))
+      {
+        result = $"Executed /{command}.";
+        return true;
+      }
+
+      result = $"Unknown command: {command}";
+      SendSystemMessage(sender, result);
+      return false;
     }
 
     public void BroadcastSystemMessage(string message)

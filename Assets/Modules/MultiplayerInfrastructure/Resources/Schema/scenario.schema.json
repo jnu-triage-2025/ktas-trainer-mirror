@@ -61,6 +61,9 @@
           "$ref": "#/$defs/ScenarioQuestControlNode"
         },
         {
+          "$ref": "#/$defs/ScenarioQuestWaypointHighlightNode"
+        },
+        {
           "$ref": "#/$defs/ScenarioNotificationNode"
         },
         {
@@ -1027,6 +1030,26 @@
         }
       ]
     },
+    "ScenarioQuestWaypointHighlightNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "QuestWaypointHighlight"
+            },
+            "waypointIdentifier": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "waypointIdentifier"
+          ]
+        }
+      ]
+    },
     "ScenarioQuestData": {
       "type": "object",
       "properties": {
@@ -1034,6 +1057,7 @@
         "Title": { "type": ["string", "null"] },
         "Description": { "type": ["string", "null"] },
         "QuestContent": { "type": ["string", "null"] },
+        "waypointIdentifier": { "type": ["string", "null"] },
         "IsTracked": { "type": "boolean", "default": false }
       },
       "required": [ "Id" ],

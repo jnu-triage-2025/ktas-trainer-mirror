@@ -59,7 +59,6 @@ namespace MultiplayerInfrastructure.UI
       style.alignItems = Align.FlexEnd;
       style.justifyContent = Justify.FlexStart;
       style.display = DisplayStyle.None;
-      // style.pointerEvents = PointerEvents.None;
     }
 
     private void Build()
@@ -94,7 +93,6 @@ namespace MultiplayerInfrastructure.UI
       card.style.paddingBottom = 10;
       card.style.marginBottom = 10;
       card.style.flexDirection = FlexDirection.Column;
-      // card.style.pointerEvents = PointerEvents.None;
 
       var title = new Label(quest.Title ?? string.Empty) { pickingMode = PickingMode.Ignore };
       title.style.color = TitleColor;
@@ -110,7 +108,20 @@ namespace MultiplayerInfrastructure.UI
       content.style.whiteSpace = WhiteSpace.Normal;
       card.Add(content);
 
+      var waypointLabel = new Label(FormatWaypointText(quest.WaypointIdentifier)) { pickingMode = PickingMode.Ignore };
+      waypointLabel.style.color = AccentColor;
+      waypointLabel.style.fontSize = 11;
+      waypointLabel.style.marginTop = 4;
+      card.Add(waypointLabel);
+
       return card;
+    }
+
+    private static string FormatWaypointText(string waypointIdentifier)
+    {
+      return string.IsNullOrWhiteSpace(waypointIdentifier)
+          ? "Waypoint: 없음"
+          : $"Waypoint: {waypointIdentifier}";
     }
   }
 }

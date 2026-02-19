@@ -246,6 +246,7 @@ namespace MultiplayerInfrastructure.UI
       private readonly Label _titleLabel;
       private readonly Label _descriptionLabel;
       private readonly Label _contentLabel;
+      private readonly Label _waypointLabel;
       private readonly Button _trackButton;
       private QuestData _boundQuest;
 
@@ -324,6 +325,12 @@ namespace MultiplayerInfrastructure.UI
         _contentLabel.style.whiteSpace = WhiteSpace.Normal;
         Add(_contentLabel);
 
+        _waypointLabel = new Label { pickingMode = PickingMode.Ignore };
+        _waypointLabel.style.color = TextSecondary;
+        _waypointLabel.style.fontSize = 11;
+        _waypointLabel.style.marginTop = 4;
+        Add(_waypointLabel);
+
         Bind(quest);
       }
 
@@ -337,6 +344,7 @@ namespace MultiplayerInfrastructure.UI
         _descriptionLabel.text = quest.Description;
         _contentLabel.text = quest.QuestContent;
         SetTracked(quest.IsTracked);
+        _waypointLabel.text = FormatWaypointText(quest.WaypointIdentifier);
       }
 
       public void SetTracked(bool isTracked)
@@ -354,6 +362,13 @@ namespace MultiplayerInfrastructure.UI
           return;
 
         OnTrackClicked?.Invoke(_boundQuest.Id, !IsTracked);
+      }
+
+      private static string FormatWaypointText(string identifier)
+      {
+        return string.IsNullOrWhiteSpace(identifier)
+            ? "Waypoint: 없음"
+            : $"Waypoint: {identifier}";
       }
     }
   }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Quest;
@@ -18,6 +19,7 @@ namespace MultiplayerInfrastructure.UI
     private UIDocument _uiDocument;
     private QuestPreviewHudElement _hudElement;
     private bool _managerHooked;
+    private readonly HashSet<string> _trackedWaypointIdentifiers = new(StringComparer.Ordinal);
 
     private void Start()
     {
@@ -92,6 +94,48 @@ namespace MultiplayerInfrastructure.UI
     private void HandleTrackedChanged(IReadOnlyList<QuestData> tracked)
     {
       _hudElement?.SetTrackedQuests(tracked);
+      RefreshTrackedWaypoints(tracked);
+    }
+
+    private void Update()
+    {
+      if (_trackedWaypointIdentifiers.Count == 0)
+      {
+        return;
+      }
+
+      if (Input.GetKeyDown(KeyCode.Y))
+      {
+        HighlightTrackedWaypoints();
+      }
+    }
+
+    private void RefreshTrackedWaypoints(IReadOnlyList<QuestData> tracked)
+    {
+      _trackedWaypointIdentifiers.Clear();
+      if (tracked == null)
+      {
+        return;
+      }
+
+      foreach (var quest in tracked)
+      {
+        if (quest == null || string.IsNullOrWhiteSpace(quest.WaypointIdentifier))
+          continue;
+
+        _trackedWaypointIdentifiers.Add(quest.WaypointIdentifier);
+      }
+    }
+
+    private void HighlightTrackedWaypoints()
+    {
+      foreach (var waypointId in _trackedWaypointIdentifiers)
+      {
+        if (WaypointAnchor.TryGet(waypointId, out var anchor))
+        {
+          anchor.Highlight();
+        }
+      }
     }
   }
 }

@@ -10,23 +10,26 @@ namespace MultiplayerInfrastructure.Quest
     public string Description { get; set; }
     public string QuestContent { get; set; }
     public bool IsTracked { get; set; }
+    public string WaypointIdentifier { get; set; }
 
     public QuestData()
     {
+      WaypointIdentifier = string.Empty;
     }
 
-    public QuestData(string id, string title, string description, string questContent, bool isTracked = false)
+    public QuestData(string id, string title, string description, string questContent, bool isTracked = false, string waypointIdentifier = null)
     {
       Id = string.IsNullOrWhiteSpace(id) ? Guid.NewGuid().ToString() : id;
       Title = title ?? string.Empty;
       Description = description ?? string.Empty;
       QuestContent = questContent ?? string.Empty;
       IsTracked = isTracked;
+      WaypointIdentifier = waypointIdentifier ?? string.Empty;
     }
 
     public QuestData Clone()
     {
-      return new QuestData(Id, Title, Description, QuestContent, IsTracked);
+      return new QuestData(Id, Title, Description, QuestContent, IsTracked, WaypointIdentifier);
     }
   }
 }
