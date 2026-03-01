@@ -20,14 +20,16 @@
 | Identifier | NodeType | 내용(줄글) | NextIdentifier |
 |---|---|---|---|
 | D001 | Dialogue | (시스템) "환자 A를 처치실로 이동해야 합니다. 플레이어 B, C, D는 각각 환자 침대의 손잡이를 클릭하여 이동을 준비하십시오." | P000 |
-| P000 | Parallel | 플레이어 B, C, D가 환자 침대를 함께 잡고 이동한다. WaitMode는 WaitAll로 서술한다. AllocationType은 ByRole로 서술한다. | E001 |
-| P000-B1 | ParallelBranch | 브랜치 시작 노드는 V001_MOVE_B이며, 플레이어 B가 침대를 잡는다. CompletionConditionIdentifier는 CC_B_move로 서술한다. | CC_B_move |
-| P000-B2 | ParallelBranch | 브랜치 시작 노드는 V001_MOVE_C이며, 플레이어 C가 침대를 잡는다. CompletionConditionIdentifier는 CC_C_move로 서술한다. | CC_C_move |
-| P000-B3 | ParallelBranch | 브랜치 시작 노드는 V001_MOVE_D이며, 플레이어 D가 침대를 잡는다. CompletionConditionIdentifier는 CC_D_move로 서술한다. | CC_D_move |
-| V001_MOVE_B | Validator | [플레이어 B] 환자 침대(손잡이 등)을 클릭한다. Condition은 Grab_Stretcher, TargetCount는 1이다. | CC_B_move |
-| V001_MOVE_C | Validator | [플레이어 C] 환자 침대(손잡이 등)을 클릭한다. Condition은 Grab_Stretcher, TargetCount는 1이다. | CC_C_move |
-| V001_MOVE_D | Validator | [플레이어 D] 환자 침대(손잡이 등)을 클릭한다. Condition은 Grab_Stretcher, TargetCount는 1이다. | CC_D_move |
-| E001 | InvokeEvent | 플레이어 B, C, D가 함께 환자를 처치실로 이동시킨다. EventIdentifier로 move_patient_a_to_treatment를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | D002 |
+| P000 | Parallel | 플레이어 A, B, C, D가 환자 침대를 함께 잡고 이동한다. WaitMode는 WaitAll로 서술한다. AllocationType은 ByRole로 서술한다. | E001 |
+| P000-B1 | ParallelBranch | 브랜치 시작 노드는 V001_MOVE_A이며, 플레이어 A가 침대를 잡는다. CompletionConditionIdentifier는 CC_A_move로 서술한다. | CC_A_move |
+| P000-B2 | ParallelBranch | 브랜치 시작 노드는 V001_MOVE_B이며, 플레이어 B가 침대를 잡는다. CompletionConditionIdentifier는 CC_B_move로 서술한다. | CC_B_move |
+| P000-B3 | ParallelBranch | 브랜치 시작 노드는 V001_MOVE_C이며, 플레이어 C가 침대를 잡는다. CompletionConditionIdentifier는 CC_C_move로 서술한다. | CC_C_move |
+| P000-B4 | ParallelBranch | 브랜치 시작 노드는 V001_MOVE_D이며, 플레이어 D가 침대를 잡는다. CompletionConditionIdentifier는 CC_D_move로 서술한다. | CC_D_move |
+| V001_Move_A | Validator | [플레이어 A] 환자 침대(손잡이 등)을 클릭한다. Condition은 Grab_Stretcher, TargetCount는 1이다. | CC_A_move |
+| V001_Move_B | Validator | [플레이어 B] 환자 침대(손잡이 등)을 클릭한다. Condition은 Grab_Stretcher, TargetCount는 1이다. | CC_B_move |
+| V001_Move_C | Validator | [플레이어 C] 환자 침대(손잡이 등)을 클릭한다. Condition은 Grab_Stretcher, TargetCount는 1이다. | CC_C_move |
+| V001_Move_D | Validator | [플레이어 D] 환자 침대(손잡이 등)을 클릭한다. Condition은 Grab_Stretcher, TargetCount는 1이다. | CC_D_move |
+| E001 | InvokeEvent | 플레이어 A, B, C, D가 함께 환자를 처치실로 이동시키고, 베드가 있는 현 위치로 이동시킨다. EventIdentifier로 move_patient_a_to_treatment를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | D002 |
 | D002 | Dialogue | 활력징후 측정, GCS 측정, 경추 고정 및 흡인을 시작한다. | P001 |
 | P001 | Parallel | 플레이어 B는 활력징후 측정, 플레이어 C는 GCS(의식 수준) 사정, 플레이어 D는 경추 고정 및 구강 흡인을 실시한다. WaitMode는 WaitAll로 서술한다. AllocationType은 ByRole로 서술한다. | D003_final |
 | P001-B1 | ParallelBranch | 브랜치 시작 노드는 D003_vital_1이며, 플레이어 B가 활력징후를 측정한다(필요한 물품: 활력징후 측정도구/전극/전극 케이블). CompletionConditionIdentifier는 CC_B_vitalcheck_a로 서술한다. | CC_B_vitalcheck_a |
@@ -42,11 +44,11 @@
 | D003_vital_4 | Dialogue | "활력징후 측정도구를 선택한 뒤, 환자를 클릭하면 활력징후가 측정됩니다." | V001_B_4 |
 | V001_B_4 | Validator | [B 4단계] 인벤토리에서 활력징후 측정도구를 클릭해 선택한 뒤 환자를 클릭하면 활력징후가 출력된다. Condition은 check_vital_a이며, TargetCount는 1이다. | E002 |
 | E002 | InvokeEvent | [플레이어 B - 활력징후 UI 창 출력] UI로 플레이어 B에게 활력징후를 보여줌과 동시에 활력징후 모니터에 활력징후가 출력된다. EventIdentifier로 activate_vital_monitor_ui를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | D003_vital_5 |
-| D003_vital_5 | [B 5단계 - 결과 확인] "혈압 70/40mmHg / 맥박 140회/분, 약하고 빠름 / 호흡수 8회/분 / SpO2 82% 입니다. 확인 후 모니터 창을 닫으십시오." | V001_B_5 |
-| V001_B_5 | Validator | [B 5단계 - 종료] 활력징후 UI 창의 닫기(X) 버튼을 클릭한다. Conditiondms Click_Close_vitalUI, TargetCount는 1이다. | CC_B_vitalcheck_a |
-| D003_gcs_1 | Dialogue [플레이어 C 전용] "환자를 클릭해 환자의 의식 상태를 사정하십시오." | V001_C |
+| D003_vital_5 | Dialogue | [B 5단계 - 결과 확인] "혈압 70/40mmHg, 맥박 140회/분 - 약하고 빠름, 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다. 확인 후 모니터 창을 닫으십시오." | V001_B_5 |
+| V001_B_5 | Validator | [B 5단계 - 종료] 활력징후 UI 창의 닫기(X) 버튼을 클릭한다. Conditiondms Close_vitalUI_a, TargetCount는 1이다. | CC_B_vitalcheck_a |
+| D003_gcs_1 | Dialogue | [플레이어 C 전용] "환자를 클릭해 환자의 의식 상태를 사정하십시오." | V001_C |
 | V001_C | Validator | 플레이어 C는 환자를 클릭해 GCS를 사정한다. Condition은 Check_gcs_a이며, TargetCount는 1이다. | D003_gcs_2 |
-| D003_gcs_2 | Dialogue | "환자의 의식 상태를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다." | D003_avpu |
+| D003_gcs_2 | Dialogue | "환자의 의식 상태(AVPU)를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다." | D003_avpu |
 | D003_avpu | Dialogue | "환자를 불렀을 때 응답이 없고, 환자의 옆구리를 꼬집었을 때 불편해하며 피하려 합니다." | C001_avpu |
 | C001_avpu | Choice | "의식 수준을 AVPU에 따라 분류할 때, 현재 환자의 의식 수준은 무엇입니까?" | C001_avpu-Wrong, C001_avpu-Correct |
 | C001_avpu-Wrong | ChoiceOption | "A(Alert, 완전히 깨어 있음)", "V(Verbal response, 음성에 반응 있음)", "U(Unconsciousness, 반응 없음)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D003_avpu_retry |
@@ -79,14 +81,14 @@
 | D003_suction_5 | Dialogue | "흡인기를 클릭한 뒤 환자를 클릭해 구강 흡인을 진행하십시오." | V001_D_5 |
 | V001_D_5 | Validator | [D 5단계 - 종료] 벽에 설치된 흡인기를 클릭한 뒤, 환자를 클릭해 구강 흡인을 진행한다. Condition은 Suction_patient_a이며, TargetCount는 1이다. | D003_suction_6 |
 | D003_suction_6 | Dialogue | "경추 고정 후 석션이 완료되었습니다." | CC_D_suction_a |
-| D003_final | Dialogue | [시스템] "환자의 활력징후는 GCS 8점, 혈압 70/40mmHg, 맥박수 140회/분 (빠르고 약함), 호흡수 8회/분, SpO2 82% 입니다." | E003 |
+| D003_final | Dialogue | [시스템] "환자의 의식상태는 GCS 8점, 활력징후는 혈압 70/40mmHg, 맥박수 140회/분 (빠르고 약함), 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다." | E003 |
 | E003 | InvokeEvent | [모든 플레이어] 모든 플레이어에게 시스템 UI 창으로 환자의 활력징후 정보를 출력한다. 10초 간 출력되게 하고 원하는 경우 최소화하여 닫을 수 있도록 한다. 필요 시 확인할 수 있도록 클릭하면 다시 모든 정보를 출력하도록 한다. EventIdentifier로 vitalinfo_a를 호출한다. MoveNextBehavior는 Immediate로 서술한다. | D004 |
 | D004 | Dialogue | [시스템, by 의사 NPC] "기도 확보를 위해 intubation을 시행하겠습니다. 간호사 B 선생님은 삽관 보조해주세요." | D005 |
 | D005 | Dialogue | [시스템, by 의사 NPC] "그동안 간호사 C 선생님은 멸균장갑을 착용하고 거즈로 출혈부위를 지혈해주세요." | D006 |
 | D006 | Dialogue | [시스템, by 의사 NPC] "간호사 D 선생님은 수액 투여를 위해 양팔에 IV 라인 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션 달겠습니다." | P002 |
 | P002 | Parallel | 플레이어 B는 삽관 보조, 플레이어 C는 지혈, 플레이어 D는 IV 라인을 확보한다. WaitMode는 WaitAll로 서술한다. AllocationType은 ByRole로 서술한다. | D008 |
 | P002-B1 | ParallelBranch | 브랜치 시작 노드는 D007_intu_1이며, 플레이어 B가 의사에게 전달할 기관삽관 관련 물품을 준비한다(필요한 물품: 후두경 블레이드, 후두경 손잡이, 기관내관, 스타일렛, 5cc 주사기, 플라스터). [이후 플레이어 A가 산소 공급을 위해 산소 유량계와 기관내관 간을 연결한다.] CompletionConditionIdentifier는 CC_B_intubation_A_oxy_a 로 서술한다. | CC_B_intubation_A_oxy_a |
-| P002-B2 | ParallelBranch | 브랜치 시작 노드는 D007_pressure_1이며, 플레이어 C가 지혈을 실시한다(필요한 물품: 멸균장갑, 거즈). CompletionConditionIdentifier는 CC_C_stopbleeding_a로 서술한다. | CC_C_stopbleeding_a |
+| P002-B2 | ParallelBranch | 브랜치 시작 노드는 D007_pressure_1이며, 플레이어 C가 지혈을 실시한다(필요한 물품: 멸균장갑, 거즈, 플라스터). CompletionConditionIdentifier는 CC_C_stopbleeding_a로 서술한다. | CC_C_stopbleeding_a |
 | P002-B3 | ParallelBranch | 브랜치 시작 노드는 D007_bothiv_1이며, 플레이어 D가 IV 라인을 확보한다(필요한 물품: 18G 혹은 20G 캐뉼라, 수액세트 2개, 생리식염수 수액, 플라즈마 솔루션 수액). CompletionConditionIdentifier는 CC_D_iv_a로 서술한다. | CC_D_iv_a |
 | D007_intu_1 | Dialogue | [플레이어 B 전용] "기관내삽관에 필요한 물품을 준비합니다. 좌측 체크리스트 창을 참고하여 필요한 물품을 클릭해 획득하세요." | E004 |
 | E004 | InvokeEvent | [플레이어 B 전용 - 체크리스트 시작] 좌측 상단에 체크리스트 UI 창을 띄워 준비할 물품을 출력한다. 8가지 아이템의 항목과 의사에게 전달해야 할 2가지 아이템과 행위로 구성한다. 7가지 아이템은 후두경 블레이드, 후두경 손잡이, 후두경, 기관내관, 스타일렛, 준비된 기관내관, 플라스터, 5cc 주사기이다. 의사에게 전달해야 할 2가지 아이템과 행위는 각각 후두경 전달하기, 준비된 기관내관 전달하기로 정의한다. EventIdentifier로 checklist_intu_a를 호출한다. MoveNextBehavior는 Immediate로 서술한다. | V002_B_1 |
@@ -108,26 +110,26 @@
 | D007_oxy_2 | Dialogue | [플레이어 A 전용] "산소 유량계 습윤병과 1L 멸균증류수를 클릭해 획득하십시오." | V002_A_1 |
 | V002_A_1 | Validator | [A 1단계 - 시작] 산소 유량계 습윤병과 1L 멸균증류수를 클릭해 획득하면 [습윤병에 멸균증류수가 채워진 것으로 가정하고 멸균증류수는 사라지고, 습윤병의 아이템 이름만 변경된다. 준비된 아이템은 "준비된 습윤병"으로 출력한다.] Condition은 Click_humidifierbottle, Click_sdw이며, TargetCount는 2이다. | D007_oxy_3 |
 | D007_oxy_3 | Dialogue | "유량계를 습득하여 산소 유량계를 완성합니다." | V002_A_2 |
-| V002_A_2 | Validator | [A 2단계] 산소 유량계 (뚜껑)를 클릭해 획득하면 산소 유량계와 습윤병이 합쳐진 아이템으로 자동 변화한다. 이후 해당 아이템을 클릭해 선택한 뒤 흡인기 옆 벽면을 클릭해 설치한다. Condition은 Click_oxyflow이며, TargetCount는 1이다. | D007_oxy_4 |
+| V002_A_2 | Validator | [A 2단계] 산소 유량계 (뚜껑)를 클릭해 획득하면 산소 유량계와 습윤병이 합쳐진 아이템으로 자동 변화한다. Condition은 Click_oxyflow이며, TargetCount는 1이다. | D007_oxy_4 |
 | D007_oxy_4 | Dialogue | "완성된 유량계를 클릭한 뒤, 흡인기 옆 벽면을 클릭해 설치하십시오." | V002_A_3 |
-| V002_A_3 | Validator | [A 3단계]완성된 산소 유량계를 클릭해 선택한 뒤, 흡인기 옆 벽면을 클릭해 설치한다. Condition은 Connect_wall_component_2이며, TargetCount는 1이다. | D007_oxy_5 |
+| V002_A_3 | Validator | [A 3단계] 완성된 산소 유량계를 클릭해 선택한 뒤, 흡인기 옆 벽면을 클릭해 설치한다. Condition은 Connect_wall_component_2이며, TargetCount는 1이다. | D007_oxy_5 |
 | D007_oxy_5 | Dialogue | "산소줄과 T-piece를 각각 클릭해 획득하고, 산소 유량계와 환자에게 삽입된 기관내관을 각각 클릭해 연결하세요." | V002_A_4 |
-| V002_A_4 | Validator | [A 4단계] [산소줄(o2 line)과 T-piece를 각각 클릭해 획득하면 산소줄과 T-piece가 연결된 T-piece set으로 변화한다.] 이후 산소 유량계와 환자에게 삽입된 기관내관을 각각 클릭해 연결한다. [이 때 T-piece set은 조립된 상태로 환자의 기관내관에 연결되며, 기관내관과 산소 유량계 간의 연결할 산소줄은 생성에 제한적이었기 때문에, 코딩을 바탕으로 투명 관으로 단순 연결한다.] Condition은 Click_o2line, Click_tpiece, Connect_tpiece_and_oxyflow(환자의 기관내관과 산소유량계 각각 클릭)이며, TargetCount는 4이다. | D007_oxy_6 |
+| V002_A_4 | Validator | [A 4단계] [산소줄(o2 line)과 T-piece를 각각 클릭해 획득하면 산소줄과 T-piece가 연결된 T-piece set으로 변화한다.] 이후 벽에 설치된 산소 유량계와 환자에게 삽입된 기관내관을 각각 클릭해 연결한다. [이 때 T-piece set은 조립된 상태로 환자의 기관내관에 연결되며, 기관내관과 산소 유량계 간의 연결할 산소줄은 생성에 제한적이었기 때문에, 코딩을 바탕으로 투명 관으로 단순 연결한다.] Condition은 Click_o2line, Click_tpiece, Connect_tpiece_and_oxyflow(환자의 기관내관과 산소유량계 각각 클릭)이며, TargetCount는 4이다. | D007_oxy_6 |
 | D007_oxy_6 | Dialogue | [플레이어 A 전용] "산소 연결이 완료되었습니다. 유량계를 클릭해 투여 산소량을 결정합니다." | V002_A_5 |
 | V002_A_5 | Validator | [A 5단계] 벽에 설치된 산소 유량계를 클릭한다. 클릭하는 경우 투여될 산소의 양을 결정할 수 있도록 UI 창을 출력한다. | C002 |
 | C002 | Choice | "투여될 산소의 양을 조절합니다." 3L/5L/10L/15L 중 하나를 선택하도록 안내하고 UI 창을 출력한다. | C002-Wrong, C002-Correct |
 | C002-Wrong | ChoiceOption | "3L", "5L", "15L" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D007_retry |
-| C002-Correct | ChoiceOption | "10L" (정답)/ DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D007_oxy_7 |
+| C002-Correct | ChoiceOption | "10L" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D007_oxy_7 |
 | D007_retry | Dialogue | "오답입니다. 처방은 10L 입니다." | C002 |
 | D007_oxy_7 | Dialogue | [시스템, by 플레이어 A (6단계 - 종료)] "산소 투여가 완료되었습니다." | CC_B_intubation_A_oxy_a |
-| D007_pressure_1 | Dialogue | [플레이어 C 전용] "지혈 준비를 합니다. 멸균장갑과 거즈를 획득하십시오." | V002_C_1 |
+| D007_pressure_1 | Dialogue | [플레이어 C 전용] "지혈을 실시합니다. 멸균장갑과 거즈, 플라스터를 클릭해 획득하십시오." | V002_C_1 |
 | V002_C_1 | Validator | [C 1단계 - 시작] 플레이어 C는 멸균장갑과 거즈, 플라스터를 클릭해 획득한다. Condition은 Click_glove, Click_gauze, Click_plaster이며, TargetCount는 3이다. | D007_pressure_2 |
-| D007_pressure_2 | Dialogue | "멸균장갑을 [더블클릭]해 착용하십시오." | V002_C_2 |
-| V002_C_2 | Validator | [C 2단계] 멸균장갑 아이템을 더블클릭해 착용한다. Condition은 wear_glove이며, TargetCount는 1이다. | D007_pressure_3 |
+| D007_pressure_2 | Dialogue | "멸균장갑을 [우클릭]해 착용하십시오." | V002_C_2 |
+| V002_C_2 | Validator | [C 2단계] 멸균장갑 아이템을 우클릭해 착용한다. Condition은 wear_glove이며, TargetCount는 1이다. | D007_pressure_3 |
 | D007_pressure_3 | Dialogue | "거즈를 클릭해 선택한 뒤, 환자에게 적용하십시오." | V002_C_3 |
 | V002_C_3 | Validator | [C 3단계] 거즈 아이템을 클릭해 선택한 뒤 환자를 클릭해 적용한다. Condition은 Apply_gauze이며, TargetCount는 1이다. | E007 |
 | E007 | InvokeEvent | 거즈가 환자 상처부위에 위치한다. 이 때 포장지 없이 흰 거즈가 상처 위에 덮인 모양이 된다. 가능하면 혈흔 이펙트가 거즈를 뚫고 나와도 좋다. EventIdentifier로 apply_gauze_a를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | D007_pressure_4 |
-| D007_pressure_4 | Dialogue | "압박을 가해 지혈하고 있습니다. 플라스터로 거즈를 고정합니다. 플라스터를 클릭해 선택한 뒤, 거즈를 고정하십시오." | V002_C_4 |
+| D007_pressure_4 | Dialogue | "압박을 가해 지혈하고 있습니다. 플라스터로 거즈를 고정합니다. 플라스터를 클릭해 선택한 뒤, 거즈를 클릭해 고정하십시오." | V002_C_4 |
 | V002_C_4 | Validator | [C 4단계 - 종료] 플라스터 아이템을 클릭해 선택한 뒤 환자에게 적용되어 있는 거즈를 클릭한다. Condition은 Apply_plaster_on_gauze이며, TargetCount는 1이다. | E008 |
 | E008 | InvokeEvent | 환자에게 적용된 거즈의 상단과 하단을 플라스터(테이프)로 고정되어 있는 것으로 변화한다. EventIdentifier로 apply_plaster_on_gauze_a를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | D007_pressure_5 |
 | D007_pressure_5 | Dialogue | [시스템, by 플레이어 C (5단계 - 종료)] "지혈 중입니다." | CC_C_stopbleeding_a |
@@ -362,9 +364,9 @@
 | V014 | Validator | [플레이어 B] 가위를 클릭해 획득하고, 해당 아이템을 선택한 상태로 환자를 클릭한다. Condition은 remove_clothings_a이며, TargetCount는 1이다. | E054 |
 | E054 | InvokeEvent | 가위로 천을 자르는 소리를 [처치실 내에서만 들리도록] 출력한다. EventIdentifier로 cutting_sound를 호출한다. MoveNextBrhavior는 WaitUntilDone으로 서술한다. | D032 |
 | D032 | Dialogue | [시스템, by 플레이어 B] "추가 외상은 확인되지 않습니다." | CC_B_cut_a |
-| D033_gcs_1 | Dialogue [플레이어 C 전용] "환자를 클릭해 환자의 의식 상태를 사정하십시오." | V015 |
-| V015 | Validator | 플레이어 C는 환자를 클릭해 GCS를 사정한다. Condition은 Check_gcs_a이며, TargetCount는 1이다. | D033_gcs_2 |
-| D033_gcs_2 | Dialogue | "환자의 의식 상태를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다." | D033_avpu |
+| D033_gcs_1 | Dialogue [플레이어 D 전용] "환자를 클릭해 환자의 의식 상태를 사정하십시오." | V015 |
+| V015 | Validator | 플레이어 D는 환자를 클릭해 GCS를 사정한다. Condition은 Check_gcs_a이며, TargetCount는 1이다. | D033_gcs_2 |
+| D033_gcs_2 | Dialogue | "환자의 의식 상태를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다." | D033_avpu |
 | D033_avpu | Dialogue | "환자를 불렀을 때 응답이 없고, 환자의 옆구리를 꼬집었을 때 불편해하며 피하려 합니다." | C011_avpu |
 | C011_avpu | Choice | "의식 수준을 AVPU에 따라 분류할 때, 현재 환자의 의식 수준은 무엇입니까?" | C011_avpu-Wrong, C011_avpu-Correct |
 | C011_avpu-Wrong | ChoiceOption | "A(Alert, 완전히 깨어 있음)", "V(Verbal response, 음성에 반응 있음)", "U(Unconsciousness, 반응 없음)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D033_avpu_retry |
