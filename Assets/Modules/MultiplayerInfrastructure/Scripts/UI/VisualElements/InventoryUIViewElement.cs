@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.Item;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -25,6 +26,7 @@ namespace MultiplayerInfrastructure.UI
     private IReadOnlyList<InventorySlotModelDTO> _boundSlots;
 
     public event Action SlotsMutated;
+    public event Action<ItemData> ItemDroppedOutside;
 
     private InventorySlotModelDTO _heldItem;
     private VisualElement _heldItemGhost;
@@ -309,7 +311,13 @@ namespace MultiplayerInfrastructure.UI
       if (_heldItem == null) return;
 
       if (!TryGetSlotIndexFromEvent(evt.target as VisualElement, out _))
-        Debug.Log("[InventoryUIView] Pointer released outside inventory grid (drop logic TBD).");
+      {
+        var item = _heldItem.ItemInstance;
+        ClearHeldItem();
+        NotifySlotsMutated();
+        if (item != null)
+          ItemDroppedOutside?.Invoke(item);
+      }
     }
 
     private bool TryGetSlotIndexFromEvent(VisualElement target, out int slotIndex)

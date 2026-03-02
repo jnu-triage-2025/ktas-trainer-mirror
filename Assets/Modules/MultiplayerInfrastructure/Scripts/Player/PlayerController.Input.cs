@@ -20,6 +20,7 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private KeyCode _keyEscape = KeyCode.Escape;
     [SerializeField] private KeyCode _keySpectatorFlyDown = KeyCode.LeftShift;
     [SerializeField] private KeyCode _keyOpenQuestUI = DefaultsKeyConfiguration.OpenQuestUI;
+    [SerializeField] private KeyCode _keyDropHeldItem = DefaultsKeyConfiguration.DropHeldItem;
 
     /**
      * 키 입력 핸들링을 막아야 하는 상황에서 이 플래그를 참으로 설정할 것
@@ -73,6 +74,7 @@ namespace MultiplayerInfrastructure.Player
       HandleHotbarControlInput();
       HandleToggleInventory();
       HandleSwitchCameraViewMode();
+      HandleItemActionInput();
     }
 
     private bool HandleEscape()
@@ -222,6 +224,13 @@ namespace MultiplayerInfrastructure.Player
       }
 
       HandleInteractablesSelectionInput();
+    }
+
+    private void HandleItemActionInput()
+    {
+      if (Input.GetMouseButtonDown(0)) TriggerAttack();
+      if (Input.GetMouseButtonDown(1)) TriggerUseItem();
+      if (Input.GetKeyDown(_keyDropHeldItem)) DropHeldItem();
     }
 
     private void HandleOpenQuestUIInput()

@@ -67,12 +67,16 @@ namespace MultiplayerInfrastructure.UI
       _view.name = string.IsNullOrEmpty(_view.name) ? "InventoryRoot" : _view.name;
       _view.Initialize(columns, rows, slotTemplate, defaultIcon);
       _view.SlotsMutated += HandleSlotsMutated;
+      _view.ItemDroppedOutside += HandleItemDroppedOutside;
     }
 
     private void OnDestroy()
     {
       if (_view != null)
+      {
         _view.SlotsMutated -= HandleSlotsMutated;
+        _view.ItemDroppedOutside -= HandleItemDroppedOutside;
+      }
     }
 
     public void UpdateInventory(IReadOnlyList<InventorySlotModelDTO> slots) => _view?.UpdateInventory(slots);
@@ -112,6 +116,12 @@ namespace MultiplayerInfrastructure.UI
       EnsureHotbar();
       _hotbarUI?.BindInventory(_view?.BoundSlots);
       OnItemAtSelectedSlotChanged?.Invoke();
+    }
+
+    private void HandleItemDroppedOutside(Item.ItemData item)
+    {
+      var player = Registry.Registry.Get<PlayerController>(RegistryType.Entity, Registry.Registry.TypeKey<PlayerController>());
+      player?.TryDropItemInFront(item);
     }
   }
 }

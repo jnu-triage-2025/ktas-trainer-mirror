@@ -17,6 +17,7 @@ namespace MultiplayerInfrastructure.UI
     private UIDocument _document;
     private VisualElement _root;
     private Button _resumeButton;
+    private Button _keyConfigButton;
     private Button _titleButton;
     private bool _isVisible;
 
@@ -35,13 +36,19 @@ namespace MultiplayerInfrastructure.UI
       _document.sortingOrder = _sortingOrder;
 
       _root = _document.rootVisualElement?.Q<VisualElement>("game-menu-root");
-      _resumeButton = _document.rootVisualElement?.Q<Button>("resume-button");
-      _titleButton = _document.rootVisualElement?.Q<Button>("title-button");
+      _resumeButton    = _document.rootVisualElement?.Q<Button>("resume-button");
+      _keyConfigButton = _document.rootVisualElement?.Q<Button>("key-config-button");
+      _titleButton     = _document.rootVisualElement?.Q<Button>("title-button");
 
       if (_resumeButton != null)
         _resumeButton.clicked += HandleResumeClicked;
       else
         Debug.LogError("[GameMenuUI] Resume button not found in UXML.");
+
+      if (_keyConfigButton != null)
+        _keyConfigButton.clicked += HandleKeyConfigClicked;
+      else
+        Debug.LogError("[GameMenuUI] Key config button not found in UXML.");
 
       if (_titleButton != null)
         _titleButton.clicked += HandleTitleClicked;
@@ -53,8 +60,9 @@ namespace MultiplayerInfrastructure.UI
 
     private void OnDestroy()
     {
-      if (_resumeButton != null) _resumeButton.clicked -= HandleResumeClicked;
-      if (_titleButton != null) _titleButton.clicked -= HandleTitleClicked;
+      if (_resumeButton != null)    _resumeButton.clicked    -= HandleResumeClicked;
+      if (_keyConfigButton != null) _keyConfigButton.clicked -= HandleKeyConfigClicked;
+      if (_titleButton != null)     _titleButton.clicked     -= HandleTitleClicked;
     }
 
     public void ShowMenu() => SetVisible(true);
@@ -77,6 +85,22 @@ namespace MultiplayerInfrastructure.UI
         UIOverlayStack.Pop();
       else
         HideMenu();
+    }
+
+    private void HandleKeyConfigClicked()
+    {
+      var keyConfigController = Registry.Registry.Get<KeyConfigUIController>(
+        RegistryType.UI,
+        Registry.Registry.TypeKey(typeof(KeyConfigUIController))
+      );
+
+      if (keyConfigController == null)
+      {
+        Debug.LogWarning("[GameMenuUI] KeyConfigUIController를 레지스트리에서 찾을 수 없습니다.");
+        return;
+      }
+
+      UIOverlayStack.Push(keyConfigController);
     }
 
     private void HandleTitleClicked()

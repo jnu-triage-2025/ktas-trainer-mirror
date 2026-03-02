@@ -156,6 +156,22 @@ namespace MultiplayerInfrastructure.Player
         PlayViewmodelUse();
     }
 
+    public void DropHeldItem()
+    {
+      if (_hotbarUI == null) return;
+      int selectedIndex = _hotbarUI.SelectedSlot;
+      if (selectedIndex < 0 || selectedIndex >= _slots.Count) return;
+
+      var slot = _slots[selectedIndex];
+      if (slot == null || slot.IsEmpty) return;
+
+      var item = slot.TakeAll();
+      if (item == null) return;
+
+      TryDropItemInFront(item);
+      OnInventoryChangedAndReturn(true);
+    }
+
     public ActionResult CancelAttack()
     {
       attackTriggered = false;

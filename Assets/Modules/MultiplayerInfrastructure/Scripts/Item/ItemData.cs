@@ -252,6 +252,16 @@ namespace MultiplayerInfrastructure.Item
       _itemTexture = icon;
     }
 
+    public ActionResult OnGet(PlayerController player)
+    {
+      return ActionResult.Success;
+    }
+
+    public ActionResult OnDrop(PlayerController player)
+    {
+      return ActionResult.Success;
+    }
+
     public ActionResult OnAttack(PlayerController player, Entity.Entity target)
     {
       return ActionResult.Success;

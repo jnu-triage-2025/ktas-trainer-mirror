@@ -1,0 +1,42 @@
+<ui:UXML
+  xmlns:ui="UnityEngine.UIElements"
+  xmlns:mi="MultiplayerInfrastructure.UI"
+>
+  <ui:Style src="KeyConfigUI.uss" />
+
+  <!-- 전체 화면 반투명 배경 -->
+  <ui:VisualElement name="key-config-root" class="key-config__root">
+
+    <!-- 중앙 패널 -->
+    <ui:VisualElement class="key-config__panel">
+
+      <!-- 헤더 -->
+      <ui:VisualElement class="key-config__header">
+        <ui:Label class="key-config__title" text="키 설정" />
+        <ui:Button name="close-button" class="key-config__close-btn" text="✕" />
+      </ui:VisualElement>
+
+      <!-- 본문: 좌측 목록 + 우측 키보드 -->
+      <ui:VisualElement class="key-config__content">
+
+        <!-- 좌측: 기능 목록 -->
+        <ui:VisualElement class="key-config__list-panel">
+          <ui:Label class="key-config__panel-title" text="기능" />
+          <ui:ScrollView
+            name="binding-scroll"
+            class="key-config__scroll"
+            vertical-scroll-enabled="true"
+            horizontal-scroll-enabled="false"
+          />
+        </ui:VisualElement>
+
+        <!-- 우측: 키보드 시각화 -->
+        <ui:VisualElement class="key-config__keyboard-panel">
+          <ui:Label class="key-config__panel-title" text="키보드" />
+          <mi:KeyboardLayoutElement name="keyboard-layout" class="key-config__keyboard" />
+        </ui:VisualElement>
+
+      </ui:VisualElement>
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>
