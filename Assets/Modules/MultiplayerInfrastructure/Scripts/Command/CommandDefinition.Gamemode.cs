@@ -4,7 +4,7 @@ using MultiplayerInfrastructure.Player;
 
 namespace MultiplayerInfrastructure.Command
 {
-  public class CammandDefinition_Gamemode : IChatCommandModel
+  public class CommandDefinition_Gamemode : IChatCommandModel
   {
     public string CommandEntry => "gamemode";
     public string Description => (
@@ -19,7 +19,7 @@ namespace MultiplayerInfrastructure.Command
 
     private readonly ChatService _manager;
 
-    public CammandDefinition_Gamemode(ChatService manager)
+    public CommandDefinition_Gamemode(ChatService manager)
     {
       _manager = manager;
     }

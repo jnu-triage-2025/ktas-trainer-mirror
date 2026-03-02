@@ -83,7 +83,7 @@ namespace MultiplayerInfrastructure.Chat
       MarkMessageSent(sender);
     }
 
-    [ObserversRpc(BufferLast = true)]
+    [ObserversRpc]
     private void ReceiveChatObserversRpc(string formattedLine)
     {
       Debug.Log($"[ChatService] Received chat message: {formattedLine}");

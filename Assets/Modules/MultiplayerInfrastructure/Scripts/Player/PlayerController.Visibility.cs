@@ -11,6 +11,7 @@ namespace MultiplayerInfrastructure.Player
 
     private readonly List<Renderer> _renderers = new();
     private readonly List<Color> _originalColors = new();
+    private readonly MaterialPropertyBlock _mpb = new();
     private int _originalLayer;
     private int _spectatorLayer = -1;
     private bool _visibilityInitialized;
@@ -92,10 +93,9 @@ namespace MultiplayerInfrastructure.Player
         if (r == null) continue;
         if (r.sharedMaterial == null || !r.sharedMaterial.HasProperty("_Color")) continue;
 
-        var block = new MaterialPropertyBlock();
-        r.GetPropertyBlock(block);
-        block.SetColor("_Color", _originalColors[i]);
-        r.SetPropertyBlock(block);
+        r.GetPropertyBlock(_mpb);
+        _mpb.SetColor("_Color", _originalColors[i]);
+        r.SetPropertyBlock(_mpb);
       }
     }
 
@@ -108,11 +108,9 @@ namespace MultiplayerInfrastructure.Player
         if (r.sharedMaterial == null || !r.sharedMaterial.HasProperty("_Color")) continue;
 
         var original = _originalColors[i];
-        var block = new MaterialPropertyBlock();
-        r.GetPropertyBlock(block);
-        var tinted = new Color(original.r, original.g, original.b, _spectatorAlpha);
-        block.SetColor("_Color", tinted);
-        r.SetPropertyBlock(block);
+        r.GetPropertyBlock(_mpb);
+        _mpb.SetColor("_Color", new Color(original.r, original.g, original.b, _spectatorAlpha));
+        r.SetPropertyBlock(_mpb);
       }
     }
   }

@@ -9,6 +9,8 @@ namespace MultiplayerInfrastructure.Player
 {
   public partial class PlayerController
   {
+    private ChatUIController _chatUI;
+
     [Header("Key Configuration")]
     [SerializeField] private KeyCode _keyMovingRunning = KeyCode.LeftControl;
     [SerializeField] private KeyCode _keyToggleInventory = KeyCode.E;
@@ -34,7 +36,8 @@ namespace MultiplayerInfrastructure.Player
 
     void Start_Input()
     {
-      RegisterOverlayLock(Registry.Registry.Get<ChatUIController>(RegistryType.UI, Registry.Registry.TypeKey<ChatUIController>()), locked => _keyHandlingLockedByChatUI = locked);
+      _chatUI = Registry.Registry.Get<ChatUIController>(RegistryType.UI, Registry.Registry.TypeKey<ChatUIController>());
+      RegisterOverlayLock(_chatUI, locked => _keyHandlingLockedByChatUI = locked);
       RegisterOverlayLock(Registry.Registry.Get<InventoryUIController>(RegistryType.UI, Registry.Registry.TypeKey<InventoryUIController>()), locked => _keyHandlingLockedByInventoryUI = locked);
       RegisterOverlayLock(Registry.Registry.Get<GameEscapeMenuUIController>(RegistryType.UI, Registry.Registry.TypeKey<GameEscapeMenuUIController>()), locked => _keyHandlingLockedByEscapeUI = locked);
     }
@@ -98,15 +101,14 @@ namespace MultiplayerInfrastructure.Player
     /// <returns>bool 인벤토리 UI 표시에 변화가 있는가?</returns>
     private bool HandleToggleInventory()
     {
-      var inventory = Registry.Registry.Get<InventoryUIController>(RegistryType.UI, Registry.Registry.TypeKey<InventoryUIController>());
-      if (inventory == null) return false;
+      if (_inventoryUI == null) return false;
 
       if (Input.GetKeyDown(_keyToggleInventory))
       {
-        if (UIOverlayStack.IsTop(inventory))
+        if (UIOverlayStack.IsTop(_inventoryUI))
           UIOverlayStack.Pop();
         else
-          UIOverlayStack.Push(inventory);
+          UIOverlayStack.Push(_inventoryUI);
         return true;
       }
       return false;
@@ -155,33 +157,32 @@ namespace MultiplayerInfrastructure.Player
 
     private void HandleChatInput()
     {
-      var chat = Registry.Registry.Get<ChatUIController>(RegistryType.UI, Registry.Registry.TypeKey<ChatUIController>());
-      if (chat.IsUnityNull()) return;
+      if (_chatUI.IsUnityNull()) return;
 
       if (Input.GetKeyDown(_keyToggleChat))
       {
-        chat.Open();
+        _chatUI.Open();
         return;
       }
 
       if (Input.GetKeyDown(_keyToggleCommand))
       {
-        chat.OpenWithCommandStart();
+        _chatUI.OpenWithCommandStart();
         return;
       }
 
-      if (!chat.IsOpen)
+      if (!_chatUI.IsOpen)
         return;
 
       if (Input.GetKeyDown(DefaultsKeyConfiguration.SendChat))
       {
-        chat.HandleSubmitKey();
+        _chatUI.HandleSubmitKey();
         return;
       }
 
       if (Input.GetKeyDown(DefaultsKeyConfiguration.CloseChatUI))
       {
-        chat.HandleCancelKey();
+        _chatUI.HandleCancelKey();
       }
     }
 

@@ -27,10 +27,9 @@ namespace MultiplayerInfrastructure.Player
       _detector = _camControl.GetComponent<NearbyInteractablesDetector>();
       _interactableHintUI = _camControl.GetComponent<InteractableObjectHintUIController>();
 
-      _detector.RegisterDetectBased(transform);
-
       if (_detector != null)
       {
+        _detector.RegisterDetectBased(transform);
         _detector.NearbyUpdated += HandleNearbyUpdated;
         HandleNearbyUpdated(_detector.Nearby);
       }
@@ -58,7 +57,9 @@ namespace MultiplayerInfrastructure.Player
 
     private void HandleNearbyUpdated(IReadOnlyList<IInteractable> nearby)
     {
+#if UNITY_EDITOR
       Debug.Log($"[PlayerController] Nearby interactables updated: {nearby.Count} items found.");
+#endif
       if (_interactableHintUI == null) return;
 
       var interacts = new List<IInteract>();

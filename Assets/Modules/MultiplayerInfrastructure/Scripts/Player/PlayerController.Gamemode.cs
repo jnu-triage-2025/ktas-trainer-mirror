@@ -55,14 +55,15 @@ namespace MultiplayerInfrastructure.Player
       _gamemode = mode;
 
       if (_gamemode == PlayerGamemode.Spectator)
+      {
         EnterSpectatorMode();
-      else
-        ExitSpectatorMode();
-
-      if (_gamemode == PlayerGamemode.Spectator)
         ApplySpectatorVisibility();
+      }
       else
+      {
+        ExitSpectatorMode();
         ApplyPlayerVisibility();
+      }
 
       // Adjust local camera culling: players hide spectators, spectators see spectators.
       if (IsOwner && _camControl != null)

@@ -114,7 +114,7 @@ namespace MultiplayerInfrastructure.Item
     public ItemData Mul(int count, bool ignoreStackOverflow = false)
     {
       if (ignoreStackOverflow) currCount *= count;
-      else currCount = Math.Max(maxCount, currCount * count);
+      else currCount = Math.Min(maxCount, currCount * count);
       return this;
     }
 

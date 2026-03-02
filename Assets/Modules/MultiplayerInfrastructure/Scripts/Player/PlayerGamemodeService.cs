@@ -31,10 +31,9 @@ namespace MultiplayerInfrastructure.Player
       _gamemodeByClient.Remove(controller.Owner.ClientId);
     }
 
-    public static bool TrySetGamemode(NetworkConnection issuer, PlayerController target, PlayerGamemode mode, out string error)
+    public static bool TrySetGamemode(NetworkConnection _, PlayerController target, PlayerGamemode mode, out string error)
     {
       error = string.Empty;
-      _ = issuer;
 
       if (target == null || target.Owner == null)
       {

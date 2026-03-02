@@ -225,8 +225,6 @@ namespace MultiplayerInfrastructure.UI
 
       RefreshUI();
       OnModeChanged?.Invoke(_currentMode);
-
-      Debug.Log("[InteractableHintUI] Exited dialogue mode, restored interactables");
     }
 
     /// <summary>
@@ -235,24 +233,7 @@ namespace MultiplayerInfrastructure.UI
     /// <param name="selections">표시할 선택지 목록</param>
     public void SetDialogueSelections(List<IInteract> selections)
     {
-      Debug.Log($"[InteractableHintUI] SetDialogueSelections called with {selections?.Count ?? 0} selections");
-      if (_currentMode != InteractableHintUIMode.Dialogue)
-      {
-        Debug.LogWarning("[InteractableHintUI] SetDialogueSelections called but not in dialogue mode");
-        return;
-      }
-
-      _interacts.Clear();
-      _nowSelected = -1;
-
-      if (selections != null && selections.Count > 0)
-      {
-        _interacts.AddRange(selections);
-        _nowSelected = 0;
-      }
-
-      RefreshUI();
-      OnDialogueSelectionsChanged?.Invoke();
+      SetDialogueSelections((IReadOnlyList<IInteract>)selections);
     }
 
     /// <summary>
@@ -610,12 +591,6 @@ namespace MultiplayerInfrastructure.UI
 
     private string GetInteractKeyText()
     {
-      // 다이얼로그 모드에서는 선택 키 표시
-      if (_currentMode == InteractableHintUIMode.Dialogue)
-      {
-        return DefaultsKeyConfiguration.InteractInteractableObject.ToString();
-      }
-
       return DefaultsKeyConfiguration.InteractInteractableObject.ToString();
     }
 

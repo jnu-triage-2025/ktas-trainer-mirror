@@ -9,7 +9,7 @@ namespace MultiplayerInfrastructure.Player
   {
     void OnStartClient_Network()
     {
-      if (!IsOwner) gameObject.GetComponent<PlayerController>().enabled = false;
+      if (!IsOwner) enabled = false;
 
       if (IsOwner)
       {

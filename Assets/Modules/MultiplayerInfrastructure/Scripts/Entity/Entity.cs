@@ -10,7 +10,7 @@ namespace MultiplayerInfrastructure.Entity
     {
       if (target == null)
         return;
-      target.OnAttacked(target, damageAmount);
+      target.OnAttacked(this, damageAmount);
     }
 
     public void OnAttacked(Entity attacker, int damageAmount)

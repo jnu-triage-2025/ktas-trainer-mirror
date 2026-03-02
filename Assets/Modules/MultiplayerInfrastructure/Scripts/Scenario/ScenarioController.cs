@@ -219,7 +219,6 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       OnScenarioEnded?.Invoke();
-      Debug.Log("[ScenarioController] Scenario ended");
     }
 
     /// <summary>
@@ -409,8 +408,9 @@ namespace MultiplayerInfrastructure.Scenario
 
       // TODO: 사운드 재생 로직 구현
       // 예: AudioSource.PlayClipAtPoint(Resources.Load<AudioClip>(node.SoundResourceIdentifier), transform.position);
-
+#if UNITY_EDITOR
       Debug.Log($"[ScenarioController] Playing sound: {node.SoundResourceIdentifier}");
+#endif
 
       if (node.WaitUntilFinished)
       {
@@ -504,7 +504,9 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingInteraction;
 
+#if UNITY_EDITOR
       Debug.Log($"[ScenarioController] Interaction requested: actorScope={node.ActorScope}, target={node.TargetIdentifier}, item={node.RequiredItemIdentifier}, type={node.InteractionType}");
+#endif
 
       if (!string.IsNullOrWhiteSpace(node.CompletionConditionIdentifier)
           && ScenarioEventIdentifierRegistry.TryGetHandler(node.CompletionConditionIdentifier, out var handler))
@@ -523,7 +525,9 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingCombineItem;
 
+#if UNITY_EDITOR
       Debug.Log($"[ScenarioController] Combine item: inputs={string.Join(",", node.InputItemIdentifiers ?? Array.Empty<string>())}, output={node.OutputItemIdentifier}, auto={node.AutoCombine}");
+#endif
 
       if (!node.AutoCombine && !string.IsNullOrWhiteSpace(node.OutputItemIdentifier)
           && ScenarioEventIdentifierRegistry.TryGetHandler(node.OutputItemIdentifier, out var handler))
@@ -571,7 +575,9 @@ namespace MultiplayerInfrastructure.Scenario
 
       var key = $"{node.TargetEntityIdentifier}.{node.StateKey}";
       _stateStore[key] = node.StateValue;
+#if UNITY_EDITOR
       Debug.Log($"[ScenarioController] State updated: {key}={node.StateValue}");
+#endif
 
       Advance();
     }
@@ -813,7 +819,9 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       // TODO: 플레이어 이동 로직 구현
+#if UNITY_EDITOR
       Debug.Log($"[ScenarioController] Moving player to: {destination}");
+#endif
 
       // 임시 대기
       yield return new WaitForSeconds(1f);
@@ -861,7 +869,9 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       // TODO: NPC 이동 로직 구현
+#if UNITY_EDITOR
       Debug.Log($"[ScenarioController] Moving NPC '{node.NPCIdentifier}' to: {destination}");
+#endif
 
       // 임시 대기
       yield return new WaitForSeconds(1f);
@@ -874,7 +884,9 @@ namespace MultiplayerInfrastructure.Scenario
       _state = State.ExecutingCameraTarget;
 
       // TODO: 카메라 타겟팅 로직 구현
+#if UNITY_EDITOR
       Debug.Log($"[ScenarioController] Targeting camera to: {node.TargetObjectIdentifier}");
+#endif
 
       if (_camController.IsUnityNull())
       {

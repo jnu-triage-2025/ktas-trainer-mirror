@@ -3,14 +3,12 @@ using MultiplayerInfrastructure.UI;
 using Unity.VisualScripting;
 using UnityEngine;
 
-using MI = MultiplayerInfrastructure;
-
 namespace MultiplayerInfrastructure.Player
 {
   public partial class PlayerController
   {
     [SerializeField] private GameEscapeMenuUIController _escapeMenuUIController;
-    [SerializeField] private bool _escapeMenuEventsRegistered = false;
+    private bool _escapeMenuEventsRegistered = false;
 
     private void OnClientStart_EscapeMenu()
     {
@@ -36,7 +34,6 @@ namespace MultiplayerInfrastructure.Player
     private void EscapeMenuOnOverlayPushed()
     {
       EnterUIOverlayMode();
-      Debug.Log("[PlayerController.EscapeMenu] Escape menu opened, entered UI overlay mode.");
     }
 
     private void EscapeMenuOnOverlayPopped()

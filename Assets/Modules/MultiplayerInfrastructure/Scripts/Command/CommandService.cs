@@ -24,7 +24,7 @@ namespace MultiplayerInfrastructure.Command
       _scenarioRunner = scenarioRunner;
 
       RegisterCommand(new CommandDefinition_Help(_chatManager, this));
-      RegisterCommand(new CammandDefinition_Gamemode(_chatManager));
+      RegisterCommand(new CommandDefinition_Gamemode(_chatManager));
       RegisterCommand(new CommandDefinition_Give(_chatManager));
       RegisterCommand(new CommandDefinition_Clean(_chatManager));
       if (_scenarioRunner != null)

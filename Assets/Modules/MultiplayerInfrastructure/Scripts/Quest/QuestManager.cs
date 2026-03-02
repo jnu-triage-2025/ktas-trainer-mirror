@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
-
-using MI = MultiplayerInfrastructure;
 
 namespace MultiplayerInfrastructure.Quest
 {
@@ -31,7 +28,19 @@ namespace MultiplayerInfrastructure.Quest
     public event Action<IReadOnlyList<QuestData>> OnTrackedQuestsChanged;
 
     public IReadOnlyList<QuestData> Quests => Snapshot(_quests.Values);
-    public IReadOnlyList<QuestData> TrackedQuests => Snapshot(_trackedQuestOrder.Select(id => _quests.TryGetValue(id, out var quest) ? quest : null));
+    public IReadOnlyList<QuestData> TrackedQuests
+    {
+      get
+      {
+        var result = new List<QuestData>(_trackedQuestOrder.Count);
+        for (int i = 0; i < _trackedQuestOrder.Count; i++)
+        {
+          if (_quests.TryGetValue(_trackedQuestOrder[i], out var q) && q != null)
+            result.Add(q.Clone());
+        }
+        return result;
+      }
+    }
 
     public bool HasQuest(string questId)
     {
