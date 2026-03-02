@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
-using MultiplayerInfrastructure.Item;
+using MultiplayerInfrastructure.ItemSystem;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -26,7 +26,7 @@ namespace MultiplayerInfrastructure.UI
     private IReadOnlyList<InventorySlotModelDTO> _boundSlots;
 
     public event Action SlotsMutated;
-    public event Action<ItemData> ItemDroppedOutside;
+    public event Action<ItemSystem.Item> ItemDroppedOutside;
 
     private InventorySlotModelDTO _heldItem;
     private VisualElement _heldItemGhost;
@@ -118,7 +118,7 @@ namespace MultiplayerInfrastructure.UI
           var leftover = slot.Push(_heldItem);
           RefreshSlotVisual(i);
 
-          if (leftover == null || _heldItem.ItemInstance == null || _heldItem.ItemInstance.currCount <= 0)
+          if (leftover == null || _heldItem.ItemInstance == null || _heldItem.ItemInstance.CurrentStackCount <= 0)
           {
             ClearHeldItem();
             NotifySlotsMutated();
@@ -278,7 +278,7 @@ namespace MultiplayerInfrastructure.UI
         var leftover = target.Push(_heldItem);
         RefreshSlotVisual(slotIndex);
 
-        if (leftover == null || _heldItem.ItemInstance == null || _heldItem.ItemInstance.currCount <= 0)
+        if (leftover == null || _heldItem.ItemInstance == null || _heldItem.ItemInstance.CurrentStackCount <= 0)
         {
           ClearHeldItem();
         }
@@ -363,13 +363,13 @@ namespace MultiplayerInfrastructure.UI
 
       if (icon != null)
       {
-        var sprite = slotData.ItemInstance?.ItemTexture;
+        var sprite = slotData.ItemInstance?.CurrentItemIconTexture;
         icon.image = sprite != null ? sprite.texture : _defaultIcon;
       }
 
       if (label != null)
-        label.text = slotData.ItemInstance != null && slotData.ItemInstance.currCount > 1
-          ? slotData.ItemInstance.currCount.ToString()
+        label.text = slotData.ItemInstance != null && slotData.ItemInstance.CurrentStackCount > 1
+          ? slotData.ItemInstance.CurrentStackCount.ToString()
           : string.Empty;
     }
 
@@ -385,10 +385,10 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      var sprite = heldData.ItemInstance?.ItemTexture;
+      var sprite = heldData.ItemInstance?.CurrentItemIconTexture;
       _heldItemGhostIcon.image = sprite != null ? sprite.texture : _defaultIcon;
-      _heldItemGhostCount.text = heldData.ItemInstance != null && heldData.ItemInstance.currCount > 1
-        ? heldData.ItemInstance.currCount.ToString()
+      _heldItemGhostCount.text = heldData.ItemInstance != null && heldData.ItemInstance.CurrentStackCount > 1
+        ? heldData.ItemInstance.CurrentStackCount.ToString()
         : string.Empty;
 
       _heldItemGhost.style.display = DisplayStyle.Flex;

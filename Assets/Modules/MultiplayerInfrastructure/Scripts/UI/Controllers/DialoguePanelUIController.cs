@@ -101,7 +101,7 @@ namespace MultiplayerInfrastructure.UI
 
     #region Unity Lifecycle
 
-    protected virtual void Awake()
+    protected override void Awake()
     {
       base.Awake();
 

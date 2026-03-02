@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cace7d3dd89ca4d6ca17426ef6afafd8, type: 3}
+  m_Name: Primary Registry Preload Item SO
+  m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Registry.RegistryPreloadItemSO
+  itemRegistryRequirements:
+  - itemDataModel: {fileID: 11400000, guid: 4a42a57a077034cb4bfc84db417e855f, type: 2}
+    itemPrefab: {fileID: 2912012519658388360, guid: 0e840f9b27ded4de18b2f28ef74c39a2, type: 3}
+    itemSprite: {fileID: 0}
+  - itemDataModel: {fileID: 11400000, guid: ba29daefc5a3448adbbffe3dd60092d0, type: 2}
+    itemPrefab: {fileID: 452677398093970061, guid: 2cfe94ac2983e4cdaaa2ede31ba08320, type: 3}
+    itemSprite: {fileID: 0}

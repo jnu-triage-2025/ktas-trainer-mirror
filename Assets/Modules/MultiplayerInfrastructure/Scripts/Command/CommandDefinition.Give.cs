@@ -2,7 +2,7 @@ using System;
 using FishNet;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
-using MultiplayerInfrastructure.Item;
+using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 
@@ -80,25 +80,22 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      if (!Registry.Registry.TryGet<Item.Item>(RegistryType.Item, itemIdentifier, out var templateItem) || templateItem == null || templateItem.Data == null)
+      var toGive = Registry.Registry.CreateItemInstance(itemIdentifier);
+      if (toGive == null)
       {
         _chat.SendSystemMessage(sender, $"Item '{itemIdentifier}' data is unavailable.");
         return;
       }
+      toGive.CurrentStackCount = count;
 
-      ItemData toGive = new ItemData(templateItem.Data)
-      {
-        currCount = count
-      };
-
-      bool fullyAdded = targetPlayer.TryAddItemToInventory(toGive, out ItemData leftover);
-      if (leftover != null && leftover.currCount > 0)
+      bool fullyAdded = targetPlayer.TryAddItemToInventory(toGive, out ItemSystem.Item leftover);
+      if (leftover != null && leftover.CurrentStackCount > 0)
       {
         targetPlayer.TryDropItemInFront(leftover);
       }
 
-      int delivered = count - (leftover?.currCount ?? 0);
-      int dropped = leftover?.currCount ?? 0;
+      int delivered = count - (leftover?.CurrentStackCount ?? 0);
+      int dropped = leftover?.CurrentStackCount ?? 0;
 
       if (fullyAdded)
       {

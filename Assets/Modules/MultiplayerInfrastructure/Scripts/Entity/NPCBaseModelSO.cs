@@ -5,7 +5,7 @@ using UnityEngine;
 namespace MultiplayerInfrastructure.Entity
 {
   [Serializable]
-  [CreateAssetMenu(fileName = "New NPC Base Model", menuName = "Triage Trainer/NPC Base Model")]
+  [CreateAssetMenu(fileName = "New NPC Base Model", menuName = "MultiplayerInfrastructure/NPC Base Model")]
   public class NPCBaseModelSO : ScriptableObject
   {
     [SerializeField] public string identifier;

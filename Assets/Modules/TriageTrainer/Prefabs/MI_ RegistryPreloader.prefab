@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1939786095423991123
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3891048832308575322}
+  - component: {fileID: 6581857130319203772}
+  m_Layer: 0
+  m_Name: MI_ RegistryPreloader
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3891048832308575322
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1939786095423991123}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6581857130319203772
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1939786095423991123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ae5ee94f2da1404f81c00f26347f592, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Registry.RegistryPreloaderController
+  preloadItemSO: {fileID: 11400000, guid: deff65a45c8e947dbbacf0207f0b08a8, type: 2}
+  preloadScenarioGraphSO: {fileID: 11400000, guid: 760490037bd4445368e154fa02a42e78, type: 2}
+  preloadIconSpriteSO: {fileID: 11400000, guid: a72fa4b67c43d433c967e99469a68963, type: 2}
+  preloadNpcSO: {fileID: 11400000, guid: fabcb4dab76cc425b9996cde8877c564, type: 2}
+  preloadWaypointSO: {fileID: 11400000, guid: 2ef500adbe10341af949fd9f6153f962, type: 2}
+  preloadEntitySO: {fileID: 11400000, guid: aeadb9aedd89d4175b696f6d6cac5975, type: 2}
+  preloadInteractableEntitySO: {fileID: 11400000, guid: c4ff3d03ca89b453b94a02489597059f, type: 2}
+  preloadUIControllerSO: {fileID: 11400000, guid: b999722059d1f4f17831fb10d584eb90, type: 2}

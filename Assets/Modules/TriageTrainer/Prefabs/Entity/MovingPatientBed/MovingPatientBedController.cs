@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
-using MultiplayerInfrastructure.Item;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
@@ -208,12 +207,12 @@ namespace TriageTrainer.Entity
       TryAttachCurrentHandlingItem(attacker);
     }
 
-    public void OnItemUsed(MI.Entity.Entity user, MI.Item.Item itemUsing)
+    public void OnItemUsed(MI.Entity.Entity user, string itemIdentifier)
     {
-      if (itemUsing == null)
+      if (string.IsNullOrWhiteSpace(itemIdentifier))
         return;
 
-      TryAttachItem(itemUsing.ItemIdentifier);
+      TryAttachItem(itemIdentifier);
     }
 
     public bool TryAttachCurrentHandlingItem(MI.Entity.Entity actorEntity)
@@ -227,7 +226,7 @@ namespace TriageTrainer.Entity
         if (each == null || !ReferenceEquals(each.PlayerEntity, actorEntity))
           continue;
 
-        string itemIdentifier = each.HandlingItem?.identifier;
+        string itemIdentifier = each.HandlingItem?.CurrentIdentifier;
         if (string.IsNullOrWhiteSpace(itemIdentifier))
           return false;
 

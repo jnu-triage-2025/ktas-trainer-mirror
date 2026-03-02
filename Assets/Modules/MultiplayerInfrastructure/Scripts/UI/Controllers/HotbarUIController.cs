@@ -51,7 +51,7 @@ namespace MultiplayerInfrastructure.UI
       _hotbar.SetSelectedIndex(0);
       _hotbar.OnSlotSelected += OnHotbarSlotSelected;
     }
-    protected virtual void Awake()
+    protected override void Awake()
     {
       base.Awake();
     }

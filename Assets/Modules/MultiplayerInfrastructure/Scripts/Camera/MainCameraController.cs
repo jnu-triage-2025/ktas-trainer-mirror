@@ -106,7 +106,7 @@ namespace MultiplayerInfrastructure.Camera
       ApplyDistanceOffset();
     }
 
-    void OnValidate()
+    new void OnValidate()
     {
       if (!Application.isPlaying) return;
       EnsureCamera();

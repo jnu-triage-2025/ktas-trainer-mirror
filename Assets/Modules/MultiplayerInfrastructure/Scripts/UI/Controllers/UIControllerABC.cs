@@ -13,12 +13,8 @@ namespace MultiplayerInfrastructure.UI
   {
     protected virtual void Awake()
     {
-      Register();
-    }
-
-    private void Register()
-    {
       Registry.Registry.Register(RegistryType.UI, Registry.Registry.TypeKey(GetType()), this);
     }
   }
 }
+

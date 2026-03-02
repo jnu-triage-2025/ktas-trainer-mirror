@@ -27,15 +27,20 @@
 
 ## 아이템 구현 가이드 (상속 확장)
 
+> **단계별 실무 구현 절차는 [item-authoring.md](item-authoring.md)를 참조하세요.**
+
 ### ItemData 상속 (권장)
 아이템 고유 동작은 `ItemData`를 상속하여 구현한다.
 
-- `OnAttack(PlayerController player, Entity target)`
-	- 공격 시 필요한 로직 (상태 변화, 버프 적용 등)
-- `OnUse(PlayerController player, Entity target)`
-	- 사용 시 필요한 로직 (회복, 상호작용 등)
+- `OnAttack(PlayerController player, Entity target)` — `virtual`, 공격 시 필요한 로직
+- `OnUse(PlayerController player, Entity target)` — `virtual`, 사용 시 필요한 로직
+- `OnGet(PlayerController player)` — `virtual`, 획득 시 로직
+- `OnDrop(PlayerController player)` — `virtual`, 드롭 시 로직
 
-상속 클래스는 반드시 `IsValid()` 조건을 만족하도록 초기화되어야 한다.
+서브클래스는 반드시 `IsValid()` 조건을 만족하도록 초기화되어야 한다.
+
+### ItemDataInitializerBase (주입 컴포넌트)
+`ItemData` 서브클래스를 프리팹에 주입하려면 `ItemDataInitializerBase`를 상속하는 `MonoBehaviour`를 같은 프리팹에 추가한다. `CreateItemData()`를 구현하여 원하는 인스턴스를 반환하면, `Awake()` 시 자동으로 `Item.ApplyItemDataOverride()`가 호출된다.
 
 ### Item 컴포넌트 확장 (제한적)
 월드 상에서 필요한 물리/시각 효과가 있다면 `Item`을 partial로 확장한다.
@@ -44,6 +49,10 @@
 - 네트워크 권한과 디스폰 타이밍은 `Item.Interactable` 로직을 따른다.
 
 ## 구현 체크리스트
-- `ItemData` 생성 시 아이콘이 주입되는지 확인한다.
+- `ItemBaseModelSO` 생성 및 identifier 설정
+- 아이콘 스프라이트 준비 (Resources 경로 또는 SO 직접 할당)
+- `ItemData` 서브클래스 작성 및 `ItemDataInitializerBase` 구현
+- 프리팹에 `Item`, `NetworkObject` 컴포넌트 추가, 레이어 `PickupItem` 설정
+- `RegistryPreloadItemSO`에 등록 및 `RegistryPreloaderController`에 연결
 - `OnAttack`/`OnUse`에서 서버와 클라 역할 분리를 유지한다.
 - 인벤토리 변경 후 UI 동기화가 필요하면 슬롯 갱신 이벤트를 사용한다.

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
@@ -118,7 +119,7 @@ namespace MultiplayerInfrastructure.UI
       OnItemAtSelectedSlotChanged?.Invoke();
     }
 
-    private void HandleItemDroppedOutside(Item.ItemData item)
+    private void HandleItemDroppedOutside(ItemSystem.Item item)
     {
       var player = Registry.Registry.Get<PlayerController>(RegistryType.Entity, Registry.Registry.TypeKey<PlayerController>());
       player?.TryDropItemInFront(item);

@@ -1,8 +1,11 @@
 using System;
+using MultiplayerInfrastructure.Item;
+using IS = MultiplayerInfrastructure.ItemSystem;
+using MultiplayerInfrastructure.Player;
 using UnityEngine;
 
 [Serializable]
-[CreateAssetMenu(fileName = "New Item Base Model", menuName = "Triage Trainer/Item Base Model")]
+[CreateAssetMenu(fileName = "New Item Base Model", menuName = "MultiplayerInfrastructure/Item Base Model")]
 public class ItemBaseModelSO : ScriptableObject
 {
   /// <summary>
@@ -40,4 +43,18 @@ public class ItemBaseModelSO : ScriptableObject
   /// 이 아이템의 최대 적재 개수입니다. 1 이상의 값을 가져야 합니다.
   /// </summary>
   [SerializeField] public int maxStackCount = 64;
+
+  // --- 아이템 행동 (서브클래스에서 override하여 커스터마이즈) ---
+
+  public virtual ActionResult OnGet(PlayerController player, IS.Item item)
+    => ActionResult.Success;
+
+  public virtual ActionResult OnDrop(PlayerController player, IS.Item item)
+    => ActionResult.Success;
+
+  public virtual ActionResult OnAttack(PlayerController player, MultiplayerInfrastructure.Entity.Entity target, IS.Item item)
+    => ActionResult.Success;
+
+  public virtual ActionResult OnUse(PlayerController player, MultiplayerInfrastructure.Entity.Entity target, IS.Item item)
+    => ActionResult.Success;
 }

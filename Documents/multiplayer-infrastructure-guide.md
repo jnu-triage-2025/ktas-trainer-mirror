@@ -70,13 +70,55 @@
 | `RegistryType.UI` | `UIControllerABC` 하위 컨트롤러들 |
 | `RegistryType.IconSprite` | `Sprite` (아이콘) |
 
-### 기본 사용법
+### 등록 방법 선택 기준
+
+레지스트리 등록에는 두 가지 방법이 있으며, **등록 대상의 성격에 따라 방법을 선택합니다.**
+
+| 대상 성격 | 권장 방법 |
+|---|---|
+| 프리팹 템플릿, 에셋, 씬 독립적 데이터 | **RegistryPreloaderController (기본)** |
+| 런타임에 동적으로 스폰·소멸되는 오브젝트 | 자기 등록 (`Awake`/`OnStartClient` 등) |
+
+### RegistryPreloaderController를 통한 등록 (기본)
+
+씬 하이어라키에 `RegistryPreloaderController` 게임 오브젝트를 배치하고, 각 RegistryType에 대응하는 ScriptableObject를 생성해 항목을 등록합니다. 씬에 종속되지 않으며 인스펙터만으로 관리할 수 있어 **에셋/프리팹 템플릿의 기본 등록 방법입니다.**
+
+```
+1. RegistryPreloaderController 게임 오브젝트를 씬에 배치
+2. Assets/Create/MultiplayerInfrastructure/ 에서 원하는 RegistryPreload*SO 생성
+3. SO에 등록할 항목 채우기
+4. 컨트롤러 인스펙터에서 SO 연결
+```
+
+지원하는 RegistryType 및 SO 목록:
+
+| ScriptableObject | 등록 대상 |
+|---|---|
+| `RegistryPreloadItemSO` | `RegistryType.Item` + `IconSprite` |
+| `RegistryPreloadScenarioGraphSO` | `RegistryType.ScenarioGraph` |
+| `RegistryPreloadIconSpriteSO` | `RegistryType.IconSprite` |
+| `RegistryPreloadNpcSO` | `RegistryType.Npc` |
+| `RegistryPreloadWaypointSO` | `RegistryType.Waypoint` |
+| `RegistryPreloadEntitySO` | `RegistryType.Entity` |
+| `RegistryPreloadInteractableEntitySO` | `RegistryType.InteractableEntity` |
+| `RegistryPreloadUIControllerSO` | `RegistryType.UI` |
+
+### 자기 등록 (런타임 예외)
+
+네트워크 스폰 플레이어나 씬에 배치된 월드 오브젝트처럼 런타임에 동적으로 생성·소멸되는 오브젝트는 자신의 Lifecycle에서 직접 등록합니다. 이때 `OnDestroy()`에서 반드시 `Unregister`를 쌍으로 호출해야 합니다.
 
 ```csharp
-// 등록
+// 등록 (Awake / OnStartClient)
 Registry.Register(RegistryType.Entity, Registry.TypeKey<QuestManager>(), this);
 
-// 조회
+// 해제 (OnDestroy)
+Registry.Unregister(RegistryType.Entity, Registry.TypeKey<QuestManager>());
+```
+
+### 조회
+
+```csharp
+// 일반 조회
 var questManager = Registry.Get<QuestManager>(RegistryType.Entity, Registry.TypeKey<QuestManager>());
 
 // 안전한 조회 (실패 시 false)
@@ -92,7 +134,6 @@ bool exists = Registry.Contains(RegistryType.Item, "scalpel");
 타입별로 고유 키가 필요할 때는 `Registry.TypeKey<T>()`를 사용합니다.
 
 ```csharp
-// 타입 → 키
 string key = Registry.TypeKey<ChatUIController>();   // "MultiplayerInfrastructure.UI.ChatUIController"
 ```
 

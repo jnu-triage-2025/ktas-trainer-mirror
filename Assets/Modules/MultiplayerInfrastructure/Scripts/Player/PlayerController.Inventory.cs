@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using MultiplayerInfrastructure.Item;
+using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
@@ -18,7 +18,7 @@ namespace MultiplayerInfrastructure.Player
       sizeHeight = 4
     };
     [SerializeField] private List<InventorySlotModelDTO> _slots = new();
-    public ItemData HandlingItem = null;
+    public ItemSystem.Item HandlingItem = null;
     
     private bool _inventoryVisible;
     private bool _inventoryRenderRequired = true;  // like a dirty bit
@@ -62,51 +62,49 @@ namespace MultiplayerInfrastructure.Player
       }
     }
 
-    public bool TryAddItemToInventory(ItemData item)
+    public bool TryAddItemToInventory(ItemSystem.Item item)
     {
       return TryAddItemToInventory(item, out _);
     }
 
-    public bool TryAddItemToInventory(ItemData item, out ItemData leftover)
+    public bool TryAddItemToInventory(ItemSystem.Item item, out ItemSystem.Item leftover)
     {
       leftover = null;
-      if (item == null || !item.IsValid() || item.currCount <= 0)
+      if (item == null || item.CurrentStackCount <= 0)
         return false;
 
-      ItemData remaining = new ItemData(item);
+      ItemSystem.Item remaining = item.Clone();
       bool changed = false;
 
       foreach (var slot in _slots)
       {
-        if (remaining.currCount <= 0) break;
+        if (remaining.CurrentStackCount <= 0) break;
         if (slot.IsEmpty || slot.ItemInstance == null) continue;
         if (!slot.ItemInstance.CanStackWith(remaining)) continue;
 
-        int room = slot.ItemInstance.maxCount - slot.ItemInstance.currCount;
+        int room = slot.ItemInstance.CurrentMaxStackCount - slot.ItemInstance.CurrentStackCount;
         if (room <= 0) continue;
 
-        int moved = Mathf.Min(room, remaining.currCount);
-        slot.ItemInstance.currCount += moved;
-        remaining.currCount -= moved;
+        int moved = Mathf.Min(room, remaining.CurrentStackCount);
+        slot.ItemInstance.CurrentStackCount += moved;
+        remaining.CurrentStackCount -= moved;
         changed = true;
       }
 
       foreach (var slot in _slots)
       {
-        if (remaining.currCount <= 0)
+        if (remaining.CurrentStackCount <= 0)
           break;
 
         if (!slot.IsEmpty)
           continue;
 
-        int moved = Mathf.Min(remaining.maxCount, remaining.currCount);
-        var placed = new ItemData(remaining)
-        {
-          currCount = moved
-        };
+        int moved = Mathf.Min(remaining.CurrentMaxStackCount, remaining.CurrentStackCount);
+        var placed = remaining.Clone();
+        placed.CurrentStackCount = moved;
 
         slot.SetItem(placed);
-        remaining.currCount -= moved;
+        remaining.CurrentStackCount -= moved;
         changed = true;
       }
 
@@ -116,7 +114,7 @@ namespace MultiplayerInfrastructure.Player
         item.OnGet(this);
       }
 
-      if (remaining.currCount > 0)
+      if (remaining.CurrentStackCount > 0)
       {
         leftover = remaining;
         return false;
@@ -134,7 +132,7 @@ namespace MultiplayerInfrastructure.Player
         if (slot == null || slot.IsEmpty || slot.ItemInstance == null)
           continue;
 
-        removed += Mathf.Max(0, slot.ItemInstance.currCount);
+        removed += Mathf.Max(0, slot.ItemInstance.CurrentStackCount);
         slot.Clear();
       }
 
@@ -160,15 +158,15 @@ namespace MultiplayerInfrastructure.Player
         if (slot == null || slot.IsEmpty || slot.ItemInstance == null)
           continue;
 
-        if (!string.Equals(slot.ItemInstance.identifier, itemIdentifier, System.StringComparison.Ordinal))
+        if (!string.Equals(slot.ItemInstance.CurrentIdentifier, itemIdentifier, System.StringComparison.Ordinal))
           continue;
 
-        int take = Mathf.Min(remainToRemove, slot.ItemInstance.currCount);
-        slot.ItemInstance.currCount -= take;
+        int take = Mathf.Min(remainToRemove, slot.ItemInstance.CurrentStackCount);
+        slot.ItemInstance.CurrentStackCount -= take;
         removed += take;
         remainToRemove -= take;
 
-        if (slot.ItemInstance.currCount <= 0)
+        if (slot.ItemInstance.CurrentStackCount <= 0)
           slot.Clear();
       }
 
@@ -189,10 +187,10 @@ namespace MultiplayerInfrastructure.Player
         if (slot == null || slot.IsEmpty || slot.ItemInstance == null)
           continue;
 
-        if (!string.Equals(slot.ItemInstance.identifier, itemIdentifier, System.StringComparison.Ordinal))
+        if (!string.Equals(slot.ItemInstance.CurrentIdentifier, itemIdentifier, System.StringComparison.Ordinal))
           continue;
 
-        removed += Mathf.Max(0, slot.ItemInstance.currCount);
+        removed += Mathf.Max(0, slot.ItemInstance.CurrentStackCount);
         slot.Clear();
       }
 
@@ -213,26 +211,28 @@ namespace MultiplayerInfrastructure.Player
         if (slot == null || slot.IsEmpty || slot.ItemInstance == null)
           continue;
 
-        if (!string.Equals(slot.ItemInstance.identifier, itemIdentifier, System.StringComparison.Ordinal))
+        if (!string.Equals(slot.ItemInstance.CurrentIdentifier, itemIdentifier, System.StringComparison.Ordinal))
           continue;
 
-        total += Mathf.Max(0, slot.ItemInstance.currCount);
+        total += Mathf.Max(0, slot.ItemInstance.CurrentStackCount);
       }
 
       return total;
     }
 
-    public bool TryDropItemInFront(ItemData itemData)
+    public bool TryDropItemInFront(ItemSystem.Item itemData)
     {
-      if (itemData == null || !itemData.IsValid() || itemData.currCount <= 0)
+      if (itemData == null || itemData.CurrentStackCount <= 0)
         return false;
 
       Vector3 forward = transform.forward.sqrMagnitude > 0.0001f ? transform.forward.normalized : Vector3.forward;
       Vector3 spawnPosition = transform.position + forward * 1.25f + Vector3.up * 0.35f;
 
-      bool dropped = ItemSpawnUtility.TrySpawnDroppedItem(itemData, spawnPosition, forward, out _);
-      if (dropped)
-        itemData.OnDrop(this);
+      bool dropped = ItemObject.Spawn(itemData, spawnPosition, forward * 2.75f) != null;
+      if (!dropped)
+        Debug.LogWarning($"[PlayerController] TryDropItemInFront failed: could not spawn ItemObject");
+      else
+        itemData.OnThrow(this);
       return dropped;
     }
 
