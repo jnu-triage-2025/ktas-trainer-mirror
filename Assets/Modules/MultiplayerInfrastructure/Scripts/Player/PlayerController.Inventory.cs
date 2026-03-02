@@ -64,35 +64,45 @@ namespace MultiplayerInfrastructure.Player
 
     public bool TryAddItemToInventory(ItemData item)
     {
-      if (item == null || !item.IsValid()) return false;
+      return TryAddItemToInventory(item, out _);
+    }
 
-      // Work on a copy to avoid mutating the source reference passed by callers
+    public bool TryAddItemToInventory(ItemData item, out ItemData leftover)
+    {
+      leftover = null;
+      if (item == null || !item.IsValid() || item.currCount <= 0)
+        return false;
+
       ItemData remaining = new ItemData(item);
+      bool changed = false;
 
-      // Pass 1: stack onto existing slots of the same item
       foreach (var slot in _slots)
       {
-        if (slot.IsEmpty) continue;
-        if (!slot.ItemInstance!.CanStackWith(remaining)) continue;
+        if (remaining.currCount <= 0) break;
+        if (slot.IsEmpty || slot.ItemInstance == null) continue;
+        if (!slot.ItemInstance.CanStackWith(remaining)) continue;
 
-        var leftover = slot.Push(remaining);
-        remaining = leftover ?? new ItemData { identifier = remaining.identifier, displayName = remaining.displayName, currCount = 0, maxCount = remaining.maxCount };
-        if (remaining.currCount <= 0)
-          return OnInventoryChangedAndReturn(true);
+        int room = slot.ItemInstance.maxCount - slot.ItemInstance.currCount;
+        if (room <= 0) continue;
+
+        int moved = Mathf.Min(room, remaining.currCount);
+        slot.ItemInstance.currCount += moved;
+        remaining.currCount -= moved;
+        changed = true;
       }
 
-      // Pass 2: place into the first empty slot
       foreach (var slot in _slots)
       {
+        if (remaining.currCount <= 0) break;
         if (!slot.IsEmpty) continue;
-        slot.SetItem(new ItemData(remaining));
-        return OnInventoryChangedAndReturn(true);
+
+        int moved = Mathf.Min(remaining.maxCount, remaining.currCount);
+        var placed = new ItemData(remaining) { currCount = moved };
+        slot.SetItem(placed);
+        remaining.currCount -= moved;
+        changed = true;
       }
 
-<<<<<<< Updated upstream
-      // No room
-      return false;
-=======
       if (changed)
       {
         OnInventoryChangedAndReturn(true);
@@ -217,7 +227,6 @@ namespace MultiplayerInfrastructure.Player
       if (dropped)
         itemData.OnDrop(this);
       return dropped;
->>>>>>> Stashed changes
     }
 
     private bool OnInventoryChangedAndReturn(bool result)
