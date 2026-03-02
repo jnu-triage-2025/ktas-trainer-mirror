@@ -22,14 +22,14 @@
 | E001 | InvokeEvent | 시나리오 B 환자, 시나리오 C 환자, 더미 B 환자가 [스트레쳐 혹은 베드](스트레쳐에서 베드로 옮기는 과정이 구현 가능하다면 스트레쳐로 들어와서 베드로 옮겨도 좋고, 제한된다면 침대로 들어와서 정해진 위치에 위치시키는 방안으로 대체한다)에 실려 들어온다. EventIdentifier로 triage_B_C_dummy_B를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다.| D001 |
 | D001 | Dialogue | [시스템] "환자가 세 명이 이송되었습니다. 간호사 A가 중증도 분류를 시행합니다." | D002 |
 | D002 | Dialogue | [플레이어 A 전용] "환자를 차례대로 클릭하여 환자의 상태를 확인하고, 중증도 분류를 실시하세요." | V001 |
-| V001 | Validator | [A - 1단계] 시나리오 B 환자를 클릭해 환자의 상태를 확인한다. 시나리오 A 환자를 클릭하면 환자의 정보가 UI로 출력되도록 한다. Condition은 Show_patient_B_info이며, TargetCount는 1이다. | E002 |
-| E002 | InvokeEvent | 시나리오 B 환자에 대한 정보를 UI창으로 띄우고, "- 현재 의식 상태: 대화 가능하나 반응이 느려 약간의 기면(drowsy) 상태로 보임, - [왼쪽 팔과 다리의 근력이 비교적 약함], - 빈맥, - 빈호흡, - 상완 부위 출혈 지속 중, - 머리에 타박상 및 약간의 출혈 보임, - C/C: 두통"으로 출력한다. EventIdentifier로 show_patient_b_ui를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | C001 |
+| V001 | Validator | [A - 1단계] 시나리오 B 환자를 클릭해 환자의 상태를 확인한다. 시나리오 B 환자를 클릭하면 환자의 정보가 UI로 출력되도록 한다. Condition은 Show_patientB_info이며, TargetCount는 1이다. | E002 |
+| E002 | InvokeEvent | 시나리오 B 환자에 대한 정보를 UI창으로 띄우고, "- 현재 의식 상태: 대화 가능하나 반응이 느려 약간의 기면(drowsy) 상태로 보임, - [왼쪽 팔과 다리의 근력이 비교적 약함], - 빈맥, - 빈호흡, - 상완 부위 출혈 지속 중, - 머리에 타박상 및 약간의 출혈 보임, - C/C: 두통"으로 출력한다. EventIdentifier로 show_patientB_ui를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | C001 |
 | C001 | Choice | [플레이어 A 전용] "해당 환자의 중증도 분류를 시행하세요." | C001-Wrong, C001-Correct |
 | C001-Wrong | ChoiceOption | "KTAS 1(소생)", "KTAS 3(응급)", "KTAS 4(준응급)", "KTAS 5(비응급)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D003 |
 | C001-Correct | ChoiceOption | "KTAS 2(긴급)" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D004 |
 | D003 | Dialogue | "오답입니다. 현재 사고의 경위, 머리의 부상 등을 고려하였을 때 뇌출혈이 의심되므로, KTAS 2(긴급)이 적절합니다." | C001 |
 | D004 | Dialogue | "해당 환자를 KTAS 2로 분류했습니다. 다음 환자를 클릭하세요." | V002 |
-| V002 | Validator | [A - 2단계] 가운데에 위치한 더미 B 환자를 클릭해 환자의 상태를 확인한다. 더미 B 환자를 클릭하면 환자의 정보가 UI로 출력되도록 한다. Condition은 Show_dummy_b_info이며, TargetCount는 1이다. | E003 |
+| V002 | Validator | [A - 2단계] 가운데에 위치한 더미 B 환자를 클릭해 환자의 상태를 확인한다. 더미 B 환자를 클릭하면 환자의 정보가 UI로 출력되도록 한다. Condition은 Show_dummyB_info이며, TargetCount는 1이다. | E003 |
 | E003 | InvokeEvent | 더미 B 환자에 대한 정보를 UI창으로 띄우고, "- 현재 의식 상태: 원활한 대화 가능함, - 활력징후 정상, - 사지의 약간의 타박상, - C/C: 어깨 통증"으로 출력한다. EventIdentifier로 show_dummy_B_ui를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | C003 |
 | C002 | Choice | [플레이어 A 전용] "해당 환자의 중증도 분류를 시행하세요." | C002-Wrong, C002-Correct |
 | C002-Wrong | ChoiceOption | "KTAS 1(소생)", "KTAS 2(긴급)", "KTAS 3(응급)", "KTAS 4(준응급)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D005 |
@@ -44,7 +44,7 @@
 | D007 | Dialogue | "오답입니다. 현재 사고의 경위, 머리의 부상 등을 고려하였을 때 뇌출혈이 의심되므로, KTAS 2(긴급)이 적절합니다." | C003 |
 | D008 | Dialogue | "해당 환자를 KTAS 2로 분류했습니다." | D009 |
 | D009 | Dialogue | "이제 입원 구역으로 이송할 긴급 환자 2명을 차례대로 클릭하세요." | V004 |
-| V004 | Validator | [A - 4단계] 시나리오 B 환자와 시나리오 C환자를 각각 클릭하여 선정한다. Condition은 Patient_B, Patient_C이며, TargetCount는 2이다. | E005 |
+| V004 | Validator | [A - 4단계] 시나리오 B 환자와 시나리오 C환자를 각각 클릭하여 선정한다. Condition은 Move_patientB, Move_patientC이며, TargetCount는 2이다. | E005 |
 | D010 | Dialogue | [시스템, by 플레이어 A] "KTAS 2(긴급)으로 분류된 환자 2명을 이송하겠습니다. 간호사 B, C, D선생님 이동 도와주세요." | E006 |
 | E006 | InvokeEvent | 플레이어 A/C는 시나리오 B 환자를, 플레이어 B/D는 시나리오 C 환자를 입원 구역으로 이동시킨다. EventIdentifier로 move_patient_B_and_C를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | P001 |
 | P001 | Parallel | [중요, 처치 동시 시작] 플레이어 A와 C는 시나리오 B 환자의 침대를 잡고 이동하고, 플레이어 B와 D가 시나리오 C 환자를 담당하여 모든 처치를 완료한다. WaitMode는 WaitAll로 서술한다. AllocationType은 ByRole로 서술한다. | D027 |
@@ -109,7 +109,7 @@
 | E009 | InvokeEvent | 펜라이트가 불이 켜져있다고 가정하고 마우스 커서가 빛을 비추는 것으로 설정하고, 마우스가 환자의 눈 위를 지나가면 빛이 비추는 범위만큼 동공이 반응하는 것으로 한다. [좌측 동공은 빛에 따라 동공이 수축하지만, 우측 동공은 거의 수축하지 않는 것으로 한다.] 양쪽을 최소 1회씩 확인해야 목표를 달성한 것으로 한다. EventIdentifier로 Pupil_reflex_patientB를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | D016_2 |
 | D016_2 | Dialogue | [시스템(플레이어 B/D 제외), by 플레이어 A] "우측 동공이 빛에 반응하지 않습니다. 뇌출혈이 의심됩니다. 추가 검사가 필요해 보입니다." | D016_3 |
 | D016_3 | Dialogue | [플레이어 A 전용] "다음으로 IV 라인을 확보합니다. 환자의 우측 팔에 IV 라인을 확보해야 합니다. 20게이지 캐뉼라, 수액세트, 생리식염수 1L 수액백을 클릭해 획득하십시오." | V008_3 |
-| V008_3 | Validator | [A 1단계 - 시작] 플레이어 A는 20게이지 캐뉼라, 수액세트, 생리식염수 1L 수액백을 클릭해 획득한다. Condition은 Click_20g, Click_ivset, Click_ns1이며, TargetCount는 3이다. | D016_4 |
+| V008_3 | Validator | [A 1단계 - 시작] 플레이어 A는 20게이지 캐뉼라, 수액세트, 생리식염수 1L 수액백을 클릭해 획득한다. Condition은 Click_20g, Click_iv_set, Click_ns1이며, TargetCount는 3이다. | D016_4 |
 | D016_4 | Dialogue | "20게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 우측 팔을 클릭해 정맥 라인을 확보하세요." | V008_4 |
 | V008_4 | Validator | [A 2단계] 플레이어 D는 인벤토리 내 18게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 우측 팔을 클릭하여 정맥 라인을 확보한다. 캐뉼라는 팔의 오금(팔을 굽혔을 때 굽혀지며 오목해지는 부분)에 적용한다. Condition은 Insert_iv_b_right이며, TargetCount는 1이다. | E010 |
 | E010 | InvokeEvent | 20G 캐뉼라가 환자 우측 팔 오금(팔을 굽혔을때 굽혀지며 오목해지는 부분)에 위치한다. 끝에 얇고 뾰족한 부분은 팔 안으로 삽입되어 팔 위에 색깔이 있는 플라스틱 부분부터 노출되어 보인다. EventIdentifier로 insert_20g_right_patientB를 호출한다. MoveNextBehavior는 Immediate로 서술한다. | D016_5 |
@@ -208,7 +208,7 @@
 | E016 | InvokeEvent | 펜라이트가 불이 켜져있다고 가정하고 마우스 커서가 빛을 비추는 것으로 설정하고, 마우스가 환자의 눈 위를 지나가면 빛이 비추는 범위만큼 동공이 반응하는 것으로 한다. [우측 동공은 빛에 따라 동공이 수축하지만, 좌측 동공은 거의 수축하지 않는 것으로 한다.] 양쪽을 최소 1회씩 확인해야 목표를 달성한 것으로 한다. EventIdentifier로 Pupil_reflex_patientC를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | D024_2 |
 | D024_2 | Dialogue | [시스템(플레이어 A/C 제외), by 플레이어 B] "좌측 동공이 빛에 반응하지 않습니다. 뇌출혈이 의심됩니다. 추가 검사가 필요해 보입니다." | D024_3 |
 | D024_3 | Dialogue | [플레이어 B 전용] "다음으로 IV 라인을 확보합니다. 환자의 좌측 팔에 IV 라인을 확보해야 합니다. 20게이지 캐뉼라, 수액세트, 생리식염수 1L 수액백을 클릭해 획득하십시오." | V012_3 |
-| V012_3 | Validator | [B 1단계 - 시작] 플레이어 A는 20게이지 캐뉼라, 수액세트, 생리식염수 1L 수액백을 클릭해 획득한다. Condition은 Click_20g, Click_ivset, Click_ns1이며, TargetCount는 3이다. | D024_4 |
+| V012_3 | Validator | [B 1단계 - 시작] 플레이어 A는 20게이지 캐뉼라, 수액세트, 생리식염수 1L 수액백을 클릭해 획득한다. Condition은 Click_20g, Click_iv_set, Click_ns1이며, TargetCount는 3이다. | D024_4 |
 | D024_4 | Dialogue | "20게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 좌측 팔을 클릭해 정맥 라인을 확보하세요." | V012_4 |
 | V012_4 | Validator | [B 2단계] 플레이어 D는 인벤토리 내 18게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 좌측 팔을 클릭하여 정맥 라인을 확보한다. 캐뉼라는 팔의 오금(팔을 굽혔을 때 굽혀지며 오목해지는 부분)에 적용한다. Condition은 Insert_iv_c_left이며, TargetCount는 1이다. | E017 |
 | E017 | InvokeEvent | 20G 캐뉼라가 환자 좌측 팔 오금(팔을 굽혔을때 굽혀지며 오목해지는 부분)에 위치한다. 끝에 얇고 뾰족한 부분은 팔 안으로 삽입되어 팔 위에 색깔이 있는 플라스틱 부분부터 노출되어 보인다. EventIdentifier로 insert_20g_left_patientC를 호출한다. MoveNextBehavior는 Immediate로 서술한다. | D024_5 |

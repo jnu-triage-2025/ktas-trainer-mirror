@@ -32,11 +32,11 @@
 | E001 | InvokeEvent | 플레이어 A, B, C, D가 함께 환자를 처치실로 이동시키고, 베드가 있는 현 위치로 이동시킨다. EventIdentifier로 move_patient_a_to_treatment를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | D002 |
 | D002 | Dialogue | 활력징후 측정, GCS 측정, 경추 고정 및 흡인을 시작한다. | P001 |
 | P001 | Parallel | 플레이어 B는 활력징후 측정, 플레이어 C는 GCS(의식 수준) 사정, 플레이어 D는 경추 고정 및 구강 흡인을 실시한다. WaitMode는 WaitAll로 서술한다. AllocationType은 ByRole로 서술한다. | D003_final |
-| P001-B1 | ParallelBranch | 브랜치 시작 노드는 D003_vital_1이며, 플레이어 B가 활력징후를 측정한다(필요한 물품: 활력징후 측정도구/전극/전극 케이블). CompletionConditionIdentifier는 CC_B_vitalcheck_a로 서술한다. | CC_B_vitalcheck_a |
-| P001-B2 | ParallelBranch | 브랜치 시작 노드는 D003_gcs_1이며, 플레이어 C가 GCS를 사정한다. CompletionConditionIdentifier는 CC_C_gcs_a로 서술한다. | CC_C_gcs_a |
-| P001-B3 | ParallelBranch | 브랜치 시작 노드는 D003_suction_1이며, 플레이어 D가 경추 고정 및 구강 흡인을 실시한다(필요한 물품: 경추고정기, 흡인기, 석션 라인, 앙커 팁). CompletionConditionIdentifier는 CC_D_suction_a 으로 서술한다. | CC_D_suction_a |
+| P001-B1 | ParallelBranch | 브랜치 시작 노드는 D003_vital_1이며, 플레이어 B가 활력징후를 측정한다(필요한 물품: 활력징후 측정도구/전극/전극 케이블). CompletionConditionIdentifier는 CC_B_vitalcheck_a로 서술한다. | D003_vital_1 |
+| P001-B2 | ParallelBranch | 브랜치 시작 노드는 D003_gcs_1이며, 플레이어 C가 AVPU 및 GCS를 사정한다. CompletionConditionIdentifier는 CC_C_gcs_a로 서술한다. | D003_gcs_1 |
+| P001-B3 | ParallelBranch | 브랜치 시작 노드는 D003_suction_1이며, 플레이어 D가 경추 고정 및 구강 흡인을 실시한다(필요한 물품: 경추고정기, 흡인기, 석션 라인, 앙커 팁). CompletionConditionIdentifier는 CC_D_suction_a 으로 서술한다. | D003_suction_1 |
 | D003_vital_1 | Dialogue | [플레이어 B 전용] "환자의 활력징후를 측정합니다. 활력징후 측정도구, 전극, 전극 케이블을 클릭해 획득하세요." | V001_B_1 |
-| V001_B_1 | Validator | [B 1단계 - 시작] 플레이어 B는 활력징후 측정도구, 전극, 전극 케이블을 클릭해 획득한다. Condition은 Click_vital_set, Click_electrode, Click_electrode_cable이며, TargetCount는 3이다. | D003_vital_2 |
+| V001_B_1 | Validator | [B 1단계 - 시작] 플레이어 B는 활력징후 측정도구, 전극, 전극 케이블을 클릭해 획득한다. Condition은 Click_vitalset, Click_electrode, Click_electrode_cable이며, TargetCount는 3이다. | D003_vital_2 |
 | D003_vital_2 | Dialogue | "전극을 선택하여 환자의 가슴에 부착하십시오." | V001_B_2 |
 | V001_B_2 | Validator | [B 2단계] 인벤토리에서 전극을 선택한 뒤 환자(환자의 흉부)를 클릭한다. Condition은 apply_electrode이며, TargetCount는 1이다. | D003_vital_3 |
 | D003_vital_3 | Dialogue | "전극 케이블을 클릭해 선택하고, 환자와 모니터를 각각 클릭해 연결하세요." | V001_B_3 |
@@ -87,9 +87,9 @@
 | D005 | Dialogue | [시스템, by 의사 NPC] "그동안 간호사 C 선생님은 멸균장갑을 착용하고 거즈로 출혈부위를 지혈해주세요." | D006 |
 | D006 | Dialogue | [시스템, by 의사 NPC] "간호사 D 선생님은 수액 투여를 위해 양팔에 IV 라인 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션 달겠습니다." | P002 |
 | P002 | Parallel | 플레이어 B는 삽관 보조, 플레이어 C는 지혈, 플레이어 D는 IV 라인을 확보한다. WaitMode는 WaitAll로 서술한다. AllocationType은 ByRole로 서술한다. | D008 |
-| P002-B1 | ParallelBranch | 브랜치 시작 노드는 D007_intu_1이며, 플레이어 B가 의사에게 전달할 기관삽관 관련 물품을 준비한다(필요한 물품: 후두경 블레이드, 후두경 손잡이, 기관내관, 스타일렛, 5cc 주사기, 플라스터). [이후 플레이어 A가 산소 공급을 위해 산소 유량계와 기관내관 간을 연결한다.] CompletionConditionIdentifier는 CC_B_intubation_A_oxy_a 로 서술한다. | CC_B_intubation_A_oxy_a |
-| P002-B2 | ParallelBranch | 브랜치 시작 노드는 D007_pressure_1이며, 플레이어 C가 지혈을 실시한다(필요한 물품: 멸균장갑, 거즈, 플라스터). CompletionConditionIdentifier는 CC_C_stopbleeding_a로 서술한다. | CC_C_stopbleeding_a |
-| P002-B3 | ParallelBranch | 브랜치 시작 노드는 D007_bothiv_1이며, 플레이어 D가 IV 라인을 확보한다(필요한 물품: 18G 혹은 20G 캐뉼라, 수액세트 2개, 생리식염수 수액, 플라즈마 솔루션 수액). CompletionConditionIdentifier는 CC_D_iv_a로 서술한다. | CC_D_iv_a |
+| P002-B1 | ParallelBranch | 브랜치 시작 노드는 D007_intu_1이며, 플레이어 B가 의사에게 전달할 기관삽관 관련 물품을 준비한다(필요한 물품: 후두경 블레이드, 후두경 손잡이, 기관내관, 스타일렛, 5cc 주사기, 플라스터). [이후 플레이어 A가 산소 공급을 위해 산소 유량계와 기관내관 간을 연결한다.] CompletionConditionIdentifier는 CC_B_intubation_A_oxy_a 로 서술한다. | D007_intu_1 |
+| P002-B2 | ParallelBranch | 브랜치 시작 노드는 D007_pressure_1이며, 플레이어 C가 지혈을 실시한다(필요한 물품: 멸균장갑, 거즈, 플라스터). CompletionConditionIdentifier는 CC_C_stopbleeding_a로 서술한다. | D007_pressure_1 |
+| P002-B3 | ParallelBranch | 브랜치 시작 노드는 D007_bothiv_1이며, 플레이어 D가 IV 라인을 확보한다(필요한 물품: 18G 혹은 20G 캐뉼라, 수액세트 2개, 생리식염수 수액, 플라즈마 솔루션 수액). CompletionConditionIdentifier는 CC_D_iv_a로 서술한다. | D007_bothiv_1 |
 | D007_intu_1 | Dialogue | [플레이어 B 전용] "기관내삽관에 필요한 물품을 준비합니다. 좌측 체크리스트 창을 참고하여 필요한 물품을 클릭해 획득하세요." | E004 |
 | E004 | InvokeEvent | [플레이어 B 전용 - 체크리스트 시작] 좌측 상단에 체크리스트 UI 창을 띄워 준비할 물품을 출력한다. 8가지 아이템의 항목과 의사에게 전달해야 할 2가지 아이템과 행위로 구성한다. 7가지 아이템은 후두경 블레이드, 후두경 손잡이, 후두경, 기관내관, 스타일렛, 준비된 기관내관, 플라스터, 5cc 주사기이다. 의사에게 전달해야 할 2가지 아이템과 행위는 각각 후두경 전달하기, 준비된 기관내관 전달하기로 정의한다. EventIdentifier로 checklist_intu_a를 호출한다. MoveNextBehavior는 Immediate로 서술한다. | V002_B_1 |
 | V002_B_1 | Validator | [B 1단계 - 시작] 플레이어 B는 후두경 블레이드, 후두경 손잡이, 기관내관, 스타일렛, 플라스터, 5cc 주사기를 클릭해 획득한다. Condition은 Click_laryngo_blade, Click_laryngo_haldle, Click_et_tube, Click_stylet, Click_plaster, Click_syringe_5cc이며, TargetCount는 6이다. (개발 참고: 6개의 Condition이 개별적으로 충족될 때마다 UI 체크리스트에 실시간으로 반영) | D007_intu_2 |
@@ -169,10 +169,10 @@
 | D011 | Dialogue | [시스템, by 플레이어 B] "맥박 없습니다." | D012 |
 | D012 | Dialogue | [시스템, by 의사 NPC] "PEA입니다. CPR 하겠습니다. 제가 팀 리더를 맡겠습니다. 간호사 A 선생님은 앰부백 짜주시고, 간호사 B 선생님은 가슴압박 해주세요. 간호사 C 선생님은 제세동기 연결해주시고, 간호사 D 선생님은 C-line으로 에피네프린 투여해주세요." | P003 |
 | P003 | Parallel | 플레이어 A는 앰부백을 이용한 산소화, 플레이어 B는 가슴 압박, 플레이어 C는 제세동기 연결, 플레이어 D는 에피네프린 투여를 실시한다. WaitMode는 WaitAll로 서술한다. AllocationType은 ByRole로 서술한다. | D017 |
-| P003-B1 | ParallelBranch | 브랜치 시작 노드는 D013_1이며, 플레이어 A는 앰부백을 이용한 산소화를 실시한다(필요한 물품: 앰부백). CompletionConditionIdentifier는 CC_A_ambu_a로 서술한다. | CC_A_ambu_a |
-| P003-B2 | ParallelBranch | 브랜치 시작 노드는 D014_1이며, 플레이어 B는 가슴 압박을 실시한다. CompletionConditionIdentifier는 CC_B_chestcomp_a로 서술한다. | CC_B_chestcomp_a |
-| P003-B3 | ParallelBranch | 브랜치 시작 노드는 D015_1이며, 플레이어 C는 제세동기를 연결한다(필요한 물품: 제세동 패드 / 필요한 기구: 제세동기). CompletionConditionIdentifier는 CC_C_defib_a로 서술한다. | CC_C_defib_a |
-| P003-B4 | ParallelBranch | 브랜치 시작 노드는 D016_1이며, 플레이어 D는 에피네프린 투여를 실시한다(필요한 물품: 5cc 주사기, 20cc 주사기, 에피네프린, 20cc 생리식염수). CompletionConditionIdentifier는 CC_D_epi_a로 서술한다. | CC_D_epi_a |
+| P003-B1 | ParallelBranch | 브랜치 시작 노드는 D013_1이며, 플레이어 A는 앰부백을 이용한 산소화를 실시한다(필요한 물품: 앰부백). CompletionConditionIdentifier는 CC_A_ambu_a로 서술한다. | D013_1 |
+| P003-B2 | ParallelBranch | 브랜치 시작 노드는 D014_1이며, 플레이어 B는 가슴 압박을 실시한다. CompletionConditionIdentifier는 CC_B_chestcomp_a로 서술한다. | D014_1 |
+| P003-B3 | ParallelBranch | 브랜치 시작 노드는 D015_1이며, 플레이어 C는 제세동기를 연결한다(필요한 물품: 제세동 패드 / 필요한 기구: 제세동기). CompletionConditionIdentifier는 CC_C_defib_a로 서술한다. | D015_1 |
+| P003-B4 | ParallelBranch | 브랜치 시작 노드는 D016_1이며, 플레이어 D는 에피네프린 투여를 실시한다(필요한 물품: 5cc 주사기, 20cc 주사기, 에피네프린, 20cc 생리식염수). CompletionConditionIdentifier는 CC_D_epi_a로 서술한다. | D016_1 |
 | D013_1 | Dialogue | [플레이어 A 전용] "앰부백과 산소 저장낭을 클릭해 획득하세요." | V004_1 |
 | V004_1 | Validator | [A 1단계 - 시작] 앰부백과 산소 저장낭을 클릭해 획득한다. [앰부백과 산소 저장낭을 획득한 즉시 연결되어 세트를 이룬다.] Condition은 Click_ambubag, Click_reservoir_bag이며, TargetCount는 2이다. | D013_2 |
 | D013_2 | Dialogue | "환자에게 연결된 T-piece를 클릭해 연결을 해제하세요." | V004_A_2 |
@@ -264,10 +264,10 @@
 | E035 | InvokeEvent | [모든 플레이어 및 관전자]에게 무수축(Asystole) 심전도 그래프를 출력한다. [또한, 제세동기 화면과 환자 모니터 화면에도 동일하게 출력]한다. [심박수는 -?- 으로 출력]되도록 한다. EventIdentifier로 Asystole_monitorui를 호출한다. MovementNextBehavior는 WaitUntilDone으로 서술한다. | D018 |
 | D018 | Dialogue | [시스템, by 의사 NPC] "Asystole입니다. 가슴압박과 앰부배깅 하시던 간호사 A, B 선생님끼리 교대 후 계속 가슴압박 해주세요. 간호사 C, D 선생님께서도 교대해서 역할을 수행해 주세요. | P004 |
 | P004 | Parallel | 플레이어 A는 가슴압박, 앰부백을 이용한 산소화, 플레이어 B는 앰부백을 이용한 산소화, 플레이어 C는 에피네프린 투여, 플레이어 D는 제세동기 준비를 실시한다. WaitMode는 WaitAll로 서술한다. AllocationType은 ByRole로 서술한다. | D023 |
-| P003-B1 | ParallelBranch | 브랜치 시작 노드는 D019이며, 플레이어 A는 가슴 압박을 실시한다. CompletionConditionIdentifier는 CC_A_chestcomp_a로 서술한다. | CC_A_chestcomp_a |
-| P003-B2 | ParallelBranch | 브랜치 시작 노드는 D020_1이며, 플레이어 B는 앰부백을 이용한 산소화를 실시한다. CompletionConditionIdentifier는 CC_B_ambu_a로 서술한다. | CC_B_ambu_a |
-| P003-B3 | ParallelBranch | 브랜치 시작 노드는 D021이며, 플레이어 C는 에피네프린 투여를 실시한다(필요한 물품: 5cc 주사기, 20cc 주사기, 에피네프린, 20cc 생리식염수). CompletionConditionIdentifier는 CC_C_epi_a로 서술한다. | CC_C_epi_a |
-| P003-B4 | ParallelBranch | 브랜치 시작 노드는 D022_1이며, 플레이어 D는 제세동기를 준비한다. CompletionConditionIdentifier는 CC_D_defib_a로 서술한다. | CC_D_defib_a |
+| P004-B1 | ParallelBranch | 브랜치 시작 노드는 D019이며, 플레이어 A는 가슴 압박을 실시한다. CompletionConditionIdentifier는 CC_A_chestcomp_a로 서술한다. | D019 |
+| P004-B2 | ParallelBranch | 브랜치 시작 노드는 D020_1이며, 플레이어 B는 앰부백을 이용한 산소화를 실시한다. CompletionConditionIdentifier는 CC_B_ambu_a로 서술한다. | D020_1 |
+| P004-B3 | ParallelBranch | 브랜치 시작 노드는 D021이며, 플레이어 C는 에피네프린 투여를 실시한다(필요한 물품: 5cc 주사기, 20cc 주사기, 에피네프린, 20cc 생리식염수). CompletionConditionIdentifier는 CC_C_epi_a로 서술한다. | D021 |
+| P004-B4 | ParallelBranch | 브랜치 시작 노드는 D022_1이며, 플레이어 D는 제세동기를 준비한다. CompletionConditionIdentifier는 CC_D_defib_a로 서술한다. | D022_1 |
 | D019 | Dialogue | [플레이어 A 전용] "환자의 가슴을 클릭해 가슴압박을 시작하세요." | V008 |
 | V008 | Validator | [A] 환자의 가슴을 클릭하여 가슴압박을 시작한다. Condition은 Click_chest이며, TargetCount는 1이다. | E036 |
 | E036 | InvokeEvent | 플레이어 A의 가슴압박 애니메이션과 함께, 가슴압박 리듬에 맞춰 환자의 가슴이 들어가는 애니메이션을 시작한다. [해당 애니메이션들은 모든 플레이어들의 임무가 완료될 때 까지 지속한다.] EventIdentifier로 start_chest_compression을 호출한다. MoveNextBehavior는 Immediate로 서술한다. | E037 |
@@ -353,11 +353,11 @@
 | D026 | Dialogue | [시스템, by 간호사 A] "환자 맥박 느껴집니다." | D027 |
 | D027 | Dialogue | [시스템, by 의사 NPC] "환자 ROSC 되었습니다. 제가 검사랑 협진 의뢰 할테니 간호사 D 선생님이 의식상태 확인해주세요." | D028 |
 | D028 | Dialogue | [시스템, by 의사 NPC] "간호사 B 선생님, 의복 제거해서 추가 손상 있는지 사정해주세요." | D029 |
-| D029 | Dialogue | [시스템, by 의사 NPC] "간호사 A 선생님께서는 다시 분류구역으로 이동해서 환자 분류헤주세요." | P004 |
-| P004 | Parallel | 플레이어 A는 중증도 분류 구역으로 복귀, 플레이어 B는 가위를 이용한 의복 제거, 플레이어 D는 의식상태 확인을 수행한다. WaitMode는 WaitAll로 서술한다. AllocationType은 ByRole로 서술한다. | D034 |
-| P004-B1 | ParallelBranch | 브랜치 시작 노드는 D030이며, 플레이어 A는 중증도 분류 구역으로 이동한다. CompletionConditionIdentifier는 CC_A_triagearea로 서술한다. | CC_A_triagearea |
-| P004-B2 | ParallelBranch | 브랜치 시작 노드는 D031이며, 플레이어 B는 가위를 이용해 환자의 의복을 제거한다. CompletionConditionIdentifier는 CC_B_cut_a로 서술한다. | CC_B_cut_a |
-| P004-B3 | ParallelBranch | 브랜치 시작 노드는 D033_gcs_1이며, 플레이어 D는 환자의 의식을 사정한다. CompletionConditionIdentifier는 CC_D_gcs_a로 서술한다. | CC_D_gcs_a |
+| D029 | Dialogue | [시스템, by 의사 NPC] "간호사 A 선생님께서는 다시 분류구역으로 이동해서 환자 분류헤주세요." | P005 |
+| P005 | Parallel | 플레이어 A는 중증도 분류 구역으로 복귀, 플레이어 B는 가위를 이용한 의복 제거, 플레이어 D는 의식상태 확인을 수행한다. WaitMode는 WaitAll로 서술한다. AllocationType은 ByRole로 서술한다. | D034 |
+| P005-B1 | ParallelBranch | 브랜치 시작 노드는 D030이며, 플레이어 A는 중증도 분류 구역으로 이동한다. CompletionConditionIdentifier는 CC_A_triagearea로 서술한다. | D030 |
+| P005-B2 | ParallelBranch | 브랜치 시작 노드는 D031이며, 플레이어 B는 가위를 이용해 환자의 의복을 제거한다. CompletionConditionIdentifier는 CC_B_cut_a로 서술한다. | D031 |
+| P005-B3 | ParallelBranch | 브랜치 시작 노드는 D033_gcs_1이며, 플레이어 D는 환자의 의식을 사정한다. CompletionConditionIdentifier는 CC_D_gcs_a_rosc로 서술한다. | D033_gcs_1 |
 | D030 | Dialogue | [플레이어 A 전용] "중증도 분류 구역으로 이동하세요." | V013 |
 | V013 | Validator | [플레이어 A] 중증도 분류 구역으로 이동하고, 게이트를 열고 중증도 분류 구역에 들어가면 도달한 것으로 간주한다. Condition은 Arrive_triagearea이며, TargetCount는 1이다. | CC_A_triagearea |
 | D031 | Dialogue | [플레이어 B 전용] "가위를 클릭해 획득하고, 환자를 클릭해 의복을 제거하세요." | V014 |
@@ -365,7 +365,7 @@
 | E054 | InvokeEvent | 가위로 천을 자르는 소리를 [처치실 내에서만 들리도록] 출력한다. EventIdentifier로 cutting_sound를 호출한다. MoveNextBrhavior는 WaitUntilDone으로 서술한다. | D032 |
 | D032 | Dialogue | [시스템, by 플레이어 B] "추가 외상은 확인되지 않습니다." | CC_B_cut_a |
 | D033_gcs_1 | Dialogue [플레이어 D 전용] "환자를 클릭해 환자의 의식 상태를 사정하십시오." | V015 |
-| V015 | Validator | 플레이어 D는 환자를 클릭해 GCS를 사정한다. Condition은 Check_gcs_a이며, TargetCount는 1이다. | D033_gcs_2 |
+| V015 | Validator | 플레이어 D는 환자를 클릭해 GCS를 사정한다. Condition은 Check_gcs_a_rosc이며, TargetCount는 1이다. | D033_gcs_2 |
 | D033_gcs_2 | Dialogue | "환자의 의식 상태를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다." | D033_avpu |
 | D033_avpu | Dialogue | "환자를 불렀을 때 응답이 없고, 환자의 옆구리를 꼬집었을 때 불편해하며 피하려 합니다." | C011_avpu |
 | C011_avpu | Choice | "의식 수준을 AVPU에 따라 분류할 때, 현재 환자의 의식 수준은 무엇입니까?" | C011_avpu-Wrong, C011_avpu-Correct |
@@ -387,7 +387,7 @@
 | C011_M-Wrong | ChoiceOption | "6점(명령 수행)", "4점(통증에 회피)", "3점(이상 굴곡)", "2점(이상 신전)", "1(반응 없음)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D_retry_M2 |
 | C011_M-Correct | ChoiceOption | "5점(통증 원인을 치우려고 손을 뻗음)" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D033_gcs_6 |
 | D_retry_M2 | Dialogue | "오답입니다. 현재 통증에 회피하고 있습니다." | C011_M |
-| D033_gcs_6 | Dialogue | "GCS 측정 완료. E2 / V(T) / M5 = 총 7T점 입니다." | CC_D_gcs_a |
+| D033_gcs_6 | Dialogue | "GCS 측정 완료. E2 / V(T) / M5 = 총 7T점 입니다." | CC_D_gcs_a_rosc |
 | D034 | Dialogue | [시스템] "시나리오 A 환자 대응 종료. 흉부외과로 환자를 이관하였습니다." 메세지를 표시한다. | (end) |
 
 
