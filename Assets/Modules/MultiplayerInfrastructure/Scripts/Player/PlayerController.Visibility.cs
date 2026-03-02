@@ -11,13 +11,14 @@ namespace MultiplayerInfrastructure.Player
 
     private readonly List<Renderer> _renderers = new();
     private readonly List<Color> _originalColors = new();
-    private readonly MaterialPropertyBlock _mpb = new();
+    private MaterialPropertyBlock _mpb;
     private int _originalLayer;
     private int _spectatorLayer = -1;
     private bool _visibilityInitialized;
 
     void Awake_Visibility()
     {
+      _mpb = new MaterialPropertyBlock();
       _originalLayer = gameObject.layer;
       _spectatorLayer = LayerMask.NameToLayer(_spectatorLayerName);
       CacheRenderers();
