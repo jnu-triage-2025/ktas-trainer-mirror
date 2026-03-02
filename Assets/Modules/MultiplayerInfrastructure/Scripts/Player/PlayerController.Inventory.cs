@@ -93,11 +93,18 @@ namespace MultiplayerInfrastructure.Player
 
       foreach (var slot in _slots)
       {
-        if (remaining.currCount <= 0) break;
-        if (!slot.IsEmpty) continue;
+        if (remaining.currCount <= 0)
+          break;
+
+        if (!slot.IsEmpty)
+          continue;
 
         int moved = Mathf.Min(remaining.maxCount, remaining.currCount);
-        var placed = new ItemData(remaining) { currCount = moved };
+        var placed = new ItemData(remaining)
+        {
+          currCount = moved
+        };
+
         slot.SetItem(placed);
         remaining.currCount -= moved;
         changed = true;

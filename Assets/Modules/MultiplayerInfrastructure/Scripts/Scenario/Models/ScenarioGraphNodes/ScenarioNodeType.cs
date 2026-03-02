@@ -12,6 +12,7 @@ namespace MultiplayerInfrastructure.Scenario
     InvokeEvent,
     Validator,
     QuestControl,
+    QuestWaypointHighlight,
     Notification,
     Delay,
     Interaction,

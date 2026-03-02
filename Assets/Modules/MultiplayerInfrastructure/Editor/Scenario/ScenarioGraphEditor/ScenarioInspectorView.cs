@@ -108,6 +108,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.QuestControl:
           DrawQuestControlFields((ScenarioQuestControlNode)data);
           break;
+        case ScenarioNodeType.QuestWaypointHighlight:
+          DrawQuestWaypointHighlightFields((ScenarioQuestWaypointHighlightNode)data);
+          break;
         case ScenarioNodeType.Notification:
           DrawNotificationFields((ScenarioNotificationNode)data);
           break;
@@ -360,12 +363,19 @@ namespace MultiplayerInfrastructure.Editor
       EditorGUILayout.LabelField("Quest", EditorStyles.boldLabel);
       data.Quest.Id = EditorGUILayout.TextField("Id", data.Quest.Id);
       data.Quest.Title = EditorGUILayout.TextField("Title", data.Quest.Title);
+      data.Quest.WaypointIdentifier = EditorGUILayout.TextField("Waypoint Identifier", data.Quest.WaypointIdentifier);
       EditorGUILayout.LabelField("Description");
       data.Quest.Description = EditorGUILayout.TextArea(data.Quest.Description, GUILayout.Height(60));
       EditorGUILayout.LabelField("Quest Content");
       data.Quest.QuestContent = EditorGUILayout.TextArea(data.Quest.QuestContent, GUILayout.Height(40));
       data.Quest.IsTracked = EditorGUILayout.Toggle("Track", data.Quest.IsTracked);
 
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawQuestWaypointHighlightFields(ScenarioQuestWaypointHighlightNode data)
+    {
+      data.WaypointIdentifier = EditorGUILayout.TextField("Waypoint Identifier", data.WaypointIdentifier);
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
 

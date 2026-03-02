@@ -14,7 +14,15 @@ namespace MultiplayerInfrastructure.Quest
   /// </summary>
   public class QuestManager : MonoBehaviour
   {
+    [Flags]
+    public enum FeatureFlags
+    {
+      None = 0,
+      HighlightAssignedWaypoint = 1 << 0
+    }
+
     [SerializeField] private int _maxTracked = DefaultsQuestControl.MaxTrackedQuests;
+    [SerializeField] private FeatureFlags _featureFlags = FeatureFlags.HighlightAssignedWaypoint;
 
     private readonly Dictionary<string, QuestData> _quests = new();
     private readonly List<string> _trackedQuestOrder = new();
@@ -84,6 +92,7 @@ namespace MultiplayerInfrastructure.Quest
         return;
 
       var cloned = quest.Clone();
+      var isNewQuest = !_quests.ContainsKey(cloned.Id);
       _quests[cloned.Id] = cloned;
 
       if (cloned.IsTracked)
@@ -91,11 +100,30 @@ namespace MultiplayerInfrastructure.Quest
         EnsureTracked(cloned.Id, suppressNotify: true);
       }
 
+      if (isNewQuest)
+      {
+        TryHighlightWaypointForQuest(cloned);
+      }
+
       if (notify)
       {
         ClampTrackedToLimit();
         NotifyListChanged();
         NotifyTrackedChanged();
+      }
+    }
+
+    private void TryHighlightWaypointForQuest(QuestData quest)
+    {
+      if (!_featureFlags.HasFlag(FeatureFlags.HighlightAssignedWaypoint) || quest == null)
+        return;
+
+      if (string.IsNullOrWhiteSpace(quest.WaypointIdentifier))
+        return;
+
+      if (WaypointAnchor.TryGet(quest.WaypointIdentifier, out var anchor))
+      {
+        anchor.Highlight();
       }
     }
 
