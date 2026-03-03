@@ -69,7 +69,34 @@ namespace MultiplayerInfrastructure.Registry
     {
       using (new EditorGUILayout.HorizontalScope())
       {
-        EditorGUILayout.LabelField(identifier, GUILayout.MinWidth(220f));
+        EditorGUILayout.LabelField(identifier, GUILayout.MinWidth(160f));
+
+        if (registryType == RegistryType.Item)
+        {
+          if (value is Type itemType)
+          {
+            EditorGUILayout.LabelField(itemType.Name, EditorStyles.textField, GUILayout.MinWidth(200f));
+            EditorGUILayout.SelectableLabel(itemType.FullName, EditorStyles.miniLabel, GUILayout.Height(EditorGUIUtility.singleLineHeight), GUILayout.MinWidth(160f));
+
+            if (GUILayout.Button("Test Instantiate", GUILayout.Width(110f)))
+            {
+              try
+              {
+                var instance = Activator.CreateInstance(itemType);
+                Debug.Log($"[RegistryDebugConsole] Instantiated '{identifier}' → {instance}");
+              }
+              catch (Exception ex)
+              {
+                Debug.LogError($"[RegistryDebugConsole] Failed to instantiate '{identifier}': {ex.Message}");
+              }
+            }
+          }
+          else
+          {
+            EditorGUILayout.SelectableLabel(value?.ToString() ?? "null", EditorStyles.textField, GUILayout.Height(EditorGUIUtility.singleLineHeight));
+          }
+          return;
+        }
 
         if (registryType == RegistryType.IconSprite)
         {

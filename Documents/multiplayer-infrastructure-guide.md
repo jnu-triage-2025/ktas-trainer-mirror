@@ -61,7 +61,7 @@
 
 | 타입 | 저장되는 것 |
 |---|---|
-| `RegistryType.Item` | `Item` 컴포넌트 (프리팹 템플릿) |
+| `RegistryType.Item` | `Item` 파생 클래스의 `System.Type` (아이템 정의) |
 | `RegistryType.ScenarioGraph` | `ScenarioGraph` 또는 `TextAsset` (JSON) |
 | `RegistryType.Npc` | NPC `GameObject` |
 | `RegistryType.Waypoint` | `Vector3` (웨이포인트 위치) |
@@ -70,13 +70,55 @@
 | `RegistryType.UI` | `UIControllerABC` 하위 컨트롤러들 |
 | `RegistryType.IconSprite` | `Sprite` (아이콘) |
 
-### 기본 사용법
+### 등록 방법 선택 기준
+
+레지스트리 등록에는 두 가지 방법이 있으며, **등록 대상의 성격에 따라 방법을 선택합니다.**
+
+| 대상 성격 | 권장 방법 |
+|---|---|
+| 프리팹 템플릿, 에셋, 씬 독립적 데이터 | **RegistryPreloaderController (기본)** |
+| 런타임에 동적으로 스폰·소멸되는 오브젝트 | 자기 등록 (`Awake`/`OnStartClient` 등) |
+
+### RegistryPreloaderController를 통한 등록 (기본)
+
+씬 하이어라키에 `RegistryPreloaderController` 게임 오브젝트를 배치하고, 각 RegistryType에 대응하는 ScriptableObject를 생성해 항목을 등록합니다. 씬에 종속되지 않으며 인스펙터만으로 관리할 수 있어 **에셋/프리팹 템플릿의 기본 등록 방법입니다.**
+
+```
+1. RegistryPreloaderController 게임 오브젝트를 씬에 배치
+2. Assets/Create/MultiplayerInfrastructure/ 에서 원하는 RegistryPreload*SO 생성
+3. SO에 등록할 항목 채우기
+4. 컨트롤러 인스펙터에서 SO 연결
+```
+
+지원하는 RegistryType 및 SO 목록:
+
+| ScriptableObject | 등록 대상 |
+|---|---|
+| `RegistryPreloadItemSO` | `RegistryType.Item` + `IconSprite` |
+| `RegistryPreloadScenarioGraphSO` | `RegistryType.ScenarioGraph` |
+| `RegistryPreloadIconSpriteSO` | `RegistryType.IconSprite` |
+| `RegistryPreloadNpcSO` | `RegistryType.Npc` |
+| `RegistryPreloadWaypointSO` | `RegistryType.Waypoint` |
+| `RegistryPreloadEntitySO` | `RegistryType.Entity` |
+| `RegistryPreloadInteractableEntitySO` | `RegistryType.InteractableEntity` |
+| `RegistryPreloadUIControllerSO` | `RegistryType.UI` |
+
+### 자기 등록 (런타임 예외)
+
+네트워크 스폰 플레이어나 씬에 배치된 월드 오브젝트처럼 런타임에 동적으로 생성·소멸되는 오브젝트는 자신의 Lifecycle에서 직접 등록합니다. 이때 `OnDestroy()`에서 반드시 `Unregister`를 쌍으로 호출해야 합니다.
 
 ```csharp
-// 등록
+// 등록 (Awake / OnStartClient)
 Registry.Register(RegistryType.Entity, Registry.TypeKey<QuestManager>(), this);
 
-// 조회
+// 해제 (OnDestroy)
+Registry.Unregister(RegistryType.Entity, Registry.TypeKey<QuestManager>());
+```
+
+### 조회
+
+```csharp
+// 일반 조회
 var questManager = Registry.Get<QuestManager>(RegistryType.Entity, Registry.TypeKey<QuestManager>());
 
 // 안전한 조회 (실패 시 false)
@@ -92,7 +134,6 @@ bool exists = Registry.Contains(RegistryType.Item, "scalpel");
 타입별로 고유 키가 필요할 때는 `Registry.TypeKey<T>()`를 사용합니다.
 
 ```csharp
-// 타입 → 키
 string key = Registry.TypeKey<ChatUIController>();   // "MultiplayerInfrastructure.UI.ChatUIController"
 ```
 
@@ -275,33 +316,43 @@ public class OpenDoorInteract : MonoBehaviour, IInteract
 
 ## 6. 아이템 시스템
 
-월드에 배치된 오브젝트로서 상호작용(줍기), 인벤토리 관리, 사용/공격 이벤트를 담당합니다.
+월드에 배치된 오브젝트로서 아이템의 정의·상태 관리와 인벤토리 사용/공격 이벤트를 담당합니다.
 
-### Item 컴포넌트
+### 핵심 클래스
+
+| 클래스 | 역할 |
+|---|---|
+| `Item` (abstract) | 아이템 정의와 런타임 상태를 포함하는 순수 C# 클래스. `public const` 필드로 Definitions 선언 |
+| `ItemObject` | 월드에 배치되는 MonoBehaviour. `Item` 인스턴스를 보유하며 3D 모델을 로드 |
 
 ```
-Item.cs            - 핵심 참조 (ItemBaseModelSO, ItemData, identifier)
-Item.Lifecycle.cs  - Awake 초기화 (BaseModel → ItemData → Registry 등록)
-Item.Interactable.cs - IInteractable + IInteract 구현 (줍기)
-Item.Visual.cs     - 렌더러 등 시각 처리
-Item.Runtime.cs    - ApplyRuntimeItemData() 런타임 데이터 교체
-Item.RuntimeData.cs - 기타 런타임 데이터 처리
+ItemObject  (Rigidbody, BoxCollider, PickupItem 레이어)
+└ ItemGroundedModel  ← Resources/Models/Items/{identifier} 에서 자동 로드
 ```
 
-### ItemData
+### Registry 등록 및 생성
 
-아이템의 데이터 컨테이너입니다. 인벤토리 슬롯 간 복사·전달에 사용됩니다.
+`RegistryType.Item`에는 `System.Type`이 저장됩니다 (프리팹이 아닙니다).
 
 ```csharp
-var data = new ItemData("scalpel", "메스", 1, 1, true, 100);
-var clone = data.Clone();
-bool canStack = data.CanStackWith(other);
-data.Add(5).ApplyRestriction();   // 연산 체이닝 지원
+// 등록
+Registry.RegisterItemDefinition<Ambubag>(Ambubag.Identifier);
+
+// 인스턴스 생성
+var item = Registry.CreateItemInstance("ambubag");   // → new Ambubag()
+
+// 월드 스폰
+ItemObject.Spawn(item, position);
+ItemObject.Spawn(item, position, throwForce);   // 드롭/던지기
 ```
 
-> **API 레퍼런스:** [api-references/MultiplayerInfrastructure.Item.Item.md](api-references/MultiplayerInfrastructure.Item.Item.md)  
-> **인벤토리 API:** [api-references/MultiplayerInfrastructure.Player.PlayerController.InventoryCommands.md](api-references/MultiplayerInfrastructure.Player.PlayerController.InventoryCommands.md)  
-> **아이템 정의:** [item.md](item.md)
+### 아이콘 스프라이트
+
+- `Resources/Textures/ItemIcons/{identifier}.png` 에 배치하면 자동 로드됩니다.
+- 또는 `RegistryPreloaderController`에 연결한 SO의 `itemSprite` 필드로 명시적으로 등록할 수 있습니다.
+
+> **아이템 정의:** [item.md](item.md)  
+> **구현 가이드:** [item-authoring.md](item-authoring.md)
 
 ---
 

@@ -20,7 +20,7 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
 #if UNITY_EDITOR
-    void OnValidate()
+    new void OnValidate()
     {
       if (_registry == null)
         _registry = GetComponent<ScenarioRegistry>();

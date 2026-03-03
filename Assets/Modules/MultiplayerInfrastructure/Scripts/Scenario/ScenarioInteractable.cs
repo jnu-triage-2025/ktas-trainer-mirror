@@ -116,13 +116,13 @@ namespace MultiplayerInfrastructure.Scenario
     #endregion
 
 #if UNITY_EDITOR
-    private void Reset()
+    private new void Reset()
     {
       _displayText = "시나리오 시작";
       _displayColor = Color.white;
     }
 
-    private void OnValidate()
+    private new void OnValidate()
     {
       _cachedGraph = null;
     }

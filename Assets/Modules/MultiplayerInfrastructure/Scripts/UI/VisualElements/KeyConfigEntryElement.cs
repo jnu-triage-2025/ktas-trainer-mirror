@@ -7,7 +7,7 @@ namespace MultiplayerInfrastructure.UI
   /// <summary>
   /// 키 설정 목록의 항목 하나를 나타내는 VisualElement입니다.
   /// 좌측에 기능 이름, 우측에 할당된 키 이름을 표시하며,
-  /// 강조(Focused) 상태와 선택(Selected) 상태를 지원합니다.
+  /// 강조(Focused) 상태, 선택(Selected) 상태, 리바인딩 대기(Rebinding) 상태를 지원합니다.
   /// </summary>
   [UxmlElement]
   public partial class KeyConfigEntryElement : VisualElement
@@ -17,6 +17,9 @@ namespace MultiplayerInfrastructure.UI
     // ──────────────────────────────────────────────────────────────────────────
     /// <summary>항목을 클릭했을 때 해당 항목의 actionId가 전달됩니다.</summary>
     public event Action<string> OnEntryClicked;
+
+    /// <summary>키 레이블을 클릭해 리바인딩을 요청할 때 해당 항목의 actionId가 전달됩니다.</summary>
+    public event Action<string> OnRebindRequested;
 
     // ──────────────────────────────────────────────────────────────────────────
     // 내부 요소
@@ -28,6 +31,8 @@ namespace MultiplayerInfrastructure.UI
     // ──────────────────────────────────────────────────────────────────────────
     // 생성자
     // ──────────────────────────────────────────────────────────────────────────
+    private const string RebindingLabel = "키를 누르세요…";
+
     public KeyConfigEntryElement()
     {
       AddToClassList("key-config-entry");
@@ -65,6 +70,32 @@ namespace MultiplayerInfrastructure.UI
         RemoveFromClassList("key-config-entry--selected");
     }
 
+    /// <summary>
+    /// 리바인딩 대기 상태를 설정합니다.
+    /// true이면 키 레이블에 "키를 누르세요…" 텍스트와 rebinding 스타일 클래스를 적용합니다.
+    /// false이면 원래 키 이름으로 복원합니다.
+    /// </summary>
+    public void SetRebinding(bool rebinding)
+    {
+      if (rebinding)
+      {
+        _keyLabel.text = RebindingLabel;
+        AddToClassList("key-config-entry--rebinding");
+      }
+      else
+      {
+        _keyLabel.text = _entry?.boundKey == KeyCode.None ? "—" : KeyCodeToLabel(_entry.boundKey);
+        RemoveFromClassList("key-config-entry--rebinding");
+      }
+    }
+
+    /// <summary>바인딩 데이터가 외부에서 변경된 후 키 레이블만 새로 고칩니다.</summary>
+    public void RefreshKeyLabel()
+    {
+      if (_entry == null) return;
+      _keyLabel.text = _entry.boundKey == KeyCode.None ? "—" : KeyCodeToLabel(_entry.boundKey);
+    }
+
     // ──────────────────────────────────────────────────────────────────────────
     // 레이아웃 구성
     // ──────────────────────────────────────────────────────────────────────────
@@ -75,9 +106,18 @@ namespace MultiplayerInfrastructure.UI
 
       _keyLabel = new Label();
       _keyLabel.AddToClassList("key-config-entry__key");
+      // 키 레이블 클릭 → 리바인딩 요청 (이벤트 버블링 방지)
+      _keyLabel.RegisterCallback<ClickEvent>(OnKeyLabelClick);
 
       Add(_actionLabel);
       Add(_keyLabel);
+    }
+
+    private void OnKeyLabelClick(ClickEvent evt)
+    {
+      if (_entry == null) return;
+      evt.StopPropagation(); // 전체 행 클릭 이벤트와 중복 방지
+      OnRebindRequested?.Invoke(_entry.actionId);
     }
 
     private void OnClick(ClickEvent _)

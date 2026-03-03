@@ -1,0 +1,9 @@
+namespace TriageTrainer.ItemDefinitions
+{
+  public class Yankauer : MedicalItem
+  {
+    public const string Identifier   = "yankauer";
+    public const string DisplayName  = "양커 석션 팁";
+    public const string Description  = "구강 내 분비물 및 이물질을 흡인할 때 흡인 라인과 연결해 사용합니다.";
+  }
+}

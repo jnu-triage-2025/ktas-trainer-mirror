@@ -26,6 +26,7 @@ namespace MultiplayerInfrastructure.UI
 
     /// <summary>
     /// Inspector에서 직접 편집하거나 런타임에 <see cref="SetBindings"/>로 교체할 수 있는 바인딩 목록입니다.
+    /// PlayerPrefs에 저장된 값이 있으면 Awake 시점에 덮어씁니다.
     /// </summary>
     [SerializeField] private List<KeyBindingEntry> _bindings = new()
     {
@@ -41,6 +42,9 @@ namespace MultiplayerInfrastructure.UI
       new KeyBindingEntry("chat",           "채팅",           KeyCode.Return),
     };
 
+    // 기본(초기) 바인딩 복원용 복사본 — 런타임에 자동 생성됩니다
+    private List<KeyBindingEntry> _defaultBindings;
+
     // ──────────────────────────────────────────────────────────────────────────
     // IUIOverlay 이벤트
     // ──────────────────────────────────────────────────────────────────────────
@@ -53,6 +57,7 @@ namespace MultiplayerInfrastructure.UI
     private UIDocument _document;
     private VisualElement _root;
     private Button _closeButton;
+    private Button _resetButton;
     private ScrollView _scroll;
     private KeyboardLayoutElement _keyboard;
 
@@ -61,12 +66,20 @@ namespace MultiplayerInfrastructure.UI
 
     private bool _isVisible;
 
+    /// <summary>현재 리바인딩 대기 중인 actionId. null이면 리바인딩 비활성 상태.</summary>
+    private string _rebindingActionId;
+
     // ──────────────────────────────────────────────────────────────────────────
     // Unity 이벤트
     // ──────────────────────────────────────────────────────────────────────────
     protected override void Awake()
     {
       base.Awake();
+
+      // 기본 바인딩 복사본 보존
+      _defaultBindings = new List<KeyBindingEntry>(_bindings.Count);
+      foreach (var entry in _bindings)
+        _defaultBindings.Add(new KeyBindingEntry(entry.actionId, entry.actionDisplayName, entry.boundKey));
 
       _document = GetComponent<UIDocument>();
       if (_document == null)
@@ -79,23 +92,59 @@ namespace MultiplayerInfrastructure.UI
       var root = _document.rootVisualElement;
       _root = root?.Q<VisualElement>("key-config-root");
       _closeButton = root?.Q<Button>("close-button");
+      _resetButton = root?.Q<Button>("reset-button");
       _scroll = root?.Q<ScrollView>("binding-scroll");
       _keyboard = root?.Q<KeyboardLayoutElement>("keyboard-layout");
 
       if (_closeButton != null)
         _closeButton.clicked += HandleCloseClicked;
 
+      if (_resetButton != null)
+        _resetButton.clicked += HandleResetClicked;
+
       if (_keyboard != null)
         _keyboard.OnAssignedKeyClicked += HandleKeyboardKeyClicked;
+
+      // 저장된 바인딩 불러오기 (없으면 기본값 유지)
+      KeyBindingRepository.LoadInto(_bindings);
 
       Populate(_bindings);
       SetVisible(false);
     }
 
+    private void Update()
+    {
+      if (_rebindingActionId == null || !_isVisible) return;
+
+      // ESC → 리바인딩 취소
+      if (Input.GetKeyDown(KeyCode.Escape))
+      {
+        CancelRebinding();
+        return;
+      }
+
+      // 어떤 키든 눌리면 캡처
+      if (!Input.anyKeyDown) return;
+
+      // 입력된 키 탐색
+      foreach (KeyCode candidate in System.Enum.GetValues(typeof(KeyCode)))
+      {
+        // 마우스 버튼 제외
+        if (candidate >= KeyCode.Mouse0 && candidate <= KeyCode.Mouse6) continue;
+        // 조이스틱 제외
+        if (candidate >= KeyCode.JoystickButton0) continue;
+        if (!Input.GetKeyDown(candidate)) continue;
+
+        ApplyRebinding(_rebindingActionId, candidate);
+        return;
+      }
+    }
+
     private void OnDestroy()
     {
       if (_closeButton != null) _closeButton.clicked -= HandleCloseClicked;
-      if (_keyboard != null)    _keyboard.OnAssignedKeyClicked -= HandleKeyboardKeyClicked;
+      if (_resetButton != null)  _resetButton.clicked -= HandleResetClicked;
+      if (_keyboard != null)     _keyboard.OnAssignedKeyClicked -= HandleKeyboardKeyClicked;
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -117,8 +166,25 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void SetBindings(IReadOnlyList<KeyBindingEntry> bindings)
     {
+      CancelRebinding();
       _bindings.Clear();
       if (bindings != null) _bindings.AddRange(bindings);
+      Populate(_bindings);
+    }
+
+    /// <summary>
+    /// 모든 바인딩을 초기(기본) 값으로 되돌리고 저장합니다.
+    /// </summary>
+    public void ResetToDefaults()
+    {
+      if (_defaultBindings == null) return;
+      CancelRebinding();
+      for (int i = 0; i < _bindings.Count; i++)
+      {
+        var def = _defaultBindings.Find(d => d.actionId == _bindings[i].actionId);
+        if (def != null) _bindings[i].boundKey = def.boundKey;
+      }
+      KeyBindingRepository.DeleteAll(_bindings);
       Populate(_bindings);
     }
 
@@ -131,7 +197,10 @@ namespace MultiplayerInfrastructure.UI
 
       // 기존 항목 정리
       foreach (var el in _entryElements)
+      {
         el.OnEntryClicked -= HandleEntryClicked;
+        el.OnRebindRequested -= HandleRebindRequested;
+      }
       _entryElements.Clear();
       _actionIdToEntry.Clear();
       _scroll.Clear();
@@ -142,6 +211,7 @@ namespace MultiplayerInfrastructure.UI
         var entry = new KeyConfigEntryElement();
         entry.Bind(binding);
         entry.OnEntryClicked += HandleEntryClicked;
+        entry.OnRebindRequested += HandleRebindRequested;
 
         _scroll.Add(entry);
         _entryElements.Add(entry);
@@ -161,6 +231,63 @@ namespace MultiplayerInfrastructure.UI
     {
       FocusEntry(actionId);
     }
+
+    /// <summary>리바인딩 요청 (키 레이블 클릭) → 대기 상태 진입</summary>
+    private void HandleRebindRequested(string actionId)
+    {
+      // 다른 항목이 이미 대기 중이면 취소
+      if (_rebindingActionId != null && _rebindingActionId != actionId)
+        CancelRebinding();
+
+      _rebindingActionId = actionId;
+
+      // 해당 엔트리 시각 상태 전환
+      if (_actionIdToEntry.TryGetValue(actionId, out var el))
+        el.SetRebinding(true);
+    }
+
+    /// <summary>리바인딩 취소</summary>
+    private void CancelRebinding()
+    {
+      if (_rebindingActionId == null) return;
+
+      if (_actionIdToEntry.TryGetValue(_rebindingActionId, out var el))
+        el.SetRebinding(false);
+
+      _rebindingActionId = null;
+    }
+
+    /// <summary>리바인딩 확정 → 데이터 갱신, 저장, UI 갱신</summary>
+    private void ApplyRebinding(string actionId, KeyCode newKey)
+    {
+      var entry = _bindings.Find(b => b.actionId == actionId);
+      if (entry == null)
+      {
+        CancelRebinding();
+        return;
+      }
+
+      entry.boundKey = newKey;
+
+      // 저장
+      KeyBindingRepository.SaveEntry(entry);
+      KeyBindingRepository.Flush();
+
+      // UI 갱신
+      if (_actionIdToEntry.TryGetValue(actionId, out var el))
+      {
+        el.SetRebinding(false);
+        el.RefreshKeyLabel();
+      }
+
+      _keyboard?.SetBindings(_bindings);
+
+      _rebindingActionId = null;
+
+      Debug.Log($"[KeyConfig] '{actionId}' → {newKey} 저장 완료");
+    }
+
+    private void HandleResetClicked() => ResetToDefaults();
 
     /// <summary>좌측 목록 항목 클릭 → 키보드에서 해당 키 강조</summary>
     private void HandleEntryClicked(string actionId)
@@ -233,6 +360,7 @@ namespace MultiplayerInfrastructure.UI
     private void SetVisible(bool visible)
     {
       _isVisible = visible;
+      if (!visible) CancelRebinding();
       if (_root == null) return;
 
       _root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;

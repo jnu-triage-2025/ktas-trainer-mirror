@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using FishNet.Object;
 using MultiplayerInfrastructure.Definitions;
-using MultiplayerInfrastructure.Item;
+using MultiplayerInfrastructure.ItemSystem;
+using Item = MultiplayerInfrastructure.ItemSystem.Item;
 using UnityEngine;
 
 class PlayerInventory : NetworkBehaviour
@@ -30,7 +31,7 @@ class PlayerInventory : NetworkBehaviour
     }
   }
 
-  public ItemData Push(ItemData itemInstance)
+  public Item Push(Item itemInstance)
   {
     for (int i = 0; i < inventorySlots.Count; i++)
     {
@@ -39,7 +40,7 @@ class PlayerInventory : NetworkBehaviour
       {
         var leftover = slot.Push(new InventorySlotModelDTO(itemInstance));
         inventorySlots[i] = slot;
-        if (leftover == null || !leftover.IsValid())
+        if (leftover == null || leftover.CurrentStackCount <= 0)
         {
           return null;
         }

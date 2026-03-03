@@ -163,8 +163,35 @@ public event Action<IReadOnlyList<IInteractable>> NearbyUpdated;
 
 ## 6. `LootableItemInteractHandler`
 
-`IInteract`를 구현하여 플레이어가 아이템을 주울 수 있도록 합니다.  
-`Item` 컴포넌트 내부에서 자동으로 사용됩니다. 직접 인스턴스화할 필요는 없습니다.
+`IInteractable` + `IInteract`를 모두 구현하는 MonoBehaviour입니다.  
+`ItemObject.Spawn()` 호출 시 자동으로 GameObect에 추가됩니다. 직접 인스턴스화할 필요는 없습니다.
+
+```csharp
+public class LootableItemInteractHandler : MonoBehaviour, IInteractable, IInteract
+```
+
+### 동작
+
+| 프로퍼티/메서드 | 반환값/동작 |
+|---|---|
+| `Interacts` | `new IInteract[] { this }` |
+| `DisplayText` | `"{CurrentDisplayName} 획득"` |
+| `DisplayIcon` | `Item.CurrentItemIconTexture` |
+| `AllowDisplayIconFallback` | `true` |
+| `DisplayColor` | `Color.white` |
+| `Interact(Transform interactor)` | 아래 참조 |
+
+### `Interact(interactor)` 흐름
+
+1. `interactor` 계층에서 `PlayerController` 탐색
+2. `PlayerController.TryAddItemToInventory(item)` 호출
+3. 성공 시 `item.OnGet(player)` 호출
+4. `Destroy(gameObject)` — `ItemObject` 제거
+
+### HUD 감지 조건
+
+`NearbyInteractablesDetector`는 `PickupItem` 레이어 콜라이더에서 `IInteractable` 컴포넌트를 탐색합니다.  
+`ItemObject.Spawn()`이 GameObject 레이어를 `PickupItem`(없으면 `Default`)으로 설정하고 `LootableItemInteractHandler`를 부착하므로, 별도 설정 없이 자동 감지됩니다.
 
 ---
 

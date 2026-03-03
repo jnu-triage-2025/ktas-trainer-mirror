@@ -60,7 +60,7 @@
 | 작업 유형 | 주로 수정/추가하는 문서 | 산출물 위치 |
 |---|---|---|
 | 시나리오 작성 | Documents/scenario-authoring.md | Documents/scenario/*.md |
-| 아이템 구현 | Documents/item.md | Assets/Modules/TriageTrainer/Prefabs/Items/<identifier>/ |
+| 아이템 구현 | Documents/item-authoring.md | Assets/Modules/TriageTrainer/Scripts/Items/Definitions/\<ItemName\>.cs |
 | 인터랙터블 구현 | Agents/Actually Used/Implement - (구현한 대상의 이름).md | Assets/Modules/TriageTrainer/Prefabs/Interactables/<identifier>/ |
 | 문서 보완 | Documents/*.md | Documents/ |
 

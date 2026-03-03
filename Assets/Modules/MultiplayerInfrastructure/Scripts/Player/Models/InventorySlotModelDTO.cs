@@ -1,113 +1,94 @@
 using System;
-using MultiplayerInfrastructure.Item;
+using MultiplayerInfrastructure.ItemSystem;
 using UnityEngine;
 
 #nullable enable
 
 /// <summary>
-/// InventorySlotModelDTO는 플레이어의 각 인벤토리 칸을 표현하는 데이터 모델입니다.
-/// 하지만 아직 InventorySlotModelDTO에 별도로 정의한 기능이 없으므로, 단순히 아이템 데이터 모델을
-/// 래핑하는 용도로만 의도되어있습니다.
+/// 플레이어 인벤토리의 슬롯 하나를 나타냅니다.
+/// ItemSystem.Item 인스턴스를 보유하며, 스택 병합/분리 등의 슬롯 조작을 제공합니다.
 /// </summary>
 [Serializable]
 public class InventorySlotModelDTO
 {
-  #region Properties
-  [SerializeField] private ItemData? _itemInstance;
-  public ItemData? ItemInstance
+  [SerializeReference] private Item? _itemInstance;
+  public Item? ItemInstance
   {
     get => _itemInstance;
     set => _itemInstance = value;
   }
-  #endregion
 
-  #region Constructors
+  public bool IsEmpty => _itemInstance == null || _itemInstance.CurrentStackCount <= 0;
+
   public InventorySlotModelDTO() { }
-  public InventorySlotModelDTO(ItemData itemInstance)
-  {
-    this._itemInstance = itemInstance;
-  }
-  #endregion
+  public InventorySlotModelDTO(Item item) { _itemInstance = item; }
 
-  public bool IsEmpty => ItemInstance == null || !ItemInstance.IsValid();
+  public void Clear() => _itemInstance = null;
 
-  public void Clear()
-  {
-    ItemInstance = null;
-  }
+  public void SetItem(Item? item) => _itemInstance = item;
 
-  public void SetItem(ItemData? item)
-  {
-    ItemInstance = item;
-  }
-
-  public ItemData? Push(ItemData item) => ItemInstance.Merge(item);
-
-  public ItemData? Push(InventorySlotModelDTO other)
+  /// <summary>item をこのスロットに可能な限り積みます。余りを返します。null なら全部収納できた。</summary>
+  public Item? Push(Item item)
   {
     if (IsEmpty)
     {
-      ItemInstance = other.ItemInstance;
+      _itemInstance = item;
       return null;
     }
-
-    if (other.IsEmpty)
-    {
-      return null;
-    }
-
-    if (ItemInstance!.identifier != other.ItemInstance!.identifier)
-    {
-      return other.ItemInstance;
-    }
-
-    int spaceLeft = ItemInstance!.maxCount - ItemInstance.currCount;
-    if (spaceLeft <= 0)
-    {
-      return other.ItemInstance;
-    }
-    int toMove = Math.Min(spaceLeft, other.ItemInstance!.currCount);
-    ItemInstance!.currCount += toMove;
-    other.ItemInstance!.currCount -= toMove;
-    if (other.ItemInstance!.currCount > 0)
-    {
-      return other.ItemInstance;
-    }
-
-    return null;
+    var leftover = _itemInstance!.Merge(item);
+    return leftover.CurrentStackCount > 0 ? leftover : null;
   }
 
-  public ItemData? TakeAll()
+  public Item? Push(InventorySlotModelDTO other)
+  {
+    if (other.IsEmpty) return null;
+
+    if (IsEmpty)
+    {
+      _itemInstance = other._itemInstance;
+      other._itemInstance = null;
+      return null;
+    }
+
+    if (_itemInstance!.CurrentIdentifier != other._itemInstance!.CurrentIdentifier)
+      return other._itemInstance;
+
+    int spaceLeft = _itemInstance.CurrentMaxStackCount - _itemInstance.CurrentStackCount;
+    if (spaceLeft <= 0) return other._itemInstance;
+
+    int toMove = Math.Min(spaceLeft, other._itemInstance.CurrentStackCount);
+    _itemInstance.CurrentStackCount += toMove;
+    other._itemInstance.CurrentStackCount -= toMove;
+
+    return other._itemInstance.CurrentStackCount > 0 ? other._itemInstance : null;
+  }
+
+  public Item? TakeAll()
   {
     if (IsEmpty) return null;
-    
-    ItemData taken = ItemInstance!;
-    ItemInstance = null;
+    var taken = _itemInstance;
+    _itemInstance = null;
     return taken;
   }
 
-  public ItemData? Pop(int count)
+  public Item? Pop(int count)
   {
-    if (IsEmpty || count <= 0)
-    {
-      return null;
-    }
+    if (IsEmpty || count <= 0) return null;
 
-    int toPop = Math.Min(count, ItemInstance!.currCount);
-    ItemData popped = new ItemData(ItemInstance!);
-    popped.currCount = toPop;
-    ItemInstance!.currCount -= toPop;
-    if (ItemInstance!.currCount <= 0)
-    {
+    int toPop = Math.Min(count, _itemInstance!.CurrentStackCount);
+    var popped = _itemInstance.Clone();
+    popped.CurrentStackCount = toPop;
+    _itemInstance.CurrentStackCount -= toPop;
+    if (_itemInstance.CurrentStackCount <= 0)
       Clear();
-    }
     return popped;
   }
 
-  public ItemData? SwapWith(ItemData? incoming)
+  public Item? SwapWith(Item? incoming)
   {
-    ItemData? previous = ItemInstance;
-    ItemInstance = incoming;
+    var previous = _itemInstance;
+    _itemInstance = incoming;
     return previous;
   }
 }
+

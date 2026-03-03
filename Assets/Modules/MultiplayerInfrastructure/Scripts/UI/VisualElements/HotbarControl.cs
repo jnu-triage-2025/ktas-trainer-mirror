@@ -165,9 +165,9 @@ namespace MultiplayerInfrastructure.UI
           var itemInstance = _inventory[i].ItemInstance;
           if (itemInstance != null)
           {
-            icon.style.backgroundImage = new StyleBackground(itemInstance.ItemTexture);
+            icon.style.backgroundImage = new StyleBackground(itemInstance.CurrentItemIconTexture);
             icon.RemoveFromClassList("hotbar__slot-empty");
-            var count = itemInstance.currCount;
+            var count = itemInstance.CurrentStackCount;
             countLabel.text = count > 1 ? count.ToString() : string.Empty;
           }
           else

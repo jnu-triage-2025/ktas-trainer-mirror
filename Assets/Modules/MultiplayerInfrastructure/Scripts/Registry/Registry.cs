@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using MultiplayerInfrastructure.ItemSystem;
+using ISItem = MultiplayerInfrastructure.ItemSystem.Item;
 using MultiplayerInfrastructure.Scenario;
 using UnityEngine;
 
@@ -254,6 +256,40 @@ namespace MultiplayerInfrastructure.Registry
       registry[identifier] = sprite;
       definition = sprite;
       return true;
+    }
+
+    // =========================================================================
+    // ItemDefinition helpers
+    // =========================================================================
+
+    /// <summary>
+    /// ItemSystem.Item 파생 클래스의 Type을 레지스트리에 등록합니다.
+    /// identifier 는 Item.Identifier 와 일치시키는 것을 권장합니다.
+    /// </summary>
+    public static void RegisterItemDefinition<T>(string identifier) where T : ISItem, new()
+      => Register(RegistryType.Item, identifier, typeof(T));
+
+    /// <summary>
+    /// RegisterItemDefinition 으로 등록된 클래스로부터 새 Item 인스턴스를 생성합니다.
+    /// 등록된 클래스가 없으면 null 을 반환합니다.
+    /// </summary>
+    public static ISItem CreateItemInstance(string identifier)
+    {
+      if (!TryGet<Type>(RegistryType.Item, identifier, out var type) || type == null)
+      {
+        Debug.LogWarning($"[Registry] ItemDefinition '{identifier}' 이(가) 등록되지 않았습니다.");
+        return null;
+      }
+
+      try
+      {
+        return (ISItem)Activator.CreateInstance(type);
+      }
+      catch (Exception ex)
+      {
+        Debug.LogError($"[Registry] ItemDefinition '{identifier}' 인스턴스화 실패: {ex.Message}");
+        return null;
+      }
     }
   }
 }

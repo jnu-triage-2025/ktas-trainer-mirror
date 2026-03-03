@@ -1,5 +1,5 @@
 using FishNet.Object;
-using MultiplayerInfrastructure.Item;
+using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using MultiplayerInfrastructure.Entity;
@@ -23,7 +23,7 @@ namespace MultiplayerInfrastructure.Player
 
     private Transform _viewmodelRoot;
     private GameObject _viewmodelInstance;
-    private ItemData _viewmodelItem;
+    private ItemSystem.Item _viewmodelItem;
     private Coroutine _viewmodelAnim;
 
     void Start_Item()
@@ -103,7 +103,7 @@ namespace MultiplayerInfrastructure.Player
         return;
       }
 
-      HandlingItem = new ItemData(instance);
+      HandlingItem = instance;
       RefreshViewmodel();
     }
 
@@ -212,13 +212,13 @@ namespace MultiplayerInfrastructure.Player
       if (_viewmodelRoot == null)
         return;
 
-      if (HandlingItem == null || string.IsNullOrWhiteSpace(HandlingItem.identifier))
+      if (HandlingItem == null || string.IsNullOrWhiteSpace(HandlingItem.CurrentIdentifier))
       {
         ClearViewmodel();
         return;
       }
 
-      if (_viewmodelItem != null && _viewmodelItem.identifier == HandlingItem.identifier)
+      if (_viewmodelItem != null && _viewmodelItem.CurrentIdentifier == HandlingItem.CurrentIdentifier)
       {
         return;
       }
@@ -226,7 +226,7 @@ namespace MultiplayerInfrastructure.Player
       ClearViewmodel();
       _viewmodelItem = HandlingItem;
 
-      var prefab = Registry.Registry.Get<GameObject>(RegistryType.Item, HandlingItem.identifier);
+      var prefab = Resources.Load<GameObject>($"Models/Items/{HandlingItem.CurrentIdentifier}");
       if (prefab == null)
         return;
 

@@ -38,12 +38,11 @@
    - `_itemBaseModel != null`
    - `_itemBaseModel.identifier`가 비어 있지 않음
 
-2. 베이스 모델이 유효하면
+2. `_itemData`가 null이거나 유효하지 않고, 베이스 모델이 유효하면
    - `new ItemData(_itemBaseModel, _itemIcon)`으로 데이터 생성
 
-3. 베이스 모델이 유효하지 않으면
-   - 기존 `_itemData`의 유효성(`IsValid`) 확인 후 fallback
-   - `_itemIcon`이 있으면 `_itemData.SetIcon(...)`
+3. `_itemData`가 이미 유효하면 (예: ItemDataInitializerBase로 주입한 서브클래스)
+   - 기존 `_itemData` 유지, `_itemIcon`이 있고 아이콘이 없으면 적용
 
 4. `_itemIdentifier` 보정
    - 비어 있으면 `_itemData.identifier`를 사용
@@ -53,7 +52,7 @@
    - `DefaultsResource.ItemTexturesPath` 및 보조 경로에서 `Resources.Load<Sprite>` 시도
 
 6. 등록 가능 여부 판단
-   - 베이스 모델/ItemData가 모두 무효면 경고 로그 후 종료
+   - ItemData가 무효면 경고 로그 후 종료
    - 식별자 비어 있으면 경고 로그 후 종료
 
 7. Registry 등록
@@ -64,6 +63,7 @@
 이 구조는 다음 장점을 만든다.
 
 - 데이터가 부분적으로 비어 있어도 최대한 복구
+- 이미 유효한 ItemData 서브클래스(커스텀 로직 포함)가 있으면 덮어쓰지 않음
 - 최소 조건 미충족이면 조용히 망가지지 않고 경고를 남김
 - 정상 케이스는 Registry에서 조회 가능해짐
 
@@ -104,10 +104,10 @@
 
 ### 4.2 추천 패턴
 
-- 권장: `_itemBaseModel` 중심 설계
-- fallback: 이미 직렬화된 `_itemData` 유지
+- 고유 로직 없는 아이템: `_itemBaseModel` 설정, `_itemData` 비워둠 (Lifecycle에서 자동 생성)
+- 고유 로직이 있는 아이템: `ItemDataInitializerBase` 서브클래스를 프리팹에 추가하여 서브클래스 `ItemData` 주입
 
-즉, 베이스 모델을 표준 데이터 소스로 삼고, 예외 케이스만 ItemData fallback을 사용한다.
+> **상세 구현 절차:** [item-authoring.md](../item-authoring.md)
 
 ### 4.3 아이콘 규칙
 
@@ -145,5 +145,5 @@ Awake에서 데이터 정합성을 확보하고 Registry에 자신을 등록하�
 
 최근 변경 이후의 핵심 한 줄 요약:
 
-- “베이스 모델 우선, ItemData fallback, 조건 미충족 시 경고 후 등록 중단, 조건 충족 시 Registry 등록”
+- "유효한 ItemData가 있으면 유지, 없으면 베이스 모델에서 생성, 조건 미충족 시 경고 후 등록 중단, 조건 충족 시 Registry 등록"
 
