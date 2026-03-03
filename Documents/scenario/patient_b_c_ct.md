@@ -12,7 +12,7 @@
 | 리소스 식별자 - 초상화 | 없음 |
 | 리소스 식별자 - 웨이포인트 | wp_treatment_area, wp_ct_room |
 | 리소스 식별자 - 카메라 타겟 | 없음 |
-| 시작 노드 Identifier | D001 |
+| 시작 노드 Identifier | E070 |
 
 ## 시나리오 본문
 
@@ -74,7 +74,7 @@
 | C040-Wrong | ChoiceOption | "5점(적절한 답변)", "3점(부적절한 답변)", "2점(신음소리)", "1점(반응 없음)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D047_retry_c |
 | C040-Correct | ChoiceOption | "4점(혼란)" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D047_5 |
 | D047_retry_c | Dialogue | "오답입니다. 현재 환자는 시간대를 인지하지 못하며 혼란스러워하는 상태입니다." | C040 |
-| D047_5 | [관찰3] "마지막으로 Motor Response(M)입니다. 움직임에 대한 명령에 잘 수행합니다." | C041 |
+| D047_5 | Dialogue | [관찰3] "마지막으로 Motor Response(M)입니다. 움직임에 대한 명령에 잘 수행합니다." | C041 |
 | C041 | Choice | "관찰된 M(Motor Response) 점수는 몇 점입니까?" | C041-Wrong, C041-Correct |
 | C041-Wrong | ChoiceOption | "5점(통증 원인을 치우려고 손을 뻗음)", "4점(통증에 회피)", "3점(이상 굴곡)", "2점(이상 신전)", "1(반응 없음)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D047_retry_d |
 | C041-Correct | ChoiceOption | "6점(명령 수행)" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D047_6 |
@@ -85,7 +85,7 @@
 | C042-Wrong | ChoiceOption | "5점(정상 근력)", "4점(중력+약간의 저항)", "2점(중력에 저항 불가, 좌우 운동)", "1점(약간의 근육 수축)", "0점(움직임 없음)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D047_retry_e |
 | C042-Correct | ChoiceOption | "3점(중력에 저항 가능)" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D047_8 |
 | D047_retry_e | Dialogue | "오답입니다. 현재 중력에는 저항 가능하나, 간호사가 저항을 가했을 때 이겨내지 못하는 상태입니다." | C004_motor |
-| D047_8 | [플레이어 A 전용] "현재 시나리오 B 환자의 GCS는 13점, 근력(Motor Grade)은 우측 5점, 좌측 3점입니다." | CC_A_gcs_patientB |
+| D047_8 | Dialogue | [플레이어 A 전용] "현재 시나리오 B 환자의 GCS는 13점, 근력(Motor Grade)은 우측 5점, 좌측 3점입니다." | CC_A_gcs_patientB |
 | D048 | Dialogue | [플레이어 C 전용] "환자의 활력징후를 측정합니다. 활력징후 측정도구, 전극, 전극 케이블을 클릭해 획득하세요." | V035 |
 | V032 | Validator | [C 1단계 - 시작] 플레이어 C는 활력징후 측정도구, 전극, 전극 케이블을 클릭해 획득한다. Condition은 Click_vital_set, Click_electrode, Click_electrode_cable이며, TargetCount는 3이다. | D048_1 |
 | D048_1 | Dialogue | "전극을 선택하여 환자의 가슴에 부착하십시오." | V032_1 |
@@ -173,7 +173,7 @@
 | C046-Wrong | ChoiceOption | "5점(적절한 답변)", "3점(부적절한 답변)", "2점(신음소리)", "1점(반응 없음)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D055_retry_c |
 | C046-Correct | ChoiceOption | "4점(혼란)" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D055_5 |
 | D055_retry_c | Dialogue | "오답입니다. 현재 환자는 시간대를 인지하지 못하며 혼란스러워하는 상태입니다." | C046 |
-| D055_5 | [관찰3] "마지막으로 Motor Response(M)입니다. 움직임에 대한 명령에 잘 수행합니다." | C047 |
+| D055_5 | Dialogue | [관찰3] "마지막으로 Motor Response(M)입니다. 움직임에 대한 명령에 잘 수행합니다." | C047 |
 | C047 | Choice | "관찰된 M(Motor Response) 점수는 몇 점입니까?" | C047-Wrong, C047-Correct |
 | C047-Wrong | ChoiceOption | "5점(통증 원인을 치우려고 손을 뻗음)", "4점(통증에 회피)", "3점(이상 굴곡)", "2점(이상 신전)", "1(반응 없음)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D055_retry_d |
 | C047-Correct | ChoiceOption | "6점(명령 수행)" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D055_6 |
@@ -184,7 +184,7 @@
 | C048-Wrong | ChoiceOption | "5점(정상 근력)", "4점(중력+약간의 저항)", "2점(중력에 저항 불가, 좌우 운동)", "1점(약간의 근육 수축)", "0점(움직임 없음)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D055_retry_e |
 | C048-Correct | ChoiceOption | "3점(중력에 저항 가능)" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D055_8 |
 | D055_retry_e | Dialogue | "오답입니다. 현재 중력에는 저항 가능하나, 간호사가 저항을 가했을 때 이겨내지 못하는 상태입니다." | C048 |
-| D055_8 | [플레이어 B 전용] "현재 시나리오 B 환자의 GCS는 13점, 근력(Motor Grade)은 좌측 5점, 우측 3점입니다." | CC_B_gcs_patientC |
+| D055_8 | Dialogue | [플레이어 B 전용] "현재 시나리오 B 환자의 GCS는 13점, 근력(Motor Grade)은 좌측 5점, 우측 3점입니다." | CC_B_gcs_patientC |
 | D056 | Dialogue | [플레이어 D 전용] "환자의 활력징후를 측정합니다. 활력징후 측정도구, 전극, 전극 케이블을 클릭해 획득하세요." | V036 |
 | V036 | Validator | [D 1단계 - 시작] 플레이어 D는 활력징후 측정도구, 전극, 전극 케이블을 클릭해 획득한다. Condition은 Click_vital_set, Click_electrode, Click_electrode_cable이며, TargetCount는 3이다. | D056_1 |
 | D056_1 | Dialogue | "전극을 선택하여 환자의 가슴에 부착하십시오." | V036_1 |
@@ -255,5 +255,5 @@
 
 | 항목 | 내용 |
 |---|---|
-| 종료 노드 | D027 |
+| 종료 노드 | D063 |
 | 종료 연출/설명 | 두 환자 모두 CT실 도달 시 종료된다. 검은 화면으로 fade out 되며 "시나리오 B, C 환자 대응 종료. 모든 시나리오를 수행하였습니다." 메세지를 표시하며 종료된다. |

@@ -12,7 +12,7 @@
 | 리소스 식별자 - 초상화 | 없음 |
 | 리소스 식별자 - 웨이포인트 | wp_treatment_room |
 | 리소스 식별자 - 카메라 타겟 | 없음 |
-| 시작 노드 Identifier | D001 |
+| 시작 노드 Identifier | D008 |
 
 ## 시나리오 본문
 
@@ -66,7 +66,7 @@
 | C006-Wrong | ChoiceOption | "5점(적절한 답변)", "4점(혼란)", "3점(부적절한 답변)", "1점(반응 없음)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D011_retry_c |
 | C006-Correct | ChoiceOption | "2점(신음소리)" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D011_5 |
 | D011_retry_c | Dialogue | "오답입니다. 현재 환자는 알아들을 수 없는 소리만 내고 있습니다." | C006 |
-| D011_5 | [관찰3] "마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 팔을 재빨리 굽혀 자극을 피합니다." | C007 |
+| D011_5 | Dialogue | [관찰3] "마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 팔을 재빨리 굽혀 자극을 피합니다." | C007 |
 | C007 | Choice | "관찰된 M(Motor Response) 점수는 몇 점입니까?" | C007-Wrong, C007-Correct |
 | C007-Wrong | ChoiceOption | "6점(명령 수행)", "5점(통증 원인을 치우려고 손을 뻗음)", "3점(이상 굴곡)", "2점(이상 신전)", "1(반응 없음)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D011_retry_d |
 | C007-Correct | ChoiceOption | "4점(통증에 회피)" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D011_6 |
@@ -160,7 +160,7 @@
 | P005-B2 | ParallelBranch | 브랜치 시작 노드는 D017_11이며, 플레이어 D는 인벤토리 내 혈액백을 선택한 뒤, Level 1 rapid infuser와 상호작용한다. CompletionConditionIdentifier는 CC_D_blood_to_lv1으로 서술한다. | D017_11 |
 | D017_9 | Dialogue | [플레이어 C 전용] "플라즈마 솔루션 1L 수액백을 클릭해 획득하세요." | V015_6 |
 | V015_6 | Validator | [C 2단계] 플라즈마 솔루션 1L 수액백을 클릭해 획득한다. Condition은 Click_ps1이며, TargetCount는 1이다. | D017_10 |
-| D017_10 | "플라즈마 솔루션 1L 수액백을 클릭해 선택한 뒤, Level 1 rapid infuser와 연결하세요." | V015_7 |
+| D017_10 | Dialogue | "플라즈마 솔루션 1L 수액백을 클릭해 선택한 뒤, Level 1 rapid infuser와 연결하세요." | V015_7 |
 | V015_7 | Validator | [C 3단계] 플라즈마 솔루션 1L 수액백을 클릭한 뒤, Level 1 rapid infuser를 클릭해 연결한다. Level 1의 외형은 변하지 않지만[가능하다면 좋다] 적용된 것으로 한다. 플라즈마 솔루션 1L 수액백이 상호작용되면 수액백 아이템은 사라지고, Level 1 rapid infuser의 상태를 "플라즈마 솔루션 1L 수액백 연결완료"를 출력한다. Condition은 Connect_ps1_to_lv1이며, TargetCount는 1이다. | CC_C_plasma_to_lv1 |
 | D017_11 | Dialogue | [플레이어 D 전용] "인벤토리 내 혈액백을 클릭해 선택한 뒤, Level 1 rapid infuser와 연결하세요." | V015_8 |
 | V015_8 | Validator | [플레이어 D 전용] 인벤토리 내 혈액백을 클릭한 뒤, Level 1 rapid infuser를 클릭해 연결한다. Level 1의 외형은 변하지 않지만[가능하다면 좋다] 적용된 것으로 한다. 혈액백이 상호작용되면 혈액백은 사라지고, Level 1 rapid infuser의 상태를 "혈액백 연결완료"를 출력한다. Condition은 Connect_blood_to_lv1이며, TargetCount는 1이다. | CC_D_blood_to_lv1 |
@@ -169,7 +169,7 @@
 | V015_9 | Validator | [C 4단계] Level 1 rapid infuser를 클릭한 뒤, 환자에게 삽입된 C-line을 클릭하면 연결된다. Condition은 Connect_lv1_to_a이며, TargetCount는 1이다. | E028 |
 | E028 | InvokeEvent | Level 1 rapid infuser와 환자에게 삽입된 C-line이 [2개의 줄]로 연결된다. [이 때 연결할 줄은 생성하는 데 제한적이었기 때문에, 코딩을 바탕으로 투명 관으로 단순 연결한다.] EventIdentifier로 connect_lv1_to_cline을 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | D017_13 |
 | D017_13 | Dialogue | [시스템, by 플레이어 C] "Level 1이 연결되었습니다." | CC_D_iv_patientA |
-| D018 | [시스템, by 의사 NPC] "그래도 혈압이 잘 안잡히네요.." | E029 |
+| D018 | Dialogue | [시스템, by 의사 NPC] "그래도 혈압이 잘 안잡히네요.." | E029 |
 | E029 | InvokeEvent | 환자 모니터에서 출력되는 창을 모두에게 띄운다. 동시에, 환자의 활력징후가 급격히 하락한다. "환자의 의식수준이 낮아지고, 혈압 -?- mmHg[측정불가하다는 의미], 맥박수 70회/분, 호흡수 -?- 회/분[측정불가하다는 의미], SpO2 -?-%" 를 출력한다. [파형을 출력하는 경우, flatline을 그린다.] EventIdentifier로 patient_crash_ui를 호출한다. MoveNextBehavior는 Immediate로 서술한다. | D019 |
 | D019 | Dialogue | [시스템, by 의사 NPC] "심전도가 이상합니다. 간호사 B 선생님, 환자 맥박 확인해주세요." | D020 |
 | D020 | Dialogue | [플레이어 B 전용] "환자의 경동맥을 촉지해 맥박을 확인합니다. 목 부위를 클릭하세요." | V016 |
@@ -261,7 +261,7 @@
 | C018 | Choice | [플레이어 D 전용] "1. 에피네프린은 얼마나 자주 투여해야 하는가?" | C018-Wrong, C018-Correct |
 | C018-Wrong | ChoiceOption | "약 1~2분에 한 번", "약 5~10분에 한 번", "누군가 시킬 때 마다" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D026_retry_a |
 | C018-Correct | ChoiceOption | "약 3~5분에 한 번" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | E047 |
-| D026_retry_a | "오답입니다. 에피네프린은 3~4분에 한 번 투여합니다." | C018 |
+| D026_retry_a | Dialogue | "오답입니다. 에피네프린은 3~4분에 한 번 투여합니다." | C018 |
 | E047 | InvokeEvent | C019에 해당하는 문제가 제시되기 전, [4초가 지난 뒤 제시]하여 시간을 확보한다. EventIdentifier로 delay_4sec를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | C019 |
 | C019 | Choice | [플레이어 D 전용] "2. 말초(팔)로 약물을 투여하는 경우, 적절한 투여 절차는?" | C019-Wrong, C019-Correct |
 | C019-Wrong | ChoiceOption | "약물 주입 후 생리식염수 주입", "약물만 주입" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D026_retry_b |
@@ -327,7 +327,7 @@
 | C026 | Choice | [플레이어 C 전용] "1. 에피네프린은 얼마나 자주 투여해야 하는가?" | C026-Wrong, C026-Correct |
 | C026-Wrong | ChoiceOption | "1~2분에 한 번", "5~10분에 한 번", "누군가 시킬 때 마다" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D031_retry_a |
 | C026-Correct | ChoiceOption | "3~5분에 한 번" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | E061 |
-| D031_retry_a | "오답입니다. 에피네프린은 3~4분에 한 번 투여합니다." | C026 |
+| D031_retry_a | Dialogue | "오답입니다. 에피네프린은 3~4분에 한 번 투여합니다." | C026 |
 | E061 | InvokeEvent | C027에 해당하는 문제가 제시되기 전, [4초가 지난 뒤 제시]하여 시간을 확보한다. EventIdentifier로 delay_4sec를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | C027 |
 | C027 | Choice | [플레이어 C 전용] "2. 말초(팔)로 약물을 투여하는 경우, 적절한 투여 절차는?" | C009_2-Wrong, C009_2-Correct |
 | C027-Wrong | ChoiceOption | "약물 주입 후 생리식염수 주입", "약물만 주입" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D031_retry_b |
@@ -373,7 +373,7 @@
 | V027 | Validator | [플레이어 B] 가위를 클릭해 획득하고, 해당 아이템을 선택한 상태로 환자를 클릭한다. Condition은 remove_clothings_a이며, TargetCount는 1이다. | E069 |
 | E069 | InvokeEvent | 가위로 천을 자르는 소리를 [처치실 내에서만 들리도록] 출력한다. EventIdentifier로 cutting_sound를 호출한다. MoveNextBrhavior는 WaitUntilDone으로 서술한다. | D041_1 |
 | D041_1 | Dialogue | [시스템, by 플레이어 B] "추가 외상은 확인되지 않습니다." | CC_B_cut_patientA |
-| D042 | Dialogue [플레이어 D 전용] "환자를 클릭해 환자의 의식 상태를 사정하십시오." | V028 |
+| D042 | Dialogue | [플레이어 D 전용] "환자를 클릭해 환자의 의식 상태를 사정하십시오." | V028 |
 | V028 | Validator | 플레이어 D는 환자를 클릭해 GCS를 사정한다. Condition은 Check_gcs_a_rosc이며, TargetCount는 1이다. | D042_1 |
 | D042_1 | Dialogue | "환자의 의식 상태를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다." | D042_2 |
 | D042_2 | Dialogue | "환자를 불렀을 때 응답이 없고, 환자의 옆구리를 꼬집었을 때 불편해하며 피하려 합니다." | C031 |
