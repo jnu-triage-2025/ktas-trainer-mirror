@@ -2,8 +2,8 @@ namespace TriageTrainer.ItemDefinitions
 {
   public class Scissors : MedicalItem
   {
-    public override string Identifier   => "scissors";
-    public override string DisplayName  => "가위";
-    public override string Description  => "";
+    public const string Identifier   = "scissors";
+    public const string DisplayName  = "가위";
+    public const string Description  = "";
   }
 }

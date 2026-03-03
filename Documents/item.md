@@ -56,3 +56,14 @@
 - `RegistryPreloadItemSO`에 등록 및 `RegistryPreloaderController`에 연결
 - `OnAttack`/`OnUse`에서 서버와 클라 역할 분리를 유지한다.
 - 인벤토리 변경 후 UI 동기화가 필요하면 슬롯 갱신 이벤트를 사용한다.
+
+## 주의사항
+
+### `const` 기반 정의 시스템
+
+`Item` 기반 클래스의 `virtual` 프로퍼티는 런타임 리플렉션으로 파생 클래스의 `public const` 필드를 읽습니다. 자세한 내용은 [item-authoring.md](item-authoring.md)의 `const 기반 정의 시스템 주의사항` 절을 참조하세요.
+
+요약:
+- leaf 클래스에 `Identifier`, `DisplayName`, `Description` `const`가 **누락되면 컴파일 에러 없이** 빈 문자열이 반환됩니다.
+- 상위 클래스의 `const`를 재정의할 때는 반드시 `new` 한정자를 붙입니다. (CS0108 경고 억제)
+- `InitializeFromDefinitions()`는 인스턴스 생성 시 1회만 호출되므로 리플렉션 비용은 `Current*` 프로퍼티에 캐싱됩니다.

@@ -212,3 +212,36 @@ namespace TriageTrainer.Items
 - **`ItemData.Clone()`과 인벤토리 조작 메서드**(`Pop`, `TakeAll` 등)는 **base `ItemData`** 복사 생성자를 사용하므로, 서브클래스 고유 필드는 복사되지 않습니다. 수량·내구도 관련 연산에는 문제가 없으나, 서브클래스 필드가 복사되어야 한다면 별도 처리가 필요합니다.
 - **`ItemDataInitializerBase.Awake()` 순서:** 같은 GameObject에서 `Item` 컴포넌트보다 아래에 위치시키세요.
 - **월드 드롭 시:** `ItemSpawnUtility.TrySpawnDroppedItem`은 `RegistryType.Item`에 등록된 프리팹 템플릿을 인스턴스화합니다. 등록이 누락되면 드롭이 실패합니다.
+
+### `const` 기반 정의 시스템 주의사항
+
+`Item` 기반 클래스의 `virtual` 프로퍼티(`Identifier`, `DisplayName`, `Description` 등)는 런타임 리플렉션으로 파생 클래스의 `public const` 필드를 탐색합니다.
+
+- **`const` 누락 시 무음 실패:** 파생 클래스에 해당 `const`가 선언되어 있지 않으면 컴파일 에러 없이 빈 문자열(`""`) 또는 기본값(`0`, `false`)이 반환됩니다. `Identifier`가 비어 있으면 레지스트리 등록·조회가 모두 실패합니다.
+  ```csharp
+  // ❌ Identifier const 누락 → item.Identifier == ""
+  public class BadItem : MedicalItem { }
+
+  // ✅
+  public class GoodItem : MedicalItem
+  {
+    public const string Identifier   = "good_item";
+    public const string DisplayName  = "Good Item";
+    public const string Description  = "설명";
+  }
+  ```
+
+- **상위 클래스 `const` 재정의 시 `new` 사용:** `MedicalItem` 등 중간 계층의 `const`를 leaf 클래스에서 다른 값으로 바꾸려면 `new` 한정자를 명시합니다. 생략하면 CS0108 경고가 발생합니다.
+  ```csharp
+  public class SpecialItem : MedicalItem
+  {
+    public const string Identifier   = "special_item";
+    public const string DisplayName  = "Special Item";
+    public const string Description  = "설명";
+    public new const int  MaxStackCount = 1;   // MedicalItem 기본값(64)을 재정의
+    public new const bool EnabledCooldown = true;
+    public new const float CooldownMilliseconds = 500f;
+  }
+  ```
+
+- **리플렉션 비용:** `InitializeFromDefinitions()`는 아이템 인스턴스 생성 시 1회만 호출됩니다. 결과는 `Current*` 프로퍼티에 캐싱되므로 런타임 핫패스에서 리플렉션이 반복 실행되지 않습니다.

@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
@@ -11,54 +12,76 @@ namespace MultiplayerInfrastructure.ItemSystem
   /// 모든 아이템의 기반 추상 클래스입니다.
   ///
   /// ■ Definitions (정의 레이어)
-  ///   파생 클래스에서 override하는 abstract/virtual 프로퍼티.
-  ///   컴파일 타임에 결정되며, 인스턴스화 시 Instance 값의 초기값으로 사용됩니다.
+  ///   파생 클래스에서 public const 필드로 선언합니다.
+  ///   기반 클래스의 virtual 프로퍼티는 리플렉션으로 읽어오며, 인스턴스화 시 Instance 초기값으로 사용됩니다.
+  ///
+  ///   예)
+  ///     public const string Identifier   = "my_item";
+  ///     public const string DisplayName  = "My Item";
+  ///     public const string Description  = "설명";
+  ///
+  ///   MyItem.Identifier 처럼 인스턴스 없이도 컴파일 타임 상수로 접근할 수 있습니다.
+  ///   같은 이름의 const를 자식 클래스에서 다시 선언하면 부모 값을 숨깁니다 (new 권고).
   ///
   /// ■ Instance (상태 레이어)
   ///   런타임 중 변하는 현재 값들. 생성자에서 Definitions 값으로 초기화됩니다.
   ///   CurrentSerializedDerivedAttributes를 통해 파생 클래스 고유 상태를 직렬화/역직렬화합니다.
-  ///
-  /// ■ 주의
-  ///   생성자에서 Definitions 프로퍼티를 읽으므로, 파생 클래스가 프로퍼티를
-  ///   컴파일 타임 상수(=> "value")나 필드 초기화값으로 정의해야 합니다.
-  ///   생성자 파라미터에 의존하는 프로퍼티 구현은 base() 호출 이후에 유효합니다.
   /// </summary>
   [Serializable]
   public abstract class Item
   {
     // =========================================================================
-    // DEFINITIONS — 파생 클래스에서 override
+    // DEFINITIONS — 파생 클래스에서 public const 필드로 선언
+    //
+    // base 클래스의 virtual 프로퍼티가 리플렉션으로 자신의 Type에서 const 값을 읽어옵니다.
+    // 중간 계층(예: MedicalItem)의 const 값은 leaf 클래스가 같은 이름의 const를 선언하지 않으면
+    // FlattenHierarchy 탐색으로 자동 사용됩니다. 재정의 시 'new' 한정자를 권고합니다.
     // =========================================================================
 
+    private static readonly BindingFlags ConstFlags =
+      BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy;
+
+    private string ReadConstString(string name)
+    {
+      var f = GetType().GetField(name, ConstFlags);
+      return f is not null ? (string)f.GetValue(null) : string.Empty;
+    }
+
+    private T ReadConst<T>(string name) where T : struct
+    {
+      var f = GetType().GetField(name, ConstFlags);
+      return f is not null ? (T)f.GetValue(null) : default;
+    }
+
     #region Definitions/Commons
-    public abstract string Identifier        { get; }
-    public abstract string DisplayName       { get; }
-    public abstract string Description       { get; }
-    public abstract string DetailComment     { get; }
+    public virtual string Identifier        => ReadConstString(nameof(Identifier));
+    public virtual string DisplayName       => ReadConstString(nameof(DisplayName));
+    public virtual string Description       => ReadConstString(nameof(Description));
+    public virtual string DetailComment     => ReadConstString(nameof(DetailComment));
     /// <summary>HTML hex color 문자열. 예: "#FF8800" 또는 "white"</summary>
-    public abstract string Color             { get; }
+    public virtual string Color             => ReadConstString(nameof(Color));
     #endregion
 
     #region Definitions/Stack
-    public abstract bool IsStackable         { get; }
-    public abstract int  MaxStackCount       { get; }
+    public virtual bool IsStackable         => ReadConst<bool>(nameof(IsStackable));
+    public virtual int  MaxStackCount       => ReadConst<int>(nameof(MaxStackCount));
     #endregion
 
     #region Definitions/Durability
-    public abstract bool HasDurability            { get; }
-    public abstract bool EnabledDeltaDurability   { get; }
-    public abstract int  MaxDurability            { get; }
-    public abstract int  DeltaDurabilityOnAttack  { get; }
-    public abstract int  DeltaDurabilityOnUse     { get; }
+    public virtual bool HasDurability            => ReadConst<bool>(nameof(HasDurability));
+    public virtual bool EnabledDeltaDurability   => ReadConst<bool>(nameof(EnabledDeltaDurability));
+    public virtual int  MaxDurability            => ReadConst<int>(nameof(MaxDurability));
+    public virtual int  DeltaDurabilityOnAttack  => ReadConst<int>(nameof(DeltaDurabilityOnAttack));
+    public virtual int  DeltaDurabilityOnUse     => ReadConst<int>(nameof(DeltaDurabilityOnUse));
     #endregion
 
     #region Definitions/ItemUsing
-    public abstract float MinReach              { get; }
-    public abstract float MaxReach              { get; }
-    public abstract int   ItemDamage            { get; }
-    public abstract bool  EnabledCooldown       { get; }
+    public virtual float MinReach              => ReadConst<float>(nameof(MinReach));
+    public virtual float MaxReach              => ReadConst<float>(nameof(MaxReach));
+    public virtual int   ItemDamage            => ReadConst<int>(nameof(ItemDamage));
+    public virtual bool  EnabledCooldown       => ReadConst<bool>(nameof(EnabledCooldown));
     /// <summary>쿨다운 시간 (밀리초)</summary>
-    public abstract float CooldownMilliseconds  { get; }
+    public virtual float CooldownMilliseconds  => ReadConst<float>(nameof(CooldownMilliseconds));
     #endregion
 
     #region Definitions/Instantiate

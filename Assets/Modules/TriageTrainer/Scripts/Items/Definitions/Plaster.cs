@@ -2,8 +2,8 @@ namespace TriageTrainer.ItemDefinitions
 {
   public class Plaster : MedicalItem
   {
-    public override string Identifier   => "plaster";
-    public override string DisplayName  => "플라스터";
-    public override string Description  => "고정용 플라스터.";
+    public const string Identifier   = "plaster";
+    public const string DisplayName  = "플라스터";
+    public const string Description  = "고정용 플라스터.";
   }
 }
