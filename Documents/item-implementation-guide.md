@@ -127,7 +127,7 @@ namespace TriageTrainer.ItemDefinitions
 
 ## 4단계: Registry 등록
 
-`Assets/Modules/TriageTrainer/MultiplayerInfrastructure/TTRegistryMonoBehaviourSupport.cs` 의 `RegisterItems()` 메서드에 한 줄을 추가합니다.
+`Assets/Modules/TriageTrainer/MultiplayerInfrastructure/TTRegistryPreloader.cs` 의 `RegisterItems()` 메서드에 한 줄을 추가합니다.
 
 ```csharp
 public void RegisterItems()
@@ -152,8 +152,6 @@ Assets/Resources/Models/Items/scalpel.prefab
 - 폴더 경로의 마지막 파일명은 `Identifier` 값과 **동일**해야 합니다.
 - 프리팹이 없으면 `ItemObject`가 기본 큐브로 대체합니다.
 
-> ⚠️ **FishNet `NetworkObject` 컴포넌트 주의:** 3D 모델 프리팹에 FishNet의 `NetworkObject` 컴포넌트가 붙어 있으면, FishNet이 네트워크에 등록되지 않은 오브젝트라고 판단하여 자동으로 **비활성화**합니다. 모델이 씬에서 보이지 않는다면 프리팹에서 `NetworkObject`(및 기타 FishNet 컴포넌트)를 제거하십시오.
-
 ---
 
 ## 구현 체크리스트
@@ -161,7 +159,7 @@ Assets/Resources/Models/Items/scalpel.prefab
 - [ ] `Item` 파생 클래스 작성 (`const Identifier`, `DisplayName`, `Description`)
 - [ ] 아이콘 스프라이트 준비 (`Resources/Textures/ItemIcons/{identifier}.png` 또는 SO 명시 할당)
 - [ ] 필요하다면 `OnUse` / `OnAttack` 등 핸들러 override
-- [ ] `TTRegistryMonoBehaviourSupport.RegisterItems()`에 `RegisterItemDefinition<T>(identifier)` 추가
+- [ ] `TTRegistryPreloader.RegisterItems()`에 `RegisterItemDefinition<T>(identifier)` 추가
 - [ ] 3D 모델이 필요하면 `Resources/Models/Items/{identifier}.prefab` 배치
 
 ---
@@ -182,7 +180,7 @@ Assets/Resources/Models/Items/scalpel.prefab
 ### 런타임 동작
 
 ```
-TTRegistryMonoBehaviourSupport.Awake()  →  모든 아이템 identifier 등록
+TTRegistryPreloader.Awake()  →  모든 아이템 identifier 등록
           ↓
 SceneItemPlacement.Start()
   ├─ Registry.CreateItemInstance(identifier)  → Item 인스턴스 생성
@@ -192,7 +190,7 @@ SceneItemPlacement.Start()
 ```
 
 > **실행 순서:** `Start()`를 사용하므로 모든 `Awake()` 완료 후 실행됩니다.  
-> `TTRegistryMonoBehaviourSupport`가 `Awake()`에서 등록하므로 `Start()` 시점에는 항상 Registry가 준비되어 있습니다.
+> `TTRegistryPreloader`가 `Awake()`에서 등록하므로 `Start()` 시점에는 항상 Registry가 준비되어 있습니다.
 
 ### 씬 뷰 Gizmo
 
@@ -202,7 +200,7 @@ SceneItemPlacement.Start()
 
 ### 주의
 
-- **배치가 되려면 identifier가 `TTRegistryMonoBehaviourSupport`(또는 다른 Preloader)에도 반드시 등록**되어 있어야 합니다.
+- **배치가 되려면 identifier가 `TTRegistryPreloader`(또는 다른 Preloader)에도 반드시 등록**되어 있어야 합니다.
 - `const` 필드가 없는 Item 서브클래스는 드롭다운에 표시되지 않습니다.
 - `SceneItemPlacement` GameObject 자체는 Start() 이후 제거됩니다. 연결된 자식 오브젝트는 ItemObject에 포함되지 않으므로 플레이스홀더 GameObject에 다른 컴포넌트를 추가하지 마십시오.
 
@@ -211,7 +209,7 @@ SceneItemPlacement.Start()
 ## 주의사항
 
 - **`Identifier`는 시스템 전체에서 유일해야 합니다.** 중복 시 나중에 등록된 항목이 앞선 항목을 덮어씁니다.
-- **월드 드롭 시:** `player.TryDropItemInFront(item)` 내부에서 `ItemObject.Spawn`이 호출됩니다. `TTRegistryMonoBehaviourSupport`에 등록이 누락되어 있어도 드롭 자체는 동작하지만, `Registry.CreateItemInstance`로 아이템을 생성하는 경로(씬 배치, `/give` 커맨드 등)는 실패합니다.
+- **월드 드롭 시:** `player.TryDropItemInFront(item)` 내부에서 `ItemObject.Spawn`이 호출됩니다. `TTRegistryPreloader`에 등록이 누락되어 있어도 드롭 자체는 동작하지만, `Registry.CreateItemInstance`로 아이템을 생성하는 경로(씬 배치, `/give` 커맨드 등)는 실패합니다.
 - **`TriageTrainer.MultiplayerInfrastructure` 네임스페이스 충돌:** 이 네임스페이스를 가진 파일에서 `MultiplayerInfrastructure.*`를 참조할 때 `using MI = MultiplayerInfrastructure` 별칭을 사용하지 않으면 CS0234 에러가 발생합니다.
 
 ### `const` 기반 정의 시스템 주의사항

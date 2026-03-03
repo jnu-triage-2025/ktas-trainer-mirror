@@ -27,26 +27,26 @@ namespace MultiplayerInfrastructure.Examples
   public class BandageItem : Item
   {
     // ── Definitions ──────────────────────────────────────────────────────
-    public override string Identifier    => "bandage";
-    public override string DisplayName   => "붕대";
-    public override string Description   => "지혈 및 상처 보호에 사용합니다.";
-    public override string DetailComment => "기본 회복량: 30 HP";
-    public override string Color         => "#FFFFFF";
+    public const string Identifier    = "bandage";
+    public const string DisplayName   = "붕대";
+    public const string Description   = "지혈 및 상처 보호에 사용합니다.";
+    public const string DetailComment = "기본 회복량: 30 HP";
+    public const string Color         = "#FFFFFF";
 
-    public override bool IsStackable   => true;
-    public override int  MaxStackCount => 10;
+    public const bool IsStackable   = true;
+    public const int  MaxStackCount = 10;
 
-    public override bool HasDurability           => false;
-    public override bool EnabledDeltaDurability  => false;
-    public override int  MaxDurability           => 0;
-    public override int  DeltaDurabilityOnAttack => 0;
-    public override int  DeltaDurabilityOnUse    => 0;
+    public const bool HasDurability           = false;
+    public const bool EnabledDeltaDurability  = false;
+    public const int  MaxDurability           = 0;
+    public const int  DeltaDurabilityOnAttack = 0;
+    public const int  DeltaDurabilityOnUse    = 0;
 
-    public override float MinReach             => 0f;
-    public override float MaxReach             => 1.5f;
-    public override int   ItemDamage           => 0;
-    public override bool  EnabledCooldown      => true;
-    public override float CooldownMilliseconds => 3000f;   // 3초 쿨다운
+    public const float MinReach             = 0f;
+    public const float MaxReach             = 1.5f;
+    public const int   ItemDamage           = 0;
+    public const bool  EnabledCooldown      = true;
+    public const float CooldownMilliseconds = 3000f;   // 3초 쿨다운
 
     // ── 파생 속성 (인스턴스별 고유 상태) ─────────────────────────────────
     /// <summary>사용 시 회복량 (HP). 기본값 30에서 변경하면 NBT로 직렬화됩니다.</summary>

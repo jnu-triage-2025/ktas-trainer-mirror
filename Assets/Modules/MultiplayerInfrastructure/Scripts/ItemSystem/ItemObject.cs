@@ -1,4 +1,5 @@
 using System.Collections;
+using MultiplayerInfrastructure.InteractableEntity.Definitions;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.ItemSystem
@@ -51,7 +52,9 @@ namespace MultiplayerInfrastructure.ItemSystem
 
       var go = new GameObject($"ItemObject_{item.CurrentIdentifier}");
       go.transform.position = position;
-      go.layer = LayerMask.NameToLayer("PickupItem");
+
+      int pickupLayer = LayerMask.NameToLayer("PickupItem");
+      go.layer = pickupLayer >= 0 ? pickupLayer : 0;
 
       // 박스 콜라이더 기본 추가 (모델 로드 후 적절히 조정 가능)
       var collider = go.AddComponent<BoxCollider>();
@@ -59,6 +62,9 @@ namespace MultiplayerInfrastructure.ItemSystem
 
       var comp = go.AddComponent<ItemObject>();
       comp.Initialize(item);
+
+      // IInteractable 등록 — NearbyInteractablesDetector가 감지할 수 있도록
+      go.AddComponent<LootableItemInteractHandler>();
 
       if (throwForce.HasValue && throwForce.Value.sqrMagnitude > 0.0001f)
         comp._rigidbody.AddForce(throwForce.Value, ForceMode.Impulse);
@@ -92,8 +98,10 @@ namespace MultiplayerInfrastructure.ItemSystem
 
       if (prefab != null)
       {
-        GroundedModel = Instantiate(prefab, transform);
+        GroundedModel = Instantiate(prefab);
         GroundedModel.name = "ItemGroundedModel";
+        GroundedModel.gameObject.SetActive(true);
+        GroundedModel.transform.SetParent(transform, false);
         GroundedModel.transform.localPosition = Vector3.zero;
         GroundedModel.transform.localRotation = Quaternion.identity;
       }
@@ -111,8 +119,6 @@ namespace MultiplayerInfrastructure.ItemSystem
         if (primCollider != null) Destroy(primCollider);
       }
     }
-
-    // ─── 애니메이션 ───────────────────────────────────────────────────────────
 
     /// <summary>공격 시 아이템을 앞으로 짧게 밀었다가 되돌리는 애니메이션입니다.</summary>
     public void TriggerAttackAnimation()

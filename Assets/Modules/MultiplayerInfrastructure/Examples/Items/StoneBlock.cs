@@ -6,67 +6,67 @@ using UnityEngine;
 namespace MultiplayerInfrastructure.ItemSystem.Examples
 {
   /// <summary>
-  /// 돌 아이템 구현 예시입니다.
+  /// 돌 블록 아이템 구현 예시입니다.
   ///
   /// ■ 등록 방법 (게임 초기화 코드에서 1회):
-  ///   Registry.Registry.RegisterItemDefinition&lt;StoneItem&gt;("stone");
+  ///   Registry.Registry.RegisterItemDefinition&lt;StoneBlock&gt;(StoneBlock.Identifier);
   ///
   /// ■ 인스턴스 생성:
-  ///   var stone = Registry.Registry.CreateItemInstance("stone") as StoneItem;
+  ///   var stone = Registry.Registry.CreateItemInstance(StoneBlock.Identifier) as StoneBlock;
   ///
   /// ■ 월드에 스폰:
   ///   ItemObject.Spawn(stone, spawnPosition);
   /// </summary>
-  public class StoneItem : Item
+  public class StoneBlock : Item
   {
     // ── Definitions ────────────────────────────────────────────────────────
-    public override string Identifier    => "stone";
-    public override string DisplayName   => "돌";
-    public override string Description   => "단단한 돌덩이입니다.";
-    public override string DetailComment => "";
-    public override string Color         => "#9E9E9E";
+    public const string Identifier    = "stone_block";
+    public const string DisplayName   = "돌 블록";
+    public const string Description   = "단단한 돌덩이입니다. 설치하면 블록이 됩니다.";
+    public const string DetailComment = "";
+    public const string Color         = "#9E9E9E";
 
-    public override bool IsStackable   => true;
-    public override int  MaxStackCount => 64;
+    public const bool IsStackable   = true;
+    public const int  MaxStackCount = 64;
 
-    public override bool HasDurability           => false;
-    public override bool EnabledDeltaDurability  => false;
-    public override int  MaxDurability           => 0;
-    public override int  DeltaDurabilityOnAttack => 0;
-    public override int  DeltaDurabilityOnUse    => 0;
+    public const bool HasDurability           = false;
+    public const bool EnabledDeltaDurability  = false;
+    public const int  MaxDurability           = 0;
+    public const int  DeltaDurabilityOnAttack = 0;
+    public const int  DeltaDurabilityOnUse    = 0;
 
-    public override float MinReach             => 0.5f;
-    public override float MaxReach             => 3.0f;
-    public override int   ItemDamage           => 5;
-    public override bool  EnabledCooldown      => false;
-    public override float CooldownMilliseconds => 0f;
+    public const float MinReach             = 0.5f;
+    public const float MaxReach             = 3.0f;
+    public const int   ItemDamage           = 5;
+    public const bool  EnabledCooldown      = false;
+    public const float CooldownMilliseconds = 0f;
 
     // ── 고유 파생 속성 ────────────────────────────────────────────────────
     /// <summary>충격 공격 추가 데미지</summary>
     public int ImpactDamage { get; set; } = 5;
 
     // ── 생성자 ────────────────────────────────────────────────────────────
-    public StoneItem() : base() { }
+    public StoneBlock() : base() { }
 
     // ── Handlers ─────────────────────────────────────────────────────────
     public override ActionResult OnAttack(PlayerController player, Entity.Entity target)
     {
-      Debug.Log($"[StoneItem] OnAttack — player={player?.name}, impactDamage={ImpactDamage}");
+      Debug.Log($"[StoneBlock] OnAttack — player={player?.name}, impactDamage={ImpactDamage}");
       // TODO: target.TakeDamage(CurrentItemDamage + ImpactDamage);
       return ActionResult.Success;
     }
 
     public override ActionResult OnUse(PlayerController player, Entity.Entity target)
     {
-      Debug.Log($"[StoneItem] OnUse — player={player?.name}. 돌 블록 설치 시도.");
+      Debug.Log($"[StoneBlock] OnUse — player={player?.name}. 돌 블록 설치 시도.");
       return ActionResult.Success;
     }
 
     public override void OnGet(PlayerController player)
-      => Debug.Log($"[StoneItem] 획득 — player={player?.name}");
+      => Debug.Log($"[StoneBlock] 획득 — player={player?.name}");
 
     public override void OnThrow(PlayerController player)
-      => Debug.Log($"[StoneItem] 던지기 — player={player?.name}");
+      => Debug.Log($"[StoneBlock] 던지기 — player={player?.name}");
 
     // ── Serialization ────────────────────────────────────────────────────
     public override string GetCurrentSerializedDerivedAttributes()
@@ -80,18 +80,18 @@ namespace MultiplayerInfrastructure.ItemSystem.Examples
       // 간단한 수동 파싱 (JsonUtility 사용도 가능)
       try
       {
-        var wrapper = JsonUtility.FromJson<StoneItemSerializedData>(serialized);
+        var wrapper = JsonUtility.FromJson<StoneBlockSerializedData>(serialized);
         ImpactDamage = wrapper.ImpactDamage;
         MarkDerivedAttributesModified();
       }
       catch
       {
-        Debug.LogWarning($"[StoneItem] 직렬화 데이터 파싱 실패: {serialized}");
+        Debug.LogWarning($"[StoneBlock] 직렬화 데이터 파싱 실패: {serialized}");
       }
     }
 
     [System.Serializable]
-    private struct StoneItemSerializedData
+    private struct StoneBlockSerializedData
     {
       public int ImpactDamage;
     }

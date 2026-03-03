@@ -57,4 +57,4 @@
 - (...)/Resources/Models : 3D 모델 리소스
 - (...)/Resources/Audio : 오디오 리소스
 - (...)/Resources/Prefabs : 프리팹 리소스
-- (...)/Resources/ScriptableObjects : ItemDataModelSO 등의 스크립터블 오브젝트 리소스
+- (...)/Resources/ScriptableObjects : 스크립터블 오브젝트 리소스
