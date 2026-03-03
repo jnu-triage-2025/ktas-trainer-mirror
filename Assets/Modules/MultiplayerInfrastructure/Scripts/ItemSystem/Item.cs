@@ -1,7 +1,8 @@
 using System;
 using MultiplayerInfrastructure.Entity;
-using MultiplayerInfrastructure.Item;
+using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.ItemSystem
@@ -80,7 +81,7 @@ namespace MultiplayerInfrastructure.ItemSystem
     public string          CurrentDetailComment    { get; protected set; }
     public UnityEngine.Color CurrentColor          { get; protected set; }
     /// <summary>
-    /// 아이템 아이콘 스프라이트. 기본값은 Identifier로 ItemSpriteRegistry를 통해 조회합니다.
+    /// 아이템 아이콘 스프라이트. 기본값은 Identifier로 Registry.GetOrLoadIconSprite 를 통해 조회합니다.
     /// </summary>
     public Sprite          CurrentItemIconTexture  { get; protected set; }
     #endregion
@@ -143,7 +144,7 @@ namespace MultiplayerInfrastructure.ItemSystem
       CurrentColor = UnityEngine.ColorUtility.TryParseHtmlString(Color, out var parsed)
         ? parsed
         : UnityEngine.Color.white;
-      CurrentItemIconTexture = ItemSpriteRegistry.GetOrLoad(Identifier);
+      CurrentItemIconTexture = Registry.Registry.GetOrLoadIconSprite(Identifier);
 
       // Stack
       IsCurrentlyStackable = IsStackable;

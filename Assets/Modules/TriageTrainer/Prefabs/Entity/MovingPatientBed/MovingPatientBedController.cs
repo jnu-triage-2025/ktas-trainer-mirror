@@ -273,7 +273,7 @@ namespace TriageTrainer.Entity
         }
 
         var player = interactor.GetComponentInParent<PlayerController>();
-        if (player != null && player.IsOwner && !Input.GetKey(MultiplayerInfrastructure.Definitions.DefaultsKeyConfiguration.InteractInteractableObject))
+        if (player != null && player.IsOwner && !Input.GetKey(MI.Definitions.DefaultsKeyConfiguration.InteractInteractableObject))
           keys.Add(each.Key);
       }
 

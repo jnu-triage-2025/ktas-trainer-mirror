@@ -1,5 +1,4 @@
 using FishNet.Object;
-using MultiplayerInfrastructure.Item;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
@@ -227,7 +226,7 @@ namespace MultiplayerInfrastructure.Player
       ClearViewmodel();
       _viewmodelItem = HandlingItem;
 
-      var prefab = Registry.Registry.Get<GameObject>(RegistryType.Item, HandlingItem.CurrentIdentifier);
+      var prefab = Resources.Load<GameObject>($"Models/Items/{HandlingItem.CurrentIdentifier}");
       if (prefab == null)
         return;
 

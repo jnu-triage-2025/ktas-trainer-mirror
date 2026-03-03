@@ -14,7 +14,6 @@ namespace MultiplayerInfrastructure.Registry
   /// </summary>
   public class RegistryPreloaderController : MonoBehaviour
   {
-    public RegistryPreloadItemSO preloadItemSO;
     public RegistryPreloadScenarioGraphSO preloadScenarioGraphSO;
     public RegistryPreloadIconSpriteSO preloadIconSpriteSO;
     public RegistryPreloadNpcSO preloadNpcSO;
@@ -25,7 +24,6 @@ namespace MultiplayerInfrastructure.Registry
 
     private void Awake()
     {
-      PreloadItems();
       PreloadScenarioGraphs();
       PreloadIconSprites();
       PreloadNpcs();
@@ -33,26 +31,6 @@ namespace MultiplayerInfrastructure.Registry
       PreloadEntities();
       PreloadInteractableEntities();
       PreloadUIControllers();
-    }
-
-    private void PreloadItems()
-    {
-      if (preloadItemSO == null || preloadItemSO.itemRegistryRequirements == null)
-        return;
-
-      foreach (var req in preloadItemSO.itemRegistryRequirements)
-      {
-        if (req.itemDataModel == null || string.IsNullOrWhiteSpace(req.itemDataModel.identifier))
-          continue;
-
-        string identifier = req.itemDataModel.identifier;
-
-        if (req.itemPrefab != null)
-          Registry.Register(RegistryType.Item, identifier, req.itemPrefab);
-
-        if (req.itemSprite != null)
-          Registry.Register(RegistryType.IconSprite, identifier, req.itemSprite);
-      }
     }
 
     private void PreloadScenarioGraphs()
@@ -79,7 +57,7 @@ namespace MultiplayerInfrastructure.Registry
         if (string.IsNullOrWhiteSpace(req.identifier) || req.sprite == null)
           continue;
 
-        Registry.Register(RegistryType.IconSprite, req.identifier, req.sprite);
+        Registry.RegisterIconSprite(req.identifier, req.sprite);
       }
     }
 

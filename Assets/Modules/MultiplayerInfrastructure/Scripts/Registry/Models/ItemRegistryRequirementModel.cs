@@ -6,9 +6,7 @@ namespace MultiplayerInfrastructure.Registry
   [Serializable]
   public struct ItemRegistryRequirement
   {
-    public ItemBaseModelSO itemDataModel;
-    public GameObject itemPrefab;
+    public Type itemDefinition;
     public Sprite itemSprite;
   }
 }
-

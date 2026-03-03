@@ -1,5 +1,5 @@
 using MultiplayerInfrastructure.Entity;
-using MultiplayerInfrastructure.Item;
+using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
 using UnityEngine;
 

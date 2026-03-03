@@ -10,7 +10,6 @@ namespace MultiplayerInfrastructure.Registry
   public static partial class Registry
   {
     private static readonly Dictionary<string, object> _itemRegistry = new(StringComparer.Ordinal);
-    private static readonly Dictionary<string, object> _itemDefinitionRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _scenarioGraphRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _iconSpriteRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _npcRegistry = new(StringComparer.Ordinal);
@@ -185,7 +184,6 @@ namespace MultiplayerInfrastructure.Registry
       return registryType switch
       {
         RegistryType.Item => _itemRegistry,
-        RegistryType.ItemDefinition => _itemDefinitionRegistry,
         RegistryType.ScenarioGraph => _scenarioGraphRegistry,
         RegistryType.IconSprite => _iconSpriteRegistry,
         RegistryType.Npc => _npcRegistry,
@@ -269,7 +267,7 @@ namespace MultiplayerInfrastructure.Registry
     /// identifier 는 Item.Identifier 와 일치시키는 것을 권장합니다.
     /// </summary>
     public static void RegisterItemDefinition<T>(string identifier) where T : ISItem, new()
-      => Register(RegistryType.ItemDefinition, identifier, typeof(T));
+      => Register(RegistryType.Item, identifier, typeof(T));
 
     /// <summary>
     /// RegisterItemDefinition 으로 등록된 클래스로부터 새 Item 인스턴스를 생성합니다.
@@ -277,7 +275,7 @@ namespace MultiplayerInfrastructure.Registry
     /// </summary>
     public static ISItem CreateItemInstance(string identifier)
     {
-      if (!TryGet<Type>(RegistryType.ItemDefinition, identifier, out var type) || type == null)
+      if (!TryGet<Type>(RegistryType.Item, identifier, out var type) || type == null)
       {
         Debug.LogWarning($"[Registry] ItemDefinition '{identifier}' 이(가) 등록되지 않았습니다.");
         return null;
