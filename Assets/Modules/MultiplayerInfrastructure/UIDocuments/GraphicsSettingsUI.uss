@@ -1,0 +1,202 @@
+/* ============================================================
+   그래픽 설정 UI — GraphicsSettingsUI.uss
+   ============================================================ */
+
+/* ── 전체 화면 오버레이 ─────────────────────────────────────── */
+.graphics-settings__root {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.55);
+}
+
+/* 에디터/런타임 초기 상태: 컨트롤러가 Show() 호출 전에는 보이지 않도록 */
+.graphics-settings__root {
+  opacity: 0;
+}
+
+/* ── 중앙 패널 ────────────────────────────────────────────── */
+.graphics-settings__panel {
+  min-width: 520px;
+  max-width: 680px;
+  background-color: #1c1c22;
+  border-radius: 10px;
+  border-width: 1px;
+  border-color: #3a3a46;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── 헤더 ──────────────────────────────────────────────────── */
+.graphics-settings__header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.graphics-settings__title {
+  font-size: 18px;
+  color: #f0f0f5;
+  -unity-font-style: bold;
+}
+
+.graphics-settings__close-btn {
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+  color: #aaaabc;
+  background-color: #2a2a34;
+  border-radius: 6px;
+  border-width: 1px;
+  border-color: #44444e;
+  padding: 0;
+}
+
+.graphics-settings__close-btn:hover {
+  background-color: #3a3a46;
+  color: #f0f0f5;
+}
+
+.graphics-settings__close-btn:active {
+  background-color: #c0392b;
+  color: #ffffff;
+  border-color: #c0392b;
+}
+
+/* ── 구분선 ────────────────────────────────────────────────── */
+.graphics-settings__divider {
+  height: 1px;
+  background-color: #2e2e3a;
+}
+
+/* ── 섹션 ──────────────────────────────────────────────────── */
+.graphics-settings__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.graphics-settings__section-title {
+  font-size: 12px;
+  color: #7878a0;
+  -unity-font-style: bold;
+  -unity-text-align: upper-left;
+  padding-left: 4px;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  border-bottom-width: 1px;
+  border-color: #2e2e3a;
+}
+
+.graphics-settings__section-desc {
+  font-size: 11px;
+  color: #5e5e78;
+  -unity-text-align: upper-left;
+  white-space: normal;
+}
+
+/* ── 옵션 타일 컨테이너 ─────────────────────────────────────── */
+.graphics-settings__options {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+/* ── 텍스처 품질 옵션 타일 (TextureQualityOptionElement) ─────── */
+.texture-quality-option {
+  flex: 1;
+  min-width: 100px;
+  padding: 14px 10px;
+  background-color: #25252e;
+  border-radius: 8px;
+  border-width: 2px;
+  border-color: #3a3a46;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition-duration: 0.12s;
+  transition-property: background-color, border-color;
+}
+
+.texture-quality-option:hover {
+  background-color: #2e2e3a;
+  border-color: #5050a0;
+}
+
+.texture-quality-option--active {
+  background-color: #1e2a4a;
+  border-color: #2d7cf4;
+}
+
+.texture-quality-option--active:hover {
+  background-color: #1e2a4a;
+  border-color: #3a89ff;
+}
+
+.texture-quality-option__label {
+  font-size: 13px;
+  color: #d0d0e8;
+  -unity-font-style: bold;
+  -unity-text-align: middle-center;
+}
+
+.texture-quality-option--active .texture-quality-option__label {
+  color: #5a9fff;
+}
+
+.texture-quality-option__subtitle {
+  font-size: 10px;
+  color: #5e5e78;
+  -unity-text-align: middle-center;
+}
+
+.texture-quality-option--active .texture-quality-option__subtitle {
+  color: #4070c0;
+}
+
+/* ── 푸터 ──────────────────────────────────────────────────── */
+.graphics-settings__footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.graphics-settings__status {
+  font-size: 11px;
+  color: #5e7c5e;
+  flex-grow: 1;
+}
+
+/* ── 적용 버튼 ─────────────────────────────────────────────── */
+.graphics-settings__apply-btn {
+  height: 34px;
+  min-width: 120px;
+  font-size: 13px;
+  color: #f4f4f7;
+  background-color: #2d7cf4;
+  border-radius: 6px;
+  border-width: 1px;
+  border-color: #2d7cf4;
+  padding: 0 16px;
+}
+
+.graphics-settings__apply-btn:hover {
+  background-color: #3a89ff;
+}
+
+.graphics-settings__apply-btn:active {
+  background-color: #236bce;
+}

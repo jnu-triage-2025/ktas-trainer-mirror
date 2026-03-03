@@ -18,6 +18,7 @@ namespace MultiplayerInfrastructure.UI
     private VisualElement _root;
     private Button _resumeButton;
     private Button _keyConfigButton;
+    private Button _graphicsSettingsButton;
     private Button _titleButton;
     private bool _isVisible;
 
@@ -36,9 +37,10 @@ namespace MultiplayerInfrastructure.UI
       _document.sortingOrder = _sortingOrder;
 
       _root = _document.rootVisualElement?.Q<VisualElement>("game-menu-root");
-      _resumeButton    = _document.rootVisualElement?.Q<Button>("resume-button");
-      _keyConfigButton = _document.rootVisualElement?.Q<Button>("key-config-button");
-      _titleButton     = _document.rootVisualElement?.Q<Button>("title-button");
+      _resumeButton           = _document.rootVisualElement?.Q<Button>("resume-button");
+      _keyConfigButton        = _document.rootVisualElement?.Q<Button>("key-config-button");
+      _graphicsSettingsButton = _document.rootVisualElement?.Q<Button>("graphics-settings-button");
+      _titleButton            = _document.rootVisualElement?.Q<Button>("title-button");
 
       if (_resumeButton != null)
         _resumeButton.clicked += HandleResumeClicked;
@@ -50,6 +52,11 @@ namespace MultiplayerInfrastructure.UI
       else
         Debug.LogError("[GameMenuUI] Key config button not found in UXML.");
 
+      if (_graphicsSettingsButton != null)
+        _graphicsSettingsButton.clicked += HandleGraphicsSettingsClicked;
+      else
+        Debug.LogError("[GameMenuUI] Graphics settings button not found in UXML.");
+
       if (_titleButton != null)
         _titleButton.clicked += HandleTitleClicked;
       else
@@ -60,9 +67,10 @@ namespace MultiplayerInfrastructure.UI
 
     private void OnDestroy()
     {
-      if (_resumeButton != null)    _resumeButton.clicked    -= HandleResumeClicked;
-      if (_keyConfigButton != null) _keyConfigButton.clicked -= HandleKeyConfigClicked;
-      if (_titleButton != null)     _titleButton.clicked     -= HandleTitleClicked;
+      if (_resumeButton != null)           _resumeButton.clicked           -= HandleResumeClicked;
+      if (_keyConfigButton != null)        _keyConfigButton.clicked        -= HandleKeyConfigClicked;
+      if (_graphicsSettingsButton != null) _graphicsSettingsButton.clicked -= HandleGraphicsSettingsClicked;
+      if (_titleButton != null)            _titleButton.clicked            -= HandleTitleClicked;
     }
 
     public void ShowMenu() => SetVisible(true);
@@ -92,7 +100,7 @@ namespace MultiplayerInfrastructure.UI
       var keyConfigController = Registry.Registry.Get<KeyConfigUIController>(
         RegistryType.UI,
         Registry.Registry.TypeKey(typeof(KeyConfigUIController))
-      );
+      ) ?? FindFirstObjectByType<KeyConfigUIController>();
 
       if (keyConfigController == null)
       {
@@ -101,6 +109,22 @@ namespace MultiplayerInfrastructure.UI
       }
 
       UIOverlayStack.Push(keyConfigController);
+    }
+
+    private void HandleGraphicsSettingsClicked()
+    {
+      var graphicsController = Registry.Registry.Get<GraphicsSettingsUIController>(
+        RegistryType.UI,
+        Registry.Registry.TypeKey(typeof(GraphicsSettingsUIController))
+      ) ?? FindFirstObjectByType<GraphicsSettingsUIController>();
+
+      if (graphicsController == null)
+      {
+        Debug.LogWarning("[GameMenuUI] GraphicsSettingsUIController를 레지스트리에서 찾을 수 없습니다.");
+        return;
+      }
+
+      UIOverlayStack.Push(graphicsController);
     }
 
     private void HandleTitleClicked()

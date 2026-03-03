@@ -1,0 +1,38 @@
+<ui:UXML
+  xmlns:ui="UnityEngine.UIElements"
+>
+  <ui:Style src="./GraphicsSettingsUI.uss" />
+
+  <!-- 전체 화면 반투명 오버레이 -->
+  <ui:VisualElement name="graphics-settings-root" class="graphics-settings__root">
+
+    <!-- 중앙 패널 -->
+    <ui:VisualElement class="graphics-settings__panel">
+
+      <!-- 헤더 -->
+      <ui:VisualElement class="graphics-settings__header">
+        <ui:Label class="graphics-settings__title" text="그래픽 설정" />
+        <ui:Button name="close-button" class="graphics-settings__close-btn" text="✕" />
+      </ui:VisualElement>
+
+      <!-- 구분선 -->
+      <ui:VisualElement class="graphics-settings__divider" />
+
+      <!-- 텍스처 품질 섹션 -->
+      <ui:VisualElement class="graphics-settings__section">
+        <ui:Label class="graphics-settings__section-title" text="텍스처 품질" />
+        <ui:Label class="graphics-settings__section-desc" text="게임 텍스처의 해상도 수준을 조절합니다. 낮을수록 성능이 향상됩니다." />
+
+        <!-- 옵션 타일 컨테이너 (C# 컨트롤러가 동적으로 채웁니다) -->
+        <ui:VisualElement name="options-container" class="graphics-settings__options" />
+      </ui:VisualElement>
+
+      <!-- 하단 푸터 -->
+      <ui:VisualElement class="graphics-settings__footer">
+        <ui:Label name="status-label" class="graphics-settings__status" text="" />
+        <ui:Button name="apply-button" class="graphics-settings__apply-btn" text="적용 및 저장" />
+      </ui:VisualElement>
+
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

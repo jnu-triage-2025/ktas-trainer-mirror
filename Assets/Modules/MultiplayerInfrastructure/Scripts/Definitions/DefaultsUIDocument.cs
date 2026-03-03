@@ -8,5 +8,6 @@ namespace MultiplayerInfrastructure.Definitions
     public const float HeldItemHudSortOrder = 2.5f;
     public const float InventoryUISortOrder = 4f;
     public const float EscapeMenuUISortOrder = 7f;
+    public const float GraphicsSettingsUISortOrder = 8f;
   }
 }
