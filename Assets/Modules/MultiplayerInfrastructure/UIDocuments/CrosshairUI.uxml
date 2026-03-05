@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML
+  xmlns:ui="UnityEngine.UIElements"
+  xmlns:mi="MultiplayerInfrastructure.UI"
+  editor-extension-mode="False"
+>
+  <ui:Style src="CrosshairUI.uss" />
+  <ui:VisualElement class="crosshair-container" picking-mode="Ignore">
+    <mi:CrosshairElement name="crosshair-root" />
+  </ui:VisualElement>
+</ui:UXML>

@@ -21,6 +21,7 @@ namespace MultiplayerInfrastructure.Player
       Awake_GameObject();
       Awake_Movement();
       Awake_Camera();
+      Awake_Raycast();
       Awake_Visibility();
 
       if (_playerEntity == null)
@@ -42,6 +43,7 @@ namespace MultiplayerInfrastructure.Player
       if (!IsOwner) return;
       Update_Input();
       Update_Movement();
+      Update_Raycast();
       Update_Inventory();
       Update_Item();
     }
@@ -58,6 +60,7 @@ namespace MultiplayerInfrastructure.Player
       
       OnStartClient_Network();
       OnStartClient_Camera();
+      OnStartClient_Crosshair();
       OnStartClient_Interactables();
       OnStartClient_Dialogue();
       OnStartClient_Quest();
