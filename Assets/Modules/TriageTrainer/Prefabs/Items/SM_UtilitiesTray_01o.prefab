@@ -319,7 +319,7 @@ MonoBehaviour:
   _componentIndexCache: 255
   _addedNetworkObject: {fileID: 3735997847376337781}
   _networkObjectCache: {fileID: 0}
-  _itemBaseModel: {fileID: 0}
+  _itemBaseModel: {fileID: 11400000, guid: 8ca768f95381b48a78a1c26f8845cabf, type: 2}
   _itemData:
     identifier: 
     displayName: 
