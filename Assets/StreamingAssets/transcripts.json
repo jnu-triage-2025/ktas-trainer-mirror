@@ -1,0 +1,77 @@
+[
+  {
+    "identifier": "intro-welcome",
+    "basetext": "KTAS 중증도 분류 훈련에 오신 것을 환영합니다.",
+    "variables": {}
+  },
+  {
+    "identifier": "triage-move-patient",
+    "basetext": "{patient-name} 환자를 {destination}으로 이동해야 합니다.",
+    "variables": {
+      "patient-name": "환자",
+      "destination": "처치실"
+    }
+  },
+  {
+    "identifier": "triage-vital-check",
+    "basetext": "{patient-name} 환자의 {vital-sign}을 확인하십시오. 현재 수치는 {vital-value}입니다.",
+    "variables": {
+      "patient-name": "환자",
+      "vital-sign": "혈압",
+      "vital-value": "정상 범위"
+    }
+  },
+  {
+    "identifier": "triage-level-announce",
+    "basetext": "{patient-name} 환자는 KTAS {level}등급으로 분류되었습니다.",
+    "variables": {
+      "patient-name": "환자",
+      "level": "2"
+    }
+  },
+  {
+    "identifier": "player-bed-grab",
+    "basetext": "{player-a}, {player-b}, {player-c}는 각각 환자 침대의 손잡이를 클릭하여 이동을 준비하십시오.",
+    "variables": {
+      "player-a": "1번 플레이어",
+      "player-b": "2번 플레이어",
+      "player-c": "3번 플레이어"
+    }
+  },
+  {
+    "identifier": "timer-warning",
+    "basetext": "제한 시간이 {remaining-seconds}초 남았습니다.",
+    "variables": {
+      "remaining-seconds": "30"
+    }
+  },
+  {
+    "identifier": "score-result",
+    "basetext": "훈련이 종료되었습니다. {player-name}의 최종 점수는 {score}점입니다.",
+    "variables": {
+      "player-name": "플레이어",
+      "score": "0"
+    }
+  },
+  {
+    "identifier": "instruction-cpr",
+    "basetext": "즉시 심폐소생술을 시작하십시오. {player-name}은 가슴 압박을 담당합니다.",
+    "variables": {
+      "player-name": "1번 플레이어"
+    }
+  },
+  {
+    "identifier": "error-wrong-triage",
+    "basetext": "{patient-name} 환자의 중증도 분류가 잘못되었습니다. 다시 평가하십시오.",
+    "variables": {
+      "patient-name": "환자"
+    }
+  },
+  {
+    "identifier": "step-complete",
+    "basetext": "{step-name} 단계를 완료했습니다.",
+    "variables": {
+      "step-name": "초기 평가"
+    }
+  }
+]

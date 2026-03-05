@@ -1,0 +1,18 @@
+[
+  {
+    "identifier": "example-1",
+    "basetext": "{patient-a}를 처치실로 이동해야 합니다.",
+    "variables": {
+      "patient-a": "환자 A"
+    }
+  },
+  {
+    "identifier": "example-2",
+    "basetext": "{player-b}, {player-c}, {player-d}는 각각 환자 침대의 손잡이를 클릭하여 이동을 준비하십시오.",
+    "variables": {
+      "player-b": "플레이어 B",
+      "player-c": "플레이어 C",
+      "player-d": "플레이어 D"
+    }
+  }
+]
