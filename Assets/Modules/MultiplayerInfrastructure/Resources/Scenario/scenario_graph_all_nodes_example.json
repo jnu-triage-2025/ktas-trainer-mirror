@@ -162,6 +162,16 @@
       "targetEntityIdentifier": "patient_a",
       "stateKey": "vitals.rhythm",
       "stateValue": "PEA",
+      "nextIdentifier": "tts_role_instruction"
+    },
+    "tts_role_instruction": {
+      "identifier": "tts_role_instruction",
+      "nodeType": "PlayTTS",
+      "transcriptIdentifier": "tts-role-instruction",
+      "variables": {
+        "role": "Doctor"
+      },
+      "waitUntilFinished": true,
       "nextIdentifier": "role_assignment"
     },
     "role_assignment": {

@@ -202,9 +202,10 @@ player.TryDropItemInFront(itemData);
 ### 흐름 요약
 
 ```
-ScenarioRegistry (씬 컴포넌트)
-    → TextAsset (JSON 파일) → Registry.ScenarioGraph 등록
-    → ScenarioCommandRunner (서버 → 클라이언트로 전송)
+ScenarioCommandRunner._scenarios (서버/클라이언트 양측 Awake에서 Registry에 등록)
+    → Registry.PreloadScenarioGraph() → Registry.ScenarioGraph 등록
+    → ScenarioCommandRunner (서버 → 클라이언트로 식별자 전송)
+    → 클라이언트: Registry.TryGetScenarioGraph(identifier) → ScenarioGraph 조회
     → ScenarioController.StartScenario(graph)
     → 노드 순차 실행 (ExecuteNode → Advance)
 ```
@@ -214,8 +215,8 @@ ScenarioRegistry (씬 컴포넌트)
 씬에 하나만 배치됩니다. 시나리오 시작/종료/진행을 담당합니다.
 
 ```csharp
-// 식별자로 시작 (ScenarioRegistry를 통해)
-scenarioRegistry.TryGetScenarioGraph("patient_a_critical", out var graph, out _);
+// 식별자로 시작 (Registry를 통해)
+Registry.Registry.TryGetScenarioGraph("patient_a_critical", out var graph, out _);
 ScenarioController.Instance.StartScenario(graph);
 
 // 수동 진행 (다이얼로그에서 다음 버튼)

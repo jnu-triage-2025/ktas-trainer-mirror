@@ -41,6 +41,20 @@ public bool IsReady { get; private set; }
 
 ---
 
+### `IsDynamicCacheDirty`
+
+```csharp
+public bool IsDynamicCacheDirty { get; }
+```
+
+동적 세그먼트의 백그라운드 캐싱이 **진행 중이거나 아직 완료되지 않았음**을 나타내는 dirty bit입니다.  
+`PrepareTranscriptVariables` 호출 시 `true`가 되고, 해당 작업이 완료되면 `false`로 돌아옵니다.
+
+여러 `PrepareTranscriptVariables` 호출이 동시에 진행될 수 있으며, 내부적으로 카운터로 관리됩니다.  
+모든 진행 중인 작업이 완료되어야 `false`가 됩니다.
+
+---
+
 ## 3. 공개 메서드
 
 ### `GetClips`
@@ -57,7 +71,7 @@ Transcript `identifier`에 해당하는 `AudioClip` 목록을 반환합니다.
 **Dynamic 세그먼트 텍스트 결정 순서:**
 1. `overrideVariables`에 해당 키가 있으면 그 값 사용
 2. Transcript JSON의 `variables` 기본값 사용
-3. 둘 다 없으면 해당 세그먼트 스킵 (무음)
+3. 둘 다 없으면 해당 세그먼트 스킵 (무음) + **`Debug.LogWarning` 출력**
 
 캐시에 없는 텍스트는 **메인 스레드에서 동기 합성**합니다. 처리 시간이 걸릴 수 있으므로 가능하면 `PrepareVariable`로 미리 합성해 두세요.
 
@@ -115,6 +129,45 @@ _ttsService.PrepareVariable("김철수", onDone: () =>
 
 ---
 
+### `PrepareTranscriptVariables`
+
+```csharp
+public Coroutine PrepareTranscriptVariables(
+    string identifier,
+    Dictionary<string, string> variables,
+    Action onDone = null)
+```
+
+지정된 Transcript `identifier`의 **동적 세그먼트 전체**를 `variables` 값으로 백그라운드에서 합성하여 캐시에 저장합니다.  
+
+- 진행 중에는 `IsDynamicCacheDirty`가 `true`가 됩니다.
+- `variables`에 없는 키는 transcript JSON의 기본값을 사용하며, 기본값도 없으면 경고 로그를 출력 후 해당 세그먼트를 건너뜁니다.
+- 이미 캐시된 텍스트는 재합성하지 않습니다.
+- 런타임에 변수 값이 바뀌면 새 값으로 다시 호출하면 됩니다. 변경된 텍스트만 재합성하며, 완료까지 `IsDynamicCacheDirty`가 `true`를 유지합니다.
+
+**예시:**
+
+```csharp
+// 게임 시작 시 PlayTTS 노드에 사용될 변수를 미리 캐싱
+_ttsService.PrepareTranscriptVariables(
+    "triage-move-patient",
+    new Dictionary<string, string>
+    {
+        { "patient-name", "김철수" },
+        { "destination",  "수술실" }
+    },
+    onDone: () => Debug.Log("캐싱 완료")
+);
+
+// 변수 값이 바뀌었을 때 재캐싱
+_ttsService.PrepareTranscriptVariables(
+    "triage-move-patient",
+    new Dictionary<string, string> { { "patient-name", "이영희" }, { "destination", "응급실" } }
+);
+```
+
+---
+
 ## 4. 초기화 흐름
 
 `Awake` 시점에 다음 순서로 초기화됩니다.
@@ -142,3 +195,5 @@ ONNX 모델이 없으면 `Debug.LogError`를 출력하고 초기화가 중단됩
 
 - [TTSCore API](TextToSpeechService.TTSCore.md)
 - [Transcript 작성 가이드](../tts-transcripts.md)
+- [ScenarioController API](MultiplayerInfrastructure.Scenario.ScenarioController.md) — `PlayTTS` 노드 연동
+- [scenario-graph.md](../scenario-graph.md) — `PlayTTSNode` JSON 스펙

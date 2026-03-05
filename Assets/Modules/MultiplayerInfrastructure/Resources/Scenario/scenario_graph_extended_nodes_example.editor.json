@@ -8,9 +8,10 @@
     "quiz_cpr": { "x": 1600, "y": 0 },
     "retry_notification": { "x": 1600, "y": 220 },
     "update_state_rhythm": { "x": 1920, "y": 0 },
-    "team_parallel": { "x": 2240, "y": 0 },
-    "branch_airway": { "x": 2560, "y": -140 },
-    "branch_oxygen": { "x": 2560, "y": 140 },
-    "finish_notification": { "x": 2880, "y": 0 }
+    "tts_rhythm_report": { "x": 2240, "y": 0 },
+    "team_parallel": { "x": 2560, "y": 0 },
+    "branch_airway": { "x": 2880, "y": -140 },
+    "branch_oxygen": { "x": 2880, "y": 140 },
+    "finish_notification": { "x": 3200, "y": 0 }
   }
 }

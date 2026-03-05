@@ -83,6 +83,9 @@
         },
         {
           "$ref": "#/$defs/ScenarioRoleAssignmentNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioPlayTTSNode"
         }
       ]
     },
@@ -1062,6 +1065,35 @@
       },
       "required": [ "Id" ],
       "additionalProperties": false
+    },
+    "ScenarioPlayTTSNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "PlayTTS"
+            },
+            "transcriptIdentifier": {
+              "type": "string",
+              "minLength": 1
+            },
+            "variables": {
+              "type": ["object", "null"],
+              "additionalProperties": { "type": "string" }
+            },
+            "waitUntilFinished": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "required": [
+            "transcriptIdentifier"
+          ]
+        }
+      ]
     }
   }
 }

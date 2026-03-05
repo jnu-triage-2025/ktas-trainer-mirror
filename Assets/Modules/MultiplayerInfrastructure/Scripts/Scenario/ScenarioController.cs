@@ -8,6 +8,7 @@ using MultiplayerInfrastructure.UI;
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Quest;
+using TextToSpeechService;
 using FishNet.Object;
 using FishNet;
 using FishNet.Connection;
@@ -30,6 +31,8 @@ namespace MultiplayerInfrastructure.Scenario
     [SerializeField] private DialoguePanelUIController _uiController;
     [SerializeField] private MainCameraController _camController;
     [SerializeField] private InteractableObjectHintUIController _hintUIController;
+    [SerializeField] private TTSService _ttsService;
+    [SerializeField] private AudioSource _ttsAudioSource;
 
     #endregion
 
@@ -70,6 +73,7 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingQuiz,
       ExecutingStateUpdate,
       ExecutingRoleAssignment,
+      ExecutingTTS,
     }
 
     [SerializeField] private State _state = State.Inactive;
@@ -194,6 +198,9 @@ namespace MultiplayerInfrastructure.Scenario
 
       OnScenarioStarted?.Invoke();
       Debug.Log("[ScenarioController] Scenario started");
+
+      // PlayTTS 노드의 동적 세그먼트를 백그라운드에서 미리 합성 (캐싱)
+      PrewarmTTSCache();
 
       // 첫 노드 실행
       ExecuteNode(startNode);
@@ -367,6 +374,9 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioRoleAssignmentNode roleAssignment:
           ExecuteRoleAssignmentNode(roleAssignment);
+          break;
+        case ScenarioPlayTTSNode playTTS:
+          StartCoroutine(ExecutePlayTTSNode(playTTS));
           break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type: {node.GetType().Name}");
@@ -620,6 +630,64 @@ namespace MultiplayerInfrastructure.Scenario
       {
         AssignRoleToOwnerOrFirst(roleOptions[0]);
         Advance();
+      }
+    }
+
+    private IEnumerator ExecutePlayTTSNode(ScenarioPlayTTSNode node)
+    {
+      _state = State.ExecutingTTS;
+
+      if (_ttsService == null)
+      {
+        Debug.LogWarning("[ScenarioController] TTSService 참조가 없습니다. PlayTTS 노드를 건너뜁니다.");
+        Advance();
+        yield break;
+      }
+
+      if (_ttsAudioSource == null)
+      {
+        Debug.LogWarning("[ScenarioController] TTS AudioSource 참조가 없습니다. PlayTTS 노드를 건너뜁니다.");
+        Advance();
+        yield break;
+      }
+
+      // TTSService가 준비될 때까지 대기
+      if (!_ttsService.IsReady)
+        yield return new WaitUntil(() => _ttsService.IsReady);
+
+      // 동적 캐싱이 진행 중이면 완료될 때까지 대기
+      if (_ttsService.IsDynamicCacheDirty)
+        yield return new WaitUntil(() => !_ttsService.IsDynamicCacheDirty);
+
+      var variables = node.Variables != null && node.Variables.Count > 0
+          ? node.Variables
+          : null;
+
+      var playCoroutine = _ttsService.PlayTranscript(node.TranscriptIdentifier, _ttsAudioSource, variables);
+
+      if (node.WaitUntilFinished)
+        yield return playCoroutine;
+
+      Advance();
+    }
+
+    /// <summary>
+    /// 현재 그래프에 포함된 모든 PlayTTS 노드의 동적 세그먼트를
+    /// 백그라운드에서 미리 합성합니다(sideeffect: IsDynamicCacheDirty 설정).
+    /// </summary>
+    private void PrewarmTTSCache()
+    {
+      if (_ttsService == null || _currentGraph == null) return;
+
+      foreach (var node in _currentGraph.Nodes.Values)
+      {
+        if (node is ScenarioPlayTTSNode playTTS)
+        {
+          var vars = playTTS.Variables != null && playTTS.Variables.Count > 0
+              ? playTTS.Variables
+              : null;
+          _ttsService.PrepareTranscriptVariables(playTTS.TranscriptIdentifier, vars);
+        }
       }
     }
 

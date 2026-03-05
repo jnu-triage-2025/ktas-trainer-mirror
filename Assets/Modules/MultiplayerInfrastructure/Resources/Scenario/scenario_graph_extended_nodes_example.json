@@ -78,6 +78,16 @@
       "targetEntityIdentifier": "patient_a",
       "stateKey": "vitals.rhythm",
       "stateValue": "PEA",
+      "nextIdentifier": "tts_rhythm_report"
+    },
+    "tts_rhythm_report": {
+      "identifier": "tts_rhythm_report",
+      "nodeType": "PlayTTS",
+      "transcriptIdentifier": "tts-rhythm-report",
+      "variables": {
+        "rhythm": "PEA"
+      },
+      "waitUntilFinished": true,
       "nextIdentifier": "team_parallel"
     },
     "team_parallel": {

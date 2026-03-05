@@ -229,6 +229,39 @@ ScenarioNode는 표현하고자 하는 내용에 따라 다양하게 데이터�
 | AssignmentMode | ScenarioRoleAssignmentMode | Select / Auto |
 | NextIdentifier | 문자열 | 다음 노드의 식별자 |
 
+### PlayTTSNode
+
+| 속성 | 타입 | 설명 |
+|---|---|---|
+| Identifier | 문자열 | 노드의 고유 식별자 |
+| NodeType | ScenarioNodeType | ScenarioNodeType.PlayTTS |
+| TranscriptIdentifier | 문자열 | `TTSService`에 등록된 Transcript 식별자 (Transcript JSON의 `identifier` 필드) |
+| Variables | `Dictionary<string, string>` | (optional) 동적 세그먼트 변수 오버라이드. 없으면 Transcript 기본값 사용 |
+| WaitUntilFinished | bool | `true`이면 모든 클립 재생 완료 후 다음 노드 진행. 기본값 `true` |
+| NextIdentifier | 문자열 | 다음 노드의 식별자 |
+
+#### 동작 개요
+
+- `TranscriptIdentifier`로 `TTSService`를 조회하여 오디오 클립 목록을 얻어 순서대로 재생합니다.
+- `Variables`에 정의된 키-값으로 동적 세그먼트의 텍스트를 오버라이드합니다.
+- 필요하지만 값이 없는 variable은 경고 로그를 출력하고 해당 세그먼트를 건너뜁니다.
+
+#### JSON 예시
+
+```json
+{
+  "identifier": "play-instruction",
+  "nodeType": "PlayTTS",
+  "transcriptIdentifier": "triage-move-patient",
+  "variables": {
+    "patient-name": "김철수",
+    "destination": "수술실"
+  },
+  "waitUntilFinished": true,
+  "nextIdentifier": "next-node"
+}
+```
+
 ## ScenarioGraph
 
 ScenarioGraph는 `Identifier`를 키로 `IScenarioNode`를 보관한다. 노드를 추가하거나 식별자로 조회할 수 있어야 한다.

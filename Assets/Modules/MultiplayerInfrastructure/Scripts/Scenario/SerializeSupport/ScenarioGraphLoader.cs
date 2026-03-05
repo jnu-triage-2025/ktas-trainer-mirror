@@ -123,6 +123,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioQuizNodeDTO quiz => ConvertQuiz(quiz),
           ScenarioStateUpdateNodeDTO stateUpdate => ConvertStateUpdate(stateUpdate),
           ScenarioRoleAssignmentNodeDTO roleAssignment => ConvertRoleAssignment(roleAssignment),
+          ScenarioPlayTTSNodeDTO playTTS => ConvertPlayTTS(playTTS),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -343,6 +344,29 @@ namespace MultiplayerInfrastructure.Scenario
           RoleOptions = dto.RoleOptions ?? new List<string>(),
           AssignmentMode = ParseRoleAssignmentMode(dto.AssignmentMode),
           NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioPlayTTSNode ConvertPlayTTS(ScenarioPlayTTSNodeDTO dto) =>
+        new ScenarioPlayTTSNode
+        {
+          Identifier = dto.Identifier,
+          TranscriptIdentifier = dto.TranscriptIdentifier,
+          Variables = dto.Variables ?? new Dictionary<string, string>(),
+          WaitUntilFinished = dto.WaitUntilFinished ?? true,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioPlayTTSNodeDTO ConvertToDTO(ScenarioPlayTTSNode node) =>
+        new ScenarioPlayTTSNodeDTO
+        {
+          NodeType = "PlayTTS",
+          Identifier = node.Identifier,
+          TranscriptIdentifier = node.TranscriptIdentifier,
+          Variables = node.Variables != null && node.Variables.Count > 0
+              ? node.Variables
+              : null,
+          WaitUntilFinished = node.WaitUntilFinished,
+          NextIdentifier = node.NextIdentifier
         };
 
     private static ScenarioParallelNode ConvertParallel(ScenarioParallelNodeDTO dto)
@@ -580,6 +604,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioQuizNode quiz => ConvertToDTO(quiz),
           ScenarioStateUpdateNode stateUpdate => ConvertToDTO(stateUpdate),
           ScenarioRoleAssignmentNode roleAssignment => ConvertToDTO(roleAssignment),
+          ScenarioPlayTTSNode playTTS => ConvertToDTO(playTTS),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 

@@ -20,8 +20,6 @@ namespace MultiplayerInfrastructure.Entity
     [Header("Custom Interacts")]
     [SerializeField] private List<MonoBehaviour> _customInteractSources = new();
 
-    [SerializeField] private ScenarioRegistry _scenarioRegistry;
-
     public string Identifier => _identifier;
 
     private readonly List<IInteract> _resolvedInteracts = new List<IInteract>();
@@ -130,14 +128,7 @@ namespace MultiplayerInfrastructure.Entity
         return false;
       }
 
-      var scenarioRegistry = ResolveScenarioRegistry();
-      if (scenarioRegistry == null)
-      {
-        Debug.LogWarning($"[Npc] '{name}' cannot start scenario: ScenarioRegistry not found.", this);
-        return false;
-      }
-
-      if (!scenarioRegistry.TryGetScenarioGraph(scenarioIdentifier, out var graph, out string error))
+      if (!Registry.Registry.TryGetScenarioGraph(scenarioIdentifier, out var graph, out string error))
       {
         Debug.LogWarning($"[Npc] '{name}' failed to load scenario '{scenarioIdentifier}': {error}", this);
         return false;
@@ -150,14 +141,6 @@ namespace MultiplayerInfrastructure.Entity
 
       ScenarioController.Instance.StartScenario(graph, startNodeIdentifier, ownerClientId);
       return true;
-    }
-
-    private ScenarioRegistry ResolveScenarioRegistry()
-    {
-      if (_scenarioRegistry == null)
-        _scenarioRegistry = FindFirstObjectByType<ScenarioRegistry>();
-
-      return _scenarioRegistry;
     }
 
     [ContextMenu("NPC/Apply Base Model Now")]

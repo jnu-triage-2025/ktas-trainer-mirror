@@ -123,6 +123,7 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.CombineItem:
         case ScenarioNodeType.StateUpdate:
         case ScenarioNodeType.RoleAssignment:
+        case ScenarioNodeType.PlayTTS:
           DefaultOutputPort = CreateStandardOutput("Next");
           break;
 

@@ -47,7 +47,6 @@
 중요 필드:
 - `_scenarioInteracts: List<NPCScenarioInteractDefinition>`
 - `_customInteractSources: List<MonoBehaviour>`
-- `_scenarioRegistry: ScenarioRegistry`
 
 중요 동작:
 - `Interacts`: 내부 캐시를 재구성한 뒤 `IInteract[]` 반환

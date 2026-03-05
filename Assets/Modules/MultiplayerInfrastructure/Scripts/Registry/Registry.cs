@@ -259,6 +259,41 @@ namespace MultiplayerInfrastructure.Registry
     }
 
     // =========================================================================
+    // ScenarioGraph helpers
+    // =========================================================================
+
+    /// <summary>
+    /// 등록된 식별자로 ScenarioGraph를 가져옵니다.
+    /// TextAsset으로 등록된 경우 파싱 후 캐싱됩니다.
+    /// </summary>
+    public static bool TryGetScenarioGraph(string identifier, out ScenarioGraph graph, out string error)
+    {
+      graph = null;
+      error = string.Empty;
+
+      if (string.IsNullOrWhiteSpace(identifier))
+      {
+        error = "Scenario identifier is required.";
+        return false;
+      }
+
+      if (!PreloadScenarioGraph(identifier))
+      {
+        error = $"Scenario '{identifier}' is not registered or failed to parse.";
+        return false;
+      }
+
+      graph = Get<ScenarioGraph>(RegistryType.ScenarioGraph, identifier);
+      if (graph == null)
+      {
+        error = $"Scenario '{identifier}' could not be resolved.";
+        return false;
+      }
+
+      return true;
+    }
+
+    // =========================================================================
     // ItemDefinition helpers
     // =========================================================================
 

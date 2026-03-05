@@ -48,6 +48,7 @@ namespace MultiplayerInfrastructure.Editor
           "RoleB"
         }
       },
+      ScenarioNodeType.PlayTTS => new ScenarioPlayTTSNode(),
       _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
   }
