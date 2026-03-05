@@ -68,5 +68,11 @@
     "dotnet.defaultSolution": "ktas-trainer.sln",
     "python-envs.defaultEnvManager": "ms-python.python:conda",
     "python-envs.defaultPackageManager": "ms-python.python:conda",
-    "python-envs.pythonProjects": []
+    "python-envs.pythonProjects": [],
+    "json.schemas": [
+        {
+            "fileMatch": ["**/StreamingAssets/transcripts.json", "**/Resources/SpeechTranscripts/*.json"],
+            "url": "./Assets/Modules/TextToSpeechService/Resources/Transcripts.schema.json"
+        }
+    ]
 }
