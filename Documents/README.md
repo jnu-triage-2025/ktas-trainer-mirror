@@ -8,7 +8,9 @@
 ### MultiplayerInfrastructure:
 
 - [MultiplayerInfrastructure 사용자 가이드](./multiplayer-infrastructure-guide.md): 모듈 전체 시스템 구조 개요 및 주요 사용 패턴
+- [Crosshair & Raycast 구현 가이드](./crosshair-raycast-guide.md): 플레이어 크로스헤어, 중앙선 레이캐스트
 - [API: Registry](./api-references/MultiplayerInfrastructure.Registry.md): 중앙 레지스트리 등록·조회
+- [API: Crosshair & Raycast](./api-references/MultiplayerInfrastructure.UI.Crosshair.md): 크로스헤어 UI 및 레이캐스트 API
 - [API: PlayerController](./api-references/MultiplayerInfrastructure.Player.PlayerController.md): 플레이어 시스템 (이동, 인벤토리, 게임모드 등)
 - [API: ScenarioController](./api-references/MultiplayerInfrastructure.Scenario.ScenarioController.md): 시나리오 그래프 실행 엔진
 - [API: ScenarioEventIdentifierRegistry](./api-references/MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md): 씬 이벤트 핸들러 등록

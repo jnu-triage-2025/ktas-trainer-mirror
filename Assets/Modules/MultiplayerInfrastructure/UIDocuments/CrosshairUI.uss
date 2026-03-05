@@ -1,0 +1,38 @@
+/* CrosshairUI.uss */
+
+/* 전체 화면을 덮는 컨테이너, 중앙 정렬 */
+.crosshair-container {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+/* CrosshairElement 자체: 0x0 크기로 중앙 기준점 역할 */
+.crosshair {
+  position: absolute;
+  width: 0;
+  height: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 단순 점 */
+.crosshair__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  background-color: rgba(255, 255, 255, 0.90);
+  border-left-width: 1px;
+  border-right-width: 1px;
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+  border-left-color: rgba(0, 0, 0, 0.55);
+  border-right-color: rgba(0, 0, 0, 0.55);
+  border-top-color: rgba(0, 0, 0, 0.55);
+  border-bottom-color: rgba(0, 0, 0, 0.55);
+  translate: -3px -3px;
+}
