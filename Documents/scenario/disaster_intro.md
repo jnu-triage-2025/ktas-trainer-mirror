@@ -10,7 +10,7 @@
 | 주요 장소 | 응급실 트리아지 구역, 처치 준비 구역 |
 | 리소스 식별자 - 사운드 | 없음 |
 | 리소스 식별자 - 초상화 | 없음 |
-| 리소스 식별자 - 웨이포인트 | wp_triage, wp_preproom |
+| 리소스 식별자 - 웨이포인트 | wp_triage, wp_preproom, wp_treatmentroom |
 | 리소스 식별자 - 카메라 타겟 | 없음 |
 | 시작 노드 Identifier | D001 |
 
@@ -22,7 +22,7 @@
 |---|---|---|
 | **Identifier** | 문자열 | D001 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
-| **SpeakerName** | 문자열 | [시스템] 원내 방송 |
+| **SpeakerName** | 문자열 | 원내 방송 |
 | **DialogueContent** | 문자열 | 병원 인근 지하철역에서 폭발 사고 발생. 재난 상황 발령되었습니다. 응급실 대비 바랍니다. |
 | **PortraitSprite** | 문자열 |  |
 | **NextNodeIdentifier** | 문자열 | R001 |
@@ -70,9 +70,9 @@
 
 | Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers |
 |---|---|---|
-| N001 | 문자열 | CC_A_Triage |
-| N002 | 문자열 | CC_BC_Ready |
-| N003 | 문자열 | CC_D_Ready |
+| N001 | CC_A_Triage | 간호사 A |
+| N002 | CC_BC_Ready | 간호사 B, 간호사 C |
+| N003 | CC_D_Ready | 간호사 D |
 
 ====================================================
 # [병렬 브랜치 1] 플레이어 A (중증도 분류 담당) 흐름
@@ -342,7 +342,6 @@
 | **Identifier** | 문자열 | E003 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
 | **EventIdentifier** | 문자열 | show_dummyA_ui |
-| **EventParameters** | 문자열 | |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C002 |
 
@@ -461,7 +460,7 @@
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.QuestControl |
 | **Operation** | ScenarioQuestOperation | Add |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
-| **Quest** | ScenarioQuestData | Quest_MoveToTreatment |
+| **Quest** | ScenarioQuestData | Quest_MoveToTreatmentroom |
 | **NextIdentifier** | 문자열 | V005 |
 
 ---
@@ -472,7 +471,7 @@
 |---|---|---|
 | **Identifier** | 문자열 | V005 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | Enter_TreatmentRoom |
+| **Condition** | 문자열 | Enter_Treatmentroom |
 | **TargetCount** | 정수 | 2 |
 | **NextIdentifier** | 문자열 | Q003_1 |
 
@@ -486,7 +485,7 @@
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.QuestControl |
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
-| **Quest** | ScenarioQuestData | Quest_MoveToTreatment |
+| **Quest** | ScenarioQuestData | Quest_MoveToTreatmentroom |
 | **NextIdentifier** | 문자열 | N002_1 |
 
 ---
@@ -587,6 +586,7 @@
 ---
 
 ### [A001] CombineItemNode
+
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | A001 |
@@ -625,6 +625,7 @@
 ---
 
 ### [A002] CombineItemNode
+
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | A002 |
@@ -725,8 +726,7 @@
 | **Identifier** | 문자열 | E004 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
 | **EventIdentifier** | 문자열 | B_C_D_to_triage |
-| **EventParameters** | 문자열 | |
-| **MoveNextBehavior** | 문자열 | WaitUntilDone |
+| **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | N004 |
 
 ---
