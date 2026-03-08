@@ -20,7 +20,7 @@
 | Identifier | NodeType | 내용(줄글) | NextIdentifier |
 |---|---|---|---|
 | E070 | InvokeEvent | 시나리오 B 환자, 시나리오 C 환자, 더미 B 환자가 [스트레쳐 혹은 베드](스트레쳐에서 베드로 옮기는 과정이 구현 가능하다면 스트레쳐로 들어와서 베드로 옮겨도 좋고, 제한된다면 침대로 들어와서 정해진 위치에 위치시키는 방안으로 대체한다)에 실려 들어온다. EventIdentifier로 triage_patientB_patientC_dummyB를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다.| D044 |
-| D044 | Dialogue | [시스템] "환자가 세 명이 이송되었습니다. 간호사 A가 중증도 분류를 시행합니다." | D045 |
+| D044 | Dialogue | [시스템] "환자 세 명이 이송되었습니다. 간호사 A가 중증도 분류를 시행합니다." | D045 |
 | D045 | Dialogue | [플레이어 A 전용] "환자를 차례대로 클릭하여 환자의 상태를 확인하고, 중증도 분류를 실시하세요." | V029 |
 | V029 | Validator | [A - 1단계] 시나리오 B 환자를 클릭해 환자의 상태를 확인한다. 시나리오 B 환자를 클릭하면 환자의 정보가 UI로 출력되도록 한다. Condition은 Show_patientB_info이며, TargetCount는 1이다. | E071 |
 | E071 | InvokeEvent | 시나리오 B 환자에 대한 정보를 UI창으로 띄우고, "- 현재 의식 상태: 대화 가능하나 반응이 느려 약간의 기면(drowsy) 상태로 보임, - [왼쪽 팔과 다리의 근력이 비교적 약함], - 빈맥, - 빈호흡, - 상완 부위 출혈 지속 중, - 머리에 타박상 및 약간의 출혈 보임, - C/C: 두통"으로 출력한다. EventIdentifier로 show_patientB_ui를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | C035 |
@@ -52,13 +52,13 @@
 | V030_A | Validator | [플레이어 A] 시나리오 B 환자의 환자 침대(손잡이 등)을 클릭한다. Condition은 Grab_Stretcher_patientB, TargetCount는 1이다. | V030_C |
 | V030_C | Validator | [플레이어 C] 시나리오 B 환자의 환자 침대(손잡이 등)을 클릭한다. Condition은 Grab_Stretcher_patientB, TargetCount는 1이다. | E075 |
 | E075 | InvokeEvent | 시나리오 B 환자를 입원실 내 정해진 위치로 이동시킨다. EventIdentifier로 move_patientB를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | D046 |
-| D046 | Dialogue | [시스템] "처치 구역에 도착했습니다. 즉시 의식상태 사정 및 활력징후 사정을 시작하세요." | P010 |
+| D046 | Dialogue | [시스템] "처치 구역에 도착했습니다. 간호사 A는 의식상태를, 간호사 C는 활력징후를 사정하세요." | P010 |
 | P010 | Parallel | [플레이어 A, C 전용] 플레이어 A는 환자를 클릭해 의식상태를 사정하고, 플레이어 C는 활력징후 사정도구를 사용해 활력징후를 사정한다. WaitMode는 WaitAll로 서술한다. AllocationType은 ByRole로 서술한다. | D049 |
 | P010-B1 | ParallelBranch | [플레이어 A] 브랜치 시작 노드는 D047이며, 플레이어 A가 시나리오 B 환자의 의식상태를 사정한다. CompletionConditionIdentifier는 CC_A_gcs_patientB로 서술한다. | D047 |
 | P010-B2 | ParallelBranch | [플레이어 C] 브랜치 시작 노드는 D048이며, 플레이어 C가 시나리오 B 환자의 활력징후를 사정한다. CompletionConditionIdentifier는 CC_C_vital_patientB로 서술한다. | D048 |
 | D047 | Dialogue | [플레이어 A 전용] "환자를 클릭하여 환자의 의식상태를 사정하세요." | V031 |
 | V031 | Validator | 플레이어 A는 시나리오 B 환자를 클릭해 의식 수준 및 GCS를 사정한다. Condition은 Check_gcs_patientB이며, TargetCount는 1이다. | D047_1 |
-| D047_1 | Dialogue | "환자의 의식 수준(AVPU)를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다." | D047_2 |
+| D047_1 | Dialogue | "환자의 의식 수준(AVPU)를 확인합니다. 마우스로 정답을 선택해주세요. 정답 시 계속 진행, 오답 시 재응시 합니다." | D047_2 |
 | D047_2 | Dialogue | "환자에게 질문했을 때, 무슨 일이 있었는지 기억하지 못하고, 말의 반응이 조금 느립니다." | C038 |
 | C038 | Choice | "의식 수준을 AVPU에 따라 분류할 때, 현재 환자의 의식 수준은 무엇입니까?" | C038-Wrong, C038-Correct |
 | C038-Wrong | ChoiceOption | "A(Alert, 완전히 깨어 있음)", "P(Pain response, 통증에 반응 있음)", "U(Unconsciousness, 반응 없음)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D047_retry_a |
@@ -107,11 +107,11 @@
 | D051_1 | Dialogue | "펜라이트를 선택한 뒤, 환자의 얼굴을 클릭해 대광반사 확인을 시작합니다." | V033_1 |
 | V033_1 | Validator | [A 2단계] 환자의 얼굴을 클릭하면 환자의 양쪽 눈이 확대된다. 펜라이트가 불이 켜져있다고 가정하고 마우스 커서가 빛을 비추는 것으로 설정하고, 마우스가 환자의 눈 위를 지나가면 빛이 비추는 범위만큼 동공이 반응하는 것으로 한다. Condition은 Click_patientB_face이며, TargetCount는 1이다. | E077 |
 | E077 | InvokeEvent | 펜라이트가 불이 켜져있다고 가정하고 마우스 커서가 빛을 비추는 것으로 설정하고, 마우스가 환자의 눈 위를 지나가면 빛이 비추는 범위만큼 동공이 반응하는 것으로 한다. [좌측 동공은 빛에 따라 동공이 수축하지만, 우측 동공은 거의 수축하지 않는 것으로 한다.] 양쪽을 최소 1회씩 확인해야 목표를 달성한 것으로 한다. EventIdentifier로 Pupil_reflex_patientB를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | D051_2 |
-| D051_2 | Dialogue | [시스템(플레이어 B/D 제외), by 플레이어 A] "우측 동공이 빛에 반응하지 않습니다. 뇌출혈이 의심됩니다. 추가 검사가 필요해 보입니다." | D051_3 |
+| D051_2 | Dialogue | [시스템(플레이어 B/D 제외), by 플레이어 A] "좌측 동공에 비해 우측 동공이 빛에 반응하지 않습니다. 추가 평가가 필요합니다." | D051_3 |
 | D051_3 | Dialogue | [플레이어 A 전용] "다음으로 IV 라인을 확보합니다. 환자의 우측 팔에 IV 라인을 확보해야 합니다. 20게이지 캐뉼라, 수액세트, 생리식염수 1L 수액백을 클릭해 획득하십시오." | V033_2 |
 | V033_2 | Validator | [A 1단계 - 시작] 플레이어 A는 20게이지 캐뉼라, 수액세트, 생리식염수 1L 수액백을 클릭해 획득한다. Condition은 Click_20g, Click_iv_set, Click_ns1이며, TargetCount는 3이다. | D051_4 |
 | D051_4 | Dialogue | "20게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 우측 팔을 클릭해 정맥 라인을 확보하세요." | V033_3 |
-| V033_3 | Validator | [A 2단계] 플레이어 D는 인벤토리 내 18게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 우측 팔을 클릭하여 정맥 라인을 확보한다. 캐뉼라는 팔의 오금(팔을 굽혔을 때 굽혀지며 오목해지는 부분)에 적용한다. Condition은 Insert_iv_b_right이며, TargetCount는 1이다. | E078 |
+| V033_3 | Validator | [A 2단계] 플레이어 D는 인벤토리 내 20게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 우측 팔을 클릭하여 정맥 라인을 확보한다. 캐뉼라는 팔의 오금(팔을 굽혔을 때 굽혀지며 오목해지는 부분)에 적용한다. Condition은 Insert_iv_b_right이며, TargetCount는 1이다. | E078 |
 | E078 | InvokeEvent | 20G 캐뉼라가 환자 우측 팔 오금(팔을 굽혔을때 굽혀지며 오목해지는 부분)에 위치한다. 끝에 얇고 뾰족한 부분은 팔 안으로 삽입되어 팔 위에 색깔이 있는 플라스틱 부분부터 노출되어 보인다. EventIdentifier로 insert_20g_right_patientB를 호출한다. MoveNextBehavior는 Immediate로 서술한다. | D051_5 |
 | D051_5 | Dialogue | "준비된 생리식염수 1L 수액백을 클릭해 선택한 뒤, 우측 팔에 연결된 20G 캐뉼라를 클릭해 연결하세요." | V033_4 |
 | V033_4 | Validator | [A 3단계] 플레이어 D는 인벤토리 내 준비된 생리식염수 1L 수액백을 클릭해 선택한 뒤, 우측 팔에 연결된 20G 캐뉼라를 클릭해 연결한다. Condition은 Connect_cannula_and_ns1_patientB이며, TargetCount는 1이다. | E079 |
@@ -206,11 +206,11 @@
 | D059_1 | Dialogue | "펜라이트를 선택한 뒤, 환자의 얼굴을 클릭해 대광반사 확인을 시작합니다." | V037_1 |
 | V037_1 | Validator | [B 2단계] 환자의 얼굴을 클릭하면 환자의 양쪽 눈이 확대된다. 펜라이트가 불이 켜져있다고 가정하고 마우스 커서가 빛을 비추는 것으로 설정하고, 마우스가 환자의 눈 위를 지나가면 빛이 비추는 범위만큼 동공이 반응하는 것으로 한다. Condition은 Click_patientC_face이며, TargetCount는 1이다. | E084 |
 | E084 | InvokeEvent | 펜라이트가 불이 켜져있다고 가정하고 마우스 커서가 빛을 비추는 것으로 설정하고, 마우스가 환자의 눈 위를 지나가면 빛이 비추는 범위만큼 동공이 반응하는 것으로 한다. [우측 동공은 빛에 따라 동공이 수축하지만, 좌측 동공은 거의 수축하지 않는 것으로 한다.] 양쪽을 최소 1회씩 확인해야 목표를 달성한 것으로 한다. EventIdentifier로 Pupil_reflex_patientC를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | D059_2 |
-| D059_2 | Dialogue | [시스템(플레이어 A/C 제외), by 플레이어 B] "좌측 동공이 빛에 반응하지 않습니다. 뇌출혈이 의심됩니다. 추가 검사가 필요해 보입니다." | D059_3 |
+| D059_2 | Dialogue | [시스템(플레이어 A/C 제외), by 플레이어 B] "우측 동공에 비해 좌측 동공이 빛에 반응하지 않습니다. 추가 평가가 필요합니다." | D059_3 |
 | D059_3 | Dialogue | [플레이어 B 전용] "다음으로 IV 라인을 확보합니다. 환자의 좌측 팔에 IV 라인을 확보해야 합니다. 20게이지 캐뉼라, 수액세트, 생리식염수 1L 수액백을 클릭해 획득하십시오." | V037_2 |
 | V037_2 | Validator | [B 1단계 - 시작] 플레이어 A는 20게이지 캐뉼라, 수액세트, 생리식염수 1L 수액백을 클릭해 획득한다. Condition은 Click_20g, Click_iv_set, Click_ns1이며, TargetCount는 3이다. | D059_4 |
 | D059_4 | Dialogue | "20게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 좌측 팔을 클릭해 정맥 라인을 확보하세요." | V037_3 |
-| V037_3 | Validator | [B 2단계] 플레이어 D는 인벤토리 내 18게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 좌측 팔을 클릭하여 정맥 라인을 확보한다. 캐뉼라는 팔의 오금(팔을 굽혔을 때 굽혀지며 오목해지는 부분)에 적용한다. Condition은 Insert_iv_c_left이며, TargetCount는 1이다. | E085 |
+| V037_3 | Validator | [B 2단계] 플레이어 D는 인벤토리 내 20게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 좌측 팔을 클릭하여 정맥 라인을 확보한다. 캐뉼라는 팔의 오금(팔을 굽혔을 때 굽혀지며 오목해지는 부분)에 적용한다. Condition은 Insert_iv_c_left이며, TargetCount는 1이다. | E085 |
 | E085 | InvokeEvent | 20G 캐뉼라가 환자 좌측 팔 오금(팔을 굽혔을때 굽혀지며 오목해지는 부분)에 위치한다. 끝에 얇고 뾰족한 부분은 팔 안으로 삽입되어 팔 위에 색깔이 있는 플라스틱 부분부터 노출되어 보인다. EventIdentifier로 insert_20g_left_patientC를 호출한다. MoveNextBehavior는 Immediate로 서술한다. | D059_5 |
 | D059_5 | Dialogue | "준비된 생리식염수 1L 수액백을 클릭해 선택한 뒤, 좌측 팔에 연결된 20G 캐뉼라를 클릭해 연결하세요." | V037_4 |
 | V037_4 | Validator | [B 3단계] 플레이어 D는 인벤토리 내 준비된 생리식염수 1L 수액백을 클릭해 선택한 뒤, 좌측 팔에 연결된 20G 캐뉼라를 클릭해 연결한다. Condition은 Connect_cannula_and_ns1_patientC이며, TargetCount는 1이다. | E086 |

@@ -154,7 +154,7 @@
 | D017_7 | Dialogue | [플레이어 C 전용] "C-line set을 클릭해 획득하고, 해당 아이템을 의사에게 전달하세요." | V015_5 |
 | V015_5 | Validator | [C 1단계] C-line set 아이템을 클릭해 획득해고, 해당 아이템을 의사 NPC를 클릭해 전달한다. Condition은 Pass_cline_set이며, TargetCount는 1이다. | E026 |
 | E026 | InvokeEvent | 의사 NPC가 삽입하는 모션을 보여준 뒤, 환자의 몸통에서 목으로 이어지는 경계선으로부터 수액백 또는 혈액백을 연결할 수 있는 관이 3개가 나온다. [해당 관은 구현할 수 있는지 확인이 필요하다.] EventIdentifier로 insert_cline을 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | D017_8 |
-| D017_8 | Dialogue | [시스템, by 의사 NPC] "[간호사 C 선생님], Level 1 연결시키고 플라즈마 솔루션 달아주세요. 그 이후 [간호사 D 선생님]이 혈액팩도 Level 1에 달아주세요." | P005 |
+| D017_8 | Dialogue | [시스템, by 의사 NPC] "[간호사 C 선생님], Level 1 연결시키고 플라즈마 솔루션 달아주세요. 그 이후 [간호사 D 선생님]이 혈액백도 Level 1에 달아주세요." | P005 |
 | P005 | Parallel | 플레이어 C는 플라즈마 솔루션 1L 수액백을 획득한 뒤 Level 1 rapid infuser와 상호작용하고, 플레이어 D는 인벤토리 내 혈액백을 선택한 뒤 Level 1 rapid infuser와 상호작용한다. WaitMode는 WaitAll로 서술한다. AllocationType은 ByRole로 서술한다. | E027 | 
 | P005-B1 | ParallelBranch | 브랜치 시작 노드는 D017_9이며, 플레이어 C는 플라즈마 솔루션 1L 수액백을 획득한 뒤, Level 1 rapid infuser와 상호작용한다. CompletionConditionIdentifier는 CC_C_plasma_to_lv1으로 서술한다. | D017_9 |
 | P005-B2 | ParallelBranch | 브랜치 시작 노드는 D017_11이며, 플레이어 D는 인벤토리 내 혈액백을 선택한 뒤, Level 1 rapid infuser와 상호작용한다. CompletionConditionIdentifier는 CC_D_blood_to_lv1으로 서술한다. | D017_11 |
@@ -171,11 +171,11 @@
 | D017_13 | Dialogue | [시스템, by 플레이어 C] "Level 1이 연결되었습니다." | CC_D_iv_patientA |
 | D018 | Dialogue | [시스템, by 의사 NPC] "그래도 혈압이 잘 안잡히네요.." | E029 |
 | E029 | InvokeEvent | 환자 모니터에서 출력되는 창을 모두에게 띄운다. 동시에, 환자의 활력징후가 급격히 하락한다. "환자의 의식수준이 낮아지고, 혈압 -?- mmHg[측정불가하다는 의미], 맥박수 70회/분, 호흡수 -?- 회/분[측정불가하다는 의미], SpO2 -?-%" 를 출력한다. [파형을 출력하는 경우, flatline을 그린다.] EventIdentifier로 patient_crash_ui를 호출한다. MoveNextBehavior는 Immediate로 서술한다. | D019 |
-| D019 | Dialogue | [시스템, by 의사 NPC] "심전도가 이상합니다. 간호사 B 선생님, 환자 맥박 확인해주세요." | D020 |
+| D019 | Dialogue | [시스템, by 의사 NPC] "심전도만 출력되고, 다른 활력징후가 출력되지 않습니다. 간호사 B 선생님, 환자 맥박 확인해주세요." | D020 |
 | D020 | Dialogue | [플레이어 B 전용] "환자의 경동맥을 촉지해 맥박을 확인합니다. 목 부위를 클릭하세요." | V016 |
 | V016 | Validator | [플레이어 B] 환자의 목 부위를 클릭해 맥박을 촉지한다. 촉지 부위는 C-line이 삽입된 반대편 경동맥을 촉지한다. Condition은 Check_pulse_patientA이며, TargetCount는 1이다. | D021 |
 | D021 | Dialogue | [시스템, by 플레이어 B] "맥박 없습니다." | D022 |
-| D022 | Dialogue | [시스템, by 의사 NPC] "PEA입니다. CPR 하겠습니다. 제가 팀 리더를 맡겠습니다. 간호사 A 선생님은 앰부백 짜주시고, 간호사 B 선생님은 가슴압박 해주세요. 간호사 C 선생님은 제세동기 연결해주시고, 간호사 D 선생님은 C-line으로 에피네프린 투여해주세요." | P006 |
+| D022 | Dialogue | [시스템, by 의사 NPC] "PEA입니다. CPR 하겠습니다. 제가 팀 리더를 맡겠습니다. 간호사 A 선생님은 앰부백 짜주시고, 간호사 B 선생님은 가슴압박 해주세요. 간호사 C 선생님은 제세동기 연결해주시고, 간호사 D 선생님은 C-line으로 에피네프린 1mg 투여해주세요." | P006 |
 | P006 | Parallel | 플레이어 A는 앰부백을 이용한 산소화, 플레이어 B는 가슴 압박, 플레이어 C는 제세동기 연결, 플레이어 D는 에피네프린 투여를 실시한다. WaitMode는 WaitAll로 서술한다. AllocationType은 ByRole로 서술한다. | D027 |
 | P006-B1 | ParallelBranch | 브랜치 시작 노드는 D023이며, 플레이어 A는 앰부백을 이용한 산소화를 실시한다(필요한 물품: 앰부백). CompletionConditionIdentifier는 CC_A_ambu로 서술한다. | D023 |
 | P006-B2 | ParallelBranch | 브랜치 시작 노드는 D024이며, 플레이어 B는 가슴 압박을 실시한다. CompletionConditionIdentifier는 CC_B_chestcomp로 서술한다. | D024 |
@@ -258,7 +258,7 @@
 | D026_3 | Dialogue | "동일한 방법으로 준비된 생리식염수 20cc를 투여해 루멘 내 잔여 약물을 주입합니다." | V020_3 |
 | V020_3 | Validator | [D 4단계] 준비된 생리식염수 20cc 아이템을 클릭해 선택한 뒤, 중심정맥관을 클릭하면 [에피네프린이 투여되었던 동일한 루멘에] 약물이 투여된다. Condition은 Push_ns이며, TargetCount는 1이다. | E046 |
 | E046 | InvokeEvent | 주사기가 중심정맥관의 [에피네프린이 투여되었던 동일한 루멘]에 연결되어 약물이 주입된다. EventIdentifier로 push_ns_a를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | C018 |
-| C018 | Choice | [플레이어 D 전용] "1. 에피네프린은 얼마나 자주 투여해야 하는가?" | C018-Wrong, C018-Correct |
+| C018 | Choice | [플레이어 D 전용] "1. 심정지 상황에서 에피네프린의 투여 간격은 어떻게 되는가?" | C018-Wrong, C018-Correct |
 | C018-Wrong | ChoiceOption | "약 1~2분에 한 번", "약 5~10분에 한 번", "누군가 시킬 때 마다" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D026_retry_a |
 | C018-Correct | ChoiceOption | "약 3~5분에 한 번" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | E047 |
 | D026_retry_a | Dialogue | "오답입니다. 에피네프린은 3~4분에 한 번 투여합니다." | C018 |
@@ -324,7 +324,7 @@
 | D031_4 | Dialogue | "동일한 방법으로 준비된 생리식염수 20cc를 투여해 루멘 내 잔여 약물을 주입합니다." | V023_3 |
 | V023_3 | Validator | [C 4단계] 준비된 생리식염수 20cc 아이템을 클릭해 선택한 뒤, 중심정맥관을 클릭하면 [에피네프린이 투여되었던 동일한 루멘에] 약물이 투여된다. Condition은 Push_ns이며, TargetCount는 1이다. | E060 |
 | E060 | InvokeEvent | 주사기가 중심정맥관의 [에피네프린이 투여되었던 동일한 루멘]에 연결되어 약물이 주입된다. EventIdentifier로 push_ns_a를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | C026 |
-| C026 | Choice | [플레이어 C 전용] "1. 에피네프린은 얼마나 자주 투여해야 하는가?" | C026-Wrong, C026-Correct |
+| C026 | Choice | [플레이어 C 전용] "1. 심정지 상황에서 에피네프린의 투여 간격은 어떻게 되는가?" | C026-Wrong, C026-Correct |
 | C026-Wrong | ChoiceOption | "1~2분에 한 번", "5~10분에 한 번", "누군가 시킬 때 마다" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D031_retry_a |
 | C026-Correct | ChoiceOption | "3~5분에 한 번" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | E061 |
 | D031_retry_a | Dialogue | "오답입니다. 에피네프린은 3~4분에 한 번 투여합니다." | C026 |
@@ -389,14 +389,14 @@
 | D042_4 | Dialogue | [관찰2] "다음은 Verbal Response(V)입니다. "여기가 어디예요?"라고 묻자, 환자는 이해할 수 없는 신음소리만 내고 있습니다. 현재 기관내삽관이 시행되어있는 상태입니다." | C033 |
 | C033 | Choice | "관찰된 V(Verbal Response) 점수는 몇 점입니까?" | C033-Wrong, C033-Correct |
 | C033-Wrong | ChoiceOption | "5점(적절한 답변)", "4점(혼란)", "3점(부적절한 답변)", "2점(신음소리)", "1점(반응 없음)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D042_retry_c |
-| C033-Correct | ChoiceOption | "T(기관삽관)" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D042_5 |
+| C033-Correct | ChoiceOption | "E(기관삽관)" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D042_5 |
 | D042_retry_c | Dialogue | "오답입니다. 현재 환자는 알아들을 수 없는 소리만 내고 있으나, 기관삽관을 하는 경우 1점으로 처리합니다." | C033 |
 | D042_5 | Dialogue | [관찰3] "마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 반대쪽 손으로 잡으려 합니다." | C034 |
 | C034 | Choice | "관찰된 M(Motor Response) 점수는 몇 점입니까?" | C034-Wrong, C034-Correct |
 | C034-Wrong | ChoiceOption | "6점(명령 수행)", "4점(통증에 회피)", "3점(이상 굴곡)", "2점(이상 신전)", "1(반응 없음)" (오답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D042_retry_d |
 | C034-Correct | ChoiceOption | "5점(통증 원인을 치우려고 손을 뻗음)" (정답) / DisplayIconIdentifier 없음 / DisplayColor: #88AAFF | D042_6 |
 | D042_retry_d | Dialogue | "오답입니다. 현재 통증에 회피하고 있습니다." | C034 |
-| D042_6 | Dialogue | "GCS 측정 완료. E2 / V(T) / M5 = 총 7T점 입니다." | CC_D_gcs_patientA_rosc |
+| D042_6 | Dialogue | "GCS 측정 완료. E2 / V(E) / M5 = 총 7T점 입니다." | CC_D_gcs_patientA_rosc |
 | D043 | Dialogue | [시스템] "시나리오 A 환자 대응 종료. 흉부외과로 환자를 이관하였습니다." 메세지를 표시한다. | (end) |
 
 
