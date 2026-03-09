@@ -70,9 +70,9 @@
 
 | Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers |
 |---|---|---|
-| N001 | CC_A_Triage | 간호사 A |
-| N002 | CC_BC_Ready | 간호사 B, 간호사 C |
-| N003 | CC_D_Ready | 간호사 D |
+| N001 | CC_A_Triage | NurseA |
+| N002 | CC_BC_Ready | NurseB, NurseC |
+| N003 | CC_D_Ready | NurseD |
 
 ====================================================
 # [병렬 브랜치 1] 플레이어 A (중증도 분류 담당) 흐름
@@ -263,35 +263,24 @@
 ### [C001] ChoiceNode
 
 | 속성 | 타입 | 설명 |
-|---|---|---|
+| :--- | :--- | :--- |
 | **Identifier** | 문자열 | C001 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Choice |
-| **QuestionText** | 문자열 | 해당 환자의 중증도 분류를 시행하세요. |
-| **NextIdentifiers** | 문자열 목록 | C001-Wrong, C001-Correct |
+| **SpeakerName** | 문자열 | 시스템 |
+| **DialogueContent** | 문자열 | 해당 환자의 중증도 분류를 시행하세요. |
+| **PortraitSprite** | 문자열 | |
+| **Options** | ScenarioChoiceOption 목록 | **[하단 C001_Options 표 참조]** |
+| **NextIdentifier** | 문자열 | |
 
----
+#### [C001_Options] 선택지 목록 (ScenarioChoiceOption)
 
-### [C001-Wrong] ChoiceOptionNode
-
-| 속성 | 타입 | 설명 |
-|---|---|---|
-| **Identifier** | 문자열 | C001-Wrong |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.ChoiceOption |
-| **OptionText** | 문자열 | KTAS 2(긴급), KTAS 3(응급), KTAS 4(준응급), KTAS 5(비응급) |
-| **DisplayColor** | 문자열 | #88AAFF |
-| **NextIdentifier** | 문자열 | N001_retry_a |
-
----
-
-### [C001-Correct] ChoiceOptionNode
-
-| 속성 | 타입 | 설명 |
-|---|---|---|
-| **Identifier** | 문자열 | C001-Correct |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.ChoiceOption |
-| **OptionText** | 문자열 | KTAS 1(소생) |
-| **DisplayColor** | 문자열 | #88AAFF |
-| **NextIdentifier** | 문자열 | N001_3 |
+| DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
+| :--- | :--- | :--- | :--- |
+| KTAS 2(긴급) | | #88AAFF | N001_retry_a |
+| KTAS 3(응급) | | #88AAFF | N001_retry_a |
+| KTAS 4(준응급) | | #88AAFF | N001_retry_a |
+| KTAS 5(비응급) | | #88AAFF | N001_retry_a |
+| KTAS 1(소생) | | #88AAFF | N001_3 |
 
 ---
 
@@ -593,7 +582,7 @@
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.CombineItem |
 | **InputItemIdentifiers** | 문자열 목록 | ns1, iv_set |
 | **OutputItemIdentifier** | 문자열 | ns1_ready |
-| **AutoCombine** | bool | Yes |
+| **AutoCombine** | bool | true |
 | **NextIdentifier** | 문자열 | N003_2 |
 
 
@@ -632,7 +621,7 @@
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.CombineItem |
 | **InputItemIdentifiers** | 문자열 목록 | ps1, iv_set |
 | **OutputItemIdentifier** | 문자열 | ps1_ready |
-| **AutoCombine** | bool | Yes |
+| **AutoCombine** | bool | true |
 | **NextIdentifier** | 문자열 | N003_3 |
 
 ---

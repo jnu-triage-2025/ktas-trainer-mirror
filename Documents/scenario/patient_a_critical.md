@@ -58,10 +58,10 @@
 
 | Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers |
 | --- | --- | --- |
-| V010_A | CC_A_grab | 간호사 A |
-| V010_B | CC_B_grab | 간호사 B |
-| V010_C | CC_C_grab | 간호사 C |
-| V010_D | CC_D_grab | 간호사 D |
+| V010_A | CC_A_grab | NurseA |
+| V010_B | CC_B_grab | NurseB |
+| V010_C | CC_C_grab | NurseC |
+| V010_D | CC_D_grab | NurseD |
 
 ---
 
@@ -175,9 +175,9 @@
 
 | Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers |
 | --- | --- | --- |
-| N005 | CC_B_vitalcheck_patientA | 간호사 B |
-| N006 | CC_C_gcs_patientA | 간호사 C |
-| N007 | CC_D_suction_patientA | 간호사 D |
+| N005 | CC_B_vitalcheck_patientA | NurseB |
+| N006 | CC_C_gcs_patientA | NurseC |
+| N007 | CC_D_suction_patientA | NurseD |
 
 ====================================================
 # [병렬 브랜치 1] 플레이어 B (활력징후 측정) 흐름
@@ -893,9 +893,9 @@
 
 | Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers |
 |---|---|---|
-| N008 | CC_B_intubation_A_oxy_patientA | 간호사 B, 간호사 A |
-| N010 | CC_C_stopbleeding_patientA | 간호사 C |
-| N011 | CC_D_iv_patientA | 간호사 D, 간호사 C |
+| N008 | CC_B_intubation_A_oxy_patientA | NurseB, NurseA |
+| N010 | CC_C_stopbleeding_patientA | NurseC |
+| N011 | CC_D_iv_patientA | NurseD, NurseC |
 
 ====================================================
 # [P004 병렬 브랜치 1] 플레이어 B & A (기관내삽관 및 산소 공급)
@@ -1417,7 +1417,7 @@
 | **Identifier** | 문자열 | N009_retry |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 처방은 10L 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 3.0 |
 | **NextIdentifier** | 문자열 | C008 |
 
@@ -2207,10 +2207,10 @@
 
 | Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers |
 |---|---|---|
-| N017 | CC_A_ambu | 간호사 A |
-| N018 | CC_B_chestcomp | 간호사 B |
-| N019 | CC_C_defib | 간호사 C |
-| N020 | CC_D_epi | 간호사 D |
+| N017 | CC_A_ambu | NurseA |
+| N018 | CC_B_chestcomp | NurseB |
+| N019 | CC_C_defib | NurseC |
+| N020 | CC_D_epi | NurseD |
 
 ====================================================
 # [P005 병렬 브랜치 1] 플레이어 A (앰부백 산소화)
@@ -2433,7 +2433,7 @@
 | **Identifier** | 문자열 | N017_retry_a |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C010 |
 
@@ -2480,7 +2480,7 @@
 | **Identifier** | 문자열 | N017_retry_b |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 6초에 1번씩 눌러야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C011 |
 
@@ -2594,7 +2594,7 @@
 | **Identifier** | 문자열 | N018_retry_a |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C012 |
 
@@ -2640,7 +2640,7 @@
 | **Identifier** | 문자열 | N018_retry_b |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C013 |
 
@@ -2687,7 +2687,7 @@
 | **Identifier** | 문자열 | N018_retry_c |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C014 |
 
@@ -2734,7 +2734,7 @@
 | **Identifier** | 문자열 | N018_retry_d |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 혈액 순환이 가능합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C015 |
 
@@ -2901,7 +2901,7 @@
 | **Identifier** | 문자열 | N019_retry_a |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C016 |
 
@@ -2947,7 +2947,7 @@
 | **Identifier** | 문자열 | N019_retry_b |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 150~200J(줄)이 정답입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C016 |
 
@@ -2995,7 +2995,7 @@
 | **Identifier** | 문자열 | N019_retry_c |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C017 |
 
@@ -3231,7 +3231,7 @@
 | **Identifier** | 문자열 | N020_retry_a |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 에피네프린은 3~5분에 한 번 투여합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C019 |
 
@@ -3278,7 +3278,7 @@
 | **Identifier** | 문자열 | N020_retry_b |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 심장에 빠르게 도달시키기 위해 생리식염수 주입 후 팔을 들어올려야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C020 |
 
@@ -3365,10 +3365,10 @@
 
 | Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers |
 |---|---|---|
-| N021 | CC_A_chestcomp | 간호사 A |
-| N022 | CC_B_ambu | 간호사 B |
-| N023 | CC_C_epi | 간호사 C |
-| N024 | CC_D_defib | 간호사 D |
+| N021 | CC_A_chestcomp | NurseA |
+| N022 | CC_B_ambu | NurseB |
+| N023 | CC_C_epi | NurseC |
+| N024 | CC_D_defib | NurseD |
 
 ====================================================
 # [P006 병렬 브랜치 1] 플레이어 A (가슴압박 교대)
@@ -3467,7 +3467,7 @@
 | **Identifier** | 문자열 | N021_retry_a |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C021 |
 
@@ -3513,7 +3513,7 @@
 | **Identifier** | 문자열 | N021_retry_b |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C022 |
 
@@ -3560,7 +3560,7 @@
 | **Identifier** | 문자열 | N021_retry_c |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C023 |
 
@@ -3607,7 +3607,7 @@
 | **Identifier** | 문자열 | N021_retry_d |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C024 |
 
@@ -3720,7 +3720,7 @@
 | **Identifier** | 문자열 | N022_retry_a |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C025 |
 
@@ -3767,7 +3767,7 @@
 | **Identifier** | 문자열 | N022_retry_b |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 6초에 1번씩 눌러야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C026 |
 
@@ -4016,7 +4016,7 @@
 | **Identifier** | 문자열 | N023_retry_a |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 에피네프린은 3~5분에 한 번 투여합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C027 |
 
@@ -4063,7 +4063,7 @@
 | **Identifier** | 문자열 | N023_retry_b |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 심장에 빠르게 도달시키기 위해 생리식염수 주입 후 팔을 들어올려야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C028 |
 
@@ -4191,7 +4191,7 @@
 | **Identifier** | 문자열 | N024_retry_a |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C029 |
 
@@ -4237,7 +4237,7 @@
 | **Identifier** | 문자열 | N024_retry_b |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 150~200J(줄)이 정답입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C030 |
 
@@ -4285,7 +4285,7 @@
 | **Identifier** | 문자열 | N024_retry_c |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C031 |
 
@@ -4451,9 +4451,9 @@
 
 | Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers |
 |---|---|---|
-| N026 | CC_A_triagearea | 간호사 A |
-| N027 | CC_B_cut_patientA | 간호사 B |
-| N028 | CC_D_gcs_patientA_rosc | 간호사 D |
+| N026 | CC_A_triagearea | NurseA |
+| N027 | CC_B_cut_patientA | NurseB |
+| N028 | CC_D_gcs_patientA_rosc | NurseD |
 
 ====================================================
 # [P007 병렬 브랜치 1] 플레이어 A (분류 구역 복귀)
@@ -4702,7 +4702,7 @@
 | **Identifier** | 문자열 | N028_retry_a |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 다른 자극에는 반응이 없다가, 통증에 반응을 하고 있습니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C032 |
 
@@ -4751,7 +4751,7 @@
 | **Identifier** | 문자열 | N028_retry_b |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 통증 자극에만 반응했음을 유의하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C033 |
 
@@ -4802,7 +4802,7 @@
 | **Identifier** | 문자열 | N028_retry_c |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 현재 환자는 알아들을 수 없는 소리만 내고 있으나, 기관삽관을 하는 경우 1점으로 처리(E 표기)합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C034 |
 
@@ -4853,7 +4853,7 @@
 | **Identifier** | 문자열 | N028_retry_d |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
 | **Message** | 문자열 | 오답입니다. 통증 원인을 치우려고 손을 뻗고 있습니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C035 |
 
