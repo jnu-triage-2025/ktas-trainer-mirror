@@ -52,16 +52,16 @@ namespace MultiplayerInfrastructure.Session
 
     private void HandleSessionInformationAlreadyConfigured()
     {
-      if (!Registry.Registry.Get<bool>(RegistryType.Entity, RegistryGlobalKeys.LoadedFromIntroScene)) return;
+      if (!Registry.Registry.Get<bool>(RegistryType.RuntimeState, RegistryGlobalKeys.LoadedFromIntroScene)) return;
       
-      var sessionInformation = Registry.Registry.Get<SessionInformationModel>(RegistryType.Entity, RegistryGlobalKeys.SessionInformation);
+      var sessionInformation = Registry.Registry.Get<SessionInformationModel>(RegistryType.RuntimeState, RegistryGlobalKeys.SessionInformation);
       if (sessionInformation == null)
       {
         Debug.LogWarning("[FishNetNetworkManagerInjection] No session information found in Registry.Registry.");
         return;
       }
 
-      if (Registry.Registry.Get<bool>(RegistryType.Entity, RegistryGlobalKeys.IsOpeningServer))
+      if (Registry.Registry.Get<bool>(RegistryType.RuntimeState, RegistryGlobalKeys.IsOpeningServer))
       {
         Debug.Log("[FishNetNetworkManagerInjection] Starting as Server based on session info from Intro Scene.");
         StartServer();

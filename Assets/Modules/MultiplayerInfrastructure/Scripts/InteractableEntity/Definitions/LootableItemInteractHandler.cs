@@ -51,12 +51,10 @@ namespace MultiplayerInfrastructure.InteractableEntity.Definitions
         return;
       }
 
-      bool added = player.TryAddItemToInventory(itemObject.Item);
-      if (added)
-      {
-        itemObject.Item.OnGet(player);
-        Destroy(itemObject.gameObject);
-      }
+      if (!string.IsNullOrWhiteSpace(itemObject.Identifier))
+        player.TryPickupWorldItem(itemObject.Identifier);
+      else
+        player.TryPickupWorldItem(itemObject);
     }
   }
 }

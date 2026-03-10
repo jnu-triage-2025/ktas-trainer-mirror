@@ -87,7 +87,7 @@ namespace MultiplayerInfrastructure.UI
     public void OnOverlayPushed()
     {
       _view?.SetVisible(true);
-      Registry.Registry.Get<PlayerController>(RegistryType.Entity, Registry.Registry.TypeKey<PlayerController>())?.EnterUIOverlayMode();
+      Registry.Registry.GetFirstEntityComponent<PlayerController>(EntityType.Player, each => each != null && each.IsOwner)?.EnterUIOverlayMode();
       OverlayPushed?.Invoke();
     }
 
@@ -95,7 +95,7 @@ namespace MultiplayerInfrastructure.UI
     {
       _view?.SetVisible(false);
       _view?.ReturnHeldItemToInventoryOnClose();
-      Registry.Registry.Get<PlayerController>(RegistryType.Entity, Registry.Registry.TypeKey<PlayerController>())?.ExitUIOverlayMode();
+      Registry.Registry.GetFirstEntityComponent<PlayerController>(EntityType.Player, each => each != null && each.IsOwner)?.ExitUIOverlayMode();
       OverlayPopped?.Invoke();
     }
 
@@ -121,7 +121,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void HandleItemDroppedOutside(ItemSystem.Item item)
     {
-      var player = Registry.Registry.Get<PlayerController>(RegistryType.Entity, Registry.Registry.TypeKey<PlayerController>());
+      var player = Registry.Registry.GetFirstEntityComponent<PlayerController>(EntityType.Player, each => each != null && each.IsOwner);
       player?.TryDropItemInFront(item);
     }
   }

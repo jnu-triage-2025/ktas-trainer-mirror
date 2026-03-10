@@ -86,6 +86,9 @@
         },
         {
           "$ref": "#/$defs/ScenarioPlayTTSNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioPlayerTagNode"
         }
       ]
     },
@@ -1091,6 +1094,57 @@
           },
           "required": [
             "transcriptIdentifier"
+          ]
+        }
+      ]
+    },
+    "ScenarioPlayerTagNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "PlayerTag"
+            },
+            "operation": {
+              "type": "string",
+              "enum": ["Add", "Remove", "Change"]
+            },
+            "scope": {
+              "type": "string",
+              "enum": ["All", "Current"],
+              "default": "Current"
+            },
+            "tag": {
+              "type": ["string", "null"]
+            },
+            "fromTag": {
+              "type": ["string", "null"]
+            },
+            "toTag": {
+              "type": ["string", "null"]
+            }
+          },
+          "required": ["operation", "scope"],
+          "allOf": [
+            {
+              "if": {
+                "properties": { "operation": { "enum": ["Add", "Remove"] } }
+              },
+              "then": {
+                "required": ["tag"]
+              }
+            },
+            {
+              "if": {
+                "properties": { "operation": { "const": "Change" } }
+              },
+              "then": {
+                "required": ["fromTag", "toTag"]
+              }
+            }
           ]
         }
       ]

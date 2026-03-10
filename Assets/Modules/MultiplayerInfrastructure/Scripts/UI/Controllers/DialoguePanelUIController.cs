@@ -561,7 +561,7 @@ namespace MultiplayerInfrastructure.UI
 
     public void OnOverlayPushed()
     {
-      var player = Registry.Registry.Get<Player.PlayerController>(RegistryType.Entity, Registry.Registry.TypeKey<Player.PlayerController>());
+      var player = Registry.Registry.GetFirstEntityComponent<Player.PlayerController>(EntityType.Player, each => each != null && each.IsOwner);
       Debug.Log($"[DialoguePanelUI] OnOverlayPushed: PlayerController found: {player != null}");
       player?.EnterUIOverlayMode();
       Debug.Log("[DialoguePanelUI] OnOverlayPushed: Entered UI overlay mode for player");
@@ -570,7 +570,7 @@ namespace MultiplayerInfrastructure.UI
 
     public void OnOverlayPopped()
     {
-      var player = Registry.Registry.Get<Player.PlayerController>(RegistryType.Entity, Registry.Registry.TypeKey<Player.PlayerController>());
+      var player = Registry.Registry.GetFirstEntityComponent<Player.PlayerController>(EntityType.Player, each => each != null && each.IsOwner);
       player?.ExitUIOverlayMode();
       OverlayPopped?.Invoke();
     }

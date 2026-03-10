@@ -27,7 +27,7 @@ namespace MultiplayerInfrastructure.Player
     void OnStartClient_Camera()
     {
       if (!IsOwner) return;
-      _camControl = MainCameraController.Instance ?? Registry.Registry.Get<MainCameraController>(RegistryType.Entity, Registry.Registry.TypeKey<MainCameraController>());
+      _camControl = MainCameraController.Instance ?? Registry.Registry.Get<MainCameraController>(RegistryType.Service, Registry.Registry.TypeKey<MainCameraController>());
 
       if (_camControl.IsUnityNull()) return;
       

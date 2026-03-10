@@ -55,8 +55,9 @@ namespace MultiplayerInfrastructure.Player
 
     public override void OnStartClient()
     {
-      if (!IsOwner) return;
       base.OnStartClient();
+      OnStartClient_AnyPeer();   // 모든 클라이언트 — owner 여부 무관
+      if (!IsOwner) return;
       
       OnStartClient_Network();
       OnStartClient_Camera();
@@ -65,6 +66,12 @@ namespace MultiplayerInfrastructure.Player
       OnStartClient_Dialogue();
       OnStartClient_Quest();
       OnClientStart_EscapeMenu();
+    }
+
+    public override void OnStopClient()
+    {
+      OnStopClient_AnyPeer();    // 모든 클라이언트 — owner 여부 무관
+      base.OnStopClient();
     }
   }
 }

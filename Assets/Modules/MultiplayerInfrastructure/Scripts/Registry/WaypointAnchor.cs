@@ -56,22 +56,18 @@ namespace MultiplayerInfrastructure.Registry
     private void OnValidate()
     {
       if (string.IsNullOrWhiteSpace(identifier))
-      {
-        identifier = gameObject.name;
-      }
+        identifier = EntityId.Ensure(identifier, gameObject, "waypoint");
     }
 
     private void RegisterToRegistry()
     {
-      if (string.IsNullOrWhiteSpace(identifier))
-        identifier = gameObject.name;
-
       if (string.IsNullOrWhiteSpace(identifier))
         return;
 
       _registeredIdentifier = identifier;
       Registry.Register(RegistryType.Waypoint, _registeredIdentifier, transform.position);
       Registry.Register(RegistryType.InteractableEntity, _registeredIdentifier, transform.position);
+      Registry.RegisterEntity(_registeredIdentifier, EntityType.Waypoint, gameObject, displayName: gameObject.name);
       _anchorsByIdentifier[_registeredIdentifier] = this;
     }
 
@@ -82,6 +78,7 @@ namespace MultiplayerInfrastructure.Registry
 
       Registry.Unregister(RegistryType.Waypoint, _registeredIdentifier);
       Registry.Unregister(RegistryType.InteractableEntity, _registeredIdentifier);
+      Registry.UnregisterEntity(_registeredIdentifier);
       _anchorsByIdentifier.Remove(_registeredIdentifier);
       _registeredIdentifier = null;
     }

@@ -20,6 +20,7 @@ namespace MultiplayerInfrastructure.Scenario
     Quiz,
     StateUpdate,
     RoleAssignment,
-    PlayTTS
+    PlayTTS,
+    PlayerTag,
   }
 }

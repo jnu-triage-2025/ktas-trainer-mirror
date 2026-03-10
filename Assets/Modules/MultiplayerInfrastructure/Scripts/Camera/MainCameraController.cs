@@ -57,7 +57,15 @@ namespace MultiplayerInfrastructure.Camera
       }
 
       _instance = this;
-      Registry.Registry.Register(RegistryType.Entity, Registry.Registry.TypeKey<MainCameraController>(), this);
+      Registry.Registry.Register(RegistryType.Service, Registry.Registry.TypeKey<MainCameraController>(), this);
+    }
+
+    private void OnDestroy()
+    {
+      if (_instance == this)
+        _instance = null;
+
+      Registry.Registry.Unregister(RegistryType.Service, Registry.Registry.TypeKey<MainCameraController>());
     }
 
     void Start()

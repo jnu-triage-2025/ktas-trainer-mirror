@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.Registry;
 using FishNet.Object;
 
 namespace MultiplayerInfrastructure.Scenario
@@ -12,6 +13,9 @@ namespace MultiplayerInfrastructure.Scenario
   public class ScenarioInteractable : NetworkBehaviour, IInteractable, IInteract
   {
     #region Serialized Fields
+
+    [Header("Identity")]
+    [SerializeField] private string _identifier;
 
     [Header("Display Settings")]
     [SerializeField] private string _displayText = "시나리오 시작";
@@ -27,6 +31,7 @@ namespace MultiplayerInfrastructure.Scenario
     #region Private Fields
 
     private ScenarioGraph _cachedGraph;
+    private string _registeredIdentifier;
 
     #endregion
 
@@ -38,8 +43,29 @@ namespace MultiplayerInfrastructure.Scenario
     public Sprite DisplayIcon => _displayIcon;
     public bool AllowDisplayIconFallback => true;
     public Color DisplayColor => _displayColor;
+    public string Identifier => _identifier;
 
     #endregion
+
+    private void Awake()
+    {
+      RegisterToRegistry();
+    }
+
+    private void OnEnable()
+    {
+      RegisterToRegistry();
+    }
+
+    private void OnDisable()
+    {
+      UnregisterFromRegistry();
+    }
+
+    private void OnDestroy()
+    {
+      UnregisterFromRegistry();
+    }
 
     #region Events
 
@@ -122,10 +148,30 @@ namespace MultiplayerInfrastructure.Scenario
       _displayColor = Color.white;
     }
 
-    private new void OnValidate()
+    private void OnValidate()
     {
       _cachedGraph = null;
+      if (string.IsNullOrWhiteSpace(_identifier))
+        _identifier = global::MultiplayerInfrastructure.Registry.EntityId.Ensure(_identifier, gameObject, "scenario-interactable");
     }
 #endif
+
+    private void RegisterToRegistry()
+    {
+      if (string.IsNullOrWhiteSpace(_identifier))
+        return;
+
+      _registeredIdentifier = _identifier;
+      Registry.Registry.RegisterEntity(_registeredIdentifier, EntityType.ScenarioInteractable, gameObject, displayName: gameObject.name, isNetworked: true);
+    }
+
+    private void UnregisterFromRegistry()
+    {
+      if (string.IsNullOrWhiteSpace(_registeredIdentifier))
+        return;
+
+      Registry.Registry.UnregisterEntity(_registeredIdentifier);
+      _registeredIdentifier = null;
+    }
   }
 }

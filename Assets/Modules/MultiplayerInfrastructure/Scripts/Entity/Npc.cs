@@ -26,6 +26,7 @@ namespace MultiplayerInfrastructure.Entity
     private bool _interactsDirty = true;
 
     private bool _baseModelApplied;
+    private string _registeredIdentifier;
 
     private void Awake()
     {
@@ -35,18 +36,44 @@ namespace MultiplayerInfrastructure.Entity
       if (string.IsNullOrWhiteSpace(_identifier))
         _identifier = gameObject.name;
 
-      Registry.Registry.Register(RegistryType.Npc, _identifier, gameObject);
+      RegisterToRegistry();
     }
 
     private void OnEnable()
     {
       EnsureBaseModelApplied();
       MarkInteractsDirty();
+      RegisterToRegistry();
     }
 
     private void OnDestroy()
     {
-      Registry.Registry.Unregister(RegistryType.Npc, _identifier);
+      UnregisterFromRegistry();
+    }
+
+    private void OnDisable()
+    {
+      UnregisterFromRegistry();
+    }
+
+    private void RegisterToRegistry()
+    {
+      if (string.IsNullOrWhiteSpace(_identifier))
+        return;
+
+      _registeredIdentifier = _identifier;
+      Registry.Registry.Register(RegistryType.Npc, _registeredIdentifier, gameObject);
+      Registry.Registry.RegisterEntity(_registeredIdentifier, EntityType.Npc, gameObject, displayName: gameObject.name);
+    }
+
+    private void UnregisterFromRegistry()
+    {
+      if (string.IsNullOrWhiteSpace(_registeredIdentifier))
+        return;
+
+      Registry.Registry.Unregister(RegistryType.Npc, _registeredIdentifier);
+      Registry.Registry.UnregisterEntity(_registeredIdentifier);
+      _registeredIdentifier = null;
     }
 
     public override void Interact(Transform interactor)
@@ -241,7 +268,7 @@ namespace MultiplayerInfrastructure.Entity
       MarkInteractsDirty();
 
       if (string.IsNullOrWhiteSpace(_identifier))
-        _identifier = gameObject.name;
+        _identifier = global::MultiplayerInfrastructure.Registry.EntityId.Ensure(_identifier, gameObject, "npc");
     }
 #endif
   }

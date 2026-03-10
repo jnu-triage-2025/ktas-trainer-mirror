@@ -8,6 +8,8 @@ using MultiplayerInfrastructure.UI;
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Quest;
+using MultiplayerInfrastructure.Session;
+using MultiplayerInfrastructure.Tag;
 using TextToSpeechService;
 using FishNet.Object;
 using FishNet;
@@ -74,6 +76,7 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingStateUpdate,
       ExecutingRoleAssignment,
       ExecutingTTS,
+      ExecutingPlayerTag,
     }
 
     [SerializeField] private State _state = State.Inactive;
@@ -378,6 +381,9 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioPlayTTSNode playTTS:
           StartCoroutine(ExecutePlayTTSNode(playTTS));
           break;
+        case ScenarioPlayerTagNode playerTag:
+          ExecutePlayerTagNode(playerTag);
+          break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type: {node.GetType().Name}");
           Advance();
@@ -435,7 +441,7 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingQuestControl;
 
-      var manager = Registry.Registry.Get<QuestManager>(RegistryType.Entity, Registry.Registry.TypeKey<QuestManager>());
+      var manager = Registry.Registry.Get<QuestManager>(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>());
       if (manager == null)
       {
         Debug.LogWarning("[ScenarioController] QuestManager not found; skipping quest control node.");
@@ -588,6 +594,74 @@ namespace MultiplayerInfrastructure.Scenario
 #if UNITY_EDITOR
       Debug.Log($"[ScenarioController] State updated: {key}={node.StateValue}");
 #endif
+
+      Advance();
+    }
+
+    private void ExecutePlayerTagNode(ScenarioPlayerTagNode node)
+    {
+      _state = State.ExecutingPlayerTag;
+
+      // 대상 세션 수집
+      var targets = new List<UserDescriptor>();
+
+      if (node.Scope == ScenarioPlayerTagScope.All)
+      {
+        foreach (var kvp in UserDescriptorService.GetAll())
+          targets.Add(kvp.Value);
+      }
+      else // Current
+      {
+        if (_scenarioOwnerClientId.HasValue &&
+            UserDescriptorService.TryGetByClientId(_scenarioOwnerClientId.Value, out var ownerSession))
+        {
+          targets.Add(ownerSession);
+        }
+        else
+        {
+          Debug.LogWarning($"[ScenarioController] PlayerTag node '{node.Identifier}': " +
+                           "Scope=Current 이지만 scenarioOwner 세션을 찾을 수 없습니다. 노드를 건너뜁니다.");
+          Advance();
+          return;
+        }
+      }
+
+      // 태그 조작 수행
+      foreach (var session in targets)
+      {
+        switch (node.Operation)
+        {
+          case ScenarioPlayerTagOperationType.Add:
+            PlayerTagService.AddTag(session.Identifier, node.Tag);
+#if UNITY_EDITOR
+            Debug.Log($"[ScenarioController] Tag Add: player={session.DisplayName} tag={node.Tag}");
+#endif
+            break;
+
+          case ScenarioPlayerTagOperationType.Remove:
+            PlayerTagService.RemoveTag(session.Identifier, node.Tag);
+#if UNITY_EDITOR
+            Debug.Log($"[ScenarioController] Tag Remove: player={session.DisplayName} tag={node.Tag}");
+#endif
+            break;
+
+          case ScenarioPlayerTagOperationType.Change:
+            bool changed = PlayerTagService.ChangeTag(session.Identifier, node.FromTag, node.ToTag);
+            if (!changed)
+            {
+              Debug.LogWarning($"[ScenarioController] Tag Change: player={session.DisplayName} " +
+                               $"fromTag='{node.FromTag}' 이(가) 없어 변경하지 못했습니다.");
+            }
+#if UNITY_EDITOR
+            else
+            {
+              Debug.Log($"[ScenarioController] Tag Change: player={session.DisplayName} " +
+                        $"{node.FromTag} → {node.ToTag}");
+            }
+#endif
+            break;
+        }
+      }
 
       Advance();
     }

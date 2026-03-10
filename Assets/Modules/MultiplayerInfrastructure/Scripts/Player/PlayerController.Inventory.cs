@@ -228,12 +228,78 @@ namespace MultiplayerInfrastructure.Player
       Vector3 forward = transform.forward.sqrMagnitude > 0.0001f ? transform.forward.normalized : Vector3.forward;
       Vector3 spawnPosition = transform.position + forward * 1.25f + Vector3.up * 0.35f;
 
-      bool dropped = ItemObject.Spawn(itemData, spawnPosition, forward * 2.75f) != null;
+      bool dropped = RequestDropWorldItem(itemData, spawnPosition, forward * 2.75f);
       if (!dropped)
         Debug.LogWarning($"[PlayerController] TryDropItemInFront failed: could not spawn ItemObject");
       else
         itemData.OnThrow(this);
       return dropped;
+    }
+
+    public bool TryPickupWorldItem(ItemObject itemObject)
+    {
+      if (itemObject == null || itemObject.Item == null)
+        return false;
+
+      if (!string.IsNullOrWhiteSpace(itemObject.Identifier))
+        return TryPickupWorldItem(itemObject.Identifier);
+
+      bool added = TryAddItemToInventory(itemObject.Item);
+      if (!added)
+        return false;
+
+      itemObject.Item.OnGet(this);
+      RequestDestroyWorldItem(itemObject);
+      return true;
+    }
+
+    public bool TryPickupWorldItem(string entityIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(entityIdentifier))
+        return false;
+
+      var itemObject = Registry.Registry.Get<ItemObject>(RegistryType.Entity, entityIdentifier);
+      if (itemObject == null || itemObject.Item == null)
+        return false;
+
+      if (!CanAcceptItem(itemObject.Item))
+        return false;
+
+      RequestPickupWorldItem(entityIdentifier);
+      return true;
+    }
+
+    public bool CanAcceptItem(ItemSystem.Item item)
+    {
+      if (item == null || item.CurrentStackCount <= 0)
+        return false;
+
+      int remainingCount = item.CurrentStackCount;
+
+      foreach (var slot in _slots)
+      {
+        if (remainingCount <= 0) break;
+        if (slot == null || slot.IsEmpty || slot.ItemInstance == null) continue;
+        if (!slot.ItemInstance.CanStackWith(item)) continue;
+
+        int room = slot.ItemInstance.CurrentMaxStackCount - slot.ItemInstance.CurrentStackCount;
+        if (room <= 0) continue;
+
+        remainingCount -= Mathf.Min(room, remainingCount);
+      }
+
+      foreach (var slot in _slots)
+      {
+        if (remainingCount <= 0)
+          break;
+
+        if (slot == null || !slot.IsEmpty)
+          continue;
+
+        remainingCount -= Mathf.Min(item.CurrentMaxStackCount, remainingCount);
+      }
+
+      return remainingCount <= 0;
     }
 
     private bool OnInventoryChangedAndReturn(bool result)

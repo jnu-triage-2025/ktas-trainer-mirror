@@ -85,11 +85,13 @@ ItemObject  (Rigidbody, BoxCollider, PickupItem 레이어)
 
 ```csharp
 // 기본 스폰
-ItemObject.Spawn(item, position);
+ItemObject.Spawn(item, position, entityIdentifier: stableId);
 
 // 드롭/던지기 (Rigidbody impulse 적용)
-ItemObject.Spawn(item, position, throwForce);
+ItemObject.Spawn(item, position, throwForce, entityIdentifier: stableId);
 ```
+
+`entityIdentifier`가 주어지면 `ItemObject`는 `RegistryType.Entity`에 `EntityType.ItemObject`로 등록됩니다.
 
 3D 모델 프리팹이 `Resources/Models/Items/{identifier}` 경로에 없으면 기본 큐브로 대체됩니다.
 `ItemObject.Spawn()` 호출 시 `LootableItemInteractHandler` 컴포넌트가 **자동으로 부착**됩니다. 별도 설정 없이도 `NearbyInteractablesDetector`가 아이템을 감지하고, 플레이어가 F 키를 누르면 자동으로 인벤토리에 주울 수 있습니다.
@@ -102,9 +104,13 @@ NearbyInteractablesDetector (OverlapSphere)
   → HUD에 "아이템 획득" 표시
   → F 키
   → LootableItemInteractHandler.Interact(interactor)
-      ├─ PlayerController.TryAddItemToInventory(item)
-      ├─ item.OnGet(player)   (상속 메서드)
-      └─ Destroy(ItemObject)
+  └─ PlayerController.TryPickupWorldItem(entityId)
+    ├─ ServerRpc pickup 요청
+    ├─ 서버가 거리/중복 요청 검증
+    ├─ TargetRpc 로 아이템 snapshot 승인 전송
+    ├─ ObserversRpc 로 월드 ItemObject 제거
+    ├─ 클라이언트 인벤토리 반영 성공 시 ack
+    └─ 실패 시 rollback → 같은 entityId의 월드 아이템 복구
 ```
 
 > ⚠️ FishNet `NetworkObject` 컴포넌트가 모델 프리팩에 붙어 있으면 FishNet이 처음 인스턴스를 **비활성화**합니다. 프리팩에서 FishNet 컴포넌트를 제거하세요.
@@ -123,8 +129,12 @@ NearbyInteractablesDetector (OverlapSphere)
 월드 드롭:
 
 ```csharp
-player.TryDropItemInFront(item);   // ItemObject.Spawn 내부 호출
+player.TryDropItemInFront(item);   // 서버가 item:{guid} 엔티티 ID 발급 후 전체 클라이언트에 전파
 ```
+
+### 씬 배치 아이템
+
+`SceneItemPlacement`는 `_entityIdentifier`를 가집니다. 이 값은 씬 authored world item의 안정적인 엔티티 ID이며, 호스트/서버가 `Start()`에서 생성하는 `ItemObject`에 그대로 전달됩니다. 클라이언트 전용 피어는 같은 플레이스홀더를 직접 스폰하지 않고, 접속 후 서버가 보내는 현재 월드 아이템 스냅샷으로 다시 그립니다.
 
 ---
 

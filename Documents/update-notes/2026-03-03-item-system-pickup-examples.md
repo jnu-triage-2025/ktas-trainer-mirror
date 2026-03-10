@@ -35,11 +35,13 @@ public class LootableItemInteractHandler : MonoBehaviour, IInteractable, IIntera
 }
 ```
 
-`Interact()` 흐름:
+`Interact()` 흐름(작성 당시 기준):
 1. `interactor` 계층에서 `PlayerController` 탐색
-2. `TryAddItemToInventory(item)` 호출
+2. 로컬 인벤토리 추가 시도
 3. 성공 시 `item.OnGet(player)` 호출
-4. `Destroy(gameObject)`
+4. 월드 오브젝트 제거
+
+> 참고: 현재 구현은 여기서 더 확장되어, entity ID 기반 서버 승인 픽업과 실패 시 롤백 복구를 사용합니다. 최신 동작은 [item.md](../item.md), [item-implementation-guide.md](../item-implementation-guide.md), [api-references/MultiplayerInfrastructure.InteractableEntity.md](../api-references/MultiplayerInfrastructure.InteractableEntity.md)를 따르십시오.
 
 ---
 

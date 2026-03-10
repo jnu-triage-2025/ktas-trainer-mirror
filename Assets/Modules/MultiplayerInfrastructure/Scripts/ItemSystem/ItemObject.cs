@@ -1,5 +1,6 @@
 using System.Collections;
 using MultiplayerInfrastructure.InteractableEntity.Definitions;
+using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.ItemSystem
@@ -24,6 +25,12 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// <summary>이 ItemObject가 보유한 Item 인스턴스입니다.</summary>
     public Item Item { get; private set; }
 
+    /// <summary>
+    /// 서버가 부여한 전역 엔티티 식별자입니다.
+    /// null 이면 엔티티 저장소에 등록되지 않습니다.
+    /// </summary>
+    public string Identifier { get; private set; }
+
     /// <summary>로드된 3D 모델 자식 오브젝트입니다. 모델이 없으면 null 입니다.</summary>
     public GameObject GroundedModel { get; private set; }
 
@@ -42,7 +49,7 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// <param name="throwForce">
     /// 0보다 크면 Rigidbody에 해당 방향으로 impulse를 가합니다. (드롭/던지기)
     /// </param>
-    public static ItemObject Spawn(Item item, Vector3 position, Vector3? throwForce = null)
+    public static ItemObject Spawn(Item item, Vector3 position, Vector3? throwForce = null, string entityIdentifier = null)
     {
       if (item == null)
       {
@@ -61,7 +68,7 @@ namespace MultiplayerInfrastructure.ItemSystem
       collider.size = Vector3.one * 0.3f;
 
       var comp = go.AddComponent<ItemObject>();
-      comp.Initialize(item);
+      comp.Initialize(item, entityIdentifier);
 
       // IInteractable 등록 — NearbyInteractablesDetector가 감지할 수 있도록
       go.AddComponent<LootableItemInteractHandler>();
@@ -79,10 +86,22 @@ namespace MultiplayerInfrastructure.ItemSystem
       _rigidbody = GetComponent<Rigidbody>();
     }
 
-    private void Initialize(Item item)
+    private void OnDestroy()
+    {
+      if (!string.IsNullOrWhiteSpace(Identifier))
+        Registry.Registry.UnregisterEntity(Identifier);
+    }
+
+    private void Initialize(Item item, string entityIdentifier)
     {
       Item = item;
+      Identifier = entityIdentifier;
       LoadModel();
+
+      if (!string.IsNullOrWhiteSpace(Identifier))
+      {
+        Registry.Registry.RegisterEntity(Identifier, EntityType.ItemObject, gameObject, displayName: gameObject.name);
+      }
     }
 
     /// <summary>

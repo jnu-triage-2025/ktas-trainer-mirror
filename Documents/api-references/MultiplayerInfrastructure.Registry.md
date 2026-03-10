@@ -21,10 +21,13 @@ public enum RegistryType
     ScenarioGraph,      // ScenarioGraph 또는 TextAsset (JSON)
     IconSprite,         // Sprite (아이콘)
     Npc,                // NPC GameObject
-    Waypoint,           // Vector3 좋아요 웨이포인트 위치
-    Entity,             // PlayerController, QuestManager 등 런타임 엔티티
+    Waypoint,           // Vector3 웨이포인트 위치
+    Entity,             // EntityDescriptor 기반 월드 엔티티 저장소
+    Service,            // QuestManager, MainCameraController 등 서비스 오브젝트
+    RuntimeState,       // SessionInformation, UserDisplayName 등 전역 상태값
     InteractableEntity, // IInteractable 구현 컴포넌트
     UI,                 // UIControllerABC 하위 컨트롤러
+    PlayerTag,          // List<string> — 키: UserDescriptor.Identifier(UUID)
 }
 ```
 
@@ -66,6 +69,13 @@ public static T Get<T>(RegistryType registryType, string identifier)
 
 **IconSprite 특수 동작:** `RegistryType.IconSprite`에 리소스 경로 문자열이 등록되어 있으면, 최초 `Get<Sprite>()` 호출 시 `Resources.Load<Sprite>(path)`를 실행하고 결과로 교체합니다.
 
+**Entity 특수 동작:** `RegistryType.Entity`의 값이 `EntityDescriptor`이면 다음 해석을 지원합니다.
+
+- `Get<EntityDescriptor>()` → 설명자 자체
+- `Get<GameObject>()` → `descriptor.GameObject`
+- `Get<Transform>()` → `descriptor.GameObject.transform`
+- `Get<Component>()` → `descriptor.GameObject.GetComponent<T>()`
+
 ---
 
 ### `TryGet<T>`
@@ -77,7 +87,7 @@ public static bool TryGet<T>(RegistryType registryType, string identifier, out T
 조회 결과를 `out` 파라미터로 반환합니다. 없거나 캐스팅 실패 시 `false`를 반환합니다.
 
 ```csharp
-if (Registry.TryGet<QuestManager>(RegistryType.Entity, Registry.TypeKey<QuestManager>(), out var mgr))
+if (Registry.TryGet<QuestManager>(RegistryType.Service, Registry.TypeKey<QuestManager>(), out var mgr))
 {
     mgr.AddOrUpdateQuest(...);
 }
@@ -127,10 +137,43 @@ public static string TypeKey(Type type)
 
 ```csharp
 // 등록
-Registry.Register(RegistryType.Entity, Registry.TypeKey<QuestManager>(), this);
+Registry.Register(RegistryType.Service, Registry.TypeKey<QuestManager>(), this);
 
 // 조회
-var mgr = Registry.Get<QuestManager>(RegistryType.Entity, Registry.TypeKey<QuestManager>());
+var mgr = Registry.Get<QuestManager>(RegistryType.Service, Registry.TypeKey<QuestManager>());
+```
+
+---
+
+### 엔티티 전용 메서드
+
+```csharp
+public static void RegisterEntity(EntityDescriptor descriptor)
+public static void RegisterEntity(string identifier, EntityType entityType, GameObject gameObject, ...)
+public static bool TryGetEntity(string identifier, out EntityDescriptor descriptor)
+public static void UnregisterEntity(string identifier)
+public static IReadOnlyDictionary<string, EntityDescriptor> GetAllEntities()
+public static IReadOnlyDictionary<string, EntityDescriptor> GetAllEntities(EntityType entityType)
+public static T GetFirstEntityComponent<T>(EntityType entityType, Predicate<T> predicate = null) where T : Component
+public static bool TryGetEntityByClientId(int clientId, out EntityDescriptor descriptor)
+public static bool TryGetEntityByOwnerUserIdentifier(string ownerUserIdentifier, out EntityDescriptor descriptor)
+public static void UpdateEntityDisplayName(string identifier, string displayName)
+```
+
+```csharp
+// 엔티티 등록
+Registry.RegisterEntity("player:abcd", EntityType.Player, player.gameObject, displayName: "Alice");
+
+// 엔티티 설명자 조회
+var entity = Registry.Get<EntityDescriptor>(RegistryType.Entity, "player:abcd");
+
+// 특정 타입 컴포넌트 직접 조회
+var npc = Registry.Get<Npc>(RegistryType.Entity, "npc:triage-desk-01");
+
+// owner 플레이어 찾기
+var localPlayer = Registry.GetFirstEntityComponent<PlayerController>(
+    EntityType.Player,
+    each => each != null && each.IsOwner);
 ```
 
 ---
@@ -162,6 +205,7 @@ var mgr = Registry.Get<QuestManager>(RegistryType.Entity, Registry.TypeKey<Quest
 - NPC 프리팹 (`RegistryType.Npc`)
 - 웨이포인트 위치 (`RegistryType.Waypoint`)
 - 미리 배치된 UI 컨트롤러 (`RegistryType.UI`)
+- 서비스성 런타임 오브젝트 (`RegistryType.Service`)
 
 설정 방법은 [섹션 5. RegistryPreloaderController](#5-registrypreloadercontroller)를 참조하세요.
 
@@ -174,25 +218,19 @@ var mgr = Registry.Get<QuestManager>(RegistryType.Entity, Registry.TypeKey<Quest
 씬에 배치되거나 네트워크로 스폰되는 오브젝트는 자신의 `Awake()` / `OnStartClient()` 등 Lifecycle에서 직접 `Registry.Register`를 호출하고, `OnDestroy()`에서 `Registry.Unregister`를 호출합니다.
 
 **적합한 등록 대상:**
-- 네트워크 스폰 플레이어 (`PlayerController` — `OnStartClient`에서 등록)
-- 씬에 배치된 월드 아이템 인스턴스 (`Item.Lifecycle.cs`)
-- 씬에 배치된 웨이포인트 앵커 (`WaypointAnchor`)
+- 네트워크 스폰 플레이어 (`PlayerController` — 서버가 엔티티 ID 발급)
+- 씬에 배치된 NPC/웨이포인트/시나리오 인터랙터블/트리거 존
+- 서버가 발급한 월드 아이템 인스턴스 (`ItemObject`)
 
 ```csharp
-// 예: 오너 플레이어 자기 등록 (PlayerController.Network.cs)
-public override void OnStartClient()
-{
-    base.OnStartClient();
-    if (IsOwner)
-        Registry.Register(RegistryType.Entity, Registry.TypeKey<PlayerController>(), this);
-}
-
-public override void OnStopClient()
-{
-    if (IsOwner)
-        Registry.Unregister(RegistryType.Entity, Registry.TypeKey<PlayerController>());
-    base.OnStopClient();
-}
+Registry.RegisterEntity(
+    entityIdentifier,
+    EntityType.Player,
+    gameObject,
+    displayName: userDisplayName,
+    ownerUserIdentifier: userIdentifier,
+    clientId: Owner.ClientId,
+    isNetworked: true);
 ```
 
 > **주의:** 자기 등록을 사용할 때는 반드시 `OnDestroy()` 또는 해당 Lifecycle 종료 시점에 `Unregister`를 쌍으로 호출하세요.
@@ -204,13 +242,13 @@ public override void OnStopClient()
 ### 일반 조회
 
 ```csharp
-var questManager = Registry.Get<QuestManager>(RegistryType.Entity, Registry.TypeKey<QuestManager>());
+var questManager = Registry.Get<QuestManager>(RegistryType.Service, Registry.TypeKey<QuestManager>());
 ```
 
 ### 안전한 조회
 
 ```csharp
-if (Registry.TryGet<QuestManager>(RegistryType.Entity, Registry.TypeKey<QuestManager>(), out var mgr))
+if (Registry.TryGet<QuestManager>(RegistryType.Service, Registry.TypeKey<QuestManager>(), out var mgr))
 {
     mgr.AddOrUpdateQuest(...);
 }
