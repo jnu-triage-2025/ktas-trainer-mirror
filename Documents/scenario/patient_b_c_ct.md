@@ -958,7 +958,7 @@
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V045 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | check_vital_b |
+| **Condition** | 문자열 | Check_vital_patientB |
 | **TargetCount** | 정수 | 1 |
 | **OnFailure** | ScenarioValidatorOnFailure | |
 | **FailureNextIdentifier** | 문자열 | |
@@ -1142,7 +1142,7 @@
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | E045 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | Pupil_reflex_patientB |
+| **EventIdentifier** | 문자열 | pupil_reflex_patientB |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | D043 |
 
@@ -1681,7 +1681,7 @@
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | E049 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | apply_plaster_on_gauze_patientB |
+| **EventIdentifier** | 문자열 | apply_gauze_with_plaster_patientB |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | S006 |
 
@@ -2288,7 +2288,7 @@
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V064 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | check_vital_c |
+| **Condition** | 문자열 | Check_vital_patientC |
 | **TargetCount** | 정수 | 1 |
 | **OnFailure** | ScenarioValidatorOnFailure | |
 | **FailureNextIdentifier** | 문자열 | |
@@ -2472,7 +2472,7 @@
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | E052 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | Pupil_reflex_patientC |
+| **EventIdentifier** | 문자열 | pupil_reflex_patientC |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | D052 |
 
@@ -3011,7 +3011,7 @@
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | E056 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | apply_plaster_on_gauze_patientC |
+| **EventIdentifier** | 문자열 | apply_gauze_with_plaster_patientC |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | S007 |
 

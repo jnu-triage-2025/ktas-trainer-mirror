@@ -671,7 +671,7 @@
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | E008 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | hide_suction_checklist |
+| **EventIdentifier** | 문자열 | hide_suction_checklist_ui |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | Immediate |
 | **NextIdentifier** | 문자열 | N007_1 |
 
@@ -933,7 +933,7 @@
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | E010 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | checklist_intu |
+| **EventIdentifier** | 문자열 | show_checklist_intu |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | Immediate |
 | **NextIdentifier** | 문자열 | V014 |
 
@@ -1354,7 +1354,7 @@
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | E014 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | Connect_tpiece_patientA |
+| **EventIdentifier** | 문자열 | connect_tpiece_ready |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | Immediate |
 | **NextIdentifier** | 문자열 | N009_4 |
 
@@ -1590,7 +1590,7 @@
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | E016 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | apply_plaster_on_gauze_patientA |
+| **EventIdentifier** | 문자열 | apply_gauze_with_plaster_patientA |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | S002 |
 
@@ -1672,7 +1672,7 @@
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | Immediate |
 | **NextIdentifier** | 문자열 | V017 |
 
-*(💡개발 참고: E015 노드는 IV 라인 확보에 필요한 물품(18G 2개, 생리식염수, 플라즈마 솔루션)을 보여주는 체크리스트 창을 띄웁니다.)*
+*(💡개발 참고: E015 노드는 IV 라인 확보에 필요한 물품(18G 2개, 준비된 생리식염수 1L 수액백, 준비된 플라즈마 솔루션 1L 수액백)을 보여주는 체크리스트 창을 띄웁니다. 다만, 준비된 생리식염수 1L 수액백과 준비된 플라즈마 솔루션 1L 수액백은 인트로에서 이미 준비하여 인벤토리에 위치해 있으므로 획득된 것으로 간주합니다.)*
 
 ---
 
@@ -1688,7 +1688,7 @@
 | **FailureNextIdentifier** | 문자열 | |
 | **NextIdentifier** | 문자열 | E018 |
 
-*(💡개발 참고: Condition 항목에 기존 `Click_18g` 외에 수액 2종 획득 여부를 추가하고 TargetCount를 4(18G 2개 + 수액 2개)로 설정했습니다. 조건이 충족될 때마다 체크리스트 UI에 실시간으로 반영됩니다.)*
+*(💡개발 참고: Condition 항목에 기존 `Click_18g` 외에 수액 2종 획득 여부를 추가하고 TargetCount를 4(18G 2개 + 수액 2개)로 설정했습니다. 조건이 충족될 때마다 체크리스트 UI에 실시간으로 반영됩니다. 다만, 준비된 생리식염수 1L 수액백과 준비된 플라즈마 솔루션 1L 수액백은 인트로에서 이미 준비하여 인벤토리에 위치해 있으므로 획득된 것으로 간주합니다.)*
 
 ---
 
@@ -1805,7 +1805,7 @@
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | Immediate |
 | **NextIdentifier** | 문자열 | E022 |
 
-*(💡개발 참고: 우측 팔 수동 상호작용 검증(ValidatorNode)을 삭제하고, 좌측 팔 완료 후 우측 팔 삽입 이벤트가 즉시 자동 실행되도록 변경했습니다.)*
+*(💡개발 참고: 우측 팔 ValidatorNode를 삭제하고, 좌측 팔 완료 직후 우측 팔 삽입 이벤트가 자동 실행되도록 변경)*
 
 ---
 
@@ -1819,7 +1819,7 @@
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | D018 |
 
-*(💡개발 참고: 우측 팔 18G 삽입 이후 바로 우측 팔 플라즈마 솔루션 연결 이벤트가 실행됩니다.)*
+*(💡개발 참고: 우측 팔 18G 삽입 이벤트 직후 바로 우측 팔에 삽입된 18G 캐뉼라에 플라즈마 솔루션 연결 이벤트 실행)*
 
 ---
 
@@ -3318,7 +3318,7 @@
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | E031 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | Stop_ambu_and_comp |
+| **EventIdentifier** | 문자열 | stop_ambu_and_comp |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | E032 |
 
@@ -3330,7 +3330,7 @@
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | E032 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | Asystole_monitor_ui |
+| **EventIdentifier** | 문자열 | asystole_monitor_ui |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | D029 |
 
