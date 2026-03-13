@@ -136,6 +136,8 @@ player.TryDropItemInFront(item);   // 서버가 item:{guid} 엔티티 ID 발급 
 
 `SceneItemPlacement`는 `_entityIdentifier`를 가집니다. 이 값은 씬 authored world item의 안정적인 엔티티 ID이며, 호스트/서버가 `Start()`에서 생성하는 `ItemObject`에 그대로 전달됩니다. 클라이언트 전용 피어는 같은 플레이스홀더를 직접 스폰하지 않고, 접속 후 서버가 보내는 현재 월드 아이템 스냅샷으로 다시 그립니다.
 
+에디터에서는 `SceneItemPlacement`가 Scene 패널에 Gizmo와 라벨을 표시합니다. `Tools/Multiplayer Infrastructure/Scene Item Visualization` 메뉴에서 표시 토글과 Scene 카메라 기준 표시 범위를 조절할 수 있습니다.
+
 ---
 
 ## Registry 등록

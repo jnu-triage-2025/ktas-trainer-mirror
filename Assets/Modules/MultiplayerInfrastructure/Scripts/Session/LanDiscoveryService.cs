@@ -198,7 +198,7 @@ namespace MultiplayerInfrastructure.Session
       {
         if (!_sessions.TryGetValue(key, out var si))
         {
-          si = new SessionInformationModel(name, port, addr, DateTime.UtcNow);
+          si = new SessionInformationModel(addr, port, name, DateTime.UtcNow);
           _sessions[key] = si;
         }
         else

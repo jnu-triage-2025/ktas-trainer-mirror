@@ -418,6 +418,21 @@ LootableItemInteractHandler.Interact()
 
 즉, **월드 아이템 생성/제거는 서버가 authoritative 하게 결정**합니다.
 
+### 씬 authored 아이템 디버그/작성 보조
+
+`SceneItemPlacement`는 에디터 Scene 패널에서 다음 시각 정보를 제공합니다.
+
+- identifier가 설정된 배치는 초록 Gizmo
+- identifier가 비어 있는 배치는 빨간 Gizmo
+- 라벨은 `itemIdentifier xStackCount` 형식으로 표시
+
+메뉴:
+
+- `Tools/Multiplayer Infrastructure/Scene Item Visualization/Show In Scene View`
+- `Tools/Multiplayer Infrastructure/Scene Item Visualization/Settings...`
+
+`Settings...`에서는 **현재 Scene 카메라 기준 표시 거리**를 설정할 수 있습니다. 범위를 `0`으로 설정하면 모든 `SceneItemPlacement`를 항상 표시합니다.
+
 > **아이템 정의:** [item.md](item.md)  
 > **구현 가이드:** [item-authoring.md](item-authoring.md)
 

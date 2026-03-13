@@ -199,7 +199,18 @@ SceneItemPlacement.Start()
 
 - 초록 구: identifier가 설정된 배치 마커
 - 빨간 구: identifier 미설정 경고
-- 마커 위에 식별자 레이블 표시
+- 마커 위에 `itemIdentifier xStackCount` 레이블 표시
+
+### 씬 뷰 표시 옵션
+
+`SceneItemPlacement`의 Scene 패널 표시 여부는 Unity 메뉴에서 제어할 수 있습니다.
+
+- `Tools/Multiplayer Infrastructure/Scene Item Visualization/Show In Scene View`
+  - Scene 패널의 아이템 마커/라벨 전체 표시·숨김 토글
+- `Tools/Multiplayer Infrastructure/Scene Item Visualization/Settings...`
+  - 현재 Scene 카메라 기준 표시 범위 설정
+  - 범위 안에 있는 `SceneItemPlacement`만 Gizmo와 라벨 표시
+  - 범위를 `0`으로 두면 거리 제한 없이 항상 표시
 
 ### 주의
 
