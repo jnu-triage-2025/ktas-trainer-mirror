@@ -62,6 +62,15 @@ namespace TextToSpeechService
     /// <summary>초기화 완료 여부</summary>
     public bool IsReady { get; private set; }
 
+    /// <summary>
+    /// 동적 세그먼트의 백그라운드 캐싱이 진행 중이거나 아직 완료되지 않음을 나타내는 dirty bit.
+    /// PrepareTranscriptVariables 호출 시 true가 되고, 캐싱이 완료되면 false가 됩니다.
+    /// </summary>
+    public bool IsDynamicCacheDirty => _dynamicCachingCount > 0;
+
+    /// <summary>현재 진행 중인 백그라운드 캐싱 작업 수 (dirty bit 카운터)</summary>
+    private int _dynamicCachingCount;
+
     // =========================================================================
     // Unity 라이프사이클
     // =========================================================================
@@ -219,7 +228,13 @@ namespace TextToSpeechService
       foreach (var seg in segments)
       {
         string text = ResolveSegmentText(seg, transcript, overrideVariables);
-        if (text == null) continue;
+        if (text == null)
+        {
+          if (seg.Type == SegmentType.Dynamic)
+            Debug.LogWarning(
+              $"[TTSService] identifier '{identifier}' 의 variable '{seg.Text}' 에 값이 없습니다. 해당 세그먼트를 건너뜁니다.");
+          continue;
+        }
 
         if (!_clipCache.TryGetValue(text, out var clip))
           clip = SynthesizeClip(text);
@@ -249,6 +264,19 @@ namespace TextToSpeechService
       return StartCoroutine(PrepareVariableCoroutine(text, onDone));
     }
 
+    /// <summary>
+    /// 지정된 identifier의 동적 세그먼트를 variables 값으로 미리 합성하여 캐시에 저장합니다.
+    /// 게임 시작 시 또는 변수 값이 확정되는 시점에 호출하세요.
+    /// 캐싱이 진행되는 동안 IsDynamicCacheDirty가 true가 됩니다.
+    /// </summary>
+    public Coroutine PrepareTranscriptVariables(
+      string identifier,
+      Dictionary<string, string> variables,
+      Action onDone = null)
+    {
+      return StartCoroutine(PrepareTranscriptVariablesCoroutine(identifier, variables, onDone));
+    }
+
     // =========================================================================
     // 내부 메서드
     // =========================================================================
@@ -269,6 +297,82 @@ namespace TextToSpeechService
       }
 
       _clipCache[text] = WavToClip(text, wav);
+      onDone?.Invoke();
+    }
+
+    private IEnumerator PrepareTranscriptVariablesCoroutine(
+      string identifier,
+      Dictionary<string, string> variables,
+      Action onDone)
+    {
+      if (!_segmentMap.TryGetValue(identifier, out var segments))
+      {
+        Debug.LogWarning($"[TTSService] PrepareTranscriptVariables: 알 수 없는 identifier: {identifier}");
+        onDone?.Invoke();
+        yield break;
+      }
+
+      var transcript   = FindTranscript(identifier);
+      var textsToCache = new List<string>();
+
+      foreach (var seg in segments)
+      {
+        if (seg.Type == SegmentType.Static) continue;
+
+        string text = variables != null && variables.TryGetValue(seg.Text, out var v)
+          ? v
+          : ResolveDefaultValue(transcript, seg.Text);
+
+        if (text == null)
+        {
+          Debug.LogWarning(
+            $"[TTSService] PrepareTranscriptVariables: identifier '{identifier}' 의 variable '{seg.Text}' 에 값이 없습니다. 해당 세그먼트를 건너뜁니다.");
+          continue;
+        }
+
+        if (!_clipCache.ContainsKey(text))
+          textsToCache.Add(text);
+      }
+
+      if (textsToCache.Count == 0)
+      {
+        onDone?.Invoke();
+        yield break;
+      }
+
+      // dirty bit 설정: 캐싱 진행 중
+      _dynamicCachingCount++;
+
+      var wavBuffer = new Dictionary<string, float[]>();
+      var task      = Task.Run(() =>
+      {
+        foreach (var text in textsToCache)
+        {
+          if (!wavBuffer.ContainsKey(text))
+            wavBuffer[text] = _core.Synthesize(text, language, totalStep, speed);
+        }
+      });
+
+      yield return new WaitUntil(() => task.IsCompleted);
+
+      if (task.IsFaulted)
+      {
+        Debug.LogError(
+          $"[TTSService] PrepareTranscriptVariables 실패 (identifier: {identifier}): {task.Exception?.GetBaseException().Message}");
+        _dynamicCachingCount--;
+        onDone?.Invoke();
+        yield break;
+      }
+
+      // 메인 스레드에서 AudioClip 생성
+      foreach (var kv in wavBuffer)
+      {
+        if (!_clipCache.ContainsKey(kv.Key))
+          _clipCache[kv.Key] = WavToClip(kv.Key, kv.Value);
+      }
+
+      // dirty bit 해제
+      _dynamicCachingCount--;
       onDone?.Invoke();
     }
 

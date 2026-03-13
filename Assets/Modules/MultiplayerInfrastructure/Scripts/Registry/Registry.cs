@@ -15,8 +15,11 @@ namespace MultiplayerInfrastructure.Registry
     private static readonly Dictionary<string, object> _npcRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _waypointRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _entityRegistry = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, object> _serviceRegistry = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, object> _runtimeStateRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _interactableEntityRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _uiRegistry = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, object> _playerTagRegistry = new(StringComparer.Ordinal);
     private static bool _builtInRegistryInitialized;
 
     static partial void RegisterBuiltInLiterals();
@@ -81,6 +84,9 @@ namespace MultiplayerInfrastructure.Registry
         return default;
       }
 
+      if (TryResolveEntityValue(registryType, definition, out T entityValue))
+        return entityValue;
+
       return definition is T typedDefinition ? typedDefinition : default;
     }
 
@@ -123,6 +129,11 @@ namespace MultiplayerInfrastructure.Registry
         return false;
       }
 
+      if (TryResolveEntityValue(registryType, definition, out value))
+      {
+        return true;
+      }
+
       if (definition is not T typedDefinition)
       {
         return false;
@@ -155,13 +166,139 @@ namespace MultiplayerInfrastructure.Registry
 
       foreach (var pair in registry)
       {
-        if (pair.Value is T typedDefinition)
+        if (TryResolveEntityValue(registryType, pair.Value, out T entityValue))
+        {
+          result[pair.Key] = entityValue;
+        }
+        else if (pair.Value is T typedDefinition)
         {
           result[pair.Key] = typedDefinition;
         }
       }
 
       return result;
+    }
+
+    public static void RegisterEntity(EntityDescriptor descriptor)
+    {
+      if (descriptor == null || string.IsNullOrWhiteSpace(descriptor.Identifier) || descriptor.GameObject == null)
+        return;
+
+      Register(RegistryType.Entity, descriptor.Identifier, descriptor);
+    }
+
+    public static void RegisterEntity(
+      string identifier,
+      EntityType entityType,
+      GameObject gameObject,
+      string displayName = null,
+      string ownerUserIdentifier = null,
+      int? clientId = null,
+      bool isNetworked = false)
+    {
+      RegisterEntity(new EntityDescriptor(
+        identifier,
+        entityType,
+        gameObject,
+        displayName,
+        ownerUserIdentifier,
+        clientId,
+        isNetworked));
+    }
+
+    public static bool TryGetEntity(string identifier, out EntityDescriptor descriptor)
+      => TryGet(RegistryType.Entity, identifier, out descriptor);
+
+    public static void UnregisterEntity(string identifier)
+      => Unregister(RegistryType.Entity, identifier);
+
+    public static IReadOnlyDictionary<string, EntityDescriptor> GetAllEntities()
+      => GetAll<EntityDescriptor>(RegistryType.Entity);
+
+    public static IReadOnlyDictionary<string, EntityDescriptor> GetAllEntities(EntityType entityType)
+    {
+      var all = GetAll<EntityDescriptor>(RegistryType.Entity);
+      var filtered = new Dictionary<string, EntityDescriptor>(StringComparer.Ordinal);
+
+      foreach (var pair in all)
+      {
+        if (pair.Value != null && pair.Value.EntityType == entityType)
+          filtered[pair.Key] = pair.Value;
+      }
+
+      return filtered;
+    }
+
+    public static bool TryFindFirstEntityComponent<T>(EntityType entityType, out T component, Predicate<T> predicate = null)
+      where T : Component
+    {
+      component = null;
+      var all = GetAllEntities(entityType);
+
+      foreach (var pair in all)
+      {
+        var go = pair.Value?.GameObject;
+        if (go == null)
+          continue;
+
+        if (!go.TryGetComponent(out T candidate) || candidate == null)
+          continue;
+
+        if (predicate != null && !predicate(candidate))
+          continue;
+
+        component = candidate;
+        return true;
+      }
+
+      return false;
+    }
+
+    public static T GetFirstEntityComponent<T>(EntityType entityType, Predicate<T> predicate = null)
+      where T : Component
+      => TryFindFirstEntityComponent(entityType, out T component, predicate) ? component : null;
+
+    public static bool TryGetEntityByClientId(int clientId, out EntityDescriptor descriptor)
+    {
+      descriptor = null;
+      var all = GetAllEntities(EntityType.Player);
+      foreach (var pair in all)
+      {
+        if (pair.Value?.ClientId == clientId)
+        {
+          descriptor = pair.Value;
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    public static bool TryGetEntityByOwnerUserIdentifier(string ownerUserIdentifier, out EntityDescriptor descriptor)
+    {
+      descriptor = null;
+      if (string.IsNullOrWhiteSpace(ownerUserIdentifier))
+        return false;
+
+      var all = GetAllEntities(EntityType.Player);
+      foreach (var pair in all)
+      {
+        if (string.Equals(pair.Value?.OwnerUserIdentifier, ownerUserIdentifier, StringComparison.Ordinal))
+        {
+          descriptor = pair.Value;
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    public static void UpdateEntityDisplayName(string identifier, string displayName)
+    {
+      if (!TryGetEntity(identifier, out var descriptor) || descriptor == null)
+        return;
+
+      descriptor.DisplayName = displayName;
     }
 
     public static string TypeKey<T>()
@@ -189,10 +326,52 @@ namespace MultiplayerInfrastructure.Registry
         RegistryType.Npc => _npcRegistry,
         RegistryType.Waypoint => _waypointRegistry,
         RegistryType.Entity => _entityRegistry,
+        RegistryType.Service => _serviceRegistry,
+        RegistryType.RuntimeState => _runtimeStateRegistry,
         RegistryType.InteractableEntity => _interactableEntityRegistry,
         RegistryType.UI => _uiRegistry,
+        RegistryType.PlayerTag => _playerTagRegistry,
         _ => throw new ArgumentOutOfRangeException(nameof(registryType), registryType, "Unknown registry type")
       };
+    }
+
+    private static bool TryResolveEntityValue<T>(RegistryType registryType, object definition, out T value)
+    {
+      value = default;
+
+      if (registryType != RegistryType.Entity)
+        return false;
+
+      if (definition is T typedDefinition)
+      {
+        value = typedDefinition;
+        return true;
+      }
+
+      if (definition is not EntityDescriptor descriptor || descriptor.GameObject == null)
+        return false;
+
+      if (typeof(T) == typeof(GameObject))
+      {
+        value = (T)(object)descriptor.GameObject;
+        return true;
+      }
+
+      if (typeof(T) == typeof(Transform))
+      {
+        value = (T)(object)descriptor.GameObject.transform;
+        return true;
+      }
+
+      if (!typeof(Component).IsAssignableFrom(typeof(T)))
+        return false;
+
+      var component = descriptor.GameObject.GetComponent(typeof(T));
+      if (component == null)
+        return false;
+
+      value = (T)(object)component;
+      return true;
     }
 
     private static bool TryResolveScenarioGraph(
@@ -255,6 +434,41 @@ namespace MultiplayerInfrastructure.Registry
 
       registry[identifier] = sprite;
       definition = sprite;
+      return true;
+    }
+
+    // =========================================================================
+    // ScenarioGraph helpers
+    // =========================================================================
+
+    /// <summary>
+    /// 등록된 식별자로 ScenarioGraph를 가져옵니다.
+    /// TextAsset으로 등록된 경우 파싱 후 캐싱됩니다.
+    /// </summary>
+    public static bool TryGetScenarioGraph(string identifier, out ScenarioGraph graph, out string error)
+    {
+      graph = null;
+      error = string.Empty;
+
+      if (string.IsNullOrWhiteSpace(identifier))
+      {
+        error = "Scenario identifier is required.";
+        return false;
+      }
+
+      if (!PreloadScenarioGraph(identifier))
+      {
+        error = $"Scenario '{identifier}' is not registered or failed to parse.";
+        return false;
+      }
+
+      graph = Get<ScenarioGraph>(RegistryType.ScenarioGraph, identifier);
+      if (graph == null)
+      {
+        error = $"Scenario '{identifier}' could not be resolved.";
+        return false;
+      }
+
       return true;
     }
 

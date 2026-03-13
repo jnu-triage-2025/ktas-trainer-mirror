@@ -65,7 +65,9 @@
 | `RegistryType.ScenarioGraph` | `ScenarioGraph` 또는 `TextAsset` (JSON) |
 | `RegistryType.Npc` | NPC `GameObject` |
 | `RegistryType.Waypoint` | `Vector3` (웨이포인트 위치) |
-| `RegistryType.Entity` | `PlayerController`, `QuestManager` 등 |
+| `RegistryType.Entity` | `EntityDescriptor` (플레이어/NPC/웨이포인트/시나리오 오브젝트/월드 아이템) |
+| `RegistryType.Service` | `QuestManager`, `MainCameraController`, `TexturePerformanceService` 등 |
+| `RegistryType.RuntimeState` | 접속 정보, 씬 전환 의도, 플레이어 이름 등 전역 상태값 |
 | `RegistryType.InteractableEntity` | 위치·인터랙터블 엔티티 |
 | `RegistryType.UI` | `UIControllerABC` 하위 컨트롤러들 |
 | `RegistryType.IconSprite` | `Sprite` (아이콘) |
@@ -99,7 +101,7 @@
 | `RegistryPreloadIconSpriteSO` | `RegistryType.IconSprite` |
 | `RegistryPreloadNpcSO` | `RegistryType.Npc` |
 | `RegistryPreloadWaypointSO` | `RegistryType.Waypoint` |
-| `RegistryPreloadEntitySO` | `RegistryType.Entity` |
+| `RegistryPreloadEntitySO` | `RegistryType.Service` |
 | `RegistryPreloadInteractableEntitySO` | `RegistryType.InteractableEntity` |
 | `RegistryPreloadUIControllerSO` | `RegistryType.UI` |
 
@@ -108,21 +110,21 @@
 네트워크 스폰 플레이어나 씬에 배치된 월드 오브젝트처럼 런타임에 동적으로 생성·소멸되는 오브젝트는 자신의 Lifecycle에서 직접 등록합니다. 이때 `OnDestroy()`에서 반드시 `Unregister`를 쌍으로 호출해야 합니다.
 
 ```csharp
-// 등록 (Awake / OnStartClient)
-Registry.Register(RegistryType.Entity, Registry.TypeKey<QuestManager>(), this);
+// 등록 (Awake)
+Registry.Register(RegistryType.Service, Registry.TypeKey<QuestManager>(), this);
 
 // 해제 (OnDestroy)
-Registry.Unregister(RegistryType.Entity, Registry.TypeKey<QuestManager>());
+Registry.Unregister(RegistryType.Service, Registry.TypeKey<QuestManager>());
 ```
 
 ### 조회
 
 ```csharp
 // 일반 조회
-var questManager = Registry.Get<QuestManager>(RegistryType.Entity, Registry.TypeKey<QuestManager>());
+var questManager = Registry.Get<QuestManager>(RegistryType.Service, Registry.TypeKey<QuestManager>());
 
 // 안전한 조회 (실패 시 false)
-if (Registry.TryGet<QuestManager>(RegistryType.Entity, Registry.TypeKey<QuestManager>(), out var mgr))
+if (Registry.TryGet<QuestManager>(RegistryType.Service, Registry.TypeKey<QuestManager>(), out var mgr))
 { ... }
 
 // 존재 여부 확인
@@ -136,6 +138,31 @@ bool exists = Registry.Contains(RegistryType.Item, "scalpel");
 ```csharp
 string key = Registry.TypeKey<ChatUIController>();   // "MultiplayerInfrastructure.UI.ChatUIController"
 ```
+
+### Entity 저장소 (`RegistryType.Entity`)
+
+`RegistryType.Entity`는 더 이상 서비스 객체를 저장하지 않습니다. 대신 `EntityDescriptor`를 저장하는 **월드 엔티티 전용 저장소**입니다.
+
+| 구성 | 설명 |
+|---|---|
+| `Identifier` | 서버/모든 클라이언트에서 동일해야 하는 전역 고유 엔티티 ID |
+| `EntityType` | `Player`, `Npc`, `Waypoint`, `ScenarioInteractable`, `ScenarioTriggerZone`, `ItemObject` |
+| `GameObject` | 로컬 프로세스에서 이 엔티티를 나타내는 실제 `GameObject` |
+| `OwnerUserIdentifier`, `ClientId` | 플레이어 엔티티일 때 연결되는 사용자/네트워크 정보 |
+
+```csharp
+var descriptor = Registry.Get<EntityDescriptor>(RegistryType.Entity, entityId);
+var npc = Registry.Get<Npc>(RegistryType.Entity, entityId);
+var localPlayer = Registry.GetFirstEntityComponent<PlayerController>(
+    EntityType.Player,
+    each => each != null && each.IsOwner);
+```
+
+엔티티 ID 규칙:
+
+- `PlayerController` : 서버가 `player:{userIdentifier}` 발급 후 SyncVar 전파
+- `Npc`, `WaypointAnchor`, `ScenarioInteractable`, `ScenarioTriggerZone` : authored ID 사용
+- `ItemObject` : 서버가 `item:{guid}` 발급하거나 `SceneItemPlacement` authored ID 사용
 
 ### ScenarioGraph 지연 로딩
 
@@ -202,9 +229,10 @@ player.TryDropItemInFront(itemData);
 ### 흐름 요약
 
 ```
-ScenarioRegistry (씬 컴포넌트)
-    → TextAsset (JSON 파일) → Registry.ScenarioGraph 등록
-    → ScenarioCommandRunner (서버 → 클라이언트로 전송)
+ScenarioCommandRunner._scenarios (서버/클라이언트 양측 Awake에서 Registry에 등록)
+    → Registry.PreloadScenarioGraph() → Registry.ScenarioGraph 등록
+    → ScenarioCommandRunner (서버 → 클라이언트로 식별자 전송)
+    → 클라이언트: Registry.TryGetScenarioGraph(identifier) → ScenarioGraph 조회
     → ScenarioController.StartScenario(graph)
     → 노드 순차 실행 (ExecuteNode → Advance)
 ```
@@ -214,8 +242,8 @@ ScenarioRegistry (씬 컴포넌트)
 씬에 하나만 배치됩니다. 시나리오 시작/종료/진행을 담당합니다.
 
 ```csharp
-// 식별자로 시작 (ScenarioRegistry를 통해)
-scenarioRegistry.TryGetScenarioGraph("patient_a_critical", out var graph, out _);
+// 식별자로 시작 (Registry를 통해)
+Registry.Registry.TryGetScenarioGraph("patient_a_critical", out var graph, out _);
 ScenarioController.Instance.StartScenario(graph);
 
 // 수동 진행 (다이얼로그에서 다음 버튼)
@@ -323,14 +351,15 @@ public class OpenDoorInteract : MonoBehaviour, IInteract
 | 클래스 | 역할 |
 |---|---|
 | `Item` (abstract) | 아이템 정의와 런타임 상태를 포함하는 순수 C# 클래스. `public const` 필드로 Definitions 선언 |
-| `ItemObject` | 월드에 배치되는 MonoBehaviour. `Item` 인스턴스를 보유하며 3D 모델을 로드 |
+| `ItemObject` | 월드에 배치되는 MonoBehaviour. `Item` 인스턴스를 보유하며 `EntityDescriptor`로 등록 |
+| `SceneItemPlacement` | 씬 authored 아이템 배치용 플레이스홀더. `Start()`에서 `ItemObject`를 생성하고 제거 |
 
 ```
 ItemObject  (Rigidbody, BoxCollider, PickupItem 레이어)
 └ ItemGroundedModel  ← Resources/Models/Items/{identifier} 에서 자동 로드
 ```
 
-### Registry 등록 및 생성
+### 아이템 정의 Registry 등록
 
 `RegistryType.Item`에는 `System.Type`이 저장됩니다 (프리팹이 아닙니다).
 
@@ -340,16 +369,69 @@ Registry.RegisterItemDefinition<Ambubag>(Ambubag.Identifier);
 
 // 인스턴스 생성
 var item = Registry.CreateItemInstance("ambubag");   // → new Ambubag()
+```
 
-// 월드 스폰
-ItemObject.Spawn(item, position);
-ItemObject.Spawn(item, position, throwForce);   // 드롭/던지기
+### 월드 아이템 엔티티 등록
+
+`ItemObject`는 이제 `RegistryType.Entity`에 `EntityType.ItemObject`로 등록됩니다.
+
+| 경우 | 엔티티 ID 생성 주체 | 결과 |
+|---|---|---|
+| `SceneItemPlacement`로 씬에 배치 | authored `_entityIdentifier` | 모든 클라이언트가 동일 ID 사용 |
+| 플레이어가 드롭 | 서버 | 서버가 `item:{guid}` 발급 후 전체 클라이언트에 전파 |
+
+```csharp
+ItemObject.Spawn(item, position, throwForce: null, entityIdentifier: stableEntityId);
 ```
 
 ### 아이콘 스프라이트
 
 - `Resources/Textures/ItemIcons/{identifier}.png` 에 배치하면 자동 로드됩니다.
 - 또는 `RegistryPreloaderController`에 연결한 SO의 `itemSprite` 필드로 명시적으로 등록할 수 있습니다.
+
+### 월드 드롭 / 픽업 흐름
+
+#### 드롭
+
+```text
+PlayerController.TryDropItemInFront(item)
+    → PlayerController.RequestDropWorldItem(...)
+    → ServerRpc
+    → 서버가 item:{guid} 발급
+    → ObserversRpc
+    → 각 클라이언트에서 ItemObject.Spawn(..., entityIdentifier)
+    → RegistryType.Entity 에 EntityDescriptor 등록
+```
+
+#### 픽업
+
+```text
+LootableItemInteractHandler.Interact()
+    → PlayerController.TryPickupWorldItem(entityId)
+    → ServerRpc pickup 요청
+    → 서버가 거리/중복 요청 검증
+    → TargetRpc 로 대상 플레이어에게만 아이템 snapshot 승인 전송
+    → ObserversRpc 로 모든 클라이언트에서 ItemObject 제거
+    → 클라이언트 인벤토리 반영 성공 시 ack
+    → 실패 시 rollback 요청 → 같은 entityId의 월드 아이템 복구
+```
+
+즉, **월드 아이템 생성/제거는 서버가 authoritative 하게 결정**합니다.
+
+### 씬 authored 아이템 디버그/작성 보조
+
+`SceneItemPlacement`는 에디터 Scene 패널에서 다음 시각 정보를 제공합니다.
+
+- identifier가 설정된 배치는 초록 Gizmo
+- identifier가 비어 있는 배치는 빨간 Gizmo
+- 라벨은 `itemIdentifier xStackCount` 형식으로 표시
+
+메뉴:
+
+- `Tools/Multiplayer Infrastructure/Scene Item Visualization/Show In Scene View`
+- `Tools/Multiplayer Infrastructure/Scene Item Visualization/Settings...`
+
+`Settings...`에서는 **현재 Scene 카메라 기준 표시 거리**를 설정할 수 있습니다. 범위를 `0`으로 설정하면 모든 `SceneItemPlacement`를 항상 표시합니다.
 
 > **아이템 정의:** [item.md](item.md)  
 > **구현 가이드:** [item-authoring.md](item-authoring.md)
@@ -361,7 +443,7 @@ ItemObject.Spawn(item, position, throwForce);   // 드롭/던지기
 `QuestManager`는 씬에 하나 배치되는 MonoBehaviour이며, Registry를 통해 접근합니다.
 
 ```csharp
-var mgr = Registry.Get<QuestManager>(RegistryType.Entity, Registry.TypeKey<QuestManager>());
+var mgr = Registry.Get<QuestManager>(RegistryType.Service, Registry.TypeKey<QuestManager>());
 
 // 퀘스트 추가 / 갱신
 mgr.AddOrUpdateQuest(new QuestData { Id = "q1", Title = "검사", IsTracked = true, WaypointIdentifier = "exam-room" });

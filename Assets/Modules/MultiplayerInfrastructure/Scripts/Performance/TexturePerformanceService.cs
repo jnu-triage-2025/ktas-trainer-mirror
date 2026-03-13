@@ -44,7 +44,7 @@ namespace MultiplayerInfrastructure.Performance
     private void Awake()
     {
       Registry.Registry.Register(
-        RegistryType.Entity,
+        RegistryType.Service,
         Registry.Registry.TypeKey<TexturePerformanceService>(),
         this
       );
@@ -55,7 +55,7 @@ namespace MultiplayerInfrastructure.Performance
     private void OnDestroy()
     {
       Registry.Registry.Unregister(
-        RegistryType.Entity,
+        RegistryType.Service,
         Registry.Registry.TypeKey<TexturePerformanceService>()
       );
     }

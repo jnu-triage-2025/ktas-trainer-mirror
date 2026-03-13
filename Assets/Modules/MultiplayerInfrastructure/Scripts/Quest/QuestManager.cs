@@ -67,12 +67,12 @@ namespace MultiplayerInfrastructure.Quest
 
     private void Awake()
     {
-      Registry.Registry.Register(RegistryType.Entity, Registry.Registry.TypeKey<QuestManager>(), this);
+      Registry.Registry.Register(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>(), this);
     }
 
     private void OnDestroy()
     {
-      Registry.Registry.Unregister(RegistryType.Entity, Registry.Registry.TypeKey<QuestManager>());
+      Registry.Registry.Unregister(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>());
     }
 
     public void SetQuests(IEnumerable<QuestData> quests, bool clearExisting = true)

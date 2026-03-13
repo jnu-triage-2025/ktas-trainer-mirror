@@ -99,7 +99,7 @@ namespace MultiplayerInfrastructure.Registry
         if (string.IsNullOrWhiteSpace(req.identifier) || req.objectRef == null)
           continue;
 
-        Registry.Register(RegistryType.Entity, req.identifier, req.objectRef);
+        Registry.Register(RegistryType.Service, req.identifier, req.objectRef);
       }
     }
 

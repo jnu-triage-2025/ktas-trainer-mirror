@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using FishNet.Object;
+using MultiplayerInfrastructure.Registry;
 
 namespace MultiplayerInfrastructure.Scenario
 {
@@ -10,6 +11,9 @@ namespace MultiplayerInfrastructure.Scenario
   public class ScenarioTriggerZone : MonoBehaviour
   {
     #region Serialized Fields
+
+    [Header("Identity")]
+    [SerializeField] private string _identifier;
 
     [Header("Scenario Settings")]
     [SerializeField] private TextAsset _scenarioJson;
@@ -28,6 +32,7 @@ namespace MultiplayerInfrastructure.Scenario
     private ScenarioGraph _cachedGraph;
     private bool _hasTriggered;
     private float _lastTriggerTime;
+    private string _registeredIdentifier;
 
     #endregion
 
@@ -40,6 +45,7 @@ namespace MultiplayerInfrastructure.Scenario
     #region Properties
 
     public bool HasTriggered => _hasTriggered;
+    public string Identifier => _identifier;
 
     #endregion
 
@@ -48,6 +54,22 @@ namespace MultiplayerInfrastructure.Scenario
     private void Awake()
     {
       CacheScenarioGraph();
+      RegisterToRegistry();
+    }
+
+    private void OnEnable()
+    {
+      RegisterToRegistry();
+    }
+
+    private void OnDisable()
+    {
+      UnregisterFromRegistry();
+    }
+
+    private void OnDestroy()
+    {
+      UnregisterFromRegistry();
     }
 
     private void OnTriggerEnter(Collider other)
@@ -128,6 +150,33 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+      CacheScenarioGraph();
+      if (string.IsNullOrWhiteSpace(_identifier))
+        _identifier = global::MultiplayerInfrastructure.Registry.EntityId.Ensure(_identifier, gameObject, "scenario-trigger-zone");
+    }
+#endif
+
+    private void RegisterToRegistry()
+    {
+      if (string.IsNullOrWhiteSpace(_identifier))
+        return;
+
+      _registeredIdentifier = _identifier;
+      Registry.Registry.RegisterEntity(_registeredIdentifier, EntityType.ScenarioTriggerZone, gameObject, displayName: gameObject.name);
+    }
+
+    private void UnregisterFromRegistry()
+    {
+      if (string.IsNullOrWhiteSpace(_registeredIdentifier))
+        return;
+
+      Registry.Registry.UnregisterEntity(_registeredIdentifier);
+      _registeredIdentifier = null;
+    }
+
     public void SetScenario(TextAsset scenarioJson, string startNodeIdentifier = null)
     {
       _scenarioJson = scenarioJson;
@@ -158,12 +207,5 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     #endregion
-
-#if UNITY_EDITOR
-    private void OnValidate()
-    {
-      CacheScenarioGraph();
-    }
-#endif
   }
 }

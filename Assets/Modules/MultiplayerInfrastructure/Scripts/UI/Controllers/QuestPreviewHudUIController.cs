@@ -71,7 +71,7 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       if (_questManager == null)
-        _questManager = Registry.Registry.Get<QuestManager>(RegistryType.Entity, Registry.Registry.TypeKey<QuestManager>());
+        _questManager = Registry.Registry.Get<QuestManager>(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>());
 
       if (_questManager == null)
         return;

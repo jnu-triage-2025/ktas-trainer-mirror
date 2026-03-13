@@ -164,7 +164,7 @@ public event Action<IReadOnlyList<IInteractable>> NearbyUpdated;
 ## 6. `LootableItemInteractHandler`
 
 `IInteractable` + `IInteract`를 모두 구현하는 MonoBehaviour입니다.  
-`ItemObject.Spawn()` 호출 시 자동으로 GameObect에 추가됩니다. 직접 인스턴스화할 필요는 없습니다.
+`ItemObject.Spawn()` 호출 시 자동으로 GameObject에 추가됩니다. 직접 인스턴스화할 필요는 없습니다.
 
 ```csharp
 public class LootableItemInteractHandler : MonoBehaviour, IInteractable, IInteract
@@ -184,14 +184,16 @@ public class LootableItemInteractHandler : MonoBehaviour, IInteractable, IIntera
 ### `Interact(interactor)` 흐름
 
 1. `interactor` 계층에서 `PlayerController` 탐색
-2. `PlayerController.TryAddItemToInventory(item)` 호출
-3. 성공 시 `item.OnGet(player)` 호출
-4. `Destroy(gameObject)` — `ItemObject` 제거
+2. `ItemObject.Identifier`가 있으면 `PlayerController.TryPickupWorldItem(entityIdentifier)` 호출
+3. identifier가 없는 구형/로컬 오브젝트일 때만 `PlayerController.TryPickupWorldItem(itemObject)` 폴백 호출
+4. 서버가 거리/중복/소유권을 검증하고 승인하면 전 관전자에게 월드 아이템 제거 전파
+5. 대상 클라이언트만 인벤토리 삽입 후 `item.OnGet(player)` 실행
+6. 대상 클라이언트가 실패를 보고하면 서버가 같은 entity ID로 월드 아이템을 롤백 복구
 
 ### HUD 감지 조건
 
 `NearbyInteractablesDetector`는 `PickupItem` 레이어 콜라이더에서 `IInteractable` 컴포넌트를 탐색합니다.  
-`ItemObject.Spawn()`이 GameObject 레이어를 `PickupItem`(없으면 `Default`)으로 설정하고 `LootableItemInteractHandler`를 부착하므로, 별도 설정 없이 자동 감지됩니다.
+`ItemObject.Spawn()`이 GameObject 레이어를 `PickupItem`(없으면 `Default`)으로 설정하고 `LootableItemInteractHandler`를 부착하므로, 별도 설정 없이 자동 감지됩니다. entity ID가 설정된 월드 아이템은 동시에 `RegistryType.Entity`의 `EntityType.ItemObject`로도 등록됩니다.
 
 ---
 

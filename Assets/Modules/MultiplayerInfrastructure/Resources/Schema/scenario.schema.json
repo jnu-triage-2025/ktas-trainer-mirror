@@ -83,6 +83,12 @@
         },
         {
           "$ref": "#/$defs/ScenarioRoleAssignmentNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioPlayTTSNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioPlayerTagNode"
         }
       ]
     },
@@ -1062,6 +1068,86 @@
       },
       "required": [ "Id" ],
       "additionalProperties": false
+    },
+    "ScenarioPlayTTSNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "PlayTTS"
+            },
+            "transcriptIdentifier": {
+              "type": "string",
+              "minLength": 1
+            },
+            "variables": {
+              "type": ["object", "null"],
+              "additionalProperties": { "type": "string" }
+            },
+            "waitUntilFinished": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          "required": [
+            "transcriptIdentifier"
+          ]
+        }
+      ]
+    },
+    "ScenarioPlayerTagNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "PlayerTag"
+            },
+            "operation": {
+              "type": "string",
+              "enum": ["Add", "Remove", "Change"]
+            },
+            "scope": {
+              "type": "string",
+              "enum": ["All", "Current"],
+              "default": "Current"
+            },
+            "tag": {
+              "type": ["string", "null"]
+            },
+            "fromTag": {
+              "type": ["string", "null"]
+            },
+            "toTag": {
+              "type": ["string", "null"]
+            }
+          },
+          "required": ["operation", "scope"],
+          "allOf": [
+            {
+              "if": {
+                "properties": { "operation": { "enum": ["Add", "Remove"] } }
+              },
+              "then": {
+                "required": ["tag"]
+              }
+            },
+            {
+              "if": {
+                "properties": { "operation": { "const": "Change" } }
+              },
+              "then": {
+                "required": ["fromTag", "toTag"]
+              }
+            }
+          ]
+        }
+      ]
     }
   }
 }

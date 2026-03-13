@@ -33,6 +33,7 @@ namespace MultiplayerInfrastructure.UI
     private Button _btnDirectJoin;
     private TextField _addrField;
     private TextField _portField;
+    private TextField _nameField;
     private ListView _listView;
     private Label _emptyState;
     private Label _status;
@@ -55,6 +56,7 @@ namespace MultiplayerInfrastructure.UI
       _btnDirectJoin = root.Q<Button>("btnDirectJoin");
       _addrField = root.Q<TextField>("addrField");
       _portField = root.Q<TextField>("portField");
+      _nameField = root.Q<TextField>("nameField");
       _listView = root.Q<ListView>("sessionList");
       _emptyState = root.Q<Label>("emptyState");
       _status = root.Q<Label>("statusLabel");
@@ -121,15 +123,16 @@ namespace MultiplayerInfrastructure.UI
 
     private void OnCreateAndJoin()
     {
-      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.SessionInformation,
+      StoreUserDisplayName();
+      StoreLaunchRequest(
         new SessionInformationModel
         (
-          address: DefaultsSessionInformationModel.address,
-          port: DefaultsSessionInformationModel.port
-        ));
-      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.IsOpeningServer, true);
-      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.UseLanDiscovery, true);
-      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.LoadedFromIntroScene, true);
+          address: defaultAddress,
+          port: defaultPort,
+          sessionName: defaultSessionName
+        ),
+        isOpeningServer: true,
+        useLanDiscovery: true);
       SetStatus("Hosting intent set. Load your gameplay scene to start FishNet server.");
       SwitchIngameScene();
     }
@@ -150,16 +153,16 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.SessionInformation,
+      StoreUserDisplayName();
+      StoreLaunchRequest(
         new SessionInformationModel
         (
           address: _selected.Address,
           port: _selected.Port,
           sessionName: _selected.Name
-        ));
-      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.IsOpeningServer, false);
-      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.UseLanDiscovery, true);
-      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.LoadedFromIntroScene, true);
+        ),
+        isOpeningServer: false,
+        useLanDiscovery: true);
       SetStatus($"Join intent set: {_selected.Address}:{_selected.Port}");
       SwitchIngameScene();
     }
@@ -173,16 +176,16 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.SessionInformation,
+      StoreUserDisplayName();
+      StoreLaunchRequest(
         new SessionInformationModel
         (
           address: ip,
           port: port,
           sessionName: "Direct"
-        ));
-      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.IsOpeningServer, false);
-      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.UseLanDiscovery, false);
-      Registry.Registry.Register(RegistryType.Entity, RegistryGlobalKeys.LoadedFromIntroScene, true);
+        ),
+        isOpeningServer: false,
+        useLanDiscovery: false);
       SetStatus($"Direct join intent set: {ip}:{port}");
       SwitchIngameScene();
     }
@@ -216,6 +219,21 @@ namespace MultiplayerInfrastructure.UI
         break;
       }
       _btnJoinSelected.SetEnabled(_selected != null);
+    }
+
+    private void StoreUserDisplayName()
+    {
+      var name = _nameField?.value?.Trim();
+      if (!string.IsNullOrWhiteSpace(name))
+        Registry.Registry.Register(RegistryType.RuntimeState, RegistryGlobalKeys.UserDisplayName, name);
+    }
+
+    private void StoreLaunchRequest(SessionInformationModel sessionInformation, bool isOpeningServer, bool useLanDiscovery)
+    {
+      Registry.Registry.Register(RegistryType.RuntimeState, RegistryGlobalKeys.SessionInformation, sessionInformation);
+      Registry.Registry.Register(RegistryType.RuntimeState, RegistryGlobalKeys.IsOpeningServer, isOpeningServer);
+      Registry.Registry.Register(RegistryType.RuntimeState, RegistryGlobalKeys.UseLanDiscovery, useLanDiscovery);
+      Registry.Registry.Register(RegistryType.RuntimeState, RegistryGlobalKeys.LoadedFromIntroScene, true);
     }
 
     private void SetStatus(string msg)

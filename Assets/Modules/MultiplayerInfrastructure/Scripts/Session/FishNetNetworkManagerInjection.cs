@@ -47,26 +47,54 @@ namespace MultiplayerInfrastructure.Session
 
     void Start()
     {
+      if (FindAnyObjectByType<UnitySceneSupports.IngameScene.IngameSceneBootstrapper>() != null)
+        return;
+
       HandleSessionInformationAlreadyConfigured();
     }
 
     private void HandleSessionInformationAlreadyConfigured()
     {
-      if (!Registry.Registry.Get<bool>(RegistryType.Entity, RegistryGlobalKeys.LoadedFromIntroScene)) return;
+      if (!Registry.Registry.Get<bool>(RegistryType.RuntimeState, RegistryGlobalKeys.LoadedFromIntroScene)) return;
       
-      var sessionInformation = Registry.Registry.Get<SessionInformationModel>(RegistryType.Entity, RegistryGlobalKeys.SessionInformation);
+      var sessionInformation = Registry.Registry.Get<SessionInformationModel>(RegistryType.RuntimeState, RegistryGlobalKeys.SessionInformation);
       if (sessionInformation == null)
       {
         Debug.LogWarning("[FishNetNetworkManagerInjection] No session information found in Registry.Registry.");
         return;
       }
 
-      if (Registry.Registry.Get<bool>(RegistryType.Entity, RegistryGlobalKeys.IsOpeningServer))
+      ConfigureTransport(sessionInformation);
+
+      StartConfiguredSession(Registry.Registry.Get<bool>(RegistryType.RuntimeState, RegistryGlobalKeys.IsOpeningServer));
+    }
+
+    public void ConfigureTransport(SessionInformationModel sessionInformation)
+    {
+      if (_networkManager.IsUnityNull() || sessionInformation == null)
+        return;
+
+      var transport = _networkManager.TransportManager?.Transport;
+      if (transport == null)
+      {
+        Debug.LogWarning("[FishNetNetworkManagerInjection] No transport found on NetworkManager.");
+        return;
+      }
+
+      transport.SetClientAddress(sessionInformation.Address);
+      transport.SetPort(sessionInformation.Port);
+
+      Debug.Log($"[FishNetNetworkManagerInjection] Transport configured for {sessionInformation.Address}:{sessionInformation.Port}");
+    }
+
+    public void StartConfiguredSession(bool isOpeningServer)
+    {
+      if (isOpeningServer)
       {
         Debug.Log("[FishNetNetworkManagerInjection] Starting as Server based on session info from Intro Scene.");
         StartServer();
       }
-      
+
       Debug.Log("[FishNetNetworkManagerInjection] Starting as Client based on session info from Intro Scene.");
       StartClient();
 
@@ -99,32 +127,52 @@ namespace MultiplayerInfrastructure.Session
     {
       if (_networkManager.IsUnityNull()) return;
       if (_serverStateAssumed == LocalConnectionState.Started)
+      {
         Debug.LogWarning("[FishNetNetworkManagerInjection] StartServer called but server is already started.");
+        return;
+      }
+
       _networkManager.ServerManager.StartConnection();
+      _serverStateAssumed = LocalConnectionState.Started;
     }
 
     public void StopServer()
     {
       if (_networkManager.IsUnityNull()) return;
       if (_serverStateAssumed == LocalConnectionState.Stopped)
+      {
         Debug.LogWarning("[FishNetNetworkManagerInjection] StopServer called but server is already stopped.");
+        return;
+      }
+
       _networkManager.ServerManager.StopConnection(true);
+      _serverStateAssumed = LocalConnectionState.Stopped;
     }
     
     public void StartClient()
     {
       if (_networkManager.IsUnityNull()) return;
       if (_clientStateAssumed == LocalConnectionState.Started)
+      {
         Debug.LogWarning("[FishNetNetworkManagerInjection] StartClient called but client is already started.");
+        return;
+      }
+
       _networkManager.ClientManager.StartConnection();
+      _clientStateAssumed = LocalConnectionState.Started;
     }
 
     public void StopClient()
     {
       if (_networkManager.IsUnityNull()) return;
       if (_clientStateAssumed == LocalConnectionState.Stopped)
+      {
         Debug.LogWarning("[FishNetNetworkManagerInjection] StopClient called but client is already stopped.");
+        return;
+      }
+
       _networkManager.ClientManager.StopConnection();
+      _clientStateAssumed = LocalConnectionState.Stopped;
     }
   }
 }

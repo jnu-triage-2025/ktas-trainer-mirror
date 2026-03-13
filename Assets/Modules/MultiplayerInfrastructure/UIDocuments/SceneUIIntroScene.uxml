@@ -8,6 +8,12 @@
 
     <ui:VisualElement class="row">
       <ui:VisualElement class="card">
+        <ui:Label text="Display Name" class="section-title" />
+        <ui:VisualElement class="form-row">
+          <ui:Label text="Name" class="field-label" />
+          <ui:TextField name="nameField" class="text-field" placeholder-text="Player" />
+        </ui:VisualElement>
+
         <ui:VisualElement class="stack gap">
           <ui:Button name="btnCreateAndJoin" class="btn primary" text="Create a Session and Join" />
           <ui:Button name="btnSearchLAN" class="btn secondary" text="Search opened session on LAN" />

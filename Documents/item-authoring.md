@@ -187,7 +187,10 @@ TTRegistryMonoBehaviourSupport.Awake()  →  모든 아이템 identifier 등록
 SceneItemPlacement.Start()
   ├─ Registry.CreateItemInstance(identifier)  → Item 인스턴스 생성
   ├─ item.CurrentStackCount = stackCount
-  ├─ ItemObject.Spawn(item, transform.position)  → 월드 오브젝트 생성
+  ├─ 클라이언트 전용 피어면 로컬 스폰 생략 후 플레이스홀더 제거
+  ├─ 호스트/서버면 _entityIdentifier 보정/유지
+  ├─ ItemObject.Spawn(item, transform.position, entityIdentifier: _entityIdentifier)
+  │    → 서버 기준 월드 오브젝트 생성 + RegistryType.Entity(EntityType.ItemObject) 등록
   └─ Destroy(this.gameObject)  → 플레이스홀더 제거
 ```
 
@@ -198,11 +201,24 @@ SceneItemPlacement.Start()
 
 - 초록 구: identifier가 설정된 배치 마커
 - 빨간 구: identifier 미설정 경고
-- 마커 위에 식별자 레이블 표시
+- 마커 위에 `itemIdentifier xStackCount` 레이블 표시
+
+### 씬 뷰 표시 옵션
+
+`SceneItemPlacement`의 Scene 패널 표시 여부는 Unity 메뉴에서 제어할 수 있습니다.
+
+- `Tools/Multiplayer Infrastructure/Scene Item Visualization/Show In Scene View`
+  - Scene 패널의 아이템 마커/라벨 전체 표시·숨김 토글
+- `Tools/Multiplayer Infrastructure/Scene Item Visualization/Settings...`
+  - 현재 Scene 카메라 기준 표시 범위 설정
+  - 범위 안에 있는 `SceneItemPlacement`만 Gizmo와 라벨 표시
+  - 범위를 `0`으로 두면 거리 제한 없이 항상 표시
 
 ### 주의
 
 - **배치가 되려면 identifier가 `TTRegistryMonoBehaviourSupport`(또는 다른 Preloader)에도 반드시 등록**되어 있어야 합니다.
+- **씬 배치 아이템은 authored entity ID를 가져야 합니다.** `SceneItemPlacement`는 `OnValidate()`에서 `_entityIdentifier`를 자동 보정하며, 이 값이 서버와 전체 클라이언트가 공유하는 월드 아이템 ID가 됩니다.
+- **클라이언트는 씬 배치 아이템을 직접 확정하지 않습니다.** 접속 후 서버가 현재 `ItemObject` 목록을 다시 보내며, 클라이언트는 그 스냅샷으로 로컬 월드를 재구성합니다.
 - `const` 필드가 없는 Item 서브클래스는 드롭다운에 표시되지 않습니다.
 - `SceneItemPlacement` GameObject 자체는 Start() 이후 제거됩니다. 연결된 자식 오브젝트는 ItemObject에 포함되지 않으므로 플레이스홀더 GameObject에 다른 컴포넌트를 추가하지 마십시오.
 
@@ -211,7 +227,8 @@ SceneItemPlacement.Start()
 ## 주의사항
 
 - **`Identifier`는 시스템 전체에서 유일해야 합니다.** 중복 시 나중에 등록된 항목이 앞선 항목을 덮어씁니다.
-- **월드 드롭 시:** `player.TryDropItemInFront(item)` 내부에서 `ItemObject.Spawn`이 호출됩니다. `TTRegistryMonoBehaviourSupport`에 등록이 누락되어 있어도 드롭 자체는 동작하지만, `Registry.CreateItemInstance`로 아이템을 생성하는 경로(씬 배치, `/give` 커맨드 등)는 실패합니다.
+- **월드 드롭 시:** `player.TryDropItemInFront(item)`는 서버 승인 후에만 월드 아이템을 생성합니다. 서버는 `item:{guid}` 형식의 entity ID를 발급하고, 모든 피어가 같은 ID로 `ItemObject`를 등록합니다.
+- **월드 픽업 시:** `LootableItemInteractHandler`는 `TryPickupWorldItem(entityIdentifier)` 경로를 우선 사용합니다. 서버가 아이템 제거를 승인하면 대상 클라이언트만 인벤토리에 반영하고, 실패 시 서버가 보관 중이던 스냅샷으로 같은 entity ID를 복구합니다.
 - **`TriageTrainer.MultiplayerInfrastructure` 네임스페이스 충돌:** 이 네임스페이스를 가진 파일에서 `MultiplayerInfrastructure.*`를 참조할 때 `using MI = MultiplayerInfrastructure` 별칭을 사용하지 않으면 CS0234 에러가 발생합니다.
 
 ### `const` 기반 정의 시스템 주의사항

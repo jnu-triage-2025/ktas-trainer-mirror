@@ -114,14 +114,14 @@ namespace MultiplayerInfrastructure.UI
     {
       RefreshFromService();
       Show();
-      Registry.Registry.Get<Player.PlayerController>(RegistryType.Entity, Registry.Registry.TypeKey<Player.PlayerController>())?.EnterUIOverlayMode();
+      Registry.Registry.GetFirstEntityComponent<Player.PlayerController>(EntityType.Player, each => each != null && each.IsOwner)?.EnterUIOverlayMode();
       OverlayPushed?.Invoke();
     }
 
     public void OnOverlayPopped()
     {
       Hide();
-      Registry.Registry.Get<Player.PlayerController>(RegistryType.Entity, Registry.Registry.TypeKey<Player.PlayerController>())?.ExitUIOverlayMode();
+      Registry.Registry.GetFirstEntityComponent<Player.PlayerController>(EntityType.Player, each => each != null && each.IsOwner)?.ExitUIOverlayMode();
       OverlayPopped?.Invoke();
     }
 
@@ -245,7 +245,7 @@ namespace MultiplayerInfrastructure.UI
     // ──────────────────────────────────────────────────────────────────────────
     private static TexturePerformanceService GetService()
       => Registry.Registry.Get<TexturePerformanceService>(
-        RegistryType.Entity,
+        RegistryType.Service,
         Registry.Registry.TypeKey<TexturePerformanceService>()
       );
 

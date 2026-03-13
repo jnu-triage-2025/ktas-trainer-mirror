@@ -123,6 +123,8 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioQuizNodeDTO quiz => ConvertQuiz(quiz),
           ScenarioStateUpdateNodeDTO stateUpdate => ConvertStateUpdate(stateUpdate),
           ScenarioRoleAssignmentNodeDTO roleAssignment => ConvertRoleAssignment(roleAssignment),
+          ScenarioPlayTTSNodeDTO playTTS => ConvertPlayTTS(playTTS),
+          ScenarioPlayerTagNodeDTO playerTag => ConvertPlayerTag(playerTag),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -345,6 +347,54 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = dto.NextIdentifier
         };
 
+    private static ScenarioPlayTTSNode ConvertPlayTTS(ScenarioPlayTTSNodeDTO dto) =>
+        new ScenarioPlayTTSNode
+        {
+          Identifier = dto.Identifier,
+          TranscriptIdentifier = dto.TranscriptIdentifier,
+          Variables = dto.Variables ?? new Dictionary<string, string>(),
+          WaitUntilFinished = dto.WaitUntilFinished ?? true,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioPlayTTSNodeDTO ConvertToDTO(ScenarioPlayTTSNode node) =>
+        new ScenarioPlayTTSNodeDTO
+        {
+          NodeType = "PlayTTS",
+          Identifier = node.Identifier,
+          TranscriptIdentifier = node.TranscriptIdentifier,
+          Variables = node.Variables != null && node.Variables.Count > 0
+              ? node.Variables
+              : null,
+          WaitUntilFinished = node.WaitUntilFinished,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioPlayerTagNode ConvertPlayerTag(ScenarioPlayerTagNodeDTO dto) =>
+        new ScenarioPlayerTagNode
+        {
+          Identifier = dto.Identifier,
+          Operation = ParsePlayerTagOperationType(dto.Operation),
+          Scope = ParsePlayerTagScope(dto.Scope),
+          Tag = dto.Tag,
+          FromTag = dto.FromTag,
+          ToTag = dto.ToTag,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioPlayerTagNodeDTO ConvertToDTO(ScenarioPlayerTagNode node) =>
+        new ScenarioPlayerTagNodeDTO
+        {
+          NodeType = "PlayerTag",
+          Identifier = node.Identifier,
+          Operation = node.Operation.ToString(),
+          Scope = node.Scope.ToString(),
+          Tag = node.Tag,
+          FromTag = node.FromTag,
+          ToTag = node.ToTag,
+          NextIdentifier = node.NextIdentifier
+        };
+
     private static ScenarioParallelNode ConvertParallel(ScenarioParallelNodeDTO dto)
     {
       var branches = new List<ScenarioParallelBranch>(dto.Branches?.Count ?? 0);
@@ -520,6 +570,28 @@ namespace MultiplayerInfrastructure.Scenario
       throw new JsonException($"Unknown ScenarioRoleAssignmentMode '{value}'.");
     }
 
+    private static ScenarioPlayerTagOperationType ParsePlayerTagOperationType(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+        return ScenarioPlayerTagOperationType.Add;
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioPlayerTagOperationType parsed))
+        return parsed;
+
+      throw new JsonException($"Unknown ScenarioPlayerTagOperationType '{value}'.");
+    }
+
+    private static ScenarioPlayerTagScope ParsePlayerTagScope(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+        return ScenarioPlayerTagScope.Current;
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioPlayerTagScope parsed))
+        return parsed;
+
+      throw new JsonException($"Unknown ScenarioPlayerTagScope '{value}'.");
+    }
+
     public static string SaveToJson(ScenarioGraph graph, bool validateWithSchema = true)
     {
       if (graph == null)
@@ -580,6 +652,8 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioQuizNode quiz => ConvertToDTO(quiz),
           ScenarioStateUpdateNode stateUpdate => ConvertToDTO(stateUpdate),
           ScenarioRoleAssignmentNode roleAssignment => ConvertToDTO(roleAssignment),
+          ScenarioPlayTTSNode playTTS => ConvertToDTO(playTTS),
+          ScenarioPlayerTagNode playerTag => ConvertToDTO(playerTag),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 

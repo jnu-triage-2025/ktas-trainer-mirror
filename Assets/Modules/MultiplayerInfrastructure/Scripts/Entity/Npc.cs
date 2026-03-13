@@ -20,14 +20,13 @@ namespace MultiplayerInfrastructure.Entity
     [Header("Custom Interacts")]
     [SerializeField] private List<MonoBehaviour> _customInteractSources = new();
 
-    [SerializeField] private ScenarioRegistry _scenarioRegistry;
-
     public string Identifier => _identifier;
 
     private readonly List<IInteract> _resolvedInteracts = new List<IInteract>();
     private bool _interactsDirty = true;
 
     private bool _baseModelApplied;
+    private string _registeredIdentifier;
 
     private void Awake()
     {
@@ -37,18 +36,44 @@ namespace MultiplayerInfrastructure.Entity
       if (string.IsNullOrWhiteSpace(_identifier))
         _identifier = gameObject.name;
 
-      Registry.Registry.Register(RegistryType.Npc, _identifier, gameObject);
+      RegisterToRegistry();
     }
 
     private void OnEnable()
     {
       EnsureBaseModelApplied();
       MarkInteractsDirty();
+      RegisterToRegistry();
     }
 
     private void OnDestroy()
     {
-      Registry.Registry.Unregister(RegistryType.Npc, _identifier);
+      UnregisterFromRegistry();
+    }
+
+    private void OnDisable()
+    {
+      UnregisterFromRegistry();
+    }
+
+    private void RegisterToRegistry()
+    {
+      if (string.IsNullOrWhiteSpace(_identifier))
+        return;
+
+      _registeredIdentifier = _identifier;
+      Registry.Registry.Register(RegistryType.Npc, _registeredIdentifier, gameObject);
+      Registry.Registry.RegisterEntity(_registeredIdentifier, EntityType.Npc, gameObject, displayName: gameObject.name);
+    }
+
+    private void UnregisterFromRegistry()
+    {
+      if (string.IsNullOrWhiteSpace(_registeredIdentifier))
+        return;
+
+      Registry.Registry.Unregister(RegistryType.Npc, _registeredIdentifier);
+      Registry.Registry.UnregisterEntity(_registeredIdentifier);
+      _registeredIdentifier = null;
     }
 
     public override void Interact(Transform interactor)
@@ -130,14 +155,7 @@ namespace MultiplayerInfrastructure.Entity
         return false;
       }
 
-      var scenarioRegistry = ResolveScenarioRegistry();
-      if (scenarioRegistry == null)
-      {
-        Debug.LogWarning($"[Npc] '{name}' cannot start scenario: ScenarioRegistry not found.", this);
-        return false;
-      }
-
-      if (!scenarioRegistry.TryGetScenarioGraph(scenarioIdentifier, out var graph, out string error))
+      if (!Registry.Registry.TryGetScenarioGraph(scenarioIdentifier, out var graph, out string error))
       {
         Debug.LogWarning($"[Npc] '{name}' failed to load scenario '{scenarioIdentifier}': {error}", this);
         return false;
@@ -150,14 +168,6 @@ namespace MultiplayerInfrastructure.Entity
 
       ScenarioController.Instance.StartScenario(graph, startNodeIdentifier, ownerClientId);
       return true;
-    }
-
-    private ScenarioRegistry ResolveScenarioRegistry()
-    {
-      if (_scenarioRegistry == null)
-        _scenarioRegistry = FindFirstObjectByType<ScenarioRegistry>();
-
-      return _scenarioRegistry;
     }
 
     [ContextMenu("NPC/Apply Base Model Now")]
@@ -258,7 +268,7 @@ namespace MultiplayerInfrastructure.Entity
       MarkInteractsDirty();
 
       if (string.IsNullOrWhiteSpace(_identifier))
-        _identifier = gameObject.name;
+        _identifier = global::MultiplayerInfrastructure.Registry.EntityId.Ensure(_identifier, gameObject, "npc");
     }
 #endif
   }

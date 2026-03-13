@@ -16,10 +16,11 @@
     "quiz_cpr": { "x": 2560, "y": 160 },
     "notification_retry": { "x": 2560, "y": 340 },
     "state_update_rhythm": { "x": 2880, "y": 160 },
-    "role_assignment": { "x": 3200, "y": 160 },
-    "parallel_merge": { "x": 3520, "y": 20 },
-    "branch_invoke": { "x": 3840, "y": -120 },
-    "branch_dialogue": { "x": 3840, "y": 180 },
-    "dialogue_outro": { "x": 4160, "y": 20 }
+    "tts_role_instruction": { "x": 3200, "y": 160 },
+    "role_assignment": { "x": 3520, "y": 160 },
+    "parallel_merge": { "x": 3840, "y": 20 },
+    "branch_invoke": { "x": 4160, "y": -120 },
+    "branch_dialogue": { "x": 4160, "y": 180 },
+    "dialogue_outro": { "x": 4480, "y": 20 }
   }
 }

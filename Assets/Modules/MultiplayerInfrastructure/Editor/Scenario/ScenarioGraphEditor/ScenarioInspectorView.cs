@@ -132,6 +132,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.RoleAssignment:
           DrawRoleAssignmentFields((ScenarioRoleAssignmentNode)data);
           break;
+        case ScenarioNodeType.PlayTTS:
+          DrawPlayTTSFields((ScenarioPlayTTSNode)data);
+          break;
       }
     }
 
@@ -524,6 +527,49 @@ namespace MultiplayerInfrastructure.Editor
 
       data.RoleOptions = options;
       data.AssignmentMode = (ScenarioRoleAssignmentMode)EditorGUILayout.EnumPopup("Assignment Mode", data.AssignmentMode);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawPlayTTSFields(ScenarioPlayTTSNode data)
+    {
+      data.TranscriptIdentifier = EditorGUILayout.TextField("Transcript Identifier", data.TranscriptIdentifier);
+      data.WaitUntilFinished = EditorGUILayout.Toggle("Wait Until Finished", data.WaitUntilFinished);
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("Variables (Override)", EditorStyles.boldLabel);
+
+      if (data.Variables == null)
+        data.Variables = new System.Collections.Generic.Dictionary<string, string>();
+
+      var keys = new System.Collections.Generic.List<string>(data.Variables.Keys);
+      for (int i = 0; i < keys.Count; i++)
+      {
+        string key = keys[i];
+        EditorGUILayout.BeginHorizontal();
+        string newKey = EditorGUILayout.TextField(key, GUILayout.Width(120));
+        string newVal = EditorGUILayout.TextField(data.Variables[key]);
+        if (GUILayout.Button("-", GUILayout.Width(22)))
+        {
+          data.Variables.Remove(key);
+          break;
+        }
+        EditorGUILayout.EndHorizontal();
+
+        if (!string.Equals(newKey, key, System.StringComparison.Ordinal))
+        {
+          data.Variables.Remove(key);
+          if (!data.Variables.ContainsKey(newKey))
+            data.Variables[newKey] = newVal;
+        }
+        else
+        {
+          data.Variables[key] = newVal;
+        }
+      }
+
+      if (GUILayout.Button("Add Variable"))
+        data.Variables[$"var{data.Variables.Count}"] = string.Empty;
+
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
   }

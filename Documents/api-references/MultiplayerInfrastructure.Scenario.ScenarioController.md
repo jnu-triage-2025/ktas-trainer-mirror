@@ -47,6 +47,7 @@ public enum State
     ExecutingQuiz,                // 퀴즈 선택지 표시 중
     ExecutingStateUpdate,         // 상태 변수 갱신 중 (구현 예정)
     ExecutingRoleAssignment,      // 역할 배정 중
+    ExecutingTTS,                 // TTS 재생 중 (PlayTTS 노드)
 }
 ```
 
@@ -145,6 +146,7 @@ public void SelectOption(int index)
 | `CameraTarget` | `ExecutingCameraTarget` | 카메라 타겟 전환 (구현 예정) |
 | `Interaction` | `ExecutingInteraction` | 인터랙션 대기 (구현 예정) |
 | `CombineItem` | `ExecutingCombineItem` | 아이템 합성 (구현 예정) |
+| `PlayTTS` | `ExecutingTTS` | TTSService로 TTS 합성 재생. `WaitUntilFinished`에 따라 완료 대기 |
 
 ---
 
@@ -181,9 +183,34 @@ Inspector 참조를 코드로 주입할 때 사용합니다. 일반적으로 Uni
 
 ---
 
+## 10. TTS 연동 (PlayTTS 노드)
+
+`ScenarioController`에는 `TTSService` 연동을 위한 두 가지 Inspector 필드가 있습니다.
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `_ttsService` | `TTSService` | TTS 재생 서비스 참조 |
+| `_ttsAudioSource` | `AudioSource` | TTS 오디오를 출력할 `AudioSource` 참조 |
+
+`PlayTTS` 노드 실행 시 동작 순서:
+
+1. `_ttsService` 또는 `_ttsAudioSource`가 `null`이면 경고 로그 후 건너뙡니다.
+2. `TTSService.IsReady`가 `false`이면 `true`가 될 때까지 대기합니다.
+3. `TTSService.IsDynamicCacheDirty`가 `true`이면 사전 캐싱이 완료될 때까지 대기합니다.
+4. `PlayTranscript`를 호출하여 실제 재생합니다.
+5. `WaitUntilFinished`가 `true`면 재생 완료를 기다린 후 다음 노드로 진행합니다.
+
+### PrewarmTTSCache 자동 호출
+
+`StartScenario` 실행 시, 그래프 내 모든 `PlayTTS` 노드의 동적 세그먼트를 `TTSService.PrepareTranscriptVariables`로 일괄 사전 합성합니다.  
+이를 통해 노드 실행 시점에 TTS 생성 지연을 최소화할 수 있습니다.
+
+---
+
 ## 관련 문서
 
 - [multiplayer-infrastructure-guide.md](../multiplayer-infrastructure-guide.md) — 시나리오 시스템 개요
 - [scenario-authoring.md](../scenario-authoring.md) — 시나리오 작성 가이드
 - [scenario-graph.md](../scenario-graph.md) — 시나리오 노드 JSON 스펙
 - [api-references/MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md](MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md) — 이벤트 등록 API
+- [api-references/TextToSpeechService.TTSService.md](TextToSpeechService.TTSService.md) — TTSService API (`PlayTTS` 노드 연동)

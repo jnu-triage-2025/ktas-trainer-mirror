@@ -1,6 +1,10 @@
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace MultiplayerInfrastructure.ItemSystem
 {
   /// <summary>
@@ -25,11 +29,17 @@ namespace MultiplayerInfrastructure.ItemSystem
   /// </summary>
   public class SceneItemPlacement : MonoBehaviour
   {
+    public const string SceneViewVisibilityPrefKey = "MultiplayerInfrastructure.SceneItemPlacement.SceneViewVisible";
+    public const string SceneViewDisplayRangePrefKey = "MultiplayerInfrastructure.SceneItemPlacement.SceneViewDisplayRange";
+    public const float DefaultSceneViewDisplayRange = 25f;
+
+    [SerializeField] private string _entityIdentifier;
     [SerializeField] private string _itemIdentifier;
     [SerializeField, Min(1)] private int _stackCount = 1;
 
     /// <summary>인스펙터에서 설정한 아이템 식별자입니다.</summary>
     public string ItemIdentifier => _itemIdentifier;
+    public int StackCount => Mathf.Max(1, _stackCount);
 
     private void Start()
     {
@@ -50,16 +60,39 @@ namespace MultiplayerInfrastructure.ItemSystem
 
       item.CurrentStackCount = Mathf.Max(1, _stackCount);
 
-      var spawned = ItemObject.Spawn(item, transform.position);
+      if (!ShouldSpawnLocally())
+      {
+        Destroy(gameObject);
+        return;
+      }
+
+      var spawned = ItemObject.Spawn(item, transform.position, entityIdentifier: _entityIdentifier);
       if (spawned != null)
         spawned.transform.rotation = transform.rotation;
 
       Destroy(gameObject);
     }
 
+    private static bool ShouldSpawnLocally()
+    {
+      if (!Registry.Registry.Get<bool>(RegistryType.RuntimeState, RegistryGlobalKeys.LoadedFromIntroScene))
+        return true;
+
+      return Registry.Registry.Get<bool>(RegistryType.RuntimeState, RegistryGlobalKeys.IsOpeningServer);
+    }
+
 #if UNITY_EDITOR
+    private void OnValidate()
+    {
+      if (string.IsNullOrWhiteSpace(_entityIdentifier))
+        _entityIdentifier = global::MultiplayerInfrastructure.Registry.EntityId.Ensure(_entityIdentifier, gameObject, "scene-item");
+    }
+
     private void OnDrawGizmos()
     {
+      if (!ShouldDrawInSceneView())
+        return;
+
       bool hasId = !string.IsNullOrWhiteSpace(_itemIdentifier);
 
       // 배치 마커 구 (식별자 있으면 초록, 없으면 빨강)
@@ -78,11 +111,28 @@ namespace MultiplayerInfrastructure.ItemSystem
       string label = hasId ? _itemIdentifier : "(identifier 미설정)";
       UnityEditor.Handles.Label(
         transform.position + Vector3.up * 0.26f,
-        label,
-        new GUIStyle(UnityEditor.EditorStyles.miniLabel)
+        hasId ? $"{label} x{StackCount}" : label,
+        new GUIStyle(EditorStyles.miniLabel)
         {
           normal = { textColor = hasId ? Color.green : Color.red }
         });
+    }
+
+    private bool ShouldDrawInSceneView()
+    {
+      if (!EditorPrefs.GetBool(SceneViewVisibilityPrefKey, true))
+        return false;
+
+      float displayRange = Mathf.Max(0f, EditorPrefs.GetFloat(SceneViewDisplayRangePrefKey, DefaultSceneViewDisplayRange));
+      if (displayRange <= 0f)
+        return true;
+
+      var sceneView = SceneView.currentDrawingSceneView ?? SceneView.lastActiveSceneView;
+      UnityEngine.Camera sceneCamera = sceneView?.camera;
+      if (sceneCamera == null)
+        return true;
+
+      return Vector3.Distance(sceneCamera.transform.position, transform.position) <= displayRange;
     }
 #endif
   }

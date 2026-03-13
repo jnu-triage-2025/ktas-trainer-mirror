@@ -27,6 +27,7 @@ namespace MultiplayerInfrastructure.Command
       RegisterCommand(new CommandDefinition_Gamemode(_chatManager));
       RegisterCommand(new CommandDefinition_Give(_chatManager));
       RegisterCommand(new CommandDefinition_Clean(_chatManager));
+      RegisterCommand(new CommandDefinition_Tag(_chatManager));
       if (_scenarioRunner != null)
         RegisterCommand(new CommandDefinition_Scenario(_chatManager, _scenarioRunner));
       else

@@ -19,6 +19,8 @@ namespace MultiplayerInfrastructure.Scenario
     CombineItem,
     Quiz,
     StateUpdate,
-    RoleAssignment
+    RoleAssignment,
+    PlayTTS,
+    PlayerTag,
   }
 }

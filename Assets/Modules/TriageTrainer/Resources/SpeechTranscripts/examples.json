@@ -14,5 +14,19 @@
       "player-c": "플레이어 C",
       "player-d": "플레이어 D"
     }
+  },
+  {
+    "identifier": "tts-rhythm-report",
+    "basetext": "{rhythm} 리듬이 감지되었습니다. 팀 처치를 시작하십시오.",
+    "variables": {
+      "rhythm": "PEA"
+    }
+  },
+  {
+    "identifier": "tts-role-instruction",
+    "basetext": "역할 배정이 완료되었습니다. {role} 팀원은 지정된 위치로 이동하십시오.",
+    "variables": {
+      "role": "Doctor"
+    }
   }
 ]

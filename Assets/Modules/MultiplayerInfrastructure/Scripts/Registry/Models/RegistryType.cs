@@ -10,8 +10,23 @@ namespace MultiplayerInfrastructure.Registry
     IconSprite,
     Npc,
     Waypoint,
+    /// <summary>
+    /// 월드에 존재하는 엔티티 저장소. 값은 EntityDescriptor 이며, Get&lt;GameObject&gt; / Get&lt;Component&gt; 해석을 지원합니다.
+    /// </summary>
     Entity,
+    /// <summary>
+    /// 씬/런타임 서비스 저장소. QuestManager, MainCameraController 등의 싱글턴성 컨트롤러를 등록합니다.
+    /// </summary>
+    Service,
+    /// <summary>
+    /// 씬 전환 의도, 접속 정보 등 전역 상태값을 등록합니다.
+    /// </summary>
+    RuntimeState,
     InteractableEntity,
     UI,
+    /// <summary>
+    /// 플레이어 태그 레지스트리. 키는 UserDescriptor.Identifier(UUID), 값은 List&lt;string&gt;입니다.
+    /// </summary>
+    PlayerTag,
   }
 }
