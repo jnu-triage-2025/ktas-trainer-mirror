@@ -10,12 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 491b1e9631db04480aeb3638f973098a, type: 3}
-  m_Name: humidifier
+  m_Name: cline
   m_EditorClassIdentifier: Assembly-CSharp::ItemBaseModelSO
-  identifier: humidifier
-  displayName: "\uC2B5\uC724\uBCD1"
-  description: "\uBA78\uADE0\uC99D\uB958\uC218\uB97C \uCC44\uC6B8 \uC218 \uC788\uB294
-    \uC2B5\uC724\uBCD1"
+  identifier: cline
+  displayName: "\uC911\uC2EC\uC815\uB9E5\uAD00"
+  description: 
   hasDurability: 0
   maxDurability: 1
   maxStackCount: 64

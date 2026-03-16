@@ -277,7 +277,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6991914049428542592}
   m_Layer: 6
-  m_Name: SM_SupplyCart_02d
+  m_Name: swab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
