@@ -1,10 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using MultiplayerInfrastructure.ItemSystem;
-using TriageTrainer.ItemDefinitions;
-using TriageTrainer.Items;
+using MultiplayerInfrastructure.Definitions;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,7 +18,7 @@ namespace MultiplayerInfrastructure.Registry
       Entity,
       InteractableEntity,
       UiController,
-      TriageItemRegistrar
+      MultiplayerInfrastructureRegisterSupport
     }
 
     [SerializeField] private ValidationTarget selectedTarget;
@@ -47,7 +44,7 @@ namespace MultiplayerInfrastructure.Registry
     {
       EditorGUILayout.LabelField("Registry Preloader Validation Panel", EditorStyles.boldLabel);
       EditorGUILayout.HelpBox(
-        "Registry 등록에 사용하는 ScriptableObject 타입을 고른 뒤, 해당 SO를 지정하고 Validate를 실행하세요.",
+        "검사 대상을 선택한 뒤 Validate를 실행하세요. SO 타겟은 객체 지정이 필요하고, MultiplayerInfrastructureRegisterSupport 타겟은 등록/리소스 무결성을 직접 검사합니다.",
         MessageType.Info);
 
       selectedTarget = (ValidationTarget)EditorGUILayout.EnumPopup("Validate Target", selectedTarget);
@@ -65,18 +62,22 @@ namespace MultiplayerInfrastructure.Registry
       EditorGUILayout.Space(8f);
       using (new EditorGUILayout.HorizontalScope())
       {
-        using (new EditorGUI.DisabledScope(!CanValidateCurrentTarget()))
+        bool canValidate = CanValidateCurrentTarget();
+        var selectedSo = GetSelectedSo();
+
+        using (new EditorGUI.DisabledScope(!canValidate))
         {
           if (GUILayout.Button("Validate Selected Target", GUILayout.Height(28f)))
           {
             ValidateSelectedTarget();
           }
+        }
 
+        using (new EditorGUI.DisabledScope(selectedSo == null))
+        {
           if (GUILayout.Button("Ping Selected SO", GUILayout.Height(28f)))
           {
-            var selected = GetSelectedSo();
-            if (selected != null)
-              EditorGUIUtility.PingObject(selected);
+            EditorGUIUtility.PingObject(selectedSo);
           }
         }
       }
@@ -142,9 +143,9 @@ namespace MultiplayerInfrastructure.Registry
             false);
           break;
 
-        case ValidationTarget.TriageItemRegistrar:
+        case ValidationTarget.MultiplayerInfrastructureRegisterSupport:
           EditorGUILayout.HelpBox(
-            "TriageItemRegistrar.RegisterAll() 기준으로 아이템 식별자 등록/생성/모델 리소스 유효성을 검사합니다.",
+            "MultiplayerInfrastructureRegisterSupport.RegisterAllItems() 기준으로 아이템 등록/생성/리소스 유효성을 검사합니다.",
             MessageType.Info);
           break;
       }
@@ -167,14 +168,14 @@ namespace MultiplayerInfrastructure.Registry
 
     private bool CanValidateCurrentTarget()
     {
-      return selectedTarget == ValidationTarget.TriageItemRegistrar || GetSelectedSo() != null;
+      return selectedTarget == ValidationTarget.MultiplayerInfrastructureRegisterSupport || GetSelectedSo() != null;
     }
 
     private void ValidateSelectedTarget()
     {
-      if (selectedTarget == ValidationTarget.TriageItemRegistrar)
+      if (selectedTarget == ValidationTarget.MultiplayerInfrastructureRegisterSupport)
       {
-        ValidateTriageItemRegistrarTarget();
+        ValidateMultiplayerInfrastructureRegisterSupportTarget();
         return;
       }
 
@@ -226,32 +227,54 @@ namespace MultiplayerInfrastructure.Registry
         "확인");
     }
 
-    private void ValidateTriageItemRegistrarTarget()
+    private void ValidateMultiplayerInfrastructureRegisterSupportTarget()
     {
       var report = RegistryPreloaderValidationReport.Create();
-      report.AddInfo("=== Validate 'TriageItemRegistrar' ===", null);
+      report.AddInfo("=== Validate 'MultiplayerInfrastructureRegisterSupport' ===", null);
 
-      TriageItemRegistrar.RegisterAll();
-
-      var definitions = CollectMedicalItemDefinitions(report);
-      var used = new HashSet<string>(StringComparer.Ordinal);
-
-      for (int i = 0; i < definitions.Count; i++)
+      const string supportTypeName = "TriageTrainer.Items.MultiplayerInfrastructureRegisterSupport";
+      var supportType = FindTypeByFullName(supportTypeName);
+      if (supportType == null)
       {
-        var defType = definitions[i];
-        string row = $"TriageItem[{i}]";
-        var field = defType.GetField("Identifier", BindingFlags.Public | BindingFlags.Static);
-        string identifier = field?.GetValue(null) as string;
+        report.AddError($"타입을 찾을 수 없습니다: {supportTypeName}", null);
+        report.FlushLogs();
+        EditorUtility.DisplayDialog(
+          "Registry Preloader Validation",
+          report.BuildSummary($"검사 대상: {supportTypeName}"),
+          "확인");
+        return;
+      }
+
+      var registerAllItems = supportType.GetMethod("RegisterAllItems", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+      if (registerAllItems == null)
+      {
+        report.AddError("RegisterAllItems() 정적 메서드를 찾을 수 없습니다.", null);
+        report.FlushLogs();
+        EditorUtility.DisplayDialog(
+          "Registry Preloader Validation",
+          report.BuildSummary($"검사 대상: {supportTypeName}"),
+          "확인");
+        return;
+      }
+
+      registerAllItems.Invoke(null, null);
+
+      var registeredItems = Registry.GetAll<Type>(RegistryType.Item);
+      if (registeredItems.Count == 0)
+      {
+        report.AddError("RegistryType.Item에 등록된 항목이 없습니다.", null);
+      }
+
+      int index = 0;
+      foreach (var pair in registeredItems)
+      {
+        string identifier = pair.Key;
+        string row = $"RegisteredItem[{index}]";
+        index++;
 
         if (string.IsNullOrWhiteSpace(identifier))
         {
-          report.AddError($"{row}: {defType.Name}.Identifier가 비어 있습니다.", null);
-          continue;
-        }
-
-        if (!used.Add(identifier))
-        {
-          report.AddError($"{row}: 중복 identifier '{identifier}'가 있습니다.", null);
+          report.AddError($"{row}: identifier가 비어 있습니다.", null);
           continue;
         }
 
@@ -268,15 +291,16 @@ namespace MultiplayerInfrastructure.Registry
           continue;
         }
 
-        if (item is not Item typedItem)
-        {
-          report.AddError($"{row}: identifier '{identifier}' 결과가 Item 타입이 아닙니다.", null);
-          continue;
-        }
-
-        if (string.IsNullOrWhiteSpace(typedItem.CurrentIdentifier))
+        if (string.IsNullOrWhiteSpace(item.CurrentIdentifier))
         {
           report.AddError($"{row}: 생성된 아이템 CurrentIdentifier가 비어 있습니다. ({identifier})", null);
+        }
+
+        string iconPath = $"{DefaultsItemRegistry.ItemTexturesPath}/{identifier}";
+        var icon = Resources.Load<Sprite>(iconPath);
+        if (icon == null)
+        {
+          report.AddError($"{row}: 아이콘 리소스가 없습니다. (Resources/{iconPath})", null);
         }
 
         string modelPath = $"Models/Items/{identifier}";
@@ -290,31 +314,20 @@ namespace MultiplayerInfrastructure.Registry
       report.FlushLogs();
       EditorUtility.DisplayDialog(
         "Registry Preloader Validation",
-        report.BuildSummary($"검사 대상: {nameof(TriageItemRegistrar)}"),
+        report.BuildSummary($"검사 대상: {supportTypeName}"),
         "확인");
     }
 
-    private static List<Type> CollectMedicalItemDefinitions(RegistryPreloaderValidationReport report)
+    private static Type FindTypeByFullName(string fullName)
     {
-      var result = new List<Type>();
-
-      var allTypes = TypeCache.GetTypesDerivedFrom<MedicalItem>();
-      foreach (var t in allTypes)
+      foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
       {
-        if (t == null || t.IsAbstract)
-          continue;
-
-        var field = t.GetField("Identifier", BindingFlags.Public | BindingFlags.Static);
-        if (field == null || field.FieldType != typeof(string))
-        {
-          report.AddWarning($"{t.Name}: public const string Identifier가 없어 검사에서 제외합니다.", null);
-          continue;
-        }
-
-        result.Add(t);
+        var type = assembly.GetType(fullName, false);
+        if (type != null)
+          return type;
       }
 
-      return result;
+      return null;
     }
   }
 }

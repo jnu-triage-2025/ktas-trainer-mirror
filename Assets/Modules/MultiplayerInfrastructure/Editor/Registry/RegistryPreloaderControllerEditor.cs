@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using MultiplayerInfrastructure.Scenario;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace MultiplayerInfrastructure.Registry
 {

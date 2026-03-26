@@ -43,3 +43,4 @@
 ### 변경 기록:
 
 - [2026-02-16: Interactable/NPC/Icon 구조 개편](./update-notes/2026-02-16-interactable-npc-icon-refactor.md)
+- [2026-03-26: Registry Preloader Validation 도구 개편](./update-notes/2026-03-26-registry-preloader-validation-tooling.md)
