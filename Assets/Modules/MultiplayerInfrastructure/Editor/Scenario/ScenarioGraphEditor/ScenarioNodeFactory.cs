@@ -24,7 +24,6 @@ namespace MultiplayerInfrastructure.Editor
       ScenarioNodeType.Validator => new ScenarioValidatorNode(),
       ScenarioNodeType.QuestControl => new ScenarioQuestControlNode(),
       ScenarioNodeType.QuestWaypointHighlight => new ScenarioQuestWaypointHighlightNode(),
-      ScenarioNodeType.Notification => new ScenarioNotificationNode(),
       ScenarioNodeType.Delay => new ScenarioDelayNode(),
       ScenarioNodeType.Interaction => new ScenarioInteractionNode(),
       ScenarioNodeType.CombineItem => new ScenarioCombineItemNode
@@ -40,14 +39,7 @@ namespace MultiplayerInfrastructure.Editor
         }
       },
       ScenarioNodeType.StateUpdate => new ScenarioStateUpdateNode(),
-      ScenarioNodeType.RoleAssignment => new ScenarioRoleAssignmentNode
-      {
-        RoleOptions = new System.Collections.Generic.List<string>
-        {
-          "RoleA",
-          "RoleB"
-        }
-      },
+      ScenarioNodeType.PlayerTag => new ScenarioPlayerTagNode(),
       ScenarioNodeType.PlayTTS => new ScenarioPlayTTSNode(),
       _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };

@@ -1,0 +1,117 @@
+{
+  "identifier": "disaster_intro.unsupported.flags",
+  "sourceScenario": "Documents/scenario/disaster_intro.md",
+  "generatedFrom": "disaster_intro conversion",
+  "status": "needs-follow-up-implementation",
+  "unsupportedSourceConstructs": [
+    {
+      "sourceNodeIdentifier": "V001",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_vital_set",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_vital_set"
+    },
+    {
+      "sourceNodeIdentifier": "V002",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_patientA",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_patientA"
+    },
+    {
+      "sourceNodeIdentifier": "V003",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_dummyA",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_dummyA"
+    },
+    {
+      "sourceNodeIdentifier": "V004",
+      "sourceType": "Validator",
+      "sourceCondition": "Move_patientA",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.move_patientA"
+    },
+    {
+      "sourceNodeIdentifier": "V005",
+      "sourceType": "Validator",
+      "sourceCondition": "Enter_Treatmentroom",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.enter_treatmentroom_count_2"
+    },
+    {
+      "sourceNodeIdentifier": "V006",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_ns1, Click_iv_set",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_ns1_and_iv_set"
+    },
+    {
+      "sourceNodeIdentifier": "V007",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_ps1, Click_iv_set",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_ps1_and_iv_set"
+    },
+    {
+      "sourceNodeIdentifier": "V008",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_blood",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_blood"
+    },
+    {
+      "sourceNodeIdentifier": "V009",
+      "sourceType": "Validator",
+      "sourceCondition": "Enter_TriageZone",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.enter_triage_zone_count_3"
+    },
+    {
+      "sourceNodeIdentifier": "C002-Wrong",
+      "sourceType": "ChoiceOptionNode",
+      "reason": "Schema does not support separate ChoiceOptionNode",
+      "convertedTo": "Choice.options merge",
+      "mergedInto": "C002"
+    },
+    {
+      "sourceNodeIdentifier": "C002-Correct",
+      "sourceType": "ChoiceOptionNode",
+      "reason": "Schema does not support separate ChoiceOptionNode",
+      "convertedTo": "Choice.options merge",
+      "mergedInto": "C002"
+    }
+  ],
+  "followUpEventsToImplement": [
+    "todo.validate.click_vital_set",
+    "todo.validate.click_patientA",
+    "todo.validate.click_dummyA",
+    "todo.validate.move_patientA",
+    "todo.validate.enter_treatmentroom_count_2",
+    "todo.validate.click_ns1_and_iv_set",
+    "todo.validate.click_ps1_and_iv_set",
+    "todo.validate.click_blood",
+    "todo.validate.enter_triage_zone_count_3"
+  ],
+  "enumConversionsApplied": [
+    {
+      "field": "P001.waitMode",
+      "from": "WaitAll",
+      "to": "All"
+    },
+    {
+      "field": "P001.allocationType",
+      "from": "ByRole",
+      "to": "SelfAll"
+    }
+  ]
+}

@@ -6,6 +6,7 @@ using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Session;
+using MultiplayerInfrastructure.Tag;
 using UnityEngine;
 using FishNet.Connection;
 
@@ -58,6 +59,7 @@ namespace MultiplayerInfrastructure.Player
       PlayerGamemodeService.RegisterPlayer(this);
       UserDescriptorService.Register(Owner.ClientId, descriptor);
       RegisterPlayerEntity();
+      SyncPlayerTagsToObservers();
       SyncExistingWorldItemsToConnection(Owner);
     }
 
@@ -65,6 +67,7 @@ namespace MultiplayerInfrastructure.Player
     {
       PlayerGamemodeService.UnregisterPlayer(this);
       Registry.Registry.UnregisterEntity(_entityIdentifier.Value);
+      PlayerTagService.ClearTags(_userIdentifier.Value);
       UserDescriptorService.Unregister(_userIdentifier.Value);
       base.OnStopServer();
     }
@@ -91,6 +94,7 @@ namespace MultiplayerInfrastructure.Player
     {
       _userDisplayName.OnChange -= OnDisplayNameChanged;
       Registry.Registry.UnregisterEntity(_entityIdentifier.Value);
+      PlayerTagService.ClearTags(_userIdentifier.Value);
       UserDescriptorService.Unregister(_userIdentifier.Value);
     }
 
@@ -98,6 +102,32 @@ namespace MultiplayerInfrastructure.Player
     {
       UserDescriptorService.UpdateDisplayName(_userIdentifier.Value, next);
       Registry.Registry.UpdateEntityDisplayName(_entityIdentifier.Value, next);
+    }
+
+    /// <summary>
+    /// 서버에서 현재 플레이어의 태그 목록을 모든 옵저버에게 동기화합니다.
+    /// </summary>
+    public void SyncPlayerTagsToObservers()
+    {
+      if (!IsServerStarted || string.IsNullOrWhiteSpace(_userIdentifier.Value))
+      {
+        return;
+      }
+
+      var currentTags = PlayerTagService.GetTags(_userIdentifier.Value);
+      var snapshot = new string[currentTags.Count];
+      for (int i = 0; i < currentTags.Count; i++)
+      {
+        snapshot[i] = currentTags[i];
+      }
+
+      RpcApplyPlayerTags(_userIdentifier.Value, snapshot);
+    }
+
+    [ObserversRpc(BufferLast = true)]
+    private void RpcApplyPlayerTags(string userIdentifier, string[] tags)
+    {
+      PlayerTagService.ReplaceTags(userIdentifier, tags);
     }
 
     // ── Owner 전용 초기화 ─────────────────────────────────────────────────────

@@ -64,6 +64,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       var graph = new ScenarioGraph();
       graph.Identifier = ResolveGraphIdentifier(dto);
+      graph.Tags = NormalizeTags(dto.Tags);
 
       foreach (var pair in dto.Nodes)
       {
@@ -82,7 +83,100 @@ namespace MultiplayerInfrastructure.Scenario
         graph.Add(ConvertNode(nodeDTO));
       }
 
+      WarnForUndeclaredTags(graph);
+
       return graph;
+    }
+
+    private static IReadOnlyList<string> NormalizeTags(IEnumerable<string> tags)
+    {
+      if (tags == null)
+      {
+        return Array.Empty<string>();
+      }
+
+      return tags
+          .Where(each => !string.IsNullOrWhiteSpace(each))
+          .Select(each => each.Trim())
+          .Distinct(StringComparer.OrdinalIgnoreCase)
+          .ToList();
+    }
+
+    private static void WarnForUndeclaredTags(ScenarioGraph graph)
+    {
+      if (graph == null)
+      {
+        return;
+      }
+
+      var declared = new HashSet<string>(NormalizeTags(graph.Tags), StringComparer.OrdinalIgnoreCase);
+      var used = CollectUsedTags(graph);
+
+      var undeclared = used
+          .Where(each => !declared.Contains(each))
+          .OrderBy(each => each, StringComparer.OrdinalIgnoreCase)
+          .ToList();
+
+      if (undeclared.Count == 0)
+      {
+        return;
+      }
+
+      Debug.LogWarning(
+          $"[ScenarioGraphLoader] Scenario '{graph.Identifier}' uses undeclared tags: " +
+          $"[{string.Join(", ", undeclared)}]. " +
+          "Declare these in top-level 'tags' for deterministic authoring.");
+    }
+
+    private static HashSet<string> CollectUsedTags(ScenarioGraph graph)
+    {
+      var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+      void AddIfNotBlank(string value)
+      {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+          used.Add(value.Trim());
+        }
+      }
+
+      foreach (var node in graph.Nodes.Values)
+      {
+        switch (node)
+        {
+          case ScenarioPlayerTagNode tagNode:
+            AddIfNotBlank(tagNode.Tag);
+            AddIfNotBlank(tagNode.FromTag);
+            AddIfNotBlank(tagNode.ToTag);
+            break;
+
+          case ScenarioParallelNode parallelNode:
+            if (parallelNode.Branches != null)
+            {
+              foreach (var branch in parallelNode.Branches)
+              {
+                if (branch?.RequiredPlayerTags != null)
+                {
+                  foreach (var requiredTag in branch.RequiredPlayerTags)
+                  {
+                    AddIfNotBlank(requiredTag);
+                  }
+                }
+
+                if (branch?.ForbiddenPlayerTags != null)
+                {
+                  foreach (var forbiddenTag in branch.ForbiddenPlayerTags)
+                  {
+                    AddIfNotBlank(forbiddenTag);
+                  }
+                }
+              }
+            }
+            break;
+        }
+      }
+
+      return used;
     }
 
     private static string ResolveGraphIdentifier(ScenarioGraphDTO dto)
@@ -116,13 +210,11 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioParallelNodeDTO parallel => ConvertParallel(parallel),
           ScenarioQuestControlNodeDTO questControl => ConvertQuestControl(questControl),
           ScenarioQuestWaypointHighlightNodeDTO highlight => ConvertQuestWaypointHighlight(highlight),
-          ScenarioNotificationNodeDTO notification => ConvertNotification(notification),
           ScenarioDelayNodeDTO delay => ConvertDelay(delay),
           ScenarioInteractionNodeDTO interaction => ConvertInteraction(interaction),
           ScenarioCombineItemNodeDTO combineItem => ConvertCombineItem(combineItem),
           ScenarioQuizNodeDTO quiz => ConvertQuiz(quiz),
           ScenarioStateUpdateNodeDTO stateUpdate => ConvertStateUpdate(stateUpdate),
-          ScenarioRoleAssignmentNodeDTO roleAssignment => ConvertRoleAssignment(roleAssignment),
           ScenarioPlayTTSNodeDTO playTTS => ConvertPlayTTS(playTTS),
           ScenarioPlayerTagNodeDTO playerTag => ConvertPlayerTag(playerTag),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
@@ -273,16 +365,6 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = dto.NextIdentifier
         };
 
-    private static ScenarioNotificationNode ConvertNotification(ScenarioNotificationNodeDTO dto) =>
-        new ScenarioNotificationNode
-        {
-          Identifier = dto.Identifier,
-          Message = dto.Message,
-          DisplayMode = ParseNotificationDisplayMode(dto.DisplayMode),
-          Duration = dto.Duration,
-          NextIdentifier = dto.NextIdentifier
-        };
-
     private static ScenarioDelayNode ConvertDelay(ScenarioDelayNodeDTO dto) =>
         new ScenarioDelayNode
         {
@@ -338,15 +420,6 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = dto.NextIdentifier
         };
 
-    private static ScenarioRoleAssignmentNode ConvertRoleAssignment(ScenarioRoleAssignmentNodeDTO dto) =>
-        new ScenarioRoleAssignmentNode
-        {
-          Identifier = dto.Identifier,
-          RoleOptions = dto.RoleOptions ?? new List<string>(),
-          AssignmentMode = ParseRoleAssignmentMode(dto.AssignmentMode),
-          NextIdentifier = dto.NextIdentifier
-        };
-
     private static ScenarioPlayTTSNode ConvertPlayTTS(ScenarioPlayTTSNodeDTO dto) =>
         new ScenarioPlayTTSNode
         {
@@ -385,7 +458,7 @@ namespace MultiplayerInfrastructure.Scenario
     private static ScenarioPlayerTagNodeDTO ConvertToDTO(ScenarioPlayerTagNode node) =>
         new ScenarioPlayerTagNodeDTO
         {
-          NodeType = "PlayerTag",
+          NodeType = "TagModification",
           Identifier = node.Identifier,
           Operation = node.Operation.ToString(),
           Scope = node.Scope.ToString(),
@@ -412,7 +485,9 @@ namespace MultiplayerInfrastructure.Scenario
           {
             Identifier = branchDTO.Identifier,
             CompletionConditionIdentifier = branchDTO.CompletionConditionIdentifier,
-            RequiredRoleIdentifiers = branchDTO.RequiredRoleIdentifiers ?? new List<string>()
+            RequiredPlayerTags = branchDTO.RequiredPlayerTags ?? new List<string>(),
+            ForbiddenPlayerTags = branchDTO.ForbiddenPlayerTags ?? new List<string>(),
+            RequiredPlayerTagsMatchMode = ParsePlayerTagMatchMode(branchDTO.RequiredPlayerTagsMatchMode)
           });
         }
       }
@@ -495,21 +570,6 @@ namespace MultiplayerInfrastructure.Scenario
       throw new JsonException($"Unknown ScenarioMoveDestinationType '{destinationTypeText}'.");
     }
 
-    private static ScenarioNotificationDisplayMode ParseNotificationDisplayMode(string value)
-    {
-      if (string.IsNullOrWhiteSpace(value))
-      {
-        return ScenarioNotificationDisplayMode.Overlay;
-      }
-
-      if (Enum.TryParse(value, ignoreCase: true, out ScenarioNotificationDisplayMode parsed))
-      {
-        return parsed;
-      }
-
-      throw new JsonException($"Unknown ScenarioNotificationDisplayMode '{value}'.");
-    }
-
     private static ScenarioDelayWaitUntil ParseDelayWaitUntil(string value)
     {
       if (string.IsNullOrWhiteSpace(value))
@@ -553,21 +613,6 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       throw new JsonException($"Unknown ScenarioInteractionType '{value}'.");
-    }
-
-    private static ScenarioRoleAssignmentMode ParseRoleAssignmentMode(string value)
-    {
-      if (string.IsNullOrWhiteSpace(value))
-      {
-        return ScenarioRoleAssignmentMode.Select;
-      }
-
-      if (Enum.TryParse(value, ignoreCase: true, out ScenarioRoleAssignmentMode parsed))
-      {
-        return parsed;
-      }
-
-      throw new JsonException($"Unknown ScenarioRoleAssignmentMode '{value}'.");
     }
 
     private static ScenarioPlayerTagOperationType ParsePlayerTagOperationType(string value)
@@ -620,6 +665,7 @@ namespace MultiplayerInfrastructure.Scenario
       var dto = new ScenarioGraphDTO
       {
         Identifier = string.IsNullOrWhiteSpace(graph.Identifier) ? "scenario_graph" : graph.Identifier.Trim(),
+        Tags = NormalizeTags(graph.Tags).ToList(),
         Nodes = new Dictionary<string, ScenarioNodeDTO>()
       };
 
@@ -645,13 +691,11 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioParallelNode parallel => ConvertToDTO(parallel),
           ScenarioQuestControlNode questControl => ConvertToDTO(questControl),
           ScenarioQuestWaypointHighlightNode waypointHighlight => ConvertToDTO(waypointHighlight),
-          ScenarioNotificationNode notification => ConvertToDTO(notification),
           ScenarioDelayNode delay => ConvertToDTO(delay),
           ScenarioInteractionNode interaction => ConvertToDTO(interaction),
           ScenarioCombineItemNode combineItem => ConvertToDTO(combineItem),
           ScenarioQuizNode quiz => ConvertToDTO(quiz),
           ScenarioStateUpdateNode stateUpdate => ConvertToDTO(stateUpdate),
-          ScenarioRoleAssignmentNode roleAssignment => ConvertToDTO(roleAssignment),
           ScenarioPlayTTSNode playTTS => ConvertToDTO(playTTS),
           ScenarioPlayerTagNode playerTag => ConvertToDTO(playerTag),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
@@ -795,17 +839,6 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = node.NextIdentifier
         };
 
-    private static ScenarioNotificationNodeDTO ConvertToDTO(ScenarioNotificationNode node) =>
-        new ScenarioNotificationNodeDTO
-        {
-          NodeType = "Notification",
-          Identifier = node.Identifier,
-          Message = node.Message,
-          DisplayMode = node.DisplayMode.ToString(),
-          Duration = node.Duration,
-          NextIdentifier = node.NextIdentifier
-        };
-
     private static ScenarioDelayNodeDTO ConvertToDTO(ScenarioDelayNode node) =>
         new ScenarioDelayNodeDTO
         {
@@ -863,16 +896,6 @@ namespace MultiplayerInfrastructure.Scenario
           TargetEntityIdentifier = node.TargetEntityIdentifier,
           StateKey = node.StateKey,
           StateValue = node.StateValue,
-          NextIdentifier = node.NextIdentifier
-        };
-
-    private static ScenarioRoleAssignmentNodeDTO ConvertToDTO(ScenarioRoleAssignmentNode node) =>
-        new ScenarioRoleAssignmentNodeDTO
-        {
-          NodeType = "RoleAssignment",
-          Identifier = node.Identifier,
-          RoleOptions = node.RoleOptions?.ToList() ?? new List<string>(),
-          AssignmentMode = node.AssignmentMode.ToString(),
           NextIdentifier = node.NextIdentifier
         };
 
@@ -935,7 +958,9 @@ namespace MultiplayerInfrastructure.Scenario
         {
           Identifier = branch.Identifier,
           CompletionConditionIdentifier = branch.CompletionConditionIdentifier,
-          RequiredRoleIdentifiers = branch.RequiredRoleIdentifiers?.ToList() ?? new List<string>()
+          RequiredPlayerTags = branch.RequiredPlayerTags?.ToList() ?? new List<string>(),
+          ForbiddenPlayerTags = branch.ForbiddenPlayerTags?.ToList() ?? new List<string>(),
+          RequiredPlayerTagsMatchMode = branch.RequiredPlayerTagsMatchMode.ToString()
         });
       }
 
@@ -970,6 +995,21 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       throw new JsonException($"Unknown ScenarioParallelMismatchHandling '{value}'.");
+    }
+
+    private static ScenarioPlayerTagMatchMode ParsePlayerTagMatchMode(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioPlayerTagMatchMode.All;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioPlayerTagMatchMode parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioPlayerTagMatchMode '{value}'.");
     }
   }
 }

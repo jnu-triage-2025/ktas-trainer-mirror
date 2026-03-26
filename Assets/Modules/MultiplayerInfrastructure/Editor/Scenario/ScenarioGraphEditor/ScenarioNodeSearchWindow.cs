@@ -33,13 +33,12 @@ namespace MultiplayerInfrastructure.Editor
             new SearchTreeEntry(new GUIContent("Parallel")) { level = 1, userData = ScenarioNodeType.Parallel },
             new SearchTreeEntry(new GUIContent("Quest Control")) { level = 1, userData = ScenarioNodeType.QuestControl },
             new SearchTreeEntry(new GUIContent("Quest Waypoint Highlight")) { level = 1, userData = ScenarioNodeType.QuestWaypointHighlight },
-            new SearchTreeEntry(new GUIContent("Notification")) { level = 1, userData = ScenarioNodeType.Notification },
             new SearchTreeEntry(new GUIContent("Delay")) { level = 1, userData = ScenarioNodeType.Delay },
             new SearchTreeEntry(new GUIContent("Interaction")) { level = 1, userData = ScenarioNodeType.Interaction },
             new SearchTreeEntry(new GUIContent("Combine Item")) { level = 1, userData = ScenarioNodeType.CombineItem },
             new SearchTreeEntry(new GUIContent("Quiz")) { level = 1, userData = ScenarioNodeType.Quiz },
             new SearchTreeEntry(new GUIContent("State Update")) { level = 1, userData = ScenarioNodeType.StateUpdate },
-            new SearchTreeEntry(new GUIContent("Role Assignment")) { level = 1, userData = ScenarioNodeType.RoleAssignment },
+            new SearchTreeEntry(new GUIContent("Tag Modification")) { level = 1, userData = ScenarioNodeType.PlayerTag },
             new SearchTreeEntry(new GUIContent("Play TTS")) { level = 1, userData = ScenarioNodeType.PlayTTS }
         };
     }

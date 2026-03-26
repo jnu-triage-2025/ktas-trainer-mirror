@@ -2,6 +2,13 @@
 
 이 문서는 원본 시나리오 텍스트를 바탕으로, 구현이 필요한 핵심 상호작용을 이벤트 단위로 정리한 목록입니다. 새로운 이벤트는 [Documents/scenario/event-registry.md](event-registry.md)에 기록합니다.
 
+> 참고: 아래 표에는 초기 설계 단계 식별자도 포함됩니다. 런타임에서 실제 사용하는 EventIdentifier는 [Documents/scenario/event-registry.md](event-registry.md)를 기준으로 확정합니다.
+
+## 태그/분기 연계 메모
+
+- 역할/태그 분기 동작 변경이 포함되는 이벤트는 시나리오 본문의 ParallelBranch 표(`RequiredPlayerTags`, `ForbiddenPlayerTags`, `RequiredPlayerTagsMatchMode`)와 함께 수정합니다.
+- 이벤트에서 플레이어 태그를 변경하는 흐름은 `TagModification` 노드로 작성하고, 그래프 상위 `tags` 선언과 일치하도록 유지합니다.
+
 ## 이벤트 목록 (핵심 상호작용)
 
 | 구간 | EventIdentifier | 내용 요약 | 구현 포인트 |

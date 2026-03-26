@@ -111,9 +111,6 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.QuestWaypointHighlight:
           DrawQuestWaypointHighlightFields((ScenarioQuestWaypointHighlightNode)data);
           break;
-        case ScenarioNodeType.Notification:
-          DrawNotificationFields((ScenarioNotificationNode)data);
-          break;
         case ScenarioNodeType.Delay:
           DrawDelayFields((ScenarioDelayNode)data);
           break;
@@ -129,8 +126,8 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.StateUpdate:
           DrawStateUpdateFields((ScenarioStateUpdateNode)data);
           break;
-        case ScenarioNodeType.RoleAssignment:
-          DrawRoleAssignmentFields((ScenarioRoleAssignmentNode)data);
+        case ScenarioNodeType.PlayerTag:
+          DrawTagModificationFields((ScenarioPlayerTagNode)data);
           break;
         case ScenarioNodeType.PlayTTS:
           DrawPlayTTSFields((ScenarioPlayTTSNode)data);
@@ -319,11 +316,25 @@ namespace MultiplayerInfrastructure.Editor
         branch.CompletionConditionIdentifier =
             EditorGUILayout.TextField("Completion Condition", branch.CompletionConditionIdentifier);
 
-        var currentRoles = branch.RequiredRoleIdentifiers == null || branch.RequiredRoleIdentifiers.Count == 0
+        var currentTags = branch.RequiredPlayerTags == null || branch.RequiredPlayerTags.Count == 0
           ? string.Empty
-          : string.Join(",", branch.RequiredRoleIdentifiers);
-        var roleText = EditorGUILayout.TextField("Required Roles(csv)", currentRoles);
-        branch.RequiredRoleIdentifiers = roleText
+          : string.Join(",", branch.RequiredPlayerTags);
+        var tagText = EditorGUILayout.TextField("Required Player Tags(csv)", currentTags);
+        branch.RequiredPlayerTags = tagText
+          .Split(',')
+          .Select(each => each.Trim())
+          .Where(each => !string.IsNullOrEmpty(each))
+          .ToList();
+
+        branch.RequiredPlayerTagsMatchMode = (ScenarioPlayerTagMatchMode)EditorGUILayout.EnumPopup(
+          "Player Tag Match Mode",
+          branch.RequiredPlayerTagsMatchMode);
+
+        var currentForbiddenTags = branch.ForbiddenPlayerTags == null || branch.ForbiddenPlayerTags.Count == 0
+          ? string.Empty
+          : string.Join(",", branch.ForbiddenPlayerTags);
+        var forbiddenTagText = EditorGUILayout.TextField("Forbidden Player Tags(csv)", currentForbiddenTags);
+        branch.ForbiddenPlayerTags = forbiddenTagText
           .Split(',')
           .Select(each => each.Trim())
           .Where(each => !string.IsNullOrEmpty(each))
@@ -379,17 +390,6 @@ namespace MultiplayerInfrastructure.Editor
     private void DrawQuestWaypointHighlightFields(ScenarioQuestWaypointHighlightNode data)
     {
       data.WaypointIdentifier = EditorGUILayout.TextField("Waypoint Identifier", data.WaypointIdentifier);
-      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
-    }
-
-    private void DrawNotificationFields(ScenarioNotificationNode data)
-    {
-      data.Message = EditorGUILayout.TextField("Message", data.Message);
-      data.DisplayMode = (ScenarioNotificationDisplayMode)EditorGUILayout.EnumPopup("Display Mode", data.DisplayMode);
-      var duration = data.Duration ?? 0f;
-      data.Duration = EditorGUILayout.Toggle("Use Duration", data.Duration.HasValue)
-          ? EditorGUILayout.FloatField("Duration", duration)
-          : null;
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
 
@@ -499,37 +499,6 @@ namespace MultiplayerInfrastructure.Editor
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
 
-    private void DrawRoleAssignmentFields(ScenarioRoleAssignmentNode data)
-    {
-      if (data.RoleOptions == null)
-      {
-        data.RoleOptions = new System.Collections.Generic.List<string>();
-      }
-
-      var options = data.RoleOptions.ToList();
-      EditorGUILayout.LabelField("Role Options", EditorStyles.boldLabel);
-      for (int i = 0; i < options.Count; i++)
-      {
-        EditorGUILayout.BeginHorizontal();
-        options[i] = EditorGUILayout.TextField($"Role {i + 1}", options[i]);
-        if (GUILayout.Button("-", GUILayout.Width(22)))
-        {
-          options.RemoveAt(i);
-          i--;
-        }
-        EditorGUILayout.EndHorizontal();
-      }
-
-      if (GUILayout.Button("Add Role"))
-      {
-        options.Add(string.Empty);
-      }
-
-      data.RoleOptions = options;
-      data.AssignmentMode = (ScenarioRoleAssignmentMode)EditorGUILayout.EnumPopup("Assignment Mode", data.AssignmentMode);
-      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
-    }
-
     private void DrawPlayTTSFields(ScenarioPlayTTSNode data)
     {
       data.TranscriptIdentifier = EditorGUILayout.TextField("Transcript Identifier", data.TranscriptIdentifier);
@@ -569,6 +538,27 @@ namespace MultiplayerInfrastructure.Editor
 
       if (GUILayout.Button("Add Variable"))
         data.Variables[$"var{data.Variables.Count}"] = string.Empty;
+
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawTagModificationFields(ScenarioPlayerTagNode data)
+    {
+      data.Operation = (ScenarioPlayerTagOperationType)EditorGUILayout.EnumPopup("Operation", data.Operation);
+      data.Scope = (ScenarioPlayerTagScope)EditorGUILayout.EnumPopup("Scope", data.Scope);
+
+      switch (data.Operation)
+      {
+        case ScenarioPlayerTagOperationType.Add:
+        case ScenarioPlayerTagOperationType.Remove:
+          data.Tag = EditorGUILayout.TextField("Tag", data.Tag);
+          break;
+
+        case ScenarioPlayerTagOperationType.Change:
+          data.FromTag = EditorGUILayout.TextField("From Tag", data.FromTag);
+          data.ToTag = EditorGUILayout.TextField("To Tag", data.ToTag);
+          break;
+      }
 
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
