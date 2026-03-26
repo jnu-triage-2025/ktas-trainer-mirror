@@ -12,6 +12,13 @@ namespace MultiplayerInfrastructure.Player
     {
       if (_hotbarUI == null)
         _hotbarUI = Registry.Registry.Get<HotbarUIController>(RegistryType.UI, Registry.Registry.TypeKey<HotbarUIController>());
+
+      if (_hotbarUI == null)
+      {
+        Debug.LogWarning("[PlayerController] HotbarUIController is not available. Skipping hotbar startup for now.");
+        return;
+      }
+
       _hotbarUI.SetupHotbarUI();
       _hotbarUI.BindInventory(_slots);
     }

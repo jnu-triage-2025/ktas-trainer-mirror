@@ -15,6 +15,11 @@ namespace MultiplayerInfrastructure.UI
     {
       Registry.Registry.Register(RegistryType.UI, Registry.Registry.TypeKey(GetType()), this);
     }
+
+    protected virtual void OnDestroy()
+    {
+      Registry.Registry.Unregister(RegistryType.UI, Registry.Registry.TypeKey(GetType()));
+    }
   }
 }
 

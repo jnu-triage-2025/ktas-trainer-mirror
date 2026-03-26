@@ -74,6 +74,12 @@ namespace MultiplayerInfrastructure.Registry
         return default;
       }
 
+      if (definition is UnityEngine.Object unityObject && unityObject == null)
+      {
+        registry.Remove(identifier);
+        return default;
+      }
+
       if (!TryResolveScenarioGraph(registryType, identifier, registry, ref definition, validateWithSchema: true))
       {
         return default;
@@ -100,7 +106,16 @@ namespace MultiplayerInfrastructure.Registry
       }
 
       var registry = ResolveRegistry(registryType);
-      return registry.ContainsKey(identifier);
+      if (!registry.TryGetValue(identifier, out var definition))
+        return false;
+
+      if (definition is UnityEngine.Object unityObject && unityObject == null)
+      {
+        registry.Remove(identifier);
+        return false;
+      }
+
+      return true;
     }
 
     public static bool TryGet<T>(RegistryType registryType, string identifier, out T value)
@@ -116,6 +131,12 @@ namespace MultiplayerInfrastructure.Registry
       var registry = ResolveRegistry(registryType);
       if (!registry.TryGetValue(identifier, out var definition))
       {
+        return false;
+      }
+
+      if (definition is UnityEngine.Object unityObject && unityObject == null)
+      {
+        registry.Remove(identifier);
         return false;
       }
 

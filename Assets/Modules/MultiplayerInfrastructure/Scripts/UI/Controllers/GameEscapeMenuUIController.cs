@@ -1,5 +1,5 @@
 using MultiplayerInfrastructure.Registry;
-using MultiplayerInfrastructure.Session;
+using MultiplayerInfrastructure.FishNetSupports;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
@@ -129,9 +129,16 @@ namespace MultiplayerInfrastructure.UI
 
     private void HandleTitleClicked()
     {
-      FishNetNetworkManagerInjection.Instance.StopClient();
+      var fishNetSupport = FishNetSupport.Instance ?? FindFirstObjectByType<FishNetSupport>();
+      if (fishNetSupport != null)
+        fishNetSupport.StopClient();
+
       if (Registry.Registry.Get<bool>(RegistryType.RuntimeState, RegistryGlobalKeys.IsOpeningServer))
-        FishNetNetworkManagerInjection.Instance.StopServer();
+      {
+        if (fishNetSupport != null)
+          fishNetSupport.StopServer();
+      }
+
       SceneManager.LoadScene(introSceneName);
     }
 

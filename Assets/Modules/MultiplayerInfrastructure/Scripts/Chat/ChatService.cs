@@ -5,6 +5,7 @@ using FishNet.Object;
 using MultiplayerInfrastructure.Command;
 using MultiplayerInfrastructure.Datapack;
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
@@ -19,7 +20,6 @@ namespace MultiplayerInfrastructure.Chat
     [Header("References")]
     [SerializeField] private ChatUIController _uiController;
     [SerializeField] private ChatCommandService _commandService;
-    [SerializeField] private ScenarioCommandRunner _scenarioRunner;
     [SerializeField] private DatapackRuntimeService _datapackRuntime;
     
     private readonly Dictionary<int, float> _lastMessageTimes = new();
@@ -32,9 +32,6 @@ namespace MultiplayerInfrastructure.Chat
         _commandService = GetComponent<ChatCommandService>();
       if (_datapackRuntime == null)
         _datapackRuntime = GetComponent<DatapackRuntimeService>();
-      // TODO: 다른 참조 방식 강구해보기
-      if (_scenarioRunner == null)
-        _scenarioRunner = FindFirstObjectByType<ScenarioCommandRunner>();
 
       if (_datapackRuntime == null)
         _datapackRuntime = gameObject.AddComponent<DatapackRuntimeService>();
@@ -45,7 +42,7 @@ namespace MultiplayerInfrastructure.Chat
         enabled = false;
         return;
       }
-      _commandService.Initialize(this, _scenarioRunner);
+      _commandService.Initialize(this);
 
       _uiController.OnSubmitted += HandleLocalSubmission;
     }
@@ -105,6 +102,25 @@ namespace MultiplayerInfrastructure.Chat
       _uiController.AppendMessage($"<color=#FFD700>[System]</color> {message}", showToastWhenHidden: true);
     }
 
+    [TargetRpc]
+    private void TargetRunScenario(NetworkConnection conn, string scenarioIdentifier, int ownerClientId)
+    {
+      if (!Registry.Registry.TryGetScenarioGraph(scenarioIdentifier, out ScenarioGraph graph, out string error))
+      {
+        Debug.LogWarning($"[ChatService] Failed to load scenario '{scenarioIdentifier}': {error}");
+        return;
+      }
+
+      if (ScenarioController.Instance == null)
+      {
+        Debug.LogWarning("[ChatService] ScenarioController is missing on this client.");
+        return;
+      }
+
+      int? owner = ownerClientId >= 0 ? ownerClientId : (int?)null;
+      ScenarioController.Instance.StartScenario(graph, null, owner);
+    }
+
 #endregion
 
 #region Helpers
@@ -135,6 +151,48 @@ namespace MultiplayerInfrastructure.Chat
         TargetReceiveSystemMessage(conn, message);
       else
         Debug.Log($"[System] {message}");
+    }
+
+    public bool TryDispatchScenario(string scenarioIdentifier, IEnumerable<NetworkConnection> targets, out string error)
+    {
+      error = string.Empty;
+
+      if (!IsServer)
+      {
+        error = "Scenario execution can only be invoked on the server.";
+        return false;
+      }
+
+      if (!Registry.Registry.Contains(RegistryType.ScenarioGraph, scenarioIdentifier))
+      {
+        error = $"Scenario '{scenarioIdentifier}' is not registered.";
+        return false;
+      }
+
+      if (targets == null)
+      {
+        error = "No target players were matched.";
+        return false;
+      }
+
+      bool anyTarget = false;
+      foreach (var target in targets)
+      {
+        if (target == null)
+          continue;
+
+        anyTarget = true;
+        int ownerId = target.ClientId >= 0 ? (int)target.ClientId : -1;
+        TargetRunScenario(target, scenarioIdentifier, ownerId);
+      }
+
+      if (!anyTarget)
+      {
+        error = "No target players were matched.";
+        return false;
+      }
+
+      return true;
     }
 
     public bool TryExecuteSystemCommand(string commandLine, out string result)

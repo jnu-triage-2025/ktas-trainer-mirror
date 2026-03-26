@@ -23,6 +23,12 @@ namespace MultiplayerInfrastructure.Player
     {
       if (!IsOwner) return;
 
+      if (_camControl == null)
+      {
+        Debug.LogWarning("[PlayerController] Camera controller is not ready; skipping interactables initialization.");
+        return;
+      }
+
       // Camera components
       _detector = _camControl.GetComponent<NearbyInteractablesDetector>();
       _interactableHintUI = _camControl.GetComponent<InteractableObjectHintUIController>();

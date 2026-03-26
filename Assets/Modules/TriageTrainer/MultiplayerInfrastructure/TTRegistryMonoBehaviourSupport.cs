@@ -1,3 +1,6 @@
+/// TTRegistryMonoBehaviourSupport는 TriageTrainer 범위의 구현물에 대해서,
+/// MultiplayerInfrastructure에 구현물 정의를 등록하기 위해 개별 구현되었습니다.
+
 using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
@@ -45,26 +48,26 @@ namespace TriageTrainer.MultiplayerInfrastructure
       Registry.RegisterItemDefinition<ElasticBand>(ElasticBand.Identifier);
       Registry.RegisterItemDefinition<Electrode>(Electrode.Identifier);
       Registry.RegisterItemDefinition<ElectrodeCable>(ElectrodeCable.Identifier);
-      Registry.RegisterItemDefinition<Epinephrine>(Epinephrine.Identifier);
-      Registry.RegisterItemDefinition<EtTube>(EtTube.Identifier);
-      Registry.RegisterItemDefinition<EtTubeReady>(EtTubeReady.Identifier);
+      Registry.RegisterItemDefinition<EpinephrineAmpule>(EpinephrineAmpule.Identifier);
+      Registry.RegisterItemDefinition<EndotrachealTube>(EndotrachealTube.Identifier);
+      Registry.RegisterItemDefinition<EndotrachealTubeReady>(EndotrachealTubeReady.Identifier);
       Registry.RegisterItemDefinition<FacialMask>(FacialMask.Identifier);
       Registry.RegisterItemDefinition<Gauze>(Gauze.Identifier);
       Registry.RegisterItemDefinition<Glove>(Glove.Identifier);
       Registry.RegisterItemDefinition<IvSet>(IvSet.Identifier);
-      Registry.RegisterItemDefinition<LaryngoBlade>(LaryngoBlade.Identifier);
-      Registry.RegisterItemDefinition<LaryngoHandle>(LaryngoHandle.Identifier);
+      Registry.RegisterItemDefinition<LaryngoscopeBlade>(LaryngoscopeBlade.Identifier);
+      Registry.RegisterItemDefinition<LaryngoscopeHandle>(LaryngoscopeHandle.Identifier);
       Registry.RegisterItemDefinition<Laryngoscope>(Laryngoscope.Identifier);
       Registry.RegisterItemDefinition<Norepinephrine>(Norepinephrine.Identifier);
-      Registry.RegisterItemDefinition<Ns1000ml>(Ns1000ml.Identifier);
-      Registry.RegisterItemDefinition<Ns20ml>(Ns20ml.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline1000ml>(NormalSaline1000ml.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline20ml>(NormalSaline20ml.Identifier);
       Registry.RegisterItemDefinition<O2Line>(O2Line.Identifier);
       Registry.RegisterItemDefinition<Penlight>(Penlight.Identifier);
       Registry.RegisterItemDefinition<Plaster>(Plaster.Identifier);
       Registry.RegisterItemDefinition<ReservoirBag>(ReservoirBag.Identifier);
       Registry.RegisterItemDefinition<Scissors>(Scissors.Identifier);
       Registry.RegisterItemDefinition<Stylet>(Stylet.Identifier);
-      Registry.RegisterItemDefinition<SuctionCath>(SuctionCath.Identifier);
+      Registry.RegisterItemDefinition<SuctionCatheter>(SuctionCatheter.Identifier);
       Registry.RegisterItemDefinition<SuctionLine>(SuctionLine.Identifier);
       Registry.RegisterItemDefinition<Swab>(Swab.Identifier);
       Registry.RegisterItemDefinition<Syringe20cc>(Syringe20cc.Identifier);
