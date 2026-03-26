@@ -44,9 +44,6 @@ namespace MultiplayerInfrastructure.Scenario
     private IScenarioNode _currentNode;
     private List<ScenarioChoiceOption> _activeOptions = new();
     private ScenarioQuizNode _activeQuizNode;
-    private ScenarioRoleAssignmentNode _activeRoleAssignmentNode;
-    private List<string> _activeRoleOptions = new List<string>();
-    private readonly Dictionary<int, string> _assignedRolesByClientId = new Dictionary<int, string>();
     private readonly Dictionary<string, string> _stateStore = new Dictionary<string, string>();
     private int? _scenarioOwnerClientId;
 
@@ -68,13 +65,11 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingParallel,
       ExecutingQuestControl,
       ExecutingQuestWaypointHighlight,
-      ExecutingNotification,
       ExecutingDelay,
       ExecutingInteraction,
       ExecutingCombineItem,
       ExecutingQuiz,
       ExecutingStateUpdate,
-      ExecutingRoleAssignment,
       ExecutingTTS,
       ExecutingPlayerTag,
     }
@@ -219,7 +214,6 @@ namespace MultiplayerInfrastructure.Scenario
       _state = State.Inactive;
 
       ClearOptions();
-      _assignedRolesByClientId.Clear();
       _stateStore.Clear();
 
       // UI 종료
@@ -261,12 +255,6 @@ namespace MultiplayerInfrastructure.Scenario
       if (_state == State.ExecutingQuiz && _activeQuizNode != null)
       {
         HandleQuizSelection(index, _activeQuizNode);
-        return;
-      }
-
-      if (_state == State.ExecutingRoleAssignment && _activeRoleAssignmentNode != null)
-      {
-        HandleRoleSelection(index);
         return;
       }
 
@@ -357,9 +345,6 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioQuestWaypointHighlightNode waypointHighlight:
           ExecuteQuestWaypointHighlightNode(waypointHighlight);
           break;
-        case ScenarioNotificationNode notification:
-          StartCoroutine(ExecuteNotificationNode(notification));
-          break;
         case ScenarioDelayNode delay:
           StartCoroutine(ExecuteDelayNode(delay));
           break;
@@ -374,9 +359,6 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioStateUpdateNode stateUpdate:
           ExecuteStateUpdateNode(stateUpdate);
-          break;
-        case ScenarioRoleAssignmentNode roleAssignment:
-          ExecuteRoleAssignmentNode(roleAssignment);
           break;
         case ScenarioPlayTTSNode playTTS:
           StartCoroutine(ExecutePlayTTSNode(playTTS));
@@ -478,27 +460,6 @@ namespace MultiplayerInfrastructure.Scenario
       else
       {
         Debug.LogWarning($"[ScenarioController] Waypoint '{node.WaypointIdentifier}' not found for highlight node '{node.Identifier}'.");
-      }
-
-      Advance();
-    }
-
-    private IEnumerator ExecuteNotificationNode(ScenarioNotificationNode node)
-    {
-      _state = State.ExecutingNotification;
-
-      if (!_uiController.IsUnityNull())
-      {
-        _uiController.DisplayDialogue("System", node.Message ?? string.Empty, null);
-      }
-      else
-      {
-        Debug.Log($"[ScenarioController] Notification({node.DisplayMode}): {node.Message}");
-      }
-
-      if (node.Duration.HasValue && node.Duration.Value > 0f)
-      {
-        yield return new WaitForSeconds(node.Duration.Value);
       }
 
       Advance();
@@ -666,47 +627,6 @@ namespace MultiplayerInfrastructure.Scenario
       Advance();
     }
 
-    private void ExecuteRoleAssignmentNode(ScenarioRoleAssignmentNode node)
-    {
-      _state = State.ExecutingRoleAssignment;
-      _activeRoleAssignmentNode = node;
-
-      if (node.AssignmentMode == ScenarioRoleAssignmentMode.Auto)
-      {
-        AutoAssignRoles(node);
-        Advance();
-        return;
-      }
-
-      var roleOptions = node.RoleOptions?.Where(role => !string.IsNullOrWhiteSpace(role)).ToList() ?? new List<string>();
-      if (roleOptions.Count == 0)
-      {
-        Debug.LogWarning($"[ScenarioController] RoleAssignment node '{node.Identifier}' has no role options.");
-        Advance();
-        return;
-      }
-
-      var options = roleOptions.Select(role => new ScenarioChoiceOption
-      {
-        DisplayText = role,
-        DisplayColor = Color.white,
-        NextNodeIdentifier = null
-      }).ToList();
-
-      _activeRoleOptions = roleOptions;
-      _activeOptions = options;
-
-      if (!_uiController.IsUnityNull())
-      {
-        _uiController.DisplayChoice("System", "역할을 선택하세요.", null, options);
-      }
-      else
-      {
-        AssignRoleToOwnerOrFirst(roleOptions[0]);
-        Advance();
-      }
-    }
-
     private IEnumerator ExecutePlayTTSNode(ScenarioPlayTTSNode node)
     {
       _state = State.ExecutingTTS;
@@ -807,55 +727,6 @@ namespace MultiplayerInfrastructure.Scenario
 
       _currentNode = nextNode;
       ExecuteNode(nextNode);
-    }
-
-    private void HandleRoleSelection(int index)
-    {
-      if (index < 0 || index >= _activeRoleOptions.Count)
-      {
-        Debug.LogWarning($"[ScenarioController] Invalid role option index: {index}");
-        return;
-      }
-
-      AssignRoleToOwnerOrFirst(_activeRoleOptions[index]);
-      _activeRoleAssignmentNode = null;
-      ClearOptions();
-      Advance();
-    }
-
-    private void AutoAssignRoles(ScenarioRoleAssignmentNode node)
-    {
-      var roles = node.RoleOptions?.Where(role => !string.IsNullOrWhiteSpace(role)).ToList() ?? new List<string>();
-      if (roles.Count == 0)
-      {
-        return;
-      }
-
-      var players = GetActivePlayerIds();
-      if (players.Count == 0)
-      {
-        return;
-      }
-
-      for (int i = 0; i < players.Count; i++)
-      {
-        _assignedRolesByClientId[players[i]] = roles[i % roles.Count];
-      }
-    }
-
-    private void AssignRoleToOwnerOrFirst(string role)
-    {
-      var players = GetActivePlayerIds();
-      if (_scenarioOwnerClientId.HasValue)
-      {
-        _assignedRolesByClientId[_scenarioOwnerClientId.Value] = role;
-        return;
-      }
-
-      if (players.Count > 0)
-      {
-        _assignedRolesByClientId[players[0]] = role;
-      }
     }
 
     private bool ApplyQuestOperation(QuestManager manager, ScenarioQuestControlNode node)
@@ -1414,18 +1285,73 @@ namespace MultiplayerInfrastructure.Scenario
 
     private bool IsPlayerEligibleForBranch(ScenarioParallelBranch branch, int clientId)
     {
-      if (branch?.RequiredRoleIdentifiers == null || branch.RequiredRoleIdentifiers.Count == 0)
+      if (branch == null)
       {
         return true;
       }
 
-      if (!_assignedRolesByClientId.TryGetValue(clientId, out var role) || string.IsNullOrWhiteSpace(role))
+      if (branch.RequiredPlayerTags != null && branch.RequiredPlayerTags.Count > 0)
       {
-        return false;
+        if (!UserDescriptorService.TryGetByClientId(clientId, out var session)
+            || session == null
+            || string.IsNullOrWhiteSpace(session.Identifier))
+        {
+          return false;
+        }
+
+        var requiredTags = branch.RequiredPlayerTags
+            .Where(requiredTag => !string.IsNullOrWhiteSpace(requiredTag))
+            .ToList();
+
+        if (requiredTags.Count == 0)
+        {
+          return true;
+        }
+
+        if (branch.RequiredPlayerTagsMatchMode == ScenarioPlayerTagMatchMode.Any)
+        {
+          bool hasAnyTag = requiredTags.Any(requiredTag => PlayerTagService.HasTag(session.Identifier, requiredTag));
+          if (!hasAnyTag)
+          {
+            return false;
+          }
+        }
+        else
+        {
+          foreach (var requiredTag in requiredTags)
+          {
+            if (!PlayerTagService.HasTag(session.Identifier, requiredTag))
+            {
+              return false;
+            }
+          }
+        }
       }
 
-      return branch.RequiredRoleIdentifiers.Any(requiredRole =>
-          string.Equals(requiredRole, role, StringComparison.OrdinalIgnoreCase));
+      if (branch.ForbiddenPlayerTags != null && branch.ForbiddenPlayerTags.Count > 0)
+      {
+        if (!UserDescriptorService.TryGetByClientId(clientId, out var session)
+            || session == null
+            || string.IsNullOrWhiteSpace(session.Identifier))
+        {
+          return false;
+        }
+
+        foreach (var forbiddenTag in branch.ForbiddenPlayerTags)
+        {
+          if (string.IsNullOrWhiteSpace(forbiddenTag))
+          {
+            continue;
+          }
+
+          if (PlayerTagService.HasTag(session.Identifier, forbiddenTag))
+          {
+            return false;
+          }
+        }
+      }
+
+      return true;
     }
 
     private static void Shuffle(IList<int> list)
@@ -1469,8 +1395,6 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _activeOptions.Clear();
       _activeQuizNode = null;
-      _activeRoleAssignmentNode = null;
-      _activeRoleOptions.Clear();
 
       if (_hintUIController != null)
       {

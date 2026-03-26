@@ -8,6 +8,9 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("identifier")]
     public string Identifier { get; set; }
 
+    [JsonPropertyName("tags")]
+    public List<string> Tags { get; set; }
+
     [JsonPropertyName("nodes")]
     public Dictionary<string, ScenarioNodeDTO> Nodes { get; set; }
   }

@@ -56,12 +56,12 @@
 
 #### [P002_Branches] 브랜치 목록 (ScenarioParallelBranch)
 
-| Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers |
-| --- | --- | --- |
-| V010_A | CC_A_grab | NurseA |
-| V010_B | CC_B_grab | NurseB |
-| V010_C | CC_C_grab | NurseC |
-| V010_D | CC_D_grab | NurseD |
+| Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
+|---|---|---|---|---|---|
+| V010_A | CC_A_grab | NurseA | triage_lead | - | All |
+| V010_B | CC_B_grab | NurseB | airway_team | - | All |
+| V010_C | CC_C_grab | NurseC | bleeding_control | - | All |
+| V010_D | CC_D_grab | NurseD | iv_team | - | All |
 
 ---
 
@@ -173,24 +173,25 @@
 
 #### [P003_Branches] 브랜치 목록 (ScenarioParallelBranch)
 
-| Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers |
-| --- | --- | --- |
-| N005 | CC_B_vitalcheck_patientA | NurseB |
-| N006 | CC_C_gcs_patientA | NurseC |
-| N007 | CC_D_suction_patientA | NurseD |
+| Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
+|---|---|---|---|---|---|
+| N005 | CC_B_vitalcheck_patientA | NurseB | airway_team | - | All |
+| N006 | CC_C_gcs_patientA | NurseC | neuro_assessment | - | All |
+| N007 | CC_D_suction_patientA | NurseD | suction_team | - | All |
 
 ====================================================
 # [병렬 브랜치 1] 플레이어 B (활력징후 측정) 흐름
 ====================================================
 
-### [N005] NotificationNode
+### [N005] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | --- | --- | --- |
 | **Identifier** | 문자열 | N005 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 환자의 활력징후를 측정합니다. 활력징후 측정도구를 클릭해 획득하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 환자의 활력징후를 측정합니다. 활력징후 측정도구를 클릭해 획득하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | Q007 |
 
@@ -223,14 +224,15 @@
 
 ---
 
-### [N005_1] NotificationNode
+### [N005_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | --- | --- | --- |
 | **Identifier** | 문자열 | N005_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 활력징후 측정도구를 선택한 뒤, 환자를 클릭하면 활력징후가 측정됩니다. 활력징후가 모니터에도 출력됩니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 활력징후 측정도구를 선택한 뒤, 환자를 클릭하면 활력징후가 측정됩니다. 활력징후가 모니터에도 출력됩니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V011_1 |
 
@@ -275,14 +277,15 @@
 
 ---
 
-### [N005_4] NotificationNode
+### [N005_4] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | --- | --- | --- |
 | **Identifier** | 문자열 | N005_4 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 혈압 70/40mmHg, 맥박 140회/분 - 약하고 빠름, 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 혈압 70/40mmHg, 맥박 140회/분 - 약하고 빠름, 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 8.0 |
 | **NextIdentifier** | 문자열 | Q007_1 |
 
@@ -303,14 +306,15 @@
 # [병렬 브랜치 2] 플레이어 C (AVPU 및 GCS 사정) 흐름
 ====================================================
 
-### [N006] NotificationNode
+### [N006] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | --- | --- | --- |
 | **Identifier** | 문자열 | N006 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 환자를 클릭해 환자의 의식 상태를 사정하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 환자를 클릭해 환자의 의식 상태를 사정하십시오. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 3.0 |
 | **NextIdentifier** | 문자열 | Q008 |
 
@@ -343,27 +347,29 @@
 
 ---
 
-### [N006_1] NotificationNode
+### [N006_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | --- | --- | --- |
 | **Identifier** | 문자열 | N006_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 환자의 의식 상태(AVPU)를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 환자의 의식 상태(AVPU)를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | N006_2 |
 
 ---
 
-### [N006_2] NotificationNode
+### [N006_2] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N006_2 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | [관찰] 환자를 불렀을 때 응답이 없고, 환자의 옆구리를 꼬집었을 때 불편해하며 피하려 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | [관찰] 환자를 불렀을 때 응답이 없고, 환자의 옆구리를 꼬집었을 때 불편해하며 피하려 합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | C004 |
 
@@ -392,27 +398,29 @@
 
 ---
 
-### [N006_retry_a] NotificationNode
+### [N006_retry_a] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N006_retry_a |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 다른 자극에는 반응이 없다가, 통증에 반응을 하고 있습니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 다른 자극에는 반응이 없다가, 통증에 반응을 하고 있습니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C004 |
 
 ---
 
-### [N006_3] NotificationNode
+### [N006_3] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N006_3 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | [관찰] 추가 사정으로 GCS를 확인합니다. 먼저 Eye Opening(E) 반응을 확인합니다. 옆구리를 꼬집자 잠시 눈을 떴다가 다시 감습니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | [관찰] 추가 사정으로 GCS를 확인합니다. 먼저 Eye Opening(E) 반응을 확인합니다. 옆구리를 꼬집자 잠시 눈을 떴다가 다시 감습니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | C005 |
 
@@ -441,27 +449,29 @@
 
 ---
 
-### [N006_retry_b] NotificationNode
+### [N006_retry_b] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N006_retry_b |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 통증 자극에만 반응했음을 유의하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 통증 자극에만 반응했음을 유의하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C005 |
 
 ---
 
-### [N006_4] NotificationNode
+### [N006_4] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N006_4 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | [관찰] 다음은 Verbal Response(V)입니다. "여기가 어디예요?"라고 묻자, 환자는 이해할 수 없는 신음소리만 내고 있습니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | [관찰] 다음은 Verbal Response(V)입니다. "여기가 어디예요?"라고 묻자, 환자는 이해할 수 없는 신음소리만 내고 있습니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | C006 |
 
@@ -491,27 +501,29 @@
 
 ---
 
-### [N006_retry_c] NotificationNode
+### [N006_retry_c] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N006_retry_c |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 현재 환자는 알아들을 수 없는 소리만 내고 있습니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 현재 환자는 알아들을 수 없는 소리만 내고 있습니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C006 |
 
 ---
 
-### [N006_5] NotificationNode
+### [N006_5] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N006_5 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | [관찰] 마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 팔을 재빨리 굽혀 자극을 피합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | [관찰] 마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 팔을 재빨리 굽혀 자극을 피합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | C007 |
 
@@ -542,27 +554,29 @@
 
 ---
 
-### [N006_retry_d] NotificationNode
+### [N006_retry_d] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N006_retry_d |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 현재 통증에 회피하고 있습니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 현재 통증에 회피하고 있습니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C007 |
 
 ---
 
-### [N006_6] NotificationNode
+### [N006_6] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N006_6 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | GCS 측정 완료. E2 / V2 / M4 = 총 8점 (Stupor) 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | GCS 측정 완료. E2 / V2 / M4 = 총 8점 (Stupor) 입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | D008 |
 
@@ -596,14 +610,15 @@
 # [병렬 브랜치 3] 플레이어 D (경추 고정 및 구강 흡인) 흐름
 ====================================================
 
-### [N007] NotificationNode
+### [N007] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N007 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 기도 확보를 위해 환자의 경추를 고정하고 구강 석션을 진행합니다. 경추고정기, 흡인기, 석션 라인, 앙커 팁을 클릭해 획득하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 기도 확보를 위해 환자의 경추를 고정하고 구강 석션을 진행합니다. 경추고정기, 흡인기, 석션 라인, 앙커 팁을 클릭해 획득하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | Q009 |
 
@@ -677,14 +692,15 @@
 
 ---
 
-### [N007_1] NotificationNode
+### [N007_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N007_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 경추 고정기를 환자에게 적용하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 경추 고정기를 환자에게 적용하십시오. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V013_1 |
 
@@ -704,14 +720,15 @@
 
 ---
 
-### [N007_2] NotificationNode
+### [N007_2] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N007_2 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 흡인기를 벽에 설치하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 흡인기를 벽에 설치하십시오. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V013_2 |
 
@@ -731,14 +748,15 @@
 
 ---
 
-### [N007_3] NotificationNode
+### [N007_3] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N007_3 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 준비된 앙커 팁을 흡인기에 연결하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 준비된 앙커 팁을 흡인기에 연결하십시오. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V013_3 |
 
@@ -758,14 +776,15 @@
 
 ---
 
-### [N007_4] NotificationNode
+### [N007_4] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N007_4 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 흡인기를 클릭한 뒤 환자를 클릭해 구강 흡인을 진행하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 흡인기를 클릭한 뒤 환자를 클릭해 구강 흡인을 진행하십시오. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V013_4 |
 
@@ -891,24 +910,25 @@
 
 #### [P004_Branches] 브랜치 목록 (ScenarioParallelBranch)
 
-| Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers |
-|---|---|---|
-| N008 | CC_B_intubation_A_oxy_patientA | NurseB, NurseA |
-| N010 | CC_C_stopbleeding_patientA | NurseC |
-| N011 | CC_D_iv_patientA | NurseD, NurseC |
+| Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
+|---|---|---|---|---|---|
+| N008 | CC_B_intubation_A_oxy_patientA | NurseB, NurseA | airway_team, triage_lead | - | All |
+| N010 | CC_C_stopbleeding_patientA | NurseC | bleeding_control | - | All |
+| N011 | CC_D_iv_patientA | NurseD, NurseC | iv_team, access_support | - | All |
 
 ====================================================
 # [P004 병렬 브랜치 1] 플레이어 B & A (기관내삽관 및 산소 공급)
 ====================================================
 
-### [N008] NotificationNode
+### [N008] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N008 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 기관내삽관에 필요한 물품을 준비합니다. 좌측 체크리스트 창을 참고하여 필요한 물품을 클릭해 획득하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 기관내삽관에 필요한 물품을 준비합니다. 좌측 체크리스트 창을 참고하여 필요한 물품을 클릭해 획득하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | Q010 |
 
@@ -991,14 +1011,15 @@
 
 ---
 
-### [N008_1] NotificationNode
+### [N008_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N008_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 완성된 후두경을 의사에게 전달하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 완성된 후두경을 의사에게 전달하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V014_1 |
 
@@ -1018,14 +1039,15 @@
 
 ---
 
-### [N008_2] NotificationNode
+### [N008_2] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N008_2 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 완성된 기관내관을 의사에게 전달하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 완성된 기관내관을 의사에게 전달하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V014_2 |
 
@@ -1057,14 +1079,15 @@
 
 ---
 
-### [N008_3] NotificationNode
+### [N008_3] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N008_3 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 환자 구강에 삽입된 기관내관을 클릭해 스타일렛을 제거하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 환자 구강에 삽입된 기관내관을 클릭해 스타일렛을 제거하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V014_3 |
 
@@ -1096,14 +1119,15 @@
 
 ---
 
-### [N008_4] NotificationNode
+### [N008_4] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N008_4 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 5cc 주사기를 의사에게 전달하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 5cc 주사기를 의사에게 전달하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V014_4 |
 
@@ -1123,14 +1147,15 @@
 
 ---
 
-### [N008_5] NotificationNode
+### [N008_5] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N008_5 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 플라스터를 클릭해 선택한 뒤, 삽입된 기관내관을 고정하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 플라스터를 클릭해 선택한 뒤, 삽입된 기관내관을 고정하십시오. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V014_5 |
 
@@ -1201,14 +1226,15 @@
 
 ---
 
-### [N009] NotificationNode
+### [N009] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N009 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 산소 유량계 습윤병과 1L 멸균증류수를 클릭해 획득하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 산소 유량계 습윤병과 1L 멸균증류수를 클릭해 획득하십시오. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q011 |
 
@@ -1254,14 +1280,15 @@
 
 ---
 
-### [N009_1] NotificationNode
+### [N009_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N009_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 유량계를 습득하여 산소 유량계를 완성합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 유량계를 습득하여 산소 유량계를 완성합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V015_1 |
 
@@ -1294,14 +1321,15 @@
 
 ---
 
-### [N009_2] NotificationNode
+### [N009_2] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N009_2 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 완성된 유량계를 클릭한 뒤, 흡인기 옆 벽면을 클릭해 설치하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 완성된 유량계를 클릭한 뒤, 흡인기 옆 벽면을 클릭해 설치하십시오. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V015_2 |
 
@@ -1321,14 +1349,15 @@
 
 ---
 
-### [N009_3] NotificationNode
+### [N009_3] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N009_3 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 산소줄과 T-piece를 각각 클릭해 획득하고, 산소 유량계와 환자에게 삽입된 기관내관을 각각 클릭해 연결하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 산소줄과 T-piece를 각각 클릭해 획득하고, 산소 유량계와 환자에게 삽입된 기관내관을 각각 클릭해 연결하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 6.0 |
 | **NextIdentifier** | 문자열 | V015_3 |
 
@@ -1360,14 +1389,15 @@
 
 ---
 
-### [N009_4] NotificationNode
+### [N009_4] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N009_4 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 산소 연결이 완료되었습니다. 유량계를 클릭해 투여 산소량을 결정합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 산소 연결이 완료되었습니다. 유량계를 클릭해 투여 산소량을 결정합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V015_4 |
 
@@ -1410,14 +1440,15 @@
 
 ---
 
-### [N009_retry] NotificationNode
+### [N009_retry] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N009_retry |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 처방은 10L 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 처방은 10L 입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 3.0 |
 | **NextIdentifier** | 문자열 | C008 |
 
@@ -1451,14 +1482,15 @@
 # [P004 병렬 브랜치 2] 플레이어 C (지혈)
 ====================================================
 
-### [N010] NotificationNode
+### [N010] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N010 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 지혈을 실시합니다. 멸균장갑과 거즈, 플라스터를 클릭해 획득하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 지혈을 실시합니다. 멸균장갑과 거즈, 플라스터를 클릭해 획득하십시오. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q012 |
 
@@ -1491,14 +1523,15 @@
 
 ---
 
-### [N010_1] NotificationNode
+### [N010_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N010_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 멸균장갑을 마우스 우클릭으로 착용하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 멸균장갑을 마우스 우클릭으로 착용하십시오. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V016_1 |
 
@@ -1518,14 +1551,15 @@
 
 ---
 
-### [N010_2] NotificationNode
+### [N010_2] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N010_2 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 거즈를 클릭해 선택한 뒤, 환자에게 적용하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 거즈를 클릭해 선택한 뒤, 환자에게 적용하십시오. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V016_2 |
 
@@ -1557,14 +1591,15 @@
 
 ---
 
-### [N010_3] NotificationNode
+### [N010_3] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N010_3 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 압박을 가해 지혈하고 있습니다. 플라스터를 클릭해 선택한 뒤, 거즈를 클릭해 고정하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 압박을 가해 지혈하고 있습니다. 플라스터를 클릭해 선택한 뒤, 거즈를 클릭해 고정하십시오. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | V016_3 |
 
@@ -1636,14 +1671,15 @@
 # [P004 병렬 브랜치 3] 플레이어 D & C (IV 라인 및 C-line 보조)
 ====================================================
 
-### [N011] NotificationNode
+### [N011] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N011 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 환자의 좌측과 우측 팔에 IV 라인을 확보해야 합니다. 18게이지 2개, 준비된 생리식염수 1L 수액백, 준비된 플라즈마 솔루션 1L 수액백을 클릭해 획득하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 환자의 좌측과 우측 팔에 IV 라인을 확보해야 합니다. 18게이지 2개, 준비된 생리식염수 1L 수액백, 준비된 플라즈마 솔루션 1L 수액백을 클릭해 획득하십시오. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 6.0 |
 | **NextIdentifier** | 문자열 | Q013 |
 
@@ -1704,14 +1740,15 @@
 
 ---
 
-### [N011_1] NotificationNode
+### [N011_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N011_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 18게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 좌측 팔을 클릭해 정맥 라인을 확보하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 18게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 좌측 팔을 클릭해 정맥 라인을 확보하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V017_1 |
 
@@ -1743,14 +1780,15 @@
 
 ---
 
-### [N011_2] NotificationNode
+### [N011_2] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N011_2 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 준비된 생리식염수 1L 수액백을 클릭해 선택한 뒤, 좌측 팔에 연결된 18G 캐뉼라를 클릭해 연결하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 준비된 생리식염수 1L 수액백을 클릭해 선택한 뒤, 좌측 팔에 연결된 18G 캐뉼라를 클릭해 연결하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V017_2 |
 
@@ -1782,14 +1820,15 @@
 
 ---
 
-### [N011_3] NotificationNode
+### [N011_3] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N011_3 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 한쪽 정맥로가 확보되어, 반대쪽 팔에도 자동으로 18G 캐뉼라 및 플라즈마 솔루션 연결이 진행됩니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 한쪽 정맥로가 확보되어, 반대쪽 팔에도 자동으로 18G 캐뉼라 및 플라즈마 솔루션 연결이 진행됩니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | E021 |
 
@@ -1862,14 +1901,15 @@
 
 ---
 
-### [N012] NotificationNode
+### [N012] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N012 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | C-line set을 클릭해 획득하고, 해당 아이템을 의사에게 전달하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | C-line set을 클릭해 획득하고, 해당 아이템을 의사에게 전달하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q014 |
 
@@ -1940,14 +1980,15 @@
 
 ---
 
-### [N013] NotificationNode
+### [N013] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N013 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 플라즈마 솔루션 1L 수액백과 혈액백을 클릭해 획득하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 플라즈마 솔루션 1L 수액백과 혈액백을 클릭해 획득하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 3.0 |
 | **NextIdentifier** | 문자열 | Q015 |
 
@@ -1980,14 +2021,15 @@
 
 ---
 
-### [N013_1] NotificationNode
+### [N013_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N013_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 플라즈마 솔루션 1L 수액백을 클릭해 선택한 뒤, Level 1 rapid infuser와 연결하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 플라즈마 솔루션 1L 수액백을 클릭해 선택한 뒤, Level 1 rapid infuser와 연결하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V019_1 |
 
@@ -2007,14 +2049,15 @@
 
 ---
 
-### [N014] NotificationNode
+### [N014] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N014 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 혈액백을 클릭해 선택한 뒤, Level 1 rapid infuser와 연결하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 혈액백을 클릭해 선택한 뒤, Level 1 rapid infuser와 연결하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V020 |
 
@@ -2112,14 +2155,15 @@
 
 ---
 
-### [N016] NotificationNode
+### [N016] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N016 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 환자의 경동맥을 촉지해 맥박을 확인합니다. 목 부위를 클릭하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 환자의 경동맥을 촉지해 맥박을 확인합니다. 목 부위를 클릭하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q018 |
 
@@ -2205,25 +2249,26 @@
 
 #### [P005_Branches] 브랜치 목록 (ScenarioParallelBranch)
 
-| Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers |
-|---|---|---|
-| N017 | CC_A_ambu | NurseA |
-| N018 | CC_B_chestcomp | NurseB |
-| N019 | CC_C_defib | NurseC |
-| N020 | CC_D_epi | NurseD |
+| Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
+|---|---|---|---|---|---|
+| N017 | CC_A_ambu | NurseA | airway_team | - | All |
+| N018 | CC_B_chestcomp | NurseB | cpr_team | - | All |
+| N019 | CC_C_defib | NurseC | defib_team | - | All |
+| N020 | CC_D_epi | NurseD | medication_team | - | All |
 
 ====================================================
 # [P005 병렬 브랜치 1] 플레이어 A (앰부백 산소화)
 ====================================================
 
-### [N017] NotificationNode
+### [N017] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N017 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 앰부백과 산소 저장낭을 클릭해 획득하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 앰부백과 산소 저장낭을 클릭해 획득하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q019 |
 
@@ -2256,14 +2301,15 @@
 
 ---
 
-### [N017_1] NotificationNode
+### [N017_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N017_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 환자에게 연결된 T-piece를 클릭해 연결을 해제하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 환자에게 연결된 T-piece를 클릭해 연결을 해제하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V023_1 |
 
@@ -2283,14 +2329,15 @@
 
 ---
 
-### [N017_2] NotificationNode
+### [N017_2] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N017_2 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 앰부백을 클릭해 선택한 뒤, 환자에게 삽입된 기관내관을 클릭해 연결하세요. 이후, 산소줄과 앰부백을 클릭해 연결합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 앰부백을 클릭해 선택한 뒤, 환자에게 삽입된 기관내관을 클릭해 연결하세요. 이후, 산소줄과 앰부백을 클릭해 연결합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 6.0 |
 | **NextIdentifier** | 문자열 | V023_2 |
 
@@ -2354,14 +2401,15 @@
 
 ---
 
-### [N017_3] NotificationNode
+### [N017_3] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N017_3 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 앰부백을 클릭해 산소 공급을 시작하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 앰부백을 클릭해 산소 공급을 시작하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 3.0 |
 | **NextIdentifier** | 문자열 | V023_4 |
 
@@ -2426,14 +2474,15 @@
 
 ---
 
-### [N017_retry_a] NotificationNode
+### [N017_retry_a] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N017_retry_a |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C010 |
 
@@ -2473,14 +2522,15 @@
 
 ---
 
-### [N017_retry_b] NotificationNode
+### [N017_retry_b] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N017_retry_b |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 6초에 1번씩 눌러야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 6초에 1번씩 눌러야 합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C011 |
 
@@ -2501,14 +2551,15 @@
 # [P005 병렬 브랜치 2] 플레이어 B (가슴 압박)
 ====================================================
 
-### [N018] NotificationNode
+### [N018] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N018 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 환자의 가슴을 클릭해 가슴압박을 시작하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 환자의 가슴을 클릭해 가슴압박을 시작하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q020 |
 
@@ -2587,14 +2638,15 @@
 
 ---
 
-### [N018_retry_a] NotificationNode
+### [N018_retry_a] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N018_retry_a |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C012 |
 
@@ -2633,14 +2685,15 @@
 
 ---
 
-### [N018_retry_b] NotificationNode
+### [N018_retry_b] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N018_retry_b |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C013 |
 
@@ -2680,14 +2733,15 @@
 
 ---
 
-### [N018_retry_c] NotificationNode
+### [N018_retry_c] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N018_retry_c |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C014 |
 
@@ -2727,14 +2781,15 @@
 
 ---
 
-### [N018_retry_d] NotificationNode
+### [N018_retry_d] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N018_retry_d |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 혈액 순환이 가능합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 혈액 순환이 가능합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C015 |
 
@@ -2755,14 +2810,15 @@
 # [P005 병렬 브랜치 3] 플레이어 C (제세동기)
 ====================================================
 
-### [N019] NotificationNode
+### [N019] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N019 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 제세동 카트를 환자 옆으로 가져오세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 제세동 카트를 환자 옆으로 가져오세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q021 |
 
@@ -2795,14 +2851,15 @@
 
 ---
 
-### [N019_1] NotificationNode
+### [N019_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N019_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 제세동 패드를 획득하고, 환자 흉부를 클릭해 부착하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 제세동 패드를 획득하고, 환자 흉부를 클릭해 부착하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V025_1 |
 
@@ -2894,14 +2951,15 @@
 
 ---
 
-### [N019_retry_a] NotificationNode
+### [N019_retry_a] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N019_retry_a |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C016 |
 
@@ -2940,14 +2998,15 @@
 
 ---
 
-### [N019_retry_b] NotificationNode
+### [N019_retry_b] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N019_retry_b |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 150~200J(줄)이 정답입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 150~200J(줄)이 정답입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C016 |
 
@@ -2988,14 +3047,15 @@
 
 ---
 
-### [N019_retry_c] NotificationNode
+### [N019_retry_c] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N019_retry_c |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C017 |
 
@@ -3016,14 +3076,15 @@
 # [P005 병렬 브랜치 4] 플레이어 D (에피네프린 투여)
 ====================================================
 
-### [N020] NotificationNode
+### [N020] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N020 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 에피네프린 투여를 위한 준비를 합니다. 에피네프린 앰퓰과 5cc 주사기를 획득해 약물이 든 주사기를 완성하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 에피네프린 투여를 위한 준비를 합니다. 에피네프린 앰퓰과 5cc 주사기를 획득해 약물이 든 주사기를 완성하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | Q022 |
 
@@ -3069,14 +3130,15 @@
 
 ---
 
-### [N020_1] NotificationNode
+### [N020_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N020_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | Push용 생리식염수를 준비합니다. 20cc 생리식염수와 20cc 주사기를 클릭해 획득하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | Push용 생리식염수를 준비합니다. 20cc 생리식염수와 20cc 주사기를 클릭해 획득하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V026_1 |
 
@@ -3109,14 +3171,15 @@
 
 ---
 
-### [N020_2] NotificationNode
+### [N020_2] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N020_2 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 준비된 에피네프린 1mg을 클릭해 선택한 뒤, 중심정맥관을 클릭해 투여하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 준비된 에피네프린 1mg을 클릭해 선택한 뒤, 중심정맥관을 클릭해 투여하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V026_2 |
 
@@ -3149,14 +3212,15 @@
 
 ---
 
-### [N020_3] NotificationNode
+### [N020_3] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N020_3 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 동일한 방법으로 준비된 생리식염수 20cc를 투여해 루멘 내 잔여 약물을 주입합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 동일한 방법으로 준비된 생리식염수 20cc를 투여해 루멘 내 잔여 약물을 주입합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V026_3 |
 
@@ -3224,14 +3288,15 @@
 
 ---
 
-### [N020_retry_a] NotificationNode
+### [N020_retry_a] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N020_retry_a |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 에피네프린은 3~5분에 한 번 투여합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 에피네프린은 3~5분에 한 번 투여합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C019 |
 
@@ -3271,14 +3336,15 @@
 
 ---
 
-### [N020_retry_b] NotificationNode
+### [N020_retry_b] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N020_retry_b |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 심장에 빠르게 도달시키기 위해 생리식염수 주입 후 팔을 들어올려야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 심장에 빠르게 도달시키기 위해 생리식염수 주입 후 팔을 들어올려야 합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C020 |
 
@@ -3363,25 +3429,26 @@
 
 #### [P006_Branches] 브랜치 목록 (ScenarioParallelBranch)
 
-| Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers |
-|---|---|---|
-| N021 | CC_A_chestcomp | NurseA |
-| N022 | CC_B_ambu | NurseB |
-| N023 | CC_C_epi | NurseC |
-| N024 | CC_D_defib | NurseD |
+| Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
+|---|---|---|---|---|---|
+| N021 | CC_A_chestcomp | NurseA | cpr_team | - | All |
+| N022 | CC_B_ambu | NurseB | airway_team | - | All |
+| N023 | CC_C_epi | NurseC | medication_team | - | All |
+| N024 | CC_D_defib | NurseD | defib_team | - | All |
 
 ====================================================
 # [P006 병렬 브랜치 1] 플레이어 A (가슴압박 교대)
 ====================================================
 
-### [N021] NotificationNode
+### [N021] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N021 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 환자의 가슴을 클릭해 가슴압박을 시작하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 환자의 가슴을 클릭해 가슴압박을 시작하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q023 |
 
@@ -3460,14 +3527,15 @@
 
 ---
 
-### [N021_retry_a] NotificationNode
+### [N021_retry_a] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N021_retry_a |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C021 |
 
@@ -3506,14 +3574,15 @@
 
 ---
 
-### [N021_retry_b] NotificationNode
+### [N021_retry_b] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N021_retry_b |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C022 |
 
@@ -3553,14 +3622,15 @@
 
 ---
 
-### [N021_retry_c] NotificationNode
+### [N021_retry_c] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N021_retry_c |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C023 |
 
@@ -3600,14 +3670,15 @@
 
 ---
 
-### [N021_retry_d] NotificationNode
+### [N021_retry_d] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N021_retry_d |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C024 |
 
@@ -3628,14 +3699,15 @@
 # [P006 병렬 브랜치 2] 플레이어 B (앰부백 산소화 교대)
 ====================================================
 
-### [N022] NotificationNode
+### [N022] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N022 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 앰부백을 클릭해 산소 공급을 시작하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 앰부백을 클릭해 산소 공급을 시작하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q024 |
 
@@ -3713,14 +3785,15 @@
 
 ---
 
-### [N022_retry_a] NotificationNode
+### [N022_retry_a] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N022_retry_a |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C025 |
 
@@ -3760,14 +3833,15 @@
 
 ---
 
-### [N022_retry_b] NotificationNode
+### [N022_retry_b] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N022_retry_b |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 6초에 1번씩 눌러야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 6초에 1번씩 눌러야 합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C026 |
 
@@ -3788,14 +3862,15 @@
 # [P006 병렬 브랜치 3] 플레이어 C (에피네프린 투여 교대)
 ====================================================
 
-### [N023] NotificationNode
+### [N023] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N023 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 에피네프린 투여를 위한 준비를 합니다. 에피네프린 앰퓰과 5cc 주사기를 획득해 약물이 든 주사기를 완성하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 에피네프린 투여를 위한 준비를 합니다. 에피네프린 앰퓰과 5cc 주사기를 획득해 약물이 든 주사기를 완성하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | Q025 |
 
@@ -3841,14 +3916,15 @@
 
 ---
 
-### [N023_1] NotificationNode
+### [N023_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N023_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | Push용 생리식염수를 준비합니다. 20cc 생리식염수와 20cc 주사기를 클릭해 획득하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | Push용 생리식염수를 준비합니다. 20cc 생리식염수와 20cc 주사기를 클릭해 획득하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V029_1 |
 
@@ -3894,14 +3970,15 @@
 
 ---
 
-### [N023_2] NotificationNode
+### [N023_2] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N023_2 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 준비된 에피네프린 1mg을 클릭해 선택한 뒤, 중심정맥관을 클릭해 투여하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 준비된 에피네프린 1mg을 클릭해 선택한 뒤, 중심정맥관을 클릭해 투여하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V029_2 |
 
@@ -3934,14 +4011,15 @@
 
 ---
 
-### [N023_3] NotificationNode
+### [N023_3] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N023_3 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 동일한 방법으로 준비된 생리식염수 20cc를 투여해 루멘 내 잔여 약물을 주입합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 동일한 방법으로 준비된 생리식염수 20cc를 투여해 루멘 내 잔여 약물을 주입합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V029_3 |
 
@@ -4009,14 +4087,15 @@
 
 ---
 
-### [N023_retry_a] NotificationNode
+### [N023_retry_a] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N023_retry_a |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 에피네프린은 3~5분에 한 번 투여합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 에피네프린은 3~5분에 한 번 투여합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C027 |
 
@@ -4056,14 +4135,15 @@
 
 ---
 
-### [N023_retry_b] NotificationNode
+### [N023_retry_b] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N023_retry_b |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 심장에 빠르게 도달시키기 위해 생리식염수 주입 후 팔을 들어올려야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 심장에 빠르게 도달시키기 위해 생리식염수 주입 후 팔을 들어올려야 합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C028 |
 
@@ -4084,14 +4164,15 @@
 # [P006 병렬 브랜치 4] 플레이어 D (제세동기 대기)
 ====================================================
 
-### [N024] NotificationNode
+### [N024] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N024 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 제세동기를 클릭해 역할을 부여받으세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 제세동기를 클릭해 역할을 부여받으세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q026 |
 
@@ -4184,14 +4265,15 @@
 
 ---
 
-### [N024_retry_a] NotificationNode
+### [N024_retry_a] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N024_retry_a |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C029 |
 
@@ -4230,14 +4312,15 @@
 
 ---
 
-### [N024_retry_b] NotificationNode
+### [N024_retry_b] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N024_retry_b |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 150~200J(줄)이 정답입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 150~200J(줄)이 정답입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C030 |
 
@@ -4278,14 +4361,15 @@
 
 ---
 
-### [N024_retry_c] NotificationNode
+### [N024_retry_c] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N024_retry_c |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C031 |
 
@@ -4356,14 +4440,15 @@
 
 ---
 
-### [N025] NotificationNode
+### [N025] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N025 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 환자의 목을 클릭해서 경동맥을 촉지합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 환자의 목을 클릭해서 경동맥을 촉지합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q027 |
 
@@ -4449,24 +4534,25 @@
 
 #### [P007_Branches] 브랜치 목록 (ScenarioParallelBranch)
 
-| Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers |
-|---|---|---|
-| N026 | CC_A_triagearea | NurseA |
-| N027 | CC_B_cut_patientA | NurseB |
-| N028 | CC_D_gcs_patientA_rosc | NurseD |
+| Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
+|---|---|---|---|---|---|
+| N026 | CC_A_triagearea | NurseA | triage_lead | - | All |
+| N027 | CC_B_cut_patientA | NurseB | procedure_team | - | All |
+| N028 | CC_D_gcs_patientA_rosc | NurseD | neuro_assessment | - | All |
 
 ====================================================
 # [P007 병렬 브랜치 1] 플레이어 A (분류 구역 복귀)
 ====================================================
 
-### [N026] NotificationNode
+### [N026] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N026 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 중증도 분류 구역으로 이동하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 중증도 분류 구역으로 이동하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q028 |
 
@@ -4526,14 +4612,15 @@
 # [P007 병렬 브랜치 2] 플레이어 B (의복 제거)
 ====================================================
 
-### [N027] NotificationNode
+### [N027] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N027 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 가위를 클릭해 획득하고, 환자를 클릭해 의복을 제거하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 가위를 클릭해 획득하고, 환자를 클릭해 의복을 제거하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q029 |
 
@@ -4578,14 +4665,15 @@
 
 ---
 
-### [N027_1] NotificationNode
+### [N027_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N027_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 추가 외상은 확인되지 않습니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 추가 외상은 확인되지 않습니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q029_1 |
 
@@ -4606,14 +4694,15 @@
 # [P007 병렬 브랜치 3] 플레이어 D (의식 상태 사정)
 ====================================================
 
-### [N028] NotificationNode
+### [N028] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N028 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 환자를 클릭해 환자의 의식 상태를 사정하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 환자를 클릭해 환자의 의식 상태를 사정하십시오. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 3.0 |
 | **NextIdentifier** | 문자열 | Q030 |
 
@@ -4646,27 +4735,29 @@
 
 ---
 
-### [N028_1] NotificationNode
+### [N028_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N028_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 환자의 의식 상태를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 환자의 의식 상태를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | N028_2 |
 
 ---
 
-### [N028_2] NotificationNode
+### [N028_2] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N028_2 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 환자를 불렀을 때 응답이 없고, 환자의 옆구리를 꼬집었을 때 불편해하며 피하려 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 환자를 불렀을 때 응답이 없고, 환자의 옆구리를 꼬집었을 때 불편해하며 피하려 합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C032 |
 
@@ -4695,27 +4786,29 @@
 
 ---
 
-### [N028_retry_a] NotificationNode
+### [N028_retry_a] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N028_retry_a |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 다른 자극에는 반응이 없다가, 통증에 반응을 하고 있습니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 다른 자극에는 반응이 없다가, 통증에 반응을 하고 있습니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C032 |
 
 ---
 
-### [N028_3] NotificationNode
+### [N028_3] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N028_3 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | [관찰] 추가 사정으로 GCS를 확인합니다. 먼저 Eye Opening(E) 반응을 확인합니다. 옆구리를 꼬집자 잠시 눈을 떴다가 다시 감습니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | [관찰] 추가 사정으로 GCS를 확인합니다. 먼저 Eye Opening(E) 반응을 확인합니다. 옆구리를 꼬집자 잠시 눈을 떴다가 다시 감습니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | C033 |
 
@@ -4744,27 +4837,29 @@
 
 ---
 
-### [N028_retry_b] NotificationNode
+### [N028_retry_b] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N028_retry_b |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 통증 자극에만 반응했음을 유의하십시오. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 통증 자극에만 반응했음을 유의하십시오. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C033 |
 
 ---
 
-### [N028_4] NotificationNode
+### [N028_4] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N028_4 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | [관찰] 다음은 Verbal Response(V)입니다. "여기가 어디예요?"라고 묻자, 환자는 이해할 수 없는 신음소리만 내고 있습니다. 현재 기관내삽관이 시행되어있는 상태입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | [관찰] 다음은 Verbal Response(V)입니다. "여기가 어디예요?"라고 묻자, 환자는 이해할 수 없는 신음소리만 내고 있습니다. 현재 기관내삽관이 시행되어있는 상태입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 6.0 |
 | **NextIdentifier** | 문자열 | C034 |
 
@@ -4795,27 +4890,29 @@
 
 ---
 
-### [N028_retry_c] NotificationNode
+### [N028_retry_c] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N028_retry_c |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 현재 환자는 알아들을 수 없는 소리만 내고 있으나, 기관삽관을 하는 경우 1점으로 처리(E 표기)합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 현재 환자는 알아들을 수 없는 소리만 내고 있으나, 기관삽관을 하는 경우 1점으로 처리(E 표기)합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C034 |
 
 ---
 
-### [N028_5] NotificationNode
+### [N028_5] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N028_5 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | [관찰] 마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 반대쪽 손으로 잡으려 합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | [관찰] 마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 반대쪽 손으로 잡으려 합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | C035 |
 
@@ -4846,27 +4943,29 @@
 
 ---
 
-### [N028_retry_d] NotificationNode
+### [N028_retry_d] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N028_retry_d |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 통증 원인을 치우려고 손을 뻗고 있습니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 통증 원인을 치우려고 손을 뻗고 있습니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C035 |
 
 ---
 
-### [N028_6] NotificationNode
+### [N028_6] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N028_6 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | GCS 측정 완료. E2 / V(E) / M5 = 총 7T점 입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | GCS 측정 완료. E2 / V(E) / M5 = 총 7T점 입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q030_1 |
 

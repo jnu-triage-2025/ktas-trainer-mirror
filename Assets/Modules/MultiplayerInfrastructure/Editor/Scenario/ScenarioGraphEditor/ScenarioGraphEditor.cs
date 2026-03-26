@@ -29,6 +29,7 @@ namespace MultiplayerInfrastructure.Editor
     private Vector2 cachedMousePosition;
     private string currentFilePath;
     private TextField graphIdentifierField;
+    private TextField graphTagsField;
 
     [MenuItem("Tools/Multiplayer Infrastructure/Scenario Graph Authoring")]
     public static void Open()
@@ -97,10 +98,23 @@ namespace MultiplayerInfrastructure.Editor
       });
       toolbar.Add(graphIdentifierField);
 
+      graphTagsField = new TextField
+      {
+        label = "Tags(csv)"
+      };
+      graphTagsField.style.width = 420f;
+      graphTagsField.RegisterValueChangedCallback(evt =>
+      {
+        EnsureGraphData();
+        graphData.Tags = ParseCsvTags(evt.newValue);
+      });
+      toolbar.Add(graphTagsField);
+
       rootVisualElement.Add(toolbar);
 
       EnsureGraphData();
       RefreshGraphIdentifierField();
+      RefreshGraphTagsField();
     }
 
     private void CreateGraphView()
@@ -249,6 +263,7 @@ namespace MultiplayerInfrastructure.Editor
       inspectorView.SetTarget(null);
       currentFilePath = null;
       RefreshGraphIdentifierField();
+      RefreshGraphTagsField();
     }
 
     private void EnsureGraphData()
@@ -262,6 +277,11 @@ namespace MultiplayerInfrastructure.Editor
       {
         graphData.Identifier = "new_scenario_graph";
       }
+
+      if (graphData.Tags == null)
+      {
+        graphData.Tags = Array.Empty<string>();
+      }
     }
 
     private void RefreshGraphIdentifierField()
@@ -270,6 +290,30 @@ namespace MultiplayerInfrastructure.Editor
         return;
 
       graphIdentifierField.SetValueWithoutNotify(graphData?.Identifier ?? string.Empty);
+    }
+
+    private void RefreshGraphTagsField()
+    {
+      if (graphTagsField == null)
+        return;
+
+      var tags = graphData?.Tags ?? Array.Empty<string>();
+      graphTagsField.SetValueWithoutNotify(string.Join(",", tags));
+    }
+
+    private static IReadOnlyList<string> ParseCsvTags(string csv)
+    {
+      if (string.IsNullOrWhiteSpace(csv))
+      {
+        return Array.Empty<string>();
+      }
+
+      return csv
+        .Split(',')
+        .Select(each => each.Trim())
+        .Where(each => !string.IsNullOrWhiteSpace(each))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
     }
 
     private string GetUniqueIdentifier(string prefix)
@@ -494,6 +538,7 @@ namespace MultiplayerInfrastructure.Editor
         inspectorView.SetTarget(null);
         currentFilePath = path;
         RefreshGraphIdentifierField();
+        RefreshGraphTagsField();
 
         ValidateResources(graphData);
       }

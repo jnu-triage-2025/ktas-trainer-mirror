@@ -48,8 +48,18 @@ namespace MultiplayerInfrastructure.UI
     [SerializeField] private int _currentCharIndex;
     [SerializeField] private float _lastTypeTime;
 
+    [SerializeField] private DialogueInputContext _inputContext = DialogueInputContext.None;
+    private IReadOnlyList<ScenarioChoiceOption> _pendingChoiceOptions;
+
     // 현재 선택지들을 IInteract로 래핑
     private List<ScenarioSelectionInteractable> _currentSelections = new();
+
+    private enum DialogueInputContext
+    {
+      None,
+      Dialogue,
+      Choice,
+    }
 
     #endregion
 
@@ -116,6 +126,10 @@ namespace MultiplayerInfrastructure.UI
       CacheVisualElements();
     }
 
+    private void OnDisable()
+    {
+    }
+
     private void Update()
     {
       if (_isTyping)
@@ -166,7 +180,6 @@ namespace MultiplayerInfrastructure.UI
       if (_dialogueElement != null)
       {
         _dialogueElement.Hide();
-        _dialogueElement.OnDialogueClicked += HandleDialogueClicked;
       }
     }
 
@@ -216,6 +229,8 @@ namespace MultiplayerInfrastructure.UI
       _currentNode = null;
       _isTyping = false;
       _isWaitingForInput = false;
+      _inputContext = DialogueInputContext.None;
+      _pendingChoiceOptions = null;
 
       // 선택지 정리
       ClearSelections();
@@ -242,35 +257,10 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void DisplayDialogue(string speakerName, string dialogueContent, string portraitIdentifier)
     {
-      _isWaitingForInput = false;
-
-      // 화자 이름 설정
-      if (_speakerNameLabel != null)
-      {
-        _speakerNameLabel.text = speakerName ?? "";
-      }
-
-      // 초상화 설정
-      if (_portraitImage != null && !string.IsNullOrEmpty(portraitIdentifier))
-      {
-        var portrait = Resources.Load<Sprite>(portraitIdentifier);
-        if (portrait != null)
-        {
-          _portraitImage.style.backgroundImage = new StyleBackground(portrait);
-          _portraitImage.style.display = DisplayStyle.Flex;
-        }
-        else
-        {
-          _portraitImage.style.display = DisplayStyle.None;
-        }
-      }
-      else if (_portraitImage != null)
-      {
-        _portraitImage.style.display = DisplayStyle.None;
-      }
-
-      // 대화 텍스트 타이핑 시작
-      StartTyping(dialogueContent ?? "");
+      _inputContext = DialogueInputContext.Dialogue;
+      _pendingChoiceOptions = null;
+      ClearSelections();
+      PresentTextNode(speakerName, dialogueContent, portraitIdentifier);
 
       OnNodeDisplayed?.Invoke(null); // TODO: pass node if needed
     }
@@ -280,21 +270,12 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void DisplayChoice(string speakerName, string dialogueContent, string portraitIdentifier, IReadOnlyList<ScenarioChoiceOption> options)
     {
-      // 먼저 대화 표시
-      DisplayDialogue(speakerName, dialogueContent, portraitIdentifier);
+      _inputContext = DialogueInputContext.Choice;
+      _pendingChoiceOptions = options;
+      ClearSelections();
+      PresentTextNode(speakerName, dialogueContent, portraitIdentifier);
 
-      // 타이핑 완료 후 선택지 표시
-      StartCoroutine(WaitForTypingThenShowChoices(options));
-    }
-
-    private System.Collections.IEnumerator WaitForTypingThenShowChoices(IReadOnlyList<ScenarioChoiceOption> options)
-    {
-      while (_isTyping)
-      {
-        yield return null;
-      }
-
-      ShowChoices(options);
+      OnNodeDisplayed?.Invoke(null); // TODO: pass node if needed
     }
 
     private void ShowChoices(IReadOnlyList<ScenarioChoiceOption> options)
@@ -328,6 +309,8 @@ namespace MultiplayerInfrastructure.UI
         _interactableHintUI.SetDialogueSelections(interacts);
       }
 
+      SetWaitingForInput(false);
+
       Debug.Log($"[DialoguePanelUI] Displayed {options.Count} options");
     }
 
@@ -344,15 +327,24 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      // 선택지가 있으면 현재 선택된 것을 실행
-      if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.HasDialogueSelection())
+      // Choice: 재생 완료 후 입력은 현재 선택지를 확정.
+      if (_inputContext == DialogueInputContext.Choice)
       {
-        _interactableHintUI.ExecuteSelectedDialogueSelection(null);
+        if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.HasDialogueSelection())
+        {
+          _interactableHintUI.ExecuteSelectedDialogueSelection(null);
+          return;
+        }
+
+        if (!HasActiveSelections && _pendingChoiceOptions != null)
+        {
+          ShowChoices(_pendingChoiceOptions);
+        }
         return;
       }
 
-      // 선택지가 없으면 다음 진행 요청
-      if (!HasActiveSelections)
+      // Dialogue: 재생 완료 후 입력은 다음 노드 진행.
+      if (_inputContext == DialogueInputContext.Dialogue)
       {
         OnAdvanceRequested?.Invoke();
 
@@ -391,6 +383,8 @@ namespace MultiplayerInfrastructure.UI
 
       // 선택지 정리
       ClearSelections();
+      _pendingChoiceOptions = null;
+      _inputContext = DialogueInputContext.None;
 
       // ScenarioController에 선택 전달
       if (!_currentController.IsUnityNull())
@@ -462,11 +456,46 @@ namespace MultiplayerInfrastructure.UI
       // 타이핑 완료 이벤트
       OnTypingCompleted?.Invoke();
 
-      // 선택지가 있으면 표시 (이미 WaitForTypingThenShowChoices에서 처리됨)
+      if (_inputContext == DialogueInputContext.Choice)
+      {
+        ShowChoices(_pendingChoiceOptions);
+        return;
+      }
+
       if (!HasActiveSelections)
       {
         SetWaitingForInput(true);
       }
+    }
+
+    private void PresentTextNode(string speakerName, string dialogueContent, string portraitIdentifier)
+    {
+      _isWaitingForInput = false;
+
+      if (_speakerNameLabel != null)
+      {
+        _speakerNameLabel.text = speakerName ?? "";
+      }
+
+      if (_portraitImage != null && !string.IsNullOrEmpty(portraitIdentifier))
+      {
+        var portrait = Resources.Load<Sprite>(portraitIdentifier);
+        if (portrait != null)
+        {
+          _portraitImage.style.backgroundImage = new StyleBackground(portrait);
+          _portraitImage.style.display = DisplayStyle.Flex;
+        }
+        else
+        {
+          _portraitImage.style.display = DisplayStyle.None;
+        }
+      }
+      else if (_portraitImage != null)
+      {
+        _portraitImage.style.display = DisplayStyle.None;
+      }
+
+      StartTyping(dialogueContent ?? "");
     }
 
     /// <summary>
@@ -578,12 +607,6 @@ namespace MultiplayerInfrastructure.UI
     #endregion
 
     #region DialogueElement Interaction
-
-    private void HandleDialogueClicked()
-    {
-      // Clicking on the dialogue area should behave like advancing/confirming.
-      TrySelectCurrentOption();
-    }
 
     /// <summary>
     /// 패널 토글

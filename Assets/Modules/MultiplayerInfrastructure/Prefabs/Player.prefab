@@ -128,7 +128,7 @@ GameObject:
   - component: {fileID: 1193226015883832250}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -191,8 +191,8 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 3332462076176395838}
   _networkObjectCache: {fileID: 3332462076176395838}
   _camControl: {fileID: 0}
+  _crosshairUI: {fileID: 0}
   _escapeMenuUIController: {fileID: 0}
-  _escapeMenuEventsRegistered: 0
   _gamemode: 0
   _isSpectateFollowing: 0
   _spectateFollowTarget: {fileID: 0}
@@ -207,6 +207,7 @@ MonoBehaviour:
   _keyEscape: 27
   _keySpectatorFlyDown: 304
   _keyOpenQuestUI: 106
+  _keyDropHeldItem: 113
   _keyHandlingLockedByEscapeUI: 0
   _keyHandlingLockedByChatUI: 0
   _keyHandlingLockedByInventoryUI: 0
@@ -215,15 +216,6 @@ MonoBehaviour:
   _interactableHintUI: {fileID: 0}
   _dialoguePanelUIController: {fileID: 0}
   _slots: []
-  HandlingItem:
-    identifier: 
-    displayName: 
-    _itemTextureIdentifier: 
-    currCount: 0
-    maxCount: 0
-    hasDurability: 0
-    currentDurability: 0
-    _itemTexture: {fileID: 0}
   attackTriggered: 0
   useItemTriggered: 0
   _enableViewmodel: 1
@@ -250,10 +242,17 @@ MonoBehaviour:
   _cameraHolderTransform: {fileID: 0}
   _questUIController: {fileID: 0}
   _questPreviewHudUIController: {fileID: 0}
+  _raycastLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  _raycastMaxDistance: 10
   _reposableCarryAnchor: {fileID: 0}
   _carriedReposableComponent: {fileID: 0}
   _spectatorAlpha: 0.5
   _spectatorLayerName: Spectator
+  references:
+    version: 2
+    RefIds: []
 --- !u!114 &3332462076176395838
 MonoBehaviour:
   m_ObjectHideFlags: 0

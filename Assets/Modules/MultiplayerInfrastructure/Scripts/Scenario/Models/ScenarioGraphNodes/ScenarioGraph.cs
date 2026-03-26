@@ -1,11 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MultiplayerInfrastructure.Scenario
 {
   public sealed class ScenarioGraph
   {
     public string Identifier { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 시나리오에서 사용할 태그 사전 선언 목록.
+    /// 선언되지 않은 태그가 노드/분기에서 사용되면 로딩 시 경고를 출력합니다.
+    /// </summary>
+    public IReadOnlyList<string> Tags { get; set; } = Array.Empty<string>();
 
     public Dictionary<string, IScenarioNode> Nodes { get; } = new Dictionary<string, IScenarioNode>();
 
@@ -17,5 +24,10 @@ namespace MultiplayerInfrastructure.Scenario
 
     public bool TryGetNode(string identifier, out IScenarioNode node)
       => Nodes.TryGetValue(identifier, out node);
+
+    public bool IsTagDeclared(string tag)
+      => !string.IsNullOrWhiteSpace(tag)
+         && Tags != null
+         && Tags.Any(each => string.Equals(each, tag, StringComparison.OrdinalIgnoreCase));
   }
 }

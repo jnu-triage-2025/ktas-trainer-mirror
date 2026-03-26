@@ -12,7 +12,7 @@ namespace TriageTrainer.Items
   {
     private void Awake()
     {
-      TriageItemRegistrar.RegisterAll();
+      MultiplayerInfrastructureRegisterSupport.RegisterAllItems();
     }
   }
 }

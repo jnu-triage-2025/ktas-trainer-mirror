@@ -1,0 +1,94 @@
+{
+  "identifier": "tag_match_mode_regression",
+  "nodes": {
+    "T001": {
+      "identifier": "T001",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "triage_lead",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "T002"
+    },
+    "T002": {
+      "identifier": "T002",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "airway_specialist",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "P001"
+    },
+    "P001": {
+      "identifier": "P001",
+      "nodeType": "Parallel",
+      "waitMode": "All",
+      "allocationType": "SpreadOrdinary",
+      "whenBranchingPlayerNotMatched": "Ignore",
+      "branches": [
+        {
+          "identifier": "B001",
+          "completionConditionIdentifier": "done.lead",
+          "requiredPlayerTags": [
+            "triage_lead",
+            "charge_nurse"
+          ],
+          "requiredPlayerTagsMatchMode": "Any"
+        },
+        {
+          "identifier": "B002",
+          "completionConditionIdentifier": "done.airway",
+          "requiredPlayerTags": [
+            "airway_specialist",
+            "support_team"
+          ],
+          "requiredPlayerTagsMatchMode": "Any"
+        },
+        {
+          "identifier": "B003",
+          "completionConditionIdentifier": null,
+          "requiredPlayerTags": [
+            "triage_lead",
+            "airway_specialist"
+          ],
+          "requiredPlayerTagsMatchMode": "All"
+        }
+      ],
+      "nextIdentifier": "N001"
+    },
+    "B001": {
+      "identifier": "B001",
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "[ANY] 리더 태그 분기 통과",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "N001"
+    },
+    "B002": {
+      "identifier": "B002",
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "[ANY] 기도/지원 태그 분기 통과",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "N001"
+    },
+    "B003": {
+      "identifier": "B003",
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "[ALL] 복합 태그 분기 통과",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "N001"
+    },
+    "N001": {
+      "identifier": "N001",
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "태그 매칭 모드 회귀 시나리오 완료",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": null
+    }
+  }
+}

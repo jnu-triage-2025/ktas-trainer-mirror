@@ -25,6 +25,9 @@ namespace MultiplayerInfrastructure.Scenario
     [SerializeField] private string _playerTag = "Player";
     [SerializeField] private bool _disableAfterTrigger = false;
 
+    [Header("Debug")]
+    [SerializeField] private bool _debugTriggerLogs = false;
+
     #endregion
 
     #region Private Fields
@@ -89,13 +92,25 @@ namespace MultiplayerInfrastructure.Scenario
     private void TryTrigger(GameObject other)
     {
       if (!other.CompareTag(_playerTag))
+      {
+        if (_debugTriggerLogs)
+          Debug.Log($"[ScenarioTriggerZone] Ignored '{other.name}': tag '{other.tag}' != required '{_playerTag}'.", this);
         return;
+      }
 
       if (_triggerOnce && _hasTriggered)
+      {
+        if (_debugTriggerLogs)
+          Debug.Log("[ScenarioTriggerZone] Ignored trigger: triggerOnce is enabled and zone already fired.", this);
         return;
+      }
 
       if (Time.time - _lastTriggerTime < _triggerCooldown)
+      {
+        if (_debugTriggerLogs)
+          Debug.Log($"[ScenarioTriggerZone] Ignored trigger: cooldown active ({Time.time - _lastTriggerTime:F2}s < {_triggerCooldown:F2}s).", this);
         return;
+      }
 
       if (_cachedGraph == null)
       {
@@ -194,6 +209,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     #region Public API
 
+    [ContextMenu("Scenario Trigger/Reset Trigger")]
     public void ResetTrigger()
     {
       _hasTriggered = false;
@@ -201,6 +217,7 @@ namespace MultiplayerInfrastructure.Scenario
       gameObject.SetActive(true);
     }
 
+    [ContextMenu("Scenario Trigger/Force Trigger")]
     public void ForceTrigger()
     {
       ExecuteTrigger();

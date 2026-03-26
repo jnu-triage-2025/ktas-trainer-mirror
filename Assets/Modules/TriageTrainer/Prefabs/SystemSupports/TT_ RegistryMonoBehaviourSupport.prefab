@@ -43,4 +43,4 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 27a8ad46562d34a5a9f568664580f5d3, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructure.TTRegistryMonoBehaviourSupport
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Items.MultiplayerInfrastructureRegisterSupport

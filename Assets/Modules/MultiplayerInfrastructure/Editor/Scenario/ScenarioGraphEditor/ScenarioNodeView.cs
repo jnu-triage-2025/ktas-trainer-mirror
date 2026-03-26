@@ -117,12 +117,10 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.Validator:
         case ScenarioNodeType.QuestControl:
         case ScenarioNodeType.QuestWaypointHighlight:
-        case ScenarioNodeType.Notification:
         case ScenarioNodeType.Delay:
         case ScenarioNodeType.Interaction:
         case ScenarioNodeType.CombineItem:
         case ScenarioNodeType.StateUpdate:
-        case ScenarioNodeType.RoleAssignment:
         case ScenarioNodeType.PlayTTS:
           DefaultOutputPort = CreateStandardOutput("Next");
           break;
