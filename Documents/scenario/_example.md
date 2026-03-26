@@ -12,6 +12,7 @@
 | 리소스 식별자 - 초상화 | portrait_mina |
 | 리소스 식별자 - 웨이포인트 | wp_guardroom, wp_warehouse |
 | 리소스 식별자 - 카메라 타겟 | obj_guardroom_door |
+| 선언 태그(tags) | patrol, clue_found |
 | 시작 노드 Identifier | D001 |
 
 ## 시나리오 본문
@@ -27,7 +28,8 @@
 | PM001 | PlayerMove | 플레이어는 Waypoint 방식으로 wp_warehouse까지 이동한다. MoveMode는 BySpeed, MoveSpeed는 3.5, IgnoreGroundCheck는 false로 서술한다. | D002 |
 | D002 | Dialogue | 경비원이 “창고 문이 살짝 열려 있다.”라고 말한다. | E001 |
 | E001 | InvokeEvent | EventIdentifier로 warehouse_door_open_check를 호출한다. MoveNextBehavior는 WaitUntilDone으로 서술한다. | S002 |
-| S002 | Sound | sfx_door_metal을 재생한다. WaitUntilFinished는 true로 서술한다. | Q001 |
+| S002 | Sound | sfx_door_metal을 재생한다. WaitUntilFinished는 true로 서술한다. | TM001 |
+| TM001 | TagModification | Operation은 Add, Scope는 Current, Tag는 clue_found로 설정해 현재 플레이어에 단서 확보 태그를 부여한다. | Q001 |
 | Q001 | QuestControl | Quest에 대해 Operation은 Add로 수행한다. FailureStrategy는 Overwrite로 서술한다. | D003 |
 | D003 | Dialogue | 경비원이 “첫 단서를 확보했다.”라고 말한다. | PM002 |
 | PM002 | PlayerMove | 플레이어는 Waypoint 방식으로 wp_guardroom까지 복귀한다. MoveMode는 ByDuration, MoveDuration은 4.0으로 서술한다. | D004 |

@@ -19,6 +19,7 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private KeyCode _keyToggleChat = DefaultsKeyConfiguration.OpenChatUI;
     [SerializeField] private KeyCode _keyToggleCommand = DefaultsKeyConfiguration.OpenChatUIWithCommand;
     [SerializeField] private KeyCode _keyInteractInteractableObject = DefaultsKeyConfiguration.InteractInteractableObject;
+    [SerializeField] private KeyCode _keyAdvanceDialogue = KeyCode.Space;
     [SerializeField] private KeyCode _keyEscape = KeyCode.Escape;
     [SerializeField] private KeyCode _keySpectatorFlyDown = KeyCode.LeftShift;
     [SerializeField] private KeyCode _keyOpenQuestUI = DefaultsKeyConfiguration.OpenQuestUI;
@@ -121,6 +122,14 @@ namespace MultiplayerInfrastructure.Player
 
     private void HandleInteractInteractableObject()
     {
+      // Dialogue progression is handled only in HandleDialogueInput.
+      // Guard here to prevent a second TrySelectCurrentOption call in the same frame.
+      if (!_dialoguePanelUIController.IsUnityNull() && UIOverlayStack.IsTop(_dialoguePanelUIController))
+      {
+        HandleInteractablesSelectionInput();
+        return;
+      }
+
       if (Input.GetKeyDown(_keyInteractInteractableObject)) TryInteractWithSelection();
       HandleInteractablesSelectionInput();
     }
@@ -214,10 +223,10 @@ namespace MultiplayerInfrastructure.Player
       if (_dialoguePanelUIController.IsUnityNull()) return;
       if (!UIOverlayStack.IsTop(_dialoguePanelUIController)) return;
 
-      // TODO: 더 고려할 사항:
-      // 다이얼로그를 빠르게 넘기려고 하다가 첫 번째 선택지가 선택됨
+      // Dialogue advance keys are centralized here so all paths go through PlayerController.Input.
       if (
         Input.GetKeyDown(_keyInteractInteractableObject) ||
+        Input.GetKeyDown(_keyAdvanceDialogue) ||
         Input.GetMouseButtonDown(0)
       )
       {

@@ -8,6 +8,16 @@
       "type": "string",
       "minLength": 1
     },
+    "tags": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
     "nodes": {
       "type": "object",
       "description": "Dictionary<string, IScenarioNode>",
@@ -64,9 +74,6 @@
           "$ref": "#/$defs/ScenarioQuestWaypointHighlightNode"
         },
         {
-          "$ref": "#/$defs/ScenarioNotificationNode"
-        },
-        {
           "$ref": "#/$defs/ScenarioDelayNode"
         },
         {
@@ -80,9 +87,6 @@
         },
         {
           "$ref": "#/$defs/ScenarioStateUpdateNode"
-        },
-        {
-          "$ref": "#/$defs/ScenarioRoleAssignmentNode"
         },
         {
           "$ref": "#/$defs/ScenarioPlayTTSNode"
@@ -710,7 +714,7 @@
             "null"
           ]
         },
-        "requiredRoleIdentifiers": {
+        "requiredPlayerTags": {
           "type": [
             "array",
             "null"
@@ -719,48 +723,30 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "forbiddenPlayerTags": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "requiredPlayerTagsMatchMode": {
+          "type": "string",
+          "enum": [
+            "All",
+            "Any"
+          ],
+          "default": "All"
         }
       },
       "required": [
         "identifier"
       ],
       "additionalProperties": false
-    },
-    "ScenarioNotificationNode": {
-      "allOf": [
-        {
-          "$ref": "#/$defs/ScenarioBaseNode"
-        },
-        {
-          "properties": {
-            "nodeType": {
-              "const": "Notification"
-            },
-            "message": {
-              "type": "string"
-            },
-            "displayMode": {
-              "type": "string",
-              "enum": [
-                "Overlay",
-                "Toast",
-                "Subtitle"
-              ],
-              "default": "Overlay"
-            },
-            "duration": {
-              "type": [
-                "number",
-                "null"
-              ],
-              "minimum": 0
-            }
-          },
-          "required": [
-            "message"
-          ]
-        }
-      ]
     },
     "ScenarioDelayNode": {
       "allOf": [
@@ -805,7 +791,6 @@
               "type": "string",
               "enum": [
                 "Player",
-                "Role",
                 "Any"
               ],
               "default": "Player"
@@ -963,40 +948,6 @@
         }
       ]
     },
-    "ScenarioRoleAssignmentNode": {
-      "allOf": [
-        {
-          "$ref": "#/$defs/ScenarioBaseNode"
-        },
-        {
-          "properties": {
-            "nodeType": {
-              "const": "RoleAssignment"
-            },
-            "roleOptions": {
-              "type": "array",
-              "minItems": 1,
-              "items": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "assignmentMode": {
-              "type": "string",
-              "enum": [
-                "Select",
-                "Auto"
-              ],
-              "default": "Select"
-            }
-          },
-          "required": [
-            "roleOptions",
-            "assignmentMode"
-          ]
-        }
-      ]
-    },
     "ScenarioQuestControlNode": {
       "allOf": [
         {
@@ -1106,7 +1057,11 @@
         {
           "properties": {
             "nodeType": {
-              "const": "PlayerTag"
+              "type": "string",
+              "enum": [
+                "PlayerTag",
+                "TagModification"
+              ]
             },
             "operation": {
               "type": "string",

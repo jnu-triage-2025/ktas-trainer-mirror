@@ -1,23 +1,18 @@
 {
   "identifier": "scenario_graph_extended_nodes_example",
+  "tags": [
+    "airway",
+    "triage_lead",
+    "support",
+    "observer"
+  ],
   "nodes": {
     "intro_notification": {
       "identifier": "intro_notification",
-      "nodeType": "Notification",
-      "message": "재난 현장 초기 대응을 시작합니다.",
-      "displayMode": "Overlay",
-      "duration": 2.0,
-      "nextIdentifier": "assign_roles"
-    },
-    "assign_roles": {
-      "identifier": "assign_roles",
-      "nodeType": "RoleAssignment",
-      "roleOptions": [
-        "Doctor",
-        "Nurse",
-        "EMT"
-      ],
-      "assignmentMode": "Select",
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "재난 현장 초기 대응을 시작합니다.",
+      "portraitSpriteIdentifier": null,
       "nextIdentifier": "staging_delay"
     },
     "staging_delay": {
@@ -30,7 +25,7 @@
     "inspect_patient_a": {
       "identifier": "inspect_patient_a",
       "nodeType": "Interaction",
-      "actorScope": "Role",
+      "actorScope": "Player",
       "targetIdentifier": "patient_a_eye",
       "requiredItemIdentifier": null,
       "interactionType": "Inspect",
@@ -66,10 +61,10 @@
     },
     "retry_notification": {
       "identifier": "retry_notification",
-      "nodeType": "Notification",
-      "message": "다시 시도합니다.",
-      "displayMode": "Toast",
-      "duration": 1.2,
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "다시 시도합니다.",
+      "portraitSpriteIdentifier": null,
       "nextIdentifier": "quiz_cpr"
     },
     "update_state_rhythm": {
@@ -88,6 +83,16 @@
         "rhythm": "PEA"
       },
       "waitUntilFinished": true,
+      "nextIdentifier": "tag_current_player"
+    },
+    "tag_current_player": {
+      "identifier": "tag_current_player",
+      "nodeType": "TagModification",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "airway",
+      "fromTag": null,
+      "toTag": null,
       "nextIdentifier": "team_parallel"
     },
     "team_parallel": {
@@ -100,17 +105,22 @@
         {
           "identifier": "branch_airway",
           "completionConditionIdentifier": "done.airway",
-          "requiredRoleIdentifiers": [
-            "Doctor"
-          ]
+          "requiredPlayerTags": [
+            "airway",
+            "triage_lead"
+          ],
+          "requiredPlayerTagsMatchMode": "Any"
         },
         {
           "identifier": "branch_oxygen",
           "completionConditionIdentifier": "done.oxygen",
-          "requiredRoleIdentifiers": [
-            "Nurse",
-            "EMT"
-          ]
+          "requiredPlayerTags": [
+            "support"
+          ],
+          "forbiddenPlayerTags": [
+            "observer"
+          ],
+          "requiredPlayerTagsMatchMode": "All"
         }
       ],
       "nextIdentifier": "finish_notification"
@@ -131,10 +141,10 @@
     },
     "finish_notification": {
       "identifier": "finish_notification",
-      "nodeType": "Notification",
-      "message": "중증 환자 1차 처치 단계 완료",
-      "displayMode": "Subtitle",
-      "duration": 2.0,
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "중증 환자 1차 처치 단계 완료",
+      "portraitSpriteIdentifier": null,
       "nextIdentifier": null
     }
   }

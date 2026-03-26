@@ -13,13 +13,11 @@ namespace MultiplayerInfrastructure.Scenario
     Validator,
     QuestControl,
     QuestWaypointHighlight,
-    Notification,
     Delay,
     Interaction,
     CombineItem,
     Quiz,
     StateUpdate,
-    RoleAssignment,
     PlayTTS,
     PlayerTag,
   }

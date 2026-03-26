@@ -11,7 +11,13 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("completionConditionIdentifier")]
     public string CompletionConditionIdentifier { get; set; }
 
-    [JsonPropertyName("requiredRoleIdentifiers")]
-    public List<string> RequiredRoleIdentifiers { get; set; }
+    [JsonPropertyName("requiredPlayerTags")]
+    public List<string> RequiredPlayerTags { get; set; }
+
+    [JsonPropertyName("forbiddenPlayerTags")]
+    public List<string> ForbiddenPlayerTags { get; set; }
+
+    [JsonPropertyName("requiredPlayerTagsMatchMode")]
+    public string RequiredPlayerTagsMatchMode { get; set; }
   }
 }

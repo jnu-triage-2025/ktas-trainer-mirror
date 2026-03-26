@@ -143,6 +143,13 @@ string key = Registry.TypeKey<ChatUIController>();   // "MultiplayerInfrastructu
 
 `RegistryType.Entity`는 더 이상 서비스 객체를 저장하지 않습니다. 대신 `EntityDescriptor`를 저장하는 **월드 엔티티 전용 저장소**입니다.
 
+플레이어 태그 설계 메모:
+
+- 플레이어 태그는 `EntityDescriptor`(플레이어 기술자)에 직접 달지 않고 `PlayerTagService` + `RegistryType.PlayerTag`에 저장합니다.
+- 이유는 태그 조건으로 플레이어를 조회하는 경로를 단일화하기 위해서입니다. (`UserDescriptor.Identifier(UUID)` 기준)
+- 반대로 `EntityDescriptor`에서 태그로 들어가는 역방향 참조까지 유지하면, 태그 추가/삭제/변경 시 양방향 동기화, 재접속 복구, 엔티티 재등록 처리까지 관리 포인트가 과도하게 늘어납니다.
+- 따라서 현재 구조는 태그 저장소를 서비스 쪽으로 분리하고, 역방향 구조는 의도적으로 두지 않습니다.
+
 | 구성 | 설명 |
 |---|---|
 | `Identifier` | 서버/모든 클라이언트에서 동일해야 하는 전역 고유 엔티티 ID |

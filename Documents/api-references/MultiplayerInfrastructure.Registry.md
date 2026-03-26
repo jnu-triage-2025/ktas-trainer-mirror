@@ -31,6 +31,13 @@ public enum RegistryType
 }
 ```
 
+`PlayerTag` 설계 메모:
+
+- 플레이어 태그는 `RegistryType.Entity`의 `EntityDescriptor`(플레이어 기술자)에 직접 보관하지 않고, `RegistryType.PlayerTag`에 별도 저장합니다.
+- 목적은 태그 기반 플레이어 조회를 단순화하는 것입니다. 키를 `UserDescriptor.Identifier(UUID)`로 고정해 `PlayerTagService`에서 일관되게 질의/변경할 수 있습니다.
+- `EntityDescriptor`에서 태그로 들어가는 역방향 참조(플레이어 기술자 -> 태그 인덱스)까지 함께 유지하면, 태그 변경/플레이어 재접속/엔티티 재등록 시 동기화 지점이 늘어나 관리 비용이 크게 증가합니다.
+- 이 이유로 역방향 구조는 의도적으로 추가하지 않았습니다.
+
 ---
 
 ## 2. 공개 메서드

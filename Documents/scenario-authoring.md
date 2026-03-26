@@ -26,14 +26,23 @@
 - `E###`: InvokeEvent
 - `V###`: Validator
 - `Q###`: QuestControl
+- `RA###`: RoleAssignment
+- `TM###`: TagModification
 
 ## 작성 절차
 
 1. 시나리오를 사건 흐름 단위로 나눕니다.
 2. 각 흐름을 NodeType으로 매핑합니다.
-3. 병렬 수행이 필요한 단계는 Parallel로 구성합니다.
+3. 병렬 수행이 필요한 단계는 Parallel로 구성하고, 브랜치별 역할/태그 조건을 명시합니다.
 4. 모든 InvokeEvent는 [Documents/scenario/event-registry.md](scenario/event-registry.md)에 기록합니다.
 5. 종료 조건을 마지막에 명시합니다.
+
+## 태그 작성 규칙
+
+- 각 시나리오의 그래프 상위에 `tags` 선언 목록을 먼저 작성합니다.
+- ParallelBranch의 태그 조건은 `RequiredPlayerTags` + `RequiredPlayerTagsMatchMode`로 표현합니다.
+- 브랜치 제외 대상은 `ForbiddenPlayerTags`로 표현합니다.
+- 플레이어 태그 변경은 `TagModification` 노드로 작성합니다. (하위 호환 표기 `PlayerTag` 허용)
 
 ## 변환 기준 예시
 

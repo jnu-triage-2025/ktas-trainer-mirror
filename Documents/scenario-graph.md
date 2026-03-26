@@ -115,6 +115,11 @@ ScenarioNode는 표현하고자 하는 내용에 따라 다양하게 데이터�
 | Identifier | 문자열 | 브랜치의 시작 노드 식별자 |
 | CompletionConditionIdentifier | 문자열 | 브랜치 완료 조건 식별자 |
 | RequiredRoleIdentifiers | 문자열 목록 | (optional) 브랜치 실행 대상 역할 식별자 목록 |
+| RequiredPlayerTags | 문자열 목록 | (optional) 브랜치 실행 대상 플레이어 태그 목록 |
+| ForbiddenPlayerTags | 문자열 목록 | (optional) 브랜치 실행 대상에서 제외할 플레이어 태그 목록 |
+| RequiredPlayerTagsMatchMode | ScenarioPlayerTagMatchMode | (optional) 태그 매칭 모드. All(기본), Any |
+
+`RequiredPlayerTags`와 `ForbiddenPlayerTags`를 함께 지정할 수 있다. 이 경우 포함 조건을 만족하면서 제외 조건을 만족하지 않는 플레이어만 브랜치에 할당된다.
 
 ### InvokeEventNode
 
@@ -149,16 +154,17 @@ ScenarioNode는 표현하고자 하는 내용에 따라 다양하게 데이터�
 | Quest | QuestData | 대상 퀘스트 데이터 |
 | NextIdentifier | 문자열 | 다음 노드의 식별자 |
 
-### NotificationNode
+### NotificationNode (Removed)
 
-| 속성 | 타입 | 설명 |
-|---|---|---|
-| Identifier | 문자열 | 노드의 고유 식별자 |
-| NodeType | ScenarioNodeType | ScenarioNodeType.Notification |
-| Message | 문자열 | 표시할 시스템 메시지 |
-| DisplayMode | ScenarioNotificationDisplayMode | Overlay / Toast / Subtitle |
-| Duration | float | (optional) 메시지 표시 시간 |
-| NextIdentifier | 문자열 | 다음 노드의 식별자 |
+`Notification` 노드 타입은 제거되었습니다.
+
+기존 Notification 사용 사례는 아래처럼 `Dialogue`로 이관합니다.
+
+- `nodeType`: `Notification` -> `Dialogue`
+- `message` -> `dialogueContent`
+- `speakerName`: `System` (고정)
+- `portraitSpriteIdentifier`: `null`
+- `nextIdentifier`: 그대로 유지
 
 ### DelayNode
 
@@ -229,6 +235,21 @@ ScenarioNode는 표현하고자 하는 내용에 따라 다양하게 데이터�
 | AssignmentMode | ScenarioRoleAssignmentMode | Select / Auto |
 | NextIdentifier | 문자열 | 다음 노드의 식별자 |
 
+### TagModificationNode
+
+| 속성 | 타입 | 설명 |
+|---|---|---|
+| Identifier | 문자열 | 노드의 고유 식별자 |
+| NodeType | 문자열 | `TagModification` (구버전 호환: `PlayerTag`) |
+| Operation | ScenarioPlayerTagOperationType | Add / Remove / Change |
+| Scope | ScenarioPlayerTagScope | Current / Role / ExplicitPlayer |
+| Tag | 문자열 | Add/Remove에서 사용할 태그 |
+| FromTag | 문자열 | Change의 변경 전 태그 |
+| ToTag | 문자열 | Change의 변경 후 태그 |
+| TargetRoleIdentifier | 문자열 | (optional) Scope=Role일 때 대상 역할 |
+| TargetPlayerIdentifier | 문자열 | (optional) Scope=ExplicitPlayer일 때 대상 플레이어 식별자 |
+| NextIdentifier | 문자열 | 다음 노드의 식별자 |
+
 ### PlayTTSNode
 
 | 속성 | 타입 | 설명 |
@@ -265,3 +286,11 @@ ScenarioNode는 표현하고자 하는 내용에 따라 다양하게 데이터�
 ## ScenarioGraph
 
 ScenarioGraph는 `Identifier`를 키로 `IScenarioNode`를 보관한다. 노드를 추가하거나 식별자로 조회할 수 있어야 한다.
+
+| 속성 | 타입 | 설명 |
+|---|---|---|
+| Identifier | 문자열 | 시나리오 그래프 식별자 |
+| Tags | 문자열 목록 | (optional) 그래프에서 사용할 태그 선언 목록 |
+| Nodes | `Dictionary<string, IScenarioNode>` | 노드 맵 |
+
+그래프에 `tags`를 선언하면 런타임 로더가 노드/브랜치에서 사용된 태그와 비교한다. 선언되지 않은 태그가 사용되면 경고 로그가 출력된다.

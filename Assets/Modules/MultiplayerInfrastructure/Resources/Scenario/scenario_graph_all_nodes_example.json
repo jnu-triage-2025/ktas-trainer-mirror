@@ -1,5 +1,6 @@
 {
   "identifier": "scenario_graph_all_nodes_example",
+  "tags": ["airway", "triage_lead", "support", "observer"],
   "nodes": {
     "dialogue_intro": {
       "identifier": "dialogue_intro",
@@ -105,10 +106,10 @@
     },
     "notification_info": {
       "identifier": "notification_info",
-      "nodeType": "Notification",
-      "message": "확장 노드 경로를 시작합니다.",
-      "displayMode": "Overlay",
-      "duration": 1.0,
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "확장 노드 경로를 시작합니다.",
+      "portraitSpriteIdentifier": null,
       "nextIdentifier": "delay_wait"
     },
     "delay_wait": {
@@ -150,10 +151,10 @@
     },
     "notification_retry": {
       "identifier": "notification_retry",
-      "nodeType": "Notification",
-      "message": "퀴즈를 다시 시도합니다.",
-      "displayMode": "Toast",
-      "duration": 1.0,
+      "nodeType": "Dialogue",
+      "speakerName": "System",
+      "dialogueContent": "퀴즈를 다시 시도합니다.",
+      "portraitSpriteIdentifier": null,
       "nextIdentifier": "quiz_cpr"
     },
     "state_update_rhythm": {
@@ -172,13 +173,16 @@
         "role": "Doctor"
       },
       "waitUntilFinished": true,
-      "nextIdentifier": "role_assignment"
+      "nextIdentifier": "tag_current_player"
     },
-    "role_assignment": {
-      "identifier": "role_assignment",
-      "nodeType": "RoleAssignment",
-      "roleOptions": ["Doctor", "Nurse", "EMT"],
-      "assignmentMode": "Select",
+    "tag_current_player": {
+      "identifier": "tag_current_player",
+      "nodeType": "TagModification",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "airway",
+      "fromTag": null,
+      "toTag": null,
       "nextIdentifier": "parallel_merge"
     },
     "parallel_merge": {
@@ -191,12 +195,15 @@
         {
           "identifier": "branch_invoke",
           "completionConditionIdentifier": "branch.invoke.done",
-          "requiredRoleIdentifiers": ["Doctor"]
+          "requiredPlayerTags": ["airway", "triage_lead"],
+          "requiredPlayerTagsMatchMode": "Any"
         },
         {
           "identifier": "branch_dialogue",
           "completionConditionIdentifier": null,
-          "requiredRoleIdentifiers": ["Nurse", "EMT"]
+          "requiredPlayerTags": ["support"],
+          "forbiddenPlayerTags": ["observer"],
+          "requiredPlayerTagsMatchMode": "All"
         }
       ],
       "nextIdentifier": "dialogue_outro"

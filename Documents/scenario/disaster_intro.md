@@ -68,24 +68,25 @@
 
 #### [P001_Branches] 브랜치 목록 (ScenarioParallelBranch)
 
-| Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers |
-|---|---|---|
-| N001 | CC_A_Triage | NurseA |
-| N002 | CC_BC_Ready | NurseB, NurseC |
-| N003 | CC_D_Ready | NurseD |
+| Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
+|---|---|---|---|---|---|
+| N001 | CC_A_Triage | NurseA | triage_lead | - | All |
+| N002 | CC_BC_Ready | NurseB, NurseC | airway_team, support_team | - | All |
+| N003 | CC_D_Ready | NurseD | iv_team | - | All |
 
 ====================================================
 # [병렬 브랜치 1] 플레이어 A (중증도 분류 담당) 흐름
 ====================================================
 
-### [N001] NotificationNode
+### [N001] DialogueNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | N001 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 중증도 분류 구역으로 이동하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 중증도 분류 구역으로 이동하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | Q001 |
 
@@ -131,14 +132,15 @@
 
 ---
 
-### [N001_1] NotificationNode
+### [N001_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | N001_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 카트 위 활력징후 측정도구를 획득하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 카트 위 활력징후 측정도구를 획득하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q002 |
 
@@ -221,14 +223,15 @@
 
 ---
 
-### [N001_2] NotificationNode
+### [N001_2] DialogueNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | N001_2 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 환자를 차례대로 클릭하여 환자의 상태를 확인하고, 중증도 분류를 실시하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 환자를 차례대로 클릭하여 환자의 상태를 확인하고, 중증도 분류를 실시하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | V002 |
 
@@ -284,27 +287,29 @@
 
 ---
 
-### [N001_retry_a] NotificationNode
+### [N001_retry_a] DialogueNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | N001_retry_a |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, KTAS 1(소생)이 적절합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, KTAS 1(소생)이 적절합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | C001 |
 
 ---
 
-### [N001_3] NotificationNode
+### [N001_3] DialogueNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | N001_3 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 해당 환자를 KTAS 1으로 분류했습니다. 다음 환자를 클릭하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 해당 환자를 KTAS 1으로 분류했습니다. 다음 환자를 클릭하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 3.0 |
 | **NextIdentifier** | 문자열 | V003 |
 
@@ -371,40 +376,43 @@
 
 ---
 
-### [N001_retry_b] NotificationNode
+### [N001_retry_b] DialogueNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | N001_retry_b |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 오답입니다. 비교적 긴급한 처치가 필요하지 않은 KTAS 5(비응급) 상태로 보입니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 오답입니다. 비교적 긴급한 처치가 필요하지 않은 KTAS 5(비응급) 상태로 보입니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C002 |
 
 ---
 
-### [N001_4] NotificationNode
+### [N001_4] DialogueNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | N001_4 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 해당 환자를 KTAS 5로 분류했습니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 해당 환자를 KTAS 5로 분류했습니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 3.0 |
 | **NextIdentifier** | 문자열 | N001_5 |
 
 ---
 
-### [N001_5] NotificationNode
+### [N001_5] DialogueNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | N001_5 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 이제 치료를 위해 이송할 긴급 환자를 클릭하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 이제 치료를 위해 이송할 긴급 환자를 클릭하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 3.0 |
 | **NextIdentifier** | 문자열 | V004 |
 
@@ -428,14 +436,15 @@
 # [병렬 브랜치 2] 플레이어 B/C (환자 처치 담당) 흐름
 ====================================================
 
-### [N002] NotificationNode
+### [N002] DialogueNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | N002 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | KTAS 1(소생) 환자에 대비하기 위해 처치실로 이동하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | KTAS 1(소생) 환자에 대비하기 위해 처치실로 이동하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q003 |
 
@@ -479,14 +488,15 @@
 
 ---
 
-### [N002_1] NotificationNode
+### [N002_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | N002_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 처치실에 있는 물품의 위치를 확인하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 처치실에 있는 물품의 위치를 확인하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 3.0 |
 | **NextIdentifier** | 문자열 | CC_BC_Ready |
 
@@ -496,14 +506,15 @@
 # [병렬 브랜치 3] 플레이어 D (약물/수액 담당) 흐름
 ====================================================
 
-### [N003] NotificationNode
+### [N003] DialogueNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | N003 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 준비실로 이동하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 준비실로 이동하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q004 |
 
@@ -549,14 +560,15 @@
 
 ---
 
-### [N003_1] NotificationNode
+### [N003_1] DialogueNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | N003_1 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 생리식염수 1L 수액백과 수액세트를 각각 클릭해 획득하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 생리식염수 1L 수액백과 수액세트를 각각 클릭해 획득하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V006 |
 
@@ -588,14 +600,15 @@
 
 ---
 
-### [N003_2] NotificationNode
+### [N003_2] DialogueNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | N003_2 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 플라즈마 솔루션 1L 수액백과 수액세트를 클릭해 획득하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 플라즈마 솔루션 1L 수액백과 수액세트를 클릭해 획득하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V007 |
 
@@ -626,14 +639,15 @@
 
 ---
 
-### [N003_3] NotificationNode
+### [N003_3] DialogueNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | **Identifier** | 문자열 | N003_3 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 수액 준비가 완료되었습니다. 혈액백을 클릭해 획득하세요. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Toast |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 수액 준비가 완료되었습니다. 혈액백을 클릭해 획득하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V008 |
 
@@ -720,14 +734,15 @@
 
 ---
 
-### [N004] NotificationNode
+### [N004] DialogueNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | N004 |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.Notification |
-| **Message** | 문자열 | 초기 대응과 중증도 분류를 완료했습니다. 다음 처치 시나리오를 진행합니다. |
-| **DisplayMode** | ScenarioNotificationDisplayMode | Overlay |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | System |
+| **DialogueContent** | 문자열 | 초기 대응과 중증도 분류를 완료했습니다. 다음 처치 시나리오를 진행합니다. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | (end) |
 

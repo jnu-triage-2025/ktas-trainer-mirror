@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using FishNet;
+using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
@@ -11,6 +13,17 @@ namespace MultiplayerInfrastructure.Tag
   /// </summary>
   public static class PlayerTagService
   {
+    private static bool IsServerMutationAllowed()
+    {
+      if (InstanceFinder.IsServerStarted)
+      {
+        return true;
+      }
+
+      Debug.LogWarning("[PlayerTagService] Tag mutation attempted outside server context. Ignored.");
+      return false;
+    }
+
     // ── 내부 헬퍼 ────────────────────────────────────────────────────────
 
     private static List<string> GetOrCreateTagList(string uuid)
@@ -23,6 +36,27 @@ namespace MultiplayerInfrastructure.Tag
       return list;
     }
 
+    private static void SyncOwnerPlayerTags(string uuid)
+    {
+      if (string.IsNullOrWhiteSpace(uuid))
+      {
+        return;
+      }
+
+      if (!Registry.Registry.TryGetEntityByOwnerUserIdentifier(uuid, out var descriptor))
+      {
+        return;
+      }
+
+      var playerObject = descriptor?.GameObject;
+      if (playerObject == null || !playerObject.TryGetComponent<PlayerController>(out var controller) || controller == null)
+      {
+        return;
+      }
+
+      controller.SyncPlayerTagsToObservers();
+    }
+
     // ── Public API ────────────────────────────────────────────────────────
 
     /// <summary>
@@ -30,12 +64,18 @@ namespace MultiplayerInfrastructure.Tag
     /// </summary>
     public static void AddTag(string uuid, string tag)
     {
+      if (!IsServerMutationAllowed())
+        return;
+
       if (string.IsNullOrWhiteSpace(uuid) || string.IsNullOrWhiteSpace(tag))
         return;
 
       var tags = GetOrCreateTagList(uuid);
       if (!tags.Contains(tag))
+      {
         tags.Add(tag);
+        SyncOwnerPlayerTags(uuid);
+      }
     }
 
     /// <summary>
@@ -44,11 +84,20 @@ namespace MultiplayerInfrastructure.Tag
     /// <returns>태그가 실제로 제거되었으면 true, 없었으면 false.</returns>
     public static bool RemoveTag(string uuid, string tag)
     {
+      if (!IsServerMutationAllowed())
+        return false;
+
       if (string.IsNullOrWhiteSpace(uuid) || string.IsNullOrWhiteSpace(tag))
         return false;
 
       var tags = GetOrCreateTagList(uuid);
-      return tags.Remove(tag);
+      bool removed = tags.Remove(tag);
+      if (removed)
+      {
+        SyncOwnerPlayerTags(uuid);
+      }
+
+      return removed;
     }
 
     /// <summary>
@@ -57,6 +106,9 @@ namespace MultiplayerInfrastructure.Tag
     /// <returns>교체에 성공했으면 true, fromTag가 없었으면 false.</returns>
     public static bool ChangeTag(string uuid, string fromTag, string toTag)
     {
+      if (!IsServerMutationAllowed())
+        return false;
+
       if (string.IsNullOrWhiteSpace(uuid) || string.IsNullOrWhiteSpace(fromTag) || string.IsNullOrWhiteSpace(toTag))
         return false;
 
@@ -66,7 +118,53 @@ namespace MultiplayerInfrastructure.Tag
         return false;
 
       tags[idx] = toTag;
+      SyncOwnerPlayerTags(uuid);
       return true;
+    }
+
+    /// <summary>
+    /// 플레이어 태그 저장소를 완전히 제거합니다.
+    /// 주로 연결 종료/디스폰 시 정리 용도로 사용합니다.
+    /// </summary>
+    public static void ClearTags(string uuid)
+    {
+      if (string.IsNullOrWhiteSpace(uuid))
+      {
+        return;
+      }
+
+      Registry.Registry.Unregister(RegistryType.PlayerTag, uuid);
+    }
+
+    /// <summary>
+    /// 네트워크 동기화된 태그 스냅샷으로 로컬 태그 목록을 교체합니다.
+    /// 서버/클라이언트 공용으로 사용됩니다.
+    /// </summary>
+    public static void ReplaceTags(string uuid, IReadOnlyList<string> tags)
+    {
+      if (string.IsNullOrWhiteSpace(uuid))
+      {
+        return;
+      }
+
+      var current = GetOrCreateTagList(uuid);
+      current.Clear();
+
+      if (tags == null)
+      {
+        return;
+      }
+
+      for (int i = 0; i < tags.Count; i++)
+      {
+        var value = tags[i];
+        if (string.IsNullOrWhiteSpace(value) || current.Contains(value))
+        {
+          continue;
+        }
+
+        current.Add(value);
+      }
     }
 
     /// <summary>

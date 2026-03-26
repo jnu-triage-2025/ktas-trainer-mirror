@@ -10,6 +10,7 @@ namespace MultiplayerInfrastructure.Registry
   public static partial class Registry
   {
     private static readonly Dictionary<string, object> _itemRegistry = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, object> _scenarioEventRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _scenarioGraphRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _iconSpriteRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _npcRegistry = new(StringComparer.Ordinal);
@@ -20,6 +21,7 @@ namespace MultiplayerInfrastructure.Registry
     private static readonly Dictionary<string, object> _interactableEntityRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _uiRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _playerTagRegistry = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, string> _playerEntityIdentifierByOwnerUserIdentifier = new(StringComparer.Ordinal);
     private static bool _builtInRegistryInitialized;
 
     static partial void RegisterBuiltInLiterals();
@@ -56,6 +58,14 @@ namespace MultiplayerInfrastructure.Registry
       }
 
       var registry = ResolveRegistry(registryType);
+
+      if (registryType == RegistryType.Entity
+          && registry.TryGetValue(identifier, out var existing)
+          && existing is EntityDescriptor existingDescriptor)
+      {
+        RemoveEntityIndexes(existingDescriptor);
+      }
+
       registry.Remove(identifier);
     }
 
@@ -173,7 +183,16 @@ namespace MultiplayerInfrastructure.Registry
 
       var registry = ResolveRegistry(RegistryType.ScenarioGraph);
       if (!registry.TryGetValue(identifier, out var definition))
-        return false;
+      {
+        // Fallback: allow scenario JSONs under Resources/Scenario to be resolved
+        // without explicit preload wiring in every scene.
+        var textAsset = Resources.Load<TextAsset>($"Scenario/{identifier}");
+        if (textAsset == null)
+          return false;
+
+        registry[identifier] = textAsset;
+        definition = textAsset;
+      }
 
       return TryResolveScenarioGraph(RegistryType.ScenarioGraph, identifier, registry, ref definition, validateWithSchema);
     }
@@ -205,7 +224,13 @@ namespace MultiplayerInfrastructure.Registry
       if (descriptor == null || string.IsNullOrWhiteSpace(descriptor.Identifier) || descriptor.GameObject == null)
         return;
 
+      if (TryGetEntity(descriptor.Identifier, out var existingDescriptor) && existingDescriptor != null)
+      {
+        RemoveEntityIndexes(existingDescriptor);
+      }
+
       Register(RegistryType.Entity, descriptor.Identifier, descriptor);
+      AddEntityIndexes(descriptor);
     }
 
     public static void RegisterEntity(
@@ -231,7 +256,14 @@ namespace MultiplayerInfrastructure.Registry
       => TryGet(RegistryType.Entity, identifier, out descriptor);
 
     public static void UnregisterEntity(string identifier)
-      => Unregister(RegistryType.Entity, identifier);
+    {
+      if (TryGetEntity(identifier, out var descriptor) && descriptor != null)
+      {
+        RemoveEntityIndexes(descriptor);
+      }
+
+      Unregister(RegistryType.Entity, identifier);
+    }
 
     public static IReadOnlyDictionary<string, EntityDescriptor> GetAllEntities()
       => GetAll<EntityDescriptor>(RegistryType.Entity);
@@ -301,12 +333,22 @@ namespace MultiplayerInfrastructure.Registry
       if (string.IsNullOrWhiteSpace(ownerUserIdentifier))
         return false;
 
+      if (_playerEntityIdentifierByOwnerUserIdentifier.TryGetValue(ownerUserIdentifier, out var entityIdentifier)
+          && TryGetEntity(entityIdentifier, out var indexedDescriptor)
+          && indexedDescriptor != null
+          && indexedDescriptor.EntityType == EntityType.Player)
+      {
+        descriptor = indexedDescriptor;
+        return true;
+      }
+
       var all = GetAllEntities(EntityType.Player);
       foreach (var pair in all)
       {
         if (string.Equals(pair.Value?.OwnerUserIdentifier, ownerUserIdentifier, StringComparison.Ordinal))
         {
           descriptor = pair.Value;
+          _playerEntityIdentifierByOwnerUserIdentifier[ownerUserIdentifier] = pair.Key;
           return true;
         }
       }
@@ -342,6 +384,7 @@ namespace MultiplayerInfrastructure.Registry
       return registryType switch
       {
         RegistryType.Item => _itemRegistry,
+        RegistryType.ScenarioEvent => _scenarioEventRegistry,
         RegistryType.ScenarioGraph => _scenarioGraphRegistry,
         RegistryType.IconSprite => _iconSpriteRegistry,
         RegistryType.Npc => _npcRegistry,
@@ -354,6 +397,51 @@ namespace MultiplayerInfrastructure.Registry
         RegistryType.PlayerTag => _playerTagRegistry,
         _ => throw new ArgumentOutOfRangeException(nameof(registryType), registryType, "Unknown registry type")
       };
+    }
+
+    private static void AddEntityIndexes(EntityDescriptor descriptor)
+    {
+      if (descriptor == null)
+      {
+        return;
+      }
+
+      if (descriptor.EntityType != EntityType.Player)
+      {
+        return;
+      }
+
+      if (string.IsNullOrWhiteSpace(descriptor.OwnerUserIdentifier)
+          || string.IsNullOrWhiteSpace(descriptor.Identifier))
+      {
+        return;
+      }
+
+      _playerEntityIdentifierByOwnerUserIdentifier[descriptor.OwnerUserIdentifier] = descriptor.Identifier;
+    }
+
+    private static void RemoveEntityIndexes(EntityDescriptor descriptor)
+    {
+      if (descriptor == null)
+      {
+        return;
+      }
+
+      if (descriptor.EntityType != EntityType.Player)
+      {
+        return;
+      }
+
+      if (string.IsNullOrWhiteSpace(descriptor.OwnerUserIdentifier))
+      {
+        return;
+      }
+
+      if (_playerEntityIdentifierByOwnerUserIdentifier.TryGetValue(descriptor.OwnerUserIdentifier, out var registeredIdentifier)
+          && string.Equals(registeredIdentifier, descriptor.Identifier, StringComparison.Ordinal))
+      {
+        _playerEntityIdentifierByOwnerUserIdentifier.Remove(descriptor.OwnerUserIdentifier);
+      }
     }
 
     private static bool TryResolveEntityValue<T>(RegistryType registryType, object definition, out T value)
@@ -457,6 +545,50 @@ namespace MultiplayerInfrastructure.Registry
       definition = sprite;
       return true;
     }
+
+    // =========================================================================
+    // ScenarioEvent helpers
+    // =========================================================================
+
+    /// <summary>
+    /// 시나리오 이벤트 핸들러를 Registry와 ScenarioEventIdentifierRegistry에 동시 등록합니다.
+    /// </summary>
+    public static void RegisterScenarioEvent(string identifier, ScenarioEventIdentifierRegistry.ScenarioEventHandler handler)
+    {
+      if (string.IsNullOrWhiteSpace(identifier) || handler == null)
+      {
+        return;
+      }
+
+      Register(RegistryType.ScenarioEvent, identifier, handler);
+      ScenarioEventIdentifierRegistry.Register(identifier, handler);
+    }
+
+    /// <summary>
+    /// 등록된 시나리오 이벤트 핸들러를 조회합니다.
+    /// </summary>
+    public static bool TryGetScenarioEvent(string identifier, out ScenarioEventIdentifierRegistry.ScenarioEventHandler handler)
+      => TryGet(RegistryType.ScenarioEvent, identifier, out handler);
+
+    /// <summary>
+    /// 시나리오 이벤트 핸들러 등록을 해제합니다.
+    /// </summary>
+    public static void UnregisterScenarioEvent(string identifier)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+      {
+        return;
+      }
+
+      Unregister(RegistryType.ScenarioEvent, identifier);
+      ScenarioEventIdentifierRegistry.Unregister(identifier);
+    }
+
+    /// <summary>
+    /// 등록된 모든 시나리오 이벤트를 반환합니다.
+    /// </summary>
+    public static IReadOnlyDictionary<string, ScenarioEventIdentifierRegistry.ScenarioEventHandler> GetAllScenarioEvents()
+      => GetAll<ScenarioEventIdentifierRegistry.ScenarioEventHandler>(RegistryType.ScenarioEvent);
 
     // =========================================================================
     // ScenarioGraph helpers
