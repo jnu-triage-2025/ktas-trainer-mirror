@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5401935169039095182}
   - component: {fileID: 6501171262436207735}
   m_Layer: 6
-  m_Name: epinephrine_ampule
+  m_Name: norepinephrine_ampule
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

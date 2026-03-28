@@ -53,12 +53,12 @@ namespace TriageTrainer.Items
       Registry.RegisterItemDefinition<EndotrachealTubeReady>(EndotrachealTubeReady.Identifier);
       Registry.RegisterItemDefinition<FacialMask>(FacialMask.Identifier);
       Registry.RegisterItemDefinition<Gauze>(Gauze.Identifier);
-      Registry.RegisterItemDefinition<Glove>(Glove.Identifier);
-      Registry.RegisterItemDefinition<IvSet>(IvSet.Identifier);
+      Registry.RegisterItemDefinition<Gloves>(Gloves.Identifier);
+      Registry.RegisterItemDefinition<IntravenousSet>(IntravenousSet.Identifier);
       Registry.RegisterItemDefinition<LaryngoscopeBlade>(LaryngoscopeBlade.Identifier);
       Registry.RegisterItemDefinition<LaryngoscopeHandle>(LaryngoscopeHandle.Identifier);
       Registry.RegisterItemDefinition<Laryngoscope>(Laryngoscope.Identifier);
-      Registry.RegisterItemDefinition<Norepinephrine>(Norepinephrine.Identifier);
+      Registry.RegisterItemDefinition<NorepinephrineAmpule>(NorepinephrineAmpule.Identifier);
       Registry.RegisterItemDefinition<NormalSaline1000ml>(NormalSaline1000ml.Identifier);
       Registry.RegisterItemDefinition<NormalSaline20ml>(NormalSaline20ml.Identifier);
       Registry.RegisterItemDefinition<O2Line>(O2Line.Identifier);
@@ -73,7 +73,7 @@ namespace TriageTrainer.Items
       Registry.RegisterItemDefinition<Syringe20cc>(Syringe20cc.Identifier);
       Registry.RegisterItemDefinition<Syringe50cc>(Syringe50cc.Identifier);
       Registry.RegisterItemDefinition<Syringe5cc>(Syringe5cc.Identifier);
-      Registry.RegisterItemDefinition<TransfusionSet>(TransfusionSet.Identifier);
+      Registry.RegisterItemDefinition<BloodTransfusionSet>(BloodTransfusionSet.Identifier);
       Registry.RegisterItemDefinition<VitalSet>(VitalSet.Identifier);
       Registry.RegisterItemDefinition<WallSuction>(WallSuction.Identifier);
       Registry.RegisterItemDefinition<Yankauer>(Yankauer.Identifier);
