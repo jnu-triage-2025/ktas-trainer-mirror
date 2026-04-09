@@ -1,0 +1,116 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &434063568747779160
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2160556403026478190}
+  - component: {fileID: 4751915680224062160}
+  m_Layer: 0
+  m_Name: PatientTypeBMale
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2160556403026478190
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 434063568747779160}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4751915680224062160
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 434063568747779160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa72363277d344e7d9c70f0745487021, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Patient.PatientTypeBMaleState
+  treatmentDisplayState:
+    <DisplaySupports>k__BackingField:
+      Syringe18GInsertedIntoLeftArm: 0
+      Syringe18GInsertedIntoRightArm: 0
+      Syringe20GInsertedIntoLeftArm: 1
+      Syringe20GInsertedIntoRightArm: 0
+      CentralVenousCatheterInsertedIntoSubclavian: 0
+      LaryngoscopeInserted: 0
+      EndotrachealTubeStyletInserted: 0
+      EndotrachealTubeInsertDone: 0
+      TPieceAttachedToNasalCannula: 0
+      AmbuBagAttachedToEndotrachealTube: 0
+      GauzePatchedOnThorax: 0
+      GauzeDressingDoneOnThorax: 0
+      GauzePatchedOnRightArm: 0
+      GauzeDressingDoneOnRightArm: 0
+      GauzePatchedOnLeftArm: 1
+      GauzeDressingDoneOnLeftArm: 1
+      GauzePatchedOnRightEyebrow: 0
+      GauzeDressingDoneOnRightEyebrow: 0
+      GauzePatchedOnLeftEyebrow: 1
+      GauzeDressingDoneOnLeftEyebrow: 1
+      NasalCannulaApplied: 1
+      CervicalCollarOnNeck: 0
+    <DisplayState>k__BackingField:
+      Syringe18GInsertedIntoLeftArm: 0
+      Syringe18GInsertedIntoRightArm: 0
+      Syringe20GInsertedIntoLeftArm: 0
+      Syringe20GInsertedIntoRightArm: 0
+      CentralVenousCatheterInsertedIntoSubclavian: 0
+      LaryngoscopeInserted: 0
+      EndotrachealTubeStyletInserted: 0
+      EndotrachealTubeInsertDone: 0
+      TPieceAttachedToNasalCannula: 0
+      AmbuBagAttachedToEndotrachealTube: 0
+      GauzePatchedOnThorax: 0
+      GauzeDressingDoneOnThorax: 0
+      GauzePatchedOnRightArm: 0
+      GauzeDressingDoneOnRightArm: 0
+      GauzePatchedOnLeftArm: 0
+      GauzeDressingDoneOnLeftArm: 0
+      GauzePatchedOnRightEyebrow: 0
+      GauzeDressingDoneOnRightEyebrow: 0
+      GauzePatchedOnLeftEyebrow: 0
+      GauzeDressingDoneOnLeftEyebrow: 0
+      NasalCannulaApplied: 0
+      CervicalCollarOnNeck: 0
+    <ChildGameObjects>k__BackingField:
+      Syringe18GInsertedIntoLeftArm: {fileID: 0}
+      Syringe18GInsertedIntoRightArm: {fileID: 0}
+      Syringe20GInsertedIntoLeftArm: {fileID: 0}
+      Syringe20GInsertedIntoRightArm: {fileID: 0}
+      CentralVenousCatheterInsertedIntoSubclavian: {fileID: 0}
+      LaryngoscopeInserted: {fileID: 0}
+      EndotrachealTubeStyletInserted: {fileID: 0}
+      EndotrachealTubeInsertDone: {fileID: 0}
+      TPieceAttachedToNasalCannula: {fileID: 0}
+      AmbuBagAttachedToEndotrachealTube: {fileID: 0}
+      GauzePatchedOnThorax: {fileID: 0}
+      GauzeDressingDoneOnThorax: {fileID: 0}
+      GauzePatchedOnRightArm: {fileID: 0}
+      GauzeDressingDoneOnRightArm: {fileID: 0}
+      GauzePatchedOnLeftArm: {fileID: 0}
+      GauzeDressingDoneOnLeftArm: {fileID: 0}
+      GauzePatchedOnRightEyebrow: {fileID: 0}
+      GauzeDressingDoneOnRightEyebrow: {fileID: 0}
+      GauzePatchedOnLeftEyebrow: {fileID: 0}
+      GauzeDressingDoneOnLeftEyebrow: {fileID: 0}
+      NasalCannulaApplied: {fileID: 0}
+      CervicalCollarOnNeck: {fileID: 0}

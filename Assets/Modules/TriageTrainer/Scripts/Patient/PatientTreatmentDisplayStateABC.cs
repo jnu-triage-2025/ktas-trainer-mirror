@@ -1,3 +1,5 @@
+using System;
+
 namespace TriageTrainer.Patient
 {
   /// <summary>
@@ -7,6 +9,7 @@ namespace TriageTrainer.Patient
   /// 대개는 특정한 장비들이 환자에 적용되거나 부착된 상태를 표시합니다.
   /// 실제로 각 환자 모델은, DisplaySupports에 정의된 내용들이 3D 모델이나 프리팹에서 구현되어있어야 합니다.
   /// </summary>
+  [Serializable]
   public abstract class PatientTreatmentDisplayStateABC
   {
     /// <summary>
@@ -14,16 +17,16 @@ namespace TriageTrainer.Patient
     /// true인 경우 환자 모델이 표현 가능함
     /// false인 경우 환자 모델에 관련 내용 구현되어있지 않음
     /// </summary>
-    public readonly PatientTreatmentDisplayModel DisplaySupports;
+    public abstract PatientTreatmentDisplayModel DisplaySupports { get; set; }
 
     /// <summary>
     /// 런타임 환경: 현재 환자 모델이 어떤 내용이 표시중인지 플래그
     /// </summary>
-    public PatientTreatmentDisplayModel DisplayState;
+    public abstract PatientTreatmentDisplayModel DisplayState { get; set; }
 
     /// <summary>
     /// 런타임 환경: 자식 GameObject 참조
     /// </summary>
-    protected PatientTreatmentDisplayingChildGameObjects ChildGameObjects;
+    public abstract PatientTreatmentDisplayingChildGameObjects ChildGameObjects { get; set; }
   }
 }

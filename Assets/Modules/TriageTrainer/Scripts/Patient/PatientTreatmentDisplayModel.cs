@@ -1,5 +1,7 @@
+using System;
 namespace TriageTrainer.Patient
 {
+  [Serializable]
   public struct PatientTreatmentDisplayModel
   {
     #region InsertingSyringe
@@ -11,27 +13,27 @@ namespace TriageTrainer.Patient
     /// <summary>
     /// 좌측 팔에 18G 주사기가 삽입된 상태를 표시할지 여부
     /// </summary>
-    public bool Syringe18GInsertedIntoLeftArm { get; set; }
+    public bool Syringe18GInsertedIntoLeftArm;
 
     /// <summary>
     /// 우측 팔에 18G 주사기가 삽입된 상태를 표시할지 여부
     /// </summary>
-    public bool Syringe18GInsertedIntoRightArm { get; set; }
+    public bool Syringe18GInsertedIntoRightArm;
 
     /// <summary>
     /// 좌측 팔에 20G 주사기가 삽입된 상태를 표시할지 여부
     /// </summary>
-    public bool Syringe20GInsertedIntoLeftArm { get; set; }
+    public bool Syringe20GInsertedIntoLeftArm;
 
     /// <summary>
     /// 우측 팔에 20G 주사기가 삽입된 상태를 표시할지 여부
     /// </summary>
-    public bool Syringe20GInsertedIntoRightArm { get; set; }
+    public bool Syringe20GInsertedIntoRightArm;
 
     /// <summary>
     /// 환자의 쇄골에 중앙정맥 카테터가 삽입된 상태를 표시할지 여부
     /// </summary>
-    public bool CentralVenousCatheterInsertedIntoSubclavian { get; set; }
+    public bool CentralVenousCatheterInsertedIntoSubclavian;
 
     #endregion  // InsertingSyringe
 
@@ -49,23 +51,28 @@ namespace TriageTrainer.Patient
     /// <summary>
     /// 환자에 후두경 삽입
     /// </summary>
-    public bool LaryngoscopeInserted { get; set; }
+    public bool LaryngoscopeInserted;
 
     /// <summary>
     /// 환자 기도삽관 중간과정 (스타일렛 꽂힘)
     /// </summary>
-    public bool EndotrachealTubeStyletInserted { get; set; }
+    public bool EndotrachealTubeStyletInserted;
 
     /// <summary>
-    /// 환자 기도삽관 완료 (스타일렛 제거)
+    /// 환자 기도삽관 완료 (스타일렛 제거, T-Piece 미연결)
     /// </summary>
-    public bool EndotrachealTubeInsertDone { get; set; }
-
+    public bool EndotrachealTubeInsertDone;
 
     /// <summary>
+    /// 환자 기도삽관 완료 (스타일렛 제거, T-Piece 연결)
+    /// </summary>
+    public bool TPieceAttachedToNasalCannula;
+
+    /// <summary>
+    /// T-Piece 제거
     /// 환자의 기도삽관이 완료된 상태에서 앰부백 마스크가 삽관관에 연결된 상태를 표시할지 여부
     /// </summary>
-    public bool AmbuBagAttachedToEndotrachealTube { get; set; }
+    public bool AmbuBagAttachedToEndotrachealTube;
 
     #endregion  // EndotrachealTubeTreatments
     #region ApplyGauzeDressing
@@ -77,52 +84,52 @@ namespace TriageTrainer.Patient
     /// <summary>
     /// 환자의 흉부에 거즈를 덧댄 경우
     /// </summary>
-    public bool GauzePatchedOnThorax { get; set; }
+    public bool GauzePatchedOnThorax;
 
     /// <summary>
     /// 환자의 흉부에 거즈 드레싱을 완료한 경우
     /// </summary>
-    public bool GauzeDressingDoneOnThorax { get; set; }
+    public bool GauzeDressingDoneOnThorax;
 
     /// <summary>
     /// 환자의 우측 팔에 거즈를 덧댄 경우
     /// </summary>
-    public bool GauzePatchedOnRightArm { get; set; }
+    public bool GauzePatchedOnRightArm;
 
     /// <summary>
     /// 환자의 우측 팔에 거즈 드레싱을 완료한 경우
     /// </summary>
-    public bool GauzeDressingDoneOnRightArm { get; set; }
+    public bool GauzeDressingDoneOnRightArm;
 
     /// <summary>
     /// 환자의 좌측 팔에 거즈를 덧댄 경우
     /// </summary>
-    public bool GauzePatchedOnLeftArm { get; set; }
+    public bool GauzePatchedOnLeftArm;
 
     /// <summary>
     /// 환자의 좌측 팔에 거즈 드레싱을 완료한 경우
     /// </summary>
-    public bool GauzeDressingDoneOnLeftArm { get; set; }
+    public bool GauzeDressingDoneOnLeftArm;
 
     /// <summary>
     /// 환자의 우측 눈썹에 거즈를 덧댄 경우
     /// </summary>
-    public bool GauzePatchedOnRightEyebrow { get; set; }
+    public bool GauzePatchedOnRightEyebrow;
 
     /// <summary>
     /// 환자의 우측 눈썹에 거즈 드레싱을 완료한 경우
     /// </summary>
-    public bool GauzeDressingDoneOnRightEyebrow { get; set; }
+    public bool GauzeDressingDoneOnRightEyebrow;
 
     /// <summary>
     /// 환자의 좌측 눈썹에 거즈를 덧댄 경우
     /// </summary>
-    public bool GauzePatchedOnLeftEyebrow { get; set; }
+    public bool GauzePatchedOnLeftEyebrow;
 
     /// <summary>
     /// 환자의 좌측 눈썹에 거즈 드레싱을 완료한 경우
     /// </summary>
-    public bool GauzeDressingDoneOnLeftEyebrow { get; set; }
+    public bool GauzeDressingDoneOnLeftEyebrow;
     
     #endregion  // ApplyGauzeDressing
     #region NasalCannulaTreatments
@@ -132,14 +139,7 @@ namespace TriageTrainer.Patient
     /// <summary>
     /// 환자의 코에 비강 캐뉼라를 적용한 경우
     /// </summary>
-    public bool NasalCannulaApplied { get; set; }
-
-
-    /// <summary>
-    /// T-Piece를 비강 캐뉼라에 연결한 경우
-    /// </summary>
-    public bool TPieceAttachedToNasalCannula { get; set; }
-    
+    public bool NasalCannulaApplied;
     #endregion  // NasalCannulaTreatments
     #region OtherTreatments
     /**
@@ -154,7 +154,7 @@ namespace TriageTrainer.Patient
     /// <summary>
     /// 환자의 목에 경부 고정대가 착용된 상태를 표시할지 여부
     /// </summary>
-    public bool CervicalCollarOnNeck { get; set; }
+    public bool CervicalCollarOnNeck;
     #endregion  // OtherTreatments
   }
 }
@@ -171,6 +171,22 @@ namespace TriageTrainer.Patient
  * `PatientTreatmentDisplayingChildGameObjects` 클래스는 이 클래스에 1:1 대응하여야 한다.
  *   - 동시에, 이러한 이유로, 생성하는 소스코드에는 일체의 주석을 작성하지 않는다.
  *     - 파일 최상단에 "이 파일은 자동 생성된 파일"이며, 현재 이 파일을 참고하라는 주석 정도만 작성한다.
- *   - 실제 정의에서 각 필드는 `public GameObject (항목명) { get; set; }` 형태로 작성될 것이다.
+ *   - 실제 정의에서 각 필드는 `public GameObject (항목명);` 형태로 작성될 것이다.
  *   - 네임스페이스는 이 클래스가 사용하는 네임스페이스와 동일한 것을 사용하여라.
+ *
+ * 
+ * 예시:
+ * ```cs
+ * using System;
+ * using UnityEngine;
+ * 
+ * namespace TriageTrainer.Patient
+ * {
+ *   [Serializable]
+ *   public class PatientTreatmentDisplayingChildGameObjects
+ *   {
+ *     public GameObject Syringe18GInsertedIntoLeftArm;
+ *     public GameObject Syringe18GInsertedIntoRightArm;
+ *     public GameObject Syringe20GInsertedIntoLeftArm;
+ * ...(후략)
  */

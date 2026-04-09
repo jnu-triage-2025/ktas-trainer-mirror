@@ -1,37 +1,38 @@
 // This file is auto-generated.
 // Refer to PatientTreatmentDisplayModel.cs.
-
+using System;
 using UnityEngine;
 
 namespace TriageTrainer.Patient
 {
+  [Serializable]
   public class PatientTreatmentDisplayingChildGameObjects
   {
-    public GameObject Syringe18GInsertedIntoLeftArm { get; set; }
-    public GameObject Syringe18GInsertedIntoRightArm { get; set; }
-    public GameObject Syringe20GInsertedIntoLeftArm { get; set; }
-    public GameObject Syringe20GInsertedIntoRightArm { get; set; }
-    public GameObject CentralVenousCatheterInsertedIntoSubclavian { get; set; }
+    public GameObject Syringe18GInsertedIntoLeftArm;
+    public GameObject Syringe18GInsertedIntoRightArm;
+    public GameObject Syringe20GInsertedIntoLeftArm;
+    public GameObject Syringe20GInsertedIntoRightArm;
+    public GameObject CentralVenousCatheterInsertedIntoSubclavian;
 
-    public GameObject LaryngoscopeInserted { get; set; }
-    public GameObject EndotrachealTubeStyletInserted { get; set; }
-    public GameObject EndotrachealTubeInsertDone { get; set; }
-    public GameObject AmbuBagAttachedToEndotrachealTube { get; set; }
+    public GameObject LaryngoscopeInserted;
+    public GameObject EndotrachealTubeStyletInserted;
+    public GameObject EndotrachealTubeInsertDone;
+    public GameObject TPieceAttachedToNasalCannula;
+    public GameObject AmbuBagAttachedToEndotrachealTube;
 
-    public GameObject GauzePatchedOnThorax { get; set; }
-    public GameObject GauzeDressingDoneOnThorax { get; set; }
-    public GameObject GauzePatchedOnRightArm { get; set; }
-    public GameObject GauzeDressingDoneOnRightArm { get; set; }
-    public GameObject GauzePatchedOnLeftArm { get; set; }
-    public GameObject GauzeDressingDoneOnLeftArm { get; set; }
-    public GameObject GauzePatchedOnRightEyebrow { get; set; }
-    public GameObject GauzeDressingDoneOnRightEyebrow { get; set; }
-    public GameObject GauzePatchedOnLeftEyebrow { get; set; }
-    public GameObject GauzeDressingDoneOnLeftEyebrow { get; set; }
+    public GameObject GauzePatchedOnThorax;
+    public GameObject GauzeDressingDoneOnThorax;
+    public GameObject GauzePatchedOnRightArm;
+    public GameObject GauzeDressingDoneOnRightArm;
+    public GameObject GauzePatchedOnLeftArm;
+    public GameObject GauzeDressingDoneOnLeftArm;
+    public GameObject GauzePatchedOnRightEyebrow;
+    public GameObject GauzeDressingDoneOnRightEyebrow;
+    public GameObject GauzePatchedOnLeftEyebrow;
+    public GameObject GauzeDressingDoneOnLeftEyebrow;
 
-    public GameObject NasalCannulaApplied { get; set; }
-    public GameObject TPieceAttachedToNasalCannula { get; set; }
+    public GameObject NasalCannulaApplied;
 
-    public GameObject CervicalCollarOnNeck { get; set; }
+    public GameObject CervicalCollarOnNeck;
   }
 }

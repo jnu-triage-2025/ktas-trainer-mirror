@@ -4,26 +4,20 @@ using UnityEngine;
 namespace TriageTrainer.Patient
 {
   /// <summary>
-  /// 시나리오1의 환자 유형 A에 대한 치료 표시 상태를 정의
+  /// 시나리오1의 환자 유형 B(남성)에 대한 치료 표시 상태를 정의
   /// </summary>
   [Serializable]
-  public class PatientTypeATreatmentDisplayState : PatientTreatmentDisplayStateABC
+  public class PatientTypeBFemaleTreatmentDisplayState : PatientTreatmentDisplayStateABC
   {
     [field: SerializeField]
     public override PatientTreatmentDisplayModel DisplaySupports { get; set; } = new PatientTreatmentDisplayModel
     {
-      Syringe18GInsertedIntoLeftArm = true,
-      Syringe18GInsertedIntoRightArm = true,
-      CentralVenousCatheterInsertedIntoSubclavian = true,
-      LaryngoscopeInserted = true,
-      EndotrachealTubeStyletInserted = true,
-      EndotrachealTubeInsertDone = true,
-      TPieceAttachedToNasalCannula = true,
-      AmbuBagAttachedToEndotrachealTube = true,
-      GauzePatchedOnThorax = true,
-      GauzeDressingDoneOnThorax = true,
+      Syringe20GInsertedIntoRightArm = true,
       NasalCannulaApplied = true,
-      CervicalCollarOnNeck = true,
+      GauzePatchedOnRightArm = true,
+      GauzeDressingDoneOnRightArm = true,
+      GauzePatchedOnRightEyebrow = true,
+      GauzeDressingDoneOnRightEyebrow = true,
     };
 
     [field: SerializeField]
