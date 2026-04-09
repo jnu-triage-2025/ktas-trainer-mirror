@@ -30,6 +30,9 @@ namespace TriageTrainer.Patient
     public override PatientTreatmentDisplayModel DisplayState { get; set; } = new PatientTreatmentDisplayModel();
 
     [field: SerializeField]
+    public override GameObject PatientModelGameObject { get; set; }
+
+    [field: SerializeField]
     public override PatientTreatmentDisplayingChildGameObjects ChildGameObjects { get; set; } = new PatientTreatmentDisplayingChildGameObjects();
   }
 }

@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace TriageTrainer.Patient
 {
@@ -23,6 +24,8 @@ namespace TriageTrainer.Patient
     /// 런타임 환경: 현재 환자 모델이 어떤 내용이 표시중인지 플래그
     /// </summary>
     public abstract PatientTreatmentDisplayModel DisplayState { get; set; }
+
+    public abstract GameObject PatientModelGameObject { get; set; }
 
     /// <summary>
     /// 런타임 환경: 자식 GameObject 참조
