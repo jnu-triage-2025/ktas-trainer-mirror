@@ -48,8 +48,8 @@ MonoBehaviour:
     <DisplaySupports>k__BackingField:
       Syringe18GInsertedIntoLeftArm: 0
       Syringe18GInsertedIntoRightArm: 0
-      Syringe20GInsertedIntoLeftArm: 0
-      Syringe20GInsertedIntoRightArm: 1
+      Syringe20GInsertedIntoLeftArm: 1
+      Syringe20GInsertedIntoRightArm: 0
       CentralVenousCatheterInsertedIntoSubclavian: 0
       LaryngoscopeInserted: 0
       EndotrachealTubeStyletInserted: 0
@@ -91,10 +91,11 @@ MonoBehaviour:
       GauzeDressingDoneOnLeftEyebrow: 0
       NasalCannulaApplied: 0
       CervicalCollarOnNeck: 0
+    <PatientModelGameObject>k__BackingField: {fileID: 7947458155882227648, guid: 69e31a8eb03fa499e992eb00d6aeb055, type: 3}
     <ChildGameObjects>k__BackingField:
       Syringe18GInsertedIntoLeftArm: {fileID: 0}
       Syringe18GInsertedIntoRightArm: {fileID: 0}
-      Syringe20GInsertedIntoLeftArm: {fileID: 0}
+      Syringe20GInsertedIntoLeftArm: {fileID: 8309685609686185534, guid: 5409b320ce32d4b6d8cb2accf67346a0, type: 3}
       Syringe20GInsertedIntoRightArm: {fileID: 0}
       CentralVenousCatheterInsertedIntoSubclavian: {fileID: 0}
       LaryngoscopeInserted: {fileID: 0}
@@ -104,13 +105,13 @@ MonoBehaviour:
       AmbuBagAttachedToEndotrachealTube: {fileID: 0}
       GauzePatchedOnThorax: {fileID: 0}
       GauzeDressingDoneOnThorax: {fileID: 0}
-      GauzePatchedOnRightArm: {fileID: 0}
-      GauzeDressingDoneOnRightArm: {fileID: 0}
+      GauzePatchedOnRightArm: {fileID: 6651249444163128761, guid: 3ce455c8ad6cf4bf0b192e0ca304fcb4, type: 3}
+      GauzeDressingDoneOnRightArm: {fileID: 2867513577512501916, guid: 3d90b0f114e924dc788397706507a802, type: 3}
       GauzePatchedOnLeftArm: {fileID: 0}
       GauzeDressingDoneOnLeftArm: {fileID: 0}
-      GauzePatchedOnRightEyebrow: {fileID: 0}
-      GauzeDressingDoneOnRightEyebrow: {fileID: 0}
+      GauzePatchedOnRightEyebrow: {fileID: 1810819605856192462, guid: 8179064993fa74fd8bfad62cc1165bad, type: 3}
+      GauzeDressingDoneOnRightEyebrow: {fileID: 7363712659138479564, guid: 2d9affa9930b042f4acca1e3119f6544, type: 3}
       GauzePatchedOnLeftEyebrow: {fileID: 0}
       GauzeDressingDoneOnLeftEyebrow: {fileID: 0}
-      NasalCannulaApplied: {fileID: 0}
+      NasalCannulaApplied: {fileID: 9218418689092315504, guid: dd53bfeeb5cb64c02b84fee3acf96ca3, type: 3}
       CervicalCollarOnNeck: {fileID: 0}
