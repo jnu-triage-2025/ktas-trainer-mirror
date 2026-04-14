@@ -87,7 +87,7 @@ public void StartScenario(ScenarioGraph graph, string startNodeIdentifier = null
 public void StartScenario(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId)
 ```
 
-**주의:** 서버 측(`ScenarioCommandRunner`)에서 호출합니다. 직접 호출 시 모든 클라이언트에 동기화되지 않을 수 있습니다.
+**주의:** 서버 측 `CommandDefinition_Scenario`/`ChatService.TryDispatchScenario` 경로에서 호출합니다. 직접 호출 시 모든 클라이언트에 동기화되지 않을 수 있습니다.
 
 ---
 

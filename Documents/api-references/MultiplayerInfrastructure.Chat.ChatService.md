@@ -20,7 +20,6 @@
 | `_messageCooldownSeconds` | `DefaultsChatControl.MessageCooldownSeconds` | 채팅 쿨다운(초) |
 | `_uiController` | (Inspector) | `ChatUIController` 참조 |
 | `_commandService` | (Inspector) | `ChatCommandService` 참조 |
-| `_scenarioRunner` | (Inspector) | `ScenarioCommandRunner` 참조 |
 | `_datapackRuntime` | (Inspector) | `DatapackRuntimeService` 참조 |
 
 ---
@@ -120,7 +119,7 @@ HandleLocalSubmission(raw)
 | `/give` | `/give <id> [count=1] [player]` | 플레이어에게 아이템 지급 |
 | `/clean` | `/clean [id] [count]` | 인벤토리 아이템 제거 |
 | `/gamemode` | `/gamemode <player\|spectator>` | 게임모드 전환 |
-| `/scenario` | `/scenario <id>` | 시나리오 실행 (ScenarioCommandRunner 필요) |
+| `/scenario` | `/scenario execute <player> <scenario_id>` | 대상 플레이어에게 시나리오 실행 |
 
 ### `/give` 동작 상세
 

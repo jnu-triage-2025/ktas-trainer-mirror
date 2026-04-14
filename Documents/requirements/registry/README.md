@@ -1,0 +1,14 @@
+# requirements/registry
+
+이 문서는 이 폴더의 문서 색인입니다.
+
+<!-- DOC-INDEX:START -->
+## 문서 색인
+
+### 문서
+- [registry-preloader-authoring-requirements.md](./registry-preloader-authoring-requirements.md): Registry 프리로더 저작/운영 요구사항
+- [registry-requirements.md](./registry-requirements.md): Registry 기능 요구사항
+- [waypoints-requirements.md](./waypoints-requirements.md): WaypointAnchor 기능 요구사항
+
+작성 기준: Git 추적 문서(.md) 기준으로 색인하며, .gitignore 대상 파일은 제외합니다.
+<!-- DOC-INDEX:END -->

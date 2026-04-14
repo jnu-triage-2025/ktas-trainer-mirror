@@ -175,7 +175,7 @@ var localPlayer = Registry.GetFirstEntityComponent<PlayerController>(
 
 `RegistryType.ScenarioGraph`에 `TextAsset`이 등록되면, `Get<ScenarioGraph>()`를 호출할 때 자동으로 JSON을 파싱하고 파싱 결과로 캐싱됩니다.
 
-> **API 레퍼런스:** [api-references/MultiplayerInfrastructure.Registry.md](api-references/MultiplayerInfrastructure.Registry.md)
+> **API 레퍼런스:** [api-references/MultiplayerInfrastructure.Registry.md](../MultiplayerInfrastructure.Registry.md)
 
 ---
 
@@ -225,7 +225,7 @@ int count = player.CountItemInInventory("bandage");
 player.TryDropItemInFront(itemData);
 ```
 
-> **API 레퍼런스:** [api-references/MultiplayerInfrastructure.Player.PlayerController.md](api-references/MultiplayerInfrastructure.Player.PlayerController.md)
+> **API 레퍼런스:** [api-references/MultiplayerInfrastructure.Player.PlayerController.md](../MultiplayerInfrastructure.Player.PlayerController.md)
 
 ---
 
@@ -236,9 +236,11 @@ player.TryDropItemInFront(itemData);
 ### 흐름 요약
 
 ```
-ScenarioCommandRunner._scenarios (서버/클라이언트 양측 Awake에서 Registry에 등록)
-    → Registry.PreloadScenarioGraph() → Registry.ScenarioGraph 등록
-    → ScenarioCommandRunner (서버 → 클라이언트로 식별자 전송)
+Registry.ScenarioGraph (프리로드/런타임 등록)
+    → /scenario execute <player> <scenario_id>
+    → CommandDefinition_Scenario.Execute
+    → ChatService.TryDispatchScenario (서버 검증/대상 분배)
+    → ChatService.TargetRunScenario (대상 클라이언트 RPC)
     → 클라이언트: Registry.TryGetScenarioGraph(identifier) → ScenarioGraph 조회
     → ScenarioController.StartScenario(graph)
     → 노드 순차 실행 (ExecuteNode → Advance)
@@ -302,8 +304,8 @@ ScenarioEventIdentifierRegistry.Unregister("move_patient_a_to_treatment");
 ```
 
 > **API 레퍼런스:**  
-> - [api-references/MultiplayerInfrastructure.Scenario.ScenarioController.md](api-references/MultiplayerInfrastructure.Scenario.ScenarioController.md)  
-> - [api-references/MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md](api-references/MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md)  
+> - [api-references/MultiplayerInfrastructure.Scenario.ScenarioController.md](../MultiplayerInfrastructure.Scenario.ScenarioController.md)  
+> - [api-references/MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md](../MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md)  
 > - [scenario-authoring-guide.md](../../requirements/content-definitions/scenario/scenario-authoring-guide.md)  
 > - [scenario-graph-spec.md](../../requirements/content-definitions/scenario/scenario-graph-spec.md)
 
@@ -344,7 +346,7 @@ public class OpenDoorInteract : MonoBehaviour, IInteract
 //    NearbyInteractablesDetector의 interactionLayerMask에 해당 레이어 포함
 ```
 
-> **API 레퍼런스:** [api-references/MultiplayerInfrastructure.InteractableEntity.md](api-references/MultiplayerInfrastructure.InteractableEntity.md)  
+> **API 레퍼런스:** [api-references/MultiplayerInfrastructure.InteractableEntity.md](../MultiplayerInfrastructure.InteractableEntity.md)  
 > **기능 요구사항:** [interaction-feature-spec.md](../../requirements/gameplay/interaction/interaction-feature-spec.md)
 
 ---
@@ -440,8 +442,8 @@ LootableItemInteractHandler.Interact()
 
 `Settings...`에서는 **현재 Scene 카메라 기준 표시 거리**를 설정할 수 있습니다. 범위를 `0`으로 설정하면 모든 `SceneItemPlacement`를 항상 표시합니다.
 
-> **아이템 정의:** [item.md](item.md)  
-> **구현 가이드:** [item-authoring.md](item-authoring.md)
+> **아이템 정의:** [item.md](../../item.md)  
+> **구현 가이드:** [item-authoring.md](../../working-guide/item-authoring.md)
 
 ---
 
@@ -468,7 +470,7 @@ mgr.OnTrackedQuestsChanged += tracked => UpdateHUD(tracked);
 
 `WaypointIdentifier`가 설정된 신규 퀘스트가 추가될 때 `FeatureFlags.HighlightAssignedWaypoint`가 활성화되어 있으면 해당 웨이포인트가 자동으로 강조됩니다.
 
-> **API 레퍼런스:** [api-references/MultiplayerInfrastructure.Quest.QuestManager.md](api-references/MultiplayerInfrastructure.Quest.QuestManager.md)
+> **API 레퍼런스:** [api-references/MultiplayerInfrastructure.Quest.QuestManager.md](../MultiplayerInfrastructure.Quest.QuestManager.md)
 
 ---
 
@@ -494,7 +496,7 @@ chatService.TryExecuteSystemCommand("/give bandage 5", out string result);
 | `/give <id> [count] [player]` | 아이템 지급 |
 | `/clean [id] [count]` | 인벤토리 아이템 제거 |
 | `/gamemode <player\|spectator>` | 게임모드 전환 |
-| `/scenario <id>` | 시나리오 실행 |
+| `/scenario execute <player> <scenario_id>` | 시나리오 실행 |
 
 ### 커스텀 커맨드 추가 (TriageTrainer 측)
 
@@ -511,8 +513,8 @@ public class MyCommand : IChatCommandModel
 // ChatCommandService.Initialize() 내부에서 RegisterCommand(new MyCommand(...))
 ```
 
-> **API 레퍼런스:** [api-references/MultiplayerInfrastructure.Chat.ChatService.md](api-references/MultiplayerInfrastructure.Chat.ChatService.md)  
-> **커맨드 확장:** [api-references/MultiplayerInfrastructure.Command.ChatCommandExtensions.md](api-references/MultiplayerInfrastructure.Command.ChatCommandExtensions.md)
+> **API 레퍼런스:** [api-references/MultiplayerInfrastructure.Chat.ChatService.md](../MultiplayerInfrastructure.Chat.ChatService.md)  
+> **커맨드 확장:** [api-references/MultiplayerInfrastructure.Command.ChatCommandExtensions.md](../MultiplayerInfrastructure.Command.ChatCommandExtensions.md)
 
 ---
 
@@ -526,7 +528,7 @@ if (WaypointAnchor.TryGet("exam-room", out var anchor))
     anchor.Highlight();   // 반짝이는 시각 강조 실행
 ```
 
-> **API 레퍼런스:** [api-references/MultiplayerInfrastructure.Registry.WaypointAnchor.md](api-references/MultiplayerInfrastructure.Registry.WaypointAnchor.md)
+> **API 레퍼런스:** [api-references/MultiplayerInfrastructure.Registry.WaypointAnchor.md](../MultiplayerInfrastructure.Registry.WaypointAnchor.md)
 
 ---
 
@@ -551,7 +553,7 @@ datapackRuntime.RegisterDatapackFromJson(jsonText);
 datapackRuntime.UnregisterDatapack("my-pack");
 ```
 
-> **API 레퍼런스:** [api-references/MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md](api-references/MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md)
+> **API 레퍼런스:** [api-references/MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md](../MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md)
 
 ---
 
@@ -611,5 +613,5 @@ void OnDestroy()
 | [scenario-graph-spec.md](../../requirements/content-definitions/scenario/scenario-graph-spec.md) | 시나리오 노드 JSON 스펙 |
 | [scenario-authoring-guide.md](../../requirements/content-definitions/scenario/scenario-authoring-guide.md) | 시나리오 작성 가이드 |
 | [interaction-feature-spec.md](../../requirements/gameplay/interaction/interaction-feature-spec.md) | 인터랙터블 기능 요구사항 |
-| [item.md](item.md) | 아이템 정의 가이드 |
-| [api-references/](api-references/) | API 레퍼런스 모음 |
+| [item.md](../../item.md) | 아이템 정의 가이드 |
+| [api-references/](../README.md) | API 레퍼런스 모음 |

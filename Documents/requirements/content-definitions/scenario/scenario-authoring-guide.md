@@ -12,13 +12,13 @@ updated: 2026-04-14
 ## 기본 원칙
 
 - 시나리오는 진입점 단위로 분리하여 파일을 작성합니다.
-- 각 파일은 [Documents/scenario/_template.md](scenario/_template.md) 형식을 따릅니다.
+- 각 파일은 [scenario/_template.md](./_template.md) 형식을 따릅니다.
 - 노드 식별자는 접두사 규칙을 지켜 숫자 증가 방식으로 부여합니다.
 
 ## 파일 구조
 
-- 시나리오 파일: `Documents/scenario/<scenario_id>.md`
-- 예시 참고: [Documents/scenario/_example.md](scenario/_example.md)
+- 시나리오 파일: `Documents/requirements/content-definitions/scenario/<scenario_id>.md`
+- 예시 참고: [scenario/_example.md](./_example.md)
 
 ## 노드 Identifier 규칙
 
@@ -41,7 +41,7 @@ updated: 2026-04-14
 1. 시나리오를 사건 흐름 단위로 나눕니다.
 2. 각 흐름을 NodeType으로 매핑합니다.
 3. 병렬 수행이 필요한 단계는 Parallel로 구성하고, 브랜치별 역할/태그 조건을 명시합니다.
-4. 모든 InvokeEvent는 [Documents/scenario/event-registry.md](scenario/event-registry.md)에 기록합니다.
+4. 모든 InvokeEvent는 [scenario/event-registry.md](./event-registry.md)에 기록합니다.
 5. 종료 조건을 마지막에 명시합니다.
 
 ## 태그 작성 규칙

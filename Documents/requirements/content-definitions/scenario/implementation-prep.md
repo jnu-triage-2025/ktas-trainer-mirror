@@ -30,7 +30,7 @@ updated: 2026-04-14
 현재 Resources/Scenario에는 샘플/검증 그래프만 있고, 실제 3개 본 시나리오(disaster_intro, patient_a_critical, patient_b_c_ct) 런타임 JSON이 없다.
 
 대상 경로:
-- [Assets/Modules/TriageTrainer/Resources/Scenario](../../Assets/Modules/TriageTrainer/Resources/Scenario)
+- [Assets/Modules/TriageTrainer/Resources/Scenario](../../../../Assets/Modules/TriageTrainer/Resources/Scenario)
 
 ### B. 이벤트 핸들러 연결 지점 부족
 
@@ -187,7 +187,7 @@ intro에서 검증된 패턴(환자 스폰/이동, UI 패널 표시, 장비 시�
 ## 10) 바로 실행할 다음 단계
 
 - 씬에 TriageScenarioEventBootstrap 컴포넌트 1개 배치
-- ScenarioCommandRunner의 _scenarios 목록에 disaster_intro_mvp JSON TextAsset 등록
+- RegistryPreloader 또는 Registry 등록 경로에 disaster_intro_mvp JSON TextAsset 등록
 - 서버 커맨드로 scenarioIdentifier=disaster_intro_mvp 실행
 - Console에서 이벤트 호출 로그 4개 확인
 	- triage_patientA_dummyA

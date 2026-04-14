@@ -9,13 +9,13 @@
 
 ## 현재 도구
 
-### check-markdown-links.sh
+### validate-documentation-links.sh
 
-Markdown 문서의 링크 대상 파일 존재 여부를 검사합니다.
+Documentation된Markdown 문서의 링크 대상 파일 존재 여부를 검사합니다.
 
 실행 예시 (working directory: Tools):
-- `./check-markdown-links.sh`
-- `./check-markdown-links.sh ../Documents`
-- `./check-markdown-links.sh ../Documents/README.md ../Documents/working-guide`
+- `./validate-documentation-links.sh`
+- `./validate-documentation-links.sh ../Documents`
+- `./validate-documentation-links.sh ../Documents/README.md ../Documents/working-guide`
 
 ### unitydiff
