@@ -214,4 +214,4 @@ await Task.Run(() =>
 ## 8. 관련 문서
 
 - [TTSService API](TextToSpeechService.TTSService.md)
-- [Transcript 작성 가이드](../tts-transcripts.md)
+- [Transcript 작성 가이드](../requirements/content-definitions/audio/tts-transcripts-spec.md)

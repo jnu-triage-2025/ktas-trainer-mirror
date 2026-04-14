@@ -1,3 +1,10 @@
+---
+title: "인벤토리 UI"
+doc_type: requirement
+status: active
+updated: 2026-04-14
+---
+
 # 인벤토리 UI
 
 | 항목 | 내용 |

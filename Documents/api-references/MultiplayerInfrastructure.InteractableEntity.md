@@ -235,6 +235,6 @@ public class MedCart : MonoBehaviour, IInteractable
 
 ## 관련 문서
 
-- [multiplayer-infrastructure-guide.md](../multiplayer-infrastructure-guide.md) — 인터랙터블 시스템 개요
-- [interaction-implementation-guide.md](../interaction-implementation-guide.md) — 상세 구현 가이드
+- [api-references/architecture/multiplayer-infrastructure-overview.md](architecture/multiplayer-infrastructure-overview.md) — 인터랙터블 시스템 개요
+- [requirements/gameplay/interaction/interaction-feature-spec.md](../requirements/gameplay/interaction/interaction-feature-spec.md) — 상세 기능 요구사항
 - [api-references/MultiplayerInfrastructure.Player.PlayerController.md](MultiplayerInfrastructure.Player.PlayerController.md) — PlayerController API

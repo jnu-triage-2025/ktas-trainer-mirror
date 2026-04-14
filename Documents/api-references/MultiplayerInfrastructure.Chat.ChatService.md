@@ -186,6 +186,6 @@ RegisterCommand(new MyCommand(chatService));
 
 ## 관련 문서
 
-- [multiplayer-infrastructure-guide.md](../multiplayer-infrastructure-guide.md) — 채팅 및 커맨드 시스템 개요
+- [multiplayer-infrastructure-overview.md](architecture/multiplayer-infrastructure-overview.md) — 채팅 및 커맨드 시스템 개요
 - [api-references/MultiplayerInfrastructure.Command.ChatCommandExtensions.md](MultiplayerInfrastructure.Command.ChatCommandExtensions.md) — 커맨드 확장 이력
 - [api-references/MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md](MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md) — 데이터팩 기반 자동 커맨드 실행

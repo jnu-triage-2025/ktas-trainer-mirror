@@ -1,3 +1,10 @@
+---
+title: "(UI명)"
+doc_type: requirement
+status: active
+updated: 2026-04-14
+---
+
 # (UI명)
 
 | 항목 | 내용 |

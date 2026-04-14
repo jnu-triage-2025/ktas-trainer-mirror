@@ -1,3 +1,10 @@
+---
+title: "퀘스트 프리뷰 HUD UI"
+doc_type: requirement
+status: active
+updated: 2026-04-14
+---
+
 # 퀘스트 프리뷰 HUD UI
 
 | 항목 | 내용 |

@@ -1,3 +1,10 @@
+---
+title: "다이얼로그 패널 UI"
+doc_type: requirement
+status: active
+updated: 2026-04-14
+---
+
 # 다이얼로그 패널 UI
 
 | 항목 | 내용 |

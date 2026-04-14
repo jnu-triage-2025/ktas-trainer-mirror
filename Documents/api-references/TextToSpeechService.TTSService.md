@@ -194,6 +194,6 @@ ONNX 모델이 없으면 `Debug.LogError`를 출력하고 초기화가 중단됩
 ## 5. 관련 문서
 
 - [TTSCore API](TextToSpeechService.TTSCore.md)
-- [Transcript 작성 가이드](../tts-transcripts.md)
+- [Transcript 작성 가이드](../requirements/content-definitions/audio/tts-transcripts-spec.md)
 - [ScenarioController API](MultiplayerInfrastructure.Scenario.ScenarioController.md) — `PlayTTS` 노드 연동
-- [scenario-graph.md](../scenario-graph.md) — `PlayTTSNode` JSON 스펙
+- [scenario-graph-spec.md](../requirements/content-definitions/scenario/scenario-graph-spec.md) — `PlayTTSNode` JSON 스펙

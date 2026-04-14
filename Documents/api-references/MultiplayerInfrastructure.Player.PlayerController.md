@@ -214,6 +214,6 @@ controller.ExitUIOverlayMode("inventory"); // 최종 해제 시 커서 잠금 �
 
 ## 관련 문서
 
-- [multiplayer-infrastructure-guide.md](../multiplayer-infrastructure-guide.md) — 시스템 전체 가이드
+- [multiplayer-infrastructure-overview.md](architecture/multiplayer-infrastructure-overview.md) — 시스템 전체 가이드
 - [api-references/MultiplayerInfrastructure.Player.PlayerController.InventoryCommands.md](MultiplayerInfrastructure.Player.PlayerController.InventoryCommands.md) — 인벤토리 커맨드
 - [api-references/MultiplayerInfrastructure.Item.Item.md](MultiplayerInfrastructure.Item.Item.md) — 아이템 시스템
