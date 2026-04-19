@@ -5,6 +5,7 @@ using UnityEngine.Rendering;
 
 namespace TriageTrainer.Tests.LineConnectorSandbox
 {
+  [ExecuteAlways]
   [DisallowMultipleComponent]
   [RequireComponent(typeof(LineRenderer))]
   public class IntravenousLineGrounded : MonoBehaviour
@@ -111,12 +112,23 @@ namespace TriageTrainer.Tests.LineConnectorSandbox
       EnsureMaterial();
     }
 
+    private void OnEnable()
+    {
+      simulationInitialized = false;
+      RefreshVisual();
+    }
+
     private void OnDisable()
     {
       simulationInitialized = false;
     }
 
     private void LateUpdate()
+    {
+      RefreshVisual();
+    }
+
+    private void RefreshVisual()
     {
       EnsureCoreComponents();
 
@@ -147,9 +159,7 @@ namespace TriageTrainer.Tests.LineConnectorSandbox
         return;
       }
 
-      EnsureCoreComponents();
-      ApplyRendererDefaults();
-      EnsureMaterial();
+      RefreshVisual();
     }
 
     private void OnDestroy()
