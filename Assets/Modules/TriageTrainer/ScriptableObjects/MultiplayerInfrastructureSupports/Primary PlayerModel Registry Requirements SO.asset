@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04e153282afe94e9980391b230024297, type: 3}
+  m_Name: Primary PlayerModel Registry Requirements SO
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects.PlayerModelRegistryRequirementsSO
+  playerModelRegistryRequirements:
+  - identifier: jeb
+    prefab: {fileID: 8246434791077451387, guid: b2b95c4d58a064035b2ce2106b33c64a, type: 3}
+  - identifier: sarah
+    prefab: {fileID: 2114059485806603911, guid: afb8f641e688f4f908b2eaca841c5d42, type: 3}
+  - identifier: dominic
+    prefab: {fileID: 6808668790273824806, guid: 13a6f1f1396aa440a9c105a2f57190a1, type: 3}
+  - identifier: brian
+    prefab: {fileID: 2656969667518500134, guid: 202577a68081144d99e1cb7e89e4e105, type: 3}
+  - identifier: lisa
+    prefab: {fileID: 6606751312203981709, guid: c6781b2c60ccd4332ae95e35b0a4776f, type: 3}
+  - identifier: maya
+    prefab: {fileID: 9000126146280538170, guid: ec0c83d96818c4cf486d34a1999e14b0, type: 3}
+  - identifier: emma
+    prefab: {fileID: 3907238120272733046, guid: 17c1e6834f75a4d91a430c6fa2bb6f91, type: 3}
+  - identifier: olivia
+    prefab: {fileID: 8480493512663385682, guid: a55a1f488bd7641a396702d767ee3ad9, type: 3}
+  - identifier: sofia
+    prefab: {fileID: 2234687413733428706, guid: 283926b421cd1406d9b1f6efde08e673, type: 3}
+  - identifier: aiden
+    prefab: {fileID: 7345567265429600410, guid: ac8105df5fcd64852a7f1bea4901dffe, type: 3}
+  - identifier: ethan
+    prefab: {fileID: 1864461740012523387, guid: 7fd5f28da4407415a9065a0b63a5f1e9, type: 3}
+  - identifier: liam
+    prefab: {fileID: 6510673966091124244, guid: 26d8f688677e943d7ab7d532e7a6b7fe, type: 3}

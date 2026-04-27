@@ -17,8 +17,17 @@ namespace MultiplayerInfrastructure.Player
 
     void Awake_GameObject()
     {
-      _bodyObject = transform.Find("Body").gameObject;
-      _spectatorMarkerObject = transform.Find("SpectatorMarker").gameObject;
+      var bodyTransform = transform.Find("Body");
+      var spectatorMarkerTransform = transform.Find("SpectatorMarker");
+
+      _bodyObject = bodyTransform != null ? bodyTransform.gameObject : null;
+      _spectatorMarkerObject = spectatorMarkerTransform != null ? spectatorMarkerTransform.gameObject : null;
+
+      if (_bodyObject == null)
+        Debug.LogWarning("[PlayerController] Child object 'Body' was not found.", this);
+
+      if (_spectatorMarkerObject == null)
+        Debug.LogWarning("[PlayerController] Child object 'SpectatorMarker' was not found.", this);
     }
   }
 }

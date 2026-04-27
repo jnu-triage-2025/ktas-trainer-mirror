@@ -59,6 +59,7 @@ namespace MultiplayerInfrastructure.Player
       PlayerGamemodeService.RegisterPlayer(this);
       UserDescriptorService.Register(Owner.ClientId, descriptor);
       RegisterPlayerEntity();
+      OnStartServer_PlayerModel();
       SyncPlayerTagsToObservers();
       SyncExistingWorldItemsToConnection(Owner);
     }
@@ -84,6 +85,7 @@ namespace MultiplayerInfrastructure.Player
       var descriptor = new UserDescriptor(_userIdentifier.Value, _userDisplayName.Value);
       UserDescriptorService.Register(Owner.ClientId, descriptor);
       RegisterPlayerEntity();
+      OnStartClient_AnyPeer_PlayerModel();
 
       // 이후 DisplayName 변경(서버 반영) 시 갱신
       _userDisplayName.OnChange += OnDisplayNameChanged;
@@ -93,6 +95,7 @@ namespace MultiplayerInfrastructure.Player
     private void OnStopClient_AnyPeer()
     {
       _userDisplayName.OnChange -= OnDisplayNameChanged;
+      OnStopClient_AnyPeer_PlayerModel();
       Registry.Registry.UnregisterEntity(_entityIdentifier.Value);
       PlayerTagService.ClearTags(_userIdentifier.Value);
       UserDescriptorService.Unregister(_userIdentifier.Value);

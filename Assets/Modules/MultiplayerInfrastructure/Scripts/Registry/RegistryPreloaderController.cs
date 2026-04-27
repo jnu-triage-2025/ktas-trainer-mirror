@@ -1,4 +1,5 @@
 using UnityEngine;
+using MultiplayerInfrastructure.Player;
 
 namespace MultiplayerInfrastructure.Registry
 {
@@ -21,6 +22,7 @@ namespace MultiplayerInfrastructure.Registry
     public RegistryPreloadEntitySO preloadEntitySO;
     public RegistryPreloadInteractableEntitySO preloadInteractableEntitySO;
     public RegistryPreloadUIControllerSO preloadUIControllerSO;
+    public RegistryPreloadPlayerCharacterSO preloadPlayerCharacterSO;
 
     private void Awake()
     {
@@ -31,6 +33,7 @@ namespace MultiplayerInfrastructure.Registry
       PreloadEntities();
       PreloadInteractableEntities();
       PreloadUIControllers();
+      PreloadPlayerCharacters();
     }
 
     private void PreloadScenarioGraphs()
@@ -132,6 +135,28 @@ namespace MultiplayerInfrastructure.Registry
           : req.identifier;
 
         Registry.Register(RegistryType.UI, key, req.controllerRef);
+      }
+    }
+
+    private void PreloadPlayerCharacters()
+    {
+      if (preloadPlayerCharacterSO == null || preloadPlayerCharacterSO.playerCharacterRegistryRequirements == null)
+        return;
+
+      foreach (var req in preloadPlayerCharacterSO.playerCharacterRegistryRequirements)
+      {
+        if (string.IsNullOrWhiteSpace(req.identifier) || req.prefab == null)
+          continue;
+
+        if (!req.prefab.TryGetComponent<IPlayerCharacterModelObject>(out _))
+        {
+          Debug.LogWarning(
+            $"[RegistryPreloaderController] PlayerCharacter '{req.identifier}' does not implement IPlayerCharacterModelObject. Skipped.",
+            req.prefab);
+          continue;
+        }
+
+        Registry.Register(RegistryType.PlayerModel, req.identifier, req.prefab);
       }
     }
   }

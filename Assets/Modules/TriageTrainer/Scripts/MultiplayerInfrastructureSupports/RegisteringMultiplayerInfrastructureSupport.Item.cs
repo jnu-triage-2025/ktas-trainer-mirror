@@ -9,7 +9,7 @@ using TriageTrainer.ItemDefinitions;
 using UnityEngine;
 using MIExamples = MultiplayerInfrastructure.ItemSystem.Examples;
 
-namespace TriageTrainer.Items
+namespace TriageTrainer.MultiplayerInfrastructureSupports
 {
   /// <summary>
   /// MultiplayerInfrastructure 레지스트리 연동 지원 MonoBehaviour입니다.
@@ -18,12 +18,12 @@ namespace TriageTrainer.Items
   /// 등록된 모든 아이템에 대해 필요한 리소스(아이콘 스프라이트, 3D 모델 프리팹)가
   /// Resources 폴더 내에 존재하는지 검증합니다.
   /// </summary>
-  public class MultiplayerInfrastructureRegisterSupport : MonoBehaviour
+  public partial class RegisteringMultiplayerInfrastructureSupport : MonoBehaviour
   {
     // 3D 모델 프리팹이 위치한 Resources 하위 경로 (ItemObject.ModelRootPath 와 동일)
     private const string ModelRootPath = "Models/Items";
 
-    private void Awake()
+    private void Awake_Item()
     {
       RegisterAllItems();
       ValidateItemResources();

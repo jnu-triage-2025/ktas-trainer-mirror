@@ -14,26 +14,8 @@ namespace MultiplayerInfrastructure.Player
     public bool IsSpectator => _gamemode == PlayerGamemode.Spectator;
     public bool IsSpectatingTarget => _isSpectateFollowing;
 
-    private MeshRenderer _bodyObjectMeshRenderer;
-    private MeshRenderer BodyObjectMeshRenderer
-    {
-      get
-      {
-        if (_bodyObjectMeshRenderer == null)
-          _bodyObjectMeshRenderer = _bodyObject.GetComponent<MeshRenderer>();
-        return _bodyObjectMeshRenderer;
-      }
-    }
-    private MeshRenderer _spectatorMarkerMeshRenderer;
-    private MeshRenderer SpectatorMarkerMeshRenderer
-    {
-      get
-      {
-        if (_spectatorMarkerMeshRenderer == null)
-          _spectatorMarkerMeshRenderer = _spectatorMarkerObject.GetComponent<MeshRenderer>();
-        return _spectatorMarkerMeshRenderer;
-      }
-    }
+    private Renderer[] _bodyRenderers;
+    private Renderer[] _spectatorMarkerRenderers;
 
     internal void ApplyGamemodeServer(PlayerGamemode mode)
     {
@@ -75,8 +57,8 @@ namespace MultiplayerInfrastructure.Player
       StopSpectateFollow();
 
       // PlayerController.GameObject
-      SpectatorMarkerMeshRenderer.enabled = true;
-      BodyObjectMeshRenderer.enabled = false;
+      SetMarkerVisibility(_spectatorMarkerObject, true, ref _spectatorMarkerRenderers, "SpectatorMarker");
+      SetMarkerVisibility(_bodyObject, false, ref _bodyRenderers, "Body");
 
       _moveDirection = Vector3.zero;
       _characterController.enabled = true;
@@ -88,12 +70,38 @@ namespace MultiplayerInfrastructure.Player
       StopSpectateFollow();
 
       // PlayerController.GameObject
-      SpectatorMarkerMeshRenderer.enabled = false;
-      BodyObjectMeshRenderer.enabled = true;
+      SetMarkerVisibility(_spectatorMarkerObject, false, ref _spectatorMarkerRenderers, "SpectatorMarker");
+      SetMarkerVisibility(_bodyObject, true, ref _bodyRenderers, "Body");
 
       _moveDirection = Vector3.zero;
       _characterController.enabled = true;
       canMove = true;
+    }
+
+    private void SetMarkerVisibility(GameObject markerRoot, bool visible, ref Renderer[] cache, string markerName)
+    {
+      if (markerRoot == null)
+      {
+        Debug.LogWarning($"[PlayerController] {markerName} object is not assigned.", this);
+        return;
+      }
+
+      if (cache == null || cache.Length == 0)
+      {
+        cache = markerRoot.GetComponentsInChildren<Renderer>(true);
+      }
+
+      if (cache == null || cache.Length == 0)
+      {
+        return;
+      }
+
+      for (int i = 0; i < cache.Length; i++)
+      {
+        var renderer = cache[i];
+        if (renderer != null)
+          renderer.enabled = visible;
+      }
     }
 
     private void BeginSpectateFollow(PlayerController target)

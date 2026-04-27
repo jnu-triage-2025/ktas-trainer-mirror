@@ -42,9 +42,9 @@ updated: 2026-04-14
 - [item](./item/README.md): 문서 3개
 - [module-features](./module-features/README.md): 문서 3개
 - [patient](./patient/README.md): 문서 3개
-- [player](./player/README.md): 문서 4개
+- [player](./player/README.md): 문서 5개
 - [quest](./quest/README.md): 문서 2개
-- [registry](./registry/README.md): 문서 4개
+- [registry](./registry/README.md): 문서 5개
 - [scenario](./scenario/README.md): 문서 7개
 - [session](./session/README.md): 문서 2개
 - [traceability](./traceability/README.md): 문서 4개

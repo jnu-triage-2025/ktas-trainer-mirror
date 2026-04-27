@@ -18,6 +18,7 @@ namespace MultiplayerInfrastructure.Registry
       Entity,
       InteractableEntity,
       UiController,
+      PlayerCharacter,
       MultiplayerInfrastructureRegisterSupport
     }
 
@@ -31,6 +32,7 @@ namespace MultiplayerInfrastructure.Registry
     [SerializeField] private RegistryPreloadEntitySO entitySO;
     [SerializeField] private RegistryPreloadInteractableEntitySO interactableEntitySO;
     [SerializeField] private RegistryPreloadUIControllerSO uiControllerSO;
+    [SerializeField] private RegistryPreloadPlayerCharacterSO playerCharacterSO;
 
     [MenuItem("Tools/Multiplayer Infrastructure/Registry Preloader: Validate Registering Resources")]
     private static void Open()
@@ -143,6 +145,14 @@ namespace MultiplayerInfrastructure.Registry
             false);
           break;
 
+        case ValidationTarget.PlayerCharacter:
+          playerCharacterSO = (RegistryPreloadPlayerCharacterSO)EditorGUILayout.ObjectField(
+            "PlayerCharacter SO",
+            playerCharacterSO,
+            typeof(RegistryPreloadPlayerCharacterSO),
+            false);
+          break;
+
         case ValidationTarget.MultiplayerInfrastructureRegisterSupport:
           EditorGUILayout.HelpBox(
             "MultiplayerInfrastructureRegisterSupport.RegisterAllItems() 기준으로 아이템 등록/생성/리소스 유효성을 검사합니다.",
@@ -162,6 +172,7 @@ namespace MultiplayerInfrastructure.Registry
         ValidationTarget.Entity => entitySO,
         ValidationTarget.InteractableEntity => interactableEntitySO,
         ValidationTarget.UiController => uiControllerSO,
+        ValidationTarget.PlayerCharacter => playerCharacterSO,
         _ => null
       };
     }
@@ -216,6 +227,10 @@ namespace MultiplayerInfrastructure.Registry
 
         case ValidationTarget.UiController:
           RegistryPreloaderValidator.ValidateUi(uiControllerSO, report);
+          break;
+
+        case ValidationTarget.PlayerCharacter:
+          RegistryPreloaderValidator.ValidatePlayerCharacter(playerCharacterSO, report);
           break;
       }
 
