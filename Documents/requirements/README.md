@@ -38,7 +38,7 @@ updated: 2026-04-14
 - [content-definitions](./content-definitions/README.md): 문서 23개
 - [datapack](./datapack/README.md): 문서 2개
 - [gameplay](./gameplay/README.md): 문서 4개
-- [interaction](./interaction/README.md): 문서 2개
+- [interaction](./interaction/README.md): 문서 3개
 - [item](./item/README.md): 문서 3개
 - [module-features](./module-features/README.md): 문서 3개
 - [patient](./patient/README.md): 문서 3개
