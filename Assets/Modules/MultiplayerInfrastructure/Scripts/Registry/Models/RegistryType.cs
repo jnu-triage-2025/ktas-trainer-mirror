@@ -25,6 +25,7 @@ namespace MultiplayerInfrastructure.Registry
     RuntimeState,
     InteractableEntity,
     UI,
+    PlayerModel,
     /// <summary>
     /// 플레이어 태그 레지스트리. 키는 UserDescriptor.Identifier(UUID), 값은 List&lt;string&gt;입니다.
     /// </summary>

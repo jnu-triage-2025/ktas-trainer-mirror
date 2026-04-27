@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Scenario;
 using UnityEditor;
 using UnityEngine;
@@ -77,6 +78,7 @@ namespace MultiplayerInfrastructure.Registry
       ValidateEntity(preloader.preloadEntitySO, report);
       ValidateInteractableEntity(preloader.preloadInteractableEntitySO, report);
       ValidateUi(preloader.preloadUIControllerSO, report);
+      ValidatePlayerCharacter(preloader.preloadPlayerCharacterSO, report);
     }
 
     internal static void ValidateScenarioGraph(
@@ -372,6 +374,52 @@ namespace MultiplayerInfrastructure.Registry
         if (!used.Add(effectiveKey))
         {
           report.AddError($"{row}: 중복 identifier '{effectiveKey}'가 있습니다.", so);
+        }
+      }
+    }
+
+    internal static void ValidatePlayerCharacter(RegistryPreloadPlayerCharacterSO so, RegistryPreloaderValidationReport report)
+    {
+      if (so == null)
+      {
+        report.AddWarning("preloadPlayerCharacterSO가 비어 있습니다.", null);
+        return;
+      }
+
+      if (so.playerCharacterRegistryRequirements == null)
+      {
+        report.AddWarning("PlayerCharacter 요구 사항 배열이 null입니다.", so);
+        return;
+      }
+
+      var used = new HashSet<string>(StringComparer.Ordinal);
+      for (int i = 0; i < so.playerCharacterRegistryRequirements.Length; i++)
+      {
+        var req = so.playerCharacterRegistryRequirements[i];
+        string row = $"PlayerCharacter[{i}]";
+
+        if (string.IsNullOrWhiteSpace(req.identifier))
+        {
+          report.AddError($"{row}: Identifier가 비어 있습니다.", so);
+          continue;
+        }
+
+        if (!used.Add(req.identifier))
+        {
+          report.AddError($"{row}: 중복 Identifier '{req.identifier}'가 있습니다.", so);
+        }
+
+        if (req.prefab == null)
+        {
+          report.AddError($"{row}: GameObjectRef 참조가 비어 있습니다.", so);
+          continue;
+        }
+
+        EnsurePersistentAsset(req.prefab, row, report);
+
+        if (!req.prefab.TryGetComponent<IPlayerCharacterModelObject>(out _))
+        {
+          report.AddError($"{row}: IPlayerCharacterModelObject 구현 컴포넌트가 없습니다.", req.prefab);
         }
       }
     }

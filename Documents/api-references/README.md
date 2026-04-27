@@ -20,6 +20,7 @@
 - [MultiplayerInfrastructure.Item.Item.md](./MultiplayerInfrastructure.Item.Item.md): MultiplayerInfrastructure.Item.Item (Current)
 - [MultiplayerInfrastructure.Player.PlayerController.InventoryCommands.md](./MultiplayerInfrastructure.Player.PlayerController.InventoryCommands.md): MultiplayerInfrastructure.Player.PlayerController.InventoryCommands
 - [MultiplayerInfrastructure.Player.PlayerController.md](./MultiplayerInfrastructure.Player.PlayerController.md): API 레퍼런스: `MultiplayerInfrastructure.Player.PlayerController`
+- [MultiplayerInfrastructure.Player.PlayerModel.md](./MultiplayerInfrastructure.Player.PlayerModel.md): API 레퍼런스: `MultiplayerInfrastructure.Player.PlayerModel`
 - [MultiplayerInfrastructure.Quest.QuestManager.md](./MultiplayerInfrastructure.Quest.QuestManager.md): MultiplayerInfrastructure.Quest.QuestManager
 - [MultiplayerInfrastructure.Registry.WaypointAnchor.md](./MultiplayerInfrastructure.Registry.WaypointAnchor.md): MultiplayerInfrastructure.Registry.WaypointAnchor
 - [MultiplayerInfrastructure.Registry.md](./MultiplayerInfrastructure.Registry.md): API 레퍼런스: `MultiplayerInfrastructure.Registry`
@@ -30,6 +31,7 @@
 - [MultiplayerInfrastructure.UI.Crosshair.md](./MultiplayerInfrastructure.UI.Crosshair.md): API 레퍼런스: Crosshair & Raycast
 - [TextToSpeechService.TTSCore.md](./TextToSpeechService.TTSCore.md): TextToSpeechService.TTSCore
 - [TextToSpeechService.TTSService.md](./TextToSpeechService.TTSService.md): TextToSpeechService.TTSService
+- [TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel.md](./TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel.md): API 레퍼런스: `TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel`
 - [TriageTrainer.Entity.PatientMonitor.md](./TriageTrainer.Entity.PatientMonitor.md): API 레퍼런스: TriageTrainer.Entity.PatientMonitor
 - [TriageTrainer.Scenario.TriageScenarioEventBootstrap.md](./TriageTrainer.Scenario.TriageScenarioEventBootstrap.md): API 레퍼런스: TriageTrainer.Scenario.TriageScenarioEventBootstrap
 
