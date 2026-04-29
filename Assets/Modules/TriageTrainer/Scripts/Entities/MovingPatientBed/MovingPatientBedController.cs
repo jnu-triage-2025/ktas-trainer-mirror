@@ -12,7 +12,7 @@ using MI = MultiplayerInfrastructure;
 
 namespace TriageTrainer.Entity
 {
-  public class MovingPatientBedController : Ridable, IInteractable, IInteract
+  public class MovingPatientBedController : Ridable, IInteractable, IInteract, IInteractorConditional
   {
     [Serializable]
     public class AttachableItemVisualPair
@@ -53,6 +53,8 @@ namespace TriageTrainer.Entity
 
     [Header("Movement")]
     [SerializeField, Min(0f)] private float _moveSpeed = 3.5f;
+    [SerializeField, Min(0f)] private float _turnSpeed = 120f;
+    [SerializeField] private float _forwardYawOffsetDegrees = -90f;
     [SerializeField] private LayerMask _movementBlockingMask = ~0;
 
     [Header("Attachable Item Visuals")]
@@ -185,6 +187,14 @@ namespace TriageTrainer.Entity
       EnterMovingMode(participant);
     }
 
+    public bool CanInteract(Transform interactor)
+    {
+      if (interactor == null)
+        return false;
+
+      return !_participants.ContainsKey(interactor.GetInstanceID());
+    }
+
     public bool TryReposeTarget(IReposable target, Transform interactor = null)
     {
       if (target == null)
@@ -305,33 +315,25 @@ namespace TriageTrainer.Entity
       if (participant?.Player == null)
         return;
 
+      participant.Player.AlignYawTo(GetBedForwardDirection());
       participant.Player.SetForcedFollowAnchor(participant.AttachPoint);
-      TryShowActionbar(participant, true);
+      TryShowActionbar(participant);
+      participant.Player.RefreshInteractableHintsNow();
     }
 
     private void ExitMovingMode(PlayerController player, RidingParticipant participant)
     {
       player?.ClearForcedFollowAnchor(participant?.AttachPoint);
       ReleaseAttachPoint(player, out _);
-      TryShowActionbar(participant, false);
+      player?.RefreshInteractableHintsNow();
     }
 
     private void RefreshOwnerActionbars()
     {
-      foreach (var each in _participants)
-      {
-        var participant = each.Value;
-        if (participant == null || participant.Player == null || !participant.Player.IsOwner)
-          continue;
-
-        if (Time.time - participant.LastActionbarRefreshAt < 0.8f)
-          continue;
-
-        TryShowActionbar(participant, true);
-      }
+      // Intentionally no-op. Actionbar hint is shown once on mode entry.
     }
 
-    private void TryShowActionbar(RidingParticipant participant, bool show)
+    private void TryShowActionbar(RidingParticipant participant)
     {
       if (participant?.Player == null || !participant.Player.IsOwner)
         return;
@@ -342,21 +344,15 @@ namespace TriageTrainer.Entity
       if (_titleUI == null)
         return;
 
-      if (show)
-      {
-        participant.LastActionbarRefreshAt = Time.time;
-        _titleUI.ShowActionbar(ConstantString.HintExitPatientBedMovingMode);
-      }
-      else
-      {
-        _titleUI.ClearActionbar();
-      }
+      participant.LastActionbarRefreshAt = Time.time;
+      _titleUI.ShowActionbar(ConstantString.HintExitPatientBedMovingMode);
     }
 
     private void MoveBedFromParticipantsInput()
     {
       int participantCount = 0;
-      Vector3 summedWorldInput = Vector3.zero;
+      float summedForwardInput = 0f;
+      float summedTurnInput = 0f;
 
       foreach (var each in _participants)
       {
@@ -368,39 +364,48 @@ namespace TriageTrainer.Entity
         participantCount++;
 
         var localInput = player.CurrentMoveInputVector;
-        if (localInput.sqrMagnitude <= 0.0001f)
-          continue;
-
-        var worldInput = player.transform.TransformDirection(localInput);
-        worldInput.y = 0f;
-        summedWorldInput += worldInput;
+        summedForwardInput += localInput.z;
+        summedTurnInput += localInput.x;
       }
 
       if (participantCount <= 0)
-        return;
-
-      if (summedWorldInput.sqrMagnitude <= 0.0001f)
         return;
 
       int requiredWeight = RequiredInteractorCount;
       int divisor = requiredWeight > 0 ? Mathf.Max(participantCount, requiredWeight) : participantCount;
       divisor = Mathf.Max(1, divisor);
 
-      Vector3 normalizedMove = summedWorldInput / divisor;
-      normalizedMove.y = 0f;
+      float forwardRatio = Mathf.Clamp(summedForwardInput / divisor, -1f, 1f);
+      float turnRatio = Mathf.Clamp(summedTurnInput / divisor, -1f, 1f);
 
-      float length = normalizedMove.magnitude;
-      if (length <= 0.0001f)
+      if (Mathf.Abs(turnRatio) > 0.0001f)
+      {
+        float yawDelta = turnRatio * _turnSpeed * Time.deltaTime;
+        transform.Rotate(0f, yawDelta, 0f, Space.World);
+      }
+
+      if (Mathf.Abs(forwardRatio) <= 0.0001f)
         return;
 
-      Vector3 desiredMove = normalizedMove.normalized * (_moveSpeed * Time.deltaTime * Mathf.Clamp01(length));
+      Vector3 bedForward = GetBedForwardDirection();
+      Vector3 desiredMove = bedForward * (forwardRatio * _moveSpeed * Time.deltaTime);
       Vector3 target = transform.position + desiredMove;
 
       if (Physics.Linecast(transform.position, target, _movementBlockingMask, QueryTriggerInteraction.Ignore))
         return;
 
       transform.position = target;
-      transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(normalizedMove.normalized), 8f * Time.deltaTime);
+    }
+
+    private Vector3 GetBedForwardDirection()
+    {
+      Quaternion forwardBasis = Quaternion.Euler(0f, _forwardYawOffsetDegrees, 0f);
+      Vector3 bedForward = (forwardBasis * transform.forward).normalized;
+      bedForward.y = 0f;
+      if (bedForward.sqrMagnitude <= 0.0001f)
+        return transform.forward;
+
+      return bedForward;
     }
 
     private void CleanupReleasedHoldInteractors()

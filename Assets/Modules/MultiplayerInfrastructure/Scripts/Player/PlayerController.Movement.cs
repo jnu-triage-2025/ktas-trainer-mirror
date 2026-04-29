@@ -176,6 +176,15 @@ namespace MultiplayerInfrastructure.Player
       _moveDirection = Vector3.zero;
     }
 
+    public void AlignYawTo(Vector3 worldForward)
+    {
+      worldForward.y = 0f;
+      if (worldForward.sqrMagnitude <= 0.0001f)
+        return;
+
+      transform.rotation = Quaternion.LookRotation(worldForward.normalized, Vector3.up);
+    }
+
     void UpdateSpectateFollowTarget()
     {
       if (!_isSpectateFollowing) return;
