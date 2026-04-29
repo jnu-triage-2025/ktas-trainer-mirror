@@ -121,6 +121,66 @@ namespace MultiplayerInfrastructure.Chat
       ScenarioController.Instance.StartScenario(graph, null, owner);
     }
 
+    [TargetRpc]
+    private void TargetShowTitle(NetworkConnection conn, string title, string subtitle)
+    {
+      var ui = GetTitleUIController();
+      if (ui == null)
+        return;
+
+      ui.ShowTitle(title, subtitle);
+    }
+
+    [TargetRpc]
+    private void TargetShowSubtitle(NetworkConnection conn, string subtitle)
+    {
+      var ui = GetTitleUIController();
+      if (ui == null)
+        return;
+
+      ui.ShowSubtitle(subtitle);
+    }
+
+    [TargetRpc]
+    private void TargetShowActionbar(NetworkConnection conn, string actionbar)
+    {
+      var ui = GetTitleUIController();
+      if (ui == null)
+        return;
+
+      ui.ShowActionbar(actionbar);
+    }
+
+    [TargetRpc]
+    private void TargetClearTitle(NetworkConnection conn)
+    {
+      var ui = GetTitleUIController();
+      if (ui == null)
+        return;
+
+      ui.ClearAll();
+    }
+
+    [TargetRpc]
+    private void TargetResetTitle(NetworkConnection conn)
+    {
+      var ui = GetTitleUIController();
+      if (ui == null)
+        return;
+
+      ui.ResetTimesAndSubtitle();
+    }
+
+    [TargetRpc]
+    private void TargetSetTitleTimes(NetworkConnection conn, int fadeInTicks, int stayTicks, int fadeOutTicks)
+    {
+      var ui = GetTitleUIController();
+      if (ui == null)
+        return;
+
+      ui.SetTimes(fadeInTicks, stayTicks, fadeOutTicks);
+    }
+
 #endregion
 
 #region Helpers
@@ -195,6 +255,58 @@ namespace MultiplayerInfrastructure.Chat
       return true;
     }
 
+    public bool TryDispatchTitle(
+      IEnumerable<NetworkConnection> targets,
+      string title,
+      string subtitle,
+      out string error)
+    {
+      return DispatchToTargets(
+        targets,
+        target => TargetShowTitle(target, title, subtitle),
+        out error);
+    }
+
+    public bool TryDispatchSubtitle(IEnumerable<NetworkConnection> targets, string subtitle, out string error)
+    {
+      return DispatchToTargets(
+        targets,
+        target => TargetShowSubtitle(target, subtitle),
+        out error);
+    }
+
+    public bool TryDispatchActionbar(IEnumerable<NetworkConnection> targets, string actionbar, out string error)
+    {
+      return DispatchToTargets(
+        targets,
+        target => TargetShowActionbar(target, actionbar),
+        out error);
+    }
+
+    public bool TryDispatchTitleClear(IEnumerable<NetworkConnection> targets, out string error)
+    {
+      return DispatchToTargets(
+        targets,
+        target => TargetClearTitle(target),
+        out error);
+    }
+
+    public bool TryDispatchTitleReset(IEnumerable<NetworkConnection> targets, out string error)
+    {
+      return DispatchToTargets(
+        targets,
+        target => TargetResetTitle(target),
+        out error);
+    }
+
+    public bool TryDispatchTitleTimes(IEnumerable<NetworkConnection> targets, int fadeInTicks, int stayTicks, int fadeOutTicks, out string error)
+    {
+      return DispatchToTargets(
+        targets,
+        target => TargetSetTitleTimes(target, fadeInTicks, stayTicks, fadeOutTicks),
+        out error);
+    }
+
     public bool TryExecuteSystemCommand(string commandLine, out string result)
     {
       return TryExecuteCommandInternal(commandLine, null, out result);
@@ -239,6 +351,49 @@ namespace MultiplayerInfrastructure.Chat
     }
 
     public string GetDisplayName(NetworkConnection conn) => conn?.ClientId.ToString() ?? "Server";
+
+    private TitleUIController GetTitleUIController()
+    {
+      return Registry.Registry.Get<TitleUIController>(RegistryType.UI, Registry.Registry.TypeKey<TitleUIController>());
+    }
+
+    private bool DispatchToTargets(
+      IEnumerable<NetworkConnection> targets,
+      System.Action<NetworkConnection> dispatch,
+      out string error)
+    {
+      error = string.Empty;
+
+      if (!IsServer)
+      {
+        error = "Title command can only be invoked on the server.";
+        return false;
+      }
+
+      if (targets == null)
+      {
+        error = "No target players were matched.";
+        return false;
+      }
+
+      bool anyTarget = false;
+      foreach (var target in targets)
+      {
+        if (target == null)
+          continue;
+
+        anyTarget = true;
+        dispatch?.Invoke(target);
+      }
+
+      if (!anyTarget)
+      {
+        error = "No target players were matched.";
+        return false;
+      }
+
+      return true;
+    }
 #endregion
   }
 }

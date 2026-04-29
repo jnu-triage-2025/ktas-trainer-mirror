@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML
+  xmlns:ui="UnityEngine.UIElements"
+  xmlns:mi="MultiplayerInfrastructure.UI"
+  editor-extension-mode="False"
+>
+  <ui:Style src="TitleUI.uss" />
+  <ui:VisualElement class="title-ui-container" picking-mode="Ignore">
+    <mi:TitleUIElement name="title-ui-root" />
+  </ui:VisualElement>
+</ui:UXML>

@@ -20,7 +20,8 @@ ChatService는 플레이어 채팅 전송과 시스템 메시지, 커맨드 실�
 
 - `SendChatServerRpc`, `ExecuteCommandServerRpc`, `ReceiveChatObserversRpc` 흐름으로 동작한다.
 - `TryExecuteSystemCommand`는 sender 없는 서버 실행 경로를 제공한다.
-- `ChatCommandService`와 결합해 `/help`, `/give`, `/clean`, `/gamemode`, `/scenario`를 실행한다.
+- `ChatCommandService`와 결합해 `/help`, `/give`, `/clean`, `/gamemode`, `/scenario`, `/title`를 실행한다.
+- 타이틀 표시는 타겟 RPC로 전달되며 클라이언트 로컬 타이밍 값을 사용한다.
 
 ## 참조
 

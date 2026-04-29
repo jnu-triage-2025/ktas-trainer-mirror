@@ -40,6 +40,13 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private Transform _cameraHolderTransform;
     public Transform CameraHolderTransform => _cameraHolderTransform;
 
+    private Transform _forcedFollowAnchor;
+
+    public bool IsMovementPositionOverridden => _forcedFollowAnchor != null;
+
+    public Vector3 CurrentMoveInputVector
+      => new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
+
     void Awake_Movement()
     {
       _characterController = GetComponent<CharacterController>();
@@ -50,6 +57,7 @@ namespace MultiplayerInfrastructure.Player
     void Update_Movement()
     {
       ComputeMovement();
+      FollowForcedAnchor();
       UpdateSpectateFollowTarget();
     }
 
@@ -77,6 +85,12 @@ namespace MultiplayerInfrastructure.Player
     
     void ComputeMovementPlayerObject()
     {
+      if (_forcedFollowAnchor != null)
+      {
+        _moveDirection = Vector3.zero;
+        return;
+      }
+
       _isRunning = Input.GetKey(_keyMovingRunning);
 
       _forwardSpeed = transform.TransformDirection(Vector3.forward);
@@ -133,6 +147,42 @@ namespace MultiplayerInfrastructure.Player
       _rotationX = Mathf.Clamp(_rotationX, _minLookXAngle, _maxLookXAngle);
       _cameraHolderTransform.localRotation = Quaternion.Euler(_rotationX, 0, 0);
       transform.Rotate(0, Input.GetAxis("Mouse X") * _rotatingSpeed, 0);
+    }
+
+    private void FollowForcedAnchor()
+    {
+      if (_forcedFollowAnchor == null)
+        return;
+
+      transform.position = _forcedFollowAnchor.position;
+    }
+
+    public void SetForcedFollowAnchor(Transform anchor)
+    {
+      _forcedFollowAnchor = anchor;
+      if (_forcedFollowAnchor == null)
+        return;
+
+      _moveDirection = Vector3.zero;
+      transform.position = _forcedFollowAnchor.position;
+    }
+
+    public void ClearForcedFollowAnchor(Transform anchor = null)
+    {
+      if (anchor != null && _forcedFollowAnchor != anchor)
+        return;
+
+      _forcedFollowAnchor = null;
+      _moveDirection = Vector3.zero;
+    }
+
+    public void AlignYawTo(Vector3 worldForward)
+    {
+      worldForward.y = 0f;
+      if (worldForward.sqrMagnitude <= 0.0001f)
+        return;
+
+      transform.rotation = Quaternion.LookRotation(worldForward.normalized, Vector3.up);
     }
 
     void UpdateSpectateFollowTarget()

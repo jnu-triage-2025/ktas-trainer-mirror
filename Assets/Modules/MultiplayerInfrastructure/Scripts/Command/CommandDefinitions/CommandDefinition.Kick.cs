@@ -6,7 +6,7 @@ namespace MultiplayerInfrastructure.Command
   public class CommandDefinition_Kick : IChatCommandModel
   {
     public string CommandEntry => "kick";
-    public string Description => "Kick a player by name or ID.";
+    public string Description => "Kick a target by name or ID.";
     public bool RequiresAdmin => true;
 
     private readonly ChatService _manager;
@@ -20,7 +20,7 @@ namespace MultiplayerInfrastructure.Command
     {
       if (args.Length == 0)
       {
-        _manager.SendSystemMessage(sender, "Usage: /kick <playerNameOrId>");
+        _manager.SendSystemMessage(sender, "Usage: /kick <targetNameOrId>");
         return;
       }
 

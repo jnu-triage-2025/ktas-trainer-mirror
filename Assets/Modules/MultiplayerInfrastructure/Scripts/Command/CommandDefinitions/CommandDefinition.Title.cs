@@ -9,15 +9,20 @@ using UnityEngine;
 
 namespace MultiplayerInfrastructure.Command
 {
-  public class CommandDefinition_Scenario : IChatCommandModel
+  public class CommandDefinition_Title : IChatCommandModel
   {
-    public string CommandEntry => "scenario";
-    public string Description => "Execute a scenario. Usage: /scenario execute <target> <scenario_id>";
+    public string CommandEntry => "title";
+    public string Description =>
+      "Display screen titles and actionbar text.\n" +
+      "  /title <targets> (clear|reset)\n" +
+      "  /title <targets> (title|subtitle|actionbar) <text>\n" +
+      "  /title <targets> times <fadeIn> <stay> <fadeOut>";
+
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
 
-    public CommandDefinition_Scenario(ChatService chat)
+    public CommandDefinition_Title(ChatService chat)
     {
       _chat = chat;
     }
@@ -27,19 +32,14 @@ namespace MultiplayerInfrastructure.Command
       if (_chat == null)
         return;
 
-      if (args == null || args.Length < 3 || !string.Equals(args[0], "execute", StringComparison.OrdinalIgnoreCase))
+      if (args == null || args.Length < 2)
       {
-        _chat.SendSystemMessage(sender, "Usage: /scenario execute <target> <scenario_id>");
+        _chat.SendSystemMessage(sender, Description);
         return;
       }
 
-      string targetSelector = args[1];
-      string scenarioId = string.Join(' ', args[2..]).Trim();
-      if (string.IsNullOrWhiteSpace(scenarioId))
-      {
-        _chat.SendSystemMessage(sender, "Scenario identifier is required.");
-        return;
-      }
+      string targetSelector = args[0];
+      string sub = args[1].ToLowerInvariant();
 
       if (!TryResolveTargets(sender, targetSelector, out List<NetworkConnection> targets, out string targetError))
       {
@@ -47,13 +47,113 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      if (!_chat.TryDispatchScenario(scenarioId, targets, out string execError))
+      switch (sub)
       {
-        _chat.SendSystemMessage(sender, execError);
+        case "clear":
+          if (args.Length != 2)
+          {
+            _chat.SendSystemMessage(sender, "Usage: /title <targets> clear");
+            return;
+          }
+
+          Dispatch(sender, targets, (IEnumerable<NetworkConnection> t, out string err) => _chat.TryDispatchTitleClear(t, out err), "Title cleared");
+          return;
+
+        case "reset":
+          if (args.Length != 2)
+          {
+            _chat.SendSystemMessage(sender, "Usage: /title <targets> reset");
+            return;
+          }
+
+          Dispatch(sender, targets, (IEnumerable<NetworkConnection> t, out string err) => _chat.TryDispatchTitleReset(t, out err), "Title reset");
+          return;
+
+        case "times":
+          if (args.Length != 5)
+          {
+            _chat.SendSystemMessage(sender, "Usage: /title <targets> times <fadeIn> <stay> <fadeOut>");
+            return;
+          }
+
+          if (!TryParseTicks(args[2], args[3], args[4], out int fadeIn, out int stay, out int fadeOut))
+          {
+            _chat.SendSystemMessage(sender, "Times must be non-negative integers in ticks.");
+            return;
+          }
+
+          Dispatch(
+            sender,
+            targets,
+            (IEnumerable<NetworkConnection> t, out string err) => _chat.TryDispatchTitleTimes(t, fadeIn, stay, fadeOut, out err),
+            $"Title times set to {fadeIn}/{stay}/{fadeOut} ticks");
+          return;
+
+        case "title":
+        case "subtitle":
+        case "actionbar":
+          if (args.Length < 3)
+          {
+            _chat.SendSystemMessage(sender, $"Usage: /title <targets> {sub} <text>");
+            return;
+          }
+
+          string text = string.Join(' ', args[2..]).Trim();
+          if (string.IsNullOrWhiteSpace(text))
+          {
+            _chat.SendSystemMessage(sender, "Text cannot be empty.");
+            return;
+          }
+
+          if (sub == "title")
+            Dispatch(sender, targets, (IEnumerable<NetworkConnection> t, out string err) => _chat.TryDispatchTitle(t, text, null, out err), "Title displayed");
+          else if (sub == "subtitle")
+            Dispatch(sender, targets, (IEnumerable<NetworkConnection> t, out string err) => _chat.TryDispatchSubtitle(t, text, out err), "Subtitle updated");
+          else
+            Dispatch(sender, targets, (IEnumerable<NetworkConnection> t, out string err) => _chat.TryDispatchActionbar(t, text, out err), "Actionbar displayed");
+          return;
+      }
+
+      _chat.SendSystemMessage(sender, $"Unknown subcommand '{args[1]}'. Use /title for help.");
+    }
+
+    private delegate bool DispatchCall(IEnumerable<NetworkConnection> targets, out string error);
+
+    private void Dispatch(
+      NetworkConnection sender,
+      List<NetworkConnection> targets,
+      DispatchCall action,
+      string successMessage)
+    {
+      if (action == null)
+        return;
+
+      if (!action(targets, out string error))
+      {
+        _chat.SendSystemMessage(sender, error);
         return;
       }
 
-      _chat.SendSystemMessage(sender, $"Scenario '{scenarioId}' dispatched to {targets.Count} target(s).");
+      _chat.SendSystemMessage(sender, $"{successMessage} ({targets.Count} target(s)).");
+    }
+
+    private bool TryParseTicks(string fadeInRaw, string stayRaw, string fadeOutRaw, out int fadeIn, out int stay, out int fadeOut)
+    {
+      fadeIn = 0;
+      stay = 0;
+      fadeOut = 0;
+
+      if (!int.TryParse(fadeInRaw, out fadeIn))
+        return false;
+      if (!int.TryParse(stayRaw, out stay))
+        return false;
+      if (!int.TryParse(fadeOutRaw, out fadeOut))
+        return false;
+
+      if (fadeIn < 0 || stay < 0 || fadeOut < 0)
+        return false;
+
+      return true;
     }
 
     private bool TryResolveTargets(NetworkConnection sender, string raw, out List<NetworkConnection> targets, out string error)

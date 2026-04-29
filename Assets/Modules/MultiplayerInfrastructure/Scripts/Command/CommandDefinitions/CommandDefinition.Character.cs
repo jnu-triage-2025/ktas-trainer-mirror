@@ -15,7 +15,7 @@ namespace MultiplayerInfrastructure.Command
       "Set or list player character models.\n"
       + "  /character list\n"
       + "  /character set <model-id>\n"
-      + "  /character set <player-id> <model-id>";
+      + "  /character set <target-id> <model-id>";
 
     public bool RequiresAdmin => false;
 
@@ -95,14 +95,14 @@ namespace MultiplayerInfrastructure.Command
 
     private void SendUsage(NetworkConnection sender)
     {
-      _chat.SendSystemMessage(sender, "Usage: /character list | /character set <model-id> | /character set <player-id> <model-id>");
+      _chat.SendSystemMessage(sender, "Usage: /character list | /character set <model-id> | /character set <target-id> <model-id>");
     }
 
     private void HandleSetSelf(NetworkConnection sender, string modelIdentifier)
     {
       if (!TryResolveControllerByConnection(sender, out var controller))
       {
-        _chat.SendSystemMessage(sender, "Unable to locate your player.");
+        _chat.SendSystemMessage(sender, "Unable to locate your target.");
         return;
       }
 
@@ -124,7 +124,7 @@ namespace MultiplayerInfrastructure.Command
     {
       if (controller == null)
       {
-        _chat.SendSystemMessage(sender, "Target player is invalid.");
+        _chat.SendSystemMessage(sender, "Target is invalid.");
         return;
       }
 
@@ -151,8 +151,28 @@ namespace MultiplayerInfrastructure.Command
 
       if (string.IsNullOrWhiteSpace(playerIdentifier))
       {
-        error = "player-id is required.";
+        error = "target-id is required.";
         return false;
+      }
+
+      if (playerIdentifier.StartsWith("@", StringComparison.Ordinal))
+      {
+        if (!TargetSelectorResolver.TryResolveTargets(sender, playerIdentifier, out var targets, out error))
+          return false;
+
+        if (targets.Count != 1)
+        {
+          error = $"Target selector matched {targets.Count} targets; expected 1.";
+          return false;
+        }
+
+        if (!TryResolveControllerByConnection(targets[0], out controller))
+        {
+          error = "Target is invalid.";
+          return false;
+        }
+
+        return true;
       }
 
       if (string.Equals(playerIdentifier, "@self", StringComparison.OrdinalIgnoreCase)
@@ -160,7 +180,7 @@ namespace MultiplayerInfrastructure.Command
       {
         if (!TryResolveControllerByConnection(sender, out controller))
         {
-          error = "Unable to locate your player.";
+          error = "Unable to locate your target.";
           return false;
         }
 
@@ -173,7 +193,7 @@ namespace MultiplayerInfrastructure.Command
         return true;
       }
 
-      error = $"Player '{playerIdentifier}' was not found.";
+      error = $"Target '{playerIdentifier}' was not found.";
       return false;
     }
 
