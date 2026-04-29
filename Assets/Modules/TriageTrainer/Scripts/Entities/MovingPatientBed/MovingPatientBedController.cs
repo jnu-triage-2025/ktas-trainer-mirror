@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
@@ -11,7 +12,7 @@ using MI = MultiplayerInfrastructure;
 
 namespace TriageTrainer.Entity
 {
-  public class MovingPatientBedController : MonoBehaviour, IInteractable, IInteract
+  public class MovingPatientBedController : Ridable, IInteractable, IInteract
   {
     [Serializable]
     public class AttachableItemVisualPair
@@ -29,6 +30,14 @@ namespace TriageTrainer.Entity
       Hold = 1
     }
 
+    private sealed class RidingParticipant
+    {
+      public PlayerController Player;
+      public Transform Interactor;
+      public Transform AttachPoint;
+      public float LastActionbarRefreshAt;
+    }
+
     [Header("Identity")]
     [SerializeField] private string _entityTypeIdentifier = "moving_patient_bed";
     private string _entityRuntimeIdentifier;
@@ -43,8 +52,7 @@ namespace TriageTrainer.Entity
     [SerializeField] private BedInteractionMode _interactionMode = BedInteractionMode.Toggle;
 
     [Header("Movement")]
-    [SerializeField, Min(0f)] private float _followSpeed = 3.5f;
-    [SerializeField, Min(0f)] private float _followStopDistance = 1.2f;
+    [SerializeField, Min(0f)] private float _moveSpeed = 3.5f;
     [SerializeField] private LayerMask _movementBlockingMask = ~0;
 
     [Header("Attachable Item Visuals")]
@@ -54,11 +62,12 @@ namespace TriageTrainer.Entity
     [SerializeField] private MonoBehaviour _reposedTargetComponent;
 
     private readonly Dictionary<string, GameObject> _attachableVisualMap = new(StringComparer.Ordinal);
-    private readonly Dictionary<int, Transform> _interactors = new();
+    private readonly Dictionary<int, RidingParticipant> _participants = new();
     private readonly Dictionary<string, float> _lastNoticeByInteractor = new(StringComparer.Ordinal);
     private readonly HashSet<string> _attachedItemIdentifiers = new(StringComparer.Ordinal);
 
     private ChatUIController _chatUI;
+    private TitleUIController _titleUI;
 
     public string Identifier => string.IsNullOrWhiteSpace(_entityRuntimeIdentifier) ? _entityTypeIdentifier : _entityRuntimeIdentifier;
     public IInteract[] Interacts => new IInteract[] { this };
@@ -73,6 +82,7 @@ namespace TriageTrainer.Entity
 
     private void Awake()
     {
+      Awake_Ridable();
       RebuildAttachableVisualMap();
       if (_reposeAnchor == null)
         _reposeAnchor = transform;
@@ -112,6 +122,15 @@ namespace TriageTrainer.Entity
 
     private void OnDestroy()
     {
+      foreach (var each in _participants)
+      {
+        var participant = each.Value;
+        if (participant?.Player != null)
+          ExitMovingMode(participant.Player, participant);
+      }
+
+      _participants.Clear();
+
       if (!string.IsNullOrWhiteSpace(_entityRuntimeIdentifier))
         Registry.UnregisterEntity(_entityRuntimeIdentifier);
     }
@@ -121,34 +140,13 @@ namespace TriageTrainer.Entity
       if (_interactionMode == BedInteractionMode.Hold)
         CleanupReleasedHoldInteractors();
 
-      if (_interactors.Count == 0)
+      CleanupExitKeyParticipants();
+
+      if (_participants.Count == 0)
         return;
 
-      if (_interactors.Count < RequiredInteractorCount)
-        return;
-
-      Transform driver = ResolveDriver();
-      if (driver == null)
-        return;
-
-      var delta = driver.position - transform.position;
-      delta.y = 0f;
-
-      if (delta.sqrMagnitude <= _followStopDistance * _followStopDistance)
-        return;
-
-      var step = Mathf.Min(delta.magnitude, _followSpeed * Time.deltaTime);
-      if (step <= 0f)
-        return;
-
-      var move = delta.normalized * step;
-      var target = transform.position + move;
-
-      if (Physics.Linecast(transform.position, target, _movementBlockingMask, QueryTriggerInteraction.Ignore))
-        return;
-
-      transform.position = target;
-      transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(delta.normalized), 8f * Time.deltaTime);
+      RefreshOwnerActionbars();
+      MoveBedFromParticipantsInput();
     }
 
     public void Interact(Transform interactor)
@@ -156,21 +154,35 @@ namespace TriageTrainer.Entity
       if (interactor == null)
         return;
 
+      var player = interactor.GetComponentInParent<PlayerController>();
+      if (player == null)
+        return;
+
       int id = interactor.GetInstanceID();
 
-      if (_interactors.ContainsKey(id))
+      if (_participants.TryGetValue(id, out var existing))
       {
-        _interactors.Remove(id);
+        ExitMovingMode(player, existing);
+        _participants.Remove(id);
         return;
       }
 
-      if (_interactors.Count + 1 < RequiredInteractorCount)
+      if (!TryOccupyNextAttachPoint(player, out _, out Transform attachPoint))
       {
-        ShowThrottledMessage(interactor, $"이 침대는 최소 {RequiredInteractorCount}명이 함께 이동해야 합니다.");
+        ShowThrottledMessage(interactor, "침대의 모든 이동 위치가 이미 사용 중입니다.");
         return;
       }
 
-      _interactors[id] = interactor;
+      var participant = new RidingParticipant
+      {
+        Player = player,
+        Interactor = interactor,
+        AttachPoint = attachPoint,
+        LastActionbarRefreshAt = -100f,
+      };
+
+      _participants[id] = participant;
+      EnterMovingMode(participant);
     }
 
     public bool TryReposeTarget(IReposable target, Transform interactor = null)
@@ -288,36 +300,163 @@ namespace TriageTrainer.Entity
       return true;
     }
 
-    private Transform ResolveDriver()
+    private void EnterMovingMode(RidingParticipant participant)
     {
-      foreach (var each in _interactors)
+      if (participant?.Player == null)
+        return;
+
+      participant.Player.SetForcedFollowAnchor(participant.AttachPoint);
+      TryShowActionbar(participant, true);
+    }
+
+    private void ExitMovingMode(PlayerController player, RidingParticipant participant)
+    {
+      player?.ClearForcedFollowAnchor(participant?.AttachPoint);
+      ReleaseAttachPoint(player, out _);
+      TryShowActionbar(participant, false);
+    }
+
+    private void RefreshOwnerActionbars()
+    {
+      foreach (var each in _participants)
       {
-        if (each.Value != null)
-          return each.Value;
+        var participant = each.Value;
+        if (participant == null || participant.Player == null || !participant.Player.IsOwner)
+          continue;
+
+        if (Time.time - participant.LastActionbarRefreshAt < 0.8f)
+          continue;
+
+        TryShowActionbar(participant, true);
+      }
+    }
+
+    private void TryShowActionbar(RidingParticipant participant, bool show)
+    {
+      if (participant?.Player == null || !participant.Player.IsOwner)
+        return;
+
+      if (_titleUI == null)
+        _titleUI = Registry.Get<TitleUIController>(RegistryType.UI, Registry.TypeKey<TitleUIController>());
+
+      if (_titleUI == null)
+        return;
+
+      if (show)
+      {
+        participant.LastActionbarRefreshAt = Time.time;
+        _titleUI.ShowActionbar(ConstantString.HintExitPatientBedMovingMode);
+      }
+      else
+      {
+        _titleUI.ClearActionbar();
+      }
+    }
+
+    private void MoveBedFromParticipantsInput()
+    {
+      int participantCount = 0;
+      Vector3 summedWorldInput = Vector3.zero;
+
+      foreach (var each in _participants)
+      {
+        var participant = each.Value;
+        var player = participant?.Player;
+        if (player == null)
+          continue;
+
+        participantCount++;
+
+        var localInput = player.CurrentMoveInputVector;
+        if (localInput.sqrMagnitude <= 0.0001f)
+          continue;
+
+        var worldInput = player.transform.TransformDirection(localInput);
+        worldInput.y = 0f;
+        summedWorldInput += worldInput;
       }
 
-      return null;
+      if (participantCount <= 0)
+        return;
+
+      if (summedWorldInput.sqrMagnitude <= 0.0001f)
+        return;
+
+      int requiredWeight = RequiredInteractorCount;
+      int divisor = requiredWeight > 0 ? Mathf.Max(participantCount, requiredWeight) : participantCount;
+      divisor = Mathf.Max(1, divisor);
+
+      Vector3 normalizedMove = summedWorldInput / divisor;
+      normalizedMove.y = 0f;
+
+      float length = normalizedMove.magnitude;
+      if (length <= 0.0001f)
+        return;
+
+      Vector3 desiredMove = normalizedMove.normalized * (_moveSpeed * Time.deltaTime * Mathf.Clamp01(length));
+      Vector3 target = transform.position + desiredMove;
+
+      if (Physics.Linecast(transform.position, target, _movementBlockingMask, QueryTriggerInteraction.Ignore))
+        return;
+
+      transform.position = target;
+      transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(normalizedMove.normalized), 8f * Time.deltaTime);
     }
 
     private void CleanupReleasedHoldInteractors()
     {
       var keys = ListPool<int>.Get();
-      foreach (var each in _interactors)
+      foreach (var each in _participants)
       {
-        var interactor = each.Value;
+        var participant = each.Value;
+        var interactor = participant?.Interactor;
         if (interactor == null)
         {
           keys.Add(each.Key);
           continue;
         }
 
-        var player = interactor.GetComponentInParent<PlayerController>();
+        var player = participant.Player;
         if (player != null && player.IsOwner && !Input.GetKey(MI.Definitions.DefaultsKeyConfiguration.InteractInteractableObject))
           keys.Add(each.Key);
       }
 
       for (int i = 0; i < keys.Count; i++)
-        _interactors.Remove(keys[i]);
+      {
+        int key = keys[i];
+        if (!_participants.TryGetValue(key, out var participant))
+          continue;
+
+        ExitMovingMode(participant.Player, participant);
+        _participants.Remove(key);
+      }
+
+      ListPool<int>.Release(keys);
+    }
+
+    private void CleanupExitKeyParticipants()
+    {
+      var keys = ListPool<int>.Get();
+      foreach (var each in _participants)
+      {
+        var participant = each.Value;
+        var player = participant?.Player;
+        if (player == null || !player.IsOwner)
+          continue;
+
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+          keys.Add(each.Key);
+      }
+
+      for (int i = 0; i < keys.Count; i++)
+      {
+        int key = keys[i];
+        if (!_participants.TryGetValue(key, out var participant))
+          continue;
+
+        ExitMovingMode(participant.Player, participant);
+        _participants.Remove(key);
+      }
 
       ListPool<int>.Release(keys);
     }
