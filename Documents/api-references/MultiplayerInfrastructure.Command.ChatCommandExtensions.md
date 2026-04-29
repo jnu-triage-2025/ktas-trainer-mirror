@@ -2,22 +2,30 @@
 
 ## 0. 문서 목적
 
-이 문서는 2026-02-18 기준으로 추가된 채팅 커맨드 확장 내용을 정리합니다.
-주요 대상은 `/give`, `/clean`, 그리고 플레이어 입력 외 시스템 호출 경로입니다.
+이 문서는 2026-04-29 기준으로 추가된 채팅 커맨드 확장 내용을 정리합니다.
+주요 대상은 `/give`, `/clean`, `/title`, 그리고 대상 선택자 파싱입니다.
 
 ---
 
 ## 1. 변경 요약
 
-- 신규 커맨드 추가
-  - `/give <item_identifier> [count=1] [player_identifier]`
-  - `/clean [item_identifier] [count]`
-- `ChatService`에 시스템 커맨드 실행 API 추가
-  - `TryExecuteSystemCommand(string commandLine, out string result)`
+- 신규/확장 커맨드
+   - `/give <item_identifier> [count=1] [target_identifier]`
+   - `/clean [item_identifier] [count]`
+   - `/title <target> (clear|reset)`
+   - `/title <target> (title|subtitle|actionbar) <text>`
+   - `/title <target> times <fadeIn> <stay> <fadeOut>`
+- 공통 대상 선택자 파싱 추가
+   - `@p`, `@a`, `@r`, `@s`, `@e`, `@n`
+   - `x,y,z,distance,dx,dy,dz,tag,type` 인자 지원
+- `ChatService`에 시스템 커맨드 실행 API
+   - `TryExecuteSystemCommand(string commandLine, out string result)`
 
 관련 파일:
-- `Assets/Modules/MultiplayerInfrastructure/Scripts/Command/CommandDefinition.Give.cs`
-- `Assets/Modules/MultiplayerInfrastructure/Scripts/Command/CommandDefinition.Clean.cs`
+- `Assets/Modules/MultiplayerInfrastructure/Scripts/Command/TargetSelectorResolver.cs`
+- `Assets/Modules/MultiplayerInfrastructure/Scripts/Command/CommandDefinitions/CommandDefinition.Give.cs`
+- `Assets/Modules/MultiplayerInfrastructure/Scripts/Command/CommandDefinitions/CommandDefinition.Clean.cs`
+- `Assets/Modules/MultiplayerInfrastructure/Scripts/Command/CommandDefinitions/CommandDefinition.Title.cs`
 - `Assets/Modules/MultiplayerInfrastructure/Scripts/Command/CommandService.cs`
 - `Assets/Modules/MultiplayerInfrastructure/Scripts/Chat/ChatService.cs`
 
@@ -27,14 +35,15 @@
 
 ### 구문
 
-`/give (item identifier: 필수) (count: 선택, 기본 1) (player identifier: 선택, 기본 호출자)`
+`/give (item identifier: 필수) (count: 선택, 기본 1) (target identifier: 선택, 기본 호출자)`
 
 ### 실행 흐름
 
 1. `RegistryType.Item`에 item identifier 등록 여부 확인
-2. 대상 플레이어 해석
+2. 대상 해석
    - 기본: 호출자 본인
    - 지원: `@s`, `fish:<clientId>`, `<clientId>`
+   - 선택자: `@p/@a/@r/@s/@e/@n` + 인자(`distance`, `tag`, 등)
 3. 템플릿 `Item`의 `ItemData`를 복제하여 지급 수량 설정
 4. 인벤토리 추가 시도 (`TryAddItemToInventory(..., out leftover)`)
 5. 남은 수량(`leftover`)이 있으면 대상 플레이어 앞에 월드 드롭 시도
@@ -72,7 +81,53 @@
 
 ---
 
-## 4. ChatService 시스템 실행 API
+## 4. /title 동작 명세
+
+### 구문
+
+`/title <target> (clear|reset)`
+
+`/title <target> (title|subtitle|actionbar) <text>`
+
+`/title <target> times <fadeIn> <stay> <fadeOut>`
+
+### 실행 규칙
+
+1. `<target>`을 선택자 파서로 해석하여 대상 연결을 찾습니다.
+2. `title`/`subtitle`/`actionbar`는 클라이언트 타이틀 UI에 표시합니다.
+3. `times`는 클라이언트 로컬에 저장되는 페이드 타이밍(틱)을 갱신합니다.
+4. `clear`는 타이틀/서브타이틀/액션바를 제거합니다.
+5. `reset`은 타이밍을 기본값으로 되돌리고 서브타이틀을 초기화합니다.
+
+---
+
+## 5. 대상 선택자 지원
+
+### 선택자
+
+- `@p`: 가장 가까운 플레이어
+- `@a`: 모든 플레이어
+- `@r`: 무작위 플레이어
+- `@s`: 실행자
+- `@e`: 모든 엔티티 (현재 `type=player`만 허용)
+- `@n`: 가장 가까운 엔티티 (현재 `type=player`만 허용)
+
+### 인자
+
+- `x,y,z` (좌표)
+- `distance` (구간)
+- `dx,dy,dz` (직육면체 범위)
+- `tag` (태그)
+- `type` (엔티티 타입)
+
+### 제한
+
+- 엔티티 대상은 아직 지원하지 않으며 `@e/@n` 사용 시 `type=player`만 허용됩니다.
+- 단일 대상이 필요한 커맨드에서 다수 매칭이면 실패합니다.
+
+---
+
+## 6. ChatService 시스템 실행 API
 
 ### 추가 API
 
@@ -84,11 +139,13 @@
 
 ---
 
-## 5. 권장 테스트 시나리오
+## 7. 권장 테스트 시나리오
 
 1. 플레이어 채팅 입력
    - `/give bandage`
    - `/give bandage 10`
+   - `/title @s title Mission Start`
+   - `/title @a[distance=..20] actionbar Get ready`
    - `/clean`
    - `/clean bandage`
    - `/clean bandage 3`

@@ -15,6 +15,7 @@
 ### 문서
 - [MultiplayerInfrastructure.Chat.ChatService.md](./MultiplayerInfrastructure.Chat.ChatService.md): API 레퍼런스: `MultiplayerInfrastructure.Chat.ChatService`
 - [MultiplayerInfrastructure.Command.ChatCommandExtensions.md](./MultiplayerInfrastructure.Command.ChatCommandExtensions.md): MultiplayerInfrastructure.Command.ChatCommandExtensions
+- [MultiplayerInfrastructure.Command.TargetSelectorResolver.md](./MultiplayerInfrastructure.Command.TargetSelectorResolver.md): API 레퍼런스: `MultiplayerInfrastructure.Command.TargetSelectorResolver`
 - [MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md](./MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md): MultiplayerInfrastructure.Datapack.DatapackRuntimeService
 - [MultiplayerInfrastructure.InteractableEntity.md](./MultiplayerInfrastructure.InteractableEntity.md): API 레퍼런스: `MultiplayerInfrastructure.InteractableEntity`
 - [MultiplayerInfrastructure.Item.Item.md](./MultiplayerInfrastructure.Item.Item.md): MultiplayerInfrastructure.Item.Item (Current)

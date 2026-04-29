@@ -11,7 +11,7 @@ namespace MultiplayerInfrastructure.Command
   public class CommandDefinition_Give : IChatCommandModel
   {
     public string CommandEntry => "give";
-    public string Description => "Give an item. Usage: /give <item_identifier> [count=1] [player_identifier]";
+    public string Description => "Give an item. Usage: /give <item_identifier> [count=1] [target_identifier]";
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
@@ -28,7 +28,7 @@ namespace MultiplayerInfrastructure.Command
 
       if (args == null || args.Length == 0)
       {
-        _chat.SendSystemMessage(sender, "Usage: /give <item_identifier> [count=1] [player_identifier]");
+        _chat.SendSystemMessage(sender, "Usage: /give <item_identifier> [count=1] [target_identifier]");
         return;
       }
 
@@ -64,7 +64,7 @@ namespace MultiplayerInfrastructure.Command
 
       if (args.Length > 3)
       {
-        _chat.SendSystemMessage(sender, "Usage: /give <item_identifier> [count=1] [player_identifier]");
+        _chat.SendSystemMessage(sender, "Usage: /give <item_identifier> [count=1] [target_identifier]");
         return;
       }
 
@@ -76,7 +76,7 @@ namespace MultiplayerInfrastructure.Command
 
       if (!TryGetPlayerController(targetConn, out var targetPlayer))
       {
-        _chat.SendSystemMessage(sender, "Target player is not available.");
+        _chat.SendSystemMessage(sender, "Target is not available.");
         return;
       }
 
@@ -99,11 +99,11 @@ namespace MultiplayerInfrastructure.Command
 
       if (fullyAdded)
       {
-        _chat.SendSystemMessage(sender, $"Gave {delivered}x '{itemIdentifier}' to player {targetConn.ClientId}.");
+        _chat.SendSystemMessage(sender, $"Gave {delivered}x '{itemIdentifier}' to target {targetConn.ClientId}.");
         return;
       }
 
-      _chat.SendSystemMessage(sender, $"Gave {delivered}x '{itemIdentifier}' to player {targetConn.ClientId}. Dropped {dropped}x in front because inventory was full.");
+      _chat.SendSystemMessage(sender, $"Gave {delivered}x '{itemIdentifier}' to target {targetConn.ClientId}. Dropped {dropped}x in front because inventory was full.");
     }
 
     private bool TryResolveTargetConnection(NetworkConnection sender, string rawTarget, out NetworkConnection target, out string error)
@@ -115,11 +115,26 @@ namespace MultiplayerInfrastructure.Command
       {
         if (sender == null)
         {
-          error = "System execution requires a target player identifier.";
+          error = "System execution requires a target identifier.";
           return false;
         }
 
         target = sender;
+        return true;
+      }
+
+      if (rawTarget.StartsWith("@", StringComparison.Ordinal))
+      {
+        if (!TargetSelectorResolver.TryResolveTargets(sender, rawTarget, out var targets, out error))
+          return false;
+
+        if (targets.Count != 1)
+        {
+          error = $"Target selector matched {targets.Count} targets; expected 1.";
+          return false;
+        }
+
+        target = targets[0];
         return true;
       }
 
@@ -141,14 +156,14 @@ namespace MultiplayerInfrastructure.Command
         string idText = rawTarget.Substring("fish:".Length);
         if (!int.TryParse(idText, out int clientId))
         {
-          error = "Invalid FishNet player identifier after 'fish:'.";
+          error = "Invalid FishNet target identifier after 'fish:'.";
           return false;
         }
 
         target = FindConnectionByClientId(clientId);
         if (target == null)
         {
-          error = $"No player found for fish id '{clientId}'.";
+          error = $"No target found for fish id '{clientId}'.";
           return false;
         }
 
@@ -160,7 +175,7 @@ namespace MultiplayerInfrastructure.Command
         target = FindConnectionByClientId(rawClientId);
         if (target == null)
         {
-          error = $"No player found for client id '{rawClientId}'.";
+          error = $"No target found for client id '{rawClientId}'.";
           return false;
         }
 

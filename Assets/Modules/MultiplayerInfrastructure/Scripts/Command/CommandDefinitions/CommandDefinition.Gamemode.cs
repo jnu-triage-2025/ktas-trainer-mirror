@@ -8,7 +8,7 @@ namespace MultiplayerInfrastructure.Command
   {
     public string CommandEntry => "gamemode";
     public string Description => (
-        "Change Gamemode of a player."
+      "Change your gamemode."
       + " Usage: /gamemode <mode>"
       + " Modes: player (0), spectator (1)"
       + " example: /gamemode 0"
@@ -34,7 +34,7 @@ namespace MultiplayerInfrastructure.Command
 
       if (sender == null || sender.FirstObject == null || !sender.FirstObject.TryGetComponent(out PlayerController controller))
       {
-        _manager.SendSystemMessage(sender, "Unable to locate your player.");
+        _manager.SendSystemMessage(sender, "Unable to locate your target.");
         return;
       }
 
