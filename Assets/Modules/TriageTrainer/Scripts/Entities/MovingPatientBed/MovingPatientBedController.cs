@@ -30,7 +30,8 @@ namespace TriageTrainer.Entity
     }
 
     [Header("Identity")]
-    [SerializeField] private string _identifier = "moving_patient_bed";
+    [SerializeField] private string _entityTypeIdentifier = "moving_patient_bed";
+    private string _entityRuntimeIdentifier;
 
     [Header("Display")]
     [SerializeField] private string _displayText = "이동식 환자 침대";
@@ -59,7 +60,7 @@ namespace TriageTrainer.Entity
 
     private ChatUIController _chatUI;
 
-    public string Identifier => _identifier;
+    public string Identifier => string.IsNullOrWhiteSpace(_entityRuntimeIdentifier) ? _entityTypeIdentifier : _entityRuntimeIdentifier;
     public IInteract[] Interacts => new IInteract[] { this };
     public string DisplayText => _displayText;
     public Sprite DisplayIcon => _displayIcon;
@@ -75,6 +76,44 @@ namespace TriageTrainer.Entity
       RebuildAttachableVisualMap();
       if (_reposeAnchor == null)
         _reposeAnchor = transform;
+      // Note: Entity identifier is assigned by server via SetIdentifier().
+      // Do not generate UUID here; wait for server assignment.
+    }
+
+    /// <summary>
+    /// Called by server/network system to assign a runtime entity identifier.
+    /// Registers this bed in the global Registry if an identifier is provided.
+    /// </summary>
+    /// <param name="identifier">Server-assigned entity identifier (e.g., "moving_patient_bed:{uuid}"), or null to defer registration.</param>
+    public void SetIdentifier(string identifier)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+        return;
+
+      _entityRuntimeIdentifier = identifier;
+
+      // Register in the global Registry as an Entity
+      try
+      {
+        Registry.RegisterEntity(
+          _entityRuntimeIdentifier,
+          EntityType.MovingPatientBed,
+          gameObject,
+          displayName: _displayText,
+          ownerUserIdentifier: null,
+          clientId: null,
+          isNetworked: false);
+      }
+      catch (Exception ex)
+      {
+        Debug.LogWarning($"[MovingPatientBed] Failed to register entity '{_entityRuntimeIdentifier}': {ex.Message}");
+      }
+    }
+
+    private void OnDestroy()
+    {
+      if (!string.IsNullOrWhiteSpace(_entityRuntimeIdentifier))
+        Registry.UnregisterEntity(_entityRuntimeIdentifier);
     }
 
     private void Update()

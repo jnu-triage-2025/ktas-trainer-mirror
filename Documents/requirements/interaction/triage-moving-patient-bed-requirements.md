@@ -14,7 +14,10 @@ updated: 2026-04-27
 
 - 이동식 환자 침대는 `IInteractable`/`IInteract` 구현체로 동작해야 한다.
 - 기본 식별자/표시값은 다음 정책을 따른다.
-  - identifier: `moving_patient_bed`
+  - entityTypeIdentifier (에디터에 보이는 "타입 식별자"): `moving_patient_bed` (로컬/테스트용 기본값)
+  - entityRuntimeIdentifier (서버가 부여한 런타임 고유 식별자): `moving_patient_bed:{uuid}` 형태이나, 서버 할당 전까지는 `null`일 수 있음
+    - 서버가 씬 로드 시 `SetIdentifier()` 호출로 할당 (ItemObject 패턴 준용)
+    - 서버 할당 시에만 Registry에 등록됨
   - displayText: `이동식 환자 침대`
   - displayColor: `Color.white`
   - displayIcon: 미지정 시 `null` 허용
@@ -29,7 +32,9 @@ updated: 2026-04-27
 ## 기술적 세부 사항
 
 - 현재 시스템 기준 침대 컨트롤러는 `MonoBehaviour` + `IInteractable`/`IInteract` 조합으로 구현한다.
-  - 구 프롬프트의 `Entity.Entity` 상속 요구는 현행 인터랙터블 구조와 다르며, 현재 코드베이스에서는 필수 요건이 아니다.
+  - 구 프롬프트의 `Entity.Entity` 상속 요구는 현행 인터랙터블 구조와 다르며, 현재 코드베이스에서는 필수 요건이 아니다. 다만 이동식 침대는 서버가 할당한 entity identifier를 통해 Registry의 Entity로 등록되어야 한다.
+  - 서버/초기화 시스템은 씬의 MovingPatientBedController 오브젝트를 발견하면 `SetIdentifier(identifier)` 메서드를 호출하여 entity identifier를 할당 (ItemObject 패턴 준용).
+  - identifier가 할당되지 않으면 Registry에 등록되지 않음 (테스트 환경 등에서도 동작 가능하도록)
 - 최소 이동 인원은 `max(침대 Weight, 현재 눕혀진 대상 Weight)`로 계산한다.
 - 침대에 대상을 눕히면 repose anchor 하위로 부모를 변경하고 로컬 위치/회전을 초기화한다.
 - 침대에서 대상을 들어올릴 때는 `PlayerController.TryPickUpReposable(...)`를 통해 운반 상태를 전환하며, 실패 시 원위치 복원해야 한다.
