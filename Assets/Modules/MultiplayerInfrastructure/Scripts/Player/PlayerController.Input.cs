@@ -192,6 +192,18 @@ namespace MultiplayerInfrastructure.Player
       if (Input.GetKeyDown(DefaultsKeyConfiguration.CloseChatUI))
       {
         _chatUI.HandleCancelKey();
+        return;
+      }
+
+      if (Input.GetKeyDown(KeyCode.UpArrow))
+      {
+        _chatUI.HandleHistoryPreviousKey();
+        return;
+      }
+
+      if (Input.GetKeyDown(KeyCode.DownArrow))
+      {
+        _chatUI.HandleHistoryNextKey();
       }
     }
 

@@ -120,6 +120,22 @@ namespace MultiplayerInfrastructure.UI
       Close();
     }
 
+    public void HandleHistoryPreviousKey()
+    {
+      if (!IsOpen)
+        return;
+
+      _chatPanel?.RecallPreviousInput();
+    }
+
+    public void HandleHistoryNextKey()
+    {
+      if (!IsOpen)
+        return;
+
+      _chatPanel?.RecallNextInput();
+    }
+
     public void OnOverlayPushed()
     {
       ShowPanel();
