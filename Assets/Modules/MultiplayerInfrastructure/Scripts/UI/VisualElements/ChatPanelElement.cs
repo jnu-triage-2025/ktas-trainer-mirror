@@ -12,9 +12,11 @@ namespace MultiplayerInfrastructure.UI
     private const int MaxToastEntries = 5;
     private const float ToastVisibleSeconds = 3.5f;
     private const float ToastFadeSeconds = 0.75f;
+    private const int MaxInputHistoryEntries = 100;
 
     private readonly Queue<VisualElement> _logEntries = new();
     private readonly List<ToastEntry> _toasts = new();
+    private readonly List<string> _inputHistory = new();
 
     private ScrollView _logView;
     private TextField _inputField;
@@ -24,6 +26,8 @@ namespace MultiplayerInfrastructure.UI
     private IVisualElementScheduledItem _toastSchedule;
     private bool _isOpen;
     private int _maxLogEntries = DefaultMaxLogEntries;
+    private int _historyCursor = -1;
+    private string _historyDraft = string.Empty;
 
     private static Color StyleColorBackground = new Color(0f, 0f, 0f, 0.82f);
     private static Color StyleColorText = Color.white;
@@ -249,13 +253,54 @@ namespace MultiplayerInfrastructure.UI
         return string.Empty;
 
       string text = _inputField.text;
+      AddInputHistory(text);
       _inputField.SetValueWithoutNotify(string.Empty);
+      ResetHistoryCursor();
       return text;
     }
 
     public void ClearInput()
     {
       _inputField?.SetValueWithoutNotify(string.Empty);
+      ResetHistoryCursor();
+    }
+
+    public void RecallPreviousInput()
+    {
+      if (_inputField == null || _inputHistory.Count == 0)
+        return;
+
+      if (_historyCursor < 0)
+      {
+        _historyDraft = _inputField.text ?? string.Empty;
+        _historyCursor = _inputHistory.Count - 1;
+      }
+      else if (_historyCursor > 0)
+      {
+        _historyCursor--;
+      }
+
+      _inputField.SetValueWithoutNotify(_inputHistory[_historyCursor]);
+      FocusInput();
+    }
+
+    public void RecallNextInput()
+    {
+      if (_inputField == null || _inputHistory.Count == 0 || _historyCursor < 0)
+        return;
+
+      if (_historyCursor < _inputHistory.Count - 1)
+      {
+        _historyCursor++;
+        _inputField.SetValueWithoutNotify(_inputHistory[_historyCursor]);
+      }
+      else
+      {
+        _historyCursor = -1;
+        _inputField.SetValueWithoutNotify(_historyDraft);
+      }
+
+      FocusInput();
     }
 
     public void AppendMessage(string message, bool showToastWhenHidden = true)
@@ -427,7 +472,28 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       _inputField.SetValueWithoutNotify(text);
+      ResetHistoryCursor();
       FocusInput();
+    }
+
+    private void AddInputHistory(string text)
+    {
+      if (string.IsNullOrWhiteSpace(text))
+        return;
+
+      string normalized = text.Trim();
+      if (_inputHistory.Count > 0 && _inputHistory[_inputHistory.Count - 1] == normalized)
+        return;
+
+      _inputHistory.Add(normalized);
+      if (_inputHistory.Count > MaxInputHistoryEntries)
+        _inputHistory.RemoveAt(0);
+    }
+
+    private void ResetHistoryCursor()
+    {
+      _historyCursor = -1;
+      _historyDraft = string.Empty;
     }
   }
 }
