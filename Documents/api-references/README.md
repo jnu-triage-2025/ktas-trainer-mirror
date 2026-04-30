@@ -24,12 +24,14 @@
 - [MultiplayerInfrastructure.Player.PlayerModel.md](./MultiplayerInfrastructure.Player.PlayerModel.md): API 레퍼런스: `MultiplayerInfrastructure.Player.PlayerModel`
 - [MultiplayerInfrastructure.Quest.QuestManager.md](./MultiplayerInfrastructure.Quest.QuestManager.md): MultiplayerInfrastructure.Quest.QuestManager
 - [MultiplayerInfrastructure.Registry.WaypointAnchor.md](./MultiplayerInfrastructure.Registry.WaypointAnchor.md): MultiplayerInfrastructure.Registry.WaypointAnchor
+- [MultiplayerInfrastructure.Registry.Problem.md](./MultiplayerInfrastructure.Registry.Problem.md): API 레퍼런스: `MultiplayerInfrastructure.Registry` (Problem 확장)
 - [MultiplayerInfrastructure.Registry.md](./MultiplayerInfrastructure.Registry.md): API 레퍼런스: `MultiplayerInfrastructure.Registry`
 - [MultiplayerInfrastructure.Scenario.ScenarioController.md](./MultiplayerInfrastructure.Scenario.ScenarioController.md): API 레퍼런스: `MultiplayerInfrastructure.Scenario.ScenarioController`
 - [MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md](./MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md): API 레퍼런스: `MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry`
 - [MultiplayerInfrastructure.Scenario.SerializeSupport.md](./MultiplayerInfrastructure.Scenario.SerializeSupport.md): API 레퍼런스: MultiplayerInfrastructure.Scenario.SerializeSupport
 - [MultiplayerInfrastructure.Tag.PlayerTagService.md](./MultiplayerInfrastructure.Tag.PlayerTagService.md): API 레퍼런스: MultiplayerInfrastructure.Tag.PlayerTagService
 - [MultiplayerInfrastructure.UI.Crosshair.md](./MultiplayerInfrastructure.UI.Crosshair.md): API 레퍼런스: Crosshair & Raycast
+- [MultiplayerInfrastructure.UI.ProblemSheet.md](./MultiplayerInfrastructure.UI.ProblemSheet.md): API 레퍼런스: `MultiplayerInfrastructure.UI.ProblemSheet`
 - [TextToSpeechService.TTSCore.md](./TextToSpeechService.TTSCore.md): TextToSpeechService.TTSCore
 - [TextToSpeechService.TTSService.md](./TextToSpeechService.TTSService.md): TextToSpeechService.TTSService
 - [TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel.md](./TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel.md): API 레퍼런스: `TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel`
@@ -38,4 +40,3 @@
 
 작성 기준: Git 추적 문서(.md) 기준으로 색인하며, .gitignore 대상 파일은 제외합니다.
 <!-- DOC-INDEX:END -->
-
