@@ -23,9 +23,9 @@
 - [miui_intro_scene.md](./miui_intro_scene.md): 인트로 씬 UI
 - [miui_inventory_panel.md](./miui_inventory_panel.md): 인벤토리 UI
 - [miui_key_config.md](./miui_key_config.md): 키 설정 UI
+- [miui_problem_sheet.md](./miui_problem_sheet.md): 문제지/문제 풀이 UI
 - [miui_quest_panel.md](./miui_quest_panel.md): 퀘스트 패널 UI
 - [miui_quest_preview_hud.md](./miui_quest_preview_hud.md): 퀘스트 프리뷰 HUD UI
 
 작성 기준: Git 추적 문서(.md) 기준으로 색인하며, .gitignore 대상 파일은 제외합니다.
 <!-- DOC-INDEX:END -->
-
