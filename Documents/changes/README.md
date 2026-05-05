@@ -21,7 +21,7 @@
 - [2026-03-26-notification-duration-removal.md](./2026-03-26-notification-duration-removal.md): Notification 제거 및 Dialogue 이관 (2026-03-26)
 - [2026-03-26-notification-removal.md](./2026-03-26-notification-removal.md): Notification 타입 완전 제거 및 Dialogue 이관 (2026-03-26)
 - [2026-03-26-registry-preloader-validation-tooling.md](./2026-03-26-registry-preloader-validation-tooling.md): Registry Preloader Validation 도구 개편 (2026-03-26)
+- [2026-05-06-problem-sheet-ui-registry-command-editor.md](./2026-05-06-problem-sheet-ui-registry-command-editor.md): 문제지 UI/Registry/명령어/에디터 통합 변경 (2026-05-06)
 
 작성 기준: Git 추적 문서(.md) 기준으로 색인하며, .gitignore 대상 파일은 제외합니다.
 <!-- DOC-INDEX:END -->
-

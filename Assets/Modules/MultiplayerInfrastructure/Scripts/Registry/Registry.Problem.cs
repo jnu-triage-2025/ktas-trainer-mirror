@@ -7,6 +7,15 @@ namespace MultiplayerInfrastructure.Registry
 {
   public static partial class Registry
   {
+    [Serializable]
+    private sealed class ProblemPackManifest
+    {
+      public string format;
+      public string problemIdentifier;
+      public string problemJson;
+      public string figuresBasePath;
+    }
+
     public static bool PreloadProblemSet(string identifier)
     {
       EnsureBuiltInRegistryInitialized();
@@ -55,6 +64,53 @@ namespace MultiplayerInfrastructure.Registry
       return true;
     }
 
+    public static bool TryGetProblemIdentifierFromManifest(string manifestResourceName, out string problemIdentifier)
+    {
+      problemIdentifier = string.Empty;
+
+      if (string.IsNullOrWhiteSpace(manifestResourceName))
+        return false;
+
+      var textAsset = Resources.Load<TextAsset>($"Problems/{manifestResourceName}");
+      if (textAsset == null || string.IsNullOrWhiteSpace(textAsset.text))
+        return false;
+
+      ProblemPackManifest manifest;
+      try
+      {
+        manifest = JsonUtility.FromJson<ProblemPackManifest>(textAsset.text);
+      }
+      catch
+      {
+        return false;
+      }
+
+      if (manifest == null)
+        return false;
+
+      if (!string.IsNullOrWhiteSpace(manifest.problemIdentifier))
+      {
+        problemIdentifier = manifest.problemIdentifier.Trim();
+        return true;
+      }
+
+      if (!string.IsNullOrWhiteSpace(manifest.problemJson))
+      {
+        problemIdentifier = manifest.problemJson.Trim();
+        return true;
+      }
+
+      return false;
+    }
+
+    public static bool PreloadProblemSetFromManifest(string manifestResourceName = "problem-pack.manifest")
+    {
+      if (!TryGetProblemIdentifierFromManifest(manifestResourceName, out var problemIdentifier))
+        return false;
+
+      return PreloadProblemSet(problemIdentifier);
+    }
+
     public static void RegisterProblemFigure(string identifier, Texture2D texture)
     {
       if (string.IsNullOrWhiteSpace(identifier) || texture == null)
@@ -81,6 +137,12 @@ namespace MultiplayerInfrastructure.Registry
         return true;
 
       texture = Resources.Load<Texture2D>($"ProblemFigures/{id}");
+      if (texture == null)
+        texture = Resources.Load<Texture2D>($"Problems/figures/{id}");
+
+      if (texture == null)
+        texture = Resources.Load<Texture2D>($"Problems/{id}");
+
       if (texture == null)
         return false;
 
