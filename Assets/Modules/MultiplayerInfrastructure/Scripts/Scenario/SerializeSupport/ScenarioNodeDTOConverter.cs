@@ -42,6 +42,8 @@ namespace MultiplayerInfrastructure.Scenario
         "PlayTTS" => Deserialize<ScenarioPlayTTSNodeDTO>(root, options),
         "PlayerTag" => Deserialize<ScenarioPlayerTagNodeDTO>(root, options),
         "TagModification" => Deserialize<ScenarioPlayerTagNodeDTO>(root, options),
+        "EntityPresetSpawn" => Deserialize<ScenarioEntityPresetSpawnNodeDTO>(root, options),
+        "EntityTag" => Deserialize<ScenarioEntityTagNodeDTO>(root, options),
         _ => throw new JsonException($"Unknown nodeType '{nodeType}'.")
       };
     }

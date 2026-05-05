@@ -93,6 +93,12 @@
         },
         {
           "$ref": "#/$defs/ScenarioPlayerTagNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioEntityPresetSpawnNode"
+        },
+        {
+          "$ref": "#/$defs/ScenarioEntityTagNode"
         }
       ]
     },
@@ -1100,6 +1106,96 @@
                 "required": ["fromTag", "toTag"]
               }
             }
+          ]
+        }
+      ]
+    },
+    "ScenarioEntityPresetSpawnNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "EntityPresetSpawn"
+            },
+            "presetIdentifier": {
+              "type": "string",
+              "minLength": 1
+            },
+            "positionSourceEntityIdentifier": {
+              "type": ["string", "null"]
+            },
+            "positionX": {
+              "type": "number"
+            },
+            "positionY": {
+              "type": "number"
+            },
+            "positionZ": {
+              "type": "number"
+            },
+            "resultStateKey": {
+              "type": ["string", "null"]
+            }
+          },
+          "required": ["presetIdentifier"]
+        }
+      ]
+    },
+    "ScenarioEntityTagNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "EntityTag"
+            },
+            "operation": {
+              "type": "string",
+              "enum": ["Add", "Remove", "Change"]
+            },
+            "targetEntityIdentifier": {
+              "type": ["string", "null"]
+            },
+            "targetEntityStateKey": {
+              "type": ["string", "null"]
+            },
+            "tag": {
+              "type": ["string", "null"]
+            },
+            "fromTag": {
+              "type": ["string", "null"]
+            },
+            "toTag": {
+              "type": ["string", "null"]
+            }
+          },
+          "required": ["operation"],
+          "allOf": [
+            {
+              "if": {
+                "properties": { "operation": { "enum": ["Add", "Remove"] } }
+              },
+              "then": {
+                "required": ["tag"]
+              }
+            },
+            {
+              "if": {
+                "properties": { "operation": { "const": "Change" } }
+              },
+              "then": {
+                "required": ["fromTag", "toTag"]
+              }
+            }
+          ],
+          "anyOf": [
+            { "required": ["targetEntityIdentifier"] },
+            { "required": ["targetEntityStateKey"] }
           ]
         }
       ]

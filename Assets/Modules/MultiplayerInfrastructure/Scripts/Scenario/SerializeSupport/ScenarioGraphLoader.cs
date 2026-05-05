@@ -217,6 +217,8 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioStateUpdateNodeDTO stateUpdate => ConvertStateUpdate(stateUpdate),
           ScenarioPlayTTSNodeDTO playTTS => ConvertPlayTTS(playTTS),
           ScenarioPlayerTagNodeDTO playerTag => ConvertPlayerTag(playerTag),
+          ScenarioEntityPresetSpawnNodeDTO entityPresetSpawn => ConvertEntityPresetSpawn(entityPresetSpawn),
+          ScenarioEntityTagNodeDTO entityTag => ConvertEntityTag(entityTag),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -468,6 +470,60 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = node.NextIdentifier
         };
 
+    private static ScenarioEntityPresetSpawnNode ConvertEntityPresetSpawn(ScenarioEntityPresetSpawnNodeDTO dto) =>
+        new ScenarioEntityPresetSpawnNode
+        {
+          Identifier = dto.Identifier,
+          PresetIdentifier = dto.PresetIdentifier,
+          PositionSourceEntityIdentifier = dto.PositionSourceEntityIdentifier,
+          PositionX = dto.PositionX ?? 0f,
+          PositionY = dto.PositionY ?? 0f,
+          PositionZ = dto.PositionZ ?? 0f,
+          ResultStateKey = dto.ResultStateKey,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioEntityTagNode ConvertEntityTag(ScenarioEntityTagNodeDTO dto) =>
+        new ScenarioEntityTagNode
+        {
+          Identifier = dto.Identifier,
+          Operation = ParsePlayerTagOperationType(dto.Operation),
+          TargetEntityIdentifier = dto.TargetEntityIdentifier,
+          TargetEntityStateKey = dto.TargetEntityStateKey,
+          Tag = dto.Tag,
+          FromTag = dto.FromTag,
+          ToTag = dto.ToTag,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioEntityPresetSpawnNodeDTO ConvertToDTO(ScenarioEntityPresetSpawnNode node) =>
+        new ScenarioEntityPresetSpawnNodeDTO
+        {
+          NodeType = "EntityPresetSpawn",
+          Identifier = node.Identifier,
+          PresetIdentifier = node.PresetIdentifier,
+          PositionSourceEntityIdentifier = node.PositionSourceEntityIdentifier,
+          PositionX = node.PositionX,
+          PositionY = node.PositionY,
+          PositionZ = node.PositionZ,
+          ResultStateKey = node.ResultStateKey,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioEntityTagNodeDTO ConvertToDTO(ScenarioEntityTagNode node) =>
+        new ScenarioEntityTagNodeDTO
+        {
+          NodeType = "EntityTag",
+          Identifier = node.Identifier,
+          Operation = node.Operation.ToString(),
+          TargetEntityIdentifier = node.TargetEntityIdentifier,
+          TargetEntityStateKey = node.TargetEntityStateKey,
+          Tag = node.Tag,
+          FromTag = node.FromTag,
+          ToTag = node.ToTag,
+          NextIdentifier = node.NextIdentifier
+        };
+
     private static ScenarioParallelNode ConvertParallel(ScenarioParallelNodeDTO dto)
     {
       var branches = new List<ScenarioParallelBranch>(dto.Branches?.Count ?? 0);
@@ -698,6 +754,8 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioStateUpdateNode stateUpdate => ConvertToDTO(stateUpdate),
           ScenarioPlayTTSNode playTTS => ConvertToDTO(playTTS),
           ScenarioPlayerTagNode playerTag => ConvertToDTO(playerTag),
+          ScenarioEntityPresetSpawnNode entityPresetSpawn => ConvertToDTO(entityPresetSpawn),
+          ScenarioEntityTagNode entityTag => ConvertToDTO(entityTag),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 
