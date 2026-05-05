@@ -121,6 +121,25 @@ namespace MultiplayerInfrastructure.Chat
       ScenarioController.Instance.StartScenario(graph, null, owner);
     }
 
+    [TargetRpc]
+    private void TargetRunProblemSheet(NetworkConnection conn, string problemSetIdentifier)
+    {
+      var controller = Registry.Registry.Get<ProblemSheetUIController>(
+        RegistryType.UI,
+        Registry.Registry.TypeKey<ProblemSheetUIController>());
+
+      if (controller == null)
+      {
+        Debug.LogWarning("[ChatService] ProblemSheetUIController is missing on this client.");
+        return;
+      }
+
+      if (!controller.OpenProblemSet(problemSetIdentifier, 0))
+      {
+        Debug.LogWarning($"[ChatService] Failed to open problem set '{problemSetIdentifier}'.");
+      }
+    }
+
 #endregion
 
 #region Helpers
@@ -184,6 +203,47 @@ namespace MultiplayerInfrastructure.Chat
         anyTarget = true;
         int ownerId = target.ClientId >= 0 ? (int)target.ClientId : -1;
         TargetRunScenario(target, scenarioIdentifier, ownerId);
+      }
+
+      if (!anyTarget)
+      {
+        error = "No target players were matched.";
+        return false;
+      }
+
+      return true;
+    }
+
+    public bool TryDispatchProblemSheet(string problemSetIdentifier, IEnumerable<NetworkConnection> targets, out string error)
+    {
+      error = string.Empty;
+
+      if (!IsServer)
+      {
+        error = "ProblemSheet execution can only be invoked on the server.";
+        return false;
+      }
+
+      if (!Registry.Registry.PreloadProblemSet(problemSetIdentifier))
+      {
+        error = $"Problem set '{problemSetIdentifier}' is not registered.";
+        return false;
+      }
+
+      if (targets == null)
+      {
+        error = "No target players were matched.";
+        return false;
+      }
+
+      bool anyTarget = false;
+      foreach (var target in targets)
+      {
+        if (target == null)
+          continue;
+
+        anyTarget = true;
+        TargetRunProblemSheet(target, problemSetIdentifier);
       }
 
       if (!anyTarget)

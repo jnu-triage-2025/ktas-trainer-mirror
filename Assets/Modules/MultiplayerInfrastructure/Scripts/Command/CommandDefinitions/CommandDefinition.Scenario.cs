@@ -259,4 +259,239 @@ namespace MultiplayerInfrastructure.Command
       return null;
     }
   }
+
+  public class CommandDefinition_ProblemSheet : IChatCommandModel
+  {
+    public string CommandEntry => "problemsheet";
+    public string Description => "Open a problem sheet. Usage: /problemsheet <target> <problem-identifier>";
+    public bool RequiresAdmin => false;
+
+    private readonly ChatService _chat;
+
+    public CommandDefinition_ProblemSheet(ChatService chat)
+    {
+      _chat = chat;
+    }
+
+    public void Execute(NetworkConnection sender, string[] args)
+    {
+      if (_chat == null)
+        return;
+
+      if (args == null || args.Length < 2)
+      {
+        _chat.SendSystemMessage(sender, "Usage: /problemsheet <target> <problem-identifier>");
+        return;
+      }
+
+      string playerSelector = args[0];
+      string problemId = string.Join(' ', args[1..]).Trim();
+      if (string.IsNullOrWhiteSpace(problemId))
+      {
+        _chat.SendSystemMessage(sender, "Problem identifier is required.");
+        return;
+      }
+
+      if (!TryResolveTargets(sender, playerSelector, out List<NetworkConnection> targets, out string targetError))
+      {
+        _chat.SendSystemMessage(sender, targetError);
+        return;
+      }
+
+      if (!_chat.TryDispatchProblemSheet(problemId, targets, out string dispatchError))
+      {
+        _chat.SendSystemMessage(sender, dispatchError);
+        return;
+      }
+
+      _chat.SendSystemMessage(sender, $"ProblemSheet '{problemId}' dispatched to {targets.Count} player(s).");
+    }
+
+    private bool TryResolveTargets(NetworkConnection sender, string raw, out List<NetworkConnection> targets, out string error)
+    {
+      targets = new List<NetworkConnection>();
+      error = string.Empty;
+
+      if (string.IsNullOrWhiteSpace(raw))
+      {
+        error = "Target player selector is required.";
+        return false;
+      }
+
+      string lowered = raw.ToLowerInvariant();
+      if (lowered == "@s")
+      {
+        if (sender == null)
+        {
+          error = "Unable to locate the command executor.";
+          return false;
+        }
+
+        targets.Add(sender);
+      }
+      else if (lowered == "@a")
+      {
+        targets.AddRange(GetAllConnections());
+      }
+      else if (lowered == "@n")
+      {
+        if (!TryGetNearestPlayer(sender, out NetworkConnection nearest, out error))
+          return false;
+
+        if (nearest != null)
+          targets.Add(nearest);
+      }
+      else if (lowered.StartsWith("fish:"))
+      {
+        string idText = raw.Substring("fish:".Length);
+        if (!int.TryParse(idText, out int clientId))
+        {
+          error = "Invalid FishNet player identifier after 'fish:'";
+          return false;
+        }
+
+        var match = FindConnectionByClientId(clientId);
+        if (match == null)
+        {
+          error = $"No player found for fish id '{clientId}'.";
+          return false;
+        }
+
+        targets.Add(match);
+      }
+      else
+      {
+        error = "Unknown target selector. Use fish:, @s, @n, or @a.";
+        return false;
+      }
+
+      if (targets.Count == 0)
+      {
+        error = "No players matched the selector.";
+        return false;
+      }
+
+      targets = targets.Where(t => t != null).GroupBy(t => (int)t.ClientId).Select(g => g.First()).ToList();
+      if (targets.Count == 0)
+      {
+        error = "No valid players matched the selector.";
+        return false;
+      }
+
+      return true;
+    }
+
+    private bool TryGetNearestPlayer(NetworkConnection sender, out NetworkConnection target, out string error)
+    {
+      target = null;
+      error = string.Empty;
+
+      var players = GetAllPlayerControllers();
+      if (players.Count == 0)
+      {
+        error = "No players are connected.";
+        return false;
+      }
+
+      var senderController = FindPlayerController(sender, players);
+      if (senderController == null)
+      {
+        error = "Unable to locate the command executor's player on the server.";
+        return false;
+      }
+
+      var others = players.Where(p => p.Owner != null && p.Owner != sender).ToList();
+      var pool = others.Count > 0 ? others : players;
+
+      PlayerController closest = null;
+      float bestSqr = float.MaxValue;
+      Vector3 origin = senderController.transform.position;
+
+      foreach (var player in pool)
+      {
+        if (player == null || player.Owner == null)
+          continue;
+
+        float sqr = (player.transform.position - origin).sqrMagnitude;
+        if (sqr < bestSqr)
+        {
+          bestSqr = sqr;
+          closest = player;
+        }
+      }
+
+      if (closest == null || closest.Owner == null)
+      {
+        error = "Unable to resolve the nearest player.";
+        return false;
+      }
+
+      target = closest.Owner;
+      return true;
+    }
+
+    private List<NetworkConnection> GetAllConnections()
+    {
+      var result = new List<NetworkConnection>();
+      var clients = InstanceFinder.ServerManager?.Clients;
+
+      if (clients != null)
+      {
+        foreach (var kvp in clients)
+        {
+          if (kvp.Value != null)
+            result.Add(kvp.Value);
+        }
+      }
+
+      return result;
+    }
+
+    private List<PlayerController> GetAllPlayerControllers()
+    {
+      var found = UnityEngine.Object.FindObjectsOfType<PlayerController>();
+      var result = new List<PlayerController>(found.Length);
+
+      foreach (var player in found)
+      {
+        if (player != null && player.Owner != null)
+          result.Add(player);
+      }
+
+      return result;
+    }
+
+    private PlayerController FindPlayerController(NetworkConnection connection, List<PlayerController> candidates)
+    {
+      if (connection == null || candidates == null)
+        return null;
+
+      foreach (var player in candidates)
+      {
+        if (player == null)
+          continue;
+
+        if (player.Owner == connection)
+          return player;
+      }
+
+      return null;
+    }
+
+    private NetworkConnection FindConnectionByClientId(int clientId)
+    {
+      var clients = InstanceFinder.ServerManager?.Clients;
+      if (clients == null)
+        return null;
+
+      foreach (var kvp in clients)
+      {
+        var candidate = kvp.Value;
+        if (candidate != null && candidate.ClientId == clientId)
+          return candidate;
+      }
+
+      return null;
+    }
+  }
 }
