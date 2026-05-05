@@ -26,6 +26,7 @@ namespace MultiplayerInfrastructure.Registry
     InteractableEntity,
     UI,
     PlayerModel,
+    EntityPreset,
     ProblemSet,
     ProblemFigure,
     /// <summary>

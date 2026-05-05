@@ -20,5 +20,7 @@ namespace MultiplayerInfrastructure.Scenario
     StateUpdate,
     PlayTTS,
     PlayerTag,
+    EntityPresetSpawn,
+    EntityTag,
   }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Command;
@@ -373,35 +374,187 @@ namespace MultiplayerInfrastructure.Chat
 
     private bool TryExecuteCommandInternal(string commandLine, NetworkConnection sender, out string result)
     {
-      result = string.Empty;
+      if (!TryExecuteCommandLineWithPipeline(commandLine, sender, out var outputValues, out var error))
+      {
+        result = string.IsNullOrWhiteSpace(error) ? "Command execution failed." : error;
+        SendSystemMessage(sender, result);
+        return false;
+      }
+
+      result = outputValues.Count > 0
+        ? string.Join(", ", outputValues)
+        : "Executed command.";
+      return true;
+    }
+
+    private bool TryExecuteCommandLineWithPipeline(string commandLine, NetworkConnection sender, out List<string> outputValues, out string error)
+    {
+      outputValues = new List<string>();
+      error = string.Empty;
+
+      string trimmed = commandLine?.Trim();
+      if (string.IsNullOrWhiteSpace(trimmed))
+      {
+        error = "Usage: /help";
+        return false;
+      }
+
+      string[] stages = trimmed.Split('|', StringSplitOptions.TrimEntries);
+      if (stages.Length == 0)
+      {
+        error = "Usage: /help";
+        return false;
+      }
+
+      bool suppressFirstStageMessages = stages.Length > 1;
+      if (!TryExecuteParallelStage(stages[0], sender, suppressFirstStageMessages, out outputValues, out error))
+        return false;
+
+      for (int i = 1; i < stages.Length; i++)
+      {
+        if (!TryExecutePipeTargetStage(stages[i], outputValues, sender, out outputValues, out error))
+          return false;
+      }
+
+      return true;
+    }
+
+    private bool TryExecuteParallelStage(
+      string stage,
+      NetworkConnection sender,
+      bool suppressSystemMessages,
+      out List<string> outputValues,
+      out string error)
+    {
+      outputValues = new List<string>();
+      error = string.Empty;
+
+      var commands = stage.Split('&', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+      if (commands.Length == 0)
+      {
+        error = "Invalid command stage.";
+        return false;
+      }
+
+      for (int i = 0; i < commands.Length; i++)
+      {
+        if (!TryExecuteSingleCommand(commands[i], sender, suppressSystemMessages, out var values, out error))
+          return false;
+
+        if (values != null && values.Count > 0)
+          outputValues.AddRange(values);
+      }
+
+      return true;
+    }
+
+    private bool TryExecutePipeTargetStage(
+      string stage,
+      IReadOnlyList<string> inputValues,
+      NetworkConnection sender,
+      out List<string> outputValues,
+      out string error)
+    {
+      outputValues = new List<string>();
+      error = string.Empty;
+
+      if (string.IsNullOrWhiteSpace(stage))
+      {
+        error = "Invalid pipeline target stage.";
+        return false;
+      }
+
+      int placeholderCount = CountPlaceholders(stage);
+      if (placeholderCount > 0)
+      {
+        int inputCount = inputValues?.Count ?? 0;
+        if (inputCount < placeholderCount)
+        {
+          error = $"Pipeline requires {placeholderCount} values but received {inputCount}.";
+          return false;
+        }
+
+        string resolved = stage;
+        for (int i = 0; i < placeholderCount; i++)
+        {
+          resolved = ReplaceFirstPlaceholder(resolved, inputValues[i]);
+        }
+
+        stage = resolved;
+      }
+
+      if (!TryExecuteParallelStage(stage, sender, suppressSystemMessages: false, out outputValues, out error))
+        return false;
+
+      return true;
+    }
+
+    private bool TryExecuteSingleCommand(
+      string commandLine,
+      NetworkConnection sender,
+      bool suppressSystemMessages,
+      out IReadOnlyList<string> pipelineValues,
+      out string error)
+    {
+      pipelineValues = Array.Empty<string>();
+      error = string.Empty;
 
       if (string.IsNullOrWhiteSpace(commandLine))
       {
-        result = "Usage: /help";
-        SendSystemMessage(sender, result);
+        error = "Usage: /help";
         return false;
       }
 
       string[] parts = commandLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
       if (parts.Length == 0)
       {
-        result = "Usage: /help";
-        SendSystemMessage(sender, result);
+        error = "Usage: /help";
         return false;
       }
 
       string command = parts[0];
       string[] args = parts.Length > 1 ? parts[1..] : Array.Empty<string>();
 
-      if (_commandService.TryExecute(command, args, sender))
+      bool handled = _commandService.TryExecute(command, args, sender, suppressSystemMessages, out pipelineValues, out error);
+      if (!handled)
       {
-        result = $"Executed /{command}.";
-        return true;
+        error = $"Unknown command: {command}";
+        return false;
       }
 
-      result = $"Unknown command: {command}";
-      SendSystemMessage(sender, result);
-      return false;
+      if (!string.IsNullOrWhiteSpace(error))
+        return false;
+
+      return true;
+    }
+
+    private static int CountPlaceholders(string input)
+    {
+      if (string.IsNullOrEmpty(input))
+        return 0;
+
+      int count = 0;
+      for (int i = 0; i < input.Length - 1; i++)
+      {
+        if (input[i] == '{' && input[i + 1] == '}')
+        {
+          count++;
+          i++;
+        }
+      }
+
+      return count;
+    }
+
+    private static string ReplaceFirstPlaceholder(string input, string value)
+    {
+      int index = input.IndexOf("{}", StringComparison.Ordinal);
+      if (index < 0)
+        return input;
+
+      return input.Substring(0, index)
+             + (value ?? string.Empty)
+             + input.Substring(index + 2);
     }
 
     public void BroadcastSystemMessage(string message)

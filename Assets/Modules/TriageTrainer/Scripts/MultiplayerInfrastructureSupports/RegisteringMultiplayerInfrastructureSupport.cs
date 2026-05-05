@@ -8,6 +8,7 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
     {
       Awake_Item();
       Awake_PlayerModel();
+      Awake_EntityPreset();
     }
   }
 }

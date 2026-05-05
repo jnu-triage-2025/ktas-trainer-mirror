@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
+using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 
@@ -78,14 +79,14 @@ namespace MultiplayerInfrastructure.Command
       string nameSelector = args[0];
       string tag = string.Join(' ', args[1..]);
 
-      if (!TryResolveSession(sender, nameSelector, out var session, out string error))
+      if (!TryResolveTarget(sender, nameSelector, out var target, out string error))
       {
         _chat.SendSystemMessage(sender, error);
         return;
       }
 
-      PlayerTagService.AddTag(session.Identifier, tag);
-      _chat.SendSystemMessage(sender, $"[태그] '{session.DisplayName}'에게 태그 '{tag}'를 추가했습니다.");
+      PlayerTagService.AddTagToIdentifier(target.Identifier, tag);
+      _chat.SendSystemMessage(sender, $"[태그] '{target.DisplayName}'에게 태그 '{tag}'를 추가했습니다.");
     }
 
     // ── /tag remove ──────────────────────────────────────────────────────
@@ -102,17 +103,17 @@ namespace MultiplayerInfrastructure.Command
       string targetName = args[0];
       string tag = string.Join(' ', args[1..]);
 
-      if (!TryResolveSession(sender, targetName, out var session, out string error))
+      if (!TryResolveTarget(sender, targetName, out var target, out string error))
       {
         _chat.SendSystemMessage(sender, error);
         return;
       }
 
-      bool removed = PlayerTagService.RemoveTag(session.Identifier, tag);
+      bool removed = PlayerTagService.RemoveTagFromIdentifier(target.Identifier, tag);
       if (!removed)
-        _chat.SendSystemMessage(sender, $"[태그] '{session.DisplayName}'에게 태그 '{tag}'가 없습니다.");
+        _chat.SendSystemMessage(sender, $"[태그] '{target.DisplayName}'에게 태그 '{tag}'가 없습니다.");
       else
-        _chat.SendSystemMessage(sender, $"[태그] '{session.DisplayName}'에서 태그 '{tag}'를 제거했습니다.");
+        _chat.SendSystemMessage(sender, $"[태그] '{target.DisplayName}'에서 태그 '{tag}'를 제거했습니다.");
     }
 
     // ── /tag change ──────────────────────────────────────────────────────
@@ -131,27 +132,27 @@ namespace MultiplayerInfrastructure.Command
       string toTag = args[2];
       bool force = args.Length >= 4 && args[3].Equals("--force", System.StringComparison.OrdinalIgnoreCase);
 
-      if (!TryResolveSession(sender, targetName, out var session, out string error))
+      if (!TryResolveTarget(sender, targetName, out var target, out string error))
       {
         _chat.SendSystemMessage(sender, error);
         return;
       }
 
-      bool changed = PlayerTagService.ChangeTag(session.Identifier, fromTag, toTag);
+      bool changed = PlayerTagService.ChangeTagForIdentifier(target.Identifier, fromTag, toTag);
 
       if (!changed)
       {
         if (force)
         {
           // --force: 없어도 toTag를 추가
-          PlayerTagService.AddTag(session.Identifier, toTag);
+          PlayerTagService.AddTagToIdentifier(target.Identifier, toTag);
           _chat.SendSystemMessage(sender,
-            $"[태그] '{session.DisplayName}'에게 태그 '{fromTag}'이(가) 없어 '{toTag}'를 강제로 추가했습니다.");
+            $"[태그] '{target.DisplayName}'에게 태그 '{fromTag}'이(가) 없어 '{toTag}'를 강제로 추가했습니다.");
         }
         else
         {
           _chat.SendSystemMessage(sender,
-            $"[태그] '{session.DisplayName}'에게 태그 '{fromTag}'이(가) 할당되어 있지 않습니다.");
+            $"[태그] '{target.DisplayName}'에게 태그 '{fromTag}'이(가) 할당되어 있지 않습니다.");
           _chat.SendSystemMessage(sender,
             $"[태그] 변경을 중단합니다. 강제로 추가하려면 --force 옵션을 사용하세요.");
         }
@@ -159,7 +160,7 @@ namespace MultiplayerInfrastructure.Command
       else
       {
         _chat.SendSystemMessage(sender,
-          $"[태그] '{session.DisplayName}'의 태그가 '{fromTag}' → '{toTag}'(으)로 변경되었습니다.");
+          $"[태그] '{target.DisplayName}'의 태그가 '{fromTag}' → '{toTag}'(으)로 변경되었습니다.");
       }
     }
 
@@ -175,18 +176,18 @@ namespace MultiplayerInfrastructure.Command
       }
 
       string targetName = args[0];
-      if (!TryResolveSession(sender, targetName, out var session, out string error))
+      if (!TryResolveTarget(sender, targetName, out var target, out string error))
       {
         _chat.SendSystemMessage(sender, error);
         return;
       }
 
-      var tags = PlayerTagService.GetTags(session.Identifier);
+      var tags = PlayerTagService.GetTagsByIdentifier(target.Identifier);
       if (tags.Count == 0)
-        _chat.SendSystemMessage(sender, $"[태그] '{session.DisplayName}'에게 할당된 태그가 없습니다.");
+        _chat.SendSystemMessage(sender, $"[태그] '{target.DisplayName}'에게 할당된 태그가 없습니다.");
       else
         _chat.SendSystemMessage(sender,
-          $"[태그] '{session.DisplayName}': [{string.Join(", ", tags)}]");
+          $"[태그] '{target.DisplayName}': [{string.Join(", ", tags)}]");
     }
 
     // ── 세션 조회 헬퍼 ────────────────────────────────────────────────────
@@ -194,13 +195,13 @@ namespace MultiplayerInfrastructure.Command
     /// <summary>
     /// "@self"이면 sender 자신의 세션을, 그 외에는 DisplayName으로 세션을 찾습니다.
     /// </summary>
-    private bool TryResolveSession(
+    private bool TryResolveTarget(
       NetworkConnection sender,
       string selector,
-      out UserDescriptor session,
+      out TagTarget target,
       out string error)
     {
-      session = null;
+      target = default;
       error = string.Empty;
 
       if (string.IsNullOrWhiteSpace(selector))
@@ -217,11 +218,13 @@ namespace MultiplayerInfrastructure.Command
           return false;
         }
 
-        if (!UserDescriptorService.TryGetByClientId(sender.ClientId, out session))
+        if (!UserDescriptorService.TryGetByClientId(sender.ClientId, out var selfSession))
         {
           error = "본인의 세션을 찾을 수 없습니다.";
           return false;
         }
+
+        target = new TagTarget(selfSession.Identifier, selfSession.DisplayName);
 
         return true;
       }
@@ -237,22 +240,50 @@ namespace MultiplayerInfrastructure.Command
           return false;
         }
 
-        if (!UserDescriptorService.TryGetByClientId(targets[0].ClientId, out session))
+        if (!UserDescriptorService.TryGetByClientId(targets[0].ClientId, out var selectedSession))
         {
+          if (Registry.Registry.TryGetEntity(selector, out var selectedEntity) && selectedEntity?.GameObject != null)
+          {
+            target = new TagTarget(selectedEntity.Identifier, selectedEntity.DisplayName ?? selectedEntity.Identifier);
+            return true;
+          }
+
           error = "Target was not found.";
           return false;
         }
 
+        target = new TagTarget(selectedSession.Identifier, selectedSession.DisplayName);
+
         return true;
       }
 
-      if (!UserDescriptorService.TryGetByDisplayName(selector, out session))
+      if (Registry.Registry.TryGetEntity(selector, out var entity) && entity?.GameObject != null)
+      {
+        target = new TagTarget(entity.Identifier, entity.DisplayName ?? entity.Identifier);
+        return true;
+      }
+
+      if (!UserDescriptorService.TryGetByDisplayName(selector, out var namedSession))
       {
         error = $"Target '{selector}'를 찾을 수 없습니다.";
         return false;
       }
 
+      target = new TagTarget(namedSession.Identifier, namedSession.DisplayName);
+
       return true;
+    }
+
+    private readonly struct TagTarget
+    {
+      public readonly string Identifier;
+      public readonly string DisplayName;
+
+      public TagTarget(string identifier, string displayName)
+      {
+        Identifier = identifier;
+        DisplayName = string.IsNullOrWhiteSpace(displayName) ? identifier : displayName;
+      }
     }
   }
 }

@@ -25,6 +25,7 @@ namespace MultiplayerInfrastructure.Command
       RegisterCommand(new CommandDefinition_ProblemSheet(_chatManager));
       RegisterCommand(new CommandDefinition_Character(_chatManager));
       RegisterCommand(new CommandDefinition_Title(_chatManager));
+      RegisterCommand(new CommandDefinition_EntityPreset(_chatManager));
       // RegisterCommand(new CommandDefinition_Kick(_chatManager));
     }
 
@@ -42,16 +43,46 @@ namespace MultiplayerInfrastructure.Command
 
     public bool TryExecute(string commandName, string[] args, NetworkConnection sender)
     {
+      return TryExecute(commandName, args, sender, suppressSystemMessages: false, out _, out _);
+    }
+
+    public bool TryExecute(
+      string commandName,
+      string[] args,
+      NetworkConnection sender,
+      bool suppressSystemMessages,
+      out IReadOnlyList<string> pipelineValues,
+      out string error)
+    {
+      pipelineValues = System.Array.Empty<string>();
+      error = string.Empty;
+
       string key = commandName?.ToLowerInvariant();
       if (string.IsNullOrWhiteSpace(key))
+      {
+        error = "Command name is required.";
         return false;
+      }
 
       if (!_commands.TryGetValue(key, out IChatCommandModel command))
+      {
+        error = $"Unknown command: {commandName}";
         return false;
+      }
 
       if (command.RequiresAdmin/* && !_chatManager.IsAdmin(sender)*/)
       {
-        _chatManager.SendSystemMessage(sender, "Permission denied.");
+        if (!suppressSystemMessages)
+          _chatManager.SendSystemMessage(sender, "Permission denied.");
+        error = "Permission denied.";
+        return true;
+      }
+
+      if (command is IChatCommandPipelineCommand pipelineCommand)
+      {
+        if (!pipelineCommand.TryExecute(sender, args, suppressSystemMessages, out pipelineValues, out error))
+          return true;
+
         return true;
       }
 

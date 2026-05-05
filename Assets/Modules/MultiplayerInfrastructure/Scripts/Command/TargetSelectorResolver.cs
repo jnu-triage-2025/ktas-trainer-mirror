@@ -499,7 +499,7 @@ namespace MultiplayerInfrastructure.Command
       if (!UserDescriptorService.TryGetByClientId(connection.ClientId, out var descriptor) || descriptor == null)
         return tags;
 
-      var list = PlayerTagService.GetTags(descriptor.Identifier);
+      var list = PlayerTagService.GetTagsByIdentifier(descriptor.Identifier);
       foreach (var tag in list)
       {
         if (!string.IsNullOrEmpty(tag))
