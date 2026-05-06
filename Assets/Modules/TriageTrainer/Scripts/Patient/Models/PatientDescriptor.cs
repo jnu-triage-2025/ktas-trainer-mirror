@@ -86,5 +86,11 @@ namespace TriageTrainer.Entity.Patient
     /// 심정지 상태라면 인게임에서 심폐소생술(CPR)이 요구됩니다.
     /// </summary>
     public bool isCardiacArrest;
+
+    /// <summary>
+    /// 환자 모니터 표시용 파라미터 묶음입니다.
+    /// PatientMonitor와 동일한 구조(ECG/ART/CVP/PLETH/Numerics/NIBP/Temperature/ST)를 사용합니다.
+    /// </summary>
+    public PatientMonitorParameters monitorParameters = PatientMonitorParameters.Default;
   }
 }
