@@ -25,7 +25,8 @@
     }
     .page {
       max-width: 1160px;
-      margin: 24px auto;
+      margin: 0 auto;
+      margin-top: 24px;
       padding: 0 16px 40px;
     }
     h1 {
@@ -43,7 +44,6 @@
 <body>
   <div class="page">
     <h1>Ingame Problem Solving UI Editor</h1>
-    <p class="subtitle">문제 세트(JSON) + 이미지(선택)를 ZIP으로 내보내고 다시 불러오는 WebComponent 편집기</p>
     <problem-pack-editor></problem-pack-editor>
   </div>
 
@@ -76,6 +76,7 @@
               border-radius: 12px;
               box-shadow: 0 4px 14px rgba(20, 30, 50, 0.06);
               padding: 14px;
+              margin: 10px;
             }
             .meta-grid {
               display: grid;
@@ -160,7 +161,6 @@
 
             <div class="footer">
               <div class="status" id="status">준비됨</div>
-              <div class="muted">ZIP 내부: problem-pack.manifest + &lt;identifier&gt;.json + figures/* (Problems 폴더에 바로 압축해제)</div>
             </div>
           </div>
         `;
