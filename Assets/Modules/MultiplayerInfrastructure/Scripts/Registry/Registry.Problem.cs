@@ -11,7 +11,6 @@ namespace MultiplayerInfrastructure.Registry
     private sealed class ProblemPackManifest
     {
       public string format;
-      public string problemIdentifier;
       public string problemJson;
       public string figuresBasePath;
     }
@@ -20,21 +19,22 @@ namespace MultiplayerInfrastructure.Registry
     {
       EnsureBuiltInRegistryInitialized();
 
-      if (string.IsNullOrWhiteSpace(identifier))
+      string normalizedIdentifier = NormalizeProblemIdentifier(identifier);
+      if (string.IsNullOrWhiteSpace(normalizedIdentifier))
         return false;
 
       var registry = ResolveRegistry(RegistryType.ProblemSet);
-      if (!registry.TryGetValue(identifier, out var definition))
+      if (!registry.TryGetValue(normalizedIdentifier, out var definition))
       {
-        var textAsset = Resources.Load<TextAsset>($"Problems/{identifier}");
+        var textAsset = TryLoadProblemSetTextAsset(normalizedIdentifier);
         if (textAsset == null)
           return false;
 
-        registry[identifier] = textAsset;
+        registry[normalizedIdentifier] = textAsset;
         definition = textAsset;
       }
 
-      return TryResolveProblemSet(RegistryType.ProblemSet, identifier, registry, ref definition);
+      return TryResolveProblemSet(RegistryType.ProblemSet, normalizedIdentifier, registry, ref definition);
     }
 
     public static bool TryGetProblemSet(string identifier, out ProblemSetDefinition problemSet, out string error)
@@ -48,13 +48,14 @@ namespace MultiplayerInfrastructure.Registry
         return false;
       }
 
-      if (!PreloadProblemSet(identifier))
+      string normalizedIdentifier = NormalizeProblemIdentifier(identifier);
+      if (!PreloadProblemSet(normalizedIdentifier))
       {
         error = $"Problem set '{identifier}' is not registered or failed to parse.";
         return false;
       }
 
-      problemSet = Get<ProblemSetDefinition>(RegistryType.ProblemSet, identifier);
+      problemSet = Get<ProblemSetDefinition>(RegistryType.ProblemSet, normalizedIdentifier);
       if (problemSet == null)
       {
         error = $"Problem set '{identifier}' could not be resolved.";
@@ -71,7 +72,7 @@ namespace MultiplayerInfrastructure.Registry
       if (string.IsNullOrWhiteSpace(manifestResourceName))
         return false;
 
-      var textAsset = Resources.Load<TextAsset>($"Problems/{manifestResourceName}");
+      var textAsset = LoadManifestTextAsset(manifestResourceName);
       if (textAsset == null || string.IsNullOrWhiteSpace(textAsset.text))
         return false;
 
@@ -88,19 +89,96 @@ namespace MultiplayerInfrastructure.Registry
       if (manifest == null)
         return false;
 
-      if (!string.IsNullOrWhiteSpace(manifest.problemIdentifier))
-      {
-        problemIdentifier = manifest.problemIdentifier.Trim();
-        return true;
-      }
-
       if (!string.IsNullOrWhiteSpace(manifest.problemJson))
       {
-        problemIdentifier = manifest.problemJson.Trim();
-        return true;
+        problemIdentifier = NormalizeProblemIdentifier(manifest.problemJson);
+        if (!string.IsNullOrWhiteSpace(problemIdentifier))
+          return true;
+      }
+
+      if (!string.IsNullOrWhiteSpace(manifestResourceName))
+      {
+        problemIdentifier = NormalizeProblemIdentifier(manifestResourceName);
+        if (!string.IsNullOrWhiteSpace(problemIdentifier))
+          return true;
       }
 
       return false;
+    }
+
+    private static string NormalizeProblemIdentifier(string jsonReference)
+    {
+      if (string.IsNullOrWhiteSpace(jsonReference))
+        return string.Empty;
+
+      var normalized = jsonReference.Trim().Replace('\\', '/');
+      const string problemsPrefix = "Problems/";
+      if (normalized.StartsWith(problemsPrefix, StringComparison.OrdinalIgnoreCase))
+        normalized = normalized.Substring(problemsPrefix.Length);
+
+      int slashIndex = normalized.LastIndexOf('/');
+      if (slashIndex >= 0 && slashIndex < normalized.Length - 1)
+        normalized = normalized.Substring(slashIndex + 1);
+
+      if (normalized.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+        normalized = normalized.Substring(0, normalized.Length - 5);
+
+      return normalized.Trim();
+    }
+
+    private static TextAsset TryLoadProblemSetTextAsset(string normalizedIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(normalizedIdentifier))
+        return null;
+
+      var candidates = new List<string>
+      {
+        normalizedIdentifier,
+        $"{normalizedIdentifier}/{normalizedIdentifier}"
+      };
+
+      foreach (var candidate in candidates)
+      {
+        if (string.IsNullOrWhiteSpace(candidate))
+          continue;
+
+        var textAsset = Resources.Load<TextAsset>($"Problems/{candidate}");
+        if (textAsset != null)
+          return textAsset;
+      }
+
+      return null;
+    }
+
+    private static TextAsset LoadManifestTextAsset(string manifestResourceName)
+    {
+      if (string.IsNullOrWhiteSpace(manifestResourceName))
+        return null;
+
+      string normalizedPath = manifestResourceName.Trim().Replace('\\', '/');
+      const string problemsPrefix = "Problems/";
+      if (normalizedPath.StartsWith(problemsPrefix, StringComparison.OrdinalIgnoreCase))
+        normalizedPath = normalizedPath.Substring(problemsPrefix.Length);
+
+      if (normalizedPath.EndsWith(".manifest", StringComparison.OrdinalIgnoreCase))
+        normalizedPath = normalizedPath.Substring(0, normalizedPath.Length - ".manifest".Length);
+
+      var textAsset = Resources.Load<TextAsset>($"Problems/{normalizedPath}");
+      if (textAsset != null)
+        return textAsset;
+
+      var manifests = Resources.LoadAll<TextAsset>("Problems");
+      foreach (var candidate in manifests)
+      {
+        if (candidate == null)
+          continue;
+
+        if (string.Equals(candidate.name, "problem-pack.manifest", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(candidate.name, "problem-pack", StringComparison.OrdinalIgnoreCase))
+          return candidate;
+      }
+
+      return null;
     }
 
     public static bool PreloadProblemSetFromManifest(string manifestResourceName = "problem-pack.manifest")
@@ -142,6 +220,23 @@ namespace MultiplayerInfrastructure.Registry
 
       if (texture == null)
         texture = Resources.Load<Texture2D>($"Problems/{id}");
+
+      if (texture == null)
+      {
+        var allFigures = Resources.LoadAll<Texture2D>("Problems");
+        for (int i = 0; i < allFigures.Length; i++)
+        {
+          var candidate = allFigures[i];
+          if (candidate == null)
+            continue;
+
+          if (string.Equals(candidate.name, id, StringComparison.OrdinalIgnoreCase))
+          {
+            texture = candidate;
+            break;
+          }
+        }
+      }
 
       if (texture == null)
         return false;

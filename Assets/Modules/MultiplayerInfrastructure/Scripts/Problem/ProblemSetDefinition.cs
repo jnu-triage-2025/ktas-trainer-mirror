@@ -24,42 +24,75 @@ namespace MultiplayerInfrastructure.Problem
     public string Prompt { get; set; }
 
     [JsonPropertyName("figure")]
-    public string FigureIdentifier { get; set; }
+    public string Figure { get; set; }
 
     [JsonPropertyName("choice")]
-    public ProblemChoiceDefinition Choice { get; set; }
+    public ChoiceDefinition Choice { get; set; }
 
     [JsonPropertyName("shortAnswer")]
-    public ProblemShortAnswerDefinition ShortAnswer { get; set; }
-  }
+    public ShortAnswerDefinition ShortAnswer { get; set; }
 
-  public sealed class ProblemChoiceDefinition
-  {
-    [JsonPropertyName("options")]
-    public List<string> Options { get; set; } = new();
+    [JsonPropertyName("onCorrect")]
+    public OnCorrectDefinition OnCorrect { get; set; }
 
-    [JsonPropertyName("correctIndex")]
-    public int CorrectIndex { get; set; } = -1;
-  }
+    [JsonPropertyName("grading")]
+    public GradingDefinition Grading { get; set; }
 
-  public sealed class ProblemShortAnswerDefinition
-  {
-    [JsonPropertyName("operator")]
-    public string Operator { get; set; } = "and";
+    public sealed class ChoiceDefinition
+    {
+      [JsonPropertyName("options")]
+      public List<string> Options { get; set; } = new();
 
-    [JsonPropertyName("conditions")]
-    public List<ShortAnswerConditionDefinition> Conditions { get; set; } = new();
-  }
+      [JsonPropertyName("correctIndex")]
+      public int CorrectIndex { get; set; } = -1;
+    }
 
-  public sealed class ShortAnswerConditionDefinition
-  {
-    [JsonPropertyName("type")]
-    public string Type { get; set; }
+    public sealed class ShortAnswerDefinition
+    {
+      [JsonPropertyName("operator")]
+      public string Operator { get; set; } = "and";
 
-    [JsonPropertyName("value")]
-    public string Value { get; set; }
+      [JsonPropertyName("conditions")]
+      public List<ConditionDefinition> Conditions { get; set; } = new();
+    }
 
-    [JsonPropertyName("ignoreCase")]
-    public bool IgnoreCase { get; set; } = true;
+    public sealed class ConditionDefinition
+    {
+      [JsonPropertyName("type")]
+      public string Type { get; set; }
+
+      [JsonPropertyName("value")]
+      public string Value { get; set; }
+
+      [JsonPropertyName("ignoreCase")]
+      public bool IgnoreCase { get; set; } = true;
+    }
+
+    public sealed class OnCorrectDefinition
+    {
+      [JsonPropertyName("scoreboard")]
+      public List<ScoreboardAdjustmentDefinition> Scoreboard { get; set; } = new();
+    }
+
+    public sealed class ScoreboardAdjustmentDefinition
+    {
+      [JsonPropertyName("objective")]
+      public string Objective { get; set; }
+
+      [JsonPropertyName("criteria")]
+      public string Criteria { get; set; } = "dummy";
+
+      [JsonPropertyName("operation")]
+      public string Operation { get; set; } = "add";
+
+      [JsonPropertyName("value")]
+      public int Value { get; set; } = 1;
+    }
+
+    public sealed class GradingDefinition
+    {
+      [JsonPropertyName("retryOnWrong")]
+      public bool RetryOnWrong { get; set; } = true;
+    }
   }
 }

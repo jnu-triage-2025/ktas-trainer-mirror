@@ -1,0 +1,65 @@
+{
+  "identifier": "sample_problem_set",
+  "title": "Sample Problem Set",
+  "problems": [
+    {
+      "id": "p1",
+      "prompt": "CDM에서 겪은 이슈에 근거하여 OFDM에서 개선된 상황에 대해서 틀린 서술을 고르시오.",
+      "figure": "probfig:(2026-05-06_11_06_42)",
+      "choice": {
+        "options": [
+          "CDM은 모든 사용자에게 동일한 주파수 대역폭을 사용하도록 한다.",
+          "CDM에서는 모든 사용자가 동일 주파수 대역을 사용하므로, 파워 컨트롤 소요가 없다.",
+          "OFDM은 subcarrier의 개수를 늘림으로서 대역폭을 증가시킬 수 있다.",
+          "OFDM은 Inter-symbol interference를 cyclic prefix를 사용함으로서 제거할 수 있다."
+        ],
+        "correctIndex": 1
+      },
+      "grading": {
+        "retryOnWrong": false
+      },
+      "onCorrect": {
+        "scoreboard": [
+          {
+            "objective": "sample_problem_set_score",
+            "criteria": "dummy",
+            "operation": "add",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "p2",
+      "prompt": "모바일 통신 시스템에서, 주파수 대역폭을 어떻게 분할하는지에 따라 수용 가능한 가입자를 조정하게 되는 시스템을 서술하여라.",
+      "shortAnswer": {
+        "operator": "or",
+        "conditions": [
+          {
+            "type": "contains",
+            "value": "FDM",
+            "ignoreCase": true
+          },
+          {
+            "type": "contains",
+            "value": "frequency division multiplexing",
+            "ignoreCase": true
+          }
+        ]
+      },
+      "grading": {
+        "retryOnWrong": true
+      },
+      "onCorrect": {
+        "scoreboard": [
+          {
+            "objective": "sample_problem_set_score",
+            "criteria": "dummy",
+            "operation": "add",
+            "value": 1
+          }
+        ]
+      }
+    }
+  ]
+}

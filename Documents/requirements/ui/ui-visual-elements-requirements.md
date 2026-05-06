@@ -14,11 +14,15 @@ UI VisualElements는 UI Toolkit 기반 재사용 컴포넌트 계층이다. 사�
 - 채팅, 크로스헤어, 다이얼로그, 핫바, 인벤토리, 퀘스트 요소는 재사용 가능한 요소 단위로 구성되어야 한다.
 - 요소는 입력 상태와 데이터 변경에 따라 즉시 시각 상태를 갱신해야 한다.
 - 힌트/퀘스트/키설정 등 반복 항목은 리스트 요소 컴포넌트로 분리되어야 한다.
+- ProblemSheetElement는 문제 진행도(`문제 x/y`)를 표시해야 한다.
+- ProblemSheetElement는 정답 시 다음 문제 버튼 노출, 마지막 문제 정답 시 닫기→완료 라벨 전환을 제공해야 한다.
+- ProblemSheetElement는 문제 스펙의 `grading.retryOnWrong` 정책에 따라 오답 재도전 허용 여부를 반영해야 한다.
 
 ## 기술적 세부 사항
 
 - 주요 구현체: ChatPanelElement, CrosshairElement, DialogueElement, HotbarControl, InventoryUIViewElement, QuestPanelElement, QuestPreviewHudElement, InteractableObjectHintList 계열.
 - 컨트롤러 계층이 데이터 바인딩을, VisualElement 계층이 렌더링을 담당하는 분리 구조를 유지한다.
+- ProblemSheetElement는 choice/shortAnswer 입력 요소를 상황에 따라 활성/비활성 전환할 수 있어야 한다.
 
 ## 참조
 

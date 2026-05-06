@@ -5,6 +5,8 @@ using FishNet;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Problem;
+using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Command
@@ -265,10 +267,10 @@ namespace MultiplayerInfrastructure.Command
     }
   }
 
-  public class CommandDefinition_ProblemSheet : IChatCommandModel
+  public class CommandDefinition_ProblemSheet : IChatCommandModel, IChatCommandPipelineCommand
   {
     public string CommandEntry => "problemsheet";
-    public string Description => "Open a problem sheet. Usage: /problemsheet <target> <problem-identifier>";
+    public string Description => "Problem sheet commands. Usage: /problemsheet list | /problemsheet <target> <problem-identifier> [problem-index]";
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
@@ -280,36 +282,131 @@ namespace MultiplayerInfrastructure.Command
 
     public void Execute(NetworkConnection sender, string[] args)
     {
+      TryExecute(sender, args, suppressSystemMessages: false, out _, out _);
+    }
+
+    public bool TryExecute(
+      NetworkConnection sender,
+      string[] args,
+      bool suppressSystemMessages,
+      out IReadOnlyList<string> pipelineValues,
+      out string error)
+    {
+      pipelineValues = Array.Empty<string>();
+      error = string.Empty;
+
       if (_chat == null)
-        return;
+      {
+        error = "Chat service is unavailable.";
+        return false;
+      }
+
+      if (args != null && args.Length >= 1 && string.Equals(args[0], "list", StringComparison.OrdinalIgnoreCase))
+      {
+        SendProblemSheetList(sender, suppressSystemMessages);
+        pipelineValues = new[] { "0" };
+        return true;
+      }
 
       if (args == null || args.Length < 2)
       {
-        _chat.SendSystemMessage(sender, "Usage: /problemsheet <target> <problem-identifier>");
-        return;
+        error = "Usage: /problemsheet list | /problemsheet <target> <problem-identifier> [problem-index]";
+        if (!suppressSystemMessages)
+          _chat.SendSystemMessage(sender, error);
+        return false;
       }
 
       string playerSelector = args[0];
-      string problemId = string.Join(' ', args[1..]).Trim();
+      int startIndex = 0;
+      bool singleProblemMode = false;
+
+      int problemIdArgEnd = args.Length;
+      if (args.Length >= 3 && int.TryParse(args[^1], out int parsedIndex))
+      {
+        startIndex = Mathf.Max(0, parsedIndex - 1);
+        singleProblemMode = true;
+        problemIdArgEnd = args.Length - 1;
+      }
+
+      string problemId = string.Join(' ', args[1..problemIdArgEnd]).Trim();
       if (string.IsNullOrWhiteSpace(problemId))
       {
-        _chat.SendSystemMessage(sender, "Problem identifier is required.");
-        return;
+        error = "Problem identifier is required.";
+        if (!suppressSystemMessages)
+          _chat.SendSystemMessage(sender, error);
+        return false;
       }
 
       if (!TryResolveTargets(sender, playerSelector, out List<NetworkConnection> targets, out string targetError))
       {
-        _chat.SendSystemMessage(sender, targetError);
-        return;
+        error = targetError;
+        if (!suppressSystemMessages)
+          _chat.SendSystemMessage(sender, error);
+        return false;
       }
 
-      if (!_chat.TryDispatchProblemSheet(problemId, targets, out string dispatchError))
+      if (!_chat.TryDispatchProblemSheet(problemId, targets, startIndex, singleProblemMode, out string dispatchError))
       {
-        _chat.SendSystemMessage(sender, dispatchError);
+        error = dispatchError;
+        if (!suppressSystemMessages)
+          _chat.SendSystemMessage(sender, error);
+        return false;
+      }
+
+      string modeText = singleProblemMode ? $"single problem #{startIndex + 1}" : "full set mode";
+      if (!suppressSystemMessages)
+        _chat.SendSystemMessage(sender, $"ProblemSheet '{problemId}' dispatched to {targets.Count} player(s) ({modeText}).");
+
+      int resultCode = _chat.GetLastProblemSheetGradeCode(sender);
+      pipelineValues = new[] { resultCode == 0 ? "0" : "1" };
+      return true;
+    }
+
+    private void SendProblemSheetList(NetworkConnection sender, bool suppressSystemMessages)
+    {
+      var discovered = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+      foreach (var pair in Registry.Registry.GetAll<object>(RegistryType.ProblemSet))
+      {
+        if (!string.IsNullOrWhiteSpace(pair.Key))
+          discovered.Add(pair.Key.Trim());
+
+        if (pair.Value is ProblemSetDefinition set && !string.IsNullOrWhiteSpace(set.Identifier))
+          discovered.Add(set.Identifier.Trim());
+      }
+
+      var resources = Resources.LoadAll<TextAsset>("Problems");
+      foreach (var textAsset in resources)
+      {
+        if (textAsset == null)
+          continue;
+
+        if (string.Equals(textAsset.name, "problem-pack.manifest", StringComparison.OrdinalIgnoreCase))
+          continue;
+
+        if (!Registry.Registry.PreloadProblemSet(textAsset.name))
+          continue;
+
+        discovered.Add(textAsset.name);
+
+        if (Registry.Registry.TryGetProblemSet(textAsset.name, out var set, out _) && !string.IsNullOrWhiteSpace(set?.Identifier))
+          discovered.Add(set.Identifier.Trim());
+      }
+
+      if (discovered.Count == 0)
+      {
+        if (!suppressSystemMessages)
+          _chat.SendSystemMessage(sender, "No problem sheets are available.");
         return;
       }
 
-      _chat.SendSystemMessage(sender, $"ProblemSheet '{problemId}' dispatched to {targets.Count} player(s).");
+      var ordered = discovered
+        .Where(each => !string.IsNullOrWhiteSpace(each))
+        .OrderBy(each => each, StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+      if (!suppressSystemMessages)
+        _chat.SendSystemMessage(sender, $"Available problem sheets ({ordered.Count}): {string.Join(", ", ordered)}");
     }
 
     private bool TryResolveTargets(NetworkConnection sender, string raw, out List<NetworkConnection> targets, out string error)

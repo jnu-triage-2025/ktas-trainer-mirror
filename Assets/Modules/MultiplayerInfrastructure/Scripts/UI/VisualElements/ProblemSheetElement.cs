@@ -13,10 +13,21 @@ namespace MultiplayerInfrastructure.UI
     private readonly ProblemChoiceElement _choice;
     private readonly ProblemShortAnswerElement _shortAnswer;
     private readonly Label _result;
+    private readonly Label _progress;
+    private readonly VisualElement _actions;
+    private readonly Button _nextButton;
+    private readonly Button _closeButton;
+    private bool _canProgressToNext;
+    private bool _isLastProblem;
+    private bool _lastProblemSolved;
+    private bool _retryOnWrong;
+    private bool _gradedFinalized;
 
     private ProblemDefinition _boundProblem;
 
     public event Action<bool> OnGraded;
+    public event Action OnNextRequested;
+    public event Action OnCloseRequested;
 
     public ProblemSheetElement()
     {
@@ -43,17 +54,46 @@ namespace MultiplayerInfrastructure.UI
       _result.style.marginTop = 10;
       _result.style.unityFontStyleAndWeight = FontStyle.Bold;
       Add(_result);
+
+      _progress = new Label();
+      _progress.style.marginTop = 6;
+      _progress.style.color = new Color(0.78f, 0.88f, 1f, 0.95f);
+      Add(_progress);
+
+      _actions = new VisualElement();
+      _actions.style.flexDirection = FlexDirection.Row;
+      _actions.style.marginTop = 10;
+      Add(_actions);
+
+      _nextButton = new Button(() => OnNextRequested?.Invoke())
+      {
+        text = "다음 문제"
+      };
+      _nextButton.style.marginRight = 8;
+      _actions.Add(_nextButton);
+
+      _closeButton = new Button(() => OnCloseRequested?.Invoke())
+      {
+        text = "닫기"
+      };
+      _actions.Add(_closeButton);
     }
 
-    public void Bind(ProblemDefinition problem)
+    public void Bind(ProblemDefinition problem, bool canProgressToNext, bool isLastProblem, int problemOrder, int totalCount, bool retryOnWrong)
     {
       _boundProblem = problem;
+      _canProgressToNext = canProgressToNext;
+      _isLastProblem = isLastProblem;
+      _retryOnWrong = retryOnWrong;
+      _lastProblemSolved = false;
+      _gradedFinalized = false;
       _result.text = string.Empty;
+      _progress.text = totalCount > 0 ? $"문제 {problemOrder}/{totalCount}" : string.Empty;
 
       Texture2D figureTexture = null;
-      if (problem != null && !string.IsNullOrWhiteSpace(problem.FigureIdentifier))
+      if (problem != null && !string.IsNullOrWhiteSpace(problem.Figure))
       {
-        Registry.Registry.TryResolveProblemFigureReference(problem.FigureIdentifier, out figureTexture);
+        Registry.Registry.TryResolveProblemFigureReference(problem.Figure, out figureTexture);
       }
 
       _prompt.Bind(problem?.Prompt, figureTexture);
@@ -65,7 +105,16 @@ namespace MultiplayerInfrastructure.UI
       _shortAnswer.Bind(hasShortAnswer);
       if (hasShortAnswer)
         _shortAnswer.FocusInput();
+
+      _nextButton.style.display = DisplayStyle.None;
+      _closeButton.text = "닫기";
+      _closeButton.style.display = DisplayStyle.Flex;
+
+      SetAnswerInputsEnabled(true);
     }
+
+    public void Bind(ProblemDefinition problem)
+      => Bind(problem, canProgressToNext: false, isLastProblem: true, problemOrder: 1, totalCount: 1, retryOnWrong: true);
 
     private void HandleChoiceSelected(int selectedIndex)
     {
@@ -81,9 +130,32 @@ namespace MultiplayerInfrastructure.UI
 
     private void ShowResult(bool correct)
     {
+      if (_gradedFinalized)
+        return;
+
       _result.text = correct ? "정답" : "오답";
       _result.style.color = correct ? new Color(0.4f, 0.95f, 0.5f, 1f) : new Color(1f, 0.4f, 0.4f, 1f);
+      if (correct && _canProgressToNext)
+        _nextButton.style.display = DisplayStyle.Flex;
+
+      if (correct && _isLastProblem)
+        _lastProblemSolved = true;
+
+      _closeButton.text = _lastProblemSolved ? "완료" : "닫기";
+
+      if (correct || !_retryOnWrong)
+      {
+        _gradedFinalized = true;
+        SetAnswerInputsEnabled(false);
+      }
+
       OnGraded?.Invoke(correct);
+    }
+
+    private void SetAnswerInputsEnabled(bool enabled)
+    {
+      _choice?.SetEnabled(enabled);
+      _shortAnswer?.SetEnabled(enabled);
     }
   }
 }

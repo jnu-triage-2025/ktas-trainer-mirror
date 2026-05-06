@@ -59,6 +59,44 @@ chatService.TryExecuteSystemCommand("scenario hospital_emergency", out _);
 
 ---
 
+### `TryDispatchProblemSheet`
+
+```csharp
+public bool TryDispatchProblemSheet(
+    string problemSetIdentifier,
+    IEnumerable<NetworkConnection> targets,
+    int startIndex,
+    bool singleProblemMode,
+    out string error)
+```
+
+문제 세트를 대상 클라이언트에 연다.
+
+- `startIndex`: 시작 문제 인덱스(0-based)
+- `singleProblemMode`: `true`면 지정 문제만 표시, `false`면 전체 세트 진행 모드
+
+### `ReportProblemGrade`
+
+```csharp
+public void ReportProblemGrade(string problemSetIdentifier, int problemIndex, int gradeCode)
+```
+
+클라이언트의 문제 판정 결과를 서버에 보고한다.
+
+- `gradeCode = 0`: 정답
+- `gradeCode = 1`: 오답
+- 정답(0)일 때만 `onCorrect.scoreboard` 보상이 서버에서 적용된다.
+
+### `GetLastProblemSheetGradeCode`
+
+```csharp
+public int GetLastProblemSheetGradeCode(NetworkConnection sender)
+```
+
+해당 연결의 마지막 문제 판정 코드를 반환한다. 커맨드 파이프라이닝에서 `problemsheet` 결과값(`0|1`) 생성에 사용된다.
+
+---
+
 ### `TryDispatchTitle`
 
 ```csharp
@@ -189,6 +227,7 @@ HandleLocalSubmission(raw)
 | `/clean` | `/clean [id] [count]` | 인벤토리 아이템 제거 |
 | `/gamemode` | `/gamemode <player\|spectator>` | 게임모드 전환 |
 | `/scenario` | `/scenario execute <target> <scenario_id>` | 대상에게 시나리오 실행 |
+| `/problemsheet` | `/problemsheet list \| /problemsheet <target> <problem-identifier> [problem-index]` | 문제 시트 실행/조회 |
 | `/title` | `/title <target> ...` | 타이틀/액션바 표시 |
 
 ### `/give` 동작 상세

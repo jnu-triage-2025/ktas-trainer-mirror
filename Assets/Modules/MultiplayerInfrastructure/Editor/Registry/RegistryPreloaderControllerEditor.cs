@@ -79,6 +79,7 @@ namespace MultiplayerInfrastructure.Registry
       ValidateInteractableEntity(preloader.preloadInteractableEntitySO, report);
       ValidateUi(preloader.preloadUIControllerSO, report);
       ValidatePlayerCharacter(preloader.preloadPlayerCharacterSO, report);
+      ValidateProblemSet(preloader.preloadProblemSetSO, report);
     }
 
     internal static void ValidateScenarioGraph(
@@ -420,6 +421,48 @@ namespace MultiplayerInfrastructure.Registry
         if (!req.prefab.TryGetComponent<IPlayerCharacterModelObject>(out _))
         {
           report.AddError($"{row}: IPlayerCharacterModelObject 구현 컴포넌트가 없습니다.", req.prefab);
+        }
+      }
+    }
+
+    internal static void ValidateProblemSet(RegistryPreloadProblemSetSO so, RegistryPreloaderValidationReport report)
+    {
+      if (so == null)
+      {
+        report.AddWarning("preloadProblemSetSO가 비어 있습니다.", null);
+        return;
+      }
+
+      if (so.problemSetRegistryRequirements == null)
+      {
+        report.AddWarning("ProblemSet 요구 사항 배열이 null입니다.", so);
+        return;
+      }
+
+      var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+      for (int i = 0; i < so.problemSetRegistryRequirements.Length; i++)
+      {
+        var req = so.problemSetRegistryRequirements[i];
+        string row = $"ProblemSet[{i}]";
+
+        if (string.IsNullOrWhiteSpace(req.identifier))
+        {
+          report.AddError($"{row}: identifier가 비어 있습니다.", so);
+          continue;
+        }
+
+        string normalized = req.identifier.Trim();
+        if (!used.Add(normalized))
+        {
+          report.AddError($"{row}: 중복 identifier '{normalized}'가 있습니다.", so);
+          continue;
+        }
+
+        if (!Registry.PreloadProblemSet(normalized))
+        {
+          report.AddError(
+            $"{row}: ProblemSet preload 실패 ('{normalized}'). Resources/Problems 경로와 JSON/manifest 구성을 확인하세요.",
+            so);
         }
       }
     }

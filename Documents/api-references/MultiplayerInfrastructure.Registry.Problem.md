@@ -8,6 +8,7 @@
 ## 0. 문서 목적
 
 문제지 데이터(ProblemSet)와 문제 이미지(ProblemFigure)를 Registry에서 등록/조회/지연 로드하는 방법을 정리한다.
+최신 문제팩 구조(`Problems/<set>/<set>.json`, `Problems/<set>/problem-pack.manifest`, `Problems/<set>/figures/*`)를 포함한다.
 
 ---
 
@@ -29,7 +30,9 @@ public static bool PreloadProblemSet(string identifier)
 ```
 
 - `ProblemSet` 식별자를 기준으로 등록 항목을 확인한다.
-- 없으면 `Resources/Problems/{identifier}`에서 `TextAsset`을 로드한다.
+- 없으면 아래 순서로 `TextAsset`을 로드한다.
+  - `Resources/Problems/{identifier}`
+  - `Resources/Problems/{identifier}/{identifier}`
 - JSON 파싱 성공 시 `ProblemSetDefinition`으로 캐시 교체한다.
 
 ### `TryGetProblemSet`
@@ -40,6 +43,15 @@ public static bool TryGetProblemSet(string identifier, out ProblemSetDefinition 
 
 - 식별자로 문제 세트를 안전 조회한다.
 - 내부적으로 `PreloadProblemSet`을 호출해 지연 로드를 수행한다.
+
+### `PreloadProblemSetFromManifest`
+
+```csharp
+public static bool PreloadProblemSetFromManifest(string manifestResourceName = "problem-pack.manifest")
+```
+
+- 문제팩 manifest에서 `problemJson`을 읽어 문제세트를 로드한다.
+- `problemJson`은 경로/확장자(`.json`) 포함 여부와 무관하게 정규화되어 해석된다.
 
 ### `RegisterProblemFigure`
 
@@ -64,7 +76,11 @@ public static bool TryResolveProblemFigureReference(string figureReference, out 
 ```
 
 - `probfig:(identifier)` 형식 문자열을 파싱해 문제 이미지를 해석한다.
-- Registry에 없으면 `Resources/ProblemFigures/{identifier}`를 시도한다.
+- Registry에 없으면 아래 경로를 순차 시도한다.
+  - `Resources/ProblemFigures/{identifier}`
+  - `Resources/Problems/figures/{identifier}`
+  - `Resources/Problems/{identifier}`
+  - `Resources/Problems` 하위 전체 Texture2D에서 이름 일치 항목
 
 ### `ParseProblemFigureIdentifier`
 
@@ -80,7 +96,7 @@ public static string ParseProblemFigureIdentifier(string figureReference)
 
 - 권장 포맷: `probfig:(ktas_reference)`
 - 허용 포맷: `probfig:ktas_reference`
-- 실제 로드 경로: `Resources/ProblemFigures/ktas_reference`
+- 실제 로드 경로: `Resources/ProblemFigures/ktas_reference` 또는 `Resources/Problems/.../figures/ktas_reference`
 
 ---
 

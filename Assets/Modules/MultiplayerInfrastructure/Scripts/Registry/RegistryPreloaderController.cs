@@ -23,6 +23,7 @@ namespace MultiplayerInfrastructure.Registry
     public RegistryPreloadInteractableEntitySO preloadInteractableEntitySO;
     public RegistryPreloadUIControllerSO preloadUIControllerSO;
     public RegistryPreloadPlayerCharacterSO preloadPlayerCharacterSO;
+    public RegistryPreloadProblemSetSO preloadProblemSetSO;
 
     private void Awake()
     {
@@ -34,6 +35,7 @@ namespace MultiplayerInfrastructure.Registry
       PreloadInteractableEntities();
       PreloadUIControllers();
       PreloadPlayerCharacters();
+      PreloadProblemSets();
     }
 
     private void PreloadScenarioGraphs()
@@ -157,6 +159,25 @@ namespace MultiplayerInfrastructure.Registry
         }
 
         Registry.Register(RegistryType.PlayerModel, req.identifier, req.prefab);
+      }
+    }
+
+    private void PreloadProblemSets()
+    {
+      if (preloadProblemSetSO == null || preloadProblemSetSO.problemSetRegistryRequirements == null)
+        return;
+
+      foreach (var req in preloadProblemSetSO.problemSetRegistryRequirements)
+      {
+        if (string.IsNullOrWhiteSpace(req.identifier))
+          continue;
+
+        if (!Registry.PreloadProblemSet(req.identifier))
+        {
+          Debug.LogWarning(
+            $"[RegistryPreloaderController] Failed to preload ProblemSet '{req.identifier}'. Ensure Resources/Problems path and manifest/json are valid.",
+            preloadProblemSetSO);
+        }
       }
     }
   }

@@ -5,7 +5,7 @@ namespace MultiplayerInfrastructure.Problem
 {
   public static class ProblemAnswerEvaluator
   {
-    public static bool EvaluateChoice(ProblemChoiceDefinition definition, int selectedIndex)
+    public static bool EvaluateChoice(ProblemDefinition.ChoiceDefinition definition, int selectedIndex)
     {
       if (definition == null)
         return false;
@@ -13,13 +13,13 @@ namespace MultiplayerInfrastructure.Problem
       return selectedIndex >= 0 && selectedIndex == definition.CorrectIndex;
     }
 
-    public static bool EvaluateShortAnswer(ProblemShortAnswerDefinition definition, string input)
+    public static bool EvaluateShortAnswer(ProblemDefinition.ShortAnswerDefinition definition, string input)
     {
       if (definition == null)
         return false;
 
       input ??= string.Empty;
-      definition.Conditions ??= new System.Collections.Generic.List<ShortAnswerConditionDefinition>();
+      definition.Conditions ??= new System.Collections.Generic.List<ProblemDefinition.ConditionDefinition>();
 
       if (definition.Conditions.Count == 0)
         return false;
@@ -30,7 +30,7 @@ namespace MultiplayerInfrastructure.Problem
         : conditionResults.All(each => each);
     }
 
-    private static bool EvaluateCondition(ShortAnswerConditionDefinition condition, string input)
+    private static bool EvaluateCondition(ProblemDefinition.ConditionDefinition condition, string input)
     {
       if (condition == null || string.IsNullOrWhiteSpace(condition.Type))
         return false;

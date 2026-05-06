@@ -33,7 +33,12 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private bool _keyHandlingLockedByChatUI = false;
     [SerializeField] private bool _keyHandlingLockedByInventoryUI = false;
     [SerializeField] private bool _keyHandlingLockedByDialogueUI = false;
-    private bool _KeyHandlingLocked => _keyHandlingLockedByEscapeUI || _keyHandlingLockedByChatUI || _keyHandlingLockedByInventoryUI || _keyHandlingLockedByDialogueUI;
+    private bool _KeyHandlingLocked =>
+      _keyHandlingLockedByEscapeUI
+      || _keyHandlingLockedByChatUI
+      || _keyHandlingLockedByInventoryUI
+      || _keyHandlingLockedByDialogueUI
+      || !UIOverlayStack.IsEmpty();
 
     void Start_Input()
     {
@@ -168,14 +173,22 @@ namespace MultiplayerInfrastructure.Player
     {
       if (_chatUI.IsUnityNull()) return;
 
+      bool hasOtherOverlay = !UIOverlayStack.IsEmpty() && !UIOverlayStack.IsTop(_chatUI);
+
       if (Input.GetKeyDown(_keyToggleChat))
       {
+        if (hasOtherOverlay)
+          return;
+
         _chatUI.Open();
         return;
       }
 
       if (Input.GetKeyDown(_keyToggleCommand))
       {
+        if (hasOtherOverlay)
+          return;
+
         _chatUI.OpenWithCommandStart();
         return;
       }
