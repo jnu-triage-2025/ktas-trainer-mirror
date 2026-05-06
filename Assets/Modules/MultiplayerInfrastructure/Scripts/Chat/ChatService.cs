@@ -399,7 +399,7 @@ namespace MultiplayerInfrastructure.Chat
         return false;
       }
 
-      string[] stages = trimmed.Split('|', StringSplitOptions.TrimEntries);
+      string[] stages = SplitAndTrim(trimmed, '|', removeEmpty: false);
       if (stages.Length == 0)
       {
         error = "Usage: /help";
@@ -429,7 +429,7 @@ namespace MultiplayerInfrastructure.Chat
       outputValues = new List<string>();
       error = string.Empty;
 
-      var commands = stage.Split('&', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+      var commands = SplitAndTrim(stage, '&', removeEmpty: true);
       if (commands.Length == 0)
       {
         error = "Invalid command stage.";
@@ -487,6 +487,30 @@ namespace MultiplayerInfrastructure.Chat
         return false;
 
       return true;
+    }
+
+    private static string[] SplitAndTrim(string input, char separator, bool removeEmpty)
+    {
+      if (string.IsNullOrEmpty(input))
+        return Array.Empty<string>();
+
+      var parts = input.Split(separator);
+      for (int i = 0; i < parts.Length; i++)
+      {
+        parts[i] = parts[i].Trim();
+      }
+
+      if (!removeEmpty)
+        return parts;
+
+      var filtered = new List<string>(parts.Length);
+      for (int i = 0; i < parts.Length; i++)
+      {
+        if (!string.IsNullOrEmpty(parts[i]))
+          filtered.Add(parts[i]);
+      }
+
+      return filtered.ToArray();
     }
 
     private bool TryExecuteSingleCommand(
