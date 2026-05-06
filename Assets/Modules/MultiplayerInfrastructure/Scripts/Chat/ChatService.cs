@@ -6,6 +6,7 @@ using FishNet.Object;
 using MultiplayerInfrastructure.Command;
 using MultiplayerInfrastructure.Datapack;
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.Problem;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
@@ -24,6 +25,7 @@ namespace MultiplayerInfrastructure.Chat
     [SerializeField] private DatapackRuntimeService _datapackRuntime;
     
     private readonly Dictionary<int, float> _lastMessageTimes = new();
+    private readonly Dictionary<int, int> _lastProblemSheetGradeByClientId = new();
 
     void Awake()
     {
@@ -182,7 +184,8 @@ namespace MultiplayerInfrastructure.Chat
       ui.SetTimes(fadeInTicks, stayTicks, fadeOutTicks);
     }
     
-    private void TargetRunProblemSheet(NetworkConnection conn, string problemSetIdentifier)
+    [TargetRpc]
+    private void TargetRunProblemSheet(NetworkConnection conn, string problemSetIdentifier, int startIndex, bool singleProblemMode)
     {
       var controller = Registry.Registry.Get<ProblemSheetUIController>(
         RegistryType.UI,
@@ -194,10 +197,29 @@ namespace MultiplayerInfrastructure.Chat
         return;
       }
 
-      if (!controller.OpenProblemSet(problemSetIdentifier, 0))
+      if (!controller.OpenProblemSet(problemSetIdentifier, startIndex, singleProblemMode))
       {
         Debug.LogWarning($"[ChatService] Failed to open problem set '{problemSetIdentifier}'.");
       }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void ReportProblemGradeServerRpc(string problemSetIdentifier, int problemIndex, int gradeCode, NetworkConnection sender = null)
+    {
+      if (sender == null)
+        return;
+
+      int normalizedCode = gradeCode == 0 ? 0 : 1;
+      _lastProblemSheetGradeByClientId[sender.ClientId] = normalizedCode;
+
+      if (!Registry.Registry.TryGetProblemSet(problemSetIdentifier, out var set, out _))
+        return;
+
+      if (set?.Problems == null || problemIndex < 0 || problemIndex >= set.Problems.Count)
+        return;
+
+      if (normalizedCode == 0)
+        ProblemRewardService.ApplyOnCorrect(set.Problems[problemIndex], sender.ClientId);
     }
 
 #endregion
@@ -326,7 +348,12 @@ namespace MultiplayerInfrastructure.Chat
         out error);
     }
 
-    public bool TryDispatchProblemSheet(string problemSetIdentifier, IEnumerable<NetworkConnection> targets, out string error)
+    public bool TryDispatchProblemSheet(
+      string problemSetIdentifier,
+      IEnumerable<NetworkConnection> targets,
+      int startIndex,
+      bool singleProblemMode,
+      out string error)
     {
       error = string.Empty;
 
@@ -349,13 +376,15 @@ namespace MultiplayerInfrastructure.Chat
       }
 
       bool anyTarget = false;
+      int safeStartIndex = Mathf.Max(0, startIndex);
       foreach (var target in targets)
       {
         if (target == null)
           continue;
 
         anyTarget = true;
-        TargetRunProblemSheet(target, problemSetIdentifier);
+        _lastProblemSheetGradeByClientId[target.ClientId] = 1;
+        TargetRunProblemSheet(target, problemSetIdentifier, safeStartIndex, singleProblemMode);
       }
 
       if (!anyTarget)
@@ -365,6 +394,24 @@ namespace MultiplayerInfrastructure.Chat
       }
 
       return true;
+    }
+
+    public void ReportProblemGrade(string problemSetIdentifier, int problemIndex, int gradeCode)
+    {
+      if (string.IsNullOrWhiteSpace(problemSetIdentifier) || problemIndex < 0)
+        return;
+
+      ReportProblemGradeServerRpc(problemSetIdentifier, problemIndex, gradeCode);
+    }
+
+    public int GetLastProblemSheetGradeCode(NetworkConnection sender)
+    {
+      if (sender == null)
+        return 1;
+
+      return _lastProblemSheetGradeByClientId.TryGetValue(sender.ClientId, out int code)
+        ? (code == 0 ? 0 : 1)
+        : 1;
     }
 
     public bool TryExecuteSystemCommand(string commandLine, out string result)

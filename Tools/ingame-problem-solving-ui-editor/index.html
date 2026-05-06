@@ -43,7 +43,7 @@
 <body>
   <div class="page">
     <h1>Ingame Problem Solving UI Editor</h1>
-    <p class="subtitle">문제 세트(JSON) + 이미지(선택)를 ZIP으로 내보내는 WebComponent 편집기</p>
+    <p class="subtitle">문제 세트(JSON) + 이미지(선택)를 ZIP으로 내보내고 다시 불러오는 WebComponent 편집기</p>
     <problem-pack-editor></problem-pack-editor>
   </div>
 
@@ -150,7 +150,9 @@
               <div class="toolbar" style="margin-top:10px;">
                 <button id="add-choice">객관식 추가</button>
                 <button id="add-short" class="secondary">단답형 추가</button>
+                <button id="upload" class="secondary">ZIP/JSON 불러오기</button>
                 <button id="download" class="ghost">ZIP 다운로드</button>
+                <input id="upload-file" type="file" accept=".zip,.json,application/zip,application/json" style="display:none;" />
               </div>
             </div>
 
@@ -183,6 +185,16 @@
 
         this.shadowRoot.getElementById('add-choice').addEventListener('click', () => this.addProblem('choice'));
         this.shadowRoot.getElementById('add-short').addEventListener('click', () => this.addProblem('shortAnswer'));
+        this.shadowRoot.getElementById('upload').addEventListener('click', () => {
+          const fileEl = this.shadowRoot.getElementById('upload-file');
+          fileEl.value = '';
+          fileEl.click();
+        });
+        this.shadowRoot.getElementById('upload-file').addEventListener('change', async (evt) => {
+          const file = evt.target.files && evt.target.files[0];
+          if (!file) return;
+          await this.importFromFile(file);
+        });
         this.shadowRoot.getElementById('download').addEventListener('click', () => this.downloadZip());
       }
 
@@ -193,6 +205,8 @@
           prompt: '',
           figureIdentifier: '',
           figureFileName: '',
+          grading: { retryOnWrong: true },
+          onCorrect: { scoreboard: [] },
           choice: null,
           shortAnswer: null
         };
@@ -329,6 +343,95 @@
         } else {
           this.renderShortAnswerPanel(typePanel, problem);
         }
+
+        this.renderBehaviorPanel(typePanel, problem);
+      }
+
+      renderBehaviorPanel(host, problem) {
+        const panel = document.createElement('div');
+        panel.innerHTML = `
+          <div class="section-title" style="margin-top:12px;">채점/보상 설정</div>
+          <div class="row" style="margin-bottom:8px;">
+            <label style="display:flex; align-items:center; gap:6px; margin:0;">
+              <input type="checkbox" data-field="retry-on-wrong" ${problem?.grading?.retryOnWrong !== false ? 'checked' : ''} />
+              오답 시 재도전 허용
+            </label>
+          </div>
+          <div class="section-title" style="margin-top:10px;">정답 시 Scoreboard 변경</div>
+          <div class="scoreboard-list"></div>
+          <div class="row" style="margin-top:8px;">
+            <button class="ghost" data-act="add-score-action">스코어 변경 추가</button>
+          </div>
+        `;
+        host.appendChild(panel);
+
+        problem.grading = problem.grading || { retryOnWrong: true };
+        problem.onCorrect = problem.onCorrect || { scoreboard: [] };
+        problem.onCorrect.scoreboard = Array.isArray(problem.onCorrect.scoreboard) ? problem.onCorrect.scoreboard : [];
+
+        const retryEl = panel.querySelector('input[data-field="retry-on-wrong"]');
+        retryEl.addEventListener('change', () => {
+          problem.grading.retryOnWrong = retryEl.checked;
+        });
+
+        const listHost = panel.querySelector('.scoreboard-list');
+        this.renderScoreboardActions(listHost, problem);
+
+        panel.querySelector('[data-act="add-score-action"]').addEventListener('click', () => {
+          problem.onCorrect.scoreboard.push({ objective: '', criteria: 'dummy', operation: 'add', value: 1 });
+          this.renderProblems();
+        });
+      }
+
+      renderScoreboardActions(host, problem) {
+        host.innerHTML = '';
+        const actions = problem?.onCorrect?.scoreboard || [];
+        actions.forEach((action, i) => {
+          const row = document.createElement('div');
+          row.className = 'row';
+          row.style.marginBottom = '8px';
+          row.innerHTML = `
+            <input type="text" data-field="objective" value="${this.escape(action.objective || '')}" style="flex:1; min-width:180px;" placeholder="objective identifier" />
+            <select data-field="criteria" style="width:110px;">
+              <option value="dummy" ${(action.criteria || 'dummy') === 'dummy' ? 'selected' : ''}>dummy</option>
+              <option value="trigger" ${(action.criteria || 'dummy') === 'trigger' ? 'selected' : ''}>trigger</option>
+            </select>
+            <select data-field="operation" style="width:110px;">
+              <option value="add" ${(action.operation || 'add') === 'add' ? 'selected' : ''}>add</option>
+              <option value="set" ${(action.operation || 'add') === 'set' ? 'selected' : ''}>set</option>
+              <option value="remove" ${(action.operation || 'add') === 'remove' ? 'selected' : ''}>remove</option>
+            </select>
+            <input type="number" data-field="value" value="${Number.isFinite(action.value) ? action.value : 1}" style="width:100px;" />
+            <button class="ghost" data-act="remove-score-action">삭제</button>
+          `;
+
+          const objectiveEl = row.querySelector('input[data-field="objective"]');
+          const criteriaEl = row.querySelector('select[data-field="criteria"]');
+          const operationEl = row.querySelector('select[data-field="operation"]');
+          const valueEl = row.querySelector('input[data-field="value"]');
+          const removeEl = row.querySelector('button[data-act="remove-score-action"]');
+
+          objectiveEl.addEventListener('input', () => {
+            action.objective = this.sanitizeId(objectiveEl.value || '');
+            objectiveEl.value = action.objective;
+          });
+          criteriaEl.addEventListener('change', () => {
+            action.criteria = criteriaEl.value === 'trigger' ? 'trigger' : 'dummy';
+          });
+          operationEl.addEventListener('change', () => {
+            action.operation = ['add', 'set', 'remove'].includes(operationEl.value) ? operationEl.value : 'add';
+          });
+          valueEl.addEventListener('input', () => {
+            const n = Number.parseInt(valueEl.value, 10);
+            action.value = Number.isFinite(n) ? n : 0;
+          });
+          removeEl.addEventListener('click', () => {
+            problem.onCorrect.scoreboard.splice(i, 1);
+            this.renderProblems();
+          });
+
+          host.appendChild(row);
+        });
       }
 
       renderChoicePanel(host, problem) {
@@ -474,6 +577,25 @@
             };
           }
 
+          out.grading = {
+            retryOnWrong: p?.grading?.retryOnWrong !== false
+          };
+
+          const scoreboard = Array.isArray(p?.onCorrect?.scoreboard)
+            ? p.onCorrect.scoreboard
+              .map(a => ({
+                objective: this.sanitizeId(a?.objective || ''),
+                criteria: a?.criteria === 'trigger' ? 'trigger' : 'dummy',
+                operation: ['add', 'set', 'remove'].includes(a?.operation) ? a.operation : 'add',
+                value: Number.isFinite(Number(a?.value)) ? Number(a.value) : 1
+              }))
+              .filter(a => !!a.objective)
+            : [];
+
+          if (scoreboard.length > 0) {
+            out.onCorrect = { scoreboard };
+          }
+
           return out;
         });
 
@@ -496,7 +618,6 @@
           zip.file(`${data.identifier}.json`, JSON.stringify(data, null, 2));
           zip.file('problem-pack.manifest', JSON.stringify({
             format: 'ktas-problem-pack-v1',
-            problemIdentifier: data.identifier,
             problemJson: data.identifier,
             figuresBasePath: 'figures'
           }, null, 2));
@@ -519,6 +640,195 @@
           console.error(err);
           status.textContent = '실패: ZIP 생성 중 오류 발생';
         }
+      }
+
+      async importFromFile(file) {
+        const status = this.shadowRoot.getElementById('status');
+        try {
+          status.textContent = '불러오는 중...';
+
+          const lowerName = (file.name || '').toLowerCase();
+          if (lowerName.endsWith('.json') || file.type === 'application/json') {
+            const text = await file.text();
+            const parsed = JSON.parse(text);
+            this.hydrateStateFromProblemSet(parsed, new Map());
+            status.textContent = '완료: JSON 불러오기 성공';
+            return;
+          }
+
+          const zip = await JSZip.loadAsync(file);
+          await this.importFromZip(zip);
+          status.textContent = '완료: ZIP 불러오기 성공';
+        } catch (err) {
+          console.error(err);
+          status.textContent = '실패: 불러오기 중 오류 발생';
+        }
+      }
+
+      async importFromZip(zip) {
+        let manifest = null;
+        let problemJsonName = '';
+
+        const manifestEntry = this.findZipEntry(zip, /(^|\/)problem-pack\.manifest$/i);
+        if (manifestEntry) {
+          const manifestText = await manifestEntry.async('text');
+          manifest = JSON.parse(manifestText);
+          if (manifest && manifest.problemJson) {
+            problemJsonName = String(manifest.problemJson || '').trim().replace(/\\/g, '/');
+            if (!problemJsonName.toLowerCase().endsWith('.json')) problemJsonName += '.json';
+          }
+        }
+
+        let jsonEntry = null;
+        if (problemJsonName) {
+          jsonEntry = zip.file(problemJsonName) || this.findZipEntry(zip, new RegExp(`(^|/)${this.escapeRegExp(problemJsonName)}$`, 'i'));
+        }
+
+        if (!jsonEntry) {
+          jsonEntry = this.findZipEntry(zip, /(^|\/)[^/]+\.json$/i);
+        }
+
+        if (!jsonEntry) {
+          throw new Error('문제세트 JSON 파일을 찾을 수 없습니다.');
+        }
+
+        const jsonText = await jsonEntry.async('text');
+        const parsed = JSON.parse(jsonText);
+
+        const imageStore = new Map();
+        const figureFiles = this.findZipEntries(zip, /(^|\/)figures\/[^/]+\.[^/.]+$/i);
+        for (const entry of figureFiles) {
+          const path = entry.name.replace(/\\/g, '/');
+          const fileName = path.substring(path.lastIndexOf('/') + 1);
+          const dot = fileName.lastIndexOf('.');
+          const id = this.sanitizeId(dot > 0 ? fileName.substring(0, dot) : fileName);
+          if (!id) continue;
+
+          const ext = dot > 0 ? fileName.substring(dot + 1).toLowerCase() : 'png';
+          const data = await entry.async('arraybuffer');
+          imageStore.set(id, {
+            fileName: `${id}.${ext}`,
+            data,
+            mime: this.mimeFromExtension(ext)
+          });
+        }
+
+        this.hydrateStateFromProblemSet(parsed, imageStore);
+      }
+
+      hydrateStateFromProblemSet(parsed, imageStore) {
+        if (!parsed || typeof parsed !== 'object') {
+          throw new Error('유효한 문제세트 JSON이 아닙니다.');
+        }
+
+        const identifier = this.sanitizeId(parsed.identifier || 'problem_set');
+        const title = String(parsed.title || '');
+        const srcProblems = Array.isArray(parsed.problems) ? parsed.problems : [];
+
+        const problems = srcProblems.map((src, i) => {
+          const id = this.sanitizeId(src?.id || `p${i + 1}`) || `p${i + 1}`;
+          const problem = {
+            id,
+            prompt: String(src?.prompt || ''),
+            figureIdentifier: '',
+            figureFileName: '',
+            grading: { retryOnWrong: src?.grading?.retryOnWrong !== false },
+            onCorrect: {
+              scoreboard: Array.isArray(src?.onCorrect?.scoreboard)
+                ? src.onCorrect.scoreboard.map(a => ({
+                    objective: this.sanitizeId(a?.objective || ''),
+                    criteria: a?.criteria === 'trigger' ? 'trigger' : 'dummy',
+                    operation: ['add', 'set', 'remove'].includes(a?.operation) ? a.operation : 'add',
+                    value: Number.isFinite(Number(a?.value)) ? Number(a.value) : 1
+                  })).filter(a => !!a.objective)
+                : []
+            },
+            choice: null,
+            shortAnswer: null
+          };
+
+          if (typeof src?.figure === 'string') {
+            const fig = src.figure.trim();
+            const match = /^probfig:\((.+)\)$/i.exec(fig);
+            const figId = this.sanitizeId(match ? match[1] : fig);
+            if (figId) {
+              problem.figureIdentifier = figId;
+              const info = imageStore.get(figId);
+              problem.figureFileName = info?.fileName || `${figId}.png`;
+            }
+          }
+
+          if (src?.choice && Array.isArray(src.choice.options)) {
+            problem.choice = {
+              options: src.choice.options.map(x => String(x || '')).slice(0, 5),
+              correctIndex: Number.isInteger(src.choice.correctIndex) ? src.choice.correctIndex : 0
+            };
+            if (problem.choice.options.length < 2) {
+              while (problem.choice.options.length < 2) problem.choice.options.push('');
+            }
+          }
+
+          if (src?.shortAnswer && Array.isArray(src.shortAnswer.conditions)) {
+            problem.shortAnswer = {
+              operator: src.shortAnswer.operator === 'or' ? 'or' : 'and',
+              conditions: src.shortAnswer.conditions.map(c => ({
+                type: c?.type || 'contains',
+                value: String(c?.value || ''),
+                ignoreCase: c?.ignoreCase !== false
+              }))
+            };
+            if (problem.shortAnswer.conditions.length === 0) {
+              problem.shortAnswer.conditions.push({ type: 'contains', value: '', ignoreCase: true });
+            }
+          }
+
+          if (!problem.choice && !problem.shortAnswer) {
+            problem.choice = { options: ['', ''], correctIndex: 0 };
+          }
+
+          return problem;
+        });
+
+        this.state.identifier = identifier || 'problem_set';
+        this.state.title = title;
+        this.state.problems = problems.length > 0 ? problems : [{
+          id: 'p1', prompt: '', figureIdentifier: '', figureFileName: '',
+          grading: { retryOnWrong: true }, onCorrect: { scoreboard: [] },
+          choice: { options: ['', '', '', ''], correctIndex: 0 }, shortAnswer: null
+        }];
+        this.state.imageStore = imageStore instanceof Map ? imageStore : new Map();
+        this.render();
+      }
+
+      findZipEntry(zip, pattern) {
+        const entries = this.findZipEntries(zip, pattern);
+        return entries.length > 0 ? entries[0] : null;
+      }
+
+      findZipEntries(zip, pattern) {
+        const files = [];
+        zip.forEach((relativePath, entry) => {
+          if (entry && !entry.dir && pattern.test(relativePath)) files.push(entry);
+        });
+        return files;
+      }
+
+      mimeFromExtension(ext) {
+        switch ((ext || '').toLowerCase()) {
+          case 'jpg':
+          case 'jpeg':
+            return 'image/jpeg';
+          case 'webp':
+            return 'image/webp';
+          case 'gif':
+            return 'image/gif';
+          default:
+            return 'image/png';
+        }
+      }
+
+      escapeRegExp(v) {
+        return String(v ?? '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       }
 
       uniqueFigureId(base) {

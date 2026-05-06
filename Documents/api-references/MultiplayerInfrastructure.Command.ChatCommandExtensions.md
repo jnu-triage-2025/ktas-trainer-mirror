@@ -2,8 +2,8 @@
 
 ## 0. 문서 목적
 
-이 문서는 2026-04-29 기준으로 추가된 채팅 커맨드 확장 내용을 정리합니다.
-주요 대상은 `/give`, `/clean`, `/title`, 그리고 대상 선택자 파싱입니다.
+이 문서는 채팅 커맨드 확장 내용을 정리합니다.
+주요 대상은 `/give`, `/clean`, `/title`, `/problemsheet`, 대상 선택자 파싱, 파이프라인 반환 규약입니다.
 
 ---
 
@@ -15,6 +15,8 @@
    - `/title <target> (clear|reset)`
    - `/title <target> (title|subtitle|actionbar) <text>`
    - `/title <target> times <fadeIn> <stay> <fadeOut>`
+   - `/problemsheet list`
+   - `/problemsheet <target> <problem-identifier> [problem-index]`
 - 공통 대상 선택자 파싱 추가
    - `@p`, `@a`, `@r`, `@s`, `@e`, `@n`
    - `x,y,z,distance,dx,dy,dz,tag,type` 인자 지원
@@ -139,6 +141,30 @@
 
 ---
 
+## 7. /problemsheet 동작 명세
+
+### 구문
+
+`/problemsheet list`
+
+`/problemsheet <target> <problem-identifier> [problem-index]`
+
+### 실행 규칙
+
+1. `list`는 Registry + `Resources/Problems`를 기반으로 사용 가능한 문제세트 식별자를 출력합니다.
+2. 실행 구문에서 `problem-index`를 주면 해당 문제만 단일 모드로 엽니다(1-based).
+3. `problem-index` 생략 시 전체 세트 모드로 시작하며, 정답 시 다음 문제 진행 UI를 사용합니다.
+
+### 파이프라인 반환 규약
+
+- `/problemsheet`는 `IChatCommandPipelineCommand`를 구현합니다.
+- 반환값은 마지막 채점 코드 1개입니다.
+  - `0`: 정답
+  - `1`: 오답
+- 이 값은 서버가 연결 단위로 유지하는 마지막 문제 판정 결과를 기준으로 생성됩니다.
+
+---
+
 ## 7. 권장 테스트 시나리오
 
 1. 플레이어 채팅 입력
@@ -157,7 +183,7 @@
 
 ---
 
-## 6. 요약
+## 8. 요약
 
 이번 확장은 “채팅 커맨드 = 플레이어 전용” 제약을 완화하여 시스템에서 재사용 가능한 실행 경로를 만든 것이 핵심입니다.
 `/give`, `/clean`은 인벤토리 조작 API와 결합되어 관리형 동작(검증, 부분 제거, overflow 처리)을 제공합니다.
