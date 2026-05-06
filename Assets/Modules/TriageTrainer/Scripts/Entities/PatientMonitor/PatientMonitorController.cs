@@ -1,12 +1,12 @@
+using FishNet.Object;
 using UnityEngine;
 using UnityEngine.UIElements;
 using TriageTrainer.Entity.Patient;
-using TriageTrainer.Patient;
 
 namespace TriageTrainer.Entity.PatientMonitor.Models
 {
   [RequireComponent(typeof(UIDocument))]
-  public class PatientMonitorController : MonoBehaviour
+  public partial class PatientMonitorController : NetworkBehaviour
   {
     public enum ECGDisplayMode
     {
@@ -19,8 +19,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     [SerializeField] private ECGRhythmType rhythmPreset = ECGRhythmType.NormalSinus;
     [SerializeField, Min(0f)] private float sampleRate = 200f;
     [SerializeField, Min(0f)] private float rhythmTransitionSeconds = 0.35f;
-    [SerializeField] private PatientMonitorParameters monitorParameters = PatientMonitorParameters.Default;
-    [SerializeField] private PatientStateABC patientState;
+    [SerializeField] private PatientController patientState;
 
     [Header("Graph Appearance")]
     public Color ecgColor = Color.green;
@@ -282,8 +281,6 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     {
       if (ecgGraphElement == null) return;
 
-      PullParametersFromPatientState();
-
       currentTime += Time.deltaTime;
       sampleAccumulator += Time.deltaTime;
 
@@ -333,13 +330,13 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       float ecgVoltage = ECGWaveformCalculator.Calculate(_currentParameters, rhythmPreset, ecgCycleNorm, dt, ref _ecgRuntimeState);
       ecgGraphElement.AddValue(ecgVoltage);
 
-      float plethCycleNorm = CalculateCycleNorm(currentTime, 0f, monitorParameters.pleth.bpm);
-      float artCycleNorm = CalculateCycleNorm(currentTime, 0f, monitorParameters.art.bpm);
-      float cvpCycleNorm = CalculateCycleNorm(currentTime, 0f, monitorParameters.cvp.bpm);
+      float plethCycleNorm = CalculateCycleNorm(currentTime, 0f, monitorPleth.bpm);
+      float artCycleNorm = CalculateCycleNorm(currentTime, 0f, monitorART.bpm);
+      float cvpCycleNorm = CalculateCycleNorm(currentTime, 0f, monitorCVP.bpm);
 
-      plethGraphElement.AddValue(PlethWaveformCalculator.Calculate(monitorParameters.pleth, plethCycleNorm));
-      artGraphElement.AddValue(ARTWaveformCalculator.Calculate(monitorParameters.art, artCycleNorm));
-      cvpGraphElement.AddValue(CVPWaveformCalculator.Calculate(monitorParameters.cvp, cvpCycleNorm));
+      plethGraphElement.AddValue(PlethWaveformCalculator.Calculate(monitorPleth, plethCycleNorm));
+      artGraphElement.AddValue(ARTWaveformCalculator.Calculate(monitorART, artCycleNorm));
+      cvpGraphElement.AddValue(CVPWaveformCalculator.Calculate(monitorCVP, cvpCycleNorm));
     }
 
     private static float CalculateCycleNorm(float time, float beatTime, float bpm)
@@ -367,6 +364,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     // 인스펙터에서 값 변경 시 실시간 반영을 위해
     private void OnValidate()
     {
+      EnsureInteractEntry(InteractIdSelectPatient, true);
+      RebuildInteractEntryMap();
+
       _targetParameters = ResolveConfiguredParameters();
 
       if (ecgGraphElement != null)
@@ -417,7 +417,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     public void SetCustomParameters(ECGParameters customParameters, bool animateTransition = true)
     {
       displayMode = ECGDisplayMode.Custom;
-      monitorParameters.ecg = customParameters;
+      monitorECG = customParameters;
       PushParametersToPatientState();
 
       _targetParameters = customParameters;
@@ -446,45 +446,6 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       _currentParameters = LerpParameters(_currentParameters, _targetParameters, t);
     }
 
-    private ECGParameters ResolveConfiguredParameters()
-    {
-      return displayMode == ECGDisplayMode.Preset ? ECGParameters.FromRhythm(rhythmPreset) : monitorParameters.ecg;
-    }
-
-    private void ResolvePatientStateIfNeeded()
-    {
-      if (patientState != null)
-      {
-        return;
-      }
-
-      patientState = GetComponentInParent<PatientStateABC>();
-    }
-
-    private void PullParametersFromPatientState()
-    {
-      if (patientState?.Descriptor == null)
-      {
-        return;
-      }
-
-      monitorParameters = patientState.Descriptor.monitorParameters;
-      if (displayMode == ECGDisplayMode.Custom)
-      {
-        _targetParameters = monitorParameters.ecg;
-      }
-    }
-
-    private void PushParametersToPatientState()
-    {
-      if (patientState?.Descriptor == null)
-      {
-        return;
-      }
-
-      patientState.Descriptor.monitorParameters = monitorParameters;
-    }
-
     private static float ComputeBaseInterval(float bpm)
     {
       return bpm > 0f ? 60f / bpm : float.MaxValue;
@@ -510,54 +471,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       };
     }
 
-    public void SetARTParameters(ARTParameters parameters)
-    {
-      monitorParameters.art = parameters;
-      PushParametersToPatientState();
-    }
-
-    public void SetCVPParameters(CVPParameters parameters)
-    {
-      monitorParameters.cvp = parameters;
-      PushParametersToPatientState();
-    }
-
-    public void SetPlethParameters(PlethParameters parameters)
-    {
-      monitorParameters.pleth = parameters;
-      PushParametersToPatientState();
-    }
-
-    public void SetNumericsParameters(NumericsParameters parameters)
-    {
-      monitorParameters.numerics = parameters;
-      PushParametersToPatientState();
-    }
-
-    public void SetNIBPParameters(NIBPParameters parameters)
-    {
-      monitorParameters.nibp = parameters;
-      PushParametersToPatientState();
-    }
-
-    public void SetTemperatureParameters(TemperatureParameters parameters)
-    {
-      monitorParameters.temperature = parameters;
-      PushParametersToPatientState();
-    }
-
-    public void SetSTLeadValues(STLeadValues values)
-    {
-      monitorParameters.stLeads = values;
-      PushParametersToPatientState();
-    }
-
     private void UpdateLabels()
     {
-      var numerics = monitorParameters.numerics;
+      var numerics = monitorNumerics;
       float bpmValue = numerics.bpm > 0f ? numerics.bpm : _currentParameters.bpm;
-      float prValue = numerics.pulseRate > 0f ? numerics.pulseRate : monitorParameters.pleth.bpm;
-      float spo2Value = numerics.spo2 > 0f ? numerics.spo2 : monitorParameters.pleth.spo2;
+      float prValue = numerics.pulseRate > 0f ? numerics.pulseRate : monitorPleth.bpm;
+      float spo2Value = numerics.spo2 > 0f ? numerics.spo2 : monitorPleth.spo2;
       float piValue = numerics.perfusionIndex > 0f ? numerics.perfusionIndex : 3.0f;
 
       if (ecgValueLabel != null)
@@ -567,18 +486,18 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       if (plethValueLabel != null)
       {
-        plethValueLabel.text = $"SpO2 {Mathf.RoundToInt(monitorParameters.pleth.spo2)}%";
+        plethValueLabel.text = $"SpO2 {Mathf.RoundToInt(monitorPleth.spo2)}%";
       }
 
       if (artValueLabel != null)
       {
-        int map = Mathf.RoundToInt(monitorParameters.art.diastolic + (monitorParameters.art.systolic - monitorParameters.art.diastolic) / 3f);
-        artValueLabel.text = $"{Mathf.RoundToInt(monitorParameters.art.systolic)}/{Mathf.RoundToInt(monitorParameters.art.diastolic)} ({map})";
+        int map = Mathf.RoundToInt(monitorART.diastolic + (monitorART.systolic - monitorART.diastolic) / 3f);
+        artValueLabel.text = $"{Mathf.RoundToInt(monitorART.systolic)}/{Mathf.RoundToInt(monitorART.diastolic)} ({map})";
       }
 
       if (cvpValueLabel != null)
       {
-        cvpValueLabel.text = $"{monitorParameters.cvp.mean:0.0} mmHg";
+        cvpValueLabel.text = $"{monitorCVP.mean:0.0} mmHg";
       }
 
       if (bpmNumericLabel != null)
@@ -593,7 +512,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       if (stNumericLabel != null)
       {
-        var st = monitorParameters.stLeads;
+        var st = monitorSTLeads;
         stNumericLabel.text =
           $"I {st.i:+0.0;-0.0;0.0} II {st.ii:+0.0;-0.0;0.0} III {st.iii:+0.0;-0.0;0.0}\n" +
           $"aVR {st.avr:+0.0;-0.0;0.0} aVL {st.avl:+0.0;-0.0;0.0} aVF {st.avf:+0.0;-0.0;0.0}\n" +
@@ -618,34 +537,34 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       if (artNumericLabel != null)
       {
-        int map = Mathf.RoundToInt(monitorParameters.art.diastolic + (monitorParameters.art.systolic - monitorParameters.art.diastolic) / 3f);
-        artNumericLabel.text = $"{Mathf.RoundToInt(monitorParameters.art.systolic)}/{Mathf.RoundToInt(monitorParameters.art.diastolic)} ({map}) mmHg";
+        int map = Mathf.RoundToInt(monitorART.diastolic + (monitorART.systolic - monitorART.diastolic) / 3f);
+        artNumericLabel.text = $"{Mathf.RoundToInt(monitorART.systolic)}/{Mathf.RoundToInt(monitorART.diastolic)} ({map}) mmHg";
       }
 
       if (cvpNumericLabel != null)
       {
-        cvpNumericLabel.text = $"{monitorParameters.cvp.mean:0.0} mmHg";
+        cvpNumericLabel.text = $"{monitorCVP.mean:0.0} mmHg";
       }
 
       if (nibpNumericLabel != null)
       {
-        int map = Mathf.RoundToInt(monitorParameters.nibp.diastolic + (monitorParameters.nibp.systolic - monitorParameters.nibp.diastolic) / 3f);
-        nibpNumericLabel.text = $"{Mathf.RoundToInt(monitorParameters.nibp.systolic)}/{Mathf.RoundToInt(monitorParameters.nibp.diastolic)} ({map}) mmHg";
+        int map = Mathf.RoundToInt(monitorNIBP.diastolic + (monitorNIBP.systolic - monitorNIBP.diastolic) / 3f);
+        nibpNumericLabel.text = $"{Mathf.RoundToInt(monitorNIBP.systolic)}/{Mathf.RoundToInt(monitorNIBP.diastolic)} ({map}) mmHg";
       }
 
       if (t1NumericLabel != null)
       {
-        t1NumericLabel.text = $"{monitorParameters.temperature.t1:0.0}°C";
+        t1NumericLabel.text = $"{monitorTemperature.t1:0.0}°C";
       }
 
       if (t2NumericLabel != null)
       {
-        t2NumericLabel.text = $"{monitorParameters.temperature.t2:0.0}°C";
+        t2NumericLabel.text = $"{monitorTemperature.t2:0.0}°C";
       }
 
       if (deltaTNumericLabel != null)
       {
-        float deltaT = Mathf.Abs(monitorParameters.temperature.t1 - monitorParameters.temperature.t2);
+        float deltaT = Mathf.Abs(monitorTemperature.t1 - monitorTemperature.t2);
         deltaTNumericLabel.text = $"{deltaT:0.0}°C";
       }
     }

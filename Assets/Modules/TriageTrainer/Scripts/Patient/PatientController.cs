@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using FishNet.Object;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
@@ -11,7 +12,8 @@ using MI = MultiplayerInfrastructure;
 
 namespace TriageTrainer.Entity
 {
-  public class PatientController : MonoBehaviour, IInteractable, IInteract, IReposable
+  [RequireComponent(typeof(CapsuleCollider))]
+  public partial class PatientController : NetworkBehaviour, IInteractable, IReposable
   {
     [Serializable]
     public class AttachableItemVisualPair
@@ -27,8 +29,10 @@ namespace TriageTrainer.Entity
     [SerializeField] private string _identifier = "patient";
 
     [Header("Display")]
-    [SerializeField] private string _displayText = "환자";
-    [SerializeField] private Sprite _displayIcon = null;
+    [SerializeField] private string _liftDisplayText = "환자를 들어올리기";
+    [SerializeField] private Sprite _liftDisplayIcon = null;
+    [SerializeField] private string _monitorSelectDisplayText = "이 환자를 모니터링";
+    [SerializeField] private Sprite _monitorSelectDisplayIcon = null;
 
     [Header("Patient")]
     [SerializeField] private int _weight = 4;
@@ -45,11 +49,6 @@ namespace TriageTrainer.Entity
     private ChatUIController _chatUI;
 
     public string Identifier => _identifier;
-    public IInteract[] Interacts => new IInteract[] { this };
-    public string DisplayText => _displayText;
-    public Sprite DisplayIcon => _displayIcon;
-    public bool AllowDisplayIconFallback => true;
-    public Color DisplayColor => Color.white;
     public int Weight => Mathf.Max(0, _weight);
 
     public bool IsReposed => _currentBed != null;
@@ -57,35 +56,11 @@ namespace TriageTrainer.Entity
 
     private void Awake()
     {
+      InitializeCollider();
+      EnsureMedicalStateDefaults();
       RebuildAttachableVisualMap();
       _weight = Mathf.Max(0, _weight);
-    }
-
-    public void Interact(Transform interactor)
-    {
-      if (_currentBed == null)
-        return;
-
-      if (interactor == null)
-        return;
-
-      var player = interactor.GetComponentInParent<PlayerController>();
-      if (player == null)
-        return;
-
-      if (player.IsCarryingReposable)
-      {
-        ShowThrottledMessage(interactor, "이미 다른 대상을 들고 있어 환자를 들어올릴 수 없습니다.");
-        return;
-      }
-
-      if (!_currentBed.TryLiftTarget(player, out _))
-      {
-        ShowThrottledMessage(interactor, "환자를 침대에서 들어올릴 수 없습니다.");
-        return;
-      }
-
-      ShowThrottledMessage(interactor, "환자를 침대에서 들어올렸습니다.");
+      BuildInteractEntries();
     }
 
     public void OnAttacked(MI.Entity.Entity attacker, int damageAmount)
@@ -178,8 +153,11 @@ namespace TriageTrainer.Entity
 
     private void OnValidate()
     {
+      InitializeCollider();
+      EnsureMedicalStateDefaults();
       _weight = Mathf.Max(0, _weight);
       RebuildAttachableVisualMap();
+      EnsureDefaultInteractConfigs();
     }
   }
 }
