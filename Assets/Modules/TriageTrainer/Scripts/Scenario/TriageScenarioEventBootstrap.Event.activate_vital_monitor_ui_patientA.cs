@@ -20,7 +20,7 @@ namespace TriageTrainer.Scenario
       {
         if (_applyPatientAInitialMonitorProfile)
         {
-          _patientAVitalMonitorController.parameters = _patientAInitialMonitorParameters;
+          _patientAVitalMonitorController.SetCustomParameters(_patientAInitialMonitorParameters);
         }
 
         _patientAVitalMonitorController.enabled = true;

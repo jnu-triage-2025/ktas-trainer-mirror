@@ -57,6 +57,10 @@ namespace TriageTrainer.Entity
     [SerializeField] private float _forwardYawOffsetDegrees = -90f;
     [SerializeField] private LayerMask _movementBlockingMask = ~0;
 
+    [Header("Attach Points")]
+    [SerializeField] private List<Transform> PlayerAttachPoints = new();
+    [SerializeField] private List<Transform> PatientAttachPoints = new();
+
     [Header("Attachable Item Visuals")]
     [SerializeField] private List<AttachableItemVisualPair> _attachableItemVisualPairs = new();
 
@@ -67,6 +71,8 @@ namespace TriageTrainer.Entity
     private readonly Dictionary<int, RidingParticipant> _participants = new();
     private readonly Dictionary<string, float> _lastNoticeByInteractor = new(StringComparer.Ordinal);
     private readonly HashSet<string> _attachedItemIdentifiers = new(StringComparer.Ordinal);
+    private readonly List<PlayerController> _playerAttachPointOccupants = new();
+    private readonly List<MonoBehaviour> _patientAttachPointOccupants = new();
 
     private ChatUIController _chatUI;
     private TitleUIController _titleUI;
@@ -85,6 +91,7 @@ namespace TriageTrainer.Entity
     private void Awake()
     {
       Awake_Ridable();
+      InitializeAttachPoints();
       RebuildAttachableVisualMap();
       if (_reposeAnchor == null)
         _reposeAnchor = transform;
@@ -169,7 +176,7 @@ namespace TriageTrainer.Entity
         return;
       }
 
-      if (!TryOccupyNextAttachPoint(player, out _, out Transform attachPoint))
+      if (!TryOccupyNextPlayerAttachPoint(player, out Transform attachPoint))
       {
         ShowThrottledMessage(interactor, "침대의 모든 이동 위치가 이미 사용 중입니다.");
         return;
@@ -206,6 +213,9 @@ namespace TriageTrainer.Entity
       if (target is not MonoBehaviour targetBehaviour)
         return false;
 
+      if (PatientAttachPoints.Count > 0 && !TryOccupyNextPatientAttachPoint(targetBehaviour, out _))
+        return false;
+
       if (interactor != null)
       {
         var player = interactor.GetComponentInParent<PlayerController>();
@@ -213,7 +223,8 @@ namespace TriageTrainer.Entity
           player.TryDropCarriedReposable(out _);
       }
 
-      targetBehaviour.transform.SetParent(_reposeAnchor, false);
+      Transform patientAnchor = ResolvePatientAnchor(targetBehaviour);
+      targetBehaviour.transform.SetParent(patientAnchor, false);
       targetBehaviour.transform.localPosition = Vector3.zero;
       targetBehaviour.transform.localRotation = Quaternion.identity;
       _reposedTargetComponent = targetBehaviour;
@@ -241,6 +252,7 @@ namespace TriageTrainer.Entity
 
       var liftedBehaviour = _reposedTargetComponent;
       _reposedTargetComponent = null;
+      ReleasePatientAttachPoint(liftedBehaviour);
 
       if (liftedBehaviour != null)
         liftedBehaviour.transform.SetParent(null, true);
@@ -253,6 +265,7 @@ namespace TriageTrainer.Entity
           liftedBehaviour.transform.localPosition = Vector3.zero;
           liftedBehaviour.transform.localRotation = Quaternion.identity;
           _reposedTargetComponent = liftedBehaviour;
+          TryOccupyNextPatientAttachPoint(liftedBehaviour, out _);
         }
         return false;
       }
@@ -324,8 +337,135 @@ namespace TriageTrainer.Entity
     private void ExitMovingMode(PlayerController player, RidingParticipant participant)
     {
       player?.ClearForcedFollowAnchor(participant?.AttachPoint);
-      ReleaseAttachPoint(player, out _);
+      ReleasePlayerAttachPoint(player);
       player?.RefreshInteractableHintsNow();
+    }
+
+    private void InitializeAttachPoints()
+    {
+      if (PlayerAttachPoints.Count == 0)
+      {
+        var playerAttachObjects = GetComponentsInChildren<RidableAttachPointObject>(true);
+        for (int i = 0; i < playerAttachObjects.Length; i++)
+        {
+          var attach = playerAttachObjects[i];
+          if (attach != null)
+            PlayerAttachPoints.Add(attach.transform);
+        }
+      }
+
+      if (PatientAttachPoints.Count == 0)
+      {
+        var patientAttachObjects = GetComponentsInChildren<MovingPatientBedPatientAttachPointObject>(true);
+        for (int i = 0; i < patientAttachObjects.Length; i++)
+        {
+          var attach = patientAttachObjects[i];
+          if (attach != null)
+            PatientAttachPoints.Add(attach.transform);
+        }
+      }
+
+      _playerAttachPointOccupants.Clear();
+      for (int i = 0; i < PlayerAttachPoints.Count; i++)
+        _playerAttachPointOccupants.Add(null);
+
+      _patientAttachPointOccupants.Clear();
+      for (int i = 0; i < PatientAttachPoints.Count; i++)
+        _patientAttachPointOccupants.Add(null);
+    }
+
+    private bool TryOccupyNextPlayerAttachPoint(PlayerController player, out Transform attachPoint)
+    {
+      attachPoint = null;
+      if (player == null)
+        return false;
+
+      for (int i = 0; i < _playerAttachPointOccupants.Count; i++)
+      {
+        if (_playerAttachPointOccupants[i] != null)
+          continue;
+
+        _playerAttachPointOccupants[i] = player;
+        attachPoint = PlayerAttachPoints[i] != null ? PlayerAttachPoints[i] : transform;
+        return true;
+      }
+
+      return false;
+    }
+
+    private bool ReleasePlayerAttachPoint(PlayerController player)
+    {
+      if (player == null)
+        return false;
+
+      for (int i = 0; i < _playerAttachPointOccupants.Count; i++)
+      {
+        if (_playerAttachPointOccupants[i] != player)
+          continue;
+
+        _playerAttachPointOccupants[i] = null;
+        return true;
+      }
+
+      return false;
+    }
+
+    private bool TryOccupyNextPatientAttachPoint(MonoBehaviour patient, out Transform attachPoint)
+    {
+      attachPoint = null;
+      if (patient == null)
+        return false;
+
+      for (int i = 0; i < _patientAttachPointOccupants.Count; i++)
+      {
+        if (_patientAttachPointOccupants[i] != null)
+          continue;
+
+        _patientAttachPointOccupants[i] = patient;
+        attachPoint = PatientAttachPoints[i] != null ? PatientAttachPoints[i] : transform;
+        return true;
+      }
+
+      return false;
+    }
+
+    private bool ReleasePatientAttachPoint(MonoBehaviour patient)
+    {
+      if (patient == null)
+        return false;
+
+      for (int i = 0; i < _patientAttachPointOccupants.Count; i++)
+      {
+        if (_patientAttachPointOccupants[i] != patient)
+          continue;
+
+        _patientAttachPointOccupants[i] = null;
+        return true;
+      }
+
+      return false;
+    }
+
+    private Transform ResolvePatientAnchor(MonoBehaviour patient)
+    {
+      if (patient != null)
+      {
+        for (int i = 0; i < _patientAttachPointOccupants.Count; i++)
+        {
+          if (_patientAttachPointOccupants[i] != patient)
+            continue;
+
+          var anchor = i >= 0 && i < PatientAttachPoints.Count ? PatientAttachPoints[i] : null;
+          if (anchor != null)
+            return anchor;
+          break;
+        }
+      }
+
+      if (_reposeAnchor != null)
+        return _reposeAnchor;
+
+      return transform;
     }
 
     private void RefreshOwnerActionbars()
@@ -509,6 +649,18 @@ namespace TriageTrainer.Entity
       if (_reposeAnchor == null)
         _reposeAnchor = transform;
       RebuildAttachableVisualMap();
+
+      for (int i = PlayerAttachPoints.Count - 1; i >= 0; i--)
+      {
+        if (PlayerAttachPoints[i] == null)
+          PlayerAttachPoints.RemoveAt(i);
+      }
+
+      for (int i = PatientAttachPoints.Count - 1; i >= 0; i--)
+      {
+        if (PatientAttachPoints[i] == null)
+          PatientAttachPoints.RemoveAt(i);
+      }
     }
 
     private void OnDrawGizmosSelected()
