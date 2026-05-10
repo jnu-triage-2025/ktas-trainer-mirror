@@ -308,6 +308,10 @@ namespace MultiplayerInfrastructure.Player
 
       // Keep the hotbar visuals in sync with inventory mutations
       _hotbarUI?.BindInventory(_slots);
+
+      // Interactable visibility can depend on inventory requirements.
+      // Refresh hints immediately so conditional interacts are recalculated.
+      RefreshInteractableHintsNow();
       return result;
     }
   }

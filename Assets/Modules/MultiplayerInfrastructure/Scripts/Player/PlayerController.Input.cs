@@ -61,6 +61,7 @@ namespace MultiplayerInfrastructure.Player
       HandleChatInput();
       var escapeConsumed = HandleEscape();
       HandleDialogueInput();
+      HandleIntravenousLineConnectionModeExit();
 
       if (_keyHandlingLockedByInventoryUI) 
         if (HandleToggleInventory())
@@ -281,6 +282,15 @@ namespace MultiplayerInfrastructure.Player
         else
           UIOverlayStack.Push(_questUIController);
       }
+    }
+
+    private void HandleIntravenousLineConnectionModeExit()
+    {
+      if (!IsIntravenousLineConnectionMode)
+        return;
+
+      if (Input.GetKeyDown(_keySpectatorFlyDown))
+        SetIntravenousLineConnectionMode(false);
     }
   }
 }
