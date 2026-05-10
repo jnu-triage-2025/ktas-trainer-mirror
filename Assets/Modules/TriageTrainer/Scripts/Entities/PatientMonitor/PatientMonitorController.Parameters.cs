@@ -22,9 +22,29 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private void PullParametersFromPatientState()
     {
       if (patientState?.Descriptor == null)
+      {
+        ResetMonitorParametersToDisconnected();
         return;
+      }
 
       ApplyMedicalState(patientState.MedicalState);
+    }
+
+    private void ResetMonitorParametersToDisconnected()
+    {
+      monitorECG = default;
+      monitorART = default;
+      monitorCVP = default;
+      monitorPleth = default;
+      monitorNumerics = default;
+      monitorNIBP = default;
+      monitorTemperature = default;
+      monitorSTLeads = default;
+
+      _targetParameters = monitorECG;
+      _currentParameters = monitorECG;
+      _transitionTimer = 0f;
+      ecgNextBeatInterval = ComputeBaseInterval(_currentParameters.bpm);
     }
 
     private void PushParametersToPatientState()
@@ -51,7 +71,10 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private void ApplyMedicalState(PatientMedicalState state)
     {
       if (state == null)
+      {
+        ResetMonitorParametersToDisconnected();
         return;
+      }
 
       monitorECG = state.ecg;
       monitorART = state.art;
@@ -62,8 +85,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       monitorTemperature = state.temperature;
       monitorSTLeads = state.stLeads;
 
-      if (displayMode == ECGDisplayMode.Custom)
-        _targetParameters = monitorECG;
+      _targetParameters = monitorECG;
+      if (_transitionTimer <= 0f)
+      {
+        _currentParameters = _targetParameters;
+        ecgNextBeatInterval = ComputeBaseInterval(_currentParameters.bpm);
+      }
     }
 
     public void SetARTParameters(ARTParameters parameters)

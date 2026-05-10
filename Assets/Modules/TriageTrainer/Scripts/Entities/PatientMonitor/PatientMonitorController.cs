@@ -79,9 +79,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     {
       uiDocument = GetComponent<UIDocument>();
       ResolvePatientStateIfNeeded();
-      PullParametersFromPatientState();
       _currentParameters = ResolveConfiguredParameters();
       _targetParameters = _currentParameters;
+      PullParametersFromPatientState();
       ecgNextBeatInterval = ComputeBaseInterval(_currentParameters.bpm);
       CreateGraphUI();
     }
@@ -281,6 +281,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     {
       if (ecgGraphElement == null) return;
 
+      PullParametersFromPatientState();
       currentTime += Time.deltaTime;
       sampleAccumulator += Time.deltaTime;
 
@@ -473,11 +474,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private void UpdateLabels()
     {
+      bool hasPatient = patientState?.Descriptor != null;
       var numerics = monitorNumerics;
       float bpmValue = numerics.bpm > 0f ? numerics.bpm : _currentParameters.bpm;
       float prValue = numerics.pulseRate > 0f ? numerics.pulseRate : monitorPleth.bpm;
       float spo2Value = numerics.spo2 > 0f ? numerics.spo2 : monitorPleth.spo2;
-      float piValue = numerics.perfusionIndex > 0f ? numerics.perfusionIndex : 3.0f;
+      float piValue = numerics.perfusionIndex > 0f ? numerics.perfusionIndex : (hasPatient ? 3.0f : 0f);
 
       if (ecgValueLabel != null)
       {
