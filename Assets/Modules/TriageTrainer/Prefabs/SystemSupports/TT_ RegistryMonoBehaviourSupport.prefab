@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7402797879992443845}
-  - component: {fileID: 7099302543262613495}
+  - component: {fileID: 8050065814150802006}
   m_Layer: 0
   m_Name: TT_ RegistryMonoBehaviourSupport
   m_TagString: Untagged
@@ -32,7 +32,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7099302543262613495
+--- !u!114 &8050065814150802006
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -41,6 +41,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7149362517535181792}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 27a8ad46562d34a5a9f568664580f5d3, type: 3}
+  m_Script: {fileID: 11500000, guid: 666cc420c9bdf4c9bac786163d079941, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Items.MultiplayerInfrastructureRegisterSupport
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport
+  _playerModelRegistryRequirementsSO: {fileID: 11400000, guid: 963509fac1d06481d9bf2729940aaa33, type: 2}

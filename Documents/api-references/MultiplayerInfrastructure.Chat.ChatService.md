@@ -20,7 +20,6 @@
 | `_messageCooldownSeconds` | `DefaultsChatControl.MessageCooldownSeconds` | 채팅 쿨다운(초) |
 | `_uiController` | (Inspector) | `ChatUIController` 참조 |
 | `_commandService` | (Inspector) | `ChatCommandService` 참조 |
-| `_scenarioRunner` | (Inspector) | `ScenarioCommandRunner` 참조 |
 | `_datapackRuntime` | (Inspector) | `DatapackRuntimeService` 참조 |
 
 ---
@@ -57,6 +56,113 @@ public bool TryExecuteSystemCommand(string commandLine, out string result)
 chatService.TryExecuteSystemCommand("give bandage 5 fish:2", out string result);
 chatService.TryExecuteSystemCommand("scenario hospital_emergency", out _);
 ```
+
+---
+
+### `TryDispatchProblemSheet`
+
+```csharp
+public bool TryDispatchProblemSheet(
+    string problemSetIdentifier,
+    IEnumerable<NetworkConnection> targets,
+    int startIndex,
+    bool singleProblemMode,
+    out string error)
+```
+
+문제 세트를 대상 클라이언트에 연다.
+
+- `startIndex`: 시작 문제 인덱스(0-based)
+- `singleProblemMode`: `true`면 지정 문제만 표시, `false`면 전체 세트 진행 모드
+
+### `ReportProblemGrade`
+
+```csharp
+public void ReportProblemGrade(string problemSetIdentifier, int problemIndex, int gradeCode)
+```
+
+클라이언트의 문제 판정 결과를 서버에 보고한다.
+
+- `gradeCode = 0`: 정답
+- `gradeCode = 1`: 오답
+- 정답(0)일 때만 `onCorrect.scoreboard` 보상이 서버에서 적용된다.
+
+### `GetLastProblemSheetGradeCode`
+
+```csharp
+public int GetLastProblemSheetGradeCode(NetworkConnection sender)
+```
+
+해당 연결의 마지막 문제 판정 코드를 반환한다. 커맨드 파이프라이닝에서 `problemsheet` 결과값(`0|1`) 생성에 사용된다.
+
+---
+
+### `TryDispatchTitle`
+
+```csharp
+public bool TryDispatchTitle(
+    IEnumerable<NetworkConnection> targets,
+    string title,
+    string subtitle,
+    out string error)
+```
+
+대상 클라이언트에 타이틀/서브타이틀을 표시합니다.
+
+---
+
+### `TryDispatchSubtitle`
+
+```csharp
+public bool TryDispatchSubtitle(IEnumerable<NetworkConnection> targets, string subtitle, out string error)
+```
+
+현재 표시 중인 타이틀이 있으면 서브타이틀을 갱신합니다.
+
+---
+
+### `TryDispatchActionbar`
+
+```csharp
+public bool TryDispatchActionbar(IEnumerable<NetworkConnection> targets, string actionbar, out string error)
+```
+
+액션바 텍스트를 표시합니다.
+
+---
+
+### `TryDispatchTitleClear`
+
+```csharp
+public bool TryDispatchTitleClear(IEnumerable<NetworkConnection> targets, out string error)
+```
+
+타이틀/서브타이틀/액션바를 제거합니다.
+
+---
+
+### `TryDispatchTitleReset`
+
+```csharp
+public bool TryDispatchTitleReset(IEnumerable<NetworkConnection> targets, out string error)
+```
+
+타이틀 타이밍을 기본값으로 복구하고 서브타이틀을 초기화합니다.
+
+---
+
+### `TryDispatchTitleTimes`
+
+```csharp
+public bool TryDispatchTitleTimes(
+    IEnumerable<NetworkConnection> targets,
+    int fadeInTicks,
+    int stayTicks,
+    int fadeOutTicks,
+    out string error)
+```
+
+타이틀 페이드 타이밍(틱)을 대상 클라이언트에 설정합니다.
 
 ---
 
@@ -117,19 +223,21 @@ HandleLocalSubmission(raw)
 | 커맨드 | 구문 | 설명 |
 |---|---|---|
 | `/help` | `/help [command]` | 커맨드 목록 또는 상세 설명 |
-| `/give` | `/give <id> [count=1] [player]` | 플레이어에게 아이템 지급 |
+| `/give` | `/give <id> [count=1] [target]` | 대상에게 아이템 지급 |
 | `/clean` | `/clean [id] [count]` | 인벤토리 아이템 제거 |
 | `/gamemode` | `/gamemode <player\|spectator>` | 게임모드 전환 |
-| `/scenario` | `/scenario <id>` | 시나리오 실행 (ScenarioCommandRunner 필요) |
+| `/scenario` | `/scenario execute <target> <scenario_id>` | 대상에게 시나리오 실행 |
+| `/problemsheet` | `/problemsheet list \| /problemsheet <target> <problem-identifier> [problem-index]` | 문제 시트 실행/조회 |
+| `/title` | `/title <target> ...` | 타이틀/액션바 표시 |
 
 ### `/give` 동작 상세
 
 ```
-/give (item identifier: 필수) (count: 선택, 기본 1) (player identifier: 선택, 기본 호출자)
+/give (item identifier: 필수) (count: 선택, 기본 1) (target identifier: 선택, 기본 호출자)
 ```
 
 1. `RegistryType.Item`에서 식별자 확인
-2. 대상 플레이어 해석 (`@s`, `fish:<clientId>`, `<clientId>` 지원)
+2. 대상 해석 (`@s`, `fish:<clientId>`, `<clientId>` 지원, 선택자 파싱 지원)
 3. 아이템 템플릿에서 데이터 복제 후 count 설정
 4. `TryAddItemToInventory()` — 인벤토리 여유 공간에 추가
 5. 남은 수량(`leftover`)이 있으면 플레이어 앞에 월드 드롭
@@ -147,7 +255,7 @@ HandleLocalSubmission(raw)
 | id + count | `min(보유 수량, count)` 제거 |
 | count만 지정 | 오류 반환 |
 
-> **참고:** `/give`, `/clean`은 sender 컨텍스트가 필요합니다. `TryExecuteSystemCommand`에서 대상 플레이어를 명시하지 않으면 실패합니다.
+> **참고:** `/give`, `/clean`은 sender 컨텍스트가 필요합니다. `TryExecuteSystemCommand`에서 대상 타겟을 명시하지 않으면 실패합니다.
 
 ---
 
@@ -186,6 +294,7 @@ RegisterCommand(new MyCommand(chatService));
 
 ## 관련 문서
 
-- [multiplayer-infrastructure-guide.md](../multiplayer-infrastructure-guide.md) — 채팅 및 커맨드 시스템 개요
+- [multiplayer-infrastructure-overview.md](architecture/multiplayer-infrastructure-overview.md) — 채팅 및 커맨드 시스템 개요
 - [api-references/MultiplayerInfrastructure.Command.ChatCommandExtensions.md](MultiplayerInfrastructure.Command.ChatCommandExtensions.md) — 커맨드 확장 이력
+- [api-references/MultiplayerInfrastructure.Command.TargetSelectorResolver.md](MultiplayerInfrastructure.Command.TargetSelectorResolver.md) — 대상 선택자 파서
 - [api-references/MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md](MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md) — 데이터팩 기반 자동 커맨드 실행

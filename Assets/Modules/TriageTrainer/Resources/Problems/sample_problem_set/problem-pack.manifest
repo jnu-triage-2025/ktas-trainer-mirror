@@ -1,0 +1,5 @@
+{
+  "format": "ktas-problem-pack-v1",
+  "problemJson": "sample_problem_set",
+  "figuresBasePath": "figures"
+}

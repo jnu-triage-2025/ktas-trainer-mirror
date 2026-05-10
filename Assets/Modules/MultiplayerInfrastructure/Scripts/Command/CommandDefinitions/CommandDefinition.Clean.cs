@@ -25,7 +25,7 @@ namespace MultiplayerInfrastructure.Command
 
       if (sender == null || sender.FirstObject == null || !sender.FirstObject.TryGetComponent(out PlayerController player) || player == null)
       {
-        _chat.SendSystemMessage(sender, "Unable to locate your player. /clean requires player context.");
+        _chat.SendSystemMessage(sender, "Unable to locate your target. /clean requires target context.");
         return;
       }
 

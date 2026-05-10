@@ -1,0 +1,2 @@
+이 방식은 MultiplayerInfrastructure에서 직접 참조해오는 방식이므로, MultiplayerInfrastructureSupports 방식으로 전환할 필요 있음.
+=> ScriptableObject가 MultiplayerInfrastructure에 있으므로, 잘못된 구현은 아님. 나중에 정리해서 이 TODO는 제거할것

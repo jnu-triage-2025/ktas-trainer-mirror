@@ -8,6 +8,7 @@ using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
 using TriageTrainer.Entity;
+using TriageTrainer.Entity.Patient;
 using TriageTrainer.Entity.PatientMonitor;
 using TriageTrainer.Entity.PatientMonitor.Models;
 
@@ -871,7 +872,7 @@ namespace TriageTrainer.Scenario
 
       if (applyProfile)
       {
-        monitorController.parameters = parameters;
+        monitorController.SetCustomParameters(parameters);
       }
 
       monitorController.enabled = true;

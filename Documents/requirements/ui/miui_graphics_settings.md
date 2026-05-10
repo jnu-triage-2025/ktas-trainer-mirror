@@ -1,3 +1,10 @@
+---
+title: "그래픽 설정 UI"
+doc_type: requirement
+status: active
+updated: 2026-04-14
+---
+
 # 그래픽 설정 UI
 
 | 항목 | 내용 |

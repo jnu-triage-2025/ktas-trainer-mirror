@@ -146,6 +146,6 @@ ScenarioEventIdentifierRegistry.Register("toggle_alarm", () =>
 
 ## 관련 문서
 
-- [multiplayer-infrastructure-guide.md](../multiplayer-infrastructure-guide.md) — 시나리오 시스템 개요
+- [multiplayer-infrastructure-overview.md](architecture/multiplayer-infrastructure-overview.md) — 시나리오 시스템 개요
 - [api-references/MultiplayerInfrastructure.Scenario.ScenarioController.md](MultiplayerInfrastructure.Scenario.ScenarioController.md) — ScenarioController API
-- [scenario-graph.md](../scenario-graph.md) — 시나리오 노드 JSON 스펙
+- [scenario-graph-spec.md](../requirements/content-definitions/scenario/scenario-graph-spec.md) — 시나리오 노드 JSON 스펙

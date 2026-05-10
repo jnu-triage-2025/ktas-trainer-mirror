@@ -26,13 +26,13 @@ namespace MultiplayerInfrastructure.Tag
 
     // ── 내부 헬퍼 ────────────────────────────────────────────────────────
 
-    private static List<string> GetOrCreateTagList(string uuid)
+    private static List<string> GetOrCreateTagList(string identifier)
     {
-      if (Registry.Registry.TryGet<List<string>>(RegistryType.PlayerTag, uuid, out var existing))
+      if (Registry.Registry.TryGet<List<string>>(RegistryType.PlayerTag, identifier, out var existing))
         return existing;
 
       var list = new List<string>();
-      Registry.Registry.Register(RegistryType.PlayerTag, uuid, list);
+      Registry.Registry.Register(RegistryType.PlayerTag, identifier, list);
       return list;
     }
 
@@ -63,18 +63,21 @@ namespace MultiplayerInfrastructure.Tag
     /// 플레이어에게 태그를 추가합니다. 이미 존재하는 태그는 무시합니다.
     /// </summary>
     public static void AddTag(string uuid, string tag)
+      => AddTagToIdentifier(uuid, tag);
+
+    public static void AddTagToIdentifier(string identifier, string tag)
     {
       if (!IsServerMutationAllowed())
         return;
 
-      if (string.IsNullOrWhiteSpace(uuid) || string.IsNullOrWhiteSpace(tag))
+      if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(tag))
         return;
 
-      var tags = GetOrCreateTagList(uuid);
+      var tags = GetOrCreateTagList(identifier);
       if (!tags.Contains(tag))
       {
         tags.Add(tag);
-        SyncOwnerPlayerTags(uuid);
+        SyncOwnerPlayerTags(identifier);
       }
     }
 
@@ -83,18 +86,21 @@ namespace MultiplayerInfrastructure.Tag
     /// </summary>
     /// <returns>태그가 실제로 제거되었으면 true, 없었으면 false.</returns>
     public static bool RemoveTag(string uuid, string tag)
+      => RemoveTagFromIdentifier(uuid, tag);
+
+    public static bool RemoveTagFromIdentifier(string identifier, string tag)
     {
       if (!IsServerMutationAllowed())
         return false;
 
-      if (string.IsNullOrWhiteSpace(uuid) || string.IsNullOrWhiteSpace(tag))
+      if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(tag))
         return false;
 
-      var tags = GetOrCreateTagList(uuid);
+      var tags = GetOrCreateTagList(identifier);
       bool removed = tags.Remove(tag);
       if (removed)
       {
-        SyncOwnerPlayerTags(uuid);
+        SyncOwnerPlayerTags(identifier);
       }
 
       return removed;
@@ -105,20 +111,23 @@ namespace MultiplayerInfrastructure.Tag
     /// </summary>
     /// <returns>교체에 성공했으면 true, fromTag가 없었으면 false.</returns>
     public static bool ChangeTag(string uuid, string fromTag, string toTag)
+      => ChangeTagForIdentifier(uuid, fromTag, toTag);
+
+    public static bool ChangeTagForIdentifier(string identifier, string fromTag, string toTag)
     {
       if (!IsServerMutationAllowed())
         return false;
 
-      if (string.IsNullOrWhiteSpace(uuid) || string.IsNullOrWhiteSpace(fromTag) || string.IsNullOrWhiteSpace(toTag))
+      if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(fromTag) || string.IsNullOrWhiteSpace(toTag))
         return false;
 
-      var tags = GetOrCreateTagList(uuid);
+      var tags = GetOrCreateTagList(identifier);
       int idx = tags.IndexOf(fromTag);
       if (idx < 0)
         return false;
 
       tags[idx] = toTag;
-      SyncOwnerPlayerTags(uuid);
+      SyncOwnerPlayerTags(identifier);
       return true;
     }
 
@@ -171,11 +180,14 @@ namespace MultiplayerInfrastructure.Tag
     /// 플레이어의 태그 목록을 읽기 전용으로 반환합니다. 없으면 빈 리스트.
     /// </summary>
     public static IReadOnlyList<string> GetTags(string uuid)
+      => GetTagsByIdentifier(uuid);
+
+    public static IReadOnlyList<string> GetTagsByIdentifier(string identifier)
     {
-      if (string.IsNullOrWhiteSpace(uuid))
+      if (string.IsNullOrWhiteSpace(identifier))
         return System.Array.Empty<string>();
 
-      if (Registry.Registry.TryGet<List<string>>(RegistryType.PlayerTag, uuid, out var tags))
+      if (Registry.Registry.TryGet<List<string>>(RegistryType.PlayerTag, identifier, out var tags))
         return tags;
 
       return System.Array.Empty<string>();
@@ -185,11 +197,14 @@ namespace MultiplayerInfrastructure.Tag
     /// 플레이어가 특정 태그를 보유하고 있는지 확인합니다.
     /// </summary>
     public static bool HasTag(string uuid, string tag)
+      => HasTagOnIdentifier(uuid, tag);
+
+    public static bool HasTagOnIdentifier(string identifier, string tag)
     {
-      if (string.IsNullOrWhiteSpace(uuid) || string.IsNullOrWhiteSpace(tag))
+      if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(tag))
         return false;
 
-      if (Registry.Registry.TryGet<List<string>>(RegistryType.PlayerTag, uuid, out var tags))
+      if (Registry.Registry.TryGet<List<string>>(RegistryType.PlayerTag, identifier, out var tags))
         return tags.Contains(tag);
 
       return false;

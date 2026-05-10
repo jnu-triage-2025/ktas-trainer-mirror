@@ -1,3 +1,10 @@
+---
+title: "퀘스트 패널 UI"
+doc_type: requirement
+status: active
+updated: 2026-04-14
+---
+
 # 퀘스트 패널 UI
 
 | 항목 | 내용 |

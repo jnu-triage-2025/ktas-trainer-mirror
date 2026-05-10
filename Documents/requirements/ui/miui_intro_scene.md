@@ -1,3 +1,10 @@
+---
+title: "인트로 씬 UI"
+doc_type: requirement
+status: active
+updated: 2026-04-14
+---
+
 # 인트로 씬 UI
 
 | 항목 | 내용 |

@@ -87,7 +87,7 @@ public void StartScenario(ScenarioGraph graph, string startNodeIdentifier = null
 public void StartScenario(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId)
 ```
 
-**주의:** 서버 측(`ScenarioCommandRunner`)에서 호출합니다. 직접 호출 시 모든 클라이언트에 동기화되지 않을 수 있습니다.
+**주의:** 서버 측 `CommandDefinition_Scenario`/`ChatService.TryDispatchScenario` 경로에서 호출합니다. 직접 호출 시 모든 클라이언트에 동기화되지 않을 수 있습니다.
 
 ---
 
@@ -209,8 +209,8 @@ Inspector 참조를 코드로 주입할 때 사용합니다. 일반적으로 Uni
 
 ## 관련 문서
 
-- [multiplayer-infrastructure-guide.md](../multiplayer-infrastructure-guide.md) — 시나리오 시스템 개요
-- [scenario-authoring.md](../scenario-authoring.md) — 시나리오 작성 가이드
-- [scenario-graph.md](../scenario-graph.md) — 시나리오 노드 JSON 스펙
+- [multiplayer-infrastructure-overview.md](architecture/multiplayer-infrastructure-overview.md) — 시나리오 시스템 개요
+- [scenario-authoring-guide.md](../requirements/content-definitions/scenario/scenario-authoring-guide.md) — 시나리오 작성 가이드
+- [scenario-graph-spec.md](../requirements/content-definitions/scenario/scenario-graph-spec.md) — 시나리오 노드 JSON 스펙
 - [api-references/MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md](MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md) — 이벤트 등록 API
 - [api-references/TextToSpeechService.TTSService.md](TextToSpeechService.TTSService.md) — TTSService API (`PlayTTS` 노드 연동)

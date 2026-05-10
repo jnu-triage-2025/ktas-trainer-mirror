@@ -1,3 +1,10 @@
+---
+title: "크로스헤어 UI"
+doc_type: requirement
+status: active
+updated: 2026-04-14
+---
+
 # 크로스헤어 UI
 
 | 항목 | 내용 |

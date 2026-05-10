@@ -1,0 +1,250 @@
+using System;
+using System.Collections.Generic;
+using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.Player;
+using UnityEngine;
+
+namespace TriageTrainer.Entity
+{
+  public partial class PatientController
+  {
+    [Serializable]
+    public class InteractConfig
+    {
+      [SerializeField] private string _identifier;
+      [SerializeField] private bool _enabled = true;
+
+      public InteractConfig(string identifier, bool enabled = true)
+      {
+        _identifier = identifier;
+        _enabled = enabled;
+      }
+
+      public string Identifier => _identifier;
+      public bool Enabled
+      {
+        get => _enabled;
+        set => _enabled = value;
+      }
+    }
+
+    private sealed class PatientLiftInteract : IInteract, IInteractorConditional
+    {
+      private readonly PatientController _owner;
+      public PatientLiftInteract(PatientController owner) { _owner = owner; }
+      public string DisplayText => _owner._liftDisplayText;
+      public Sprite DisplayIcon => _owner._liftDisplayIcon;
+      public bool AllowDisplayIconFallback => true;
+      public Color DisplayColor => Color.white;
+      public bool CanInteract(Transform interactor)
+      {
+        return _owner.IsInteractEnabled(InteractIdLiftFromBed) && _owner._currentBed != null;
+      }
+      public void Interact(Transform interactor)
+      {
+        _owner.TryLiftFromBed(interactor);
+      }
+    }
+
+    private sealed class PatientMonitorSelectInteract : IInteract, IInteractorConditional
+    {
+      private readonly PatientController _owner;
+      public PatientMonitorSelectInteract(PatientController owner) { _owner = owner; }
+      public string DisplayText => _owner._monitorSelectDisplayText;
+      public Sprite DisplayIcon => _owner._monitorSelectDisplayIcon;
+      public bool AllowDisplayIconFallback => true;
+      public Color DisplayColor => Color.white;
+      public bool CanInteract(Transform interactor)
+      {
+        var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+        if (player == null)
+          return false;
+
+        return _owner.IsInteractEnabled(InteractIdMonitorSelect)
+               && player.IsPatientSelectionMode;
+      }
+      public void Interact(Transform interactor)
+      {
+        _owner._activeMonitorSelectionRequester?.HandlePatientSelected(_owner, interactor);
+      }
+    }
+
+    public interface IMonitorSelectionRequester
+    {
+      void HandlePatientSelected(PatientController patient, Transform interactor);
+    }
+
+    public const string InteractIdLiftFromBed = "lift_from_bed";
+    public const string InteractIdMonitorSelect = "monitor_select";
+
+    [Header("Interact")]
+    [SerializeField] private List<InteractConfig> _interactConfigs = new();
+
+    private readonly List<IInteract> _interacts = new();
+    private readonly Dictionary<string, InteractConfig> _interactConfigMap = new(StringComparer.Ordinal);
+    private IMonitorSelectionRequester _activeMonitorSelectionRequester;
+
+    public IInteract[] Interacts => _interacts.ToArray();
+
+    private void BuildInteractEntries()
+    {
+      EnsureDefaultInteractConfigs();
+      RebuildInteractConfigMap();
+
+      _interacts.Clear();
+      _interacts.Add(new PatientLiftInteract(this));
+      _interacts.Add(new PatientMonitorSelectInteract(this));
+    }
+
+    private void RebuildInteractConfigMap()
+    {
+      _interactConfigMap.Clear();
+      for (int i = 0; i < _interactConfigs.Count; i++)
+      {
+        var each = _interactConfigs[i];
+        if (each == null || string.IsNullOrWhiteSpace(each.Identifier))
+          continue;
+
+        _interactConfigMap[each.Identifier] = each;
+      }
+    }
+
+    private void EnsureDefaultInteractConfigs()
+    {
+      EnsureInteractConfig(InteractIdLiftFromBed, true);
+      // monitor_select는 항상 true로 유지합니다.
+      // 표시/비표시는 PlayerController.IsPatientSelectionMode에서만 제어합니다.
+      EnsureInteractConfig(InteractIdMonitorSelect, true);
+    }
+
+    private void EnsureInteractConfig(string identifier, bool enabled)
+    {
+      for (int i = 0; i < _interactConfigs.Count; i++)
+      {
+        var each = _interactConfigs[i];
+        if (each == null || !string.Equals(each.Identifier, identifier, StringComparison.Ordinal))
+          continue;
+
+        return;
+      }
+
+      _interactConfigs.Add(new InteractConfig(identifier, enabled));
+    }
+
+    public void SetInteractEnabled(string identifier, bool enabled)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+        return;
+
+      if (string.Equals(identifier, InteractIdMonitorSelect, StringComparison.Ordinal))
+      {
+        // monitor_select는 항상 true를 유지하고, 노출 제어는 플레이어 선택 모드 플래그로만 처리합니다.
+        enabled = true;
+      }
+
+      for (int i = 0; i < _interactConfigs.Count; i++)
+      {
+        var each = _interactConfigs[i];
+        if (each == null || !string.Equals(each.Identifier, identifier, StringComparison.Ordinal))
+          continue;
+
+        each.Enabled = enabled;
+        RebuildInteractConfigMap();
+        return;
+      }
+
+      EnsureInteractConfig(identifier, enabled);
+      RebuildInteractConfigMap();
+    }
+
+    public void AddInteract(string identifier, bool enabled = true)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+        return;
+
+      if (string.Equals(identifier, InteractIdMonitorSelect, StringComparison.Ordinal))
+      {
+        // monitor_select는 항상 true를 유지하고, 노출 제어는 플레이어 선택 모드 플래그로만 처리합니다.
+        enabled = true;
+      }
+
+      EnsureInteractConfig(identifier, enabled);
+      RebuildInteractConfigMap();
+    }
+
+    public void RemoveInteract(string identifier)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+        return;
+
+      for (int i = _interactConfigs.Count - 1; i >= 0; i--)
+      {
+        var each = _interactConfigs[i];
+        if (each == null || !string.Equals(each.Identifier, identifier, StringComparison.Ordinal))
+          continue;
+
+        _interactConfigs.RemoveAt(i);
+      }
+
+      RebuildInteractConfigMap();
+    }
+
+    public bool IsInteractEnabled(string identifier)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+        return false;
+
+      if (string.Equals(identifier, InteractIdMonitorSelect, StringComparison.Ordinal))
+      {
+        // monitor_select는 항상 true로 간주됩니다.
+        // 실질적인 활성/비활성은 PlayerController.IsPatientSelectionMode가 담당합니다.
+        return true;
+      }
+
+      if (_interactConfigMap.TryGetValue(identifier, out var cfg))
+        return cfg.Enabled;
+
+      return false;
+    }
+
+    public void SetMonitorSelectionRequester(IMonitorSelectionRequester requester)
+    {
+      _activeMonitorSelectionRequester = requester;
+    }
+
+    public void ClearMonitorSelectionRequester(IMonitorSelectionRequester requester)
+    {
+      if (requester != null && !ReferenceEquals(_activeMonitorSelectionRequester, requester))
+        return;
+
+      _activeMonitorSelectionRequester = null;
+    }
+
+    private void TryLiftFromBed(Transform interactor)
+    {
+      if (_currentBed == null)
+        return;
+
+      if (interactor == null)
+        return;
+
+      var player = interactor.GetComponentInParent<PlayerController>();
+      if (player == null)
+        return;
+
+      if (player.IsCarryingReposable)
+      {
+        ShowThrottledMessage(interactor, "이미 다른 대상을 들고 있어 환자를 들어올릴 수 없습니다.");
+        return;
+      }
+
+      if (!_currentBed.TryLiftTarget(player, out _))
+      {
+        ShowThrottledMessage(interactor, "환자를 침대에서 들어올릴 수 없습니다.");
+        return;
+      }
+
+      ShowThrottledMessage(interactor, "환자를 침대에서 들어올렸습니다.");
+    }
+  }
+}

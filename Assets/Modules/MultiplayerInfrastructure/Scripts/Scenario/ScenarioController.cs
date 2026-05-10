@@ -72,6 +72,8 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingStateUpdate,
       ExecutingTTS,
       ExecutingPlayerTag,
+      ExecutingEntityPresetSpawn,
+      ExecutingEntityTag,
     }
 
     [SerializeField] private State _state = State.Inactive;
@@ -366,6 +368,12 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioPlayerTagNode playerTag:
           ExecutePlayerTagNode(playerTag);
           break;
+        case ScenarioEntityPresetSpawnNode entityPresetSpawn:
+          ExecuteEntityPresetSpawnNode(entityPresetSpawn);
+          break;
+        case ScenarioEntityTagNode entityTag:
+          ExecuteEntityTagNode(entityTag);
+          break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type: {node.GetType().Name}");
           Advance();
@@ -625,6 +633,97 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Advance();
+    }
+
+    private void ExecuteEntityPresetSpawnNode(ScenarioEntityPresetSpawnNode node)
+    {
+      _state = State.ExecutingEntityPresetSpawn;
+
+      if (node == null || string.IsNullOrWhiteSpace(node.PresetIdentifier))
+      {
+        Debug.LogWarning("[ScenarioController] EntityPresetSpawn node is missing presetIdentifier.");
+        Advance();
+        return;
+      }
+
+      Vector3 spawnPosition = new Vector3(node.PositionX, node.PositionY, node.PositionZ);
+      if (!string.IsNullOrWhiteSpace(node.PositionSourceEntityIdentifier)
+          && Registry.Registry.TryGetEntity(node.PositionSourceEntityIdentifier, out var sourceDescriptor)
+          && sourceDescriptor?.GameObject != null)
+      {
+        spawnPosition = sourceDescriptor.GameObject.transform.position;
+      }
+
+      if (!Registry.Registry.TrySpawnEntityPreset(
+            node.PresetIdentifier,
+            spawnPosition,
+            Quaternion.identity,
+            out _,
+            out var spawnedDescriptor,
+            out var error))
+      {
+        Debug.LogWarning($"[ScenarioController] EntityPresetSpawn '{node.Identifier}' failed: {error}");
+        Advance();
+        return;
+      }
+
+      string stateKey = string.IsNullOrWhiteSpace(node.ResultStateKey)
+        ? $"{node.Identifier}.spawnedEntityIdentifier"
+        : node.ResultStateKey;
+      _stateStore[stateKey] = spawnedDescriptor.Identifier;
+
+      Advance();
+    }
+
+    private void ExecuteEntityTagNode(ScenarioEntityTagNode node)
+    {
+      _state = State.ExecutingEntityTag;
+
+      string targetIdentifier = ResolveEntityTagTargetIdentifier(node);
+      if (string.IsNullOrWhiteSpace(targetIdentifier))
+      {
+        Debug.LogWarning($"[ScenarioController] EntityTag '{node?.Identifier}' target identifier is missing.");
+        Advance();
+        return;
+      }
+
+      if (!Registry.Registry.TryGetEntity(targetIdentifier, out var entityDescriptor) || entityDescriptor?.GameObject == null)
+      {
+        Debug.LogWarning($"[ScenarioController] EntityTag '{node.Identifier}' target '{targetIdentifier}' was not found.");
+        Advance();
+        return;
+      }
+
+      switch (node.Operation)
+      {
+        case ScenarioPlayerTagOperationType.Add:
+          PlayerTagService.AddTagToIdentifier(targetIdentifier, node.Tag);
+          break;
+        case ScenarioPlayerTagOperationType.Remove:
+          PlayerTagService.RemoveTagFromIdentifier(targetIdentifier, node.Tag);
+          break;
+        case ScenarioPlayerTagOperationType.Change:
+          PlayerTagService.ChangeTagForIdentifier(targetIdentifier, node.FromTag, node.ToTag);
+          break;
+      }
+
+      Advance();
+    }
+
+    private string ResolveEntityTagTargetIdentifier(ScenarioEntityTagNode node)
+    {
+      if (node == null)
+        return string.Empty;
+
+      if (!string.IsNullOrWhiteSpace(node.TargetEntityIdentifier))
+        return node.TargetEntityIdentifier;
+
+      if (string.IsNullOrWhiteSpace(node.TargetEntityStateKey))
+        return string.Empty;
+
+      return _stateStore.TryGetValue(node.TargetEntityStateKey, out var value)
+        ? value
+        : string.Empty;
     }
 
     private IEnumerator ExecutePlayTTSNode(ScenarioPlayTTSNode node)

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML
+  xmlns:ui="UnityEngine.UIElements"
+  xmlns:mi="MultiplayerInfrastructure.UI"
+>
+  <mi:ProblemSheetElement name="problem-sheet-root" />
+</ui:UXML>

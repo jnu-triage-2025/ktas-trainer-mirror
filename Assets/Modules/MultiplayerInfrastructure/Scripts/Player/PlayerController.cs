@@ -19,6 +19,7 @@ namespace MultiplayerInfrastructure.Player
     void Awake()
     {
       Awake_GameObject();
+      Awake_PlayerModel();
       Awake_Movement();
       Awake_Camera();
       Awake_Raycast();

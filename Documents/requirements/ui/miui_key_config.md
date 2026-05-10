@@ -1,3 +1,10 @@
+---
+title: "키 설정 UI"
+doc_type: requirement
+status: active
+updated: 2026-04-14
+---
+
 # 키 설정 UI
 
 | 항목 | 내용 |

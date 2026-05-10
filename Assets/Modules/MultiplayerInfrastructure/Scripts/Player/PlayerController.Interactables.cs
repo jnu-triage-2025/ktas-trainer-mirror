@@ -82,14 +82,30 @@ namespace MultiplayerInfrastructure.Player
           for (int j = 0; j < eachInteracts.Length; j++)
           {
             var interact = eachInteracts[j];
-            if (interact != null)
-              interacts.Add(interact);
+            if (interact == null)
+              continue;
+
+            if (interact is IInteractorConditional conditional && !conditional.CanInteract(transform))
+              continue;
+
+            interacts.Add(interact);
           }
         }
       }
 
       // UpdateInteractables를 사용하여 모드에 따라 적절히 처리
       _interactableHintUI.UpdateInteractables(interacts);
+    }
+
+    public void RefreshInteractableHintsNow()
+    {
+      if (!IsOwner)
+        return;
+
+      if (_detector == null)
+        return;
+
+      HandleNearbyUpdated(_detector.Nearby);
     }
 
     // called from PlayerController.Input

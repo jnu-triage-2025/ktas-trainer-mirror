@@ -20,6 +20,10 @@ namespace MultiplayerInfrastructure.Registry
     private static readonly Dictionary<string, object> _runtimeStateRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _interactableEntityRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _uiRegistry = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, object> _playerModelRegistry = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, object> _entityPresetRegistry = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, object> _problemSetRegistry = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, object> _problemFigureRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _playerTagRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, string> _playerEntityIdentifierByOwnerUserIdentifier = new(StringComparer.Ordinal);
     private static bool _builtInRegistryInitialized;
@@ -394,6 +398,10 @@ namespace MultiplayerInfrastructure.Registry
         RegistryType.RuntimeState => _runtimeStateRegistry,
         RegistryType.InteractableEntity => _interactableEntityRegistry,
         RegistryType.UI => _uiRegistry,
+        RegistryType.PlayerModel => _playerModelRegistry,
+        RegistryType.EntityPreset => _entityPresetRegistry,
+        RegistryType.ProblemSet => _problemSetRegistry,
+        RegistryType.ProblemFigure => _problemFigureRegistry,
         RegistryType.PlayerTag => _playerTagRegistry,
         _ => throw new ArgumentOutOfRangeException(nameof(registryType), registryType, "Unknown registry type")
       };

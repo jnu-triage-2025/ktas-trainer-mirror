@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Command;
 using MultiplayerInfrastructure.Datapack;
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.Problem;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
@@ -23,6 +25,7 @@ namespace MultiplayerInfrastructure.Chat
     [SerializeField] private DatapackRuntimeService _datapackRuntime;
     
     private readonly Dictionary<int, float> _lastMessageTimes = new();
+    private readonly Dictionary<int, int> _lastProblemSheetGradeByClientId = new();
 
     void Awake()
     {
@@ -121,6 +124,104 @@ namespace MultiplayerInfrastructure.Chat
       ScenarioController.Instance.StartScenario(graph, null, owner);
     }
 
+    [TargetRpc]
+    private void TargetShowTitle(NetworkConnection conn, string title, string subtitle)
+    {
+      var ui = GetTitleUIController();
+      if (ui == null)
+        return;
+
+      ui.ShowTitle(title, subtitle);
+    }
+
+    [TargetRpc]
+    private void TargetShowSubtitle(NetworkConnection conn, string subtitle)
+    {
+      var ui = GetTitleUIController();
+      if (ui == null)
+        return;
+
+      ui.ShowSubtitle(subtitle);
+    }
+
+    [TargetRpc]
+    private void TargetShowActionbar(NetworkConnection conn, string actionbar)
+    {
+      var ui = GetTitleUIController();
+      if (ui == null)
+        return;
+
+      ui.ShowActionbar(actionbar);
+    }
+
+    [TargetRpc]
+    private void TargetClearTitle(NetworkConnection conn)
+    {
+      var ui = GetTitleUIController();
+      if (ui == null)
+        return;
+
+      ui.ClearAll();
+    }
+
+    [TargetRpc]
+    private void TargetResetTitle(NetworkConnection conn)
+    {
+      var ui = GetTitleUIController();
+      if (ui == null)
+        return;
+
+      ui.ResetTimesAndSubtitle();
+    }
+
+    [TargetRpc]
+    private void TargetSetTitleTimes(NetworkConnection conn, int fadeInTicks, int stayTicks, int fadeOutTicks)
+    {
+      var ui = GetTitleUIController();
+      if (ui == null)
+        return;
+
+      ui.SetTimes(fadeInTicks, stayTicks, fadeOutTicks);
+    }
+    
+    [TargetRpc]
+    private void TargetRunProblemSheet(NetworkConnection conn, string problemSetIdentifier, int startIndex, bool singleProblemMode)
+    {
+      var controller = Registry.Registry.Get<ProblemSheetUIController>(
+        RegistryType.UI,
+        Registry.Registry.TypeKey<ProblemSheetUIController>());
+
+      if (controller == null)
+      {
+        Debug.LogWarning("[ChatService] ProblemSheetUIController is missing on this client.");
+        return;
+      }
+
+      if (!controller.OpenProblemSet(problemSetIdentifier, startIndex, singleProblemMode))
+      {
+        Debug.LogWarning($"[ChatService] Failed to open problem set '{problemSetIdentifier}'.");
+      }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void ReportProblemGradeServerRpc(string problemSetIdentifier, int problemIndex, int gradeCode, NetworkConnection sender = null)
+    {
+      if (sender == null)
+        return;
+
+      int normalizedCode = gradeCode == 0 ? 0 : 1;
+      _lastProblemSheetGradeByClientId[sender.ClientId] = normalizedCode;
+
+      if (!Registry.Registry.TryGetProblemSet(problemSetIdentifier, out var set, out _))
+        return;
+
+      if (set?.Problems == null || problemIndex < 0 || problemIndex >= set.Problems.Count)
+        return;
+
+      if (normalizedCode == 0)
+        ProblemRewardService.ApplyOnCorrect(set.Problems[problemIndex], sender.ClientId);
+    }
+
 #endregion
 
 #region Helpers
@@ -195,6 +296,124 @@ namespace MultiplayerInfrastructure.Chat
       return true;
     }
 
+    public bool TryDispatchTitle(
+      IEnumerable<NetworkConnection> targets,
+      string title,
+      string subtitle,
+      out string error)
+    {
+      return DispatchToTargets(
+        targets,
+        target => TargetShowTitle(target, title, subtitle),
+        out error);
+    }
+
+    public bool TryDispatchSubtitle(IEnumerable<NetworkConnection> targets, string subtitle, out string error)
+    {
+      return DispatchToTargets(
+        targets,
+        target => TargetShowSubtitle(target, subtitle),
+        out error);
+    }
+
+    public bool TryDispatchActionbar(IEnumerable<NetworkConnection> targets, string actionbar, out string error)
+    {
+      return DispatchToTargets(
+        targets,
+        target => TargetShowActionbar(target, actionbar),
+        out error);
+    }
+
+    public bool TryDispatchTitleClear(IEnumerable<NetworkConnection> targets, out string error)
+    {
+      return DispatchToTargets(
+        targets,
+        target => TargetClearTitle(target),
+        out error);
+    }
+
+    public bool TryDispatchTitleReset(IEnumerable<NetworkConnection> targets, out string error)
+    {
+      return DispatchToTargets(
+        targets,
+        target => TargetResetTitle(target),
+        out error);
+    }
+
+    public bool TryDispatchTitleTimes(IEnumerable<NetworkConnection> targets, int fadeInTicks, int stayTicks, int fadeOutTicks, out string error)
+    {
+      return DispatchToTargets(
+        targets,
+        target => TargetSetTitleTimes(target, fadeInTicks, stayTicks, fadeOutTicks),
+        out error);
+    }
+
+    public bool TryDispatchProblemSheet(
+      string problemSetIdentifier,
+      IEnumerable<NetworkConnection> targets,
+      int startIndex,
+      bool singleProblemMode,
+      out string error)
+    {
+      error = string.Empty;
+
+      if (!IsServer)
+      {
+        error = "ProblemSheet execution can only be invoked on the server.";
+        return false;
+      }
+
+      if (!Registry.Registry.PreloadProblemSet(problemSetIdentifier))
+      {
+        error = $"Problem set '{problemSetIdentifier}' is not registered.";
+        return false;
+      }
+
+      if (targets == null)
+      {
+        error = "No target players were matched.";
+        return false;
+      }
+
+      bool anyTarget = false;
+      int safeStartIndex = Mathf.Max(0, startIndex);
+      foreach (var target in targets)
+      {
+        if (target == null)
+          continue;
+
+        anyTarget = true;
+        _lastProblemSheetGradeByClientId[target.ClientId] = 1;
+        TargetRunProblemSheet(target, problemSetIdentifier, safeStartIndex, singleProblemMode);
+      }
+
+      if (!anyTarget)
+      {
+        error = "No target players were matched.";
+        return false;
+      }
+
+      return true;
+    }
+
+    public void ReportProblemGrade(string problemSetIdentifier, int problemIndex, int gradeCode)
+    {
+      if (string.IsNullOrWhiteSpace(problemSetIdentifier) || problemIndex < 0)
+        return;
+
+      ReportProblemGradeServerRpc(problemSetIdentifier, problemIndex, gradeCode);
+    }
+
+    public int GetLastProblemSheetGradeCode(NetworkConnection sender)
+    {
+      if (sender == null)
+        return 1;
+
+      return _lastProblemSheetGradeByClientId.TryGetValue(sender.ClientId, out int code)
+        ? (code == 0 ? 0 : 1)
+        : 1;
+    }
+
     public bool TryExecuteSystemCommand(string commandLine, out string result)
     {
       return TryExecuteCommandInternal(commandLine, null, out result);
@@ -202,35 +421,211 @@ namespace MultiplayerInfrastructure.Chat
 
     private bool TryExecuteCommandInternal(string commandLine, NetworkConnection sender, out string result)
     {
-      result = string.Empty;
+      if (!TryExecuteCommandLineWithPipeline(commandLine, sender, out var outputValues, out var error))
+      {
+        result = string.IsNullOrWhiteSpace(error) ? "Command execution failed." : error;
+        SendSystemMessage(sender, result);
+        return false;
+      }
+
+      result = outputValues.Count > 0
+        ? string.Join(", ", outputValues)
+        : "Executed command.";
+      return true;
+    }
+
+    private bool TryExecuteCommandLineWithPipeline(string commandLine, NetworkConnection sender, out List<string> outputValues, out string error)
+    {
+      outputValues = new List<string>();
+      error = string.Empty;
+
+      string trimmed = commandLine?.Trim();
+      if (string.IsNullOrWhiteSpace(trimmed))
+      {
+        error = "Usage: /help";
+        return false;
+      }
+
+      string[] stages = SplitAndTrim(trimmed, '|', removeEmpty: false);
+      if (stages.Length == 0)
+      {
+        error = "Usage: /help";
+        return false;
+      }
+
+      bool suppressFirstStageMessages = stages.Length > 1;
+      if (!TryExecuteParallelStage(stages[0], sender, suppressFirstStageMessages, out outputValues, out error))
+        return false;
+
+      for (int i = 1; i < stages.Length; i++)
+      {
+        if (!TryExecutePipeTargetStage(stages[i], outputValues, sender, out outputValues, out error))
+          return false;
+      }
+
+      return true;
+    }
+
+    private bool TryExecuteParallelStage(
+      string stage,
+      NetworkConnection sender,
+      bool suppressSystemMessages,
+      out List<string> outputValues,
+      out string error)
+    {
+      outputValues = new List<string>();
+      error = string.Empty;
+
+      var commands = SplitAndTrim(stage, '&', removeEmpty: true);
+      if (commands.Length == 0)
+      {
+        error = "Invalid command stage.";
+        return false;
+      }
+
+      for (int i = 0; i < commands.Length; i++)
+      {
+        if (!TryExecuteSingleCommand(commands[i], sender, suppressSystemMessages, out var values, out error))
+          return false;
+
+        if (values != null && values.Count > 0)
+          outputValues.AddRange(values);
+      }
+
+      return true;
+    }
+
+    private bool TryExecutePipeTargetStage(
+      string stage,
+      IReadOnlyList<string> inputValues,
+      NetworkConnection sender,
+      out List<string> outputValues,
+      out string error)
+    {
+      outputValues = new List<string>();
+      error = string.Empty;
+
+      if (string.IsNullOrWhiteSpace(stage))
+      {
+        error = "Invalid pipeline target stage.";
+        return false;
+      }
+
+      int placeholderCount = CountPlaceholders(stage);
+      if (placeholderCount > 0)
+      {
+        int inputCount = inputValues?.Count ?? 0;
+        if (inputCount < placeholderCount)
+        {
+          error = $"Pipeline requires {placeholderCount} values but received {inputCount}.";
+          return false;
+        }
+
+        string resolved = stage;
+        for (int i = 0; i < placeholderCount; i++)
+        {
+          resolved = ReplaceFirstPlaceholder(resolved, inputValues[i]);
+        }
+
+        stage = resolved;
+      }
+
+      if (!TryExecuteParallelStage(stage, sender, suppressSystemMessages: false, out outputValues, out error))
+        return false;
+
+      return true;
+    }
+
+    private static string[] SplitAndTrim(string input, char separator, bool removeEmpty)
+    {
+      if (string.IsNullOrEmpty(input))
+        return Array.Empty<string>();
+
+      var parts = input.Split(separator);
+      for (int i = 0; i < parts.Length; i++)
+      {
+        parts[i] = parts[i].Trim();
+      }
+
+      if (!removeEmpty)
+        return parts;
+
+      var filtered = new List<string>(parts.Length);
+      for (int i = 0; i < parts.Length; i++)
+      {
+        if (!string.IsNullOrEmpty(parts[i]))
+          filtered.Add(parts[i]);
+      }
+
+      return filtered.ToArray();
+    }
+
+    private bool TryExecuteSingleCommand(
+      string commandLine,
+      NetworkConnection sender,
+      bool suppressSystemMessages,
+      out IReadOnlyList<string> pipelineValues,
+      out string error)
+    {
+      pipelineValues = Array.Empty<string>();
+      error = string.Empty;
 
       if (string.IsNullOrWhiteSpace(commandLine))
       {
-        result = "Usage: /help";
-        SendSystemMessage(sender, result);
+        error = "Usage: /help";
         return false;
       }
 
       string[] parts = commandLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
       if (parts.Length == 0)
       {
-        result = "Usage: /help";
-        SendSystemMessage(sender, result);
+        error = "Usage: /help";
         return false;
       }
 
       string command = parts[0];
       string[] args = parts.Length > 1 ? parts[1..] : Array.Empty<string>();
 
-      if (_commandService.TryExecute(command, args, sender))
+      bool handled = _commandService.TryExecute(command, args, sender, suppressSystemMessages, out pipelineValues, out error);
+      if (!handled)
       {
-        result = $"Executed /{command}.";
-        return true;
+        error = $"Unknown command: {command}";
+        return false;
       }
 
-      result = $"Unknown command: {command}";
-      SendSystemMessage(sender, result);
-      return false;
+      if (!string.IsNullOrWhiteSpace(error))
+        return false;
+
+      return true;
+    }
+
+    private static int CountPlaceholders(string input)
+    {
+      if (string.IsNullOrEmpty(input))
+        return 0;
+
+      int count = 0;
+      for (int i = 0; i < input.Length - 1; i++)
+      {
+        if (input[i] == '{' && input[i + 1] == '}')
+        {
+          count++;
+          i++;
+        }
+      }
+
+      return count;
+    }
+
+    private static string ReplaceFirstPlaceholder(string input, string value)
+    {
+      int index = input.IndexOf("{}", StringComparison.Ordinal);
+      if (index < 0)
+        return input;
+
+      return input.Substring(0, index)
+             + (value ?? string.Empty)
+             + input.Substring(index + 2);
     }
 
     public void BroadcastSystemMessage(string message)
@@ -239,6 +634,49 @@ namespace MultiplayerInfrastructure.Chat
     }
 
     public string GetDisplayName(NetworkConnection conn) => conn?.ClientId.ToString() ?? "Server";
+
+    private TitleUIController GetTitleUIController()
+    {
+      return Registry.Registry.Get<TitleUIController>(RegistryType.UI, Registry.Registry.TypeKey<TitleUIController>());
+    }
+
+    private bool DispatchToTargets(
+      IEnumerable<NetworkConnection> targets,
+      System.Action<NetworkConnection> dispatch,
+      out string error)
+    {
+      error = string.Empty;
+
+      if (!IsServer)
+      {
+        error = "Title command can only be invoked on the server.";
+        return false;
+      }
+
+      if (targets == null)
+      {
+        error = "No target players were matched.";
+        return false;
+      }
+
+      bool anyTarget = false;
+      foreach (var target in targets)
+      {
+        if (target == null)
+          continue;
+
+        anyTarget = true;
+        dispatch?.Invoke(target);
+      }
+
+      if (!anyTarget)
+      {
+        error = "No target players were matched.";
+        return false;
+      }
+
+      return true;
+    }
 #endregion
   }
 }
