@@ -20,6 +20,7 @@ namespace MultiplayerInfrastructure.Player
     {
       Awake_GameObject();
       Awake_PlayerModel();
+      Awake_Animation();
       Awake_Movement();
       Awake_Camera();
       Awake_Raycast();
@@ -44,6 +45,7 @@ namespace MultiplayerInfrastructure.Player
       if (!IsOwner) return;
       Update_Input();
       Update_Movement();
+      Update_Animation();
       Update_Raycast();
       Update_Inventory();
       Update_Item();

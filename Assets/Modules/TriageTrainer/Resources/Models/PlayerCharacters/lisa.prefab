@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b998c7f1896534a60b8237231f18ecdd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelLisa
+  _animator: {fileID: 824017596446152008}
 --- !u!1001 &1936233392889184784
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -102,6 +103,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f4e2ebb8ef45c8f41b4f2e36fe8993c1, type: 3}
+--- !u!95 &824017596446152008 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 1274973482151630680, guid: f4e2ebb8ef45c8f41b4f2e36fe8993c1, type: 3}
+  m_PrefabInstance: {fileID: 1936233392889184784}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &3185938167337025593 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3956513294655898153, guid: f4e2ebb8ef45c8f41b4f2e36fe8993c1, type: 3}

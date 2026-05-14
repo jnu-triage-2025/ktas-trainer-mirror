@@ -244,18 +244,15 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f477b65c256f4cdf871532cc731c1dac, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  _componentIndexCache: 0
-  _addedNetworkObject: {fileID: 3332462076176395838}
-  _networkObjectCache: {fileID: 3332462076176395838}
+  m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Player.PlayerController
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 0}
+  _networkObjectCache: {fileID: 0}
+  _runtimeAnimatorController: {fileID: 9100000, guid: 168bd517d468d4d61a605dc1ea630cb6, type: 2}
   _camControl: {fileID: 0}
   playerCharacterModelAttachPoint: {fileID: 0}
-  playerCharacterBody: {fileID: 0}
-  _defaultPlayerModelIdentifier: 
+  _defaultPlayerModelIdentifier: jeb
   _currentPlayerModelIdentifier: 
-  _enforceBodySphereCollider: 1
-  _bodySphereColliderCenter: {x: 0, y: 1, z: 0}
-  _bodySphereColliderRadius: 0.35
   _crosshairUI: {fileID: 0}
   _escapeMenuUIController: {fileID: 0}
   _gamemode: 0
@@ -306,6 +303,8 @@ MonoBehaviour:
   _isCursorLocked: 0
   _characterController: {fileID: 0}
   _cameraHolderTransform: {fileID: 0}
+  _isPatientSelectionMode: 0
+  _isIntravenousLineConnectionMode: 0
   _questUIController: {fileID: 0}
   _questPreviewHudUIController: {fileID: 0}
   _raycastLayerMask:

@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4566625674cd49be913614454927b2c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelSofia
+  _animator: {fileID: 4549582370455359934}
 --- !u!1001 &4205075360948355332
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -105,5 +106,10 @@ PrefabInstance:
 --- !u!4 &3072522254548927111 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1222911418941834115, guid: a4218cf84493a8f4bbfb6825629c76cb, type: 3}
+  m_PrefabInstance: {fileID: 4205075360948355332}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &4549582370455359934 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 394118625701400762, guid: a4218cf84493a8f4bbfb6825629c76cb, type: 3}
   m_PrefabInstance: {fileID: 4205075360948355332}
   m_PrefabAsset: {fileID: 0}

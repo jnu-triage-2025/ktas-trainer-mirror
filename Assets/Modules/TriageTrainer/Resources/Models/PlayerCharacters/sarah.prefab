@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 985296e90f88944e78e2bfebbe28fbfe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelSerah
+  _animator: {fileID: 4315510464078484771}
 --- !u!1001 &3359103801953384935
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -105,5 +106,10 @@ PrefabInstance:
 --- !u!4 &2963116762718383473 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 541265262067700886, guid: a6aeefce18e2a854abb3b9cf48f21427, type: 3}
+  m_PrefabInstance: {fileID: 3359103801953384935}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &4315510464078484771 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 1548722580544384196, guid: a6aeefce18e2a854abb3b9cf48f21427, type: 3}
   m_PrefabInstance: {fileID: 3359103801953384935}
   m_PrefabAsset: {fileID: 0}

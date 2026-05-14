@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6088c7255ca5d4eba9393db838e91ed8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelMaya
+  _animator: {fileID: 6344039979770211811}
 --- !u!1001 &5312861212074359483
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -102,6 +103,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2a24c2fdcb1a0b641b30d4c34fb7a33c, type: 3}
+--- !u!95 &6344039979770211811 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 1274973482151630680, guid: 2a24c2fdcb1a0b641b30d4c34fb7a33c, type: 3}
+  m_PrefabInstance: {fileID: 5312861212074359483}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &9174757124389468306 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3956513294655898153, guid: 2a24c2fdcb1a0b641b30d4c34fb7a33c, type: 3}
