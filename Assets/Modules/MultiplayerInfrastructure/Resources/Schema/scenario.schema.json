@@ -619,19 +619,15 @@
             "nodeType": {
               "const": "Validator"
             },
-            "condition": {
-              "type": "string",
-              "enum": [
-                "PlayerCountEqual",
-                "PlayerCountNotEqual",
-                "PlayerCountLessThan",
-                "PlayerCountLessThanOrEqual",
-                "PlayerCountGreaterThan",
-                "PlayerCountGreaterThanOrEqual"
-              ]
-            },
-            "targetCount": {
-              "type": "integer"
+            "rootConditions": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/ScenarioValidatorRootCondition"
+              }
             },
             "onFailure": {
               "type": "string",
@@ -642,6 +638,10 @@
               ],
               "default": "Panic"
             },
+            "failureReportTargets": {
+              "type": "string",
+              "default": "UnityConsole"
+            },
             "failureNextIdentifier": {
               "type": [
                 "string",
@@ -650,11 +650,113 @@
             }
           },
           "required": [
-            "condition",
-            "targetCount"
+            "rootConditions"
           ]
         }
       ]
+    },
+    "ScenarioValidatorRootCondition": {
+      "type": "object",
+      "properties": {
+        "condition": {
+          "type": "string",
+          "enum": [
+            "PlayerCountEqual",
+            "PlayerCountNotEqual",
+            "PlayerCountLessThan",
+            "PlayerCountLessThanOrEqual",
+            "PlayerCountGreaterThan",
+            "PlayerCountGreaterThanOrEqual",
+            "RegistryContains",
+            "PlayerAssignedTag"
+          ]
+        },
+        "targetCount": {
+          "type": "integer"
+        },
+        "playerTag": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "playerScope": {
+          "type": "string",
+          "enum": [
+            "Any",
+            "All",
+            "Owner"
+          ],
+          "default": "Any"
+        },
+        "validationRules": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/ScenarioValidatorRule"
+          }
+        }
+      },
+      "required": [
+        "condition"
+      ],
+      "additionalProperties": false
+    },
+    "ScenarioValidatorRule": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Registry"
+          ],
+          "default": "Registry"
+        },
+        "condition": {
+          "type": "string",
+          "enum": [
+            "Contains"
+          ],
+          "default": "Contains"
+        },
+        "registryType": {
+          "type": "string",
+          "enum": [
+            "Item",
+            "ScenarioEvent",
+            "ScenarioGraph",
+            "IconSprite",
+            "Npc",
+            "Waypoint",
+            "Entity",
+            "Service",
+            "RuntimeState",
+            "InteractableEntity",
+            "UI",
+            "PlayerModel",
+            "EntityPreset",
+            "ProblemSet",
+            "ProblemFigure",
+            "PlayerTag"
+          ],
+          "default": "Waypoint"
+        },
+        "registryIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "condition",
+        "registryType",
+        "registryIdentifier"
+      ],
+      "additionalProperties": false
     },
     "ScenarioParallelNode": {
       "allOf": [

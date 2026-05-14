@@ -1,5 +1,6 @@
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Quest;
+using MultiplayerInfrastructure.Registry;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -72,6 +73,7 @@ namespace MultiplayerInfrastructure.Editor
       }
 
       DrawTypeSpecificInspector(targetNode.Data);
+      targetNode.RefreshTitle();
     }
 
     private void DrawTypeSpecificInspector(IScenarioNode data)
@@ -279,9 +281,61 @@ namespace MultiplayerInfrastructure.Editor
 
     private void DrawValidatorFields(ScenarioValidatorNode data)
     {
-      data.Condition = (ScenarioValidatorCondition)EditorGUILayout.EnumPopup("Condition", data.Condition);
-      data.TargetCount = EditorGUILayout.IntField("Target Count", data.TargetCount);
+      if (data.RootConditions == null)
+      {
+        data.RootConditions = new System.Collections.Generic.List<ScenarioValidatorRootCondition>();
+      }
+
+      var editableRootConditions = data.RootConditions as System.Collections.Generic.List<ScenarioValidatorRootCondition>
+          ?? data.RootConditions.ToList();
+      data.RootConditions = editableRootConditions;
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("Root Conditions", EditorStyles.boldLabel);
+
+      for (int i = 0; i < editableRootConditions.Count; i++)
+      {
+        var rootCondition = editableRootConditions[i] ?? new ScenarioValidatorRootCondition();
+        editableRootConditions[i] = rootCondition;
+
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField($"Root Condition {i + 1}", EditorStyles.boldLabel);
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Remove", GUILayout.Width(70)))
+        {
+          editableRootConditions.RemoveAt(i);
+          targetNode.RefreshTitle();
+          window.NotifyNodeSelected(targetNode);
+          EditorGUILayout.EndHorizontal();
+          EditorGUILayout.EndVertical();
+          break;
+        }
+        EditorGUILayout.EndHorizontal();
+
+        DrawValidatorRootConditionFields(rootCondition);
+        EditorGUILayout.EndVertical();
+      }
+
+      if (GUILayout.Button("Add Root Condition"))
+      {
+        editableRootConditions.Add(new ScenarioValidatorRootCondition
+        {
+          Condition = ScenarioValidatorCondition.RegistryContains
+        });
+      }
+
+      if (editableRootConditions.Count == 0)
+      {
+        EditorGUILayout.HelpBox("Validator 노드에는 최소 1개 이상의 Root Condition이 필요합니다.", MessageType.Warning);
+      }
+
+      data.RootConditions = editableRootConditions;
+
       data.OnFailure = (ScenarioValidatorOnFailure)EditorGUILayout.EnumPopup("On Failure", data.OnFailure);
+      data.FailureReportTargets = (ScenarioValidatorFailureReportTarget)EditorGUILayout.EnumFlagsField(
+        "Failure Report Targets",
+        data.FailureReportTargets);
 
       if (data.OnFailure == ScenarioValidatorOnFailure.Branching)
       {
@@ -289,6 +343,97 @@ namespace MultiplayerInfrastructure.Editor
       }
 
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawValidatorRootConditionFields(ScenarioValidatorRootCondition rootCondition)
+    {
+      if (rootCondition == null)
+      {
+        return;
+      }
+
+      rootCondition.Condition = (ScenarioValidatorCondition)EditorGUILayout.EnumPopup("Condition", rootCondition.Condition);
+
+      switch (rootCondition.Condition)
+      {
+        case ScenarioValidatorCondition.PlayerCountEqual:
+        case ScenarioValidatorCondition.PlayerCountNotEqual:
+        case ScenarioValidatorCondition.PlayerCountLessThan:
+        case ScenarioValidatorCondition.PlayerCountLessThanOrEqual:
+        case ScenarioValidatorCondition.PlayerCountGreaterThan:
+        case ScenarioValidatorCondition.PlayerCountGreaterThanOrEqual:
+          rootCondition.TargetCount = EditorGUILayout.IntField("Target Count", rootCondition.TargetCount);
+          break;
+        case ScenarioValidatorCondition.RegistryContains:
+          DrawValidatorRegistryRules(rootCondition);
+          break;
+        case ScenarioValidatorCondition.PlayerAssignedTag:
+          rootCondition.PlayerTag = EditorGUILayout.TextField("Player Tag", rootCondition.PlayerTag);
+          rootCondition.PlayerScope = (ScenarioValidatorPlayerScope)EditorGUILayout.EnumPopup("Player Scope", rootCondition.PlayerScope);
+          break;
+      }
+    }
+
+    private void DrawValidatorRegistryRules(ScenarioValidatorRootCondition rootCondition)
+    {
+      if (rootCondition.ValidationRules == null)
+      {
+        rootCondition.ValidationRules = new System.Collections.Generic.List<ScenarioValidatorRule>();
+      }
+
+      var rules = rootCondition.ValidationRules as System.Collections.Generic.List<ScenarioValidatorRule>
+          ?? rootCondition.ValidationRules.ToList();
+      rootCondition.ValidationRules = rules;
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("Registry Validation Rules", EditorStyles.boldLabel);
+
+      for (int i = 0; i < rules.Count; i++)
+      {
+        var rule = rules[i] ?? new ScenarioValidatorRule();
+        rules[i] = rule;
+
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField($"Rule {i + 1}", EditorStyles.boldLabel);
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Remove", GUILayout.Width(70)))
+        {
+          rules.RemoveAt(i);
+          targetNode.RefreshTitle();
+          window.NotifyNodeSelected(targetNode);
+          EditorGUILayout.EndHorizontal();
+          EditorGUILayout.EndVertical();
+          break;
+        }
+        EditorGUILayout.EndHorizontal();
+
+        rule.Type = (ScenarioValidatorRuleType)EditorGUILayout.EnumPopup("Type", rule.Type);
+        rule.Condition = (ScenarioValidatorRuleCondition)EditorGUILayout.EnumPopup("Condition", rule.Condition);
+        rule.RegistryType = (RegistryType)EditorGUILayout.EnumPopup("Registry Type", rule.RegistryType);
+        rule.RegistryIdentifier = EditorGUILayout.TextField("Registry Identifier", rule.RegistryIdentifier);
+
+        EditorGUILayout.EndVertical();
+      }
+
+      if (GUILayout.Button("Add Registry Rule"))
+      {
+        rules.Add(new ScenarioValidatorRule
+        {
+          Type = ScenarioValidatorRuleType.Registry,
+          Condition = ScenarioValidatorRuleCondition.Contains,
+          RegistryType = RegistryType.Waypoint
+        });
+        targetNode.RefreshTitle();
+      }
+
+      if (rules.Count == 0)
+      {
+        EditorGUILayout.HelpBox("RegistryContains 조건에는 최소 1개 이상의 Rule이 필요합니다.", MessageType.Warning);
+      }
+
+      rootCondition.ValidationRules = rules;
     }
 
     private void DrawParallelFields(ScenarioParallelNode data)
