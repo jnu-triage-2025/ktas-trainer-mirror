@@ -730,7 +730,7 @@ namespace TriageTrainer.Entity.IntravenousLine
           if (collider == null || !collider.enabled)
             continue;
 
-          Vector3 closest = collider.ClosestPoint(current);
+          Vector3 closest = GetClosestPointSafe(collider, current);
           Vector3 toPoint = current - closest;
           float distance = toPoint.magnitude;
 
@@ -750,6 +750,21 @@ namespace TriageTrainer.Entity.IntravenousLine
 
         _points[i] = current;
       }
+    }
+
+    private static Vector3 GetClosestPointSafe(Collider collider, Vector3 point)
+    {
+      if (collider == null)
+        return point;
+
+      if (collider is BoxCollider || collider is SphereCollider || collider is CapsuleCollider)
+        return collider.ClosestPoint(point);
+
+      if (collider is MeshCollider meshCollider && meshCollider.convex)
+        return collider.ClosestPoint(point);
+
+      // Fallback for unsupported collider types (eg non-convex MeshCollider).
+      return collider.bounds.ClosestPoint(point);
     }
   }
 }
