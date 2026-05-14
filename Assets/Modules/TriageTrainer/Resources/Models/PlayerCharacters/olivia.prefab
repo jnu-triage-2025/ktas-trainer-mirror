@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47e76f64792bc4213b42a3ed2818341b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelOlivia
+  _animator: {fileID: 691976432490287797}
 --- !u!1001 &928397018593395215
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -102,6 +103,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4ffab3593271b6342a1e3881083022ab, type: 3}
+--- !u!95 &691976432490287797 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 394118625701400762, guid: 4ffab3593271b6342a1e3881083022ab, type: 3}
+  m_PrefabInstance: {fileID: 928397018593395215}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &2025198574656455052 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1222911418941834115, guid: 4ffab3593271b6342a1e3881083022ab, type: 3}

@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7360e8213e6c476fba6e6e3e34fda4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelAiden
+  _animator: {fileID: 785094935739910806}
 --- !u!1001 &3969775452229086546
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -105,5 +106,10 @@ PrefabInstance:
 --- !u!4 &770344781067155007 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4442706210297961325, guid: 4f78f7f37c7ddf64fb4c5475780ed459, type: 3}
+  m_PrefabInstance: {fileID: 3969775452229086546}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &785094935739910806 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 4463716022101370820, guid: 4f78f7f37c7ddf64fb4c5475780ed459, type: 3}
   m_PrefabInstance: {fileID: 3969775452229086546}
   m_PrefabAsset: {fileID: 0}

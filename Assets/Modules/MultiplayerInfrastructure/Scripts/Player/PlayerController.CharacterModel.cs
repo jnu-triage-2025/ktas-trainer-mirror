@@ -127,10 +127,15 @@ namespace MultiplayerInfrastructure.Player
 
       playerCharacterModelAttachPoint.ReplaceAttachedModel(modelObject);
 
-      if (!applyCharacterControllerCenter)
-        return;
-
       if (!TryResolvePlayerModelComponent(modelObject, out var playerCharacterModel))
+      {
+        SetCharacterModelAnimator(null);
+        return;
+      }
+
+      SetCharacterModelAnimator(playerCharacterModel.Animator);
+
+      if (!applyCharacterControllerCenter)
         return;
 
       SetCharacterControllerCenter(playerCharacterModel.CharacterControllerCenter);
@@ -145,6 +150,7 @@ namespace MultiplayerInfrastructure.Player
       }
 
       playerCharacterModelAttachPoint.ClearAttachedModel();
+      SetCharacterModelAnimator(null);
     }
 
     private static bool TryResolvePlayerModelObject(string modelIdentifier, out GameObject playerModelObject)

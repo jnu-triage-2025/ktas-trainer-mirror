@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08b244a6b12fc41449b9d8779018ece3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelEthan
+  _animator: {fileID: 7438436011243550859}
 --- !u!1001 &6541738178736774991
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -102,6 +103,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 24ddca5740ddd6b4791ffc5a741ca2c4, type: 3}
+--- !u!95 &7438436011243550859 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 4463716022101370820, guid: 24ddca5740ddd6b4791ffc5a741ca2c4, type: 3}
+  m_PrefabInstance: {fileID: 6541738178736774991}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &7453252823787766818 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4442706210297961325, guid: 24ddca5740ddd6b4791ffc5a741ca2c4, type: 3}
