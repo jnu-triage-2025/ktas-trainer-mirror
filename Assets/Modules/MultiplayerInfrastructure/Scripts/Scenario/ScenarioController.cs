@@ -46,6 +46,7 @@ namespace MultiplayerInfrastructure.Scenario
     private ScenarioQuizNode _activeQuizNode;
     private readonly Dictionary<string, string> _stateStore = new Dictionary<string, string>();
     private int? _scenarioOwnerClientId;
+    private ChatUIController _chatUIController;
 
     #endregion
 
@@ -1065,7 +1066,7 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingValidator;
 
-      bool passed = EvaluateValidator(node);
+      bool passed = EvaluateValidator(node, out var failureReason);
 
       if (passed)
       {
@@ -1073,10 +1074,11 @@ namespace MultiplayerInfrastructure.Scenario
         yield break;
       }
 
+      ReportValidatorFailure(node, failureReason);
+
       switch (node.OnFailure)
       {
         case ScenarioValidatorOnFailure.Panic:
-          Debug.LogWarning($"[ScenarioController] Validator failed at node '{node.Identifier}'.");
           EndScenario();
           break;
         case ScenarioValidatorOnFailure.Branching:
@@ -1464,26 +1466,250 @@ namespace MultiplayerInfrastructure.Scenario
 
     private bool EvaluateValidator(ScenarioValidatorNode node)
     {
-      var clientCount = InstanceFinder.ClientManager?.Clients?.Count ?? 0;
-      var value = clientCount;
+      return EvaluateValidator(node, out _);
+    }
 
-      switch (node.Condition)
+    private bool EvaluateValidator(ScenarioValidatorNode node, out string failureReason)
+    {
+      failureReason = null;
+      var rootConditions = node.RootConditions;
+      if (rootConditions == null || rootConditions.Count == 0)
+      {
+        failureReason = "rootConditions is empty.";
+        return false;
+      }
+
+      for (int i = 0; i < rootConditions.Count; i++)
+      {
+        var rootCondition = rootConditions[i];
+        if (rootCondition == null)
+        {
+          continue;
+        }
+
+        if (!EvaluateValidatorRootCondition(rootCondition, out var rootReason))
+        {
+          failureReason = $"rootCondition[{i}] failed: {rootReason}";
+          return false;
+        }
+      }
+
+      bool hasAnyCondition = rootConditions.Any(each => each != null);
+      if (!hasAnyCondition)
+      {
+        failureReason = "rootConditions has no valid condition entries.";
+        return false;
+      }
+
+      return true;
+    }
+
+    private bool EvaluateValidatorRootCondition(ScenarioValidatorRootCondition rootCondition, out string failureReason)
+    {
+      failureReason = null;
+      var clientCount = InstanceFinder.ClientManager?.Clients?.Count ?? 0;
+
+      switch (rootCondition.Condition)
       {
         case ScenarioValidatorCondition.PlayerCountEqual:
-          return value == node.TargetCount;
+          if (clientCount == rootCondition.TargetCount)
+          {
+            return true;
+          }
+          failureReason = $"player count {clientCount} is not equal to target {rootCondition.TargetCount}.";
+          return false;
         case ScenarioValidatorCondition.PlayerCountNotEqual:
-          return value != node.TargetCount;
+          if (clientCount != rootCondition.TargetCount)
+          {
+            return true;
+          }
+          failureReason = $"player count {clientCount} is equal to target {rootCondition.TargetCount}.";
+          return false;
         case ScenarioValidatorCondition.PlayerCountLessThan:
-          return value < node.TargetCount;
+          if (clientCount < rootCondition.TargetCount)
+          {
+            return true;
+          }
+          failureReason = $"player count {clientCount} is not less than target {rootCondition.TargetCount}.";
+          return false;
         case ScenarioValidatorCondition.PlayerCountLessThanOrEqual:
-          return value <= node.TargetCount;
+          if (clientCount <= rootCondition.TargetCount)
+          {
+            return true;
+          }
+          failureReason = $"player count {clientCount} is greater than target {rootCondition.TargetCount}.";
+          return false;
         case ScenarioValidatorCondition.PlayerCountGreaterThan:
-          return value > node.TargetCount;
+          if (clientCount > rootCondition.TargetCount)
+          {
+            return true;
+          }
+          failureReason = $"player count {clientCount} is not greater than target {rootCondition.TargetCount}.";
+          return false;
         case ScenarioValidatorCondition.PlayerCountGreaterThanOrEqual:
-          return value >= node.TargetCount;
+          if (clientCount >= rootCondition.TargetCount)
+          {
+            return true;
+          }
+          failureReason = $"player count {clientCount} is less than target {rootCondition.TargetCount}.";
+          return false;
+        case ScenarioValidatorCondition.RegistryContains:
+        {
+          var rules = rootCondition.ValidationRules;
+          if (rules == null || rules.Count == 0)
+          {
+            failureReason = "validationRules is empty for RegistryContains condition.";
+            return false;
+          }
+
+          for (int i = 0; i < rules.Count; i++)
+          {
+            var rule = rules[i];
+            if (rule == null)
+            {
+              continue;
+            }
+
+            if (rule.Type != ScenarioValidatorRuleType.Registry)
+            {
+              failureReason = $"rule[{i}] has unsupported type '{rule.Type}'.";
+              return false;
+            }
+
+            if (rule.Condition != ScenarioValidatorRuleCondition.Contains)
+            {
+              failureReason = $"rule[{i}] has unsupported condition '{rule.Condition}'.";
+              return false;
+            }
+
+            var ruleIdentifier = rule.RegistryIdentifier?.Trim();
+            if (string.IsNullOrWhiteSpace(ruleIdentifier))
+            {
+              failureReason = $"rule[{i}] registryIdentifier is null or empty.";
+              return false;
+            }
+
+            if (!Registry.Registry.Contains(rule.RegistryType, ruleIdentifier))
+            {
+              failureReason = $"rule[{i}] identifier '{ruleIdentifier}' is not registered in {rule.RegistryType}.";
+              return false;
+            }
+          }
+
+          return true;
+        }
+        case ScenarioValidatorCondition.PlayerAssignedTag:
+        {
+          var tag = rootCondition.PlayerTag?.Trim();
+          if (string.IsNullOrWhiteSpace(tag))
+          {
+            failureReason = "playerTag is null or empty.";
+            return false;
+          }
+
+          var users = UserDescriptorService.GetAll();
+          if (users == null || users.Count == 0)
+          {
+            failureReason = "no registered users found for player tag validation.";
+            return false;
+          }
+
+          switch (rootCondition.PlayerScope)
+          {
+            case ScenarioValidatorPlayerScope.Any:
+              if (users.Values.Any(each => each != null
+                                           && !string.IsNullOrWhiteSpace(each.Identifier)
+                                           && PlayerTagService.HasTag(each.Identifier, tag)))
+              {
+                return true;
+              }
+              failureReason = $"no registered player has tag '{tag}'.";
+              return false;
+            case ScenarioValidatorPlayerScope.All:
+            {
+              var missingPlayer = users.Values.FirstOrDefault(each => each == null
+                                                                      || string.IsNullOrWhiteSpace(each.Identifier)
+                                                                      || !PlayerTagService.HasTag(each.Identifier, tag));
+              if (missingPlayer == null)
+              {
+                return true;
+              }
+
+              var missingLabel = !string.IsNullOrWhiteSpace(missingPlayer.DisplayName)
+                  ? missingPlayer.DisplayName
+                  : missingPlayer.Identifier ?? "<unknown>";
+              failureReason = $"player '{missingLabel}' does not have required tag '{tag}'.";
+              return false;
+            }
+            case ScenarioValidatorPlayerScope.Owner:
+            {
+              if (_scenarioOwnerClientId == null)
+              {
+                failureReason = "owner client id is not assigned for owner-scope tag validation.";
+                return false;
+              }
+
+              if (!UserDescriptorService.TryGetByClientId(_scenarioOwnerClientId.Value, out var owner)
+                  || owner == null
+                  || string.IsNullOrWhiteSpace(owner.Identifier))
+              {
+                failureReason = $"owner descriptor not found for clientId {_scenarioOwnerClientId.Value}.";
+                return false;
+              }
+
+              if (PlayerTagService.HasTag(owner.Identifier, tag))
+              {
+                return true;
+              }
+
+              var ownerLabel = !string.IsNullOrWhiteSpace(owner.DisplayName)
+                  ? owner.DisplayName
+                  : owner.Identifier;
+              failureReason = $"owner player '{ownerLabel}' does not have tag '{tag}'.";
+              return false;
+            }
+            default:
+              failureReason = $"unknown player scope '{rootCondition.PlayerScope}'.";
+              return false;
+          }
+        }
         default:
+          failureReason = $"unsupported validator condition '{rootCondition.Condition}'.";
           return false;
       }
+    }
+
+    private void ReportValidatorFailure(ScenarioValidatorNode node, string reason)
+    {
+      var resolvedReason = string.IsNullOrWhiteSpace(reason)
+          ? "condition evaluated to false"
+          : reason;
+      var message = $"[ScenarioController] Validator failed at node '{node.Identifier}': {resolvedReason}";
+
+      if ((node.FailureReportTargets & ScenarioValidatorFailureReportTarget.UnityConsole) != 0)
+      {
+        Debug.LogWarning(message);
+      }
+
+      if ((node.FailureReportTargets & ScenarioValidatorFailureReportTarget.InGameChat) != 0)
+      {
+        AppendSystemChatMessage($"Validator failed: {resolvedReason}");
+      }
+    }
+
+    private void AppendSystemChatMessage(string message)
+    {
+      if (string.IsNullOrWhiteSpace(message))
+      {
+        return;
+      }
+
+      if (_chatUIController == null)
+      {
+        Registry.Registry.TryGet<ChatUIController>(RegistryType.UI, Registry.Registry.TypeKey<ChatUIController>(), out _chatUIController);
+      }
+
+      _chatUIController?.AppendMessage($"<color=#FFD700>[System]</color> {message}", true);
     }
 
     #endregion

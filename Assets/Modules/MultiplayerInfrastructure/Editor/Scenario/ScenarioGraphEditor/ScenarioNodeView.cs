@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using MultiplayerInfrastructure.Scenario;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -17,6 +18,7 @@ namespace MultiplayerInfrastructure.Editor
 
     private readonly ScenarioGraphAuthoringWindow window;
     private readonly ScenarioGraphView graphView;
+    private Label _summaryLabel;
 
     private readonly Dictionary<ScenarioChoiceOption, Port> choicePorts = new Dictionary<ScenarioChoiceOption, Port>();
     private readonly Dictionary<ScenarioParallelBranch, Port> branchPorts = new Dictionary<ScenarioParallelBranch, Port>();
@@ -33,7 +35,7 @@ namespace MultiplayerInfrastructure.Editor
       this.graphView = graphView;
       Data = data;
 
-      title = data.Identifier;
+      RefreshTitle();
       style.left = EditorPosition.x;
       style.top = EditorPosition.y;
 
@@ -60,6 +62,7 @@ namespace MultiplayerInfrastructure.Editor
     public void RefreshTitle()
     {
       title = Data.Identifier;
+      RefreshSummaryLabel();
     }
 
     public new void RefreshPorts()
@@ -205,6 +208,81 @@ namespace MultiplayerInfrastructure.Editor
     {
       var label = new Label(Data.NodeType.ToString()) { style = { unityFontStyleAndWeight = FontStyle.Italic } };
       mainContainer.Add(label);
+
+      _summaryLabel = new Label();
+      _summaryLabel.style.whiteSpace = WhiteSpace.Normal;
+      _summaryLabel.style.fontSize = 10;
+      _summaryLabel.style.color = new Color(0.85f, 0.85f, 0.85f, 1f);
+      mainContainer.Add(_summaryLabel);
+      RefreshSummaryLabel();
+    }
+
+    private void RefreshSummaryLabel()
+    {
+      if (_summaryLabel == null)
+      {
+        return;
+      }
+
+      _summaryLabel.text = BuildNodeSummary(Data);
+    }
+
+    private static string BuildNodeSummary(IScenarioNode node)
+    {
+      if (node is not ScenarioValidatorNode validator)
+      {
+        return string.Empty;
+      }
+
+      var rootConditions = validator.RootConditions?
+          .Where(each => each != null)
+          .ToList();
+
+      if (rootConditions == null || rootConditions.Count == 0)
+      {
+        return "Root conditions: (empty)";
+      }
+
+      return string.Join("\n", rootConditions.Select((rootCondition, index) =>
+          BuildRootConditionSummary(index, rootCondition)));
+    }
+
+    private static string BuildRootConditionSummary(int index, ScenarioValidatorRootCondition rootCondition)
+    {
+      if (rootCondition == null)
+      {
+        return $"{index + 1}. (null)";
+      }
+
+      switch (rootCondition.Condition)
+      {
+        case ScenarioValidatorCondition.RegistryContains:
+        {
+          var rules = rootCondition.ValidationRules?
+              .Where(each => each != null)
+              .ToList();
+
+          if (rules == null || rules.Count == 0)
+          {
+            return $"{index + 1}. RegistryContains (rules: empty)";
+          }
+
+          var compactRules = string.Join(", ", rules.Select(each =>
+              $"{each.Type}/{each.Condition}/{each.RegistryType}:{each.RegistryIdentifier}"));
+          return $"{index + 1}. RegistryContains [{compactRules}]";
+        }
+        case ScenarioValidatorCondition.PlayerAssignedTag:
+          return $"{index + 1}. PlayerAssignedTag {rootCondition.PlayerScope}/{rootCondition.PlayerTag}";
+        case ScenarioValidatorCondition.PlayerCountEqual:
+        case ScenarioValidatorCondition.PlayerCountNotEqual:
+        case ScenarioValidatorCondition.PlayerCountLessThan:
+        case ScenarioValidatorCondition.PlayerCountLessThanOrEqual:
+        case ScenarioValidatorCondition.PlayerCountGreaterThan:
+        case ScenarioValidatorCondition.PlayerCountGreaterThanOrEqual:
+          return $"{index + 1}. {rootCondition.Condition} {rootCondition.TargetCount}";
+        default:
+          return $"{index + 1}. {rootCondition.Condition}";
+      }
     }
 
     private Port CreateStandardOutput(string name)

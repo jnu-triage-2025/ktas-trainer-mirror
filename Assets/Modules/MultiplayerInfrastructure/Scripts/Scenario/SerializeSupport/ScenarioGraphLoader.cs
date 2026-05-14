@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Encodings.Web;
 using UnityEngine;
+using MultiplayerInfrastructure.Registry;
 
 namespace MultiplayerInfrastructure.Scenario
 {
@@ -148,6 +149,24 @@ namespace MultiplayerInfrastructure.Scenario
             AddIfNotBlank(tagNode.Tag);
             AddIfNotBlank(tagNode.FromTag);
             AddIfNotBlank(tagNode.ToTag);
+            break;
+
+          case ScenarioValidatorNode validatorNode:
+            if (validatorNode.RootConditions != null)
+            {
+              foreach (var rootCondition in validatorNode.RootConditions)
+              {
+                if (rootCondition == null)
+                {
+                  continue;
+                }
+
+                if (rootCondition.Condition == ScenarioValidatorCondition.PlayerAssignedTag)
+                {
+                  AddIfNotBlank(rootCondition.PlayerTag);
+                }
+              }
+            }
             break;
 
           case ScenarioParallelNode parallelNode:
@@ -360,9 +379,9 @@ namespace MultiplayerInfrastructure.Scenario
         new ScenarioValidatorNode
         {
           Identifier = dto.Identifier,
-          Condition = ParseValidatorCondition(dto.Condition),
-          TargetCount = dto.TargetCount ?? 0,
+          RootConditions = ParseValidatorRootConditions(dto.RootConditions),
           OnFailure = ParseValidatorOnFailure(dto.OnFailure),
+          FailureReportTargets = ParseValidatorFailureReportTargets(dto.FailureReportTargets),
           FailureNextIdentifier = dto.FailureNextIdentifier,
           NextIdentifier = dto.NextIdentifier
         };
@@ -890,9 +909,9 @@ namespace MultiplayerInfrastructure.Scenario
         {
           NodeType = "Validator",
           Identifier = node.Identifier,
-          Condition = node.Condition.ToString(),
-          TargetCount = node.TargetCount,
+          RootConditions = ConvertValidatorRootConditionsToDTO(node.RootConditions),
           OnFailure = node.OnFailure.ToString(),
+          FailureReportTargets = node.FailureReportTargets.ToString(),
           FailureNextIdentifier = node.FailureNextIdentifier,
           NextIdentifier = node.NextIdentifier
         };
@@ -995,6 +1014,191 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       throw new JsonException($"Unknown ScenarioValidatorOnFailure '{value}'.");
+    }
+
+    private static RegistryType ParseValidatorRegistryType(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return RegistryType.Waypoint;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out RegistryType parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown validator registry type '{value}'.");
+    }
+
+    private static ScenarioValidatorPlayerScope ParseValidatorPlayerScope(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioValidatorPlayerScope.Any;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioValidatorPlayerScope parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioValidatorPlayerScope '{value}'.");
+    }
+
+    private static ScenarioValidatorFailureReportTarget ParseValidatorFailureReportTargets(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioValidatorFailureReportTarget.UnityConsole;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioValidatorFailureReportTarget parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioValidatorFailureReportTarget '{value}'.");
+    }
+
+    private static IReadOnlyList<ScenarioValidatorRootCondition> ParseValidatorRootConditions(List<ScenarioValidatorNodeDTO.ScenarioValidatorRootConditionDTO> rootConditions)
+    {
+      if (rootConditions == null || rootConditions.Count == 0)
+      {
+        return Array.Empty<ScenarioValidatorRootCondition>();
+      }
+
+      var parsed = new List<ScenarioValidatorRootCondition>(rootConditions.Count);
+      foreach (var each in rootConditions)
+      {
+        if (each == null)
+        {
+          continue;
+        }
+
+        parsed.Add(new ScenarioValidatorRootCondition
+        {
+          Condition = ParseValidatorCondition(each.Condition),
+          TargetCount = each.TargetCount ?? 0,
+          PlayerTag = each.PlayerTag,
+          PlayerScope = ParseValidatorPlayerScope(each.PlayerScope),
+          ValidationRules = ParseValidatorRules(each.ValidationRules)
+        });
+      }
+
+      return parsed;
+    }
+
+    private static List<ScenarioValidatorNodeDTO.ScenarioValidatorRootConditionDTO> ConvertValidatorRootConditionsToDTO(IReadOnlyList<ScenarioValidatorRootCondition> rootConditions)
+    {
+      if (rootConditions == null || rootConditions.Count == 0)
+      {
+        return null;
+      }
+
+      var dtoConditions = new List<ScenarioValidatorNodeDTO.ScenarioValidatorRootConditionDTO>(rootConditions.Count);
+      foreach (var each in rootConditions)
+      {
+        if (each == null)
+        {
+          continue;
+        }
+
+        dtoConditions.Add(new ScenarioValidatorNodeDTO.ScenarioValidatorRootConditionDTO
+        {
+          Condition = each.Condition.ToString(),
+          TargetCount = each.TargetCount,
+          PlayerTag = each.PlayerTag,
+          PlayerScope = each.PlayerScope.ToString(),
+          ValidationRules = ConvertValidatorRulesToDTO(each.ValidationRules)
+        });
+      }
+
+      return dtoConditions;
+    }
+
+    private static IReadOnlyList<ScenarioValidatorRule> ParseValidatorRules(List<ScenarioValidatorNodeDTO.ScenarioValidatorRuleDTO> rules)
+    {
+      if (rules == null || rules.Count == 0)
+      {
+        return Array.Empty<ScenarioValidatorRule>();
+      }
+
+      var parsed = new List<ScenarioValidatorRule>(rules.Count);
+      foreach (var each in rules)
+      {
+        if (each == null)
+        {
+          continue;
+        }
+
+        parsed.Add(new ScenarioValidatorRule
+        {
+          Type = ParseValidatorRuleType(each.Type),
+          Condition = ParseValidatorRuleCondition(each.Condition),
+          RegistryType = ParseValidatorRegistryType(each.RegistryType),
+          RegistryIdentifier = each.RegistryIdentifier
+        });
+      }
+
+      return parsed;
+    }
+
+    private static List<ScenarioValidatorNodeDTO.ScenarioValidatorRuleDTO> ConvertValidatorRulesToDTO(IReadOnlyList<ScenarioValidatorRule> rules)
+    {
+      if (rules == null || rules.Count == 0)
+      {
+        return null;
+      }
+
+      var dtoRules = new List<ScenarioValidatorNodeDTO.ScenarioValidatorRuleDTO>(rules.Count);
+      foreach (var each in rules)
+      {
+        if (each == null)
+        {
+          continue;
+        }
+
+        dtoRules.Add(new ScenarioValidatorNodeDTO.ScenarioValidatorRuleDTO
+        {
+          Type = each.Type.ToString(),
+          Condition = each.Condition.ToString(),
+          RegistryType = each.RegistryType.ToString(),
+          RegistryIdentifier = each.RegistryIdentifier
+        });
+      }
+
+      return dtoRules;
+    }
+
+    private static ScenarioValidatorRuleType ParseValidatorRuleType(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioValidatorRuleType.Registry;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioValidatorRuleType parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioValidatorRuleType '{value}'.");
+    }
+
+    private static ScenarioValidatorRuleCondition ParseValidatorRuleCondition(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioValidatorRuleCondition.Contains;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioValidatorRuleCondition parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioValidatorRuleCondition '{value}'.");
     }
 
     private static ScenarioParallelNodeDTO ConvertToDTO(ScenarioParallelNode node)

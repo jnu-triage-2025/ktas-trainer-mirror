@@ -21,7 +21,24 @@ namespace MultiplayerInfrastructure.Editor
         Branches = new System.Collections.Generic.List<ScenarioParallelBranch>()
       },
       ScenarioNodeType.InvokeEvent => new ScenarioInvokeEventNode(),
-      ScenarioNodeType.Validator => new ScenarioValidatorNode(),
+      ScenarioNodeType.Validator => new ScenarioValidatorNode
+      {
+        RootConditions = new System.Collections.Generic.List<ScenarioValidatorRootCondition>
+        {
+          new ScenarioValidatorRootCondition
+          {
+            Condition = ScenarioValidatorCondition.RegistryContains,
+            ValidationRules = new System.Collections.Generic.List<ScenarioValidatorRule>
+            {
+              new ScenarioValidatorRule
+              {
+                Type = ScenarioValidatorRuleType.Registry,
+                Condition = ScenarioValidatorRuleCondition.Contains
+              }
+            }
+          }
+        }
+      },
       ScenarioNodeType.QuestControl => new ScenarioQuestControlNode(),
       ScenarioNodeType.QuestWaypointHighlight => new ScenarioQuestWaypointHighlightNode(),
       ScenarioNodeType.Delay => new ScenarioDelayNode(),
