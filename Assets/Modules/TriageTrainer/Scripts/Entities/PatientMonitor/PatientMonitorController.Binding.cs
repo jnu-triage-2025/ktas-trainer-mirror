@@ -19,6 +19,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       _monitoringPatient = patient;
       ResolvePatientStateIfNeeded();
       PullParametersFromPatientState();
+      UpdateTrackingLine();
     }
 
     private void ResolvePatientStateIfNeeded()
