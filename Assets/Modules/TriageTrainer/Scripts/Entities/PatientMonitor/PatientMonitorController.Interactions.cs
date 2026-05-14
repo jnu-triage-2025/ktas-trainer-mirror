@@ -64,12 +64,14 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     {
       ExitSelectionModeForAll();
       UnregisterMedicalStateSubscription();
+      DisableTrackingLine();
     }
 
     private void OnDestroy()
     {
       ExitSelectionModeForAll();
       UnregisterMedicalStateSubscription();
+      ReleaseTrackingLineResources();
     }
 
     private void BuildInteracts()

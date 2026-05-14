@@ -84,6 +84,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       PullParametersFromPatientState();
       ecgNextBeatInterval = ComputeBaseInterval(_currentParameters.bpm);
       CreateGraphUI();
+      UpdateTrackingLine();
     }
 
     void CreateGraphUI()
@@ -279,6 +280,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     void Update()
     {
+      UpdateTrackingLine();
       if (ecgGraphElement == null) return;
 
       PullParametersFromPatientState();
@@ -369,6 +371,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       RebuildInteractEntryMap();
 
       _targetParameters = ResolveConfiguredParameters();
+      ApplyTrackingLineSettings();
 
       if (ecgGraphElement != null)
       {
