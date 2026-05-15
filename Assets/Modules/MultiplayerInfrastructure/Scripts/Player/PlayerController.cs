@@ -20,6 +20,7 @@ namespace MultiplayerInfrastructure.Player
     {
       Awake_GameObject();
       Awake_PlayerModel();
+      Awake_ReposableCarry();
       Awake_Animation();
       Awake_Movement();
       Awake_Camera();

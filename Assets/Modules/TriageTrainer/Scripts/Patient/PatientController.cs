@@ -15,6 +15,8 @@ namespace TriageTrainer.Entity
   [RequireComponent(typeof(CapsuleCollider))]
   public partial class PatientController : NetworkBehaviour, IInteractable, IReposable
   {
+    private const string DefaultPatientCarryAttachPointName = "PatientCarryAttachPoint";
+
     [Serializable]
     public class AttachableItemVisualPair
     {
@@ -31,6 +33,8 @@ namespace TriageTrainer.Entity
     [Header("Display")]
     [SerializeField] private string _liftDisplayText = "환자를 들어올리기";
     [SerializeField] private Sprite _liftDisplayIcon = null;
+    [SerializeField] private string _carryDisplayText = "환자 들어올리기";
+    [SerializeField] private Sprite _carryDisplayIcon = null;
     [SerializeField] private string _monitorSelectDisplayText = "이 환자를 모니터링";
     [SerializeField] private Sprite _monitorSelectDisplayIcon = null;
 
@@ -42,6 +46,9 @@ namespace TriageTrainer.Entity
 
     [Header("Runtime")]
     [SerializeField] private MovingPatientBedController _currentBed;
+    [SerializeField] private Transform _carryAttachPoint;
+    [SerializeField] private bool _isMovingPatientBedAttached;
+    [SerializeField] private bool _isPlayerAttached;
 
     private readonly Dictionary<string, GameObject> _attachableVisualMap = new(StringComparer.Ordinal);
     private readonly Dictionary<string, float> _lastNoticeByInteractor = new(StringComparer.Ordinal);
@@ -53,9 +60,13 @@ namespace TriageTrainer.Entity
 
     public bool IsReposed => _currentBed != null;
     public MovingPatientBedController CurrentBed => _currentBed;
+    public Transform CarryAttachPoint => _carryAttachPoint != null ? _carryAttachPoint : transform;
+    public bool IsMovingPatientBedAttached => _isMovingPatientBedAttached;
+    public bool IsPlayerAttached => _isPlayerAttached;
 
     private void Awake()
     {
+      EnsureCarryAttachPoint();
       InitializeCollider();
       EnsureMedicalStateDefaults();
       RebuildAttachableVisualMap();
@@ -114,6 +125,26 @@ namespace TriageTrainer.Entity
       _currentBed = bed;
     }
 
+    public void OnMovingPatientBedAttachedEnter()
+    {
+      _isMovingPatientBedAttached = true;
+    }
+
+    public void OnMovingPatientBedAttachedExit()
+    {
+      _isMovingPatientBedAttached = false;
+    }
+
+    public void OnPlayerAttachedEnter()
+    {
+      _isPlayerAttached = true;
+    }
+
+    public void OnPlayerAttachedExit()
+    {
+      _isPlayerAttached = false;
+    }
+
     private void ShowThrottledMessage(Transform interactor, string message)
     {
       if (interactor == null || string.IsNullOrWhiteSpace(message))
@@ -151,8 +182,28 @@ namespace TriageTrainer.Entity
       }
     }
 
+    private void EnsureCarryAttachPoint()
+    {
+      if (_carryAttachPoint != null)
+        return;
+
+      var existing = transform.Find(DefaultPatientCarryAttachPointName);
+      if (existing != null)
+      {
+        _carryAttachPoint = existing;
+        return;
+      }
+
+      var go = new GameObject(DefaultPatientCarryAttachPointName);
+      _carryAttachPoint = go.transform;
+      _carryAttachPoint.SetParent(transform, false);
+      _carryAttachPoint.localPosition = new Vector3(0f, 1.0f, 0.2f);
+      _carryAttachPoint.localRotation = Quaternion.identity;
+    }
+
     private void OnValidate()
     {
+      EnsureCarryAttachPoint();
       InitializeCollider();
       EnsureMedicalStateDefaults();
       _weight = Mathf.Max(0, _weight);

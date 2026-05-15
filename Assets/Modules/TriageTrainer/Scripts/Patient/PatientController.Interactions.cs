@@ -46,6 +46,34 @@ namespace TriageTrainer.Entity
       }
     }
 
+    private sealed class PatientCarryInteract : IInteract, IInteractorConditional
+    {
+      private readonly PatientController _owner;
+      public PatientCarryInteract(PatientController owner) { _owner = owner; }
+      public string DisplayText => _owner._carryDisplayText;
+      public Sprite DisplayIcon => _owner._carryDisplayIcon;
+      public bool AllowDisplayIconFallback => true;
+      public Color DisplayColor => Color.white;
+      public bool CanInteract(Transform interactor)
+      {
+        if (!_owner.IsInteractEnabled(InteractIdCarry))
+          return false;
+
+        if (_owner._currentBed != null)
+          return false;
+
+        var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+        if (player == null)
+          return false;
+
+        return !player.IsCarryingReposable;
+      }
+      public void Interact(Transform interactor)
+      {
+        _owner.TryCarryByInteractor(interactor);
+      }
+    }
+
     private sealed class PatientMonitorSelectInteract : IInteract, IInteractorConditional
     {
       private readonly PatientController _owner;
@@ -75,6 +103,7 @@ namespace TriageTrainer.Entity
     }
 
     public const string InteractIdLiftFromBed = "lift_from_bed";
+    public const string InteractIdCarry = "carry_patient";
     public const string InteractIdMonitorSelect = "monitor_select";
 
     [Header("Interact")]
@@ -93,6 +122,7 @@ namespace TriageTrainer.Entity
 
       _interacts.Clear();
       _interacts.Add(new PatientLiftInteract(this));
+      _interacts.Add(new PatientCarryInteract(this));
       _interacts.Add(new PatientMonitorSelectInteract(this));
     }
 
@@ -112,6 +142,7 @@ namespace TriageTrainer.Entity
     private void EnsureDefaultInteractConfigs()
     {
       EnsureInteractConfig(InteractIdLiftFromBed, true);
+      EnsureInteractConfig(InteractIdCarry, true);
       // monitor_select는 항상 true로 유지합니다.
       // 표시/비표시는 PlayerController.IsPatientSelectionMode에서만 제어합니다.
       EnsureInteractConfig(InteractIdMonitorSelect, true);
@@ -245,6 +276,35 @@ namespace TriageTrainer.Entity
       }
 
       ShowThrottledMessage(interactor, "환자를 침대에서 들어올렸습니다.");
+      player.RefreshInteractableHintsNow();
+    }
+
+    private void TryCarryByInteractor(Transform interactor)
+    {
+      if (_currentBed != null)
+        return;
+
+      if (interactor == null)
+        return;
+
+      var player = interactor.GetComponentInParent<PlayerController>();
+      if (player == null)
+        return;
+
+      if (player.IsCarryingReposable)
+      {
+        ShowThrottledMessage(interactor, "이미 다른 대상을 들고 있어 환자를 들어올릴 수 없습니다.");
+        return;
+      }
+
+      if (!player.TryPickUpReposable(this))
+      {
+        ShowThrottledMessage(interactor, "환자를 들어올릴 수 없습니다.");
+        return;
+      }
+
+      ShowThrottledMessage(interactor, "환자를 들어올렸습니다.");
+      player.RefreshInteractableHintsNow();
     }
   }
 }
