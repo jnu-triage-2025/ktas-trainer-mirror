@@ -2,7 +2,7 @@
 title: Module Documentation Gap Inventory
 doc_type: requirement
 status: active
-updated: 2026-04-14
+updated: 2026-05-17
 owner: docs
 ---
 
@@ -25,6 +25,9 @@ owner: docs
 | Scenario SerializeSupport | `Scenario/SerializeSupport/*.cs` | 미문서 | 문서화 완료 |
 | Triage 이벤트 부트스트랩 | `TriageScenarioEventBootstrap*.cs` | 부분 문서(요구사항 중심) | API 문서화 완료 |
 | Patient 모니터 | `Entity/PatientMonitor/*.cs` | 미문서 | 문서화 완료 |
+| 이동 침대/환자 상호작용 | `Scripts/Entities/MovingPatientBed/*.cs`, `Scripts/Patient/PatientController*.cs` | 부분 문서 | API/요구사항 보강 완료 |
+| 수액 라인 연결 | `Scripts/Entities/IntravenousLine/*.cs` | 미문서 | API/요구사항 문서화 완료 |
+| 플레이어 캐릭터 모델 어댑터 | `Scripts/MultiplayerInfrastructureSupports/PlayerCharacterModels/*.cs` | 간접 문서만 존재 | API 문서 보강 완료 |
 | 문서화 절차 | `working-guide/ai-workflow.md` | 미정의 | 절차 추가 완료 |
 
 ## 3. 잔여 권장 항목

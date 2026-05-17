@@ -10,7 +10,7 @@
 
 ### 하위 폴더
 - [architecture](./architecture/README.md): 문서 1개
-- [entities](./entities/README.md): 문서 2개
+- [entities](./entities/README.md): 문서 4개
 
 ### 문서
 - [MultiplayerInfrastructure.Chat.ChatService.md](./MultiplayerInfrastructure.Chat.ChatService.md): API 레퍼런스: `MultiplayerInfrastructure.Chat.ChatService`
@@ -37,6 +37,8 @@
 - [TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel.md](./TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel.md): API 레퍼런스: `TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel`
 - [TriageTrainer.Entity.PatientMonitor.md](./TriageTrainer.Entity.PatientMonitor.md): API 레퍼런스: TriageTrainer.Entity.PatientMonitor
 - [TriageTrainer.Scenario.TriageScenarioEventBootstrap.md](./TriageTrainer.Scenario.TriageScenarioEventBootstrap.md): API 레퍼런스: TriageTrainer.Scenario.TriageScenarioEventBootstrap
+
+최근 반영(2026-05-17): `entities/` 하위에 환자 컨트롤러, 수액 라인 레퍼런스가 추가되어 기존 이동 침대/환자 문서를 보강했습니다.
 
 작성 기준: Git 추적 문서(.md) 기준으로 색인하며, .gitignore 대상 파일은 제외합니다.
 <!-- DOC-INDEX:END -->

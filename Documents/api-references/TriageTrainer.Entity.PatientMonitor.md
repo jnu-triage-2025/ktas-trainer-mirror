@@ -1,71 +1,88 @@
-# API 레퍼런스: TriageTrainer.Entity.PatientMonitor
+# API 레퍼런스: `TriageTrainer.Entity.PatientMonitor`
 
-> 네임스페이스: `TriageTrainer.Entity.PatientMonitor.Models`, `TriageTrainer.Entity.PatientMonitor`  
-> 파일 위치:  
-> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/PatientMonitorController.cs`  
-> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/ECGGraphVisualElement.cs`  
-> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/UIDocumentWorldSurfaceBinder.cs`  
-> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/Models/ECGParameters.cs`  
-> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/Models/ECGWaveformCalculator.cs`  
-> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/Models/ARTParameters.cs`  
-> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/Models/ARTWaveformCalculator.cs`  
-> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/Models/CVPParameters.cs`  
-> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/Models/CVPWaveformCalculator.cs`  
-> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/Models/PlethParameters.cs`  
-> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/Models/PlethWaveformCalculator.cs`  
-> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/Models/PatientMonitorParameters.cs`
+> 네임스페이스: `TriageTrainer.Entity.PatientMonitor`, `TriageTrainer.Entity.PatientMonitor.Models`
+>
+> 파일 위치:
+> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/PatientMonitorController.cs`
+> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/PatientMonitorController.Binding.cs`
+> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/PatientMonitorController.Interactions.cs`
+> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/PatientMonitorController.Parameters.cs`
+> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/PatientMonitorController.TrackingLine.cs`
+> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/PatientMonitorGraphVisualElement.cs`
+> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/UIDocumentWorldSurfaceBinder.cs`
+> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/Models/*.cs`
 
 ## 0. 개요
 
-PatientMonitor 모듈은 UI Toolkit 기반 환자 모니터를 제공하며, ECG/ART/CVP/PLETH 파형을 동시에 렌더링한다. 파형 파라미터는 FishNet `SyncVar`를 통해 네트워크로 동기화된다.
+PatientMonitor 모듈은 UI Toolkit 기반 환자 모니터를 월드 오브젝트 표면에 표시하고, ECG/ART/CVP/PLETH 파형 및 수치 파라미터를 네트워크 동기화해 시뮬레이션 참가자에게 동일하게 제공한다.
 
-## 1. PatientMonitorController
+## 1. `PatientMonitorController`
 
 ### 책임
 
-- UIDocument 루트에 4채널(ECG, PLETH, ART, CVP) 그래프 UI 구성
-- 파형 계산기(`*WaveformCalculator`)를 사용해 샘플 생성
-- 서버 권위 파라미터를 `SyncVar`로 전파하고 클라이언트에서 반영
+- UIDocument 루트에서 4채널 그래프 UI를 구성
+- 파형 계산기(`*WaveformCalculator`)로 샘플을 생성해 그래프에 반영
+- 모니터 파라미터를 서버 권위로 동기화
+- 환자 선택/연동 인터랙션 진입점 제공
 
-### 주요 필드
+### 주요 동작
 
-| 필드 | 설명 |
-|---|---|
-| monitorParameters | ECG/ART/CVP/PLETH 통합 파라미터 |
-| _syncEcgParameters, _syncArtParameters, _syncCvpParameters, _syncPlethParameters | 도메인별 SyncVar |
-| _syncRhythmPreset | ECG 리듬 프리셋 SyncVar |
-| ecgGraphElement, plethGraphElement, artGraphElement, cvpGraphElement | 채널별 그래프 엘리먼트 |
+- `OnStartServer`: 초기 파라미터를 서버 상태에 반영
+- `OnStartClient` / `OnStopClient`: 동기화 구독 등록/해제
+- 파라미터 적용 API 호출 시 서버/클라이언트 컨텍스트에 맞게 동기화 경로를 분기
+- 샘플 틱에서 채널별 그래프에 값 스트리밍
 
-### 주요 메서드
+## 2. 그래프 계층 (`PatientMonitorGraphElement`)
 
-| 메서드 | 역할 |
-|---|---|
-| OnStartServer | 초기 파라미터를 SyncVar에 설정 |
-| OnStartClient / OnStopClient | SyncVar 변경 콜백 등록/해제 |
-| SetRhythm / SetCustomParameters | ECG 리듬/파라미터 적용(클라 호출 시 ServerRpc 경유) |
-| SetARTParameters / SetCVPParameters / SetPlethParameters | 비ECG 파라미터 적용(네트워크 전파) |
-| TickSample | 모든 채널 샘플 생성 및 그래프 반영 |
+`PatientMonitorGraphVisualElement.cs`의 `PatientMonitorGraphElement`는 채널별 범위를 가진 UI Toolkit 커스텀 그래프다.
 
-## 2. 모델/계산기 구조 (Models 통합)
+- 채널 식별자: `ECG`, `PLETH`, `ART`, `CVP`
+- 채널별 기본 값 범위(`GraphRange`) 내장
+- `AddValue(float)`로 새 샘플을 추가하고 최대 포인트 수 유지
+- `SetChannel(...)`, `SetRange(...)`로 채널 특성 전환
 
-`Models` 폴더 내에서 도메인별로 다음 패턴을 동일하게 사용한다.
+## 3. 월드 표면 바인더 (`UIDocumentWorldSurfaceBinder`)
+
+`UIDocumentWorldSurfaceBinder`는 UIDocument를 RenderTexture에 렌더링하고 `MeshRenderer` 머티리얼 텍스처 슬롯으로 연결한다.
+
+### 인스펙터 핵심 필드
+
+- Target Surface
+  - `_targetRenderer`
+  - `_texturePropertyName`(기본 `_BaseMap`)
+  - `_instantiateMaterial`
+- RenderTexture
+  - `_resolution`
+  - `_depthBuffer`
+  - `_format`
+  - `_filterMode`
+
+### 라이프사이클
+
+- `OnEnable`
+  - `UIDocument.panelSettings`를 런타임 인스턴스로 복제
+  - RenderTexture 생성 후 panel targetTexture로 연결
+  - 필요 시 머티리얼 인스턴스화 후 텍스처 슬롯 바인딩
+- `OnDisable`
+  - 원본 PanelSettings 복원
+  - RenderTexture 해제/파기
+  - 런타임 머티리얼/패널 설정 파기
+
+## 4. 모델/계산기 구조
+
+`Models` 폴더는 채널별 `Parameters + WaveformCalculator` 패턴을 사용한다.
 
 - `ECGParameters` + `ECGWaveformCalculator`
 - `ARTParameters` + `ARTWaveformCalculator`
 - `CVPParameters` + `CVPWaveformCalculator`
 - `PlethParameters` + `PlethWaveformCalculator`
-- `PatientMonitorParameters` (통합 컨테이너)
+- `PatientMonitorParameters`(통합 컨테이너)
 
-## 3. 그래프/표시 계층
+## 5. 시나리오 연동
 
-- `ECGGraphVisualElement`는 단일 채널 그래프를 렌더링하며, 채널 타입별 기본 범위 설정을 지원한다.
-- `UIDocumentWorldSurfaceBinder`는 UIDocument를 RenderTexture로 출력해 월드 오브젝트 표면에 표시한다.
+시나리오 이벤트 계층(`TriageScenarioEventBootstrap`)은 환자 상태 변화에 따라 모니터 파라미터를 갱신한다. 이를 통해 UI 표시(모니터 on/off)와 파형 상태 전환이 시나리오 진행과 일치한다.
 
-## 4. 시나리오 연동
-
-`TriageScenarioEventBootstrap`에서 환자 상태 이벤트에 맞춰 `PatientMonitorController` 파라미터를 변경한다. 기존 ECG 중심 이벤트 흐름을 유지하면서도, 필요 시 ART/CVP/PLETH API를 동일한 방식으로 확장 가능하다.
-
-## 5. 관련 문서
+## 6. 관련 문서
 
 - `Documents/requirements/patient/patient-monitor-requirements.md`
 - `Documents/api-references/TriageTrainer.Scenario.TriageScenarioEventBootstrap.md`
