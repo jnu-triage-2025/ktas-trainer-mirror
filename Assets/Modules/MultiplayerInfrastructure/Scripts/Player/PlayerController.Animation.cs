@@ -98,7 +98,6 @@ namespace MultiplayerInfrastructure.Player
 
     private void ApplyAnimationParameters(bool isWalk, bool isJump)
     {
-      Debug.Log($"Applying animation parameters: isWalk={isWalk}, isJump={isJump}", this);
       if (_characterModelAnimator == null)
         return;
 
