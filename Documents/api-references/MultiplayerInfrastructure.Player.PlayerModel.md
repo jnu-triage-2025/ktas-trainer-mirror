@@ -2,9 +2,9 @@
 
 > **네임스페이스:** `MultiplayerInfrastructure.Player`  
 > **파일 위치:**  
-> - `Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerController.Model.cs`  
-> - `Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerModelControls/IPlayerModelObject.cs`  
-> - `Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerModelControls/PlayerModelAttachPoint.cs`
+> - `Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerController.CharacterModel.cs`  
+> - `Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerCharacterModelControls/IPlayerCharacterModelObject.cs`  
+> - `Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerCharacterModelControls/PlayerCharacterModelAttachPoint.cs`
 
 ---
 
@@ -18,47 +18,52 @@
 
 | 구성 요소 | 역할 |
 |---|---|
-| `IPlayerModelObject` | 플레이어 모델로 등록 가능한 프리팹의 마커 인터페이스 |
-| `PlayerModelAttachPoint` | 기존 자식 모델 제거 후 신규 모델 인스턴스를 하위에 부착 |
-| `PlayerController.Model` | 모델 ID 관리, 서버 권한 변경, SyncVar 동기화 |
+| `IPlayerCharacterModelObject` | 플레이어 캐릭터 모델 계약(Animator, 중심값) |
+| `PlayerCharacterModelAttachPoint` | 기존 자식 모델 제거 후 신규 모델 인스턴스를 하위에 부착 |
+| `PlayerController.CharacterModel` | 모델 ID 관리, 서버 권한 변경, SyncVar 동기화 |
 
 ---
 
-## 2. `IPlayerModelObject`
+## 2. `IPlayerCharacterModelObject`
 
 ```csharp
-public interface IPlayerModelObject {}
+public interface IPlayerCharacterModelObject
+{
+  Vector3 CharacterControllerCenter { get; }
+  Animator Animator { get; }
+}
 ```
 
-- 모델 프리팹이 플레이어 모델 시스템에서 유효하다는 것을 나타내는 마커입니다.
-- `PlayerModelAttachPoint`와 `PlayerController.Model`은 등록/적용 시 이 인터페이스 구현 여부를 검증합니다.
+- 모델 프리팹이 플레이어 캐릭터 모델 시스템에서 유효하다는 것을 나타내는 계약입니다.
+- `PlayerCharacterModelAttachPoint`와 `PlayerController.CharacterModel`은 등록/적용 시 이 인터페이스 구현 여부를 검증합니다.
 
 ---
 
-## 3. `PlayerModelAttachPoint`
+## 3. `PlayerCharacterModelAttachPoint`
 
 ### 주요 메서드
 
 ```csharp
-public GameObject ReplaceAttachedModel(GameObject playerModelObject)
-public GameObject ReplaceAttachedModel(IPlayerModelObject playerModelObject)
+public GameObject ReplaceAttachedModel(GameObject characterModelObject)
+public GameObject ReplaceAttachedModel(IPlayerCharacterModelObject characterModelObject)
 ```
 
 ### 동작
 
-- 입력 오브젝트의 `IPlayerModelObject` 구현 여부를 확인합니다.
+- 입력 오브젝트의 `IPlayerCharacterModelObject` 구현 여부를 확인합니다.
 - 현재 AttachPoint 하위 자식 오브젝트를 모두 제거합니다.
 - 전달된 모델 프리팹을 AttachPoint 하위에 인스턴스화합니다.
 - 생성된 모델의 로컬 트랜스폼을 기본값(`position=0`, `rotation=identity`, `scale=1`)으로 맞춥니다.
+- Network 컴포넌트(`NetworkBehaviour`, `NetworkObject`)는 제거하여 로컬 표시 모델로 정리합니다.
 
 ---
 
-## 4. `PlayerController.Model` (partial)
+## 4. `PlayerController.CharacterModel` (partial)
 
 ### 상태 필드
 
 ```csharp
-[SerializeField] private PlayerModelAttachPoint _playerModelAttachPoint;
+[SerializeField] private PlayerCharacterModelAttachPoint playerCharacterModelAttachPoint;
 [SerializeField] private string _defaultPlayerModelIdentifier;
 [SerializeField] private string _currentPlayerModelIdentifier;
 private readonly SyncVar<string> _playerModelIdentifier;
@@ -99,8 +104,10 @@ var raw = Registry.Registry.Get<object>(RegistryType.PlayerModel, modelIdentifie
 
 조회 규칙:
 
-- `GameObject`로 등록된 경우: 해당 오브젝트가 `IPlayerModelObject`를 가져야 유효합니다.
-- `Component`로 등록된 경우: 그 컴포넌트가 `IPlayerModelObject`여야 유효합니다.
+- `GameObject`로 등록된 경우: 해당 오브젝트가 `IPlayerCharacterModelObject`를 가져야 유효합니다.
+- `Component`로 등록된 경우: 그 컴포넌트가 `IPlayerCharacterModelObject`여야 유효합니다.
+
+참고: 구현체 검증은 `TryResolvePlayerModelObject(...)` 경로에서 수행된다.
 
 ---
 

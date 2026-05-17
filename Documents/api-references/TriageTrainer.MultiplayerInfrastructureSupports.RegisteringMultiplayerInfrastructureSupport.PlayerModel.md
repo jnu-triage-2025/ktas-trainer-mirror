@@ -57,7 +57,7 @@ public class PlayerModelRegistryRequirementsSO : ScriptableObject
 |---|---|
 | `Awake_PlayerModel()` | PlayerModel 등록 + 리소스 검증 수행 |
 | `RegisterAllPlayerModels()` | SO 목록을 순회하며 `RegistryType.PlayerModel`에 등록 |
-| `ValidatePlayerModelResources()` | 프리팹의 `IPlayerModelObject` 구현 여부 검증 |
+| `ValidatePlayerModelResources()` | 프리팹의 `IPlayerCharacterModelObject` 구현 여부 검증 |
 
 ### 동작 규칙
 
@@ -70,7 +70,34 @@ public class PlayerModelRegistryRequirementsSO : ScriptableObject
 1. `Create > TriageTrainer > Multiplayer Infrastructure > PlayerModel Registry Requirements SO`로 에셋 생성
 2. `RegisteringMultiplayerInfrastructureSupport`의 Player Model Registry 필드에 SO 할당
 3. 각 엔트리에 모델 ID와 프리팹을 설정
-4. 프리팹 루트(또는 동일 GameObject)에 `IPlayerModelObject` 구현 컴포넌트 부착
+4. 프리팹 루트(또는 동일 GameObject)에 `IPlayerCharacterModelObject` 구현 컴포넌트 부착
+
+## 5. TriageTrainer 캐릭터 모델 구현체
+
+TriageTrainer는 플레이어 모델 프리팹 루트에 다음 어댑터 컴포넌트를 배치해 `IPlayerCharacterModelObject` 계약을 충족한다.
+
+- `PlayerCharacterModelAiden`
+- `PlayerCharacterModelBrian`
+- `PlayerCharacterModelDominic`
+- `PlayerCharacterModelEmma`
+- `PlayerCharacterModelEthan`
+- `PlayerCharacterModelJeb`
+- `PlayerCharacterModelLiam`
+- `PlayerCharacterModelLisa`
+- `PlayerCharacterModelMaya`
+- `PlayerCharacterModelOlivia`
+- `PlayerCharacterModelSerah`
+- `PlayerCharacterModelSofia`
+
+공통 계약:
+
+- `CharacterControllerCenter => (0, 1, 0)`
+- `Animator` 프로퍼티로 모델 Animator를 노출
+
+검증 시 주의사항:
+
+- 등록 SO에는 identifier/prefab null 항목이 없어야 한다.
+- prefab 루트에 `IPlayerCharacterModelObject` 구현이 없으면 런타임 경고가 발생한다.
 
 ## 관련 문서
 
