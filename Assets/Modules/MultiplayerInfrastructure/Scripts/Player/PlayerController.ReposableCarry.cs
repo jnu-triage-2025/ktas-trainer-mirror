@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using MultiplayerInfrastructure.Entity;
+using TriageTrainer.Entity;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
@@ -14,6 +16,11 @@ namespace MultiplayerInfrastructure.Player
     [Header("Reposable Carry")]
     [SerializeField] private Transform _reposableCarryAnchor;
     [SerializeField] private MonoBehaviour _carriedReposableComponent;
+    [SerializeField] private bool _followCarriedReposableWithoutParent;
+    [SerializeField] private Vector3 _carriedAttachPointLocalPosition;
+    [SerializeField] private Quaternion _carriedAttachPointLocalRotation = Quaternion.identity;
+
+    private readonly List<Collider> _ignoredCarryColliders = new();
 
     public bool IsCarryingReposable => CarriedReposable != null;
     public IReposable CarriedReposable => _carriedReposableComponent as IReposable;
@@ -89,20 +96,57 @@ namespace MultiplayerInfrastructure.Player
       var anchor = _reposableCarryAnchor != null ? _reposableCarryAnchor : transform;
 
       _carriedReposableComponent = target;
-      target.transform.SetParent(anchor, false);
+      SetCarryCollisionIgnore(target.transform, true);
+
+      bool shouldFollowByWorldAnchorOnly = target.TryGetComponent(out PatientController _);
+      _followCarriedReposableWithoutParent = shouldFollowByWorldAnchorOnly;
+
+      if (!shouldFollowByWorldAnchorOnly)
+        target.transform.SetParent(anchor, false);
+
       if (TryResolveTargetCarryAttachPoint(target.transform, out Transform targetAttachPoint))
       {
-        target.transform.localPosition = -targetAttachPoint.localPosition;
-        target.transform.localRotation = Quaternion.Inverse(targetAttachPoint.localRotation);
+        _carriedAttachPointLocalPosition = target.transform.InverseTransformPoint(targetAttachPoint.position);
+        _carriedAttachPointLocalRotation = Quaternion.Inverse(target.transform.rotation) * targetAttachPoint.rotation;
       }
       else
       {
-        target.transform.localPosition = Vector3.zero;
-        target.transform.localRotation = Quaternion.identity;
+        _carriedAttachPointLocalPosition = Vector3.zero;
+        _carriedAttachPointLocalRotation = Quaternion.identity;
       }
+
+      SnapCarriedReposableToAnchor(target.transform, anchor);
 
       reposable.OnPlayerAttachedEnter();
       return true;
+    }
+
+    private void Update_ReposableCarry()
+    {
+      if (!_followCarriedReposableWithoutParent)
+        return;
+
+      if (_carriedReposableComponent == null)
+      {
+        SetCarryCollisionIgnore(null, false);
+        _followCarriedReposableWithoutParent = false;
+        return;
+      }
+
+      RefreshCarryAttachPointFromHierarchy();
+      var anchor = _reposableCarryAnchor != null ? _reposableCarryAnchor : transform;
+      SnapCarriedReposableToAnchor(_carriedReposableComponent.transform, anchor);
+    }
+
+    private void SnapCarriedReposableToAnchor(Transform targetTransform, Transform anchor)
+    {
+      if (targetTransform == null || anchor == null)
+        return;
+
+      Quaternion rootRotation = anchor.rotation * Quaternion.Inverse(_carriedAttachPointLocalRotation);
+      Vector3 rootPosition = anchor.position - (rootRotation * _carriedAttachPointLocalPosition);
+
+      targetTransform.SetPositionAndRotation(rootPosition, rootRotation);
     }
 
     private static bool TryResolveTargetCarryAttachPoint(Transform targetRoot, out Transform attachPoint)
@@ -130,11 +174,62 @@ namespace MultiplayerInfrastructure.Player
         return false;
       }
 
-      _carriedReposableComponent.transform.SetParent(null, true);
+      if (!_followCarriedReposableWithoutParent)
+        _carriedReposableComponent.transform.SetParent(null, true);
+
       ResolveDropTransform(_carriedReposableComponent.transform);
       dropped.OnPlayerAttachedExit();
       _carriedReposableComponent = null;
+      SetCarryCollisionIgnore(null, false);
+      _followCarriedReposableWithoutParent = false;
+      _carriedAttachPointLocalPosition = Vector3.zero;
+      _carriedAttachPointLocalRotation = Quaternion.identity;
       return true;
+    }
+
+    private void SetCarryCollisionIgnore(Transform carriedRoot, bool ignore)
+    {
+      var playerCollider = ResolveCarryPlayerCollider();
+      if (playerCollider == null)
+        return;
+
+      if (!ignore)
+      {
+        for (int i = 0; i < _ignoredCarryColliders.Count; i++)
+        {
+          var col = _ignoredCarryColliders[i];
+          if (col == null)
+            continue;
+
+          Physics.IgnoreCollision(playerCollider, col, false);
+        }
+
+        _ignoredCarryColliders.Clear();
+        return;
+      }
+
+      _ignoredCarryColliders.Clear();
+      if (carriedRoot == null)
+        return;
+
+      var carriedColliders = carriedRoot.GetComponentsInChildren<Collider>(true);
+      for (int i = 0; i < carriedColliders.Length; i++)
+      {
+        var col = carriedColliders[i];
+        if (col == null || ReferenceEquals(col, playerCollider))
+          continue;
+
+        Physics.IgnoreCollision(playerCollider, col, true);
+        _ignoredCarryColliders.Add(col);
+      }
+    }
+
+    private Collider ResolveCarryPlayerCollider()
+    {
+      if (_characterController == null)
+        _characterController = GetComponent<CharacterController>();
+
+      return _characterController;
     }
 
     private void ResolveDropTransform(Transform droppedTransform)
