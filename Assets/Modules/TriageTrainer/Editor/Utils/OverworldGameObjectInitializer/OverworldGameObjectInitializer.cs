@@ -1,5 +1,4 @@
 using System.Reflection;
-using FishNet.Component.Spawning;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
@@ -26,8 +25,7 @@ namespace TriageTrainer.Editor.Utils
       DeleteChildren(generatedRoot.transform);
       CreateWaypoint(generatedRoot.transform, BuildingEnteranceIdentifier, DefaultBuildingEnterance);
       CreateWaypoint(generatedRoot.transform, TreatmentRoomEnteranceIdentifier, DefaultTreatmentRoomEnterance);
-      var commonsSpawnPoint = CreateSpawnPoint(generatedRoot.transform, CommonsSpawnPointIdentifier, DefaultCommonsSpawnPoint);
-      ApplyCommonsSpawnPointToPlayerSpawners(commonsSpawnPoint);
+      CreateSpawnPoint(generatedRoot.transform, CommonsSpawnPointIdentifier, DefaultCommonsSpawnPoint);
     }
 
     public static void Delete()
@@ -118,36 +116,6 @@ namespace TriageTrainer.Editor.Utils
 #endif
 
       return spawnPointObject.transform;
-    }
-
-    private static void ApplyCommonsSpawnPointToPlayerSpawners(Transform commonsSpawnPoint)
-    {
-      if (commonsSpawnPoint == null)
-        return;
-
-      var playerSpawners = Object.FindObjectsByType<PlayerSpawner>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-      for (int i = 0; i < playerSpawners.Length; i++)
-      {
-        var playerSpawner = playerSpawners[i];
-        if (playerSpawner == null)
-          continue;
-
-#if UNITY_EDITOR
-        if (!Application.isPlaying)
-        {
-          Undo.RecordObject(playerSpawner, "Assign Common SpawnPoint");
-        }
-#endif
-
-        playerSpawner.Spawns = new[] { commonsSpawnPoint };
-
-#if UNITY_EDITOR
-        if (!Application.isPlaying)
-        {
-          EditorUtility.SetDirty(playerSpawner);
-        }
-#endif
-      }
     }
 
     private static void SetWaypointIdentifier(WaypointAnchor waypointAnchor, string identifier)

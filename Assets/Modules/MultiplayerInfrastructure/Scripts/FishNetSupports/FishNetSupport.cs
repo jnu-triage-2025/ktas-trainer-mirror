@@ -74,6 +74,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
       }
 
       ConfigureTransport(sessionInformation);
+      PrepareDeferredPlayerSpawning();
 
       if (isOpeningServer)
         StartServer();

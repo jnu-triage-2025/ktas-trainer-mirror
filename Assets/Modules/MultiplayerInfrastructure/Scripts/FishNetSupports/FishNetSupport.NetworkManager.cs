@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FishNet.Component.Spawning;
 using FishNet.Example;
 using FishNet.Managing;
 using FishNet.Transporting;
@@ -63,6 +64,27 @@ namespace MultiplayerInfrastructure.FishNetSupports
       transport.SetPort(sessionInformation.Port);
 
       Debug.Log($"[FishNetSupport] Transport configured for {sessionInformation.Address}:{sessionInformation.Port}");
+    }
+
+    public void PrepareDeferredPlayerSpawning()
+    {
+      if (!ResolveNetworkManagerInHierarchy())
+        return;
+
+      var playerSpawners = networkManager.GetComponentsInChildren<PlayerSpawner>(true);
+      for (int i = 0; i < playerSpawners.Length; i++)
+      {
+        var playerSpawner = playerSpawners[i];
+        if (playerSpawner == null)
+          continue;
+
+        var deferredSpawner = playerSpawner.GetComponent<FishNetDeferredPlayerSpawner>();
+        if (deferredSpawner == null)
+          deferredSpawner = playerSpawner.gameObject.AddComponent<FishNetDeferredPlayerSpawner>();
+
+        deferredSpawner.ConfigureFromPlayerSpawner(playerSpawner);
+        playerSpawner.enabled = false;
+      }
     }
 
     public void StartServer()

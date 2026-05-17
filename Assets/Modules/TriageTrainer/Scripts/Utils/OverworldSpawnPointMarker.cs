@@ -1,4 +1,5 @@
 using UnityEngine;
+using MultiplayerInfrastructure.FishNetSupports;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -6,13 +7,27 @@ using UnityEditor;
 
 namespace TriageTrainer.Utils
 {
-  public sealed class OverworldSpawnPointMarker : MonoBehaviour
+  public sealed class OverworldSpawnPointMarker : MonoBehaviour, IPlayerSpawnPointProvider
   {
     [SerializeField] private string _identifier;
+
+    public string Identifier => _identifier;
+    public Transform SpawnTransform => transform;
+    public bool IsAvailable => isActiveAndEnabled && gameObject.activeInHierarchy;
 
     public void SetIdentifier(string identifier)
     {
       _identifier = identifier;
+    }
+
+    private void OnEnable()
+    {
+      PlayerSpawnPointRegistry.Register(this);
+    }
+
+    private void OnDisable()
+    {
+      PlayerSpawnPointRegistry.Unregister(this);
     }
 
     private void OnDrawGizmos()
