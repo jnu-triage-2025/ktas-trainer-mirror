@@ -14,6 +14,9 @@ namespace TriageTrainer.Entity
 {
   public class MovingPatientBedController : Ridable, IInteractable, IInteract, IInteractorConditional
   {
+    private const string DefaultPlayerAttachPointName = "PlayerAttachPoint";
+    private const string DefaultPatientAttachPointName = "PatientAttachPoint";
+
     [Serializable]
     public class AttachableItemVisualPair
     {
@@ -38,6 +41,53 @@ namespace TriageTrainer.Entity
       public float LastActionbarRefreshAt;
     }
 
+    private sealed class BedReposeInteract : IInteract, IInteractorConditional
+    {
+      private readonly MovingPatientBedController _owner;
+
+      public BedReposeInteract(MovingPatientBedController owner)
+      {
+        _owner = owner;
+      }
+
+      public string DisplayText => _owner._reposeDisplayText;
+      public Sprite DisplayIcon => _owner._reposeDisplayIcon;
+      public bool AllowDisplayIconFallback => true;
+      public Color DisplayColor => Color.white;
+
+      public bool CanInteract(Transform interactor)
+      {
+        if (_owner == null || interactor == null)
+          return false;
+
+        if (_owner.ReposedTarget != null)
+          return false;
+
+        var player = interactor.GetComponentInParent<PlayerController>();
+        if (player == null || !player.IsCarryingReposable)
+          return false;
+
+        return player.CarriedReposable != null;
+      }
+
+      public void Interact(Transform interactor)
+      {
+        if (_owner == null || interactor == null)
+          return;
+
+        var player = interactor.GetComponentInParent<PlayerController>();
+        if (player == null || !player.IsCarryingReposable)
+          return;
+
+        if (_owner.TryReposeTarget(player.CarriedReposable, interactor))
+          _owner.ShowThrottledMessage(interactor, "환자를 침대에 내려놓았습니다.");
+        else
+          _owner.ShowThrottledMessage(interactor, "환자를 침대에 내려놓을 수 없습니다.");
+
+        player.RefreshInteractableHintsNow();
+      }
+    }
+
     [Header("Identity")]
     [SerializeField] private string _entityTypeIdentifier = "moving_patient_bed";
     private string _entityRuntimeIdentifier;
@@ -45,6 +95,8 @@ namespace TriageTrainer.Entity
     [Header("Display")]
     [SerializeField] private string _displayText = "이동식 환자 침대";
     [SerializeField] private Sprite _displayIcon = null;
+    [SerializeField] private string _reposeDisplayText = "환자 침대에 내려놓기";
+    [SerializeField] private Sprite _reposeDisplayIcon = null;
 
     [Header("Bed")]
     [SerializeField] private int _weight = 0;
@@ -76,9 +128,11 @@ namespace TriageTrainer.Entity
 
     private ChatUIController _chatUI;
     private TitleUIController _titleUI;
+    private BedReposeInteract _reposeInteract;
+    private IInteract[] _interacts;
 
     public string Identifier => string.IsNullOrWhiteSpace(_entityRuntimeIdentifier) ? _entityTypeIdentifier : _entityRuntimeIdentifier;
-    public IInteract[] Interacts => new IInteract[] { this };
+    public IInteract[] Interacts => _interacts ?? Array.Empty<IInteract>();
     public string DisplayText => _displayText;
     public Sprite DisplayIcon => _displayIcon;
     public bool AllowDisplayIconFallback => true;
@@ -91,6 +145,8 @@ namespace TriageTrainer.Entity
     private void Awake()
     {
       Awake_Ridable();
+      _reposeInteract = new BedReposeInteract(this);
+      _interacts = new IInteract[] { this, _reposeInteract };
       InitializeAttachPoints();
       RebuildAttachableVisualMap();
       if (_reposeAnchor == null)
@@ -199,6 +255,10 @@ namespace TriageTrainer.Entity
       if (interactor == null)
         return false;
 
+      var player = interactor.GetComponentInParent<PlayerController>();
+      if (player != null && player.IsCarryingReposable)
+        return false;
+
       return !_participants.ContainsKey(interactor.GetInstanceID());
     }
 
@@ -228,6 +288,7 @@ namespace TriageTrainer.Entity
       targetBehaviour.transform.localPosition = Vector3.zero;
       targetBehaviour.transform.localRotation = Quaternion.identity;
       _reposedTargetComponent = targetBehaviour;
+      target.OnMovingPatientBedAttachedEnter();
 
       if (targetBehaviour.TryGetComponent(out PatientController patient))
         patient.SetCurrentBed(this);
@@ -253,6 +314,7 @@ namespace TriageTrainer.Entity
       var liftedBehaviour = _reposedTargetComponent;
       _reposedTargetComponent = null;
       ReleasePatientAttachPoint(liftedBehaviour);
+      lifted.OnMovingPatientBedAttachedExit();
 
       if (liftedBehaviour != null)
         liftedBehaviour.transform.SetParent(null, true);
@@ -266,6 +328,7 @@ namespace TriageTrainer.Entity
           liftedBehaviour.transform.localRotation = Quaternion.identity;
           _reposedTargetComponent = liftedBehaviour;
           TryOccupyNextPatientAttachPoint(liftedBehaviour, out _);
+          lifted.OnMovingPatientBedAttachedEnter();
         }
         return false;
       }
@@ -343,6 +406,9 @@ namespace TriageTrainer.Entity
 
     private void InitializeAttachPoints()
     {
+      EnsureDefaultPlayerAttachPoint();
+      EnsureDefaultPatientAttachPoint();
+
       if (PlayerAttachPoints.Count == 0)
       {
         var playerAttachObjects = GetComponentsInChildren<RidableAttachPointObject>(true);
@@ -372,6 +438,48 @@ namespace TriageTrainer.Entity
       _patientAttachPointOccupants.Clear();
       for (int i = 0; i < PatientAttachPoints.Count; i++)
         _patientAttachPointOccupants.Add(null);
+    }
+
+    private void EnsureDefaultPlayerAttachPoint()
+    {
+      if (PlayerAttachPoints.Count > 0)
+        return;
+
+      var existing = GetComponentInChildren<RidableAttachPointObject>(true);
+      if (existing != null)
+      {
+        PlayerAttachPoints.Add(existing.transform);
+        return;
+      }
+
+      var go = new GameObject(DefaultPlayerAttachPointName);
+      var attach = go.AddComponent<RidableAttachPointObject>();
+      var attachTransform = attach.transform;
+      attachTransform.SetParent(transform, false);
+      attachTransform.localPosition = new Vector3(0f, 0f, -0.8f);
+      attachTransform.localRotation = Quaternion.identity;
+      PlayerAttachPoints.Add(attachTransform);
+    }
+
+    private void EnsureDefaultPatientAttachPoint()
+    {
+      if (PatientAttachPoints.Count > 0)
+        return;
+
+      var existing = GetComponentInChildren<MovingPatientBedPatientAttachPointObject>(true);
+      if (existing != null)
+      {
+        PatientAttachPoints.Add(existing.transform);
+        return;
+      }
+
+      var go = new GameObject(DefaultPatientAttachPointName);
+      var attach = go.AddComponent<MovingPatientBedPatientAttachPointObject>();
+      var attachTransform = attach.transform;
+      attachTransform.SetParent(transform, false);
+      attachTransform.localPosition = new Vector3(0f, 0.9f, 0f);
+      attachTransform.localRotation = Quaternion.identity;
+      PatientAttachPoints.Add(attachTransform);
     }
 
     private bool TryOccupyNextPlayerAttachPoint(PlayerController player, out Transform attachPoint)
@@ -661,6 +769,9 @@ namespace TriageTrainer.Entity
         if (PatientAttachPoints[i] == null)
           PatientAttachPoints.RemoveAt(i);
       }
+
+      EnsureDefaultPlayerAttachPoint();
+      EnsureDefaultPatientAttachPoint();
     }
 
     private void OnDrawGizmosSelected()
