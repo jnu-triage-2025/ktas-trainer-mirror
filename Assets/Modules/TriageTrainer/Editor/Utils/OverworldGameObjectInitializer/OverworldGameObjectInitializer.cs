@@ -1,4 +1,5 @@
 using System.Reflection;
+using FishNet.Component.Spawning;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
@@ -13,9 +14,11 @@ namespace TriageTrainer.Editor.Utils
   public static class OverworldGameObjectInitializer
   {
     public static readonly Vector3 DefaultBuildingEnterance = new(-72.525f, 1f, 2.3f);
-    public const string BuildingEnteranceIdentifier = "BuildingEnterance";
+    public const string BuildingEnteranceIdentifier = "building-enterance";
     public static readonly Vector3 DefaultTreatmentRoomEnterance = new(-66.5f, 1f, -10.2f);
-    public const string TreatmentRoomEnteranceIdentifier = "TreatmentRoomEnterance";
+    public const string TreatmentRoomEnteranceIdentifier = "treatment-room-enterance";
+    public static readonly Vector3 DefaultCommonsSpawnPoint = new(-73f, 1f, -7.5f);
+    public const string CommonsSpawnPointIdentifier = "spawnpoint-commons";
 
     public static void Set()
     {
@@ -23,6 +26,8 @@ namespace TriageTrainer.Editor.Utils
       DeleteChildren(generatedRoot.transform);
       CreateWaypoint(generatedRoot.transform, BuildingEnteranceIdentifier, DefaultBuildingEnterance);
       CreateWaypoint(generatedRoot.transform, TreatmentRoomEnteranceIdentifier, DefaultTreatmentRoomEnterance);
+      var commonsSpawnPoint = CreateSpawnPoint(generatedRoot.transform, CommonsSpawnPointIdentifier, DefaultCommonsSpawnPoint);
+      ApplyCommonsSpawnPointToPlayerSpawners(commonsSpawnPoint);
     }
 
     public static void Delete()
@@ -94,6 +99,55 @@ namespace TriageTrainer.Editor.Utils
         Undo.RegisterCreatedObjectUndo(waypointObject, "Create Waypoint");
       }
 #endif
+    }
+
+    private static Transform CreateSpawnPoint(Transform parent, string identifier, Vector3 position)
+    {
+      var spawnPointObject = new GameObject($"SpawnPoint_{identifier}");
+      spawnPointObject.transform.SetParent(parent, false);
+      spawnPointObject.transform.position = position;
+
+      var marker = spawnPointObject.AddComponent<OverworldSpawnPointMarker>();
+      marker.SetIdentifier(identifier);
+
+#if UNITY_EDITOR
+      if (!Application.isPlaying)
+      {
+        Undo.RegisterCreatedObjectUndo(spawnPointObject, "Create Common SpawnPoint");
+      }
+#endif
+
+      return spawnPointObject.transform;
+    }
+
+    private static void ApplyCommonsSpawnPointToPlayerSpawners(Transform commonsSpawnPoint)
+    {
+      if (commonsSpawnPoint == null)
+        return;
+
+      var playerSpawners = Object.FindObjectsByType<PlayerSpawner>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+      for (int i = 0; i < playerSpawners.Length; i++)
+      {
+        var playerSpawner = playerSpawners[i];
+        if (playerSpawner == null)
+          continue;
+
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
+        {
+          Undo.RecordObject(playerSpawner, "Assign Common SpawnPoint");
+        }
+#endif
+
+        playerSpawner.Spawns = new[] { commonsSpawnPoint };
+
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
+        {
+          EditorUtility.SetDirty(playerSpawner);
+        }
+#endif
+      }
     }
 
     private static void SetWaypointIdentifier(WaypointAnchor waypointAnchor, string identifier)

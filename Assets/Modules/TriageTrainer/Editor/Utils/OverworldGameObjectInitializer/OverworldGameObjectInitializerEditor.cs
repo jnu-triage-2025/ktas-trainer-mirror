@@ -19,13 +19,22 @@ namespace TriageTrainer.Editor.Utils
         "시나리오 진행 중에 오버월드에서 사용할 주요한 게임 오브젝트들을 생성합니다.",
         MessageType.Info
       );
-      EditorGUILayout.LabelField("Waypoints", EditorStyles.boldLabel);
       EditorGUILayout.Space(4f);
+      EditorGUILayout.LabelField("Waypoints", EditorStyles.boldLabel);
 
       EditorGUILayout.TextField("Building Identifier", OverworldGameObjectInitializer.BuildingEnteranceIdentifier);
       EditorGUILayout.Vector3Field("BuildingEnterance", OverworldGameObjectInitializer.DefaultBuildingEnterance);
       EditorGUILayout.TextField("Treatment Identifier", OverworldGameObjectInitializer.TreatmentRoomEnteranceIdentifier);
       EditorGUILayout.Vector3Field("TreatmentRoomEnterance", OverworldGameObjectInitializer.DefaultTreatmentRoomEnterance);
+
+      EditorGUILayout.Space(4f);
+      EditorGUILayout.LabelField("Spawnpoints", EditorStyles.boldLabel);
+      EditorGUILayout.TextField("Commons Identifier", OverworldGameObjectInitializer.CommonsSpawnPointIdentifier);
+      EditorGUILayout.Vector3Field("CommonsSpawnPoint", OverworldGameObjectInitializer.DefaultCommonsSpawnPoint);
+      EditorGUILayout.HelpBox(
+        "Set 실행 시 FishNet PlayerSpawner의 Spawns 배열이 CommonsSpawnPoint 하나로 설정됩니다.",
+        MessageType.None
+      );
 
       EditorGUILayout.Space(8f);
 
