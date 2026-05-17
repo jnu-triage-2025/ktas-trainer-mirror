@@ -41,6 +41,7 @@ namespace MultiplayerInfrastructure.Player
     public Transform CameraHolderTransform => _cameraHolderTransform;
 
     private Transform _forcedFollowAnchor;
+    private bool _jumpAnimationRequestedThisFrame;
 
     public bool IsMovementPositionOverridden => _forcedFollowAnchor != null;
 
@@ -56,6 +57,7 @@ namespace MultiplayerInfrastructure.Player
 
     void Update_Movement()
     {
+      _jumpAnimationRequestedThisFrame = false;
       ComputeMovement();
       FollowForcedAnchor();
       UpdateSpectateFollowTarget();
@@ -104,6 +106,8 @@ namespace MultiplayerInfrastructure.Player
       if (Input.GetButton("Jump") && canMove && _characterController.isGrounded)
       {
         _moveDirection.y = _jumpSpeed;
+        if (Input.GetButtonDown("Jump"))
+          _jumpAnimationRequestedThisFrame = true;
       }
       else
       {

@@ -54,6 +54,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 6960931668411606285}
     m_Modifications:
+    - target: {fileID: 1274973482151630680, guid: f4e2ebb8ef45c8f41b4f2e36fe8993c1, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1451910391280527622, guid: f4e2ebb8ef45c8f41b4f2e36fe8993c1, type: 3}
       propertyPath: m_Name
       value: Chr_Nurse_Female_01_Prefab

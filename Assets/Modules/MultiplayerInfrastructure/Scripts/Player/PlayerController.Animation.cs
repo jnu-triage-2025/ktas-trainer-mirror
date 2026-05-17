@@ -55,10 +55,7 @@ namespace MultiplayerInfrastructure.Player
 
     private bool IsJumpingAnimationState()
     {
-      if (_characterController == null)
-        _characterController = GetComponent<CharacterController>();
-
-      return _characterController != null && !_characterController.isGrounded;
+      return _jumpAnimationRequestedThisFrame;
     }
 
     private bool IsWalkingAnimationState()
