@@ -98,6 +98,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: 168bd517d468d4d61a605dc1ea630cb6, type: 2}
+    - target: {fileID: 1548722580544384196, guid: c217e88e350127b4091443bae01d78eb, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5555097590719788135, guid: c217e88e350127b4091443bae01d78eb, type: 3}
       propertyPath: m_Name
       value: Chr_Doctor_Female_01_Prefab

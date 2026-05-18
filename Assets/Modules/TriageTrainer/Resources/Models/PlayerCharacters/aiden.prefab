@@ -94,6 +94,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4463716022101370820, guid: 4f78f7f37c7ddf64fb4c5475780ed459, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5156426834569296056, guid: 4f78f7f37c7ddf64fb4c5475780ed459, type: 3}
       propertyPath: m_Name
       value: Chr_Sergeon_Male_01_Prefab

@@ -55,10 +55,7 @@ namespace MultiplayerInfrastructure.Player
 
     private bool IsJumpingAnimationState()
     {
-      if (_characterController == null)
-        _characterController = GetComponent<CharacterController>();
-
-      return _characterController != null && !_characterController.isGrounded;
+      return _jumpAnimationRequestedThisFrame;
     }
 
     private bool IsWalkingAnimationState()
@@ -101,7 +98,6 @@ namespace MultiplayerInfrastructure.Player
 
     private void ApplyAnimationParameters(bool isWalk, bool isJump)
     {
-      Debug.Log($"Applying animation parameters: isWalk={isWalk}, isJump={isJump}", this);
       if (_characterModelAnimator == null)
         return;
 
