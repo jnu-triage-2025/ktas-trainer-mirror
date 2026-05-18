@@ -191,14 +191,54 @@ namespace MultiplayerInfrastructure.Registry
         // Fallback: allow scenario JSONs under Resources/Scenario to be resolved
         // without explicit preload wiring in every scene.
         var textAsset = Resources.Load<TextAsset>($"Scenario/{identifier}");
-        if (textAsset == null)
-          return false;
+        if (textAsset != null)
+        {
+          registry[identifier] = textAsset;
+          definition = textAsset;
+        }
+        else
+        {
+          // Secondary fallback: scan all scenario TextAssets and register them.
+          // This allows lookup by graph identifier even when file name differs.
+          PreloadScenarioGraphsFromResources(validateWithSchema);
 
-        registry[identifier] = textAsset;
-        definition = textAsset;
+          if (!registry.TryGetValue(identifier, out definition))
+            return false;
+        }
       }
 
       return TryResolveScenarioGraph(RegistryType.ScenarioGraph, identifier, registry, ref definition, validateWithSchema);
+    }
+
+    public static int PreloadScenarioGraphsFromResources(bool validateWithSchema = true)
+    {
+      EnsureBuiltInRegistryInitialized();
+
+      var registry = ResolveRegistry(RegistryType.ScenarioGraph);
+      var assets = Resources.LoadAll<TextAsset>("Scenario");
+      int successCount = 0;
+
+      for (int i = 0; i < assets.Length; i++)
+      {
+        var asset = assets[i];
+        if (asset == null)
+          continue;
+
+        string key = asset.name?.Trim();
+        if (string.IsNullOrWhiteSpace(key))
+          continue;
+
+        if (!registry.TryGetValue(key, out var definition) || definition == null)
+        {
+          registry[key] = asset;
+          definition = asset;
+        }
+
+        if (TryResolveScenarioGraph(RegistryType.ScenarioGraph, key, registry, ref definition, validateWithSchema))
+          successCount++;
+      }
+
+      return successCount;
     }
 
     public static IReadOnlyDictionary<string, T> GetAll<T>(RegistryType registryType)
@@ -515,9 +555,13 @@ namespace MultiplayerInfrastructure.Registry
         var graph = ScenarioGraphLoader.LoadFromJson(textAsset.text, validateWithSchema);
         if (string.IsNullOrWhiteSpace(graph.Identifier))
           graph.Identifier = identifier;
+        else
+          graph.Identifier = graph.Identifier.Trim();
 
         registry[identifier] = graph;
         definition = graph;
+
+        RegisterScenarioGraphAlias(registry, graph, identifier);
         return true;
       }
       catch (Exception ex)
@@ -525,6 +569,30 @@ namespace MultiplayerInfrastructure.Registry
         Debug.LogError($"[Registry] Failed to load ScenarioGraph '{identifier}': {ex.Message}");
         return false;
       }
+    }
+
+    private static void RegisterScenarioGraphAlias(Dictionary<string, object> registry, ScenarioGraph graph, string sourceIdentifier)
+    {
+      if (registry == null || graph == null || string.IsNullOrWhiteSpace(graph.Identifier))
+        return;
+
+      string alias = graph.Identifier.Trim();
+      if (string.IsNullOrWhiteSpace(alias))
+        return;
+
+      if (registry.TryGetValue(alias, out var existing))
+      {
+        if (existing is ScenarioGraph existingGraph && !ReferenceEquals(existingGraph, graph)
+                                               && !string.Equals(alias, sourceIdentifier, StringComparison.Ordinal))
+        {
+          Debug.LogWarning(
+            $"[Registry] ScenarioGraph alias conflict: '{alias}' is already mapped. Source key '{sourceIdentifier}' keeps existing mapping.");
+        }
+
+        return;
+      }
+
+      registry[alias] = graph;
     }
 
     private static bool TryResolveIconSprite(
