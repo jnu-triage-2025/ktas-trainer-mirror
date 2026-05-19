@@ -66,6 +66,7 @@ namespace TriageTrainer.Entity
 
     private void Awake()
     {
+      Awake_Animation();
       EnsureCarryAttachPoint();
       InitializeCollider();
       EnsureMedicalStateDefaults();
@@ -123,16 +124,22 @@ namespace TriageTrainer.Entity
     public void SetCurrentBed(MovingPatientBedController bed)
     {
       _currentBed = bed;
+      OnMovingPatientBedAttachedStateChanged(_currentBed != null || _isMovingPatientBedAttached);
+      Update_Animation();
     }
 
     public void OnMovingPatientBedAttachedEnter()
     {
       _isMovingPatientBedAttached = true;
+      OnMovingPatientBedAttachedStateChanged(true);
+      Update_Animation();
     }
 
     public void OnMovingPatientBedAttachedExit()
     {
       _isMovingPatientBedAttached = false;
+      OnMovingPatientBedAttachedStateChanged(_currentBed != null || _isMovingPatientBedAttached);
+      Update_Animation();
     }
 
     public void OnPlayerAttachedEnter()
@@ -203,6 +210,7 @@ namespace TriageTrainer.Entity
 
     private void OnValidate()
     {
+      OnValidate_Animation();
       EnsureCarryAttachPoint();
       InitializeCollider();
       EnsureMedicalStateDefaults();

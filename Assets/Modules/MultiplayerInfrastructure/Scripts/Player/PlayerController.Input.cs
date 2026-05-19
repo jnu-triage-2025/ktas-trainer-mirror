@@ -58,6 +58,8 @@ namespace MultiplayerInfrastructure.Player
 
     public void Update_Input()
     {
+      if (Input.GetKeyDown(KeyCode.F)) Debug.Log($"[PlayerController] F key pressed. IsOwner: {IsOwner}, IsClient: {IsClient}, IsServer: {IsServer}");
+
       HandleChatInput();
       var escapeConsumed = HandleEscape();
       HandleDialogueInput();
@@ -77,7 +79,7 @@ namespace MultiplayerInfrastructure.Player
         HandleSpectatorInput();
         return;
       }
-      
+
       HandleOpenQuestUIInput();
 
       HandleInteractInteractableObject();
