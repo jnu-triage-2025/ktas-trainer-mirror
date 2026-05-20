@@ -27,6 +27,7 @@ namespace MultiplayerInfrastructure.UI
       PruneDeadOverlays();
       return Stack.Count > 0 && Stack.Peek() == overlay;
     }
+
     public static void Push(IUIOverlay overlay)
     {
       int previousCount = Stack.Count;
@@ -34,7 +35,6 @@ namespace MultiplayerInfrastructure.UI
 
       PruneDeadOverlays();
       if (overlay == null) return;
-      PruneInvalidOverlays();
 
       if (Stack.Count > 0)
       {
