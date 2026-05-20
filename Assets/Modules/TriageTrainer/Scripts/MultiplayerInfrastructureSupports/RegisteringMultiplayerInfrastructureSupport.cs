@@ -6,6 +6,7 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
   {
     private void Awake()
     {
+      Awake_SpawnPoint();
       Awake_Item();
       Awake_PlayerModel();
       Awake_EntityPreset();

@@ -29,10 +29,10 @@ namespace TriageTrainer.Editor.Utils
 
       EditorGUILayout.Space(4f);
       EditorGUILayout.LabelField("Spawnpoints", EditorStyles.boldLabel);
-      EditorGUILayout.TextField("Commons Identifier", OverworldGameObjectInitializer.CommonsSpawnPointIdentifier);
-      EditorGUILayout.Vector3Field("CommonsSpawnPoint", OverworldGameObjectInitializer.DefaultCommonsSpawnPoint);
+      EditorGUILayout.TextField("Common Identifier", OverworldGameObjectInitializer.CommonSpawnPointIdentifier);
+      EditorGUILayout.Vector3Field("Common SpawnPoint", OverworldGameObjectInitializer.DefaultCommonSpawnPoint);
       EditorGUILayout.HelpBox(
-        "Set 실행 시 FishNet PlayerSpawner의 Spawns 배열이 CommonsSpawnPoint 하나로 설정됩니다.",
+        "Set 실행 시 FishNet PlayerSpawner의 Spawns 배열이 CommonSpawnPoint 하나로 설정됩니다.",
         MessageType.None
       );
 

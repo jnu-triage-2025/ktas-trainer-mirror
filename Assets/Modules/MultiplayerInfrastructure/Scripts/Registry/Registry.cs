@@ -15,6 +15,7 @@ namespace MultiplayerInfrastructure.Registry
     private static readonly Dictionary<string, object> _iconSpriteRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _npcRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _waypointRegistry = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, object> _spawnPointRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _entityRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _serviceRegistry = new(StringComparer.Ordinal);
     private static readonly Dictionary<string, object> _runtimeStateRegistry = new(StringComparer.Ordinal);
@@ -433,6 +434,7 @@ namespace MultiplayerInfrastructure.Registry
         RegistryType.IconSprite => _iconSpriteRegistry,
         RegistryType.Npc => _npcRegistry,
         RegistryType.Waypoint => _waypointRegistry,
+        RegistryType.SpawnPoint => _spawnPointRegistry,
         RegistryType.Entity => _entityRegistry,
         RegistryType.Service => _serviceRegistry,
         RegistryType.RuntimeState => _runtimeStateRegistry,
