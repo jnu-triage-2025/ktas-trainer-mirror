@@ -21,11 +21,29 @@ namespace TriageTrainer.Editor.Utils
 
     public static void Set()
     {
+      Set(
+        BuildingEnteranceIdentifier,
+        DefaultBuildingEnterance,
+        TreatmentRoomEnteranceIdentifier,
+        DefaultTreatmentRoomEnterance,
+        CommonSpawnPointIdentifier,
+        DefaultCommonSpawnPoint
+      );
+    }
+
+    public static void Set(
+      string buildingIdentifier,
+      Vector3 buildingEnterance,
+      string treatmentIdentifier,
+      Vector3 treatmentRoomEnterance,
+      string commonSpawnPointIdentifier,
+      Vector3 commonSpawnPoint)
+    {
       var generatedRoot = GetOrCreateGeneratedRoot();
       DeleteChildren(generatedRoot.transform);
-      CreateWaypoint(generatedRoot.transform, BuildingEnteranceIdentifier, DefaultBuildingEnterance);
-      CreateWaypoint(generatedRoot.transform, TreatmentRoomEnteranceIdentifier, DefaultTreatmentRoomEnterance);
-      CreateSpawnPoint(generatedRoot.transform, CommonSpawnPointIdentifier, DefaultCommonSpawnPoint);
+      CreateWaypoint(generatedRoot.transform, buildingIdentifier, buildingEnterance);
+      CreateWaypoint(generatedRoot.transform, treatmentIdentifier, treatmentRoomEnterance);
+      CreateSpawnPoint(generatedRoot.transform, commonSpawnPointIdentifier, commonSpawnPoint);
     }
 
     public static void Delete()

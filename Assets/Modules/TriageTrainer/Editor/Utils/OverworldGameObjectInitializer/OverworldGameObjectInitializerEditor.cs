@@ -6,6 +6,13 @@ namespace TriageTrainer.Editor.Utils
 {
   public sealed class OverworldGameObjectInitializerEditor : EditorWindow
   {
+    private string buildingIdentifier = OverworldGameObjectInitializer.BuildingEnteranceIdentifier;
+    private Vector3 buildingEnterance = OverworldGameObjectInitializer.DefaultBuildingEnterance;
+    private string treatmentIdentifier = OverworldGameObjectInitializer.TreatmentRoomEnteranceIdentifier;
+    private Vector3 treatmentRoomEnterance = OverworldGameObjectInitializer.DefaultTreatmentRoomEnterance;
+    private string commonSpawnPointIdentifier = OverworldGameObjectInitializer.CommonSpawnPointIdentifier;
+    private Vector3 commonSpawnPoint = OverworldGameObjectInitializer.DefaultCommonSpawnPoint;
+
     [MenuItem("Tools/Triage Trainer/Overworld GameObject Initializer")]
     private static void Open()
     {
@@ -22,15 +29,15 @@ namespace TriageTrainer.Editor.Utils
       EditorGUILayout.Space(4f);
       EditorGUILayout.LabelField("Waypoints", EditorStyles.boldLabel);
 
-      EditorGUILayout.TextField("Building Identifier", OverworldGameObjectInitializer.BuildingEnteranceIdentifier);
-      EditorGUILayout.Vector3Field("BuildingEnterance", OverworldGameObjectInitializer.DefaultBuildingEnterance);
-      EditorGUILayout.TextField("Treatment Identifier", OverworldGameObjectInitializer.TreatmentRoomEnteranceIdentifier);
-      EditorGUILayout.Vector3Field("TreatmentRoomEnterance", OverworldGameObjectInitializer.DefaultTreatmentRoomEnterance);
+      buildingIdentifier = EditorGUILayout.TextField("Building Identifier", buildingIdentifier);
+      buildingEnterance = EditorGUILayout.Vector3Field("BuildingEnterance", buildingEnterance);
+      treatmentIdentifier = EditorGUILayout.TextField("Treatment Identifier", treatmentIdentifier);
+      treatmentRoomEnterance = EditorGUILayout.Vector3Field("TreatmentRoomEnterance", treatmentRoomEnterance);
 
       EditorGUILayout.Space(4f);
       EditorGUILayout.LabelField("Spawnpoints", EditorStyles.boldLabel);
-      EditorGUILayout.TextField("Common Identifier", OverworldGameObjectInitializer.CommonSpawnPointIdentifier);
-      EditorGUILayout.Vector3Field("Common SpawnPoint", OverworldGameObjectInitializer.DefaultCommonSpawnPoint);
+      commonSpawnPointIdentifier = EditorGUILayout.TextField("Common Identifier", commonSpawnPointIdentifier);
+      commonSpawnPoint = EditorGUILayout.Vector3Field("Common SpawnPoint", commonSpawnPoint);
       EditorGUILayout.HelpBox(
         "Set 실행 시 FishNet PlayerSpawner의 Spawns 배열이 CommonSpawnPoint 하나로 설정됩니다.",
         MessageType.None
@@ -38,11 +45,25 @@ namespace TriageTrainer.Editor.Utils
 
       EditorGUILayout.Space(8f);
 
+      if (GUILayout.Button("Reset Values", GUILayout.Height(22f)))
+      {
+        ResetValues();
+      }
+
+      EditorGUILayout.Space(4f);
+
       using (new EditorGUILayout.HorizontalScope())
       {
         if (GUILayout.Button("Set", GUILayout.Height(22f)))
         {
-          OverworldGameObjectInitializer.Set();
+          OverworldGameObjectInitializer.Set(
+            buildingIdentifier,
+            buildingEnterance,
+            treatmentIdentifier,
+            treatmentRoomEnterance,
+            commonSpawnPointIdentifier,
+            commonSpawnPoint
+          );
         }
 
         if (GUILayout.Button("Delete", GUILayout.Height(22f)))
@@ -50,6 +71,16 @@ namespace TriageTrainer.Editor.Utils
           OverworldGameObjectInitializer.Delete();
         }
       }
+    }
+
+    private void ResetValues()
+    {
+      buildingIdentifier = OverworldGameObjectInitializer.BuildingEnteranceIdentifier;
+      buildingEnterance = OverworldGameObjectInitializer.DefaultBuildingEnterance;
+      treatmentIdentifier = OverworldGameObjectInitializer.TreatmentRoomEnteranceIdentifier;
+      treatmentRoomEnterance = OverworldGameObjectInitializer.DefaultTreatmentRoomEnterance;
+      commonSpawnPointIdentifier = OverworldGameObjectInitializer.CommonSpawnPointIdentifier;
+      commonSpawnPoint = OverworldGameObjectInitializer.DefaultCommonSpawnPoint;
     }
   }
 }
