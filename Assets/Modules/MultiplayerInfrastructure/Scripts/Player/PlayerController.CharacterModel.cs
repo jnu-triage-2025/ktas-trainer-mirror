@@ -125,9 +125,14 @@ namespace MultiplayerInfrastructure.Player
         return;
       }
 
-      playerCharacterModelAttachPoint.ReplaceAttachedModel(modelObject);
+      var modelInstance = playerCharacterModelAttachPoint.ReplaceAttachedModel(modelObject);
+      if (modelInstance == null)
+      {
+        SetCharacterModelAnimator(null);
+        return;
+      }
 
-      if (!TryResolvePlayerModelComponent(modelObject, out var playerCharacterModel))
+      if (!TryResolvePlayerModelComponent(modelInstance, out var playerCharacterModel))
       {
         SetCharacterModelAnimator(null);
         return;

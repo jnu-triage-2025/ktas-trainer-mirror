@@ -21,9 +21,9 @@ flags: []
 
 - `PlayerController.Model` partial이 모델 상태 필드(`_playerModelIdentifier`, `_currentPlayerModelIdentifier`)와 변경 API를 제공한다.
 - 클라이언트 요청 진입점은 `RequestSetPlayerModel`, 서버 적용 진입점은 `ApplyPlayerModelByIdentifierServer`다.
-- 모델 오브젝트 장착은 `PlayerModelAttachPoint.ReplaceAttachedModel(...)`가 담당하며, 교체 전 자식 오브젝트를 모두 정리한다.
+- 모델 오브젝트 장착은 `PlayerCharacterModelAttachPoint.ReplaceAttachedModel(...)`가 담당하며, 교체 전 자식 오브젝트를 모두 정리한다.
 - 네트워크 동기화는 `SyncVar<string>`와 OnChange 구독으로 처리한다.
-- 등록 저장소는 `RegistryType.PlayerModel`이며, 값은 `GameObject` 또는 `IPlayerModelObject`를 구현한 `Component`를 허용한다.
+- 등록 저장소는 `RegistryType.PlayerModel`이며, 값은 `GameObject` 또는 `IPlayerCharacterModelObject`를 구현한 `Component`를 허용한다.
 
 ## 참조
 

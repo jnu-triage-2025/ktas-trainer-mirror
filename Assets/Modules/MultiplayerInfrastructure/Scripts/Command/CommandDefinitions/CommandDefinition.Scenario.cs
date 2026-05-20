@@ -7,6 +7,7 @@ using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Problem;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Scenario;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Command
@@ -14,7 +15,7 @@ namespace MultiplayerInfrastructure.Command
   public class CommandDefinition_Scenario : IChatCommandModel
   {
     public string CommandEntry => "scenario";
-    public string Description => "Execute a scenario. Usage: /scenario execute <target> <scenario_id>";
+    public string Description => "Scenario commands. Usage: /scenario list | /scenario execute <target> <scenario_id>";
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
@@ -29,9 +30,17 @@ namespace MultiplayerInfrastructure.Command
       if (_chat == null)
         return;
 
+      if (args != null
+          && args.Length >= 1
+          && string.Equals(args[0], "list", StringComparison.OrdinalIgnoreCase))
+      {
+        SendScenarioList(sender);
+        return;
+      }
+
       if (args == null || args.Length < 3 || !string.Equals(args[0], "execute", StringComparison.OrdinalIgnoreCase))
       {
-        _chat.SendSystemMessage(sender, "Usage: /scenario execute <target> <scenario_id>");
+        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute <target> <scenario_id>");
         return;
       }
 
@@ -56,6 +65,35 @@ namespace MultiplayerInfrastructure.Command
       }
 
       _chat.SendSystemMessage(sender, $"Scenario '{scenarioId}' dispatched to {targets.Count} target(s).");
+    }
+
+    private void SendScenarioList(NetworkConnection sender)
+    {
+      Registry.Registry.PreloadScenarioGraphsFromResources(validateWithSchema: true);
+
+      var discovered = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+      foreach (var pair in Registry.Registry.GetAll<object>(RegistryType.ScenarioGraph))
+      {
+        if (!string.IsNullOrWhiteSpace(pair.Key))
+          discovered.Add(pair.Key.Trim());
+
+        if (pair.Value is ScenarioGraph graph && !string.IsNullOrWhiteSpace(graph.Identifier))
+          discovered.Add(graph.Identifier.Trim());
+      }
+
+      if (discovered.Count == 0)
+      {
+        _chat.SendSystemMessage(sender, "No scenarios are available.");
+        return;
+      }
+
+      var ordered = discovered
+        .Where(each => !string.IsNullOrWhiteSpace(each))
+        .OrderBy(each => each, StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+      _chat.SendSystemMessage(sender, $"Available scenarios ({ordered.Count}): {string.Join(", ", ordered)}");
     }
 
     private bool TryResolveTargets(NetworkConnection sender, string raw, out List<NetworkConnection> targets, out string error)

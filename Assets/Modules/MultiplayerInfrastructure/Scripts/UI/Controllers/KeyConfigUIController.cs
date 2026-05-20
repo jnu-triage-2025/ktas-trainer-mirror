@@ -371,14 +371,12 @@ namespace MultiplayerInfrastructure.UI
     public void OnOverlayPushed()
     {
       Show();
-      Registry.Registry.GetFirstEntityComponent<Player.PlayerController>(EntityType.Player, each => each != null && each.IsOwner)?.EnterUIOverlayMode();
       OverlayPushed?.Invoke();
     }
 
     public void OnOverlayPopped()
     {
       Hide();
-      Registry.Registry.GetFirstEntityComponent<Player.PlayerController>(EntityType.Player, each => each != null && each.IsOwner)?.ExitUIOverlayMode();
       OverlayPopped?.Invoke();
     }
   }

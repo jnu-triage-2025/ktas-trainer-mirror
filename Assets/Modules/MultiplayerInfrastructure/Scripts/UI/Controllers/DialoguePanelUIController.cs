@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Scenario;
-using MultiplayerInfrastructure.Registry;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
@@ -590,17 +589,11 @@ namespace MultiplayerInfrastructure.UI
 
     public void OnOverlayPushed()
     {
-      var player = Registry.Registry.GetFirstEntityComponent<Player.PlayerController>(EntityType.Player, each => each != null && each.IsOwner);
-      Debug.Log($"[DialoguePanelUI] OnOverlayPushed: PlayerController found: {player != null}");
-      player?.EnterUIOverlayMode();
-      Debug.Log("[DialoguePanelUI] OnOverlayPushed: Entered UI overlay mode for player");
       OverlayPushed?.Invoke();
     }
 
     public void OnOverlayPopped()
     {
-      var player = Registry.Registry.GetFirstEntityComponent<Player.PlayerController>(EntityType.Player, each => each != null && each.IsOwner);
-      player?.ExitUIOverlayMode();
       OverlayPopped?.Invoke();
     }
 

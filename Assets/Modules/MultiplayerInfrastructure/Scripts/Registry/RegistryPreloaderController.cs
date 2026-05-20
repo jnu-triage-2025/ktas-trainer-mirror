@@ -40,6 +40,10 @@ namespace MultiplayerInfrastructure.Registry
 
     private void PreloadScenarioGraphs()
     {
+      // Always attempt bulk preload from Resources/Scenario so all available
+      // scenario TextAssets can be discovered even without explicit SO wiring.
+      Registry.PreloadScenarioGraphsFromResources(validateWithSchema: true);
+
       if (preloadScenarioGraphSO == null || preloadScenarioGraphSO.scenarioGraphRegistryRequirements == null)
         return;
 

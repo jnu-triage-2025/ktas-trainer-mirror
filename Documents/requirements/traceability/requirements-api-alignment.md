@@ -2,7 +2,7 @@
 title: Requirements API Alignment Matrix
 doc_type: requirement
 status: active
-updated: 2026-04-14
+updated: 2026-05-17
 owner: docs
 ---
 
@@ -32,6 +32,16 @@ owner: docs
 | 월드 아이템 픽업 서버 승인 흐름 | `LootableItemInteractHandler` 설명 | 높음 |
 | TTS transcript와 PlayTTS 연동 | `TTSService` 문서의 transcript 참조, scenario graph node 정의 | 중간 |
 
+## 2.1 2026-05 문서화 반영 매트릭스
+
+| 구현 항목 | API 문서 | 요구사항 문서 | 정합성 |
+|---|---|---|---|
+| MovingPatientBedController 협동 이동/눕힘 | `api-references/entities/moving-patient-bed-and-patient.md` | `requirements/interaction/triage-moving-patient-bed-requirements.md` | 높음 |
+| PatientController 상호작용/의료 상태 | `api-references/entities/patient-controller-reference.md` | `requirements/patient/triage-patient-models-requirements.md` | 높음 |
+| IntravenousLine 연결 포인트/서비스 | `api-references/entities/intravenous-line-reference.md` | `requirements/interaction/triage-intravenous-line-requirements.md` | 높음 |
+| UIDocumentWorldSurfaceBinder 월드 표면 바인딩 | `api-references/TriageTrainer.Entity.PatientMonitor.md` | `requirements/patient/patient-monitor-requirements.md` | 높음 |
+| PlayerCharacterModel 어댑터 구현체 | `api-references/TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel.md`, `api-references/MultiplayerInfrastructure.Player.PlayerModel.md` | `requirements/player/player-model-requirements.md` | 중간 |
+
 ## 3. 불일치/개선 필요 사항
 
 1. 일부 API 레퍼런스가 이동 전 문서 경로를 참조하고 있었음(이번 정리에서 링크 갱신).
@@ -42,3 +52,4 @@ owner: docs
 
 - 핵심 기능(크로스헤어, 레이캐스트, 상호작용 인터페이스, 서버 승인 픽업)은 요구사항과 API 문서가 대체로 정합하다.
 - 시나리오/TTS 용어와 일부 실행 순서 기술은 후속 문서 개선 대상으로 남긴다.
+- 2026-05 반영 대상으로 선정된 환자/침대/수액 라인/플레이어 모델/모니터 바인더는 요구사항과 API 간 상호 참조를 확보했다.

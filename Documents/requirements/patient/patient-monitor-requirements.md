@@ -16,11 +16,13 @@ PatientMonitor는 환자 활력징후 파형을 시각화하는 기능이다. �
 - 이벤트별 파라미터 프리셋 적용 시 화면 깜빡임 없이 자연스럽게 갱신되어야 한다.
 - 모니터 표시 여부(패널 활성/비활성)와 파라미터 적용 순서가 일관되어야 한다.
 - 모니터 파라미터는 네트워크 세션의 모든 관찰자에게 동일하게 전파되어야 한다.
+- UI Toolkit 문서는 월드 표면(RenderTexture) 출력 경로를 지원해야 하며, 대상 머티리얼 텍스처 슬롯 바인딩이 가능해야 한다.
 - 코드 구조는 `Models` 폴더 내에서 도메인별 `Parameters + WaveformCalculator` 패턴을 유지해야 한다.
 
 ## 기술적 세부 사항
 
 - `PatientMonitorController`가 4개 파형 샘플 계산과 그래프 반영(Update 루프)을 담당한다.
+- `UIDocumentWorldSurfaceBinder`가 `UIDocument`를 `RenderTexture`로 출력해 월드 `MeshRenderer` 표면에 바인딩한다.
 - `PatientMonitorParameters`가 도메인별 파라미터(`ECG/ART/CVP/PLETH`)를 통합 보유한다.
 - 각 도메인은 `*Parameters`와 `*WaveformCalculator`를 통해 독립 계산된다.
 - 네트워크 동기화는 FishNet `SyncVar` 및 `ServerRpc` 기반으로 수행된다.

@@ -207,6 +207,8 @@ namespace TriageTrainer.Entity
 
       CleanupExitKeyParticipants();
 
+      SyncReposedTargetTransform();
+
       if (_participants.Count == 0)
         return;
 
@@ -283,11 +285,8 @@ namespace TriageTrainer.Entity
           player.TryDropCarriedReposable(out _);
       }
 
-      Transform patientAnchor = ResolvePatientAnchor(targetBehaviour);
-      targetBehaviour.transform.SetParent(patientAnchor, false);
-      targetBehaviour.transform.localPosition = Vector3.zero;
-      targetBehaviour.transform.localRotation = Quaternion.identity;
       _reposedTargetComponent = targetBehaviour;
+      SnapReposedTargetToAnchor(targetBehaviour);
       target.OnMovingPatientBedAttachedEnter();
 
       if (targetBehaviour.TryGetComponent(out PatientController patient))
@@ -316,18 +315,13 @@ namespace TriageTrainer.Entity
       ReleasePatientAttachPoint(liftedBehaviour);
       lifted.OnMovingPatientBedAttachedExit();
 
-      if (liftedBehaviour != null)
-        liftedBehaviour.transform.SetParent(null, true);
-
       if (!player.TryPickUpReposable(lifted))
       {
         if (liftedBehaviour != null)
         {
-          liftedBehaviour.transform.SetParent(_reposeAnchor, false);
-          liftedBehaviour.transform.localPosition = Vector3.zero;
-          liftedBehaviour.transform.localRotation = Quaternion.identity;
           _reposedTargetComponent = liftedBehaviour;
           TryOccupyNextPatientAttachPoint(liftedBehaviour, out _);
+          SnapReposedTargetToAnchor(liftedBehaviour);
           lifted.OnMovingPatientBedAttachedEnter();
         }
         return false;
@@ -574,6 +568,37 @@ namespace TriageTrainer.Entity
         return _reposeAnchor;
 
       return transform;
+    }
+
+    private void SyncReposedTargetTransform()
+    {
+      if (_reposedTargetComponent == null)
+        return;
+
+      SnapReposedTargetToAnchor(_reposedTargetComponent);
+    }
+
+    private void SnapReposedTargetToAnchor(MonoBehaviour patient)
+    {
+      if (patient == null)
+        return;
+
+      Transform patientAnchor = ResolvePatientAnchor(patient);
+      if (patientAnchor == null)
+        return;
+
+      Vector3 worldPosition = patientAnchor.position;
+      Quaternion worldRotation = patientAnchor.rotation;
+
+      if (patient.TryGetComponent<PatientController>(out var patientController)
+          && patientController != null
+          && patientController.TryGetLayingOnMovingBedOffsets(out var localOffset, out var localRotationOffset))
+      {
+        worldPosition += patientAnchor.TransformVector(localOffset);
+        worldRotation = patientAnchor.rotation * localRotationOffset;
+      }
+
+      patient.transform.SetPositionAndRotation(worldPosition, worldRotation);
     }
 
     private void RefreshOwnerActionbars()

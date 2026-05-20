@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
-using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Registry;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -168,15 +166,12 @@ namespace MultiplayerInfrastructure.UI
     {
       EnsurePanel();
       _questPanel?.SetOpen(true);
-      NotifyPlayerOverlay(expanding: true);
     }
 
     private void HidePanel()
     {
       if (_questPanel != null)
         _questPanel.SetOpen(false);
-
-      NotifyPlayerOverlay(expanding: false);
     }
 
     private void HideImmediately()
@@ -185,14 +180,5 @@ namespace MultiplayerInfrastructure.UI
       _questPanel?.SetOpen(false);
     }
 
-    private void NotifyPlayerOverlay(bool expanding)
-    {
-      var playerController = Registry.Registry.GetFirstEntityComponent<PlayerController>(EntityType.Player, each => each != null && each.IsOwner);
-      if (!playerController.IsUnityNull())
-      {
-        if (expanding) playerController.EnterUIOverlayMode();
-        else playerController.ExitUIOverlayMode();
-      }
-    }
   }
 }

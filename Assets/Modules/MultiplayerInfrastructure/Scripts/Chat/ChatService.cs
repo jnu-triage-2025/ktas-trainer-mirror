@@ -264,7 +264,7 @@ namespace MultiplayerInfrastructure.Chat
         return false;
       }
 
-      if (!Registry.Registry.Contains(RegistryType.ScenarioGraph, scenarioIdentifier))
+      if (!Registry.Registry.PreloadScenarioGraph(scenarioIdentifier, validateWithSchema: true))
       {
         error = $"Scenario '{scenarioIdentifier}' is not registered.";
         return false;
