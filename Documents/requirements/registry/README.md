@@ -7,6 +7,7 @@
 
 ### 문서
 - [entity-preset-registry-requirements.md](./entity-preset-registry-requirements.md): Entity Preset 레지스트리 요구사항
+- [overworld-spawnpoint-initializer-requirements.md](./overworld-spawnpoint-initializer-requirements.md): 오버월드 웨이포인트/스폰포인트 초기화 기능 요구사항
 - [player-model-registry-requirements.md](./player-model-registry-requirements.md): PlayerModel Registry 확장 요구사항
 - [registry-preloader-authoring-requirements.md](./registry-preloader-authoring-requirements.md): Registry 프리로더 저작/운영 요구사항
 - [registry-requirements.md](./registry-requirements.md): Registry 기능 요구사항

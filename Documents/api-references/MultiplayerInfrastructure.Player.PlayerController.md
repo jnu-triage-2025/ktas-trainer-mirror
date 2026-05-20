@@ -152,8 +152,39 @@ public bool TryDropItemInFront(ItemData itemData)
 
 ## 6. Interactables (PlayerController.Interactables.cs)
 
-직접 호출보다는 `NearbyInteractablesDetector`를 통해 자동으로 관리됩니다.  
-`E` (기본 상호작용 키)를 누르면 감지된 첫 번째 인터랙터블이 `Interact()`됩니다.
+`NearbyInteractablesDetector` 이벤트를 기준으로 주변 상호작용 후보를 매 프레임이 아닌 "변화 시점"에 갱신합니다.
+
+### 초기화/해제 흐름
+
+- `OnStartClient_Interactables()`
+  - 소유 플레이어(`IsOwner`)에서만 동작
+  - 카메라 컨트롤러에서 `NearbyInteractablesDetector`, `InteractableObjectHintUIController`를 획득
+  - `_detector.NearbyUpdated += HandleNearbyUpdated` 구독 후 즉시 1회 렌더링
+  - `DialoguePanelUIController`를 연결하고 `SetInteractableHintUI(...)`로 힌트 UI-다이얼로그 UI를 결합
+- `OnDestroy()`
+  - `_detector.NearbyUpdated` 구독 해제
+
+### 후보 필터링 규칙 (`HandleNearbyUpdated`)
+
+```csharp
+private void HandleNearbyUpdated(IReadOnlyList<IInteractable> nearby)
+```
+
+- `IInteractable.Interacts`를 평탄화(flatten)해 `List<IInteract>`로 구성
+- `null` 항목 제거
+- `IInteractorConditional` 구현체는 `CanInteract(transform)`가 `true`일 때만 포함
+- 최종 목록을 `_interactableHintUI.UpdateInteractables(interacts)`로 전달
+  - 힌트 UI가 다이얼로그 모드인 경우, 현재 표시 목록 대신 "복원 캐시"가 갱신됨
+
+### 입력 처리 연동
+
+- 선택 이동: 마우스 휠, `-`, `=`/`+`, `Keypad +/-`
+- 상호작용 실행:
+  - 일반 모드: `_interactableHintUI.GetSelected()?.Interact(transform)`
+  - 다이얼로그 모드: `DialoguePanelUIController.TrySelectCurrentOption()`으로 위임
+- `RefreshInteractableHintsNow()`
+  - 즉시 현재 감지 결과로 힌트 목록을 강제 동기화할 때 사용
+  - 예: 특정 상호작용 성공 직후 UI 반영 필요 시
 
 ---
 
