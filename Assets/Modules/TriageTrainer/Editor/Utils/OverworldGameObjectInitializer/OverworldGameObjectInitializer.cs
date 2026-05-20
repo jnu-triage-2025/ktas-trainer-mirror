@@ -16,8 +16,8 @@ namespace TriageTrainer.Editor.Utils
     public const string BuildingEnteranceIdentifier = "building-enterance";
     public static readonly Vector3 DefaultTreatmentRoomEnterance = new(-66.5f, 1f, -10.2f);
     public const string TreatmentRoomEnteranceIdentifier = "treatment-room-enterance";
-    public static readonly Vector3 DefaultCommonsSpawnPoint = new(-73f, 1f, -7.5f);
-    public const string CommonsSpawnPointIdentifier = "spawnpoint-commons";
+    public static readonly Vector3 DefaultCommonSpawnPoint = new(-73f, 1f, -7.5f);
+    public const string CommonSpawnPointIdentifier = "spawnpoint-commons";
 
     public static void Set()
     {
@@ -25,7 +25,7 @@ namespace TriageTrainer.Editor.Utils
       DeleteChildren(generatedRoot.transform);
       CreateWaypoint(generatedRoot.transform, BuildingEnteranceIdentifier, DefaultBuildingEnterance);
       CreateWaypoint(generatedRoot.transform, TreatmentRoomEnteranceIdentifier, DefaultTreatmentRoomEnterance);
-      CreateSpawnPoint(generatedRoot.transform, CommonsSpawnPointIdentifier, DefaultCommonsSpawnPoint);
+      CreateSpawnPoint(generatedRoot.transform, CommonSpawnPointIdentifier, DefaultCommonSpawnPoint);
     }
 
     public static void Delete()
@@ -105,7 +105,7 @@ namespace TriageTrainer.Editor.Utils
       spawnPointObject.transform.SetParent(parent, false);
       spawnPointObject.transform.position = position;
 
-      var marker = spawnPointObject.AddComponent<OverworldSpawnPointMarker>();
+      var marker = spawnPointObject.AddComponent<OverworldSpawnPoint>();
       marker.SetIdentifier(identifier);
 
 #if UNITY_EDITOR

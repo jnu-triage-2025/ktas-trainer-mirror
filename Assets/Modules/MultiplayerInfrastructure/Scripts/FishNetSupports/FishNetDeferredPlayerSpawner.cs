@@ -17,6 +17,9 @@ namespace MultiplayerInfrastructure.FishNetSupports
     private static readonly FieldInfo PlayerSpawnerAddToDefaultSceneField =
       typeof(PlayerSpawner).GetField("_addToDefaultScene", BindingFlags.Instance | BindingFlags.NonPublic);
 
+    private static readonly MethodInfo PlayerSpawnerOnDestroyMethod =
+      typeof(PlayerSpawner).GetMethod("OnDestroy", BindingFlags.Instance | BindingFlags.NonPublic);
+
     [SerializeField] private NetworkManager _networkManager;
     [SerializeField] private NetworkObject _playerPrefab;
     [SerializeField] private bool _addToDefaultScene = true;
@@ -99,6 +102,26 @@ namespace MultiplayerInfrastructure.FishNetSupports
       }
     }
 
+    public void SetRequiredSpawnIdentifier(string identifier)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+        return;
+
+      _requiredSpawnIdentifier = identifier;
+      TrySpawnWaitingClients();
+    }
+
+    public static void DisableLegacyPlayerSpawner(PlayerSpawner source)
+    {
+      if (source == null)
+        return;
+
+      // PlayerSpawner subscribes in Awake and only unsubscribes in OnDestroy.
+      // Calling OnDestroy here detaches its spawn callback without editing FishNet source.
+      PlayerSpawnerOnDestroyMethod?.Invoke(source, null);
+      source.enabled = false;
+    }
+
     private void SceneManager_OnClientLoadedStartScenes(NetworkConnection conn, bool asServer)
     {
       if (!asServer)
@@ -129,6 +152,9 @@ namespace MultiplayerInfrastructure.FishNetSupports
 
     private void TrySpawnForConnection(NetworkConnection conn)
     {
+      if (!ResolveNetworkManager())
+        return;
+
       if (conn == null || !conn.IsValid)
         return;
 
@@ -142,10 +168,15 @@ namespace MultiplayerInfrastructure.FishNetSupports
       }
 
       if (!PlayerSpawnPointRegistry.TryGet(_requiredSpawnIdentifier, out var spawnTransform))
+      {
+        Debug.Log($"[FishNetDeferredPlayerSpawner] SpawnPoint '{_requiredSpawnIdentifier}' is not available yet.");
         return;
+      }
 
       var spawned = _networkManager.GetPooledInstantiated(_playerPrefab, spawnTransform.position, spawnTransform.rotation, true);
       _networkManager.ServerManager.Spawn(spawned, conn);
+
+      Debug.Log($"[FishNetDeferredPlayerSpawner] Spawned client {conn.ClientId} at '{_requiredSpawnIdentifier}' ({spawnTransform.position}).");
 
       if (_addToDefaultScene)
         _networkManager.SceneManager.AddOwnerToDefaultScene(spawned);

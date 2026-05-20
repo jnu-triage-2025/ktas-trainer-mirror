@@ -1,5 +1,6 @@
 using UnityEngine;
 using MultiplayerInfrastructure.FishNetSupports;
+using MultiplayerInfrastructure.Registry;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -7,9 +8,11 @@ using UnityEditor;
 
 namespace TriageTrainer.Utils
 {
-  public sealed class OverworldSpawnPointMarker : MonoBehaviour, IPlayerSpawnPointProvider
+  public sealed class OverworldSpawnPoint : MonoBehaviour, IPlayerSpawnPointProvider
   {
     [SerializeField] private string _identifier;
+
+    private string _registeredIdentifier;
 
     public string Identifier => _identifier;
     public Transform SpawnTransform => transform;
@@ -22,12 +25,37 @@ namespace TriageTrainer.Utils
 
     private void OnEnable()
     {
+      RegisterToRegistry();
       PlayerSpawnPointRegistry.Register(this);
     }
 
     private void OnDisable()
     {
       PlayerSpawnPointRegistry.Unregister(this);
+      UnregisterFromRegistry();
+    }
+
+    private void OnDestroy()
+    {
+      UnregisterFromRegistry();
+    }
+
+    private void RegisterToRegistry()
+    {
+      if (string.IsNullOrWhiteSpace(_identifier))
+        return;
+
+      _registeredIdentifier = _identifier;
+      Registry.Register(RegistryType.SpawnPoint, _registeredIdentifier, transform);
+    }
+
+    private void UnregisterFromRegistry()
+    {
+      if (string.IsNullOrWhiteSpace(_registeredIdentifier))
+        return;
+
+      Registry.Unregister(RegistryType.SpawnPoint, _registeredIdentifier);
+      _registeredIdentifier = null;
     }
 
     private void OnDrawGizmos()

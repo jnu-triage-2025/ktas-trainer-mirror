@@ -11,6 +11,7 @@ namespace MultiplayerInfrastructure.Registry
     IconSprite,
     Npc,
     Waypoint,
+    SpawnPoint,
     /// <summary>
     /// 월드에 존재하는 엔티티 저장소. 값은 EntityDescriptor 이며, Get&lt;GameObject&gt; / Get&lt;Component&gt; 해석을 지원합니다.
     /// </summary>

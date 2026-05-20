@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.FishNetSupports
@@ -43,6 +44,16 @@ namespace MultiplayerInfrastructure.FishNetSupports
     public static bool TryGet(string identifier, out Transform spawnTransform)
     {
       spawnTransform = null;
+
+      if (string.IsNullOrWhiteSpace(identifier))
+        return false;
+
+      if (Registry.Registry.TryGet<Transform>(RegistryType.SpawnPoint, identifier, out var registryTransform)
+          && registryTransform != null)
+      {
+        spawnTransform = registryTransform;
+        return true;
+      }
 
       for (int i = Providers.Count - 1; i >= 0; i--)
       {

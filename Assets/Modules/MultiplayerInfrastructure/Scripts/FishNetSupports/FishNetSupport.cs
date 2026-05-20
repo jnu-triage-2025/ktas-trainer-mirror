@@ -28,11 +28,44 @@ namespace MultiplayerInfrastructure.FishNetSupports
 
     private void Awake()
     {
-      if (_instance != null && _instance != this)
+      if (_instance == null)
       {
-        Debug.LogWarning("[FishNetSupport] Duplicate instance detected. Disabling duplicate component without destroying its GameObject.");
-        enabled = false;
+        _instance = this;
+        ResolveNetworkManagerInHierarchy();
         return;
+      }
+
+      if (_instance == this)
+      {
+        ResolveNetworkManagerInHierarchy();
+        return;
+      }
+
+      // Static singleton can remain when domain reload is disabled.
+      // If previous instance is inactive or effectively missing, replace it.
+      if (!_instance || !_instance.isActiveAndEnabled)
+      {
+        _instance = this;
+        ResolveNetworkManagerInHierarchy();
+        return;
+      }
+
+      if (_instance != null)
+      {
+        bool currentResolved = ResolveNetworkManagerInHierarchy();
+        bool existingResolved = _instance.ResolveNetworkManagerInHierarchy();
+
+        if (!existingResolved && currentResolved)
+        {
+          _instance.enabled = false;
+          _instance = this;
+        }
+        else
+        {
+          Debug.LogWarning($"[FishNetSupport] Duplicate instance detected. Keeping existing instance '{_instance.gameObject.name}' and disabling '{gameObject.name}'.");
+          enabled = false;
+          return;
+        }
       }
 
       _instance = this;
@@ -74,10 +107,12 @@ namespace MultiplayerInfrastructure.FishNetSupports
       }
 
       ConfigureTransport(sessionInformation);
-      PrepareDeferredPlayerSpawning();
 
       if (isOpeningServer)
+      {
+        PrepareDeferredPlayerSpawning();
         StartServer();
+      }
 
       StartClient();
 

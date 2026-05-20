@@ -6,6 +6,7 @@ namespace MultiplayerInfrastructure.Registry
     public const string IsOpeningServer = "IsOpeningServer";
     public const string UseLanDiscovery = "UseLanDiscovery";
     public const string LoadedFromIntroScene = "LoadedFromIntroScene";
+    public const string DefaultCommonSpawnPoint = "DefaultCommonSpawnPoint";
 
     /// <summary>
     /// IntroScene에서 플레이어가 입력한 DisplayName.

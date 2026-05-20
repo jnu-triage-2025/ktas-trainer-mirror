@@ -61,7 +61,12 @@ namespace MultiplayerInfrastructure.Player
       RegisterPlayerEntity();
       OnStartServer_PlayerModel();
       SyncPlayerTagsToObservers();
-      SyncExistingWorldItemsToConnection(Owner);
+    }
+
+    public override void OnSpawnServer(NetworkConnection connection)
+    {
+      base.OnSpawnServer(connection);
+      SyncExistingWorldItemsToConnection(connection);
     }
 
     public override void OnStopServer()
@@ -625,4 +630,3 @@ namespace MultiplayerInfrastructure.Player
     }
   }
 }
-
