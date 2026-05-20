@@ -1,5 +1,7 @@
 using FishNet.Object;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UIElements;
 using TriageTrainer.Entity.Patient;
 
@@ -140,6 +142,43 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       container.Add(body);
 
       root.Add(container);
+      SetVisualTreeNonInteractive(root);
+      ClearRuntimeMonitorPanelSelection();
+    }
+
+    private static void SetVisualTreeNonInteractive(VisualElement root)
+    {
+      if (root == null)
+        return;
+
+      var stack = new Stack<VisualElement>();
+      stack.Push(root);
+      while (stack.Count > 0)
+      {
+        var current = stack.Pop();
+        if (current == null)
+          continue;
+
+        current.pickingMode = PickingMode.Ignore;
+        current.focusable = false;
+
+        for (int i = 0; i < current.childCount; i++)
+          stack.Push(current[i]);
+      }
+    }
+
+    private static void ClearRuntimeMonitorPanelSelection()
+    {
+      var eventSystem = EventSystem.current;
+      if (eventSystem == null)
+        return;
+
+      var selected = eventSystem.currentSelectedGameObject;
+      if (selected == null)
+        return;
+
+      if (selected.name.StartsWith("PatientMonitorPanelSettings", System.StringComparison.Ordinal))
+        eventSystem.SetSelectedGameObject(null);
     }
 
     private void BuildNumericsColumn(VisualElement parent)

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UIElements;
 
 namespace TriageTrainer.Entity.PatientMonitor
@@ -75,6 +76,26 @@ namespace TriageTrainer.Entity.PatientMonitor
       }
 
       _targetRenderer.material.SetTexture(_texturePropertyName, _renderTexture);
+      ClearRuntimeMonitorPanelSelection();
+    }
+
+    private void LateUpdate()
+    {
+      ClearRuntimeMonitorPanelSelection();
+    }
+
+    private void ClearRuntimeMonitorPanelSelection()
+    {
+      var eventSystem = EventSystem.current;
+      if (eventSystem == null)
+        return;
+
+      var selected = eventSystem.currentSelectedGameObject;
+      if (selected == null)
+        return;
+
+      if (selected.name.StartsWith("PatientMonitorPanelSettings", System.StringComparison.Ordinal))
+        eventSystem.SetSelectedGameObject(null);
     }
 
     private void OnDisable()

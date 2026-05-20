@@ -1,4 +1,3 @@
-using System;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
@@ -25,35 +24,10 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private KeyCode _keyOpenQuestUI = DefaultsKeyConfiguration.OpenQuestUI;
     [SerializeField] private KeyCode _keyDropHeldItem = DefaultsKeyConfiguration.DropHeldItem;
 
-    /**
-     * 키 입력 핸들링을 막아야 하는 상황에서 이 플래그를 참으로 설정할 것
-     * i.e. 채팅창 오픈
-     */
-    [SerializeField] private bool _keyHandlingLockedByEscapeUI = false;
-    [SerializeField] private bool _keyHandlingLockedByChatUI = false;
-    [SerializeField] private bool _keyHandlingLockedByInventoryUI = false;
-    [SerializeField] private bool _keyHandlingLockedByDialogueUI = false;
-    private bool _KeyHandlingLocked =>
-      _keyHandlingLockedByEscapeUI
-      || _keyHandlingLockedByChatUI
-      || _keyHandlingLockedByInventoryUI
-      || _keyHandlingLockedByDialogueUI
-      || !UIOverlayStack.IsEmpty();
-
     void Start_Input()
     {
       _chatUI = Registry.Registry.Get<ChatUIController>(RegistryType.UI, Registry.Registry.TypeKey<ChatUIController>());
-      RegisterOverlayLock(_chatUI, locked => _keyHandlingLockedByChatUI = locked);
-      RegisterOverlayLock(Registry.Registry.Get<InventoryUIController>(RegistryType.UI, Registry.Registry.TypeKey<InventoryUIController>()), locked => _keyHandlingLockedByInventoryUI = locked);
-      RegisterOverlayLock(Registry.Registry.Get<GameEscapeMenuUIController>(RegistryType.UI, Registry.Registry.TypeKey<GameEscapeMenuUIController>()), locked => _keyHandlingLockedByEscapeUI = locked);
-    }
-
-    private void RegisterOverlayLock(IUIOverlay overlay, Action<bool> setLocked)
-    {
-      if (overlay == null || setLocked == null) return;
-
-      overlay.OverlayPushed += () => setLocked(true);
-      overlay.OverlayPopped += () => setLocked(false);
+      EnsureEscapeMenuController();
     }
 
     public void Update_Input()
@@ -65,11 +39,14 @@ namespace MultiplayerInfrastructure.Player
       HandleDialogueInput();
       HandleIntravenousLineConnectionModeExit();
 
-      if (_keyHandlingLockedByInventoryUI) 
-        if (HandleToggleInventory())
-          return;
+      if (HandleToggleInventory())
+        return;
 
-      if (_KeyHandlingLocked) return;
+      if (HandleOpenQuestUIInput())
+        return;
+
+      if (!UIOverlayStack.IsEmpty())
+        return;
 
       if (!escapeConsumed)
         HandleEscapeMenuInput();
@@ -80,11 +57,8 @@ namespace MultiplayerInfrastructure.Player
         return;
       }
 
-      HandleOpenQuestUIInput();
-
       HandleInteractInteractableObject();
       HandleHotbarControlInput();
-      HandleToggleInventory();
       HandleSwitchCameraViewMode();
       HandleItemActionInput();
     }
@@ -115,11 +89,18 @@ namespace MultiplayerInfrastructure.Player
       if (Input.GetKeyDown(_keyToggleInventory))
       {
         if (UIOverlayStack.IsTop(_inventoryUI))
+        {
           UIOverlayStack.Pop();
-        else
+          return true;
+        }
+
+        if (UIOverlayStack.IsEmpty())
+        {
           UIOverlayStack.Push(_inventoryUI);
-        return true;
+          return true;
+        }
       }
+
       return false;
     }
 
@@ -227,6 +208,10 @@ namespace MultiplayerInfrastructure.Player
     {
       if (Input.GetKeyDown(_keyOpenEscMenu))
       {
+        EnsureEscapeMenuController();
+        if (_escapeMenuUIController.IsUnityNull())
+          return;
+
         if (UIOverlayStack.IsTop(_escapeMenuUIController))
           UIOverlayStack.Pop();
         else
@@ -278,19 +263,30 @@ namespace MultiplayerInfrastructure.Player
       if (Input.GetKeyDown(_keyDropHeldItem)) DropHeldItem();
     }
 
-    private void HandleOpenQuestUIInput()
+    private bool HandleOpenQuestUIInput()
     {
-      if (Input.GetKeyDown(_keyOpenQuestUI))
-      {
-        if (_questUIController.IsUnityNull())
-          _questUIController = FindQuestUIController();
-        if (_questUIController.IsUnityNull()) return;
+      if (!Input.GetKeyDown(_keyOpenQuestUI))
+        return false;
 
-        if (UIOverlayStack.IsTop(_questUIController))
-          UIOverlayStack.Pop();
-        else
-          UIOverlayStack.Push(_questUIController);
+      if (_questUIController.IsUnityNull())
+        _questUIController = FindQuestUIController();
+
+      if (_questUIController.IsUnityNull())
+        return false;
+
+      if (UIOverlayStack.IsTop(_questUIController))
+      {
+        UIOverlayStack.Pop();
+        return true;
       }
+
+      if (UIOverlayStack.IsEmpty())
+      {
+        UIOverlayStack.Push(_questUIController);
+        return true;
+      }
+
+      return false;
     }
 
     private void HandleIntravenousLineConnectionModeExit()

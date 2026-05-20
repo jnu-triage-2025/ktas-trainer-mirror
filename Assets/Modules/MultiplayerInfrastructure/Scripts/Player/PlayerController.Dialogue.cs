@@ -29,11 +29,6 @@ namespace MultiplayerInfrastructure.Player
         _camControl,
         _interactableHintUI
       );
-
-      if (!_dialoguePanelUIController.IsUnityNull())
-      {
-        RegisterOverlayLock(_dialoguePanelUIController, locked => _keyHandlingLockedByDialogueUI = locked);
-      }
     }
 
     /// <summary>

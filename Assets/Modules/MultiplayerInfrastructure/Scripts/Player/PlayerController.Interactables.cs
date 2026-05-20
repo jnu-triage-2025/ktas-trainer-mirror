@@ -55,6 +55,8 @@ namespace MultiplayerInfrastructure.Player
 
     void OnDestroy()
     {
+      OnStopClient_UIOverlaySync();
+
       StopSpectateFollow();
 
       if (_detector != null)

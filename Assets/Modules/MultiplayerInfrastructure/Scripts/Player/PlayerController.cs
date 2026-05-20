@@ -1,6 +1,7 @@
 using FishNet.Object;
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
@@ -63,6 +64,8 @@ namespace MultiplayerInfrastructure.Player
       base.OnStartClient();
       OnStartClient_AnyPeer();   // 모든 클라이언트 — owner 여부 무관
       if (!IsOwner) return;
+
+      OnStartClient_UIOverlaySync();
       
       OnStartClient_Network();
       OnStartClient_Camera();
@@ -75,6 +78,7 @@ namespace MultiplayerInfrastructure.Player
 
     public override void OnStopClient()
     {
+      OnStopClient_UIOverlaySync();
       OnStopClient_AnyPeer();    // 모든 클라이언트 — owner 여부 무관
       base.OnStopClient();
     }
