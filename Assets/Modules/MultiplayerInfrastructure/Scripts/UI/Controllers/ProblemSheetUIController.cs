@@ -1,10 +1,8 @@
 using System;
 using MultiplayerInfrastructure.Definitions;
-using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Problem;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Chat;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -209,32 +207,18 @@ namespace MultiplayerInfrastructure.UI
     {
       EnsurePanel();
       _problemSheet.style.display = DisplayStyle.Flex;
-      NotifyPlayerOverlay(true);
     }
 
     private void HidePanel()
     {
       if (_problemSheet != null)
         _problemSheet.style.display = DisplayStyle.None;
-
-      NotifyPlayerOverlay(false);
     }
 
     private void HideImmediately()
     {
       EnsurePanel();
       _problemSheet.style.display = DisplayStyle.None;
-      NotifyPlayerOverlay(false);
-    }
-
-    private static void NotifyPlayerOverlay(bool expanding)
-    {
-      var playerController = Registry.Registry.GetFirstEntityComponent<PlayerController>(EntityType.Player, each => each != null && each.IsOwner);
-      if (!playerController.IsUnityNull())
-      {
-        if (expanding) playerController.EnterUIOverlayMode();
-        else playerController.ExitUIOverlayMode();
-      }
     }
   }
 }

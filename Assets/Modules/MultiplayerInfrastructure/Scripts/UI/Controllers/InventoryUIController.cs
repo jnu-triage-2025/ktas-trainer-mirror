@@ -87,7 +87,6 @@ namespace MultiplayerInfrastructure.UI
     public void OnOverlayPushed()
     {
       _view?.SetVisible(true);
-      Registry.Registry.GetFirstEntityComponent<PlayerController>(EntityType.Player, each => each != null && each.IsOwner)?.EnterUIOverlayMode();
       OverlayPushed?.Invoke();
     }
 
@@ -95,7 +94,6 @@ namespace MultiplayerInfrastructure.UI
     {
       _view?.SetVisible(false);
       _view?.ReturnHeldItemToInventoryOnClose();
-      Registry.Registry.GetFirstEntityComponent<PlayerController>(EntityType.Player, each => each != null && each.IsOwner)?.ExitUIOverlayMode();
       OverlayPopped?.Invoke();
     }
 
