@@ -144,3 +144,56 @@
 - `Documents/requirements/patient/triage-patient-models-requirements.md`
 - `Documents/requirements/interaction/triage-moving-patient-bed-requirements.md`
 - `Documents/api-references/TriageTrainer.Entity.PatientMonitor.md`
+
+## 10. 침대 부착 화면 표시 (Attachment Display)
+
+### 10.1 `PatientDisplayState`의 수액걸이 필드
+
+`PatientDisplayState` (partial) 에는 수액걸이 관련 표시 상태 및 참조가 포함되어 있다.
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `IntravenousStandAttached` | `bool` | 환자에 수액걸이 스탠드가 부착되어있는지 여부 |
+| `IntravenousStandReference` | `GameObject` | 스탠드 시각 오브젝트 참조 |
+| `IntravenousHangerAttached` | `bool` | 환자에 수액걸이가 부착되어있는지 여부 |
+| `IntravenousHangerReference` | `GameObject` | 수액걸이 시각 오브젝트 참조 |
+| `IntravenousFluidAttached` | `bool` | 환자에 수액이 부착되어있는지 여부 |
+| `IntravenousFluidReference` | `GameObject` | 수액 시각 오브젝트 참조 |
+
+### 10.2 `PatientTreatmentDisplayModel` 확장
+
+수액걸이 표시 플래그가 `PatientTreatmentDisplayModel`에 추가되었다.
+
+```csharp
+public bool IntravenousStandAttached;
+public bool IntravenousHangerAttached;
+public bool IntravenousFluidAttached;
+```
+
+### 10.3 `PatientTreatmentDisplayingChildGameObjects` 확장
+
+대응되는 `GameObject` 참조가 추가되었다.
+
+```csharp
+public GameObject IntravenousStandAttached;
+public GameObject IntravenousHangerAttached;
+public GameObject IntravenousFluidAttached;
+```
+
+### 10.4 `MovingPatientBedController` Attachment Display partial
+
+침대는 독립적인 표시 상태를 갖는다. `MovingPatientBedController.AttachmentDisplay.cs` (partial) 에서 관리한다.
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `_intravenousStandAttached` | `bool` | 침대 수액걸이 스탠드 표시 플래그 |
+| `_intravenousStandReference` | `GameObject` | 스탠드 시각 오브젝트 |
+| `_intravenousHangerAttached` | `bool` | 침대 수액걸이 표시 플래그 |
+| `_intravenousHangerReference` | `GameObject` | 수액걸이 시각 오브젝트 |
+| `_intravenousFluidAttached` | `bool` | 침대 수액 표시 플래그 |
+| `_intravenousFluidReference` | `GameObject` | 수액 시각 오브젝트 |
+
+### 10.5 표시 동기화 메서드
+
+- `SyncPatientAttachmentVisuals(Transform patientAnchor)`: 환자 스냅 시 호출되어 모든 수액 걸이 시각을 업데이트
+- `SyncPatientAttachmentVisual(GameObject target, bool isAttached, Transform patientAnchor)`: 개별 시각 오브젝트 활성화 및 앵커 위치 맞춤
