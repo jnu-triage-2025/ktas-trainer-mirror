@@ -34,5 +34,8 @@ namespace TriageTrainer.Patient
     public GameObject NasalCannulaApplied;
 
     public GameObject CervicalCollarOnNeck;
+    public GameObject IntravenousStandAttached;
+    public GameObject IntravenousHangerAttached;
+    public GameObject IntravenousFluidAttached;
   }
 }

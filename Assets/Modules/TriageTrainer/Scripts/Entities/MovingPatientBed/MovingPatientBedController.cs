@@ -12,7 +12,7 @@ using MI = MultiplayerInfrastructure;
 
 namespace TriageTrainer.Entity
 {
-  public class MovingPatientBedController : Ridable, IInteractable, IInteract, IInteractorConditional
+  public partial class MovingPatientBedController : Ridable, IInteractable, IInteract, IInteractorConditional
   {
     private const string DefaultPlayerAttachPointName = "PlayerAttachPoint";
     private const string DefaultPatientAttachPointName = "PatientAttachPoint";
@@ -597,6 +597,8 @@ namespace TriageTrainer.Entity
         worldPosition += patientAnchor.TransformVector(localOffset);
         worldRotation = patientAnchor.rotation * localRotationOffset;
       }
+
+      SyncPatientAttachmentVisuals(patientAnchor);
 
       patient.transform.SetPositionAndRotation(worldPosition, worldRotation);
     }
