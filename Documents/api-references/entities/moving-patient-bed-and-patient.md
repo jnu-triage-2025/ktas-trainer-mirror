@@ -17,6 +17,8 @@
   - `namespace MultiplayerInfrastructure.Player`
 - `Assets/Modules/TriageTrainer/Scripts/Entities/MovingPatientBed/MovingPatientBedController.cs`
   - `namespace TriageTrainer.Entity`
+- `Assets/Modules/TriageTrainer/Scripts/Entities/MovingPatientBed/MovingPatientBedController.AttachmentDisplay.cs`
+  - `namespace TriageTrainer.Entity`
 - `Assets/Modules/TriageTrainer/Scripts/Entities/MovingPatientBed/MovingPatientBedPatientAttachPointObject.cs`
   - `namespace TriageTrainer.Entity`
 - `Assets/Modules/TriageTrainer/Scripts/Patient/PatientController.cs`
@@ -103,6 +105,34 @@
 - `TryReposeTarget(IReposable target, Transform interactor = null)`: 대상 눕히기
 - `TryLiftTarget(PlayerController player, out IReposable lifted)`: 침대에서 대상 들어올리기
 - `TryAttachCurrentHandlingItem(...)` / `TryAttachItem(string itemIdentifier)`: 시각 오브젝트 활성화
+
+### 3.2 수액걸이 표시 (Attachment Display)
+
+`MovingPatientBedController`는 partial 클래스로 분리되어 있다.
+
+| 파일 | 내용 |
+|---|---|
+| `MovingPatientBedController.cs` | 핵심 침대 기능 (이동, 탑승, 환자 부착) |
+| `MovingPatientBedController.AttachmentDisplay.cs` | 수액걸이 스탠드/걸이/수액 독립 표시 상태 |
+
+#### 독립 표시 플래그
+
+침대는 환자와 별도로 수액걸이 표시 상태를 관리한다.
+
+```csharp
+[Header("Attachment Display")]
+[SerializeField] private bool _intravenousStandAttached;
+[SerializeField] private GameObject _intravenousStandReference;
+[SerializeField] private bool _intravenousHangerAttached;
+[SerializeField] private GameObject _intravenousHangerReference;
+[SerializeField] private bool _intravenousFluidAttached;
+[SerializeField] private GameObject _intravenousFluidReference;
+```
+
+#### 표시 동기화
+
+- `SyncPatientAttachmentVisuals(Transform patientAnchor)`: `SnapReposedTargetToAnchor`에서 호출되어 수액 걸이 시각을 업데이트
+- `SyncPatientAttachmentVisual(GameObject, bool, Transform)`: 개별 시각 오브젝트를 활성화하고 환자 앵커 위치에 맞춤
 
 ### 3.2 `PatientController`(침대 연동 범위)
 

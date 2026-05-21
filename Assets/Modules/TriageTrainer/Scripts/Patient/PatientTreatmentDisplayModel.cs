@@ -155,6 +155,21 @@ namespace TriageTrainer.Patient
     /// 환자의 목에 경부 고정대가 착용된 상태를 표시할지 여부
     /// </summary>
     public bool CervicalCollarOnNeck;
+
+    /// <summary>
+    /// 환자에게 연결된 수액걸이 스탠드를 표시할지 여부
+    /// </summary>
+    public bool IntravenousStandAttached;
+
+    /// <summary>
+    /// 환자에게 연결된 수액걸이를 표시할지 여부
+    /// </summary>
+    public bool IntravenousHangerAttached;
+
+    /// <summary>
+    /// 환자에게 연결된 수액을 표시할지 여부
+    /// </summary>
+    public bool IntravenousFluidAttached;
     #endregion  // OtherTreatments
   }
 }

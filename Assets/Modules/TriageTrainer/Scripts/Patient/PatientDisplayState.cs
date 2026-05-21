@@ -10,6 +10,14 @@ namespace TriageTrainer.Patient
     [SerializeField] private GameObject patientModelGameObject;
     [SerializeField] private PatientTreatmentDisplayingChildGameObjects childGameObjects = new PatientTreatmentDisplayingChildGameObjects();
 
+    [Header("Attachment Display")]
+    [SerializeField] private bool intravenousStandAttached;
+    [SerializeField] private GameObject intravenousStandReference;
+    [SerializeField] private bool intravenousHangerAttached;
+    [SerializeField] private GameObject intravenousHangerReference;
+    [SerializeField] private bool intravenousFluidAttached;
+    [SerializeField] private GameObject intravenousFluidReference;
+
     public ref PatientTreatmentDisplayModel DisplaySupports => ref displaySupports;
     public ref PatientTreatmentDisplayModel DisplayState => ref displayState;
     public GameObject PatientModelGameObject
@@ -22,6 +30,42 @@ namespace TriageTrainer.Patient
     {
       get => childGameObjects;
       set => childGameObjects = value;
+    }
+
+    public bool IntravenousStandAttached
+    {
+      get => intravenousStandAttached;
+      set => intravenousStandAttached = value;
+    }
+
+    public GameObject IntravenousStandReference
+    {
+      get => intravenousStandReference;
+      set => intravenousStandReference = value;
+    }
+
+    public bool IntravenousHangerAttached
+    {
+      get => intravenousHangerAttached;
+      set => intravenousHangerAttached = value;
+    }
+
+    public GameObject IntravenousHangerReference
+    {
+      get => intravenousHangerReference;
+      set => intravenousHangerReference = value;
+    }
+
+    public bool IntravenousFluidAttached
+    {
+      get => intravenousFluidAttached;
+      set => intravenousFluidAttached = value;
+    }
+
+    public GameObject IntravenousFluidReference
+    {
+      get => intravenousFluidReference;
+      set => intravenousFluidReference = value;
     }
   }
 }
