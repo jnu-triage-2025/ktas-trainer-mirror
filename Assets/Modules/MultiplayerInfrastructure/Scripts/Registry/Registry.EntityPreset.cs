@@ -195,6 +195,13 @@ namespace MultiplayerInfrastructure.Registry
           ? preset.DisplayName
           : spawned.name;
 
+        if (preset.EntityType == EntityType.Undefined)
+        {
+          Debug.LogWarning(
+            $"[Registry] Entity preset '{identifier}' 는 자가 등록 컴포넌트가 없어 폴백 등록되지만 " +
+            "fallbackEntityType 이 Undefined 입니다. 단순 프리팹이면 적절한 EntityType 을 지정하세요.");
+        }
+
         RegisterEntity(runtimeEntityIdentifier, preset.EntityType, spawned, displayName, isNetworked: preset.IsNetworked);
 
         if (!TryGetEntity(runtimeEntityIdentifier, out descriptor) || descriptor == null)

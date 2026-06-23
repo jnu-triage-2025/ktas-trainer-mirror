@@ -58,8 +58,9 @@ flags: []
 - `EntityPresetRegistryRequirementsSO` 에 환자별 프리셋을 **3개** 등록한다(각각 그 환자의 의학적 상태/외형을
   프리팹에 구성):
   - `patient_a` (심정지/흉부 관통상 프리팹), `patient_b`, `patient_c`, 그리고 분류용 `dummy_b`
-  - 각 항목: `entityType=Patient`, `prefab=해당 환자 프리팹`, `isNetworked=true`.
-    (환자 전용 `EntityType.Patient` 가 추가되어, 환자는 `Npc` 가 아니라 `Patient` 로 등록한다. 침대는 `MovingPatientBed`.)
+  - 각 항목: `fallbackEntityType=Undefined`(그대로 둠), `prefab=해당 환자 프리팹`, `isNetworked=true`.
+    (환자는 `PatientController` 가 스스로 `EntityType.Patient` 로 등록하므로 `fallbackEntityType` 는 사용되지 않는다.
+     자가 등록 컴포넌트가 없는 단순 프리팹에만 `fallbackEntityType` 를 적절히 지정한다.)
 - 시나리오 시작부 `EntityPresetSpawn` 노드가 각 프리셋에서 스폰한다(현재 JSON 값):
   - `patient_a_critical` / `SPAWN_A` → `presetIdentifier=patient_a`, `spawnedEntityIdentifier=patient_a`
   - `patient_b_c_ct` / `SPAWN_B`·`SPAWN_C`·`SPAWN_DUMMY_B` → `patient_b`·`patient_c`·`dummy_b`
@@ -94,8 +95,8 @@ flags: []
 ### 2-1bis. 엔티티 종류(EntityType)와 등록 소유권
 
 혼동을 줄이기 위한 사실 정리:
-- 등록 종류(`EntityType`): `Player`, `Npc`, **`Patient`**, `MovingPatientBed`, `Waypoint`,
-  `ScenarioInteractable`, `ScenarioTriggerZone`, `ItemObject`. (환자 전용 `Patient` 추가됨.)
+- 등록 종류(`EntityType`): **`Undefined`(기본값)**, `Player`, `Npc`, **`Patient`**, `MovingPatientBed`, `Waypoint`,
+  `ScenarioInteractable`, `ScenarioTriggerZone`, `ItemObject`. (환자 전용 `Patient` 및 미지정 기본값 `Undefined` 추가됨.)
 - **모든 런타임 엔티티는 식별자(identifier)로 단일 저장소(`RegistryType.Entity`)에 등록** 된다.
   `EntityType` 은 분류/필터용 메타데이터일 뿐, 조회는 `Registry.Get(RegistryType.Entity, "<식별자>")` 로
   종류와 무관하게 식별자로 한다.
@@ -106,8 +107,9 @@ flags: []
 >
 > 프리셋 스폰(`EntityPresetSpawn`)은 **인스턴스화 + (네트워크) 스폰 + 식별자 주입 + 위계 해제** 만 담당하고,
 > **엔티티 등록과 EntityType 결정은 하지 않는다**(그 책임은 컴포넌트 소유). 즉 환자/침대처럼 자가 등록하는
-> 프리팹에서는 **프리셋 요구사항의 `entityType` 값이 사용되지 않는다**(컴포넌트가 자기 타입으로 등록).
-> `entityType` 은 *자가 등록 컴포넌트가 없는 단순 프리팹* 의 **폴백 등록** 에만 쓰인다.
+> 프리팹에서는 **프리셋 요구사항의 `fallbackEntityType` 값이 사용되지 않는다**(컴포넌트가 자기 타입으로 등록).
+> `fallbackEntityType`(기본값 `Undefined`)은 *자가 등록 컴포넌트가 없는 단순 프리팹* 의 **폴백 등록** 에만 쓰인다.
+> 자가 등록 프리팹/컨테이너에서는 `Undefined` 로 두면 된다.
 >
 > 따라서 질문에 답하면: 컨테이너(환자+침대) 프리셋의 `entityType` 은 **의미 없음**(루트는 소비되고 등록되지 않음).
 > 환자/침대는 이미 각자의 구현체가 스폰·등록을 관리하며, 프리셋이 그 책임을 흡수하지 않는다(의도대로 분리됨).

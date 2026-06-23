@@ -6,6 +6,8 @@ namespace MultiplayerInfrastructure.Registry
   /// </summary>
   public enum EntityType
   {
+    /// <summary>미지정(기본값). 폴백 등록에서 종류가 명시되지 않았음을 의미한다.</summary>
+    Undefined = 0,
     Player,
     Npc,
     Patient,
