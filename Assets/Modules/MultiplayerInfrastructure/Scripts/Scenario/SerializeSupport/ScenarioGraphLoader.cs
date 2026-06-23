@@ -248,6 +248,7 @@ namespace MultiplayerInfrastructure.Scenario
           SpeakerName = dto.SpeakerName,
           DialogueContent = dto.DialogueContent,
           PortraitSpriteIdentifier = dto.PortraitSpriteIdentifier,
+          AutoAdvanceSeconds = dto.AutoAdvanceSeconds,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -786,6 +787,7 @@ namespace MultiplayerInfrastructure.Scenario
           SpeakerName = node.SpeakerName,
           DialogueContent = node.DialogueContent,
           PortraitSpriteIdentifier = node.PortraitSpriteIdentifier,
+          AutoAdvanceSeconds = node.AutoAdvanceSeconds,
           NextIdentifier = node.NextIdentifier
         };
 

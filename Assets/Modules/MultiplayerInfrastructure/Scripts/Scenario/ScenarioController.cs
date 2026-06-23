@@ -47,6 +47,7 @@ namespace MultiplayerInfrastructure.Scenario
     private readonly Dictionary<string, string> _stateStore = new Dictionary<string, string>();
     private int? _scenarioOwnerClientId;
     private ChatUIController _chatUIController;
+    private Coroutine _dialogueAutoAdvanceRoutine;
 
     #endregion
 
@@ -212,6 +213,8 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public void EndScenario()
     {
+      CancelDialogueAutoAdvance();
+
       _currentGraph = null;
       _currentNode = null;
       _state = State.Inactive;
@@ -233,6 +236,9 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public void Advance()
     {
+      // 진행되는 즉시 대기 중인 Dialogue 자동 진행 타이머를 취소하여 중복 진행을 막는다.
+      CancelDialogueAutoAdvance();
+
       if (_currentNode == null || string.IsNullOrEmpty(_currentNode.NextIdentifier))
       {
         EndScenario();
@@ -386,14 +392,44 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingDialogue;
 
+      // 이전 노드의 잔여 타이머가 있다면 정리.
+      CancelDialogueAutoAdvance();
+
       if (!_uiController.IsUnityNull())
       {
         _uiController.DisplayDialogue(node.SpeakerName, node.DialogueContent, node.PortraitSpriteIdentifier);
+
+        // AutoAdvanceSeconds 가 양수이면 표시 후 해당 시간 경과 시 자동 진행.
+        // 그 전에 사용자가 Advance() 를 호출하면 타이머는 취소된다(중복 진행 방지).
+        if (node.AutoAdvanceSeconds.HasValue && node.AutoAdvanceSeconds.Value > 0f)
+        {
+          _dialogueAutoAdvanceRoutine = StartCoroutine(DialogueAutoAdvanceRoutine(node.AutoAdvanceSeconds.Value));
+        }
       }
       else
       {
         // UI 없으면 바로 진행
         Advance();
+      }
+    }
+
+    private IEnumerator DialogueAutoAdvanceRoutine(float seconds)
+    {
+      yield return new WaitForSeconds(seconds);
+      _dialogueAutoAdvanceRoutine = null;
+      // 타이머 만료 시에만 자동 진행. (사용자 입력으로 이미 진행되었다면 CancelDialogueAutoAdvance 로 취소됨)
+      if (_state == State.ExecutingDialogue)
+      {
+        Advance();
+      }
+    }
+
+    private void CancelDialogueAutoAdvance()
+    {
+      if (_dialogueAutoAdvanceRoutine != null)
+      {
+        StopCoroutine(_dialogueAutoAdvanceRoutine);
+        _dialogueAutoAdvanceRoutine = null;
       }
     }
 

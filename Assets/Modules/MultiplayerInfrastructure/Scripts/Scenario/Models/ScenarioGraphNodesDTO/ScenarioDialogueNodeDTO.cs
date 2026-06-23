@@ -12,5 +12,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("portraitSpriteIdentifier")]
     public string PortraitSpriteIdentifier { get; set; }
+
+    [JsonPropertyName("autoAdvanceSeconds")]
+    public float? AutoAdvanceSeconds { get; set; }
   }
 }

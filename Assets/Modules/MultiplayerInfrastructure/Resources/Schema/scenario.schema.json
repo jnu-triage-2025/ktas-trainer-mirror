@@ -413,6 +413,13 @@
                 "string",
                 "null"
               ]
+            },
+            "autoAdvanceSeconds": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
             }
           },
           "required": [
