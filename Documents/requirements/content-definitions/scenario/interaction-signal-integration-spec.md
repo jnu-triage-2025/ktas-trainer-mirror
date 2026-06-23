@@ -71,14 +71,38 @@ AVPU/GCS/활력/맥박/동공 사정은 시나리오 Choice/InvokeEvent 흐름�
 Raise 하거나 사정 UI 확정 콜백에 연결. 대상: `click_patientA`, `click_patient_b/c`, `click_patient_b/c_face`,
 `select_patient_b_and_select_patient_c`, `check_*`(7개), `click_chest`, `click_to_start_comp`.
 
-### click_* (아이템 획득) — [부분]
-아이템 픽업 성공 시(`PlayerController.TryAddItemToInventory` → `item.OnGet`) 아이템 식별자로 Raise.
-복수 아이템 요구 신호(`_and_` 포함)는 **모든 구성 아이템 획득 후** Raise(획득 카운트 추적 필요).
-대상: `click_vital_set`, `click_18g_and_click_ns1_and_click_ps1`, `click_humidifierbottle_and_click_sdw`,
-`click_laryngo_blade_and_..._syringe_5cc`, `click_epi_and_click_syringe_5cc`, `click_glove_and_click_gauze_and_click_plaster` 등 다수.
-구현 메모: 개별 아이템 픽업마다 부분 신호를 올리고, Validator 의 `validationRules` 가 이미 개별 `sig.click_<item>`
-다중 룰로 분해되어 있으므로 **조합 신호(`_and_`) 대신 개별 아이템 신호로 Raise** 하는 편이 자연스럽다
-(현재 변환은 조합 조건을 개별 룰로 분리해 두었으므로 개별 `sig.click_<item>` Raise 로도 통과).
+### click_* (아이템 획득) — [부분 → **공통 계측 완료**]
+`MedicalItem.OnGet` 을 override 하여, 아이템 획득(인벤토리 추가) 시 `sig.<identifier>` 와
+`sig.click_<identifier>` 두 신호를 올린다(2026-06-23 구현, 모든 의료 아이템 공통 1개 지점).
+Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰로 분해되어 있으므로,
+조합(`_and_`) 신호 없이 **개별 아이템 획득만으로** 각 룰이 충족된다.
+
+#### 아이템 식별자 ↔ 조건명 정합
+
+`Raise("click_"+identifier)` 기준으로 시나리오 `sig.click_*` 조건과 대조한 결과:
+
+- **자동 일치(19)**: 조건명 == 아이템 식별자 → 픽업 즉시 통과. 예) `18g, 20g, ambubag, defibpad, electrode,
+  electrode_cable, gauze, o2_line, penlight, plaster, reservoir_bag, scissors, stylet, suction_line,
+  syringe_20cc, syringe_5cc, vital_set, wall_suction, yankauer`.
+- **표기 불일치(아이템 픽업인데 식별자와 조건명이 다름)** — 둘 중 하나로 정합 필요:
+  (a) 시나리오 JSON 조건명을 아이템 식별자에 맞춰 변경, 또는 (b) 아이템에 별칭 신호 Raise 추가.
+  | 조건명(JSON) | 실제 아이템 식별자 |
+  |---|---|
+  | `click_glove` | `gloves` |
+  | `click_et_tube` | `endotracheal_tube` |
+  | `click_epi` | `epinephrine_ampule` |
+  | `click_iv_set` | `intravenous_set` |
+  | `click_ns1` | `normal_saline_1000ml` |
+  | `click_ns_20cc` | `normal_saline_20ml` |
+  | `click_laryngo_blade` | `laryngoscope_blade` |
+  | `click_laryngo_handle` | `laryngoscope_handle` |
+  | `click_blood` | `blood_transfusion_set` |
+- **아이템 픽업이 아닌 click 조건(별도 처리)**: `click_chest`, `click_patient_a/b/c`, `click_patient_*_face`,
+  `click_patient_chest`, `click_defib`, `click_to_start_comp`, `click_flowmeter`, `click_oxyflow_wall`,
+  `click_humidifierbottle`, `click_tpiece`, `click_nasal`, `click_sdw`, `click_neckstabilizer`,
+  `click_dummy_a/b` → 환자/장비/더미 클릭 또는 조립 산출물(prepared) 이므로 각 해당 인터랙션 지점에서 Raise.
+
+권장: 표기 불일치 9건은 시나리오 조건명을 아이템 식별자로 통일(JSON 일괄 치환)하는 편이 단순하다.
 
 ### apply_* / wear_* / insert_* / push_* / suction_* / remove_* (적용/착용/삽입/주입/흡인/제거) — [없음]
 해당 게임플레이 로직 미구현(`MedicalItem.OnUse` 는 no-op, `RaycastTargetEntity()` 는 stub=null).

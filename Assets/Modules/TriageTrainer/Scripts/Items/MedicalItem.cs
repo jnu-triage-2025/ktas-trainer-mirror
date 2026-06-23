@@ -41,6 +41,30 @@ namespace TriageTrainer.ItemDefinitions
     protected MedicalItem() : base() { }
 
     // ── Handlers (기본 no-op) ─────────────────────────────────────────────
+
+    /// <summary>
+    /// 아이템 획득(인벤토리 추가) 완료 시 시나리오 게이팅용 완료 신호(sig.*)를 올린다.
+    /// 아이템 식별자 자체를 신호로 사용하므로(=sig.&lt;identifier&gt; 및 sig.click_&lt;identifier&gt;),
+    /// 시나리오 조건명을 아이템 식별자에 맞추면 별도 코드 없이 획득 게이트가 통과된다.
+    ///
+    /// 주의: 일부 시나리오 조건명(예: click_glove, click_et_tube, click_ns1)은 아이템 식별자
+    /// (gloves, endotracheal_tube, normal_saline_1000ml)와 표기가 다르다. 이 불일치 목록과
+    /// 처리 방침은 interaction-signal-integration-spec.md 의 "아이템 식별자 ↔ 조건명 정합" 절 참조.
+    /// </summary>
+    public override void OnGet(PlayerController player)
+    {
+      base.OnGet(player);
+
+      string id = CurrentIdentifier;
+      if (string.IsNullOrWhiteSpace(id))
+      {
+        return;
+      }
+
+      MI.Scenario.ScenarioInteractionSignals.Raise(id);
+      MI.Scenario.ScenarioInteractionSignals.Raise("click_" + id);
+    }
+
     public override ActionResult OnUse(PlayerController player, MI.Entity.Entity target)
       => ActionResult.Success;
 
