@@ -97,11 +97,10 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
   | `click_laryngo_blade` | `click_laryngoscope_blade` |
   | `click_laryngo_handle` | `click_laryngoscope_handle` |
   | `click_blood` | `click_blood_transfusion_set` |
-- **미해결(콘텐츠 갭) — `ps1`(플라즈마 솔루션 1L)**: 시나리오는 `sig.click_ps1` 을 요구하나
-  대응하는 아이템이 TriageTrainer 아이템 정의에 **없다**(생리식염수만 존재). 임의 매핑은 추측이므로
-  보류한다. **(TODO-CONTENT-1)**: 플라즈마 솔루션 아이템(예: 식별자 `plasma_solution_1000ml`) 정의를
-  추가하고 시나리오 조건명을 그 식별자로 맞춘다. 아이템 추가 전까지 해당 게이트는 신호 미발생으로
-  자동 통과(onFailure:Ignore)된다.
+- **`ps1`(플라즈마 솔루션 1L) — 해결됨(TODO-CONTENT-1 완료, 2026-06-23)**: `PlasmaSolution1000ml`
+  아이템(식별자 `plasma_solution_1000ml`)을 신설·등록하고, 시나리오 조건 `sig.click_ps1` →
+  `sig.click_plasma_solution_1000ml` 로 정합했다. 이제 모든 아이템 픽업 게이트가 식별자와 1:1 일치한다.
+  (단, 아이콘 스프라이트/3D 모델 리소스는 별도 추가 필요 — `ValidateItemResources` 경고 참조.)
 - **아이템 픽업이 아닌 click 조건(별도 처리)**: `click_chest`, `click_patient_a/b/c`, `click_patient_*_face`,
   `click_patient_chest`, `click_defib`, `click_to_start_comp`, `click_flowmeter`, `click_oxyflow_wall`,
   `click_humidifierbottle`, `click_tpiece`, `click_nasal`, `click_sdw`, `click_neckstabilizer`,

@@ -524,7 +524,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_ps1"
+              "registryIdentifier": "sig.click_plasma_solution_1000ml"
             },
             {
               "type": "Registry",

@@ -11,6 +11,7 @@
 ### 하위 폴더
 - [architecture](./architecture/README.md): 문서 1개
 - [entities](./entities/README.md): 문서 4개
+- [items](./items/README.md): 문서 1개
 
 ### 문서
 - [MultiplayerInfrastructure.Chat.ChatService.md](./MultiplayerInfrastructure.Chat.ChatService.md): API 레퍼런스: `MultiplayerInfrastructure.Chat.ChatService`
