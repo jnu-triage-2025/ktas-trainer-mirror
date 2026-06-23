@@ -48,20 +48,37 @@ flags: []
 씬에 아래 오브젝트를 두고, **각 오브젝트의 `Identifier` 를 표의 값으로 지정** 한다(또는 부트스트랩 인스펙터 연결).
 
 ### 2-1. 환자 — **프리셋 스폰 방식**(씬에 직접 두지 않음)
-환자/더미는 **하나의 환자 프리셋을 등록해두고 시나리오가 스폰** 한다(수동 배치 불요).
-- `EntityPresetRegistryRequirementsSO` 에 환자 프리셋을 식별자 **`patient`** 로 등록한다
-  (`entityType=Npc`, `prefab=환자 프리팹`, `isNetworked=true`). 부트스트랩 `Awake_EntityPreset` 가 자동 등록.
-- 시나리오 시작부의 `EntityPresetSpawn` 노드가 이 프리셋에서 인스턴스를 스폰하며,
-  **인스턴스별 식별자를 자동 부여** 한다:
-  - `patient_a_critical` 시작 노드 `SPAWN_A` → `patient_a`
-  - `patient_b_c_ct` 시작 노드 `SPAWN_B`/`SPAWN_C`/`SPAWN_DUMMY_B` → `patient_b` / `patient_c` / `dummy_b`
-- 스폰 위치는 기본 원점(0,0,0)이다. 특정 위치에 두려면 스폰 노드의 `positionSourceEntityIdentifier`
-  를 위치 기준 엔티티(예: 베드/스폰포인트)로 지정하거나 `positionX/Y/Z` 를 편집한다.
 
-> 동작 원리: 스폰 시 `ScenarioEntityPresetSpawnNode.spawnedEntityIdentifier` 값이
-> `PatientController` 에 주입(`ISpawnedEntityIdentifierReceiver`)되어 그 식별자로 레지스트리에 등록된다.
-> 따라서 한 프리셋에서 `patient_a/_b/_c` 가 구분되며, `click_patient_a` / `select_patient_b` 게이트와
-> 이벤트 핸들러(`*_patient_a` 등)가 그대로 동작한다. (네트워크 프리셋은 서버에서 FishNet 으로 복제 스폰.)
+> 주의(정정): 환자 A/B/C 는 의학적 내용이 **서로 다르다**. `PatientController._medicalState`
+> (의식·혈압·맥박·심정지 여부·ECG·health problem 등)는 **프리팹에 직렬화(SerializeField)** 되어 있어
+> 식별자만 바꾼다고 환자 A(심정지)와 환자 B(두부손상, 의식 명료)가 구분되지 않는다.
+> 따라서 "`patient` 하나만 등록"으로는 부족하며, 아래 둘 중 하나를 택한다.
+
+**방식 A — 환자별 프리셋(권장, 현재 시나리오 반영됨)**
+- `EntityPresetRegistryRequirementsSO` 에 환자별 프리셋을 **3개** 등록한다(각각 그 환자의 의학적 상태/외형을
+  프리팹에 구성):
+  - `patient_a` (심정지/흉부 관통상 프리팹), `patient_b`, `patient_c`, 그리고 분류용 `dummy_b`
+  - 각 항목: `entityType=Npc`, `prefab=해당 환자 프리팹`, `isNetworked=true`.
+- 시나리오 시작부 `EntityPresetSpawn` 노드가 각 프리셋에서 스폰한다(현재 JSON 값):
+  - `patient_a_critical` / `SPAWN_A` → `presetIdentifier=patient_a`, `spawnedEntityIdentifier=patient_a`
+  - `patient_b_c_ct` / `SPAWN_B`·`SPAWN_C`·`SPAWN_DUMMY_B` → `patient_b`·`patient_c`·`dummy_b`
+- (환자 A/B/C 프리팹이 외형은 같고 의학 상태만 다르면, 같은 베이스 프리팹을 복제해 인스펙터의
+  `_medicalState` 만 다르게 채운 3개 프리팹으로 만든다.)
+
+**방식 B — 단일 프리셋 + 런타임 상태 주입**
+- 프리셋을 `patient` 하나만 등록하고, 스폰 노드의 `spawnedEntityIdentifier` 로 `patient_a/_b/_c` 식별자만 부여.
+- 단, 이 경우 **각 환자의 의학적 상태를 스폰 후 런타임에 주입** 해야 한다(현재 미구현). 즉 환자별
+  `_medicalState` 를 설정하는 이벤트/노드가 추가로 필요하다. 현재는 활력징후 **모니터 표시값** 만
+  부트스트랩의 `_patientXInitialMonitorParameters` 로 데이터 주입되고, 환자 자신의 `_medicalState`
+  (심정지/의식/health problem 등 처치 로직 구동값)는 주입 경로가 없다. → 방식 B 를 쓰려면 별도 구현 필요.
+
+스폰 위치는 기본 원점(0,0,0)이다. 특정 위치에 두려면 스폰 노드의 `positionSourceEntityIdentifier`
+를 위치 기준 엔티티(예: 베드/스폰포인트)로 지정하거나 `positionX/Y/Z` 를 편집한다.
+
+> 동작 원리(공통): 스폰 시 `spawnedEntityIdentifier` 가 `PatientController` 에 주입
+> (`ISpawnedEntityIdentifierReceiver`)되어 그 식별자로 레지스트리에 등록된다. 따라서 `patient_a/_b/_c` 가
+> 구분되어 `click_patient_a` / `select_patient_b` 게이트와 이벤트 핸들러(`*_patient_a` 등)가 동작한다.
+> (네트워크 프리셋은 서버에서 FishNet 으로 복제 스폰.)
 
 ### 2-1b. 간호사/침대/모니터 (씬 배치 또는 별도 프리셋)
 | 종류 | 식별자 |

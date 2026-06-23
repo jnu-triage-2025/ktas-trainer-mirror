@@ -13,7 +13,7 @@
     "SPAWN_B": {
       "identifier": "SPAWN_B",
       "nodeType": "EntityPresetSpawn",
-      "presetIdentifier": "patient",
+      "presetIdentifier": "patient_b",
       "spawnedEntityIdentifier": "patient_b",
       "positionSourceEntityIdentifier": null,
       "positionX": 0.0,
@@ -25,7 +25,7 @@
     "SPAWN_C": {
       "identifier": "SPAWN_C",
       "nodeType": "EntityPresetSpawn",
-      "presetIdentifier": "patient",
+      "presetIdentifier": "patient_c",
       "spawnedEntityIdentifier": "patient_c",
       "positionSourceEntityIdentifier": null,
       "positionX": 0.0,
@@ -37,7 +37,7 @@
     "SPAWN_DUMMY_B": {
       "identifier": "SPAWN_DUMMY_B",
       "nodeType": "EntityPresetSpawn",
-      "presetIdentifier": "patient",
+      "presetIdentifier": "dummy_b",
       "spawnedEntityIdentifier": "dummy_b",
       "positionSourceEntityIdentifier": null,
       "positionX": 0.0,

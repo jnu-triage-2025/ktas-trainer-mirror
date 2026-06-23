@@ -21,7 +21,7 @@
     "SPAWN_A": {
       "identifier": "SPAWN_A",
       "nodeType": "EntityPresetSpawn",
-      "presetIdentifier": "patient",
+      "presetIdentifier": "patient_a",
       "spawnedEntityIdentifier": "patient_a",
       "positionSourceEntityIdentifier": null,
       "positionX": 0.0,
