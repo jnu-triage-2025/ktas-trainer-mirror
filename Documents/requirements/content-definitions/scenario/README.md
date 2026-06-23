@@ -20,6 +20,7 @@
 - [event-mapping.md](./event-mapping.md): 시나리오 이벤트-구현 매핑 (재난 시나리오)
 - [event-registry.md](./event-registry.md): 시나리오 이벤트 레지스트리
 - [implementation-prep.md](./implementation-prep.md): 재난 시나리오 미구현 기능 구현 준비서 (안전 우선)
+- [interaction-signal-integration-spec.md](./interaction-signal-integration-spec.md): 인터랙션 완료 신호(sig.*) 게임플레이 연결 명세
 - [json-conversion-rules.md](./json-conversion-rules.md): Scenario 문서 -> JSON 변환 규칙표
 - [patient_a_critical.md](./patient_a_critical.md): scenario 환자 A 중증 처치
 - [patient-a-b-c-conversion-notes.md](./patient-a-b-c-conversion-notes.md): 환자 A/B/C 시나리오 JSON 변환 노트 및 검토 결과
