@@ -1,10 +1,24 @@
 {
   "identifier": "disaster_intro",
   "tags": [
-    "triage_lead",
+    "access_support",
     "airway_team",
+    "bleeding_control",
+    "cpr_team",
+    "defib_team",
+    "iv_team",
+    "medication_team",
+    "neuro_assessment",
+    "nurse_a",
+    "nurse_b",
+    "nurse_c",
+    "nurse_d",
+    "procedure_team",
+    "pupil_check",
+    "suction_team",
     "support_team",
-    "iv_team"
+    "triage_lead",
+    "vital_team"
   ],
   "nodes": {
     "D001": {
@@ -21,7 +35,7 @@
       "speakerName": "시스템",
       "dialogueContent": "의료진 간 재난 상황을 공유하고 초기 대응을 시작합니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "P001"
+      "nextIdentifier": "C_role_select"
     },
     "P001": {
       "identifier": "P001",
@@ -497,6 +511,212 @@
       "dialogueContent": "초기 대응과 중증도 분류를 완료했습니다. 다음 처치 시나리오를 진행합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": null
+    },
+    "C_role_select": {
+      "identifier": "C_role_select",
+      "nodeType": "Choice",
+      "speakerName": "시스템",
+      "dialogueContent": "당신의 역할을 선택하세요. (각 플레이어가 한 명씩 선택)",
+      "portraitSpriteIdentifier": null,
+      "options": [
+        {
+          "displayText": "간호사 A (KTAS 분류 / CPR 보조)",
+          "nextNodeIdentifier": "TAG_a_0"
+        },
+        {
+          "displayText": "간호사 B (환자 처치)",
+          "nextNodeIdentifier": "TAG_b_0"
+        },
+        {
+          "displayText": "간호사 C (환자 처치)",
+          "nextNodeIdentifier": "TAG_c_0"
+        },
+        {
+          "displayText": "간호사 D (약물 전담)",
+          "nextNodeIdentifier": "TAG_d_0"
+        }
+      ],
+      "nextIdentifier": null
+    },
+    "TAG_a_0": {
+      "identifier": "TAG_a_0",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "nurse_a",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "TAG_a_1"
+    },
+    "TAG_a_1": {
+      "identifier": "TAG_a_1",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "triage_lead",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "P001"
+    },
+    "TAG_b_0": {
+      "identifier": "TAG_b_0",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "nurse_b",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "TAG_b_1"
+    },
+    "TAG_b_1": {
+      "identifier": "TAG_b_1",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "airway_team",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "TAG_b_2"
+    },
+    "TAG_b_2": {
+      "identifier": "TAG_b_2",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "cpr_team",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "TAG_b_3"
+    },
+    "TAG_b_3": {
+      "identifier": "TAG_b_3",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "support_team",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "P001"
+    },
+    "TAG_c_0": {
+      "identifier": "TAG_c_0",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "nurse_c",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "TAG_c_1"
+    },
+    "TAG_c_1": {
+      "identifier": "TAG_c_1",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "bleeding_control",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "TAG_c_2"
+    },
+    "TAG_c_2": {
+      "identifier": "TAG_c_2",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "defib_team",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "TAG_c_3"
+    },
+    "TAG_c_3": {
+      "identifier": "TAG_c_3",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "neuro_assessment",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "P001"
+    },
+    "TAG_d_0": {
+      "identifier": "TAG_d_0",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "nurse_d",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "TAG_d_1"
+    },
+    "TAG_d_1": {
+      "identifier": "TAG_d_1",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "iv_team",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "TAG_d_2"
+    },
+    "TAG_d_2": {
+      "identifier": "TAG_d_2",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "access_support",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "TAG_d_3"
+    },
+    "TAG_d_3": {
+      "identifier": "TAG_d_3",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "medication_team",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "TAG_d_4"
+    },
+    "TAG_d_4": {
+      "identifier": "TAG_d_4",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "procedure_team",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "TAG_d_5"
+    },
+    "TAG_d_5": {
+      "identifier": "TAG_d_5",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "suction_team",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "TAG_d_6"
+    },
+    "TAG_d_6": {
+      "identifier": "TAG_d_6",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "vital_team",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "TAG_d_7"
+    },
+    "TAG_d_7": {
+      "identifier": "TAG_d_7",
+      "nodeType": "PlayerTag",
+      "operation": "Add",
+      "scope": "Current",
+      "tag": "pupil_check",
+      "fromTag": null,
+      "toTag": null,
+      "nextIdentifier": "P001"
     }
   }
 }

@@ -6,7 +6,7 @@ namespace TriageTrainer.Scenario
   {
     private void RegisterEvent_ApplyGauzePatientB()
     {
-      Register("apply_gauze_patientB", Event_ApplyGauzePatientB);
+      Register("apply_gauze_patient_b", Event_ApplyGauzePatientB);
     }
 
     private IEnumerator Event_ApplyGauzePatientB()

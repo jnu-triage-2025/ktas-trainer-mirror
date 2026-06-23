@@ -11,5 +11,7 @@ namespace MultiplayerInfrastructure.Scenario
     Remove,
     /// <summary>대상 플레이어의 FromTag를 ToTag로 교체합니다.</summary>
     Change,
+    /// <summary>SwapTagA 보유 플레이어와 SwapTagB 보유 플레이어의 해당 태그를 서로 교환합니다(역할 교대).</summary>
+    Swap,
   }
 }

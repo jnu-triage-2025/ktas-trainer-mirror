@@ -6,7 +6,7 @@ namespace TriageTrainer.Scenario
   {
     private void RegisterEvent_RoscMonitorUi()
     {
-      Register("ROSC_monitor_ui", Event_RoscMonitorUi);
+      Register("rosc_monitor_ui", Event_RoscMonitorUi);
     }
 
     private IEnumerator Event_RoscMonitorUi()

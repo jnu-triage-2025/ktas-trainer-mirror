@@ -21,5 +21,13 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>Change 용 대상 태그.</summary>
     [JsonPropertyName("toTag")]
     public string ToTag { get; set; }
+
+    /// <summary>Swap 용 교환 대상 A 태그.</summary>
+    [JsonPropertyName("swapTagA")]
+    public string SwapTagA { get; set; }
+
+    /// <summary>Swap 용 교환 대상 B 태그.</summary>
+    [JsonPropertyName("swapTagB")]
+    public string SwapTagB { get; set; }
   }
 }

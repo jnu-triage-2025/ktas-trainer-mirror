@@ -1,0 +1,693 @@
+{
+  "identifier": "patient_a_critical.unsupported.flags",
+  "sourceScenario": "Documents/requirements/content-definitions/scenario/patient_a_critical.md",
+  "generatedFrom": "patient_a_critical conversion",
+  "status": "needs-follow-up-implementation",
+  "unsupportedSourceConstructs": [
+    {
+      "sourceNodeIdentifier": "V010_A",
+      "sourceType": "Validator",
+      "sourceCondition": "Grab_Stretcher_A",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.grab_stretcher_a"
+    },
+    {
+      "sourceNodeIdentifier": "V010_B",
+      "sourceType": "Validator",
+      "sourceCondition": "Grab_Stretcher_B",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.grab_stretcher_b"
+    },
+    {
+      "sourceNodeIdentifier": "V010_C",
+      "sourceType": "Validator",
+      "sourceCondition": "Grab_Stretcher_C",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.grab_stretcher_c"
+    },
+    {
+      "sourceNodeIdentifier": "V010_D",
+      "sourceType": "Validator",
+      "sourceCondition": "Grab_Stretcher_D",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.grab_stretcher_d"
+    },
+    {
+      "sourceNodeIdentifier": "V011",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_vital_set",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_vital_set"
+    },
+    {
+      "sourceNodeIdentifier": "V011_1",
+      "sourceType": "Validator",
+      "sourceCondition": "show_vital_patientA",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.show_vital_patient_a"
+    },
+    {
+      "sourceNodeIdentifier": "V012",
+      "sourceType": "Validator",
+      "sourceCondition": "Check_avpu_gcs_patientA",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.check_avpu_gcs_patient_a"
+    },
+    {
+      "sourceNodeIdentifier": "V013",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_neckstabilizer, Click_wall_suction, Click_suction_line, Click_yankauer",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_neckstabilizer_and_click_wall_suction_and_click_suction_line_and_click_yankauer"
+    },
+    {
+      "sourceNodeIdentifier": "V013_1",
+      "sourceType": "Validator",
+      "sourceCondition": "Apply_stabilizer_patientA",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.apply_stabilizer_patient_a"
+    },
+    {
+      "sourceNodeIdentifier": "V013_2",
+      "sourceType": "Validator",
+      "sourceCondition": "Connect_wall_component_1",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.connect_wall_component_1"
+    },
+    {
+      "sourceNodeIdentifier": "V013_3",
+      "sourceType": "Validator",
+      "sourceCondition": "Connect_wall_component_and_yankauer",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.connect_wall_component_and_yankauer"
+    },
+    {
+      "sourceNodeIdentifier": "V013_4",
+      "sourceType": "Validator",
+      "sourceCondition": "Suction_patientA",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.suction_patient_a"
+    },
+    {
+      "sourceNodeIdentifier": "V014",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_laryngo_blade, Click_laryngo_handle, Click_et_tube, Click_stylet, Click_plaster, Click_syringe_5cc",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_laryngo_blade_and_click_laryngo_handle_and_click_et_tube_and_click_stylet_and_click_plaster_and_click_syringe_5cc"
+    },
+    {
+      "sourceNodeIdentifier": "V014_1",
+      "sourceType": "Validator",
+      "sourceCondition": "Pass_laryngoscope",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.pass_laryngoscope"
+    },
+    {
+      "sourceNodeIdentifier": "V014_2",
+      "sourceType": "Validator",
+      "sourceCondition": "Pass_et_tube_ready",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.pass_et_tube_ready"
+    },
+    {
+      "sourceNodeIdentifier": "V014_3",
+      "sourceType": "Validator",
+      "sourceCondition": "Remove_intu_stylet",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.remove_intu_stylet"
+    },
+    {
+      "sourceNodeIdentifier": "V014_4",
+      "sourceType": "Validator",
+      "sourceCondition": "Pass_syringe",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.pass_syringe"
+    },
+    {
+      "sourceNodeIdentifier": "V014_5",
+      "sourceType": "Validator",
+      "sourceCondition": "Apply_plaster_on_intu",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.apply_plaster_on_intu"
+    },
+    {
+      "sourceNodeIdentifier": "V015",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_humidifierbottle, Click_sdw",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_humidifierbottle_and_click_sdw"
+    },
+    {
+      "sourceNodeIdentifier": "V015_1",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_flowmeter",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_flowmeter"
+    },
+    {
+      "sourceNodeIdentifier": "V015_2",
+      "sourceType": "Validator",
+      "sourceCondition": "Connect_wall_component_2",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.connect_wall_component_2"
+    },
+    {
+      "sourceNodeIdentifier": "V015_3",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_o2_line, Click_tpiece, Connect_tpiece_and_oxyflow",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_o2_line_and_click_tpiece_and_connect_tpiece_and_oxyflow"
+    },
+    {
+      "sourceNodeIdentifier": "V015_4",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_oxyflow_wall",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_oxyflow_wall"
+    },
+    {
+      "sourceNodeIdentifier": "V016",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_glove, Click_gauze, Click_plaster",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_glove_and_click_gauze_and_click_plaster"
+    },
+    {
+      "sourceNodeIdentifier": "V016_1",
+      "sourceType": "Validator",
+      "sourceCondition": "wear_glove",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.wear_glove"
+    },
+    {
+      "sourceNodeIdentifier": "V016_2",
+      "sourceType": "Validator",
+      "sourceCondition": "Apply_gauze",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.apply_gauze"
+    },
+    {
+      "sourceNodeIdentifier": "V016_3",
+      "sourceType": "Validator",
+      "sourceCondition": "Apply_plaster_on_gauze",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.apply_plaster_on_gauze"
+    },
+    {
+      "sourceNodeIdentifier": "V017",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_18g, Click_ns1, Click_ps1",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_18g_and_click_ns1_and_click_ps1"
+    },
+    {
+      "sourceNodeIdentifier": "V017_1",
+      "sourceType": "Validator",
+      "sourceCondition": "Insert_iv_patientA_left",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.insert_iv_patient_a_left"
+    },
+    {
+      "sourceNodeIdentifier": "V017_2",
+      "sourceType": "Validator",
+      "sourceCondition": "Connect_cannula_and_ns1",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.connect_cannula_and_ns1"
+    },
+    {
+      "sourceNodeIdentifier": "V018",
+      "sourceType": "Validator",
+      "sourceCondition": "Pass_central_line_set",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.pass_central_line_set"
+    },
+    {
+      "sourceNodeIdentifier": "V019",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_ps1, Click_blood",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_ps1_and_click_blood"
+    },
+    {
+      "sourceNodeIdentifier": "V019_1",
+      "sourceType": "Validator",
+      "sourceCondition": "Connect_ps1_to_lv1",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.connect_ps1_to_lv1"
+    },
+    {
+      "sourceNodeIdentifier": "V020",
+      "sourceType": "Validator",
+      "sourceCondition": "Connect_blood_to_lv1",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.connect_blood_to_lv1"
+    },
+    {
+      "sourceNodeIdentifier": "V022",
+      "sourceType": "Validator",
+      "sourceCondition": "Check_pulse_patientA",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.check_pulse_patient_a"
+    },
+    {
+      "sourceNodeIdentifier": "V023",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_ambubag, Click_reservoir_bag",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_ambubag_and_click_reservoir_bag"
+    },
+    {
+      "sourceNodeIdentifier": "V023_1",
+      "sourceType": "Validator",
+      "sourceCondition": "Remove_tpiece",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.remove_tpiece"
+    },
+    {
+      "sourceNodeIdentifier": "V023_2",
+      "sourceType": "Validator",
+      "sourceCondition": "Connect_ambubag, Connect_o2_to_ambu",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.connect_ambubag_and_connect_o2_to_ambu"
+    },
+    {
+      "sourceNodeIdentifier": "V023_4",
+      "sourceType": "Validator",
+      "sourceCondition": "Start_ambu",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.start_ambu"
+    },
+    {
+      "sourceNodeIdentifier": "V024",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_to_start_comp",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_to_start_comp"
+    },
+    {
+      "sourceNodeIdentifier": "V025",
+      "sourceType": "Validator",
+      "sourceCondition": "Move_defibcart_to_patient",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.move_defibcart_to_patient"
+    },
+    {
+      "sourceNodeIdentifier": "V025_1",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_defibpad, Click_patient_chest",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_defibpad_and_click_patient_chest"
+    },
+    {
+      "sourceNodeIdentifier": "V026",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_epi, Click_syringe_5cc",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_epi_and_click_syringe_5cc"
+    },
+    {
+      "sourceNodeIdentifier": "V026_1",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_ns_20cc, Click_syringe_20cc",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_ns_20cc_and_click_syringe_20cc"
+    },
+    {
+      "sourceNodeIdentifier": "V026_2",
+      "sourceType": "Validator",
+      "sourceCondition": "Push_epi",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.push_epi"
+    },
+    {
+      "sourceNodeIdentifier": "V026_3",
+      "sourceType": "Validator",
+      "sourceCondition": "Push_ns",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.push_ns"
+    },
+    {
+      "sourceNodeIdentifier": "V027",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_chest",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_chest"
+    },
+    {
+      "sourceNodeIdentifier": "V028",
+      "sourceType": "Validator",
+      "sourceCondition": "Start_ambu",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.start_ambu"
+    },
+    {
+      "sourceNodeIdentifier": "V029",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_epi, Click_syringe_5cc",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_epi_and_click_syringe_5cc"
+    },
+    {
+      "sourceNodeIdentifier": "V029_1",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_ns_20cc, Click_syringe_20cc",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_ns_20cc_and_click_syringe_20cc"
+    },
+    {
+      "sourceNodeIdentifier": "V029_2",
+      "sourceType": "Validator",
+      "sourceCondition": "Push_epi",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.push_epi"
+    },
+    {
+      "sourceNodeIdentifier": "V029_3",
+      "sourceType": "Validator",
+      "sourceCondition": "Push_ns",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.push_ns"
+    },
+    {
+      "sourceNodeIdentifier": "V030",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_defib",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_defib"
+    },
+    {
+      "sourceNodeIdentifier": "V031",
+      "sourceType": "Validator",
+      "sourceCondition": "Check_pulse_patientA",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.check_pulse_patient_a"
+    },
+    {
+      "sourceNodeIdentifier": "V032",
+      "sourceType": "Validator",
+      "sourceCondition": "Arrive_triagearea",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.arrive_triagearea"
+    },
+    {
+      "sourceNodeIdentifier": "V033",
+      "sourceType": "Validator",
+      "sourceCondition": "Click_scissors, Remove_patient_clothing",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.click_scissors_and_remove_patient_clothing"
+    },
+    {
+      "sourceNodeIdentifier": "V034",
+      "sourceType": "Validator",
+      "sourceCondition": "Check_gcs_a_rosc",
+      "reason": "Validator.condition supports PlayerCount* only",
+      "convertedTo": "InvokeEvent",
+      "replacementEventIdentifier": "todo.validate.check_gcs_a_rosc"
+    },
+    {
+      "sourceType": "Dialogue.Duration",
+      "reason": "ScenarioDialogueNode schema does not support Duration field",
+      "convertedTo": "Dropped field",
+      "droppedField": "Duration",
+      "appliedCount": 99
+    },
+    {
+      "sourceType": "ParallelBranch.RequiredRoleIdentifiers",
+      "reason": "ScenarioParallelBranch schema does not support RequiredRoleIdentifiers",
+      "convertedTo": "Dropped field",
+      "droppedField": "RequiredRoleIdentifiers",
+      "note": "Role intent preserved only by requiredPlayerTags"
+    }
+  ],
+  "followUpEventsToImplement": [
+    "todo.validate.grab_stretcher_a",
+    "todo.validate.grab_stretcher_b",
+    "todo.validate.grab_stretcher_c",
+    "todo.validate.grab_stretcher_d",
+    "todo.validate.click_vital_set",
+    "todo.validate.show_vital_patient_a",
+    "todo.validate.check_avpu_gcs_patient_a",
+    "todo.validate.click_neckstabilizer_and_click_wall_suction_and_click_suction_line_and_click_yankauer",
+    "todo.validate.apply_stabilizer_patient_a",
+    "todo.validate.connect_wall_component_1",
+    "todo.validate.connect_wall_component_and_yankauer",
+    "todo.validate.suction_patient_a",
+    "todo.validate.click_laryngo_blade_and_click_laryngo_handle_and_click_et_tube_and_click_stylet_and_click_plaster_and_click_syringe_5cc",
+    "todo.validate.pass_laryngoscope",
+    "todo.validate.pass_et_tube_ready",
+    "todo.validate.remove_intu_stylet",
+    "todo.validate.pass_syringe",
+    "todo.validate.apply_plaster_on_intu",
+    "todo.validate.click_humidifierbottle_and_click_sdw",
+    "todo.validate.click_flowmeter",
+    "todo.validate.connect_wall_component_2",
+    "todo.validate.click_o2_line_and_click_tpiece_and_connect_tpiece_and_oxyflow",
+    "todo.validate.click_oxyflow_wall",
+    "todo.validate.click_glove_and_click_gauze_and_click_plaster",
+    "todo.validate.wear_glove",
+    "todo.validate.apply_gauze",
+    "todo.validate.apply_plaster_on_gauze",
+    "todo.validate.click_18g_and_click_ns1_and_click_ps1",
+    "todo.validate.insert_iv_patient_a_left",
+    "todo.validate.connect_cannula_and_ns1",
+    "todo.validate.pass_central_line_set",
+    "todo.validate.click_ps1_and_click_blood",
+    "todo.validate.connect_ps1_to_lv1",
+    "todo.validate.connect_blood_to_lv1",
+    "todo.validate.check_pulse_patient_a",
+    "todo.validate.click_ambubag_and_click_reservoir_bag",
+    "todo.validate.remove_tpiece",
+    "todo.validate.connect_ambubag_and_connect_o2_to_ambu",
+    "todo.validate.start_ambu",
+    "todo.validate.click_to_start_comp",
+    "todo.validate.move_defibcart_to_patient",
+    "todo.validate.click_defibpad_and_click_patient_chest",
+    "todo.validate.click_epi_and_click_syringe_5cc",
+    "todo.validate.click_ns_20cc_and_click_syringe_20cc",
+    "todo.validate.push_epi",
+    "todo.validate.push_ns",
+    "todo.validate.click_chest",
+    "todo.validate.click_defib",
+    "todo.validate.arrive_triagearea",
+    "todo.validate.click_scissors_and_remove_patient_clothing",
+    "todo.validate.check_gcs_a_rosc"
+  ],
+  "enumConversionsApplied": [
+    {
+      "field": "P002.waitMode",
+      "from": "WaitAll",
+      "to": "All"
+    },
+    {
+      "field": "P003.waitMode",
+      "from": "WaitAll",
+      "to": "All"
+    },
+    {
+      "field": "P004.waitMode",
+      "from": "WaitAll",
+      "to": "All"
+    },
+    {
+      "field": "P005.waitMode",
+      "from": "WaitAll",
+      "to": "All"
+    },
+    {
+      "field": "P006.waitMode",
+      "from": "WaitAll",
+      "to": "All"
+    },
+    {
+      "field": "P007.waitMode",
+      "from": "WaitAll",
+      "to": "All"
+    },
+    {
+      "field": "P002.allocationType",
+      "from": "ByRole",
+      "to": "SelfAll"
+    },
+    {
+      "field": "P003.allocationType",
+      "from": "ByRole",
+      "to": "SelfAll"
+    },
+    {
+      "field": "P004.allocationType",
+      "from": "ByRole",
+      "to": "SelfAll"
+    },
+    {
+      "field": "P005.allocationType",
+      "from": "ByRole",
+      "to": "SelfAll"
+    },
+    {
+      "field": "P006.allocationType",
+      "from": "ByRole",
+      "to": "SelfAll"
+    },
+    {
+      "field": "P007.allocationType",
+      "from": "ByRole",
+      "to": "SelfAll"
+    },
+    {
+      "field": "E007.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E008.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E009.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E010.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E011.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E014.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E017.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E018.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E019.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E020.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E021.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E024.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E025.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E026.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E027.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E028.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E029.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E030.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E033.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    },
+    {
+      "field": "E034.moveNextBehavior",
+      "from": "Immediate",
+      "to": "Immediately"
+    }
+  ]
+}

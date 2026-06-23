@@ -149,6 +149,8 @@ namespace MultiplayerInfrastructure.Scenario
             AddIfNotBlank(tagNode.Tag);
             AddIfNotBlank(tagNode.FromTag);
             AddIfNotBlank(tagNode.ToTag);
+            AddIfNotBlank(tagNode.SwapTagA);
+            AddIfNotBlank(tagNode.SwapTagB);
             break;
 
           case ScenarioValidatorNode validatorNode:
@@ -248,6 +250,7 @@ namespace MultiplayerInfrastructure.Scenario
           SpeakerName = dto.SpeakerName,
           DialogueContent = dto.DialogueContent,
           PortraitSpriteIdentifier = dto.PortraitSpriteIdentifier,
+          AutoAdvanceSeconds = dto.AutoAdvanceSeconds,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -473,6 +476,8 @@ namespace MultiplayerInfrastructure.Scenario
           Tag = dto.Tag,
           FromTag = dto.FromTag,
           ToTag = dto.ToTag,
+          SwapTagA = dto.SwapTagA,
+          SwapTagB = dto.SwapTagB,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -486,6 +491,8 @@ namespace MultiplayerInfrastructure.Scenario
           Tag = node.Tag,
           FromTag = node.FromTag,
           ToTag = node.ToTag,
+          SwapTagA = node.SwapTagA,
+          SwapTagB = node.SwapTagB,
           NextIdentifier = node.NextIdentifier
         };
 
@@ -786,6 +793,7 @@ namespace MultiplayerInfrastructure.Scenario
           SpeakerName = node.SpeakerName,
           DialogueContent = node.DialogueContent,
           PortraitSpriteIdentifier = node.PortraitSpriteIdentifier,
+          AutoAdvanceSeconds = node.AutoAdvanceSeconds,
           NextIdentifier = node.NextIdentifier
         };
 

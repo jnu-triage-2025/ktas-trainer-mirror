@@ -6,7 +6,7 @@ namespace TriageTrainer.Scenario
   {
     private void RegisterEvent_Insert20gLeftPatientC()
     {
-      Register("insert_20g_left_patientC", Event_Insert20gLeftPatientC);
+      Register("insert_20g_left_patient_c", Event_Insert20gLeftPatientC);
     }
 
     private IEnumerator Event_Insert20gLeftPatientC()
