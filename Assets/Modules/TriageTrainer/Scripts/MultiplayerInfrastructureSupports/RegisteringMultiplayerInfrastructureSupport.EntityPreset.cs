@@ -58,7 +58,8 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
           req.entityType,
           req.prefab,
           req.displayName,
-          req.isNetworked);
+          req.isNetworked,
+          req.childDetachments);
         registeredCount++;
       }
 

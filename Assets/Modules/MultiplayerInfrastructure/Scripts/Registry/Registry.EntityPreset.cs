@@ -25,14 +25,16 @@ namespace MultiplayerInfrastructure.Registry
       EntityType entityType,
       GameObject prefab,
       string displayName = null,
-      bool isNetworked = false)
+      bool isNetworked = false,
+      IReadOnlyList<EntityPresetChildDetachment> childDetachments = null)
     {
       RegisterEntityPreset(new EntityPresetDefinition(
         identifier,
         entityType,
         prefab,
         displayName,
-        isNetworked));
+        isNetworked,
+        childDetachments));
     }
 
     public static bool TryGetEntityPreset(string identifier, out EntityPresetDefinition definition)
@@ -123,6 +125,21 @@ namespace MultiplayerInfrastructure.Registry
       }
 
       // 1) 자식 NetworkObject 분리(ungroup) — 루트 스폰 전에 수행하여 nested 스폰을 피한다.
+      //    호출자가 분리 목록을 주지 않으면, 프리셋 자체에 내장된 분리 설정(preset.ChildDetachments)을 사용한다.
+      if ((childDetachments == null || childDetachments.Count == 0)
+          && preset.ChildDetachments != null && preset.ChildDetachments.Count > 0)
+      {
+        var fromPreset = new List<(string, string)>(preset.ChildDetachments.Count);
+        foreach (var c in preset.ChildDetachments)
+        {
+          if (!string.IsNullOrWhiteSpace(c.childPath))
+          {
+            fromPreset.Add((c.childPath, c.spawnedEntityIdentifier));
+          }
+        }
+        childDetachments = fromPreset;
+      }
+
       if (childDetachments != null && childDetachments.Count > 0)
       {
         foreach (var (childPath, childId) in childDetachments)

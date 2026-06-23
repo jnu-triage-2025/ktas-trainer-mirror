@@ -91,25 +91,32 @@ flags: []
 프리셋+스폰 노드로 전환할 수 있다.
 
 ### 2-1c. 묶음 프리셋 + 위계 해제(ungroup) — 환자+침대를 함께 배치할 때
-환자와 침대를 "한 묶음"으로 배치하고 싶을 때(예: 환자가 침대에 결합된 상태로 시작), **컨테이너 프리팹**
-(비-NetworkObject 루트) 아래에 환자/침대를 자식으로 두고 프리셋으로 등록한다. 스폰 시 지정한
-**자식 NetworkObject 만 루트로 분리(ungroup)** 되어 각각 독립 엔티티로 스폰·등록된다.
 
-- 분리 지정: `EntityPresetSpawn` 노드의 `childDetachments` 에 `{ childPath, spawnedEntityIdentifier }` 목록을 둔다.
-  예) 컨테이너 자식 `Bed` 를 `bed_a` 로 분리:
-  ```json
-  { "nodeType": "EntityPresetSpawn", "identifier": "SPAWN_A_GRP",
-    "presetIdentifier": "patient_bed_group", "spawnedEntityIdentifier": "patient_a",
-    "childDetachments": [ { "childPath": "Bed", "spawnedEntityIdentifier": "bed_a" } ],
-    "nextIdentifier": "..." }
-  ```
-- 규칙: **분리는 NetworkObject 인 자식에 대해서만** 동작한다(비-NetworkObject 자식은 무시·잔류).
-  지정하지 않은 자식 NetworkObject 는 자동 분리되지 않고 루트 위계에 남는다.
-- 분리된 침대는 `MovingPatientBedController` 가 식별자를 주입받아(`ISpawnedEntityIdentifierReceiver`) 등록된다.
-- 네트워크 프리셋이면 분리된 각 NetworkObject 가 서버에서 FishNet 으로 개별 복제된다.
-- **런타임 결합 상태**: 분리 후 환자와 침대는 위계 없는 독립 객체이므로, "환자가 침대에 결합된 상태"로
-  시작하려면 스폰 직후 InvokeEvent 핸들러(TriageTrainer)에서 `bed.TryReposeTarget(patient)` 등을 호출해
-  논리적 결합을 재설정한다(엔진은 분리/스폰까지만 담당). **(후속 연결 작업)**
+환자와 침대를 "한 묶음"으로 결합 배치하고 싶을 때(예: 환자가 침대에 결합된 상태로 시작):
+
+**(1) 컨테이너 프리팹 구성 (에디터, 비런타임)**
+- **비-NetworkObject 루트** GameObject 를 만들고, 그 아래에 환자(`PatientController`)와 침대
+  (`MovingPatientBedController`)를 **각각 자식 NetworkObject** 로 둔다. 하나의 프리팹으로 저장.
+- 결합 상태(환자가 침대 위)는 프리팹에서 직접 사전 설정 가능하다(직렬화 필드):
+  침대의 `_reposedTargetComponent` ← 환자, 환자의 `_currentBed`/`_isMovingPatientBedAttached` ← 침대.
+  (스폰 후 분리되면 위계는 사라지지만, 런타임 논리 결합은 아래 (4) 로 재설정.)
+
+**(2) 분리(ungroup) 설정 — 프리셋 SO 에 내장(권장) 또는 시나리오 노드**
+- **권장: `EntityPresetRegistryRequirementsSO` 의 해당 항목 `childDetachments`** 에 분리할 자식을 등록한다
+  (`childPath`=예 `Bed`, `spawnedEntityIdentifier`=예 `bed_a`). 프리셋 자체가 분리 설정을 가지므로 자기서술적.
+- 또는 시나리오 `EntityPresetSpawn` 노드의 `childDetachments` 로 지정(노드 지정이 있으면 노드 우선, 없으면 프리셋 설정 사용).
+- 규칙: **분리는 NetworkObject 자식에 대해서만** 동작(비-NetworkObject 무시·잔류). 미지정 자식은 자동 분리 안 함.
+
+**(3) 비런타임(에디터) 검증 — 지원됨**
+- SO 인스펙터에서 값 변경 시 자동(`OnValidate`) + 우클릭 메뉴 **"Validate Presets (Editor)"** 로 수동 검증.
+- 검사: 각 `childPath` 가 프리팹에서 해석되는가 / 분리 대상이 NetworkObject 인가 / 컨테이너 루트가
+  비-NetworkObject 인가(권장) / identifier 중복·prefab 누락. 문제 시 Console 경고. **플레이 없이 확인 가능.**
+
+**(4) 런타임 결합 재설정 (후속)**
+- 스폰 시 지정 자식이 루트로 분리되어 각각 독립 엔티티로 스폰·등록된다(네트워크 프리셋은 서버에서 FishNet 복제).
+  분리된 침대는 `MovingPatientBedController.ApplySpawnedEntityIdentifier`(=`SetIdentifier`)로 식별자 등록.
+- 분리 후 둘은 위계 없는 독립 객체이므로, "결합 상태"로 시작하려면 스폰 직후 InvokeEvent 핸들러에서
+  `bed.TryReposeTarget(patient)` 를 호출해 논리 결합을 재설정한다(엔진은 분리/스폰까지 담당). **(후속 연결 작업)**
 
 ### 2-2. 수액/산소/모니터 연결 지점(`IntravenousLineConnectionPoint`)
 연결 완료 시 끝점 `Identifier` 로 신호가 올라가므로, **연결 지점의 `Identifier` 를 아래 조건명으로 지정** 한다.
