@@ -152,63 +152,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c593455c7ffa4b24a14d0a9416d5327, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.PatientMonitor.Models.PatientMonitorController
+  _componentIndexCache: 0
+  _addedNetworkObject: {fileID: 0}
+  _networkObjectCache: {fileID: 6016408113005942236}
+  _monitoringPatient: {fileID: 0}
   displayMode: 0
   rhythmPreset: 0
   sampleRate: 200
   rhythmTransitionSeconds: 0.35
-  monitorParameters:
-    ecg:
-      bpm: 75
-      irregularity: 0
-      pAmp: 0.15
-      pWidth: 0.04
-      qAmp: -0.15
-      rAmp: 1.2
-      sAmp: -0.25
-      tAmp: 0.3
-      tWidth: 0.08
-      uAmp: 0
-      stElevation: 0
-      noise: 0.02
-      qrsWidthScale: 1
-    art:
-      bpm: 75
-      systolic: 120
-      diastolic: 80
-      noise: 0.2
-    cvp:
-      bpm: 75
-      mean: 12
-      noise: 0.2
-    pleth:
-      bpm: 75
-      spo2: 99
-      noise: 0.2
-    numerics:
-      bpm: 60
-      pvcs: 0
-      pulseRate: 74
-      perfusionIndex: 3
-      spo2: 99
-    nibp:
-      systolic: 120
-      diastolic: 82
-    temperature:
-      t1: 36.5
-      t2: 32.3
-    stLeads:
-      i: 0
-      ii: 0
-      iii: 0
-      avr: 0
-      avl: 0
-      avf: 0
-      v1: 0
-      v2: 0
-      v3: 0
-      v4: 0
-      v5: 0
-      v6: 0
+  patientState: {fileID: 0}
   ecgColor: {r: 0, g: 1, b: 0, a: 1}
   plethColor: {r: 0, g: 1, b: 0.53, a: 1}
   artColor: {r: 1, g: 0.33, b: 0.33, a: 1}
@@ -224,6 +176,75 @@ MonoBehaviour:
   numericsPanelWidth: 176
   numericsPanelMinWidth: 136
   numericsPanelMaxWidth: 208
+  _interactIcon: {fileID: 0}
+  _interactEntries:
+  - _identifier: select_patient_mode
+    _enabled: 1
+  monitorECG:
+    bpm: 75
+    irregularity: 0
+    pAmp: 0.15
+    pWidth: 0.04
+    qAmp: -0.15
+    rAmp: 1.2
+    sAmp: -0.25
+    tAmp: 0.3
+    tWidth: 0.08
+    uAmp: 0
+    stElevation: 0
+    noise: 0.02
+    qrsWidthScale: 1
+  monitorART:
+    bpm: 75
+    systolic: 120
+    diastolic: 80
+    noise: 0.2
+  monitorCVP:
+    bpm: 75
+    mean: 12
+    noise: 0.2
+  monitorPleth:
+    bpm: 75
+    spo2: 99
+    noise: 0.2
+  monitorNumerics:
+    bpm: 60
+    pvcs: 0
+    pulseRate: 74
+    perfusionIndex: 3
+    spo2: 99
+  monitorNIBP:
+    systolic: 120
+    diastolic: 82
+  monitorTemperature:
+    t1: 36.5
+    t2: 32.3
+  monitorSTLeads:
+    i: 0
+    ii: 0
+    iii: 0
+    avr: 0
+    avl: 0
+    avf: 0
+    v1: 0
+    v2: 0
+    v3: 0
+    v4: 0
+    v5: 0
+    v6: 0
+  _showTrackingLine: 1
+  _showTrackingLineForDefaultPatient: 0
+  _trackingLineStart: {fileID: 0}
+  _trackingLineStartOffset: {x: 0, y: 1, z: 0}
+  _trackingLineEndOffset: {x: 0, y: 1, z: 0}
+  _trackingLineWidth: 0.02
+  _trackingLineColor: {r: 1, g: 1, b: 1, a: 1}
+  _trackingDashLength: 0.2
+  _trackingDashGap: 0.2
+  _trackingDashFlowFromTarget: 1
+  _trackingDashScrollSpeed: 0.9
+  _trackingSparkleIntensity: 0.2
+  _trackingSparkleSpeed: 2.2
 --- !u!114 &6008763409848515848
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -262,6 +283,7 @@ MonoBehaviour:
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
+  - {fileID: 2664412941118097791}
   - {fileID: -2517495696321276197}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
@@ -273,7 +295,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584235603682451508
+  _initializedTimestamp: -8584194028435746808
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -288,7 +310,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 11
+  <PrefabId>k__BackingField: 12
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 12890342040272269563
   SceneId: 0
@@ -309,6 +331,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a6a39c46bf52104ba8efe3100bce3f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: FishNet.Runtime::FishNet.Object.EmptyNetworkBehaviour
-  _componentIndexCache: 0
+  _componentIndexCache: 1
   _addedNetworkObject: {fileID: 6016408113005942236}
   _networkObjectCache: {fileID: 6016408113005942236}

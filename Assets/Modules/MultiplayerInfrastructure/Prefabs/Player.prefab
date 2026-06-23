@@ -245,9 +245,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f477b65c256f4cdf871532cc731c1dac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Player.PlayerController
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 0}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 3332462076176395838}
   _runtimeAnimatorController: {fileID: 9100000, guid: 168bd517d468d4d61a605dc1ea630cb6, type: 2}
   _camControl: {fileID: 0}
   playerCharacterModelAttachPoint: {fileID: 0}
@@ -271,10 +271,6 @@ MonoBehaviour:
   _keySpectatorFlyDown: 304
   _keyOpenQuestUI: 106
   _keyDropHeldItem: 113
-  _keyHandlingLockedByEscapeUI: 0
-  _keyHandlingLockedByChatUI: 0
-  _keyHandlingLockedByInventoryUI: 0
-  _keyHandlingLockedByDialogueUI: 0
   _detector: {fileID: 0}
   _interactableHintUI: {fileID: 0}
   _dialoguePanelUIController: {fileID: 0}
@@ -313,6 +309,9 @@ MonoBehaviour:
   _raycastMaxDistance: 10
   _reposableCarryAnchor: {fileID: 0}
   _carriedReposableComponent: {fileID: 0}
+  _followCarriedReposableWithoutParent: 0
+  _carriedAttachPointLocalPosition: {x: 0, y: 0, z: 0}
+  _carriedAttachPointLocalRotation: {x: 0, y: 0, z: 0, w: 1}
   _debugTagUserIdentifier: 
   _debugTagUserDisplayName: 
   _debugTags: []
@@ -354,7 +353,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584309080420666728
+  _initializedTimestamp: -8584194028435746808
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -369,7 +368,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 8
+  <PrefabId>k__BackingField: 9
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 6603010548494297973
   SceneId: 0

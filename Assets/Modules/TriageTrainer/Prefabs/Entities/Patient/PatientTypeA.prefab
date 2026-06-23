@@ -686,10 +686,10 @@ Animator:
   m_GameObject: {fileID: 3450568105730186838}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: f2c32dc988d2d484c80371011ed13c01, type: 3}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
-  m_ApplyRootMotion: 1
+  m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
@@ -804,6 +804,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1827749486389943084}
   - component: {fileID: 6000008013074765727}
+  - component: {fileID: 1052761791884885070}
+  - component: {fileID: 8087024027560552857}
+  - component: {fileID: 8931320053880548344}
   m_Layer: 0
   m_Name: PatientTypeA
   m_TagString: Untagged
@@ -825,6 +828,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2641697381257004268}
+  - {fileID: 6122798806109109470}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6000008013074765727
@@ -869,6 +873,9 @@ MonoBehaviour:
       GauzeDressingDoneOnLeftEyebrow: 0
       NasalCannulaApplied: 0
       CervicalCollarOnNeck: 1
+      IntravenousStandAttached: 0
+      IntravenousHangerAttached: 0
+      IntravenousFluidAttached: 0
     <DisplayState>k__BackingField:
       Syringe18GInsertedIntoLeftArm: 0
       Syringe18GInsertedIntoRightArm: 0
@@ -892,6 +899,9 @@ MonoBehaviour:
       GauzeDressingDoneOnLeftEyebrow: 0
       NasalCannulaApplied: 0
       CervicalCollarOnNeck: 0
+      IntravenousStandAttached: 0
+      IntravenousHangerAttached: 0
+      IntravenousFluidAttached: 0
     <PatientModelGameObject>k__BackingField: {fileID: 3450568105730186838}
     <ChildGameObjects>k__BackingField:
       Syringe18GInsertedIntoLeftArm: {fileID: 8163350724442503120}
@@ -916,6 +926,185 @@ MonoBehaviour:
       GauzeDressingDoneOnLeftEyebrow: {fileID: 0}
       NasalCannulaApplied: {fileID: 0}
       CervicalCollarOnNeck: {fileID: 834701797872302687}
+      IntravenousStandAttached: {fileID: 0}
+      IntravenousHangerAttached: {fileID: 0}
+      IntravenousFluidAttached: {fileID: 0}
+--- !u!114 &1052761791884885070
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4077515750642718864}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FishNet.Runtime::FishNet.Object.NetworkObject
+  <IsNested>k__BackingField: 0
+  WasActiveDuringEdit: 0
+  WasActiveDuringEdit_Set1: 1
+  <ComponentIndex>k__BackingField: 0
+  <PredictedSpawn>k__BackingField: {fileID: 0}
+  <PredictedOwner>k__BackingField: {fileID: 0}
+  NetworkBehaviours:
+  - {fileID: 8931320053880548344}
+  InitializedParentNetworkBehaviour: {fileID: 0}
+  InitializedNestedNetworkObjects: []
+  RuntimeParentNetworkBehaviour: {fileID: 0}
+  RuntimeChildNetworkBehaviours: []
+  _isNetworked: 1
+  _isSpawnable: 1
+  _isGlobal: 0
+  _initializeOrder: 0
+  _preventDespawnOnDisconnect: 0
+  _defaultDespawnType: 0
+  _initializedTimestamp: -8584194028435746808
+  NetworkObserver: {fileID: 0}
+  _enablePrediction: 0
+  _predictionType: 0
+  _graphicalObject: {fileID: 0}
+  _detachGraphicalObject: 0
+  _enableStateForwarding: 1
+  _networkTransform: {fileID: 0}
+  _ownerInterpolation: 1
+  _ownerSmoothedProperties: 255
+  _adaptiveInterpolation: 3
+  _spectatorSmoothedProperties: 255
+  _spectatorInterpolation: 2
+  _enableTeleport: 0
+  _teleportThreshold: 1
+  <PrefabId>k__BackingField: 6
+  <SpawnableCollectionId>k__BackingField: 0
+  <AssetPathHash>k__BackingField: 3584526928423580773
+  SceneId: 0
+  SerializedTransformProperties:
+    Position: {x: 0, y: 0, z: 0}
+    Rotation: {x: 0, y: 0, z: 0, w: 1}
+    Scale: {x: 1, y: 1, z: 1}
+    IsValid: 1
+--- !u!136 &8087024027560552857
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4077515750642718864}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.3
+  m_Height: 1.8
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.9, z: 0}
+--- !u!114 &8931320053880548344
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4077515750642718864}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e794a1dae1454908ba448af46d61805, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.PatientController
+  _componentIndexCache: 0
+  _addedNetworkObject: {fileID: 1052761791884885070}
+  _networkObjectCache: {fileID: 1052761791884885070}
+  _runtimeAnimatorController: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
+  _capsuleCollider: {fileID: 8087024027560552857}
+  _standingCapsuleCenter: {x: 0, y: 0.9, z: 0}
+  _standingCapsuleHeight: 1.8
+  _standingCapsuleRadius: 0.3
+  _standingCapsuleDirection: 1
+  _lyingCapsuleCenter: {x: 0, y: 0.45, z: 0}
+  _lyingCapsuleHeight: 1.8
+  _lyingCapsuleRadius: 0.3
+  _lyingCapsuleDirection: 2
+  _identifier: patient
+  _liftDisplayText: "\uD658\uC790\uB97C \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
+  _liftDisplayIcon: {fileID: 0}
+  _carryDisplayText: "\uD658\uC790 \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
+  _carryDisplayIcon: {fileID: 0}
+  _monitorSelectDisplayText: "\uC774 \uD658\uC790\uB97C \uBAA8\uB2C8\uD130\uB9C1"
+  _monitorSelectDisplayIcon: {fileID: 0}
+  _weight: 4
+  _attachableItemVisualPairs: []
+  _currentBed: {fileID: 0}
+  _carryAttachPoint: {fileID: 6122798806109109470}
+  _isMovingPatientBedAttached: 0
+  _isPlayerAttached: 0
+  _interactConfigs:
+  - _identifier: lift_from_bed
+    _enabled: 1
+  - _identifier: monitor_select
+    _enabled: 1
+  - _identifier: carry_patient
+    _enabled: 1
+  _medicalState:
+    isCardiacArrest: 0
+    ecg:
+      bpm: 75
+      irregularity: 0
+      pAmp: 0.15
+      pWidth: 0.04
+      qAmp: -0.15
+      rAmp: 1.2
+      sAmp: -0.25
+      tAmp: 0.3
+      tWidth: 0.08
+      uAmp: 0
+      stElevation: 0
+      noise: 0.02
+      qrsWidthScale: 1
+    art:
+      bpm: 75
+      systolic: 120
+      diastolic: 80
+      noise: 0.2
+    cvp:
+      bpm: 75
+      mean: 12
+      noise: 0.2
+    pleth:
+      bpm: 75
+      spo2: 99
+      noise: 0.2
+    numerics:
+      bpm: 60
+      pvcs: 0
+      pulseRate: 74
+      perfusionIndex: 3
+      spo2: 99
+    nibp:
+      systolic: 120
+      diastolic: 82
+    temperature:
+      t1: 36.5
+      t2: 32.3
+    stLeads:
+      i: 0
+      ii: 0
+      iii: 0
+      avr: 0
+      avl: 0
+      avf: 0
+      v1: 0
+      v2: 0
+      v3: 0
+      v4: 0
+      v5: 0
+      v6: 0
 --- !u!1 &4249946182890119528
 GameObject:
   m_ObjectHideFlags: 0
@@ -1594,6 +1783,37 @@ Transform:
   - {fileID: 8741483642730250005}
   - {fileID: 4692509358247451290}
   m_Father: {fileID: 3714386319514714883}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8488914535556601482
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6122798806109109470}
+  m_Layer: 0
+  m_Name: PatientCarryAttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6122798806109109470
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8488914535556601482}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1, z: 0.2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1827749486389943084}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8505415652043200396
 GameObject:

@@ -306,9 +306,17 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 5796848331211291605}
   attachPoints: []
   nowRidingPlayers: []
+  _intravenousStandAttached: 0
+  _intravenousStandReference: {fileID: 0}
+  _intravenousHangerAttached: 0
+  _intravenousHangerReference: {fileID: 0}
+  _intravenousFluidAttached: 0
+  _intravenousFluidReference: {fileID: 0}
   _entityTypeIdentifier: moving_patient_bed
   _displayText: "\uC774\uB3D9\uC2DD \uD658\uC790 \uCE68\uB300"
   _displayIcon: {fileID: 0}
+  _reposeDisplayText: "\uD658\uC790 \uCE68\uB300\uC5D0 \uB0B4\uB824\uB193\uAE30"
+  _reposeDisplayIcon: {fileID: 0}
   _weight: 0
   _reposeAnchor: {fileID: 4813026280041569582}
   _interactionMode: 0
@@ -318,8 +326,10 @@ MonoBehaviour:
   _movementBlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  PlayerAttachPoints: []
-  PatientAttachPoints: []
+  PlayerAttachPoints:
+  - {fileID: 7425824512457748482}
+  PatientAttachPoints:
+  - {fileID: 762591555731961356}
   _attachableItemVisualPairs: []
   _reposedTargetComponent: {fileID: 0}
 --- !u!114 &5796848331211291605
@@ -352,7 +362,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584235526554901298
+  _initializedTimestamp: -8584194028435746808
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
