@@ -22,6 +22,7 @@
 - [implementation-prep.md](./implementation-prep.md): 재난 시나리오 미구현 기능 구현 준비서 (안전 우선)
 - [json-conversion-rules.md](./json-conversion-rules.md): Scenario 문서 -> JSON 변환 규칙표
 - [patient_a_critical.md](./patient_a_critical.md): scenario 환자 A 중증 처치
+- [patient-a-b-c-conversion-notes.md](./patient-a-b-c-conversion-notes.md): 환자 A/B/C 시나리오 JSON 변환 노트 및 검토 결과
 - [patient_b_c_ct.md](./patient_b_c_ct.md): scenario 환자 B/C 지연 처치
 - [remaining-implementation-checklist.md](./remaining-implementation-checklist.md): 남은 이벤트 구현 체크리스트
 - [scenario-authoring-guide.md](./scenario-authoring-guide.md): 시나리오 작성 가이드
