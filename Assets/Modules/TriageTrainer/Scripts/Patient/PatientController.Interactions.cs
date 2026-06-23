@@ -94,6 +94,8 @@ namespace TriageTrainer.Entity
       public void Interact(Transform interactor)
       {
         _owner._activeMonitorSelectionRequester?.HandlePatientSelected(_owner, interactor);
+        // 환자 선택(클릭) 완료 신호 — click_patient_* / select_patient_* 게이트용.
+        _owner.RaisePatientInteractionSignals();
       }
     }
 
@@ -276,7 +278,27 @@ namespace TriageTrainer.Entity
       }
 
       ShowThrottledMessage(interactor, "환자를 침대에서 들어올렸습니다.");
+      RaisePatientInteractionSignals();
       player.RefreshInteractableHintsNow();
+    }
+
+    /// <summary>
+    /// 환자 대상 인터랙션(클릭/들어올리기/이송) 완료 시 시나리오 게이팅용 완료 신호(sig.*)를 올린다.
+    /// 환자 Identifier 를 그대로 신호로 사용하므로(sig.&lt;id&gt; / sig.click_&lt;id&gt; / sig.select_&lt;id&gt;),
+    /// 환자 Identifier 를 시나리오 조건명 기반(예: patient_a, patient_b, patient_c)으로 지정하면
+    /// click_patient_a / select_patient_b 등의 게이트가 별도 코드 없이 통과된다.
+    /// </summary>
+    private void RaisePatientInteractionSignals()
+    {
+      string id = Identifier;
+      if (string.IsNullOrWhiteSpace(id))
+      {
+        return;
+      }
+
+      MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(id);
+      MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise("click_" + id);
+      MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise("select_" + id);
     }
 
     private void TryCarryByInteractor(Transform interactor)
@@ -304,6 +326,7 @@ namespace TriageTrainer.Entity
       }
 
       ShowThrottledMessage(interactor, "환자를 들어올렸습니다.");
+      RaisePatientInteractionSignals();
       player.RefreshInteractableHintsNow();
     }
   }

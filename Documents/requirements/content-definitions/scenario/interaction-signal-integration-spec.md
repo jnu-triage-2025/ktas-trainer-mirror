@@ -65,11 +65,19 @@ flags: ["refactor-required"]
 침대/들것 상호작용(`MovingPatientBedController.TryAttachItem`/이동, `PatientController.TryLiftFromBed`/`TryCarryByInteractor`)
 성공 지점에 Raise. 대상: `grab_stretcher_a~d`, `grab_stretcher_patient_b/c`, `move_defibcart_to_patient`, `move_patientA`.
 
-### click_patient* / select_* / check_* (환자·신체부위 클릭, 사정) — [부분]
-환자/모니터 선택(`PatientMonitorSelectInteract.Interact`, `PatientController.Interactions`) 지점에 Raise.
-AVPU/GCS/활력/맥박/동공 사정은 시나리오 Choice/InvokeEvent 흐름과 묶여 있어, 해당 흐름 완료 시
-Raise 하거나 사정 UI 확정 콜백에 연결. 대상: `click_patientA`, `click_patient_b/c`, `click_patient_b/c_face`,
-`select_patient_b_and_select_patient_c`, `check_*`(7개), `click_chest`, `click_to_start_comp`.
+### click_patient* / select_* (환자 선택/이송) — [부분 → **계측 완료**]
+`PatientController.RaisePatientInteractionSignals()` 가 다음 3개 완료 지점에서 호출된다(2026-06-23 구현):
+- 환자 선택 클릭(`PatientMonitorSelectInteract.Interact`)
+- 침대에서 들어올리기(`TryLiftFromBed` 성공)
+- 이송 들기(`TryCarryByInteractor` 성공)
+
+올라가는 신호: `sig.<patientId>`, `sig.click_<patientId>`, `sig.select_<patientId>`.
+**운영자 작업**: 각 환자(`PatientController`)의 `Identifier` 를 `patient_a` / `patient_b` / `patient_c` 로
+지정하면 `click_patient_a`, `select_patient_b` 등의 게이트가 통과된다.
+
+> 주의: `click_patient_b_face/c_face`(동공반사용 얼굴 클릭)와 `click_chest`(가슴압박 위치 클릭),
+> `check_*`(AVPU/GCS/활력/맥박/동공 사정), `click_to_start_comp` 는 별도의 신체부위/사정 인터랙션이라
+> 위 환자-선택 신호로는 충족되지 않는다. 이들은 해당 신체부위 클릭/사정 UI 확정 지점에서 별도 Raise 필요([부분] 잔여).
 
 ### click_* (아이템 획득) — [부분 → **공통 계측 완료**]
 `MedicalItem.OnGet` 을 override 하여, 아이템 획득(인벤토리 추가) 시 `sig.<identifier>` 와
