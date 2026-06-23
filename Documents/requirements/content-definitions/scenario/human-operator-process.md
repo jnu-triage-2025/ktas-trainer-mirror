@@ -91,14 +91,26 @@ flags: []
 이들은 현재 씬 배치 + 식별자 지정(또는 부트스트랩 인스펙터 연결)로 다룬다. 필요 시 환자와 동일하게
 프리셋+스폰 노드로 전환할 수 있다.
 
-### 2-1bis. 엔티티 종류(EntityType)와 레지스트리 정리
+### 2-1bis. 엔티티 종류(EntityType)와 등록 소유권
 
 혼동을 줄이기 위한 사실 정리:
 - 등록 종류(`EntityType`): `Player`, `Npc`, **`Patient`**, `MovingPatientBed`, `Waypoint`,
   `ScenarioInteractable`, `ScenarioTriggerZone`, `ItemObject`. (환자 전용 `Patient` 추가됨.)
 - **모든 런타임 엔티티는 식별자(identifier)로 단일 저장소(`RegistryType.Entity`)에 등록** 된다.
   `EntityType` 은 분류/필터용 메타데이터일 뿐, 조회는 `Registry.Get(RegistryType.Entity, "<식별자>")` 로
-  종류와 무관하게 식별자로 한다. 따라서 환자(`patient_a`)와 침대(`bed_a`)는 **각각 독립 식별자로 등록된 별개 엔티티** 다.
+  종류와 무관하게 식별자로 한다.
+
+> **등록 소유권(중요)**: 레지스트리 등록은 **각 엔티티의 컴포넌트가 스스로 수행** 한다.
+> - 환자: `PatientController` 가 `OnStartClient` 에서 `EntityType.Patient` 로 자가 등록.
+> - 침대: `MovingPatientBedController` 가 `SetIdentifier` 로 `EntityType.MovingPatientBed` 로 등록.
+>
+> 프리셋 스폰(`EntityPresetSpawn`)은 **인스턴스화 + (네트워크) 스폰 + 식별자 주입 + 위계 해제** 만 담당하고,
+> **엔티티 등록과 EntityType 결정은 하지 않는다**(그 책임은 컴포넌트 소유). 즉 환자/침대처럼 자가 등록하는
+> 프리팹에서는 **프리셋 요구사항의 `entityType` 값이 사용되지 않는다**(컴포넌트가 자기 타입으로 등록).
+> `entityType` 은 *자가 등록 컴포넌트가 없는 단순 프리팹* 의 **폴백 등록** 에만 쓰인다.
+>
+> 따라서 질문에 답하면: 컨테이너(환자+침대) 프리셋의 `entityType` 은 **의미 없음**(루트는 소비되고 등록되지 않음).
+> 환자/침대는 이미 각자의 구현체가 스폰·등록을 관리하며, 프리셋이 그 책임을 흡수하지 않는다(의도대로 분리됨).
 
 ### 2-1c. 묶음 프리셋 + 위계 해제(ungroup) — 환자+침대를 함께 배치할 때
 

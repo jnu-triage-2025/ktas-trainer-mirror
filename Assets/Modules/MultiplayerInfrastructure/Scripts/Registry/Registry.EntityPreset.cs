@@ -175,7 +175,11 @@ namespace MultiplayerInfrastructure.Registry
         return true;
       }
 
-      // 2) 루트 인스턴스: 식별자 주입(자가 등록 전) → (네트워크면) 서버 스폰 → 레지스트리 등록.
+      // 2) 루트 인스턴스 처리.
+      //    레지스트리 등록의 "소유권"은 자가 등록 컴포넌트(ISpawnedEntityIdentifierReceiver, 예: PatientController/
+      //    MovingPatientBedController)에 있다. 이런 컴포넌트가 있으면 식별자만 주입하고, 등록/EntityType 은
+      //    컴포넌트가 자기 책임으로 수행한다(프리셋이 중복 등록하지 않음 — preset.EntityType 은 사용되지 않음).
+      //    자가 등록 컴포넌트가 없는 "단순 프리팹" 일 때만 프리셋이 preset.EntityType 으로 폴백 등록한다.
       var rootReceiver = spawned.GetComponentInChildren<ISpawnedEntityIdentifierReceiver>(true);
       rootReceiver?.ApplySpawnedEntityIdentifier(runtimeEntityIdentifier);
 
@@ -184,18 +188,27 @@ namespace MultiplayerInfrastructure.Registry
         NetworkSpawnIfServer(spawned, identifier);
       }
 
-      string displayName = !string.IsNullOrWhiteSpace(preset.DisplayName)
-        ? preset.DisplayName
-        : spawned.name;
-
-      RegisterEntity(runtimeEntityIdentifier, preset.EntityType, spawned, displayName, isNetworked: preset.IsNetworked);
-
-      if (!TryGetEntity(runtimeEntityIdentifier, out descriptor) || descriptor == null)
+      if (rootReceiver == null)
       {
-        error = $"Entity preset '{identifier}' spawned but registry registration failed.";
-        return false;
+        // 폴백: 자가 등록 컴포넌트가 없는 단순 프리팹만 프리셋이 직접 등록.
+        string displayName = !string.IsNullOrWhiteSpace(preset.DisplayName)
+          ? preset.DisplayName
+          : spawned.name;
+
+        RegisterEntity(runtimeEntityIdentifier, preset.EntityType, spawned, displayName, isNetworked: preset.IsNetworked);
+
+        if (!TryGetEntity(runtimeEntityIdentifier, out descriptor) || descriptor == null)
+        {
+          error = $"Entity preset '{identifier}' spawned but registry registration failed.";
+          return false;
+        }
+
+        return true;
       }
 
+      // 자가 등록 컴포넌트가 소유: 동기 등록되었으면(비네트워크) 디스크립터를 반환, 비동기(네트워크 OnStartClient)면
+      // 아직 없을 수 있으므로 descriptor 는 null 일 수 있다(스폰 자체는 성공).
+      TryGetEntity(runtimeEntityIdentifier, out descriptor);
       return true;
     }
 
