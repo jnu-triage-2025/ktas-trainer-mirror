@@ -12,7 +12,7 @@ using MI = MultiplayerInfrastructure;
 
 namespace TriageTrainer.Entity
 {
-  public partial class MovingPatientBedController : Ridable, IInteractable, IInteract, IInteractorConditional
+  public partial class MovingPatientBedController : Ridable, IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver
   {
     private const string DefaultPlayerAttachPointName = "PlayerAttachPoint";
     private const string DefaultPatientAttachPointName = "PatientAttachPoint";
@@ -160,6 +160,12 @@ namespace TriageTrainer.Entity
     /// Registers this bed in the global Registry if an identifier is provided.
     /// </summary>
     /// <param name="identifier">Server-assigned entity identifier (e.g., "moving_patient_bed:{uuid}"), or null to defer registration.</param>
+    /// <summary>
+    /// 엔티티 프리셋 스폰 시 식별자를 주입받는다(ISpawnedEntityIdentifierReceiver).
+    /// 침대는 SetIdentifier 로 식별자 설정 + 레지스트리 등록이 이루어지므로 그대로 위임한다.
+    /// </summary>
+    public void ApplySpawnedEntityIdentifier(string identifier) => SetIdentifier(identifier);
+
     public void SetIdentifier(string identifier)
     {
       if (string.IsNullOrWhiteSpace(identifier))

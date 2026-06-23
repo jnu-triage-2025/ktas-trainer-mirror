@@ -496,12 +496,55 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = node.NextIdentifier
         };
 
+    private static List<ScenarioEntityChildDetachment> ConvertChildDetachments(List<ScenarioEntityChildDetachmentDTO> dtos)
+    {
+      if (dtos == null || dtos.Count == 0)
+      {
+        return null;
+      }
+
+      var list = new List<ScenarioEntityChildDetachment>(dtos.Count);
+      foreach (var d in dtos)
+      {
+        if (d == null || string.IsNullOrWhiteSpace(d.ChildPath))
+        {
+          continue;
+        }
+
+        list.Add(new ScenarioEntityChildDetachment
+        {
+          ChildPath = d.ChildPath,
+          SpawnedEntityIdentifier = d.SpawnedEntityIdentifier
+        });
+      }
+
+      return list.Count > 0 ? list : null;
+    }
+
+    private static List<ScenarioEntityChildDetachmentDTO> ConvertChildDetachmentsToDTO(List<ScenarioEntityChildDetachment> nodes)
+    {
+      if (nodes == null || nodes.Count == 0)
+      {
+        return null;
+      }
+
+      return nodes
+        .Where(n => n != null)
+        .Select(n => new ScenarioEntityChildDetachmentDTO
+        {
+          ChildPath = n.ChildPath,
+          SpawnedEntityIdentifier = n.SpawnedEntityIdentifier
+        })
+        .ToList();
+    }
+
     private static ScenarioEntityPresetSpawnNode ConvertEntityPresetSpawn(ScenarioEntityPresetSpawnNodeDTO dto) =>
         new ScenarioEntityPresetSpawnNode
         {
           Identifier = dto.Identifier,
           PresetIdentifier = dto.PresetIdentifier,
           SpawnedEntityIdentifier = dto.SpawnedEntityIdentifier,
+          ChildDetachments = ConvertChildDetachments(dto.ChildDetachments),
           PositionSourceEntityIdentifier = dto.PositionSourceEntityIdentifier,
           PositionX = dto.PositionX ?? 0f,
           PositionY = dto.PositionY ?? 0f,
@@ -530,6 +573,7 @@ namespace MultiplayerInfrastructure.Scenario
           Identifier = node.Identifier,
           PresetIdentifier = node.PresetIdentifier,
           SpawnedEntityIdentifier = node.SpawnedEntityIdentifier,
+          ChildDetachments = ConvertChildDetachmentsToDTO(node.ChildDetachments),
           PositionSourceEntityIdentifier = node.PositionSourceEntityIdentifier,
           PositionX = node.PositionX,
           PositionY = node.PositionY,

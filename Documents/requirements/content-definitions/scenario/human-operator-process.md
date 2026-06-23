@@ -73,6 +73,27 @@ flags: []
 이들은 현재 씬 배치 + 식별자 지정(또는 부트스트랩 인스펙터 연결)로 다룬다. 필요 시 환자와 동일하게
 프리셋+스폰 노드로 전환할 수 있다.
 
+### 2-1c. 묶음 프리셋 + 위계 해제(ungroup) — 환자+침대를 함께 배치할 때
+환자와 침대를 "한 묶음"으로 배치하고 싶을 때(예: 환자가 침대에 결합된 상태로 시작), **컨테이너 프리팹**
+(비-NetworkObject 루트) 아래에 환자/침대를 자식으로 두고 프리셋으로 등록한다. 스폰 시 지정한
+**자식 NetworkObject 만 루트로 분리(ungroup)** 되어 각각 독립 엔티티로 스폰·등록된다.
+
+- 분리 지정: `EntityPresetSpawn` 노드의 `childDetachments` 에 `{ childPath, spawnedEntityIdentifier }` 목록을 둔다.
+  예) 컨테이너 자식 `Bed` 를 `bed_a` 로 분리:
+  ```json
+  { "nodeType": "EntityPresetSpawn", "identifier": "SPAWN_A_GRP",
+    "presetIdentifier": "patient_bed_group", "spawnedEntityIdentifier": "patient_a",
+    "childDetachments": [ { "childPath": "Bed", "spawnedEntityIdentifier": "bed_a" } ],
+    "nextIdentifier": "..." }
+  ```
+- 규칙: **분리는 NetworkObject 인 자식에 대해서만** 동작한다(비-NetworkObject 자식은 무시·잔류).
+  지정하지 않은 자식 NetworkObject 는 자동 분리되지 않고 루트 위계에 남는다.
+- 분리된 침대는 `MovingPatientBedController` 가 식별자를 주입받아(`ISpawnedEntityIdentifierReceiver`) 등록된다.
+- 네트워크 프리셋이면 분리된 각 NetworkObject 가 서버에서 FishNet 으로 개별 복제된다.
+- **런타임 결합 상태**: 분리 후 환자와 침대는 위계 없는 독립 객체이므로, "환자가 침대에 결합된 상태"로
+  시작하려면 스폰 직후 InvokeEvent 핸들러(TriageTrainer)에서 `bed.TryReposeTarget(patient)` 등을 호출해
+  논리적 결합을 재설정한다(엔진은 분리/스폰까지만 담당). **(후속 연결 작업)**
+
 ### 2-2. 수액/산소/모니터 연결 지점(`IntravenousLineConnectionPoint`)
 연결 완료 시 끝점 `Identifier` 로 신호가 올라가므로, **연결 지점의 `Identifier` 를 아래 조건명으로 지정** 한다.
 (연결 = 한쪽 시작점 + 다른 쪽 끝점. 보통 게이트는 끝점 Identifier 로 맞추면 된다.)

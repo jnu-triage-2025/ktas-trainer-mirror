@@ -768,11 +768,25 @@ namespace MultiplayerInfrastructure.Scenario
         spawnPosition = sourceDescriptor.GameObject.transform.position;
       }
 
+      System.Collections.Generic.List<(string childPath, string spawnedEntityIdentifier)> detachments = null;
+      if (node.ChildDetachments != null && node.ChildDetachments.Count > 0)
+      {
+        detachments = new System.Collections.Generic.List<(string, string)>(node.ChildDetachments.Count);
+        foreach (var d in node.ChildDetachments)
+        {
+          if (d != null && !string.IsNullOrWhiteSpace(d.ChildPath))
+          {
+            detachments.Add((d.ChildPath, d.SpawnedEntityIdentifier));
+          }
+        }
+      }
+
       if (!Registry.Registry.TrySpawnEntityPreset(
             node.PresetIdentifier,
             spawnPosition,
             Quaternion.identity,
             node.SpawnedEntityIdentifier,
+            detachments,
             out _,
             out var spawnedDescriptor,
             out var error))
