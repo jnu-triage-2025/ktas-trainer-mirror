@@ -10,6 +10,42 @@
     "pupil_check"
   ],
   "nodes": {
+    "SPAWN_B": {
+      "identifier": "SPAWN_B",
+      "nodeType": "EntityPresetSpawn",
+      "presetIdentifier": "patient",
+      "spawnedEntityIdentifier": "patient_b",
+      "positionSourceEntityIdentifier": null,
+      "positionX": 0.0,
+      "positionY": 0.0,
+      "positionZ": 0.0,
+      "resultStateKey": null,
+      "nextIdentifier": "SPAWN_C"
+    },
+    "SPAWN_C": {
+      "identifier": "SPAWN_C",
+      "nodeType": "EntityPresetSpawn",
+      "presetIdentifier": "patient",
+      "spawnedEntityIdentifier": "patient_c",
+      "positionSourceEntityIdentifier": null,
+      "positionX": 0.0,
+      "positionY": 0.0,
+      "positionZ": 0.0,
+      "resultStateKey": null,
+      "nextIdentifier": "SPAWN_DUMMY_B"
+    },
+    "SPAWN_DUMMY_B": {
+      "identifier": "SPAWN_DUMMY_B",
+      "nodeType": "EntityPresetSpawn",
+      "presetIdentifier": "patient",
+      "spawnedEntityIdentifier": "dummy_b",
+      "positionSourceEntityIdentifier": null,
+      "positionX": 0.0,
+      "positionY": 0.0,
+      "positionZ": 0.0,
+      "resultStateKey": null,
+      "nextIdentifier": "E038"
+    },
     "E038": {
       "identifier": "E038",
       "nodeType": "InvokeEvent",

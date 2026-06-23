@@ -772,6 +772,7 @@ namespace MultiplayerInfrastructure.Scenario
             node.PresetIdentifier,
             spawnPosition,
             Quaternion.identity,
+            node.SpawnedEntityIdentifier,
             out _,
             out var spawnedDescriptor,
             out var error))

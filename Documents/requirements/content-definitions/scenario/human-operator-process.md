@@ -47,17 +47,31 @@ flags: []
 
 씬에 아래 오브젝트를 두고, **각 오브젝트의 `Identifier` 를 표의 값으로 지정** 한다(또는 부트스트랩 인스펙터 연결).
 
-### 2-1. 환자/더미/간호사/침대/모니터
+### 2-1. 환자 — **프리셋 스폰 방식**(씬에 직접 두지 않음)
+환자/더미는 **하나의 환자 프리셋을 등록해두고 시나리오가 스폰** 한다(수동 배치 불요).
+- `EntityPresetRegistryRequirementsSO` 에 환자 프리셋을 식별자 **`patient`** 로 등록한다
+  (`entityType=Npc`, `prefab=환자 프리팹`, `isNetworked=true`). 부트스트랩 `Awake_EntityPreset` 가 자동 등록.
+- 시나리오 시작부의 `EntityPresetSpawn` 노드가 이 프리셋에서 인스턴스를 스폰하며,
+  **인스턴스별 식별자를 자동 부여** 한다:
+  - `patient_a_critical` 시작 노드 `SPAWN_A` → `patient_a`
+  - `patient_b_c_ct` 시작 노드 `SPAWN_B`/`SPAWN_C`/`SPAWN_DUMMY_B` → `patient_b` / `patient_c` / `dummy_b`
+- 스폰 위치는 기본 원점(0,0,0)이다. 특정 위치에 두려면 스폰 노드의 `positionSourceEntityIdentifier`
+  를 위치 기준 엔티티(예: 베드/스폰포인트)로 지정하거나 `positionX/Y/Z` 를 편집한다.
+
+> 동작 원리: 스폰 시 `ScenarioEntityPresetSpawnNode.spawnedEntityIdentifier` 값이
+> `PatientController` 에 주입(`ISpawnedEntityIdentifierReceiver`)되어 그 식별자로 레지스트리에 등록된다.
+> 따라서 한 프리셋에서 `patient_a/_b/_c` 가 구분되며, `click_patient_a` / `select_patient_b` 게이트와
+> 이벤트 핸들러(`*_patient_a` 등)가 그대로 동작한다. (네트워크 프리셋은 서버에서 FishNet 으로 복제 스폰.)
+
+### 2-1b. 간호사/침대/모니터 (씬 배치 또는 별도 프리셋)
 | 종류 | 식별자 |
 |---|---|
-| 환자 | `patient_a`, `patient_b`, `patient_c` |
-| 더미 | `dummy_a`, `dummy_b` |
 | 간호사(NPC) | `NurseA`~`NurseD` |
 | 침대(분류/처치) | `patientABed`, `dummyABed`, `patientATreatmentBed` 등 |
 | 모니터 | `patientA_monitor`, `patientB_monitor`, `patientC_monitor` |
 
-> 중요: 환자 `PatientController` 의 `Identifier` 를 `patient_a/_b/_c` 로 지정해야
-> `click_patient_a` / `select_patient_b` 게이트가 동작한다(환자 선택/들기/이송 시 자동 신호 발생).
+이들은 현재 씬 배치 + 식별자 지정(또는 부트스트랩 인스펙터 연결)로 다룬다. 필요 시 환자와 동일하게
+프리셋+스폰 노드로 전환할 수 있다.
 
 ### 2-2. 수액/산소/모니터 연결 지점(`IntravenousLineConnectionPoint`)
 연결 완료 시 끝점 `Identifier` 로 신호가 올라가므로, **연결 지점의 `Identifier` 를 아래 조건명으로 지정** 한다.

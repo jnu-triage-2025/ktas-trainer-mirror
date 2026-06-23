@@ -18,6 +18,18 @@
     "triage_lead"
   ],
   "nodes": {
+    "SPAWN_A": {
+      "identifier": "SPAWN_A",
+      "nodeType": "EntityPresetSpawn",
+      "presetIdentifier": "patient",
+      "spawnedEntityIdentifier": "patient_a",
+      "positionSourceEntityIdentifier": null,
+      "positionX": 0.0,
+      "positionY": 0.0,
+      "positionZ": 0.0,
+      "resultStateKey": null,
+      "nextIdentifier": "D005"
+    },
     "D005": {
       "identifier": "D005",
       "nodeType": "Dialogue",
