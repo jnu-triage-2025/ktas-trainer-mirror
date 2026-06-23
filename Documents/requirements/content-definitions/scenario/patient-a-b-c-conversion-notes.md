@@ -266,8 +266,30 @@ Agent Manager 워크트리 2개(`scenario-patient-a-json`, `scenario-patient-bc-
 - 재작업 위험: 없음. `todo.validate.*` 는 의도적으로 등록 대상에서 **제외**한다(향후 TODO-SPEC-2의
   Interaction/Validator 노드로 치환될 예정이므로 지금 핸들러를 붙이면 폐기 작업이 됨).
 
+**(완료) 초기 역할 태그 부여 — intro 역할 선택 + PlayerTag(Add)**
+- 원본 루브릭상 "역할 선택"은 step 0(intro 단계)이고, 환자 A/B/C 는 태그가 이미 있다고 가정하고
+  중간(D005/E038)부터 시작한다. 따라서 역할 선택+태그 부여를 **`disaster_intro.json` 도입부**
+  (D002 직후)에 배치했다. 환자 A/B/C JSON 은 변경하지 않는다.
+- 구현: `C_role_select`(Choice, 4개 역할) → 각 역할별 `PlayerTag(Add, Scope=Current)` 체인 → `P001`.
+  각 플레이어가 자기 역할을 선택하면 해당 태그 집합이 본인(시나리오 owner)에게 부여된다.
+- 태그 모델: **각 facet 태그를 정확히 한 간호사만 보유(disjoint)** 하도록 cycle-1 기준 배정.
+  - nurse_a: triage_lead
+  - nurse_b: airway_team, cpr_team, support_team
+  - nurse_c: bleeding_control, defib_team, neuro_assessment
+  - nurse_d: iv_team, access_support, medication_team, procedure_team, suction_team, vital_team, pupil_check
+  - (+ 각자 식별 태그 nurse_a~d)
+- 검증(정적 시뮬레이션): 단일 역할 브랜치는 전부 1:1 매칭(intro 3/3, 환자A 20/20, 환자B·C 8/8),
+  MULTI(중복 매칭) 0건. dangling 참조 0, 스키마 통과.
+- **SPEC-3/할당 대기로 남는 브랜치(=2인 협업 브랜치, `matchMode:All` 로 한 명이 두 태그를 모두
+  요구받음)**: 다음 3개는 단일 간호사로 매칭되지 않으며(=0건), 원본상 2인 공동 수행 브랜치다.
+  - 환자A `P004/N008` `airway_team+triage_lead` (B+A 기관내삽관 보조)
+  - 환자B/C `P009/V040_A` `bleeding_control+triage_lead` (A+C 환자 B 이송)
+  - 환자B/C `P009/V040_B` `airway_team+iv_team` (B+D 환자 C 이송)
+  → 해결책은 (a) 해당 브랜치 `requiredPlayerTagsMatchMode = Any`, 또는 (b) 멀티플레이어 할당
+    재설계(SPEC-3 영역). 정적 태그 부여로는 의도(2인 협업)를 표현 못 하므로 SPEC-3 으로 둔다.
+- CPR 교대(P005→P006 facet swap)도 정적 부여 한계로 SPEC-3 대기(`PlayerTag Swap`).
+
 **(남은 엔진 무관 작업)**
-- 초기 역할 태그 부여: 도입부 역할 선택 + `PlayerTag(Add)` 노드(기존 노드로 충분). CPR 교대만 TODO-SPEC-3 대기.
 - 씬/레지스트리 등록: 환자/더미/침대/모니터/간호사/Waypoint 를 Entity/Npc/Waypoint 레지스트리에 등록.
 
 ### 3-3. 변환 후 검증 체크리스트
