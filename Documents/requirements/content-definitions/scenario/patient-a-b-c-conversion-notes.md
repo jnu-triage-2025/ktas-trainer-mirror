@@ -230,19 +230,19 @@ Agent Manager 워크트리 2개(`scenario-patient-a-json`, `scenario-patient-bc-
 드롭된 RequiredRoleIdentifiers 등), `followUpEventsToImplement[]`(모든 `todo.validate.*`),
 `enumConversionsApplied[]`(WaitAll→All, ByRole→SelfAll, Immediate→Immediately).
 
-### 3-2. 스펙 표현력 부족 — 엔진 개선 TODO (다른 모델/담당에게 할당)
+### 3-2. 스펙 표현력 부족 — 엔진 개선 TODO 및 구현 상태
 
-| ID | 내용 | 영향 | 임시 대응(현 변환) |
+| ID | 내용 | 상태(2026-06-23) | 비고 |
 |---|---|---|---|
-| TODO-SPEC-1 | DialogueNode 에 자동 진행 `duration` 개념 없음 | 원본의 "n초 안내 후 자동 진행" 연출 손실 | Duration 드롭. 필요 구간은 Delay 노드로 분리 검토 |
-| TODO-SPEC-2 | Validator 가 도메인 인터랙션(클릭/적용/연결/진입/촉지) 완료 검증 불가 (PlayerCount 계열만) | 학습자 수행 검증 전부 미구현 | `todo.validate.*` InvokeEvent 스텁으로 치환, flags 파일에 누적 |
-| TODO-SPEC-3 | CPR 교대 시 동일 플레이어의 역할 태그가 사이클마다 바뀜 → 정적 태그 매칭 한계 | P005↔P006 교대 브랜치 매칭 오류 가능 | TagModification 노드 삽입 또는 태그 설계 재검토 필요 |
-| TODO-SPEC-4 | 환자/더미별 동일 처치 서브그래프(B, C, 더미) 재사용 수단 없음(서브그래프 호출/포함 미지원) | 동일 흐름을 식별자만 바꿔 복제해야 함 | 식별자 접미사로 복제 작성 |
+| TODO-SPEC-1 | DialogueNode 자동 진행 시간 부재 | **구현됨** | `autoAdvanceSeconds`(opt-in). null/0이하=입력 대기(하위호환) |
+| TODO-SPEC-2 | Validator 도메인 인터랙션 완료 검증 불가 | **엔진 메커니즘 구현됨** | 신규 enum 없이 `RegistryContains`+`RuntimeState`+`ScenarioInteractionSignals` 재사용. `todo.validate.*`→Validator 치환 규칙은 `json-conversion-rules.md`. 게임플레이 신호 emit 연결은 후속 |
+| TODO-SPEC-3 | 역할 태그 교대(CPR 사이클) 표현 불가 | **구현됨** | PlayerTag `Swap`(1:1 교대) + `ByTag` scope 추가 |
+| TODO-SPEC-4 | 동일 처치 서브그래프 재사용 수단 없음 | **보류** | 플레이 차단 아님(환자 C 복제로 동작). 침습적이라 우선순위 최하로 연기 |
 
-위 TODO-SPEC-* 는 모두 엔진(`MultiplayerInfrastructure`) 변경을 필요로 하므로,
-루트 `AGENTS.md` 정책에 따라 `/Agents/Proposals/Feature Proposal - ScenarioNode Expressiveness/`
-하위에 Feature Proposal + 예시 설계 명세로 작성하였다(2026-06-23).
-본 변환 작업 자체는 TriageTrainer 리소스(JSON)만 생성하므로 엔진 변경 없이 수행한다.
+TODO-SPEC-* 는 모두 엔진(`MultiplayerInfrastructure`) 변경을 필요로 하여, 루트 `AGENTS.md` 정책에 따라
+`/Agents/Proposals/Feature Proposal - ScenarioNode Expressiveness/` 에 Feature Proposal + 예시 설계 명세를
+먼저 작성하였고(2026-06-23), 이후 SPEC-1·2·3 을 엔진에 구현하였다(전부 opt-in·하위호환, 기존 시나리오 회귀 0건).
+본 변환 작업 자체(JSON 산출)는 엔진 변경 없이 수행되었다.
 
 ### 3-2-1. 플레이 가능화 — 엔진 무관 선행 작업 (2026-06-23)
 
