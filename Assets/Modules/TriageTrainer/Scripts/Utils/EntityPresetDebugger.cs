@@ -32,6 +32,11 @@ namespace TriageTrainer.Utils
     [Tooltip("'Spawn Selected Preset' 로 스폰할 프리셋 식별자.")]
     [SerializeField] private string _selectedPresetIdentifier;
 
+    [Header("Self Registration (Debug)")]
+    [Tooltip("Start 시 SO 의 프리셋을 레지스트리에 자동 등록한다. " +
+             "씬에 RegisteringMultiplayerInfrastructureSupport 가 없을 때도 디버거 단독으로 스폰 테스트가 가능하게 한다.")]
+    [SerializeField] private bool _autoRegisterOnStart = true;
+
     [Header("Debug Overlay")]
     [SerializeField] private bool _showOverlay = true;
 
@@ -41,7 +46,53 @@ namespace TriageTrainer.Utils
 
     private Vector3 OriginPosition => _spawnOrigin != null ? _spawnOrigin.position : transform.position;
 
+    private void Start()
+    {
+      if (_autoRegisterOnStart)
+      {
+        RegisterPresetsFromSO();
+      }
+    }
+
     // ── ContextMenu 액션 ─────────────────────────────────────────────────
+
+    [ContextMenu("Register Presets From SO")]
+    public void RegisterPresetsFromSO()
+    {
+      if (_requirementsSO?.entityPresetRegistryRequirements == null)
+      {
+        _lastResultSummary = "SO 미지정 또는 항목 없음";
+        Debug.LogWarning("[EntityPresetDebugger] SO 가 지정되지 않았거나 항목이 없습니다.", this);
+        return;
+      }
+
+      int registered = 0;
+      foreach (var req in _requirementsSO.entityPresetRegistryRequirements)
+      {
+        if (string.IsNullOrWhiteSpace(req.identifier) || req.prefab == null)
+        {
+          continue;
+        }
+
+        // 이미 등록되어 있으면(부트스트랩이 등록) 건너뛴다.
+        if (Registry.TryGetEntityPreset(req.identifier, out var existing) && existing != null)
+        {
+          continue;
+        }
+
+        Registry.RegisterEntityPreset(
+          req.identifier,
+          req.fallbackEntityType,
+          req.prefab,
+          req.displayName,
+          req.isNetworked,
+          req.childDetachments);
+        registered++;
+      }
+
+      _lastResultSummary = $"프리셋 등록: {registered}개 신규(SO 기준)";
+      Debug.Log($"[EntityPresetDebugger] {_lastResultSummary}", this);
+    }
 
     [ContextMenu("List Registered Presets")]
     public void ListRegisteredPresets()
@@ -142,6 +193,12 @@ namespace TriageTrainer.Utils
         return false;
       }
 
+      // 디버그 편의: 아직 레지스트리에 없으면 SO 기준으로 등록을 시도한 뒤 스폰한다.
+      if (!Registry.TryGetEntityPreset(presetIdentifier, out _))
+      {
+        RegisterPresetsFromSO();
+      }
+
       bool ok = Registry.TrySpawnEntityPreset(
         presetIdentifier, position, Quaternion.identity,
         out _, out var descriptor, out var error);
@@ -177,6 +234,7 @@ namespace TriageTrainer.Utils
       GUILayout.Label($"Presets: {presetCount} | Entities: {entityCount} | DebugSpawned: {_debugSpawnedIdentifiers.Count}");
       GUILayout.Label($"Last: {_lastResultSummary}");
 
+      if (GUILayout.Button("Register Presets From SO")) RegisterPresetsFromSO();
       if (GUILayout.Button("Spawn All Presets")) SpawnAllPresets();
       if (GUILayout.Button($"Spawn Selected ('{_selectedPresetIdentifier}')")) SpawnSelectedPreset();
       if (GUILayout.Button("Report Registered Entities")) ReportRegisteredEntities();

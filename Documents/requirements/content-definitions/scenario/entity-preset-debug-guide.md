@@ -35,8 +35,16 @@ IndevScene 의 빈 GameObject(예 `__EntityPresetDebugger`)에 붙이고 인스�
 1. **호스트/서버로 플레이모드 진입** (네트워크 프리셋은 서버 컨텍스트에서만 복제 스폰됨).
 2. 컴포넌트 우클릭 **ContextMenu** 또는 화면 좌상단 **오버레이 버튼** 으로 다음을 실행한다.
 
+> **중요 — 등록 선행**: 프리셋은 먼저 레지스트리에 **등록** 되어야 스폰된다. 등록은 원래
+> `RegisteringMultiplayerInfrastructureSupport`(부트스트랩) 가 `Awake` 에서 수행한다. 만약 IndevScene 에
+> 그 컴포넌트가 없거나 SO 가 연결되지 않았다면, `Entity preset '...' is not registered.` 오류가 난다.
+> 디버거는 이를 위해 **`_autoRegisterOnStart`(기본 on)** 와 **"Register Presets From SO"** 액션을 제공한다.
+> (디버거의 `Requirements SO` 에 동일 SO 를 지정해두면, 부트스트랩 없이도 디버거가 단독 등록한다. Spawn 액션도
+> 미등록 시 자동으로 SO 등록을 시도한다.)
+
 | 액션 | 효과 / 확인 포인트 |
 |---|---|
+| **Register Presets From SO** | SO 의 프리셋을 레지스트리에 등록(미등록분만). 부트스트랩 없을 때 선행 실행. |
 | **List Registered Presets** | 등록된 프리셋 수 + 각 항목(type/networked/detach 개수/prefab 유무). 등록 자체 확인. |
 | **Spawn Selected Preset** | `Selected Preset Identifier` 1개 스폰. 성공/실패 + 결과 식별자 로그. |
 | **Spawn All Presets** | SO 의 모든 프리셋을 간격을 두고 스폰. `성공/전체` 요약. |
@@ -56,6 +64,23 @@ IndevScene 의 빈 GameObject(예 `__EntityPresetDebugger`)에 붙이고 인스�
 
 > 참고: `/entitypreset list` / `/entitypreset spawn <id> <x> <y> <z>` 채팅 명령으로도 동일 확인이 가능하다.
 > 디버거 컴포넌트는 그 위에 "에디터에서 클릭 한 번 + 오버레이 가시화" 편의를 더한 것이다.
+
+## 3-1. 식별자 개념 정리 (childPath vs identifier — 혼동 주의)
+
+프리셋에는 **두 단계**의 식별자가 있다.
+
+- **프리셋(컨테이너) `identifier`** — SO 항목 최상단 필드(예 `patient_a_bed_group`).
+  **스폰할 때 사용하는 키** 다. `TrySpawnEntityPreset("patient_a_bed_group", ...)` 처럼 이걸로 스폰한다.
+- **자식 `childDetachments[]`** — 컨테이너 안에서 분리할 자식 지정.
+  - `childPath`: **프리팹 위계상의 경로/이름**(예 `PatientTypeA`, `PatientMovingBed`). 어떤 자식을 분리할지 가리킨다.
+  - `spawnedEntityIdentifier`: 분리되어 독립 객체가 된 그 자식이 **가질 식별자**(예 `patient_a`, `patient_a_moving_bed`).
+
+즉 사용자의 이해가 맞다: **path = 위계 경로, (자식)identifier = 생성된 대상이 가질 식별자.**
+"Path 가 왜 있나"의 답: **스폰은 프리셋(컨테이너) identifier 로 하고**, path 는 그 컨테이너 *내부에서*
+어떤 자식을 분리할지 지목하는 용도다(두 개는 다른 계층의 식별자).
+
+위 오류(`patient_a_bed_group' is not registered`)는 식별자 개념 문제가 아니라 **컨테이너 프리셋이
+레지스트리에 등록되지 않은** 상태(부트스트랩 미실행/SO 미연결)였다. 위 §2 "등록 선행" 으로 해결한다.
 
 ## 4. 관련
 
