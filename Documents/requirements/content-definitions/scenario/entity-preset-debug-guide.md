@@ -82,6 +82,26 @@ IndevScene 의 빈 GameObject(예 `__EntityPresetDebugger`)에 붙이고 인스�
 위 오류(`patient_a_bed_group' is not registered`)는 식별자 개념 문제가 아니라 **컨테이너 프리셋이
 레지스트리에 등록되지 않은** 상태(부트스트랩 미실행/SO 미연결)였다. 위 §2 "등록 선행" 으로 해결한다.
 
+## 3-2. 자주 나는 오류와 해결
+
+### (A) `Entity preset '...' is not registered.`
+- 원인: 프리셋이 레지스트리에 등록되지 않음(부트스트랩 미실행/SO 미연결).
+- 해결: §2 "등록 선행" — 디버거 `_autoRegisterOnStart`(기본 on) 또는 "Register Presets From SO".
+
+### (B) `NetworkObject Name [...] ObjectId [65535] ... is expected to be initialized but was not. ... Reserialize Prefabs ...`
+- 원인: **FishNet 프리팹 직렬화 누락**. 새로 만든(또는 자식으로 NetworkObject 를 가진) 프리팹이
+  FishNet 의 프리팹 컬렉션(`DefaultPrefabObjects.asset`)에 직렬화/등록되지 않아, `Instantiate` 시
+  `NetworkObject.Awake` 가 초기화되지 않았다고 판단해 오류를 낸다. (ObjectId 65535 = 미설정)
+- **해결(에디터 작업, 필수)**:
+  1. 플레이모드를 종료한다.
+  2. Unity 상단 메뉴 **Fish-Networking > Utility > Reserialize NetworkObjects** 실행
+     (또는 **Refresh Default Prefabs** / **Reserialize Prefabs**). 씬 오브젝트면 **Reserialize Scenes** 도 함께.
+  3. 컨테이너 프리팹과 그 **자식 NetworkObject(환자/침대)** 가 `DefaultPrefabObjects.asset` 에 포함되었는지 확인.
+  4. 다시 플레이모드로 스폰 테스트.
+- 참고: 컨테이너(분리용) 프리팹은 **자식 NetworkObject 가 nested** 된 구조다. FishNet 에서 nested
+  NetworkObject 는 반드시 프리팹 직렬화가 되어 있어야 인스턴스화/스폰이 정상 동작한다. 새 프리팹을
+  만들거나 자식 NetworkObject 구성을 바꿀 때마다 위 Reserialize 를 수행해야 한다.
+
 ## 4. 관련
 
 - 결합 프리셋 구성: [`patient-bed-combined-preset-guide.md`](./patient-bed-combined-preset-guide.md)

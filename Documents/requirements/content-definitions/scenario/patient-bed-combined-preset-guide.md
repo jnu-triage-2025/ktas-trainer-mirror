@@ -44,6 +44,11 @@ flags: []
    - 환자의 `_currentBed` ← 침대, `_isMovingPatientBedAttached` = true
    - (이는 시각/초기 상태용. 런타임 논리 결합은 4단계에서 확정한다.)
 4. 이 루트를 **프리팹으로 저장**한다(예: `Assets/Modules/TriageTrainer/Prefabs/EntityPresets/patient_a_bed_group/`).
+5. **(필수) FishNet 프리팹 직렬화**: 프리팹을 만들거나 자식 NetworkObject 구성을 바꾼 뒤에는
+   Unity 메뉴 **Fish-Networking > Utility > Reserialize NetworkObjects**(+ Reserialize Prefabs) 를 실행한다.
+   이를 건너뛰면 스폰 시 `NetworkObject ... ObjectId [65535] ... is expected to be initialized but was not.`
+   오류가 난다(컨테이너의 자식 NetworkObject 가 직렬화되지 않았기 때문).
+   상세: [`entity-preset-debug-guide.md`](./entity-preset-debug-guide.md) §3-2 (B).
 
 > 환자 자체의 의학 상태(`_medicalState`: 의식/혈압/심정지 등)는 환자 오브젝트(프리팹)에 직접 구성한다.
 > 환자 A/B/C 가 다르면 각각 별도 컨테이너 프리팹을 만든다.
