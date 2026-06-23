@@ -115,7 +115,7 @@
     }
   ],
   "gameplaySignalsToRaise": [
-    "sig.click_blood",
+    "sig.click_blood_transfusion_set",
     "sig.click_dummyA",
     "sig.click_ns1_and_iv_set",
     "sig.click_patientA",

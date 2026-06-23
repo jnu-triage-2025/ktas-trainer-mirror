@@ -900,19 +900,19 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_laryngo_blade"
+              "registryIdentifier": "sig.click_laryngoscope_blade"
             },
             {
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_laryngo_handle"
+              "registryIdentifier": "sig.click_laryngoscope_handle"
             },
             {
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_et_tube"
+              "registryIdentifier": "sig.click_endotracheal_tube"
             },
             {
               "type": "Registry",
@@ -1433,7 +1433,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_glove"
+              "registryIdentifier": "sig.click_gloves"
             },
             {
               "type": "Registry",
@@ -1619,7 +1619,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_ns1"
+              "registryIdentifier": "sig.click_normal_saline_1000ml"
             },
             {
               "type": "Registry",
@@ -1857,7 +1857,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_blood"
+              "registryIdentifier": "sig.click_blood_transfusion_set"
             }
           ]
         }
@@ -2776,7 +2776,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_epi"
+              "registryIdentifier": "sig.click_epinephrine_ampule"
             },
             {
               "type": "Registry",
@@ -2821,7 +2821,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_ns_20cc"
+              "registryIdentifier": "sig.click_normal_saline_20ml"
             },
             {
               "type": "Registry",
@@ -3436,7 +3436,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_epi"
+              "registryIdentifier": "sig.click_epinephrine_ampule"
             },
             {
               "type": "Registry",
@@ -3481,7 +3481,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_ns_20cc"
+              "registryIdentifier": "sig.click_normal_saline_20ml"
             },
             {
               "type": "Registry",

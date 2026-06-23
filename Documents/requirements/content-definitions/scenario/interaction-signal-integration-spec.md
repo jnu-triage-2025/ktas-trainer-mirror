@@ -84,19 +84,24 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
 - **자동 일치(19)**: 조건명 == 아이템 식별자 → 픽업 즉시 통과. 예) `18g, 20g, ambubag, defibpad, electrode,
   electrode_cable, gauze, o2_line, penlight, plaster, reservoir_bag, scissors, stylet, suction_line,
   syringe_20cc, syringe_5cc, vital_set, wall_suction, yankauer`.
-- **표기 불일치(아이템 픽업인데 식별자와 조건명이 다름)** — 둘 중 하나로 정합 필요:
-  (a) 시나리오 JSON 조건명을 아이템 식별자에 맞춰 변경, 또는 (b) 아이템에 별칭 신호 Raise 추가.
-  | 조건명(JSON) | 실제 아이템 식별자 |
+- **표기 불일치(아이템 픽업) — 정합 완료(2026-06-23)**: 아래 9건의 시나리오 JSON 조건명을
+  실제 아이템 식별자로 일괄 변경하여 픽업 즉시 게이트가 통과되도록 했다(`registryIdentifier` 치환).
+  | 변경 전 조건명 | 변경 후(= 아이템 식별자) |
   |---|---|
-  | `click_glove` | `gloves` |
-  | `click_et_tube` | `endotracheal_tube` |
-  | `click_epi` | `epinephrine_ampule` |
-  | `click_iv_set` | `intravenous_set` |
-  | `click_ns1` | `normal_saline_1000ml` |
-  | `click_ns_20cc` | `normal_saline_20ml` |
-  | `click_laryngo_blade` | `laryngoscope_blade` |
-  | `click_laryngo_handle` | `laryngoscope_handle` |
-  | `click_blood` | `blood_transfusion_set` |
+  | `click_glove` | `click_gloves` |
+  | `click_et_tube` | `click_endotracheal_tube` |
+  | `click_epi` | `click_epinephrine_ampule` |
+  | `click_iv_set` | `click_intravenous_set` |
+  | `click_ns1` | `click_normal_saline_1000ml` |
+  | `click_ns_20cc` | `click_normal_saline_20ml` |
+  | `click_laryngo_blade` | `click_laryngoscope_blade` |
+  | `click_laryngo_handle` | `click_laryngoscope_handle` |
+  | `click_blood` | `click_blood_transfusion_set` |
+- **미해결(콘텐츠 갭) — `ps1`(플라즈마 솔루션 1L)**: 시나리오는 `sig.click_ps1` 을 요구하나
+  대응하는 아이템이 TriageTrainer 아이템 정의에 **없다**(생리식염수만 존재). 임의 매핑은 추측이므로
+  보류한다. **(TODO-CONTENT-1)**: 플라즈마 솔루션 아이템(예: 식별자 `plasma_solution_1000ml`) 정의를
+  추가하고 시나리오 조건명을 그 식별자로 맞춘다. 아이템 추가 전까지 해당 게이트는 신호 미발생으로
+  자동 통과(onFailure:Ignore)된다.
 - **아이템 픽업이 아닌 click 조건(별도 처리)**: `click_chest`, `click_patient_a/b/c`, `click_patient_*_face`,
   `click_patient_chest`, `click_defib`, `click_to_start_comp`, `click_flowmeter`, `click_oxyflow_wall`,
   `click_humidifierbottle`, `click_tpiece`, `click_nasal`, `click_sdw`, `click_neckstabilizer`,

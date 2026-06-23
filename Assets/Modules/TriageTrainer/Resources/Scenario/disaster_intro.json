@@ -479,13 +479,13 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_ns1"
+              "registryIdentifier": "sig.click_normal_saline_1000ml"
             },
             {
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_iv_set"
+              "registryIdentifier": "sig.click_intravenous_set"
             }
           ]
         }
@@ -530,7 +530,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_iv_set"
+              "registryIdentifier": "sig.click_intravenous_set"
             }
           ]
         }
@@ -569,7 +569,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_blood"
+              "registryIdentifier": "sig.click_blood_transfusion_set"
             }
           ]
         }
