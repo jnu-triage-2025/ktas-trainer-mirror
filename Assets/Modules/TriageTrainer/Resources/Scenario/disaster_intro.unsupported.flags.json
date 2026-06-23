@@ -2,7 +2,7 @@
   "identifier": "disaster_intro.unsupported.flags",
   "sourceScenario": "Documents/scenario/disaster_intro.md",
   "generatedFrom": "disaster_intro conversion",
-  "status": "needs-follow-up-implementation",
+  "status": "validators-converted; gameplay signal emit pending",
   "unsupportedSourceConstructs": [
     {
       "sourceNodeIdentifier": "V001",
@@ -113,5 +113,17 @@
       "from": "ByRole",
       "to": "SelfAll"
     }
-  ]
+  ],
+  "gameplaySignalsToRaise": [
+    "sig.click_blood",
+    "sig.click_dummyA",
+    "sig.click_ns1_and_iv_set",
+    "sig.click_patientA",
+    "sig.click_ps1_and_iv_set",
+    "sig.click_vital_set",
+    "sig.enter_treatmentroom_count_2",
+    "sig.enter_triage_zone_count_3",
+    "sig.move_patientA"
+  ],
+  "note": "todo.validate.* InvokeEvent 스텁을 Validator(RegistryContains, RuntimeState, sig.*) 로 치환 완료. 이제 게임플레이가 인터랙션 완료 시 ScenarioInteractionSignals.Raise(\"<cond>\") 로 아래 신호를 올려야 진행된다."
 }

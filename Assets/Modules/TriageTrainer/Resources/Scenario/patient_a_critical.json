@@ -80,30 +80,82 @@
     },
     "V010_A": {
       "identifier": "V010_A",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.grab_stretcher_a",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.grab_stretcher_a"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "CC_A_grab"
     },
     "V010_B": {
       "identifier": "V010_B",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.grab_stretcher_b",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.grab_stretcher_b"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "CC_B_grab"
     },
     "V010_C": {
       "identifier": "V010_C",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.grab_stretcher_c",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.grab_stretcher_c"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "CC_C_grab"
     },
     "V010_D": {
       "identifier": "V010_D",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.grab_stretcher_d",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.grab_stretcher_d"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "CC_D_grab"
     },
     "Q006_1": {
@@ -188,9 +240,22 @@
     },
     "V011": {
       "identifier": "V011",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_vital_set",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_vital_set"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N005_1"
     },
     "N005_1": {
@@ -203,9 +268,22 @@
     },
     "V011_1": {
       "identifier": "V011_1",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.show_vital_patient_a",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.show_vital_patient_a"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E006"
     },
     "E006": {
@@ -261,9 +339,22 @@
     },
     "V012": {
       "identifier": "V012",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.check_avpu_gcs_patient_a",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.check_avpu_gcs_patient_a"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N006_1"
     },
     "N006_1": {
@@ -507,9 +598,40 @@
     },
     "V013": {
       "identifier": "V013",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_neckstabilizer_and_click_wall_suction_and_click_suction_line_and_click_yankauer",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_neckstabilizer"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_wall_suction"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_suction_line"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_yankauer"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "A003"
     },
     "A003": {
@@ -540,9 +662,22 @@
     },
     "V013_1": {
       "identifier": "V013_1",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.apply_stabilizer_patient_a",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.apply_stabilizer_patient_a"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N007_2"
     },
     "N007_2": {
@@ -555,9 +690,22 @@
     },
     "V013_2": {
       "identifier": "V013_2",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.connect_wall_component_1",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.connect_wall_component_1"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N007_3"
     },
     "N007_3": {
@@ -570,9 +718,22 @@
     },
     "V013_3": {
       "identifier": "V013_3",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.connect_wall_component_and_yankauer",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.connect_wall_component_and_yankauer"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N007_4"
     },
     "N007_4": {
@@ -585,9 +746,22 @@
     },
     "V013_4": {
       "identifier": "V013_4",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.suction_patient_a",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.suction_patient_a"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "D009"
     },
     "D009": {
@@ -662,7 +836,7 @@
             "triage_lead"
           ],
           "forbiddenPlayerTags": [],
-          "requiredPlayerTagsMatchMode": "All"
+          "requiredPlayerTagsMatchMode": "Any"
         },
         {
           "identifier": "N010",
@@ -713,9 +887,52 @@
     },
     "V014": {
       "identifier": "V014",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_laryngo_blade_and_click_laryngo_handle_and_click_et_tube_and_click_stylet_and_click_plaster_and_click_syringe_5cc",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_laryngo_blade"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_laryngo_handle"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_et_tube"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_stylet"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_plaster"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_syringe_5cc"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "A004"
     },
     "A004": {
@@ -757,9 +974,22 @@
     },
     "V014_1": {
       "identifier": "V014_1",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.pass_laryngoscope",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.pass_laryngoscope"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N008_2"
     },
     "N008_2": {
@@ -772,9 +1002,22 @@
     },
     "V014_2": {
       "identifier": "V014_2",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.pass_et_tube_ready",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.pass_et_tube_ready"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E012"
     },
     "E012": {
@@ -794,9 +1037,22 @@
     },
     "V014_3": {
       "identifier": "V014_3",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.remove_intu_stylet",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.remove_intu_stylet"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E013"
     },
     "E013": {
@@ -816,9 +1072,22 @@
     },
     "V014_4": {
       "identifier": "V014_4",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.pass_syringe",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.pass_syringe"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N008_5"
     },
     "N008_5": {
@@ -831,9 +1100,22 @@
     },
     "V014_5": {
       "identifier": "V014_5",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.apply_plaster_on_intu",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.apply_plaster_on_intu"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "S001"
     },
     "S001": {
@@ -889,9 +1171,28 @@
     },
     "V015": {
       "identifier": "V015",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_humidifierbottle_and_click_sdw",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_humidifierbottle"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_sdw"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "A006"
     },
     "A006": {
@@ -915,9 +1216,22 @@
     },
     "V015_1": {
       "identifier": "V015_1",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_flowmeter",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_flowmeter"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "A007"
     },
     "A007": {
@@ -941,9 +1255,22 @@
     },
     "V015_2": {
       "identifier": "V015_2",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.connect_wall_component_2",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.connect_wall_component_2"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N009_3"
     },
     "N009_3": {
@@ -956,9 +1283,34 @@
     },
     "V015_3": {
       "identifier": "V015_3",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_o2_line_and_click_tpiece_and_connect_tpiece_and_oxyflow",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_o2_line"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_tpiece"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.connect_tpiece_and_oxyflow"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E014"
     },
     "E014": {
@@ -978,9 +1330,22 @@
     },
     "V015_4": {
       "identifier": "V015_4",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_oxyflow_wall",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_oxyflow_wall"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "C008"
     },
     "C008": {
@@ -1055,9 +1420,34 @@
     },
     "V016": {
       "identifier": "V016",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_glove_and_click_gauze_and_click_plaster",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_glove"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_gauze"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_plaster"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N010_1"
     },
     "N010_1": {
@@ -1070,9 +1460,22 @@
     },
     "V016_1": {
       "identifier": "V016_1",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.wear_glove",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.wear_glove"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N010_2"
     },
     "N010_2": {
@@ -1085,9 +1488,22 @@
     },
     "V016_2": {
       "identifier": "V016_2",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.apply_gauze",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.apply_gauze"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E015"
     },
     "E015": {
@@ -1107,9 +1523,22 @@
     },
     "V016_3": {
       "identifier": "V016_3",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.apply_plaster_on_gauze",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.apply_plaster_on_gauze"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E016"
     },
     "E016": {
@@ -1171,9 +1600,34 @@
     },
     "V017": {
       "identifier": "V017",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_18g_and_click_ns1_and_click_ps1",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_18g"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_ns1"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_ps1"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E018"
     },
     "E018": {
@@ -1193,9 +1647,22 @@
     },
     "V017_1": {
       "identifier": "V017_1",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.insert_iv_patient_a_left",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.insert_iv_patient_a_left"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E019"
     },
     "E019": {
@@ -1215,9 +1682,22 @@
     },
     "V017_2": {
       "identifier": "V017_2",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.connect_cannula_and_ns1",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.connect_cannula_and_ns1"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E020"
     },
     "E020": {
@@ -1295,9 +1775,22 @@
     },
     "V018": {
       "identifier": "V018",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.pass_central_line_set",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.pass_central_line_set"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E023"
     },
     "E023": {
@@ -1345,9 +1838,28 @@
     },
     "V019": {
       "identifier": "V019",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_ps1_and_click_blood",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_ps1"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_blood"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N013_1"
     },
     "N013_1": {
@@ -1360,9 +1872,22 @@
     },
     "V019_1": {
       "identifier": "V019_1",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.connect_ps1_to_lv1",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.connect_ps1_to_lv1"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N014"
     },
     "N014": {
@@ -1375,9 +1900,22 @@
     },
     "V020": {
       "identifier": "V020",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.connect_blood_to_lv1",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.connect_blood_to_lv1"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E024"
     },
     "E024": {
@@ -1448,9 +1986,22 @@
     },
     "V022": {
       "identifier": "V022",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.check_pulse_patient_a",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.check_pulse_patient_a"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "Q018_1"
     },
     "Q018_1": {
@@ -1545,9 +2096,28 @@
     },
     "V023": {
       "identifier": "V023",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_ambubag_and_click_reservoir_bag",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_ambubag"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_reservoir_bag"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N017_1"
     },
     "N017_1": {
@@ -1560,9 +2130,22 @@
     },
     "V023_1": {
       "identifier": "V023_1",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.remove_tpiece",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.remove_tpiece"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N017_2"
     },
     "N017_2": {
@@ -1575,9 +2158,28 @@
     },
     "V023_2": {
       "identifier": "V023_2",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.connect_ambubag_and_connect_o2_to_ambu",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.connect_ambubag"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.connect_o2_to_ambu"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E026"
     },
     "E026": {
@@ -1618,9 +2220,22 @@
     },
     "V023_4": {
       "identifier": "V023_4",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.start_ambu",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.start_ambu"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E027"
     },
     "E027": {
@@ -1730,9 +2345,22 @@
     },
     "V024": {
       "identifier": "V024",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_to_start_comp",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_to_start_comp"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E028"
     },
     "E028": {
@@ -1916,9 +2544,22 @@
     },
     "V025": {
       "identifier": "V025",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.move_defibcart_to_patient",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.move_defibcart_to_patient"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N019_1"
     },
     "N019_1": {
@@ -1931,9 +2572,28 @@
     },
     "V025_1": {
       "identifier": "V025_1",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_defibpad_and_click_patient_chest",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_defibpad"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_patient_chest"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E029"
     },
     "E029": {
@@ -2103,9 +2763,28 @@
     },
     "V026": {
       "identifier": "V026",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_epi_and_click_syringe_5cc",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_epi"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_syringe_5cc"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "A008"
     },
     "A008": {
@@ -2129,9 +2808,28 @@
     },
     "V026_1": {
       "identifier": "V026_1",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_ns_20cc_and_click_syringe_20cc",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_ns_20cc"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_syringe_20cc"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "A009"
     },
     "A009": {
@@ -2155,9 +2853,22 @@
     },
     "V026_2": {
       "identifier": "V026_2",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.push_epi",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.push_epi"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "D027"
     },
     "D027": {
@@ -2178,9 +2889,22 @@
     },
     "V026_3": {
       "identifier": "V026_3",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.push_ns",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.push_ns"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "D027_1"
     },
     "D027_1": {
@@ -2375,9 +3099,22 @@
     },
     "V027": {
       "identifier": "V027",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_chest",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_chest"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E033"
     },
     "E033": {
@@ -2561,9 +3298,22 @@
     },
     "V028": {
       "identifier": "V028",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.start_ambu",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.start_ambu"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E034"
     },
     "E034": {
@@ -2673,9 +3423,28 @@
     },
     "V029": {
       "identifier": "V029",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_epi_and_click_syringe_5cc",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_epi"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_syringe_5cc"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "A010"
     },
     "A010": {
@@ -2699,9 +3468,28 @@
     },
     "V029_1": {
       "identifier": "V029_1",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_ns_20cc_and_click_syringe_20cc",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_ns_20cc"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_syringe_20cc"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "A011"
     },
     "A011": {
@@ -2733,9 +3521,22 @@
     },
     "V029_2": {
       "identifier": "V029_2",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.push_epi",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.push_epi"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "D031"
     },
     "D031": {
@@ -2756,9 +3557,22 @@
     },
     "V029_3": {
       "identifier": "V029_3",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.push_ns",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.push_ns"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "D031_1"
     },
     "D031_1": {
@@ -2877,9 +3691,22 @@
     },
     "V030": {
       "identifier": "V030",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_defib",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_defib"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "S004"
     },
     "S004": {
@@ -3072,9 +3899,22 @@
     },
     "V031": {
       "identifier": "V031",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.check_pulse_patient_a",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.check_pulse_patient_a"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "Q027_1"
     },
     "Q027_1": {
@@ -3160,9 +4000,22 @@
     },
     "V032": {
       "identifier": "V032",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.arrive_triagearea",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.arrive_triagearea"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "E037"
     },
     "E037": {
@@ -3202,9 +4055,28 @@
     },
     "V033": {
       "identifier": "V033",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.click_scissors_and_remove_patient_clothing",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_scissors"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.remove_patient_clothing"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "S005"
     },
     "S005": {
@@ -3252,9 +4124,22 @@
     },
     "V034": {
       "identifier": "V034",
-      "nodeType": "InvokeEvent",
-      "eventIdentifier": "todo.validate.check_gcs_a_rosc",
-      "moveNextBehavior": "WaitUntilDone",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.check_gcs_a_rosc"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
       "nextIdentifier": "N028_1"
     },
     "N028_1": {
