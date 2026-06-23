@@ -71,8 +71,12 @@
     "validator_players": {
       "identifier": "validator_players",
       "nodeType": "Validator",
-      "condition": "PlayerCountGreaterThanOrEqual",
-      "targetCount": 1,
+      "rootConditions": [
+        {
+          "condition": "PlayerCountGreaterThanOrEqual",
+          "targetCount": 1
+        }
+      ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "parallel_merge"

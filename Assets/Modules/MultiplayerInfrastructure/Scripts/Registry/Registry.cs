@@ -229,6 +229,13 @@ namespace MultiplayerInfrastructure.Registry
         if (string.IsNullOrWhiteSpace(key))
           continue;
 
+        // Skip companion artifacts that live alongside scenario graphs but are not
+        // ScenarioGraph documents themselves (editor layout sidecars and conversion
+        // reports). Unity strips the .json extension, so these surface as asset names
+        // ending in ".editor", ".unsupported.flags", etc.
+        if (IsNonScenarioGraphCompanionAsset(key))
+          continue;
+
         if (!registry.TryGetValue(key, out var definition) || definition == null)
         {
           registry[key] = asset;
@@ -240,6 +247,22 @@ namespace MultiplayerInfrastructure.Registry
       }
 
       return successCount;
+    }
+
+    /// <summary>
+    /// Returns true when a Resources/Scenario asset is a companion artifact rather than a
+    /// ScenarioGraph document. These include editor layout sidecars (".editor") and
+    /// conversion reports (".unsupported.flags", ".unsupported"), which intentionally do
+    /// not match the ScenarioGraph schema and must not be loaded as graphs.
+    /// </summary>
+    private static bool IsNonScenarioGraphCompanionAsset(string assetName)
+    {
+      if (string.IsNullOrWhiteSpace(assetName))
+        return false;
+
+      return assetName.EndsWith(".editor", StringComparison.OrdinalIgnoreCase)
+        || assetName.EndsWith(".unsupported.flags", StringComparison.OrdinalIgnoreCase)
+        || assetName.EndsWith(".unsupported", StringComparison.OrdinalIgnoreCase);
     }
 
     public static IReadOnlyDictionary<string, T> GetAll<T>(RegistryType registryType)

@@ -39,66 +39,337 @@
         "identifier",
         "nodeType"
       ],
-      "oneOf": [
+      "properties": {
+        "nodeType": {
+          "type": "string",
+          "enum": [
+            "Dialogue",
+            "Choice",
+            "Sound",
+            "PlayerMove",
+            "NPCMove",
+            "CameraTarget",
+            "InvokeEvent",
+            "Validator",
+            "Parallel",
+            "QuestControl",
+            "QuestWaypointHighlight",
+            "Delay",
+            "Interaction",
+            "CombineItem",
+            "Quiz",
+            "StateUpdate",
+            "PlayTTS",
+            "PlayerTag",
+            "TagModification",
+            "EntityPresetSpawn",
+            "EntityTag"
+          ]
+        }
+      },
+      "allOf": [
         {
-          "$ref": "#/$defs/ScenarioDialogueNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "Dialogue"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioDialogueNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioChoiceNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "Choice"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioChoiceNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioSoundNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "Sound"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioSoundNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioPlayerMoveNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "PlayerMove"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioPlayerMoveNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioNPCMoveNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "NPCMove"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioNPCMoveNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioCameraTargetNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "CameraTarget"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioCameraTargetNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioInvokeEventNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "InvokeEvent"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioInvokeEventNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioValidatorNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "Validator"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioValidatorNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioParallelNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "Parallel"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioParallelNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioQuestControlNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "QuestControl"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioQuestControlNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioQuestWaypointHighlightNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "QuestWaypointHighlight"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioQuestWaypointHighlightNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioDelayNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "Delay"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioDelayNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioInteractionNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "Interaction"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioInteractionNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioCombineItemNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "CombineItem"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioCombineItemNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioQuizNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "Quiz"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioQuizNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioStateUpdateNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "StateUpdate"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioStateUpdateNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioPlayTTSNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "PlayTTS"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioPlayTTSNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioPlayerTagNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "enum": [
+                  "PlayerTag",
+                  "TagModification"
+                ]
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioPlayerTagNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioEntityPresetSpawnNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "EntityPresetSpawn"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioEntityPresetSpawnNode"
+          }
         },
         {
-          "$ref": "#/$defs/ScenarioEntityTagNode"
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "EntityTag"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioEntityTagNode"
+          }
         }
       ]
     },
@@ -1118,14 +1389,41 @@
     "ScenarioQuestData": {
       "type": "object",
       "properties": {
-        "Id": { "type": "string" },
-        "Title": { "type": ["string", "null"] },
-        "Description": { "type": ["string", "null"] },
-        "QuestContent": { "type": ["string", "null"] },
-        "waypointIdentifier": { "type": ["string", "null"] },
-        "IsTracked": { "type": "boolean", "default": false }
+        "Id": {
+          "type": "string"
+        },
+        "Title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "Description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "QuestContent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "waypointIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "IsTracked": {
+          "type": "boolean",
+          "default": false
+        }
       },
-      "required": [ "Id" ],
+      "required": [
+        "Id"
+      ],
       "additionalProperties": false
     },
     "ScenarioPlayTTSNode": {
@@ -1143,8 +1441,13 @@
               "minLength": 1
             },
             "variables": {
-              "type": ["object", "null"],
-              "additionalProperties": { "type": "string" }
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": {
+                "type": "string"
+              }
             },
             "waitUntilFinished": {
               "type": "boolean",
@@ -1173,39 +1476,74 @@
             },
             "operation": {
               "type": "string",
-              "enum": ["Add", "Remove", "Change"]
+              "enum": [
+                "Add",
+                "Remove",
+                "Change"
+              ]
             },
             "scope": {
               "type": "string",
-              "enum": ["All", "Current"],
+              "enum": [
+                "All",
+                "Current"
+              ],
               "default": "Current"
             },
             "tag": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "fromTag": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "toTag": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
-          "required": ["operation", "scope"],
+          "required": [
+            "operation",
+            "scope"
+          ],
           "allOf": [
             {
               "if": {
-                "properties": { "operation": { "enum": ["Add", "Remove"] } }
+                "properties": {
+                  "operation": {
+                    "enum": [
+                      "Add",
+                      "Remove"
+                    ]
+                  }
+                }
               },
               "then": {
-                "required": ["tag"]
+                "required": [
+                  "tag"
+                ]
               }
             },
             {
               "if": {
-                "properties": { "operation": { "const": "Change" } }
+                "properties": {
+                  "operation": {
+                    "const": "Change"
+                  }
+                }
               },
               "then": {
-                "required": ["fromTag", "toTag"]
+                "required": [
+                  "fromTag",
+                  "toTag"
+                ]
               }
             }
           ]
@@ -1227,7 +1565,10 @@
               "minLength": 1
             },
             "positionSourceEntityIdentifier": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "positionX": {
               "type": "number"
@@ -1239,10 +1580,15 @@
               "type": "number"
             },
             "resultStateKey": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
-          "required": ["presetIdentifier"]
+          "required": [
+            "presetIdentifier"
+          ]
         }
       ]
     },
@@ -1258,46 +1604,91 @@
             },
             "operation": {
               "type": "string",
-              "enum": ["Add", "Remove", "Change"]
+              "enum": [
+                "Add",
+                "Remove",
+                "Change"
+              ]
             },
             "targetEntityIdentifier": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "targetEntityStateKey": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "tag": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "fromTag": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "toTag": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
-          "required": ["operation"],
+          "required": [
+            "operation"
+          ],
           "allOf": [
             {
               "if": {
-                "properties": { "operation": { "enum": ["Add", "Remove"] } }
+                "properties": {
+                  "operation": {
+                    "enum": [
+                      "Add",
+                      "Remove"
+                    ]
+                  }
+                }
               },
               "then": {
-                "required": ["tag"]
+                "required": [
+                  "tag"
+                ]
               }
             },
             {
               "if": {
-                "properties": { "operation": { "const": "Change" } }
+                "properties": {
+                  "operation": {
+                    "const": "Change"
+                  }
+                }
               },
               "then": {
-                "required": ["fromTag", "toTag"]
+                "required": [
+                  "fromTag",
+                  "toTag"
+                ]
               }
             }
           ],
           "anyOf": [
-            { "required": ["targetEntityIdentifier"] },
-            { "required": ["targetEntityStateKey"] }
+            {
+              "required": [
+                "targetEntityIdentifier"
+              ]
+            },
+            {
+              "required": [
+                "targetEntityStateKey"
+              ]
+            }
           ]
         }
       ]

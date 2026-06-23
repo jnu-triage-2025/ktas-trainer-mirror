@@ -82,8 +82,12 @@
     "validator_players": {
       "nodeType": "Validator",
       "identifier": "validator_players",
-      "condition": "PlayerCountGreaterThanOrEqual",
-      "targetCount": 1,
+      "rootConditions": [
+        {
+          "condition": "PlayerCountGreaterThanOrEqual",
+          "targetCount": 1
+        }
+      ],
       "onFailure": "Branching",
       "failureNextIdentifier": "validator_fail",
       "nextIdentifier": "parallel_main"
