@@ -25,5 +25,11 @@ namespace MultiplayerInfrastructure.Scenario
 
     /// <summary>Change 시 새로 교체될 태그.</summary>
     public string ToTag { get; set; }
+
+    /// <summary>Swap 시 교환 대상 A 태그. SwapTagA 보유 플레이어가 SwapTagB 를 갖게 된다.</summary>
+    public string SwapTagA { get; set; }
+
+    /// <summary>Swap 시 교환 대상 B 태그. SwapTagB 보유 플레이어가 SwapTagA 를 갖게 된다.</summary>
+    public string SwapTagB { get; set; }
   }
 }

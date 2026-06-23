@@ -413,6 +413,13 @@
                 "string",
                 "null"
               ]
+            },
+            "autoAdvanceSeconds": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
             }
           },
           "required": [
@@ -1479,14 +1486,16 @@
               "enum": [
                 "Add",
                 "Remove",
-                "Change"
+                "Change",
+                "Swap"
               ]
             },
             "scope": {
               "type": "string",
               "enum": [
                 "All",
-                "Current"
+                "Current",
+                "ByTag"
               ],
               "default": "Current"
             },
@@ -1503,6 +1512,18 @@
               ]
             },
             "toTag": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "swapTagA": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "swapTagB": {
               "type": [
                 "string",
                 "null"
@@ -1543,6 +1564,21 @@
                 "required": [
                   "fromTag",
                   "toTag"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "operation": {
+                    "const": "Swap"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "swapTagA",
+                  "swapTagB"
                 ]
               }
             }
