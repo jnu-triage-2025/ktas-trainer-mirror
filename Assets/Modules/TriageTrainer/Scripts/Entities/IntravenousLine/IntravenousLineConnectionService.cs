@@ -187,10 +187,42 @@ namespace TriageTrainer.Entity.IntravenousLine
       startPoint.RegisterConnectedLineObject(lineObject);
       endPoint.RegisterConnectedLineObject(lineObject);
 
+      RaiseConnectionSignals(startPoint, endPoint);
+
       ClearPendingFor(player);
       player.SetIntravenousLineConnectionMode(false, false);
       player.RefreshInteractableHintsNow();
       return true;
+    }
+
+    /// <summary>
+    /// 수액/산소 줄 연결이 완료되면 시나리오 게이팅용 완료 신호(sig.*)를 올린다.
+    /// 연결 지점의 Identifier 를 그대로 신호로 사용하므로, 시나리오가 기대하는 조건명
+    /// (예: "connect_cannula_and_ns1")을 연결 지점 Identifier 로 지정하면 별도 코드 없이
+    /// Validator(RegistryContains, RuntimeState, "sig.&lt;조건명&gt;") 게이트가 통과된다.
+    /// 끝점 단독 / 시작점 단독 / 시작__끝 쌍 세 가지를 모두 올려 작성 유연성을 확보한다.
+    /// </summary>
+    private static void RaiseConnectionSignals(
+      IntravenousLineConnectionPoint startPoint,
+      IntravenousLineConnectionPoint endPoint)
+    {
+      string startId = startPoint != null ? startPoint.Identifier : null;
+      string endId = endPoint != null ? endPoint.Identifier : null;
+
+      if (!string.IsNullOrWhiteSpace(endId))
+      {
+        MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(endId);
+      }
+
+      if (!string.IsNullOrWhiteSpace(startId))
+      {
+        MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(startId);
+      }
+
+      if (!string.IsNullOrWhiteSpace(startId) && !string.IsNullOrWhiteSpace(endId))
+      {
+        MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise($"{startId}__{endId}");
+      }
     }
 
     public void CancelConnectionMode(PlayerController player)

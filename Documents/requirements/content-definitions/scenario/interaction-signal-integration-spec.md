@@ -42,12 +42,24 @@ flags: ["refactor-required"]
 
 > 표기: **[있음]** 실제 완료 코드 존재(즉시 계측 가능) / **[부분]** 일부만 존재 / **[없음]** 게임플레이 미구현(선행 구현 필요).
 
-### connect_* (IV/산소/벽 연결) — [있음]
-가장 깔끔한 연결 지점. `IntravenousLineConnectionService.TryCompleteConnection` 성공 시
-(`IntravenousLineConnectionPoint.ConnectHereInteract.Interact` 호출부, 반환 true) `endPoint.Identifier`
-기준으로 Raise. 대상 신호: `connect_cannula_and_ns1(_patient_b/_c)`, `connect_ambubag_and_connect_o2_to_ambu`,
+### connect_* (IV/산소/벽 연결) — [있음 → **계측 완료**]
+`IntravenousLineConnectionService.TryCompleteConnection` 성공 시 `RaiseConnectionSignals(startPoint, endPoint)`
+가 호출되어 다음 3개 신호를 올린다(2026-06-23 구현):
+- `sig.<endPoint.Identifier>` (끝점 단독)
+- `sig.<startPoint.Identifier>` (시작점 단독)
+- `sig.<startPoint.Identifier>__<endPoint.Identifier>` (시작__끝 쌍)
+
+**별도 코드 없이** 시나리오 게이트를 활성화하는 방법: 해당 연결 지점(`IntravenousLineConnectionPoint`)의
+인스펙터 `Identifier` 를 시나리오가 기대하는 조건명으로 지정한다. 예) 좌측 캐뉼라+생리식염수 연결
+끝점의 Identifier 를 `connect_cannula_and_ns1` 로 지정하면, 연결 완료 시 `sig.connect_cannula_and_ns1` 가
+올라가 `Validator(RegistryContains, RuntimeState, "sig.connect_cannula_and_ns1")` 게이트가 통과된다.
+
+대상 신호: `connect_cannula_and_ns1(_patient_b/_c)`, `connect_ambubag_and_connect_o2_to_ambu`,
 `connect_blood_to_lv1`, `connect_ps1_to_lv1`, `connect_patient_and_monitor_b(_patient_c)`,
 `connect_wall_component_1/2`, `connect_wall_component_and_yankauer`.
+
+> 운영자 작업: 위 조건명에 대응하는 IV/산소/모니터 연결 지점들의 `Identifier` 를 각 조건명으로 설정.
+> 코드 변경 불필요(연결 완료 시 자동으로 해당 sig.* 가 올라감).
 
 ### grab_* / move_* (들것 잡기/이동) — [부분]
 침대/들것 상호작용(`MovingPatientBedController.TryAttachItem`/이동, `PatientController.TryLiftFromBed`/`TryCarryByInteractor`)
