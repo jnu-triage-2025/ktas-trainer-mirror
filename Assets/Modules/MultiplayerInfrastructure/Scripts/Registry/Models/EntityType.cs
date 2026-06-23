@@ -8,6 +8,7 @@ namespace MultiplayerInfrastructure.Registry
   {
     Player,
     Npc,
+    Patient,
     MovingPatientBed,
     Waypoint,
     ScenarioInteractable,

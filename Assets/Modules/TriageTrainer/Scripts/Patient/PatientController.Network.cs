@@ -52,7 +52,7 @@ namespace TriageTrainer.Entity
       _registeredEntityIdentifier = _identifier;
       Registry.RegisterEntity(
         _registeredEntityIdentifier,
-        EntityType.Npc,
+        EntityType.Patient,
         gameObject,
         displayName: _identifier,
         ownerUserIdentifier: null,

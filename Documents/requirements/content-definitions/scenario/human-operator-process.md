@@ -58,7 +58,8 @@ flags: []
 - `EntityPresetRegistryRequirementsSO` 에 환자별 프리셋을 **3개** 등록한다(각각 그 환자의 의학적 상태/외형을
   프리팹에 구성):
   - `patient_a` (심정지/흉부 관통상 프리팹), `patient_b`, `patient_c`, 그리고 분류용 `dummy_b`
-  - 각 항목: `entityType=Npc`, `prefab=해당 환자 프리팹`, `isNetworked=true`.
+  - 각 항목: `entityType=Patient`, `prefab=해당 환자 프리팹`, `isNetworked=true`.
+    (환자 전용 `EntityType.Patient` 가 추가되어, 환자는 `Npc` 가 아니라 `Patient` 로 등록한다. 침대는 `MovingPatientBed`.)
 - 시나리오 시작부 `EntityPresetSpawn` 노드가 각 프리셋에서 스폰한다(현재 JSON 값):
   - `patient_a_critical` / `SPAWN_A` → `presetIdentifier=patient_a`, `spawnedEntityIdentifier=patient_a`
   - `patient_b_c_ct` / `SPAWN_B`·`SPAWN_C`·`SPAWN_DUMMY_B` → `patient_b`·`patient_c`·`dummy_b`
@@ -90,7 +91,25 @@ flags: []
 이들은 현재 씬 배치 + 식별자 지정(또는 부트스트랩 인스펙터 연결)로 다룬다. 필요 시 환자와 동일하게
 프리셋+스폰 노드로 전환할 수 있다.
 
+### 2-1bis. 엔티티 종류(EntityType)와 레지스트리 정리
+
+혼동을 줄이기 위한 사실 정리:
+- 등록 종류(`EntityType`): `Player`, `Npc`, **`Patient`**, `MovingPatientBed`, `Waypoint`,
+  `ScenarioInteractable`, `ScenarioTriggerZone`, `ItemObject`. (환자 전용 `Patient` 추가됨.)
+- **모든 런타임 엔티티는 식별자(identifier)로 단일 저장소(`RegistryType.Entity`)에 등록** 된다.
+  `EntityType` 은 분류/필터용 메타데이터일 뿐, 조회는 `Registry.Get(RegistryType.Entity, "<식별자>")` 로
+  종류와 무관하게 식별자로 한다. 따라서 환자(`patient_a`)와 침대(`bed_a`)는 **각각 독립 식별자로 등록된 별개 엔티티** 다.
+
 ### 2-1c. 묶음 프리셋 + 위계 해제(ungroup) — 환자+침대를 함께 배치할 때
+
+> **결합 처리 전략(정본)**: 환자+침대 "결합"은 **루트 컨테이너 프리셋 1개를 등록 → 런타임에 그 루트가
+> 해제(detach)되며 환자/침대가 각각 독립 엔티티로 등록되는** 방식이 정본이다. 환자·침대를 별도 프리셋으로
+> 따로 등록해 런타임에 합치는 방식이 **아니다**. 정리하면:
+> - **등록(에디터)**: 컨테이너 프리셋 **1개**(비-NetworkObject 루트 + 환자/침대 자식 NetworkObject) + 분리 설정.
+> - **런타임**: 스폰 시 컨테이너 루트는 소비되고(자식 분리 후 빈 컨테이너는 제거), 환자/침대가 각각
+>   독립 루트 NetworkObject 로 분리·복제·등록된다(`patient_a`, `bed_a`). 위계는 사라진다.
+> - **결합 상태**: 위계가 없으므로 논리 결합은 `attach_patient_bed_pairs`(아래 (4))로 재설정한다.
+> - 즉 "루트가 런타임에 해제될 것을 기대"가 맞고, "따로 등록"은 아니다.
 
 환자와 침대를 "한 묶음"으로 결합 배치하고 싶을 때(예: 환자가 침대에 결합된 상태로 시작):
 

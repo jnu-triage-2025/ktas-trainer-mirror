@@ -140,12 +140,39 @@ namespace MultiplayerInfrastructure.Registry
         childDetachments = fromPreset;
       }
 
+      string firstDetachedIdentifier = null;
       if (childDetachments != null && childDetachments.Count > 0)
       {
         foreach (var (childPath, childId) in childDetachments)
         {
-          DetachAndSpawnChildNetworkObject(spawned.transform, childPath, childId, identifier);
+          if (DetachAndSpawnChildNetworkObject(spawned.transform, childPath, childId, identifier, out var assignedChildId)
+              && firstDetachedIdentifier == null)
+          {
+            firstDetachedIdentifier = assignedChildId;
+          }
         }
+      }
+
+      // 1-b) 루트가 "순수 컨테이너"(NetworkObject 도 식별자 수신자도 없음)이고 자식 분리가 있었다면,
+      //      루트 자체는 의미 있는 엔티티가 아니므로 등록하지 않고 빈 컨테이너를 제거한다(루트가 런타임에 해제됨).
+      bool rootIsPureContainer =
+        firstDetachedIdentifier != null
+        && spawned.GetComponent<NetworkObject>() == null
+        && spawned.GetComponentInChildren<ISpawnedEntityIdentifierReceiver>(true) == null;
+
+      if (rootIsPureContainer)
+      {
+        UnityEngine.Object.Destroy(spawned);
+        spawned = null;
+
+        // 컨테이너에는 단일 루트 엔티티가 없으므로, 가장 먼저 분리된 자식을 대표 디스크립터로 반환한다.
+        if (!TryGetEntity(firstDetachedIdentifier, out descriptor) || descriptor == null)
+        {
+          error = $"Entity preset '{identifier}' container spawned but child registration not found.";
+          return false;
+        }
+
+        return true;
       }
 
       // 2) 루트 인스턴스: 식별자 주입(자가 등록 전) → (네트워크면) 서버 스폰 → 레지스트리 등록.
@@ -176,15 +203,18 @@ namespace MultiplayerInfrastructure.Registry
     /// 컨테이너 자식 중 childPath 에 해당하는 NetworkObject 를 루트로 분리하여 독립 스폰·등록한다.
     /// NetworkObject 가 아니거나 찾지 못하면 분리하지 않고 경고만 남긴다(컨테이너 위계에 잔류).
     /// </summary>
-    private static void DetachAndSpawnChildNetworkObject(
+    private static bool DetachAndSpawnChildNetworkObject(
       Transform containerRoot,
       string childPath,
       string spawnedEntityIdentifier,
-      string presetIdentifier)
+      string presetIdentifier,
+      out string assignedChildIdentifier)
     {
+      assignedChildIdentifier = null;
+
       if (containerRoot == null || string.IsNullOrWhiteSpace(childPath))
       {
-        return;
+        return false;
       }
 
       Transform child = containerRoot.Find(childPath);
@@ -204,7 +234,7 @@ namespace MultiplayerInfrastructure.Registry
       if (child == null)
       {
         Debug.LogWarning($"[Registry] Preset '{presetIdentifier}': child '{childPath}' not found for detachment. Skipped.");
-        return;
+        return false;
       }
 
       var childNob = child.GetComponent<NetworkObject>();
@@ -212,7 +242,7 @@ namespace MultiplayerInfrastructure.Registry
       {
         // NetworkObject 만 분리 허용.
         Debug.LogWarning($"[Registry] Preset '{presetIdentifier}': child '{childPath}' is not a NetworkObject. Detachment skipped.");
-        return;
+        return false;
       }
 
       // 루트로 분리(월드 위치 유지). 분리 후에는 컨테이너 위계에 속하지 않는 독립 루트가 된다.
@@ -221,6 +251,7 @@ namespace MultiplayerInfrastructure.Registry
       string childRuntimeId = !string.IsNullOrWhiteSpace(spawnedEntityIdentifier)
         ? spawnedEntityIdentifier.Trim()
         : BuildEntityPresetRuntimeIdentifier($"{presetIdentifier}:child");
+      assignedChildIdentifier = childRuntimeId;
 
       // 식별자 주입: 분리된 자식이 식별자 수신 인터페이스를 구현하면, 자가 등록(OnStartClient/SetIdentifier 등)
       // 전에 식별자를 전달한다. 분리 대상 NetworkObject 는 보통 자체적으로 RegisterEntity 하므로
@@ -240,6 +271,7 @@ namespace MultiplayerInfrastructure.Registry
 
       // 자식 NetworkObject 는 서버에서 개별 복제 스폰.
       NetworkSpawnIfServer(child.gameObject, $"{presetIdentifier}:{childPath}");
+      return true;
     }
 
     private static void NetworkSpawnIfServer(GameObject go, string contextLabel)
