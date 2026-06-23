@@ -711,6 +711,54 @@ namespace TriageTrainer.Scenario
       }
     }
 
+    /// <summary>
+    /// 레지스트리에 등록된 식별자로 환자/침대를 찾아 논리 결합(repose)을 재설정한다.
+    /// 프리셋 그룹 스폰(환자+침대 분리) 직후, 위계 없는 두 독립 객체를 "결합 상태"로 만들기 위해 사용한다.
+    /// </summary>
+    private bool TryAttachPatientToBedByIdentifier(string patientIdentifier, string bedIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(patientIdentifier) || string.IsNullOrWhiteSpace(bedIdentifier))
+      {
+        return false;
+      }
+
+      var patientObject = Registry.Get<GameObject>(RegistryType.Entity, patientIdentifier)
+                          ?? Registry.Get<GameObject>(RegistryType.Npc, patientIdentifier);
+      var bedObject = Registry.Get<GameObject>(RegistryType.Entity, bedIdentifier)
+                      ?? Registry.Get<GameObject>(RegistryType.Npc, bedIdentifier);
+
+      if (patientObject == null || bedObject == null)
+      {
+        Debug.LogWarning(
+          $"[TriageScenarioEventBootstrap] Attach by identifier failed: " +
+          $"patient '{patientIdentifier}'={(patientObject != null)}, bed '{bedIdentifier}'={(bedObject != null)} not resolved.");
+        return false;
+      }
+
+      var patient = patientObject.GetComponent<PatientController>();
+      var bed = bedObject.GetComponent<MovingPatientBedController>();
+      if (patient == null || bed == null)
+      {
+        Debug.LogWarning(
+          $"[TriageScenarioEventBootstrap] Attach by identifier failed: component missing " +
+          $"(patient {patient != null}, bed {bed != null}).");
+        return false;
+      }
+
+      if (patient.CurrentBed == bed)
+      {
+        return true;
+      }
+
+      if (bed.TryReposeTarget(patient))
+      {
+        Debug.Log($"[TriageScenarioEventBootstrap] Attached '{patientIdentifier}' to bed '{bedIdentifier}'.");
+        return true;
+      }
+
+      return false;
+    }
+
     private IEnumerator ShowPanelTemporarily(GameObject panel, float autoHideSeconds, string message)
     {
       if (panel == null)

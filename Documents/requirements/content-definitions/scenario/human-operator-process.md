@@ -112,11 +112,16 @@ flags: []
 - 검사: 각 `childPath` 가 프리팹에서 해석되는가 / 분리 대상이 NetworkObject 인가 / 컨테이너 루트가
   비-NetworkObject 인가(권장) / identifier 중복·prefab 누락. 문제 시 Console 경고. **플레이 없이 확인 가능.**
 
-**(4) 런타임 결합 재설정 (후속)**
+**(4) 런타임 결합 재설정 — 지원됨(`attach_patient_bed_pairs`)**
 - 스폰 시 지정 자식이 루트로 분리되어 각각 독립 엔티티로 스폰·등록된다(네트워크 프리셋은 서버에서 FishNet 복제).
   분리된 침대는 `MovingPatientBedController.ApplySpawnedEntityIdentifier`(=`SetIdentifier`)로 식별자 등록.
-- 분리 후 둘은 위계 없는 독립 객체이므로, "결합 상태"로 시작하려면 스폰 직후 InvokeEvent 핸들러에서
-  `bed.TryReposeTarget(patient)` 를 호출해 논리 결합을 재설정한다(엔진은 분리/스폰까지 담당). **(후속 연결 작업)**
+- 분리 후 둘은 위계 없는 독립 객체이므로, "결합 상태"로 시작하려면 스폰 직후 시나리오에서
+  InvokeEvent **`attach_patient_bed_pairs`** 노드를 호출한다. 이 핸들러는 부트스트랩 인스펙터의
+  `_patientBedPairs`(환자 식별자 ↔ 침대 식별자 목록)를 읽어, 레지스트리에서 객체를 찾아
+  `bed.TryReposeTarget(patient)` 로 논리 결합을 재설정한다.
+  - 운영자 작업: 부트스트랩 인스펙터 `attach_patient_bed_pairs > Patient Bed Pairs` 에
+    `{ patientIdentifier: patient_a, bedIdentifier: bed_a }` 등을 등록.
+  - 시나리오: 그룹 스폰 노드 다음에 `{ "nodeType": "InvokeEvent", "eventIdentifier": "attach_patient_bed_pairs", "moveNextBehavior": "WaitUntilDone", "nextIdentifier": "..." }` 를 둔다.
 
 ### 2-2. 수액/산소/모니터 연결 지점(`IntravenousLineConnectionPoint`)
 연결 완료 시 끝점 `Identifier` 로 신호가 올라가므로, **연결 지점의 `Identifier` 를 아래 조건명으로 지정** 한다.
