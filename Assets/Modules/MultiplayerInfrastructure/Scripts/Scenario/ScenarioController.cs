@@ -608,6 +608,14 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingPlayerTag;
 
+      // Swap 은 두 태그 그룹 간 교환이므로 대상-세션 루프와 별개로 처리한다.
+      if (node.Operation == ScenarioPlayerTagOperationType.Swap)
+      {
+        ExecutePlayerTagSwap(node);
+        Advance();
+        return;
+      }
+
       // 대상 세션 수집
       var targets = new List<UserDescriptor>();
 
@@ -615,6 +623,27 @@ namespace MultiplayerInfrastructure.Scenario
       {
         foreach (var kvp in UserDescriptorService.GetAll())
           targets.Add(kvp.Value);
+      }
+      else if (node.Scope == ScenarioPlayerTagScope.ByTag)
+      {
+        var byTag = node.Tag?.Trim();
+        if (string.IsNullOrWhiteSpace(byTag))
+        {
+          Debug.LogWarning($"[ScenarioController] PlayerTag node '{node.Identifier}': " +
+                           "Scope=ByTag 이지만 Tag 가 비어 있습니다. 노드를 건너뜁니다.");
+          Advance();
+          return;
+        }
+
+        foreach (var kvp in UserDescriptorService.GetAll())
+        {
+          var session = kvp.Value;
+          if (session != null && !string.IsNullOrWhiteSpace(session.Identifier)
+              && PlayerTagService.HasTag(session.Identifier, byTag))
+          {
+            targets.Add(session);
+          }
+        }
       }
       else // Current
       {
@@ -670,6 +699,54 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Advance();
+    }
+
+    /// <summary>
+    /// SwapTagA 보유 플레이어와 SwapTagB 보유 플레이어의 해당 태그를 서로 교환한다(역할 교대).
+    /// 1:1 매칭을 가정하며, 한쪽 보유자가 없거나 2인 이상이면 경고 후 안전 스킵한다.
+    /// </summary>
+    private void ExecutePlayerTagSwap(ScenarioPlayerTagNode node)
+    {
+      var tagA = node.SwapTagA?.Trim();
+      var tagB = node.SwapTagB?.Trim();
+
+      if (string.IsNullOrWhiteSpace(tagA) || string.IsNullOrWhiteSpace(tagB))
+      {
+        Debug.LogWarning($"[ScenarioController] PlayerTag Swap '{node.Identifier}': swapTagA/swapTagB 가 비어 있어 건너뜁니다.");
+        return;
+      }
+
+      var holdersA = new List<UserDescriptor>();
+      var holdersB = new List<UserDescriptor>();
+      foreach (var kvp in UserDescriptorService.GetAll())
+      {
+        var session = kvp.Value;
+        if (session == null || string.IsNullOrWhiteSpace(session.Identifier))
+        {
+          continue;
+        }
+
+        if (PlayerTagService.HasTag(session.Identifier, tagA)) holdersA.Add(session);
+        if (PlayerTagService.HasTag(session.Identifier, tagB)) holdersB.Add(session);
+      }
+
+      if (holdersA.Count != 1 || holdersB.Count != 1)
+      {
+        Debug.LogWarning($"[ScenarioController] PlayerTag Swap '{node.Identifier}': " +
+                         $"1:1 매칭 실패(tagA='{tagA}' 보유 {holdersA.Count}명, tagB='{tagB}' 보유 {holdersB.Count}명). 교환을 건너뜁니다.");
+        return;
+      }
+
+      var playerA = holdersA[0];
+      var playerB = holdersB[0];
+
+      // A 보유자는 tagA -> tagB, B 보유자는 tagB -> tagA 로 교체.
+      PlayerTagService.ChangeTag(playerA.Identifier, tagA, tagB);
+      PlayerTagService.ChangeTag(playerB.Identifier, tagB, tagA);
+
+#if UNITY_EDITOR
+      Debug.Log($"[ScenarioController] PlayerTag Swap: {playerA.DisplayName}({tagA}->{tagB}) <-> {playerB.DisplayName}({tagB}->{tagA})");
+#endif
     }
 
     private void ExecuteEntityPresetSpawnNode(ScenarioEntityPresetSpawnNode node)
