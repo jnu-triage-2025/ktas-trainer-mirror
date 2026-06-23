@@ -6,7 +6,7 @@ namespace TriageTrainer.Scenario
   {
     private void RegisterEvent_ShowDummyBUi()
     {
-      Register("show_dummyB_ui", Event_ShowDummyBUi);
+      Register("show_dummy_b_ui", Event_ShowDummyBUi);
     }
 
     private IEnumerator Event_ShowDummyBUi()

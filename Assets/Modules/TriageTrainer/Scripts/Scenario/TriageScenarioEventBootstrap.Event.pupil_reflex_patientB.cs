@@ -6,7 +6,7 @@ namespace TriageTrainer.Scenario
   {
     private void RegisterEvent_PupilReflexPatientB()
     {
-      Register("pupil_reflex_patientB", Event_PupilReflexPatientB);
+      Register("pupil_reflex_patient_b", Event_PupilReflexPatientB);
     }
 
     private IEnumerator Event_PupilReflexPatientB()

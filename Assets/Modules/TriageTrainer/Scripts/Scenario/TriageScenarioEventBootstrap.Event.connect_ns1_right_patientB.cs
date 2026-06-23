@@ -6,7 +6,7 @@ namespace TriageTrainer.Scenario
   {
     private void RegisterEvent_ConnectNs1RightPatientB()
     {
-      Register("connect_ns1_right_patientB", Event_ConnectNs1RightPatientB);
+      Register("connect_ns1_right_patient_b", Event_ConnectNs1RightPatientB);
     }
 
     private IEnumerator Event_ConnectNs1RightPatientB()

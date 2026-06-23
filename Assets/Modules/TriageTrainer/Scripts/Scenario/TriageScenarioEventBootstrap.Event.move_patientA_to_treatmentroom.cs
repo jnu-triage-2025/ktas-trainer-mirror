@@ -6,7 +6,7 @@ namespace TriageTrainer.Scenario
   {
     private void RegisterEvent_MovePatientAToTreatmentRoom()
     {
-      Register("move_patientA_to_treatmentroom", Event_MovePatientAToTreatmentRoom);
+      Register("move_patient_a_to_treatmentroom", Event_MovePatientAToTreatmentRoom);
     }
 
     private IEnumerator Event_MovePatientAToTreatmentRoom()

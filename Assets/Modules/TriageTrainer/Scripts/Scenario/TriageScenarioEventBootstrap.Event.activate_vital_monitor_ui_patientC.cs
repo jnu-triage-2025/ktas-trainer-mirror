@@ -6,7 +6,7 @@ namespace TriageTrainer.Scenario
   {
     private void RegisterEvent_ActivateVitalMonitorUiPatientC()
     {
-      Register("activate_vital_monitor_ui_patientC", Event_ActivateVitalMonitorUiPatientC);
+      Register("activate_vital_monitor_ui_patient_c", Event_ActivateVitalMonitorUiPatientC);
     }
 
     private IEnumerator Event_ActivateVitalMonitorUiPatientC()

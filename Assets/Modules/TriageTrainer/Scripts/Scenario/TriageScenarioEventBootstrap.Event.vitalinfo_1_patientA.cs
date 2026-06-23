@@ -6,7 +6,7 @@ namespace TriageTrainer.Scenario
   {
     private void RegisterEvent_VitalInfoPatientA()
     {
-      Register("vitalinfo_1_patientA", Event_VitalInfoPatientA);
+      Register("vitalinfo_1_patient_a", Event_VitalInfoPatientA);
     }
 
     private IEnumerator Event_VitalInfoPatientA()

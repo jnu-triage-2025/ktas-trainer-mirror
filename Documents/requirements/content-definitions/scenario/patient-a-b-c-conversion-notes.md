@@ -239,9 +239,36 @@ Agent Manager 워크트리 2개(`scenario-patient-a-json`, `scenario-patient-bc-
 | TODO-SPEC-3 | CPR 교대 시 동일 플레이어의 역할 태그가 사이클마다 바뀜 → 정적 태그 매칭 한계 | P005↔P006 교대 브랜치 매칭 오류 가능 | TagModification 노드 삽입 또는 태그 설계 재검토 필요 |
 | TODO-SPEC-4 | 환자/더미별 동일 처치 서브그래프(B, C, 더미) 재사용 수단 없음(서브그래프 호출/포함 미지원) | 동일 흐름을 식별자만 바꿔 복제해야 함 | 식별자 접미사로 복제 작성 |
 
-위 TODO-SPEC-* 가 엔진(`MultiplayerInfrastructure`) 변경을 필요로 한다면,
-루트 `AGENTS.md` 정책에 따라 `/Agents/Proposals/` 하위에 Feature Proposal 로 별도 작성한다.
+위 TODO-SPEC-* 는 모두 엔진(`MultiplayerInfrastructure`) 변경을 필요로 하므로,
+루트 `AGENTS.md` 정책에 따라 `/Agents/Proposals/Feature Proposal - ScenarioNode Expressiveness/`
+하위에 Feature Proposal + 예시 설계 명세로 작성하였다(2026-06-23).
 본 변환 작업 자체는 TriageTrainer 리소스(JSON)만 생성하므로 엔진 변경 없이 수행한다.
+
+### 3-2-1. 플레이 가능화 — 엔진 무관 선행 작업 (2026-06-23)
+
+엔진 확장(TODO-SPEC) 승인/구현과 **무관하게, 재작업 위험 없이** 선행 가능한 항목부터 처리한다.
+
+**(완료) 이벤트 식별자 정합 — InvokeEvent 핸들러 매칭**
+- 변환 JSON 은 이벤트 식별자를 소문자 스네이크(`move_patient_a_to_treatmentroom`)로 쓰는데,
+  기존 핸들러(`TriageScenarioEventBootstrap`)는 camelCase(`move_patientA_to_treatmentroom`)로
+  등록되어 있고 레지스트리가 `StringComparer.Ordinal`(대소문자 구분)이라 매칭 실패했다.
+- 비-`todo.validate.*` 실제 이벤트 50개 중 23개는 직접 일치, 27개가 불일치였다.
+- **방침: JSON 식별자 컨벤션(소문자 스네이크)을 단일 기준으로 유지하고, C# 런타임에서 그 식별자를
+  그대로 등록·호출한다.** 별칭 매핑 계층은 두지 않는다(코드 측 컨벤션이 다소 깨지더라도 식별자
+  기준을 JSON 하나로 통일).
+- 해결: 불일치 27개 핸들러 파일의 `Register("...")` 등록 문자열을 JSON 의 스네이크 식별자로 직접
+  변경했다(파일명/메서드명 등 C# 표기는 그대로 두어 변경 범위 최소화).
+- `disaster_intro` 와 공유되는 `B_C_D_to_triage` 핸들러는 disaster_intro(camelCase)와
+  patient_b_c_ct(`b_c_d_to_triage`, snake) 양쪽 식별자를 같은 핸들러에 **둘 다 직접 등록**하여
+  기존 인트로 호환을 유지한다.
+- 결과: disaster_intro / disaster_intro_mvp / patient_a_critical / patient_b_c_ct 4개 그래프의
+  실제(비-todo) 이벤트가 전부 핸들러로 해소(미해소 0).
+- 재작업 위험: 없음. `todo.validate.*` 는 의도적으로 등록 대상에서 **제외**한다(향후 TODO-SPEC-2의
+  Interaction/Validator 노드로 치환될 예정이므로 지금 핸들러를 붙이면 폐기 작업이 됨).
+
+**(남은 엔진 무관 작업)**
+- 초기 역할 태그 부여: 도입부 역할 선택 + `PlayerTag(Add)` 노드(기존 노드로 충분). CPR 교대만 TODO-SPEC-3 대기.
+- 씬/레지스트리 등록: 환자/더미/침대/모니터/간호사/Waypoint 를 Entity/Npc/Waypoint 레지스트리에 등록.
 
 ### 3-3. 변환 후 검증 체크리스트
 
