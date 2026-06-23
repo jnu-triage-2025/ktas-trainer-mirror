@@ -58,9 +58,42 @@ updated: 2026-04-14
 
 ### Validator
 
-- 현재 엔진 Validator.condition은 PlayerCount 계열만 허용한다.
-- Click_xxx / Enter_xxx / Grab_xxx 같은 도메인 조건은 Validator에 넣지 않는다.
-- 도메인 조건은 Interaction + InvokeEvent + Choice/Quiz로 풀어 쓴다.
+- 엔진 Validator.condition 은 `PlayerCount*`, `RegistryContains`, `PlayerAssignedTag` 를 지원한다.
+- `Click_xxx` / `Apply_xxx` / `Enter_xxx` / `Grab_xxx` 같은 **도메인 인터랙션 완료** 조건은
+  enum 으로 직접 표현할 수 없다. 대신 **인터랙션 완료 신호(Signal) + `RegistryContains`(RuntimeState)** 로 게이팅한다(TODO-SPEC-2 채택안).
+
+#### 도메인 인터랙션 게이트 변환 (todo.validate.* -> Validator/RegistryContains)
+
+1차 변환에서 `todo.validate.<cond>` (InvokeEvent 스텁) 으로 둔 게이트는 다음으로 치환한다.
+
+```json
+{
+  "nodeType": "Validator",
+  "identifier": "<원래 id>",
+  "rootConditions": [
+    {
+      "condition": "RegistryContains",
+      "validationRules": [
+        { "type": "Registry", "condition": "Contains",
+          "registryType": "RuntimeState", "registryIdentifier": "sig.<cond>" }
+      ]
+    }
+  ],
+  "onFailure": "Ignore",
+  "nextIdentifier": "<원래 NextIdentifier>"
+}
+```
+
+- 복수 조건(예: 후두경 블레이드+손잡이)은 `validationRules` 에 룰을 여러 개 둔다(모두 Contains 시 통과).
+- 신호 식별자 접두사는 `sig.` 로 통일한다(`ScenarioInteractionSignals.Prefix`).
+- 게임플레이 측은 인터랙션 완료 시 `ScenarioInteractionSignals.Raise("<cond>")` 를 호출한다
+  (= `Registry.Register(RegistryType.RuntimeState, "sig.<cond>", true)`).
+  사이클 반복 등에서 재설정이 필요하면 `ScenarioInteractionSignals.Clear("<cond>")`.
+- `onFailure` 는 보통 `Ignore`(신호 미도달 시 자동 진행 대신 대기/스킵 정책에 맞춰 선택).
+  "수행해야만 진행"을 강제하려면 Validator 통과까지 대기하도록 별도 폴링/대기 노드와 조합한다.
+
+> 참고: 위 방식은 신규 enum 없이 기존 엔진 능력만으로 동작한다. 신호를 올리는 게임플레이
+> 연결(어떤 클릭/적용/연결이 어떤 `sig.*` 를 올리는지)은 TriageTrainer 측 후속 통합 작업이다.
 
 ## 3) 구조 치환 예시
 
