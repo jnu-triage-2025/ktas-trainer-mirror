@@ -7,6 +7,9 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("presetIdentifier")]
     public string PresetIdentifier { get; set; }
 
+    [JsonPropertyName("spawnedEntityIdentifier")]
+    public string SpawnedEntityIdentifier { get; set; }
+
     [JsonPropertyName("positionSourceEntityIdentifier")]
     public string PositionSourceEntityIdentifier { get; set; }
 

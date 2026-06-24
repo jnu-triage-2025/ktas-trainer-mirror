@@ -55,7 +55,7 @@ namespace TriageTrainer.Entity
 
     private ChatUIController _chatUI;
 
-    public string Identifier => _identifier;
+    public string Identifier => EffectiveIdentifier;
     public int Weight => Mathf.Max(0, _weight);
 
     public bool IsReposed => _currentBed != null;

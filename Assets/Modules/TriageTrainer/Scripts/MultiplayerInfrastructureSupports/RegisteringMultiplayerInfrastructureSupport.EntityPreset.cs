@@ -55,10 +55,11 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
 
         Registry.RegisterEntityPreset(
           req.identifier,
-          req.entityType,
+          req.fallbackEntityType,
           req.prefab,
           req.displayName,
-          req.isNetworked);
+          req.isNetworked,
+          req.childReferences);
         registeredCount++;
       }
 

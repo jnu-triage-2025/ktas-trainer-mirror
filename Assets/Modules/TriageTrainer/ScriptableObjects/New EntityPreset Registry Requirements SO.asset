@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 583cdfded70644bb39ac0a633354e8cd, type: 3}
+  m_Name: New EntityPreset Registry Requirements SO
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects.EntityPresetRegistryRequirementsSO
+  entityPresetRegistryRequirements:
+  - identifier: patient_a
+    fallbackEntityType: 0
+    prefab: {fileID: 4077515750642718864, guid: 8da04afe96bb7432dacab7b61d966b26, type: 3}
+    displayName: 
+    isNetworked: 1
+    childReferences:
+    - childPresetIdentifier: bed_a
+      spawnedEntityIdentifier: bed_a
+      unwrapOnSpawn: 1
+      linkChildToParent: 1
+  - identifier: bed_a
+    fallbackEntityType: 0
+    prefab: {fileID: 5017221584004301368, guid: 19556133e274748aebcdaaa9ee7730b9, type: 3}
+    displayName: 
+    isNetworked: 1
+    childReferences: []
+  - identifier: patient_b
+    fallbackEntityType: 0
+    prefab: {fileID: 434063568747779160, guid: 0e03ef4333774435183b2f7769a1fce7, type: 3}
+    displayName: 
+    isNetworked: 1
+    childReferences:
+    - childPresetIdentifier: bed_b
+      spawnedEntityIdentifier: bed_b
+      unwrapOnSpawn: 1
+      linkChildToParent: 1
+  - identifier: bed_b
+    fallbackEntityType: 0
+    prefab: {fileID: 5017221584004301368, guid: 19556133e274748aebcdaaa9ee7730b9, type: 3}
+    displayName: 
+    isNetworked: 1
+    childReferences: []
+  - identifier: patient_c
+    fallbackEntityType: 0
+    prefab: {fileID: 2574628634766077341, guid: 860f27b53e0b440e0a748435508ed67d, type: 3}
+    displayName: 
+    isNetworked: 1
+    childReferences:
+    - childPresetIdentifier: bed_c
+      spawnedEntityIdentifier: bed_c
+      unwrapOnSpawn: 1
+      linkChildToParent: 1
+  - identifier: bed_c
+    fallbackEntityType: 0
+    prefab: {fileID: 5017221584004301368, guid: 19556133e274748aebcdaaa9ee7730b9, type: 3}
+    displayName: 
+    isNetworked: 1
+    childReferences: []

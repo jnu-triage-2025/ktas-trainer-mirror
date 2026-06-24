@@ -19,11 +19,16 @@
 - [event-handler-file-index.md](./event-handler-file-index.md): Event Handler File Index
 - [event-mapping.md](./event-mapping.md): 시나리오 이벤트-구현 매핑 (재난 시나리오)
 - [event-registry.md](./event-registry.md): 시나리오 이벤트 레지스트리
+- [entity-preset-debug-guide.md](./entity-preset-debug-guide.md): EntityPreset 개발 디버깅 가이드 (IndevScene)
+- [human-operator-process.md](./human-operator-process.md): 재난 시나리오 인게임화 — 인간 작업 프로세스(운영자용)
 - [implementation-prep.md](./implementation-prep.md): 재난 시나리오 미구현 기능 구현 준비서 (안전 우선)
+- [interaction-signal-integration-spec.md](./interaction-signal-integration-spec.md): 인터랙션 완료 신호(sig.*) 게임플레이 연결 명세
 - [json-conversion-rules.md](./json-conversion-rules.md): Scenario 문서 -> JSON 변환 규칙표
 - [patient_a_critical.md](./patient_a_critical.md): scenario 환자 A 중증 처치
 - [patient-a-b-c-conversion-notes.md](./patient-a-b-c-conversion-notes.md): 환자 A/B/C 시나리오 JSON 변환 노트 및 검토 결과
 - [patient-a-b-c-play-setup-guide.md](./patient-a-b-c-play-setup-guide.md): 환자 A/B/C 시나리오 인게임 실행 셋업 가이드 (운영자용)
+- [patient-b-c-entitypreset-setup-guide.md](./patient-b-c-entitypreset-setup-guide.md): 환자 B/C(PatientTypeB Male/Female) EntityPreset 구성 가이드 (운영자용)
+- [patient-bed-combined-preset-guide.md](./patient-bed-combined-preset-guide.md): 환자 + 환자침대 결합 프리셋 구성 가이드 (운영자용)
 - [patient_b_c_ct.md](./patient_b_c_ct.md): scenario 환자 B/C 지연 처치
 - [remaining-implementation-checklist.md](./remaining-implementation-checklist.md): 남은 이벤트 구현 체크리스트
 - [scenario-authoring-guide.md](./scenario-authoring-guide.md): 시나리오 작성 가이드

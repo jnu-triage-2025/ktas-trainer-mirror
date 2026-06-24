@@ -104,7 +104,7 @@ MonoBehaviour:
   _messageCooldownSeconds: 0
   _uiController: {fileID: 0}
   _commandService: {fileID: 0}
-  _scenarioRunner: {fileID: 0}
+  _datapackRuntime: {fileID: 0}
 --- !u!114 &480613486783352052
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -135,7 +135,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584309080420666728
+  _initializedTimestamp: -8584193287592937588
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0

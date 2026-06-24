@@ -501,6 +501,7 @@ namespace MultiplayerInfrastructure.Scenario
         {
           Identifier = dto.Identifier,
           PresetIdentifier = dto.PresetIdentifier,
+          SpawnedEntityIdentifier = dto.SpawnedEntityIdentifier,
           PositionSourceEntityIdentifier = dto.PositionSourceEntityIdentifier,
           PositionX = dto.PositionX ?? 0f,
           PositionY = dto.PositionY ?? 0f,
@@ -528,6 +529,7 @@ namespace MultiplayerInfrastructure.Scenario
           NodeType = "EntityPresetSpawn",
           Identifier = node.Identifier,
           PresetIdentifier = node.PresetIdentifier,
+          SpawnedEntityIdentifier = node.SpawnedEntityIdentifier,
           PositionSourceEntityIdentifier = node.PositionSourceEntityIdentifier,
           PositionX = node.PositionX,
           PositionY = node.PositionY,

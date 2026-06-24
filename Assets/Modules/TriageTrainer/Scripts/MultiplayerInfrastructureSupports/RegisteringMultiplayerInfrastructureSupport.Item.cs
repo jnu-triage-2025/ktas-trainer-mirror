@@ -61,6 +61,7 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<NorepinephrineAmpule>(NorepinephrineAmpule.Identifier);
       Registry.RegisterItemDefinition<NormalSaline1000ml>(NormalSaline1000ml.Identifier);
       Registry.RegisterItemDefinition<NormalSaline20ml>(NormalSaline20ml.Identifier);
+      Registry.RegisterItemDefinition<PlasmaSolution1000ml>(PlasmaSolution1000ml.Identifier);
       Registry.RegisterItemDefinition<O2Line>(O2Line.Identifier);
       Registry.RegisterItemDefinition<Penlight>(Penlight.Identifier);
       Registry.RegisterItemDefinition<Plaster>(Plaster.Identifier);

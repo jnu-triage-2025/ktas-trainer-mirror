@@ -49,6 +49,8 @@ MonoBehaviour:
   _uiController: {fileID: 0}
   _camController: {fileID: 0}
   _hintUIController: {fileID: 0}
+  _ttsService: {fileID: 0}
+  _ttsAudioSource: {fileID: 0}
   _state: 0
 --- !u!114 &4818426619342773491
 MonoBehaviour:
@@ -80,7 +82,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584309080420666728
+  _initializedTimestamp: -8584193287592937588
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0

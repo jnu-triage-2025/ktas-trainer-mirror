@@ -1600,6 +1600,12 @@
               "type": "string",
               "minLength": 1
             },
+            "spawnedEntityIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "positionSourceEntityIdentifier": {
               "type": [
                 "string",

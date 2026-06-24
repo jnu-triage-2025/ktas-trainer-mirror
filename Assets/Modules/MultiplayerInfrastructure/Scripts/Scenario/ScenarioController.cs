@@ -772,6 +772,7 @@ namespace MultiplayerInfrastructure.Scenario
             node.PresetIdentifier,
             spawnPosition,
             Quaternion.identity,
+            node.SpawnedEntityIdentifier,
             out _,
             out var spawnedDescriptor,
             out var error))
@@ -784,7 +785,13 @@ namespace MultiplayerInfrastructure.Scenario
       string stateKey = string.IsNullOrWhiteSpace(node.ResultStateKey)
         ? $"{node.Identifier}.spawnedEntityIdentifier"
         : node.ResultStateKey;
-      _stateStore[stateKey] = spawnedDescriptor.Identifier;
+
+      // 네트워크 루트는 OnStartClient 에서 비동기 자가 등록하므로 스폰 직후 디스크립터가 아직 없을 수 있다.
+      // 그 경우 노드에 지정된 식별자(있으면)를 결과로 저장한다.
+      string spawnedIdentifier = spawnedDescriptor?.Identifier;
+      if (string.IsNullOrWhiteSpace(spawnedIdentifier))
+        spawnedIdentifier = node.SpawnedEntityIdentifier;
+      _stateStore[stateKey] = spawnedIdentifier;
 
       Advance();
     }

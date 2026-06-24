@@ -2,7 +2,7 @@
   "identifier": "patient_b_c_ct.unsupported.flags",
   "sourceScenario": "Documents/requirements/content-definitions/scenario/patient_b_c_ct.md",
   "generatedFrom": "patient_b_c_ct conversion",
-  "status": "needs-follow-up-implementation",
+  "status": "validators-converted; gameplay signal emit pending",
   "unsupportedSourceConstructs": [
     {
       "sourceNodeIdentifier": "N029",
@@ -1064,5 +1064,41 @@
       "resolution": "N092를 터미널 노드로 사용(nextIdentifier=null). 원저자 확인 후 종료 조건 표를 N092로 보정 권장.",
       "todoId": "TODO-DATA-5"
     }
-  ]
+  ],
+  "gameplaySignalsToRaise": [
+    "sig.apply_electrode",
+    "sig.apply_gauze",
+    "sig.apply_plaster_on_gauze",
+    "sig.check_gcs_patient_b",
+    "sig.check_gcs_patient_c",
+    "sig.check_vital_patient_b",
+    "sig.check_vital_patient_c",
+    "sig.click_20g_and_click_iv_set_and_click_ns1",
+    "sig.click_dummy_b",
+    "sig.click_flowmeter",
+    "sig.click_glove_and_click_gauze_and_click_plaster",
+    "sig.click_humidifierbottle_and_click_sdw",
+    "sig.click_nasal_and_connect_nasal_and_o2",
+    "sig.click_patient_b",
+    "sig.click_patient_b_face",
+    "sig.click_patient_c",
+    "sig.click_patient_c_face",
+    "sig.click_penlight",
+    "sig.click_vital_set_and_click_electrode_and_click_electrode_cable",
+    "sig.close_vital_ui_b",
+    "sig.close_vital_ui_c",
+    "sig.connect_cannula_and_ns1_patient_b",
+    "sig.connect_cannula_and_ns1_patient_c",
+    "sig.connect_patient_and_monitor_b",
+    "sig.connect_patient_and_monitor_patient_c",
+    "sig.connect_wall_component_2",
+    "sig.enter_triage_zone_count_3",
+    "sig.grab_stretcher_patient_b",
+    "sig.grab_stretcher_patient_c",
+    "sig.insert_iv_b_right",
+    "sig.insert_iv_c_left",
+    "sig.select_patient_b_and_select_patient_c",
+    "sig.wear_glove"
+  ],
+  "note": "todo.validate.* InvokeEvent 스텁을 Validator(RegistryContains, RuntimeState, sig.*) 로 치환 완료. 이제 게임플레이가 인터랙션 완료 시 ScenarioInteractionSignals.Raise(\"<cond>\") 로 아래 신호를 올려야 진행된다."
 }

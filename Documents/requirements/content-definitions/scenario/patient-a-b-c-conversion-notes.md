@@ -235,7 +235,7 @@ Agent Manager 워크트리 2개(`scenario-patient-a-json`, `scenario-patient-bc-
 | ID | 내용 | 상태(2026-06-23) | 비고 |
 |---|---|---|---|
 | TODO-SPEC-1 | DialogueNode 자동 진행 시간 부재 | **구현됨** | `autoAdvanceSeconds`(opt-in). null/0이하=입력 대기(하위호환) |
-| TODO-SPEC-2 | Validator 도메인 인터랙션 완료 검증 불가 | **엔진 메커니즘 구현됨** | 신규 enum 없이 `RegistryContains`+`RuntimeState`+`ScenarioInteractionSignals` 재사용. `todo.validate.*`→Validator 치환 규칙은 `json-conversion-rules.md`. 게임플레이 신호 emit 연결은 후속 |
+| TODO-SPEC-2 | Validator 도메인 인터랙션 완료 검증 불가 | **엔진 구현됨 + JSON 치환 완료** | `RegistryContains`+`RuntimeState`+`ScenarioInteractionSignals`. 세 시나리오의 `todo.validate.*` 스텁 113개(A 57·B/C 47·intro 9)를 `Validator(RegistryContains, RuntimeState, sig.*)` 로 치환 완료(todo 스텁 0). 게임플레이가 인터랙션 완료 시 `ScenarioInteractionSignals.Raise("<cond>")` 로 신호를 올리는 연결만 후속(각 `*.unsupported.flags.json` 의 `gameplaySignalsToRaise` 참조) |
 | TODO-SPEC-3 | 역할 태그 교대(CPR 사이클) 표현 불가 | **구현됨** | PlayerTag `Swap`(1:1 교대) + `ByTag` scope 추가 |
 | TODO-SPEC-4 | 동일 처치 서브그래프 재사용 수단 없음 | **보류** | 플레이 차단 아님(환자 C 복제로 동작). 침습적이라 우선순위 최하로 연기 |
 
@@ -280,14 +280,23 @@ TODO-SPEC-* 는 모두 엔진(`MultiplayerInfrastructure`) 변경을 필요로 �
   - (+ 각자 식별 태그 nurse_a~d)
 - 검증(정적 시뮬레이션): 단일 역할 브랜치는 전부 1:1 매칭(intro 3/3, 환자A 20/20, 환자B·C 8/8),
   MULTI(중복 매칭) 0건. dangling 참조 0, 스키마 통과.
-- **SPEC-3/할당 대기로 남는 브랜치(=2인 협업 브랜치, `matchMode:All` 로 한 명이 두 태그를 모두
-  요구받음)**: 다음 3개는 단일 간호사로 매칭되지 않으며(=0건), 원본상 2인 공동 수행 브랜치다.
+- **2인 협업 브랜치(=원본상 2인 공동 수행) — `matchMode:Any` 적용 완료**: 아래 3개는 한 명이
+  두 태그를 모두 가질 수 없는 협업 브랜치였다(이전엔 `matchMode:All` 로 매칭 0건).
   - 환자A `P004/N008` `airway_team+triage_lead` (B+A 기관내삽관 보조)
   - 환자B/C `P009/V040_A` `bleeding_control+triage_lead` (A+C 환자 B 이송)
   - 환자B/C `P009/V040_B` `airway_team+iv_team` (B+D 환자 C 이송)
-  → 해결책은 (a) 해당 브랜치 `requiredPlayerTagsMatchMode = Any`, 또는 (b) 멀티플레이어 할당
-    재설계(SPEC-3 영역). 정적 태그 부여로는 의도(2인 협업)를 표현 못 하므로 SPEC-3 으로 둔다.
-- CPR 교대(P005→P006 facet swap)도 정적 부여 한계로 SPEC-3 대기(`PlayerTag Swap`).
+  → `requiredPlayerTagsMatchMode = Any` 로 변경하여, 두 협업 간호사가 모두 적격(MULTI)이 되도록 했다.
+    이는 "두 명이 함께 수행"하는 원본 의도와 일치한다(`SelfAll` 할당이 양쪽에 브랜치를 제공).
+- **CPR 교대(P005→P006) — 해소 완료(식별자 태그 방식)**: 분석 결과 facet 태그(airway_team/cpr_team)는
+  비-CPR 병렬에서도 재사용되어(예: P003 N005 airway=활력측정 담당 B vs P005 N017 airway=앰부 담당 A)
+  같은 facet 이 병렬마다 다른 간호사를 가리킨다. 따라서 `PlayerTag Swap` 으로 facet 을 교환하는
+  방식은 "한 간호사가 두 facet 을 모두 보유" 문제를 일으켜 부적합했다.
+  대신 **CPR 병렬(P005·P006)의 브랜치 태그를 안정적 식별자 태그(`nurse_a`~`nurse_d`)로 재지정**했다.
+  - P005(사이클1): N017=nurse_a(앰부), N018=nurse_b(가슴압박), N019=nurse_c(제세동), N020=nurse_d(에피)
+  - P006(사이클2): N021=nurse_a(가슴압박), N022=nurse_b(앰부), N023=nurse_c(에피), N024=nurse_d(제세동)
+  - 식별자 태그는 intro 역할 선택 prelude 에서 각 간호사에게 1:1 부여되므로, 두 사이클 모두 결정적으로
+    1:1 매칭되며 사이클 간 역할 전환이 "어떤 브랜치를 맡는가"로 자연스럽게 표현된다.
+    (즉 본 케이스에서는 `PlayerTag Swap` 노드가 불필요. Swap 연산은 다른 교대형 시나리오를 위해 유지.)
 
 **(남은 엔진 무관 작업)**
 - 씬/레지스트리 등록: 환자/더미/침대/모니터/간호사/Waypoint 를 Entity/Npc/Waypoint 레지스트리에 등록.
