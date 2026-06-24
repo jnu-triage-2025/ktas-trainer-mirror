@@ -29,3 +29,35 @@ MonoBehaviour:
     displayName: 
     isNetworked: 1
     childReferences: []
+  - identifier: patient_b
+    fallbackEntityType: 0
+    prefab: {fileID: 434063568747779160, guid: 0e03ef4333774435183b2f7769a1fce7, type: 3}
+    displayName: 
+    isNetworked: 1
+    childReferences:
+    - childPresetIdentifier: bed_b
+      spawnedEntityIdentifier: bed_b
+      unwrapOnSpawn: 1
+      linkChildToParent: 1
+  - identifier: bed_b
+    fallbackEntityType: 0
+    prefab: {fileID: 5017221584004301368, guid: 19556133e274748aebcdaaa9ee7730b9, type: 3}
+    displayName: 
+    isNetworked: 1
+    childReferences: []
+  - identifier: patient_c
+    fallbackEntityType: 0
+    prefab: {fileID: 2574628634766077341, guid: 860f27b53e0b440e0a748435508ed67d, type: 3}
+    displayName: 
+    isNetworked: 1
+    childReferences:
+    - childPresetIdentifier: bed_c
+      spawnedEntityIdentifier: bed_c
+      unwrapOnSpawn: 1
+      linkChildToParent: 1
+  - identifier: bed_c
+    fallbackEntityType: 0
+    prefab: {fileID: 5017221584004301368, guid: 19556133e274748aebcdaaa9ee7730b9, type: 3}
+    displayName: 
+    isNetworked: 1
+    childReferences: []
