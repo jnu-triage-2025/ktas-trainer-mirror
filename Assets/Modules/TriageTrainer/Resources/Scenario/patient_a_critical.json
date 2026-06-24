@@ -52,7 +52,7 @@
       "identifier": "P002",
       "nodeType": "Parallel",
       "waitMode": "All",
-      "allocationType": "SelfAll",
+      "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
@@ -112,7 +112,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "CC_A_grab"
+      "nextIdentifier": "CC_A_grab",
+      "waitForCondition": true
     },
     "V010_B": {
       "identifier": "V010_B",
@@ -132,7 +133,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "CC_B_grab"
+      "nextIdentifier": "CC_B_grab",
+      "waitForCondition": true
     },
     "V010_C": {
       "identifier": "V010_C",
@@ -152,7 +154,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "CC_C_grab"
+      "nextIdentifier": "CC_C_grab",
+      "waitForCondition": true
     },
     "V010_D": {
       "identifier": "V010_D",
@@ -172,7 +175,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "CC_D_grab"
+      "nextIdentifier": "CC_D_grab",
+      "waitForCondition": true
     },
     "Q006_1": {
       "identifier": "Q006_1",
@@ -203,7 +207,7 @@
       "identifier": "P003",
       "nodeType": "Parallel",
       "waitMode": "All",
-      "allocationType": "SelfAll",
+      "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
@@ -272,7 +276,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N005_1"
+      "nextIdentifier": "N005_1",
+      "waitForCondition": true
     },
     "N005_1": {
       "identifier": "N005_1",
@@ -300,7 +305,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E006"
+      "nextIdentifier": "E006",
+      "waitForCondition": true
     },
     "E006": {
       "identifier": "E006",
@@ -371,7 +377,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N006_1"
+      "nextIdentifier": "N006_1",
+      "waitForCondition": true
     },
     "N006_1": {
       "identifier": "N006_1",
@@ -648,7 +655,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "A003"
+      "nextIdentifier": "A003",
+      "waitForCondition": true
     },
     "A003": {
       "identifier": "A003",
@@ -694,7 +702,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N007_2"
+      "nextIdentifier": "N007_2",
+      "waitForCondition": true
     },
     "N007_2": {
       "identifier": "N007_2",
@@ -722,7 +731,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N007_3"
+      "nextIdentifier": "N007_3",
+      "waitForCondition": true
     },
     "N007_3": {
       "identifier": "N007_3",
@@ -750,7 +760,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N007_4"
+      "nextIdentifier": "N007_4",
+      "waitForCondition": true
     },
     "N007_4": {
       "identifier": "N007_4",
@@ -778,7 +789,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "D009"
+      "nextIdentifier": "D009",
+      "waitForCondition": true
     },
     "D009": {
       "identifier": "D009",
@@ -841,7 +853,7 @@
       "identifier": "P004",
       "nodeType": "Parallel",
       "waitMode": "All",
-      "allocationType": "SelfAll",
+      "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
@@ -949,7 +961,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "A004"
+      "nextIdentifier": "A004",
+      "waitForCondition": true
     },
     "A004": {
       "identifier": "A004",
@@ -1006,7 +1019,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N008_2"
+      "nextIdentifier": "N008_2",
+      "waitForCondition": true
     },
     "N008_2": {
       "identifier": "N008_2",
@@ -1034,7 +1048,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E012"
+      "nextIdentifier": "E012",
+      "waitForCondition": true
     },
     "E012": {
       "identifier": "E012",
@@ -1069,7 +1084,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E013"
+      "nextIdentifier": "E013",
+      "waitForCondition": true
     },
     "E013": {
       "identifier": "E013",
@@ -1104,7 +1120,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N008_5"
+      "nextIdentifier": "N008_5",
+      "waitForCondition": true
     },
     "N008_5": {
       "identifier": "N008_5",
@@ -1132,7 +1149,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "S001"
+      "nextIdentifier": "S001",
+      "waitForCondition": true
     },
     "S001": {
       "identifier": "S001",
@@ -1209,7 +1227,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "A006"
+      "nextIdentifier": "A006",
+      "waitForCondition": true
     },
     "A006": {
       "identifier": "A006",
@@ -1248,7 +1267,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "A007"
+      "nextIdentifier": "A007",
+      "waitForCondition": true
     },
     "A007": {
       "identifier": "A007",
@@ -1287,7 +1307,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N009_3"
+      "nextIdentifier": "N009_3",
+      "waitForCondition": true
     },
     "N009_3": {
       "identifier": "N009_3",
@@ -1327,7 +1348,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E014"
+      "nextIdentifier": "E014",
+      "waitForCondition": true
     },
     "E014": {
       "identifier": "E014",
@@ -1362,7 +1384,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "C008"
+      "nextIdentifier": "C008",
+      "waitForCondition": true
     },
     "C008": {
       "identifier": "C008",
@@ -1464,7 +1487,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N010_1"
+      "nextIdentifier": "N010_1",
+      "waitForCondition": true
     },
     "N010_1": {
       "identifier": "N010_1",
@@ -1492,7 +1516,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N010_2"
+      "nextIdentifier": "N010_2",
+      "waitForCondition": true
     },
     "N010_2": {
       "identifier": "N010_2",
@@ -1520,7 +1545,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E015"
+      "nextIdentifier": "E015",
+      "waitForCondition": true
     },
     "E015": {
       "identifier": "E015",
@@ -1555,7 +1581,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E016"
+      "nextIdentifier": "E016",
+      "waitForCondition": true
     },
     "E016": {
       "identifier": "E016",
@@ -1644,7 +1671,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E018"
+      "nextIdentifier": "E018",
+      "waitForCondition": true
     },
     "E018": {
       "identifier": "E018",
@@ -1679,7 +1707,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E019"
+      "nextIdentifier": "E019",
+      "waitForCondition": true
     },
     "E019": {
       "identifier": "E019",
@@ -1714,7 +1743,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E020"
+      "nextIdentifier": "E020",
+      "waitForCondition": true
     },
     "E020": {
       "identifier": "E020",
@@ -1807,7 +1837,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E023"
+      "nextIdentifier": "E023",
+      "waitForCondition": true
     },
     "E023": {
       "identifier": "E023",
@@ -1876,7 +1907,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N013_1"
+      "nextIdentifier": "N013_1",
+      "waitForCondition": true
     },
     "N013_1": {
       "identifier": "N013_1",
@@ -1904,7 +1936,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N014"
+      "nextIdentifier": "N014",
+      "waitForCondition": true
     },
     "N014": {
       "identifier": "N014",
@@ -1932,7 +1965,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E024"
+      "nextIdentifier": "E024",
+      "waitForCondition": true
     },
     "E024": {
       "identifier": "E024",
@@ -2018,7 +2052,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "Q018_1"
+      "nextIdentifier": "Q018_1",
+      "waitForCondition": true
     },
     "Q018_1": {
       "identifier": "Q018_1",
@@ -2050,7 +2085,7 @@
       "identifier": "P005",
       "nodeType": "Parallel",
       "waitMode": "All",
-      "allocationType": "SelfAll",
+      "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
@@ -2134,7 +2169,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N017_1"
+      "nextIdentifier": "N017_1",
+      "waitForCondition": true
     },
     "N017_1": {
       "identifier": "N017_1",
@@ -2162,7 +2198,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N017_2"
+      "nextIdentifier": "N017_2",
+      "waitForCondition": true
     },
     "N017_2": {
       "identifier": "N017_2",
@@ -2196,7 +2233,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E026"
+      "nextIdentifier": "E026",
+      "waitForCondition": true
     },
     "E026": {
       "identifier": "E026",
@@ -2252,7 +2290,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E027"
+      "nextIdentifier": "E027",
+      "waitForCondition": true
     },
     "E027": {
       "identifier": "E027",
@@ -2377,7 +2416,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E028"
+      "nextIdentifier": "E028",
+      "waitForCondition": true
     },
     "E028": {
       "identifier": "E028",
@@ -2576,7 +2616,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N019_1"
+      "nextIdentifier": "N019_1",
+      "waitForCondition": true
     },
     "N019_1": {
       "identifier": "N019_1",
@@ -2610,7 +2651,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E029"
+      "nextIdentifier": "E029",
+      "waitForCondition": true
     },
     "E029": {
       "identifier": "E029",
@@ -2801,7 +2843,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "A008"
+      "nextIdentifier": "A008",
+      "waitForCondition": true
     },
     "A008": {
       "identifier": "A008",
@@ -2846,7 +2889,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "A009"
+      "nextIdentifier": "A009",
+      "waitForCondition": true
     },
     "A009": {
       "identifier": "A009",
@@ -2885,7 +2929,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "D027"
+      "nextIdentifier": "D027",
+      "waitForCondition": true
     },
     "D027": {
       "identifier": "D027",
@@ -2921,7 +2966,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "D027_1"
+      "nextIdentifier": "D027_1",
+      "waitForCondition": true
     },
     "D027_1": {
       "identifier": "D027_1",
@@ -3053,7 +3099,7 @@
       "identifier": "P006",
       "nodeType": "Parallel",
       "waitMode": "All",
-      "allocationType": "SelfAll",
+      "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
@@ -3131,7 +3177,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E033"
+      "nextIdentifier": "E033",
+      "waitForCondition": true
     },
     "E033": {
       "identifier": "E033",
@@ -3330,7 +3377,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E034"
+      "nextIdentifier": "E034",
+      "waitForCondition": true
     },
     "E034": {
       "identifier": "E034",
@@ -3461,7 +3509,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "A010"
+      "nextIdentifier": "A010",
+      "waitForCondition": true
     },
     "A010": {
       "identifier": "A010",
@@ -3506,7 +3555,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "A011"
+      "nextIdentifier": "A011",
+      "waitForCondition": true
     },
     "A011": {
       "identifier": "A011",
@@ -3553,7 +3603,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "D031"
+      "nextIdentifier": "D031",
+      "waitForCondition": true
     },
     "D031": {
       "identifier": "D031",
@@ -3589,7 +3640,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "D031_1"
+      "nextIdentifier": "D031_1",
+      "waitForCondition": true
     },
     "D031_1": {
       "identifier": "D031_1",
@@ -3723,7 +3775,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "S004"
+      "nextIdentifier": "S004",
+      "waitForCondition": true
     },
     "S004": {
       "identifier": "S004",
@@ -3931,7 +3984,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "Q027_1"
+      "nextIdentifier": "Q027_1",
+      "waitForCondition": true
     },
     "Q027_1": {
       "identifier": "Q027_1",
@@ -3963,7 +4017,7 @@
       "identifier": "P007",
       "nodeType": "Parallel",
       "waitMode": "All",
-      "allocationType": "SelfAll",
+      "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Ignore",
       "branches": [
         {
@@ -4032,7 +4086,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E037"
+      "nextIdentifier": "E037",
+      "waitForCondition": true
     },
     "E037": {
       "identifier": "E037",
@@ -4093,7 +4148,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "S005"
+      "nextIdentifier": "S005",
+      "waitForCondition": true
     },
     "S005": {
       "identifier": "S005",
@@ -4156,7 +4212,8 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N028_1"
+      "nextIdentifier": "N028_1",
+      "waitForCondition": true
     },
     "N028_1": {
       "identifier": "N028_1",

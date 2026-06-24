@@ -29,8 +29,10 @@ updated: 2026-04-14
 - WaitAny -> Any
 - WaitNone -> None
 
-- ByRole -> SelfAll + branches[].requiredRoleIdentifiers 사용
-  - 문서의 역할 분기 의도는 requiredRoleIdentifiers에 반영
+- ByRole -> allocationType = "ByRole" (엔진 정식 지원)
+  - 각 브랜치를 자격(requiredPlayerTags/forbiddenPlayerTags)에 맞는 **서로 다른** 플레이어에게 1:1 배정한다.
+  - 다인 동시 협력 처치(간호사 B/C/D가 각기 다른 처치를 동시 수행)를 표현하는 기본 모드이다.
+  - 역할 의도는 branches[].requiredPlayerTags 로 표현한다(requiredRoleIdentifiers 는 스키마 미지원, 사용 금지).
 
 - Tag 분기 -> branches[].requiredPlayerTags 사용
   - 태그 조건은 배열의 모든 태그를 만족해야 매칭
@@ -61,6 +63,8 @@ updated: 2026-04-14
 - 엔진 Validator.condition 은 `PlayerCount*`, `RegistryContains`, `PlayerAssignedTag` 를 지원한다.
 - `Click_xxx` / `Apply_xxx` / `Enter_xxx` / `Grab_xxx` 같은 **도메인 인터랙션 완료** 조건은
   enum 으로 직접 표현할 수 없다. 대신 **인터랙션 완료 신호(Signal) + `RegistryContains`(RuntimeState)** 로 게이팅한다(TODO-SPEC-2 채택안).
+- "수행해야만 진행"을 강제하려면 Validator 에 `waitForCondition: true` 를 둔다(엔진 정식 지원).
+  이때 조건(신호)이 올라올 때까지 진행을 막고 폴링 대기한다. 별도 대기 노드 조합이 더 이상 필요 없다.
 
 #### 도메인 인터랙션 게이트 변환 (todo.validate.* -> Validator/RegistryContains)
 
@@ -80,6 +84,7 @@ updated: 2026-04-14
     }
   ],
   "onFailure": "Ignore",
+  "waitForCondition": true,
   "nextIdentifier": "<원래 NextIdentifier>"
 }
 ```
@@ -89,11 +94,12 @@ updated: 2026-04-14
 - 게임플레이 측은 인터랙션 완료 시 `ScenarioInteractionSignals.Raise("<cond>")` 를 호출한다
   (= `Registry.Register(RegistryType.RuntimeState, "sig.<cond>", true)`).
   사이클 반복 등에서 재설정이 필요하면 `ScenarioInteractionSignals.Clear("<cond>")`.
-- `onFailure` 는 보통 `Ignore`(신호 미도달 시 자동 진행 대신 대기/스킵 정책에 맞춰 선택).
-  "수행해야만 진행"을 강제하려면 Validator 통과까지 대기하도록 별도 폴링/대기 노드와 조합한다.
+- "수행해야만 진행"을 강제하려면 `waitForCondition: true` 를 둔다(신호가 올라올 때까지 진행 차단).
+  생략/`false` 이면 1회 평가 후 `onFailure` 정책을 따른다(하위호환).
 
-> 참고: 위 방식은 신규 enum 없이 기존 엔진 능력만으로 동작한다. 신호를 올리는 게임플레이
-> 연결(어떤 클릭/적용/연결이 어떤 `sig.*` 를 올리는지)은 TriageTrainer 측 후속 통합 작업이다.
+> 테스트 보조: 게임플레이의 실제 신호 배선 전에는
+> `/scenario signal <cond>` (해제는 `/scenario signal <cond> clear`) 채팅 커맨드로 신호를 수동으로 올려
+> 게이트 통과를 통합 테스트할 수 있다.
 
 ## 3) 구조 치환 예시
 
@@ -103,21 +109,12 @@ updated: 2026-04-14
 - C002(Choice) + C002-Wrong(ChoiceOptionNode) + C002-Correct(ChoiceOptionNode)
 
 엔진형(권장):
-- C002(Choice) 내부 options에 Wrong/Correct 항목을 직접 작성
-
-### 예시 B: ByRole 병렬
-
-문서형:
-- Parallel.WaitMode = WaitAll
-- Parallel.AllocationType = ByRole
-
-엔진형:
 - waitMode = All
-- allocationType = SelfAll
-- branches[].requiredRoleIdentifiers = ["NurseA"], ["NurseB", "NurseC"] ...
-- branches[].requiredPlayerTags = ["airway"], ["triage-lead", "ct-team"] ...
+- allocationType = ByRole  (각 브랜치를 서로 다른 자격 플레이어에게 1:1 배정)
+- branches[].requiredPlayerTags = ["airway_team"], ["bleeding_control"], ["iv_team"] ...
 - branches[].forbiddenPlayerTags = ["observer"] ...
 - branches[].requiredPlayerTagsMatchMode = "All" | "Any"
+- branches[].completionConditionIdentifier = 브랜치 체인 종료 수렴 라벨(예: "CC_B_vitalcheck_patientA")
 
 ## 4) 금지 규칙
 

@@ -162,7 +162,9 @@ Agent Manager 워크트리 2개(`scenario-patient-a-json`, `scenario-patient-bc-
 ### 2-5. Parallel 치환
 
 - `WaitMode`: `WaitAll → All`.
-- `AllocationType`: `ByRole → SelfAll`.
+- `AllocationType`: `ByRole`(엔진 정식 지원 — 1차 변환의 `SelfAll` 매핑은 폐기됨).
+  각 브랜치를 자격(`requiredPlayerTags`)에 맞는 **서로 다른** 플레이어에게 1:1 배정한다.
+  → 다인 동시 협력 처치 의도가 실제로 실현된다(과거 `SelfAll` 은 단일 플레이어로 붕괴시켰음).
 - `WhenBranchingPlayerNotMatched`: 비어있으면 `Ignore` 로 채운다(선례 일치).
 - 브랜치 필드는 **`identifier`, `completionConditionIdentifier`, `requiredPlayerTags`,
   `forbiddenPlayerTags`, `requiredPlayerTagsMatchMode`** 만 허용
@@ -238,10 +240,19 @@ Agent Manager 워크트리 2개(`scenario-patient-a-json`, `scenario-patient-bc-
 | TODO-SPEC-2 | Validator 도메인 인터랙션 완료 검증 불가 | **엔진 구현됨 + JSON 치환 완료** | `RegistryContains`+`RuntimeState`+`ScenarioInteractionSignals`. 세 시나리오의 `todo.validate.*` 스텁 113개(A 57·B/C 47·intro 9)를 `Validator(RegistryContains, RuntimeState, sig.*)` 로 치환 완료(todo 스텁 0). 게임플레이가 인터랙션 완료 시 `ScenarioInteractionSignals.Raise("<cond>")` 로 신호를 올리는 연결만 후속(각 `*.unsupported.flags.json` 의 `gameplaySignalsToRaise` 참조) |
 | TODO-SPEC-3 | 역할 태그 교대(CPR 사이클) 표현 불가 | **구현됨** | PlayerTag `Swap`(1:1 교대) + `ByTag` scope 추가 |
 | TODO-SPEC-4 | 동일 처치 서브그래프 재사용 수단 없음 | **보류** | 플레이 차단 아님(환자 C 복제로 동작). 침습적이라 우선순위 최하로 연기 |
+| GAP-G1 | 병렬 다인 동시 협력 분배 부재(ByRole 없음 → SelfAll 단일 플레이어 붕괴) | **구현됨(2026-06-24)** | `ScenarioParallelAllocationType.ByRole` 추가. 각 브랜치를 자격(태그)에 맞는 서로 다른 플레이어에게 1:1 배정. 두 시나리오 Parallel 11개 전부 `ByRole` 로 재변환 |
+| GAP-G2 | 병렬 브랜치 완료조건 미구현(ExecuteBranch TODO, 대기 없음) | **구현됨(2026-06-24)** | `RunBranchChain` 으로 브랜치가 NextIdentifier 체인을 끝까지(또는 `completionConditionIdentifier` 수렴 라벨까지) 실행·대기. WaitAll 합류 정상화 |
+| GAP-G3 | Validator 일회성 평가(게이팅 무력) | **구현됨(2026-06-24)** | `ScenarioValidatorNode.WaitForCondition`(opt-in) 추가. true 시 조건 충족까지 폴링 대기. 신호 게이팅 Validator 104개(A 57·B/C 47) `waitForCondition:true` 재변환 |
+| GAP-G4 | 게임플레이 `sig.*` 발신 미배선 | **부분(디버그 훅)** | `/scenario signal <cond> [clear]` 커맨드 추가(테스트용). 실제 인터랙션→Raise 배선은 후속 TriageTrainer 작업 |
+| GAP-G5 | Sound 노드 미구현 | **TODO** | `ExecuteSoundNode` 스텁(1초 고정 대기) |
+| GAP-G6 | Choice→Quiz 채점 미연동 | **TODO** | 루브릭(수행/미수행) 집계 훅 미구현 |
+| GAP-G7 | Dialogue Duration 손실 | **TODO(변환기)** | 엔진 `autoAdvanceSeconds` 존재 → JSON 재변환으로 복원 가능(특히 환자 B/C) |
 
 TODO-SPEC-* 는 모두 엔진(`MultiplayerInfrastructure`) 변경을 필요로 하여, 루트 `AGENTS.md` 정책에 따라
 `/Agents/Proposals/Feature Proposal - ScenarioNode Expressiveness/` 에 Feature Proposal + 예시 설계 명세를
 먼저 작성하였고(2026-06-23), 이후 SPEC-1·2·3 을 엔진에 구현하였다(전부 opt-in·하위호환, 기존 시나리오 회귀 0건).
+GAP-G1~G3(병렬 실행·게이팅 계층)은 별도 제안서
+`/Agents/Proposals/2026-06-24-scenario-parallel-execution/` 에 정리 후 엔진에 구현하였다(2026-06-24).
 본 변환 작업 자체(JSON 산출)는 엔진 변경 없이 수행되었다.
 
 ### 3-2-1. 플레이 가능화 — 엔진 무관 선행 작업 (2026-06-23)

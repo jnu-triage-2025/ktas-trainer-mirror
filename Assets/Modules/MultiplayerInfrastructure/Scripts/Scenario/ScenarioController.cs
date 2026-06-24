@@ -1186,6 +1186,14 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingValidator;
 
+      // WaitForCondition=true 이면 조건 충족까지 폴링 대기하는 게이트로 동작한다.
+      if (node.WaitForCondition)
+      {
+        yield return new WaitUntil(() => EvaluateValidator(node));
+        Advance();
+        yield break;
+      }
+
       bool passed = EvaluateValidator(node, out var failureReason);
 
       if (passed)
@@ -1218,6 +1226,30 @@ namespace MultiplayerInfrastructure.Scenario
           break;
       }
 
+      yield break;
+    }
+
+    /// <summary>
+    /// 브랜치 체인 내부에서 Validator 를 게이트로 평가한다(전역 Advance 미사용).
+    /// WaitForCondition=true 이면 조건 충족까지 폴링 대기한다.
+    /// false 이면 1회 평가하고, 실패 시 OnFailure 정책 중 Panic 만 브랜치를 즉시 중단한다
+    /// (브랜치 내부에서는 EndScenario/전역 Branching 을 일으키지 않고 통과 진행한다).
+    /// </summary>
+    private IEnumerator ExecuteValidatorGate(ScenarioValidatorNode node)
+    {
+      if (node.WaitForCondition)
+      {
+        yield return new WaitUntil(() => EvaluateValidator(node));
+        yield break;
+      }
+
+      if (EvaluateValidator(node, out var failureReason))
+      {
+        yield break;
+      }
+
+      ReportValidatorFailure(node, failureReason);
+      // 브랜치 내부에서는 진행을 막지 않고 통과한다(병렬 합류 흐름 보호).
       yield break;
     }
 
@@ -1285,31 +1317,125 @@ namespace MultiplayerInfrastructure.Scenario
       var previousOwner = _scenarioOwnerClientId;
       _scenarioOwnerClientId = branchOwnerClientId ?? previousOwner;
 
-      // 브랜치 실행 (간단히 재귀 호출)
-      if (node is ScenarioInvokeEventNode invoke)
+      try
       {
-        if (invoke.MoveNextBehavior == ScenarioInvokeEventMoveNextBehavior.Immediately)
+        // 브랜치의 시작 노드부터 NextIdentifier 체인을 끝까지(또는 완료조건 라벨까지) 실행한다.
+        // 완료조건 식별자(completionCondition)는 보통 그래프에 실제 노드가 없는 "수렴 라벨"이며,
+        // 브랜치 체인 마지막 노드의 NextIdentifier 가 이 라벨을 가리킨다.
+        // 라벨에 도달하면 브랜치 완료로 간주한다(전역 Advance/EndScenario 를 건드리지 않음).
+        // 브랜치 내부의 게이팅(인터랙션 완료 대기)은 체인에 포함된
+        // Validator(waitForCondition=true) 노드가 담당하므로, 라벨 도달 = 브랜치 완료가 된다.
+        yield return RunBranchChain(node, completionCondition);
+      }
+      finally
+      {
+        _scenarioOwnerClientId = previousOwner;
+      }
+    }
+
+    /// <summary>
+    /// 병렬 브랜치 전용 자가완결 실행기.
+    /// 전역 <see cref="_currentNode"/> / <see cref="Advance"/> / <see cref="EndScenario"/> 에 의존하지 않고,
+    /// 시작 노드부터 NextIdentifier 체인을 따라 노드를 하나씩 실행·대기한다.
+    /// 다음 식별자가 비어 있거나(터미널) 완료조건 라벨(<paramref name="completionLabel"/>)과 같거나
+    /// 그래프에 존재하지 않으면 브랜치를 종료한다.
+    /// </summary>
+    private IEnumerator RunBranchChain(IScenarioNode startNode, string completionLabel)
+    {
+      var cursor = startNode;
+      int guard = 0;
+      const int maxNodes = 10000; // 순환 방지 안전장치.
+
+      while (cursor != null)
+      {
+        if (++guard > maxNodes)
         {
-          StartCoroutine(ExecuteInvokeEventNode(invoke));
+          Debug.LogWarning("[ScenarioController] Branch chain exceeded node limit; aborting branch to avoid infinite loop.");
+          yield break;
         }
-        else if (invoke.MoveNextBehavior == ScenarioInvokeEventMoveNextBehavior.WaitUntilDone)
+
+        OnNodeChanged?.Invoke(cursor);
+
+        // 단일 노드를 실행하고 완료를 대기한다(전역 Advance 미사용).
+        yield return ExecuteBranchNode(cursor);
+
+        var nextId = cursor.NextIdentifier;
+
+        // 터미널: 다음 노드가 없음.
+        if (string.IsNullOrEmpty(nextId))
         {
-          yield return ExecuteInvokeEventNode(invoke);
+          yield break;
         }
-        else
+
+        // 완료조건 수렴 라벨에 도달 → 브랜치 완료.
+        if (!string.IsNullOrWhiteSpace(completionLabel)
+            && string.Equals(nextId, completionLabel, StringComparison.Ordinal))
         {
+          yield break;
+        }
+
+        if (!_currentGraph.TryGetNode(nextId, out var nextNode))
+        {
+          // 다음 식별자가 그래프에 없으면(예: 미정의 수렴 라벨) 브랜치 완료로 간주한다.
+          yield break;
+        }
+
+        cursor = nextNode;
+      }
+    }
+
+    /// <summary>
+    /// 브랜치 내부에서 단일 노드를 실행하고 그 노드가 완료될 때까지 대기한다.
+    /// 각 노드 실행기는 내부적으로 전역 <see cref="Advance"/> 를 호출하지만, 브랜치 체인에서는
+    /// 그 진행을 사용하지 않고 NextIdentifier 로 직접 이동하므로 부작용이 격리된다.
+    /// 코루틴형 노드(예: Delay/InvokeEvent(WaitUntilDone)/Sound)는 완료까지 yield 로 대기한다.
+    /// </summary>
+    private IEnumerator ExecuteBranchNode(IScenarioNode node)
+    {
+      switch (node)
+      {
+        case ScenarioDelayNode delay:
+          yield return ExecuteDelayNode(delay);
+          break;
+        case ScenarioInvokeEventNode invoke:
+          if (invoke.MoveNextBehavior == ScenarioInvokeEventMoveNextBehavior.WaitUntilDone)
+          {
+            yield return ExecuteInvokeEventNode(invoke);
+          }
+          else
+          {
+            StartCoroutine(ExecuteInvokeEventNode(invoke));
+          }
+          break;
+        case ScenarioSoundNode sound:
+          yield return ExecuteSoundNode(sound);
+          break;
+        case ScenarioValidatorNode validator:
+          yield return ExecuteValidatorGate(validator);
+          break;
+        case ScenarioInteractionNode interaction:
+          yield return ExecuteInteractionNode(interaction);
+          break;
+        case ScenarioCombineItemNode combineItem:
+          yield return ExecuteCombineItemNode(combineItem);
+          break;
+        case ScenarioDialogueNode dialogue:
+          // 브랜치 내 다이얼로그: 자동진행 시간이 지정되면 그 시간만큼, 아니면 짧게 표시 후 진행.
+          if (!_uiController.IsUnityNull())
+          {
+            _uiController.DisplayDialogue(dialogue.SpeakerName, dialogue.DialogueContent, dialogue.PortraitSpriteIdentifier);
+          }
+          if (dialogue.AutoAdvanceSeconds.HasValue && dialogue.AutoAdvanceSeconds.Value > 0f)
+          {
+            yield return new WaitForSeconds(dialogue.AutoAdvanceSeconds.Value);
+          }
+          break;
+        default:
+          // 즉시 완료형 노드(QuestControl/StateUpdate/PlayerTag/EntityTag/WaypointHighlight 등):
+          // 실행기가 내부에서 Advance 를 호출하더라도, 브랜치는 그 진행을 사용하지 않고 직접 이동한다.
           ExecuteNode(node);
-        }
+          break;
       }
-      else
-      {
-        ExecuteNode(node);
-      }
-
-      _scenarioOwnerClientId = previousOwner;
-
-      // TODO: completionCondition 체크 로직
-      yield return null; // 임시
     }
 
     private IEnumerator WaitForAny(List<Coroutine> coroutines)
@@ -1409,6 +1535,71 @@ namespace MultiplayerInfrastructure.Scenario
           {
             allocation[branch] = pick;
           }
+          return true;
+        }
+        case ScenarioParallelAllocationType.ByRole:
+        {
+          // 각 브랜치를 자격에 맞는 서로 다른 플레이어에게 1:1로 배정한다.
+          // 자격 후보가 적은 브랜치부터 그리디로 처리하여 결정적 매칭을 보장한다.
+          var assignedPlayers = new HashSet<int>();
+
+          // 브랜치별 자격 후보 목록을 미리 계산.
+          var candidatesByBranch = new Dictionary<ScenarioParallelBranch, List<int>>();
+          foreach (var branch in branches)
+          {
+            candidatesByBranch[branch] = playerPool
+                .Where(clientId => IsPlayerEligibleForBranch(branch, clientId))
+                .ToList();
+          }
+
+          // 후보 수가 적은(제약이 강한) 브랜치부터 처리. 동률은 원래 정의 순서 유지(안정 정렬).
+          var orderedBranches = branches
+              .Select((branch, index) => (branch, index))
+              .OrderBy(entry => candidatesByBranch[entry.branch].Count)
+              .ThenBy(entry => entry.index)
+              .Select(entry => entry.branch)
+              .ToList();
+
+          bool anyUnassigned = false;
+          foreach (var branch in orderedBranches)
+          {
+            int? pick = candidatesByBranch[branch]
+                .Where(clientId => !assignedPlayers.Contains(clientId))
+                .Select(clientId => (int?)clientId)
+                .FirstOrDefault();
+
+            if (pick != null)
+            {
+              assignedPlayers.Add(pick.Value);
+              allocation[branch] = pick;
+            }
+            else
+            {
+              allocation[branch] = null;
+              anyUnassigned = true;
+            }
+          }
+
+          if (anyUnassigned)
+          {
+            // 미배정 브랜치가 존재하면 미스매치 정책에 위임한다.
+            // (Ignore: null 배정 그대로 스킵 / Panic: 중단 / Reallocation: 라운드로빈 재배정)
+            int unmatchedCount = allocation.Count(kvp => kvp.Value == null);
+            if (node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
+            {
+              Debug.LogWarning($"[ScenarioController] ByRole allocation panic: {unmatchedCount} branch(es) have no eligible/free player.");
+              return false;
+            }
+
+            if (node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Reallocation)
+            {
+              return HandleParallelMismatch(node, branches.Count, playerPool.Count, playerPool, allocation, assignNull: false);
+            }
+
+            // Ignore: null 배정 유지(해당 브랜치 스킵).
+            Debug.LogWarning($"[ScenarioController] ByRole allocation ignored {unmatchedCount} unmatched branch(es).");
+          }
+
           return true;
         }
         case ScenarioParallelAllocationType.SpreadRandom:

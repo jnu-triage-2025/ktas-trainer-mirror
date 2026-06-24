@@ -111,7 +111,7 @@ ScenarioNode는 표현하고자 하는 내용에 따라 다양하게 데이터�
 | NodeType | ScenarioNodeType | ScenarioNodeType.Parallel |
 | Branches | ScenarioParallelBranch 목록 | 동시에 실행할 브랜치 목록 |
 | WaitMode | ScenarioWaitMode | All / Any / None |
-| AllocationType | ScenarioParallelAllocationType | 플레이어에게 브랜치를 할당하는 방식 |
+| AllocationType | ScenarioParallelAllocationType | 플레이어에게 브랜치를 할당하는 방식. SelfAll / RandomOneAll / SpreadRandom / SpreadOrdinary / **ByRole**(각 브랜치를 자격에 맞는 서로 다른 플레이어에게 1:1 배정, 다인 동시 협력용) |
 | WhenBranchingPlayerNotMatched | ScenarioParallelMismatchHandling | 플레이어 수와 브랜치 수 불일치 시 처리 |
 | NextIdentifier | 문자열 | 대기 조건 충족 후 이동할 다음 노드 식별자 |
 
@@ -120,8 +120,8 @@ ScenarioNode는 표현하고자 하는 내용에 따라 다양하게 데이터�
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | Identifier | 문자열 | 브랜치의 시작 노드 식별자 |
-| CompletionConditionIdentifier | 문자열 | 브랜치 완료 조건 식별자 |
-| RequiredRoleIdentifiers | 문자열 목록 | (optional) 브랜치 실행 대상 역할 식별자 목록 |
+| CompletionConditionIdentifier | 문자열 | 브랜치 완료 조건(수렴 라벨) 식별자. 브랜치 체인의 마지막 노드 NextIdentifier 가 이 값을 가리키면 브랜치 완료로 간주 |
+| ~~RequiredRoleIdentifiers~~ | - | **엔진/스키마 미지원**(DTO 없음). 역할 의도는 RequiredPlayerTags 로 표현할 것 |
 | RequiredPlayerTags | 문자열 목록 | (optional) 브랜치 실행 대상 플레이어 태그 목록 |
 | ForbiddenPlayerTags | 문자열 목록 | (optional) 브랜치 실행 대상에서 제외할 플레이어 태그 목록 |
 | RequiredPlayerTagsMatchMode | ScenarioPlayerTagMatchMode | (optional) 태그 매칭 모드. All(기본), Any |
@@ -148,6 +148,7 @@ ScenarioNode는 표현하고자 하는 내용에 따라 다양하게 데이터�
 | TargetCount | int | 비교 대상 수 |
 | OnFailure | ScenarioValidatorOnFailure | Panic / Branching / Ignore |
 | FailureNextIdentifier | 문자열 | (Branching일 때) 실패 시 이동할 노드 식별자 |
+| WaitForCondition | bool (optional) | true 이면 조건 충족까지 진행을 막고 폴링 대기하는 게이트로 동작. 미지정/false 이면 1회 평가 후 OnFailure 정책(하위호환) |
 | NextIdentifier | 문자열 | 다음 노드의 식별자 |
 
 ### QuestControlNode
