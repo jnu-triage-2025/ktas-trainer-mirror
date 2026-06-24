@@ -56,51 +56,60 @@ IndevScene 의 빈 GameObject(예 `__EntityPresetDebugger`)에 붙이고 인스�
 
 ## 3. 결합 프리셋(환자+침대) 확인 흐름 (예)
 
-1. `Selected Preset Identifier` = `patient_a_bed_group` 으로 두고 **Spawn Selected Preset**.
+1. `Selected Preset Identifier` = `patient_a` 으로 두고 **Spawn Selected Preset**.
 2. **Report Registered Entities** 로 `patient_a`(Patient), `bed_a`(MovingPatientBed) 가 등록되었는지 확인
-   → 자식 분리(ungroup)가 동작했음을 의미.
+   → 하위 프리셋(`bed_a`)이 `unwrapOnSpawn` 으로 형제 루트 스폰되었음을 의미.
 3. (선택) 결합 동작은 `attach_patient_bed_pairs` 시나리오 이벤트 또는 별도 호출로 확인.
 4. **Despawn Debug Spawns** 로 정리.
 
 > 참고: `/entitypreset list` / `/entitypreset spawn <id> <x> <y> <z>` 채팅 명령으로도 동일 확인이 가능하다.
 > 디버거 컴포넌트는 그 위에 "에디터에서 클릭 한 번 + 오버레이 가시화" 편의를 더한 것이다.
 
-## 3-1. 식별자 개념 정리 (childPath vs identifier — 혼동 주의)
+## 3-1. 식별자 개념 정리 (childPresetIdentifier vs spawnedEntityIdentifier)
 
-프리셋에는 **두 단계**의 식별자가 있다.
+프리셋에는 **두 종류**의 식별자가 있다.
 
-- **프리셋(컨테이너) `identifier`** — SO 항목 최상단 필드(예 `patient_a_bed_group`).
-  **스폰할 때 사용하는 키** 다. `TrySpawnEntityPreset("patient_a_bed_group", ...)` 처럼 이걸로 스폰한다.
-- **자식 `childDetachments[]`** — 컨테이너 안에서 분리할 자식 지정.
-  - `childPath`: **프리팹 위계상의 경로/이름**(예 `PatientTypeA`, `PatientMovingBed`). 어떤 자식을 분리할지 가리킨다.
-  - `spawnedEntityIdentifier`: 분리되어 독립 객체가 된 그 자식이 **가질 식별자**(예 `patient_a`, `patient_a_moving_bed`).
+- **프리셋 `identifier`** — SO 항목 최상단 필드(예 `patient_a`, `bed_a`).
+  **스폰할 때 사용하는 키** 다. `TrySpawnEntityPreset("patient_a", ...)` 처럼 이걸로 스폰한다.
+- **하위 참조 `childReferences[]`** — 이 프리셋과 함께 스폰할 다른 프리셋 지정.
+  - `childPresetIdentifier`: **함께 스폰할 다른 EntityPreset 의 식별자**(예 `bed_a`). 원본 프리팹의 자식 경로가 아니다.
+  - `spawnedEntityIdentifier`: 그 하위가 스폰되어 가질 식별자(예 `bed_a`).
+  - `unwrapOnSpawn`: true 면 하위를 루트의 자식이 아니라 **동일 계층(형제 루트)** 으로 둔다.
 
-즉 사용자의 이해가 맞다: **path = 위계 경로, (자식)identifier = 생성된 대상이 가질 식별자.**
-"Path 가 왜 있나"의 답: **스폰은 프리셋(컨테이너) identifier 로 하고**, path 는 그 컨테이너 *내부에서*
-어떤 자식을 분리할지 지목하는 용도다(두 개는 다른 계층의 식별자).
-
-위 오류(`patient_a_bed_group' is not registered`)는 식별자 개념 문제가 아니라 **컨테이너 프리셋이
-레지스트리에 등록되지 않은** 상태(부트스트랩 미실행/SO 미연결)였다. 위 §2 "등록 선행" 으로 해결한다.
+위 오류(`'patient_a' is not registered`)는 **프리셋이 레지스트리에 등록되지 않은** 상태(부트스트랩 미실행/SO 미연결)다.
+아래 §2 "등록 선행" 으로 해결한다.
 
 ## 3-2. 자주 나는 오류와 해결
 
 ### (A) `Entity preset '...' is not registered.`
-- 원인: 프리셋이 레지스트리에 등록되지 않음(부트스트랩 미실행/SO 미연결).
-- 해결: §2 "등록 선행" — 디버거 `_autoRegisterOnStart`(기본 on) 또는 "Register Presets From SO".
+- 원인: 프리셋이 레지스트리에 등록되지 않음(부트스트랩 미실행/SO 미연결). 또는 `childPresetIdentifier` 가 가리키는
+  하위 프리셋이 등록되지 않음.
+- 해결: §2 "등록 선행" — 디버거 `_autoRegisterOnStart`(기본 on) 또는 "Register Presets From SO". 하위 프리셋도 같은
+  SO 에 함께 등록되었는지 확인한다.
 
 ### (B) `NetworkObject Name [...] ObjectId [65535] ... is expected to be initialized but was not. ... Reserialize Prefabs ...`
-- 원인: **FishNet 프리팹 직렬화 누락**. 새로 만든(또는 자식으로 NetworkObject 를 가진) 프리팹이
-  FishNet 의 프리팹 컬렉션(`DefaultPrefabObjects.asset`)에 직렬화/등록되지 않아, `Instantiate` 시
-  `NetworkObject.Awake` 가 초기화되지 않았다고 판단해 오류를 낸다. (ObjectId 65535 = 미설정)
-- **해결(에디터 작업, 필수)**:
-  1. 플레이모드를 종료한다.
-  2. Unity 상단 메뉴 **Fish-Networking > Utility > Reserialize NetworkObjects** 실행
-     (또는 **Refresh Default Prefabs** / **Reserialize Prefabs**). 씬 오브젝트면 **Reserialize Scenes** 도 함께.
-  3. 컨테이너 프리팹과 그 **자식 NetworkObject(환자/침대)** 가 `DefaultPrefabObjects.asset` 에 포함되었는지 확인.
-  4. 다시 플레이모드로 스폰 테스트.
-- 참고: 컨테이너(분리용) 프리팹은 **자식 NetworkObject 가 nested** 된 구조다. FishNet 에서 nested
-  NetworkObject 는 반드시 프리팹 직렬화가 되어 있어야 인스턴스화/스폰이 정상 동작한다. 새 프리팹을
-  만들거나 자식 NetworkObject 구성을 바꿀 때마다 위 Reserialize 를 수행해야 한다.
+- 원인: **FishNet 프리팹 직렬화 누락**. 프리팹이 FishNet 프리팹 컬렉션(`DefaultPrefabObjects.asset`)에 등록되지 않음.
+- **해결(에디터 작업)**: 플레이모드 종료 → Unity 메뉴 **Fish-Networking > Utility > Reserialize NetworkObjects**
+  (또는 **Refresh Default Prefabs**) 실행 → 환자/침대 프리팹이 컬렉션에 포함되었는지 확인 → 다시 스폰 테스트.
+- 참고(중요): 새 EntityPreset 모델에서는 **컨테이너 프리팹/ nested NetworkObject 가 없다.** 환자/침대는 각각 독립
+  프리팹이므로 일반 프리팹과 동일한 직렬화 규칙만 따른다. 따라서 (B) 오류 발생 빈도가 크게 줄어든다.
+
+## 3-3. FishNet 스폰 규칙 준수 (Instantiate → ServerManager.Spawn)
+
+엔진 스폰 로직(`Registry.TrySpawnEntityPreset`)은 FishNet 공식 가이드의 패턴을 따른다.
+참고: [Spawnable Prefabs](https://fish-networking.gitbook.io/docs/fishnet-building-blocks/scriptableobjects/spawnableprefabs),
+[Spawning](https://fish-networking.gitbook.io/docs/guides/features/networked-gameobjects-and-scripts/spawning).
+
+- **전제(필수)**: 스폰할 프리팹(환자/침대 등)은 NetworkManager 의 **Spawnable Prefabs**(`DefaultPrefabObjects.asset`)에
+  등록되어 있어야 한다. 위 (B) 해결의 Reserialize 가 이 등록을 보장한다. 미등록 시 (B) 오류가 난다.
+- **서버 컨텍스트**: `NetworkSpawnIfServer` 는 `InstanceFinder.IsServerStarted` 일 때만 `ServerManager.Spawn(go)` 를
+  호출한다(공식 예시와 동일: `Instantiate` 후 `ServerManager.Spawn`). 서버가 아니면 복제되지 않으며 경고를 남긴다.
+- **unwrap 하위(환자+침대의 기본 사례)**: 환자(루트)와 침대(하위)는 **각각 독립 루트 NetworkObject** 로 따로
+  Instantiate·Spawn 된다. 한 프리팹에 nested 되지 않으므로, 과거 "prefab-nested NetworkObject 를 런타임에 unparent"
+  하던 방식(FishNet 기술 제약상 금지)의 문제가 원천적으로 사라진다.
+- **비-unwrap 하위(드문 경우)**: 하위를 루트의 자식으로 두는 경우, 엔진은 하위를 **스폰 전에 먼저 루트 아래로 reparent**
+  한다(루트는 prefab-nested 가 아닌 "루트" 상태라 런타임 reparent 가 허용됨). 스폰된 루트 아래로 사후 nested 되어 스폰될
+  때는 소유권이 자동 추론되지 않으므로 ownerless(null owner)로 스폰된다(프로젝트 기본값과 동일).
 
 ## 4. 관련
 

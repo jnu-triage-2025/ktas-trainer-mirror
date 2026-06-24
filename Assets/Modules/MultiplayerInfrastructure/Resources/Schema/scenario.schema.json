@@ -1606,30 +1606,6 @@
                 "null"
               ]
             },
-            "childDetachments": {
-              "type": [
-                "array",
-                "null"
-              ],
-              "items": {
-                "type": "object",
-                "properties": {
-                  "childPath": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "spawnedEntityIdentifier": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  }
-                },
-                "required": [
-                  "childPath"
-                ]
-              }
-            },
             "positionSourceEntityIdentifier": {
               "type": [
                 "string",

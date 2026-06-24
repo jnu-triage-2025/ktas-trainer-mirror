@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using FishNet.Object;
 using UnityEngine;
 
 namespace TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects
@@ -14,7 +13,7 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects
 #if UNITY_EDITOR
     // ── 비런타임(에디터) 검증 ────────────────────────────────────────────────
     // 인스펙터에서 값이 바뀔 때 자동 검증하고, 우클릭 ContextMenu 로 수동 검증도 가능하다.
-    // 이를 통해 "환자+침대 결합 프리팹 + 분리(ungroup) 설정" 을 플레이 없이 확인할 수 있다.
+    // 새 모델에서는 하위를 "다른 EntityPreset 식별자" 로 참조하므로, 참조 무결성/순환/누락을 검사한다.
 
     private void OnValidate() => ValidatePresetsEditor(logWhenOk: false);
 
@@ -25,9 +24,9 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects
     /// 각 프리셋 요구사항을 에디터에서 검증한다.
     /// 검사 항목:
     ///  - identifier/prefab 누락, identifier 중복
-    ///  - childDetachments 의 각 childPath 가 프리팹에서 해석되는지
-    ///  - 분리 대상 자식이 NetworkObject 인지(아니면 분리 불가)
-    ///  - 컨테이너 결합(예: 침대-환자) 시 권장 구조 경고
+    ///  - 각 childReferences 의 childPresetIdentifier 가 비어있지 않은지
+    ///  - 해당 하위 프리셋 식별자가 이 SO 내에 정의되어 있는지(없으면 다른 SO/코드 등록 가능성을 안내)
+    ///  - 자기 자신을 하위로 참조하는 순환 여부
     /// </summary>
     private void ValidatePresetsEditor(bool logWhenOk)
     {
@@ -36,6 +35,13 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects
 
       int problems = 0;
       var seen = new HashSet<string>(System.StringComparer.Ordinal);
+      var knownIdentifiers = new HashSet<string>(System.StringComparer.Ordinal);
+
+      foreach (var r in entityPresetRegistryRequirements)
+      {
+        if (!string.IsNullOrWhiteSpace(r.identifier))
+          knownIdentifiers.Add(r.identifier);
+      }
 
       for (int i = 0; i < entityPresetRegistryRequirements.Length; i++)
       {
@@ -62,40 +68,30 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects
           continue;
         }
 
-        // 분리 설정 검증
-        if (req.childDetachments != null && req.childDetachments.Length > 0)
+        if (req.childReferences == null || req.childReferences.Length == 0)
+          continue;
+
+        foreach (var child in req.childReferences)
         {
-          foreach (var det in req.childDetachments)
+          if (string.IsNullOrWhiteSpace(child.childPresetIdentifier))
           {
-            if (string.IsNullOrWhiteSpace(det.childPath))
-            {
-              Debug.LogWarning($"[EntityPresetSO] {tag} childDetachments 에 빈 childPath 가 있습니다.", this);
-              problems++;
-              continue;
-            }
-
-            Transform child = ResolveChild(req.prefab.transform, det.childPath);
-            if (child == null)
-            {
-              Debug.LogWarning($"[EntityPresetSO] {tag} 의 분리 대상 childPath '{det.childPath}' 를 프리팹에서 찾을 수 없습니다.", this);
-              problems++;
-              continue;
-            }
-
-            if (child.GetComponent<NetworkObject>() == null)
-            {
-              Debug.LogWarning($"[EntityPresetSO] {tag} 의 분리 대상 '{det.childPath}' 에 NetworkObject 가 없습니다. NetworkObject 만 분리 가능합니다.", this);
-              problems++;
-            }
+            Debug.LogWarning($"[EntityPresetSO] {tag} childReferences 에 빈 childPresetIdentifier 가 있습니다.", this);
+            problems++;
+            continue;
           }
 
-          // 권장 구조: 컨테이너 루트(분리 대상이 있는 프리팹) 자체는 NetworkObject 가 아닌 편이 안전
-          // (자식 NetworkObject 가 nested 되지 않도록). 루트가 NetworkObject 이면 경고.
-          if (req.prefab.GetComponent<NetworkObject>() != null)
+          if (string.Equals(child.childPresetIdentifier, req.identifier, System.StringComparison.Ordinal))
+          {
+            Debug.LogWarning($"[EntityPresetSO] {tag} 가 자기 자신을 하위 프리셋으로 참조합니다(순환).", this);
+            problems++;
+            continue;
+          }
+
+          if (!knownIdentifiers.Contains(child.childPresetIdentifier))
           {
             Debug.LogWarning(
-              $"[EntityPresetSO] {tag} 는 자식 분리를 사용하는데 컨테이너 루트에 NetworkObject 가 있습니다. " +
-              "컨테이너 루트는 비-NetworkObject 로 두고, 분리할 환자/침대를 각각 자식 NetworkObject 로 두는 것을 권장합니다.", this);
+              $"[EntityPresetSO] {tag} 의 하위 프리셋 '{child.childPresetIdentifier}' 가 이 SO 안에 정의되어 있지 않습니다. " +
+              "다른 SO/코드에서 등록되는 프리셋이면 무시해도 되지만, 오타가 아닌지 확인하세요.", this);
             problems++;
           }
         }
@@ -105,25 +101,6 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects
       {
         Debug.Log($"[EntityPresetSO] 검증 완료 — 문제 없음 ({entityPresetRegistryRequirements.Length} 항목).", this);
       }
-    }
-
-    private static Transform ResolveChild(Transform root, string childPath)
-    {
-      if (root == null || string.IsNullOrWhiteSpace(childPath))
-        return null;
-
-      Transform byPath = root.Find(childPath);
-      if (byPath != null)
-        return byPath;
-
-      // 이름 기준 1단계 폴백
-      for (int i = 0; i < root.childCount; i++)
-      {
-        if (root.GetChild(i).name == childPath)
-          return root.GetChild(i);
-      }
-
-      return null;
     }
 #endif
   }

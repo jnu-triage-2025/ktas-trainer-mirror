@@ -86,7 +86,7 @@ namespace TriageTrainer.Utils
           req.prefab,
           req.displayName,
           req.isNetworked,
-          req.childDetachments);
+          req.childReferences);
         registered++;
       }
 
@@ -103,8 +103,8 @@ namespace TriageTrainer.Utils
       foreach (var kv in presets)
       {
         var d = kv.Value;
-        int childCount = d?.ChildDetachments?.Count ?? 0;
-        sb.AppendLine($"  - {kv.Key} (type={d?.EntityType}, networked={d?.IsNetworked}, detach={childCount}, prefab={(d?.Prefab != null)})");
+        int childCount = d?.ChildReferences?.Count ?? 0;
+        sb.AppendLine($"  - {kv.Key} (type={d?.EntityType}, networked={d?.IsNetworked}, children={childCount}, prefab={(d?.Prefab != null)})");
       }
       _lastResultSummary = $"프리셋 {presets.Count}개 등록됨";
       Debug.Log(sb.ToString(), this);

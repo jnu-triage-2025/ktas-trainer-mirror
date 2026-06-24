@@ -13,13 +13,18 @@ MonoBehaviour:
   m_Name: New EntityPreset Registry Requirements SO
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects.EntityPresetRegistryRequirementsSO
   entityPresetRegistryRequirements:
-  - identifier: patient_a_group
+  - identifier: patient_a
     fallbackEntityType: 0
-    prefab: {fileID: 5968801798902785713, guid: 6a8feddbdfeca4c5895b4d0600bc9001, type: 3}
+    prefab: {fileID: 4077515750642718864, guid: 8da04afe96bb7432dacab7b61d966b26, type: 3}
     displayName: 
     isNetworked: 1
-    childDetachments:
-    - childPath: PatientTypeA
-      spawnedEntityIdentifier: patient_type_a
-    - childPath: PatientMovingBed
-      spawnedEntityIdentifier: patient_a_moving_bed
+    childReferences:
+    - childPresetIdentifier: bed_a
+      spawnedEntityIdentifier: bed_a
+      unwrapOnSpawn: 1
+  - identifier: bed_a
+    fallbackEntityType: 0
+    prefab: {fileID: 5017221584004301368, guid: 19556133e274748aebcdaaa9ee7730b9, type: 3}
+    displayName: 
+    isNetworked: 1
+    childReferences: []

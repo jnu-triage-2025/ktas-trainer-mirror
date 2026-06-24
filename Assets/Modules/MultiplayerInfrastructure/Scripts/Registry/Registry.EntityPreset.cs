@@ -8,6 +8,9 @@ namespace MultiplayerInfrastructure.Registry
 {
   public static partial class Registry
   {
+    // 재귀 스폰 시 순환 참조(A→B→A)로 인한 무한 루프를 막기 위한 진행 중 프리셋 집합.
+    [ThreadStatic] private static HashSet<string> _entityPresetSpawnStack;
+
     public static void RegisterEntityPreset(EntityPresetDefinition definition)
     {
       if (definition == null
@@ -26,7 +29,7 @@ namespace MultiplayerInfrastructure.Registry
       GameObject prefab,
       string displayName = null,
       bool isNetworked = false,
-      IReadOnlyList<EntityPresetChildDetachment> childDetachments = null)
+      IReadOnlyList<EntityPresetChildReference> childReferences = null)
     {
       RegisterEntityPreset(new EntityPresetDefinition(
         identifier,
@@ -34,7 +37,7 @@ namespace MultiplayerInfrastructure.Registry
         prefab,
         displayName,
         isNetworked,
-        childDetachments));
+        childReferences));
     }
 
     public static bool TryGetEntityPreset(string identifier, out EntityPresetDefinition definition)
@@ -57,10 +60,17 @@ namespace MultiplayerInfrastructure.Registry
 
     /// <summary>
     /// 엔티티 프리셋을 스폰한다.
-    /// <paramref name="desiredEntityIdentifier"/> 가 지정되면 스폰 인스턴스를 해당 식별자로 등록하고,
-    /// (네트워크 프리셋인 경우) 스폰 직후 인스턴스의 IScenarioSpawnIdentifiable 등에 식별자를 전달한다.
-    /// 비어 있으면 기존처럼 GUID 기반 식별자가 부여된다(하위호환).
-    /// 네트워크 프리셋(IsNetworked=true)이고 서버 컨텍스트이면 FishNet ServerManager.Spawn 으로 복제한다.
+    ///
+    /// 동작:
+    ///  1) 프리셋의 프리팹을 (position, rotation) 에 인스턴스화하고, 자가 등록 컴포넌트
+    ///     (ISpawnedEntityIdentifierReceiver, 예: PatientController/MovingPatientBedController)가 있으면
+    ///     식별자를 주입한다. 없으면 프리셋의 fallbackEntityType 으로 직접 등록한다.
+    ///  2) 프리셋에 하위 참조(ChildReferences)가 있으면, 각 하위를 <b>등록된 다른 EntityPreset</b>으로 재귀 스폰한다.
+    ///     - unwrapOnSpawn=false: 하위 인스턴스를 루트의 자식으로 부착한다.
+    ///     - unwrapOnSpawn=true : 하위 인스턴스를 루트와 동일 계층(형제 루트)에 둔다(독립 루트). 환자+침대 결합 스폰용.
+    ///  3) 네트워크 프리셋(IsNetworked=true)이고 서버 컨텍스트이면, NetworkObject 를 FishNet ServerManager.Spawn 으로 복제한다.
+    ///
+    /// <paramref name="desiredEntityIdentifier"/> 가 지정되면 루트 인스턴스를 해당 식별자로 등록한다(미지정 시 GUID).
     /// </summary>
     public static bool TrySpawnEntityPreset(
       string identifier,
@@ -70,23 +80,29 @@ namespace MultiplayerInfrastructure.Registry
       out GameObject spawned,
       out EntityDescriptor descriptor,
       out string error)
-      => TrySpawnEntityPreset(identifier, position, rotation, desiredEntityIdentifier, null, out spawned, out descriptor, out error);
+    {
+      return TrySpawnEntityPresetInternal(
+        identifier,
+        position,
+        rotation,
+        desiredEntityIdentifier,
+        parentForHierarchy: null,
+        out spawned,
+        out descriptor,
+        out error);
+    }
 
     /// <summary>
-    /// 엔티티 프리셋을 스폰한다.
-    /// <paramref name="desiredEntityIdentifier"/> 가 지정되면 루트 인스턴스를 해당 식별자로 등록한다(미지정 시 GUID).
-    /// <paramref name="childDetachments"/> 가 지정되면, 컨테이너 프리팹의 해당 자식 <b>NetworkObject</b>를
-    /// 루트로 분리(ungroup)하여 각각 독립 엔티티로 스폰·등록한다. 분리는 NetworkObject 에 대해서만 허용되며,
-    /// (네트워크 프리셋 + 서버 컨텍스트인 경우) 각 분리 객체를 FishNet ServerManager.Spawn 으로 개별 복제한다.
-    /// 런타임에 환자↔침대처럼 위계가 없는 객체들을 한 프리팹으로 배치해두고 스폰 시 독립 루트로 푸는 용도다.
-    /// 모든 변경은 opt-in: childDetachments 가 비어 있으면 기존 단일 객체 스폰과 동일하다(하위호환).
+    /// 내부 재귀 스폰 구현.
+    /// <paramref name="parentForHierarchy"/> 가 지정되면(=비-unwrap 하위 스폰) 스폰된 루트를 해당 부모의 자식으로 부착한다.
+    /// null 이면 월드 루트로 둔다(최상위 호출 또는 unwrap 하위).
     /// </summary>
-    public static bool TrySpawnEntityPreset(
+    private static bool TrySpawnEntityPresetInternal(
       string identifier,
       Vector3 position,
       Quaternion rotation,
       string desiredEntityIdentifier,
-      IReadOnlyList<(string childPath, string spawnedEntityIdentifier)> childDetachments,
+      Transform parentForHierarchy,
       out GameObject spawned,
       out EntityDescriptor descriptor,
       out string error)
@@ -113,185 +129,146 @@ namespace MultiplayerInfrastructure.Registry
         return false;
       }
 
-      string runtimeEntityIdentifier = !string.IsNullOrWhiteSpace(desiredEntityIdentifier)
-        ? desiredEntityIdentifier.Trim()
-        : BuildEntityPresetRuntimeIdentifier(identifier);
-
-      spawned = UnityEngine.Object.Instantiate(preset.Prefab, position, rotation);
-      if (spawned == null)
+      _entityPresetSpawnStack ??= new HashSet<string>(StringComparer.Ordinal);
+      if (!_entityPresetSpawnStack.Add(identifier))
       {
-        error = $"Failed to spawn entity preset '{identifier}'.";
+        error = $"Entity preset '{identifier}' has a circular child reference. Spawn aborted.";
         return false;
       }
 
-      // 1) 자식 NetworkObject 분리(ungroup) — 루트 스폰 전에 수행하여 nested 스폰을 피한다.
-      //    호출자가 분리 목록을 주지 않으면, 프리셋 자체에 내장된 분리 설정(preset.ChildDetachments)을 사용한다.
-      if ((childDetachments == null || childDetachments.Count == 0)
-          && preset.ChildDetachments != null && preset.ChildDetachments.Count > 0)
+      try
       {
-        var fromPreset = new List<(string, string)>(preset.ChildDetachments.Count);
-        foreach (var c in preset.ChildDetachments)
+        string runtimeEntityIdentifier = !string.IsNullOrWhiteSpace(desiredEntityIdentifier)
+          ? desiredEntityIdentifier.Trim()
+          : BuildEntityPresetRuntimeIdentifier(identifier);
+
+        spawned = UnityEngine.Object.Instantiate(preset.Prefab, position, rotation);
+        if (spawned == null)
         {
-          if (!string.IsNullOrWhiteSpace(c.childPath))
-          {
-            fromPreset.Add((c.childPath, c.spawnedEntityIdentifier));
-          }
-        }
-        childDetachments = fromPreset;
-      }
-
-      string firstDetachedIdentifier = null;
-      if (childDetachments != null && childDetachments.Count > 0)
-      {
-        foreach (var (childPath, childId) in childDetachments)
-        {
-          if (DetachAndSpawnChildNetworkObject(spawned.transform, childPath, childId, identifier, out var assignedChildId)
-              && firstDetachedIdentifier == null)
-          {
-            firstDetachedIdentifier = assignedChildId;
-          }
-        }
-      }
-
-      // 1-b) 루트가 "순수 컨테이너"(NetworkObject 도 식별자 수신자도 없음)이고 자식 분리가 있었다면,
-      //      루트 자체는 의미 있는 엔티티가 아니므로 등록하지 않고 빈 컨테이너를 제거한다(루트가 런타임에 해제됨).
-      bool rootIsPureContainer =
-        firstDetachedIdentifier != null
-        && spawned.GetComponent<NetworkObject>() == null
-        && spawned.GetComponentInChildren<ISpawnedEntityIdentifierReceiver>(true) == null;
-
-      if (rootIsPureContainer)
-      {
-        UnityEngine.Object.Destroy(spawned);
-        spawned = null;
-
-        // 컨테이너에는 단일 루트 엔티티가 없으므로, 가장 먼저 분리된 자식을 대표 디스크립터로 반환한다.
-        if (!TryGetEntity(firstDetachedIdentifier, out descriptor) || descriptor == null)
-        {
-          error = $"Entity preset '{identifier}' container spawned but child registration not found.";
+          error = $"Failed to spawn entity preset '{identifier}'.";
           return false;
         }
 
-        return true;
-      }
-
-      // 2) 루트 인스턴스 처리.
-      //    레지스트리 등록의 "소유권"은 자가 등록 컴포넌트(ISpawnedEntityIdentifierReceiver, 예: PatientController/
-      //    MovingPatientBedController)에 있다. 이런 컴포넌트가 있으면 식별자만 주입하고, 등록/EntityType 은
-      //    컴포넌트가 자기 책임으로 수행한다(프리셋이 중복 등록하지 않음 — preset.EntityType 은 사용되지 않음).
-      //    자가 등록 컴포넌트가 없는 "단순 프리팹" 일 때만 프리셋이 preset.EntityType 으로 폴백 등록한다.
-      var rootReceiver = spawned.GetComponentInChildren<ISpawnedEntityIdentifierReceiver>(true);
-      rootReceiver?.ApplySpawnedEntityIdentifier(runtimeEntityIdentifier);
-
-      if (preset.IsNetworked)
-      {
-        NetworkSpawnIfServer(spawned, identifier);
-      }
-
-      if (rootReceiver == null)
-      {
-        // 폴백: 자가 등록 컴포넌트가 없는 단순 프리팹만 프리셋이 직접 등록.
-        string displayName = !string.IsNullOrWhiteSpace(preset.DisplayName)
-          ? preset.DisplayName
-          : spawned.name;
-
-        if (preset.EntityType == EntityType.Undefined)
+        // 1) 계층 부착(비-unwrap 하위 스폰일 때만).
+        //    FishNet 규칙: "루트를 스폰하면 그 아래 이미 nested 된 NetworkObject 도 함께 스폰된다."
+        //    따라서 비-unwrap 하위는 자신의 NetworkSpawn 보다 "먼저" 부모(루트) 아래로 옮겨, 루트 스폰 시
+        //    함께 복제되도록 한다(스폰 후 nested 시 ownership 명시 필요 등 타이밍 문제를 피한다).
+        //    NetworkObject 가 prefab-nested 가 아니라 "루트"인 상태에서 reparent 하는 것이므로 런타임 reparent 가 허용된다.
+        if (parentForHierarchy != null)
         {
-          Debug.LogWarning(
-            $"[Registry] Entity preset '{identifier}' 는 자가 등록 컴포넌트가 없어 폴백 등록되지만 " +
-            "fallbackEntityType 이 Undefined 입니다. 단순 프리팹이면 적절한 EntityType 을 지정하세요.");
+          spawned.transform.SetParent(parentForHierarchy, worldPositionStays: true);
         }
 
-        RegisterEntity(runtimeEntityIdentifier, preset.EntityType, spawned, displayName, isNetworked: preset.IsNetworked);
+        // 2) 식별자 주입: 자가 등록 컴포넌트가 있으면 자가 등록(OnStartClient/SetIdentifier) 전에 식별자를 전달한다.
+        var rootReceiver = spawned.GetComponentInChildren<ISpawnedEntityIdentifierReceiver>(true);
+        rootReceiver?.ApplySpawnedEntityIdentifier(runtimeEntityIdentifier);
 
-        if (!TryGetEntity(runtimeEntityIdentifier, out descriptor) || descriptor == null)
+        // 3) 네트워크 복제: 루트가 NetworkObject 이고 네트워크 프리셋이면 서버에서 스폰한다.
+        //    하위 참조 스폰(4)보다 "먼저" 수행한다 → unwrap 하위는 독립 루트로 따로 스폰되고,
+        //    비-unwrap 하위는 이미 이 루트 아래로 옮겨진 뒤 자신을 스폰하므로(아래 4에서 parent 선행),
+        //    어느 경우에도 "스폰된 루트 아래로 사후 nested" 가 발생하지 않는다.
+        if (preset.IsNetworked)
         {
-          error = $"Entity preset '{identifier}' spawned but registry registration failed.";
-          return false;
+          NetworkSpawnIfServer(spawned, identifier);
         }
 
+        // 4) 하위 참조 스폰(재귀). 루트의 월드 위치를 기준점으로, 비-unwrap 은 루트의 자식으로(부모 선행 부착),
+        //    unwrap 은 루트와 동일 계층(형제 독립 루트)으로 둔다.
+        if (preset.ChildReferences != null && preset.ChildReferences.Count > 0)
+        {
+          SpawnChildPresetReferences(spawned.transform, preset, identifier);
+        }
+
+        // 5) 레지스트리 등록. 자가 등록 컴포넌트가 있으면 소유권은 그 컴포넌트에 있고(EntityType 도 컴포넌트가 결정),
+        //    없으면 프리셋이 fallbackEntityType 으로 직접 등록한다.
+        if (rootReceiver == null)
+        {
+          string displayName = !string.IsNullOrWhiteSpace(preset.DisplayName)
+            ? preset.DisplayName
+            : spawned.name;
+
+          if (preset.EntityType == EntityType.Undefined)
+          {
+            Debug.LogWarning(
+              $"[Registry] Entity preset '{identifier}' 는 자가 등록 컴포넌트가 없어 폴백 등록되지만 " +
+              "fallbackEntityType 이 Undefined 입니다. 단순 프리팹이면 적절한 EntityType 을 지정하세요.");
+          }
+
+          RegisterEntity(runtimeEntityIdentifier, preset.EntityType, spawned, displayName, isNetworked: preset.IsNetworked);
+
+          if (!TryGetEntity(runtimeEntityIdentifier, out descriptor) || descriptor == null)
+          {
+            error = $"Entity preset '{identifier}' spawned but registry registration failed.";
+            return false;
+          }
+
+          return true;
+        }
+
+        // 자가 등록 컴포넌트가 소유: 동기 등록(비네트워크)이면 디스크립터가 즉시 잡히고,
+        // 비동기(네트워크 OnStartClient)면 아직 null 일 수 있다(스폰 자체는 성공).
+        TryGetEntity(runtimeEntityIdentifier, out descriptor);
         return true;
       }
-
-      // 자가 등록 컴포넌트가 소유: 동기 등록되었으면(비네트워크) 디스크립터를 반환, 비동기(네트워크 OnStartClient)면
-      // 아직 없을 수 있으므로 descriptor 는 null 일 수 있다(스폰 자체는 성공).
-      TryGetEntity(runtimeEntityIdentifier, out descriptor);
-      return true;
+      finally
+      {
+        _entityPresetSpawnStack.Remove(identifier);
+      }
     }
 
     /// <summary>
-    /// 컨테이너 자식 중 childPath 에 해당하는 NetworkObject 를 루트로 분리하여 독립 스폰·등록한다.
-    /// NetworkObject 가 아니거나 찾지 못하면 분리하지 않고 경고만 남긴다(컨테이너 위계에 잔류).
+    /// 프리셋의 하위 참조(ChildReferences)를 각각 등록된 EntityPreset 으로 재귀 스폰한다.
+    /// 루트의 위치/회전을 기준점으로 사용하며, unwrap 여부에 따라 계층(자식 vs 형제 루트)을 결정한다.
     /// </summary>
-    private static bool DetachAndSpawnChildNetworkObject(
-      Transform containerRoot,
-      string childPath,
-      string spawnedEntityIdentifier,
-      string presetIdentifier,
-      out string assignedChildIdentifier)
+    private static void SpawnChildPresetReferences(Transform rootTransform, EntityPresetDefinition rootPreset, string rootIdentifier)
     {
-      assignedChildIdentifier = null;
-
-      if (containerRoot == null || string.IsNullOrWhiteSpace(childPath))
+      if (rootTransform == null || rootPreset?.ChildReferences == null)
       {
-        return false;
+        return;
       }
 
-      Transform child = containerRoot.Find(childPath);
-      if (child == null)
+      // unwrap 된 하위는 루트와 동일 계층(루트의 부모)에 두어 "또 다른 루트"가 되게 한다.
+      Transform unwrapParent = rootTransform.parent;
+      Vector3 basePosition = rootTransform.position;
+      Quaternion baseRotation = rootTransform.rotation;
+
+      foreach (var child in rootPreset.ChildReferences)
       {
-        // 경로로 못 찾으면 이름 기준 1단계 탐색 폴백.
-        for (int i = 0; i < containerRoot.childCount; i++)
+        if (string.IsNullOrWhiteSpace(child.childPresetIdentifier))
         {
-          if (string.Equals(containerRoot.GetChild(i).name, childPath, StringComparison.Ordinal))
-          {
-            child = containerRoot.GetChild(i);
-            break;
-          }
+          continue;
+        }
+
+        if (string.Equals(child.childPresetIdentifier, rootIdentifier, StringComparison.Ordinal))
+        {
+          Debug.LogWarning($"[Registry] Entity preset '{rootIdentifier}' references itself as a child. Skipped.");
+          continue;
+        }
+
+        // 비-unwrap 하위는 스폰 후 루트의 자식으로 부착되므로 부모 계층을 루트로 지정한다.
+        Transform parentForChild = child.unwrapOnSpawn ? null : rootTransform;
+
+        if (!TrySpawnEntityPresetInternal(
+              child.childPresetIdentifier,
+              basePosition,
+              baseRotation,
+              child.spawnedEntityIdentifier,
+              parentForChild,
+              out var childGo,
+              out _,
+              out var childError))
+        {
+          Debug.LogWarning(
+            $"[Registry] Entity preset '{rootIdentifier}': child preset '{child.childPresetIdentifier}' spawn failed: {childError}");
+          continue;
+        }
+
+        if (childGo != null && child.unwrapOnSpawn)
+        {
+          // 명시적으로 형제 루트 계층에 둔다(루트의 부모; 루트가 최상위면 월드 루트).
+          childGo.transform.SetParent(unwrapParent, worldPositionStays: true);
         }
       }
-
-      if (child == null)
-      {
-        Debug.LogWarning($"[Registry] Preset '{presetIdentifier}': child '{childPath}' not found for detachment. Skipped.");
-        return false;
-      }
-
-      var childNob = child.GetComponent<NetworkObject>();
-      if (childNob == null)
-      {
-        // NetworkObject 만 분리 허용.
-        Debug.LogWarning($"[Registry] Preset '{presetIdentifier}': child '{childPath}' is not a NetworkObject. Detachment skipped.");
-        return false;
-      }
-
-      // 루트로 분리(월드 위치 유지). 분리 후에는 컨테이너 위계에 속하지 않는 독립 루트가 된다.
-      child.SetParent(null, true);
-
-      string childRuntimeId = !string.IsNullOrWhiteSpace(spawnedEntityIdentifier)
-        ? spawnedEntityIdentifier.Trim()
-        : BuildEntityPresetRuntimeIdentifier($"{presetIdentifier}:child");
-      assignedChildIdentifier = childRuntimeId;
-
-      // 식별자 주입: 분리된 자식이 식별자 수신 인터페이스를 구현하면, 자가 등록(OnStartClient/SetIdentifier 등)
-      // 전에 식별자를 전달한다. 분리 대상 NetworkObject 는 보통 자체적으로 RegisterEntity 하므로
-      // 엔티티 타입은 그 컴포넌트가 결정한다(여기서 타입을 임의 지정하지 않는다).
-      var childReceiver = child.GetComponent<ISpawnedEntityIdentifierReceiver>()
-                          ?? child.GetComponentInChildren<ISpawnedEntityIdentifierReceiver>(true);
-      if (childReceiver != null)
-      {
-        childReceiver.ApplySpawnedEntityIdentifier(childRuntimeId);
-      }
-      else
-      {
-        Debug.LogWarning(
-          $"[Registry] Preset '{presetIdentifier}': detached child '{childPath}' has no ISpawnedEntityIdentifierReceiver; " +
-          $"identifier '{childRuntimeId}' could not be injected. The child must self-register or implement the receiver.");
-      }
-
-      // 자식 NetworkObject 는 서버에서 개별 복제 스폰.
-      NetworkSpawnIfServer(child.gameObject, $"{presetIdentifier}:{childPath}");
-      return true;
     }
 
     private static void NetworkSpawnIfServer(GameObject go, string contextLabel)
