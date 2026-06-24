@@ -52,6 +52,18 @@ updated: 2026-04-14
 - WaitUntilDone -> WaitUntilDone
 - False -> False
 
+### Dialogue
+
+- `.md` 의 `Duration`(자동 진행 시간, System 안내문 등)은 엔진 `autoAdvanceSeconds` 로 매핑한다.
+  - `autoAdvanceSeconds > 0`: 표시 후 해당 시간 경과 시 자동 진행(사용자 입력 시 즉시 진행, 타이머 취소).
+  - 생략/`null`/`<=0`: 사용자 입력 대기(하위호환).
+- 과거(1차 변환)에 `Duration` 을 드롭하고 별도 `Delay` 노드로 보완한 흐름은 `autoAdvanceSeconds` 로 일원화한다.
+
+### Sound
+
+- `SoundResourceIdentifier` 는 `Assets/.../Resources/Sound/<id>`(폴백 `Resources/<id>`) 에 AudioClip 으로 존재해야 한다.
+- 클립이 없으면 엔진이 경고 후 스킵한다(진행은 막지 않음). 콘텐츠(클립 배치)는 별도 에셋 작업이다.
+
 ### Choice
 
 - ChoiceOptionNode 분리형은 사용하지 않는다.

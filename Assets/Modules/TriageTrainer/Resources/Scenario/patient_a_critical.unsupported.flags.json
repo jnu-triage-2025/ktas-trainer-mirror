@@ -2,7 +2,7 @@
   "identifier": "patient_a_critical.unsupported.flags",
   "sourceScenario": "Documents/requirements/content-definitions/scenario/patient_a_critical.md",
   "generatedFrom": "patient_a_critical conversion",
-  "status": "validators-converted; ByRole+waitForCondition applied; gameplay signal emit pending",
+  "status": "validators-converted; ByRole+waitForCondition applied; Dialogue Duration restored as autoAdvanceSeconds; gameplay signal emit in progress",
   "unsupportedSourceConstructs": [
     {
       "sourceNodeIdentifier": "V010_A",
@@ -743,5 +743,12 @@
     "sig.suction_patient_a",
     "sig.wear_glove"
   ],
-  "note": "ByRole 병렬 분배와 Validator(waitForCondition) 게이팅이 엔진에 구현되어 JSON에 반영됨. 이제 게임플레이가 인터랙션 완료 시 ScenarioInteractionSignals.Raise(\"<cond>\") 로 신호를 올려야 게이트가 통과한다(현재 미배선). 테스트는 /scenario signal <cond> 커맨드로 가능. 참고 제안서: Agents/Proposals/2026-06-24-scenario-parallel-execution/"
+  "note": "ByRole 병렬 분배와 Validator(waitForCondition) 게이팅이 엔진에 구현되어 JSON에 반영됨. 이제 게임플레이가 인터랙션 완료 시 ScenarioInteractionSignals.Raise(\"<cond>\") 로 신호를 올려야 게이트가 통과한다(현재 미배선). 테스트는 /scenario signal <cond> 커맨드로 가능. 참고 제안서: Agents/Proposals/2026-06-24-scenario-parallel-execution/",
+  "resolvedConstructs": [
+    {
+      "construct": "Dialogue.Duration (dropped)",
+      "resolution": "엔진 autoAdvanceSeconds(opt-in) 로 복원. 원본 .md 의 Duration 값을 해당 Dialogue 노드 autoAdvanceSeconds 로 재변환 적용.",
+      "date": "2026-06-24"
+    }
+  ]
 }

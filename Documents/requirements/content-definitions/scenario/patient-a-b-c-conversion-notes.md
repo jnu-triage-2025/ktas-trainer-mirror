@@ -244,9 +244,9 @@ Agent Manager 워크트리 2개(`scenario-patient-a-json`, `scenario-patient-bc-
 | GAP-G2 | 병렬 브랜치 완료조건 미구현(ExecuteBranch TODO, 대기 없음) | **구현됨(2026-06-24)** | `RunBranchChain` 으로 브랜치가 NextIdentifier 체인을 끝까지(또는 `completionConditionIdentifier` 수렴 라벨까지) 실행·대기. WaitAll 합류 정상화 |
 | GAP-G3 | Validator 일회성 평가(게이팅 무력) | **구현됨(2026-06-24)** | `ScenarioValidatorNode.WaitForCondition`(opt-in) 추가. true 시 조건 충족까지 폴링 대기. 신호 게이팅 Validator 104개(A 57·B/C 47) `waitForCondition:true` 재변환 |
 | GAP-G4 | 게임플레이 `sig.*` 발신 미배선 | **부분(디버그 훅)** | `/scenario signal <cond> [clear]` 커맨드 추가(테스트용). 실제 인터랙션→Raise 배선은 후속 TriageTrainer 작업 |
-| GAP-G5 | Sound 노드 미구현 | **TODO** | `ExecuteSoundNode` 스텁(1초 고정 대기) |
-| GAP-G6 | Choice→Quiz 채점 미연동 | **TODO** | 루브릭(수행/미수행) 집계 훅 미구현 |
-| GAP-G7 | Dialogue Duration 손실 | **TODO(변환기)** | 엔진 `autoAdvanceSeconds` 존재 → JSON 재변환으로 복원 가능(특히 환자 B/C) |
+| GAP-G5 | Sound 노드 미구현 | **구현됨(2026-06-24)** | `ExecuteSoundNode` 가 `Resources/Sound/<id>`(폴백 `Resources/<id>`) 에서 클립 로드 후 `PlayOneShot` 재생, `WaitUntilFinished` 시 실제 클립 길이만큼 대기 |
+| GAP-G6 | Choice→Quiz 채점 미연동 | **보류(별도 설계 필요)** | 루브릭(수행/미수행) 집계는 관찰자/평가자 모드·루브릭 데이터모델·영속화가 필요한 신규 기능. 별도 제안 필요. Quiz 노드(correctIndex/feedback)는 이미 정/오답 표현 가능 |
+| GAP-G7 | Dialogue Duration 손실 | **구현됨(2026-06-24)** | 엔진 `autoAdvanceSeconds`(opt-in) 로 복원. 원본 `.md` 의 Duration 을 해당 Dialogue 노드 `autoAdvanceSeconds` 로 재변환(A 99건·B/C 81건 적용) |
 
 TODO-SPEC-* 는 모두 엔진(`MultiplayerInfrastructure`) 변경을 필요로 하여, 루트 `AGENTS.md` 정책에 따라
 `/Agents/Proposals/Feature Proposal - ScenarioNode Expressiveness/` 에 Feature Proposal + 예시 설계 명세를

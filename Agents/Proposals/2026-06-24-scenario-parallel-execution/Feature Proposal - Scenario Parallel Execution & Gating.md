@@ -91,10 +91,10 @@
 | G-1 | `ByRole` 병렬 분배 | 치명 | O | ✅ 구현 |
 | G-2 | 브랜치 완료조건 대기 | 치명 | O | ✅ 구현 |
 | G-3 | Validator `waitForCondition` 폴링 | 치명 | O | ✅ 구현 |
-| G-4 | 게임플레이 `sig.*` 발신 | 치명 | △(TriageTrainer) | ⬜ TODO (디버그 훅만) |
-| G-5 | Sound 실제 재생 | 중간 | O | ⬜ TODO |
-| G-6 | Quiz/루브릭 채점 연동 | 중간 | △ | ⬜ TODO |
-| G-7 | Dialogue `autoAdvanceSeconds` 재변환 | 중간 | X(변환기) | ⬜ TODO |
+| G-4 | 게임플레이 `sig.*` 발신 | 치명 | △(TriageTrainer) | 🔶 진행중 (디버그 훅 + 일부 인터랙션 배선 기존재; 잔여 매핑은 콘텐츠 작업) |
+| G-5 | Sound 실제 재생 | 중간 | O | ✅ 구현 (`Resources/Sound/<id>` 로드·재생·길이 대기) |
+| G-6 | Quiz/루브릭 채점 연동 | 중간 | △ | ⬜ 보류 (별도 설계/제안 필요) |
+| G-7 | Dialogue `autoAdvanceSeconds` 재변환 | 중간 | X(변환기) | ✅ 적용 (A 99·B/C 81건 Duration→autoAdvanceSeconds) |
 
 ### 문서화
 

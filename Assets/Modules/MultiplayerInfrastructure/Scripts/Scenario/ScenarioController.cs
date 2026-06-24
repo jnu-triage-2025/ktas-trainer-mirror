@@ -449,19 +449,53 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingSound;
 
-      // TODO: 사운드 재생 로직 구현
-      // 예: AudioSource.PlayClipAtPoint(Resources.Load<AudioClip>(node.SoundResourceIdentifier), transform.position);
-#if UNITY_EDITOR
-      Debug.Log($"[ScenarioController] Playing sound: {node.SoundResourceIdentifier}");
-#endif
+      var clip = LoadSoundClip(node.SoundResourceIdentifier);
+
+      if (clip == null)
+      {
+        Debug.LogWarning($"[ScenarioController] Sound clip '{node.SoundResourceIdentifier}' not found in Resources/Sound. Skipping.");
+        Advance();
+        yield break;
+      }
+
+      // 효과음은 TTS용 AudioSource 를 재사용한다(전용 SFX 소스가 없을 경우 PlayClipAtPoint 폴백).
+      if (_ttsAudioSource != null)
+      {
+        _ttsAudioSource.PlayOneShot(clip);
+      }
+      else
+      {
+        AudioSource.PlayClipAtPoint(clip, UnityEngine.Camera.main != null ? UnityEngine.Camera.main.transform.position : Vector3.zero);
+      }
 
       if (node.WaitUntilFinished)
       {
-        // TODO: 실제 클립 길이만큼 대기
-        yield return new WaitForSeconds(1f); // 임시
+        // 실제 클립 길이만큼 대기.
+        yield return new WaitForSeconds(clip.length);
       }
 
       Advance();
+    }
+
+    /// <summary>
+    /// 사운드 식별자를 Resources 에서 로드한다.
+    /// 우선 등록된 사운드 레지스트리(RegistryType.RuntimeState 가 아닌 별도 경로가 없으므로)
+    /// `Resources/Sound/&lt;id&gt;` 를 시도하고, 실패 시 `Resources/&lt;id&gt;` 를 시도한다.
+    /// </summary>
+    private static AudioClip LoadSoundClip(string soundResourceIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(soundResourceIdentifier))
+      {
+        return null;
+      }
+
+      var clip = Resources.Load<AudioClip>($"Sound/{soundResourceIdentifier}");
+      if (clip == null)
+      {
+        clip = Resources.Load<AudioClip>(soundResourceIdentifier);
+      }
+
+      return clip;
     }
 
     private void ExecuteQuestControlNode(ScenarioQuestControlNode node)
