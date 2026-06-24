@@ -32,5 +32,13 @@ namespace MultiplayerInfrastructure.Registry
     /// 비활성화되면 하위 인스턴스는 루트의 자식으로 부착된다(로컬 오프셋 유지).
     /// </summary>
     public bool unwrapOnSpawn;
+
+    /// <summary>
+    /// 활성화되면 하위 인스턴스가 <see cref="IEntityPresetParentLinkReceiver"/> 를 구현한 경우,
+    /// 스폰 직후 <b>부모(루트) 프리셋의 런타임 식별자</b>를 하위에 전달한다.
+    /// 결합의 구체적 의미(예: 환자침대가 부모 환자를 자기 위에 누임)는 하위 구현체가 결정한다.
+    /// "사전 결합된 채로 스폰"(환자 위에 침대 결합)을 별도 시나리오 이벤트 없이 성립시키는 데 사용한다.
+    /// </summary>
+    public bool linkChildToParent;
   }
 }

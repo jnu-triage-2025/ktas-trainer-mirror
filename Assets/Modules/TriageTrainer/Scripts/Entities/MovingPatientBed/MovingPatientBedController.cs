@@ -12,7 +12,7 @@ using MI = MultiplayerInfrastructure;
 
 namespace TriageTrainer.Entity
 {
-  public partial class MovingPatientBedController : Ridable, IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver
+  public partial class MovingPatientBedController : Ridable, IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver, IEntityPresetParentLinkReceiver
   {
     private const string DefaultPlayerAttachPointName = "PlayerAttachPoint";
     private const string DefaultPatientAttachPointName = "PatientAttachPoint";
@@ -131,7 +131,7 @@ namespace TriageTrainer.Entity
     private BedReposeInteract _reposeInteract;
     private IInteract[] _interacts;
 
-    public string Identifier => string.IsNullOrWhiteSpace(_entityRuntimeIdentifier) ? _entityTypeIdentifier : _entityRuntimeIdentifier;
+    public string Identifier => EffectiveBedIdentifier;
     public IInteract[] Interacts => _interacts ?? Array.Empty<IInteract>();
     public string DisplayText => _displayText;
     public Sprite DisplayIcon => _displayIcon;
@@ -166,29 +166,26 @@ namespace TriageTrainer.Entity
     /// </summary>
     public void ApplySpawnedEntityIdentifier(string identifier) => SetIdentifier(identifier);
 
+    /// <summary>
+    /// 런타임 엔티티 식별자를 설정한다. 서버에서 호출되면 SyncVar 로 전 피어에 복제되고,
+    /// 모든 피어가 동일 식별자로 레지스트리에 등록한다(원격 클라에서도 식별자 기반 조회/결합이 동작하도록).
+    /// 등록 자체는 SyncVar 경로(OnStartClient/OnChange)에서 수행한다.
+    /// </summary>
     public void SetIdentifier(string identifier)
     {
       if (string.IsNullOrWhiteSpace(identifier))
         return;
 
-      _entityRuntimeIdentifier = identifier;
+      string trimmed = identifier.Trim();
+      _entityRuntimeIdentifier = trimmed; // 로컬 즉시 반영
 
-      // Register in the global Registry as an Entity
-      try
+      if (IsServerStarted)
       {
-        Registry.RegisterEntity(
-          _entityRuntimeIdentifier,
-          EntityType.MovingPatientBed,
-          gameObject,
-          displayName: _displayText,
-          ownerUserIdentifier: null,
-          clientId: null,
-          isNetworked: false);
+        _runtimeIdentifierSync.Value = trimmed;
       }
-      catch (Exception ex)
-      {
-        Debug.LogWarning($"[MovingPatientBed] Failed to register entity '{_entityRuntimeIdentifier}': {ex.Message}");
-      }
+
+      // 서버에서 이미 스폰/등록된 뒤 재주입되는 경우를 위해 즉시 재등록도 시도.
+      RegisterBedEntity();
     }
 
     private void OnDestroy()
@@ -202,8 +199,7 @@ namespace TriageTrainer.Entity
 
       _participants.Clear();
 
-      if (!string.IsNullOrWhiteSpace(_entityRuntimeIdentifier))
-        Registry.UnregisterEntity(_entityRuntimeIdentifier);
+      UnregisterBedEntity();
     }
 
     private void Update()
@@ -281,9 +277,19 @@ namespace TriageTrainer.Entity
       if (target is not MonoBehaviour targetBehaviour)
         return false;
 
-      if (PatientAttachPoints.Count > 0 && !TryOccupyNextPatientAttachPoint(targetBehaviour, out _))
+      // 결합 권위는 서버의 SyncVar(_reposedTargetIdentifier)에 있다. 식별자로 환자를 가리켜야 하므로
+      // PatientController(자가 등록 식별자 보유)만 결합 대상으로 허용한다.
+      if (!targetBehaviour.TryGetComponent(out PatientController patient) || patient == null)
         return false;
 
+      string patientIdentifier = patient.Identifier;
+      if (string.IsNullOrWhiteSpace(patientIdentifier))
+      {
+        Debug.LogWarning("[MovingPatientBed] Repose target patient has no identifier yet; cannot establish networked repose link.");
+        return false;
+      }
+
+      // 들고 있던 플레이어가 내려놓는 경우, 먼저 내려놓기 처리.
       if (interactor != null)
       {
         var player = interactor.GetComponentInParent<PlayerController>();
@@ -291,13 +297,8 @@ namespace TriageTrainer.Entity
           player.TryDropCarriedReposable(out _);
       }
 
-      _reposedTargetComponent = targetBehaviour;
-      SnapReposedTargetToAnchor(targetBehaviour);
-      target.OnMovingPatientBedAttachedEnter();
-
-      if (targetBehaviour.TryGetComponent(out PatientController patient))
-        patient.SetCurrentBed(this);
-
+      // 권위값 설정(서버) 또는 서버로 위임(클라). 실제 로컬 결합 적용은 SyncVar OnChange 가 모든 피어에서 수행한다.
+      SetReposedTargetByIdentifier(patientIdentifier);
       return true;
     }
 
@@ -316,26 +317,14 @@ namespace TriageTrainer.Entity
         return false;
       }
 
-      var liftedBehaviour = _reposedTargetComponent;
-      _reposedTargetComponent = null;
-      ReleasePatientAttachPoint(liftedBehaviour);
-      lifted.OnMovingPatientBedAttachedExit();
-
+      // 들어올림 시도: 먼저 플레이어가 실제로 들 수 있는지 확인한 뒤, 성공하면 권위값을 해제한다.
       if (!player.TryPickUpReposable(lifted))
       {
-        if (liftedBehaviour != null)
-        {
-          _reposedTargetComponent = liftedBehaviour;
-          TryOccupyNextPatientAttachPoint(liftedBehaviour, out _);
-          SnapReposedTargetToAnchor(liftedBehaviour);
-          lifted.OnMovingPatientBedAttachedEnter();
-        }
         return false;
       }
 
-      if (liftedBehaviour != null && liftedBehaviour.TryGetComponent(out PatientController patient))
-        patient.SetCurrentBed(null);
-
+      // 권위 결합 해제(서버) 또는 서버로 위임(클라). 로컬 결합 해제는 OnChange 가 수행한다.
+      SetReposedTargetByIdentifier(null);
       return true;
     }
 
@@ -578,6 +567,9 @@ namespace TriageTrainer.Entity
 
     private void SyncReposedTargetTransform()
     {
+      // 권위값(SyncVar)으로 지정됐으나 아직 환자 등록 전이라 보류 중인 결합이 있으면 매 프레임 재시도한다.
+      ResolveDesiredReposeLinkIfPending();
+
       if (_reposedTargetComponent == null)
         return;
 

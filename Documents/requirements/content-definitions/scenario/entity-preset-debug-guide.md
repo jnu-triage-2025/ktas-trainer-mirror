@@ -93,6 +93,14 @@ IndevScene 의 빈 GameObject(예 `__EntityPresetDebugger`)에 붙이고 인스�
   (또는 **Refresh Default Prefabs**) 실행 → 환자/침대 프리팹이 컬렉션에 포함되었는지 확인 → 다시 스폰 테스트.
 - 참고(중요): 새 EntityPreset 모델에서는 **컨테이너 프리팹/ nested NetworkObject 가 없다.** 환자/침대는 각각 독립
   프리팹이므로 일반 프리팹과 동일한 직렬화 규칙만 따른다. 따라서 (B) 오류 발생 빈도가 크게 줄어든다.
+- **Reserialize 해도 (B) 가 계속 나는 경우 — 프리팹 Variant 주의**: 스폰하려는 프리팹이 다른 프리팹의 **Variant**
+  (또는 NetworkObject 가 base 에만 있고 variant 가 이를 상속만 함)이면, FishNet 의 Spawnable Prefabs 컬렉션
+  (`DefaultPrefabObjects.asset`)에는 **base 만 등록되고 variant 는 등록되지 않는다.** 이 variant 를 Instantiate 하면
+  `PrefabId` 가 미할당(65535)이라 (B) 오류가 난다(Reserialize 로도 추가되지 않음).
+  - 확인: `DefaultPrefabObjects.asset` 에 그 프리팹의 guid 가 들어 있는지 본다(없으면 미등록).
+  - 해결: EntityPreset 의 prefab 을 **컬렉션에 등록된 원본(일반) 프리팹**으로 지정한다(Variant 가 아니라).
+  - 예방: `EntityPresetRegistryRequirementsSO` 의 "Validate Presets (Editor)" 가 이제 네트워크 프리셋 프리팹의
+    `PrefabId` 미할당을 에디터에서 경고한다(스폰 전에 발견).
 
 ## 3-3. FishNet 스폰 규칙 준수 (Instantiate → ServerManager.Spawn)
 

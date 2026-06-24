@@ -176,7 +176,7 @@ namespace MultiplayerInfrastructure.Registry
         //    unwrap 은 루트와 동일 계층(형제 독립 루트)으로 둔다.
         if (preset.ChildReferences != null && preset.ChildReferences.Count > 0)
         {
-          SpawnChildPresetReferences(spawned.transform, preset, identifier);
+          SpawnChildPresetReferences(spawned.transform, preset, identifier, runtimeEntityIdentifier);
         }
 
         // 5) 레지스트리 등록. 자가 등록 컴포넌트가 있으면 소유권은 그 컴포넌트에 있고(EntityType 도 컴포넌트가 결정),
@@ -220,7 +220,11 @@ namespace MultiplayerInfrastructure.Registry
     /// 프리셋의 하위 참조(ChildReferences)를 각각 등록된 EntityPreset 으로 재귀 스폰한다.
     /// 루트의 위치/회전을 기준점으로 사용하며, unwrap 여부에 따라 계층(자식 vs 형제 루트)을 결정한다.
     /// </summary>
-    private static void SpawnChildPresetReferences(Transform rootTransform, EntityPresetDefinition rootPreset, string rootIdentifier)
+    private static void SpawnChildPresetReferences(
+      Transform rootTransform,
+      EntityPresetDefinition rootPreset,
+      string rootIdentifier,
+      string rootRuntimeIdentifier)
     {
       if (rootTransform == null || rootPreset?.ChildReferences == null)
       {
@@ -261,6 +265,24 @@ namespace MultiplayerInfrastructure.Registry
           Debug.LogWarning(
             $"[Registry] Entity preset '{rootIdentifier}': child preset '{child.childPresetIdentifier}' spawn failed: {childError}");
           continue;
+        }
+
+        // 부모 연결 요청 시, 하위가 IEntityPresetParentLinkReceiver 를 구현하면 부모(루트) 런타임 식별자를 전달한다.
+        // 결합의 구체 의미(예: 환자침대가 부모 환자를 누임)는 하위 구현체가 결정한다(엔진은 식별자 전달만).
+        if (childGo != null && child.linkChildToParent && !string.IsNullOrWhiteSpace(rootRuntimeIdentifier))
+        {
+          var linkReceiver = childGo.GetComponent<IEntityPresetParentLinkReceiver>()
+                             ?? childGo.GetComponentInChildren<IEntityPresetParentLinkReceiver>(true);
+          if (linkReceiver != null)
+          {
+            linkReceiver.ApplyParentEntityIdentifier(rootRuntimeIdentifier);
+          }
+          else
+          {
+            Debug.LogWarning(
+              $"[Registry] Entity preset '{rootIdentifier}': child '{child.childPresetIdentifier}' requested parent link " +
+              "but does not implement IEntityPresetParentLinkReceiver. Link skipped.");
+          }
         }
 
         if (childGo != null && child.unwrapOnSpawn)

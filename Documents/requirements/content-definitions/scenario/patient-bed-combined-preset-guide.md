@@ -80,15 +80,30 @@ flags: []
    - 하위 구성(침대 unwrap)은 프리셋 정의에 있으므로 노드에는 적지 않는다(노드는 하위 구성을 다루지 않음).
    - 스폰 결과: `patient_a`(EntityType.Patient), `bed_a`(EntityType.MovingPatientBed) 가 각각 독립 루트로 등록.
 
-2. **결합 재설정**: `attach_patient_bed_pairs` 이벤트를 호출한다.
+2. **결합 설정 — 권장: 프리셋이 자동 결합**
+
+   결합(환자가 침대 위)은 **침대의 SyncVar 권위값(`_reposedTargetIdentifier`)** 으로 네트워크 복제된다.
+   서버가 그 값을 설정하면 모든 피어가 식별자로 환자를 찾아 자동 결합한다(누운 애니메이션/콜라이더/위치 스냅까지).
+
+   **(권장) 프리셋 하위 참조에 `linkChildToParent` 지정** — 별도 노드/프리팹 수작업 불필요:
+   - SO 의 `patient_a.childReferences > bed_a` 항목에 `linkChildToParent = true` 를 켠다(이미 SO 에 설정됨).
+   - 스폰 시 엔진이 침대(하위)에게 부모(환자) 런타임 식별자를 전달 → 침대가 그 환자를 결합 권위값으로 설정 →
+     스폰 즉시 결합되고 전 피어로 복제된다. 환자 등록이 늦어도 침대가 매 프레임 재시도하여 결국 결합된다.
+   - 침대 프리팹은 공유 자산이어도 되며, 환자별로 식별자를 손으로 적어둘 필요가 없다(부모 식별자가 런타임에 주입됨).
+
+   **(대체) 시나리오에서 결합** — 런타임에 동적으로 묶을 때:
    ```json
    { "nodeType": "InvokeEvent", "identifier": "RELINK_A",
      "eventIdentifier": "attach_patient_bed_pairs",
      "moveNextBehavior": "WaitUntilDone", "nextIdentifier": "..." }
    ```
-   - 부트스트랩 인스펙터 `attach_patient_bed_pairs > Patient Bed Pairs` 에
-     `{ patientIdentifier: patient_a, bedIdentifier: bed_a }` 를 등록해 둔다.
-   - 핸들러가 레지스트리에서 두 객체를 찾아 `bed.TryReposeTarget(patient)` 로 논리 결합(환자가 침대 위)을 재설정한다.
+   - 부트스트랩 `attach_patient_bed_pairs > Patient Bed Pairs` 에 `{ patientIdentifier: patient_a, bedIdentifier: bed_a }` 등록.
+   - 핸들러가 `bed.TryReposeTarget(patient)` 를 호출 → 내부적으로 서버 권위값(SyncVar)을 설정한다(과거처럼 로컬만
+     바꾸지 않는다). 따라서 결합이 모든 피어에 정상 복제·지속된다.
+
+> 중요(네트워크 식별자): 환자/침대의 런타임 식별자는 이제 **SyncVar** 로 전 피어에 복제된다. 과거에는 식별자가 서버에서만
+> 주입되어 원격 클라에서는 기본값(`patient`)으로 남았고, 그 때문에 식별자 기반 결합이 원격에서 해석되지 않아 "스폰은 되나
+> 결합되지 않는" 문제가 있었다. 이제 모든 피어가 같은 식별자로 등록·조회하므로 결합이 정상 복제된다.
 
 ---
 
@@ -96,18 +111,18 @@ flags: []
 
 | 동작 | 담당 |
 |---|---|
-| 인스턴스화 + 네트워크 스폰 + 식별자 주입 + 하위 프리셋 재귀 스폰(unwrap 포함) | 프리셋 스폰(`Registry.TrySpawnEntityPreset`) |
-| 엔티티 등록 + EntityType 결정 | **각 컴포넌트**(`PatientController`=Patient, `MovingPatientBedController`=MovingPatientBed) |
-| 논리 결합(환자↔침대) | `attach_patient_bed_pairs` 핸들러(`bed.TryReposeTarget`) |
+| 인스턴스화 + 네트워크 스폰 + 식별자 주입 + 하위 프리셋 재귀 스폰(unwrap) + 부모 식별자 전달(`linkChildToParent`) | 프리셋 스폰(`Registry.TrySpawnEntityPreset`) |
+| 엔티티 등록 + EntityType 결정 + **런타임 식별자 복제(SyncVar)** | **각 컴포넌트**(`PatientController`/`MovingPatientBedController`) |
+| 논리 결합(환자↔침대) **권위/복제** | 침대의 SyncVar `_reposedTargetIdentifier`(서버 설정 → 전 피어 OnChange 적용) |
+| 결합 트리거 | 프리셋 `linkChildToParent`(권장) 또는 `attach_patient_bed_pairs`/`bed.TryReposeTarget` |
 
-즉 프리셋은 "스폰 메커니즘"만 담당하고, 엔티티의 정체성/등록은 원래 소유자(컴포넌트)에 있다.
+즉 프리셋은 "스폰 + 결합 트리거"를 담당하고, 결합 상태는 침대의 식별자 SyncVar 가 네트워크 권위적으로 보유한다.
 
 ## 체크리스트
 
 - [ ] 환자/침대 프리팹은 각각 NetworkObject 를 가진 독립 프리팹이다(컨테이너 프리팹 불필요).
 - [ ] SO 에 `bed_a`, `patient_a` 2개 프리셋이 등록됨.
-- [ ] `patient_a.childReferences` 에 `bed_a` 가 `unwrapOnSpawn=true` 로 등록됨.
+- [ ] `patient_a.childReferences` 에 `bed_a` 가 `unwrapOnSpawn=true`, `linkChildToParent=true` 로 등록됨.
 - [ ] 두 프리셋 모두 `isNetworked=true`, `fallbackEntityType=Undefined`.
 - [ ] "Validate Presets (Editor)" 경고 없음.
-- [ ] 시나리오: `EntityPresetSpawn`(`patient_a`) → `attach_patient_bed_pairs` 순서.
-- [ ] 부트스트랩 `_patientBedPairs` 에 (patient_a, bed_a) 등록.
+- [ ] 시나리오: `EntityPresetSpawn`(`patient_a`) 만으로 결합 스폰(권장). 동적 결합이 필요하면 뒤에 `attach_patient_bed_pairs` 추가.

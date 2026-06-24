@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FishNet.Object;
 using UnityEngine;
 
 namespace TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects
@@ -66,6 +67,23 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects
           Debug.LogWarning($"[EntityPresetSO] {tag} prefab 이 비어 있습니다.", this);
           problems++;
           continue;
+        }
+
+        // FishNet Spawnable Prefabs 등록 검증:
+        // 네트워크 프리셋의 프리팹이 NetworkObject 를 가졌는데 PrefabId 가 미할당(UNSET=65535)이면,
+        // 그 프리팹은 DefaultPrefabObjects 컬렉션에 포함되지 않은 것이다(예: 프리팹 Variant, 스캔 제외 폴더 등).
+        // 이 상태로 스폰하면 런타임에 "ObjectId 65535 ... is expected to be initialized but was not" 오류가 난다.
+        if (req.isNetworked && req.prefab.TryGetComponent(out NetworkObject nob))
+        {
+          if (nob.PrefabId == NetworkObject.UNSET_PREFABID_VALUE)
+          {
+            Debug.LogWarning(
+              $"[EntityPresetSO] {tag} 의 프리팹 '{req.prefab.name}' 이 FishNet Spawnable Prefabs(DefaultPrefabObjects)에 " +
+              "등록되어 있지 않습니다(PrefabId 미할당). 프리팹 Variant 이거나 스캔에서 제외된 위치일 수 있습니다. " +
+              "원본(컬렉션에 등록된) 프리팹을 지정하거나, Fish-Networking > Utility > Reserialize Prefabs 후에도 " +
+              "포함되지 않으면 Variant 대신 일반 프리팹을 사용하세요. (이대로 스폰하면 런타임 ObjectId 65535 오류 발생)", this);
+            problems++;
+          }
         }
 
         if (req.childReferences == null || req.childReferences.Length == 0)

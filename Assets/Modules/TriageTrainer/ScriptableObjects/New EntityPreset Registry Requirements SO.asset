@@ -22,6 +22,7 @@ MonoBehaviour:
     - childPresetIdentifier: bed_a
       spawnedEntityIdentifier: bed_a
       unwrapOnSpawn: 1
+      linkChildToParent: 1
   - identifier: bed_a
     fallbackEntityType: 0
     prefab: {fileID: 5017221584004301368, guid: 19556133e274748aebcdaaa9ee7730b9, type: 3}
