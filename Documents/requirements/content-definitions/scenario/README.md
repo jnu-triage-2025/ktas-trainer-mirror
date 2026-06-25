@@ -32,6 +32,7 @@
 - [patient-bed-combined-preset-guide.md](./patient-bed-combined-preset-guide.md): 환자 + 환자침대 결합 프리셋 구성 가이드 (운영자용)
 - [patient_b_c_ct.md](./patient_b_c_ct.md): scenario 환자 B/C 지연 처치
 - [remaining-implementation-checklist.md](./remaining-implementation-checklist.md): 남은 이벤트 구현 체크리스트
+- [rubric-recorder-setup-guide.md](./rubric-recorder-setup-guide.md): 평가 루브릭 기록 코어(RubricRecorder) 설정 가이드
 - [scenario-authoring-guide.md](./scenario-authoring-guide.md): 시나리오 작성 가이드
 - [scenario-graph-spec.md](./scenario-graph-spec.md): scenario-graph
 - [validator-gate-timeout-setup-guide.md](./validator-gate-timeout-setup-guide.md): Validator 게이트 타임아웃·실패 분기 설정 가이드

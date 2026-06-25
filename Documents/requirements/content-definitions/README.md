@@ -10,7 +10,7 @@
 
 ### 하위 폴더
 - [audio](./audio/README.md): 문서 1개
-- [scenario](./scenario/README.md): 문서 19개
+- [scenario](./scenario/README.md): 문서 20개
 
 ### 문서
 - (없음)
