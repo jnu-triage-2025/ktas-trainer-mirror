@@ -83,7 +83,7 @@
 |---|---|---|---|---|
 | S-1 | `waitForCondition=true` 게이트 타임아웃·실패 분기 부재 | `ScenarioController.cs:1224-1228`, `1274-1278` | 미배선/미설정 게이트에서 영구 hang | **본 제안서로 해결 예정** |
 | S-2 | 신호 Raise 지점이 3곳뿐(적용/삽입/주입/흡인/사정/전달/진입 미구현) | `interaction-signal-integration-spec.md §0,§2` + 코드 실측 | 핵심 처치 게이트가 통과 불가 | 신호 배선 또는 선행 게임플레이 구현 (별도) |
-| S-3 | 병렬 `whenBranchingPlayerNotMatched` 기본값 Panic | `ScenarioParallelNode.cs:32`, `ScenarioController.cs:1298-1302,1617-1635` | 인원 부족 시 데모 중단 | JSON에 정책 명시 또는 운영 가이드 |
+| S-3 | 병렬 `whenBranchingPlayerNotMatched` 정책 | `ScenarioParallelNode.cs:32`, `ScenarioController.cs:1628-1804` | (해결) 두 JSON 11개 Parallel은 원래 `Ignore`였음(Panic 위험 없음). 단 `Ignore`는 인원 부족 시 처치 브랜치를 조용히 스킵(수행 누락) | **해결: 2026-06-25 11개 전부 `Reallocation`으로 변경** → 인원 무관 모든 처치 브랜치 실행. 변환규칙 문서화 |
 | S-4 | PlayerMove/NPCMove/CameraTarget 실효 미구현(스텁) | `ScenarioController.cs:1088-1096,1138-1146,1158-1162` | 이동/카메라 연출이 시간 대기로만 처리, CameraTarget은 조건식이 반전되어 진입조차 안 함 | 인프라 구현 또는 이벤트 위임 명문화 |
 | S-5 | 평가 기록 훅(G-3) 미구현 | spec §0.1(3) | 루브릭 "수행/미수행" 판정 근거 미생성 | 제안서 채택 후 이벤트 수신부 구현 |
 | S-6 | 문서-코드 불일치: "신호 없으면 통과" 서술 | spec §0(L26-27), 두 flags.json `status`/`conversionState` | 운영자가 데모가 끝까지 진행된다고 오해 | 문서 정정 (§5) |
@@ -116,7 +116,7 @@
 - [ ] **사운드 클립 배치**: `S001`의 `tape_sound` 등 `Resources/Sound/<id>` 존재(없으면 스킵되지만 연출 누락).
 
 ### 4.4 멀티플레이 실행 검수
-- [ ] **병렬 구간 인원/태그 매칭**: 각 `ParallelNode`의 `whenBranchingPlayerNotMatched`가 JSON에 명시되어 있는지(미명시 시 기본 Panic→세션 종료). 4인 미만 데모 시 정책을 `Ignore`/`Reallocation`로 둘지 운영 결정.
+- [x] **병렬 구간 인원/태그 매칭**: (해결, 2026-06-25) 두 시나리오 11개 `ParallelNode`의 `whenBranchingPlayerNotMatched`를 모두 `Reallocation`으로 명시 → 인원 부족 시에도 모든 처치 브랜치가 실행됨(라운드로빈 재배정, 태그 자격은 미적용). 4인 완전체 + 엄격 역할 분리가 필요한 평가 모드를 원하면 해당 노드만 `Ignore`로 되돌릴 수 있음.
 - [ ] 플레이어 4인에게 **태그(triage_lead, airway_team, bleeding_control, iv_team 등)**가 실제로 부여되는 경로가 있는지(역할 선택 단계). 없으면 ByRole 배정 실패.
 - [ ] **Choice 선택의 동기화**: 현 ChoiceNode는 서버 권한이 아닌 로컬 처리(`ScenarioController`는 MonoBehaviour, `SelectOption`에 RPC 없음). 다인 환경에서 누가 선택하면 어떻게 동기화되는지 실측 확인.
 

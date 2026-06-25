@@ -415,7 +415,7 @@
       "nodeType": "Parallel",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Ignore",
+      "whenBranchingPlayerNotMatched": "Reallocation",
       "branches": [
         {
           "identifier": "V040_A",
@@ -503,7 +503,7 @@
       "nodeType": "Parallel",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Ignore",
+      "whenBranchingPlayerNotMatched": "Reallocation",
       "branches": [
         {
           "identifier": "N035",
@@ -1052,7 +1052,7 @@
       "nodeType": "Parallel",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Ignore",
+      "whenBranchingPlayerNotMatched": "Reallocation",
       "branches": [
         {
           "identifier": "N048",
@@ -1798,7 +1798,7 @@
       "nodeType": "Parallel",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Ignore",
+      "whenBranchingPlayerNotMatched": "Reallocation",
       "branches": [
         {
           "identifier": "N064",
@@ -2347,7 +2347,7 @@
       "nodeType": "Parallel",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Ignore",
+      "whenBranchingPlayerNotMatched": "Reallocation",
       "branches": [
         {
           "identifier": "N077",

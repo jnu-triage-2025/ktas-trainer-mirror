@@ -41,6 +41,20 @@ updated: 2026-04-14
 - 제외 태그 분기 -> branches[].forbiddenPlayerTags 사용
   - 해당 태그를 가진 플레이어는 브랜치 대상에서 제외
 
+#### whenBranchingPlayerNotMatched (인원 부족·미매칭 처리)
+
+브랜치에 배정할 적격 플레이어가 부족할 때의 정책. **스키마 기본값은 `Panic`(세션 종료)이므로 반드시 명시한다.**
+
+| 값 | 동작 | 비고 |
+|---|---|---|
+| `Panic` | 세션 종료(`EndScenario`) | 데모/수업에 위험. 사용 비권장. |
+| `Ignore` | 미배정 브랜치를 **조용히 스킵**(해당 처치 미실행) | `waitMode=All` 이어도 스킵된 브랜치는 수행되지 않음 → 수행 누락. |
+| `Reallocation` | 남은 플레이어에게 **라운드로빈 재배정**하여 모든 브랜치 실행 | 인원 부족 시에도 모든 처치 브랜치가 실행됨. **단, 재배정 시 태그 자격은 무시**(과소 인원에서 1인이 다역할 수행). |
+
+- 재난 훈련처럼 "인원과 무관하게 모든 필수 처치가 수행되어야" 하는 시나리오는 `Reallocation` 을 권장한다
+  (patient_a_critical / patient_b_c_ct 의 11개 Parallel 노드는 2026-06-25 기준 모두 `Reallocation`).
+- 역할 분리(태그 자격)를 엄격히 강제해야 하는 평가 모드에서는 충분한 인원(4인) 확보를 전제로 `Ignore` 를 고려할 수 있다.
+
 ### TagModification
 
 - PlayerTagNode 문서 표현은 엔진에서 `TagModification` nodeType으로 저장하는 것을 권장한다.

@@ -10,7 +10,7 @@
     "allValidatorsOnFailure": "Ignore",
     "compositeConditionHandling": "원본의 'A, B, C' 다중 조건은 단일 합성 신호가 아니라 개별 validationRules(각각 sig.<cond>) 다중 룰로 분해됨(AND 게이팅).",
     "dialogueDuration": "원본 Duration 은 Dialogue 노드 autoAdvanceSeconds 로 복원되어 런타임에서 소비됨(ScenarioController.cs).",
-    "parallelAllocation": "Parallel.allocationType=ByRole, waitMode=All, whenBranchingPlayerNotMatched=Ignore 로 변환. requiredPlayerTags 로 역할 분배(환자 B: A+C, 환자 C: B+D)."
+    "parallelAllocation": "Parallel.allocationType=ByRole, waitMode=All, whenBranchingPlayerNotMatched=Reallocation(2026-06-25 변경, 기존 Ignore) 로 변환. requiredPlayerTags 로 역할 분배(환자 B: A+C, 환자 C: B+D). 인원 부족 시 라운드로빈 재배정으로 모든 처치 브랜치가 실행됨(재배정 시 태그 자격 미적용)."
   },
   "gateSignalCoverage": {
     "description": "각 Validator 게이트가 기대하는 sig.* 신호를, 현재 게임플레이 코드가 올리는지 분류한다.",
@@ -70,6 +70,10 @@
     {
       "date": "2026-06-25",
       "change": "플래그 파일을 실제 JSON 상태와 일치하도록 재작성. 게이트 신호 커버리지(wired/notWired)를 실측 기준으로 재정리. 데이터 불일치 항목(TODO-DATA-5/6) 유지."
+    },
+    {
+      "date": "2026-06-25",
+      "change": "S-3: 5개 Parallel 노드의 whenBranchingPlayerNotMatched 를 Ignore→Reallocation 으로 변경(인원 부족 시 처치 브랜치 누락 방지). 변환규칙 문서에 정책 표 추가."
     }
   ]
 }
