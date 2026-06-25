@@ -15,7 +15,7 @@ namespace MultiplayerInfrastructure.Command
   public class CommandDefinition_Scenario : IChatCommandModel
   {
     public string CommandEntry => "scenario";
-    public string Description => "Scenario commands. Usage: /scenario list | /scenario execute <target> <scenario_id>";
+    public string Description => "Scenario commands. Usage: /scenario list | /scenario execute <target> <scenario_id> | /scenario signal <signal_id> [clear]";
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
@@ -38,9 +38,37 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
+      // 디버그 훅(G-4): 인터랙션 완료 신호를 수동으로 올리거나 내린다.
+      // 게임플레이의 실제 ScenarioInteractionSignals.Raise 배선 전에 게이트(Validator/Parallel) 통합 테스트에 사용한다.
+      // 사용: /scenario signal <signal_id> [clear]
+      if (args != null
+          && args.Length >= 2
+          && string.Equals(args[0], "signal", StringComparison.OrdinalIgnoreCase))
+      {
+        string signalId = args[1].Trim();
+        if (string.IsNullOrWhiteSpace(signalId))
+        {
+          _chat.SendSystemMessage(sender, "Signal identifier is required. Usage: /scenario signal <signal_id> [clear]");
+          return;
+        }
+
+        bool clear = args.Length >= 3 && string.Equals(args[2], "clear", StringComparison.OrdinalIgnoreCase);
+        if (clear)
+        {
+          ScenarioInteractionSignals.Clear(signalId);
+          _chat.SendSystemMessage(sender, $"Scenario signal '{ScenarioInteractionSignals.Normalize(signalId)}' cleared.");
+        }
+        else
+        {
+          ScenarioInteractionSignals.Raise(signalId);
+          _chat.SendSystemMessage(sender, $"Scenario signal '{ScenarioInteractionSignals.Normalize(signalId)}' raised.");
+        }
+        return;
+      }
+
       if (args == null || args.Length < 3 || !string.Equals(args[0], "execute", StringComparison.OrdinalIgnoreCase))
       {
-        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute <target> <scenario_id>");
+        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute <target> <scenario_id> | /scenario signal <signal_id> [clear]");
         return;
       }
 

@@ -386,6 +386,7 @@ namespace MultiplayerInfrastructure.Scenario
           OnFailure = ParseValidatorOnFailure(dto.OnFailure),
           FailureReportTargets = ParseValidatorFailureReportTargets(dto.FailureReportTargets),
           FailureNextIdentifier = dto.FailureNextIdentifier,
+          WaitForCondition = dto.WaitForCondition ?? false,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -923,6 +924,7 @@ namespace MultiplayerInfrastructure.Scenario
           OnFailure = node.OnFailure.ToString(),
           FailureReportTargets = node.FailureReportTargets.ToString(),
           FailureNextIdentifier = node.FailureNextIdentifier,
+          WaitForCondition = node.WaitForCondition ? true : (bool?)null,
           NextIdentifier = node.NextIdentifier
         };
 

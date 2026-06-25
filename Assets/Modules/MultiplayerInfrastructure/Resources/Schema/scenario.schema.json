@@ -925,6 +925,14 @@
                 "string",
                 "null"
               ]
+            },
+            "waitForCondition": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": false,
+              "description": "true 이면 조건 충족까지 진행을 막고 폴링 대기하는 게이트로 동작한다(인터랙션 신호 게이팅). 미지정/false 이면 1회 평가 후 onFailure 정책을 따른다(하위호환)."
             }
           },
           "required": [
@@ -1061,7 +1069,8 @@
                 "SelfAll",
                 "RandomOneAll",
                 "SpreadRandom",
-                "SpreadOrdinary"
+                "SpreadOrdinary",
+                "ByRole"
               ],
               "default": "SelfAll"
             },
