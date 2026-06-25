@@ -137,9 +137,12 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
 
 권장: 표기 불일치 9건은 시나리오 조건명을 아이템 식별자로 통일(JSON 일괄 치환)하는 편이 단순하다.
 
-### apply_* / wear_* / insert_* / push_* / suction_* / remove_* (적용/착용/삽입/주입/흡인/제거) — [없음]
+### apply_* / wear_* / insert_* / push_* / suction_* / remove_* (적용/착용/삽입/주입/흡인/제거) — [없음 → 제안서 진행 중]
 해당 게임플레이 로직 미구현(`MedicalItem.OnUse` 는 no-op, `RaycastTargetEntity()` 는 stub=null).
-**선행 게임플레이 구현 후** 완료 지점에 Raise 해야 한다. 대상: `apply_gauze`, `apply_electrode`,
+조사 결과 **부착 시각화(`TryAttachCurrentHandlingItem`)는 이미 구현**되어 있고, 유일하게 막힌 것은
+타깃 해석 스텁이다. 이를 살리는 작업은 `MultiplayerInfrastructure` 변경이라 Feature Proposal 로 분리했다:
+`Agents/Proposals/scheduled/2026-06-25-item-use-target-signal/`. 채택 시 `apply_*`/`wear_glove`/`push_*`
+다수가 단일 변경으로 계측된다. 대상: `apply_gauze`, `apply_electrode`,
 `apply_plaster_on_*`, `apply_stabilizer_patient_a`, `wear_glove`, `insert_iv_*`, `push_epi`, `push_ns`,
 `suction_patient_a`, `remove_intu_stylet`, `remove_tpiece`, `start_ambu`.
 
@@ -147,10 +150,13 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
 아이템을 NPC 에게 건네는 인터랙션. NPC 상호작용 완료 지점 필요. 대상: `pass_laryngoscope`,
 `pass_et_tube_ready`, `pass_syringe`, `pass_central_line_set`.
 
-### enter_* / arrive_* (구역 진입) — [있음(다른 의미)]
-`ScenarioTriggerZone` 는 "시나리오 시작" 이벤트만 발생시키고 "구역 진입 완료 신호"는 없다.
-구역 진입을 게이트로 쓰려면 트리거 존에 진입 카운트 → `Raise("enter_treatmentroom")` 등을 추가해야 한다.
-대상: `enter_treatmentroom_count_2`, `enter_triage_zone_count_3`, `arrive_triagearea`.
+### enter_* / arrive_* (구역 진입) — [계측 완료, 2026-06-25]
+`ScenarioTriggerZone` 에 옵션 필드 `_raiseSignalsOnEnter`(string[]) 가 추가되었다. 플레이어가 존에
+진입할 때 지정한 신호들을 `ScenarioInteractionSignals.Raise` 로 올린다(시나리오 시작 여부와 독립).
+- **운영자 작업(코드 변경 불필요)**: 해당 구역의 `ScenarioTriggerZone` 인스펙터 `_raiseSignalsOnEnter` 에
+  조건명(예: `enter_triage_zone`, `arrive_triagearea`)을 입력한다. 비워 두면 기존 동작(신호 없음) 유지.
+- 신호 전용 존(시나리오 그래프 미지정)도 허용된다 → 게이트 통과 전용 트리거로 배치 가능.
+대상: `enter_triage_zone`, `arrive_triagearea` (필요 시 `enter_treatmentroom` 등 추가).
 
 ### click_flowmeter / click_oxyflow_wall / close_vital_ui_* / show_* — [부분]
 UI/장비 클릭. 해당 UI 확정 또는 장비 클릭 콜백에 연결. 대상: `click_flowmeter`, `click_oxyflow_wall`,
@@ -213,9 +219,13 @@ syringe_5cc, vital_set, wall_suction, yankauer`
 - 의사 NPC 전달: `pass_laryngoscope`, `pass_et_tube_ready`, `pass_syringe`, `pass_central_line_set`.
 - 사정 확정: `check_avpu_gcs_patient_a`, `check_pulse_patient_a`, `check_gcs_a_rosc`,
   `check_gcs_patient_b/c`, `check_vital_patient_b/c`, `show_vital_patient_a`, `close_vital_ui_b/c`.
-- 신체부위/장비/구역: `click_chest`, `click_patient_chest`, `click_to_start_comp`, `click_defib`,
+- 신체부위/장비: `click_chest`, `click_patient_chest`, `click_to_start_comp`, `click_defib`,
   `click_flowmeter`, `click_oxyflow_wall`, `click_humidifierbottle`, `click_sdw`, `click_tpiece`,
   `click_neckstabilizer`, `click_nasal`, `click_patient_b_face`, `click_patient_c_face`,
-  `click_dummy_b`, `move_defibcart_to_patient`, `arrive_triagearea`, `enter_triage_zone`.
+  `click_dummy_b`, `move_defibcart_to_patient`.
+- 구역 진입: `arrive_triagearea`, `enter_triage_zone` → **계측 완료(2026-06-25)**. `ScenarioTriggerZone`
+  의 `_raiseSignalsOnEnter` 에 조건명을 지정하면 진입 시 자동 Raise(§2 구역 진입 절 참고).
+- 적용/착용/주입(`apply_*`/`wear_glove`/`push_*`): Feature Proposal 진행 중
+  (`Agents/Proposals/scheduled/2026-06-25-item-use-target-signal/`). 채택 시 다수 동시 계측.
 
 > 검증 방법: 배선 전이라도 `/scenario signal <cond>` 커맨드로 각 게이트가 막히고 열리는지 수동 확인 가능.

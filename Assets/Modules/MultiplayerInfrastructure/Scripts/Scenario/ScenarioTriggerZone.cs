@@ -25,6 +25,10 @@ namespace MultiplayerInfrastructure.Scenario
     [SerializeField] private string _playerTag = "Player";
     [SerializeField] private bool _disableAfterTrigger = false;
 
+    [Header("Interaction Signals (옵션)")]
+    [Tooltip("플레이어가 존에 진입할 때 올릴 시나리오 인터랙션 신호(sig.* 게이팅용). 예: enter_triage_zone, arrive_triagearea. 비워 두면 신호를 올리지 않는다(기존 동작).")]
+    [SerializeField] private string[] _raiseSignalsOnEnter = Array.Empty<string>();
+
     [Header("Debug")]
     [SerializeField] private bool _debugTriggerLogs = false;
 
@@ -112,37 +116,65 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
-      if (_cachedGraph == null)
+      // 신호 전용 존(시나리오 그래프 미지정)도 허용한다: 그래프가 있으면 시나리오를 시작하고,
+      // 없더라도 진입 신호(_raiseSignalsOnEnter)만 올리는 게이트 트리거로 동작할 수 있다.
+      bool hasGraph = _cachedGraph != null;
+      bool hasSignals = _raiseSignalsOnEnter != null && _raiseSignalsOnEnter.Length > 0;
+
+      if (!hasGraph && !hasSignals)
       {
-        Debug.LogError("[ScenarioTriggerZone] Scenario graph is null");
+        Debug.LogError("[ScenarioTriggerZone] Scenario graph is null and no enter-signals configured; nothing to trigger.", this);
         return;
       }
 
-      ExecuteTrigger(other);
+      ExecuteTrigger(other, hasGraph);
     }
 
-    private void ExecuteTrigger(GameObject triggeringObject = null)
+    private void ExecuteTrigger(GameObject triggeringObject = null, bool startScenario = true)
     {
       _hasTriggered = true;
       _lastTriggerTime = Time.time;
 
-      Debug.Log("[ScenarioTriggerZone] Triggering scenario");
+      // 진입 신호를 먼저 올린다(게이트 통과용). 시나리오 시작 여부와 독립적으로 동작한다.
+      RaiseEnterSignals();
 
-      int? clientId = null;
-      if (triggeringObject != null)
+      if (startScenario && _cachedGraph != null)
       {
-        var netObj = triggeringObject.GetComponent<NetworkObject>();
-        if (netObj != null)
-        {
-          clientId = (int)netObj.Owner.ClientId;
-        }
-      }
+        Debug.Log("[ScenarioTriggerZone] Triggering scenario");
 
-      OnScenarioRequested?.Invoke(_cachedGraph, _startNodeIdentifier, clientId);
+        int? clientId = null;
+        if (triggeringObject != null)
+        {
+          var netObj = triggeringObject.GetComponent<NetworkObject>();
+          if (netObj != null)
+          {
+            clientId = (int)netObj.Owner.ClientId;
+          }
+        }
+
+        OnScenarioRequested?.Invoke(_cachedGraph, _startNodeIdentifier, clientId);
+      }
 
       if (_disableAfterTrigger)
       {
         gameObject.SetActive(false);
+      }
+    }
+
+    private void RaiseEnterSignals()
+    {
+      if (_raiseSignalsOnEnter == null)
+        return;
+
+      foreach (var signal in _raiseSignalsOnEnter)
+      {
+        if (string.IsNullOrWhiteSpace(signal))
+          continue;
+
+        if (_debugTriggerLogs)
+          Debug.Log($"[ScenarioTriggerZone] Raising enter signal '{signal}'.", this);
+
+        ScenarioInteractionSignals.Raise(signal);
       }
     }
 
