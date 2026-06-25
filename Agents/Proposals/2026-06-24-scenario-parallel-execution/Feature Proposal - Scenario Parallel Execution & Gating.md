@@ -77,6 +77,20 @@
 
 - 엔진의 `AutoAdvanceSeconds`가 이미 구현되어 있으므로, 변환기/JSON이 원본 `Duration`을 `autoAdvanceSeconds`로 매핑하도록 재변환. 특히 환자 B/C JSON에는 자동 진행 시간이 누락되어 있어 우선 적용.
 
+#### 8) G-8 (신규 발견) — 시나리오 실행 모델이 클라이언트 로컬이라 병렬 다인 분배가 성립하지 않음 (치명, 별도 설계 필요)
+
+분석 중 발견한 **실행 모델 차원의 차단 요소**. 현재 시나리오 디스패치는 `ChatService.TryDispatchScenario`(서버) → `TargetRunScenario`([TargetRpc], `ChatService.cs:108`) 로, **대상 클라이언트마다 그래프를 로컬로 실행**하며 각 클라이언트가 자신을 owner 로 설정한다(`ScenarioController.StartScenario`).
+
+이로 인해:
+- `GetActivePlayerIds()`(`ScenarioController.cs:1491`)는 **호스트(서버+클라)** 에서는 전체 클라이언트를 보지만, **순수 클라이언트** 인스턴스에서는 `else` 분기로 **로컬 연결 1개만** 반환한다.
+- 따라서 `ByRole`/`SpreadOrdinary` 등 다인 분배가 순수 클라이언트에서는 항상 "플레이어 1명"으로 동작 → 모든 역할 브랜치가 로컬 1인에게 배정되어 **다인 협력 의도가 깨진다**.
+- 완료 신호(`RuntimeState` 레지스트리)도 클라이언트 로컬이므로, 다른 플레이어의 인터랙션 완료가 게이트에 반영되지 않는다.
+
+근본 해결안(범위 큼, 본 PR 밖):
+- (8-A, 권장) 시나리오를 **서버 권한 단일 실행**으로 전환: 서버가 그래프를 실행하고, Dialogue/Choice/UI 표시·인터랙션 요청만 각 클라이언트로 RPC, 인터랙션 완료 신호는 클라→서버로 보고하여 서버의 단일 `RuntimeState`/할당에 반영.
+- (8-B, 대안) 클라이언트 로컬 실행 유지 + **공유 상태 동기화 레이어**: 플레이어 목록·완료 신호·브랜치 할당을 서버 권위 레지스트리로 복제.
+- 두 방안 모두 `MultiplayerInfrastructure` 네트워킹 계층 변경이 필요하므로 별도 제안서로 분리한다. 본 PR 의 `ByRole`/`waitForCondition`/`completionCondition` 로직은 "플레이어 풀이 채워진다"는 전제 하에서 정확하며, 8-A/8-B 가 그 전제를 제공한다.
+
 ### 자세한 달성 목표
 
 - 환자 A/B/C 병렬 처치 구간에서 4인이 각자 다른 브랜치를 동시에 수행한다(ByRole).
@@ -95,6 +109,7 @@
 | G-5 | Sound 실제 재생 | 중간 | O | ✅ 구현 (`Resources/Sound/<id>` 로드·재생·길이 대기) |
 | G-6 | Quiz/루브릭 채점 연동 | 중간 | △ | ⬜ 보류 (별도 설계/제안 필요) |
 | G-7 | Dialogue `autoAdvanceSeconds` 재변환 | 중간 | X(변환기) | ✅ 적용 (A 99·B/C 81건 Duration→autoAdvanceSeconds) |
+| G-8 | 시나리오 클라이언트-로컬 실행 → 다인 분배 불성립 | 치명 | O(네트워킹) | 🔶 P1 구현 (`ScenarioNetworkRelay` 로 신호 서버 권한화). P2(권위 플레이어 풀)·P3(실행 권위/표현 RPC)는 후속. 상세: `server-authoritative-execution-spec.md` |
 
 ### 문서화
 

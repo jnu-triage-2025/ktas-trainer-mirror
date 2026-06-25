@@ -35,7 +35,12 @@ namespace MultiplayerInfrastructure.Scenario
       return signalId.StartsWith(Prefix, StringComparison.Ordinal) ? signalId : Prefix + signalId;
     }
 
-    /// <summary>인터랙션 완료 신호를 올린다(RuntimeState 레지스트리에 등록).</summary>
+    /// <summary>
+    /// 인터랙션 완료 신호를 올린다.
+    /// 서버 권한(authoritative) 경로로 라우팅한다: 서버면 직접 RuntimeState 에 기록하고,
+    /// 클라이언트면 <see cref="ScenarioNetworkRelay"/> 를 통해 서버로 보고한다(G-8 P1).
+    /// 네트워크가 비활성이거나 중계기가 없으면 로컬에 기록(단일 플레이어/오프라인).
+    /// </summary>
     public static void Raise(string signalId)
     {
       if (string.IsNullOrWhiteSpace(signalId))
@@ -43,10 +48,10 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
-      Registry.Registry.Register(RegistryType.RuntimeState, Normalize(signalId), true);
+      ScenarioNetworkRelay.RaiseAuthoritative(Normalize(signalId));
     }
 
-    /// <summary>신호를 내린다(RuntimeState 레지스트리에서 제거). 사이클 반복 등에서 재설정 시 사용.</summary>
+    /// <summary>신호를 내린다. 서버 권한 경로로 라우팅한다(사이클 반복 등에서 재설정 시 사용).</summary>
     public static void Clear(string signalId)
     {
       if (string.IsNullOrWhiteSpace(signalId))
@@ -54,7 +59,32 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
-      Registry.Registry.Unregister(RegistryType.RuntimeState, Normalize(signalId));
+      ScenarioNetworkRelay.ClearAuthoritative(Normalize(signalId));
+    }
+
+    /// <summary>
+    /// 정규화된 신호를 로컬 RuntimeState 레지스트리에 직접 등록한다.
+    /// 권한 라우팅을 거치지 않으므로, 서버 컨텍스트 또는 중계기 내부에서만 호출해야 한다.
+    /// </summary>
+    internal static void RegisterLocal(string normalizedSignalId)
+    {
+      if (string.IsNullOrWhiteSpace(normalizedSignalId))
+      {
+        return;
+      }
+
+      Registry.Registry.Register(RegistryType.RuntimeState, normalizedSignalId, true);
+    }
+
+    /// <summary>정규화된 신호를 로컬 RuntimeState 레지스트리에서 직접 제거한다(권한 라우팅 미경유).</summary>
+    internal static void UnregisterLocal(string normalizedSignalId)
+    {
+      if (string.IsNullOrWhiteSpace(normalizedSignalId))
+      {
+        return;
+      }
+
+      Registry.Registry.Unregister(RegistryType.RuntimeState, normalizedSignalId);
     }
 
     /// <summary>신호가 올라가 있는지 조회한다(Validator 의 RegistryContains 와 동일 기준).</summary>
