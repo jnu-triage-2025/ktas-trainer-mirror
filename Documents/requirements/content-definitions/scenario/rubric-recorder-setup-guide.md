@@ -23,6 +23,11 @@ updated: 2026-06-25
 
 > 전제: "미수행"이 자동 기록되려면, 해당 게이트에 타임아웃이 설정되어 있어야 합니다.
 > 설정 방법은 [validator-gate-timeout-setup-guide.md](./validator-gate-timeout-setup-guide.md) 참고.
+>
+> 적용 현황(2026-06-25): `rubric_definition_disaster.json` 이 매핑한 핵심 게이트 18개
+> (patient_a 11개 + patient_b_c 7개)에는 이미 `waitTimeoutSeconds=120` + `onWaitTimeout=ForceAdvance`
+> 가 부여되어 있다. 따라서 이 18개 항목은 별도 설정 없이 "수행(게이트 통과)/미수행(120초 타임아웃)"이
+> 자동 기록된다(타임아웃 값은 운영 상황에 맞게 조정 가능).
 
 ## 2. 설치 순서 (Unity 에디터)
 

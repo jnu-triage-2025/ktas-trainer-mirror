@@ -74,6 +74,10 @@
     {
       "date": "2026-06-25",
       "change": "S-3: 5개 Parallel 노드의 whenBranchingPlayerNotMatched 를 Ignore→Reallocation 으로 변경(인원 부족 시 처치 브랜치 누락 방지). 변환규칙 문서에 정책 표 추가."
+    },
+    {
+      "date": "2026-06-25",
+      "change": "G-6 실적용: 루브릭 매핑 핵심 게이트 7개(V038,V041,V058,V050,V048,V060,V069)에 waitTimeoutSeconds=120 + onWaitTimeout=ForceAdvance 부여. 미배선 신호로 인한 hang 제거 + RubricRecorder 미수행 자동 기록 활성화."
     }
   ]
 }

@@ -342,7 +342,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "Q031_1",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "Q031_1": {
       "identifier": "Q031_1",
@@ -564,7 +566,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "N036",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "N036": {
       "identifier": "N036",
@@ -1143,7 +1147,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "E045",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "E045": {
       "identifier": "E045",
@@ -1230,7 +1236,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "E046",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "E046": {
       "identifier": "E046",
@@ -1647,7 +1655,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "E048",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "E048": {
       "identifier": "E048",
@@ -1859,7 +1869,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "N065",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "N065": {
       "identifier": "N065",
@@ -2525,7 +2537,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "E053",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "E053": {
       "identifier": "E053",

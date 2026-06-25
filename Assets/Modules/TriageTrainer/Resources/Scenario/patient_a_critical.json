@@ -278,7 +278,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "N005_1",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "N005_1": {
       "identifier": "N005_1",
@@ -382,7 +384,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "N006_1",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "N006_1": {
       "identifier": "N006_1",
@@ -719,7 +723,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "N007_2",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "N007_2": {
       "identifier": "N007_2",
@@ -809,7 +815,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "D009",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "D009": {
       "identifier": "D009",
@@ -1175,7 +1183,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "S001",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "S001": {
       "identifier": "S001",
@@ -1580,7 +1590,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "E015",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "E015": {
       "identifier": "E015",
@@ -1745,7 +1757,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "E019",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "E019": {
       "identifier": "E019",
@@ -2097,7 +2111,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "Q018_1",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "Q018_1": {
       "identifier": "Q018_1",
@@ -2468,7 +2484,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "E028",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "E028": {
       "identifier": "E028",
@@ -2993,7 +3011,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "D027",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "D027": {
       "identifier": "D027",
@@ -4236,7 +4256,9 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "nextIdentifier": "S005",
-      "waitForCondition": true
+      "waitForCondition": true,
+      "waitTimeoutSeconds": 120.0,
+      "onWaitTimeout": "ForceAdvance"
     },
     "S005": {
       "identifier": "S005",

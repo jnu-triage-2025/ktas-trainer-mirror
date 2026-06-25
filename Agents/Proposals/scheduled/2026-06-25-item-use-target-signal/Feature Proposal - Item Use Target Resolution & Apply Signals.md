@@ -16,9 +16,17 @@
   구현하고, `MedicalItem.OnUse` 에서 대상 기반으로 `ScenarioInteractionSignals.Raise(...)` 를 호출한다.
 - 의도/목표: 평가 루브릭의 핵심 "처치 수행" 게이트(지혈/고정/플라스터/장갑/약물 주입)를
   **실제 게임플레이 수행으로 통과**시켜, "수행해야 진행"(G-2)과 평가 기록(G-3)을 실효화한다.
-- 주요 맥락: 부착 시각화(`PatientController.TryAttachCurrentHandlingItem`,
-  `MovingPatientBedController.OnItemUsed/OnAttacked`)는 **이미 구현되어 있고**, 유일하게 막힌 것은
-  타깃 해석 스텁이다. 이 한 지점을 살리면 다수 `apply_*` 게이트가 한 번에 계측 가능하다.
+- 주요 맥락: 부착 시각화(`PatientController.TryAttachItem`, `MovingPatientBedController.TryAttachItem`)와
+  대상측 핸들러(`OnItemUsed(Entity, itemId)` / `OnAttacked(Entity, dmg)`)는 **이미 구현되어 있으나**,
+  현재 **누구도 호출하지 않는 고아(orphan) 메서드**다. 막힌 지점이 두 개다:
+  (1) `RaycastTargetEntity()` 스텁(=null), (2) `PlayerController.UseItem()`/`Attack()` 가 해석된 대상의
+  `OnItemUsed`/`OnAttacked` 를 **호출하는 브리지 자체가 없음**(`Entity.Attack` 은 플레인 `Entity`의
+  health 만 깎고 `PatientController` 로 전달되지 않음). 따라서 본 제안은 단순 스텁 채움이 아니라
+  **"아이템 사용 대상 해석 + 대상 핸들러 호출 브리지"** 신설을 포함한다.
+- 설계 메모: 레이캐스트는 Collider→GameObject→`MonoBehaviour` 를 맞히므로, 대상 핸들러를 공통
+  인터페이스(예: `IItemUseTarget { void OnItemUsed(Entity user, string itemIdentifier); }`)로 추상화하고
+  `PatientController`/`MovingPatientBedController` 가 이를 구현하도록 한다. `RaycastTargetEntity` 또는
+  신규 `RaycastUseTarget()` 가 이 인터페이스를 반환하고, `UseItem()` 이 `target.OnItemUsed(PlayerEntity, id)` 를 호출한다.
 - 기술적 제약: `RaycastTargetEntity` 는 `MultiplayerInfrastructure.Player.PlayerController` 의 일부로,
   타 프로젝트에서도 재사용되는 핵심 입력/아이템 경로다. 신중한 변경과 하위호환이 필요하다.
 
@@ -47,18 +55,22 @@
 
 ### 제안
 
-1. **타깃 해석 구현** (`PlayerController.Item.cs`):
-   `RaycastTargetEntity()` 를 소유자(IsOwner) 카메라 기준 레이캐스트로 구현하여, 사거리
-   (`MedicalItem.MinReach`~`MaxReach`) 내 `Entity.Entity`(또는 부착점 컴포넌트가 부여한 식별자)를 반환한다.
-   - 히트가 없거나 `Entity` 가 아니면 `null`(기존 동작) 반환 → 하위호환.
-   - 서버 권한 정합: 사용 결과(신호)는 `ScenarioInteractionSignals.Raise`(서버 권한 라우팅)로 보고.
+1. **사용 대상 핸들러 인터페이스 신설** (`MultiplayerInfrastructure`):
+   `IItemUseTarget { void OnItemUsed(Entity user, string itemIdentifier); }` (필요 시 `OnAttacked` 포함)를
+   추가하고, `PatientController`/`MovingPatientBedController` 가 이를 구현(이미 동명 메서드 보유 → 시그니처 정합만).
 
-2. **처치 완료 신호 배선** (`MedicalItem.OnUse`, TriageTrainer):
+2. **타깃 해석 + 브리지 구현** (`PlayerController.Item.cs`):
+   소유자 카메라 기준 레이캐스트로 사거리(`MinReach`~`MaxReach`) 내 콜라이더에서 `IItemUseTarget` 을 찾고,
+   `UseItem()`/`Attack()` 에서 `target.OnItemUsed(PlayerEntity, HandlingItem.CurrentIdentifier)` 를 호출한다.
+   - 히트 없음/대상 아님이면 아무 것도 하지 않음(기존 동작) → 하위호환.
+   - 기존 `RaycastTargetEntity`(Entity 반환)는 전투용으로 보존하거나, 신규 `RaycastUseTarget()` 로 분리.
+
+3. **처치 완료 신호 배선** (`MedicalItem.OnUse` 또는 대상 핸들러, TriageTrainer):
    대상이 환자/환부일 때 아이템 종류·환부 식별자에 따라 `Raise("apply_gauze")`,
    `Raise("apply_stabilizer_" + targetId)`, `Raise("wear_glove")`, `Raise("push_epi")` 등을 올린다.
-   - 부착 시각화는 기존 `TryAttachCurrentHandlingItem` 경로를 재사용한다(신규 시각 작업 없음).
+   - 부착 시각화는 기존 `TryAttachItem` 경로를 재사용한다(신규 시각 작업 없음).
 
-3. (선택) 약물 주입(`push_*`)은 부착이 아니라 "투여 동작"이므로, 중심정맥관/IV 라인 대상일 때만
+4. (선택) 약물 주입(`push_*`)은 부착이 아니라 "투여 동작"이므로, 중심정맥관/IV 라인 대상일 때만
    신호를 올리도록 대상 타입 가드를 둔다.
 
 ### 자세한 달성 목표
