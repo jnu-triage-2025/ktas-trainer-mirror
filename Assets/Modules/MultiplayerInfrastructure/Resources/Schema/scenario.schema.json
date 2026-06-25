@@ -933,6 +933,29 @@
               ],
               "default": false,
               "description": "true 이면 조건 충족까지 진행을 막고 폴링 대기하는 게이트로 동작한다(인터랙션 신호 게이팅). 미지정/false 이면 1회 평가 후 onFailure 정책을 따른다(하위호환)."
+            },
+            "waitTimeoutSeconds": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "exclusiveMinimum": 0,
+              "description": "waitForCondition 게이트의 선택적 타임아웃(초). 미지정/null/0 이하이면 타임아웃 없이 무한 대기한다(기존 동작, 하위호환). 양수이면 그 시간 안에 조건이 충족되지 않을 경우 onWaitTimeout 정책이 적용된다."
+            },
+            "onWaitTimeout": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "KeepWaiting",
+                "FailBranch",
+                "ForceAdvance",
+                "WarnAndKeepWaiting",
+                null
+              ],
+              "default": "KeepWaiting",
+              "description": "waitTimeoutSeconds 초과 시 행동. KeepWaiting(기본, 계속 대기) / FailBranch(failureNextIdentifier 로 분기, 없으면 KeepWaiting 폴백) / ForceAdvance(nextIdentifier 로 강제 진행, 미수행 기록) / WarnAndKeepWaiting(경고 후 계속 대기)."
             }
           },
           "required": [

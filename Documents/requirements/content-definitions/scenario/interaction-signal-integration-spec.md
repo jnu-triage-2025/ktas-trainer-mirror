@@ -23,8 +23,11 @@ flags: ["refactor-required"]
 ## 0. 현재 상태(중요)
 
 - 변환된 Validator 게이트(patient_a 57개 + patient_b_c 47개 = 104개)는 모두 `onFailure: Ignore`,
-  `waitForCondition: true` 다. **신호가 없으면 게이트는 그냥 통과(Advance)** 하므로,
-  신호 연결 전에도 시나리오는 끝까지 진행된다(데모 가능). 신호를 연결할수록 "수행해야 진행"이 점진 활성화된다.
+  `waitForCondition: true` 다. **주의: `waitForCondition: true` 게이트는 `onFailure` 를 참조하지 않는다.**
+  신호가 끝내 올라오지 않으면 게이트는 통과(Advance)하는 것이 아니라 **무한 대기(hang)** 한다
+  (엔진 `ScenarioController.ExecuteValidatorNode`/`ExecuteValidatorGate`). 즉 신호 미배선 구간에서는
+  세션이 그 지점에서 멈춘다. 따라서 데모/수업을 멈추지 않으려면 게이트별 타임아웃(`waitTimeoutSeconds`
+  + `onWaitTimeout`, 아래 §0.1) 또는 `/scenario signal <cond>` 수동 통과가 필요하다.
 - **현재 게임플레이 인터랙션 계층에는 완료 이벤트가 없다.** `IInteract.Interact` 는 `void` 이며
   완료 콜백/이벤트가 없다. 또한 다수 인터랙션(아이템 적용/조립/삽입)은 게임플레이 로직 자체가
   아직 구현되지 않았고, 시각효과만 시나리오 핸들러가 생성한다. 따라서 신호 연결은
@@ -33,18 +36,19 @@ flags: ["refactor-required"]
 ### 0.1 게이트 정책 결정(G-2, 2026-06-25)
 
 원본 평가 루브릭의 의도는 "필수 처치를 수행해야 진행"이다. 이를 시스템에서 실현하려면 핵심 게이트가
-blocking 이어야 한다. 그러나 신호 배선이 끝나기 전에 `onFailure` 를 `Panic`/`Branching` 으로 바꾸면
-미배선 게이트에서 **코루틴이 영구 대기(hang)** 한다(현재 엔진은 `waitForCondition=true` 게이트에
-타임아웃·실패 분기가 없음). 따라서 설계 의도를 운영 위험 없이 달성하기 위한 단계적 정책은 다음과 같다.
+blocking 이어야 한다. 그러나 신호 배선이 끝나기 전에 핵심 게이트를 강제하면 미배선 게이트에서
+**코루틴이 영구 대기(hang)** 한다. 따라서 설계 의도를 운영 위험 없이 달성하기 위한 단계적 정책은 다음과 같다.
 
-1. **(현재)** 신호 미배선 구간은 `onFailure: Ignore` 유지 → 데모/수업이 멈추지 않음.
-2. **(선행 조건)** `Validator 게이트 타임아웃·실패 분기` 도입
-   (제안서: `Agents/Proposals/스케줄됨/2026-06-25-scenario-validator-gate-timeout/`).
-   하위호환(미지정 시 기존 동작)으로 hang 위험을 제거한다.
-3. **(목표)** 신호가 배선된 핵심 처치 게이트부터 blocking 으로 전환(타임아웃+미수행 기록).
-   미수행은 평가 기록(루브릭, G-3)으로 남긴다.
+1. **(완료)** 신호 미배선 구간은 `onFailure: Ignore`/`onWaitTimeout` 미지정 유지 → 무한 대기 기본값이지만,
+   필요 시 게이트별 `waitTimeoutSeconds`로 hang을 제거할 수 있다.
+2. **(완료, G-6)** `Validator 게이트 타임아웃·실패 분기` 엔진 도입(2026-06-25, 브랜치 `feat/scenario-validator-gate-timeout`).
+   게이트별 `waitTimeoutSeconds`(옵션) + `onWaitTimeout`(`KeepWaiting`/`FailBranch`/`ForceAdvance`/`WarnAndKeepWaiting`)
+   추가. 미지정 시 기존 동작(무한 대기) 유지 → 하위호환. 변환 규칙: [`json-conversion-rules.md`](./json-conversion-rules.md) Validator 섹션.
+   제안서: `Agents/Proposals/scheduled/2026-06-25-scenario-validator-gate-timeout/`.
+3. **(목표)** 신호가 배선된 핵심 처치 게이트부터 `waitTimeoutSeconds`+`onWaitTimeout=ForceAdvance`(또는 `FailBranch`)로
+   전환. 타임아웃은 `ScenarioController.OnValidatorWaitTimeout` 이벤트로 평가 기록(루브릭, G-3)에 남긴다.
 
-즉, **G-2(수행 강제)는 G-6(게이트 타임아웃) 도입 후에 게이트 단위로 점진 적용**한다.
+즉, **G-6(게이트 타임아웃)이 도입되었으므로, G-2(수행 강제)는 신호 배선이 끝난 게이트부터 단위로 점진 적용**한다.
 
 ## 1. 연결 방식 두 가지
 

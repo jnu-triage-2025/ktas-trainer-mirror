@@ -78,6 +78,47 @@ updated: 2026-04-14
 - "수행해야만 진행"을 강제하려면 Validator 에 `waitForCondition: true` 를 둔다(엔진 정식 지원).
   이때 조건(신호)이 올라올 때까지 진행을 막고 폴링 대기한다. 별도 대기 노드 조합이 더 이상 필요 없다.
 
+#### 게이트 타임아웃·실패 분기 (waitTimeoutSeconds / onWaitTimeout)
+
+`waitForCondition: true` 게이트는 기본적으로 조건이 올라올 때까지 **무한 대기**한다. 신호가
+미배선·오설정인 지점에서 세션이 멈추지 않도록(hang 방지), 게이트별로 **선택적 타임아웃**과
+타임아웃 시 행동을 지정할 수 있다(2026-06-25 엔진 도입, 하위호환).
+
+| 필드 | 타입 | 기본값 | 설명 |
+|---|---|---|---|
+| `waitTimeoutSeconds` | number(옵션) | 미지정 | 게이트 타임아웃(초). **미지정/null/0 이하이면 무한 대기(기존 동작)**. 양수이면 그 시간 안에 조건 미충족 시 `onWaitTimeout` 적용. |
+| `onWaitTimeout` | string(옵션) | `KeepWaiting` | 타임아웃 시 행동. 아래 4가지. |
+
+`onWaitTimeout` 값:
+- `KeepWaiting`(기본): 타임아웃을 무시하고 계속 대기 = **기존 동작과 동일**(하위호환).
+- `FailBranch`: `failureNextIdentifier` 로 분기. 미지정/미존재면 `KeepWaiting` 으로 폴백.
+- `ForceAdvance`: `nextIdentifier` 로 강제 진행하고, 미수행 기록 이벤트(`OnValidatorWaitTimeout`)를 1회 발생.
+- `WarnAndKeepWaiting`: 운영자에게 경고(콘솔+인게임챗) 후 계속 대기.
+
+```json
+{
+  "nodeType": "Validator",
+  "identifier": "V013_4",
+  "rootConditions": [
+    { "condition": "RegistryContains",
+      "validationRules": [
+        { "type": "Registry", "condition": "Contains",
+          "registryType": "RuntimeState", "registryIdentifier": "sig.suction_patient_a" } ] }
+  ],
+  "onFailure": "Ignore",
+  "waitForCondition": true,
+  "waitTimeoutSeconds": 90,
+  "onWaitTimeout": "ForceAdvance",
+  "nextIdentifier": "D009"
+}
+```
+
+- 미지정 게이트(기존 104개)는 **동작 변화 0** (KeepWaiting = 무한 대기).
+- 브랜치(Parallel) 내부 게이트에서는 전역 분기/종료를 일으키지 않으므로, `FailBranch`/`ForceAdvance`
+  모두 "타임아웃 시 게이트를 해제하고 브랜치 체인을 다음 노드로 진행"으로 동작한다(미수행 기록).
+- 타임아웃 발생은 `ScenarioController.OnValidatorWaitTimeout(node, behavior)` 이벤트로 노출되어
+  평가 기록(루브릭 "미수행" 판정, G-3)에서 구독할 수 있다.
+
 #### 도메인 인터랙션 게이트 변환 (todo.validate.* -> Validator/RegistryContains)
 
 1차 변환에서 `todo.validate.<cond>` (InvokeEvent 스텁) 으로 둔 게이트는 다음으로 치환한다.

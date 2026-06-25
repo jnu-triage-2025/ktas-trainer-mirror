@@ -34,6 +34,7 @@
 - [remaining-implementation-checklist.md](./remaining-implementation-checklist.md): 남은 이벤트 구현 체크리스트
 - [scenario-authoring-guide.md](./scenario-authoring-guide.md): 시나리오 작성 가이드
 - [scenario-graph-spec.md](./scenario-graph-spec.md): scenario-graph
+- [validator-gate-timeout-setup-guide.md](./validator-gate-timeout-setup-guide.md): Validator 게이트 타임아웃·실패 분기 설정 가이드
 
 작성 기준: Git 추적 문서(.md) 기준으로 색인하며, .gitignore 대상 파일은 제외합니다.
 <!-- DOC-INDEX:END -->

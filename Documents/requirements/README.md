@@ -35,7 +35,7 @@ updated: 2026-04-14
 
 ### 하위 폴더
 - [chat-command](./chat-command/README.md): 문서 5개
-- [content-definitions](./content-definitions/README.md): 문서 24개
+- [content-definitions](./content-definitions/README.md): 문서 25개
 - [datapack](./datapack/README.md): 문서 2개
 - [gameplay](./gameplay/README.md): 문서 4개
 - [interaction](./interaction/README.md): 문서 4개
