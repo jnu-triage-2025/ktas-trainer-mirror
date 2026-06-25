@@ -20,6 +20,7 @@
 - [event-mapping.md](./event-mapping.md): 시나리오 이벤트-구현 매핑 (재난 시나리오)
 - [event-registry.md](./event-registry.md): 시나리오 이벤트 레지스트리
 - [entity-preset-debug-guide.md](./entity-preset-debug-guide.md): EntityPreset 개발 디버깅 가이드 (IndevScene)
+- [evaluation-rubric-recording-system.md](./evaluation-rubric-recording-system.md): 평가 루브릭 수행/미수행 기록 시스템
 - [human-operator-process.md](./human-operator-process.md): 재난 시나리오 인게임화 — 인간 작업 프로세스(운영자용)
 - [implementation-prep.md](./implementation-prep.md): 재난 시나리오 미구현 기능 구현 준비서 (안전 우선)
 - [interaction-signal-integration-spec.md](./interaction-signal-integration-spec.md): 인터랙션 완료 신호(sig.*) 게임플레이 연결 명세

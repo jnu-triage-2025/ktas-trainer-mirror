@@ -22,12 +22,29 @@ flags: ["refactor-required"]
 
 ## 0. 현재 상태(중요)
 
-- 변환된 113개 Validator 는 모두 `onFailure: Ignore` 다. **신호가 없으면 게이트는 그냥 통과(Advance)** 하므로,
+- 변환된 Validator 게이트(patient_a 57개 + patient_b_c 47개 = 104개)는 모두 `onFailure: Ignore`,
+  `waitForCondition: true` 다. **신호가 없으면 게이트는 그냥 통과(Advance)** 하므로,
   신호 연결 전에도 시나리오는 끝까지 진행된다(데모 가능). 신호를 연결할수록 "수행해야 진행"이 점진 활성화된다.
 - **현재 게임플레이 인터랙션 계층에는 완료 이벤트가 없다.** `IInteract.Interact` 는 `void` 이며
   완료 콜백/이벤트가 없다. 또한 다수 인터랙션(아이템 적용/조립/삽입)은 게임플레이 로직 자체가
   아직 구현되지 않았고, 시각효과만 시나리오 핸들러가 생성한다. 따라서 신호 연결은
   "이벤트 구독"이 아니라 **각 완료 지점 직접 계측** 또는 **선행 게임플레이 구현** 이 필요하다.
+
+### 0.1 게이트 정책 결정(G-2, 2026-06-25)
+
+원본 평가 루브릭의 의도는 "필수 처치를 수행해야 진행"이다. 이를 시스템에서 실현하려면 핵심 게이트가
+blocking 이어야 한다. 그러나 신호 배선이 끝나기 전에 `onFailure` 를 `Panic`/`Branching` 으로 바꾸면
+미배선 게이트에서 **코루틴이 영구 대기(hang)** 한다(현재 엔진은 `waitForCondition=true` 게이트에
+타임아웃·실패 분기가 없음). 따라서 설계 의도를 운영 위험 없이 달성하기 위한 단계적 정책은 다음과 같다.
+
+1. **(현재)** 신호 미배선 구간은 `onFailure: Ignore` 유지 → 데모/수업이 멈추지 않음.
+2. **(선행 조건)** `Validator 게이트 타임아웃·실패 분기` 도입
+   (제안서: `Agents/Proposals/2026-06-25-scenario-validator-gate-timeout/`).
+   하위호환(미지정 시 기존 동작)으로 hang 위험을 제거한다.
+3. **(목표)** 신호가 배선된 핵심 처치 게이트부터 blocking 으로 전환(타임아웃+미수행 기록).
+   미수행은 평가 기록(루브릭, G-3)으로 남긴다.
+
+즉, **G-2(수행 강제)는 G-6(게이트 타임아웃) 도입 후에 게이트 단위로 점진 적용**한다.
 
 ## 1. 연결 방식 두 가지
 
@@ -149,3 +166,52 @@ UI/장비 클릭. 해당 UI 확정 또는 장비 클릭 콜백에 연결. 대상
 
 CPR 2사이클처럼 같은 인터랙션을 반복하는 구간은, 사이클 시작 시 `ScenarioInteractionSignals.Clear("<cond>")`
 로 이전 신호를 내려야 다음 사이클의 Validator 가 다시 대기한다(필요 구간 한정).
+
+## 5. 운영자 Editor 정합 체크리스트 (2026-06-25 실측 검증)
+
+실제 JSON 의 게이트 신호(`sig.*`)를 두 시나리오에서 모두 추출하여, 현재 게임플레이 코드가
+올리는 신호와 대조한 결과다. 이 체크리스트만 따르면 "코드 변경 없이" 통과시킬 수 있는 게이트가
+명확해진다.
+
+### 5.1 아이템 픽업 게이트 — 정합 완료(코드/설정 변경 불필요)
+`MedicalItem.OnGet` 이 `sig.click_<Identifier>` 를 올리며, 아래 29개 픽업 게이트는 모두 실제
+아이템 `Identifier` 와 1:1 일치함을 확인했다(불일치 0건).
+
+`18g, 20g, ambubag, blood_transfusion_set, defibpad, electrode, electrode_cable,
+endotracheal_tube, epinephrine_ampule, gauze, gloves, intravenous_set, laryngoscope_blade,
+laryngoscope_handle, normal_saline_1000ml, normal_saline_20ml, o2_line, penlight,
+plasma_solution_1000ml, plaster, reservoir_bag, scissors, stylet, suction_line, syringe_20cc,
+syringe_5cc, vital_set, wall_suction, yankauer`
+
+- [ ] 운영자 확인사항: 위 아이템 프리팹들이 씬에 배치되어 있고 획득 가능한지.
+- [ ] `plasma_solution_1000ml` 아이콘 스프라이트/3D 모델 리소스 추가(`ValidateItemResources` 경고 해소).
+
+### 5.2 환자/연결지점 Identifier 지정 (코드 변경 불필요, 에디터 설정 필수)
+아래는 코드는 자동으로 신호를 올리지만, **에디터에서 Identifier 를 조건명으로 맞춰야** 통과한다.
+
+- [ ] `PatientController` Identifier: 환자 A=`patient_a`, B=`patient_b`, C=`patient_c`, 더미=`dummy_b`.
+- [ ] IV/산소/벽/모니터 연결지점(`IntravenousLineConnectionPoint`) Identifier 를 조건명으로 지정:
+      `connect_cannula_and_ns1`, `connect_cannula_and_ns1_patient_b`, `connect_cannula_and_ns1_patient_c`,
+      `connect_wall_component_1`, `connect_wall_component_2`, `connect_wall_component_and_yankauer`,
+      `connect_ambubag`, `connect_o2_to_ambu`, `connect_blood_to_lv1`, `connect_ps1_to_lv1`,
+      `connect_tpiece_and_oxyflow`, `connect_patient_and_monitor_b`, `connect_patient_and_monitor_patient_c`,
+      `connect_nasal_and_o2`.
+- [ ] 들것/침대 잡기 지점 Identifier: `grab_stretcher_a~d`, `grab_stretcher_patient_b`, `grab_stretcher_patient_c`.
+
+### 5.3 게임플레이 미구현 — 신호 배선 선행 필요(별도 백로그)
+아래 신호는 게임플레이 인터랙션 자체가 없거나 완료 이벤트가 없어, 코드 구현 후 `Raise` 가 필요하다.
+이들이 배선되기 전까지 해당 게이트는 `onFailure: Ignore` 로 자동 통과되며 "수행 검사"가 되지 않는다.
+
+- 적용/착용/삽입/주입/흡인/제거: `apply_gauze`, `apply_electrode`, `apply_plaster_on_gauze`,
+  `apply_plaster_on_intu`, `apply_stabilizer_patient_a`, `wear_glove`, `insert_iv_patient_a_left`,
+  `insert_iv_b_right`, `insert_iv_c_left`, `push_epi`, `push_ns`, `suction_patient_a`,
+  `remove_intu_stylet`, `remove_tpiece`, `remove_patient_clothing`, `start_ambu`.
+- 의사 NPC 전달: `pass_laryngoscope`, `pass_et_tube_ready`, `pass_syringe`, `pass_central_line_set`.
+- 사정 확정: `check_avpu_gcs_patient_a`, `check_pulse_patient_a`, `check_gcs_a_rosc`,
+  `check_gcs_patient_b/c`, `check_vital_patient_b/c`, `show_vital_patient_a`, `close_vital_ui_b/c`.
+- 신체부위/장비/구역: `click_chest`, `click_patient_chest`, `click_to_start_comp`, `click_defib`,
+  `click_flowmeter`, `click_oxyflow_wall`, `click_humidifierbottle`, `click_sdw`, `click_tpiece`,
+  `click_neckstabilizer`, `click_nasal`, `click_patient_b_face`, `click_patient_c_face`,
+  `click_dummy_b`, `move_defibcart_to_patient`, `arrive_triagearea`, `enter_triage_zone`.
+
+> 검증 방법: 배선 전이라도 `/scenario signal <cond>` 커맨드로 각 게이트가 막히고 열리는지 수동 확인 가능.
