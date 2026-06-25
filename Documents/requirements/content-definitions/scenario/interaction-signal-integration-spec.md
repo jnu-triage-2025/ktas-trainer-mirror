@@ -39,7 +39,7 @@ blocking 이어야 한다. 그러나 신호 배선이 끝나기 전에 `onFailur
 
 1. **(현재)** 신호 미배선 구간은 `onFailure: Ignore` 유지 → 데모/수업이 멈추지 않음.
 2. **(선행 조건)** `Validator 게이트 타임아웃·실패 분기` 도입
-   (제안서: `Agents/Proposals/2026-06-25-scenario-validator-gate-timeout/`).
+   (제안서: `Agents/Proposals/스케줄됨/2026-06-25-scenario-validator-gate-timeout/`).
    하위호환(미지정 시 기존 동작)으로 hang 위험을 제거한다.
 3. **(목표)** 신호가 배선된 핵심 처치 게이트부터 blocking 으로 전환(타임아웃+미수행 기록).
    미수행은 평가 기록(루브릭, G-3)으로 남긴다.

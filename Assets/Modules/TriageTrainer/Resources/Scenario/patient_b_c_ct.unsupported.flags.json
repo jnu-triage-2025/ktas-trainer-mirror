@@ -61,7 +61,7 @@
       "status": "open"
     }
   ],
-  "note": "테스트: /scenario signal <cond> 커맨드로 게이트 통과 검증 가능. 미배선 신호 배선 가이드: Documents/requirements/content-definitions/scenario/interaction-signal-integration-spec.md. 참고 제안서: Agents/Proposals/2026-06-24-scenario-parallel-execution/",
+  "note": "테스트: /scenario signal <cond> 커맨드로 게이트 통과 검증 가능. 미배선 신호 배선 가이드: Documents/requirements/content-definitions/scenario/interaction-signal-integration-spec.md. 참고 제안서: Agents/Proposals/완료/2026-06-24-scenario-parallel-execution/",
   "history": [
     {
       "date": "2026-06-24",

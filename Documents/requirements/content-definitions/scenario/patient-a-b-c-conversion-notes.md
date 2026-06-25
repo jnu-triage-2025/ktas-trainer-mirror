@@ -247,13 +247,13 @@ Agent Manager 워크트리 2개(`scenario-patient-a-json`, `scenario-patient-bc-
 | GAP-G5 | Sound 노드 미구현 | **구현됨(2026-06-24)** | `ExecuteSoundNode` 가 `Resources/Sound/<id>`(폴백 `Resources/<id>`) 에서 클립 로드 후 `PlayOneShot` 재생, `WaitUntilFinished` 시 실제 클립 길이만큼 대기 |
 | GAP-G6 | Choice→Quiz 채점 미연동 | **보류(별도 설계 필요)** | 루브릭(수행/미수행) 집계는 관찰자/평가자 모드·루브릭 데이터모델·영속화가 필요한 신규 기능. 별도 제안 필요. Quiz 노드(correctIndex/feedback)는 이미 정/오답 표현 가능 |
 | GAP-G7 | Dialogue Duration 손실 | **구현됨(2026-06-24)** | 엔진 `autoAdvanceSeconds`(opt-in) 로 복원. 원본 `.md` 의 Duration 을 해당 Dialogue 노드 `autoAdvanceSeconds` 로 재변환(A 99건·B/C 81건 적용) |
-| GAP-G8 | 시나리오가 클라이언트 로컬 실행(TargetRpc)이라 다인 분배·신호 공유 불성립 | **P1 구현(2026-06-24)** | `ScenarioNetworkRelay`(NetworkBehaviour) 로 완료 신호를 서버 권한화(클라 인터랙션 → ServerRpc → 서버 RuntimeState). 중계기 부재 시 로컬 폴백(회귀 없음). P2(권위 플레이어 풀)·P3(실행 권위/표현 RPC)는 후속. 상세: `Agents/Proposals/2026-06-24-scenario-parallel-execution/server-authoritative-execution-spec.md` |
+| GAP-G8 | 시나리오가 클라이언트 로컬 실행(TargetRpc)이라 다인 분배·신호 공유 불성립 | **P1 구현(2026-06-24)** | `ScenarioNetworkRelay`(NetworkBehaviour) 로 완료 신호를 서버 권한화(클라 인터랙션 → ServerRpc → 서버 RuntimeState). 중계기 부재 시 로컬 폴백(회귀 없음). P2(권위 플레이어 풀)·P3(실행 권위/표현 RPC)는 후속. 상세: `Agents/Proposals/완료/2026-06-24-scenario-parallel-execution/server-authoritative-execution-spec.md` |
 
 TODO-SPEC-* 는 모두 엔진(`MultiplayerInfrastructure`) 변경을 필요로 하여, 루트 `AGENTS.md` 정책에 따라
 `/Agents/Proposals/Feature Proposal - ScenarioNode Expressiveness/` 에 Feature Proposal + 예시 설계 명세를
 먼저 작성하였고(2026-06-23), 이후 SPEC-1·2·3 을 엔진에 구현하였다(전부 opt-in·하위호환, 기존 시나리오 회귀 0건).
 GAP-G1~G3(병렬 실행·게이팅 계층)은 별도 제안서
-`/Agents/Proposals/2026-06-24-scenario-parallel-execution/` 에 정리 후 엔진에 구현하였다(2026-06-24).
+`/Agents/Proposals/완료/2026-06-24-scenario-parallel-execution/` 에 정리 후 엔진에 구현하였다(2026-06-24).
 본 변환 작업 자체(JSON 산출)는 엔진 변경 없이 수행되었다.
 
 ### 3-2-1. 플레이 가능화 — 엔진 무관 선행 작업 (2026-06-23)

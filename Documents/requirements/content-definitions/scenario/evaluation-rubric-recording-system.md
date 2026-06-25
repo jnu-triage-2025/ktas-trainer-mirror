@@ -61,4 +61,4 @@ flags: ["refactor-required"]
 - 원본 기획: `Documents/requirements/content-definitions/scenario/_origin/시뮬레이션 사례 + 평가 루브릭 (4차 수정).txt`
 - [인터랙션 완료 신호 연결 명세](./interaction-signal-integration-spec.md)
 - [환자 A 시나리오](./patient_a_critical.md) · [환자 B/C 시나리오](./patient_b_c_ct.md)
-- 게이트 타임아웃 제안: `Agents/Proposals/2026-06-25-scenario-validator-gate-timeout/Feature Proposal - Scenario Validator Gate Timeout.md`
+- 게이트 타임아웃 제안: `Agents/Proposals/스케줄됨/2026-06-25-scenario-validator-gate-timeout/Feature Proposal - Scenario Validator Gate Timeout.md`

@@ -2,7 +2,7 @@
 
 - 작성일: 2026-06-25
 - 대상 모듈: `Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/`
-- 관련 제안: `Agents/Proposals/2026-06-24-scenario-parallel-execution/`
+- 관련 제안: `Agents/Proposals/완료/2026-06-24-scenario-parallel-execution/`
 - 관련 명세: `Documents/requirements/content-definitions/scenario/interaction-signal-integration-spec.md`
 
 ### 개요
@@ -116,4 +116,4 @@ if (!EvaluateValidator(node)) { /* 타임아웃 → OnWaitTimeout 정책 적용 
 
 - 무한 대기 근거: `ScenarioController.cs` `ExecuteValidatorNode`(waitForCondition 분기), `ExecuteValidatorGate`.
 - 신호 배선 현황: `interaction-signal-integration-spec.md` §2, 각 `*.unsupported.flags.json` 의 `gateSignalCoverage`.
-- 선행 제안: `Agents/Proposals/2026-06-24-scenario-parallel-execution/`.
+- 선행 제안: `Agents/Proposals/완료/2026-06-24-scenario-parallel-execution/`.
