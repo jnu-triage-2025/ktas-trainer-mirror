@@ -48,5 +48,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("failureNextIdentifier")]
     public string FailureNextIdentifier { get; set; }
+
+    [JsonPropertyName("waitForCondition")]
+    public bool? WaitForCondition { get; set; }
   }
 }

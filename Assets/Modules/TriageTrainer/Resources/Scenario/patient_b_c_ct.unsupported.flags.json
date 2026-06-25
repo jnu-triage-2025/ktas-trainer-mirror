@@ -2,7 +2,7 @@
   "identifier": "patient_b_c_ct.unsupported.flags",
   "sourceScenario": "Documents/requirements/content-definitions/scenario/patient_b_c_ct.md",
   "generatedFrom": "patient_b_c_ct conversion",
-  "status": "validators-converted; gameplay signal emit pending",
+  "status": "validators-converted; ByRole+waitForCondition applied; Dialogue Duration restored as autoAdvanceSeconds; gameplay signal emit in progress",
   "unsupportedSourceConstructs": [
     {
       "sourceNodeIdentifier": "N029",
@@ -1100,5 +1100,12 @@
     "sig.select_patient_b_and_select_patient_c",
     "sig.wear_glove"
   ],
-  "note": "todo.validate.* InvokeEvent 스텁을 Validator(RegistryContains, RuntimeState, sig.*) 로 치환 완료. 이제 게임플레이가 인터랙션 완료 시 ScenarioInteractionSignals.Raise(\"<cond>\") 로 아래 신호를 올려야 진행된다."
+  "note": "ByRole 병렬 분배와 Validator(waitForCondition) 게이팅이 엔진에 구현되어 JSON에 반영됨. 이제 게임플레이가 인터랙션 완료 시 ScenarioInteractionSignals.Raise(\"<cond>\") 로 신호를 올려야 게이트가 통과한다(현재 미배선). 테스트는 /scenario signal <cond> 커맨드로 가능. 참고 제안서: Agents/Proposals/2026-06-24-scenario-parallel-execution/",
+  "resolvedConstructs": [
+    {
+      "construct": "Dialogue.Duration (dropped)",
+      "resolution": "엔진 autoAdvanceSeconds(opt-in) 로 복원. 원본 .md 의 Duration 값을 해당 Dialogue 노드 autoAdvanceSeconds 로 재변환 적용.",
+      "date": "2026-06-24"
+    }
+  ]
 }
