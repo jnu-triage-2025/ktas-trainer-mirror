@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using TriageTrainer.Patient;
 
+using MI = MultiplayerInfrastructure;
+
 namespace TriageTrainer.Entity
 {
   /// <summary>
