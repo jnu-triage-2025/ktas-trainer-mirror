@@ -10,6 +10,7 @@ using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
+using MultiplayerInfrastructure.Scenario.Preflight;
 using TextToSpeechService;
 using FishNet.Object;
 using FishNet;
@@ -36,6 +37,12 @@ namespace MultiplayerInfrastructure.Scenario
     [SerializeField] private TTSService _ttsService;
     [SerializeField] private AudioSource _ttsAudioSource;
 
+    [Header("Preflight (사전 요구사항 검증)")]
+    [Tooltip("시나리오 시작 직전에 그래프가 요구하는 씬/레지스트리 요소가 준비되어 있는지 점검한다.")]
+    [SerializeField] private bool _preflightEnabled = true;
+    [SerializeField]
+    private ScenarioPreflightPolicy _preflightPolicy = ScenarioPreflightPolicy.Default;
+
     #endregion
 
     #region Private Fields
@@ -48,6 +55,16 @@ namespace MultiplayerInfrastructure.Scenario
     private int? _scenarioOwnerClientId;
     private ChatUIController _chatUIController;
     private Coroutine _dialogueAutoAdvanceRoutine;
+
+    /// <summary>
+    /// 브랜치 체인(<see cref="RunBranchChain"/>)이 노드를 실행하는 동안 0보다 크다.
+    /// 브랜치 내부의 노드 실행기(QuestControl/StateUpdate/PlayerTag/InvokeEvent 등)는
+    /// 내부적으로 전역 <see cref="Advance"/> 를 호출하는데, 이 값이 0보다 큰 동안에는
+    /// 전역 진행을 무시(no-op)하여 브랜치 노드의 부수효과가 전역 시나리오 커서를
+    /// 끌고 가지 않도록 격리한다. 브랜치는 <see cref="IScenarioNode.NextIdentifier"/> 로 직접 이동한다.
+    /// 동시 실행되는 여러 브랜치/지연 코루틴을 고려해 카운터로 관리한다.
+    /// </summary>
+    private int _globalAdvanceSuppressionDepth;
 
     #endregion
 
@@ -119,6 +136,13 @@ namespace MultiplayerInfrastructure.Scenario
       _instance = this;
     }
 
+    private void Reset()
+    {
+      // 컴포넌트를 처음 붙일 때 Preflight 정책을 안전한 기본값(콘솔/인게임챗 둘 다 경고 + 계속 진행)으로 초기화한다.
+      _preflightEnabled = true;
+      _preflightPolicy = ScenarioPreflightPolicy.Default;
+    }
+
     public void RegisterReferences(
       DialoguePanelUIController uiController,
       MainCameraController camController,
@@ -172,6 +196,13 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
+      // 이전 시나리오 실행에서 남은 코루틴(병렬 브랜치 등)이 있으면 새 시나리오 시작 전에 정리한다.
+      StopAllCoroutines();
+      CancelDialogueAutoAdvance();
+      // StopAllCoroutines 로 강제 종료된 브랜치 코루틴은 finally 가 실행되지 않아
+      // 억제 카운터가 불균형 상태로 남을 수 있으므로 명시적으로 초기화한다.
+      _globalAdvanceSuppressionDepth = 0;
+
       _currentGraph = graph;
       _scenarioOwnerClientId = ownerClientId;
 
@@ -192,6 +223,17 @@ namespace MultiplayerInfrastructure.Scenario
       if (!graph.TryGetNode(startId, out var startNode))
       {
         Debug.LogError($"[ScenarioController] Start node '{startId}' not found");
+        return;
+      }
+
+      // 사전 요구사항 검증: 그래프가 요구하는 씬/레지스트리 요소가 준비됐는지 점검한다.
+      // 정책이 AbortStart 이고 누락이 있으면 시작을 중단한다(경고 후 return).
+      if (_preflightEnabled
+          && !ScenarioPreflight.Run(graph, _preflightPolicy, AppendSystemChatMessage, out _))
+      {
+        _currentGraph = null;
+        _currentNode = null;
+        _state = State.Inactive;
         return;
       }
 
@@ -222,9 +264,16 @@ namespace MultiplayerInfrastructure.Scenario
     {
       CancelDialogueAutoAdvance();
 
+      // 아직 진행 중인 시나리오 코루틴(특히 WaitMode.None 으로 전역 시나리오보다 오래
+      // 살아남는 병렬 브랜치)을 모두 정리한다. 이를 누락하면 그래프가 해제된 뒤에도
+      // 브랜치 체인이 계속 돌면서 _currentGraph 역참조에서 NullReferenceException 이 발생한다.
+      StopAllCoroutines();
+
       _currentGraph = null;
       _currentNode = null;
       _state = State.Inactive;
+      // 강제 종료된 브랜치 코루틴의 finally 가 실행되지 않을 수 있으므로 억제 카운터를 초기화한다.
+      _globalAdvanceSuppressionDepth = 0;
 
       ClearOptions();
       _stateStore.Clear();
@@ -243,6 +292,14 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public void Advance()
     {
+      // 브랜치 체인이 노드를 실행하는 동안에는 전역 진행을 무시한다.
+      // 브랜치는 NextIdentifier 로 직접 이동하므로, 브랜치 노드 실행기가 호출한
+      // Advance 가 전역 _currentNode 를 끌고 가서 시나리오를 조기 종료시키는 것을 막는다.
+      if (_globalAdvanceSuppressionDepth > 0)
+      {
+        return;
+      }
+
       // 진행되는 즉시 대기 중인 Dialogue 자동 진행 타이머를 취소하여 중복 진행을 막는다.
       CancelDialogueAutoAdvance();
 
@@ -1492,6 +1549,14 @@ namespace MultiplayerInfrastructure.Scenario
 
       while (cursor != null)
       {
+        // 시나리오가 이미 종료되어 그래프가 해제된 경우(예: WaitMode.None 병렬 브랜치가
+        // 전역 시나리오보다 오래 살아남은 경우)에는 브랜치를 안전하게 종료한다.
+        // 이를 누락하면 아래 _currentGraph 역참조에서 NullReferenceException 이 발생한다.
+        if (_currentGraph == null)
+        {
+          yield break;
+        }
+
         if (++guard > maxNodes)
         {
           Debug.LogWarning("[ScenarioController] Branch chain exceeded node limit; aborting branch to avoid infinite loop.");
@@ -1502,6 +1567,12 @@ namespace MultiplayerInfrastructure.Scenario
 
         // 단일 노드를 실행하고 완료를 대기한다(전역 Advance 미사용).
         yield return ExecuteBranchNode(cursor);
+
+        // 노드 대기 도중 시나리오가 종료되어 그래프가 해제됐을 수 있으므로 재확인한다.
+        if (_currentGraph == null)
+        {
+          yield break;
+        }
 
         var nextId = cursor.NextIdentifier;
 
@@ -1536,49 +1607,81 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     private IEnumerator ExecuteBranchNode(IScenarioNode node)
     {
-      switch (node)
+      // 브랜치 노드 실행기가 내부적으로 전역 Advance 를 호출하더라도 전역 시나리오 커서가
+      // 끌려가지 않도록, 브랜치 노드 실행 구간 동안 전역 Advance 를 억제한다.
+      // 브랜치 진행은 RunBranchChain 이 NextIdentifier 로만 수행한다.
+      _globalAdvanceSuppressionDepth++;
+      try
       {
-        case ScenarioDelayNode delay:
-          yield return ExecuteDelayNode(delay);
-          break;
-        case ScenarioInvokeEventNode invoke:
-          if (invoke.MoveNextBehavior == ScenarioInvokeEventMoveNextBehavior.WaitUntilDone)
-          {
-            yield return ExecuteInvokeEventNode(invoke);
-          }
-          else
-          {
-            StartCoroutine(ExecuteInvokeEventNode(invoke));
-          }
-          break;
-        case ScenarioSoundNode sound:
-          yield return ExecuteSoundNode(sound);
-          break;
-        case ScenarioValidatorNode validator:
-          yield return ExecuteValidatorGate(validator);
-          break;
-        case ScenarioInteractionNode interaction:
-          yield return ExecuteInteractionNode(interaction);
-          break;
-        case ScenarioCombineItemNode combineItem:
-          yield return ExecuteCombineItemNode(combineItem);
-          break;
-        case ScenarioDialogueNode dialogue:
-          // 브랜치 내 다이얼로그: 자동진행 시간이 지정되면 그 시간만큼, 아니면 짧게 표시 후 진행.
-          if (!_uiController.IsUnityNull())
-          {
-            _uiController.DisplayDialogue(dialogue.SpeakerName, dialogue.DialogueContent, dialogue.PortraitSpriteIdentifier);
-          }
-          if (dialogue.AutoAdvanceSeconds.HasValue && dialogue.AutoAdvanceSeconds.Value > 0f)
-          {
-            yield return new WaitForSeconds(dialogue.AutoAdvanceSeconds.Value);
-          }
-          break;
-        default:
-          // 즉시 완료형 노드(QuestControl/StateUpdate/PlayerTag/EntityTag/WaypointHighlight 등):
-          // 실행기가 내부에서 Advance 를 호출하더라도, 브랜치는 그 진행을 사용하지 않고 직접 이동한다.
-          ExecuteNode(node);
-          break;
+        switch (node)
+        {
+          case ScenarioDelayNode delay:
+            yield return ExecuteDelayNode(delay);
+            break;
+          case ScenarioInvokeEventNode invoke:
+            // WaitUntilDone/Immediately 모두 실행기 말미에 전역 Advance 를 호출하지만,
+            // 억제 카운터로 무시된다. Immediately(fire-and-forget) 의 경우 핸들러 코루틴이
+            // 이 메서드 종료 후 끝날 수 있어, 그 시점까지 억제가 유지되도록 전용 래퍼로 감싼다.
+            if (invoke.MoveNextBehavior == ScenarioInvokeEventMoveNextBehavior.WaitUntilDone)
+            {
+              yield return ExecuteInvokeEventNode(invoke);
+            }
+            else
+            {
+              StartCoroutine(RunInvokeEventSuppressed(invoke));
+            }
+            break;
+          case ScenarioSoundNode sound:
+            yield return ExecuteSoundNode(sound);
+            break;
+          case ScenarioValidatorNode validator:
+            yield return ExecuteValidatorGate(validator);
+            break;
+          case ScenarioInteractionNode interaction:
+            yield return ExecuteInteractionNode(interaction);
+            break;
+          case ScenarioCombineItemNode combineItem:
+            yield return ExecuteCombineItemNode(combineItem);
+            break;
+          case ScenarioDialogueNode dialogue:
+            // 브랜치 내 다이얼로그: 자동진행 시간이 지정되면 그 시간만큼, 아니면 짧게 표시 후 진행.
+            if (!_uiController.IsUnityNull())
+            {
+              _uiController.DisplayDialogue(dialogue.SpeakerName, dialogue.DialogueContent, dialogue.PortraitSpriteIdentifier);
+            }
+            if (dialogue.AutoAdvanceSeconds.HasValue && dialogue.AutoAdvanceSeconds.Value > 0f)
+            {
+              yield return new WaitForSeconds(dialogue.AutoAdvanceSeconds.Value);
+            }
+            break;
+          default:
+            // 즉시 완료형 노드(QuestControl/StateUpdate/PlayerTag/EntityTag/WaypointHighlight 등):
+            // 실행기가 내부에서 Advance 를 호출하더라도, 브랜치는 그 진행을 사용하지 않고 직접 이동한다.
+            ExecuteNode(node);
+            break;
+        }
+      }
+      finally
+      {
+        _globalAdvanceSuppressionDepth--;
+      }
+    }
+
+    /// <summary>
+    /// 브랜치 내부의 fire-and-forget InvokeEvent 핸들러 코루틴을 실행하는 동안
+    /// 전역 Advance 억제를 유지한다. 핸들러가 이 노드 실행 완료 이후에 끝나며
+    /// 말미의 전역 Advance 를 호출하더라도 전역 시나리오 커서를 끌고 가지 않게 한다.
+    /// </summary>
+    private IEnumerator RunInvokeEventSuppressed(ScenarioInvokeEventNode invoke)
+    {
+      _globalAdvanceSuppressionDepth++;
+      try
+      {
+        yield return ExecuteInvokeEventNode(invoke);
+      }
+      finally
+      {
+        _globalAdvanceSuppressionDepth--;
       }
     }
 

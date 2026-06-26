@@ -149,6 +149,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "waitForCondition": true,
       "nextIdentifier": "Q002_2"
     },
     "Q002_2": {
@@ -210,6 +211,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "waitForCondition": true,
       "nextIdentifier": "E002"
     },
     "E002": {
@@ -283,6 +285,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "waitForCondition": true,
       "nextIdentifier": "E003"
     },
     "E003": {
@@ -364,6 +367,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "waitForCondition": true,
       "nextIdentifier": "CC_A_Triage"
     },
     "N002": {
@@ -402,6 +406,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "waitForCondition": true,
       "nextIdentifier": "Q003_1"
     },
     "Q003_1": {
@@ -492,6 +497,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "waitForCondition": true,
       "nextIdentifier": "A001"
     },
     "A001": {
@@ -537,6 +543,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "waitForCondition": true,
       "nextIdentifier": "A002"
     },
     "A002": {
@@ -576,6 +583,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "waitForCondition": true,
       "nextIdentifier": "CC_D_Ready"
     },
     "D004": {
@@ -614,6 +622,7 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
+      "waitForCondition": true,
       "nextIdentifier": "Q005_1"
     },
     "Q005_1": {
