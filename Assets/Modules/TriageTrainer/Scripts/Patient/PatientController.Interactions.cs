@@ -126,6 +126,7 @@ namespace TriageTrainer.Entity
       _interacts.Add(new PatientLiftInteract(this));
       _interacts.Add(new PatientCarryInteract(this));
       _interacts.Add(new PatientMonitorSelectInteract(this));
+      AddAssessInteracts();
     }
 
     private void RebuildInteractConfigMap()

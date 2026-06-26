@@ -66,6 +66,30 @@ updated: 2026-06-25
 > 부착(Apply)과 사용(Use) 신호는 독립적으로 동작합니다. 시각 부착이 있으면 Attachable Item Visuals에,
 > 없으면 Item Use Signals에 매핑하면 됩니다. 둘 다 설정해도 됩니다.
 
+## 2-2. Assess Actions (환자 사정 신호)
+
+의식상태(AVPU/GCS)·활력징후·맥박 확인처럼 "환자를 클릭해 사정"하는 동작은 `PatientController` 의
+**Assess Actions** 목록에 등록합니다. 등록된 사정은 환자 상호작용 힌트로 노출되고, 수행 시 신호를 올립니다.
+
+| 필드 | 설명 |
+|---|---|
+| `Identifier` | 사정 동작 식별자(중복 불가). 예: `assess_avpu_gcs`, `assess_pulse` |
+| `Display Text` | 상호작용 힌트 문구. 예: `의식상태 사정`, `맥박 확인` |
+| `Assess Signal` | 수행 시 올릴 신호 조건명. 예: `check_avpu_gcs_patient_a`, `check_pulse_patient_a` |
+| `Enabled` | 노출 여부. 시나리오 진행 중 `SetAssessActionEnabled(id, bool)` 로 제어 가능 |
+
+매핑 예:
+
+| Assess Signal | 게이트 |
+|---|---|
+| `check_avpu_gcs_patient_a` | `V012`(환자 A) |
+| `check_pulse_patient_a` | `V022`, `V031`(환자 A) |
+| `check_gcs_patient_b` | `V041`(환자 B) |
+| `check_vital_patient_b` | `V045`(환자 B) |
+| `check_gcs_patient_c` | `V060`(환자 C) |
+
+> `show_vital_patient_a`, `close_vital_ui_b/c` 는 바이탈 모니터 UI 열기/닫기 콜백이 필요해 별도(후속)입니다.
+
 ## 3. 테스트
 
 1. 거즈 아이템을 획득해 들고, 환자를 조준한 상태에서 사용 입력.

@@ -154,6 +154,17 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
   `epinephrine_ampule`→`push_epi`, `normal_saline_20ml`→`push_ns`.
 - 설정: [item-apply-signal-setup-guide.md](./item-apply-signal-setup-guide.md) "Item Use Signals" 절.
 
+### check_* (사정: 의식/활력/맥박) — [계측 완료, 2026-06-25]
+환자를 클릭해 사정을 수행하는 동작을 `PatientController` 의 **Assess Actions**(`AssessActionConfig`:
+identifier/displayText/assessSignal/enabled)로 데이터화했다. 등록된 각 사정은 환자 인터랙션
+힌트로 노출되며, 수행 시 `assessSignal` 을 `ScenarioInteractionSignals.Raise` 로 올린다.
+- 운영자 작업(코드 변경 불필요): 환자 프리팹 Assess Actions 에 예) `assess_avpu_gcs`→`check_avpu_gcs_patient_a`,
+  `assess_pulse`→`check_pulse_patient_a`, `assess_vital`→`check_vital_patient_b` 매핑.
+- 시나리오 진행에 따라 `PatientController.SetAssessActionEnabled(id, bool)` 로 노출을 제어할 수 있다.
+- 대상: `check_avpu_gcs_patient_a`, `check_pulse_patient_a`, `check_gcs_a_rosc`,
+  `check_gcs_patient_b/c`, `check_vital_patient_b/c`.
+- 잔여: `show_vital_patient_a`, `close_vital_ui_b/c` 는 바이탈 모니터 UI 열기/닫기 콜백이 필요(미구현).
+
 ### insert_* / remove_* (삽입/제거) — [없음]
 정맥 캐뉼라 삽입(연결과 구분), 스타일렛/T-piece 제거 등은 전용 메커닉이 없어 선행 구현이 필요하다.
 대상: `insert_iv_patient_a_left`, `insert_iv_b_right`, `insert_iv_c_left`, `remove_intu_stylet`, `remove_tpiece`.
@@ -224,21 +235,22 @@ syringe_5cc, vital_set, wall_suction, yankauer`
 아래 신호는 게임플레이 인터랙션 자체가 없거나 완료 이벤트가 없어, 코드 구현 후 `Raise` 가 필요하다.
 이들이 배선되기 전까지 해당 게이트는 `onFailure: Ignore` 로 자동 통과되며 "수행 검사"가 되지 않는다.
 
-- 적용/착용/삽입/주입/흡인/제거: `apply_gauze`, `apply_electrode`, `apply_plaster_on_gauze`,
-  `apply_plaster_on_intu`, `apply_stabilizer_patient_a`, `wear_glove`, `insert_iv_patient_a_left`,
-  `insert_iv_b_right`, `insert_iv_c_left`, `push_epi`, `push_ns`, `suction_patient_a`,
-  `remove_intu_stylet`, `remove_tpiece`, `remove_patient_clothing`, `start_ambu`.
+계측 완료(2026-06-25, 설정만으로 동작):
+- 구역 진입: `arrive_triagearea`, `enter_triage_zone` → `ScenarioTriggerZone._raiseSignalsOnEnter`(§2 구역 진입 절).
+- 부착형 적용/착용: `apply_gauze`, `apply_electrode`, `apply_plaster_on_*`, `apply_stabilizer_patient_a`,
+  `wear_glove` → 환자/침대 프리팹 Attachable Item Visuals `Apply Signal`(§2 apply_* 절).
+- 아이템 사용(부착 없음): `push_epi`, `push_ns`, `suction_patient_a`, `start_ambu` → Item Use Signals(§2).
+- 사정: `check_avpu_gcs_patient_a`, `check_pulse_patient_a`, `check_gcs_a_rosc`, `check_gcs_patient_b/c`,
+  `check_vital_patient_b/c` → 환자 프리팹 **Assess Actions**(`assessSignal`)에 매핑(§2 사정 절).
+
+선행 메커닉 필요(미구현):
+- 정맥 삽입/제거: `insert_iv_patient_a_left`, `insert_iv_b_right`, `insert_iv_c_left`,
+  `remove_intu_stylet`, `remove_tpiece`, `remove_patient_clothing`.
 - 의사 NPC 전달: `pass_laryngoscope`, `pass_et_tube_ready`, `pass_syringe`, `pass_central_line_set`.
-- 사정 확정: `check_avpu_gcs_patient_a`, `check_pulse_patient_a`, `check_gcs_a_rosc`,
-  `check_gcs_patient_b/c`, `check_vital_patient_b/c`, `show_vital_patient_a`, `close_vital_ui_b/c`.
-- 신체부위/장비: `click_chest`, `click_patient_chest`, `click_to_start_comp`, `click_defib`,
+- 모니터 UI 토글: `show_vital_patient_a`, `close_vital_ui_b/c`(바이탈 UI 열기/닫기 콜백 필요).
+- 신체부위/장비 클릭: `click_chest`, `click_patient_chest`, `click_to_start_comp`, `click_defib`,
   `click_flowmeter`, `click_oxyflow_wall`, `click_humidifierbottle`, `click_sdw`, `click_tpiece`,
   `click_neckstabilizer`, `click_nasal`, `click_patient_b_face`, `click_patient_c_face`,
   `click_dummy_b`, `move_defibcart_to_patient`.
-- 구역 진입: `arrive_triagearea`, `enter_triage_zone` → **계측 완료(2026-06-25)**. `ScenarioTriggerZone`
-  의 `_raiseSignalsOnEnter` 에 조건명을 지정하면 진입 시 자동 Raise(§2 구역 진입 절 참고).
-- 부착형 적용/착용(`apply_*`/`wear_glove`): **계측 완료(2026-06-25)**. 환자/침대 프리팹의
-  Attachable Item Visuals `Apply Signal` 설정으로 사용 시 자동 Raise(§2 apply_* 절, 설정 가이드 참고).
-- 삽입/주입/흡인/제거(`insert_iv_*`/`push_*`/`suction_*`/`remove_*`): 선행 메커닉 필요(미구현).
 
 > 검증 방법: 배선 전이라도 `/scenario signal <cond>` 커맨드로 각 게이트가 막히고 열리는지 수동 확인 가능.
