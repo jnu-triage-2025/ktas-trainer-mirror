@@ -31,6 +31,60 @@ namespace MultiplayerInfrastructure.Editor
     private TextField graphIdentifierField;
     private TextField graphTagsField;
 
+    // Scenario documents are stored as "<identifier>.scenario.json"; node-layout sidecars
+    // are stored as "<identifier>.scenario.editor.json".
+    private const string ScenarioExtension = ".scenario.json";
+    private const string ScenarioEditorExtension = ".scenario.editor.json";
+
+    /// <summary>
+    /// Ensures a scenario file path uses the ".scenario.json" extension. Paths already
+    /// ending in ".scenario.json" are returned unchanged; a plain ".json" path is upgraded.
+    /// </summary>
+    private static string NormalizeScenarioPath(string path)
+    {
+      if (string.IsNullOrEmpty(path))
+        return path;
+
+      if (path.EndsWith(ScenarioExtension, StringComparison.OrdinalIgnoreCase))
+        return path;
+
+      if (path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+        return path.Substring(0, path.Length - ".json".Length) + ScenarioExtension;
+
+      return path + ScenarioExtension;
+    }
+
+    /// <summary>
+    /// Returns the editor node-layout sidecar path for a scenario file path.
+    /// </summary>
+    private static string GetEditorSidecarPath(string scenarioPath)
+    {
+      if (string.IsNullOrEmpty(scenarioPath))
+        return scenarioPath;
+
+      if (scenarioPath.EndsWith(ScenarioExtension, StringComparison.OrdinalIgnoreCase))
+        return scenarioPath.Substring(0, scenarioPath.Length - ScenarioExtension.Length) + ScenarioEditorExtension;
+
+      // Fallback for legacy plain ".json" paths.
+      if (scenarioPath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+        return scenarioPath.Substring(0, scenarioPath.Length - ".json".Length) + ScenarioEditorExtension;
+
+      return scenarioPath + ScenarioEditorExtension;
+    }
+
+    /// <summary>
+    /// Derives the scenario identifier from a file path, stripping both the ".scenario.json"
+    /// (or legacy ".json") extension and any residual ".scenario" suffix.
+    /// </summary>
+    private static string GetScenarioIdentifierFromPath(string path)
+    {
+      var name = Path.GetFileNameWithoutExtension(path);
+      if (!string.IsNullOrEmpty(name) && name.EndsWith(".scenario", StringComparison.OrdinalIgnoreCase))
+        name = name.Substring(0, name.Length - ".scenario".Length);
+
+      return name;
+    }
+
     [MenuItem("Tools/Multiplayer Infrastructure/Scenario Graph Authoring")]
     public static void Open()
     {
@@ -489,13 +543,13 @@ namespace MultiplayerInfrastructure.Editor
 
         graphData = loaded;
         if (string.IsNullOrWhiteSpace(graphData.Identifier))
-          graphData.Identifier = Path.GetFileNameWithoutExtension(path);
+          graphData.Identifier = GetScenarioIdentifierFromPath(path);
 
         nodeViews.Clear();
         graphView.ClearGraph();
 
         // Load editor data
-        var editorPath = path.Replace(".json", ".editor.json");
+        var editorPath = GetEditorSidecarPath(path);
         ScenarioGraphEditorData editorData = null;
         if (File.Exists(editorPath))
         {
@@ -575,10 +629,10 @@ namespace MultiplayerInfrastructure.Editor
         return;
       }
 
-      var path = EditorUtility.SaveFilePanel("Save Scenario JSON", Application.dataPath, "scenario_graph.json", "json");
+      var path = EditorUtility.SaveFilePanel("Save Scenario JSON", Application.dataPath, "scenario_graph.scenario.json", "json");
       if (string.IsNullOrEmpty(path)) return;
 
-      SaveGraphToPath(path);
+      SaveGraphToPath(NormalizeScenarioPath(path));
     }
 
     private void SaveGraphToPath(string path)
@@ -588,7 +642,7 @@ namespace MultiplayerInfrastructure.Editor
       EnsureGraphData();
       if (string.IsNullOrWhiteSpace(graphData.Identifier))
       {
-        graphData.Identifier = Path.GetFileNameWithoutExtension(path);
+        graphData.Identifier = GetScenarioIdentifierFromPath(path);
         RefreshGraphIdentifierField();
       }
 
@@ -641,7 +695,7 @@ namespace MultiplayerInfrastructure.Editor
               WriteIndented = true,
               IncludeFields = true
             });
-        var editorPath = path.Replace(".json", ".editor.json");
+        var editorPath = GetEditorSidecarPath(path);
         File.WriteAllText(editorPath, editorJson);
 
         AssetDatabase.Refresh();

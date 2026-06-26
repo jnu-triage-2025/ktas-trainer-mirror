@@ -6,7 +6,7 @@ using MultiplayerInfrastructure.Scenario;
 
 public class ScenarioValidatorWindow : EditorWindow
 {
-  private const string ExampleScenarioResourcePath = "Scenario/sample_scenario";
+  private const string ExampleScenarioResourcePath = "Scenario/sample_scenario.scenario";
 
   [SerializeField] private TextAsset scenarioAsset;
   [SerializeField] private bool validateWithSchema = true;
