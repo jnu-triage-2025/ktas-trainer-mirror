@@ -23,6 +23,7 @@
 - [evaluation-rubric-recording-system.md](./evaluation-rubric-recording-system.md): 평가 루브릭 수행/미수행 기록 시스템
 - [human-operator-process.md](./human-operator-process.md): 재난 시나리오 인게임화 — 인간 작업 프로세스(운영자용)
 - [implementation-prep.md](./implementation-prep.md): 재난 시나리오 미구현 기능 구현 준비서 (안전 우선)
+- [indev-scene-verification-guide.md](./indev-scene-verification-guide.md): IndevScene 시나리오 기능 검증 가이드
 - [interaction-signal-integration-spec.md](./interaction-signal-integration-spec.md): 인터랙션 완료 신호(sig.*) 게임플레이 연결 명세
 - [item-apply-signal-setup-guide.md](./item-apply-signal-setup-guide.md): 아이템 처치(apply) 사용 신호 설정 가이드
 - [json-conversion-rules.md](./json-conversion-rules.md): Scenario 문서 -> JSON 변환 규칙표
