@@ -51,5 +51,11 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("waitForCondition")]
     public bool? WaitForCondition { get; set; }
+
+    [JsonPropertyName("waitTimeoutSeconds")]
+    public float? WaitTimeoutSeconds { get; set; }
+
+    [JsonPropertyName("onWaitTimeout")]
+    public string OnWaitTimeout { get; set; }
   }
 }

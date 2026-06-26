@@ -152,8 +152,33 @@ namespace MultiplayerInfrastructure.Player
 
     public void UseItem()
     {
+      // 들고 있는 아이템을 조준 대상(크로스헤어 레이캐스트 히트)에 "사용"한다.
+      // 대상이 IItemUseTarget 을 구현하면 OnItemUsed 로 위임한다(아이템 적용/신호 배선은 대상 책임).
+      TryUseHandlingItemOnTarget();
+
       if (IsOwner)
         PlayViewmodelUse();
+    }
+
+    /// <summary>
+    /// 현재 조준 중인 대상(크로스헤어 레이캐스트 히트)에서 <see cref="Entity.IItemUseTarget"/> 를 찾아
+    /// 들고 있는 아이템을 사용한다. 히트가 없거나 대상이 아니면 아무 것도 하지 않는다(기존 동작).
+    /// </summary>
+    private bool TryUseHandlingItemOnTarget()
+    {
+      var itemId = HandlingItem?.CurrentIdentifier;
+      if (string.IsNullOrWhiteSpace(itemId))
+        return false;
+
+      var hitObject = RaycastHitObject;
+      if (hitObject == null)
+        return false;
+
+      var useTarget = hitObject.GetComponentInParent<Entity.IItemUseTarget>();
+      if (useTarget == null)
+        return false;
+
+      return useTarget.OnItemUsed(PlayerEntity, itemId);
     }
 
     public void DropHeldItem()

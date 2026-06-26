@@ -89,6 +89,13 @@ namespace MultiplayerInfrastructure.Scenario
     public event Action<IScenarioNode> OnNodeChanged;
     public event Action<ScenarioChoiceOption> OnOptionSelected;
 
+    /// <summary>
+    /// WaitForCondition 게이트가 WaitTimeoutSeconds 안에 조건을 충족하지 못해 타임아웃 정책이
+    /// 적용될 때 1회 발생한다. 평가 기록(루브릭의 "미수행" 판정 등, G-3)에서 구독할 수 있다.
+    /// 인자: (타임아웃된 Validator 노드, 적용된 타임아웃 정책).
+    /// </summary>
+    public event Action<ScenarioValidatorNode, ScenarioValidatorWaitTimeoutBehavior> OnValidatorWaitTimeout;
+
     #endregion
 
     #region Properties
@@ -1223,9 +1230,54 @@ namespace MultiplayerInfrastructure.Scenario
       // WaitForCondition=true 이면 조건 충족까지 폴링 대기하는 게이트로 동작한다.
       if (node.WaitForCondition)
       {
-        yield return new WaitUntil(() => EvaluateValidator(node));
-        Advance();
-        yield break;
+        // 조건 충족 또는 (지정 시) 타임아웃 중 먼저 도달하는 쪽까지 대기한다.
+        yield return WaitForValidatorGate(node);
+
+        // 조건이 충족된 상태로 빠져나왔다면 정상 진행한다.
+        if (EvaluateValidator(node))
+        {
+          Advance();
+          yield break;
+        }
+
+        // 여기 도달 = 타임아웃 발생(조건 미충족). 정책을 적용한다.
+        OnValidatorWaitTimeout?.Invoke(node, node.OnWaitTimeout);
+
+        switch (node.OnWaitTimeout)
+        {
+          case ScenarioValidatorWaitTimeoutBehavior.ForceAdvance:
+            Debug.LogWarning($"[ScenarioController] Validator gate '{node.Identifier}' timed out after {node.WaitTimeoutSeconds}s. ForceAdvance (미수행 기록).");
+            Advance();
+            yield break;
+
+          case ScenarioValidatorWaitTimeoutBehavior.FailBranch:
+            if (!string.IsNullOrEmpty(node.FailureNextIdentifier)
+                && _currentGraph.TryGetNode(node.FailureNextIdentifier, out var failureNode))
+            {
+              Debug.LogWarning($"[ScenarioController] Validator gate '{node.Identifier}' timed out. FailBranch → '{node.FailureNextIdentifier}'.");
+              _currentNode = failureNode;
+              ExecuteNode(failureNode);
+              yield break;
+            }
+            // 분기 대상이 없으면 KeepWaiting 으로 폴백.
+            Debug.LogWarning($"[ScenarioController] Validator gate '{node.Identifier}' timed out but FailureNextIdentifier '{node.FailureNextIdentifier}' is unavailable; falling back to KeepWaiting.");
+            yield return new WaitUntil(() => EvaluateValidator(node));
+            Advance();
+            yield break;
+
+          case ScenarioValidatorWaitTimeoutBehavior.WarnAndKeepWaiting:
+            ReportValidatorWaitTimeoutWarning(node);
+            yield return new WaitUntil(() => EvaluateValidator(node));
+            Advance();
+            yield break;
+
+          case ScenarioValidatorWaitTimeoutBehavior.KeepWaiting:
+          default:
+            // 타임아웃을 무시하고 조건이 올라올 때까지 계속 대기(기존 동작).
+            yield return new WaitUntil(() => EvaluateValidator(node));
+            Advance();
+            yield break;
+        }
       }
 
       bool passed = EvaluateValidator(node, out var failureReason);
@@ -1273,8 +1325,36 @@ namespace MultiplayerInfrastructure.Scenario
     {
       if (node.WaitForCondition)
       {
-        yield return new WaitUntil(() => EvaluateValidator(node));
-        yield break;
+        yield return WaitForValidatorGate(node);
+
+        if (EvaluateValidator(node))
+        {
+          yield break;
+        }
+
+        // 타임아웃 발생. 브랜치 내부에서는 전역 Advance/EndScenario/Branching 을 일으키지 않고,
+        // 정책에 따라 "대기 지속" 또는 "대기 종료(체인 진행 허용)" 만 결정한다.
+        OnValidatorWaitTimeout?.Invoke(node, node.OnWaitTimeout);
+
+        switch (node.OnWaitTimeout)
+        {
+          case ScenarioValidatorWaitTimeoutBehavior.ForceAdvance:
+          case ScenarioValidatorWaitTimeoutBehavior.FailBranch:
+            // 브랜치 체인은 NextIdentifier 로 진행하므로, 대기를 끝내면 체인이 다음 노드로 이동한다.
+            // (브랜치 내부에는 전역 실패 분기가 없으므로 FailBranch 도 동일하게 게이트만 해제한다.)
+            Debug.LogWarning($"[ScenarioController] Branch validator gate '{node.Identifier}' timed out after {node.WaitTimeoutSeconds}s; releasing gate (미수행 기록).");
+            yield break;
+
+          case ScenarioValidatorWaitTimeoutBehavior.WarnAndKeepWaiting:
+            ReportValidatorWaitTimeoutWarning(node);
+            yield return new WaitUntil(() => EvaluateValidator(node));
+            yield break;
+
+          case ScenarioValidatorWaitTimeoutBehavior.KeepWaiting:
+          default:
+            yield return new WaitUntil(() => EvaluateValidator(node));
+            yield break;
+        }
       }
 
       if (EvaluateValidator(node, out var failureReason))
@@ -1285,6 +1365,36 @@ namespace MultiplayerInfrastructure.Scenario
       ReportValidatorFailure(node, failureReason);
       // 브랜치 내부에서는 진행을 막지 않고 통과한다(병렬 합류 흐름 보호).
       yield break;
+    }
+
+    /// <summary>
+    /// WaitForCondition 게이트의 대기 루틴. WaitTimeoutSeconds 가 양수이면 "조건 충족 OR 타임아웃" 중
+    /// 먼저 도달하는 쪽까지 대기하고, null/0 이하이면 조건이 충족될 때까지 무한 대기한다(기존 동작).
+    /// 타임아웃 판정은 권위 컨텍스트(게이트를 구동하는 컨트롤러)에서 수행된다.
+    /// 빠져나온 뒤 조건 충족 여부는 호출부가 <see cref="EvaluateValidator(ScenarioValidatorNode)"/> 로 재확인한다.
+    /// </summary>
+    private IEnumerator WaitForValidatorGate(ScenarioValidatorNode node)
+    {
+      var timeout = node.WaitTimeoutSeconds;
+      if (timeout is > 0f)
+      {
+        float deadline = Time.time + timeout.Value;
+        yield return new WaitUntil(() => EvaluateValidator(node) || Time.time >= deadline);
+      }
+      else
+      {
+        yield return new WaitUntil(() => EvaluateValidator(node));
+      }
+    }
+
+    /// <summary>
+    /// WarnAndKeepWaiting 정책에서 운영자에게 게이트 타임아웃 경고를 전달한다(콘솔 + 인게임챗).
+    /// </summary>
+    private void ReportValidatorWaitTimeoutWarning(ScenarioValidatorNode node)
+    {
+      var message = $"Validator gate '{node.Identifier}' timed out after {node.WaitTimeoutSeconds}s; still waiting for condition.";
+      Debug.LogWarning($"[ScenarioController] {message}");
+      AppendSystemChatMessage(message);
     }
 
     private IEnumerator ExecuteParallelNode(ScenarioParallelNode node)

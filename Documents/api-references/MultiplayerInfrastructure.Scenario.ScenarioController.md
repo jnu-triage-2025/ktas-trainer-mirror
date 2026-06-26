@@ -137,7 +137,7 @@ public void SelectOption(int index)
 | `Notification` | `ExecutingNotification` | 알림 UI 메시지 표시 |
 | `Delay` | `ExecutingDelay` | 지정 시간(초) 대기 후 자동 진행 |
 | `Parallel` | `ExecutingParallel` | 복수 브랜치 동시 또는 순차 실행 |
-| `Validator` | `ExecutingValidator` | 플레이어 수 등 조건 검사 후 분기 |
+| `Validator` | `ExecutingValidator` | 플레이어 수/신호 등 조건 검사. `waitForCondition=true`면 조건 충족까지 게이트 대기(§7-1 타임아웃 참고) |
 | `RoleAssignment` | `ExecutingRoleAssignment` | 역할 자동/수동 배정 |
 | `StateUpdate` | `ExecutingStateUpdate` | 내부 상태 변수 갱신 (구현 예정) |
 | `Sound` | `ExecutingSound` | 사운드 재생 (구현 예정) |
@@ -147,6 +147,45 @@ public void SelectOption(int index)
 | `Interaction` | `ExecutingInteraction` | 인터랙션 대기 (구현 예정) |
 | `CombineItem` | `ExecutingCombineItem` | 아이템 합성 (구현 예정) |
 | `PlayTTS` | `ExecutingTTS` | TTSService로 TTS 합성 재생. `WaitUntilFinished`에 따라 완료 대기 |
+
+---
+
+## 7-1. Validator 게이트 타임아웃·실패 분기
+
+`Validator` 노드에 `waitForCondition: true`를 두면, 조건(인터랙션 신호 등)이 충족될 때까지
+진행을 막는 **게이트**로 동작합니다. 기본적으로는 조건이 올라올 때까지 **무한 대기**합니다.
+
+신호 미배선·오설정으로 인한 영구 정지(hang)를 막기 위해, 게이트별로 **선택적 타임아웃**을
+지정할 수 있습니다(2026-06-25 도입, 하위호환).
+
+| 필드 | 타입 | 기본값 | 설명 |
+|---|---|---|---|
+| `WaitTimeoutSeconds` | `float?` | `null` | 게이트 타임아웃(초). `null`/0 이하이면 무한 대기(기존 동작). |
+| `OnWaitTimeout` | `ScenarioValidatorWaitTimeoutBehavior` | `KeepWaiting` | 타임아웃 시 행동. |
+
+`ScenarioValidatorWaitTimeoutBehavior`:
+
+| 값 | 메인 흐름 동작 | 브랜치(Parallel) 내부 동작 |
+|---|---|---|
+| `KeepWaiting`(기본) | 타임아웃 무시, 계속 대기 | 동일 |
+| `FailBranch` | `FailureNextIdentifier`로 분기(없으면 KeepWaiting 폴백) | 게이트 해제 후 체인 진행(전역 분기 없음) |
+| `ForceAdvance` | `NextIdentifier`로 강제 진행 | 게이트 해제 후 체인 진행 |
+| `WarnAndKeepWaiting` | 콘솔+인게임챗 경고 후 계속 대기 | 동일 |
+
+실행 경로:
+- 메인 흐름: `ExecuteValidatorNode` → `WaitForValidatorGate`(조건 OR 타임아웃 경합) → 조건 충족 시 `Advance()`,
+  미충족(타임아웃) 시 `OnWaitTimeout` 정책 적용.
+- 브랜치 흐름: `ExecuteValidatorGate` → 동일 대기 → 타임아웃 시 전역 `Advance`/`EndScenario` 없이
+  게이트만 해제하여 브랜치 체인이 `NextIdentifier`로 진행하도록 함(병렬 합류 흐름 보호).
+
+### OnValidatorWaitTimeout 이벤트
+
+```csharp
+public event Action<ScenarioValidatorNode, ScenarioValidatorWaitTimeoutBehavior> OnValidatorWaitTimeout;
+```
+
+게이트가 타임아웃되어 정책이 적용될 때 1회 발생합니다. 평가 기록(루브릭 "미수행" 판정, G-3)에서
+구독하여 "어떤 게이트가 시간 내 미수행되었는지"를 기록할 수 있습니다.
 
 ---
 

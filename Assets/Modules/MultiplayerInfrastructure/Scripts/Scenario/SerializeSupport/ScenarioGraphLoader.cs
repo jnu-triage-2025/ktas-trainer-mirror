@@ -387,6 +387,8 @@ namespace MultiplayerInfrastructure.Scenario
           FailureReportTargets = ParseValidatorFailureReportTargets(dto.FailureReportTargets),
           FailureNextIdentifier = dto.FailureNextIdentifier,
           WaitForCondition = dto.WaitForCondition ?? false,
+          WaitTimeoutSeconds = (dto.WaitTimeoutSeconds is > 0f) ? dto.WaitTimeoutSeconds : null,
+          OnWaitTimeout = ParseValidatorWaitTimeoutBehavior(dto.OnWaitTimeout),
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -925,6 +927,10 @@ namespace MultiplayerInfrastructure.Scenario
           FailureReportTargets = node.FailureReportTargets.ToString(),
           FailureNextIdentifier = node.FailureNextIdentifier,
           WaitForCondition = node.WaitForCondition ? true : (bool?)null,
+          WaitTimeoutSeconds = (node.WaitTimeoutSeconds is > 0f) ? node.WaitTimeoutSeconds : null,
+          OnWaitTimeout = node.OnWaitTimeout != ScenarioValidatorWaitTimeoutBehavior.KeepWaiting
+              ? node.OnWaitTimeout.ToString()
+              : null,
           NextIdentifier = node.NextIdentifier
         };
 
@@ -1026,6 +1032,21 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       throw new JsonException($"Unknown ScenarioValidatorOnFailure '{value}'.");
+    }
+
+    private static ScenarioValidatorWaitTimeoutBehavior ParseValidatorWaitTimeoutBehavior(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioValidatorWaitTimeoutBehavior.KeepWaiting;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioValidatorWaitTimeoutBehavior parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioValidatorWaitTimeoutBehavior '{value}'.");
     }
 
     private static RegistryType ParseValidatorRegistryType(string value)

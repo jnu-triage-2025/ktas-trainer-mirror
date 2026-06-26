@@ -152,8 +152,11 @@
 | `condition`              | string  | 플레이어 수 비교: `PlayerCountEqual`, `PlayerCountNotEqual`, `<`, `<=`, `>`, `>=` 대응 |
 | `targetCount`            | int     | 비교 대상 값                                                       |
 | `onFailure`              | string  | `Panic` \| `Branching` \| `Ignore`                                 |
-| `failureNextIdentifier`  | string  | `Branching`일 때 이동할 노드 ID                                    |
-| `nextIdentifier`         | string  | 검증 성공 시 이동할 노드 ID                                        |
+| `failureNextIdentifier`  | string  | `Branching`(또는 `onWaitTimeout=FailBranch`)일 때 이동할 노드 ID    |
+| `waitForCondition`       | bool    | `true`이면 조건 충족까지 진행을 막는 게이트로 동작(기본 `false`)     |
+| `waitTimeoutSeconds`     | number  | (옵션) 게이트 타임아웃(초). 미지정/0 이하면 무한 대기(기존 동작)     |
+| `onWaitTimeout`          | string  | 타임아웃 시 행동: `KeepWaiting`(기본) \| `FailBranch` \| `ForceAdvance` \| `WarnAndKeepWaiting` |
+| `nextIdentifier`         | string  | 검증 성공 시(또는 `onWaitTimeout=ForceAdvance`) 이동할 노드 ID       |
 
 #### 3.9 QuestControl (`ScenarioQuestControlNodeDTO`)
 

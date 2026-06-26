@@ -190,8 +190,11 @@ namespace MultiplayerInfrastructure.Registry
       if (!registry.TryGetValue(identifier, out var definition))
       {
         // Fallback: allow scenario JSONs under Resources/Scenario to be resolved
-        // without explicit preload wiring in every scene.
-        var textAsset = Resources.Load<TextAsset>($"Scenario/{identifier}");
+        // without explicit preload wiring in every scene. Scenario documents use the
+        // ".scenario.json" extension, so Unity exposes them as "<identifier>.scenario";
+        // also try the bare identifier for backward compatibility.
+        var textAsset = Resources.Load<TextAsset>($"Scenario/{identifier}{ScenarioGraphAssetSuffix}")
+          ?? Resources.Load<TextAsset>($"Scenario/{identifier}");
         if (textAsset != null)
         {
           registry[identifier] = textAsset;
@@ -225,15 +228,23 @@ namespace MultiplayerInfrastructure.Registry
         if (asset == null)
           continue;
 
-        string key = asset.name?.Trim();
-        if (string.IsNullOrWhiteSpace(key))
+        string assetName = asset.name?.Trim();
+        if (string.IsNullOrWhiteSpace(assetName))
           continue;
 
-        // Skip companion artifacts that live alongside scenario graphs but are not
-        // ScenarioGraph documents themselves (editor layout sidecars and conversion
-        // reports). Unity strips the .json extension, so these surface as asset names
-        // ending in ".editor", ".unsupported.flags", etc.
-        if (IsNonScenarioGraphCompanionAsset(key))
+        // Only ScenarioGraph documents are loaded as graphs. Scenario documents use the
+        // ".scenario.json" extension; Unity strips the trailing ".json", so they surface
+        // as asset names ending in ".scenario". Companion artifacts (editor layout
+        // sidecars ".scenario.editor", conversion reports ".scenario.unsupported.flags",
+        // and rubric definitions ".rubric") intentionally do not match the ScenarioGraph
+        // schema and must not be loaded as graphs.
+        if (!IsScenarioGraphAsset(assetName))
+          continue;
+
+        // Register under the bare identifier (without the ".scenario" suffix) so lookups
+        // by scenario identifier resolve regardless of the file extension scheme.
+        string key = StripScenarioGraphSuffix(assetName);
+        if (string.IsNullOrWhiteSpace(key))
           continue;
 
         if (!registry.TryGetValue(key, out var definition) || definition == null)
@@ -250,19 +261,42 @@ namespace MultiplayerInfrastructure.Registry
     }
 
     /// <summary>
-    /// Returns true when a Resources/Scenario asset is a companion artifact rather than a
-    /// ScenarioGraph document. These include editor layout sidecars (".editor") and
-    /// conversion reports (".unsupported.flags", ".unsupported"), which intentionally do
+    /// Asset-name suffix exposed by Unity for ScenarioGraph documents. Scenario files use
+    /// the ".scenario.json" extension; Unity strips the trailing ".json", leaving
+    /// ".scenario".
+    /// </summary>
+    private const string ScenarioGraphAssetSuffix = ".scenario";
+
+    /// <summary>
+    /// Returns true when a Resources/Scenario asset is an actual ScenarioGraph document.
+    /// Scenario documents end in ".scenario" (from ".scenario.json"). Companion artifacts
+    /// such as editor layout sidecars (".scenario.editor"), conversion reports
+    /// (".scenario.unsupported.flags"), and rubric definitions (".rubric") intentionally do
     /// not match the ScenarioGraph schema and must not be loaded as graphs.
     /// </summary>
-    private static bool IsNonScenarioGraphCompanionAsset(string assetName)
+    private static bool IsScenarioGraphAsset(string assetName)
     {
       if (string.IsNullOrWhiteSpace(assetName))
         return false;
 
-      return assetName.EndsWith(".editor", StringComparison.OrdinalIgnoreCase)
-        || assetName.EndsWith(".unsupported.flags", StringComparison.OrdinalIgnoreCase)
-        || assetName.EndsWith(".unsupported", StringComparison.OrdinalIgnoreCase);
+      // ".scenario.editor", ".scenario.unsupported.flags", etc. carry additional suffixes
+      // after ".scenario" and must be excluded.
+      return assetName.EndsWith(ScenarioGraphAssetSuffix, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Strips the trailing ".scenario" suffix from a ScenarioGraph asset name, yielding the
+    /// bare scenario identifier used as the registry key.
+    /// </summary>
+    private static string StripScenarioGraphSuffix(string assetName)
+    {
+      if (string.IsNullOrWhiteSpace(assetName))
+        return assetName;
+
+      if (assetName.EndsWith(ScenarioGraphAssetSuffix, StringComparison.OrdinalIgnoreCase))
+        return assetName.Substring(0, assetName.Length - ScenarioGraphAssetSuffix.Length);
+
+      return assetName;
     }
 
     public static IReadOnlyDictionary<string, T> GetAll<T>(RegistryType registryType)

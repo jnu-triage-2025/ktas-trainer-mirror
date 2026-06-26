@@ -1,9 +1,15 @@
 ---
 title: "평가 루브릭 수행/미수행 기록 시스템"
 domain: content-definitions
-progress: "0-reserved"
+progress: "2-implementing"
 flags: ["refactor-required"]
 ---
+
+> 구현 현황(2026-06-25): 자동 기록 **코어 첫 증분**이 구현되었다(`TriageTrainer.Scenario.Rubric.RubricRecorder`).
+> 게이트 통과→수행, 게이트 타임아웃(G-6)→미수행을 팀 단위로 자동 기록하고 CSV로 내보낸다.
+> 관찰자 모드 UI, 플레이어별 분배, 파일 영속화는 후속 작업이다.
+> 설정: [rubric-recorder-setup-guide.md](./rubric-recorder-setup-guide.md) ·
+> 레퍼런스: [api-references/TriageTrainer.Scenario.Rubric.RubricRecorder.md](../../../api-references/TriageTrainer.Scenario.Rubric.RubricRecorder.md)
 
 ## 개요
 
@@ -44,9 +50,10 @@ flags: ["refactor-required"]
 - **자동 판정 연계점**: 시나리오 엔진의 게이트 통과(`ScenarioInteractionSignals` / Validator
   `RegistryContains(RuntimeState, "sig.*")`)와 사정 퀴즈(`ScenarioChoiceNode`/`ScenarioQuizNode`)가
   수행 판정의 1차 데이터다. 항목↔게이트 매핑 표가 필요하다(아래 신호 목록 참조).
-- **미수행 판정의 전제**: 현재 모든 게이트는 `onFailure: Ignore` 라 미수행을 구분하지 못한다.
-  "미수행" 자동 판정은 게이트 타임아웃 기능(아래 G-6 제안) 도입 후, 타임아웃→미수행 이벤트로
-  기록하는 방식이 필요하다.
+- **미수행 판정의 전제**: 게이트 타임아웃 기능(G-6, 2026-06-25 구현)으로 해결되었다.
+  게이트가 `waitTimeoutSeconds` 초과 시 `ScenarioController.OnValidatorWaitTimeout` 이벤트가 발생하며,
+  `RubricRecorder` 가 이를 구독하여 `ForceAdvance`/`FailBranch` 타임아웃을 "미수행"으로 기록한다.
+  단, 타임아웃이 설정되지 않은(무한 대기) 게이트는 여전히 미수행을 자동 판정하지 못한다(설정 필요).
 - **수동 항목**: `pass_*`(의사 전달), 신체 사정 등 자동 신호가 없는 항목은 관찰자 수동 체크 UI 필요.
 - **관찰자 모드**: 별도 플레이어 권한(관찰/평가)과 UI 가 필요하다. 현재 멀티플레이 인프라의 역할/태그
   (`PlayerTagService`)를 활용하되, 관찰자 전용 화면은 신규 UI 작업이다.
@@ -61,4 +68,5 @@ flags: ["refactor-required"]
 - 원본 기획: `Documents/requirements/content-definitions/scenario/_origin/시뮬레이션 사례 + 평가 루브릭 (4차 수정).txt`
 - [인터랙션 완료 신호 연결 명세](./interaction-signal-integration-spec.md)
 - [환자 A 시나리오](./patient_a_critical.md) · [환자 B/C 시나리오](./patient_b_c_ct.md)
-- 게이트 타임아웃 제안: `Agents/Proposals/스케줄됨/2026-06-25-scenario-validator-gate-timeout/Feature Proposal - Scenario Validator Gate Timeout.md`
+- 게이트 타임아웃 제안: `Agents/Proposals/scheduled/2026-06-25-scenario-validator-gate-timeout/Feature Proposal - Scenario Validator Gate Timeout.md`
+- 기록 코어 설정 가이드: [rubric-recorder-setup-guide.md](./rubric-recorder-setup-guide.md)

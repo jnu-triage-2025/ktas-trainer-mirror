@@ -13,19 +13,9 @@ using MI = MultiplayerInfrastructure;
 namespace TriageTrainer.Entity
 {
   [RequireComponent(typeof(CapsuleCollider))]
-  public partial class PatientController : NetworkBehaviour, IInteractable, IReposable
+  public partial class PatientController : NetworkBehaviour, IInteractable, IReposable, IItemUseTarget
   {
     private const string DefaultPatientCarryAttachPointName = "PatientCarryAttachPoint";
-
-    [Serializable]
-    public class AttachableItemVisualPair
-    {
-      [SerializeField] private string _itemIdentifier;
-      [SerializeField] private GameObject _visualObject;
-
-      public string ItemIdentifier => _itemIdentifier;
-      public GameObject VisualObject => _visualObject;
-    }
 
     [Header("Identity")]
     [SerializeField] private string _identifier = "patient";
@@ -41,16 +31,12 @@ namespace TriageTrainer.Entity
     [Header("Patient")]
     [SerializeField] private int _weight = 4;
 
-    [Header("Attachable Item Visuals")]
-    [SerializeField] private List<AttachableItemVisualPair> _attachableItemVisualPairs = new();
-
     [Header("Runtime")]
     [SerializeField] private MovingPatientBedController _currentBed;
     [SerializeField] private Transform _carryAttachPoint;
     [SerializeField] private bool _isMovingPatientBedAttached;
     [SerializeField] private bool _isPlayerAttached;
 
-    private readonly Dictionary<string, GameObject> _attachableVisualMap = new(StringComparer.Ordinal);
     private readonly Dictionary<string, float> _lastNoticeByInteractor = new(StringComparer.Ordinal);
 
     private ChatUIController _chatUI;
@@ -70,7 +56,6 @@ namespace TriageTrainer.Entity
       EnsureCarryAttachPoint();
       InitializeCollider();
       EnsureMedicalStateDefaults();
-      RebuildAttachableVisualMap();
       _weight = Mathf.Max(0, _weight);
       BuildInteractEntries();
     }
@@ -80,12 +65,16 @@ namespace TriageTrainer.Entity
       TryAttachCurrentHandlingItem(attacker);
     }
 
-    public void OnItemUsed(MI.Entity.Entity user, string itemIdentifier)
+    /// <summary>
+    /// 아이템 사용 대상으로서의 처리(<see cref="IItemUseTarget"/>): 코드 하드코딩 매핑(<see cref="ApplyItemUse"/>)에 따라
+    /// 처치 시각 표현을 켜고 시나리오 게이팅 신호를 올린다.
+    /// </summary>
+    public bool OnItemUsed(MI.Entity.Entity user, string itemIdentifier)
     {
       if (string.IsNullOrWhiteSpace(itemIdentifier))
-        return;
+        return false;
 
-      TryAttachItem(itemIdentifier);
+      return ApplyItemUse(itemIdentifier);
     }
 
     public bool TryAttachCurrentHandlingItem(MI.Entity.Entity actorEntity)
@@ -103,22 +92,10 @@ namespace TriageTrainer.Entity
         if (string.IsNullOrWhiteSpace(itemIdentifier))
           return false;
 
-        return TryAttachItem(itemIdentifier);
+        return ApplyItemUse(itemIdentifier);
       }
 
       return false;
-    }
-
-    public bool TryAttachItem(string itemIdentifier)
-    {
-      if (string.IsNullOrWhiteSpace(itemIdentifier))
-        return false;
-
-      if (!_attachableVisualMap.TryGetValue(itemIdentifier, out var visual) || visual == null)
-        return false;
-
-      visual.SetActive(true);
-      return true;
     }
 
     public void SetCurrentBed(MovingPatientBedController bed)
@@ -175,20 +152,6 @@ namespace TriageTrainer.Entity
         Debug.Log($"[Patient] {message}", this);
     }
 
-    private void RebuildAttachableVisualMap()
-    {
-      _attachableVisualMap.Clear();
-
-      for (int i = 0; i < _attachableItemVisualPairs.Count; i++)
-      {
-        var pair = _attachableItemVisualPairs[i];
-        if (pair == null || string.IsNullOrWhiteSpace(pair.ItemIdentifier) || pair.VisualObject == null)
-          continue;
-
-        _attachableVisualMap[pair.ItemIdentifier] = pair.VisualObject;
-      }
-    }
-
     private void EnsureCarryAttachPoint()
     {
       if (_carryAttachPoint != null)
@@ -215,7 +178,6 @@ namespace TriageTrainer.Entity
       InitializeCollider();
       EnsureMedicalStateDefaults();
       _weight = Mathf.Max(0, _weight);
-      RebuildAttachableVisualMap();
       EnsureDefaultInteractConfigs();
     }
   }

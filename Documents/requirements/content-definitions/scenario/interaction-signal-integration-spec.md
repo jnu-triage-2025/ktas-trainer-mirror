@@ -23,8 +23,11 @@ flags: ["refactor-required"]
 ## 0. 현재 상태(중요)
 
 - 변환된 Validator 게이트(patient_a 57개 + patient_b_c 47개 = 104개)는 모두 `onFailure: Ignore`,
-  `waitForCondition: true` 다. **신호가 없으면 게이트는 그냥 통과(Advance)** 하므로,
-  신호 연결 전에도 시나리오는 끝까지 진행된다(데모 가능). 신호를 연결할수록 "수행해야 진행"이 점진 활성화된다.
+  `waitForCondition: true` 다. **주의: `waitForCondition: true` 게이트는 `onFailure` 를 참조하지 않는다.**
+  신호가 끝내 올라오지 않으면 게이트는 통과(Advance)하는 것이 아니라 **무한 대기(hang)** 한다
+  (엔진 `ScenarioController.ExecuteValidatorNode`/`ExecuteValidatorGate`). 즉 신호 미배선 구간에서는
+  세션이 그 지점에서 멈춘다. 따라서 데모/수업을 멈추지 않으려면 게이트별 타임아웃(`waitTimeoutSeconds`
+  + `onWaitTimeout`, 아래 §0.1) 또는 `/scenario signal <cond>` 수동 통과가 필요하다.
 - **현재 게임플레이 인터랙션 계층에는 완료 이벤트가 없다.** `IInteract.Interact` 는 `void` 이며
   완료 콜백/이벤트가 없다. 또한 다수 인터랙션(아이템 적용/조립/삽입)은 게임플레이 로직 자체가
   아직 구현되지 않았고, 시각효과만 시나리오 핸들러가 생성한다. 따라서 신호 연결은
@@ -33,18 +36,19 @@ flags: ["refactor-required"]
 ### 0.1 게이트 정책 결정(G-2, 2026-06-25)
 
 원본 평가 루브릭의 의도는 "필수 처치를 수행해야 진행"이다. 이를 시스템에서 실현하려면 핵심 게이트가
-blocking 이어야 한다. 그러나 신호 배선이 끝나기 전에 `onFailure` 를 `Panic`/`Branching` 으로 바꾸면
-미배선 게이트에서 **코루틴이 영구 대기(hang)** 한다(현재 엔진은 `waitForCondition=true` 게이트에
-타임아웃·실패 분기가 없음). 따라서 설계 의도를 운영 위험 없이 달성하기 위한 단계적 정책은 다음과 같다.
+blocking 이어야 한다. 그러나 신호 배선이 끝나기 전에 핵심 게이트를 강제하면 미배선 게이트에서
+**코루틴이 영구 대기(hang)** 한다. 따라서 설계 의도를 운영 위험 없이 달성하기 위한 단계적 정책은 다음과 같다.
 
-1. **(현재)** 신호 미배선 구간은 `onFailure: Ignore` 유지 → 데모/수업이 멈추지 않음.
-2. **(선행 조건)** `Validator 게이트 타임아웃·실패 분기` 도입
-   (제안서: `Agents/Proposals/스케줄됨/2026-06-25-scenario-validator-gate-timeout/`).
-   하위호환(미지정 시 기존 동작)으로 hang 위험을 제거한다.
-3. **(목표)** 신호가 배선된 핵심 처치 게이트부터 blocking 으로 전환(타임아웃+미수행 기록).
-   미수행은 평가 기록(루브릭, G-3)으로 남긴다.
+1. **(완료)** 신호 미배선 구간은 `onFailure: Ignore`/`onWaitTimeout` 미지정 유지 → 무한 대기 기본값이지만,
+   필요 시 게이트별 `waitTimeoutSeconds`로 hang을 제거할 수 있다.
+2. **(완료, G-6)** `Validator 게이트 타임아웃·실패 분기` 엔진 도입(2026-06-25, 브랜치 `feat/scenario-validator-gate-timeout`).
+   게이트별 `waitTimeoutSeconds`(옵션) + `onWaitTimeout`(`KeepWaiting`/`FailBranch`/`ForceAdvance`/`WarnAndKeepWaiting`)
+   추가. 미지정 시 기존 동작(무한 대기) 유지 → 하위호환. 변환 규칙: [`json-conversion-rules.md`](./json-conversion-rules.md) Validator 섹션.
+   제안서: `Agents/Proposals/scheduled/2026-06-25-scenario-validator-gate-timeout/`.
+3. **(목표)** 신호가 배선된 핵심 처치 게이트부터 `waitTimeoutSeconds`+`onWaitTimeout=ForceAdvance`(또는 `FailBranch`)로
+   전환. 타임아웃은 `ScenarioController.OnValidatorWaitTimeout` 이벤트로 평가 기록(루브릭, G-3)에 남긴다.
 
-즉, **G-2(수행 강제)는 G-6(게이트 타임아웃) 도입 후에 게이트 단위로 점진 적용**한다.
+즉, **G-6(게이트 타임아웃)이 도입되었으므로, G-2(수행 강제)는 신호 배선이 끝난 게이트부터 단위로 점진 적용**한다.
 
 ## 1. 연결 방식 두 가지
 
@@ -133,20 +137,43 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
 
 권장: 표기 불일치 9건은 시나리오 조건명을 아이템 식별자로 통일(JSON 일괄 치환)하는 편이 단순하다.
 
-### apply_* / wear_* / insert_* / push_* / suction_* / remove_* (적용/착용/삽입/주입/흡인/제거) — [없음]
-해당 게임플레이 로직 미구현(`MedicalItem.OnUse` 는 no-op, `RaycastTargetEntity()` 는 stub=null).
-**선행 게임플레이 구현 후** 완료 지점에 Raise 해야 한다. 대상: `apply_gauze`, `apply_electrode`,
-`apply_plaster_on_*`, `apply_stabilizer_patient_a`, `wear_glove`, `insert_iv_*`, `push_epi`, `push_ns`,
-`suction_patient_a`, `remove_intu_stylet`, `remove_tpiece`, `start_ambu`.
+### apply_* / wear_* / push_* / suction_* / start_ambu (아이템 사용 기반) — [계측 완료, 2026-06-26]
+아이템 사용(Use) 입력 → 조준 대상의 `IItemUseTarget.OnItemUsed` 브리지가 구현되었다
+(`PlayerController.UseItem` → `RaycastHitObject` → `IItemUseTarget`). `PatientController` 가 이를 구현하며,
+**아이템→(처치 시각 표현 + 신호) 매핑은 코드 하드코딩**(`PatientController.TreatmentDisplay.cs` 의 `ItemUseEffects`)이라
+인스펙터 입력 없이 동작한다(Reset 무관).
+- 설계: 데이터(`PatientDisplayState`: `DisplayState` 플래그 + `ChildGameObjects`)와 적용(컨트롤러가 플래그 set +
+  자식 GameObject `SetActive`)을 분리. 부위 구분은 환자 프리팹 hierarchy 가 반영(컨트롤러는 플래그만 켬).
+- **운영자 작업**: 환자 프리팹 `PatientDisplayState.ChildGameObjects` 에 처치 표현 오브젝트 연결 + 아이템/환자
+  Identifier 정합. 신호명 입력 불필요. 설정 가이드: [item-apply-signal-setup-guide.md](./item-apply-signal-setup-guide.md).
+- 대상: `apply_gauze`, `apply_plaster_on_gauze`, `apply_plaster_on_intu`, `apply_stabilizer_{id}`, `wear_glove`,
+  `apply_electrode`, `apply_nasal_cannula`, `suction_{id}`, `start_ambu`, `push_epi`, `push_ns`.
+
+### check_* (사정: 의식/활력/맥박) — [계측 완료, 2026-06-25]
+환자를 클릭해 사정을 수행하는 동작을 `PatientController` 의 Assess 인터랙션으로 처리한다. 표준 사정 동작
+(`assess_avpu_gcs`/`assess_pulse`/`assess_gcs`/`assess_vital`)은 **코드 기본값으로 자동 노출**되며 각각
+`check_avpu_gcs_{id}`/`check_pulse_{id}`/`check_gcs_{id}`/`check_vital_{id}` 를 올린다.
+- 비표준 신호(`check_gcs_a_rosc` 등)는 환자 Assess Actions 인스펙터에 `AssessSignal` 로 명시.
+- `PatientController.SetAssessActionEnabled(id, bool)` 로 노출 제어.
+- 대상: `check_avpu_gcs_patient_a`, `check_pulse_patient_a`, `check_gcs_a_rosc`,
+  `check_gcs_patient_b/c`, `check_vital_patient_b/c`.
+- 잔여: `show_vital_patient_a`, `close_vital_ui_b/c` 는 바이탈 모니터 UI 열기/닫기 콜백이 필요(미구현).
+
+### insert_* / remove_* (삽입/제거) — [없음]
+정맥 캐뉼라 삽입(연결과 구분), 스타일렛/T-piece 제거 등은 전용 메커닉이 없어 선행 구현이 필요하다.
+대상: `insert_iv_patient_a_left`, `insert_iv_b_right`, `insert_iv_c_left`, `remove_intu_stylet`, `remove_tpiece`.
 
 ### pass_* (의사 NPC 전달) — [없음/부분]
 아이템을 NPC 에게 건네는 인터랙션. NPC 상호작용 완료 지점 필요. 대상: `pass_laryngoscope`,
 `pass_et_tube_ready`, `pass_syringe`, `pass_central_line_set`.
 
-### enter_* / arrive_* (구역 진입) — [있음(다른 의미)]
-`ScenarioTriggerZone` 는 "시나리오 시작" 이벤트만 발생시키고 "구역 진입 완료 신호"는 없다.
-구역 진입을 게이트로 쓰려면 트리거 존에 진입 카운트 → `Raise("enter_treatmentroom")` 등을 추가해야 한다.
-대상: `enter_treatmentroom_count_2`, `enter_triage_zone_count_3`, `arrive_triagearea`.
+### enter_* / arrive_* (구역 진입) — [계측 완료, 2026-06-25]
+`ScenarioTriggerZone` 에 옵션 필드 `_raiseSignalsOnEnter`(string[]) 가 추가되었다. 플레이어가 존에
+진입할 때 지정한 신호들을 `ScenarioInteractionSignals.Raise` 로 올린다(시나리오 시작 여부와 독립).
+- **운영자 작업(코드 변경 불필요)**: 해당 구역의 `ScenarioTriggerZone` 인스펙터 `_raiseSignalsOnEnter` 에
+  조건명(예: `enter_triage_zone`, `arrive_triagearea`)을 입력한다. 비워 두면 기존 동작(신호 없음) 유지.
+- 신호 전용 존(시나리오 그래프 미지정)도 허용된다 → 게이트 통과 전용 트리거로 배치 가능.
+대상: `enter_triage_zone`, `arrive_triagearea` (필요 시 `enter_treatmentroom` 등 추가).
 
 ### click_flowmeter / click_oxyflow_wall / close_vital_ui_* / show_* — [부분]
 UI/장비 클릭. 해당 UI 확정 또는 장비 클릭 콜백에 연결. 대상: `click_flowmeter`, `click_oxyflow_wall`,
@@ -202,16 +229,22 @@ syringe_5cc, vital_set, wall_suction, yankauer`
 아래 신호는 게임플레이 인터랙션 자체가 없거나 완료 이벤트가 없어, 코드 구현 후 `Raise` 가 필요하다.
 이들이 배선되기 전까지 해당 게이트는 `onFailure: Ignore` 로 자동 통과되며 "수행 검사"가 되지 않는다.
 
-- 적용/착용/삽입/주입/흡인/제거: `apply_gauze`, `apply_electrode`, `apply_plaster_on_gauze`,
-  `apply_plaster_on_intu`, `apply_stabilizer_patient_a`, `wear_glove`, `insert_iv_patient_a_left`,
-  `insert_iv_b_right`, `insert_iv_c_left`, `push_epi`, `push_ns`, `suction_patient_a`,
-  `remove_intu_stylet`, `remove_tpiece`, `remove_patient_clothing`, `start_ambu`.
+계측 완료(2026-06-25, 설정만으로 동작):
+- 구역 진입: `arrive_triagearea`, `enter_triage_zone` → `ScenarioTriggerZone._raiseSignalsOnEnter`(§2 구역 진입 절).
+- 부착형 적용/착용: `apply_gauze`, `apply_electrode`, `apply_plaster_on_*`, `apply_stabilizer_patient_a`,
+  `wear_glove` → 환자/침대 프리팹 Attachable Item Visuals `Apply Signal`(§2 apply_* 절).
+- 아이템 사용(부착 없음): `push_epi`, `push_ns`, `suction_patient_a`, `start_ambu` → Item Use Signals(§2).
+- 사정: `check_avpu_gcs_patient_a`, `check_pulse_patient_a`, `check_gcs_a_rosc`, `check_gcs_patient_b/c`,
+  `check_vital_patient_b/c` → 환자 프리팹 **Assess Actions**(`assessSignal`)에 매핑(§2 사정 절).
+
+선행 메커닉 필요(미구현):
+- 정맥 삽입/제거: `insert_iv_patient_a_left`, `insert_iv_b_right`, `insert_iv_c_left`,
+  `remove_intu_stylet`, `remove_tpiece`, `remove_patient_clothing`.
 - 의사 NPC 전달: `pass_laryngoscope`, `pass_et_tube_ready`, `pass_syringe`, `pass_central_line_set`.
-- 사정 확정: `check_avpu_gcs_patient_a`, `check_pulse_patient_a`, `check_gcs_a_rosc`,
-  `check_gcs_patient_b/c`, `check_vital_patient_b/c`, `show_vital_patient_a`, `close_vital_ui_b/c`.
-- 신체부위/장비/구역: `click_chest`, `click_patient_chest`, `click_to_start_comp`, `click_defib`,
+- 모니터 UI 토글: `show_vital_patient_a`, `close_vital_ui_b/c`(바이탈 UI 열기/닫기 콜백 필요).
+- 신체부위/장비 클릭: `click_chest`, `click_patient_chest`, `click_to_start_comp`, `click_defib`,
   `click_flowmeter`, `click_oxyflow_wall`, `click_humidifierbottle`, `click_sdw`, `click_tpiece`,
   `click_neckstabilizer`, `click_nasal`, `click_patient_b_face`, `click_patient_c_face`,
-  `click_dummy_b`, `move_defibcart_to_patient`, `arrive_triagearea`, `enter_triage_zone`.
+  `click_dummy_b`, `move_defibcart_to_patient`.
 
 > 검증 방법: 배선 전이라도 `/scenario signal <cond>` 커맨드로 각 게이트가 막히고 열리는지 수동 확인 가능.

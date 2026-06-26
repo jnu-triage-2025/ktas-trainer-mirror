@@ -1,0 +1,150 @@
+{
+  "identifier": "rubric_definition_disaster",
+  "items": [
+    {
+      "id": "rubric.a.airway_assessment_vital",
+      "area": "Triage",
+      "title": "활력징후 측정(환자 A)",
+      "gateNodeIdentifier": "V011",
+      "autoSignal": "click_vital_set",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.a.consciousness_avpu_gcs",
+      "area": "Disability",
+      "title": "의식상태 사정(AVPU/GCS, 환자 A)",
+      "gateNodeIdentifier": "V012",
+      "autoSignal": "check_avpu_gcs_patient_a",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.a.cervical_stabilization",
+      "area": "Airway",
+      "title": "경추 고정(환자 A)",
+      "gateNodeIdentifier": "V013_1",
+      "autoSignal": "apply_stabilizer_patient_a",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.a.oral_suction",
+      "area": "Airway",
+      "title": "구강 흡인(환자 A)",
+      "gateNodeIdentifier": "V013_4",
+      "autoSignal": "suction_patient_a",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.b.intubation_tube_fix",
+      "area": "Breathing",
+      "title": "기관내삽관 고정(플라스터, 환자 A)",
+      "gateNodeIdentifier": "V014_5",
+      "autoSignal": "apply_plaster_on_intu",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.c.bleeding_control_gauze",
+      "area": "Circulation",
+      "title": "지혈(거즈 압박, 환자 A)",
+      "gateNodeIdentifier": "V016_2",
+      "autoSignal": "apply_gauze",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.c.iv_access_left",
+      "area": "Circulation",
+      "title": "정맥로 확보(좌측, 환자 A)",
+      "gateNodeIdentifier": "V017_1",
+      "autoSignal": "insert_iv_patient_a_left",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.c.epinephrine_push",
+      "area": "Circulation",
+      "title": "에피네프린 투여(환자 A)",
+      "gateNodeIdentifier": "V026_2",
+      "autoSignal": "push_epi",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.c.chest_compression",
+      "area": "Circulation",
+      "title": "가슴압박 시작(환자 A)",
+      "gateNodeIdentifier": "V024",
+      "autoSignal": "click_to_start_comp",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.c.pulse_check",
+      "area": "Circulation",
+      "title": "맥박 확인(환자 A)",
+      "gateNodeIdentifier": "V022",
+      "autoSignal": "check_pulse_patient_a",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.e.body_exposure",
+      "area": "Exposure",
+      "title": "신체 노출(가위 제거, 환자 A)",
+      "gateNodeIdentifier": "V033",
+      "autoSignal": "click_scissors",
+      "perPlayer": false
+    },
+
+    {
+      "id": "rubric.bc.triage_classification",
+      "area": "Triage",
+      "title": "중증도 분류(환자 B/C/더미)",
+      "gateNodeIdentifier": "V038",
+      "autoSignal": "select_patient_b",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.bc.gcs_patient_b",
+      "area": "Disability",
+      "title": "GCS 사정(환자 B)",
+      "gateNodeIdentifier": "V041",
+      "autoSignal": "check_gcs_patient_b",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.bc.bleeding_control_b",
+      "area": "Circulation",
+      "title": "지혈(환자 B)",
+      "gateNodeIdentifier": "V058",
+      "autoSignal": "apply_gauze",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.bc.iv_access_b",
+      "area": "Circulation",
+      "title": "정맥로 확보(환자 B 우측)",
+      "gateNodeIdentifier": "V050",
+      "autoSignal": "insert_iv_b_right",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.bc.pupil_check_b",
+      "area": "Disability",
+      "title": "동공 반응 확인(환자 B)",
+      "gateNodeIdentifier": "V048",
+      "autoSignal": "click_patient_b_face",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.bc.gcs_patient_c",
+      "area": "Disability",
+      "title": "GCS 사정(환자 C)",
+      "gateNodeIdentifier": "V060",
+      "autoSignal": "check_gcs_patient_c",
+      "perPlayer": false
+    },
+    {
+      "id": "rubric.bc.iv_access_c",
+      "area": "Circulation",
+      "title": "정맥로 확보(환자 C 좌측)",
+      "gateNodeIdentifier": "V069",
+      "autoSignal": "insert_iv_c_left",
+      "perPlayer": false
+    }
+  ]
+}
