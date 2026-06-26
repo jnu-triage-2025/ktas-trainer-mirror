@@ -13,7 +13,7 @@ using MI = MultiplayerInfrastructure;
 namespace TriageTrainer.Entity
 {
   [RequireComponent(typeof(CapsuleCollider))]
-  public partial class PatientController : NetworkBehaviour, IInteractable, IReposable
+  public partial class PatientController : NetworkBehaviour, IInteractable, IReposable, IItemUseTarget
   {
     private const string DefaultPatientCarryAttachPointName = "PatientCarryAttachPoint";
 
@@ -23,8 +23,12 @@ namespace TriageTrainer.Entity
       [SerializeField] private string _itemIdentifier;
       [SerializeField] private GameObject _visualObject;
 
+      [Tooltip("이 아이템을 환자에게 사용(부착)했을 때 올릴 시나리오 인터랙션 신호(sig.* 게이팅용, 옵션). 예: apply_gauze, apply_stabilizer_patient_a. 비워 두면 신호를 올리지 않는다.")]
+      [SerializeField] private string _applySignal;
+
       public string ItemIdentifier => _itemIdentifier;
       public GameObject VisualObject => _visualObject;
+      public string ApplySignal => _applySignal;
     }
 
     [Header("Identity")]
@@ -51,6 +55,7 @@ namespace TriageTrainer.Entity
     [SerializeField] private bool _isPlayerAttached;
 
     private readonly Dictionary<string, GameObject> _attachableVisualMap = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, string> _attachableApplySignalMap = new(StringComparer.Ordinal);
     private readonly Dictionary<string, float> _lastNoticeByInteractor = new(StringComparer.Ordinal);
 
     private ChatUIController _chatUI;
@@ -80,12 +85,12 @@ namespace TriageTrainer.Entity
       TryAttachCurrentHandlingItem(attacker);
     }
 
-    public void OnItemUsed(MI.Entity.Entity user, string itemIdentifier)
+    public bool OnItemUsed(MI.Entity.Entity user, string itemIdentifier)
     {
       if (string.IsNullOrWhiteSpace(itemIdentifier))
-        return;
+        return false;
 
-      TryAttachItem(itemIdentifier);
+      return TryAttachItem(itemIdentifier);
     }
 
     public bool TryAttachCurrentHandlingItem(MI.Entity.Entity actorEntity)
@@ -118,6 +123,14 @@ namespace TriageTrainer.Entity
         return false;
 
       visual.SetActive(true);
+
+      // 처치 적용 완료 시 시나리오 게이팅용 신호를 올린다(설정된 경우). 서버 권한 라우팅.
+      if (_attachableApplySignalMap.TryGetValue(itemIdentifier, out var applySignal)
+          && !string.IsNullOrWhiteSpace(applySignal))
+      {
+        MI.Scenario.ScenarioInteractionSignals.Raise(applySignal);
+      }
+
       return true;
     }
 
@@ -178,6 +191,7 @@ namespace TriageTrainer.Entity
     private void RebuildAttachableVisualMap()
     {
       _attachableVisualMap.Clear();
+      _attachableApplySignalMap.Clear();
 
       for (int i = 0; i < _attachableItemVisualPairs.Count; i++)
       {
@@ -186,6 +200,9 @@ namespace TriageTrainer.Entity
           continue;
 
         _attachableVisualMap[pair.ItemIdentifier] = pair.VisualObject;
+
+        if (!string.IsNullOrWhiteSpace(pair.ApplySignal))
+          _attachableApplySignalMap[pair.ItemIdentifier] = pair.ApplySignal;
       }
     }
 

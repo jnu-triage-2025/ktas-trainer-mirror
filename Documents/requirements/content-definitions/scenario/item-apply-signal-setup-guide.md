@@ -1,0 +1,68 @@
+---
+title: "아이템 처치(apply) 사용 신호 설정 가이드"
+doc_type: requirement
+domain: content-definitions
+progress: "2-implementing"
+status: active
+updated: 2026-06-25
+---
+
+# 아이템 처치(apply) 사용 신호 설정 가이드
+
+이 가이드는 운영자가 "학습자가 아이템(거즈/고정기/플라스터/장갑 등)을 환자에게 **사용(적용)** 하면
+시나리오 게이트가 통과되도록" 설정하는 방법을 설명합니다.
+
+## 1. 동작 원리 (2026-06-25 구현)
+
+- 플레이어가 아이템을 들고 **조준한 상태에서 사용** 하면, `PlayerController` 가 조준 대상(크로스헤어
+  레이캐스트 히트)에서 `IItemUseTarget` 을 찾아 `OnItemUsed(사용자, 아이템식별자)` 를 호출합니다.
+- 대상이 **환자(`PatientController`)** 또는 **환자침대(`MovingPatientBedController`)** 이면, 설정된
+  부착 비주얼을 켜고(기존 동작), **그 아이템에 매핑된 시나리오 신호(`sig.*`)를 올립니다.**
+- 신호가 올라가면 대응 Validator 게이트(예: `V016_2 sig.apply_gauze`)가 통과됩니다.
+
+## 2. 설정 방법 (Unity 에디터)
+
+환자/환자침대 프리팹의 `PatientController`(또는 `MovingPatientBedController`) 인스펙터에서
+**Attachable Item Visuals** 목록의 각 항목에 다음을 채웁니다.
+
+| 필드 | 설명 |
+|---|---|
+| `Item Identifier` | 사용할 아이템 식별자(예: `gauze`, `neckstabilizer`, `gloves`) |
+| `Visual Object` | 적용 시 켜질 부착 비주얼 GameObject |
+| `Apply Signal` | **(신규)** 적용 완료 시 올릴 시나리오 신호 조건명. 예: `apply_gauze`, `apply_stabilizer_patient_a`, `wear_glove` |
+
+- `Apply Signal` 을 **비워 두면** 신호를 올리지 않습니다(기존 동작, 시각 부착만).
+- 신호명은 `sig.` 접두사 없이 조건명만 입력합니다(자동으로 `sig.` 부착).
+
+### 시나리오 게이트와의 매핑 예 (disaster 시나리오)
+
+| 아이템(Item Identifier) | Apply Signal | 게이트 노드 |
+|---|---|---|
+| `gauze` | `apply_gauze` | `V016_2`(환자 A), `V058`(환자 B) |
+| `neckstabilizer` | `apply_stabilizer_patient_a` | `V013_1`(환자 A) |
+| `plaster` | `apply_plaster_on_intu` / `apply_plaster_on_gauze` | `V014_5` 등 |
+| `gloves` | `wear_glove` | `V016_1` 등 |
+| `electrode` | `apply_electrode` | `V043`(환자 B) |
+
+> 약물 주입(`push_epi`/`push_ns`)은 "부착"이 아니라 "투여"라서, 중심정맥관/IV 대상에 사용하는
+> 별도 처리가 필요합니다. 본 가이드의 부착 기반 매핑과는 구분됩니다(후속).
+
+## 3. 테스트
+
+1. 거즈 아이템을 획득해 들고, 환자를 조준한 상태에서 사용 입력.
+2. 거즈 부착 비주얼이 켜지고 `sig.apply_gauze` 가 올라가는지 확인(`/scenario` 디버그 또는 게이트 진행).
+3. 대응 Validator 게이트(`V016_2`)가 통과되어 다음 단계로 진행되는지 확인.
+4. 평가 기록(`RubricRecorder`)에 해당 항목이 "수행"으로 기록되는지 확인.
+
+## 4. 한계 / 후속
+
+- 본 구현은 **사용(Use) 입력 → 조준 대상의 `IItemUseTarget`** 경로다. 조준이 빗나가면(히트 없음)
+  아무 일도 일어나지 않는다(기존 동작 유지, 안전).
+- 약물 주입/흡인/제거/NPC 전달 등은 별도 메커닉이 필요하다(`interaction-signal-integration-spec.md` §2 참고).
+- 부착 비주얼/식별자 정합은 운영자가 프리팹에서 맞춰야 한다.
+
+## 관련 문서
+
+- [인터랙션 완료 신호 연결 명세](./interaction-signal-integration-spec.md) §2 apply_* 절
+- [api-references/MultiplayerInfrastructure.Entity.IItemUseTarget.md](../../../api-references/MultiplayerInfrastructure.Entity.IItemUseTarget.md)
+- 제안서: `Agents/Proposals/done/2026-06-25-item-use-target-signal/`

@@ -137,14 +137,19 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
 
 권장: 표기 불일치 9건은 시나리오 조건명을 아이템 식별자로 통일(JSON 일괄 치환)하는 편이 단순하다.
 
-### apply_* / wear_* / insert_* / push_* / suction_* / remove_* (적용/착용/삽입/주입/흡인/제거) — [없음 → 제안서 진행 중]
-해당 게임플레이 로직 미구현(`MedicalItem.OnUse` 는 no-op, `RaycastTargetEntity()` 는 stub=null).
-조사 결과 **부착 시각화(`TryAttachCurrentHandlingItem`)는 이미 구현**되어 있고, 유일하게 막힌 것은
-타깃 해석 스텁이다. 이를 살리는 작업은 `MultiplayerInfrastructure` 변경이라 Feature Proposal 로 분리했다:
-`Agents/Proposals/scheduled/2026-06-25-item-use-target-signal/`. 채택 시 `apply_*`/`wear_glove`/`push_*`
-다수가 단일 변경으로 계측된다. 대상: `apply_gauze`, `apply_electrode`,
-`apply_plaster_on_*`, `apply_stabilizer_patient_a`, `wear_glove`, `insert_iv_*`, `push_epi`, `push_ns`,
-`suction_patient_a`, `remove_intu_stylet`, `remove_tpiece`, `start_ambu`.
+### apply_* / wear_* (부착형 적용/착용) — [계측 완료, 2026-06-25]
+아이템 사용(Use) 입력 → 조준 대상의 `IItemUseTarget.OnItemUsed` 브리지가 구현되었다
+(`PlayerController.UseItem` → `RaycastHitObject` → `IItemUseTarget`). `PatientController`/
+`MovingPatientBedController` 가 이를 구현하며, `AttachableItemVisualPair.ApplySignal`(옵션)에
+조건명을 지정하면 부착 성공 시 `ScenarioInteractionSignals.Raise` 가 호출된다.
+- **운영자 작업(코드 변경 불필요)**: 환자/침대 프리팹의 Attachable Item Visuals 항목에 `Apply Signal` 입력.
+  설정 가이드: [item-apply-signal-setup-guide.md](./item-apply-signal-setup-guide.md).
+- 대상: `apply_gauze`, `apply_electrode`, `apply_plaster_on_*`, `apply_stabilizer_patient_a`, `wear_glove`.
+
+### insert_* / push_* / suction_* / remove_* (삽입/주입/흡인/제거) — [없음]
+부착형이 아닌 동작(정맥 삽입, 약물 투여, 흡인, 제거)은 전용 메커닉이 없어 선행 구현이 필요하다.
+대상: `insert_iv_*`, `push_epi`, `push_ns`, `suction_patient_a`, `remove_intu_stylet`,
+`remove_tpiece`, `start_ambu`.
 
 ### pass_* (의사 NPC 전달) — [없음/부분]
 아이템을 NPC 에게 건네는 인터랙션. NPC 상호작용 완료 지점 필요. 대상: `pass_laryngoscope`,
@@ -225,7 +230,8 @@ syringe_5cc, vital_set, wall_suction, yankauer`
   `click_dummy_b`, `move_defibcart_to_patient`.
 - 구역 진입: `arrive_triagearea`, `enter_triage_zone` → **계측 완료(2026-06-25)**. `ScenarioTriggerZone`
   의 `_raiseSignalsOnEnter` 에 조건명을 지정하면 진입 시 자동 Raise(§2 구역 진입 절 참고).
-- 적용/착용/주입(`apply_*`/`wear_glove`/`push_*`): Feature Proposal 진행 중
-  (`Agents/Proposals/scheduled/2026-06-25-item-use-target-signal/`). 채택 시 다수 동시 계측.
+- 부착형 적용/착용(`apply_*`/`wear_glove`): **계측 완료(2026-06-25)**. 환자/침대 프리팹의
+  Attachable Item Visuals `Apply Signal` 설정으로 사용 시 자동 Raise(§2 apply_* 절, 설정 가이드 참고).
+- 삽입/주입/흡인/제거(`insert_iv_*`/`push_*`/`suction_*`/`remove_*`): 선행 메커닉 필요(미구현).
 
 > 검증 방법: 배선 전이라도 `/scenario signal <cond>` 커맨드로 각 게이트가 막히고 열리는지 수동 확인 가능.

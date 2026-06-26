@@ -1,5 +1,12 @@
 # Feature Proposal: 아이템 사용 타깃 해석 활성화 및 처치(apply/use) 완료 신호 배선
 
+> 구현 완료(2026-06-25, 브랜치 `feat/scenario-validator-gate-timeout`): 부착형 적용/착용
+> (`apply_*`/`wear_glove`) 범위로 구현됨. `IItemUseTarget` 인터페이스 신설 + `PlayerController.UseItem`
+> 브리지 + `PatientController`/`MovingPatientBedController` 구현 + `AttachableItemVisualPair.ApplySignal`
+> 설정. 삽입(`insert_iv_*`)·주입(`push_*`)·흡인/제거는 전용 메커닉이 추가로 필요하여 본 구현 범위에서 제외.
+> 레퍼런스: `Documents/api-references/MultiplayerInfrastructure.Entity.IItemUseTarget.md`,
+> 설정 가이드: `Documents/requirements/content-definitions/scenario/item-apply-signal-setup-guide.md`.
+
 - 작성일: 2026-06-25
 - 대상 모듈: `Assets/Modules/MultiplayerInfrastructure/Scripts/Player/` (시스템), `Assets/Modules/TriageTrainer/Scripts/Items/` (프로젝트)
 - 관련 평가: `Agents/Proposals/scheduled/2026-06-25-scenario-validator-gate-timeout/Evaluation - Scenario JSON vs Original Plan.md` (S-2)
