@@ -41,6 +41,18 @@ namespace TriageTrainer.Entity
       public Sprite DisplayIcon => _displayIcon;
       public string AssessSignal => _assessSignal;
       public bool Enabled { get => _enabled; set => _enabled = value; }
+
+      /// <summary>
+      /// 코드 기본값(런타임 전용) config 를 구성한다. AssessSignal 은 비워 두어 식별자 규칙 기반
+      /// 기본 신호(<see cref="ResolveDefaultAssessSignal"/>)가 적용되게 한다.
+      /// </summary>
+      internal void InitializeRuntimeDefault(string identifier, string displayText)
+      {
+        _identifier = identifier;
+        _displayText = displayText;
+        _assessSignal = null;
+        _enabled = true;
+      }
     }
 
     private sealed class PatientAssessInteract : IInteract, IInteractorConditional
@@ -103,10 +115,25 @@ namespace TriageTrainer.Entity
       return _assessActionMap.TryGetValue(identifier, out var cfg) ? cfg : null;
     }
 
-    /// <summary>등록된 사정 동작들을 IInteract 엔트리로 추가한다(BuildInteractEntries 에서 호출).</summary>
+    /// <summary>표준 사정 동작의 코드 기본값(식별자 → 표시문구). Reset/미설정 시에도 사정 인터랙션이 노출되도록 한다.</summary>
+    private static readonly (string Id, string DisplayText)[] DefaultAssessActions =
+    {
+      ("assess_avpu_gcs", "의식상태 사정(AVPU/GCS)"),
+      ("assess_pulse", "맥박 확인"),
+      ("assess_gcs", "GCS 재사정"),
+      ("assess_vital", "활력징후 사정"),
+    };
+
+    /// <summary>
+    /// 등록된 사정 동작들을 IInteract 엔트리로 추가한다(BuildInteractEntries 에서 호출).
+    /// 인스펙터에 없는 표준 사정 동작은 코드 기본값으로 보충한다(직렬화 필드를 건드리지 않으므로 Reset 무관).
+    /// </summary>
     private void AddAssessInteracts()
     {
       RebuildAssessActionMap();
+
+      // 인스펙터에 명시된 사정 동작.
+      var added = new HashSet<string>(StringComparer.Ordinal);
       for (int i = 0; i < _assessActions.Count; i++)
       {
         var each = _assessActions[i];
@@ -114,7 +141,29 @@ namespace TriageTrainer.Entity
           continue;
 
         _interacts.Add(new PatientAssessInteract(this, each.Identifier));
+        added.Add(each.Identifier);
       }
+
+      // 미설정 표준 사정 동작을 코드 기본값으로 보충(런타임 전용 맵, 직렬화 안 함).
+      for (int i = 0; i < DefaultAssessActions.Length; i++)
+      {
+        var def = DefaultAssessActions[i];
+        if (added.Contains(def.Id))
+          continue;
+
+        // 런타임 기본 config 를 맵에 등록(PerformAssess 의 신호 폴백이 동작하도록).
+        if (!_assessActionMap.ContainsKey(def.Id))
+          _assessActionMap[def.Id] = MakeDefaultAssessConfig(def.Id, def.DisplayText);
+
+        _interacts.Add(new PatientAssessInteract(this, def.Id));
+      }
+    }
+
+    private static AssessActionConfig MakeDefaultAssessConfig(string id, string displayText)
+    {
+      var cfg = new AssessActionConfig();
+      cfg.InitializeRuntimeDefault(id, displayText);
+      return cfg;
     }
 
     private void PerformAssess(string actionIdentifier)
@@ -123,8 +172,13 @@ namespace TriageTrainer.Entity
       if (cfg == null || !cfg.Enabled)
         return;
 
-      if (!string.IsNullOrWhiteSpace(cfg.AssessSignal))
-        MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(cfg.AssessSignal);
+      // 인스펙터 AssessSignal 우선, 없으면 식별자 규칙 기반 코드 기본값(Reset 무관)으로 폴백.
+      string signal = !string.IsNullOrWhiteSpace(cfg.AssessSignal)
+          ? cfg.AssessSignal
+          : ResolveDefaultAssessSignal(actionIdentifier);
+
+      if (!string.IsNullOrWhiteSpace(signal))
+        MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(signal);
     }
 
     /// <summary>시나리오 진행에 따라 특정 사정 동작의 노출을 켜고 끈다.</summary>

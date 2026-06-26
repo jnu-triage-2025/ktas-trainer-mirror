@@ -121,8 +121,14 @@ namespace TriageTrainer.Entity
 
     private bool RaiseItemUseSignal(string itemIdentifier)
     {
+      // 인스펙터 매핑 우선, 없으면 코드 하드코딩 기본값(Reset 무관)으로 폴백.
       if (!_itemUseSignalMap.TryGetValue(itemIdentifier, out var useSignal)
           || string.IsNullOrWhiteSpace(useSignal))
+      {
+        useSignal = ResolveDefaultItemUseSignal(itemIdentifier);
+      }
+
+      if (string.IsNullOrWhiteSpace(useSignal))
         return false;
 
       MI.Scenario.ScenarioInteractionSignals.Raise(useSignal);
@@ -160,11 +166,17 @@ namespace TriageTrainer.Entity
 
       visual.SetActive(true);
 
-      // 처치 적용 완료 시 시나리오 게이팅용 신호를 올린다(설정된 경우). 서버 권한 라우팅.
+      // 처치 적용 완료 시 시나리오 게이팅용 신호를 올린다. 서버 권한 라우팅.
+      // 인스펙터 매핑이 있으면 그것만, 없으면 코드 하드코딩 기본값(Reset 무관)으로 폴백.
       if (_attachableApplySignalMap.TryGetValue(itemIdentifier, out var applySignal)
           && !string.IsNullOrWhiteSpace(applySignal))
       {
         MI.Scenario.ScenarioInteractionSignals.Raise(applySignal);
+      }
+      else
+      {
+        foreach (var defaultSignal in ResolveDefaultApplySignals(itemIdentifier))
+          MI.Scenario.ScenarioInteractionSignals.Raise(defaultSignal);
       }
 
       return true;

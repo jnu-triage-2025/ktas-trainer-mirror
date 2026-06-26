@@ -12,6 +12,12 @@ updated: 2026-06-25
 이 가이드는 운영자가 "학습자가 아이템(거즈/고정기/플라스터/장갑 등)을 환자에게 **사용(적용)** 하면
 시나리오 게이트가 통과되도록" 설정하는 방법을 설명합니다.
 
+> 중요(2026-06-25): 표준 처치/사정 신호는 **코드에 기본값으로 하드코딩**되어 있습니다. 따라서 아래 매핑을
+> 인스펙터에 입력하지 않아도(또는 컴포넌트 Reset 으로 직렬화 필드가 비워져도) 표준 케이스는 자동 동작합니다.
+> 인스펙터 입력은 **기본값을 덮어쓰거나(override) 비표준 신호를 추가**할 때만 필요합니다.
+> 하드코딩 기본값 정의: `Assets/Modules/TriageTrainer/Scripts/Patient/PatientController.SignalDefaults.cs`,
+> `PatientController.Assess.cs`(`DefaultAssessActions`).
+
 ## 1. 동작 원리 (2026-06-25 구현)
 
 - 플레이어가 아이템을 들고 **조준한 상태에서 사용** 하면, `PlayerController` 가 조준 대상(크로스헤어
@@ -96,6 +102,25 @@ updated: 2026-06-25
 2. 거즈 부착 비주얼이 켜지고 `sig.apply_gauze` 가 올라가는지 확인(`/scenario` 디버그 또는 게이트 진행).
 3. 대응 Validator 게이트(`V016_2`)가 통과되어 다음 단계로 진행되는지 확인.
 4. 평가 기록(`RubricRecorder`)에 해당 항목이 "수행"으로 기록되는지 확인.
+
+## 3-1. 코드 하드코딩 기본값 (Reset 무관)
+
+아래는 `PatientController` 에 코드 상수로 내장되어 인스펙터/Reset 과 무관하게 항상 적용됩니다
+(`{id}` 는 환자 Identifier 로 치환). 인스펙터에 같은 항목을 넣으면 그쪽이 우선합니다.
+
+- 아이템 사용(부착 없음): `yankauer`/`yankauer_ready`→`suction_{id}`, `ambubag`→`start_ambu`,
+  `epinephrine_ampule`→`push_epi`, `normal_saline_20ml`→`push_ns`.
+- 아이템 부착(시각 적용 시): `gauze`→`apply_gauze`, `gloves`→`wear_glove`, `electrode`→`apply_electrode`,
+  `neckstabilizer`→`apply_stabilizer_{id}`, `plaster`→`apply_plaster_on_gauze`+`apply_plaster_on_intu`(둘 다).
+  - 단, 부착 신호는 해당 아이템의 **부착 비주얼(Visual Object)** 이 설정되어 있어야 발화한다(비주얼은 콘텐츠).
+- 사정(환자 클릭): 표준 사정 동작 `assess_avpu_gcs`/`assess_pulse`/`assess_gcs`/`assess_vital` 가 자동 노출되며
+  각각 `check_avpu_gcs_{id}`/`check_pulse_{id}`/`check_gcs_{id}`/`check_vital_{id}` 를 올린다.
+
+비표준(인스펙터 override 필요) 예: `check_gcs_a_rosc`(ROSC 후 GCS, `{id}` 규칙과 불일치) → 해당 환자
+Assess Actions 에 `AssessSignal=check_gcs_a_rosc` 로 명시.
+
+> 비고: 위 기본값은 **PatientController** 에만 내장된다. `MovingPatientBedController` 는 인스펙터 매핑만 사용한다
+> (침대는 어떤 환자인지 모호하므로 환자별 신호 기본값을 두지 않음).
 
 ## 4. 한계 / 후속
 
