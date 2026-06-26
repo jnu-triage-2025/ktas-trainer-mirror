@@ -12,7 +12,7 @@ using MI = MultiplayerInfrastructure;
 
 namespace TriageTrainer.Entity
 {
-  public partial class MovingPatientBedController : Ridable, IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver, IEntityPresetParentLinkReceiver, IItemUseTarget
+  public partial class MovingPatientBedController : Ridable, IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver, IEntityPresetParentLinkReceiver
   {
     private const string DefaultPlayerAttachPointName = "PlayerAttachPoint";
     private const string DefaultPatientAttachPointName = "PatientAttachPoint";
@@ -23,25 +23,8 @@ namespace TriageTrainer.Entity
       [SerializeField] private string _itemIdentifier;
       [SerializeField] private GameObject _visualObject;
 
-      [Tooltip("이 아이템을 침대(또는 환자)에 사용(부착)했을 때 올릴 시나리오 인터랙션 신호(sig.* 게이팅용, 옵션). 비워 두면 신호를 올리지 않는다.")]
-      [SerializeField] private string _applySignal;
-
       public string ItemIdentifier => _itemIdentifier;
       public GameObject VisualObject => _visualObject;
-      public string ApplySignal => _applySignal;
-    }
-
-    /// <summary>시각 부착 없이 아이템 사용 사실만으로 신호를 올리는 매핑(흡인/앤부/주입 등).</summary>
-    [Serializable]
-    public class ItemUseSignalPair
-    {
-      [SerializeField] private string _itemIdentifier;
-
-      [Tooltip("이 아이템을 사용했을 때 올릴 시나리오 인터랙션 신호(sig.* 게이팅용). 시각 부착이 필요 없는 동작에 사용한다.")]
-      [SerializeField] private string _useSignal;
-
-      public string ItemIdentifier => _itemIdentifier;
-      public string UseSignal => _useSignal;
     }
 
     public enum BedInteractionMode
@@ -132,14 +115,11 @@ namespace TriageTrainer.Entity
 
     [Header("Attachable Item Visuals")]
     [SerializeField] private List<AttachableItemVisualPair> _attachableItemVisualPairs = new();
-    [SerializeField] private List<ItemUseSignalPair> _itemUseSignalPairs = new();
 
     [Header("Runtime")]
     [SerializeField] private MonoBehaviour _reposedTargetComponent;
 
     private readonly Dictionary<string, GameObject> _attachableVisualMap = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, string> _attachableApplySignalMap = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, string> _itemUseSignalMap = new(StringComparer.Ordinal);
     private readonly Dictionary<int, RidingParticipant> _participants = new();
     private readonly Dictionary<string, float> _lastNoticeByInteractor = new(StringComparer.Ordinal);
     private readonly HashSet<string> _attachedItemIdentifiers = new(StringComparer.Ordinal);
@@ -353,24 +333,12 @@ namespace TriageTrainer.Entity
       TryAttachCurrentHandlingItem(attacker);
     }
 
-    public bool OnItemUsed(MI.Entity.Entity user, string itemIdentifier)
+    public void OnItemUsed(MI.Entity.Entity user, string itemIdentifier)
     {
       if (string.IsNullOrWhiteSpace(itemIdentifier))
-        return false;
+        return;
 
-      bool attached = TryAttachItem(itemIdentifier);
-      bool usedSignal = RaiseItemUseSignal(itemIdentifier);
-      return attached || usedSignal;
-    }
-
-    private bool RaiseItemUseSignal(string itemIdentifier)
-    {
-      if (!_itemUseSignalMap.TryGetValue(itemIdentifier, out var useSignal)
-          || string.IsNullOrWhiteSpace(useSignal))
-        return false;
-
-      MI.Scenario.ScenarioInteractionSignals.Raise(useSignal);
-      return true;
+      TryAttachItem(itemIdentifier);
     }
 
     public bool TryAttachCurrentHandlingItem(MI.Entity.Entity actorEntity)
@@ -404,14 +372,6 @@ namespace TriageTrainer.Entity
 
       visual.SetActive(true);
       _attachedItemIdentifiers.Add(itemIdentifier);
-
-      // 처치 적용 완료 시 시나리오 게이팅용 신호를 올린다(설정된 경우). 서버 권한 라우팅.
-      if (_attachableApplySignalMap.TryGetValue(itemIdentifier, out var applySignal)
-          && !string.IsNullOrWhiteSpace(applySignal))
-      {
-        MI.Scenario.ScenarioInteractionSignals.Raise(applySignal);
-      }
-
       return true;
     }
 
@@ -806,7 +766,6 @@ namespace TriageTrainer.Entity
     private void RebuildAttachableVisualMap()
     {
       _attachableVisualMap.Clear();
-      _attachableApplySignalMap.Clear();
       for (int i = 0; i < _attachableItemVisualPairs.Count; i++)
       {
         var pair = _attachableItemVisualPairs[i];
@@ -814,19 +773,6 @@ namespace TriageTrainer.Entity
           continue;
 
         _attachableVisualMap[pair.ItemIdentifier] = pair.VisualObject;
-
-        if (!string.IsNullOrWhiteSpace(pair.ApplySignal))
-          _attachableApplySignalMap[pair.ItemIdentifier] = pair.ApplySignal;
-      }
-
-      _itemUseSignalMap.Clear();
-      for (int i = 0; i < _itemUseSignalPairs.Count; i++)
-      {
-        var pair = _itemUseSignalPairs[i];
-        if (pair == null || string.IsNullOrWhiteSpace(pair.ItemIdentifier) || string.IsNullOrWhiteSpace(pair.UseSignal))
-          continue;
-
-        _itemUseSignalMap[pair.ItemIdentifier] = pair.UseSignal;
       }
     }
 

@@ -188,5 +188,25 @@ namespace TriageTrainer.Entity
       if (cfg != null)
         cfg.Enabled = enabled;
     }
+
+    // ── 사정 기본 신호(코드 하드코딩): 사정 동작 식별자 → 신호 템플릿 ──
+    // AssessSignal 이 비어 있을 때 적용된다. {id} 는 환자 Identifier 로 치환(ResolveSignalTemplate, TreatmentDisplay.cs).
+    private static readonly Dictionary<string, string> DefaultAssessSignals = new(StringComparer.Ordinal)
+    {
+      { "assess_avpu_gcs", "check_avpu_gcs_{id}" },
+      { "assess_pulse", "check_pulse_{id}" },
+      { "assess_gcs", "check_gcs_{id}" },
+      { "assess_vital", "check_vital_{id}" },
+    };
+
+    private string ResolveDefaultAssessSignal(string actionIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(actionIdentifier))
+        return null;
+
+      return DefaultAssessSignals.TryGetValue(actionIdentifier, out var template)
+          ? ResolveSignalTemplate(template)
+          : null;
+    }
   }
 }

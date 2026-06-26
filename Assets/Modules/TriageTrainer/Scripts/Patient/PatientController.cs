@@ -17,36 +17,6 @@ namespace TriageTrainer.Entity
   {
     private const string DefaultPatientCarryAttachPointName = "PatientCarryAttachPoint";
 
-    [Serializable]
-    public class AttachableItemVisualPair
-    {
-      [SerializeField] private string _itemIdentifier;
-      [SerializeField] private GameObject _visualObject;
-
-      [Tooltip("이 아이템을 환자에게 사용(부착)했을 때 올릴 시나리오 인터랙션 신호(sig.* 게이팅용, 옵션). 예: apply_gauze, apply_stabilizer_patient_a. 비워 두면 신호를 올리지 않는다.")]
-      [SerializeField] private string _applySignal;
-
-      public string ItemIdentifier => _itemIdentifier;
-      public GameObject VisualObject => _visualObject;
-      public string ApplySignal => _applySignal;
-    }
-
-    /// <summary>
-    /// 시각 부착 없이 "아이템을 환자에게 사용"한 사실만으로 신호를 올리는 매핑(흡인/앤부/주입 등).
-    /// 예: yankauer→suction_patient_a, ambubag→start_ambu.
-    /// </summary>
-    [Serializable]
-    public class ItemUseSignalPair
-    {
-      [SerializeField] private string _itemIdentifier;
-
-      [Tooltip("이 아이템을 환자에게 사용했을 때 올릴 시나리오 인터랙션 신호(sig.* 게이팅용). 시각 부착이 필요 없는 동작(흡인/앤부/주입 등)에 사용한다.")]
-      [SerializeField] private string _useSignal;
-
-      public string ItemIdentifier => _itemIdentifier;
-      public string UseSignal => _useSignal;
-    }
-
     [Header("Identity")]
     [SerializeField] private string _identifier = "patient";
 
@@ -61,21 +31,12 @@ namespace TriageTrainer.Entity
     [Header("Patient")]
     [SerializeField] private int _weight = 4;
 
-    [Header("Attachable Item Visuals")]
-    [SerializeField] private List<AttachableItemVisualPair> _attachableItemVisualPairs = new();
-
-    [Header("Item Use Signals (시각 부착 없음)")]
-    [SerializeField] private List<ItemUseSignalPair> _itemUseSignalPairs = new();
-
     [Header("Runtime")]
     [SerializeField] private MovingPatientBedController _currentBed;
     [SerializeField] private Transform _carryAttachPoint;
     [SerializeField] private bool _isMovingPatientBedAttached;
     [SerializeField] private bool _isPlayerAttached;
 
-    private readonly Dictionary<string, GameObject> _attachableVisualMap = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, string> _attachableApplySignalMap = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, string> _itemUseSignalMap = new(StringComparer.Ordinal);
     private readonly Dictionary<string, float> _lastNoticeByInteractor = new(StringComparer.Ordinal);
 
     private ChatUIController _chatUI;
@@ -95,7 +56,6 @@ namespace TriageTrainer.Entity
       EnsureCarryAttachPoint();
       InitializeCollider();
       EnsureMedicalStateDefaults();
-      RebuildAttachableVisualMap();
       _weight = Mathf.Max(0, _weight);
       BuildInteractEntries();
     }
@@ -105,34 +65,16 @@ namespace TriageTrainer.Entity
       TryAttachCurrentHandlingItem(attacker);
     }
 
+    /// <summary>
+    /// 아이템 사용 대상으로서의 처리(<see cref="IItemUseTarget"/>): 코드 하드코딩 매핑(<see cref="ApplyItemUse"/>)에 따라
+    /// 처치 시각 표현을 켜고 시나리오 게이팅 신호를 올린다.
+    /// </summary>
     public bool OnItemUsed(MI.Entity.Entity user, string itemIdentifier)
     {
       if (string.IsNullOrWhiteSpace(itemIdentifier))
         return false;
 
-      // 시각 부착(있으면) + 부착형 적용 신호.
-      bool attached = TryAttachItem(itemIdentifier);
-
-      // 시각 부착 없는 사용 신호(흡인/앤부/주입 등)는 부착 성공 여부와 독립적으로 올린다.
-      bool usedSignal = RaiseItemUseSignal(itemIdentifier);
-
-      return attached || usedSignal;
-    }
-
-    private bool RaiseItemUseSignal(string itemIdentifier)
-    {
-      // 인스펙터 매핑 우선, 없으면 코드 하드코딩 기본값(Reset 무관)으로 폴백.
-      if (!_itemUseSignalMap.TryGetValue(itemIdentifier, out var useSignal)
-          || string.IsNullOrWhiteSpace(useSignal))
-      {
-        useSignal = ResolveDefaultItemUseSignal(itemIdentifier);
-      }
-
-      if (string.IsNullOrWhiteSpace(useSignal))
-        return false;
-
-      MI.Scenario.ScenarioInteractionSignals.Raise(useSignal);
-      return true;
+      return ApplyItemUse(itemIdentifier);
     }
 
     public bool TryAttachCurrentHandlingItem(MI.Entity.Entity actorEntity)
@@ -150,36 +92,10 @@ namespace TriageTrainer.Entity
         if (string.IsNullOrWhiteSpace(itemIdentifier))
           return false;
 
-        return TryAttachItem(itemIdentifier);
+        return ApplyItemUse(itemIdentifier);
       }
 
       return false;
-    }
-
-    public bool TryAttachItem(string itemIdentifier)
-    {
-      if (string.IsNullOrWhiteSpace(itemIdentifier))
-        return false;
-
-      if (!_attachableVisualMap.TryGetValue(itemIdentifier, out var visual) || visual == null)
-        return false;
-
-      visual.SetActive(true);
-
-      // 처치 적용 완료 시 시나리오 게이팅용 신호를 올린다. 서버 권한 라우팅.
-      // 인스펙터 매핑이 있으면 그것만, 없으면 코드 하드코딩 기본값(Reset 무관)으로 폴백.
-      if (_attachableApplySignalMap.TryGetValue(itemIdentifier, out var applySignal)
-          && !string.IsNullOrWhiteSpace(applySignal))
-      {
-        MI.Scenario.ScenarioInteractionSignals.Raise(applySignal);
-      }
-      else
-      {
-        foreach (var defaultSignal in ResolveDefaultApplySignals(itemIdentifier))
-          MI.Scenario.ScenarioInteractionSignals.Raise(defaultSignal);
-      }
-
-      return true;
     }
 
     public void SetCurrentBed(MovingPatientBedController bed)
@@ -236,34 +152,6 @@ namespace TriageTrainer.Entity
         Debug.Log($"[Patient] {message}", this);
     }
 
-    private void RebuildAttachableVisualMap()
-    {
-      _attachableVisualMap.Clear();
-      _attachableApplySignalMap.Clear();
-
-      for (int i = 0; i < _attachableItemVisualPairs.Count; i++)
-      {
-        var pair = _attachableItemVisualPairs[i];
-        if (pair == null || string.IsNullOrWhiteSpace(pair.ItemIdentifier) || pair.VisualObject == null)
-          continue;
-
-        _attachableVisualMap[pair.ItemIdentifier] = pair.VisualObject;
-
-        if (!string.IsNullOrWhiteSpace(pair.ApplySignal))
-          _attachableApplySignalMap[pair.ItemIdentifier] = pair.ApplySignal;
-      }
-
-      _itemUseSignalMap.Clear();
-      for (int i = 0; i < _itemUseSignalPairs.Count; i++)
-      {
-        var pair = _itemUseSignalPairs[i];
-        if (pair == null || string.IsNullOrWhiteSpace(pair.ItemIdentifier) || string.IsNullOrWhiteSpace(pair.UseSignal))
-          continue;
-
-        _itemUseSignalMap[pair.ItemIdentifier] = pair.UseSignal;
-      }
-    }
-
     private void EnsureCarryAttachPoint()
     {
       if (_carryAttachPoint != null)
@@ -290,7 +178,6 @@ namespace TriageTrainer.Entity
       InitializeCollider();
       EnsureMedicalStateDefaults();
       _weight = Mathf.Max(0, _weight);
-      RebuildAttachableVisualMap();
       EnsureDefaultInteractConfigs();
     }
   }

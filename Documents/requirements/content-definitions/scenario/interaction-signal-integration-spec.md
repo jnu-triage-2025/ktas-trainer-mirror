@@ -137,30 +137,24 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
 
 권장: 표기 불일치 9건은 시나리오 조건명을 아이템 식별자로 통일(JSON 일괄 치환)하는 편이 단순하다.
 
-### apply_* / wear_* (부착형 적용/착용) — [계측 완료, 2026-06-25]
+### apply_* / wear_* / push_* / suction_* / start_ambu (아이템 사용 기반) — [계측 완료, 2026-06-26]
 아이템 사용(Use) 입력 → 조준 대상의 `IItemUseTarget.OnItemUsed` 브리지가 구현되었다
-(`PlayerController.UseItem` → `RaycastHitObject` → `IItemUseTarget`). `PatientController`/
-`MovingPatientBedController` 가 이를 구현하며, `AttachableItemVisualPair.ApplySignal`(옵션)에
-조건명을 지정하면 부착 성공 시 `ScenarioInteractionSignals.Raise` 가 호출된다.
-- **운영자 작업(코드 변경 불필요)**: 환자/침대 프리팹의 Attachable Item Visuals 항목에 `Apply Signal` 입력.
-  설정 가이드: [item-apply-signal-setup-guide.md](./item-apply-signal-setup-guide.md).
-- 대상: `apply_gauze`, `apply_electrode`, `apply_plaster_on_*`, `apply_stabilizer_patient_a`, `wear_glove`.
-
-### push_* / suction_* / start_ambu (아이템 사용 기반, 시각 부착 불필요) — [계측 완료, 2026-06-25]
-"아이템을 환자에게 사용" 사실만으로 신호를 올리는 경로가 추가되었다. `PatientController`/
-`MovingPatientBedController` 의 **Item Use Signals**(`ItemUseSignalPair`: itemIdentifier→useSignal) 에
-매핑하면, 해당 아이템을 환자에 사용 시 시각 부착 없이도 신호가 올라간다(`IItemUseTarget.OnItemUsed`).
-- 운영자 작업(코드 변경 불필요): 예) `yankauer`→`suction_patient_a`, `ambubag`→`start_ambu`,
-  `epinephrine_ampule`→`push_epi`, `normal_saline_20ml`→`push_ns`.
-- 설정: [item-apply-signal-setup-guide.md](./item-apply-signal-setup-guide.md) "Item Use Signals" 절.
+(`PlayerController.UseItem` → `RaycastHitObject` → `IItemUseTarget`). `PatientController` 가 이를 구현하며,
+**아이템→(처치 시각 표현 + 신호) 매핑은 코드 하드코딩**(`PatientController.TreatmentDisplay.cs` 의 `ItemUseEffects`)이라
+인스펙터 입력 없이 동작한다(Reset 무관).
+- 설계: 데이터(`PatientDisplayState`: `DisplayState` 플래그 + `ChildGameObjects`)와 적용(컨트롤러가 플래그 set +
+  자식 GameObject `SetActive`)을 분리. 부위 구분은 환자 프리팹 hierarchy 가 반영(컨트롤러는 플래그만 켬).
+- **운영자 작업**: 환자 프리팹 `PatientDisplayState.ChildGameObjects` 에 처치 표현 오브젝트 연결 + 아이템/환자
+  Identifier 정합. 신호명 입력 불필요. 설정 가이드: [item-apply-signal-setup-guide.md](./item-apply-signal-setup-guide.md).
+- 대상: `apply_gauze`, `apply_plaster_on_gauze`, `apply_plaster_on_intu`, `apply_stabilizer_{id}`, `wear_glove`,
+  `apply_electrode`, `apply_nasal_cannula`, `suction_{id}`, `start_ambu`, `push_epi`, `push_ns`.
 
 ### check_* (사정: 의식/활력/맥박) — [계측 완료, 2026-06-25]
-환자를 클릭해 사정을 수행하는 동작을 `PatientController` 의 **Assess Actions**(`AssessActionConfig`:
-identifier/displayText/assessSignal/enabled)로 데이터화했다. 등록된 각 사정은 환자 인터랙션
-힌트로 노출되며, 수행 시 `assessSignal` 을 `ScenarioInteractionSignals.Raise` 로 올린다.
-- 운영자 작업(코드 변경 불필요): 환자 프리팹 Assess Actions 에 예) `assess_avpu_gcs`→`check_avpu_gcs_patient_a`,
-  `assess_pulse`→`check_pulse_patient_a`, `assess_vital`→`check_vital_patient_b` 매핑.
-- 시나리오 진행에 따라 `PatientController.SetAssessActionEnabled(id, bool)` 로 노출을 제어할 수 있다.
+환자를 클릭해 사정을 수행하는 동작을 `PatientController` 의 Assess 인터랙션으로 처리한다. 표준 사정 동작
+(`assess_avpu_gcs`/`assess_pulse`/`assess_gcs`/`assess_vital`)은 **코드 기본값으로 자동 노출**되며 각각
+`check_avpu_gcs_{id}`/`check_pulse_{id}`/`check_gcs_{id}`/`check_vital_{id}` 를 올린다.
+- 비표준 신호(`check_gcs_a_rosc` 등)는 환자 Assess Actions 인스펙터에 `AssessSignal` 로 명시.
+- `PatientController.SetAssessActionEnabled(id, bool)` 로 노출 제어.
 - 대상: `check_avpu_gcs_patient_a`, `check_pulse_patient_a`, `check_gcs_a_rosc`,
   `check_gcs_patient_b/c`, `check_vital_patient_b/c`.
 - 잔여: `show_vital_patient_a`, `close_vital_ui_b/c` 는 바이탈 모니터 UI 열기/닫기 콜백이 필요(미구현).
