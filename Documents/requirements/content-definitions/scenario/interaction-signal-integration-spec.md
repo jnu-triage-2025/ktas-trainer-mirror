@@ -146,10 +146,17 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
   설정 가이드: [item-apply-signal-setup-guide.md](./item-apply-signal-setup-guide.md).
 - 대상: `apply_gauze`, `apply_electrode`, `apply_plaster_on_*`, `apply_stabilizer_patient_a`, `wear_glove`.
 
-### insert_* / push_* / suction_* / remove_* (삽입/주입/흡인/제거) — [없음]
-부착형이 아닌 동작(정맥 삽입, 약물 투여, 흡인, 제거)은 전용 메커닉이 없어 선행 구현이 필요하다.
-대상: `insert_iv_*`, `push_epi`, `push_ns`, `suction_patient_a`, `remove_intu_stylet`,
-`remove_tpiece`, `start_ambu`.
+### push_* / suction_* / start_ambu (아이템 사용 기반, 시각 부착 불필요) — [계측 완료, 2026-06-25]
+"아이템을 환자에게 사용" 사실만으로 신호를 올리는 경로가 추가되었다. `PatientController`/
+`MovingPatientBedController` 의 **Item Use Signals**(`ItemUseSignalPair`: itemIdentifier→useSignal) 에
+매핑하면, 해당 아이템을 환자에 사용 시 시각 부착 없이도 신호가 올라간다(`IItemUseTarget.OnItemUsed`).
+- 운영자 작업(코드 변경 불필요): 예) `yankauer`→`suction_patient_a`, `ambubag`→`start_ambu`,
+  `epinephrine_ampule`→`push_epi`, `normal_saline_20ml`→`push_ns`.
+- 설정: [item-apply-signal-setup-guide.md](./item-apply-signal-setup-guide.md) "Item Use Signals" 절.
+
+### insert_* / remove_* (삽입/제거) — [없음]
+정맥 캐뉼라 삽입(연결과 구분), 스타일렛/T-piece 제거 등은 전용 메커닉이 없어 선행 구현이 필요하다.
+대상: `insert_iv_patient_a_left`, `insert_iv_b_right`, `insert_iv_c_left`, `remove_intu_stylet`, `remove_tpiece`.
 
 ### pass_* (의사 NPC 전달) — [없음/부분]
 아이템을 NPC 에게 건네는 인터랙션. NPC 상호작용 완료 지점 필요. 대상: `pass_laryngoscope`,

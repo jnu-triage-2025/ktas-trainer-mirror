@@ -31,6 +31,22 @@ namespace TriageTrainer.Entity
       public string ApplySignal => _applySignal;
     }
 
+    /// <summary>
+    /// 시각 부착 없이 "아이템을 환자에게 사용"한 사실만으로 신호를 올리는 매핑(흡인/앤부/주입 등).
+    /// 예: yankauer→suction_patient_a, ambubag→start_ambu.
+    /// </summary>
+    [Serializable]
+    public class ItemUseSignalPair
+    {
+      [SerializeField] private string _itemIdentifier;
+
+      [Tooltip("이 아이템을 환자에게 사용했을 때 올릴 시나리오 인터랙션 신호(sig.* 게이팅용). 시각 부착이 필요 없는 동작(흡인/앤부/주입 등)에 사용한다.")]
+      [SerializeField] private string _useSignal;
+
+      public string ItemIdentifier => _itemIdentifier;
+      public string UseSignal => _useSignal;
+    }
+
     [Header("Identity")]
     [SerializeField] private string _identifier = "patient";
 
@@ -48,6 +64,9 @@ namespace TriageTrainer.Entity
     [Header("Attachable Item Visuals")]
     [SerializeField] private List<AttachableItemVisualPair> _attachableItemVisualPairs = new();
 
+    [Header("Item Use Signals (시각 부착 없음)")]
+    [SerializeField] private List<ItemUseSignalPair> _itemUseSignalPairs = new();
+
     [Header("Runtime")]
     [SerializeField] private MovingPatientBedController _currentBed;
     [SerializeField] private Transform _carryAttachPoint;
@@ -56,6 +75,7 @@ namespace TriageTrainer.Entity
 
     private readonly Dictionary<string, GameObject> _attachableVisualMap = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _attachableApplySignalMap = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, string> _itemUseSignalMap = new(StringComparer.Ordinal);
     private readonly Dictionary<string, float> _lastNoticeByInteractor = new(StringComparer.Ordinal);
 
     private ChatUIController _chatUI;
@@ -90,7 +110,23 @@ namespace TriageTrainer.Entity
       if (string.IsNullOrWhiteSpace(itemIdentifier))
         return false;
 
-      return TryAttachItem(itemIdentifier);
+      // 시각 부착(있으면) + 부착형 적용 신호.
+      bool attached = TryAttachItem(itemIdentifier);
+
+      // 시각 부착 없는 사용 신호(흡인/앤부/주입 등)는 부착 성공 여부와 독립적으로 올린다.
+      bool usedSignal = RaiseItemUseSignal(itemIdentifier);
+
+      return attached || usedSignal;
+    }
+
+    private bool RaiseItemUseSignal(string itemIdentifier)
+    {
+      if (!_itemUseSignalMap.TryGetValue(itemIdentifier, out var useSignal)
+          || string.IsNullOrWhiteSpace(useSignal))
+        return false;
+
+      MI.Scenario.ScenarioInteractionSignals.Raise(useSignal);
+      return true;
     }
 
     public bool TryAttachCurrentHandlingItem(MI.Entity.Entity actorEntity)
@@ -203,6 +239,16 @@ namespace TriageTrainer.Entity
 
         if (!string.IsNullOrWhiteSpace(pair.ApplySignal))
           _attachableApplySignalMap[pair.ItemIdentifier] = pair.ApplySignal;
+      }
+
+      _itemUseSignalMap.Clear();
+      for (int i = 0; i < _itemUseSignalPairs.Count; i++)
+      {
+        var pair = _itemUseSignalPairs[i];
+        if (pair == null || string.IsNullOrWhiteSpace(pair.ItemIdentifier) || string.IsNullOrWhiteSpace(pair.UseSignal))
+          continue;
+
+        _itemUseSignalMap[pair.ItemIdentifier] = pair.UseSignal;
       }
     }
 

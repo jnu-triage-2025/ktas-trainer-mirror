@@ -44,8 +44,27 @@ updated: 2026-06-25
 | `gloves` | `wear_glove` | `V016_1` 등 |
 | `electrode` | `apply_electrode` | `V043`(환자 B) |
 
-> 약물 주입(`push_epi`/`push_ns`)은 "부착"이 아니라 "투여"라서, 중심정맥관/IV 대상에 사용하는
-> 별도 처리가 필요합니다. 본 가이드의 부착 기반 매핑과는 구분됩니다(후속).
+## 2-1. Item Use Signals (시각 부착 없는 사용 신호)
+
+흡인/앤부/약물 투여처럼 **시각 부착이 필요 없는** 사용 동작은 `PatientController`(또는
+`MovingPatientBedController`)의 **Item Use Signals** 목록에 매핑합니다.
+
+| 필드 | 설명 |
+|---|---|
+| `Item Identifier` | 사용할 아이템 식별자(예: `yankauer`, `ambubag`, `epinephrine_ampule`) |
+| `Use Signal` | 사용 시 올릴 시나리오 신호 조건명(예: `suction_patient_a`, `start_ambu`, `push_epi`) |
+
+매핑 예:
+
+| 아이템 | Use Signal | 게이트 |
+|---|---|---|
+| `yankauer` | `suction_patient_a` | `V013_4`(환자 A) |
+| `ambubag` | `start_ambu` | 환자 A CPR 구간 |
+| `epinephrine_ampule` | `push_epi` | `V026_2`(환자 A) |
+| `normal_saline_20ml` | `push_ns` | 환자 A CPR 구간 |
+
+> 부착(Apply)과 사용(Use) 신호는 독립적으로 동작합니다. 시각 부착이 있으면 Attachable Item Visuals에,
+> 없으면 Item Use Signals에 매핑하면 됩니다. 둘 다 설정해도 됩니다.
 
 ## 3. 테스트
 
