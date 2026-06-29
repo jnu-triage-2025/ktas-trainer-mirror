@@ -284,6 +284,8 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.PlayerTag:
           BuildPlayerTagInlineEditor((ScenarioPlayerTagNode)Data);
           break;
+        case ScenarioNodeType.Parallel:
+          break;
         default:
           AddNextIdentifierField(Data);
           break;

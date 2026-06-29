@@ -51,6 +51,33 @@ namespace MultiplayerInfrastructure.Scenario
 
     public override void Write(Utf8JsonWriter writer, ScenarioNodeDTO value, JsonSerializerOptions options)
     {
+      if (value is ScenarioParallelNodeDTO parallel)
+      {
+        writer.WriteStartObject();
+        writer.WriteString("identifier", parallel.Identifier);
+        writer.WriteString("nodeType", parallel.NodeType);
+
+        if (!string.IsNullOrWhiteSpace(parallel.WaitMode))
+        {
+          writer.WriteString("waitMode", parallel.WaitMode);
+        }
+
+        if (!string.IsNullOrWhiteSpace(parallel.AllocationType))
+        {
+          writer.WriteString("allocationType", parallel.AllocationType);
+        }
+
+        if (!string.IsNullOrWhiteSpace(parallel.WhenBranchingPlayerNotMatched))
+        {
+          writer.WriteString("whenBranchingPlayerNotMatched", parallel.WhenBranchingPlayerNotMatched);
+        }
+
+        writer.WritePropertyName("branches");
+        JsonSerializer.Serialize(writer, parallel.Branches, options);
+        writer.WriteEndObject();
+        return;
+      }
+
       JsonSerializer.Serialize(writer, (object)value, value.GetType(), options);
     }
 

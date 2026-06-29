@@ -209,8 +209,7 @@
           "forbiddenPlayerTags": ["observer"],
           "requiredPlayerTagsMatchMode": "All"
         }
-      ],
-      "nextIdentifier": "dialogue_outro"
+      ]
     },
     "branch_invoke": {
       "identifier": "branch_invoke",

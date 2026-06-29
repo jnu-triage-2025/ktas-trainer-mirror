@@ -288,7 +288,10 @@ namespace MultiplayerInfrastructure.Editor
       newData.Identifier = oldData.Identifier;
 
       // Preserve simple next link if applicable.
-      newData.NextIdentifier = oldData.NextIdentifier;
+      if (newType != ScenarioNodeType.Parallel)
+      {
+        newData.NextIdentifier = oldData.NextIdentifier;
+      }
 
       // Replace data in graph.
       graphData.Nodes[newData.Identifier] = newData;
@@ -971,7 +974,7 @@ namespace MultiplayerInfrastructure.Editor
     {
       if (node == null) yield break;
 
-      if (!string.IsNullOrEmpty(node.NextIdentifier))
+      if (node is not ScenarioParallelNode && !string.IsNullOrEmpty(node.NextIdentifier))
       {
         yield return node.NextIdentifier;
       }

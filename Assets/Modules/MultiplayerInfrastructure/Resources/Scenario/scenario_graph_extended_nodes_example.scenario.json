@@ -122,8 +122,7 @@
           ],
           "requiredPlayerTagsMatchMode": "All"
         }
-      ],
-      "nextIdentifier": "finish_notification"
+      ]
     },
     "branch_airway": {
       "identifier": "branch_airway",

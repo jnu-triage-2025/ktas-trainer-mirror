@@ -1816,7 +1816,7 @@ namespace MultiplayerInfrastructure.Scenario
           break;
       }
 
-      Advance();
+      EndScenario();
     }
 
     private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, int? branchOwnerClientId)

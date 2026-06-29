@@ -72,7 +72,8 @@ namespace MultiplayerInfrastructure.Editor
     {
       foreach (var node in nodeViews.Values)
       {
-        if (!string.IsNullOrEmpty(node.Data.NextIdentifier) &&
+        if (node.Data is not ScenarioParallelNode &&
+            !string.IsNullOrEmpty(node.Data.NextIdentifier) &&
             nodeViews.TryGetValue(node.Data.NextIdentifier, out var target) &&
             node.DefaultOutputPort != null)
         {

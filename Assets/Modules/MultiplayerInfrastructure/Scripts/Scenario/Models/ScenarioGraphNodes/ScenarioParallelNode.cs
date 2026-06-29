@@ -7,7 +7,7 @@ namespace MultiplayerInfrastructure.Scenario
     public string Identifier { get; set;}
     public ScenarioNodeType NodeType => ScenarioNodeType.Parallel;
     /// <summary>
-    /// WaitMode 충족 시 다음 노드로 이동
+    /// Parallel 브랜치가 모두 종료되었을 때의 대기 정책입니다.
     /// </summary>
     public string NextIdentifier { get; set; }
 

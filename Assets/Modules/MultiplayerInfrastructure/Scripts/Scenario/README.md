@@ -133,7 +133,8 @@
 | `branches`        | 배열     | 병렬 분기 목록                                            |
 | `branches[].identifier` | string | 브랜치 고유 ID                                        |
 | `branches[].completionConditionIdentifier` | string | 완료 조건 식별자   |
-| `nextIdentifier`  | string   | 병렬 완료 후 다음 노드                                   |
+
+> Parallel 노드는 브랜치 완료를 기다린 뒤 종료되며, `nextIdentifier`를 사용하지 않습니다.
 
 #### 3.7 InvokeEvent (`ScenarioInvokeEventNodeDTO`)
 
@@ -235,7 +236,7 @@
 - **일관된 식별자 사용**: JSON 키, `identifier`, 다른 노드에서 참조하는 `nextIdentifier` 모두 동일해야 합니다.
 - **enum 값 대소문자**: 로더가 `ignoreCase: true`로 파싱하기 때문에 대소문자 차이는 허용되지만, 오탈자 방지를 위해 enum 이름 그대로 쓰는 것을 권장합니다.
 - **기본값 명시**: 선택적 필드라도 명시하면 디버깅이 쉬워집니다. (예: `waitUntilFinished: true`)
-- **분기 누락 방지**: `Choice`나 `Parallel` 노드에서 `nextNodeIdentifier`가 누락되면 실행 중 예기치 않은 종료가 발생할 수 있습니다.
+- **분기 누락 방지**: `Choice` 노드에서 `nextNodeIdentifier`가 누락되면 실행 중 예기치 않은 종료가 발생할 수 있습니다. `Parallel` 노드는 브랜치 식별자와 완료 조건만 사용합니다.
 - **스키마 유지보수**: JSON 구조가 변하면 스키마와 DTO를 동시에 업데이트해야 합니다.
 - **Converter 등록 확인**: `ScenarioNodeDTOConverter`가 `SerializerOptions.Converters`에 등록되어 있어야 `nodeType` 기반 폴리모픽 역직렬화가 정상 작동합니다.
 

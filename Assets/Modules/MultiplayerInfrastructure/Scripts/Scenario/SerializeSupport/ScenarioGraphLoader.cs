@@ -679,8 +679,7 @@ namespace MultiplayerInfrastructure.Scenario
         WaitMode = ParseWaitMode(dto.WaitMode),
         AllocationType = ParseParallelAllocationType(dto.AllocationType),
         WhenBranchingPlayerNotMatched = ParseParallelMismatchHandling(dto.WhenBranchingPlayerNotMatched),
-        Branches = branches,
-        NextIdentifier = dto.NextIdentifier
+        Branches = branches
       };
     }
 
@@ -1357,7 +1356,6 @@ namespace MultiplayerInfrastructure.Scenario
         WaitMode = node.WaitMode.ToString(),
         AllocationType = node.AllocationType.ToString(),
         WhenBranchingPlayerNotMatched = node.WhenBranchingPlayerNotMatched.ToString(),
-        NextIdentifier = node.NextIdentifier,
         Branches = new List<ScenarioParallelBranchDTO>()
       };
 
