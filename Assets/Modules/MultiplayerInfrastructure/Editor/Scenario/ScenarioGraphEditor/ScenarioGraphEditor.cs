@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
 using System.Linq;
-using MultiplayerInfrastructure.Scenario;
+using System.Text.Json;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Scenario;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
@@ -22,9 +22,12 @@ namespace MultiplayerInfrastructure.Editor
     private ScenarioNodeSearchWindow searchWindow;
     private VisualElement mainContainer;
 
-
     private ScenarioGraph graphData = new ScenarioGraph();
     private readonly Dictionary<string, ScenarioNodeView> nodeViews = new Dictionary<string, ScenarioNodeView>();
+
+    private ScenarioController runtimeScenarioController;
+    private ScenarioNodeView runtimeHighlightedNodeView;
+    private string runtimeHighlightedNodeIdentifier;
 
     private Vector2 cachedMousePosition;
     private string currentFilePath;
@@ -96,19 +99,40 @@ namespace MultiplayerInfrastructure.Editor
 
     private void OnEnable()
     {
+      EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
       ConstructUI();
       CreateGraphView();
       CreateInspector();
       CreateSearchWindow();
       BindGraphEvents();
       LoadBlankGraph();
+      SyncRuntimeHighlight();
     }
 
     private void OnDisable()
     {
+      EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+      UnbindRuntimeScenarioController();
+      ClearRuntimeHighlight();
+
       if (mainContainer != null && mainContainer.parent != null)
       {
         rootVisualElement.Remove(mainContainer);
+      }
+    }
+
+    private void OnPlayModeStateChanged(PlayModeStateChange state)
+    {
+      if (state == PlayModeStateChange.EnteredPlayMode)
+      {
+        SyncRuntimeHighlight();
+        return;
+      }
+
+      if (state == PlayModeStateChange.ExitingPlayMode)
+      {
+        UnbindRuntimeScenarioController();
+        ClearRuntimeHighlight();
       }
     }
 
@@ -280,6 +304,7 @@ namespace MultiplayerInfrastructure.Editor
 
       // Rebuild connections based on updated data.
       graphView.RebuildAllEdges();
+      SyncRuntimeHighlight();
 
       return newView;
     }
@@ -287,6 +312,131 @@ namespace MultiplayerInfrastructure.Editor
     private void BindGraphEvents()
     {
       graphView.onNodeSelected = node => inspectorView.SetTarget(node);
+    }
+
+    private void SyncRuntimeHighlight()
+    {
+      if (!Application.isPlaying)
+      {
+        UnbindRuntimeScenarioController();
+        ClearRuntimeHighlight();
+        return;
+      }
+
+      var controller = ScenarioController.Instance;
+      if (controller == null)
+      {
+        UnbindRuntimeScenarioController();
+        ClearRuntimeHighlight();
+        return;
+      }
+
+      BindRuntimeScenarioController(controller);
+
+      if (controller.CurrentGraph == null
+          || graphData == null
+          || controller.CurrentGraph.Identifier != graphData.Identifier)
+      {
+        ClearRuntimeHighlight();
+        return;
+      }
+
+      UpdateRuntimeHighlight(controller.CurrentNode?.Identifier);
+    }
+
+    private void BindRuntimeScenarioController(ScenarioController controller)
+    {
+      if (runtimeScenarioController == controller)
+      {
+        return;
+      }
+
+      UnbindRuntimeScenarioController();
+
+      runtimeScenarioController = controller;
+      runtimeScenarioController.OnScenarioStarted += HandleRuntimeScenarioStarted;
+      runtimeScenarioController.OnScenarioEnded += HandleRuntimeScenarioEnded;
+      runtimeScenarioController.OnNodeChanged += HandleRuntimeNodeChanged;
+    }
+
+    private void UnbindRuntimeScenarioController()
+    {
+      if (runtimeScenarioController == null)
+      {
+        return;
+      }
+
+      runtimeScenarioController.OnScenarioStarted -= HandleRuntimeScenarioStarted;
+      runtimeScenarioController.OnScenarioEnded -= HandleRuntimeScenarioEnded;
+      runtimeScenarioController.OnNodeChanged -= HandleRuntimeNodeChanged;
+      runtimeScenarioController = null;
+    }
+
+    private void HandleRuntimeScenarioStarted()
+    {
+      SyncRuntimeHighlight();
+    }
+
+    private void HandleRuntimeScenarioEnded()
+    {
+      ClearRuntimeHighlight();
+    }
+
+    private void HandleRuntimeNodeChanged(IScenarioNode node)
+    {
+      if (!Application.isPlaying)
+      {
+        return;
+      }
+
+      if (runtimeScenarioController == null)
+      {
+        SyncRuntimeHighlight();
+        return;
+      }
+
+      if (runtimeScenarioController.CurrentGraph == null
+          || graphData == null
+          || runtimeScenarioController.CurrentGraph.Identifier != graphData.Identifier)
+      {
+        ClearRuntimeHighlight();
+        return;
+      }
+
+      UpdateRuntimeHighlight(node?.Identifier);
+    }
+
+    private void UpdateRuntimeHighlight(string nodeIdentifier)
+    {
+      if (runtimeHighlightedNodeIdentifier == nodeIdentifier)
+      {
+        return;
+      }
+
+      ClearRuntimeHighlight();
+
+      if (string.IsNullOrWhiteSpace(nodeIdentifier))
+      {
+        return;
+      }
+
+      if (nodeViews.TryGetValue(nodeIdentifier, out var nodeView))
+      {
+        runtimeHighlightedNodeView = nodeView;
+        runtimeHighlightedNodeIdentifier = nodeIdentifier;
+        runtimeHighlightedNodeView.SetExecutionHighlighted(true);
+      }
+    }
+
+    private void ClearRuntimeHighlight()
+    {
+      if (runtimeHighlightedNodeView != null)
+      {
+        runtimeHighlightedNodeView.SetExecutionHighlighted(false);
+      }
+
+      runtimeHighlightedNodeView = null;
+      runtimeHighlightedNodeIdentifier = null;
     }
 
     public ScenarioNodeView CreateNode(ScenarioNodeType type, Vector2 screenMousePosition)
@@ -318,6 +468,7 @@ namespace MultiplayerInfrastructure.Editor
       currentFilePath = null;
       RefreshGraphIdentifierField();
       RefreshGraphTagsField();
+      ClearRuntimeHighlight();
     }
 
     private void EnsureGraphData()
@@ -446,6 +597,7 @@ namespace MultiplayerInfrastructure.Editor
       }
 
       inspectorView.SetTarget(null);
+      SyncRuntimeHighlight();
     }
 
     public bool TryRenameNode(ScenarioNodeView nodeView, string newId)
@@ -523,6 +675,7 @@ namespace MultiplayerInfrastructure.Editor
 
       graphView.RebuildAllEdges();
       nodeView.RefreshTitle();
+      SyncRuntimeHighlight();
 
       return true;
     }
@@ -595,6 +748,7 @@ namespace MultiplayerInfrastructure.Editor
         RefreshGraphTagsField();
 
         ValidateResources(graphData);
+        SyncRuntimeHighlight();
       }
       catch (Exception ex)
       {

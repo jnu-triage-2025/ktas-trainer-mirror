@@ -10,6 +10,10 @@ namespace MultiplayerInfrastructure.Editor
 {
   public class ScenarioNodeView : Node
   {
+    private static readonly Color ExecutionBorderColor = new Color(0.29f, 0.82f, 0.47f, 1f);
+    private static readonly Color ExecutionFillColor = new Color(0.12f, 0.24f, 0.16f, 0.95f);
+    private static readonly Color ExecutionTitleColor = new Color(0.16f, 0.34f, 0.22f, 1f);
+
     public IScenarioNode Data { get; }
     public Port InputPort { get; private set; }
     public Port DefaultOutputPort { get; private set; }
@@ -47,6 +51,30 @@ namespace MultiplayerInfrastructure.Editor
 
       RefreshExpandedState();
       RefreshPorts();
+    }
+
+    public void SetExecutionHighlighted(bool highlighted)
+    {
+      style.borderLeftWidth = highlighted ? 4f : 1f;
+      style.borderRightWidth = highlighted ? 4f : 1f;
+      style.borderTopWidth = highlighted ? 4f : 1f;
+      style.borderBottomWidth = highlighted ? 4f : 1f;
+
+      var borderColor = highlighted ? ExecutionBorderColor : new Color(0.25f, 0.25f, 0.25f, 1f);
+      style.borderLeftColor = borderColor;
+      style.borderRightColor = borderColor;
+      style.borderTopColor = borderColor;
+      style.borderBottomColor = borderColor;
+
+      if (titleContainer != null)
+      {
+        titleContainer.style.backgroundColor = highlighted ? ExecutionTitleColor : new Color(0.18f, 0.18f, 0.18f, 1f);
+      }
+
+      if (mainContainer != null)
+      {
+        mainContainer.style.backgroundColor = highlighted ? ExecutionFillColor : new Color(0.16f, 0.16f, 0.16f, 1f);
+      }
     }
 
     public override void OnSelected()
