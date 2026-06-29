@@ -85,11 +85,11 @@ namespace MultiplayerInfrastructure.Editor
       return name;
     }
 
-    [MenuItem("Tools/Multiplayer Infrastructure/Scenario Graph Authoring")]
+    [MenuItem("Tools/Multiplayer Infrastructure/Scenario Graph Editor")]
     public static void Open()
     {
       var window = GetWindow<ScenarioGraphAuthoringWindow>();
-      window.titleContent = new GUIContent("Scenario Graph Authoring");
+      window.titleContent = new GUIContent("Scenario Graph Editor");
       window.minSize = new Vector2(900f, 500f);
       window.Show();
     }
@@ -560,8 +560,8 @@ namespace MultiplayerInfrastructure.Editor
         }
 
         var orderedNodes = graphData.Nodes.Values.OrderBy(n => n.Identifier).ToList();
-        const float spacingX = 320f;
-        const float spacingY = 220f;
+        const float spacingX = 360f;
+        const float spacingY = 240f;
         int index = 0;
 
         foreach (var node in orderedNodes)
@@ -798,8 +798,8 @@ namespace MultiplayerInfrastructure.Editor
         if (!depth.ContainsKey(id)) depth[id] = maxDepth + 1;
       }
 
-      const float spacingX = 360f;
-      const float spacingY = 200f;
+      const float spacingX = 380f;
+      const float spacingY = 240f;
       foreach (var group in depth.GroupBy(kvp => kvp.Value).OrderBy(g => g.Key))
       {
         var nodesInDepth = group.Select(kvp => kvp.Key).OrderBy(id => id).ToList();

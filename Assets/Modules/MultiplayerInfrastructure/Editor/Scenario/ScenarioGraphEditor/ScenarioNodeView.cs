@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.Quest;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -19,6 +20,7 @@ namespace MultiplayerInfrastructure.Editor
     private readonly ScenarioGraphAuthoringWindow window;
     private readonly ScenarioGraphView graphView;
     private Label _summaryLabel;
+    private VisualElement _inlineEditorContainer;
 
     private readonly Dictionary<ScenarioChoiceOption, Port> choicePorts = new Dictionary<ScenarioChoiceOption, Port>();
     private readonly Dictionary<ScenarioParallelBranch, Port> branchPorts = new Dictionary<ScenarioParallelBranch, Port>();
@@ -125,6 +127,7 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.CombineItem:
         case ScenarioNodeType.StateUpdate:
         case ScenarioNodeType.PlayTTS:
+        case ScenarioNodeType.PlayerTag:
           DefaultOutputPort = CreateStandardOutput("Next");
           break;
 
@@ -214,7 +217,211 @@ namespace MultiplayerInfrastructure.Editor
       _summaryLabel.style.fontSize = 10;
       _summaryLabel.style.color = new Color(0.85f, 0.85f, 0.85f, 1f);
       mainContainer.Add(_summaryLabel);
+
+      _inlineEditorContainer = new VisualElement();
+      _inlineEditorContainer.style.marginTop = 6;
+      _inlineEditorContainer.style.flexDirection = FlexDirection.Column;
+      mainContainer.Add(_inlineEditorContainer);
+
+      BuildInlineEditor();
       RefreshSummaryLabel();
+    }
+
+    private void BuildInlineEditor()
+    {
+      if (_inlineEditorContainer == null)
+        return;
+
+      _inlineEditorContainer.Clear();
+
+      AddIdentifierField();
+
+      switch (Data.NodeType)
+      {
+        case ScenarioNodeType.Dialogue:
+          BuildDialogueInlineEditor((ScenarioDialogueNode)Data);
+          break;
+        case ScenarioNodeType.Choice:
+          BuildChoiceInlineEditor((ScenarioChoiceNode)Data);
+          break;
+        case ScenarioNodeType.InvokeEvent:
+          BuildInvokeEventInlineEditor((ScenarioInvokeEventNode)Data);
+          break;
+        case ScenarioNodeType.Validator:
+          BuildValidatorInlineEditor((ScenarioValidatorNode)Data);
+          break;
+        case ScenarioNodeType.QuestControl:
+          BuildQuestControlInlineEditor((ScenarioQuestControlNode)Data);
+          break;
+        case ScenarioNodeType.PlayerTag:
+          BuildPlayerTagInlineEditor((ScenarioPlayerTagNode)Data);
+          break;
+        default:
+          AddNextIdentifierField(Data);
+          break;
+      }
+    }
+
+    private void AddIdentifierField()
+    {
+      var idField = new TextField("Id")
+      {
+        value = Data.Identifier ?? string.Empty
+      };
+      idField.RegisterValueChangedCallback(evt =>
+      {
+        if (window.TryRenameNode(this, evt.newValue))
+          RefreshTitle();
+        else
+          idField.SetValueWithoutNotify(Data.Identifier ?? string.Empty);
+      });
+      _inlineEditorContainer.Add(idField);
+    }
+
+    private void BuildDialogueInlineEditor(ScenarioDialogueNode data)
+    {
+      AddTextField("Speaker", value => data.SpeakerName = value, data.SpeakerName);
+      AddTextAreaField("Dialogue", value => data.DialogueContent = value, data.DialogueContent);
+      AddToggleField("Interaction Required", value => data.InteractionRequired = value, data.InteractionRequired);
+      AddOptionalFloatField("Auto Advance (sec)", value => data.AutoAdvanceSeconds = value, data.AutoAdvanceSeconds);
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildChoiceInlineEditor(ScenarioChoiceNode data)
+    {
+      AddTextField("Speaker", value => data.SpeakerName = value, data.SpeakerName);
+      AddTextAreaField("Dialogue", value => data.DialogueContent = value, data.DialogueContent);
+      AddTextField("Option 1", value =>
+      {
+        EnsureChoiceOptions(data);
+        data.Options[0].DisplayText = value;
+        UpdateOptionPortLabel(data.Options[0]);
+      }, GetChoiceOptionText(data, 0));
+      AddTextField("Option 2", value =>
+      {
+        EnsureChoiceOptions(data);
+        data.Options[1].DisplayText = value;
+        UpdateOptionPortLabel(data.Options[1]);
+      }, GetChoiceOptionText(data, 1));
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildInvokeEventInlineEditor(ScenarioInvokeEventNode data)
+    {
+      AddTextField("Event", value => data.EventIdentifier = value, data.EventIdentifier);
+      var enumField = new EnumField("Move Next", data.MoveNextBehavior);
+      enumField.RegisterValueChangedCallback(evt =>
+      {
+        if (evt.newValue is ScenarioInvokeEventMoveNextBehavior value)
+          data.MoveNextBehavior = value;
+      });
+      _inlineEditorContainer.Add(enumField);
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildValidatorInlineEditor(ScenarioValidatorNode data)
+    {
+      AddToggleField("Wait For Condition", value => data.WaitForCondition = value, data.WaitForCondition);
+      AddOptionalFloatField("Wait Timeout (sec)", value => data.WaitTimeoutSeconds = value, data.WaitTimeoutSeconds);
+      AddTextField("Failure Next", value => data.FailureNextIdentifier = value, data.FailureNextIdentifier);
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildQuestControlInlineEditor(ScenarioQuestControlNode data)
+    {
+      var opField = new EnumField("Operation", data.Operation);
+      opField.RegisterValueChangedCallback(evt =>
+      {
+        if (evt.newValue is ScenarioQuestOperationType value)
+          data.Operation = value;
+      });
+      _inlineEditorContainer.Add(opField);
+
+      AddTextField("Quest Definition", value => data.QuestDefinitionIdentifier = value, data.QuestDefinitionIdentifier);
+      AddTextField("Quest Id", value =>
+      {
+        data.Quest ??= new QuestData();
+        data.Quest.Id = value;
+      }, data.Quest?.Id);
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildPlayerTagInlineEditor(ScenarioPlayerTagNode data)
+    {
+      var opField = new EnumField("Operation", data.Operation);
+      opField.RegisterValueChangedCallback(evt =>
+      {
+        if (evt.newValue is ScenarioPlayerTagOperationType value)
+          data.Operation = value;
+      });
+      _inlineEditorContainer.Add(opField);
+
+      AddTextField("Tag", value => data.Tag = value, data.Tag);
+      AddNextIdentifierField(data);
+    }
+
+    private void AddNextIdentifierField(IScenarioNode data)
+    {
+      AddTextField("Next", value => data.NextIdentifier = value, data.NextIdentifier);
+    }
+
+    private void AddTextField(string label, System.Action<string> setter, string current)
+    {
+      var field = new TextField(label) { value = current ?? string.Empty };
+      field.RegisterValueChangedCallback(evt => setter(evt.newValue));
+      _inlineEditorContainer.Add(field);
+    }
+
+    private void AddTextAreaField(string label, System.Action<string> setter, string current)
+    {
+      var field = new TextField(label)
+      {
+        multiline = true,
+        value = current ?? string.Empty
+      };
+      field.style.minHeight = 54;
+      field.RegisterValueChangedCallback(evt => setter(evt.newValue));
+      _inlineEditorContainer.Add(field);
+    }
+
+    private void AddToggleField(string label, System.Action<bool> setter, bool current)
+    {
+      var field = new Toggle(label) { value = current };
+      field.RegisterValueChangedCallback(evt => setter(evt.newValue));
+      _inlineEditorContainer.Add(field);
+    }
+
+    private void AddOptionalFloatField(string label, System.Action<float?> setter, float? current)
+    {
+      var field = new TextField(label)
+      {
+        value = current.HasValue ? current.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : string.Empty
+      };
+      field.RegisterValueChangedCallback(evt =>
+      {
+        if (string.IsNullOrWhiteSpace(evt.newValue))
+        {
+          setter(null);
+          return;
+        }
+
+        if (float.TryParse(evt.newValue, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsed))
+          setter(parsed);
+      });
+      _inlineEditorContainer.Add(field);
+    }
+
+    private static void EnsureChoiceOptions(ScenarioChoiceNode data)
+    {
+      data.Options ??= new List<ScenarioChoiceOption>();
+      while (data.Options.Count < 2)
+        data.Options.Add(new ScenarioChoiceOption());
+    }
+
+    private static string GetChoiceOptionText(ScenarioChoiceNode data, int index)
+    {
+      EnsureChoiceOptions(data);
+      return data.Options[index]?.DisplayText ?? string.Empty;
     }
 
     private void RefreshSummaryLabel()
@@ -231,6 +438,11 @@ namespace MultiplayerInfrastructure.Editor
     {
       if (node is not ScenarioValidatorNode validator)
       {
+        if (node is ScenarioPlayerTagNode playerTag)
+        {
+          return $"Tag: {playerTag.Tag ?? string.Empty}\nNext: {playerTag.NextIdentifier ?? "(미연결)"}";
+        }
+
         return string.Empty;
       }
 

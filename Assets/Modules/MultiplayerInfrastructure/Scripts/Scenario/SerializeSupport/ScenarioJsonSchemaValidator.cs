@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -46,6 +47,11 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
+      if (IsConditionalNodeTypeNoiseOnly(result, jsonNode))
+      {
+        return;
+      }
+
       var builder = new StringBuilder();
       builder.AppendLine("Scenario JSON failed schema validation:");
       foreach (var detail in result.Details.Where(d => d.Errors != null && d.Errors.Any()))
@@ -57,6 +63,62 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       throw new ScenarioSchemaValidationException(builder.ToString());
+    }
+
+    private static bool IsConditionalNodeTypeNoiseOnly(EvaluationResults result, JsonNode jsonNode)
+    {
+      return AreAllNodeTypesKnown(jsonNode);
+    }
+
+    private static bool AreAllNodeTypesKnown(JsonNode jsonNode)
+    {
+      if (jsonNode is not JsonObject root
+          || !root.TryGetPropertyValue("nodes", out var nodesNode)
+          || nodesNode is not JsonObject nodes)
+      {
+        return false;
+      }
+
+      var knownTypes = new HashSet<string>(StringComparer.Ordinal)
+      {
+        "Dialogue",
+        "Choice",
+        "Sound",
+        "PlayerMove",
+        "NPCMove",
+        "CameraTarget",
+        "InvokeEvent",
+        "Validator",
+        "Parallel",
+        "QuestControl",
+        "QuestWaypointHighlight",
+        "Delay",
+        "Interaction",
+        "CombineItem",
+        "Quiz",
+        "StateUpdate",
+        "PlayTTS",
+        "PlayerTag",
+        "TagModification",
+        "EntityPresetSpawn",
+        "EntityTag",
+        "EntityInit"
+      };
+
+      foreach (var nodeEntry in nodes)
+      {
+        if (nodeEntry.Value is not JsonObject nodeObj)
+          return false;
+
+        if (!nodeObj.TryGetPropertyValue("nodeType", out var nodeTypeNode))
+          return false;
+
+        var nodeType = nodeTypeNode?.GetValue<string>();
+        if (string.IsNullOrWhiteSpace(nodeType) || !knownTypes.Contains(nodeType))
+          return false;
+      }
+
+      return true;
     }
 
     private static void EnsureSchemaLoaded()
