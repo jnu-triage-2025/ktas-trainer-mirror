@@ -13,7 +13,7 @@ using MI = MultiplayerInfrastructure;
 namespace TriageTrainer.Entity
 {
   [RequireComponent(typeof(CapsuleCollider))]
-  public partial class PatientController : NetworkBehaviour, IInteractable, IReposable, IItemUseTarget
+  public partial class PatientController : NetworkBehaviour, IInteractable, IReposable, IItemUseTarget, IScenarioEntityInitTarget
   {
     private const string DefaultPatientCarryAttachPointName = "PatientCarryAttachPoint";
 

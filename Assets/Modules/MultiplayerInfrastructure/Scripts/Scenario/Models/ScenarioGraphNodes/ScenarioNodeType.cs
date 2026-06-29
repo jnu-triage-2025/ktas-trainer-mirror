@@ -22,5 +22,6 @@ namespace MultiplayerInfrastructure.Scenario
     PlayerTag,
     EntityPresetSpawn,
     EntityTag,
+    EntityInit,
   }
 }

@@ -44,6 +44,7 @@ namespace MultiplayerInfrastructure.Scenario
         "TagModification" => Deserialize<ScenarioPlayerTagNodeDTO>(root, options),
         "EntityPresetSpawn" => Deserialize<ScenarioEntityPresetSpawnNodeDTO>(root, options),
         "EntityTag" => Deserialize<ScenarioEntityTagNodeDTO>(root, options),
+        "EntityInit" => Deserialize<ScenarioEntityInitNodeDTO>(root, options),
         _ => throw new JsonException($"Unknown nodeType '{nodeType}'.")
       };
     }
