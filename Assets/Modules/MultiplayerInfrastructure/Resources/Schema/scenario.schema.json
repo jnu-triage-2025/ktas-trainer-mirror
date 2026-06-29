@@ -63,7 +63,8 @@
             "PlayerTag",
             "TagModification",
             "EntityPresetSpawn",
-            "EntityTag"
+            "EntityTag",
+            "EntityInit"
           ]
         }
       },
@@ -369,6 +370,21 @@
           },
           "then": {
             "$ref": "#/$defs/ScenarioEntityTagNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "EntityInit"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioEntityInitNode"
           }
         }
       ]
@@ -1753,6 +1769,116 @@
             }
           ],
           "anyOf": [
+            {
+              "required": [
+                "targetEntityIdentifier"
+              ]
+            },
+            {
+              "required": [
+                "targetEntityStateKey"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ScenarioEntityInitNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "EntityInit"
+            },
+            "presetIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "positionSourceEntityIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "positionX": {
+              "type": "number"
+            },
+            "positionY": {
+              "type": "number"
+            },
+            "positionZ": {
+              "type": "number"
+            },
+            "targetEntityIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "targetEntityStateKey": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "entityIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "resultStateKey": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "stateOperations": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "StateStore",
+                      "DisplayState"
+                    ]
+                  },
+                  "key": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "value": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "displayActive": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "key"
+                ]
+              }
+            }
+          },
+          "anyOf": [
+            {
+              "required": [
+                "presetIdentifier"
+              ]
+            },
             {
               "required": [
                 "targetEntityIdentifier"

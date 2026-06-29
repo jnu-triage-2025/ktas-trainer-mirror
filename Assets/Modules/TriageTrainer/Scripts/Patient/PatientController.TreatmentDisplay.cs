@@ -146,6 +146,40 @@ namespace TriageTrainer.Entity
     /// <summary>처치 표현을 끈다(반복 사이클 리셋 등).</summary>
     public void HideTreatmentDisplay(TreatmentDisplay display) => SetTreatmentDisplay(display, false);
 
+    /// <summary>
+    /// 시나리오 EntityInit 노드가 부르는 명명된 표시 상태 설정(<see cref="MI.Entity.IScenarioEntityInitTarget"/>).
+    /// <paramref name="displayStateName"/> 을 <see cref="TreatmentDisplay"/> 로 해석하여 표시/비표시한다.
+    /// 환자 부착물 초기 표시 상태 설정의 진입점.
+    /// </summary>
+    public bool ApplyScenarioDisplayState(string displayStateName, bool active)
+    {
+      if (string.IsNullOrWhiteSpace(displayStateName))
+        return false;
+
+      string trimmed = displayStateName.Trim();
+
+      // 숫자 문자열을 먼저 거부한다. Enum.TryParse 는 숫자도 허용하므로
+      // "5" 같은 입력이 무관한 enum 멤버로 해석되는 것을 방지한다.
+      if (trimmed.Length > 0 && char.IsDigit(trimmed[0]))
+      {
+        Debug.LogWarning($"[PatientController] Numeric display state name '{displayStateName}' is not allowed on patient '{Identifier}'.");
+        return false;
+      }
+
+      if (!System.Enum.TryParse(trimmed, ignoreCase: true, out TreatmentDisplay display)
+          || display == TreatmentDisplay.None
+          || !System.Enum.IsDefined(typeof(TreatmentDisplay), display))
+      {
+        Debug.LogWarning($"[PatientController] Unknown scenario display state '{displayStateName}' on patient '{Identifier}'.");
+        return false;
+      }
+
+      // 네트워크 환경에서는 서버/클라이언트 구분 없이 SetTreatmentDisplayNetworked 를 통해
+      // 모든 피어에 변경 사항을 전파한다. 오프라인이면 로컬만 적용.
+      SetTreatmentDisplayNetworked(display, active);
+      return true;
+    }
+
     private void SetTreatmentDisplay(TreatmentDisplay display, bool active)
     {
       if (display == TreatmentDisplay.None)

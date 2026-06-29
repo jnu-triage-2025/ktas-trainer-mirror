@@ -93,6 +93,7 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingPlayerTag,
       ExecutingEntityPresetSpawn,
       ExecutingEntityTag,
+      ExecutingEntityInit,
     }
 
     [SerializeField] private State _state = State.Inactive;
@@ -444,6 +445,9 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioEntityTagNode entityTag:
           ExecuteEntityTagNode(entityTag);
+          break;
+        case ScenarioEntityInitNode entityInit:
+          ExecuteEntityInitNode(entityInit);
           break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type: {node.GetType().Name}");
@@ -943,6 +947,184 @@ namespace MultiplayerInfrastructure.Scenario
       return _stateStore.TryGetValue(node.TargetEntityStateKey, out var value)
         ? value
         : string.Empty;
+    }
+
+    /// <summary>
+    /// 엔티티를 준비(프리셋 스폰 또는 기존 엔티티 참조)하고 초기 상태를 설정한다.
+    /// 1차 목표는 환자 엔티티 부착물의 초기 표시 상태 설정이다.
+    /// </summary>
+    private void ExecuteEntityInitNode(ScenarioEntityInitNode node)
+    {
+      _state = State.ExecutingEntityInit;
+
+      if (node == null)
+      {
+        Advance();
+        return;
+      }
+
+      GameObject targetGameObject = null;
+      string resolvedIdentifier = null;
+
+      if (!string.IsNullOrWhiteSpace(node.PresetIdentifier))
+      {
+        // ── 프리셋 스폰 ──
+        // 네트워크 엔티티 프리셋 스폰은 서버 권한이 필요하다. ScenarioController 는 클라이언트에서도
+        // 실행되므로(ChatService.TargetRunScenario), 현재 컨텍스트가 서버가 아니면 스폰을 건너뛴다.
+        // 클라이언트 측에서는 서버가 별도로 스폰한 엔티티가 동기화되어 레지스트리에 등록되므로,
+        // 이 경로를 강제하는 대신 "기존 엔티티 참조" 경로로 InitState 만 적용하면 충분하다.
+        if (!InstanceFinder.IsServerStarted && !InstanceFinder.IsOffline)
+        {
+          Debug.Log($"[ScenarioController] EntityInit '{node.Identifier}': preset spawn skipped on client (server-authoritative). " +
+                    $"Use targetEntityIdentifier to apply display state to an already-spawned entity on clients.");
+          Advance();
+          return;
+        }
+
+        Vector3 spawnPosition = new Vector3(node.PositionX, node.PositionY, node.PositionZ);
+        if (!string.IsNullOrWhiteSpace(node.PositionSourceEntityIdentifier)
+            && Registry.Registry.TryGetEntity(node.PositionSourceEntityIdentifier, out var sourceDescriptor)
+            && sourceDescriptor?.GameObject != null)
+        {
+          spawnPosition = sourceDescriptor.GameObject.transform.position;
+        }
+
+        if (!Registry.Registry.TrySpawnEntityPreset(
+              node.PresetIdentifier,
+              spawnPosition,
+              Quaternion.identity,
+              node.EntityIdentifier,
+              out var spawned,
+              out var spawnedDescriptor,
+              out var error))
+        {
+          Debug.LogWarning($"[ScenarioController] EntityInit '{node.Identifier}' preset spawn failed: {error}");
+          Advance();
+          return;
+        }
+
+        // 네트워크 루트는 OnStartClient 에서 비동기 자가 등록하므로 디스크립터가 아직 없을 수 있다.
+        // 표시 상태 적용은 스폰된 GameObject 에서 직접 컴포넌트를 찾아 수행한다(레지스트리 등록과 무관).
+        targetGameObject = spawned;
+        resolvedIdentifier = spawnedDescriptor?.Identifier;
+        if (string.IsNullOrWhiteSpace(resolvedIdentifier))
+          resolvedIdentifier = node.EntityIdentifier;
+      }
+      else
+      {
+        // ── 기존 엔티티 참조 ──
+        resolvedIdentifier = ResolveEntityInitTargetIdentifier(node);
+        if (string.IsNullOrWhiteSpace(resolvedIdentifier))
+        {
+          Debug.LogWarning($"[ScenarioController] EntityInit '{node.Identifier}' target identifier is missing.");
+          Advance();
+          return;
+        }
+
+        if (!Registry.Registry.TryGetEntity(resolvedIdentifier, out var entityDescriptor)
+            || entityDescriptor?.GameObject == null)
+        {
+          Debug.LogWarning($"[ScenarioController] EntityInit '{node.Identifier}' target '{resolvedIdentifier}' was not found.");
+          Advance();
+          return;
+        }
+
+        targetGameObject = entityDescriptor.GameObject;
+      }
+
+      // 확정된 식별자를 상태 저장소에 기록(후속 노드 참조용).
+      // ResultStateKey 가 명시되지 않아도 기본 키로 기록하여, 후속 EntityTag/EntityInit 노드가
+      // 이 노드의 식별자를 기반으로 엔티티를 참조할 수 있다(EntityPresetSpawn 동작과 일치).
+      if (!string.IsNullOrWhiteSpace(resolvedIdentifier))
+      {
+        string storeKey = string.IsNullOrWhiteSpace(node.ResultStateKey)
+          ? $"{node.Identifier}.entityIdentifier"
+          : node.ResultStateKey;
+        _stateStore[storeKey] = resolvedIdentifier;
+      }
+
+      ApplyEntityInitStateOperations(node, resolvedIdentifier, targetGameObject);
+
+      Advance();
+    }
+
+    private string ResolveEntityInitTargetIdentifier(ScenarioEntityInitNode node)
+    {
+      if (node == null)
+        return string.Empty;
+
+      if (!string.IsNullOrWhiteSpace(node.TargetEntityIdentifier))
+        return node.TargetEntityIdentifier;
+
+      if (!string.IsNullOrWhiteSpace(node.EntityIdentifier))
+        return node.EntityIdentifier;
+
+      if (string.IsNullOrWhiteSpace(node.TargetEntityStateKey))
+        return string.Empty;
+
+      return _stateStore.TryGetValue(node.TargetEntityStateKey, out var value)
+        ? value
+        : string.Empty;
+    }
+
+    private void ApplyEntityInitStateOperations(ScenarioEntityInitNode node, string entityIdentifier, GameObject targetGameObject)
+    {
+      if (node.StateOperations == null || node.StateOperations.Count == 0)
+        return;
+
+      Entity.IScenarioEntityInitTarget displayTarget = null;
+      if (targetGameObject != null)
+        displayTarget = targetGameObject.GetComponentInChildren<Entity.IScenarioEntityInitTarget>(true);
+
+      foreach (var op in node.StateOperations)
+      {
+        if (op == null)
+          continue;
+
+        switch (op.Kind)
+        {
+          case ScenarioEntityStateOperationKind.StateStore:
+            if (string.IsNullOrWhiteSpace(op.Key))
+              break;
+            // 엔티티 식별자 접두로 기존 StateUpdate 노드와 동일한 네임스페이스를 따른다.
+            string stateKey = string.IsNullOrWhiteSpace(entityIdentifier)
+              ? op.Key
+              : $"{entityIdentifier}.{op.Key}";
+            _stateStore[stateKey] = op.Value;
+            break;
+
+          case ScenarioEntityStateOperationKind.DisplayState:
+            if (string.IsNullOrWhiteSpace(op.Key))
+              break;
+            if (displayTarget == null)
+            {
+              Debug.LogWarning($"[ScenarioController] EntityInit '{node.Identifier}' target '{entityIdentifier}' has no IScenarioEntityInitTarget for display state '{op.Key}'.");
+              break;
+            }
+            displayTarget.ApplyScenarioDisplayState(op.Key, op.DisplayActive);
+            break;
+        }
+      }
+
+      // DisplayState 항목이 하나 이상 적용됐으면, 모든 피어에 전체 상태를 일괄 동기화한다.
+      // 이를 통해 BufferLast RPC 가 "마지막 단일 항목"만 버퍼링하는 제약을 우회하고,
+      // 늦은 입장 클라이언트도 완전한 초기 상태를 수신한다.
+      if (displayTarget != null && node.StateOperations != null)
+      {
+        bool hasDisplayOp = false;
+        foreach (var op in node.StateOperations)
+        {
+          if (op != null && op.Kind == ScenarioEntityStateOperationKind.DisplayState)
+          {
+            hasDisplayOp = true;
+            break;
+          }
+        }
+        if (hasDisplayOp)
+        {
+          displayTarget.SyncAllDisplayStatesNetworked();
+        }
+      }
     }
 
     private IEnumerator ExecutePlayTTSNode(ScenarioPlayTTSNode node)

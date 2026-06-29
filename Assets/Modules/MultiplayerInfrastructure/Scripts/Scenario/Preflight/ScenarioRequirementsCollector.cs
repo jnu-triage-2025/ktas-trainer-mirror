@@ -60,6 +60,19 @@ namespace MultiplayerInfrastructure.Scenario.Preflight
             AddRequirement(ScenarioRequirementKind.EntityPreset, preset.PresetIdentifier, preset.Identifier);
             break;
 
+          case ScenarioEntityInitNode entityInit:
+            // 프리셋 스폰 경로
+            if (!string.IsNullOrWhiteSpace(entityInit.PresetIdentifier))
+            {
+              AddRequirement(ScenarioRequirementKind.EntityPreset, entityInit.PresetIdentifier, entityInit.Identifier);
+            }
+            // 기존 엔티티 참조 경로(식별자 직접 지정인 경우만 정적 확인 가능)
+            if (!string.IsNullOrWhiteSpace(entityInit.TargetEntityIdentifier))
+            {
+              AddRequirement(ScenarioRequirementKind.InteractionTarget, entityInit.TargetEntityIdentifier, entityInit.Identifier);
+            }
+            break;
+
           case ScenarioCombineItemNode combine:
             if (combine.InputItemIdentifiers != null)
             {

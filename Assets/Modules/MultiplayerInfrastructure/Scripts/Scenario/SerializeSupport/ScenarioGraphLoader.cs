@@ -240,6 +240,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioPlayerTagNodeDTO playerTag => ConvertPlayerTag(playerTag),
           ScenarioEntityPresetSpawnNodeDTO entityPresetSpawn => ConvertEntityPresetSpawn(entityPresetSpawn),
           ScenarioEntityTagNodeDTO entityTag => ConvertEntityTag(entityTag),
+          ScenarioEntityInitNodeDTO entityInit => ConvertEntityInit(entityInit),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -526,6 +527,43 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = dto.NextIdentifier
         };
 
+    private static ScenarioEntityInitNode ConvertEntityInit(ScenarioEntityInitNodeDTO dto)
+    {
+      var operations = new List<ScenarioEntityStateOperation>(dto.StateOperations?.Count ?? 0);
+      if (dto.StateOperations != null)
+      {
+        foreach (var opDTO in dto.StateOperations)
+        {
+          if (opDTO == null)
+            continue;
+
+          operations.Add(new ScenarioEntityStateOperation
+          {
+            Kind = ParseEntityStateOperationKind(opDTO.Kind),
+            Key = opDTO.Key,
+            Value = opDTO.Value,
+            DisplayActive = opDTO.DisplayActive ?? true
+          });
+        }
+      }
+
+      return new ScenarioEntityInitNode
+      {
+        Identifier = dto.Identifier,
+        PresetIdentifier = dto.PresetIdentifier,
+        PositionSourceEntityIdentifier = dto.PositionSourceEntityIdentifier,
+        PositionX = dto.PositionX ?? 0f,
+        PositionY = dto.PositionY ?? 0f,
+        PositionZ = dto.PositionZ ?? 0f,
+        TargetEntityIdentifier = dto.TargetEntityIdentifier,
+        TargetEntityStateKey = dto.TargetEntityStateKey,
+        EntityIdentifier = dto.EntityIdentifier,
+        ResultStateKey = dto.ResultStateKey,
+        StateOperations = operations,
+        NextIdentifier = dto.NextIdentifier
+      };
+    }
+
     private static ScenarioEntityPresetSpawnNodeDTO ConvertToDTO(ScenarioEntityPresetSpawnNode node) =>
         new ScenarioEntityPresetSpawnNodeDTO
         {
@@ -554,6 +592,45 @@ namespace MultiplayerInfrastructure.Scenario
           ToTag = node.ToTag,
           NextIdentifier = node.NextIdentifier
         };
+
+    private static ScenarioEntityInitNodeDTO ConvertToDTO(ScenarioEntityInitNode node)
+    {
+      List<ScenarioEntityStateOperationDTO> operations = null;
+      if (node.StateOperations != null && node.StateOperations.Count > 0)
+      {
+        operations = new List<ScenarioEntityStateOperationDTO>(node.StateOperations.Count);
+        foreach (var op in node.StateOperations)
+        {
+          if (op == null)
+            continue;
+
+          operations.Add(new ScenarioEntityStateOperationDTO
+          {
+            Kind = op.Kind.ToString(),
+            Key = op.Key,
+            Value = op.Value,
+            DisplayActive = op.DisplayActive
+          });
+        }
+      }
+
+      return new ScenarioEntityInitNodeDTO
+      {
+        NodeType = "EntityInit",
+        Identifier = node.Identifier,
+        PresetIdentifier = node.PresetIdentifier,
+        PositionSourceEntityIdentifier = node.PositionSourceEntityIdentifier,
+        PositionX = node.PositionX,
+        PositionY = node.PositionY,
+        PositionZ = node.PositionZ,
+        TargetEntityIdentifier = node.TargetEntityIdentifier,
+        TargetEntityStateKey = node.TargetEntityStateKey,
+        EntityIdentifier = node.EntityIdentifier,
+        ResultStateKey = node.ResultStateKey,
+        StateOperations = operations,
+        NextIdentifier = node.NextIdentifier
+      };
+    }
 
     private static ScenarioParallelNode ConvertParallel(ScenarioParallelNodeDTO dto)
     {
@@ -724,6 +801,22 @@ namespace MultiplayerInfrastructure.Scenario
       throw new JsonException($"Unknown ScenarioPlayerTagScope '{value}'.");
     }
 
+    private static ScenarioEntityStateOperationKind ParseEntityStateOperationKind(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+        return ScenarioEntityStateOperationKind.DisplayState;
+
+      // 숫자 문자열은 Enum.TryParse 로 파싱되더라도 정의되지 않은 값일 수 있으므로 먼저 거부한다.
+      if (value.Length > 0 && char.IsDigit(value[0]))
+        throw new JsonException($"Unknown ScenarioEntityStateOperationKind '{value}'.");
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioEntityStateOperationKind parsed)
+          && Enum.IsDefined(typeof(ScenarioEntityStateOperationKind), parsed))
+        return parsed;
+
+      throw new JsonException($"Unknown ScenarioEntityStateOperationKind '{value}'.");
+    }
+
     public static string SaveToJson(ScenarioGraph graph, bool validateWithSchema = true)
     {
       if (graph == null)
@@ -787,6 +880,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioPlayerTagNode playerTag => ConvertToDTO(playerTag),
           ScenarioEntityPresetSpawnNode entityPresetSpawn => ConvertToDTO(entityPresetSpawn),
           ScenarioEntityTagNode entityTag => ConvertToDTO(entityTag),
+          ScenarioEntityInitNode entityInit => ConvertToDTO(entityInit),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 
