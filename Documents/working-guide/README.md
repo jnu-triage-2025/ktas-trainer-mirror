@@ -9,7 +9,7 @@
 실무 작업 절차와 운영 가이드를 정리합니다.
 
 ### 하위 폴더
-- (없음)
+- [features](./features/README.md): 기능별 작업 가이드
 
 ### 문서
 - [ai-workflow.md](./ai-workflow.md): AI 작업 흐름 가이드

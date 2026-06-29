@@ -7,9 +7,9 @@ updated: 2026-04-14
 
 # 시나리오 이벤트-구현 매핑 (재난 시나리오)
 
-이 문서는 원본 시나리오 텍스트를 바탕으로, 구현이 필요한 핵심 상호작용을 이벤트 단위로 정리한 목록입니다. 새로운 이벤트는 [Documents/scenario/event-registry.md](event-registry.md)에 기록합니다.
+이 문서는 원본 시나리오 텍스트를 바탕으로, 구현이 필요한 핵심 상호작용을 이벤트 단위로 정리한 목록입니다. 새로운 이벤트는 [Documents/requirements/content-definitions/scenario/event-registry.md](../../../requirements/content-definitions/scenario/event-registry.md)에 기록합니다.
 
-> 참고: 아래 표에는 초기 설계 단계 식별자도 포함됩니다. 런타임에서 실제 사용하는 EventIdentifier는 [Documents/scenario/event-registry.md](event-registry.md)를 기준으로 확정합니다.
+> 참고: 아래 표에는 초기 설계 단계 식별자도 포함됩니다. 런타임에서 실제 사용하는 EventIdentifier는 [Documents/requirements/content-definitions/scenario/event-registry.md](../../../requirements/content-definitions/scenario/event-registry.md)를 기준으로 확정합니다.
 
 ## 태그/분기 연계 메모
 
@@ -57,4 +57,4 @@ updated: 2026-04-14
 - 장비 조립(후두경, ET-tube+스타일렛, 산소 유량계)
 - 패드 부착 위치 검증
 
-필요 시 상호작용 기능은 [Documents/requirements/gameplay/interaction/interaction-feature-spec.md](../../gameplay/interaction/interaction-feature-spec.md)를 참고합니다.
+필요 시 상호작용 기능은 [Documents/requirements/gameplay/interaction/interaction-feature-spec.md](../../../requirements/gameplay/interaction/interaction-feature-spec.md)를 참고합니다.

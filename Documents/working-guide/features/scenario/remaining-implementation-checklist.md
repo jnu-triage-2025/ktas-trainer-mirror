@@ -7,7 +7,7 @@ updated: 2026-04-14
 
 # 남은 이벤트 구현 체크리스트
 
-기준 문서: Documents/scenario/event-registry.md
+기준 문서: Documents/requirements/content-definitions/scenario/event-registry.md
 생성일: 2026-03-17
 
 ## 분류 기준

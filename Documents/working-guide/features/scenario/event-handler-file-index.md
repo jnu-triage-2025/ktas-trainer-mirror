@@ -10,7 +10,7 @@ updated: 2026-04-14
 TriageTrainer 시나리오 이벤트 구현 파일 인덱스입니다.
 
 운영 규칙:
-- 이벤트 구현을 추가/변경하면 [Documents/scenario/event-registry.md](event-registry.md)와 함께 갱신합니다.
+- 이벤트 구현을 추가/변경하면 [Documents/requirements/content-definitions/scenario/event-registry.md](../../../requirements/content-definitions/scenario/event-registry.md)와 함께 갱신합니다.
 - 이벤트가 분기 조건 또는 플레이어 태그 변경에 영향을 주는 경우, 시나리오 문서의 `RequiredPlayerTags`/`ForbiddenPlayerTags`/`RequiredPlayerTagsMatchMode` 및 `TagModification` 노드 정의를 함께 확인합니다.
 
 ## Core bootstrap

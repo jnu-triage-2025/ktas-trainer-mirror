@@ -41,7 +41,7 @@ updated: 2026-04-14
 1. 시나리오를 사건 흐름 단위로 나눕니다.
 2. 각 흐름을 NodeType으로 매핑합니다.
 3. 병렬 수행이 필요한 단계는 Parallel로 구성하고, 브랜치별 역할/태그 조건을 명시합니다.
-4. 모든 InvokeEvent는 [scenario/event-registry.md](./event-registry.md)에 기록합니다.
+4. 모든 InvokeEvent는 [Documents/requirements/content-definitions/scenario/event-registry.md](../../../requirements/content-definitions/scenario/event-registry.md)에 기록합니다.
 5. 종료 조건을 마지막에 명시합니다.
 
 ## 태그 작성 규칙
