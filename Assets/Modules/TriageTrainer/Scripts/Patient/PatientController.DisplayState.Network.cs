@@ -1,4 +1,5 @@
 using FishNet.Object;
+using TriageTrainer.Patient;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -98,14 +99,14 @@ namespace TriageTrainer.Entity
     // 서버에서 호출: 현재 DisplayState 구조체 전체를 한 번의 RPC 로 브로드캐스트한다.
     // 다수 항목을 동시에 적용한 뒤 늦은 입장 클라이언트에 전체 상태를 전달하는 용도.
     [ServerRpc(RequireOwnership = false)]
-    private void CmdSyncAllDisplayStates(Patient.PatientTreatmentDisplayModel flags)
+    private void CmdSyncAllDisplayStates(PatientTreatmentDisplayModel flags)
     {
       ApplyDisplayModelLocally(flags);
       RpcSyncAllDisplayStates(flags);
     }
 
     [ObserversRpc(BufferLast = true)]
-    private void RpcSyncAllDisplayStates(Patient.PatientTreatmentDisplayModel flags)
+    private void RpcSyncAllDisplayStates(PatientTreatmentDisplayModel flags)
     {
       if (IsServerStarted)
         return;
@@ -113,7 +114,7 @@ namespace TriageTrainer.Entity
       ApplyDisplayModelLocally(flags);
     }
 
-    private void SyncAllDisplayStates(Patient.PatientTreatmentDisplayModel flags)
+    private void SyncAllDisplayStates(PatientTreatmentDisplayModel flags)
     {
       if (!IsServerStarted)
         return;
@@ -125,7 +126,7 @@ namespace TriageTrainer.Entity
     /// <summary>
     /// DisplayModel 의 모든 필드를 로컬에 일괄 적용한다(SetActive 포함).
     /// </summary>
-    private void ApplyDisplayModelLocally(Patient.PatientTreatmentDisplayModel flags)
+    private void ApplyDisplayModelLocally(PatientTreatmentDisplayModel flags)
     {
       var state = GetPatientDisplayState();
       if (state == null)
