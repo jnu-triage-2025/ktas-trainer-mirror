@@ -4,7 +4,7 @@
 - 대상 모듈: `Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/`,
   `Assets/Modules/MultiplayerInfrastructure/Scripts/Entity/`
 - 연관 구현(TriageTrainer): `Assets/Modules/TriageTrainer/Scripts/Patient/PatientController.TreatmentDisplay.cs`
-- 관련 제안: `Agents/Proposals/scheduled/2026-06-26-scenario-preflight-requirements/`
+- 관련 제안: `Agents/Proposals/done/2026-06-26-scenario-preflight-requirements/`
 - 관련 명세: `Documents/requirements/scenario/scenario-entity-preset-and-tag-node-requirements.md`
 
 ### 개요

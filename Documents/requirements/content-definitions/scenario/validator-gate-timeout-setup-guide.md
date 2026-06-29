@@ -86,4 +86,4 @@ Validator 노드(JSON) 안에 아래 두 줄을 추가합니다.
 - [json-conversion-rules.md](./json-conversion-rules.md) — Validator 섹션(필드 표기)
 - [interaction-signal-integration-spec.md](./interaction-signal-integration-spec.md) — §0.1 게이트 정책(G-6)
 - [api-references/MultiplayerInfrastructure.Scenario.ScenarioController.md](../../../api-references/MultiplayerInfrastructure.Scenario.ScenarioController.md) — §7-1 게이트 타임아웃 동작/이벤트
-- 제안서: `Agents/Proposals/scheduled/2026-06-25-scenario-validator-gate-timeout/`
+- 제안서: `Agents/Proposals/done/2026-06-25-scenario-validator-gate-timeout/`

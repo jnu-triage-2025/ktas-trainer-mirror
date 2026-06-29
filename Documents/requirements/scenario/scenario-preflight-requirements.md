@@ -59,7 +59,7 @@ Scenario 사전 요구사항 검증(Preflight) 기능은 시나리오를 시작�
 
 ## 참조
 
-- 제안서: `Agents/Proposals/scheduled/2026-06-26-scenario-preflight-requirements/Feature Proposal - Scenario Preflight Requirements.md`
+- 제안서: `Agents/Proposals/done/2026-06-26-scenario-preflight-requirements/Feature Proposal - Scenario Preflight Requirements.md`
 - [api:MultiplayerInfrastructure.Scenario.ScenarioController](../../api-references/MultiplayerInfrastructure.Scenario.ScenarioController.md)
 - [api:MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry](../../api-references/MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md)
 - [scenario-runtime-validation-requirements](./scenario-runtime-validation-requirements.md)

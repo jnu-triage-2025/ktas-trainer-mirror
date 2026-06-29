@@ -9,7 +9,7 @@
 
 - 작성일: 2026-06-25
 - 대상 모듈: `Assets/Modules/MultiplayerInfrastructure/Scripts/Player/` (시스템), `Assets/Modules/TriageTrainer/Scripts/Items/` (프로젝트)
-- 관련 평가: `Agents/Proposals/scheduled/2026-06-25-scenario-validator-gate-timeout/Evaluation - Scenario JSON vs Original Plan.md` (S-2)
+- 관련 평가: `Agents/Proposals/done/2026-06-25-scenario-validator-gate-timeout/Evaluation - Scenario JSON vs Original Plan.md` (S-2)
 - 관련 명세: `Documents/requirements/content-definitions/scenario/interaction-signal-integration-spec.md` §2
 
 ### 개요

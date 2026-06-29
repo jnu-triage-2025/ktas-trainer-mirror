@@ -44,7 +44,7 @@ blocking 이어야 한다. 그러나 신호 배선이 끝나기 전에 핵심 �
 2. **(완료, G-6)** `Validator 게이트 타임아웃·실패 분기` 엔진 도입(2026-06-25, 브랜치 `feat/scenario-validator-gate-timeout`).
    게이트별 `waitTimeoutSeconds`(옵션) + `onWaitTimeout`(`KeepWaiting`/`FailBranch`/`ForceAdvance`/`WarnAndKeepWaiting`)
    추가. 미지정 시 기존 동작(무한 대기) 유지 → 하위호환. 변환 규칙: [`json-conversion-rules.md`](./json-conversion-rules.md) Validator 섹션.
-   제안서: `Agents/Proposals/scheduled/2026-06-25-scenario-validator-gate-timeout/`.
+   제안서: `Agents/Proposals/done/2026-06-25-scenario-validator-gate-timeout/`.
 3. **(목표)** 신호가 배선된 핵심 처치 게이트부터 `waitTimeoutSeconds`+`onWaitTimeout=ForceAdvance`(또는 `FailBranch`)로
    전환. 타임아웃은 `ScenarioController.OnValidatorWaitTimeout` 이벤트로 평가 기록(루브릭, G-3)에 남긴다.
 

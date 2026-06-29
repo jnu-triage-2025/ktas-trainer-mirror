@@ -2,7 +2,7 @@
 
 - 작성일: 2026-06-26
 - 대상 모듈: `Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/`
-- 관련 제안: `Agents/Proposals/scheduled/2026-06-25-scenario-validator-gate-timeout/`
+- 관련 제안: `Agents/Proposals/done/2026-06-25-scenario-validator-gate-timeout/`
 - 관련 명세: `Documents/requirements/scenario/scenario-runtime-validation-requirements.md`,
   `Documents/requirements/content-definitions/scenario/interaction-signal-integration-spec.md`
 
