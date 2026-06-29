@@ -17,6 +17,7 @@ namespace MultiplayerInfrastructure.UI
     private static readonly Color CardBorder = new Color(1f, 1f, 1f, 0.08f);
     private static readonly Color TextPrimary = new Color(0.95f, 0.98f, 0.96f, 1f);
     private static readonly Color TextSecondary = new Color(0.85f, 0.9f, 0.9f, 0.9f);
+    private static readonly Color CompletedColor = new Color(0.4f, 0.9f, 0.58f, 1f);
 
     private readonly Dictionary<string, QuestEntryElement> _entries = new();
 
@@ -246,6 +247,8 @@ namespace MultiplayerInfrastructure.UI
       private readonly Label _titleLabel;
       private readonly Label _descriptionLabel;
       private readonly Label _contentLabel;
+      private readonly Label _progressLabel;
+      private readonly Label _statusLabel;
       private readonly Label _waypointLabel;
       private readonly Button _trackButton;
       private QuestData _boundQuest;
@@ -325,6 +328,18 @@ namespace MultiplayerInfrastructure.UI
         _contentLabel.style.whiteSpace = WhiteSpace.Normal;
         Add(_contentLabel);
 
+        _progressLabel = new Label { pickingMode = PickingMode.Ignore };
+        _progressLabel.style.color = TextPrimary;
+        _progressLabel.style.fontSize = 11;
+        _progressLabel.style.marginTop = 4;
+        Add(_progressLabel);
+
+        _statusLabel = new Label { pickingMode = PickingMode.Ignore };
+        _statusLabel.style.color = TextSecondary;
+        _statusLabel.style.fontSize = 11;
+        _statusLabel.style.marginTop = 2;
+        Add(_statusLabel);
+
         _waypointLabel = new Label { pickingMode = PickingMode.Ignore };
         _waypointLabel.style.color = TextSecondary;
         _waypointLabel.style.fontSize = 11;
@@ -343,14 +358,21 @@ namespace MultiplayerInfrastructure.UI
         _titleLabel.text = quest.Title;
         _descriptionLabel.text = quest.Description;
         _contentLabel.text = quest.QuestContent;
+        _progressLabel.text = $"진행도: {FormatProgress(quest)}";
+        _statusLabel.text = quest.Completed ? "완료" : "진행 중";
+        _statusLabel.style.color = quest.Completed ? CompletedColor : TextSecondary;
         SetTracked(quest.IsTracked);
         _waypointLabel.text = FormatWaypointText(quest.WaypointIdentifier);
+        _waypointLabel.style.display = string.IsNullOrWhiteSpace(quest.WaypointIdentifier) ? DisplayStyle.None : DisplayStyle.Flex;
+        style.opacity = quest.Completed ? 0.78f : 1f;
       }
 
       public void SetTracked(bool isTracked)
       {
         IsTracked = isTracked;
-        _trackButton.text = isTracked ? "Untrack" : "Preview";
+        bool trackable = _boundQuest == null || _boundQuest.IsTrackable;
+        _trackButton.SetEnabled(trackable);
+        _trackButton.text = !trackable ? "고정 불가" : isTracked ? "Untrack" : "Preview";
         _trackButton.style.backgroundColor = isTracked ? AccentColor : new Color(1f, 1f, 1f, 0.08f);
         _trackButton.style.color = isTracked ? Color.black : TextPrimary;
         style.borderLeftColor = isTracked ? AccentColor : CardBorder;
@@ -366,9 +388,15 @@ namespace MultiplayerInfrastructure.UI
 
       private static string FormatWaypointText(string identifier)
       {
-        return string.IsNullOrWhiteSpace(identifier)
-            ? "Waypoint: 없음"
-            : $"Waypoint: {identifier}";
+        return $"Waypoint: {identifier}";
+      }
+
+      private static string FormatProgress(QuestData quest)
+      {
+        if (quest?.Progress == null)
+          return "0/1";
+
+        return quest.Progress.ToDisplayText();
       }
     }
   }

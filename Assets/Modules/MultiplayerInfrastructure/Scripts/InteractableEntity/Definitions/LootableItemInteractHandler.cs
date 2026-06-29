@@ -51,8 +51,18 @@ namespace MultiplayerInfrastructure.InteractableEntity.Definitions
         return;
       }
 
+      if (string.IsNullOrWhiteSpace(itemObject.Identifier))
+      {
+        Debug.LogWarning($"[LootableItemInteractHandler] ItemObject '{itemObject.gameObject.name}' has empty identifier.");
+      }
+
       if (!string.IsNullOrWhiteSpace(itemObject.Identifier))
+      {
+#if UNITY_EDITOR && (DEBUG == true)
+        Debug.Log($"[LootableItemInteractHandler] pickup request: id={itemObject.Identifier}, item={itemObject.Item.CurrentIdentifier}, pos={itemObject.transform.position}");
+#endif
         player.TryPickupWorldItem(itemObject.Identifier);
+      }
       else
         player.TryPickupWorldItem(itemObject);
     }

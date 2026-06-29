@@ -66,6 +66,7 @@ namespace MultiplayerInfrastructure.Scenario
       var graph = new ScenarioGraph();
       graph.Identifier = ResolveGraphIdentifier(dto);
       graph.Tags = NormalizeTags(dto.Tags);
+      graph.QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(dto.QuestDefinitionIncludes);
 
       foreach (var pair in dto.Nodes)
       {
@@ -100,6 +101,20 @@ namespace MultiplayerInfrastructure.Scenario
           .Where(each => !string.IsNullOrWhiteSpace(each))
           .Select(each => each.Trim())
           .Distinct(StringComparer.OrdinalIgnoreCase)
+          .ToList();
+    }
+
+    private static IReadOnlyList<string> NormalizeQuestDefinitionIncludes(IEnumerable<string> includes)
+    {
+      if (includes == null)
+      {
+        return Array.Empty<string>();
+      }
+
+      return includes
+          .Where(each => !string.IsNullOrWhiteSpace(each))
+          .Select(each => each.Trim())
+          .Distinct(StringComparer.Ordinal)
           .ToList();
     }
 
@@ -252,6 +267,7 @@ namespace MultiplayerInfrastructure.Scenario
           DialogueContent = dto.DialogueContent,
           PortraitSpriteIdentifier = dto.PortraitSpriteIdentifier,
           AutoAdvanceSeconds = dto.AutoAdvanceSeconds,
+          InteractionRequired = dto.InteractionRequired ?? false,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -367,6 +383,7 @@ namespace MultiplayerInfrastructure.Scenario
           Identifier = dto.Identifier,
           Operation = ParseQuestOperation(dto.Operation),
           FailureStrategy = ParseQuestFailureStrategy(dto.FailureStrategy),
+          QuestDefinitionIdentifier = dto.QuestDefinitionIdentifier,
           Quest = dto.Quest,
           NextIdentifier = dto.NextIdentifier
         };
@@ -846,6 +863,7 @@ namespace MultiplayerInfrastructure.Scenario
       {
         Identifier = string.IsNullOrWhiteSpace(graph.Identifier) ? "scenario_graph" : graph.Identifier.Trim(),
         Tags = NormalizeTags(graph.Tags).ToList(),
+        QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(graph.QuestDefinitionIncludes).ToList(),
         Nodes = new Dictionary<string, ScenarioNodeDTO>()
       };
 
@@ -893,6 +911,7 @@ namespace MultiplayerInfrastructure.Scenario
           DialogueContent = node.DialogueContent,
           PortraitSpriteIdentifier = node.PortraitSpriteIdentifier,
           AutoAdvanceSeconds = node.AutoAdvanceSeconds,
+          InteractionRequired = node.InteractionRequired ? true : (bool?)null,
           NextIdentifier = node.NextIdentifier
         };
 
@@ -940,6 +959,7 @@ namespace MultiplayerInfrastructure.Scenario
           Identifier = node.Identifier,
           Operation = node.Operation.ToString(),
           FailureStrategy = node.FailureStrategy.ToString(),
+          QuestDefinitionIdentifier = node.QuestDefinitionIdentifier,
           Quest = node.Quest,
           NextIdentifier = node.NextIdentifier
         };

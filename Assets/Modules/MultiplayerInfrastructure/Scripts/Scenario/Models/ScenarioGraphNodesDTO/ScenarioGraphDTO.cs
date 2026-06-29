@@ -11,6 +11,9 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("tags")]
     public List<string> Tags { get; set; }
 
+    [JsonPropertyName("questDefinitionIncludes")]
+    public List<string> QuestDefinitionIncludes { get; set; }
+
     [JsonPropertyName("nodes")]
     public Dictionary<string, ScenarioNodeDTO> Nodes { get; set; }
   }

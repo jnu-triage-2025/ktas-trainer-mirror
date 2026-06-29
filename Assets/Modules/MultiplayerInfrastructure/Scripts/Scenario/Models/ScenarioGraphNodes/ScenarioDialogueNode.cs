@@ -9,6 +9,7 @@ namespace MultiplayerInfrastructure.Scenario
     public string SpeakerName { get; set; }
     public string DialogueContent { get; set; }
     public string PortraitSpriteIdentifier { get; set; }
+    public bool InteractionRequired { get; set; }
 
     /// <summary>
     /// 자동 진행까지 대기할 시간(초). null/0 이하이면 기존처럼 사용자 입력을 기다린다(하위호환).

@@ -66,11 +66,31 @@ namespace MultiplayerInfrastructure.ItemSystem
         return;
       }
 
+      EnsureUniqueRuntimeEntityIdentifier();
+
       var spawned = ItemObject.Spawn(item, transform.position, entityIdentifier: _entityIdentifier);
       if (spawned != null)
         spawned.transform.rotation = transform.rotation;
 
       Destroy(gameObject);
+    }
+
+    private void EnsureUniqueRuntimeEntityIdentifier()
+    {
+      if (string.IsNullOrWhiteSpace(_entityIdentifier))
+      {
+        _entityIdentifier = global::MultiplayerInfrastructure.Registry.EntityId.Ensure(_entityIdentifier, gameObject, "scene-item");
+        return;
+      }
+
+      if (!Registry.Registry.TryGetEntity(_entityIdentifier, out var existing) || existing == null)
+        return;
+
+      string previous = _entityIdentifier;
+      _entityIdentifier = global::MultiplayerInfrastructure.Registry.EntityId.Ensure(null, gameObject, "scene-item");
+      Debug.LogWarning(
+        $"[SceneItemPlacement] Duplicate entity identifier detected: '{previous}'. " +
+        $"Reassigned to '{_entityIdentifier}' for '{gameObject.name}'.");
     }
 
     private static bool ShouldSpawnLocally()

@@ -46,6 +46,7 @@ namespace MultiplayerInfrastructure.UI
     [SerializeField] private string _fullText;
     [SerializeField] private int _currentCharIndex;
     [SerializeField] private float _lastTypeTime;
+    [SerializeField] private bool _currentDialogueInteractionRequired;
 
     [SerializeField] private DialogueInputContext _inputContext = DialogueInputContext.None;
     private IReadOnlyList<ScenarioChoiceOption> _pendingChoiceOptions;
@@ -202,7 +203,8 @@ namespace MultiplayerInfrastructure.UI
       // InteractableHintUI를 시나리오 모드로 전환
       if (!_interactableHintUI.IsUnityNull())
       {
-        _interactableHintUI.EnterDialogueMode();
+        if (!_interactableHintUI.IsDialogueMode)
+          _interactableHintUI.EnterDialogueMode();
       }
 
       // 패널 표시
@@ -256,9 +258,17 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void DisplayDialogue(string speakerName, string dialogueContent, string portraitIdentifier)
     {
+      DisplayDialogue(speakerName, dialogueContent, portraitIdentifier, false);
+    }
+
+    public void DisplayDialogue(string speakerName, string dialogueContent, string portraitIdentifier, bool interactionRequired)
+    {
+      EnsureDialogueModeActive();
       _inputContext = DialogueInputContext.Dialogue;
+      _currentDialogueInteractionRequired = interactionRequired;
       _pendingChoiceOptions = null;
       ClearSelections();
+      EnsureOverlayActive();
       PresentTextNode(speakerName, dialogueContent, portraitIdentifier);
 
       OnNodeDisplayed?.Invoke(null); // TODO: pass node if needed
@@ -269,9 +279,12 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void DisplayChoice(string speakerName, string dialogueContent, string portraitIdentifier, IReadOnlyList<ScenarioChoiceOption> options)
     {
+      EnsureDialogueModeActive();
       _inputContext = DialogueInputContext.Choice;
+      _currentDialogueInteractionRequired = false;
       _pendingChoiceOptions = options;
       ClearSelections();
+      EnsureOverlayActive();
       PresentTextNode(speakerName, dialogueContent, portraitIdentifier);
 
       OnNodeDisplayed?.Invoke(null); // TODO: pass node if needed
@@ -345,6 +358,18 @@ namespace MultiplayerInfrastructure.UI
       // Dialogue: 재생 완료 후 입력은 다음 노드 진행.
       if (_inputContext == DialogueInputContext.Dialogue)
       {
+        if (_currentDialogueInteractionRequired)
+        {
+          DismissInteractionRequiredDialogue();
+          OnAdvanceRequested?.Invoke();
+
+          if (!_currentController.IsUnityNull())
+          {
+            _currentController.Advance();
+          }
+          return;
+        }
+
         OnAdvanceRequested?.Invoke();
 
         if (!_currentController.IsUnityNull())
@@ -583,6 +608,46 @@ namespace MultiplayerInfrastructure.UI
       }
 
       _dialogueElement?.Hide();
+    }
+
+    public void DismissInteractionRequiredDialogue()
+    {
+      _isTyping = false;
+      _isWaitingForInput = false;
+      _inputContext = DialogueInputContext.None;
+      _pendingChoiceOptions = null;
+      _currentDialogueInteractionRequired = false;
+      _fullText = string.Empty;
+      _currentCharIndex = 0;
+      ClearSelections();
+      Hide();
+
+      if (UIOverlayStack.IsTop(this))
+        UIOverlayStack.Pop();
+
+      // interaction-required 대화가 닫힌 뒤에는 월드 상호작용 힌트를 즉시 다시 보이도록
+      // 일반 모드로 복귀한다. 이후 다음 Dialogue/Choice 표시 시 다시 Dialogue 모드로 전환된다.
+      if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.IsDialogueMode)
+        _interactableHintUI.ExitDialogueMode();
+    }
+
+    private void EnsureDialogueModeActive()
+    {
+      if (!_interactableHintUI.IsUnityNull() && !_interactableHintUI.IsDialogueMode)
+        _interactableHintUI.EnterDialogueMode();
+    }
+
+    public void EnsureOverlayActive()
+    {
+      if (!UIOverlayStack.IsTop(this))
+      {
+        if (UIOverlayStack.IsEmpty())
+          UIOverlayStack.Push(this);
+        else
+          UIOverlayStack.Push(this);
+      }
+
+      Show();
     }
 
     // IUIOverlay

@@ -14,6 +14,7 @@ namespace MultiplayerInfrastructure.UI
     private static readonly Color BorderColor = new Color(1f, 1f, 1f, 0.08f);
     private static readonly Color TitleColor = new Color(0.86f, 0.94f, 0.86f, 1f);
     private static readonly Color ContentColor = new Color(0.95f, 0.98f, 0.96f, 1f);
+    private static readonly Color DescriptionColor = new Color(0.8f, 0.88f, 0.84f, 0.92f);
 
     private VisualElement _cards;
 
@@ -101,6 +102,14 @@ namespace MultiplayerInfrastructure.UI
       title.style.opacity = 0.92f;
       card.Add(title);
 
+      var description = new Label(quest.Description ?? string.Empty) { pickingMode = PickingMode.Ignore };
+      description.style.color = DescriptionColor;
+      description.style.fontSize = 11;
+      description.style.marginTop = 4;
+      description.style.whiteSpace = WhiteSpace.Normal;
+      description.style.display = string.IsNullOrWhiteSpace(quest.Description) ? DisplayStyle.None : DisplayStyle.Flex;
+      card.Add(description);
+
       var content = new Label(quest.QuestContent ?? string.Empty) { pickingMode = PickingMode.Ignore };
       content.style.color = ContentColor;
       content.style.fontSize = 13;
@@ -108,20 +117,39 @@ namespace MultiplayerInfrastructure.UI
       content.style.whiteSpace = WhiteSpace.Normal;
       card.Add(content);
 
+      var progress = new Label($"진행도: {FormatProgress(quest)}") { pickingMode = PickingMode.Ignore };
+      progress.style.color = quest.Completed ? AccentColor : ContentColor;
+      progress.style.fontSize = 11;
+      progress.style.marginTop = 4;
+      card.Add(progress);
+
+      var status = new Label(quest.Completed ? "상태: 완료" : "상태: 진행 중") { pickingMode = PickingMode.Ignore };
+      status.style.color = quest.Completed ? AccentColor : DescriptionColor;
+      status.style.fontSize = 11;
+      status.style.marginTop = 2;
+      card.Add(status);
+
       var waypointLabel = new Label(FormatWaypointText(quest.WaypointIdentifier)) { pickingMode = PickingMode.Ignore };
       waypointLabel.style.color = AccentColor;
       waypointLabel.style.fontSize = 11;
       waypointLabel.style.marginTop = 4;
+      waypointLabel.style.display = string.IsNullOrWhiteSpace(quest.WaypointIdentifier) ? DisplayStyle.None : DisplayStyle.Flex;
       card.Add(waypointLabel);
 
       return card;
     }
 
+    private static string FormatProgress(QuestData quest)
+    {
+      if (quest?.Progress == null)
+        return "0/1";
+
+      return quest.Progress.ToDisplayText();
+    }
+
     private static string FormatWaypointText(string waypointIdentifier)
     {
-      return string.IsNullOrWhiteSpace(waypointIdentifier)
-          ? "Waypoint: 없음"
-          : $"Waypoint: {waypointIdentifier}";
+      return $"Waypoint: {waypointIdentifier}";
     }
   }
 }

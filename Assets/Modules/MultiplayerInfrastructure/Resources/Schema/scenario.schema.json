@@ -18,6 +18,16 @@
         "minLength": 1
       }
     },
+    "questDefinitionIncludes": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
     "nodes": {
       "type": "object",
       "description": "Dictionary<string, IScenarioNode>",
@@ -436,6 +446,13 @@
                 "null"
               ],
               "minimum": 0
+            },
+            "interactionRequired": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": false
             }
           },
           "required": [
@@ -1410,13 +1427,37 @@
               "default": "Overwrite"
             },
             "quest": {
-              "$ref": "#/$defs/ScenarioQuestData"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ScenarioQuestData"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "questDefinitionIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
           "required": [
             "operation",
-            "failureStrategy",
-            "quest"
+            "failureStrategy"
+          ],
+          "anyOf": [
+            {
+              "required": [
+                "quest"
+              ]
+            },
+            {
+              "required": [
+                "questDefinitionIdentifier"
+              ]
+            }
           ]
         }
       ]
@@ -1470,6 +1511,18 @@
             "string",
             "null"
           ]
+        },
+        "scope": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "Player",
+            "Global",
+            null
+          ],
+          "default": "Player"
         },
         "IsTracked": {
           "type": "boolean",

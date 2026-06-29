@@ -207,6 +207,9 @@ namespace MultiplayerInfrastructure.Scenario
       _currentGraph = graph;
       _scenarioOwnerClientId = ownerClientId;
 
+      // 시나리오가 요구하는 퀘스트 정의 include를 선로딩한다.
+      QuestDefinitionRegistry.EnsureIncludesLoaded(graph.QuestDefinitionIncludes);
+
       ResolveUIControllers();
 
       // 시작 노드 찾기
@@ -382,6 +385,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void ExecuteNode(IScenarioNode node)
     {
+      LogNodeExecution(node);
       OnNodeChanged?.Invoke(node);
 
       switch (node)
@@ -456,6 +460,26 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
+    [System.Diagnostics.Conditional("UNITY_EDITOR")]
+    [System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
+    private void LogNodeExecution(IScenarioNode node)
+    {
+      if (node == null)
+      {
+        Debug.LogWarning("[ScenarioController] ExecuteNode called with null node.");
+        return;
+      }
+
+      int? localClientId = null;
+      var localConn = InstanceFinder.ClientManager?.Connection;
+      if (localConn != null)
+        localClientId = (int)localConn.ClientId;
+
+      Debug.Log(
+        $"[ScenarioController] Executing node: id='{node.Identifier}', type={node.NodeType}, " +
+        $"ownerClientId={_scenarioOwnerClientId?.ToString() ?? "null"}, localClientId={localClientId?.ToString() ?? "null"}");
+    }
+
     private void ExecuteDialogueNode(ScenarioDialogueNode node)
     {
       _state = State.ExecutingDialogue;
@@ -465,13 +489,13 @@ namespace MultiplayerInfrastructure.Scenario
 
       if (!_uiController.IsUnityNull())
       {
-        _uiController.DisplayDialogue(node.SpeakerName, node.DialogueContent, node.PortraitSpriteIdentifier);
+        _uiController.DisplayDialogue(node.SpeakerName, node.DialogueContent, node.PortraitSpriteIdentifier, node.InteractionRequired);
 
         // AutoAdvanceSeconds 가 양수이면 표시 후 해당 시간 경과 시 자동 진행.
         // 그 전에 사용자가 Advance() 를 호출하면 타이머는 취소된다(중복 진행 방지).
         if (node.AutoAdvanceSeconds.HasValue && node.AutoAdvanceSeconds.Value > 0f)
         {
-          _dialogueAutoAdvanceRoutine = StartCoroutine(DialogueAutoAdvanceRoutine(node.AutoAdvanceSeconds.Value));
+          _dialogueAutoAdvanceRoutine = StartCoroutine(DialogueAutoAdvanceRoutine(node.AutoAdvanceSeconds.Value, node.InteractionRequired));
         }
       }
       else
@@ -481,13 +505,16 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
-    private IEnumerator DialogueAutoAdvanceRoutine(float seconds)
+    private IEnumerator DialogueAutoAdvanceRoutine(float seconds, bool interactionRequired)
     {
       yield return new WaitForSeconds(seconds);
       _dialogueAutoAdvanceRoutine = null;
       // 타이머 만료 시에만 자동 진행. (사용자 입력으로 이미 진행되었다면 CancelDialogueAutoAdvance 로 취소됨)
       if (_state == State.ExecutingDialogue)
       {
+        if (interactionRequired)
+          yield break;
+
         Advance();
       }
     }
@@ -570,6 +597,12 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingQuestControl;
 
+      if (!ShouldApplyQuestControlNode(node))
+      {
+        Advance();
+        return;
+      }
+
       var manager = Registry.Registry.Get<QuestManager>(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>());
       if (manager == null)
       {
@@ -587,6 +620,38 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Advance();
+    }
+
+    private bool ShouldApplyQuestControlNode(ScenarioQuestControlNode node)
+    {
+      if (node == null)
+        return false;
+
+      // 시나리오 owner가 지정된 경우, 퀘스트 노드는 해당 owner 클라이언트에서만 적용한다.
+      // 그렇지 않으면 모든 피어에서 동일 퀘스트가 동시에 등록되어 역할별 분기가 깨질 수 있다.
+      if (!_scenarioOwnerClientId.HasValue)
+      {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[ScenarioController] QuestControl '{node.Identifier}' apply=true (ownerClientId is null)");
+#endif
+        return true;
+      }
+
+      var localConn = InstanceFinder.ClientManager?.Connection;
+      if (localConn == null)
+      {
+        // 서버 전용 컨텍스트(로컬 클라이언트 없음)에서는 클라이언트 전용 퀘스트 적용을 건너뛴다.
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[ScenarioController] QuestControl '{node.Identifier}' apply=false (local connection is null, ownerClientId={_scenarioOwnerClientId})");
+#endif
+        return false;
+      }
+
+      bool apply = localConn.ClientId == _scenarioOwnerClientId.Value;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+      Debug.Log($"[ScenarioController] QuestControl '{node.Identifier}' apply={apply} (ownerClientId={_scenarioOwnerClientId}, localClientId={localConn.ClientId})");
+#endif
+      return apply;
     }
 
     private void ExecuteQuestWaypointHighlightNode(ScenarioQuestWaypointHighlightNode node)
@@ -1231,41 +1296,48 @@ namespace MultiplayerInfrastructure.Scenario
 
     private bool ApplyQuestOperation(QuestManager manager, ScenarioQuestControlNode node)
     {
-      string questId = node.Quest?.Id;
+      string questId = ResolveQuestId(node);
+      var questData = BuildQuestPayload(node, questId);
 
       switch (node.Operation)
       {
         case ScenarioQuestOperationType.Add:
           if (manager.HasQuest(questId))
           {
-            return HandleConflict(node, () => manager.AddOrUpdateQuest(node.Quest));
+            return HandleConflict(node, () => manager.AddOrUpdateQuest(questData));
           }
 
-          if (node.Quest == null)
+          if (questData == null)
           {
             Debug.LogWarning("[ScenarioController] Add quest operation missing quest data.");
             return node.FailureStrategy != ScenarioQuestFailureStrategy.Panic;
           }
 
-          manager.AddOrUpdateQuest(node.Quest);
+          manager.AddOrUpdateQuest(questData);
           return true;
 
         case ScenarioQuestOperationType.Update:
           if (manager.HasQuest(questId))
           {
-            if (node.Quest == null)
+            if (questData == null)
             {
               Debug.LogWarning("[ScenarioController] Update quest operation missing quest data.");
               return node.FailureStrategy != ScenarioQuestFailureStrategy.Panic;
             }
 
-            manager.AddOrUpdateQuest(node.Quest);
+            manager.AddOrUpdateQuest(questData);
             return true;
           }
 
           if (node.FailureStrategy == ScenarioQuestFailureStrategy.Overwrite)
           {
-            manager.AddOrUpdateQuest(node.Quest);
+            if (questData == null)
+            {
+              Debug.LogWarning("[ScenarioController] Update->Overwrite quest operation missing quest data.");
+              return node.FailureStrategy != ScenarioQuestFailureStrategy.Panic;
+            }
+
+            manager.AddOrUpdateQuest(questData);
             return true;
           }
 
@@ -1284,6 +1356,47 @@ namespace MultiplayerInfrastructure.Scenario
           Debug.LogWarning($"[ScenarioController] Unknown quest operation {node.Operation}.");
           return node.FailureStrategy != ScenarioQuestFailureStrategy.Panic;
       }
+    }
+
+    private static string ResolveQuestId(ScenarioQuestControlNode node)
+    {
+      if (node == null)
+        return null;
+
+      if (!string.IsNullOrWhiteSpace(node.Quest?.Id))
+        return node.Quest.Id;
+
+      if (!string.IsNullOrWhiteSpace(node.QuestDefinitionIdentifier))
+        return node.QuestDefinitionIdentifier;
+
+      return null;
+    }
+
+    private static QuestData BuildQuestPayload(ScenarioQuestControlNode node, string questId)
+    {
+      if (node == null)
+        return null;
+
+      if (node.Quest != null)
+      {
+        var copy = node.Quest.Clone();
+        if (string.IsNullOrWhiteSpace(copy.Id))
+          copy.Id = questId;
+
+        if (string.IsNullOrWhiteSpace(copy.DefinitionIdentifier) && !string.IsNullOrWhiteSpace(node.QuestDefinitionIdentifier))
+          copy.DefinitionIdentifier = node.QuestDefinitionIdentifier;
+
+        return copy;
+      }
+
+      if (string.IsNullOrWhiteSpace(node.QuestDefinitionIdentifier))
+        return null;
+
+      return new QuestData
+      {
+        Id = string.IsNullOrWhiteSpace(questId) ? node.QuestDefinitionIdentifier : questId,
+        DefinitionIdentifier = node.QuestDefinitionIdentifier
+      };
     }
 
     private bool HandleConflict(ScenarioQuestControlNode node, Action overwriteAction)
@@ -1641,6 +1754,7 @@ namespace MultiplayerInfrastructure.Scenario
       _state = State.ExecutingParallel;
 
       var runningCoroutines = new List<Coroutine>();
+      int? localClientId = (int?)InstanceFinder.ClientManager?.Connection?.ClientId;
       var players = GetActivePlayerIds();
       var allocation = new Dictionary<ScenarioParallelBranch, int?>();
 
@@ -1669,6 +1783,16 @@ namespace MultiplayerInfrastructure.Scenario
         {
           EndScenario();
           yield break;
+        }
+
+        // 멀티플레이어에서는 로컬 클라이언트에 할당된 브랜치만 실행한다.
+        // (미할당 브랜치 체인을 로컬에서 함께 돌리면 타 역할 노드가 한 번에 실행되는 문제가 발생한다.)
+        if (assignedClientId.HasValue && localClientId.HasValue && assignedClientId.Value != localClientId.Value)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+          Debug.Log($"[ScenarioController] Parallel branch '{branch.Identifier}' skipped on local client {localClientId} (assigned to {assignedClientId}).");
+#endif
+          continue;
         }
 
         var coroutine = StartCoroutine(ExecuteBranch(branchNode, branch.CompletionConditionIdentifier, assignedClientId));
@@ -1826,14 +1950,23 @@ namespace MultiplayerInfrastructure.Scenario
             yield return ExecuteCombineItemNode(combineItem);
             break;
           case ScenarioDialogueNode dialogue:
-            // 브랜치 내 다이얼로그: 자동진행 시간이 지정되면 그 시간만큼, 아니면 짧게 표시 후 진행.
+            // 브랜치 내 다이얼로그: interactionRequired면 자동 닫힘 없이 입력으로만 닫힌다.
             if (!_uiController.IsUnityNull())
             {
-              _uiController.DisplayDialogue(dialogue.SpeakerName, dialogue.DialogueContent, dialogue.PortraitSpriteIdentifier);
+              _uiController.DisplayDialogue(
+                dialogue.SpeakerName,
+                dialogue.DialogueContent,
+                dialogue.PortraitSpriteIdentifier,
+                dialogue.InteractionRequired);
             }
-            if (dialogue.AutoAdvanceSeconds.HasValue && dialogue.AutoAdvanceSeconds.Value > 0f)
+
+            var waitSeconds = (dialogue.AutoAdvanceSeconds.HasValue && dialogue.AutoAdvanceSeconds.Value > 0f)
+              ? dialogue.AutoAdvanceSeconds.Value
+              : 0f;
+
+            if (waitSeconds > 0f)
             {
-              yield return new WaitForSeconds(dialogue.AutoAdvanceSeconds.Value);
+              yield return new WaitForSeconds(waitSeconds);
             }
             break;
           default:
@@ -1927,7 +2060,7 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioParallelAllocationType.SelfAll:
         {
           int? target = _scenarioOwnerClientId;
-          if (target != null && !IsPlayerEligibleForBranch(branches[0], target.Value))
+          if (target != null && !branches.All(branch => IsPlayerEligibleForBranch(branch, target.Value)))
           {
             target = null;
           }
@@ -1935,7 +2068,7 @@ namespace MultiplayerInfrastructure.Scenario
           if (target == null && playerPool.Count > 0)
           {
             target = playerPool
-                .Where(clientId => IsPlayerEligibleForBranch(branches[0], clientId))
+                .Where(clientId => branches.All(branch => IsPlayerEligibleForBranch(branch, clientId)))
                 .Select(clientId => (int?)clientId)
                 .FirstOrDefault();
           }

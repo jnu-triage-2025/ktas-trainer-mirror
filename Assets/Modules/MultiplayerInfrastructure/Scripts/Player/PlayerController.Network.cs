@@ -27,6 +27,8 @@ namespace MultiplayerInfrastructure.Player
     }
 
     private static readonly System.Collections.Generic.Dictionary<string, PendingWorldItemPickup> _pendingWorldItemPickups = new(StringComparer.Ordinal);
+    private const float MaxWorldItemPickupDistance = 4f;
+    private const float MaxWorldItemPickupDistanceSqr = MaxWorldItemPickupDistance * MaxWorldItemPickupDistance;
 
     // ── SyncVars ─────────────────────────────────────────────────────────────
     // 서버가 설정하고 모든 클라이언트로 자동 전파됩니다.
@@ -459,10 +461,15 @@ namespace MultiplayerInfrastructure.Player
       if (_pendingWorldItemPickups.ContainsKey(entityIdentifier))
         return;
 
-      float sqrDistance = (itemObject.transform.position - transform.position).sqrMagnitude;
-      if (sqrDistance > 9f)
+      var claimantPosition = ResolveServerPickupOriginPosition();
+      var pickupPoint = ResolveWorldItemPickupPoint(itemObject, claimantPosition);
+      float sqrDistance = (pickupPoint - claimantPosition).sqrMagnitude;
+      if (sqrDistance > MaxWorldItemPickupDistanceSqr)
       {
-        Debug.LogWarning($"[PlayerController] Reject pickup '{entityIdentifier}': too far from player.");
+        Debug.LogWarning(
+          $"[PlayerController] Reject pickup '{entityIdentifier}': too far from player. " +
+          $"distance={Mathf.Sqrt(sqrDistance):0.00}m, limit={MaxWorldItemPickupDistance:0.00}m, " +
+          $"player={claimantPosition}, itemRoot={itemObject.transform.position}, pickupPoint={pickupPoint}");
         return;
       }
 
@@ -489,6 +496,70 @@ namespace MultiplayerInfrastructure.Player
         item.CurrentSerializedDerivedAttributes ?? string.Empty);
 
       RpcDestroyWorldItem(entityIdentifier);
+    }
+
+    private Vector3 ResolveServerPickupOriginPosition()
+    {
+      if (TryGetComponent<CharacterController>(out var characterController))
+      {
+        return transform.TransformPoint(characterController.center);
+      }
+
+      if (TryGetComponent<CapsuleCollider>(out var capsuleCollider))
+      {
+        return transform.TransformPoint(capsuleCollider.center);
+      }
+
+      return transform.position;
+    }
+
+    private static Vector3 ResolveWorldItemPickupPoint(ItemObject itemObject, Vector3 referencePosition)
+    {
+      if (itemObject == null)
+        return referencePosition;
+
+      bool foundCandidate = false;
+      float bestDistanceSqr = float.MaxValue;
+      Vector3 bestPoint = itemObject.transform.position;
+
+      var colliders = itemObject.GetComponentsInChildren<Collider>(includeInactive: false);
+      for (int i = 0; i < colliders.Length; i++)
+      {
+        var collider = colliders[i];
+        if (collider == null || !collider.enabled || !collider.gameObject.activeInHierarchy)
+          continue;
+
+        var point = collider.ClosestPoint(referencePosition);
+        float sqr = (point - referencePosition).sqrMagnitude;
+        if (sqr < bestDistanceSqr)
+        {
+          bestDistanceSqr = sqr;
+          bestPoint = point;
+          foundCandidate = true;
+        }
+      }
+
+      if (foundCandidate)
+        return bestPoint;
+
+      var renderers = itemObject.GetComponentsInChildren<Renderer>(includeInactive: false);
+      for (int i = 0; i < renderers.Length; i++)
+      {
+        var renderer = renderers[i];
+        if (renderer == null || !renderer.enabled)
+          continue;
+
+        var point = renderer.bounds.ClosestPoint(referencePosition);
+        float sqr = (point - referencePosition).sqrMagnitude;
+        if (sqr < bestDistanceSqr)
+        {
+          bestDistanceSqr = sqr;
+          bestPoint = point;
+          foundCandidate = true;
+        }
+      }
+
+      return foundCandidate ? bestPoint : itemObject.transform.position;
     }
 
     [ServerRpc]
@@ -630,4 +701,3 @@ namespace MultiplayerInfrastructure.Player
     }
   }
 }
-

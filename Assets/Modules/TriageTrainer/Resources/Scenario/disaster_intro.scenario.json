@@ -20,6 +20,9 @@
     "triage_lead",
     "vital_team"
   ],
+  "questDefinitionIncludes": [
+    "disaster_intro.quests.quest"
+  ],
   "nodes": {
     "D001": {
       "identifier": "D001",
@@ -119,6 +122,16 @@
       "speakerName": "System",
       "dialogueContent": "카트 위 활력징후 측정도구를 획득하세요.",
       "portraitSpriteIdentifier": null,
+      "interactionRequired": true,
+      "nextIdentifier": "q002_item"
+    },
+    "q002_item": {
+      "identifier": "q002_item",
+      "nodeType": "QuestControl",
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro.role_a::collect_vital_set",
+      "quest": null,
       "nextIdentifier": "Q002"
     },
     "Q002": {
@@ -160,6 +173,15 @@
       "quest": {
         "Id": "Quest_GetVitalSet"
       },
+      "nextIdentifier": "q002_item_1"
+    },
+    "q002_item_1": {
+      "identifier": "q002_item_1",
+      "nodeType": "QuestControl",
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro.role_a::collect_vital_set",
+      "quest": null,
       "nextIdentifier": "D003"
     },
     "D003": {
@@ -471,6 +493,17 @@
       "speakerName": "System",
       "dialogueContent": "생리식염수 1L 수액백과 수액세트를 각각 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
+      "interactionRequired": true,
+      "autoAdvanceSeconds": 0.2,
+      "nextIdentifier": "q006"
+    },
+    "q006": {
+      "identifier": "q006",
+      "nodeType": "QuestControl",
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro.role_a::collect_ns1_and_iv_set",
+      "quest": null,
       "nextIdentifier": "V006"
     },
     "V006": {
@@ -498,6 +531,15 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
+      "nextIdentifier": "q006_1"
+    },
+    "q006_1": {
+      "identifier": "q006_1",
+      "nodeType": "QuestControl",
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro.role_a::collect_ns1_and_iv_set",
+      "quest": null,
       "nextIdentifier": "A001"
     },
     "A001": {
@@ -517,6 +559,16 @@
       "speakerName": "System",
       "dialogueContent": "플라즈마 솔루션 1L 수액백과 수액세트를 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
+      "interactionRequired": true,
+      "nextIdentifier": "q007"
+    },
+    "q007": {
+      "identifier": "q007",
+      "nodeType": "QuestControl",
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro.role_a::collect_ps1_and_iv_set",
+      "quest": null,
       "nextIdentifier": "V007"
     },
     "V007": {
@@ -526,6 +578,12 @@
         {
           "condition": "RegistryContains",
           "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "quest.completed.disaster_intro.role_a::collect_ns1_and_iv_set"
+            },
             {
               "type": "Registry",
               "condition": "Contains",
@@ -544,6 +602,15 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
+      "nextIdentifier": "q007_1"
+    },
+    "q007_1": {
+      "identifier": "q007_1",
+      "nodeType": "QuestControl",
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro.role_a::collect_ps1_and_iv_set",
+      "quest": null,
       "nextIdentifier": "A002"
     },
     "A002": {
@@ -563,6 +630,16 @@
       "speakerName": "System",
       "dialogueContent": "수액 준비가 완료되었습니다. 혈액백을 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
+      "interactionRequired": true,
+      "nextIdentifier": "q008"
+    },
+    "q008": {
+      "identifier": "q008",
+      "nodeType": "QuestControl",
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro.role_a::collect_blood_transfusion_set",
+      "quest": null,
       "nextIdentifier": "V008"
     },
     "V008": {
@@ -584,6 +661,15 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
+      "nextIdentifier": "q008_1"
+    },
+    "q008_1": {
+      "identifier": "q008_1",
+      "nodeType": "QuestControl",
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "disaster_intro.role_a::collect_blood_transfusion_set",
+      "quest": null,
       "nextIdentifier": "CC_D_Ready"
     },
     "D004": {

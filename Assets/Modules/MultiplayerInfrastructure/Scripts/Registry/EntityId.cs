@@ -16,6 +16,8 @@ namespace MultiplayerInfrastructure.Registry
       if (!string.IsNullOrWhiteSpace(currentIdentifier))
         return currentIdentifier;
 
+      prefix = string.IsNullOrWhiteSpace(prefix) ? "entity" : prefix.Trim();
+
       string baseName = target != null && !string.IsNullOrWhiteSpace(target.name)
         ? target.name.Trim().Replace(' ', '-')
         : prefix;

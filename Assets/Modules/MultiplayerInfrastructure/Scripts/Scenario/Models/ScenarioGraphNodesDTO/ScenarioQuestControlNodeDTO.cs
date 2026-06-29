@@ -11,6 +11,9 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("failureStrategy")]
     public string FailureStrategy { get; set; }
 
+    [JsonPropertyName("questDefinitionIdentifier")]
+    public string QuestDefinitionIdentifier { get; set; }
+
     [JsonPropertyName("quest")]
     public QuestData Quest { get; set; }
   }

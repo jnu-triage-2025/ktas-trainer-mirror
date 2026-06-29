@@ -1,0 +1,89 @@
+{
+  "namespace": "disaster_intro.role_a",
+  "definitions": [
+    {
+      "identifier": "collect_vital_set",
+      "title": "활력징후 측정도구 획득",
+      "description": "카트 위 활력징후 측정도구를 획득하세요.",
+      "questContent": "활력징후 측정도구 획득",
+      "isTrackable": true,
+      "isAutoComplete": true,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "completionCriteria": [
+        {
+          "type": "InventoryContains",
+          "itemId": "vital_set",
+          "count": 1,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "identifier": "collect_ns1_and_iv_set",
+      "title": "수액 준비물 획득",
+      "description": "생리식염수 1L 수액백과 수액세트를 각각 획득하세요.",
+      "questContent": "생리식염수 1L 수액백 + 수액세트 획득",
+      "isTrackable": true,
+      "isAutoComplete": true,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "completionCriteria": [
+        {
+          "type": "InventoryContains",
+          "itemId": "normal_saline_1000ml",
+          "count": 1,
+          "conditions": []
+        },
+        {
+          "type": "InventoryContains",
+          "itemId": "intravenous_set",
+          "count": 1,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "identifier": "collect_ps1_and_iv_set",
+      "title": "플라즈마 수액 준비물 획득",
+      "description": "플라즈마 솔루션 1L 수액백과 수액세트를 각각 획득하세요.",
+      "questContent": "플라즈마 솔루션 1L 수액백 + 수액세트 획득",
+      "isTrackable": true,
+      "isAutoComplete": true,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "completionCriteria": [
+        {
+          "type": "InventoryContains",
+          "itemId": "plasma_solution_1000ml",
+          "count": 1,
+          "conditions": []
+        },
+        {
+          "type": "InventoryContains",
+          "itemId": "intravenous_set",
+          "count": 1,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "identifier": "collect_blood_transfusion_set",
+      "title": "수혈 세트 획득",
+      "description": "혈액백(수혈 세트)을 획득하세요.",
+      "questContent": "수혈 세트 획득",
+      "isTrackable": true,
+      "isAutoComplete": true,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "completionCriteria": [
+        {
+          "type": "InventoryContains",
+          "itemId": "blood_transfusion_set",
+          "count": 1,
+          "conditions": []
+        }
+      ]
+    }
+  ]
+}

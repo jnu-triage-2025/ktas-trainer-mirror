@@ -88,7 +88,7 @@ namespace MultiplayerInfrastructure.Scenario
       Debug.Log($"[ScenarioInteractable] {gameObject.name}: 시나리오 그래프를 시작합니다.");
 
       int? clientId = null;
-      var interactorNetworkObject = interactor.GetComponent<NetworkObject>();
+      var interactorNetworkObject = interactor.GetComponentInParent<NetworkObject>();
       if (interactorNetworkObject != null)
       {
         clientId = (int)interactorNetworkObject.Owner.ClientId;

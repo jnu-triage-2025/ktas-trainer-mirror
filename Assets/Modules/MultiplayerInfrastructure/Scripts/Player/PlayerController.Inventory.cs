@@ -258,9 +258,13 @@ namespace MultiplayerInfrastructure.Player
       if (string.IsNullOrWhiteSpace(entityIdentifier))
         return false;
 
+      entityIdentifier = entityIdentifier.Trim();
       var itemObject = Registry.Registry.Get<ItemObject>(RegistryType.Entity, entityIdentifier);
       if (itemObject == null || itemObject.Item == null)
+      {
+        Debug.LogWarning($"[PlayerController] TryPickupWorldItem failed: entity '{entityIdentifier}' not found or invalid.");
         return false;
+      }
 
       if (!CanAcceptItem(itemObject.Item))
         return false;

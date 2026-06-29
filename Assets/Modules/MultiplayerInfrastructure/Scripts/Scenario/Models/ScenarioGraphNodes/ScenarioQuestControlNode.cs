@@ -10,6 +10,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     public ScenarioQuestOperationType Operation { get; set; }
     public ScenarioQuestFailureStrategy FailureStrategy { get; set; } = ScenarioQuestFailureStrategy.Overwrite;
+    public string QuestDefinitionIdentifier { get; set; }
     public QuestData Quest { get; set; }
   }
 }

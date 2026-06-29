@@ -15,5 +15,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("autoAdvanceSeconds")]
     public float? AutoAdvanceSeconds { get; set; }
+
+    [JsonPropertyName("interactionRequired")]
+    public bool? InteractionRequired { get; set; }
   }
 }

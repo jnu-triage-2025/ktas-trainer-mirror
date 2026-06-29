@@ -14,6 +14,12 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public IReadOnlyList<string> Tags { get; set; } = Array.Empty<string>();
 
+    /// <summary>
+    /// 이 시나리오에서 사용할 퀘스트 정의 include 목록.
+    /// 각 항목은 Resources/Quest 하위 .quest.json(TextAsset) 파일명을 가리킨다.
+    /// </summary>
+    public IReadOnlyList<string> QuestDefinitionIncludes { get; set; } = Array.Empty<string>();
+
     public Dictionary<string, IScenarioNode> Nodes { get; } = new Dictionary<string, IScenarioNode>();
 
     public void Add(IScenarioNode node)

@@ -145,7 +145,7 @@ namespace MultiplayerInfrastructure.Scenario
         int? clientId = null;
         if (triggeringObject != null)
         {
-          var netObj = triggeringObject.GetComponent<NetworkObject>();
+          var netObj = triggeringObject.GetComponentInParent<NetworkObject>();
           if (netObj != null)
           {
             clientId = (int)netObj.Owner.ClientId;

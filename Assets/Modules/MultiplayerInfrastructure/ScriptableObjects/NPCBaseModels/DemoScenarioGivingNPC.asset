@@ -22,5 +22,5 @@ MonoBehaviour:
       _iconRegistryIdentifier: 
       _iconDefinition: 0
     _displayColor: {r: 0, g: 0, b: 0, a: 0}
-    _scenarioIdentifier: scenario_graph_quest
-    _scenarioStartNodeIdentifier: intro_1
+    _scenarioIdentifier: disaster_intro
+    _scenarioStartNodeIdentifier: D001
