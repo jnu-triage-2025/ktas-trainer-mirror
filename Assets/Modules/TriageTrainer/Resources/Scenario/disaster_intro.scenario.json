@@ -392,6 +392,14 @@
       "waitForCondition": true,
       "nextIdentifier": "CC_A_Triage"
     },
+    "CC_A_Triage": {
+      "identifier": "CC_A_Triage",
+      "nodeType": "StateUpdate",
+      "targetEntityIdentifier": null,
+      "stateKey": "branch.completion.CC_A_Triage",
+      "stateValue": "true",
+      "nextIdentifier": null
+    },
     "N002": {
       "identifier": "N002",
       "nodeType": "Dialogue",
@@ -448,6 +456,14 @@
       "dialogueContent": "처치실에 있는 물품의 위치를 확인하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "CC_BC_Ready"
+    },
+    "CC_BC_Ready": {
+      "identifier": "CC_BC_Ready",
+      "nodeType": "StateUpdate",
+      "targetEntityIdentifier": null,
+      "stateKey": "branch.completion.CC_BC_Ready",
+      "stateValue": "true",
+      "nextIdentifier": null
     },
     "N003": {
       "identifier": "N003",
@@ -671,6 +687,14 @@
       "questDefinitionIdentifier": "disaster_intro.role_a::collect_blood_transfusion_set",
       "quest": null,
       "nextIdentifier": "CC_D_Ready"
+    },
+    "CC_D_Ready": {
+      "identifier": "CC_D_Ready",
+      "nodeType": "StateUpdate",
+      "targetEntityIdentifier": null,
+      "stateKey": "branch.completion.CC_D_Ready",
+      "stateValue": "true",
+      "nextIdentifier": null
     },
     "D004": {
       "identifier": "D004",
