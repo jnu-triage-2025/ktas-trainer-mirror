@@ -28,6 +28,7 @@
 - [MultiplayerInfrastructure.Registry.Problem.md](./MultiplayerInfrastructure.Registry.Problem.md): API 레퍼런스: `MultiplayerInfrastructure.Registry` (Problem 확장)
 - [MultiplayerInfrastructure.Registry.md](./MultiplayerInfrastructure.Registry.md): API 레퍼런스: `MultiplayerInfrastructure.Registry`
 - [MultiplayerInfrastructure.Scenario.ScenarioController.md](./MultiplayerInfrastructure.Scenario.ScenarioController.md): API 레퍼런스: `MultiplayerInfrastructure.Scenario.ScenarioController`
+- [MultiplayerInfrastructure.Editor.ScenarioGraphAuthoringWindow.md](./MultiplayerInfrastructure.Editor.ScenarioGraphAuthoringWindow.md): API 레퍼런스: `MultiplayerInfrastructure.Editor.ScenarioGraphAuthoringWindow`
 - [MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md](./MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md): API 레퍼런스: `MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry`
 - [MultiplayerInfrastructure.Scenario.SerializeSupport.md](./MultiplayerInfrastructure.Scenario.SerializeSupport.md): API 레퍼런스: MultiplayerInfrastructure.Scenario.SerializeSupport
 - [MultiplayerInfrastructure.Tag.PlayerTagService.md](./MultiplayerInfrastructure.Tag.PlayerTagService.md): API 레퍼런스: MultiplayerInfrastructure.Tag.PlayerTagService
@@ -41,7 +42,7 @@
 - [TriageTrainer.Scenario.TriageScenarioEventBootstrap.md](./TriageTrainer.Scenario.TriageScenarioEventBootstrap.md): API 레퍼런스: TriageTrainer.Scenario.TriageScenarioEventBootstrap
 - [TriageTrainer.Utils.OverworldGameObjectInitializer.md](./TriageTrainer.Utils.OverworldGameObjectInitializer.md): API 레퍼런스: `TriageTrainer.Utils.OverworldGameObjectInitializer`
 
-최근 반영(2026-05-20): `UIOverlayStack`, `OverworldGameObjectInitializer` API 레퍼런스를 추가해 UI 오버레이 스택 관리와 오버월드 초기화 도구 문서 공백을 보완했습니다.
+최근 반영(2026-06-29): Scenario Graph Editor 런타임 하이라이트 API 레퍼런스를 추가해 재생 중인 시나리오의 현재 노드를 편집기에서 추적하는 동작을 문서화했습니다.
 
 작성 기준: Git 추적 문서(.md) 기준으로 색인하며, .gitignore 대상 파일은 제외합니다.
 <!-- DOC-INDEX:END -->
