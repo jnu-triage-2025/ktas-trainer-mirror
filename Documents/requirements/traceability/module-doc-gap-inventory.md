@@ -31,6 +31,7 @@ owner: docs
 | 문서화 절차 | `working-guide/ai-workflow.md` | 미정의 | 절차 추가 완료 |
 | UIOverlayStack | `Scripts/UI/UIOverlayStack.cs` | 간접 문서(요구사항만 언급) | API 문서화 완료 |
 | Overworld 초기화 에디터 툴 | `Editor/Utils/OverworldGameObjectInitializer/*.cs`, `Scripts/Utils/OverworldSpawnPoint.cs` | 미문서 | 요구사항/API 문서화 완료 |
+| Scenario Graph Editor authoring window | `Editor/Scenario/ScenarioGraphEditor/*.cs` | 미문서 | API 문서화 완료 |
 
 ## 3. 잔여 권장 항목
 

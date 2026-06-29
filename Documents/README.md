@@ -2,7 +2,7 @@
 
 - [일반적인 사항들, General](./working-guide/general.md): 프로젝트 전반에 걸쳐 알아두어야 할 일반적인 사항들
 - [작업 상황 동기화 및 공유](./working-guide/sync-working-progress.md): 프로젝트 다운받기, 작업물을 다른 사람과 공유하기
-- [온보딩 가이드](./onboarding.md): 프로젝트 시작 시 참고
+- [온보딩 가이드](./working-guide/onboarding.md): 프로젝트 시작 시 참고
 - [AI 작업 흐름 가이드](./working-guide/ai-workflow.md): AI를 활용해 작업할 때의 흐름과 주의사항
 
 ### MultiplayerInfrastructure:
@@ -13,6 +13,7 @@
 - [API: Crosshair & Raycast](./api-references/MultiplayerInfrastructure.UI.Crosshair.md): 크로스헤어 UI 및 레이캐스트 API
 - [API: PlayerController](./api-references/MultiplayerInfrastructure.Player.PlayerController.md): 플레이어 시스템 (이동, 인벤토리, 게임모드 등)
 - [API: ScenarioController](./api-references/MultiplayerInfrastructure.Scenario.ScenarioController.md): 시나리오 그래프 실행 엔진
+- [API: Scenario Graph Editor](./api-references/MultiplayerInfrastructure.Editor.ScenarioGraphAuthoringWindow.md): 시나리오 그래프 작성/저장/재생 하이라이트 편집기
 - [API: ScenarioEventIdentifierRegistry](./api-references/MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md): 씬 이벤트 핸들러 등록
 - [API: Scenario SerializeSupport](./api-references/MultiplayerInfrastructure.Scenario.SerializeSupport.md): 시나리오 JSON 검증/역직렬화/변환 파이프라인
 - [API: InteractableEntity](./api-references/MultiplayerInfrastructure.InteractableEntity.md): 인터랙터블 인터페이스 및 컴포넌트
@@ -50,3 +51,4 @@
 
 - [2026-02-16: Interactable/NPC/Icon 구조 개편](./changes/2026-02-16-interactable-npc-icon-refactor.md)
 - [2026-03-26: Registry Preloader Validation 도구 개편](./changes/2026-03-26-registry-preloader-validation-tooling.md)
+- [2026-06-29: Scenario Graph Editor runtime highlight](./changes/2026-06-29-scenario-graph-editor-runtime-highlight.md)
