@@ -19,6 +19,7 @@ namespace MultiplayerInfrastructure.Editor
   {
     private ScenarioGraphView graphView;
     private ScenarioInspectorView inspectorView;
+    private ScenarioRuntimeHistoryView runtimeHistoryView;
     private ScenarioNodeSearchWindow searchWindow;
     private VisualElement mainContainer;
 
@@ -132,6 +133,7 @@ namespace MultiplayerInfrastructure.Editor
       if (state == PlayModeStateChange.ExitingPlayMode)
       {
         UnbindRuntimeScenarioController();
+        ClearRuntimeVisitState();
         ClearRuntimeHighlight();
       }
     }
@@ -214,6 +216,9 @@ namespace MultiplayerInfrastructure.Editor
       inspectorView = new ScenarioInspectorView(this) { name = "ScenarioInspectorView" };
       inspectorView.style.flexGrow = 1f;
 
+      runtimeHistoryView = new ScenarioRuntimeHistoryView { name = "ScenarioRuntimeHistoryView" };
+      runtimeHistoryView.OnNodeSelected = FocusNodeByIdentifier;
+
       var inspectorHeader = new Label("Scenario Inspector")
       {
         style =
@@ -241,6 +246,7 @@ namespace MultiplayerInfrastructure.Editor
       inspectorPanel.style.flexDirection = FlexDirection.Column;
 
       inspectorPanel.Add(inspectorHeader);
+      inspectorPanel.Add(runtimeHistoryView);
       inspectorPanel.Add(inspectorScroll);
 
       mainContainer.Add(graphHost);
@@ -308,6 +314,7 @@ namespace MultiplayerInfrastructure.Editor
       // Rebuild connections based on updated data.
       graphView.RebuildAllEdges();
       SyncRuntimeHighlight();
+      RefreshRuntimeHistoryView();
 
       return newView;
     }
@@ -393,6 +400,7 @@ namespace MultiplayerInfrastructure.Editor
     private void HandleRuntimeScenarioEnded()
     {
       ClearRuntimeHighlight();
+      RefreshRuntimeHistoryView();
     }
 
     private void HandleRuntimeNodeChanged(IScenarioNode node)
@@ -411,6 +419,7 @@ namespace MultiplayerInfrastructure.Editor
       if (graphData == null)
       {
         ClearRuntimeHighlight();
+        RefreshRuntimeHistoryView();
         return;
       }
 
@@ -456,6 +465,7 @@ namespace MultiplayerInfrastructure.Editor
       if (runtimeScenarioController == null || graphData == null)
       {
         ClearRuntimeVisitState();
+        RefreshRuntimeHistoryView();
         return;
       }
 
@@ -463,6 +473,8 @@ namespace MultiplayerInfrastructure.Editor
       {
         pair.Value?.SetRuntimeVisitOrders(runtimeScenarioController.GetNodeVisitOrders(graphData.Identifier, pair.Key));
       }
+
+      RefreshRuntimeHistoryView();
     }
 
     private void UpdateRuntimeVisitState(string nodeIdentifier)
@@ -476,6 +488,8 @@ namespace MultiplayerInfrastructure.Editor
       {
         nodeView.SetRuntimeVisitOrders(runtimeScenarioController.GetNodeVisitOrders(graphData.Identifier, nodeIdentifier));
       }
+
+      RefreshRuntimeHistoryView();
     }
 
     private void ClearRuntimeVisitState()
@@ -484,6 +498,74 @@ namespace MultiplayerInfrastructure.Editor
       {
         nodeView?.SetRuntimeVisitOrders(Array.Empty<int>());
       }
+
+      RefreshRuntimeHistoryView();
+    }
+
+    private void RefreshRuntimeHistoryView()
+    {
+      if (runtimeHistoryView == null)
+      {
+        return;
+      }
+
+      runtimeHistoryView.SetEntries(BuildRuntimeHistoryEntries());
+    }
+
+    private IReadOnlyList<ScenarioRuntimeHistoryEntry> BuildRuntimeHistoryEntries()
+    {
+      if (runtimeScenarioController == null || graphData == null || string.IsNullOrWhiteSpace(graphData.Identifier))
+      {
+        return Array.Empty<ScenarioRuntimeHistoryEntry>();
+      }
+
+      var entries = new List<ScenarioRuntimeHistoryEntry>();
+
+      foreach (var pair in nodeViews)
+      {
+        var nodeView = pair.Value;
+        if (nodeView == null)
+        {
+          continue;
+        }
+
+        var visitOrders = runtimeScenarioController.GetNodeVisitOrders(graphData.Identifier, pair.Key);
+        if (visitOrders == null || visitOrders.Count == 0)
+        {
+          continue;
+        }
+
+        var displayLabel = nodeView.Data != null
+          ? $"{nodeView.Data.Identifier} [{nodeView.Data.NodeType}]"
+          : pair.Key;
+
+        foreach (var visitOrder in visitOrders)
+        {
+          entries.Add(new ScenarioRuntimeHistoryEntry(visitOrder, pair.Key, displayLabel));
+        }
+      }
+
+      entries.Sort((left, right) => left.Sequence.CompareTo(right.Sequence));
+      return entries;
+    }
+
+    private void FocusNodeByIdentifier(string nodeIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(nodeIdentifier))
+      {
+        return;
+      }
+
+      if (!nodeViews.TryGetValue(nodeIdentifier, out var nodeView) || nodeView == null)
+      {
+        return;
+      }
+
+      inspectorView.SetTarget(nodeView);
+
+      graphView.ClearSelection();
+      graphView.AddToSelection(nodeView);
+      graphView.FrameSelection();
     }
 
     public ScenarioNodeView CreateNode(ScenarioNodeType type, Vector2 screenMousePosition)
@@ -503,6 +585,7 @@ namespace MultiplayerInfrastructure.Editor
       nodeView.RefreshPorts();
 
       inspectorView.SetTarget(nodeView);
+      RefreshRuntimeHistoryView();
       return nodeView;
     }
 
@@ -516,6 +599,7 @@ namespace MultiplayerInfrastructure.Editor
       RefreshGraphIdentifierField();
       RefreshGraphTagsField();
       ClearRuntimeHighlight();
+      RefreshRuntimeHistoryView();
     }
 
     private void EnsureGraphData()
@@ -645,6 +729,7 @@ namespace MultiplayerInfrastructure.Editor
 
       inspectorView.SetTarget(null);
       SyncRuntimeHighlight();
+      RefreshRuntimeHistoryView();
     }
 
     public bool TryRenameNode(ScenarioNodeView nodeView, string newId)
@@ -723,6 +808,7 @@ namespace MultiplayerInfrastructure.Editor
       graphView.RebuildAllEdges();
       nodeView.RefreshTitle();
       SyncRuntimeHighlight();
+      RefreshRuntimeHistoryView();
 
       return true;
     }
@@ -796,6 +882,7 @@ namespace MultiplayerInfrastructure.Editor
 
         ValidateResources(graphData);
         SyncRuntimeHighlight();
+        RefreshRuntimeHistoryView();
       }
       catch (Exception ex)
       {
