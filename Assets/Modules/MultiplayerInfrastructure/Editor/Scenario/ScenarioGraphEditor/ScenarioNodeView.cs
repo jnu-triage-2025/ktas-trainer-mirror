@@ -10,6 +10,9 @@ namespace MultiplayerInfrastructure.Editor
 {
   public class ScenarioNodeView : Node
   {
+    private const float NodeMinWidth = 260f;
+    private const float NodeMaxWidth = 340f;
+    private const int VisitPreviewLimit = 3;
     private static readonly Color ExecutionBorderColor = new Color(0.29f, 0.82f, 0.47f, 1f);
     private static readonly Color ExecutionFillColor = new Color(0.12f, 0.24f, 0.16f, 0.95f);
     private static readonly Color ExecutionTitleColor = new Color(0.16f, 0.34f, 0.22f, 1f);
@@ -24,7 +27,10 @@ namespace MultiplayerInfrastructure.Editor
     private readonly ScenarioGraphAuthoringWindow window;
     private readonly ScenarioGraphView graphView;
     private Label _summaryLabel;
+    private Foldout _visitHistoryFoldout;
+    private Label _visitHistoryLabel;
     private VisualElement _inlineEditorContainer;
+    private readonly List<int> _runtimeVisitOrders = new List<int>();
 
     private readonly Dictionary<ScenarioChoiceOption, Port> choicePorts = new Dictionary<ScenarioChoiceOption, Port>();
     private readonly Dictionary<ScenarioParallelBranch, Port> branchPorts = new Dictionary<ScenarioParallelBranch, Port>();
@@ -40,6 +46,10 @@ namespace MultiplayerInfrastructure.Editor
       this.window = window;
       this.graphView = graphView;
       Data = data;
+
+      style.minWidth = NodeMinWidth;
+      style.maxWidth = NodeMaxWidth;
+      style.width = NodeMaxWidth;
 
       RefreshTitle();
       style.left = EditorPosition.x;
@@ -93,6 +103,19 @@ namespace MultiplayerInfrastructure.Editor
     {
       title = Data.Identifier;
       RefreshSummaryLabel();
+      RefreshVisitHistory();
+    }
+
+    public void SetRuntimeVisitOrders(IReadOnlyList<int> visitOrders)
+    {
+      _runtimeVisitOrders.Clear();
+      if (visitOrders != null)
+      {
+        _runtimeVisitOrders.AddRange(visitOrders);
+      }
+
+      RefreshSummaryLabel();
+      RefreshVisitHistory();
     }
 
     public new void RefreshPorts()
@@ -239,6 +262,7 @@ namespace MultiplayerInfrastructure.Editor
     private void SetupNodeBody()
     {
       var label = new Label(Data.NodeType.ToString()) { style = { unityFontStyleAndWeight = FontStyle.Italic } };
+      label.style.whiteSpace = WhiteSpace.Normal;
       mainContainer.Add(label);
 
       _summaryLabel = new Label();
@@ -246,6 +270,20 @@ namespace MultiplayerInfrastructure.Editor
       _summaryLabel.style.fontSize = 10;
       _summaryLabel.style.color = new Color(0.85f, 0.85f, 0.85f, 1f);
       mainContainer.Add(_summaryLabel);
+
+      _visitHistoryFoldout = new Foldout
+      {
+        text = "Visit History",
+        value = false
+      };
+      _visitHistoryFoldout.style.marginTop = 4;
+      _visitHistoryFoldout.style.display = DisplayStyle.None;
+      _visitHistoryLabel = new Label();
+      _visitHistoryLabel.style.whiteSpace = WhiteSpace.Normal;
+      _visitHistoryLabel.style.fontSize = 10;
+      _visitHistoryLabel.style.color = new Color(0.78f, 0.88f, 0.80f, 1f);
+      _visitHistoryFoldout.Add(_visitHistoryLabel);
+      mainContainer.Add(_visitHistoryFoldout);
 
       _inlineEditorContainer = new VisualElement();
       _inlineEditorContainer.style.marginTop = 6;
@@ -302,6 +340,7 @@ namespace MultiplayerInfrastructure.Editor
       {
         value = Data.Identifier ?? string.Empty
       };
+      ConfigureTextField(idField, false);
       idField.RegisterValueChangedCallback(evt =>
       {
         if (window.TryRenameNode(this, evt.newValue))
@@ -419,6 +458,7 @@ namespace MultiplayerInfrastructure.Editor
     private void AddTextField(string label, System.Action<string> setter, string current)
     {
       var field = new TextField(label) { value = current ?? string.Empty };
+      ConfigureTextField(field, false);
       field.RegisterValueChangedCallback(evt => setter(evt.newValue));
       _inlineEditorContainer.Add(field);
     }
@@ -430,6 +470,7 @@ namespace MultiplayerInfrastructure.Editor
         multiline = true,
         value = current ?? string.Empty
       };
+      ConfigureTextField(field, true);
       field.style.minHeight = 54;
       field.RegisterValueChangedCallback(evt => setter(evt.newValue));
       _inlineEditorContainer.Add(field);
@@ -482,24 +523,48 @@ namespace MultiplayerInfrastructure.Editor
         return;
       }
 
-      _summaryLabel.text = BuildNodeSummary(Data);
+      _summaryLabel.text = BuildNodeSummary(Data, _runtimeVisitOrders);
     }
 
-    private static string BuildNodeSummary(IScenarioNode node)
+    private void RefreshVisitHistory()
     {
+      if (_visitHistoryFoldout == null || _visitHistoryLabel == null)
+      {
+        return;
+      }
+
+      if (_runtimeVisitOrders.Count == 0)
+      {
+        _visitHistoryFoldout.style.display = DisplayStyle.None;
+        _visitHistoryLabel.text = string.Empty;
+        return;
+      }
+
+      _visitHistoryFoldout.style.display = DisplayStyle.Flex;
+      _visitHistoryFoldout.text = _runtimeVisitOrders.Count > VisitPreviewLimit
+        ? $"Visit History ({_runtimeVisitOrders.Count})"
+        : "Visit History";
+      _visitHistoryFoldout.value = _runtimeVisitOrders.Count <= VisitPreviewLimit;
+      _visitHistoryLabel.text = string.Join(", ", _runtimeVisitOrders.Select(FormatVisitOrder));
+    }
+
+    private static string BuildNodeSummary(IScenarioNode node, IReadOnlyList<int> visitOrders)
+    {
+      var summaryParts = new List<string>();
+
       if (node is not ScenarioValidatorNode validator)
       {
         if (node is ScenarioPlayerTagNode playerTag)
         {
-          return $"Tag: {playerTag.Tag ?? string.Empty}\nNext: {playerTag.NextIdentifier ?? "(미연결)"}";
+          summaryParts.Add($"Tag: {playerTag.Tag ?? string.Empty}\nNext: {playerTag.NextIdentifier ?? "(미연결)"}");
         }
-
-        if (node is ScenarioServerInternalSignalNode internalSignal)
+        else if (node is ScenarioServerInternalSignalNode internalSignal)
         {
-          return $"Target: {internalSignal.TargetIdentifier ?? "@m"}\nSignal: {internalSignal.SignalIdentifier ?? string.Empty}\nOperation: {internalSignal.Operation}\nNext: {internalSignal.NextIdentifier ?? "(미연결)"}";
+          summaryParts.Add($"Target: {internalSignal.TargetIdentifier ?? "@m"}\nSignal: {internalSignal.SignalIdentifier ?? string.Empty}\nOperation: {internalSignal.Operation}\nNext: {internalSignal.NextIdentifier ?? "(미연결)"}");
         }
 
-        return string.Empty;
+        AddVisitSummary(summaryParts, visitOrders);
+        return string.Join("\n", summaryParts.Where(each => !string.IsNullOrWhiteSpace(each)));
       }
 
       var rootConditions = validator.RootConditions?
@@ -508,11 +573,63 @@ namespace MultiplayerInfrastructure.Editor
 
       if (rootConditions == null || rootConditions.Count == 0)
       {
-        return "Root conditions: (empty)";
+        summaryParts.Add("Root conditions: (empty)");
+        AddVisitSummary(summaryParts, visitOrders);
+        return string.Join("\n", summaryParts.Where(each => !string.IsNullOrWhiteSpace(each)));
       }
 
-      return string.Join("\n", rootConditions.Select((rootCondition, index) =>
+      summaryParts.AddRange(rootConditions.Select((rootCondition, index) =>
           BuildRootConditionSummary(index, rootCondition)));
+      AddVisitSummary(summaryParts, visitOrders);
+      return string.Join("\n", summaryParts.Where(each => !string.IsNullOrWhiteSpace(each)));
+    }
+
+    private static void AddVisitSummary(List<string> summaryParts, IReadOnlyList<int> visitOrders)
+    {
+      var visitSummary = BuildVisitSummary(visitOrders);
+      if (!string.IsNullOrWhiteSpace(visitSummary))
+      {
+        summaryParts.Add($"Visits: {visitSummary}");
+      }
+    }
+
+    private static string BuildVisitSummary(IReadOnlyList<int> visitOrders)
+    {
+      if (visitOrders == null || visitOrders.Count == 0)
+      {
+        return string.Empty;
+      }
+
+      var preview = visitOrders
+          .Take(VisitPreviewLimit)
+          .Select(FormatVisitOrder);
+
+      var summary = string.Join(", ", preview);
+      if (visitOrders.Count > VisitPreviewLimit)
+      {
+        summary += ", ...";
+      }
+
+      return summary;
+    }
+
+    private static string FormatVisitOrder(int visitOrder)
+    {
+      return $"#{visitOrder}";
+    }
+
+    private void ConfigureTextField(TextField field, bool multiline)
+    {
+      field.style.flexGrow = 1f;
+      field.style.minWidth = 0;
+      field.style.maxWidth = Length.Percent(100);
+      field.labelElement.style.whiteSpace = WhiteSpace.Normal;
+      field.labelElement.style.minWidth = 0;
+
+      if (multiline)
+      {
+        field.style.whiteSpace = WhiteSpace.Normal;
+      }
     }
 
     private static string BuildRootConditionSummary(int index, ScenarioValidatorRootCondition rootCondition)

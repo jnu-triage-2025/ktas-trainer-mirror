@@ -51,10 +51,17 @@ namespace MultiplayerInfrastructure.Scenario
     private IScenarioNode _currentNode;
     private List<ScenarioChoiceOption> _activeOptions = new();
     private ScenarioQuizNode _activeQuizNode;
+    private readonly Dictionary<string, GraphVisitHistory> _graphVisitHistory = new Dictionary<string, GraphVisitHistory>();
     private readonly Dictionary<string, string> _stateStore = new Dictionary<string, string>();
     private int? _scenarioOwnerClientId;
     private ChatUIController _chatUIController;
     private Coroutine _dialogueAutoAdvanceRoutine;
+
+    private sealed class GraphVisitHistory
+    {
+      public readonly Dictionary<string, List<int>> NodeVisitOrders = new Dictionary<string, List<int>>();
+      public int Sequence;
+    }
 
     /// <summary>
     /// 브랜치 체인(<see cref="RunBranchChain"/>)이 노드를 실행하는 동안 0보다 크다.
@@ -122,6 +129,33 @@ namespace MultiplayerInfrastructure.Scenario
     public State CurrentState => _state;
     public IScenarioNode CurrentNode => _currentNode;
     public ScenarioGraph CurrentGraph => _currentGraph;
+    public IReadOnlyList<int> GetNodeVisitOrders(string graphIdentifier, string nodeIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(graphIdentifier) || string.IsNullOrWhiteSpace(nodeIdentifier))
+      {
+        return Array.Empty<int>();
+      }
+
+      if (_graphVisitHistory.TryGetValue(graphIdentifier, out var history)
+          && history != null
+          && history.NodeVisitOrders.TryGetValue(nodeIdentifier, out var orders)
+          && orders != null)
+      {
+        return orders;
+      }
+
+      return Array.Empty<int>();
+    }
+
+    public IReadOnlyList<int> GetNodeVisitOrders(string nodeIdentifier)
+    {
+      if (_currentGraph == null)
+      {
+        return Array.Empty<int>();
+      }
+
+      return GetNodeVisitOrders(_currentGraph.Identifier, nodeIdentifier);
+    }
 
     #endregion
 
@@ -203,6 +237,7 @@ namespace MultiplayerInfrastructure.Scenario
       // StopAllCoroutines 로 강제 종료된 브랜치 코루틴은 finally 가 실행되지 않아
       // 억제 카운터가 불균형 상태로 남을 수 있으므로 명시적으로 초기화한다.
       _globalAdvanceSuppressionDepth = 0;
+      ResetNodeVisitOrders(graph.Identifier);
       ScenarioInteractionSignals.ClearAllInternalSignals();
 
       _currentGraph = graph;
@@ -387,6 +422,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void ExecuteNode(IScenarioNode node)
     {
+      RecordNodeVisit(node);
       LogNodeExecution(node);
       OnNodeChanged?.Invoke(node);
 
@@ -478,11 +514,56 @@ namespace MultiplayerInfrastructure.Scenario
       int? localClientId = null;
       var localConn = InstanceFinder.ClientManager?.Connection;
       if (localConn != null)
+      {
         localClientId = (int)localConn.ClientId;
+      }
 
       Debug.Log(
         $"[ScenarioController] Executing node: id='{node.Identifier}', type={node.NodeType}, " +
         $"ownerClientId={_scenarioOwnerClientId?.ToString() ?? "null"}, localClientId={localClientId?.ToString() ?? "null"}");
+    }
+
+    private void ResetNodeVisitOrders()
+    {
+      _graphVisitHistory.Clear();
+    }
+
+    private void ResetNodeVisitOrders(string graphIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(graphIdentifier))
+      {
+        return;
+      }
+
+      _graphVisitHistory[graphIdentifier] = new GraphVisitHistory();
+    }
+
+    private void RecordNodeVisit(IScenarioNode node)
+    {
+      if (node == null || string.IsNullOrWhiteSpace(node.Identifier))
+      {
+        return;
+      }
+
+      if (_currentGraph == null || string.IsNullOrWhiteSpace(_currentGraph.Identifier))
+      {
+        return;
+      }
+
+      if (!_graphVisitHistory.TryGetValue(_currentGraph.Identifier, out var history) || history == null)
+      {
+        history = new GraphVisitHistory();
+        _graphVisitHistory[_currentGraph.Identifier] = history;
+      }
+
+      history.Sequence++;
+      if (!history.NodeVisitOrders.TryGetValue(node.Identifier, out var orders) || orders == null)
+      {
+        orders = new List<int>();
+        history.NodeVisitOrders[node.Identifier] = orders;
+      }
+
+      orders.Insert(0, history.Sequence);
     }
 
     private void ExecuteDialogueNode(ScenarioDialogueNode node)
@@ -2020,11 +2101,6 @@ namespace MultiplayerInfrastructure.Scenario
             {
               yield return new WaitForSeconds(waitSeconds);
             }
-            break;
-          default:
-            // 즉시 완료형 노드(QuestControl/StateUpdate/PlayerTag/EntityTag/WaypointHighlight 등):
-            // 실행기가 내부에서 Advance 를 호출하더라도, 브랜치는 그 진행을 사용하지 않고 직접 이동한다.
-            ExecuteNode(node);
             break;
         }
       }

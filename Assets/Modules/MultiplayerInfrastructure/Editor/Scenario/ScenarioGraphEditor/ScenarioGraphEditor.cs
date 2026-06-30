@@ -322,6 +322,7 @@ namespace MultiplayerInfrastructure.Editor
       if (!Application.isPlaying)
       {
         UnbindRuntimeScenarioController();
+        ClearRuntimeVisitState();
         ClearRuntimeHighlight();
         return;
       }
@@ -330,21 +331,30 @@ namespace MultiplayerInfrastructure.Editor
       if (controller == null)
       {
         UnbindRuntimeScenarioController();
+        ClearRuntimeVisitState();
         ClearRuntimeHighlight();
         return;
       }
 
       BindRuntimeScenarioController(controller);
 
-      if (controller.CurrentGraph == null
-          || graphData == null
-          || controller.CurrentGraph.Identifier != graphData.Identifier)
+      if (graphData == null)
       {
         ClearRuntimeHighlight();
         return;
       }
 
-      UpdateRuntimeHighlight(controller.CurrentNode?.Identifier);
+      SyncRuntimeVisitState();
+
+      if (controller.CurrentGraph != null
+          && controller.CurrentGraph.Identifier == graphData.Identifier)
+      {
+        UpdateRuntimeHighlight(controller.CurrentNode?.Identifier);
+      }
+      else
+      {
+        ClearRuntimeHighlight();
+      }
     }
 
     private void BindRuntimeScenarioController(ScenarioController controller)
@@ -398,14 +408,13 @@ namespace MultiplayerInfrastructure.Editor
         return;
       }
 
-      if (runtimeScenarioController.CurrentGraph == null
-          || graphData == null
-          || runtimeScenarioController.CurrentGraph.Identifier != graphData.Identifier)
+      if (graphData == null)
       {
         ClearRuntimeHighlight();
         return;
       }
 
+      UpdateRuntimeVisitState(node?.Identifier);
       UpdateRuntimeHighlight(node?.Identifier);
     }
 
@@ -440,6 +449,41 @@ namespace MultiplayerInfrastructure.Editor
 
       runtimeHighlightedNodeView = null;
       runtimeHighlightedNodeIdentifier = null;
+    }
+
+    private void SyncRuntimeVisitState()
+    {
+      if (runtimeScenarioController == null || graphData == null)
+      {
+        ClearRuntimeVisitState();
+        return;
+      }
+
+      foreach (var pair in nodeViews)
+      {
+        pair.Value?.SetRuntimeVisitOrders(runtimeScenarioController.GetNodeVisitOrders(graphData.Identifier, pair.Key));
+      }
+    }
+
+    private void UpdateRuntimeVisitState(string nodeIdentifier)
+    {
+      if (runtimeScenarioController == null || string.IsNullOrWhiteSpace(nodeIdentifier))
+      {
+        return;
+      }
+
+      if (nodeViews.TryGetValue(nodeIdentifier, out var nodeView))
+      {
+        nodeView.SetRuntimeVisitOrders(runtimeScenarioController.GetNodeVisitOrders(graphData.Identifier, nodeIdentifier));
+      }
+    }
+
+    private void ClearRuntimeVisitState()
+    {
+      foreach (var nodeView in nodeViews.Values)
+      {
+        nodeView?.SetRuntimeVisitOrders(Array.Empty<int>());
+      }
     }
 
     public ScenarioNodeView CreateNode(ScenarioNodeType type, Vector2 screenMousePosition)
