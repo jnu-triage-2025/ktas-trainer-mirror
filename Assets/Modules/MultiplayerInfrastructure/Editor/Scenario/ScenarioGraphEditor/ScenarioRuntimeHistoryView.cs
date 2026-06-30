@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -27,6 +29,7 @@ namespace MultiplayerInfrastructure.Editor
     private readonly VisualElement resizeHandle;
     private readonly Label emptyLabel;
     private readonly ScrollView scrollView;
+    private readonly Button dumpButton;
     private readonly float minHeight = 120f;
     private readonly float maxHeight = 520f;
     private readonly float collapsedHeight = 28f;
@@ -36,6 +39,7 @@ namespace MultiplayerInfrastructure.Editor
     private int activePointerId = -1;
     private float dragStartPointerY;
     private float dragStartHeight;
+    private IReadOnlyList<ScenarioRuntimeHistoryEntry> currentEntries;
 
     public Action<string> OnNodeSelected;
 
@@ -116,6 +120,16 @@ namespace MultiplayerInfrastructure.Editor
       };
       boxContainer.Add(emptyLabel);
 
+      dumpButton = new Button(DumpHistoryToFile)
+      {
+        text = "Dump History to File"
+      };
+      dumpButton.style.height = 20f;
+      dumpButton.style.fontSize = 10;
+      dumpButton.style.marginBottom = 4f;
+      dumpButton.style.display = DisplayStyle.None;
+      boxContainer.Add(dumpButton);
+
       scrollView = new ScrollView(ScrollViewMode.Vertical)
       {
         style =
@@ -135,17 +149,20 @@ namespace MultiplayerInfrastructure.Editor
 
     public void SetEntries(IReadOnlyList<ScenarioRuntimeHistoryEntry> entries)
     {
+      currentEntries = entries;
       scrollView.Clear();
 
       if (entries == null || entries.Count == 0)
       {
         UpdateTitle();
         emptyLabel.style.display = DisplayStyle.Flex;
+        dumpButton.style.display = DisplayStyle.None;
         return;
       }
 
       UpdateTitle(entries.Count);
       emptyLabel.style.display = DisplayStyle.None;
+      dumpButton.style.display = DisplayStyle.Flex;
 
       for (var index = 0; index < entries.Count; index++)
       {
@@ -203,6 +220,41 @@ namespace MultiplayerInfrastructure.Editor
       headerLabel.text = entryCount.HasValue
         ? $"{prefix} Visit History ({entryCount.Value})"
         : $"{prefix} Visit History";
+    }
+
+    private void DumpHistoryToFile()
+    {
+      if (currentEntries == null || currentEntries.Count == 0)
+      {
+        return;
+      }
+
+      var path = EditorUtility.SaveFilePanel("Save Runtime History Dump", "", "scenario_runtime_history.history.log", "history.log");
+      if (string.IsNullOrEmpty(path))
+      {
+        return;
+      }
+
+      try
+      {
+        using (var writer = new StreamWriter(path))
+        {
+          writer.WriteLine($"Scenario Runtime History Dump - {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+          writer.WriteLine(new string('=', 50));
+          foreach (var entry in currentEntries)
+          {
+            writer.WriteLine($"Sequence: {entry.Sequence}");
+            writer.WriteLine($"Node ID : {entry.NodeIdentifier}");
+            writer.WriteLine($"Label   : {entry.DisplayLabel}");
+            writer.WriteLine(new string('-', 30));
+          }
+        }
+        Debug.Log($"[ScenarioRuntimeHistoryView] History dumped to: {path}");
+      }
+      catch (Exception ex)
+      {
+        Debug.LogError($"[ScenarioRuntimeHistoryView] Failed to dump history: {ex.Message}");
+      }
     }
   }
 }
