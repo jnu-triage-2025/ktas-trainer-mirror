@@ -30,6 +30,7 @@
 - [MultiplayerInfrastructure.Scenario.ScenarioController.md](./MultiplayerInfrastructure.Scenario.ScenarioController.md): API 레퍼런스: `MultiplayerInfrastructure.Scenario.ScenarioController`
 - [MultiplayerInfrastructure.Editor.ScenarioGraphAuthoringWindow.md](./MultiplayerInfrastructure.Editor.ScenarioGraphAuthoringWindow.md): API 레퍼런스: `MultiplayerInfrastructure.Editor.ScenarioGraphAuthoringWindow`
 - [MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md](./MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md): API 레퍼런스: `MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry`
+- [MultiplayerInfrastructure.Scenario.ScenarioServerInternalSignalRegistry.md](./MultiplayerInfrastructure.Scenario.ScenarioServerInternalSignalRegistry.md): API 레퍼런스: `MultiplayerInfrastructure.Scenario.ScenarioServerInternalSignalRegistry`
 - [MultiplayerInfrastructure.Scenario.SerializeSupport.md](./MultiplayerInfrastructure.Scenario.SerializeSupport.md): API 레퍼런스: MultiplayerInfrastructure.Scenario.SerializeSupport
 - [MultiplayerInfrastructure.Tag.PlayerTagService.md](./MultiplayerInfrastructure.Tag.PlayerTagService.md): API 레퍼런스: MultiplayerInfrastructure.Tag.PlayerTagService
 - [MultiplayerInfrastructure.UI.Crosshair.md](./MultiplayerInfrastructure.UI.Crosshair.md): API 레퍼런스: Crosshair & Raycast

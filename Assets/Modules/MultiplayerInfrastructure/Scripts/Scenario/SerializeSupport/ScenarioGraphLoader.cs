@@ -242,6 +242,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioNPCMoveNodeDTO npcMove => ConvertNPCMove(npcMove),
           ScenarioCameraTargetNodeDTO camera => ConvertCameraTarget(camera),
           ScenarioInvokeEventNodeDTO invoke => ConvertInvokeEvent(invoke),
+          ScenarioServerInternalSignalNodeDTO internalSignal => ConvertServerInternalSignal(internalSignal),
           ScenarioValidatorNodeDTO validator => ConvertValidator(validator),
           ScenarioParallelNodeDTO parallel => ConvertParallel(parallel),
           ScenarioQuestControlNodeDTO questControl => ConvertQuestControl(questControl),
@@ -374,6 +375,17 @@ namespace MultiplayerInfrastructure.Scenario
           Identifier = dto.Identifier,
           EventIdentifier = dto.EventIdentifier,
           MoveNextBehavior = ParseInvokeEventMoveNext(dto.MoveNextBehavior),
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioServerInternalSignalNode ConvertServerInternalSignal(ScenarioServerInternalSignalNodeDTO dto) =>
+        new ScenarioServerInternalSignalNode
+        {
+          Identifier = dto.Identifier,
+          TargetIdentifier = dto.TargetIdentifier,
+          SignalIdentifier = dto.SignalIdentifier,
+          Operation = ParseServerInternalSignalOperation(dto.Operation),
+          WaitForResolution = dto.WaitForResolution ?? true,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -1030,6 +1042,18 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = node.NextIdentifier
         };
 
+    private static ScenarioServerInternalSignalNodeDTO ConvertToDTO(ScenarioServerInternalSignalNode node) =>
+        new ScenarioServerInternalSignalNodeDTO
+        {
+          NodeType = "ServerInternalSignal",
+          Identifier = node.Identifier,
+          TargetIdentifier = node.TargetIdentifier,
+          SignalIdentifier = node.SignalIdentifier,
+          Operation = node.Operation.ToString(),
+          WaitForResolution = node.WaitForResolution,
+          NextIdentifier = node.NextIdentifier
+        };
+
     private static ScenarioValidatorNodeDTO ConvertToDTO(ScenarioValidatorNode node) =>
         new ScenarioValidatorNodeDTO
         {
@@ -1120,6 +1144,21 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       throw new JsonException($"Unknown ScenarioInvokeEventMoveNextBehavior '{value}'.");
+    }
+
+    private static ScenarioServerInternalSignalOperationType ParseServerInternalSignalOperation(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioServerInternalSignalOperationType.Register;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioServerInternalSignalOperationType parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioServerInternalSignalOperationType '{value}'.");
     }
 
     private static ScenarioValidatorCondition ParseValidatorCondition(string value)

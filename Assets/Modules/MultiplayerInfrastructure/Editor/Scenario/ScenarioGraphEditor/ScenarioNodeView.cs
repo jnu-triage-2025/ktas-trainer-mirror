@@ -147,6 +147,7 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.NPCMove:
         case ScenarioNodeType.CameraTarget:
         case ScenarioNodeType.InvokeEvent:
+        case ScenarioNodeType.ServerInternalSignal:
         case ScenarioNodeType.Validator:
         case ScenarioNodeType.QuestControl:
         case ScenarioNodeType.QuestWaypointHighlight:
@@ -275,6 +276,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.InvokeEvent:
           BuildInvokeEventInlineEditor((ScenarioInvokeEventNode)Data);
           break;
+        case ScenarioNodeType.ServerInternalSignal:
+          BuildServerInternalSignalInlineEditor((ScenarioServerInternalSignalNode)Data);
+          break;
         case ScenarioNodeType.Validator:
           BuildValidatorInlineEditor((ScenarioValidatorNode)Data);
           break;
@@ -346,6 +350,23 @@ namespace MultiplayerInfrastructure.Editor
           data.MoveNextBehavior = value;
       });
       _inlineEditorContainer.Add(enumField);
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildServerInternalSignalInlineEditor(ScenarioServerInternalSignalNode data)
+    {
+      AddTextField("Target", value => data.TargetIdentifier = value, data.TargetIdentifier);
+      AddTextField("Signal", value => data.SignalIdentifier = value, data.SignalIdentifier);
+
+      var enumField = new EnumField("Operation", data.Operation);
+      enumField.RegisterValueChangedCallback(evt =>
+      {
+        if (evt.newValue is ScenarioServerInternalSignalOperationType value)
+          data.Operation = value;
+      });
+      _inlineEditorContainer.Add(enumField);
+
+      AddToggleField("Wait For Resolution", value => data.WaitForResolution = value, data.WaitForResolution);
       AddNextIdentifierField(data);
     }
 
@@ -471,6 +492,11 @@ namespace MultiplayerInfrastructure.Editor
         if (node is ScenarioPlayerTagNode playerTag)
         {
           return $"Tag: {playerTag.Tag ?? string.Empty}\nNext: {playerTag.NextIdentifier ?? "(미연결)"}";
+        }
+
+        if (node is ScenarioServerInternalSignalNode internalSignal)
+        {
+          return $"Target: {internalSignal.TargetIdentifier ?? "@m"}\nSignal: {internalSignal.SignalIdentifier ?? string.Empty}\nOperation: {internalSignal.Operation}\nNext: {internalSignal.NextIdentifier ?? "(미연결)"}";
         }
 
         return string.Empty;

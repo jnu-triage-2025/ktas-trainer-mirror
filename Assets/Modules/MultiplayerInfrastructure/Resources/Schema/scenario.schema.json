@@ -60,6 +60,7 @@
             "NPCMove",
             "CameraTarget",
             "InvokeEvent",
+            "ServerInternalSignal",
             "Validator",
             "Parallel",
             "QuestControl",
@@ -182,6 +183,21 @@
           },
           "then": {
             "$ref": "#/$defs/ScenarioInvokeEventNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "ServerInternalSignal"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioServerInternalSignalNode"
           }
         },
         {
@@ -916,6 +932,48 @@
           },
           "required": [
             "eventIdentifier"
+          ]
+        }
+      ]
+    },
+    "ScenarioServerInternalSignalNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "ServerInternalSignal"
+            },
+            "targetIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": "@m"
+            },
+            "signalIdentifier": {
+              "type": "string"
+            },
+            "operation": {
+              "type": "string",
+              "enum": [
+                "Register",
+                "Resolve"
+              ],
+              "default": "Register"
+            },
+            "waitForResolution": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": true
+            }
+          },
+          "required": [
+            "signalIdentifier"
           ]
         }
       ]

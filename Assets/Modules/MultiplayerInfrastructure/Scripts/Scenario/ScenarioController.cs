@@ -203,6 +203,7 @@ namespace MultiplayerInfrastructure.Scenario
       // StopAllCoroutines 로 강제 종료된 브랜치 코루틴은 finally 가 실행되지 않아
       // 억제 카운터가 불균형 상태로 남을 수 있으므로 명시적으로 초기화한다.
       _globalAdvanceSuppressionDepth = 0;
+      ScenarioInteractionSignals.ClearAllInternalSignals();
 
       _currentGraph = graph;
       _scenarioOwnerClientId = ownerClientId;
@@ -272,6 +273,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 살아남는 병렬 브랜치)을 모두 정리한다. 이를 누락하면 그래프가 해제된 뒤에도
       // 브랜치 체인이 계속 돌면서 _currentGraph 역참조에서 NullReferenceException 이 발생한다.
       StopAllCoroutines();
+      ScenarioInteractionSignals.ClearAllInternalSignals();
 
       _currentGraph = null;
       _currentNode = null;
@@ -410,6 +412,9 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioInvokeEventNode invoke:
           StartCoroutine(ExecuteInvokeEventNode(invoke));
+          break;
+        case ScenarioServerInternalSignalNode internalSignal:
+          StartCoroutine(ExecuteServerInternalSignalNode(internalSignal));
           break;
         case ScenarioValidatorNode validator:
           StartCoroutine(ExecuteValidatorNode(validator));
@@ -1817,6 +1822,53 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       EndScenario();
+    }
+
+    private IEnumerator ExecuteServerInternalSignalNode(ScenarioServerInternalSignalNode node)
+    {
+      _state = State.ExecutingInvokeEvent;
+
+      if (node == null || string.IsNullOrWhiteSpace(node.SignalIdentifier))
+      {
+        Debug.LogWarning("[ScenarioController] Server internal signal node is missing a signal identifier.");
+        Advance();
+        yield break;
+      }
+
+      var targetId = ScenarioServerInternalSignalRegistry.NormalizeTarget(node.TargetIdentifier);
+      var signalId = node.SignalIdentifier.Trim();
+
+      switch (node.Operation)
+      {
+        case ScenarioServerInternalSignalOperationType.Register:
+        {
+          bool resolved = false;
+          resolved = ScenarioInteractionSignals.RegisterInternal(targetId, signalId, () => resolved = true);
+
+          if (node.WaitForResolution)
+          {
+            while (!resolved)
+            {
+              if (_currentGraph == null)
+              {
+                yield break;
+              }
+
+              yield return null;
+            }
+          }
+
+          break;
+        }
+        case ScenarioServerInternalSignalOperationType.Resolve:
+          ScenarioInteractionSignals.ResolveInternal(targetId, signalId);
+          break;
+        default:
+          Debug.LogWarning($"[ScenarioController] Unsupported server internal signal operation: {node.Operation}");
+          break;
+      }
+
+      Advance();
     }
 
     private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, int? branchOwnerClientId)

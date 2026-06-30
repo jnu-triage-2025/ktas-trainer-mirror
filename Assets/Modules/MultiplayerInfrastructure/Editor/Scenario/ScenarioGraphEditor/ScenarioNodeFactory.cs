@@ -21,6 +21,7 @@ namespace MultiplayerInfrastructure.Editor
         Branches = new System.Collections.Generic.List<ScenarioParallelBranch>()
       },
       ScenarioNodeType.InvokeEvent => new ScenarioInvokeEventNode(),
+      ScenarioNodeType.ServerInternalSignal => new ScenarioServerInternalSignalNode(),
       ScenarioNodeType.Validator => new ScenarioValidatorNode
       {
         RootConditions = new System.Collections.Generic.List<ScenarioValidatorRootCondition>

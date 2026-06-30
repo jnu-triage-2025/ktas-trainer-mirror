@@ -63,6 +63,33 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     /// <summary>
+    /// 서버 내부 신호를 수신 대기 등록한다.
+    /// targetId 는 `@m`(서버) 또는 `@s`(self) 같은 서버 내부 목적지 식별자일 수 있다.
+    /// </summary>
+    public static bool RegisterInternal(string targetId, string signalId, Action onResolved)
+      => ScenarioServerInternalSignalRegistry.Register(targetId, signalId, onResolved);
+
+    /// <summary>
+    /// 서버 내부 신호를 resolve 한다.
+    /// targetId 는 `@m`(서버) 또는 `@s`(self) 같은 서버 내부 목적지 식별자일 수 있다.
+    /// </summary>
+    public static bool ResolveInternal(string targetId, string signalId)
+      => ScenarioServerInternalSignalRegistry.Resolve(targetId, signalId);
+
+    /// <summary>
+    /// 특정 대상/신호의 내부 신호 상태를 제거한다.
+    /// </summary>
+    public static void ClearInternal(string targetId, string signalId)
+      => ScenarioServerInternalSignalRegistry.Clear(targetId, signalId);
+
+    /// <summary>
+    /// 내부 신호 레지스트리 전체를 제거한다.
+    /// 시나리오 시작/종료 시점에 호출하여 이전 세션 상태가 섞이지 않도록 한다.
+    /// </summary>
+    public static void ClearAllInternalSignals()
+      => ScenarioServerInternalSignalRegistry.ClearAll();
+
+    /// <summary>
     /// 정규화된 신호를 로컬 RuntimeState 레지스트리에 직접 등록한다.
     /// 권한 라우팅을 거치지 않으므로, 서버 컨텍스트 또는 중계기 내부에서만 호출해야 한다.
     /// </summary>

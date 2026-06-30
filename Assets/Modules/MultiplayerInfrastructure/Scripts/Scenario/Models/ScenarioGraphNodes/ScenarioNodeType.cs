@@ -10,6 +10,7 @@ namespace MultiplayerInfrastructure.Scenario
     CameraTarget,
     Parallel,
     InvokeEvent,
+    ServerInternalSignal,
     Validator,
     QuestControl,
     QuestWaypointHighlight,

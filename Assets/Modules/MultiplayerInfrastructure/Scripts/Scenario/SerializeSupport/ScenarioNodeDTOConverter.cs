@@ -30,6 +30,7 @@ namespace MultiplayerInfrastructure.Scenario
         "NPCMove" => Deserialize<ScenarioNPCMoveNodeDTO>(root, options),
         "CameraTarget" => Deserialize<ScenarioCameraTargetNodeDTO>(root, options),
         "InvokeEvent" => Deserialize<ScenarioInvokeEventNodeDTO>(root, options),
+        "ServerInternalSignal" => Deserialize<ScenarioServerInternalSignalNodeDTO>(root, options),
         "Validator" => Deserialize<ScenarioValidatorNodeDTO>(root, options),
         "Parallel" => Deserialize<ScenarioParallelNodeDTO>(root, options),
         "QuestControl" => Deserialize<ScenarioQuestControlNodeDTO>(root, options),

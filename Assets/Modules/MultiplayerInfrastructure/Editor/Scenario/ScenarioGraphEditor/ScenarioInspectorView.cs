@@ -101,6 +101,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.InvokeEvent:
           DrawInvokeEventFields((ScenarioInvokeEventNode)data);
           break;
+        case ScenarioNodeType.ServerInternalSignal:
+          DrawServerInternalSignalFields((ScenarioServerInternalSignalNode)data);
+          break;
         case ScenarioNodeType.Validator:
           DrawValidatorFields((ScenarioValidatorNode)data);
           break;
@@ -276,6 +279,15 @@ namespace MultiplayerInfrastructure.Editor
     {
       data.EventIdentifier = EditorGUILayout.TextField("Event Identifier", data.EventIdentifier);
       data.MoveNextBehavior = (ScenarioInvokeEventMoveNextBehavior)EditorGUILayout.EnumPopup("Move Next", data.MoveNextBehavior);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawServerInternalSignalFields(ScenarioServerInternalSignalNode data)
+    {
+      data.TargetIdentifier = EditorGUILayout.TextField("Target Identifier", data.TargetIdentifier);
+      data.SignalIdentifier = EditorGUILayout.TextField("Signal Identifier", data.SignalIdentifier);
+      data.Operation = (ScenarioServerInternalSignalOperationType)EditorGUILayout.EnumPopup("Operation", data.Operation);
+      data.WaitForResolution = EditorGUILayout.Toggle("Wait For Resolution", data.WaitForResolution);
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
 
