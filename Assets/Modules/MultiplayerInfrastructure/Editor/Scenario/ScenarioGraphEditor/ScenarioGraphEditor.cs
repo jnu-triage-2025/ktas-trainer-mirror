@@ -541,7 +541,7 @@ namespace MultiplayerInfrastructure.Editor
 
         foreach (var visitOrder in visitOrders)
         {
-          entries.Add(new ScenarioRuntimeHistoryEntry(visitOrder, pair.Key, displayLabel));
+          entries.Add(new ScenarioRuntimeHistoryEntry(visitOrder, pair.Key, displayLabel, nodeView.Data));
         }
       }
 

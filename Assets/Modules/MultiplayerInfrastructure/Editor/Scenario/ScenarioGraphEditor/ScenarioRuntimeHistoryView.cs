@@ -4,6 +4,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using MultiplayerInfrastructure.Scenario;
 
 namespace MultiplayerInfrastructure.Editor
 {
@@ -12,12 +13,14 @@ namespace MultiplayerInfrastructure.Editor
     public readonly int Sequence;
     public readonly string NodeIdentifier;
     public readonly string DisplayLabel;
+    public readonly IScenarioNode NodeData;
 
-    public ScenarioRuntimeHistoryEntry(int sequence, string nodeIdentifier, string displayLabel)
+    public ScenarioRuntimeHistoryEntry(int sequence, string nodeIdentifier, string displayLabel, IScenarioNode nodeData = null)
     {
       Sequence = sequence;
       NodeIdentifier = nodeIdentifier;
       DisplayLabel = displayLabel;
+      NodeData = nodeData;
     }
   }
 
@@ -240,13 +243,109 @@ namespace MultiplayerInfrastructure.Editor
         using (var writer = new StreamWriter(path))
         {
           writer.WriteLine($"Scenario Runtime History Dump - {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-          writer.WriteLine(new string('=', 50));
-          foreach (var entry in currentEntries)
+          writer.WriteLine(new string('=', 60));
+          writer.WriteLine();
+
+          for (var i = 0; i < currentEntries.Count; i++)
           {
-            writer.WriteLine($"Sequence: {entry.Sequence}");
-            writer.WriteLine($"Node ID : {entry.NodeIdentifier}");
-            writer.WriteLine($"Label   : {entry.DisplayLabel}");
-            writer.WriteLine(new string('-', 30));
+            var entry = currentEntries[i];
+            writer.WriteLine($"[{entry.Sequence:00}] ID: {entry.NodeIdentifier}");
+            writer.WriteLine($"     Type: {entry.NodeData?.NodeType.ToString() ?? "Unknown"}");
+            writer.WriteLine($"     Label: {entry.DisplayLabel}");
+
+            // 다음 노드로 넘어가는 흐름 및 조건(브랜칭, 선택, 퀴즈, 게이트 등) 서술
+            if (i < currentEntries.Count - 1)
+            {
+              var nextEntry = currentEntries[i + 1];
+              var node = entry.NodeData;
+              writer.WriteLine();
+              writer.WriteLine("     >>> Next Transition:");
+              writer.WriteLine($"         To Node ID: {nextEntry.NodeIdentifier}");
+
+              if (node != null)
+              {
+                switch (node)
+                {
+                  case ScenarioChoiceNode choiceNode:
+                    writer.WriteLine("         Reason: Choice selected by user");
+                    if (choiceNode.Options != null)
+                    {
+                      foreach (var option in choiceNode.Options)
+                      {
+                        if (option.NextNodeIdentifier == nextEntry.NodeIdentifier)
+                        {
+                          writer.WriteLine($"         Selected Option: \"{option.DisplayText}\"");
+                          break;
+                        }
+                      }
+                    }
+                    break;
+
+                  case ScenarioQuizNode quizNode:
+                    if (quizNode.OnCorrectNextIdentifier == nextEntry.NodeIdentifier)
+                    {
+                      writer.WriteLine("         Reason: Quiz answered CORRECTLY");
+                      writer.WriteLine($"         On Correct Path: {quizNode.OnCorrectNextIdentifier}");
+                    }
+                    else if (quizNode.OnIncorrectNextIdentifier == nextEntry.NodeIdentifier)
+                    {
+                      writer.WriteLine("         Reason: Quiz answered INCORRECTLY (OnIncorrectNextIdentifier branch)");
+                      writer.WriteLine($"         On Incorrect Path: {quizNode.OnIncorrectNextIdentifier}");
+                    }
+                    else if (quizNode.NextIdentifier == nextEntry.NodeIdentifier)
+                    {
+                      writer.WriteLine("         Reason: Quiz answered INCORRECTLY (Fallback to NextIdentifier)");
+                      writer.WriteLine($"         On Fallback Path: {quizNode.NextIdentifier}");
+                    }
+                    else
+                    {
+                      writer.WriteLine("         Reason: Quiz answer transition");
+                    }
+                    break;
+
+                  case ScenarioValidatorNode validatorNode:
+                    if (validatorNode.FailureNextIdentifier == nextEntry.NodeIdentifier)
+                    {
+                      writer.WriteLine("         Reason: Validator conditions FAILED (Branched/Timed out to FailureNextIdentifier)");
+                      writer.WriteLine($"         On Failure Branch: {validatorNode.FailureNextIdentifier}");
+                    }
+                    else if (validatorNode.NextIdentifier == nextEntry.NodeIdentifier)
+                    {
+                      writer.WriteLine("         Reason: Validator conditions PASSED (Proceed to NextIdentifier)");
+                      writer.WriteLine($"         On Success Path: {validatorNode.NextIdentifier}");
+                    }
+                    else
+                    {
+                      writer.WriteLine("         Reason: Validator check transition");
+                    }
+                    break;
+
+                  default:
+                    if (!string.IsNullOrEmpty(node.NextIdentifier) && node.NextIdentifier == nextEntry.NodeIdentifier)
+                    {
+                      writer.WriteLine("         Reason: Sequential flow (NextIdentifier)");
+                    }
+                    else
+                    {
+                      writer.WriteLine("         Reason: Custom/Direct jump transition");
+                    }
+                    break;
+                }
+              }
+              else
+              {
+                writer.WriteLine("         Reason: Unknown transition (Node data unavailable)");
+              }
+            }
+            else
+            {
+              writer.WriteLine();
+              writer.WriteLine("     >>> End of History (Last Executed Node)");
+            }
+
+            writer.WriteLine();
+            writer.WriteLine(new string('-', 60));
+            writer.WriteLine();
           }
         }
         Debug.Log($"[ScenarioRuntimeHistoryView] History dumped to: {path}");
