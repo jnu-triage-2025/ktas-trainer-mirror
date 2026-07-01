@@ -9,14 +9,20 @@ using UnityEngine;
 
 namespace MultiplayerInfrastructure.Command
 {
-  public class CommandDefinition_Title : IChatCommandModel
+  public class CommandDefinition_Title : IChatCommandModel, IChatCommandUsage
   {
     public string CommandEntry => "title";
-    public string Description =>
-      "Display screen titles and actionbar text.\n" +
-      "  /title <targets> (clear|reset)\n" +
-      "  /title <targets> (title|subtitle|actionbar) <text>\n" +
-      "  /title <targets> times <fadeIn> <stay> <fadeOut>";
+    public string Description => "Display screen titles and actionbar text.";
+    public System.Collections.Generic.IReadOnlyList<UsageLine> UsageLines => new[]
+    {
+      new UsageLine("title <targets> clear", "Hide all title text."),
+      new UsageLine("title <targets> reset", "Reset times and subtitle."),
+      new UsageLine("title <targets> title <text>", "Show a title."),
+      new UsageLine("title <targets> subtitle <text>", "Show a subtitle."),
+      new UsageLine("title <targets> actionbar <text>", "Show actionbar text."),
+      new UsageLine("title <targets> times <fadeIn> <stay> <fadeOut>", "Set timings, in ticks."),
+      new UsageLine("  <targets>", "@s, @a, @n, fish:<id>, or an @selector."),
+    };
 
     public bool RequiresAdmin => false;
 
@@ -34,7 +40,7 @@ namespace MultiplayerInfrastructure.Command
 
       if (args == null || args.Length < 2)
       {
-        _chat.SendSystemMessage(sender, Description);
+        _chat.SendSystemMessage(sender, ChatCommandHelp.GetHelpPage(this));
         return;
       }
 

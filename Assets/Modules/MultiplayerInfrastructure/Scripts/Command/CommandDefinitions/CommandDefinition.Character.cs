@@ -8,14 +8,18 @@ using MultiplayerInfrastructure.Session;
 
 namespace MultiplayerInfrastructure.Command
 {
-  public class CommandDefinition_Character : IChatCommandModel
+  public class CommandDefinition_Character : IChatCommandModel, IChatCommandUsage
   {
     public string CommandEntry => "character";
-    public string Description =>
-      "Set or list player character models.\n"
-      + "  /character list\n"
-      + "  /character set <model-id>\n"
-      + "  /character set <target-id> <model-id>";
+    public string Description => "Set or list player character models.";
+    public System.Collections.Generic.IReadOnlyList<UsageLine> UsageLines => new[]
+    {
+      new UsageLine("character list", "List available character models."),
+      new UsageLine("character set <model>", "Apply a model to yourself."),
+      new UsageLine("character set <target> <model>", "Apply a model to a target."),
+      new UsageLine("  <target>", "@s, <clientId>, fish:<id>, id:<user>, name:<name>."),
+      new UsageLine("  <model>", "Registered player model identifier."),
+    };
 
     public bool RequiresAdmin => false;
 
@@ -95,7 +99,7 @@ namespace MultiplayerInfrastructure.Command
 
     private void SendUsage(NetworkConnection sender)
     {
-      _chat.SendSystemMessage(sender, "Usage: /character list | /character set <model-id> | /character set <target-id> <model-id>");
+      _chat.SendSystemMessage(sender, ChatCommandHelp.GetHelpPage(this));
     }
 
     private void HandleSetSelf(NetworkConnection sender, string modelIdentifier)

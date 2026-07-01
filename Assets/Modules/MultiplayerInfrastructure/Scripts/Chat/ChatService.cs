@@ -421,10 +421,16 @@ namespace MultiplayerInfrastructure.Chat
 
     private bool TryExecuteCommandInternal(string commandLine, NetworkConnection sender, out string result)
     {
-      if (!TryExecuteCommandLineWithPipeline(commandLine, sender, out var outputValues, out var error))
+      if (!TryExecuteCommandLineWithPipeline(commandLine, sender, out var outputValues, out var error, out bool alreadyReported))
       {
         result = string.IsNullOrWhiteSpace(error) ? "Command execution failed." : error;
-        SendSystemMessage(sender, result);
+
+        // Only surface the error here when the command layer has NOT already
+        // shown it to the user. Commands that run with system messages enabled
+        // report their own usage/errors, so re-sending would duplicate output.
+        if (!alreadyReported)
+          SendSystemMessage(sender, result);
+
         return false;
       }
 
@@ -434,10 +440,11 @@ namespace MultiplayerInfrastructure.Chat
       return true;
     }
 
-    private bool TryExecuteCommandLineWithPipeline(string commandLine, NetworkConnection sender, out List<string> outputValues, out string error)
+    private bool TryExecuteCommandLineWithPipeline(string commandLine, NetworkConnection sender, out List<string> outputValues, out string error, out bool alreadyReported)
     {
       outputValues = new List<string>();
       error = string.Empty;
+      alreadyReported = false;
 
       string trimmed = commandLine?.Trim();
       if (string.IsNullOrWhiteSpace(trimmed))
@@ -454,12 +461,12 @@ namespace MultiplayerInfrastructure.Chat
       }
 
       bool suppressFirstStageMessages = stages.Length > 1;
-      if (!TryExecuteParallelStage(stages[0], sender, suppressFirstStageMessages, out outputValues, out error))
+      if (!TryExecuteParallelStage(stages[0], sender, suppressFirstStageMessages, out outputValues, out error, out alreadyReported))
         return false;
 
       for (int i = 1; i < stages.Length; i++)
       {
-        if (!TryExecutePipeTargetStage(stages[i], outputValues, sender, out outputValues, out error))
+        if (!TryExecutePipeTargetStage(stages[i], outputValues, sender, out outputValues, out error, out alreadyReported))
           return false;
       }
 
@@ -471,10 +478,12 @@ namespace MultiplayerInfrastructure.Chat
       NetworkConnection sender,
       bool suppressSystemMessages,
       out List<string> outputValues,
-      out string error)
+      out string error,
+      out bool alreadyReported)
     {
       outputValues = new List<string>();
       error = string.Empty;
+      alreadyReported = false;
 
       var commands = SplitAndTrim(stage, '&', removeEmpty: true);
       if (commands.Length == 0)
@@ -485,7 +494,7 @@ namespace MultiplayerInfrastructure.Chat
 
       for (int i = 0; i < commands.Length; i++)
       {
-        if (!TryExecuteSingleCommand(commands[i], sender, suppressSystemMessages, out var values, out error))
+        if (!TryExecuteSingleCommand(commands[i], sender, suppressSystemMessages, out var values, out error, out alreadyReported))
           return false;
 
         if (values != null && values.Count > 0)
@@ -500,10 +509,12 @@ namespace MultiplayerInfrastructure.Chat
       IReadOnlyList<string> inputValues,
       NetworkConnection sender,
       out List<string> outputValues,
-      out string error)
+      out string error,
+      out bool alreadyReported)
     {
       outputValues = new List<string>();
       error = string.Empty;
+      alreadyReported = false;
 
       if (string.IsNullOrWhiteSpace(stage))
       {
@@ -530,7 +541,7 @@ namespace MultiplayerInfrastructure.Chat
         stage = resolved;
       }
 
-      if (!TryExecuteParallelStage(stage, sender, suppressSystemMessages: false, out outputValues, out error))
+      if (!TryExecuteParallelStage(stage, sender, suppressSystemMessages: false, out outputValues, out error, out alreadyReported))
         return false;
 
       return true;
@@ -565,10 +576,12 @@ namespace MultiplayerInfrastructure.Chat
       NetworkConnection sender,
       bool suppressSystemMessages,
       out IReadOnlyList<string> pipelineValues,
-      out string error)
+      out string error,
+      out bool alreadyReported)
     {
       pipelineValues = Array.Empty<string>();
       error = string.Empty;
+      alreadyReported = false;
 
       if (string.IsNullOrWhiteSpace(commandLine))
       {
@@ -594,7 +607,13 @@ namespace MultiplayerInfrastructure.Chat
       }
 
       if (!string.IsNullOrWhiteSpace(error))
+      {
+        // The command exists and ran. When system messages are enabled the
+        // command already delivered its own error/usage output to the user,
+        // so the caller must not print it again (prevents duplicate hints).
+        alreadyReported = !suppressSystemMessages;
         return false;
+      }
 
       return true;
     }

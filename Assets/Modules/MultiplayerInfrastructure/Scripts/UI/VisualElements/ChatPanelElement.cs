@@ -70,6 +70,9 @@ namespace MultiplayerInfrastructure.UI
       _panel.style.flexDirection = FlexDirection.Column;
       _panel.style.flexGrow = 0;
       _panel.style.flexShrink = 0;
+      // Always fill the fixed-width root so the panel width is constant.
+      _panel.style.width = Length.Percent(100);
+      _panel.style.alignItems = Align.Stretch;
       // USS `gap` and IStyle.pointerEvents are not available in this scripting API level.
       // Use margins on children for spacing and pickingMode for pointer behavior.
       _panel.pickingMode = PickingMode.Position;
@@ -80,9 +83,20 @@ namespace MultiplayerInfrastructure.UI
         name = DefaultsChatControl.ChatLogName,
         verticalScrollerVisibility = ScrollerVisibility.Auto,
         horizontalScrollerVisibility = ScrollerVisibility.Hidden,
-        pickingMode = PickingMode.Ignore
+        // Must accept pointer events so the user can scroll the log with the
+        // mouse wheel and drag the scrollbar. PickingMode.Ignore here would
+        // block all scroll interaction (the reported "can't scroll history" bug).
+        pickingMode = PickingMode.Position
       };
+      // Speed up mouse-wheel scrolling a bit for chat history browsing.
+      _logView.mouseWheelScrollSize = 40f;
+      // Ensure the viewport and content also receive pointer/wheel events so
+      // wheel scrolling works when hovering anywhere over the log area.
+      _logView.contentViewport.pickingMode = PickingMode.Position;
+      _logView.contentContainer.pickingMode = PickingMode.Position;
       _logView.AddToClassList("chat-log");
+      _logView.style.width = Length.Percent(100);
+      _logView.style.flexShrink = 0;
       _logView.style.backgroundColor = new Color(0f, 0f, 0f, 0.65f);
       _logView.style.paddingTop = 8;
       _logView.style.paddingBottom = 8;
@@ -108,10 +122,12 @@ namespace MultiplayerInfrastructure.UI
 
       var inputRow = new VisualElement();
       inputRow.AddToClassList("chat-input-row");
+      inputRow.style.width = Length.Percent(100);
       _panel.Add(inputRow);
 
       var inputBg = new VisualElement();
       inputBg.AddToClassList("chat-input-bg");
+      inputBg.style.width = Length.Percent(100);
       inputBg.style.backgroundColor = StyleColorBackground;
       inputBg.style.paddingTop = 8;
       inputBg.style.paddingBottom = 8;
@@ -189,6 +205,10 @@ namespace MultiplayerInfrastructure.UI
 
     private void ApplyInlineStyles()
     {
+      // Layout/width for the root is defined authoritatively in ChatPanelUI.uss
+      // (.chat-root uses a fixed --panel-width). We intentionally do NOT set an
+      // inline width here: an inline width would override the USS rule and, with
+      // flex-start alignment, let the panel resize based on content length.
       style.position = Position.Absolute;
       style.left = styleLeft;
       style.right = styleRight;
@@ -196,11 +216,11 @@ namespace MultiplayerInfrastructure.UI
       style.paddingLeft = stylePaddingLeft;
       style.paddingBottom = stylePaddingBottom;
       style.paddingRight = stylePaddingRight;
-      style.width = Length.Percent(100);
       style.flexDirection = FlexDirection.Column;
-      style.alignItems = Align.FlexStart;
+      // Stretch children (panel/log/input) to the full root width so the chat
+      // width stays constant regardless of message or input text length.
+      style.alignItems = Align.Stretch;
       style.justifyContent = Justify.FlexEnd;
-      // style.gap = 8;
       style.flexGrow = 0;
       style.flexShrink = 0;
     }
@@ -223,6 +243,8 @@ namespace MultiplayerInfrastructure.UI
         AddToClassList("expanded");
         if (_panel != null) _panel.style.display = DisplayStyle.Flex;
         ClearToasts();
+        // When the panel is (re)opened, show the most recent messages.
+        ScrollToBottom();
       }
       else
       {
@@ -315,17 +337,52 @@ namespace MultiplayerInfrastructure.UI
       };
       entry.AddToClassList("chat-log__entry");
       entry.style.whiteSpace = WhiteSpace.Normal;
-      entry.style.flexShrink = 1;
+      // flexShrink MUST be 0. Inside the vertical ScrollView, a shrinkable
+      // entry lets the content compress to fit the viewport, so the content
+      // never exceeds the viewport height and the log becomes non-scrollable
+      // (the reported "can't scroll history" bug).
+      entry.style.flexShrink = 0;
       entry.style.width = Length.Percent(100);
+
+      // Capture whether the user is currently pinned to (near) the bottom
+      // BEFORE we add the new entry. Only auto-scroll when they were already
+      // at the bottom, so scrolling up to read history is not interrupted.
+      bool stickToBottom = IsScrolledToBottom();
 
       _logView.contentContainer.Add(entry);
       _logEntries.Enqueue(entry);
 
       TrimLogIfNeeded();
-      ScrollToBottom();
+
+      if (stickToBottom)
+        ScrollToBottom();
 
       if (!_isOpen && showToastWhenHidden)
         ShowToast(message);
+    }
+
+    /// <summary>
+    /// True when the vertical scroller is at (or very near) the bottom,
+    /// or when the content is not tall enough to scroll at all.
+    /// Used to decide whether new messages should auto-scroll into view.
+    /// </summary>
+    private bool IsScrolledToBottom()
+    {
+      if (_logView == null)
+        return true;
+
+      var scroller = _logView.verticalScroller;
+      if (scroller == null)
+        return true;
+
+      float range = scroller.highValue - scroller.lowValue;
+      // No scrollable range yet: treat as bottom so the first messages show.
+      if (range <= Mathf.Epsilon)
+        return true;
+
+      // Allow a small threshold so minor offsets still count as "at bottom".
+      const float bottomThreshold = 4f;
+      return scroller.value >= scroller.highValue - bottomThreshold;
     }
 
     public void ClearLog()

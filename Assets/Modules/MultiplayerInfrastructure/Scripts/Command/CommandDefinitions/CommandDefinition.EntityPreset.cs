@@ -10,10 +10,18 @@ using UnityEngine;
 
 namespace MultiplayerInfrastructure.Command
 {
-  public class CommandDefinition_EntityPreset : IChatCommandModel, IChatCommandPipelineCommand
+  public class CommandDefinition_EntityPreset : IChatCommandModel, IChatCommandPipelineCommand, IChatCommandUsage
   {
     public string CommandEntry => "entitypreset";
-    public string Description => "Manage entity presets. Usage: /entitypreset list | /entitypreset spawn <identifier> <x> <y> <z> | /entitypreset spawn <identifier> <target>";
+    public string Description => "Spawn and manage entity presets.";
+    public System.Collections.Generic.IReadOnlyList<UsageLine> UsageLines => new[]
+    {
+      new UsageLine("entitypreset list", "List available entity presets."),
+      new UsageLine("entitypreset spawn <preset> <x> <y> <z>", "Spawn at world coordinates."),
+      new UsageLine("entitypreset spawn <preset> <target>", "Spawn at a target's position."),
+      new UsageLine("  <preset>", "Registered entity preset identifier."),
+      new UsageLine("  <target>", "@s, <clientId>, fish:<id>, or entity id."),
+    };
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
@@ -310,7 +318,7 @@ namespace MultiplayerInfrastructure.Command
 
     private void SendUsage(NetworkConnection sender)
     {
-      _chat.SendSystemMessage(sender, "Usage: /entitypreset list | /entitypreset spawn <identifier> <x> <y> <z> | /entitypreset spawn <identifier> <target>");
+      _chat.SendSystemMessage(sender, ChatCommandHelp.GetHelpPage(this));
     }
   }
 }

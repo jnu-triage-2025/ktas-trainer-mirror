@@ -12,10 +12,18 @@ using UnityEngine;
 
 namespace MultiplayerInfrastructure.Command
 {
-  public class CommandDefinition_Scenario : IChatCommandModel
+  public class CommandDefinition_Scenario : IChatCommandModel, IChatCommandUsage
   {
     public string CommandEntry => "scenario";
-    public string Description => "Scenario commands. Usage: /scenario list | /scenario execute <target> <scenario_id> | /scenario signal <signal_id> [clear]";
+    public string Description => "Run and control scenarios.";
+    public System.Collections.Generic.IReadOnlyList<UsageLine> UsageLines => new[]
+    {
+      new UsageLine("scenario list", "List available scenarios."),
+      new UsageLine("scenario execute <target> <scenario>", "Start a scenario for targets."),
+      new UsageLine("scenario signal <signal> [clear]", "Raise (or clear) a signal."),
+      new UsageLine("  <target>", "@s, @a, @n, or fish:<id>."),
+      new UsageLine("  <scenario>", "Registered scenario identifier."),
+    };
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
@@ -333,10 +341,18 @@ namespace MultiplayerInfrastructure.Command
     }
   }
 
-  public class CommandDefinition_ProblemSheet : IChatCommandModel, IChatCommandPipelineCommand
+  public class CommandDefinition_ProblemSheet : IChatCommandModel, IChatCommandPipelineCommand, IChatCommandUsage
   {
     public string CommandEntry => "problemsheet";
-    public string Description => "Problem sheet commands. Usage: /problemsheet list | /problemsheet <target> <problem-identifier> [problem-index]";
+    public string Description => "Dispatch problem sheets to players.";
+    public System.Collections.Generic.IReadOnlyList<UsageLine> UsageLines => new[]
+    {
+      new UsageLine("problemsheet list", "List available problem sheets."),
+      new UsageLine("problemsheet <target> <problem> [index]", "Open a problem sheet for targets."),
+      new UsageLine("  <target>", "@s, @a, @n, or fish:<id>."),
+      new UsageLine("  <problem>", "Registered problem set identifier."),
+      new UsageLine("  [index]", "1-based problem number; opens only that one."),
+    };
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;

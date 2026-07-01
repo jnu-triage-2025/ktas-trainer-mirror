@@ -1,0 +1,65 @@
+{
+  "identifier": "comp-quiz",
+  "title": "Chest_Compression _Quiz",
+  "problems": [
+    {
+      "id": "p11",
+      "prompt": "1. 성인의 정확한 가슴 압박 깊이는?",
+      "choice": {
+        "options": [
+          "약 4cm",
+          "약 5cm",
+          "약 6cm"
+        ],
+        "correctIndex": 1
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    },
+    {
+      "id": "p12",
+      "prompt": "2. 성인의 정확한 가슴 압박 위치는?",
+      "choice": {
+        "options": [
+          "양측 유두선상의 중간지점",
+          "흉골 하부 1/2 지점"
+        ],
+        "correctIndex": 1
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    },
+    {
+      "id": "p13",
+      "prompt": "3. 정확한 가슴 압박 속도(횟수)는?",
+      "choice": {
+        "options": [
+          "분당 약 80~100회",
+          "분당 약 120~140회",
+          "분당 약 100~120회"
+        ],
+        "correctIndex": 2
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    },
+    {
+      "id": "p14",
+      "prompt": "4. 가슴압박 시 주의사항은?",
+      "choice": {
+        "options": [
+          "지쳐도 한 사람이 계속 가슴압박을 수행한다.",
+          "뼈가 부러진 것 같으면 멈춘다.",
+          "충분한 이완을 제공한다."
+        ],
+        "correctIndex": 2
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    }
+  ]
+}

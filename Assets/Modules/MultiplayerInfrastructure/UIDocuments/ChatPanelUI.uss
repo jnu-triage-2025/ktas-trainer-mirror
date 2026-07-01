@@ -12,10 +12,14 @@
   position: absolute;
   left: 18px;
   bottom: 18px;
+  /* Fixed width so the chat never resizes with message/input length. */
   width: var(--panel-width);
+  min-width: var(--panel-width);
+  max-width: var(--panel-width);
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  /* Stretch so children always fill the fixed panel width. */
+  align-items: stretch;
   justify-content: flex-end;
   flex-shrink: 0;
   flex-grow: 0;
@@ -25,6 +29,8 @@
 .chat-panel {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  width: 100%;
   gap: 8px;
   pointer-events: auto;
 }
@@ -45,6 +51,7 @@
 .chat-log {
   background-color: var(--bg);
   padding: 8px 10px;
+  width: 100%;
   min-height: 140px;
   height: 200px;
   flex-shrink: 0;
@@ -118,11 +125,13 @@
 
 .chat-input-row {
   flex-direction: column;
+  width: 100%;
 }
 
 .chat-input-bg {
   background-color: rgba(0, 0, 0, 0.82);
   padding: 10px 12px;
+  width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
 }
@@ -151,7 +160,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  width: var(--panel-width);
+  width: 100%;
   pointer-events: none;
 }
 

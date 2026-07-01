@@ -1,0 +1,91 @@
+{
+  "identifier": "avpu-gcs-3rd-patient-b",
+  "title": "3rd - AVPU/GCS check (Patient B)",
+  "problems": [
+    {
+      "id": "p27",
+      "prompt": "[관찰] 환자에게 질문했을 때, 무슨 일이 있었는지 기억하지 못하고, 말의 반응이 조금 느립니다.\n\n의식 수준을 AVPU에 따라 분류할 때, 현재 환자의 의식 수준은 무엇입니까?",
+      "choice": {
+        "options": [
+          "A (Alert, 완전히 깨어 있음)",
+          "V (Verbal stimuli, 음성에 반응 있음)",
+          "P (Painful stimuli, 통증에 반응 있음)",
+          "U (Unconsciousness, 반응 없음)"
+        ],
+        "correctIndex": 1
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    },
+    {
+      "id": "p28",
+      "prompt": "추가 사정을 위해 GCS를 확인합니다.\n먼저 Eye Opening(E) 반응을 확인합니다.\n\n[관찰] 눈을 감고 있다가, 질문을 하면 눈을 뜨고 있습니다.\n\n관찰된 E(Eye Opening) 점수는 몇 점입니까?",
+      "choice": {
+        "options": [
+          "4점 (자발적 반응)",
+          "3점 (구두 명령에 반응)",
+          "2점 (통증에 반응)",
+          "1점 (반응 없음)"
+        ],
+        "correctIndex": 1
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    },
+    {
+      "id": "p29",
+      "prompt": "다음은 Verbal Response(V) 입니다.\n\n[관찰] 간호사가 지금 시간대에 대해 질문하자 \"어... 그... 퇴근길이었던거 같은데.\"라고 답했습니다.\n\n관찰된 V(Verbal Response) 점수는 몇 점입니까?",
+      "choice": {
+        "options": [
+          "5점 (적절한 답변)",
+          "4점 (혼란)",
+          "3점 (부적절한 답변)",
+          "2점 (신음소리)",
+          "1점 (반응 없음)"
+        ],
+        "correctIndex": 1
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    },
+    {
+      "id": "p30",
+      "prompt": "마지막으로 Motor Response(M) 입니다.\n\n[관찰] 움직임에 대한 명령에 잘 수행합니다.\n\n관찰된 M(Motor Response) 점수는 몇 점입니까?",
+      "choice": {
+        "options": [
+          "6점 (명령 수행)",
+          "5점 (통증 원인을 치우려 손을 뻗음)",
+          "4점 (통증에 회피)",
+          "3점 (이상 굴곡)",
+          "2점 (이상 신전)",
+          "1점 (반응 없음)"
+        ],
+        "correctIndex": 0
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    },
+    {
+      "id": "p31",
+      "prompt": "근력에 대한 추가 사정을 실시합니다.\n\n근력 사정 중 왼쪽 다리가 오른쪽 다리의 정상 근력보다 약하고, 간호사가 가하는 저항에 이기지 못하고 있습니다.\n\n정상인 우측(5점)에 비해, 좌측의 근력 수준은?",
+      "choice": {
+        "options": [
+          "5점 (정상 근력)",
+          "4점 (중력+약간의 저항)",
+          "3점 (중력에 저항 가능)",
+          "2점 (중력에 저항 불가, 좌우로만 운동 가능)",
+          "1점 (약간의 근육 수축)",
+          "0점 (움직임 없음)"
+        ],
+        "correctIndex": 0
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    }
+  ]
+}

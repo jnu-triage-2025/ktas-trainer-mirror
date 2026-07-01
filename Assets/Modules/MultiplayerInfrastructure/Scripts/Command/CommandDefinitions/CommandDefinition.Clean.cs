@@ -5,10 +5,16 @@ using MultiplayerInfrastructure.Registry;
 
 namespace MultiplayerInfrastructure.Command
 {
-  public class CommandDefinition_Clean : IChatCommandModel
+  public class CommandDefinition_Clean : IChatCommandModel, IChatCommandUsage
   {
     public string CommandEntry => "clean";
-    public string Description => "Clean inventory. Usage: /clean [item_identifier] [count]";
+    public string Description => "Clean your inventory.";
+    public System.Collections.Generic.IReadOnlyList<UsageLine> UsageLines => new[]
+    {
+      new UsageLine("clean", "Remove all items."),
+      new UsageLine("clean <item>", "Remove all of one item."),
+      new UsageLine("clean <item> <count>", "Remove up to count of one item."),
+    };
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;

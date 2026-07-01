@@ -3,10 +3,15 @@ using MultiplayerInfrastructure.Chat;
 
 namespace MultiplayerInfrastructure.Command
 {
-  public class CommandDefinition_Kick : IChatCommandModel
+  public class CommandDefinition_Kick : IChatCommandModel, IChatCommandUsage
   {
     public string CommandEntry => "kick";
     public string Description => "Kick a target by name or ID.";
+    public System.Collections.Generic.IReadOnlyList<UsageLine> UsageLines => new[]
+    {
+      new UsageLine("kick <target>", "Kick a connected target. Requires admin."),
+      new UsageLine("  <target>", "Target display name or client ID."),
+    };
     public bool RequiresAdmin => true;
 
     private readonly ChatService _manager;
