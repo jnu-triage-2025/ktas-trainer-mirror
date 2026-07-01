@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MultiplayerInfrastructure.ItemSystem;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -14,6 +15,12 @@ namespace MultiplayerInfrastructure.UI
     private readonly List<VisualElement> _slots = new();
     private IReadOnlyList<InventorySlotModelDTO> _inventory;
     private int _selectedIndex;
+
+    // 현재 손에 들고 있는(선택된 슬롯) 아이템 이름 추적용.
+    // 슬롯 선택 변경 또는 슬롯 내 아이템 상태 변경을 감지하기 위한 스냅샷 값.
+    private Item _heldItemSnapshot;
+    private string _heldItemNameSnapshot;
+    private bool _hasHeldItemSnapshot;
 
     [SerializeField] private int _hotbarSlotCount = 9;
 
@@ -36,6 +43,15 @@ namespace MultiplayerInfrastructure.UI
 
     public int SlotCount { get; private set; } = 9;
     public Action<int> OnSlotSelected;
+
+    /// <summary>
+    /// 현재 선택된(손에 들고 있는) 슬롯의 아이템이 변경되었을 때 호출됩니다.
+    /// 변경으로 간주되는 경우:
+    /// - 선택 슬롯이 바뀐 경우
+    /// - 선택 슬롯의 아이템 인스턴스 또는 표시 이름이 바뀐 경우
+    /// 슬롯이 비어있으면 null 을 전달합니다.
+    /// </summary>
+    public Action<string> OnHeldItemNameChanged;
 
     public HotbarControl()
     {
@@ -136,6 +152,7 @@ namespace MultiplayerInfrastructure.UI
 
       _selectedIndex = index;
       ApplySelectionVisuals();
+      UpdateHeldItemName();
       OnSlotSelected?.Invoke(_selectedIndex);
     }
 
@@ -149,6 +166,7 @@ namespace MultiplayerInfrastructure.UI
       if (_selectedIndex < 0) _selectedIndex += SlotCount;
 
       ApplySelectionVisuals();
+      UpdateHeldItemName();
       OnSlotSelected?.Invoke(_selectedIndex);
     }
 
@@ -184,6 +202,41 @@ namespace MultiplayerInfrastructure.UI
           countLabel.text = string.Empty;
         }
       }
+
+      // 인벤토리 갱신으로 선택 슬롯의 아이템 상태가 바뀌었을 수 있으므로 이름 재확인.
+      UpdateHeldItemName();
+    }
+
+    /// <summary>
+    /// 현재 선택된 슬롯의 아이템을 확인하고, 이전 스냅샷과 비교하여
+    /// 변경되었으면 <see cref="OnHeldItemNameChanged"/> 를 호출합니다.
+    /// </summary>
+    private void UpdateHeldItemName()
+    {
+      Item current = null;
+      if (_inventory != null &&
+          _selectedIndex >= 0 &&
+          _selectedIndex < _inventory.Count &&
+          _inventory[_selectedIndex] != null)
+      {
+        current = _inventory[_selectedIndex].ItemInstance;
+      }
+
+      var currentName = current != null ? current.CurrentDisplayName : null;
+
+      // 아이템 인스턴스 참조 또는 표시 이름이 이전과 동일하면 변경으로 보지 않는다.
+      bool changed = !_hasHeldItemSnapshot
+        || !ReferenceEquals(_heldItemSnapshot, current)
+        || _heldItemNameSnapshot != currentName;
+
+      if (!changed) return;
+
+      _heldItemSnapshot = current;
+      _heldItemNameSnapshot = currentName;
+      _hasHeldItemSnapshot = true;
+
+      // 슬롯이 비어있으면(아이템 없음) 아무것도 표시하지 않도록 null 전달.
+      OnHeldItemNameChanged?.Invoke(current != null ? currentName : null);
     }
 
     private void ApplySelectionVisuals()
