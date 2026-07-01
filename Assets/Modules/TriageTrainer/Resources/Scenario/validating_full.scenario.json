@@ -7,7 +7,8 @@
       "speakerName": "Narrator",
       "dialogueContent": "Debug scenario starting.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "choice_intro"
+      "nextIdentifier": "choice_intro",
+      "playTTS": true
     },
     "choice_intro": {
       "nodeType": "Choice",
@@ -39,7 +40,8 @@
           "nextNodeIdentifier": "validator_players"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "sound_fx": {
       "nodeType": "Sound",
@@ -98,7 +100,8 @@
       "speakerName": "System",
       "dialogueContent": "Validator failed: not enough players.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "parallel_main": {
       "nodeType": "Parallel",
@@ -139,7 +142,8 @@
       "speakerName": "NPC A",
       "dialogueContent": "Branch A completed.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "branch_moveB_start": {
       "nodeType": "PlayerMove",
@@ -161,7 +165,8 @@
       "speakerName": "Player",
       "dialogueContent": "Branch B completed.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "dialogue_post_parallel": {
       "nodeType": "Dialogue",
@@ -169,7 +174,8 @@
       "speakerName": "Narrator",
       "dialogueContent": "Debug scenario finished.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     }
   }
 }

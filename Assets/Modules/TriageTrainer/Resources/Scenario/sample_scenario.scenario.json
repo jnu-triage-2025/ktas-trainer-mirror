@@ -7,7 +7,8 @@
       "speakerName": "Guide",
       "dialogueContent": "Welcome to the arena! Let me show you around.",
       "portraitSpriteIdentifier": "guide_portrait",
-      "nextIdentifier": "choice_join"
+      "nextIdentifier": "choice_join",
+      "playTTS": true
     },
     "choice_join": {
       "identifier": "choice_join",
@@ -39,7 +40,8 @@
           "nextNodeIdentifier": "wait_sound"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "player_move": {
       "identifier": "player_move",
@@ -76,7 +78,8 @@
       "speakerName": "Guide",
       "dialogueContent": "Great! You're all set to start the multiplayer tutorial.",
       "portraitSpriteIdentifier": "guide_smile",
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     }
   }
 }

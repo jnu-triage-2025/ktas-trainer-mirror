@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace TextToSpeechService
@@ -27,6 +29,13 @@ namespace TextToSpeechService
 
     /// <summary>사전 합성(baked) WAV 폴더 (StreamingAssets 기준 상대 경로)</summary>
     public const string BakedAudioSubdir     = "TTS/Baked";
+
+    /// <summary>
+    /// 시나리오 그래프의 인라인 텍스트(Dialogue/Choice/Quiz 등)를 사전 합성한
+    /// WAV 폴더 (StreamingAssets 기준 상대 경로).
+    /// transcripts.json 기반 <see cref="BakedAudioSubdir"/> 와 분리하여 관리한다.
+    /// </summary>
+    public const string BakedInlineAudioSubdir = "TTS/BakedInline";
 
     // HuggingFace 다운로드 베이스 URL (git-lfs 없이 직접 HTTP)
     // /resolve/{revision}/{path} 엔드포인트는 git-lfs·Xet 스토리지를 투명하게
@@ -166,6 +175,57 @@ namespace TextToSpeechService
       return Path.Combine(
         streamingAssetsPath, BakedAudioSubdir,
         identifier, $"{segmentIndex}.wav");
+    }
+
+    // =========================================================================
+    // 인라인 텍스트 Baked 경로 / 해시 헬퍼
+    // =========================================================================
+
+    /// <summary>
+    /// 시나리오 그래프의 인라인 텍스트에 대한 사전 합성(baked) WAV 파일의 절대 경로를 반환합니다.
+    ///
+    /// 파일명 규칙:
+    ///   {BakedInlineAudioSubdir}/{scenarioIdentifier}/{nodeIdentifier}_{hash}.wav
+    ///
+    /// scenarioIdentifier·nodeIdentifier 는 사람이 식별할 수 있도록 접두어로 붙이고,
+    /// hash 는 텍스트 내용 변경(=dirty) 감지를 위한 결정적 해시이다.
+    /// </summary>
+    /// <param name="streamingAssetsPath">Application.streamingAssetsPath</param>
+    /// <param name="scenarioIdentifier">시나리오 그래프 식별자</param>
+    /// <param name="nodeIdentifier">노드 식별자</param>
+    /// <param name="text">합성 대상 텍스트</param>
+    public static string GetBakedInlineClipPath(
+      string streamingAssetsPath, string scenarioIdentifier, string nodeIdentifier, string text)
+    {
+      string safeScenario = SanitizeForFileName(scenarioIdentifier);
+      string safeNode      = SanitizeForFileName(nodeIdentifier);
+      string hash          = ComputeTextHash(text);
+
+      return Path.Combine(
+        streamingAssetsPath, BakedInlineAudioSubdir,
+        safeScenario, $"{safeNode}_{hash}.wav");
+    }
+
+    /// <summary>인라인 텍스트에 대한 결정적 콘텐츠 해시(짧은 hex)를 계산합니다.</summary>
+    public static string ComputeTextHash(string text)
+    {
+      using var sha = SHA256.Create();
+      byte[] bytes  = sha.ComputeHash(Encoding.UTF8.GetBytes(text ?? string.Empty));
+      var    sb     = new StringBuilder(16);
+      for (int i = 0; i < 8; i++) // 앞 8바이트(16 hex)면 충돌 방지에 충분
+        sb.Append(bytes[i].ToString("x2"));
+      return sb.ToString();
+    }
+
+    /// <summary>파일/폴더명에 사용할 수 없는 문자를 '_' 로 치환합니다.</summary>
+    private static string SanitizeForFileName(string value)
+    {
+      if (string.IsNullOrEmpty(value)) return "_";
+      var invalid = Path.GetInvalidFileNameChars();
+      var sb      = new StringBuilder(value.Length);
+      foreach (char c in value)
+        sb.Append(Array.IndexOf(invalid, c) >= 0 ? '_' : c);
+      return sb.ToString();
     }
 
     public void Dispose() { /* ONNX 세션은 GC에서 해제됨 */ }

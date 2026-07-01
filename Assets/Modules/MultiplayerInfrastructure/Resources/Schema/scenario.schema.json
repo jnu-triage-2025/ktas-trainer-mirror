@@ -469,6 +469,13 @@
                 "null"
               ],
               "default": false
+            },
+            "playTTS": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": false
             }
           },
           "required": [
@@ -506,6 +513,13 @@
               "items": {
                 "$ref": "#/$defs/ScenarioChoiceOption"
               }
+            },
+            "playTTS": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": false
             },
             "nextIdentifier": {
               "type": "null"
@@ -1415,6 +1429,13 @@
                 "string",
                 "null"
               ]
+            },
+            "playTTS": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": false
             },
             "nextIdentifier": {
               "type": "null"

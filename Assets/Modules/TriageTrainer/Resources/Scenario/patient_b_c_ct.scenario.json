@@ -59,7 +59,8 @@
       "speakerName": "시스템",
       "dialogueContent": "환자 세 명이 이송되었습니다. 간호사 A가 중증도 분류를 시행합니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N029"
+      "nextIdentifier": "N029",
+      "playTTS": true
     },
     "N029": {
       "identifier": "N029",
@@ -68,7 +69,8 @@
       "dialogueContent": "[플레이어 A 전용] 환자를 왼쪽부터 차례대로 클릭하여 환자의 상태를 확인하고, 중증도 분류를 실시하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q031",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q031": {
       "identifier": "Q031",
@@ -136,7 +138,8 @@
           "nextNodeIdentifier": "N030"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N029_retry_a": {
       "identifier": "N029_retry_a",
@@ -145,7 +148,8 @@
       "dialogueContent": "오답입니다. 현재 사고의 경위, 머리의 부상 등을 고려하였을 때 뇌출혈이 의심되므로, KTAS 2(긴급)이 적절합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C036",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N030": {
       "identifier": "N030",
@@ -154,7 +158,8 @@
       "dialogueContent": "해당 환자를 KTAS 2로 분류했습니다. 다음 환자를 클릭하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V036",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V036": {
       "identifier": "V036",
@@ -212,7 +217,8 @@
           "nextNodeIdentifier": "N031"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N030_retry_b": {
       "identifier": "N030_retry_b",
@@ -221,7 +227,8 @@
       "dialogueContent": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 KTAS 5(비응급) 상태로 보입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C037",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N031": {
       "identifier": "N031",
@@ -230,7 +237,8 @@
       "dialogueContent": "해당 환자를 KTAS 5로 분류했습니다. 다음 환자를 클릭하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V037",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V037": {
       "identifier": "V037",
@@ -288,7 +296,8 @@
           "nextNodeIdentifier": "N032"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N031_retry_c": {
       "identifier": "N031_retry_c",
@@ -297,7 +306,8 @@
       "dialogueContent": "오답입니다. 현재 사고의 경위, 머리의 부상 등을 고려하였을 때 뇌출혈이 의심되므로, KTAS 2(긴급)이 적절합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C038",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N032": {
       "identifier": "N032",
@@ -306,7 +316,8 @@
       "dialogueContent": "해당 환자를 KTAS 2로 분류했습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "N033",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N033": {
       "identifier": "N033",
@@ -315,7 +326,8 @@
       "dialogueContent": "이제 입원 구역으로 이송할 긴급 환자 2명을 차례대로 클릭하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V038",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V038": {
       "identifier": "V038",
@@ -362,7 +374,8 @@
       "speakerName": "간호사 A",
       "dialogueContent": "KTAS 2(긴급)으로 분류된 환자 2명을 이송하겠습니다. 간호사 B, C, D선생님 이동 도와주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q032"
+      "nextIdentifier": "Q032",
+      "playTTS": true
     },
     "Q032": {
       "identifier": "Q032",
@@ -498,7 +511,8 @@
       "dialogueContent": "처치 구역에 도착했습니다. 간호사 A는 의식상태를, 간호사 C는 활력징후를 사정하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "P010",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "P010": {
       "identifier": "P010",
@@ -535,7 +549,8 @@
       "dialogueContent": "환자를 클릭하여 환자의 의식상태를 사정하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q033",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q033": {
       "identifier": "Q033",
@@ -577,7 +592,8 @@
       "dialogueContent": "환자의 의식 수준(AVPU)를 확인합니다. 마우스로 정답을 선택해주세요. 정답 시 계속 진행, 오답 시 재응시 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "N037",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "N037": {
       "identifier": "N037",
@@ -586,7 +602,8 @@
       "dialogueContent": "[관찰] 환자에게 질문했을 때, 무슨 일이 있었는지 기억하지 못하고, 말의 반응이 조금 느립니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C039",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "C039": {
       "identifier": "C039",
@@ -612,7 +629,8 @@
           "nextNodeIdentifier": "N038"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N037_retry_a": {
       "identifier": "N037_retry_a",
@@ -621,7 +639,8 @@
       "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)가 적절합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C039",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N038": {
       "identifier": "N038",
@@ -630,7 +649,8 @@
       "dialogueContent": "[관찰] 추가 사정으로 GCS를 확인합니다. 먼저 Eye Opening(E) 반응을 확인합니다. 눈을 감고 있다가, 질문을 하면 눈을 뜨고 있습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C040",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "C040": {
       "identifier": "C040",
@@ -656,7 +676,8 @@
           "nextNodeIdentifier": "N039"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N038_retry_b": {
       "identifier": "N038_retry_b",
@@ -665,7 +686,8 @@
       "dialogueContent": "오답입니다. 현재 눈을 감고 있다가, 질문을 하면 눈을 뜨고 있습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C040",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N039": {
       "identifier": "N039",
@@ -674,7 +696,8 @@
       "dialogueContent": "[관찰] 다음은 Verbal Response(V)입니다. 지금 시간대에 대해 질문하자 \"어... 그... 퇴근길이었던거 같은데.\"라고 답했습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C041",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "C041": {
       "identifier": "C041",
@@ -704,7 +727,8 @@
           "nextNodeIdentifier": "N040"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N039_retry_c": {
       "identifier": "N039_retry_c",
@@ -713,7 +737,8 @@
       "dialogueContent": "오답입니다. 현재 환자는 시간대를 인지하지 못하며 혼란스러워하는 상태입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C041",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N040": {
       "identifier": "N040",
@@ -722,7 +747,8 @@
       "dialogueContent": "[관찰] 마지막으로 Motor Response(M)입니다. 움직임에 대한 명령에 잘 수행합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C042",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "C042": {
       "identifier": "C042",
@@ -756,7 +782,8 @@
           "nextNodeIdentifier": "N041"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N040_retry_d": {
       "identifier": "N040_retry_d",
@@ -765,7 +792,8 @@
       "dialogueContent": "오답입니다. 현재 움직임에 대한 명령에 잘 수행하고 있습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C042",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N041": {
       "identifier": "N041",
@@ -774,7 +802,8 @@
       "dialogueContent": "GCS 측정 완료. E3 / V4 / M6 = 총 13점 (Drowsy/Lethargy) 입니다. 근력에 대한 추가 사정을 실시합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "N042",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "N042": {
       "identifier": "N042",
@@ -783,7 +812,8 @@
       "dialogueContent": "GCS의 M(Motor Response) 사정 중 왼쪽 다리가 오른쪽 다리의 정상 근력보다 약하고, 저항에 이기지 못하고 있습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C043",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "C043": {
       "identifier": "C043",
@@ -817,7 +847,8 @@
           "nextNodeIdentifier": "D040"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N042_retry_e": {
       "identifier": "N042_retry_e",
@@ -826,7 +857,8 @@
       "dialogueContent": "오답입니다. 현재 중력에는 저항 가능하나, 간호사가 저항을 가했을 때 이겨내지 못하는 상태입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C043",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "D040": {
       "identifier": "D040",
@@ -834,7 +866,8 @@
       "speakerName": "간호사 A",
       "dialogueContent": "현재 시나리오 B 환자의 GCS는 13점, 근력(Motor Grade)은 우측 5점, 좌측 3점입니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q033_1"
+      "nextIdentifier": "Q033_1",
+      "playTTS": true
     },
     "Q033_1": {
       "identifier": "Q033_1",
@@ -853,7 +886,8 @@
       "dialogueContent": "환자의 활력징후를 측정합니다. 활력징후 측정도구, 전극, 전극 케이블을 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q034",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "Q034": {
       "identifier": "Q034",
@@ -905,7 +939,8 @@
       "dialogueContent": "전극을 선택하여 환자의 가슴에 부착하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V043",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V043": {
       "identifier": "V043",
@@ -935,7 +970,8 @@
       "dialogueContent": "전극 케이블을 클릭해 선택하고, 환자와 모니터를 각각 클릭해 연결하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V044",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V044": {
       "identifier": "V044",
@@ -965,7 +1001,8 @@
       "dialogueContent": "활력징후 측정도구를 선택한 뒤, 환자를 클릭하면 활력징후가 측정됩니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V045",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V045": {
       "identifier": "V045",
@@ -1002,7 +1039,8 @@
       "dialogueContent": "혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.3도, SpO2 93% 입니다. 확인 후 모니터 창을 닫으십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V046",
-      "autoAdvanceSeconds": 6.0
+      "autoAdvanceSeconds": 6.0,
+      "playTTS": true
     },
     "V046": {
       "identifier": "V046",
@@ -1041,7 +1079,8 @@
       "speakerName": "시스템",
       "dialogueContent": "B 환자의 의식상태는 GCS 13점, 근력 우측 5점/좌측 3점이며, 활력징후는 혈압 140/86, 맥박 120, 호흡수 24, 체온 37.3, SpO2 93% 입니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D042"
+      "nextIdentifier": "D042",
+      "playTTS": true
     },
     "D042": {
       "identifier": "D042",
@@ -1049,7 +1088,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "간호사 A 선생님, 펜라이트로 동공반사 확인해주시고 생리식염수 1L로 IV라인 확보해주세요. 간호사 C 선생님, 산소포화도가 조금 낮으니 비강캐뉼라로 3L 주시고 지혈도 해주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "P011"
+      "nextIdentifier": "P011",
+      "playTTS": true
     },
     "P011": {
       "identifier": "P011",
@@ -1086,7 +1126,8 @@
       "dialogueContent": "먼저 대광반사를 확인하겠습니다. 펜라이트를 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q035",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q035": {
       "identifier": "Q035",
@@ -1126,7 +1167,8 @@
       "dialogueContent": "펜라이트를 선택한 뒤, 환자의 얼굴을 클릭해 대광반사 확인을 시작합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V048",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V048": {
       "identifier": "V048",
@@ -1164,7 +1206,8 @@
       "speakerName": "간호사 A",
       "dialogueContent": "좌측 동공에 비해 우측 동공이 빛에 반응하지 않습니다. 추가 평가가 필요합니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N050"
+      "nextIdentifier": "N050",
+      "playTTS": true
     },
     "N050": {
       "identifier": "N050",
@@ -1173,7 +1216,8 @@
       "dialogueContent": "다음으로 IV 라인을 확보합니다. 환자의 우측 팔에 IV 라인을 확보해야 합니다. 20게이지 캐뉼라, 수액세트, 생리식염수 1L 수액백을 클릭해 획득하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V049",
-      "autoAdvanceSeconds": 6.0
+      "autoAdvanceSeconds": 6.0,
+      "playTTS": true
     },
     "V049": {
       "identifier": "V049",
@@ -1215,7 +1259,8 @@
       "dialogueContent": "20게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 우측 팔을 클릭해 정맥 라인을 확보하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V050",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V050": {
       "identifier": "V050",
@@ -1254,7 +1299,8 @@
       "dialogueContent": "준비된 생리식염수 1L 수액백을 클릭해 선택한 뒤, 우측 팔에 연결된 20G 캐뉼라를 클릭해 연결하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V051",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V051": {
       "identifier": "V051",
@@ -1290,7 +1336,8 @@
       "speakerName": "간호사 A",
       "dialogueContent": "정맥로가 확보되었습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D045"
+      "nextIdentifier": "D045",
+      "playTTS": true
     },
     "D045": {
       "identifier": "D045",
@@ -1298,7 +1345,8 @@
       "speakerName": "간호사 A",
       "dialogueContent": "환자의 우측 동공이 빛에 반응하지 않습니다. 추가 검사가 필요해 보입니다. IV 라인도 확보되었습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q035_1"
+      "nextIdentifier": "Q035_1",
+      "playTTS": true
     },
     "Q035_1": {
       "identifier": "Q035_1",
@@ -1317,7 +1365,8 @@
       "dialogueContent": "비강캐뉼라를 이용한 산소화를 먼저 실시합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "N053",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N053": {
       "identifier": "N053",
@@ -1326,7 +1375,8 @@
       "dialogueContent": "산소 유량계 습윤병과 1L 멸균증류수를 클릭해 획득하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q036",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q036": {
       "identifier": "Q036",
@@ -1383,7 +1433,8 @@
       "dialogueContent": "유량계를 습득하여 산소 유량계를 완성하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V053",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V053": {
       "identifier": "V053",
@@ -1424,7 +1475,8 @@
       "dialogueContent": "완성된 유량계를 클릭한 뒤, 흡인기 옆 벽면을 클릭해 설치하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V054",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V054": {
       "identifier": "V054",
@@ -1454,7 +1506,8 @@
       "dialogueContent": "비강캐뉼라를 클릭해 획득하고, 산소 유량계와 환자를 각각 클릭해 적용하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V055",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "V055": {
       "identifier": "V055",
@@ -1490,7 +1543,8 @@
       "dialogueContent": "산소 연결이 완료되었습니다. 유량계를 클릭해 투여 산소량을 결정합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C044",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "C044": {
       "identifier": "C044",
@@ -1516,7 +1570,8 @@
           "nextNodeIdentifier": "D046"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N057_retry": {
       "identifier": "N057_retry",
@@ -1525,7 +1580,8 @@
       "dialogueContent": "오답입니다. 처방은 3L 입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C044",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "D046": {
       "identifier": "D046",
@@ -1533,7 +1589,8 @@
       "speakerName": "간호사 C",
       "dialogueContent": "산소 투여가 완료되었습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q036_1"
+      "nextIdentifier": "Q036_1",
+      "playTTS": true
     },
     "Q036_1": {
       "identifier": "Q036_1",
@@ -1552,7 +1609,8 @@
       "dialogueContent": "지혈을 실시합니다. 멸균장갑과 거즈, 플라스터를 클릭해 획득하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q037",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q037": {
       "identifier": "Q037",
@@ -1604,7 +1662,8 @@
       "dialogueContent": "멸균장갑을 [우클릭]해 착용하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V057",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V057": {
       "identifier": "V057",
@@ -1634,7 +1693,8 @@
       "dialogueContent": "거즈를 클릭해 선택한 뒤, 환자에게 적용하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V058",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V058": {
       "identifier": "V058",
@@ -1673,7 +1733,8 @@
       "dialogueContent": "압박을 가해 지혈하고 있습니다. 플라스터로 거즈를 고정합니다. 플라스터를 클릭해 선택한 뒤, 거즈를 클릭해 고정하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V059",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "V059": {
       "identifier": "V059",
@@ -1716,7 +1777,8 @@
       "speakerName": "간호사 C",
       "dialogueContent": "지혈 중입니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D048"
+      "nextIdentifier": "D048",
+      "playTTS": true
     },
     "D048": {
       "identifier": "D048",
@@ -1724,7 +1786,8 @@
       "speakerName": "간호사 C",
       "dialogueContent": "산소 적용 및 지혈이 완료되었습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q037_1"
+      "nextIdentifier": "Q037_1",
+      "playTTS": true
     },
     "Q037_1": {
       "identifier": "Q037_1",
@@ -1743,7 +1806,8 @@
       "dialogueContent": "시나리오 B 환자에 대한 간호 중재가 완료되었습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "CC_A_C_patientB_complete",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V040_B": {
       "identifier": "V040_B",
@@ -1801,7 +1865,8 @@
       "dialogueContent": "처치 구역에 도착했습니다. 즉시 의식상태 사정 및 활력징후 사정을 시작하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "P012",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "P012": {
       "identifier": "P012",
@@ -1838,7 +1903,8 @@
       "dialogueContent": "환자를 클릭하여 환자의 의식상태를 사정하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q038",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q038": {
       "identifier": "Q038",
@@ -1880,7 +1946,8 @@
       "dialogueContent": "환자의 의식 수준(AVPU)를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "N066",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "N066": {
       "identifier": "N066",
@@ -1889,7 +1956,8 @@
       "dialogueContent": "[관찰] 환자에게 질문했을 때, 무슨 일이 있었는지 기억하지 못하고, 말의 반응이 조금 느립니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C045",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "C045": {
       "identifier": "C045",
@@ -1915,7 +1983,8 @@
           "nextNodeIdentifier": "N067"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N066_retry_a": {
       "identifier": "N066_retry_a",
@@ -1924,7 +1993,8 @@
       "dialogueContent": "오답입니다. 질문에 대답을 하지만 정확한 답변을 하지 못하므로, V(Verbal Response)가 적절합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C045",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N067": {
       "identifier": "N067",
@@ -1933,7 +2003,8 @@
       "dialogueContent": "[관찰] 추가 사정으로 GCS를 확인합니다. 먼저 Eye Opening(E) 반응을 확인합니다. 눈을 감고 있다가, 질문을 하면 눈을 뜨고 있습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C046",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "C046": {
       "identifier": "C046",
@@ -1959,7 +2030,8 @@
           "nextNodeIdentifier": "N068"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N067_retry_b": {
       "identifier": "N067_retry_b",
@@ -1968,7 +2040,8 @@
       "dialogueContent": "오답입니다. 현재 눈을 감고 있다가, 질문을 하면 눈을 뜨고 있습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C046",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N068": {
       "identifier": "N068",
@@ -1977,7 +2050,8 @@
       "dialogueContent": "[관찰] 다음은 Verbal Response(V)입니다. 지금 시간대에 대해 질문하자 \"어... 그... 퇴근길이었던거 같은데.\"라고 답했습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C047",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "C047": {
       "identifier": "C047",
@@ -2007,7 +2081,8 @@
           "nextNodeIdentifier": "N069"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N068_retry_c": {
       "identifier": "N068_retry_c",
@@ -2016,7 +2091,8 @@
       "dialogueContent": "오답입니다. 현재 환자는 시간대를 인지하지 못하며 혼란스러워하는 상태입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C047",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N069": {
       "identifier": "N069",
@@ -2025,7 +2101,8 @@
       "dialogueContent": "[관찰] 마지막으로 Motor Response(M)입니다. 움직임에 대한 명령에 잘 수행합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C048",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "C048": {
       "identifier": "C048",
@@ -2059,7 +2136,8 @@
           "nextNodeIdentifier": "N070"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N069_retry_d": {
       "identifier": "N069_retry_d",
@@ -2068,7 +2146,8 @@
       "dialogueContent": "오답입니다. 현재 움직임에 대한 명령에 잘 수행하고 있습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C048",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N070": {
       "identifier": "N070",
@@ -2077,7 +2156,8 @@
       "dialogueContent": "GCS 측정 완료. E3 / V4 / M6 = 총 13점 (Drowsy/Lethargy) 입니다. 근력에 대한 추가 사정을 실시합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "N071",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "N071": {
       "identifier": "N071",
@@ -2086,7 +2166,8 @@
       "dialogueContent": "GCS의 M(Motor Response) 사정 중 오른쪽 다리가 왼쪽 다리의 정상 근력보다 약하고, 간호사가 가하는 저항에 이기지 못하고 있습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C049",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "C049": {
       "identifier": "C049",
@@ -2120,7 +2201,8 @@
           "nextNodeIdentifier": "D050"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N071_retry_e": {
       "identifier": "N071_retry_e",
@@ -2129,7 +2211,8 @@
       "dialogueContent": "오답입니다. 현재 중력에는 저항 가능하나, 간호사가 저항을 가했을 때 이겨내지 못하는 상태입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C049",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "D050": {
       "identifier": "D050",
@@ -2137,7 +2220,8 @@
       "speakerName": "간호사 B",
       "dialogueContent": "현재 시나리오 C 환자의 GCS는 13점, 근력(Motor Grade)은 좌측 5점, 우측 3점입니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q038_1"
+      "nextIdentifier": "Q038_1",
+      "playTTS": true
     },
     "Q038_1": {
       "identifier": "Q038_1",
@@ -2156,7 +2240,8 @@
       "dialogueContent": "환자의 활력징후를 측정합니다. 활력징후 측정도구, 전극, 전극 케이블을 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q039",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "Q039": {
       "identifier": "Q039",
@@ -2208,7 +2293,8 @@
       "dialogueContent": "전극을 선택하여 환자의 가슴에 부착하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V062",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V062": {
       "identifier": "V062",
@@ -2238,7 +2324,8 @@
       "dialogueContent": "전극 케이블을 클릭해 선택하고, 환자와 모니터를 각각 클릭해 연결하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V063",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V063": {
       "identifier": "V063",
@@ -2268,7 +2355,8 @@
       "dialogueContent": "활력징후 측정도구를 선택한 뒤, 환자를 클릭하면 활력징후가 측정됩니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V064",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V064": {
       "identifier": "V064",
@@ -2305,7 +2393,8 @@
       "dialogueContent": "혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.3도, SpO2 93% 입니다. 확인 후 모니터 창을 닫으십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V065",
-      "autoAdvanceSeconds": 6.0
+      "autoAdvanceSeconds": 6.0,
+      "playTTS": true
     },
     "V065": {
       "identifier": "V065",
@@ -2344,7 +2433,8 @@
       "speakerName": "시스템",
       "dialogueContent": "C 환자의 의식상태는 GCS 13점, 근력 좌측 5점/우측 3점이며, 활력징후는 혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.3도, SpO2 93% 입니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D051"
+      "nextIdentifier": "D051",
+      "playTTS": true
     },
     "D051": {
       "identifier": "D051",
@@ -2352,7 +2442,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "간호사 B 선생님, 펜라이트로 동공반사 확인해주시고 생리식염수 1L로 IV라인 확보해주세요. 간호사 D 선생님, 산소포화도가 조금 낮으니 비강캐뉼라로 3L 주시고 지혈도 해주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "P013"
+      "nextIdentifier": "P013",
+      "playTTS": true
     },
     "P013": {
       "identifier": "P013",
@@ -2389,7 +2480,8 @@
       "dialogueContent": "먼저 대광반사를 확인하겠습니다. 펜라이트를 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q040",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q040": {
       "identifier": "Q040",
@@ -2429,7 +2521,8 @@
       "dialogueContent": "펜라이트를 선택한 뒤, 환자의 얼굴을 클릭해 대광반사 확인을 시작합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V067",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V067": {
       "identifier": "V067",
@@ -2465,7 +2558,8 @@
       "speakerName": "간호사 B",
       "dialogueContent": "우측 동공에 비해 좌측 동공이 빛에 반응하지 않습니다. 추가 평가가 필요합니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N079"
+      "nextIdentifier": "N079",
+      "playTTS": true
     },
     "N079": {
       "identifier": "N079",
@@ -2474,7 +2568,8 @@
       "dialogueContent": "다음으로 IV 라인을 확보합니다. 환자의 좌측 팔에 IV 라인을 확보해야 합니다. 20게이지 캐뉼라, 수액세트, 생리식염수 1L 수액백을 클릭해 획득하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V068",
-      "autoAdvanceSeconds": 6.0
+      "autoAdvanceSeconds": 6.0,
+      "playTTS": true
     },
     "V068": {
       "identifier": "V068",
@@ -2516,7 +2611,8 @@
       "dialogueContent": "20게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 좌측 팔을 클릭해 정맥 라인을 확보하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V069",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V069": {
       "identifier": "V069",
@@ -2555,7 +2651,8 @@
       "dialogueContent": "준비된 생리식염수 1L 수액백을 클릭해 선택한 뒤, 좌측 팔에 연결된 20G 캐뉼라를 클릭해 연결하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V070",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V070": {
       "identifier": "V070",
@@ -2591,7 +2688,8 @@
       "speakerName": "간호사 B",
       "dialogueContent": "정맥로가 확보되었습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D054"
+      "nextIdentifier": "D054",
+      "playTTS": true
     },
     "D054": {
       "identifier": "D054",
@@ -2599,7 +2697,8 @@
       "speakerName": "간호사 B",
       "dialogueContent": "환자의 좌측 동공이 빛에 반응하지 않습니다. 추가 검사가 필요해 보입니다. IV 라인도 확보되었습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q040_1"
+      "nextIdentifier": "Q040_1",
+      "playTTS": true
     },
     "Q040_1": {
       "identifier": "Q040_1",
@@ -2618,7 +2717,8 @@
       "dialogueContent": "비강캐뉼라를 이용한 산소화를 먼저 실시합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "N082",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N082": {
       "identifier": "N082",
@@ -2627,7 +2727,8 @@
       "dialogueContent": "산소 유량계 습윤병과 1L 멸균증류수를 클릭해 획득하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q041",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q041": {
       "identifier": "Q041",
@@ -2684,7 +2785,8 @@
       "dialogueContent": "유량계를 습득하여 산소 유량계를 완성하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V072",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V072": {
       "identifier": "V072",
@@ -2725,7 +2827,8 @@
       "dialogueContent": "완성된 유량계를 클릭한 뒤, 흡인기 옆 벽면을 클릭해 설치하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V073",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V073": {
       "identifier": "V073",
@@ -2755,7 +2858,8 @@
       "dialogueContent": "비강캐뉼라를 클릭해 획득하고, 산소 유량계와 환자를 각각 클릭해 적용하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V074",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "V074": {
       "identifier": "V074",
@@ -2791,7 +2895,8 @@
       "dialogueContent": "산소 연결이 완료되었습니다. 유량계를 클릭해 투여 산소량을 결정합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C050",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "C050": {
       "identifier": "C050",
@@ -2817,7 +2922,8 @@
           "nextNodeIdentifier": "D055"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N086_retry": {
       "identifier": "N086_retry",
@@ -2826,7 +2932,8 @@
       "dialogueContent": "오답입니다. 처방은 3L 입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C050",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "D055": {
       "identifier": "D055",
@@ -2834,7 +2941,8 @@
       "speakerName": "간호사 D",
       "dialogueContent": "산소 투여가 완료되었습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q041_1"
+      "nextIdentifier": "Q041_1",
+      "playTTS": true
     },
     "Q041_1": {
       "identifier": "Q041_1",
@@ -2853,7 +2961,8 @@
       "dialogueContent": "지혈을 실시합니다. 멸균장갑과 거즈, 플라스터를 클릭해 획득하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q042",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q042": {
       "identifier": "Q042",
@@ -2905,7 +3014,8 @@
       "dialogueContent": "멸균장갑을 [우클릭]해 착용하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V076",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V076": {
       "identifier": "V076",
@@ -2935,7 +3045,8 @@
       "dialogueContent": "거즈를 클릭해 선택한 뒤, 환자에게 적용하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V077",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V077": {
       "identifier": "V077",
@@ -2972,7 +3083,8 @@
       "dialogueContent": "압박을 가해 지혈하고 있습니다. 플라스터로 거즈를 고정합니다. 플라스터를 클릭해 선택한 뒤, 거즈를 클릭해 고정하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V078",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "V078": {
       "identifier": "V078",
@@ -3015,7 +3127,8 @@
       "speakerName": "간호사 D",
       "dialogueContent": "지혈 중입니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D057"
+      "nextIdentifier": "D057",
+      "playTTS": true
     },
     "D057": {
       "identifier": "D057",
@@ -3023,7 +3136,8 @@
       "speakerName": "간호사 D",
       "dialogueContent": "산소 적용 및 지혈이 완료되었습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q042_1"
+      "nextIdentifier": "Q042_1",
+      "playTTS": true
     },
     "Q042_1": {
       "identifier": "Q042_1",
@@ -3042,7 +3156,8 @@
       "dialogueContent": "시나리오 C 환자에 대한 간호 중재가 완료되었습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "CC_B_D_patientC_complete",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "D058": {
       "identifier": "D058",
@@ -3050,7 +3165,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "기전과 사정 결과를 보니 뇌손상이 의심됩니다. 활력징후는 비교적 안정되어 있으니 지금 Brain CT 찍겠습니다. 지금 환자를 CT실로 이동시켜주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "E057"
+      "nextIdentifier": "E057",
+      "playTTS": true
     },
     "E057": {
       "identifier": "E057",
@@ -3066,7 +3182,8 @@
       "dialogueContent": "시나리오 B, C 환자 대응 종료. 모든 시나리오를 수행하였습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": null,
-      "autoAdvanceSeconds": 10.0
+      "autoAdvanceSeconds": 10.0,
+      "playTTS": true
     }
   }
 }

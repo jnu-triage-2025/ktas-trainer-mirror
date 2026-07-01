@@ -13,5 +13,12 @@ namespace MultiplayerInfrastructure.Scenario
     public string PortraitSpriteIdentifier { get; set; }
 
     public List<ScenarioChoiceOption> Options { get; set; }
+
+    /// <summary>
+    /// true이면 <see cref="DialogueContent"/> 를 표시할 때 TTS로 함께 재생한다.
+    /// 변수를 포함하지 않는 콘텐츠는 에디터에서 사전 합성(bake)될 수 있으며,
+    /// bake되지 않은 경우 런타임에 즉석으로 합성해 재생한다.
+    /// </summary>
+    public bool PlayTTS { get; set; }
   }
 }

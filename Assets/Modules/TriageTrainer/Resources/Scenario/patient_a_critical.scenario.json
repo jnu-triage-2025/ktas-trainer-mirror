@@ -36,7 +36,8 @@
       "speakerName": "시스템",
       "dialogueContent": "환자 A를 처치실로 이동해야 합니다. 플레이어 A, B, C, D는 각각 환자 침대의 손잡이를 클릭하여 이동을 준비하십시오.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q006"
+      "nextIdentifier": "Q006",
+      "playTTS": true
     },
     "Q006": {
       "identifier": "Q006",
@@ -201,7 +202,8 @@
       "speakerName": "시스템",
       "dialogueContent": "활력징후 측정, AVPU 및 GCS 측정, 경추 고정 및 흡인을 시작합니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "P003"
+      "nextIdentifier": "P003",
+      "playTTS": true
     },
     "P003": {
       "identifier": "P003",
@@ -247,7 +249,8 @@
       "dialogueContent": "환자의 활력징후를 측정합니다. 활력징후 측정도구를 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q007",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "Q007": {
       "identifier": "Q007",
@@ -289,7 +292,8 @@
       "dialogueContent": "활력징후 측정도구를 선택한 뒤, 환자를 클릭하면 활력징후가 측정됩니다. 활력징후가 모니터에도 출력됩니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V011_1",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V011_1": {
       "identifier": "V011_1",
@@ -325,7 +329,8 @@
       "speakerName": "간호사 B",
       "dialogueContent": "환자 활력징후 출력됩니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N005_4"
+      "nextIdentifier": "N005_4",
+      "playTTS": true
     },
     "N005_4": {
       "identifier": "N005_4",
@@ -334,7 +339,8 @@
       "dialogueContent": "혈압 70/40mmHg, 맥박 140회/분 - 약하고 빠름, 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q007_1",
-      "autoAdvanceSeconds": 8.0
+      "autoAdvanceSeconds": 8.0,
+      "playTTS": true
     },
     "Q007_1": {
       "identifier": "Q007_1",
@@ -353,7 +359,8 @@
       "dialogueContent": "환자를 클릭해 환자의 의식 상태를 사정하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q008",
-      "autoAdvanceSeconds": 3.0
+      "autoAdvanceSeconds": 3.0,
+      "playTTS": true
     },
     "Q008": {
       "identifier": "Q008",
@@ -395,7 +402,8 @@
       "dialogueContent": "환자의 의식 상태(AVPU)를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "N006_2",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "N006_2": {
       "identifier": "N006_2",
@@ -404,7 +412,8 @@
       "dialogueContent": "[관찰] 환자를 불렀을 때 응답이 없고, 환자의 옆구리를 꼬집었을 때 불편해하며 피하려 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C004",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "C004": {
       "identifier": "C004",
@@ -430,7 +439,8 @@
           "nextNodeIdentifier": "N006_retry_a"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N006_retry_a": {
       "identifier": "N006_retry_a",
@@ -439,7 +449,8 @@
       "dialogueContent": "오답입니다. 다른 자극에는 반응이 없다가, 통증에 반응을 하고 있습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C004",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N006_3": {
       "identifier": "N006_3",
@@ -448,7 +459,8 @@
       "dialogueContent": "[관찰] 추가 사정으로 GCS를 확인합니다. 먼저 Eye Opening(E) 반응을 확인합니다. 옆구리를 꼬집자 잠시 눈을 떴다가 다시 감습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C005",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "C005": {
       "identifier": "C005",
@@ -474,7 +486,8 @@
           "nextNodeIdentifier": "N006_retry_b"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N006_retry_b": {
       "identifier": "N006_retry_b",
@@ -483,7 +496,8 @@
       "dialogueContent": "오답입니다. 통증 자극에만 반응했음을 유의하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C005",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N006_4": {
       "identifier": "N006_4",
@@ -492,7 +506,8 @@
       "dialogueContent": "[관찰] 다음은 Verbal Response(V)입니다. \"여기가 어디예요?\"라고 묻자, 환자는 이해할 수 없는 신음소리만 내고 있습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C006",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "C006": {
       "identifier": "C006",
@@ -522,7 +537,8 @@
           "nextNodeIdentifier": "N006_retry_c"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N006_retry_c": {
       "identifier": "N006_retry_c",
@@ -531,7 +547,8 @@
       "dialogueContent": "오답입니다. 현재 환자는 알아들을 수 없는 소리만 내고 있습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C006",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N006_5": {
       "identifier": "N006_5",
@@ -540,7 +557,8 @@
       "dialogueContent": "[관찰] 마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 팔을 재빨리 굽혀 자극을 피합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C007",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "C007": {
       "identifier": "C007",
@@ -574,7 +592,8 @@
           "nextNodeIdentifier": "N006_retry_d"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N006_retry_d": {
       "identifier": "N006_retry_d",
@@ -583,7 +602,8 @@
       "dialogueContent": "오답입니다. 현재 통증에 회피하고 있습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C007",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N006_6": {
       "identifier": "N006_6",
@@ -592,7 +612,8 @@
       "dialogueContent": "GCS 측정 완료. E2 / V2 / M4 = 총 8점 (Stupor) 입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "D008",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "D008": {
       "identifier": "D008",
@@ -600,7 +621,8 @@
       "speakerName": "간호사 C",
       "dialogueContent": "AVPU 중 P이며, 추가 사정한 GCS 결과 8점 확인했습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q008_1"
+      "nextIdentifier": "Q008_1",
+      "playTTS": true
     },
     "Q008_1": {
       "identifier": "Q008_1",
@@ -619,7 +641,8 @@
       "dialogueContent": "기도 확보를 위해 환자의 경추를 고정하고 구강 석션을 진행합니다. 경추고정기, 흡인기, 석션 라인, 앙커 팁을 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q009",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "Q009": {
       "identifier": "Q009",
@@ -702,7 +725,8 @@
       "dialogueContent": "경추 고정기를 환자에게 적용하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V013_1",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V013_1": {
       "identifier": "V013_1",
@@ -734,7 +758,8 @@
       "dialogueContent": "흡인기를 벽에 설치하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V013_2",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V013_2": {
       "identifier": "V013_2",
@@ -764,7 +789,8 @@
       "dialogueContent": "준비된 앙커 팁을 흡인기에 연결하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V013_3",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V013_3": {
       "identifier": "V013_3",
@@ -794,7 +820,8 @@
       "dialogueContent": "흡인기를 클릭한 뒤 환자를 클릭해 구강 흡인을 진행하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V013_4",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V013_4": {
       "identifier": "V013_4",
@@ -825,7 +852,8 @@
       "speakerName": "간호사 D",
       "dialogueContent": "경추 고정 및 구강 흡인 완료했습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q009_1"
+      "nextIdentifier": "Q009_1",
+      "playTTS": true
     },
     "Q009_1": {
       "identifier": "Q009_1",
@@ -843,7 +871,8 @@
       "speakerName": "시스템",
       "dialogueContent": "환자의 의식상태는 GCS 8점, 활력징후는 혈압 70/40mmHg, 맥박수 140회/분 (빠르고 약함), 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "E009"
+      "nextIdentifier": "E009",
+      "playTTS": true
     },
     "E009": {
       "identifier": "E009",
@@ -858,7 +887,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "기도 확보를 위해 intubation을 시행하겠습니다. 간호사 B 선생님은 삽관 보조해주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D012"
+      "nextIdentifier": "D012",
+      "playTTS": true
     },
     "D012": {
       "identifier": "D012",
@@ -866,7 +896,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "그동안 간호사 C 선생님은 멸균장갑을 착용하고 거즈로 출혈부위를 지혈해주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D013"
+      "nextIdentifier": "D013",
+      "playTTS": true
     },
     "D013": {
       "identifier": "D013",
@@ -874,7 +905,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "간호사 D 선생님은 수액 투여를 위해 양팔에 IV 라인 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션 달겠습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "P004"
+      "nextIdentifier": "P004",
+      "playTTS": true
     },
     "P004": {
       "identifier": "P004",
@@ -922,7 +954,8 @@
       "dialogueContent": "기관내삽관에 필요한 물품을 준비합니다. 좌측 체크리스트 창을 참고하여 필요한 물품을 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q010",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "Q010": {
       "identifier": "Q010",
@@ -1028,7 +1061,8 @@
       "dialogueContent": "완성된 후두경을 의사에게 전달하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V014_1",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V014_1": {
       "identifier": "V014_1",
@@ -1058,7 +1092,8 @@
       "dialogueContent": "완성된 기관내관을 의사에게 전달하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V014_2",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V014_2": {
       "identifier": "V014_2",
@@ -1095,7 +1130,8 @@
       "dialogueContent": "환자 구강에 삽입된 기관내관을 클릭해 스타일렛을 제거하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V014_3",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V014_3": {
       "identifier": "V014_3",
@@ -1132,7 +1168,8 @@
       "dialogueContent": "5cc 주사기를 의사에게 전달하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V014_4",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V014_4": {
       "identifier": "V014_4",
@@ -1162,7 +1199,8 @@
       "dialogueContent": "플라스터를 클릭해 선택한 뒤, 삽입된 기관내관을 고정하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V014_5",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V014_5": {
       "identifier": "V014_5",
@@ -1210,7 +1248,8 @@
       "speakerName": "간호사 B",
       "dialogueContent": "삽입된 깊이 23cm, 기관내관 고정되었습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D015"
+      "nextIdentifier": "D015",
+      "playTTS": true
     },
     "D015": {
       "identifier": "D015",
@@ -1218,7 +1257,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "삽관이 끝났고, 자발호흡이 있으니 간호사 A 선생님이 T-piece 연결하고 산소 10L 주면서 산소포화도 모니터링 해주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N009"
+      "nextIdentifier": "N009",
+      "playTTS": true
     },
     "N009": {
       "identifier": "N009",
@@ -1227,7 +1267,8 @@
       "dialogueContent": "산소 유량계 습윤병과 1L 멸균증류수를 클릭해 획득하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q011",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q011": {
       "identifier": "Q011",
@@ -1284,7 +1325,8 @@
       "dialogueContent": "유량계를 습득하여 산소 유량계를 완성합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V015_1",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V015_1": {
       "identifier": "V015_1",
@@ -1325,7 +1367,8 @@
       "dialogueContent": "완성된 유량계를 클릭한 뒤, 흡인기 옆 벽면을 클릭해 설치하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V015_2",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V015_2": {
       "identifier": "V015_2",
@@ -1355,7 +1398,8 @@
       "dialogueContent": "산소줄과 T-piece를 각각 클릭해 획득하고, 산소 유량계와 환자에게 삽입된 기관내관을 각각 클릭해 연결하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V015_3",
-      "autoAdvanceSeconds": 6.0
+      "autoAdvanceSeconds": 6.0,
+      "playTTS": true
     },
     "V015_3": {
       "identifier": "V015_3",
@@ -1404,7 +1448,8 @@
       "dialogueContent": "산소 연결이 완료되었습니다. 유량계를 클릭해 투여 산소량을 결정합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V015_4",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V015_4": {
       "identifier": "V015_4",
@@ -1451,7 +1496,8 @@
           "nextNodeIdentifier": "N009_retry"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N009_retry": {
       "identifier": "N009_retry",
@@ -1460,7 +1506,8 @@
       "dialogueContent": "오답입니다. 처방은 10L 입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C008",
-      "autoAdvanceSeconds": 3.0
+      "autoAdvanceSeconds": 3.0,
+      "playTTS": true
     },
     "D016": {
       "identifier": "D016",
@@ -1468,7 +1515,8 @@
       "speakerName": "간호사 A",
       "dialogueContent": "산소 투여 시작했습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q011_1"
+      "nextIdentifier": "Q011_1",
+      "playTTS": true
     },
     "Q011_1": {
       "identifier": "Q011_1",
@@ -1487,7 +1535,8 @@
       "dialogueContent": "지혈을 실시합니다. 멸균장갑과 거즈, 플라스터를 클릭해 획득하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q012",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q012": {
       "identifier": "Q012",
@@ -1539,7 +1588,8 @@
       "dialogueContent": "멸균장갑을 마우스 우클릭으로 착용하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V016_1",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V016_1": {
       "identifier": "V016_1",
@@ -1569,7 +1619,8 @@
       "dialogueContent": "거즈를 클릭해 선택한 뒤, 환자에게 적용하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V016_2",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V016_2": {
       "identifier": "V016_2",
@@ -1608,7 +1659,8 @@
       "dialogueContent": "압박을 가해 지혈하고 있습니다. 플라스터를 클릭해 선택한 뒤, 거즈를 클릭해 고정하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V016_3",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "V016_3": {
       "identifier": "V016_3",
@@ -1651,7 +1703,8 @@
       "speakerName": "간호사 C",
       "dialogueContent": "지혈 중입니다. 거즈 고정했습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q012_1"
+      "nextIdentifier": "Q012_1",
+      "playTTS": true
     },
     "Q012_1": {
       "identifier": "Q012_1",
@@ -1670,7 +1723,8 @@
       "dialogueContent": "환자의 좌측과 우측 팔에 IV 라인을 확보해야 합니다. 18게이지 2개, 준비된 생리식염수 1L 수액백, 준비된 플라즈마 솔루션 1L 수액백을 클릭해 획득하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q013",
-      "autoAdvanceSeconds": 6.0
+      "autoAdvanceSeconds": 6.0,
+      "playTTS": true
     },
     "Q013": {
       "identifier": "Q013",
@@ -1736,7 +1790,8 @@
       "dialogueContent": "18게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 좌측 팔을 클릭해 정맥 라인을 확보하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V017_1",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V017_1": {
       "identifier": "V017_1",
@@ -1775,7 +1830,8 @@
       "dialogueContent": "준비된 생리식염수 1L 수액백을 클릭해 선택한 뒤, 좌측 팔에 연결된 18G 캐뉼라를 클릭해 연결하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V017_2",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V017_2": {
       "identifier": "V017_2",
@@ -1812,7 +1868,8 @@
       "dialogueContent": "한쪽 정맥로가 확보되어, 반대쪽 팔에도 자동으로 18G 캐뉼라 및 플라즈마 솔루션 연결이 진행됩니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "E021",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "E021": {
       "identifier": "E021",
@@ -1834,7 +1891,8 @@
       "speakerName": "간호사 D",
       "dialogueContent": "양측 정맥로가 모두 확보되었습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q013_1"
+      "nextIdentifier": "Q013_1",
+      "playTTS": true
     },
     "Q013_1": {
       "identifier": "Q013_1",
@@ -1852,7 +1910,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "그래도 혈압이 잡히지 않네요. C-line 잡아서 수액을 빠르게 투여하겠습니다. 간호사 C 선생님, C-line set 건네주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N012"
+      "nextIdentifier": "N012",
+      "playTTS": true
     },
     "N012": {
       "identifier": "N012",
@@ -1861,7 +1920,8 @@
       "dialogueContent": "C-line set을 클릭해 획득하고, 해당 아이템을 의사에게 전달하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q014",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q014": {
       "identifier": "Q014",
@@ -1917,7 +1977,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "간호사 C 선생님, Level 1 rapid infuser에 플라즈마 솔루션과 혈액백 연결시켜주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N013"
+      "nextIdentifier": "N013",
+      "playTTS": true
     },
     "N013": {
       "identifier": "N013",
@@ -1926,7 +1987,8 @@
       "dialogueContent": "플라즈마 솔루션 1L 수액백과 혈액백을 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q015",
-      "autoAdvanceSeconds": 3.0
+      "autoAdvanceSeconds": 3.0,
+      "playTTS": true
     },
     "Q015": {
       "identifier": "Q015",
@@ -1972,7 +2034,8 @@
       "dialogueContent": "플라즈마 솔루션 1L 수액백을 클릭해 선택한 뒤, Level 1 rapid infuser와 연결하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V019_1",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V019_1": {
       "identifier": "V019_1",
@@ -2002,7 +2065,8 @@
       "dialogueContent": "혈액백을 클릭해 선택한 뒤, Level 1 rapid infuser와 연결하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V020",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V020": {
       "identifier": "V020",
@@ -2038,7 +2102,8 @@
       "speakerName": "간호사 C",
       "dialogueContent": "Level 1에 플라즈마 솔루션과 혈액백 연결 완료되었습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q015_1"
+      "nextIdentifier": "Q015_1",
+      "playTTS": true
     },
     "Q015_1": {
       "identifier": "Q015_1",
@@ -2056,7 +2121,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "그래도 혈압이 잘 안잡히네요...",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "E025"
+      "nextIdentifier": "E025",
+      "playTTS": true
     },
     "E025": {
       "identifier": "E025",
@@ -2071,7 +2137,8 @@
       "speakerName": "시스템",
       "dialogueContent": "심전도만 출력되고, 다른 활력징후가 출력되지 않습니다. 간호사 B 선생님, 환자 맥박 확인해주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N016"
+      "nextIdentifier": "N016",
+      "playTTS": true
     },
     "N016": {
       "identifier": "N016",
@@ -2080,7 +2147,8 @@
       "dialogueContent": "환자의 경동맥을 촉지해 맥박을 확인합니다. 목 부위를 클릭하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q018",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q018": {
       "identifier": "Q018",
@@ -2131,7 +2199,8 @@
       "speakerName": "간호사 B",
       "dialogueContent": "맥박 없습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D025"
+      "nextIdentifier": "D025",
+      "playTTS": true
     },
     "D025": {
       "identifier": "D025",
@@ -2139,7 +2208,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "PEA입니다. CPR 하겠습니다. 제가 팀 리더를 맡겠습니다. 간호사 A 선생님은 앰부백 짜주시고, 간호사 B 선생님은 가슴압박 해주세요. 간호사 C 선생님은 제세동기 연결해주시고, 간호사 D 선생님은 C-line으로 에피네프린 1mg 투여해주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "P005"
+      "nextIdentifier": "P005",
+      "playTTS": true
     },
     "P005": {
       "identifier": "P005",
@@ -2194,7 +2264,8 @@
       "dialogueContent": "앰부백과 산소 저장낭을 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q019",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q019": {
       "identifier": "Q019",
@@ -2240,7 +2311,8 @@
       "dialogueContent": "환자에게 연결된 T-piece를 클릭해 연결을 해제하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V023_1",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V023_1": {
       "identifier": "V023_1",
@@ -2270,7 +2342,8 @@
       "dialogueContent": "앰부백을 클릭해 선택한 뒤, 환자에게 삽입된 기관내관을 클릭해 연결하세요. 이후, 산소줄과 앰부백을 클릭해 연결합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V023_2",
-      "autoAdvanceSeconds": 6.0
+      "autoAdvanceSeconds": 6.0,
+      "playTTS": true
     },
     "V023_2": {
       "identifier": "V023_2",
@@ -2318,7 +2391,8 @@
           "nextNodeIdentifier": "S003"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "S003": {
       "identifier": "S003",
@@ -2334,7 +2408,8 @@
       "dialogueContent": "앰부백을 클릭해 산소 공급을 시작하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V023_4",
-      "autoAdvanceSeconds": 3.0
+      "autoAdvanceSeconds": 3.0,
+      "playTTS": true
     },
     "V023_4": {
       "identifier": "V023_4",
@@ -2387,7 +2462,8 @@
           "nextNodeIdentifier": "L002"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N017_retry_a": {
       "identifier": "N017_retry_a",
@@ -2396,7 +2472,8 @@
       "dialogueContent": "오답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C010",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "L002": {
       "identifier": "L002",
@@ -2425,7 +2502,8 @@
           "nextNodeIdentifier": "Q019_1"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N017_retry_b": {
       "identifier": "N017_retry_b",
@@ -2434,7 +2512,8 @@
       "dialogueContent": "오답입니다. 6초에 1번씩 눌러야 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C011",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q019_1": {
       "identifier": "Q019_1",
@@ -2453,7 +2532,8 @@
       "dialogueContent": "환자의 가슴을 클릭해 가슴압박을 시작하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q020",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q020": {
       "identifier": "Q020",
@@ -2522,7 +2602,8 @@
           "nextNodeIdentifier": "L004"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N018_retry_a": {
       "identifier": "N018_retry_a",
@@ -2531,7 +2612,8 @@
       "dialogueContent": "오답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C012",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "L004": {
       "identifier": "L004",
@@ -2556,7 +2638,8 @@
           "nextNodeIdentifier": "L005"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N018_retry_b": {
       "identifier": "N018_retry_b",
@@ -2565,7 +2648,8 @@
       "dialogueContent": "오답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C013",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "L005": {
       "identifier": "L005",
@@ -2594,7 +2678,8 @@
           "nextNodeIdentifier": "L006"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N018_retry_c": {
       "identifier": "N018_retry_c",
@@ -2603,7 +2688,8 @@
       "dialogueContent": "오답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C014",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "L006": {
       "identifier": "L006",
@@ -2632,7 +2718,8 @@
           "nextNodeIdentifier": "Q020_1"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N018_retry_d": {
       "identifier": "N018_retry_d",
@@ -2641,7 +2728,8 @@
       "dialogueContent": "오답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 혈액 순환이 가능합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C015",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q020_1": {
       "identifier": "Q020_1",
@@ -2660,7 +2748,8 @@
       "dialogueContent": "제세동 카트를 환자 옆으로 가져오세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q021",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q021": {
       "identifier": "Q021",
@@ -2700,7 +2789,8 @@
       "dialogueContent": "제세동 패드를 획득하고, 환자 흉부를 클릭해 부착하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V025_1",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V025_1": {
       "identifier": "V025_1",
@@ -2749,7 +2839,8 @@
       "speakerName": "간호사 C",
       "dialogueContent": "제세동기 준비가 완료되었습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "L007"
+      "nextIdentifier": "L007",
+      "playTTS": true
     },
     "L007": {
       "identifier": "L007",
@@ -2782,7 +2873,8 @@
           "nextNodeIdentifier": "L008"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N019_retry_a": {
       "identifier": "N019_retry_a",
@@ -2791,7 +2883,8 @@
       "dialogueContent": "오답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C016",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "L008": {
       "identifier": "L008",
@@ -2816,7 +2909,8 @@
           "nextNodeIdentifier": "L009"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N019_retry_b": {
       "identifier": "N019_retry_b",
@@ -2825,7 +2919,8 @@
       "dialogueContent": "오답입니다. 150~200J(줄)이 정답입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C016",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "L009": {
       "identifier": "L009",
@@ -2858,7 +2953,8 @@
           "nextNodeIdentifier": "Q021_1"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N019_retry_c": {
       "identifier": "N019_retry_c",
@@ -2867,7 +2963,8 @@
       "dialogueContent": "오답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C017",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q021_1": {
       "identifier": "Q021_1",
@@ -2886,7 +2983,8 @@
       "dialogueContent": "에피네프린 투여를 위한 준비를 합니다. 에피네프린 앰퓰과 5cc 주사기를 획득해 약물이 든 주사기를 완성하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q022",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "Q022": {
       "identifier": "Q022",
@@ -2943,7 +3041,8 @@
       "dialogueContent": "Push용 생리식염수를 준비합니다. 20cc 생리식염수와 20cc 주사기를 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V026_1",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V026_1": {
       "identifier": "V026_1",
@@ -2990,7 +3089,8 @@
       "dialogueContent": "준비된 에피네프린 1mg을 클릭해 선택한 뒤, 중심정맥관을 클릭해 투여하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V026_2",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V026_2": {
       "identifier": "V026_2",
@@ -3021,7 +3121,8 @@
       "speakerName": "간호사 D",
       "dialogueContent": "에피네프린 1mg 투여했습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N020_3"
+      "nextIdentifier": "N020_3",
+      "playTTS": true
     },
     "N020_3": {
       "identifier": "N020_3",
@@ -3030,7 +3131,8 @@
       "dialogueContent": "동일한 방법으로 준비된 생리식염수 20cc를 투여해 루멘 내 잔여 약물을 주입합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V026_3",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V026_3": {
       "identifier": "V026_3",
@@ -3059,7 +3161,8 @@
       "speakerName": "간호사 D",
       "dialogueContent": "생리식염수 20cc 투여했습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "L010"
+      "nextIdentifier": "L010",
+      "playTTS": true
     },
     "L010": {
       "identifier": "L010",
@@ -3092,7 +3195,8 @@
           "nextNodeIdentifier": "L011"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N020_retry_a": {
       "identifier": "N020_retry_a",
@@ -3101,7 +3205,8 @@
       "dialogueContent": "오답입니다. 에피네프린은 3~5분에 한 번 투여합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C019",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "L011": {
       "identifier": "L011",
@@ -3130,7 +3235,8 @@
           "nextNodeIdentifier": "Q022_1"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N020_retry_b": {
       "identifier": "N020_retry_b",
@@ -3139,7 +3245,8 @@
       "dialogueContent": "오답입니다. 심장에 빠르게 도달시키기 위해 생리식염수 주입 후 팔을 들어올려야 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C020",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q022_1": {
       "identifier": "Q022_1",
@@ -3157,7 +3264,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "2분 지났습니다. 리듬 확인하겠습니다. 모두 떨어져 주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "E031"
+      "nextIdentifier": "E031",
+      "playTTS": true
     },
     "E031": {
       "identifier": "E031",
@@ -3179,7 +3287,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "Asystole입니다. 가슴압박과 앰부배깅 하시던 간호사 A, B 선생님끼리 교대 후 계속 가슴압박 해주세요. 간호사 C, D 선생님께서도 교대해서 역할을 수행해 주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "P006"
+      "nextIdentifier": "P006",
+      "playTTS": true
     },
     "P006": {
       "identifier": "P006",
@@ -3234,7 +3343,8 @@
       "dialogueContent": "환자의 가슴을 클릭해 가슴압박을 시작하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q023",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q023": {
       "identifier": "Q023",
@@ -3301,7 +3411,8 @@
           "nextNodeIdentifier": "L013"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N021_retry_a": {
       "identifier": "N021_retry_a",
@@ -3310,7 +3421,8 @@
       "dialogueContent": "오답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C021",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "L013": {
       "identifier": "L013",
@@ -3335,7 +3447,8 @@
           "nextNodeIdentifier": "L014"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N021_retry_b": {
       "identifier": "N021_retry_b",
@@ -3344,7 +3457,8 @@
       "dialogueContent": "오답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C022",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "L014": {
       "identifier": "L014",
@@ -3373,7 +3487,8 @@
           "nextNodeIdentifier": "L015"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N021_retry_c": {
       "identifier": "N021_retry_c",
@@ -3382,7 +3497,8 @@
       "dialogueContent": "오답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C023",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "L015": {
       "identifier": "L015",
@@ -3411,7 +3527,8 @@
           "nextNodeIdentifier": "Q023_1"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N021_retry_d": {
       "identifier": "N021_retry_d",
@@ -3420,7 +3537,8 @@
       "dialogueContent": "오답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C024",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q023_1": {
       "identifier": "Q023_1",
@@ -3439,7 +3557,8 @@
       "dialogueContent": "앰부백을 클릭해 산소 공급을 시작하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q024",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q024": {
       "identifier": "Q024",
@@ -3502,7 +3621,8 @@
           "nextNodeIdentifier": "L017"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N022_retry_a": {
       "identifier": "N022_retry_a",
@@ -3511,7 +3631,8 @@
       "dialogueContent": "오답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C025",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "L017": {
       "identifier": "L017",
@@ -3540,7 +3661,8 @@
           "nextNodeIdentifier": "Q024_1"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N022_retry_b": {
       "identifier": "N022_retry_b",
@@ -3549,7 +3671,8 @@
       "dialogueContent": "오답입니다. 6초에 1번씩 눌러야 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C026",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q024_1": {
       "identifier": "Q024_1",
@@ -3568,7 +3691,8 @@
       "dialogueContent": "에피네프린 투여를 위한 준비를 합니다. 에피네프린 앰퓰과 5cc 주사기를 획득해 약물이 든 주사기를 완성하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q025",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "Q025": {
       "identifier": "Q025",
@@ -3625,7 +3749,8 @@
       "dialogueContent": "Push용 생리식염수를 준비합니다. 20cc 생리식염수와 20cc 주사기를 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V029_1",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V029_1": {
       "identifier": "V029_1",
@@ -3671,7 +3796,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "에피네프린 첫 투여 시점부터 4분 지났습니다. 간호사 C 선생님, 바로 에피네프린과 생리식염수 20cc 투여해주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N023_2"
+      "nextIdentifier": "N023_2",
+      "playTTS": true
     },
     "N023_2": {
       "identifier": "N023_2",
@@ -3680,7 +3806,8 @@
       "dialogueContent": "준비된 에피네프린 1mg을 클릭해 선택한 뒤, 중심정맥관을 클릭해 투여하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V029_2",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V029_2": {
       "identifier": "V029_2",
@@ -3709,7 +3836,8 @@
       "speakerName": "간호사 D",
       "dialogueContent": "에피네프린 1mg 투여했습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N023_3"
+      "nextIdentifier": "N023_3",
+      "playTTS": true
     },
     "N023_3": {
       "identifier": "N023_3",
@@ -3718,7 +3846,8 @@
       "dialogueContent": "동일한 방법으로 준비된 생리식염수 20cc를 투여해 루멘 내 잔여 약물을 주입합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "V029_3",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "V029_3": {
       "identifier": "V029_3",
@@ -3747,7 +3876,8 @@
       "speakerName": "간호사 D",
       "dialogueContent": "생리식염수 20cc 투여했습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "L018"
+      "nextIdentifier": "L018",
+      "playTTS": true
     },
     "L018": {
       "identifier": "L018",
@@ -3780,7 +3910,8 @@
           "nextNodeIdentifier": "L019"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N023_retry_a": {
       "identifier": "N023_retry_a",
@@ -3789,7 +3920,8 @@
       "dialogueContent": "오답입니다. 에피네프린은 3~5분에 한 번 투여합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C027",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "L019": {
       "identifier": "L019",
@@ -3818,7 +3950,8 @@
           "nextNodeIdentifier": "Q025_1"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N023_retry_b": {
       "identifier": "N023_retry_b",
@@ -3827,7 +3960,8 @@
       "dialogueContent": "오답입니다. 심장에 빠르게 도달시키기 위해 생리식염수 주입 후 팔을 들어올려야 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C028",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q025_1": {
       "identifier": "Q025_1",
@@ -3846,7 +3980,8 @@
       "dialogueContent": "제세동기를 클릭해 역할을 부여받으세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q026",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q026": {
       "identifier": "Q026",
@@ -3892,7 +4027,8 @@
       "speakerName": "간호사 D",
       "dialogueContent": "제세동기 준비가 완료되었습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "L020"
+      "nextIdentifier": "L020",
+      "playTTS": true
     },
     "L020": {
       "identifier": "L020",
@@ -3925,7 +4061,8 @@
           "nextNodeIdentifier": "L021"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N024_retry_a": {
       "identifier": "N024_retry_a",
@@ -3934,7 +4071,8 @@
       "dialogueContent": "오답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C029",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "L021": {
       "identifier": "L021",
@@ -3959,7 +4097,8 @@
           "nextNodeIdentifier": "L022"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N024_retry_b": {
       "identifier": "N024_retry_b",
@@ -3968,7 +4107,8 @@
       "dialogueContent": "오답입니다. 150~200J(줄)이 정답입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C030",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "L022": {
       "identifier": "L022",
@@ -4001,7 +4141,8 @@
           "nextNodeIdentifier": "Q026_1"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N024_retry_c": {
       "identifier": "N024_retry_c",
@@ -4010,7 +4151,8 @@
       "dialogueContent": "오답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C031",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q026_1": {
       "identifier": "Q026_1",
@@ -4028,7 +4170,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "2분 지났습니다. 리듬 확인하겠습니다. 모두 떨어져 주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "E035"
+      "nextIdentifier": "E035",
+      "playTTS": true
     },
     "E035": {
       "identifier": "E035",
@@ -4050,7 +4193,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "QRS 보입니다. 간호사 A 선생님, 환자 맥박 있는지 확인해주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N025"
+      "nextIdentifier": "N025",
+      "playTTS": true
     },
     "N025": {
       "identifier": "N025",
@@ -4059,7 +4203,8 @@
       "dialogueContent": "환자의 목을 클릭해서 경동맥을 촉지합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q027",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q027": {
       "identifier": "Q027",
@@ -4108,7 +4253,8 @@
       "speakerName": "간호사 A",
       "dialogueContent": "환자 맥박 느껴집니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D036"
+      "nextIdentifier": "D036",
+      "playTTS": true
     },
     "D036": {
       "identifier": "D036",
@@ -4116,7 +4262,8 @@
       "speakerName": "의사 NPC",
       "dialogueContent": "환자 ROSC 되었습니다. 제가 검사랑 협진 의뢰 할테니 간호사 D 선생님이 의식상태 확인해주세요. 간호사 B 선생님, 의복 제거해서 추가 손상 있는지 사정해주세요. 간호사 A 선생님께서는 다시 분류구역으로 이동해서 환자 분류해주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "P007"
+      "nextIdentifier": "P007",
+      "playTTS": true
     },
     "P007": {
       "identifier": "P007",
@@ -4162,7 +4309,8 @@
       "dialogueContent": "중증도 분류 구역으로 이동하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q028",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q028": {
       "identifier": "Q028",
@@ -4219,7 +4367,8 @@
       "dialogueContent": "가위를 클릭해 획득하고, 환자를 클릭해 의복을 제거하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q029",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q029": {
       "identifier": "Q029",
@@ -4274,7 +4423,8 @@
       "dialogueContent": "추가 외상은 확인되지 않습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q029_1",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q029_1": {
       "identifier": "Q029_1",
@@ -4293,7 +4443,8 @@
       "dialogueContent": "환자를 클릭해 환자의 의식 상태를 사정하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q030",
-      "autoAdvanceSeconds": 3.0
+      "autoAdvanceSeconds": 3.0,
+      "playTTS": true
     },
     "Q030": {
       "identifier": "Q030",
@@ -4333,7 +4484,8 @@
       "dialogueContent": "환자의 의식 상태를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "N028_2",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "N028_2": {
       "identifier": "N028_2",
@@ -4342,7 +4494,8 @@
       "dialogueContent": "환자를 불렀을 때 응답이 없고, 환자의 옆구리를 꼬집었을 때 불편해하며 피하려 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C032",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "C032": {
       "identifier": "C032",
@@ -4368,7 +4521,8 @@
           "nextNodeIdentifier": "N028_retry_a"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N028_retry_a": {
       "identifier": "N028_retry_a",
@@ -4377,7 +4531,8 @@
       "dialogueContent": "오답입니다. 다른 자극에는 반응이 없다가, 통증에 반응을 하고 있습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C032",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N028_3": {
       "identifier": "N028_3",
@@ -4386,7 +4541,8 @@
       "dialogueContent": "[관찰] 추가 사정으로 GCS를 확인합니다. 먼저 Eye Opening(E) 반응을 확인합니다. 옆구리를 꼬집자 잠시 눈을 떴다가 다시 감습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C033",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "C033": {
       "identifier": "C033",
@@ -4412,7 +4568,8 @@
           "nextNodeIdentifier": "N028_retry_b"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N028_retry_b": {
       "identifier": "N028_retry_b",
@@ -4421,7 +4578,8 @@
       "dialogueContent": "오답입니다. 통증 자극에만 반응했음을 유의하십시오.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C033",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N028_4": {
       "identifier": "N028_4",
@@ -4430,7 +4588,8 @@
       "dialogueContent": "[관찰] 다음은 Verbal Response(V)입니다. \"여기가 어디예요?\"라고 묻자, 환자는 이해할 수 없는 신음소리만 내고 있습니다. 현재 기관내삽관이 시행되어있는 상태입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C034",
-      "autoAdvanceSeconds": 6.0
+      "autoAdvanceSeconds": 6.0,
+      "playTTS": true
     },
     "C034": {
       "identifier": "C034",
@@ -4464,7 +4623,8 @@
           "nextNodeIdentifier": "N028_5"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N028_retry_c": {
       "identifier": "N028_retry_c",
@@ -4473,7 +4633,8 @@
       "dialogueContent": "오답입니다. 현재 환자는 알아들을 수 없는 소리만 내고 있으나, 기관삽관을 하는 경우 1점으로 처리(E 표기)합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C034",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N028_5": {
       "identifier": "N028_5",
@@ -4482,7 +4643,8 @@
       "dialogueContent": "[관찰] 마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 반대쪽 손으로 잡으려 합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C035",
-      "autoAdvanceSeconds": 5.0
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true
     },
     "C035": {
       "identifier": "C035",
@@ -4516,7 +4678,8 @@
           "nextNodeIdentifier": "N028_retry_d"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N028_retry_d": {
       "identifier": "N028_retry_d",
@@ -4525,7 +4688,8 @@
       "dialogueContent": "오답입니다. 통증 원인을 치우려고 손을 뻗고 있습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "C035",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "N028_6": {
       "identifier": "N028_6",
@@ -4534,7 +4698,8 @@
       "dialogueContent": "GCS 측정 완료. E2 / V(E) / M5 = 총 7T점 입니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "Q030_1",
-      "autoAdvanceSeconds": 4.0
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true
     },
     "Q030_1": {
       "identifier": "Q030_1",
@@ -4552,7 +4717,8 @@
       "speakerName": "시스템",
       "dialogueContent": "시나리오 A 환자 대응 종료. 흉부외과로 환자를 이관하였습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     }
   }
 }

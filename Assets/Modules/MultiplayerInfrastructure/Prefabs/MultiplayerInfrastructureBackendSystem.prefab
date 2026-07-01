@@ -35,6 +35,7 @@ Transform:
   - {fileID: 4449760152395672102}
   - {fileID: 4681593785427441821}
   - {fileID: 3087438686682236629}
+  - {fileID: 6305358650877280443}
   m_Father: {fileID: 6477868594539004900}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6316362055708797182
@@ -374,6 +375,68 @@ MonoBehaviour:
 Transform:
   m_CorrespondingSourceObject: {fileID: 6522312684999162493, guid: a10f2bcdfa46b4e619751a618250101e, type: 3}
   m_PrefabInstance: {fileID: 159623575257244002}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &1068049551978098693
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 8489590729023058562}
+    m_Modifications:
+    - target: {fileID: 5037152638126653526, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: m_Name
+      value: 'MI: TextToSpeechService'
+      objectReference: {fileID: 0}
+    - target: {fileID: 6436588491929383102, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6436588491929383102, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6436588491929383102, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6436588491929383102, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6436588491929383102, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6436588491929383102, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6436588491929383102, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6436588491929383102, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6436588491929383102, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6436588491929383102, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 8246eddada20244ea80d43788151c273, type: 3}
+--- !u!4 &6305358650877280443 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6436588491929383102, guid: 8246eddada20244ea80d43788151c273, type: 3}
+  m_PrefabInstance: {fileID: 1068049551978098693}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1139466030371319613
 PrefabInstance:
@@ -1381,9 +1444,17 @@ PrefabInstance:
     m_TransformParent: {fileID: 8489590729023058562}
     m_Modifications:
     - target: {fileID: 2284797557008519615, guid: 81b31d72af24747048f08241429e16d1, type: 3}
+      propertyPath: _ttsService
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 2284797557008519615, guid: 81b31d72af24747048f08241429e16d1, type: 3}
       propertyPath: _uiController
       value: 
       objectReference: {fileID: 5499687112701096679}
+    - target: {fileID: 2284797557008519615, guid: 81b31d72af24747048f08241429e16d1, type: 3}
+      propertyPath: _ttsAudioSource
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 4818426619342773491, guid: 81b31d72af24747048f08241429e16d1, type: 3}
       propertyPath: SceneId
       value: 0
@@ -1465,7 +1536,8 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 1000000000000000001, guid: 81b31d72af24747048f08241429e16d1, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 81b31d72af24747048f08241429e16d1, type: 3}

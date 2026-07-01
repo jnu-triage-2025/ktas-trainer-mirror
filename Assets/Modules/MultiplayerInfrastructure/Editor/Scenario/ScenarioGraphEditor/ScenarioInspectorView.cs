@@ -146,6 +146,30 @@ namespace MultiplayerInfrastructure.Editor
       EditorGUILayout.PrefixLabel("Dialogue");
       data.DialogueContent = EditorGUILayout.TextArea(data.DialogueContent, GUILayout.Height(60));
       data.PortraitSpriteIdentifier = EditorGUILayout.TextField("Portrait Sprite", data.PortraitSpriteIdentifier);
+      data.PlayTTS = EditorGUILayout.Toggle("Play TTS", data.PlayTTS);
+      DrawTTSBakeHint(data.PlayTTS, data.DialogueContent);
+    }
+
+    /// <summary>
+    /// PlayTTS 플래그가 켜져 있을 때, 대상 텍스트의 bake 가능 여부(변수 포함 여부)를 안내한다.
+    /// 변수({...})를 포함하면 bake되지 않고 런타임에 즉석 합성된다.
+    /// </summary>
+    private static void DrawTTSBakeHint(bool playTTS, string text)
+    {
+      if (!playTTS) return;
+
+      if (ScenarioTTSBakeScanner.ContainsVariable(text))
+      {
+        EditorGUILayout.HelpBox(
+          "이 텍스트는 변수({...})를 포함하여 사전 합성(bake)되지 않으며 런타임에 즉석 합성됩니다.",
+          MessageType.Warning);
+      }
+      else
+      {
+        EditorGUILayout.HelpBox(
+          "이 텍스트는 'Tools > Text to Speech Service > Bake Scenario Inline Audio' 로 사전 합성할 수 있습니다.",
+          MessageType.Info);
+      }
     }
 
     private void DrawChoiceFields(ScenarioChoiceNode data)
@@ -154,6 +178,8 @@ namespace MultiplayerInfrastructure.Editor
       EditorGUILayout.PrefixLabel("Dialogue");
       data.DialogueContent = EditorGUILayout.TextArea(data.DialogueContent, GUILayout.Height(60));
       data.PortraitSpriteIdentifier = EditorGUILayout.TextField("Portrait Sprite", data.PortraitSpriteIdentifier);
+      data.PlayTTS = EditorGUILayout.Toggle("Play TTS", data.PlayTTS);
+      DrawTTSBakeHint(data.PlayTTS, data.DialogueContent);
 
       EditorGUILayout.Space();
       EditorGUILayout.LabelField("Options", EditorStyles.boldLabel);
@@ -644,6 +670,8 @@ namespace MultiplayerInfrastructure.Editor
       data.CorrectIndex = EditorGUILayout.IntField("Correct Index", data.CorrectIndex);
       data.FeedbackCorrect = EditorGUILayout.TextField("Feedback Correct", data.FeedbackCorrect);
       data.FeedbackIncorrect = EditorGUILayout.TextField("Feedback Incorrect", data.FeedbackIncorrect);
+      data.PlayTTS = EditorGUILayout.Toggle("Play TTS", data.PlayTTS);
+      DrawTTSBakeHint(data.PlayTTS, data.Question);
       EditorGUILayout.LabelField("On Correct", data.OnCorrectNextIdentifier ?? "(미연결)");
       EditorGUILayout.LabelField("On Incorrect", data.OnIncorrectNextIdentifier ?? "(미연결)");
     }
