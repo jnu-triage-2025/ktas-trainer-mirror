@@ -65,6 +65,12 @@ namespace MultiplayerInfrastructure.UI
       SetVisible(false);
     }
 
+    private void OnEnable()
+    {
+      if (!_isVisible)
+        StartCoroutine(NeutralizeDocumentRootWhenReady(_document));
+    }
+
     private void OnDestroy()
     {
       if (_resumeButton != null)           _resumeButton.clicked           -= HandleResumeClicked;
@@ -80,12 +86,14 @@ namespace MultiplayerInfrastructure.UI
     private void SetVisible(bool visible)
     {
       _isVisible = visible;
+
+      // rootVisualElement 중립화는 _root(자식) 유무와 무관하게 항상 수행한다.
+      SetDocumentRootInteractable(_document, visible);
+
       if (_root == null) return;
 
       _root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
       _root.style.visibility = visible ? Visibility.Visible : Visibility.Hidden;
-
-      SetDocumentRootInteractable(_document, visible);
     }
 
     private void HandleResumeClicked()

@@ -112,6 +112,14 @@ namespace MultiplayerInfrastructure.UI
       SetVisible(false);
     }
 
+    private void OnEnable()
+    {
+      // UIDocument가 rootVisualElement를 (재)생성한 뒤 숨김 상태로 확실히 중립화한다.
+      // (Awake 시점 캐시가 detached되어 컨텐츠 root가 pickable로 남는 문제를 방지.)
+      if (!_isVisible)
+        StartCoroutine(NeutralizeDocumentRootWhenReady(_document));
+    }
+
     private void Update()
     {
       if (_rebindingActionId == null || !_isVisible) return;
@@ -361,13 +369,15 @@ namespace MultiplayerInfrastructure.UI
     {
       _isVisible = visible;
       if (!visible) CancelRebinding();
+
+      // rootVisualElement 중립화는 _root(자식) 유무와 무관하게 항상 수행한다.
+      SetDocumentRootInteractable(_document, visible);
+
       if (_root == null) return;
 
       _root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
       // USS 기본값 opacity: 0 을 런타임에서 override
       _root.style.opacity = visible ? 1f : 0f;
-
-      SetDocumentRootInteractable(_document, visible);
     }
 
     public void OnOverlayPushed()

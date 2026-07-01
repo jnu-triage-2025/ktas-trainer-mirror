@@ -86,6 +86,12 @@ namespace MultiplayerInfrastructure.UI
       SetVisible(false);
     }
 
+    private void OnEnable()
+    {
+      if (!_isVisible)
+        StartCoroutine(NeutralizeDocumentRootWhenReady(_document));
+    }
+
     private void OnDestroy()
     {
       if (_closeButton != null) _closeButton.clicked -= HandleCloseClicked;
@@ -225,13 +231,17 @@ namespace MultiplayerInfrastructure.UI
     private void SetVisible(bool visible)
     {
       _isVisible = visible;
+
+      // rootVisualElement 중립화는 _root(자식) 유무와 무관하게 항상 수행해야 한다.
+      // (_root가 아직 null이어도 rootVisualElement는 존재할 수 있고, 이 처리가 누락되면
+      //  숨김 상태의 패널 root가 화면 전체에서 포인터 이벤트를 계속 가로챈다.)
+      SetDocumentRootInteractable(_document, visible);
+
       if (_root == null) return;
 
       _root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
       // USS 기본값 opacity: 0 을 런타임에서 override
       _root.style.opacity = visible ? 1f : 0f;
-
-      SetDocumentRootInteractable(_document, visible);
     }
 
     private void SetStatusText(string text)
