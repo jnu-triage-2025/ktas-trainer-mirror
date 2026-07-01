@@ -59,3 +59,22 @@
   color: rgba(255,255,255,0.65);
   -unity-font-definition: var(--unity-default-font);
 }
+
+.hotbar__item-name {
+  margin-bottom: 6px;
+  padding: 4px 12px;
+  font-size: 16px;
+  color: #f5f5f5;
+  -unity-font-definition: var(--unity-default-font);
+  -unity-font-style: bold;
+  -unity-text-align: middle-center;
+  -unity-text-outline-color: rgba(0, 0, 0, 0.9);
+  -unity-text-outline-width: 1px;
+  background-color: rgba(20, 20, 20, 0.65);
+  border-radius: 6px;
+  align-self: center;
+}
+
+.hotbar__item-name--hidden {
+  display: none;
+}

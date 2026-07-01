@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Unity.VisualScripting;
@@ -11,11 +12,16 @@ namespace MultiplayerInfrastructure.UI
   {
     [Header("Config")]
     [SerializeField] private int hotbarSlotCount = 9;
-    
+
+    [Tooltip("아이템 이름이 표시된 후 자동으로 사라지기까지의 시간(초)")]
+    [SerializeField] private float _itemNameDisplayDuration = 1.5f;
+
     [Header("References")]
     [SerializeField] private UIDocument _uiDocument;
 
     private HotbarControl _hotbar;
+    private Label _itemNameLabel;
+    private Coroutine _itemNameHideRoutine;
     [Header("State")]
     [SerializeField] private int _selectedSlot = 0;
 
@@ -39,6 +45,7 @@ namespace MultiplayerInfrastructure.UI
       
       var root = _uiDocument.rootVisualElement;
       _hotbar = root.Q<HotbarControl>("hotbar-root");
+      _itemNameLabel = root.Q<Label>("hotbar-item-name");
 
       if (_hotbar.IsUnityNull())
       {
@@ -50,6 +57,49 @@ namespace MultiplayerInfrastructure.UI
       // _hotbar.BindInventory(Inventory);
       _hotbar.SetSelectedIndex(0);
       _hotbar.OnSlotSelected += OnHotbarSlotSelected;
+      _hotbar.OnHeldItemNameChanged += OnHeldItemNameChanged;
+    }
+
+    /// <summary>
+    /// 손에 들고 있는 아이템 이름이 변경되면 핫바 위 중앙 라벨을 잠깐 표시한다.
+    /// 표시 후 <see cref="_itemNameDisplayDuration"/> 초가 지나면 자동으로 사라진다.
+    /// 이름이 비어있으면(슬롯이 비어있으면) 즉시 숨긴다.
+    /// </summary>
+    private void OnHeldItemNameChanged(string itemName)
+    {
+      if (_itemNameLabel == null) return;
+
+      if (_itemNameHideRoutine != null)
+      {
+        StopCoroutine(_itemNameHideRoutine);
+        _itemNameHideRoutine = null;
+      }
+
+      if (string.IsNullOrEmpty(itemName))
+      {
+        HideItemNameLabel();
+        return;
+      }
+
+      _itemNameLabel.text = itemName;
+      _itemNameLabel.RemoveFromClassList("hotbar__item-name--hidden");
+
+      if (isActiveAndEnabled)
+        _itemNameHideRoutine = StartCoroutine(HideItemNameAfterDelay());
+    }
+
+    private IEnumerator HideItemNameAfterDelay()
+    {
+      yield return new WaitForSeconds(_itemNameDisplayDuration);
+      HideItemNameLabel();
+      _itemNameHideRoutine = null;
+    }
+
+    private void HideItemNameLabel()
+    {
+      if (_itemNameLabel == null) return;
+      _itemNameLabel.AddToClassList("hotbar__item-name--hidden");
+      _itemNameLabel.text = string.Empty;
     }
     protected override void Awake()
     {
