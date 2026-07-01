@@ -35,6 +35,7 @@ namespace TextToSpeechService.Editor
       if (missing.Count == 0)
       {
         Debug.Log("[TTSBuildPreprocessor] 모든 모델 파일이 존재합니다. 통과.");
+        WarnIfInlineBakeStale(sa);
         return;
       }
 
@@ -55,6 +56,36 @@ namespace TextToSpeechService.Editor
 
       AssetDatabase.Refresh();
       Debug.Log("[TTSBuildPreprocessor] 모델 다운로드 완료. 빌드를 계속합니다.");
+
+      WarnIfInlineBakeStale(sa);
+    }
+
+    /// <summary>
+    /// PlayTTS가 켜진 시나리오 인라인 텍스트 중 bake되지 않았거나 변경(dirty)된 항목이
+    /// 있으면 빌드 로그에 경고한다. baked WAV는 StreamingAssets/TTS/BakedInline/ 아래에
+    /// 위치하여 빌드 산출물에 자동 포함되지만, 누락분은 런타임 즉석 합성으로만 재생된다.
+    /// 빌드를 중단하지는 않는다(모델은 필수, 인라인 bake는 선택).
+    /// </summary>
+    private static void WarnIfInlineBakeStale(string streamingAssets)
+    {
+      try
+      {
+        var scan = MultiplayerInfrastructure.Scenario.ScenarioTTSBakeScanner
+          .ScanAllScenarios(streamingAssets);
+
+        if (scan.NeedsBake)
+        {
+          Debug.LogWarning(
+            $"[TTSBuildPreprocessor] 시나리오 인라인 TTS bake가 최신이 아닙니다 " +
+            $"(미bake {scan.MissingCount}개, 변경됨 {scan.DirtyCount}개). " +
+            "Tools > Text to Speech Service > Bake Scenario Inline Audio 에서 사전 합성하면 " +
+            "빌드에 포함되어 런타임 합성 부하를 줄일 수 있습니다.");
+        }
+      }
+      catch (Exception ex)
+      {
+        Debug.LogWarning($"[TTSBuildPreprocessor] 인라인 bake 스캔 실패(무시): {ex.Message}");
+      }
     }
 
     // =========================================================================

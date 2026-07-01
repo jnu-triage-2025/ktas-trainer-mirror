@@ -22,6 +22,7 @@ ScenarioNode는 표현하고자 하는 내용에 따라 다양하게 데이터�
 | SpeakerName | 문자열 | 대사를 말하는 캐릭터의 표시 이름 |
 | DialogueContent | 문자열 | 대사 내용 |
 | PortraitSprite | 문자열 | (optional) 대화 중 표시할 캐릭터 초상화 스프라이트 식별자 |
+| PlayTTS | bool | (optional, 기본 false) 참이면 DialogueContent를 표시할 때 TTS로 함께 재생한다. 변수(`{...}`)를 포함하지 않는 콘텐츠는 에디터에서 사전 합성(bake)할 수 있으며, bake되지 않은 경우 런타임에 즉석 합성된다. JSON 키는 `playTTS`. |
 | NextNodeIdentifier | 문자열 | 다음 노드의 식별자 |
 
 ### ChoiceNode  
@@ -34,6 +35,7 @@ ScenarioNode는 표현하고자 하는 내용에 따라 다양하게 데이터�
 | DialogueContent | 문자열 | 선택지를 제시하기 위한 대사 내용 |
 | PortraitSprite | 문자열 | (optional) 대화 중 표시할 캐릭터 초상화 스프라이트 식별자 |
 | Options | ScenarioChoiceOption 목록 | 선택지 목록 |
+| PlayTTS | bool | (optional, 기본 false) 참이면 DialogueContent를 표시할 때 TTS로 함께 재생한다. 세부 동작은 DialogueNode의 PlayTTS와 동일. JSON 키는 `playTTS`. |
 | NextIdentifier | 문자열 | (optional) 선택지 없이 자동 진행될 때의 다음 노드 식별자 |
 
 #### ScenarioChoiceOption
@@ -235,6 +237,7 @@ ParallelNode는 한 플레이어의 브랜치 실행과 합류만 책임진다. 
 | OnIncorrectNextIdentifier | 문자열 | (optional) 오답 시 다음 노드 식별자 |
 | FeedbackCorrect | 문자열 | (optional) 정답 피드백 |
 | FeedbackIncorrect | 문자열 | (optional) 오답 피드백 |
+| PlayTTS | bool | (optional, 기본 false) 참이면 Question(및 피드백 텍스트)을 표시할 때 TTS로 함께 재생한다. 세부 동작은 DialogueNode의 PlayTTS와 동일. JSON 키는 `playTTS`. |
 
 ### StateUpdateNode
 

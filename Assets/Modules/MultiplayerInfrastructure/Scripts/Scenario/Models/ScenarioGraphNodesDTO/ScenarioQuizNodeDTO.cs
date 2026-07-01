@@ -25,5 +25,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("feedbackIncorrect")]
     public string FeedbackIncorrect { get; set; }
+
+    [JsonPropertyName("playTTS")]
+    public bool? PlayTTS { get; set; }
   }
 }

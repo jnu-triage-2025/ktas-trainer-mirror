@@ -18,5 +18,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("interactionRequired")]
     public bool? InteractionRequired { get; set; }
+
+    [JsonPropertyName("playTTS")]
+    public bool? PlayTTS { get; set; }
   }
 }

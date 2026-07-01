@@ -577,6 +577,9 @@ namespace MultiplayerInfrastructure.Scenario
       {
         _uiController.DisplayDialogue(node.SpeakerName, node.DialogueContent, node.PortraitSpriteIdentifier, node.InteractionRequired);
 
+        if (node.PlayTTS)
+          PlayInlineTTS(node.Identifier, node.DialogueContent);
+
         // AutoAdvanceSeconds 가 양수이면 표시 후 해당 시간 경과 시 자동 진행.
         // 그 전에 사용자가 Advance() 를 호출하면 타이머는 취소된다(중복 진행 방지).
         if (node.AutoAdvanceSeconds.HasValue && node.AutoAdvanceSeconds.Value > 0f)
@@ -621,6 +624,9 @@ namespace MultiplayerInfrastructure.Scenario
       if (!_uiController.IsUnityNull())
       {
         _uiController.DisplayChoice(node.SpeakerName, node.DialogueContent, node.PortraitSpriteIdentifier, node.Options);
+
+        if (node.PlayTTS)
+          PlayInlineTTS(node.Identifier, node.DialogueContent);
       }
 
       _activeOptions = new List<ScenarioChoiceOption>(node.Options);
@@ -836,6 +842,9 @@ namespace MultiplayerInfrastructure.Scenario
       if (!_uiController.IsUnityNull())
       {
         _uiController.DisplayChoice("Quiz", node.Question ?? string.Empty, null, options);
+
+        if (node.PlayTTS)
+          PlayInlineTTS(node.Identifier, node.Question);
       }
       else
       {
@@ -1336,6 +1345,22 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
+    /// <summary>
+    /// 시나리오 그래프의 인라인 텍스트(Dialogue/Choice/Quiz 콘텐츠)를 TTS로 재생한다.
+    /// baked WAV가 있으면 우선 재생하고, 없으면 즉석 합성한다.
+    /// TTSService/AudioSource 참조가 없거나 텍스트가 비어 있으면 아무 작업도 하지 않는다.
+    /// 텍스트 표시와 병렬로 재생되며(대기하지 않음), 다음 노드 진행을 막지 않는다.
+    /// </summary>
+    private void PlayInlineTTS(string nodeIdentifier, string text)
+    {
+      if (_ttsService == null || _ttsAudioSource == null) return;
+      if (string.IsNullOrWhiteSpace(text)) return;
+      if (!_ttsService.IsReady) return;
+
+      string scenarioIdentifier = _currentGraph != null ? _currentGraph.Identifier : null;
+      _ttsService.PlayText(text, _ttsAudioSource, scenarioIdentifier, nodeIdentifier);
+    }
+
     private void HandleQuizSelection(int index, ScenarioQuizNode node)
     {
       if (node.Options == null || index < 0 || index >= node.Options.Count)
@@ -1354,6 +1379,12 @@ namespace MultiplayerInfrastructure.Scenario
       if (!string.IsNullOrWhiteSpace(feedback) && !_uiController.IsUnityNull())
       {
         _uiController.DisplayDialogue("Quiz", feedback, null);
+
+        if (node.PlayTTS)
+        {
+          string feedbackNodeId = node.Identifier + (isCorrect ? "_feedbackCorrect" : "_feedbackIncorrect");
+          PlayInlineTTS(feedbackNodeId, feedback);
+        }
       }
 
       var target = isCorrect

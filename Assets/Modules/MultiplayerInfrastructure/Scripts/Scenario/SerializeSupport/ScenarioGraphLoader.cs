@@ -269,6 +269,7 @@ namespace MultiplayerInfrastructure.Scenario
           PortraitSpriteIdentifier = dto.PortraitSpriteIdentifier,
           AutoAdvanceSeconds = dto.AutoAdvanceSeconds,
           InteractionRequired = dto.InteractionRequired ?? false,
+          PlayTTS = dto.PlayTTS ?? false,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -311,6 +312,7 @@ namespace MultiplayerInfrastructure.Scenario
         SpeakerName = dto.SpeakerName,
         DialogueContent = dto.DialogueContent,
         PortraitSpriteIdentifier = dto.PortraitSpriteIdentifier,
+        PlayTTS = dto.PlayTTS ?? false,
         Options = options
       };
     }
@@ -464,6 +466,7 @@ namespace MultiplayerInfrastructure.Scenario
           OnIncorrectNextIdentifier = dto.OnIncorrectNextIdentifier,
           FeedbackCorrect = dto.FeedbackCorrect,
           FeedbackIncorrect = dto.FeedbackIncorrect,
+          PlayTTS = dto.PlayTTS ?? false,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -923,6 +926,7 @@ namespace MultiplayerInfrastructure.Scenario
           PortraitSpriteIdentifier = node.PortraitSpriteIdentifier,
           AutoAdvanceSeconds = node.AutoAdvanceSeconds,
           InteractionRequired = node.InteractionRequired ? true : (bool?)null,
+          PlayTTS = node.PlayTTS ? true : (bool?)null,
           NextIdentifier = node.NextIdentifier
         };
 
@@ -935,6 +939,7 @@ namespace MultiplayerInfrastructure.Scenario
         SpeakerName = node.SpeakerName,
         DialogueContent = node.DialogueContent,
         PortraitSpriteIdentifier = node.PortraitSpriteIdentifier,
+        PlayTTS = node.PlayTTS ? true : (bool?)null,
         NextIdentifier = null,
         Options = new List<ScenarioChoiceOptionDTO>()
       };
@@ -1117,6 +1122,7 @@ namespace MultiplayerInfrastructure.Scenario
           OnIncorrectNextIdentifier = node.OnIncorrectNextIdentifier,
           FeedbackCorrect = node.FeedbackCorrect,
           FeedbackIncorrect = node.FeedbackIncorrect,
+          PlayTTS = node.PlayTTS ? true : (bool?)null,
           NextIdentifier = node.NextIdentifier
         };
 

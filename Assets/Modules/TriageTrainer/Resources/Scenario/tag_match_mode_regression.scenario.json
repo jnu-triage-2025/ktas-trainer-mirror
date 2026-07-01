@@ -64,7 +64,8 @@
       "speakerName": "System",
       "dialogueContent": "[ANY] 리더 태그 분기 통과",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N001"
+      "nextIdentifier": "N001",
+      "playTTS": true
     },
     "B002": {
       "identifier": "B002",
@@ -72,7 +73,8 @@
       "speakerName": "System",
       "dialogueContent": "[ANY] 기도/지원 태그 분기 통과",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N001"
+      "nextIdentifier": "N001",
+      "playTTS": true
     },
     "B003": {
       "identifier": "B003",
@@ -80,7 +82,8 @@
       "speakerName": "System",
       "dialogueContent": "[ALL] 복합 태그 분기 통과",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N001"
+      "nextIdentifier": "N001",
+      "playTTS": true
     },
     "N001": {
       "identifier": "N001",
@@ -88,7 +91,8 @@
       "speakerName": "System",
       "dialogueContent": "태그 매칭 모드 회귀 시나리오 완료",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     }
   }
 }

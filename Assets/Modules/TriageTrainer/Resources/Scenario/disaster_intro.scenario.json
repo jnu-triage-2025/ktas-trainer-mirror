@@ -30,7 +30,8 @@
       "speakerName": "원내 방송",
       "dialogueContent": "병원 인근 지하철역에서 폭발 사고 발생. 재난 상황 발령되었습니다. 응급실 대비 바랍니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D002"
+      "nextIdentifier": "D002",
+      "playTTS": true
     },
     "D002": {
       "identifier": "D002",
@@ -38,7 +39,8 @@
       "speakerName": "시스템",
       "dialogueContent": "의료진 간 재난 상황을 공유하고 초기 대응을 시작합니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C_role_select"
+      "nextIdentifier": "C_role_select",
+      "playTTS": true
     },
     "P001": {
       "identifier": "P001",
@@ -84,7 +86,8 @@
       "speakerName": "System",
       "dialogueContent": "중증도 분류 구역으로 이동하세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q001"
+      "nextIdentifier": "Q001",
+      "playTTS": true
     },
     "Q001": {
       "identifier": "Q001",
@@ -123,7 +126,8 @@
       "dialogueContent": "카트 위 활력징후 측정도구를 획득하세요.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": true,
-      "nextIdentifier": "q002_item"
+      "nextIdentifier": "q002_item",
+      "playTTS": true
     },
     "q002_item": {
       "identifier": "q002_item",
@@ -190,7 +194,8 @@
       "speakerName": "시스템",
       "dialogueContent": "잠시 후 환자가 이송됩니다. 중증도 분류 후 환자 처치가 시작됩니다. 각자의 역할에 대비하세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "E001"
+      "nextIdentifier": "E001",
+      "playTTS": true
     },
     "E001": {
       "identifier": "E001",
@@ -205,7 +210,8 @@
       "speakerName": "시스템",
       "dialogueContent": "환자 두 명이 이송되었습니다. 간호사 A가 중증도 분류를 시행합니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N001_2"
+      "nextIdentifier": "N001_2",
+      "playTTS": true
     },
     "N001_2": {
       "identifier": "N001_2",
@@ -213,7 +219,8 @@
       "speakerName": "System",
       "dialogueContent": "환자를 차례대로 클릭하여 환자의 상태를 확인하고, 중증도 분류를 실시하세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V002"
+      "nextIdentifier": "V002",
+      "playTTS": true
     },
     "V002": {
       "identifier": "V002",
@@ -271,7 +278,8 @@
           "nextNodeIdentifier": "N001_3"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N001_retry_a": {
       "identifier": "N001_retry_a",
@@ -279,7 +287,8 @@
       "speakerName": "System",
       "dialogueContent": "오답입니다. 현재 흉부의 외상 및 다량의 출혈, 환자의 전반적인 외견을 고려하였을 때, KTAS 1(소생)이 적절합니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C001"
+      "nextIdentifier": "C001",
+      "playTTS": true
     },
     "N001_3": {
       "identifier": "N001_3",
@@ -287,7 +296,8 @@
       "speakerName": "System",
       "dialogueContent": "해당 환자를 KTAS 1으로 분류했습니다. 다음 환자를 클릭하세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V003"
+      "nextIdentifier": "V003",
+      "playTTS": true
     },
     "V003": {
       "identifier": "V003",
@@ -345,7 +355,8 @@
           "nextNodeIdentifier": "N001_4"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "N001_retry_b": {
       "identifier": "N001_retry_b",
@@ -353,7 +364,8 @@
       "speakerName": "System",
       "dialogueContent": "오답입니다. 비교적 긴급한 처치가 필요하지 않은 KTAS 5(비응급) 상태로 보입니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C002"
+      "nextIdentifier": "C002",
+      "playTTS": true
     },
     "N001_4": {
       "identifier": "N001_4",
@@ -361,7 +373,8 @@
       "speakerName": "System",
       "dialogueContent": "해당 환자를 KTAS 5로 분류했습니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N001_5"
+      "nextIdentifier": "N001_5",
+      "playTTS": true
     },
     "N001_5": {
       "identifier": "N001_5",
@@ -369,7 +382,8 @@
       "speakerName": "System",
       "dialogueContent": "이제 치료를 위해 이송할 긴급 환자를 클릭하세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V004"
+      "nextIdentifier": "V004",
+      "playTTS": true
     },
     "V004": {
       "identifier": "V004",
@@ -406,7 +420,8 @@
       "speakerName": "System",
       "dialogueContent": "KTAS 1(소생) 환자에 대비하기 위해 처치실로 이동하세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q003"
+      "nextIdentifier": "Q003",
+      "playTTS": true
     },
     "Q003": {
       "identifier": "Q003",
@@ -455,7 +470,8 @@
       "speakerName": "System",
       "dialogueContent": "처치실에 있는 물품의 위치를 확인하세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "CC_BC_Ready"
+      "nextIdentifier": "CC_BC_Ready",
+      "playTTS": true
     },
     "CC_BC_Ready": {
       "identifier": "CC_BC_Ready",
@@ -471,7 +487,8 @@
       "speakerName": "System",
       "dialogueContent": "준비실로 이동하세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q004"
+      "nextIdentifier": "Q004",
+      "playTTS": true
     },
     "Q004": {
       "identifier": "Q004",
@@ -511,7 +528,8 @@
       "portraitSpriteIdentifier": null,
       "interactionRequired": true,
       "autoAdvanceSeconds": 0.2,
-      "nextIdentifier": "q006"
+      "nextIdentifier": "q006",
+      "playTTS": true
     },
     "q006": {
       "identifier": "q006",
@@ -576,7 +594,8 @@
       "dialogueContent": "플라즈마 솔루션 1L 수액백과 수액세트를 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": true,
-      "nextIdentifier": "q007"
+      "nextIdentifier": "q007",
+      "playTTS": true
     },
     "q007": {
       "identifier": "q007",
@@ -647,7 +666,8 @@
       "dialogueContent": "수액 준비가 완료되었습니다. 혈액백을 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
       "interactionRequired": true,
-      "nextIdentifier": "q008"
+      "nextIdentifier": "q008",
+      "playTTS": true
     },
     "q008": {
       "identifier": "q008",
@@ -702,7 +722,8 @@
       "speakerName": "간호사 A",
       "dialogueContent": "KTAS 1(소생)으로 분류된 환자를 이송하겠습니다. 간호사 B, C, D선생님, 해당 환자 처치실로 이동하도록 도와주세요.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q005"
+      "nextIdentifier": "Q005",
+      "playTTS": true
     },
     "Q005": {
       "identifier": "Q005",
@@ -758,7 +779,8 @@
       "speakerName": "System",
       "dialogueContent": "초기 대응과 중증도 분류를 완료했습니다. 다음 처치 시나리오를 진행합니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "C_role_select": {
       "identifier": "C_role_select",
@@ -784,7 +806,8 @@
           "nextNodeIdentifier": "TAG_d_0"
         }
       ],
-      "nextIdentifier": null
+      "nextIdentifier": null,
+      "playTTS": true
     },
     "TAG_a_0": {
       "identifier": "TAG_a_0",

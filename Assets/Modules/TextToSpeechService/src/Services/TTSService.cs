@@ -256,6 +256,86 @@ namespace TextToSpeechService
     }
 
     /// <summary>
+    /// transcripts.json에 등록되지 않은 임의의 인라인 텍스트(시나리오 그래프의
+    /// Dialogue/Choice/Quiz 콘텐츠 등)를 TTS로 재생합니다.
+    ///
+    /// 우선순위:
+    ///   1) (scenarioIdentifier, nodeIdentifier, text) 에 대한 사전 합성(baked) WAV
+    ///   2) 런타임 즉석 합성 (baked가 없거나 로드 실패 시)
+    ///
+    /// scenarioIdentifier/nodeIdentifier 가 주어지면 baked WAV 조회에 사용된다.
+    /// 둘 중 하나라도 없으면(즉석 재생 목적) 캐시/합성만 수행한다.
+    /// </summary>
+    public Coroutine PlayText(
+      string text,
+      AudioSource audioSource,
+      string scenarioIdentifier = null,
+      string nodeIdentifier = null)
+    {
+      return StartCoroutine(PlayTextCoroutine(text, audioSource, scenarioIdentifier, nodeIdentifier));
+    }
+
+    private IEnumerator PlayTextCoroutine(
+      string text, AudioSource audioSource, string scenarioIdentifier, string nodeIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(text)) yield break;
+
+      // 이미 캐시에 있으면 바로 재생
+      if (_clipCache.TryGetValue(text, out var cached))
+      {
+        yield return PlaySequentially(new List<AudioClip> { cached }, audioSource);
+        yield break;
+      }
+
+      // baked WAV 조회 (scenario/node 정보가 있을 때만)
+      if (!string.IsNullOrEmpty(scenarioIdentifier) && !string.IsNullOrEmpty(nodeIdentifier))
+      {
+        string bakedPath = TTSCore.GetBakedInlineClipPath(
+          Application.streamingAssetsPath, scenarioIdentifier, nodeIdentifier, text);
+
+        if (File.Exists(bakedPath))
+        {
+          string url    = "file://" + bakedPath;
+          using var req = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.WAV);
+          yield return req.SendWebRequest();
+
+          if (req.result == UnityWebRequest.Result.Success)
+          {
+            var clip  = DownloadHandlerAudioClip.GetContent(req);
+            clip.name = text;
+            _clipCache[text] = clip;
+            yield return PlaySequentially(new List<AudioClip> { clip }, audioSource);
+            yield break;
+          }
+
+          Debug.LogWarning($"[TTSService] baked inline WAV 로드 실패 ({bakedPath}): {req.error}. 즉석 합성으로 대체합니다.");
+        }
+      }
+
+      // 즉석 합성 (백그라운드)
+      if (_core == null)
+      {
+        Debug.LogWarning("[TTSService] PlayText: TTSCore가 초기화되지 않았습니다.");
+        yield break;
+      }
+
+      float[] wav  = null;
+      var     task = Task.Run(() => wav = _core.Synthesize(text, language, totalStep, speed));
+      yield return new WaitUntil(() => task.IsCompleted);
+
+      if (task.IsFaulted)
+      {
+        Debug.LogError(
+          $"[TTSService] PlayText 합성 실패 ({text}): {task.Exception?.GetBaseException().Message}");
+        yield break;
+      }
+
+      var synthClip = WavToClip(text, wav);
+      _clipCache[text] = synthClip;
+      yield return PlaySequentially(new List<AudioClip> { synthClip }, audioSource);
+    }
+
+    /// <summary>
     /// 동적 텍스트를 백그라운드에서 미리 합성합니다.
     /// 게임 로딩 중 변수 값이 확정되는 시점에 호출하세요.
     /// </summary>
