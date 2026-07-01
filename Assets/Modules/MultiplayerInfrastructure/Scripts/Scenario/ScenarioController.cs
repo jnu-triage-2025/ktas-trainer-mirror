@@ -11,7 +11,7 @@ using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 using MultiplayerInfrastructure.Scenario.Preflight;
-using TextToSpeechService;
+using MultiplayerInfrastructure.TTS;
 using FishNet.Object;
 using FishNet;
 using FishNet.Connection;
@@ -34,7 +34,7 @@ namespace MultiplayerInfrastructure.Scenario
     [SerializeField] private DialoguePanelUIController _uiController;
     [SerializeField] private MainCameraController _camController;
     [SerializeField] private InteractableObjectHintUIController _hintUIController;
-    [SerializeField] private TTSService _ttsService;
+    [SerializeField] private ScenarioTTSService _ttsService;
     [SerializeField] private AudioSource _ttsAudioSource;
 
     [Header("Preflight (사전 요구사항 검증)")]
@@ -197,6 +197,44 @@ namespace MultiplayerInfrastructure.Scenario
         _hintUIController = Registry.Registry.Get<InteractableObjectHintUIController>(RegistryType.UI, Registry.Registry.TypeKey<InteractableObjectHintUIController>());
     }
 
+    /// <summary>
+    /// TTS 재생 서비스를 확보한다. 인스펙터에 연결되지 않았다면(예: 프리팹이 아닌 씬의
+    /// 단독 ScenarioController) 씬에서 찾고, 그래도 없으면 런타임에 자동 생성한다.
+    /// 자동 생성 시 ScenarioTTSService(및 RequireComponent에 의한 TTSService·AudioSource)가
+    /// 함께 붙으며, 해당 AudioSource를 재생 대상으로 사용한다.
+    /// </summary>
+    private void ResolveTTSService()
+    {
+      if (!_ttsService.IsUnityNull())
+      {
+        if (_ttsAudioSource == null)
+          _ttsAudioSource = _ttsService.AudioSource;
+        return;
+      }
+
+      // 씬에 이미 존재하는 서비스 탐색
+#if UNITY_2023_1_OR_NEWER
+      var existing = UnityEngine.Object.FindFirstObjectByType<ScenarioTTSService>();
+#else
+      var existing = UnityEngine.Object.FindObjectOfType<ScenarioTTSService>();
+#endif
+      if (existing != null)
+      {
+        _ttsService = existing;
+        if (_ttsAudioSource == null)
+          _ttsAudioSource = existing.AudioSource;
+        return;
+      }
+
+      // 자동 생성 (RequireComponent로 TTSService·AudioSource가 함께 추가됨)
+      var go = new GameObject("ScenarioTTSService (auto)");
+      _ttsService = go.AddComponent<ScenarioTTSService>();
+      if (_ttsAudioSource == null)
+        _ttsAudioSource = _ttsService.AudioSource;
+
+      Debug.Log("[ScenarioController] ScenarioTTSService가 연결되지 않아 자동 생성했습니다.");
+    }
+
     private void Start()
     {
       // 이벤트 구독
@@ -247,6 +285,7 @@ namespace MultiplayerInfrastructure.Scenario
       QuestDefinitionRegistry.EnsureIncludesLoaded(graph.QuestDefinitionIncludes);
 
       ResolveUIControllers();
+      ResolveTTSService();
 
       // 시작 노드 찾기
       string startId = startNodeIdentifier;
@@ -1355,8 +1394,9 @@ namespace MultiplayerInfrastructure.Scenario
     {
       if (_ttsService == null || _ttsAudioSource == null) return;
       if (string.IsNullOrWhiteSpace(text)) return;
-      if (!_ttsService.IsReady) return;
 
+      // IsReady를 기다리지 않는다: baked WAV는 ONNX 초기화 없이 즉시 재생 가능하고,
+      // baked가 없을 때만 내부에서 즉석 합성(초기화 완료 후 가능)으로 폴백한다.
       string scenarioIdentifier = _currentGraph != null ? _currentGraph.Identifier : null;
       _ttsService.PlayText(text, _ttsAudioSource, scenarioIdentifier, nodeIdentifier);
     }
