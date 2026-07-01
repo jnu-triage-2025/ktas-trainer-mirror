@@ -123,7 +123,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584192565342810138
+  _initializedTimestamp: -8584187215550772778
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -284,7 +284,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 480613486783352052, guid: a10f2bcdfa46b4e619751a618250101e, type: 3}
       propertyPath: _initializedTimestamp
-      value: -8584192565342810138
+      value: -8584187215550772778
       objectReference: {fileID: 0}
     - target: {fileID: 480613486783352052, guid: a10f2bcdfa46b4e619751a618250101e, type: 3}
       propertyPath: <IsNested>k__BackingField
@@ -842,7 +842,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 543940734885712351, guid: d03ef2bb740e347128c1785c882342de, type: 3}
       propertyPath: _initializedTimestamp
-      value: -8584192565342810138
+      value: -8584187215550772778
       objectReference: {fileID: 0}
     - target: {fileID: 543940734885712351, guid: d03ef2bb740e347128c1785c882342de, type: 3}
       propertyPath: <IsNested>k__BackingField
@@ -923,6 +923,10 @@ PrefabInstance:
     - target: {fileID: 3735441076491205273, guid: d03ef2bb740e347128c1785c882342de, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6559124852540257606, guid: d03ef2bb740e347128c1785c882342de, type: 3}
+      propertyPath: _camera
+      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1306,6 +1310,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1597054456330649215}
     m_Modifications:
+    - target: {fileID: 1837494253074572007, guid: e76fe2e93be4b488ab283dedd174af42, type: 3}
+      propertyPath: _sortingOrder
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 1837494253074572007, guid: e76fe2e93be4b488ab283dedd174af42, type: 3}
+      propertyPath: m_EditorClassIdentifier
+      value: Assembly-CSharp::MultiplayerInfrastructure.UI.InventoryUIController
+      objectReference: {fileID: 0}
     - target: {fileID: 3824752680390181844, guid: e76fe2e93be4b488ab283dedd174af42, type: 3}
       propertyPath: m_Name
       value: 'MI: InventoryUI'
@@ -1382,7 +1394,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4818426619342773491, guid: 81b31d72af24747048f08241429e16d1, type: 3}
       propertyPath: _initializedTimestamp
-      value: -8584192565342810138
+      value: -8584187215550772778
       objectReference: {fileID: 0}
     - target: {fileID: 4818426619342773491, guid: 81b31d72af24747048f08241429e16d1, type: 3}
       propertyPath: <IsNested>k__BackingField

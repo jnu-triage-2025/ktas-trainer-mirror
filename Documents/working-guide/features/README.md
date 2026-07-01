@@ -9,6 +9,7 @@
 
 ### 하위 폴더
 - [scenario](./scenario/README.md): 시나리오 운영/변환/검증 가이드
+- [ui](./ui/README.md): UI(UIDocument/오버레이) 작업 가이드
 
 ### 문서
 - (없음)

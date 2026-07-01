@@ -41,6 +41,12 @@ namespace MultiplayerInfrastructure.UI
       HideImmediately();
     }
 
+    private void OnEnable()
+    {
+      if (!IsOpen)
+        StartCoroutine(NeutralizeDocumentRootWhenReady(_uiDocument));
+    }
+
     public bool OpenProblemSet(string problemSetIdentifier, int index = 0, bool singleProblemMode = false)
     {
       if (!Registry.Registry.TryGetProblemSet(problemSetIdentifier, out var set, out _))

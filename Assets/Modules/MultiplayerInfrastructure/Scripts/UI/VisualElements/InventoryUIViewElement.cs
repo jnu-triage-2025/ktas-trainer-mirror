@@ -373,7 +373,6 @@ namespace MultiplayerInfrastructure.UI
 
     private void HandleSlotClicked(int slotIndex, PointerDownEvent evt)
     {
-      Debug.Log($"[InventoryUIView] Slot {slotIndex} clicked.");
       if (slotIndex < 0 || slotIndex >= _slotElements.Count) return;
 
       if (_heldItem == null)
