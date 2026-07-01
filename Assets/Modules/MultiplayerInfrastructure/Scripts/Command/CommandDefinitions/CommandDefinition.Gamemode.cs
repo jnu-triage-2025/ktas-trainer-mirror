@@ -4,16 +4,15 @@ using MultiplayerInfrastructure.Player;
 
 namespace MultiplayerInfrastructure.Command
 {
-  public class CommandDefinition_Gamemode : IChatCommandModel
+  public class CommandDefinition_Gamemode : IChatCommandModel, IChatCommandUsage
   {
     public string CommandEntry => "gamemode";
-    public string Description => (
-      "Change your gamemode."
-      + " Usage: /gamemode <mode>"
-      + " Modes: player (0), spectator (1)"
-      + " example: /gamemode 0"
-      + "          /gamemode spectator"
-    );
+    public string Description => "Change your gamemode.";
+    public System.Collections.Generic.IReadOnlyList<UsageLine> UsageLines => new[]
+    {
+      new UsageLine("gamemode player", "Normal play mode (also: 0)."),
+      new UsageLine("gamemode spectator", "Free-fly spectator mode (also: 1)."),
+    };
 
     public bool RequiresAdmin => false;
 

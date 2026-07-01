@@ -1,0 +1,52 @@
+{
+  "identifier": "defib-quiz",
+  "title": "Defib_quiz",
+  "problems": [
+    {
+      "id": "p15",
+      "prompt": "1. 제세동기는 \"Sync 버튼\"을 눌러 Cardioversion을 제공할 수 있습니다. 다음 중 제세동을 실시해야 하는 심전도는?",
+      "choice": {
+        "options": [
+          "Asystole (무수축)",
+          "PEA (Pulseless Electrical Activity, 무맥성 전기활동)",
+          "VT (Ventricular Tachycardia, 맥박이 있는 심실빈맥)",
+          "VF (Ventricular Fibrillation, 심실세동)"
+        ],
+        "correctIndex": 3
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    },
+    {
+      "id": "p16",
+      "prompt": "2. 제세동(defibrillation) 시, 이상파형(Biphasic) 제세동기에서 필요한 에너지 양은?",
+      "choice": {
+        "options": [
+          "360J (줄)",
+          "150~200J (줄)"
+        ],
+        "correctIndex": 1
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    },
+    {
+      "id": "p17",
+      "prompt": "3. 제세동(defibrillation), cardioversion 등 전기충격 시 주의해야 할 사항은?",
+      "choice": {
+        "options": [
+          "꼬인 수액 줄을 풀어준다.",
+          "의료진이 손을 대어도 괜찮다.",
+          "의사의 지시와 무관하게 타이밍이 되면 전기충격을 제공한다.",
+          "전기충격 전 모두 환자에게서 떨어지도록 지시한다."
+        ],
+        "correctIndex": 3
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    }
+  ]
+}

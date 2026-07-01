@@ -17,15 +17,18 @@ namespace MultiplayerInfrastructure.Command
   /// /tag change {target} {from} {to} --force — 태그가 없어도 강제 추가
   /// /tag show {target}                    — 태그 목록 출력
   /// </summary>
-  public class CommandDefinition_Tag : IChatCommandModel
+  public class CommandDefinition_Tag : IChatCommandModel, IChatCommandUsage
   {
     public string CommandEntry => "tag";
-    public string Description =>
-      "Manage target tags.\n" +
-      "  /tag add <@self|target> <tag>                       — add tag\n" +
-      "  /tag remove <target> <tag>                          — remove tag\n" +
-      "  /tag change <target> <fromTag> <toTag> [--force]    — change tag\n" +
-      "  /tag show <target>                                  — show tags";
+    public string Description => "Manage target tags.";
+    public System.Collections.Generic.IReadOnlyList<UsageLine> UsageLines => new[]
+    {
+      new UsageLine("tag add <target> <tag>", "Add a tag to the target."),
+      new UsageLine("tag remove <target> <tag>", "Remove a tag from the target."),
+      new UsageLine("tag change <target> <from> <to> [--force]", "Rename a tag (--force adds if missing)."),
+      new UsageLine("tag show <target>", "List the target's tags."),
+      new UsageLine("  <target>", "@self, display name, entity id, or @selector."),
+    };
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
@@ -39,7 +42,7 @@ namespace MultiplayerInfrastructure.Command
     {
       if (args == null || args.Length == 0)
       {
-        _chat.SendSystemMessage(sender, Description);
+        _chat.SendSystemMessage(sender, ChatCommandHelp.GetHelpPage(this));
         return;
       }
 

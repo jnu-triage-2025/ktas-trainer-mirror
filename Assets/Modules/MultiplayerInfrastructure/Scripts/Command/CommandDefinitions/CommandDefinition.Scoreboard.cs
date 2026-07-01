@@ -8,21 +8,23 @@ using MultiplayerInfrastructure.Variable;
 
 namespace MultiplayerInfrastructure.Command
 {
-  public class CommandDefinition_Scoreboard : IChatCommandModel
+  public class CommandDefinition_Scoreboard : IChatCommandModel, IChatCommandUsage
   {
     public string CommandEntry => "scoreboard";
-    public string Description =>
-      "Session-wide per-player variable storage.\n" +
-      "  /scoreboard objectives add <objective> <criteria(dummy|trigger)>\n" +
-      "  /scoreboard objectives list\n" +
-      "  /scoreboard objectives remove <objective>\n" +
-      "  /scoreboard players get <target> <objective>\n" +
-      "  /scoreboard players set <target> <objective> <value>\n" +
-      "  /scoreboard players add <target> <objective> <value>\n" +
-      "  /scoreboard players remove <target> <objective> <value>\n" +
-      "  /scoreboard players list [target]\n" +
-      "  /scoreboard players reset <target> [objective]\n" +
-      "  /scoreboard players operation <target> <targetObjective> <op> <source> <sourceObjective>";
+    public string Description => "Session-wide per-player variable storage.";
+    public System.Collections.Generic.IReadOnlyList<UsageLine> UsageLines => new[]
+    {
+      new UsageLine("scoreboard objectives add <objective> <dummy|trigger>", "Create an objective."),
+      new UsageLine("scoreboard objectives list", "List objectives."),
+      new UsageLine("scoreboard objectives remove <objective>", "Delete an objective."),
+      new UsageLine("scoreboard players get <target> <objective>", "Read a score."),
+      new UsageLine("scoreboard players set <target> <objective> <value>", "Set a score."),
+      new UsageLine("scoreboard players add <target> <objective> <value>", "Add to a score."),
+      new UsageLine("scoreboard players remove <target> <objective> <value>", "Subtract from a score."),
+      new UsageLine("scoreboard players list [target]", "List scores."),
+      new UsageLine("scoreboard players reset <target> [objective]", "Reset score(s)."),
+      new UsageLine("scoreboard players operation <target> <objA> <op> <src> <objB>", "Combine two scores."),
+    };
     public bool RequiresAdmin => false;
 
     private static readonly HashSet<string> SupportedCriteria = new(StringComparer.OrdinalIgnoreCase)
@@ -45,7 +47,7 @@ namespace MultiplayerInfrastructure.Command
 
       if (args == null || args.Length == 0)
       {
-        _chat.SendSystemMessage(sender, Description);
+        _chat.SendSystemMessage(sender, ChatCommandHelp.GetHelpPage(this));
         return;
       }
 

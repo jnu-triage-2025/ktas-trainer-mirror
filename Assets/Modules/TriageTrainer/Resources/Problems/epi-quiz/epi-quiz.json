@@ -1,0 +1,37 @@
+{
+  "identifier": "epi-quiz",
+  "title": "Epinephrine_quiz",
+  "problems": [
+    {
+      "id": "p18",
+      "prompt": "1. 심정지 상황에서 에피네프린의 투여 간격은 어떻게 되는가?",
+      "choice": {
+        "options": [
+          "약 1~2분에 한 번",
+          "약 5~10분에 한 번",
+          "누군가 시킬 때마다",
+          "약 3~5분에 한 번"
+        ],
+        "correctIndex": 3
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    },
+    {
+      "id": "p19",
+      "prompt": "2. 말초(팔)로 약물을 투여하는 경우, 적절한 투여 절차는?",
+      "choice": {
+        "options": [
+          "약물만 주입",
+          "약물 주입 후 생리식염수 주입",
+          "약물 주입 후 생리식염수 주입, 이후 팔 들어올리기"
+        ],
+        "correctIndex": 2
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    }
+  ]
+}

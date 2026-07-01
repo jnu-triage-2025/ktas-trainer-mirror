@@ -1,0 +1,5 @@
+{
+  "format": "ktas-problem-pack-v1",
+  "problemJson": "defib-quiz",
+  "figuresBasePath": "figures"
+}

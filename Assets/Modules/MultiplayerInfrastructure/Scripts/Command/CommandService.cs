@@ -78,6 +78,16 @@ namespace MultiplayerInfrastructure.Command
         return true;
       }
 
+      // Intercept help flags (-h / --help / /? / ?) for every command so that
+      // detailed usage is shown without executing the command itself.
+      if (ChatCommandHelp.IsHelpFlag(args))
+      {
+        if (!suppressSystemMessages)
+          _chatManager.SendSystemMessage(sender, ChatCommandHelp.GetHelpPage(command));
+
+        return true;
+      }
+
       if (command is IChatCommandPipelineCommand pipelineCommand)
       {
         if (!pipelineCommand.TryExecute(sender, args, suppressSystemMessages, out pipelineValues, out error))

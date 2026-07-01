@@ -1,0 +1,40 @@
+{
+  "identifier": "ktas-1st",
+  "title": "1st KTAS decision",
+  "problems": [
+    {
+      "id": "p1",
+      "prompt": "다음 보기 중, 해당 환자에게 적절한 중증도를 선택하세요.",
+      "choice": {
+        "options": [
+          "KTAS 1 (소생)",
+          "KTAS 2 (긴급)",
+          "KTAS 3 (응급)",
+          "KTAS 4 (준응급)",
+          "KTAS 5 (비응급)"
+        ],
+        "correctIndex": 0
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    },
+    {
+      "id": "p2",
+      "prompt": "다음 보기 중, 해당 환자에게 적절한 중증도를 선택하세요.",
+      "choice": {
+        "options": [
+          "KTAS 1 (소생)",
+          "KTAS 2 (긴급)",
+          "KTAS 3 (응급)",
+          "KTAS 4 (준응급)",
+          "KTAS 5 (비응급)"
+        ],
+        "correctIndex": 4
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    }
+  ]
+}

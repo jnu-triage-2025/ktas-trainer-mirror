@@ -1,0 +1,74 @@
+{
+  "identifier": "avpu-gcs-2nd",
+  "title": "2nd - AVPU/GCS check",
+  "problems": [
+    {
+      "id": "p20",
+      "prompt": "[관찰] 환자를 불렀을 때 응답이 없고, 환자의 옆구리를 꼬집었을 때 불편해하며 피하려 합니다.\n\n의식 수준을 AVPU에 따라 분류할 때, 현재 환자의 의식 수준은 무엇입니까?",
+      "choice": {
+        "options": [
+          "A (Alert, 완전히 깨어 있음)",
+          "V (Verbal stimuli, 음성에 반응 있음)",
+          "P (Painful stimuli, 통증에 반응 있음)",
+          "U (Unconsciousness, 반응 없음)"
+        ],
+        "correctIndex": 2
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    },
+    {
+      "id": "p21",
+      "prompt": "추가 사정을 위해 GCS를 확인합니다.\n먼저 Eye Opening(E) 반응을 확인합니다.\n\n[관찰] 옆구리를 꼬집자 잠시 눈을 떴다가 다시 감습니다.\n\n관찰된 E(Eye Opening) 점수는 몇 점입니까?",
+      "choice": {
+        "options": [
+          "4점 (자발적 반응)",
+          "3점 (구두 명령에 반응)",
+          "2점 (통증에 반응)",
+          "1점 (반응 없음)"
+        ],
+        "correctIndex": 2
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    },
+    {
+      "id": "p22",
+      "prompt": "다음은 Verbal Response(V) 입니다.\n\n[관찰] 간호사가 \"여기가 어디예요?\"라고 묻자, 환자는 이해할 수 없는 신음소리만 내고 있습니다. 현재 기관내삽관이 시행되어 있는 상태입니다.\n\n관찰된 V(Verbal Response) 점수는 몇 점입니까?",
+      "choice": {
+        "options": [
+          "5점 (적절한 답변)",
+          "4점 (혼란)",
+          "3점 (부적절한 답변)",
+          "2점 (신음소리)",
+          "1점 (반응 없음)",
+          "T (기관삽관 상태)"
+        ],
+        "correctIndex": 5
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    },
+    {
+      "id": "p23",
+      "prompt": "마지막으로 Motor Response(M) 입니다.\n\n[관찰] 손톱 뿌리쪽 피부에 압력을 가하자 움츠러들며 자극을 피합니다.\n\n관찰된 M(Motor Response) 점수는 몇 점입니까?",
+      "choice": {
+        "options": [
+          "6점 (명령 수행)",
+          "5점 (통증 원인을 치우려 손을 뻗음)",
+          "4점 (통증에 회피)",
+          "3점 (이상 굴곡)",
+          "2점 (이상 신전)",
+          "1점 (반응 없음)"
+        ],
+        "correctIndex": 2
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    }
+  ]
+}

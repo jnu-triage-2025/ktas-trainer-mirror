@@ -1,0 +1,35 @@
+{
+  "identifier": "ambu-quiz",
+  "title": "Ambu_quiz",
+  "problems": [
+    {
+      "id": "p9",
+      "prompt": "1. 성인의 정확한 산소 제공량은?",
+      "choice": {
+        "options": [
+          "약 1500ml (다섯 손가락 모두를 이용해 백을 짠다)",
+          "약 600ml (다섯 손가락 모두를 이용해 백을 짠다)"
+        ],
+        "correctIndex": 1
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    },
+    {
+      "id": "p10",
+      "prompt": "2. 심폐소생술 중, 앰부 배깅으로 산소를 제공할 때 적절한 속도는?",
+      "choice": {
+        "options": [
+          "3초에 1번 (분당 약 20회)",
+          "6초에 1번 (분당 약 10회)",
+          "10초에 1번 (분당 약 6회)"
+        ],
+        "correctIndex": 1
+      },
+      "grading": {
+        "retryOnWrong": true
+      }
+    }
+  ]
+}

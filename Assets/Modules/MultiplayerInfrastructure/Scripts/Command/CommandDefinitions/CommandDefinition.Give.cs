@@ -8,10 +8,17 @@ using MultiplayerInfrastructure.Registry;
 
 namespace MultiplayerInfrastructure.Command
 {
-  public class CommandDefinition_Give : IChatCommandModel
+  public class CommandDefinition_Give : IChatCommandModel, IChatCommandUsage
   {
     public string CommandEntry => "give";
-    public string Description => "Give an item. Usage: /give <item_identifier> [count=1] [target_identifier]";
+    public string Description => "Give an item to a target.";
+    public System.Collections.Generic.IReadOnlyList<UsageLine> UsageLines => new[]
+    {
+      new UsageLine("give <item> [count] [target]", "Give an item. Overflow drops in front."),
+      new UsageLine("  <item>", "Registered item identifier."),
+      new UsageLine("  [count]", "Amount to give. Default: 1."),
+      new UsageLine("  [target]", "@s, <clientId>, fish:<id>. Default: you."),
+    };
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
