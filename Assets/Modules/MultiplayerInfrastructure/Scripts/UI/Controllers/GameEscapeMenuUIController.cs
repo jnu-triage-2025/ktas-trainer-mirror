@@ -84,6 +84,8 @@ namespace MultiplayerInfrastructure.UI
 
       _root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
       _root.style.visibility = visible ? Visibility.Visible : Visibility.Hidden;
+
+      SetDocumentRootInteractable(_document, visible);
     }
 
     private void HandleResumeClicked()

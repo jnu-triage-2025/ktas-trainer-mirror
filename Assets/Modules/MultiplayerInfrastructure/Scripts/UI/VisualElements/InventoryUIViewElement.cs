@@ -33,6 +33,14 @@ namespace MultiplayerInfrastructure.UI
     private Image _heldItemGhostIcon;
     private Label _heldItemGhostCount;
 
+    private VisualElement _tooltip;
+    private Label _tooltipName;
+    private Label _tooltipType;
+    private Label _tooltipDescription;
+    private Label _tooltipDetail;
+    private Label _tooltipStack;
+    private int _hoveredSlotIndex = -1;
+
     public bool IsVisible => style.display != DisplayStyle.None;
     public IReadOnlyList<InventorySlotModelDTO> BoundSlots => _boundSlots ?? _slotDataBuffer;
 
@@ -46,7 +54,9 @@ namespace MultiplayerInfrastructure.UI
       _inventoryGrid = this.Q<VisualElement>("InventoryGrid") ?? CreateFallbackGrid();
 
       CreateHeldItemGhost();
+      CreateTooltip();
       RegisterCallback<PointerMoveEvent>(OnPointerMoveWhileHolding);
+      RegisterCallback<PointerMoveEvent>(OnPointerMoveForTooltip);
       RegisterCallback<PointerUpEvent>(OnPointerUpOutsideSlot);
 
       BuildInventoryGrid();
@@ -59,6 +69,8 @@ namespace MultiplayerInfrastructure.UI
       style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
       if (!visible && _heldItemGhost != null)
         _heldItemGhost.style.display = DisplayStyle.None;
+      if (!visible)
+        HideTooltip();
     }
 
     public void UpdateInventory(IReadOnlyList<InventorySlotModelDTO> slots)
@@ -165,6 +177,8 @@ namespace MultiplayerInfrastructure.UI
 
           int capturedIndex = slotIndex;
           slot.RegisterCallback<PointerDownEvent>(evt => HandleSlotClicked(capturedIndex, evt));
+          slot.RegisterCallback<PointerEnterEvent>(evt => HandleSlotPointerEnter(capturedIndex, evt));
+          slot.RegisterCallback<PointerLeaveEvent>(_ => HandleSlotPointerLeave(capturedIndex));
 
           slotRow.Add(slot);
           _slotElements.Add(slot);
@@ -224,6 +238,139 @@ namespace MultiplayerInfrastructure.UI
       Add(_heldItemGhost);
     }
 
+    private void CreateTooltip()
+    {
+      _tooltip = new VisualElement { name = "ItemTooltip" };
+      _tooltip.AddToClassList("item-tooltip");
+      _tooltip.style.position = Position.Absolute;
+      _tooltip.style.display = DisplayStyle.None;
+      _tooltip.pickingMode = PickingMode.Ignore;
+
+      _tooltipName = new Label { name = "ItemTooltipName", pickingMode = PickingMode.Ignore };
+      _tooltipName.AddToClassList("item-tooltip__name");
+      _tooltip.Add(_tooltipName);
+
+      _tooltipType = new Label { name = "ItemTooltipType", pickingMode = PickingMode.Ignore };
+      _tooltipType.AddToClassList("item-tooltip__type");
+      _tooltip.Add(_tooltipType);
+
+      _tooltipDescription = new Label { name = "ItemTooltipDescription", pickingMode = PickingMode.Ignore };
+      _tooltipDescription.AddToClassList("item-tooltip__description");
+      _tooltip.Add(_tooltipDescription);
+
+      _tooltipDetail = new Label { name = "ItemTooltipDetail", pickingMode = PickingMode.Ignore };
+      _tooltipDetail.AddToClassList("item-tooltip__detail");
+      _tooltip.Add(_tooltipDetail);
+
+      _tooltipStack = new Label { name = "ItemTooltipStack", pickingMode = PickingMode.Ignore };
+      _tooltipStack.AddToClassList("item-tooltip__stack");
+      _tooltip.Add(_tooltipStack);
+
+      Add(_tooltip);
+    }
+
+    private void HandleSlotPointerEnter(int slotIndex, PointerEnterEvent evt)
+    {
+      _hoveredSlotIndex = slotIndex;
+
+      // 아이템을 들고 있는 동안에는 ghost가 우선이며 툴팁은 방해되므로 표시하지 않는다.
+      if (_heldItem != null)
+      {
+        HideTooltip();
+        return;
+      }
+
+      ShowTooltipForSlot(slotIndex, evt.position);
+    }
+
+    private void HandleSlotPointerLeave(int slotIndex)
+    {
+      if (_hoveredSlotIndex == slotIndex)
+        _hoveredSlotIndex = -1;
+
+      HideTooltip();
+    }
+
+    private void ShowTooltipForSlot(int slotIndex, Vector2 panelPosition)
+    {
+      if (_tooltip == null)
+        return;
+
+      var slotData = GetSlotModel(slotIndex);
+      var item = slotData?.ItemInstance;
+      if (slotData == null || slotData.IsEmpty || item == null)
+      {
+        HideTooltip();
+        return;
+      }
+
+      SetLabel(_tooltipName, string.IsNullOrEmpty(item.CurrentDisplayName) ? item.CurrentIdentifier : item.CurrentDisplayName);
+      // 아이템의 CurrentColor를 이름 색으로 사용(희소도/카테고리 필드가 없으므로 색상으로 구분).
+      _tooltipName.style.color = item.CurrentColor;
+
+      SetLabel(_tooltipType, item.GetType().Name);
+      SetLabel(_tooltipDescription, item.CurrentDescription);
+      SetLabel(_tooltipDetail, item.CurrentDetailComment);
+
+      string stackText = item.IsCurrentlyStackable
+        ? $"{item.CurrentStackCount} / {item.CurrentMaxStackCount}"
+        : string.Empty;
+      SetLabel(_tooltipStack, stackText);
+
+      _tooltip.style.display = DisplayStyle.Flex;
+      _tooltip.BringToFront();
+      UpdateTooltipPosition(panelPosition);
+    }
+
+    private static void SetLabel(Label label, string text)
+    {
+      if (label == null)
+        return;
+
+      bool hasText = !string.IsNullOrWhiteSpace(text);
+      label.text = hasText ? text : string.Empty;
+      label.style.display = hasText ? DisplayStyle.Flex : DisplayStyle.None;
+    }
+
+    private void HideTooltip()
+    {
+      if (_tooltip != null)
+        _tooltip.style.display = DisplayStyle.None;
+    }
+
+    private void OnPointerMoveForTooltip(PointerMoveEvent evt)
+    {
+      if (_tooltip == null || _tooltip.style.display.value == DisplayStyle.None)
+        return;
+
+      UpdateTooltipPosition(evt.position);
+    }
+
+    private void UpdateTooltipPosition(Vector2 panelPosition)
+    {
+      if (_tooltip == null)
+        return;
+
+      Rect rootBounds = worldBound;
+      const float offsetX = 16f;
+      const float offsetY = 16f;
+
+      float localX = panelPosition.x - rootBounds.x + offsetX;
+      float localY = panelPosition.y - rootBounds.y + offsetY;
+
+      // 툴팁이 인벤토리 루트 밖으로 넘치지 않도록 오른쪽/아래 경계에서 보정한다.
+      float tooltipWidth = Mathf.Max(1f, _tooltip.resolvedStyle.width);
+      float tooltipHeight = Mathf.Max(1f, _tooltip.resolvedStyle.height);
+
+      if (localX + tooltipWidth > rootBounds.width)
+        localX = panelPosition.x - rootBounds.x - tooltipWidth - offsetX;
+      if (localY + tooltipHeight > rootBounds.height)
+        localY = panelPosition.y - rootBounds.y - tooltipHeight - offsetY;
+
+      _tooltip.style.left = Mathf.Max(0f, localX);
+      _tooltip.style.top = Mathf.Max(0f, localY);
+    }
+
     private void HandleSlotClicked(int slotIndex, PointerDownEvent evt)
     {
       Debug.Log($"[InventoryUIView] Slot {slotIndex} clicked.");
@@ -235,6 +382,12 @@ namespace MultiplayerInfrastructure.UI
         TryPlaceHeldItemIntoSlot(slotIndex);
 
       UpdateHeldItemGhostPosition(evt.position);
+
+      // 집는 중에는 툴팁을 숨기고, 아이템을 내려놓아 손이 비었으면 현재 슬롯 기준으로 다시 표시한다.
+      if (_heldItem != null)
+        HideTooltip();
+      else
+        ShowTooltipForSlot(slotIndex, evt.position);
     }
 
     private void TryPickUpFromSlot(int slotIndex)

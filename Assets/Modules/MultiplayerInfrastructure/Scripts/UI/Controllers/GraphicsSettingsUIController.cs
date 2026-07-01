@@ -230,6 +230,8 @@ namespace MultiplayerInfrastructure.UI
       _root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
       // USS 기본값 opacity: 0 을 런타임에서 override
       _root.style.opacity = visible ? 1f : 0f;
+
+      SetDocumentRootInteractable(_document, visible);
     }
 
     private void SetStatusText(string text)

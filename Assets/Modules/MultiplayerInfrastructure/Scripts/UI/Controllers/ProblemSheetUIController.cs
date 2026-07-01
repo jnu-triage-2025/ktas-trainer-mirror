@@ -207,18 +207,21 @@ namespace MultiplayerInfrastructure.UI
     {
       EnsurePanel();
       _problemSheet.style.display = DisplayStyle.Flex;
+      SetDocumentRootInteractable(_uiDocument, true);
     }
 
     private void HidePanel()
     {
       if (_problemSheet != null)
         _problemSheet.style.display = DisplayStyle.None;
+      SetDocumentRootInteractable(_uiDocument, false);
     }
 
     private void HideImmediately()
     {
       EnsurePanel();
       _problemSheet.style.display = DisplayStyle.None;
+      SetDocumentRootInteractable(_uiDocument, false);
     }
   }
 }
