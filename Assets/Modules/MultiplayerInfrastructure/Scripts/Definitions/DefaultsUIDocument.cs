@@ -8,7 +8,7 @@ namespace MultiplayerInfrastructure.Definitions
     public const float QuestPreviewHudSortOrder = 2f;
     public const float HeldItemHudSortOrder = 2.5f;
     public const float TitleUISortOrder = 5f;
-    public const float InventoryUISortOrder = 4f;
+    public const float InventoryUISortOrder = 6f;
     public const float EscapeMenuUISortOrder = 7f;
     public const float GraphicsSettingsUISortOrder = 8f;
     public const float ProblemSheetUISortOrder = 9f;
