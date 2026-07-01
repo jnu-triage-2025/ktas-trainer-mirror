@@ -98,7 +98,7 @@ namespace MultiplayerInfrastructure.Scenario
       if (_scan != null)
       {
         EditorGUILayout.LabelField("스캔 결과",
-          $"작업 {_scan.Jobs.Count}개  ·  미bake {_scan.MissingCount}개  ·  dirty {_scan.DirtyCount}개",
+          $"작업 {_scan.Jobs.Count}개  ·  미bake {_scan.MissingCount}개  ·  dirty {_scan.DirtyCount}개  ·  미사용 {_scan.OrphanCount}개",
           EditorStyles.miniLabel);
       }
 
@@ -124,6 +124,13 @@ namespace MultiplayerInfrastructure.Scenario
             if (GUILayout.Button("전체 다시 굽기"))
               StartBaking(onlyNeeded: false);
           }
+        }
+
+        // 사용하지 않는(orphan) baked 파일 정리
+        using (new EditorGUI.DisabledScope(_scan == null || !_scan.HasOrphans))
+        {
+          if (GUILayout.Button($"미사용 baked 파일 정리 ({(_scan != null ? _scan.OrphanCount : 0)}개)"))
+            CleanOrphans();
         }
       }
 
@@ -167,6 +174,25 @@ namespace MultiplayerInfrastructure.Scenario
         _lastError = $"스캔 오류: {ex.Message}";
         Debug.LogError($"[ScenarioInlineAudioBaker] {ex}");
       }
+    }
+
+    /// <summary>현재 스캔 결과의 미사용(orphan) baked 파일을 삭제한다.</summary>
+    private void CleanOrphans()
+    {
+      if (_scan == null || !_scan.HasOrphans) return;
+
+      bool ok = EditorUtility.DisplayDialog(
+        "미사용 baked 파일 정리",
+        $"현재 어떤 시나리오 노드에서도 사용하지 않는 baked 파일 {_scan.OrphanCount}개를 삭제합니다.\n계속하시겠습니까?",
+        "삭제", "취소");
+      if (!ok) return;
+
+      int removed = ScenarioTTSBakeScanner.DeleteOrphans(_scan.OrphanedBakedPaths);
+      AssetDatabase.Refresh();
+      _log.Clear();
+      _log.Add($"미사용 baked 파일 {removed}개 삭제 완료.");
+      Debug.Log($"[ScenarioInlineAudioBaker] 미사용 baked 파일 {removed}개 삭제.");
+      Rescan();
     }
 
     // =========================================================================

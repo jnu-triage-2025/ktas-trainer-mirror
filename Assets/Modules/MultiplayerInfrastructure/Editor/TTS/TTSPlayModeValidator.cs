@@ -83,34 +83,72 @@ namespace MultiplayerInfrastructure.Editor.TTS
         return;
       }
 
-      if (!scan.NeedsBake) return;
+      // bake가 필요하거나(미bake/dirty) 사용하지 않는 baked 파일(orphan)이 있으면 안내한다.
+      if (!scan.NeedsBake && !scan.HasOrphans) return;
 
       EditorApplication.isPlaying = false;
 
+      // 상태 메시지 구성
+      var lines = new System.Text.StringBuilder();
+      if (scan.NeedsBake)
+      {
+        lines.AppendLine("PlayTTS가 켜진 인라인 텍스트 중 사전 합성이 필요한 항목이 있습니다.");
+        lines.AppendLine($"  · 미bake: {scan.MissingCount}개");
+        lines.AppendLine($"  · 변경됨(dirty): {scan.DirtyCount}개");
+      }
+      if (scan.HasOrphans)
+      {
+        if (scan.NeedsBake) lines.AppendLine();
+        lines.AppendLine($"더 이상 사용하지 않는 baked 파일: {scan.OrphanCount}개");
+      }
+      lines.AppendLine();
+
+      if (scan.NeedsBake)
+        lines.Append("지금 bake하시겠습니까? bake하지 않으면 런타임에 즉석 합성됩니다.");
+      else
+        lines.Append("사용하지 않는 baked 파일을 정리하시겠습니까?");
+
+      // 버튼 구성:
+      //   · bake가 필요하면: [지금 bake + 정리] / [취소] / [그대로 재생]
+      //   · orphan만 있으면:  [지금 정리] / [취소] / [그대로 재생]
+      string primaryLabel = scan.NeedsBake
+        ? (scan.HasOrphans ? "지금 bake + 정리" : "지금 bake")
+        : "지금 정리";
+
       int choice = EditorUtility.DisplayDialogComplex(
-        "시나리오 TTS Bake 필요",
-        "PlayTTS가 켜진 인라인 텍스트 중 사전 합성이 필요한 항목이 있습니다.\n\n" +
-        $"  · 미bake: {scan.MissingCount}개\n" +
-        $"  · 변경됨(dirty): {scan.DirtyCount}개\n\n" +
-        "지금 bake하시겠습니까? bake하지 않으면 런타임에 즉석 합성됩니다.",
-        "지금 bake",    // 0
-        "취소",         // 1
-        "그대로 재생");  // 2
+        "시나리오 TTS Bake 검사",
+        lines.ToString(),
+        primaryLabel,   // 0
+        "취소",          // 1
+        "그대로 재생");   // 2
 
       switch (choice)
       {
-        case 0:
-          MultiplayerInfrastructure.Scenario.ScenarioTTSBakeScanner.BakeAllNeededSynchronously();
+        case 0: // 주 작업(bake 및/또는 orphan 정리) 후 재생
+          if (scan.NeedsBake)
+            MultiplayerInfrastructure.Scenario.ScenarioTTSBakeScanner.BakeAllNeededSynchronously();
+
+          if (scan.HasOrphans)
+          {
+            int removed = MultiplayerInfrastructure.Scenario.ScenarioTTSBakeScanner
+              .DeleteOrphans(scan.OrphanedBakedPaths);
+            if (removed > 0)
+            {
+              AssetDatabase.Refresh();
+              Debug.Log($"[TTS] 사용하지 않는 baked 파일 {removed}개를 정리했습니다.");
+            }
+          }
+
           _skipInlineBakeCheckOnce = true;
           EditorApplication.isPlaying = true;
           break;
 
-        case 2:
+        case 2: // 그대로 재생 (정리/생성 없이 진행, 런타임 즉석 합성)
           _skipInlineBakeCheckOnce = true;
           EditorApplication.isPlaying = true;
           break;
 
-        default:
+        default: // 취소
           break;
       }
     }

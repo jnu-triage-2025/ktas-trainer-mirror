@@ -65,8 +65,21 @@ namespace MultiplayerInfrastructure.Scenario
       /// <summary>텍스트 변경으로 stale 파일이 남은 dirty 작업 수.</summary>
       public int DirtyCount;
 
+      /// <summary>
+      /// 현재 어떤 시나리오 노드에서도 사용하지 않는(=orphan) baked WAV 절대 경로 목록.
+      /// 노드/시나리오 삭제, PlayTTS 해제, 텍스트 변경 등으로 더 이상 참조되지 않는 파일들이다.
+      /// (dirty 작업의 stale 파일도 여기에 포함된다.)
+      /// </summary>
+      public readonly List<string> OrphanedBakedPaths = new List<string>();
+
+      /// <summary>사용하지 않는 baked 파일 수.</summary>
+      public int OrphanCount => OrphanedBakedPaths.Count;
+
       /// <summary>bake가 필요한(missing 또는 dirty) 작업이 있으면 true.</summary>
       public bool NeedsBake => MissingCount > 0 || DirtyCount > 0;
+
+      /// <summary>정리할 사용하지 않는 baked 파일이 있으면 true.</summary>
+      public bool HasOrphans => OrphanedBakedPaths.Count > 0;
     }
 
     /// <summary>
@@ -109,7 +122,81 @@ namespace MultiplayerInfrastructure.Scenario
         CollectFromGraph(graph, streamingAssetsPath, result);
       }
 
+      CollectOrphans(streamingAssetsPath, result);
+
       return result;
+    }
+
+    /// <summary>
+    /// BakedInline 폴더 내 모든 .wav 파일 중 현재 어떤 job에서도 참조하지 않는
+    /// 파일(=orphan)을 수집한다. 현재 유효한 대상은 각 job의 ExpectedBakedPath 이다.
+    /// </summary>
+    private static void CollectOrphans(string streamingAssetsPath, ScanResult result)
+    {
+      string inlineRoot = Path.Combine(streamingAssetsPath, TTSCore.BakedInlineAudioSubdir);
+      if (!Directory.Exists(inlineRoot)) return;
+
+      // 현재 유효한(사용 중인) baked 경로 집합
+      var validPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+      foreach (var job in result.Jobs)
+        validPaths.Add(Path.GetFullPath(job.ExpectedBakedPath));
+
+      foreach (var wav in Directory.GetFiles(inlineRoot, "*.wav", SearchOption.AllDirectories))
+      {
+        if (!validPaths.Contains(Path.GetFullPath(wav)))
+          result.OrphanedBakedPaths.Add(wav);
+      }
+    }
+
+    /// <summary>
+    /// 사용하지 않는(orphan) baked WAV 파일과 그 .meta를 삭제한다.
+    /// 삭제 후 비게 된 하위 디렉터리도 정리한다.
+    /// </summary>
+    /// <returns>실제로 삭제한 파일 수.</returns>
+    public static int DeleteOrphans(IEnumerable<string> orphanedPaths)
+    {
+      int deleted = 0;
+      var touchedDirs = new HashSet<string>();
+
+      foreach (var path in orphanedPaths)
+      {
+        try
+        {
+          if (File.Exists(path))
+          {
+            File.Delete(path);
+            deleted++;
+          }
+
+          string meta = path + ".meta";
+          if (File.Exists(meta)) File.Delete(meta);
+
+          string dir = Path.GetDirectoryName(path);
+          if (!string.IsNullOrEmpty(dir)) touchedDirs.Add(dir);
+        }
+        catch (Exception e)
+        {
+          Debug.LogWarning($"[ScenarioTTSBakeScanner] orphan 삭제 실패 ({path}): {e.Message}");
+        }
+      }
+
+      // 비게 된 시나리오 하위 디렉터리 정리
+      foreach (var dir in touchedDirs)
+      {
+        try
+        {
+          if (Directory.Exists(dir) && Directory.GetFiles(dir).Length == 0
+              && Directory.GetDirectories(dir).Length == 0)
+          {
+            Directory.Delete(dir);
+            string dirMeta = dir + ".meta";
+            if (File.Exists(dirMeta)) File.Delete(dirMeta);
+          }
+        }
+        catch { /* ignore */ }
+      }
+
+      return deleted;
     }
 
     private static void CollectFromGraph(ScenarioGraph graph, string streamingAssetsPath, ScanResult result)
@@ -144,6 +231,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 변수를 포함하면 bake 대상에서 제외 (런타임 즉석 합성).
       if (ContainsVariable(text)) return;
 
+      string hash         = TTSCore.ComputeTextHash(text);
       string expectedPath = TTSCore.GetBakedInlineClipPath(streamingAssetsPath, scenarioId, nodeId, text);
       bool   isBaked      = File.Exists(expectedPath);
 
@@ -157,17 +245,28 @@ namespace MultiplayerInfrastructure.Scenario
       };
 
       // 같은 노드에 대한 stale 파일(구버전 해시) 탐색 → dirty 판정.
-      string nodeDir     = Path.GetDirectoryName(expectedPath);
-      string safeNode    = Path.GetFileNameWithoutExtension(expectedPath);
-      // safeNode 는 "{nodeIdentifier}_{hash}" 형태. 접두어(nodeIdentifier_)만 추출.
-      int    lastUnder   = safeNode.LastIndexOf('_');
-      string nodePrefix  = lastUnder >= 0 ? safeNode.Substring(0, lastUnder + 1) : safeNode;
+      //
+      // 주의: 노드 식별자가 서로 접두어 관계일 수 있다(예: "N001" 과 "N001_1", "N001_retry_a").
+      // 단순 "{nodeId}_*" 글롭은 다른 노드의 파일까지 오탐하므로,
+      // "{sanitizedNodeId}_{16자리 hex}.wav" 형태로 정확히 일치하는 파일만 stale 후보로 본다.
+      string nodeDir  = Path.GetDirectoryName(expectedPath);
+      string fileStem = Path.GetFileNameWithoutExtension(expectedPath); // "{sanitizedNodeId}_{hash}"
+      // fileStem 끝의 "_{hash}"(= '_' + 16 hex)를 제거하면 정확한 sanitizedNodeId 를 얻는다.
+      string sanitizedNodeId = fileStem.Length > hash.Length + 1
+        ? fileStem.Substring(0, fileStem.Length - hash.Length - 1)
+        : fileStem;
+
+      var exactPattern = new Regex(
+        "^" + Regex.Escape(sanitizedNodeId) + @"_[0-9a-f]{16}\.wav$",
+        RegexOptions.IgnoreCase);
 
       if (nodeDir != null && Directory.Exists(nodeDir))
       {
-        foreach (var wav in Directory.GetFiles(nodeDir, nodePrefix + "*.wav"))
+        string expectedFull = Path.GetFullPath(expectedPath);
+        foreach (var wav in Directory.GetFiles(nodeDir, "*.wav"))
         {
-          if (Path.GetFullPath(wav) != Path.GetFullPath(expectedPath))
+          if (!exactPattern.IsMatch(Path.GetFileName(wav))) continue;
+          if (Path.GetFullPath(wav) != expectedFull)
             job.StaleBakedPaths.Add(wav);
         }
       }
