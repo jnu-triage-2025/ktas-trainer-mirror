@@ -36,11 +36,11 @@ namespace MultiplayerInfrastructure.Player
 
     void Start()
     {
-      Start_Input();
+      // 인벤토리 슬롯 초기화는 소유 여부와 무관하게 필요하다(서버/원격에서도 슬롯 데이터 유지).
       Start_Inventory();
-      Start_Hotbar();
-      Start_Item();
     }
+
+
 
     void Update()
     {
@@ -74,6 +74,15 @@ namespace MultiplayerInfrastructure.Player
       OnStartClient_Dialogue();
       OnStartClient_Quest();
       OnClientStart_EscapeMenu();
+
+      // UI 바인딩(핫바/아이템/입력)은 로컬 소유자 전용이다.
+      // 원격 플레이어 인스턴스가 로컬 핫바 UI를 자신의 슬롯으로 재바인딩하면
+      // 중복 구독과 잘못된 인벤토리 표시가 발생한다.
+      // (FishNet 은 Start 안에서 IsOwner 사용을 금지하므로 여기서 호출한다.)
+      Start_Inventory(); // 슬롯이 아직 없으면 먼저 초기화(멱등).
+      Start_Input();
+      Start_Hotbar();
+      Start_Item();
     }
 
     public override void OnStopClient()

@@ -77,7 +77,45 @@ namespace MultiplayerInfrastructure.Player
       Registry.Registry.UnregisterEntity(_entityIdentifier.Value);
       PlayerTagService.ClearTags(_userIdentifier.Value);
       UserDescriptorService.Unregister(_userIdentifier.Value);
+
+      // 이 플레이어가 점유(claim)했지만 확정(ack/failure)하지 못한 픽업이 있으면
+      // 아이템이 영구 유실되지 않도록 월드에 되돌린다.
+      RestorePendingPickupsForClaimant();
+
       base.OnStopServer();
+    }
+
+    /// <summary>
+    /// 접속 종료 등으로 픽업 확정이 오지 않은 항목을 월드에 다시 스폰한다(서버 전용).
+    /// </summary>
+    private void RestorePendingPickupsForClaimant()
+    {
+      if (Owner == null || !Owner.IsValid)
+        return;
+
+      int claimantId = Owner.ClientId;
+      var toRestore = new List<KeyValuePair<string, PendingWorldItemPickup>>();
+      foreach (var kvp in _pendingWorldItemPickups)
+      {
+        if (kvp.Value != null && kvp.Value.ClaimantClientId == claimantId)
+          toRestore.Add(kvp);
+      }
+
+      foreach (var kvp in toRestore)
+      {
+        _pendingWorldItemPickups.Remove(kvp.Key);
+        var pending = kvp.Value;
+        RpcSpawnDroppedWorldItem(
+          kvp.Key,
+          pending.ItemIdentifier,
+          pending.StackCount,
+          pending.Durability,
+          pending.CooldownRemainingMilliseconds,
+          pending.SerializedDerivedAttributes ?? string.Empty,
+          pending.Position,
+          pending.Rotation,
+          Vector3.zero);
+      }
     }
 
     // ── 클라이언트 생명주기 (모든 클라이언트 — owner 무관) ────────────────────
@@ -632,14 +670,17 @@ namespace MultiplayerInfrastructure.Player
       if (!string.IsNullOrWhiteSpace(serializedDerivedAttributes))
         item.SetCurrentSerializedDerivedAttributes(serializedDerivedAttributes);
 
-      if (!TryAddItemToInventory(item))
+      // 전량 수용 가능 여부를 먼저 확인한다(all-or-nothing).
+      // 부분 추가 후 실패 보고를 하면 서버가 원래 스택 전체를 다시 스폰하여
+      // 부분 추가된 만큼 아이템이 복제되는 버그가 발생한다.
+      if (!CanAcceptItem(item) || !TryAddItemToInventory(item))
       {
         Debug.LogWarning($"[PlayerController] Pickup confirmation received for '{entityIdentifier}', but inventory is full.");
         CmdReportPickupWorldItemFailure(entityIdentifier);
         return;
       }
 
-      item.OnGet(this);
+      // OnGet 은 TryAddItemToInventory 내부에서 1회 호출된다(중복 호출 금지).
       CmdAcknowledgePickupWorldItemSuccess(entityIdentifier);
     }
 

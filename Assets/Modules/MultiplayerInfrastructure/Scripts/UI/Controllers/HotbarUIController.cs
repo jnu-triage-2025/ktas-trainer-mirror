@@ -56,6 +56,10 @@ namespace MultiplayerInfrastructure.UI
       _hotbar.Initialize(Math.Clamp(hotbarSlotCount, HotbarControl.MinSlotSize, HotbarControl.MaxSlotSize));
       // _hotbar.BindInventory(Inventory);
       _hotbar.SetSelectedIndex(0);
+      // SetupHotbarUI 가 여러 번 호출되어도(플레이어 리스폰 등) 핸들러가 중복 누적되지 않도록
+      // 구독 전에 항상 해제한다(idempotent).
+      _hotbar.OnSlotSelected -= OnHotbarSlotSelected;
+      _hotbar.OnHeldItemNameChanged -= OnHeldItemNameChanged;
       _hotbar.OnSlotSelected += OnHotbarSlotSelected;
       _hotbar.OnHeldItemNameChanged += OnHeldItemNameChanged;
     }

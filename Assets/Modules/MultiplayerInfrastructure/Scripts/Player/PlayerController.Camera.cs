@@ -39,6 +39,16 @@ namespace MultiplayerInfrastructure.Player
       if (!IsOwner) return;
       if (_camControl == null) return;
 
+      // 관전 추종(spectate follow) 중에는 다른 플레이어의 카메라 홀더를 따라가야 하므로
+      // 로컬 홀더로 되돌리지 않는다. (되돌리면 관전 추종이 매 프레임 풀리는 버그 발생)
+      if (_isSpectateFollowing)
+      {
+        // 추종 대상이 파괴(접속 종료 등)되면 자동으로 관전 추종을 해제한다.
+        if (_spectateFollowTarget == null)
+          StopSpectateFollow();
+        return;
+      }
+
       // Ensure camera sticks to the local owner's holder even if other events tried to retarget.
       if (_camControl.FollowingCameraHolder != _cameraHolderTransform)
         _camControl.SetTarget(this);

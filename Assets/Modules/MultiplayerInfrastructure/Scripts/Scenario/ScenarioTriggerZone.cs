@@ -146,7 +146,8 @@ namespace MultiplayerInfrastructure.Scenario
         if (triggeringObject != null)
         {
           var netObj = triggeringObject.GetComponentInParent<NetworkObject>();
-          if (netObj != null)
+          // 서버 소유(Owner 미지정) 오브젝트는 ClientId 가 -1 이므로 소유자로 취급하지 않는다.
+          if (netObj != null && netObj.Owner != null && netObj.Owner.IsValid)
           {
             clientId = (int)netObj.Owner.ClientId;
           }

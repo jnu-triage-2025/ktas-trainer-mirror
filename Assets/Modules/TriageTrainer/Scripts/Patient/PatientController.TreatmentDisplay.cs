@@ -72,6 +72,12 @@ namespace TriageTrainer.Entity
       }
     }
 
+    // ── 공유 효과 정의(별칭 키가 동일 인스턴스를 참조하여 드리프트를 방지) ──
+    private static readonly ItemUseEffect CervicalCollarEffect =
+      new(TreatmentDisplay.CervicalCollarOnNeck, "apply_stabilizer_{id}", "click_neckstabilizer");
+    private static readonly ItemUseEffect NasalCannulaEffect =
+      new(TreatmentDisplay.NasalCannulaApplied, "apply_nasal_cannula", "click_nasal");
+
     // ── 아이템 식별자 → 효과(처치표현 + 신호) 기본 매핑(하드코딩, Reset 무관) ──
     //
     // 부위가 환자별로 고정되어 있고(프리팹 hierarchy 반영) 컨트롤러는 플래그만 켜면 되므로,
@@ -83,9 +89,14 @@ namespace TriageTrainer.Entity
       { "gauze",          new ItemUseEffect(TreatmentDisplay.GauzePatchedOnThorax, "apply_gauze") },
       { "plaster",        new ItemUseEffect(TreatmentDisplay.GauzeDressingDoneOnThorax, "apply_plaster_on_gauze", "apply_plaster_on_intu") },
       { "gloves",         new ItemUseEffect(TreatmentDisplay.None, "wear_glove") },
-      { "neckstabilizer", new ItemUseEffect(TreatmentDisplay.CervicalCollarOnNeck, "apply_stabilizer_{id}") },
+      // 실제 아이템 식별자(cervical_collar / nasalcannula)가 프로덕션 경로의 키.
+      // 구 명칭(neckstabilizer / nasal)은 디버그 훅(Debug_ApplyItemUse) 호환용 별칭이며,
+      // 반드시 동일 인스턴스를 공유해 신호/표현이 갈라지지 않게 한다.
+      { "cervical_collar", CervicalCollarEffect },
+      { "neckstabilizer",  CervicalCollarEffect },
       { "electrode",      new ItemUseEffect(TreatmentDisplay.None, "apply_electrode") },
-      { "nasal",          new ItemUseEffect(TreatmentDisplay.NasalCannulaApplied, "apply_nasal_cannula") },
+      { "nasalcannula",   NasalCannulaEffect },
+      { "nasal",          NasalCannulaEffect },
 
       // 사용형(시각 표현 없음 또는 별도 이벤트가 표현 담당)
       { "yankauer",            new ItemUseEffect(TreatmentDisplay.None, "suction_{id}") },

@@ -61,6 +61,8 @@ namespace MultiplayerInfrastructure.Player
 
       if (_detector != null)
         _detector.NearbyUpdated -= HandleNearbyUpdated;
+
+      OnDestroy_Item();
     }
 
     private void HandleNearbyUpdated(IReadOnlyList<IInteractable> nearby)

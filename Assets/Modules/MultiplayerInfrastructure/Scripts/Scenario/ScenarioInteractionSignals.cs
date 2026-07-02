@@ -23,6 +23,12 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>RuntimeState 레지스트리에서 신호 식별자에 적용할 접두사.</summary>
     public const string Prefix = "sig.";
 
+    /// <summary>
+    /// 신호가 로컬 레지스트리에 기록될 때 발생한다(정규화된 식별자 전달).
+    /// 루브릭 기록 등 신호 관찰자가 게이트 타임아웃 이후의 수행도 추적할 수 있게 한다.
+    /// </summary>
+    public static event Action<string> OnSignalRegistered;
+
     /// <summary>신호 식별자를 정규화한다(접두사 보장).</summary>
     public static string Normalize(string signalId)
     {
@@ -101,6 +107,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Registry.Registry.Register(RegistryType.RuntimeState, normalizedSignalId, true);
+      OnSignalRegistered?.Invoke(normalizedSignalId);
     }
 
     /// <summary>정규화된 신호를 로컬 RuntimeState 레지스트리에서 직접 제거한다(권한 라우팅 미경유).</summary>

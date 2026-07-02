@@ -17,6 +17,11 @@ namespace MultiplayerInfrastructure.Player
     private bool _currentJumpAnimationParameter;
     private bool _hasValidatedAnimationParameters;
     private bool _hasRequiredAnimationParameters;
+    private bool _hasWarnedMissingAnimationParameters;
+    // Hysteresis for walk detection to prevent jitter
+    private bool _wasWalking;
+    private const float WalkEnterThreshold = 0.1f;
+    private const float WalkExitThreshold = 0.05f;
 
     private void Awake_Animation()
     {
@@ -45,7 +50,16 @@ namespace MultiplayerInfrastructure.Player
       EnsureBaseLayerWeight(_characterModelAnimator);
 
       if (!HasRequiredAnimationParameters(_characterModelAnimator))
-        Debug.LogWarning($"Animator '{_characterModelAnimator.name}' is missing required animation parameters. Walk parameter: '{WalkAnimationParameterName}', Jump parameter: '{JumpAnimationParameterName}'.", this);
+      {
+        // 필수 파라미터가 없으면 SetBool/CrossFade 를 시도하지 않는다.
+        // 경고는 최초 1회만 출력한다(매 프레임 로그 스팸 방지).
+        if (!_hasWarnedMissingAnimationParameters)
+        {
+          _hasWarnedMissingAnimationParameters = true;
+          Debug.LogWarning($"Animator '{_characterModelAnimator.name}' is missing required animation parameters. Walk parameter: '{WalkAnimationParameterName}', Jump parameter: '{JumpAnimationParameterName}'.", this);
+        }
+        return;
+      }
 
       bool isJump = IsJumpingAnimationState();
       bool isWalk = !isJump && IsWalkingAnimationState();
@@ -58,20 +72,23 @@ namespace MultiplayerInfrastructure.Player
       return _jumpAnimationRequestedThisFrame;
     }
 
-    private bool IsWalkingAnimationState()
+private bool IsWalkingAnimationState()
     {
-      if (!canMove)
-        return false;
+        if (_characterController == null)
+            return false;
 
-      if (_characterController == null)
-        _characterController = GetComponent<CharacterController>();
-
-      if (_characterController == null || !_characterController.isGrounded)
-        return false;
-
-      Vector3 planarMoveDirection = _moveDirection;
-      planarMoveDirection.y = 0f;
-      return planarMoveDirection.sqrMagnitude > 0.0001f;
+        Vector3 planarMove = _characterController.velocity;
+        planarMove.y = 0f;
+        float speedSqr = planarMove.sqrMagnitude;
+        if (!_wasWalking && speedSqr > WalkEnterThreshold * WalkEnterThreshold)
+        {
+            _wasWalking = true;
+        }
+        else if (_wasWalking && speedSqr < WalkExitThreshold * WalkExitThreshold)
+        {
+            _wasWalking = false;
+        }
+        return _wasWalking;
     }
 
     private void SetCharacterModelAnimator(Animator animator)
@@ -82,6 +99,7 @@ namespace MultiplayerInfrastructure.Player
       _currentJumpAnimationParameter = false;
       _hasValidatedAnimationParameters = false;
       _hasRequiredAnimationParameters = false;
+      _hasWarnedMissingAnimationParameters = false;
 
       ApplyRuntimeAnimatorController(_characterModelAnimator);
 
@@ -96,24 +114,29 @@ namespace MultiplayerInfrastructure.Player
       ApplyAnimationParameters(isWalk: false, isJump: false);
     }
 
-    private void ApplyAnimationParameters(bool isWalk, bool isJump)
+private void ApplyAnimationParameters(bool isWalk, bool isJump)
     {
-      if (_characterModelAnimator == null)
-        return;
+        if (_characterModelAnimator == null)
+            return;
 
-      bool changed = !_hasAnimationParameterState
-        || _currentWalkAnimationParameter != isWalk
-        || _currentJumpAnimationParameter != isJump;
+        bool changed = !_hasAnimationParameterState
+            || _currentWalkAnimationParameter != isWalk
+            || _currentJumpAnimationParameter != isJump;
 
-      if (!changed)
-        return;
+        if (!changed)
+            return;
 
-      _characterModelAnimator.SetBool(WalkAnimationParameterName, isWalk);
-      _characterModelAnimator.SetBool(JumpAnimationParameterName, isJump);
+        // Set parameters for any other logic that may read them
+        _characterModelAnimator.SetBool(WalkAnimationParameterName, isWalk);
+        _characterModelAnimator.SetBool(JumpAnimationParameterName, isJump);
 
-      _currentWalkAnimationParameter = isWalk;
-      _currentJumpAnimationParameter = isJump;
-      _hasAnimationParameterState = true;
+        // Immediately cross‑fade to the target state to avoid waiting for exit time
+        string targetState = isJump ? "Jump" : (isWalk ? "Walk" : "Idle");
+        _characterModelAnimator.CrossFade(targetState, 0f, 0);
+
+        _currentWalkAnimationParameter = isWalk;
+        _currentJumpAnimationParameter = isJump;
+        _hasAnimationParameterState = true;
     }
 
     private void ApplyRuntimeAnimatorController(Animator animator)

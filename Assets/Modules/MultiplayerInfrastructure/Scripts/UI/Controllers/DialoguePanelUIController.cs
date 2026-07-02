@@ -641,10 +641,7 @@ namespace MultiplayerInfrastructure.UI
     {
       if (!UIOverlayStack.IsTop(this))
       {
-        if (UIOverlayStack.IsEmpty())
-          UIOverlayStack.Push(this);
-        else
-          UIOverlayStack.Push(this);
+        UIOverlayStack.Push(this);
       }
 
       Show();

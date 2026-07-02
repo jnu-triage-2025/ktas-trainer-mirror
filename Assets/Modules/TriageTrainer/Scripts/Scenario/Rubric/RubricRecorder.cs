@@ -37,6 +37,7 @@ namespace TriageTrainer.Scenario.Rubric
 
     private readonly Dictionary<string, RubricItemDefinition> _itemsByGateNode = new();
     private readonly Dictionary<string, RubricItemDefinition> _itemsById = new();
+    private readonly Dictionary<string, List<RubricItemDefinition>> _itemsByAutoSignal = new();
 
     private RubricResultStore _store;
     private ScenarioController _controller;
@@ -63,6 +64,7 @@ namespace TriageTrainer.Scenario.Rubric
     {
       _itemsByGateNode.Clear();
       _itemsById.Clear();
+      _itemsByAutoSignal.Clear();
 
       if (_rubricDefinition == null || string.IsNullOrWhiteSpace(_rubricDefinition.text))
       {
@@ -100,6 +102,19 @@ namespace TriageTrainer.Scenario.Rubric
         {
           _itemsByGateNode[item.GateNodeIdentifier] = item;
         }
+
+        // autoSignal 매핑: 게이트 타임아웃(NotPerformed) 이후에라도
+        // 매핑된 신호가 올라오면 Performed 로 기록한다(수행 우선 정책과 결합).
+        if (!string.IsNullOrWhiteSpace(item.AutoSignal))
+        {
+          var normalized = ScenarioInteractionSignals.Normalize(item.AutoSignal);
+          if (!_itemsByAutoSignal.TryGetValue(normalized, out var list))
+          {
+            list = new List<RubricItemDefinition>();
+            _itemsByAutoSignal[normalized] = list;
+          }
+          list.Add(item);
+        }
       }
 
       if (_logDecisions)
@@ -126,6 +141,7 @@ namespace TriageTrainer.Scenario.Rubric
       _controller.OnScenarioEnded += HandleScenarioEnded;
       _controller.OnNodeChanged += HandleNodeChanged;
       _controller.OnValidatorWaitTimeout += HandleValidatorWaitTimeout;
+      ScenarioInteractionSignals.OnSignalRegistered += HandleSignalRegistered;
     }
 
     private void Start()
@@ -145,7 +161,37 @@ namespace TriageTrainer.Scenario.Rubric
       _controller.OnScenarioEnded -= HandleScenarioEnded;
       _controller.OnNodeChanged -= HandleNodeChanged;
       _controller.OnValidatorWaitTimeout -= HandleValidatorWaitTimeout;
+      ScenarioInteractionSignals.OnSignalRegistered -= HandleSignalRegistered;
       _controller = null;
+    }
+
+    /// <summary>
+    /// autoSignal 로 매핑된 신호가 올라오면 해당 항목을 Performed 로 기록한다.
+    /// 게이트 타임아웃으로 NotPerformed 가 먼저 기록됐더라도 "수행 우선" 정책에 따라
+    /// 이후 실제 수행이 확인되면 Performed 로 갱신된다.
+    /// </summary>
+    private void HandleSignalRegistered(string normalizedSignalId)
+    {
+      if (_store == null || string.IsNullOrEmpty(normalizedSignalId)
+          || !_itemsByAutoSignal.TryGetValue(normalizedSignalId, out var items))
+      {
+        return;
+      }
+
+      foreach (var item in items)
+      {
+        // 타임아웃 후 늦은 수행 포함: NotPerformed → Performed 승격은 Record 가 허용한다
+        // (Record 는 Performed→NotPerformed 강등만 막는다).
+        bool wasTimedOut = _store.TryGet(item.Id, playerId: null, out var existing)
+            && existing.Status == RubricStatus.NotPerformed;
+        var note = wasTimedOut ? $"signal after timeout: {normalizedSignalId}" : $"signal: {normalizedSignalId}";
+        var result = _store.Record(item.Id, playerId: null, RubricStatus.Performed, note);
+
+        if (_logDecisions && result != null)
+        {
+          Debug.Log($"[RubricRecorder] 수행(신호): {item.Id} ({item.Title}) ← {normalizedSignalId}", this);
+        }
+      }
     }
 
     // ── 세션 수명주기 ───────────────────────────────────────────────

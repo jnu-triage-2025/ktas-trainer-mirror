@@ -31,7 +31,7 @@ namespace TriageTrainer.Entity.Patient
     {
       get
       {
-        if (gcs < 2) return GCSLabel.NA;
+        if (gcs < 3) return GCSLabel.NA; // GCS 최저점은 3점(E1/V1/M1)
         if (gcs <= 8) return GCSLabel.Severe;
         if (gcs <= 12) return GCSLabel.Moderate;
         if (gcs <= 15) return GCSLabel.Mild;
