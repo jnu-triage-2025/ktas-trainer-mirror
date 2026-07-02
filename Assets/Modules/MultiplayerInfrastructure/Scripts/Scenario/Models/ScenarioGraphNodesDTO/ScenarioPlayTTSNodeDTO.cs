@@ -13,5 +13,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("waitUntilFinished")]
     public bool? WaitUntilFinished { get; set; }
+
+    [JsonPropertyName("ttsVoiceIdentifier")]
+    public string TtsVoiceIdentifier { get; set; }
   }
 }

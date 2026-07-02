@@ -12,6 +12,7 @@
 - (없음)
 
 ### 문서
+- [tts-multi-voice-spec.md](./tts-multi-voice-spec.md): TTS 다중 목소리 프로파일 (Multi-Voice Profile)
 - [tts-transcripts-spec.md](./tts-transcripts-spec.md): TTS 스크립트 (Transcripts) 가이드
 
 작성 기준: Git 추적 문서(.md) 기준으로 색인하며, .gitignore 대상 파일은 제외합니다.

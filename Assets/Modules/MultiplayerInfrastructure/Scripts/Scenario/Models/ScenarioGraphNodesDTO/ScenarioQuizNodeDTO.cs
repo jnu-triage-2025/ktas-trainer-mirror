@@ -28,5 +28,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("playTTS")]
     public bool? PlayTTS { get; set; }
+
+    [JsonPropertyName("ttsVoiceIdentifier")]
+    public string TtsVoiceIdentifier { get; set; }
   }
 }

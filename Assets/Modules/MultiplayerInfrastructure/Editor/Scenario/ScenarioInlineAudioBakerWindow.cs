@@ -15,7 +15,8 @@ namespace MultiplayerInfrastructure.Scenario
   /// StreamingAssets/TTS/BakedInline/ 에 WAV로 저장하는 에디터 창.
   ///
   /// 저장 경로 규칙:
-  ///   Assets/StreamingAssets/TTS/BakedInline/{scenarioIdentifier}/{nodeIdentifier}_{hash}.wav
+  ///   · 기본 목소리:  TTS/BakedInline/{scenarioIdentifier}/{nodeIdentifier}_{hash}.wav
+  ///   · 지정 목소리: TTS/BakedInline/{scenarioIdentifier}/{voiceIdentifier}/{nodeIdentifier}_{hash}.wav
   ///
   /// 메뉴: Tools > Text to Speech Service > Bake Scenario Inline Audio
   /// </summary>
@@ -30,7 +31,15 @@ namespace MultiplayerInfrastructure.Scenario
     private string _language  = "ko";
     private int    _totalStep = 5;
     private float  _speed     = 1.05f;
-    private bool   _cleanStale = true;
+    // voice 경로가 변경된 첫 베이크에서 기존 flat-path 파일이 orphan으로 삭제되는 것을 방지하기 위해
+    // 기본값을 false로 설정한다. 사용자가 명시적으로 활성화해야 한다.
+    private bool   _cleanStale = false;
+
+    // 추가 목소리 프로파일 (VoiceIdentifier → TTSVoiceProfile)
+    // 시나리오 노드에 ttsVoiceIdentifier가 설정된 경우 이 매핑으로 스타일을 결정한다.
+    private readonly List<TTSVoiceProfile> _extraVoiceProfiles = new();
+    private Vector2 _profileScroll;
+    private bool    _showVoiceProfiles = true;
 
     private void OnEnable()
     {
@@ -82,10 +91,58 @@ namespace MultiplayerInfrastructure.Scenario
       using (new EditorGUI.DisabledScope(_isBaking))
       {
         _onnxDirPath    = EditorGUILayout.TextField("ONNX 디렉터리", _onnxDirPath);
+
+        EditorGUILayout.Space(4);
+        EditorGUILayout.LabelField("기본 목소리 설정", EditorStyles.boldLabel);
         _voiceStylePath = EditorGUILayout.TextField("음성 스타일",   _voiceStylePath);
         _language  = EditorGUILayout.TextField("언어 코드", _language);
         _totalStep = EditorGUILayout.IntField("Diffusion 스텝", _totalStep);
         _speed     = EditorGUILayout.FloatField("속도 배율",  _speed);
+
+        EditorGUILayout.Space(4);
+
+        // 추가 목소리 프로파일 편집 UI
+        _showVoiceProfiles = EditorGUILayout.Foldout(_showVoiceProfiles, $"추가 목소리 프로파일 ({_extraVoiceProfiles.Count}개)", true);
+        if (_showVoiceProfiles)
+        {
+          EditorGUI.indentLevel++;
+          EditorGUILayout.HelpBox(
+            "시나리오 노드에 ttsVoiceIdentifier가 설정된 경우 이 목록의 해당 프로파일로 bake됩니다.\n" +
+            "VoiceIdentifier는 노드 JSON의 ttsVoiceIdentifier 값과 정확히 일치해야 합니다.",
+            MessageType.Info);
+
+          _profileScroll = EditorGUILayout.BeginScrollView(_profileScroll, GUILayout.MaxHeight(160));
+          for (int pi = 0; pi < _extraVoiceProfiles.Count; pi++)
+          {
+            var p = _extraVoiceProfiles[pi];
+            EditorGUILayout.BeginVertical("box");
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField($"프로파일 #{pi + 1}", EditorStyles.boldLabel, GUILayout.Width(90));
+            if (GUILayout.Button("삭제", GUILayout.Width(42)))
+            {
+              _extraVoiceProfiles.RemoveAt(pi);
+              EditorGUILayout.EndHorizontal();
+              EditorGUILayout.EndVertical();
+              break;
+            }
+            EditorGUILayout.EndHorizontal();
+
+            p.VoiceIdentifier = EditorGUILayout.TextField("VoiceIdentifier", p.VoiceIdentifier);
+            p.VoiceStyleName  = EditorGUILayout.TextField("음성 스타일명", p.VoiceStyleName);
+            p.Language        = EditorGUILayout.TextField("언어 코드 (빈칸=기본)", p.Language);
+            p.TotalStep       = EditorGUILayout.IntField("Diffusion 스텝 (0=기본)", p.TotalStep);
+            p.Speed           = EditorGUILayout.FloatField("속도 배율 (0=기본)", p.Speed);
+            EditorGUILayout.EndVertical();
+          }
+          EditorGUILayout.EndScrollView();
+
+          if (GUILayout.Button("+ 프로파일 추가"))
+            _extraVoiceProfiles.Add(new TTSVoiceProfile { VoiceStyleName = "F1", Language = "ko" });
+
+          EditorGUI.indentLevel--;
+        }
+
+        EditorGUILayout.Space(4);
         _cleanStale = EditorGUILayout.Toggle("변경/미사용 파일 정리", _cleanStale);
 
         EditorGUILayout.Space(4);
@@ -148,9 +205,10 @@ namespace MultiplayerInfrastructure.Scenario
       {
         foreach (var job in _scan.Jobs)
         {
-          string state = job.IsDirty ? "DIRTY" : (job.IsBaked ? "OK" : "MISSING");
+          string state      = job.IsDirty ? "DIRTY" : (job.IsBaked ? "OK" : "MISSING");
+          string voiceLabel = string.IsNullOrEmpty(job.VoiceIdentifier) ? "" : $" [{job.VoiceIdentifier}]";
           EditorGUILayout.LabelField(
-            $"[{state}] {job.ScenarioIdentifier}/{job.NodeIdentifier}  \"{Truncate(job.Text, 40)}\"",
+            $"[{state}]{voiceLabel} {job.ScenarioIdentifier}/{job.NodeIdentifier}  \"{Truncate(job.Text, 40)}\"",
             EditorStyles.miniLabel);
         }
       }
@@ -236,12 +294,50 @@ namespace MultiplayerInfrastructure.Scenario
       float  spd        = _speed;
       bool   cleanStale = _cleanStale;
       var    log        = _log;
+      var    sa         = Application.streamingAssetsPath;
+
+      // 추가 voice profile 스냅샷 (비동기 작업 중 UI 변경 방지)
+      var profileSnapshot = new List<TTSVoiceProfile>(_extraVoiceProfiles.Count);
+      foreach (var p in _extraVoiceProfiles)
+        profileSnapshot.Add(new TTSVoiceProfile
+        {
+          VoiceIdentifier = p.VoiceIdentifier,
+          VoiceStyleName  = p.VoiceStyleName,
+          Language        = p.Language,
+          TotalStep       = p.TotalStep,
+          Speed           = p.Speed
+        });
 
       _ = Task.Run(() =>
       {
+        // voice identifier → TTSCore 캐시 (style path → core)
+        var coreByStylePath = new Dictionary<string, TTSCore>(StringComparer.Ordinal);
+
         try
         {
-          using var core = new TTSCore(onnxDir, stylePath);
+          // 기본 코어 생성
+          coreByStylePath[stylePath] = new TTSCore(onnxDir, stylePath);
+
+          // 추가 프로파일 코어 미리 생성
+          foreach (var p in profileSnapshot)
+          {
+            if (string.IsNullOrEmpty(p.VoiceIdentifier) || string.IsNullOrEmpty(p.VoiceStyleName)) continue;
+            string pStylePath = TTSCore.GetVoiceStylePath(sa, p.VoiceStyleName);
+            if (!coreByStylePath.ContainsKey(pStylePath))
+              coreByStylePath[pStylePath] = new TTSCore(onnxDir, pStylePath);
+          }
+
+          // voiceIdentifier → (stylePath, lang, step, spd) 매핑 구성
+          var voiceParamsMap = new Dictionary<string, (string sp, string lg, int st, float sd)>(StringComparer.Ordinal);
+          foreach (var p in profileSnapshot)
+          {
+            if (string.IsNullOrEmpty(p.VoiceIdentifier)) continue;
+            string pSp = TTSCore.GetVoiceStylePath(sa, string.IsNullOrEmpty(p.VoiceStyleName) ? "F1" : p.VoiceStyleName);
+            string pLg = string.IsNullOrEmpty(p.Language) ? lang : p.Language;
+            int    pSt = p.TotalStep > 0 ? p.TotalStep : steps;
+            float  pSd = p.Speed > 0f ? p.Speed : spd;
+            voiceParamsMap[p.VoiceIdentifier] = (pSp, pLg, pSt, pSd);
+          }
 
           for (int i = 0; i < jobs.Count; i++)
           {
@@ -270,12 +366,38 @@ namespace MultiplayerInfrastructure.Scenario
               continue;
             }
 
-            float[] wav = core.Synthesize(job.Text, lang, steps, spd);
+            // voice identifier에 맞는 core/params 결정
+            string jobSp = stylePath;
+            string jobLg = lang;
+            int    jobSt = steps;
+            float  jobSd = spd;
+
+            if (!string.IsNullOrEmpty(job.VoiceIdentifier)
+                && voiceParamsMap.TryGetValue(job.VoiceIdentifier, out var vp))
+            {
+              jobSp = vp.sp;
+              jobLg = vp.lg;
+              jobSt = vp.st;
+              jobSd = vp.sd;
+            }
+            else if (!string.IsNullOrEmpty(job.VoiceIdentifier))
+            {
+              AppendLog(log, $"[WARN] VoiceIdentifier '{job.VoiceIdentifier}' 에 대한 프로파일이 없습니다. 기본 스타일로 bake합니다.");
+            }
+
+            if (!coreByStylePath.TryGetValue(jobSp, out var core))
+            {
+              core = new TTSCore(onnxDir, jobSp);
+              coreByStylePath[jobSp] = core;
+            }
+
+            float[] wav = core.Synthesize(job.Text, jobLg, jobSt, jobSd);
 
             Directory.CreateDirectory(Path.GetDirectoryName(job.ExpectedBakedPath)!);
             Supertonic.Helper.WriteWavFile(job.ExpectedBakedPath, wav, core.SampleRate);
 
-            AppendLog(log, $"[OK]   {job.ScenarioIdentifier}/{job.NodeIdentifier}  \"{Truncate(job.Text, 30)}\"");
+            string voiceLabel = string.IsNullOrEmpty(job.VoiceIdentifier) ? "" : $" [{job.VoiceIdentifier}]";
+            AppendLog(log, $"[OK]{voiceLabel}   {job.ScenarioIdentifier}/{job.NodeIdentifier}  \"{Truncate(job.Text, 30)}\"");
           }
 
           AppendLog(log, $"완료 — {jobs.Count}개 인라인 세그먼트 처리됨");
@@ -294,6 +416,9 @@ namespace MultiplayerInfrastructure.Scenario
         }
         finally
         {
+          foreach (var c in coreByStylePath.Values)
+            try { c?.Dispose(); } catch { /* ignore */ }
+
           EditorApplication.delayCall += () =>
           {
             _isBaking   = false;

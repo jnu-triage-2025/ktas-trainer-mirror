@@ -181,30 +181,44 @@ namespace TextToSpeechService
     // 인라인 텍스트 Baked 경로 / 해시 헬퍼
     // =========================================================================
 
-    /// <summary>
-    /// 시나리오 그래프의 인라인 텍스트에 대한 사전 합성(baked) WAV 파일의 절대 경로를 반환합니다.
-    ///
-    /// 파일명 규칙:
-    ///   {BakedInlineAudioSubdir}/{scenarioIdentifier}/{nodeIdentifier}_{hash}.wav
-    ///
-    /// scenarioIdentifier·nodeIdentifier 는 사람이 식별할 수 있도록 접두어로 붙이고,
-    /// hash 는 텍스트 내용 변경(=dirty) 감지를 위한 결정적 해시이다.
-    /// </summary>
-    /// <param name="streamingAssetsPath">Application.streamingAssetsPath</param>
-    /// <param name="scenarioIdentifier">시나리오 그래프 식별자</param>
-    /// <param name="nodeIdentifier">노드 식별자</param>
-    /// <param name="text">합성 대상 텍스트</param>
-    public static string GetBakedInlineClipPath(
-      string streamingAssetsPath, string scenarioIdentifier, string nodeIdentifier, string text)
-    {
-      string safeScenario = SanitizeForFileName(scenarioIdentifier);
-      string safeNode      = SanitizeForFileName(nodeIdentifier);
-      string hash          = ComputeTextHash(text);
+  /// <summary>
+  /// 시나리오 그래프의 인라인 텍스트에 대한 사전 합성(baked) WAV 파일의 절대 경로를 반환합니다.
+  ///
+  /// 파일명 규칙:
+  ///   {BakedInlineAudioSubdir}/{scenarioIdentifier}/{nodeIdentifier}_{hash}.wav
+  ///
+  /// scenarioIdentifier·nodeIdentifier 는 사람이 식별할 수 있도록 접두어로 붙이고,
+  /// hash 는 텍스트 내용 변경(=dirty) 감지를 위한 결정적 해시이다.
+  ///
+  /// voiceIdentifier 가 null/빈 문자열이면 기존 경로 구조(voice 폴더 없음)를 유지한다.
+  /// </summary>
+  /// <param name="streamingAssetsPath">Application.streamingAssetsPath</param>
+  /// <param name="scenarioIdentifier">시나리오 그래프 식별자</param>
+  /// <param name="nodeIdentifier">노드 식별자</param>
+  /// <param name="text">합성 대상 텍스트</param>
+  /// <param name="voiceIdentifier">
+  /// 목소리 프로파일 식별자. null 또는 빈 문자열이면 기본 목소리 경로를 사용한다.
+  /// </param>
+  public static string GetBakedInlineClipPath(
+    string streamingAssetsPath, string scenarioIdentifier, string nodeIdentifier, string text,
+    string voiceIdentifier = null)
+  {
+    string safeScenario = SanitizeForFileName(scenarioIdentifier);
+    string safeNode      = SanitizeForFileName(nodeIdentifier);
+    string hash          = ComputeTextHash(text);
 
+    if (string.IsNullOrEmpty(voiceIdentifier))
+    {
       return Path.Combine(
         streamingAssetsPath, BakedInlineAudioSubdir,
         safeScenario, $"{safeNode}_{hash}.wav");
     }
+
+    string safeVoice = SanitizeForFileName(voiceIdentifier);
+    return Path.Combine(
+      streamingAssetsPath, BakedInlineAudioSubdir,
+      safeScenario, safeVoice, $"{safeNode}_{hash}.wav");
+  }
 
     /// <summary>인라인 텍스트에 대한 결정적 콘텐츠 해시(짧은 hex)를 계산합니다.</summary>
     public static string ComputeTextHash(string text)

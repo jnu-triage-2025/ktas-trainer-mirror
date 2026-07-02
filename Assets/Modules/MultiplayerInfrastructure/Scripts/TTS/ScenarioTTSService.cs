@@ -53,37 +53,49 @@ namespace MultiplayerInfrastructure.TTS
     /// <summary>
     /// transcripts.json에 등록된 identifier의 음성을 재생한다.
     /// </summary>
+    /// <param name="voiceIdentifier">
+    /// 사용할 목소리 프로파일 식별자. null 또는 빈 문자열이면 기본 목소리를 사용한다.
+    /// </param>
     public Coroutine PlayTranscript(
       string identifier,
       AudioSource audioSource = null,
-      Dictionary<string, string> overrideVariables = null)
+      Dictionary<string, string> overrideVariables = null,
+      string voiceIdentifier = null)
     {
       if (_core == null) return null;
-      return _core.PlayTranscript(identifier, audioSource ?? _audioSource, overrideVariables);
+      return _core.PlayTranscript(identifier, audioSource ?? _audioSource, overrideVariables, voiceIdentifier);
     }
 
     /// <summary>
     /// 시나리오 그래프의 인라인 텍스트(Dialogue/Choice/Quiz)를 재생한다.
     /// baked WAV가 있으면 우선 재생하고 없으면 즉석 합성한다.
     /// </summary>
+    /// <param name="voiceIdentifier">
+    /// 사용할 목소리 프로파일 식별자. null 또는 빈 문자열이면 기본 목소리를 사용한다.
+    /// </param>
     public Coroutine PlayText(
       string text,
       AudioSource audioSource = null,
       string scenarioIdentifier = null,
-      string nodeIdentifier = null)
+      string nodeIdentifier = null,
+      string voiceIdentifier = null)
     {
       if (_core == null) return null;
-      return _core.PlayText(text, audioSource ?? _audioSource, scenarioIdentifier, nodeIdentifier);
+      return _core.PlayText(text, audioSource ?? _audioSource, scenarioIdentifier, nodeIdentifier, voiceIdentifier);
     }
 
     /// <summary>지정된 identifier의 동적 세그먼트를 미리 합성해 캐시한다.</summary>
+    /// <param name="voiceIdentifier">
+    /// 사용할 목소리 프로파일 식별자. null 또는 빈 문자열이면 기본 목소리를 사용한다.
+    /// </param>
     public Coroutine PrepareTranscriptVariables(
       string identifier,
       Dictionary<string, string> variables,
-      System.Action onDone = null)
+      System.Action onDone = null,
+      string voiceIdentifier = null)
     {
       if (_core == null) return null;
-      return _core.PrepareTranscriptVariables(identifier, variables, onDone);
+      return _core.PrepareTranscriptVariables(identifier, variables, onDone, voiceIdentifier);
     }
 
 #if UNITY_EDITOR

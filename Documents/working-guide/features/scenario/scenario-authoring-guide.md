@@ -2,7 +2,7 @@
 title: "시나리오 작성 가이드"
 doc_type: requirement
 status: active
-updated: 2026-04-14
+updated: 2026-07-03
 ---
 
 # 시나리오 작성 가이드
@@ -64,6 +64,55 @@ updated: 2026-04-14
 - 모든 NextIdentifier는 실제 노드를 가리켜야 합니다.
 - Optional 표기가 있는 경우에도 흐름이 끊기지 않아야 합니다.
 - 새로운 NodeType이 필요하다면 기능 제안서를 작성합니다.
+
+## TTS 음성 재생
+
+### 인라인 TTS (Dialogue / Choice / Quiz)
+
+노드에 `"playTTS": true`를 추가하면 해당 노드의 텍스트가 TTS로 재생됩니다.
+
+```json
+{
+  "nodeType": "Dialogue",
+  "dialogueContent": "기도 확보 후 정맥로를 확보하세요.",
+  "playTTS": true
+}
+```
+
+### 캐릭터별 목소리 지정 (ttsVoiceIdentifier)
+
+`"ttsVoiceIdentifier"` 필드에 TTSService에 등록된 프로파일 식별자를 입력하면  
+해당 캐릭터의 목소리로 재생됩니다.
+
+```json
+{
+  "nodeType": "Dialogue",
+  "speakerName": "김의사",
+  "dialogueContent": "기도 확보 후 정맥로를 확보하세요.",
+  "playTTS": true,
+  "ttsVoiceIdentifier": "doctor"
+}
+```
+
+- `ttsVoiceIdentifier`를 생략하거나 `null`로 두면 TTSService의 기본 목소리로 재생됩니다.
+- 등록되지 않은 식별자를 입력해도 오류 없이 기본 목소리로 자동 대체됩니다.
+- 상세 설정 방법은 [TTS 다중 목소리 프로파일 설정 가이드](./tts-voice-profile-setup-guide.md)를 참고하세요.
+
+### transcript 기반 TTS (PlayTTS 노드)
+
+`transcripts.json`에 등록된 발화를 재생합니다. 변수 치환이 필요한 경우에 사용합니다.
+
+```json
+{
+  "nodeType": "PlayTTS",
+  "transcriptIdentifier": "tts-role-instruction",
+  "variables": { "role": "응급의학과" },
+  "waitUntilFinished": true,
+  "ttsVoiceIdentifier": "dispatcher"
+}
+```
+
+transcript 작성 방법은 [TTS 스크립트 가이드](../../../requirements/content-definitions/audio/tts-transcripts-spec.md)를 참고하세요.
 
 ## 기능 제안이 필요한 경우
 

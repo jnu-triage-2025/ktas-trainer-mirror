@@ -20,6 +20,9 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("playTTS")]
     public bool? PlayTTS { get; set; }
 
+    [JsonPropertyName("ttsVoiceIdentifier")]
+    public string TtsVoiceIdentifier { get; set; }
+
     // Choice 노드는 nextIdentifier가 항상 null이어야 하므로 DTO에도 명시적으로 포함
     [JsonPropertyName("nextIdentifier")]
     public new string NextIdentifier

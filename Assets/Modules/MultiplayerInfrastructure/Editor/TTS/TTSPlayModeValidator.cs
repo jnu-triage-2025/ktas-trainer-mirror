@@ -126,7 +126,42 @@ namespace MultiplayerInfrastructure.Editor.TTS
       {
         case 0: // 주 작업(bake 및/또는 orphan 정리) 후 재생
           if (scan.NeedsBake)
-            MultiplayerInfrastructure.Scenario.ScenarioTTSBakeScanner.BakeAllNeededSynchronously();
+          {
+            // 씬에 존재하는 TTSService로부터 voice profile 정보를 가져온다.
+            // 씬이 열려 있지 않은 경우 프로파일 없이 기본 목소리만으로 bake한다.
+            TTSVoiceProfile[] voiceProfiles = null;
+#if UNITY_2023_1_OR_NEWER
+            var ttsService = UnityEngine.Object.FindFirstObjectByType<TextToSpeechService.TTSService>();
+#else
+            var ttsService = UnityEngine.Object.FindObjectOfType<TextToSpeechService.TTSService>();
+#endif
+            // TTSService의 voiceProfiles 필드는 SerializedObject를 통해 접근한다.
+            if (ttsService != null)
+            {
+              var so = new UnityEditor.SerializedObject(ttsService);
+              var profilesProp = so.FindProperty("voiceProfiles");
+              if (profilesProp != null && profilesProp.isArray)
+              {
+                var list = new System.Collections.Generic.List<TTSVoiceProfile>(profilesProp.arraySize);
+                for (int pIdx = 0; pIdx < profilesProp.arraySize; pIdx++)
+                {
+                  var elem = profilesProp.GetArrayElementAtIndex(pIdx);
+                  if (elem == null) continue;
+                  list.Add(new TTSVoiceProfile
+                  {
+                    VoiceIdentifier = elem.FindPropertyRelative("VoiceIdentifier")?.stringValue,
+                    VoiceStyleName  = elem.FindPropertyRelative("VoiceStyleName")?.stringValue,
+                    Language        = elem.FindPropertyRelative("Language")?.stringValue,
+                    TotalStep       = elem.FindPropertyRelative("TotalStep")?.intValue ?? 0,
+                    Speed           = elem.FindPropertyRelative("Speed")?.floatValue ?? 0f
+                  });
+                }
+                voiceProfiles = list.ToArray();
+              }
+            }
+            MultiplayerInfrastructure.Scenario.ScenarioTTSBakeScanner.BakeAllNeededSynchronously(
+              voiceProfiles: voiceProfiles);
+          }
 
           if (scan.HasOrphans)
           {
