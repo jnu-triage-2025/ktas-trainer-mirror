@@ -694,7 +694,10 @@ namespace MultiplayerInfrastructure.Scenario
         WaitMode = ParseWaitMode(dto.WaitMode),
         AllocationType = ParseParallelAllocationType(dto.AllocationType),
         WhenBranchingPlayerNotMatched = ParseParallelMismatchHandling(dto.WhenBranchingPlayerNotMatched),
-        Branches = branches
+        Branches = branches,
+        // NextIdentifier 누락 시 병렬 노드 완료 후 다음 노드로 진행할 수 없어
+        // 시나리오가 조기 종료된다(다른 모든 컨버터와 동일하게 복사해야 함).
+        NextIdentifier = dto.NextIdentifier
       };
     }
 
@@ -1401,7 +1404,8 @@ namespace MultiplayerInfrastructure.Scenario
         WaitMode = node.WaitMode.ToString(),
         AllocationType = node.AllocationType.ToString(),
         WhenBranchingPlayerNotMatched = node.WhenBranchingPlayerNotMatched.ToString(),
-        Branches = new List<ScenarioParallelBranchDTO>()
+        Branches = new List<ScenarioParallelBranchDTO>(),
+        NextIdentifier = node.NextIdentifier
       };
 
       foreach (var branch in node.Branches)

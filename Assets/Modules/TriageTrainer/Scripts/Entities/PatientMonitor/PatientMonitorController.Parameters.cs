@@ -19,14 +19,25 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       return displayMode == ECGDisplayMode.Preset ? ECGParameters.FromRhythm(rhythmPreset) : monitorECG;
     }
 
+    /// <summary>직전 프레임에 환자가 연결되어 있었는지(연결 해제 전이 감지용).</summary>
+    private bool _wasPatientBound;
+
     private void PullParametersFromPatientState()
     {
       if (patientState?.Descriptor == null)
       {
-        ResetMonitorParametersToDisconnected();
+        // 환자 미연결 상태에서는 "연결 해제 전이" 시점에만 1회 리셋한다.
+        // 매 프레임 리셋하면 시나리오가 SetCustomParameters/SetRhythm 으로 설정한
+        // 모니터 프로파일(심정지/ROSC 등)이 즉시 지워지는 버그가 발생한다.
+        if (_wasPatientBound)
+        {
+          ResetMonitorParametersToDisconnected();
+          _wasPatientBound = false;
+        }
         return;
       }
 
+      _wasPatientBound = true;
       ApplyMedicalState(patientState.MedicalState);
     }
 

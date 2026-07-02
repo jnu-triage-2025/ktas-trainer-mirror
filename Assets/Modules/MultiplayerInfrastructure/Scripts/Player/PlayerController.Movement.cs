@@ -103,21 +103,23 @@ namespace MultiplayerInfrastructure.Player
       float movementDirectionY = _moveDirection.y;
       _moveDirection = (_forwardSpeed * curSpeedX) + (_rightSpeed * curSpeedY);
 
-      if (Input.GetButton("Jump") && canMove && _characterController.isGrounded)
-      {
-        _moveDirection.y = _jumpSpeed;
-        if (Input.GetButtonDown("Jump"))
-          _jumpAnimationRequestedThisFrame = true;
-      }
-      else
-      {
-        _moveDirection.y = movementDirectionY;
-      }
-
-      if (!_characterController.isGrounded)
-      {
-        _moveDirection.y -= _gravity * Time.deltaTime;
-      }
+if (Input.GetButton("Jump") && canMove && _characterController.isGrounded)
+       {
+         _moveDirection.y = _jumpSpeed;
+         if (Input.GetButtonDown("Jump"))
+           _jumpAnimationRequestedThisFrame = true;
+       }
+       else if (!_characterController.isGrounded)
+       {
+         // Apply gravity and retain vertical velocity from jump/fall
+         _moveDirection.y = movementDirectionY - _gravity * Time.deltaTime;
+       }
+       else
+       {
+         // Grounded but not jumping: clamp vertical velocity to zero to prevent
+         // tiny negative values that can cause isGrounded to flicker.
+         _moveDirection.y = 0f;
+       }
       
       _characterController.Move(_moveDirection * Time.deltaTime);
     }

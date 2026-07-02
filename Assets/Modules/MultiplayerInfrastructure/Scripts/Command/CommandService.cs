@@ -70,7 +70,9 @@ namespace MultiplayerInfrastructure.Command
         return false;
       }
 
-      if (command.RequiresAdmin/* && !_chatManager.IsAdmin(sender)*/)
+      // 관리자 전용 커맨드: 호스트(서버 로컬 클라이언트) 또는 서버 콘솔(sender == null)만 허용한다.
+      // (기존에는 IsAdmin 검사가 주석 처리되어 RequiresAdmin 커맨드가 모두에게 거부되는 버그가 있었다.)
+      if (command.RequiresAdmin && sender != null && !sender.IsHost)
       {
         if (!suppressSystemMessages)
           _chatManager.SendSystemMessage(sender, "Permission denied.");

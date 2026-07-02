@@ -149,6 +149,14 @@ namespace MultiplayerInfrastructure.Session
       client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
       client.Client.Bind(new IPEndPoint(IPAddress.Any, discoveryPort));
 
+      // 취소 시 소켓을 닫아 대기 중인 ReceiveAsync 를 즉시 깨운다.
+      // (취소 토큰 없이 대기하면 StopDiscovery 후에도 다음 패킷이 올 때까지
+      //  루프가 살아 있고 포트가 해제되지 않는 버그가 발생한다.)
+      using var registration = token.Register(() =>
+      {
+        try { client.Close(); } catch { /* ignore */ }
+      });
+
       while (!token.IsCancellationRequested)
       {
         UdpReceiveResult result;
@@ -161,6 +169,14 @@ namespace MultiplayerInfrastructure.Session
         catch (OperationCanceledException)
         {
           break;
+        }
+        catch (ObjectDisposedException)
+        {
+          break; // 취소로 소켓이 닫힘.
+        }
+        catch (SocketException) when (token.IsCancellationRequested)
+        {
+          break; // 취소로 소켓이 닫힘.
         }
         catch (Exception ex)
         {

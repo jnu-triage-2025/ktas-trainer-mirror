@@ -354,6 +354,10 @@ namespace MultiplayerInfrastructure.Scenario
       _state = State.Inactive;
       // 강제 종료된 브랜치 코루틴의 finally 가 실행되지 않을 수 있으므로 억제 카운터를 초기화한다.
       _globalAdvanceSuppressionDepth = 0;
+      // 브랜치 Choice/Quiz 대기 중 종료된 경우 남은 인터셉터/프롬프트 상태를 정리한다.
+      // (StopAllCoroutines 로 강제 종료된 프롬프트 코루틴의 finally 가 실행되지 않을 수 있음)
+      _branchOptionInterceptor = null;
+      _branchPromptActive = false;
 
       ClearOptions();
       _stateStore.Clear();
@@ -405,15 +409,25 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public void SelectOption(int index)
     {
-      if (_state == State.ExecutingQuiz && _activeQuizNode != null)
-      {
-        HandleQuizSelection(index, _activeQuizNode);
-        return;
-      }
-
       if (index < 0 || index >= _activeOptions.Count)
       {
         Debug.LogWarning($"[ScenarioController] Invalid option index: {index}");
+        return;
+      }
+
+      // 브랜치 체인에서 실행 중인 Choice/Quiz 는 전역 커서를 움직이지 않고
+      // 인터셉터로 선택 결과만 전달한다.
+      if (_branchOptionInterceptor != null)
+      {
+        var interceptor = _branchOptionInterceptor;
+        _branchOptionInterceptor = null;
+        interceptor(index);
+        return;
+      }
+
+      if (_state == State.ExecutingQuiz && _activeQuizNode != null)
+      {
+        HandleQuizSelection(index, _activeQuizNode);
         return;
       }
 
@@ -659,7 +673,15 @@ namespace MultiplayerInfrastructure.Scenario
     private void ExecuteChoiceNode(ScenarioChoiceNode node)
     {
       _state = State.ExecutingChoice;
+      PresentChoice(node);
+    }
 
+    /// <summary>
+    /// Choice 노드의 UI 표시/TTS/_activeOptions 설정 공용 루틴.
+    /// 전역 경로(<see cref="ExecuteChoiceNode"/>)와 브랜치 경로가 함께 사용한다.
+    /// </summary>
+    private void PresentChoice(ScenarioChoiceNode node)
+    {
       if (!_uiController.IsUnityNull())
       {
         _uiController.DisplayChoice(node.SpeakerName, node.DialogueContent, node.PortraitSpriteIdentifier, node.Options);
@@ -867,6 +889,23 @@ namespace MultiplayerInfrastructure.Scenario
       _state = State.ExecutingQuiz;
       _activeQuizNode = node;
 
+      if (!_uiController.IsUnityNull())
+      {
+        PresentQuiz(node);
+      }
+      else
+      {
+        Debug.LogWarning($"[ScenarioController] Quiz node '{node.Identifier}' cannot render choices because UI controller is missing.");
+        ResolveQuizNext(node, false);
+      }
+    }
+
+    /// <summary>
+    /// Quiz 노드의 옵션 구성/UI 표시/TTS/_activeOptions 설정 공용 루틴.
+    /// 전역 경로(<see cref="ExecuteQuizNode"/>)와 브랜치 경로가 함께 사용한다.
+    /// </summary>
+    private void PresentQuiz(ScenarioQuizNode node)
+    {
       var options = (node.Options ?? Array.Empty<string>())
           .Select(text => new ScenarioChoiceOption
           {
@@ -885,11 +924,37 @@ namespace MultiplayerInfrastructure.Scenario
         if (node.PlayTTS)
           PlayInlineTTS(node.Identifier, node.Question);
       }
-      else
+    }
+
+    /// <summary>
+    /// 퀴즈 정답/오답 피드백을 표시한다(전역/브랜치 공용).
+    /// </summary>
+    private void ShowQuizFeedback(ScenarioQuizNode node, bool isCorrect)
+    {
+      var feedback = isCorrect ? node.FeedbackCorrect : node.FeedbackIncorrect;
+      if (string.IsNullOrWhiteSpace(feedback) || _uiController.IsUnityNull())
       {
-        Debug.LogWarning($"[ScenarioController] Quiz node '{node.Identifier}' cannot render choices because UI controller is missing.");
-        ResolveQuizNext(node, false);
+        return;
       }
+
+      _uiController.DisplayDialogue("Quiz", feedback, null);
+
+      if (node.PlayTTS)
+      {
+        string feedbackNodeId = node.Identifier + (isCorrect ? "_feedbackCorrect" : "_feedbackIncorrect");
+        PlayInlineTTS(feedbackNodeId, feedback);
+      }
+    }
+
+    /// <summary>
+    /// 퀴즈 정답/오답에 따른 다음 노드 식별자를 결정한다(전역/브랜치 공용).
+    /// 전용 식별자가 비어 있으면 공통 NextIdentifier 로 폴백한다.
+    /// </summary>
+    private static string ResolveQuizTarget(ScenarioQuizNode node, bool isCorrect)
+    {
+      return isCorrect
+          ? string.IsNullOrWhiteSpace(node.OnCorrectNextIdentifier) ? node.NextIdentifier : node.OnCorrectNextIdentifier
+          : string.IsNullOrWhiteSpace(node.OnIncorrectNextIdentifier) ? node.NextIdentifier : node.OnIncorrectNextIdentifier;
     }
 
     private void ExecuteStateUpdateNode(ScenarioStateUpdateNode node)
@@ -1415,21 +1480,11 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void ResolveQuizNext(ScenarioQuizNode node, bool isCorrect)
     {
-      var feedback = isCorrect ? node.FeedbackCorrect : node.FeedbackIncorrect;
-      if (!string.IsNullOrWhiteSpace(feedback) && !_uiController.IsUnityNull())
-      {
-        _uiController.DisplayDialogue("Quiz", feedback, null);
+      ShowQuizFeedback(node, isCorrect);
 
-        if (node.PlayTTS)
-        {
-          string feedbackNodeId = node.Identifier + (isCorrect ? "_feedbackCorrect" : "_feedbackIncorrect");
-          PlayInlineTTS(feedbackNodeId, feedback);
-        }
-      }
-
-      var target = isCorrect
-          ? node.OnCorrectNextIdentifier
-          : string.IsNullOrWhiteSpace(node.OnIncorrectNextIdentifier) ? node.NextIdentifier : node.OnIncorrectNextIdentifier;
+      // 정답/오답 전용 다음 노드가 없으면 공통 NextIdentifier 로 폴백한다.
+      // (정답 경로에 폴백이 없으면 nextIdentifier 만 지정한 퀴즈에서 정답 시 시나리오가 종료되는 버그)
+      var target = ResolveQuizTarget(node, isCorrect);
 
       _activeQuizNode = null;
       ClearOptions();
@@ -1671,7 +1726,7 @@ namespace MultiplayerInfrastructure.Scenario
       Debug.Log($"[ScenarioController] Targeting camera to: {node.TargetObjectIdentifier}");
 #endif
 
-      if (_camController.IsUnityNull())
+      if (!_camController.IsUnityNull())
       {
         // TODO: 카메라 타겟 설정
         // _camController.SetTargetObject(node.TargetObjectIdentifier, node.OffsetX, node.OffsetY, node.OffsetZ, node.BlendTime);
@@ -1911,6 +1966,7 @@ namespace MultiplayerInfrastructure.Scenario
       _state = State.ExecutingParallel;
 
       var runningCoroutines = new List<Coroutine>();
+      var runningTrackers = new List<BranchCompletionTracker>();
       int? localClientId = (int?)InstanceFinder.ClientManager?.Connection?.ClientId;
       var players = GetActivePlayerIds();
       var allocation = new Dictionary<ScenarioParallelBranch, int?>();
@@ -1952,8 +2008,15 @@ namespace MultiplayerInfrastructure.Scenario
           continue;
         }
 
-        var coroutine = StartCoroutine(ExecuteBranch(branchNode, branch.CompletionConditionIdentifier, assignedClientId));
+        // Unity 의 Coroutine 핸들은 완료되어도 null 이 되지 않으므로,
+        // 완료 추적 플래그로 감싸 WaitMode.Any 판정에 사용한다.
+        // 병렬 노드 자신의 NextIdentifier(합류 노드)는 브랜치 체인의 정지 라벨로도 전달한다.
+        // 브랜치 종단이 합류 노드를 가리키는 그래프에서, 합류 노드가 브랜치에서 1회 +
+        // 전역 Advance 에서 1회 총 2회 실행되는 것을 방지한다.
+        var tracker = new BranchCompletionTracker();
+        var coroutine = StartCoroutine(RunTrackedBranch(branchNode, branch.CompletionConditionIdentifier, node.NextIdentifier, assignedClientId, tracker));
         runningCoroutines.Add(coroutine);
+        runningTrackers.Add(tracker);
       }
 
       // WaitMode에 따라 대기
@@ -1966,14 +2029,36 @@ namespace MultiplayerInfrastructure.Scenario
           }
           break;
         case ScenarioWaitMode.Any:
-          yield return WaitForAny(runningCoroutines);
+          yield return WaitForAny(runningTrackers);
           break;
         case ScenarioWaitMode.None:
           // 바로 진행
           break;
       }
 
-      EndScenario();
+      // 병렬 노드 완료 후에는 NextIdentifier 로 진행한다.
+      // (기존의 무조건 EndScenario 호출은 병렬 이후 노드를 모두 건너뛰고
+      //  WaitMode.None 브랜치를 StopAllCoroutines 로 즉시 종료시키는 버그였다.)
+      // NextIdentifier 가 없으면 Advance 가 EndScenario 로 폴백한다.
+      Advance();
+    }
+
+    /// <summary>병렬 브랜치의 완료 여부를 추적하는 플래그 홀더.</summary>
+    private sealed class BranchCompletionTracker
+    {
+      public bool Completed;
+    }
+
+    private IEnumerator RunTrackedBranch(IScenarioNode branchNode, string completionCondition, string joinNodeIdentifier, int? assignedClientId, BranchCompletionTracker tracker)
+    {
+      try
+      {
+        yield return ExecuteBranch(branchNode, completionCondition, joinNodeIdentifier, assignedClientId);
+      }
+      finally
+      {
+        tracker.Completed = true;
+      }
     }
 
     private IEnumerator ExecuteServerInternalSignalNode(ScenarioServerInternalSignalNode node)
@@ -2023,7 +2108,7 @@ namespace MultiplayerInfrastructure.Scenario
       Advance();
     }
 
-    private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, int? branchOwnerClientId)
+    private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, string joinNodeIdentifier, int? branchOwnerClientId)
     {
       var previousOwner = _scenarioOwnerClientId;
       _scenarioOwnerClientId = branchOwnerClientId ?? previousOwner;
@@ -2034,9 +2119,11 @@ namespace MultiplayerInfrastructure.Scenario
         // 완료조건 식별자(completionCondition)는 보통 그래프에 실제 노드가 없는 "수렴 라벨"이며,
         // 브랜치 체인 마지막 노드의 NextIdentifier 가 이 라벨을 가리킨다.
         // 라벨에 도달하면 브랜치 완료로 간주한다(전역 Advance/EndScenario 를 건드리지 않음).
+        // joinNodeIdentifier(병렬 노드의 NextIdentifier)도 정지 라벨로 취급하여,
+        // 합류 노드가 브랜치와 전역 Advance 양쪽에서 이중 실행되는 것을 막는다.
         // 브랜치 내부의 게이팅(인터랙션 완료 대기)은 체인에 포함된
         // Validator(waitForCondition=true) 노드가 담당하므로, 라벨 도달 = 브랜치 완료가 된다.
-        yield return RunBranchChain(node, completionCondition);
+        yield return RunBranchChain(node, completionCondition, joinNodeIdentifier);
       }
       finally
       {
@@ -2051,11 +2138,13 @@ namespace MultiplayerInfrastructure.Scenario
     /// 다음 식별자가 비어 있거나(터미널) 완료조건 라벨(<paramref name="completionLabel"/>)과 같거나
     /// 그래프에 존재하지 않으면 브랜치를 종료한다.
     /// </summary>
-    private IEnumerator RunBranchChain(IScenarioNode startNode, string completionLabel)
+    private IEnumerator RunBranchChain(IScenarioNode startNode, string completionLabel, string joinNodeIdentifier = null)
     {
       var cursor = startNode;
       int guard = 0;
       const int maxNodes = 10000; // 순환 방지 안전장치.
+      // 브랜치 체인별 실행 컨텍스트(동시 실행되는 다른 브랜치와 상태를 공유하지 않는다).
+      var chainContext = new BranchChainContext();
 
       while (cursor != null)
       {
@@ -2076,7 +2165,8 @@ namespace MultiplayerInfrastructure.Scenario
         OnNodeChanged?.Invoke(cursor);
 
         // 단일 노드를 실행하고 완료를 대기한다(전역 Advance 미사용).
-        yield return ExecuteBranchNode(cursor);
+        chainContext.NextOverride = null;
+        yield return ExecuteBranchNode(cursor, chainContext);
 
         // 노드 대기 도중 시나리오가 종료되어 그래프가 해제됐을 수 있으므로 재확인한다.
         if (_currentGraph == null)
@@ -2084,7 +2174,8 @@ namespace MultiplayerInfrastructure.Scenario
           yield break;
         }
 
-        var nextId = cursor.NextIdentifier;
+        // Choice 등 선택 결과에 따라 다음 노드가 결정되는 노드는 NextOverride 를 사용한다.
+        var nextId = chainContext.NextOverride ?? cursor.NextIdentifier;
 
         // 터미널: 다음 노드가 없음.
         if (string.IsNullOrEmpty(nextId))
@@ -2099,6 +2190,14 @@ namespace MultiplayerInfrastructure.Scenario
           yield break;
         }
 
+        // 병렬 노드의 합류 노드(NextIdentifier)에 도달 → 브랜치 완료.
+        // 합류 노드는 병렬 대기 후 전역 Advance 가 실행하므로 브랜치에서 실행하지 않는다(이중 실행 방지).
+        if (!string.IsNullOrWhiteSpace(joinNodeIdentifier)
+            && string.Equals(nextId, joinNodeIdentifier, StringComparison.Ordinal))
+        {
+          yield break;
+        }
+
         if (!_currentGraph.TryGetNode(nextId, out var nextNode))
         {
           // 다음 식별자가 그래프에 없으면(예: 미정의 수렴 라벨) 브랜치 완료로 간주한다.
@@ -2109,13 +2208,20 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
+    /// <summary>브랜치 체인 단위의 실행 컨텍스트. 선택 결과에 따른 다음 노드 오버라이드를 전달한다.</summary>
+    private sealed class BranchChainContext
+    {
+      /// <summary>Choice/Quiz 등 선택 결과가 다음 노드를 결정하는 경우 설정된다.</summary>
+      public string NextOverride;
+    }
+
     /// <summary>
     /// 브랜치 내부에서 단일 노드를 실행하고 그 노드가 완료될 때까지 대기한다.
     /// 각 노드 실행기는 내부적으로 전역 <see cref="Advance"/> 를 호출하지만, 브랜치 체인에서는
     /// 그 진행을 사용하지 않고 NextIdentifier 로 직접 이동하므로 부작용이 격리된다.
     /// 코루틴형 노드(예: Delay/InvokeEvent(WaitUntilDone)/Sound)는 완료까지 yield 로 대기한다.
     /// </summary>
-    private IEnumerator ExecuteBranchNode(IScenarioNode node)
+    private IEnumerator ExecuteBranchNode(IScenarioNode node, BranchChainContext context)
     {
       // 브랜치 노드 실행기가 내부적으로 전역 Advance 를 호출하더라도 전역 시나리오 커서가
       // 끌려가지 않도록, 브랜치 노드 실행 구간 동안 전역 Advance 를 억제한다.
@@ -2173,12 +2279,192 @@ namespace MultiplayerInfrastructure.Scenario
               yield return new WaitForSeconds(waitSeconds);
             }
             break;
+          case ScenarioChoiceNode choice:
+            // 브랜치 내 선택지: 전역 커서 대신 선택 결과를 NextOverride 로 전달한다.
+            yield return ExecuteChoiceNodeInBranch(choice, context);
+            break;
+          case ScenarioQuizNode quiz:
+            yield return ExecuteQuizNodeInBranch(quiz, context);
+            break;
+          case ScenarioQuestControlNode questControl:
+            ExecuteQuestControlNode(questControl);
+            break;
+          case ScenarioQuestWaypointHighlightNode waypointHighlight:
+            ExecuteQuestWaypointHighlightNode(waypointHighlight);
+            break;
+          case ScenarioStateUpdateNode stateUpdate:
+            ExecuteStateUpdateNode(stateUpdate);
+            break;
+          case ScenarioPlayerTagNode playerTag:
+            ExecutePlayerTagNode(playerTag);
+            break;
+          case ScenarioPlayTTSNode playTTS:
+            yield return ExecutePlayTTSNode(playTTS);
+            break;
+          case ScenarioPlayerMoveNode playerMove:
+            yield return ExecutePlayerMoveNode(playerMove);
+            break;
+          case ScenarioNPCMoveNode npcMove:
+            yield return ExecuteNPCMoveNode(npcMove);
+            break;
+          case ScenarioCameraTargetNode cameraTarget:
+            yield return ExecuteCameraTargetNode(cameraTarget);
+            break;
+          case ScenarioServerInternalSignalNode internalSignal:
+            yield return ExecuteServerInternalSignalNode(internalSignal);
+            break;
+          case ScenarioEntityPresetSpawnNode entityPresetSpawn:
+            ExecuteEntityPresetSpawnNode(entityPresetSpawn);
+            break;
+          case ScenarioEntityTagNode entityTag:
+            ExecuteEntityTagNode(entityTag);
+            break;
+          case ScenarioEntityInitNode entityInit:
+            ExecuteEntityInitNode(entityInit);
+            break;
+          case ScenarioParallelNode nestedParallel:
+            // 중첩 병렬: 내부 브랜치 완료까지 대기(말미의 전역 Advance 는 억제됨).
+            yield return ExecuteParallelNode(nestedParallel);
+            break;
+          default:
+            Debug.LogWarning($"[ScenarioController] Unsupported node type in branch chain: {node.GetType().Name} (id='{node.Identifier}'). Skipping.");
+            break;
         }
       }
       finally
       {
         _globalAdvanceSuppressionDepth--;
       }
+    }
+
+    /// <summary>
+    /// 선택지 선택을 브랜치 체인으로 위임하기 위한 인터셉터.
+    /// 값이 설정되어 있으면 <see cref="SelectOption"/> 이 전역 진행 대신 이 콜백을 호출한다.
+    /// </summary>
+    private Action<int> _branchOptionInterceptor;
+
+    /// <summary>
+    /// 브랜치 프롬프트(Choice/Quiz)가 화면에 표시 중인 동안 true.
+    /// 다이얼로그 UI와 인터셉터는 하나뿐이므로, 동시 실행 브랜치의 프롬프트는
+    /// 이 플래그로 직렬화한다(덮어쓰기 시 미해결 브랜치가 영구 대기하는 교착 방지).
+    /// </summary>
+    private bool _branchPromptActive;
+
+    /// <summary>브랜치 프롬프트의 선택 결과 홀더.</summary>
+    private sealed class BranchOptionSelection
+    {
+      public bool Resolved;
+      public int Index = -1;
+    }
+
+    /// <summary>
+    /// 브랜치 프롬프트 실행 공용 루틴: (1) 다른 브랜치 프롬프트가 끝날 때까지 대기(직렬화),
+    /// (2) present 콜백으로 UI 표시, (3) 인터셉터로 선택을 수신할 때까지 대기.
+    /// 시나리오 종료 시 selection.Resolved == false 상태로 종료된다.
+    /// </summary>
+    private IEnumerator RunBranchPrompt(Action present, BranchOptionSelection selection)
+    {
+      // 직렬화: 다른 브랜치의 프롬프트가 진행 중이면 순서를 기다린다.
+      while (_branchPromptActive)
+      {
+        if (_currentGraph == null)
+        {
+          yield break;
+        }
+        yield return null;
+      }
+
+      if (_currentGraph == null)
+      {
+        yield break;
+      }
+
+      _branchPromptActive = true;
+      try
+      {
+        present();
+
+        _branchOptionInterceptor = index =>
+        {
+          selection.Resolved = true;
+          selection.Index = index;
+        };
+
+        while (!selection.Resolved)
+        {
+          if (_currentGraph == null)
+          {
+            _branchOptionInterceptor = null;
+            yield break;
+          }
+          yield return null;
+        }
+      }
+      finally
+      {
+        _branchPromptActive = false;
+      }
+    }
+
+    /// <summary>
+    /// 브랜치 체인 안에서 Choice 노드를 실행한다.
+    /// 전역 <see cref="SelectOption"/> 경로(전역 커서 이동)를 사용하지 않고,
+    /// 선택 결과를 <see cref="BranchChainContext.NextOverride"/> 로 전달한다.
+    /// </summary>
+    private IEnumerator ExecuteChoiceNodeInBranch(ScenarioChoiceNode node, BranchChainContext context)
+    {
+      var selection = new BranchOptionSelection();
+      yield return RunBranchPrompt(() =>
+      {
+        _state = State.ExecutingChoice;
+        PresentChoice(node);
+      }, selection);
+
+      if (!selection.Resolved)
+      {
+        yield break; // 시나리오 종료 등으로 미해결 종료.
+      }
+
+      if (node.Options != null && selection.Index >= 0 && selection.Index < node.Options.Count)
+      {
+        var option = node.Options[selection.Index];
+        OnOptionSelected?.Invoke(option);
+        context.NextOverride = option.NextNodeIdentifier;
+      }
+
+      ClearOptions();
+    }
+
+    /// <summary>
+    /// 브랜치 체인 안에서 Quiz 노드를 실행한다. 정답/오답에 따른 다음 노드를
+    /// <see cref="BranchChainContext.NextOverride"/> 로 전달한다.
+    /// </summary>
+    private IEnumerator ExecuteQuizNodeInBranch(ScenarioQuizNode node, BranchChainContext context)
+    {
+      if (_uiController.IsUnityNull())
+      {
+        Debug.LogWarning($"[ScenarioController] Quiz node '{node.Identifier}' cannot render choices because UI controller is missing.");
+        context.NextOverride = ResolveQuizTarget(node, isCorrect: false);
+        yield break;
+      }
+
+      var selection = new BranchOptionSelection();
+      yield return RunBranchPrompt(() =>
+      {
+        _state = State.ExecutingQuiz;
+        PresentQuiz(node);
+      }, selection);
+
+      if (!selection.Resolved)
+      {
+        yield break; // 시나리오 종료 등으로 미해결 종료.
+      }
+
+      bool isCorrect = selection.Index == node.CorrectIndex;
+      ShowQuizFeedback(node, isCorrect);
+      context.NextOverride = ResolveQuizTarget(node, isCorrect);
+
+      ClearOptions();
     }
 
     /// <summary>
@@ -2199,15 +2485,21 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
-    private IEnumerator WaitForAny(List<Coroutine> coroutines)
+    private IEnumerator WaitForAny(List<BranchCompletionTracker> trackers)
     {
-      while (coroutines.Count > 0)
+      // Unity Coroutine 핸들은 완료 시 null 이 되지 않으므로,
+      // 브랜치 완료 플래그(tracker)를 폴링하여 하나라도 끝나면 반환한다.
+      if (trackers == null || trackers.Count == 0)
       {
-        for (int i = coroutines.Count - 1; i >= 0; i--)
+        yield break;
+      }
+
+      while (true)
+      {
+        for (int i = 0; i < trackers.Count; i++)
         {
-          if (coroutines[i] == null) // 완료된 코루틴
+          if (trackers[i] != null && trackers[i].Completed)
           {
-            coroutines.RemoveAt(i);
             yield break;
           }
         }
@@ -2219,27 +2511,95 @@ namespace MultiplayerInfrastructure.Scenario
     {
       var ids = new List<int>();
 
-      var serverClients = InstanceFinder.ServerManager?.Clients;
-      if (serverClients != null)
+      // 서버가 실제로 구동 중일 때만 ServerManager.Clients 를 신뢰한다.
+      // 순수 클라이언트에서도 ServerManager.Clients 는 null 이 아니라 "빈 딕셔너리"이므로
+      // null 검사만으로 분기하면 클라이언트에서 플레이어 목록이 항상 비게 된다.
+      if (InstanceFinder.IsServerStarted)
       {
-        foreach (var kvp in serverClients)
+        var serverClients = InstanceFinder.ServerManager?.Clients;
+        if (serverClients != null)
         {
-          if (kvp.Value != null)
+          foreach (var kvp in serverClients)
           {
-            ids.Add((int)kvp.Value.ClientId);
+            if (kvp.Value != null)
+            {
+              ids.Add((int)kvp.Value.ClientId);
+            }
           }
         }
       }
       else if (InstanceFinder.ClientManager != null)
       {
-        var localConn = InstanceFinder.ClientManager.Connection;
-        if (localConn != null)
+        // 클라이언트 컨텍스트: FishNet ShareIds 가 활성화되어 있으면 전체 접속자 목록을,
+        // 아니면 최소한 로컬 커넥션이라도 확보한다.
+        var sharedClients = InstanceFinder.ClientManager.Clients;
+        if (sharedClients != null && sharedClients.Count > 0)
         {
-          ids.Add((int)localConn.ClientId);
+          foreach (var kvp in sharedClients)
+          {
+            if (kvp.Value != null)
+            {
+              ids.Add((int)kvp.Value.ClientId);
+            }
+          }
+        }
+        else
+        {
+          var localConn = InstanceFinder.ClientManager.Connection;
+          if (localConn != null)
+          {
+            ids.Add((int)localConn.ClientId);
+          }
         }
       }
 
+      // 모든 피어에서 동일한 순서를 보장한다(딕셔너리 순회 순서에 의존하지 않도록).
+      ids.Sort();
       return ids;
+    }
+
+    /// <summary>
+    /// 병렬 브랜치 할당용 결정적 난수 생성기를 만든다.
+    /// 모든 피어가 동일 그래프/노드/방문 순서를 공유하므로, 이를 시드로 쓰면
+    /// RandomOneAll/SpreadRandom 할당이 피어 간에 일치한다.
+    /// (로컬 UnityEngine.Random 을 쓰면 피어마다 다른 플레이어가 배정되는 버그가 발생한다.)
+    /// </summary>
+    private System.Random CreateDeterministicAllocationRandom(ScenarioParallelNode node)
+    {
+      int seed = 17;
+      unchecked
+      {
+        // string.GetHashCode 는 런타임/프로세스별로 달라질 수 있으므로
+        // 안정적인 FNV-1a 해시를 사용한다.
+        seed = seed * 31 + StableStringHash(_currentGraph?.Identifier);
+        seed = seed * 31 + StableStringHash(node?.Identifier);
+
+        // 같은 노드를 반복 방문해도 매번 같은 결과가 나오지 않도록 방문 횟수를 섞는다.
+        var visits = node != null ? GetNodeVisitOrders(node.Identifier) : null;
+        seed = seed * 31 + (visits?.Count ?? 0);
+      }
+
+      return new System.Random(seed);
+    }
+
+    /// <summary>프로세스/플랫폼과 무관하게 동일한 값을 내는 문자열 해시(FNV-1a 32bit).</summary>
+    private static int StableStringHash(string text)
+    {
+      if (string.IsNullOrEmpty(text))
+      {
+        return 0;
+      }
+
+      unchecked
+      {
+        uint hash = 2166136261u;
+        for (int i = 0; i < text.Length; i++)
+        {
+          hash ^= text[i];
+          hash *= 16777619u;
+        }
+        return (int)hash;
+      }
     }
 
     private bool TryAllocateParallel(ScenarioParallelNode node, List<int> players, Dictionary<ScenarioParallelBranch, int?> allocation)
@@ -2291,7 +2651,9 @@ namespace MultiplayerInfrastructure.Scenario
             return HandleParallelMismatch(node, branches.Count, 0, playerPool, allocation, assignNull: true);
           }
 
-          var pick = eligiblePlayers[UnityEngine.Random.Range(0, eligiblePlayers.Count)];
+          // 피어 간 동일한 배정을 위해 결정적 난수를 사용한다.
+          var allocationRandom = CreateDeterministicAllocationRandom(node);
+          var pick = eligiblePlayers[allocationRandom.Next(0, eligiblePlayers.Count)];
           foreach (var branch in branches)
           {
             allocation[branch] = pick;
@@ -2365,7 +2727,8 @@ namespace MultiplayerInfrastructure.Scenario
         }
         case ScenarioParallelAllocationType.SpreadRandom:
         {
-          Shuffle(playerPool);
+          // 피어 간 동일한 배정을 위해 결정적 난수로 셔플한다.
+          Shuffle(playerPool, CreateDeterministicAllocationRandom(node));
           goto case ScenarioParallelAllocationType.SpreadOrdinary;
         }
         case ScenarioParallelAllocationType.SpreadOrdinary:
@@ -2527,11 +2890,11 @@ namespace MultiplayerInfrastructure.Scenario
       return true;
     }
 
-    private static void Shuffle(IList<int> list)
+    private static void Shuffle(IList<int> list, System.Random random)
     {
       for (int i = list.Count - 1; i > 0; i--)
       {
-        int j = UnityEngine.Random.Range(0, i + 1);
+        int j = random.Next(0, i + 1);
         (list[i], list[j]) = (list[j], list[i]);
       }
     }
@@ -2579,7 +2942,11 @@ namespace MultiplayerInfrastructure.Scenario
     private bool EvaluateValidatorRootCondition(ScenarioValidatorRootCondition rootCondition, out string failureReason)
     {
       failureReason = null;
-      var clientCount = InstanceFinder.ClientManager?.Clients?.Count ?? 0;
+      // 서버 구동 중에는 서버의 접속자 목록을 사용한다.
+      // (ClientManager.Clients 는 전용 서버에서 0이고, ShareIds 비활성 시 클라이언트에서도 부정확하다.)
+      var clientCount = InstanceFinder.IsServerStarted
+          ? InstanceFinder.ServerManager?.Clients?.Count ?? 0
+          : InstanceFinder.ClientManager?.Clients?.Count ?? 0;
 
       switch (rootCondition.Condition)
       {

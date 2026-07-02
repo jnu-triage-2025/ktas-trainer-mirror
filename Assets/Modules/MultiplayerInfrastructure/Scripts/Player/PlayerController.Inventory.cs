@@ -28,7 +28,10 @@ namespace MultiplayerInfrastructure.Player
       if (_inventoryUI == null)
         _inventoryUI = Registry.Registry.Get<InventoryUIController>(RegistryType.UI, Registry.Registry.TypeKey<InventoryUIController>());
 
-      for (int i = 0; i < _inventoryConf.sizeWidth * _inventoryConf.sizeHeight; i++)
+      // 멱등성 보장: Start 와 OnStartClient 양쪽에서 호출될 수 있으므로
+      // 목표 슬롯 수까지만 채운다(중복 호출 시 슬롯이 2배로 늘어나는 것 방지).
+      int targetCount = _inventoryConf.sizeWidth * _inventoryConf.sizeHeight;
+      while (_slots.Count < targetCount)
         _slots.Add(new InventorySlotModelDTO());
     }
 
@@ -244,11 +247,15 @@ namespace MultiplayerInfrastructure.Player
       if (!string.IsNullOrWhiteSpace(itemObject.Identifier))
         return TryPickupWorldItem(itemObject.Identifier);
 
+      // 부분 추가로 인한 아이템 유실/복제를 막기 위해 전량 수용 가능할 때만 추가한다.
+      if (!CanAcceptItem(itemObject.Item))
+        return false;
+
       bool added = TryAddItemToInventory(itemObject.Item);
       if (!added)
         return false;
 
-      itemObject.Item.OnGet(this);
+      // OnGet 은 TryAddItemToInventory 내부에서 1회 호출된다(중복 호출 금지).
       RequestDestroyWorldItem(itemObject);
       return true;
     }

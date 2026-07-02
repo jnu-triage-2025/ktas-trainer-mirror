@@ -59,10 +59,16 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
-      // 서버 컨텍스트: 직접 권위 기록.
+      // 서버 컨텍스트: 직접 권위 기록 후 전체 클라이언트에 미러링.
+      // (Validator 판정은 각 피어 로컬에서 폴링되므로, 서버 기록만으로는
+      //  다른 클라이언트의 게이트가 통과되지 않는다.)
       if (InstanceFinder.IsServerStarted)
       {
         ScenarioInteractionSignals.RegisterLocal(normalizedSignalId);
+        if (_instance != null)
+        {
+          _instance.RpcMirrorRaiseScenarioSignal(normalizedSignalId);
+        }
         return;
       }
 
@@ -88,6 +94,10 @@ namespace MultiplayerInfrastructure.Scenario
       if (InstanceFinder.IsServerStarted)
       {
         ScenarioInteractionSignals.UnregisterLocal(normalizedSignalId);
+        if (_instance != null)
+        {
+          _instance.RpcMirrorClearScenarioSignal(normalizedSignalId);
+        }
         return;
       }
 
@@ -100,14 +110,69 @@ namespace MultiplayerInfrastructure.Scenario
       ScenarioInteractionSignals.UnregisterLocal(normalizedSignalId);
     }
 
+    /// <summary>신호 식별자 최대 길이(자원 고갈 방지용 방어선).</summary>
+    private const int MaxSignalIdentifierLength = 256;
+
+    /// <summary>
+    /// 클라이언트가 보고한 신호 식별자의 서버측 검증.
+    /// 정규화 접두사(sig.)와 길이 상한을 강제하여, 임의 문자열 주입으로 인한
+    /// 레지스트리 오염/무한 증식(1→N 증폭)을 차단한다.
+    /// </summary>
+    private static bool IsValidClientSignal(string normalizedSignalId)
+    {
+      if (string.IsNullOrWhiteSpace(normalizedSignalId))
+      {
+        return false;
+      }
+
+      if (normalizedSignalId.Length > MaxSignalIdentifierLength)
+      {
+        return false;
+      }
+
+      return normalizedSignalId.StartsWith(ScenarioInteractionSignals.Prefix, System.StringComparison.Ordinal);
+    }
+
     [ServerRpc(RequireOwnership = false)]
     private void CmdRaiseScenarioSignal(string normalizedSignalId)
     {
+      if (!IsValidClientSignal(normalizedSignalId))
+      {
+        Debug.LogWarning($"[ScenarioNetworkRelay] Rejected invalid client signal raise: '{normalizedSignalId}'");
+        return;
+      }
+
       ScenarioInteractionSignals.RegisterLocal(normalizedSignalId);
+      // 서버 기록 후 모든 클라이언트(호스트 포함)에 미러링하여
+      // 각 피어 로컬의 Validator 폴링이 통과되도록 한다.
+      RpcMirrorRaiseScenarioSignal(normalizedSignalId);
     }
 
     [ServerRpc(RequireOwnership = false)]
     private void CmdClearScenarioSignal(string normalizedSignalId)
+    {
+      if (!IsValidClientSignal(normalizedSignalId))
+      {
+        Debug.LogWarning($"[ScenarioNetworkRelay] Rejected invalid client signal clear: '{normalizedSignalId}'");
+        return;
+      }
+
+      ScenarioInteractionSignals.UnregisterLocal(normalizedSignalId);
+      RpcMirrorClearScenarioSignal(normalizedSignalId);
+    }
+
+    /// <summary>
+    /// 서버의 권위 신호 기록을 모든 클라이언트 로컬 레지스트리로 미러링한다.
+    /// </summary>
+    [ObserversRpc(BufferLast = false)]
+    private void RpcMirrorRaiseScenarioSignal(string normalizedSignalId)
+    {
+      // 호스트(서버=클라)에서는 이미 서버 경로에서 기록되었으므로 중복 기록해도 무해(idempotent)하다.
+      ScenarioInteractionSignals.RegisterLocal(normalizedSignalId);
+    }
+
+    [ObserversRpc(BufferLast = false)]
+    private void RpcMirrorClearScenarioSignal(string normalizedSignalId)
     {
       ScenarioInteractionSignals.UnregisterLocal(normalizedSignalId);
     }

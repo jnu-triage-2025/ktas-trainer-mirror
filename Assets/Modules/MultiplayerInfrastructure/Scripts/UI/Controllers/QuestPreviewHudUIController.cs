@@ -104,10 +104,21 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      if (Input.GetKeyDown(KeyCode.Y))
+      // 키 입력 검사를 먼저 수행한다. (UIOverlayStack.IsEmpty 는 내부 정리 과정에서
+      // 리스트를 할당하므로 매 프레임 호출하면 프레임당 GC 할당이 발생한다.)
+      if (!Input.GetKeyDown(KeyCode.Y))
       {
-        HighlightTrackedWaypoints();
+        return;
       }
+
+      // 채팅 입력 등 다른 UI 오버레이가 열려 있으면 단축키를 무시한다.
+      // (채팅에 'y' 를 입력할 때마다 하이라이트가 발동하는 버그 방지)
+      if (!UIOverlayStack.IsEmpty())
+      {
+        return;
+      }
+
+      HighlightTrackedWaypoints();
     }
 
     private void RefreshTrackedWaypoints(IReadOnlyList<QuestData> tracked)

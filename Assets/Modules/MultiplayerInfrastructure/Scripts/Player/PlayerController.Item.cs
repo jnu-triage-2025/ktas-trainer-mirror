@@ -46,6 +46,20 @@ namespace MultiplayerInfrastructure.Player
     }
 
     /// <summary>
+    /// 파괴 시 UI 이벤트 구독을 해제한다.
+    /// 구독 해제를 누락하면 파괴된 플레이어 오브젝트로의 dangling 핸들러가 남아
+    /// 이후 슬롯 변경 이벤트에서 예외가 발생한다.
+    /// </summary>
+    void OnDestroy_Item()
+    {
+      if (_hotbarUI != null)
+        _hotbarUI.OnSelectedSlotChanged -= ResolveHandledItem;
+
+      if (_inventoryUI != null)
+        _inventoryUI.OnItemAtSelectedSlotChanged -= ResolveHandledItem;
+    }
+
+    /// <summary>
     /// Usage Sequence:
     /// called TriggerAttack/TriggerUseItem from other part
     /// -> triggered by Trigger~
@@ -62,17 +76,17 @@ namespace MultiplayerInfrastructure.Player
       if (attackTriggered)
       {
         attackTriggered = false;
+        // 아이템 핸들러가 Cancelled 를 반환한 경우에만 기본 공격을 생략한다.
+        // (Success/Passed 는 기본 동작을 계속 수행)
         if (InvokeAttack() != ActionResult.Cancelled)
-          return;
-        Attack();
+          Attack();
       }
 
       if (useItemTriggered)
       {
         useItemTriggered = false;
         if (InvokeUseItem() != ActionResult.Cancelled)
-          return;
-        UseItem();
+          UseItem();
       }
     }
 
