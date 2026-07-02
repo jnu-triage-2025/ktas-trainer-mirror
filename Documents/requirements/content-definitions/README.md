@@ -9,7 +9,7 @@
 기능 요구사항과 추적성 문서를 정리합니다.
 
 ### 하위 폴더
-- [audio](./audio/README.md): 문서 1개
+- [audio](./audio/README.md): 문서 2개
 - [scenario](./scenario/README.md): 문서 23개
 
 ### 문서

@@ -631,7 +631,7 @@ namespace MultiplayerInfrastructure.Scenario
         _uiController.DisplayDialogue(node.SpeakerName, node.DialogueContent, node.PortraitSpriteIdentifier, node.InteractionRequired);
 
         if (node.PlayTTS)
-          PlayInlineTTS(node.Identifier, node.DialogueContent);
+          PlayInlineTTS(node.Identifier, node.DialogueContent, node.TtsVoiceIdentifier);
 
         // AutoAdvanceSeconds 가 양수이면 표시 후 해당 시간 경과 시 자동 진행.
         // 그 전에 사용자가 Advance() 를 호출하면 타이머는 취소된다(중복 진행 방지).
@@ -687,7 +687,7 @@ namespace MultiplayerInfrastructure.Scenario
         _uiController.DisplayChoice(node.SpeakerName, node.DialogueContent, node.PortraitSpriteIdentifier, node.Options);
 
         if (node.PlayTTS)
-          PlayInlineTTS(node.Identifier, node.DialogueContent);
+          PlayInlineTTS(node.Identifier, node.DialogueContent, node.TtsVoiceIdentifier);
       }
 
       _activeOptions = new List<ScenarioChoiceOption>(node.Options);
@@ -922,7 +922,7 @@ namespace MultiplayerInfrastructure.Scenario
         _uiController.DisplayChoice("Quiz", node.Question ?? string.Empty, null, options);
 
         if (node.PlayTTS)
-          PlayInlineTTS(node.Identifier, node.Question);
+          PlayInlineTTS(node.Identifier, node.Question, node.TtsVoiceIdentifier);
       }
     }
 
@@ -942,7 +942,7 @@ namespace MultiplayerInfrastructure.Scenario
       if (node.PlayTTS)
       {
         string feedbackNodeId = node.Identifier + (isCorrect ? "_feedbackCorrect" : "_feedbackIncorrect");
-        PlayInlineTTS(feedbackNodeId, feedback);
+        PlayInlineTTS(feedbackNodeId, feedback, node.TtsVoiceIdentifier);
       }
     }
 
@@ -1421,7 +1421,9 @@ namespace MultiplayerInfrastructure.Scenario
           ? node.Variables
           : null;
 
-      var playCoroutine = _ttsService.PlayTranscript(node.TranscriptIdentifier, _ttsAudioSource, variables);
+      var playCoroutine = _ttsService.PlayTranscript(
+        node.TranscriptIdentifier, _ttsAudioSource, variables,
+        voiceIdentifier: string.IsNullOrEmpty(node.TtsVoiceIdentifier) ? null : node.TtsVoiceIdentifier);
 
       if (node.WaitUntilFinished)
         yield return playCoroutine;
@@ -1444,7 +1446,8 @@ namespace MultiplayerInfrastructure.Scenario
           var vars = playTTS.Variables != null && playTTS.Variables.Count > 0
               ? playTTS.Variables
               : null;
-          _ttsService.PrepareTranscriptVariables(playTTS.TranscriptIdentifier, vars);
+          string voiceId = string.IsNullOrEmpty(playTTS.TtsVoiceIdentifier) ? null : playTTS.TtsVoiceIdentifier;
+          _ttsService.PrepareTranscriptVariables(playTTS.TranscriptIdentifier, vars, voiceIdentifier: voiceId);
         }
       }
     }
@@ -1455,7 +1458,10 @@ namespace MultiplayerInfrastructure.Scenario
     /// TTSService/AudioSource 참조가 없거나 텍스트가 비어 있으면 아무 작업도 하지 않는다.
     /// 텍스트 표시와 병렬로 재생되며(대기하지 않음), 다음 노드 진행을 막지 않는다.
     /// </summary>
-    private void PlayInlineTTS(string nodeIdentifier, string text)
+    /// <param name="voiceIdentifier">
+    /// 사용할 목소리 프로파일 식별자. null이면 기본 목소리를 사용한다.
+    /// </param>
+    private void PlayInlineTTS(string nodeIdentifier, string text, string voiceIdentifier = null)
     {
       if (_ttsService == null || _ttsAudioSource == null) return;
       if (string.IsNullOrWhiteSpace(text)) return;
@@ -1463,7 +1469,7 @@ namespace MultiplayerInfrastructure.Scenario
       // IsReady를 기다리지 않는다: baked WAV는 ONNX 초기화 없이 즉시 재생 가능하고,
       // baked가 없을 때만 내부에서 즉석 합성(초기화 완료 후 가능)으로 폴백한다.
       string scenarioIdentifier = _currentGraph != null ? _currentGraph.Identifier : null;
-      _ttsService.PlayText(text, _ttsAudioSource, scenarioIdentifier, nodeIdentifier);
+      _ttsService.PlayText(text, _ttsAudioSource, scenarioIdentifier, nodeIdentifier, voiceIdentifier);
     }
 
     private void HandleQuizSelection(int index, ScenarioQuizNode node)

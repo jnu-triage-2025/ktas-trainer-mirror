@@ -20,5 +20,12 @@ namespace MultiplayerInfrastructure.Scenario
 
     /// <summary>true이면 음성 재생이 끝날 때까지 다음 노드로 진행하지 않습니다.</summary>
     public bool WaitUntilFinished { get; set; } = true;
+
+    /// <summary>
+    /// 사용할 목소리 프로파일 식별자.
+    /// TTSService의 Voice Profiles 목록에 등록된 식별자를 지정한다.
+    /// null 또는 빈 문자열이면 TTSService의 기본 목소리를 사용한다.
+    /// </summary>
+    public string TtsVoiceIdentifier { get; set; }
   }
 }

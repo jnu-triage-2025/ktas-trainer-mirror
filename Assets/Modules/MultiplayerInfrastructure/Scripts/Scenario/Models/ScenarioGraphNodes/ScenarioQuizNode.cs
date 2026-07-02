@@ -22,5 +22,13 @@ namespace MultiplayerInfrastructure.Scenario
     /// bake되지 않은 경우 런타임에 즉석으로 합성해 재생한다.
     /// </summary>
     public bool PlayTTS { get; set; }
+
+    /// <summary>
+    /// 사용할 목소리 프로파일 식별자.
+    /// TTSService의 Voice Profiles 목록에 등록된 식별자를 지정한다.
+    /// null 또는 빈 문자열이면 TTSService의 기본 목소리를 사용한다.
+    /// <see cref="PlayTTS"/>가 true일 때만 효과가 있다.
+    /// </summary>
+    public string TtsVoiceIdentifier { get; set; }
   }
 }

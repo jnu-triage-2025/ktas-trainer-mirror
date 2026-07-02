@@ -1,0 +1,133 @@
+{
+  "identifier": "multi_voice_example",
+  "tags": [],
+  "nodes": {
+    "narrator_intro": {
+      "identifier": "narrator_intro",
+      "nodeType": "Dialogue",
+      "speakerName": "나레이터",
+      "dialogueContent": "응급실에 대규모 재난 환자가 이송되고 있습니다. 팀장은 즉시 트리아지를 시작하십시오.",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": 5.0,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "narrator",
+      "nextIdentifier": "dispatcher_call"
+    },
+    "dispatcher_call": {
+      "identifier": "dispatcher_call",
+      "nodeType": "Dialogue",
+      "speakerName": "상황실",
+      "dialogueContent": "팀장, 현재 30명 이상의 부상자가 예상됩니다. 즉시 대응 레벨 3을 발령합니다.",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": true,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "dispatcher",
+      "nextIdentifier": "doctor_briefing"
+    },
+    "doctor_briefing": {
+      "identifier": "doctor_briefing",
+      "nodeType": "Dialogue",
+      "speakerName": "김의사",
+      "dialogueContent": "알겠습니다. 적색 구역부터 시작합니다. 기도 확보 팀은 저를 따라오세요.",
+      "portraitSpriteIdentifier": "portrait_doctor",
+      "interactionRequired": true,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "doctor",
+      "nextIdentifier": "patient_response"
+    },
+    "patient_response": {
+      "identifier": "patient_response",
+      "nodeType": "Dialogue",
+      "speakerName": "환자 A",
+      "dialogueContent": "으...... 다리가...... 아파요.",
+      "portraitSpriteIdentifier": "portrait_patient_a",
+      "interactionRequired": true,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "patient",
+      "nextIdentifier": "triage_choice"
+    },
+    "triage_choice": {
+      "identifier": "triage_choice",
+      "nodeType": "Choice",
+      "speakerName": "김의사",
+      "dialogueContent": "이 환자의 트리아지 등급을 결정하세요.",
+      "portraitSpriteIdentifier": "portrait_doctor",
+      "playTTS": true,
+      "ttsVoiceIdentifier": "doctor",
+      "options": [
+        {
+          "displayText": "적색 (즉각 처치)",
+          "displayIconIdentifier": null,
+          "displayColor": { "r": 0.9, "g": 0.1, "b": 0.1, "a": 1.0 },
+          "nextNodeIdentifier": "quiz_vital"
+        },
+        {
+          "displayText": "황색 (지연 처치)",
+          "displayIconIdentifier": null,
+          "displayColor": { "r": 0.9, "g": 0.7, "b": 0.0, "a": 1.0 },
+          "nextNodeIdentifier": "feedback_wrong"
+        },
+        {
+          "displayText": "녹색 (경증)",
+          "displayIconIdentifier": null,
+          "displayColor": { "r": 0.1, "g": 0.8, "b": 0.2, "a": 1.0 },
+          "nextNodeIdentifier": "feedback_wrong"
+        }
+      ],
+      "nextIdentifier": null
+    },
+    "quiz_vital": {
+      "identifier": "quiz_vital",
+      "nodeType": "Quiz",
+      "question": "이 환자의 호흡수가 분당 28회, 수축기 혈압 88mmHg입니다. 적절한 조치 우선순위는?",
+      "options": [
+        "기도 확보 후 정맥로 확보",
+        "진통제 투여 후 고정",
+        "체온 유지 후 이송 대기"
+      ],
+      "correctIndex": 0,
+      "feedbackCorrect": "정확합니다. 기도 확보와 정맥로 확보를 동시에 진행하세요.",
+      "feedbackIncorrect": "틀렸습니다. 쇼크 징후가 있는 환자는 기도 확보와 수액 투여가 최우선입니다.",
+      "onCorrectNextIdentifier": "tts_instruction",
+      "onIncorrectNextIdentifier": "tts_instruction",
+      "playTTS": true,
+      "ttsVoiceIdentifier": "narrator",
+      "nextIdentifier": "tts_instruction"
+    },
+    "feedback_wrong": {
+      "identifier": "feedback_wrong",
+      "nodeType": "Dialogue",
+      "speakerName": "나레이터",
+      "dialogueContent": "다시 생각해보세요. 환자의 활력 징후를 먼저 확인하고 판단하세요.",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": true,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "narrator",
+      "nextIdentifier": "triage_choice"
+    },
+    "tts_instruction": {
+      "identifier": "tts_instruction",
+      "nodeType": "PlayTTS",
+      "transcriptIdentifier": "tts-role-instruction",
+      "variables": {
+        "role": "응급의학과"
+      },
+      "waitUntilFinished": true,
+      "ttsVoiceIdentifier": "dispatcher",
+      "nextIdentifier": "ending"
+    },
+    "ending": {
+      "identifier": "ending",
+      "nodeType": "Dialogue",
+      "speakerName": "나레이터",
+      "dialogueContent": "1차 트리아지가 완료되었습니다. 다음 환자로 이동하십시오.",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": 4.0,
+      "playTTS": true,
+      "ttsVoiceIdentifier": "narrator",
+      "nextIdentifier": null
+    }
+  }
+}

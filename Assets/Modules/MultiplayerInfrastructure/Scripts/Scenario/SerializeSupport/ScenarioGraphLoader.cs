@@ -270,6 +270,7 @@ namespace MultiplayerInfrastructure.Scenario
           AutoAdvanceSeconds = dto.AutoAdvanceSeconds,
           InteractionRequired = dto.InteractionRequired ?? false,
           PlayTTS = dto.PlayTTS ?? false,
+          TtsVoiceIdentifier = string.IsNullOrEmpty(dto.TtsVoiceIdentifier) ? null : dto.TtsVoiceIdentifier,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -313,6 +314,7 @@ namespace MultiplayerInfrastructure.Scenario
         DialogueContent = dto.DialogueContent,
         PortraitSpriteIdentifier = dto.PortraitSpriteIdentifier,
         PlayTTS = dto.PlayTTS ?? false,
+        TtsVoiceIdentifier = string.IsNullOrEmpty(dto.TtsVoiceIdentifier) ? null : dto.TtsVoiceIdentifier,
         Options = options
       };
     }
@@ -467,6 +469,7 @@ namespace MultiplayerInfrastructure.Scenario
           FeedbackCorrect = dto.FeedbackCorrect,
           FeedbackIncorrect = dto.FeedbackIncorrect,
           PlayTTS = dto.PlayTTS ?? false,
+          TtsVoiceIdentifier = string.IsNullOrEmpty(dto.TtsVoiceIdentifier) ? null : dto.TtsVoiceIdentifier,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -487,6 +490,7 @@ namespace MultiplayerInfrastructure.Scenario
           TranscriptIdentifier = dto.TranscriptIdentifier,
           Variables = dto.Variables ?? new Dictionary<string, string>(),
           WaitUntilFinished = dto.WaitUntilFinished ?? true,
+          TtsVoiceIdentifier = string.IsNullOrEmpty(dto.TtsVoiceIdentifier) ? null : dto.TtsVoiceIdentifier,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -500,6 +504,7 @@ namespace MultiplayerInfrastructure.Scenario
               ? node.Variables
               : null,
           WaitUntilFinished = node.WaitUntilFinished,
+          TtsVoiceIdentifier = string.IsNullOrEmpty(node.TtsVoiceIdentifier) ? null : node.TtsVoiceIdentifier,
           NextIdentifier = node.NextIdentifier
         };
 
@@ -930,6 +935,7 @@ namespace MultiplayerInfrastructure.Scenario
           AutoAdvanceSeconds = node.AutoAdvanceSeconds,
           InteractionRequired = node.InteractionRequired ? true : (bool?)null,
           PlayTTS = node.PlayTTS ? true : (bool?)null,
+          TtsVoiceIdentifier = string.IsNullOrEmpty(node.TtsVoiceIdentifier) ? null : node.TtsVoiceIdentifier,
           NextIdentifier = node.NextIdentifier
         };
 
@@ -943,6 +949,7 @@ namespace MultiplayerInfrastructure.Scenario
         DialogueContent = node.DialogueContent,
         PortraitSpriteIdentifier = node.PortraitSpriteIdentifier,
         PlayTTS = node.PlayTTS ? true : (bool?)null,
+        TtsVoiceIdentifier = string.IsNullOrEmpty(node.TtsVoiceIdentifier) ? null : node.TtsVoiceIdentifier,
         NextIdentifier = null,
         Options = new List<ScenarioChoiceOptionDTO>()
       };
@@ -1126,6 +1133,7 @@ namespace MultiplayerInfrastructure.Scenario
           FeedbackCorrect = node.FeedbackCorrect,
           FeedbackIncorrect = node.FeedbackIncorrect,
           PlayTTS = node.PlayTTS ? true : (bool?)null,
+          TtsVoiceIdentifier = string.IsNullOrEmpty(node.TtsVoiceIdentifier) ? null : node.TtsVoiceIdentifier,
           NextIdentifier = node.NextIdentifier
         };
 
