@@ -22,11 +22,17 @@ namespace MultiplayerInfrastructure.Player
     private bool _wasWalking;
     private const float WalkEnterThreshold = 0.1f;
     private const float WalkExitThreshold = 0.05f;
+    // Jump 애니메이션이 재생 중인 동안 유지하는 상태 플래그
+    private bool _isPlayingJumpAnimation;
+    private const float JumpAnimationMinDuration = 0.4f; // 최소 점프 애니메이션 재생 시간(초)
+    private float _jumpAnimationStartTime;
 
     private void Awake_Animation()
     {
       EnsureDefaultRuntimeAnimatorController();
       _hasAnimationParameterState = false;
+      _isPlayingJumpAnimation = false;
+      // _jumpAnimationStartTime은 _isPlayingJumpAnimation = true 시점에 항상 덮어쓰이므로 초기화 불필요
     }
 
 #if UNITY_EDITOR
@@ -69,7 +75,30 @@ namespace MultiplayerInfrastructure.Player
 
     private bool IsJumpingAnimationState()
     {
-      return _jumpAnimationRequestedThisFrame;
+      // 이번 프레임에 점프 입력이 들어왔으면 점프 애니메이션 시작
+      if (_jumpAnimationRequestedThisFrame)
+      {
+        _isPlayingJumpAnimation = true;
+        _jumpAnimationStartTime = Time.time;
+        return true;
+      }
+
+      // 점프 애니메이션 최소 재생 시간이 지나지 않았으면 계속 점프 상태 유지
+      if (_isPlayingJumpAnimation)
+      {
+        // _characterController가 null이면 방어적으로 착지 상태로 간주한다.
+        // (character model 교체·씬 전환 등으로 null이 되면 영구 jump 상태 고착 방지)
+        bool grounded = _characterController == null || _characterController.isGrounded;
+        bool minDurationPassed = (Time.time - _jumpAnimationStartTime) >= JumpAnimationMinDuration;
+
+        // 착지했고 최소 재생 시간이 지났을 때만 점프 애니메이션 종료
+        if (grounded && minDurationPassed)
+          _isPlayingJumpAnimation = false;
+        else
+          return true;
+      }
+
+      return false;
     }
 
 private bool IsWalkingAnimationState()
@@ -100,6 +129,8 @@ private bool IsWalkingAnimationState()
       _hasValidatedAnimationParameters = false;
       _hasRequiredAnimationParameters = false;
       _hasWarnedMissingAnimationParameters = false;
+      _isPlayingJumpAnimation = false;
+      // _jumpAnimationStartTime은 _isPlayingJumpAnimation = true 시점에 항상 덮어쓰이므로 초기화 불필요
 
       ApplyRuntimeAnimatorController(_characterModelAnimator);
 
@@ -114,7 +145,7 @@ private bool IsWalkingAnimationState()
       ApplyAnimationParameters(isWalk: false, isJump: false);
     }
 
-private void ApplyAnimationParameters(bool isWalk, bool isJump)
+    private void ApplyAnimationParameters(bool isWalk, bool isJump)
     {
         if (_characterModelAnimator == null)
             return;
@@ -126,13 +157,24 @@ private void ApplyAnimationParameters(bool isWalk, bool isJump)
         if (!changed)
             return;
 
-        // Set parameters for any other logic that may read them
+        // 파라미터를 먼저 설정해 Animator 상태 머신이 조건 기반 트랜지션을 올바르게 평가하도록 한다.
         _characterModelAnimator.SetBool(WalkAnimationParameterName, isWalk);
         _characterModelAnimator.SetBool(JumpAnimationParameterName, isJump);
 
-        // Immediately cross‑fade to the target state to avoid waiting for exit time
-        string targetState = isJump ? "Jump" : (isWalk ? "Walk" : "Idle");
-        _characterModelAnimator.CrossFade(targetState, 0f, 0);
+        // jump 전환에만 CrossFade로 즉시 인터럽트한다.
+        // idle ↔ walk 전환은 Animator 상태 머신의 조건 트랜지션에 맡겨
+        // 불필요한 CrossFade 호출로 인한 재생 끊김을 방지한다.
+        if (_currentJumpAnimationParameter && !isJump)
+        {
+            // 점프 종료 후 walk 또는 idle로 즉시 전환
+            string targetState = isWalk ? "walk" : "idle";
+            _characterModelAnimator.CrossFade(targetState, 0.15f, 0);
+        }
+        else if (!_currentJumpAnimationParameter && isJump)
+        {
+            // jump 진입: 이전에 점프 상태가 아니었던 모든 경우에 즉시 CrossFade
+            _characterModelAnimator.CrossFade("jump", 0f, 0);
+        }
 
         _currentWalkAnimationParameter = isWalk;
         _currentJumpAnimationParameter = isJump;
