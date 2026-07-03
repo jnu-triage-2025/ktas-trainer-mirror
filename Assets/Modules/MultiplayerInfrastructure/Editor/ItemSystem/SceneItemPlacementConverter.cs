@@ -91,11 +91,16 @@ namespace MultiplayerInfrastructure.Editor.ItemSystem
 
         var go = placement.gameObject;
 
-        // 이미 StaticPlacedItem 이 있으면 건너뛴다(중복 변환 방지).
+        // 이미 StaticPlacedItem 이 있는 경우(같은 GameObject 에 SceneItemPlacement 가 중복 부착되어
+        // 앞선 항목에서 이미 변환된 경우): StaticPlacedItem 을 다시 만들지는 않되,
+        // 남아 있는 이 SceneItemPlacement 는 반드시 제거한다.
+        // 제거하지 않으면 런타임에 이 SceneItemPlacement 가 ItemObject(Rigidbody 보유)를 스폰하여
+        // 아이템이 물리로 날아다니게 된다(정적 배치 목적 위배).
         if (go.GetComponent<StaticPlacedItem>() != null)
         {
+          Undo.DestroyObjectImmediate(placement);
           skipped++;
-          report.AppendLine($"  [skip] {go.name}: 이미 StaticPlacedItem 이 있습니다.");
+          report.AppendLine($"  [dedup] {go.name}: 이미 변환됨 → 중복 SceneItemPlacement 제거.");
           continue;
         }
 

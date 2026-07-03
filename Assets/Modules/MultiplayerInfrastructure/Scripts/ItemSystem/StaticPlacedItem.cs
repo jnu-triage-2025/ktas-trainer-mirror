@@ -70,11 +70,31 @@ namespace MultiplayerInfrastructure.ItemSystem
       if (string.IsNullOrWhiteSpace(_entityIdentifier))
         _entityIdentifier = global::MultiplayerInfrastructure.Registry.EntityId.Ensure(_entityIdentifier, gameObject, "static-item");
 
+      WarnIfSceneItemPlacementCoexists();
+
       if (_autoLoadModel)
         LoadModelIfNeeded();
 
       EnsureInteractionCollider();
       RegisterToRegistry();
+    }
+
+    /// <summary>
+    /// 같은 GameObject 에 <see cref="SceneItemPlacement"/> 가 함께 존재하면 경고합니다.
+    /// SceneItemPlacement 는 Start 에서 물리(Rigidbody) 기반 <see cref="ItemObject"/> 를 스폰하므로,
+    /// StaticPlacedItem 과 공존하면 아이템이 흩어지고 배치 목적이 깨진다.
+    /// (변환 도구가 중복을 제거하지 못한 씬을 조기에 발견하기 위한 방어 로그)
+    /// </summary>
+    private void WarnIfSceneItemPlacementCoexists()
+    {
+      if (TryGetComponent<SceneItemPlacement>(out var placement) && placement != null)
+      {
+        Debug.LogWarning(
+          $"[StaticPlacedItem] '{gameObject.name}' 에 SceneItemPlacement 가 함께 존재합니다. " +
+          $"SceneItemPlacement 는 물리 기반 ItemObject 를 스폰하여 아이템이 흩어지게 하므로 제거해야 합니다. " +
+          $"(Tools ▸ Multiplayer Infrastructure ▸ Static Placed Item ▸ Convert All In Active Scene 재실행 권장)",
+          this);
+      }
     }
 
     /// <summary>
