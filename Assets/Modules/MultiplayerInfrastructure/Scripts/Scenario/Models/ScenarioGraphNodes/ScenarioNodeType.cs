@@ -24,5 +24,6 @@ namespace MultiplayerInfrastructure.Scenario
     EntityPresetSpawn,
     EntityTag,
     EntityInit,
+    TriageAssessControl,
   }
 }

@@ -1,0 +1,378 @@
+using System;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
+using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.Player;
+using TriageTrainer.Entity.Patient;
+using UnityEngine;
+
+namespace TriageTrainer.Entity
+{
+  /// <summary>
+  /// 환자 "트리아지(Triage) 분류" 인터랙션 부분 구현.
+  ///
+  /// <para>
+  /// 플레이어는 환자 상태에 따라 트리아지를 분류(KTAS 등급 부여)할 수 있다. 이 동작은 기존 사정(Assess)과
+  /// 별개의 전용 인터랙션(<see cref="PatientTriageInteract"/>)으로 노출되며, 상호작용 시 트리아지 평가
+  /// UI(<see cref="TriageTrainer.UI.TriageAssessmentUIController"/>)를 열어 등급을 선택받고 그 결과를
+  /// 환자에게 적용한다.
+  /// </para>
+  ///
+  /// <para>
+  /// 노출 여부는 <see cref="TriageAssessmentConfig.Assessable"/> 플래그로 제어되며, 시나리오는
+  /// <see cref="SetTriageAssessable"/> 로 이 플래그를 켜고 끌 수 있다. 평가 완료 후의 재상호작용 정책은
+  /// <see cref="ChangeAssessableOnAssessDone"/> 로 지정한다.
+  /// </para>
+  /// </summary>
+  public partial class PatientController
+  {
+    /// <summary>
+    /// 트리아지 평가 완료 후 인터랙션 재노출 정책.
+    /// </summary>
+    public enum ChangeAssessableOnAssessDone
+    {
+      /// <summary>한 번 평가하면 이후 항상 트리아지 인터랙션을 비활성화한다.</summary>
+      DisableAssessable,
+
+      /// <summary>평가 후에도 항상 트리아지 인터랙션을 유지(재평가 허용)한다.</summary>
+      RemainAssessable,
+
+      /// <summary>의도된 정답(intendedTriage)을 맞췄을 때만 비활성화하고, 오답이면 계속 노출한다.</summary>
+      DisableOnIntendedOnly,
+    }
+
+    [Serializable]
+    public struct TriageAssessmentConfig
+    {
+      [Tooltip("트리아지 인터랙션 활성화 플래그. true 여야 상호작용이 노출/가능하다(시나리오가 SetTriageAssessable 로 제어).")]
+      [SerializeField] private bool _assessable;
+
+      [Tooltip("평가 후 재상호작용 정책.")]
+      [SerializeField] private ChangeAssessableOnAssessDone _changeAssessableOnAssessDone;
+
+      [Tooltip("상호작용 힌트에 표시할 문구.")]
+      [SerializeField] private string _displayText;
+
+      [SerializeField] private Sprite _displayIcon;
+
+      public bool Assessable
+      {
+        get => _assessable;
+        set => _assessable = value;
+      }
+
+      public ChangeAssessableOnAssessDone ChangeAssessableOnAssessDone => _changeAssessableOnAssessDone;
+
+      public string DisplayText => string.IsNullOrWhiteSpace(_displayText) ? "트리아지 분류" : _displayText;
+
+      public Sprite DisplayIcon => _displayIcon;
+
+      public static TriageAssessmentConfig Default()
+      {
+        var cfg = new TriageAssessmentConfig();
+        cfg._assessable = false;
+        cfg._changeAssessableOnAssessDone = ChangeAssessableOnAssessDone.DisableAssessable;
+        cfg._displayText = "트리아지 분류";
+        cfg._displayIcon = null;
+        return cfg;
+      }
+    }
+
+    private sealed class PatientTriageInteract : IInteract, IInteractorConditional
+    {
+      private readonly PatientController _owner;
+
+      public PatientTriageInteract(PatientController owner) { _owner = owner; }
+
+      public string DisplayText => _owner._triageConfig.DisplayText;
+      public Sprite DisplayIcon => _owner._triageConfig.DisplayIcon;
+      public bool AllowDisplayIconFallback => true;
+      public Color DisplayColor => TriageLevelInfo.GetColor(TriageLevel.Level3);
+
+      public bool CanInteract(Transform interactor)
+      {
+        if (!_owner.EffectiveAssessable)
+          return false;
+
+        var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+        return player != null;
+      }
+
+      public void Interact(Transform interactor)
+      {
+        _owner.BeginTriageAssessment(interactor);
+      }
+    }
+
+    public const string InteractIdTriage = "triage_assess";
+
+    [Header("Triage (트리아지 분류)")]
+    [SerializeField] private TriageAssessmentConfig _triageConfig;
+
+    // 플레이어가 평가한 트리아지 등급(서버 권위 + 전 피어 복제).
+    private readonly SyncVar<TriageLevel> _assessedTriage = new SyncVar<TriageLevel>(TriageLevel.Unassessed);
+
+    // 트리아지 인터랙션 활성화 여부(서버 권위 + 전 피어 복제). 인스펙터의 _triageConfig.Assessable 은
+    // 초깃값으로만 쓰이고, 런타임 활성/비활성 상태는 이 SyncVar 가 단일 진실 공급원이 되어 모든 피어가
+    // 동일한 게이팅을 보게 한다. _assessableInitialized 는 서버가 초깃값을 아직 반영하지 않았을 때
+    // 인스펙터 값을 폴백으로 쓰기 위한 플래그다.
+    private readonly SyncVar<bool> _assessable = new SyncVar<bool>(false);
+    private bool _assessableInitialized;
+
+    /// <summary>현재 이 환자에 부여된(평가된) 트리아지 등급. 미평가면 <see cref="TriageLevel.Unassessed"/>.</summary>
+    public TriageLevel AssessedTriage => _assessedTriage.Value;
+
+    /// <summary>이 환자의 의도된 트리아지 등급(정답).</summary>
+    public TriageLevel IntendedTriage => _patientDescriptor != null ? _patientDescriptor.intendedTriage : TriageLevel.Unassessed;
+
+    /// <summary>
+    /// 트리아지 인터랙션이 현재 활성 상태인지(전 피어 일관, 외부 조회용).
+    /// 서버가 초깃값을 반영하기 전에는 인스펙터 값으로 폴백한다.
+    /// </summary>
+    public bool EffectiveAssessable => _assessableInitialized ? _assessable.Value : _triageConfig.Assessable;
+
+    /// <summary>트리아지 인터랙션 엔트리를 추가한다(BuildInteractEntries 에서 호출).</summary>
+    private void AddTriageInteract()
+    {
+      _interacts.Add(new PatientTriageInteract(this));
+    }
+
+    private void InitializeTriageSync()
+    {
+      // 서술된 descriptor 초깃값을 SyncVar 에 반영(서버 컨텍스트에서만 권위 기록).
+      _assessedTriage.OnChange += OnAssessedTriageChanged;
+
+      if (IsServerStarted)
+      {
+        // 서버가 인스펙터 초깃값을 권위 상태로 승격한다(전 피어 복제).
+        _assessable.Value = _triageConfig.Assessable;
+        _assessableInitialized = true;
+
+        if (_patientDescriptor != null && _patientDescriptor.assessedTriage != TriageLevel.Unassessed)
+          _assessedTriage.Value = _patientDescriptor.assessedTriage;
+      }
+      else
+      {
+        // 클라이언트는 SyncVar 로 복제된 서버 권위 값을 사용한다.
+        _assessableInitialized = true;
+      }
+    }
+
+    private void TeardownTriageSync()
+    {
+      _assessedTriage.OnChange -= OnAssessedTriageChanged;
+    }
+
+    private void OnAssessedTriageChanged(TriageLevel previous, TriageLevel next, bool asServer)
+    {
+      // descriptor 상태값을 동기화된 값과 일치시켜, 사후 평가/조회가 일관되게 한다.
+      if (_patientDescriptor != null)
+        _patientDescriptor.assessedTriage = next;
+
+      UpdateTriageOverheadLabel(next);
+    }
+
+    /// <summary>시나리오 진행에 따라 트리아지 인터랙션 노출을 켜고 끈다.</summary>
+    public void SetTriageAssessable(bool assessable)
+    {
+      // 인스펙터 초깃값도 갱신해 두어(서버가 아직 SyncVar 를 승격하기 전 폴백 일관성) 초기 상태가 어긋나지 않게 한다.
+      _triageConfig.Assessable = assessable;
+
+      if (IsServerStarted)
+      {
+        _assessable.Value = assessable;
+        _assessableInitialized = true;
+      }
+    }
+
+    /// <summary>
+    /// 트리아지 평가를 시작한다(상호작용한 플레이어에게 트리아지 UI 를 연다).
+    /// UI 는 로컬 플레이어 클라이언트에서만 열리며, 선택 결과는 <see cref="SubmitTriageAssessment"/> 로 반영된다.
+    /// </summary>
+    private void BeginTriageAssessment(Transform interactor)
+    {
+      if (!EffectiveAssessable)
+        return;
+
+      var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+      if (player == null || !player.IsOwner)
+        return;
+
+      var ui = TriageTrainer.UI.TriageAssessmentUIController.ActiveInstance;
+      if (ui == null)
+      {
+        Debug.LogWarning("[PatientController] TriageAssessmentUIController 를 찾을 수 없어 트리아지 UI 를 열 수 없습니다.", this);
+        return;
+      }
+
+      ui.Open(AssessedTriage, selected => SubmitTriageAssessment(selected));
+    }
+
+    /// <summary>
+    /// 트리아지 UI 에서 선택된 등급을 환자에 적용한다(네트워크 전파). 로컬 플레이어 클라이언트에서 호출된다.
+    /// </summary>
+    public void SubmitTriageAssessment(TriageLevel level)
+    {
+      if (!IsValidAssessedTriage(level))
+        return;
+
+      SetAssessedTriageNetworked(level);
+    }
+
+    // 유효한 평가 등급인지(정의된 enum 값이며 미분류가 아님). 서버/클라이언트 양쪽에서 방어한다.
+    private static bool IsValidAssessedTriage(TriageLevel level)
+    {
+      return level != TriageLevel.Unassessed && Enum.IsDefined(typeof(TriageLevel), level);
+    }
+
+    private void SetAssessedTriageNetworked(TriageLevel level)
+    {
+      if (IsServerStarted)
+      {
+        ApplyAssessedTriage(level);
+      }
+      else if (IsClientInitialized)
+      {
+        CmdSetAssessedTriage(level);
+      }
+      else
+      {
+        // 오프라인/단독 실행 → 로컬만 적용.
+        ApplyAssessedTriageLocalOnly(level);
+      }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdSetAssessedTriage(TriageLevel level)
+    {
+      ApplyAssessedTriage(level);
+    }
+
+    // 서버 컨텍스트: 상태값을 갱신(SyncVar 로 전 피어 복제)하고, 완료 후 재노출 정책을 적용한다.
+    // 클라이언트 신뢰 없이 서버에서 권위 검증(활성화 게이트 + enum 값)을 재수행한다.
+    private void ApplyAssessedTriage(TriageLevel level)
+    {
+      // 서버 권위 게이트: 현재 평가 가능 상태가 아니면 거부(클라이언트 게이트 우회 방지).
+      if (!EffectiveAssessable)
+        return;
+
+      // 값 검증: 정의되지 않은 enum/미분류 값 거부(조작된 RPC 방지).
+      if (!IsValidAssessedTriage(level))
+        return;
+
+      _assessedTriage.Value = level;
+      if (_patientDescriptor != null)
+        _patientDescriptor.assessedTriage = level;
+
+      // SyncVar OnChange 는 값이 실제로 변경된 경우에만 발화한다(같은 값이면 무시).
+      // 서버 측 라벨 업데이트를 OnChange 경유 없이 직접 호출해 누락을 방지한다.
+      UpdateTriageOverheadLabel(level);
+
+      ApplyAssessableChangePolicy(level);
+    }
+
+    // 재노출 정책은 서버 권위 SyncVar(_assessable)를 통해 전 피어에 일관되게 반영한다.
+    private void ApplyAssessableChangePolicy(TriageLevel level)
+    {
+      switch (_triageConfig.ChangeAssessableOnAssessDone)
+      {
+        case ChangeAssessableOnAssessDone.DisableAssessable:
+          SetAssessableAuthoritative(false);
+          break;
+
+        case ChangeAssessableOnAssessDone.RemainAssessable:
+          // 유지: 아무 것도 하지 않는다.
+          break;
+
+        case ChangeAssessableOnAssessDone.DisableOnIntendedOnly:
+          if (level == IntendedTriage)
+            SetAssessableAuthoritative(false);
+          break;
+      }
+    }
+
+    // 활성/비활성 상태를 컨텍스트에 맞게 반영한다. 서버면 SyncVar 로 복제, 오프라인이면 로컬 폴백만 갱신.
+    private void SetAssessableAuthoritative(bool assessable)
+    {
+      _triageConfig.Assessable = assessable;
+      if (IsServerStarted)
+      {
+        _assessable.Value = assessable;
+        _assessableInitialized = true;
+      }
+    }
+
+    // 오프라인 전용 로컬 적용(SyncVar 를 직접 못 쓰는 컨텍스트 대비).
+    private void ApplyAssessedTriageLocalOnly(TriageLevel level)
+    {
+      if (!IsValidAssessedTriage(level))
+        return;
+
+      if (_patientDescriptor != null)
+        _patientDescriptor.assessedTriage = level;
+
+      ApplyAssessableChangePolicy(level);
+      UpdateTriageOverheadLabel(level);
+    }
+
+    // ── 인게임 오버헤드 태그(환자 위 트리아지 표기) ──
+
+    [Tooltip("트리아지 오버헤드 태그를 띄울 앵커(미지정 시 환자 루트 Transform 사용). 예: 머리 위 빈 오브젝트.")]
+    [SerializeField] private Transform _triageLabelAnchor;
+
+    private Transform TriageLabelAnchor => _triageLabelAnchor != null ? _triageLabelAnchor : transform;
+
+    /// <summary>
+    /// 평가된 트리아지 등급을 환자 위 오버헤드 라벨(색상 사각형 + 명칭)로 표기한다.
+    /// 미평가(Unassessed)면 라벨을 제거한다.
+    /// </summary>
+    private void UpdateTriageOverheadLabel(TriageLevel level)
+    {
+      var ui = ResolveOverheadLabelUI();
+      if (ui == null)
+        return;
+
+      if (level == TriageLevel.Unassessed)
+      {
+        ui.RemoveLabel(TriageLabelAnchor);
+        return;
+      }
+
+      var content = new MultiplayerInfrastructure.UI.EntityOverheadLabelUIController.LabelContent(
+        TriageLevelInfo.GetColor(level),
+        TriageLevelInfo.GetDisplayName(level),
+        TriageLevelInfo.GetColor(level));  // 어두운 배경 위이므로 swatch 색을 텍스트에도 입힌다.
+
+      ui.SetLabel(TriageLabelAnchor, content);
+    }
+
+    private void DestroyTriageOverheadLabel()
+    {
+      var ui = MultiplayerInfrastructure.UI.EntityOverheadLabelUIController.ActiveInstance;
+      ui?.RemoveLabel(TriageLabelAnchor);
+    }
+
+    // ActiveInstance 가 없으면 씬 내 컴포넌트를 직접 탐색해 폴백으로 사용한다.
+    // (씬에 EntityOverheadLabelUIController 가 배치되지 않은 경우 경고를 출력한다.)
+    private static MultiplayerInfrastructure.UI.EntityOverheadLabelUIController _cachedOverheadLabelUI;
+
+    private static MultiplayerInfrastructure.UI.EntityOverheadLabelUIController ResolveOverheadLabelUI()
+    {
+      var instance = MultiplayerInfrastructure.UI.EntityOverheadLabelUIController.ActiveInstance;
+      if (instance != null)
+        return instance;
+
+      // ActiveInstance 가 없으면 씬 탐색으로 폴백(캐시하여 매 호출마다 탐색하지 않는다).
+      if (_cachedOverheadLabelUI != null)
+        return _cachedOverheadLabelUI;
+
+      _cachedOverheadLabelUI = UnityEngine.Object.FindFirstObjectByType<MultiplayerInfrastructure.UI.EntityOverheadLabelUIController>();
+      if (_cachedOverheadLabelUI == null)
+      {
+        Debug.LogWarning("[PatientController] EntityOverheadLabelUIController 를 씬에서 찾을 수 없습니다. " +
+                         "씬에 EntityOverheadLabelUIController + UIDocument 컴포넌트를 배치하세요.");
+      }
+      return _cachedOverheadLabelUI;
+    }
+  }
+}

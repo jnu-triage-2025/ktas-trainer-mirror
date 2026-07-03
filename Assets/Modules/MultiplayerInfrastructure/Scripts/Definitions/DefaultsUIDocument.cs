@@ -12,5 +12,7 @@ namespace MultiplayerInfrastructure.Definitions
     public const float EscapeMenuUISortOrder = 7f;
     public const float GraphicsSettingsUISortOrder = 8f;
     public const float ProblemSheetUISortOrder = 9f;
+    public const float TriageAssessmentUISortOrder = 9.5f;
+    public const float EntityOverheadLabelSortOrder = 2.2f;
   }
 }

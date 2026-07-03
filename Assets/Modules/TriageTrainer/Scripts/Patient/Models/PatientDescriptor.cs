@@ -36,5 +36,17 @@ namespace TriageTrainer.Entity.Patient
     /// </summary>
     public BloodType bloodType;
 
+    /// <summary>
+    /// 의도된 트리아지 등급(정답)입니다. 시나리오 설계자가 이 환자에 대해 기대하는 KTAS 등급을 지정합니다.
+    /// 트리아지 평가 시 <see cref="assessedTriage"/> 와 비교해 정답 여부를 판정하는 데 사용됩니다.
+    /// </summary>
+    public TriageLevel intendedTriage = TriageLevel.Unassessed;
+
+    /// <summary>
+    /// 플레이어가 실제로 평가한 트리아지 등급(현재 상태값)입니다.
+    /// 아직 평가되지 않았으면 <see cref="TriageLevel.Unassessed"/> 입니다.
+    /// </summary>
+    public TriageLevel assessedTriage = TriageLevel.Unassessed;
+
   }
 }

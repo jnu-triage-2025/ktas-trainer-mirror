@@ -124,7 +124,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584187215550772778
+  _initializedTimestamp: -8584185397344916508
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -203,6 +203,7 @@ Transform:
   - {fileID: 266007674457149216}
   - {fileID: 6761558171251175369}
   - {fileID: 7481660868115124630}
+  - {fileID: 7684827840179661956}
   m_Father: {fileID: 6477868594539004900}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &49631320236964572
@@ -285,7 +286,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 480613486783352052, guid: a10f2bcdfa46b4e619751a618250101e, type: 3}
       propertyPath: _initializedTimestamp
-      value: -8584187215550772778
+      value: -8584185397344916508
       objectReference: {fileID: 0}
     - target: {fileID: 480613486783352052, guid: a10f2bcdfa46b4e619751a618250101e, type: 3}
       propertyPath: <IsNested>k__BackingField
@@ -427,6 +428,42 @@ PrefabInstance:
     - target: {fileID: 6436588491929383102, guid: 8246eddada20244ea80d43788151c273, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913298595757436489, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: voiceProfiles.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913298595757436489, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: voiceProfiles.Array.data[0].VoiceStyleName
+      value: F1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913298595757436489, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: voiceProfiles.Array.data[1].VoiceStyleName
+      value: M1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913298595757436489, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: voiceProfiles.Array.data[2].VoiceStyleName
+      value: M2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913298595757436489, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: voiceProfiles.Array.data[3].VoiceStyleName
+      value: F3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913298595757436489, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: voiceProfiles.Array.data[0].VoiceIdentifier
+      value: narrator
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913298595757436489, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: voiceProfiles.Array.data[1].VoiceIdentifier
+      value: dispatcher
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913298595757436489, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: voiceProfiles.Array.data[2].VoiceIdentifier
+      value: doctor
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913298595757436489, guid: 8246eddada20244ea80d43788151c273, type: 3}
+      propertyPath: voiceProfiles.Array.data[3].VoiceIdentifier
+      value: patient
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -905,7 +942,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 543940734885712351, guid: d03ef2bb740e347128c1785c882342de, type: 3}
       propertyPath: _initializedTimestamp
-      value: -8584187215550772778
+      value: -8584185397344916508
       objectReference: {fileID: 0}
     - target: {fileID: 543940734885712351, guid: d03ef2bb740e347128c1785c882342de, type: 3}
       propertyPath: <IsNested>k__BackingField
@@ -1241,6 +1278,68 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3891048832308575322, guid: d52fb987302194fbda914fce0e333276, type: 3}
   m_PrefabInstance: {fileID: 5872202130743899024}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &7269224307540237549
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1597054456330649215}
+    m_Modifications:
+    - target: {fileID: 1028094817195978857, guid: 38c18e0fced164aeb9c1c62b6c5f355c, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028094817195978857, guid: 38c18e0fced164aeb9c1c62b6c5f355c, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028094817195978857, guid: 38c18e0fced164aeb9c1c62b6c5f355c, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028094817195978857, guid: 38c18e0fced164aeb9c1c62b6c5f355c, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028094817195978857, guid: 38c18e0fced164aeb9c1c62b6c5f355c, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028094817195978857, guid: 38c18e0fced164aeb9c1c62b6c5f355c, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028094817195978857, guid: 38c18e0fced164aeb9c1c62b6c5f355c, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028094817195978857, guid: 38c18e0fced164aeb9c1c62b6c5f355c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028094817195978857, guid: 38c18e0fced164aeb9c1c62b6c5f355c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1028094817195978857, guid: 38c18e0fced164aeb9c1c62b6c5f355c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1750920433657378927, guid: 38c18e0fced164aeb9c1c62b6c5f355c, type: 3}
+      propertyPath: m_Name
+      value: 'MI: EntityOverheadLabelUI'
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 38c18e0fced164aeb9c1c62b6c5f355c, type: 3}
+--- !u!4 &7684827840179661956 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1028094817195978857, guid: 38c18e0fced164aeb9c1c62b6c5f355c, type: 3}
+  m_PrefabInstance: {fileID: 7269224307540237549}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8311928406230385308
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1465,7 +1564,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4818426619342773491, guid: 81b31d72af24747048f08241429e16d1, type: 3}
       propertyPath: _initializedTimestamp
-      value: -8584187215550772778
+      value: -8584185397344916508
       objectReference: {fileID: 0}
     - target: {fileID: 4818426619342773491, guid: 81b31d72af24747048f08241429e16d1, type: 3}
       propertyPath: <IsNested>k__BackingField
