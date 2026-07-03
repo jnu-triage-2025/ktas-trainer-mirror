@@ -12,10 +12,12 @@ using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 using MultiplayerInfrastructure.Scenario.Preflight;
 using MultiplayerInfrastructure.TTS;
+using MultiplayerInfrastructure.Player;
 using FishNet.Object;
 using FishNet;
 using FishNet.Connection;
 using Unity.VisualScripting;
+using TriageTrainer.Entity;
 
 namespace MultiplayerInfrastructure.Scenario
 {
@@ -1633,44 +1635,225 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
+    // 이동 도착 판정 임계값(수평 거리, m).
+    private const float MoveArriveThreshold = 0.05f;
+    private const string NpcWalkAnimationParameterName = "walk";
+
     private IEnumerator ExecutePlayerMoveNode(ScenarioPlayerMoveNode node)
     {
       _state = State.ExecutingPlayerMove;
 
-      Vector3 destination;
-      if (node.DestinationType == ScenarioMoveDestinationType.Position)
+      if (!TryResolveMoveDestination(node.DestinationType, node.DestinationIdentifier,
+            node.DestinationX, node.DestinationY, node.DestinationZ, out var destination))
       {
-        destination = new Vector3(node.DestinationX, node.DestinationY, node.DestinationZ);
-      }
-      else
-      {
-        if (Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, node.DestinationIdentifier, out var waypointPos)
-            || Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, node.DestinationIdentifier, out waypointPos))
-        {
-          destination = waypointPos;
-        }
-        else
-        {
-          Debug.LogWarning($"[ScenarioController] Waypoint '{node.DestinationIdentifier}' not found. Fallback to no move.");
-          // Fallback: MoveDuration이 있으면 기다리고, 없으면 바로 스킵
-          if (node.MoveMode == ScenarioMoveMode.ByDuration && node.MoveDuration > 0)
-          {
-            yield return new WaitForSeconds(node.MoveDuration);
-          }
-          Advance();
-          yield break;
-        }
+        Debug.LogWarning($"[ScenarioController] Waypoint '{node.DestinationIdentifier}' not found. Fallback to no move.");
+        Advance();
+        yield break;
       }
 
-      // TODO: 플레이어 이동 로직 구현
+      // 오우너 클라이언트에서만 로컬 플레이어를 이동시킨다.
+      // 다른 피어에서는 owner와 동일 공식으로 산출한 이동 시간만큼 대기하여
+      // 그래프 진행 타이밍을 맞춘다(피어 간 커서 동기화).
+      var player = ResolveLocalOwnerPlayer();
+      if (player == null)
+      {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[ScenarioController] PlayerMove '{node.Identifier}' skipped local movement (not owner or player unavailable).");
+#endif
+        float waitSeconds = ComputeMoveDurationSeconds(node.MoveMode, node.MoveSpeed, node.MoveDuration,
+          EstimatePlayerMoveDistance(destination));
+        if (waitSeconds > 0f)
+          yield return new WaitForSeconds(waitSeconds);
+        Advance();
+        yield break;
+      }
+
 #if UNITY_EDITOR
-      Debug.Log($"[ScenarioController] Moving player to: {destination}");
+      Debug.Log($"[ScenarioController] Moving player to: {destination} (mode={node.MoveMode})");
 #endif
 
-      // 임시 대기
-      yield return new WaitForSeconds(1f);
+      player.BeginScriptedMovement();
+      bool wasCanMove = player.canMove;
+      player.canMove = false;
+      try
+      {
+        yield return MovePlayerRoutine(player, destination, node.MoveMode, node.MoveSpeed, node.MoveDuration, node.IgnoreGroundCheck);
+      }
+      finally
+      {
+        // 이동 중 플레이어가 파괴되었을 수 있으므로 null 가드를 둔다(Unity의 == null 오버로드).
+        if (player != null)
+        {
+          player.EndScriptedMovement();
+          player.canMove = wasCanMove;
+        }
+      }
 
       Advance();
+    }
+
+    /// <summary>
+    /// non-owner 대기 시간(BySpeed) 산출을 위해, 실제 이동하는 owner 플레이어의
+    /// 예상 이동 거리를 추정한다. owner 플레이어의 위치는 FishNet으로 동기화되므로
+    /// non-owner 피어에서도 동일한 시작 위치를 참조해 owner와 동일한 이동 시간을 얻는다.
+    /// owner 엔티티를 찾지 못하면 0을 반환한다(speed 기반 대기가 0 → 즉시 진행).
+    /// </summary>
+    private float EstimatePlayerMoveDistance(Vector3 destination)
+    {
+      // owner가 지정된 경우 owner 플레이어 위치 기준, 아니면 로컬 플레이어 위치 기준.
+      int? targetClientId = _scenarioOwnerClientId ?? (int?)InstanceFinder.ClientManager?.Connection?.ClientId;
+      if (targetClientId.HasValue
+          && Registry.Registry.TryGetEntityByClientId(targetClientId.Value, out var descriptor)
+          && descriptor?.GameObject != null)
+      {
+        return HorizontalDistance(descriptor.GameObject.transform.position, destination);
+      }
+
+      return 0f;
+    }
+
+    /// <summary>
+    /// 시나리오 owner인 로컬 플레이어의 <see cref="PlayerController"/> 를 반환한다.
+    /// owner가 아니거나(다른 피어) 로컬 플레이어를 찾지 못하면 null.
+    /// owner가 지정되지 않은 경우(null)에는 로컬 플레이어를 반환한다.
+    /// </summary>
+    private PlayerController ResolveLocalOwnerPlayer()
+    {
+      var localConn = InstanceFinder.ClientManager?.Connection;
+      if (localConn == null)
+        return null;
+
+      int localClientId = localConn.ClientId;
+
+      // owner가 지정된 경우 로컬 클라이언트가 owner일 때만 이동한다.
+      if (_scenarioOwnerClientId.HasValue && _scenarioOwnerClientId.Value != localClientId)
+        return null;
+
+      if (Registry.Registry.TryGetEntityByClientId(localClientId, out var descriptor)
+          && descriptor?.GameObject != null
+          && descriptor.GameObject.TryGetComponent<PlayerController>(out var player))
+      {
+        return player;
+      }
+
+      return null;
+    }
+
+    /// <summary>
+    /// 목적지(좌표 또는 웨이포인트)를 해석한다. 실패 시 false.
+    /// </summary>
+    private static bool TryResolveMoveDestination(
+      ScenarioMoveDestinationType destinationType,
+      string destinationIdentifier,
+      float x, float y, float z,
+      out Vector3 destination)
+    {
+      if (destinationType == ScenarioMoveDestinationType.Position)
+      {
+        destination = new Vector3(x, y, z);
+        return true;
+      }
+
+      if (Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, destinationIdentifier, out destination)
+          || Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, destinationIdentifier, out destination))
+      {
+        return true;
+      }
+
+      destination = Vector3.zero;
+      return false;
+    }
+
+    /// <summary>
+    /// 이동 총 소요 시간(초)을 산출한다. owner의 실제 이동과 non-owner의 대기가
+    /// 동일 공식을 사용하도록 하여 피어 간 그래프 진행 타이밍을 일치시킨다.
+    /// - Instant: 0
+    /// - BySpeed: 거리 / 속도 (속도가 0 이하이면 0 → 즉시)
+    /// - ByDuration: MoveDuration
+    /// </summary>
+    private static float ComputeMoveDurationSeconds(ScenarioMoveMode mode, float moveSpeed, float moveDuration, float distance)
+    {
+      switch (mode)
+      {
+        case ScenarioMoveMode.ByDuration:
+          return Mathf.Max(0f, moveDuration);
+        case ScenarioMoveMode.BySpeed:
+          return moveSpeed > 0f ? distance / moveSpeed : 0f;
+        default: // Instant
+          return 0f;
+      }
+    }
+
+    /// <summary>
+    /// CharacterController 기반 시간 보간 이동. 총 소요 시간 동안 시작 위치→목적지를
+    /// 선형 보간하므로 BySpeed/ByDuration 모두 예상 시간에 정확히 도착하며,
+    /// non-owner 대기 시간(<see cref="ComputeMoveDurationSeconds"/>)과 완료 시점이 일치한다.
+    /// IgnoreGroundCheck=false 이면 중력을 적용해 접지 상태를 유지한다.
+    /// </summary>
+    private IEnumerator MovePlayerRoutine(
+      PlayerController player,
+      Vector3 destination,
+      ScenarioMoveMode mode,
+      float moveSpeed,
+      float moveDuration,
+      bool ignoreGroundCheck)
+    {
+      var playerTransform = player.transform;
+      Vector3 start = playerTransform.position;
+      float distance = HorizontalDistance(start, destination);
+
+      bool applyGravity = !ignoreGroundCheck;
+
+      if (distance <= MoveArriveThreshold)
+        yield break;
+
+      FaceHorizontal(playerTransform, destination);
+
+      float duration = ComputeMoveDurationSeconds(mode, moveSpeed, moveDuration, distance);
+      if (duration <= 0f)
+      {
+        // Instant 또는 속도 0: 즉시 목적지로.
+        player.ApplyScriptedMove(HorizontalDelta(playerTransform.position, destination), applyGravity: false);
+        yield break;
+      }
+
+      float elapsed = 0f;
+      Vector3 previousTarget = start;
+
+      while (elapsed < duration)
+      {
+        elapsed += Time.deltaTime;
+        float t = Mathf.Clamp01(elapsed / duration);
+
+        // 이번 프레임에 있어야 할 보간 지점과 이전 지점의 차이만큼만 이동시킨다.
+        Vector3 currentTarget = Vector3.Lerp(start, destination, t);
+        Vector3 frameDelta = HorizontalDelta(previousTarget, currentTarget);
+        previousTarget = currentTarget;
+
+        player.ApplyScriptedMove(frameDelta, applyGravity);
+
+        yield return null;
+      }
+    }
+
+    private static Vector3 HorizontalDelta(Vector3 from, Vector3 to)
+    {
+      var delta = to - from;
+      delta.y = 0f;
+      return delta;
+    }
+
+    private static float HorizontalDistance(Vector3 from, Vector3 to)
+      => HorizontalDelta(from, to).magnitude;
+
+    private static void FaceHorizontal(Transform transform, Vector3 target)
+    {
+      Vector3 forward = target - transform.position;
+      forward.y = 0f;
+      if (forward.sqrMagnitude <= 0.0001f)
+        return;
+
+      transform.rotation = Quaternion.LookRotation(forward.normalized, Vector3.up);
     }
 
     private IEnumerator ExecuteNPCMoveNode(ScenarioNPCMoveNode node)
@@ -1687,40 +1870,156 @@ namespace MultiplayerInfrastructure.Scenario
         yield break;
       }
 
-      Vector3 destination;
-      if (node.DestinationType == ScenarioMoveDestinationType.Position)
+      if (!TryResolveMoveDestination(node.DestinationType, node.DestinationIdentifier,
+            node.DestinationX, node.DestinationY, node.DestinationZ, out var destination))
       {
-        destination = new Vector3(node.DestinationX, node.DestinationY, node.DestinationZ);
+        Debug.LogWarning($"[ScenarioController] Waypoint '{node.DestinationIdentifier}' not found. Fallback to no move.");
+        Advance();
+        yield break;
       }
-      else
+
+#if UNITY_EDITOR
+      Debug.Log($"[ScenarioController] Moving NPC '{node.NPCIdentifier}' to: {destination} (mode={node.MoveMode})");
+#endif
+
+      var animation = npc.GetComponentInChildren<HumanoidAnimationController>(true);
+      try
       {
-        if (Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, node.DestinationIdentifier, out var waypointPos)
-            || Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, node.DestinationIdentifier, out waypointPos))
+        yield return MoveNpcRoutine(npc.transform, animation, destination,
+          node.MoveMode, node.MoveSpeed, node.MoveDuration, node.IgnoreGroundCheck);
+      }
+      finally
+      {
+        // 이동 종료 시 walk 애니메이션 해제 (NPC가 파괴되지 않았을 때만)
+        if (animation != null)
+          animation.SetBool(NpcWalkAnimationParameterName, false);
+      }
+
+      Advance();
+    }
+
+    /// <summary>
+    /// NPC(transform) 시간 보간 이동. NavMesh를 사용하지 않으므로 transform을 직접 이동한다.
+    /// IgnoreGroundCheck=false 이면 CharacterController가 있을 때 누적 중력을,
+    /// 없을 때는 지면 레이캐스트로 접지 y를 보정한다.
+    /// 이동 중 HumanoidAnimationController의 walk 파라미터를 true로 설정한다.
+    /// </summary>
+    private IEnumerator MoveNpcRoutine(
+      Transform npcTransform,
+      HumanoidAnimationController animation,
+      Vector3 destination,
+      ScenarioMoveMode mode,
+      float moveSpeed,
+      float moveDuration,
+      bool ignoreGroundCheck)
+    {
+      var characterController = npcTransform.GetComponent<CharacterController>();
+      // 지면 레이캐스트가 NPC 자신을 맞히지 않도록 자신의 콜라이더를 제외 목록으로 둔다.
+      var ownColliders = npcTransform.GetComponentsInChildren<Collider>(true);
+      float verticalVelocity = 0f; // CharacterController 중력 누적 속도(m/s)
+
+      void MoveStep(Vector3 horizontalDelta)
+      {
+        if (characterController != null && characterController.enabled)
         {
-          destination = waypointPos;
+          Vector3 motion = horizontalDelta;
+          if (!ignoreGroundCheck)
+          {
+            // 누적 속도 기반 중력 변위(m). 접지 시 하향 속도를 리셋한다.
+            if (characterController.isGrounded && verticalVelocity < 0f)
+              verticalVelocity = 0f;
+            verticalVelocity += Physics.gravity.y * Time.deltaTime;
+            motion.y += verticalVelocity * Time.deltaTime;
+          }
+          characterController.Move(motion);
         }
         else
         {
-          Debug.LogWarning($"[ScenarioController] Waypoint '{node.DestinationIdentifier}' not found. Fallback to no move.");
-          // Fallback: MoveDuration이 있으면 기다리고, 없으면 바로 스킵
-          if (node.MoveMode == ScenarioMoveMode.ByDuration && node.MoveDuration > 0)
+          Vector3 next = npcTransform.position + horizontalDelta;
+          if (!ignoreGroundCheck && TryRaycastGround(next, ownColliders, out float groundY))
           {
-            yield return new WaitForSeconds(node.MoveDuration);
+            next.y = groundY;
           }
-          Advance();
-          yield break;
+          npcTransform.position = next;
         }
       }
 
-      // TODO: NPC 이동 로직 구현
-#if UNITY_EDITOR
-      Debug.Log($"[ScenarioController] Moving NPC '{node.NPCIdentifier}' to: {destination}");
-#endif
+      Vector3 start = npcTransform.position;
+      float distance = HorizontalDistance(start, destination);
 
-      // 임시 대기
-      yield return new WaitForSeconds(1f);
+      if (distance <= MoveArriveThreshold)
+        yield break;
 
-      Advance();
+      FaceHorizontal(npcTransform, destination);
+
+      float duration = ComputeMoveDurationSeconds(mode, moveSpeed, moveDuration, distance);
+      if (duration <= 0f)
+      {
+        MoveStep(HorizontalDelta(npcTransform.position, destination));
+        yield break;
+      }
+
+      animation?.SetBool(NpcWalkAnimationParameterName, true);
+
+      float elapsed = 0f;
+      Vector3 previousTarget = start;
+
+      while (elapsed < duration)
+      {
+        elapsed += Time.deltaTime;
+        float t = Mathf.Clamp01(elapsed / duration);
+
+        Vector3 currentTarget = Vector3.Lerp(start, destination, t);
+        Vector3 frameDelta = HorizontalDelta(previousTarget, currentTarget);
+        previousTarget = currentTarget;
+
+        MoveStep(frameDelta);
+
+        yield return null;
+      }
+    }
+
+    /// <summary>
+    /// 지정 위치 상공에서 하향 레이캐스트로 지면 y를 찾는다.
+    /// 트리거는 무시하고, NPC 자신의 콜라이더에 맞은 히트는 건너뛴다.
+    /// </summary>
+    private static bool TryRaycastGround(Vector3 position, Collider[] ownColliders, out float groundY)
+    {
+      groundY = position.y;
+      var hits = Physics.RaycastAll(position + Vector3.up * 2f, Vector3.down, 10f, ~0, QueryTriggerInteraction.Ignore);
+      float best = float.NegativeInfinity;
+      bool found = false;
+
+      for (int i = 0; i < hits.Length; i++)
+      {
+        var hit = hits[i];
+        if (IsOwnCollider(hit.collider, ownColliders))
+          continue;
+
+        if (!found || hit.point.y > best)
+        {
+          best = hit.point.y;
+          found = true;
+        }
+      }
+
+      if (found)
+        groundY = best;
+      return found;
+    }
+
+    private static bool IsOwnCollider(Collider collider, Collider[] ownColliders)
+    {
+      if (collider == null || ownColliders == null)
+        return false;
+
+      for (int i = 0; i < ownColliders.Length; i++)
+      {
+        if (ReferenceEquals(collider, ownColliders[i]))
+          return true;
+      }
+
+      return false;
     }
 
     private IEnumerator ExecuteCameraTargetNode(ScenarioCameraTargetNode node)
