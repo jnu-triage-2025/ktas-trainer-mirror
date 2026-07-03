@@ -257,6 +257,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioEntityPresetSpawnNodeDTO entityPresetSpawn => ConvertEntityPresetSpawn(entityPresetSpawn),
           ScenarioEntityTagNodeDTO entityTag => ConvertEntityTag(entityTag),
           ScenarioEntityInitNodeDTO entityInit => ConvertEntityInit(entityInit),
+          ScenarioTriageAssessControlNodeDTO triageAssess => ConvertTriageAssessControl(triageAssess),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -480,6 +481,15 @@ namespace MultiplayerInfrastructure.Scenario
           TargetEntityIdentifier = dto.TargetEntityIdentifier,
           StateKey = dto.StateKey,
           StateValue = dto.StateValue,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioTriageAssessControlNode ConvertTriageAssessControl(ScenarioTriageAssessControlNodeDTO dto) =>
+        new ScenarioTriageAssessControlNode
+        {
+          Identifier = dto.Identifier,
+          TargetEntityIdentifier = dto.TargetEntityIdentifier,
+          Assessable = dto.Assessable,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -921,6 +931,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioEntityPresetSpawnNode entityPresetSpawn => ConvertToDTO(entityPresetSpawn),
           ScenarioEntityTagNode entityTag => ConvertToDTO(entityTag),
           ScenarioEntityInitNode entityInit => ConvertToDTO(entityInit),
+          ScenarioTriageAssessControlNode triageAssess => ConvertToDTO(triageAssess),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 
@@ -1145,6 +1156,16 @@ namespace MultiplayerInfrastructure.Scenario
           TargetEntityIdentifier = node.TargetEntityIdentifier,
           StateKey = node.StateKey,
           StateValue = node.StateValue,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioTriageAssessControlNodeDTO ConvertToDTO(ScenarioTriageAssessControlNode node) =>
+        new ScenarioTriageAssessControlNodeDTO
+        {
+          NodeType = "TriageAssessControl",
+          Identifier = node.Identifier,
+          TargetEntityIdentifier = node.TargetEntityIdentifier,
+          Assessable = node.Assessable,
           NextIdentifier = node.NextIdentifier
         };
 

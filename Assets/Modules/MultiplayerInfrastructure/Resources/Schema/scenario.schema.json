@@ -75,7 +75,8 @@
             "TagModification",
             "EntityPresetSpawn",
             "EntityTag",
-            "EntityInit"
+            "EntityInit",
+            "TriageAssessControl"
           ]
         }
       },
@@ -411,6 +412,21 @@
           },
           "then": {
             "$ref": "#/$defs/ScenarioEntityInitNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "TriageAssessControl"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioTriageAssessControlNode"
           }
         }
       ]
@@ -1474,6 +1490,30 @@
             "targetEntityIdentifier",
             "stateKey",
             "stateValue"
+          ]
+        }
+      ]
+    },
+    "ScenarioTriageAssessControlNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "TriageAssessControl"
+            },
+            "targetEntityIdentifier": {
+              "type": "string"
+            },
+            "assessable": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "targetEntityIdentifier",
+            "assessable"
           ]
         }
       ]

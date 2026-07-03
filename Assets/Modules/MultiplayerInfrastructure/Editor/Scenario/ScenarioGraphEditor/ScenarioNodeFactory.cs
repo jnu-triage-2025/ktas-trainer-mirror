@@ -59,6 +59,7 @@ namespace MultiplayerInfrastructure.Editor
       ScenarioNodeType.StateUpdate => new ScenarioStateUpdateNode(),
       ScenarioNodeType.PlayerTag => new ScenarioPlayerTagNode(),
       ScenarioNodeType.PlayTTS => new ScenarioPlayTTSNode(),
+      ScenarioNodeType.TriageAssessControl => new ScenarioTriageAssessControlNode(),
       _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
   }

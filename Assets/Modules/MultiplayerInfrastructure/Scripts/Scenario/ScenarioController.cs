@@ -103,6 +103,7 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingEntityPresetSpawn,
       ExecutingEntityTag,
       ExecutingEntityInit,
+      ExecutingTriageAssessControl,
     }
 
     [SerializeField] private State _state = State.Inactive;
@@ -548,6 +549,9 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioEntityInitNode entityInit:
           ExecuteEntityInitNode(entityInit);
+          break;
+        case ScenarioTriageAssessControlNode triageAssess:
+          ExecuteTriageAssessControlNode(triageAssess);
           break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type: {node.GetType().Name}");
@@ -1391,6 +1395,41 @@ namespace MultiplayerInfrastructure.Scenario
           displayTarget.SyncAllDisplayStatesNetworked();
         }
       }
+    }
+
+    private void ExecuteTriageAssessControlNode(ScenarioTriageAssessControlNode node)
+    {
+      _state = State.ExecutingTriageAssessControl;
+
+      if (node == null || string.IsNullOrWhiteSpace(node.TargetEntityIdentifier))
+      {
+        Debug.LogWarning($"[ScenarioController] TriageAssessControl '{node?.Identifier}' target identifier is missing.");
+        Advance();
+        return;
+      }
+
+      if (!Registry.Registry.TryGetEntity(node.TargetEntityIdentifier, out var descriptor)
+          || descriptor?.GameObject == null)
+      {
+        Debug.LogWarning($"[ScenarioController] TriageAssessControl '{node.Identifier}' target '{node.TargetEntityIdentifier}' was not found.");
+        Advance();
+        return;
+      }
+
+      var target = descriptor.GameObject.GetComponentInChildren<Entity.IScenarioTriageAssessTarget>(true);
+      if (target == null)
+      {
+        Debug.LogWarning($"[ScenarioController] TriageAssessControl '{node.Identifier}' target '{node.TargetEntityIdentifier}' has no IScenarioTriageAssessTarget.");
+        Advance();
+        return;
+      }
+
+      target.SetTriageAssessable(node.Assessable);
+#if UNITY_EDITOR
+      Debug.Log($"[ScenarioController] TriageAssessControl: {node.TargetEntityIdentifier}.assessable={node.Assessable}");
+#endif
+
+      Advance();
     }
 
     private IEnumerator ExecutePlayTTSNode(ScenarioPlayTTSNode node)
@@ -2626,6 +2665,9 @@ namespace MultiplayerInfrastructure.Scenario
             break;
           case ScenarioEntityInitNode entityInit:
             ExecuteEntityInitNode(entityInit);
+            break;
+          case ScenarioTriageAssessControlNode triageAssess:
+            ExecuteTriageAssessControlNode(triageAssess);
             break;
           case ScenarioParallelNode nestedParallel:
             // 중첩 병렬: 내부 브랜치 완료까지 대기(말미의 전역 Advance 는 억제됨).

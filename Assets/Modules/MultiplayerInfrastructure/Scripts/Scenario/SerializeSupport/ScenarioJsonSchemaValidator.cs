@@ -102,7 +102,8 @@ namespace MultiplayerInfrastructure.Scenario
         "TagModification",
         "EntityPresetSpawn",
         "EntityTag",
-        "EntityInit"
+        "EntityInit",
+        "TriageAssessControl"
       };
 
       foreach (var nodeEntry in nodes)
