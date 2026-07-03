@@ -69,6 +69,7 @@ namespace MultiplayerInfrastructure.Player
     {
       base.OnSpawnServer(connection);
       SyncExistingWorldItemsToConnection(connection);
+      SyncStaticPlacedItemsToConnection(connection);
     }
 
     public override void OnStopServer()
@@ -77,6 +78,14 @@ namespace MultiplayerInfrastructure.Player
       Registry.Registry.UnregisterEntity(_entityIdentifier.Value);
       PlayerTagService.ClearTags(_userIdentifier.Value);
       UserDescriptorService.Unregister(_userIdentifier.Value);
+
+      // 이 플레이어가 승인받았으나 확정(성공/실패)하지 못한 정적 아이템 픽업 예약이 있으면
+      // 선점 감소한 Remains 를 복원한다. 아래 ClearUser 보다 먼저 수행해야 Local 예약 복원이 유효하다.
+      RestorePendingStaticPickupsForClaimant();
+
+      // StaticPlacedItem 의 Local 모드 상태는 기본적으로 재접속 시 초기화한다.
+      // 접속 종료 시 이 유저의 개별 Remains 상태를 제거한다.
+      StaticPlacedItemService.ClearUser(_userIdentifier.Value);
 
       // 이 플레이어가 점유(claim)했지만 확정(ack/failure)하지 못한 픽업이 있으면
       // 아이템이 영구 유실되지 않도록 월드에 되돌린다.
