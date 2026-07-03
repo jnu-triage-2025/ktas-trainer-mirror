@@ -1635,6 +1635,10 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
+    // 이동 도착 판정 임계값(수평 거리, m).
+    private const float MoveArriveThreshold = 0.05f;
+    private const string NpcWalkAnimationParameterName = "walk";
+
     private IEnumerator ExecutePlayerMoveNode(ScenarioPlayerMoveNode node)
     {
       _state = State.ExecutingPlayerMove;
@@ -1643,27 +1647,23 @@ namespace MultiplayerInfrastructure.Scenario
             node.DestinationX, node.DestinationY, node.DestinationZ, out var destination))
       {
         Debug.LogWarning($"[ScenarioController] Waypoint '{node.DestinationIdentifier}' not found. Fallback to no move.");
-        // Fallback: ByDuration이면 기다리고, 없으면 바로 스킵 (피어 간 타이밍 동기화 유지)
-        if (node.MoveMode == ScenarioMoveMode.ByDuration && node.MoveDuration > 0)
-        {
-          yield return new WaitForSeconds(node.MoveDuration);
-        }
         Advance();
         yield break;
       }
 
       // 오우너 클라이언트에서만 로컬 플레이어를 이동시킨다.
-      // 다른 피어에서는 이동 시간만큼 대기하여 그래프 진행 타이밍을 맞춘다.
+      // 다른 피어에서는 owner와 동일 공식으로 산출한 이동 시간만큼 대기하여
+      // 그래프 진행 타이밍을 맞춘다(피어 간 커서 동기화).
       var player = ResolveLocalOwnerPlayer();
       if (player == null)
       {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         Debug.Log($"[ScenarioController] PlayerMove '{node.Identifier}' skipped local movement (not owner or player unavailable).");
 #endif
-        if (node.MoveMode == ScenarioMoveMode.ByDuration && node.MoveDuration > 0f)
-        {
-          yield return new WaitForSeconds(node.MoveDuration);
-        }
+        float waitSeconds = ComputeMoveDurationSeconds(node.MoveMode, node.MoveSpeed, node.MoveDuration,
+          EstimatePlayerMoveDistance(destination));
+        if (waitSeconds > 0f)
+          yield return new WaitForSeconds(waitSeconds);
         Advance();
         yield break;
       }
@@ -1681,11 +1681,35 @@ namespace MultiplayerInfrastructure.Scenario
       }
       finally
       {
-        player.EndScriptedMovement();
-        player.canMove = wasCanMove;
+        // 이동 중 플레이어가 파괴되었을 수 있으므로 null 가드를 둔다(Unity의 == null 오버로드).
+        if (player != null)
+        {
+          player.EndScriptedMovement();
+          player.canMove = wasCanMove;
+        }
       }
 
       Advance();
+    }
+
+    /// <summary>
+    /// non-owner 대기 시간(BySpeed) 산출을 위해, 실제 이동하는 owner 플레이어의
+    /// 예상 이동 거리를 추정한다. owner 플레이어의 위치는 FishNet으로 동기화되므로
+    /// non-owner 피어에서도 동일한 시작 위치를 참조해 owner와 동일한 이동 시간을 얻는다.
+    /// owner 엔티티를 찾지 못하면 0을 반환한다(speed 기반 대기가 0 → 즉시 진행).
+    /// </summary>
+    private float EstimatePlayerMoveDistance(Vector3 destination)
+    {
+      // owner가 지정된 경우 owner 플레이어 위치 기준, 아니면 로컬 플레이어 위치 기준.
+      int? targetClientId = _scenarioOwnerClientId ?? (int?)InstanceFinder.ClientManager?.Connection?.ClientId;
+      if (targetClientId.HasValue
+          && Registry.Registry.TryGetEntityByClientId(targetClientId.Value, out var descriptor)
+          && descriptor?.GameObject != null)
+      {
+        return HorizontalDistance(descriptor.GameObject.transform.position, destination);
+      }
+
+      return 0f;
     }
 
     /// <summary>
@@ -1741,7 +1765,29 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     /// <summary>
-    /// CharacterController 기반 직선 보간 이동. 목적지 수평 거리 기준으로 이동하며,
+    /// 이동 총 소요 시간(초)을 산출한다. owner의 실제 이동과 non-owner의 대기가
+    /// 동일 공식을 사용하도록 하여 피어 간 그래프 진행 타이밍을 일치시킨다.
+    /// - Instant: 0
+    /// - BySpeed: 거리 / 속도 (속도가 0 이하이면 0 → 즉시)
+    /// - ByDuration: MoveDuration
+    /// </summary>
+    private static float ComputeMoveDurationSeconds(ScenarioMoveMode mode, float moveSpeed, float moveDuration, float distance)
+    {
+      switch (mode)
+      {
+        case ScenarioMoveMode.ByDuration:
+          return Mathf.Max(0f, moveDuration);
+        case ScenarioMoveMode.BySpeed:
+          return moveSpeed > 0f ? distance / moveSpeed : 0f;
+        default: // Instant
+          return 0f;
+      }
+    }
+
+    /// <summary>
+    /// CharacterController 기반 시간 보간 이동. 총 소요 시간 동안 시작 위치→목적지를
+    /// 선형 보간하므로 BySpeed/ByDuration 모두 예상 시간에 정확히 도착하며,
+    /// non-owner 대기 시간(<see cref="ComputeMoveDurationSeconds"/>)과 완료 시점이 일치한다.
     /// IgnoreGroundCheck=false 이면 중력을 적용해 접지 상태를 유지한다.
     /// </summary>
     private IEnumerator MovePlayerRoutine(
@@ -1753,62 +1799,41 @@ namespace MultiplayerInfrastructure.Scenario
       bool ignoreGroundCheck)
     {
       var playerTransform = player.transform;
+      Vector3 start = playerTransform.position;
+      float distance = HorizontalDistance(start, destination);
 
-      if (mode == ScenarioMoveMode.Instant)
+      bool applyGravity = !ignoreGroundCheck;
+
+      if (distance <= MoveArriveThreshold)
+        yield break;
+
+      FaceHorizontal(playerTransform, destination);
+
+      float duration = ComputeMoveDurationSeconds(mode, moveSpeed, moveDuration, distance);
+      if (duration <= 0f)
       {
-        FaceHorizontal(playerTransform, destination);
+        // Instant 또는 속도 0: 즉시 목적지로.
         player.ApplyScriptedMove(HorizontalDelta(playerTransform.position, destination), applyGravity: false);
         yield break;
       }
 
-      // 이동 속도 계산 (m/s). ByDuration이면 초기 수평 거리 / duration.
-      float speed = ResolveMoveSpeed(mode, moveSpeed, moveDuration,
-        HorizontalDistance(playerTransform.position, destination));
-
-      if (speed <= 0f)
-      {
-        // 속도가 0 이하이면 무한 루프를 피하기 위해 순간이동으로 대체한다.
-        FaceHorizontal(playerTransform, destination);
-        player.ApplyScriptedMove(HorizontalDelta(playerTransform.position, destination), applyGravity: false);
-        yield break;
-      }
-
-      const float arriveThreshold = 0.05f;
       float elapsed = 0f;
-      // ByDuration일 때 안전 상한(예상 시간의 2배 또는 최소 5초).
-      float timeLimit = mode == ScenarioMoveMode.ByDuration
-        ? Mathf.Max(moveDuration * 2f, 5f)
-        : Mathf.Max((HorizontalDistance(playerTransform.position, destination) / speed) * 2f, 5f);
+      Vector3 previousTarget = start;
 
-      while (HorizontalDistance(playerTransform.position, destination) > arriveThreshold)
+      while (elapsed < duration)
       {
-        Vector3 toTarget = HorizontalDelta(playerTransform.position, destination);
-        float step = speed * Time.deltaTime;
-        Vector3 frameDelta = (toTarget.magnitude <= step) ? toTarget : toTarget.normalized * step;
-
-        FaceHorizontal(playerTransform, destination);
-        player.ApplyScriptedMove(frameDelta, applyGravity: !ignoreGroundCheck);
-
         elapsed += Time.deltaTime;
-        if (elapsed >= timeLimit)
-        {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-          Debug.LogWarning($"[ScenarioController] Player move time limit ({timeLimit:0.0}s) reached before arrival. Snapping.");
-#endif
-          break;
-        }
+        float t = Mathf.Clamp01(elapsed / duration);
+
+        // 이번 프레임에 있어야 할 보간 지점과 이전 지점의 차이만큼만 이동시킨다.
+        Vector3 currentTarget = Vector3.Lerp(start, destination, t);
+        Vector3 frameDelta = HorizontalDelta(previousTarget, currentTarget);
+        previousTarget = currentTarget;
+
+        player.ApplyScriptedMove(frameDelta, applyGravity);
 
         yield return null;
       }
-    }
-
-    private static float ResolveMoveSpeed(ScenarioMoveMode mode, float moveSpeed, float moveDuration, float distance)
-    {
-      if (mode == ScenarioMoveMode.ByDuration)
-        return moveDuration > 0f ? distance / moveDuration : 0f;
-
-      // BySpeed
-      return moveSpeed;
     }
 
     private static Vector3 HorizontalDelta(Vector3 from, Vector3 to)
@@ -1849,10 +1874,6 @@ namespace MultiplayerInfrastructure.Scenario
             node.DestinationX, node.DestinationY, node.DestinationZ, out var destination))
       {
         Debug.LogWarning($"[ScenarioController] Waypoint '{node.DestinationIdentifier}' not found. Fallback to no move.");
-        if (node.MoveMode == ScenarioMoveMode.ByDuration && node.MoveDuration > 0)
-        {
-          yield return new WaitForSeconds(node.MoveDuration);
-        }
         Advance();
         yield break;
       }
@@ -1869,18 +1890,18 @@ namespace MultiplayerInfrastructure.Scenario
       }
       finally
       {
-        // 이동 종료 시 walk 애니메이션 해제
-        animation?.SetBool(NpcWalkAnimationParameterName, false);
+        // 이동 종료 시 walk 애니메이션 해제 (NPC가 파괴되지 않았을 때만)
+        if (animation != null)
+          animation.SetBool(NpcWalkAnimationParameterName, false);
       }
 
       Advance();
     }
 
-    private const string NpcWalkAnimationParameterName = "walk";
-
     /// <summary>
-    /// NPC(transform) 직선 보간 이동. NavMesh를 사용하지 않으므로 transform을 직접 이동한다.
-    /// IgnoreGroundCheck=false 이면 CharacterController가 있을 때 중력을 적용한다.
+    /// NPC(transform) 시간 보간 이동. NavMesh를 사용하지 않으므로 transform을 직접 이동한다.
+    /// IgnoreGroundCheck=false 이면 CharacterController가 있을 때 누적 중력을,
+    /// 없을 때는 지면 레이캐스트로 접지 y를 보정한다.
     /// 이동 중 HumanoidAnimationController의 walk 파라미터를 true로 설정한다.
     /// </summary>
     private IEnumerator MoveNpcRoutine(
@@ -1893,6 +1914,9 @@ namespace MultiplayerInfrastructure.Scenario
       bool ignoreGroundCheck)
     {
       var characterController = npcTransform.GetComponent<CharacterController>();
+      // 지면 레이캐스트가 NPC 자신을 맞히지 않도록 자신의 콜라이더를 제외 목록으로 둔다.
+      var ownColliders = npcTransform.GetComponentsInChildren<Collider>(true);
+      float verticalVelocity = 0f; // CharacterController 중력 누적 속도(m/s)
 
       void MoveStep(Vector3 horizontalDelta)
       {
@@ -1901,68 +1925,101 @@ namespace MultiplayerInfrastructure.Scenario
           Vector3 motion = horizontalDelta;
           if (!ignoreGroundCheck)
           {
-            // 접지 유지를 위해 하향 중력 성분을 추가한다.
-            motion += Vector3.up * (Physics.gravity.y * Time.deltaTime);
+            // 누적 속도 기반 중력 변위(m). 접지 시 하향 속도를 리셋한다.
+            if (characterController.isGrounded && verticalVelocity < 0f)
+              verticalVelocity = 0f;
+            verticalVelocity += Physics.gravity.y * Time.deltaTime;
+            motion.y += verticalVelocity * Time.deltaTime;
           }
           characterController.Move(motion);
         }
         else
         {
           Vector3 next = npcTransform.position + horizontalDelta;
-          if (!ignoreGroundCheck
-              && Physics.Raycast(next + Vector3.up * 2f, Vector3.down, out var hit, 10f))
+          if (!ignoreGroundCheck && TryRaycastGround(next, ownColliders, out float groundY))
           {
-            next.y = hit.point.y;
+            next.y = groundY;
           }
           npcTransform.position = next;
         }
       }
 
-      if (mode == ScenarioMoveMode.Instant)
-      {
-        FaceHorizontal(npcTransform, destination);
-        MoveStep(HorizontalDelta(npcTransform.position, destination));
+      Vector3 start = npcTransform.position;
+      float distance = HorizontalDistance(start, destination);
+
+      if (distance <= MoveArriveThreshold)
         yield break;
-      }
 
-      float speed = ResolveMoveSpeed(mode, moveSpeed, moveDuration,
-        HorizontalDistance(npcTransform.position, destination));
+      FaceHorizontal(npcTransform, destination);
 
-      if (speed <= 0f)
+      float duration = ComputeMoveDurationSeconds(mode, moveSpeed, moveDuration, distance);
+      if (duration <= 0f)
       {
-        FaceHorizontal(npcTransform, destination);
         MoveStep(HorizontalDelta(npcTransform.position, destination));
         yield break;
       }
 
       animation?.SetBool(NpcWalkAnimationParameterName, true);
 
-      const float arriveThreshold = 0.05f;
       float elapsed = 0f;
-      float timeLimit = mode == ScenarioMoveMode.ByDuration
-        ? Mathf.Max(moveDuration * 2f, 5f)
-        : Mathf.Max((HorizontalDistance(npcTransform.position, destination) / speed) * 2f, 5f);
+      Vector3 previousTarget = start;
 
-      while (HorizontalDistance(npcTransform.position, destination) > arriveThreshold)
+      while (elapsed < duration)
       {
-        Vector3 toTarget = HorizontalDelta(npcTransform.position, destination);
-        float step = speed * Time.deltaTime;
-        Vector3 frameDelta = (toTarget.magnitude <= step) ? toTarget : toTarget.normalized * step;
-
-        FaceHorizontal(npcTransform, destination);
-        MoveStep(frameDelta);
-
         elapsed += Time.deltaTime;
-        if (elapsed >= timeLimit)
-        {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-          Debug.LogWarning($"[ScenarioController] NPC move time limit ({timeLimit:0.0}s) reached before arrival. Snapping.");
-#endif
-          break;
-        }
+        float t = Mathf.Clamp01(elapsed / duration);
+
+        Vector3 currentTarget = Vector3.Lerp(start, destination, t);
+        Vector3 frameDelta = HorizontalDelta(previousTarget, currentTarget);
+        previousTarget = currentTarget;
+
+        MoveStep(frameDelta);
 
         yield return null;
       }
+    }
+
+    /// <summary>
+    /// 지정 위치 상공에서 하향 레이캐스트로 지면 y를 찾는다.
+    /// 트리거는 무시하고, NPC 자신의 콜라이더에 맞은 히트는 건너뛴다.
+    /// </summary>
+    private static bool TryRaycastGround(Vector3 position, Collider[] ownColliders, out float groundY)
+    {
+      groundY = position.y;
+      var hits = Physics.RaycastAll(position + Vector3.up * 2f, Vector3.down, 10f, ~0, QueryTriggerInteraction.Ignore);
+      float best = float.NegativeInfinity;
+      bool found = false;
+
+      for (int i = 0; i < hits.Length; i++)
+      {
+        var hit = hits[i];
+        if (IsOwnCollider(hit.collider, ownColliders))
+          continue;
+
+        if (!found || hit.point.y > best)
+        {
+          best = hit.point.y;
+          found = true;
+        }
+      }
+
+      if (found)
+        groundY = best;
+      return found;
+    }
+
+    private static bool IsOwnCollider(Collider collider, Collider[] ownColliders)
+    {
+      if (collider == null || ownColliders == null)
+        return false;
+
+      for (int i = 0; i < ownColliders.Length; i++)
+      {
+        if (ReferenceEquals(collider, ownColliders[i]))
+          return true;
+      }
+
+      return false;
     }
 
     private IEnumerator ExecuteCameraTargetNode(ScenarioCameraTargetNode node)

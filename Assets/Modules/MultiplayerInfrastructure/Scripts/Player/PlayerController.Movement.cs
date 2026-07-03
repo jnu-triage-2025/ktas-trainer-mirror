@@ -50,11 +50,6 @@ namespace MultiplayerInfrastructure.Player
 
     public bool IsMovementPositionOverridden => _forcedFollowAnchor != null;
 
-    /// <summary>
-    /// 스크립트(시나리오 등)에 의한 이동 제어 활성 여부.
-    /// </summary>
-    public bool IsScriptedMovementActive => _scriptedMovementActive;
-
     public Vector3 CurrentMoveInputVector
       => new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
 
