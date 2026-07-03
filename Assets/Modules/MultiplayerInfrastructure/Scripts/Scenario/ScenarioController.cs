@@ -12,10 +12,12 @@ using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 using MultiplayerInfrastructure.Scenario.Preflight;
 using MultiplayerInfrastructure.TTS;
+using MultiplayerInfrastructure.Player;
 using FishNet.Object;
 using FishNet;
 using FishNet.Connection;
 using Unity.VisualScripting;
+using TriageTrainer.Entity;
 
 namespace MultiplayerInfrastructure.Scenario
 {
@@ -1637,40 +1639,196 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingPlayerMove;
 
-      Vector3 destination;
-      if (node.DestinationType == ScenarioMoveDestinationType.Position)
+      if (!TryResolveMoveDestination(node.DestinationType, node.DestinationIdentifier,
+            node.DestinationX, node.DestinationY, node.DestinationZ, out var destination))
       {
-        destination = new Vector3(node.DestinationX, node.DestinationY, node.DestinationZ);
-      }
-      else
-      {
-        if (Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, node.DestinationIdentifier, out var waypointPos)
-            || Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, node.DestinationIdentifier, out waypointPos))
+        Debug.LogWarning($"[ScenarioController] Waypoint '{node.DestinationIdentifier}' not found. Fallback to no move.");
+        // Fallback: ByDuration이면 기다리고, 없으면 바로 스킵 (피어 간 타이밍 동기화 유지)
+        if (node.MoveMode == ScenarioMoveMode.ByDuration && node.MoveDuration > 0)
         {
-          destination = waypointPos;
+          yield return new WaitForSeconds(node.MoveDuration);
         }
-        else
-        {
-          Debug.LogWarning($"[ScenarioController] Waypoint '{node.DestinationIdentifier}' not found. Fallback to no move.");
-          // Fallback: MoveDuration이 있으면 기다리고, 없으면 바로 스킵
-          if (node.MoveMode == ScenarioMoveMode.ByDuration && node.MoveDuration > 0)
-          {
-            yield return new WaitForSeconds(node.MoveDuration);
-          }
-          Advance();
-          yield break;
-        }
+        Advance();
+        yield break;
       }
 
-      // TODO: 플레이어 이동 로직 구현
+      // 오우너 클라이언트에서만 로컬 플레이어를 이동시킨다.
+      // 다른 피어에서는 이동 시간만큼 대기하여 그래프 진행 타이밍을 맞춘다.
+      var player = ResolveLocalOwnerPlayer();
+      if (player == null)
+      {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[ScenarioController] PlayerMove '{node.Identifier}' skipped local movement (not owner or player unavailable).");
+#endif
+        if (node.MoveMode == ScenarioMoveMode.ByDuration && node.MoveDuration > 0f)
+        {
+          yield return new WaitForSeconds(node.MoveDuration);
+        }
+        Advance();
+        yield break;
+      }
+
 #if UNITY_EDITOR
-      Debug.Log($"[ScenarioController] Moving player to: {destination}");
+      Debug.Log($"[ScenarioController] Moving player to: {destination} (mode={node.MoveMode})");
 #endif
 
-      // 임시 대기
-      yield return new WaitForSeconds(1f);
+      player.BeginScriptedMovement();
+      bool wasCanMove = player.canMove;
+      player.canMove = false;
+      try
+      {
+        yield return MovePlayerRoutine(player, destination, node.MoveMode, node.MoveSpeed, node.MoveDuration, node.IgnoreGroundCheck);
+      }
+      finally
+      {
+        player.EndScriptedMovement();
+        player.canMove = wasCanMove;
+      }
 
       Advance();
+    }
+
+    /// <summary>
+    /// 시나리오 owner인 로컬 플레이어의 <see cref="PlayerController"/> 를 반환한다.
+    /// owner가 아니거나(다른 피어) 로컬 플레이어를 찾지 못하면 null.
+    /// owner가 지정되지 않은 경우(null)에는 로컬 플레이어를 반환한다.
+    /// </summary>
+    private PlayerController ResolveLocalOwnerPlayer()
+    {
+      var localConn = InstanceFinder.ClientManager?.Connection;
+      if (localConn == null)
+        return null;
+
+      int localClientId = localConn.ClientId;
+
+      // owner가 지정된 경우 로컬 클라이언트가 owner일 때만 이동한다.
+      if (_scenarioOwnerClientId.HasValue && _scenarioOwnerClientId.Value != localClientId)
+        return null;
+
+      if (Registry.Registry.TryGetEntityByClientId(localClientId, out var descriptor)
+          && descriptor?.GameObject != null
+          && descriptor.GameObject.TryGetComponent<PlayerController>(out var player))
+      {
+        return player;
+      }
+
+      return null;
+    }
+
+    /// <summary>
+    /// 목적지(좌표 또는 웨이포인트)를 해석한다. 실패 시 false.
+    /// </summary>
+    private static bool TryResolveMoveDestination(
+      ScenarioMoveDestinationType destinationType,
+      string destinationIdentifier,
+      float x, float y, float z,
+      out Vector3 destination)
+    {
+      if (destinationType == ScenarioMoveDestinationType.Position)
+      {
+        destination = new Vector3(x, y, z);
+        return true;
+      }
+
+      if (Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, destinationIdentifier, out destination)
+          || Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, destinationIdentifier, out destination))
+      {
+        return true;
+      }
+
+      destination = Vector3.zero;
+      return false;
+    }
+
+    /// <summary>
+    /// CharacterController 기반 직선 보간 이동. 목적지 수평 거리 기준으로 이동하며,
+    /// IgnoreGroundCheck=false 이면 중력을 적용해 접지 상태를 유지한다.
+    /// </summary>
+    private IEnumerator MovePlayerRoutine(
+      PlayerController player,
+      Vector3 destination,
+      ScenarioMoveMode mode,
+      float moveSpeed,
+      float moveDuration,
+      bool ignoreGroundCheck)
+    {
+      var playerTransform = player.transform;
+
+      if (mode == ScenarioMoveMode.Instant)
+      {
+        FaceHorizontal(playerTransform, destination);
+        player.ApplyScriptedMove(HorizontalDelta(playerTransform.position, destination), applyGravity: false);
+        yield break;
+      }
+
+      // 이동 속도 계산 (m/s). ByDuration이면 초기 수평 거리 / duration.
+      float speed = ResolveMoveSpeed(mode, moveSpeed, moveDuration,
+        HorizontalDistance(playerTransform.position, destination));
+
+      if (speed <= 0f)
+      {
+        // 속도가 0 이하이면 무한 루프를 피하기 위해 순간이동으로 대체한다.
+        FaceHorizontal(playerTransform, destination);
+        player.ApplyScriptedMove(HorizontalDelta(playerTransform.position, destination), applyGravity: false);
+        yield break;
+      }
+
+      const float arriveThreshold = 0.05f;
+      float elapsed = 0f;
+      // ByDuration일 때 안전 상한(예상 시간의 2배 또는 최소 5초).
+      float timeLimit = mode == ScenarioMoveMode.ByDuration
+        ? Mathf.Max(moveDuration * 2f, 5f)
+        : Mathf.Max((HorizontalDistance(playerTransform.position, destination) / speed) * 2f, 5f);
+
+      while (HorizontalDistance(playerTransform.position, destination) > arriveThreshold)
+      {
+        Vector3 toTarget = HorizontalDelta(playerTransform.position, destination);
+        float step = speed * Time.deltaTime;
+        Vector3 frameDelta = (toTarget.magnitude <= step) ? toTarget : toTarget.normalized * step;
+
+        FaceHorizontal(playerTransform, destination);
+        player.ApplyScriptedMove(frameDelta, applyGravity: !ignoreGroundCheck);
+
+        elapsed += Time.deltaTime;
+        if (elapsed >= timeLimit)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+          Debug.LogWarning($"[ScenarioController] Player move time limit ({timeLimit:0.0}s) reached before arrival. Snapping.");
+#endif
+          break;
+        }
+
+        yield return null;
+      }
+    }
+
+    private static float ResolveMoveSpeed(ScenarioMoveMode mode, float moveSpeed, float moveDuration, float distance)
+    {
+      if (mode == ScenarioMoveMode.ByDuration)
+        return moveDuration > 0f ? distance / moveDuration : 0f;
+
+      // BySpeed
+      return moveSpeed;
+    }
+
+    private static Vector3 HorizontalDelta(Vector3 from, Vector3 to)
+    {
+      var delta = to - from;
+      delta.y = 0f;
+      return delta;
+    }
+
+    private static float HorizontalDistance(Vector3 from, Vector3 to)
+      => HorizontalDelta(from, to).magnitude;
+
+    private static void FaceHorizontal(Transform transform, Vector3 target)
+    {
+      Vector3 forward = target - transform.position;
+      forward.y = 0f;
+      if (forward.sqrMagnitude <= 0.0001f)
+        return;
+
+      transform.rotation = Quaternion.LookRotation(forward.normalized, Vector3.up);
     }
 
     private IEnumerator ExecuteNPCMoveNode(ScenarioNPCMoveNode node)
@@ -1687,40 +1845,124 @@ namespace MultiplayerInfrastructure.Scenario
         yield break;
       }
 
-      Vector3 destination;
-      if (node.DestinationType == ScenarioMoveDestinationType.Position)
+      if (!TryResolveMoveDestination(node.DestinationType, node.DestinationIdentifier,
+            node.DestinationX, node.DestinationY, node.DestinationZ, out var destination))
       {
-        destination = new Vector3(node.DestinationX, node.DestinationY, node.DestinationZ);
-      }
-      else
-      {
-        if (Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, node.DestinationIdentifier, out var waypointPos)
-            || Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, node.DestinationIdentifier, out waypointPos))
+        Debug.LogWarning($"[ScenarioController] Waypoint '{node.DestinationIdentifier}' not found. Fallback to no move.");
+        if (node.MoveMode == ScenarioMoveMode.ByDuration && node.MoveDuration > 0)
         {
-          destination = waypointPos;
+          yield return new WaitForSeconds(node.MoveDuration);
+        }
+        Advance();
+        yield break;
+      }
+
+#if UNITY_EDITOR
+      Debug.Log($"[ScenarioController] Moving NPC '{node.NPCIdentifier}' to: {destination} (mode={node.MoveMode})");
+#endif
+
+      var animation = npc.GetComponentInChildren<HumanoidAnimationController>(true);
+      try
+      {
+        yield return MoveNpcRoutine(npc.transform, animation, destination,
+          node.MoveMode, node.MoveSpeed, node.MoveDuration, node.IgnoreGroundCheck);
+      }
+      finally
+      {
+        // 이동 종료 시 walk 애니메이션 해제
+        animation?.SetBool(NpcWalkAnimationParameterName, false);
+      }
+
+      Advance();
+    }
+
+    private const string NpcWalkAnimationParameterName = "walk";
+
+    /// <summary>
+    /// NPC(transform) 직선 보간 이동. NavMesh를 사용하지 않으므로 transform을 직접 이동한다.
+    /// IgnoreGroundCheck=false 이면 CharacterController가 있을 때 중력을 적용한다.
+    /// 이동 중 HumanoidAnimationController의 walk 파라미터를 true로 설정한다.
+    /// </summary>
+    private IEnumerator MoveNpcRoutine(
+      Transform npcTransform,
+      HumanoidAnimationController animation,
+      Vector3 destination,
+      ScenarioMoveMode mode,
+      float moveSpeed,
+      float moveDuration,
+      bool ignoreGroundCheck)
+    {
+      var characterController = npcTransform.GetComponent<CharacterController>();
+
+      void MoveStep(Vector3 horizontalDelta)
+      {
+        if (characterController != null && characterController.enabled)
+        {
+          Vector3 motion = horizontalDelta;
+          if (!ignoreGroundCheck)
+          {
+            // 접지 유지를 위해 하향 중력 성분을 추가한다.
+            motion += Vector3.up * (Physics.gravity.y * Time.deltaTime);
+          }
+          characterController.Move(motion);
         }
         else
         {
-          Debug.LogWarning($"[ScenarioController] Waypoint '{node.DestinationIdentifier}' not found. Fallback to no move.");
-          // Fallback: MoveDuration이 있으면 기다리고, 없으면 바로 스킵
-          if (node.MoveMode == ScenarioMoveMode.ByDuration && node.MoveDuration > 0)
+          Vector3 next = npcTransform.position + horizontalDelta;
+          if (!ignoreGroundCheck
+              && Physics.Raycast(next + Vector3.up * 2f, Vector3.down, out var hit, 10f))
           {
-            yield return new WaitForSeconds(node.MoveDuration);
+            next.y = hit.point.y;
           }
-          Advance();
-          yield break;
+          npcTransform.position = next;
         }
       }
 
-      // TODO: NPC 이동 로직 구현
-#if UNITY_EDITOR
-      Debug.Log($"[ScenarioController] Moving NPC '{node.NPCIdentifier}' to: {destination}");
+      if (mode == ScenarioMoveMode.Instant)
+      {
+        FaceHorizontal(npcTransform, destination);
+        MoveStep(HorizontalDelta(npcTransform.position, destination));
+        yield break;
+      }
+
+      float speed = ResolveMoveSpeed(mode, moveSpeed, moveDuration,
+        HorizontalDistance(npcTransform.position, destination));
+
+      if (speed <= 0f)
+      {
+        FaceHorizontal(npcTransform, destination);
+        MoveStep(HorizontalDelta(npcTransform.position, destination));
+        yield break;
+      }
+
+      animation?.SetBool(NpcWalkAnimationParameterName, true);
+
+      const float arriveThreshold = 0.05f;
+      float elapsed = 0f;
+      float timeLimit = mode == ScenarioMoveMode.ByDuration
+        ? Mathf.Max(moveDuration * 2f, 5f)
+        : Mathf.Max((HorizontalDistance(npcTransform.position, destination) / speed) * 2f, 5f);
+
+      while (HorizontalDistance(npcTransform.position, destination) > arriveThreshold)
+      {
+        Vector3 toTarget = HorizontalDelta(npcTransform.position, destination);
+        float step = speed * Time.deltaTime;
+        Vector3 frameDelta = (toTarget.magnitude <= step) ? toTarget : toTarget.normalized * step;
+
+        FaceHorizontal(npcTransform, destination);
+        MoveStep(frameDelta);
+
+        elapsed += Time.deltaTime;
+        if (elapsed >= timeLimit)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+          Debug.LogWarning($"[ScenarioController] NPC move time limit ({timeLimit:0.0}s) reached before arrival. Snapping.");
 #endif
+          break;
+        }
 
-      // 임시 대기
-      yield return new WaitForSeconds(1f);
-
-      Advance();
+        yield return null;
+      }
     }
 
     private IEnumerator ExecuteCameraTargetNode(ScenarioCameraTargetNode node)

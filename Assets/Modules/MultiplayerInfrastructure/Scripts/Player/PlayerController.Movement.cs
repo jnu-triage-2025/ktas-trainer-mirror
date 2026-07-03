@@ -43,7 +43,17 @@ namespace MultiplayerInfrastructure.Player
     private Transform _forcedFollowAnchor;
     private bool _jumpAnimationRequestedThisFrame;
 
+    // 시나리오 등 스크립트가 플레이어 위치를 직접 제어하는 동안 true.
+    // 이 동안 입력 기반 이동(ComputeMovementPlayerObject)은 억제되지만
+    // CharacterController.velocity 기반 walk 애니메이션은 정상 동작한다.
+    private bool _scriptedMovementActive;
+
     public bool IsMovementPositionOverridden => _forcedFollowAnchor != null;
+
+    /// <summary>
+    /// 스크립트(시나리오 등)에 의한 이동 제어 활성 여부.
+    /// </summary>
+    public bool IsScriptedMovementActive => _scriptedMovementActive;
 
     public Vector3 CurrentMoveInputVector
       => new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
@@ -88,6 +98,14 @@ namespace MultiplayerInfrastructure.Player
     void ComputeMovementPlayerObject()
     {
       if (_forcedFollowAnchor != null)
+      {
+        _moveDirection = Vector3.zero;
+        return;
+      }
+
+      // 스크립트 이동이 활성화된 동안에는 입력 기반 이동을 억제한다.
+      // 실제 이동은 ApplyScriptedMove(...)를 통해 외부에서 구동된다.
+      if (_scriptedMovementActive)
       {
         _moveDirection = Vector3.zero;
         return;
@@ -189,6 +207,56 @@ if (Input.GetButton("Jump") && canMove && _characterController.isGrounded)
         return;
 
       transform.rotation = Quaternion.LookRotation(worldForward.normalized, Vector3.up);
+    }
+
+    /// <summary>
+    /// 스크립트(시나리오 등)에 의한 이동 제어를 시작한다.
+    /// 이 동안 입력 기반 이동은 억제되며, 실제 이동은 <see cref="ApplyScriptedMove"/> 로 구동한다.
+    /// </summary>
+    public void BeginScriptedMovement()
+    {
+      _scriptedMovementActive = true;
+      _moveDirection = Vector3.zero;
+    }
+
+    /// <summary>
+    /// 스크립트 이동 제어를 종료하고 입력 기반 이동으로 복귀한다.
+    /// </summary>
+    public void EndScriptedMovement()
+    {
+      _scriptedMovementActive = false;
+      _moveDirection = Vector3.zero;
+    }
+
+    /// <summary>
+    /// 스크립트 이동 1프레임 분의 변위를 적용한다.
+    /// <paramref name="horizontalDelta"/> 는 이번 프레임에 이동할 수평 변위(월드 기준, y 무시).
+    /// <paramref name="applyGravity"/> 가 true면 접지 전까지 중력을 누적 적용한다.
+    /// CharacterController.Move 를 사용하므로 velocity 기반 walk 애니메이션이 자동으로 재생된다.
+    /// </summary>
+    public void ApplyScriptedMove(Vector3 horizontalDelta, bool applyGravity)
+    {
+      if (_characterController == null)
+        return;
+
+      horizontalDelta.y = 0f;
+
+      Vector3 motion = horizontalDelta;
+
+      if (applyGravity)
+      {
+        if (_characterController.isGrounded && _moveDirection.y < 0f)
+          _moveDirection.y = 0f;
+
+        _moveDirection.y -= _gravity * Time.deltaTime;
+        motion.y = _moveDirection.y * Time.deltaTime;
+      }
+      else
+      {
+        _moveDirection.y = 0f;
+      }
+
+      _characterController.Move(motion);
     }
 
     void UpdateSpectateFollowTarget()
