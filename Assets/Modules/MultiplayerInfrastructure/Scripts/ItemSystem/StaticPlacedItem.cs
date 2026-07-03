@@ -73,8 +73,83 @@ namespace MultiplayerInfrastructure.ItemSystem
       if (_autoLoadModel)
         LoadModelIfNeeded();
 
+      EnsureInteractionCollider();
       RegisterToRegistry();
     }
+
+    /// <summary>
+    /// 상호작용 감지를 위한 Collider 를 보장합니다.
+    ///
+    /// <para>
+    /// <see cref="NearbyInteractablesDetector"/> 는 Collider 와 같은 GameObject 의 <see cref="IInteractable"/>
+    /// 을 통해 감지하므로 Collider 가 반드시 필요합니다. <c>[RequireComponent(typeof(Collider))]</c> 로 인해
+    /// 에디터에서 BoxCollider 가 자동 부착되지만, 자동 부착된 콜라이더는 크기가 잡히지 않을 수 있습니다.
+    /// 콜라이더 크기가 사실상 0이면 자식 Renderer 들의 bounds 로 보정합니다(에디터 변환 도구가 이미 크기를 설정했다면 건드리지 않음).
+    /// </para>
+    /// </summary>
+    private void EnsureInteractionCollider()
+    {
+      if (!TryGetComponent<Collider>(out var existing) || existing == null)
+      {
+        // RequireComponent 가 보장하지 못한 예외적 상황 폴백.
+        gameObject.AddComponent<BoxCollider>();
+      }
+
+      if (!TryGetComponent<BoxCollider>(out var box) || box == null)
+        return;
+
+      // 이미 유의미한 크기가 설정되어 있으면 그대로 둔다.
+      if (box.size.sqrMagnitude > 0.0001f)
+        return;
+
+      FitBoxColliderToRenderers(box);
+    }
+
+    private void FitBoxColliderToRenderers(BoxCollider box)
+    {
+      var renderers = GetComponentsInChildren<Renderer>(includeInactive: true);
+      if (renderers == null || renderers.Length == 0)
+      {
+        // Renderer 가 없으면 최소한의 기본 크기라도 부여해 감지가 가능하게 한다.
+        box.size = Vector3.one * 0.25f;
+        return;
+      }
+
+      bool hasBounds = false;
+      Bounds worldBounds = default;
+      for (int i = 0; i < renderers.Length; i++)
+      {
+        if (renderers[i] == null || !renderers[i].enabled)
+          continue;
+
+        if (!hasBounds)
+        {
+          worldBounds = renderers[i].bounds;
+          hasBounds = true;
+        }
+        else
+        {
+          worldBounds.Encapsulate(renderers[i].bounds);
+        }
+      }
+
+      if (!hasBounds)
+      {
+        box.size = Vector3.one * 0.25f;
+        return;
+      }
+
+      // 월드 bounds → 로컬 기준으로 변환.
+      box.center = transform.InverseTransformPoint(worldBounds.center);
+      var lossy = transform.lossyScale;
+      box.size = new Vector3(
+        SafeDivide(worldBounds.size.x, lossy.x),
+        SafeDivide(worldBounds.size.y, lossy.y),
+        SafeDivide(worldBounds.size.z, lossy.z));
+    }
+
+    private static float SafeDivide(float value, float divisor)
+      => Mathf.Approximately(divisor, 0f) ? value : value / divisor;
 
     private void OnEnable()
     {
