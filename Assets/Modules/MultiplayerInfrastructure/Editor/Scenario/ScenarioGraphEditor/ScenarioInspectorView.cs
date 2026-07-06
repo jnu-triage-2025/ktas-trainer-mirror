@@ -72,8 +72,17 @@ namespace MultiplayerInfrastructure.Editor
         }
       }
 
+      EditorGUI.BeginChangeCheck();
       DrawTypeSpecificInspector(targetNode.Data);
-      targetNode.RefreshTitle();
+      if (EditorGUI.EndChangeCheck())
+      {
+        targetNode.RefreshTitle();
+        window.NotifyGraphStructureChanged();
+      }
+      else
+      {
+        targetNode.RefreshTitle();
+      }
     }
 
     private void DrawTypeSpecificInspector(IScenarioNode data)
@@ -136,6 +145,21 @@ namespace MultiplayerInfrastructure.Editor
           break;
         case ScenarioNodeType.PlayTTS:
           DrawPlayTTSFields((ScenarioPlayTTSNode)data);
+          break;
+        case ScenarioNodeType.EntityPresetSpawn:
+          DrawEntityPresetSpawnFields((ScenarioEntityPresetSpawnNode)data);
+          break;
+        case ScenarioNodeType.EntityTag:
+          DrawEntityTagFields((ScenarioEntityTagNode)data);
+          break;
+        case ScenarioNodeType.EntityInit:
+          DrawEntityInitFields((ScenarioEntityInitNode)data);
+          break;
+        case ScenarioNodeType.TriageAssessControl:
+          DrawTriageAssessControlFields((ScenarioTriageAssessControlNode)data);
+          break;
+        case ScenarioNodeType.PatientMedicalStatePreset:
+          DrawPatientMedicalStatePresetFields((ScenarioPatientMedicalStatePresetNode)data);
           break;
       }
     }
@@ -746,6 +770,194 @@ namespace MultiplayerInfrastructure.Editor
       }
 
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawEntityPresetSpawnFields(ScenarioEntityPresetSpawnNode data)
+    {
+      data.PresetIdentifier = EditorGUILayout.TextField("Preset Identifier", data.PresetIdentifier);
+      data.SpawnedEntityIdentifier = EditorGUILayout.TextField("Spawned Entity Id", data.SpawnedEntityIdentifier);
+      data.PositionSourceEntityIdentifier = EditorGUILayout.TextField("Position Source Entity", data.PositionSourceEntityIdentifier);
+      data.PositionX = EditorGUILayout.FloatField("Position X", data.PositionX);
+      data.PositionY = EditorGUILayout.FloatField("Position Y", data.PositionY);
+      data.PositionZ = EditorGUILayout.FloatField("Position Z", data.PositionZ);
+      data.ResultStateKey = EditorGUILayout.TextField("Result State Key", data.ResultStateKey);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawEntityTagFields(ScenarioEntityTagNode data)
+    {
+      data.TargetEntityIdentifier = EditorGUILayout.TextField("Target Entity", data.TargetEntityIdentifier);
+      data.TargetEntityStateKey = EditorGUILayout.TextField("Target Entity State Key", data.TargetEntityStateKey);
+      data.Operation = (ScenarioPlayerTagOperationType)EditorGUILayout.EnumPopup("Operation", data.Operation);
+
+      switch (data.Operation)
+      {
+        case ScenarioPlayerTagOperationType.Add:
+        case ScenarioPlayerTagOperationType.Remove:
+          data.Tag = EditorGUILayout.TextField("Tag", data.Tag);
+          break;
+        case ScenarioPlayerTagOperationType.Change:
+          data.FromTag = EditorGUILayout.TextField("From Tag", data.FromTag);
+          data.ToTag = EditorGUILayout.TextField("To Tag", data.ToTag);
+          break;
+      }
+
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawEntityInitFields(ScenarioEntityInitNode data)
+    {
+      EditorGUILayout.LabelField("Target (Preset Spawn)", EditorStyles.boldLabel);
+      data.PresetIdentifier = EditorGUILayout.TextField("Preset Identifier", data.PresetIdentifier);
+      data.EntityIdentifier = EditorGUILayout.TextField("Entity Identifier", data.EntityIdentifier);
+      data.PositionSourceEntityIdentifier = EditorGUILayout.TextField("Position Source Entity", data.PositionSourceEntityIdentifier);
+      data.PositionX = EditorGUILayout.FloatField("Position X", data.PositionX);
+      data.PositionY = EditorGUILayout.FloatField("Position Y", data.PositionY);
+      data.PositionZ = EditorGUILayout.FloatField("Position Z", data.PositionZ);
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("Target (Existing Entity)", EditorStyles.boldLabel);
+      data.TargetEntityIdentifier = EditorGUILayout.TextField("Target Entity Id", data.TargetEntityIdentifier);
+      data.TargetEntityStateKey = EditorGUILayout.TextField("Target Entity State Key", data.TargetEntityStateKey);
+      data.ResultStateKey = EditorGUILayout.TextField("Result State Key", data.ResultStateKey);
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("State Operations", EditorStyles.boldLabel);
+
+      if (data.StateOperations == null)
+        data.StateOperations = new System.Collections.Generic.List<ScenarioEntityStateOperation>();
+
+      for (int i = 0; i < data.StateOperations.Count; i++)
+      {
+        var op = data.StateOperations[i];
+        if (op == null) continue;
+
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField($"Op {i + 1}", EditorStyles.boldLabel);
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Remove", GUILayout.Width(70)))
+        {
+          data.StateOperations.RemoveAt(i);
+          EditorGUILayout.EndHorizontal();
+          EditorGUILayout.EndVertical();
+          break;
+        }
+        EditorGUILayout.EndHorizontal();
+
+        op.Kind = (ScenarioEntityStateOperationKind)EditorGUILayout.EnumPopup("Kind", op.Kind);
+        op.Key = EditorGUILayout.TextField("Key", op.Key);
+        if (op.Kind == ScenarioEntityStateOperationKind.StateStore)
+          op.Value = EditorGUILayout.TextField("Value", op.Value);
+        else
+          op.DisplayActive = EditorGUILayout.Toggle("Display Active", op.DisplayActive);
+
+        EditorGUILayout.EndVertical();
+      }
+
+      if (GUILayout.Button("Add State Operation"))
+        data.StateOperations.Add(new ScenarioEntityStateOperation());
+
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawTriageAssessControlFields(ScenarioTriageAssessControlNode data)
+    {
+      data.TargetEntityIdentifier = EditorGUILayout.TextField("Target Entity", data.TargetEntityIdentifier);
+      data.Assessable = EditorGUILayout.Toggle("Assessable", data.Assessable);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawPatientMedicalStatePresetFields(ScenarioPatientMedicalStatePresetNode data)
+    {
+      data.TargetEntityIdentifier = EditorGUILayout.TextField("Target Entity", data.TargetEntityIdentifier);
+      data.TargetEntityStateKey = EditorGUILayout.TextField("Target Entity State Key", data.TargetEntityStateKey);
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("환자 기술자 (PatientDescriptor)", EditorStyles.boldLabel);
+      data.Name = NullableTextField("Name", data.Name);
+      data.Sex = NullableEnumField<TriageTrainer.Entity.Patient.Sex>("Sex", data.Sex);
+      data.Age = NullableIntField("Age", data.Age);
+      data.BloodType = NullableEnumField<TriageTrainer.Entity.Patient.BloodType>("Blood Type", data.BloodType);
+      data.IntendedTriage = NullableEnumField<TriageTrainer.Entity.Patient.TriageLevel>("Intended Triage", data.IntendedTriage);
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("의식 (Consciousness)", EditorStyles.boldLabel);
+      data.ConsciousnessGcs = NullableIntField("GCS (3~15)", data.ConsciousnessGcs);
+      data.ConsciousnessLocLabel = NullableEnumField<TriageTrainer.Entity.Patient.LOCLabel>("LOC Label", data.ConsciousnessLocLabel);
+      data.ConsciousnessPupillaryResponse = NullableEnumField<TriageTrainer.Entity.Patient.PupillaryResponse>("Pupillary Response", data.ConsciousnessPupillaryResponse);
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("호흡 (Respiration)", EditorStyles.boldLabel);
+      data.RespirationAwRR = NullableIntField("awRR (분당 호흡수)", data.RespirationAwRR);
+      data.RespirationTypeValue = NullableEnumField<TriageTrainer.Entity.Patient.RespirationType>("Type", data.RespirationTypeValue);
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("맥박 (Pulse)", EditorStyles.boldLabel);
+      data.PulseRate = NullableIntField("Rate (분당)", data.PulseRate);
+      data.PulseForceType = NullableEnumField<TriageTrainer.Entity.Patient.BloodPulseForceType>("Force Type", data.PulseForceType);
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("혈압 (Blood Pressure)", EditorStyles.boldLabel);
+      data.BloodPressureSystolic = NullableIntField("Systolic (수축기)", data.BloodPressureSystolic);
+      data.BloodPressureDiastolic = NullableIntField("Diastolic (이완기)", data.BloodPressureDiastolic);
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("피부 (Skin)", EditorStyles.boldLabel);
+      data.SkinColorHue = NullableEnumField<TriageTrainer.Entity.Patient.SkinColorHue>("Color Hue", data.SkinColorHue);
+      data.SkinTemperatureType = NullableEnumField<TriageTrainer.Entity.Patient.SkinTemperatureType>("Temperature Type", data.SkinTemperatureType);
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("기타", EditorStyles.boldLabel);
+      data.IsCardiacArrest = NullableBoolField("Is Cardiac Arrest", data.IsCardiacArrest);
+
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    /// <summary>
+    /// null 허용 string 필드 편집기. 빈 문자열 입력 시 null로 저장한다.
+    /// </summary>
+    private static string NullableTextField(string label, string current)
+    {
+      var result = EditorGUILayout.TextField(label, current ?? string.Empty);
+      return string.IsNullOrEmpty(result) ? null : result;
+    }
+
+    /// <summary>
+    /// null 허용 int 필드 편집기. 빈 문자열 입력 시 null을 반환한다.
+    /// </summary>
+    private static int? NullableIntField(string label, int? current)
+    {
+      var text = EditorGUILayout.TextField(label, current.HasValue ? current.Value.ToString() : string.Empty);
+      if (string.IsNullOrWhiteSpace(text)) return null;
+      return int.TryParse(text, out var parsed) ? parsed : current;
+    }
+
+    /// <summary>
+    /// null 허용 bool 필드 편집기. "(not set) / true / false" 3-state 팝업.
+    /// </summary>
+    private static bool? NullableBoolField(string label, bool? current)
+    {
+      var options = new[] { "(not set)", "true", "false" };
+      int selected = current.HasValue ? (current.Value ? 1 : 2) : 0;
+      int newSelected = EditorGUILayout.Popup(label, selected, options);
+      return newSelected == 0 ? (bool?)null : newSelected == 1;
+    }
+
+    /// <summary>
+    /// null 허용 Enum 필드 편집기. "(not set)" 항목을 첫 번째에 추가한다.
+    /// </summary>
+    private static TEnum? NullableEnumField<TEnum>(string label, TEnum? current) where TEnum : struct, System.Enum
+    {
+      var names = System.Enum.GetNames(typeof(TEnum));
+      var display = new string[names.Length + 1];
+      display[0] = "(not set)";
+      names.CopyTo(display, 1);
+
+      int selected = current.HasValue ? System.Array.IndexOf(names, current.Value.ToString()) + 1 : 0;
+      int newSelected = EditorGUILayout.Popup(label, selected, display);
+      if (newSelected == 0) return null;
+      return (TEnum)System.Enum.Parse(typeof(TEnum), names[newSelected - 1]);
     }
   }
 }

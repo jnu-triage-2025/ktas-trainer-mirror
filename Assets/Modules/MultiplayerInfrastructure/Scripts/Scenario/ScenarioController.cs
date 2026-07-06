@@ -104,6 +104,7 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingEntityTag,
       ExecutingEntityInit,
       ExecutingTriageAssessControl,
+      ExecutingPatientMedicalStatePreset,
     }
 
     [SerializeField] private State _state = State.Inactive;
@@ -552,6 +553,9 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioTriageAssessControlNode triageAssess:
           ExecuteTriageAssessControlNode(triageAssess);
+          break;
+        case ScenarioPatientMedicalStatePresetNode patientPreset:
+          StartCoroutine(ExecutePatientMedicalStatePresetNode(patientPreset));
           break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type: {node.GetType().Name}");
@@ -1427,6 +1431,87 @@ namespace MultiplayerInfrastructure.Scenario
       target.SetTriageAssessable(node.Assessable);
 #if UNITY_EDITOR
       Debug.Log($"[ScenarioController] TriageAssessControl: {node.TargetEntityIdentifier}.assessable={node.Assessable}");
+#endif
+
+      Advance();
+    }
+
+    /// <summary>
+    /// 환자 엔티티에 의료 상태 프리셋을 적용한다.
+    ///
+    /// <para>
+    /// <b>서버 전용 실행:</b> <see cref="ExecuteEntityInitNode"/> 와 동일하게, 프리셋 적용은 서버/호스트
+    /// 컨텍스트에서만 수행하고 결과를 RPC로 클라이언트에 전파한다. 클라이언트에서는 노드를 건너뛴다.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>레지스트리 타이밍:</b> <see cref="PatientController"/>는 FishNet <c>OnStartClient</c> 콜백에서
+    /// 레지스트리에 등록된다. 이 콜백은 스폰 직후 즉시 호출되지 않을 수 있으므로, 대상이 등록될 때까지
+    /// 최대 <c>PatientMedicalStatePresetRegistryTimeoutFrames</c> 프레임 동안 폴링한다.
+    /// </para>
+    /// </summary>
+    private const int PatientMedicalStatePresetRegistryTimeoutFrames = 10;
+
+    private IEnumerator ExecutePatientMedicalStatePresetNode(ScenarioPatientMedicalStatePresetNode node)
+    {
+      _state = State.ExecutingPatientMedicalStatePreset;
+
+      if (node == null)
+      {
+        Advance();
+        yield break;
+      }
+
+      // 서버(또는 오프라인) 컨텍스트에서만 실행한다.
+      // ExecuteEntityInitNode 와 동일한 패턴. 클라이언트는 Advance 만 호출하고 프리셋 적용을 건너뛴다.
+      // 프리셋 필드는 서버가 적용 후 RPC(ApplyMedicalStatePreset 내부의 RpcSyncVitalMedicalState)로 전파된다.
+      if (!InstanceFinder.IsServerStarted && !InstanceFinder.IsOffline)
+      {
+        Advance();
+        yield break;
+      }
+
+      // 대상 엔티티 식별자 결정: 직접 지정 → 상태 저장소 조회 순서
+      string targetIdentifier = node.TargetEntityIdentifier;
+      if (string.IsNullOrWhiteSpace(targetIdentifier) && !string.IsNullOrWhiteSpace(node.TargetEntityStateKey))
+      {
+        _stateStore.TryGetValue(node.TargetEntityStateKey, out targetIdentifier);
+      }
+
+      if (string.IsNullOrWhiteSpace(targetIdentifier))
+      {
+        Debug.LogWarning($"[ScenarioController] PatientMedicalStatePreset '{node.Identifier}': target identifier is missing.");
+        Advance();
+        yield break;
+      }
+
+      // PatientController 는 FishNet OnStartClient 콜백에서 레지스트리에 등록된다.
+      // 스폰(EntityPresetSpawn) 직후 이 노드가 실행되면 등록이 아직 완료되지 않았을 수 있으므로,
+      // 최대 PatientMedicalStatePresetRegistryTimeoutFrames 프레임 동안 폴링한다.
+      PatientController patient = null;
+      for (int frame = 0; frame < PatientMedicalStatePresetRegistryTimeoutFrames; frame++)
+      {
+        if (Registry.Registry.TryGetEntity(targetIdentifier, out var descriptor) && descriptor?.GameObject != null)
+        {
+          patient = descriptor.GameObject.GetComponentInChildren<PatientController>(true);
+          if (patient != null)
+            break;
+        }
+
+        yield return null; // 다음 프레임까지 대기
+      }
+
+      if (patient == null)
+      {
+        Debug.LogWarning($"[ScenarioController] PatientMedicalStatePreset '{node.Identifier}': target '{targetIdentifier}' not found after {PatientMedicalStatePresetRegistryTimeoutFrames} frames.");
+        Advance();
+        yield break;
+      }
+
+      patient.ApplyMedicalStatePreset(node);
+
+#if UNITY_EDITOR
+      Debug.Log($"[ScenarioController] PatientMedicalStatePreset applied to '{targetIdentifier}'.");
 #endif
 
       Advance();

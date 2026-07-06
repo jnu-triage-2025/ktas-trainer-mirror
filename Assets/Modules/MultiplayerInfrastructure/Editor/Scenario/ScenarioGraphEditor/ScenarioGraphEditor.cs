@@ -22,6 +22,9 @@ namespace MultiplayerInfrastructure.Editor
     private ScenarioRuntimeHistoryView runtimeHistoryView;
     private ScenarioNodeSearchWindow searchWindow;
     private VisualElement mainContainer;
+    private VisualElement graphHost;
+    private ScenarioDebugPanelView debugPanelView;
+    private ScenarioSearchPanelView searchPanelView;
 
     private ScenarioGraph graphData = new ScenarioGraph();
     private readonly Dictionary<string, ScenarioNodeView> nodeViews = new Dictionary<string, ScenarioNodeView>();
@@ -103,6 +106,8 @@ namespace MultiplayerInfrastructure.Editor
       EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
       ConstructUI();
       CreateGraphView();
+      CreateDebugPanel();
+      CreateSearchPanel();
       CreateInspector();
       CreateSearchWindow();
       BindGraphEvents();
@@ -115,6 +120,8 @@ namespace MultiplayerInfrastructure.Editor
       EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
       UnbindRuntimeScenarioController();
       ClearRuntimeHighlight();
+
+      rootVisualElement.UnregisterCallback<KeyDownEvent>(OnGlobalKeyDown, TrickleDown.TrickleDown);
 
       if (mainContainer != null && mainContainer.parent != null)
       {
@@ -166,6 +173,9 @@ namespace MultiplayerInfrastructure.Editor
       var validateButton = new ToolbarButton(ValidateGraphUsingRuntimeValidator) { text = "Validate" };
       toolbar.Add(validateButton);
 
+      var searchButton = new ToolbarButton(OpenSearchPanel) { text = "Find" };
+      toolbar.Add(searchButton);
+
       graphIdentifierField = new TextField
       {
         label = "Graph ID"
@@ -200,12 +210,14 @@ namespace MultiplayerInfrastructure.Editor
     private void CreateGraphView()
     {
       mainContainer = new VisualElement { name = "ScenarioMainContainer" };
-      mainContainer.style.flexGrow = 1f;
+      mainContainer.style.flexGrow    = 1f;
+      mainContainer.style.flexShrink  = 1f;  // 디버그 패널이 공간을 차지하면 축소될 수 있어야 함
       mainContainer.style.flexDirection = FlexDirection.Row;
 
-      var graphHost = new VisualElement { name = "ScenarioGraphHost" };
+      graphHost = new VisualElement { name = "ScenarioGraphHost" };
       graphHost.style.flexGrow = 1f;
       graphHost.style.flexShrink = 1f;
+      graphHost.style.overflow = Overflow.Hidden; // 검색 패널 오버레이가 graphHost 경계 안에만 보이도록
       graphHost.style.backgroundColor = new StyleColor(new Color(0.12f, 0.12f, 0.12f, 1f));
 
       graphView = new ScenarioGraphView(this) { name = "ScenarioGraphView" };
@@ -253,6 +265,73 @@ namespace MultiplayerInfrastructure.Editor
       mainContainer.Add(inspectorPanel);
 
       rootVisualElement.Add(mainContainer);
+      // 디버그 패널은 mainContainer 아래에 배치한다. CreateDebugPanel() 에서 추가된다.
+    }
+
+    private void CreateDebugPanel()
+    {
+      debugPanelView = new ScenarioDebugPanelView();
+      debugPanelView.OnNodeFocusRequested = FocusNodeByIdentifier;
+      rootVisualElement.Add(debugPanelView);
+    }
+
+    private void CreateSearchPanel()
+    {
+      searchPanelView = new ScenarioSearchPanelView();
+      searchPanelView.OnResultSelected = FocusNodeByIdentifier;
+      searchPanelView.OnQueryChanged   = HandleSearchQuery;
+      searchPanelView.OnClosed         = () => { /* 포커스를 graphView 로 돌려줌 */ graphView?.Focus(); };
+
+      // graphHost 위에 절대 위치 오버레이로 추가
+      // graphHost 가 아직 null 이면 rootVisualElement 에 임시 추가 후 CreateGraphView 이후 재배치
+      if (graphHost != null)
+        graphHost.Add(searchPanelView);
+      else
+        rootVisualElement.Add(searchPanelView);
+
+      // Cmd/Ctrl+F: rootVisualElement 에서 키 이벤트를 잡는다
+      // TrickleDown 으로 등록해서 GraphView 보다 먼저 처리
+      rootVisualElement.RegisterCallback<KeyDownEvent>(OnGlobalKeyDown, TrickleDown.TrickleDown);
+    }
+
+    private void HandleSearchQuery(string query)
+    {
+      if (searchPanelView == null || graphData == null) return;
+      var results = ScenarioNodeSearcher.Search(graphData, query);
+      searchPanelView.SetResults(results, query);
+    }
+
+    /// <summary>에디터 윈도우 전역 키 핸들러. Cmd/Ctrl+F 로 검색 패널을 토글한다.</summary>
+    private void OnGlobalKeyDown(KeyDownEvent evt)
+    {
+      bool isMac    = Application.platform == RuntimePlatform.OSXEditor;
+      bool modifier = isMac ? evt.commandKey : evt.ctrlKey;
+
+      if (modifier && evt.keyCode == KeyCode.F)
+      {
+        if (searchPanelView == null) return;
+
+        if (searchPanelView.IsOpen)
+          searchPanelView.Close();
+        else
+          searchPanelView.Open();
+
+        evt.StopPropagation();
+        evt.PreventDefault();
+      }
+    }
+
+    /// <summary>Cmd/Ctrl+F 로 검색 패널을 여는 public API (툴바 버튼 등에서 호출 가능).</summary>
+    public void OpenSearchPanel()
+    {
+      searchPanelView?.Open();
+    }
+
+    private void RefreshDebugPanel()
+    {
+      if (debugPanelView == null) return;
+      var items = ScenarioGraphDiagnostics.Run(graphData);
+      debugPanelView.Refresh(items);
     }
 
     private void CreateInspector()
@@ -315,6 +394,7 @@ namespace MultiplayerInfrastructure.Editor
       graphView.RebuildAllEdges();
       SyncRuntimeHighlight();
       RefreshRuntimeHistoryView();
+      RefreshDebugPanel();
 
       return newView;
     }
@@ -586,6 +666,7 @@ namespace MultiplayerInfrastructure.Editor
 
       inspectorView.SetTarget(nodeView);
       RefreshRuntimeHistoryView();
+      RefreshDebugPanel();
       return nodeView;
     }
 
@@ -600,6 +681,7 @@ namespace MultiplayerInfrastructure.Editor
       RefreshGraphTagsField();
       ClearRuntimeHighlight();
       RefreshRuntimeHistoryView();
+      RefreshDebugPanel();
     }
 
     private void EnsureGraphData()
@@ -730,6 +812,7 @@ namespace MultiplayerInfrastructure.Editor
       inspectorView.SetTarget(null);
       SyncRuntimeHighlight();
       RefreshRuntimeHistoryView();
+      RefreshDebugPanel();
     }
 
     public bool TryRenameNode(ScenarioNodeView nodeView, string newId)
@@ -809,6 +892,7 @@ namespace MultiplayerInfrastructure.Editor
       nodeView.RefreshTitle();
       SyncRuntimeHighlight();
       RefreshRuntimeHistoryView();
+      RefreshDebugPanel();
 
       return true;
     }
@@ -883,6 +967,7 @@ namespace MultiplayerInfrastructure.Editor
         ValidateResources(graphData);
         SyncRuntimeHighlight();
         RefreshRuntimeHistoryView();
+        RefreshDebugPanel();
       }
       catch (Exception ex)
       {
@@ -1020,6 +1105,15 @@ namespace MultiplayerInfrastructure.Editor
 
     public ScenarioGraph GraphData => graphData;
 
+    /// <summary>
+    /// 엣지 연결/해제 등 외부에서 그래프 구조가 변경되었을 때 호출한다.
+    /// 디버그 패널을 다시 실행한다.
+    /// </summary>
+    public void NotifyGraphStructureChanged()
+    {
+      RefreshDebugPanel();
+    }
+
     public ScenarioNodeView GetNodeView(string Identifier)
     {
       nodeViews.TryGetValue(Identifier, out var nodeView);
@@ -1064,7 +1158,9 @@ namespace MultiplayerInfrastructure.Editor
       {
         var current = queue.Dequeue();
         var currentDepth = depth[current];
-        var node = graphData.Nodes[current];
+        // 노드로 등록되지 않은 식별자(completionConditionIdentifier 등)는 건너뛴다.
+        if (!graphData.Nodes.TryGetValue(current, out var node))
+          continue;
         foreach (var tgt in GetOutgoingTargets(node))
         {
           if (!depth.ContainsKey(tgt))
