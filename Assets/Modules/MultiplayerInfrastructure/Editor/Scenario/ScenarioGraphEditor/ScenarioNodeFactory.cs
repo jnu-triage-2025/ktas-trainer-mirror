@@ -60,6 +60,13 @@ namespace MultiplayerInfrastructure.Editor
       ScenarioNodeType.PlayerTag => new ScenarioPlayerTagNode(),
       ScenarioNodeType.PlayTTS => new ScenarioPlayTTSNode(),
       ScenarioNodeType.TriageAssessControl => new ScenarioTriageAssessControlNode(),
+      ScenarioNodeType.EntityPresetSpawn => new ScenarioEntityPresetSpawnNode(),
+      ScenarioNodeType.EntityTag => new ScenarioEntityTagNode(),
+      ScenarioNodeType.EntityInit => new ScenarioEntityInitNode
+      {
+        StateOperations = new System.Collections.Generic.List<ScenarioEntityStateOperation>()
+      },
+      ScenarioNodeType.PatientMedicalStatePreset => new ScenarioPatientMedicalStatePresetNode(),
       _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
   }

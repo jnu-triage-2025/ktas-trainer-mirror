@@ -1064,7 +1064,9 @@ namespace MultiplayerInfrastructure.Editor
       {
         var current = queue.Dequeue();
         var currentDepth = depth[current];
-        var node = graphData.Nodes[current];
+        // 노드로 등록되지 않은 식별자(completionConditionIdentifier 등)는 건너뛴다.
+        if (!graphData.Nodes.TryGetValue(current, out var node))
+          continue;
         foreach (var tgt in GetOutgoingTargets(node))
         {
           if (!depth.ContainsKey(tgt))

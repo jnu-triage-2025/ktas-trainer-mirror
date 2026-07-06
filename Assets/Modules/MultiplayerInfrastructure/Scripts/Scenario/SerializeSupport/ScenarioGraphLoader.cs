@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Encodings.Web;
 using UnityEngine;
 using MultiplayerInfrastructure.Registry;
+using TriageTrainer.Entity.Patient;
 
 namespace MultiplayerInfrastructure.Scenario
 {
@@ -258,6 +259,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioEntityTagNodeDTO entityTag => ConvertEntityTag(entityTag),
           ScenarioEntityInitNodeDTO entityInit => ConvertEntityInit(entityInit),
           ScenarioTriageAssessControlNodeDTO triageAssess => ConvertTriageAssessControl(triageAssess),
+          ScenarioPatientMedicalStatePresetNodeDTO patientPreset => ConvertPatientMedicalStatePreset(patientPreset),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -932,6 +934,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioEntityTagNode entityTag => ConvertToDTO(entityTag),
           ScenarioEntityInitNode entityInit => ConvertToDTO(entityInit),
           ScenarioTriageAssessControlNode triageAssess => ConvertToDTO(triageAssess),
+          ScenarioPatientMedicalStatePresetNode patientPreset => ConvertToDTO(patientPreset),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 
@@ -1495,6 +1498,125 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       throw new JsonException($"Unknown ScenarioPlayerTagMatchMode '{value}'.");
+    }
+
+    // ── PatientMedicalStatePreset 변환 ──
+
+    /// <summary>
+    /// DTO → 도메인 노드 변환.
+    /// 모든 의료 상태 필드는 optional이므로, JSON에서 생략된 항목은 null 그대로 전달되어
+    /// <c>PatientController.ApplyMedicalStatePreset</c> 에서 현재 값을 유지한다.
+    ///
+    /// <para>새 PatientDescriptor / PatientMedicalState 필드 추가 시 이 메서드에도
+    /// 매핑 줄을 추가한다.</para>
+    /// </summary>
+    private static ScenarioPatientMedicalStatePresetNode ConvertPatientMedicalStatePreset(
+        ScenarioPatientMedicalStatePresetNodeDTO dto)
+    {
+      return new ScenarioPatientMedicalStatePresetNode
+      {
+        Identifier = dto.Identifier,
+        NextIdentifier = dto.NextIdentifier,
+
+        // 대상 엔티티
+        TargetEntityIdentifier = dto.TargetEntityIdentifier,
+        TargetEntityStateKey = dto.TargetEntityStateKey,
+
+        // 환자 기술자
+        Name = dto.Name,
+        Sex = ParseOptionalEnum<Sex>(dto.Sex),
+        Age = dto.Age,
+        BloodType = ParseOptionalEnum<BloodType>(dto.BloodType),
+        IntendedTriage = ParseOptionalEnum<TriageLevel>(dto.IntendedTriage),
+
+        // 의식
+        ConsciousnessGcs = dto.ConsciousnessGcs,
+        ConsciousnessLocLabel = ParseOptionalEnum<LOCLabel>(dto.ConsciousnessLocLabel),
+        ConsciousnessPupillaryResponse = ParseOptionalEnum<PupillaryResponse>(dto.ConsciousnessPupillaryResponse),
+
+        // 호흡
+        RespirationAwRR = dto.RespirationAwRR,
+        RespirationTypeValue = ParseOptionalEnum<RespirationType>(dto.RespirationTypeValue),
+
+        // 맥박
+        PulseRate = dto.PulseRate,
+        PulseForceType = ParseOptionalEnum<BloodPulseForceType>(dto.PulseForceType),
+
+        // 혈압
+        BloodPressureSystolic = dto.BloodPressureSystolic,
+        BloodPressureDiastolic = dto.BloodPressureDiastolic,
+
+        // 피부
+        SkinColorHue = ParseOptionalEnum<SkinColorHue>(dto.SkinColorHue),
+        SkinTemperatureType = ParseOptionalEnum<SkinTemperatureType>(dto.SkinTemperatureType),
+
+        // 기타
+        IsCardiacArrest = dto.IsCardiacArrest,
+      };
+    }
+
+    /// <summary>
+    /// 도메인 노드 → DTO 변환.
+    /// null 인 항목은 DTO에도 null 로 직렬화되어 JSON에서 생략된다.
+    /// </summary>
+    private static ScenarioPatientMedicalStatePresetNodeDTO ConvertToDTO(ScenarioPatientMedicalStatePresetNode node)
+    {
+      return new ScenarioPatientMedicalStatePresetNodeDTO
+      {
+        NodeType = "PatientMedicalStatePreset",
+        Identifier = node.Identifier,
+        NextIdentifier = node.NextIdentifier,
+
+        // 대상 엔티티
+        TargetEntityIdentifier = node.TargetEntityIdentifier,
+        TargetEntityStateKey = node.TargetEntityStateKey,
+
+        // 환자 기술자
+        Name = node.Name,
+        Sex = node.Sex?.ToString(),
+        Age = node.Age,
+        BloodType = node.BloodType?.ToString(),
+        IntendedTriage = node.IntendedTriage?.ToString(),
+
+        // 의식
+        ConsciousnessGcs = node.ConsciousnessGcs,
+        ConsciousnessLocLabel = node.ConsciousnessLocLabel?.ToString(),
+        ConsciousnessPupillaryResponse = node.ConsciousnessPupillaryResponse?.ToString(),
+
+        // 호흡
+        RespirationAwRR = node.RespirationAwRR,
+        RespirationTypeValue = node.RespirationTypeValue?.ToString(),
+
+        // 맥박
+        PulseRate = node.PulseRate,
+        PulseForceType = node.PulseForceType?.ToString(),
+
+        // 혈압
+        BloodPressureSystolic = node.BloodPressureSystolic,
+        BloodPressureDiastolic = node.BloodPressureDiastolic,
+
+        // 피부
+        SkinColorHue = node.SkinColorHue?.ToString(),
+        SkinTemperatureType = node.SkinTemperatureType?.ToString(),
+
+        // 기타
+        IsCardiacArrest = node.IsCardiacArrest,
+      };
+    }
+
+    /// <summary>
+    /// 문자열을 nullable 열거형으로 파싱한다.
+    /// null 또는 공백이면 null 반환. 파싱 불가 문자열은 예외를 발생시킨다.
+    /// </summary>
+    private static TEnum? ParseOptionalEnum<TEnum>(string value) where TEnum : struct, Enum
+    {
+      if (string.IsNullOrWhiteSpace(value))
+        return null;
+
+      if (Enum.TryParse(value, ignoreCase: true, out TEnum parsed) && Enum.IsDefined(typeof(TEnum), parsed))
+        return parsed;
+
+      throw new JsonException($"Unknown {typeof(TEnum).Name} value '{value}'.");
     }
   }
 }

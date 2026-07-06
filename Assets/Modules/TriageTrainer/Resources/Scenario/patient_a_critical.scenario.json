@@ -28,6 +28,26 @@
       "positionY": 0.0,
       "positionZ": 0.0,
       "resultStateKey": null,
+      "nextIdentifier": "PRESET_A"
+    },
+    "PRESET_A": {
+      "identifier": "PRESET_A",
+      "nodeType": "PatientMedicalStatePreset",
+      "targetEntityIdentifier": "patient_a",
+      "sex": "Male",
+      "age": 35,
+      "consciousnessGcs": 8,
+      "consciousnessLocLabel": "Stupor",
+      "consciousnessPupillaryResponse": "Normal",
+      "respirationAwRR": 8,
+      "respirationType": "Irregular",
+      "pulseRate": 140,
+      "pulseForceType": "Weak",
+      "bloodPressureSystolic": 70,
+      "bloodPressureDiastolic": 40,
+      "skinColorHue": "Pale",
+      "skinTemperatureType": "Cold",
+      "isCardiacArrest": false,
       "nextIdentifier": "D005"
     },
     "D005": {

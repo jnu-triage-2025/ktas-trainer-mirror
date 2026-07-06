@@ -4,18 +4,42 @@ using UnityEngine;
 
 namespace TriageTrainer.Entity.Patient
 {
+  /// <summary>
+  /// 환자의 의료 상태를 표현합니다.
+  ///
+  /// <para>
+  /// <b>시나리오 프리셋 지원:</b> 이 클래스의 모든 필드는
+  /// <see cref="MultiplayerInfrastructure.Scenario.ScenarioPatientMedicalStatePresetNode"/> 를 통해
+  /// 시나리오 JSON에서 초기값(프리셋)을 설정할 수 있습니다.
+  /// </para>
+  ///
+  /// <para>새 필드를 추가할 때 프리셋 지원이 필요하면 다음 네 곳에 동일하게 추가하세요:
+  /// <list type="number">
+  /// <item><see cref="MultiplayerInfrastructure.Scenario.ScenarioPatientMedicalStatePresetNode"/> — nullable 프로퍼티</item>
+  /// <item><see cref="MultiplayerInfrastructure.Scenario.ScenarioPatientMedicalStatePresetNodeDTO"/> — nullable JSON 프로퍼티</item>
+  /// <item><c>ScenarioGraphLoader.ConvertPatientMedicalStatePreset</c> — DTO → 도메인 매핑</item>
+  /// <item><c>PatientController.ApplyMedicalStatePreset</c> — 도메인 → PatientController 적용</item>
+  /// </list>
+  /// </para>
+  /// </summary>
   [Serializable]
   public class PatientMedicalState
   {
     [Header("Medical State")]
+    // 프리셋 지원: ScenarioPatientMedicalStatePresetNode.BloodPressureSystolic / BloodPressureDiastolic
     public BloodPressure bloodPressure;
+    // 프리셋 지원: ScenarioPatientMedicalStatePresetNode.PulseRate / PulseForceType
     public BloodPulse pulse;
+    // 프리셋 지원: ScenarioPatientMedicalStatePresetNode.SkinColorHue / SkinTemperatureType
     public Skin skin = Skin.Default;
     public BodyTemperature bodyTemperature;
     public List<HealthProblem> healthProblem = new();
+    // 프리셋 지원: ScenarioPatientMedicalStatePresetNode.ConsciousnessGcs / ConsciousnessLocLabel / ConsciousnessPupillaryResponse
     public Consciousness consciousness = Consciousness.Default;
+    // 프리셋 지원: ScenarioPatientMedicalStatePresetNode.RespirationAwRR / RespirationTypeValue
     public Respiration respiration;
     public List<RequiredDrug> requiredDrugs = new();
+    // 프리셋 지원: ScenarioPatientMedicalStatePresetNode.IsCardiacArrest
     public bool isCardiacArrest;
 
     [Header("Medical State/Monitor")]

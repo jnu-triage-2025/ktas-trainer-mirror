@@ -47,6 +47,7 @@ namespace MultiplayerInfrastructure.Scenario
         "EntityTag" => Deserialize<ScenarioEntityTagNodeDTO>(root, options),
         "EntityInit" => Deserialize<ScenarioEntityInitNodeDTO>(root, options),
         "TriageAssessControl" => Deserialize<ScenarioTriageAssessControlNodeDTO>(root, options),
+        "PatientMedicalStatePreset" => Deserialize<ScenarioPatientMedicalStatePresetNodeDTO>(root, options),
         _ => throw new JsonException($"Unknown nodeType '{nodeType}'.")
       };
     }

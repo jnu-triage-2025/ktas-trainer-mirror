@@ -180,6 +180,11 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.StateUpdate:
         case ScenarioNodeType.PlayTTS:
         case ScenarioNodeType.PlayerTag:
+        case ScenarioNodeType.EntityPresetSpawn:
+        case ScenarioNodeType.EntityTag:
+        case ScenarioNodeType.EntityInit:
+        case ScenarioNodeType.TriageAssessControl:
+        case ScenarioNodeType.PatientMedicalStatePreset:
           DefaultOutputPort = CreateStandardOutput("Next");
           break;
 
@@ -326,6 +331,21 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.PlayerTag:
           BuildPlayerTagInlineEditor((ScenarioPlayerTagNode)Data);
           break;
+        case ScenarioNodeType.EntityPresetSpawn:
+          BuildEntityPresetSpawnInlineEditor((ScenarioEntityPresetSpawnNode)Data);
+          break;
+        case ScenarioNodeType.EntityTag:
+          BuildEntityTagInlineEditor((ScenarioEntityTagNode)Data);
+          break;
+        case ScenarioNodeType.EntityInit:
+          BuildEntityInitInlineEditor((ScenarioEntityInitNode)Data);
+          break;
+        case ScenarioNodeType.TriageAssessControl:
+          BuildTriageAssessControlInlineEditor((ScenarioTriageAssessControlNode)Data);
+          break;
+        case ScenarioNodeType.PatientMedicalStatePreset:
+          BuildPatientMedicalStatePresetInlineEditor((ScenarioPatientMedicalStatePresetNode)Data);
+          break;
         case ScenarioNodeType.Parallel:
           break;
         default:
@@ -447,6 +467,58 @@ namespace MultiplayerInfrastructure.Editor
       _inlineEditorContainer.Add(opField);
 
       AddTextField("Tag", value => data.Tag = value, data.Tag);
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildEntityPresetSpawnInlineEditor(ScenarioEntityPresetSpawnNode data)
+    {
+      AddTextField("Preset Id", value => data.PresetIdentifier = value, data.PresetIdentifier);
+      AddTextField("Spawned Entity Id", value => data.SpawnedEntityIdentifier = value, data.SpawnedEntityIdentifier);
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildEntityTagInlineEditor(ScenarioEntityTagNode data)
+    {
+      AddTextField("Target Entity", value => data.TargetEntityIdentifier = value, data.TargetEntityIdentifier);
+      var opField = new EnumField("Operation", data.Operation);
+      opField.RegisterValueChangedCallback(evt =>
+      {
+        if (evt.newValue is ScenarioPlayerTagOperationType value)
+          data.Operation = value;
+      });
+      _inlineEditorContainer.Add(opField);
+      AddTextField("Tag", value => data.Tag = value, data.Tag);
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildEntityInitInlineEditor(ScenarioEntityInitNode data)
+    {
+      AddTextField("Target Entity", value => data.TargetEntityIdentifier = value, data.TargetEntityIdentifier);
+      AddTextField("Preset Id", value => data.PresetIdentifier = value, data.PresetIdentifier);
+      AddTextField("Entity Id", value => data.EntityIdentifier = value, data.EntityIdentifier);
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildTriageAssessControlInlineEditor(ScenarioTriageAssessControlNode data)
+    {
+      AddTextField("Target Entity", value => data.TargetEntityIdentifier = value, data.TargetEntityIdentifier);
+      AddToggleField("Assessable", value => data.Assessable = value, data.Assessable);
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildPatientMedicalStatePresetInlineEditor(ScenarioPatientMedicalStatePresetNode data)
+    {
+      AddTextField("Target Entity", value => data.TargetEntityIdentifier = value, data.TargetEntityIdentifier);
+      // 주요 식별 필드만 인라인으로 표시하고, 상세 수치는 Inspector 패널에서 편집한다
+      var sexLabel = data.Sex.HasValue ? data.Sex.Value.ToString() : "(not set)";
+      var ageLabel = data.Age.HasValue ? data.Age.Value.ToString() : "(not set)";
+      _inlineEditorContainer.Add(new Label($"Sex: {sexLabel}  Age: {ageLabel}") { style = { fontSize = 10, color = new Color(0.85f, 0.85f, 0.85f) } });
+      var gcsLabel = data.ConsciousnessGcs.HasValue ? $"GCS {data.ConsciousnessGcs}" : string.Empty;
+      var bpLabel = (data.BloodPressureSystolic.HasValue || data.BloodPressureDiastolic.HasValue)
+        ? $"BP {data.BloodPressureSystolic}/{data.BloodPressureDiastolic}" : string.Empty;
+      var summary = string.Join("  ", new[] { gcsLabel, bpLabel }.Where(s => !string.IsNullOrEmpty(s)));
+      if (!string.IsNullOrEmpty(summary))
+        _inlineEditorContainer.Add(new Label(summary) { style = { fontSize = 10, color = new Color(0.85f, 0.85f, 0.85f) } });
       AddNextIdentifierField(data);
     }
 
