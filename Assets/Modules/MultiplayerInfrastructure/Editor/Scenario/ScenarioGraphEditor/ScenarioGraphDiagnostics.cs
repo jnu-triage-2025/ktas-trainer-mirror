@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.Scenario;
+using TriageTrainer.Entity.Patient;
 
 namespace MultiplayerInfrastructure.Editor
 {
@@ -258,12 +260,16 @@ namespace MultiplayerInfrastructure.Editor
 
     private static void CheckPatientMedicalStatePreset(ScenarioPatientMedicalStatePresetNode node, List<DiagnosticItem> items)
     {
+      var id = node.Identifier;
+
+      // ── 대상 지정 여부 ──
       bool hasTarget = !string.IsNullOrWhiteSpace(node.TargetEntityIdentifier)
                        || !string.IsNullOrWhiteSpace(node.TargetEntityStateKey);
       if (!hasTarget)
-        items.Add(new DiagnosticItem(Severity.Error, node.Identifier,
+        items.Add(new DiagnosticItem(Severity.Error, id,
           "targetEntityIdentifier 또는 targetEntityStateKey 를 지정해야 합니다."));
 
+      // ── 프리셋 필드 존재 여부 ──
       bool hasAnyField =
         node.Sex.HasValue || node.Age.HasValue || node.Name != null || node.BloodType.HasValue
         || node.IntendedTriage.HasValue || node.ConsciousnessGcs.HasValue
@@ -275,17 +281,111 @@ namespace MultiplayerInfrastructure.Editor
         || node.IsCardiacArrest.HasValue;
 
       if (!hasAnyField)
-        items.Add(new DiagnosticItem(Severity.Warning, node.Identifier,
+        items.Add(new DiagnosticItem(Severity.Warning, id,
           "설정된 프리셋 필드가 없습니다. 노드가 아무 효과도 없습니다."));
 
-      if (node.ConsciousnessGcs.HasValue && (node.ConsciousnessGcs.Value < 3 || node.ConsciousnessGcs.Value > 15))
-        items.Add(new DiagnosticItem(Severity.Error, node.Identifier,
-          $"consciousnessGcs={node.ConsciousnessGcs.Value} 는 유효 범위(3~15)를 벗어납니다."));
+      // ── 열거형 필드 검사 ────────────────────────────────────────────────────
+      // null(not set) → Warning, 정의되지 않은 값 → Error.
+      // 새 열거형 필드 추가 시 아래에 동일 패턴으로 추가한다.
+
+      CheckEnumField<Sex>(node.Sex,                                        "sex",                          id, items);
+      CheckEnumField<BloodType>(node.BloodType,                            "bloodType",                    id, items);
+      CheckEnumField<LOCLabel>(node.ConsciousnessLocLabel,                 "consciousnessLocLabel",         id, items);
+      CheckEnumField<PupillaryResponse>(node.ConsciousnessPupillaryResponse, "consciousnessPupillaryResponse", id, items);
+      CheckEnumField<RespirationType>(node.RespirationTypeValue,           "respirationType",              id, items);
+      CheckEnumField<BloodPulseForceType>(node.PulseForceType,             "pulseForceType",               id, items);
+      CheckEnumField<SkinColorHue>(node.SkinColorHue,                      "skinColorHue",                 id, items);
+      CheckEnumField<SkinTemperatureType>(node.SkinTemperatureType,        "skinTemperatureType",          id, items);
+
+      // TriageLevel: not set / Unassessed(="미평가" sentinel) / 미정의 값을 각각 구분
+      if (!node.IntendedTriage.HasValue)
+        items.Add(new DiagnosticItem(Severity.Warning, id,
+          "intendedTriage가 설정되지 않았습니다(not set). 의도된 정답 등급(Level1~Level5)을 지정하세요."));
+      else if (!Enum.IsDefined(typeof(TriageLevel), node.IntendedTriage.Value))
+        items.Add(new DiagnosticItem(Severity.Error, id,
+          $"intendedTriage={node.IntendedTriage.Value} 는 TriageLevel에 정의되지 않은 값입니다."));
+      else if (node.IntendedTriage.Value == TriageLevel.Unassessed)
+        items.Add(new DiagnosticItem(Severity.Warning, id,
+          "intendedTriage=Unassessed 는 '미평가' 상태를 의미합니다. 의도된 정답 등급을 지정하려면 Level1~Level5 중 하나를 사용하세요."));
+
+      // ── 수치 범위 검사 ──────────────────────────────────────────────────────
+
+      if (node.ConsciousnessGcs.HasValue)
+      {
+        int gcs = node.ConsciousnessGcs.Value;
+        if (gcs < 3 || gcs > 15)
+          items.Add(new DiagnosticItem(Severity.Error, id,
+            $"consciousnessGcs={gcs} 는 유효 범위(3~15)를 벗어납니다."));
+      }
+
+      // GCS와 LOC 레이블 일관성 검사
+      // Consciousness.cs 기준: GCS ≤8 → Severe(Stupor/SemiComa/Coma),
+      //                        GCS ≤12 → Moderate(Drowsy/Stupor),
+      //                        GCS ≤15 → Mild(Alert/Drowsy)
+      if (node.ConsciousnessGcs.HasValue && node.ConsciousnessLocLabel.HasValue)
+      {
+        int gcs       = node.ConsciousnessGcs.Value;
+        var locLabel  = node.ConsciousnessLocLabel.Value;
+        bool mismatch = false;
+        string expected = string.Empty;
+
+        if (gcs <= 8 && (locLabel == LOCLabel.Alert || locLabel == LOCLabel.Drowsy))
+        {
+          mismatch = true;
+          expected = "Stupor / SemiComa / Coma";
+        }
+        else if (gcs >= 13 && (locLabel == LOCLabel.Stupor || locLabel == LOCLabel.SemiComa || locLabel == LOCLabel.Coma))
+        {
+          mismatch = true;
+          expected = "Alert / Drowsy";
+        }
+
+        if (mismatch)
+          items.Add(new DiagnosticItem(Severity.Warning, id,
+            $"GCS={gcs} 와 consciousnessLocLabel={locLabel} 이 일치하지 않습니다. GCS {gcs} 에서 기대되는 LOC: {expected}"));
+      }
 
       if (node.BloodPressureSystolic.HasValue && node.BloodPressureDiastolic.HasValue
           && node.BloodPressureSystolic.Value <= node.BloodPressureDiastolic.Value)
-        items.Add(new DiagnosticItem(Severity.Warning, node.Identifier,
+        items.Add(new DiagnosticItem(Severity.Warning, id,
           $"수축기 혈압({node.BloodPressureSystolic}) ≤ 이완기 혈압({node.BloodPressureDiastolic}) 입니다."));
+
+      if (node.RespirationAwRR.HasValue && node.RespirationAwRR.Value < 0)
+        items.Add(new DiagnosticItem(Severity.Error, id,
+          $"respirationAwRR={node.RespirationAwRR.Value} 는 음수입니다."));
+
+      if (node.PulseRate.HasValue && node.PulseRate.Value < 0)
+        items.Add(new DiagnosticItem(Severity.Error, id,
+          $"pulseRate={node.PulseRate.Value} 는 음수입니다."));
+
+      if (node.Age.HasValue && node.Age.Value < 0)
+        items.Add(new DiagnosticItem(Severity.Error, id,
+          $"age={node.Age.Value} 는 음수입니다."));
+    }
+
+    /// <summary>
+    /// nullable 열거형 필드를 검사한다.
+    /// <list type="bullet">
+    /// <item>null(not set) → Warning: 필드가 설정되지 않음</item>
+    /// <item>HasValue 이지만 <c>Enum.IsDefined</c> 실패 → Error: 정의되지 않은 값
+    ///   (JSON int 캐스팅 오류 등으로 범위 밖 값이 들어왔을 때)</item>
+    /// </list>
+    /// 새 열거형 필드 추가 시 <see cref="CheckPatientMedicalStatePreset"/> 에서
+    /// 이 메서드를 한 줄로 호출하면 된다.
+    /// </summary>
+    private static void CheckEnumField<TEnum>(
+        TEnum? value, string fieldName, string nodeId, List<DiagnosticItem> items)
+        where TEnum : struct, Enum
+    {
+      if (!value.HasValue)
+      {
+        items.Add(new DiagnosticItem(Severity.Warning, nodeId,
+          $"{fieldName}이(가) 설정되지 않았습니다(not set)."));
+        return;
+      }
+      if (!Enum.IsDefined(typeof(TEnum), value.Value))
+        items.Add(new DiagnosticItem(Severity.Error, nodeId,
+          $"{fieldName}={value.Value} 는 {typeof(TEnum).Name}에 정의되지 않은 값입니다."));
     }
 
     private static void CheckQuestControl(ScenarioQuestControlNode node, List<DiagnosticItem> items)
