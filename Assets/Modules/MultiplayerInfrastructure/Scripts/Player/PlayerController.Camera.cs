@@ -49,8 +49,8 @@ namespace MultiplayerInfrastructure.Player
         return;
       }
 
-      // Ensure camera sticks to the local owner's holder even if other events tried to retarget.
-      if (_camControl.FollowingCameraHolder != _cameraHolderTransform)
+      // Ensure camera sticks to the local owner's attach point even if other events tried to retarget.
+      if (_camControl.FollowingCameraHolder != CameraHolderTransform)
         _camControl.SetTarget(this);
     }
 
