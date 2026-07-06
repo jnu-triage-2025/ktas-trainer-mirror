@@ -19,8 +19,26 @@ namespace MultiplayerInfrastructure.Camera
     [SerializeField] private CameraViewMode _currentViewMode = CameraViewMode.ThirdPerson;
 
     [SerializeField] private float _firstPersonDistance = 0.5f;
-    [SerializeField] private float _thirdPersonDistance = 5.0f;
+    [SerializeField] private float _thirdPersonDistance = 3.0f;
     [SerializeField] private float _cameraModeTransitionSpeed = 5.0f;
+
+    [Header("Third Person Distance Zoom")]
+    [Tooltip("3인칭 시점에서 사용자가 조정할 수 있는 최소 거리")]
+    [SerializeField] private float _minThirdPersonDistance = 1.0f;
+    [Tooltip("3인칭 시점에서 사용자가 조정할 수 있는 최대 거리")]
+    [SerializeField] private float _maxThirdPersonDistance = 8.0f;
+    [Tooltip("거리 조정(줌) 1스텝당 변화량")]
+    [SerializeField] private float _distanceZoomStep = 0.5f;
+
+    [Header("Camera Collision")]
+    [Tooltip("카메라가 벽을 뚫고 보지 못하도록 충돌 처리를 활성화합니다.")]
+    [SerializeField] private bool _enableCollision = true;
+    [Tooltip("카메라 충돌 검사에 사용할 구체 반지름. 카메라 근평면 크기에 맞춥니다.")]
+    [SerializeField] private float _collisionProbeRadius = 0.2f;
+    [Tooltip("벽과 카메라 사이에 확보할 여유 간격")]
+    [SerializeField] private float _collisionBuffer = 0.1f;
+    [Tooltip("카메라 충돌 검사 대상 레이어. 플레이어/트리거 등은 제외해야 합니다.")]
+    [SerializeField] private LayerMask _collisionMask = ~0;
 
     [Header("References")]
     [SerializeField] private Transform _followingCameraHolder;
@@ -41,6 +59,9 @@ namespace MultiplayerInfrastructure.Camera
     [Header("State")]
     [SerializeField] private float _currentDistance;
     [SerializeField] private float _targetDistance;
+    [Tooltip("사용자가 조정한 3인칭 목표 거리. 벽 충돌 전 원하는 거리입니다.")]
+    [SerializeField] private float _desiredThirdPersonDistance;
+    [SerializeField] private bool _desiredDistanceInitialized = false;
     [SerializeField] private int _baseCullingMask;
     [SerializeField] private bool _baseMaskInitialized = false;
     
@@ -80,8 +101,8 @@ namespace MultiplayerInfrastructure.Camera
 
       if (!IsOwner) return;
 
-      _currentDistance = _targetDistance;
       UpdateCameraDistance();
+      _currentDistance = _targetDistance;
     }
 
     public CameraViewMode CurrentViewMode
@@ -126,9 +147,68 @@ namespace MultiplayerInfrastructure.Camera
 
     private void UpdateCameraDistance()
     {
+      EnsureDesiredDistanceInitialized();
+
       _targetDistance = _currentViewMode == CameraViewMode.FirstPerson
         ? _firstPersonDistance
-        : _thirdPersonDistance;
+        : _desiredThirdPersonDistance;
+    }
+
+    private void EnsureDesiredDistanceInitialized()
+    {
+      if (_desiredDistanceInitialized) return;
+
+      _desiredThirdPersonDistance = Mathf.Clamp(
+        _thirdPersonDistance,
+        _minThirdPersonDistance,
+        _maxThirdPersonDistance
+      );
+      _desiredDistanceInitialized = true;
+    }
+
+    /// <summary>
+    /// 3인칭 POV 거리를 스텝 단위로 조정합니다.
+    /// 양수(steps &gt; 0)는 카메라를 플레이어에 가깝게, 음수는 멀게 합니다.
+    /// </summary>
+    /// <param name="steps">스크롤 스텝 수. 각 스텝은 _distanceZoomStep 만큼 변화합니다.</param>
+    public void AdjustThirdPersonDistance(float steps)
+    {
+      EnsureDesiredDistanceInitialized();
+
+      _desiredThirdPersonDistance = Mathf.Clamp(
+        _desiredThirdPersonDistance - steps * _distanceZoomStep,
+        _minThirdPersonDistance,
+        _maxThirdPersonDistance
+      );
+
+      UpdateCameraDistance();
+    }
+
+    /// <summary>
+    /// 3인칭 POV 거리를 절대값으로 설정합니다. 허용 범위로 clamp됩니다.
+    /// </summary>
+    public void SetThirdPersonDistance(float distance)
+    {
+      _desiredThirdPersonDistance = Mathf.Clamp(
+        distance,
+        _minThirdPersonDistance,
+        _maxThirdPersonDistance
+      );
+      _desiredDistanceInitialized = true;
+
+      UpdateCameraDistance();
+    }
+
+    /// <summary>
+    /// 현재 사용자가 설정한 3인칭 POV 거리(벽 충돌 반영 전)입니다.
+    /// </summary>
+    public float DesiredThirdPersonDistance
+    {
+      get
+      {
+        EnsureDesiredDistanceInitialized();
+        return _desiredThirdPersonDistance;
+      }
     }
 
     private void SmoothDistanceTransition()
@@ -143,10 +223,41 @@ namespace MultiplayerInfrastructure.Camera
     private void ApplyDistanceOffset()
     {
       if (_camera.IsUnityNull()) return;
-      if (_currentDistance > 0.01f)
+      if (_currentDistance <= 0.01f) return;
+
+      float distance = ResolveCollisionAdjustedDistance(_currentDistance);
+      if (distance <= 0.01f) return;
+
+      _camera.transform.position -= _camera.transform.forward * distance;
+    }
+
+    /// <summary>
+    /// 카메라 홀더(피벗)에서 뒤로 물러나는 경로에 벽/장애물이 있는지 검사하여,
+    /// 카메라가 벽을 뚫지 않도록 실제 이동 가능한 거리로 제한합니다.
+    /// </summary>
+    private float ResolveCollisionAdjustedDistance(float desiredDistance)
+    {
+      if (!_enableCollision) return desiredDistance;
+      if (_followingCameraHolder.IsUnityNull()) return desiredDistance;
+
+      Vector3 pivot = _followingCameraHolder.position;
+      Vector3 dir = -_camera.transform.forward;
+      float castDistance = desiredDistance + _collisionProbeRadius;
+
+      if (Physics.SphereCast(
+            pivot,
+            _collisionProbeRadius,
+            dir,
+            out RaycastHit hit,
+            castDistance,
+            _collisionMask,
+            QueryTriggerInteraction.Ignore))
       {
-        _camera.transform.position -= _camera.transform.forward * _currentDistance;
+        float allowed = hit.distance - _collisionBuffer;
+        return Mathf.Clamp(allowed, 0f, desiredDistance);
       }
+
+      return desiredDistance;
     }
 
 
