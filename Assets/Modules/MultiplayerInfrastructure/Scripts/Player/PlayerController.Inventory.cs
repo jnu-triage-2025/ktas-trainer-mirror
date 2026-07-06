@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
@@ -22,6 +24,7 @@ namespace MultiplayerInfrastructure.Player
     
     private bool _inventoryVisible;
     private bool _inventoryRenderRequired = true;  // like a dirty bit
+    private bool _isCombining = false;             // 자동 조합 재진입 방지 플래그
 
     void Start_Inventory()
     {
@@ -115,6 +118,8 @@ namespace MultiplayerInfrastructure.Player
       {
         OnInventoryChangedAndReturn(true);
         item.OnGet(this);
+        if (!_isCombining)
+          TryAutoCombineItems();
       }
 
       if (remaining.CurrentStackCount > 0)
@@ -124,6 +129,65 @@ namespace MultiplayerInfrastructure.Player
       }
 
       return true;
+    }
+
+    /// <summary>
+    /// 인벤토리에 등록된 조합 레시피가 충족되는지 검사하고, 충족되면 자동으로 조합을 수행합니다.
+    /// 조합이 발생할 때마다 재검사하여 연속 조합도 지원합니다.
+    /// _isCombining 플래그로 TryAddItemToInventory 내부로부터의 재진입을 방지합니다.
+    /// </summary>
+    private void TryAutoCombineItems()
+    {
+      if (_isCombining) return;
+      _isCombining = true;
+
+      try
+      {
+        bool combined = true;
+        while (combined)
+        {
+          combined = false;
+
+          // 현재 인벤토리 아이템 수량 맵 수집
+          var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+          foreach (var slot in _slots)
+          {
+            if (slot == null || slot.IsEmpty || slot.ItemInstance == null) continue;
+            string id = slot.ItemInstance.CurrentIdentifier;
+            if (string.IsNullOrWhiteSpace(id)) continue;
+            counts.TryGetValue(id, out int existing);
+            counts[id] = existing + slot.ItemInstance.CurrentStackCount;
+          }
+
+          if (!ItemCombineRecipeRegistry.TryGetMatchingRecipe(counts, out var recipe))
+            break;
+
+          // 재료 소비
+          foreach (var ingredient in recipe.Ingredients)
+            RemoveItemFromInventory(ingredient.Identifier, ingredient.RequiredCount);
+
+          // 결과 아이템 생성 및 추가
+          var outputItem = Registry.Registry.CreateItemInstance(recipe.OutputItemIdentifier);
+          if (outputItem == null)
+          {
+            Debug.LogWarning($"[PlayerController] AutoCombine: 결과 아이템 '{recipe.OutputItemIdentifier}' 생성 실패. Registry에 등록되지 않은 Identifier일 수 있습니다.");
+            break;
+          }
+
+          outputItem.CurrentStackCount = recipe.OutputItemCount;
+          // _isCombining = true 상태이므로 TryAddItemToInventory 내부에서 TryAutoCombineItems가 재진입하지 않는다.
+          TryAddItemToInventory(outputItem);
+          combined = true;
+
+#if UNITY_EDITOR
+          Debug.Log($"[PlayerController] AutoCombine: [{string.Join(", ", recipe.Ingredients.Select(i => $"{i.Identifier}×{i.RequiredCount}"))}] → {recipe.OutputItemIdentifier}×{recipe.OutputItemCount}");
+#endif
+        }
+      }
+      finally
+      {
+        _isCombining = false;
+      }
     }
 
     public int ClearInventory()

@@ -24,6 +24,7 @@
 - [2026-05-06-problem-sheet-ui-registry-command-editor.md](./2026-05-06-problem-sheet-ui-registry-command-editor.md): 문제지 UI/Registry/명령어/에디터 통합 변경 (2026-05-06)
 - [2026-06-29-scenario-graph-editor-runtime-highlight.md](./2026-06-29-scenario-graph-editor-runtime-highlight.md): Scenario Graph Editor runtime highlight (2026-06-29)
 - [2026-07-01-inventory-ui-visibility-and-overlay-picking-fix.md](./2026-07-01-inventory-ui-visibility-and-overlay-picking-fix.md): 인벤토리 UI 표시/상호작용 수정 + 오버레이 클릭 가로채기 방지 + 아이템 툴팁 (2026-07-01)
+- [2026-07-06-item-auto-combine.md](./2026-07-06-item-auto-combine.md): 아이템 자동 조합 시스템 도입 (2026-07-06)
 
 작성 기준: Git 추적 문서(.md) 기준으로 색인하며, .gitignore 대상 파일은 제외합니다.
 <!-- DOC-INDEX:END -->
