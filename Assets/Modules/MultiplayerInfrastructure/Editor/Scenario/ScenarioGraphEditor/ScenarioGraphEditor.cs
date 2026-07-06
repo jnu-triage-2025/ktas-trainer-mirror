@@ -22,6 +22,7 @@ namespace MultiplayerInfrastructure.Editor
     private ScenarioRuntimeHistoryView runtimeHistoryView;
     private ScenarioNodeSearchWindow searchWindow;
     private VisualElement mainContainer;
+    private ScenarioDebugPanelView debugPanelView;
 
     private ScenarioGraph graphData = new ScenarioGraph();
     private readonly Dictionary<string, ScenarioNodeView> nodeViews = new Dictionary<string, ScenarioNodeView>();
@@ -103,6 +104,7 @@ namespace MultiplayerInfrastructure.Editor
       EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
       ConstructUI();
       CreateGraphView();
+      CreateDebugPanel();
       CreateInspector();
       CreateSearchWindow();
       BindGraphEvents();
@@ -253,6 +255,21 @@ namespace MultiplayerInfrastructure.Editor
       mainContainer.Add(inspectorPanel);
 
       rootVisualElement.Add(mainContainer);
+      // 디버그 패널은 mainContainer 아래에 배치한다. CreateDebugPanel() 에서 추가된다.
+    }
+
+    private void CreateDebugPanel()
+    {
+      debugPanelView = new ScenarioDebugPanelView();
+      debugPanelView.OnNodeFocusRequested = FocusNodeByIdentifier;
+      rootVisualElement.Add(debugPanelView);
+    }
+
+    private void RefreshDebugPanel()
+    {
+      if (debugPanelView == null) return;
+      var items = ScenarioGraphDiagnostics.Run(graphData);
+      debugPanelView.Refresh(items);
     }
 
     private void CreateInspector()
@@ -315,6 +332,7 @@ namespace MultiplayerInfrastructure.Editor
       graphView.RebuildAllEdges();
       SyncRuntimeHighlight();
       RefreshRuntimeHistoryView();
+      RefreshDebugPanel();
 
       return newView;
     }
@@ -586,6 +604,7 @@ namespace MultiplayerInfrastructure.Editor
 
       inspectorView.SetTarget(nodeView);
       RefreshRuntimeHistoryView();
+      RefreshDebugPanel();
       return nodeView;
     }
 
@@ -600,6 +619,7 @@ namespace MultiplayerInfrastructure.Editor
       RefreshGraphTagsField();
       ClearRuntimeHighlight();
       RefreshRuntimeHistoryView();
+      RefreshDebugPanel();
     }
 
     private void EnsureGraphData()
@@ -730,6 +750,7 @@ namespace MultiplayerInfrastructure.Editor
       inspectorView.SetTarget(null);
       SyncRuntimeHighlight();
       RefreshRuntimeHistoryView();
+      RefreshDebugPanel();
     }
 
     public bool TryRenameNode(ScenarioNodeView nodeView, string newId)
@@ -809,6 +830,7 @@ namespace MultiplayerInfrastructure.Editor
       nodeView.RefreshTitle();
       SyncRuntimeHighlight();
       RefreshRuntimeHistoryView();
+      RefreshDebugPanel();
 
       return true;
     }
@@ -883,6 +905,7 @@ namespace MultiplayerInfrastructure.Editor
         ValidateResources(graphData);
         SyncRuntimeHighlight();
         RefreshRuntimeHistoryView();
+        RefreshDebugPanel();
       }
       catch (Exception ex)
       {
@@ -1019,6 +1042,15 @@ namespace MultiplayerInfrastructure.Editor
     }
 
     public ScenarioGraph GraphData => graphData;
+
+    /// <summary>
+    /// 엣지 연결/해제 등 외부에서 그래프 구조가 변경되었을 때 호출한다.
+    /// 디버그 패널을 다시 실행한다.
+    /// </summary>
+    public void NotifyGraphStructureChanged()
+    {
+      RefreshDebugPanel();
+    }
 
     public ScenarioNodeView GetNodeView(string Identifier)
     {

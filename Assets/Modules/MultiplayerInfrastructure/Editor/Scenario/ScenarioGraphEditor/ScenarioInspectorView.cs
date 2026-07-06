@@ -72,8 +72,17 @@ namespace MultiplayerInfrastructure.Editor
         }
       }
 
+      EditorGUI.BeginChangeCheck();
       DrawTypeSpecificInspector(targetNode.Data);
-      targetNode.RefreshTitle();
+      if (EditorGUI.EndChangeCheck())
+      {
+        targetNode.RefreshTitle();
+        window.NotifyGraphStructureChanged();
+      }
+      else
+      {
+        targetNode.RefreshTitle();
+      }
     }
 
     private void DrawTypeSpecificInspector(IScenarioNode data)

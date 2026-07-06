@@ -176,6 +176,14 @@ namespace MultiplayerInfrastructure.Editor
         }
       }
 
+      // 엣지 변경(연결/해제)이 있으면 디버그 패널을 갱신한다.
+      bool hasEdgeChange = (change.edgesToCreate != null && change.edgesToCreate.Count > 0)
+                         || (change.elementsToRemove != null && change.elementsToRemove.OfType<Edge>().Any());
+      if (hasEdgeChange)
+      {
+        window.NotifyGraphStructureChanged();
+      }
+
       return change;
     }
 
