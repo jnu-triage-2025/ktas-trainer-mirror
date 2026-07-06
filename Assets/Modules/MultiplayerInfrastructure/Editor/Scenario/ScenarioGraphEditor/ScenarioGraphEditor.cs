@@ -202,7 +202,8 @@ namespace MultiplayerInfrastructure.Editor
     private void CreateGraphView()
     {
       mainContainer = new VisualElement { name = "ScenarioMainContainer" };
-      mainContainer.style.flexGrow = 1f;
+      mainContainer.style.flexGrow    = 1f;
+      mainContainer.style.flexShrink  = 1f;  // 디버그 패널이 공간을 차지하면 축소될 수 있어야 함
       mainContainer.style.flexDirection = FlexDirection.Row;
 
       var graphHost = new VisualElement { name = "ScenarioGraphHost" };
