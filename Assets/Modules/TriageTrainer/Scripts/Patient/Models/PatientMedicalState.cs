@@ -25,6 +25,14 @@ namespace TriageTrainer.Entity.Patient
   [Serializable]
   public class PatientMedicalState
   {
+    /// <summary>
+    /// 모니터 수치 필드(numerics.bpm/pulseRate, nibp.systolic/diastolic 등)에서
+    /// "측정 불가 / 무의식 / 호흡 없음"을 나타내는 센티넬 값.
+    /// 이 값이 설정되면 환자 상태 모니터에는 해당 수치가 <c>-?-</c> 로 표시된다.
+    /// 프리셋 노드에서 수치 필드에 -1을 지정하면 이 값으로 매핑된다.
+    /// </summary>
+    public const float MonitorValueUnavailable = -1f;
+
     [Header("Medical State")]
     // 프리셋 지원: ScenarioPatientMedicalStatePresetNode.BloodPressureSystolic / BloodPressureDiastolic
     public BloodPressure bloodPressure;

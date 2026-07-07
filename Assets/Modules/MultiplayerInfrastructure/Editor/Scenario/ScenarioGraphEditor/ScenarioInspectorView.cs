@@ -874,6 +874,17 @@ namespace MultiplayerInfrastructure.Editor
       data.TargetEntityStateKey = EditorGUILayout.TextField("Target Entity State Key", data.TargetEntityStateKey);
 
       EditorGUILayout.Space();
+      EditorGUILayout.LabelField("전이 (Transition)", EditorStyles.boldLabel);
+      data.TransitionMode = (PatientMedicalStateTransitionMode)EditorGUILayout.EnumPopup(
+        "Transition Mode", data.TransitionMode);
+      // 점차 변화(Gradual) 선택 시에만 소요 시간 필드를 표시한다.
+      if (data.TransitionMode == PatientMedicalStateTransitionMode.Gradual)
+      {
+        data.TransitionDurationSeconds = Mathf.Max(0f,
+          EditorGUILayout.FloatField("소요 시간(초)", data.TransitionDurationSeconds));
+      }
+
+      EditorGUILayout.Space();
       EditorGUILayout.LabelField("환자 기술자 (PatientDescriptor)", EditorStyles.boldLabel);
       data.Name = NullableTextField("Name", data.Name);
       data.Sex = NullableEnumField<TriageTrainer.Entity.Patient.Sex>("Sex", data.Sex);

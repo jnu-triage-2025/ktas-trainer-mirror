@@ -1522,6 +1522,11 @@ namespace MultiplayerInfrastructure.Scenario
         TargetEntityIdentifier = dto.TargetEntityIdentifier,
         TargetEntityStateKey = dto.TargetEntityStateKey,
 
+        // 전이(Transition)
+        TransitionMode = ParseOptionalEnum<PatientMedicalStateTransitionMode>(dto.TransitionMode)
+                         ?? PatientMedicalStateTransitionMode.Immediate,
+        TransitionDurationSeconds = dto.TransitionDurationSeconds ?? 0f,
+
         // 환자 기술자
         Name = dto.Name,
         Sex = ParseOptionalEnum<Sex>(dto.Sex),
@@ -1573,6 +1578,15 @@ namespace MultiplayerInfrastructure.Scenario
         // 대상 엔티티
         TargetEntityIdentifier = node.TargetEntityIdentifier,
         TargetEntityStateKey = node.TargetEntityStateKey,
+
+        // 전이(Transition)
+        // Immediate(기본값)는 JSON에서 생략한다. Gradual일 때만 소요 시간과 함께 직렬화한다.
+        TransitionMode = node.TransitionMode == PatientMedicalStateTransitionMode.Immediate
+                         ? null
+                         : node.TransitionMode.ToString(),
+        TransitionDurationSeconds = node.TransitionMode == PatientMedicalStateTransitionMode.Gradual
+                         ? node.TransitionDurationSeconds
+                         : (float?)null,
 
         // 환자 기술자
         Name = node.Name,

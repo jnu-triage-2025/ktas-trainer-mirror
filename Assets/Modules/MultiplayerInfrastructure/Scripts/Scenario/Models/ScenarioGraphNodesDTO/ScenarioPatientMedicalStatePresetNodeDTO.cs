@@ -14,6 +14,12 @@ namespace MultiplayerInfrastructure.Scenario
   /// <see cref="ScenarioPatientMedicalStatePresetNode"/>, ScenarioGraphLoader.ConvertPatientMedicalStatePreset,
   /// PatientController.ApplyMedicalStatePreset 세 곳에도 동일하게 추가한다.</para>
   ///
+  /// <para>
+  /// 수치 필드에 -1을 지정하면 "무의식 / 호흡 없음 / 측정 불가"를 의미하며, 모니터에 <c>-?-</c>로 표시된다.
+  /// (null은 "현재 값 유지", -1은 "측정 불가"로 서로 다르다.)
+  /// transitionMode를 "Gradual"로 지정하면 transitionDurationSeconds 동안 수치가 점차 변화한다.
+  /// </para>
+  ///
   /// <code>
   /// // JSON 사용 예시 (환자 A 중증 프리셋):
   /// {
@@ -39,6 +45,24 @@ namespace MultiplayerInfrastructure.Scenario
   ///   "isCardiacArrest": false,
   ///   "nextIdentifier": "D005"
   /// }
+  ///
+  /// // JSON 사용 예시 (심정지 전이 - 3초에 걸쳐 측정 불가로 변화):
+  /// {
+  ///   "identifier": "PRESET_PEA",
+  ///   "nodeType": "PatientMedicalStatePreset",
+  ///   "targetEntityIdentifier": "patient_a",
+  ///   "transitionMode": "Gradual",
+  ///   "transitionDurationSeconds": 3.0,
+  ///   "consciousnessGcs": -1,
+  ///   "respirationAwRR": -1,
+  ///   "pulseRate": -1,
+  ///   "bloodPressureSystolic": -1,
+  ///   "bloodPressureDiastolic": -1,
+  ///   "skinColorHue": "Pale",
+  ///   "skinTemperatureType": "Cold",
+  ///   "isCardiacArrest": true,
+  ///   "nextIdentifier": "D006"
+  /// }
   /// </code>
   /// </summary>
   internal sealed class ScenarioPatientMedicalStatePresetNodeDTO : ScenarioNodeDTO
@@ -52,6 +76,16 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>상태 저장소에서 대상 엔티티 식별자를 간접 조회할 키.</summary>
     [JsonPropertyName("targetEntityStateKey")]
     public string TargetEntityStateKey { get; set; }
+
+    // ── 전이(Transition) ──
+
+    /// <summary>프리셋 값 적용 방식 문자열 ("Immediate" / "Gradual"). null이면 즉시(Immediate).</summary>
+    [JsonPropertyName("transitionMode")]
+    public string TransitionMode { get; set; }
+
+    /// <summary>점차 변화(Gradual) 시 소요 시간(초). Immediate에서는 무시된다.</summary>
+    [JsonPropertyName("transitionDurationSeconds")]
+    public float? TransitionDurationSeconds { get; set; }
 
     // ── 환자 기술자(PatientDescriptor) 프리셋 필드 ──
     // 새 PatientDescriptor 필드 추가 시 아래에 nullable 프로퍼티를 추가하고,
@@ -85,7 +119,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     // ── 의식(Consciousness) ──
 
-    /// <summary>GCS 점수(3~15). null이면 현재 값 유지.</summary>
+    /// <summary>GCS 점수(3~15). null이면 현재 값 유지, -1이면 무의식(측정 불가).</summary>
     [JsonPropertyName("consciousnessGcs")]
     public int? ConsciousnessGcs { get; set; }
 
@@ -111,7 +145,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     // ── 호흡(Respiration) ──
 
-    /// <summary>분당 호흡수(awRR). null이면 현재 값 유지.</summary>
+    /// <summary>분당 호흡수(awRR). null이면 현재 값 유지, -1이면 호흡 없음(측정 불가).</summary>
     [JsonPropertyName("respirationAwRR")]
     public int? RespirationAwRR { get; set; }
 
@@ -121,7 +155,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     // ── 맥박(BloodPulse) ──
 
-    /// <summary>분당 맥박수. null이면 현재 값 유지.</summary>
+    /// <summary>분당 맥박수. null이면 현재 값 유지, -1이면 맥박 없음(측정 불가).</summary>
     [JsonPropertyName("pulseRate")]
     public int? PulseRate { get; set; }
 
@@ -131,11 +165,11 @@ namespace MultiplayerInfrastructure.Scenario
 
     // ── 혈압(BloodPressure) ──
 
-    /// <summary>수축기 혈압(mmHg). null이면 현재 값 유지.</summary>
+    /// <summary>수축기 혈압(mmHg). null이면 현재 값 유지, -1이면 측정 불가.</summary>
     [JsonPropertyName("bloodPressureSystolic")]
     public int? BloodPressureSystolic { get; set; }
 
-    /// <summary>이완기 혈압(mmHg). null이면 현재 값 유지.</summary>
+    /// <summary>이완기 혈압(mmHg). null이면 현재 값 유지, -1이면 측정 불가.</summary>
     [JsonPropertyName("bloodPressureDiastolic")]
     public int? BloodPressureDiastolic { get; set; }
 

@@ -285,6 +285,13 @@ namespace MultiplayerInfrastructure.Editor
         items.Add(new DiagnosticItem(Severity.Warning, id,
           "설정된 프리셋 필드가 없습니다. 노드가 아무 효과도 없습니다."));
 
+      // ── 전이(Transition) 검사 ──
+      // 점차 변화(Gradual)인데 소요 시간이 0 이하이면 즉시 적용과 동일하게 동작하므로 경고한다.
+      if (node.TransitionMode == PatientMedicalStateTransitionMode.Gradual
+          && node.TransitionDurationSeconds <= 0f)
+        items.Add(new DiagnosticItem(Severity.Warning, id,
+          "transitionMode=Gradual 이지만 transitionDurationSeconds 가 0 이하입니다. 즉시 적용(Immediate)과 동일하게 동작합니다."));
+
       // ── 열거형 필드 검사 ────────────────────────────────────────────────────
       // null(not set) → Warning, 정의되지 않은 값 → Error.
       // 새 열거형 필드 추가 시 아래에 동일 패턴으로 추가한다.
