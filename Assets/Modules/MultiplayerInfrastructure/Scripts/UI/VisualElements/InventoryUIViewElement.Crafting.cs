@@ -279,6 +279,19 @@ namespace MultiplayerInfrastructure.UI
       RenderRequirements();
     }
 
+    /// <summary>대상 요소가 조합 패널(또는 그 자식) 내부인지 검사한다.</summary>
+    private bool IsWithinCraftingPanel(VisualElement target)
+    {
+      if (target == null || _craftingPanel == null) return false;
+      var cur = target;
+      while (cur != null)
+      {
+        if (cur == _craftingPanel) return true;
+        cur = cur.parent;
+      }
+      return false;
+    }
+
     /// <summary>패널이 닫힐 때 선택 상태를 초기화한다.</summary>
     private void ResetCraftingSelection()
     {
