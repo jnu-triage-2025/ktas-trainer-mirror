@@ -226,6 +226,39 @@ SceneItemPlacement.Start()
 
 ---
 
+## 자동 조합 레시피 등록
+
+특정 아이템 조합을 획득하면 자동으로 다른 아이템으로 합쳐지는 **자동 조합** 기능을 이용할 수 있습니다.
+
+자동 조합은 `ItemCombineRecipeRegistry`에 레시피를 등록함으로써 설정합니다. 레시피는 `RegisterAllCombineRecipes()` 메서드에 선언합니다.
+
+```csharp
+// RegisteringMultiplayerInfrastructureSupport.Item.cs
+public static void RegisterAllCombineRecipes()
+{
+  ItemCombineRecipeRegistry.Clear();
+
+  // A 2개 + B 1개 → C 1개
+  ItemCombineRecipeRegistry.Register(
+    new ItemCombineRecipe("c")
+      .Requires("a", 2)
+      .Requires("b", 1)
+      .Produces(1));
+}
+```
+
+레시피가 충족되면 인벤토리에 아이템이 추가되는 즉시 자동으로 처리됩니다. 연속 조합(조합 결과물이 또 다른 레시피의 재료)도 지원됩니다.
+
+조합 가능한 아이템은 `Description`에 안내 문구를 추가하는 것을 권장합니다:
+
+```csharp
+public const string Description = "기존 설명. [재료 A, 재료 B]을 획득하면 [결과]으로 자동 조합됩니다.";
+```
+
+자세한 내용은 [아이템 자동 조합 설정 가이드](./features/items/item-auto-combine-setup-guide.md)를 참고합니다.
+
+---
+
 ## 주의사항
 
 - **`Identifier`는 시스템 전체에서 유일해야 합니다.** 중복 시 나중에 등록된 항목이 앞선 항목을 덮어씁니다.

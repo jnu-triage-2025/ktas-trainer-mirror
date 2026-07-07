@@ -20,6 +20,7 @@
 - [MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md](./MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md): MultiplayerInfrastructure.Datapack.DatapackRuntimeService
 - [MultiplayerInfrastructure.InteractableEntity.md](./MultiplayerInfrastructure.InteractableEntity.md): API 레퍼런스: `MultiplayerInfrastructure.InteractableEntity`
 - [MultiplayerInfrastructure.Item.Item.md](./MultiplayerInfrastructure.Item.Item.md): MultiplayerInfrastructure.Item.Item (Current)
+- [MultiplayerInfrastructure.ItemSystem.ItemCombineRecipe.md](./MultiplayerInfrastructure.ItemSystem.ItemCombineRecipe.md): API 레퍼런스: `MultiplayerInfrastructure.ItemSystem.ItemCombineRecipe` (아이템 자동 조합)
 - [MultiplayerInfrastructure.ItemSystem.StaticPlacedItem.md](./MultiplayerInfrastructure.ItemSystem.StaticPlacedItem.md): API 레퍼런스: `MultiplayerInfrastructure.ItemSystem.StaticPlacedItem`
 - [MultiplayerInfrastructure.Player.PlayerController.InventoryCommands.md](./MultiplayerInfrastructure.Player.PlayerController.InventoryCommands.md): MultiplayerInfrastructure.Player.PlayerController.InventoryCommands
 - [MultiplayerInfrastructure.Player.PlayerController.md](./MultiplayerInfrastructure.Player.PlayerController.md): API 레퍼런스: `MultiplayerInfrastructure.Player.PlayerController`
@@ -44,7 +45,7 @@
 - [TriageTrainer.Scenario.TriageScenarioEventBootstrap.md](./TriageTrainer.Scenario.TriageScenarioEventBootstrap.md): API 레퍼런스: TriageTrainer.Scenario.TriageScenarioEventBootstrap
 - [TriageTrainer.Utils.OverworldGameObjectInitializer.md](./TriageTrainer.Utils.OverworldGameObjectInitializer.md): API 레퍼런스: `TriageTrainer.Utils.OverworldGameObjectInitializer`
 
-최근 반영(2026-07-03): StaticPlacedItem(에디터 사전 배치 정적 아이템) 시스템 API 레퍼런스를 추가했습니다.
+최근 반영(2026-07-06): ItemCombineRecipe/ItemCombineRecipeRegistry(아이템 자동 조합) 시스템 API 레퍼런스를 추가했습니다.
 
 작성 기준: Git 추적 문서(.md) 기준으로 색인하며, .gitignore 대상 파일은 제외합니다.
 <!-- DOC-INDEX:END -->
