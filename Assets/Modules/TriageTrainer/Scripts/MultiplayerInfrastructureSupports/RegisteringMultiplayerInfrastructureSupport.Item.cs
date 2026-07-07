@@ -51,6 +51,7 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<Electrode>(Electrode.Identifier);
       Registry.RegisterItemDefinition<ElectrodeCable>(ElectrodeCable.Identifier);
       Registry.RegisterItemDefinition<EpinephrineAmpule>(EpinephrineAmpule.Identifier);
+      Registry.RegisterItemDefinition<EpinephrineSyringe>(EpinephrineSyringe.Identifier);
       Registry.RegisterItemDefinition<EndotrachealTube>(EndotrachealTube.Identifier);
       Registry.RegisterItemDefinition<EndotrachealTubeReady>(EndotrachealTubeReady.Identifier);
       Registry.RegisterItemDefinition<FacialMask>(FacialMask.Identifier);
@@ -113,6 +114,14 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
         new ItemCombineRecipe(EndotrachealTubeReady.Identifier)
           .Requires(EndotrachealTube.Identifier, 1)
           .Requires(Stylet.Identifier, 1)
+          .Produces(1));
+
+      // 5cc 주사기 1개 + 에피네프린 앰플 1개 → 에피네프린 주사기 1개
+      // (주사기에 에피네프린 1mg 을 준비)
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(EpinephrineSyringe.Identifier)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
           .Produces(1));
     }
 

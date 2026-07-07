@@ -55,6 +55,14 @@ namespace MultiplayerInfrastructure.UI
         _document = GetComponent<UIDocument>();
 
       BindViewToCurrentDocumentRoot();
+
+      // 여러 UIDocument가 하나의 PanelSettings를 공유하므로, 닫힌 상태의 이 오버레이 root가
+      // 전체 화면을 덮은 채 pickingMode=Position 으로 남으면 sortingOrder가 낮은 인벤토리(6)의
+      // 클릭/hover를 가로챈다. 이 컨트롤러는 sortingOrder = 인벤토리+1(=7) 이므로 반드시
+      // 시작 시 닫힘 상태로 중립화(pickingMode 서브트리 Ignore)해야 한다.
+      // (다른 오버레이 컨트롤러들과 동일한 규약 — overlay-uidocument-picking-guide.md 참고)
+      if (!IsOpened)
+        StartCoroutine(NeutralizeDocumentRootWhenReady(_document));
     }
 
     private void OnDestroy()

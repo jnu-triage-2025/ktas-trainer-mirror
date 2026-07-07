@@ -53,6 +53,7 @@ namespace MultiplayerInfrastructure.UI
 
       _inventoryGrid = this.Q<VisualElement>("InventoryGrid") ?? CreateFallbackGrid();
 
+      BuildCraftingPanel();
       CreateHeldItemGhost();
       CreateTooltip();
       RegisterCallback<PointerMoveEvent>(OnPointerMoveWhileHolding);
@@ -70,7 +71,10 @@ namespace MultiplayerInfrastructure.UI
       if (!visible && _heldItemGhost != null)
         _heldItemGhost.style.display = DisplayStyle.None;
       if (!visible)
+      {
         HideTooltip();
+        ResetCraftingSelection();
+      }
     }
 
     public void UpdateInventory(IReadOnlyList<InventorySlotModelDTO> slots)

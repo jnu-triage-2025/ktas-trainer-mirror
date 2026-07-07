@@ -98,6 +98,10 @@ namespace MultiplayerInfrastructure.UI
       _view.Initialize(columns, rows, slotTemplate, defaultIcon);
       _view.SlotsMutated += HandleSlotsMutated;
       _view.ItemDroppedOutside += HandleItemDroppedOutside;
+      _view.CraftLeftoverReturned += HandleCraftLeftoverReturned;
+
+      // 조합 패널 콜백 주입: 보유 수량 조회 + 조합 실행.
+      _view.SetCraftingCallbacks(ResolveHeldCount, HandleCraftRequest);
     }
 
     private void DetachViewEvents()
@@ -107,6 +111,37 @@ namespace MultiplayerInfrastructure.UI
 
       _view.SlotsMutated -= HandleSlotsMutated;
       _view.ItemDroppedOutside -= HandleItemDroppedOutside;
+      _view.CraftLeftoverReturned -= HandleCraftLeftoverReturned;
+    }
+
+    private PlayerController ResolveOwningPlayer()
+      => Registry.Registry.GetFirstEntityComponent<PlayerController>(
+           EntityType.Player, each => each != null && each.IsOwner);
+
+    private int ResolveHeldCount(string identifier)
+    {
+      var player = ResolveOwningPlayer();
+      return player != null ? player.CountItemInInventory(identifier) : 0;
+    }
+
+    /// <summary>
+    /// 조합 패널에서 선택된 레시피의 조합을 요청받아 실행한다.
+    /// 재료를 소비하고 생성된 결과 아이템을 반환한다(뷰가 커서로 pickup 처리).
+    /// </summary>
+    private ItemSystem.Item HandleCraftRequest(InventoryUIView.CraftableRecipeDisplay recipe)
+    {
+      if (recipe == null) return null;
+      var player = ResolveOwningPlayer();
+      if (player == null) return null;
+      return player.TryCraftRecipe(recipe.OutputIdentifier);
+    }
+
+    /// <summary>커서 스택 한도를 초과한 조합 결과 잔량을 인벤토리로 돌려보낸다.</summary>
+    private void HandleCraftLeftoverReturned(ItemSystem.Item leftover)
+    {
+      if (leftover == null || leftover.CurrentStackCount <= 0) return;
+      var player = ResolveOwningPlayer();
+      player?.TryAddItemToInventory(leftover);
     }
 
     private void OnDestroy()
@@ -114,7 +149,19 @@ namespace MultiplayerInfrastructure.UI
       DetachViewEvents();
     }
 
-    public void UpdateInventory(IReadOnlyList<InventorySlotModelDTO> slots) => _view?.UpdateInventory(slots);
+    public void UpdateInventory(IReadOnlyList<InventorySlotModelDTO> slots)
+    {
+      _view?.UpdateInventory(slots);
+      RefreshCraftableRecipes();
+    }
+
+    /// <summary>조합 패널의 "조합 가능" 목록과 "필요 아이템" 표시를 현재 보유량 기준으로 갱신한다.</summary>
+    private void RefreshCraftableRecipes()
+    {
+      if (_view == null) return;
+      var player = ResolveOwningPlayer();
+      _view.UpdateCraftableRecipes(player != null ? player.GetCraftableRecipes() : null);
+    }
 
     public void ToggleRoot(bool visible) => _view?.SetVisible(visible);
 
@@ -154,6 +201,9 @@ namespace MultiplayerInfrastructure.UI
       EnsureHotbar();
       _hotbarUI?.BindInventory(_view?.BoundSlots);
       OnItemAtSelectedSlotChanged?.Invoke();
+
+      // 슬롯 변화(집기/놓기/조합)에 따라 조합 가능 목록/필요 아이템 표시를 즉시 갱신.
+      RefreshCraftableRecipes();
     }
 
     private void HandleItemDroppedOutside(ItemSystem.Item item)
