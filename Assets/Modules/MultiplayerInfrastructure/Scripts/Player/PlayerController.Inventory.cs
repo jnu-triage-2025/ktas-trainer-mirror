@@ -384,8 +384,16 @@ namespace MultiplayerInfrastructure.Player
       // Keep the hotbar visuals in sync with inventory mutations
       _hotbarUI?.BindInventory(_slots);
 
-      // Interactable visibility can depend on inventory requirements.
-      // Refresh hints immediately so conditional interacts are recalculated.
+      // 데이터(_slots)를 코드로 직접 변경(예: /give, 아이템 획득/제거/조합)한 경우에는
+      // HotbarUIController.OnSelectedSlotChanged / InventoryUIController.OnItemAtSelectedSlotChanged
+      // 이벤트가 발화되지 않으므로 ResolveHandledItem 이 트리거되지 않는다. 그 결과 현재 선택된
+      // hold 슬롯의 ItemInstance 가 교체/충전되어도 HandlingItem 이 갱신되지 않아 뷰모델/아이템
+      // 소지 조건부 상호작용이 반영되지 않는 버그가 있었다. 여기서 직접 재해석해 갱신을 보장한다.
+      // (ResolveHandledItem 은 HandlingItem 이 실제로 바뀐 경우에만 힌트를 재평가한다.)
+      ResolveHandledItem();
+
+      // HandlingItem 이 바뀌지 않았더라도 다른 슬롯의 보유 수량 변화 등으로 상호작용 노출 조건이
+      // 달라질 수 있으므로(예: CountItemInInventory 기반 조건), 힌트를 항상 재평가한다.
       RefreshInteractableHintsNow();
       return result;
     }
