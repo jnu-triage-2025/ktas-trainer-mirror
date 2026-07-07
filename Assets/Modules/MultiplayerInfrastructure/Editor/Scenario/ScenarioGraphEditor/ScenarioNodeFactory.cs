@@ -67,6 +67,11 @@ namespace MultiplayerInfrastructure.Editor
         StateOperations = new System.Collections.Generic.List<ScenarioEntityStateOperation>()
       },
       ScenarioNodeType.PatientMedicalStatePreset => new ScenarioPatientMedicalStatePresetNode(),
+      ScenarioNodeType.ItemSubmissionConfig => new ScenarioItemSubmissionConfigNode
+      {
+        RequiredItems = new System.Collections.Generic.List<ScenarioItemRequirement>()
+      },
+      ScenarioNodeType.NpcInteractControl => new ScenarioNpcInteractControlNode(),
       _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
   }

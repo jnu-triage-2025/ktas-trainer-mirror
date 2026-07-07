@@ -1,0 +1,237 @@
+/* ── 전체 래퍼: 항상 존재하는 투명 컨테이너(UIDocument 에 상시 배치됨) ── */
+.item-submission-wrapper {
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+/*
+ * 반투명 딤(dim) 배경은 반드시 View 자신(.item-submission-root, SetVisible() 이 display/visibility
+ * 를 토글하는 대상)에 걸어야 한다. wrapper 는 항상 렌더링되므로 wrapper 에 배경을 두면
+ * UIDocument 에 Source Asset 을 지정한 순간부터 패널이 닫혀 있어도 화면이 항상 어둡게 보인다.
+ */
+.item-submission-root {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.55);
+}
+
+/* ── 패널 본체 ── */
+.item-submission-panel {
+  width: 480px;
+  padding: 26px;
+  background-color: #16213e;
+  border-width: 2px;
+  border-color: #2d4373;
+  border-radius: 14px;
+  gap: 0;
+}
+
+/* ── 헤더 (제목 + × 버튼 + 구분선) ── */
+.item-submission-header {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 14px;
+  margin-bottom: 12px;
+  border-bottom-width: 2px;
+  border-bottom-color: rgba(74, 158, 255, 0.35);
+}
+
+.item-submission-title {
+  -unity-font-style: bold;
+  font-size: 22px;
+  color: #f0f4ff;
+}
+
+.item-submission-close-x {
+  width: 30px;
+  height: 30px;
+  font-size: 20px;
+  color: #9aa5b8;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-width: 0;
+  border-radius: 15px;
+  padding: 0;
+  -unity-text-align: middle-center;
+  transition-duration: 0.12s;
+  transition-property: background-color, color;
+}
+
+.item-submission-close-x:hover {
+  color: #ff6b6b;
+  background-color: rgba(255, 107, 107, 0.18);
+}
+
+/* ── 설명 문구 ── */
+.item-submission-description {
+  font-size: 12px;
+  color: #a9b4c8;
+  white-space: normal;
+  margin-bottom: 18px;
+  -unity-font-style: italic;
+}
+
+/* ── 섹션 라벨 ("필요 아이템") ── */
+.item-submission-section-label {
+  font-size: 11px;
+  -unity-font-style: bold;
+  color: #4a9eff;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+/* ── 요구 아이템 그리드 영역 ── */
+.item-submission-requirements {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  padding: 14px;
+  gap: 10px;
+  border-width: 1px;
+  border-color: #1f3a63;
+  border-radius: 10px;
+  background-color: rgba(6, 16, 32, 0.75);
+  min-height: 100px;
+  margin-bottom: 22px;
+}
+
+/* ── 요구 아이템 슬롯 ── */
+.item-submission-slot {
+  width: 86px;
+  height: 108px;
+  border-width: 2px;
+  border-color: #1f3a63;
+  border-radius: 10px;
+  background-color: rgba(11, 22, 40, 0.95);
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px 6px 4px;
+  overflow: hidden;
+  transition-duration: 0.18s;
+  transition-property: border-color, background-color, scale;
+  scale: 1 1;
+}
+
+/* 아이콘 영역: placeholder(흐리고 회색 tint) */
+.item-submission-slot__icon {
+  width: 46px;
+  height: 46px;
+  tint-color: rgba(160, 160, 160, 1);
+  opacity: 0.28;
+  flex-shrink: 0;
+  transition-duration: 0.18s;
+  transition-property: opacity;
+}
+
+/* 아이템 이름: 아이콘 아래 */
+.item-submission-slot__name {
+  font-size: 10px;
+  -unity-font-style: bold;
+  color: #cdd6e6;
+  -unity-text-align: middle-center;
+  white-space: normal;
+  margin-top: 4px;
+  max-width: 76px;
+}
+
+/* 수량 텍스트: 이름 바로 아래 */
+.item-submission-slot__count {
+  font-size: 11px;
+  -unity-font-style: bold;
+  color: #4a9eff;
+  -unity-text-align: middle-center;
+  margin-top: 2px;
+}
+
+/* 충족 상태 */
+.item-submission-slot--satisfied {
+  border-color: #2ecc71;
+  background-color: rgba(20, 52, 36, 0.95);
+  scale: 1.03 1.03;
+}
+
+.item-submission-slot--satisfied .item-submission-slot__icon {
+  tint-color: white;
+  opacity: 1;
+}
+
+.item-submission-slot--satisfied .item-submission-slot__name {
+  color: #eafff0;
+}
+
+.item-submission-slot--satisfied .item-submission-slot__count {
+  color: #2ecc71;
+}
+
+/* 미충족: 테두리는 기본 navy 유지 (과도한 강조 없음) */
+.item-submission-slot--unsatisfied {
+  border-color: #1f3a63;
+}
+
+/* ── 버튼 행 ── */
+.item-submission-buttons {
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.item-submission-submit {
+  flex: 1;
+  height: 42px;
+  font-size: 14px;
+  -unity-font-style: bold;
+  background-color: #27ae60;
+  color: #fff;
+  border-width: 0;
+  border-radius: 8px;
+  transition-duration: 0.12s;
+  transition-property: background-color, scale;
+  scale: 1 1;
+}
+
+.item-submission-submit:hover {
+  background-color: #2ecc71;
+  scale: 1.02 1.02;
+}
+
+.item-submission-submit:active {
+  scale: 0.98 0.98;
+}
+
+.item-submission-submit:disabled {
+  background-color: rgba(80, 80, 80, 0.8);
+  color: rgba(180, 180, 180, 0.7);
+  scale: 1 1;
+}
+
+.item-submission-close {
+  flex: 1;
+  height: 42px;
+  font-size: 14px;
+  -unity-font-style: bold;
+  background-color: #c0392b;
+  color: #fff;
+  border-width: 0;
+  border-radius: 8px;
+  transition-duration: 0.12s;
+  transition-property: background-color, scale;
+  scale: 1 1;
+}
+
+.item-submission-close:hover {
+  background-color: #e74c3c;
+  scale: 1.02 1.02;
+}
+
+.item-submission-close:active {
+  scale: 0.98 0.98;
+}

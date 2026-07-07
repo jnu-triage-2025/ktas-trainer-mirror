@@ -26,5 +26,7 @@ namespace MultiplayerInfrastructure.Scenario
     EntityInit,
     TriageAssessControl,
     PatientMedicalStatePreset,
+    ItemSubmissionConfig,
+    NpcInteractControl,
   }
 }

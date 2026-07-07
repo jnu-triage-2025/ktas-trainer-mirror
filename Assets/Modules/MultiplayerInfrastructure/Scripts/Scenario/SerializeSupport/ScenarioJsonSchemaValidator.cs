@@ -104,7 +104,9 @@ namespace MultiplayerInfrastructure.Scenario
         "EntityTag",
         "EntityInit",
         "TriageAssessControl",
-        "PatientMedicalStatePreset"
+        "PatientMedicalStatePreset",
+        "ItemSubmissionConfig",
+        "NpcInteractControl"
       };
 
       foreach (var nodeEntry in nodes)

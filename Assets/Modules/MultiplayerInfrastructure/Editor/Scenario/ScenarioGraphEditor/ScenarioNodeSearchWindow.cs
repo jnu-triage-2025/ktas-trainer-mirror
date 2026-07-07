@@ -39,7 +39,9 @@ namespace MultiplayerInfrastructure.Editor
             new SearchTreeEntry(new GUIContent("Quiz")) { level = 1, userData = ScenarioNodeType.Quiz },
             new SearchTreeEntry(new GUIContent("State Update")) { level = 1, userData = ScenarioNodeType.StateUpdate },
             new SearchTreeEntry(new GUIContent("Tag Modification")) { level = 1, userData = ScenarioNodeType.PlayerTag },
-            new SearchTreeEntry(new GUIContent("Play TTS")) { level = 1, userData = ScenarioNodeType.PlayTTS }
+            new SearchTreeEntry(new GUIContent("Play TTS")) { level = 1, userData = ScenarioNodeType.PlayTTS },
+            new SearchTreeEntry(new GUIContent("Item Submission Config")) { level = 1, userData = ScenarioNodeType.ItemSubmissionConfig },
+            new SearchTreeEntry(new GUIContent("NPC Interact Control")) { level = 1, userData = ScenarioNodeType.NpcInteractControl }
         };
     }
 

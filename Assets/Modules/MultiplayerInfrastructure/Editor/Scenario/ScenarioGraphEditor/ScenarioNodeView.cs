@@ -185,6 +185,8 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.EntityInit:
         case ScenarioNodeType.TriageAssessControl:
         case ScenarioNodeType.PatientMedicalStatePreset:
+        case ScenarioNodeType.ItemSubmissionConfig:
+        case ScenarioNodeType.NpcInteractControl:
           DefaultOutputPort = CreateStandardOutput("Next");
           break;
 
@@ -345,6 +347,12 @@ namespace MultiplayerInfrastructure.Editor
           break;
         case ScenarioNodeType.PatientMedicalStatePreset:
           BuildPatientMedicalStatePresetInlineEditor((ScenarioPatientMedicalStatePresetNode)Data);
+          break;
+        case ScenarioNodeType.ItemSubmissionConfig:
+          BuildItemSubmissionConfigInlineEditor((ScenarioItemSubmissionConfigNode)Data);
+          break;
+        case ScenarioNodeType.NpcInteractControl:
+          BuildNpcInteractControlInlineEditor((ScenarioNpcInteractControlNode)Data);
           break;
         case ScenarioNodeType.Parallel:
           break;
@@ -519,6 +527,81 @@ namespace MultiplayerInfrastructure.Editor
       var summary = string.Join("  ", new[] { gcsLabel, bpLabel }.Where(s => !string.IsNullOrEmpty(s)));
       if (!string.IsNullOrEmpty(summary))
         _inlineEditorContainer.Add(new Label(summary) { style = { fontSize = 10, color = new Color(0.85f, 0.85f, 0.85f) } });
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildItemSubmissionConfigInlineEditor(ScenarioItemSubmissionConfigNode data)
+    {
+      AddTextField("Preset Id (spawn)", value => data.PresetIdentifier = value, data.PresetIdentifier);
+      AddTextField("Target Id (existing)", value => data.TargetIdentifier = value, data.TargetIdentifier);
+      AddTextField("Completion Signal", value => data.CompletionSignalIdentifier = value, data.CompletionSignalIdentifier);
+      AddToggleField("Enabled", value => data.Enabled = value, data.Enabled);
+
+      data.RequiredItems ??= new List<ScenarioItemRequirement>();
+
+      _inlineEditorContainer.Add(new Label("Required Items (id x count)")
+      {
+        style = { fontSize = 10, color = new Color(0.85f, 0.85f, 0.85f), marginTop = 4 }
+      });
+
+      var itemsContainer = new VisualElement();
+      _inlineEditorContainer.Add(itemsContainer);
+
+      void RebuildItemsList()
+      {
+        itemsContainer.Clear();
+        for (int i = 0; i < data.RequiredItems.Count; i++)
+        {
+          int index = i;
+          var req = data.RequiredItems[index] ??= new ScenarioItemRequirement();
+
+          var row = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+
+          var idField = new TextField { value = req.ItemIdentifier ?? string.Empty, style = { flexGrow = 1 } };
+          idField.RegisterValueChangedCallback(evt => data.RequiredItems[index].ItemIdentifier = evt.newValue);
+          row.Add(idField);
+
+          var countField = new IntegerField { value = req.Count <= 0 ? 1 : req.Count, style = { width = 48 } };
+          countField.RegisterValueChangedCallback(evt => data.RequiredItems[index].Count = evt.newValue <= 0 ? 1 : evt.newValue);
+          row.Add(countField);
+
+          var removeButton = new Button(() =>
+          {
+            data.RequiredItems.RemoveAt(index);
+            RebuildItemsList();
+          })
+          { text = "-", style = { width = 22 } };
+          row.Add(removeButton);
+
+          itemsContainer.Add(row);
+        }
+      }
+
+      RebuildItemsList();
+
+      _inlineEditorContainer.Add(new Button(() =>
+      {
+        data.RequiredItems.Add(new ScenarioItemRequirement { Count = 1 });
+        RebuildItemsList();
+      })
+      { text = "Add Required Item" });
+
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildNpcInteractControlInlineEditor(ScenarioNpcInteractControlNode data)
+    {
+      AddTextField("NPC Id", value => data.NpcIdentifier = value, data.NpcIdentifier);
+      AddTextField("Interactable Id", value => data.InteractableIdentifier = value, data.InteractableIdentifier);
+
+      var opField = new EnumField("Operation", data.Operation);
+      opField.RegisterValueChangedCallback(evt =>
+      {
+        if (evt.newValue is ScenarioNpcInteractControlOperation value)
+          data.Operation = value;
+      });
+      _inlineEditorContainer.Add(opField);
+
       AddNextIdentifierField(data);
     }
 

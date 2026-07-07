@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML
+  xmlns:ui="UnityEngine.UIElements"
+  xmlns:mi="MultiplayerInfrastructure.UI"
+>
+  <ui:Style src="ItemSubmissionUI.uss" />
+  <ui:VisualElement name="ItemSubmissionWrapper" class="item-submission-wrapper">
+    <mi:ItemSubmissionUIView name="ItemSubmissionRoot" class="item-submission-root" style="visibility: hidden;" />
+  </ui:VisualElement>
+</ui:UXML>
