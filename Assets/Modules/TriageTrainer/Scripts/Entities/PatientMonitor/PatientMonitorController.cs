@@ -514,10 +514,30 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       };
     }
 
+    /// <summary>
+    /// 측정 불가(무의식/호흡 없음/맥박 없음/혈압 측정 불가)를 모니터에 표시할 때 사용하는 문자열.
+    /// 프리셋 노드에서 수치 필드에 -1을 지정하면 이 값으로 표시된다.
+    /// </summary>
+    private const string UnavailableDisplay = "-?-";
+
+    /// <summary>
+    /// 수치가 "측정 불가"(<see cref="PatientMedicalState.MonitorValueUnavailable"/>)를 나타내는지 판정한다.
+    /// </summary>
+    private static bool IsUnavailable(float value)
+    {
+      return value <= PatientMedicalState.MonitorValueUnavailable;
+    }
+
     private void UpdateLabels()
     {
       bool hasPatient = patientState?.Descriptor != null;
       var numerics = monitorNumerics;
+
+      // 측정 불가(-1) 여부. 측정 불가인 경우 폴백(> 0f) 대신 -?- 로 표시한다.
+      bool bpmUnavailable = IsUnavailable(numerics.bpm);
+      bool prUnavailable = IsUnavailable(numerics.pulseRate);
+      bool nibpUnavailable = IsUnavailable(monitorNIBP.systolic) || IsUnavailable(monitorNIBP.diastolic);
+
       float bpmValue = numerics.bpm > 0f ? numerics.bpm : _currentParameters.bpm;
       float prValue = numerics.pulseRate > 0f ? numerics.pulseRate : monitorPleth.bpm;
       float spo2Value = numerics.spo2 > 0f ? numerics.spo2 : monitorPleth.spo2;
@@ -525,7 +545,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       if (ecgValueLabel != null)
       {
-        ecgValueLabel.text = $"HR {Mathf.RoundToInt(_currentParameters.bpm)}";
+        ecgValueLabel.text = bpmUnavailable ? $"HR {UnavailableDisplay}" : $"HR {Mathf.RoundToInt(_currentParameters.bpm)}";
       }
 
       if (plethValueLabel != null)
@@ -546,7 +566,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       if (bpmNumericLabel != null)
       {
-        bpmNumericLabel.text = $"{Mathf.RoundToInt(bpmValue)}";
+        bpmNumericLabel.text = bpmUnavailable ? UnavailableDisplay : $"{Mathf.RoundToInt(bpmValue)}";
       }
 
       if (pvcsNumericLabel != null)
@@ -566,7 +586,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       if (prNumericLabel != null)
       {
-        prNumericLabel.text = $"{Mathf.RoundToInt(prValue)}";
+        prNumericLabel.text = prUnavailable ? UnavailableDisplay : $"{Mathf.RoundToInt(prValue)}";
       }
 
       if (piNumericLabel != null)
@@ -592,8 +612,15 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       if (nibpNumericLabel != null)
       {
-        int map = Mathf.RoundToInt(monitorNIBP.diastolic + (monitorNIBP.systolic - monitorNIBP.diastolic) / 3f);
-        nibpNumericLabel.text = $"{Mathf.RoundToInt(monitorNIBP.systolic)}/{Mathf.RoundToInt(monitorNIBP.diastolic)} ({map}) mmHg";
+        if (nibpUnavailable)
+        {
+          nibpNumericLabel.text = UnavailableDisplay;
+        }
+        else
+        {
+          int map = Mathf.RoundToInt(monitorNIBP.diastolic + (monitorNIBP.systolic - monitorNIBP.diastolic) / 3f);
+          nibpNumericLabel.text = $"{Mathf.RoundToInt(monitorNIBP.systolic)}/{Mathf.RoundToInt(monitorNIBP.diastolic)} ({map}) mmHg";
+        }
       }
 
       if (t1NumericLabel != null)

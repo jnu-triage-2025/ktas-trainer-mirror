@@ -1,4 +1,5 @@
 using FishNet.Object;
+using MultiplayerInfrastructure.Camera;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -37,8 +38,16 @@ namespace MultiplayerInfrastructure.Player
 
     [Header("References")]
     [SerializeField] private CharacterController _characterController;
-    [SerializeField] private Transform _cameraHolderTransform;
-    public Transform CameraHolderTransform => _cameraHolderTransform;
+
+    // 플레이어 측 카메라 부착점. 이전에는 "CameraHolder"라는 이름의 Transform이었으나,
+    // 카메라 래퍼(CameraHolder)와 책임을 분리하기 위해 CameraAttachPoint 컴포넌트로 대체되었다.
+    [SerializeField] private CameraAttachPoint _cameraAttachPoint;
+    public CameraAttachPoint CameraAttachPoint => _cameraAttachPoint;
+
+    /// <summary>
+    /// 카메라 부착점의 피벗 Transform입니다. 기존 호출부 호환을 위해 유지합니다.
+    /// </summary>
+    public Transform CameraHolderTransform => _cameraAttachPoint != null ? _cameraAttachPoint.PivotTransform : null;
 
     private Transform _forcedFollowAnchor;
     private bool _jumpAnimationRequestedThisFrame;
@@ -56,7 +65,7 @@ namespace MultiplayerInfrastructure.Player
     void Awake_Movement()
     {
       _characterController = GetComponent<CharacterController>();
-      InitializeCameraHolder();
+      InitializeCameraAttachPoint();
       LockCursor();
     }
 
@@ -71,13 +80,11 @@ namespace MultiplayerInfrastructure.Player
     Vector3 _forwardSpeed;
     Vector3 _rightSpeed;
 
-    void InitializeCameraHolder()
+    void InitializeCameraAttachPoint()
     {
-      GameObject go = new GameObject("CameraHolder");
-      go.transform.SetParent(transform);
-      go.transform.localPosition = Vector3.zero;
-      go.transform.localRotation = Quaternion.identity;
-      _cameraHolderTransform = go.transform;
+      // 발밑(y=0)이 아니라 눈높이 정도로 올려, 카메라 충돌 검사가 플레이어 콜라이더 내부에서
+      // 시작되어 카메라가 강제로 1인칭으로 당겨지는 현상을 방지한다.
+      _cameraAttachPoint = CameraAttachPoint.Create(transform, _cameraHolderPositionYOffset);
     }
 
     void ComputeMovement()
@@ -158,13 +165,13 @@ if (Input.GetButton("Jump") && canMove && _characterController.isGrounded)
 
     void ComputeMovementCameraHolder()
     {
-      if (_cameraHolderTransform.IsUnityNull()) return;
+      if (_cameraAttachPoint.IsUnityNull()) return;
       if (!canMove) return;
       if (_isSpectateFollowing) return;
       
       _rotationX += -Input.GetAxis("Mouse Y") * _rotatingSpeed;
       _rotationX = Mathf.Clamp(_rotationX, _minLookXAngle, _maxLookXAngle);
-      _cameraHolderTransform.localRotation = Quaternion.Euler(_rotationX, 0, 0);
+      _cameraAttachPoint.SetPitch(_rotationX);
       transform.Rotate(0, Input.GetAxis("Mouse X") * _rotatingSpeed, 0);
     }
 

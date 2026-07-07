@@ -183,7 +183,20 @@ namespace MultiplayerInfrastructure.ItemSystem
       _localRemains.Remove(entityIdentifier);
     }
 
-    /// <summary>모든 상태를 초기화합니다(예: 씬 리로드/서버 재시작 시).</summary>
+    /// <summary>
+    /// 모든 상태를 초기화합니다.
+    ///
+    /// <para>
+    /// 서버 세션 시작(<see cref="FishNet.Transporting.LocalConnectionState.Started"/>) 및
+    /// 종료(<see cref="FishNet.Transporting.LocalConnectionState.Stopped"/>) 시
+    /// <c>FishNetSupport.ServerManager_OnServerConnectionState</c>에서 자동 호출됩니다.
+    /// </para>
+    ///
+    /// <para>
+    /// static Dictionary는 Unity 도메인 리로드 없이 프로세스 수명 내내 유지되므로,
+    /// 이 메서드를 호출하지 않으면 이전 세션의 획득 상태가 다음 세션에도 남습니다.
+    /// </para>
+    /// </summary>
     public static void ClearAll()
     {
       _globalRemains.Clear();

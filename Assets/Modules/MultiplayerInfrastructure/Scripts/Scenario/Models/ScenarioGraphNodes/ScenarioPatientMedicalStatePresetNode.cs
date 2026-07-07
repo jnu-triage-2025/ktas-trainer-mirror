@@ -3,6 +3,23 @@ using TriageTrainer.Entity.Patient;
 namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
+  /// 프리셋 값이 대상 환자에게 적용되는 방식.
+  /// </summary>
+  public enum PatientMedicalStateTransitionMode
+  {
+    /// <summary>즉시(한 프레임에) 대상 값으로 덮어쓴다.</summary>
+    Immediate = 0,
+
+    /// <summary>
+    /// 지정한 소요 시간(<see cref="ScenarioPatientMedicalStatePresetNode.TransitionDurationSeconds"/>)
+    /// 동안 현재 값에서 대상 값으로 점차 보간(lerp)한다.
+    /// 수치 필드(GCS/호흡수/맥박수/혈압 등)만 보간되며, 열거형/불리언 등 비수치 필드는 보간 종료 시점에 적용된다.
+    /// 측정 불가(-1) 값은 보간 대상이 아니므로 즉시 적용된다.
+    /// </summary>
+    Gradual = 1
+  }
+
+  /// <summary>
   /// 환자 엔티티의 의료 상태(PatientDescriptor 및 PatientMedicalState)를 일괄 초기화(프리셋)하는 노드.
   ///
   /// <para>
@@ -26,6 +43,9 @@ namespace MultiplayerInfrastructure.Scenario
   /// <item><term>환자 기술자</term>    <term><see cref="BloodType"/></term>        <term>BloodType?</term></item>
   /// <item><term>환자 기술자</term>    <term><see cref="IntendedTriage"/></term>   <term>TriageLevel?</term></item>
   /// <item><term>의료 상태</term>      <term><see cref="ConsciousnessGcs"/></term> <term>int?</term></item>
+  /// <item><term>의료 상태/의식</term> <term><see cref="ConsciousnessEyeOpening"/></term><term>EyeOpeningResponse?</term></item>
+  /// <item><term>의료 상태/의식</term> <term><see cref="ConsciousnessVerbal"/></term><term>VerbalResponse?</term></item>
+  /// <item><term>의료 상태/의식</term> <term><see cref="ConsciousnessMotor"/></term><term>MotorResponse?</term></item>
   /// <item><term>의료 상태/의식</term> <term><see cref="ConsciousnessLocLabel"/></term><term>LOCLabel?</term></item>
   /// <item><term>의료 상태/의식</term> <term><see cref="ConsciousnessPupillaryResponse"/></term><term>PupillaryResponse?</term></item>
   /// <item><term>의료 상태/호흡</term> <term><see cref="RespirationAwRR"/></term>  <term>int?</term></item>
@@ -38,6 +58,23 @@ namespace MultiplayerInfrastructure.Scenario
   /// <item><term>의료 상태/피부</term> <term><see cref="SkinTemperatureType"/></term><term>SkinTemperatureType?</term></item>
   /// <item><term>의료 상태</term>      <term><see cref="IsCardiacArrest"/></term>  <term>bool?</term></item>
   /// </list>
+  /// </para>
+  ///
+  /// <para>
+  /// ── 측정 불가/무의식/없음 표현 ──
+  /// 수치 필드(<see cref="ConsciousnessGcs"/>, <see cref="RespirationAwRR"/>, <see cref="PulseRate"/>,
+  /// <see cref="BloodPressureSystolic"/>, <see cref="BloodPressureDiastolic"/>)에 <b>-1</b>을 지정하면
+  /// "무의식 / 호흡 없음 / 측정 불가" 등 <b>값이 존재하지 않는 상태</b>를 의미한다.
+  /// 이 경우 환자 상태 모니터에는 해당 수치가 <c>-?-</c> 로 표시된다.
+  /// (null은 "현재 값 유지", -1은 "측정 불가"로 서로 다른 의미임에 유의한다.)
+  /// </para>
+  ///
+  /// <para>
+  /// ── 전이(Transition) 방식 ──
+  /// <see cref="TransitionMode"/> 로 프리셋 값이 적용되는 방식을 지정한다.
+  /// <see cref="PatientMedicalStateTransitionMode.Immediate"/> 는 즉시 적용,
+  /// <see cref="PatientMedicalStateTransitionMode.Gradual"/> 은 <see cref="TransitionDurationSeconds"/> 동안
+  /// 수치 값을 현재 값에서 대상 값으로 점차 보간한다.
   /// </para>
   /// </summary>
   public sealed class ScenarioPatientMedicalStatePresetNode : IScenarioNode
@@ -59,6 +96,22 @@ namespace MultiplayerInfrastructure.Scenario
     /// <see cref="TargetEntityIdentifier"/> 가 비어 있을 때만 사용된다.
     /// </summary>
     public string TargetEntityStateKey { get; set; }
+
+    // ── 전이(Transition) ──
+
+    /// <summary>
+    /// 프리셋 값 적용 방식. 기본값은 <see cref="PatientMedicalStateTransitionMode.Immediate"/>(즉시).
+    /// <see cref="PatientMedicalStateTransitionMode.Gradual"/> 로 지정하면
+    /// <see cref="TransitionDurationSeconds"/> 동안 수치 값을 점차 변화시킨다.
+    /// </summary>
+    public PatientMedicalStateTransitionMode TransitionMode { get; set; } = PatientMedicalStateTransitionMode.Immediate;
+
+    /// <summary>
+    /// 점차 변화(<see cref="PatientMedicalStateTransitionMode.Gradual"/>) 시 소요 시간(초).
+    /// <see cref="PatientMedicalStateTransitionMode.Immediate"/> 에서는 무시된다.
+    /// 0 이하이면 즉시 적용과 동일하게 동작한다.
+    /// </summary>
+    public float TransitionDurationSeconds { get; set; }
 
     // ── 환자 기술자(PatientDescriptor) 프리셋 필드 ──
     // 새 PatientDescriptor 필드 추가 시 아래에 nullable 프로퍼티를 추가하고,
@@ -87,8 +140,17 @@ namespace MultiplayerInfrastructure.Scenario
 
     // ── 의식(Consciousness) ──
 
-    /// <summary>GCS 점수(3~15). null이면 현재 값 유지.</summary>
+    /// <summary>GCS 점수(3~15). null이면 현재 값 유지, -1이면 무의식(측정 불가).</summary>
     public int? ConsciousnessGcs { get; set; }
+
+    /// <summary>GCS의 E(Eye Opening, 눈뜨기 반응) 세부 항목(1~4점). null이면 현재 값 유지.</summary>
+    public EyeOpeningResponse? ConsciousnessEyeOpening { get; set; }
+
+    /// <summary>GCS의 V(Verbal Response, 언어 반응) 세부 항목(1~5점). null이면 현재 값 유지.</summary>
+    public VerbalResponse? ConsciousnessVerbal { get; set; }
+
+    /// <summary>GCS의 M(Motor Response, 운동 반응) 세부 항목(1~6점). null이면 현재 값 유지.</summary>
+    public MotorResponse? ConsciousnessMotor { get; set; }
 
     /// <summary>의식수준 5단계(LOC). null이면 현재 값 유지.</summary>
     public LOCLabel? ConsciousnessLocLabel { get; set; }
@@ -98,7 +160,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     // ── 호흡(Respiration) ──
 
-    /// <summary>분당 호흡수(awRR). null이면 현재 값 유지.</summary>
+    /// <summary>분당 호흡수(awRR). null이면 현재 값 유지, -1이면 호흡 없음(측정 불가).</summary>
     public int? RespirationAwRR { get; set; }
 
     /// <summary>호흡 유형. null이면 현재 값 유지.</summary>
@@ -106,7 +168,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     // ── 맥박(BloodPulse) ──
 
-    /// <summary>분당 맥박수. null이면 현재 값 유지.</summary>
+    /// <summary>분당 맥박수. null이면 현재 값 유지, -1이면 맥박 없음(측정 불가).</summary>
     public int? PulseRate { get; set; }
 
     /// <summary>맥박 세기 유형. null이면 현재 값 유지.</summary>
@@ -114,10 +176,10 @@ namespace MultiplayerInfrastructure.Scenario
 
     // ── 혈압(BloodPressure) ──
 
-    /// <summary>수축기 혈압(mmHg). null이면 현재 값 유지.</summary>
+    /// <summary>수축기 혈압(mmHg). null이면 현재 값 유지, -1이면 측정 불가.</summary>
     public int? BloodPressureSystolic { get; set; }
 
-    /// <summary>이완기 혈압(mmHg). null이면 현재 값 유지.</summary>
+    /// <summary>이완기 혈압(mmHg). null이면 현재 값 유지, -1이면 측정 불가.</summary>
     public int? BloodPressureDiastolic { get; set; }
 
     // ── 피부(Skin) ──

@@ -273,6 +273,7 @@ namespace MultiplayerInfrastructure.Editor
       bool hasAnyField =
         node.Sex.HasValue || node.Age.HasValue || node.Name != null || node.BloodType.HasValue
         || node.IntendedTriage.HasValue || node.ConsciousnessGcs.HasValue
+        || node.ConsciousnessEyeOpening.HasValue || node.ConsciousnessVerbal.HasValue || node.ConsciousnessMotor.HasValue
         || node.ConsciousnessLocLabel.HasValue || node.ConsciousnessPupillaryResponse.HasValue
         || node.RespirationAwRR.HasValue || node.RespirationTypeValue.HasValue
         || node.PulseRate.HasValue || node.PulseForceType.HasValue
@@ -284,12 +285,22 @@ namespace MultiplayerInfrastructure.Editor
         items.Add(new DiagnosticItem(Severity.Warning, id,
           "설정된 프리셋 필드가 없습니다. 노드가 아무 효과도 없습니다."));
 
+      // ── 전이(Transition) 검사 ──
+      // 점차 변화(Gradual)인데 소요 시간이 0 이하이면 즉시 적용과 동일하게 동작하므로 경고한다.
+      if (node.TransitionMode == PatientMedicalStateTransitionMode.Gradual
+          && node.TransitionDurationSeconds <= 0f)
+        items.Add(new DiagnosticItem(Severity.Warning, id,
+          "transitionMode=Gradual 이지만 transitionDurationSeconds 가 0 이하입니다. 즉시 적용(Immediate)과 동일하게 동작합니다."));
+
       // ── 열거형 필드 검사 ────────────────────────────────────────────────────
       // null(not set) → Warning, 정의되지 않은 값 → Error.
       // 새 열거형 필드 추가 시 아래에 동일 패턴으로 추가한다.
 
       CheckEnumField<Sex>(node.Sex,                                        "sex",                          id, items);
       CheckEnumField<BloodType>(node.BloodType,                            "bloodType",                    id, items);
+      CheckEnumField<EyeOpeningResponse>(node.ConsciousnessEyeOpening,     "consciousnessEyeOpening",       id, items);
+      CheckEnumField<VerbalResponse>(node.ConsciousnessVerbal,             "consciousnessVerbal",           id, items);
+      CheckEnumField<MotorResponse>(node.ConsciousnessMotor,               "consciousnessMotor",            id, items);
       CheckEnumField<LOCLabel>(node.ConsciousnessLocLabel,                 "consciousnessLocLabel",         id, items);
       CheckEnumField<PupillaryResponse>(node.ConsciousnessPupillaryResponse, "consciousnessPupillaryResponse", id, items);
       CheckEnumField<RespirationType>(node.RespirationTypeValue,           "respirationType",              id, items);
@@ -343,6 +354,21 @@ namespace MultiplayerInfrastructure.Editor
         if (mismatch)
           items.Add(new DiagnosticItem(Severity.Warning, id,
             $"GCS={gcs} 와 consciousnessLocLabel={locLabel} 이 일치하지 않습니다. GCS {gcs} 에서 기대되는 LOC: {expected}"));
+      }
+
+      // GCS와 E/V/M 세부 항목(합계) 일관성 검사
+      // E(1~4) + V(1~5) + M(1~6) 의 합이 consciousnessGcs와 일치해야 한다.
+      if (node.ConsciousnessGcs.HasValue
+          && node.ConsciousnessEyeOpening.HasValue
+          && node.ConsciousnessVerbal.HasValue
+          && node.ConsciousnessMotor.HasValue)
+      {
+        int gcs = node.ConsciousnessGcs.Value;
+        int evm = (int)node.ConsciousnessEyeOpening.Value + (int)node.ConsciousnessVerbal.Value + (int)node.ConsciousnessMotor.Value;
+        if (gcs != evm)
+          items.Add(new DiagnosticItem(Severity.Warning, id,
+            $"consciousnessGcs={gcs} 가 E+V+M 세부 항목의 합({evm})과 일치하지 않습니다. " +
+            $"(E={node.ConsciousnessEyeOpening.Value}, V={node.ConsciousnessVerbal.Value}, M={node.ConsciousnessMotor.Value})"));
       }
 
       if (node.BloodPressureSystolic.HasValue && node.BloodPressureDiastolic.HasValue

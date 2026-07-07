@@ -874,6 +874,17 @@ namespace MultiplayerInfrastructure.Editor
       data.TargetEntityStateKey = EditorGUILayout.TextField("Target Entity State Key", data.TargetEntityStateKey);
 
       EditorGUILayout.Space();
+      EditorGUILayout.LabelField("전이 (Transition)", EditorStyles.boldLabel);
+      data.TransitionMode = (PatientMedicalStateTransitionMode)EditorGUILayout.EnumPopup(
+        "Transition Mode", data.TransitionMode);
+      // 점차 변화(Gradual) 선택 시에만 소요 시간 필드를 표시한다.
+      if (data.TransitionMode == PatientMedicalStateTransitionMode.Gradual)
+      {
+        data.TransitionDurationSeconds = Mathf.Max(0f,
+          EditorGUILayout.FloatField("소요 시간(초)", data.TransitionDurationSeconds));
+      }
+
+      EditorGUILayout.Space();
       EditorGUILayout.LabelField("환자 기술자 (PatientDescriptor)", EditorStyles.boldLabel);
       data.Name = NullableTextField("Name", data.Name);
       data.Sex = NullableEnumField<TriageTrainer.Entity.Patient.Sex>("Sex", data.Sex);
@@ -884,6 +895,9 @@ namespace MultiplayerInfrastructure.Editor
       EditorGUILayout.Space();
       EditorGUILayout.LabelField("의식 (Consciousness)", EditorStyles.boldLabel);
       data.ConsciousnessGcs = NullableIntField("GCS (3~15)", data.ConsciousnessGcs);
+      data.ConsciousnessEyeOpening = NullableEnumField<TriageTrainer.Entity.Patient.EyeOpeningResponse>("E: Eye Opening (1~4)", data.ConsciousnessEyeOpening);
+      data.ConsciousnessVerbal = NullableEnumField<TriageTrainer.Entity.Patient.VerbalResponse>("V: Verbal Response (1~5)", data.ConsciousnessVerbal);
+      data.ConsciousnessMotor = NullableEnumField<TriageTrainer.Entity.Patient.MotorResponse>("M: Motor Response (1~6)", data.ConsciousnessMotor);
       data.ConsciousnessLocLabel = NullableEnumField<TriageTrainer.Entity.Patient.LOCLabel>("LOC Label", data.ConsciousnessLocLabel);
       data.ConsciousnessPupillaryResponse = NullableEnumField<TriageTrainer.Entity.Patient.PupillaryResponse>("Pupillary Response", data.ConsciousnessPupillaryResponse);
 

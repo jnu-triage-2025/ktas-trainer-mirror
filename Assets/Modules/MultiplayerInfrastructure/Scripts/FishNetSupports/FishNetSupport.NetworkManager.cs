@@ -3,6 +3,7 @@ using FishNet.Component.Spawning;
 using FishNet.Example;
 using FishNet.Managing;
 using FishNet.Transporting;
+using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Session;
 using Unity.VisualScripting;
@@ -158,13 +159,21 @@ namespace MultiplayerInfrastructure.FishNetSupports
     {
       if (args.ConnectionState == LocalConnectionState.Started)
       {
+        // 새 서버 세션 시작: 이전 세션에서 남은 StaticPlacedItem 상태를 초기화한다.
+        // static Dictionary는 도메인 리로드 없이는 유지되므로 명시적 초기화가 필요하다.
+        StaticPlacedItemService.ClearAll();
+
         _deferredPlayerSpawningPrepared = false;
         PrepareDeferredPlayerSpawning();
         return;
       }
 
       if (args.ConnectionState == LocalConnectionState.Stopped)
+      {
+        // 서버 세션 종료: 상태를 정리하여 다음 세션이 깨끗한 상태로 시작하도록 한다.
+        StaticPlacedItemService.ClearAll();
         _deferredPlayerSpawningPrepared = false;
+      }
     }
 
     private static void RegisterSceneSpawnPointProviders()

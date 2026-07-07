@@ -517,14 +517,34 @@ namespace MultiplayerInfrastructure.Editor
     private void BuildPatientMedicalStatePresetInlineEditor(ScenarioPatientMedicalStatePresetNode data)
     {
       AddTextField("Target Entity", value => data.TargetEntityIdentifier = value, data.TargetEntityIdentifier);
+
+      // 전이 방식: Immediate(즉시) / Gradual(점차 변화). Gradual 선택 시 소요 시간 필드를 표시한다.
+      var transitionField = new EnumField("Transition", data.TransitionMode);
+      transitionField.RegisterValueChangedCallback(evt =>
+      {
+        data.TransitionMode = (PatientMedicalStateTransitionMode)evt.newValue;
+        BuildInlineEditor();
+      });
+      _inlineEditorContainer.Add(transitionField);
+
+      if (data.TransitionMode == PatientMedicalStateTransitionMode.Gradual)
+      {
+        var durationField = new FloatField("소요 시간(초)") { value = data.TransitionDurationSeconds };
+        durationField.RegisterValueChangedCallback(evt =>
+          data.TransitionDurationSeconds = Mathf.Max(0f, evt.newValue));
+        _inlineEditorContainer.Add(durationField);
+      }
+
       // 주요 식별 필드만 인라인으로 표시하고, 상세 수치는 Inspector 패널에서 편집한다
       var sexLabel = data.Sex.HasValue ? data.Sex.Value.ToString() : "(not set)";
       var ageLabel = data.Age.HasValue ? data.Age.Value.ToString() : "(not set)";
       _inlineEditorContainer.Add(new Label($"Sex: {sexLabel}  Age: {ageLabel}") { style = { fontSize = 10, color = new Color(0.85f, 0.85f, 0.85f) } });
       var gcsLabel = data.ConsciousnessGcs.HasValue ? $"GCS {data.ConsciousnessGcs}" : string.Empty;
+      var evmLabel = (data.ConsciousnessEyeOpening.HasValue || data.ConsciousnessVerbal.HasValue || data.ConsciousnessMotor.HasValue)
+        ? $"E{(int?)data.ConsciousnessEyeOpening}/V{(int?)data.ConsciousnessVerbal}/M{(int?)data.ConsciousnessMotor}" : string.Empty;
       var bpLabel = (data.BloodPressureSystolic.HasValue || data.BloodPressureDiastolic.HasValue)
         ? $"BP {data.BloodPressureSystolic}/{data.BloodPressureDiastolic}" : string.Empty;
-      var summary = string.Join("  ", new[] { gcsLabel, bpLabel }.Where(s => !string.IsNullOrEmpty(s)));
+      var summary = string.Join("  ", new[] { gcsLabel, evmLabel, bpLabel }.Where(s => !string.IsNullOrEmpty(s)));
       if (!string.IsNullOrEmpty(summary))
         _inlineEditorContainer.Add(new Label(summary) { style = { fontSize = 10, color = new Color(0.85f, 0.85f, 0.85f) } });
       AddNextIdentifierField(data);

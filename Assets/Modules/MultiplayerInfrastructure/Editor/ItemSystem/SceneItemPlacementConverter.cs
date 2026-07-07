@@ -27,6 +27,25 @@ namespace MultiplayerInfrastructure.Editor.ItemSystem
     private const string ConvertSelectionMenuPath = MenuRoot + "Convert Selected SceneItemPlacements";
     private const string ConvertSceneMenuPath = MenuRoot + "Convert All In Active Scene";
 
+    /// <summary>
+    /// <see cref="RunConversion"/> 의 결과 요약입니다. GUI(다이얼로그)와 배치(-batchmode) 양쪽 호출부에서 공유합니다.
+    /// </summary>
+    internal readonly struct ConversionResult
+    {
+      public ConversionResult(int converted, int skipped, int failed, string report)
+      {
+        Converted = converted;
+        Skipped = skipped;
+        Failed = failed;
+        Report = report;
+      }
+
+      public int Converted { get; }
+      public int Skipped { get; }
+      public int Failed { get; }
+      public string Report { get; }
+    }
+
     // ── 선택 오브젝트 변환 ─────────────────────────────────────────────────
 
     [MenuItem(ConvertSelectionMenuPath)]
@@ -75,6 +94,23 @@ namespace MultiplayerInfrastructure.Editor.ItemSystem
     // ── 공통 변환 실행 ─────────────────────────────────────────────────────
 
     private static void RunConversion(List<SceneItemPlacement> placements, string label)
+    {
+      var result = RunConversionCore(placements, label);
+
+      Debug.Log(
+        $"[SceneItemPlacementConverter] 변환 완료: 성공 {result.Converted}개, 건너뜀 {result.Skipped}개, " +
+        $"실패 {result.Failed}개.\n{result.Report}");
+      EditorUtility.DisplayDialog(
+        "Static Placed Item",
+        $"변환 완료\n\n성공: {result.Converted}개\n건너뜀: {result.Skipped}개\n실패: {result.Failed}개\n\n" +
+        "자세한 내역은 콘솔 로그를 확인하세요.\n씬을 저장해야 반영됩니다.",
+        "확인");
+    }
+
+    /// <summary>
+    /// GUI 다이얼로그 없이 변환을 수행하고 결과를 반환합니다. 배치(-batchmode) 실행 진입점에서 사용합니다.
+    /// </summary>
+    internal static ConversionResult RunConversionCore(List<SceneItemPlacement> placements, string label)
     {
       int group = Undo.GetCurrentGroup();
       Undo.SetCurrentGroupName($"Convert {label} to StaticPlacedItem");
@@ -126,12 +162,7 @@ namespace MultiplayerInfrastructure.Editor.ItemSystem
       if (scene.IsValid())
         EditorSceneManager.MarkSceneDirty(scene);
 
-      Debug.Log(
-        $"[SceneItemPlacementConverter] 변환 완료: 성공 {converted}개, 건너뜀 {skipped}개, 실패 {failed}개.\n{report}");
-      EditorUtility.DisplayDialog(
-        "Static Placed Item",
-        $"변환 완료\n\n성공: {converted}개\n건너뜀: {skipped}개\n실패: {failed}개\n\n자세한 내역은 콘솔 로그를 확인하세요.\n씬을 저장해야 반영됩니다.",
-        "확인");
+      return new ConversionResult(converted, skipped, failed, report.ToString());
     }
 
     private static bool ConvertOne(SceneItemPlacement placement, StringBuilder report)
@@ -290,7 +321,7 @@ namespace MultiplayerInfrastructure.Editor.ItemSystem
       return result;
     }
 
-    private static List<SceneItemPlacement> CollectFromActiveScene()
+    internal static List<SceneItemPlacement> CollectFromActiveScene()
     {
       var result = new List<SceneItemPlacement>();
 

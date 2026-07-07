@@ -92,6 +92,18 @@ namespace MultiplayerInfrastructure.Player
 
     private void ResolveHandledItem()
     {
+      // 손에 든 아이템이 바뀌면 아이템 소지 조건부 상호작용(예: 특정 아이템을 든 경우에만 노출되는
+      // IInteract)의 힌트가 즉시 재평가되어야 하므로, 변경 여부를 추적해 갱신을 트리거한다.
+      var previousHandlingItem = HandlingItem;
+
+      ResolveHandledItemCore();
+
+      if (!ReferenceEquals(previousHandlingItem, HandlingItem))
+        RefreshInteractableHintsNow();
+    }
+
+    private void ResolveHandledItemCore()
+    {
       if (_slots == null || _slots.Count == 0)
       {
         HandlingItem = null;

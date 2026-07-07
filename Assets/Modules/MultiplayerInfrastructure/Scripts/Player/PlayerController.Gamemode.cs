@@ -119,8 +119,8 @@ namespace MultiplayerInfrastructure.Player
 
     private void StopSpectateFollow()
     {
-      if (_camControl != null && _cameraHolderTransform != null)
-        _camControl.FollowingCameraHolder = _cameraHolderTransform;
+      if (_camControl != null && CameraHolderTransform != null)
+        _camControl.FollowingCameraHolder = CameraHolderTransform;
 
       _isSpectateFollowing = false;
       _spectateFollowTarget = null;

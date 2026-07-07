@@ -155,23 +155,16 @@ namespace MultiplayerInfrastructure.Editor
 
       var toolbar = new Toolbar();
 
-      var newButton = new ToolbarButton(LoadBlankGraph) { text = "New Graph" };
-      toolbar.Add(newButton);
+      var fileMenu = new ToolbarMenu { text = "File" };
+      fileMenu.menu.AppendAction("New", _ => LoadBlankGraph());
+      fileMenu.menu.AppendAction("Open", _ => OpenGraphFromJson());
+      fileMenu.menu.AppendAction("Save", _ => SaveGraphToJson());
+      fileMenu.menu.AppendAction("Save As...", _ => SaveGraphToJsonAs());
+      fileMenu.menu.AppendAction("Validate", _ => ValidateGraphUsingRuntimeValidator());
+      toolbar.Add(fileMenu);
 
-      var addNodeButton = new ToolbarButton(OpenCreateNodeMenu) { text = "Add Node" };
+      var addNodeButton = new ToolbarButton(OpenCreateNodeMenu) { text = "+" };
       toolbar.Add(addNodeButton);
-
-      var loadButton = new ToolbarButton(OpenGraphFromJson) { text = "Open File" };
-      toolbar.Add(loadButton);
-
-      var saveButton = new ToolbarButton(SaveGraphToJson) { text = "Save File" };
-      toolbar.Add(saveButton);
-
-      var saveAsButton = new ToolbarButton(SaveGraphToJsonAs) { text = "Save File As..." };
-      toolbar.Add(saveAsButton);
-
-      var validateButton = new ToolbarButton(ValidateGraphUsingRuntimeValidator) { text = "Validate" };
-      toolbar.Add(validateButton);
 
       var searchButton = new ToolbarButton(OpenSearchPanel) { text = "Find" };
       toolbar.Add(searchButton);

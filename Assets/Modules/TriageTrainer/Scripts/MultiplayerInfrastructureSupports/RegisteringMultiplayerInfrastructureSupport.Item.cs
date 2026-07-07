@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
 using TriageTrainer.ItemDefinitions;
 using UnityEngine;
@@ -26,6 +27,7 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
     private void Awake_Item()
     {
       RegisterAllItems();
+      RegisterAllCombineRecipes();
       ValidateItemResources();
     }
 
@@ -78,6 +80,40 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<VitalSet>(VitalSet.Identifier);
       Registry.RegisterItemDefinition<WallSuction>(WallSuction.Identifier);
       Registry.RegisterItemDefinition<Yankauer>(Yankauer.Identifier);
+    }
+
+    // =========================================================================
+    // 자동 조합 레시피 등록
+    // =========================================================================
+
+    /// <summary>
+    /// 아이템 자동 조합 레시피를 등록합니다.
+    ///
+    /// 레시피 형식:
+    ///   new ItemCombineRecipe(결과_식별자)
+    ///     .Requires(재료_식별자, 필요_수량)
+    ///     ...
+    ///     .Produces(생성_수량);
+    ///
+    /// 새 조합 규칙 추가 시 이 메서드에만 등록하면 됩니다.
+    /// </summary>
+    public static void RegisterAllCombineRecipes()
+    {
+      ItemCombineRecipeRegistry.Clear();
+
+      // 후두경 블레이드 1개 + 후두경 손잡이 1개 → 후두경 1개
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Laryngoscope.Identifier)
+          .Requires(LaryngoscopeBlade.Identifier, 1)
+          .Requires(LaryngoscopeHandle.Identifier, 1)
+          .Produces(1));
+
+      // 기관내관 1개 + 스타일렛 1개 → 기관내관 (준비 완료) 1개
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(EndotrachealTubeReady.Identifier)
+          .Requires(EndotrachealTube.Identifier, 1)
+          .Requires(Stylet.Identifier, 1)
+          .Produces(1));
     }
 
     // =========================================================================

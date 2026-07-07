@@ -24,6 +24,9 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private KeyCode _keyOpenQuestUI = DefaultsKeyConfiguration.OpenQuestUI;
     [SerializeField] private KeyCode _keyDropHeldItem = DefaultsKeyConfiguration.DropHeldItem;
 
+    [Tooltip("이 키를 누른 채 마우스 휠을 굴리면 3인칭 카메라 거리(POV)를 조정합니다.")]
+    [SerializeField] private KeyCode _keyCameraDistanceModifier = KeyCode.LeftAlt;
+
     void Start_Input()
     {
       _chatUI = Registry.Registry.Get<ChatUIController>(RegistryType.UI, Registry.Registry.TypeKey<ChatUIController>());
@@ -225,10 +228,28 @@ namespace MultiplayerInfrastructure.Player
       // Selection using numkey
       HandleHotbarInputNumkey();
 
+      // 수정자 키를 누른 채 휠을 굴리면 핫바 선택 대신 카메라 거리(POV)를 조정한다.
+      if (Input.GetKey(_keyCameraDistanceModifier))
+      {
+        HandleCameraDistanceInput();
+        return;
+      }
+
       if (_detector.IsUnityNull()) return;
       // Selection using mouse wheel
       if (_detector.InteractableNearbyExists) return;
       HandleHotbarInputMouseWheel();
+    }
+
+    private void HandleCameraDistanceInput()
+    {
+      if (_camControl.IsUnityNull()) return;
+
+      float scroll = Input.mouseScrollDelta.y;
+      if (Mathf.Abs(scroll) <= Mathf.Epsilon) return;
+
+      // 휠을 위로(scroll > 0) 굴리면 카메라를 가깝게, 아래로 굴리면 멀게 한다.
+      _camControl.AdjustThirdPersonDistance(scroll > 0 ? 1 : -1);
     }
 
     private void HandleDialogueInput()

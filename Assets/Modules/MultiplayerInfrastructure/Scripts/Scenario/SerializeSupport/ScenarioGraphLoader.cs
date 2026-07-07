@@ -1634,6 +1634,11 @@ namespace MultiplayerInfrastructure.Scenario
         TargetEntityIdentifier = dto.TargetEntityIdentifier,
         TargetEntityStateKey = dto.TargetEntityStateKey,
 
+        // 전이(Transition)
+        TransitionMode = ParseOptionalEnum<PatientMedicalStateTransitionMode>(dto.TransitionMode)
+                         ?? PatientMedicalStateTransitionMode.Immediate,
+        TransitionDurationSeconds = dto.TransitionDurationSeconds ?? 0f,
+
         // 환자 기술자
         Name = dto.Name,
         Sex = ParseOptionalEnum<Sex>(dto.Sex),
@@ -1643,6 +1648,9 @@ namespace MultiplayerInfrastructure.Scenario
 
         // 의식
         ConsciousnessGcs = dto.ConsciousnessGcs,
+        ConsciousnessEyeOpening = ParseOptionalEnum<EyeOpeningResponse>(dto.ConsciousnessEyeOpening),
+        ConsciousnessVerbal = ParseOptionalEnum<VerbalResponse>(dto.ConsciousnessVerbal),
+        ConsciousnessMotor = ParseOptionalEnum<MotorResponse>(dto.ConsciousnessMotor),
         ConsciousnessLocLabel = ParseOptionalEnum<LOCLabel>(dto.ConsciousnessLocLabel),
         ConsciousnessPupillaryResponse = ParseOptionalEnum<PupillaryResponse>(dto.ConsciousnessPupillaryResponse),
 
@@ -1683,6 +1691,15 @@ namespace MultiplayerInfrastructure.Scenario
         TargetEntityIdentifier = node.TargetEntityIdentifier,
         TargetEntityStateKey = node.TargetEntityStateKey,
 
+        // 전이(Transition)
+        // Immediate(기본값)는 JSON에서 생략한다. Gradual일 때만 소요 시간과 함께 직렬화한다.
+        TransitionMode = node.TransitionMode == PatientMedicalStateTransitionMode.Immediate
+                         ? null
+                         : node.TransitionMode.ToString(),
+        TransitionDurationSeconds = node.TransitionMode == PatientMedicalStateTransitionMode.Gradual
+                         ? node.TransitionDurationSeconds
+                         : (float?)null,
+
         // 환자 기술자
         Name = node.Name,
         Sex = node.Sex?.ToString(),
@@ -1692,6 +1709,9 @@ namespace MultiplayerInfrastructure.Scenario
 
         // 의식
         ConsciousnessGcs = node.ConsciousnessGcs,
+        ConsciousnessEyeOpening = node.ConsciousnessEyeOpening?.ToString(),
+        ConsciousnessVerbal = node.ConsciousnessVerbal?.ToString(),
+        ConsciousnessMotor = node.ConsciousnessMotor?.ToString(),
         ConsciousnessLocLabel = node.ConsciousnessLocLabel?.ToString(),
         ConsciousnessPupillaryResponse = node.ConsciousnessPupillaryResponse?.ToString(),
 

@@ -72,19 +72,31 @@ MonoBehaviour:
   _componentIndexCache: 1
   _addedNetworkObject: {fileID: 0}
   _networkObjectCache: {fileID: 543940734885712351}
-  _currentViewMode: 1
-  _firstPersonDistance: 0.5
-  _thirdPersonDistance: 5
-  _cameraModeTransitionSpeed: 5
-  _followingCameraHolder: {fileID: 0}
-  _camera: {fileID: 0}
+  _holder:
+    _currentViewMode: 1
+    _firstPersonDistance: 0.5
+    _thirdPersonDistance: 5
+    _cameraModeTransitionSpeed: 5
+    _minThirdPersonDistance: 1
+    _maxThirdPersonDistance: 8
+    _distanceZoomStep: 0.5
+    _enableCollision: 1
+    _collisionProbeRadius: 0.2
+    _collisionBuffer: 0.1
+    _collisionMask:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    _followingPivot: {fileID: 0}
+    _camera: {fileID: 0}
+    _spectatorLayerName: Spectator
+    _currentDistance: 0
+    _targetDistance: 0
+    _desiredThirdPersonDistance: 0
+    _desiredDistanceInitialized: 0
+    _baseCullingMask: 0
+    _baseMaskInitialized: 0
   _nearbyInteractablesDetector: {fileID: 0}
   _interactableHintUIController: {fileID: 0}
-  _spectatorLayerName: Spectator
-  _currentDistance: 0
-  _targetDistance: 0
-  _baseCullingMask: 0
-  _baseMaskInitialized: 0
 --- !u!114 &4333088614849922663
 MonoBehaviour:
   m_ObjectHideFlags: 0

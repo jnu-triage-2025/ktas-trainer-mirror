@@ -327,137 +327,82 @@ namespace TriageTrainer.Entity
 
       EnsureMedicalStateDefaults();
 
-      // ── 환자 기술자(PatientDescriptor) ──
-      // 새 PatientDescriptor 필드 추가 시 아래에 동일 패턴으로 추가한다.
+      // ── 전이 방식 결정 ──
+      // Gradual + 소요 시간 > 0 인 경우에만 점차 변화 코루틴을 실행한다.
+      // (게임오브젝트가 비활성 상태이면 코루틴을 시작할 수 없으므로 즉시 적용으로 폴백한다.)
+      bool gradual = preset.TransitionMode == PatientMedicalStateTransitionMode.Gradual
+                     && preset.TransitionDurationSeconds > 0f
+                     && isActiveAndEnabled;
 
-      if (preset.Name != null)
-        _patientDescriptor.name = preset.Name;
-
-      if (preset.Sex.HasValue)
-        _patientDescriptor.sex = preset.Sex.Value;
-
-      if (preset.Age.HasValue)
-        _patientDescriptor.age = preset.Age.Value;
-
-      if (preset.BloodType.HasValue)
-        _patientDescriptor.bloodType = preset.BloodType.Value;
-
-      if (preset.IntendedTriage.HasValue)
-        _patientDescriptor.intendedTriage = preset.IntendedTriage.Value;
-
-      // ── 의식(Consciousness) ──
-      // 새 Consciousness 필드 추가 시 아래에 동일 패턴으로 추가한다.
-
-      if (preset.ConsciousnessGcs.HasValue
-          || preset.ConsciousnessLocLabel.HasValue
-          || preset.ConsciousnessPupillaryResponse.HasValue)
+      if (gradual)
       {
-        if (_medicalState.consciousness == null)
-          _medicalState.consciousness = Consciousness.Default;
+        // 비수치(열거형/불리언/문자열/피부/의식 라벨 등) 필드는 즉시 적용하고,
+        // 수치 필드(GCS/호흡수/맥박수/혈압)는 소요 시간 동안 점차 보간한다.
+        ApplyNonNumericPresetFields(preset);
+        NotifyMedicalStateChanged();
+        PropagatePresetToClients(preset, includeNumericVitals: false);
 
-        if (preset.ConsciousnessGcs.HasValue)
-          _medicalState.consciousness.gcs = preset.ConsciousnessGcs.Value;
-
-        if (preset.ConsciousnessLocLabel.HasValue)
-          _medicalState.consciousness.locLabel = preset.ConsciousnessLocLabel.Value;
-
-        if (preset.ConsciousnessPupillaryResponse.HasValue)
-          _medicalState.consciousness.pupillaryResponse = preset.ConsciousnessPupillaryResponse.Value;
+        if (_medicalStateTransitionRoutine != null)
+          StopCoroutine(_medicalStateTransitionRoutine);
+        _medicalStateTransitionRoutine = StartCoroutine(
+          GradualNumericTransitionRoutine(preset, preset.TransitionDurationSeconds));
+        return;
       }
 
-      // ── 호흡(Respiration) ──
-      // 새 Respiration 필드 추가 시 아래에 동일 패턴으로 추가한다.
-
-      if (preset.RespirationAwRR.HasValue || preset.RespirationTypeValue.HasValue)
+      // ── 즉시 적용 ──
+      if (_medicalStateTransitionRoutine != null)
       {
-        if (_medicalState.respiration == null)
-          _medicalState.respiration = new Respiration();
-
-        if (preset.RespirationAwRR.HasValue)
-          _medicalState.respiration.awRR = preset.RespirationAwRR.Value;
-
-        if (preset.RespirationTypeValue.HasValue)
-          _medicalState.respiration.type = preset.RespirationTypeValue.Value;
+        StopCoroutine(_medicalStateTransitionRoutine);
+        _medicalStateTransitionRoutine = null;
       }
 
-      // ── 맥박(BloodPulse) ──
-      // 새 BloodPulse 필드 추가 시 아래에 동일 패턴으로 추가한다.
-
-      if (preset.PulseRate.HasValue || preset.PulseForceType.HasValue)
-      {
-        if (_medicalState.pulse == null)
-          _medicalState.pulse = new BloodPulse();
-
-        if (preset.PulseRate.HasValue)
-          _medicalState.pulse.rate = preset.PulseRate.Value;
-
-        if (preset.PulseForceType.HasValue)
-          _medicalState.pulse.forceType = preset.PulseForceType.Value;
-      }
-
-      // ── 혈압(BloodPressure) ──
-      // 새 BloodPressure 필드 추가 시 아래에 동일 패턴으로 추가한다.
-
-      if (preset.BloodPressureSystolic.HasValue || preset.BloodPressureDiastolic.HasValue)
-      {
-        if (_medicalState.bloodPressure == null)
-          _medicalState.bloodPressure = new BloodPressure();
-
-        if (preset.BloodPressureSystolic.HasValue)
-          _medicalState.bloodPressure.systolic = preset.BloodPressureSystolic.Value;
-
-        if (preset.BloodPressureDiastolic.HasValue)
-          _medicalState.bloodPressure.diastolic = preset.BloodPressureDiastolic.Value;
-      }
-
-      // ── 피부(Skin) ──
-      // 새 Skin 필드 추가 시 아래에 동일 패턴으로 추가한다.
-
-      if (preset.SkinColorHue.HasValue || preset.SkinTemperatureType.HasValue)
-      {
-        if (_medicalState.skin == null)
-          _medicalState.skin = Skin.Default;
-
-        if (preset.SkinColorHue.HasValue)
-          _medicalState.skin.colorHue = preset.SkinColorHue.Value;
-
-        if (preset.SkinTemperatureType.HasValue)
-          _medicalState.skin.temperatureType = preset.SkinTemperatureType.Value;
-      }
-
-      // ── 기타 의료 상태 ──
-      // 새 PatientMedicalState 필드 추가 시 아래에 동일 패턴으로 추가한다.
-
-      if (preset.IsCardiacArrest.HasValue)
-        _medicalState.isCardiacArrest = preset.IsCardiacArrest.Value;
+      ApplyNonNumericPresetFields(preset);
+      ApplyNumericPresetFields(preset);
 
       NotifyMedicalStateChanged();
 
-      // 서버 컨텍스트이면 변경된 vital 필드를 모든 클라이언트에 전파한다.
-      // BufferLast 옵션으로, 늦게 참여한 클라이언트도 마지막 프리셋 상태를 수신한다.
-      // 새 필드 추가 시 RpcSyncVitalMedicalState 에도 동일하게 파라미터를 추가한다.
-      if (IsServerStarted)
-      {
-        RpcSyncVitalMedicalState(
-          name: preset.Name,
-          sex: preset.Sex.HasValue ? (int)preset.Sex.Value : PresetSentinelNone,
-          age: preset.Age ?? PresetSentinelNone,
-          bloodType: preset.BloodType.HasValue ? (int)preset.BloodType.Value : PresetSentinelNone,
-          intendedTriage: preset.IntendedTriage.HasValue ? (int)preset.IntendedTriage.Value : PresetSentinelNone,
-          consciousnessGcs: preset.ConsciousnessGcs ?? PresetSentinelNone,
-          consciousnessLocLabel: preset.ConsciousnessLocLabel.HasValue ? (int)preset.ConsciousnessLocLabel.Value : PresetSentinelNone,
-          consciousnessPupillaryResponse: preset.ConsciousnessPupillaryResponse.HasValue ? (int)preset.ConsciousnessPupillaryResponse.Value : PresetSentinelNone,
-          respirationAwRR: preset.RespirationAwRR ?? PresetSentinelNone,
-          respirationTypeValue: preset.RespirationTypeValue.HasValue ? (int)preset.RespirationTypeValue.Value : PresetSentinelNone,
-          pulseRate: preset.PulseRate ?? PresetSentinelNone,
-          pulseForceType: preset.PulseForceType.HasValue ? (int)preset.PulseForceType.Value : PresetSentinelNone,
-          bloodPressureSystolic: preset.BloodPressureSystolic ?? PresetSentinelNone,
-          bloodPressureDiastolic: preset.BloodPressureDiastolic ?? PresetSentinelNone,
-          skinColorHue: preset.SkinColorHue.HasValue ? (int)preset.SkinColorHue.Value : PresetSentinelNone,
-          skinTemperatureType: preset.SkinTemperatureType.HasValue ? (int)preset.SkinTemperatureType.Value : PresetSentinelNone,
-          isCardiacArrest: preset.IsCardiacArrest.HasValue ? (preset.IsCardiacArrest.Value ? 1 : 0) : PresetSentinelNone
-        );
-      }
+      PropagatePresetToClients(preset, includeNumericVitals: true);
+    }
+
+    /// <summary>진행 중인 점차 변화(Gradual) 코루틴 핸들. 새 프리셋 적용 시 취소된다.</summary>
+    private Coroutine _medicalStateTransitionRoutine;
+
+    /// <summary>
+    /// 서버 컨텍스트에서 프리셋 vital 필드를 모든 클라이언트에 전파한다.
+    /// <c>BufferLast = true</c> 로, 늦게 참여한 클라이언트도 마지막 프리셋 상태를 수신한다.
+    ///
+    /// <para><paramref name="includeNumericVitals"/> 가 false이면 수치 필드(GCS/호흡수/맥박수/혈압)는
+    /// <see cref="PresetSentinelNone"/> 로 전송되어 클라이언트에서 건너뛴다. 점차 변화(Gradual) 시작 시
+    /// 비수치 필드만 먼저 전파하기 위해 사용한다. 수치 필드는 매 프레임 <see cref="RpcSyncMonitorMedicalState"/> 로
+    /// 모니터 값이 전파되며, 종료 시 true 로 최종 확정 전파한다.</para>
+    /// </summary>
+    private void PropagatePresetToClients(ScenarioPatientMedicalStatePresetNode preset, bool includeNumericVitals)
+    {
+      if (!IsServerStarted)
+        return;
+
+      RpcSyncVitalMedicalState(
+        name: preset.Name,
+        sex: preset.Sex.HasValue ? (int)preset.Sex.Value : PresetSentinelNone,
+        age: preset.Age ?? PresetSentinelNone,
+        bloodType: preset.BloodType.HasValue ? (int)preset.BloodType.Value : PresetSentinelNone,
+        intendedTriage: preset.IntendedTriage.HasValue ? (int)preset.IntendedTriage.Value : PresetSentinelNone,
+        consciousnessGcs: includeNumericVitals ? (preset.ConsciousnessGcs ?? PresetSentinelNone) : PresetSentinelNone,
+        consciousnessEyeOpening: preset.ConsciousnessEyeOpening.HasValue ? (int)preset.ConsciousnessEyeOpening.Value : PresetSentinelNone,
+        consciousnessVerbal: preset.ConsciousnessVerbal.HasValue ? (int)preset.ConsciousnessVerbal.Value : PresetSentinelNone,
+        consciousnessMotor: preset.ConsciousnessMotor.HasValue ? (int)preset.ConsciousnessMotor.Value : PresetSentinelNone,
+        consciousnessLocLabel: preset.ConsciousnessLocLabel.HasValue ? (int)preset.ConsciousnessLocLabel.Value : PresetSentinelNone,
+        consciousnessPupillaryResponse: preset.ConsciousnessPupillaryResponse.HasValue ? (int)preset.ConsciousnessPupillaryResponse.Value : PresetSentinelNone,
+        respirationAwRR: includeNumericVitals ? (preset.RespirationAwRR ?? PresetSentinelNone) : PresetSentinelNone,
+        respirationTypeValue: preset.RespirationTypeValue.HasValue ? (int)preset.RespirationTypeValue.Value : PresetSentinelNone,
+        pulseRate: includeNumericVitals ? (preset.PulseRate ?? PresetSentinelNone) : PresetSentinelNone,
+        pulseForceType: preset.PulseForceType.HasValue ? (int)preset.PulseForceType.Value : PresetSentinelNone,
+        bloodPressureSystolic: includeNumericVitals ? (preset.BloodPressureSystolic ?? PresetSentinelNone) : PresetSentinelNone,
+        bloodPressureDiastolic: includeNumericVitals ? (preset.BloodPressureDiastolic ?? PresetSentinelNone) : PresetSentinelNone,
+        skinColorHue: preset.SkinColorHue.HasValue ? (int)preset.SkinColorHue.Value : PresetSentinelNone,
+        skinTemperatureType: preset.SkinTemperatureType.HasValue ? (int)preset.SkinTemperatureType.Value : PresetSentinelNone,
+        isCardiacArrest: preset.IsCardiacArrest.HasValue ? (preset.IsCardiacArrest.Value ? 1 : 0) : PresetSentinelNone
+      );
     }
 
     /// <summary>
@@ -484,6 +429,9 @@ namespace TriageTrainer.Entity
       int bloodType,
       int intendedTriage,
       int consciousnessGcs,
+      int consciousnessEyeOpening,
+      int consciousnessVerbal,
+      int consciousnessMotor,
       int consciousnessLocLabel,
       int consciousnessPupillaryResponse,
       int respirationAwRR,
@@ -511,6 +459,9 @@ namespace TriageTrainer.Entity
 
       // 의식
       if (consciousnessGcs != PresetSentinelNone
+          || consciousnessEyeOpening != PresetSentinelNone
+          || consciousnessVerbal != PresetSentinelNone
+          || consciousnessMotor != PresetSentinelNone
           || consciousnessLocLabel != PresetSentinelNone
           || consciousnessPupillaryResponse != PresetSentinelNone)
       {
@@ -519,6 +470,12 @@ namespace TriageTrainer.Entity
 
         if (consciousnessGcs != PresetSentinelNone)
           _medicalState.consciousness.gcs = consciousnessGcs;
+        if (consciousnessEyeOpening != PresetSentinelNone)
+          _medicalState.consciousness.eyeOpening = (EyeOpeningResponse)consciousnessEyeOpening;
+        if (consciousnessVerbal != PresetSentinelNone)
+          _medicalState.consciousness.verbal = (VerbalResponse)consciousnessVerbal;
+        if (consciousnessMotor != PresetSentinelNone)
+          _medicalState.consciousness.motor = (MotorResponse)consciousnessMotor;
         if (consciousnessLocLabel != PresetSentinelNone)
           _medicalState.consciousness.locLabel = (LOCLabel)consciousnessLocLabel;
         if (consciousnessPupillaryResponse != PresetSentinelNone)
@@ -561,6 +518,13 @@ namespace TriageTrainer.Entity
           _medicalState.bloodPressure.diastolic = bloodPressureDiastolic;
       }
 
+      // 모니터 수치 구조체 브리지: 클라이언트에서도 환자 상태 모니터에 프리셋 수치가 반영되도록 한다.
+      // -1(측정 불가)은 MonitorValueUnavailable 로 매핑되어 모니터에 -?- 로 표시된다.
+      BridgeNumericVitalsToMonitor(
+        pulseRate: pulseRate != PresetSentinelNone ? pulseRate : (int?)null,
+        bloodPressureSystolic: bloodPressureSystolic != PresetSentinelNone ? bloodPressureSystolic : (int?)null,
+        bloodPressureDiastolic: bloodPressureDiastolic != PresetSentinelNone ? bloodPressureDiastolic : (int?)null);
+
       // 피부
       if (skinColorHue != PresetSentinelNone || skinTemperatureType != PresetSentinelNone)
       {
@@ -578,6 +542,152 @@ namespace TriageTrainer.Entity
         _medicalState.isCardiacArrest = isCardiacArrest != 0;
 
       NotifyMedicalStateChanged();
+    }
+
+    /// <summary>
+    /// 비수치 프리셋 필드(환자 기술자, 의식 세부 반응/라벨/동공, 호흡 유형, 맥박 세기, 피부, 심정지)를 즉시 적용한다.
+    /// 수치 필드(GCS/호흡수/맥박수/혈압)는 <see cref="ApplyNumericPresetFields"/> 에서 별도 처리한다.
+    /// </summary>
+    private void ApplyNonNumericPresetFields(ScenarioPatientMedicalStatePresetNode preset)
+    {
+      EnsureMedicalStateDefaults();
+
+      // ── 환자 기술자(PatientDescriptor) ──
+      if (preset.Name != null)
+        _patientDescriptor.name = preset.Name;
+      if (preset.Sex.HasValue)
+        _patientDescriptor.sex = preset.Sex.Value;
+      if (preset.Age.HasValue)
+        _patientDescriptor.age = preset.Age.Value;
+      if (preset.BloodType.HasValue)
+        _patientDescriptor.bloodType = preset.BloodType.Value;
+      if (preset.IntendedTriage.HasValue)
+        _patientDescriptor.intendedTriage = preset.IntendedTriage.Value;
+
+      // ── 의식(Consciousness) 비수치 항목 ──
+      if (preset.ConsciousnessEyeOpening.HasValue
+          || preset.ConsciousnessVerbal.HasValue
+          || preset.ConsciousnessMotor.HasValue
+          || preset.ConsciousnessLocLabel.HasValue
+          || preset.ConsciousnessPupillaryResponse.HasValue)
+      {
+        if (_medicalState.consciousness == null)
+          _medicalState.consciousness = Consciousness.Default;
+
+        if (preset.ConsciousnessEyeOpening.HasValue)
+          _medicalState.consciousness.eyeOpening = preset.ConsciousnessEyeOpening.Value;
+        if (preset.ConsciousnessVerbal.HasValue)
+          _medicalState.consciousness.verbal = preset.ConsciousnessVerbal.Value;
+        if (preset.ConsciousnessMotor.HasValue)
+          _medicalState.consciousness.motor = preset.ConsciousnessMotor.Value;
+        if (preset.ConsciousnessLocLabel.HasValue)
+          _medicalState.consciousness.locLabel = preset.ConsciousnessLocLabel.Value;
+        if (preset.ConsciousnessPupillaryResponse.HasValue)
+          _medicalState.consciousness.pupillaryResponse = preset.ConsciousnessPupillaryResponse.Value;
+      }
+
+      // ── 호흡 유형 / 맥박 세기 ──
+      if (preset.RespirationTypeValue.HasValue)
+      {
+        if (_medicalState.respiration == null)
+          _medicalState.respiration = new Respiration();
+        _medicalState.respiration.type = preset.RespirationTypeValue.Value;
+      }
+
+      if (preset.PulseForceType.HasValue)
+      {
+        if (_medicalState.pulse == null)
+          _medicalState.pulse = new BloodPulse();
+        _medicalState.pulse.forceType = preset.PulseForceType.Value;
+      }
+
+      // ── 피부(Skin) ──
+      if (preset.SkinColorHue.HasValue || preset.SkinTemperatureType.HasValue)
+      {
+        if (_medicalState.skin == null)
+          _medicalState.skin = Skin.Default;
+
+        if (preset.SkinColorHue.HasValue)
+          _medicalState.skin.colorHue = preset.SkinColorHue.Value;
+        if (preset.SkinTemperatureType.HasValue)
+          _medicalState.skin.temperatureType = preset.SkinTemperatureType.Value;
+      }
+
+      // ── 기타 ──
+      if (preset.IsCardiacArrest.HasValue)
+        _medicalState.isCardiacArrest = preset.IsCardiacArrest.Value;
+    }
+
+    /// <summary>
+    /// 수치 프리셋 필드(GCS/호흡수/맥박수/혈압)를 최종 대상 값으로 즉시 적용하고,
+    /// 모니터 수치 구조체(<c>numerics</c>/<c>nibp</c>)에 브리지한다.
+    /// -1(측정 불가)은 모니터에 <c>-?-</c> 로 표시되도록 매핑된다.
+    /// </summary>
+    private void ApplyNumericPresetFields(ScenarioPatientMedicalStatePresetNode preset)
+    {
+      EnsureMedicalStateDefaults();
+
+      if (preset.ConsciousnessGcs.HasValue)
+      {
+        if (_medicalState.consciousness == null)
+          _medicalState.consciousness = Consciousness.Default;
+        _medicalState.consciousness.gcs = preset.ConsciousnessGcs.Value;
+      }
+
+      if (preset.RespirationAwRR.HasValue)
+      {
+        if (_medicalState.respiration == null)
+          _medicalState.respiration = new Respiration();
+        _medicalState.respiration.awRR = preset.RespirationAwRR.Value;
+      }
+
+      if (preset.PulseRate.HasValue)
+      {
+        if (_medicalState.pulse == null)
+          _medicalState.pulse = new BloodPulse();
+        _medicalState.pulse.rate = preset.PulseRate.Value;
+      }
+
+      if (preset.BloodPressureSystolic.HasValue || preset.BloodPressureDiastolic.HasValue)
+      {
+        if (_medicalState.bloodPressure == null)
+          _medicalState.bloodPressure = new BloodPressure();
+        if (preset.BloodPressureSystolic.HasValue)
+          _medicalState.bloodPressure.systolic = preset.BloodPressureSystolic.Value;
+        if (preset.BloodPressureDiastolic.HasValue)
+          _medicalState.bloodPressure.diastolic = preset.BloodPressureDiastolic.Value;
+      }
+
+      BridgeNumericVitalsToMonitor(
+        pulseRate: preset.PulseRate,
+        bloodPressureSystolic: preset.BloodPressureSystolic,
+        bloodPressureDiastolic: preset.BloodPressureDiastolic);
+    }
+
+    /// <summary>
+    /// 프리셋 수치 vital을 모니터 수치 구조체(<c>numerics</c>/<c>nibp</c>)에 반영한다.
+    /// 음수(-1 등, 측정 불가)는 <see cref="PatientMedicalState.MonitorValueUnavailable"/> 로 매핑되어
+    /// 모니터에 <c>-?-</c> 로 표시된다. null(값 미지정)은 기존 모니터 값을 유지한다.
+    /// </summary>
+    private void BridgeNumericVitalsToMonitor(int? pulseRate, int? bloodPressureSystolic, int? bloodPressureDiastolic)
+    {
+      var numerics = _medicalState.numerics;
+      var nibp = _medicalState.nibp;
+
+      if (pulseRate.HasValue)
+      {
+        float v = pulseRate.Value < 0 ? PatientMedicalState.MonitorValueUnavailable : pulseRate.Value;
+        numerics.bpm = v;
+        numerics.pulseRate = v;
+      }
+
+      if (bloodPressureSystolic.HasValue)
+        nibp.systolic = bloodPressureSystolic.Value < 0 ? PatientMedicalState.MonitorValueUnavailable : bloodPressureSystolic.Value;
+      if (bloodPressureDiastolic.HasValue)
+        nibp.diastolic = bloodPressureDiastolic.Value < 0 ? PatientMedicalState.MonitorValueUnavailable : bloodPressureDiastolic.Value;
+
+      _medicalState.numerics = numerics;
+      _medicalState.nibp = nibp;
     }
 
     private void EnsureMedicalStateDefaults()
@@ -599,6 +709,93 @@ namespace TriageTrainer.Entity
 
       if (_medicalState.consciousness == null)
         _medicalState.consciousness = Consciousness.Default;
+    }
+
+    /// <summary>
+    /// 점차 변화(Gradual) 중 모니터 수치를 클라이언트로 전파하는 최소 간격(초).
+    /// 로컬 렌더링은 매 프레임 갱신하되, 네트워크 RPC는 이 간격으로 스로틀링하여
+    /// 긴 전이/다수 클라이언트에서 대역폭을 절약한다(약 10Hz).
+    /// </summary>
+    private const float GradualTransitionSyncIntervalSeconds = 0.1f;
+
+    /// <summary>
+    /// 점차 변화(Gradual) 코루틴. <paramref name="durationSeconds"/> 동안 수치 필드를
+    /// 현재 값에서 대상 값으로 선형 보간(lerp)한다. 측정 불가(-1) 값은 보간하지 않고
+    /// 종료 시점에 즉시 확정 적용한다(수치가 서서히 줄어드는 연출이 부적절하므로).
+    /// 로컬 렌더링은 매 프레임 갱신하고, 서버 컨텍스트에서는 모니터 수치를
+    /// <see cref="GradualTransitionSyncIntervalSeconds"/> 간격으로 클라이언트에 전파하며,
+    /// 종료 시 전체 vital 필드를 최종 값으로 확정 전파한다.
+    /// </summary>
+    private System.Collections.IEnumerator GradualNumericTransitionRoutine(
+      ScenarioPatientMedicalStatePresetNode preset, float durationSeconds)
+    {
+      // 보간 시작(from) 값 스냅샷
+      float fromGcs = _medicalState.consciousness?.gcs ?? 0;
+      float fromRr = _medicalState.respiration?.awRR ?? 0;
+      float fromPulse = _medicalState.numerics.bpm;
+      float fromSys = _medicalState.nibp.systolic;
+      float fromDia = _medicalState.nibp.diastolic;
+
+      // 측정 불가(-1) 대상은 보간에서 제외한다.
+      bool gcsUnavailable = preset.ConsciousnessGcs.HasValue && preset.ConsciousnessGcs.Value < 0;
+      bool rrUnavailable = preset.RespirationAwRR.HasValue && preset.RespirationAwRR.Value < 0;
+      bool pulseUnavailable = preset.PulseRate.HasValue && preset.PulseRate.Value < 0;
+      bool sysUnavailable = preset.BloodPressureSystolic.HasValue && preset.BloodPressureSystolic.Value < 0;
+      bool diaUnavailable = preset.BloodPressureDiastolic.HasValue && preset.BloodPressureDiastolic.Value < 0;
+
+      float elapsed = 0f;
+      float sinceLastSync = 0f;
+      while (elapsed < durationSeconds)
+      {
+        elapsed += Time.deltaTime;
+        sinceLastSync += Time.deltaTime;
+        float t = Mathf.Clamp01(elapsed / durationSeconds);
+
+        if (preset.ConsciousnessGcs.HasValue && !gcsUnavailable && _medicalState.consciousness != null)
+          _medicalState.consciousness.gcs = Mathf.RoundToInt(Mathf.Lerp(fromGcs, preset.ConsciousnessGcs.Value, t));
+        if (preset.RespirationAwRR.HasValue && !rrUnavailable && _medicalState.respiration != null)
+          _medicalState.respiration.awRR = Mathf.RoundToInt(Mathf.Lerp(fromRr, preset.RespirationAwRR.Value, t));
+
+        int? interpPulse = (preset.PulseRate.HasValue && !pulseUnavailable)
+          ? Mathf.RoundToInt(Mathf.Lerp(fromPulse, preset.PulseRate.Value, t)) : (int?)null;
+        int? interpSys = (preset.BloodPressureSystolic.HasValue && !sysUnavailable)
+          ? Mathf.RoundToInt(Mathf.Lerp(fromSys, preset.BloodPressureSystolic.Value, t)) : (int?)null;
+        int? interpDia = (preset.BloodPressureDiastolic.HasValue && !diaUnavailable)
+          ? Mathf.RoundToInt(Mathf.Lerp(fromDia, preset.BloodPressureDiastolic.Value, t)) : (int?)null;
+
+        if (interpPulse.HasValue && _medicalState.pulse != null)
+          _medicalState.pulse.rate = interpPulse.Value;
+        if (_medicalState.bloodPressure != null)
+        {
+          if (interpSys.HasValue)
+            _medicalState.bloodPressure.systolic = interpSys.Value;
+          if (interpDia.HasValue)
+            _medicalState.bloodPressure.diastolic = interpDia.Value;
+        }
+
+        BridgeNumericVitalsToMonitor(interpPulse, interpSys, interpDia);
+
+        // 로컬 렌더링은 매 프레임 갱신한다(호스트/오프라인 모니터가 부드럽게 보이도록).
+        NotifyMedicalStateChanged();
+
+        // 네트워크 전파는 스로틀링한다. 최종 확정 값은 루프 종료 후 PropagatePresetToClients 로 전송된다.
+        if (IsServerStarted && sinceLastSync >= GradualTransitionSyncIntervalSeconds)
+        {
+          sinceLastSync = 0f;
+          RpcSyncMonitorMedicalState(
+            _medicalState.ecg, _medicalState.art, _medicalState.cvp, _medicalState.pleth,
+            _medicalState.numerics, _medicalState.nibp, _medicalState.temperature, _medicalState.stLeads);
+        }
+
+        yield return null;
+      }
+
+      // 최종 확정: 수치 필드를 정확한 대상 값(측정 불가 -1 포함)으로 적용하고 전체 전파한다.
+      ApplyNumericPresetFields(preset);
+      NotifyMedicalStateChanged();
+      PropagatePresetToClients(preset, includeNumericVitals: true);
+
+      _medicalStateTransitionRoutine = null;
     }
   }
 }

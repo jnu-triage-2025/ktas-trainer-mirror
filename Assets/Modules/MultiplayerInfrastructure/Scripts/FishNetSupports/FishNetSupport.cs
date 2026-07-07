@@ -80,6 +80,11 @@ namespace MultiplayerInfrastructure.FishNetSupports
 
     private void Start()
     {
+      // OnEnable may run before the NetworkManager finishes Awake, in which case the
+      // server-connection-state subscription silently fails. Retry once everything is initialized
+      // so deferred player spawning is always prepared when the server starts.
+      ResolveNetworkManagerInHierarchy();
+
       if (!autoStartFromRegistryWhenNoBootstrapper)
         return;
 
