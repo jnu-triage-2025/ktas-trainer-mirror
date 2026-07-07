@@ -438,6 +438,12 @@ namespace MultiplayerInfrastructure.Player
     {
       if (TryGetStaticPlacedItem(entityIdentifier, out var staticItem) && staticItem != null)
         staticItem.ApplyVanished();
+
+      // NearbyInteractablesDetector는 감지 대상 목록의 "구성원 변화"에만 반응하므로,
+      // VanishBehavior가 DisableInteraction/Invisible(콜라이더 유지)인 경우 이 오브젝트는 계속 감지 목록에
+      // 남아 다음 구성원 변화(범위 재진입 등)가 있기 전까지 상호작용 힌트 UI가 갱신되지 않는다.
+      // 사라짐 적용 직후 즉시 갱신하여, 다음 감지 주기나 다른 인벤토리 변화가 있을 때까지 기다리지 않게 한다.
+      RefreshInteractableHintsNow();
     }
 
     // ── 신규 접속자 동기화 (서버에서 호출) ───────────────────────────────────
