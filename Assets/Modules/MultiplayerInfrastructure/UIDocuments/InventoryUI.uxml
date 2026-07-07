@@ -6,8 +6,9 @@
   <ui:Style src="InventoryUI.uss" />
   <ui:VisualElement name="InventoryUIWrapper" class="inventory-ui-wrapper">
     <mi:InventoryUIView name="InventoryRoot" class="inventory-root" style="visibility: hidden;">
-      <ui:Label text="Inventory" class="inventory-title" />
-      <ui:VisualElement name="InventoryGrid" class="inventory-grid" />
+      <ui:VisualElement name="InventoryPanel" class="inventory-panel">
+        <ui:VisualElement name="InventoryGrid" class="inventory-grid" />
+      </ui:VisualElement>
     </mi:InventoryUIView>
   </ui:VisualElement>
 </ui:UXML>

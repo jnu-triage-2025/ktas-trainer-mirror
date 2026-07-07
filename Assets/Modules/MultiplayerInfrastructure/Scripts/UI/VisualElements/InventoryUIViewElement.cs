@@ -53,6 +53,7 @@ namespace MultiplayerInfrastructure.UI
 
       _inventoryGrid = this.Q<VisualElement>("InventoryGrid") ?? CreateFallbackGrid();
 
+      BuildCraftingPanel();
       CreateHeldItemGhost();
       CreateTooltip();
       RegisterCallback<PointerMoveEvent>(OnPointerMoveWhileHolding);
@@ -70,7 +71,10 @@ namespace MultiplayerInfrastructure.UI
       if (!visible && _heldItemGhost != null)
         _heldItemGhost.style.display = DisplayStyle.None;
       if (!visible)
+      {
         HideTooltip();
+        ResetCraftingSelection();
+      }
     }
 
     public void UpdateInventory(IReadOnlyList<InventorySlotModelDTO> slots)
@@ -462,7 +466,15 @@ namespace MultiplayerInfrastructure.UI
     {
       if (_heldItem == null) return;
 
-      if (!TryGetSlotIndexFromEvent(evt.target as VisualElement, out _))
+      var target = evt.target as VisualElement;
+
+      // 조합 패널 위에서 손을 뗀 경우(예: 조합 목록 클릭으로 결과물을 커서에 pickup 한 직후의
+      // PointerUp)에는 아이템을 바닥에 버리지 않는다. 조합 패널은 인벤토리 UI의 정당한 영역이므로
+      // "슬롯 바깥 = 월드에 드롭" 규칙에서 제외한다.
+      if (IsWithinCraftingPanel(target))
+        return;
+
+      if (!TryGetSlotIndexFromEvent(target, out _))
       {
         var item = _heldItem.ItemInstance;
         ClearHeldItem();

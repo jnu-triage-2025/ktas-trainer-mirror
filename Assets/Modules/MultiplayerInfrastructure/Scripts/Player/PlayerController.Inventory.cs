@@ -118,8 +118,10 @@ namespace MultiplayerInfrastructure.Player
       {
         OnInventoryChangedAndReturn(true);
         item.OnGet(this);
-        if (!_isCombining)
-          TryAutoCombineItems();
+        // 조합은 이제 인벤토리 UI 의 조합 패널을 통해 수동으로 수행한다(자동 조합 비활성).
+        // 기존 자동 조합 로직은 GetCraftableRecipes / TryCraftRecipe 로 대체되었다.
+        // if (!_isCombining)
+        //   TryAutoCombineItems();
       }
 
       if (remaining.CurrentStackCount > 0)
@@ -188,6 +190,108 @@ namespace MultiplayerInfrastructure.Player
       {
         _isCombining = false;
       }
+    }
+
+    // =========================================================================
+    // 수동 조합(조합 패널) 지원 API
+    // =========================================================================
+
+    /// <summary>
+    /// 현재 인벤토리 보유량 기준으로 조합 가능한 레시피 목록을 조합 패널용 DTO로 반환한다.
+    /// (등록된 모든 레시피 중, 재료가 충분한 레시피만 포함)
+    /// </summary>
+    public List<InventoryUIView.CraftableRecipeDisplay> GetCraftableRecipes()
+    {
+      var result = new List<InventoryUIView.CraftableRecipeDisplay>();
+
+      var counts = BuildInventoryCountMap();
+      var recipes = ItemCombineRecipeRegistry.GetAll();
+
+      for (int i = 0; i < recipes.Count; i++)
+      {
+        var recipe = recipes[i];
+        if (recipe == null || string.IsNullOrWhiteSpace(recipe.OutputItemIdentifier))
+          continue;
+        if (!ItemCombineRecipeRegistry.RecipeCanCombine(recipe, counts))
+          continue;
+
+        var ingredients = new List<InventoryUIView.CraftableRecipeDisplay.Ingredient>(recipe.Ingredients.Count);
+        foreach (var ing in recipe.Ingredients)
+          ingredients.Add(new InventoryUIView.CraftableRecipeDisplay.Ingredient(ing.Identifier, ing.RequiredCount));
+
+        result.Add(new InventoryUIView.CraftableRecipeDisplay
+        {
+          OutputIdentifier = recipe.OutputItemIdentifier,
+          Ingredients = ingredients
+        });
+      }
+
+      return result;
+    }
+
+    /// <summary>
+    /// 지정한 결과 식별자의 레시피를 1회 조합한다.
+    /// 재료가 충분하면 인벤토리에서 재료를 소비하고, 생성된 결과 아이템 인스턴스를 반환한다.
+    /// (결과 아이템은 인벤토리에 추가하지 않는다 — 호출자(조합 패널)가 커서로 pickup 처리)
+    /// 재료가 부족하거나 결과 생성에 실패하면 null 을 반환한다.
+    /// </summary>
+    public ItemSystem.Item TryCraftRecipe(string outputItemIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(outputItemIdentifier))
+        return null;
+
+      var counts = BuildInventoryCountMap();
+      var recipes = ItemCombineRecipeRegistry.GetAll();
+
+      ItemCombineRecipe matched = null;
+      for (int i = 0; i < recipes.Count; i++)
+      {
+        var recipe = recipes[i];
+        if (recipe == null) continue;
+        if (!string.Equals(recipe.OutputItemIdentifier, outputItemIdentifier, StringComparison.Ordinal)) continue;
+        if (!ItemCombineRecipeRegistry.RecipeCanCombine(recipe, counts)) continue;
+        matched = recipe;
+        break;
+      }
+
+      if (matched == null)
+        return null;
+
+      // 재료 소비.
+      foreach (var ingredient in matched.Ingredients)
+      {
+        int removed = RemoveItemFromInventory(ingredient.Identifier, ingredient.RequiredCount);
+        if (removed < ingredient.RequiredCount)
+        {
+          // 이론상 도달하지 않지만(사전 검사 통과), 방어적으로 로그만 남긴다.
+          Debug.LogWarning($"[PlayerController] TryCraftRecipe: 재료 '{ingredient.Identifier}' 소비 부족({removed}/{ingredient.RequiredCount}).");
+        }
+      }
+
+      var outputItem = Registry.Registry.CreateItemInstance(matched.OutputItemIdentifier);
+      if (outputItem == null)
+      {
+        Debug.LogWarning($"[PlayerController] TryCraftRecipe: 결과 아이템 '{matched.OutputItemIdentifier}' 생성 실패. Registry 미등록 Identifier 일 수 있습니다.");
+        return null;
+      }
+
+      outputItem.CurrentStackCount = matched.OutputItemCount;
+      return outputItem;
+    }
+
+    /// <summary>현재 인벤토리의 아이템 수량 맵(Identifier → count)을 만든다.</summary>
+    private Dictionary<string, int> BuildInventoryCountMap()
+    {
+      var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+      foreach (var slot in _slots)
+      {
+        if (slot == null || slot.IsEmpty || slot.ItemInstance == null) continue;
+        string id = slot.ItemInstance.CurrentIdentifier;
+        if (string.IsNullOrWhiteSpace(id)) continue;
+        counts.TryGetValue(id, out int existing);
+        counts[id] = existing + slot.ItemInstance.CurrentStackCount;
+      }
+      return counts;
     }
 
     public int ClearInventory()

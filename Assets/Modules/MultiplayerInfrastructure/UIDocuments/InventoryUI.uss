@@ -5,37 +5,47 @@
   justify-content: center;
 }
 
+/*
+ * 인벤토리 루트: 좌측 인벤토리 그리드 + 우측 조합 패널을 나란히 배치.
+ * 스타일 팔레트는 ItemSubmissionUI 와 통일(navy 계열).
+ */
 .inventory-root {
-  width: 420px;
-  padding: 12px;
-  background-color: #c6c6c6;
-  border: 2px solid #000;
-  gap: 8px;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 20px;
+  background-color: #16213e;
+  border-width: 2px;
+  border-color: #2d4373;
+  border-radius: 14px;
+  gap: 16px;
 }
 
-/*
-.inventory-root--visible {
-  visibility: visible;
+/* ── 좌측 인벤토리 영역 ───────────────────────────────────────
+ * 너비를 고정하지 않는다: 그리드(9칸×54px + gap/padding ≈ 556px)가
+ * 고정 폭보다 넓으면 슬롯이 패널 밖으로 넘쳐 우측 조합 패널에 가려지고,
+ * 그 결과 넘친 슬롯이 포인터 이벤트(클릭/hover)를 받지 못한다.
+ * 내용 크기에 맞춰 auto 로 둔다. */
+.inventory-panel {
+  flex-shrink: 0;
 }
-.inventory-root--hidden {
-  visibility: hidden;
-}
-*/
 
 .inventory-title {
   -unity-font-style: bold;
   font-size: 18px;
-  color: #222;
-  margin-bottom: 4px;
+  color: #f0f4ff;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
 }
 
 .inventory-grid {
-  border: 2px solid #555;
-  padding: 8px;
+  border-width: 1px;
+  border-color: #1f3a63;
+  border-radius: 10px;
+  padding: 10px;
   gap: 6px;
   flex-wrap: wrap;
   flex-direction: column;
-  background-color: #bdbdbd;
+  background-color: rgba(6, 16, 32, 0.75);
   min-height: 120px;
 }
 
@@ -46,12 +56,20 @@
 .slot {
   width: 54px;
   height: 54px;
-  border: 2px solid #777;
-  background-color: #d9d9d9;
+  border-width: 2px;
+  border-color: #1f3a63;
+  border-radius: 8px;
+  background-color: rgba(11, 22, 40, 0.95);
   justify-content: flex-end;
   align-items: flex-end;
   padding: 2px;
   position: relative;
+  transition-duration: 0.12s;
+  transition-property: border-color, background-color;
+}
+
+.slot:hover {
+  border-color: #4a9eff;
 }
 
 .slot__icon {
@@ -100,48 +118,217 @@
   -unity-text-align: middle-right;
 }
 
+/* ── 우측 조합 패널 ─────────────────────────────────────────── */
+.crafting-panel {
+  width: 180px;
+  flex-shrink: 0;
+  align-items: stretch;
+}
+
+/* 조합 패널 타이틀: 소제목 느낌으로 매우 작게 */
+.crafting-title {
+  -unity-font-style: bold;
+  font-size: 11px;
+  color: #4a9eff;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+/* (b) 선택된 레시피의 필요 아이템 표시 영역 */
+.crafting-section-label {
+  font-size: 9px;
+  -unity-font-style: bold;
+  color: #6b7891;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.crafting-requirements {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 8px;
+  gap: 6px;
+  border-width: 1px;
+  border-color: #1f3a63;
+  border-radius: 10px;
+  background-color: rgba(6, 16, 32, 0.75);
+  min-height: 64px;
+}
+
+.crafting-requirements__empty {
+  font-size: 10px;
+  color: #6b7891;
+  -unity-font-style: italic;
+  white-space: normal;
+  -unity-text-align: middle-center;
+  flex-grow: 1;
+}
+
+/* 필요 아이템 칸: 아이콘 + "보유/요구" 수량 */
+.crafting-req-slot {
+  width: 48px;
+  height: 60px;
+  border-width: 2px;
+  border-color: #1f3a63;
+  border-radius: 8px;
+  background-color: rgba(11, 22, 40, 0.95);
+  align-items: center;
+  justify-content: center;
+  padding: 4px 2px 3px 2px;
+  overflow: hidden;
+}
+
+.crafting-req-slot__icon {
+  width: 30px;
+  height: 30px;
+  tint-color: rgba(160, 160, 160, 1);
+  opacity: 0.35;
+  flex-shrink: 0;
+}
+
+.crafting-req-slot__count {
+  font-size: 10px;
+  -unity-font-style: bold;
+  color: #4a9eff;
+  -unity-text-align: middle-center;
+  margin-top: 3px;
+}
+
+.crafting-req-slot--satisfied {
+  border-color: #2ecc71;
+  background-color: rgba(20, 52, 36, 0.95);
+}
+
+.crafting-req-slot--satisfied .crafting-req-slot__icon {
+  tint-color: white;
+  opacity: 1;
+}
+
+.crafting-req-slot--satisfied .crafting-req-slot__count {
+  color: #2ecc71;
+}
+
+/* ── 구분선 ── */
+.crafting-divider {
+  height: 1px;
+  background-color: rgba(74, 158, 255, 0.35);
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+/* (a) 조합 가능한 아이템 목록 */
+.crafting-recipe-list {
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow: hidden;
+}
+
+.crafting-recipe-list__empty {
+  font-size: 10px;
+  color: #6b7891;
+  -unity-font-style: italic;
+  white-space: normal;
+  padding: 10px 4px;
+  -unity-text-align: middle-center;
+}
+
+/* 레시피 목록 항목 */
+.crafting-recipe {
+  flex-direction: row;
+  align-items: center;
+  padding: 4px 6px;
+  gap: 6px;
+  border-width: 2px;
+  border-color: #1f3a63;
+  border-radius: 8px;
+  background-color: rgba(11, 22, 40, 0.95);
+  transition-duration: 0.12s;
+  transition-property: border-color, background-color;
+}
+
+.crafting-recipe:hover {
+  border-color: #4a9eff;
+  background-color: rgba(20, 36, 66, 0.95);
+}
+
+/* 선택된 레시피 강조 */
+.crafting-recipe--selected {
+  border-color: #4a9eff;
+  background-color: rgba(24, 44, 82, 0.98);
+}
+
+.crafting-recipe__icon {
+  width: 28px;
+  height: 28px;
+  tint-color: white;
+  flex-shrink: 0;
+}
+
+.crafting-recipe__name {
+  font-size: 11px;
+  -unity-font-style: bold;
+  color: #cdd6e6;
+  flex-grow: 1;
+  flex-shrink: 1;
+  white-space: normal;
+}
+
+.crafting-recipe--selected .crafting-recipe__name {
+  color: #f0f4ff;
+}
+
+.crafting-recipe__hint {
+  font-size: 9px;
+  color: #4a9eff;
+  -unity-font-style: italic;
+  flex-shrink: 0;
+}
+
 /* ── 아이템 툴팁 ─────────────────────────────────────────────── */
 .item-tooltip {
   position: absolute;
   max-width: 260px;
   min-width: 120px;
   padding: 8px 10px;
-  background-color: rgba(18, 18, 22, 0.95);
+  background-color: rgba(6, 16, 32, 0.97);
   border-width: 1px;
-  border-color: #3a3a46;
-  border-radius: 6px;
+  border-color: #2d4373;
+  border-radius: 8px;
   gap: 3px;
 }
 
 .item-tooltip__name {
   -unity-font-style: bold;
   font-size: 14px;
-  color: #fff;
+  color: #f0f4ff;
   white-space: normal;
 }
 
 .item-tooltip__type {
   font-size: 10px;
-  color: #9a9aa5;
+  color: #6b7891;
   -unity-font-style: italic;
 }
 
 .item-tooltip__description {
   font-size: 12px;
-  color: #d5d5db;
+  color: #cdd6e6;
   white-space: normal;
   margin-top: 2px;
 }
 
 .item-tooltip__detail {
   font-size: 11px;
-  color: #a7a7b2;
+  color: #a9b4c8;
   white-space: normal;
 }
 
 .item-tooltip__stack {
   font-size: 11px;
-  color: #c9c9d2;
+  color: #4a9eff;
   margin-top: 2px;
   -unity-text-align: middle-left;
 }
