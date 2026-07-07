@@ -62,6 +62,13 @@ namespace MultiplayerInfrastructure.ItemSystem
     private GameObject _loadedModel;
     private string _registeredIdentifier;
 
+    /// <summary>
+    /// <see cref="_pickupReward"/>의 ItemIdentifier로부터 지연 생성/캐시되는 아이템 인스턴스입니다.
+    /// DisplayText/DisplayIcon 표시용으로만 사용되며(획득 시 실제 지급은 서버 권위 프로토콜을 따름), 값이 변경될 수 있으므로 매번 캐시 유효성을 확인합니다.
+    /// </summary>
+    private Item _cachedDisplayItem;
+    private string _cachedDisplayItemIdentifier;
+
     /// <summary>현재 로컬 표현이 사라짐(Vanished) 상태로 적용되어 있는지.</summary>
     private bool _localVanished;
 
@@ -244,8 +251,43 @@ namespace MultiplayerInfrastructure.ItemSystem
         if (!string.IsNullOrWhiteSpace(baseText))
           return baseText;
 
-        return "획득";
+        var item = ResolveDisplayItem();
+        return item != null ? $"{item.CurrentDisplayName} 획득" : "획득";
       }
+    }
+
+    public override Sprite DisplayIcon
+    {
+      get
+      {
+        var baseIcon = base.DisplayIcon;
+        if (baseIcon != null)
+          return baseIcon;
+
+        return ResolveDisplayItem()?.CurrentItemIconTexture;
+      }
+    }
+
+    /// <summary>
+    /// PickupReward의 ItemIdentifier로 아이템 인스턴스를 조회/캐시합니다.
+    /// DisplayText/DisplayIcon 표시(UI 미리보기) 용도이며, 조회 실패 시 null을 반환합니다.
+    /// </summary>
+    private Item ResolveDisplayItem()
+    {
+      string identifier = _pickupReward.ItemIdentifier;
+      if (string.IsNullOrWhiteSpace(identifier))
+      {
+        _cachedDisplayItem = null;
+        _cachedDisplayItemIdentifier = null;
+        return null;
+      }
+
+      if (_cachedDisplayItem != null && _cachedDisplayItemIdentifier == identifier)
+        return _cachedDisplayItem;
+
+      _cachedDisplayItem = Registry.Registry.CreateItemInstance(identifier);
+      _cachedDisplayItemIdentifier = identifier;
+      return _cachedDisplayItem;
     }
 
     public override void Interact(Transform interactor)
