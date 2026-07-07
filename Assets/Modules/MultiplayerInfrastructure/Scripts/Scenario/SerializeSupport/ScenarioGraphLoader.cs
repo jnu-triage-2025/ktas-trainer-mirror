@@ -1531,6 +1531,9 @@ namespace MultiplayerInfrastructure.Scenario
 
         // 의식
         ConsciousnessGcs = dto.ConsciousnessGcs,
+        ConsciousnessEyeOpening = ParseOptionalEnum<EyeOpeningResponse>(dto.ConsciousnessEyeOpening),
+        ConsciousnessVerbal = ParseOptionalEnum<VerbalResponse>(dto.ConsciousnessVerbal),
+        ConsciousnessMotor = ParseOptionalEnum<MotorResponse>(dto.ConsciousnessMotor),
         ConsciousnessLocLabel = ParseOptionalEnum<LOCLabel>(dto.ConsciousnessLocLabel),
         ConsciousnessPupillaryResponse = ParseOptionalEnum<PupillaryResponse>(dto.ConsciousnessPupillaryResponse),
 
@@ -1580,6 +1583,9 @@ namespace MultiplayerInfrastructure.Scenario
 
         // 의식
         ConsciousnessGcs = node.ConsciousnessGcs,
+        ConsciousnessEyeOpening = node.ConsciousnessEyeOpening?.ToString(),
+        ConsciousnessVerbal = node.ConsciousnessVerbal?.ToString(),
+        ConsciousnessMotor = node.ConsciousnessMotor?.ToString(),
         ConsciousnessLocLabel = node.ConsciousnessLocLabel?.ToString(),
         ConsciousnessPupillaryResponse = node.ConsciousnessPupillaryResponse?.ToString(),
 

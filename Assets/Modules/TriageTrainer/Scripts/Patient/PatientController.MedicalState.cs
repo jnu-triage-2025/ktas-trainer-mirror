@@ -349,6 +349,9 @@ namespace TriageTrainer.Entity
       // 새 Consciousness 필드 추가 시 아래에 동일 패턴으로 추가한다.
 
       if (preset.ConsciousnessGcs.HasValue
+          || preset.ConsciousnessEyeOpening.HasValue
+          || preset.ConsciousnessVerbal.HasValue
+          || preset.ConsciousnessMotor.HasValue
           || preset.ConsciousnessLocLabel.HasValue
           || preset.ConsciousnessPupillaryResponse.HasValue)
       {
@@ -357,6 +360,15 @@ namespace TriageTrainer.Entity
 
         if (preset.ConsciousnessGcs.HasValue)
           _medicalState.consciousness.gcs = preset.ConsciousnessGcs.Value;
+
+        if (preset.ConsciousnessEyeOpening.HasValue)
+          _medicalState.consciousness.eyeOpening = preset.ConsciousnessEyeOpening.Value;
+
+        if (preset.ConsciousnessVerbal.HasValue)
+          _medicalState.consciousness.verbal = preset.ConsciousnessVerbal.Value;
+
+        if (preset.ConsciousnessMotor.HasValue)
+          _medicalState.consciousness.motor = preset.ConsciousnessMotor.Value;
 
         if (preset.ConsciousnessLocLabel.HasValue)
           _medicalState.consciousness.locLabel = preset.ConsciousnessLocLabel.Value;
@@ -445,6 +457,9 @@ namespace TriageTrainer.Entity
           bloodType: preset.BloodType.HasValue ? (int)preset.BloodType.Value : PresetSentinelNone,
           intendedTriage: preset.IntendedTriage.HasValue ? (int)preset.IntendedTriage.Value : PresetSentinelNone,
           consciousnessGcs: preset.ConsciousnessGcs ?? PresetSentinelNone,
+          consciousnessEyeOpening: preset.ConsciousnessEyeOpening.HasValue ? (int)preset.ConsciousnessEyeOpening.Value : PresetSentinelNone,
+          consciousnessVerbal: preset.ConsciousnessVerbal.HasValue ? (int)preset.ConsciousnessVerbal.Value : PresetSentinelNone,
+          consciousnessMotor: preset.ConsciousnessMotor.HasValue ? (int)preset.ConsciousnessMotor.Value : PresetSentinelNone,
           consciousnessLocLabel: preset.ConsciousnessLocLabel.HasValue ? (int)preset.ConsciousnessLocLabel.Value : PresetSentinelNone,
           consciousnessPupillaryResponse: preset.ConsciousnessPupillaryResponse.HasValue ? (int)preset.ConsciousnessPupillaryResponse.Value : PresetSentinelNone,
           respirationAwRR: preset.RespirationAwRR ?? PresetSentinelNone,
@@ -484,6 +499,9 @@ namespace TriageTrainer.Entity
       int bloodType,
       int intendedTriage,
       int consciousnessGcs,
+      int consciousnessEyeOpening,
+      int consciousnessVerbal,
+      int consciousnessMotor,
       int consciousnessLocLabel,
       int consciousnessPupillaryResponse,
       int respirationAwRR,
@@ -511,6 +529,9 @@ namespace TriageTrainer.Entity
 
       // 의식
       if (consciousnessGcs != PresetSentinelNone
+          || consciousnessEyeOpening != PresetSentinelNone
+          || consciousnessVerbal != PresetSentinelNone
+          || consciousnessMotor != PresetSentinelNone
           || consciousnessLocLabel != PresetSentinelNone
           || consciousnessPupillaryResponse != PresetSentinelNone)
       {
@@ -519,6 +540,12 @@ namespace TriageTrainer.Entity
 
         if (consciousnessGcs != PresetSentinelNone)
           _medicalState.consciousness.gcs = consciousnessGcs;
+        if (consciousnessEyeOpening != PresetSentinelNone)
+          _medicalState.consciousness.eyeOpening = (EyeOpeningResponse)consciousnessEyeOpening;
+        if (consciousnessVerbal != PresetSentinelNone)
+          _medicalState.consciousness.verbal = (VerbalResponse)consciousnessVerbal;
+        if (consciousnessMotor != PresetSentinelNone)
+          _medicalState.consciousness.motor = (MotorResponse)consciousnessMotor;
         if (consciousnessLocLabel != PresetSentinelNone)
           _medicalState.consciousness.locLabel = (LOCLabel)consciousnessLocLabel;
         if (consciousnessPupillaryResponse != PresetSentinelNone)

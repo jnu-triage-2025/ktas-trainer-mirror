@@ -26,6 +26,9 @@ namespace MultiplayerInfrastructure.Scenario
   /// <item><term>환자 기술자</term>    <term><see cref="BloodType"/></term>        <term>BloodType?</term></item>
   /// <item><term>환자 기술자</term>    <term><see cref="IntendedTriage"/></term>   <term>TriageLevel?</term></item>
   /// <item><term>의료 상태</term>      <term><see cref="ConsciousnessGcs"/></term> <term>int?</term></item>
+  /// <item><term>의료 상태/의식</term> <term><see cref="ConsciousnessEyeOpening"/></term><term>EyeOpeningResponse?</term></item>
+  /// <item><term>의료 상태/의식</term> <term><see cref="ConsciousnessVerbal"/></term><term>VerbalResponse?</term></item>
+  /// <item><term>의료 상태/의식</term> <term><see cref="ConsciousnessMotor"/></term><term>MotorResponse?</term></item>
   /// <item><term>의료 상태/의식</term> <term><see cref="ConsciousnessLocLabel"/></term><term>LOCLabel?</term></item>
   /// <item><term>의료 상태/의식</term> <term><see cref="ConsciousnessPupillaryResponse"/></term><term>PupillaryResponse?</term></item>
   /// <item><term>의료 상태/호흡</term> <term><see cref="RespirationAwRR"/></term>  <term>int?</term></item>
@@ -89,6 +92,15 @@ namespace MultiplayerInfrastructure.Scenario
 
     /// <summary>GCS 점수(3~15). null이면 현재 값 유지.</summary>
     public int? ConsciousnessGcs { get; set; }
+
+    /// <summary>GCS의 E(Eye Opening, 눈뜨기 반응) 세부 항목(1~4점). null이면 현재 값 유지.</summary>
+    public EyeOpeningResponse? ConsciousnessEyeOpening { get; set; }
+
+    /// <summary>GCS의 V(Verbal Response, 언어 반응) 세부 항목(1~5점). null이면 현재 값 유지.</summary>
+    public VerbalResponse? ConsciousnessVerbal { get; set; }
+
+    /// <summary>GCS의 M(Motor Response, 운동 반응) 세부 항목(1~6점). null이면 현재 값 유지.</summary>
+    public MotorResponse? ConsciousnessMotor { get; set; }
 
     /// <summary>의식수준 5단계(LOC). null이면 현재 값 유지.</summary>
     public LOCLabel? ConsciousnessLocLabel { get; set; }

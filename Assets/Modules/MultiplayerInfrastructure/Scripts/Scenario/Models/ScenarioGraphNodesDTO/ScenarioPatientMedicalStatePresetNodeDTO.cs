@@ -23,6 +23,9 @@ namespace MultiplayerInfrastructure.Scenario
   ///   "sex": "Male",
   ///   "age": 35,
   ///   "consciousnessGcs": 8,
+  ///   "consciousnessEyeOpening": "ToPressure",
+  ///   "consciousnessVerbal": "Sounds",
+  ///   "consciousnessMotor": "Withdrawal",
   ///   "consciousnessLocLabel": "Stupor",
   ///   "consciousnessPupillaryResponse": "Normal",
   ///   "respirationAwRR": 8,
@@ -85,6 +88,18 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>GCS 점수(3~15). null이면 현재 값 유지.</summary>
     [JsonPropertyName("consciousnessGcs")]
     public int? ConsciousnessGcs { get; set; }
+
+    /// <summary>GCS의 E(Eye Opening, 눈뜨기 반응) 세부 항목 문자열(1~4점). null이면 현재 값 유지.</summary>
+    [JsonPropertyName("consciousnessEyeOpening")]
+    public string ConsciousnessEyeOpening { get; set; }
+
+    /// <summary>GCS의 V(Verbal Response, 언어 반응) 세부 항목 문자열(1~5점). null이면 현재 값 유지.</summary>
+    [JsonPropertyName("consciousnessVerbal")]
+    public string ConsciousnessVerbal { get; set; }
+
+    /// <summary>GCS의 M(Motor Response, 운동 반응) 세부 항목 문자열(1~6점). null이면 현재 값 유지.</summary>
+    [JsonPropertyName("consciousnessMotor")]
+    public string ConsciousnessMotor { get; set; }
 
     /// <summary>의식수준 5단계(LOC) 문자열. null이면 현재 값 유지.</summary>
     [JsonPropertyName("consciousnessLocLabel")]

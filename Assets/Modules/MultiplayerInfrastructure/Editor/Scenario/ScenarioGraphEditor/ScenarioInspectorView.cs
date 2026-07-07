@@ -884,6 +884,9 @@ namespace MultiplayerInfrastructure.Editor
       EditorGUILayout.Space();
       EditorGUILayout.LabelField("의식 (Consciousness)", EditorStyles.boldLabel);
       data.ConsciousnessGcs = NullableIntField("GCS (3~15)", data.ConsciousnessGcs);
+      data.ConsciousnessEyeOpening = NullableEnumField<TriageTrainer.Entity.Patient.EyeOpeningResponse>("E: Eye Opening (1~4)", data.ConsciousnessEyeOpening);
+      data.ConsciousnessVerbal = NullableEnumField<TriageTrainer.Entity.Patient.VerbalResponse>("V: Verbal Response (1~5)", data.ConsciousnessVerbal);
+      data.ConsciousnessMotor = NullableEnumField<TriageTrainer.Entity.Patient.MotorResponse>("M: Motor Response (1~6)", data.ConsciousnessMotor);
       data.ConsciousnessLocLabel = NullableEnumField<TriageTrainer.Entity.Patient.LOCLabel>("LOC Label", data.ConsciousnessLocLabel);
       data.ConsciousnessPupillaryResponse = NullableEnumField<TriageTrainer.Entity.Patient.PupillaryResponse>("Pupillary Response", data.ConsciousnessPupillaryResponse);
 

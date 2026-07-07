@@ -514,9 +514,11 @@ namespace MultiplayerInfrastructure.Editor
       var ageLabel = data.Age.HasValue ? data.Age.Value.ToString() : "(not set)";
       _inlineEditorContainer.Add(new Label($"Sex: {sexLabel}  Age: {ageLabel}") { style = { fontSize = 10, color = new Color(0.85f, 0.85f, 0.85f) } });
       var gcsLabel = data.ConsciousnessGcs.HasValue ? $"GCS {data.ConsciousnessGcs}" : string.Empty;
+      var evmLabel = (data.ConsciousnessEyeOpening.HasValue || data.ConsciousnessVerbal.HasValue || data.ConsciousnessMotor.HasValue)
+        ? $"E{(int?)data.ConsciousnessEyeOpening}/V{(int?)data.ConsciousnessVerbal}/M{(int?)data.ConsciousnessMotor}" : string.Empty;
       var bpLabel = (data.BloodPressureSystolic.HasValue || data.BloodPressureDiastolic.HasValue)
         ? $"BP {data.BloodPressureSystolic}/{data.BloodPressureDiastolic}" : string.Empty;
-      var summary = string.Join("  ", new[] { gcsLabel, bpLabel }.Where(s => !string.IsNullOrEmpty(s)));
+      var summary = string.Join("  ", new[] { gcsLabel, evmLabel, bpLabel }.Where(s => !string.IsNullOrEmpty(s)));
       if (!string.IsNullOrEmpty(summary))
         _inlineEditorContainer.Add(new Label(summary) { style = { fontSize = 10, color = new Color(0.85f, 0.85f, 0.85f) } });
       AddNextIdentifierField(data);

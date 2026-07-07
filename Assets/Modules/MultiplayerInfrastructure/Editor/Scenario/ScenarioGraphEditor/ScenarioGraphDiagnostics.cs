@@ -273,6 +273,7 @@ namespace MultiplayerInfrastructure.Editor
       bool hasAnyField =
         node.Sex.HasValue || node.Age.HasValue || node.Name != null || node.BloodType.HasValue
         || node.IntendedTriage.HasValue || node.ConsciousnessGcs.HasValue
+        || node.ConsciousnessEyeOpening.HasValue || node.ConsciousnessVerbal.HasValue || node.ConsciousnessMotor.HasValue
         || node.ConsciousnessLocLabel.HasValue || node.ConsciousnessPupillaryResponse.HasValue
         || node.RespirationAwRR.HasValue || node.RespirationTypeValue.HasValue
         || node.PulseRate.HasValue || node.PulseForceType.HasValue
@@ -290,6 +291,9 @@ namespace MultiplayerInfrastructure.Editor
 
       CheckEnumField<Sex>(node.Sex,                                        "sex",                          id, items);
       CheckEnumField<BloodType>(node.BloodType,                            "bloodType",                    id, items);
+      CheckEnumField<EyeOpeningResponse>(node.ConsciousnessEyeOpening,     "consciousnessEyeOpening",       id, items);
+      CheckEnumField<VerbalResponse>(node.ConsciousnessVerbal,             "consciousnessVerbal",           id, items);
+      CheckEnumField<MotorResponse>(node.ConsciousnessMotor,               "consciousnessMotor",            id, items);
       CheckEnumField<LOCLabel>(node.ConsciousnessLocLabel,                 "consciousnessLocLabel",         id, items);
       CheckEnumField<PupillaryResponse>(node.ConsciousnessPupillaryResponse, "consciousnessPupillaryResponse", id, items);
       CheckEnumField<RespirationType>(node.RespirationTypeValue,           "respirationType",              id, items);
@@ -343,6 +347,21 @@ namespace MultiplayerInfrastructure.Editor
         if (mismatch)
           items.Add(new DiagnosticItem(Severity.Warning, id,
             $"GCS={gcs} 와 consciousnessLocLabel={locLabel} 이 일치하지 않습니다. GCS {gcs} 에서 기대되는 LOC: {expected}"));
+      }
+
+      // GCS와 E/V/M 세부 항목(합계) 일관성 검사
+      // E(1~4) + V(1~5) + M(1~6) 의 합이 consciousnessGcs와 일치해야 한다.
+      if (node.ConsciousnessGcs.HasValue
+          && node.ConsciousnessEyeOpening.HasValue
+          && node.ConsciousnessVerbal.HasValue
+          && node.ConsciousnessMotor.HasValue)
+      {
+        int gcs = node.ConsciousnessGcs.Value;
+        int evm = (int)node.ConsciousnessEyeOpening.Value + (int)node.ConsciousnessVerbal.Value + (int)node.ConsciousnessMotor.Value;
+        if (gcs != evm)
+          items.Add(new DiagnosticItem(Severity.Warning, id,
+            $"consciousnessGcs={gcs} 가 E+V+M 세부 항목의 합({evm})과 일치하지 않습니다. " +
+            $"(E={node.ConsciousnessEyeOpening.Value}, V={node.ConsciousnessVerbal.Value}, M={node.ConsciousnessMotor.Value})"));
       }
 
       if (node.BloodPressureSystolic.HasValue && node.BloodPressureDiastolic.HasValue
