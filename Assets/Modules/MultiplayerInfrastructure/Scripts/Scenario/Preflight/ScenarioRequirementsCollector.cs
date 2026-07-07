@@ -92,6 +92,33 @@ namespace MultiplayerInfrastructure.Scenario.Preflight
           case ScenarioValidatorNode validator:
             CollectValidatorSignals(validator, AddRequirement);
             break;
+
+          case ScenarioItemSubmissionConfigNode itemSubmission:
+            // 프리셋 스폰 경로: 등록된 EntityPreset 이 필요하다.
+            if (!string.IsNullOrWhiteSpace(itemSubmission.PresetIdentifier))
+            {
+              AddRequirement(ScenarioRequirementKind.EntityPreset, itemSubmission.PresetIdentifier, itemSubmission.Identifier);
+            }
+            // 기존 참조 경로(식별자 직접 지정인 경우만 정적 확인 가능).
+            if (!string.IsNullOrWhiteSpace(itemSubmission.TargetIdentifier))
+            {
+              AddRequirement(ScenarioRequirementKind.InteractionTarget, itemSubmission.TargetIdentifier, itemSubmission.Identifier);
+            }
+            // 요구 아이템은 등록된 Item 이어야 한다.
+            if (itemSubmission.RequiredItems != null)
+            {
+              foreach (var req in itemSubmission.RequiredItems)
+              {
+                if (req != null)
+                  AddRequirement(ScenarioRequirementKind.Item, req.ItemIdentifier, itemSubmission.Identifier);
+              }
+            }
+            break;
+
+          case ScenarioNpcInteractControlNode npcInteractControl:
+            AddRequirement(ScenarioRequirementKind.InteractionTarget, npcInteractControl.NpcIdentifier, npcInteractControl.Identifier);
+            AddRequirement(ScenarioRequirementKind.InteractionTarget, npcInteractControl.InteractableIdentifier, npcInteractControl.Identifier);
+            break;
         }
       }
 

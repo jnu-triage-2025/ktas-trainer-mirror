@@ -24,3 +24,4 @@ MonoBehaviour:
     _displayColor: {r: 0, g: 0, b: 0, a: 0}
     _scenarioIdentifier: disaster_intro
     _scenarioStartNodeIdentifier: D001
+  submissionInteracts: []

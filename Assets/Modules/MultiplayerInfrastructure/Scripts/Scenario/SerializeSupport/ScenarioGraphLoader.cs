@@ -260,6 +260,8 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioEntityInitNodeDTO entityInit => ConvertEntityInit(entityInit),
           ScenarioTriageAssessControlNodeDTO triageAssess => ConvertTriageAssessControl(triageAssess),
           ScenarioPatientMedicalStatePresetNodeDTO patientPreset => ConvertPatientMedicalStatePreset(patientPreset),
+          ScenarioItemSubmissionConfigNodeDTO itemSubmission => ConvertItemSubmissionConfig(itemSubmission),
+          ScenarioNpcInteractControlNodeDTO npcInteractControl => ConvertNpcInteractControl(npcInteractControl),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -628,6 +630,114 @@ namespace MultiplayerInfrastructure.Scenario
           NextIdentifier = node.NextIdentifier
         };
 
+    private static ScenarioItemSubmissionConfigNode ConvertItemSubmissionConfig(ScenarioItemSubmissionConfigNodeDTO dto)
+    {
+      var requirements = new List<ScenarioItemRequirement>();
+      if (dto.RequiredItems != null)
+      {
+        foreach (var reqDto in dto.RequiredItems)
+        {
+          if (reqDto == null || string.IsNullOrWhiteSpace(reqDto.ItemIdentifier))
+            continue;
+
+          requirements.Add(new ScenarioItemRequirement
+          {
+            ItemIdentifier = reqDto.ItemIdentifier,
+            Count = reqDto.Count.HasValue && reqDto.Count.Value > 0 ? reqDto.Count.Value : 1
+          });
+        }
+      }
+
+      return new ScenarioItemSubmissionConfigNode
+      {
+        Identifier = dto.Identifier,
+        PresetIdentifier = dto.PresetIdentifier,
+        SpawnedEntityIdentifier = dto.SpawnedEntityIdentifier,
+        PositionSourceEntityIdentifier = dto.PositionSourceEntityIdentifier,
+        PositionX = dto.PositionX ?? 0f,
+        PositionY = dto.PositionY ?? 0f,
+        PositionZ = dto.PositionZ ?? 0f,
+        TargetIdentifier = dto.TargetIdentifier,
+        TargetStateKey = dto.TargetStateKey,
+        RequiredItems = requirements,
+        CompletionSignalIdentifier = dto.CompletionSignalIdentifier,
+        Enabled = dto.Enabled ?? true,
+        ResultStateKey = dto.ResultStateKey,
+        NextIdentifier = dto.NextIdentifier
+      };
+    }
+
+    private static ScenarioItemSubmissionConfigNodeDTO ConvertToDTO(ScenarioItemSubmissionConfigNode node)
+    {
+      List<ScenarioItemRequirementDTO> requirements = null;
+      if (node.RequiredItems != null && node.RequiredItems.Count > 0)
+      {
+        requirements = new List<ScenarioItemRequirementDTO>();
+        foreach (var req in node.RequiredItems)
+        {
+          if (req == null || string.IsNullOrWhiteSpace(req.ItemIdentifier))
+            continue;
+
+          requirements.Add(new ScenarioItemRequirementDTO
+          {
+            ItemIdentifier = req.ItemIdentifier,
+            Count = req.Count > 0 ? req.Count : 1
+          });
+        }
+      }
+
+      return new ScenarioItemSubmissionConfigNodeDTO
+      {
+        NodeType = "ItemSubmissionConfig",
+        Identifier = node.Identifier,
+        PresetIdentifier = node.PresetIdentifier,
+        SpawnedEntityIdentifier = node.SpawnedEntityIdentifier,
+        PositionSourceEntityIdentifier = node.PositionSourceEntityIdentifier,
+        PositionX = node.PositionX,
+        PositionY = node.PositionY,
+        PositionZ = node.PositionZ,
+        TargetIdentifier = node.TargetIdentifier,
+        TargetStateKey = node.TargetStateKey,
+        RequiredItems = requirements,
+        CompletionSignalIdentifier = node.CompletionSignalIdentifier,
+        Enabled = node.Enabled ? (bool?)null : false,
+        ResultStateKey = node.ResultStateKey,
+        NextIdentifier = node.NextIdentifier
+      };
+    }
+
+    private static ScenarioNpcInteractControlNode ConvertNpcInteractControl(ScenarioNpcInteractControlNodeDTO dto) =>
+        new ScenarioNpcInteractControlNode
+        {
+          Identifier = dto.Identifier,
+          NpcIdentifier = dto.NpcIdentifier,
+          InteractableIdentifier = dto.InteractableIdentifier,
+          Operation = ParseNpcInteractControlOperation(dto.Operation),
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioNpcInteractControlNodeDTO ConvertToDTO(ScenarioNpcInteractControlNode node) =>
+        new ScenarioNpcInteractControlNodeDTO
+        {
+          NodeType = "NpcInteractControl",
+          Identifier = node.Identifier,
+          NpcIdentifier = node.NpcIdentifier,
+          InteractableIdentifier = node.InteractableIdentifier,
+          Operation = node.Operation.ToString(),
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioNpcInteractControlOperation ParseNpcInteractControlOperation(string value)
+    {
+      if (!string.IsNullOrWhiteSpace(value)
+          && System.Enum.TryParse<ScenarioNpcInteractControlOperation>(value, ignoreCase: true, out var parsed))
+      {
+        return parsed;
+      }
+
+      return ScenarioNpcInteractControlOperation.Add;
+    }
+
     private static ScenarioEntityTagNodeDTO ConvertToDTO(ScenarioEntityTagNode node) =>
         new ScenarioEntityTagNodeDTO
         {
@@ -935,6 +1045,8 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioEntityInitNode entityInit => ConvertToDTO(entityInit),
           ScenarioTriageAssessControlNode triageAssess => ConvertToDTO(triageAssess),
           ScenarioPatientMedicalStatePresetNode patientPreset => ConvertToDTO(patientPreset),
+          ScenarioItemSubmissionConfigNode itemSubmission => ConvertToDTO(itemSubmission),
+          ScenarioNpcInteractControlNode npcInteractControl => ConvertToDTO(npcInteractControl),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 

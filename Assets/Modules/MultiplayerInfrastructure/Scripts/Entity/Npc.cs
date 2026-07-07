@@ -17,6 +17,10 @@ namespace MultiplayerInfrastructure.Entity
     [Header("Scenario Interacts")]
     [SerializeField] private List<NPCScenarioInteractDefinition> _scenarioInteracts = new();
 
+    [Header("Item Submission Interacts")]
+    [Tooltip("이 NPC 에게 아이템을 제출하는 상호작용. 런타임에 ItemSubmissionInteractable 컴포넌트를 자동 생성해 부착한다.")]
+    [SerializeField] private List<NPCSubmissionInteractDefinition> _submissionInteracts = new();
+
     [Header("Custom Interacts")]
     [SerializeField] private List<MonoBehaviour> _customInteractSources = new();
 
@@ -24,6 +28,10 @@ namespace MultiplayerInfrastructure.Entity
 
     private readonly List<IInteract> _resolvedInteracts = new List<IInteract>();
     private bool _interactsDirty = true;
+
+    // 자동 생성된 submission Interactable 컴포넌트. 재빌드 시 재생성하지 않도록 정의별로 캐시한다.
+    private readonly List<ItemSubmissionInteractable> _generatedSubmissionInteractables = new List<ItemSubmissionInteractable>();
+    private bool _submissionInteractablesBuilt;
 
     private bool _baseModelApplied;
     private string _registeredIdentifier;
@@ -115,6 +123,14 @@ namespace MultiplayerInfrastructure.Entity
         }
       }
 
+      EnsureSubmissionInteractablesBuilt();
+      for (int i = 0; i < _generatedSubmissionInteractables.Count; i++)
+      {
+        var submission = _generatedSubmissionInteractables[i];
+        if (submission != null)
+          _resolvedInteracts.Add(submission);
+      }
+
       if (_customInteractSources != null)
       {
         for (int i = 0; i < _customInteractSources.Count; i++)
@@ -136,6 +152,73 @@ namespace MultiplayerInfrastructure.Entity
     private void MarkInteractsDirty()
     {
       _interactsDirty = true;
+    }
+
+    /// <summary>
+    /// 인스펙터/SO 에 정의된 submission 상호작용을 실제 <see cref="ItemSubmissionInteractable"/> 컴포넌트로 한 번 생성한다.
+    /// 각 정의마다 NPC 하위에 자식 GameObject 를 만들어 컴포넌트를 부착하고 정의로 구성한다.
+    /// </summary>
+    private void EnsureSubmissionInteractablesBuilt()
+    {
+      if (_submissionInteractablesBuilt)
+        return;
+
+      _submissionInteractablesBuilt = true;
+      _generatedSubmissionInteractables.Clear();
+
+      if (_submissionInteracts == null)
+        return;
+
+      for (int i = 0; i < _submissionInteracts.Count; i++)
+      {
+        var def = _submissionInteracts[i];
+        if (def == null || !def.IsValid)
+          continue;
+
+        var child = new GameObject($"{name}_Submission_{i}");
+        child.transform.SetParent(transform, worldPositionStays: false);
+
+        var interactable = child.AddComponent<ItemSubmissionInteractable>();
+        interactable.Configure(
+          identifier: def.InteractableIdentifier,
+          definition: def.ToSubmissionDefinition(),
+          displayIcon: def.DisplayIcon,
+          displayColor: def.DisplayColor,
+          enabled: def.Enabled);
+
+        _generatedSubmissionInteractables.Add(interactable);
+      }
+    }
+
+    /// <summary>
+    /// NPC 에 커스텀 Interactable 소스(<see cref="IInteract"/> 를 구현한 MonoBehaviour)를 런타임에 추가한다.
+    /// 시나리오 그래프 노드(NpcInteractControl)가 특정 시점에 상호작용을 부여할 때 사용한다.
+    /// </summary>
+    public bool AddCustomInteractSource(MonoBehaviour source)
+    {
+      if (source == null || source is not IInteract)
+        return false;
+
+      _customInteractSources ??= new List<MonoBehaviour>();
+      if (_customInteractSources.Contains(source))
+        return true;
+
+      _customInteractSources.Add(source);
+      MarkInteractsDirty();
+      return true;
+    }
+
+    /// <summary>이전에 추가된 커스텀 Interactable 소스를 NPC 에서 제거한다.</summary>
+    public bool RemoveCustomInteractSource(MonoBehaviour source)
+    {
+      if (source == null || _customInteractSources == null)
+        return false;
+
+      bool removed = _customInteractSources.Remove(source);
+      if (removed)
+        MarkInteractsDirty();
+
+      return removed;
     }
 
     private bool TryStartScenarioInteract(NPCScenarioInteractDefinition interactDefinition, Transform interactor)
@@ -219,6 +302,20 @@ namespace MultiplayerInfrastructure.Entity
           if (each == null) continue;
           _scenarioInteracts.Add(each.Clone());
         }
+        changed = true;
+      }
+
+      if (_npcBaseModel.submissionInteracts != null && _npcBaseModel.submissionInteracts.Count > 0)
+      {
+        _submissionInteracts = new List<NPCSubmissionInteractDefinition>();
+        for (int i = 0; i < _npcBaseModel.submissionInteracts.Count; i++)
+        {
+          var each = _npcBaseModel.submissionInteracts[i];
+          if (each == null) continue;
+          _submissionInteracts.Add(each.Clone());
+        }
+        // 정의가 교체되었으므로 이미 생성된 submission Interactable 이 있으면 재생성 대상으로 표시한다.
+        _submissionInteractablesBuilt = false;
         changed = true;
       }
 

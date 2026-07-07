@@ -105,6 +105,8 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingEntityInit,
       ExecutingTriageAssessControl,
       ExecutingPatientMedicalStatePreset,
+      ExecutingItemSubmissionConfig,
+      ExecutingNpcInteractControl,
     }
 
     [SerializeField] private State _state = State.Inactive;
@@ -556,6 +558,12 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioPatientMedicalStatePresetNode patientPreset:
           StartCoroutine(ExecutePatientMedicalStatePresetNode(patientPreset));
+          break;
+        case ScenarioItemSubmissionConfigNode itemSubmission:
+          ExecuteItemSubmissionConfigNode(itemSubmission);
+          break;
+        case ScenarioNpcInteractControlNode npcInteractControl:
+          ExecuteNpcInteractControlNode(npcInteractControl);
           break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type: {node.GetType().Name}");
@@ -1168,6 +1176,198 @@ namespace MultiplayerInfrastructure.Scenario
       if (string.IsNullOrWhiteSpace(spawnedIdentifier))
         spawnedIdentifier = node.SpawnedEntityIdentifier;
       _stateStore[stateKey] = spawnedIdentifier;
+
+      Advance();
+    }
+
+    /// <summary>
+    /// 아이템 제출 Interactable 을 사전 설정한다.
+    /// 프리셋 스폰(서버 권한) 또는 기존 Interactable 참조 후, 요구 아이템/완료 신호/활성 상태를 오버라이드한다.
+    /// </summary>
+    private void ExecuteItemSubmissionConfigNode(ScenarioItemSubmissionConfigNode node)
+    {
+      _state = State.ExecutingItemSubmissionConfig;
+
+      if (node == null)
+      {
+        Advance();
+        return;
+      }
+
+      string resolvedIdentifier = null;
+
+      if (!string.IsNullOrWhiteSpace(node.PresetIdentifier))
+      {
+        // 프리셋 스폰은 네트워크 엔티티일 수 있어 서버 권한이 필요하다.
+        // 클라이언트에서는 서버가 스폰한 인스턴스가 동기화되어 Registry 에 등록되므로, 여기서는 스폰을 건너뛴다.
+        // (오버라이드 설정은 인스턴스가 존재하는 서버 측에서 적용되며, IInteract 표시/CanInteract 는 클라이언트에서 평가된다.)
+        if (!InstanceFinder.IsServerStarted && !InstanceFinder.IsOffline)
+        {
+          Debug.Log($"[ScenarioController] ItemSubmissionConfig '{node.Identifier}': preset spawn skipped on client (server-authoritative).");
+          Advance();
+          return;
+        }
+
+        Vector3 spawnPosition = new Vector3(node.PositionX, node.PositionY, node.PositionZ);
+        if (!string.IsNullOrWhiteSpace(node.PositionSourceEntityIdentifier)
+            && Registry.Registry.TryGetEntity(node.PositionSourceEntityIdentifier, out var sourceDescriptor)
+            && sourceDescriptor?.GameObject != null)
+        {
+          spawnPosition = sourceDescriptor.GameObject.transform.position;
+        }
+
+        if (!Registry.Registry.TrySpawnEntityPreset(
+              node.PresetIdentifier,
+              spawnPosition,
+              Quaternion.identity,
+              node.SpawnedEntityIdentifier,
+              out _,
+              out var spawnedDescriptor,
+              out var error))
+        {
+          Debug.LogWarning($"[ScenarioController] ItemSubmissionConfig '{node.Identifier}' preset spawn failed: {error}");
+          Advance();
+          return;
+        }
+
+        resolvedIdentifier = spawnedDescriptor?.Identifier;
+        if (string.IsNullOrWhiteSpace(resolvedIdentifier))
+          resolvedIdentifier = node.SpawnedEntityIdentifier;
+      }
+      else
+      {
+        resolvedIdentifier = ResolveItemSubmissionTargetIdentifier(node);
+      }
+
+      if (string.IsNullOrWhiteSpace(resolvedIdentifier))
+      {
+        Debug.LogWarning($"[ScenarioController] ItemSubmissionConfig '{node.Identifier}': target identifier is missing.");
+        Advance();
+        return;
+      }
+
+      var interactable = Registry.Registry.Get<ItemSubmissionInteractable>(RegistryType.InteractableEntity, resolvedIdentifier);
+      if (interactable == null)
+      {
+        // 네트워크 스폰 직후에는 자가 등록이 비동기로 완료될 수 있어 즉시 조회되지 않을 수 있다.
+        // 그 경우에도 노드 진행은 계속하고, 오버라이드는 인스턴스가 존재하는 컨텍스트에서만 적용된다.
+        Debug.LogWarning($"[ScenarioController] ItemSubmissionConfig '{node.Identifier}': ItemSubmissionInteractable '{resolvedIdentifier}' not found (may spawn asynchronously).");
+      }
+      else
+      {
+        if (node.RequiredItems != null && node.RequiredItems.Count > 0)
+        {
+          var requirements = new List<ItemRequirement>();
+          foreach (var req in node.RequiredItems)
+          {
+            if (req == null || string.IsNullOrWhiteSpace(req.ItemIdentifier))
+              continue;
+            requirements.Add(new ItemRequirement(req.ItemIdentifier, req.Count));
+          }
+          interactable.SetRequiredItems(requirements);
+        }
+
+        if (!string.IsNullOrWhiteSpace(node.CompletionSignalIdentifier))
+          interactable.SetCompletionSignal(node.CompletionSignalIdentifier);
+
+        interactable.SetEnabled(node.Enabled);
+      }
+
+      string stateKey = string.IsNullOrWhiteSpace(node.ResultStateKey)
+        ? $"{node.Identifier}.submissionEntityIdentifier"
+        : node.ResultStateKey;
+      _stateStore[stateKey] = resolvedIdentifier;
+
+      Advance();
+    }
+
+    private string ResolveItemSubmissionTargetIdentifier(ScenarioItemSubmissionConfigNode node)
+    {
+      if (node == null)
+        return string.Empty;
+
+      if (!string.IsNullOrWhiteSpace(node.TargetIdentifier))
+        return node.TargetIdentifier;
+
+      if (!string.IsNullOrWhiteSpace(node.TargetStateKey)
+          && _stateStore.TryGetValue(node.TargetStateKey, out var value))
+      {
+        return value;
+      }
+
+      return string.Empty;
+    }
+
+    /// <summary>
+    /// NPC 에 Interactable 을 추가/제거하거나 활성/비활성 전환한다.
+    /// </summary>
+    private void ExecuteNpcInteractControlNode(ScenarioNpcInteractControlNode node)
+    {
+      _state = State.ExecutingNpcInteractControl;
+
+      if (node == null || string.IsNullOrWhiteSpace(node.NpcIdentifier))
+      {
+        Debug.LogWarning($"[ScenarioController] NpcInteractControl '{node?.Identifier}': npcIdentifier is missing.");
+        Advance();
+        return;
+      }
+
+      var npcGo = Registry.Registry.Get<GameObject>(RegistryType.Npc, node.NpcIdentifier);
+      var npc = npcGo != null ? npcGo.GetComponent<Entity.Npc>() : null;
+      if (npc == null)
+      {
+        Debug.LogWarning($"[ScenarioController] NpcInteractControl '{node.Identifier}': NPC '{node.NpcIdentifier}' not found.");
+        Advance();
+        return;
+      }
+
+      // 대상 Interactable 컴포넌트를 식별자로 해석한다.
+      // 1) InteractableEntity 저장소(ItemSubmissionInteractable 등 컴포넌트가 직접 등록됨)
+      // 2) Entity 저장소(EntityDescriptor.GameObject 에서 IInteract 컴포넌트 탐색)
+      MonoBehaviour interactableComponent = null;
+      if (!string.IsNullOrWhiteSpace(node.InteractableIdentifier))
+      {
+        interactableComponent = Registry.Registry.Get<MonoBehaviour>(
+          RegistryType.InteractableEntity, node.InteractableIdentifier);
+
+        if (interactableComponent == null
+            && Registry.Registry.TryGetEntity(node.InteractableIdentifier, out var interactableDescriptor)
+            && interactableDescriptor?.GameObject != null)
+        {
+          var interact = interactableDescriptor.GameObject.GetComponentInChildren<IInteract>(true);
+          interactableComponent = interact as MonoBehaviour;
+        }
+      }
+
+      switch (node.Operation)
+      {
+        case ScenarioNpcInteractControlOperation.Add:
+          if (interactableComponent == null)
+          {
+            Debug.LogWarning($"[ScenarioController] NpcInteractControl '{node.Identifier}': interactable '{node.InteractableIdentifier}' not found for Add.");
+            break;
+          }
+          npc.AddCustomInteractSource(interactableComponent);
+          break;
+
+        case ScenarioNpcInteractControlOperation.Remove:
+          if (interactableComponent != null)
+            npc.RemoveCustomInteractSource(interactableComponent);
+          break;
+
+        case ScenarioNpcInteractControlOperation.Enable:
+        case ScenarioNpcInteractControlOperation.Disable:
+          if (interactableComponent is IInteractToggleable toggleable)
+            toggleable.SetEnabled(node.Operation == ScenarioNpcInteractControlOperation.Enable);
+          else
+            Debug.LogWarning($"[ScenarioController] NpcInteractControl '{node.Identifier}': interactable '{node.InteractableIdentifier}' does not implement IInteractToggleable.");
+          break;
+      }
+
+      // 상호작용 힌트를 갱신하여 변경이 즉시 반영되게 한다.
+      var player = Registry.Registry.GetFirstEntityComponent<PlayerController>(
+        EntityType.Player, each => each != null && each.IsOwner);
+      player?.RefreshInteractableHintsNow();
 
       Advance();
     }
@@ -2753,6 +2953,12 @@ namespace MultiplayerInfrastructure.Scenario
             break;
           case ScenarioTriageAssessControlNode triageAssess:
             ExecuteTriageAssessControlNode(triageAssess);
+            break;
+          case ScenarioItemSubmissionConfigNode itemSubmission:
+            ExecuteItemSubmissionConfigNode(itemSubmission);
+            break;
+          case ScenarioNpcInteractControlNode npcInteractControl:
+            ExecuteNpcInteractControlNode(npcInteractControl);
             break;
           case ScenarioParallelNode nestedParallel:
             // 중첩 병렬: 내부 브랜치 완료까지 대기(말미의 전역 Advance 는 억제됨).
