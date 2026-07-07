@@ -21,8 +21,19 @@ namespace MultiplayerInfrastructure.Editor.TTS
   {
     private const string PrefKey = "TTS.OnnxDirPath";
 
+    /// <summary>
+    /// "무시" + "앞으로도 계속 무시하기" 선택 시 저장되는 영구 설정 키.
+    /// true인 동안은 ONNX 모델이 없어도 플레이 모드 진입 시 경고/프롬프트 없이 그대로 진행한다.
+    /// 이 설정은 사용자가 실수로 영구히 켜 둔 채 잊어버릴 수 있으므로, 반드시 별도로 끌 수 있는
+    /// 에디터 UI가 필요하다 → Edit(Unity) > Project Settings > TTS 패널의 체크박스에서 해제 가능.
+    /// </summary>
+    private const string IgnorePermanentlyPrefKey = "TTS.IgnoreMissingModelsPermanently";
+
     /// <summary>"그대로 재생"(런타임 즉석 합성) 선택 시 이번 플레이 진입 1회 bake 검사를 건너뛴다.</summary>
     private static bool _skipInlineBakeCheckOnce;
+
+    /// <summary>"무시" 선택(1회) 시 이번 플레이 진입 1회 모델 존재 검사를 건너뛴다.</summary>
+    private static bool _skipModelCheckOnce;
 
     static TTSPlayModeValidator()
     {
@@ -36,27 +47,54 @@ namespace MultiplayerInfrastructure.Editor.TTS
       set => EditorPrefs.SetString(PrefKey, value);
     }
 
+    /// <summary>
+    /// true면 ONNX 모델 누락 경고를 항상 무시하고 플레이 모드를 계속 진행한다.
+    /// Project Settings > TTS 패널에서 언제든 다시 끌 수 있다.
+    /// </summary>
+    public static bool IgnoreMissingModelsPermanently
+    {
+      get => EditorPrefs.GetBool(IgnorePermanentlyPrefKey, false);
+      set => EditorPrefs.SetBool(IgnorePermanentlyPrefKey, value);
+    }
+
     private static void OnPlayModeStateChanged(PlayModeStateChange state)
     {
       if (state != PlayModeStateChange.ExitingEditMode) return;
 
       // ── 1단계: ONNX 모델 다운로드 여부 검사 ─────────────────────────────
-      if (!TTSCore.AreModelsPresent(OnnxDirPath))
+      if (_skipModelCheckOnce)
+      {
+        _skipModelCheckOnce = false;
+      }
+      else if (IgnoreMissingModelsPermanently)
+      {
+        // 사용자가 "앞으로도 계속 무시하기"를 선택한 상태. 검사를 건너뛰고 그대로 진행한다.
+        // Project Settings > TTS 패널에서 다시 켤 수 있다.
+      }
+      else if (!TTSCore.AreModelsPresent(OnnxDirPath))
       {
         EditorApplication.isPlaying = false;
 
         var missing = TTSCore.GetMissingModelFiles(OnnxDirPath);
-        bool open = EditorUtility.DisplayDialog(
-          "TTS 모델 없음",
-          "플레이 모드를 시작할 수 없습니다.\n\n" +
-          $"다음 ONNX 모델 파일이 없습니다 ({OnnxDirPath}):\n" +
-          $"  · {string.Join("\n  · ", missing)}\n\n" +
-          "TTS > Download Models 에서 다운로드하시겠습니까?",
-          "다운로드 창 열기", "취소");
+        var result = TTSMissingModelsDialog.Show(OnnxDirPath, missing);
 
-        if (open)
-          TTSModelDownloaderWindow.OpenWindow();
-        return;
+        switch (result.Choice)
+        {
+          case TTSMissingModelsDialog.DialogChoice.OpenDownloadWindow:
+            TTSModelDownloaderWindow.OpenWindow();
+            return;
+
+          case TTSMissingModelsDialog.DialogChoice.Ignore:
+            if (result.IgnorePermanently)
+              IgnoreMissingModelsPermanently = true;
+
+            _skipModelCheckOnce = true;
+            EditorApplication.isPlaying = true;
+            break;
+
+          default: // 취소
+            return;
+        }
       }
 
       // ── 2단계: 시나리오 인라인 TTS bake 여부 검사 ───────────────────────
@@ -193,6 +231,15 @@ namespace MultiplayerInfrastructure.Editor.TTS
       if (TTSCore.AreModelsPresent(OnnxDirPath)) return;
 
       var missing = TTSCore.GetMissingModelFiles(OnnxDirPath);
+
+      if (IgnoreMissingModelsPermanently)
+      {
+        Debug.Log(
+          $"[TTS] ONNX 모델 파일 {missing.Count}개가 없지만, '앞으로도 계속 무시하기' 설정으로 인해 경고를 건너뜁니다. " +
+          "(Project Settings > TTS 에서 다시 켤 수 있습니다)");
+        return;
+      }
+
       Debug.LogWarning(
         $"[TTS] ONNX 모델 파일 {missing.Count}개가 없습니다: {OnnxDirPath}\n" +
         $"누락 파일: {string.Join(", ", missing)}\n" +
@@ -235,6 +282,21 @@ namespace MultiplayerInfrastructure.Editor.TTS
             if (GUILayout.Button("TTS > Download Models 열기"))
               TTSModelDownloaderWindow.OpenWindow();
           }
+
+          EditorGUILayout.Space(12);
+          EditorGUILayout.LabelField("플레이 모드 경고", EditorStyles.boldLabel);
+
+          EditorGUI.BeginChangeCheck();
+          bool ignorePermanently = EditorGUILayout.ToggleLeft(
+            "ONNX 모델 누락 경고를 앞으로도 계속 무시하기",
+            TTSPlayModeValidator.IgnoreMissingModelsPermanently);
+          if (EditorGUI.EndChangeCheck())
+            TTSPlayModeValidator.IgnoreMissingModelsPermanently = ignorePermanently;
+
+          EditorGUILayout.HelpBox(
+            "플레이 모드 진입 시 표시되는 'TTS 모델 없음' 대화상자에서 '무시' + '앞으로도 계속 무시하기'를 " +
+            "선택하면 이 설정이 켜집니다. 여기서 언제든 다시 끌 수 있습니다.",
+            MessageType.None);
         },
         keywords = new System.Collections.Generic.HashSet<string> { "TTS", "ONNX", "Supertonic" },
       };
