@@ -87,6 +87,12 @@ namespace MultiplayerInfrastructure.Camera
 
     public float DesiredThirdPersonDistance => _holder.DesiredThirdPersonDistance;
 
+    /// <summary>3인칭 POV 거리 조정의 허용 최소값입니다.</summary>
+    public float MinThirdPersonDistance => _holder.MinThirdPersonDistance;
+
+    /// <summary>3인칭 POV 거리 조정의 허용 최대값입니다.</summary>
+    public float MaxThirdPersonDistance => _holder.MaxThirdPersonDistance;
+
     void LateUpdate()
     {
       _holder.Follow();

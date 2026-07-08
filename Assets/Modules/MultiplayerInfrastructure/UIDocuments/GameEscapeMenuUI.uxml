@@ -6,8 +6,7 @@
     <ui:VisualElement class="game-menu__panel">
       <ui:Label name="menu-title" class="game-menu__title" text="메뉴" />
       <ui:Button name="resume-button" class="game-menu__button" text="돌아가기" />
-      <ui:Button name="key-config-button" class="game-menu__button game-menu__button--secondary" text="키 설정" />
-      <ui:Button name="graphics-settings-button" class="game-menu__button game-menu__button--secondary" text="그래픽 설정" />
+      <ui:Button name="settings-button" class="game-menu__button game-menu__button--secondary" text="설정" />
       <ui:Button name="title-button" class="game-menu__button game-menu__button--secondary" text="타이틀 화면으로" />
     </ui:VisualElement>
   </ui:VisualElement>

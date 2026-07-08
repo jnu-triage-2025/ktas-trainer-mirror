@@ -370,6 +370,12 @@ namespace MultiplayerInfrastructure.UI
       _isVisible = visible;
       if (!visible) CancelRebinding();
 
+      // 표시할 때 캐시된 _root가 detached되었을 수 있으므로 재바인딩을 시도한다.
+      // (network-spawned 프리팹의 UIDocument rootVisualElement 재생성 대응.
+      //  Awake 시점에 한 번만 캐시하면 화면에 반영되지 않는 문제 방지.)
+      if (visible && (_root == null || _root.panel == null))
+        RebindToCurrentDocumentRoot();
+
       // rootVisualElement 중립화는 _root(자식) 유무와 무관하게 항상 수행한다.
       SetDocumentRootInteractable(_document, visible);
 
@@ -378,6 +384,36 @@ namespace MultiplayerInfrastructure.UI
       _root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
       // USS 기본값 opacity: 0 을 런타임에서 override
       _root.style.opacity = visible ? 1f : 0f;
+    }
+
+    /// <summary>
+    /// 현재 UIDocument.rootVisualElement 기준으로 요소를 재바인딩한다(detached root 대응).
+    /// </summary>
+    private void RebindToCurrentDocumentRoot()
+    {
+      var root = _document != null ? _document.rootVisualElement : null;
+      if (root == null) return;
+
+      var newRoot = root.Q<VisualElement>("key-config-root");
+      if (_root == newRoot && _root != null && _root.panel != null)
+        return;
+
+      // 이전 구독 해제
+      if (_closeButton != null) _closeButton.clicked -= HandleCloseClicked;
+      if (_resetButton != null) _resetButton.clicked -= HandleResetClicked;
+      if (_keyboard != null)    _keyboard.OnAssignedKeyClicked -= HandleKeyboardKeyClicked;
+
+      _root = newRoot;
+      _closeButton = root.Q<Button>("close-button");
+      _resetButton = root.Q<Button>("reset-button");
+      _scroll = root.Q<ScrollView>("binding-scroll");
+      _keyboard = root.Q<KeyboardLayoutElement>("keyboard-layout");
+
+      if (_closeButton != null) _closeButton.clicked += HandleCloseClicked;
+      if (_resetButton != null) _resetButton.clicked += HandleResetClicked;
+      if (_keyboard != null)    _keyboard.OnAssignedKeyClicked += HandleKeyboardKeyClicked;
+
+      Populate(_bindings);
     }
 
     public void OnOverlayPushed()

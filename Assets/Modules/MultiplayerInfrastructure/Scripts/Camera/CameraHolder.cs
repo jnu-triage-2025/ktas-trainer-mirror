@@ -235,6 +235,12 @@ namespace MultiplayerInfrastructure.Camera
       }
     }
 
+    /// <summary>3인칭 POV 거리 조정의 허용 최소값입니다.</summary>
+    public float MinThirdPersonDistance => _minThirdPersonDistance;
+
+    /// <summary>3인칭 POV 거리 조정의 허용 최대값입니다.</summary>
+    public float MaxThirdPersonDistance => _maxThirdPersonDistance;
+
     private void SmoothDistanceTransition()
     {
       _currentDistance = Mathf.Lerp(
