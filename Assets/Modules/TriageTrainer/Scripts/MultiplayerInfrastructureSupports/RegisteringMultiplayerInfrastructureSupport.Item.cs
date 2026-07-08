@@ -81,6 +81,53 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<VitalSet>(VitalSet.Identifier);
       Registry.RegisterItemDefinition<WallSuction>(WallSuction.Identifier);
       Registry.RegisterItemDefinition<Yankauer>(Yankauer.Identifier);
+
+      // ===== 바늘(게이지) + 몸통(주사기) + 용액 조합 완제품 (45종) =====
+      Registry.RegisterItemDefinition<Epinephrine16g5ccSyringe>(Epinephrine16g5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine16g20ccSyringe>(Epinephrine16g20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine16g50ccSyringe>(Epinephrine16g50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine18g5ccSyringe>(Epinephrine18g5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine18g20ccSyringe>(Epinephrine18g20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine18g50ccSyringe>(Epinephrine18g50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine20g5ccSyringe>(Epinephrine20g5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine20g20ccSyringe>(Epinephrine20g20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine20g50ccSyringe>(Epinephrine20g50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine22g5ccSyringe>(Epinephrine22g5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine22g20ccSyringe>(Epinephrine22g20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine22g50ccSyringe>(Epinephrine22g50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine24g5ccSyringe>(Epinephrine24g5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine24g20ccSyringe>(Epinephrine24g20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine24g50ccSyringe>(Epinephrine24g50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine16g5ccSyringe>(Norepinephrine16g5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine16g20ccSyringe>(Norepinephrine16g20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine16g50ccSyringe>(Norepinephrine16g50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine18g5ccSyringe>(Norepinephrine18g5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine18g20ccSyringe>(Norepinephrine18g20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine18g50ccSyringe>(Norepinephrine18g50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine20g5ccSyringe>(Norepinephrine20g5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine20g20ccSyringe>(Norepinephrine20g20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine20g50ccSyringe>(Norepinephrine20g50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine22g5ccSyringe>(Norepinephrine22g5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine22g20ccSyringe>(Norepinephrine22g20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine22g50ccSyringe>(Norepinephrine22g50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine24g5ccSyringe>(Norepinephrine24g5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine24g20ccSyringe>(Norepinephrine24g20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine24g50ccSyringe>(Norepinephrine24g50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline16g5ccSyringe>(NormalSaline16g5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline16g20ccSyringe>(NormalSaline16g20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline16g50ccSyringe>(NormalSaline16g50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline18g5ccSyringe>(NormalSaline18g5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline18g20ccSyringe>(NormalSaline18g20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline18g50ccSyringe>(NormalSaline18g50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline20g5ccSyringe>(NormalSaline20g5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline20g20ccSyringe>(NormalSaline20g20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline20g50ccSyringe>(NormalSaline20g50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline22g5ccSyringe>(NormalSaline22g5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline22g20ccSyringe>(NormalSaline22g20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline22g50ccSyringe>(NormalSaline22g50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline24g5ccSyringe>(NormalSaline24g5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline24g20ccSyringe>(NormalSaline24g20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline24g50ccSyringe>(NormalSaline24g50ccSyringe.Identifier);
     }
 
     // =========================================================================
@@ -122,6 +169,368 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
         new ItemCombineRecipe(EpinephrineSyringe.Identifier)
           .Requires(Syringe5cc.Identifier, 1)
           .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // ===== 바늘(게이지) + 몸통(주사기) + 용액 조합 레시피 (45종) =====
+
+      // 에피네프린이 든 16g 5cc 주사기 = 16g 카테터 1 + 5cc 주사기 1 + 에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine16g5ccSyringe.Identifier)
+          .Requires(Cannula16g.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린이 든 16g 20cc 주사기 = 16g 카테터 1 + 20cc 주사기 1 + 에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine16g20ccSyringe.Identifier)
+          .Requires(Cannula16g.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린이 든 16g 50cc 주사기 = 16g 카테터 1 + 50cc 주사기 1 + 에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine16g50ccSyringe.Identifier)
+          .Requires(Cannula16g.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린이 든 18g 5cc 주사기 = 18g 카테터 1 + 5cc 주사기 1 + 에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine18g5ccSyringe.Identifier)
+          .Requires(Cannula18g.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린이 든 18g 20cc 주사기 = 18g 카테터 1 + 20cc 주사기 1 + 에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine18g20ccSyringe.Identifier)
+          .Requires(Cannula18g.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린이 든 18g 50cc 주사기 = 18g 카테터 1 + 50cc 주사기 1 + 에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine18g50ccSyringe.Identifier)
+          .Requires(Cannula18g.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린이 든 20g 5cc 주사기 = 20g 카테터 1 + 5cc 주사기 1 + 에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine20g5ccSyringe.Identifier)
+          .Requires(Cannula20g.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린이 든 20g 20cc 주사기 = 20g 카테터 1 + 20cc 주사기 1 + 에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine20g20ccSyringe.Identifier)
+          .Requires(Cannula20g.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린이 든 20g 50cc 주사기 = 20g 카테터 1 + 50cc 주사기 1 + 에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine20g50ccSyringe.Identifier)
+          .Requires(Cannula20g.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린이 든 22g 5cc 주사기 = 22g 카테터 1 + 5cc 주사기 1 + 에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine22g5ccSyringe.Identifier)
+          .Requires(Cannula22g.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린이 든 22g 20cc 주사기 = 22g 카테터 1 + 20cc 주사기 1 + 에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine22g20ccSyringe.Identifier)
+          .Requires(Cannula22g.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린이 든 22g 50cc 주사기 = 22g 카테터 1 + 50cc 주사기 1 + 에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine22g50ccSyringe.Identifier)
+          .Requires(Cannula22g.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린이 든 24g 5cc 주사기 = 24g 카테터 1 + 5cc 주사기 1 + 에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine24g5ccSyringe.Identifier)
+          .Requires(Cannula24g.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린이 든 24g 20cc 주사기 = 24g 카테터 1 + 20cc 주사기 1 + 에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine24g20ccSyringe.Identifier)
+          .Requires(Cannula24g.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린이 든 24g 50cc 주사기 = 24g 카테터 1 + 50cc 주사기 1 + 에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine24g50ccSyringe.Identifier)
+          .Requires(Cannula24g.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린이 든 16g 5cc 주사기 = 16g 카테터 1 + 5cc 주사기 1 + 노르에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine16g5ccSyringe.Identifier)
+          .Requires(Cannula16g.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린이 든 16g 20cc 주사기 = 16g 카테터 1 + 20cc 주사기 1 + 노르에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine16g20ccSyringe.Identifier)
+          .Requires(Cannula16g.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린이 든 16g 50cc 주사기 = 16g 카테터 1 + 50cc 주사기 1 + 노르에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine16g50ccSyringe.Identifier)
+          .Requires(Cannula16g.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린이 든 18g 5cc 주사기 = 18g 카테터 1 + 5cc 주사기 1 + 노르에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine18g5ccSyringe.Identifier)
+          .Requires(Cannula18g.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린이 든 18g 20cc 주사기 = 18g 카테터 1 + 20cc 주사기 1 + 노르에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine18g20ccSyringe.Identifier)
+          .Requires(Cannula18g.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린이 든 18g 50cc 주사기 = 18g 카테터 1 + 50cc 주사기 1 + 노르에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine18g50ccSyringe.Identifier)
+          .Requires(Cannula18g.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린이 든 20g 5cc 주사기 = 20g 카테터 1 + 5cc 주사기 1 + 노르에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine20g5ccSyringe.Identifier)
+          .Requires(Cannula20g.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린이 든 20g 20cc 주사기 = 20g 카테터 1 + 20cc 주사기 1 + 노르에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine20g20ccSyringe.Identifier)
+          .Requires(Cannula20g.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린이 든 20g 50cc 주사기 = 20g 카테터 1 + 50cc 주사기 1 + 노르에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine20g50ccSyringe.Identifier)
+          .Requires(Cannula20g.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린이 든 22g 5cc 주사기 = 22g 카테터 1 + 5cc 주사기 1 + 노르에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine22g5ccSyringe.Identifier)
+          .Requires(Cannula22g.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린이 든 22g 20cc 주사기 = 22g 카테터 1 + 20cc 주사기 1 + 노르에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine22g20ccSyringe.Identifier)
+          .Requires(Cannula22g.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린이 든 22g 50cc 주사기 = 22g 카테터 1 + 50cc 주사기 1 + 노르에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine22g50ccSyringe.Identifier)
+          .Requires(Cannula22g.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린이 든 24g 5cc 주사기 = 24g 카테터 1 + 5cc 주사기 1 + 노르에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine24g5ccSyringe.Identifier)
+          .Requires(Cannula24g.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린이 든 24g 20cc 주사기 = 24g 카테터 1 + 20cc 주사기 1 + 노르에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine24g20ccSyringe.Identifier)
+          .Requires(Cannula24g.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린이 든 24g 50cc 주사기 = 24g 카테터 1 + 50cc 주사기 1 + 노르에피네프린 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine24g50ccSyringe.Identifier)
+          .Requires(Cannula24g.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수가 든 16g 5cc 주사기 = 16g 카테터 1 + 5cc 주사기 1 + 생리식염수 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline16g5ccSyringe.Identifier)
+          .Requires(Cannula16g.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수가 든 16g 20cc 주사기 = 16g 카테터 1 + 20cc 주사기 1 + 생리식염수 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline16g20ccSyringe.Identifier)
+          .Requires(Cannula16g.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수가 든 16g 50cc 주사기 = 16g 카테터 1 + 50cc 주사기 1 + 생리식염수 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline16g50ccSyringe.Identifier)
+          .Requires(Cannula16g.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수가 든 18g 5cc 주사기 = 18g 카테터 1 + 5cc 주사기 1 + 생리식염수 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline18g5ccSyringe.Identifier)
+          .Requires(Cannula18g.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수가 든 18g 20cc 주사기 = 18g 카테터 1 + 20cc 주사기 1 + 생리식염수 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline18g20ccSyringe.Identifier)
+          .Requires(Cannula18g.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수가 든 18g 50cc 주사기 = 18g 카테터 1 + 50cc 주사기 1 + 생리식염수 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline18g50ccSyringe.Identifier)
+          .Requires(Cannula18g.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수가 든 20g 5cc 주사기 = 20g 카테터 1 + 5cc 주사기 1 + 생리식염수 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline20g5ccSyringe.Identifier)
+          .Requires(Cannula20g.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수가 든 20g 20cc 주사기 = 20g 카테터 1 + 20cc 주사기 1 + 생리식염수 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline20g20ccSyringe.Identifier)
+          .Requires(Cannula20g.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수가 든 20g 50cc 주사기 = 20g 카테터 1 + 50cc 주사기 1 + 생리식염수 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline20g50ccSyringe.Identifier)
+          .Requires(Cannula20g.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수가 든 22g 5cc 주사기 = 22g 카테터 1 + 5cc 주사기 1 + 생리식염수 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline22g5ccSyringe.Identifier)
+          .Requires(Cannula22g.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수가 든 22g 20cc 주사기 = 22g 카테터 1 + 20cc 주사기 1 + 생리식염수 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline22g20ccSyringe.Identifier)
+          .Requires(Cannula22g.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수가 든 22g 50cc 주사기 = 22g 카테터 1 + 50cc 주사기 1 + 생리식염수 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline22g50ccSyringe.Identifier)
+          .Requires(Cannula22g.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수가 든 24g 5cc 주사기 = 24g 카테터 1 + 5cc 주사기 1 + 생리식염수 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline24g5ccSyringe.Identifier)
+          .Requires(Cannula24g.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수가 든 24g 20cc 주사기 = 24g 카테터 1 + 20cc 주사기 1 + 생리식염수 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline24g20ccSyringe.Identifier)
+          .Requires(Cannula24g.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수가 든 24g 50cc 주사기 = 24g 카테터 1 + 50cc 주사기 1 + 생리식염수 앰플 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline24g50ccSyringe.Identifier)
+          .Requires(Cannula24g.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Requires(NormalSaline20ml.Identifier, 1)
           .Produces(1));
     }
 
