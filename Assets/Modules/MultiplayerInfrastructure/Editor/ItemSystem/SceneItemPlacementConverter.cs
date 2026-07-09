@@ -207,7 +207,10 @@ namespace MultiplayerInfrastructure.Editor.ItemSystem
       if (!string.IsNullOrWhiteSpace(entityIdentifier))
         so.FindProperty("_entityIdentifier").stringValue = entityIdentifier;
 
-      var reward = so.FindProperty("_pickupReward");
+      // 보상은 리스트(_pickupRewards)이며, 변환 시 단일 항목(index 0)만 채운다.
+      var rewards = so.FindProperty("_pickupRewards");
+      rewards.arraySize = 1;
+      var reward = rewards.GetArrayElementAtIndex(0);
       reward.FindPropertyRelative("_itemIdentifier").stringValue = itemIdentifier;
       reward.FindPropertyRelative("_amount").intValue = Mathf.Max(1, stackCount);
       reward.FindPropertyRelative("_decreaseRemains").intValue = 1;
