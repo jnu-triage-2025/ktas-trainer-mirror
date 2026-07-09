@@ -131,8 +131,33 @@ namespace MultiplayerInfrastructure.UI
       // 먼저 호출되므로, Add 순서상 ghost/tooltip 이 조합 패널보다 나중에 추가되어 위에 그려진다.
       Add(_craftingPanel);
 
+      // 조합 패널 높이를 좌측 인벤토리 패널(소유 아이템 영역) 높이에 고정한다.
+      // 조합 가능 아이템 수와 무관하게 UI 전체 높이가 인벤토리 기준으로 유지되도록,
+      // 인벤토리 패널의 레이아웃이 바뀔 때마다 조합 패널 높이를 동기화한다.
+      if (_inventoryPanel != null)
+      {
+        _inventoryPanel.RegisterCallback<GeometryChangedEvent>(_ => SyncCraftingPanelHeightToInventory());
+        SyncCraftingPanelHeightToInventory();
+      }
+
       RenderRequirements();
       RenderRecipeList();
+    }
+
+    /// <summary>
+    /// 조합 패널 높이를 좌측 인벤토리 패널 높이에 맞춘다.
+    /// 이렇게 하면 UI 전체 높이는 인벤토리(소유 아이템) 영역 기준으로 고정되고,
+    /// 조합 가능 아이템 수가 늘어나도 패널 높이가 늘어나지 않는다(대신 목록이 스크롤됨).
+    /// </summary>
+    private void SyncCraftingPanelHeightToInventory()
+    {
+      // _inventoryPanel 이 루트(this) 로 폴백된 경우(UXML 없이 코드로 생성) 순환 참조가 되므로 건너뛴다.
+      if (_craftingPanel == null || _inventoryPanel == null || _inventoryPanel == this) return;
+
+      float h = _inventoryPanel.resolvedStyle.height;
+      if (h <= 0f || float.IsNaN(h)) return;
+
+      _craftingPanel.style.height = h;
     }
 
     /// <summary>

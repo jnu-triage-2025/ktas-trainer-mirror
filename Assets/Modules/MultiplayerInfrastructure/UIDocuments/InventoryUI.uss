@@ -11,7 +11,7 @@
  */
 .inventory-root {
   flex-direction: row;
-  align-items: flex-start;
+  align-items: center;
   padding: 20px;
   background-color: #16213e;
   border-width: 2px;
@@ -45,6 +45,8 @@
   gap: 6px;
   flex-wrap: wrap;
   flex-direction: column;
+  /* 소유 아이템(슬롯) 부분의 세로 정렬: top → middle(center) */
+  justify-content: center;
   background-color: rgba(6, 16, 32, 0.75);
   min-height: 120px;
 }
@@ -118,20 +120,29 @@
   -unity-text-align: middle-right;
 }
 
-/* ── 우측 조합 패널 ─────────────────────────────────────────── */
+/* ── 우측 조합 패널 ───────────────────────────────────────────
+ * 높이는 C#(SyncCraftingPanelHeightToInventory)에서 좌측 인벤토리 패널 높이로 고정한다.
+ * 내부는 세로(column) 배치: 고정 크기 섹션들 + flex-grow 하는 조합 목록 스크롤.
+ * 남는 세로 공간이 있으면 목록 스크롤 영역이 채우고, 넘치면 스크롤된다. */
 .crafting-panel {
-  width: 180px;
+  width: 200px;
   flex-shrink: 0;
+  flex-direction: column;
   align-items: stretch;
+  /* 인벤토리(소유 아이템) 영역과의 가로 간격 */
+  margin-left: 16px;
 }
 
-/* 조합 패널 타이틀: 소제목 느낌으로 매우 작게 */
+/* 조합 패널 타이틀: 소제목 느낌으로 매우 작게. 여백 최소화. */
 .crafting-title {
   -unity-font-style: bold;
   font-size: 11px;
   color: #4a9eff;
   letter-spacing: 2px;
-  margin-bottom: 8px;
+  margin-top: 0;
+  margin-bottom: 2px;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 /* (b) 선택된 레시피의 필요 아이템 표시 영역 */
@@ -141,6 +152,7 @@
   color: #6b7891;
   letter-spacing: 1px;
   margin-bottom: 6px;
+  flex-shrink: 0;
 }
 
 .crafting-requirements {
@@ -148,13 +160,14 @@
   flex-wrap: wrap;
   justify-content: flex-start;
   align-items: flex-start;
-  padding: 8px;
-  gap: 6px;
+  padding: 5px;
+  gap: 4px;
   border-width: 1px;
   border-color: #1f3a63;
   border-radius: 10px;
   background-color: rgba(6, 16, 32, 0.75);
-  min-height: 64px;
+  min-height: 48px;
+  flex-shrink: 0;
 }
 
 .crafting-requirements__empty {
@@ -168,21 +181,21 @@
 
 /* 필요 아이템 칸: 아이콘 + "보유/요구" 수량 */
 .crafting-req-slot {
-  width: 48px;
-  height: 60px;
+  width: 40px;
+  height: 48px;
   border-width: 2px;
   border-color: #1f3a63;
   border-radius: 8px;
   background-color: rgba(11, 22, 40, 0.95);
   align-items: center;
   justify-content: center;
-  padding: 4px 2px 3px 2px;
+  padding: 3px 2px 2px 2px;
   overflow: hidden;
 }
 
 .crafting-req-slot__icon {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   tint-color: rgba(160, 160, 160, 1);
   opacity: 0.35;
   flex-shrink: 0;
@@ -215,14 +228,19 @@
   height: 1px;
   background-color: rgba(74, 158, 255, 0.35);
   margin-top: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
+  flex-shrink: 0;
 }
 
 /* (a) 조합 가능한 아이템 목록
  * 목록은 가변적이므로 ScrollView 로 감싸 넘칠 때 세로 스크롤한다.
- * 스크롤 영역의 최대 높이만 제한하고, 격자 배치는 내부 .crafting-recipe-list 가 담당한다. */
+ * 스크롤 영역 높이는 조합 패널(=인벤토리 높이)에 의해 제한되고, 격자 배치는 내부 .crafting-recipe-list 가 담당한다. */
 .crafting-recipe-scroll {
-  max-height: 240px;
+  /* 패널의 남은 세로 공간을 채우고, 내용이 넘치면 스크롤한다.
+   * 높이가 패널에 의해 제한되므로 별도의 max-height 는 두지 않는다. */
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-height: 60px;
   border-width: 1px;
   border-color: #1f3a63;
   border-radius: 10px;
@@ -232,14 +250,14 @@
 /* 슬롯을 인벤토리 그리드처럼 행 단위(column)로 쌓는다. */
 .crafting-recipe-list {
   flex-direction: column;
-  padding: 8px;
-  gap: 6px;
+  padding: 6px;
+  gap: 5px;
 }
 
 /* 격자의 한 줄: 슬롯을 가로로 나열 */
 .crafting-recipe-row {
   flex-direction: row;
-  gap: 6px;
+  gap: 5px;
 }
 
 .crafting-recipe-list__empty {
@@ -253,8 +271,8 @@
 
 /* 레시피 슬롯: 인벤토리 슬롯과 동일한 격자형 칸(아이콘만 표시, 이름은 툴팁) */
 .crafting-recipe-slot {
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   border-width: 2px;
   border-color: #1f3a63;
   border-radius: 8px;
@@ -278,8 +296,8 @@
 }
 
 .crafting-recipe-slot__icon {
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   tint-color: white;
   flex-shrink: 0;
 }

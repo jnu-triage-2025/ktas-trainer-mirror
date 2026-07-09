@@ -20,6 +20,7 @@ namespace MultiplayerInfrastructure.UI
     private Texture2D _defaultIcon;
 
     private VisualElement _inventoryGrid;
+    private VisualElement _inventoryPanel;
 
     private readonly List<VisualElement> _slotElements = new();
     private readonly List<InventorySlotModelDTO> _slotDataBuffer = new();
@@ -52,6 +53,8 @@ namespace MultiplayerInfrastructure.UI
       _defaultIcon = defaultIcon;
 
       _inventoryGrid = this.Q<VisualElement>("InventoryGrid") ?? CreateFallbackGrid();
+      // "소유 아이템" 영역(좌측 인벤토리 패널). UI 전체 높이의 기준이 된다.
+      _inventoryPanel = this.Q<VisualElement>("InventoryPanel") ?? _inventoryGrid.parent;
 
       BuildCraftingPanel();
       CreateHeldItemGhost();
