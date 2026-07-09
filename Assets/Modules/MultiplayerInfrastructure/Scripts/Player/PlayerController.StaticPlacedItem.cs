@@ -124,10 +124,18 @@ namespace MultiplayerInfrastructure.Player
       if (!TryGetStaticPlacedItem(entityIdentifier, out var staticItem) || staticItem == null)
         return;
 
-      var reward = staticItem.PickupReward;
-      if (string.IsNullOrWhiteSpace(reward.ItemIdentifier))
+      // 유효한 보상이 하나도 없으면(목록이 비었거나 모든 항목이 무효) 이 아이템은 무시한다(획득 불가).
+      if (!staticItem.HasAnyReward)
       {
-        Debug.LogWarning($"[PlayerController] StaticPlacedItem '{entityIdentifier}' has empty item identifier.");
+        Debug.LogWarning($"[PlayerController] StaticPlacedItem '{entityIdentifier}' has no valid pickup reward.");
+        return;
+      }
+
+      // 유효 보상들을 병렬 배열(식별자/수량)로 수집하여 요청자에게 전달한다.
+      CollectValidRewards(staticItem, out var itemIdentifiers, out var amounts);
+      if (itemIdentifiers.Length == 0)
+      {
+        Debug.LogWarning($"[PlayerController] StaticPlacedItem '{entityIdentifier}' has no valid pickup reward.");
         return;
       }
 
@@ -155,8 +163,57 @@ namespace MultiplayerInfrastructure.Player
       TargetConfirmPickupStaticPlacedItem(
         claimant,
         entityIdentifier,
-        reward.ItemIdentifier,
-        reward.Amount);
+        itemIdentifiers,
+        amounts);
+    }
+
+    /// <summary>
+    /// 정적 아이템의 유효 보상(식별자가 비어 있지 않은 항목)들을 병렬 배열로 수집합니다(서버 전용).
+    /// index 0 은 대표(표시 기준) 보상입니다.
+    /// </summary>
+    private static void CollectValidRewards(
+      StaticPlacedItem staticItem,
+      out string[] itemIdentifiers,
+      out int[] amounts)
+    {
+      var rewards = staticItem.PickupRewards;
+      var ids = new List<string>(rewards.Count);
+      var amts = new List<int>(rewards.Count);
+
+      for (int i = 0; i < rewards.Count; i++)
+      {
+        var reward = rewards[i];
+        if (string.IsNullOrWhiteSpace(reward.ItemIdentifier))
+          continue;
+
+        ids.Add(reward.ItemIdentifier);
+        amts.Add(reward.Amount);
+      }
+
+      itemIdentifiers = ids.ToArray();
+      amounts = amts.ToArray();
+    }
+
+    /// <summary>
+    /// 1회 획득 시 Remains 감소량을 결정합니다(서버 전용).
+    /// 유효 보상들의 DecreaseRemains 중 최댓값을 사용하며, 유효 보상이 없으면 0 입니다.
+    /// </summary>
+    private static int ResolveDecreaseRemains(StaticPlacedItem staticItem)
+    {
+      var rewards = staticItem.PickupRewards;
+      int max = 0;
+      for (int i = 0; i < rewards.Count; i++)
+      {
+        var reward = rewards[i];
+        if (string.IsNullOrWhiteSpace(reward.ItemIdentifier))
+          continue;
+
+        int d = Mathf.Max(0, reward.DecreaseRemains);
+        if (d > max)
+          max = d;
+      }
+
+      return max;
     }
 
     /// <summary>
@@ -170,7 +227,9 @@ namespace MultiplayerInfrastructure.Player
       out PendingStaticPickup pending)
     {
       pending = null;
-      int decreaseBy = Mathf.Max(0, staticItem.PickupReward.DecreaseRemains);
+      // 1회 획득으로 Remains 를 얼마나 줄일지는 유효 보상들의 DecreaseRemains 중 최댓값을 사용한다.
+      // (단일 보상일 때는 기존과 동일하게 그 항목의 값이 그대로 적용된다.)
+      int decreaseBy = ResolveDecreaseRemains(staticItem);
 
       switch (staticItem.VanishMode)
       {
@@ -237,27 +296,45 @@ namespace MultiplayerInfrastructure.Player
     private void TargetConfirmPickupStaticPlacedItem(
       NetworkConnection conn,
       string entityIdentifier,
-      string itemIdentifier,
-      int amount)
+      string[] itemIdentifiers,
+      int[] amounts)
     {
-      if (string.IsNullOrWhiteSpace(itemIdentifier))
+      if (itemIdentifiers == null || itemIdentifiers.Length == 0
+          || amounts == null || amounts.Length != itemIdentifiers.Length)
       {
         ReportStaticPickupFailure(entityIdentifier);
         return;
       }
 
-      var item = Registry.Registry.CreateItemInstance(itemIdentifier);
-      if (item == null)
+      // 지급할 모든 아이템 인스턴스를 먼저 생성한다.
+      var items = new List<Item>(itemIdentifiers.Length);
+      for (int i = 0; i < itemIdentifiers.Length; i++)
       {
-        Debug.LogWarning($"[PlayerController] Failed to create static pickup item '{itemIdentifier}'.");
+        string itemIdentifier = itemIdentifiers[i];
+        if (string.IsNullOrWhiteSpace(itemIdentifier))
+          continue;
+
+        var item = Registry.Registry.CreateItemInstance(itemIdentifier);
+        if (item == null)
+        {
+          Debug.LogWarning($"[PlayerController] Failed to create static pickup item '{itemIdentifier}'.");
+          ReportStaticPickupFailure(entityIdentifier);
+          return;
+        }
+
+        item.CurrentStackCount = Mathf.Max(1, amounts[i]);
+        items.Add(item);
+      }
+
+      if (items.Count == 0)
+      {
         ReportStaticPickupFailure(entityIdentifier);
         return;
       }
 
-      item.CurrentStackCount = Mathf.Max(1, amount);
-
-      // 월드아이템과 동일한 all-or-nothing 규약: 전량 수용 가능할 때만 추가.
-      if (!CanAcceptItem(item) || !TryAddItemToInventory(item))
+      // 월드아이템과 동일한 all-or-nothing 규약: 목록의 모든 아이템을 전량 수용 가능할 때만 추가한다.
+      // 하나라도 수용 불가하면 아무것도 추가하지 않는다.
+      if (!CanAcceptAllItems(items))
       {
         Debug.LogWarning(
           $"[PlayerController] Static pickup confirmation for '{entityIdentifier}', but inventory is full.");
@@ -265,8 +342,125 @@ namespace MultiplayerInfrastructure.Player
         return;
       }
 
-      // OnGet 은 TryAddItemToInventory 내부에서 1회 호출된다.
+      for (int i = 0; i < items.Count; i++)
+      {
+        // CanAcceptAllItems 로 전량 수용을 이미 검증했으므로 개별 추가는 성공해야 한다.
+        // OnGet 은 TryAddItemToInventory 내부에서 아이템별로 1회 호출된다.
+        if (!TryAddItemToInventory(items[i]))
+        {
+          Debug.LogWarning(
+            $"[PlayerController] Static pickup partial-add failure for '{entityIdentifier}' item index {i}.");
+          ReportStaticPickupFailure(entityIdentifier);
+          return;
+        }
+      }
+
       AcknowledgeStaticPickupSuccess(entityIdentifier);
+    }
+
+    /// <summary>
+    /// 여러 아이템을 인벤토리에 모두 수용할 수 있는지 판정합니다(로컬 클라이언트 전용).
+    /// 스택 병합/부분 수용을 정확히 반영하기 위해 슬롯 상태를 복제하여 순차 시뮬레이션합니다.
+    /// </summary>
+    private bool CanAcceptAllItems(List<Item> items)
+    {
+      if (items == null || items.Count == 0)
+        return false;
+
+      // 단일 아이템이면 기존 경로를 그대로 사용(추가 복제/시뮬레이션 비용 없음).
+      if (items.Count == 1)
+        return CanAcceptItem(items[0]);
+
+      return CanAcceptAllItemsSimulated(items);
+    }
+
+    /// <summary>시뮬레이션용 슬롯 상태(실제 인벤토리를 변경하지 않는 가상 슬롯).</summary>
+    private sealed class SimSlot
+    {
+      public Item Prototype;     // 스택 판정(CanStackWith)용 프로토타입. 빈 슬롯은 채워질 때 설정된다.
+      public bool IsEmptyState;  // 현재 비어 있는지(원본 IsEmpty 또는 시뮬 중 아직 채워지지 않음).
+      public int CurrentCount;
+      public int MaxCount;
+    }
+
+    /// <summary>
+    /// 슬롯 상태를 복제해 아이템들을 순차로 가상 배치하며 전량 수용 가능 여부를 판정합니다.
+    /// <see cref="TryAddItemToInventory"/> 와 동일한 규칙(먼저 스택 병합, 그다음 빈 슬롯 배치)을 따릅니다.
+    /// </summary>
+    private bool CanAcceptAllItemsSimulated(List<Item> items)
+    {
+      var sim = new List<SimSlot>(_slots.Count);
+      foreach (var slot in _slots)
+      {
+        if (slot == null)
+        {
+          sim.Add(new SimSlot { Prototype = null, IsEmptyState = true, CurrentCount = 0, MaxCount = 0 });
+          continue;
+        }
+
+        bool empty = slot.IsEmpty || slot.ItemInstance == null;
+        sim.Add(new SimSlot
+        {
+          Prototype = empty ? null : slot.ItemInstance,
+          IsEmptyState = empty,
+          CurrentCount = empty ? 0 : slot.ItemInstance.CurrentStackCount,
+          MaxCount = empty ? 0 : slot.ItemInstance.CurrentMaxStackCount,
+        });
+      }
+
+      foreach (var item in items)
+      {
+        if (item == null || item.CurrentStackCount <= 0)
+          continue;
+
+        if (!SimulatePlaceItem(sim, item))
+          return false;
+      }
+
+      return true;
+    }
+
+    /// <summary>하나의 아이템을 시뮬레이션 슬롯들에 배치 시도합니다. 전량 배치 성공 시 true.</summary>
+    private static bool SimulatePlaceItem(List<SimSlot> sim, Item item)
+    {
+      int remaining = item.CurrentStackCount;
+
+      // 1) 스택 병합 가능한 기존(또는 이미 채워진) 슬롯에 먼저 채운다.
+      for (int i = 0; i < sim.Count && remaining > 0; i++)
+      {
+        var s = sim[i];
+        if (s.IsEmptyState || s.Prototype == null)
+          continue;
+        if (!s.Prototype.CanStackWith(item))
+          continue;
+
+        int room = s.MaxCount - s.CurrentCount;
+        if (room <= 0)
+          continue;
+
+        int moved = Mathf.Min(room, remaining);
+        s.CurrentCount += moved;
+        remaining -= moved;
+      }
+
+      // 2) 남으면 빈 슬롯에 배치한다.
+      for (int i = 0; i < sim.Count && remaining > 0; i++)
+      {
+        var s = sim[i];
+        if (!s.IsEmptyState)
+          continue;
+
+        int max = item.CurrentMaxStackCount;
+        int moved = Mathf.Min(max, remaining);
+
+        s.IsEmptyState = false;
+        s.Prototype = item;
+        s.MaxCount = max;
+        s.CurrentCount = moved;
+        remaining -= moved;
+      }
+
+      return remaining <= 0;
     }
 
     private void AcknowledgeStaticPickupSuccess(string entityIdentifier)

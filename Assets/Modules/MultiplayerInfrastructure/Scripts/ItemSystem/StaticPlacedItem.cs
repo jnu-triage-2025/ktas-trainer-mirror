@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
@@ -32,8 +33,12 @@ namespace MultiplayerInfrastructure.ItemSystem
     [SerializeField] private string _entityIdentifier;
 
     [Header("Pickup")]
+    [Tooltip("획득 시 지급되는 보상 목록입니다. 여러 종류의 아이템을 한 번에 지급할 수 있습니다. 목록이 비어 있으면 이 아이템은 무시됩니다(획득 불가).")]
     [SerializeField]
-    private StaticPlacedItemPickupReward _pickupReward = StaticPlacedItemPickupReward.CreateDefault();
+    private List<StaticPlacedItemPickupReward> _pickupRewards = new()
+    {
+      StaticPlacedItemPickupReward.CreateDefault(),
+    };
 
     [SerializeField]
     private StaticPlacedItemState _initialState = StaticPlacedItemState.CreateDefault();
@@ -56,14 +61,82 @@ namespace MultiplayerInfrastructure.ItemSystem
 
     public StaticPlacedItemVanishMode VanishMode => _vanishMode;
     public StaticPlacedItemVanishBehavior VanishBehavior => _vanishBehavior;
-    public StaticPlacedItemPickupReward PickupReward => _pickupReward;
+
+    /// <summary>
+    /// 획득 시 지급되는 보상 목록(읽기 전용). 아이템 식별자가 비어 있는 항목은 유효하지 않은 것으로 간주됩니다.
+    /// </summary>
+    public IReadOnlyList<StaticPlacedItemPickupReward> PickupRewards
+      => _pickupRewards ?? (IReadOnlyList<StaticPlacedItemPickupReward>)System.Array.Empty<StaticPlacedItemPickupReward>();
+
+    /// <summary>
+    /// 유효한(아이템 식별자가 비어 있지 않은) 보상이 하나라도 존재하는지 여부입니다.
+    /// 목록이 비어 있거나 모든 항목이 무효하면 이 아이템은 획득 대상에서 무시됩니다.
+    /// </summary>
+    public bool HasAnyReward
+    {
+      get
+      {
+        if (_pickupRewards == null)
+          return false;
+
+        for (int i = 0; i < _pickupRewards.Count; i++)
+        {
+          if (!string.IsNullOrWhiteSpace(_pickupRewards[i].ItemIdentifier))
+            return true;
+        }
+
+        return false;
+      }
+    }
+
+    /// <summary>
+    /// 표시(아이콘/모델)의 기준이 되는 대표 보상(첫 번째 유효 항목)을 반환합니다.
+    /// 유효한 보상이 없으면 false 를 반환합니다.
+    /// </summary>
+    public bool TryGetPrimaryReward(out StaticPlacedItemPickupReward primary)
+    {
+      if (_pickupRewards != null)
+      {
+        for (int i = 0; i < _pickupRewards.Count; i++)
+        {
+          if (!string.IsNullOrWhiteSpace(_pickupRewards[i].ItemIdentifier))
+          {
+            primary = _pickupRewards[i];
+            return true;
+          }
+        }
+      }
+
+      primary = default;
+      return false;
+    }
+
+    /// <summary>유효한 보상 항목의 개수입니다.</summary>
+    public int ValidRewardCount
+    {
+      get
+      {
+        if (_pickupRewards == null)
+          return 0;
+
+        int count = 0;
+        for (int i = 0; i < _pickupRewards.Count; i++)
+        {
+          if (!string.IsNullOrWhiteSpace(_pickupRewards[i].ItemIdentifier))
+            count++;
+        }
+
+        return count;
+      }
+    }
+
     public int InitialRemains => _initialState.Remains;
 
     private GameObject _loadedModel;
     private string _registeredIdentifier;
 
     /// <summary>
-    /// <see cref="_pickupReward"/>의 ItemIdentifier로부터 지연 생성/캐시되는 아이템 인스턴스입니다.
+    /// 대표 보상(첫 번째 유효 항목)의 ItemIdentifier로부터 지연 생성/캐시되는 아이템 인스턴스입니다.
     /// DisplayText/DisplayIcon 표시용으로만 사용되며(획득 시 실제 지급은 서버 권위 프로토콜을 따름), 값이 변경될 수 있으므로 매번 캐시 유효성을 확인합니다.
     /// </summary>
     private Item _cachedDisplayItem;
@@ -223,10 +296,10 @@ namespace MultiplayerInfrastructure.ItemSystem
 
     private void LoadModelIfNeeded()
     {
-      if (_loadedModel != null || string.IsNullOrWhiteSpace(_pickupReward.ItemIdentifier))
+      if (_loadedModel != null || !TryGetPrimaryReward(out var primary))
         return;
 
-      string path = $"{ModelRootPath}/{_pickupReward.ItemIdentifier}";
+      string path = $"{ModelRootPath}/{primary.ItemIdentifier}";
       var prefab = Resources.Load<GameObject>(path);
       if (prefab == null)
       {
@@ -252,7 +325,15 @@ namespace MultiplayerInfrastructure.ItemSystem
           return baseText;
 
         var item = ResolveDisplayItem();
-        return item != null ? $"{item.CurrentDisplayName} 획득" : "획득";
+        if (item == null)
+          return "획득";
+
+        // 유효 보상이 2개 이상이면 "{0번 아이템} 외 {나머지 개수}개 아이템" 으로 표시한다.
+        int validCount = ValidRewardCount;
+        if (validCount > 1)
+          return $"{item.CurrentDisplayName} 외 {validCount - 1}개 아이템";
+
+        return $"{item.CurrentDisplayName} 획득";
       }
     }
 
@@ -264,24 +345,25 @@ namespace MultiplayerInfrastructure.ItemSystem
         if (baseIcon != null)
           return baseIcon;
 
+        // 대표(0번 인덱스) 유효 아이템의 텍스쳐를 아이콘으로 사용한다.
         return ResolveDisplayItem()?.CurrentItemIconTexture;
       }
     }
 
     /// <summary>
-    /// PickupReward의 ItemIdentifier로 아이템 인스턴스를 조회/캐시합니다.
+    /// 대표 보상(첫 번째 유효 항목)의 ItemIdentifier로 아이템 인스턴스를 조회/캐시합니다.
     /// DisplayText/DisplayIcon 표시(UI 미리보기) 용도이며, 조회 실패 시 null을 반환합니다.
     /// </summary>
     private Item ResolveDisplayItem()
     {
-      string identifier = _pickupReward.ItemIdentifier;
-      if (string.IsNullOrWhiteSpace(identifier))
+      if (!TryGetPrimaryReward(out var primary))
       {
         _cachedDisplayItem = null;
         _cachedDisplayItemIdentifier = null;
         return null;
       }
 
+      string identifier = primary.ItemIdentifier;
       if (_cachedDisplayItem != null && _cachedDisplayItemIdentifier == identifier)
         return _cachedDisplayItem;
 
@@ -386,7 +468,7 @@ namespace MultiplayerInfrastructure.ItemSystem
 
     private void OnDrawGizmos()
     {
-      bool hasItem = !string.IsNullOrWhiteSpace(_pickupReward.ItemIdentifier);
+      bool hasItem = TryGetPrimaryReward(out var primary);
 
       Gizmos.color = hasItem
         ? new Color(0.2f, 0.6f, 0.95f, 0.55f)
@@ -398,10 +480,22 @@ namespace MultiplayerInfrastructure.ItemSystem
         : new Color(0.8f, 0.1f, 0.1f, 1f);
       Gizmos.DrawWireSphere(transform.position, 0.15f);
 
-      string label = hasItem ? _pickupReward.ItemIdentifier : "(item 미설정)";
+      string text;
+      if (!hasItem)
+      {
+        text = "(item 미설정)";
+      }
+      else
+      {
+        int validCount = ValidRewardCount;
+        text = validCount > 1
+          ? $"[static] {primary.ItemIdentifier} x{primary.Amount} 외 {validCount - 1}종"
+          : $"[static] {primary.ItemIdentifier} x{primary.Amount}";
+      }
+
       UnityEditor.Handles.Label(
         transform.position + Vector3.up * 0.26f,
-        hasItem ? $"[static] {label} x{_pickupReward.Amount}" : label,
+        text,
         new GUIStyle(UnityEditor.EditorStyles.miniLabel)
         {
           normal = { textColor = hasItem ? Color.cyan : Color.red }
