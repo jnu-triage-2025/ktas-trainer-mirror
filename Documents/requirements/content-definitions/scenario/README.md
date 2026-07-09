@@ -6,20 +6,21 @@
 <!-- DOC-INDEX:START -->
 ## 문서 색인
 
-시나리오 정의, 원본 텍스트, 그래프 예시, 이벤트 레지스트리를 정리합니다.
+시나리오 정의, 원본 텍스트, 그래프 스펙, 이벤트 레지스트리, 조합 레시피를 정리합니다.
 
 ### 하위 폴더
-- [_origin](./_origin/README.md): 원본 텍스트 1개
-- [cards](./cards/README.md): 문서 4개
+- [_origin](./_origin/README.md): 원본 텍스트/루브릭
+- `_pre_refactor/`: 재작성 이전 원본 데이터시트 보관(참조용)
 
 ### 문서
+- [_CONTENT_CHECKLIST.md](./_CONTENT_CHECKLIST.md): 시나리오 콘텐츠 원안 체크리스트
 - [_example.md](./_example.md): scenario example
 - [_template.md](./_template.md): scenario template
-- [disaster_intro.md](./disaster_intro.md): scenario 재난 초기 대응 및 중증도 분류
+- [scenario-graph-spec.md](./scenario-graph-spec.md): scenario-graph 노드/스키마 스펙
 - [event-registry.md](./event-registry.md): 시나리오 이벤트 레지스트리
+- [crafting-recipes.md](./crafting-recipes.md): 시나리오 조합(crafting) 레시피 모음
 - [patient_a_critical.md](./patient_a_critical.md): scenario 환자 A 중증 처치
 - [patient_b_c_ct.md](./patient_b_c_ct.md): scenario 환자 B/C 지연 처치
-- [scenario-graph-spec.md](./scenario-graph-spec.md): scenario-graph
 
 ### 작업 가이드로 이동
 - [working-guide/features/scenario](../../../working-guide/features/scenario/README.md): 시나리오 운영/변환/검증 가이드
