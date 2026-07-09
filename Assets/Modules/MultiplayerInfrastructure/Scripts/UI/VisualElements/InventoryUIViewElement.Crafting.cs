@@ -55,7 +55,11 @@ namespace MultiplayerInfrastructure.UI
 
     private VisualElement _craftingPanel;
     private VisualElement _craftingRequirements;
+    private ScrollView _craftingRecipeScroll;
     private VisualElement _craftingRecipeList;
+
+    /// <summary>조합 목록을 격자로 배치할 때 한 줄에 놓는 슬롯 개수.</summary>
+    private const int CraftingRecipeColumns = 4;
 
     private readonly List<CraftableRecipeDisplay> _craftableRecipes = new();
 
@@ -106,9 +110,21 @@ namespace MultiplayerInfrastructure.UI
       listLabel.AddToClassList("crafting-section-label");
       _craftingPanel.Add(listLabel);
 
+      // 조합 가능 목록은 가변적이므로 세로 스크롤 가능한 ScrollView 로 감싼다.
+      // 목록이 넘칠 때만 스크롤바가 나타나도록 Auto 모드를 사용한다.
+      _craftingRecipeScroll = new ScrollView(ScrollViewMode.Vertical)
+      {
+        name = "CraftingRecipeScroll"
+      };
+      _craftingRecipeScroll.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+      _craftingRecipeScroll.verticalScrollerVisibility = ScrollerVisibility.Auto;
+      _craftingRecipeScroll.AddToClassList("crafting-recipe-scroll");
+      _craftingPanel.Add(_craftingRecipeScroll);
+
+      // 실제 슬롯이 배치되는 격자 컨테이너.
       _craftingRecipeList = new VisualElement { name = "CraftingRecipeList" };
       _craftingRecipeList.AddToClassList("crafting-recipe-list");
-      _craftingPanel.Add(_craftingRecipeList);
+      _craftingRecipeScroll.Add(_craftingRecipeList);
 
       // 좌측 인벤토리 패널(InventoryPanel) 다음에 추가하여 우측에 배치한다
       // (.inventory-root: flex-direction: row). BuildCraftingPanel 은 ghost/tooltip 생성보다
@@ -164,41 +180,63 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      foreach (var recipe in _craftableRecipes)
+      // 인벤토리 슬롯과 동일하게 격자(row 단위)로 배치한다.
+      // 이름은 슬롯 옆에 붙이지 않고, 마우스오버 시 툴팁으로 이름/설명을 표시한다.
+      VisualElement currentRow = null;
+      for (int i = 0; i < _craftableRecipes.Count; i++)
       {
+        if (i % CraftingRecipeColumns == 0)
+        {
+          currentRow = new VisualElement { name = $"RecipeRow_{i / CraftingRecipeColumns}" };
+          currentRow.AddToClassList("crafting-recipe-row");
+          _craftingRecipeList.Add(currentRow);
+        }
+
+        var recipe = _craftableRecipes[i];
         string outputId = recipe.OutputIdentifier;
 
-        var row = new VisualElement { name = $"Recipe_{outputId}" };
-        row.AddToClassList("crafting-recipe");
+        var slot = new VisualElement { name = $"Recipe_{outputId}" };
+        slot.AddToClassList("crafting-recipe-slot");
 
         var icon = new Image { name = "RecipeIcon", pickingMode = PickingMode.Ignore };
-        icon.AddToClassList("crafting-recipe__icon");
+        icon.AddToClassList("crafting-recipe-slot__icon");
         var sprite = Registry.Registry.GetOrLoadIconSprite(outputId);
         if (sprite != null) icon.image = sprite.texture;
-        row.Add(icon);
-
-        var nameLabel = new Label
-        {
-          name = "RecipeName",
-          pickingMode = PickingMode.Ignore,
-          text = Registry.Registry.GetItemDisplayName(outputId)
-        };
-        nameLabel.AddToClassList("crafting-recipe__name");
-        row.Add(nameLabel);
-
-        var hint = new Label { name = "RecipeHint", pickingMode = PickingMode.Ignore };
-        hint.AddToClassList("crafting-recipe__hint");
-        row.Add(hint);
+        slot.Add(icon);
 
         bool selected = string.Equals(outputId, _selectedRecipeOutputId, StringComparison.Ordinal);
-        row.EnableInClassList("crafting-recipe--selected", selected);
-        hint.text = selected ? "다시 클릭하여 조합" : "선택";
+        slot.EnableInClassList("crafting-recipe-slot--selected", selected);
 
         string captured = outputId;
-        row.RegisterCallback<PointerDownEvent>(evt => HandleRecipeClicked(captured, evt));
+        slot.RegisterCallback<PointerDownEvent>(evt => HandleRecipeClicked(captured, evt));
+        slot.RegisterCallback<PointerEnterEvent>(evt => ShowTooltipForRecipe(captured, evt.position));
+        slot.RegisterCallback<PointerLeaveEvent>(_ => HideTooltip());
 
-        _craftingRecipeList.Add(row);
+        currentRow.Add(slot);
       }
+    }
+
+    /// <summary>
+    /// 조합 목록 슬롯 hover 시, 결과 아이템의 임시 인스턴스를 만들어 인벤토리 슬롯과 동일한 툴팁을 표시한다.
+    /// 레시피는 인스턴스가 아닌 identifier 만 가지므로 스택 수량은 표시하지 않는다.
+    /// </summary>
+    private void ShowTooltipForRecipe(string outputId, UnityEngine.Vector2 panelPosition)
+    {
+      // 손에 아이템을 들고 있는 동안에는 ghost 가 우선이므로 툴팁을 표시하지 않는다.
+      if (_heldItem != null)
+      {
+        HideTooltip();
+        return;
+      }
+
+      var item = Registry.Registry.CreateItemInstance(outputId);
+      if (item == null)
+      {
+        HideTooltip();
+        return;
+      }
+
+      ShowTooltipForItem(item, panelPosition, showStack: false);
     }
 
     private void HandleRecipeClicked(string outputId, PointerDownEvent evt)

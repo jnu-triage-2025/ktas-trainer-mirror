@@ -308,6 +308,19 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
+      ShowTooltipForItem(item, panelPosition, showStack: true);
+    }
+
+    /// <summary>
+    /// 임의의 아이템 인스턴스에 대한 툴팁을 표시한다.
+    /// 슬롯 hover(<see cref="ShowTooltipForSlot"/>) 뿐 아니라 조합 목록 항목 hover 에서도 재사용된다.
+    /// </summary>
+    /// <param name="showStack">스택 수량(N/Max) 표시 여부. 조합 목록 항목은 인스턴스가 아니므로 false.</param>
+    internal void ShowTooltipForItem(Item item, Vector2 panelPosition, bool showStack)
+    {
+      if (_tooltip == null || item == null)
+        return;
+
       SetLabel(_tooltipName, string.IsNullOrEmpty(item.CurrentDisplayName) ? item.CurrentIdentifier : item.CurrentDisplayName);
       // 아이템의 CurrentColor를 이름 색으로 사용(희소도/카테고리 필드가 없으므로 색상으로 구분).
       _tooltipName.style.color = item.CurrentColor;
@@ -316,7 +329,7 @@ namespace MultiplayerInfrastructure.UI
       SetLabel(_tooltipDescription, item.CurrentDescription);
       SetLabel(_tooltipDetail, item.CurrentDetailComment);
 
-      string stackText = item.IsCurrentlyStackable
+      string stackText = showStack && item.IsCurrentlyStackable
         ? $"{item.CurrentStackCount} / {item.CurrentMaxStackCount}"
         : string.Empty;
       SetLabel(_tooltipStack, stackText);
