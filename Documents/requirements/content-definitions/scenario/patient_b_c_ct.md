@@ -40,14 +40,14 @@ flags: ["refactor-required"]
 
 조합은 노드가 아니라 **crafting 시스템**으로 처리한다. 본 시나리오가 필요로 하는 조합 산출물:
 
-| 산출물 | 입력 | 비고 |
-|---|---|---|
-| `humidifierbottle_ready` | `humidifierbottle` + `sdw`(멸균증류수) | 환자 B/C 산소화 선행 |
-| `oxyflowmeter_b` | `humidifierbottle_ready` + `flowmeter` | 환자 B 산소 유량계 |
-| `oxyflowmeter_c` | `humidifierbottle_ready` + `flowmeter` | 환자 C 산소 유량계 |
+| 산출물(정본) | 입력 | 등록 상태 | 비고 |
+|---|---|---|---|
+| `humidifierbottle_ready` | `humidifierbottle` + `sterile_distilled_water`(멸균증류수) | 등록필요(재료 미존재로 보류) | 환자 B/C 산소화 선행. 구 `sdw` → 정본 `sterile_distilled_water` 확정 |
+| `oxyflowmeter` | `humidifierbottle_ready` + `flowmeter` | 등록필요(재료 미존재로 보류) | 환자 B·C 공용 단일 산출물. 구 `oxyflowmeter_b`/`oxyflowmeter_c` 통합 확정 |
 
 - 상세 레시피/등록 상태는 [crafting-recipes.md](./crafting-recipes.md) 참조.
-- [ ] 명명충돌/통합 확정요청: `oxyflowmeter_b`/`oxyflowmeter_c` 가 단일 `oxyflowmeter` 로 통합 가능한지 (crafting-recipes.md).
+- [x] 명명충돌/통합 확정요청: `oxyflowmeter_b`/`oxyflowmeter_c` 는 레시피·입력이 동일하므로 단일 `oxyflowmeter` 로 통합 확정(환자 B·C 공용). (crafting-recipes.md §확정 요청 [x], 2026-07-09).
+- [ ] 등록 보류: `humidifierbottle_ready`, `oxyflowmeter` 레시피는 재료 아이템(`humidifierbottle`, `sterile_distilled_water`, `flowmeter`) 미존재로 등록 보류. 재료 선행 추가 후 `RegisterAllCombineRecipes()` 등록 필요 — 인간 작업자/후속 작업 (crafting-recipes.md 참조).
 
 ## 역할·태그 정리(예비) (R10, c)
 
@@ -78,7 +78,7 @@ flags: ["refactor-required"]
 interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 분류한다.
 
 - **자동 계측 완료**(설정만으로 동작): `enter_triage_zone`(구역 진입, 단 인원수 검증은 별도), `apply_electrode`, `apply_gauze`, `apply_plaster_on_gauze`, `wear_glove`.
-- **선행 구현 필요**(게임플레이 미구현, 배선 전 자동 통과): `insert_iv_b_right`, `insert_iv_c_left`, `close_vital_ui_b`, `close_vital_ui_c`, `click_patient_b_face`, `click_patient_c_face`, `click_flowmeter`, `click_humidifierbottle`, `click_sdw`, `click_nasal`, `click_dummy_b`.
+- **선행 구현 필요**(게임플레이 미구현, 배선 전 자동 통과): `insert_iv_b_right`, `insert_iv_c_left`, `close_vital_ui_b`, `close_vital_ui_c`, `click_patient_b_face`, `click_patient_c_face`, `click_flowmeter`, `click_humidifierbottle`, `click_sterile_distilled_water`(구 `click_sdw`), `click_nasal`, `click_dummy_b`.
 - **에디터 Identifier 정합 필요**(코드는 있으나 프리팹/에디터 매핑 확정 필요): `check_gcs_patient_b`, `check_gcs_patient_c`, `check_vital_patient_b`, `check_vital_patient_c`, `click_patient_b`, `click_patient_c`.
 
 ## 시나리오 본문
@@ -1659,15 +1659,15 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V052 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.click_humidifierbottle AND sig.click_sdw |
+| **Condition** | 문자열 | sig.click_humidifierbottle AND sig.click_sterile_distilled_water |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | N054 |
 
 > R5: 구 `A012`(CombineItem, humidifierbottle_ready) 노드를 노드 흐름에서 제거하고 V052 → N054 로 재연결한다.
-- [ ] 조합은 crafting 시스템으로 처리. 이 지점은 `humidifierbottle_ready` 가 준비되어 있어야 진행 (crafting-recipes.md 참조).
-- [ ] f: `click_humidifierbottle`/`click_sdw`는 §5.3상 "선행 메커닉 필요(장비 클릭 미구현)". 배선 전 자동 통과.
+- [ ] 조합은 crafting 시스템으로 처리. 이 지점은 `humidifierbottle_ready` 가 준비되어 있어야 진행. 단 해당 레시피는 재료(`humidifierbottle`, `sterile_distilled_water`) 미존재로 **등록 보류** 상태(crafting-recipes.md 참조).
+- [ ] f: `click_humidifierbottle`/`click_sterile_distilled_water`(구 `click_sdw`)는 §5.3상 "선행 메커닉 필요(장비 클릭 미구현)". 배선 전 자동 통과.
 
 ---
 
@@ -1698,9 +1698,9 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | N055 |
 
-> R5: 구 `A013`(CombineItem, oxyflowmeter_b) 노드를 노드 흐름에서 제거하고 V053 → N055 로 재연결한다.
-- [ ] 조합은 crafting 시스템으로 처리. 이 지점은 `oxyflowmeter_b` 가 준비되어 있어야 진행 (crafting-recipes.md 참조).
-- [ ] 명명충돌/통합 확정요청: `oxyflowmeter_b`/`oxyflowmeter_c` 가 단일 `oxyflowmeter` 로 통합 가능한지 (crafting-recipes.md).
+> R5: 구 `A013`(CombineItem, oxyflowmeter_b) 노드를 노드 흐름에서 제거하고 V053 → N055 로 재연결한다. 산출물은 단일 `oxyflowmeter` 로 통합 확정(환자 B·C 공용).
+- [ ] 조합은 crafting 시스템으로 처리. 이 지점은 `oxyflowmeter`(구 `oxyflowmeter_b`) 가 준비되어 있어야 진행. 단 해당 레시피는 재료(`humidifierbottle_ready`, `flowmeter`) 미존재로 **등록 보류** 상태(crafting-recipes.md 참조).
+- [x] 명명충돌/통합 확정요청: `oxyflowmeter_b`/`oxyflowmeter_c` 는 단일 `oxyflowmeter` 로 통합 확정(레시피·입력 동일, 환자 B·C 공용)(crafting-recipes.md §확정 요청 [x], 2026-07-09).
 - [ ] f: `click_flowmeter`는 §5.3상 "선행 메커닉 필요(장비 클릭 미구현)".
 
 ---
@@ -3111,15 +3111,15 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V071 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.click_humidifierbottle AND sig.click_sdw |
+| **Condition** | 문자열 | sig.click_humidifierbottle AND sig.click_sterile_distilled_water |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | N083 |
 
 > R5: 구 `A014`(CombineItem, humidifierbottle_ready) 노드를 노드 흐름에서 제거하고 V071 → N083 로 재연결한다.
-- [ ] 조합은 crafting 시스템으로 처리. 이 지점은 `humidifierbottle_ready` 가 준비되어 있어야 진행 (crafting-recipes.md 참조).
-- [ ] f: `click_humidifierbottle`/`click_sdw`는 §5.3상 "선행 메커닉 필요(장비 클릭 미구현)".
+- [ ] 조합은 crafting 시스템으로 처리. 이 지점은 `humidifierbottle_ready` 가 준비되어 있어야 진행. 단 해당 레시피는 재료(`humidifierbottle`, `sterile_distilled_water`) 미존재로 **등록 보류** 상태(crafting-recipes.md 참조).
+- [ ] f: `click_humidifierbottle`/`click_sterile_distilled_water`(구 `click_sdw`)는 §5.3상 "선행 메커닉 필요(장비 클릭 미구현)".
 
 ---
 
@@ -3150,9 +3150,9 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | N084 |
 
-> R5: 구 `A015`(CombineItem, oxyflowmeter_c) 노드를 노드 흐름에서 제거하고 V072 → N084 로 재연결한다.
-- [ ] 조합은 crafting 시스템으로 처리. 이 지점은 `oxyflowmeter_c` 가 준비되어 있어야 진행 (crafting-recipes.md 참조).
-- [ ] 명명충돌/통합 확정요청: `oxyflowmeter_b`/`oxyflowmeter_c` 가 단일 `oxyflowmeter` 로 통합 가능한지 (crafting-recipes.md).
+> R5: 구 `A015`(CombineItem, oxyflowmeter_c) 노드를 노드 흐름에서 제거하고 V072 → N084 로 재연결한다. 산출물은 단일 `oxyflowmeter` 로 통합 확정(환자 B·C 공용).
+- [ ] 조합은 crafting 시스템으로 처리. 이 지점은 `oxyflowmeter`(구 `oxyflowmeter_c`) 가 준비되어 있어야 진행. 단 해당 레시피는 재료(`humidifierbottle_ready`, `flowmeter`) 미존재로 **등록 보류** 상태(crafting-recipes.md 참조).
+- [x] 명명충돌/통합 확정요청: `oxyflowmeter_b`/`oxyflowmeter_c` 는 단일 `oxyflowmeter` 로 통합 확정(레시피·입력 동일, 환자 B·C 공용)(crafting-recipes.md §확정 요청 [x], 2026-07-09).
 - [ ] f: `click_flowmeter`는 §5.3상 "선행 메커닉 필요(장비 클릭 미구현)".
 
 ---

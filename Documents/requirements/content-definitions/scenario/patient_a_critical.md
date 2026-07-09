@@ -36,20 +36,21 @@ flags: ["refactor-required"]
 
 이 시나리오가 요구하는 조합 산출물:
 
-| 산출물 | 입력 | 구 md 노드(제거됨) | 명명 주의 |
-|---|---|---|---|
-| `yankauer_ready` | `suction_line` + `yankauer` | A003 | — |
-| `laryngoscope` | `laryngoscope_handle` + `laryngoscope_blade` | A004 | 구 md `laryngo_handle`/`laryngo_blade` → 정본 `laryngoscope_handle`/`laryngoscope_blade` |
-| `endotracheal_tube_ready` | `endotracheal_tube` + `stylet` | A005 | 구 md `et_tube_ready`/`et_tube` → 정본 `endotracheal_tube_ready`/`endotracheal_tube` |
-| `humidifierbottle_ready` | `humidifierbottle` + `sdw` | A006 | `sdw` 식별자 확정 필요 |
-| `oxyflowmeter` | `humidifierbottle_ready` + `flowmeter` | A007 | — |
-| `epinephrine_syringe` | `epinephrine_ampule` + `syringe_5cc` | A008 · A010 | 구 md `epi_ready`/`epi` → 정본 `epinephrine_syringe`/`epinephrine_ampule` |
-| `ns_20cc_ready` | `normal_saline_20ml` + `syringe_20cc` | A009 · A011 | 구 md `ns_20cc` → 정본 `normal_saline_20ml` |
-| `ns1_ready` | `normal_saline_1000ml` + `intravenous_set` | (인트로 사전조합) | 수액 준비물 |
-| `ps1_ready` | `plasma_solution_1000ml` + `intravenous_set` | (인트로 사전조합) | 수액 준비물 |
+| 산출물(정본) | 입력 | 구 md 노드(제거됨) | 등록 상태 | 명명 주의 |
+|---|---|---|---|---|
+| `yankauer_suction_ready` | `suction_line` + `yankauer` | A003 | 등록됨(2026-07-09) | 구 `yankauer_ready` → 정본 `yankauer_suction_ready` |
+| `laryngoscope` | `laryngoscope_handle` + `laryngoscope_blade` | A004 | 등록됨 | 구 md `laryngo_handle`/`laryngo_blade` → 정본 `laryngoscope_handle`/`laryngoscope_blade` |
+| `endotracheal_tube_ready` | `endotracheal_tube` + `stylet` | A005 | 등록됨 | 구 md `et_tube_ready`/`et_tube` → 정본 `endotracheal_tube_ready`/`endotracheal_tube` |
+| `humidifierbottle_ready` | `humidifierbottle` + `sterile_distilled_water` | A006 | 등록필요(재료 미존재로 보류) | 구 `sdw` → 정본 `sterile_distilled_water`. 재료 아이템 `humidifierbottle`/`sterile_distilled_water` 미존재 |
+| `oxyflowmeter` | `humidifierbottle_ready` + `flowmeter` | A007 | 등록필요(재료 미존재로 보류) | `flowmeter` 미존재 |
+| `epinephrine_5cc_syringe` | `epinephrine_ampule` + `syringe_5cc` | A008 · A010 | 등록됨(2026-07-09) | 구 md `epi_ready`/`epi`/`epinephrine_syringe` → 정본 `epinephrine_5cc_syringe`/`epinephrine_ampule` |
+| `normal_saline_20cc_syringe` | `normal_saline_20ml` + `syringe_20cc` | A009 · A011 | 등록됨(2026-07-09) | 구 `ns_20cc(_ready)` 산출물 제거 → 규칙적 산출물 `normal_saline_20cc_syringe`(관계 1) |
+| `normal_saline_intravenous_ready` | `normal_saline_1000ml` + `intravenous_set` | (인트로 사전조합) | 등록됨(2026-07-09) | 구 `ns1_ready` → 정본 `normal_saline_intravenous_ready`(수액 준비물) |
+| `plasma_solution_intravenous_ready` | `plasma_solution_1000ml` + `intravenous_set` | (인트로 사전조합) | 등록됨(2026-07-09) | 구 `ps1_ready` → 정본 `plasma_solution_intravenous_ready`(수액 준비물) |
 
-- [ ] 명명충돌 확정요청: `et_tube_ready`↔`endotracheal_tube_ready`, `epi_ready`↔`epinephrine_syringe`, `ns_20cc(_ready)`↔`normal_saline_20ml`(→`ns_20cc_ready`). C# 정본에 맞춰 시나리오 산출물명 치환 권장 (crafting-recipes.md §확정 요청 참조).
-- [ ] 등록필요 레시피(`yankauer_ready`, `humidifierbottle_ready`, `oxyflowmeter`, `ns_20cc_ready`, `ns1_ready`, `ps1_ready`)를 `RegisterAllCombineRecipes()`에 추가 (crafting-recipes.md 참조).
+- [x] 명명충돌 확정요청: `et_tube_ready`↔`endotracheal_tube_ready`, `epi_ready`↔`epinephrine_5cc_syringe`, `ns_20cc(_ready)`→`normal_saline_20cc_syringe`, `ns1_ready`→`normal_saline_intravenous_ready`, `ps1_ready`→`plasma_solution_intravenous_ready`, `yankauer_ready`→`yankauer_suction_ready`. C# 정본에 맞춰 시나리오 산출물명 치환 확정(crafting-recipes.md §확정 요청 [x] 참조, 2026-07-09).
+- [x] 등록완료 레시피(`yankauer_suction_ready`, `epinephrine_5cc_syringe`, `normal_saline_20cc_syringe`, `normal_saline_intravenous_ready`, `plasma_solution_intravenous_ready`, `laryngoscope`, `endotracheal_tube_ready`)를 `RegisterAllCombineRecipes()`에 추가 완료 (crafting-recipes.md 참조, 2026-07-09).
+- [ ] 등록 보류 레시피(`humidifierbottle_ready`, `oxyflowmeter`): 재료 아이템(`humidifierbottle`, `sterile_distilled_water`, `flowmeter`) 선행 추가 필요 — 인간 작업자/후속 작업 (crafting-recipes.md 참조).
 
 ## 환자 A 사전설정 (d-3)
 
@@ -857,9 +858,9 @@ flags: ["refactor-required"]
 | Registry | Contains | RuntimeState | sig.click_yankauer |
 
 
-- [ ] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A003(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A003 → E008 로 재지정함. 산출물이 조합 완료되어 있어야 진행 (crafting-recipes.md 참조).
+- [x] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A003(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A003 → E008 로 재지정함. 산출물 `yankauer_suction_ready` 는 레지스트리 등록 완료(2026-07-09), 조합 완료 전제로 진행 (crafting-recipes.md 참조).
 
-- [ ] 명명충돌 확정요청: 위 조합 산출물명(구 md ↔ C# 정본) 정합 확인 (crafting-recipes.md §확정 요청).
+- [x] 명명충돌 확정요청: 산출물명 `yankauer_ready` → 정본 `yankauer_suction_ready` 확정(crafting-recipes.md §확정 요청 [x], 2026-07-09).
 
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_wall_suction, sig.click_suction_line, sig.click_yankauer [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
@@ -1230,9 +1231,9 @@ flags: ["refactor-required"]
 | Registry | Contains | RuntimeState | sig.click_syringe_5cc |
 
 
-- [ ] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A004(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A004 → E011 로 재지정함. 산출물이 조합 완료되어 있어야 진행 (crafting-recipes.md 참조).
+- [x] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A004(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A004 → E011 로 재지정함. 산출물 `laryngoscope` 는 레지스트리 등록 완료, 조합 완료 전제로 진행 (crafting-recipes.md 참조).
 
-- [ ] 명명충돌 확정요청: 위 조합 산출물명(구 md ↔ C# 정본) 정합 확인 (crafting-recipes.md §확정 요청).
+- [x] 명명충돌 확정요청: 입력 식별자 `laryngo_handle`/`laryngo_blade` → 정본 `laryngoscope_handle`/`laryngoscope_blade` 확정(crafting-recipes.md §확정 요청 [x]).
 
 
 - [x] a-1 아이템 식별자 정합(구 md→JSON 정본): click_laryngo_blade→click_laryngoscope_blade, click_laryngo_handle→click_laryngoscope_handle, click_et_tube→click_endotracheal_tube (interaction-signal-integration-spec §2 참조).
@@ -1577,15 +1578,15 @@ flags: ["refactor-required"]
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
 | Registry | Contains | RuntimeState | sig.click_humidifierbottle |
-| Registry | Contains | RuntimeState | sig.click_sdw |
+| Registry | Contains | RuntimeState | sig.click_sterile_distilled_water |
 
 
-- [ ] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A006(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A006 → N009_1 로 재지정함. 산출물이 조합 완료되어 있어야 진행 (crafting-recipes.md 참조).
+- [ ] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A006(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A006 → N009_1 로 재지정함. 산출물 `humidifierbottle_ready` 는 재료 미존재로 **등록 보류**(crafting-recipes.md 참조). 재료(`humidifierbottle`, `sterile_distilled_water`) 선행 추가 후 조합 완료 전제로 진행.
 
-- [ ] 명명충돌 확정요청: 위 조합 산출물명(구 md ↔ C# 정본) 정합 확인 (crafting-recipes.md §확정 요청).
+- [x] 명명충돌 확정요청: 입력 식별자 `sdw` → 정본 `sterile_distilled_water` 확정(crafting-recipes.md §확정 요청 [x]). 단 레시피 자체는 재료 미존재로 등록 보류 상태.
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.click_humidifierbottle, sig.click_sdw. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [ ] (b) 선행 구현 필요(미배선): sig.click_humidifierbottle, sig.click_sterile_distilled_water. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
 
 
 ---
@@ -1624,9 +1625,9 @@ flags: ["refactor-required"]
 | Registry | Contains | RuntimeState | sig.click_flowmeter |
 
 
-- [ ] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A007(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A007 → N009_2 로 재지정함. 산출물이 조합 완료되어 있어야 진행 (crafting-recipes.md 참조).
+- [ ] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A007(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A007 → N009_2 로 재지정함. 산출물 `oxyflowmeter` 는 재료 미존재로 **등록 보류**(crafting-recipes.md 참조). 재료(`humidifierbottle_ready`, `flowmeter`) 선행 추가 후 조합 완료 전제로 진행.
 
-- [ ] 명명충돌 확정요청: 위 조합 산출물명(구 md ↔ C# 정본) 정합 확인 (crafting-recipes.md §확정 요청).
+- [x] 명명충돌 확정요청: 산출물명 `oxyflowmeter` 단일 식별자로 확정(환자 B·C 공용, `oxyflowmeter_b`/`oxyflowmeter_c` 미분리)(crafting-recipes.md §확정 요청 [x]). 단 레시피 자체는 재료 미존재로 등록 보류 상태.
 
 
 - [ ] (b) 선행 구현 필요(미배선): sig.click_flowmeter. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
@@ -2147,7 +2148,7 @@ flags: ["refactor-required"]
 - [x] a-1 아이템 식별자 정합(구 md→JSON 정본): click_ns1→click_normal_saline_1000ml, click_ps1→click_plasma_solution_1000ml (interaction-signal-integration-spec §2 참조).
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_18g, sig.click_normal_saline_1000ml, sig.click_plasma_solution_1000ml [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
-- [ ] 개수 불일치 확정요청: 구 md는 TargetCount 4(18G 2개 + 수액 2종)였으나 JSON 정본은 시그널 룰 3개(`click_18g`, `click_normal_saline_1000ml`, `click_plasma_solution_1000ml`)로 축약됨. 18G 2개를 각각 계측할지, 준비된 생리식염수/플라즈마(ns1_ready/ps1_ready)를 픽업 완료로 간주할지 확정 필요.
+- [ ] 개수 불일치 확정요청: 구 md는 TargetCount 4(18G 2개 + 수액 2종)였으나 JSON 정본은 시그널 룰 3개(`click_18g`, `click_normal_saline_1000ml`, `click_plasma_solution_1000ml`)로 축약됨. 18G 2개를 각각 계측할지, 준비된 생리식염수/플라즈마 수액세트(정본 `normal_saline_intravenous_ready`/`plasma_solution_intravenous_ready`, 구 `ns1_ready`/`ps1_ready`, 레지스트리 등록 완료 2026-07-09)를 픽업 완료로 간주할지 확정 필요.
 
 ---
 
@@ -3767,9 +3768,9 @@ flags: ["refactor-required"]
 | Registry | Contains | RuntimeState | sig.click_syringe_5cc |
 
 
-- [ ] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A008(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A008 → N020_1 로 재지정함. 산출물이 조합 완료되어 있어야 진행 (crafting-recipes.md 참조).
+- [x] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A008(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A008 → N020_1 로 재지정함. 산출물 `epinephrine_5cc_syringe` 는 레지스트리 등록 완료(2026-07-09), 조합 완료 전제로 진행 (crafting-recipes.md 참조).
 
-- [ ] 명명충돌 확정요청: 위 조합 산출물명(구 md ↔ C# 정본) 정합 확인 (crafting-recipes.md §확정 요청).
+- [x] 명명충돌 확정요청: 산출물명 구 `epi_ready`/`epinephrine_syringe` → 정본 `epinephrine_5cc_syringe` 확정(crafting-recipes.md §확정 요청 [x], 2026-07-09).
 
 
 - [x] a-1 아이템 식별자 정합(구 md→JSON 정본): click_epi→click_epinephrine_ampule (interaction-signal-integration-spec §2 참조).
@@ -3814,9 +3815,9 @@ flags: ["refactor-required"]
 | Registry | Contains | RuntimeState | sig.click_syringe_20cc |
 
 
-- [ ] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A009(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A009 → N020_2 로 재지정함. 산출물이 조합 완료되어 있어야 진행 (crafting-recipes.md 참조).
+- [x] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A009(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A009 → N020_2 로 재지정함. 산출물 `normal_saline_20cc_syringe` 는 레지스트리 등록 완료(2026-07-09), 조합 완료 전제로 진행 (crafting-recipes.md 참조).
 
-- [ ] 명명충돌 확정요청: 위 조합 산출물명(구 md ↔ C# 정본) 정합 확인 (crafting-recipes.md §확정 요청).
+- [x] 명명충돌 확정요청: 구 `ns_20cc(_ready)` 산출물은 명명 규칙 위배로 제거, 규칙적 산출물 `normal_saline_20cc_syringe`(관계 1)로 대체 확정(crafting-recipes.md §확정 요청 [x], 2026-07-09).
 
 
 - [x] a-1 아이템 식별자 정합(구 md→JSON 정본): click_ns_20cc→click_normal_saline_20ml (interaction-signal-integration-spec §2 참조).
@@ -4649,9 +4650,9 @@ flags: ["refactor-required"]
 | Registry | Contains | RuntimeState | sig.click_syringe_5cc |
 
 
-- [ ] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A010(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A010 → N023_1 로 재지정함. 산출물이 조합 완료되어 있어야 진행 (crafting-recipes.md 참조).
+- [x] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A010(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A010 → N023_1 로 재지정함. 산출물 `epinephrine_5cc_syringe` 는 레지스트리 등록 완료(2026-07-09), 조합 완료 전제로 진행 (crafting-recipes.md 참조).
 
-- [ ] 명명충돌 확정요청: 위 조합 산출물명(구 md ↔ C# 정본) 정합 확인 (crafting-recipes.md §확정 요청).
+- [x] 명명충돌 확정요청: 산출물명 구 `epi_ready`/`epinephrine_syringe` → 정본 `epinephrine_5cc_syringe` 확정(crafting-recipes.md §확정 요청 [x], 2026-07-09).
 
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_epinephrine_ampule, sig.click_syringe_5cc [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
@@ -4694,9 +4695,9 @@ flags: ["refactor-required"]
 | Registry | Contains | RuntimeState | sig.click_syringe_20cc |
 
 
-- [ ] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A011(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A011 → D030 로 재지정함. 산출물이 조합 완료되어 있어야 진행 (crafting-recipes.md 참조).
+- [x] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A011(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A011 → D030 로 재지정함. 산출물 `normal_saline_20cc_syringe` 는 레지스트리 등록 완료(2026-07-09), 조합 완료 전제로 진행 (crafting-recipes.md 참조).
 
-- [ ] 명명충돌 확정요청: 위 조합 산출물명(구 md ↔ C# 정본) 정합 확인 (crafting-recipes.md §확정 요청).
+- [x] 명명충돌 확정요청: 구 `ns_20cc(_ready)` 산출물 제거 → 규칙적 산출물 `normal_saline_20cc_syringe`(관계 1) 대체 확정(crafting-recipes.md §확정 요청 [x], 2026-07-09).
 
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_normal_saline_20ml, sig.click_syringe_20cc [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].

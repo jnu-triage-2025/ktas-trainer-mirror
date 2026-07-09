@@ -111,4 +111,4 @@ flags: ["refactor-required"]
 - [x] `sdw`(멸균증류수)는 `sterile_distilled_water`로 식별자 확정하기
   - [x] 본 문서 내 `sdw` → `sterile_distilled_water` 치환 완료.
   - [ ] 다른 문서(예: `patient_a_critical.md`, `patient_b_c*.md`, `disaster_intro*.md` 등) 전반의 `sdw` → `sterile_distilled_water` 치환 — 인간 작업자/후속 작업(교차 문서 정합).
-- [ ] 입력 식별자 정합: `laryngo_handle`/`laryngo_blade` → `laryngoscope_handle`/`laryngoscope_blade`, `et_tube`/`epi`/`ns1`/`ps1` 등 구식 식별자를 아이템 정본 식별자로 치환(→ `interaction-signal-integration-spec.md` §2 아이템 식별자↔조건명 정합 표 참조). — 아이템 픽업 조건명(`click_*`)은 spec §2에서 이미 정합 완료; 조합 산출물명 치환은 위 항목들로 반영됨. `ns_20cc(_ready)` 는 산출물 제거로 폐기(→ `normal_saline_20cc_syringe`).
+- [x] 입력 식별자 정합: `laryngo_handle`/`laryngo_blade` → `laryngoscope_handle`/`laryngoscope_blade`, `et_tube`/`epi`/`ns1`/`ps1` 등 구식 식별자를 아이템 정본 식별자로 치환(→ `interaction-signal-integration-spec.md` §2 아이템 식별자↔조건명 정합 표 참조). — 아이템 픽업 조건명(`click_*`)은 spec §2에서 이미 정합 완료; 조합 산출물명 치환은 위 항목들로 반영됨. `ns_20cc(_ready)` 는 산출물 제거로 폐기(→ `normal_saline_20cc_syringe`).
