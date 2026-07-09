@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "1-designed"
 status: active
-updated: 2026-06-23
+updated: 2026-07-09
 flags: ["refactor-required"]
 ---
 
@@ -248,3 +248,37 @@ syringe_5cc, vital_set, wall_suction, yankauer`
   `click_dummy_b`, `move_defibcart_to_patient`.
 
 > 검증 방법: 배선 전이라도 `/scenario signal <cond>` 커맨드로 각 게이트가 막히고 열리는지 수동 확인 가능.
+
+## 6. "여러 후보 중 하나면 통과"(OR) 게이트 처리 정책 — 시나리오 작성자 공통 지침
+
+동일 의미의 산출물/아이템이 여러 변형으로 존재할 때(대표 사례: 에피네프린 주사기 완제품 18종
+= 카테터 없는 `epinephrine_5cc_syringe`/`_20cc_syringe`/`_50cc_syringe` 3종 + 게이지 포함
+`epinephrine_16g_5cc_syringe` … `epinephrine_24g_50cc_syringe` 15종), "그 중 **어느 하나라도**
+준비/사용하면 통과" 라는 게이트가 필요하다. 관련 배경: `crafting-recipes.md` §확정 요청 (*1).
+
+현재 `RegistryContains` Validator 는 `validationRules` 를 **AND(모두 충족)** 로만 결합하므로, 여러
+변형을 한 규칙 집합에 나열하면 "전부 준비" 라는 잘못된 게이트가 된다. 이 문제는 아래 두 방식으로
+대응하며, **작성 시 우선순위는 (B)** 다.
+
+### (B) 콘텐츠 레벨 대응 — 우선 채택 (코드 변경 불필요)
+
+- **원칙**: OR 판정이 필요한 지점은 개별 완제품 픽업(`sig.click_<변형별 아이템>`) 대신, **사용 시점의
+  대표 시그널**(`sig.push_epi`, `sig.push_ns` 등 `PatientController` 아이템 사용 시그널)로 게이팅한다.
+- **이유**: 사용 시점 시그널은 아이템을 실제로 사용(투여)하는 순간 올라오며, 어떤 게이지/용량 변형을
+  조합했든 **동일한 대표 시그널**을 올린다(→ 자연스럽게 OR 성립). 시스템 변경이 필요 없다.
+- **예시(patient_a_critical.md)**: 에피네프린 투여 완료 게이트는 `sig.push_epi` 로 검사한다(V026_2,
+  V029_1 등). 변형별 완제품 각각을 나열하지 않는다.
+- **적용 대상 매핑 근거**: `PatientController.TreatmentDisplay.cs` 의 `ItemUseEffects`(예:
+  `epinephrine_ampule → push_epi`, `normal_saline_20ml → push_ns`).
+
+> 다른 시나리오 문서에서도 "여러 변형 중 하나면 통과" 게이트가 필요하면 **먼저 (B) 방식**(사용 시점
+> 대표 시그널)으로 표현할 것. 개별 변형 아이템을 OR 로 나열해야만 하는 경우에 한해 (A) 를 검토한다.
+
+### (A) 시스템 레벨 대응 — Validator OR(Any) 매칭 모드 (제안됨, 미반영)
+
+- 콘텐츠만으로 표현이 어려운 경우(예: 픽업 단계에서 변형 중 하나 보유를 검사)를 위해, Validator
+  `RegistryContains` 에 root condition 별 `matchMode: All|Any` 를 도입하는 시스템 확장을 제안했다.
+- `matchMode: Any` 이면 나열한 규칙 중 하나만 충족돼도 통과한다. 기본값 `All` 은 기존 AND 동작 유지.
+- `MultiplayerInfrastructure` 변경이므로 Feature Proposal 로 분리했다(반영 전, 하위호환 보장):
+  `Agents/Proposals/scheduled/2026-07-09-scenario-validator-any-match-mode/`.
+- (A) 반영 후에도 **우선순위는 (B)** 이며, (A) 는 (B)로 표현이 어려운 게이트에만 사용한다.

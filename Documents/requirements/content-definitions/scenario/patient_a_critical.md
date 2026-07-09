@@ -28,6 +28,7 @@ flags: ["refactor-required"]
 - [x] a-2: MoveNextBehavior/WaitUntil 열거값을 엔진 정본(`Immediately`/`WaitUntilDone`)으로 정규화함(구 md `Immediate` 폐기).
 - [x] a-1/a-2: EventIdentifier·Validator 시그널·아이템 식별자를 JSON/C# 정본 snake_case로 통일함.
 - [ ] a-1 잔여: 병렬 브랜치의 `CompletionConditionIdentifier`(예: `CC_B_vitalcheck_patientA`, `CC_C_gcs_patientA`, `CC_D_gcs_patientA_rosc` 등)는 JSON 정본이 아직 camelCase(`patientA`)를 유지하고 있어 본 문서도 JSON에 맞춰 그대로 표기함. 이들은 EventIdentifier/시그널/아이템이 아니라 병렬 합류 라벨이므로 snake_case 전환 시 JSON·엔진과 동시 갱신 필요. 인간 작업자 확정 요망(→ `CC_*_patient_a` 계열로 통일할지 결정).
+  - 인간 작업자 코멘트: `CC_*_patient_a` 계열로 통일
 
 ## 조합(crafting) 참조 (d-2)
 
@@ -3861,6 +3862,11 @@ flags: ["refactor-required"]
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.push_epi [아이템 사용(Item Use Signal), spec §5.1~5.3].
 
+> OR 게이트 처리(B, 우선 채택): 에피네프린 주사기는 완제품이 18종(용량·게이지 변형)으로 존재하나,
+> 이 게이트는 개별 변형 픽업이 아니라 **사용 시점 대표 시그널 `sig.push_epi`** 로 검사하므로 어떤 변형을
+> 조합·투여했든 통과한다(OR 자연 성립). 정책 근거: `interaction-signal-integration-spec.md` §6,
+> `crafting-recipes.md` §확정 요청 (*1).
+
 
 ---
 
@@ -4747,6 +4753,9 @@ flags: ["refactor-required"]
 
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.push_epi [아이템 사용(Item Use Signal), spec §5.1~5.3].
+
+> OR 게이트 처리(B, 우선 채택): V026_2 와 동일하게 사용 시점 대표 시그널 `sig.push_epi` 로 검사하여
+> 에피네프린 주사기 18종 변형 중 어느 것을 투여해도 통과한다. 정책: `interaction-signal-integration-spec.md` §6.
 
 
 ---

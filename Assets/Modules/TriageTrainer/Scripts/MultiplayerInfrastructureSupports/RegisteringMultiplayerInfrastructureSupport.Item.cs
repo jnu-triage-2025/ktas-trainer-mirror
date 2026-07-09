@@ -51,7 +51,6 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<Electrode>(Electrode.Identifier);
       Registry.RegisterItemDefinition<ElectrodeCable>(ElectrodeCable.Identifier);
       Registry.RegisterItemDefinition<EpinephrineAmpule>(EpinephrineAmpule.Identifier);
-      Registry.RegisterItemDefinition<EpinephrineSyringe>(EpinephrineSyringe.Identifier);
       Registry.RegisterItemDefinition<EndotrachealTube>(EndotrachealTube.Identifier);
       Registry.RegisterItemDefinition<EndotrachealTubeReady>(EndotrachealTubeReady.Identifier);
       Registry.RegisterItemDefinition<FacialMask>(FacialMask.Identifier);
@@ -65,6 +64,11 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<NormalSaline1000ml>(NormalSaline1000ml.Identifier);
       Registry.RegisterItemDefinition<NormalSaline20ml>(NormalSaline20ml.Identifier);
       Registry.RegisterItemDefinition<PlasmaSolution1000ml>(PlasmaSolution1000ml.Identifier);
+
+      // 조합 산출물(준비 완료) 아이템 — 리소스는 재료 아이템을 복사해 사용
+      Registry.RegisterItemDefinition<NormalSalineIntravenousReady>(NormalSalineIntravenousReady.Identifier);
+      Registry.RegisterItemDefinition<PlasmaSolutionIntravenousReady>(PlasmaSolutionIntravenousReady.Identifier);
+      Registry.RegisterItemDefinition<YankauerSuctionReady>(YankauerSuctionReady.Identifier);
       Registry.RegisterItemDefinition<O2Line>(O2Line.Identifier);
       Registry.RegisterItemDefinition<Penlight>(Penlight.Identifier);
       Registry.RegisterItemDefinition<Plaster>(Plaster.Identifier);
@@ -81,6 +85,17 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<VitalSet>(VitalSet.Identifier);
       Registry.RegisterItemDefinition<WallSuction>(WallSuction.Identifier);
       Registry.RegisterItemDefinition<Yankauer>(Yankauer.Identifier);
+
+      // ===== 몸통(주사기) + 용액 조합 완제품 (카테터 없음, 9종) =====
+      Registry.RegisterItemDefinition<Epinephrine5ccSyringe>(Epinephrine5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine20ccSyringe>(Epinephrine20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Epinephrine50ccSyringe>(Epinephrine50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine5ccSyringe>(Norepinephrine5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine20ccSyringe>(Norepinephrine20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<Norepinephrine50ccSyringe>(Norepinephrine50ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline5ccSyringe>(NormalSaline5ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline20ccSyringe>(NormalSaline20ccSyringe.Identifier);
+      Registry.RegisterItemDefinition<NormalSaline50ccSyringe>(NormalSaline50ccSyringe.Identifier);
 
       // ===== 바늘(게이지) + 몸통(주사기) + 용액 조합 완제품 (45종) =====
       Registry.RegisterItemDefinition<Epinephrine16g5ccSyringe>(Epinephrine16g5ccSyringe.Identifier);
@@ -163,15 +178,100 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
           .Requires(Stylet.Identifier, 1)
           .Produces(1));
 
-      // 5cc 주사기 1개 + 에피네프린 앰플 1개 → 에피네프린 주사기 1개
-      // (주사기에 에피네프린 1mg 을 준비)
+      // 생리식염수 1L 1개 + 수액세트 1개 → 식염수 수액 세트 1개
+      // (시나리오 구식 산출물명 ns1_ready)
       ItemCombineRecipeRegistry.Register(
-        new ItemCombineRecipe(EpinephrineSyringe.Identifier)
-          .Requires(Syringe5cc.Identifier, 1)
-          .Requires(EpinephrineAmpule.Identifier, 1)
+        new ItemCombineRecipe(NormalSalineIntravenousReady.Identifier)
+          .Requires(NormalSaline1000ml.Identifier, 1)
+          .Requires(IntravenousSet.Identifier, 1)
           .Produces(1));
 
-      // ===== 바늘(게이지) + 몸통(주사기) + 용액 조합 레시피 (45종) =====
+      // 플라즈마 솔루션 1L 1개 + 수액세트 1개 → 혈장 수액 세트 1개
+      // (시나리오 구식 산출물명 ps1_ready)
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(PlasmaSolutionIntravenousReady.Identifier)
+          .Requires(PlasmaSolution1000ml.Identifier, 1)
+          .Requires(IntravenousSet.Identifier, 1)
+          .Produces(1));
+
+      // 석션 라인 1개 + 양커 석션 팁 1개 → 준비된 양커 석션 1개
+      // (시나리오 구식 산출물명 yankauer_ready)
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(YankauerSuctionReady.Identifier)
+          .Requires(SuctionLine.Identifier, 1)
+          .Requires(Yankauer.Identifier, 1)
+          .Produces(1));
+
+      // ===== [관계 1] 용액 + *cc 주사기 → 용액이 든 *cc 주사기 (카테터 없음, 9종) =====
+
+      // 에피네프린 앰플 1 + 5cc 주사기 1 → 에피네프린이 든 5cc 주사기 1
+      // (구 epinephrine_syringe 를 명명 규칙에 맞춰 대체)
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine5ccSyringe.Identifier)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린 앰플 1 + 20cc 주사기 1 → 에피네프린이 든 20cc 주사기 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine20ccSyringe.Identifier)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Produces(1));
+
+      // 에피네프린 앰플 1 + 50cc 주사기 1 → 에피네프린이 든 50cc 주사기 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Epinephrine50ccSyringe.Identifier)
+          .Requires(EpinephrineAmpule.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린 앰플 1 + 5cc 주사기 1 → 노르에피네프린이 든 5cc 주사기 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine5ccSyringe.Identifier)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린 앰플 1 + 20cc 주사기 1 → 노르에피네프린이 든 20cc 주사기 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine20ccSyringe.Identifier)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Produces(1));
+
+      // 노르에피네프린 앰플 1 + 50cc 주사기 1 → 노르에피네프린이 든 50cc 주사기 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(Norepinephrine50ccSyringe.Identifier)
+          .Requires(NorepinephrineAmpule.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수 1 + 5cc 주사기 1 → 생리식염수가 든 5cc 주사기 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline5ccSyringe.Identifier)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Requires(Syringe5cc.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수 1 + 20cc 주사기 1 → 생리식염수가 든 20cc 주사기 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline20ccSyringe.Identifier)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Requires(Syringe20cc.Identifier, 1)
+          .Produces(1));
+
+      // 생리식염수 1 + 50cc 주사기 1 → 생리식염수가 든 50cc 주사기 1
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(NormalSaline50ccSyringe.Identifier)
+          .Requires(NormalSaline20ml.Identifier, 1)
+          .Requires(Syringe50cc.Identifier, 1)
+          .Produces(1));
+
+      // ===== [관계 2] 용액이 든 *cc 주사기 + *게이지 → 용액이 든 *g *cc 주사기 (45종) =====
+      RegisterFilledSyringeWithGaugeRecipes();
+
+      // ===== [관계 3] 용액 + *cc 주사기 + *게이지 → 용액이 든 *g *cc 주사기 (45종) =====
 
       // 에피네프린이 든 16g 5cc 주사기 = 16g 카테터 1 + 5cc 주사기 1 + 에피네프린 앰플 1
       ItemCombineRecipeRegistry.Register(
@@ -532,6 +632,77 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
           .Requires(Syringe50cc.Identifier, 1)
           .Requires(NormalSaline20ml.Identifier, 1)
           .Produces(1));
+    }
+
+    /// <summary>
+    /// [관계 2] 용액이 든 *cc 주사기 + *게이지(카테터) → 용액이 든 *g *cc 주사기 (45종).
+    ///
+    /// 관계 1(용액+주사기)로 만든 "용액이 든 *cc 주사기"에 카테터를 결합하면,
+    /// 관계 3(용액+주사기+게이지)과 동일한 최종 산출물(`{solution}_{g}_{cc}_syringe`)이 된다.
+    /// 즉 최종 완제품은 아래 두 경로 중 어느 쪽으로도 조합 가능하다:
+    ///   (경로 A, 관계 1→2) 용액+주사기 → 용액이 든 주사기, + 게이지 → 완제품
+    ///   (경로 B, 관계 3)    용액+주사기+게이지 → 완제품 (한 번에)
+    ///
+    /// 재료·산출물 식별자가 규칙적이므로 (용액 3종 × 게이지 5종 × 용량 3종) 조합을 표로 순회해 등록한다.
+    /// </summary>
+    private static void RegisterFilledSyringeWithGaugeRecipes()
+    {
+      // (용액 접두사, 용액이 든 *cc 주사기 식별자[5cc,20cc,50cc])
+      var solutions = new (string prefix, string[] filledSyringeByVolume)[]
+      {
+        ("epinephrine", new[]
+        {
+          Epinephrine5ccSyringe.Identifier,
+          Epinephrine20ccSyringe.Identifier,
+          Epinephrine50ccSyringe.Identifier,
+        }),
+        ("norepinephrine", new[]
+        {
+          Norepinephrine5ccSyringe.Identifier,
+          Norepinephrine20ccSyringe.Identifier,
+          Norepinephrine50ccSyringe.Identifier,
+        }),
+        ("normal_saline", new[]
+        {
+          NormalSaline5ccSyringe.Identifier,
+          NormalSaline20ccSyringe.Identifier,
+          NormalSaline50ccSyringe.Identifier,
+        }),
+      };
+
+      // (게이지 라벨, 카테터 식별자)
+      var gauges = new (string label, string cannulaIdentifier)[]
+      {
+        ("16g", Cannula16g.Identifier),
+        ("18g", Cannula18g.Identifier),
+        ("20g", Cannula20g.Identifier),
+        ("22g", Cannula22g.Identifier),
+        ("24g", Cannula24g.Identifier),
+      };
+
+      // 용량 라벨(관계 순회용). filledSyringeByVolume 인덱스와 1:1 대응.
+      var volumeLabels = new[] { "5cc", "20cc", "50cc" };
+
+      foreach (var solution in solutions)
+      {
+        for (int v = 0; v < volumeLabels.Length; v++)
+        {
+          string filledSyringe = solution.filledSyringeByVolume[v];
+          string volume = volumeLabels[v];
+
+          foreach (var gauge in gauges)
+          {
+            // 최종 산출물 식별자: {용액}_{게이지}_{용량}_syringe (관계 3과 동일)
+            string output = $"{solution.prefix}_{gauge.label}_{volume}_syringe";
+
+            ItemCombineRecipeRegistry.Register(
+              new ItemCombineRecipe(output)
+                .Requires(filledSyringe, 1)
+                .Requires(gauge.cannulaIdentifier, 1)
+                .Produces(1));
+          }
+        }
+      }
     }
 
     // =========================================================================
