@@ -4,8 +4,11 @@ namespace MultiplayerInfrastructure.Scenario
 {
   internal sealed class ScenarioTimeControlNodeDTO : ScenarioNodeDTO
   {
-    [JsonPropertyName("action")]
-    public string Action { get; set; }
+    [JsonPropertyName("operation")]
+    public string Operation { get; set; }
+
+    [JsonPropertyName("timerId")]
+    public string TimerId { get; set; }
 
     [JsonPropertyName("direction")]
     public string Direction { get; set; }

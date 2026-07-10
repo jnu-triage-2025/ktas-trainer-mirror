@@ -99,7 +99,12 @@ namespace MultiplayerInfrastructure.UI
       if (_element == null)
         BindElement();
 
-      _element?.SetVisibleState(ScenarioTimeState.IsVisible);
+      if (_element == null)
+        return;
+
+      // 상태 변화(생성/시작/표시 대상 교체 등) 시 캐시를 무효화해 다음 렌더에서 즉시 반영한다.
+      _element.InvalidateRenderCache();
+      _element.SetVisibleState(ScenarioTimeState.IsVisible);
     }
 
     private void Update()
@@ -108,9 +113,9 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       _element.Render(
-        ScenarioTimeState.Direction,
-        ScenarioTimeState.CurrentDisplayWholeSeconds(),
-        ScenarioTimeState.HasCountdownFinished());
+        ScenarioTimeState.ShownDirection(),
+        ScenarioTimeState.ShownWholeSeconds(),
+        ScenarioTimeState.ShownCountdownFinished());
     }
   }
 }

@@ -105,9 +105,18 @@ namespace MultiplayerInfrastructure.UI
       // 다시 표시될 때 강제로 한 번 다시 그리도록 캐시를 무효화한다.
       if (!visible)
       {
-        _hasRenderState = false;
-        _lastWholeSeconds = long.MinValue;
+        InvalidateRenderCache();
       }
+    }
+
+    /// <summary>
+    /// 렌더 캐시를 무효화하여 다음 <see cref="Render"/> 에서 강제로 다시 그리게 한다.
+    /// 표시 대상 타이머가 교체될 때(Show) 호출하여, 값/모드가 우연히 같아도 즉시 갱신되게 한다.
+    /// </summary>
+    public void InvalidateRenderCache()
+    {
+      _hasRenderState = false;
+      _lastWholeSeconds = long.MinValue;
     }
 
     /// <summary>

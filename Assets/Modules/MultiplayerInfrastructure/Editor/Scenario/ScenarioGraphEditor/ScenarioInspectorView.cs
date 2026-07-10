@@ -612,21 +612,38 @@ namespace MultiplayerInfrastructure.Editor
 
     private void DrawTimeControlFields(ScenarioTimeControlNode data)
     {
-      data.Action = (ScenarioTimeAction)EditorGUILayout.EnumPopup("Action", data.Action);
+      data.Operation = (ScenarioTimeOperationType)EditorGUILayout.EnumPopup("Operation", data.Operation);
 
-      if (data.Action == ScenarioTimeAction.Start)
+      // Hide 를 제외한 모든 연산은 대상 타이머 식별자를 사용한다.
+      if (data.Operation != ScenarioTimeOperationType.Hide)
       {
-        data.Direction = (ScenarioTimeDirection)EditorGUILayout.EnumPopup("Direction", data.Direction);
+        data.TimerId = EditorGUILayout.TextField("Timer Id", data.TimerId);
+      }
 
-        if (data.Direction == ScenarioTimeDirection.Countdown)
-        {
-          data.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Duration Seconds", data.DurationSeconds));
-          EditorGUILayout.HelpBox(
-            "카운트다운: 목표 시간에서 0으로 감소합니다. Start Seconds 가 0이면 Duration 을 시작값으로 사용합니다.",
-            MessageType.None);
-        }
+      switch (data.Operation)
+      {
+        case ScenarioTimeOperationType.Create:
+          data.Direction = (ScenarioTimeDirection)EditorGUILayout.EnumPopup("Direction", data.Direction);
+          if (data.Direction == ScenarioTimeDirection.Countdown)
+          {
+            data.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Duration Seconds (target)", data.DurationSeconds));
+            EditorGUILayout.HelpBox(
+              "카운트다운: 목표 시간에서 0으로 감소합니다. Start Seconds(표시 남은값)가 0이면 Duration 을 시작값으로 사용합니다.",
+              MessageType.None);
+          }
+          data.StartSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Start Seconds (display)", data.StartSeconds));
+          EditorGUILayout.HelpBox("Create 는 정지 상태로 생성하며 화면에 표시하지 않습니다. Start 로 흐름, Show 로 표시하세요.", MessageType.None);
+          break;
 
-        data.StartSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Start Seconds", data.StartSeconds));
+        case ScenarioTimeOperationType.Set:
+          data.StartSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Display Seconds", data.StartSeconds));
+          data.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("New Target Seconds (0=keep)", data.DurationSeconds));
+          EditorGUILayout.HelpBox("Set 은 현재 표시값을 절대값으로 설정합니다. New Target 이 양수이면 카운트다운 목표(총)도 재설정합니다.", MessageType.None);
+          break;
+
+        case ScenarioTimeOperationType.Hide:
+          EditorGUILayout.HelpBox("Hide 는 화면 표시만 끕니다(타이머 상태/흐름 유지).", MessageType.None);
+          break;
       }
 
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");

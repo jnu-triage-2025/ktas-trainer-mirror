@@ -1342,16 +1342,26 @@
             "nodeType": {
               "const": "TimeControl"
             },
-            "action": {
+            "operation": {
               "type": "string",
               "enum": [
+                "Create",
                 "Start",
                 "Pause",
                 "Resume",
                 "Stop",
-                "Hide"
+                "Set",
+                "Show",
+                "Hide",
+                "Remove"
               ],
-              "default": "Start"
+              "default": "Create"
+            },
+            "timerId": {
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "direction": {
               "type": "string",

@@ -445,7 +445,8 @@ namespace MultiplayerInfrastructure.Scenario
         new ScenarioTimeControlNode
         {
           Identifier = dto.Identifier,
-          Action = ParseTimeAction(dto.Action),
+          Operation = ParseTimeOperation(dto.Operation),
+          TimerId = dto.TimerId,
           Direction = ParseTimeDirection(dto.Direction),
           DurationSeconds = dto.DurationSeconds ?? 0f,
           StartSeconds = dto.StartSeconds ?? 0f,
@@ -922,20 +923,20 @@ namespace MultiplayerInfrastructure.Scenario
       throw new JsonException($"Unknown ScenarioDelayWaitUntil '{value}'.");
     }
 
-    private static ScenarioTimeAction ParseTimeAction(string value)
+    private static ScenarioTimeOperationType ParseTimeOperation(string value)
     {
       if (string.IsNullOrWhiteSpace(value))
       {
-        return ScenarioTimeAction.Start;
+        return ScenarioTimeOperationType.Create;
       }
 
-      if (Enum.TryParse(value, ignoreCase: true, out ScenarioTimeAction parsed)
-          && Enum.IsDefined(typeof(ScenarioTimeAction), parsed))
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioTimeOperationType parsed)
+          && Enum.IsDefined(typeof(ScenarioTimeOperationType), parsed))
       {
         return parsed;
       }
 
-      throw new JsonException($"Unknown ScenarioTimeAction '{value}'.");
+      throw new JsonException($"Unknown ScenarioTimeOperationType '{value}'.");
     }
 
     private static ScenarioTimeDirection ParseTimeDirection(string value)
@@ -1272,7 +1273,8 @@ namespace MultiplayerInfrastructure.Scenario
         {
           NodeType = "TimeControl",
           Identifier = node.Identifier,
-          Action = node.Action.ToString(),
+          Operation = node.Operation.ToString(),
+          TimerId = node.TimerId,
           Direction = node.Direction.ToString(),
           DurationSeconds = node.DurationSeconds,
           StartSeconds = node.StartSeconds,

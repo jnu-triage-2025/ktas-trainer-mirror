@@ -285,8 +285,8 @@ namespace MultiplayerInfrastructure.Scenario
       ResetNodeVisitOrders(graph.Identifier);
       ScenarioInteractionSignals.ClearAllInternalSignals();
 
-      // 이전 시나리오에서 남았을 수 있는 시간 표시 HUD 를 새 시나리오 시작 시 정리한다.
-      ScenarioTimeRelay.HideAuthoritative();
+      // 이전 시나리오에서 남았을 수 있는 모든 타이머/표시를 새 시나리오 시작 시 정리한다.
+      ScenarioTimeRelay.ClearAllAuthoritative();
 
       _currentGraph = graph;
       _scenarioOwnerClientId = ownerClientId;
@@ -359,9 +359,9 @@ namespace MultiplayerInfrastructure.Scenario
       StopAllCoroutines();
       ScenarioInteractionSignals.ClearAllInternalSignals();
 
-      // 시나리오가 남긴 시간 표시(스톱워치/카운트다운) HUD 를 정리한다.
-      // 명시적 Hide 노드 없이 종료(또는 조기/오류 종료)하더라도 다음 시나리오로 새어 나가지 않게 한다.
-      ScenarioTimeRelay.HideAuthoritative();
+      // 시나리오가 남긴 모든 타이머/표시를 정리한다.
+      // 명시적 정리 없이 종료(또는 조기/오류 종료)하더라도 다음 시나리오로 새어 나가지 않게 한다.
+      ScenarioTimeRelay.ClearAllAuthoritative();
 
       _currentGraph = null;
       _currentNode = null;
@@ -872,8 +872,8 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     /// <summary>
-    /// 시간 표시(스톱워치/카운트다운) HUD 를 제어한다. 서버 권한으로 모든 클라이언트에
-    /// 명령을 전파하고 즉시 다음 노드로 진행한다(대기하지 않는다).
+    /// 시간 표시(스톱워치/카운트다운) HUD 를 제어한다. <see cref="ScenarioTimeControlNode.Operation"/> 에 따라
+    /// 생성/흐름/표시/삭제를 각각 수행하며, 서버 권한으로 모든 클라이언트에 전파하고 즉시 다음 노드로 진행한다.
     /// 표시 자체는 <see cref="MultiplayerInfrastructure.UI.TimeDisplayUIController"/> 가
     /// <see cref="ScenarioTimeState"/> 를 매 프레임 조회해 렌더한다.
     /// </summary>
@@ -881,43 +881,60 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingTimeControl;
 
-      switch (node.Action)
+      switch (node.Operation)
       {
-        case ScenarioTimeAction.Start:
+        case ScenarioTimeOperationType.Create:
         {
           double duration = Mathf.Max(0f, node.DurationSeconds);
           if (node.Direction == ScenarioTimeDirection.Countdown)
           {
-            // 카운트다운: StartSeconds 는 시작 시 표시할 "남은 값". 미지정(0)이면 목표 시간에서 시작.
+            // 카운트다운: StartSeconds 는 시작 표시할 "남은 값". 미지정(0)이면 목표 시간에서 시작.
             double displayStart = node.StartSeconds > 0f ? node.StartSeconds : duration;
             // 목표(총) 시간은 최소한 시작 표시값 이상이어야 한다(Duration 미지정 시 StartSeconds 로 대체).
             double target = Mathf.Max((float)duration, (float)displayStart);
-            ScenarioTimeRelay.StartAuthoritative(node.Direction, displayStart, target);
+            ScenarioTimeRelay.CreateAuthoritative(node.TimerId, node.Direction, displayStart, target);
           }
           else
           {
             double start = Mathf.Max(0f, node.StartSeconds);
-            ScenarioTimeRelay.StartAuthoritative(node.Direction, start, duration);
+            ScenarioTimeRelay.CreateAuthoritative(node.TimerId, node.Direction, start, duration);
           }
           break;
         }
-        case ScenarioTimeAction.Pause:
-          ScenarioTimeRelay.PauseAuthoritative();
+        case ScenarioTimeOperationType.Start:
+          ScenarioTimeRelay.StartAuthoritative(node.TimerId);
           break;
-        case ScenarioTimeAction.Resume:
-          ScenarioTimeRelay.ResumeAuthoritative();
+        case ScenarioTimeOperationType.Pause:
+          ScenarioTimeRelay.PauseAuthoritative(node.TimerId);
           break;
-        case ScenarioTimeAction.Stop:
-          ScenarioTimeRelay.StopAuthoritative();
+        case ScenarioTimeOperationType.Resume:
+          ScenarioTimeRelay.ResumeAuthoritative(node.TimerId);
           break;
-        case ScenarioTimeAction.Hide:
+        case ScenarioTimeOperationType.Stop:
+          ScenarioTimeRelay.StopAuthoritative(node.TimerId);
+          break;
+        case ScenarioTimeOperationType.Set:
+        {
+          double displaySeconds = Mathf.Max(0f, node.StartSeconds);
+          // DurationSeconds 가 양수이면 카운트다운 목표(총) 시간도 재설정한다.
+          bool hasNewTarget = node.DurationSeconds > 0f;
+          ScenarioTimeRelay.SetAuthoritative(node.TimerId, displaySeconds, hasNewTarget, Mathf.Max(0f, node.DurationSeconds));
+          break;
+        }
+        case ScenarioTimeOperationType.Show:
+          ScenarioTimeRelay.ShowAuthoritative(node.TimerId);
+          break;
+        case ScenarioTimeOperationType.Hide:
           ScenarioTimeRelay.HideAuthoritative();
+          break;
+        case ScenarioTimeOperationType.Remove:
+          ScenarioTimeRelay.RemoveAuthoritative(node.TimerId);
           break;
       }
 
 #if UNITY_EDITOR
-      Debug.Log($"[ScenarioController] TimeControl '{node.Identifier}': action={node.Action}, " +
-                $"direction={node.Direction}, duration={node.DurationSeconds}, start={node.StartSeconds}");
+      Debug.Log($"[ScenarioController] TimeControl '{node.Identifier}': operation={node.Operation}, " +
+                $"timerId={node.TimerId}, direction={node.Direction}, duration={node.DurationSeconds}, start={node.StartSeconds}");
 #endif
 
       Advance();

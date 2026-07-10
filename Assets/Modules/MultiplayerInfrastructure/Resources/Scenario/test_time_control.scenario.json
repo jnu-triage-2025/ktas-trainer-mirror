@@ -6,119 +6,215 @@
       "identifier": "intro",
       "nodeType": "Dialogue",
       "speakerName": "TimeTest",
-      "dialogueContent": "시간 표시 테스트를 시작합니다. 먼저 스톱워치(정방향)를 확인합니다.",
+      "dialogueContent": "시간 표시 테스트를 시작합니다. 스톱워치(sw)와 카운트다운(cd) 두 타이머를 사용합니다.",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "stopwatch_start"
+      "nextIdentifier": "create_sw"
     },
-    "stopwatch_start": {
-      "identifier": "stopwatch_start",
+    "create_sw": {
+      "identifier": "create_sw",
       "nodeType": "TimeControl",
-      "action": "Start",
+      "operation": "Create",
+      "timerId": "sw",
       "direction": "Stopwatch",
       "durationSeconds": 0,
       "startSeconds": 0,
-      "nextIdentifier": "stopwatch_run_delay"
+      "nextIdentifier": "create_cd"
     },
-    "stopwatch_run_delay": {
-      "identifier": "stopwatch_run_delay",
+    "create_cd": {
+      "identifier": "create_cd",
+      "nodeType": "TimeControl",
+      "operation": "Create",
+      "timerId": "cd",
+      "direction": "Countdown",
+      "durationSeconds": 20,
+      "startSeconds": 0,
+      "nextIdentifier": "show_sw_first"
+    },
+    "show_sw_first": {
+      "identifier": "show_sw_first",
+      "nodeType": "TimeControl",
+      "operation": "Show",
+      "timerId": "sw",
+      "durationSeconds": 0,
+      "startSeconds": 0,
+      "nextIdentifier": "start_sw"
+    },
+    "start_sw": {
+      "identifier": "start_sw",
+      "nodeType": "TimeControl",
+      "operation": "Start",
+      "timerId": "sw",
+      "durationSeconds": 0,
+      "startSeconds": 0,
+      "nextIdentifier": "sw_run_delay"
+    },
+    "sw_run_delay": {
+      "identifier": "sw_run_delay",
       "nodeType": "Delay",
       "durationSeconds": 3.0,
       "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "stopwatch_pause"
+      "nextIdentifier": "start_cd"
     },
-    "stopwatch_pause": {
-      "identifier": "stopwatch_pause",
+    "start_cd": {
+      "identifier": "start_cd",
       "nodeType": "TimeControl",
-      "action": "Pause",
-      "direction": "Stopwatch",
+      "operation": "Start",
+      "timerId": "cd",
       "durationSeconds": 0,
       "startSeconds": 0,
-      "nextIdentifier": "stopwatch_paused_delay"
+      "nextIdentifier": "show_cd"
     },
-    "stopwatch_paused_delay": {
-      "identifier": "stopwatch_paused_delay",
+    "show_cd": {
+      "identifier": "show_cd",
+      "nodeType": "TimeControl",
+      "operation": "Show",
+      "timerId": "cd",
+      "durationSeconds": 0,
+      "startSeconds": 0,
+      "nextIdentifier": "cd_visible_delay"
+    },
+    "cd_visible_delay": {
+      "identifier": "cd_visible_delay",
+      "nodeType": "Delay",
+      "durationSeconds": 3.0,
+      "waitUntil": "WaitUntilDone",
+      "nextIdentifier": "show_sw_again"
+    },
+    "show_sw_again": {
+      "identifier": "show_sw_again",
+      "nodeType": "TimeControl",
+      "operation": "Show",
+      "timerId": "sw",
+      "durationSeconds": 0,
+      "startSeconds": 0,
+      "nextIdentifier": "sw_back_dialogue"
+    },
+    "sw_back_dialogue": {
+      "identifier": "sw_back_dialogue",
+      "nodeType": "Dialogue",
+      "speakerName": "TimeTest",
+      "dialogueContent": "스톱워치는 표시되지 않는 동안에도 계속 흘렀어야 합니다(약 6초).",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "set_sw"
+    },
+    "set_sw": {
+      "identifier": "set_sw",
+      "nodeType": "TimeControl",
+      "operation": "Set",
+      "timerId": "sw",
+      "durationSeconds": 0,
+      "startSeconds": 100,
+      "nextIdentifier": "set_sw_delay"
+    },
+    "set_sw_delay": {
+      "identifier": "set_sw_delay",
       "nodeType": "Delay",
       "durationSeconds": 2.0,
       "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "stopwatch_resume"
+      "nextIdentifier": "pause_sw"
     },
-    "stopwatch_resume": {
-      "identifier": "stopwatch_resume",
+    "pause_sw": {
+      "identifier": "pause_sw",
       "nodeType": "TimeControl",
-      "action": "Resume",
-      "direction": "Stopwatch",
+      "operation": "Pause",
+      "timerId": "sw",
       "durationSeconds": 0,
       "startSeconds": 0,
-      "nextIdentifier": "stopwatch_resumed_delay"
+      "nextIdentifier": "pause_sw_delay"
     },
-    "stopwatch_resumed_delay": {
-      "identifier": "stopwatch_resumed_delay",
+    "pause_sw_delay": {
+      "identifier": "pause_sw_delay",
       "nodeType": "Delay",
       "durationSeconds": 2.0,
       "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "stopwatch_stop"
+      "nextIdentifier": "resume_sw"
     },
-    "stopwatch_stop": {
-      "identifier": "stopwatch_stop",
+    "resume_sw": {
+      "identifier": "resume_sw",
       "nodeType": "TimeControl",
-      "action": "Stop",
-      "direction": "Stopwatch",
+      "operation": "Resume",
+      "timerId": "sw",
       "durationSeconds": 0,
       "startSeconds": 0,
-      "nextIdentifier": "countdown_intro"
+      "nextIdentifier": "resume_sw_delay"
     },
-    "countdown_intro": {
-      "identifier": "countdown_intro",
-      "nodeType": "Dialogue",
-      "speakerName": "TimeTest",
-      "dialogueContent": "이제 카운트다운(역방향) 10초를 시작합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "countdown_start"
+    "resume_sw_delay": {
+      "identifier": "resume_sw_delay",
+      "nodeType": "Delay",
+      "durationSeconds": 2.0,
+      "waitUntil": "WaitUntilDone",
+      "nextIdentifier": "stop_sw"
     },
-    "countdown_start": {
-      "identifier": "countdown_start",
+    "stop_sw": {
+      "identifier": "stop_sw",
       "nodeType": "TimeControl",
-      "action": "Start",
-      "direction": "Countdown",
-      "durationSeconds": 10.0,
+      "operation": "Stop",
+      "timerId": "sw",
+      "durationSeconds": 0,
       "startSeconds": 0,
-      "nextIdentifier": "countdown_mid_delay"
+      "nextIdentifier": "stop_sw_delay"
     },
-    "countdown_mid_delay": {
-      "identifier": "countdown_mid_delay",
+    "stop_sw_delay": {
+      "identifier": "stop_sw_delay",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
+      "durationSeconds": 2.0,
       "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "countdown_mid_dialogue"
+      "nextIdentifier": "show_cd_finish"
     },
-    "countdown_mid_dialogue": {
-      "identifier": "countdown_mid_dialogue",
-      "nodeType": "Dialogue",
-      "speakerName": "TimeTest",
-      "dialogueContent": "약 6초 남아 있어야 합니다. 계속 감소하는지 확인하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "countdown_finish_delay"
-    },
-    "countdown_finish_delay": {
-      "identifier": "countdown_finish_delay",
-      "nodeType": "Delay",
-      "durationSeconds": 7.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "countdown_done_dialogue"
-    },
-    "countdown_done_dialogue": {
-      "identifier": "countdown_done_dialogue",
-      "nodeType": "Dialogue",
-      "speakerName": "TimeTest",
-      "dialogueContent": "카운트다운이 00:00:00 에 도달해 색상이 바뀌어야 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "hide_timer"
-    },
-    "hide_timer": {
-      "identifier": "hide_timer",
+    "show_cd_finish": {
+      "identifier": "show_cd_finish",
       "nodeType": "TimeControl",
-      "action": "Hide",
-      "direction": "Stopwatch",
+      "operation": "Show",
+      "timerId": "cd",
+      "durationSeconds": 0,
+      "startSeconds": 0,
+      "nextIdentifier": "cd_finish_delay"
+    },
+    "cd_finish_delay": {
+      "identifier": "cd_finish_delay",
+      "nodeType": "Delay",
+      "durationSeconds": 8.0,
+      "waitUntil": "WaitUntilDone",
+      "nextIdentifier": "cd_finished_dialogue"
+    },
+    "cd_finished_dialogue": {
+      "identifier": "cd_finished_dialogue",
+      "nodeType": "Dialogue",
+      "speakerName": "TimeTest",
+      "dialogueContent": "카운트다운이 00:00:00 에 도달해도 자동으로 사라지지 않고 색상만 바뀌어야 합니다.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "hide_display"
+    },
+    "hide_display": {
+      "identifier": "hide_display",
+      "nodeType": "TimeControl",
+      "operation": "Hide",
+      "durationSeconds": 0,
+      "startSeconds": 0,
+      "nextIdentifier": "hidden_dialogue"
+    },
+    "hidden_dialogue": {
+      "identifier": "hidden_dialogue",
+      "nodeType": "Dialogue",
+      "speakerName": "TimeTest",
+      "dialogueContent": "표시가 꺼졌습니다(타이머는 아직 존재). 이제 타이머를 삭제합니다.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "remove_sw"
+    },
+    "remove_sw": {
+      "identifier": "remove_sw",
+      "nodeType": "TimeControl",
+      "operation": "Remove",
+      "timerId": "sw",
+      "durationSeconds": 0,
+      "startSeconds": 0,
+      "nextIdentifier": "remove_cd"
+    },
+    "remove_cd": {
+      "identifier": "remove_cd",
+      "nodeType": "TimeControl",
+      "operation": "Remove",
+      "timerId": "cd",
       "durationSeconds": 0,
       "startSeconds": 0,
       "nextIdentifier": "outro"
@@ -127,7 +223,7 @@
       "identifier": "outro",
       "nodeType": "Dialogue",
       "speakerName": "TimeTest",
-      "dialogueContent": "시간 표시가 사라졌습니다. 테스트를 종료합니다.",
+      "dialogueContent": "테스트를 종료합니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": null
     }

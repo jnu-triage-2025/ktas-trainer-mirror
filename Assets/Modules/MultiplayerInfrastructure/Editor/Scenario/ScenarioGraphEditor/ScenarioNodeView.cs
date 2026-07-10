@@ -631,24 +631,44 @@ namespace MultiplayerInfrastructure.Editor
 
     private void BuildTimeControlInlineEditor(ScenarioTimeControlNode data)
     {
-      var actionField = new EnumField("Action", data.Action);
-      actionField.RegisterValueChangedCallback(evt =>
+      var operationField = new EnumField("Operation", data.Operation);
+      operationField.RegisterValueChangedCallback(evt =>
       {
-        if (evt.newValue is ScenarioTimeAction value)
-          data.Action = value;
+        if (evt.newValue is ScenarioTimeOperationType value && value != data.Operation)
+        {
+          data.Operation = value;
+          // 연산이 바뀌면 관련 파라미터만 다시 그린다.
+          BuildInlineEditor();
+        }
       });
-      _inlineEditorContainer.Add(actionField);
+      _inlineEditorContainer.Add(operationField);
 
-      var directionField = new EnumField("Direction", data.Direction);
-      directionField.RegisterValueChangedCallback(evt =>
+      // Hide 를 제외한 모든 연산은 대상 타이머 식별자를 사용한다.
+      if (data.Operation != ScenarioTimeOperationType.Hide)
       {
-        if (evt.newValue is ScenarioTimeDirection value)
-          data.Direction = value;
-      });
-      _inlineEditorContainer.Add(directionField);
+        AddTextField("Timer Id", value => data.TimerId = value, data.TimerId);
+      }
 
-      AddPlainFloatField("Duration (sec)", value => data.DurationSeconds = Mathf.Max(0f, value), data.DurationSeconds);
-      AddPlainFloatField("Start (sec)", value => data.StartSeconds = Mathf.Max(0f, value), data.StartSeconds);
+      switch (data.Operation)
+      {
+        case ScenarioTimeOperationType.Create:
+          var directionField = new EnumField("Direction", data.Direction);
+          directionField.RegisterValueChangedCallback(evt =>
+          {
+            if (evt.newValue is ScenarioTimeDirection value)
+              data.Direction = value;
+          });
+          _inlineEditorContainer.Add(directionField);
+          AddPlainFloatField("Duration (sec, countdown)", value => data.DurationSeconds = Mathf.Max(0f, value), data.DurationSeconds);
+          AddPlainFloatField("Start (sec, display)", value => data.StartSeconds = Mathf.Max(0f, value), data.StartSeconds);
+          break;
+
+        case ScenarioTimeOperationType.Set:
+          AddPlainFloatField("Display (sec)", value => data.StartSeconds = Mathf.Max(0f, value), data.StartSeconds);
+          AddPlainFloatField("New Target (sec, 0=keep)", value => data.DurationSeconds = Mathf.Max(0f, value), data.DurationSeconds);
+          break;
+      }
+
       AddNextIdentifierField(data);
     }
 
