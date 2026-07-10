@@ -7,16 +7,21 @@ flags: []
 
 # ScenarioGraph
 
-시나리오 그래프는 인게임 환경에서 대화, 컷씬, 퀘스트 발행, 환자/NPC 상태 설정 등 인게임 시나리오 흐름을 재생하는 데 필요한 컨트롤을 데이터 값으로 정의할 수 있도록 설계된 시스템 모듈입니다.  
+시나리오 그래프(ScenarioGraph)는 게임 안에서 벌어지는 하나의 "사건"을, 코드를 새로 짜지 않고도 데이터(JSON)로 표현할 수 있게 해주는 시스템입니다. 대화 한 마디, 환자가 침대에 눕는 장면, 카메라가 특정 인물을 비추는 컷씬, 퀴즈로 정답을 확인하는 순간, 여러 명의 간호사가 동시에 각자 다른 처치를 수행하는 협동 시나리오까지 — 이런 흐름 하나하나가 "노드"라는 작은 블록으로 나뉘고, 그 블록들을 화살표처럼 연결한 것이 시나리오 그래프입니다.
 
-이 시스템은 `.scenario.json` 포맷으로 데이터를 입출력할 수 있고, `.editor.scenario.json` 포맷을 추가적으로 사용할 수 있습니다. `.editor.scenario.json`은 에디터 전용이므로 빌드에 포함할 필요는 없습니다.  
+노드는 종류에 따라 역할이 다릅니다. 어떤 노드는 화면에 글자를 띄우고, 어떤 노드는 NPC를 움직이고, 어떤 노드는 환자의 혈압을 바꾸는 식입니다. 이 문서는 현재 프로젝트에 존재하는 모든 노드 종류를 하나씩 소개하며, 각 노드가 어떤 값을 받고 그 값이 무엇을 의미하는지 정리합니다. 시나리오를 새로 작성하거나 기존 시나리오 JSON을 읽고 고칠 때 이 문서를 참고하면 됩니다.
+
+시나리오 데이터는 `.scenario.json` 파일로 저장되고 게임에서 그대로 재생됩니다. 이와 별도로 `.editor.scenario.json`이라는 파일도 있는데, 이는 에디터에서 그래프를 보기 편하게 배치하기 위한 부가 정보(노드 위치 등)만 담고 있어서 실제 게임 빌드에는 포함할 필요가 없습니다.
 
 ## 개요
 
-- 코드 위치: `Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/Models/ScenarioGraphNodes/`
-- 실행기: `Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/ScenarioController.cs`
-- JSON 직렬화: `Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/SerializeSupport/`
-- 모든 노드는 공통으로 `IScenarioNode` 인터페이스를 구현하며, 아래 3개 필드를 갖습니다.
+시나리오 그래프와 관련된 코드는 아래 위치에서 찾을 수 있습니다.
+
+- 노드 클래스가 정의된 위치: `Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/Models/ScenarioGraphNodes/`
+- 실제로 노드를 하나씩 실행해 나가는 실행기: `Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/ScenarioController.cs`
+- JSON ↔ 노드 객체 변환(불러오기/저장하기)을 담당하는 코드: `Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/SerializeSupport/`
+
+노드 종류는 25가지가 넘지만, 모든 노드는 공통적으로 `IScenarioNode`라는 하나의 규격을 따릅니다. 즉 아래 3개 필드는 노드 종류를 가리지 않고 항상 존재합니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -24,17 +29,21 @@ flags: []
 | `nodeType` | `string` | 노드 종류를 나타내는 문자열(JSON 역직렬화 판별 키) | `Dialogue` |
 | `nextIdentifier` | `string` | 다음 진행 노드의 식별자. 마지막 노드이거나 다른 방식(옵션/조건)으로 분기하는 노드는 `null`일 수 있다 | `next-node-identifier` |
 
-JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 저장되며, 각 노드의 딕셔너리 키는 해당 노드의 `identifier`와 일치해야 합니다. 그래프에는 시작 노드를 명시하는 필드가 없으며, 시작 노드는 `ScenarioController.StartScenario(graph, startNodeIdentifier, ...)` 호출 시 외부에서 지정합니다(미지정 시 `Nodes` 딕셔너리에서 임의의 첫 항목이 선택되는 임시 로직이 존재하므로, 실제 사용 시 시작 노드 식별자를 항상 명시적으로 지정해야 합니다).
+그래프 전체는 JSON에서 `nodes`라는 하나의 딕셔너리(맵) 형태로 저장되며, 각 노드는 자신의 `identifier`를 키로 사용해 이 딕셔너리에 들어갑니다(즉, 딕셔너리 키와 노드 내부의 `identifier` 값이 서로 같아야 합니다). 그런데 이 그래프에는 "어디서부터 시작할지"를 알려주는 필드가 따로 없습니다. 시작 노드는 그래프 데이터 안이 아니라, `ScenarioController.StartScenario(graph, startNodeIdentifier, ...)`를 호출하는 코드 쪽에서 지정합니다.
 
-### 다이얼로그류 노드의 공통 입력 규칙
+> **주의**: 만약 시작 노드 식별자를 지정하지 않으면, 딕셔너리에서 어떤 노드가 먼저 나올지 보장되지 않는 임시 로직이 동작합니다. 실제 시나리오를 재생할 때는 항상 시작 노드 식별자를 명시적으로 지정하는 것을 권장합니다.
 
-`Dialogue`, `Choice`, `Quiz` 노드처럼 화면에 대사창을 표시하는 노드는 아래와 같은 공통 입력 규칙을 따릅니다(`PlayerController.Input.cs`, `DialoguePanelUIController.cs` 참고).
+### 대화창을 띄우는 노드의 공통 입력 규칙
 
-- 텍스트가 타이핑 애니메이션 중일 때 입력(마우스 좌클릭, `Space`, `F`)을 주면 타이핑 애니메이션만 즉시 완료되며 다음 노드로는 진행하지 않습니다.
-- 텍스트 타이핑이 끝난 상태에서 동일한 입력을 다시 주면 다음 노드로 진행하거나(Dialogue), 현재 강조된 선택지를 확정합니다(Choice/Quiz).
-- 선택지가 있는 노드(Choice/Quiz)에서 강조된 옵션을 바꾸는 것은 마우스 스크롤 휠 또는 `-`/`+`(키패드 포함) 키로 수행하며, 숫자 키를 이용한 직접 선택은 지원하지 않습니다.
+`Dialogue`, `Choice`, `Quiz` 세 노드는 화면에 대사창을 띄운다는 공통점이 있고, 그만큼 플레이어 입력을 처리하는 방식도 동일합니다(구현 위치: `PlayerController.Input.cs`, `DialoguePanelUIController.cs`). 시나리오를 작성할 때 플레이어가 실제로 어떤 조작을 하게 되는지 알아두면 대사 길이나 선택지 개수를 정할 때 도움이 됩니다.
+
+- 글자가 한 자씩 타이핑되는 애니메이션이 재생되는 동안 아무 입력(마우스 좌클릭, `Space`, `F` 중 하나)이나 주면, 애니메이션만 즉시 끝까지 표시되고 다음 노드로는 넘어가지 않습니다. 즉 첫 입력은 "빨리 보여줘"라는 뜻입니다.
+- 글자 표시가 이미 끝난 상태에서 같은 입력을 한 번 더 주면, 그제야 다음 노드로 진행하거나(Dialogue), 지금 강조돼 있는 선택지를 확정합니다(Choice/Quiz). 즉 두 번째 입력이 "다음으로"라는 뜻입니다.
+- Choice나 Quiz처럼 여러 선택지 중 하나를 고르는 노드에서는, 마우스 스크롤 휠 또는 `-`/`+`(키패드 포함) 키로 강조된 선택지를 옮길 수 있습니다. 숫자 키를 눌러 곧바로 특정 번호를 고르는 방식은 지원하지 않으므로, 선택지가 너무 많으면 플레이어가 원하는 항목을 찾기 번거로울 수 있습니다. 선택지는 가급적 4~5개 이하로 구성하는 것을 권장합니다.
 
 ## ScenarioGraph
+
+시나리오 그래프 파일 하나(즉, `.scenario.json` 하나)는 아래 필드로 구성된 최상위 객체입니다. 여러 개의 짧은 시나리오를 만들 계획이라면, 서로 다른 그래프 사이에서 `identifier`가 겹치지 않도록 주의해야 합니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -43,11 +52,15 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 | `questDefinitionIncludes` | `string[]` | 미리 로드할 퀘스트 정의 파일명 목록(`Resources/Quest/*.quest.json`) | `["main-quest.quest.json"]` |
 | `nodes` | `Dictionary<string, Node>` | 노드 식별자를 키로 하는 노드 맵 | - |
 
+`tags`는 필수는 아니지만, 여러 명이 함께 작업하는 시나리오라면 처음에 사용할 태그를 미리 적어두는 것이 좋습니다. 오타로 다른 태그를 잘못 입력했을 때 경고 로그로 바로 알아챌 수 있기 때문입니다.
+
 ---
 
 ### Dialogue
 
-플레이어에게 대화 다이얼로그를 재생합니다. 다이얼로그는 마우스 클릭, `Space` 또는 `F` 키 입력으로 타이핑 연출을 스킵하거나 다음 다이얼로그로 진행할 수 있습니다. `autoAdvanceSeconds`가 지정되면 입력 없이도 시간 경과 후 자동으로 다음 노드로 진행합니다.
+가장 기본적이고 가장 자주 쓰이는 노드입니다. 화면에 캐릭터의 대사 한 마디를 띄우는 역할을 합니다. 플레이어는 마우스 클릭, `Space`, `F` 중 아무 입력이나 줘서 타이핑 연출을 건너뛰거나 다음 대사로 넘어갈 수 있습니다.
+
+컷씬처럼 플레이어의 입력을 기다리지 않고 저절로 흘러가야 하는 대화라면 `autoAdvanceSeconds`에 값을 지정하면 됩니다. 이 값을 지정하면 대사가 표시된 뒤 그 시간이 지나면 입력 없이도 자동으로 다음 노드로 넘어갑니다(단, 플레이어가 그 전에 입력을 주면 즉시 넘어갑니다). 반대로 플레이어가 직접 읽는 속도에 맞춰 진행하는 일반적인 대화라면 `autoAdvanceSeconds`를 비워두고 입력을 기다리게 하는 것이 자연스럽습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -62,7 +75,9 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### Choice
 
-플레이어에게 선택 가능한 분기 대화를 제시합니다. 각 선택지를 고르면 `options` 목록에서 해당 옵션의 `nextNodeIdentifier`로 이동합니다. 선택지가 있는 노드이므로 자체 `nextIdentifier`는 사용하지 않으며(`null`이어야 함), 옵션 강조는 마우스 스크롤 또는 `-`/`+` 키로, 확정은 마우스 클릭/`Space`/`F` 키로 수행합니다.
+플레이어에게 "어떻게 할지"를 직접 고르게 하는 노드입니다. 여러 개의 선택지(`options`)를 보여주고, 플레이어가 그중 하나를 고르면 그 선택지에 적힌 `nextNodeIdentifier`로 이동합니다. Dialogue 노드와 달리 진행 방향이 하나로 정해져 있지 않기 때문에, 노드 자체의 `nextIdentifier`는 사용하지 않고 항상 `null`로 둬야 합니다(어디로 갈지는 전적으로 선택지가 결정합니다).
+
+플레이어가 선택지를 고르는 방법은 마우스 스크롤 또는 `-`/`+` 키로 원하는 항목을 강조한 뒤, 마우스 클릭/`Space`/`F`로 확정하는 방식입니다. 훈련 시나리오에서 "정답이 없는" 분위기 전환용 선택지와 "실제로 결과가 달라지는" 중요한 선택지를 함께 쓸 때는, `displayText`만으로 결과의 무게가 잘 드러나도록 문구를 명확하게 적어두는 것이 좋습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -72,7 +87,7 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 | `options` | `ScenarioChoiceOption[]` | 선택지 목록(하단 참고) | - |
 | `playTTS` | `bool` | 참이면 `dialogueContent`를 표시할 때 TTS로 함께 재생합니다. 세부 동작은 Dialogue의 `playTTS`와 동일(optional, 기본 false) | `false` |
 | `ttsVoiceIdentifier` | `string` | 사용할 목소리 프로파일 식별자(optional) | `nurse-voice-01` |
-| `nextIdentifier` | `string` | 스키마 규칙상 반드시 `null`이어야 한다(옵션을 통해서만 분기) | `null` |
+| `nextIdentifier` | `string` | 스키마 규칙상 반드시 `null`이어야 합니다(옵션을 통해서만 분기) | `null` |
 
 #### ScenarioChoiceOption
 
@@ -85,7 +100,7 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### Sound
 
-지정한 사운드 리소스를 1회 재생합니다. `waitUntilFinished`가 참이면 재생이 끝날 때까지 다음 노드로 진행하지 않고 대기합니다.
+지정한 효과음(SFX)을 한 번 재생하는 간단한 노드입니다. 폭발음, 알람음처럼 짧게 재생하고 바로 다음으로 넘어가도 되는 소리라면 `waitUntilFinished`를 꺼둔 채(false) 사용하면 되고, 소리가 다 끝날 때까지 시나리오가 잠깐 멈춰야 하는 경우(예: 긴박한 알람이 끝나야 다음 대사가 시작되는 연출)라면 `waitUntilFinished`를 켜서(true) 사용하면 됩니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -95,7 +110,9 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### PlayerMove
 
-로컬 플레이어 엔티티를 지정한 목적지로 이동시킵니다. 목적지는 좌표 또는 사전 정의된 웨이포인트로 지정할 수 있고, 이동 방식(즉시/속도 기반/시간 기반)을 선택할 수 있습니다.
+플레이어 캐릭터를 시나리오가 원하는 위치로 자동으로 이동시키는 노드입니다. 예를 들어 "환자에게 다가가서 대화를 시작한다" 같은 연출을 만들 때, 플레이어가 직접 걸어가지 않아도 이 노드로 이동을 대신할 수 있습니다.
+
+목적지는 좌표(`Position`)로 직접 찍어도 되고, 미리 씬에 배치해 둔 웨이포인트(`Waypoint`)를 참조해도 됩니다. 씬 구조가 바뀔 가능성이 있다면 좌표보다 웨이포인트를 사용하는 편이 유지보수하기 쉽습니다. 이동 방식은 순간이동(`Instant`), 정해진 속도로 걸어가기(`BySpeed`), 정해진 시간 동안 이동(`ByDuration`) 중에서 상황에 맞게 고르면 됩니다 — 예를 들어 급박한 상황이라면 `Instant`, 자연스러운 도보 이동이라면 `BySpeed`가 어울립니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -110,7 +127,7 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### NPCMove
 
-지정한 NPC 엔티티를 목적지로 이동시킵니다. `PlayerMove`와 필드 구성이 동일하며, 대상이 NPC로 바뀐 점만 다릅니다.
+의사나 간호사 같은 NPC 캐릭터를 목적지로 이동시키는 노드입니다. 필드 구성은 `PlayerMove`와 완전히 동일하고, "누구를 움직이는지"만 다르다고 생각하면 됩니다. 여러 NPC를 동시에 등장·퇴장시키는 장면에서는 각 NPC마다 별도의 NPCMove 노드를 두고, 필요하면 `Parallel` 노드로 묶어 동시에 움직이게 할 수도 있습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -126,7 +143,7 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### CameraTarget
 
-플레이어 카메라의 초점 대상을 변경합니다. 컷씬 연출 등에서 특정 오브젝트를 비추도록 사용합니다.
+카메라가 어디를 바라볼지 바꾸는 노드입니다. 중요한 순간에 특정 NPC나 오브젝트를 클로즈업하는 컷씬 연출에 사용합니다. `blendTime`을 짧게 주면 급격하게 시선이 전환되고, 길게 주면 부드럽게 시선이 이동하므로, 장면의 긴박함 정도에 맞춰 조절하면 좋습니다. 컷씬이 끝나면 다시 플레이어 시점으로 돌려주는 별도의 CameraTarget 노드를 추가하는 것을 잊지 않아야 합니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -137,13 +154,15 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### Parallel
 
-여러 브랜치 체인을 동시에 실행합니다. 브랜치를 접속 중인 플레이어들에게 어떻게 분배할지, 완료를 어떻게 기다릴지를 지정할 수 있으며, 다인 협력 처치(예: 여러 간호사가 각자 다른 처치를 동시에 수행)를 표현하는 데 사용합니다.
+"여러 일이 동시에 벌어지는" 상황을 표현하는 노드입니다. 예를 들어 다인 플레이 훈련에서 간호사 역할 세 명이 각각 활력징후 측정, GCS 평가, 석션을 동시에 수행해야 하는 장면을 만들 때 이 노드를 사용합니다. 각 동시 작업은 `branches`라는 목록의 항목 하나하나로 표현되며, 각 브랜치는 그 자체로 독립된 노드 체인(연쇄)입니다.
+
+가장 신경 써야 할 설정은 `allocationType`입니다. 혼자 플레이하는 시나리오라면 `SelfAll`로 두면 되고, 여러 명이 각자 다른 역할(태그)을 맡아 협력하는 시나리오라면 `ByRole`을 사용해 각 브랜치를 알맞은 역할의 플레이어에게 한 명씩 배정할 수 있습니다. `waitMode`는 "모두가 끝나야 다음으로 넘어갈지(`All`)", "한 명이라도 끝나면 넘어갈지(`Any`)", "기다리지 않고 바로 넘어갈지(`None`)"를 결정합니다. 협력 처치처럼 모두의 완료가 중요한 경우 `All`을, 여러 방법 중 하나만 성공해도 되는 경우 `Any`를 사용하면 됩니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
 | `branches` | `ScenarioParallelBranch[]` | 동시에 실행할 브랜치 목록(하단 참고) | - |
 | `waitMode` | `string` (`All`\|`Any`\|`None`) | 브랜치 완료 감시 정책. `All`=모든 브랜치가 끝나야 진행, `Any`=하나라도 끝나면 진행, `None`=시작 즉시 진행(fire-and-forget) | `All` |
-| `allocationType` | `string` (`SelfAll`\|`RandomOneAll`\|`SpreadRandom`\|`SpreadOrdinary`\|`ByRole`) | 브랜치를 플레이어에게 분배하는 방식. `ByRole`은 각 브랜치를 자격(태그)에 맞는 서로 다른 플레이어에게 1:1로 배정한다(다인 동시 협력용) | `ByRole` |
+| `allocationType` | `string` (`SelfAll`\|`RandomOneAll`\|`SpreadRandom`\|`SpreadOrdinary`\|`ByRole`) | 브랜치를 플레이어에게 분배하는 방식. `ByRole`은 각 브랜치를 자격(태그)에 맞는 서로 다른 플레이어에게 1:1로 배정합니다(다인 동시 협력용) | `ByRole` |
 | `whenBranchingPlayerNotMatched` | `string` (`Panic`\|`Ignore`\|`Reallocation`) | 플레이어 수와 브랜치 수가 일치하지 않을 때의 처리 방식 | `Panic` |
 | `nextIdentifier` | `string` | `waitMode` 조건 충족 후 이동할 다음 노드 식별자 | `next-node-identifier` |
 
@@ -152,26 +171,26 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
 | `identifier` | `string` | 브랜치의 시작 노드 식별자 | `branch-vitals` |
-| `completionConditionIdentifier` | `string` | 브랜치 완료 조건(수렴 라벨) 식별자. 브랜치 체인의 마지막 노드의 `nextIdentifier`가 이 값을 가리키면 해당 브랜치가 완료된 것으로 간주된다 | `branch-vitals-done` |
+| `completionConditionIdentifier` | `string` | 브랜치 완료 조건(수렴 라벨) 식별자. 브랜치 체인의 마지막 노드의 `nextIdentifier`가 이 값을 가리키면 해당 브랜치가 완료된 것으로 간주됩니다 | `branch-vitals-done` |
 | `requiredPlayerTags` | `string[]` | (optional) 이 브랜치 실행 대상이 되기 위해 필요한 플레이어 태그 목록 | `["nurse"]` |
 | `forbiddenPlayerTags` | `string[]` | (optional) 이 브랜치 실행 대상에서 제외할 플레이어 태그 목록 | `["doctor"]` |
 | `requiredPlayerTagsMatchMode` | `string` (`All`\|`Any`) | `requiredPlayerTags` 매칭 모드(기본값 `All`) | `All` |
 
 ### ServerInternalSignal
 
-서버 권위 하에 동작하는 IPC 유사 내부 신호를 등록(register)하거나 발생(resolve)시킵니다. 한 플레이어의 시나리오 흐름이 다른 플레이어(또는 서버 이벤트)의 상태 변화에 의존할 때 사용합니다.
+여러 플레이어가 함께 플레이할 때, "한 사람의 진행이 다른 사람의 상황에 달려 있는" 경우에 쓰는 신호 전달용 노드입니다. 예를 들어 의사 역할 플레이어는 간호사 역할 플레이어가 처치를 끝낼 때까지 다음 대사를 기다려야 하는 상황을 생각해 보면, 간호사 쪽 그래프에서는 처치가 끝난 뒤 `Resolve`로 신호를 올리고, 의사 쪽 그래프에서는 `Register`로 그 신호를 기다리면 됩니다. 어느 쪽이 먼저 도착하든(신호가 먼저 발생하든, 대기가 먼저 걸리든) 서버가 두 요청을 짝지어 처리해 주므로 순서를 걱정할 필요는 없습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
-| `targetIdentifier` | `string` | 신호의 목적지. `@m`은 서버 권위 대상(기본값), `@s`는 실행자 자신을 뜻한다 | `@m` |
+| `targetIdentifier` | `string` | 신호의 목적지입니다. `@m`은 서버 권위 대상(기본값), `@s`는 실행자 자신을 뜻합니다 | `@m` |
 | `signalIdentifier` | `string` | 신호 이름 | `sig.patient-a-triaged` |
-| `operation` | `string` (`Register`\|`Resolve`) | `Register`=신호를 기다린다(선등록 시 이후 발생하는 동일 신호에 즉시 resolve), `Resolve`=신호를 발생시킨다(선발생 시 이후 등록하는 대기자에게 즉시 resolve) | `Register` |
-| `waitForResolution` | `bool` | 참이면 신호가 resolve될 때까지 다음 노드 진행을 막는다(기본값 true) | `true` |
+| `operation` | `string` (`Register`\|`Resolve`) | `Register`=신호를 기다립니다(선등록 시 이후 발생하는 동일 신호에 즉시 resolve), `Resolve`=신호를 발생시킵니다(선발생 시 이후 등록하는 대기자에게 즉시 resolve) | `Register` |
+| `waitForResolution` | `bool` | 참이면 신호가 resolve될 때까지 다음 노드 진행을 막습니다(기본값 true) | `true` |
 | `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
 
 ### InvokeEvent
 
-이벤트 식별자를 통해 게임 코드에 정의된 커스텀 이벤트 핸들러(예: TriageTrainer의 `TriageScenarioEventBootstrap.Event.*`)를 호출합니다.
+시나리오 그래프의 표준 노드로는 표현하기 어려운, 프로젝트에 특화된 동작을 실행해야 할 때 쓰는 "탈출구" 같은 노드입니다. 실제 동작은 C# 코드(TriageTrainer의 `TriageScenarioEventBootstrap.Event.*` 등)에 미리 등록돼 있어야 하며, 이 노드는 그 코드를 `eventIdentifier`로 호출만 합니다. 새로운 게임플레이 기능이 필요한데 기존 노드로 표현할 수 없다면, 먼저 개발자와 상의해 이벤트 핸들러를 추가한 뒤 이 노드로 연결하는 흐름을 권장합니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -181,7 +200,9 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### Validator
 
-조건(플레이어 수, 태그 보유 여부, 레지스트리 상태 등)을 검사하여 통과/실패에 따라 진행을 분기하거나, 조건이 충족될 때까지 대기하는 게이트로 동작합니다.
+"조건이 맞는지 확인하는" 노드입니다. 예를 들어 "플레이어가 2명 이상 접속했는지", "이 플레이어가 간호사 태그를 갖고 있는지" 같은 조건을 검사한 뒤, 조건이 맞으면 다음으로 넘어가고 맞지 않으면 실패로 처리하도록 만들 수 있습니다.
+
+이 노드는 두 가지 모드로 쓸 수 있습니다. `waitForCondition`을 꺼두면(기본값) "지금 이 순간에" 조건을 딱 한 번 검사하고 그 결과에 따라 `onFailure` 정책(오류로 중단, 다른 노드로 분기, 무시하고 진행)을 적용합니다. 반대로 `waitForCondition`을 켜면 조건이 충족될 때까지 계속 기다리는 "게이트" 역할을 하게 되는데, 이는 예를 들어 "간호사가 처치를 완료하기 전까지 이 지점에서 대기"처럼 다른 플레이어의 작업 완료를 기다려야 하는 상황에 유용합니다. 무한정 기다리는 것이 부담스럽다면 `waitTimeoutSeconds`로 최대 대기 시간을 정해두는 것을 권장합니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -190,7 +211,7 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 | `failureReportTargets` | `string` (flags: `UnityConsole`\|`InGameChat`) | 실패 보고 대상(플래그 조합 가능) | `UnityConsole` |
 | `failureNextIdentifier` | `string` | (`onFailure`가 `Branching`일 때) 실패 시 이동할 노드 식별자 | `validator-fail-branch` |
 | `waitForCondition` | `bool` | 참이면 조건이 충족될 때까지 진행을 막고 폴링 대기하는 게이트로 동작합니다. 미지정/false이면 1회만 평가하고 `onFailure` 정책을 따릅니다(하위호환, 기본값 false) | `true` |
-| `waitTimeoutSeconds` | `float` (nullable) | `waitForCondition` 게이트의 타임아웃(초). `null`/0 이하면 타임아웃 없이 무한 대기한다(기본값) | `30.0` |
+| `waitTimeoutSeconds` | `float` (nullable) | `waitForCondition` 게이트의 타임아웃(초)입니다. `null`/0 이하면 타임아웃 없이 무한 대기합니다(기본값) | `30.0` |
 | `onWaitTimeout` | `string` (`KeepWaiting`\|`FailBranch`\|`ForceAdvance`\|`WarnAndKeepWaiting`) | `waitTimeoutSeconds` 초과 시 동작. `KeepWaiting`=계속 대기(기본값), `FailBranch`=`failureNextIdentifier`로 분기, `ForceAdvance`=`nextIdentifier`로 강제 진행, `WarnAndKeepWaiting`=경고 후 계속 대기 | `KeepWaiting` |
 | `nextIdentifier` | `string` | 조건 충족(또는 `Ignore`/`ForceAdvance`) 시 이동할 다음 노드 식별자 | `next-node-identifier` |
 
@@ -217,7 +238,7 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### QuestControl
 
-퀘스트를 추가/갱신/삭제합니다.
+플레이어의 퀘스트 목록에 새 퀘스트를 추가하거나, 기존 퀘스트 내용을 갱신하거나, 완료된 퀘스트를 제거하는 노드입니다. "환자에게 다가가서 대화하기" 같은 목표를 화면에 안내해 주고 싶을 때 이 노드로 퀘스트를 추가하면 됩니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -229,7 +250,7 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### QuestWaypointHighlight
 
-퀘스트 진행 안내용 웨이포인트 마커를 강조 표시합니다.
+"여기로 가세요"라고 알려주는 웨이포인트 마커를 화면에 강조 표시하는 노드입니다. 퀘스트를 새로 부여한 직후에 함께 사용하면, 플레이어가 다음에 어디로 이동해야 할지 헤매지 않고 바로 알 수 있습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -238,7 +259,7 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### Delay
 
-지정한 시간만큼 대기합니다.
+그냥 정해진 시간만큼 잠깐 멈춰 있는 노드입니다. 대사와 대사 사이에 약간의 여백을 주거나, 효과음이 끝날 시간을 벌어주거나, 연출상 "숨 고르는" 타이밍을 만들 때 사용합니다. 뒤에 바로 다음 동작이 이어져야 한다면 `waitUntilFinished`를 켜두고, 대기와 동시에 다른 작업이 진행돼야 한다면 `Immediately`로 두고 다음 노드를 바로 실행하게 만들 수 있습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -248,7 +269,7 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### Interaction
 
-플레이어(또는 임의의 액터)가 특정 대상과 상호작용을 완료해야 다음으로 진행되는 노드입니다.
+플레이어가 어떤 오브젝트를 직접 조작(사용/조사/부착/탈착)해야만 다음으로 넘어갈 수 있는 노드입니다. 예를 들어 "문을 직접 열어야 다음 장면으로 넘어간다"처럼, 플레이어가 능동적으로 행동하게 만들고 싶을 때 Dialogue 대신 이 노드를 사용하면 몰입감을 높일 수 있습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -261,18 +282,20 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### CombineItem
 
-여러 입력 아이템을 하나의 결과 아이템으로 조합합니다.
+여러 개의 재료 아이템을 하나의 결과 아이템으로 합치는 노드입니다. 붕대와 거즈를 조합해 상처 드레싱 키트를 만드는 식의 훈련 상황을 표현할 수 있습니다. 플레이어가 직접 조합 버튼을 눌러야 하는 경우와, 필요한 재료가 다 모이면 자동으로 조합되는 경우를 `autoCombine`으로 선택할 수 있습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
 | `inputItemIdentifiers` | `string[]` | 조합에 필요한 입력 아이템 식별자 목록 | `["gauze", "bandage"]` |
 | `outputItemIdentifier` | `string` | 조합 결과 아이템 식별자 | `wound_dressing_kit` |
-| `autoCombine` | `bool` | 참이면 수동 조작 없이 자동으로 조합된다 | `true` |
+| `autoCombine` | `bool` | 참이면 수동 조작 없이 자동으로 조합됩니다 | `true` |
 | `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
 
 ### Quiz
 
-객관식 퀴즈를 제시하고 정답/오답에 따라 분기합니다. 선택 입력 방식은 Choice 노드와 동일합니다(스크롤/`±` 키로 강조, 클릭/`Space`/`F`로 확정).
+플레이어의 이해도를 확인하는 객관식 퀴즈 노드입니다. 정답을 고르면 `onCorrectNextIdentifier`로, 오답을 고르면 `onIncorrectNextIdentifier`로 이동하도록 만들 수 있습니다. 선택하는 방법은 Choice 노드와 동일합니다(스크롤 또는 `±` 키로 강조한 뒤 클릭/`Space`/`F`로 확정).
+
+오답을 골랐을 때 바로 다음으로 넘어가지 않고 같은 퀴즈로 되돌아가게(`onIncorrectNextIdentifier`를 자기 자신 또는 재시도용 노드로 지정) 만들면, 플레이어가 다시 도전해 정답을 맞힐 때까지 학습을 유도할 수 있습니다. `feedbackCorrect`/`feedbackIncorrect`에 왜 정답인지/오답인지 설명을 짧게 넣어주면 교육 효과를 높일 수 있습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -283,12 +306,12 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 | `onIncorrectNextIdentifier` | `string` | (optional) 오답 선택 시 다음 노드 식별자(예: 재시도 루프) | `quiz-retry` |
 | `feedbackCorrect` | `string` | (optional) 정답 시 표시할 피드백 텍스트 | `정답입니다!` |
 | `feedbackIncorrect` | `string` | (optional) 오답 시 표시할 피드백 텍스트 | `다시 확인해보세요.` |
-| `playTTS` | `bool` | 참이면 문항(및 피드백)을 표시할 때 TTS로 함께 재생한다(optional, 기본 false) | `false` |
+| `playTTS` | `bool` | 참이면 문항(및 피드백)을 표시할 때 TTS로 함께 재생합니다(optional, 기본 false) | `false` |
 | `ttsVoiceIdentifier` | `string` | 사용할 목소리 프로파일 식별자(optional) | `doctor-voice-01` |
 
 ### StateUpdate
 
-시나리오 상태 저장소(`_stateStore`)에 임의의 키-값을 기록합니다.
+시나리오가 진행되는 동안 잠깐 기억해 둬야 할 값을, 화면에 보이지 않는 "메모장"(상태 저장소)에 키-값 형태로 적어두는 노드입니다. 이후 다른 노드들이 이 값을 다시 읽어 조건 분기 등에 활용할 수 있습니다. 값 자체는 문자열로만 저장되므로, 숫자나 상태를 담더라도 문자열 규칙(예: 부정맥 상태 코드 표기)을 팀 내에서 미리 정해두고 일관되게 사용하는 것이 좋습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -299,19 +322,19 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### PlayTTS
 
-대화창 없이 독립적으로 TTS 대본을 재생합니다. 변수 치환을 지원합니다.
+Dialogue 노드처럼 화면에 텍스트 창을 띄우지 않고, 순수하게 음성만 재생하고 싶을 때 사용하는 노드입니다. 예를 들어 무전기에서 들려오는 안내 음성이나, 배경에서 흘러나오는 방송처럼 화면에 자막 창이 없어도 되는 상황에 어울립니다. `variables`를 이용하면 환자 이름이나 목적지 같은 값을 매번 다른 내용으로 바꿔 재생할 수 있어서, 같은 대본을 여러 시나리오에서 재활용하기 좋습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
 | `transcriptIdentifier` | `string` | `TTSService`에 등록된 대본(Transcript) 식별자 | `triage-move-patient` |
 | `variables` | `Dictionary<string,string>` | (optional) 대본 내 동적 세그먼트 변수 오버라이드. 필요하지만 값이 없는 변수는 경고 후 해당 세그먼트를 건너뜀 | `{"patient-name":"김철수"}` |
-| `waitUntilFinished` | `bool` | 참이면 모든 클립 재생이 끝날 때까지 다음 노드 진행을 대기한다(기본값 true) | `true` |
+| `waitUntilFinished` | `bool` | 참이면 모든 클립 재생이 끝날 때까지 다음 노드 진행을 대기합니다(기본값 true) | `true` |
 | `ttsVoiceIdentifier` | `string` | (optional) 사용할 목소리 프로파일 식별자. 미지정 시 기본 목소리 사용 | `doctor-voice-01` |
 | `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
 
 ### PlayerTag (JSON `nodeType`: `TagModification`, 구버전 호환 별칭 `PlayerTag`)
 
-플레이어의 태그를 추가/제거/변경/교환합니다. 다인 플레이 시 역할(간호사/의사 등) 배정에 사용됩니다.
+다인 플레이 시나리오에서 "이 플레이어는 간호사, 저 플레이어는 의사" 같은 역할을 나눠주는 노드입니다. 태그는 곧 역할표라고 생각하면 됩니다. `Parallel` 노드의 `ByRole` 브랜치 분배나 `Validator`의 태그 조건 검사는 모두 이 노드로 부여한 태그를 참고하므로, 협동 시나리오를 만들 때는 시작 지점에서 역할 태그를 먼저 배정해 두는 흐름이 일반적입니다. 두 플레이어의 역할을 서로 바꿔야 하는 경우(예: 중간에 역할 교대)에는 `Swap` 조작을 사용하면 각자 새 태그를 추가/제거하는 여러 노드를 만들 필요 없이 한 번에 처리할 수 있습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -326,12 +349,12 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### EntityPresetSpawn
 
-등록된 엔티티 프리셋을 식별자로 스폰합니다. 하위 오브젝트 구성은 프리셋 정의에 사전 설정되어 있으므로 이 노드는 재정의하지 않습니다.
+미리 만들어 둔 엔티티 프리셋(환자, NPC 등)을 씬에 등장시키는 노드입니다. 프리셋 내부에 어떤 하위 오브젝트를 함께 스폰할지는 이미 프리셋 쪽에서 정해져 있으므로, 이 노드에서는 "어떤 프리셋을, 어디에, 어떤 이름으로" 스폰할지만 정하면 됩니다. 스폰한 뒤에도 계속 그 대상을 제어해야 한다면(예: 이후 `EntityTag`, `StateUpdate` 등으로 상태를 바꿔야 한다면) `spawnedEntityIdentifier`를 꼭 지정해서 나중에 같은 식별자로 다시 찾을 수 있게 해두는 것이 좋습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
 | `presetIdentifier` | `string` | 스폰할 엔티티 프리셋 식별자 | `patient_preset_a` |
-| `spawnedEntityIdentifier` | `string` | 스폰된 루트 인스턴스에 부여할 엔티티 식별자. 비어 있으면 GUID 기반 식별자가 자동 부여된다 | `patient_a` |
+| `spawnedEntityIdentifier` | `string` | 스폰된 루트 인스턴스에 부여할 엔티티 식별자입니다. 비어 있으면 GUID 기반 식별자가 자동 부여됩니다 | `patient_a` |
 | `positionSourceEntityIdentifier` | `string` | (optional) 다른 엔티티의 위치를 기준으로 스폰할 때 그 엔티티의 식별자 | `bed_a` |
 | `positionX` / `positionY` / `positionZ` | `float` | 스폰 좌표(`positionSourceEntityIdentifier`가 없을 때 사용) | `0.0` |
 | `resultStateKey` | `string` | (optional) 결과로 생성된 엔티티 식별자를 상태 저장소에 기록할 키 | `patient_a.entityId` |
@@ -339,7 +362,7 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### EntityTag
 
-플레이어가 아닌 엔티티에 대해 태그 조작을 수행합니다.
+플레이어가 아니라 환자나 오브젝트 같은 "엔티티"에 태그를 붙이거나 떼는 노드입니다. `PlayerTag`가 사람(플레이어)의 역할표라면, 이 노드는 환자나 사물의 상태 라벨이라고 볼 수 있습니다. 예를 들어 환자에게 `critical` 태그를 붙여두면, 이후 다른 시스템(레지스트리 조회, Validator 조건 등)에서 그 태그를 기준으로 "위급 환자만" 걸러내는 로직을 만들 수 있습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -353,11 +376,13 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### EntityInit
 
-엔티티를 준비(스폰 또는 기존 엔티티 참조)하고 초기 상태를 설정합니다. 주 용도는 환자에게 부착된 처치 부착물(주사기, 거즈, 경부보호대 등)의 초기 표시 여부 설정입니다. `presetIdentifier`가 지정되면 스폰이 기존 엔티티 참조보다 우선합니다.
+새로 등장시킨 환자(혹은 이미 씬에 있는 환자)에, "처음부터 이런 상태로 시작한다"를 한 번에 세팅해 주는 노드입니다. 대표적인 활용 사례는 환자 몸에 이미 경부보호대나 거즈가 붙어 있는 채로 시나리오가 시작되게 만드는 것입니다 — 사고 현장에 응급처치가 이미 일부 되어 있는 상황을 표현할 때 유용합니다.
+
+`presetIdentifier`를 지정하면 새 엔티티를 스폰하면서 초기 상태를 함께 적용하고, 지정하지 않으면 이미 존재하는 엔티티(`targetEntityIdentifier` 또는 `targetEntityStateKey`로 지정)에 초기 상태만 적용합니다. `EntityPresetSpawn`으로 스폰한 뒤 곧바로 `EntityInit`으로 상태를 세팅하는 두 단계 대신, 스폰과 초기화가 한 번에 필요하다면 이 노드 하나로 끝낼 수 있습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
-| `presetIdentifier` | `string` | (optional) 스폰할 엔티티 프리셋 식별자. 지정되면 새 인스턴스를 스폰한다 | `patient_preset_b` |
+| `presetIdentifier` | `string` | (optional) 스폰할 엔티티 프리셋 식별자입니다. 지정되면 새 인스턴스를 스폰합니다 | `patient_preset_b` |
 | `positionSourceEntityIdentifier` | `string` | (optional) 스폰 위치 기준이 되는 기존 엔티티 식별자 | `bed_b` |
 | `positionX` / `positionY` / `positionZ` | `float` | 스폰 좌표 | `0.0` |
 | `targetEntityIdentifier` | `string` | (프리셋 스폰이 아닐 때) 제어 대상 엔티티 식별자(직접) | `patient_b` |
@@ -378,7 +403,7 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### TriageAssessControl
 
-특정 환자(엔티티)에 대해 트리아지(Triage) 평가 인터랙션을 활성화/비활성화합니다.
+환자를 트리아지(중증도 분류) 평가할 수 있는 상태로 켜거나 끄는 노드입니다. 시나리오 초반에는 아직 환자에게 접근할 수 없게 막아두고, 도입부 대화나 준비 동작이 끝난 뒤에 이 노드로 평가를 열어주는 식으로 활용하면, 플레이어가 준비되지 않은 상태에서 미리 평가를 끝내버리는 것을 방지할 수 있습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -388,14 +413,16 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### PatientMedicalStatePreset
 
-환자 엔티티의 의료 상태(환자 기술자 및 의료 상태)를 일괄 초기화/덮어씁니다. 모든 상태 필드는 nullable이며, `null`인 항목은 현재 값을 유지합니다. 수치 필드에 `-1`을 지정하면 "무의식/호흡 없음/측정 불가" 등 값이 존재하지 않는 상태를 의미합니다(이는 "현재 값 유지"를 뜻하는 `null`과는 다른 의미).
+환자의 이름, 나이, 의식 수준, 호흡수, 맥박, 혈압 등 의료 정보를 한 번에 세팅하는 노드입니다. 훈련 시나리오에서 환자의 초기 상태(예: "GCS 8점의 의식 저하 환자")를 만들 때 이 노드를 사용하며, 이후 처치 결과에 따라 상태를 다시 이 노드로 바꿔서 환자 상태가 개선되거나 악화되는 흐름을 표현할 수도 있습니다.
+
+가장 중요한 규칙은 필드 값의 의미입니다. 필드를 아예 적지 않으면(`null`) "지금 값 그대로 유지"이고, 수치 필드에 `-1`을 명시적으로 적으면 "측정할 수 없음/없음"이라는 별도의 의미가 됩니다. 이 둘을 혼동하지 않아야 합니다 — 예를 들어 심정지 환자의 맥박을 표현하려면 `pulseRate`를 `-1`로 명시해야 하며, 단순히 필드를 비워두면 이전 값이 그대로 남아있게 됩니다. 값을 부드럽게 변화시키는 연출(`transitionMode: Gradual`)을 쓰면, 환자가 서서히 나빠지거나 회복되는 모니터링 화면을 만들 수 있습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
 | `targetEntityIdentifier` | `string` | 상태를 초기화할 환자 엔티티 식별자 | `patient_a` |
 | `targetEntityStateKey` | `string` | (optional) `targetEntityIdentifier`가 비어 있을 때 상태 저장소에서 대상 엔티티 식별자를 간접 조회할 키 | `patient_a.entityId` |
 | `transitionMode` | `string` (`Immediate`\|`Gradual`) | 프리셋 값 적용 방식. `Immediate`=즉시 덮어쓰기(기본값), `Gradual`=`transitionDurationSeconds` 동안 수치 값을 점차 보간(비수치 필드는 종료 시점에 적용, `-1`은 보간 대상 아님) | `Immediate` |
-| `transitionDurationSeconds` | `float` | (`Gradual`일 때) 보간 소요 시간(초). 0 이하이면 즉시 적용과 동일 | `0.0` |
+| `transitionDurationSeconds` | `float` | (`Gradual`일 때) 보간 소요 시간(초)입니다. 0 이하이면 즉시 적용과 동일합니다 | `0.0` |
 | `name` | `string` | 환자 성명. `null`이면 현재 값 유지 | `김철수` |
 | `sex` | `string` (`Male`\|`Female`, nullable) | 환자 성별 | `Male` |
 | `age` | `int` (nullable) | 환자 나이 | `45` |
@@ -420,7 +447,9 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### ItemSubmissionConfig
 
-아이템 제출(Item Submission) 인터랙터블을 사전 설정합니다. 프리셋을 새로 스폰하거나 기존 인터랙터블을 참조해 요구 아이템, 완료 신호, 활성 여부 등을 오버라이드합니다. 제출이 완료되면 서버 권한 경로로 완료 신호가 올라가며 이를 `Validator` 노드로 게이팅할 수 있습니다.
+플레이어가 특정 아이템을 모아서 "제출"해야 하는 상호작용을 설정하는 노드입니다. 예를 들어 "의사 NPC에게 지정된 약품 2개를 가져다줘야 다음으로 넘어간다" 같은 미션을 만들 때 사용합니다. `requiredItems`로 어떤 아이템이 몇 개 필요한지 지정하고, 제출이 완료되면 `completionSignalIdentifier`로 신호를 올려줍니다.
+
+이 노드 하나로 상호작용 대상을 새로 스폰할 수도 있고, 이미 배치된 대상(예: NPC에 붙어 있는 제출 슬롯)을 재사용할 수도 있습니다. 제출 완료 신호는 뒤따르는 `Validator` 노드에서 `waitForCondition`으로 기다리게 만들면, "제출이 끝날 때까지 다음 장면으로 넘어가지 않는" 흐름을 자연스럽게 구성할 수 있습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
@@ -445,7 +474,7 @@ JSON 상에서 그래프는 `nodes`라는 `Dictionary<string, Node>` 형태로 �
 
 ### NpcInteractControl
 
-NPC에 부착된(혹은 참조로 연결할) 인터랙터블을 추가/제거하거나 활성/비활성 전환합니다. 예: 의사 NPC에게 "아이템 제출" 상호작용을 시나리오 진행 시점에 활성화하거나, 시나리오 종료 후 비활성화합니다.
+NPC가 특정 시점에만 상호작용 가능하게 만들고 싶을 때 쓰는 노드입니다. 예를 들어 시나리오 중반에 도달하기 전까지는 의사 NPC에게 "아이템 제출" 기능이 없다가, 특정 지점을 지나면 이 노드로 그 기능을 활성화(`Add` 또는 `Enable`)하고, 시나리오가 끝나면 다시 비활성화(`Disable`)하는 식으로 사용합니다. 이렇게 하면 아직 준비되지 않은 상호작용을 플레이어가 미리 눌러버리는 상황을 막을 수 있습니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
