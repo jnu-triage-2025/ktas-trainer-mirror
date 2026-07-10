@@ -124,6 +124,9 @@ namespace TriageTrainer.Entity.IntravenousLine
 
       player.SetIntravenousLineConnectionMode(true);
       player.RefreshInteractableHintsNow();
+
+      // 한 점 연결(연결 작업 시작)을 알린다: C# 이벤트 발화 + 인게임 서버 "연결 시도" 시그널.
+      startPoint.NotifyConnectStart();
     }
 
     public bool HasPendingStartPoint(PlayerController player, out IntravenousLineConnectionPoint startPoint)
@@ -187,7 +190,12 @@ namespace TriageTrainer.Entity.IntravenousLine
       startPoint.RegisterConnectedLineObject(lineObject);
       endPoint.RegisterConnectedLineObject(lineObject);
 
+      // 시나리오 게이팅용 완료 신호(Identifier 그대로 / start__end 쌍).
       RaiseConnectionSignals(startPoint, endPoint);
+
+      // 연결 완료를 각 지점에 알린다: C# 이벤트 발화 + 인게임 서버 "연결 완료" 시그널.
+      startPoint.NotifyConnected(endPoint);
+      endPoint.NotifyConnected(startPoint);
 
       ClearPendingFor(player);
       player.SetIntravenousLineConnectionMode(false, false);
@@ -306,13 +314,25 @@ namespace TriageTrainer.Entity.IntravenousLine
       if (lineObject == null)
         return;
 
+      IntravenousLineConnectionPoint startPoint = null;
+      IntravenousLineConnectionPoint endPoint = null;
+
       if (lineObject.TryGetComponent<IntravenousLineConnectionRuntime>(out var runtime) && runtime != null)
       {
-        runtime.StartPoint?.UnregisterConnectedLineObject(lineObject);
-        runtime.EndPoint?.UnregisterConnectedLineObject(lineObject);
+        startPoint = runtime.StartPoint;
+        endPoint = runtime.EndPoint;
+
+        startPoint?.UnregisterConnectedLineObject(lineObject);
+        endPoint?.UnregisterConnectedLineObject(lineObject);
       }
 
       Destroy(lineObject);
+
+      // 줄 단위 연결 끊김을 각 지점에 알린다: C# 이벤트 발화 + 인게임 서버 "연결 끊김" 시그널.
+      // 끊긴 줄마다 그 줄의 양 끝점에서 각각 발화한다(OnConnected 와 대칭). 지점에 다른
+      // 연결이 남아 있는지 여부는 수신 측에서 HasAnyConnection 으로 판단한다.
+      startPoint?.NotifyDisconnected(endPoint);
+      endPoint?.NotifyDisconnected(startPoint);
     }
 
     private void EnsureLinesRoot()

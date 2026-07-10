@@ -137,9 +137,12 @@ namespace TriageTrainer.Entity.IntravenousLine
       public DisconnectInteract(IntravenousLineConnectionPoint owner) { _owner = owner; }
 
       public string DisplayText => "수액 줄 해제";
-      public Sprite DisplayIcon => _owner._displayIcon;
-      public bool AllowDisplayIconFallback => true;
-      public Color DisplayColor => Color.white;
+
+      // 이미 연결된 수액 줄에 대한 해제 상호작용은 투명 아이콘으로 표시한다.
+      // (아이콘 없음 + fallback 아이콘도 표시하지 않음 → 배경색 Color.clear 로 렌더)
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => false;
+      public Color DisplayColor => Color.clear;
 
       public bool CanInteract(Transform interactor)
       {
@@ -166,6 +169,15 @@ namespace TriageTrainer.Entity.IntravenousLine
     public const string InteractIdConnectHere = "intravenous_line_connect_here";
     public const string InteractIdDisconnect = "intravenous_line_disconnect";
 
+    /// <summary>연결 작업 시작(한 점 연결) 시 인게임 서버로 올리는 신호 접두사. 뒤에 지점 Identifier 가 붙는다.</summary>
+    public const string ConnectStartSignalPrefix = "iv_connect_start_";
+
+    /// <summary>연결 완료 시 인게임 서버로 올리는 신호 접두사. 뒤에 지점 Identifier 가 붙는다.</summary>
+    public const string ConnectedSignalPrefix = "iv_connected_";
+
+    /// <summary>연결 끊김 시 인게임 서버로 올리는 신호 접두사. 뒤에 지점 Identifier 가 붙는다.</summary>
+    public const string DisconnectedSignalPrefix = "iv_disconnected_";
+
     [Header("Service")]
     [SerializeField] private IntravenousLineConnectionService connectionService;
 
@@ -182,6 +194,28 @@ namespace TriageTrainer.Entity.IntravenousLine
 
     private List<IInteract> _interacts = new();
     private Dictionary<string, InteractConfig> _interactConfigMap = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// 이 지점에서 수액 줄 연결 작업이 시작될 때(한 점만 연결된 상태) 발생한다.
+    /// 인자: 연결 시작 지점(this).
+    /// </summary>
+    public event Action<IntravenousLineConnectionPoint> OnConnectStart;
+
+    /// <summary>
+    /// 이 지점을 포함하는 수액 줄 연결이 완료되었을 때 발생한다.
+    /// 인자: (this 지점, 상대 지점). 양 끝점 모두에서 각각 발생한다.
+    /// </summary>
+    public event Action<IntravenousLineConnectionPoint, IntravenousLineConnectionPoint> OnConnected;
+
+    /// <summary>
+    /// 이 지점을 포함하던 수액 줄 하나가 끊겼을 때 발생한다.
+    /// 계약: "줄 단위" 이벤트다. 끊긴 줄마다 그 줄의 양 끝점에서 각각 발생하며,
+    /// 지점에 다른 연결이 더 남아 있는지 여부와 무관하게 매번 발생한다
+    /// (OnConnected 와 대칭). 지점이 완전히 비연결 상태가 되는 시점만 알고 싶다면
+    /// 수신 측에서 <see cref="HasAnyConnection"/> 로 확인한다.
+    /// 인자: (this 지점, 끊긴 줄의 상대 지점 또는 알 수 없으면 null).
+    /// </summary>
+    public event Action<IntravenousLineConnectionPoint, IntravenousLineConnectionPoint> OnDisconnected;
 
     public string Identifier => _identifier;
     public IInteract[] Interacts => _interacts.ToArray();
@@ -385,6 +419,46 @@ namespace TriageTrainer.Entity.IntravenousLine
         return;
 
       _connectedLineObjects.Add(lineObject);
+    }
+
+    /// <summary>
+    /// 연결 작업 시작(한 점 연결)을 알린다. C# 이벤트를 발화하고, 인게임 서버에
+    /// 이 지점 Identifier 와 함께 "연결 시도" 시그널을 올린다.
+    /// </summary>
+    public void NotifyConnectStart()
+    {
+      OnConnectStart?.Invoke(this);
+      RaiseSignalWithIdentifier(ConnectStartSignalPrefix);
+    }
+
+    /// <summary>
+    /// 연결 완료를 알린다. C# 이벤트를 발화하고, 인게임 서버에 이 지점 Identifier 와
+    /// 함께 "연결 완료" 시그널을 올린다.
+    /// </summary>
+    public void NotifyConnected(IntravenousLineConnectionPoint other)
+    {
+      OnConnected?.Invoke(this, other);
+      RaiseSignalWithIdentifier(ConnectedSignalPrefix);
+    }
+
+    /// <summary>
+    /// 줄 하나의 연결 끊김을 알린다. C# 이벤트를 발화하고, 인게임 서버에 이 지점
+    /// Identifier 와 함께 "연결 끊김" 시그널을 올린다. 끊긴 줄마다 호출되며,
+    /// 이 지점에 다른 연결이 남아 있는지 여부와 무관하게 매번 알린다.
+    /// </summary>
+    /// <param name="other">끊긴 줄의 상대 지점(알 수 없으면 null).</param>
+    public void NotifyDisconnected(IntravenousLineConnectionPoint other = null)
+    {
+      OnDisconnected?.Invoke(this, other);
+      RaiseSignalWithIdentifier(DisconnectedSignalPrefix);
+    }
+
+    private void RaiseSignalWithIdentifier(string signalPrefix)
+    {
+      if (string.IsNullOrWhiteSpace(_identifier))
+        return;
+
+      MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise($"{signalPrefix}{_identifier}");
     }
 
     public void UnregisterConnectedLineObject(GameObject lineObject)
