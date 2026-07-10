@@ -20,6 +20,9 @@ namespace MultiplayerInfrastructure.UI
     private TextureQuality _pendingQuality;
     private bool _hasPendingQualityChange;
 
+    private VisualElement _uiScaleOptionsContainer;
+    private readonly List<UIScaleOptionElement> _uiScaleOptionElements = new();
+
     private Slider _povSlider;
     private Label _povValueLabel;
     private bool _povSliderInitializing;
@@ -53,6 +56,25 @@ namespace MultiplayerInfrastructure.UI
 
       content.Add(textureSection);
 
+      // ── UI 배율 섹션 ────────────────────────────────────────
+      var uiScaleSection = new VisualElement();
+      uiScaleSection.AddToClassList("settings__section");
+      uiScaleSection.AddToClassList("settings__section--spaced");
+
+      var uiScaleTitle = new Label("UI 배율");
+      uiScaleTitle.AddToClassList("settings__section-title");
+      uiScaleSection.Add(uiScaleTitle);
+
+      var uiScaleDesc = new Label("화면에 표시되는 UI 요소의 크기를 조절합니다. 단계가 높을수록 UI가 크게 표시됩니다.");
+      uiScaleDesc.AddToClassList("settings__section-desc");
+      uiScaleSection.Add(uiScaleDesc);
+
+      _uiScaleOptionsContainer = new VisualElement();
+      _uiScaleOptionsContainer.AddToClassList("settings__graphics-options");
+      uiScaleSection.Add(_uiScaleOptionsContainer);
+
+      content.Add(uiScaleSection);
+
       // ── 카메라 시점(POV) 섹션 ────────────────────────────────
       var povSection = new VisualElement();
       povSection.AddToClassList("settings__section");
@@ -85,6 +107,9 @@ namespace MultiplayerInfrastructure.UI
       // 텍스처 품질 옵션 채우기
       PopulateTextureOptions();
 
+      // UI 배율 옵션 채우기
+      PopulateUIScaleOptions();
+
       _graphicsTabContent = content;
       return _graphicsTabContent;
     }
@@ -95,6 +120,7 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       RefreshTextureFromService();
+      RefreshUIScaleFromService();
       RefreshPovFromService();
     }
 
@@ -104,10 +130,15 @@ namespace MultiplayerInfrastructure.UI
         el.OnOptionSelected -= HandleTextureOptionSelected;
       _textureOptionElements.Clear();
 
+      foreach (var el in _uiScaleOptionElements)
+        el.OnOptionSelected -= HandleUIScaleOptionSelected;
+      _uiScaleOptionElements.Clear();
+
       if (_povSlider != null)
         _povSlider.UnregisterValueChangedCallback(OnPovSliderChanged);
 
       _graphicsOptionsContainer = null;
+      _uiScaleOptionsContainer = null;
       _povSlider = null;
       _povValueLabel = null;
     }
@@ -175,6 +206,64 @@ namespace MultiplayerInfrastructure.UI
 
       foreach (var el in _textureOptionElements)
         el.SetActive(el.BoundQuality == current);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // UI 배율
+    // ──────────────────────────────────────────────────────────────────────────
+    private void PopulateUIScaleOptions()
+    {
+      if (_uiScaleOptionsContainer == null)
+        return;
+
+      _uiScaleOptionsContainer.Clear();
+      _uiScaleOptionElements.Clear();
+
+      var scales = new[]
+      {
+        UIScale.Level1,
+        UIScale.Level2,
+        UIScale.Level3,
+        UIScale.Level4,
+      };
+
+      foreach (var scale in scales)
+      {
+        var element = new UIScaleOptionElement();
+        element.Bind(scale);
+        element.OnOptionSelected += HandleUIScaleOptionSelected;
+        _uiScaleOptionElements.Add(element);
+        _uiScaleOptionsContainer.Add(element);
+      }
+
+      RefreshUIScaleFromService();
+    }
+
+    private void HandleUIScaleOptionSelected(UIScale scale)
+    {
+      foreach (var el in _uiScaleOptionElements)
+        el.SetActive(el.BoundScale == scale);
+
+      // UI 배율은 선택 즉시 적용/저장한다(별도 적용 버튼 없이 즉시 반영).
+      var service = GetUIScaleService();
+      if (service != null)
+      {
+        service.SetScale(scale);
+        SetStatusText($"UI 배율을 '{UIScaleLabel(scale)}'(으)로 변경했습니다.");
+      }
+      else
+      {
+        SetStatusText("오류: UI 배율 서비스를 찾을 수 없습니다.");
+      }
+    }
+
+    private void RefreshUIScaleFromService()
+    {
+      var service = GetUIScaleService();
+      var current = service != null ? service.CurrentScale : UIScale.Level2;
+
+      foreach (var el in _uiScaleOptionElements)
+        el.SetActive(el.BoundScale == current);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -289,6 +378,10 @@ namespace MultiplayerInfrastructure.UI
       => Registry.Registry.Get<CameraDistancePreferenceService>(
            RegistryType.Service, Registry.Registry.TypeKey<CameraDistancePreferenceService>());
 
+    private static UIScalePreferenceService GetUIScaleService()
+      => Registry.Registry.Get<UIScalePreferenceService>(
+           RegistryType.Service, Registry.Registry.TypeKey<UIScalePreferenceService>());
+
     private static string QualityLabel(TextureQuality quality) => quality switch
     {
       TextureQuality.Ultra  => "매우 높음",
@@ -296,6 +389,15 @@ namespace MultiplayerInfrastructure.UI
       TextureQuality.Medium => "보통",
       TextureQuality.Low    => "낮음",
       _                     => quality.ToString(),
+    };
+
+    private static string UIScaleLabel(UIScale scale) => scale switch
+    {
+      UIScale.Level1 => "1단계",
+      UIScale.Level2 => "2단계",
+      UIScale.Level3 => "3단계",
+      UIScale.Level4 => "4단계",
+      _              => scale.ToString(),
     };
   }
 }
