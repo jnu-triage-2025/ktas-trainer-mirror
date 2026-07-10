@@ -70,7 +70,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.UI.ScenarioPanelUIController
   _uiDocument: {fileID: 0}
   _typingSpeed: 0.05
-  _autoShowOnScenarioStart: 1
+  _autoShowOnScenarioStart: 0
   _interactableHintUI: {fileID: 0}
   _currentController: {fileID: 0}
   _isTyping: 0
