@@ -107,6 +107,7 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingPatientMedicalStatePreset,
       ExecutingItemSubmissionConfig,
       ExecutingNpcInteractControl,
+      ExecutingTimeControl,
     }
 
     [SerializeField] private State _state = State.Inactive;
@@ -284,6 +285,9 @@ namespace MultiplayerInfrastructure.Scenario
       ResetNodeVisitOrders(graph.Identifier);
       ScenarioInteractionSignals.ClearAllInternalSignals();
 
+      // 이전 시나리오에서 남았을 수 있는 시간 표시 HUD 를 새 시나리오 시작 시 정리한다.
+      ScenarioTimeRelay.HideAuthoritative();
+
       _currentGraph = graph;
       _scenarioOwnerClientId = ownerClientId;
 
@@ -354,6 +358,10 @@ namespace MultiplayerInfrastructure.Scenario
       // 브랜치 체인이 계속 돌면서 _currentGraph 역참조에서 NullReferenceException 이 발생한다.
       StopAllCoroutines();
       ScenarioInteractionSignals.ClearAllInternalSignals();
+
+      // 시나리오가 남긴 시간 표시(스톱워치/카운트다운) HUD 를 정리한다.
+      // 명시적 Hide 노드 없이 종료(또는 조기/오류 종료)하더라도 다음 시나리오로 새어 나가지 않게 한다.
+      ScenarioTimeRelay.HideAuthoritative();
 
       _currentGraph = null;
       _currentNode = null;
@@ -564,6 +572,9 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioNpcInteractControlNode npcInteractControl:
           ExecuteNpcInteractControlNode(npcInteractControl);
+          break;
+        case ScenarioTimeControlNode timeControl:
+          ExecuteTimeControlNode(timeControl);
           break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type: {node.GetType().Name}");
@@ -856,6 +867,58 @@ namespace MultiplayerInfrastructure.Scenario
       {
         yield return new WaitForSeconds(node.DurationSeconds);
       }
+
+      Advance();
+    }
+
+    /// <summary>
+    /// 시간 표시(스톱워치/카운트다운) HUD 를 제어한다. 서버 권한으로 모든 클라이언트에
+    /// 명령을 전파하고 즉시 다음 노드로 진행한다(대기하지 않는다).
+    /// 표시 자체는 <see cref="MultiplayerInfrastructure.UI.TimeDisplayUIController"/> 가
+    /// <see cref="ScenarioTimeState"/> 를 매 프레임 조회해 렌더한다.
+    /// </summary>
+    private void ExecuteTimeControlNode(ScenarioTimeControlNode node)
+    {
+      _state = State.ExecutingTimeControl;
+
+      switch (node.Action)
+      {
+        case ScenarioTimeAction.Start:
+        {
+          double duration = Mathf.Max(0f, node.DurationSeconds);
+          if (node.Direction == ScenarioTimeDirection.Countdown)
+          {
+            // 카운트다운: StartSeconds 는 시작 시 표시할 "남은 값". 미지정(0)이면 목표 시간에서 시작.
+            double displayStart = node.StartSeconds > 0f ? node.StartSeconds : duration;
+            // 목표(총) 시간은 최소한 시작 표시값 이상이어야 한다(Duration 미지정 시 StartSeconds 로 대체).
+            double target = Mathf.Max((float)duration, (float)displayStart);
+            ScenarioTimeRelay.StartAuthoritative(node.Direction, displayStart, target);
+          }
+          else
+          {
+            double start = Mathf.Max(0f, node.StartSeconds);
+            ScenarioTimeRelay.StartAuthoritative(node.Direction, start, duration);
+          }
+          break;
+        }
+        case ScenarioTimeAction.Pause:
+          ScenarioTimeRelay.PauseAuthoritative();
+          break;
+        case ScenarioTimeAction.Resume:
+          ScenarioTimeRelay.ResumeAuthoritative();
+          break;
+        case ScenarioTimeAction.Stop:
+          ScenarioTimeRelay.StopAuthoritative();
+          break;
+        case ScenarioTimeAction.Hide:
+          ScenarioTimeRelay.HideAuthoritative();
+          break;
+      }
+
+#if UNITY_EDITOR
+      Debug.Log($"[ScenarioController] TimeControl '{node.Identifier}': action={node.Action}, " +
+                $"direction={node.Direction}, duration={node.DurationSeconds}, start={node.StartSeconds}");
+#endif
 
       Advance();
     }

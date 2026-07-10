@@ -187,6 +187,7 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.PatientMedicalStatePreset:
         case ScenarioNodeType.ItemSubmissionConfig:
         case ScenarioNodeType.NpcInteractControl:
+        case ScenarioNodeType.TimeControl:
           DefaultOutputPort = CreateStandardOutput("Next");
           break;
 
@@ -353,6 +354,9 @@ namespace MultiplayerInfrastructure.Editor
           break;
         case ScenarioNodeType.NpcInteractControl:
           BuildNpcInteractControlInlineEditor((ScenarioNpcInteractControlNode)Data);
+          break;
+        case ScenarioNodeType.TimeControl:
+          BuildTimeControlInlineEditor((ScenarioTimeControlNode)Data);
           break;
         case ScenarioNodeType.Parallel:
           break;
@@ -623,6 +627,36 @@ namespace MultiplayerInfrastructure.Editor
       _inlineEditorContainer.Add(opField);
 
       AddNextIdentifierField(data);
+    }
+
+    private void BuildTimeControlInlineEditor(ScenarioTimeControlNode data)
+    {
+      var actionField = new EnumField("Action", data.Action);
+      actionField.RegisterValueChangedCallback(evt =>
+      {
+        if (evt.newValue is ScenarioTimeAction value)
+          data.Action = value;
+      });
+      _inlineEditorContainer.Add(actionField);
+
+      var directionField = new EnumField("Direction", data.Direction);
+      directionField.RegisterValueChangedCallback(evt =>
+      {
+        if (evt.newValue is ScenarioTimeDirection value)
+          data.Direction = value;
+      });
+      _inlineEditorContainer.Add(directionField);
+
+      AddPlainFloatField("Duration (sec)", value => data.DurationSeconds = Mathf.Max(0f, value), data.DurationSeconds);
+      AddPlainFloatField("Start (sec)", value => data.StartSeconds = Mathf.Max(0f, value), data.StartSeconds);
+      AddNextIdentifierField(data);
+    }
+
+    private void AddPlainFloatField(string label, System.Action<float> setter, float current)
+    {
+      var field = new FloatField(label) { value = current };
+      field.RegisterValueChangedCallback(evt => setter(evt.newValue));
+      _inlineEditorContainer.Add(field);
     }
 
     private void AddNextIdentifierField(IScenarioNode data)

@@ -1,0 +1,135 @@
+{
+  "identifier": "test_time_control",
+  "tags": [],
+  "nodes": {
+    "intro": {
+      "identifier": "intro",
+      "nodeType": "Dialogue",
+      "speakerName": "TimeTest",
+      "dialogueContent": "시간 표시 테스트를 시작합니다. 먼저 스톱워치(정방향)를 확인합니다.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "stopwatch_start"
+    },
+    "stopwatch_start": {
+      "identifier": "stopwatch_start",
+      "nodeType": "TimeControl",
+      "action": "Start",
+      "direction": "Stopwatch",
+      "durationSeconds": 0,
+      "startSeconds": 0,
+      "nextIdentifier": "stopwatch_run_delay"
+    },
+    "stopwatch_run_delay": {
+      "identifier": "stopwatch_run_delay",
+      "nodeType": "Delay",
+      "durationSeconds": 3.0,
+      "waitUntil": "WaitUntilDone",
+      "nextIdentifier": "stopwatch_pause"
+    },
+    "stopwatch_pause": {
+      "identifier": "stopwatch_pause",
+      "nodeType": "TimeControl",
+      "action": "Pause",
+      "direction": "Stopwatch",
+      "durationSeconds": 0,
+      "startSeconds": 0,
+      "nextIdentifier": "stopwatch_paused_delay"
+    },
+    "stopwatch_paused_delay": {
+      "identifier": "stopwatch_paused_delay",
+      "nodeType": "Delay",
+      "durationSeconds": 2.0,
+      "waitUntil": "WaitUntilDone",
+      "nextIdentifier": "stopwatch_resume"
+    },
+    "stopwatch_resume": {
+      "identifier": "stopwatch_resume",
+      "nodeType": "TimeControl",
+      "action": "Resume",
+      "direction": "Stopwatch",
+      "durationSeconds": 0,
+      "startSeconds": 0,
+      "nextIdentifier": "stopwatch_resumed_delay"
+    },
+    "stopwatch_resumed_delay": {
+      "identifier": "stopwatch_resumed_delay",
+      "nodeType": "Delay",
+      "durationSeconds": 2.0,
+      "waitUntil": "WaitUntilDone",
+      "nextIdentifier": "stopwatch_stop"
+    },
+    "stopwatch_stop": {
+      "identifier": "stopwatch_stop",
+      "nodeType": "TimeControl",
+      "action": "Stop",
+      "direction": "Stopwatch",
+      "durationSeconds": 0,
+      "startSeconds": 0,
+      "nextIdentifier": "countdown_intro"
+    },
+    "countdown_intro": {
+      "identifier": "countdown_intro",
+      "nodeType": "Dialogue",
+      "speakerName": "TimeTest",
+      "dialogueContent": "이제 카운트다운(역방향) 10초를 시작합니다.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "countdown_start"
+    },
+    "countdown_start": {
+      "identifier": "countdown_start",
+      "nodeType": "TimeControl",
+      "action": "Start",
+      "direction": "Countdown",
+      "durationSeconds": 10.0,
+      "startSeconds": 0,
+      "nextIdentifier": "countdown_mid_delay"
+    },
+    "countdown_mid_delay": {
+      "identifier": "countdown_mid_delay",
+      "nodeType": "Delay",
+      "durationSeconds": 4.0,
+      "waitUntil": "WaitUntilDone",
+      "nextIdentifier": "countdown_mid_dialogue"
+    },
+    "countdown_mid_dialogue": {
+      "identifier": "countdown_mid_dialogue",
+      "nodeType": "Dialogue",
+      "speakerName": "TimeTest",
+      "dialogueContent": "약 6초 남아 있어야 합니다. 계속 감소하는지 확인하세요.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "countdown_finish_delay"
+    },
+    "countdown_finish_delay": {
+      "identifier": "countdown_finish_delay",
+      "nodeType": "Delay",
+      "durationSeconds": 7.0,
+      "waitUntil": "WaitUntilDone",
+      "nextIdentifier": "countdown_done_dialogue"
+    },
+    "countdown_done_dialogue": {
+      "identifier": "countdown_done_dialogue",
+      "nodeType": "Dialogue",
+      "speakerName": "TimeTest",
+      "dialogueContent": "카운트다운이 00:00:00 에 도달해 색상이 바뀌어야 합니다.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "hide_timer"
+    },
+    "hide_timer": {
+      "identifier": "hide_timer",
+      "nodeType": "TimeControl",
+      "action": "Hide",
+      "direction": "Stopwatch",
+      "durationSeconds": 0,
+      "startSeconds": 0,
+      "nextIdentifier": "outro"
+    },
+    "outro": {
+      "identifier": "outro",
+      "nodeType": "Dialogue",
+      "speakerName": "TimeTest",
+      "dialogueContent": "시간 표시가 사라졌습니다. 테스트를 종료합니다.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": null
+    }
+  }
+}

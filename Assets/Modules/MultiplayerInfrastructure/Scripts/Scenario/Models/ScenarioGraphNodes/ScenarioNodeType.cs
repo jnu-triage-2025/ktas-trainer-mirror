@@ -28,5 +28,6 @@ namespace MultiplayerInfrastructure.Scenario
     PatientMedicalStatePreset,
     ItemSubmissionConfig,
     NpcInteractControl,
+    TimeControl,
   }
 }

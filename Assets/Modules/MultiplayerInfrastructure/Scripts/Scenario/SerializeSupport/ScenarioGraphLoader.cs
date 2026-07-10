@@ -262,6 +262,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioPatientMedicalStatePresetNodeDTO patientPreset => ConvertPatientMedicalStatePreset(patientPreset),
           ScenarioItemSubmissionConfigNodeDTO itemSubmission => ConvertItemSubmissionConfig(itemSubmission),
           ScenarioNpcInteractControlNodeDTO npcInteractControl => ConvertNpcInteractControl(npcInteractControl),
+          ScenarioTimeControlNodeDTO timeControl => ConvertTimeControl(timeControl),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -437,6 +438,17 @@ namespace MultiplayerInfrastructure.Scenario
           Identifier = dto.Identifier,
           DurationSeconds = dto.DurationSeconds ?? 0f,
           WaitUntil = ParseDelayWaitUntil(dto.WaitUntil),
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioTimeControlNode ConvertTimeControl(ScenarioTimeControlNodeDTO dto) =>
+        new ScenarioTimeControlNode
+        {
+          Identifier = dto.Identifier,
+          Action = ParseTimeAction(dto.Action),
+          Direction = ParseTimeDirection(dto.Direction),
+          DurationSeconds = dto.DurationSeconds ?? 0f,
+          StartSeconds = dto.StartSeconds ?? 0f,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -910,6 +922,38 @@ namespace MultiplayerInfrastructure.Scenario
       throw new JsonException($"Unknown ScenarioDelayWaitUntil '{value}'.");
     }
 
+    private static ScenarioTimeAction ParseTimeAction(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioTimeAction.Start;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioTimeAction parsed)
+          && Enum.IsDefined(typeof(ScenarioTimeAction), parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioTimeAction '{value}'.");
+    }
+
+    private static ScenarioTimeDirection ParseTimeDirection(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioTimeDirection.Stopwatch;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioTimeDirection parsed)
+          && Enum.IsDefined(typeof(ScenarioTimeDirection), parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioTimeDirection '{value}'.");
+    }
+
     private static ScenarioInteractionActorScope ParseInteractionActorScope(string value)
     {
       if (string.IsNullOrWhiteSpace(value))
@@ -1047,6 +1091,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioPatientMedicalStatePresetNode patientPreset => ConvertToDTO(patientPreset),
           ScenarioItemSubmissionConfigNode itemSubmission => ConvertToDTO(itemSubmission),
           ScenarioNpcInteractControlNode npcInteractControl => ConvertToDTO(npcInteractControl),
+          ScenarioTimeControlNode timeControl => ConvertToDTO(timeControl),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 
@@ -1219,6 +1264,18 @@ namespace MultiplayerInfrastructure.Scenario
           Identifier = node.Identifier,
           DurationSeconds = node.DurationSeconds,
           WaitUntil = node.WaitUntil.ToString(),
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioTimeControlNodeDTO ConvertToDTO(ScenarioTimeControlNode node) =>
+        new ScenarioTimeControlNodeDTO
+        {
+          NodeType = "TimeControl",
+          Identifier = node.Identifier,
+          Action = node.Action.ToString(),
+          Direction = node.Direction.ToString(),
+          DurationSeconds = node.DurationSeconds,
+          StartSeconds = node.StartSeconds,
           NextIdentifier = node.NextIdentifier
         };
 

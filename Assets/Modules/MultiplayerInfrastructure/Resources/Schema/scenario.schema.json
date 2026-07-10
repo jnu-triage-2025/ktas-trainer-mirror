@@ -76,7 +76,8 @@
             "EntityPresetSpawn",
             "EntityTag",
             "EntityInit",
-            "TriageAssessControl"
+            "TriageAssessControl",
+            "TimeControl"
           ]
         }
       },
@@ -274,6 +275,21 @@
           },
           "then": {
             "$ref": "#/$defs/ScenarioDelayNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "TimeControl"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioTimeControlNode"
           }
         },
         {
@@ -1313,6 +1329,47 @@
           "required": [
             "durationSeconds"
           ]
+        }
+      ]
+    },
+    "ScenarioTimeControlNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "TimeControl"
+            },
+            "action": {
+              "type": "string",
+              "enum": [
+                "Start",
+                "Pause",
+                "Resume",
+                "Stop",
+                "Hide"
+              ],
+              "default": "Start"
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "Stopwatch",
+                "Countdown"
+              ],
+              "default": "Stopwatch"
+            },
+            "durationSeconds": {
+              "type": "number",
+              "minimum": 0
+            },
+            "startSeconds": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
         }
       ]
     },

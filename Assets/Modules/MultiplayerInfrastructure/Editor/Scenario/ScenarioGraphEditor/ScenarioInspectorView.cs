@@ -161,6 +161,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.PatientMedicalStatePreset:
           DrawPatientMedicalStatePresetFields((ScenarioPatientMedicalStatePresetNode)data);
           break;
+        case ScenarioNodeType.TimeControl:
+          DrawTimeControlFields((ScenarioTimeControlNode)data);
+          break;
       }
     }
 
@@ -604,6 +607,28 @@ namespace MultiplayerInfrastructure.Editor
     {
       data.DurationSeconds = EditorGUILayout.FloatField("Duration Seconds", data.DurationSeconds);
       data.WaitUntil = (ScenarioDelayWaitUntil)EditorGUILayout.EnumPopup("Wait Until", data.WaitUntil);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawTimeControlFields(ScenarioTimeControlNode data)
+    {
+      data.Action = (ScenarioTimeAction)EditorGUILayout.EnumPopup("Action", data.Action);
+
+      if (data.Action == ScenarioTimeAction.Start)
+      {
+        data.Direction = (ScenarioTimeDirection)EditorGUILayout.EnumPopup("Direction", data.Direction);
+
+        if (data.Direction == ScenarioTimeDirection.Countdown)
+        {
+          data.DurationSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Duration Seconds", data.DurationSeconds));
+          EditorGUILayout.HelpBox(
+            "카운트다운: 목표 시간에서 0으로 감소합니다. Start Seconds 가 0이면 Duration 을 시작값으로 사용합니다.",
+            MessageType.None);
+        }
+
+        data.StartSeconds = Mathf.Max(0f, EditorGUILayout.FloatField("Start Seconds", data.StartSeconds));
+      }
+
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
 

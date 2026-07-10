@@ -123,6 +123,25 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioSoundNode sound:
           CheckSound(sound, items);
           break;
+        case ScenarioTimeControlNode timeControl:
+          CheckTimeControl(timeControl, items);
+          break;
+      }
+    }
+
+    private static void CheckTimeControl(ScenarioTimeControlNode node, List<DiagnosticItem> items)
+    {
+      if (node.DurationSeconds < 0f)
+        items.Add(new DiagnosticItem(Severity.Error, node.Identifier, $"durationSeconds={node.DurationSeconds} 는 음수입니다."));
+      if (node.StartSeconds < 0f)
+        items.Add(new DiagnosticItem(Severity.Error, node.Identifier, $"startSeconds={node.StartSeconds} 는 음수입니다."));
+      if (node.Action == ScenarioTimeAction.Start
+          && node.Direction == ScenarioTimeDirection.Countdown
+          && node.DurationSeconds <= 0f
+          && node.StartSeconds <= 0f)
+      {
+        items.Add(new DiagnosticItem(Severity.Warning, node.Identifier,
+          "카운트다운 Start 인데 durationSeconds/startSeconds 가 모두 0입니다. 즉시 0으로 표시됩니다."));
       }
     }
 
