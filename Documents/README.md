@@ -31,6 +31,7 @@
 
 <br />
 
+- [시나리오 그래프 노드 전체 스펙](./guide/ScenarioGraph.md): 모든 ScenarioGraph 노드 타입의 필드/동작 레퍼런스
 - [시나리오의 프로그래밍 표현](./requirements/content-definitions/scenario/scenario-graph-spec.md)
 - [시나리오 작성 가이드](./requirements/content-definitions/scenario/scenario-authoring-guide.md)
 - [시나리오 이벤트 레지스트리](./requirements/content-definitions/scenario/event-registry.md)
