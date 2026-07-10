@@ -29,6 +29,22 @@
   justify-content: center;
   -unity-text-align: middle-center;
   color: var(--keyhint-background-dark);
+
+  /* 높이를 고정하고 overflow를 visible로 두어, 내부 힌트 아이콘(마우스 스크롤 아이콘 등)의
+     크기가 이후 커지더라도 이 영역의 레이아웃 높이는 변하지 않는다.
+     이렇게 해서 옆에 있는 "현재 선택된 Interactable 옵션" 영역의 세로 간격/높이가
+     힌트 아이콘 크기 변경과 독립적으로 유지된다. */
+  height: 20px;
+  overflow: visible;
+}
+
+.interactable-hint .interact-key-hint .interact-scroll-hint {
+  width: 20px;
+  height: 20px;
+  margin-right: 6px;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .interactable-hint .interact-key-hint .interact-key-text {

@@ -11,6 +11,7 @@
     <!--
     <ui:VisualElement class="interactable-hint">
       <ui:VisualElement class="interact-key-hint">
+        <ui:VisualElement class="interact-scroll-hint" />
         <ui:Label text="F" class="interact-key-text" />
       </ui:VisualElement>
       <ui:VisualElement class="interactable-content-wrapper">
@@ -22,6 +23,7 @@
     <!--
     <ui:VisualElement class="interactable-hint selected">
       <ui:VisualElement class="interact-key-hint">
+        <ui:VisualElement class="interact-scroll-hint" />
         <ui:Label text="F" class="interact-key-text" />
       </ui:VisualElement>
       <ui:VisualElement class="interactable-content-wrapper">
