@@ -1,170 +1,99 @@
-# Moving Patient Bed / Patient API Reference
+# Moving Patient Bed and Patient Entity Documentation
 
-## 0. 이 문서가 다루는 범위
+## Overview
+This document explains the interaction between the moving patient bed entity and the patient entity, focusing on the `IReposable` interface, the patient carry system, and the mechanics of placing a patient onto or lifting them from the bed.
 
-이 문서는 다음 구현의 현재 API와 동작 흐름을 정리한다.
+## Key Components
 
-1. `MultiplayerInfrastructure.Entity.IReposable`
-2. `MultiplayerInfrastructure.Player.PlayerController.ReposableCarry`(연계 사용)
-3. `TriageTrainer.Entity.MovingPatientBedController`
-4. `TriageTrainer.Entity.PatientController`(침대 연동 범위)
+### 1. IReposable Interface
+- **File**: `Assets/Modules/MultiplayerInfrastructure/Scripts/Entity/IReposable.cs`
+- **Purpose**: Defines a contract for objects that can be placed on or carried from a surface (e.g., a bed).
+- **Members**:
+  - `int Weight { get; }` – Returns the weight of the object. Used by the bed to calculate required personnel for movement.
 
-## 1. 파일/네임스페이스 맵
+### 2. Player Carry System (Reposable Carry)
+- **File**: `Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerController.ReposableCarry.cs`
+- **Purpose**: Manages the player’s ability to pick up, carry, and drop `IReposable` objects.
+- **Key Members**:
+  - `bool IsCarryingReposable { get; }` – True when the player is currently carrying an reposable.
+  - `IReposable CarriedReposable { get; }` – Reference to the carried object (null if none).
+  - `bool TryPickUpReposable(IReposable target, out string failReason)` – Attempts to pick up the target.
+  - `bool TryDropCarriedReposable(out string failReason)` – Attempts to drop the currently carried object.
 
-- `Assets/Modules/MultiplayerInfrastructure/Scripts/Entity/IReposable.cs`
-  - `namespace MultiplayerInfrastructure.Entity`
-- `Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerController.ReposableCarry.cs`
-  - `namespace MultiplayerInfrastructure.Player`
-- `Assets/Modules/TriageTrainer/Scripts/Entities/MovingPatientBed/MovingPatientBedController.cs`
-  - `namespace TriageTrainer.Entity`
-- `Assets/Modules/TriageTrainer/Scripts/Entities/MovingPatientBed/MovingPatientBedController.AttachmentDisplay.cs`
-  - `namespace TriageTrainer.Entity`
-- `Assets/Modules/TriageTrainer/Scripts/Entities/MovingPatientBed/MovingPatientBedPatientAttachPointObject.cs`
-  - `namespace TriageTrainer.Entity`
-- `Assets/Modules/TriageTrainer/Scripts/Patient/PatientController.cs`
-  - `namespace TriageTrainer.Entity`
-- `Assets/Modules/TriageTrainer/Scripts/Patient/PatientController.Interactions.cs`
-  - `namespace TriageTrainer.Entity`
+### 3. MovingPatientBedController
+- **File**: `Assets/Modules/TriageTrainer/Prefabs/Entity/MovingPatientBed/MovingPatientBedController.cs`
+- **Purpose**: Represents a movable bed that can have a patient placed on it or lifted from it.
+- **Implemented Interfaces**: `IInteractable`, `IInteract`
+- **Core Mechanics**:
+  - **Weight Calculation**: Total weight = bed’s own weight (`_weight`) + weight of the occupant (`ReposedTarget?.Weight ?? 0`).
+  - **Movement Modes**:
+    - **Toggle**: Simple on/off movement.
+    - **Hold**: Requires continuous input to move.
+  - **Attachment Visuals**: Maps entity identifiers to visual objects for attaching/detaching the patient model on/off the bed.
+  - **Message Cooldown**: Prevents chat spam by enforcing a 3‑second cooldown on repeated interaction messages.
+  - **Patient Transfer Methods**:
+    - `ReposePatientOnBed(IPatient patient)` – Lays a patient onto the bed.
+    - `LiftPatientFromBed()` – Lifts the patient off the bed and returns the patient reference.
 
-## 2. 핵심 메커니즘
+### 4. PatientController
+- **File**: `Assets/Modules/TriageTrainer/Prefabs/Entity/Patient/PatientController.cs`
+- **Purpose**: Represents a patient that can lie on a bed and be carried by a player.
+- **Implemented Interfaces**: `IInteractable`, `IInteract`, `IReposable`
+- **Key Features**:
+  - Default weight: `4`.
+  - When lying on a bed and interacted with, the patient signals the bed to lift them (`Bed.LiftPatientFromBed()`), handing control to the player via the carry system.
+  - Visual attachment: Uses the same identifier‑to‑visual mapping as the bed to show the patient model when on the bed.
+  - Message Cooldown: Shares the 3‑second cooldown mechanism to avoid repetitive chat notifications.
 
-### 2.1 `IReposable` 기반 눕힘/들기 계약
+## Interaction Flow
 
-침대는 구체 타입 대신 `IReposable` 인터페이스만 사용한다.
+1. **Patient onto Bed**
+   - Player interacts with a patient (while not carrying anything).
+   - Patient calls `Interact` → requests the nearby bed to take the patient.
+   - Bed verifies capacity, calls `ReposePatientOnBed(patient)`.
+   - Patient becomes the bed’s `ReposedTarget`; visual attachment is shown.
+   - Player is no longer carrying anything.
 
-- `Weight`로 협동 인원 계산
-- `OnMovingPatientBedAttachedEnter/Exit`로 침대 부착 상태 전환
-- 플레이어 운반 전환은 `PlayerController.TryPickUpReposable(...)`로 위임
+2. **Patient from Bed to Player**
+   - Player interacts with the bed that has a patient.
+   - Bed’s `Interact` → checks if player is free, then calls `LiftPatientFromBed()`.
+   - Bed returns the patient instance; player’s carry system picks it up (`TryPickUpReposable`).
+   - Bed’s `ReposedTarget` cleared; visual attachment removed.
 
-### 2.2 침대 인터랙션 구성
+3. **Patient from Player to Bed (reverse)**
+   - Player carrying a patient interacts with a bed.
+   - Bed’s `Interact` → attempts to accept the carried patient via `TryPickUpReposable`‑style logic (internally uses bed’s placement check).
+   - If successful, patient is transferred to bed’s `ReposedTarget` and visually attached.
 
-`MovingPatientBedController`는 `IInteractable`, `IInteract`, `IInteractorConditional`을 구현한다.
+## Configuration & Setup
 
-- 기본 인터랙션(`this`): 침대 이동 모드 참가/해제
-- 보조 인터랙션(`BedReposeInteract`): 운반 중인 환자를 침대에 내려놓기
-- `Interacts`는 위 두 액션을 모두 반환한다.
+### Required Prefabs / Assets
+- **Bed Prefab**: `Assets/Modules/TriageTrainer/Prefabs/Entity/MovingPatientBed/MovingPatientBed.prefab`
+  - Must contain `MovingPatientBedController` component.
+  - Must have a `UIDocument` for interaction prompts (if applicable).
+- **Patient Prefab**: `Assets/Modules/TriageTrainer/Prefabs/Entity/Patient/PatientPrefab.prefab`
+  - Must contain `PatientController` component.
+- **Player Prefab**: Ensure `PlayerController.ReposableCarry` component is present on the player hierarchy.
 
-### 2.3 협동 이동 계산 방식
+### Registry Registration
+- Both `MovingPatientBedController` and `PatientController` register themselves in the appropriate registries (`RegistryType.Entity`) during `Entity` during their `Awake` via `TTRegistryMonoBehaviourSupport` or equivalent.
+- Ensure the identifier constants (`Identifier`) in each script match the prefab names used in Resources or addressable assets.
 
-이동은 "대표 1인 추종"이 아니라 "참여자 입력 합산" 방식으로 동작한다.
+## Common Pitfalls
+- **Missing IReposable Implementation**: If either bed or patient lacks proper `IReposable` weight implementation, the carrying system will reject pickups.
+- **Missing Visual Mapping**: The identifier‑to‑visual mapping must exist in the bed/patient controller; otherwise the attached model will not appear/disappear correctly.
+- **Registry Duplicates**: Registering the same entity type twice leads to warnings; ensure each prefab registers only once (typically via the centralized `TTRegistryMonoBehaviourSupport`).
 
-- 각 참여자의 `CurrentMoveInputVector`를 합산
-- 전진/회전 비율을 `RequiredInteractorCount` 기준으로 정규화
-- `RequiredInteractorCount = max(침대 Weight, 눕혀진 대상 Weight)`
-- `_movementBlockingMask` Linecast에 걸리면 해당 프레임 이동 취소
+## Verification Steps
+1. Enter Play mode in a scene containing a bed and a patient prefab.
+2. Select the patient and press the interact key (default `F`). Verify the patient lies onto the bed and disappears from the player’s hands.
+3. Select the bed with the patient aboard and press interact. Verify the patient lifts onto the player’s hands and the bed becomes empty.
+4. Attempt to pick up the patient from the bed while already carrying another item – should fail with appropriate feedback.
+5. Check the console for any warnings regarding missing weights or missing visual mappings.
 
-### 2.4 토글/홀드 모드
+## Related Documentation
+- [IReposable Interface](../multiplayerinfrastructure/IReposable.md)
+- [Player Controller – Carry System](../multiplayerinfrastructure/player/playercontroller.md#reposable-carry)
+- [Scenario Event Registry](../multiplayerinfrastructure/scenario/scenarioeventidentifierregistry.md)
+- [Item Base Model SO](../triagetrainer/itembasemodelso.md)
 
-`BedInteractionMode`:
-
-- `Toggle`: 상호작용 시 참가/해제를 토글
-- `Hold`: 상호작용 키를 떼면 참가 해제(`CleanupReleasedHoldInteractors`)
-
-공통으로 `LeftShift` 입력 시 참여 해제가 가능하다.
-
-### 2.5 부착 포인트와 기본 자동 생성
-
-침대는 두 종류의 부착 포인트를 사용한다.
-
-- `PlayerAttachPoints` (`RidableAttachPointObject`)
-- `PatientAttachPoints` (`MovingPatientBedPatientAttachPointObject`)
-
-인스펙터에 포인트가 없으면 런타임에 기본 포인트를 자동 생성한다.
-
-- `PlayerAttachPoint` 기본 로컬 위치: `(0, 0, -0.8)`
-- `PatientAttachPoint` 기본 로컬 위치: `(0, 0.9, 0)`
-
-`MovingPatientBedPatientAttachPointObject`는 편집기 Gizmo 구체만 표시하는 마커 컴포넌트다.
-
-### 2.6 아이템 시각 오브젝트 활성화
-
-침대/환자 모두 `itemIdentifier -> visualObject` 매핑을 직렬화 리스트로 보관하고, 런타임 딕셔너리로 조회한다.
-
-- `OnAttacked(...)`: 공격자 플레이어의 `HandlingItem.CurrentIdentifier`를 확인
-- `OnItemUsed(..., itemIdentifier)`: 전달된 식별자를 즉시 사용
-- 매핑이 존재하면 대응 오브젝트를 `SetActive(true)`
-
-### 2.7 채팅 메시지 스로틀
-
-침대/환자 모두 동일 메시지 반복 노출을 제한한다.
-
-- 키: `interactorInstanceId + ":" + message`
-- 3초 내 동일 키는 무시
-
-## 3. 주요 API
-
-### 3.1 `MovingPatientBedController`
-
-- `Identifier`: 런타임 식별자(서버 할당값 우선, 없으면 타입 식별자)
-- `Weight`: 침대 무게(0 미만 방지)
-- `ReposedTarget`: 현재 침대에 눕혀진 `IReposable`
-- `RequiredInteractorCount`: 협동 이동 최소 필요 인원
-- `SetIdentifier(string identifier)`: 서버가 런타임 엔티티 식별자 할당 및 Registry 등록
-- `Interact(Transform interactor)`: 이동 참가/해제
-- `CanInteract(Transform interactor)`: 운반 중 플레이어 등의 상호작용 가능 여부
-- `TryReposeTarget(IReposable target, Transform interactor = null)`: 대상 눕히기
-- `TryLiftTarget(PlayerController player, out IReposable lifted)`: 침대에서 대상 들어올리기
-- `TryAttachCurrentHandlingItem(...)` / `TryAttachItem(string itemIdentifier)`: 시각 오브젝트 활성화
-
-### 3.2 수액걸이 표시 (Attachment Display)
-
-`MovingPatientBedController`는 partial 클래스로 분리되어 있다.
-
-| 파일 | 내용 |
-|---|---|
-| `MovingPatientBedController.cs` | 핵심 침대 기능 (이동, 탑승, 환자 부착) |
-| `MovingPatientBedController.AttachmentDisplay.cs` | 수액걸이 스탠드/걸이/수액 독립 표시 상태 |
-
-#### 독립 표시 플래그
-
-침대는 환자와 별도로 수액걸이 표시 상태를 관리한다.
-
-```csharp
-[Header("Attachment Display")]
-[SerializeField] private bool _intravenousStandAttached;
-[SerializeField] private GameObject _intravenousStandReference;
-[SerializeField] private bool _intravenousHangerAttached;
-[SerializeField] private GameObject _intravenousHangerReference;
-[SerializeField] private bool _intravenousFluidAttached;
-[SerializeField] private GameObject _intravenousFluidReference;
-```
-
-#### 표시 동기화
-
-- `SyncPatientAttachmentVisuals(Transform patientAnchor)`: `SnapReposedTargetToAnchor`에서 호출되어 수액 걸이 시각을 업데이트
-- `SyncPatientAttachmentVisual(GameObject, bool, Transform)`: 개별 시각 오브젝트를 활성화하고 환자 앵커 위치에 맞춤
-
-### 3.2 `PatientController`(침대 연동 범위)
-
-`PatientController` 자체는 `IInteract`를 직접 구현하지 않고, partial(`PatientController.Interactions.cs`)에서 `Interacts`를 구성한다.
-
-침대 연동에 직접 관련된 API:
-
-- `Weight`, `IsReposed`, `CurrentBed`, `CarryAttachPoint`
-- `SetCurrentBed(MovingPatientBedController bed)`
-- `OnMovingPatientBedAttachedEnter/Exit()`
-- `OnPlayerAttachedEnter/Exit()`
-- `TryAttachCurrentHandlingItem(...)` / `TryAttachItem(...)`
-
-환자 상호작용/의료 상태 전체 API는 별도 문서 참조:
-
-- `Documents/api-references/entities/patient-controller-reference.md`
-
-## 4. Unity 설정 체크 포인트
-
-- 침대의 `_reposeAnchor`, `PlayerAttachPoints`, `PatientAttachPoints`를 프리팹 기준으로 확인
-- `_attachableItemVisualPairs`에 식별자와 시각 오브젝트 매핑이 누락되지 않았는지 확인
-- 환자 `CarryAttachPoint`가 없으면 자동 생성되지만, 의도된 파지 위치가 있으면 명시 지정
-- 협동 이동 인원 정책이 의도와 맞는지 `Weight` / 환자 `Weight`로 검증
-
-## 5. 제한 사항
-
-- 침대 이동은 로컬 입력 합산 기반이며, 고급 물리/네트워크 보정은 별도 계층에서 처리 필요
-- 눕힘/들기 실패 시 피드백은 채팅 메시지 중심이며, 별도 UI 상태 배지 연동은 제공하지 않음
-- 아이템 부착은 "오브젝트 활성화" 방식이며 런타임 생성/조립 파이프라인은 포함하지 않음
-
-## 6. 관련 문서
-
-- `Documents/requirements/interaction/triage-moving-patient-bed-requirements.md`
-- `Documents/api-references/MultiplayerInfrastructure.Player.PlayerController.md`
-- `Documents/api-references/entities/patient-controller-reference.md`
