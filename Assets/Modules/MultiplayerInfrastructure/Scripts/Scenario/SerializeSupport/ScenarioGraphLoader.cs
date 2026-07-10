@@ -262,6 +262,8 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioPatientMedicalStatePresetNodeDTO patientPreset => ConvertPatientMedicalStatePreset(patientPreset),
           ScenarioItemSubmissionConfigNodeDTO itemSubmission => ConvertItemSubmissionConfig(itemSubmission),
           ScenarioNpcInteractControlNodeDTO npcInteractControl => ConvertNpcInteractControl(npcInteractControl),
+          ScenarioChatPrintNodeDTO chatPrint => ConvertChatPrint(chatPrint),
+          ScenarioExecuteCommandNodeDTO executeCommand => ConvertExecuteCommand(executeCommand),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -395,6 +397,24 @@ namespace MultiplayerInfrastructure.Scenario
           SignalIdentifier = dto.SignalIdentifier,
           Operation = ParseServerInternalSignalOperation(dto.Operation),
           WaitForResolution = dto.WaitForResolution ?? true,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioChatPrintNode ConvertChatPrint(ScenarioChatPrintNodeDTO dto) =>
+        new ScenarioChatPrintNode
+        {
+          Identifier = dto.Identifier,
+          Message = dto.Message,
+          Targets = ParseChatPrintTarget(dto.Targets),
+          Broadcast = dto.Broadcast ?? false,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioExecuteCommandNode ConvertExecuteCommand(ScenarioExecuteCommandNodeDTO dto) =>
+        new ScenarioExecuteCommandNode
+        {
+          Identifier = dto.Identifier,
+          CommandLine = dto.CommandLine,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -1047,6 +1067,8 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioPatientMedicalStatePresetNode patientPreset => ConvertToDTO(patientPreset),
           ScenarioItemSubmissionConfigNode itemSubmission => ConvertToDTO(itemSubmission),
           ScenarioNpcInteractControlNode npcInteractControl => ConvertToDTO(npcInteractControl),
+          ScenarioChatPrintNode chatPrint => ConvertToDTO(chatPrint),
+          ScenarioExecuteCommandNode executeCommand => ConvertToDTO(executeCommand),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 
@@ -1192,6 +1214,28 @@ namespace MultiplayerInfrastructure.Scenario
           SignalIdentifier = node.SignalIdentifier,
           Operation = node.Operation.ToString(),
           WaitForResolution = node.WaitForResolution,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioChatPrintNodeDTO ConvertToDTO(ScenarioChatPrintNode node) =>
+        new ScenarioChatPrintNodeDTO
+        {
+          NodeType = "ChatPrint",
+          Identifier = node.Identifier,
+          Message = node.Message,
+          Targets = node.Targets != ScenarioChatPrintTarget.InGameChat
+              ? node.Targets.ToString()
+              : null,
+          Broadcast = node.Broadcast ? true : (bool?)null,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioExecuteCommandNodeDTO ConvertToDTO(ScenarioExecuteCommandNode node) =>
+        new ScenarioExecuteCommandNodeDTO
+        {
+          NodeType = "ExecuteCommand",
+          Identifier = node.Identifier,
+          CommandLine = node.CommandLine,
           NextIdentifier = node.NextIdentifier
         };
 
@@ -1397,6 +1441,21 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       throw new JsonException($"Unknown ScenarioValidatorFailureReportTarget '{value}'.");
+    }
+
+    private static ScenarioChatPrintTarget ParseChatPrintTarget(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioChatPrintTarget.InGameChat;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioChatPrintTarget parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioChatPrintTarget '{value}'.");
     }
 
     private static IReadOnlyList<ScenarioValidatorRootCondition> ParseValidatorRootConditions(List<ScenarioValidatorNodeDTO.ScenarioValidatorRootConditionDTO> rootConditions)

@@ -28,5 +28,7 @@ namespace MultiplayerInfrastructure.Scenario
     PatientMedicalStatePreset,
     ItemSubmissionConfig,
     NpcInteractControl,
+    ChatPrint,
+    ExecuteCommand,
   }
 }

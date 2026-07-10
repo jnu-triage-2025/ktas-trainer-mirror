@@ -76,7 +76,9 @@
             "EntityPresetSpawn",
             "EntityTag",
             "EntityInit",
-            "TriageAssessControl"
+            "TriageAssessControl",
+            "ChatPrint",
+            "ExecuteCommand"
           ]
         }
       },

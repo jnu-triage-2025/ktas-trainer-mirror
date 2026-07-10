@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.UI;
 using MultiplayerInfrastructure.Camera;
@@ -57,6 +58,7 @@ namespace MultiplayerInfrastructure.Scenario
     private readonly Dictionary<string, string> _stateStore = new Dictionary<string, string>();
     private int? _scenarioOwnerClientId;
     private ChatUIController _chatUIController;
+    private ChatService _chatService;
     private Coroutine _dialogueAutoAdvanceRoutine;
 
     private sealed class GraphVisitHistory
@@ -564,6 +566,12 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioNpcInteractControlNode npcInteractControl:
           ExecuteNpcInteractControlNode(npcInteractControl);
+          break;
+        case ScenarioChatPrintNode chatPrint:
+          ExecuteChatPrintNode(chatPrint);
+          break;
+        case ScenarioExecuteCommandNode executeCommand:
+          ExecuteExecuteCommandNode(executeCommand);
           break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type: {node.GetType().Name}");
@@ -2960,6 +2968,12 @@ namespace MultiplayerInfrastructure.Scenario
           case ScenarioNpcInteractControlNode npcInteractControl:
             ExecuteNpcInteractControlNode(npcInteractControl);
             break;
+          case ScenarioChatPrintNode chatPrint:
+            ExecuteChatPrintNode(chatPrint);
+            break;
+          case ScenarioExecuteCommandNode executeCommand:
+            ExecuteExecuteCommandNode(executeCommand);
+            break;
           case ScenarioParallelNode nestedParallel:
             // 중첩 병렬: 내부 브랜치 완료까지 대기(말미의 전역 Advance 는 억제됨).
             yield return ExecuteParallelNode(nestedParallel);
@@ -3754,6 +3768,99 @@ namespace MultiplayerInfrastructure.Scenario
           failureReason = $"unsupported validator condition '{rootCondition.Condition}'.";
           return false;
       }
+    }
+
+    /// <summary>
+    /// 채팅/콘솔에 텍스트를 출력하는 노드를 실행한다.
+    /// 시그널/이벤트 발생을 눈으로 확인하는 디버깅·데모 용도. 대기 없이 즉시 진행한다.
+    /// </summary>
+    private void ExecuteChatPrintNode(ScenarioChatPrintNode node)
+    {
+      _state = State.ExecutingInvokeEvent;
+
+      if (node == null)
+      {
+        Advance();
+        return;
+      }
+
+      var message = node.Message ?? string.Empty;
+
+      if ((node.Targets & ScenarioChatPrintTarget.UnityConsole) != 0)
+      {
+        Debug.Log($"[ScenarioController][ChatPrint] {message}");
+      }
+
+      if ((node.Targets & ScenarioChatPrintTarget.InGameChat) != 0)
+      {
+        if (node.Broadcast)
+        {
+          // 서버(또는 오프라인)만 전체 클라이언트로 브로드캐스트한다. 각 클라이언트도
+          // 자기 그래프를 로컬 실행하므로, 브로드캐스트 중복을 막기 위해 서버 컨텍스트로 한정한다.
+          if (InstanceFinder.IsServerStarted || InstanceFinder.IsOffline)
+          {
+            var chatService = ResolveChatService();
+            if (chatService != null)
+            {
+              chatService.BroadcastSystemMessage(message);
+            }
+            else
+            {
+              // 채팅 서비스가 없으면 로컬 폴백.
+              AppendSystemChatMessage(message);
+            }
+          }
+        }
+        else
+        {
+          // 로컬 전용: 각 피어가 자기 채팅창에만 출력한다.
+          AppendSystemChatMessage(message);
+        }
+      }
+
+      Advance();
+    }
+
+    /// <summary>
+    /// 인게임 채팅 명령어를 서버 권한으로 실행하는 노드를 실행한다.
+    /// 서버(또는 오프라인) 컨텍스트에서만 실제 실행하고, 클라이언트는 진행만 한다
+    /// (명령은 서버 권한 자원을 변경하므로 중복 실행을 방지). 대기 없이 즉시 진행한다.
+    /// </summary>
+    private void ExecuteExecuteCommandNode(ScenarioExecuteCommandNode node)
+    {
+      _state = State.ExecutingInvokeEvent;
+
+      if (node == null || string.IsNullOrWhiteSpace(node.CommandLine))
+      {
+        Advance();
+        return;
+      }
+
+      if (InstanceFinder.IsServerStarted || InstanceFinder.IsOffline)
+      {
+        var chatService = ResolveChatService();
+        if (chatService == null)
+        {
+          Debug.LogWarning($"[ScenarioController] ExecuteCommand node '{node.Identifier}' could not resolve ChatService; command skipped.");
+        }
+        else if (!chatService.TryExecuteSystemCommand(node.CommandLine.Trim(), out var result))
+        {
+          Debug.LogWarning($"[ScenarioController] ExecuteCommand node '{node.Identifier}' failed: {result}");
+        }
+      }
+
+      Advance();
+    }
+
+    private ChatService ResolveChatService()
+    {
+      if (_chatService != null)
+      {
+        return _chatService;
+      }
+
+      Registry.Registry.TryGet<ChatService>(RegistryType.Service, Registry.Registry.TypeKey<ChatService>(), out _chatService);
+      return _chatService;
     }
 
     private void ReportValidatorFailure(ScenarioValidatorNode node, string reason)
