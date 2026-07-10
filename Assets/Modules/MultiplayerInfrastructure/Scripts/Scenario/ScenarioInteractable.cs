@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using MultiplayerInfrastructure.Commons;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Registry;
 using FishNet.Object;
@@ -40,7 +41,14 @@ namespace MultiplayerInfrastructure.Scenario
     public IInteract[] Interacts => new IInteract[] { this };
 
     public string DisplayText => _displayText;
-    public Sprite DisplayIcon => _displayIcon;
+
+    // 시나리오 실행을 fire하는 interactable의 기본 아이콘은 message-circle 입니다.
+    // 인스펙터에서 _displayIcon 을 지정하면 그 값으로 덮어써집니다.
+    public Sprite DisplayIcon =>
+      _displayIcon != null
+        ? _displayIcon
+        : Registry.Registry.Get<Sprite>(RegistryType.IconSprite, IconSpriteIdentifiers.ScenarioDefault);
+
     public bool AllowDisplayIconFallback => true;
     public Color DisplayColor => _displayColor;
     public string Identifier => _identifier;

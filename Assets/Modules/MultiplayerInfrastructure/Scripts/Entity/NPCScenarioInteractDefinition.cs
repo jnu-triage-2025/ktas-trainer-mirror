@@ -14,7 +14,10 @@ namespace MultiplayerInfrastructure.Entity
     [SerializeField] private string _scenarioStartNodeIdentifier;
 
     public string DisplayText => _displayText;
-    public Sprite DisplayIcon => _displayIcon?.Resolve();
+
+    // 시나리오 실행을 fire하는 interactable의 기본 아이콘은 message-circle 입니다.
+    // NPC 정의에서 아이콘을 명시적으로 지정하면 그 값으로 덮어써집니다.
+    public Sprite DisplayIcon => _displayIcon?.Resolve(IconSpriteIdentifiers.ScenarioDefault);
     public bool AllowDisplayIconFallback => !(_displayIcon?.IsExplicitNone ?? false);
     public Color DisplayColor => _displayColor;
     public string ScenarioIdentifier => _scenarioIdentifier;
