@@ -19,3 +19,7 @@
 (Project Path)/Assets/Modules/MultiplayerInfrastructure/Resources/Textures
 ❯ sh lucide-convert.sh
 ```
+
+## Copyright
+
+- mouse-scroll: Created by kiddo from Noun Project. Licensed under CC BY-3.0. https://thenounproject.com/icon/mouse-scroll-496854/
