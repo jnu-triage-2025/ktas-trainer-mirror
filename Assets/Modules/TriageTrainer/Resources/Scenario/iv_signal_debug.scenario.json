@@ -2,16 +2,33 @@
   "identifier": "iv_signal_debug",
   "tags": [],
   "nodes": {
-    "intro_print": {
-      "identifier": "intro_print",
+    "flow1_intro_print": {
+      "identifier": "flow1_intro_print",
       "nodeType": "ChatPrint",
-      "message": "[IV 시그널 디버그] 수액 연결 신호를 감시합니다. 연결 지점 identifier 는 'cannula_a' 로 가정합니다.",
+      "message": "[IV 시그널 디버그/흐름1] 수액 연결 신호 감시를 등록합니다. 연결 지점 identifier 는 'point00' 로 가정합니다.",
       "targets": "UnityConsole, InGameChat",
       "broadcast": true,
-      "nextIdentifier": "wait_connect_start"
+      "nextIdentifier": "flow1_register_watch"
     },
-    "wait_connect_start": {
-      "identifier": "wait_connect_start",
+    "flow1_register_watch": {
+      "identifier": "flow1_register_watch",
+      "nodeType": "ServerInternalSignal",
+      "targetIdentifier": "@m",
+      "signalIdentifier": "sig.iv_signal_debug_watch_registered",
+      "operation": "Resolve",
+      "waitForResolution": false,
+      "nextIdentifier": "flow1_registered_print"
+    },
+    "flow1_registered_print": {
+      "identifier": "flow1_registered_print",
+      "nodeType": "ChatPrint",
+      "message": "[IV 시그널 디버그/흐름1] 신호 감시 등록 완료. 흐름1은 여기서 마칩니다. 이제 연결 이벤트를 대기하는 흐름2가 이어서 재생됩니다.",
+      "targets": "UnityConsole, InGameChat",
+      "broadcast": true,
+      "nextIdentifier": "flow2_wait_connect_start"
+    },
+    "flow2_wait_connect_start": {
+      "identifier": "flow2_wait_connect_start",
       "nodeType": "Validator",
       "rootConditions": [
         {
@@ -21,26 +38,26 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.iv_connect_start_cannula_a"
+              "registryIdentifier": "sig.iv_connect_start_point00"
             }
           ]
         }
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "print_connect_start",
+      "nextIdentifier": "flow2_print_connect_start",
       "waitForCondition": true
     },
-    "print_connect_start": {
-      "identifier": "print_connect_start",
+    "flow2_print_connect_start": {
+      "identifier": "flow2_print_connect_start",
       "nodeType": "ChatPrint",
-      "message": "[IV 시그널] 연결 작업 시작(한 점 연결) 감지: cannula_a",
+      "message": "[IV 시그널 디버그/흐름2] 연결 작업 시작(한 점 연결) 감지: point00",
       "targets": "UnityConsole, InGameChat",
       "broadcast": true,
-      "nextIdentifier": "wait_connected"
+      "nextIdentifier": "flow2_wait_connected"
     },
-    "wait_connected": {
-      "identifier": "wait_connected",
+    "flow2_wait_connected": {
+      "identifier": "flow2_wait_connected",
       "nodeType": "Validator",
       "rootConditions": [
         {
@@ -50,32 +67,32 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.iv_connected_cannula_a"
+              "registryIdentifier": "sig.iv_connected_point00"
             }
           ]
         }
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "print_connected",
+      "nextIdentifier": "flow2_print_connected",
       "waitForCondition": true
     },
-    "print_connected": {
-      "identifier": "print_connected",
+    "flow2_print_connected": {
+      "identifier": "flow2_print_connected",
       "nodeType": "ChatPrint",
-      "message": "[IV 시그널] 연결 완료 감지: cannula_a",
+      "message": "[IV 시그널 디버그/흐름2] 연결 완료 감지: point00",
       "targets": "UnityConsole, InGameChat",
       "broadcast": true,
-      "nextIdentifier": "command_on_connected"
+      "nextIdentifier": "flow2_command_on_connected"
     },
-    "command_on_connected": {
-      "identifier": "command_on_connected",
+    "flow2_command_on_connected": {
+      "identifier": "flow2_command_on_connected",
       "nodeType": "ExecuteCommand",
       "commandLine": "title @a title 수액 연결 완료",
-      "nextIdentifier": "wait_disconnected"
+      "nextIdentifier": "flow2_wait_disconnected"
     },
-    "wait_disconnected": {
-      "identifier": "wait_disconnected",
+    "flow2_wait_disconnected": {
+      "identifier": "flow2_wait_disconnected",
       "nodeType": "Validator",
       "rootConditions": [
         {
@@ -85,20 +102,20 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.iv_disconnected_cannula_a"
+              "registryIdentifier": "sig.iv_disconnected_point00"
             }
           ]
         }
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "print_disconnected",
+      "nextIdentifier": "flow2_print_disconnected",
       "waitForCondition": true
     },
-    "print_disconnected": {
-      "identifier": "print_disconnected",
+    "flow2_print_disconnected": {
+      "identifier": "flow2_print_disconnected",
       "nodeType": "ChatPrint",
-      "message": "[IV 시그널] 연결 끊김 감지: cannula_a",
+      "message": "[IV 시그널 디버그/흐름2] 연결 끊김 감지: point00",
       "targets": "UnityConsole, InGameChat",
       "broadcast": true,
       "nextIdentifier": null

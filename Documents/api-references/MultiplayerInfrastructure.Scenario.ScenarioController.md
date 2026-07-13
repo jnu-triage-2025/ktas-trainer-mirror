@@ -71,7 +71,13 @@ public bool IsActive { get; }               // 시나리오 진행 중 여부 (S
 public State CurrentState { get; }          // 현재 상태
 public IScenarioNode CurrentNode { get; }   // 현재 노드
 public ScenarioGraph CurrentGraph { get; }  // 현재 그래프
+
+// 두 개 이상의 흐름이 동시에 대화창(Dialogue/Choice/Quiz)을 점유하려 할 때의 처리 정책.
+// 기본값 Warn(경고 후 진행). 인게임 커맨드 `/scenario conflictpolicy <warn|cancel|panic>` 로도 변경 가능.
+public ScenarioConcurrencyConflictPolicy ConcurrencyConflictPolicy { get; set; }
 ```
+
+`ScenarioConcurrencyConflictPolicy` 값: `Warn`(경고 후 그대로 진행, 기본), `Cancel`(뒤에 점유하려 한 흐름 취소), `Panic`(전체 시나리오 `EndScenario` 중단). 충돌 감지는 대화창 점유 노드가 실제 표시되는 시점에 이루어집니다.
 
 ---
 

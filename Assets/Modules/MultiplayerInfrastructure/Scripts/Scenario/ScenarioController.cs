@@ -46,6 +46,18 @@ namespace MultiplayerInfrastructure.Scenario
     [SerializeField]
     private ScenarioPreflightPolicy _preflightPolicy = ScenarioPreflightPolicy.Default;
 
+    [Header("Concurrency (동시 실행 충돌)")]
+    [Tooltip("두 개 이상의 시나리오 흐름이 동시에 대화창 UI(Dialogue/Choice/Quiz)를 점유하려 할 때의 처리 정책.")]
+    [SerializeField]
+    private ScenarioConcurrencyConflictPolicy _concurrencyConflictPolicy = ScenarioConcurrencyConflictPolicy.Warn;
+
+    /// <summary>동시 대화창 점유 충돌 처리 정책. 인게임 커맨드로 런타임 변경 가능.</summary>
+    public ScenarioConcurrencyConflictPolicy ConcurrencyConflictPolicy
+    {
+      get => _concurrencyConflictPolicy;
+      set => _concurrencyConflictPolicy = value;
+    }
+
     #endregion
 
     #region Private Fields
@@ -184,6 +196,8 @@ namespace MultiplayerInfrastructure.Scenario
       // 컴포넌트를 처음 붙일 때 Preflight 정책을 안전한 기본값(콘솔/인게임챗 둘 다 경고 + 계속 진행)으로 초기화한다.
       _preflightEnabled = true;
       _preflightPolicy = ScenarioPreflightPolicy.Default;
+      // 동시 실행 충돌 정책 기본값: 경고 후 계속 진행(기존 동작 유지).
+      _concurrencyConflictPolicy = ScenarioConcurrencyConflictPolicy.Warn;
     }
 
     public void RegisterReferences(
@@ -295,6 +309,13 @@ namespace MultiplayerInfrastructure.Scenario
       ResolveUIControllers();
       ResolveTTSService();
 
+      // 새 시나리오 시작은 이전 실행을 강제 정리한 직후이므로, 대화창 점유 상태를 초기화한다.
+      // (이전 실행이 EndScenario 를 거치지 않고 덮어써진 경우, 스테일 점유자가 새 시나리오
+      //  자신의 대화 노드를 오탐(충돌)하게 만드는 것을 방지한다.)
+      _branchPromptActive = false;
+      if (!_uiController.IsUnityNull())
+        _uiController.ClearDialogueOwner();
+
       // 시작 노드 찾기
       string startId = startNodeIdentifier;
       if (string.IsNullOrEmpty(startId))
@@ -375,6 +396,14 @@ namespace MultiplayerInfrastructure.Scenario
       {
         _uiController.EndScenario();
       }
+
+      // 시나리오가 진행되는 동안 힌트 UI 가 Dialogue 모드로 캐시만 갱신하고 화면에 반영하지
+      // 않았거나, Dialogue 모드로 전환된 적이 없어 복원 대상 캐시가 실제 근처 상황과 어긋날 수
+      // 있다. 종료 직후 로컬 플레이어에게 근처 Interactable 을 다시 인식(재갱신)시켜, 시나리오가
+      // 끝났을 때 월드 상호작용 힌트가 확실히 현재 상태로 복구되도록 한다.
+      var localPlayer = Registry.Registry.GetFirstEntityComponent<PlayerController>(
+        EntityType.Player, each => each != null && each.IsOwner);
+      localPlayer?.RefreshInteractableHintsNow();
 
       OnScenarioEnded?.Invoke();
     }
@@ -645,12 +674,85 @@ namespace MultiplayerInfrastructure.Scenario
       orders.Insert(0, history.Sequence);
     }
 
+    /// <summary>
+    /// 대화창 계열 UI(Dialogue/Choice/Quiz) 점유를 시도한다. 이미 다른 흐름이 점유 중이거나,
+    /// 같은 그래프 안에서 이미 프롬프트가 표시 중(브랜치 동시 프롬프트)이면 충돌로 보고
+    /// <see cref="_concurrencyConflictPolicy"/> 를 적용한다.
+    /// 반환값 true = 점유 성공(계속 진행), false = 이 흐름/노드는 취소되어야 함.
+    /// </summary>
+    private bool TryClaimDialogueUI()
+    {
+      if (_uiController.IsUnityNull())
+        return true; // 대화창 UI 가 없으면 동시 점유 개념 자체가 없다.
+
+      // 브랜치 내부 프롬프트는 RunBranchPrompt 가 _branchPromptActive 로 같은 그래프 내
+      // 동시 프롬프트를 이미 직렬화하므로, 그 경우 _branchPromptActive 를 충돌로 보지 않는다.
+      // 전역(비브랜치) 경로에서는 _branchPromptActive 가 곧 "다른 브랜치 흐름이 점유 중"을 뜻한다.
+      return TryClaimDialogueUI(considerBranchPrompt: true);
+    }
+
+    /// <summary>
+    /// <see cref="TryClaimDialogueUI()"/> 의 코어. <paramref name="considerBranchPrompt"/> 가 true 면
+    /// 같은 그래프 안에서 이미 프롬프트가 표시 중인 것도 충돌로 취급한다(전역 경로용).
+    /// 브랜치 경로는 자체 직렬화가 있으므로 false 로 호출해 교차 그래프 점유만 검사한다.
+    /// </summary>
+    private bool TryClaimDialogueUI(bool considerBranchPrompt)
+    {
+      if (_uiController.IsUnityNull())
+        return true;
+
+      string owner = _currentGraph != null ? _currentGraph.Identifier : "(unknown)";
+
+      // 충돌 조건: (1) 다른 그래프/흐름이 이미 점유 중이거나,
+      //           (2) (전역 경로 한정) 같은 그래프 안에서 이미 프롬프트가 표시 중.
+      bool conflict = _uiController.IsDialogueOwnedByOther(owner)
+                   || (considerBranchPrompt && _branchPromptActive);
+      if (!conflict)
+      {
+        _uiController.MarkDialogueOwner(owner);
+        return true;
+      }
+
+      string existingOwner = _uiController.CurrentDialogueOwner ?? owner;
+      string msg = $"[ScenarioController] 대화창 UI 동시 점유 충돌: '{owner}' 가 "
+                 + $"'{existingOwner}' 점유 중 대화창을 요청함.";
+
+      switch (_concurrencyConflictPolicy)
+      {
+        case ScenarioConcurrencyConflictPolicy.Warn:
+          // 경고 후 undefined behavior(기존처럼 덮어쓰며 그대로 진행).
+          Debug.LogWarning(msg + " (WARN: 경고 후 계속 진행)");
+          AppendSystemChatMessage(msg + " (WARN)");
+          _uiController.MarkDialogueOwner(owner);
+          return true;
+
+        case ScenarioConcurrencyConflictPolicy.Cancel:
+          // 뒤에 요청한 흐름만 취소. 먼저 점유한 흐름은 보존.
+          Debug.LogWarning(msg + " (CANCEL: 뒤에 요청한 흐름 취소)");
+          AppendSystemChatMessage(msg + " (CANCEL)");
+          return false;
+
+        case ScenarioConcurrencyConflictPolicy.Panic:
+          // 진행 중인 모든 시나리오를 안전 종료.
+          Debug.LogError(msg + " (PANIC: 전체 시나리오 중단)");
+          AppendSystemChatMessage(msg + " (PANIC)");
+          EndScenario();
+          return false;
+      }
+
+      return true;
+    }
+
     private void ExecuteDialogueNode(ScenarioDialogueNode node)
     {
       _state = State.ExecutingDialogue;
 
       // 이전 노드의 잔여 타이머가 있다면 정리.
       CancelDialogueAutoAdvance();
+
+      // 대화창 점유 충돌 검사(정책 적용). Cancel/Panic 이면 여기서 중단.
+      if (!_uiController.IsUnityNull() && !TryClaimDialogueUI())
+        return;
 
       if (!_uiController.IsUnityNull())
       {
@@ -698,6 +800,10 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void ExecuteChoiceNode(ScenarioChoiceNode node)
     {
+      // 대화창 점유 충돌 검사(정책 적용). Cancel/Panic 이면 여기서 중단.
+      if (!_uiController.IsUnityNull() && !TryClaimDialogueUI())
+        return;
+
       _state = State.ExecutingChoice;
       PresentChoice(node);
     }
@@ -912,6 +1018,10 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void ExecuteQuizNode(ScenarioQuizNode node)
     {
+      // 대화창 점유 충돌 검사(정책 적용). Cancel/Panic 이면 여기서 중단.
+      if (!_uiController.IsUnityNull() && !TryClaimDialogueUI())
+        return;
+
       _state = State.ExecutingQuiz;
       _activeQuizNode = node;
 
@@ -2898,6 +3008,13 @@ namespace MultiplayerInfrastructure.Scenario
             break;
           case ScenarioDialogueNode dialogue:
             // 브랜치 내 다이얼로그: interactionRequired면 자동 닫힘 없이 입력으로만 닫힌다.
+            // 다른 그래프/흐름이 대화창을 점유 중이면 정책을 적용한다(교차 그래프 충돌만 검사).
+            if (!_uiController.IsUnityNull() && !TryClaimDialogueUI(considerBranchPrompt: false))
+            {
+              // Cancel: 이 다이얼로그를 표시하지 않고 브랜치 체인을 종료.
+              // Panic: EndScenario 로 _currentGraph 가 정리됨.
+              yield break;
+            }
             if (!_uiController.IsUnityNull())
             {
               _uiController.DisplayDialogue(
@@ -3028,6 +3145,16 @@ namespace MultiplayerInfrastructure.Scenario
 
       if (_currentGraph == null)
       {
+        yield break;
+      }
+
+      // 다른 그래프/흐름이 이미 대화창을 점유 중이면 정책을 적용한다.
+      // (같은 그래프 내 동시 프롬프트는 위 _branchPromptActive 직렬화로 이미 처리되므로
+      //  considerBranchPrompt: false 로 교차 그래프 점유만 검사한다.)
+      if (!TryClaimDialogueUI(considerBranchPrompt: false))
+      {
+        // Cancel: 이 브랜치 프롬프트를 표시하지 않고 미해결 상태로 종료.
+        // Panic: TryClaimDialogueUI 내부 EndScenario 로 _currentGraph 가 이미 정리됨.
         yield break;
       }
 

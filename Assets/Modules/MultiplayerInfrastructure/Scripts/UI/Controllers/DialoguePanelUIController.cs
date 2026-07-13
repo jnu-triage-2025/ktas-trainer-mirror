@@ -41,6 +41,10 @@ namespace MultiplayerInfrastructure.UI
     [SerializeField] private ScenarioController _currentController;
     [SerializeField] private IScenarioNode _currentNode;
 
+    // 대화창 계열 UI(Dialogue/Choice/Quiz)를 현재 점유 중인 시나리오 흐름(그래프) 식별자.
+    // 두 개 이상의 흐름이 동시에 대화창을 점유하려는 충돌을 감지하는 데 사용한다.
+    private string _owningGraphIdentifier;
+
     [SerializeField] private bool _isTyping;
     [SerializeField] private bool _isWaitingForInput;
     [SerializeField] private string _fullText;
@@ -106,6 +110,37 @@ namespace MultiplayerInfrastructure.UI
     /// 입력 대기 중인지 여부
     /// </summary>
     public bool IsWaitingForInput => _isWaitingForInput;
+
+    /// <summary>현재 대화창 계열 UI를 점유 중인 그래프 식별자(없으면 null).</summary>
+    public string CurrentDialogueOwner => _owningGraphIdentifier;
+
+    #endregion
+
+    #region Dialogue Ownership (동시 점유 충돌 감지)
+
+    /// <summary>
+    /// <paramref name="owningGraphIdentifier"/> 이외의 다른 흐름이 대화창을 점유 중이면 true.
+    /// 점유자가 없거나 동일 식별자이면 false.
+    /// </summary>
+    public bool IsDialogueOwnedByOther(string owningGraphIdentifier)
+    {
+      if (string.IsNullOrEmpty(_owningGraphIdentifier))
+        return false;
+
+      return !string.Equals(_owningGraphIdentifier, owningGraphIdentifier, StringComparison.Ordinal);
+    }
+
+    /// <summary>대화창 점유자를 등록/갱신한다.</summary>
+    public void MarkDialogueOwner(string owningGraphIdentifier)
+    {
+      _owningGraphIdentifier = owningGraphIdentifier;
+    }
+
+    /// <summary>대화창 점유자를 해제한다(시나리오 종료 시).</summary>
+    public void ClearDialogueOwner()
+    {
+      _owningGraphIdentifier = null;
+    }
 
     #endregion
 
@@ -200,12 +235,13 @@ namespace MultiplayerInfrastructure.UI
 
       _currentController = controller;
 
-      // InteractableHintUI를 시나리오 모드로 전환
-      if (!_interactableHintUI.IsUnityNull())
-      {
-        if (!_interactableHintUI.IsDialogueMode)
-          _interactableHintUI.EnterDialogueMode();
-      }
+      // InteractableHintUI 를 시나리오 시작 시점에 무조건 Dialogue 모드로 전환하지 않는다.
+      // 예전에는 여기서 EnterDialogueMode() 를 호출해 힌트 목록을 비웠는데, 이는 대화창 UI 를
+      // 실제로 표시하지 않는(신호 대기 등 배경 감시용) 시나리오에서도 월드 상호작용 힌트를
+      // 지워버려, 시나리오가 끝나기 전까지 Interactable 이 모두 사라져 보이는 버그의 원인이었다.
+      // Dialogue/Choice/Quiz 처럼 실제로 대화창을 점유하는 노드가 표시될 때
+      // DisplayDialogue/DisplayChoice 내부의 EnsureDialogueModeActive() 가 그 시점에
+      // 지연 전환하므로, 시작 시점에 미리 전환할 필요가 없다.
 
       // 시나리오 시작 시점에는 패널을 열지 않는다. 실제 대화/선택/퀴즈 노드가 표시될 때
       // DisplayDialogue/DisplayChoice 내부의 EnsureOverlayActive() 가 패널 표시 + 오버레이 push 를
@@ -236,6 +272,9 @@ namespace MultiplayerInfrastructure.UI
       _isWaitingForInput = false;
       _inputContext = DialogueInputContext.None;
       _pendingChoiceOptions = null;
+
+      // 대화창 점유자 해제. 누락하면 다음 시나리오가 계속 충돌로 오판된다.
+      _owningGraphIdentifier = null;
 
       // 선택지 정리
       ClearSelections();
