@@ -21,6 +21,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("scenario list", "List available scenarios."),
       new UsageLine("scenario execute <target> <scenario>", "Start a scenario for targets."),
       new UsageLine("scenario signal <signal> [clear]", "Raise (or clear) a signal."),
+      new UsageLine("scenario conflictpolicy [warn|cancel|panic]", "Get/set concurrent-dialogue conflict policy."),
       new UsageLine("  <target>", "@s, @a, @n, or fish:<id>."),
       new UsageLine("  <scenario>", "Registered scenario identifier."),
     };
@@ -74,9 +75,42 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
+      // /scenario conflictpolicy [warn|cancel|panic]
+      // 두 개 이상의 시나리오 흐름이 동시에 대화창(Dialogue/Choice/Quiz)을 점유하려 할 때의 정책을
+      // 조회/변경한다. 인자 없으면 현재 값을 보고한다.
+      if (args != null
+          && args.Length >= 1
+          && string.Equals(args[0], "conflictpolicy", StringComparison.OrdinalIgnoreCase))
+      {
+        var controller = ScenarioController.Instance;
+        if (controller == null)
+        {
+          _chat.SendSystemMessage(sender, "ScenarioController instance is not available.");
+          return;
+        }
+
+        if (args.Length < 2)
+        {
+          _chat.SendSystemMessage(sender,
+            $"Current scenario concurrency conflict policy: {controller.ConcurrencyConflictPolicy}. "
+            + "Change with: /scenario conflictpolicy <warn|cancel|panic>");
+          return;
+        }
+
+        if (!ScenarioConcurrencyConflictPolicyExtensions.TryParse(args[1], out var policy, out string policyError))
+        {
+          _chat.SendSystemMessage(sender, policyError);
+          return;
+        }
+
+        controller.ConcurrencyConflictPolicy = policy;
+        _chat.SendSystemMessage(sender, $"Scenario concurrency conflict policy set to '{policy}'.");
+        return;
+      }
+
       if (args == null || args.Length < 3 || !string.Equals(args[0], "execute", StringComparison.OrdinalIgnoreCase))
       {
-        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute <target> <scenario_id> | /scenario signal <signal_id> [clear]");
+        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute <target> <scenario_id> | /scenario signal <signal_id> [clear] | /scenario conflictpolicy [warn|cancel|panic]");
         return;
       }
 
