@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "2-implementing"
 status: active
-updated: 2026-07-09
+updated: 2026-07-13
 flags: ["refactor-required"]
 ---
 
@@ -123,13 +123,48 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 
 ### [PRESET_B] PatientMedicalStatePresetNode
 
-> R7/d-3/e-1: JSON 정본에는 환자 B/C의 PatientMedicalStatePreset가 없어(스폰만 존재) 공백이었다. 원본(_origin) 값으로 사전설정 노드를 추가한다. 원본상 환자 B와 C는 동일 부상/활력이다.
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | PRESET_B |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.PatientMedicalStatePreset |
 | **TargetEntityIdentifier** | 문자열 | patient_b |
+| **TransitionMode** | PatientMedicalStateTransitionMode | Immediate |
+| **Sex** | Sex | Male |
+| **Age** | 정수 | 53 |
+| **ConsciousnessGcs** | 정수 | 13 |
+| **ConsciousnessEyeOpening** | EyeOpeningResponse | ToSound (E3) |
+| **ConsciousnessVerbal** | VerbalResponse | Confused (V4) |
+| **ConsciousnessMotor** | MotorResponse | ObeysCommands (M6) |
+| **ConsciousnessLocLabel** | LOCLabel | Drowsy |
+| **ConsciousnessPupillaryResponse** | PupillaryResponse | Abnormal (좌측 무반응) |
+| **RespirationAwRR** | 정수 | 24 |
+| **RespirationType** | RespirationType | Regular (C# 프로퍼티는 RespirationTypeValue, JSON 키는 respirationType) |
+| **PulseRate** | 정수 | 120 |
+| **PulseForceType** | BloodPulseForceType | Normal |
+| **BloodPressureSystolic** | 정수 | 140 |
+| **BloodPressureDiastolic** | 정수 | 86 |
+| **SkinColorHue** | SkinColorHue | Normal |
+| **SkinTemperatureType** | SkinTemperatureType | Normal |
+| **IsCardiacArrest** | bool | false |
+| **NextIdentifier** | 문자열 | PRESET_C |
+
+- 원본 근거: 체온(BT) 37.8°, SpO2 93%. GCS 13(E3/V4/M6), 좌측 동공 무반응(pupil_reflex_patient_b), 좌측 상완 개방성 골절.
+- [ ] SpO2/체온 필드가 PatientMedicalStatePreset 스키마에 없음. 활력 UI 이벤트(activate_vital_monitor_ui_patient_b/c)로만 표기됨. 스키마 확장 여부 확정요청.
+- [ ] 확정요청: 활력 체온 37.8(원본) vs JSON 37.3 불일치. 원본 기준 37.8 채택함. 임시치 아님(원본 확정치). JSON 갱신 필요. -> 37.3으로 설정하겠습니다.
+- [x] d-3: 환자 B/C 상태 사전설정 값 원본(_origin)에서 확인·기록.
+> "좌측 상완 부상, 좌측 동공 무반응"으로 설정.
+
+---
+
+### [PRESET_C] PatientMedicalStatePresetNode
+
+
+| 속성 | 타입 | 설명 |
+| :--- | :--- | :--- |
+| **Identifier** | 문자열 | PRESET_C |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.PatientMedicalStatePreset |
+| **TargetEntityIdentifier** | 문자열 | patient_c |
 | **TransitionMode** | PatientMedicalStateTransitionMode | Immediate |
 | **Sex** | Sex | Female |
 | **Age** | 정수 | 53 |
@@ -148,46 +183,11 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **SkinColorHue** | SkinColorHue | Normal |
 | **SkinTemperatureType** | SkinTemperatureType | Normal |
 | **IsCardiacArrest** | bool | false |
-| **NextIdentifier** | 문자열 | PRESET_C |
-
-- 원본 근거: 체온(BT) 37.8°, SpO2 93%. GCS 13(E3/V4/M6), 우측 동공 무반응(pupil_reflex_patient_b), 좌측 상완 개방성 골절.
-- [ ] SpO2/체온 필드가 PatientMedicalStatePreset 스키마에 없음. 활력 UI 이벤트(activate_vital_monitor_ui_patient_b/c)로만 표기됨. 스키마 확장 여부 확정요청.
-- [ ] 확정요청: 활력 체온 37.8(원본) vs JSON 37.3 불일치. 원본 기준 37.8 채택함. 임시치 아님(원본 확정치). JSON 갱신 필요.
-- [x] d-3: 환자 B/C 상태 사전설정 값 원본(_origin)에서 확인·기록.
-
----
-
-### [PRESET_C] PatientMedicalStatePresetNode
-
-> R8: 원본은 환자 C를 "환자 B와 동일 부상"으로 명시한다. 현행 JSON/구 md의 divergence(C=무릎 하단 출혈 / 한쪽 팔)는 폐기하고 B와 동일(좌측 상완 개방성 골절 + 두부 손상)로 통일한다.
-
-| 속성 | 타입 | 설명 |
-| :--- | :--- | :--- |
-| **Identifier** | 문자열 | PRESET_C |
-| **NodeType** | ScenarioNodeType | ScenarioNodeType.PatientMedicalStatePreset |
-| **TargetEntityIdentifier** | 문자열 | patient_c |
-| **TransitionMode** | PatientMedicalStateTransitionMode | Immediate |
-| **Sex** | Sex | Female |
-| **Age** | 정수 | 53 |
-| **ConsciousnessGcs** | 정수 | 13 |
-| **ConsciousnessEyeOpening** | EyeOpeningResponse | ToSound (E3) |
-| **ConsciousnessVerbal** | VerbalResponse | Confused (V4) |
-| **ConsciousnessMotor** | MotorResponse | ObeysCommands (M6) |
-| **ConsciousnessLocLabel** | LOCLabel | Drowsy |
-| **ConsciousnessPupillaryResponse** | PupillaryResponse | Abnormal (좌측 무반응) |
-| **RespirationAwRR** | 정수 | 24 |
-| **RespirationType** | RespirationType | Regular (C# 프로퍼티는 RespirationTypeValue, JSON 키는 respirationType) |
-| **PulseRate** | 정수 | 120 |
-| **PulseForceType** | BloodPulseForceType | Normal |
-| **BloodPressureSystolic** | 정수 | 140 |
-| **BloodPressureDiastolic** | 정수 | 86 |
-| **SkinColorHue** | SkinColorHue | Normal |
-| **SkinTemperatureType** | SkinTemperatureType | Normal |
-| **IsCardiacArrest** | bool | false |
 | **NextIdentifier** | 문자열 | E038 |
 
-- 부상/활력은 환자 B와 동일(좌측 상완 개방성 골절 + 두부 손상, GCS 13). 동공은 C 브랜치 저작 원본대로 좌측 무반응(pupil_reflex_patient_c)을 유지한다. 거즈/지혈 부위는 "좌측 상완"으로 통일.
+- 부상/활력은 환자 B와 동일(좌측 상완 개방성 골절 + 두부 손상, GCS 13). 동공은 C 브랜치 저작 원본대로 우측 무반응(pupil_reflex_patient_c)을 유지한다. 거즈/지혈 부위는 "좌측 상완"으로 통일.
 - [ ] 확정요청: 원본은 환자 C를 'B와 동일 부상'으로 명시. 현행 JSON의 C=무릎하단/한쪽팔 divergence는 폐기하고 B와 동일(좌측 상완)로 통일함. JSON 갱신 및 임상 검수 필요.
+> "우측 상완 부상, 우측 동공 무반응"으로 설정.
 
 ---
 
@@ -293,10 +293,10 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | KTAS 1(소생) | | | N029_retry_a |
+| KTAS 2(긴급) | | | N030 |
 | KTAS 3(응급) | | | N029_retry_a |
 | KTAS 4(준응급) | | | N029_retry_a |
 | KTAS 5(비응급) | | | N029_retry_a |
-| KTAS 2(긴급) | | | N030 |
 
 ---
 
@@ -390,7 +390,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Identifier** | 문자열 | N030_retry_b |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 오답입니다. 비교적 긴급한 처치가 필요하지 않은 KTAS 5(비응급) 상태로 보입니다. |
+| **DialogueContent** | 문자열 | 오답입니다. 활력징후가 안정적이므로 비교적 긴급한 처치가 필요하지 않은 KTAS 5(비응급) 상태로 보입니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **AutoAdvanceSeconds** | 실수(float) | 4.0 |
 | **PlayTTS** | bool | true |
@@ -459,10 +459,10 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | KTAS 1(소생) | | | N031_retry_c |
+| KTAS 2(긴급) | | | N032 |
 | KTAS 3(응급) | | | N031_retry_c |
 | KTAS 4(준응급) | | | N031_retry_c |
 | KTAS 5(비응급) | | | N031_retry_c |
-| KTAS 2(긴급) | | | N032 |
 
 ---
 
@@ -811,9 +811,9 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | A(Alert, 완전히 깨어 있음) | | | N037_retry_a |
+| V(Verbal response, 음성에 반응 있음) | | | N038 |
 | P(Pain response, 통증에 반응 있음) | | | N037_retry_a |
 | U(Unconsciousness, 반응 없음) | | | N037_retry_a |
-| V(Verbal response, 음성에 반응 있음) | | | N038 |
 
 ---
 
@@ -865,9 +865,9 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | 4점(자발적) | | | N038_retry_b |
+| 3점(명령) | | | N039 |
 | 2점(통증) | | | N038_retry_b |
 | 1점(반응 없음) | | | N038_retry_b |
-| 3점(명령) | | | N039 |
 
 ---
 
@@ -919,10 +919,10 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | 5점(적절한 답변) | | | N039_retry_c |
+| 4점(혼란) | | | N040 |
 | 3점(부적절한 답변) | | | N039_retry_c |
 | 2점(신음소리) | | | N039_retry_c |
 | 1점(반응 없음) | | | N039_retry_c |
-| 4점(혼란) | | | N040 |
 
 ---
 
@@ -948,7 +948,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Identifier** | 문자열 | N040 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | [관찰] 마지막으로 Motor Response(M)입니다. 움직임에 대한 명령에 잘 수행합니다. |
+| **DialogueContent** | 문자열 | [관찰] 마지막으로 Motor Response(M)입니다. 신체의 좌우가 비대칭적이지만 움직임에 대한 명령에 잘 수행합니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **AutoAdvanceSeconds** | 실수(float) | 4.0 |
 | **PlayTTS** | bool | true |
@@ -973,12 +973,12 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
+| 6점(명령 수행) | | | N041 |
 | 5점(통증 원인을 치우려고 손을 뻗음) | | | N040_retry_d |
 | 4점(통증에 회피) | | | N040_retry_d |
 | 3점(이상 굴곡) | | | N040_retry_d |
 | 2점(이상 신전) | | | N040_retry_d |
 | 1점(반응 없음) | | | N040_retry_d |
-| 6점(명령 수행) | | | N041 |
 
 ---
 
@@ -1046,10 +1046,10 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- | :--- |
 | 5점(정상 근력) | | | N042_retry_e |
 | 4점(중력+약간의 저항) | | | N042_retry_e |
+| 3점(중력에 저항 가능) | | | D040 |
 | 2점(중력에 저항 불가, 좌우 운동) | | | N042_retry_e |
 | 1점(약간의 근육 수축) | | | N042_retry_e |
 | 0점(움직임 없음) | | | N042_retry_e |
-| 3점(중력에 저항 가능) | | | D040 |
 
 ---
 
@@ -1251,13 +1251,11 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Identifier** | 문자열 | N047 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.8도, SpO2 93% 입니다. 확인 후 모니터 창을 닫으십시오. |
+| **DialogueContent** | 문자열 | 혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.3도, SpO2 93% 입니다. 확인 후 모니터 창을 닫으십시오. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **AutoAdvanceSeconds** | 실수(float) | 6.0 |
 | **PlayTTS** | bool | true |
 | **NextIdentifier** | 문자열 | V046 |
-
-- 체온 37.8°(원본), SpO2 93%. PRESET_B와 일치(R7/e-1). 구 md/JSON의 37.3은 오류로 정정.
 
 ---
 
@@ -1299,12 +1297,10 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Identifier** | 문자열 | D041 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | B 환자의 의식상태는 GCS 13점, 근력 우측 5점/좌측 3점이며, 활력징후는 혈압 140/86, 맥박 120, 호흡수 24, 체온 37.8, SpO2 93% 입니다. |
+| **DialogueContent** | 문자열 | B 환자의 의식상태는 GCS 13점, 근력 우측 5점/좌측 3점이며, 활력징후는 혈압 140/86, 맥박 120, 호흡수 24, 체온 37.3, SpO2 93% 입니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **PlayTTS** | bool | true |
 | **NextIdentifier** | 문자열 | D042 |
-
-- 체온 37.8°로 정정(R7/e-1).
 
 ---
 
@@ -1439,7 +1435,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Identifier** | 문자열 | D043 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 간호사 A |
-| **DialogueContent** | 문자열 | 좌측 동공에 비해 우측 동공이 빛에 반응하지 않습니다. 추가 평가가 필요합니다. |
+| **DialogueContent** | 문자열 | 우측 동공에 비해 좌측 동공이 빛에 반응하지 않습니다. 추가 평가가 필요합니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **PlayTTS** | bool | true |
 | **NextIdentifier** | 문자열 | N050 |
@@ -1588,7 +1584,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Identifier** | 문자열 | D045 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 간호사 A |
-| **DialogueContent** | 문자열 | 환자의 우측 동공이 빛에 반응하지 않습니다. 추가 검사가 필요해 보입니다. IV 라인도 확보되었습니다. |
+| **DialogueContent** | 문자열 | 환자의 좌측 동공이 빛에 반응하지 않습니다. 추가 검사가 필요해 보입니다. IV 라인도 확보되었습니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **PlayTTS** | bool | true |
 | **NextIdentifier** | 문자열 | Q035_1 |
@@ -1797,10 +1793,10 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
+| 3L | | | D046 |
 | 5L | | | N057_retry |
 | 10L | | | N057_retry |
 | 15L | | | N057_retry |
-| 3L | | | D046 |
 
 ---
 
@@ -2084,6 +2080,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 ====================================================
 
 > R8: 환자 C의 부상/활력은 환자 B와 동일(좌측 상완 개방성 골절 + 두부 손상, GCS 13, 동일 활력)로 통일한다. 지혈/거즈 부위는 좌측 상완. 동공 무반응 측은 C 브랜치 저작 원본대로 좌측(pupil_reflex_patient_c). GCS 근력 사정의 좌우 표현은 JSON 저작 원본을 보존한다.
+> 수정: 환자 C(Scenario2Female)의 부상은 환자 B(Scenario2Male)와 달리, 우측 상완 개방성 골절 + 두부 손상, GCS 13, 동일 활력이다. 지혈/거즈 부위는 우측 상완, 동공 무반응 측은 우측으로 한다. GCS 및 근력 사정의 표현은 수정함.
 
 ### [V040_B] ValidatorNode
 
@@ -2136,7 +2133,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Identifier** | 문자열 | N063 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 처치 구역에 도착했습니다. 즉시 의식상태 사정 및 활력징후 사정을 시작하세요. |
+| **DialogueContent** | 문자열 | 처치 구역에 도착했습니다. 간호사 B는 의식상태를, 간호사 D는 활력징후를 사정하세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **AutoAdvanceSeconds** | 실수(float) | 5.0 |
 | **PlayTTS** | bool | true |
@@ -2261,9 +2258,9 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | A(Alert, 완전히 깨어 있음) | | | N066_retry_a |
+| V(Verbal response, 음성에 반응 있음) | | | N067 |
 | P(Pain response, 통증에 반응 있음) | | | N066_retry_a |
 | U(Unconsciousness, 반응 없음) | | | N066_retry_a |
-| V(Verbal response, 음성에 반응 있음) | | | N067 |
 
 ---
 
@@ -2315,9 +2312,9 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | 4점(자발적) | | | N067_retry_b |
+| 3점(명령) | | | N068 |
 | 2점(통증) | | | N067_retry_b |
 | 1점(반응 없음) | | | N067_retry_b |
-| 3점(명령) | | | N068 |
 
 ---
 
@@ -2369,10 +2366,10 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | 5점(적절한 답변) | | | N068_retry_c |
+| 4점(혼란) | | | N069 |
 | 3점(부적절한 답변) | | | N068_retry_c |
 | 2점(신음소리) | | | N068_retry_c |
 | 1점(반응 없음) | | | N068_retry_c |
-| 4점(혼란) | | | N069 |
 
 ---
 
@@ -2398,7 +2395,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Identifier** | 문자열 | N069 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | [관찰] 마지막으로 Motor Response(M)입니다. 움직임에 대한 명령에 잘 수행합니다. |
+| **DialogueContent** | 문자열 | [관찰] 마지막으로 Motor Response(M)입니다. 신체의 좌우가 비대칭적이지만 움직임에 대한 명령에 잘 수행합니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **AutoAdvanceSeconds** | 실수(float) | 4.0 |
 | **PlayTTS** | bool | true |
@@ -2423,12 +2420,12 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
+| 6점(명령 수행) | | | N070 |
 | 5점(통증 원인을 치우려고 손을 뻗음) | | | N069_retry_d |
 | 4점(통증에 회피) | | | N069_retry_d |
 | 3점(이상 굴곡) | | | N069_retry_d |
 | 2점(이상 신전) | | | N069_retry_d |
 | 1점(반응 없음) | | | N069_retry_d |
-| 6점(명령 수행) | | | N070 |
 
 ---
 
@@ -2476,6 +2473,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **NextIdentifier** | 문자열 | C049 |
 
 - [ ] R8 검수: C의 근력 사정 좌우(우측 약함)는 JSON 저작 원본을 보존함. 부상 부위(좌측 상완)와의 정합은 임상 검수 필요.
+> 우측 약함 맞습니다!
 
 ---
 
@@ -2498,10 +2496,10 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- | :--- |
 | 5점(정상 근력) | | | N071_retry_e |
 | 4점(중력+약간의 저항) | | | N071_retry_e |
+| 3점(중력에 저항 가능) | | | D050 |
 | 2점(중력에 저항 불가, 좌우 운동) | | | N071_retry_e |
 | 1점(약간의 근육 수축) | | | N071_retry_e |
 | 0점(움직임 없음) | | | N071_retry_e |
-| 3점(중력에 저항 가능) | | | D050 |
 
 ---
 
@@ -2703,13 +2701,11 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Identifier** | 문자열 | N076 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.8도, SpO2 93% 입니다. 확인 후 모니터 창을 닫으십시오. |
+| **DialogueContent** | 문자열 | 혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.3도, SpO2 93% 입니다. 확인 후 모니터 창을 닫으십시오. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **AutoAdvanceSeconds** | 실수(float) | 6.0 |
 | **PlayTTS** | bool | true |
 | **NextIdentifier** | 문자열 | V065 |
-
-- 체온 37.8°(원본), SpO2 93%. PRESET_C와 일치(R7/e-1). 구 md/JSON의 37.3은 오류로 정정.
 
 ---
 
@@ -2751,12 +2747,11 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Identifier** | 문자열 | D049 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | C 환자의 의식상태는 GCS 13점, 근력 좌측 5점/우측 3점이며, 활력징후는 혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.8도, SpO2 93% 입니다. |
+| **DialogueContent** | 문자열 | C 환자의 의식상태는 GCS 13점, 근력 좌측 5점/우측 3점이며, 활력징후는 혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.3도, SpO2 93% 입니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **PlayTTS** | bool | true |
 | **NextIdentifier** | 문자열 | D051 |
 
-- 체온 37.8°로 정정(R7/e-1). 활력은 환자 B와 동일(R8).
 
 ---
 
@@ -2889,7 +2884,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Identifier** | 문자열 | D052 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 간호사 B |
-| **DialogueContent** | 문자열 | 우측 동공에 비해 좌측 동공이 빛에 반응하지 않습니다. 추가 평가가 필요합니다. |
+| **DialogueContent** | 문자열 | 좌측 동공에 비해 우측 동공이 빛에 반응하지 않습니다. 추가 평가가 필요합니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **PlayTTS** | bool | true |
 | **NextIdentifier** | 문자열 | N079 |
@@ -3040,7 +3035,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Identifier** | 문자열 | D054 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 간호사 B |
-| **DialogueContent** | 문자열 | 환자의 좌측 동공이 빛에 반응하지 않습니다. 추가 검사가 필요해 보입니다. IV 라인도 확보되었습니다. |
+| **DialogueContent** | 문자열 | 환자의 우측 동공이 빛에 반응하지 않습니다. 추가 검사가 필요해 보입니다. IV 라인도 확보되었습니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **PlayTTS** | bool | true |
 | **NextIdentifier** | 문자열 | Q040_1 |
@@ -3249,10 +3244,10 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
+| 3L | | | D055 |
 | 5L | | | N086_retry |
 | 10L | | | N086_retry |
 | 15L | | | N086_retry |
-| 3L | | | D055 |
 
 ---
 
