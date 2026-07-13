@@ -21,8 +21,11 @@ namespace MultiplayerInfrastructure.Player
     [ObserversRpc]
     private void RpcTeleportTo(Vector3 position)
     {
-      // ForcedFollowAnchor가 설정되어 있으면 해제하여 텔레포트가 덮어씌워지지 않도록 한다.
-      ClearForcedFollowAnchor();
+      // ForcedFollowAnchor 해제는 클라이언트에서만 수행한다.
+      // 서버에서 실행하면 시나리오 스크립트가 설정해 둔 서버 측 앵커를 조기 제거할 수 있다.
+      // (FishNet 기본 동작: [ObserversRpc]는 서버 인스턴스에서도 RPC 본문을 실행한다.)
+      if (!IsServerStarted)
+        ClearForcedFollowAnchor();
 
       // CharacterController 가 활성화된 상태에서 transform.position 을 직접 바꾸면
       // 내부 상태와 충돌이 발생할 수 있으므로 일시 비활성화 후 이동한다.

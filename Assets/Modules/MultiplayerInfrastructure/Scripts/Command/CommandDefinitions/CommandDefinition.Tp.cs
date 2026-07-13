@@ -60,14 +60,14 @@ namespace MultiplayerInfrastructure.Command
       }
 
       // /tp x y z  (3 floats → teleport self)
-      if (args.Length == 3 && TryParseFloat(args[0], out float x3) && TryParseFloat(args[1], out float y3) && TryParseFloat(args[2], out float z3))
+      if (args.Length == 3 && TryParseFiniteFloat(args[0], out float x3) && TryParseFiniteFloat(args[1], out float y3) && TryParseFiniteFloat(args[2], out float z3))
       {
         HandleSelfToXyz(sender, new Vector3(x3, y3, z3));
         return;
       }
 
       // /tp <player> x y z  (4 args, last 3 are floats → teleport player to coords)
-      if (args.Length == 4 && TryParseFloat(args[1], out float x4) && TryParseFloat(args[2], out float y4) && TryParseFloat(args[3], out float z4))
+      if (args.Length == 4 && TryParseFiniteFloat(args[1], out float x4) && TryParseFiniteFloat(args[2], out float y4) && TryParseFiniteFloat(args[3], out float z4))
       {
         HandlePlayerToXyz(sender, args[0], new Vector3(x4, y4, z4));
         return;
@@ -111,6 +111,12 @@ namespace MultiplayerInfrastructure.Command
       if (!TryResolveController(playerToken, sender, out var controller, out string error))
       {
         _chat.SendSystemMessage(sender, error);
+        return;
+      }
+
+      if (!IsAdminOrSelf(sender, controller))
+      {
+        _chat.SendSystemMessage(sender, "Permission denied: you can only teleport yourself.");
         return;
       }
 
@@ -164,6 +170,12 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
+      if (!IsAdminOrSelf(sender, subjectController))
+      {
+        _chat.SendSystemMessage(sender, "Permission denied: you can only teleport yourself.");
+        return;
+      }
+
       string subjectName = ResolveDisplayName(subjectController);
 
       // Try b as player.
@@ -193,9 +205,27 @@ namespace MultiplayerInfrastructure.Command
       controller.TeleportToServer(position);
     }
 
-    private static bool TryParseFloat(string s, out float value)
-      => float.TryParse(s, System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out value);
+    /// float.TryParse 에 NaN/Infinity 거부 가드 추가.
+    private static bool TryParseFiniteFloat(string s, out float value)
+    {
+      if (!float.TryParse(s, System.Globalization.NumberStyles.Float,
+                          System.Globalization.CultureInfo.InvariantCulture, out value))
+        return false;
+
+      return float.IsFinite(value);
+    }
+
+    /// sender 가 null(시스템 콘솔) 이거나 호스트면 어드민으로 판단.
+    /// 그 외에는 subject 가 sender 본인일 때만 허용.
+    private static bool IsAdminOrSelf(NetworkConnection sender, PlayerController subject)
+    {
+      // 서버 콘솔(sender == null) 또는 호스트(IsHost) → 항상 허용
+      if (sender == null || sender.IsHost)
+        return true;
+
+      // subject 의 소유자가 sender 본인인지 확인
+      return subject != null && subject.Owner != null && subject.Owner.ClientId == sender.ClientId;
+    }
 
     private static bool TryResolveWaypointPosition(string identifier, out Vector3 position)
     {
