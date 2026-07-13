@@ -2403,7 +2403,7 @@
           "nextNodeIdentifier": "N017_retry_a"
         },
         {
-          "displayText": "약 600ml (다섯 손가락 모두를 이용해 백을 짠다)",
+          "displayText": "약 600ml (엄지, 검지, 중지를 이용해 백을 짠다)",
           "nextNodeIdentifier": "L002"
         }
       ],
@@ -2439,12 +2439,12 @@
           "nextNodeIdentifier": "N017_retry_b"
         },
         {
-          "displayText": "3초에 1번 (분당 약 20회)",
-          "nextNodeIdentifier": "N017_retry_b"
-        },
-        {
           "displayText": "6초에 1번 (분당 약 10회)",
           "nextNodeIdentifier": "Q019_1"
+        },
+        {
+          "displayText": "3초에 1번 (분당 약 20회)",
+          "nextNodeIdentifier": "N017_retry_b"
         }
       ],
       "nextIdentifier": null,
@@ -2537,12 +2537,12 @@
           "nextNodeIdentifier": "N018_retry_a"
         },
         {
-          "displayText": "약 6cm",
-          "nextNodeIdentifier": "N018_retry_a"
-        },
-        {
           "displayText": "약 5cm",
           "nextNodeIdentifier": "L004"
+        },
+        {
+          "displayText": "약 6cm",
+          "nextNodeIdentifier": "N018_retry_a"
         }
       ],
       "nextIdentifier": null,
@@ -2613,12 +2613,12 @@
           "nextNodeIdentifier": "N018_retry_c"
         },
         {
-          "displayText": "분당 약 120~140회",
-          "nextNodeIdentifier": "N018_retry_c"
-        },
-        {
           "displayText": "분당 약 100~120회",
           "nextNodeIdentifier": "L006"
+        },
+        {
+          "displayText": "분당 약 120~140회",
+          "nextNodeIdentifier": "N018_retry_c"
         }
       ],
       "nextIdentifier": null,
@@ -2844,12 +2844,12 @@
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "360J(줄)",
-          "nextNodeIdentifier": "N019_retry_b"
-        },
-        {
           "displayText": "150~200J(줄)",
           "nextNodeIdentifier": "L009"
+        },
+        {
+          "displayText": "360J(줄)",
+          "nextNodeIdentifier": "N019_retry_b"
         }
       ],
       "nextIdentifier": null,
@@ -3322,12 +3322,12 @@
           "nextNodeIdentifier": "N021_retry_a"
         },
         {
-          "displayText": "약 6cm",
-          "nextNodeIdentifier": "N021_retry_a"
-        },
-        {
           "displayText": "약 5cm",
           "nextNodeIdentifier": "L013"
+        },
+        {
+          "displayText": "약 6cm",
+          "nextNodeIdentifier": "N021_retry_a"
         }
       ],
       "nextIdentifier": null,
@@ -3398,12 +3398,12 @@
           "nextNodeIdentifier": "N021_retry_c"
         },
         {
-          "displayText": "분당 약 120~140회",
-          "nextNodeIdentifier": "N021_retry_c"
-        },
-        {
           "displayText": "분당 약 100~120회",
           "nextNodeIdentifier": "L015"
+        },
+        {
+          "displayText": "분당 약 120~140회",
+          "nextNodeIdentifier": "N021_retry_c"
         }
       ],
       "nextIdentifier": null,
@@ -3536,7 +3536,7 @@
           "nextNodeIdentifier": "N022_retry_a"
         },
         {
-          "displayText": "약 600ml (다섯 손가락 모두를 이용해 백을 짠다)",
+          "displayText": "약 600ml (엄지, 검지, 중지를 이용해 백을 짠다)",
           "nextNodeIdentifier": "L017"
         }
       ],
@@ -3572,12 +3572,12 @@
           "nextNodeIdentifier": "N022_retry_b"
         },
         {
-          "displayText": "3초에 1번 (분당 약 20회)",
-          "nextNodeIdentifier": "N022_retry_b"
-        },
-        {
           "displayText": "6초에 1번 (분당 약 10회)",
           "nextNodeIdentifier": "Q024_1"
+        },
+        {
+          "displayText": "3초에 1번 (분당 약 20회)",
+          "nextNodeIdentifier": "N022_retry_b"
         }
       ],
       "nextIdentifier": null,
@@ -3986,12 +3986,12 @@
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "360J(줄)",
-          "nextNodeIdentifier": "N024_retry_b"
-        },
-        {
           "displayText": "150~200J(줄)",
           "nextNodeIdentifier": "L022"
+        },
+        {
+          "displayText": "360J(줄)",
+          "nextNodeIdentifier": "N024_retry_b"
         }
       ],
       "nextIdentifier": null,

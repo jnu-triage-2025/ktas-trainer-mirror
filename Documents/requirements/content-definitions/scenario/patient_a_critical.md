@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "2-implementing"
 status: active
-updated: 2026-07-09
+updated: 2026-07-12
 flags: ["refactor-required"]
 ---
 
@@ -3047,7 +3047,7 @@ flags: ["refactor-required"]
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | 약 1500ml (다섯 손가락 모두를 이용해 백을 짠다) |  | #88AAFF | N017_retry_a |
-| 약 600ml (다섯 손가락 모두를 이용해 백을 짠다) |  | #88AAFF | L002 |
+| 약 600ml (엄지, 검지, 중지를 이용해 백을 짠다) |  | #88AAFF | L002 |
 
 
 ---
@@ -3087,7 +3087,7 @@ flags: ["refactor-required"]
 | **Identifier** | 문자열 | C011 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Choice |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 2. 심폐소생술 중 적절한 속도는? |
+| **DialogueContent** | 문자열 | 2. 심폐소생술 시 앰부 배깅(ambu-bagging)의 적절한 속도는? |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Options** | ScenarioChoiceOption 목록 | **[하단 C011_Options 표 참조]** |
 
@@ -3096,8 +3096,8 @@ flags: ["refactor-required"]
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | 10초에 1번 (분당 약 6회) |  | #88AAFF | N017_retry_b |
-| 3초에 1번 (분당 약 20회) |  | #88AAFF | N017_retry_b |
 | 6초에 1번 (분당 약 10회) |  | #88AAFF | Q019_1 |
+| 3초에 1번 (분당 약 20회) |  | #88AAFF | N017_retry_b |
 
 
 ---
@@ -3229,8 +3229,8 @@ flags: ["refactor-required"]
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | 약 4cm |  | #88AAFF | N018_retry_a |
-| 약 6cm |  | #88AAFF | N018_retry_a |
 | 약 5cm |  | #88AAFF | L004 |
+| 약 6cm |  | #88AAFF | N018_retry_a |
 
 
 ---
@@ -3328,8 +3328,8 @@ flags: ["refactor-required"]
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | 분당 약 80~100회 |  | #88AAFF | N018_retry_c |
-| 분당 약 120~140회 |  | #88AAFF | N018_retry_c |
 | 분당 약 100~120회 |  | #88AAFF | L006 |
+| 분당 약 120~140회 |  | #88AAFF | N018_retry_c |
 
 
 ---
@@ -3630,8 +3630,8 @@ flags: ["refactor-required"]
 
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
-| 360J(줄) |  | #88AAFF | N019_retry_b |
 | 150~200J(줄) |  | #88AAFF | L009 |
+| 360J(줄) |  | #88AAFF | N019_retry_b |
 
 
 ---
@@ -3967,9 +3967,9 @@ flags: ["refactor-required"]
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | 약 1~2분에 한 번 |  | #88AAFF | N020_retry_a |
+| 약 3~5분에 한 번 |  | #88AAFF | L011 |
 | 약 5~10분에 한 번 |  | #88AAFF | N020_retry_a |
 | 누군가 시킬 때 마다 |  | #88AAFF | N020_retry_a |
-| 약 3~5분에 한 번 |  | #88AAFF | L011 |
 
 
 ---
@@ -4017,8 +4017,8 @@ flags: ["refactor-required"]
 
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
-| 약물 주입 후 생리식염수 주입 |  | #88AAFF | N020_retry_b |
 | 약물만 주입 |  | #88AAFF | N020_retry_b |
+| 약물 주입 후 생리식염수 주입 |  | #88AAFF | N020_retry_b |
 | 약물 주입 후 생리식염수 주입, 이후 팔 들어올리기 |  | #88AAFF | Q022_1 |
 
 
@@ -4232,8 +4232,8 @@ flags: ["refactor-required"]
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | 약 4cm |  | #88AAFF | N021_retry_a |
-| 약 6cm |  | #88AAFF | N021_retry_a |
 | 약 5cm |  | #88AAFF | L013 |
+| 약 6cm |  | #88AAFF | N021_retry_a |
 
 
 ---
@@ -4331,8 +4331,8 @@ flags: ["refactor-required"]
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | 분당 약 80~100회 |  | #88AAFF | N021_retry_c |
-| 분당 약 120~140회 |  | #88AAFF | N021_retry_c |
 | 분당 약 100~120회 |  | #88AAFF | L015 |
+| 분당 약 120~140회 |  | #88AAFF | N021_retry_c |
 
 
 ---
@@ -4513,8 +4513,8 @@ flags: ["refactor-required"]
 
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
+| 약 600ml (엄지, 검지, 중지를 이용해 백을 짠다) |  | #88AAFF | L017 |
 | 약 1500ml (다섯 손가락 모두를 이용해 백을 짠다) |  | #88AAFF | N022_retry_a |
-| 약 600ml (다섯 손가락 모두를 이용해 백을 짠다) |  | #88AAFF | L017 |
 
 
 ---
@@ -4563,8 +4563,8 @@ flags: ["refactor-required"]
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | 10초에 1번 (분당 약 6회) |  | #88AAFF | N022_retry_b |
-| 3초에 1번 (분당 약 20회) |  | #88AAFF | N022_retry_b |
 | 6초에 1번 (분당 약 10회) |  | #88AAFF | Q024_1 |
+| 3초에 1번 (분당 약 20회) |  | #88AAFF | N022_retry_b |
 
 
 ---
@@ -4857,9 +4857,9 @@ flags: ["refactor-required"]
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | 약 1~2분에 한 번 |  | #88AAFF | N023_retry_a |
+| 약 3~5분에 한 번 |  | #88AAFF | L019 |
 | 약 5~10분에 한 번 |  | #88AAFF | N023_retry_a |
 | 누군가 시킬 때 마다 |  | #88AAFF | N023_retry_a |
-| 약 3~5분에 한 번 |  | #88AAFF | L019 |
 
 
 ---
@@ -4907,8 +4907,8 @@ flags: ["refactor-required"]
 
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
-| 약물 주입 후 생리식염수 주입 |  | #88AAFF | N023_retry_b |
 | 약물만 주입 |  | #88AAFF | N023_retry_b |
+| 약물 주입 후 생리식염수 주입 |  | #88AAFF | N023_retry_b |
 | 약물 주입 후 생리식염수 주입, 이후 팔 들어올리기 |  | #88AAFF | Q025_1 |
 
 
@@ -5105,8 +5105,8 @@ flags: ["refactor-required"]
 
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
-| 360J(줄) |  | #88AAFF | N024_retry_b |
 | 150~200J(줄) |  | #88AAFF | L022 |
+| 360J(줄) |  | #88AAFF | N024_retry_b |
 
 
 ---
@@ -5734,7 +5734,7 @@ flags: ["refactor-required"]
 | **Identifier** | 문자열 | N028_4 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | [관찰] 다음은 Verbal Response(V)입니다. "여기가 어디예요?"라고 묻자, 환자는 이해할 수 없는 신음소리만 내고 있습니다. 현재 기관내삽관이 시행되어있는 상태입니다. |
+| **DialogueContent** | 문자열 | [관찰] 다음은 Verbal Response(V)입니다. 현재 기관내삽관이 시행되어있는 상태입니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 6.0 |
 | **NextIdentifier** | 문자열 | C034 |
@@ -5774,7 +5774,7 @@ flags: ["refactor-required"]
 | **Identifier** | 문자열 | N028_retry_c |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 오답입니다. 현재 환자는 알아들을 수 없는 소리만 내고 있으나, 기관삽관을 하는 경우 1점으로 처리(E 표기)합니다. |
+| **DialogueContent** | 문자열 | 오답입니다. 기관삽관을 하는 경우 E로 처리(표기)합니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C034 |
@@ -5789,7 +5789,7 @@ flags: ["refactor-required"]
 | **Identifier** | 문자열 | N028_5 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | [관찰] 마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 반대쪽 손으로 잡으려 합니다. |
+| **DialogueContent** | 문자열 | [관찰] 마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 움찔거리며 움직이려 합니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | C035 |
@@ -5813,8 +5813,8 @@ flags: ["refactor-required"]
 | DisplayText | DisplayIconIdentifier | DisplayColor | NextNodeIdentifier |
 | :--- | :--- | :--- | :--- |
 | 6점(명령 수행) |  | #88AAFF | N028_retry_d |
-| 5점(통증 원인을 치우려고 손을 뻗음) |  | #88AAFF | N028_6 |
-| 4점(통증에 회피) |  | #88AAFF | N028_retry_d |
+| 5점(통증 원인을 치우려고 손을 뻗음) |  | #88AAFF | N028_retry_d |
+| 4점(통증에 회피) |  | #88AAFF | N028_6 |
 | 3점(이상 굴곡) |  | #88AAFF | N028_retry_d |
 | 2점(이상 신전) |  | #88AAFF | N028_retry_d |
 | 1점(반응 없음) |  | #88AAFF | N028_retry_d |
@@ -5829,7 +5829,7 @@ flags: ["refactor-required"]
 | **Identifier** | 문자열 | N028_retry_d |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 오답입니다. 통증 원인을 치우려고 손을 뻗고 있습니다. |
+| **DialogueContent** | 문자열 | 오답입니다. 통증으로부터 회피하려 합니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | C035 |
@@ -5844,7 +5844,7 @@ flags: ["refactor-required"]
 | **Identifier** | 문자열 | N028_6 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | GCS 측정 완료. E2 / V(E) / M5 = 총 7T점 입니다. |
+| **DialogueContent** | 문자열 | GCS 측정 완료. E2 / V(E) / M4 = 총 6E점 입니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q030_1 |
