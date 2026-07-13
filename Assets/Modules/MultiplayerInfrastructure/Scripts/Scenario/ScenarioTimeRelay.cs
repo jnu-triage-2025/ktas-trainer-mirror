@@ -286,6 +286,11 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>
     /// 현재 표시 중인 타이머의 권위 스냅샷을 전 클라이언트에 재전파한다(주기적 드리프트 보정).
     /// running 인 경우 issuedTick 으로 발행 이후 흐른 시간을 보정한다.
+    ///
+    /// 값(방향/목표/경과)만 보정하며 표시 여부는 바꾸지 않는다. 표시 전환은 오직 Show/Hide/Remove
+    /// 로만 발생하므로, 정상 흐름에서 수신 피어는 이미 동일 타이머를 Show 로 표시 중인 상태에서
+    /// 이 스냅샷으로 값만 맞춘다. BufferLast 로 남은 이전 세션의 resync 가 재생되더라도
+    /// 표시를 켜지 않으므로 Show 없이 화면에 나타나지 않는다.
     /// </summary>
     [ObserversRpc(BufferLast = true)]
     private void RpcResync(string timerId, int direction, float displaySeconds, float targetSeconds, bool running, uint issuedTick)

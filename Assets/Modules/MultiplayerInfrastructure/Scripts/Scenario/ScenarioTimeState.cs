@@ -226,9 +226,14 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     /// <summary>
-    /// 주기적 재동기화 스냅샷을 적용한다. 지정한 타이머를 스냅샷 값으로 덮어쓰고(없으면 생성) 화면에 표시한다.
+    /// 주기적 재동기화 스냅샷을 적용한다. 지정한 타이머의 값(방향/목표/경과)만 스냅샷으로 덮어쓴다(없으면 생성).
     /// 흐르는 중이면 발행 이후 이미 흐른 시간(<paramref name="alreadyRunningSeconds"/>)을 반영해
     /// 늦게 수신한 피어도 정확히 맞춘다.
+    ///
+    /// 표시 여부(<see cref="_shownTimerId"/>)는 이 메서드에서 절대 변경하지 않는다. 표시 전환은
+    /// 스펙상 오직 <see cref="Show"/>/<see cref="Hide"/>/<see cref="Remove"/> 연산으로만 발생해야 한다.
+    /// (과거 구현은 resync 가 표시를 강제로 켜서, 생성만 한 타이머나 이전 세션의 버퍼된 resync 로 인해
+    ///  Show 없이 화면에 표시되는 문제가 있었다.)
     /// </summary>
     public static void ApplyResync(
         string timerId,
@@ -258,8 +263,8 @@ namespace MultiplayerInfrastructure.Scenario
       }
       timer.BaseElapsedSeconds = elapsed;
 
+      // 값만 갱신한다. 표시 대상(_shownTimerId)은 건드리지 않는다.
       Timers[timerId] = timer;
-      _shownTimerId = timerId;
       Changed?.Invoke();
     }
 
