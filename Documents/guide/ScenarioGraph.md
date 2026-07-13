@@ -482,3 +482,29 @@ NPC가 특정 시점에만 상호작용 가능하게 만들고 싶을 때 쓰는
 | `interactableIdentifier` | `string` | 대상 Interactable의 식별자. `Add` 시 레지스트리에서 해당 식별자의 인터랙트 컴포넌트를 찾아 NPC의 커스텀 소스로 추가하고, `Enable`/`Disable` 시 대상이 토글 가능한 인터랙터블이면 활성 상태를 전환한다 | `submission_a` |
 | `operation` | `string` (`Add`\|`Remove`\|`Enable`\|`Disable`) | 수행할 동작. `Add`=추가, `Remove`=제거, `Enable`=활성화, `Disable`=비활성화(기본값 `Add`) | `Add` |
 | `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
+
+### ChatPrint
+
+시나리오 진행 중 임의의 텍스트를 인게임 채팅창이나 Unity 콘솔에 출력하는 노드입니다. 어떤 시그널(예: 수액 줄 연결/끊김)이 실제로 올라왔는지, 어떤 지점을 지나고 있는지를 눈으로 바로 확인하고 싶을 때 사용하는 디버깅·데모용 노드입니다. 대사창을 띄우는 `Dialogue`와 달리 플레이어 입력을 기다리지 않고 즉시 다음 노드로 넘어갑니다.
+
+`targets`로 출력 위치를 고를 수 있습니다. `UnityConsole`은 개발자용 로그(콘솔)에만, `InGameChat`은 인게임 채팅창에 출력하며, 두 값을 함께(예: `"UnityConsole, InGameChat"`) 지정할 수도 있습니다. 여러 명이 함께 플레이하는 경우, 서버가 판정한 결과를 모든 플레이어에게 한 번씩 보여주고 싶다면 `broadcast`를 켜면 됩니다. `broadcast`가 꺼져 있으면 각 플레이어가 자기 화면(로컬 채팅창/콘솔)에만 출력합니다.
+
+| 필드 이름 | 값 타입 | 값 | 예시 |
+|---|---|---|---|
+| `message` | `string` | 출력할 메시지 본문 | `[IV 시그널] 연결 완료 감지` |
+| `targets` | `string` (flags: `UnityConsole`\|`InGameChat`) | 출력 대상(플래그 조합 가능). 미지정 시 기본값 `InGameChat` | `UnityConsole, InGameChat` |
+| `broadcast` | `bool` | 참이면 서버가 전체 클라이언트에게 브로드캐스트(InGameChat 대상에 한함). 거짓(기본)이면 각 피어가 자기 화면에만 출력 | `true` |
+| `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
+
+### ExecuteCommand
+
+인게임 채팅 명령어(예: `/give`, `/title`, `/tag`)를 시나리오가 서버 권한으로 대신 실행하는 노드입니다. 사람이 채팅창에 직접 명령어를 치는 것과 동일한 효과를 시나리오 흐름 안에서 자동으로 일으킬 수 있습니다. 명령 문자열 안에 대상 선택자(`@s`=실행 주체 자신, `@a`=전체, `@n`=가장 가까운 플레이어, `fish:<clientId>`=특정 클라이언트)와 파이프라인(`|`)을 그대로 쓸 수 있으므로, "특정 플레이어/서버 기준 실행"을 명령 문자열로 표현합니다.
+
+이 노드는 서버(또는 오프라인 단일 플레이) 컨텍스트에서만 실제로 명령을 실행하고, 일반 클라이언트는 진행만 합니다(같은 명령이 여러 번 실행되는 것을 방지). 대기 없이 즉시 다음 노드로 넘어갑니다. 선행 슬래시(`/`)는 있어도 없어도 됩니다.
+
+| 필드 이름 | 값 타입 | 값 | 예시 |
+|---|---|---|---|
+| `commandLine` | `string` | 실행할 명령 문자열(대상 선택자·파이프라인 포함 가능). 서버 권한 시스템 컨텍스트에서 실행됨 | `title @a title 수액 연결 완료` |
+| `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
+
+> **활용 예 — 수액 연결 시그널 확인**: 수액 줄 연결 지점(`IntravenousLineConnectionPoint`)은 연결 시도/완료/끊김 시 각각 `iv_connect_start_<지점Identifier>`, `iv_connected_<지점Identifier>`, `iv_disconnected_<지점Identifier>` 시그널을 인게임 서버로 올립니다(RuntimeState 레지스트리에 `sig.` 접두사로 기록). 따라서 `Validator`(condition=`RegistryContains`, registryType=`RuntimeState`, registryIdentifier=`sig.iv_connected_<지점Identifier>`, `waitForCondition: true`) 게이트로 해당 시그널을 기다렸다가, `ChatPrint`로 "연결 완료 감지"를 출력하거나 `ExecuteCommand`로 후속 명령을 실행할 수 있습니다. 완성된 예시는 `Assets/Modules/TriageTrainer/Resources/Scenario/iv_signal_debug.scenario.json`을 참고하세요.

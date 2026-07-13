@@ -23,7 +23,7 @@ namespace MultiplayerInfrastructure.UI
 
     [Header("Settings")]
     [SerializeField] private float _typingSpeed = 0.05f;
-    [SerializeField] private bool _autoShowOnScenarioStart = true;
+    [SerializeField] private bool _autoShowOnScenarioStart = false;
 
     #endregion
 
@@ -207,15 +207,19 @@ namespace MultiplayerInfrastructure.UI
           _interactableHintUI.EnterDialogueMode();
       }
 
-      // 패널 표시
+      // 시나리오 시작 시점에는 패널을 열지 않는다. 실제 대화/선택/퀴즈 노드가 표시될 때
+      // DisplayDialogue/DisplayChoice 내부의 EnsureOverlayActive() 가 패널 표시 + 오버레이 push 를
+      // 수행한다. (신호 대기 등 UI 없는 노드로만 구성된 시나리오가 빈 패널을 띄우고 플레이어
+      // 입력을 잠그던 문제를 방지)
+      // _autoShowOnScenarioStart 가 명시적으로 true 인 경우에만(레거시 옵트인) 즉시 표시한다.
       if (_autoShowOnScenarioStart)
       {
         ShowPanel();
-      }
 
-      // Treat scenario UI as an overlay so player input/camera lock is paused and cursor is free.
-      if (!UIOverlayStack.IsTop(this))
-        UIOverlayStack.Push(this);
+        // Treat scenario UI as an overlay so player input/camera lock is paused and cursor is free.
+        if (!UIOverlayStack.IsTop(this))
+          UIOverlayStack.Push(this);
+      }
 
       OnScenarioStarted?.Invoke();
       Debug.Log("[DialoguePanelUI] Scenario started");

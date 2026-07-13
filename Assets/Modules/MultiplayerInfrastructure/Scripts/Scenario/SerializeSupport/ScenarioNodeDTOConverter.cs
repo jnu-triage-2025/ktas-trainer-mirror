@@ -50,6 +50,8 @@ namespace MultiplayerInfrastructure.Scenario
         "PatientMedicalStatePreset" => Deserialize<ScenarioPatientMedicalStatePresetNodeDTO>(root, options),
         "ItemSubmissionConfig" => Deserialize<ScenarioItemSubmissionConfigNodeDTO>(root, options),
         "NpcInteractControl" => Deserialize<ScenarioNpcInteractControlNodeDTO>(root, options),
+        "ChatPrint" => Deserialize<ScenarioChatPrintNodeDTO>(root, options),
+        "ExecuteCommand" => Deserialize<ScenarioExecuteCommandNodeDTO>(root, options),
         _ => throw new JsonException($"Unknown nodeType '{nodeType}'.")
       };
     }

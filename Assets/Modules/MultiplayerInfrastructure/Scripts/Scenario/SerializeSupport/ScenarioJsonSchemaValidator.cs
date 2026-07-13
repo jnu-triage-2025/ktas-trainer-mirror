@@ -106,7 +106,9 @@ namespace MultiplayerInfrastructure.Scenario
         "TriageAssessControl",
         "PatientMedicalStatePreset",
         "ItemSubmissionConfig",
-        "NpcInteractControl"
+        "NpcInteractControl",
+        "ChatPrint",
+        "ExecuteCommand"
       };
 
       foreach (var nodeEntry in nodes)
