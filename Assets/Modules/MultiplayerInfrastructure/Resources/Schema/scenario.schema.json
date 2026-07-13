@@ -78,7 +78,8 @@
             "EntityInit",
             "TriageAssessControl",
             "ChatPrint",
-            "ExecuteCommand"
+            "ExecuteCommand",
+            "TimeControl"
           ]
         }
       },
@@ -276,6 +277,21 @@
           },
           "then": {
             "$ref": "#/$defs/ScenarioDelayNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "TimeControl"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioTimeControlNode"
           }
         },
         {
@@ -1315,6 +1331,57 @@
           "required": [
             "durationSeconds"
           ]
+        }
+      ]
+    },
+    "ScenarioTimeControlNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "TimeControl"
+            },
+            "operation": {
+              "type": "string",
+              "enum": [
+                "Create",
+                "Start",
+                "Pause",
+                "Resume",
+                "Stop",
+                "Set",
+                "Show",
+                "Hide",
+                "Remove"
+              ],
+              "default": "Create"
+            },
+            "timerId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "Stopwatch",
+                "Countdown"
+              ],
+              "default": "Stopwatch"
+            },
+            "durationSeconds": {
+              "type": "number",
+              "minimum": 0
+            },
+            "startSeconds": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
         }
       ]
     },

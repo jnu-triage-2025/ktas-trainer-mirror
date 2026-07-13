@@ -187,6 +187,7 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.PatientMedicalStatePreset:
         case ScenarioNodeType.ItemSubmissionConfig:
         case ScenarioNodeType.NpcInteractControl:
+        case ScenarioNodeType.TimeControl:
           DefaultOutputPort = CreateStandardOutput("Next");
           break;
 
@@ -353,6 +354,9 @@ namespace MultiplayerInfrastructure.Editor
           break;
         case ScenarioNodeType.NpcInteractControl:
           BuildNpcInteractControlInlineEditor((ScenarioNpcInteractControlNode)Data);
+          break;
+        case ScenarioNodeType.TimeControl:
+          BuildTimeControlInlineEditor((ScenarioTimeControlNode)Data);
           break;
         case ScenarioNodeType.Parallel:
           break;
@@ -623,6 +627,56 @@ namespace MultiplayerInfrastructure.Editor
       _inlineEditorContainer.Add(opField);
 
       AddNextIdentifierField(data);
+    }
+
+    private void BuildTimeControlInlineEditor(ScenarioTimeControlNode data)
+    {
+      var operationField = new EnumField("Operation", data.Operation);
+      operationField.RegisterValueChangedCallback(evt =>
+      {
+        if (evt.newValue is ScenarioTimeOperationType value && value != data.Operation)
+        {
+          data.Operation = value;
+          // 연산이 바뀌면 관련 파라미터만 다시 그린다.
+          BuildInlineEditor();
+        }
+      });
+      _inlineEditorContainer.Add(operationField);
+
+      // Hide 를 제외한 모든 연산은 대상 타이머 식별자를 사용한다.
+      if (data.Operation != ScenarioTimeOperationType.Hide)
+      {
+        AddTextField("Timer Id", value => data.TimerId = value, data.TimerId);
+      }
+
+      switch (data.Operation)
+      {
+        case ScenarioTimeOperationType.Create:
+          var directionField = new EnumField("Direction", data.Direction);
+          directionField.RegisterValueChangedCallback(evt =>
+          {
+            if (evt.newValue is ScenarioTimeDirection value)
+              data.Direction = value;
+          });
+          _inlineEditorContainer.Add(directionField);
+          AddPlainFloatField("Duration (sec, countdown)", value => data.DurationSeconds = Mathf.Max(0f, value), data.DurationSeconds);
+          AddPlainFloatField("Start (sec, display)", value => data.StartSeconds = Mathf.Max(0f, value), data.StartSeconds);
+          break;
+
+        case ScenarioTimeOperationType.Set:
+          AddPlainFloatField("Display (sec)", value => data.StartSeconds = Mathf.Max(0f, value), data.StartSeconds);
+          AddPlainFloatField("New Target (sec, 0=keep)", value => data.DurationSeconds = Mathf.Max(0f, value), data.DurationSeconds);
+          break;
+      }
+
+      AddNextIdentifierField(data);
+    }
+
+    private void AddPlainFloatField(string label, System.Action<float> setter, float current)
+    {
+      var field = new FloatField(label) { value = current };
+      field.RegisterValueChangedCallback(evt => setter(evt.newValue));
+      _inlineEditorContainer.Add(field);
     }
 
     private void AddNextIdentifierField(IScenarioNode data)

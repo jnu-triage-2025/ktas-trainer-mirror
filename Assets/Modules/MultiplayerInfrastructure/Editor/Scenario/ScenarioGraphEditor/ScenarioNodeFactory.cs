@@ -72,6 +72,7 @@ namespace MultiplayerInfrastructure.Editor
         RequiredItems = new System.Collections.Generic.List<ScenarioItemRequirement>()
       },
       ScenarioNodeType.NpcInteractControl => new ScenarioNpcInteractControlNode(),
+      ScenarioNodeType.TimeControl => new ScenarioTimeControlNode(),
       _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
   }

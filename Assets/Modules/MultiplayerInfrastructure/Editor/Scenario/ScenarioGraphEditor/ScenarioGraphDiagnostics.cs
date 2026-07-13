@@ -123,6 +123,34 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioSoundNode sound:
           CheckSound(sound, items);
           break;
+        case ScenarioTimeControlNode timeControl:
+          CheckTimeControl(timeControl, items);
+          break;
+      }
+    }
+
+    private static void CheckTimeControl(ScenarioTimeControlNode node, List<DiagnosticItem> items)
+    {
+      if (node.DurationSeconds < 0f)
+        items.Add(new DiagnosticItem(Severity.Error, node.Identifier, $"durationSeconds={node.DurationSeconds} 는 음수입니다."));
+      if (node.StartSeconds < 0f)
+        items.Add(new DiagnosticItem(Severity.Error, node.Identifier, $"startSeconds={node.StartSeconds} 는 음수입니다."));
+
+      // Hide 를 제외한 모든 연산은 대상 타이머 식별자가 필요하다.
+      if (node.Operation != ScenarioTimeOperationType.Hide && string.IsNullOrWhiteSpace(node.TimerId))
+      {
+        items.Add(new DiagnosticItem(Severity.Error, node.Identifier,
+          $"{node.Operation} 연산에는 timerId 가 필요합니다."));
+      }
+
+      // 카운트다운 생성인데 목표/시작이 모두 0이면 즉시 0으로 표시된다.
+      if (node.Operation == ScenarioTimeOperationType.Create
+          && node.Direction == ScenarioTimeDirection.Countdown
+          && node.DurationSeconds <= 0f
+          && node.StartSeconds <= 0f)
+      {
+        items.Add(new DiagnosticItem(Severity.Warning, node.Identifier,
+          "카운트다운 Create 인데 durationSeconds/startSeconds 가 모두 0입니다. 즉시 0으로 표시됩니다."));
       }
     }
 

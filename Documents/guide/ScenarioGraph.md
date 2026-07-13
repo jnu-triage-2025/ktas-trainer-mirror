@@ -267,6 +267,43 @@ flags: []
 | `waitUntil` | `string` (`Immediately`\|`WaitUntilDone`) | `Immediately`=대기를 시작만 하고 즉시 다음 노드로 진행, `WaitUntilDone`=대기가 끝날 때까지 다음 노드 진행을 막음(기본값) | `WaitUntilDone` |
 | `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
 
+### TimeControl
+
+화면에 시간을 표시하는 스톱워치/카운트다운(이하 "타이머")을 생성하고, 흐름을 시작·정지·일시정지·재개하며, 표시를 켜고 끄는 노드입니다. 시나리오에서 "8분 안에 처치를 완료하라" 같은 시간 제한이나, 경과 시간을 측정하는 스톱워치를 띄워야 할 때 사용합니다.
+
+이 노드의 특징은 **생성·흐름·표시가 서로 분리**되어 있다는 점입니다. `Create`로 타이머를 만들면 "정지 상태"로 생성되며 화면에 표시되지 않습니다. 흐르게 하려면 `Start`를, 화면에 띄우려면 `Show`를 각각 따로 호출해야 합니다. 만약 `Create` 즉시 `Show` 없이 표시되기를 기대하면 안 됩니다 — 의도한 동작이 아니며, 스펙상 표시는 `Show`로만 켭니다. 반대로 `Hide`는 표시만 끌 뿐 타이머의 흐름과 존재는 유지되므로, 숨겨진 동안에도 시간은 계속 흐릅니다. 타이머가 더 이상 필요 없으면 명시적으로 `Remove`로 삭제해야 합니다.
+
+여러 타이머를 `timerId`로 구분해 동시에 보유할 수 있으나, **화면에 표시되는 타이머는 항상 최대 1개**입니다. `Show`로 새 타이머를 표시하면 기존 표시 대상은 교체됩니다. 카운트다운이 `00:00:00`에 도달해도 자동으로 숨겨지지 않으므로, 종료 연출이 필요하다면 별도의 `Hide`/`Remove` 노드를 둬야 합니다.
+
+카운트다운(`direction: Countdown`)의 경우 `durationSeconds`가 "총 목표 시간", `startSeconds`가 "시작할 때 화면에 표시할 남은값"입니다. `startSeconds`를 생략(또는 0)하면 `durationSeconds`에서 시작합니다. 스톱워치(`direction: Stopwatch`)에서는 `durationSeconds`를 무시하며 `startSeconds`만 시작 표시값(기본 0)으로 사용합니다. `Set` 연산은 흐름 상태(흐르고 있으면 계속 흐름, 멈춰 있으면 계속 멈춤)를 유지한 채 표시값만 절대값으로 바꾸며, `durationSeconds`가 양수면 카운트다운 목표 시간도 함께 재설정합니다(0이면 기존 목표 유지).
+
+모든 연산은 서버 권한으로 모든 클라이언트에 전파되며, 이 노드는 대기 없이 즉시 다음 노드로 진행합니다(흐름 자체는 백그라운드에서 진행됨). 표시 렌더링은 HUD(`TimeDisplayUIController`)가 매 프레임 `ScenarioTimeState`를 조회해 수행합니다.
+
+| 필드 이름 | 값 타입 | 값 | 예시 |
+|---|---|---|---|
+| `operation` | `string` (`Create`\|`Start`\|`Pause`\|`Resume`\|`Stop`\|`Set`\|`Show`\|`Hide`\|`Remove`) | 가할 연산(기본값 `Create`) | `Create` |
+| `timerId` | `string` | 대상 타이머 식별자. `Hide` 외 모든 연산에서 사용 | `scenario_timer` |
+| `direction` | `string` (`Stopwatch`\|`Countdown`) | 흐름 방향. `Create`에서만 사용. `Stopwatch`=경과 시간 증가, `Countdown`=남은 시간 감소(기본값 `Stopwatch`) | `Countdown` |
+| `durationSeconds` | `float` | `Create`에서는 카운트다운 목표(총) 시간(초). `Set`에서는 카운트다운 목표 재설정(0이면 유지). 스톱워치에서는 무시(기본값 0) | `480.0` |
+| `startSeconds` | `float` | `Create`에서는 시작 표시값(스톱워치=경과, 카운트다운=남은값. 카운트다운에서 0이면 `durationSeconds`로 대체). `Set`에서는 설정할 절대 표시값. 다른 연산에서는 무시(기본값 0) | `0.0` |
+| `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
+
+#### 연산별 동작 요약
+
+| `operation` | 사용 파라미터 | 동작 |
+|---|---|---|
+| `Create` | `timerId`, `direction`, `durationSeconds`, `startSeconds` | 타이머를 "정지 상태"로 생성. 화면에 표시하지 않음 |
+| `Start` | `timerId` | 타이머 흐름을 시작(또는 재시작) |
+| `Pause` | `timerId` | 흐름을 일시정지 |
+| `Resume` | `timerId` | 일시정지된 흐름을 재개 |
+| `Stop` | `timerId` | 흐름을 정지하고 표시값을 시작값으로 되돌림(리셋) |
+| `Set` | `timerId`, `startSeconds`, `durationSeconds`(0이면 목표 유지) | 표시값을 절대값으로 설정. 흐름 상태는 유지 |
+| `Show` | `timerId` | 지정한 타이머를 화면에 표시(기존 표시는 교체). 표시는 항상 최대 1개 |
+| `Hide` | (없음) | 화면 표시만 끔. 타이머 상태·흐름은 유지(숨겨진 동안에도 시간은 계속 흐름) |
+| `Remove` | `timerId` | 타이머를 삭제(표시 중이면 표시도 꺼짐) |
+
+> **주의**: `Create`만 한 상태에서 `Show` 없이 타이머가 화면에 나타나기를 기대하면 안 됩니다. 표시는 오직 `Show`로만 켜집니다. 반대로 `Hide`는 타이머를 삭제하지 않으므로, 표시를 꺼도 흐름은 계속되고 `Show`로 다시 켤 수 있습니다.
+
 ### Interaction
 
 플레이어가 어떤 오브젝트를 직접 조작(사용/조사/부착/탈착)해야만 다음으로 넘어갈 수 있는 노드입니다. 예를 들어 "문을 직접 열어야 다음 장면으로 넘어간다"처럼, 플레이어가 능동적으로 행동하게 만들고 싶을 때 Dialogue 대신 이 노드를 사용하면 몰입감을 높일 수 있습니다.

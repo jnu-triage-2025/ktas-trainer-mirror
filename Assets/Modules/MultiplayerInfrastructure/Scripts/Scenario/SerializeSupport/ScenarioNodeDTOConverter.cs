@@ -52,6 +52,7 @@ namespace MultiplayerInfrastructure.Scenario
         "NpcInteractControl" => Deserialize<ScenarioNpcInteractControlNodeDTO>(root, options),
         "ChatPrint" => Deserialize<ScenarioChatPrintNodeDTO>(root, options),
         "ExecuteCommand" => Deserialize<ScenarioExecuteCommandNodeDTO>(root, options),
+        "TimeControl" => Deserialize<ScenarioTimeControlNodeDTO>(root, options),
         _ => throw new JsonException($"Unknown nodeType '{nodeType}'.")
       };
     }

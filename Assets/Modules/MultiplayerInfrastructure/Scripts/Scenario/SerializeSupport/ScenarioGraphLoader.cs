@@ -264,6 +264,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioNpcInteractControlNodeDTO npcInteractControl => ConvertNpcInteractControl(npcInteractControl),
           ScenarioChatPrintNodeDTO chatPrint => ConvertChatPrint(chatPrint),
           ScenarioExecuteCommandNodeDTO executeCommand => ConvertExecuteCommand(executeCommand),
+          ScenarioTimeControlNodeDTO timeControl => ConvertTimeControl(timeControl),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -457,6 +458,18 @@ namespace MultiplayerInfrastructure.Scenario
           Identifier = dto.Identifier,
           DurationSeconds = dto.DurationSeconds ?? 0f,
           WaitUntil = ParseDelayWaitUntil(dto.WaitUntil),
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioTimeControlNode ConvertTimeControl(ScenarioTimeControlNodeDTO dto) =>
+        new ScenarioTimeControlNode
+        {
+          Identifier = dto.Identifier,
+          Operation = ParseTimeOperation(dto.Operation),
+          TimerId = dto.TimerId,
+          Direction = ParseTimeDirection(dto.Direction),
+          DurationSeconds = dto.DurationSeconds ?? 0f,
+          StartSeconds = dto.StartSeconds ?? 0f,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -930,6 +943,38 @@ namespace MultiplayerInfrastructure.Scenario
       throw new JsonException($"Unknown ScenarioDelayWaitUntil '{value}'.");
     }
 
+    private static ScenarioTimeOperationType ParseTimeOperation(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioTimeOperationType.Create;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioTimeOperationType parsed)
+          && Enum.IsDefined(typeof(ScenarioTimeOperationType), parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioTimeOperationType '{value}'.");
+    }
+
+    private static ScenarioTimeDirection ParseTimeDirection(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioTimeDirection.Stopwatch;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioTimeDirection parsed)
+          && Enum.IsDefined(typeof(ScenarioTimeDirection), parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioTimeDirection '{value}'.");
+    }
+
     private static ScenarioInteractionActorScope ParseInteractionActorScope(string value)
     {
       if (string.IsNullOrWhiteSpace(value))
@@ -1069,6 +1114,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioNpcInteractControlNode npcInteractControl => ConvertToDTO(npcInteractControl),
           ScenarioChatPrintNode chatPrint => ConvertToDTO(chatPrint),
           ScenarioExecuteCommandNode executeCommand => ConvertToDTO(executeCommand),
+          ScenarioTimeControlNode timeControl => ConvertToDTO(timeControl),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 
@@ -1263,6 +1309,19 @@ namespace MultiplayerInfrastructure.Scenario
           Identifier = node.Identifier,
           DurationSeconds = node.DurationSeconds,
           WaitUntil = node.WaitUntil.ToString(),
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioTimeControlNodeDTO ConvertToDTO(ScenarioTimeControlNode node) =>
+        new ScenarioTimeControlNodeDTO
+        {
+          NodeType = "TimeControl",
+          Identifier = node.Identifier,
+          Operation = node.Operation.ToString(),
+          TimerId = node.TimerId,
+          Direction = node.Direction.ToString(),
+          DurationSeconds = node.DurationSeconds,
+          StartSeconds = node.StartSeconds,
           NextIdentifier = node.NextIdentifier
         };
 

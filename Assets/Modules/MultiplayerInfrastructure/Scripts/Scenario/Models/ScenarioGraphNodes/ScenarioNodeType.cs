@@ -30,5 +30,6 @@ namespace MultiplayerInfrastructure.Scenario
     NpcInteractControl,
     ChatPrint,
     ExecuteCommand,
+    TimeControl,
   }
 }
