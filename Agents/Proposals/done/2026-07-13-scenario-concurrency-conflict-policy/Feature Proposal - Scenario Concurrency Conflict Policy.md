@@ -5,8 +5,9 @@
 - 선행/유사 패턴: `ScenarioPreflightPolicy`(인스펙터 직렬화 정책 + `Default`), `ScenarioPlayerTagMatchMode`(enum 미러링), `CommandDefinition_Gamemode`(enum 파싱 커맨드)
 - 관련 작업: `iv_signal_debug` 흐름 분리 + Interactable 사라짐 버그 수정(2026-07-13, TriageTrainer/시스템 최소 수정으로 이미 반영됨)
 
-> 상태: **제안(scheduled)**. `MultiplayerInfrastructure` 는 타 프로젝트 재사용 전제 모듈이므로,
-> 본 제안은 예시 구현만 포함하며 실제 모듈 반영은 인간 작업자 검토·승인 후 진행한다(AGENTS.md 규칙).
+> 상태: **반영 완료(done, 2026-07-13)**. 인간 작업자 승인 후 `MultiplayerInfrastructure` 에 실제 반영됨.
+> 반영 파일: `ScenarioConcurrencyConflictPolicy.cs`(신규), `ScenarioController.cs`, `DialoguePanelUIController.cs`,
+> `CommandDefinition.Scenario.cs`, 문서(`ScenarioGraph.md`, `ScenarioController.md`).
 > 파일별 예시 코드는 같은 폴더의 [`example-implementation.md`](./example-implementation.md) 참조.
 
 ### 개요

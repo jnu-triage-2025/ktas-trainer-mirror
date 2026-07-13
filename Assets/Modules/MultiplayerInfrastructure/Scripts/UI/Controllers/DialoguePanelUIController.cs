@@ -41,6 +41,10 @@ namespace MultiplayerInfrastructure.UI
     [SerializeField] private ScenarioController _currentController;
     [SerializeField] private IScenarioNode _currentNode;
 
+    // 대화창 계열 UI(Dialogue/Choice/Quiz)를 현재 점유 중인 시나리오 흐름(그래프) 식별자.
+    // 두 개 이상의 흐름이 동시에 대화창을 점유하려는 충돌을 감지하는 데 사용한다.
+    private string _owningGraphIdentifier;
+
     [SerializeField] private bool _isTyping;
     [SerializeField] private bool _isWaitingForInput;
     [SerializeField] private string _fullText;
@@ -106,6 +110,37 @@ namespace MultiplayerInfrastructure.UI
     /// 입력 대기 중인지 여부
     /// </summary>
     public bool IsWaitingForInput => _isWaitingForInput;
+
+    /// <summary>현재 대화창 계열 UI를 점유 중인 그래프 식별자(없으면 null).</summary>
+    public string CurrentDialogueOwner => _owningGraphIdentifier;
+
+    #endregion
+
+    #region Dialogue Ownership (동시 점유 충돌 감지)
+
+    /// <summary>
+    /// <paramref name="owningGraphIdentifier"/> 이외의 다른 흐름이 대화창을 점유 중이면 true.
+    /// 점유자가 없거나 동일 식별자이면 false.
+    /// </summary>
+    public bool IsDialogueOwnedByOther(string owningGraphIdentifier)
+    {
+      if (string.IsNullOrEmpty(_owningGraphIdentifier))
+        return false;
+
+      return !string.Equals(_owningGraphIdentifier, owningGraphIdentifier, StringComparison.Ordinal);
+    }
+
+    /// <summary>대화창 점유자를 등록/갱신한다.</summary>
+    public void MarkDialogueOwner(string owningGraphIdentifier)
+    {
+      _owningGraphIdentifier = owningGraphIdentifier;
+    }
+
+    /// <summary>대화창 점유자를 해제한다(시나리오 종료 시).</summary>
+    public void ClearDialogueOwner()
+    {
+      _owningGraphIdentifier = null;
+    }
 
     #endregion
 
@@ -237,6 +272,9 @@ namespace MultiplayerInfrastructure.UI
       _isWaitingForInput = false;
       _inputContext = DialogueInputContext.None;
       _pendingChoiceOptions = null;
+
+      // 대화창 점유자 해제. 누락하면 다음 시나리오가 계속 충돌로 오판된다.
+      _owningGraphIdentifier = null;
 
       // 선택지 정리
       ClearSelections();
