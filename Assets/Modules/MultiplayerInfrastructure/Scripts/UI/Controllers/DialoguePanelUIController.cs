@@ -200,12 +200,13 @@ namespace MultiplayerInfrastructure.UI
 
       _currentController = controller;
 
-      // InteractableHintUI를 시나리오 모드로 전환
-      if (!_interactableHintUI.IsUnityNull())
-      {
-        if (!_interactableHintUI.IsDialogueMode)
-          _interactableHintUI.EnterDialogueMode();
-      }
+      // InteractableHintUI 를 시나리오 시작 시점에 무조건 Dialogue 모드로 전환하지 않는다.
+      // 예전에는 여기서 EnterDialogueMode() 를 호출해 힌트 목록을 비웠는데, 이는 대화창 UI 를
+      // 실제로 표시하지 않는(신호 대기 등 배경 감시용) 시나리오에서도 월드 상호작용 힌트를
+      // 지워버려, 시나리오가 끝나기 전까지 Interactable 이 모두 사라져 보이는 버그의 원인이었다.
+      // Dialogue/Choice/Quiz 처럼 실제로 대화창을 점유하는 노드가 표시될 때
+      // DisplayDialogue/DisplayChoice 내부의 EnsureDialogueModeActive() 가 그 시점에
+      // 지연 전환하므로, 시작 시점에 미리 전환할 필요가 없다.
 
       // 시나리오 시작 시점에는 패널을 열지 않는다. 실제 대화/선택/퀴즈 노드가 표시될 때
       // DisplayDialogue/DisplayChoice 내부의 EnsureOverlayActive() 가 패널 표시 + 오버레이 push 를

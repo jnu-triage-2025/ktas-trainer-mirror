@@ -508,3 +508,7 @@ NPC가 특정 시점에만 상호작용 가능하게 만들고 싶을 때 쓰는
 | `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
 
 > **활용 예 — 수액 연결 시그널 확인**: 수액 줄 연결 지점(`IntravenousLineConnectionPoint`)은 연결 시도/완료/끊김 시 각각 `iv_connect_start_<지점Identifier>`, `iv_connected_<지점Identifier>`, `iv_disconnected_<지점Identifier>` 시그널을 인게임 서버로 올립니다(RuntimeState 레지스트리에 `sig.` 접두사로 기록). 따라서 `Validator`(condition=`RegistryContains`, registryType=`RuntimeState`, registryIdentifier=`sig.iv_connected_<지점Identifier>`, `waitForCondition: true`) 게이트로 해당 시그널을 기다렸다가, `ChatPrint`로 "연결 완료 감지"를 출력하거나 `ExecuteCommand`로 후속 명령을 실행할 수 있습니다. 완성된 예시는 `Assets/Modules/TriageTrainer/Resources/Scenario/iv_signal_debug.scenario.json`을 참고하세요.
+>
+> 이 예시 그래프는 두 개의 흐름(자기완결적 시퀀스)으로 구성되어 있습니다. **흐름1**(`flow1_*`)은 감시 등록 안내를 출력하고 `ServerInternalSignal`(operation=`Resolve`, `waitForResolution: false`)로 등록 신호만 올린 뒤 마칩니다 — 진입점 `flow1_intro_print`, 마침점 `flow1_registered_print`. **흐름2**(`flow2_*`)는 진입점 `flow2_wait_connect_start`의 `Validator` 게이트에서 연결 시작 신호를 기다렸다가, 연결/끊김 신호를 순차적으로 감지해 메시지를 출력하고 마침점 `flow2_print_disconnected`에서 종료합니다. 두 흐름은 논리적으로 분리된 시퀀스이며, 예시에서는 흐름1의 마침점이 흐름2의 진입점으로 이어지도록 연결되어 있습니다.
+>
+> **주의 — UI 없는(신호 대기) 시나리오와 Interactable**: 이 예시처럼 `Dialogue`/`Choice`/`Quiz` 같은 대화창 UI 노드가 하나도 없는 "배경 신호 감시" 시나리오는, 시나리오가 진행 중이어도 월드 Interactable 힌트를 가리지 않습니다. (시나리오 시작 시점에 힌트 UI를 대화 모드로 강제 전환하지 않으며, 실제 대화창 노드가 표시될 때만 지연 전환합니다.) 또한 시나리오가 종료되면 로컬 플레이어의 근처 Interactable을 다시 인식시켜 힌트가 현재 상태로 복구됩니다.

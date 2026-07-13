@@ -376,6 +376,14 @@ namespace MultiplayerInfrastructure.Scenario
         _uiController.EndScenario();
       }
 
+      // 시나리오가 진행되는 동안 힌트 UI 가 Dialogue 모드로 캐시만 갱신하고 화면에 반영하지
+      // 않았거나, Dialogue 모드로 전환된 적이 없어 복원 대상 캐시가 실제 근처 상황과 어긋날 수
+      // 있다. 종료 직후 로컬 플레이어에게 근처 Interactable 을 다시 인식(재갱신)시켜, 시나리오가
+      // 끝났을 때 월드 상호작용 힌트가 확실히 현재 상태로 복구되도록 한다.
+      var localPlayer = Registry.Registry.GetFirstEntityComponent<PlayerController>(
+        EntityType.Player, each => each != null && each.IsOwner);
+      localPlayer?.RefreshInteractableHintsNow();
+
       OnScenarioEnded?.Invoke();
     }
 
