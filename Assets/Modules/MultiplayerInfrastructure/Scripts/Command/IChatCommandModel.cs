@@ -14,6 +14,18 @@ namespace MultiplayerInfrastructure.Command
     /// </summary>
     string Description { get; }
 
+    /// <summary>
+    /// 이 커맨드 최상위에 필요한 permission identifier.
+    /// 예: "scenario" → "scenario" 권한이 있어야 실행 가능.
+    /// PermissionService 에서 하위 경로 확장을 통해 "scenario.execute" 등도 처리된다.
+    /// null 또는 empty 이면 모든 유저가 실행 가능.
+    /// </summary>
+    string PermissionIdentifier { get; }
+
+    /// <summary>
+    /// Legacy admin-only flag. PermissionService 로 대체되었으나 하위 호환을 위해 유지.
+    /// PermissionService 가 로드되지 않은 경우의 fallback으로 사용된다.
+    /// </summary>
     bool RequiresAdmin { get; }
 
     void Execute(NetworkConnection sender, string[] args);

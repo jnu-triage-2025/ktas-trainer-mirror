@@ -24,6 +24,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("  <targets>", "@s, @a, @n, fish:<id>, or an @selector."),
     };
 
+    public string PermissionIdentifier => "title";
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
