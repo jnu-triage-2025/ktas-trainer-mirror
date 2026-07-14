@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 491b1e9631db04480aeb3638f973098a, type: 3}
-  m_Name: 24g
+  m_Name: cannula_24g
   m_EditorClassIdentifier: Assembly-CSharp::ItemBaseModelSO
-  identifier: 24g
+  identifier: cannula_24g
   displayName: "24\uAC8C\uC774\uC9C0 \uCE90\uB27C\uB77C"
   description: "\uD608\uAD00\uC774 \uC791\uC740 \uC131\uC778\uC774\uB098 \uC18C\uC544\uC5D0\uAC8C
     \uC218\uC561\uC744 \uB290\uB9B0 \uC18D\uB3C4\uB85C \uD22C\uC5EC\uD560 \uB54C

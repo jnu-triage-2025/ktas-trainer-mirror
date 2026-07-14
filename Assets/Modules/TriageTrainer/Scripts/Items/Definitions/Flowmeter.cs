@@ -4,6 +4,6 @@ namespace TriageTrainer.ItemDefinitions
   {
     public const string Identifier   = "flowmeter";
     public const string DisplayName  = "유량계";
-    public const string Description  = "습윤병과 결합하여 완성합니다.";
+    public const string Description  = "멸균증류수가 담긴 습윤병과 결합하여 산소 유량계를 완성합니다.";
   }
 }

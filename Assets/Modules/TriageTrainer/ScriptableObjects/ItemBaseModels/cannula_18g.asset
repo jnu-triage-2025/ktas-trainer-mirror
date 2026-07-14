@@ -10,11 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 491b1e9631db04480aeb3638f973098a, type: 3}
-  m_Name: 20g
+  m_Name: cannula_18g
   m_EditorClassIdentifier: Assembly-CSharp::ItemBaseModelSO
-  identifier: 20g
-  displayName: "20\uAC8C\uC774\uC9C0 \uCE90\uB27C\uB77C"
-  description: "\uC218\uD608 \uBC0F \uC218\uC561 \uACF5\uAE09 \uC2DC \uC0AC\uC6A9\uD569\uB2C8\uB2E4."
+  identifier: cannula_18g
+  displayName: "18\uAC8C\uC774\uC9C0 \uCE90\uB27C\uB77C"
+  description: "\uC131\uC778\uC758 \uC218\uD608 \uBC0F \uB300\uB7C9\uC758 \uC218\uC561
+    \uACF5\uAE09 \uC2DC \uC0AC\uC6A9\uD569\uB2C8\uB2E4."
   hasDurability: 0
   maxDurability: 1
   maxStackCount: 64

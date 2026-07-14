@@ -62,7 +62,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: dcbd501e1f4b341e8b1c7f437e4b1469, type: 3}
       propertyPath: m_Name
-      value: humidifier_bottle
+      value: humidifier_sterile_distilled_water_bottle
       objectReference: {fileID: 0}
     - target: {fileID: 6124915608905433365, guid: a17005947a1584d589dcd4a1bfe37904, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'

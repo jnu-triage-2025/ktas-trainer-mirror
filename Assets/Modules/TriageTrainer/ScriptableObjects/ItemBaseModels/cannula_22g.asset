@@ -10,12 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 491b1e9631db04480aeb3638f973098a, type: 3}
-  m_Name: humidifier_bottle
+  m_Name: cannula_22g
   m_EditorClassIdentifier: Assembly-CSharp::ItemBaseModelSO
-  identifier: humidifier_bottle
-  displayName: "\uC2B5\uC724\uBCD1"
-  description: "\uBA78\uADE0\uC99D\uB958\uC218\uB97C \uCC44\uC6B8 \uC218 \uC788\uB294
-    \uC2B5\uC724\uBCD1\uC785\uB2C8\uB2E4."
+  identifier: cannula_22g
+  displayName: "22\uAC8C\uC774\uC9C0 \uCE90\uB27C\uB77C"
+  description: "\uC218\uC561 \uC8FC\uC785 \uC2DC \uC0AC\uC6A9\uD569\uB2C8\uB2E4."
   hasDurability: 0
   maxDurability: 1
   maxStackCount: 64

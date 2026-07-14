@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5412002717838773054}
   - component: {fileID: 325639422530414317}
   m_Layer: 6
-  m_Name: 20g
+  m_Name: cannula_20g
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
