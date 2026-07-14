@@ -6,9 +6,11 @@ using FishNet.Object;
 using MultiplayerInfrastructure.Command;
 using MultiplayerInfrastructure.Datapack;
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Problem;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
@@ -78,9 +80,19 @@ namespace MultiplayerInfrastructure.Chat
         return;
       }
 
-      string formatted = $"<{GetDisplayName(sender)}> {rawMessage}";
+      string displayName = GetDisplayName(sender);
+      string senderUuid = string.Empty;
+      if (UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor))
+        senderUuid = descriptor.Identifier;
+
+      string formatted = $"<{displayName}> {rawMessage}";
       ReceiveChatObserversRpc(formatted);
       MarkMessageSent(sender);
+
+      // 로그 기록 (서버 측)
+      GameLogService.WriteChat(
+        $"<{displayName}> {rawMessage}",
+        string.IsNullOrEmpty(senderUuid) ? displayName : senderUuid);
     }
 
     [ObserversRpc]
@@ -95,6 +107,15 @@ namespace MultiplayerInfrastructure.Chat
     {
       if (sender == null)
         return;
+
+      // 커맨드 로그 기록 (서버 측)
+      string senderName = GetDisplayName(sender);
+      string senderUuid = string.Empty;
+      if (UserDescriptorService.TryGetByClientId(sender.ClientId, out var desc))
+        senderUuid = desc.Identifier;
+      GameLogService.WriteCommand(
+        $"/{commandLine} (by {senderName})",
+        string.IsNullOrEmpty(senderUuid) ? senderName : senderUuid);
 
       TryExecuteCommandInternal(commandLine, sender, out _);
     }
@@ -416,6 +437,8 @@ namespace MultiplayerInfrastructure.Chat
 
     public bool TryExecuteSystemCommand(string commandLine, out string result)
     {
+      // 서버 콘솔 커맨드 로그 기록
+      GameLogService.WriteCommand($"/{commandLine} (by server)", "server");
       return TryExecuteCommandInternal(commandLine, null, out result);
     }
 

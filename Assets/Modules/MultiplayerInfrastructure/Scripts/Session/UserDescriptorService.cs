@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MultiplayerInfrastructure.Logging;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Session
@@ -42,6 +43,9 @@ namespace MultiplayerInfrastructure.Session
       _clientIdByIdentifier[descriptor.Identifier] = clientId;
 
       Debug.Log($"[UserDescriptorService] Registered: clientId={clientId} → {descriptor}");
+      GameLogService.WritePlayerJoin(
+        $"Player joined: displayName={descriptor.DisplayName}, clientId={clientId}, uuid={descriptor.Identifier}",
+        descriptor.Identifier);
     }
 
     /// <summary>PlayerController 디스폰 시 호출됩니다.</summary>
@@ -58,6 +62,9 @@ namespace MultiplayerInfrastructure.Session
 
       _byIdentifier.Remove(identifier);
       Debug.Log($"[UserDescriptorService] Unregistered: {descriptor}");
+      GameLogService.WritePlayerJoin(
+        $"Player left: displayName={descriptor.DisplayName}, uuid={descriptor.Identifier}",
+        descriptor.Identifier);
     }
 
     /// <summary>SyncVar 변경 시 DisplayName을 최신으로 유지합니다.</summary>
