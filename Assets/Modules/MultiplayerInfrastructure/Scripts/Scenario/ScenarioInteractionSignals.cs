@@ -1,4 +1,5 @@
 using System;
+using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Registry;
 
 namespace MultiplayerInfrastructure.Scenario
@@ -107,6 +108,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Registry.Registry.Register(RegistryType.RuntimeState, normalizedSignalId, true);
+      GameLogService.WriteSignal($"Signal raised: {normalizedSignalId}", normalizedSignalId);
       OnSignalRegistered?.Invoke(normalizedSignalId);
     }
 
@@ -119,6 +121,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Registry.Registry.Unregister(RegistryType.RuntimeState, normalizedSignalId);
+      GameLogService.WriteSignal($"Signal cleared: {normalizedSignalId}", normalizedSignalId);
     }
 
     /// <summary>신호가 올라가 있는지 조회한다(Validator 의 RegistryContains 와 동일 기준).</summary>

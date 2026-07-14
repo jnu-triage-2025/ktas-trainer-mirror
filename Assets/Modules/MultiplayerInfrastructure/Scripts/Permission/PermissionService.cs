@@ -109,13 +109,14 @@ namespace MultiplayerInfrastructure.Permission
         },
       };
 
-      // operator role: user 상속 + permission 관리
+      // operator role: user 상속 + permission 관리 + log 관리
       file.permissions["operator"] = new RoleDefinition
       {
         contains = new List<string> { "user" },
         permissions = new List<string>
         {
           "permission",
+          "log",
         },
       };
 

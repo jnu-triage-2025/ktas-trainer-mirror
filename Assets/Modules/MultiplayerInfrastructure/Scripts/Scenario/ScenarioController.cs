@@ -14,6 +14,7 @@ using MultiplayerInfrastructure.Tag;
 using MultiplayerInfrastructure.Scenario.Preflight;
 using MultiplayerInfrastructure.TTS;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Logging;
 using FishNet.Object;
 using FishNet;
 using FishNet.Connection;
@@ -361,6 +362,13 @@ namespace MultiplayerInfrastructure.Scenario
 
       OnScenarioStarted?.Invoke();
       Debug.Log("[ScenarioController] Scenario started");
+      try
+      {
+        GameLogService.WriteScenario(
+          $"Scenario started: graph={graph.Identifier}, startNode={startId}, ownerClientId={ownerClientId?.ToString() ?? "null"}",
+          graph.Identifier);
+      }
+      catch { /* 로그 실패는 시나리오 실행에 영향 없음 */ }
 
       // PlayTTS 노드의 동적 세그먼트를 백그라운드에서 미리 합성 (캐싱)
       PrewarmTTSCache();
@@ -374,6 +382,8 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public void EndScenario()
     {
+      // 로그 기록을 위해 그래프 ID를 먼저 캡처 (_currentGraph는 이후 null로 초기화됨)
+      string endingGraphId = _currentGraph?.Identifier;
       CancelDialogueAutoAdvance();
 
       // 아직 진행 중인 시나리오 코루틴(특히 WaitMode.None 으로 전역 시나리오보다 오래
@@ -414,6 +424,13 @@ namespace MultiplayerInfrastructure.Scenario
       localPlayer?.RefreshInteractableHintsNow();
 
       OnScenarioEnded?.Invoke();
+      try
+      {
+        GameLogService.WriteScenario(
+          $"Scenario ended: graph={endingGraphId ?? "unknown"}",
+          endingGraphId);
+      }
+      catch { /* 로그 실패는 시나리오 종료에 영향 없음 */ }
     }
 
     /// <summary>
@@ -478,6 +495,13 @@ namespace MultiplayerInfrastructure.Scenario
 
       var option = _activeOptions[index];
       OnOptionSelected?.Invoke(option);
+      try
+      {
+        GameLogService.WriteScenario(
+          $"Option selected: index={index}, text='{option.DisplayText}', nextNode='{option.NextNodeIdentifier}', graph={_currentGraph?.Identifier}",
+          _currentGraph?.Identifier);
+      }
+      catch { /* 로그 실패는 선택지 처리에 영향 없음 */ }
 
       ClearOptions();
 
@@ -522,6 +546,13 @@ namespace MultiplayerInfrastructure.Scenario
     {
       RecordNodeVisit(node);
       LogNodeExecution(node);
+      try
+      {
+        GameLogService.WriteScenario(
+          $"Node executed: id='{node?.Identifier}', type={node?.NodeType}, graph={_currentGraph?.Identifier}",
+          _currentGraph?.Identifier);
+      }
+      catch { /* 로그 실패는 노드 실행에 영향 없음 */ }
       OnNodeChanged?.Invoke(node);
 
       switch (node)
