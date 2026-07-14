@@ -19,6 +19,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("  [count]", "Amount to give. Default: 1."),
       new UsageLine("  [target]", "@s, <clientId>, fish:<id>. Default: you."),
     };
+    public string PermissionIdentifier => "give";
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;

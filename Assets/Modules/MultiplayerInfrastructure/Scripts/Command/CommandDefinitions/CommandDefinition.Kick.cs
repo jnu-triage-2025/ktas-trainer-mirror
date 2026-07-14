@@ -12,6 +12,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("kick <target>", "Kick a connected target. Requires admin."),
       new UsageLine("  <target>", "Target display name or client ID."),
     };
+    public string PermissionIdentifier => "kick";
     public bool RequiresAdmin => true;
 
     private readonly ChatService _manager;

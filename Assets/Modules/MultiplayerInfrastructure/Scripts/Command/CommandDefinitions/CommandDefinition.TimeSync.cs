@@ -28,6 +28,7 @@ namespace MultiplayerInfrastructure.Command
     };
 
     // 서버(호스트/콘솔)에서만 조정 가능하게 한다.
+    public string PermissionIdentifier => "timesync";
     public bool RequiresAdmin => true;
 
     private readonly ChatService _chat;

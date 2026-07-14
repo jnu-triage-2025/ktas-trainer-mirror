@@ -21,6 +21,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("  <model>", "Registered player model identifier."),
     };
 
+    public string PermissionIdentifier => "character";
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;

@@ -25,6 +25,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("scoreboard players reset <target> [objective]", "Reset score(s)."),
       new UsageLine("scoreboard players operation <target> <objA> <op> <src> <objB>", "Combine two scores."),
     };
+    public string PermissionIdentifier => "scoreboard";
     public bool RequiresAdmin => false;
 
     private static readonly HashSet<string> SupportedCriteria = new(StringComparer.OrdinalIgnoreCase)

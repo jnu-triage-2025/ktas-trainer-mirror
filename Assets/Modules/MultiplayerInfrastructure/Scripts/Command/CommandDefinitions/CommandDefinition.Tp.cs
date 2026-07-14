@@ -2,6 +2,7 @@ using System;
 using FishNet;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
+using MultiplayerInfrastructure.Permission;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Session;
@@ -37,6 +38,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("  <waypoint>",            "Registered waypoint identifier."),
     };
 
+    public string PermissionIdentifier => "tp";
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
@@ -215,16 +217,25 @@ namespace MultiplayerInfrastructure.Command
       return float.IsFinite(value);
     }
 
-    /// sender 가 null(시스템 콘솔) 이거나 호스트면 어드민으로 판단.
-    /// 그 외에는 subject 가 sender 본인일 때만 허용.
+    /// sender 가 null(시스템 콘솔) 이거나 호스트면 항상 허용.
+    /// 그 외에는 PermissionService 로 "tp" 권한을 확인하거나 subject 가 sender 본인인지 확인.
     private static bool IsAdminOrSelf(NetworkConnection sender, PlayerController subject)
     {
       // 서버 콘솔(sender == null) 또는 호스트(IsHost) → 항상 허용
       if (sender == null || sender.IsHost)
         return true;
 
-      // subject 의 소유자가 sender 본인인지 확인
-      return subject != null && subject.Owner != null && subject.Owner.ClientId == sender.ClientId;
+      // subject 의 소유자가 sender 본인이면 허용 (자기 자신 이동은 언제나 가능)
+      if (subject != null && subject.Owner != null && subject.Owner.ClientId == sender.ClientId)
+        return true;
+
+      // 그 외 타인 이동은 PermissionService 에서 "tp" 권한 확인
+      // (CommandService 레벨에서 이미 top-level "tp" 권한을 확인했으므로,
+      //  여기서 실질적으로 체크하는 것은 operator 이상 여부다.)
+      if (UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor))
+        return PermissionService.HasPermission(descriptor.Identifier, "tp");
+
+      return false;
     }
 
     private static bool TryResolveWaypointPosition(string identifier, out Vector3 position)

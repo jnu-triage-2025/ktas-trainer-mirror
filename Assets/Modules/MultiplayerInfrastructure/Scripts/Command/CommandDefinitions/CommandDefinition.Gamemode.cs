@@ -14,6 +14,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("gamemode spectator", "Free-fly spectator mode (also: 1)."),
     };
 
+    public string PermissionIdentifier => "gamemode";
     public bool RequiresAdmin => false;
 
     private readonly ChatService _manager;
