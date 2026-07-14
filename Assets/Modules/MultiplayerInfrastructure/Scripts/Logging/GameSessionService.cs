@@ -86,13 +86,14 @@ namespace MultiplayerInfrastructure.Logging
     }
 
     /// <summary>
-    /// 로그 파일/폴더 이름에 사용하기 위한 세션 슬러그를 반환한다.
-    /// 예: "session-a1b2c3d4e5f6..." (타임스탬프 포함)
+    /// 로그 파일 이름에 사용하기 위한 세션 슬러그를 반환한다.
+    /// 형식: session-{yyyyMMdd_HHmmss}-{uuid앞8자}
+    /// 날짜·시간이 앞에 위치하므로 파일 탐색기에서 이름순 정렬 시 시간 순서대로 나열된다.
     /// </summary>
     public static string GetSessionSlug()
     {
       EnsureInitialized();
-      return $"session-{_sessionId}_{SessionStartTime:yyyyMMdd_HHmmss}";
+      return $"session-{SessionStartTime:yyyyMMdd_HHmmss}-{_sessionId[..8]}";
     }
   }
 }
