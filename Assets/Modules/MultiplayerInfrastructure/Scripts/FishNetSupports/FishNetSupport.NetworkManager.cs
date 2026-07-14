@@ -162,6 +162,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
         // 새 서버 세션 시작: 이전 세션에서 남은 StaticPlacedItem 상태를 초기화한다.
         // static Dictionary는 도메인 리로드 없이는 유지되므로 명시적 초기화가 필요하다.
         StaticPlacedItemService.ClearAll();
+        StaticObjectDisplaymentService.ClearAll();
 
         _deferredPlayerSpawningPrepared = false;
         PrepareDeferredPlayerSpawning();
@@ -172,6 +173,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
       {
         // 서버 세션 종료: 상태를 정리하여 다음 세션이 깨끗한 상태로 시작하도록 한다.
         StaticPlacedItemService.ClearAll();
+        StaticObjectDisplaymentService.ClearAll();
         _deferredPlayerSpawningPrepared = false;
       }
     }
