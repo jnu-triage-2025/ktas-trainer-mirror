@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
+using MultiplayerInfrastructure.Permission;
+using MultiplayerInfrastructure.Session;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Command
@@ -27,6 +29,8 @@ namespace MultiplayerInfrastructure.Command
       RegisterCommand(new CommandDefinition_Title(_chatManager));
       RegisterCommand(new CommandDefinition_EntityPreset(_chatManager));
       RegisterCommand(new CommandDefinition_TimeSync(_chatManager));
+      RegisterCommand(new CommandDefinition_Tp(_chatManager));
+      RegisterCommand(new CommandDefinition_Permission(_chatManager));
       // RegisterCommand(new CommandDefinition_Kick(_chatManager));
     }
 
@@ -71,14 +75,34 @@ namespace MultiplayerInfrastructure.Command
         return false;
       }
 
-      // 관리자 전용 커맨드: 호스트(서버 로컬 클라이언트) 또는 서버 콘솔(sender == null)만 허용한다.
-      // (기존에는 IsAdmin 검사가 주석 처리되어 RequiresAdmin 커맨드가 모두에게 거부되는 버그가 있었다.)
-      if (command.RequiresAdmin && sender != null && !sender.IsHost)
+      // ── 권한 검사 ────────────────────────────────────────────────────────────
+      // sender == null (서버 콘솔) 또는 IsHost 이면 항상 허용.
+      // 그 외 클라이언트는 PermissionService 를 통해 role 기반 검사를 수행한다.
+      // Legacy RequiresAdmin flag 는 PermissionService 로드에 실패한 경우의 fallback으로 사용한다.
+      if (sender != null && !sender.IsHost)
       {
-        if (!suppressSystemMessages)
-          _chatManager.SendSystemMessage(sender, "Permission denied.");
-        error = "Permission denied.";
-        return true;
+        PermissionService.EnsureLoaded();
+        string userIdentifier = ResolveUserIdentifier(sender);
+        string permId = command.PermissionIdentifier;
+
+        bool denied;
+        if (!string.IsNullOrWhiteSpace(permId))
+        {
+          denied = !PermissionService.HasPermission(userIdentifier, permId);
+        }
+        else
+        {
+          // PermissionIdentifier 없는 커맨드는 RequiresAdmin fallback 사용
+          denied = command.RequiresAdmin;
+        }
+
+        if (denied)
+        {
+          if (!suppressSystemMessages)
+            _chatManager.SendSystemMessage(sender, "Permission denied.");
+          error = "Permission denied.";
+          return true;
+        }
       }
 
       // Intercept help flags (-h / --help / /? / ?) for every command so that
@@ -106,6 +130,21 @@ namespace MultiplayerInfrastructure.Command
     public IEnumerable<IChatCommandModel> GetCommands()
     {
       return _commands.Values;
+    }
+
+    /// <summary>
+    /// NetworkConnection 으로부터 UserDescriptor 의 Identifier(UUID) 를 조회한다.
+    /// 조회에 실패하면 빈 문자열을 반환 (PermissionService 는 빈 identifier 를 default role 로 처리한다).
+    /// </summary>
+    private static string ResolveUserIdentifier(NetworkConnection sender)
+    {
+      if (sender == null)
+        return string.Empty;
+
+      if (UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor))
+        return descriptor.Identifier;
+
+      return string.Empty;
     }
   }
 }

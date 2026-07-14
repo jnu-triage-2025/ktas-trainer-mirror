@@ -22,6 +22,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("  <preset>", "Registered entity preset identifier."),
       new UsageLine("  <target>", "@s, <clientId>, fish:<id>, or entity id."),
     };
+    public string PermissionIdentifier => "entitypreset";
     public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
