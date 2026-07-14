@@ -73,6 +73,7 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<O2Line>(O2Line.Identifier);
       Registry.RegisterItemDefinition<SterileDistilledWater>(SterileDistilledWater.Identifier);
       Registry.RegisterItemDefinition<Flowmeter>(Flowmeter.Identifier);
+      Registry.RegisterItemDefinition<Humidifier>(Humidifier.Identifier);
       Registry.RegisterItemDefinition<Penlight>(Penlight.Identifier);
       Registry.RegisterItemDefinition<Plaster>(Plaster.Identifier);
       Registry.RegisterItemDefinition<ReservoirBag>(ReservoirBag.Identifier);
@@ -205,12 +206,12 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
           .Requires(Yankauer.Identifier, 1)
           .Produces(1));
 
-      // 유량계 1개 + 멸균증류수 1개 → 준비된 산소 유량계 1개
+      // 유량계 1개 + 습윤병 1개 → 준비된 산소 유량계 1개
       // (시나리오 구식 산출물명 oxyflowmeter)
       ItemCombineRecipeRegistry.Register(
         new ItemCombineRecipe(Oxyflowmeter.Identifier)
           .Requires(Flowmeter.Identifier, 1)
-          .Requires(SterileDistilledWater.Identifier, 1)
+          .Requires(Humidifier.Identifier, 1)
           .Produces(1));
 
       // ===== [관계 1] 용액 + *cc 주사기 → 용액이 든 *cc 주사기 (카테터 없음, 9종) =====

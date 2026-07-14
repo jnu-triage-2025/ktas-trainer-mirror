@@ -34,7 +34,7 @@
       "sig.check_gcs_patient_b", "sig.check_gcs_patient_c", "sig.check_vital_patient_b",
       "sig.check_vital_patient_c", "sig.close_vital_ui_b", "sig.close_vital_ui_c",
       "sig.click_dummy_b", "sig.click_patient_b_face", "sig.click_patient_c_face",
-      "sig.click_flowmeter", "sig.click_humidifierbottle", "sig.click_sdw", "sig.click_nasal",
+      "sig.click_flowmeter", "sig.click_humidifier", "sig.click_sdw", "sig.click_nasal",
       "sig.enter_triage_zone"
     ]
   },

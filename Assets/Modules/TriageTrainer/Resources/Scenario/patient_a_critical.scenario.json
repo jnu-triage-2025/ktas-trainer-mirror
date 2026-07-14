@@ -1264,7 +1264,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_humidifierbottle"
+              "registryIdentifier": "sig.click_humidifier"
             },
             {
               "type": "Registry",
