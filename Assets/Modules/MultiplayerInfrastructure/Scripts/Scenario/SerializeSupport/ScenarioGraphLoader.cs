@@ -237,6 +237,7 @@ namespace MultiplayerInfrastructure.Scenario
         dto switch
         {
           ScenarioDialogueNodeDTO dialogue => ConvertDialogue(dialogue),
+          ScenarioDisinteractableDialogueNodeDTO dialogue => ConvertDisinteractableDialogue(dialogue),
           ScenarioChoiceNodeDTO choice => ConvertChoice(choice),
           ScenarioSoundNodeDTO sound => ConvertSound(sound),
           ScenarioPlayerMoveNodeDTO move => ConvertPlayerMove(move),
@@ -266,6 +267,19 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioExecuteCommandNodeDTO executeCommand => ConvertExecuteCommand(executeCommand),
           ScenarioTimeControlNodeDTO timeControl => ConvertTimeControl(timeControl),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
+        };
+
+    private static ScenarioDisinteractableDialogueNode ConvertDisinteractableDialogue(ScenarioDisinteractableDialogueNodeDTO dto) =>
+        new ScenarioDisinteractableDialogueNode
+        {
+          Identifier = dto.Identifier,
+          SpeakerName = dto.SpeakerName,
+          DialogueContent = dto.DialogueContent,
+          PortraitSpriteIdentifier = dto.PortraitSpriteIdentifier,
+          FadeInDuration = dto.FadeInDuration ?? ScenarioTimeValue.Seconds(0.5d),
+          DisplayDuration = dto.DisplayDuration ?? ScenarioTimeValue.Seconds(1.5d),
+          FadeOutDuration = dto.FadeOutDuration ?? ScenarioTimeValue.Seconds(0.5d),
+          NextIdentifier = dto.NextIdentifier
         };
 
     private static ScenarioDialogueNode ConvertDialogue(ScenarioDialogueNodeDTO dto) =>
@@ -1088,6 +1102,7 @@ namespace MultiplayerInfrastructure.Scenario
         node switch
         {
           ScenarioDialogueNode dialogue => ConvertToDTO(dialogue),
+          ScenarioDisinteractableDialogueNode dialogue => ConvertToDTO(dialogue),
           ScenarioChoiceNode choice => ConvertToDTO(choice),
           ScenarioSoundNode sound => ConvertToDTO(sound),
           ScenarioPlayerMoveNode move => ConvertToDTO(move),
@@ -1116,6 +1131,20 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioExecuteCommandNode executeCommand => ConvertToDTO(executeCommand),
           ScenarioTimeControlNode timeControl => ConvertToDTO(timeControl),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
+        };
+
+    private static ScenarioDisinteractableDialogueNodeDTO ConvertToDTO(ScenarioDisinteractableDialogueNode node) =>
+        new ScenarioDisinteractableDialogueNodeDTO
+        {
+          NodeType = "DisinteractableDialogue",
+          Identifier = node.Identifier,
+          SpeakerName = node.SpeakerName,
+          DialogueContent = node.DialogueContent,
+          PortraitSpriteIdentifier = node.PortraitSpriteIdentifier,
+          FadeInDuration = node.FadeInDuration,
+          DisplayDuration = node.DisplayDuration,
+          FadeOutDuration = node.FadeOutDuration,
+          NextIdentifier = node.NextIdentifier
         };
 
     private static ScenarioDialogueNodeDTO ConvertToDTO(ScenarioDialogueNode node) =>

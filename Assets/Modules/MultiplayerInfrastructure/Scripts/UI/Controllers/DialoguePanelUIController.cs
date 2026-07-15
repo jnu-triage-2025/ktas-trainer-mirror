@@ -306,6 +306,7 @@ namespace MultiplayerInfrastructure.UI
 
     public void DisplayDialogue(string speakerName, string dialogueContent, string portraitIdentifier, bool interactionRequired)
     {
+      RestoreInteractivePresentation();
       EnsureDialogueModeActive();
       _inputContext = DialogueInputContext.Dialogue;
       _currentDialogueInteractionRequired = interactionRequired;
@@ -318,10 +319,59 @@ namespace MultiplayerInfrastructure.UI
     }
 
     /// <summary>
+    /// 입력과 overlay를 점유하지 않고 대화 UI에 전체 텍스트를 즉시 표시한다.
+    /// </summary>
+    public void DisplayDisinteractableDialogue(string speakerName, string dialogueContent, string portraitIdentifier)
+    {
+      if (UIOverlayStack.IsTop(this))
+        UIOverlayStack.Pop();
+
+      if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.IsDialogueMode)
+        _interactableHintUI.ExitDialogueMode();
+
+      _isTyping = false;
+      _isWaitingForInput = false;
+      _inputContext = DialogueInputContext.None;
+      _currentDialogueInteractionRequired = false;
+      _pendingChoiceOptions = null;
+      ClearSelections();
+
+      if (_speakerNameLabel != null)
+        _speakerNameLabel.text = speakerName ?? string.Empty;
+
+      SetPortrait(portraitIdentifier);
+      _fullText = dialogueContent ?? string.Empty;
+      _currentCharIndex = _fullText.Length;
+      if (_dialogueTextLabel != null)
+        _dialogueTextLabel.text = _fullText;
+
+      SetWaitingIndicatorVisible(false);
+      if (_dialoguePanel != null)
+      {
+        _dialoguePanel.style.opacity = 0f;
+      }
+      SetPickingModeRecursive(_root, PickingMode.Ignore);
+      Show();
+      OnNodeDisplayed?.Invoke(null);
+    }
+
+    public void SetDisinteractableDialogueOpacity(float opacity)
+    {
+      if (_dialoguePanel != null)
+        _dialoguePanel.style.opacity = Mathf.Clamp01(opacity);
+    }
+
+    public void HideDisinteractableDialogue()
+    {
+      Hide();
+    }
+
+    /// <summary>
     /// 선택지 표시
     /// </summary>
     public void DisplayChoice(string speakerName, string dialogueContent, string portraitIdentifier, IReadOnlyList<ScenarioChoiceOption> options)
     {
+      RestoreInteractivePresentation();
       EnsureDialogueModeActive();
       _inputContext = DialogueInputContext.Choice;
       _currentDialogueInteractionRequired = false;
@@ -544,6 +594,13 @@ namespace MultiplayerInfrastructure.UI
         _speakerNameLabel.text = speakerName ?? "";
       }
 
+      SetPortrait(portraitIdentifier);
+
+      StartTyping(dialogueContent ?? "");
+    }
+
+    private void SetPortrait(string portraitIdentifier)
+    {
       if (_portraitImage != null && !string.IsNullOrEmpty(portraitIdentifier))
       {
         var portrait = Resources.Load<Sprite>(portraitIdentifier);
@@ -561,8 +618,6 @@ namespace MultiplayerInfrastructure.UI
       {
         _portraitImage.style.display = DisplayStyle.None;
       }
-
-      StartTyping(dialogueContent ?? "");
     }
 
     /// <summary>
@@ -648,9 +703,28 @@ namespace MultiplayerInfrastructure.UI
       if (_dialoguePanel != null)
       {
         _dialoguePanel.style.display = DisplayStyle.None;
+        _dialoguePanel.style.opacity = 1f;
+        SetPickingModeRecursive(_dialoguePanel, PickingMode.Position);
       }
 
       _dialogueElement?.Hide();
+    }
+
+    private static void SetPickingModeRecursive(VisualElement element, PickingMode pickingMode)
+    {
+      if (element == null)
+        return;
+
+      element.pickingMode = pickingMode;
+      for (int i = 0; i < element.childCount; i++)
+        SetPickingModeRecursive(element[i], pickingMode);
+    }
+
+    private void RestoreInteractivePresentation()
+    {
+      SetPickingModeRecursive(_root, PickingMode.Position);
+      if (_dialoguePanel != null)
+        _dialoguePanel.style.opacity = 1f;
     }
 
     public void DismissInteractionRequiredDialogue()

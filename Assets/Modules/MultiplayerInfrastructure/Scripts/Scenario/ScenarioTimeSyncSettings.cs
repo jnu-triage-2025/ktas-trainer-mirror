@@ -5,21 +5,6 @@ using UnityEngine;
 namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
-  /// 시간 동기화 밀도(주기)의 단위.
-  /// </summary>
-  public enum ScenarioTimeSyncUnit
-  {
-    /// <summary>네트워크 tick 단위(FishNet <c>TimeManager.Tick</c> 기준).</summary>
-    Tick,
-
-    /// <summary>밀리초 단위.</summary>
-    Milliseconds,
-
-    /// <summary>초 단위.</summary>
-    Seconds
-  }
-
-  /// <summary>
   /// 시간 표시(스톱워치/카운트다운)의 주기적 재동기화 밀도를 담는 서버 측 설정.
   ///
   /// 설계:
@@ -38,30 +23,26 @@ namespace MultiplayerInfrastructure.Scenario
     public static event Action Changed;
 
     /// <summary>tick 단위 폴백 간격. TimeManager 가 없을 때(오프라인) 사용하는 근사 tickRate(30) 기준 1초.</summary>
-    private const uint FallbackTicksPerSecond = 30u;
-
-    private static double _value = 1d;
-    private static ScenarioTimeSyncUnit _unit = ScenarioTimeSyncUnit.Seconds;
+    private static ScenarioTimeValue _interval = ScenarioTimeValue.Seconds(1d);
 
     /// <summary>현재 설정된 원본 값(단위는 <see cref="Unit"/>).</summary>
-    public static double Value => _value;
+    public static double Value => _interval.Value;
 
     /// <summary>현재 설정된 단위.</summary>
-    public static ScenarioTimeSyncUnit Unit => _unit;
+    public static ScenarioTimeUnit Unit => _interval.Unit;
 
     /// <summary>
     /// 재동기화 밀도를 설정한다. 값은 양수여야 한다.
     /// </summary>
     /// <returns>유효하면 true, 아니면 false(설정 미변경).</returns>
-    public static bool Configure(double value, ScenarioTimeSyncUnit unit)
+    public static bool Configure(double value, ScenarioTimeUnit unit)
     {
       if (double.IsNaN(value) || double.IsInfinity(value) || value <= 0d)
       {
         return false;
       }
 
-      _value = value;
-      _unit = unit;
+      _interval = new ScenarioTimeValue(value, unit);
       Changed?.Invoke();
       return true;
     }
@@ -70,8 +51,7 @@ namespace MultiplayerInfrastructure.Scenario
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     public static void ResetToDefault()
     {
-      _value = 1d;
-      _unit = ScenarioTimeSyncUnit.Seconds;
+      _interval = ScenarioTimeValue.Seconds(1d);
       Changed?.Invoke();
     }
 
@@ -81,47 +61,21 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public static uint GetIntervalTicks()
     {
-      var tm = InstanceFinder.TimeManager;
-
-      switch (_unit)
-      {
-        case ScenarioTimeSyncUnit.Tick:
-          return (uint)Math.Max(1d, Math.Round(_value));
-
-        case ScenarioTimeSyncUnit.Milliseconds:
-        {
-          double seconds = _value / 1000d;
-          if (tm != null)
-          {
-            return Math.Max(1u, tm.TimeToTicks(seconds));
-          }
-          return (uint)Math.Max(1d, Math.Round(seconds * FallbackTicksPerSecond));
-        }
-
-        case ScenarioTimeSyncUnit.Seconds:
-        default:
-        {
-          if (tm != null)
-          {
-            return Math.Max(1u, tm.TimeToTicks(_value));
-          }
-          return (uint)Math.Max(1d, Math.Round(_value * FallbackTicksPerSecond));
-        }
-      }
+      return Math.Max(1u, _interval.ToTicks());
     }
 
     /// <summary>현재 설정을 사람이 읽을 수 있는 문자열로 반환한다(명령 에코용).</summary>
     public static string Describe()
     {
-      string unitText = _unit switch
+      string unitText = _interval.Unit switch
       {
-        ScenarioTimeSyncUnit.Tick => "tick(s)",
-        ScenarioTimeSyncUnit.Milliseconds => "ms",
-        ScenarioTimeSyncUnit.Seconds => "second(s)",
-        _ => _unit.ToString()
+        ScenarioTimeUnit.Tick => "tick(s)",
+        ScenarioTimeUnit.Milliseconds => "ms",
+        ScenarioTimeUnit.Seconds => "second(s)",
+        _ => _interval.Unit.ToString()
       };
 
-      return $"{_value:0.###} {unitText} (≈{GetIntervalTicks()} tick interval)";
+      return $"{_interval.Value:0.###} {unitText} (≈{GetIntervalTicks()} tick interval)";
     }
   }
 }

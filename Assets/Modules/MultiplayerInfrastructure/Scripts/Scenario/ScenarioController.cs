@@ -135,6 +135,7 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingItemSubmissionConfig,
       ExecutingNpcInteractControl,
       ExecutingTimeControl,
+      ExecutingDisinteractableDialogue,
     }
 
     [SerializeField] private State _state = State.Inactive;
@@ -332,6 +333,10 @@ namespace MultiplayerInfrastructure.Scenario
 
       ResolveUIControllers();
       ResolveTTSService();
+
+      // 이전 실행이 비상호작용 대화 fade 도중 중단된 경우 남은 UI 상태를 정리한다.
+      if (!_uiController.IsUnityNull())
+        _uiController.HideDisinteractableDialogue();
 
       // 새 시나리오 시작은 이전 실행을 강제 정리한 직후이므로, 대화창 점유 상태를 초기화한다.
       // (이전 실행이 EndScenario 를 거치지 않고 덮어써진 경우, 스테일 점유자가 새 시나리오
@@ -578,6 +583,9 @@ namespace MultiplayerInfrastructure.Scenario
       {
         case ScenarioDialogueNode dialogue:
           ExecuteDialogueNode(dialogue);
+          break;
+        case ScenarioDisinteractableDialogueNode dialogue:
+          StartCoroutine(ExecuteDisinteractableDialogueNode(dialogue));
           break;
         case ScenarioChoiceNode choice:
           ExecuteChoiceNode(choice);
@@ -848,6 +856,77 @@ namespace MultiplayerInfrastructure.Scenario
 
         Advance();
       }
+    }
+
+    private IEnumerator ExecuteDisinteractableDialogueNode(ScenarioDisinteractableDialogueNode node)
+    {
+      _state = State.ExecutingDisinteractableDialogue;
+
+      if (!_uiController.IsUnityNull() && !TryClaimDialogueUI())
+      {
+        if (_currentGraph != null)
+          Advance();
+        yield break;
+      }
+
+      double fadeInSeconds = node.FadeInDuration.ToSeconds();
+      double displaySeconds = node.DisplayDuration.ToSeconds();
+      double fadeOutSeconds = node.FadeOutDuration.ToSeconds();
+
+      if (!_uiController.IsUnityNull())
+      {
+        _uiController.DisplayDisinteractableDialogue(
+          node.SpeakerName,
+          node.DialogueContent,
+          node.PortraitSpriteIdentifier);
+        yield return FadeDisinteractableDialogue(0f, 1f, fadeInSeconds);
+      }
+      else
+      {
+        yield return WaitRealtime(fadeInSeconds);
+      }
+
+      yield return WaitRealtime(displaySeconds);
+
+      if (!_uiController.IsUnityNull())
+      {
+        yield return FadeDisinteractableDialogue(1f, 0f, fadeOutSeconds);
+        _uiController.HideDisinteractableDialogue();
+      }
+      else
+      {
+        yield return WaitRealtime(fadeOutSeconds);
+      }
+
+      Advance();
+    }
+
+    private IEnumerator FadeDisinteractableDialogue(float from, float to, double durationSeconds)
+    {
+      if (durationSeconds <= 0d)
+      {
+        _uiController.SetDisinteractableDialogueOpacity(to);
+        yield break;
+      }
+
+      double elapsed = 0d;
+      while (elapsed < durationSeconds)
+      {
+        elapsed += Time.unscaledDeltaTime;
+        _uiController.SetDisinteractableDialogueOpacity(
+          Mathf.Lerp(from, to, (float)Math.Min(1d, elapsed / durationSeconds)));
+        yield return null;
+      }
+    }
+
+    private static IEnumerator WaitRealtime(double seconds)
+    {
+      if (seconds <= 0d)
+        yield break;
+
+      double end = Time.realtimeSinceStartupAsDouble + seconds;
+      while (Time.realtimeSinceStartupAsDouble < end)
+        yield return null;
     }
 
     private void CancelDialogueAutoAdvance()

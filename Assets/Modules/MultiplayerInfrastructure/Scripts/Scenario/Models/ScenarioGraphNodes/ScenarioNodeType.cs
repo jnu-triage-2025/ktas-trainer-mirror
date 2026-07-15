@@ -31,5 +31,6 @@ namespace MultiplayerInfrastructure.Scenario
     ChatPrint,
     ExecuteCommand,
     TimeControl,
+    DisinteractableDialogue,
   }
 }

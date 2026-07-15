@@ -8,6 +8,7 @@ namespace MultiplayerInfrastructure.Editor
     public static IScenarioNode Create(ScenarioNodeType type) => type switch
     {
       ScenarioNodeType.Dialogue => new ScenarioDialogueNode(),
+      ScenarioNodeType.DisinteractableDialogue => new ScenarioDisinteractableDialogueNode(),
       ScenarioNodeType.Choice => new ScenarioChoiceNode
       {
         Options = new System.Collections.Generic.List<ScenarioChoiceOption>()
