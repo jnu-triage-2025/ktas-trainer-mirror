@@ -165,6 +165,7 @@ namespace MultiplayerInfrastructure.Editor
       switch (Data.NodeType)
       {
         case ScenarioNodeType.Dialogue:
+        case ScenarioNodeType.DisinteractableDialogue:
         case ScenarioNodeType.Sound:
         case ScenarioNodeType.PlayerMove:
         case ScenarioNodeType.NPCMove:
@@ -316,6 +317,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.Dialogue:
           BuildDialogueInlineEditor((ScenarioDialogueNode)Data);
           break;
+        case ScenarioNodeType.DisinteractableDialogue:
+          BuildDisinteractableDialogueInlineEditor((ScenarioDisinteractableDialogueNode)Data);
+          break;
         case ScenarioNodeType.Choice:
           BuildChoiceInlineEditor((ScenarioChoiceNode)Data);
           break;
@@ -389,6 +393,16 @@ namespace MultiplayerInfrastructure.Editor
       AddTextAreaField("Dialogue", value => data.DialogueContent = value, data.DialogueContent);
       AddToggleField("Interaction Required", value => data.InteractionRequired = value, data.InteractionRequired);
       AddOptionalFloatField("Auto Advance (sec)", value => data.AutoAdvanceSeconds = value, data.AutoAdvanceSeconds);
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildDisinteractableDialogueInlineEditor(ScenarioDisinteractableDialogueNode data)
+    {
+      AddTextField("Speaker", value => data.SpeakerName = value, data.SpeakerName);
+      AddTextAreaField("Dialogue", value => data.DialogueContent = value, data.DialogueContent);
+      AddTimeValueField("Fade In", data.FadeInDuration, value => data.FadeInDuration = value);
+      AddTimeValueField("Display", data.DisplayDuration, value => data.DisplayDuration = value);
+      AddTimeValueField("Fade Out", data.FadeOutDuration, value => data.FadeOutDuration = value);
       AddNextIdentifierField(data);
     }
 
@@ -730,6 +744,19 @@ namespace MultiplayerInfrastructure.Editor
           setter(parsed);
       });
       _inlineEditorContainer.Add(field);
+    }
+
+    private void AddTimeValueField(string label, ScenarioTimeValue current, System.Action<ScenarioTimeValue> setter)
+    {
+      var row = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+      var valueField = new DoubleField(label) { value = current.Value };
+      valueField.style.flexGrow = 1f;
+      var unitField = new EnumField(current.Unit);
+      valueField.RegisterValueChangedCallback(evt => setter(new ScenarioTimeValue(System.Math.Max(0d, evt.newValue), (ScenarioTimeUnit)unitField.value)));
+      unitField.RegisterValueChangedCallback(evt => setter(new ScenarioTimeValue(System.Math.Max(0d, valueField.value), (ScenarioTimeUnit)evt.newValue)));
+      row.Add(valueField);
+      row.Add(unitField);
+      _inlineEditorContainer.Add(row);
     }
 
     private static void EnsureChoiceOptions(ScenarioChoiceNode data)

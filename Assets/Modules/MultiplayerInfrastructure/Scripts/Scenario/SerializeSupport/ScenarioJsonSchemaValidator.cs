@@ -82,6 +82,7 @@ namespace MultiplayerInfrastructure.Scenario
       var knownTypes = new HashSet<string>(StringComparer.Ordinal)
       {
         "Dialogue",
+        "DisinteractableDialogue",
         "Choice",
         "Sound",
         "PlayerMove",
@@ -108,7 +109,9 @@ namespace MultiplayerInfrastructure.Scenario
         "ItemSubmissionConfig",
         "NpcInteractControl",
         "ChatPrint",
-        "ExecuteCommand"
+        "ExecuteCommand",
+        "ServerInternalSignal",
+        "TimeControl"
       };
 
       foreach (var nodeEntry in nodes)

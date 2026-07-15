@@ -24,6 +24,7 @@ namespace MultiplayerInfrastructure.Scenario
       return nodeType switch
       {
         "Dialogue" => Deserialize<ScenarioDialogueNodeDTO>(root, options),
+        "DisinteractableDialogue" => Deserialize<ScenarioDisinteractableDialogueNodeDTO>(root, options),
         "Choice" => Deserialize<ScenarioChoiceNodeDTO>(root, options),
         "Sound" => Deserialize<ScenarioSoundNodeDTO>(root, options),
         "PlayerMove" => Deserialize<ScenarioPlayerMoveNodeDTO>(root, options),

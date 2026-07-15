@@ -92,6 +92,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.Dialogue:
           DrawDialogueFields((ScenarioDialogueNode)data);
           break;
+        case ScenarioNodeType.DisinteractableDialogue:
+          DrawDisinteractableDialogueFields((ScenarioDisinteractableDialogueNode)data);
+          break;
         case ScenarioNodeType.Choice:
           DrawChoiceFields((ScenarioChoiceNode)data);
           break;
@@ -175,6 +178,27 @@ namespace MultiplayerInfrastructure.Editor
       data.PortraitSpriteIdentifier = EditorGUILayout.TextField("Portrait Sprite", data.PortraitSpriteIdentifier);
       data.PlayTTS = EditorGUILayout.Toggle("Play TTS", data.PlayTTS);
       DrawTTSBakeHint(data.PlayTTS, data.DialogueContent);
+    }
+
+    private void DrawDisinteractableDialogueFields(ScenarioDisinteractableDialogueNode data)
+    {
+      data.SpeakerName = EditorGUILayout.TextField("Speaker", data.SpeakerName);
+      EditorGUILayout.PrefixLabel("Dialogue");
+      data.DialogueContent = EditorGUILayout.TextArea(data.DialogueContent, GUILayout.Height(60));
+      data.PortraitSpriteIdentifier = EditorGUILayout.TextField("Portrait Sprite", data.PortraitSpriteIdentifier);
+      data.FadeInDuration = DrawTimeValue("Fade In", data.FadeInDuration);
+      data.DisplayDuration = DrawTimeValue("Display", data.DisplayDuration);
+      data.FadeOutDuration = DrawTimeValue("Fade Out", data.FadeOutDuration);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private static ScenarioTimeValue DrawTimeValue(string label, ScenarioTimeValue value)
+    {
+      EditorGUILayout.BeginHorizontal();
+      double amount = System.Math.Max(0d, EditorGUILayout.DoubleField(label, value.Value));
+      var unit = (ScenarioTimeUnit)EditorGUILayout.EnumPopup(value.Unit, GUILayout.Width(110));
+      EditorGUILayout.EndHorizontal();
+      return new ScenarioTimeValue(amount, unit);
     }
 
     /// <summary>

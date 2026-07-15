@@ -81,6 +81,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioDialogueNode dialogue:
           CheckDialogue(dialogue, items);
           break;
+        case ScenarioDisinteractableDialogueNode dialogue:
+          CheckDisinteractableDialogue(dialogue, items);
+          break;
         case ScenarioChoiceNode choice:
           CheckChoice(choice, nodeIds, items);
           break;
@@ -160,6 +163,16 @@ namespace MultiplayerInfrastructure.Editor
         items.Add(new DiagnosticItem(Severity.Warning, node.Identifier, "dialogueContent가 비어 있습니다."));
       if (string.IsNullOrWhiteSpace(node.SpeakerName))
         items.Add(new DiagnosticItem(Severity.Warning, node.Identifier, "speakerName이 비어 있습니다."));
+      if (string.IsNullOrWhiteSpace(node.NextIdentifier))
+        items.Add(new DiagnosticItem(Severity.Warning, node.Identifier, "nextIdentifier가 없습니다 (시나리오 종료 노드일 경우 무시)."));
+    }
+
+    private static void CheckDisinteractableDialogue(ScenarioDisinteractableDialogueNode node, List<DiagnosticItem> items)
+    {
+      if (string.IsNullOrWhiteSpace(node.DialogueContent))
+        items.Add(new DiagnosticItem(Severity.Warning, node.Identifier, "dialogueContent가 비어 있습니다."));
+      if (node.FadeInDuration.Value < 0d || node.DisplayDuration.Value < 0d || node.FadeOutDuration.Value < 0d)
+        items.Add(new DiagnosticItem(Severity.Error, node.Identifier, "대화 표시 시간은 음수일 수 없습니다."));
       if (string.IsNullOrWhiteSpace(node.NextIdentifier))
         items.Add(new DiagnosticItem(Severity.Warning, node.Identifier, "nextIdentifier가 없습니다 (시나리오 종료 노드일 경우 무시)."));
     }

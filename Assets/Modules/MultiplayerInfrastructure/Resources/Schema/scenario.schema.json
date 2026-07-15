@@ -79,11 +79,27 @@
             "TriageAssessControl",
             "ChatPrint",
             "ExecuteCommand",
-            "TimeControl"
+            "TimeControl",
+            "DisinteractableDialogue"
           ]
         }
       },
       "allOf": [
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "DisinteractableDialogue"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioDisinteractableDialogueNode"
+          }
+        },
         {
           "if": {
             "properties": {
@@ -516,6 +532,57 @@
             "speakerName",
             "dialogueContent"
           ]
+        }
+      ]
+    },
+    "ScenarioTimeValue": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "enum": ["Tick", "Milliseconds", "Seconds"]
+        }
+      },
+      "required": ["value", "unit"],
+      "additionalProperties": false
+    },
+    "ScenarioDisinteractableDialogueNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "DisinteractableDialogue"
+            },
+            "speakerName": {
+              "type": "string"
+            },
+            "dialogueContent": {
+              "type": "string"
+            },
+            "portraitSpriteIdentifier": {
+              "type": ["string", "null"]
+            },
+            "fadeInDuration": {
+              "$ref": "#/$defs/ScenarioTimeValue",
+              "default": { "value": 0.5, "unit": "Seconds" }
+            },
+            "displayDuration": {
+              "$ref": "#/$defs/ScenarioTimeValue",
+              "default": { "value": 1.5, "unit": "Seconds" }
+            },
+            "fadeOutDuration": {
+              "$ref": "#/$defs/ScenarioTimeValue",
+              "default": { "value": 0.5, "unit": "Seconds" }
+            }
+          },
+          "required": ["speakerName", "dialogueContent"]
         }
       ]
     },

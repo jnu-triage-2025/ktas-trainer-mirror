@@ -77,6 +77,12 @@ namespace MultiplayerInfrastructure.Editor
           Add("ttsVoiceIdentifier",      d.TtsVoiceIdentifier);
           break;
 
+        case ScenarioDisinteractableDialogueNode d:
+          Add("speakerName", d.SpeakerName);
+          Add("dialogueContent", d.DialogueContent);
+          Add("portraitSpriteIdentifier", d.PortraitSpriteIdentifier);
+          break;
+
         case ScenarioChoiceNode c:
           Add("speakerName",             c.SpeakerName);
           Add("dialogueContent",         c.DialogueContent);

@@ -23,6 +23,7 @@ namespace MultiplayerInfrastructure.Editor
         {
             new SearchTreeGroupEntry(new GUIContent("Scenario Nodes"), 0),
             new SearchTreeEntry(new GUIContent("Dialogue")) { level = 1, userData = ScenarioNodeType.Dialogue },
+            new SearchTreeEntry(new GUIContent("Disinteractable Dialogue")) { level = 1, userData = ScenarioNodeType.DisinteractableDialogue },
             new SearchTreeEntry(new GUIContent("Choice")) { level = 1, userData = ScenarioNodeType.Choice },
             new SearchTreeEntry(new GUIContent("Sound")) { level = 1, userData = ScenarioNodeType.Sound },
             new SearchTreeEntry(new GUIContent("Player Move")) { level = 1, userData = ScenarioNodeType.PlayerMove },

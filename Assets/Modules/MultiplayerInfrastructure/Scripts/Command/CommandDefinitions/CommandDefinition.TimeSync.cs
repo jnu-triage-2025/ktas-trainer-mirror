@@ -63,7 +63,7 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      if (!TryParseUnit(args[0], out ScenarioTimeSyncUnit unit))
+      if (!TryParseUnit(args[0], out ScenarioTimeUnit unit))
       {
         _chat.SendSystemMessage(sender, $"Unknown unit '{args[0]}'. Use tick, ms, or seconds.");
         return;
@@ -85,9 +85,9 @@ namespace MultiplayerInfrastructure.Command
       _chat.SendSystemMessage(sender, $"Time re-sync density set to {ScenarioTimeSyncSettings.Describe()}.");
     }
 
-    private static bool TryParseUnit(string raw, out ScenarioTimeSyncUnit unit)
+    private static bool TryParseUnit(string raw, out ScenarioTimeUnit unit)
     {
-      unit = ScenarioTimeSyncUnit.Seconds;
+      unit = ScenarioTimeUnit.Seconds;
       if (string.IsNullOrWhiteSpace(raw))
         return false;
 
@@ -95,20 +95,20 @@ namespace MultiplayerInfrastructure.Command
       {
         case "tick":
         case "ticks":
-          unit = ScenarioTimeSyncUnit.Tick;
+          unit = ScenarioTimeUnit.Tick;
           return true;
         case "ms":
         case "milli":
         case "millis":
         case "milliseconds":
-          unit = ScenarioTimeSyncUnit.Milliseconds;
+          unit = ScenarioTimeUnit.Milliseconds;
           return true;
         case "s":
         case "sec":
         case "secs":
         case "second":
         case "seconds":
-          unit = ScenarioTimeSyncUnit.Seconds;
+          unit = ScenarioTimeUnit.Seconds;
           return true;
         default:
           return false;
