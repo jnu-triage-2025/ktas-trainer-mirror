@@ -34,10 +34,11 @@
     {
       "selector": {
         "kind": "Npc",
-        "identifier": "npc-1",
-        "scope": "Overworld",
-        "authority": "Server"
+        "identifier": "npc-1"
       },
+      "operation": "Override",
+      "scope": "Overworld",
+      "authority": "Server",
       "binding": {
         "mode": "PrefabInstance",
         "factoryIdentifier": "triage.npc.standard"
@@ -50,11 +51,12 @@
     },
     {
       "selector": {
-        "kind": "Waypoint",
-        "identifier": "treatment-room",
-        "scope": "Overworld",
-        "authority": "Any"
+        "kind": "SpatialAnchor",
+        "identifier": "treatment-room"
       },
+      "operation": "Override",
+      "scope": "Overworld",
+      "authority": "Any",
       "binding": {
         "mode": "GeneratedSceneObject",
         "factoryIdentifier": "mi.waypoint-anchor"
@@ -68,9 +70,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.external-device-ready",
-        "scope": "AnyLoadedScene",
-        "authority": "Server"
+        "identifier": "sig.external-device-ready"
       },
       "reason": "외부 장비 bridge가 세션 시작 후 등록한다.",
       "owner": "simulation-team",
@@ -93,7 +93,7 @@ AI 출력은 canonical sidecar와 별도 형식으로 import한다.
     {
       "kind": "Npc",
       "identifier": "npc-1",
-      "capabilities": ["RegisteredNpc", "ProvidesPosition"],
+      "capabilities": ["ResolvableNpcMoveTarget", "ProvidesPosition"],
       "evidence": [
         {
           "nodeIdentifier": "M014",
@@ -104,7 +104,8 @@ AI 출력은 canonical sidecar와 별도 형식으로 import한다.
       "suggestedBinding": {
         "mode": "PrefabInstance",
         "factoryIdentifier": null,
-        "scope": "Overworld"
+        "scope": "Overworld",
+        "authority": "Server"
       },
       "confidence": 0.96,
       "reviewRequired": true,
@@ -143,7 +144,7 @@ public sealed class ScenarioRequirementDescriptor
   public ScenarioRequirementScope Scope { get; }
   public ScenarioRequirementAuthority Authority { get; }
   public ScenarioRequirementCardinality Cardinality { get; }
-  public ScenarioRequirementAvailability Availability { get; }
+  public ScenarioRequirementAvailability EffectiveAvailability { get; }
   public IReadOnlySet<ScenarioRequirementCapability> Capabilities { get; }
   public IReadOnlyList<ScenarioRequirementOccurrence> Occurrences { get; }
   public ScenarioRequirementBindingHint BindingHint { get; }
@@ -160,21 +161,19 @@ public sealed class ScenarioRequirementDescriptor
 ```text
 Kind
 Identifier.Trim()
-Scope
-Authority
 ```
 
 표시와 stable report key는 다음 escape 규칙으로 만든다.
 
 ```text
-<Kind>:<Scope>:<Authority>:<percent-encoded-identifier>
+<Kind>:<percent-encoded-identifier>
 ```
 
 예:
 
 ```text
-Npc:Overworld:Server:npc-1
-Waypoint:Overworld:Any:treatment-room
+Npc:npc-1
+SpatialAnchor:treatment-room
 ```
 
 ## 6. Declaration 필드
@@ -185,8 +184,22 @@ Waypoint:Overworld:Any:treatment-room
 |---|---:|---|
 | `kind` | 예 | known enum |
 | `identifier` | 예 | trim 후 비어 있지 않음 |
-| `scope` | 예 | known enum |
-| `authority` | 예 | known enum |
+
+selector 밖 declaration 필드:
+
+| 필드 | 필수 | 규칙 |
+|---|---:|---|
+| `operation` | 예 | `Declare` 또는 `Override` |
+| `scope` | 아니오 | known enum, 미지정 시 inferred/default 유지 |
+| `authority` | 아니오 | known enum, 미지정 시 inferred/default 유지 |
+| `availability` | 아니오 | occurrence 의미를 약화시키지 않아야 함 |
+| `cardinality` | 아니오 | minimum 0 이상, maximum은 null 또는 minimum 이상 |
+| `mustProve` | 아니오 | 기본 false, Indeterminate를 strict Error로 승격 |
+| `occurrenceSelector` | 아니오 | 특정 node/field occurrence만 override할 때 사용 |
+
+`occurrenceSelector`는 `nodeIdentifier`와 `fieldPath`를 모두 요구한다. 생략하면 descriptor 전체 제약을
+override한다. 같은 requirement key의 override를 여러 개 둘 수 있지만 descriptor-wide override는 최대
+하나이며 occurrence selector tuple은 중복될 수 없다.
 
 ### binding
 
@@ -235,13 +248,13 @@ factory identifier별 등록 schema가 Editor importer에서 추가 검증되어
 
 ## 9. Merge 규칙
 
-동일 key에 대해:
+동일 `(kind, normalizedIdentifier)` key에 대해:
 
 1. inferred occurrence를 모두 수집한다.
 2. capability를 합친다.
 3. rule default cardinality와 availability를 정한다.
-4. declared 값을 적용한다.
-5. project override를 적용한다.
+4. `Declare`를 적용한다. 같은 inferred key가 있으면 duplicate declaration Error다.
+5. `Override`를 적용한다. 대상 key가 없으면 orphan Error다.
 6. suppression의 유효성, 사유와 만료를 검사한다.
 7. deterministic key 순서로 정렬한다.
 
@@ -254,7 +267,45 @@ factory identifier별 등록 schema가 Editor importer에서 추가 검증되어
 - 필수 inferred requirement의 무사유 삭제
 - 같은 selector의 declaration 중복
 
-## 10. Suppression 규칙
+여기서 중복은 `(selector, operation, occurrenceSelector)`가 같은 항목이다. 서로 다른 occurrence를
+대상으로 하는 override는 허용한다.
+
+cardinality는 `minimum = max(all minimum)`, `maximum = min(all bounded maximum)`으로 병합한다. bounded
+maximum이 없으면 unbounded다. 결과가 `minimum > maximum`이면 Error다.
+
+## 10. AI 승인 변환
+
+1. inferred key와 일치하면 `operation = Override`, 일치하지 않으면 사용자가 `Declare`를 명시한다.
+2. scope가 없으면 inferred scope 또는 `AnyLoadedScene`을 제안하고 승인 UI에서 확정한다.
+3. authority가 없으면 inferred authority 또는 `Any`를 제안하고 승인 UI에서 확정한다.
+4. candidate capability는 known capability만 추가할 수 있고 extractor 결과를 제거할 수 없다.
+5. Generated/Prefab mode에서 factory나 필수 위치가 null이면 unresolved 상태로 저장할 수 있으나 Apply와
+   Production validation은 차단된다.
+6. 승인 후 confidence는 canonical 계약에 저장하지 않는다.
+
+## 11. Occurrence와 availability
+
+각 occurrence는 다음 값을 갖는다.
+
+```text
+nodeIdentifier
+nodeType
+fieldPath
+direction: Consumes | Produces
+availability
+expectedSupply: Scene | Scenario | Gameplay | External
+usage
+```
+
+- descriptor의 `EffectiveAvailability`는 consumer occurrence만으로 계산한다.
+- 우선순위는 `BeforeScenarioStart`, `WhenNodeReached`, `OptionalFallback`, `NotConsumed` 순이다.
+- producer occurrence는 별도 목록으로 보존하며 availability에는 producer node가 실행되는 시점을 쓴다.
+- consumer가 gameplay signal을 기다리는 경우 `direction = Consumes`, `availability = WhenNodeReached`,
+  `expectedSupply = Gameplay`다. `ProducedByGameplay`를 availability 값으로 사용하지 않는다.
+- 같은 key에 producer와 consumer가 있으면 1차 구현은 temporal status를 `Indeterminate`로 보고한다.
+- 후속 graph analysis가 producer 선행을 증명하면 `expectedSupply = Scenario`를 충족으로 확정한다.
+
+## 12. Suppression 규칙
 
 - `reason`은 trim 후 10자 이상이어야 한다.
 - `owner`는 비어 있지 않아야 한다.
@@ -264,7 +315,7 @@ factory identifier별 등록 schema가 Editor importer에서 추가 검증되어
 - `Malformed`, schema 오류와 duplicate declaration은 suppress할 수 없다.
 - AI candidate는 suppression을 생성하거나 수정할 수 없다.
 
-## 11. Deterministic serialization
+## 13. Deterministic serialization
 
 - declaration은 requirement key 순서로 저장한다.
 - capability와 evidence 배열은 ordinal 정렬한다.
@@ -273,7 +324,7 @@ factory identifier별 등록 schema가 Editor importer에서 추가 검증되어
 - 줄바꿈은 repository convention을 따른다.
 - 동일 domain model을 연속 serialize하면 byte-identical 결과를 내야 한다.
 
-## 12. Version migration
+## 14. Version migration
 
 - loader는 현재 version과 명시적으로 지원하는 이전 version만 읽는다.
 - 미래 version은 best-effort로 읽지 않고 `SIR103 UnsupportedSchemaVersion`을 낸다.

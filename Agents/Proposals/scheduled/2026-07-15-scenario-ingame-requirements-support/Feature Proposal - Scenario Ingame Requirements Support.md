@@ -71,8 +71,12 @@ scene bindings ───── binding ────────┘            v
 - `ScenarioDevStubSpawner`는 identifier 이름으로 trigger 여부를 추측하며 개발 시연에는 유용하지만
   production authoring 계약으로 사용할 수 없다.
 - AI가 요구사항을 식별해도 이를 받을 표준 데이터 계약, 검토 과정과 strict validation 경계가 없다.
-- 현재 scenario JSON schema validator의 조건부 오류 우회는 schema 결과를 광범위하게 무시할 수 있어,
-  잘못된 입력으로부터 strict manifest를 만드는 기반으로 바로 사용할 수 없다.
+- 현재 scenario JSON schema validator의 "조건부 오류 우회"(`IsConditionalNodeTypeNoiseOnly`)는 이름과
+  달리 `EvaluationResults`를 사용하지 않고, 모든 `nodeType`이 known이면 필수 필드 누락과 타입 오류까지
+  포함한 schema 결과 전체를 무시한다. 게다가 schema root `nodeType` enum에는 `PatientMedicalStatePreset`,
+  `ItemSubmissionConfig`, `NpcInteractControl`이 빠져 있어, 이 노드를 쓰는 기존 시나리오가 사실상 이
+  우회에 의존해 통과하고 있다. 따라서 잘못된 입력으로부터 strict manifest를 만드는 기반으로 바로 사용할
+  수 없으며, 우회 제거는 schema enum 보강과 함께 순서대로 진행해야 한다(Phase 0 참고).
 
 사용자 관점의 문제는 다음과 같다.
 
@@ -135,8 +139,12 @@ scene bindings ───── binding ────────┘            v
 Requirement는 다음 tuple을 canonical identity로 사용한다.
 
 ```text
-(kind, normalizedIdentifier, scope, authority)
+(kind, normalizedIdentifier)
 ```
+
+`scope`와 `authority`는 identity가 아니라 적용 제약이다. 따라서 inferred 항목의 기본 제약을
+declaration이 `Overworld/Server`처럼 구체화할 수 있다. 동일 key에 양립할 수 없는 제약이 선언되면
+별도 requirement를 암묵적으로 만들지 않고 compile conflict로 보고한다.
 
 - 문자열은 앞뒤 공백을 제거한다.
 - 빈 문자열은 조용히 버리지 않고 `SIR100 InvalidIdentifier` 오류 occurrence를 만든다.
@@ -153,10 +161,14 @@ nodeType
 fieldPath
 usage
 sourceOrigin
+direction
+availability
+expectedSupply
 ```
 
-예를 들어 같은 `treatment-room` waypoint가 두 이동 노드와 한 highlight 노드에서 사용되면 하나의
-requirement에 세 occurrence가 붙고 capability는 합집합이 된다.
+예를 들어 같은 `treatment-room` 위치가 두 이동 노드와 한 highlight 노드에서 사용되면 하나의
+`SpatialAnchor` requirement에 세 occurrence가 붙고 `ProvidesPosition`과
+`HighlightableWaypoint` capability가 합쳐진다.
 
 #### 3. Kind와 Capability를 분리한다
 
@@ -168,8 +180,7 @@ requirement에 세 occurrence가 붙고 capability는 합집합이 된다.
 - `Entity`
 - `Npc`
 - `Interactable`
-- `Waypoint`
-- `MoveDestination`
+- `SpatialAnchor`
 - `SpawnPoint`
 - `EntityPreset`
 - `ItemDefinition`
@@ -188,7 +199,8 @@ requirement에 세 occurrence가 붙고 capability는 합집합이 된다.
 초기 capability 집합:
 
 - `RegisteredEntity`
-- `RegisteredNpc`
+- `ResolvableNpcMoveTarget`
+- `RegisteredNpcComponent`
 - `ProvidesPosition`
 - `HighlightableWaypoint`
 - `Interactable`
@@ -208,28 +220,33 @@ Kind나 capability enum을 sidecar의 프로젝트별 새 문자열로 임의 �
 
 #### 4. Availability를 명시한다
 
-요구사항은 단순히 존재/부재만으로 판단하지 않고 언제 공급되어야 하는지 표현한다.
+요구사항은 단순히 존재/부재만으로 판단하지 않고 언제 공급되어야 하는지 표현한다. Availability는
+각 occurrence에 기록한다. Descriptor의 `EffectiveAvailability`는 모든 소비 occurrence 중 가장 이른
+필요 시점이며, 생산 occurrence는 `Direction = Produces`로 별도 보존한다.
 
 | Availability | 의미 |
 |---|---|
 | `BeforeScenarioStart` | 시나리오 시작 전에 준비되어야 함 |
 | `WhenNodeReached` | 해당 node 도달 전까지 준비되어야 함 |
-| `ProducedByScenario` | 앞선 시나리오 node가 생산할 수 있음 |
-| `ProducedByGameplay` | 사용자 행동 또는 외부 gameplay가 생산 |
-| `ExternalRuntime` | 서버, 장비 bridge 등 외부 runtime 공급 |
 | `OptionalFallback` | 없으면 명시된 runtime fallback을 사용 |
 | `NotConsumed` | 데이터 필드는 있으나 현재 runtime이 실제 소비하지 않음 |
 
-`ProducedByScenario`는 단순 면제가 아니다. 후속 temporal validation에서 producer node와 consumer
-node 사이의 도달 가능성을 검사할 수 있어야 한다. 1차 구현은 이를 `Indeterminate`로 보고하고 source와
-state key를 보존한다.
+`BeforeScenarioStart`는 node별 추출 행렬에서 직접 발생하지 않는다. 이는 declaration의
+`availability` override, scope role이 `Bootstrap`/`SystemOverlay`처럼 시작 전 준비되어야 하는 항목,
+또는 `Availability = BeforeScenarioStart`가 기본인 well-known service requirement에서 나온다. 즉 개별
+consumer node가 아니라 declaration/scope/service default가 이 값의 출처다.
+
+생산 여부와 필요 시점은 분리한다. `direction`은 `Consumes` 또는 `Produces`, availability는 소비 또는
+생산 node의 시점, `expectedSupply`는 `Scene`, `Scenario`, `Gameplay`, `External` 중 예상 공급원을
+나타낸다. `expectedSupply = Scenario`는 단순 면제가 아니다. 후속 temporal validation에서 producer node와
+consumer node 사이의 도달 가능성을 검사한다. 1차 구현은 이를 `Indeterminate`로 보고한다.
 
 #### 5. Cardinality와 Scope를 명시한다
 
 모든 requirement는 최소/최대 수량을 갖는다. 기본값은 kind별 rule이 제공한다.
 
 ```text
-Npc/Waypoint/Entity identifier: exactly 1
+Npc/SpatialAnchor/Entity identifier: exactly 1
 EventHandler: at least 1
 Service: exactly 1 per applicable authority
 RuntimeSignal: cardinality validation 없음
@@ -248,9 +265,19 @@ Scope는 scene name 문자열이 아니라 표준 role과 선택적 scene compos
 
 실제 scene asset path/GUID와 role의 연결은 프로젝트별 `ScenarioSceneCompositionProfile`에서 관리한다.
 MultiplayerInfrastructure는 `OverworldScene` 같은 TriageTrainer의 구체 scene 이름을 알지 않는다.
+Authoring에서는 profile 부재 시 제한적인 `AnyLoadedScene` 진단을 허용하지만 Development/Production
+build에서는 scenario에 정확히 하나의 composition profile이 연결되어야 한다. profile 부재나 중복은
+build Error다.
 
-Authority는 `Any`, `Server`, `Client`, `Host`를 지원한다. UI와 server-only service가 같은 기준으로
-검사되는 오탐을 방지한다.
+Authority는 `Any`, `Server`, `Client`, `HostOnly`를 지원한다.
+
+- dedicated server: `Any`, `Server`
+- remote client: `Any`, `Client`
+- host server pass: `Any`, `Server`
+- host client pass: `Any`, `Client`
+- host 통합 공급자 전용: `HostOnly`
+
+Host에서는 server/client pass를 분리하며 동일한 `Any` 진단은 report 단계에서 축약한다.
 
 #### 6. Requirement rule을 실행 의미의 단일 정의로 사용한다
 
@@ -283,11 +310,19 @@ disaster_intro.scenario.editor.json
 - `.scenario.requirements.json`: 사람이 승인한 보충 declaration
 - `.scenario.editor.json`: 그래프 레이아웃
 
-자동 추출 결과는 source JSON에서 결정적으로 재생성할 수 있으므로 기본적으로 별도 tracked 파일로
-저장하지 않는다. CI나 외부 도구가 필요하면 cache 성격의
-`.scenario.requirements.generated.json`을 export할 수 있지만 canonical source로 취급하지 않는다.
+자동 추출 결과는 source JSON에서 결정적으로 재생성할 수 있으므로 tracked 파일로 저장하지 않는다.
+version 1은 generated ScriptableObject catalog를 두지 않고 graph와 sidecar를 compile한 immutable
+manifest를 process-local cache에 둔다.
 
-컴파일 결과는 Unity import cache 또는 생성 asset로 둘 수 있으며 사람이 직접 편집하지 않는다.
+manifest lookup key는 `(scenarioIdentifier, graphFingerprint)`다. `graphFingerprint`는 domain graph의
+canonical JSON UTF-8 bytes에 대한 SHA-256으로 계산한다.
+
+- Resources scenario는 같은 Resources subtree의 sidecar를 함께 발견한다.
+- scenario TextAsset을 직접 받는 component에는 선택적 requirements TextAsset reference를 추가한다.
+- 동일 identifier라도 fingerprint가 다르면 다른 manifest로 취급한다.
+- sidecar 없는 graph와 메모리 생성 graph는 inferred-only manifest를 runtime에서 compile한다.
+- 같은 lookup key의 sidecar가 둘 이상이면 ambiguity Error다.
+- Player build에는 Resources sidecar 또는 serialized TextAsset reference로 계약이 포함된다.
 
 sidecar를 선택한 이유:
 
@@ -308,18 +343,22 @@ sidecar의 상세 JSON 계약은
 | `Inferred` | scenario node에서 rule이 자동 추출 | 가능 |
 | `AiImported` | AI 파일에서 가져왔지만 미승인 | 불가, 최대 Warning |
 | `Declared` | 사람이 승인한 sidecar 값 | 가능 |
-| `Override` | 프로젝트별 명시적 수정 | 가능 |
+| `Override` | declaration의 `operation: Override`로 inferred 제약 구체화 | 가능 |
 | `Suppressed` | 사유를 갖고 검증에서 제외 | 만료/형식 검증 대상 |
 
-병합 우선순위는 `Override > Declared > Inferred`로 고정한다. `AiImported`는 승인 전에는 canonical
-compile에 직접 참여하지 않고 review queue에만 존재한다.
+병합 우선순위는 `Override > Declared > Inferred`로 고정한다. `Declared`는 inferred에 없는 공급 계약을
+추가하고 `Override`는 같은 `(kind, identifier)`의 scope, authority, cardinality, availability 또는
+binding hint를 구체화한다. 둘은 sidecar의 `operation` 필드로 구분한다. `AiImported`는 승인 전에는
+canonical compile에 참여하지 않는다.
 
 다음 값은 자동 합친다.
 
 - occurrence/source 목록: 합집합
 - capability: 합집합
-- 최소 cardinality: 가장 엄격한 값
-- 최대 cardinality: 가장 엄격한 값
+- 최소 cardinality: 모든 제약의 `max(minimum)`
+- 최대 cardinality: bounded maximum의 `min(maximum)`, 모두 unbounded면 unbounded
+
+결과가 `minimum > maximum`이면 `SIR204 ImpossibleCardinality` Error다.
 
 다음 충돌은 자동 결정하지 않고 compile Error로 보고한다.
 
@@ -486,6 +525,15 @@ Prefab Stage에서는 기본적으로 Apply를 금지한다. build validation은
 Severity는 `Info`, `Warning`, `Error`, `Fatal`을 사용한다. 모든 진단은 안정적인 code, requirement key,
 source occurrence와 수정 힌트를 갖는다.
 
+| Status | Authoring | Development | Production |
+|---|---|---|---|
+| Missing/Duplicate/WrongType/MissingCapability/Malformed | Error | Error | 차단 |
+| WrongScene/Inactive/NotRegistered | Warning 또는 Error | Error | 차단 |
+| NotReady | 정보성 | runtime timeout 전 재시도 | runtime timeout 후 차단 |
+| Indeterminate | 정보성 | Warning | Warning, `mustProve=true`만 차단 |
+| NotConsumed | 정보성 | 차단 안 함 | 차단 안 함 |
+| Suppressed | 사유/만료 표시 | 유효하면 차단 안 함 | 유효하면 차단 안 함 |
+
 진단 code namespace는 `SIR`을 사용한다.
 
 ```text
@@ -516,6 +564,11 @@ SIR7xx AI review
 - `Authoring`: Warning 중심, Apply 가능
 - `Development`: Error 보고, 빌드 차단 선택 가능
 - `Production`: unresolved Error/Fatal 빌드 차단
+
+runtime code registration은 `IScenarioRequirementStaticProvider` 또는 프로젝트 catalog가 공급 identifier,
+capability와 authority를 부작용 없이 열거하여 build-time 증거를 제공한다. runtime 등록만 존재하면
+`Indeterminate`이며 기본 Production profile에서도 Warning이다. declaration의 `mustProve=true`는 이를
+Error로 승격한다.
 
 #### 15. Runtime preflight는 compiled manifest를 사용한다
 
@@ -549,9 +602,11 @@ ScenarioDevStubSpawner         -> development factory adapter
 OverworldGameObjectInitializer -> project declaration/factory migration 대상
 ```
 
-초기에는 기존 public API와 serialized `ScenarioPreflightPolicy`를 유지한다. 새 결과를 기존
-`ScenarioRequirement` 형태로 projection하여 하위호환하고, 새 Editor와 build 경로는 canonical model을
-직접 사용한다.
+초기에는 기존 public API와 serialized `ScenarioPreflightPolicy`(현재 `[Serializable] struct`, modes enum은
+`ScenarioPreflightMissingBehavior`)를 유지한다. 기존 `ScenarioRequirementsCollector`가 `(kind, identifier)`
+중복 시 첫 source만 남기고 나머지를 버리는 현재 동작과 달리, 새 compiler는 모든 occurrence를 보존한다.
+새 결과를 기존 `ScenarioRequirement` 형태로 projection하여 하위호환하되(단일 `SourceNodeIdentifier`로
+축약), 새 Editor와 build 경로는 canonical model을 직접 사용한다.
 
 ### 자세한 달성 목표
 
@@ -586,12 +641,29 @@ OverworldGameObjectInitializer -> project declaration/factory migration 대상
 
 #### Phase 0. 선행 정합성 수정
 
-- scenario schema의 지원 node type과 DTO converter 목록을 일치시킨다.
-- `ScenarioJsonSchemaValidator`의 광범위한 conditional-noise 우회를 제거하거나 실제 오류 위치와 keyword에
-  한정한다.
-- 현재 node별 runtime lookup 행렬을 테스트 가능한 문서와 코드 등록 구조로 확정한다.
+이 단계는 **엄격한 순서**가 있다. 순서를 지키지 않으면 정상 콘텐츠가 회귀로 거부된다.
 
-완료 조건: 잘못된 scenario JSON이 requirement compiler 진입 전에 결정적으로 거부된다.
+1. **먼저** scenario schema root `nodeType` enum과 per-node `if/then` 브랜치에 누락 node type을 추가한다.
+   현재 schema root enum(`scenario.schema.json`)은 28종만 나열하며 다음 3종이 빠져 있다.
+   - `PatientMedicalStatePreset`
+   - `ItemSubmissionConfig`
+   - `NpcInteractControl`
+
+   이 3종은 DTO converter(`ScenarioNodeDTOConverter`)와 validator의 `knownTypes`(31종)에는 있으나
+   schema root enum에 없다. root가 `additionalProperties: false`이므로, 현재 이 노드를 쓰는 시나리오는
+   **오직 아래 2번의 우회 덕분에** 통과하고 있다. 우회를 먼저 제거하면 정상 콘텐츠가 즉시 거부된다.
+   `ChatPrint`/`ExecuteCommand`처럼 schema enum에는 있으나 per-node `if/then` 브랜치가 없어 필드 검증이
+   비어 있는 node도 이 단계에서 브랜치를 채운다.
+2. schema가 3종을 정식 검증하게 된 **후에** `ScenarioJsonSchemaValidator`의 우회를 제거하거나 실제 오류
+   위치와 keyword에 한정한다. 현재 `IsConditionalNodeTypeNoiseOnly`는 이름과 달리 `EvaluationResults`를
+   사용하지 않고, 모든 `nodeType`이 known이면 필수 필드 누락·타입 오류·잘못된 속성을 포함한 **모든
+   schema 오류를 통째로 무시**한다. conditional(if/then/anyOf/oneOf) noise에 한정하는 것이 목표라면
+   실제 실패 keyword/instance path 기준으로 좁혀야 한다.
+3. 현재 node별 runtime lookup 행렬을 테스트 가능한 문서와 코드 등록 구조로 확정한다.
+
+완료 조건: schema root enum·per-node 브랜치·DTO converter·validator known types가 일치하고, 3종 노드를
+쓰는 기존 시나리오가 우회 없이 valid로 통과하며, 잘못된 scenario JSON은 requirement compiler 진입 전에
+결정적으로 거부된다. Phase 0 전후로 기존 정상 시나리오 fixture의 검증 결과가 회귀하지 않는다.
 
 #### Phase 1. Canonical model과 inferred compiler
 
@@ -647,6 +719,9 @@ OverworldGameObjectInitializer -> project declaration/factory migration 대상
 
 완료 조건: Editor/build/runtime의 동일 fixture가 같은 requirement key와 core diagnostic을 출력한다.
 
+각 Phase는 별도 issue와 merge request로 승인한다. Phase 0-1은 extraction core, Phase 2는 data/AI,
+Phase 3-4는 scene authoring, Phase 5는 build gate, Phase 6은 runtime lifecycle 변경이다.
+
 ### 문서화
 
 구현 시 다음 문서를 추가 또는 갱신한다.
@@ -669,7 +744,7 @@ OverworldGameObjectInitializer -> project declaration/factory migration 대상
 |---|---|---|
 | rule과 실제 runtime lookup 불일치 | false pass/false fail | runtime lookup 행렬 테스트와 공용 resolver 사용 |
 | additive scene 미로딩 상태 검증 | false Missing | composition과 readiness phase 분리 |
-| Registry last-write-wins | 중복이 정상처럼 보임 | Editor/build scene snapshot cardinality 검사 |
+| Registry last-write-wins, owner metadata 부재 | 중복이 정상처럼 보이고 runtime에서 증거 identity 병합 불가 | duplicate 판정 정본을 Editor/build scene snapshot에 두고, runtime은 병합 불가 시 Indeterminate로 강등. owner-aware Registry는 별도 proposal(§13) |
 | domain reload 비활성화 | stale static entry | runtime static reset 및 반복 PlayMode 테스트 |
 | AI의 잘못된 추정 | 잘못된 scene mutation | preview, allowlist, 승인 전 non-blocking |
 | 자동 생성이 수동 작업 삭제 | authoring 손실 | 증분 marker, orphan preview, atomic Undo |
@@ -704,12 +779,15 @@ OverworldGameObjectInitializer -> project declaration/factory migration 대상
 
 #### 수용 기준
 
-1. `NPCMove(npc-1, waypoint-a)`에서 NPC와 이동 목적지가 별도 requirement로 추출된다.
+1. `NPCMove(npc-1, waypoint-a)`에서 NPC와 `SpatialAnchor`가 별도 requirement로 추출된다.
 2. 같은 waypoint를 이동과 highlight가 함께 사용하면 `ProvidesPosition`과
    `HighlightableWaypoint` capability가 합쳐지고 모든 source가 표시된다.
 3. identifier는 있으나 필요한 component가 없는 경우 `Satisfied`가 아니라
    `MissingCapability`가 출력된다.
-4. 동일 identifier 공급자가 두 개이고 cardinality가 exactly one이면 `Duplicate` Error가 출력된다.
+4. 동일 identifier 공급자가 두 개이고 cardinality가 exactly one이면 Editor/build scene snapshot 판정에서
+   `Duplicate` Error가 출력된다. runtime에서는 owner metadata가 없어 물리 공급자 identity를 합칠 수 없는
+   경우 `Duplicate`로 단정하지 않고 `Indeterminate`로 보고한다. runtime duplicate 확정 강화는 owner-aware
+   Registry API 이후로 미룬다.
 5. runtime signal은 존재하지 않는 scene object로 오판되지 않고 `Indeterminate` 또는 producer 계약으로
    표시된다.
 6. AI import는 승인 전에 sidecar와 scene을 변경하지 않는다.
@@ -718,12 +796,14 @@ OverworldGameObjectInitializer -> project declaration/factory migration 대상
 9. Build validator는 모든 Error를 수집한 뒤 실패하며 validation 전후 tracked file 내용이 동일하다.
 10. Runtime strict 실패는 새 scenario를 시작하지 않되 기존 실행 중 scenario를 먼저 중단하지 않는다.
 11. Editor, build와 runtime report가 같은 requirement key와 diagnostic code를 사용한다.
-12. MultiplayerInfrastructure runtime 코드는 TriageTrainer 타입, prefab 또는 scene 이름을 참조하지 않는다.
+12. 이 기능으로 새로 추가되는 MultiplayerInfrastructure requirements 코드는 TriageTrainer 타입,
+    prefab 또는 scene 이름을 참조하지 않는다. 기존 `ScenarioController`의 concrete 의존 제거는 별도
+    리팩터링으로 다룬다.
 
 ### 링크, 참고사항
 
 - 기존 요구사항: [`scenario-preflight-requirements.md`](../../../../Documents/requirements/scenario/scenario-preflight-requirements.md)
-- 기존 구현 제안: [`Scenario Preflight Requirements`](../../done/2026-06-26-scenario-preflight-requirements/Feature%20Proposal%20-%20Scenario%20Preflight%20Requirements.md)
+- 기존 구현 제안: [Scenario Preflight Requirements](../../done/2026-06-26-scenario-preflight-requirements/Feature Proposal - Scenario Preflight Requirements.md)
 - 기존 운영 가이드: [`scenario-preflight-and-dev-stub-setup-guide.md`](../../../../Documents/working-guide/features/scenario/scenario-preflight-and-dev-stub-setup-guide.md)
 - Scenario graph 가이드: [`ScenarioGraph.md`](../../../../Documents/guide/ScenarioGraph.md)
 - 기존 collector: `Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/Preflight/ScenarioRequirementsCollector.cs`
