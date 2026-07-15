@@ -2,7 +2,7 @@
 title: Module Documentation Gap Inventory
 doc_type: requirement
 status: active
-updated: 2026-05-20
+updated: 2026-07-15
 owner: docs
 ---
 
@@ -17,7 +17,20 @@ owner: docs
   - Documents/api-references/**/*.md
   - Documents/requirements/**/*.md
 
-## 2. 이번 반영 대상(우선순위)
+## 2. 반영 이력
+
+### 2026-07-15 반영 (갭 분석 및 문서화)
+
+| 영역 | 구현 파일(대표) | 이전 상태 | 현재 상태 |
+|---|---|---|---|
+| ScenarioGraph 노드 타입 전체 레퍼런스 | `Scripts/Scenario/Models/ScenarioGraphNodes/*.cs` (29종) | 미문서 | API 문서화 완료 (`MultiplayerInfrastructure.Scenario.ScenarioGraphNodes.md`) |
+| Session 시스템 | `Scripts/Session/LanDiscoveryService.cs`, `UserDescriptorService.cs`, `UserDescriptor.cs`, `SessionInformationModel.cs` | 미문서 | API 문서화 완료 (`MultiplayerInfrastructure.Session.md`) |
+| Permission 시스템 | `Scripts/Permission/PermissionService.cs` | 미문서 | API 문서화 완료 (`MultiplayerInfrastructure.Permission.md`) |
+| Variable/Scoreboard 시스템 | `Scripts/Variable/SessionVariableService.cs` | 미문서 | API 문서화 완료 (`MultiplayerInfrastructure.Variable.md`) |
+| Logging 시스템 | `Scripts/Logging/GameLogService.cs`, `GameSessionService.cs`, `GameLogEntry.cs` | 미문서 | API 문서화 완료 (`MultiplayerInfrastructure.Logging.md`) |
+| MedicalItem 기반 클래스 및 전체 아이템 목록 | `Scripts/Items/MedicalItem.cs`, `Definitions/*.cs` (103개) | 1개만 문서화 | API 문서화 완료 (`TriageTrainer.ItemDefinitions.MedicalItem.md`) |
+
+### 2026-05-20 반영
 
 | 영역 | 구현 파일(대표) | 이전 상태 | 현재 상태 |
 |---|---|---|---|
@@ -33,15 +46,42 @@ owner: docs
 | Overworld 초기화 에디터 툴 | `Editor/Utils/OverworldGameObjectInitializer/*.cs`, `Scripts/Utils/OverworldSpawnPoint.cs` | 미문서 | 요구사항/API 문서화 완료 |
 | Scenario Graph Editor authoring window | `Editor/Scenario/ScenarioGraphEditor/*.cs` | 미문서 | API 문서화 완료 |
 
-## 3. 잔여 권장 항목
+## 3. 잔여 미문서화 항목
 
-| 영역 | 권장 문서 유형 | 우선순위 |
+### 높은 우선순위
+
+| 영역 | 구현 파일(대표) | 권장 문서 유형 |
 |---|---|---|
-| RegistryPreloader Editor 툴 | api-references | 중간 |
-| UI VisualElements 상세 | api-references | 중간 |
-| TriageTrainer Item Definitions 자동 생성 규칙 | requirements + workflow | 중간 |
-| Session/LAN Discovery 서비스 | api-references | 낮음 |
+| UI 컨트롤러 전체 | `Scripts/UI/Controllers/*.cs` (17개) | api-references |
+| UI VisualElements 전체 | `Scripts/UI/VisualElements/*.cs` (21개) | api-references |
+| Command 시스템 | `Scripts/Command/CommandService.cs`, `CommandDefinitions/*.cs` | api-references |
+| WallAttachedOxyflowmeter | `Scripts/Entities/WallAttachedOxyflowmeter/WallAttachedOxyflowmeter.cs` | api-references |
+| WallAttachedWallSuction | `Scripts/Entities/WallAttachedWallSuction/WallAttachedWallSuction.cs` | api-references |
+
+### 중간 우선순위
+
+| 영역 | 구현 파일(대표) | 권장 문서 유형 |
+|---|---|---|
+| RegistryPreloader Editor 툴 | `Editor/Registry/RegistryPreloaderValidationPanel.cs` | api-references |
+| PatientController 상세 API | `Scripts/Patient/PatientController*.cs` (13 partial) | api-references |
+| 환자 의료 상태 모델 | `Scripts/Patient/Models/*.cs` (36개) | api-references |
+| Npc 엔티티 | `Scripts/Entity/Npc.cs`, `NPCBaseModelSO.cs` | api-references |
+| Ridable/Reposable 엔티티 | `Scripts/Entity/Ridable.cs`, `IReposable.cs` | api-references |
+| TriageScenarioEventBootstrap 이벤트 핸들러 | `.Event.*.cs` (~50 partial) | 워킹 가이드 |
+| RubricModels/RubricResultStore | `Scripts/Scenario/Rubric/RubricModels.cs`, `RubricResultStore.cs` | api-references |
+
+### 낮은 우선순위
+
+| 영역 | 권장 문서 유형 |
+|---|---|
+| Camera 시스템 (`MainCameraController`, `NearbyInteractablesDetector`) | api-references |
+| HumanoidAnimationController | api-references |
+| FishNetSupport 래퍼 | api-references |
+| PlayerInventory, PlayerGamemodeService | api-references |
+| StaticObjectDisplayment/Service | api-references |
 
 ## 4. 비고
 
-이번 반영은 운영 리스크가 높은 런타임 핵심 경로를 우선 대상으로 선정했습니다. 잔여 항목은 기능 변경 시점에 순차 문서화를 권장합니다.
+이번 반영은 시나리오 그래프 운영에 직접 필요한 노드 레퍼런스와, 코드 내 의존도가 높지만 완전히 미문서화되어 있던 핵심 시스템(Session, Permission, Variable, Logging, 아이템 정의)을 우선 대상으로 선정했습니다.
+
+잔여 항목은 기능 변경 또는 신규 개발 시점에 순차 문서화를 권장합니다.
