@@ -198,10 +198,9 @@ namespace MultiplayerInfrastructure.UI
 
       foreach (var quest in tracked)
       {
-        if (quest == null || string.IsNullOrWhiteSpace(quest.WaypointIdentifier))
-          continue;
-
-        _trackedWaypointIdentifiers.Add(quest.WaypointIdentifier);
+        var waypointIdentifiers = QuestManager.GetActiveWaypointIdentifiers(quest);
+        for (int i = 0; i < waypointIdentifiers.Count; i++)
+          _trackedWaypointIdentifiers.Add(waypointIdentifiers[i]);
       }
     }
 

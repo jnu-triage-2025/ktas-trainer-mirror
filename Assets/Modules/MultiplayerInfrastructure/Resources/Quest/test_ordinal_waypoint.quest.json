@@ -1,0 +1,39 @@
+{
+  "namespace": "test.ordinal_waypoint",
+  "definitions": [
+    {
+      "identifier": "visit_three_waypoints",
+      "title": "순차 웨이포인트 테스트",
+      "description": "표시되는 현재 목적지를 순서대로 방문하세요.",
+      "questContent": "세 웨이포인트를 순서대로 방문",
+      "isTrackable": true,
+      "isAutoComplete": true,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": true,
+      "tasks": [
+        {
+          "type": "WaypointReached",
+          "waypointIdentifier": "quest-test-waypoint-a",
+          "reachDistance": 1.5,
+          "displayTextContent": "첫 번째 지점으로 이동",
+          "conditions": []
+        },
+        {
+          "type": "WaypointReached",
+          "waypointIdentifier": "quest-test-waypoint-b",
+          "reachDistance": 1.5,
+          "displayTextContent": "두 번째 지점으로 이동",
+          "conditions": []
+        },
+        {
+          "type": "WaypointReached",
+          "waypointIdentifier": "quest-test-waypoint-c",
+          "reachDistance": 1.5,
+          "displayTextContent": "마지막 지점으로 이동",
+          "conditions": []
+        }
+      ]
+    }
+  ]
+}

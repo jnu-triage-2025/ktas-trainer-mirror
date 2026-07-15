@@ -14,6 +14,8 @@ namespace MultiplayerInfrastructure.Quest
     public string QuestContent { get; set; }
     public QuestProgressValue Progress { get; set; }
     public bool Completed { get; set; }
+    public bool IsOrdinal { get; set; }
+    public List<QuestCompletionCriteria> Tasks { get; set; }
     public List<QuestCompletionCriteria> CompletionCriteria { get; set; }
     public QuestScopeType Scope { get; set; }
     public bool IsTracked { get; set; }
@@ -25,6 +27,7 @@ namespace MultiplayerInfrastructure.Quest
     {
       DefinitionIdentifier = string.Empty;
       Progress = new QuestProgressValue(0, 1);
+      Tasks = new List<QuestCompletionCriteria>();
       CompletionCriteria = new List<QuestCompletionCriteria>();
       Scope = QuestScopeType.Player;
       WaypointIdentifier = string.Empty;
@@ -39,6 +42,7 @@ namespace MultiplayerInfrastructure.Quest
       QuestContent = questContent ?? string.Empty;
       Progress = new QuestProgressValue(0, 1);
       Completed = false;
+      Tasks = new List<QuestCompletionCriteria>();
       CompletionCriteria = new List<QuestCompletionCriteria>();
       Scope = QuestScopeType.Player;
       IsTracked = isTracked;
@@ -54,6 +58,8 @@ namespace MultiplayerInfrastructure.Quest
         DefinitionIdentifier = DefinitionIdentifier ?? string.Empty,
         Progress = Progress?.Clone() ?? new QuestProgressValue(0, 1),
         Completed = Completed,
+        IsOrdinal = IsOrdinal,
+        Tasks = CloneCriteria(Tasks),
         CompletionCriteria = CloneCriteria(CompletionCriteria),
         Scope = Scope,
         IsTrackable = IsTrackable,
@@ -116,6 +122,8 @@ namespace MultiplayerInfrastructure.Quest
     public QuestCompletionCriteriaType Type { get; set; } = QuestCompletionCriteriaType.InventoryContains;
     public string ItemId { get; set; }
     public string SignalId { get; set; }
+    public string WaypointIdentifier { get; set; }
+    public float ReachDistance { get; set; } = 1f;
     public string DisplayTextContent { get; set; }
     public int Count { get; set; } = 1;
     public List<QuestCompletionCriteria> Conditions { get; set; } = new();
@@ -133,6 +141,8 @@ namespace MultiplayerInfrastructure.Quest
         Type = Type,
         ItemId = ItemId,
         SignalId = SignalId,
+        WaypointIdentifier = WaypointIdentifier,
+        ReachDistance = ReachDistance,
         DisplayTextContent = DisplayTextContent,
         Count = Count,
         Progress = includeRuntimeState ? Progress?.Clone() ?? QuestProgressValue.SingleStep : QuestProgressValue.SingleStep,
@@ -159,6 +169,7 @@ namespace MultiplayerInfrastructure.Quest
   {
     InventoryContains,
     InteractionSignalReceived,
+    WaypointReached,
     AllOf,
     AnyOf
   }
@@ -182,6 +193,8 @@ namespace MultiplayerInfrastructure.Quest
     public bool IsAutoComplete { get; set; }
     public bool IsTrackedByDefault { get; set; }
     public QuestScopeType Scope { get; set; } = QuestScopeType.Player;
+    public bool IsOrdinal { get; set; }
+    public List<QuestCompletionCriteria> Tasks { get; set; } = new();
     public List<QuestCompletionCriteria> CompletionCriteria { get; set; } = new();
 
     public QuestDefinition Clone()
@@ -197,8 +210,20 @@ namespace MultiplayerInfrastructure.Quest
         IsAutoComplete = IsAutoComplete,
         IsTrackedByDefault = IsTrackedByDefault,
         Scope = Scope,
+        IsOrdinal = IsOrdinal,
+        Tasks = new List<QuestCompletionCriteria>(),
         CompletionCriteria = new List<QuestCompletionCriteria>()
       };
+
+      if (Tasks != null)
+      {
+        for (int i = 0; i < Tasks.Count; i++)
+        {
+          var each = Tasks[i];
+          if (each != null)
+            copy.Tasks.Add(each.Clone(includeRuntimeState: false));
+        }
+      }
 
       if (CompletionCriteria != null)
       {

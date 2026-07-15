@@ -126,10 +126,11 @@ namespace MultiplayerInfrastructure.Quest
       var isNewQuest = !_quests.TryGetValue(cloned.Id, out var existingQuest);
       bool wasCompleted = existingQuest?.Completed ?? false;
       bool wasTracked = !isNewQuest && _trackedQuestOrder.Contains(cloned.Id);
-      if (!isNewQuest && wasCompleted)
-        cloned.Completed = true;
       if (!isNewQuest)
+      {
+        MergeQuestRuntimeState(existingQuest, cloned);
         cloned.IsTracked = wasTracked;
+      }
 
       _quests[cloned.Id] = cloned;
       UpdateQuestCompletionRuntimeState(cloned.Id, cloned.Completed);
@@ -194,11 +195,12 @@ namespace MultiplayerInfrastructure.Quest
 
       bool wasCompleted = previousCompleted ?? quest.Completed;
       bool wasTracked = _trackedQuestOrder.Contains(questId);
+      var tasks = GetQuestTasks(quest);
       var evaluation = quest.Scope == QuestScopeType.Global
-        ? QuestCriteriaEvaluator.EvaluateTreeGlobal(quest.CompletionCriteria)
-        : QuestCriteriaEvaluator.EvaluateTree(quest.CompletionCriteria, GetOwnerPlayerController());
+        ? QuestCriteriaEvaluator.EvaluateTreeGlobal(tasks, quest.IsOrdinal)
+        : QuestCriteriaEvaluator.EvaluateTree(tasks, GetOwnerPlayerController(), quest.IsOrdinal);
 
-      ApplyEvaluation(quest.CompletionCriteria, evaluation.Children);
+      ApplyEvaluation(tasks, evaluation.Children);
       quest.Progress = new QuestProgressValue(evaluation.Result.Current, evaluation.Result.Target);
       quest.Completed = evaluation.Result.IsSatisfied;
       UpdateQuestCompletionRuntimeState(questId, quest.Completed);
@@ -223,10 +225,11 @@ namespace MultiplayerInfrastructure.Quest
       if (!_featureFlags.HasFlag(FeatureFlags.HighlightAssignedWaypoint) || quest == null)
         return;
 
-      if (string.IsNullOrWhiteSpace(quest.WaypointIdentifier))
+      string waypointIdentifier = GetActiveWaypointIdentifier(quest);
+      if (string.IsNullOrWhiteSpace(waypointIdentifier))
         return;
 
-      if (WaypointAnchor.TryGet(quest.WaypointIdentifier, out var anchor))
+      if (WaypointAnchor.TryGet(waypointIdentifier, out var anchor))
       {
         anchor.Highlight();
       }
@@ -364,6 +367,97 @@ namespace MultiplayerInfrastructure.Quest
       return changed;
     }
 
+    public static IReadOnlyList<QuestCompletionCriteria> GetQuestTasks(QuestData quest)
+    {
+      if (quest?.Tasks != null && quest.Tasks.Count > 0)
+        return quest.Tasks;
+
+      if (quest?.CompletionCriteria != null)
+        return quest.CompletionCriteria;
+
+      return Array.Empty<QuestCompletionCriteria>();
+    }
+
+    public static IReadOnlyList<string> GetActiveWaypointIdentifiers(QuestData quest)
+    {
+      var result = new List<string>();
+      var tasks = GetQuestTasks(quest);
+      if (tasks == null || tasks.Count == 0)
+        return result;
+
+      int start = quest != null && quest.IsOrdinal ? GetOrdinalActiveTaskIndex(tasks) : 0;
+      int end = quest != null && quest.IsOrdinal ? Math.Min(tasks.Count, start + 1) : tasks.Count;
+      for (int i = start; i < end; i++)
+      {
+        CollectActiveWaypoints(tasks[i], result);
+      }
+
+      return result;
+    }
+
+    public static string GetActiveWaypointIdentifier(QuestData quest)
+    {
+      var identifiers = GetActiveWaypointIdentifiers(quest);
+      return identifiers.Count > 0 ? identifiers[0] : null;
+    }
+
+    private static int GetOrdinalActiveTaskIndex(IReadOnlyList<QuestCompletionCriteria> tasks)
+    {
+      for (int i = 0; i < tasks.Count; i++)
+      {
+        if (tasks[i] != null && !tasks[i].Completed)
+          return i;
+      }
+
+      return tasks.Count;
+    }
+
+    private static void CollectActiveWaypoints(QuestCompletionCriteria criterion, List<string> result)
+    {
+      if (criterion == null || criterion.Completed)
+        return;
+
+      if (criterion.Type == QuestCompletionCriteriaType.WaypointReached
+          && !string.IsNullOrWhiteSpace(criterion.WaypointIdentifier)
+          && !result.Contains(criterion.WaypointIdentifier))
+        result.Add(criterion.WaypointIdentifier);
+
+      if (criterion.Conditions == null)
+        return;
+
+      for (int i = 0; i < criterion.Conditions.Count; i++)
+        CollectActiveWaypoints(criterion.Conditions[i], result);
+    }
+
+    private static void MergeQuestRuntimeState(QuestData source, QuestData destination)
+    {
+      if (source == null || destination == null)
+        return;
+
+      destination.Progress = source.Progress?.Clone() ?? destination.Progress;
+      destination.Completed = source.Completed;
+      MergeCriteriaRuntimeState(GetQuestTasks(source), GetQuestTasks(destination));
+    }
+
+    private static void MergeCriteriaRuntimeState(IReadOnlyList<QuestCompletionCriteria> source, IReadOnlyList<QuestCompletionCriteria> destination)
+    {
+      if (source == null || destination == null)
+        return;
+
+      int count = Math.Min(source.Count, destination.Count);
+      for (int i = 0; i < count; i++)
+      {
+        var sourceCriterion = source[i];
+        var destinationCriterion = destination[i];
+        if (sourceCriterion == null || destinationCriterion == null || sourceCriterion.Type != destinationCriterion.Type)
+          continue;
+
+        destinationCriterion.Progress = sourceCriterion.Progress?.Clone() ?? QuestProgressValue.SingleStep;
+        destinationCriterion.Completed = sourceCriterion.Completed;
+        MergeCriteriaRuntimeState(sourceCriterion.Conditions, destinationCriterion.Conditions);
+      }
+    }
+
     private static string BuildQuestCompletedRuntimeStateKey(string questId)
     {
       return string.IsNullOrWhiteSpace(questId)
@@ -400,6 +494,8 @@ namespace MultiplayerInfrastructure.Quest
         if (!string.IsNullOrWhiteSpace(resolved.WaypointIdentifier))
           fromDefinition.WaypointIdentifier = resolved.WaypointIdentifier;
 
+        RestoreDefinitionRuntimeState(resolved, fromDefinition);
+
         return fromDefinition;
       }
 
@@ -414,6 +510,8 @@ namespace MultiplayerInfrastructure.Quest
         if (!string.IsNullOrWhiteSpace(resolved.WaypointIdentifier))
           fallbackById.WaypointIdentifier = resolved.WaypointIdentifier;
 
+        RestoreDefinitionRuntimeState(resolved, fallbackById);
+
         return fallbackById;
       }
 
@@ -424,6 +522,18 @@ namespace MultiplayerInfrastructure.Quest
         resolved.CompletionCriteria = new List<QuestCompletionCriteria>();
 
       return resolved;
+    }
+
+    private static void RestoreDefinitionRuntimeState(QuestData source, QuestData destination)
+    {
+      var sourceTasks = GetQuestTasks(source);
+      if (sourceTasks == null || sourceTasks.Count == 0)
+        return;
+
+      destination.IsOrdinal = source.IsOrdinal;
+      destination.Progress = source.Progress?.Clone() ?? destination.Progress;
+      destination.Completed = source.Completed;
+      MergeCriteriaRuntimeState(sourceTasks, GetQuestTasks(destination));
     }
 
     private bool TryResolveFromDefinition(string definitionIdentifier, out QuestData quest)
@@ -457,6 +567,8 @@ namespace MultiplayerInfrastructure.Quest
         IsAutoComplete = definition.IsAutoComplete,
         IsTracked = definition.IsTrackable && definition.IsTrackedByDefault,
         Scope = definition.Scope,
+        IsOrdinal = definition.IsOrdinal,
+        Tasks = CloneCriteria(definition.Tasks),
         CompletionCriteria = CloneCriteria(definition.CompletionCriteria),
         Progress = new QuestProgressValue(0, 1),
         Completed = false
@@ -561,7 +673,8 @@ namespace MultiplayerInfrastructure.Quest
           || (before.Progress?.Target ?? 1) != (after.Progress?.Target ?? 1))
         return true;
 
-      return HasCriteriaStateChanged(before.CompletionCriteria, after.CompletionCriteria);
+      return before.IsOrdinal != after.IsOrdinal
+          || HasCriteriaStateChanged(GetQuestTasks(before), GetQuestTasks(after));
     }
 
     private static bool HasCriteriaStateChanged(IReadOnlyList<QuestCompletionCriteria> before, IReadOnlyList<QuestCompletionCriteria> after)
@@ -597,28 +710,41 @@ namespace MultiplayerInfrastructure.Quest
   {
     public static QuestCriteriaEvaluationResult Evaluate(IReadOnlyList<QuestCompletionCriteria> criteria, PlayerController playerController)
     {
-      return EvaluateTree(criteria, playerController).Result;
+      return EvaluateTree(criteria, playerController, false).Result;
     }
 
     public static QuestCriteriaEvaluationResult EvaluateGlobal(IReadOnlyList<QuestCompletionCriteria> criteria)
     {
-      return EvaluateTreeGlobal(criteria).Result;
+      return EvaluateTreeGlobal(criteria, false).Result;
     }
 
-    internal static QuestCriteriaEvaluationNode EvaluateTree(IReadOnlyList<QuestCompletionCriteria> criteria, PlayerController playerController)
+    internal static QuestCriteriaEvaluationNode EvaluateTree(IReadOnlyList<QuestCompletionCriteria> criteria, PlayerController playerController, bool isOrdinal)
     {
       if (criteria == null || criteria.Count == 0)
         return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(false, 0, 1));
 
       var children = new List<QuestCriteriaEvaluationNode>(criteria.Count);
       int satisfied = 0;
+      bool activeTaskEvaluated = false;
+      bool ordinalPrefixIntact = true;
       for (int i = 0; i < criteria.Count; i++)
       {
         var each = criteria[i];
-        var child = EvaluateNode(each, playerController);
+        bool preserveCompletedTask = isOrdinal && ordinalPrefixIntact && each != null && each.Completed;
+        bool canEvaluate = !isOrdinal || !activeTaskEvaluated;
+        var child = preserveCompletedTask || !canEvaluate
+          ? CreatePreservedNode(each)
+          : EvaluateNode(each, playerController);
+        if (isOrdinal && !ordinalPrefixIntact)
+          child = CreateIncompleteNode(each);
         children.Add(child);
         if (child.Result.IsSatisfied)
           satisfied++;
+        if (isOrdinal && !preserveCompletedTask)
+        {
+          activeTaskEvaluated = true;
+          ordinalPrefixIntact = false;
+        }
       }
 
       int target = Math.Max(1, criteria.Count);
@@ -626,19 +752,33 @@ namespace MultiplayerInfrastructure.Quest
       return new QuestCriteriaEvaluationNode(result, children);
     }
 
-    internal static QuestCriteriaEvaluationNode EvaluateTreeGlobal(IReadOnlyList<QuestCompletionCriteria> criteria)
+    internal static QuestCriteriaEvaluationNode EvaluateTreeGlobal(IReadOnlyList<QuestCompletionCriteria> criteria, bool isOrdinal)
     {
       if (criteria == null || criteria.Count == 0)
         return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(false, 0, 1));
 
       var children = new List<QuestCriteriaEvaluationNode>(criteria.Count);
       int satisfied = 0;
+      bool activeTaskEvaluated = false;
+      bool ordinalPrefixIntact = true;
       for (int i = 0; i < criteria.Count; i++)
       {
-        var child = EvaluateNodeGlobal(criteria[i]);
+        var each = criteria[i];
+        bool preserveCompletedTask = isOrdinal && ordinalPrefixIntact && each != null && each.Completed;
+        bool canEvaluate = !isOrdinal || !activeTaskEvaluated;
+        var child = preserveCompletedTask || !canEvaluate
+          ? CreatePreservedNode(each)
+          : EvaluateNodeGlobal(each);
+        if (isOrdinal && !ordinalPrefixIntact)
+          child = CreateIncompleteNode(each);
         children.Add(child);
         if (child.Result.IsSatisfied)
           satisfied++;
+        if (isOrdinal && !preserveCompletedTask)
+        {
+          activeTaskEvaluated = true;
+          ordinalPrefixIntact = false;
+        }
       }
 
       int target = Math.Max(1, criteria.Count);
@@ -671,6 +811,12 @@ namespace MultiplayerInfrastructure.Quest
               && Registry.Registry.Contains(RegistryType.RuntimeState, normalized);
           int current = raised ? count : 0;
           return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(raised, current, count));
+        }
+
+        case QuestCompletionCriteriaType.WaypointReached:
+        {
+          bool reached = IsWaypointReached(criteria, playerController);
+          return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(reached, reached ? 1 : 0, 1));
         }
 
         case QuestCompletionCriteriaType.AllOf:
@@ -706,6 +852,11 @@ namespace MultiplayerInfrastructure.Quest
               && Registry.Registry.Contains(RegistryType.RuntimeState, normalized);
           int current = raised ? count : 0;
           return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(raised, current, count));
+        }
+        case QuestCompletionCriteriaType.WaypointReached:
+        {
+          bool reached = IsWaypointReachedGlobal(criteria);
+          return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(reached, reached ? 1 : 0, 1));
         }
         case QuestCompletionCriteriaType.AllOf:
           return EvaluateCompositeGlobal(criteria.Conditions, true);
@@ -785,6 +936,71 @@ namespace MultiplayerInfrastructure.Quest
       }
 
       return total;
+    }
+
+    private static bool IsWaypointReached(QuestCompletionCriteria criteria, PlayerController playerController)
+    {
+      if (playerController == null
+          || string.IsNullOrWhiteSpace(criteria.WaypointIdentifier)
+          || !WaypointAnchor.TryGet(criteria.WaypointIdentifier, out var anchor)
+          || anchor == null)
+        return false;
+
+      float reachDistance = Mathf.Max(0.01f, criteria.ReachDistance);
+      return (playerController.transform.position - anchor.transform.position).sqrMagnitude <= reachDistance * reachDistance;
+    }
+
+    private static bool IsWaypointReachedGlobal(QuestCompletionCriteria criteria)
+    {
+      if (string.IsNullOrWhiteSpace(criteria.WaypointIdentifier)
+          || !WaypointAnchor.TryGet(criteria.WaypointIdentifier, out var anchor)
+          || anchor == null)
+        return false;
+
+      float reachDistance = Mathf.Max(0.01f, criteria.ReachDistance);
+      float reachDistanceSquared = reachDistance * reachDistance;
+      var players = UnityEngine.Object.FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+      for (int i = 0; i < players.Length; i++)
+      {
+        var player = players[i];
+        if (player != null && (player.transform.position - anchor.transform.position).sqrMagnitude <= reachDistanceSquared)
+          return true;
+      }
+
+      return false;
+    }
+
+    private static QuestCriteriaEvaluationNode CreatePreservedNode(QuestCompletionCriteria criterion)
+    {
+      if (criterion == null)
+        return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(false, 0, 1));
+
+      var children = new List<QuestCriteriaEvaluationNode>();
+      if (criterion.Conditions != null)
+      {
+        for (int i = 0; i < criterion.Conditions.Count; i++)
+          children.Add(CreatePreservedNode(criterion.Conditions[i]));
+      }
+
+      var progress = criterion.Progress ?? QuestProgressValue.SingleStep;
+      var result = new QuestCriteriaEvaluationResult(criterion.Completed, progress.Current, progress.Target);
+      return new QuestCriteriaEvaluationNode(result, children);
+    }
+
+    private static QuestCriteriaEvaluationNode CreateIncompleteNode(QuestCompletionCriteria criterion)
+    {
+      if (criterion == null)
+        return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(false, 0, 1));
+
+      var children = new List<QuestCriteriaEvaluationNode>();
+      if (criterion.Conditions != null)
+      {
+        for (int i = 0; i < criterion.Conditions.Count; i++)
+          children.Add(CreateIncompleteNode(criterion.Conditions[i]));
+      }
+
+      int target = Math.Max(1, criterion.Progress?.Target ?? criterion.Count);
+      return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(false, 0, target), children);
     }
 
   }

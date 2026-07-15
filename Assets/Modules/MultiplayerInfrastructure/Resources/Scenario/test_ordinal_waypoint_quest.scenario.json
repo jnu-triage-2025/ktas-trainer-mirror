@@ -1,0 +1,26 @@
+{
+  "identifier": "test_ordinal_waypoint_quest",
+  "tags": [],
+  "questDefinitionIncludes": [
+    "test_ordinal_waypoint.quest"
+  ],
+  "nodes": {
+    "dialogue_start": {
+      "identifier": "dialogue_start",
+      "nodeType": "Dialogue",
+      "speakerName": "Quest Test",
+      "dialogueContent": "순차 웨이포인트 퀘스트를 발행합니다. Preview에는 현재 Task까지만 표시됩니다.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "quest_add"
+    },
+    "quest_add": {
+      "identifier": "quest_add",
+      "nodeType": "QuestControl",
+      "operation": "Add",
+      "failureStrategy": "Overwrite",
+      "questDefinitionIdentifier": "test.ordinal_waypoint::visit_three_waypoints",
+      "quest": null,
+      "nextIdentifier": null
+    }
+  }
+}

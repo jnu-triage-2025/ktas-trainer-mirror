@@ -1774,6 +1774,17 @@
           "type": "boolean",
           "default": false
         },
+        "IsOrdinal": {
+          "type": "boolean",
+          "default": false
+        },
+        "Tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QuestCompletionCriteria"
+          },
+          "default": []
+        },
         "CompletionCriteria": {
           "type": "array",
           "items": {
@@ -1839,6 +1850,7 @@
           "enum": [
             "InventoryContains",
             "InteractionSignalReceived",
+            "WaypointReached",
             "AllOf",
             "AnyOf"
           ]
@@ -1854,6 +1866,17 @@
             "string",
             "null"
           ]
+        },
+        "WaypointIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ReachDistance": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "default": 1
         },
         "DisplayTextContent": {
           "type": [

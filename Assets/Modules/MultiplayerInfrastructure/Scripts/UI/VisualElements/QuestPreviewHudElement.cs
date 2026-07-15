@@ -137,7 +137,7 @@ namespace MultiplayerInfrastructure.UI
       content.style.whiteSpace = WhiteSpace.Normal;
       card.Add(content);
 
-      AddCriteria(card, quest.CompletionCriteria);
+      AddCriteria(card, QuestManager.GetQuestTasks(quest), quest.IsOrdinal);
 
       var progress = new Label($"진행도: {FormatProgress(quest)}") { pickingMode = PickingMode.Ignore };
       progress.style.color = quest.Completed ? AccentColor : ContentColor;
@@ -150,13 +150,6 @@ namespace MultiplayerInfrastructure.UI
       status.style.fontSize = 11;
       status.style.marginTop = 2;
       card.Add(status);
-
-      var waypointLabel = new Label(FormatWaypointText(quest.WaypointIdentifier)) { pickingMode = PickingMode.Ignore };
-      waypointLabel.style.color = AccentColor;
-      waypointLabel.style.fontSize = 11;
-      waypointLabel.style.marginTop = 4;
-      waypointLabel.style.display = string.IsNullOrWhiteSpace(quest.WaypointIdentifier) ? DisplayStyle.None : DisplayStyle.Flex;
-      card.Add(waypointLabel);
 
       return card;
     }
@@ -177,22 +170,23 @@ namespace MultiplayerInfrastructure.UI
       return card;
     }
 
-    private static void AddCriteria(VisualElement card, IReadOnlyList<QuestCompletionCriteria> criteria)
+    private static void AddCriteria(VisualElement card, IReadOnlyList<QuestCompletionCriteria> criteria, bool isOrdinal)
     {
       if (criteria == null || criteria.Count == 0)
         return;
 
-      for (int i = 0; i < criteria.Count; i++)
+      int visibleCount = isOrdinal ? GetOrdinalVisibleTaskCount(criteria) : criteria.Count;
+      for (int i = 0; i < visibleCount; i++)
       {
         var each = criteria[i];
         if (each == null)
           continue;
 
-        AddCriterion(card, each, 0);
+        AddCriterion(card, each, 0, isOrdinal && IsCurrentTask(criteria, i));
       }
     }
 
-    private static void AddCriterion(VisualElement parent, QuestCompletionCriteria criterion, int depth)
+    private static void AddCriterion(VisualElement parent, QuestCompletionCriteria criterion, int depth, bool isCurrent)
     {
       string displayText = FormatCriterion(criterion);
       if (!string.IsNullOrWhiteSpace(displayText))
@@ -205,8 +199,9 @@ namespace MultiplayerInfrastructure.UI
         row.style.marginLeft = depth * 10;
 
         var label = new Label(displayText) { pickingMode = PickingMode.Ignore };
-        label.style.color = criterion.Completed ? AccentColor : DescriptionColor;
+        label.style.color = criterion.Completed || isCurrent ? AccentColor : DescriptionColor;
         label.style.fontSize = 11;
+        label.style.unityFontStyleAndWeight = isCurrent ? FontStyle.Bold : FontStyle.Normal;
         label.style.whiteSpace = WhiteSpace.Normal;
         row.Add(label);
 
@@ -232,8 +227,33 @@ namespace MultiplayerInfrastructure.UI
       {
         var child = criterion.Conditions[i];
         if (child != null)
-          AddCriterion(parent, child, depth + 1);
+          AddCriterion(parent, child, depth + 1, isCurrent);
       }
+    }
+
+    private static int GetOrdinalVisibleTaskCount(IReadOnlyList<QuestCompletionCriteria> tasks)
+    {
+      for (int i = 0; i < tasks.Count; i++)
+      {
+        if (tasks[i] != null && !tasks[i].Completed)
+          return i + 1;
+      }
+
+      return tasks.Count;
+    }
+
+    private static bool IsCurrentTask(IReadOnlyList<QuestCompletionCriteria> tasks, int index)
+    {
+      if (tasks == null || index < 0 || index >= tasks.Count)
+        return false;
+
+      for (int i = 0; i < tasks.Count; i++)
+      {
+        if (tasks[i] != null && !tasks[i].Completed)
+          return i == index;
+      }
+
+      return false;
     }
 
     private static string FormatCriterion(QuestCompletionCriteria criterion)
@@ -246,6 +266,7 @@ namespace MultiplayerInfrastructure.UI
       {
         QuestCompletionCriteriaType.InventoryContains when !string.IsNullOrWhiteSpace(criterion.ItemId) => $"{criterion.ItemId} ({progress})",
         QuestCompletionCriteriaType.InteractionSignalReceived when !string.IsNullOrWhiteSpace(criterion.SignalId) => $"{criterion.SignalId} ({progress})",
+        QuestCompletionCriteriaType.WaypointReached when !string.IsNullOrWhiteSpace(criterion.WaypointIdentifier) => $"Waypoint: {criterion.WaypointIdentifier}",
         QuestCompletionCriteriaType.AllOf => "모든 조건 달성",
         QuestCompletionCriteriaType.AnyOf => "조건 중 하나 달성",
         _ => string.Empty
@@ -260,9 +281,5 @@ namespace MultiplayerInfrastructure.UI
       return quest.Progress.ToDisplayText();
     }
 
-    private static string FormatWaypointText(string waypointIdentifier)
-    {
-      return $"Waypoint: {waypointIdentifier}";
-    }
   }
 }
