@@ -52,6 +52,7 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 543940734885712351}
   _networkObjectCache: {fileID: 543940734885712351}
   detectionRedius: 1.3
+  detectionOffset: {x: 0, y: 1, z: 0}
   interactionLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295

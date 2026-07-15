@@ -23,6 +23,7 @@ namespace MultiplayerInfrastructure.Camera
     [Header("Detection Settings")] [SerializeField, Min(.5f)]
     private float detectionRedius = 1.3f;
 
+    [SerializeField] private Vector3 detectionOffset = new Vector3(0f, 1f, 0f);
     [SerializeField] private LayerMask interactionLayerMask = ~0;
     [SerializeField, Min(.02f)] private float queryInterval = .05f;
 
@@ -55,9 +56,10 @@ namespace MultiplayerInfrastructure.Camera
       if (detectBased.IsUnityNull()) return;
       if (Time.time < nextQueryTime) return;
       nextQueryTime = Time.time + queryInterval;
-      
+
+      Vector3 detectionPosition = detectBased.position + detectionOffset;
       int count = Physics.OverlapSphereNonAlloc(
-        detectBased.position, 
+        detectionPosition,
         detectionRedius,
         overlapColliderBuf,
         interactionLayerMask,
@@ -96,7 +98,7 @@ namespace MultiplayerInfrastructure.Camera
     {
       if (detectBased.IsUnityNull()) return;
       Gizmos.color = Color.cyan;
-      Gizmos.DrawWireSphere(detectBased.position, detectionRedius);
+      Gizmos.DrawWireSphere(detectBased.position + detectionOffset, detectionRedius);
     }
 #endif
   }
