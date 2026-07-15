@@ -17,7 +17,9 @@ namespace MultiplayerInfrastructure.FishNetSupports
     private LocalConnectionState _serverStateAssumed = LocalConnectionState.Stopped;
     private LocalConnectionState _clientStateAssumed = LocalConnectionState.Stopped;
     private bool _deferredPlayerSpawningPrepared;
+    private bool _systemSceneObserverPrepared;
     private bool _serverConnectionStateSubscribed;
+    private SystemSceneObserverBinder _systemSceneObserverBinder;
     private readonly List<GameObject> _hiddenHudObjects = new List<GameObject>();
 
     private void OnEnable()
@@ -131,6 +133,33 @@ namespace MultiplayerInfrastructure.FishNetSupports
       Debug.Log($"[FishNetSupport] Deferred player spawning prepared for {playerSpawners.Length} PlayerSpawner(s).");
     }
 
+    /// <summary>
+    /// Additive 로드된 시스템/백엔드 씬(SystemOverlayScene 등)의 공유 Scene NetworkObject가
+    /// 모든 클라이언트에게 관측되도록, 접속하는 각 Connection을 해당 씬들에 등록하는 바인더를 준비한다.
+    /// 이 처리가 없으면 ChatService 등 non-global Scene NetworkObject가 원격 클라이언트에서 스폰되지 않아
+    /// Chat/Command Service가 동작하지 않는다.
+    /// </summary>
+    public void PrepareSystemSceneObserverBinding()
+    {
+      if (_systemSceneObserverPrepared)
+        return;
+
+      if (!ResolveNetworkManagerInHierarchy())
+        return;
+
+      if (_systemSceneObserverBinder == null)
+      {
+        _systemSceneObserverBinder = networkManager.GetComponentInChildren<SystemSceneObserverBinder>(true);
+        if (_systemSceneObserverBinder == null)
+          _systemSceneObserverBinder = networkManager.gameObject.AddComponent<SystemSceneObserverBinder>();
+      }
+
+      _systemSceneObserverBinder.Configure(networkManager);
+
+      _systemSceneObserverPrepared = true;
+      Debug.Log("[FishNetSupport] System scene observer binding prepared.");
+    }
+
     private void TrySubscribeServerConnectionState()
     {
       if (_serverConnectionStateSubscribed)
@@ -166,6 +195,9 @@ namespace MultiplayerInfrastructure.FishNetSupports
 
         _deferredPlayerSpawningPrepared = false;
         PrepareDeferredPlayerSpawning();
+
+        _systemSceneObserverPrepared = false;
+        PrepareSystemSceneObserverBinding();
         return;
       }
 
@@ -175,6 +207,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
         StaticPlacedItemService.ClearAll();
         StaticObjectDisplaymentService.ClearAll();
         _deferredPlayerSpawningPrepared = false;
+        _systemSceneObserverPrepared = false;
       }
     }
 
