@@ -271,6 +271,11 @@ namespace MultiplayerInfrastructure.Scenario
       // 이벤트 구독 해제
       ScenarioInteractable.OnScenarioRequested -= HandleScenarioRequested;
       ScenarioTriggerZone.OnScenarioRequested -= HandleScenarioRequested;
+
+      if (_instance == this)
+      {
+        _instance = null;
+      }
     }
 
     #endregion
@@ -3020,6 +3025,7 @@ namespace MultiplayerInfrastructure.Scenario
           yield break;
         }
 
+        RecordNodeVisit(cursor);
         OnNodeChanged?.Invoke(cursor);
 
         // 단일 노드를 실행하고 완료를 대기한다(전역 Advance 미사용).

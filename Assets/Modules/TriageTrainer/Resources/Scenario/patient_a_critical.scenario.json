@@ -230,7 +230,7 @@
       "branches": [
         {
           "identifier": "N005",
-          "completionConditionIdentifier": "CC_B_vitalcheck_patientA",
+          "completionConditionIdentifier": "CC_B_vitalcheck_patient_a",
           "requiredPlayerTags": [
             "airway_team"
           ],
@@ -239,7 +239,7 @@
         },
         {
           "identifier": "N006",
-          "completionConditionIdentifier": "CC_C_gcs_patientA",
+          "completionConditionIdentifier": "CC_C_gcs_patient_a",
           "requiredPlayerTags": [
             "neuro_assessment"
           ],
@@ -248,7 +248,7 @@
         },
         {
           "identifier": "N007",
-          "completionConditionIdentifier": "CC_D_suction_patientA",
+          "completionConditionIdentifier": "CC_D_suction_patient_a",
           "requiredPlayerTags": [
             "suction_team"
           ],
@@ -364,7 +364,7 @@
       "quest": {
         "Id": "Quest_Check_Vital_PatientA"
       },
-      "nextIdentifier": "CC_B_vitalcheck_patientA"
+      "nextIdentifier": "CC_B_vitalcheck_patient_a"
     },
     "N006": {
       "identifier": "N006",
@@ -437,25 +437,21 @@
         {
           "displayText": "A(Alert, 완전히 깨어 있음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_retry_a"
         },
         {
           "displayText": "V(Verbal response, 음성에 반응 있음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_retry_a"
         },
         {
           "displayText": "P(Pain response, 통증에 반응 있음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_3"
         },
         {
           "displayText": "U(Unconsciousness, 반응 없음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_retry_a"
         }
       ]
@@ -490,25 +486,21 @@
         {
           "displayText": "4점(자발적 반응)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_retry_b"
         },
         {
           "displayText": "3점(구두 명령에 반응)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_retry_b"
         },
         {
           "displayText": "2점(통증에 반응)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_4"
         },
         {
           "displayText": "1점(반응 없음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_retry_b"
         }
       ]
@@ -543,31 +535,26 @@
         {
           "displayText": "5점(적절한 답변)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_retry_c"
         },
         {
           "displayText": "4점(혼란)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_retry_c"
         },
         {
           "displayText": "3점(부적절한 답변)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_retry_c"
         },
         {
           "displayText": "2점(신음소리)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_5"
         },
         {
           "displayText": "1점(반응 없음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_retry_c"
         }
       ]
@@ -602,37 +589,31 @@
         {
           "displayText": "6점(명령 수행)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_retry_d"
         },
         {
           "displayText": "5점(통증 원인을 치우려고 손을 뻗음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_retry_d"
         },
         {
           "displayText": "4점(통증에 회피)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_6"
         },
         {
           "displayText": "3점(이상 굴곡)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_retry_d"
         },
         {
           "displayText": "2점(이상 신전)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_retry_d"
         },
         {
           "displayText": "1점(반응 없음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N006_retry_d"
         }
       ]
@@ -674,7 +655,7 @@
       "quest": {
         "Id": "Quest_Check_GCS_PatientA"
       },
-      "nextIdentifier": "CC_C_gcs_patientA"
+      "nextIdentifier": "CC_C_gcs_patient_a"
     },
     "N007": {
       "identifier": "N007",
@@ -890,7 +871,7 @@
       "quest": {
         "Id": "Quest_Stabilizer_And_Suction_PatientA"
       },
-      "nextIdentifier": "CC_D_suction_patientA"
+      "nextIdentifier": "CC_D_suction_patient_a"
     },
     "D010": {
       "identifier": "D010",
@@ -944,7 +925,7 @@
       "branches": [
         {
           "identifier": "N008",
-          "completionConditionIdentifier": "CC_B_intubation_A_oxy_patientA",
+          "completionConditionIdentifier": "CC_B_intubation_A_oxy_patient_a",
           "requiredPlayerTags": [
             "airway_team",
             "triage_lead"
@@ -954,7 +935,7 @@
         },
         {
           "identifier": "N010",
-          "completionConditionIdentifier": "CC_C_stopbleeding_patientA",
+          "completionConditionIdentifier": "CC_C_stopbleeding_patient_a",
           "requiredPlayerTags": [
             "bleeding_control"
           ],
@@ -963,7 +944,7 @@
         },
         {
           "identifier": "N011",
-          "completionConditionIdentifier": "CC_D_iv_patientA",
+          "completionConditionIdentifier": "CC_D_iv_patient_a",
           "requiredPlayerTags": [
             "iv_team",
             "access_support"
@@ -1463,25 +1444,21 @@
         {
           "displayText": "3L",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N009_retry"
         },
         {
           "displayText": "5L",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N009_retry"
         },
         {
           "displayText": "10L",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "D016"
         },
         {
           "displayText": "15L",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N009_retry"
         }
       ]
@@ -1513,7 +1490,7 @@
       "quest": {
         "Id": "Quest_Oxygen_PatientA"
       },
-      "nextIdentifier": "CC_B_intubation_A_oxy_patientA"
+      "nextIdentifier": "CC_B_intubation_A_oxy_patient_a"
     },
     "N010": {
       "identifier": "N010",
@@ -1699,7 +1676,7 @@
       "quest": {
         "Id": "Quest_BleedingControl_PatientA"
       },
-      "nextIdentifier": "CC_C_stopbleeding_patientA"
+      "nextIdentifier": "CC_C_stopbleeding_patient_a"
     },
     "N011": {
       "identifier": "N011",
@@ -2096,7 +2073,7 @@
       "quest": {
         "Id": "Quest_Lv1_Fluids"
       },
-      "nextIdentifier": "CC_D_iv_patientA"
+      "nextIdentifier": "CC_D_iv_patient_a"
     },
     "D022": {
       "identifier": "D022",
@@ -2370,7 +2347,6 @@
         {
           "displayText": "Full",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "S003"
         }
       ]
@@ -2437,13 +2413,11 @@
         {
           "displayText": "약 1500ml (다섯 손가락 모두를 이용해 백을 짠다)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N017_retry_a"
         },
         {
           "displayText": "약 600ml (엄지, 검지, 중지를 이용해 백을 짠다)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "L002"
         }
       ]
@@ -2475,19 +2449,16 @@
         {
           "displayText": "10초에 1번 (분당 약 6회)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N017_retry_b"
         },
         {
           "displayText": "6초에 1번 (분당 약 10회)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "Q019_1"
         },
         {
           "displayText": "3초에 1번 (분당 약 20회)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N017_retry_b"
         }
       ]
@@ -2577,19 +2548,16 @@
         {
           "displayText": "약 4cm",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N018_retry_a"
         },
         {
           "displayText": "약 5cm",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "L004"
         },
         {
           "displayText": "약 6cm",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N018_retry_a"
         }
       ]
@@ -2621,13 +2589,11 @@
         {
           "displayText": "양측 유두선상의 중간지점",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N018_retry_b"
         },
         {
           "displayText": "흉골 하부 1/2 지점",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "L005"
         }
       ]
@@ -2659,19 +2625,16 @@
         {
           "displayText": "분당 약 80~100회",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N018_retry_c"
         },
         {
           "displayText": "분당 약 100~120회",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "L006"
         },
         {
           "displayText": "분당 약 120~140회",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N018_retry_c"
         }
       ]
@@ -2703,19 +2666,16 @@
         {
           "displayText": "지쳐도 한 사람이 계속 가슴압박을 수행한다.",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N018_retry_d"
         },
         {
           "displayText": "뼈가 부러진 것 같으면 멈춘다.",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N018_retry_d"
         },
         {
           "displayText": "충분한 이완을 제공한다.",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "Q020_1"
         }
       ]
@@ -2858,25 +2818,21 @@
         {
           "displayText": "Asystole(무수축)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N019_retry_a"
         },
         {
           "displayText": "PEA(무맥성 전기활동)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N019_retry_a"
         },
         {
           "displayText": "VT(맥박이 있는 심실빈맥)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N019_retry_a"
         },
         {
           "displayText": "VF(심실세동)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "L008"
         }
       ]
@@ -2908,13 +2864,11 @@
         {
           "displayText": "150~200J(줄)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "L009"
         },
         {
           "displayText": "360J(줄)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N019_retry_b"
         }
       ]
@@ -2946,25 +2900,21 @@
         {
           "displayText": "꼬인 수액 줄을 풀어준다.",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N019_retry_c"
         },
         {
           "displayText": "의료진이 손을 대어도 괜찮다.",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N019_retry_c"
         },
         {
           "displayText": "의사의 지시가 있을 때에만 실시한다.",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N019_retry_c"
         },
         {
           "displayText": "전기충격 전 모두 환자에게서 떨어지도록 지시한다.",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "Q021_1"
         }
       ]
@@ -3170,25 +3120,21 @@
         {
           "displayText": "약 1~2분에 한 번",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N020_retry_a"
         },
         {
           "displayText": "약 3~5분에 한 번",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "L011"
         },
         {
           "displayText": "약 5~10분에 한 번",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N020_retry_a"
         },
         {
           "displayText": "누군가 시킬 때 마다",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N020_retry_a"
         }
       ]
@@ -3220,19 +3166,16 @@
         {
           "displayText": "약물만 주입",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N020_retry_b"
         },
         {
           "displayText": "약물 주입 후 생리식염수 주입",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N020_retry_b"
         },
         {
           "displayText": "약물 주입 후 생리식염수 주입, 이후 팔 들어올리기",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "Q022_1"
         }
       ]
@@ -3400,19 +3343,16 @@
         {
           "displayText": "약 4cm",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N021_retry_a"
         },
         {
           "displayText": "약 5cm",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "L013"
         },
         {
           "displayText": "약 6cm",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N021_retry_a"
         }
       ]
@@ -3444,13 +3384,11 @@
         {
           "displayText": "양측 유두선상의 중간지점",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N021_retry_b"
         },
         {
           "displayText": "흉골 하부 1/2 지점",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "L014"
         }
       ]
@@ -3482,19 +3420,16 @@
         {
           "displayText": "분당 약 80~100회",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N021_retry_c"
         },
         {
           "displayText": "분당 약 100~120회",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "L015"
         },
         {
           "displayText": "분당 약 120~140회",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N021_retry_c"
         }
       ]
@@ -3526,19 +3461,16 @@
         {
           "displayText": "지쳐도 한 사람이 계속 가슴압박을 수행한다.",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N021_retry_d"
         },
         {
           "displayText": "뼈가 부러진 것 같으면 멈춘다.",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N021_retry_d"
         },
         {
           "displayText": "충분한 이완을 제공한다.",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "Q023_1"
         }
       ]
@@ -3628,13 +3560,11 @@
         {
           "displayText": "약 600ml (엄지, 검지, 중지를 이용해 백을 짠다)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "L017"
         },
         {
           "displayText": "약 1500ml (다섯 손가락 모두를 이용해 백을 짠다)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N022_retry_a"
         }
       ]
@@ -3666,19 +3596,16 @@
         {
           "displayText": "10초에 1번 (분당 약 6회)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N022_retry_b"
         },
         {
           "displayText": "6초에 1번 (분당 약 10회)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "Q024_1"
         },
         {
           "displayText": "3초에 1번 (분당 약 20회)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N022_retry_b"
         }
       ]
@@ -3893,25 +3820,21 @@
         {
           "displayText": "약 1~2분에 한 번",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N023_retry_a"
         },
         {
           "displayText": "약 3~5분에 한 번",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "L019"
         },
         {
           "displayText": "약 5~10분에 한 번",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N023_retry_a"
         },
         {
           "displayText": "누군가 시킬 때 마다",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N023_retry_a"
         }
       ]
@@ -3943,19 +3866,16 @@
         {
           "displayText": "약물만 주입",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N023_retry_b"
         },
         {
           "displayText": "약물 주입 후 생리식염수 주입",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N023_retry_b"
         },
         {
           "displayText": "약물 주입 후 생리식염수 주입, 이후 팔 들어올리기",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "Q025_1"
         }
       ]
@@ -4054,25 +3974,21 @@
         {
           "displayText": "Asystole(무수축)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N024_retry_a"
         },
         {
           "displayText": "PEA(무맥성 전기활동)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N024_retry_a"
         },
         {
           "displayText": "VT(맥박이 있는 심실빈맥)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N024_retry_a"
         },
         {
           "displayText": "VF(심실세동)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "L021"
         }
       ]
@@ -4104,13 +4020,11 @@
         {
           "displayText": "150~200J(줄)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "L022"
         },
         {
           "displayText": "360J(줄)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N024_retry_b"
         }
       ]
@@ -4142,25 +4056,21 @@
         {
           "displayText": "꼬인 수액 줄을 풀어준다.",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N024_retry_c"
         },
         {
           "displayText": "의료진이 손을 대어도 괜찮다.",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N024_retry_c"
         },
         {
           "displayText": "의사의 지시가 있을 때에만 실시한다.",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N024_retry_c"
         },
         {
           "displayText": "전기충격 전 모두 환자에게서 떨어지도록 지시한다.",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "Q026_1"
         }
       ]
@@ -4304,7 +4214,7 @@
         },
         {
           "identifier": "N027",
-          "completionConditionIdentifier": "CC_B_cut_patientA",
+          "completionConditionIdentifier": "CC_B_cut_patient_a",
           "requiredPlayerTags": [
             "procedure_team"
           ],
@@ -4313,7 +4223,7 @@
         },
         {
           "identifier": "N028",
-          "completionConditionIdentifier": "CC_D_gcs_patientA_rosc",
+          "completionConditionIdentifier": "CC_D_gcs_patient_a_rosc",
           "requiredPlayerTags": [
             "neuro_assessment"
           ],
@@ -4453,7 +4363,7 @@
       "quest": {
         "Id": "Quest_Cut_Clothing"
       },
-      "nextIdentifier": "CC_B_cut_patientA"
+      "nextIdentifier": "CC_B_cut_patient_a"
     },
     "N028": {
       "identifier": "N028",
@@ -4526,25 +4436,21 @@
         {
           "displayText": "A(Alert, 완전히 깨어 있음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_a"
         },
         {
           "displayText": "V(Verbal response, 음성에 반응 있음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_a"
         },
         {
           "displayText": "P(Pain response, 통증에 반응 있음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_3"
         },
         {
           "displayText": "U(Unconsciousness, 반응 없음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_a"
         }
       ]
@@ -4579,25 +4485,21 @@
         {
           "displayText": "4점(자발적)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_b"
         },
         {
           "displayText": "3점(명령)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_b"
         },
         {
           "displayText": "2점(통증)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_4"
         },
         {
           "displayText": "1점(반응 없음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_b"
         }
       ]
@@ -4632,37 +4534,31 @@
         {
           "displayText": "5점(적절한 답변)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
           "displayText": "4점(혼란)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
           "displayText": "3점(부적절한 답변)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
           "displayText": "2점(신음소리)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
           "displayText": "1점(반응 없음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
           "displayText": "E(기관삽관)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_5"
         }
       ]
@@ -4697,37 +4593,31 @@
         {
           "displayText": "6점(명령 수행)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
           "displayText": "5점(통증 원인을 치우려고 손을 뻗음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
           "displayText": "4점(통증에 회피)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_6"
         },
         {
           "displayText": "3점(이상 굴곡)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
           "displayText": "2점(이상 신전)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
           "displayText": "1점(반응 없음)",
           "displayIconIdentifier": null,
-          "displayColor": "#88AAFF",
           "nextNodeIdentifier": "N028_retry_d"
         }
       ]
@@ -4760,7 +4650,7 @@
       "quest": {
         "Id": "Quest_Check_GCS_ROSC"
       },
-      "nextIdentifier": "CC_D_gcs_patientA_rosc"
+      "nextIdentifier": "CC_D_gcs_patient_a_rosc"
     },
     "D037": {
       "identifier": "D037",

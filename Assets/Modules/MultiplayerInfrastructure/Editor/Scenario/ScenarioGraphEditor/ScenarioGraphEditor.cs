@@ -104,6 +104,7 @@ namespace MultiplayerInfrastructure.Editor
     private void OnEnable()
     {
       EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+      EditorApplication.update += SyncRuntimeScenarioController;
       ConstructUI();
       CreateGraphView();
       CreateDebugPanel();
@@ -118,6 +119,7 @@ namespace MultiplayerInfrastructure.Editor
     private void OnDisable()
     {
       EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+      EditorApplication.update -= SyncRuntimeScenarioController;
       UnbindRuntimeScenarioController();
       ClearRuntimeHighlight();
 
@@ -434,6 +436,20 @@ namespace MultiplayerInfrastructure.Editor
       else
       {
         ClearRuntimeHighlight();
+      }
+    }
+
+    private void SyncRuntimeScenarioController()
+    {
+      if (!Application.isPlaying)
+      {
+        return;
+      }
+
+      var controller = ScenarioController.Instance;
+      if (runtimeScenarioController != controller)
+      {
+        SyncRuntimeHighlight();
       }
     }
 

@@ -44,4 +44,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 666cc420c9bdf4c9bac786163d079941, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport
+  _entityPresetRegistryRequirementsSO: {fileID: 11400000, guid: 36089e499c1ac452daf52fbaf70c3c66, type: 2}
   _playerModelRegistryRequirementsSO: {fileID: 11400000, guid: 963509fac1d06481d9bf2729940aaa33, type: 2}
