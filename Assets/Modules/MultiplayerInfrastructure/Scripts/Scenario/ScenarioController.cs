@@ -52,11 +52,23 @@ namespace MultiplayerInfrastructure.Scenario
     [SerializeField]
     private ScenarioConcurrencyConflictPolicy _concurrencyConflictPolicy = ScenarioConcurrencyConflictPolicy.Warn;
 
+    [Header("Validator Block Logging")]
+    [Tooltip("Validator 게이트가 조건 미충족으로 진행을 막기 시작할 때 오류를 기록할 대상.")]
+    [SerializeField]
+    private ScenarioValidatorBlockLogTarget _validatorBlockLogTargets =
+      ScenarioValidatorBlockLogTarget.UnityConsole | ScenarioValidatorBlockLogTarget.SessionLog;
+
     /// <summary>동시 대화창 점유 충돌 처리 정책. 인게임 커맨드로 런타임 변경 가능.</summary>
     public ScenarioConcurrencyConflictPolicy ConcurrencyConflictPolicy
     {
       get => _concurrencyConflictPolicy;
       set => _concurrencyConflictPolicy = value;
+    }
+
+    public ScenarioValidatorBlockLogTarget ValidatorBlockLogTargets
+    {
+      get => _validatorBlockLogTargets;
+      set => _validatorBlockLogTargets = value;
     }
 
     #endregion
@@ -200,6 +212,8 @@ namespace MultiplayerInfrastructure.Scenario
       _preflightPolicy = ScenarioPreflightPolicy.Default;
       // 동시 실행 충돌 정책 기본값: 경고 후 계속 진행(기존 동작 유지).
       _concurrencyConflictPolicy = ScenarioConcurrencyConflictPolicy.Warn;
+      _validatorBlockLogTargets =
+        ScenarioValidatorBlockLogTarget.UnityConsole | ScenarioValidatorBlockLogTarget.SessionLog;
     }
 
     public void RegisterReferences(
@@ -2802,6 +2816,11 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     private IEnumerator WaitForValidatorGate(ScenarioValidatorNode node)
     {
+      if (!EvaluateValidator(node, out var failureReason))
+      {
+        ReportValidatorBlocked(node, failureReason);
+      }
+
       var timeout = node.WaitTimeoutSeconds;
       if (timeout is > 0f)
       {
@@ -4122,6 +4141,30 @@ namespace MultiplayerInfrastructure.Scenario
       if ((node.FailureReportTargets & ScenarioValidatorFailureReportTarget.InGameChat) != 0)
       {
         AppendSystemChatMessage($"Validator failed: {resolvedReason}");
+      }
+    }
+
+    private void ReportValidatorBlocked(ScenarioValidatorNode node, string reason)
+    {
+      var resolvedReason = string.IsNullOrWhiteSpace(reason)
+        ? "condition evaluated to false"
+        : reason;
+      var graphIdentifier = _currentGraph?.Identifier ?? "<unknown>";
+      var message = $"Validator gate blocked scenario progress: graph='{graphIdentifier}', node='{node.Identifier}', reason={resolvedReason}";
+
+      if ((_validatorBlockLogTargets & ScenarioValidatorBlockLogTarget.UnityConsole) != 0)
+      {
+        Debug.LogError($"[ScenarioController] {message}", this);
+      }
+
+      if ((_validatorBlockLogTargets & ScenarioValidatorBlockLogTarget.InGameChat) != 0)
+      {
+        AppendSystemChatMessage(message);
+      }
+
+      if ((_validatorBlockLogTargets & ScenarioValidatorBlockLogTarget.SessionLog) != 0)
+      {
+        GameLogService.WriteScenario($"ERROR: {message}", graphIdentifier);
       }
     }
 

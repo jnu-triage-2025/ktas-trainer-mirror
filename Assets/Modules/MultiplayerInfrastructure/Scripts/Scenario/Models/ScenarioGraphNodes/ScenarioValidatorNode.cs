@@ -31,6 +31,15 @@ namespace MultiplayerInfrastructure.Scenario
     InGameChat = 1 << 1
   }
 
+  [Flags]
+  public enum ScenarioValidatorBlockLogTarget
+  {
+    None = 0,
+    UnityConsole = 1 << 0,
+    InGameChat = 1 << 1,
+    SessionLog = 1 << 2
+  }
+
   public enum ScenarioValidatorRuleType
   {
     Registry

@@ -22,6 +22,8 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("scenario execute <target> <scenario>", "Start a scenario for targets."),
       new UsageLine("scenario signal <signal> [clear]", "Raise (or clear) a signal."),
       new UsageLine("scenario conflictpolicy [warn|cancel|panic]", "Get/set concurrent-dialogue conflict policy."),
+      new UsageLine("scenario validatorlog", "Show Validator block logging targets."),
+      new UsageLine("scenario validatorlog <console|chat|session> <on|off>", "Enable or disable a logging target."),
       new UsageLine("  <target>", "@s, @a, @n, or fish:<id>."),
       new UsageLine("  <scenario>", "Registered scenario identifier."),
     };
@@ -109,9 +111,17 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
+      if (args != null
+          && args.Length >= 1
+          && string.Equals(args[0], "validatorlog", StringComparison.OrdinalIgnoreCase))
+      {
+        ExecuteValidatorLogCommand(sender, args);
+        return;
+      }
+
       if (args == null || args.Length < 3 || !string.Equals(args[0], "execute", StringComparison.OrdinalIgnoreCase))
       {
-        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute <target> <scenario_id> | /scenario signal <signal_id> [clear] | /scenario conflictpolicy [warn|cancel|panic]");
+        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute <target> <scenario_id> | /scenario signal <signal_id> [clear] | /scenario conflictpolicy [warn|cancel|panic] | /scenario validatorlog [<console|chat|session> <on|off>]");
         return;
       }
 
@@ -136,6 +146,90 @@ namespace MultiplayerInfrastructure.Command
       }
 
       _chat.SendSystemMessage(sender, $"Scenario '{scenarioId}' dispatched to {targets.Count} target(s).");
+    }
+
+    private void ExecuteValidatorLogCommand(NetworkConnection sender, string[] args)
+    {
+      var controller = ScenarioController.Instance;
+      if (controller == null)
+      {
+        _chat.SendSystemMessage(sender, "ScenarioController instance is not available.");
+        return;
+      }
+
+      if (args.Length == 1)
+      {
+        var targets = controller.ValidatorBlockLogTargets;
+        _chat.SendSystemMessage(sender,
+          $"Validator block logging: console={FormatFlag(targets, ScenarioValidatorBlockLogTarget.UnityConsole)}, "
+          + $"chat={FormatFlag(targets, ScenarioValidatorBlockLogTarget.InGameChat)}, "
+          + $"session={FormatFlag(targets, ScenarioValidatorBlockLogTarget.SessionLog)}.");
+        return;
+      }
+
+      if (args.Length != 3
+          || !TryParseValidatorLogTarget(args[1], out var target)
+          || !TryParseToggle(args[2], out bool enabled))
+      {
+        _chat.SendSystemMessage(sender,
+          "Usage: /scenario validatorlog <console|chat|session> <on|off>");
+        return;
+      }
+
+      var updatedTargets = enabled
+        ? controller.ValidatorBlockLogTargets | target
+        : controller.ValidatorBlockLogTargets & ~target;
+
+      if (!_chat.TrySetValidatorBlockLogTargets(updatedTargets, out string error))
+      {
+        _chat.SendSystemMessage(sender, error);
+        return;
+      }
+
+      _chat.SendSystemMessage(sender,
+        $"Validator block logging target '{args[1].ToLowerInvariant()}' set to {(enabled ? "on" : "off")}.");
+    }
+
+    private static bool TryParseValidatorLogTarget(string value, out ScenarioValidatorBlockLogTarget target)
+    {
+      switch (value?.Trim().ToLowerInvariant())
+      {
+        case "console":
+          target = ScenarioValidatorBlockLogTarget.UnityConsole;
+          return true;
+        case "chat":
+          target = ScenarioValidatorBlockLogTarget.InGameChat;
+          return true;
+        case "session":
+          target = ScenarioValidatorBlockLogTarget.SessionLog;
+          return true;
+        default:
+          target = ScenarioValidatorBlockLogTarget.None;
+          return false;
+      }
+    }
+
+    private static bool TryParseToggle(string value, out bool enabled)
+    {
+      switch (value?.Trim().ToLowerInvariant())
+      {
+        case "on":
+          enabled = true;
+          return true;
+        case "off":
+          enabled = false;
+          return true;
+        default:
+          enabled = false;
+          return false;
+      }
+    }
+
+    private static string FormatFlag(
+      ScenarioValidatorBlockLogTarget targets,
+      ScenarioValidatorBlockLogTarget target)
+    {
+      return (targets & target) != 0 ? "on" : "off";
     }
 
     private void SendScenarioList(NetworkConnection sender)

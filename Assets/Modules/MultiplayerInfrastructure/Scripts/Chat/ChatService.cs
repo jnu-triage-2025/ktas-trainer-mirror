@@ -145,6 +145,15 @@ namespace MultiplayerInfrastructure.Chat
       ScenarioController.Instance.StartScenario(graph, null, owner);
     }
 
+    [ObserversRpc(BufferLast = true)]
+    private void SyncValidatorBlockLogTargetsObserversRpc(int targets)
+    {
+      if (ScenarioController.Instance != null)
+      {
+        ScenarioController.Instance.ValidatorBlockLogTargets = (ScenarioValidatorBlockLogTarget)targets;
+      }
+    }
+
     [TargetRpc]
     private void TargetShowTitle(NetworkConnection conn, string title, string subtitle)
     {
@@ -314,6 +323,28 @@ namespace MultiplayerInfrastructure.Chat
         return false;
       }
 
+      return true;
+    }
+
+    public bool TrySetValidatorBlockLogTargets(ScenarioValidatorBlockLogTarget targets, out string error)
+    {
+      error = string.Empty;
+
+      if (!IsServer)
+      {
+        error = "Validator block logging can only be changed on the server.";
+        return false;
+      }
+
+      var controller = ScenarioController.Instance;
+      if (controller == null)
+      {
+        error = "ScenarioController instance is not available.";
+        return false;
+      }
+
+      controller.ValidatorBlockLogTargets = targets;
+      SyncValidatorBlockLogTargetsObserversRpc((int)targets);
       return true;
     }
 
