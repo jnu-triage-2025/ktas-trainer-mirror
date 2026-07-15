@@ -28,9 +28,16 @@ namespace MultiplayerInfrastructure.UI
 
     public void SetTrackedQuests(IReadOnlyList<QuestData> tracked)
     {
+      SetQuests(tracked, null);
+    }
+
+    public void SetQuests(IReadOnlyList<QuestData> tracked, IReadOnlyList<QuestData> completed)
+    {
       _cards?.Clear();
 
-      if (tracked == null || tracked.Count == 0)
+      int completedCount = completed?.Count ?? 0;
+      int trackedCount = tracked?.Count ?? 0;
+      if (completedCount == 0 && trackedCount == 0)
       {
         style.display = DisplayStyle.None;
         return;
@@ -38,15 +45,28 @@ namespace MultiplayerInfrastructure.UI
 
       style.display = DisplayStyle.Flex;
 
-      int count = Mathf.Min(tracked.Count, DefaultsQuestControl.MaxTrackedQuests);
-      for (int i = 0; i < count; i++)
+      var completedIds = new HashSet<string>();
+      int displayed = 0;
+      for (int i = 0; i < completedCount && displayed < DefaultsQuestControl.MaxTrackedQuests; i++)
+      {
+        var quest = completed[i];
+        if (quest == null)
+          continue;
+
+        completedIds.Add(quest.Id);
+        _cards.Add(CreateCompletedCard(quest));
+        displayed++;
+      }
+
+      for (int i = 0; i < trackedCount && displayed < DefaultsQuestControl.MaxTrackedQuests; i++)
       {
         var quest = tracked[i];
-        if (quest == null)
+        if (quest == null || completedIds.Contains(quest.Id))
           continue;
 
         var card = CreateCard(quest);
         _cards.Add(card);
+        displayed++;
       }
     }
 
@@ -117,6 +137,8 @@ namespace MultiplayerInfrastructure.UI
       content.style.whiteSpace = WhiteSpace.Normal;
       card.Add(content);
 
+      AddCriteria(card, quest.CompletionCriteria);
+
       var progress = new Label($"진행도: {FormatProgress(quest)}") { pickingMode = PickingMode.Ignore };
       progress.style.color = quest.Completed ? AccentColor : ContentColor;
       progress.style.fontSize = 11;
@@ -137,6 +159,97 @@ namespace MultiplayerInfrastructure.UI
       card.Add(waypointLabel);
 
       return card;
+    }
+
+    private VisualElement CreateCompletedCard(QuestData quest)
+    {
+      var card = CreateCard(quest);
+      card.Clear();
+
+      var completed = new Label("퀘스트 완료") { pickingMode = PickingMode.Ignore };
+      completed.style.color = AccentColor;
+      completed.style.fontSize = 16;
+      completed.style.unityFontStyleAndWeight = FontStyle.Bold;
+      completed.style.unityTextAlign = TextAnchor.MiddleCenter;
+      completed.style.paddingTop = 8;
+      completed.style.paddingBottom = 8;
+      card.Add(completed);
+      return card;
+    }
+
+    private static void AddCriteria(VisualElement card, IReadOnlyList<QuestCompletionCriteria> criteria)
+    {
+      if (criteria == null || criteria.Count == 0)
+        return;
+
+      for (int i = 0; i < criteria.Count; i++)
+      {
+        var each = criteria[i];
+        if (each == null)
+          continue;
+
+        AddCriterion(card, each, 0);
+      }
+    }
+
+    private static void AddCriterion(VisualElement parent, QuestCompletionCriteria criterion, int depth)
+    {
+      string displayText = FormatCriterion(criterion);
+      if (!string.IsNullOrWhiteSpace(displayText))
+      {
+        var row = new VisualElement { pickingMode = PickingMode.Ignore };
+        row.style.position = Position.Relative;
+        row.style.alignSelf = Align.FlexStart;
+        row.style.maxWidth = Mathf.Max(120, 296 - depth * 10);
+        row.style.marginTop = 4;
+        row.style.marginLeft = depth * 10;
+
+        var label = new Label(displayText) { pickingMode = PickingMode.Ignore };
+        label.style.color = criterion.Completed ? AccentColor : DescriptionColor;
+        label.style.fontSize = 11;
+        label.style.whiteSpace = WhiteSpace.Normal;
+        row.Add(label);
+
+        if (criterion.Completed)
+        {
+          var strike = new VisualElement { pickingMode = PickingMode.Ignore };
+          strike.style.position = Position.Absolute;
+          strike.style.left = 0;
+          strike.style.right = 0;
+          strike.style.top = new Length(50, LengthUnit.Percent);
+          strike.style.height = 1;
+          strike.style.backgroundColor = AccentColor;
+          row.Add(strike);
+        }
+
+        parent.Add(row);
+      }
+
+      if (criterion.Conditions == null)
+        return;
+
+      for (int i = 0; i < criterion.Conditions.Count; i++)
+      {
+        var child = criterion.Conditions[i];
+        if (child != null)
+          AddCriterion(parent, child, depth + 1);
+      }
+    }
+
+    private static string FormatCriterion(QuestCompletionCriteria criterion)
+    {
+      if (!string.IsNullOrWhiteSpace(criterion.DisplayTextContent))
+        return criterion.DisplayTextContent.Trim();
+
+      string progress = criterion.Progress?.ToDisplayText() ?? $"0/{Mathf.Max(1, criterion.Count)}";
+      return criterion.Type switch
+      {
+        QuestCompletionCriteriaType.InventoryContains when !string.IsNullOrWhiteSpace(criterion.ItemId) => $"{criterion.ItemId} ({progress})",
+        QuestCompletionCriteriaType.InteractionSignalReceived when !string.IsNullOrWhiteSpace(criterion.SignalId) => $"{criterion.SignalId} ({progress})",
+        QuestCompletionCriteriaType.AllOf => "모든 조건 달성",
+        QuestCompletionCriteriaType.AnyOf => "조건 중 하나 달성",
+        _ => string.Empty
+      };
     }
 
     private static string FormatProgress(QuestData quest)

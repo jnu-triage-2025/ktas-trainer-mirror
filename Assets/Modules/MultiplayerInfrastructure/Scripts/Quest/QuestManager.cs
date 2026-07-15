@@ -34,6 +34,7 @@ namespace MultiplayerInfrastructure.Quest
 
     public event Action<IReadOnlyList<QuestData>> OnQuestListChanged;
     public event Action<IReadOnlyList<QuestData>> OnTrackedQuestsChanged;
+    public event Action<QuestData> OnQuestCompleted;
 
     public IReadOnlyList<QuestData> Quests => Snapshot(_quests.Values);
     public IReadOnlyList<QuestData> TrackedQuests
@@ -90,8 +91,11 @@ namespace MultiplayerInfrastructure.Quest
 
       if (clearExisting)
       {
+        var existingIds = new List<string>(_quests.Keys);
         _quests.Clear();
         _trackedQuestOrder.Clear();
+        for (int i = 0; i < existingIds.Count; i++)
+          UpdateQuestCompletionRuntimeState(existingIds[i], false);
       }
 
       foreach (var quest in quests)
@@ -99,9 +103,18 @@ namespace MultiplayerInfrastructure.Quest
         AddOrUpdateQuest(quest, notify: false);
       }
 
+      var questIds = new List<string>(_quests.Keys);
+      var completedSnapshots = new List<QuestData>();
+      for (int i = 0; i < questIds.Count; i++)
+      {
+        if (EvaluateQuestProgressInternal(questIds[i], null, out var completedSnapshot) && completedSnapshot != null)
+          completedSnapshots.Add(completedSnapshot);
+      }
+
       ClampTrackedToLimit();
       NotifyListChanged();
       NotifyTrackedChanged();
+      PublishCompleted(completedSnapshots);
     }
 
     public void AddOrUpdateQuest(QuestData quest, bool notify = true)
@@ -110,13 +123,24 @@ namespace MultiplayerInfrastructure.Quest
         return;
 
       var cloned = ResolveQuestData(quest);
-      var isNewQuest = !_quests.ContainsKey(cloned.Id);
+      var isNewQuest = !_quests.TryGetValue(cloned.Id, out var existingQuest);
+      bool wasCompleted = existingQuest?.Completed ?? false;
+      bool wasTracked = !isNewQuest && _trackedQuestOrder.Contains(cloned.Id);
+      if (!isNewQuest && wasCompleted)
+        cloned.Completed = true;
+      if (!isNewQuest)
+        cloned.IsTracked = wasTracked;
+
       _quests[cloned.Id] = cloned;
-      UpdateQuestCompletionRuntimeState(cloned.Id, false);
+      UpdateQuestCompletionRuntimeState(cloned.Id, cloned.Completed);
 
       if (cloned.IsTracked)
       {
         EnsureTracked(cloned.Id, suppressNotify: true);
+      }
+      else
+      {
+        _trackedQuestOrder.Remove(cloned.Id);
       }
 
       if (isNewQuest)
@@ -126,39 +150,64 @@ namespace MultiplayerInfrastructure.Quest
 
       if (notify)
       {
-        EvaluateQuestProgress(cloned.Id);
+        EvaluateQuestProgressInternal(cloned.Id, wasCompleted, out var completedSnapshot);
         ClampTrackedToLimit();
         NotifyListChanged();
         NotifyTrackedChanged();
+        PublishCompleted(completedSnapshot);
       }
     }
 
     public void EvaluateAllQuestProgress()
     {
       var questIds = new List<string>(_quests.Keys);
+      var completedSnapshots = new List<QuestData>();
       for (int i = 0; i < questIds.Count; i++)
       {
-        EvaluateQuestProgress(questIds[i]);
+        if (EvaluateQuestProgressInternal(questIds[i], null, out var completedSnapshot) && completedSnapshot != null)
+          completedSnapshots.Add(completedSnapshot);
       }
 
       ClampTrackedToLimit();
       NotifyListChanged();
       NotifyTrackedChanged();
+      PublishCompleted(completedSnapshots);
     }
 
     public bool EvaluateQuestProgress(string questId)
     {
+      if (!EvaluateQuestProgressInternal(questId, null, out var completedSnapshot))
+        return false;
+
+      ClampTrackedToLimit();
+      NotifyListChanged();
+      NotifyTrackedChanged();
+      PublishCompleted(completedSnapshot);
+      return _quests.TryGetValue(questId, out var quest) && quest != null && quest.Completed;
+    }
+
+    private bool EvaluateQuestProgressInternal(string questId, bool? previousCompleted, out QuestData completedSnapshot)
+    {
+      completedSnapshot = null;
       if (string.IsNullOrWhiteSpace(questId) || !_quests.TryGetValue(questId, out var quest) || quest == null)
         return false;
 
-      var result = QuestCriteriaEvaluator.Evaluate(quest.CompletionCriteria, GetOwnerPlayerController());
-      if (quest.Scope == QuestScopeType.Global)
-      {
-        result = QuestCriteriaEvaluator.EvaluateGlobal(quest.CompletionCriteria);
-      }
-      quest.Progress = new QuestProgressValue(result.Current, result.Target);
-      quest.Completed = result.IsSatisfied;
+      bool wasCompleted = previousCompleted ?? quest.Completed;
+      bool wasTracked = _trackedQuestOrder.Contains(questId);
+      var evaluation = quest.Scope == QuestScopeType.Global
+        ? QuestCriteriaEvaluator.EvaluateTreeGlobal(quest.CompletionCriteria)
+        : QuestCriteriaEvaluator.EvaluateTree(quest.CompletionCriteria, GetOwnerPlayerController());
+
+      ApplyEvaluation(quest.CompletionCriteria, evaluation.Children);
+      quest.Progress = new QuestProgressValue(evaluation.Result.Current, evaluation.Result.Target);
+      quest.Completed = evaluation.Result.IsSatisfied;
       UpdateQuestCompletionRuntimeState(questId, quest.Completed);
+
+      if (!wasCompleted && quest.Completed)
+      {
+        completedSnapshot = quest.Clone();
+        completedSnapshot.IsTracked = wasTracked;
+      }
 
       if (quest.Completed && quest.IsAutoComplete)
       {
@@ -166,7 +215,7 @@ namespace MultiplayerInfrastructure.Quest
         _trackedQuestOrder.Remove(questId);
       }
 
-      return quest.Completed;
+      return true;
     }
 
     private void TryHighlightWaypointForQuest(QuestData quest)
@@ -265,6 +314,55 @@ namespace MultiplayerInfrastructure.Quest
 
     private void NotifyListChanged() => OnQuestListChanged?.Invoke(Quests);
     private void NotifyTrackedChanged() => OnTrackedQuestsChanged?.Invoke(TrackedQuests);
+
+    private void PublishCompleted(QuestData completedSnapshot)
+    {
+      if (completedSnapshot == null
+          || string.IsNullOrWhiteSpace(completedSnapshot.Id)
+          || !_quests.TryGetValue(completedSnapshot.Id, out var currentQuest)
+          || currentQuest == null
+          || !currentQuest.Completed)
+        return;
+
+      OnQuestCompleted?.Invoke(completedSnapshot);
+    }
+
+    private void PublishCompleted(IReadOnlyList<QuestData> completedSnapshots)
+    {
+      if (completedSnapshots == null)
+        return;
+
+      for (int i = 0; i < completedSnapshots.Count; i++)
+        PublishCompleted(completedSnapshots[i]);
+    }
+
+    private static bool ApplyEvaluation(IReadOnlyList<QuestCompletionCriteria> criteria, IReadOnlyList<QuestCriteriaEvaluationNode> evaluations)
+    {
+      if (criteria == null || evaluations == null)
+        return false;
+
+      bool changed = false;
+      int count = Math.Min(criteria.Count, evaluations.Count);
+      for (int i = 0; i < count; i++)
+      {
+        var criterion = criteria[i];
+        var evaluation = evaluations[i];
+        if (criterion == null || evaluation == null)
+          continue;
+
+        int previousCurrent = criterion.Progress?.Current ?? 0;
+        int previousTarget = criterion.Progress?.Target ?? 1;
+        bool previousCompleted = criterion.Completed;
+        criterion.Progress = new QuestProgressValue(evaluation.Result.Current, evaluation.Result.Target);
+        criterion.Completed = evaluation.Result.IsSatisfied;
+        changed |= previousCurrent != criterion.Progress.Current
+            || previousTarget != criterion.Progress.Target
+            || previousCompleted != criterion.Completed;
+        changed |= ApplyEvaluation(criterion.Conditions, evaluation.Children);
+      }
+
+      return changed;
+    }
 
     private static string BuildQuestCompletedRuntimeStateKey(string questId)
     {
@@ -422,25 +520,23 @@ namespace MultiplayerInfrastructure.Quest
         return;
 
       bool changed = false;
-      foreach (var quest in _quests)
+      var questIds = new List<string>(_quests.Keys);
+      var completedSnapshots = new List<QuestData>();
+      for (int i = 0; i < questIds.Count; i++)
       {
-        var before = quest.Value?.Progress?.Current ?? 0;
-        var beforeTarget = quest.Value?.Progress?.Target ?? 1;
-        var beforeCompleted = quest.Value?.Completed ?? false;
-
-        EvaluateQuestProgress(quest.Key);
-
-        var currentQuest = quest.Value;
-        if (currentQuest == null)
+        string questId = questIds[i];
+        if (!_quests.TryGetValue(questId, out var quest) || quest == null)
           continue;
 
-        var after = currentQuest.Progress?.Current ?? 0;
-        var afterTarget = currentQuest.Progress?.Target ?? 1;
-        var afterCompleted = currentQuest.Completed;
-        if (before != after || beforeTarget != afterTarget || beforeCompleted != afterCompleted)
-        {
+        var before = quest.Clone();
+        if (!EvaluateQuestProgressInternal(questId, null, out var completedSnapshot))
+          continue;
+
+        if (completedSnapshot != null)
+          completedSnapshots.Add(completedSnapshot);
+
+        if (_quests.TryGetValue(questId, out var currentQuest) && HasQuestStateChanged(before, currentQuest))
           changed = true;
-        }
       }
 
       if (changed)
@@ -449,6 +545,51 @@ namespace MultiplayerInfrastructure.Quest
         NotifyListChanged();
         NotifyTrackedChanged();
       }
+
+      PublishCompleted(completedSnapshots);
+    }
+
+    private static bool HasQuestStateChanged(QuestData before, QuestData after)
+    {
+      if (before == null || after == null)
+        return before != after;
+
+      if (before.Completed != after.Completed || before.IsTracked != after.IsTracked)
+        return true;
+
+      if ((before.Progress?.Current ?? 0) != (after.Progress?.Current ?? 0)
+          || (before.Progress?.Target ?? 1) != (after.Progress?.Target ?? 1))
+        return true;
+
+      return HasCriteriaStateChanged(before.CompletionCriteria, after.CompletionCriteria);
+    }
+
+    private static bool HasCriteriaStateChanged(IReadOnlyList<QuestCompletionCriteria> before, IReadOnlyList<QuestCompletionCriteria> after)
+    {
+      int beforeCount = before?.Count ?? 0;
+      int afterCount = after?.Count ?? 0;
+      if (beforeCount != afterCount)
+        return true;
+
+      for (int i = 0; i < beforeCount; i++)
+      {
+        var beforeCriterion = before[i];
+        var afterCriterion = after[i];
+        if (beforeCriterion == null || afterCriterion == null)
+        {
+          if (beforeCriterion != afterCriterion)
+            return true;
+          continue;
+        }
+
+        if (beforeCriterion.Completed != afterCriterion.Completed
+            || (beforeCriterion.Progress?.Current ?? 0) != (afterCriterion.Progress?.Current ?? 0)
+            || (beforeCriterion.Progress?.Target ?? 1) != (afterCriterion.Progress?.Target ?? 1)
+            || HasCriteriaStateChanged(beforeCriterion.Conditions, afterCriterion.Conditions))
+          return true;
+      }
+
+      return false;
     }
   }
 
@@ -456,53 +597,59 @@ namespace MultiplayerInfrastructure.Quest
   {
     public static QuestCriteriaEvaluationResult Evaluate(IReadOnlyList<QuestCompletionCriteria> criteria, PlayerController playerController)
     {
-      if (criteria == null || criteria.Count == 0)
-      {
-        return new QuestCriteriaEvaluationResult(false, 0, 1);
-      }
-
-      int satisfied = 0;
-      for (int i = 0; i < criteria.Count; i++)
-      {
-        var each = criteria[i];
-        if (each == null)
-          continue;
-
-        var result = Evaluate(each, playerController);
-        if (result.IsSatisfied)
-          satisfied++;
-      }
-
-      int target = Math.Max(1, criteria.Count);
-      return new QuestCriteriaEvaluationResult(satisfied >= target, Math.Min(satisfied, target), target);
+      return EvaluateTree(criteria, playerController).Result;
     }
 
     public static QuestCriteriaEvaluationResult EvaluateGlobal(IReadOnlyList<QuestCompletionCriteria> criteria)
     {
-      if (criteria == null || criteria.Count == 0)
-      {
-        return new QuestCriteriaEvaluationResult(false, 0, 1);
-      }
+      return EvaluateTreeGlobal(criteria).Result;
+    }
 
+    internal static QuestCriteriaEvaluationNode EvaluateTree(IReadOnlyList<QuestCompletionCriteria> criteria, PlayerController playerController)
+    {
+      if (criteria == null || criteria.Count == 0)
+        return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(false, 0, 1));
+
+      var children = new List<QuestCriteriaEvaluationNode>(criteria.Count);
       int satisfied = 0;
       for (int i = 0; i < criteria.Count; i++)
       {
         var each = criteria[i];
-        if (each == null)
-          continue;
-
-        if (EvaluateGlobal(each).IsSatisfied)
+        var child = EvaluateNode(each, playerController);
+        children.Add(child);
+        if (child.Result.IsSatisfied)
           satisfied++;
       }
 
       int target = Math.Max(1, criteria.Count);
-      return new QuestCriteriaEvaluationResult(satisfied >= target, Math.Min(satisfied, target), target);
+      var result = new QuestCriteriaEvaluationResult(satisfied >= target, Math.Min(satisfied, target), target);
+      return new QuestCriteriaEvaluationNode(result, children);
     }
 
-    private static QuestCriteriaEvaluationResult Evaluate(QuestCompletionCriteria criteria, PlayerController playerController)
+    internal static QuestCriteriaEvaluationNode EvaluateTreeGlobal(IReadOnlyList<QuestCompletionCriteria> criteria)
+    {
+      if (criteria == null || criteria.Count == 0)
+        return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(false, 0, 1));
+
+      var children = new List<QuestCriteriaEvaluationNode>(criteria.Count);
+      int satisfied = 0;
+      for (int i = 0; i < criteria.Count; i++)
+      {
+        var child = EvaluateNodeGlobal(criteria[i]);
+        children.Add(child);
+        if (child.Result.IsSatisfied)
+          satisfied++;
+      }
+
+      int target = Math.Max(1, criteria.Count);
+      var result = new QuestCriteriaEvaluationResult(satisfied >= target, Math.Min(satisfied, target), target);
+      return new QuestCriteriaEvaluationNode(result, children);
+    }
+
+    private static QuestCriteriaEvaluationNode EvaluateNode(QuestCompletionCriteria criteria, PlayerController playerController)
     {
       if (criteria == null)
-        return new QuestCriteriaEvaluationResult(true, 1, 1);
+        return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(false, 0, 1));
 
       int count = Math.Max(1, criteria.Count);
 
@@ -514,7 +661,7 @@ namespace MultiplayerInfrastructure.Quest
               ? playerController.CountItemInInventory(criteria.ItemId)
               : 0;
           bool satisfied = inventoryCount >= count;
-          return new QuestCriteriaEvaluationResult(satisfied, Math.Min(inventoryCount, count), count);
+          return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(satisfied, Math.Min(inventoryCount, count), count));
         }
 
         case QuestCompletionCriteriaType.InteractionSignalReceived:
@@ -523,7 +670,7 @@ namespace MultiplayerInfrastructure.Quest
           bool raised = !string.IsNullOrWhiteSpace(normalized)
               && Registry.Registry.Contains(RegistryType.RuntimeState, normalized);
           int current = raised ? count : 0;
-          return new QuestCriteriaEvaluationResult(raised, current, count);
+          return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(raised, current, count));
         }
 
         case QuestCompletionCriteriaType.AllOf:
@@ -533,14 +680,14 @@ namespace MultiplayerInfrastructure.Quest
           return EvaluateComposite(criteria.Conditions, false, playerController);
 
         default:
-          return new QuestCriteriaEvaluationResult(false, 0, 1);
+          return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(false, 0, 1));
       }
     }
 
-    private static QuestCriteriaEvaluationResult EvaluateGlobal(QuestCompletionCriteria criteria)
+    private static QuestCriteriaEvaluationNode EvaluateNodeGlobal(QuestCompletionCriteria criteria)
     {
       if (criteria == null)
-        return new QuestCriteriaEvaluationResult(true, 1, 1);
+        return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(false, 0, 1));
 
       int count = Math.Max(1, criteria.Count);
 
@@ -550,7 +697,7 @@ namespace MultiplayerInfrastructure.Quest
         {
           int totalCount = CountItemAcrossAllPlayers(criteria.ItemId);
           bool satisfied = totalCount >= count;
-          return new QuestCriteriaEvaluationResult(satisfied, Math.Min(totalCount, count), count);
+          return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(satisfied, Math.Min(totalCount, count), count));
         }
         case QuestCompletionCriteriaType.InteractionSignalReceived:
         {
@@ -558,67 +705,67 @@ namespace MultiplayerInfrastructure.Quest
           bool raised = !string.IsNullOrWhiteSpace(normalized)
               && Registry.Registry.Contains(RegistryType.RuntimeState, normalized);
           int current = raised ? count : 0;
-          return new QuestCriteriaEvaluationResult(raised, current, count);
+          return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(raised, current, count));
         }
         case QuestCompletionCriteriaType.AllOf:
           return EvaluateCompositeGlobal(criteria.Conditions, true);
         case QuestCompletionCriteriaType.AnyOf:
           return EvaluateCompositeGlobal(criteria.Conditions, false);
         default:
-          return new QuestCriteriaEvaluationResult(false, 0, 1);
+          return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(false, 0, 1));
       }
     }
 
-    private static QuestCriteriaEvaluationResult EvaluateComposite(IReadOnlyList<QuestCompletionCriteria> conditions, bool requireAll, PlayerController playerController)
+    private static QuestCriteriaEvaluationNode EvaluateComposite(IReadOnlyList<QuestCompletionCriteria> conditions, bool requireAll, PlayerController playerController)
     {
       if (conditions == null || conditions.Count == 0)
-        return new QuestCriteriaEvaluationResult(true, 1, 1);
+        return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(false, 0, 1));
 
+      var children = new List<QuestCriteriaEvaluationNode>(conditions.Count);
       int satisfied = 0;
       for (int i = 0; i < conditions.Count; i++)
       {
-        var each = conditions[i];
-        if (each == null)
-          continue;
-
-        if (Evaluate(each, playerController).IsSatisfied)
+        var child = EvaluateNode(conditions[i], playerController);
+        children.Add(child);
+        if (child.Result.IsSatisfied)
           satisfied++;
       }
 
       int total = Math.Max(1, conditions.Count);
       if (requireAll)
       {
-        return new QuestCriteriaEvaluationResult(satisfied >= total, Math.Min(satisfied, total), total);
+        var result = new QuestCriteriaEvaluationResult(satisfied >= total, Math.Min(satisfied, total), total);
+        return new QuestCriteriaEvaluationNode(result, children);
       }
 
       int current = satisfied > 0 ? 1 : 0;
-      return new QuestCriteriaEvaluationResult(satisfied > 0, current, 1);
+      return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(satisfied > 0, current, 1), children);
     }
 
-    private static QuestCriteriaEvaluationResult EvaluateCompositeGlobal(IReadOnlyList<QuestCompletionCriteria> conditions, bool requireAll)
+    private static QuestCriteriaEvaluationNode EvaluateCompositeGlobal(IReadOnlyList<QuestCompletionCriteria> conditions, bool requireAll)
     {
       if (conditions == null || conditions.Count == 0)
-        return new QuestCriteriaEvaluationResult(true, 1, 1);
+        return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(false, 0, 1));
 
+      var children = new List<QuestCriteriaEvaluationNode>(conditions.Count);
       int satisfied = 0;
       for (int i = 0; i < conditions.Count; i++)
       {
-        var each = conditions[i];
-        if (each == null)
-          continue;
-
-        if (EvaluateGlobal(each).IsSatisfied)
+        var child = EvaluateNodeGlobal(conditions[i]);
+        children.Add(child);
+        if (child.Result.IsSatisfied)
           satisfied++;
       }
 
       int total = Math.Max(1, conditions.Count);
       if (requireAll)
       {
-        return new QuestCriteriaEvaluationResult(satisfied >= total, Math.Min(satisfied, total), total);
+        var result = new QuestCriteriaEvaluationResult(satisfied >= total, Math.Min(satisfied, total), total);
+        return new QuestCriteriaEvaluationNode(result, children);
       }
 
       int current = satisfied > 0 ? 1 : 0;
-      return new QuestCriteriaEvaluationResult(satisfied > 0, current, 1);
+      return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(satisfied > 0, current, 1), children);
     }
 
     private static int CountItemAcrossAllPlayers(string itemId)
@@ -639,6 +786,7 @@ namespace MultiplayerInfrastructure.Quest
 
       return total;
     }
+
   }
 
   public sealed class QuestDefinitionRegistry : MonoBehaviour

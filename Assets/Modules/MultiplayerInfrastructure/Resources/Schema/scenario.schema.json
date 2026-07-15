@@ -1743,6 +1743,12 @@
         "Id": {
           "type": "string"
         },
+        "DefinitionIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "Title": {
           "type": [
             "string",
@@ -1761,31 +1767,115 @@
             "null"
           ]
         },
-        "waypointIdentifier": {
-          "type": [
-            "string",
-            "null"
-          ]
+        "Progress": {
+          "$ref": "#/$defs/QuestProgressValue"
         },
-        "scope": {
-          "type": [
-            "string",
-            "null"
-          ],
+        "Completed": {
+          "type": "boolean",
+          "default": false
+        },
+        "CompletionCriteria": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QuestCompletionCriteria"
+          },
+          "default": []
+        },
+        "Scope": {
+          "type": "string",
           "enum": [
             "Player",
-            "Global",
-            null
+            "Global"
           ],
           "default": "Player"
         },
         "IsTracked": {
           "type": "boolean",
           "default": false
+        },
+        "IsTrackable": {
+          "type": "boolean",
+          "default": true
+        },
+        "IsAutoComplete": {
+          "type": "boolean",
+          "default": false
+        },
+        "WaypointIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
         "Id"
+      ],
+      "additionalProperties": false
+    },
+    "QuestProgressValue": {
+      "type": "object",
+      "properties": {
+        "Current": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Target": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "Current",
+        "Target"
+      ],
+      "additionalProperties": false
+    },
+    "QuestCompletionCriteria": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string",
+          "enum": [
+            "InventoryContains",
+            "InteractionSignalReceived",
+            "AllOf",
+            "AnyOf"
+          ]
+        },
+        "ItemId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "SignalId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "DisplayTextContent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "Count": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        },
+        "Conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QuestCompletionCriteria"
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "Type"
       ],
       "additionalProperties": false
     },

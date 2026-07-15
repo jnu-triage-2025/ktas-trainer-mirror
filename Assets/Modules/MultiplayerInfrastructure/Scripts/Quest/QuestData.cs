@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace MultiplayerInfrastructure.Quest
 {
@@ -115,17 +116,27 @@ namespace MultiplayerInfrastructure.Quest
     public QuestCompletionCriteriaType Type { get; set; } = QuestCompletionCriteriaType.InventoryContains;
     public string ItemId { get; set; }
     public string SignalId { get; set; }
+    public string DisplayTextContent { get; set; }
     public int Count { get; set; } = 1;
     public List<QuestCompletionCriteria> Conditions { get; set; } = new();
 
-    public QuestCompletionCriteria Clone()
+    [JsonIgnore]
+    public QuestProgressValue Progress { get; set; } = QuestProgressValue.SingleStep;
+
+    [JsonIgnore]
+    public bool Completed { get; set; }
+
+    public QuestCompletionCriteria Clone(bool includeRuntimeState = true)
     {
       var copy = new QuestCompletionCriteria
       {
         Type = Type,
         ItemId = ItemId,
         SignalId = SignalId,
+        DisplayTextContent = DisplayTextContent,
         Count = Count,
+        Progress = includeRuntimeState ? Progress?.Clone() ?? QuestProgressValue.SingleStep : QuestProgressValue.SingleStep,
+        Completed = includeRuntimeState && Completed,
         Conditions = new List<QuestCompletionCriteria>()
       };
 
@@ -135,7 +146,7 @@ namespace MultiplayerInfrastructure.Quest
         {
           var child = Conditions[i];
           if (child != null)
-            copy.Conditions.Add(child.Clone());
+            copy.Conditions.Add(child.Clone(includeRuntimeState));
         }
       }
 
@@ -143,6 +154,7 @@ namespace MultiplayerInfrastructure.Quest
     }
   }
 
+  [JsonConverter(typeof(JsonStringEnumConverter))]
   public enum QuestCompletionCriteriaType
   {
     InventoryContains,
@@ -151,6 +163,7 @@ namespace MultiplayerInfrastructure.Quest
     AnyOf
   }
 
+  [JsonConverter(typeof(JsonStringEnumConverter))]
   public enum QuestScopeType
   {
     Player,
@@ -193,7 +206,7 @@ namespace MultiplayerInfrastructure.Quest
         {
           var each = CompletionCriteria[i];
           if (each != null)
-            copy.CompletionCriteria.Add(each.Clone());
+            copy.CompletionCriteria.Add(each.Clone(includeRuntimeState: false));
         }
       }
 
@@ -219,6 +232,18 @@ namespace MultiplayerInfrastructure.Quest
       IsSatisfied = isSatisfied;
       Current = current;
       Target = target;
+    }
+  }
+
+  internal sealed class QuestCriteriaEvaluationNode
+  {
+    public QuestCriteriaEvaluationResult Result { get; }
+    public IReadOnlyList<QuestCriteriaEvaluationNode> Children { get; }
+
+    public QuestCriteriaEvaluationNode(QuestCriteriaEvaluationResult result, IReadOnlyList<QuestCriteriaEvaluationNode> children = null)
+    {
+      Result = result;
+      Children = children ?? Array.Empty<QuestCriteriaEvaluationNode>();
     }
   }
 }

@@ -14,6 +14,7 @@
         {
           "type": "InventoryContains",
           "itemId": "vital_set",
+          "displayTextContent": "활력징후 측정도구 획득",
           "count": 1,
           "conditions": []
         }
@@ -32,12 +33,14 @@
         {
           "type": "InventoryContains",
           "itemId": "normal_saline_1000ml",
+          "displayTextContent": "생리식염수 1L 수액백 획득",
           "count": 1,
           "conditions": []
         },
         {
           "type": "InventoryContains",
           "itemId": "intravenous_set",
+          "displayTextContent": "수액세트 획득",
           "count": 1,
           "conditions": []
         }
@@ -56,12 +59,14 @@
         {
           "type": "InventoryContains",
           "itemId": "plasma_solution_1000ml",
+          "displayTextContent": "플라즈마 솔루션 1L 수액백 획득",
           "count": 1,
           "conditions": []
         },
         {
           "type": "InventoryContains",
           "itemId": "intravenous_set",
+          "displayTextContent": "수액세트 획득",
           "count": 1,
           "conditions": []
         }
@@ -80,6 +85,7 @@
         {
           "type": "InventoryContains",
           "itemId": "blood_transfusion_set",
+          "displayTextContent": "수혈 세트 획득",
           "count": 1,
           "conditions": []
         }

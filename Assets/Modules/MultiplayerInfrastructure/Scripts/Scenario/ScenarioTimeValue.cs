@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json.Serialization;
 using FishNet;
+using UnityEngine;
 
 namespace MultiplayerInfrastructure.Scenario
 {
@@ -18,16 +19,27 @@ namespace MultiplayerInfrastructure.Scenario
   {
     private const double FallbackTicksPerSecond = 30d;
 
+    [SerializeField] private double _value;
+    [SerializeField] private ScenarioTimeUnit _unit;
+
     [JsonPropertyName("value")]
-    public double Value { get; set; }
+    public double Value
+    {
+      get => _value;
+      set => _value = value;
+    }
 
     [JsonPropertyName("unit")]
-    public ScenarioTimeUnit Unit { get; set; }
+    public ScenarioTimeUnit Unit
+    {
+      get => _unit;
+      set => _unit = value;
+    }
 
     public ScenarioTimeValue(double value, ScenarioTimeUnit unit)
     {
-      Value = value;
-      Unit = unit;
+      _value = value;
+      _unit = unit;
     }
 
     public double ToSeconds()

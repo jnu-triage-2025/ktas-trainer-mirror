@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Scenario;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -15,10 +16,14 @@ namespace MultiplayerInfrastructure.UI
     [SerializeField] private float _sortingOrder = DefaultsUIDocument.QuestPreviewHudSortOrder;
     [SerializeField] private StyleSheet _styleSheet;
     [SerializeField] private QuestManager _questManager;
+    [SerializeField] private ScenarioTimeValue _questCompletionDisplayDuration = ScenarioTimeValue.Seconds(1d);
 
     private UIDocument _uiDocument;
     private QuestPreviewHudElement _hudElement;
     private bool _managerHooked;
+    private IReadOnlyList<QuestData> _trackedQuests = Array.Empty<QuestData>();
+    private readonly List<QuestData> _completedQuests = new();
+    private readonly Dictionary<string, double> _completionExpiryByQuestId = new(StringComparer.Ordinal);
     private readonly HashSet<string> _trackedWaypointIdentifiers = new(StringComparer.Ordinal);
 
     private void Start()
@@ -31,12 +36,19 @@ namespace MultiplayerInfrastructure.UI
 
     private void OnEnable()
     {
-      AttachManager();
+      if (_uiDocument != null)
+        AttachManager();
     }
 
     private void OnDisable()
     {
       DetachManager();
+      StopAllCoroutines();
+      _completedQuests.Clear();
+      _completionExpiryByQuestId.Clear();
+      _trackedQuests = Array.Empty<QuestData>();
+      RefreshTrackedWaypoints(_trackedQuests);
+      RefreshHud();
     }
 
     private void BindElement()
@@ -77,6 +89,7 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       _questManager.OnTrackedQuestsChanged += HandleTrackedChanged;
+      _questManager.OnQuestCompleted += HandleQuestCompleted;
       _managerHooked = true;
 
       HandleTrackedChanged(_questManager.TrackedQuests);
@@ -84,17 +97,71 @@ namespace MultiplayerInfrastructure.UI
 
     private void DetachManager()
     {
-      if (!_managerHooked || _questManager == null)
-        return;
+      if (_managerHooked && _questManager != null)
+      {
+        _questManager.OnTrackedQuestsChanged -= HandleTrackedChanged;
+        _questManager.OnQuestCompleted -= HandleQuestCompleted;
+      }
 
-      _questManager.OnTrackedQuestsChanged -= HandleTrackedChanged;
       _managerHooked = false;
+      _questManager = null;
     }
 
     private void HandleTrackedChanged(IReadOnlyList<QuestData> tracked)
     {
-      _hudElement?.SetTrackedQuests(tracked);
+      _trackedQuests = tracked ?? Array.Empty<QuestData>();
+      for (int i = _completedQuests.Count - 1; i >= 0; i--)
+      {
+        var completedQuest = _completedQuests[i];
+        if (completedQuest == null || IsNoLongerCompleted(completedQuest.Id))
+        {
+          if (completedQuest != null)
+            _completionExpiryByQuestId.Remove(completedQuest.Id);
+          _completedQuests.RemoveAt(i);
+        }
+      }
+
+      RefreshHud();
       RefreshTrackedWaypoints(tracked);
+    }
+
+    private void HandleQuestCompleted(QuestData quest)
+    {
+      if (quest == null || !quest.IsTracked)
+        return;
+
+      _completedQuests.RemoveAll(each => each != null && each.Id == quest.Id);
+      _completedQuests.Insert(0, quest.Clone());
+      double expiresAt = Time.realtimeSinceStartupAsDouble + _questCompletionDisplayDuration.ToSeconds();
+      _completionExpiryByQuestId[quest.Id] = expiresAt;
+      RefreshHud();
+      StartCoroutine(RemoveCompletedQuestAfterDelay(quest.Id, expiresAt));
+    }
+
+    private bool IsNoLongerCompleted(string questId)
+    {
+      return _questManager == null
+          || !_questManager.TryGetQuest(questId, out var currentQuest)
+          || currentQuest == null
+          || !currentQuest.Completed;
+    }
+
+    private System.Collections.IEnumerator RemoveCompletedQuestAfterDelay(string questId, double expiresAt)
+    {
+      while (Time.realtimeSinceStartupAsDouble < expiresAt)
+        yield return null;
+
+      if (!_completionExpiryByQuestId.TryGetValue(questId, out double currentExpiry) || currentExpiry != expiresAt)
+        yield break;
+
+      _completionExpiryByQuestId.Remove(questId);
+      _completedQuests.RemoveAll(each => each != null && each.Id == questId);
+      RefreshHud();
+    }
+
+    private void RefreshHud()
+    {
+      _hudElement?.SetQuests(_trackedQuests, _completedQuests);
     }
 
     private void Update()
