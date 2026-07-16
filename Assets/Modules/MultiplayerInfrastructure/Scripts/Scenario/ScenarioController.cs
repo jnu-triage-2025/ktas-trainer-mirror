@@ -12,6 +12,7 @@ using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 using MultiplayerInfrastructure.Scenario.Preflight;
+using MultiplayerInfrastructure.Scenario.Requirements;
 using MultiplayerInfrastructure.TTS;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Logging;
@@ -46,6 +47,9 @@ namespace MultiplayerInfrastructure.Scenario
     [SerializeField] private bool _preflightEnabled = true;
     [SerializeField]
     private ScenarioPreflightPolicy _preflightPolicy = ScenarioPreflightPolicy.Default;
+    [SerializeField] private ScenarioRuntimeValidationMode _runtimeRequirementsValidationMode = ScenarioRuntimeValidationMode.ReportOnly;
+    [SerializeField, Min(0f)] private float _runtimeRequirementsReadinessTimeoutSeconds = 10f;
+    [SerializeField, Min(0.01f)] private float _runtimeRequirementsReadinessPollIntervalSeconds = 0.1f;
 
     [Header("Concurrency (동시 실행 충돌)")]
     [Tooltip("두 개 이상의 시나리오 흐름이 동시에 대화창 UI(Dialogue/Choice/Quiz)를 점유하려 할 때의 처리 정책.")]
@@ -85,6 +89,8 @@ namespace MultiplayerInfrastructure.Scenario
     private ChatUIController _chatUIController;
     private ChatService _chatService;
     private Coroutine _dialogueAutoAdvanceRoutine;
+    private Coroutine _runtimeRequirementsWaitRoutine;
+    private bool _skipRuntimeRequirementsValidationOnce;
 
     private sealed class GraphVisitHistory
     {
@@ -211,6 +217,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 컴포넌트를 처음 붙일 때 Preflight 정책을 안전한 기본값(콘솔/인게임챗 둘 다 경고 + 계속 진행)으로 초기화한다.
       _preflightEnabled = true;
       _preflightPolicy = ScenarioPreflightPolicy.Default;
+      _runtimeRequirementsValidationMode = ScenarioRuntimeValidationMode.ReportOnly;
       // 동시 실행 충돌 정책 기본값: 경고 후 계속 진행(기존 동작 유지).
       _concurrencyConflictPolicy = ScenarioConcurrencyConflictPolicy.Warn;
       _validatorBlockLogTargets =
@@ -313,6 +320,53 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
+      if (_runtimeRequirementsWaitRoutine != null)
+      {
+        StopCoroutine(_runtimeRequirementsWaitRoutine);
+        _runtimeRequirementsWaitRoutine = null;
+      }
+
+      var runtimeValidationMode = _skipRuntimeRequirementsValidationOnce
+        ? ScenarioRuntimeValidationMode.Off
+        : _runtimeRequirementsValidationMode;
+      _skipRuntimeRequirementsValidationOnce = false;
+      if (runtimeValidationMode == ScenarioRuntimeValidationMode.ReportOnly
+          && _preflightPolicy.MissingBehavior == ScenarioPreflightMissingBehavior.AbortStart)
+        runtimeValidationMode = ScenarioRuntimeValidationMode.AbortScenarioStart;
+      if (_preflightEnabled && runtimeValidationMode != ScenarioRuntimeValidationMode.Off)
+      {
+        var runtimeValidation = ScenarioRuntimeRequirementsValidator.Validate(
+          graph,
+          runtimeValidationMode,
+          new ScenarioRuntimeValidationContext(ScenarioRequirementAuthority.Any));
+        if (_preflightPolicy.WarnToConsole)
+        {
+          foreach (var diagnostic in runtimeValidation.Diagnostics.Where(value => value.Severity >= ScenarioRequirementDiagnosticSeverity.Warning))
+            Debug.LogWarning($"[ScenarioRuntime] {diagnostic.Code}: {diagnostic.Message}");
+        }
+        if (runtimeValidation.Readiness == ScenarioRuntimeReadiness.NotReady
+            && (runtimeValidationMode == ScenarioRuntimeValidationMode.AbortScenarioStart
+                || runtimeValidationMode == ScenarioRuntimeValidationMode.AbortSessionBootstrap))
+        {
+          _runtimeRequirementsWaitRoutine = StartCoroutine(WaitForRuntimeRequirementsAndStart(graph, startNodeIdentifier, ownerClientId));
+          return;
+        }
+        if (runtimeValidation.ShouldAbort)
+        {
+          if (_preflightPolicy.WarnToConsole)
+            Debug.LogError($"[ScenarioRuntime] Aborting scenario '{graph.Identifier}' before changing current scenario state.");
+          if (_preflightPolicy.WarnToInGameChat)
+            AppendSystemChatMessage($"[ScenarioRuntime] Scenario '{graph.Identifier}' could not start because requirements are unresolved.");
+          return;
+        }
+      }
+
+      if (_preflightEnabled
+          && !ScenarioPreflight.Run(graph, _preflightPolicy, AppendSystemChatMessage, out _))
+      {
+        return;
+      }
+
       // 이전 시나리오 실행에서 남은 코루틴(병렬 브랜치 등)이 있으면 새 시나리오 시작 전에 정리한다.
       StopAllCoroutines();
       CancelDialogueAutoAdvance();
@@ -363,17 +417,6 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
-      // 사전 요구사항 검증: 그래프가 요구하는 씬/레지스트리 요소가 준비됐는지 점검한다.
-      // 정책이 AbortStart 이고 누락이 있으면 시작을 중단한다(경고 후 return).
-      if (_preflightEnabled
-          && !ScenarioPreflight.Run(graph, _preflightPolicy, AppendSystemChatMessage, out _))
-      {
-        _currentGraph = null;
-        _currentNode = null;
-        _state = State.Inactive;
-        return;
-      }
-
       _currentNode = startNode;
       _state = State.Inactive; // 초기화
 
@@ -399,6 +442,30 @@ namespace MultiplayerInfrastructure.Scenario
 
       // 첫 노드 실행
       ExecuteNode(startNode);
+    }
+
+    private IEnumerator WaitForRuntimeRequirementsAndStart(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId)
+    {
+      ScenarioRuntimeValidationResult completed = null;
+      yield return ScenarioRuntimeRequirementsValidator.WaitUntilReady(
+        graph,
+        _runtimeRequirementsValidationMode,
+        new ScenarioRuntimeValidationContext(ScenarioRequirementAuthority.Any),
+        _runtimeRequirementsReadinessTimeoutSeconds,
+        _runtimeRequirementsReadinessPollIntervalSeconds,
+        value => completed = value);
+      _runtimeRequirementsWaitRoutine = null;
+      if (completed == null || completed.ShouldAbort)
+      {
+        if (_preflightPolicy.WarnToConsole)
+          Debug.LogError($"[ScenarioRuntime] Aborting scenario '{graph.Identifier}' because requirements did not become ready.");
+        if (_preflightPolicy.WarnToInGameChat)
+          AppendSystemChatMessage($"[ScenarioRuntime] Scenario '{graph.Identifier}' could not start because requirements are unresolved.");
+        yield break;
+      }
+
+      _skipRuntimeRequirementsValidationOnce = true;
+      StartScenario(graph, startNodeIdentifier, ownerClientId);
     }
 
     /// <summary>
@@ -1306,7 +1373,9 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingStateUpdate;
 
-      var key = $"{node.TargetEntityIdentifier}.{node.StateKey}";
+      var key = string.IsNullOrWhiteSpace(node.TargetEntityIdentifier)
+        ? node.StateKey
+        : $"{node.TargetEntityIdentifier}.{node.StateKey}";
       _stateStore[key] = node.StateValue;
 #if UNITY_EDITOR
       Debug.Log($"[ScenarioController] State updated: {key}={node.StateValue}");

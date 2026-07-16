@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using MultiplayerInfrastructure.Scenario.Requirements;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -22,7 +23,12 @@ namespace MultiplayerInfrastructure.Registry
     [SerializeField] private int _highlightSortingOrder = 500;
 
     private string _registeredIdentifier;
+    private ScenarioRequirementRuntimeRegistrationHandle _waypointEvidence;
+    private ScenarioRequirementRuntimeRegistrationHandle _entityEvidence;
     private static readonly Dictionary<string, WaypointAnchor> _anchorsByIdentifier = new(StringComparer.Ordinal);
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStaticAnchors() => _anchorsByIdentifier.Clear();
 
     private GameObject _highlightObject;
     private SpriteRenderer _highlightRenderer;
@@ -30,6 +36,12 @@ namespace MultiplayerInfrastructure.Registry
     private Coroutine _highlightRoutine;
 
     public string Identifier => identifier;
+    public bool SupportsHighlight => _highlightSprite != null;
+
+    public void ConfigureIdentifier(string value)
+    {
+      identifier = value;
+    }
 
     private void Awake()
     {
@@ -69,6 +81,8 @@ namespace MultiplayerInfrastructure.Registry
       Registry.Register(RegistryType.InteractableEntity, _registeredIdentifier, transform.position);
       Registry.RegisterEntity(_registeredIdentifier, EntityType.Waypoint, gameObject, displayName: gameObject.name);
       _anchorsByIdentifier[_registeredIdentifier] = this;
+      _waypointEvidence = ScenarioRequirementRuntimeRegistrationRegistry.Register(RegistryType.Waypoint, ScenarioRequirementKind.SpatialAnchor, _registeredIdentifier, this, SupportsHighlight ? new[] { ScenarioRequirementCapability.ProvidesPosition, ScenarioRequirementCapability.HighlightableWaypoint } : new[] { ScenarioRequirementCapability.ProvidesPosition });
+      _entityEvidence = ScenarioRequirementRuntimeRegistrationRegistry.Register(RegistryType.Entity, ScenarioRequirementKind.Entity, _registeredIdentifier, this, new[] { ScenarioRequirementCapability.RegisteredEntity });
     }
 
     private void UnregisterFromRegistry()
@@ -79,6 +93,8 @@ namespace MultiplayerInfrastructure.Registry
       Registry.Unregister(RegistryType.Waypoint, _registeredIdentifier);
       Registry.Unregister(RegistryType.InteractableEntity, _registeredIdentifier);
       Registry.UnregisterEntity(_registeredIdentifier);
+      _waypointEvidence.Dispose();
+      _entityEvidence.Dispose();
       _anchorsByIdentifier.Remove(_registeredIdentifier);
       _registeredIdentifier = null;
     }

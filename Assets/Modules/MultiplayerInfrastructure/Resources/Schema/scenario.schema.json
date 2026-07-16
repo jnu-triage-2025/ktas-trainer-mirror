@@ -77,6 +77,9 @@
             "EntityTag",
             "EntityInit",
             "TriageAssessControl",
+            "PatientMedicalStatePreset",
+            "ItemSubmissionConfig",
+            "NpcInteractControl",
             "ChatPrint",
             "ExecuteCommand",
             "TimeControl",
@@ -462,8 +465,84 @@
           "then": {
             "$ref": "#/$defs/ScenarioTriageAssessControlNode"
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "PatientMedicalStatePreset"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioPatientMedicalStatePresetNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "ItemSubmissionConfig"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioItemSubmissionConfigNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "NpcInteractControl"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioNpcInteractControlNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "ChatPrint"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioChatPrintNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "ExecuteCommand"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioExecuteCommandNode"
+          }
         }
-      ]
+      ],
+      "unevaluatedProperties": false
     },
     "ScenarioBaseNode": {
       "type": "object",
@@ -481,8 +560,7 @@
       },
       "required": [
         "identifier"
-      ],
-      "additionalProperties": true
+      ]
     },
     "ScenarioDialogueNode": {
       "allOf": [
@@ -526,6 +604,12 @@
                 "null"
               ],
               "default": false
+            },
+            "ttsVoiceIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
           "required": [
@@ -621,6 +705,12 @@
                 "null"
               ],
               "default": false
+            },
+            "ttsVoiceIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "nextIdentifier": {
               "type": "null"
@@ -795,6 +885,11 @@
                 }
               },
               "then": {
+                "properties": {
+                  "destinationX": { "type": "number" },
+                  "destinationY": { "type": "number" },
+                  "destinationZ": { "type": "number" }
+                },
                 "required": [
                   "destinationX",
                   "destinationY",
@@ -811,6 +906,9 @@
                 }
               },
               "then": {
+                "properties": {
+                  "destinationIdentifier": { "type": "string", "minLength": 1, "pattern": "\\S" }
+                },
                 "required": [
                   "destinationIdentifier"
                 ]
@@ -822,9 +920,13 @@
                   "moveMode": {
                     "const": "BySpeed"
                   }
-                }
+                },
+                "required": ["moveMode"]
               },
               "then": {
+                "properties": {
+                  "moveSpeed": { "type": "number", "exclusiveMinimum": 0 }
+                },
                 "required": [
                   "moveSpeed"
                 ]
@@ -836,9 +938,13 @@
                   "moveMode": {
                     "const": "ByDuration"
                   }
-                }
+                },
+                "required": ["moveMode"]
               },
               "then": {
+                "properties": {
+                  "moveDuration": { "type": "number", "exclusiveMinimum": 0 }
+                },
                 "required": [
                   "moveDuration"
                 ]
@@ -932,6 +1038,11 @@
                 }
               },
               "then": {
+                "properties": {
+                  "destinationX": { "type": "number" },
+                  "destinationY": { "type": "number" },
+                  "destinationZ": { "type": "number" }
+                },
                 "required": [
                   "destinationX",
                   "destinationY",
@@ -948,6 +1059,9 @@
                 }
               },
               "then": {
+                "properties": {
+                  "destinationIdentifier": { "type": "string", "minLength": 1, "pattern": "\\S" }
+                },
                 "required": [
                   "destinationIdentifier"
                 ]
@@ -959,9 +1073,13 @@
                   "moveMode": {
                     "const": "BySpeed"
                   }
-                }
+                },
+                "required": ["moveMode"]
               },
               "then": {
+                "properties": {
+                  "moveSpeed": { "type": "number", "exclusiveMinimum": 0 }
+                },
                 "required": [
                   "moveSpeed"
                 ]
@@ -973,9 +1091,13 @@
                   "moveMode": {
                     "const": "ByDuration"
                   }
-                }
+                },
+                "required": ["moveMode"]
               },
               "then": {
+                "properties": {
+                  "moveDuration": { "type": "number", "exclusiveMinimum": 0 }
+                },
                 "required": [
                   "moveDuration"
                 ]
@@ -1589,8 +1711,17 @@
               ],
               "default": false
             },
+            "ttsVoiceIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "nextIdentifier": {
-              "type": "null"
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
           "required": [
@@ -1613,7 +1744,10 @@
               "const": "StateUpdate"
             },
             "targetEntityIdentifier": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "stateKey": {
               "type": "string"
@@ -1704,11 +1838,22 @@
           ],
           "anyOf": [
             {
+              "properties": {
+                "quest": {
+                  "$ref": "#/$defs/ScenarioQuestData"
+                }
+              },
               "required": [
                 "quest"
               ]
             },
             {
+              "properties": {
+                "questDefinitionIdentifier": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
               "required": [
                 "questDefinitionIdentifier"
               ]
@@ -1905,6 +2050,12 @@
             "waitUntilFinished": {
               "type": "boolean",
               "default": true
+            },
+            "ttsVoiceIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
           "required": [
@@ -2168,11 +2319,25 @@
           ],
           "anyOf": [
             {
+              "properties": {
+                "targetEntityIdentifier": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
               "required": [
                 "targetEntityIdentifier"
               ]
             },
             {
+              "properties": {
+                "targetEntityStateKey": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
               "required": [
                 "targetEntityStateKey"
               ]
@@ -2267,26 +2432,523 @@
                 },
                 "required": [
                   "key"
-                ]
+                ],
+                "additionalProperties": false
               }
             }
           },
           "anyOf": [
             {
+              "properties": {
+                "presetIdentifier": { "type": "string", "minLength": 1, "pattern": "\\S" }
+              },
               "required": [
                 "presetIdentifier"
               ]
             },
             {
+              "properties": {
+                "targetEntityIdentifier": { "type": "string", "minLength": 1, "pattern": "\\S" }
+              },
               "required": [
                 "targetEntityIdentifier"
               ]
             },
             {
+              "properties": {
+                "targetEntityStateKey": { "type": "string", "minLength": 1, "pattern": "\\S" }
+              },
               "required": [
                 "targetEntityStateKey"
               ]
             }
+          ]
+        }
+      ]
+    },
+    "ScenarioPatientMedicalStatePresetNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "PatientMedicalStatePreset"
+            },
+            "targetEntityIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "targetEntityStateKey": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "transitionMode": {
+              "enum": [
+                "Immediate",
+                "Gradual",
+                null
+              ]
+            },
+            "transitionDurationSeconds": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "exclusiveMinimum": 0
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "sex": {
+              "enum": [
+                "Male",
+                "Female",
+                null
+              ]
+            },
+            "age": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "bloodType": {
+              "enum": [
+                "APlus",
+                "AMinus",
+                "BPlus",
+                "BMinus",
+                "ABPlus",
+                "ABMinus",
+                "OPlus",
+                "OMinus",
+                null
+              ]
+            },
+            "intendedTriage": {
+              "enum": [
+                "Unassessed",
+                "Level1",
+                "Level2",
+                "Level3",
+                "Level4",
+                "Level5",
+                null
+              ]
+            },
+            "consciousnessGcs": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "consciousnessEyeOpening": {
+              "enum": [
+                "None",
+                "ToPressure",
+                "ToSound",
+                "Spontaneous",
+                null
+              ]
+            },
+            "consciousnessVerbal": {
+              "enum": [
+                "None",
+                "Sounds",
+                "Words",
+                "Confused",
+                "Oriented",
+                null
+              ]
+            },
+            "consciousnessMotor": {
+              "enum": [
+                "None",
+                "Extension",
+                "AbnormalFlexion",
+                "Withdrawal",
+                "Localizing",
+                "ObeysCommands",
+                null
+              ]
+            },
+            "consciousnessLocLabel": {
+              "enum": [
+                "Alert",
+                "Drowsy",
+                "Stupor",
+                "SemiComa",
+                "Coma",
+                null
+              ]
+            },
+            "consciousnessPupillaryResponse": {
+              "enum": [
+                "Normal",
+                "Abnormal",
+                null
+              ]
+            },
+            "respirationAwRR": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "respirationType": {
+              "enum": [
+                "Regular",
+                "Irregular",
+                "ChainStocks",
+                null
+              ]
+            },
+            "pulseRate": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "pulseForceType": {
+              "enum": [
+                "Weak",
+                "Normal",
+                "Strong",
+                null
+              ]
+            },
+            "bloodPressureSystolic": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "bloodPressureDiastolic": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "skinColorHue": {
+              "enum": [
+                "Pale",
+                "Normal",
+                null
+              ]
+            },
+            "skinTemperatureType": {
+              "enum": [
+                "Cold",
+                "Normal",
+                null
+              ]
+            },
+            "isCardiacArrest": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "transitionMode": {
+                    "const": "Gradual"
+                  }
+                },
+                "required": [
+                  "transitionMode"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "transitionDurationSeconds": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "required": [
+                  "transitionDurationSeconds"
+                ]
+              }
+            }
+          ],
+          "anyOf": [
+            {
+              "properties": {
+                "targetEntityIdentifier": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "targetEntityIdentifier"
+              ]
+            },
+            {
+              "properties": {
+                "targetEntityStateKey": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "targetEntityStateKey"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ScenarioItemRequirement": {
+      "type": "object",
+      "properties": {
+        "itemIdentifier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "count": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      "required": [
+        "itemIdentifier"
+      ],
+      "additionalProperties": false
+    },
+    "ScenarioItemSubmissionConfigNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "ItemSubmissionConfig"
+            },
+            "presetIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "spawnedEntityIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "positionSourceEntityIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "positionX": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "positionY": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "positionZ": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "targetIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "targetStateKey": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "requiredItems": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "$ref": "#/$defs/ScenarioItemRequirement"
+              }
+            },
+            "completionSignalIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "enabled": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": true
+            },
+            "resultStateKey": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "anyOf": [
+            {
+              "properties": {
+                "presetIdentifier": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "presetIdentifier"
+              ]
+            },
+            {
+              "properties": {
+                "targetIdentifier": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "targetIdentifier"
+              ]
+            },
+            {
+              "properties": {
+                "targetStateKey": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "targetStateKey"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ScenarioNpcInteractControlNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "NpcInteractControl"
+            },
+            "npcIdentifier": {
+              "type": "string",
+              "minLength": 1
+            },
+            "interactableIdentifier": {
+              "type": "string",
+              "minLength": 1
+            },
+            "operation": {
+              "enum": [
+                "Add",
+                "Remove",
+                "Enable",
+                "Disable",
+                null
+              ],
+              "default": "Add"
+            }
+          },
+          "required": [
+            "npcIdentifier",
+            "interactableIdentifier"
+          ]
+        }
+      ]
+    },
+    "ScenarioChatPrintNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "ChatPrint"
+            },
+            "message": {
+              "type": "string",
+              "minLength": 1
+            },
+            "targets": {
+              "enum": [
+                "None",
+                "UnityConsole",
+                "InGameChat",
+                "UnityConsole, InGameChat",
+                null
+              ],
+              "default": "InGameChat"
+            },
+            "broadcast": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": false
+            }
+          },
+          "required": [
+            "message"
+          ]
+        }
+      ]
+    },
+    "ScenarioExecuteCommandNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "ExecuteCommand"
+            },
+            "commandLine": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            }
+          },
+          "required": [
+            "commandLine"
           ]
         }
       ]

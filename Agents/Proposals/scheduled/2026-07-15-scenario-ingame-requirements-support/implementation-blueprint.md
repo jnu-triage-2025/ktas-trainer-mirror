@@ -595,22 +595,22 @@ requirements 구현 중 추가하는 static cache는 반드시
 ## 15. 테스트 파일 구조
 
 ```text
-Assets/Modules/MultiplayerInfrastructure/Tests/EditMode/Scenario/Requirements/
-  ScenarioRequirementExtractorTests.cs
+Assets/Modules/MultiplayerInfrastructure/Editor/Scenario/Requirements/Tests/
   ScenarioRequirementCompilerTests.cs
   ScenarioRequirementsSerializationTests.cs
+  ScenarioRequirementValidationEngineTests.cs
   ScenarioRequirementsSceneScannerTests.cs
   ScenarioRequirementsApplyServiceTests.cs
   ScenarioRequirementsBuildValidatorTests.cs
 
-Assets/Modules/MultiplayerInfrastructure/Tests/PlayMode/Scenario/Requirements/
-  ScenarioRequirementsRuntimeValidatorTests.cs
-  ScenarioRequirementsRegistryLifecycleTests.cs
-  ScenarioRequirementsAdditiveSceneTests.cs
+Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/Requirements/Tests/
+  ScenarioRequirementsRuntimePlayModeSmokeTests.cs
 ```
 
-현재 first-party test asmdef가 없으므로 테스트 도입 시 Test assembly 설정을 함께 해야 한다. runtime
-assembly를 부분적으로 asmdef화하는 변경과 한 commit에 섞지 않는다.
+현재 first-party runtime asmdef가 없으므로 EditMode test source는 `Assembly-CSharp-Editor`에 포함되는
+`Editor/` 아래에 둔다. 이 구성은 Test Runner가 NUnit fixture를 발견하게 하며, runtime assembly를
+부분적으로 asmdef화하는 변경과 섞지 않는다. runtime assembly의 PlayMode smoke fixture는
+`UNITY_INCLUDE_TESTS` 조건부 synchronous NUnit test로 두어 별도 asmdef 없이 player test에 포함한다.
 
 ## 16. 필수 단위 테스트
 

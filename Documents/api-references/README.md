@@ -34,6 +34,7 @@
 - [MultiplayerInfrastructure.Registry.md](./MultiplayerInfrastructure.Registry.md): API 레퍼런스: `MultiplayerInfrastructure.Registry`
 - [MultiplayerInfrastructure.Scenario.ScenarioController.md](./MultiplayerInfrastructure.Scenario.ScenarioController.md): API 레퍼런스: `MultiplayerInfrastructure.Scenario.ScenarioController`
 - [MultiplayerInfrastructure.Scenario.ScenarioGraphNodes.md](./MultiplayerInfrastructure.Scenario.ScenarioGraphNodes.md): API 레퍼런스: ScenarioGraph 노드 타입 전체 레퍼런스 (29종)
+- [MultiplayerInfrastructure.Scenario.Requirements.md](./MultiplayerInfrastructure.Scenario.Requirements.md): API 레퍼런스: `MultiplayerInfrastructure.Scenario.Requirements`
 - [MultiplayerInfrastructure.Editor.ScenarioGraphAuthoringWindow.md](./MultiplayerInfrastructure.Editor.ScenarioGraphAuthoringWindow.md): API 레퍼런스: `MultiplayerInfrastructure.Editor.ScenarioGraphAuthoringWindow`
 - [MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md](./MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md): API 레퍼런스: `MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry`
 - [MultiplayerInfrastructure.Scenario.ScenarioNetworkRelay.md](./MultiplayerInfrastructure.Scenario.ScenarioNetworkRelay.md): API 레퍼런스: `MultiplayerInfrastructure.Scenario.ScenarioNetworkRelay`
