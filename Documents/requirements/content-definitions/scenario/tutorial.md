@@ -96,12 +96,23 @@ Title 발생
   
   - 다이얼로그 계속: `hat-starting-3` 다음
     - 퀘스트 발행 및 미니 퀘스트 오버레이 발생
-      - 퀘스트
+      - 퀘스트: `tutorial-quest-delivery`
         - 텍스트 콘텐츠 "택배 가져오기"
         - 완료조건
           1. waypoint `delivery-storage-spot`으로 이동
             - 표시: "택배 보관소로 가기"
+            - 기술노트: 이 조건을 완료했을 때 `disinteractable dialogue` 발생해야함:
+              - 발화자: null
+              - 텍스트: "아이템 앞에서 F 키를 눌러 택배를 획득하자."
+              이 구현을 만족하려면 1번 완료조건이 처리되었을 때 시그널이 발생하여 두 개 갈래로 분기되어 이 다이얼로그 발생이 처리되어야 함. 따라서 완료조건에 onComplete를 추가하고 oncomplete 시에 시그널을 발생하도록 구현을 수정하여야 한다. 
           2. 택배 획득(StaticPlacedObject) 시 아이템 `tutorial_delivery_package` 획득
             - 표시: "택배 획득하기"
           3. `tutorial-guide-hat`에게 아이템 `tutorial_delivery_package` 제출
             - 표시: "모자에게 택배 전달하기"
+      * 코멘트: 마우스 휠 인터렉션 조정도 익힐 수 있게 하기 위해 여러개 아이템을 흩뿌려놓고 정답이 아닌 것을 이건 아닌 것 같다고 독백하는 다이얼로그 띄우도록 하기
+
+### 부분 3
+  - `tutorial-quest-delivery` 완료 시
+    - 다이얼로그 발생
+      - 발화자: "모자"
+      - 텍스트: "감사합니다! 덕분에 일이 잘 해결되었네요..!"
