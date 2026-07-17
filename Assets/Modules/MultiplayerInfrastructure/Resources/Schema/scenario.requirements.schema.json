@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "format": { "const": "scenario-ingame-requirements" },
+    "schemaVersion": { "const": 1 },
+    "scenarioIdentifier": { "type": "string", "minLength": 1, "pattern": "\\S" },
+    "source": { "$ref": "#/$defs/source" },
+    "declarations": { "type": "array", "items": { "$ref": "#/$defs/declaration" } },
+    "suppressions": { "type": "array", "items": { "$ref": "#/$defs/suppression" } }
+  },
+  "required": ["format", "schemaVersion", "scenarioIdentifier", "source", "declarations", "suppressions"],
+  "additionalProperties": false,
+  "$defs": {
+    "kind": { "enum": ["Entity", "Npc", "Interactable", "SpatialAnchor", "SpawnPoint", "EntityPreset", "ItemDefinition", "EventHandler", "RegistryEntry", "RuntimeSignal", "AudioResource", "SpriteResource", "TtsTranscript", "TtsVoice", "QuestDefinition", "PlayerTagState", "RuntimeEntityReference", "Service"] },
+    "capability": { "enum": ["RegisteredEntity", "ResolvableNpcMoveTarget", "RegisteredNpcComponent", "ProvidesPosition", "HighlightableWaypoint", "Interactable", "ToggleableInteractable", "ItemSubmissionTarget", "ScenarioEntityInitTarget", "ScenarioTriageAssessTarget", "PatientMedicalStateTarget", "SpawnablePreset", "InvokableEventHandler", "LoadableResource", "ResolvableQuestDefinition"] },
+    "selector": {
+      "type": "object",
+      "properties": { "kind": { "$ref": "#/$defs/kind" }, "identifier": { "type": "string", "minLength": 1, "pattern": "\\S" } },
+      "required": ["kind", "identifier"], "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "properties": { "scenarioSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }, "generatedAtUtc": { "type": ["string", "null"], "format": "date-time" } },
+      "required": ["scenarioSha256"], "additionalProperties": false
+    },
+    "occurrenceSelector": {
+      "type": "object",
+      "properties": { "nodeIdentifier": { "type": "string", "minLength": 1, "pattern": "\\S" }, "fieldPath": { "type": "string", "minLength": 1, "pattern": "\\S" } },
+      "required": ["nodeIdentifier", "fieldPath"], "additionalProperties": false
+    },
+    "cardinality": {
+      "type": "object",
+      "properties": { "minimum": { "type": "integer", "minimum": 0 }, "maximum": { "type": ["integer", "null"], "minimum": 0 } },
+      "additionalProperties": false
+    },
+    "binding": {
+      "type": "object",
+      "properties": {
+        "mode": { "enum": ["ExistingSceneObject", "GeneratedSceneObject", "PrefabInstance", "RegistryProvided", "RuntimeProduced", "External"] },
+        "factoryIdentifier": { "type": ["string", "null"] },
+        "providerIdentifier": { "type": ["string", "null"] }
+      },
+      "required": ["mode"], "additionalProperties": false
+    },
+    "vector3": {
+      "type": "object",
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "z": { "type": "number" } },
+      "required": ["x", "y", "z"], "additionalProperties": false
+    },
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "position": { "$ref": "#/$defs/vector3" },
+        "rotationEuler": { "$ref": "#/$defs/vector3" },
+        "scale": { "$ref": "#/$defs/vector3" },
+        "parentBindingKey": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "declaration": {
+      "type": "object",
+      "properties": {
+        "selector": { "$ref": "#/$defs/selector" },
+        "operation": { "enum": ["Declare", "Override"] },
+        "capabilities": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/capability" } },
+        "scope": { "enum": ["AnyLoadedScene", "Bootstrap", "SystemOverlay", "Overworld", "Content", "DontDestroyOnLoad"] },
+        "authority": { "enum": ["Any", "Server", "Client", "HostOnly"] },
+        "availability": { "enum": ["BeforeScenarioStart", "WhenNodeReached", "OptionalFallback", "NotConsumed"] },
+        "cardinality": { "$ref": "#/$defs/cardinality" },
+        "mustProve": { "type": "boolean" },
+        "occurrenceSelector": { "$ref": "#/$defs/occurrenceSelector" },
+        "binding": { "$ref": "#/$defs/binding" },
+        "configuration": { "$ref": "#/$defs/configuration" },
+        "notes": { "type": ["string", "null"] }
+      },
+      "required": ["selector", "operation"], "additionalProperties": false,
+      "allOf": [{ "if": { "properties": { "operation": { "const": "Declare" } }, "required": ["operation"] }, "then": { "not": { "required": ["occurrenceSelector"] } } }]
+    },
+    "suppression": {
+      "type": "object",
+      "properties": {
+        "selector": { "$ref": "#/$defs/selector" },
+        "reason": { "type": "string", "minLength": 10, "pattern": "\\S" },
+        "owner": { "type": "string", "minLength": 1, "pattern": "\\S" },
+        "expiresOn": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" }
+      },
+      "required": ["selector", "reason", "owner", "expiresOn"], "additionalProperties": false
+    }
+  }
+}

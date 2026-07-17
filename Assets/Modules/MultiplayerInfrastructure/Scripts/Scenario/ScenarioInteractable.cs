@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using MultiplayerInfrastructure.Scenario.Requirements;
 using MultiplayerInfrastructure.Commons;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Registry;
@@ -33,6 +34,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     private ScenarioGraph _cachedGraph;
     private string _registeredIdentifier;
+    private ScenarioRequirementRuntimeRegistrationHandle _runtimeEvidence;
 
     #endregion
 
@@ -171,6 +173,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       _registeredIdentifier = _identifier;
       Registry.Registry.RegisterEntity(_registeredIdentifier, EntityType.ScenarioInteractable, gameObject, displayName: gameObject.name, isNetworked: true);
+      _runtimeEvidence = ScenarioRequirementRuntimeRegistrationRegistry.Register(RegistryType.Entity, ScenarioRequirementKind.Interactable, _registeredIdentifier, this, new[] { ScenarioRequirementCapability.Interactable });
     }
 
     private void UnregisterFromRegistry()
@@ -179,6 +182,7 @@ namespace MultiplayerInfrastructure.Scenario
         return;
 
       Registry.Registry.UnregisterEntity(_registeredIdentifier);
+      _runtimeEvidence.Dispose();
       _registeredIdentifier = null;
     }
   }

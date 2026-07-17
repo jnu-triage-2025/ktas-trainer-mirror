@@ -24,7 +24,11 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
 #if UNITY_EDITOR
-    public static void ForceReload() => _cachedSchemaText = null;
+    public static void ForceReload()
+    {
+      _cachedSchemaText = null;
+      ScenarioJsonSchemaValidator.ClearCachedSchema();
+    }
 #endif
   }
 }

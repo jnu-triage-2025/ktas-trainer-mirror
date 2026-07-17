@@ -25,6 +25,7 @@
 - [remaining-implementation-checklist.md](./remaining-implementation-checklist.md): 남은 이벤트 구현 체크리스트
 - [rubric-recorder-setup-guide.md](./rubric-recorder-setup-guide.md): 평가 루브릭 기록 코어(RubricRecorder) 설정 가이드
 - [scenario-authoring-guide.md](./scenario-authoring-guide.md): 시나리오 작성 가이드
+- [scenario-ingame-requirements-support-guide.md](./scenario-ingame-requirements-support-guide.md): Scenario 인게임 요구사항 계약 운영 가이드
 - [scenario-preflight-and-dev-stub-setup-guide.md](./scenario-preflight-and-dev-stub-setup-guide.md): Scenario 사전 검증(Preflight) & 개발 스텁 설정 가이드
 - [tts-voice-profile-setup-guide.md](./tts-voice-profile-setup-guide.md): TTS 다중 목소리 프로파일 설정 가이드
 - [validator-gate-timeout-setup-guide.md](./validator-gate-timeout-setup-guide.md): Validator 게이트 타임아웃·실패 분기 설정 가이드
