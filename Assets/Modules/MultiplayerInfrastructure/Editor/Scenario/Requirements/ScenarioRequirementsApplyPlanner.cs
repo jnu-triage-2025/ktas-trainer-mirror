@@ -101,6 +101,13 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
           continue;
         }
         var marker = matchingMarkers.SingleOrDefault();
+        // When the requirement returns after having been orphaned, re-adopt the
+        // existing orphaned object (Configure clears the orphan flag) instead of
+        // creating a second live object.  This keeps re-apply idempotent and
+        // avoids duplicate generated objects (proposal §12, acceptance
+        // criterion 8).
+        if (marker == null)
+          marker = FindAdoptableOrphan(scene, composition.Identifier, requirement.Key, targetSceneGuid);
         var effectiveConfiguration = new ScenarioRequirementGenerationConfiguration(
           configuration.Position,
           configuration.RotationEuler,
@@ -109,7 +116,10 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
           targetSceneGuid);
         var identity = BuildPlanIdentity(scenarioIdentifier, composition, requirement, effectiveConfiguration, factory);
         var operation = marker == null ? ScenarioWorldObjectOperationKind.Create : ScenarioWorldObjectOperationKind.Configure;
-        plans.Add(new ScenarioWorldObjectCreationPlan(identity, scenarioIdentifier, requirement.Key, operation, effectiveConfiguration.TargetScenePath, effectiveConfiguration.TargetSceneGuid, FindRole(composition, effectiveConfiguration.TargetScenePath), factory.Identifier, factory.Version, marker?.Identity, marker == null ? "No owned generated object exists." : "Owned generated object will be configured.", ScenarioWorldObjectPlanRisk.None, Array.Empty<ScenarioWorldObjectFieldChange>(), marker, manifestFingerprint));
+        var reason = marker == null
+          ? "No owned generated object exists."
+          : marker.IsOrphan ? "Orphaned generated object will be re-adopted and configured." : "Owned generated object will be configured.";
+        plans.Add(new ScenarioWorldObjectCreationPlan(identity, scenarioIdentifier, requirement.Key, operation, effectiveConfiguration.TargetScenePath, effectiveConfiguration.TargetSceneGuid, FindRole(composition, effectiveConfiguration.TargetScenePath), factory.Identifier, factory.Version, marker?.Identity, reason, ScenarioWorldObjectPlanRisk.None, Array.Empty<ScenarioWorldObjectFieldChange>(), marker, manifestFingerprint));
       }
       foreach (var sceneEntry in composition.Scenes)
       {
@@ -120,9 +130,39 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
           if (marker.gameObject.scene != scene || marker.CompositionIdentifier != composition.Identifier || !marker.TryGetKey(out var markerKey)) continue;
           if ((requirements ?? Array.Empty<ScenarioRequirementDescriptor>()).Any(value => value.Key.Equals(markerKey))) continue;
           var deleteApproved = approvedDeletionMarkerIdentities != null && approvedDeletionMarkerIdentities.Contains(marker.Identity);
-          var operation = deleteApproved
-            ? ScenarioWorldObjectOperationKind.DeleteGenerated
-            : marker.IsOrphan ? ScenarioWorldObjectOperationKind.NoChange : ScenarioWorldObjectOperationKind.MarkOrphan;
+          var hasManualChildren = HasManualChildren(marker);
+          // Deletion is a two-step contract that matches the Apply service guard
+          // (a generated object must be orphaned before it can be deleted) and
+          // never destroys an object that has manual/user-added children
+          // (proposal §12).  An approved deletion of a not-yet-orphaned object
+          // first marks it orphan; the next Apply performs the deletion.
+          ScenarioWorldObjectOperationKind operation;
+          string reason;
+          ScenarioWorldObjectPlanRisk risk;
+          if (deleteApproved && marker.IsOrphan && !hasManualChildren)
+          {
+            operation = ScenarioWorldObjectOperationKind.DeleteGenerated;
+            reason = "Explicitly approved deletion of generated orphan.";
+            risk = ScenarioWorldObjectPlanRisk.Destructive;
+          }
+          else if (deleteApproved && marker.IsOrphan && hasManualChildren)
+          {
+            operation = ScenarioWorldObjectOperationKind.NoChange;
+            reason = "Deletion skipped: orphan has manual child objects and is not auto-deleted.";
+            risk = ScenarioWorldObjectPlanRisk.Warning;
+          }
+          else if (marker.IsOrphan)
+          {
+            operation = ScenarioWorldObjectOperationKind.NoChange;
+            reason = "Generated object is orphaned; explicit deletion approval is required.";
+            risk = ScenarioWorldObjectPlanRisk.None;
+          }
+          else
+          {
+            operation = ScenarioWorldObjectOperationKind.MarkOrphan;
+            reason = "Generated object is no longer required by the current manifest.";
+            risk = ScenarioWorldObjectPlanRisk.Warning;
+          }
           plans.Add(new ScenarioWorldObjectCreationPlan(
             "orphan|" + marker.Identity,
             marker.ScenarioIdentifier,
@@ -134,8 +174,8 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
             marker.FactoryIdentifier,
             marker.FactoryVersion,
             marker.Identity,
-            deleteApproved ? "Explicitly approved deletion of generated orphan." : marker.IsOrphan ? "Generated object is orphaned; explicit deletion approval is required." : "Generated object is no longer required by the current manifest.",
-            deleteApproved ? ScenarioWorldObjectPlanRisk.Destructive : marker.IsOrphan ? ScenarioWorldObjectPlanRisk.None : ScenarioWorldObjectPlanRisk.Warning,
+            reason,
+            risk,
             Array.Empty<ScenarioWorldObjectFieldChange>(),
             marker));
         }
@@ -157,6 +197,42 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
             && (string.IsNullOrWhiteSpace(marker.TargetSceneGuid) || marker.TargetSceneGuid == sceneGuid)
             && marker.TryGetKey(out var markerKey) && markerKey.Equals(key)) result.Add(marker);
       return result;
+    }
+
+    // A generated object is considered to have manual children when its
+    // hierarchy contains any child GameObject that the generator does not own
+    // (i.e. a child without its own generated marker).  Such objects must not
+    // be auto-deleted to avoid authoring loss (proposal §12).
+    private static bool HasManualChildren(ScenarioGeneratedWorldObject marker)
+    {
+      if (marker == null) return false;
+      var root = marker.transform;
+      for (var index = 0; index < root.childCount; index++)
+      {
+        var child = root.GetChild(index);
+        if (child.GetComponent<ScenarioGeneratedWorldObject>() == null) return true;
+      }
+      return false;
+    }
+
+    // Finds a single orphaned generated object that can be re-adopted for a
+    // returning requirement key.  Only a unique orphan is adoptable; if several
+    // orphans share the key the caller keeps them out of live handling so the
+    // ambiguity is resolved explicitly by the user.
+    private static ScenarioGeneratedWorldObject FindAdoptableOrphan(Scene scene, string compositionIdentifier, ScenarioRequirementKey key, string sceneGuid)
+    {
+      ScenarioGeneratedWorldObject found = null;
+      foreach (var marker in UnityEngine.Object.FindObjectsByType<ScenarioGeneratedWorldObject>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+      {
+        if (!marker.IsOrphan
+            || marker.gameObject.scene != scene
+            || marker.CompositionIdentifier != compositionIdentifier
+            || !(string.IsNullOrWhiteSpace(marker.TargetSceneGuid) || marker.TargetSceneGuid == sceneGuid)
+            || !marker.TryGetKey(out var markerKey) || !markerKey.Equals(key)) continue;
+        if (found != null) return null;
+        found = marker;
+      }
+      return found;
     }
 
     private static ScenarioRequirementScope FindRole(ScenarioRequirementSceneComposition composition, string path)

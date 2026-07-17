@@ -459,11 +459,17 @@ namespace MultiplayerInfrastructure.Scenario
       var offline = InstanceFinder.IsOffline;
       var isServer = offline || InstanceFinder.IsServerStarted;
       var isClient = offline || InstanceFinder.IsClientStarted;
+      // HostOnly means "an integrated host is running both server and client in
+      // the same networked process" (proposal §5).  Offline/single-player is
+      // not a networked host, so a HostOnly requirement must not be enforced
+      // there; deriving isHost from the offline server/client fallback would
+      // wrongly activate HostOnly in plain single-player play.
+      var isHost = !offline && InstanceFinder.IsServerStarted && InstanceFinder.IsClientStarted;
       return new ScenarioRuntimeValidationContext(
         ScenarioRequirementAuthority.Any,
         isServer,
         isClient,
-        isServer && isClient);
+        isHost);
     }
 
     private IEnumerator WaitForRuntimeRequirementsAndStart(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId, ScenarioRuntimeValidationMode validationMode)

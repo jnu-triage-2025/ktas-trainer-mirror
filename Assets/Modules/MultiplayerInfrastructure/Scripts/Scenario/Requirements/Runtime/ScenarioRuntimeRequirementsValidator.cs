@@ -54,11 +54,35 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       var diagnostics = new List<ScenarioRequirementDiagnostic>(ScenarioRuntimeManifestRegistry.Diagnostics);
       var manifestDiagnostics = new List<ScenarioRequirementDiagnostic>();
       var graphFingerprint = ScenarioGraphFingerprint.Compute(graph);
-      if (ScenarioRuntimeManifestRegistry.TryGet(graph.Identifier, graphFingerprint, out var entry) && entry.Manifest != null)
+      if (ScenarioRuntimeManifestRegistry.TryGet(graph.Identifier, graphFingerprint, out var entry))
       {
-        manifest = entry.Manifest;
+        // A compiled manifest was discovered for this exact graph.  If it failed
+        // to compile/load (Manifest == null) its contract is invalid and MUST
+        // block in strict mode; falling back to a fresh inferred compile here
+        // would discard the failure and could produce a false pass
+        // (proposal §14, §15).
+        manifest = entry.Manifest ?? ScenarioRequirementCompiler.CompileInferred(graph);
         diagnostics.AddRange(entry.Diagnostics);
         manifestDiagnostics.AddRange(entry.Diagnostics);
+        if (entry.Manifest == null)
+        {
+          var invalidDiagnostic = new ScenarioRequirementDiagnostic("SIR614", "InvalidRuntimeManifest", ScenarioRequirementDiagnosticSeverity.Error, "The compiled runtime manifest for this scenario failed to load; its contract cannot be trusted.", null, string.Empty, string.Empty);
+          diagnostics.Add(invalidDiagnostic);
+          manifestDiagnostics.Add(invalidDiagnostic);
+        }
+      }
+      else if (ScenarioRuntimeManifestRegistry.TryGetInvalid(graph.Identifier, out var invalidEntry))
+      {
+        // A sidecar/manifest for this scenario was discovered but failed to
+        // load (no valid fingerprint could be computed).  Surface the failure
+        // and block in strict mode rather than substituting a clean inferred
+        // compile (proposal §14, §15).
+        manifest = ScenarioRequirementCompiler.CompileInferred(graph);
+        diagnostics.AddRange(invalidEntry.Diagnostics);
+        manifestDiagnostics.AddRange(invalidEntry.Diagnostics);
+        var invalidDiagnostic = new ScenarioRequirementDiagnostic("SIR614", "InvalidRuntimeManifest", ScenarioRequirementDiagnosticSeverity.Error, "The compiled runtime manifest for this scenario failed to load; its contract cannot be trusted.", null, string.Empty, string.Empty);
+        diagnostics.Add(invalidDiagnostic);
+        manifestDiagnostics.Add(invalidDiagnostic);
       }
       else
       {

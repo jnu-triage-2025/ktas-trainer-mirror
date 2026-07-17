@@ -16,6 +16,28 @@
 | 5 | composition profile, read-only build validator, stable build report | 구현됨 | clean checkout batch build와 변경 파일 없음 확인 |
 | 6 | runtime manifest registry, provider snapshot, readiness gate, controller integration | 구현됨 | host/server/client 및 readiness timeout PlayMode 실행 |
 
+## 버그 수정 (리뷰 후속)
+
+리뷰에서 확인된 수용 기준 위반/버그를 수정했다.
+
+- H1/H2: scene scanner가 `Interactable`/`SpawnPoint`/`Entity`를 `Complete`로 표시하고, static
+  catalog가 scene-complete kind를 `Partial`로 강등하지 못하게 했다. 이제 Editor/build scene snapshot이
+  이 kind들의 duplicate를 정본으로 판정한다(수용 기준 4).
+- H3: `ScenarioRequirementSceneCapabilityMap`을 단일 source of truth로 도입해 Editor scanner, scene
+  binding inference, runtime provider snapshot의 capability를 통일했다(수용 기준 11).
+- H4: offline/single-player에서 `IsHost`가 항상 true가 되어 `HostOnly`가 오작동하던 문제를 수정했다.
+- H5: build validator가 malformed sidecar에서 early return 하지 않고 inferred fallback으로 나머지
+  검사를 계속 수행한다(수용 기준 9).
+- M1: `WrongScene`/`Inactive`를 Development에서도 Error로 승격한다(§13).
+- M2: Authoring profile에서 구조 진단(SIR501/502/504/506)이 빌드를 강제 실패시키지 않는다(§14).
+- M3/L2: 부트 씬이 `MarkReady`에서 no-op 되던 문제를 수정했다.
+- M4: fingerprint 일치하지만 invalid한 runtime manifest가 inferred fallback으로 우회되지 않고
+  `SIR614`로 차단된다(§14/§15).
+- M5/M6/M7: Apply의 삭제 승인/orphan 가드를 일치시키고, orphan 재요구 시 중복 생성 대신 재적용,
+  수동 자식이 있는 orphan은 자동 삭제하지 않도록 했다(수용 기준 8, §12).
+- M8: import와 compile 간 진단 code를 통일했다(impossible cardinality=`SIR204`,
+  binding semantics=`SIR109`, suppression 검증은 compile phase로 일원화).
+
 ## 이번 보완
 
 - runtime sidecar 선택을 `(scenarioIdentifier, graph ContentFingerprint)` exact match로 변경했다.

@@ -22,7 +22,14 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
 
     public static void MarkReady(Scene scene)
     {
-      if (!scene.IsValid() || !scene.isLoaded || !LoadedScenes.Contains(scene.handle) || !ReadyScenes.Add(scene.handle)) return;
+      if (!scene.IsValid() || !scene.isLoaded) return;
+      // The scene that was already active before this subsystem subscribed to
+      // sceneLoaded (e.g. the process boot scene) never raised sceneLoaded, so
+      // it would otherwise be missing from LoadedScenes and could never be
+      // marked ready.  Register any valid loaded scene here so readiness works
+      // for the startup scene as well.
+      LoadedScenes.Add(scene.handle);
+      if (!ReadyScenes.Add(scene.handle)) return;
       SceneReady?.Invoke(scene);
     }
 

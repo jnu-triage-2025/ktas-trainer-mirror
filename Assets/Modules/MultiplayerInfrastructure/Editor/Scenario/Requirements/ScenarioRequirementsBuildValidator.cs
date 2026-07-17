@@ -69,7 +69,6 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
         .OrderBy(value => value.Identifier, StringComparer.Ordinal).ToArray();
       var buildScenes = EditorBuildSettings.scenes;
       var discovered = ScenarioRequirementsResourceScanner.Discover();
-      var production = buildReport != null && (buildReport.summary.options & BuildOptions.Development) == 0;
       var isBuild = buildReport != null;
 
       foreach (var pair in discovered)
@@ -93,7 +92,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
             AddCompilerDiagnostics(result, inferred, graph.Identifier, pair.ScenarioPath, string.Empty);
             continue;
           }
-          foreach (var profile in selected) ValidateScenarioProfile(pair, graph, profile, buildScenes, production, result);
+          foreach (var profile in selected) ValidateScenarioProfile(pair, graph, profile, buildScenes, result);
         }
         catch (Exception ex)
         {
@@ -125,23 +124,27 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
       return wildcard.Length == 1 ? wildcard : Array.Empty<ScenarioSceneCompositionProfile>();
     }
 
-    private static void ValidateScenarioProfile(ScenarioRequirementAssetPair pair, ScenarioGraph graph, ScenarioSceneCompositionProfile profile, EditorBuildSettingsScene[] buildScenes, bool production, ScenarioRequirementsBuildReport report)
+    private static void ValidateScenarioProfile(ScenarioRequirementAssetPair pair, ScenarioGraph graph, ScenarioSceneCompositionProfile profile, EditorBuildSettingsScene[] buildScenes, ScenarioRequirementsBuildReport report)
     {
+      // Authoring is Warning-centric and Apply-capable (proposal §14); its
+      // structural composition diagnostics must not hard-block the build.
+      var isAuthoring = profile.ValidationProfile.Mode == ScenarioRequirementsValidationProfileMode.Authoring;
+      var structuralSeverity = isAuthoring ? ScenarioRequirementDiagnosticSeverity.Warning : ScenarioRequirementDiagnosticSeverity.Error;
       var sidecarAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(pair.SidecarPath);
       ScenarioRequirementsDocument sidecar = null;
       if (sidecarAsset != null)
       {
         var loaded = ScenarioRequirementsLoader.LoadSidecar(sidecarAsset.text);
-        if (!loaded.IsValid)
-        {
-          foreach (var diagnostic in loaded.Diagnostics) report.Add(graph.Identifier, pair.ScenarioPath, profile.Identifier, string.Empty, diagnostic.HasRequirementKey ? diagnostic.RequirementKey.ToString() : string.Empty, diagnostic.Code, diagnostic.Name, diagnostic.Severity, diagnostic.Message);
-          return;
-        }
-        sidecar = loaded.Document;
+        foreach (var diagnostic in loaded.Diagnostics) report.Add(graph.Identifier, pair.ScenarioPath, profile.Identifier, string.Empty, diagnostic.HasRequirementKey ? diagnostic.RequirementKey.ToString() : string.Empty, diagnostic.Code, diagnostic.Name, diagnostic.Severity, diagnostic.Message);
+        // A malformed sidecar is a reported Error, but validation must still
+        // collect every other diagnostic for this scenario (proposal §14,
+        // acceptance criterion 9).  Fall back to inferred-only requirements so
+        // the remaining scene/composition/cardinality checks continue to run.
+        sidecar = loaded.IsValid ? loaded.Document : null;
       }
       else if (profile.ValidationProfile.RequireProfileForBuild)
       {
-        report.Add(graph.Identifier, pair.ScenarioPath, profile.Identifier, string.Empty, string.Empty, "SIR506", "SidecarMissingUnderPolicy", ScenarioRequirementDiagnosticSeverity.Error, "Requirements sidecar is required by the selected profile.");
+        report.Add(graph.Identifier, pair.ScenarioPath, profile.Identifier, string.Empty, string.Empty, "SIR506", "SidecarMissingUnderPolicy", structuralSeverity, "Requirements sidecar is required by the selected profile.");
       }
       var manifest = ScenarioRequirementCompiler.Compile(graph, pair.SourceBytes, sidecar, new ScenarioRequirementCompilationContext(DateTime.UtcNow));
       AddCompilerDiagnostics(report, manifest, graph.Identifier, pair.ScenarioPath, profile.Identifier);
@@ -151,21 +154,19 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
       var composition = new ScenarioRequirementSceneComposition(profile.Identifier, compositionScenes);
       var snapshot = ScenarioRequirementsSceneScanner.Scan(manifest, composition);
       var sceneReport = ScenarioRequirementValidationEngine.Validate(manifest, snapshot, composition);
-      // A Production-mode profile only enforces production blocking when the
-      // actual build is a production (non-Development) build, or when running
-      // the editor validation menu (production == true, isBuild == false).  A
-      // Development build against a Production-mode profile behaves like
-      // Development so that the build's Development flag is honored
-      // (proposal §14).
-      var enforceProduction = profile.ValidationProfile.Mode == ScenarioRequirementsValidationProfileMode.Production && production;
-      var elevateIndeterminate = profile.ValidationProfile.Mode != ScenarioRequirementsValidationProfileMode.Authoring;
+      // WrongScene/Inactive/NotRegistered are Warning by default in the engine
+      // but the diagnostic severity table (proposal §13) escalates them to Error
+      // in BOTH Development and Production (Production additionally hard-blocks).
+      // Only Authoring keeps them Warning-centric.
+      var elevateSceneErrors = !isAuthoring;
+      var elevateIndeterminate = !isAuthoring;
       foreach (var diagnostic in sceneReport.Diagnostics)
       {
         var severity = diagnostic.Severity;
-        if (profile.ValidationProfile.Mode == ScenarioRequirementsValidationProfileMode.Authoring
+        if (isAuthoring
             && severity >= ScenarioRequirementDiagnosticSeverity.Error)
           severity = ScenarioRequirementDiagnosticSeverity.Warning;
-        else if (enforceProduction
+        else if (elevateSceneErrors
                  && (diagnostic.Code == "SIR310" || diagnostic.Code == "SIR404" || diagnostic.Code == "SIR413"))
           severity = ScenarioRequirementDiagnosticSeverity.Error;
         // Indeterminate results are reported as Info by the engine.  In
@@ -184,14 +185,14 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
       {
         var asset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scene.ScenePath);
         if (asset == null || AssetDatabase.AssetPathToGUID(scene.ScenePath) != scene.SceneGuid)
-          report.Add(graph.Identifier, pair.ScenarioPath, profile.Identifier, scene.ScenePath, string.Empty, "SIR502", "ScenePathGuidMismatch", ScenarioRequirementDiagnosticSeverity.Error, "Profile scene path/GUID does not resolve to the same asset.");
+          report.Add(graph.Identifier, pair.ScenarioPath, profile.Identifier, scene.ScenePath, string.Empty, "SIR502", "ScenePathGuidMismatch", structuralSeverity, "Profile scene path/GUID does not resolve to the same asset.");
         var matchingBuildScenes = buildScenes.Where(value => value.path == scene.ScenePath || value.guid.ToString() == scene.SceneGuid).ToArray();
         var buildScene = matchingBuildScenes.FirstOrDefault();
         if (!scene.Optional && (buildScene == null || !buildScene.enabled))
-          report.Add(graph.Identifier, pair.ScenarioPath, profile.Identifier, scene.ScenePath, string.Empty, "SIR501", "RequiredSceneAbsentFromBuildSettings", ScenarioRequirementDiagnosticSeverity.Error, "Required profile scene is not enabled in Build Settings.");
+          report.Add(graph.Identifier, pair.ScenarioPath, profile.Identifier, scene.ScenePath, string.Empty, "SIR501", "RequiredSceneAbsentFromBuildSettings", structuralSeverity, "Required profile scene is not enabled in Build Settings.");
         var buildSceneCount = matchingBuildScenes.Count(value => value.enabled);
         if (buildSceneCount < scene.MinimumLoadCount || buildSceneCount > scene.MaximumLoadCount)
-          report.Add(graph.Identifier, pair.ScenarioPath, profile.Identifier, scene.ScenePath, string.Empty, "SIR504", "SceneLoadCountMismatch", ScenarioRequirementDiagnosticSeverity.Error, $"Expected scene load count {scene.MinimumLoadCount}-{scene.MaximumLoadCount}, found {buildSceneCount}.");
+          report.Add(graph.Identifier, pair.ScenarioPath, profile.Identifier, scene.ScenePath, string.Empty, "SIR504", "SceneLoadCountMismatch", structuralSeverity, $"Expected scene load count {scene.MinimumLoadCount}-{scene.MaximumLoadCount}, found {buildSceneCount}.");
       }
       if (profile.ValidationProfile.FailOnIndeterminate && sceneReport.Results.Any(value => value.Status == ScenarioRequirementValidationStatus.Indeterminate))
         report.Add(graph.Identifier, pair.ScenarioPath, profile.Identifier, string.Empty, string.Empty, "SIR507", "IndeterminateRequirement", ScenarioRequirementDiagnosticSeverity.Error, "Profile requires proof for indeterminate requirements.");

@@ -118,6 +118,19 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       return Entries.Values.Any(value => value.Identifier == (identifier ?? string.Empty));
     }
 
+    /// <summary>
+    /// Returns a discovered-but-failed entry (manifest == null) for the given
+    /// scenario identifier, if one exists.  A failed compile/load is stored so
+    /// runtime strict validation can surface the failure and block instead of
+    /// silently substituting a fresh inferred compile that might pass.
+    /// </summary>
+    public static bool TryGetInvalid(string identifier, out ScenarioRuntimeManifestEntry entry)
+    {
+      EnsureLoaded();
+      entry = Entries.Values.FirstOrDefault(value => value.Identifier == (identifier ?? string.Empty) && value.Manifest == null);
+      return entry != null;
+    }
+
     private static ScenarioRequirementDiagnostic Diagnostic(string code, string name, string message)
       => new ScenarioRequirementDiagnostic(code, name, ScenarioRequirementDiagnosticSeverity.Error, message, null, string.Empty, string.Empty);
   }

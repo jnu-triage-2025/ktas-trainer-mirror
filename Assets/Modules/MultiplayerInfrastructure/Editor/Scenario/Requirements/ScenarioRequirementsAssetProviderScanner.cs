@@ -76,8 +76,11 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
                 true,
                 ScenarioRequirementProviderOrigin.ProjectContributor));
               // A catalog can prove its declared entry exists, but cannot prove
-              // that no runtime-only provider shares the same identity.
-              completeness[entry.Key.Kind] = ScenarioRequirementEvidenceCompleteness.Partial;
+              // that no runtime-only provider shares the same identity.  It must
+              // not, however, downgrade a scene-scannable kind that the scene
+              // snapshot already resolves as Complete (blueprint §6): the scene
+              // scan remains the canonical duplicate authority for those kinds.
+              DowngradeToPartial(completeness, entry.Key.Kind);
             }
           }
           catch (Exception ex)
@@ -112,6 +115,16 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
     {
       if (!completeness.ContainsKey(requirement.Kind))
         completeness[requirement.Kind] = ScenarioRequirementEvidenceCompleteness.Partial;
+    }
+
+    // Lowers a kind to Partial only when it is not already established as
+    // Complete by a physical scan.  A Complete kind's duplicate conclusion is
+    // authoritative and must never be weakened by asset/catalog evidence.
+    private static void DowngradeToPartial(IDictionary<ScenarioRequirementKind, ScenarioRequirementEvidenceCompleteness> completeness, ScenarioRequirementKind kind)
+    {
+      if (completeness.TryGetValue(kind, out var current) && current == ScenarioRequirementEvidenceCompleteness.Complete)
+        return;
+      completeness[kind] = ScenarioRequirementEvidenceCompleteness.Partial;
     }
 
     private static void AddQuestDefinition(ScenarioRequirementDescriptor requirement, List<ScenarioRequirementProvider> providers, IDictionary<ScenarioRequirementKind, ScenarioRequirementEvidenceCompleteness> completeness)
