@@ -140,6 +140,38 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
     }
 
     [Test]
+    public void RuntimeWithoutCompositionReportsFixedScopeAsIndeterminateNotWrongScene()
+    {
+      // Regression: the common StartScenario path passes no composition, so a
+      // fixed scene-role scope cannot be proven.  A provider that exists but is
+      // tagged AnyLoadedScene must NOT be reported as WrongScene (which would
+      // falsely abort strict start); it must be Indeterminate (proposal §15).
+      var graph = new ScenarioGraph { Identifier = "scope-runtime" };
+      graph.Add(new ScenarioPlayerMoveNode { Identifier = "move", DestinationType = ScenarioMoveDestinationType.Waypoint, DestinationIdentifier = "overworld-anchor" });
+      var source = System.Text.Encoding.UTF8.GetBytes(ScenarioGraphLoader.SaveToJson(graph, false));
+      var sourceHash = ScenarioRequirementSourceHasher.ComputeSha256(source);
+      // A sidecar Override pins the SpatialAnchor requirement to the Overworld
+      // scene role so the descriptor carries a fixed (non-AnyLoadedScene) scope.
+      var sidecarJson = "{\"format\":\"scenario-ingame-requirements\",\"schemaVersion\":1,\"scenarioIdentifier\":\"scope-runtime\"," +
+        "\"source\":{\"scenarioSha256\":\"" + sourceHash + "\"}," +
+        "\"declarations\":[{\"selector\":{\"kind\":\"SpatialAnchor\",\"identifier\":\"overworld-anchor\"},\"operation\":\"Override\",\"scope\":\"Overworld\"}]," +
+        "\"suppressions\":[]}";
+      var sidecar = ScenarioRequirementsLoader.LoadSidecar(sidecarJson);
+      Assert.That(sidecar.IsValid, Is.True);
+      var manifest = ScenarioRequirementCompiler.Compile(graph, source, sidecar.Document, new ScenarioRequirementCompilationContext(DateTime.UtcNow));
+      var key = new ScenarioRequirementKey(ScenarioRequirementKind.SpatialAnchor, "overworld-anchor");
+      var provider = new ScenarioRequirementProvider("scene:overworld-anchor", key, "Assets/Overworld.unity", ScenarioRequirementScope.AnyLoadedScene, "Anchor", new[] { ScenarioRequirementCapability.ProvidesPosition }, true, true, true, ScenarioRequirementProviderOrigin.SceneComponent);
+      var snapshot = new ScenarioRequirementProviderSnapshot(new[] { provider }, Array.Empty<ScenarioRequirementValidationDiagnostic>(), new Dictionary<ScenarioRequirementKind, ScenarioRequirementEvidenceCompleteness>
+      {
+        [ScenarioRequirementKind.SpatialAnchor] = ScenarioRequirementEvidenceCompleteness.Complete
+      });
+
+      var report = ScenarioRequirementValidationEngine.ValidateRuntime(manifest, snapshot, new ScenarioRequirementSceneComposition("runtime", Array.Empty<ScenarioRequirementCompositionScene>()));
+
+      Assert.That(report.Results.Single(value => value.Requirement.Key.Equals(key)).Status, Is.EqualTo(ScenarioRequirementValidationStatus.Indeterminate));
+    }
+
+    [Test]
     public void PartialEvidenceNeverProvesDuplicateProviders()
     {
       var graph = new ScenarioGraph { Identifier = "partial-duplicate" };

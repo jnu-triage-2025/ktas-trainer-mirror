@@ -82,12 +82,22 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
             // Two or more profiles match: this is a single, reported composition
             // conflict (SIR503).  It must NOT degrade to the legacy 0-match
             // AnyLoadedScene inference path, which would both double-report and
-            // silently relax validation (proposal blueprint §9).
+            // silently relax validation (proposal blueprint §9).  An ambiguous
+            // composition is a hard configuration error and blocks the build.
+            result.MarkBlocking(true);
             continue;
           }
           if (selected.Length == 0)
           {
-            result.Add(graph.Identifier, pair.ScenarioPath, string.Empty, string.Empty, string.Empty, "SIR506", "CompositionProfileMissing", isBuild ? ScenarioRequirementDiagnosticSeverity.Error : ScenarioRequirementDiagnosticSeverity.Warning, isBuild ? "No composition profile selected for this scenario." : "No composition profile selected; authoring validation used legacy AnyLoadedScene inference.");
+            // A missing composition profile must not hard-block the build.  The
+            // proposal's strictness rollout is staged (observe -> Editor -> CI
+            // opt-in -> Production, risk table): until a project authors a
+            // profile that opts in via RequireProfileForBuild, scenarios are
+            // validated with inferred-only requirements and the absent profile
+            // is reported as a non-blocking Warning.  Blocking on absence by
+            // default would fail every player build in a repo that has not yet
+            // authored any ScenarioSceneCompositionProfile asset.
+            result.Add(graph.Identifier, pair.ScenarioPath, string.Empty, string.Empty, string.Empty, "SIR506", "CompositionProfileMissing", ScenarioRequirementDiagnosticSeverity.Warning, isBuild ? "No composition profile selected for this scenario; inferred-only validation was used." : "No composition profile selected; authoring validation used legacy AnyLoadedScene inference.");
             var inferred = ScenarioRequirementCompiler.CompileInferred(graph);
             AddCompilerDiagnostics(result, inferred, graph.Identifier, pair.ScenarioPath, string.Empty);
             continue;
@@ -96,10 +106,16 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
         }
         catch (Exception ex)
         {
+          // A scenario that cannot even be loaded is a hard failure regardless
+          // of profile mode.
           result.Add(string.Empty, pair.ScenarioPath, string.Empty, string.Empty, string.Empty, "SIR505", "ScenarioAssetDiscoveryFailure", ScenarioRequirementDiagnosticSeverity.Error, ex.Message);
+          result.MarkBlocking(true);
         }
       }
-      result.HasBlockingErrors = result.ErrorCount > 0;
+      // Blocking is accumulated per profile mode and per hard discovery failure
+      // (proposal §14 staged strictness).  It is NOT simply ErrorCount > 0, so a
+      // Development/Authoring profile or a missing-profile scenario can report
+      // errors without failing the build.
       return result;
     }
 
@@ -198,6 +214,17 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
         report.Add(graph.Identifier, pair.ScenarioPath, profile.Identifier, string.Empty, string.Empty, "SIR507", "IndeterminateRequirement", ScenarioRequirementDiagnosticSeverity.Error, "Profile requires proof for indeterminate requirements.");
       foreach (var requirement in sceneReport.Results.Where(value => value.Status == ScenarioRequirementValidationStatus.Indeterminate && value.Requirement.MustProve))
         report.Add(graph.Identifier, pair.ScenarioPath, profile.Identifier, string.Empty, requirement.Requirement.Key.ToString(), "SIR507", "MustProveIndeterminateRequirement", ScenarioRequirementDiagnosticSeverity.Error, "Requirement is marked mustProve but static evidence is indeterminate.");
+
+      // Staged strictness (proposal §14): only a Production-mode profile blocks
+      // the build on its errors.  Authoring is Warning-centric, and Development
+      // reports errors without failing the build (blocking is opt-in via
+      // Production mode).  Errors for this profile still appear in the report
+      // for CI visibility either way.
+      if (profile.ValidationProfile.Mode == ScenarioRequirementsValidationProfileMode.Production)
+        report.MarkBlocking(report.Diagnostics.Any(value =>
+          string.Equals(value.ProfileIdentifier, profile.Identifier, StringComparison.Ordinal)
+          && string.Equals(value.AssetPath, pair.ScenarioPath, StringComparison.Ordinal)
+          && value.Severity >= ScenarioRequirementDiagnosticSeverity.Error));
     }
 
     private static void AddCompilerDiagnostics(ScenarioRequirementsBuildReport report, ScenarioRequirementManifest manifest, string scenarioIdentifier, string assetPath, string profileIdentifier)

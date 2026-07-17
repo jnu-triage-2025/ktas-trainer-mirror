@@ -34,7 +34,16 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
     public int ErrorCount => Diagnostics.Count(value => value.Severity >= ScenarioRequirementDiagnosticSeverity.Error);
     public int WarningCount => Diagnostics.Count(value => value.Severity == ScenarioRequirementDiagnosticSeverity.Warning);
     public int InfoCount => Diagnostics.Count(value => value.Severity == ScenarioRequirementDiagnosticSeverity.Info);
-    public bool HasBlockingErrors { get; set; }
+
+    // Whether any recorded error should actually fail the build.  This is
+    // distinct from ErrorCount: the proposal's staged strictness (§14) means a
+    // Development/Authoring profile reports errors without necessarily blocking
+    // the build, and a missing profile must never block by default.  Only
+    // Production-mode profile errors and hard discovery failures (recorded via
+    // MarkBlocking) gate the build.
+    private bool _hasBlockingErrors;
+    public bool HasBlockingErrors { get => _hasBlockingErrors; set => _hasBlockingErrors = value; }
+    public void MarkBlocking(bool blocking) => _hasBlockingErrors |= blocking;
     public void Add(ScenarioRequirementsBuildDiagnostic diagnostic) => _diagnostics.Add(diagnostic);
     public void Add(string scenario, string asset, string profile, string scene, string key, string code, string name, ScenarioRequirementDiagnosticSeverity severity, string message) => Add(new ScenarioRequirementsBuildDiagnostic(scenario, asset, profile, scene, key, code, name, severity, message));
     public string ToStableSummary() => $"Scenario requirements build validation failed. errors={ErrorCount} warnings={WarningCount} info={InfoCount}.";

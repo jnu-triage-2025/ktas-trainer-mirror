@@ -107,7 +107,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
         // avoids duplicate generated objects (proposal §12, acceptance
         // criterion 8).
         if (marker == null)
-          marker = FindAdoptableOrphan(scene, composition.Identifier, requirement.Key, targetSceneGuid);
+          marker = FindAdoptableOrphan(scene, scenarioIdentifier, composition.Identifier, requirement.Key, targetSceneGuid);
         var effectiveConfiguration = new ScenarioRequirementGenerationConfiguration(
           configuration.Position,
           configuration.RotationEuler,
@@ -128,6 +128,14 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
         foreach (var marker in UnityEngine.Object.FindObjectsByType<ScenarioGeneratedWorldObject>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
           if (marker.gameObject.scene != scene || marker.CompositionIdentifier != composition.Identifier || !marker.TryGetKey(out var markerKey)) continue;
+          // A generated object is owned by the scenario that created it.  Only
+          // orphan markers produced by the scenario currently being applied;
+          // another scenario sharing the same composition may still require this
+          // key, and orphaning/deleting its object would violate scenario-level
+          // ownership (proposal §12, blueprint §8).  Markers with no recorded
+          // scenario identifier (legacy) fall back to composition-only handling.
+          if (!string.IsNullOrEmpty(marker.ScenarioIdentifier)
+              && !string.Equals(marker.ScenarioIdentifier, scenarioIdentifier, StringComparison.Ordinal)) continue;
           if ((requirements ?? Array.Empty<ScenarioRequirementDescriptor>()).Any(value => value.Key.Equals(markerKey))) continue;
           var deleteApproved = approvedDeletionMarkerIdentities != null && approvedDeletionMarkerIdentities.Contains(marker.Identity);
           var hasManualChildren = HasManualChildren(marker);
@@ -218,8 +226,11 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
     // Finds a single orphaned generated object that can be re-adopted for a
     // returning requirement key.  Only a unique orphan is adoptable; if several
     // orphans share the key the caller keeps them out of live handling so the
-    // ambiguity is resolved explicitly by the user.
-    private static ScenarioGeneratedWorldObject FindAdoptableOrphan(Scene scene, string compositionIdentifier, ScenarioRequirementKey key, string sceneGuid)
+    // ambiguity is resolved explicitly by the user.  Re-adoption is scoped to
+    // the applying scenario (or legacy ownerless markers) so applying scenario
+    // A never steals scenario B's orphaned object, consistent with the
+    // scenario-scoped orphan pass (proposal §12, blueprint §8).
+    private static ScenarioGeneratedWorldObject FindAdoptableOrphan(Scene scene, string scenarioIdentifier, string compositionIdentifier, ScenarioRequirementKey key, string sceneGuid)
     {
       ScenarioGeneratedWorldObject found = null;
       foreach (var marker in UnityEngine.Object.FindObjectsByType<ScenarioGeneratedWorldObject>(FindObjectsInactive.Include, FindObjectsSortMode.None))
@@ -227,6 +238,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
         if (!marker.IsOrphan
             || marker.gameObject.scene != scene
             || marker.CompositionIdentifier != compositionIdentifier
+            || (!string.IsNullOrEmpty(marker.ScenarioIdentifier) && !string.Equals(marker.ScenarioIdentifier, scenarioIdentifier, StringComparison.Ordinal))
             || !(string.IsNullOrWhiteSpace(marker.TargetSceneGuid) || marker.TargetSceneGuid == sceneGuid)
             || !marker.TryGetKey(out var markerKey) || !markerKey.Equals(key)) continue;
         if (found != null) return null;

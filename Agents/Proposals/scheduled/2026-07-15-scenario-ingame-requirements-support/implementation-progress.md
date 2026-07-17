@@ -16,6 +16,24 @@
 | 5 | composition profile, read-only build validator, stable build report | 구현됨 | clean checkout batch build와 변경 파일 없음 확인 |
 | 6 | runtime manifest registry, provider snapshot, readiness gate, controller integration | 구현됨 | host/server/client 및 readiness timeout PlayMode 실행 |
 
+## 버그 수정 (P0/P1/P2 리뷰 후속)
+
+빌드 게이트·런타임 scope·생성물 소유권 경계의 치명 결함을 수정했다.
+
+- P0: composition profile 부재가 더 이상 모든 player build를 차단하지 않는다. profile이 없는
+  scenario는 `SIR506`을 **Warning**으로 보고하고 inferred-only 검증으로 계속 진행한다. 빌드 차단은
+  `RequireProfileForBuild` opt-in 또는 Production profile에서만 발생한다(§14 staged strictness).
+- P1a: orphan 탐색이 적용 중인 `scenarioIdentifier`와 marker의 `ScenarioIdentifier`를 비교한다. 같은
+  composition을 공유하는 다른 scenario의 생성물을 orphan/삭제하지 않는다(§12, blueprint §8).
+- P1b: composition profile이 없는 runtime `StartScenario` 경로에서 fixed scene-role scope 요구사항을
+  `WrongScene`으로 오판하지 않고 `SIR315 Indeterminate`로 보고한다. strict 모드에서 정상 시작이 오탐
+  차단되지 않는다(§15). `ScenarioController`는 project-agnostic하게 유지되며, composition을 아는 구체
+  bootstrap 모듈이 scope를 강제할 수 있다.
+- P2: build 차단이 `ErrorCount > 0`가 아니라 profile mode 기반이다. Production profile 오류와 hard
+  discovery/ambiguity 실패만 차단하고, Authoring/Development는 오류를 보고하되 차단하지 않는다(§14).
+- 회귀 테스트: composition 없이 fixed-scope 요구사항이 `Indeterminate`가 되는 것을 검증하는 EditMode
+  테스트를 추가했다.
+
 ## 버그 수정 (리뷰 후속)
 
 리뷰에서 확인된 수용 기준 위반/버그를 수정했다.

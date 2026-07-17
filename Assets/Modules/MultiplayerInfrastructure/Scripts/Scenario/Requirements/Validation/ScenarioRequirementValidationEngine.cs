@@ -12,7 +12,13 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       // already executing in a concrete authority context.  The caller filters
       // non-applicable requirements; applicable ones must be checked against
       // the live provider snapshot rather than downgraded to Indeterminate.
-      var report = ValidateInternal(manifest, snapshot, composition, proveFixedAuthority: true);
+      // At runtime, scene-role scope can only be proven when a composition
+      // profile with scene roles is available.  When it is not (the common
+      // StartScenario path passes no composition), every provider is tagged
+      // AnyLoadedScene, so a fixed-scope requirement must NOT be reported as
+      // WrongScene; its scope is simply unprovable and becomes Indeterminate.
+      var proveSceneScope = composition != null && composition.Scenes.Count > 0;
+      var report = ValidateInternal(manifest, snapshot, composition, proveFixedAuthority: true, proveSceneScope: proveSceneScope);
       var results = report.Results.Select(result =>
         result.Status == ScenarioRequirementValidationStatus.Inactive
           ? new ScenarioRequirementValidationResult(result.Requirement, ScenarioRequirementValidationStatus.NotReady, result.Providers, result.Diagnostics.Concat(new[] { new ScenarioRequirementValidationDiagnostic("SIR413", "ProviderNotReady", ScenarioRequirementDiagnosticSeverity.Warning, "Runtime provider is not active or enabled.", result.Requirement.Key) }))
@@ -20,9 +26,9 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       return new ScenarioRequirementValidationReport(manifest.ScenarioIdentifier, results, report.Diagnostics);
     }
     public static ScenarioRequirementValidationReport Validate(ScenarioRequirementManifest manifest, ScenarioRequirementProviderSnapshot snapshot, ScenarioRequirementSceneComposition composition)
-      => ValidateInternal(manifest, snapshot, composition, proveFixedAuthority: false);
+      => ValidateInternal(manifest, snapshot, composition, proveFixedAuthority: false, proveSceneScope: true);
 
-    private static ScenarioRequirementValidationReport ValidateInternal(ScenarioRequirementManifest manifest, ScenarioRequirementProviderSnapshot snapshot, ScenarioRequirementSceneComposition composition, bool proveFixedAuthority)
+    private static ScenarioRequirementValidationReport ValidateInternal(ScenarioRequirementManifest manifest, ScenarioRequirementProviderSnapshot snapshot, ScenarioRequirementSceneComposition composition, bool proveFixedAuthority, bool proveSceneScope)
     {
       if (manifest == null) throw new ArgumentNullException(nameof(manifest));
       if (snapshot == null) throw new ArgumentNullException(nameof(snapshot));
@@ -31,14 +37,14 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       var diagnostics = new List<ScenarioRequirementValidationDiagnostic>(snapshot.Diagnostics);
       foreach (var requirement in manifest.Requirements)
       {
-        var result = ValidateRequirement(requirement, snapshot, composition, proveFixedAuthority);
+        var result = ValidateRequirement(requirement, snapshot, composition, proveFixedAuthority, proveSceneScope);
         results.Add(result);
         diagnostics.AddRange(result.Diagnostics);
       }
       return new ScenarioRequirementValidationReport(manifest.ScenarioIdentifier, results, diagnostics);
     }
 
-    private static ScenarioRequirementValidationResult ValidateRequirement(ScenarioRequirementDescriptor requirement, ScenarioRequirementProviderSnapshot snapshot, ScenarioRequirementSceneComposition composition, bool proveFixedAuthority)
+    private static ScenarioRequirementValidationResult ValidateRequirement(ScenarioRequirementDescriptor requirement, ScenarioRequirementProviderSnapshot snapshot, ScenarioRequirementSceneComposition composition, bool proveFixedAuthority, bool proveSceneScope)
     {
       if (requirement.IsSuppressed && requirement.Suppression.ExpiresOnUtc >= DateTime.UtcNow.Date)
         return Result(requirement, ScenarioRequirementValidationStatus.Suppressed);
@@ -52,6 +58,12 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       if (requirement.Scope == ScenarioRequirementScope.DontDestroyOnLoad) return Indeterminate(requirement, "SIR311", "DontDestroyOnLoad scope cannot be proven from scene assets.");
       if (!proveFixedAuthority && requirement.Authority != ScenarioRequirementAuthority.Any)
         return Indeterminate(requirement, "SIR411", "Fixed network authority cannot be proven from scene evidence.");
+      // A fixed scene-role scope cannot be judged without a composition profile
+      // that maps scenes to roles.  Reporting WrongScene here would falsely fail
+      // every scope-fixed requirement whenever the runtime path has no
+      // composition (proposal §15); report it as unprovable instead.
+      if (!proveSceneScope && requirement.Scope != ScenarioRequirementScope.AnyLoadedScene)
+        return Indeterminate(requirement, "SIR315", "Scene-role scope cannot be proven without a composition profile.");
 
       var allKeyMatches = snapshot.Providers.Where(value => value.Key.Equals(requirement.Key)).ToArray();
       var inScope = allKeyMatches.Where(value => IsInScope(requirement.Scope, value.SceneRole)).ToArray();
