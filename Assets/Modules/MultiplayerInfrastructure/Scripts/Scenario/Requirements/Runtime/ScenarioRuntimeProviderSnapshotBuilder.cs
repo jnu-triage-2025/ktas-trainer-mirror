@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.Entity;
-using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -108,11 +107,15 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
           foreach (var component in root.GetComponentsInChildren<Component>(true))
           {
             if (component == null) continue;
-            if (component is WaypointAnchor waypoint) AddSceneProvider(providers, waypoint, ScenarioRequirementKind.SpatialAnchor, waypoint.Identifier, role, waypoint.SupportsHighlight ? new[] { ScenarioRequirementCapability.ProvidesPosition, ScenarioRequirementCapability.HighlightableWaypoint } : new[] { ScenarioRequirementCapability.ProvidesPosition });
-            else if (component is Npc npc) AddSceneProvider(providers, npc, ScenarioRequirementKind.Npc, npc.Identifier, role, new[] { ScenarioRequirementCapability.ResolvableNpcMoveTarget, ScenarioRequirementCapability.RegisteredNpcComponent, ScenarioRequirementCapability.ProvidesPosition });
-            else if (component is ItemSubmissionInteractable submission) AddSceneProvider(providers, submission, ScenarioRequirementKind.Interactable, submission.Identifier, role, new[] { ScenarioRequirementCapability.Interactable, ScenarioRequirementCapability.ItemSubmissionTarget });
-            else if (component is ScenarioInteractable scenarioInteractable) AddSceneProvider(providers, scenarioInteractable, ScenarioRequirementKind.Interactable, scenarioInteractable.Identifier, role, new[] { ScenarioRequirementCapability.Interactable });
-            else AddProviderBackedEntity(providers, component, role);
+            // Editor scan, scene binding inference, and this runtime snapshot
+            // must resolve identical capabilities for the same component type
+            // (proposal §6, acceptance criterion 11).  A single shared map is the
+            // sole source of truth so Editor/build results cannot diverge from
+            // runtime and cause a false pass followed by a runtime failure.
+            if (ScenarioRequirementSceneCapabilityMap.TryResolve(component, out var kind, out var capabilities, out var identifier))
+              AddSceneProvider(providers, component, kind, identifier, role, capabilities);
+            else
+              AddProviderBackedEntity(providers, component, role);
           }
         }
       }

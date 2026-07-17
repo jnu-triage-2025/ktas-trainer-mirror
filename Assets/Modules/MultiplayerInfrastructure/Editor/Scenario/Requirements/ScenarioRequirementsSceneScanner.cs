@@ -62,13 +62,19 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
       {
         for (var index = previewScenes.Count - 1; index >= 0; index--) EditorSceneManager.ClosePreviewScene(previewScenes[index]);
       }
+      // Every kind the scene scanner physically enumerates has a stable scene
+      // object identity, so the Editor/build scene snapshot can coalesce the
+      // multiple registry evidences of one physical object and make a
+      // definitive duplicate conclusion.  Per blueprint §6, these kinds are the
+      // canonical duplicate authority and must be Complete; leaving them Partial
+      // would silently downgrade genuine scene duplicates to Indeterminate.
       var completeness = new Dictionary<ScenarioRequirementKind, ScenarioRequirementEvidenceCompleteness>
       {
         [ScenarioRequirementKind.Npc] = ScenarioRequirementEvidenceCompleteness.Complete,
         [ScenarioRequirementKind.SpatialAnchor] = ScenarioRequirementEvidenceCompleteness.Complete,
-        [ScenarioRequirementKind.Interactable] = ScenarioRequirementEvidenceCompleteness.Partial,
-        [ScenarioRequirementKind.SpawnPoint] = ScenarioRequirementEvidenceCompleteness.Partial,
-        [ScenarioRequirementKind.Entity] = ScenarioRequirementEvidenceCompleteness.Partial
+        [ScenarioRequirementKind.Interactable] = ScenarioRequirementEvidenceCompleteness.Complete,
+        [ScenarioRequirementKind.SpawnPoint] = ScenarioRequirementEvidenceCompleteness.Complete,
+        [ScenarioRequirementKind.Entity] = ScenarioRequirementEvidenceCompleteness.Complete
       };
       ScenarioRequirementsAssetProviderScanner.AddProviders(manifest, providers, diagnostics, completeness);
       return new ScenarioRequirementProviderSnapshot(providers, diagnostics, completeness);
@@ -83,11 +89,13 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
         foreach (var component in root.GetComponentsInChildren<Component>(true))
         {
           if (component == null) continue;
-          if (component is WaypointAnchor waypoint) AddProvider(providers, diagnostics, waypoint, ScenarioRequirementKind.SpatialAnchor, waypoint.Identifier, entry, waypoint.SupportsHighlight ? new[] { ScenarioRequirementCapability.ProvidesPosition, ScenarioRequirementCapability.HighlightableWaypoint, ScenarioRequirementCapability.RegisteredEntity } : new[] { ScenarioRequirementCapability.ProvidesPosition, ScenarioRequirementCapability.RegisteredEntity });
-          else if (component is Npc npc) AddProvider(providers, diagnostics, npc, ScenarioRequirementKind.Npc, npc.Identifier, entry, new[] { ScenarioRequirementCapability.ResolvableNpcMoveTarget, ScenarioRequirementCapability.RegisteredNpcComponent, ScenarioRequirementCapability.ProvidesPosition, ScenarioRequirementCapability.RegisteredEntity, ScenarioRequirementCapability.Interactable });
-          else if (component is ItemSubmissionInteractable submission) AddProvider(providers, diagnostics, submission, ScenarioRequirementKind.Interactable, submission.Identifier, entry, new[] { ScenarioRequirementCapability.Interactable, ScenarioRequirementCapability.ToggleableInteractable, ScenarioRequirementCapability.ItemSubmissionTarget, ScenarioRequirementCapability.RegisteredEntity });
-          else if (component is ScenarioInteractable interactable) AddProvider(providers, diagnostics, interactable, ScenarioRequirementKind.Interactable, interactable.Identifier, entry, new[] { ScenarioRequirementCapability.Interactable, ScenarioRequirementCapability.RegisteredEntity });
-          else if (component is MonoBehaviour behaviour && behaviour is IPlayerSpawnPointProvider spawn) AddProvider(providers, diagnostics, behaviour, ScenarioRequirementKind.SpawnPoint, spawn.Identifier, entry, Array.Empty<ScenarioRequirementCapability>(), spawn.IsAvailable);
+          // Editor scan capabilities and identifiers come from the same shared
+          // map used by the runtime provider snapshot so Editor/build and runtime
+          // cannot diverge (proposal §6, acceptance criterion 11).
+          if (ScenarioRequirementSceneCapabilityMap.TryResolve(component, out var kind, out var capabilities, out var identifier))
+            AddProvider(providers, diagnostics, component, kind, identifier, entry, capabilities);
+          else if (component is MonoBehaviour behaviour && behaviour is IPlayerSpawnPointProvider spawn)
+            AddProvider(providers, diagnostics, behaviour, ScenarioRequirementKind.SpawnPoint, spawn.Identifier, entry, Array.Empty<ScenarioRequirementCapability>(), spawn.IsAvailable);
         }
       }
       if (bindings.Count > 1) diagnostics.Add(new ScenarioRequirementValidationDiagnostic("SIR308", "MultipleSceneBindingComponents", ScenarioRequirementDiagnosticSeverity.Warning, $"Scene '{entry.ScenePath}' contains {bindings.Count} binding components.", scenePath: entry.ScenePath));
@@ -185,25 +193,9 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
     }
 
     private static IEnumerable<ScenarioRequirementCapability> InferBindingCapabilities(Component component, ScenarioRequirementKey key)
-    {
-      if (component is WaypointAnchor waypoint)
-      {
-        var capabilities = new List<ScenarioRequirementCapability>
-        {
-          ScenarioRequirementCapability.ProvidesPosition,
-          ScenarioRequirementCapability.RegisteredEntity
-        };
-        if (waypoint.SupportsHighlight) capabilities.Add(ScenarioRequirementCapability.HighlightableWaypoint);
-        return capabilities;
-      }
-      if (component is Npc)
-        return new[] { ScenarioRequirementCapability.ResolvableNpcMoveTarget, ScenarioRequirementCapability.RegisteredNpcComponent, ScenarioRequirementCapability.ProvidesPosition, ScenarioRequirementCapability.RegisteredEntity };
-      if (component is ItemSubmissionInteractable)
-        return new[] { ScenarioRequirementCapability.Interactable, ScenarioRequirementCapability.ToggleableInteractable, ScenarioRequirementCapability.ItemSubmissionTarget, ScenarioRequirementCapability.RegisteredEntity };
-      if (component is ScenarioInteractable)
-        return new[] { ScenarioRequirementCapability.Interactable, ScenarioRequirementCapability.RegisteredEntity };
-      return Array.Empty<ScenarioRequirementCapability>();
-    }
+      => ScenarioRequirementSceneCapabilityMap.TryResolve(component, out _, out var capabilities)
+        ? capabilities
+        : Array.Empty<ScenarioRequirementCapability>();
 
     private static void AddProvider(List<ScenarioRequirementProvider> providers, List<ScenarioRequirementValidationDiagnostic> diagnostics, Component component, ScenarioRequirementKind kind, string identifier, ScenarioRequirementCompositionScene scene, IEnumerable<ScenarioRequirementCapability> capabilities, bool? expectedToRegister = null)
     {

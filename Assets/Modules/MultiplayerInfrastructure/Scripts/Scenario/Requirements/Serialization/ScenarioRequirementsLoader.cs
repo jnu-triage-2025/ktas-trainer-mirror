@@ -134,22 +134,30 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       if (dto?.Declarations == null) return;
       foreach (var declaration in dto.Declarations)
       {
+        // These are declaration-semantic checks, not JSON-schema violations, so
+        // they must not reuse SIR105 (schema).  Use stable codes that match the
+        // context each condition is also detected in, so the same defect yields
+        // the same diagnostic code across Import and Compile (proposal §13,
+        // acceptance criterion 11).
         var binding = declaration?.Binding;
         if (binding != null && (binding.Mode == ScenarioRequirementBindingMode.GeneratedSceneObject || binding.Mode == ScenarioRequirementBindingMode.PrefabInstance)
             && string.IsNullOrWhiteSpace(binding.FactoryIdentifier))
-          diagnostics.Add(Diagnostic("SIR105", "RequirementsSchemaViolation", $"{binding.Mode} requires factoryIdentifier."));
+          diagnostics.Add(Diagnostic("SIR109", "MalformedDeclarationBinding", $"{binding.Mode} requires factoryIdentifier."));
         if (binding != null && binding.Mode == ScenarioRequirementBindingMode.RegistryProvided && string.IsNullOrWhiteSpace(binding.ProviderIdentifier))
-          diagnostics.Add(Diagnostic("SIR105", "RequirementsSchemaViolation", "RegistryProvided requires providerIdentifier."));
+          diagnostics.Add(Diagnostic("SIR109", "MalformedDeclarationBinding", "RegistryProvided requires providerIdentifier."));
         var cardinality = declaration?.Cardinality;
+        // Impossible cardinality is SIR204 in the merge policy; use the same
+        // code here so Import and Compile agree.
         if (cardinality?.Minimum.HasValue == true && cardinality.Maximum.HasValue && cardinality.Maximum.Value < cardinality.Minimum.Value)
-          diagnostics.Add(Diagnostic("SIR105", "RequirementsSchemaViolation", "Cardinality maximum must be greater than or equal to minimum."));
+          diagnostics.Add(Diagnostic("SIR204", "ImpossibleCardinality", "Cardinality maximum must be greater than or equal to minimum."));
         var scale = declaration.Configuration?.Scale;
         if (scale != null && (scale.X <= 0 || scale.Y <= 0 || scale.Z <= 0))
-          diagnostics.Add(Diagnostic("SIR105", "RequirementsSchemaViolation", "Configuration scale axes must be greater than zero."));
+          diagnostics.Add(Diagnostic("SIR109", "MalformedDeclarationBinding", "Configuration scale axes must be greater than zero."));
       }
-      foreach (var suppression in dto.Suppressions ?? new List<ScenarioRequirementSuppressionDTO>())
-        if ((suppression?.Reason?.Trim().Length ?? 0) < 10)
-          diagnostics.Add(Diagnostic("SIR210", "MalformedSuppression", "Suppression reason must contain at least 10 non-padding characters."));
+      // Suppression owner/reason/expiry validation belongs to the compile/merge
+      // phase (SIR210 in the merge policy).  The JSON schema already enforces
+      // reason minLength/owner/expiry at import, so re-checking here would both
+      // duplicate the diagnostic and disagree with the schema on padded reasons.
     }
 
     private static JsonSerializerOptions CreateOptions()

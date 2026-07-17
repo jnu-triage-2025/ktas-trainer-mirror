@@ -80,6 +80,45 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
     GameObject Apply(ScenarioWorldObjectCreationPlan plan, ScenarioWorldObjectFactoryContext context, GameObject existingObject);
   }
 
+  /// <summary>
+  /// Shared configuration validation for world-object factories.  Enforces the
+  /// data-contract §6 rules (position/rotation must be finite, scale axes must
+  /// be greater than zero) and the §10.5 rule that a Generated/Prefab factory
+  /// with a required-but-missing position must be blocked at Apply rather than
+  /// silently created at the origin.  Every factory should call this so an
+  /// unresolved or malformed configuration cannot reach a scene mutation.
+  /// </summary>
+  public static class ScenarioWorldObjectConfigurationValidation
+  {
+    public static bool Validate(ScenarioRequirementGenerationConfiguration configuration, bool positionRequired, out string reason)
+    {
+      reason = string.Empty;
+      if (configuration == null) { reason = "Generation configuration is missing."; return false; }
+      if (positionRequired && !configuration.Position.HasValue)
+      {
+        reason = "Position is required for generated placement but is unresolved.";
+        return false;
+      }
+      if (configuration.Position.HasValue && !IsFinite(configuration.Position.Value)) { reason = "Position must be finite."; return false; }
+      if (configuration.RotationEuler.HasValue && !IsFinite(configuration.RotationEuler.Value)) { reason = "Rotation must be finite."; return false; }
+      if (configuration.Scale.HasValue)
+      {
+        var scale = configuration.Scale.Value;
+        if (!IsFinite(scale) || scale.x <= 0f || scale.y <= 0f || scale.z <= 0f)
+        {
+          reason = "Scale axes must be finite and greater than zero.";
+          return false;
+        }
+      }
+      return true;
+    }
+
+    private static bool IsFinite(Vector3 value)
+      => !(float.IsNaN(value.x) || float.IsInfinity(value.x)
+           || float.IsNaN(value.y) || float.IsInfinity(value.y)
+           || float.IsNaN(value.z) || float.IsInfinity(value.z));
+  }
+
   public static class ScenarioWorldObjectFactoryRegistry
   {
     private static readonly Dictionary<string, IScenarioWorldObjectFactory> Factories = new Dictionary<string, IScenarioWorldObjectFactory>(StringComparer.Ordinal);

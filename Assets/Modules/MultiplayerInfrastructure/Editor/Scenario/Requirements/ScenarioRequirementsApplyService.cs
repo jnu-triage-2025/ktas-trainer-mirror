@@ -53,6 +53,10 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
           {
             if (plan.ExistingMarker == null || plan.ExistingMarker.IsOrphan == false)
               throw new InvalidOperationException("Only an orphaned generated object may be deleted: " + plan.RequirementKey);
+            // Defense in depth: never destroy an object that carries manual
+            // child objects, even if a plan asked to (proposal §12).
+            if (HasManualChildren(plan.ExistingMarker))
+              throw new InvalidOperationException("Generated object has manual child objects and cannot be auto-deleted: " + plan.RequirementKey);
             var deletedScene = plan.ExistingMarker.gameObject.scene;
             Undo.DestroyObjectImmediate(plan.ExistingMarker.gameObject);
             EditorSceneManager.MarkSceneDirty(deletedScene);
@@ -82,6 +86,15 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
         Undo.RevertAllDownToGroup(undoGroup);
         return new ScenarioRequirementsApplyReport(false, applied, changedScenes, ex.Message);
       }
+    }
+
+    private static bool HasManualChildren(ScenarioGeneratedWorldObject marker)
+    {
+      if (marker == null) return false;
+      var root = marker.transform;
+      for (var index = 0; index < root.childCount; index++)
+        if (root.GetChild(index).GetComponent<ScenarioGeneratedWorldObject>() == null) return true;
+      return false;
     }
   }
 }

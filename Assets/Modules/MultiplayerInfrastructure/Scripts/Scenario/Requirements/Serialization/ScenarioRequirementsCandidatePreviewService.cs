@@ -34,6 +34,14 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       ScenarioRequirementCandidatesDocument candidates,
       ScenarioRequirementManifest inferredManifest,
       IEnumerable<ScenarioRequirementKey> approvedKeys)
+      => CreateApprovedDocument(current, candidates, inferredManifest, approvedKeys, null);
+
+    public static ScenarioRequirementsDocument CreateApprovedDocument(
+      ScenarioRequirementsDocument current,
+      ScenarioRequirementCandidatesDocument candidates,
+      ScenarioRequirementManifest inferredManifest,
+      IEnumerable<ScenarioRequirementKey> approvedKeys,
+      ISet<string> allowedFactoryIdentifiers)
     {
       if (current == null) throw new ArgumentNullException(nameof(current));
       if (candidates == null) throw new ArgumentNullException(nameof(candidates));
@@ -54,6 +62,20 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
         if (candidate.SuggestedBinding != null
             && candidate.SuggestedBinding.Mode == ScenarioRequirementBindingMode.RegistryProvided)
           throw new InvalidOperationException($"Candidate '{key}' cannot be approved with RegistryProvided binding because candidates do not declare providerIdentifier.");
+        // An approved Generated/Prefab candidate must resolve to a known factory
+        // (data contract §3, §10.5).  Do not trust the caller's approvedKeys to
+        // have consulted the preview; re-validate the factory here so an unknown
+        // or null factory cannot be written into the canonical sidecar.
+        if (candidate.SuggestedBinding != null
+            && (candidate.SuggestedBinding.Mode == ScenarioRequirementBindingMode.GeneratedSceneObject
+                || candidate.SuggestedBinding.Mode == ScenarioRequirementBindingMode.PrefabInstance))
+        {
+          var factory = candidate.SuggestedBinding.FactoryIdentifier;
+          if (string.IsNullOrWhiteSpace(factory))
+            throw new InvalidOperationException($"Candidate '{key}' cannot be approved: {candidate.SuggestedBinding.Mode} binding requires a factoryIdentifier.");
+          if (allowedFactoryIdentifiers == null || !allowedFactoryIdentifiers.Contains(factory))
+            throw new InvalidOperationException($"Candidate '{key}' cannot be approved: unknown factory '{factory}'.");
+        }
         var applyCandidateFields = existing == null;
         var approvedDeclaration = new ScenarioRequirementDeclarationDTO
         {
@@ -134,13 +156,18 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
         var existing = inferredManifest.Requirements.FirstOrDefault(value => value.Key.Equals(key));
         foreach (var evidence in dto.Evidence ?? new List<ScenarioRequirementEvidenceDTO>())
         {
+          // Data contract §3 requires only that evidence matches the scenario
+          // graph: the node exists, its nodeType matches, and the field is a
+          // canonical external-lookup field.  Do NOT additionally require the
+          // evidence to appear in the inferred occurrence set, which would
+          // reject legitimate override candidates whose real graph field simply
+          // was not captured as an occurrence.
           if (!graph.TryGetNode(evidence.NodeIdentifier, out var node)
               || !string.Equals(node.NodeType.ToString(), evidence.NodeType, StringComparison.Ordinal)
-              || !HasCanonicalLookupField(node, evidence.FieldPath)
-              || (existing != null && !existing.Occurrences.Any(value => value.NodeIdentifier == evidence.NodeIdentifier && value.FieldPath == evidence.FieldPath)))
+              || !HasCanonicalLookupField(node, evidence.FieldPath))
           {
             diagnostics.Add(ScenarioRequirementsLoader.Diagnostic("SIR701", "CandidateEvidenceMismatch",
-              $"Candidate '{key}' evidence '{evidence.NodeIdentifier}:{evidence.FieldPath}' does not match inferred occurrences.", key));
+              $"Candidate '{key}' evidence '{evidence.NodeIdentifier}:{evidence.FieldPath}' does not match the scenario graph.", key));
           }
         }
         var factory = dto.SuggestedBinding?.FactoryIdentifier;
