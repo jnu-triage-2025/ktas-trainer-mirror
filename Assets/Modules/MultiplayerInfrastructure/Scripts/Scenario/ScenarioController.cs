@@ -3248,6 +3248,9 @@ namespace MultiplayerInfrastructure.Scenario
               yield return new WaitForSeconds(waitSeconds);
             }
             break;
+          case ScenarioDisinteractableDialogueNode disinteractableDialogue:
+            yield return ExecuteDisinteractableDialogueNode(disinteractableDialogue);
+            break;
           case ScenarioChoiceNode choice:
             // 브랜치 내 선택지: 전역 커서 대신 선택 결과를 NextOverride 로 전달한다.
             yield return ExecuteChoiceNodeInBranch(choice, context);

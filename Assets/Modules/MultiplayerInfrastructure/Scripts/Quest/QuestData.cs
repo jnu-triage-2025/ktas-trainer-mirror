@@ -125,6 +125,7 @@ namespace MultiplayerInfrastructure.Quest
     public string WaypointIdentifier { get; set; }
     public float ReachDistance { get; set; } = 1f;
     public string DisplayTextContent { get; set; }
+    public string OnCompleteSignalIdentifier { get; set; }
     public int Count { get; set; } = 1;
     public List<QuestCompletionCriteria> Conditions { get; set; } = new();
 
@@ -144,6 +145,7 @@ namespace MultiplayerInfrastructure.Quest
         WaypointIdentifier = WaypointIdentifier,
         ReachDistance = ReachDistance,
         DisplayTextContent = DisplayTextContent,
+        OnCompleteSignalIdentifier = OnCompleteSignalIdentifier,
         Count = Count,
         Progress = includeRuntimeState ? Progress?.Clone() ?? QuestProgressValue.SingleStep : QuestProgressValue.SingleStep,
         Completed = includeRuntimeState && Completed,

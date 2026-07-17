@@ -135,6 +135,9 @@ namespace MultiplayerInfrastructure.Quest
       _quests[cloned.Id] = cloned;
       UpdateQuestCompletionRuntimeState(cloned.Id, cloned.Completed);
 
+      if (isNewQuest)
+        ClearCompletionSignals(GetQuestTasks(cloned));
+
       if (cloned.IsTracked)
       {
         EnsureTracked(cloned.Id, suppressNotify: true);
@@ -362,9 +365,28 @@ namespace MultiplayerInfrastructure.Quest
             || previousTarget != criterion.Progress.Target
             || previousCompleted != criterion.Completed;
         changed |= ApplyEvaluation(criterion.Conditions, evaluation.Children);
+        if (!previousCompleted && criterion.Completed && !string.IsNullOrWhiteSpace(criterion.OnCompleteSignalIdentifier))
+          ScenarioInteractionSignals.Raise(criterion.OnCompleteSignalIdentifier);
       }
 
       return changed;
+    }
+
+    private static void ClearCompletionSignals(IReadOnlyList<QuestCompletionCriteria> criteria)
+    {
+      if (criteria == null)
+        return;
+
+      for (int i = 0; i < criteria.Count; i++)
+      {
+        var criterion = criteria[i];
+        if (criterion == null)
+          continue;
+
+        if (!string.IsNullOrWhiteSpace(criterion.OnCompleteSignalIdentifier))
+          ScenarioInteractionSignals.Clear(criterion.OnCompleteSignalIdentifier);
+        ClearCompletionSignals(criterion.Conditions);
+      }
     }
 
     public static IReadOnlyList<QuestCompletionCriteria> GetQuestTasks(QuestData quest)

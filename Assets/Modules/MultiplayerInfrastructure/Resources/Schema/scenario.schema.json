@@ -495,7 +495,7 @@
               "const": "Dialogue"
             },
             "speakerName": {
-              "type": "string"
+              "type": ["string", "null"]
             },
             "dialogueContent": {
               "type": "string"
@@ -1879,6 +1879,12 @@
           "default": 1
         },
         "DisplayTextContent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "OnCompleteSignalIdentifier": {
           "type": [
             "string",
             "null"

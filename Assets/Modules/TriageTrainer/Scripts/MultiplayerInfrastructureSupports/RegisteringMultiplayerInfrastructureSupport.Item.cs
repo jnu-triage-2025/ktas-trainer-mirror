@@ -88,6 +88,7 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<Syringe5cc>(Syringe5cc.Identifier);
       Registry.RegisterItemDefinition<BloodTransfusionSet>(BloodTransfusionSet.Identifier);
       Registry.RegisterItemDefinition<VitalSet>(VitalSet.Identifier);
+      Registry.RegisterItemDefinition<TutorialDeliveryPackage>(TutorialDeliveryPackage.Identifier);
       Registry.RegisterItemDefinition<WallSuction>(WallSuction.Identifier);
       Registry.RegisterItemDefinition<Yankauer>(Yankauer.Identifier);
 

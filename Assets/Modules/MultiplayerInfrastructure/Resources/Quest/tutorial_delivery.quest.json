@@ -1,0 +1,39 @@
+{
+  "namespace": "",
+  "definitions": [
+    {
+      "identifier": "tutorial-quest-delivery",
+      "title": "택배 가져오기",
+      "description": "택배 보관소에서 택배를 획득해 모자에게 전달하세요.",
+      "questContent": "택배 가져오기",
+      "isTrackable": true,
+      "isAutoComplete": true,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": true,
+      "tasks": [
+        {
+          "type": "WaypointReached",
+          "waypointIdentifier": "delivery-storage-spot",
+          "reachDistance": 1.5,
+          "displayTextContent": "택배 보관소로 가기",
+          "onCompleteSignalIdentifier": "tutorial.quest.delivery.storage.reached",
+          "conditions": []
+        },
+        {
+          "type": "InventoryContains",
+          "itemId": "tutorial_delivery_package",
+          "count": 1,
+          "displayTextContent": "택배 획득하기",
+          "conditions": []
+        },
+        {
+          "type": "InteractionSignalReceived",
+          "signalId": "tutorial.delivery.package.submitted",
+          "displayTextContent": "모자에게 택배 전달하기",
+          "conditions": []
+        }
+      ]
+    }
+  ]
+}
