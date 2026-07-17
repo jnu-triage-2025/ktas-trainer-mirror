@@ -163,7 +163,8 @@ namespace MultiplayerInfrastructure.Scenario.Editor
         "AI candidate evidence preview did not propose a safe override.");
       var approved = ScenarioRequirementsCandidatePreviewService.CreateApprovedDocument(
         sidecar.Document, candidates.Document, ScenarioRequirementCompiler.CompileInferred(graph),
-        new[] { new ScenarioRequirementKey(ScenarioRequirementKind.SpatialAnchor, "room") });
+        new[] { new ScenarioRequirementKey(ScenarioRequirementKind.SpatialAnchor, "room") },
+        new HashSet<string>(StringComparer.Ordinal) { "mi.waypoint-anchor" });
       var firstWrite = ScenarioRequirementsWriter.WriteUtf8(approved);
       var secondWrite = ScenarioRequirementsWriter.WriteUtf8(approved);
       Require(firstWrite.SequenceEqual(secondWrite), "Approved sidecar serialization is not byte deterministic.");

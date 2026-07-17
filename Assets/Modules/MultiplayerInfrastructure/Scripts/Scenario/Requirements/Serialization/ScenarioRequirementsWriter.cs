@@ -55,7 +55,11 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       if (value.Scope.HasValue) writer.WriteString("scope", value.Scope.Value.ToString());
       if (value.Authority.HasValue) writer.WriteString("authority", value.Authority.Value.ToString());
       if (value.Availability.HasValue) writer.WriteString("availability", value.Availability.Value.ToString());
-      if (value.Cardinality != null) { writer.WritePropertyName("cardinality"); writer.WriteStartObject(); if (value.Cardinality.Minimum.HasValue) writer.WriteNumber("minimum", value.Cardinality.Minimum.Value); if (value.Cardinality.Maximum.HasValue) writer.WriteNumber("maximum", value.Cardinality.Maximum.Value); else writer.WriteNull("maximum"); writer.WriteEndObject(); }
+      // Only emit fields that were actually present so a load -> write round
+      // trip of an externally authored sidecar is byte-identical (data contract
+      // §13).  Writing an implicit "maximum": null would mutate a file that
+      // omitted the key and break source-hash/stale comparisons.
+      if (value.Cardinality != null) { writer.WritePropertyName("cardinality"); writer.WriteStartObject(); if (value.Cardinality.Minimum.HasValue) writer.WriteNumber("minimum", value.Cardinality.Minimum.Value); if (value.Cardinality.Maximum.HasValue) writer.WriteNumber("maximum", value.Cardinality.Maximum.Value); writer.WriteEndObject(); }
       if (value.MustProve.HasValue) writer.WriteBoolean("mustProve", value.MustProve.Value);
       if (value.OccurrenceSelector != null) { writer.WritePropertyName("occurrenceSelector"); writer.WriteStartObject(); writer.WriteString("nodeIdentifier", value.OccurrenceSelector.NodeIdentifier); writer.WriteString("fieldPath", value.OccurrenceSelector.FieldPath); writer.WriteEndObject(); }
       if (value.Binding != null) { writer.WritePropertyName("binding"); writer.WriteStartObject(); writer.WriteString("mode", value.Binding.Mode.ToString()); if (!string.IsNullOrWhiteSpace(value.Binding.FactoryIdentifier)) writer.WriteString("factoryIdentifier", value.Binding.FactoryIdentifier); if (!string.IsNullOrWhiteSpace(value.Binding.ProviderIdentifier)) writer.WriteString("providerIdentifier", value.Binding.ProviderIdentifier); writer.WriteEndObject(); }

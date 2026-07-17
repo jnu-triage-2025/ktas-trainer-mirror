@@ -20,7 +20,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
       reason = string.Empty;
       if (requirement.Kind != ScenarioRequirementKind.SpatialAnchor) { reason = "Factory only supports SpatialAnchor."; return false; }
       if (configuration == null || string.IsNullOrWhiteSpace(configuration.TargetScenePath)) { reason = "Target scene is required."; return false; }
-      return true;
+      return ScenarioWorldObjectConfigurationValidation.Validate(configuration, positionRequired: true, out reason);
     }
 
     public GameObject Apply(ScenarioWorldObjectCreationPlan plan, ScenarioWorldObjectFactoryContext context, GameObject existingObject)
