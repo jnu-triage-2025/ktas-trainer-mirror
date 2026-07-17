@@ -631,7 +631,11 @@ OverworldGameObjectInitializer -> project declaration/factory migration 대상
 - cross-scene serialized reference를 새로 지원하지 않는다.
 - FishNet scene management를 대체하지 않는다.
 - runtime signal이 미래에 반드시 발생할 것을 정적으로 증명하지 않는다.
-- graph edge 무결성 검증을 ingame requirement로 혼합하지 않는다. 이는 별도 structural validation이다.
+- graph edge 무결성 검증 자체를 requirement occurrence로 변환하거나 capability/cardinality 판정에
+  혼합하지 않는다. 이는 별도 structural validation이다. 다만 malformed graph에서 strict manifest를
+  신뢰할 수 없으므로 structural Error는 compiled manifest의 유효성을 무효화하고 build/runtime strict
+  gate에서 함께 보고한다. structural diagnostics는 requirement diagnostics(`SIR`)와 구분되는
+  `SGR` namespace를 사용한다.
 - Registry 전체를 이 기능 안에서 즉시 리팩터링하지 않는다.
 - build validation 중 asset 생성, 다운로드 또는 자동 저장을 하지 않는다.
 - `ScenarioDevStubSpawner`의 이름 기반 trigger 추측을 production 생성 규칙으로 사용하지 않는다.

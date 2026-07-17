@@ -36,6 +36,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
   public sealed class ScenarioWorldObjectCreationPlan
   {
     public string PlanIdentity { get; }
+    public string ManifestFingerprint { get; }
     public string ScenarioIdentifier { get; }
     public ScenarioRequirementKey RequirementKey { get; }
     public ScenarioWorldObjectOperationKind Operation { get; }
@@ -50,8 +51,8 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
     public bool IsBlocked => Operation == ScenarioWorldObjectOperationKind.Blocked;
     public IReadOnlyList<ScenarioWorldObjectFieldChange> Changes { get; }
     public ScenarioGeneratedWorldObject ExistingMarker { get; }
-    internal ScenarioWorldObjectCreationPlan(string planIdentity, string scenarioIdentifier, ScenarioRequirementKey key, ScenarioWorldObjectOperationKind operation, string targetScenePath, string targetSceneGuid, ScenarioRequirementScope role, string factoryIdentifier, int factoryVersion, string existingObjectIdentity, string reason, ScenarioWorldObjectPlanRisk risk, IEnumerable<ScenarioWorldObjectFieldChange> changes, ScenarioGeneratedWorldObject existingMarker)
-    { PlanIdentity = planIdentity; ScenarioIdentifier = scenarioIdentifier ?? string.Empty; RequirementKey = key; Operation = operation; TargetScenePath = targetScenePath; TargetSceneGuid = targetSceneGuid; TargetSceneRole = role; FactoryIdentifier = factoryIdentifier; FactoryVersion = factoryVersion; ExistingObjectIdentity = existingObjectIdentity; Reason = reason; Risk = risk; Changes = new ReadOnlyCollection<ScenarioWorldObjectFieldChange>((changes ?? Array.Empty<ScenarioWorldObjectFieldChange>()).ToArray()); ExistingMarker = existingMarker; }
+    internal ScenarioWorldObjectCreationPlan(string planIdentity, string scenarioIdentifier, ScenarioRequirementKey key, ScenarioWorldObjectOperationKind operation, string targetScenePath, string targetSceneGuid, ScenarioRequirementScope role, string factoryIdentifier, int factoryVersion, string existingObjectIdentity, string reason, ScenarioWorldObjectPlanRisk risk, IEnumerable<ScenarioWorldObjectFieldChange> changes, ScenarioGeneratedWorldObject existingMarker, string manifestFingerprint = null)
+    { PlanIdentity = planIdentity; ManifestFingerprint = manifestFingerprint ?? string.Empty; ScenarioIdentifier = scenarioIdentifier ?? string.Empty; RequirementKey = key; Operation = operation; TargetScenePath = targetScenePath; TargetSceneGuid = targetSceneGuid; TargetSceneRole = role; FactoryIdentifier = factoryIdentifier; FactoryVersion = factoryVersion; ExistingObjectIdentity = existingObjectIdentity; Reason = reason; Risk = risk; Changes = new ReadOnlyCollection<ScenarioWorldObjectFieldChange>((changes ?? Array.Empty<ScenarioWorldObjectFieldChange>()).ToArray()); ExistingMarker = existingMarker; }
   }
 
   public sealed class ScenarioWorldObjectCreationPlanSet

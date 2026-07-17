@@ -43,11 +43,22 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
     {
       if (_initialized) return;
       _initialized = true;
-      foreach (var asset in Resources.LoadAll<TextAsset>("Scenario").OrderBy(value => value.name, StringComparer.Ordinal))
+      var scenarioAssets = Resources.LoadAll<TextAsset>("Scenario");
+      foreach (var asset in scenarioAssets.OrderBy(value => value.name, StringComparer.Ordinal))
       {
         if (asset == null || !asset.name.EndsWith(".scenario", StringComparison.Ordinal)) continue;
         var identifier = asset.name.Substring(0, asset.name.Length - ".scenario".Length);
-        var sidecar = Resources.Load<TextAsset>("Scenario/" + asset.name + ".requirements");
+        // Resources.LoadAll is recursive beneath Scenario.  Resolve siblings
+        // from that same set instead of assuming every scenario lives directly
+        // under Resources/Scenario; nested scenario folders otherwise lose
+        // their sidecar at runtime.
+        var sidecars = scenarioAssets.Where(value => value != null && value.name == asset.name + ".requirements").ToArray();
+        if (sidecars.Length > 1)
+        {
+          DiscoveryDiagnostics.Add(Diagnostic("SIR613", "AmbiguousRuntimeSidecar", $"Multiple requirements sidecars match Resources scenario '{asset.name}'."));
+          continue;
+        }
+        var sidecar = sidecars.SingleOrDefault();
         var diagnostics = new List<ScenarioRequirementDiagnostic>();
         try
         {

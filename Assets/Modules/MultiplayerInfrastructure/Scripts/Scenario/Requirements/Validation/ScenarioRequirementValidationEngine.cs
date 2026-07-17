@@ -8,7 +8,11 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
   {
     public static ScenarioRequirementValidationReport ValidateRuntime(ScenarioRequirementManifest manifest, ScenarioRequirementProviderSnapshot snapshot, ScenarioRequirementSceneComposition composition)
     {
-      var report = Validate(manifest, snapshot, composition);
+      // Scene assets cannot prove a fixed network authority, but runtime is
+      // already executing in a concrete authority context.  The caller filters
+      // non-applicable requirements; applicable ones must be checked against
+      // the live provider snapshot rather than downgraded to Indeterminate.
+      var report = ValidateInternal(manifest, snapshot, composition, proveFixedAuthority: true);
       var results = report.Results.Select(result =>
         result.Status == ScenarioRequirementValidationStatus.Inactive
           ? new ScenarioRequirementValidationResult(result.Requirement, ScenarioRequirementValidationStatus.NotReady, result.Providers, result.Diagnostics.Concat(new[] { new ScenarioRequirementValidationDiagnostic("SIR413", "ProviderNotReady", ScenarioRequirementDiagnosticSeverity.Warning, "Runtime provider is not active or enabled.", result.Requirement.Key) }))
@@ -16,6 +20,9 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       return new ScenarioRequirementValidationReport(manifest.ScenarioIdentifier, results, report.Diagnostics);
     }
     public static ScenarioRequirementValidationReport Validate(ScenarioRequirementManifest manifest, ScenarioRequirementProviderSnapshot snapshot, ScenarioRequirementSceneComposition composition)
+      => ValidateInternal(manifest, snapshot, composition, proveFixedAuthority: false);
+
+    private static ScenarioRequirementValidationReport ValidateInternal(ScenarioRequirementManifest manifest, ScenarioRequirementProviderSnapshot snapshot, ScenarioRequirementSceneComposition composition, bool proveFixedAuthority)
     {
       if (manifest == null) throw new ArgumentNullException(nameof(manifest));
       if (snapshot == null) throw new ArgumentNullException(nameof(snapshot));
@@ -24,16 +31,17 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       var diagnostics = new List<ScenarioRequirementValidationDiagnostic>(snapshot.Diagnostics);
       foreach (var requirement in manifest.Requirements)
       {
-        var result = ValidateRequirement(requirement, snapshot, composition);
+        var result = ValidateRequirement(requirement, snapshot, composition, proveFixedAuthority);
         results.Add(result);
         diagnostics.AddRange(result.Diagnostics);
       }
       return new ScenarioRequirementValidationReport(manifest.ScenarioIdentifier, results, diagnostics);
     }
 
-    private static ScenarioRequirementValidationResult ValidateRequirement(ScenarioRequirementDescriptor requirement, ScenarioRequirementProviderSnapshot snapshot, ScenarioRequirementSceneComposition composition)
+    private static ScenarioRequirementValidationResult ValidateRequirement(ScenarioRequirementDescriptor requirement, ScenarioRequirementProviderSnapshot snapshot, ScenarioRequirementSceneComposition composition, bool proveFixedAuthority)
     {
-      if (requirement.IsSuppressed) return Result(requirement, ScenarioRequirementValidationStatus.Suppressed);
+      if (requirement.IsSuppressed && requirement.Suppression.ExpiresOnUtc >= DateTime.UtcNow.Date)
+        return Result(requirement, ScenarioRequirementValidationStatus.Suppressed);
       if (requirement.EffectiveAvailability == ScenarioRequirementAvailability.NotConsumed) return Result(requirement, ScenarioRequirementValidationStatus.NotConsumed);
       if (requirement.EffectiveAvailability == ScenarioRequirementAvailability.OptionalFallback && requirement.Cardinality.Minimum == 0)
       {
@@ -42,7 +50,8 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       }
       if (requirement.Occurrences.Count > 0 && requirement.Occurrences.All(value => value.Direction == ScenarioRequirementDirection.Produces)) return Indeterminate(requirement, "SIR410", "Producer-only requirement is not scene-cardinality validated.");
       if (requirement.Scope == ScenarioRequirementScope.DontDestroyOnLoad) return Indeterminate(requirement, "SIR311", "DontDestroyOnLoad scope cannot be proven from scene assets.");
-      if (requirement.Authority != ScenarioRequirementAuthority.Any) return Indeterminate(requirement, "SIR411", "Fixed network authority cannot be proven from scene evidence.");
+      if (!proveFixedAuthority && requirement.Authority != ScenarioRequirementAuthority.Any)
+        return Indeterminate(requirement, "SIR411", "Fixed network authority cannot be proven from scene evidence.");
 
       var allKeyMatches = snapshot.Providers.Where(value => value.Key.Equals(requirement.Key)).ToArray();
       var inScope = allKeyMatches.Where(value => IsInScope(requirement.Scope, value.SceneRole)).ToArray();

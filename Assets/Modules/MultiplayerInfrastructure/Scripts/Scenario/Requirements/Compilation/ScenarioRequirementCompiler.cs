@@ -690,9 +690,10 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
         case RegistryType.SpawnPoint: kind = ScenarioRequirementKind.SpawnPoint; break;
         case RegistryType.Entity: kind = ScenarioRequirementKind.Entity; capabilities = new[] { ScenarioRequirementCapability.RegisteredEntity }; break;
         case RegistryType.RuntimeState:
-          kind = identifier != null && identifier.Trim().StartsWith("sig.", StringComparison.Ordinal)
-            ? ScenarioRequirementKind.RuntimeSignal
-            : ScenarioRequirementKind.RegistryEntry;
+          // RuntimeState is gameplay-produced state regardless of its naming
+          // convention.  A missing `sig.` prefix must not turn it into a
+          // static exactly-one registry requirement.
+          kind = ScenarioRequirementKind.RuntimeSignal;
           supply = ScenarioRequirementExpectedSupply.Gameplay;
           break;
         case RegistryType.InteractableEntity: kind = ScenarioRequirementKind.Interactable; capabilities = new[] { ScenarioRequirementCapability.Interactable }; break;

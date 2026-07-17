@@ -71,7 +71,7 @@ namespace TriageTrainer.Scenario.Requirements.Editor
       if (context.Configuration.Scale.HasValue) target.transform.localScale = context.Configuration.Scale.Value;
       var marker = target.GetComponent<ScenarioGeneratedWorldObject>() ?? Undo.AddComponent<ScenarioGeneratedWorldObject>(target);
       Undo.RecordObject(marker, "Configure Triage Generated Marker");
-      marker.Configure(plan.ScenarioIdentifier, plan.PlanIdentity, context.Composition.Identifier, plan.RequirementKey, Identifier, Version, plan.TargetSceneGuid, plan.TargetSceneRole, plan.PlanIdentity);
+      marker.Configure(plan.ScenarioIdentifier, plan.ManifestFingerprint, context.Composition.Identifier, plan.RequirementKey, Identifier, Version, plan.TargetSceneGuid, plan.TargetSceneRole, plan.PlanIdentity);
       PrefabUtility.RecordPrefabInstancePropertyModifications(target.transform);
       PrefabUtility.RecordPrefabInstancePropertyModifications(marker);
       EditorUtility.SetDirty(target);

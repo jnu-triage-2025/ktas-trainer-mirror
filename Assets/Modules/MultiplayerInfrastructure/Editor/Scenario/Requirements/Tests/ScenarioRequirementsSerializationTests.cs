@@ -31,6 +31,17 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
     }
 
     [Test]
+    public void SchemaRejectsUnknownEnumAndUnknownProperty()
+    {
+      const string json = "{\"format\":\"scenario-ingame-requirements\",\"schemaVersion\":1,\"scenarioIdentifier\":\"test\",\"source\":{\"scenarioSha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"declarations\":[{\"selector\":{\"kind\":\"NotAKind\",\"identifier\":\"x\"},\"operation\":\"Override\",\"unexpected\":true}],\"suppressions\":[]}";
+
+      var result = ScenarioRequirementsLoader.LoadSidecar(json);
+
+      Assert.That(result.IsValid, Is.False);
+      Assert.That(result.Diagnostics.Any(value => value.Code == "SIR105"), Is.True);
+    }
+
+    [Test]
     public void StaleSourceHashProducesWarningDuringCompile()
     {
       var graph = new MultiplayerInfrastructure.Scenario.ScenarioGraph { Identifier = "stale-test" };

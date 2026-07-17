@@ -58,7 +58,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       }
       catch (JsonException ex)
       {
-        diagnostics.Add(Diagnostic("SIR104", "MalformedRequirementsJson", ex.Message));
+        diagnostics.Add(DeserializeDiagnostic(ex));
         return new ScenarioRequirementsLoadResult<ScenarioRequirementsDocument>(null, Sort(diagnostics));
       }
     }
@@ -74,7 +74,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       }
       catch (JsonException ex)
       {
-        diagnostics.Add(Diagnostic("SIR104", "MalformedRequirementsJson", ex.Message));
+        diagnostics.Add(DeserializeDiagnostic(ex));
         return new ScenarioRequirementsLoadResult<ScenarioRequirementCandidatesDocument>(null, Sort(diagnostics));
       }
     }
@@ -135,12 +135,14 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       foreach (var declaration in dto.Declarations)
       {
         var binding = declaration?.Binding;
-        if (binding == null) continue;
-        if ((binding.Mode == ScenarioRequirementBindingMode.GeneratedSceneObject || binding.Mode == ScenarioRequirementBindingMode.PrefabInstance)
+        if (binding != null && (binding.Mode == ScenarioRequirementBindingMode.GeneratedSceneObject || binding.Mode == ScenarioRequirementBindingMode.PrefabInstance)
             && string.IsNullOrWhiteSpace(binding.FactoryIdentifier))
           diagnostics.Add(Diagnostic("SIR105", "RequirementsSchemaViolation", $"{binding.Mode} requires factoryIdentifier."));
-        if (binding.Mode == ScenarioRequirementBindingMode.RegistryProvided && string.IsNullOrWhiteSpace(binding.ProviderIdentifier))
+        if (binding != null && binding.Mode == ScenarioRequirementBindingMode.RegistryProvided && string.IsNullOrWhiteSpace(binding.ProviderIdentifier))
           diagnostics.Add(Diagnostic("SIR105", "RequirementsSchemaViolation", "RegistryProvided requires providerIdentifier."));
+        var cardinality = declaration?.Cardinality;
+        if (cardinality?.Minimum.HasValue == true && cardinality.Maximum.HasValue && cardinality.Maximum.Value < cardinality.Minimum.Value)
+          diagnostics.Add(Diagnostic("SIR105", "RequirementsSchemaViolation", "Cardinality maximum must be greater than or equal to minimum."));
         var scale = declaration.Configuration?.Scale;
         if (scale != null && (scale.X <= 0 || scale.Y <= 0 || scale.Z <= 0))
           diagnostics.Add(Diagnostic("SIR105", "RequirementsSchemaViolation", "Configuration scale axes must be greater than zero."));
@@ -155,6 +157,20 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = false, AllowTrailingCommas = false, ReadCommentHandling = JsonCommentHandling.Disallow };
       options.Converters.Add(new JsonStringEnumConverter(null, false));
       return options;
+    }
+
+    private static ScenarioRequirementDiagnostic DeserializeDiagnostic(JsonException exception)
+    {
+      // The JSON schema normally catches unknown enum strings.  Keep the
+      // deserialization boundary precise as well: custom callers or future
+      // schema evolution must not collapse an enum contract violation into a
+      // generic malformed-JSON diagnostic.
+      var message = exception?.Message ?? "Requirements JSON could not be deserialized.";
+      var isEnumConversion = message.IndexOf("could not be converted", StringComparison.OrdinalIgnoreCase) >= 0
+                             || message.IndexOf("not a supported", StringComparison.OrdinalIgnoreCase) >= 0;
+      return isEnumConversion
+        ? Diagnostic("SIR108", "UnknownRequirementsEnum", message)
+        : Diagnostic("SIR104", "MalformedRequirementsJson", message);
     }
 
     internal static ScenarioRequirementDiagnostic Diagnostic(string code, string name, string message, ScenarioRequirementKey? key = null)

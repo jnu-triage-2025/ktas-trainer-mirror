@@ -18,12 +18,14 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
     [SerializeField] private bool _hideSatisfied = true;
     private Vector2 _scroll;
     private ScenarioRequirementValidationReport _report;
+    private ScenarioRequirementManifest _manifest;
     private ScenarioWorldObjectCreationPlanSet _plan;
     private ScenarioRequirementKey _selectedBindingKey;
     private UnityEngine.Object _selectedBindingTarget;
     private readonly Dictionary<ScenarioRequirementKey, ScenarioRequirementGenerationConfiguration> _generationConfigurations = new Dictionary<ScenarioRequirementKey, ScenarioRequirementGenerationConfiguration>();
     private readonly Dictionary<ScenarioRequirementKey, Vector3> _generationPositions = new Dictionary<ScenarioRequirementKey, Vector3>();
     private readonly Dictionary<ScenarioRequirementKey, string> _generationScenes = new Dictionary<ScenarioRequirementKey, string>();
+    private readonly HashSet<string> _approvedGeneratedDeletions = new HashSet<string>(StringComparer.Ordinal);
     private string _error;
 
     [MenuItem("Tools/Multiplayer Infrastructure/Scenario Ingame Requirements")]
@@ -53,7 +55,16 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
       {
         EditorGUILayout.LabelField($"Generation plan: {_plan.Plans.Count}, applyable: {_plan.CanApply}");
         foreach (var plan in _plan.Plans)
+        {
           EditorGUILayout.HelpBox($"{plan.Operation} {plan.RequirementKey}: {plan.Reason}", plan.IsBlocked ? MessageType.Error : plan.Risk == ScenarioWorldObjectPlanRisk.Warning ? MessageType.Warning : MessageType.Info);
+          if (plan.ExistingMarker != null && plan.ExistingMarker.IsOrphan)
+          {
+            var approved = _approvedGeneratedDeletions.Contains(plan.ExistingMarker.Identity);
+            var updated = EditorGUILayout.ToggleLeft($"Approve permanent deletion: {plan.ExistingMarker.Identity}", approved);
+            if (updated) _approvedGeneratedDeletions.Add(plan.ExistingMarker.Identity);
+            else _approvedGeneratedDeletions.Remove(plan.ExistingMarker.Identity);
+          }
+        }
       }
       if (_report != null) DrawGenerationConfigurationEditor();
       _scroll = EditorGUILayout.BeginScrollView(_scroll);
@@ -99,6 +110,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
           sidecar = loaded.Document;
         }
         var manifest = ScenarioRequirementCompiler.Compile(graph, sourceBytes, sidecar, new ScenarioRequirementCompilationContext(DateTime.UtcNow));
+        _manifest = manifest;
         var scenes = GetCompositionScenes();
         var composition = new ScenarioRequirementSceneComposition("open-scenes", scenes);
         var snapshot = ScenarioRequirementsSceneScanner.Scan(manifest, composition);
@@ -108,6 +120,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
       catch (Exception ex)
       {
         _report = null;
+        _manifest = null;
         _error = ex.Message;
       }
     }
@@ -117,7 +130,9 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
       if (_report == null) return;
       var composition = new ScenarioRequirementSceneComposition(_compositionProfile != null ? _compositionProfile.Identifier : "open-scenes", GetCompositionScenes());
       RefreshGenerationConfigurations();
-      _plan = ScenarioRequirementsApplyPlanner.CreatePlan(_report.ScenarioIdentifier, _report.Results.Select(value => value.Requirement), composition, _generationConfigurations);
+      _plan = _manifest != null
+        ? ScenarioRequirementsApplyPlanner.CreatePlan(_manifest, composition, _generationConfigurations, _approvedGeneratedDeletions)
+        : ScenarioRequirementsApplyPlanner.CreatePlan(_report.ScenarioIdentifier, _report.Results.Select(value => value.Requirement), composition, _generationConfigurations);
     }
 
     private void ApplyPlan()

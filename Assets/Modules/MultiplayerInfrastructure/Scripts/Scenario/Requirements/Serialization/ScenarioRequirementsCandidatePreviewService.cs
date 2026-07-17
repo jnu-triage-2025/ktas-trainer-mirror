@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using MultiplayerInfrastructure.Scenario.Preflight;
 
 namespace MultiplayerInfrastructure.Scenario.Requirements
 {
@@ -43,7 +44,8 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       var declarations = (current.DTO.Declarations ?? new List<ScenarioRequirementDeclarationDTO>()).ToList();
       foreach (var candidate in candidates.DTO.Candidates ?? new List<ScenarioRequirementCandidateDTO>())
       {
-        var key = new ScenarioRequirementKey(candidate.Kind, candidate.Identifier.Trim());
+        if (!TryCreateKey(candidate, out var key))
+          throw new InvalidOperationException("Candidate identifier is null, empty, or whitespace. LoadCandidates must succeed before approval.");
         if (!approved.Contains(key)) continue;
         var existingIndex = declarations.FindIndex(value => value.Selector.Kind == key.Kind
           && string.Equals(value.Selector.Identifier.Trim(), key.Identifier, StringComparison.Ordinal)
@@ -52,23 +54,21 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
         if (candidate.SuggestedBinding != null
             && candidate.SuggestedBinding.Mode == ScenarioRequirementBindingMode.RegistryProvided)
           throw new InvalidOperationException($"Candidate '{key}' cannot be approved with RegistryProvided binding because candidates do not declare providerIdentifier.");
-        if (candidate.SuggestedBinding != null && existing?.Binding != null
-            && (existing.Binding.Mode != candidate.SuggestedBinding.Mode
-                || !string.Equals(existing.Binding.FactoryIdentifier, candidate.SuggestedBinding.FactoryIdentifier, StringComparison.Ordinal)))
-          throw new InvalidOperationException($"Candidate '{key}' conflicts with the existing binding and must be resolved manually.");
+        var applyCandidateFields = existing == null;
         var approvedDeclaration = new ScenarioRequirementDeclarationDTO
         {
           Selector = new ScenarioRequirementSelectorDTO { Kind = key.Kind, Identifier = key.Identifier },
           Operation = existing?.Operation ?? (inferredManifest.Requirements.Any(value => value.Key.Equals(key))
             ? ScenarioRequirementDeclarationOperation.Override : ScenarioRequirementDeclarationOperation.Declare),
-          Capabilities = (existing?.Capabilities ?? new List<ScenarioRequirementCapability>())
-            .Concat(candidate.Capabilities ?? new List<ScenarioRequirementCapability>()).Distinct().OrderBy(value => value).ToList(),
-          Scope = candidate.SuggestedBinding?.Scope ?? existing?.Scope,
-          Authority = candidate.SuggestedBinding?.Authority ?? existing?.Authority,
+          // Approval may introduce a new declaration, but it must never
+          // silently rewrite an already canonical declaration.
+          Capabilities = applyCandidateFields ? (candidate.Capabilities ?? new List<ScenarioRequirementCapability>()).Distinct().OrderBy(value => value).ToList() : (existing.Capabilities ?? new List<ScenarioRequirementCapability>()).ToList(),
+          Scope = applyCandidateFields ? candidate.SuggestedBinding?.Scope : existing.Scope,
+          Authority = applyCandidateFields ? candidate.SuggestedBinding?.Authority : existing.Authority,
           Availability = existing?.Availability,
           Cardinality = existing?.Cardinality,
           MustProve = existing?.MustProve,
-          Binding = candidate.SuggestedBinding == null ? existing?.Binding : new ScenarioRequirementBindingDTO
+          Binding = !applyCandidateFields ? existing.Binding : candidate.SuggestedBinding == null ? null : new ScenarioRequirementBindingDTO
           {
             Mode = candidate.SuggestedBinding.Mode,
             FactoryIdentifier = candidate.SuggestedBinding.FactoryIdentifier
@@ -102,15 +102,30 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       var result = new List<ScenarioRequirementCandidatePreview>();
       var duplicateKeys = new HashSet<ScenarioRequirementKey>();
       var seenKeys = new HashSet<ScenarioRequirementKey>();
+      var candidateIndex = 0;
       foreach (var candidate in document.DTO.Candidates ?? new List<ScenarioRequirementCandidateDTO>())
       {
-        var candidateKey = new ScenarioRequirementKey(candidate.Kind, candidate.Identifier.Trim());
+        if (!TryCreateKey(candidate, out var candidateKey))
+        {
+          candidateIndex++;
+          continue;
+        }
         if (!seenKeys.Add(candidateKey)) duplicateKeys.Add(candidateKey);
+        candidateIndex++;
       }
+      candidateIndex = 0;
       foreach (var dto in document.DTO.Candidates ?? new List<ScenarioRequirementCandidateDTO>())
       {
-        var key = new ScenarioRequirementKey(dto.Kind, dto.Identifier.Trim());
+        var hasValidKey = TryCreateKey(dto, out var key);
+        if (!hasValidKey) key = new ScenarioRequirementKey(ScenarioRequirementKind.RuntimeSignal, "invalid-candidate-" + candidateIndex);
         var diagnostics = new List<ScenarioRequirementDiagnostic>();
+        if (!hasValidKey)
+        {
+          diagnostics.Add(ScenarioRequirementsLoader.Diagnostic("SIR700", "InvalidCandidateIdentifier", "Candidate identifier is null, empty, or whitespace.", key));
+          result.Add(new ScenarioRequirementCandidatePreview(key, ScenarioRequirementCandidateDisposition.Invalid, ScenarioRequirementDeclarationOperation.Declare, 0d, diagnostics));
+          candidateIndex++;
+          continue;
+        }
         if (!string.Equals(document.ScenarioIdentifier, graph.Identifier, StringComparison.Ordinal)
             || !string.Equals(document.ScenarioIdentifier, inferredManifest.ScenarioIdentifier, StringComparison.Ordinal))
           diagnostics.Add(ScenarioRequirementsLoader.Diagnostic("SIR106", "ScenarioIdentifierMismatch", "Candidate scenarioIdentifier does not match the graph.", key));
@@ -121,8 +136,8 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
         {
           if (!graph.TryGetNode(evidence.NodeIdentifier, out var node)
               || !string.Equals(node.NodeType.ToString(), evidence.NodeType, StringComparison.Ordinal)
-              || existing == null
-              || !existing.Occurrences.Any(value => value.NodeIdentifier == evidence.NodeIdentifier && value.FieldPath == evidence.FieldPath))
+              || !HasCanonicalLookupField(node, evidence.FieldPath)
+              || (existing != null && !existing.Occurrences.Any(value => value.NodeIdentifier == evidence.NodeIdentifier && value.FieldPath == evidence.FieldPath)))
           {
             diagnostics.Add(ScenarioRequirementsLoader.Diagnostic("SIR701", "CandidateEvidenceMismatch",
               $"Candidate '{key}' evidence '{evidence.NodeIdentifier}:{evidence.FieldPath}' does not match inferred occurrences.", key));
@@ -140,8 +155,26 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
           existing == null ? ScenarioRequirementDeclarationOperation.Declare : ScenarioRequirementDeclarationOperation.Override,
           dto.Confidence,
           diagnostics));
+        candidateIndex++;
       }
       return new ScenarioRequirementCandidatePreviewResult(result);
+    }
+
+    private static bool HasCanonicalLookupField(IScenarioNode node, string fieldPath)
+    {
+      if (node == null || string.IsNullOrWhiteSpace(fieldPath)
+          || !ScenarioNodeRuntimeLookupRegistry.TryGet(node.NodeType, out var registration))
+        return false;
+      return registration.Lookups.Any(lookup => lookup.Classification == ScenarioRuntimeLookupClassification.External
+                                                && string.Equals(lookup.FieldPath, fieldPath, StringComparison.Ordinal));
+    }
+
+    private static bool TryCreateKey(ScenarioRequirementCandidateDTO candidate, out ScenarioRequirementKey key)
+    {
+      key = default;
+      if (candidate == null || string.IsNullOrWhiteSpace(candidate.Identifier)) return false;
+      key = new ScenarioRequirementKey(candidate.Kind, candidate.Identifier.Trim());
+      return true;
     }
   }
 }

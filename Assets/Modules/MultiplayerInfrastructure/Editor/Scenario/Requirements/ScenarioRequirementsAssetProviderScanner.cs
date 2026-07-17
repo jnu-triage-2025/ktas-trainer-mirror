@@ -15,6 +15,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
       List<ScenarioRequirementValidationDiagnostic> diagnostics,
       IDictionary<ScenarioRequirementKind, ScenarioRequirementEvidenceCompleteness> completeness)
     {
+      AddStaticCodeProviders(providers, diagnostics, completeness);
       foreach (var requirement in manifest.Requirements)
       {
         switch (requirement.Kind)
@@ -37,6 +38,52 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
           case ScenarioRequirementKind.QuestDefinition:
             AddQuestDefinition(requirement, providers, completeness);
             break;
+        }
+      }
+    }
+
+    private static void AddStaticCodeProviders(
+      List<ScenarioRequirementProvider> providers,
+      List<ScenarioRequirementValidationDiagnostic> diagnostics,
+      IDictionary<ScenarioRequirementKind, ScenarioRequirementEvidenceCompleteness> completeness)
+    {
+      // Static providers are authored assets/catalogs, never live registry
+      // state.  Enumerating them is therefore safe during build validation.
+      foreach (var type in TypeCache.GetTypesDerivedFrom<IScenarioRequirementStaticProvider>()
+                 .Where(value => value != null && !value.IsAbstract && typeof(ScriptableObject).IsAssignableFrom(value))
+                 .OrderBy(value => value.FullName, StringComparer.Ordinal))
+      {
+        foreach (var guid in AssetDatabase.FindAssets("t:" + type.Name).OrderBy(value => value, StringComparer.Ordinal))
+        {
+          var path = AssetDatabase.GUIDToAssetPath(guid);
+          var asset = AssetDatabase.LoadAssetAtPath(path, type) as IScenarioRequirementStaticProvider;
+          if (asset == null) continue;
+          try
+          {
+            foreach (var entry in asset.GetStaticProviders() ?? Array.Empty<ScenarioRequirementStaticProviderEntry>())
+            {
+              if (entry == null) continue;
+              var identity = "static:" + guid + ":" + (string.IsNullOrWhiteSpace(entry.ProviderIdentifier) ? entry.Key.ToString() : entry.ProviderIdentifier);
+              providers.Add(new ScenarioRequirementProvider(
+                identity,
+                entry.Key,
+                path,
+                ScenarioRequirementScope.AnyLoadedScene,
+                path,
+                entry.Capabilities,
+                true,
+                true,
+                true,
+                ScenarioRequirementProviderOrigin.ProjectContributor));
+              // A catalog can prove its declared entry exists, but cannot prove
+              // that no runtime-only provider shares the same identity.
+              completeness[entry.Key.Kind] = ScenarioRequirementEvidenceCompleteness.Partial;
+            }
+          }
+          catch (Exception ex)
+          {
+            diagnostics.Add(new ScenarioRequirementValidationDiagnostic("SIR314", "StaticProviderEnumerationFailed", ScenarioRequirementDiagnosticSeverity.Error, $"Static provider '{path}' failed to enumerate: {ex.Message}", scenePath: path));
+          }
         }
       }
     }

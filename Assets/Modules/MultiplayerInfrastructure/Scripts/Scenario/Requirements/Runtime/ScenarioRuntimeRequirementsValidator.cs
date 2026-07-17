@@ -52,11 +52,13 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       ScenarioRuntimeManifestRegistry.EnsureLoaded();
       ScenarioRequirementManifest manifest;
       var diagnostics = new List<ScenarioRequirementDiagnostic>(ScenarioRuntimeManifestRegistry.Diagnostics);
+      var manifestDiagnostics = new List<ScenarioRequirementDiagnostic>();
       var graphFingerprint = ScenarioGraphFingerprint.Compute(graph);
       if (ScenarioRuntimeManifestRegistry.TryGet(graph.Identifier, graphFingerprint, out var entry) && entry.Manifest != null)
       {
         manifest = entry.Manifest;
         diagnostics.AddRange(entry.Diagnostics);
+        manifestDiagnostics.AddRange(entry.Diagnostics);
       }
       else
       {
@@ -68,16 +70,26 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
           : "No runtime sidecar manifest was found; inferred requirements were used.";
         diagnostics.Add(new ScenarioRequirementDiagnostic(code, name, ScenarioRequirementDiagnosticSeverity.Warning, message, null, string.Empty, string.Empty));
         diagnostics.AddRange(manifest.Diagnostics);
+        manifestDiagnostics.AddRange(manifest.Diagnostics);
       }
 
       var snapshot = ScenarioRuntimeProviderSnapshotBuilder.Build(composition);
       diagnostics.AddRange(snapshot.Diagnostics.Select(value => new ScenarioRequirementDiagnostic(value.Code, value.Name, value.Severity, value.Message, null, value.RequirementKey.HasValue ? value.RequirementKey.Value.Identifier : string.Empty, value.FixHint, value.RequirementKey)));
-      if (composition != null && composition.Scenes.Any(scene => UnityEngine.SceneManagement.SceneManager.GetSceneByPath(scene.ScenePath).IsValid() && !ScenarioRuntimeSceneReadiness.IsReady(UnityEngine.SceneManagement.SceneManager.GetSceneByPath(scene.ScenePath))))
+      if (composition != null && composition.Scenes.Any(scene =>
+      {
+        var runtimeScene = UnityEngine.SceneManagement.SceneManager.GetSceneByPath(scene.ScenePath);
+        return !runtimeScene.IsValid() || !runtimeScene.isLoaded || !ScenarioRuntimeSceneReadiness.IsReady(runtimeScene);
+      }))
         diagnostics.Add(new ScenarioRequirementDiagnostic("SIR608", "SceneReadinessPending", ScenarioRequirementDiagnosticSeverity.Warning, "One or more composition scenes have loaded but have not completed bootstrap readiness.", null, string.Empty, string.Empty));
       var report = ScenarioRequirementValidationEngine.ValidateRuntime(manifest, snapshot, composition ?? new ScenarioRequirementSceneComposition("runtime", Array.Empty<ScenarioRequirementCompositionScene>()));
       var applicableResults = report.Results.Where(value => AppliesToContext(value.Requirement.Authority, context)).ToArray();
       var readiness = applicableResults.Any(value => value.Status == ScenarioRequirementValidationStatus.NotReady) ? ScenarioRuntimeReadiness.NotReady : applicableResults.Any(value => value.Status == ScenarioRequirementValidationStatus.Indeterminate) ? ScenarioRuntimeReadiness.Indeterminate : ScenarioRuntimeReadiness.Ready;
       var blocking = applicableResults.Any(value => value.Status == ScenarioRequirementValidationStatus.Missing || value.Status == ScenarioRequirementValidationStatus.Duplicate || value.Status == ScenarioRequirementValidationStatus.MissingCapability || value.Status == ScenarioRequirementValidationStatus.WrongType || value.Status == ScenarioRequirementValidationStatus.WrongScene || value.Status == ScenarioRequirementValidationStatus.NotRegistered);
+      // Diagnostics belonging to this selected manifest (schema/load/merge
+      // failures included) invalidate its contract in strict mode.  Do not use
+      // global discovery diagnostics here: an unrelated Resources scenario
+      // must not block this one.
+      blocking |= manifestDiagnostics.Any(value => value.Severity >= ScenarioRequirementDiagnosticSeverity.Error);
       if (diagnostics.Any(value => value.Code == "SIR608")) readiness = ScenarioRuntimeReadiness.NotReady;
       if (applicableResults.Any(value => value.Requirement.MustProve) && readiness == ScenarioRuntimeReadiness.Indeterminate) blocking = true;
       var strictMode = mode == ScenarioRuntimeValidationMode.AbortScenarioStart || mode == ScenarioRuntimeValidationMode.AbortSessionBootstrap;

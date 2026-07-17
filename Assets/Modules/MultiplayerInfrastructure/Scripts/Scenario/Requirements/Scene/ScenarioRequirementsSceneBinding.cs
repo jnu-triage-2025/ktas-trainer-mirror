@@ -56,6 +56,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
     public void AddOrUpdateBinding(ScenarioRequirementKey key, UnityEngine.Object target, string notes = null)
     {
       if (target == null) throw new ArgumentNullException(nameof(target));
+      RejectCrossSceneTarget(target);
       var binding = _bindings.FirstOrDefault(value => value != null && value.TryGetKey(out var existing) && existing.Equals(key));
       if (binding == null)
       {
@@ -74,7 +75,41 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
     public void AddBinding(ScenarioRequirementKey key, UnityEngine.Object target, string notes = null)
     {
       if (target == null) throw new ArgumentNullException(nameof(target));
+      RejectCrossSceneTarget(target);
       _bindings.Add(new ScenarioRequirementObjectBinding(key.Kind, key.Identifier, target, notes));
+    }
+
+    /// <summary>
+    /// A scene binding may only directly reference targets that live in the same
+    /// scene as this component.  Cross-scene serialized references are not
+    /// supported; providers in other scenes are composed via identifier and the
+    /// composition snapshot instead (proposal §10).  Persistent assets have no
+    /// scene and are rejected here as well because a scene binding target must be
+    /// a scene object.
+    /// </summary>
+    private void RejectCrossSceneTarget(UnityEngine.Object target)
+    {
+      UnityEngine.SceneManagement.Scene targetScene;
+      switch (target)
+      {
+        case GameObject gameObjectTarget:
+          targetScene = gameObjectTarget.scene;
+          break;
+        case Component componentTarget:
+          targetScene = componentTarget.gameObject.scene;
+          break;
+        default:
+          throw new ArgumentException(
+            "Scenario requirement binding target must be a scene GameObject or Component, not a persistent asset.",
+            nameof(target));
+      }
+
+      if (!targetScene.IsValid() || targetScene != gameObject.scene)
+      {
+        throw new ArgumentException(
+          $"Scenario requirement binding target '{target.name}' must belong to the same scene as the binding component '{gameObject.scene.name}'. Cross-scene references are not supported.",
+          nameof(target));
+      }
     }
 
     public void SetCompositionIdentifier(string compositionIdentifier)

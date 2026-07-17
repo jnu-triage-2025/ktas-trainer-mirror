@@ -30,7 +30,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
   public sealed class ScenarioRequirementsBuildReport
   {
     private readonly List<ScenarioRequirementsBuildDiagnostic> _diagnostics = new List<ScenarioRequirementsBuildDiagnostic>();
-    public IReadOnlyList<ScenarioRequirementsBuildDiagnostic> Diagnostics => new ReadOnlyCollection<ScenarioRequirementsBuildDiagnostic>(_diagnostics.OrderBy(value => value.ScenarioIdentifier, StringComparer.Ordinal).ThenBy(value => value.RequirementKey, StringComparer.Ordinal).ThenBy(value => value.Code, StringComparer.Ordinal).ThenBy(value => value.AssetPath, StringComparer.Ordinal).ThenBy(value => value.ScenePath, StringComparer.Ordinal).ThenBy(value => value.ProfileIdentifier, StringComparer.Ordinal).ThenBy(value => value.Message, StringComparer.Ordinal).ToArray());
+    public IReadOnlyList<ScenarioRequirementsBuildDiagnostic> Diagnostics => new ReadOnlyCollection<ScenarioRequirementsBuildDiagnostic>(_diagnostics.OrderBy(value => value.ScenarioIdentifier, StringComparer.Ordinal).ThenBy(value => value.RequirementKey, StringComparer.Ordinal).ThenBy(value => value.Code, StringComparer.Ordinal).ThenBy(value => value.AssetPath, StringComparer.Ordinal).ThenBy(value => value.ScenePath, StringComparer.Ordinal).ThenBy(value => value.ProfileIdentifier, StringComparer.Ordinal).ToArray());
     public int ErrorCount => Diagnostics.Count(value => value.Severity >= ScenarioRequirementDiagnosticSeverity.Error);
     public int WarningCount => Diagnostics.Count(value => value.Severity == ScenarioRequirementDiagnosticSeverity.Warning);
     public int InfoCount => Diagnostics.Count(value => value.Severity == ScenarioRequirementDiagnosticSeverity.Info);
@@ -48,6 +48,14 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
         writer.WriteEndArray(); writer.WritePropertyName("summary"); writer.WriteStartObject(); writer.WriteNumber("info", InfoCount); writer.WriteNumber("warning", WarningCount); writer.WriteNumber("error", ErrorCount); writer.WriteEndObject(); writer.WriteEndObject();
       }
       return stream.ToArray().Concat(new[] { (byte)'\n' }).ToArray();
+    }
+
+    public void WriteUtf8Json(string path, string buildTarget, string result)
+    {
+      if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("Report path is null or empty.", nameof(path));
+      var directory = Path.GetDirectoryName(path);
+      if (!string.IsNullOrWhiteSpace(directory)) Directory.CreateDirectory(directory);
+      File.WriteAllBytes(path, ToUtf8Json(buildTarget, result));
     }
   }
 }

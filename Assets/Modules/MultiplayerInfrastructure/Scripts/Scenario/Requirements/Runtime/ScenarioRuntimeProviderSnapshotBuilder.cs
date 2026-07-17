@@ -17,9 +17,9 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       var diagnostics = new List<ScenarioRequirementValidationDiagnostic>();
       var completeness = new Dictionary<ScenarioRequirementKind, ScenarioRequirementEvidenceCompleteness>
       {
-        // Registry entries do not expose their registration owner.  They can
-        // duplicate a scene component in this snapshot, so they must not be
-        // used to prove a runtime cardinality/duplicate conclusion.
+        // These kinds may still be supplied by the legacy Registry API.  Its
+        // entries lack owner identity, so runtime can establish presence but
+        // cannot make a definitive duplicate conclusion.
         [ScenarioRequirementKind.Npc] = ScenarioRequirementEvidenceCompleteness.Partial,
         [ScenarioRequirementKind.SpatialAnchor] = ScenarioRequirementEvidenceCompleteness.Partial,
         [ScenarioRequirementKind.Interactable] = ScenarioRequirementEvidenceCompleteness.Partial,
@@ -40,7 +40,9 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       foreach (var record in ScenarioRequirementRuntimeRegistrationRegistry.GetAll())
       {
         providers.Add(new ScenarioRequirementProvider(
-          "runtime-registration:" + record.Token.Generation + ":" + record.Token.Sequence,
+          record.Owner is Component component
+            ? GetPhysicalIdentifier(component)
+            : "runtime-registration:" + record.Token.Generation + ":" + record.Token.Sequence,
           new ScenarioRequirementKey(record.Kind, record.Identifier),
           record.ScenePath,
           ScenarioRequirementScope.AnyLoadedScene,
@@ -55,7 +57,11 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
 
     private static void AddRegistryEvidence(List<ScenarioRequirementProvider> providers, List<ScenarioRequirementValidationDiagnostic> diagnostics)
     {
-      AddRegistryType(providers, RegistryType.Npc, ScenarioRequirementKind.Npc, new[] { ScenarioRequirementCapability.RegisteredNpcComponent, ScenarioRequirementCapability.ResolvableNpcMoveTarget });
+      // Retain raw Registry evidence for backwards compatibility.  Its lack
+      // of owner identity is represented by Partial completeness above, which
+      // prevents duplicate claims while still allowing an existing provider
+      // to satisfy a requirement.
+      AddRegistryType(providers, RegistryType.Npc, ScenarioRequirementKind.Npc, new[] { ScenarioRequirementCapability.RegisteredNpcComponent, ScenarioRequirementCapability.ResolvableNpcMoveTarget, ScenarioRequirementCapability.ProvidesPosition });
       AddRegistryType(providers, RegistryType.Waypoint, ScenarioRequirementKind.SpatialAnchor, new[] { ScenarioRequirementCapability.ProvidesPosition });
       AddRegistryType(providers, RegistryType.InteractableEntity, ScenarioRequirementKind.Interactable, new[] { ScenarioRequirementCapability.Interactable });
       AddRegistryType(providers, RegistryType.Entity, ScenarioRequirementKind.Entity, new[] { ScenarioRequirementCapability.RegisteredEntity });
@@ -114,29 +120,25 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
 
     private static void AddProviderBackedEntity(List<ScenarioRequirementProvider> providers, Component component, ScenarioRequirementScope role)
     {
-      var capabilities = new[]
+      var requestedCapabilities = new[]
       {
         ScenarioRequirementCapability.PatientMedicalStateTarget,
         ScenarioRequirementCapability.ScenarioEntityInitTarget,
         ScenarioRequirementCapability.ScenarioTriageAssessTarget
-      }.Where(capability => ScenarioRuntimeCapabilityProviderRegistry.Supports(component, capability)).ToArray();
-      if (capabilities.Length == 0) return;
-      string identifier = null;
-      foreach (var providerCapability in capabilities)
+      };
+      foreach (var provider in ScenarioRuntimeCapabilityProviderRegistry.GetAll())
       {
-        foreach (var provider in ScenarioRuntimeCapabilityProviderRegistry.GetAll())
-          if (provider.TryGetIdentifier(component, out identifier)) break;
-        if (!string.IsNullOrWhiteSpace(identifier)) break;
+        var capabilities = requestedCapabilities.Where(capability => provider.Supports(component, capability)).ToArray();
+        if (capabilities.Length == 0 || !provider.TryGetIdentifier(component, out var identifier) || string.IsNullOrWhiteSpace(identifier)) continue;
+        AddSceneProvider(providers, component, ScenarioRequirementKind.Entity, identifier, role, capabilities);
       }
-      if (string.IsNullOrWhiteSpace(identifier)) return;
-      AddSceneProvider(providers, component, ScenarioRequirementKind.Entity, identifier, role, capabilities);
     }
 
     private static void AddSceneProvider(List<ScenarioRequirementProvider> providers, Component component, ScenarioRequirementKind kind, string identifier, ScenarioRequirementScope role, IEnumerable<ScenarioRequirementCapability> capabilities)
     {
       if (string.IsNullOrWhiteSpace(identifier)) return;
       providers.Add(new ScenarioRequirementProvider(
-        "runtime:" + component.GetType().FullName + ":" + component.gameObject.scene.path + ":" + GetHierarchyPath(component.transform),
+        GetPhysicalIdentifier(component),
         new ScenarioRequirementKey(kind, identifier.Trim()),
         component.gameObject.scene.path,
         role,
@@ -147,6 +149,12 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
         component.gameObject.activeInHierarchy && (!(component is Behaviour enabledBehaviour) || enabledBehaviour.enabled),
         ScenarioRequirementProviderOrigin.SceneComponent));
     }
+
+    private static string GetPhysicalIdentifier(Component component)
+      // Names are not unique among siblings.  The instance ID remains stable
+      // throughout this runtime session and is shared by scene and owner-aware
+      // registration evidence for this exact component.
+      => "runtime:" + component.GetType().FullName + ":" + component.GetInstanceID();
 
     private static string GetHierarchyPath(Transform transform)
     {

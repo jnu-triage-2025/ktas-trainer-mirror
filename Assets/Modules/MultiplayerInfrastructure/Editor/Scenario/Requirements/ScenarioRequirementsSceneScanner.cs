@@ -19,12 +19,27 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
     {
       var providers = new List<ScenarioRequirementProvider>();
       var diagnostics = new List<ScenarioRequirementValidationDiagnostic>();
+      // Prefab Stage is validated separately from the Main Stage.  An open
+      // Prefab Stage must not suppress Main Stage composition validation, so we
+      // do not abort the whole scan here; instead each composition scene is
+      // scanned and the Prefab Stage's own preview scene is explicitly excluded
+      // below (proposal §11, blueprint §7).
+      var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+      if (prefabStage != null)
+        diagnostics.Add(new ScenarioRequirementValidationDiagnostic("SIR313", "PrefabStageExcludedFromScan", ScenarioRequirementDiagnosticSeverity.Info, "A Prefab Stage is open; it is excluded from scenario requirement scene validation and does not affect Main Stage results."));
+      var prefabStageScene = prefabStage != null ? prefabStage.scene : default;
       var previewScenes = new List<Scene>();
       try
       {
         foreach (var entry in composition.Scenes)
         {
           var scene = SceneManager.GetSceneByPath(entry.ScenePath);
+          if (scene.IsValid() && prefabStageScene.IsValid() && scene == prefabStageScene)
+          {
+            // Never treat the Prefab Stage's scene as a composition scene.
+            diagnostics.Add(new ScenarioRequirementValidationDiagnostic("SIR300", "MalformedSceneComposition", ScenarioRequirementDiagnosticSeverity.Error, $"Scene '{entry.ScenePath}' resolves to the open Prefab Stage and cannot be scanned as a composition scene.", scenePath: entry.ScenePath));
+            continue;
+          }
           if (!scene.IsValid() || !scene.isLoaded)
           {
             if (string.IsNullOrWhiteSpace(entry.ScenePath) || AssetDatabase.LoadAssetAtPath<SceneAsset>(entry.ScenePath) == null)
@@ -149,8 +164,11 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
         {
           diagnostics.Add(new ScenarioRequirementValidationDiagnostic("SIR403", "MissingProviderCapability", ScenarioRequirementDiagnosticSeverity.Error, $"Binding '{key}' target does not provide the required scenario capabilities.", key, owner.gameObject.scene.path));
         }
-        var identity = GlobalObjectId.GetGlobalObjectIdSlow(targetComponent).ToString();
-        if (string.IsNullOrWhiteSpace(identity)) identity = scene.ScenePath + ":binding:" + targetComponent.GetInstanceID();
+        // Physical provider identity must be computed identically to the
+        // scene-component scan path so that the same physical object reached via
+        // a scene component and via a binding coalesces to one provider during
+        // cardinality/duplicate detection (proposal §2, blueprint §7).
+        var identity = ComputePhysicalIdentity(targetComponent, scene.ScenePath);
         var behaviour = targetComponent as Behaviour;
         providers.Add(new ScenarioRequirementProvider(
           identity,
@@ -193,9 +211,25 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
       var key = new ScenarioRequirementKey(kind, identifier.Trim());
       var behaviour = component as Behaviour;
       var enabled = behaviour == null || behaviour.enabled;
-      var identity = GlobalObjectId.GetGlobalObjectIdSlow(component).ToString();
-      if (string.IsNullOrWhiteSpace(identity) || identity.EndsWith("-0-0", StringComparison.Ordinal)) identity = scene.ScenePath + ":" + component.GetInstanceID();
+      var identity = ComputePhysicalIdentity(component, scene.ScenePath);
       providers.Add(new ScenarioRequirementProvider(identity, key, scene.ScenePath, scene.Role, GetHierarchyPath(component.transform), capabilities, component.gameObject.activeInHierarchy, enabled, expectedToRegister ?? (component.gameObject.activeInHierarchy && enabled), ScenarioRequirementProviderOrigin.SceneComponent));
+    }
+
+    /// <summary>
+    /// Computes a stable physical-provider identity for a scene component.  The
+    /// same physical object reached through different scan paths (scene
+    /// component vs scene binding) must yield the same identity so that
+    /// duplicate detection does not double-count one object.  The fallback path
+    /// keys on the owning GameObject's instance id so that multiple provider
+    /// components on the same object still coalesce to a single physical
+    /// provider.
+    /// </summary>
+    private static string ComputePhysicalIdentity(Component component, string scenePath)
+    {
+      var identity = GlobalObjectId.GetGlobalObjectIdSlow(component).ToString();
+      if (!string.IsNullOrWhiteSpace(identity) && !identity.EndsWith("-0-0", StringComparison.Ordinal))
+        return identity;
+      return scenePath + ":" + component.gameObject.GetInstanceID();
     }
 
     private static string GetHierarchyPath(Transform transform)

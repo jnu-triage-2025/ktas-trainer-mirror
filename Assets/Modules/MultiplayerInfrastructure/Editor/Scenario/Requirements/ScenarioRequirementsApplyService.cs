@@ -38,6 +38,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
       {
         foreach (var plan in planSet.Plans)
         {
+          if (plan.Operation == ScenarioWorldObjectOperationKind.NoChange) continue;
           if (plan.Operation == ScenarioWorldObjectOperationKind.MarkOrphan)
           {
             if (plan.ExistingMarker == null) throw new InvalidOperationException("Orphan marker no longer exists: " + plan.RequirementKey);
@@ -45,6 +46,17 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
             plan.ExistingMarker.MarkOrphan();
             EditorSceneManager.MarkSceneDirty(plan.ExistingMarker.gameObject.scene);
             changedScenes.Add(plan.ExistingMarker.gameObject.scene.path);
+            applied++;
+            continue;
+          }
+          if (plan.Operation == ScenarioWorldObjectOperationKind.DeleteGenerated)
+          {
+            if (plan.ExistingMarker == null || plan.ExistingMarker.IsOrphan == false)
+              throw new InvalidOperationException("Only an orphaned generated object may be deleted: " + plan.RequirementKey);
+            var deletedScene = plan.ExistingMarker.gameObject.scene;
+            Undo.DestroyObjectImmediate(plan.ExistingMarker.gameObject);
+            EditorSceneManager.MarkSceneDirty(deletedScene);
+            changedScenes.Add(deletedScene.path);
             applied++;
             continue;
           }

@@ -90,7 +90,6 @@ namespace MultiplayerInfrastructure.Scenario
     private ChatService _chatService;
     private Coroutine _dialogueAutoAdvanceRoutine;
     private Coroutine _runtimeRequirementsWaitRoutine;
-    private bool _skipRuntimeRequirementsValidationOnce;
 
     private sealed class GraphVisitHistory
     {
@@ -314,6 +313,11 @@ namespace MultiplayerInfrastructure.Scenario
 
     public void StartScenario(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId)
     {
+      StartScenarioInternal(graph, startNodeIdentifier, ownerClientId, false);
+    }
+
+    private void StartScenarioInternal(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId, bool requirementsAlreadyValidated)
+    {
       if (graph == null)
       {
         Debug.LogError("[ScenarioController] Cannot start scenario with null graph");
@@ -326,19 +330,21 @@ namespace MultiplayerInfrastructure.Scenario
         _runtimeRequirementsWaitRoutine = null;
       }
 
-      var runtimeValidationMode = _skipRuntimeRequirementsValidationOnce
+      var runtimeValidationMode = requirementsAlreadyValidated
         ? ScenarioRuntimeValidationMode.Off
         : _runtimeRequirementsValidationMode;
-      _skipRuntimeRequirementsValidationOnce = false;
       if (runtimeValidationMode == ScenarioRuntimeValidationMode.ReportOnly
           && _preflightPolicy.MissingBehavior == ScenarioPreflightMissingBehavior.AbortStart)
         runtimeValidationMode = ScenarioRuntimeValidationMode.AbortScenarioStart;
-      if (_preflightEnabled && runtimeValidationMode != ScenarioRuntimeValidationMode.Off)
+      // Runtime requirements mode is the authoritative switch.  The legacy
+      // preflight checkbox must not silently disable an explicitly configured
+      // strict runtime gate.
+      if (!requirementsAlreadyValidated && runtimeValidationMode != ScenarioRuntimeValidationMode.Off)
       {
         var runtimeValidation = ScenarioRuntimeRequirementsValidator.Validate(
           graph,
           runtimeValidationMode,
-          new ScenarioRuntimeValidationContext(ScenarioRequirementAuthority.Any));
+          CreateRuntimeRequirementsValidationContext());
         if (_preflightPolicy.WarnToConsole)
         {
           foreach (var diagnostic in runtimeValidation.Diagnostics.Where(value => value.Severity >= ScenarioRequirementDiagnosticSeverity.Warning))
@@ -348,7 +354,7 @@ namespace MultiplayerInfrastructure.Scenario
             && (runtimeValidationMode == ScenarioRuntimeValidationMode.AbortScenarioStart
                 || runtimeValidationMode == ScenarioRuntimeValidationMode.AbortSessionBootstrap))
         {
-          _runtimeRequirementsWaitRoutine = StartCoroutine(WaitForRuntimeRequirementsAndStart(graph, startNodeIdentifier, ownerClientId));
+          _runtimeRequirementsWaitRoutine = StartCoroutine(WaitForRuntimeRequirementsAndStart(graph, startNodeIdentifier, ownerClientId, runtimeValidationMode));
           return;
         }
         if (runtimeValidation.ShouldAbort)
@@ -361,7 +367,11 @@ namespace MultiplayerInfrastructure.Scenario
         }
       }
 
-      if (_preflightEnabled
+      // The canonical runtime validator is the sole gate whenever enabled.
+      // Retain legacy preflight only for explicit runtime-validation Off mode.
+      if (!requirementsAlreadyValidated
+          && _preflightEnabled
+          && runtimeValidationMode == ScenarioRuntimeValidationMode.Off
           && !ScenarioPreflight.Run(graph, _preflightPolicy, AppendSystemChatMessage, out _))
       {
         return;
@@ -444,13 +454,25 @@ namespace MultiplayerInfrastructure.Scenario
       ExecuteNode(startNode);
     }
 
-    private IEnumerator WaitForRuntimeRequirementsAndStart(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId)
+    private static ScenarioRuntimeValidationContext CreateRuntimeRequirementsValidationContext()
+    {
+      var offline = InstanceFinder.IsOffline;
+      var isServer = offline || InstanceFinder.IsServerStarted;
+      var isClient = offline || InstanceFinder.IsClientStarted;
+      return new ScenarioRuntimeValidationContext(
+        ScenarioRequirementAuthority.Any,
+        isServer,
+        isClient,
+        isServer && isClient);
+    }
+
+    private IEnumerator WaitForRuntimeRequirementsAndStart(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId, ScenarioRuntimeValidationMode validationMode)
     {
       ScenarioRuntimeValidationResult completed = null;
       yield return ScenarioRuntimeRequirementsValidator.WaitUntilReady(
         graph,
-        _runtimeRequirementsValidationMode,
-        new ScenarioRuntimeValidationContext(ScenarioRequirementAuthority.Any),
+        validationMode,
+        CreateRuntimeRequirementsValidationContext(),
         _runtimeRequirementsReadinessTimeoutSeconds,
         _runtimeRequirementsReadinessPollIntervalSeconds,
         value => completed = value);
@@ -464,8 +486,10 @@ namespace MultiplayerInfrastructure.Scenario
         yield break;
       }
 
-      _skipRuntimeRequirementsValidationOnce = true;
-      StartScenario(graph, startNodeIdentifier, ownerClientId);
+      // The successful readiness result is already the canonical validation
+      // result for this start request.  Do not re-enter via Off mode, which
+      // would invoke the legacy preflight and could reverse that decision.
+      StartScenarioInternal(graph, startNodeIdentifier, ownerClientId, true);
     }
 
     /// <summary>

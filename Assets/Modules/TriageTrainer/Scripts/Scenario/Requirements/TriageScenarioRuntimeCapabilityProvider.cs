@@ -25,7 +25,9 @@ namespace TriageTrainer.Scenario.Requirements
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Register()
     {
-      ScenarioRuntimeCapabilityProviderRegistry.Register(new TriageScenarioRuntimeCapabilityProvider(), out _);
+      if (!ScenarioRuntimeCapabilityProviderRegistry.Register(new TriageScenarioRuntimeCapabilityProvider(), out var error)
+          && !string.IsNullOrWhiteSpace(error))
+        UnityEngine.Debug.LogError("[ScenarioRequirements] " + error);
     }
   }
 }

@@ -58,6 +58,27 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
     }
 
     [Test]
+    public void RuntimeValidationChecksApplicableFixedAuthorityRequirement()
+    {
+      var graph = new ScenarioGraph { Identifier = "server-authority" };
+      graph.Add(new ScenarioEntityInitNode { Identifier = "spawn", PresetIdentifier = "server-preset" });
+      var manifest = ScenarioRequirementCompiler.CompileInferred(graph);
+      var snapshot = new ScenarioRequirementProviderSnapshot(
+        Array.Empty<ScenarioRequirementProvider>(),
+        Array.Empty<ScenarioRequirementValidationDiagnostic>(),
+        new Dictionary<ScenarioRequirementKind, ScenarioRequirementEvidenceCompleteness>
+        {
+          [ScenarioRequirementKind.EntityPreset] = ScenarioRequirementEvidenceCompleteness.Complete
+        });
+      var composition = new ScenarioRequirementSceneComposition("test", Array.Empty<ScenarioRequirementCompositionScene>());
+
+      Assert.That(ScenarioRequirementValidationEngine.Validate(manifest, snapshot, composition).Results.Single(value => value.Requirement.Key.Kind == ScenarioRequirementKind.EntityPreset).Status,
+        Is.EqualTo(ScenarioRequirementValidationStatus.Indeterminate));
+      Assert.That(ScenarioRequirementValidationEngine.ValidateRuntime(manifest, snapshot, composition).Results.Single(value => value.Requirement.Key.Kind == ScenarioRequirementKind.EntityPreset).Status,
+        Is.EqualTo(ScenarioRequirementValidationStatus.Missing));
+    }
+
+    [Test]
     public void RuntimeFallbackPreservesCompilerRequirementKeys()
     {
       var graph = new ScenarioGraph { Identifier = "runtime-parity" };
@@ -96,6 +117,26 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
 
       Assert.That(result.ShouldAbort, Is.False);
       Assert.That(result.Report.Results.Any(value => value.Status == ScenarioRequirementValidationStatus.Indeterminate), Is.True);
+    }
+
+    [Test]
+    public void StrictRuntimeValidationAbortsOnManifestCompilationError()
+    {
+      var graph = new ScenarioGraph { Identifier = "runtime-invalid-manifest" };
+      graph.Add(new ScenarioPlayerMoveNode
+      {
+        Identifier = "move",
+        DestinationType = ScenarioMoveDestinationType.Waypoint,
+        DestinationIdentifier = " "
+      });
+
+      var result = ScenarioRuntimeRequirementsValidator.Validate(
+        graph,
+        ScenarioRuntimeValidationMode.AbortScenarioStart,
+        new ScenarioRuntimeValidationContext(ScenarioRequirementAuthority.Any));
+
+      Assert.That(result.Diagnostics.Any(value => value.Code == "SIR100" && value.Severity >= ScenarioRequirementDiagnosticSeverity.Error), Is.True);
+      Assert.That(result.ShouldAbort, Is.True);
     }
 
     [Test]

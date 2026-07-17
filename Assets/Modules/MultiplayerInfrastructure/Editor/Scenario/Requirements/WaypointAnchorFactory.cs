@@ -56,7 +56,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
       var marker = target.GetComponent<ScenarioGeneratedWorldObject>();
       if (marker == null) marker = Undo.AddComponent<ScenarioGeneratedWorldObject>(target);
       Undo.RecordObject(marker, "Configure Scenario Generated Marker");
-      marker.Configure(plan.ScenarioIdentifier, plan.PlanIdentity, context.Composition.Identifier,
+      marker.Configure(plan.ScenarioIdentifier, plan.ManifestFingerprint, context.Composition.Identifier,
         plan.RequirementKey, Identifier, Version, plan.TargetSceneGuid, plan.TargetSceneRole, plan.PlanIdentity);
       EditorUtility.SetDirty(target);
       return target;
