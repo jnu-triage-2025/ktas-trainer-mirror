@@ -157,7 +157,7 @@ namespace MultiplayerInfrastructure.Scenario
         }
       }
 
-      foreach (var node in graph.Nodes.Values)
+      foreach (var node in graph.Nodes.Values.OrderBy(value => value?.Identifier ?? string.Empty, StringComparer.Ordinal))
       {
         switch (node)
         {
@@ -1090,7 +1090,7 @@ namespace MultiplayerInfrastructure.Scenario
         Nodes = new Dictionary<string, ScenarioNodeDTO>()
       };
 
-      foreach (var node in graph.Nodes.Values)
+      foreach (var node in graph.Nodes.Values.OrderBy(value => value?.Identifier ?? string.Empty, StringComparer.Ordinal))
       {
         dto.Nodes[node.Identifier] = ConvertToDTO(node);
       }

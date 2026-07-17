@@ -44,6 +44,14 @@ namespace MultiplayerInfrastructure.Scenario.Preflight
     /// 정적으로 판정할 수 없음(예: 런타임 신호). 정보성으로만 보고하며 누락 집계에서 제외한다.
     /// </summary>
     Indeterminate
+    ,Suppressed
+    ,NotConsumed
+    ,WrongScene
+    ,Inactive
+    ,MissingCapability
+    ,Duplicate
+    ,NotReady
+    ,Malformed
   }
 
   /// <summary>
@@ -62,11 +70,23 @@ namespace MultiplayerInfrastructure.Scenario.Preflight
 
     public ScenarioRequirementStatus Status { get; set; } = ScenarioRequirementStatus.Unknown;
 
+    internal MultiplayerInfrastructure.Scenario.Requirements.ScenarioRequirementDescriptor CanonicalDescriptor { get; }
+
     public ScenarioRequirement(ScenarioRequirementKind kind, string identifier, string sourceNodeIdentifier)
+      : this(kind, identifier, sourceNodeIdentifier, null)
+    {
+    }
+
+    internal ScenarioRequirement(
+      ScenarioRequirementKind kind,
+      string identifier,
+      string sourceNodeIdentifier,
+      MultiplayerInfrastructure.Scenario.Requirements.ScenarioRequirementDescriptor canonicalDescriptor)
     {
       Kind = kind;
       Identifier = identifier;
       SourceNodeIdentifier = sourceNodeIdentifier;
+      CanonicalDescriptor = canonicalDescriptor;
     }
 
     public override string ToString()

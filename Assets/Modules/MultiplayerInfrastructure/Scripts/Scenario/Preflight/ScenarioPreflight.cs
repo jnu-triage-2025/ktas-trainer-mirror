@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using MultiplayerInfrastructure.Scenario.Requirements;
 
 namespace MultiplayerInfrastructure.Scenario.Preflight
 {
@@ -10,6 +11,27 @@ namespace MultiplayerInfrastructure.Scenario.Preflight
   /// </summary>
   public static class ScenarioPreflight
   {
+    public static bool RunCanonical(
+      ScenarioRequirementManifest manifest,
+      ScenarioRequirementProviderSnapshot snapshot,
+      ScenarioRequirementSceneComposition composition,
+      ScenarioPreflightPolicy policy,
+      Action<string> inGameChatWarn,
+      out ScenarioPreflightReport report)
+    {
+      report = ScenarioRequirementsChecker.CheckCanonical(manifest, snapshot, composition);
+      if (report.BlockingCount == 0 && report.IndeterminateCount == 0) return true;
+      var summary = ScenarioRequirementsChecker.BuildSummary(manifest?.ScenarioIdentifier ?? "(null)", report);
+      if (policy.WarnToConsole) { if (report.BlockingCount > 0) Debug.LogWarning(summary); else Debug.Log(summary); }
+      if (policy.WarnToInGameChat && report.BlockingCount > 0) inGameChatWarn?.Invoke(summary);
+      if (report.BlockingCount > 0 && policy.MissingBehavior == ScenarioPreflightMissingBehavior.AbortStart)
+      {
+        if (policy.WarnToConsole) Debug.LogError($"[ScenarioPreflight] Aborting scenario '{manifest?.ScenarioIdentifier}' start due to {report.BlockingCount} blocking requirement(s).");
+        if (policy.WarnToInGameChat) inGameChatWarn?.Invoke($"[ScenarioPreflight] Scenario '{manifest?.ScenarioIdentifier}' could not start because requirements are unresolved.");
+        return false;
+      }
+      return true;
+    }
     /// <summary>
     /// 사전 검증을 실행한다.
     /// </summary>
