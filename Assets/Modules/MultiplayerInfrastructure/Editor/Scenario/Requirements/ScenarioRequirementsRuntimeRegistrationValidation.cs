@@ -8,10 +8,9 @@ using UnityEngine;
 
 namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
 {
-  public static class ScenarioRequirementsRuntimeRegistrationValidation
+  internal static class ScenarioRequirementsRuntimeRegistrationValidation
   {
-    [MenuItem("Tools/Multiplayer Infrastructure/Validate Runtime Requirement Registration")]
-    public static void Run()
+    internal static void Run()
     {
       ScenarioRequirementRuntimeRegistrationRegistry.Reset();
       var first = new GameObject("runtime-owner-a");

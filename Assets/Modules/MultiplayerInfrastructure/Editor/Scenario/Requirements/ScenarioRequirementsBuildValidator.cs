@@ -46,8 +46,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
       }
     }
 
-    [MenuItem("Tools/Multiplayer Infrastructure/Validate Scenario Requirements Build")]
-    public static void ValidateFromEditor()
+    internal static ScenarioRequirementsBuildReport ValidateFromEditor()
     {
       var result = Validate(null);
       foreach (var diagnostic in result.Diagnostics)
@@ -57,9 +56,10 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
         else Debug.Log(diagnostic.Message);
       }
       Debug.Log($"[ScenarioRequirementsBuild] scenarios={ScenarioRequirementsResourceScanner.Discover().Count} warnings={result.WarningCount} errors={result.ErrorCount} info={result.InfoCount}");
+      return result;
     }
 
-    public static ScenarioRequirementsBuildReport Validate(BuildReport buildReport)
+    internal static ScenarioRequirementsBuildReport Validate(BuildReport buildReport)
     {
       var result = new ScenarioRequirementsBuildReport();
       var profiles = AssetDatabase.FindAssets("t:ScenarioSceneCompositionProfile")

@@ -33,7 +33,7 @@
 - requirements schema JSON 파싱: 통과
 - 새 문서 링크: 통과
 - Unity 6000.2 batch compile: 통과
-- Phase 0-4 acceptance smoke (`ScenarioRequirementsPhaseValidation.Run`): 통과
+- 통합 requirements validation command: 통과
 - EditMode Test Runner: 11/11 통과 (`/private/tmp/ktas-requirements-editmode-final.xml`), strict runtime abort와
   runtime fallback parity 포함
 - Build Validator batch 실행: 오류 0, 경고 9 (profile 미설정 상태의 예상 경고)

@@ -11,10 +11,9 @@ using UnityEngine.SceneManagement;
 
 namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
 {
-  public static class ScenarioRequirementsPhase4Validation
+  internal static class ScenarioRequirementsPhase4Validation
   {
-    [MenuItem("Tools/Multiplayer Infrastructure/Validate Scenario Requirements Phase 4")]
-    public static void Run()
+    internal static void Run()
     {
       const string path = "Assets/TempScenarioRequirementsPhase4.unity";
       try

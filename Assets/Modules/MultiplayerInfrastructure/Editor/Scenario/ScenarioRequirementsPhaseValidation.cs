@@ -15,10 +15,9 @@ using MultiplayerInfrastructure.Scenario.Requirements.Editor;
 namespace MultiplayerInfrastructure.Scenario.Editor
 {
   /// <summary>Phase 0-4 acceptance smoke validation for local and CI batch execution.</summary>
-  public static class ScenarioRequirementsPhaseValidation
+  internal static class ScenarioRequirementsPhaseValidation
   {
-    [MenuItem("Tools/Multiplayer Infrastructure/Validate Scenario Requirements Phase 0-4")]
-    public static void Run()
+    internal static void Run()
     {
       ValidateAllScenarioAssets();
       ValidateCanonicalAcceptanceCases();
