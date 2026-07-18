@@ -88,28 +88,28 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
     public void ValidatorAnyMatchModeLoadsAndRoundTrips()
     {
       const string json = @"{
-        \"identifier\": \"validator-any-test\",
-        \"tags\": [],
-        \"nodes\": {
-          \"validator\": {
-            \"identifier\": \"validator\",
-            \"nodeType\": \"Validator\",
-            \"rootConditions\": [{
-              \"condition\": \"RegistryContains\",
-              \"matchMode\": \"Any\",
-              \"validationRules\": [{
-                \"type\": \"Registry\",
-                \"condition\": \"Contains\",
-                \"registryType\": \"RuntimeState\",
-                \"registryIdentifier\": \"sig.one\"
+        ""identifier"": ""validator-any-test"",
+        ""tags"": [],
+        ""nodes"": {
+          ""validator"": {
+            ""identifier"": ""validator"",
+            ""nodeType"": ""Validator"",
+            ""rootConditions"": [{
+              ""condition"": ""RegistryContains"",
+              ""matchMode"": ""Any"",
+              ""validationRules"": [{
+                ""type"": ""Registry"",
+                ""condition"": ""Contains"",
+                ""registryType"": ""RuntimeState"",
+                ""registryIdentifier"": ""sig.one""
               }, {
-                \"type\": \"Registry\",
-                \"condition\": \"Contains\",
-                \"registryType\": \"RuntimeState\",
-                \"registryIdentifier\": \"sig.two\"
+                ""type"": ""Registry"",
+                ""condition"": ""Contains"",
+                ""registryType"": ""RuntimeState"",
+                ""registryIdentifier"": ""sig.two""
               }]
             }],
-            \"onFailure\": \"Ignore\"
+            ""onFailure"": ""Ignore""
           }
         }
       }";

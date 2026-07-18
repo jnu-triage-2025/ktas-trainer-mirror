@@ -22,6 +22,7 @@ namespace MultiplayerInfrastructure.Scenario
       public System.Collections.Generic.List<ScenarioValidatorRuleDTO> ValidationRules { get; set; }
 
       [JsonPropertyName("matchMode")]
+      [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
       public string MatchMode { get; set; }
     }
 
