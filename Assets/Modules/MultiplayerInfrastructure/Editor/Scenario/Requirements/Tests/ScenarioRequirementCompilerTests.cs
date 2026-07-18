@@ -145,6 +145,45 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
     }
 
     [Test]
+    public void ValidatorAnyMatchModePassesWhenOneRegistryRuleMatches()
+    {
+      const string matchingIdentifier = "sig.validator-any-match";
+      MultiplayerInfrastructure.Registry.Registry.Register(RegistryType.RuntimeState, matchingIdentifier, true);
+      var gameObject = new UnityEngine.GameObject("validator-any-match-test");
+      var controller = gameObject.AddComponent<ScenarioController>();
+      var evaluate = typeof(ScenarioController).GetMethod(
+        "EvaluateValidatorRootCondition",
+        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+      try
+      {
+        var anyCondition = new ScenarioValidatorRootCondition
+        {
+          Condition = ScenarioValidatorCondition.RegistryContains,
+          MatchMode = ScenarioValidatorMatchMode.Any,
+          ValidationRules = new List<ScenarioValidatorRule>
+          {
+            new ScenarioValidatorRule { RegistryType = RegistryType.RuntimeState, RegistryIdentifier = "sig.validator-missing" },
+            new ScenarioValidatorRule { RegistryType = RegistryType.RuntimeState, RegistryIdentifier = matchingIdentifier }
+          }
+        };
+        var anyArguments = new object[] { anyCondition, null };
+
+        Assert.That(evaluate, Is.Not.Null);
+        Assert.That((bool)evaluate.Invoke(controller, anyArguments), Is.True);
+
+        anyCondition.MatchMode = ScenarioValidatorMatchMode.All;
+        var allArguments = new object[] { anyCondition, null };
+        Assert.That((bool)evaluate.Invoke(controller, allArguments), Is.False);
+      }
+      finally
+      {
+        MultiplayerInfrastructure.Registry.Registry.Unregister(RegistryType.RuntimeState, matchingIdentifier);
+        UnityEngine.Object.DestroyImmediate(gameObject);
+      }
+    }
+
+    [Test]
     public void GraphFingerprintIsIndependentOfNodeInsertionOrder()
     {
       var first = new ScenarioGraph { Identifier = "fingerprint" };
