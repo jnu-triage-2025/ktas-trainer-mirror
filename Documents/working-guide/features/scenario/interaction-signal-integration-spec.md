@@ -96,7 +96,7 @@ blocking 이어야 한다. 그러나 신호 배선이 끝나기 전에 핵심 �
 **운영자 작업**: 각 환자(`PatientController`)의 `Identifier` 를 `patient_a` / `patient_b` / `patient_c` 로
 지정하면 `click_patient_a`, `select_patient_b` 등의 게이트가 통과된다.
 
-> 주의: `click_patient_b_face/c_face`(동공반사용 얼굴 클릭)와 `click_chest`(가슴압박 위치 클릭),
+> 주의: `click_patient_b_face/c_face`(동공반사용 얼굴 클릭)와 `interact_chest`(가슴압박 위치 상호작용),
 > `check_*`(AVPU/GCS/활력/맥박/동공 사정), `click_to_start_comp` 는 별도의 신체부위/사정 인터랙션이라
 > 위 환자-선택 신호로는 충족되지 않는다. 이들은 해당 신체부위 클릭/사정 UI 확정 지점에서 별도 Raise 필요([부분] 잔여).
 
@@ -130,9 +130,9 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
   아이템(식별자 `plasma_solution_1000ml`)을 신설·등록하고, 시나리오 조건 `sig.click_ps1` →
   `sig.click_plasma_solution_1000ml` 로 정합했다. 이제 모든 아이템 픽업 게이트가 식별자와 1:1 일치한다.
   (단, 아이콘 스프라이트/3D 모델 리소스는 별도 추가 필요 — `ValidateItemResources` 경고 참조.)
-- **아이템 픽업이 아닌 click 조건(별도 처리)**: `click_chest`, `click_patient_a/b/c`, `click_patient_*_face`,
-  `click_patient_chest`, `click_defib`, `click_to_start_comp`, `click_flowmeter`, `click_oxyflow_wall`,
-  `click_humidifierbottle`, `click_tpiece`, `click_nasal`, `click_sdw`, `click_neckstabilizer`,
+- **아이템 픽업이 아닌 상호작용 조건(별도 처리)**: `interact_chest`, `click_patient_a/b/c`, `click_patient_*_face`,
+  `interact_patient_chest`, `interact_defib`, `click_to_start_comp`, `click_flowmeter`, `interact_oxyflow_wall`,
+  `click_humidifierbottle`, `interact_tpiece`, `click_nasal`, `click_sdw`,
   `click_dummy_a/b` → 환자/장비/더미 클릭 또는 조립 산출물(prepared) 이므로 각 해당 인터랙션 지점에서 Raise.
 
 권장: 표기 불일치 9건은 시나리오 조건명을 아이템 식별자로 통일(JSON 일괄 치환)하는 편이 단순하다.
@@ -175,9 +175,9 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
 - 신호 전용 존(시나리오 그래프 미지정)도 허용된다 → 게이트 통과 전용 트리거로 배치 가능.
 대상: `enter_triage_zone`, `arrive_triagearea` (필요 시 `enter_treatmentroom` 등 추가).
 
-### click_flowmeter / click_oxyflow_wall / close_vital_ui_* / show_* — [부분]
-UI/장비 클릭. 해당 UI 확정 또는 장비 클릭 콜백에 연결. 대상: `click_flowmeter`, `click_oxyflow_wall`,
-`close_vital_ui_b/c`, `show_vital_patient_a`, `click_defib`, `click_penlight`, `click_nasal_and_connect_nasal_and_o2`,
+### click_flowmeter / interact_oxyflow_wall / close_vital_ui_* / show_* — [부분]
+UI/장비 상호작용. 해당 UI 확정 또는 장비 상호작용 콜백에 연결. 대상: `click_flowmeter`, `interact_oxyflow_wall`,
+`close_vital_ui_b/c`, `show_vital_patient_a`, `interact_defib`, `click_penlight`, `click_nasal_and_connect_nasal_and_o2`,
 `click_o2_line_and_click_tpiece_and_connect_tpiece_and_oxyflow`, `click_scissors_and_remove_patient_clothing`,
 `click_defibpad_and_click_patient_chest`, `click_ns_20cc_and_click_syringe_20cc`, `click_ns1_and_iv_set`, `click_ps1_and_iv_set`, `click_ps1_and_click_blood`, `click_20g_and_click_iv_set_and_click_ns1`, `click_dummyA`, `click_dummy_b`.
 
@@ -242,9 +242,9 @@ syringe_5cc, vital_set, wall_suction, yankauer`
   `remove_intu_stylet`, `remove_tpiece`, `remove_patient_clothing`.
 - 의사 NPC 전달: `pass_laryngoscope`, `pass_et_tube_ready`, `pass_syringe`, `pass_central_line_set`.
 - 모니터 UI 토글: `show_vital_patient_a`, `close_vital_ui_b/c`(바이탈 UI 열기/닫기 콜백 필요).
-- 신체부위/장비 클릭: `click_chest`, `click_patient_chest`, `click_to_start_comp`, `click_defib`,
-  `click_flowmeter`, `click_oxyflow_wall`, `click_humidifierbottle`, `click_sdw`, `click_tpiece`,
-  `click_neckstabilizer`, `click_nasal`, `click_patient_b_face`, `click_patient_c_face`,
+- 신체부위/장비 상호작용: `interact_chest`, `interact_patient_chest`, `click_to_start_comp`, `interact_defib`,
+  `click_flowmeter`, `interact_oxyflow_wall`, `click_humidifierbottle`, `click_sdw`, `interact_tpiece`,
+  `click_nasal`, `click_patient_b_face`, `click_patient_c_face`,
   `click_dummy_b`, `move_defibcart_to_patient`.
 
 > 검증 방법: 배선 전이라도 `/scenario signal <cond>` 커맨드로 각 게이트가 막히고 열리는지 수동 확인 가능.

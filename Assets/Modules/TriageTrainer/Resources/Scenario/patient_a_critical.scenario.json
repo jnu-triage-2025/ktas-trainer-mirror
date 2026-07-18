@@ -626,7 +626,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_neckstabilizer"
+              "registryIdentifier": "sig.apply_stabilizer_patient_a"
             },
             {
               "type": "Registry",
@@ -1271,7 +1271,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_tpiece"
+              "registryIdentifier": "sig.interact_tpiece"
             },
             {
               "type": "Registry",
@@ -1313,7 +1313,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_oxyflow_wall"
+              "registryIdentifier": "sig.interact_oxyflow_wall"
             }
           ]
         }
@@ -2554,7 +2554,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_patient_chest"
+              "registryIdentifier": "sig.interact_patient_chest"
             }
           ]
         }
@@ -3049,7 +3049,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_chest"
+              "registryIdentifier": "sig.interact_chest"
             }
           ]
         }
@@ -3611,7 +3611,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_defib"
+              "registryIdentifier": "sig.interact_defib"
             }
           ]
         }

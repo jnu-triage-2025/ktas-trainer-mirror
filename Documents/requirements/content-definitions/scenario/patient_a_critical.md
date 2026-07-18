@@ -903,7 +903,7 @@ Scenario로 판정하면 안 된다.
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.click_neckstabilizer |
+| Registry | Contains | RuntimeState | sig.apply_stabilizer_patient_a |
 | Registry | Contains | RuntimeState | sig.click_wall_suction |
 | Registry | Contains | RuntimeState | sig.click_suction_line |
 | Registry | Contains | RuntimeState | sig.click_yankauer |
@@ -916,7 +916,7 @@ Scenario로 판정하면 안 된다.
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_wall_suction, sig.click_suction_line, sig.click_yankauer [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
 
-- [ ] (b) 선행 구현 필요(미배선): sig.click_neckstabilizer. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [x] 목 고정대는 클릭 대상이 아니라 환자에게 사용하는 아이템이다. `cervical_collar` 사용이 기존 환자 표시 상태를 켜고 `sig.apply_stabilizer_patient_a`를 올린다.
 
 
 ---
@@ -1757,13 +1757,13 @@ Scenario로 판정하면 안 된다.
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
 | Registry | Contains | RuntimeState | sig.click_o2_line |
-| Registry | Contains | RuntimeState | sig.click_tpiece |
+| Registry | Contains | RuntimeState | sig.interact_tpiece |
 | Registry | Contains | RuntimeState | sig.connect_tpiece_and_oxyflow |
 
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_o2_line, sig.connect_tpiece_and_oxyflow [아이템 픽업(MedicalItem.OnGet 자동) / 연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3].
 
-- [ ] (b) 선행 구현 필요(미배선): sig.click_tpiece. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [ ] T-piece 오브젝트에 `ScenarioActionInteractable`을 붙이고 completion signal을 `interact_tpiece`로 설정한다.
 
 
 ---
@@ -1812,10 +1812,10 @@ Scenario로 판정하면 안 된다.
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.click_oxyflow_wall |
+| Registry | Contains | RuntimeState | sig.interact_oxyflow_wall |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.click_oxyflow_wall. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [ ] 벽 유량계 `WallAttachedOxyflowmeter`의 Attach Completion Signal을 `interact_oxyflow_wall`로 설정한다.
 
 
 ---
@@ -3552,12 +3552,12 @@ Scenario로 판정하면 안 된다.
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
 | Registry | Contains | RuntimeState | sig.click_defibpad |
-| Registry | Contains | RuntimeState | sig.click_patient_chest |
+| Registry | Contains | RuntimeState | sig.interact_patient_chest |
 
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_defibpad [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
 
-- [ ] (b) 선행 구현 필요(미배선): sig.click_patient_chest. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [ ] 환자 A 흉부 부위 collider에 `ScenarioActionInteractable`을 붙이고 completion signal을 `interact_patient_chest`로 설정한다.
 
 
 ---
@@ -4233,10 +4233,10 @@ Scenario로 판정하면 안 된다.
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.click_chest |
+| Registry | Contains | RuntimeState | sig.interact_chest |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.click_chest. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [ ] 환자 A 흉부 압박 위치 collider에 `ScenarioActionInteractable`을 붙이고 completion signal을 `interact_chest`로 설정한다.
 
 
 ---
@@ -5042,10 +5042,10 @@ Scenario로 판정하면 안 된다.
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.click_defib |
+| Registry | Contains | RuntimeState | sig.interact_defib |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.click_defib. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [ ] 제세동기 collider에 `ScenarioActionInteractable`을 붙이고 completion signal을 `interact_defib`로 설정한다.
 
 
 ---
