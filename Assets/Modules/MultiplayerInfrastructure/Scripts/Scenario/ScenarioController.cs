@@ -4104,38 +4104,72 @@ namespace MultiplayerInfrastructure.Scenario
             return false;
           }
 
+          bool anyMode = rootCondition.MatchMode == ScenarioValidatorMatchMode.Any;
+          bool anyMatched = false;
+          var anyModeFailures = anyMode ? new List<string>() : null;
+
           for (int i = 0; i < rules.Count; i++)
           {
             var rule = rules[i];
             if (rule == null)
             {
+              if (anyMode)
+              {
+                anyModeFailures.Add($"rule[{i}] is null.");
+              }
               continue;
             }
 
+            string misconfiguration = null;
             if (rule.Type != ScenarioValidatorRuleType.Registry)
             {
-              failureReason = $"rule[{i}] has unsupported type '{rule.Type}'.";
-              return false;
+              misconfiguration = $"rule[{i}] has unsupported type '{rule.Type}'.";
             }
-
-            if (rule.Condition != ScenarioValidatorRuleCondition.Contains)
+            else if (rule.Condition != ScenarioValidatorRuleCondition.Contains)
             {
-              failureReason = $"rule[{i}] has unsupported condition '{rule.Condition}'.";
-              return false;
+              misconfiguration = $"rule[{i}] has unsupported condition '{rule.Condition}'.";
             }
 
             var ruleIdentifier = rule.RegistryIdentifier?.Trim();
-            if (string.IsNullOrWhiteSpace(ruleIdentifier))
+            if (misconfiguration == null && string.IsNullOrWhiteSpace(ruleIdentifier))
             {
-              failureReason = $"rule[{i}] registryIdentifier is null or empty.";
+              misconfiguration = $"rule[{i}] registryIdentifier is null or empty.";
+            }
+
+            if (misconfiguration != null)
+            {
+              if (anyMode)
+              {
+                anyModeFailures.Add(misconfiguration);
+                continue;
+              }
+
+              failureReason = misconfiguration;
               return false;
             }
 
-            if (!Registry.Registry.Contains(rule.RegistryType, ruleIdentifier))
+            bool matched = Registry.Registry.Contains(rule.RegistryType, ruleIdentifier);
+            if (anyMode)
+            {
+              if (matched)
+              {
+                anyMatched = true;
+                break;
+              }
+
+              anyModeFailures.Add($"rule[{i}] identifier '{ruleIdentifier}' is not registered in {rule.RegistryType}.");
+            }
+            else if (!matched)
             {
               failureReason = $"rule[{i}] identifier '{ruleIdentifier}' is not registered in {rule.RegistryType}.";
               return false;
             }
+          }
+
+          if (anyMode && !anyMatched)
+          {
+            failureReason = $"no rule matched (Any mode). details: {string.Join(" | ", anyModeFailures)}";
+            return false;
           }
 
           return true;

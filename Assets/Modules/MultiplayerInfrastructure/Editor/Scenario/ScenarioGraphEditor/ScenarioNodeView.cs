@@ -910,7 +910,7 @@ namespace MultiplayerInfrastructure.Editor
 
           var compactRules = string.Join(", ", rules.Select(each =>
               $"{each.Type}/{each.Condition}/{each.RegistryType}:{each.RegistryIdentifier}"));
-          return $"{index + 1}. RegistryContains [{compactRules}]";
+          return $"{index + 1}. RegistryContains [{rootCondition.MatchMode}: {compactRules}]";
         }
         case ScenarioValidatorCondition.PlayerAssignedTag:
           return $"{index + 1}. PlayerAssignedTag {rootCondition.PlayerScope}/{rootCondition.PlayerTag}";

@@ -274,11 +274,17 @@ syringe_5cc, vital_set, wall_suction, yankauer`
 > 다른 시나리오 문서에서도 "여러 변형 중 하나면 통과" 게이트가 필요하면 **먼저 (B) 방식**(사용 시점
 > 대표 시그널)으로 표현할 것. 개별 변형 아이템을 OR 로 나열해야만 하는 경우에 한해 (A) 를 검토한다.
 
-### (A) 시스템 레벨 대응 — Validator OR(Any) 매칭 모드 (제안됨, 미반영)
+### (A) 시스템 레벨 대응 — Validator OR(Any) 매칭 모드
 
 - 콘텐츠만으로 표현이 어려운 경우(예: 픽업 단계에서 변형 중 하나 보유를 검사)를 위해, Validator
   `RegistryContains` 에 root condition 별 `matchMode: All|Any` 를 도입하는 시스템 확장을 제안했다.
-- `matchMode: Any` 이면 나열한 규칙 중 하나만 충족돼도 통과한다. 기본값 `All` 은 기존 AND 동작 유지.
-- `MultiplayerInfrastructure` 변경이므로 Feature Proposal 로 분리했다(반영 전, 하위호환 보장):
-  `Agents/Proposals/scheduled/2026-07-09-scenario-validator-any-match-mode/`.
+- `matchMode: "Any"` 이면 나열한 규칙 중 하나만 충족돼도 통과한다. 기본값 `All`(필드 생략 가능)은
+  기존 AND 동작을 유지한다. 이 모드는 root condition별로 적용된다.
+- 예시:
+  ```json
+  { "condition": "RegistryContains", "matchMode": "Any", "validationRules": [
+    { "type": "Registry", "condition": "Contains", "registryType": "RuntimeState", "registryIdentifier": "sig.push_epi_variant_a" },
+    { "type": "Registry", "condition": "Contains", "registryType": "RuntimeState", "registryIdentifier": "sig.push_epi_variant_b" }
+  ] }
+  ```
 - (A) 반영 후에도 **우선순위는 (B)** 이며, (A) 는 (B)로 표현이 어려운 게이트에만 사용한다.

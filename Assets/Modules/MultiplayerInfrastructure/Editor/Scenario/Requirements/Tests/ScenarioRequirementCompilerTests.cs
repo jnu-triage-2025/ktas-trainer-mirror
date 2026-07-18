@@ -85,6 +85,66 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
     }
 
     [Test]
+    public void ValidatorAnyMatchModeLoadsAndRoundTrips()
+    {
+      const string json = @"{
+        \"identifier\": \"validator-any-test\",
+        \"tags\": [],
+        \"nodes\": {
+          \"validator\": {
+            \"identifier\": \"validator\",
+            \"nodeType\": \"Validator\",
+            \"rootConditions\": [{
+              \"condition\": \"RegistryContains\",
+              \"matchMode\": \"Any\",
+              \"validationRules\": [{
+                \"type\": \"Registry\",
+                \"condition\": \"Contains\",
+                \"registryType\": \"RuntimeState\",
+                \"registryIdentifier\": \"sig.one\"
+              }, {
+                \"type\": \"Registry\",
+                \"condition\": \"Contains\",
+                \"registryType\": \"RuntimeState\",
+                \"registryIdentifier\": \"sig.two\"
+              }]
+            }],
+            \"onFailure\": \"Ignore\"
+          }
+        }
+      }";
+
+      var graph = ScenarioGraphLoader.LoadFromJson(json);
+      var validator = (ScenarioValidatorNode)graph.Nodes["validator"];
+
+      Assert.That(validator.RootConditions.Single().MatchMode, Is.EqualTo(ScenarioValidatorMatchMode.Any));
+      Assert.That(ScenarioGraphLoader.SaveToJson(graph), Does.Contain("\"matchMode\": \"Any\""));
+    }
+
+    [Test]
+    public void ValidatorDefaultMatchModeOmitsFieldWhenRoundTripped()
+    {
+      var graph = new ScenarioGraph { Identifier = "validator-all-test" };
+      graph.Add(new ScenarioValidatorNode
+      {
+        Identifier = "validator",
+        RootConditions = new List<ScenarioValidatorRootCondition>
+        {
+          new ScenarioValidatorRootCondition
+          {
+            Condition = ScenarioValidatorCondition.RegistryContains,
+            ValidationRules = new List<ScenarioValidatorRule>
+            {
+              new ScenarioValidatorRule { RegistryType = RegistryType.RuntimeState, RegistryIdentifier = "sig.one" }
+            }
+          }
+        }
+      });
+
+      Assert.That(ScenarioGraphLoader.SaveToJson(graph), Does.Not.Contain("\"matchMode\""));
+    }
+
+    [Test]
     public void GraphFingerprintIsIndependentOfNodeInsertionOrder()
     {
       var first = new ScenarioGraph { Identifier = "fingerprint" };

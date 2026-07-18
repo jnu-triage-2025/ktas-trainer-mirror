@@ -1326,6 +1326,15 @@
           ],
           "default": "Any"
         },
+        "matchMode": {
+          "type": "string",
+          "enum": [
+            "All",
+            "Any"
+          ],
+          "default": "All",
+          "description": "RegistryContains validationRules 결합 방식. All(기본)=모든 규칙 충족, Any=하나 이상 충족."
+        },
         "validationRules": {
           "type": [
             "array",

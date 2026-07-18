@@ -20,6 +20,9 @@ namespace MultiplayerInfrastructure.Scenario
 
       [JsonPropertyName("validationRules")]
       public System.Collections.Generic.List<ScenarioValidatorRuleDTO> ValidationRules { get; set; }
+
+      [JsonPropertyName("matchMode")]
+      public string MatchMode { get; set; }
     }
 
     internal sealed class ScenarioValidatorRuleDTO

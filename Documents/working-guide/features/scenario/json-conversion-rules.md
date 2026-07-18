@@ -91,6 +91,9 @@ updated: 2026-04-14
   enum 으로 직접 표현할 수 없다. 대신 **인터랙션 완료 신호(Signal) + `RegistryContains`(RuntimeState)** 로 게이팅한다(TODO-SPEC-2 채택안).
 - "수행해야만 진행"을 강제하려면 Validator 에 `waitForCondition: true` 를 둔다(엔진 정식 지원).
   이때 조건(신호)이 올라올 때까지 진행을 막고 폴링 대기한다. 별도 대기 노드 조합이 더 이상 필요 없다.
+- `RegistryContains`의 `validationRules`는 기본적으로 모두 충족해야 한다(`matchMode: "All"`, 생략 가능).
+  여러 후보 중 하나만 충족하면 되는 경우에만 `matchMode: "Any"`를 지정한다. `Any`는 각 root condition에
+  적용되며, 다른 root condition들과의 결합은 계속 AND다.
 
 #### 게이트 타임아웃·실패 분기 (waitTimeoutSeconds / onWaitTimeout)
 

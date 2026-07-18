@@ -1567,7 +1567,8 @@ namespace MultiplayerInfrastructure.Scenario
           TargetCount = each.TargetCount ?? 0,
           PlayerTag = each.PlayerTag,
           PlayerScope = ParseValidatorPlayerScope(each.PlayerScope),
-          ValidationRules = ParseValidatorRules(each.ValidationRules)
+          ValidationRules = ParseValidatorRules(each.ValidationRules),
+          MatchMode = ParseValidatorMatchMode(each.MatchMode)
         });
       }
 
@@ -1595,11 +1596,27 @@ namespace MultiplayerInfrastructure.Scenario
           TargetCount = each.TargetCount,
           PlayerTag = each.PlayerTag,
           PlayerScope = each.PlayerScope.ToString(),
-          ValidationRules = ConvertValidatorRulesToDTO(each.ValidationRules)
+          ValidationRules = ConvertValidatorRulesToDTO(each.ValidationRules),
+          MatchMode = each.MatchMode == ScenarioValidatorMatchMode.All ? null : each.MatchMode.ToString()
         });
       }
 
       return dtoConditions;
+    }
+
+    private static ScenarioValidatorMatchMode ParseValidatorMatchMode(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioValidatorMatchMode.All;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioValidatorMatchMode parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioValidatorMatchMode '{value}'.");
     }
 
     private static IReadOnlyList<ScenarioValidatorRule> ParseValidatorRules(List<ScenarioValidatorNodeDTO.ScenarioValidatorRuleDTO> rules)

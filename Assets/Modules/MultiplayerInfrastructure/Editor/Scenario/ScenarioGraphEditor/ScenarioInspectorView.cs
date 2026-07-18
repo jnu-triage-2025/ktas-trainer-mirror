@@ -476,6 +476,9 @@ namespace MultiplayerInfrastructure.Editor
 
       EditorGUILayout.Space();
       EditorGUILayout.LabelField("Registry Validation Rules", EditorStyles.boldLabel);
+      rootCondition.MatchMode = (ScenarioValidatorMatchMode)EditorGUILayout.EnumPopup(
+        new GUIContent("Match Mode", "All=모든 규칙 충족(AND), Any=하나 이상 충족(OR)"),
+        rootCondition.MatchMode);
 
       for (int i = 0; i < rules.Count; i++)
       {
