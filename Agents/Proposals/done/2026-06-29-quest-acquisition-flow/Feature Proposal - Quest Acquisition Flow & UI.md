@@ -1,7 +1,7 @@
 # Feature Proposal: 아이템 획득형 퀘스트 흐름 및 Quest UI 확장
 
 - 작성일: 2026-06-29
-- 상태: scheduled
+- 상태: done (현재 구현 대조 완료: 2026-07-18)
 - 대상 모듈: `Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/`, `Assets/Modules/MultiplayerInfrastructure/Scripts/Quest/`, `Assets/Modules/MultiplayerInfrastructure/Scripts/UI/`
 - 관련 콘텐츠: `Documents/requirements/content-definitions/scenario/disaster_intro.md` (`N003_1`, `V006` 구간)
 

@@ -1,7 +1,7 @@
 # Feature Proposal: Scenario Ingame Requirements Support
 
 - 작성일: 2026-07-15
-- 상태: **제안(scheduled)**
+- 상태: **done** (현재 구현 및 검증 증거 대조 완료: 2026-07-18)
 - 대상 모듈: `Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/`,
   `Assets/Modules/MultiplayerInfrastructure/Editor/Scenario/`
 - 프로젝트 확장 대상: `Assets/Modules/TriageTrainer/Editor/Scenario/`
@@ -807,7 +807,7 @@ Phase 3-4는 scene authoring, Phase 5는 build gate, Phase 6은 runtime lifecycl
 ### 링크, 참고사항
 
 - 기존 요구사항: [`scenario-preflight-requirements.md`](../../../../Documents/requirements/scenario/scenario-preflight-requirements.md)
-- 기존 구현 제안: [Scenario Preflight Requirements](../../done/2026-06-26-scenario-preflight-requirements/Feature Proposal - Scenario Preflight Requirements.md)
+- 기존 구현 제안: [Scenario Preflight Requirements](../2026-06-26-scenario-preflight-requirements/Feature Proposal - Scenario Preflight Requirements.md)
 - 기존 운영 가이드: [`scenario-preflight-and-dev-stub-setup-guide.md`](../../../../Documents/working-guide/features/scenario/scenario-preflight-and-dev-stub-setup-guide.md)
 - Scenario graph 가이드: [`ScenarioGraph.md`](../../../../Documents/guide/ScenarioGraph.md)
 - 기존 collector: `Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/Preflight/ScenarioRequirementsCollector.cs`
