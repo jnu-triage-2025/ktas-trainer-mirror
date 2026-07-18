@@ -223,6 +223,7 @@ flags: []
 | `targetCount` | `int` | 비교 대상 수(PlayerCount* 조건에서 사용) | `2` |
 | `playerTag` | `string` | 비교할 플레이어 태그(`PlayerAssignedTag` 조건에서 사용) | `nurse` |
 | `playerScope` | `string` (`Any`\|`All`\|`Owner`) | 조건을 검사할 플레이어 범위(기본값 `Any`) | `Any` |
+| `matchMode` | `string` (`All`\|`Any`) | `RegistryContains`의 규칙 결합 방식. 생략/`All`은 모두 충족(AND), `Any`는 하나 이상 충족(OR) | `Any` |
 | `validationRules` | `ScenarioValidatorRule[]` | (`RegistryContains` 조건에서 사용) 레지스트리 검증 규칙 목록 | - |
 
 조건(`condition`) 종류: `PlayerCountEqual`, `PlayerCountNotEqual`, `PlayerCountLessThan`, `PlayerCountLessThanOrEqual`, `PlayerCountGreaterThan`, `PlayerCountGreaterThanOrEqual`, `RegistryContains`, `PlayerAssignedTag`
