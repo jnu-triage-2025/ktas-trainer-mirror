@@ -12,8 +12,9 @@ flags: ["refactor-required"]
 
 이 문서는 다음 두 작업의 근거와 결과를 정리한다.
 
-1. [`patient_a_critical.md`](./patient_a_critical.md) / [`patient_b_c_ct.md`](./patient_b_c_ct.md) 가
-   원본 텍스트([`_origin/시뮬레이션 사례 + 평가 루브릭 (4차 수정).txt`](./_origin/))와
+1. [`patient_a_critical.md`](../../../requirements/content-definitions/scenario/patient_a_critical.md) /
+   [`patient_b_c_ct.md`](../../../requirements/content-definitions/scenario/patient_b_c_ct.md) 가
+   원본 텍스트([`_origin/README.md`](../../../requirements/content-definitions/scenario/_origin/README.md))와
    scenario JSON 규격을 얼마나 잘 만족하는지에 대한 검토(judgement)
 2. 이들 `.md` 를 scenario JSON 으로 변환할 때 따라야 하는 규칙과,
    현재 node 스펙의 표현력 부족으로 발생하는 후속 구현 TODO(플래그)
@@ -21,7 +22,7 @@ flags: ["refactor-required"]
 규격/규칙의 1차 근거는 다음 문서들이며, 본 문서는 환자 A/B/C 변환에 특화된 부속 노트다.
 
 - [`json-conversion-rules.md`](./json-conversion-rules.md)
-- [`scenario-graph-spec.md`](./scenario-graph-spec.md)
+- [`scenario-graph-spec.md`](../../../requirements/content-definitions/scenario/scenario-graph-spec.md)
 - `Assets/Modules/MultiplayerInfrastructure/Resources/Schema/scenario.schema.json`
 - 변환 선례: `Assets/Modules/TriageTrainer/Resources/Scenario/disaster_intro.json`
   및 동봉된 `disaster_intro.unsupported.flags.json`
@@ -152,7 +153,8 @@ Agent Manager 워크트리 2개(`scenario-patient-a-json`, `scenario-patient-bc-
   }
   ```
   변환 패턴(복수 조건 `A, B` + TargetCount N): 하나의 todo 이벤트로 병합한다.
-  예) `Click_humidifierbottle, Click_sdw` → `todo.validate.click_humidifierbottle_and_sdw`.
+  예) `Click_humidifier_bottle, Click_sterile_distilled_water` →
+  `todo.validate.click_humidifier_bottle_and_sterile_distilled_water`.
 - 생성되는 모든 `todo.validate.*` 이벤트는 후속 구현 대상이므로 각 파일별
   `*.unsupported.flags.json` 에 누적 기록한다(아래 3장).
 - **표현력 부족 플래그 → TODO-SPEC-2** (아이템 클릭/적용/연결, 구역 진입, 환자 신체부위

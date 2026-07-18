@@ -65,7 +65,6 @@ Scenario로 판정하면 안 된다.
 | ROLE-1 | `P002`, `P003`, `P004`, `P005`, `P006`, `P007` 진입 전 | `ByRole`은 플레이어 태그만 읽지만, 이 문서에는 NurseA~D와 역할 태그를 연결·부여하는 진입 노드가 없다. 태그가 없으면 `Reallocation` 이후에도 브랜치 할당이 보장되지 않는다. | **인간 판단 필요:** 로비/세션이 `triage_lead`, `airway_team`, `neuro_assessment` 등 모든 태그를 선행 부여하는지 확정한다. 아니라면 Scenario 시작 전용 role→tag 바인더 구현 후 `SPAWN_A`의 선행 요구사항으로 둔다. |
 | ROLE-2 | `P004`의 `N008`, `N011` 브랜치 | 한 브랜치에 각각 `NurseB, NurseA`와 `NurseD, NurseC` 두 역할을 적었지만 현재 `ByRole`은 한 브랜치에 한 플레이어만 배정한다. `requiredPlayerTagsMatchMode=All`은 두 사람이 아니라 한 사람이 두 태그를 모두 가져야 한다는 뜻이다. | **인간 판단 필요:** (a) 한 명이 전체 브랜치를 수행하도록 역할 표기를 단일화하거나, (b) `N008`의 삽관/산소 및 `N011`의 IV/보조 흐름을 별도 병렬 브랜치와 합류점으로 분리한다. |
 | S-1 | `V011_1`, `V013`, `V014_1~V014_4`, `V015`, `V015_1`, `V015_3~V015_4`, `V017_1`, `V018`, `V023_1`, `V024`, `V025~V025_1`, `V027`, `V030`, `V033` | 20개 신호에 실제 gameplay producer가 연결되지 않았다고 문서에 표시되어 있다. 하나라도 생산되지 않으면 해당 Validator에서 영구 정지한다. | 각 노드의 기존 `(b) 선행 구현 필요` 주석을 producer 작업 목록으로 사용한다. 구현 전에는 Debug emitter를 정식 producer로 간주하지 않는다. |
-| CRAFT-1 | `V015`~`V015_4` 산소 공급 흐름 | `humidifierbottle`, `sterile_distilled_water`, `flowmeter`와 두 조합 레시피가 없어 `humidifierbottle_ready`/`oxyflowmeter`를 만들 수 없다. | **필수 보충:** 재료 ItemDefinition 3개와 recipe 2개를 등록한다. 미등록 상태에서는 이 브랜치를 제거하거나 자동 통과시키지 않는다. |
 | Q-1 | 모든 `Q006`~`Q030_1` | 23개 `Quest_*`가 표시용 식별자만 있고 title/content/task definition이 없다. 식별자만 가진 inline quest는 빈 오버레이를 만들며 플레이 안내가 느슨해진다. | **인간 콘텐츠 확정 필요:** 각 Add 노드 주변 Dialogue와 이어지는 Validator 조건을 기반으로 title, questContent, task display text를 확정해 별도 quest definition으로 작성한다. Remove 노드는 같은 definition identifier를 사용한다. |
 | IV-1 | `V017` | 18G 2개가 필요한 서술과 신호 3개/`TargetCount` 의미가 일치하지 않는다. 동일 식별자의 두 번째 획득을 `RegistryContains`로 구분할 수 없다. | **인간 판단 필요:** 좌·우 18G를 `click_18g_left/right`로 분리하거나, 수량 기반 quest condition으로 교체한다. |
 | END-1 | `D037` 및 종료 조건 | 문서는 fade-out, 종료 메시지, 다음 Scenario 진행을 요구하지만 `D037 -> (end)`만 정의한다. | **인간 판단 필요:** 다음 Scenario identifier를 확정한다. 이후 `D037 -> END_FADE_OUT -> END_MESSAGE -> START_NEXT_SCENARIO` 연결을 추가하고, 마지막 노드만 `null`로 둔다. |
@@ -75,7 +74,6 @@ Scenario로 판정하면 안 된다.
 - ROLE-1과 ROLE-2의 할당 정책이 확정되어야 한다.
 - SPAWN-A-1의 FishNet spawnable prefab 등록이 완료되어야 한다.
 - S-1의 20개 신호에 정식 producer와 동일 식별자가 연결되어야 한다.
-- CRAFT-1의 아이템·레시피가 등록되어야 한다.
 - Q-1의 23개 quest definition이 작성되어야 한다.
 - IV-1의 18G 수량 판정과 END-1의 다음 Scenario identifier가 확정되어야 한다.
 - 변환 후 Requirements Supports에서 NPC/entity/item/event/quest/runtime-signal 요구사항을 컴파일하고,
@@ -92,8 +90,8 @@ Scenario로 판정하면 안 된다.
 | `yankauer_suction_ready` | `suction_line` + `yankauer` | A003 | 등록됨(2026-07-09) | 구 `yankauer_ready` → 정본 `yankauer_suction_ready` |
 | `laryngoscope` | `laryngoscope_handle` + `laryngoscope_blade` | A004 | 등록됨 | 구 md `laryngo_handle`/`laryngo_blade` → 정본 `laryngoscope_handle`/`laryngoscope_blade` |
 | `endotracheal_tube_ready` | `endotracheal_tube` + `stylet` | A005 | 등록됨 | 구 md `et_tube_ready`/`et_tube` → 정본 `endotracheal_tube_ready`/`endotracheal_tube` |
-| `humidifierbottle_ready` | `humidifierbottle` + `sterile_distilled_water` | A006 | 등록필요(재료 미존재로 보류) | 구 `sdw` → 정본 `sterile_distilled_water`. 재료 아이템 `humidifierbottle`/`sterile_distilled_water` 미존재 |
-| `oxyflowmeter` | `humidifierbottle_ready` + `flowmeter` | A007 | 등록필요(재료 미존재로 보류) | `flowmeter` 미존재 |
+| `humidifier_sterile_distilled_water_bottle` | `humidifier_bottle` + `sterile_distilled_water` | A006 | 등록됨 | 구 `sdw` → 정본 `sterile_distilled_water` |
+| `oxyflowmeter` | `humidifier_sterile_distilled_water_bottle` + `flowmeter` | A007 | 등록됨 | 환자 B·C 공용 단일 산출물 |
 | `epinephrine_5cc_syringe` | `epinephrine_ampule` + `syringe_5cc` | A008 · A010 | 등록됨(2026-07-09) | 구 md `epi_ready`/`epi`/`epinephrine_syringe` → 정본 `epinephrine_5cc_syringe`/`epinephrine_ampule` |
 | `normal_saline_20cc_syringe` | `normal_saline_20ml` + `syringe_20cc` | A009 · A011 | 등록됨(2026-07-09) | 구 `ns_20cc(_ready)` 산출물 제거 → 규칙적 산출물 `normal_saline_20cc_syringe`(관계 1) |
 | `normal_saline_intravenous_ready` | `normal_saline_1000ml` + `intravenous_set` | (인트로 사전조합) | 등록됨(2026-07-09) | 구 `ns1_ready` → 정본 `normal_saline_intravenous_ready`(수액 준비물) |
@@ -101,7 +99,7 @@ Scenario로 판정하면 안 된다.
 
 - [x] 명명충돌 확정요청: `et_tube_ready`↔`endotracheal_tube_ready`, `epi_ready`↔`epinephrine_5cc_syringe`, `ns_20cc(_ready)`→`normal_saline_20cc_syringe`, `ns1_ready`→`normal_saline_intravenous_ready`, `ps1_ready`→`plasma_solution_intravenous_ready`, `yankauer_ready`→`yankauer_suction_ready`. C# 정본에 맞춰 시나리오 산출물명 치환 확정(crafting-recipes.md §확정 요청 [x] 참조, 2026-07-09).
 - [x] 등록완료 레시피(`yankauer_suction_ready`, `epinephrine_5cc_syringe`, `normal_saline_20cc_syringe`, `normal_saline_intravenous_ready`, `plasma_solution_intravenous_ready`, `laryngoscope`, `endotracheal_tube_ready`)를 `RegisterAllCombineRecipes()`에 추가 완료 (crafting-recipes.md 참조, 2026-07-09).
-- [ ] 등록 보류 레시피(`humidifierbottle_ready`, `oxyflowmeter`): 재료 아이템(`humidifierbottle`, `sterile_distilled_water`, `flowmeter`) 선행 추가 필요 — 인간 작업자/후속 작업 (crafting-recipes.md 참조).
+- [x] 산소화 레시피(`humidifier_sterile_distilled_water_bottle`, `oxyflowmeter`)와 재료(`humidifier_bottle`, `sterile_distilled_water`, `flowmeter`)는 `RegisterAllItems()`/`RegisterAllCombineRecipes()`에 등록됨.
 
 ## 환자 A 사전설정 (d-3)
 
@@ -1628,16 +1626,16 @@ Scenario로 판정하면 안 된다.
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.click_humidifierbottle |
+| Registry | Contains | RuntimeState | sig.click_humidifier_bottle |
 | Registry | Contains | RuntimeState | sig.click_sterile_distilled_water |
 
 
-- [ ] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A006(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A006 → N009_1 로 재지정함. 산출물 `humidifierbottle_ready` 는 재료 미존재로 **등록 보류**(crafting-recipes.md 참조). 재료(`humidifierbottle`, `sterile_distilled_water`) 선행 추가 후 조합 완료 전제로 진행.
+- [x] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A006(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A006 → N009_1 로 재지정함. 산출물 `humidifier_sterile_distilled_water_bottle` 레시피는 등록되어 있다(crafting-recipes.md 참조).
 
-- [x] 명명충돌 확정요청: 입력 식별자 `sdw` → 정본 `sterile_distilled_water` 확정(crafting-recipes.md §확정 요청 [x]). 단 레시피 자체는 재료 미존재로 등록 보류 상태.
+- [x] 명명충돌 확정요청: 입력 식별자 `sdw` → 정본 `sterile_distilled_water`, `humidifierbottle` → `humidifier_bottle`로 확정(crafting-recipes.md 참조).
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.click_humidifierbottle, sig.click_sterile_distilled_water. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [x] `sig.click_humidifier_bottle`, `sig.click_sterile_distilled_water`는 `MedicalItem.OnGet()`이 아이템 획득 시 자동 발행한다.
 
 
 ---
@@ -1676,12 +1674,12 @@ Scenario로 판정하면 안 된다.
 | Registry | Contains | RuntimeState | sig.click_flowmeter |
 
 
-- [ ] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A007(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A007 → N009_2 로 재지정함. 산출물 `oxyflowmeter` 는 재료 미존재로 **등록 보류**(crafting-recipes.md 참조). 재료(`humidifierbottle_ready`, `flowmeter`) 선행 추가 후 조합 완료 전제로 진행.
+- [x] 조합은 노드가 아니라 crafting 시스템으로 처리됨. 구 md의 A007(CombineItem)을 제거하고 이 지점의 NextIdentifier를 A007 → N009_2 로 재지정함. 산출물 `oxyflowmeter` 레시피는 등록되어 있다(crafting-recipes.md 참조).
 
-- [x] 명명충돌 확정요청: 산출물명 `oxyflowmeter` 단일 식별자로 확정(환자 B·C 공용, `oxyflowmeter_b`/`oxyflowmeter_c` 미분리)(crafting-recipes.md §확정 요청 [x]). 단 레시피 자체는 재료 미존재로 등록 보류 상태.
+- [x] 명명충돌 확정요청: 산출물명 `oxyflowmeter` 단일 식별자로 확정(환자 B·C 공용, `oxyflowmeter_b`/`oxyflowmeter_c` 미분리)(crafting-recipes.md 참조).
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.click_flowmeter. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [x] `sig.click_flowmeter`는 `MedicalItem.OnGet()`이 아이템 획득 시 자동 발행한다.
 
 
 ---

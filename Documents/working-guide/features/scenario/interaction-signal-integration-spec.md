@@ -131,8 +131,8 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
   `sig.click_plasma_solution_1000ml` 로 정합했다. 이제 모든 아이템 픽업 게이트가 식별자와 1:1 일치한다.
   (단, 아이콘 스프라이트/3D 모델 리소스는 별도 추가 필요 — `ValidateItemResources` 경고 참조.)
 - **아이템 픽업이 아닌 상호작용 조건(별도 처리)**: `interact_chest`, `click_patient_a/b/c`, `click_patient_*_face`,
-  `interact_patient_chest`, `interact_defib`, `click_to_start_comp`, `click_flowmeter`, `interact_oxyflow_wall`,
-  `click_humidifierbottle`, `interact_tpiece`, `click_nasal`, `click_sdw`,
+  `interact_patient_chest`, `interact_defib`, `click_to_start_comp`, `interact_oxyflow_wall`,
+  `interact_tpiece`, `click_nasal`,
   `click_dummy_a/b` → 환자/장비/더미 클릭 또는 조립 산출물(prepared) 이므로 각 해당 인터랙션 지점에서 Raise.
 
 권장: 표기 불일치 9건은 시나리오 조건명을 아이템 식별자로 통일(JSON 일괄 치환)하는 편이 단순하다.
@@ -243,7 +243,7 @@ syringe_5cc, vital_set, wall_suction, yankauer`
 - 의사 NPC 전달: `pass_laryngoscope`, `pass_et_tube_ready`, `pass_syringe`, `pass_central_line_set`.
 - 모니터 UI 토글: `show_vital_patient_a`, `close_vital_ui_b/c`(바이탈 UI 열기/닫기 콜백 필요).
 - 신체부위/장비 상호작용: `interact_chest`, `interact_patient_chest`, `click_to_start_comp`, `interact_defib`,
-  `click_flowmeter`, `interact_oxyflow_wall`, `click_humidifierbottle`, `click_sdw`, `interact_tpiece`,
+  `interact_oxyflow_wall`, `interact_tpiece`,
   `click_nasal`, `click_patient_b_face`, `click_patient_c_face`,
   `click_dummy_b`, `move_defibcart_to_patient`.
 
