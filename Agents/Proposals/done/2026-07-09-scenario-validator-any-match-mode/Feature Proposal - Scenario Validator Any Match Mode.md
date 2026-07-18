@@ -6,10 +6,9 @@
 - 관련 명세: `Documents/requirements/content-definitions/scenario/interaction-signal-integration-spec.md`
 - 선행/유사 패턴: `ScenarioPlayerTagMatchMode`(Parallel 브랜치의 `RequiredPlayerTagsMatchMode`)
 
-> 상태: **제안(scheduled)**. `MultiplayerInfrastructure` 는 타 프로젝트 재사용 전제 모듈이므로,
-> 본 제안은 예시 구현만 포함하며 실제 모듈 반영은 인간 작업자 검토·승인 후 진행한다(AGENTS.md 규칙).
-> 콘텐츠 레벨 대응(B, `push_*` 사용 시점 시그널 게이팅)은 본 제안과 독립적으로 이미 우선 채택되어
-> 동작하므로, 본 제안(A)이 반영되기 전에도 OR 게이트 문제는 해결된 상태다.
+> 상태: **완료(done)**. `matchMode: "Any"`를 모델·JSON 스키마·로더·런타임·에디터에 반영했으며,
+> `All` 기본값의 하위호환 직렬화와 `Any`/`All` 런타임 판정을 Unity 에디터 테스트로 검증했다.
+> 콘텐츠 레벨 대응(B, `push_*` 사용 시점 시그널 게이팅)은 계속 우선 권장한다.
 
 ### 개요
 
