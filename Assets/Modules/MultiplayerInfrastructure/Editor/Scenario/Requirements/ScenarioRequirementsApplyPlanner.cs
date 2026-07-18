@@ -116,10 +116,10 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
           targetSceneGuid);
         var identity = BuildPlanIdentity(scenarioIdentifier, composition, requirement, effectiveConfiguration, factory);
         var operation = marker == null ? ScenarioWorldObjectOperationKind.Create : ScenarioWorldObjectOperationKind.Configure;
-        var reason = marker == null
+        var planReason = marker == null
           ? "No owned generated object exists."
           : marker.IsOrphan ? "Orphaned generated object will be re-adopted and configured." : "Owned generated object will be configured.";
-        plans.Add(new ScenarioWorldObjectCreationPlan(identity, scenarioIdentifier, requirement.Key, operation, effectiveConfiguration.TargetScenePath, effectiveConfiguration.TargetSceneGuid, FindRole(composition, effectiveConfiguration.TargetScenePath), factory.Identifier, factory.Version, marker?.Identity, reason, ScenarioWorldObjectPlanRisk.None, Array.Empty<ScenarioWorldObjectFieldChange>(), marker, manifestFingerprint));
+        plans.Add(new ScenarioWorldObjectCreationPlan(identity, scenarioIdentifier, requirement.Key, operation, effectiveConfiguration.TargetScenePath, effectiveConfiguration.TargetSceneGuid, FindRole(composition, effectiveConfiguration.TargetScenePath), factory.Identifier, factory.Version, marker?.Identity, planReason, ScenarioWorldObjectPlanRisk.None, Array.Empty<ScenarioWorldObjectFieldChange>(), marker, manifestFingerprint));
       }
       foreach (var sceneEntry in composition.Scenes)
       {

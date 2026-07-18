@@ -1,7 +1,7 @@
 ---
 title: "Scenario 인게임 요구사항 계약"
 domain: "module-features.multiplayer-infrastructure"
-progress: "2-implementing"
+progress: "3-implemented"
 flags: []
 ---
 
@@ -38,5 +38,5 @@ flags: []
 
 ## 참조
 
-- [구현 제안](../../../Agents/Proposals/scheduled/2026-07-15-scenario-ingame-requirements-support/Feature Proposal - Scenario Ingame Requirements Support.md)
+- [구현 제안](../../../Agents/Proposals/done/2026-07-15-scenario-ingame-requirements-support/Feature Proposal - Scenario Ingame Requirements Support.md)
 - [API 레퍼런스](../../api-references/MultiplayerInfrastructure.Scenario.Requirements.md)

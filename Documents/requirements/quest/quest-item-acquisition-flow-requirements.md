@@ -1,7 +1,7 @@
 ---
 title: "아이템 획득형 Quest 흐름 및 UI 요구사항"
 domain: "module-features.multiplayer-infrastructure"
-progress: "1-designed"
+progress: "3-implemented"
 flags: []
 ---
 
@@ -65,7 +65,7 @@ flags: []
 
 ## 참조
 
-- [requirement:disaster_intro](../content-definitions/scenario/disaster_intro.md)
+- [scenario:disaster_intro](../../../Assets/Modules/TriageTrainer/Resources/Scenario/disaster_intro.scenario.json)
 - [requirement:quest-manager](./quest-manager-requirements.md)
 - [requirement:ui-controllers](../ui/ui-controllers-requirements.md)
-- [proposal:quest-acquisition-flow](../../../Agents/Proposals/scheduled/2026-06-29-quest-acquisition-flow/Feature Proposal - Quest Acquisition Flow & UI.md)
+- [proposal:quest-acquisition-flow](../../../Agents/Proposals/done/2026-06-29-quest-acquisition-flow/Feature Proposal - Quest Acquisition Flow & UI.md)
