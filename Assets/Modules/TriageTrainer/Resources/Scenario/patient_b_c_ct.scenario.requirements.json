@@ -1,0 +1,1118 @@
+{
+  "format": "scenario-ingame-requirements",
+  "schemaVersion": 1,
+  "scenarioIdentifier": "patient_b_c_ct",
+  "source": {
+    "scenarioSha256": "c0345366824ffa76a6e369cd0a5a63e5e798e65da845aa63718100f6d0a5e81f",
+    "generatedAtUtc": null
+  },
+  "declarations": [
+    {
+      "selector": {
+        "kind": "EntityPreset",
+        "identifier": "dummy_b"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "SpawnablePreset"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "Scenario 시작 전에 EntityPreset registry에서 해석되어야 합니다."
+    },
+    {
+      "selector": {
+        "kind": "EntityPreset",
+        "identifier": "patient_b"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "SpawnablePreset"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "Scenario 시작 전에 EntityPreset registry에서 해석되어야 합니다."
+    },
+    {
+      "selector": {
+        "kind": "EntityPreset",
+        "identifier": "patient_c"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "SpawnablePreset"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "Scenario 시작 전에 EntityPreset registry에서 해석되어야 합니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "activate_vital_monitor_ui_patient_b"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "activate_vital_monitor_ui_patient_c"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "apply_gauze_patient_b"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "apply_gauze_patient_c"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "apply_gauze_with_plaster_patient_b"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "apply_gauze_with_plaster_patient_c"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "b_c_d_to_triage"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "connect_ns1_left_patient_c"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "connect_ns1_right_patient_b"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "insert_20g_left_patient_c"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "insert_20g_right_patient_b"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "move_patient_b"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "move_patient_c"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "move_patients_to_ct"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "pupil_reflex_patient_b"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "pupil_reflex_patient_c"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "show_dummy_b_ui"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "show_patient_b_ui"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "show_patient_c_ui"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "EventHandler",
+        "identifier": "triage_patient_b_patient_c_dummy_b"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "InvokableEventHandler"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "TriageScenarioEventBootstrap가 등록해야 하는 이벤트 핸들러입니다."
+    },
+    {
+      "selector": {
+        "kind": "QuestDefinition",
+        "identifier": "Quest_BleedingControl_B"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "ResolvableQuestDefinition"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "동일 Scenario의 questDefinitionIncludes에서 불러오는 퀘스트 정의입니다."
+    },
+    {
+      "selector": {
+        "kind": "QuestDefinition",
+        "identifier": "Quest_BleedingControl_C"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "ResolvableQuestDefinition"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "동일 Scenario의 questDefinitionIncludes에서 불러오는 퀘스트 정의입니다."
+    },
+    {
+      "selector": {
+        "kind": "QuestDefinition",
+        "identifier": "Quest_GCS_B"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "ResolvableQuestDefinition"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "동일 Scenario의 questDefinitionIncludes에서 불러오는 퀘스트 정의입니다."
+    },
+    {
+      "selector": {
+        "kind": "QuestDefinition",
+        "identifier": "Quest_GCS_C"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "ResolvableQuestDefinition"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "동일 Scenario의 questDefinitionIncludes에서 불러오는 퀘스트 정의입니다."
+    },
+    {
+      "selector": {
+        "kind": "QuestDefinition",
+        "identifier": "Quest_Nasal_B"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "ResolvableQuestDefinition"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "동일 Scenario의 questDefinitionIncludes에서 불러오는 퀘스트 정의입니다."
+    },
+    {
+      "selector": {
+        "kind": "QuestDefinition",
+        "identifier": "Quest_Nasal_C"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "ResolvableQuestDefinition"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "동일 Scenario의 questDefinitionIncludes에서 불러오는 퀘스트 정의입니다."
+    },
+    {
+      "selector": {
+        "kind": "QuestDefinition",
+        "identifier": "Quest_playerB_playerC_playerD_to_triage"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "ResolvableQuestDefinition"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "동일 Scenario의 questDefinitionIncludes에서 불러오는 퀘스트 정의입니다."
+    },
+    {
+      "selector": {
+        "kind": "QuestDefinition",
+        "identifier": "Quest_Pupil_IV_B"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "ResolvableQuestDefinition"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "동일 Scenario의 questDefinitionIncludes에서 불러오는 퀘스트 정의입니다."
+    },
+    {
+      "selector": {
+        "kind": "QuestDefinition",
+        "identifier": "Quest_Pupil_IV_C"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "ResolvableQuestDefinition"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "동일 Scenario의 questDefinitionIncludes에서 불러오는 퀘스트 정의입니다."
+    },
+    {
+      "selector": {
+        "kind": "QuestDefinition",
+        "identifier": "Quest_Triage_patientB_patientC"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "ResolvableQuestDefinition"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "동일 Scenario의 questDefinitionIncludes에서 불러오는 퀘스트 정의입니다."
+    },
+    {
+      "selector": {
+        "kind": "QuestDefinition",
+        "identifier": "Quest_Vital_B"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "ResolvableQuestDefinition"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "동일 Scenario의 questDefinitionIncludes에서 불러오는 퀘스트 정의입니다."
+    },
+    {
+      "selector": {
+        "kind": "QuestDefinition",
+        "identifier": "Quest_Vital_C"
+      },
+      "operation": "Override",
+      "capabilities": [
+        "ResolvableQuestDefinition"
+      ],
+      "availability": "BeforeScenarioStart",
+      "mustProve": true,
+      "binding": {
+        "mode": "External"
+      },
+      "notes": "동일 Scenario의 questDefinitionIncludes에서 불러오는 퀘스트 정의입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.apply_electrode"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.apply_gauze"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.apply_plaster_on_gauze"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.check_gcs_patient_b"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.check_gcs_patient_c"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.check_vital_patient_b"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.check_vital_patient_c"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_20g"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_dummy_b"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_electrode"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_electrode_cable"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_flowmeter"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_gauze"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_gloves"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_humidifierbottle"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_intravenous_set"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_nasal"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_normal_saline_1000ml"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_patient_b"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_patient_b_face"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_patient_c"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_patient_c_face"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_penlight"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_plaster"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_sterile_distilled_water"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_vital_set"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.close_vital_ui_b"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.close_vital_ui_c"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.connect_cannula_and_ns1_patient_b"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.connect_cannula_and_ns1_patient_c"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.connect_nasal_and_o2"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.connect_patient_and_monitor_b"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.connect_patient_and_monitor_patient_c"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.connect_wall_component_2"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.enter_triage_zone"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.grab_stretcher_patient_b"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.grab_stretcher_patient_c"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.insert_iv_b_right"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.insert_iv_c_left"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.select_patient_b"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.select_patient_c"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.wear_glove"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    }
+  ],
+  "suppressions": []
+}

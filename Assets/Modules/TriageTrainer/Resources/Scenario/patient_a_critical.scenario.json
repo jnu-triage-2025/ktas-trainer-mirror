@@ -1,34 +1,25 @@
 {
   "identifier": "patient_a_critical",
-  "tags": [
-    "access_support",
-    "airway_team",
-    "bleeding_control",
-    "cpr_team",
-    "defib_team",
-    "iv_team",
-    "medication_team",
-    "neuro_assessment",
-    "procedure_team",
-    "suction_team",
-    "triage_lead"
+  "tags": [],
+  "questDefinitionIncludes": [
+    "patient_a_critical.quests.quest"
   ],
   "nodes": {
     "SPAWN_A": {
       "identifier": "SPAWN_A",
       "nodeType": "EntityPresetSpawn",
+      "nextIdentifier": "PRESET_A",
       "presetIdentifier": "patient_a",
       "spawnedEntityIdentifier": "patient_a",
       "positionSourceEntityIdentifier": null,
-      "positionX": 0.0,
-      "positionY": 0.0,
-      "positionZ": 0.0,
-      "resultStateKey": null,
-      "nextIdentifier": "PRESET_A"
+      "positionX": 0,
+      "positionY": 0,
+      "positionZ": 0
     },
     "PRESET_A": {
       "identifier": "PRESET_A",
       "nodeType": "PatientMedicalStatePreset",
+      "nextIdentifier": "D005",
       "targetEntityIdentifier": "patient_a",
       "sex": "Male",
       "age": 35,
@@ -43,31 +34,29 @@
       "bloodPressureDiastolic": 40,
       "skinColorHue": "Pale",
       "skinTemperatureType": "Cold",
-      "isCardiacArrest": false,
-      "nextIdentifier": "D005"
+      "isCardiacArrest": false
     },
     "D005": {
       "identifier": "D005",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q006",
       "speakerName": "시스템",
       "dialogueContent": "환자 A를 처치실로 이동해야 합니다. 플레이어 A, B, C, D는 각각 환자 침대의 손잡이를 클릭하여 이동을 준비하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q006",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "Q006": {
       "identifier": "Q006",
       "nodeType": "QuestControl",
+      "nextIdentifier": "P002",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Grab_Stretcher"
-      },
-      "nextIdentifier": "P002"
+      "questDefinitionIdentifier": "Quest_Grab_Stretcher",
+      "quest": null
     },
     "P002": {
       "identifier": "P002",
       "nodeType": "Parallel",
+      "nextIdentifier": "Q006_1",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Reallocation",
@@ -108,12 +97,12 @@
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         }
-      ],
-      "nextIdentifier": "Q006_1"
+      ]
     },
     "V010_A": {
       "identifier": "V010_A",
       "nodeType": "Validator",
+      "nextIdentifier": "CC_A_grab",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -129,12 +118,12 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "CC_A_grab",
       "waitForCondition": true
     },
     "V010_B": {
       "identifier": "V010_B",
       "nodeType": "Validator",
+      "nextIdentifier": "CC_B_grab",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -150,12 +139,12 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "CC_B_grab",
       "waitForCondition": true
     },
     "V010_C": {
       "identifier": "V010_C",
       "nodeType": "Validator",
+      "nextIdentifier": "CC_C_grab",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -171,12 +160,12 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "CC_C_grab",
       "waitForCondition": true
     },
     "V010_D": {
       "identifier": "V010_D",
       "nodeType": "Validator",
+      "nextIdentifier": "CC_D_grab",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -192,38 +181,36 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "CC_D_grab",
       "waitForCondition": true
     },
     "Q006_1": {
       "identifier": "Q006_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "E005",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Grab_Stretcher"
-      },
-      "nextIdentifier": "E005"
+      "questDefinitionIdentifier": "Quest_Grab_Stretcher",
+      "quest": null
     },
     "E005": {
       "identifier": "E005",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "D006",
       "eventIdentifier": "move_patient_a_to_treatmentroom",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "D006"
+      "moveNextBehavior": "WaitUntilDone"
     },
     "D006": {
       "identifier": "D006",
       "nodeType": "Dialogue",
+      "nextIdentifier": "P003",
       "speakerName": "시스템",
       "dialogueContent": "활력징후 측정, AVPU 및 GCS 측정, 경추 고정 및 흡인을 시작합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "P003",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "P003": {
       "identifier": "P003",
       "nodeType": "Parallel",
+      "nextIdentifier": "D010",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Reallocation",
@@ -255,32 +242,29 @@
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         }
-      ],
-      "nextIdentifier": "D010"
+      ]
     },
     "N005": {
       "identifier": "N005",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q007",
       "speakerName": "시스템",
       "dialogueContent": "환자의 활력징후를 측정합니다. 활력징후 측정도구를 클릭해 획득하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q007",
-      "playTTS": true,
-      "autoAdvanceSeconds": 5.0
+      "portraitSpriteIdentifier": null
     },
     "Q007": {
       "identifier": "Q007",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V011",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Check_Vital_PatientA"
-      },
-      "nextIdentifier": "V011"
+      "questDefinitionIdentifier": "Quest_Check_Vital_PatientA",
+      "quest": null
     },
     "V011": {
       "identifier": "V011",
       "nodeType": "Validator",
+      "nextIdentifier": "N005_1",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -296,22 +280,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N005_1",
       "waitForCondition": true
     },
     "N005_1": {
       "identifier": "N005_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V011_1",
       "speakerName": "시스템",
       "dialogueContent": "활력징후 측정도구를 선택한 뒤, 환자를 클릭하면 활력징후가 측정됩니다. 활력징후가 모니터에도 출력됩니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V011_1",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V011_1": {
       "identifier": "V011_1",
       "nodeType": "Validator",
+      "nextIdentifier": "E006",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -327,68 +309,61 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E006",
       "waitForCondition": true
     },
     "E006": {
       "identifier": "E006",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "D007",
       "eventIdentifier": "activate_vital_monitor_ui_patient_a",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "D007"
+      "moveNextBehavior": "WaitUntilDone"
     },
     "D007": {
       "identifier": "D007",
       "nodeType": "Dialogue",
+      "nextIdentifier": "N005_4",
       "speakerName": "간호사 B",
       "dialogueContent": "환자 활력징후 출력됩니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N005_4",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "N005_4": {
       "identifier": "N005_4",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q007_1",
       "speakerName": "시스템",
       "dialogueContent": "혈압 70/40mmHg, 맥박 140회/분 - 약하고 빠름, 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q007_1",
-      "playTTS": true,
-      "autoAdvanceSeconds": 8.0
+      "portraitSpriteIdentifier": null
     },
     "Q007_1": {
       "identifier": "Q007_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_B_vitalcheck_patient_a",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Check_Vital_PatientA"
-      },
-      "nextIdentifier": "CC_B_vitalcheck_patient_a"
+      "questDefinitionIdentifier": "Quest_Check_Vital_PatientA",
+      "quest": null
     },
     "N006": {
       "identifier": "N006",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q008",
       "speakerName": "시스템",
       "dialogueContent": "환자를 클릭해 환자의 의식 상태를 사정하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q008",
-      "playTTS": true,
-      "autoAdvanceSeconds": 3.0
+      "portraitSpriteIdentifier": null
     },
     "Q008": {
       "identifier": "Q008",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V012",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Check_GCS_PatientA"
-      },
-      "nextIdentifier": "V012"
+      "questDefinitionIdentifier": "Quest_Check_GCS_PatientA",
+      "quest": null
     },
     "V012": {
       "identifier": "V012",
       "nodeType": "Validator",
+      "nextIdentifier": "N006_1",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -404,28 +379,23 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N006_1",
       "waitForCondition": true
     },
     "N006_1": {
       "identifier": "N006_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "N006_2",
       "speakerName": "시스템",
       "dialogueContent": "환자의 의식 상태(AVPU)를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N006_2",
-      "playTTS": true,
-      "autoAdvanceSeconds": 5.0
+      "portraitSpriteIdentifier": null
     },
     "N006_2": {
       "identifier": "N006_2",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C004",
       "speakerName": "시스템",
       "dialogueContent": "[관찰] 환자를 불렀을 때 응답이 없고, 환자의 옆구리를 꼬집었을 때 불편해하며 피하려 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C004",
-      "playTTS": true,
-      "autoAdvanceSeconds": 5.0
+      "portraitSpriteIdentifier": null
     },
     "C004": {
       "identifier": "C004",
@@ -436,22 +406,18 @@
       "options": [
         {
           "displayText": "A(Alert, 완전히 깨어 있음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_retry_a"
         },
         {
           "displayText": "V(Verbal response, 음성에 반응 있음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_retry_a"
         },
         {
           "displayText": "P(Pain response, 통증에 반응 있음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_3"
         },
         {
           "displayText": "U(Unconsciousness, 반응 없음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_retry_a"
         }
       ]
@@ -459,22 +425,18 @@
     "N006_retry_a": {
       "identifier": "N006_retry_a",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C004",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 다른 자극에는 반응이 없다가, 통증에 반응을 하고 있습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C004",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "N006_3": {
       "identifier": "N006_3",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C005",
       "speakerName": "시스템",
       "dialogueContent": "[관찰] 추가 사정으로 GCS를 확인합니다. 먼저 Eye Opening(E) 반응을 확인합니다. 옆구리를 꼬집자 잠시 눈을 떴다가 다시 감습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C005",
-      "playTTS": true,
-      "autoAdvanceSeconds": 5.0
+      "portraitSpriteIdentifier": null
     },
     "C005": {
       "identifier": "C005",
@@ -485,22 +447,18 @@
       "options": [
         {
           "displayText": "4점(자발적 반응)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_retry_b"
         },
         {
           "displayText": "3점(구두 명령에 반응)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_retry_b"
         },
         {
           "displayText": "2점(통증에 반응)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_4"
         },
         {
           "displayText": "1점(반응 없음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_retry_b"
         }
       ]
@@ -508,22 +466,18 @@
     "N006_retry_b": {
       "identifier": "N006_retry_b",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C005",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 통증 자극에만 반응했음을 유의하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C005",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "N006_4": {
       "identifier": "N006_4",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C006",
       "speakerName": "시스템",
       "dialogueContent": "[관찰] 다음은 Verbal Response(V)입니다. \"여기가 어디예요?\"라고 묻자, 환자는 이해할 수 없는 신음소리만 내고 있습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C006",
-      "playTTS": true,
-      "autoAdvanceSeconds": 5.0
+      "portraitSpriteIdentifier": null
     },
     "C006": {
       "identifier": "C006",
@@ -534,27 +488,22 @@
       "options": [
         {
           "displayText": "5점(적절한 답변)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_retry_c"
         },
         {
           "displayText": "4점(혼란)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_retry_c"
         },
         {
           "displayText": "3점(부적절한 답변)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_retry_c"
         },
         {
           "displayText": "2점(신음소리)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_5"
         },
         {
           "displayText": "1점(반응 없음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_retry_c"
         }
       ]
@@ -562,22 +511,18 @@
     "N006_retry_c": {
       "identifier": "N006_retry_c",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C006",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 현재 환자는 알아들을 수 없는 소리만 내고 있습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C006",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "N006_5": {
       "identifier": "N006_5",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C007",
       "speakerName": "시스템",
       "dialogueContent": "[관찰] 마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 팔을 재빨리 굽혀 자극을 피합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C007",
-      "playTTS": true,
-      "autoAdvanceSeconds": 5.0
+      "portraitSpriteIdentifier": null
     },
     "C007": {
       "identifier": "C007",
@@ -588,32 +533,26 @@
       "options": [
         {
           "displayText": "6점(명령 수행)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_retry_d"
         },
         {
           "displayText": "5점(통증 원인을 치우려고 손을 뻗음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_retry_d"
         },
         {
           "displayText": "4점(통증에 회피)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_6"
         },
         {
           "displayText": "3점(이상 굴곡)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_retry_d"
         },
         {
           "displayText": "2점(이상 신전)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_retry_d"
         },
         {
           "displayText": "1점(반응 없음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N006_retry_d"
         }
       ]
@@ -621,72 +560,64 @@
     "N006_retry_d": {
       "identifier": "N006_retry_d",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C007",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 현재 통증에 회피하고 있습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C007",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "N006_6": {
       "identifier": "N006_6",
       "nodeType": "Dialogue",
+      "nextIdentifier": "D008",
       "speakerName": "시스템",
       "dialogueContent": "GCS 측정 완료. E2 / V2 / M4 = 총 8점 (Stupor) 입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D008",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "D008": {
       "identifier": "D008",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q008_1",
       "speakerName": "간호사 C",
       "dialogueContent": "AVPU 중 P이며, 추가 사정한 GCS 결과 8점 확인했습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q008_1",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "Q008_1": {
       "identifier": "Q008_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_C_gcs_patient_a",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Check_GCS_PatientA"
-      },
-      "nextIdentifier": "CC_C_gcs_patient_a"
+      "questDefinitionIdentifier": "Quest_Check_GCS_PatientA",
+      "quest": null
     },
     "N007": {
       "identifier": "N007",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q009",
       "speakerName": "시스템",
       "dialogueContent": "기도 확보를 위해 환자의 경추를 고정하고 구강 석션을 진행합니다. 경추고정기, 흡인기, 석션 라인, 앙커 팁을 클릭해 획득하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q009",
-      "playTTS": true,
-      "autoAdvanceSeconds": 5.0
+      "portraitSpriteIdentifier": null
     },
     "Q009": {
       "identifier": "Q009",
       "nodeType": "QuestControl",
+      "nextIdentifier": "E007",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Stabilizer_And_Suction_PatientA"
-      },
-      "nextIdentifier": "E007"
+      "questDefinitionIdentifier": "Quest_Stabilizer_And_Suction_PatientA",
+      "quest": null
     },
     "E007": {
       "identifier": "E007",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "V013",
       "eventIdentifier": "show_suction_checklist_ui",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "V013"
+      "moveNextBehavior": "Immediately"
     },
     "V013": {
       "identifier": "V013",
       "nodeType": "Validator",
+      "nextIdentifier": "E008",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -720,29 +651,27 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E008",
       "waitForCondition": true
     },
     "E008": {
       "identifier": "E008",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "N007_1",
       "eventIdentifier": "hide_suction_checklist_ui",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "N007_1"
+      "moveNextBehavior": "Immediately"
     },
     "N007_1": {
       "identifier": "N007_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V013_1",
       "speakerName": "시스템",
       "dialogueContent": "경추 고정기를 환자에게 적용하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V013_1",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V013_1": {
       "identifier": "V013_1",
       "nodeType": "Validator",
+      "nextIdentifier": "N007_2",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -758,22 +687,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N007_2",
       "waitForCondition": true
     },
     "N007_2": {
       "identifier": "N007_2",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V013_2",
       "speakerName": "시스템",
       "dialogueContent": "흡인기를 벽에 설치하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V013_2",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V013_2": {
       "identifier": "V013_2",
       "nodeType": "Validator",
+      "nextIdentifier": "N007_3",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -789,22 +716,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N007_3",
       "waitForCondition": true
     },
     "N007_3": {
       "identifier": "N007_3",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V013_3",
       "speakerName": "시스템",
       "dialogueContent": "준비된 앙커 팁을 흡인기에 연결하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V013_3",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V013_3": {
       "identifier": "V013_3",
       "nodeType": "Validator",
+      "nextIdentifier": "N007_4",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -820,22 +745,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N007_4",
       "waitForCondition": true
     },
     "N007_4": {
       "identifier": "N007_4",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V013_4",
       "speakerName": "시스템",
       "dialogueContent": "흡인기를 클릭한 뒤 환자를 클릭해 구강 흡인을 진행하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V013_4",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V013_4": {
       "identifier": "V013_4",
       "nodeType": "Validator",
+      "nextIdentifier": "D009",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -851,74 +774,68 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "D009",
       "waitForCondition": true
     },
     "D009": {
       "identifier": "D009",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q009_1",
       "speakerName": "간호사 D",
       "dialogueContent": "경추 고정 및 구강 흡인 완료했습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q009_1",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "Q009_1": {
       "identifier": "Q009_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_D_suction_patient_a",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Stabilizer_And_Suction_PatientA"
-      },
-      "nextIdentifier": "CC_D_suction_patient_a"
+      "questDefinitionIdentifier": "Quest_Stabilizer_And_Suction_PatientA",
+      "quest": null
     },
     "D010": {
       "identifier": "D010",
       "nodeType": "Dialogue",
+      "nextIdentifier": "E009",
       "speakerName": "시스템",
       "dialogueContent": "환자의 의식상태는 GCS 8점, 활력징후는 혈압 70/40mmHg, 맥박수 140회/분 (빠르고 약함), 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "E009",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "E009": {
       "identifier": "E009",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "D011",
       "eventIdentifier": "vitalinfo_1_patient_a",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "D011"
+      "moveNextBehavior": "Immediately"
     },
     "D011": {
       "identifier": "D011",
       "nodeType": "Dialogue",
+      "nextIdentifier": "D012",
       "speakerName": "의사 NPC",
       "dialogueContent": "기도 확보를 위해 intubation을 시행하겠습니다. 간호사 B 선생님은 삽관 보조해주세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D012",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "D012": {
       "identifier": "D012",
       "nodeType": "Dialogue",
+      "nextIdentifier": "D013",
       "speakerName": "의사 NPC",
       "dialogueContent": "그동안 간호사 C 선생님은 멸균장갑을 착용하고 거즈로 출혈부위를 지혈해주세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D013",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "D013": {
       "identifier": "D013",
       "nodeType": "Dialogue",
+      "nextIdentifier": "P004",
       "speakerName": "의사 NPC",
       "dialogueContent": "간호사 D 선생님은 수액 투여를 위해 양팔에 IV 라인 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션 달겠습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "P004",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "P004": {
       "identifier": "P004",
       "nodeType": "Parallel",
+      "nextIdentifier": "D022",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Reallocation",
@@ -952,39 +869,36 @@
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         }
-      ],
-      "nextIdentifier": "D022"
+      ]
     },
     "N008": {
       "identifier": "N008",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q010",
       "speakerName": "시스템",
       "dialogueContent": "기관내삽관에 필요한 물품을 준비합니다. 좌측 체크리스트 창을 참고하여 필요한 물품을 클릭해 획득하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q010",
-      "playTTS": true,
-      "autoAdvanceSeconds": 5.0
+      "portraitSpriteIdentifier": null
     },
     "Q010": {
       "identifier": "Q010",
       "nodeType": "QuestControl",
+      "nextIdentifier": "E010",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Intubation_PatientA"
-      },
-      "nextIdentifier": "E010"
+      "questDefinitionIdentifier": "Quest_Intubation_PatientA",
+      "quest": null
     },
     "E010": {
       "identifier": "E010",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "V014",
       "eventIdentifier": "show_checklist_intu",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "V014"
+      "moveNextBehavior": "Immediately"
     },
     "V014": {
       "identifier": "V014",
       "nodeType": "Validator",
+      "nextIdentifier": "E011",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1030,29 +944,27 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E011",
       "waitForCondition": true
     },
     "E011": {
       "identifier": "E011",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "N008_1",
       "eventIdentifier": "hide_checklist_intu",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "N008_1"
+      "moveNextBehavior": "Immediately"
     },
     "N008_1": {
       "identifier": "N008_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V014_1",
       "speakerName": "시스템",
       "dialogueContent": "완성된 후두경을 의사에게 전달하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V014_1",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V014_1": {
       "identifier": "V014_1",
       "nodeType": "Validator",
+      "nextIdentifier": "N008_2",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1068,22 +980,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N008_2",
       "waitForCondition": true
     },
     "N008_2": {
       "identifier": "N008_2",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V014_2",
       "speakerName": "시스템",
       "dialogueContent": "완성된 기관내관을 의사에게 전달하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V014_2",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V014_2": {
       "identifier": "V014_2",
       "nodeType": "Validator",
+      "nextIdentifier": "E012",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1099,29 +1009,27 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E012",
       "waitForCondition": true
     },
     "E012": {
       "identifier": "E012",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "N008_3",
       "eventIdentifier": "insert_et_tube",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "N008_3"
+      "moveNextBehavior": "WaitUntilDone"
     },
     "N008_3": {
       "identifier": "N008_3",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V014_3",
       "speakerName": "시스템",
       "dialogueContent": "환자 구강에 삽입된 기관내관을 클릭해 스타일렛을 제거하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V014_3",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V014_3": {
       "identifier": "V014_3",
       "nodeType": "Validator",
+      "nextIdentifier": "E013",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1137,29 +1045,27 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E013",
       "waitForCondition": true
     },
     "E013": {
       "identifier": "E013",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "N008_4",
       "eventIdentifier": "remove_stylet",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "N008_4"
+      "moveNextBehavior": "WaitUntilDone"
     },
     "N008_4": {
       "identifier": "N008_4",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V014_4",
       "speakerName": "시스템",
       "dialogueContent": "5cc 주사기를 의사에게 전달하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V014_4",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V014_4": {
       "identifier": "V014_4",
       "nodeType": "Validator",
+      "nextIdentifier": "N008_5",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1175,22 +1081,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N008_5",
       "waitForCondition": true
     },
     "N008_5": {
       "identifier": "N008_5",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V014_5",
       "speakerName": "시스템",
       "dialogueContent": "플라스터를 클릭해 선택한 뒤, 삽입된 기관내관을 고정하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V014_5",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V014_5": {
       "identifier": "V014_5",
       "nodeType": "Validator",
+      "nextIdentifier": "S001",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1206,67 +1110,60 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "S001",
       "waitForCondition": true
     },
     "S001": {
       "identifier": "S001",
       "nodeType": "Sound",
-      "soundResourceIdentifier": "tape_sound",
-      "waitUntilFinished": true,
-      "nextIdentifier": "Q010_1"
+      "nextIdentifier": "Q010_1",
+      "soundResourceIdentifier": "tape_sound"
     },
     "Q010_1": {
       "identifier": "Q010_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "D014",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Intubation_PatientA"
-      },
-      "nextIdentifier": "D014"
+      "questDefinitionIdentifier": "Quest_Intubation_PatientA",
+      "quest": null
     },
     "D014": {
       "identifier": "D014",
       "nodeType": "Dialogue",
+      "nextIdentifier": "D015",
       "speakerName": "간호사 B",
       "dialogueContent": "삽입된 깊이 23cm, 기관내관 고정되었습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D015",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "D015": {
       "identifier": "D015",
       "nodeType": "Dialogue",
+      "nextIdentifier": "N009",
       "speakerName": "의사 NPC",
       "dialogueContent": "삽관이 끝났고, 자발호흡이 있으니 간호사 A 선생님이 T-piece 연결하고 산소 10L 주면서 산소포화도 모니터링 해주세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N009",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "N009": {
       "identifier": "N009",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q011",
       "speakerName": "시스템",
       "dialogueContent": "산소 유량계 습윤병과 1L 멸균증류수를 클릭해 획득하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q011",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q011": {
       "identifier": "Q011",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V015",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Oxygen_PatientA"
-      },
-      "nextIdentifier": "V015"
+      "questDefinitionIdentifier": "Quest_Oxygen_PatientA",
+      "quest": null
     },
     "V015": {
       "identifier": "V015",
       "nodeType": "Validator",
+      "nextIdentifier": "N009_1",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1288,22 +1185,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N009_1",
       "waitForCondition": true
     },
     "N009_1": {
       "identifier": "N009_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V015_1",
       "speakerName": "시스템",
       "dialogueContent": "유량계를 습득하여 산소 유량계를 완성합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V015_1",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V015_1": {
       "identifier": "V015_1",
       "nodeType": "Validator",
+      "nextIdentifier": "N009_2",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1319,22 +1214,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N009_2",
       "waitForCondition": true
     },
     "N009_2": {
       "identifier": "N009_2",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V015_2",
       "speakerName": "시스템",
       "dialogueContent": "완성된 유량계를 클릭한 뒤, 흡인기 옆 벽면을 클릭해 설치하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V015_2",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V015_2": {
       "identifier": "V015_2",
       "nodeType": "Validator",
+      "nextIdentifier": "N009_3",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1350,22 +1243,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N009_3",
       "waitForCondition": true
     },
     "N009_3": {
       "identifier": "N009_3",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V015_3",
       "speakerName": "시스템",
       "dialogueContent": "산소줄과 T-piece를 각각 클릭해 획득하고, 산소 유량계와 환자에게 삽입된 기관내관을 각각 클릭해 연결하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V015_3",
-      "playTTS": true,
-      "autoAdvanceSeconds": 6.0
+      "portraitSpriteIdentifier": null
     },
     "V015_3": {
       "identifier": "V015_3",
       "nodeType": "Validator",
+      "nextIdentifier": "E014",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1393,29 +1284,27 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E014",
       "waitForCondition": true
     },
     "E014": {
       "identifier": "E014",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "N009_4",
       "eventIdentifier": "connect_tpiece_ready",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "N009_4"
+      "moveNextBehavior": "Immediately"
     },
     "N009_4": {
       "identifier": "N009_4",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V015_4",
       "speakerName": "시스템",
       "dialogueContent": "산소 연결이 완료되었습니다. 유량계를 클릭해 투여 산소량을 결정합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V015_4",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V015_4": {
       "identifier": "V015_4",
       "nodeType": "Validator",
+      "nextIdentifier": "C008",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1431,7 +1320,6 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "C008",
       "waitForCondition": true
     },
     "C008": {
@@ -1443,22 +1331,18 @@
       "options": [
         {
           "displayText": "3L",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N009_retry"
         },
         {
           "displayText": "5L",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N009_retry"
         },
         {
           "displayText": "10L",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "D016"
         },
         {
           "displayText": "15L",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N009_retry"
         }
       ]
@@ -1466,55 +1350,49 @@
     "N009_retry": {
       "identifier": "N009_retry",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C008",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 처방은 10L 입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C008",
-      "playTTS": true,
-      "autoAdvanceSeconds": 3.0
+      "portraitSpriteIdentifier": null
     },
     "D016": {
       "identifier": "D016",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q011_1",
       "speakerName": "간호사 A",
       "dialogueContent": "산소 투여 시작했습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q011_1",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "Q011_1": {
       "identifier": "Q011_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_B_intubation_A_oxy_patient_a",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Oxygen_PatientA"
-      },
-      "nextIdentifier": "CC_B_intubation_A_oxy_patient_a"
+      "questDefinitionIdentifier": "Quest_Oxygen_PatientA",
+      "quest": null
     },
     "N010": {
       "identifier": "N010",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q012",
       "speakerName": "시스템",
       "dialogueContent": "지혈을 실시합니다. 멸균장갑과 거즈, 플라스터를 클릭해 획득하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q012",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q012": {
       "identifier": "Q012",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V016",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_BleedingControl_PatientA"
-      },
-      "nextIdentifier": "V016"
+      "questDefinitionIdentifier": "Quest_BleedingControl_PatientA",
+      "quest": null
     },
     "V016": {
       "identifier": "V016",
       "nodeType": "Validator",
+      "nextIdentifier": "N010_1",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1542,22 +1420,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N010_1",
       "waitForCondition": true
     },
     "N010_1": {
       "identifier": "N010_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V016_1",
       "speakerName": "시스템",
       "dialogueContent": "멸균장갑을 마우스 우클릭으로 착용하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V016_1",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V016_1": {
       "identifier": "V016_1",
       "nodeType": "Validator",
+      "nextIdentifier": "N010_2",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1573,22 +1449,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N010_2",
       "waitForCondition": true
     },
     "N010_2": {
       "identifier": "N010_2",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V016_2",
       "speakerName": "시스템",
       "dialogueContent": "거즈를 클릭해 선택한 뒤, 환자에게 적용하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V016_2",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V016_2": {
       "identifier": "V016_2",
       "nodeType": "Validator",
+      "nextIdentifier": "E015",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1604,29 +1478,27 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E015",
       "waitForCondition": true
     },
     "E015": {
       "identifier": "E015",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "N010_3",
       "eventIdentifier": "apply_gauze_patient_a",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "N010_3"
+      "moveNextBehavior": "WaitUntilDone"
     },
     "N010_3": {
       "identifier": "N010_3",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V016_3",
       "speakerName": "시스템",
       "dialogueContent": "압박을 가해 지혈하고 있습니다. 플라스터를 클릭해 선택한 뒤, 거즈를 클릭해 고정하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V016_3",
-      "playTTS": true,
-      "autoAdvanceSeconds": 5.0
+      "portraitSpriteIdentifier": null
     },
     "V016_3": {
       "identifier": "V016_3",
       "nodeType": "Validator",
+      "nextIdentifier": "E016",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1642,72 +1514,66 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E016",
       "waitForCondition": true
     },
     "E016": {
       "identifier": "E016",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "S002",
       "eventIdentifier": "apply_gauze_with_plaster_patient_a",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "S002"
+      "moveNextBehavior": "WaitUntilDone"
     },
     "S002": {
       "identifier": "S002",
       "nodeType": "Sound",
-      "soundResourceIdentifier": "tape_sound",
-      "waitUntilFinished": true,
-      "nextIdentifier": "D017"
+      "nextIdentifier": "D017",
+      "soundResourceIdentifier": "tape_sound"
     },
     "D017": {
       "identifier": "D017",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q012_1",
       "speakerName": "간호사 C",
       "dialogueContent": "지혈 중입니다. 거즈 고정했습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q012_1",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "Q012_1": {
       "identifier": "Q012_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_C_stopbleeding_patient_a",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_BleedingControl_PatientA"
-      },
-      "nextIdentifier": "CC_C_stopbleeding_patient_a"
+      "questDefinitionIdentifier": "Quest_BleedingControl_PatientA",
+      "quest": null
     },
     "N011": {
       "identifier": "N011",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q013",
       "speakerName": "시스템",
       "dialogueContent": "환자의 좌측과 우측 팔에 IV 라인을 확보해야 합니다. 18게이지 2개, 준비된 생리식염수 1L 수액백, 준비된 플라즈마 솔루션 1L 수액백을 클릭해 획득하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q013",
-      "playTTS": true,
-      "autoAdvanceSeconds": 6.0
+      "portraitSpriteIdentifier": null
     },
     "Q013": {
       "identifier": "Q013",
       "nodeType": "QuestControl",
+      "nextIdentifier": "E017",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_IV_Line_PatientA"
-      },
-      "nextIdentifier": "E017"
+      "questDefinitionIdentifier": "Quest_IV_Line_PatientA",
+      "quest": null
     },
     "E017": {
       "identifier": "E017",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "V017",
       "eventIdentifier": "show_iv_checklist",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "V017"
+      "moveNextBehavior": "Immediately"
     },
     "V017": {
       "identifier": "V017",
       "nodeType": "Validator",
+      "nextIdentifier": "E018",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1735,29 +1601,27 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E018",
       "waitForCondition": true
     },
     "E018": {
       "identifier": "E018",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "N011_1",
       "eventIdentifier": "hide_iv_checklist",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "N011_1"
+      "moveNextBehavior": "Immediately"
     },
     "N011_1": {
       "identifier": "N011_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V017_1",
       "speakerName": "시스템",
       "dialogueContent": "18게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 좌측 팔을 클릭해 정맥 라인을 확보하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V017_1",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V017_1": {
       "identifier": "V017_1",
       "nodeType": "Validator",
+      "nextIdentifier": "E019",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1773,29 +1637,27 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E019",
       "waitForCondition": true
     },
     "E019": {
       "identifier": "E019",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "N011_2",
       "eventIdentifier": "insert_18g_left",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "N011_2"
+      "moveNextBehavior": "Immediately"
     },
     "N011_2": {
       "identifier": "N011_2",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V017_2",
       "speakerName": "시스템",
       "dialogueContent": "준비된 생리식염수 1L 수액백을 클릭해 선택한 뒤, 좌측 팔에 연결된 18G 캐뉼라를 클릭해 연결하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V017_2",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V017_2": {
       "identifier": "V017_2",
       "nodeType": "Validator",
+      "nextIdentifier": "E020",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1811,91 +1673,83 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E020",
       "waitForCondition": true
     },
     "E020": {
       "identifier": "E020",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "N011_3",
       "eventIdentifier": "connect_ns1_left",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "N011_3"
+      "moveNextBehavior": "Immediately"
     },
     "N011_3": {
       "identifier": "N011_3",
       "nodeType": "Dialogue",
+      "nextIdentifier": "E021",
       "speakerName": "시스템",
       "dialogueContent": "한쪽 정맥로가 확보되어, 반대쪽 팔에도 자동으로 18G 캐뉼라 및 플라즈마 솔루션 연결이 진행됩니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "E021",
-      "playTTS": true,
-      "autoAdvanceSeconds": 5.0
+      "portraitSpriteIdentifier": null
     },
     "E021": {
       "identifier": "E021",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "E022",
       "eventIdentifier": "insert_18g_right",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "E022"
+      "moveNextBehavior": "Immediately"
     },
     "E022": {
       "identifier": "E022",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "D018",
       "eventIdentifier": "connect_ps1_right",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "D018"
+      "moveNextBehavior": "WaitUntilDone"
     },
     "D018": {
       "identifier": "D018",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q013_1",
       "speakerName": "간호사 D",
       "dialogueContent": "양측 정맥로가 모두 확보되었습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q013_1",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "Q013_1": {
       "identifier": "Q013_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "D019",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_IV_Line_PatientA"
-      },
-      "nextIdentifier": "D019"
+      "questDefinitionIdentifier": "Quest_IV_Line_PatientA",
+      "quest": null
     },
     "D019": {
       "identifier": "D019",
       "nodeType": "Dialogue",
+      "nextIdentifier": "N012",
       "speakerName": "의사 NPC",
       "dialogueContent": "그래도 혈압이 잡히지 않네요. C-line 잡아서 수액을 빠르게 투여하겠습니다. 간호사 C 선생님, C-line set 건네주세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N012",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "N012": {
       "identifier": "N012",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q014",
       "speakerName": "시스템",
       "dialogueContent": "C-line set을 클릭해 획득하고, 해당 아이템을 의사에게 전달하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q014",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q014": {
       "identifier": "Q014",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V018",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Cline_Assist"
-      },
-      "nextIdentifier": "V018"
+      "questDefinitionIdentifier": "Quest_Cline_Assist",
+      "quest": null
     },
     "V018": {
       "identifier": "V018",
       "nodeType": "Validator",
+      "nextIdentifier": "E023",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1911,58 +1765,53 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E023",
       "waitForCondition": true
     },
     "E023": {
       "identifier": "E023",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "Q014_1",
       "eventIdentifier": "insert_central_line_set",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "Q014_1"
+      "moveNextBehavior": "WaitUntilDone"
     },
     "Q014_1": {
       "identifier": "Q014_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "D020",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Cline_Assist"
-      },
-      "nextIdentifier": "D020"
+      "questDefinitionIdentifier": "Quest_Cline_Assist",
+      "quest": null
     },
     "D020": {
       "identifier": "D020",
       "nodeType": "Dialogue",
+      "nextIdentifier": "N013",
       "speakerName": "의사 NPC",
       "dialogueContent": "간호사 C 선생님, Level 1 rapid infuser에 플라즈마 솔루션과 혈액백 연결시켜주세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N013",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "N013": {
       "identifier": "N013",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q015",
       "speakerName": "시스템",
       "dialogueContent": "플라즈마 솔루션 1L 수액백과 혈액백을 클릭해 획득하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q015",
-      "playTTS": true,
-      "autoAdvanceSeconds": 3.0
+      "portraitSpriteIdentifier": null
     },
     "Q015": {
       "identifier": "Q015",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V019",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Lv1_Fluids"
-      },
-      "nextIdentifier": "V019"
+      "questDefinitionIdentifier": "Quest_Lv1_Fluids",
+      "quest": null
     },
     "V019": {
       "identifier": "V019",
       "nodeType": "Validator",
+      "nextIdentifier": "N013_1",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1984,22 +1833,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N013_1",
       "waitForCondition": true
     },
     "N013_1": {
       "identifier": "N013_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V019_1",
       "speakerName": "시스템",
       "dialogueContent": "플라즈마 솔루션 1L 수액백을 클릭해 선택한 뒤, Level 1 rapid infuser와 연결하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V019_1",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V019_1": {
       "identifier": "V019_1",
       "nodeType": "Validator",
+      "nextIdentifier": "N014",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -2015,22 +1862,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N014",
       "waitForCondition": true
     },
     "N014": {
       "identifier": "N014",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V020",
       "speakerName": "시스템",
       "dialogueContent": "혈액백을 클릭해 선택한 뒤, Level 1 rapid infuser와 연결하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V020",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V020": {
       "identifier": "V020",
       "nodeType": "Validator",
+      "nextIdentifier": "E024",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -2046,83 +1891,76 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E024",
       "waitForCondition": true
     },
     "E024": {
       "identifier": "E024",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "D021",
       "eventIdentifier": "lv1_ready",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "D021"
+      "moveNextBehavior": "Immediately"
     },
     "D021": {
       "identifier": "D021",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q015_1",
       "speakerName": "간호사 C",
       "dialogueContent": "Level 1에 플라즈마 솔루션과 혈액백 연결 완료되었습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q015_1",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "Q015_1": {
       "identifier": "Q015_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_D_iv_patient_a",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Lv1_Fluids"
-      },
-      "nextIdentifier": "CC_D_iv_patient_a"
+      "questDefinitionIdentifier": "Quest_Lv1_Fluids",
+      "quest": null
     },
     "D022": {
       "identifier": "D022",
       "nodeType": "Dialogue",
+      "nextIdentifier": "E025",
       "speakerName": "의사 NPC",
       "dialogueContent": "그래도 혈압이 잘 안잡히네요...",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "E025",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "E025": {
       "identifier": "E025",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "D023",
       "eventIdentifier": "patient_crash_ui",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "D023"
+      "moveNextBehavior": "Immediately"
     },
     "D023": {
       "identifier": "D023",
       "nodeType": "Dialogue",
+      "nextIdentifier": "N016",
       "speakerName": "시스템",
       "dialogueContent": "심전도만 출력되고, 다른 활력징후가 출력되지 않습니다. 간호사 B 선생님, 환자 맥박 확인해주세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N016",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "N016": {
       "identifier": "N016",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q018",
       "speakerName": "시스템",
       "dialogueContent": "환자의 경동맥을 촉지해 맥박을 확인합니다. 목 부위를 클릭하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q018",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q018": {
       "identifier": "Q018",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V022",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Check_Pulse"
-      },
-      "nextIdentifier": "V022"
+      "questDefinitionIdentifier": "Quest_Check_Pulse",
+      "quest": null
     },
     "V022": {
       "identifier": "V022",
       "nodeType": "Validator",
+      "nextIdentifier": "Q018_1",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -2138,40 +1976,37 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "Q018_1",
       "waitForCondition": true
     },
     "Q018_1": {
       "identifier": "Q018_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "D024",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Check_Pulse"
-      },
-      "nextIdentifier": "D024"
+      "questDefinitionIdentifier": "Quest_Check_Pulse",
+      "quest": null
     },
     "D024": {
       "identifier": "D024",
       "nodeType": "Dialogue",
+      "nextIdentifier": "D025",
       "speakerName": "간호사 B",
       "dialogueContent": "맥박 없습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D025",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "D025": {
       "identifier": "D025",
       "nodeType": "Dialogue",
+      "nextIdentifier": "P005",
       "speakerName": "의사 NPC",
       "dialogueContent": "PEA입니다. CPR 하겠습니다. 제가 팀 리더를 맡겠습니다. 간호사 A 선생님은 앰부백 짜주시고, 간호사 B 선생님은 가슴압박 해주세요. 간호사 C 선생님은 제세동기 연결해주시고, 간호사 D 선생님은 C-line으로 에피네프린 1mg 투여해주세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "P005",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "P005": {
       "identifier": "P005",
       "nodeType": "Parallel",
+      "nextIdentifier": "D028",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Reallocation",
@@ -2212,32 +2047,29 @@
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         }
-      ],
-      "nextIdentifier": "D028"
+      ]
     },
     "N017": {
       "identifier": "N017",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q019",
       "speakerName": "시스템",
       "dialogueContent": "앰부백과 산소 저장낭을 클릭해 획득하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q019",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q019": {
       "identifier": "Q019",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V023",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Ambu_A"
-      },
-      "nextIdentifier": "V023"
+      "questDefinitionIdentifier": "Quest_Ambu_A",
+      "quest": null
     },
     "V023": {
       "identifier": "V023",
       "nodeType": "Validator",
+      "nextIdentifier": "N017_1",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -2259,22 +2091,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N017_1",
       "waitForCondition": true
     },
     "N017_1": {
       "identifier": "N017_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V023_1",
       "speakerName": "시스템",
       "dialogueContent": "환자에게 연결된 T-piece를 클릭해 연결을 해제하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V023_1",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V023_1": {
       "identifier": "V023_1",
       "nodeType": "Validator",
+      "nextIdentifier": "N017_2",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -2290,22 +2120,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N017_2",
       "waitForCondition": true
     },
     "N017_2": {
       "identifier": "N017_2",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V023_2",
       "speakerName": "시스템",
       "dialogueContent": "앰부백을 클릭해 선택한 뒤, 환자에게 삽입된 기관내관을 클릭해 연결하세요. 이후, 산소줄과 앰부백을 클릭해 연결합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V023_2",
-      "playTTS": true,
-      "autoAdvanceSeconds": 6.0
+      "portraitSpriteIdentifier": null
     },
     "V023_2": {
       "identifier": "V023_2",
       "nodeType": "Validator",
+      "nextIdentifier": "E026",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -2327,15 +2155,14 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E026",
       "waitForCondition": true
     },
     "E026": {
       "identifier": "E026",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "C009",
       "eventIdentifier": "apply_ambu_patient_a",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "C009"
+      "moveNextBehavior": "Immediately"
     },
     "C009": {
       "identifier": "C009",
@@ -2346,7 +2173,6 @@
       "options": [
         {
           "displayText": "Full",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "S003"
         }
       ]
@@ -2354,23 +2180,21 @@
     "S003": {
       "identifier": "S003",
       "nodeType": "Sound",
-      "soundResourceIdentifier": "oxygen_sound",
-      "waitUntilFinished": true,
-      "nextIdentifier": "N017_3"
+      "nextIdentifier": "N017_3",
+      "soundResourceIdentifier": "oxygen_sound"
     },
     "N017_3": {
       "identifier": "N017_3",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V023_4",
       "speakerName": "시스템",
       "dialogueContent": "앰부백을 클릭해 산소 공급을 시작하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V023_4",
-      "playTTS": true,
-      "autoAdvanceSeconds": 3.0
+      "portraitSpriteIdentifier": null
     },
     "V023_4": {
       "identifier": "V023_4",
       "nodeType": "Validator",
+      "nextIdentifier": "E027",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -2386,22 +2210,21 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E027",
       "waitForCondition": true
     },
     "E027": {
       "identifier": "E027",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "L001",
       "eventIdentifier": "start_ambubagging",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "L001"
+      "moveNextBehavior": "Immediately"
     },
     "L001": {
       "identifier": "L001",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C010"
+      "nextIdentifier": "C010",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C010": {
       "identifier": "C010",
@@ -2412,12 +2235,10 @@
       "options": [
         {
           "displayText": "약 1500ml (다섯 손가락 모두를 이용해 백을 짠다)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N017_retry_a"
         },
         {
           "displayText": "약 600ml (엄지, 검지, 중지를 이용해 백을 짠다)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "L002"
         }
       ]
@@ -2425,19 +2246,17 @@
     "N017_retry_a": {
       "identifier": "N017_retry_a",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C010",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C010",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "L002": {
       "identifier": "L002",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C011"
+      "nextIdentifier": "C011",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C011": {
       "identifier": "C011",
@@ -2448,17 +2267,14 @@
       "options": [
         {
           "displayText": "10초에 1번 (분당 약 6회)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N017_retry_b"
         },
         {
           "displayText": "6초에 1번 (분당 약 10회)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "Q019_1"
         },
         {
           "displayText": "3초에 1번 (분당 약 20회)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N017_retry_b"
         }
       ]
@@ -2466,46 +2282,41 @@
     "N017_retry_b": {
       "identifier": "N017_retry_b",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C011",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 6초에 1번씩 눌러야 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C011",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q019_1": {
       "identifier": "Q019_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_A_ambu",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Ambu_A"
-      },
-      "nextIdentifier": "CC_A_ambu"
+      "questDefinitionIdentifier": "Quest_Ambu_A",
+      "quest": null
     },
     "N018": {
       "identifier": "N018",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q020",
       "speakerName": "시스템",
       "dialogueContent": "환자의 가슴을 클릭해 가슴압박을 시작하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q020",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q020": {
       "identifier": "Q020",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V024",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_ChestComp_B"
-      },
-      "nextIdentifier": "V024"
+      "questDefinitionIdentifier": "Quest_ChestComp_B",
+      "quest": null
     },
     "V024": {
       "identifier": "V024",
       "nodeType": "Validator",
+      "nextIdentifier": "E028",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -2521,22 +2332,21 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E028",
       "waitForCondition": true
     },
     "E028": {
       "identifier": "E028",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "L003",
       "eventIdentifier": "start_chest_compression",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "L003"
+      "moveNextBehavior": "Immediately"
     },
     "L003": {
       "identifier": "L003",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C012"
+      "nextIdentifier": "C012",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C012": {
       "identifier": "C012",
@@ -2547,17 +2357,14 @@
       "options": [
         {
           "displayText": "약 4cm",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N018_retry_a"
         },
         {
           "displayText": "약 5cm",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "L004"
         },
         {
           "displayText": "약 6cm",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N018_retry_a"
         }
       ]
@@ -2565,19 +2372,17 @@
     "N018_retry_a": {
       "identifier": "N018_retry_a",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C012",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C012",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "L004": {
       "identifier": "L004",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C013"
+      "nextIdentifier": "C013",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C013": {
       "identifier": "C013",
@@ -2588,12 +2393,10 @@
       "options": [
         {
           "displayText": "양측 유두선상의 중간지점",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N018_retry_b"
         },
         {
           "displayText": "흉골 하부 1/2 지점",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "L005"
         }
       ]
@@ -2601,19 +2404,17 @@
     "N018_retry_b": {
       "identifier": "N018_retry_b",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C013",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C013",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "L005": {
       "identifier": "L005",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C014"
+      "nextIdentifier": "C014",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C014": {
       "identifier": "C014",
@@ -2624,17 +2425,14 @@
       "options": [
         {
           "displayText": "분당 약 80~100회",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N018_retry_c"
         },
         {
           "displayText": "분당 약 100~120회",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "L006"
         },
         {
           "displayText": "분당 약 120~140회",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N018_retry_c"
         }
       ]
@@ -2642,19 +2440,17 @@
     "N018_retry_c": {
       "identifier": "N018_retry_c",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C014",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C014",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "L006": {
       "identifier": "L006",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C015"
+      "nextIdentifier": "C015",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C015": {
       "identifier": "C015",
@@ -2665,17 +2461,14 @@
       "options": [
         {
           "displayText": "지쳐도 한 사람이 계속 가슴압박을 수행한다.",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N018_retry_d"
         },
         {
           "displayText": "뼈가 부러진 것 같으면 멈춘다.",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N018_retry_d"
         },
         {
           "displayText": "충분한 이완을 제공한다.",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "Q020_1"
         }
       ]
@@ -2683,46 +2476,41 @@
     "N018_retry_d": {
       "identifier": "N018_retry_d",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C015",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 혈액 순환이 가능합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C015",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q020_1": {
       "identifier": "Q020_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_B_chestcomp",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_ChestComp_B"
-      },
-      "nextIdentifier": "CC_B_chestcomp"
+      "questDefinitionIdentifier": "Quest_ChestComp_B",
+      "quest": null
     },
     "N019": {
       "identifier": "N019",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q021",
       "speakerName": "시스템",
       "dialogueContent": "제세동 카트를 환자 옆으로 가져오세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q021",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q021": {
       "identifier": "Q021",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V025",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Defib_C"
-      },
-      "nextIdentifier": "V025"
+      "questDefinitionIdentifier": "Quest_Defib_C",
+      "quest": null
     },
     "V025": {
       "identifier": "V025",
       "nodeType": "Validator",
+      "nextIdentifier": "N019_1",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -2738,22 +2526,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N019_1",
       "waitForCondition": true
     },
     "N019_1": {
       "identifier": "N019_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V025_1",
       "speakerName": "시스템",
       "dialogueContent": "제세동 패드를 획득하고, 환자 흉부를 클릭해 부착하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V025_1",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V025_1": {
       "identifier": "V025_1",
       "nodeType": "Validator",
+      "nextIdentifier": "E029",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -2775,38 +2561,36 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E029",
       "waitForCondition": true
     },
     "E029": {
       "identifier": "E029",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "E030",
       "eventIdentifier": "attach_defibpad",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "E030"
+      "moveNextBehavior": "Immediately"
     },
     "E030": {
       "identifier": "E030",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "D026",
       "eventIdentifier": "defib_ui_irregular",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "D026"
+      "moveNextBehavior": "Immediately"
     },
     "D026": {
       "identifier": "D026",
       "nodeType": "Dialogue",
+      "nextIdentifier": "L007",
       "speakerName": "간호사 C",
       "dialogueContent": "제세동기 준비가 완료되었습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "L007",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "L007": {
       "identifier": "L007",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C016"
+      "nextIdentifier": "C016",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C016": {
       "identifier": "C016",
@@ -2817,22 +2601,18 @@
       "options": [
         {
           "displayText": "Asystole(무수축)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N019_retry_a"
         },
         {
           "displayText": "PEA(무맥성 전기활동)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N019_retry_a"
         },
         {
           "displayText": "VT(맥박이 있는 심실빈맥)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N019_retry_a"
         },
         {
           "displayText": "VF(심실세동)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "L008"
         }
       ]
@@ -2840,19 +2620,17 @@
     "N019_retry_a": {
       "identifier": "N019_retry_a",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C016",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C016",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "L008": {
       "identifier": "L008",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C017"
+      "nextIdentifier": "C017",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C017": {
       "identifier": "C017",
@@ -2863,12 +2641,10 @@
       "options": [
         {
           "displayText": "150~200J(줄)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "L009"
         },
         {
           "displayText": "360J(줄)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N019_retry_b"
         }
       ]
@@ -2876,19 +2652,17 @@
     "N019_retry_b": {
       "identifier": "N019_retry_b",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C016",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 150~200J(줄)이 정답입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C016",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "L009": {
       "identifier": "L009",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C018"
+      "nextIdentifier": "C018",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C018": {
       "identifier": "C018",
@@ -2899,22 +2673,18 @@
       "options": [
         {
           "displayText": "꼬인 수액 줄을 풀어준다.",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N019_retry_c"
         },
         {
           "displayText": "의료진이 손을 대어도 괜찮다.",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N019_retry_c"
         },
         {
           "displayText": "의사의 지시가 있을 때에만 실시한다.",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N019_retry_c"
         },
         {
           "displayText": "전기충격 전 모두 환자에게서 떨어지도록 지시한다.",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "Q021_1"
         }
       ]
@@ -2922,46 +2692,41 @@
     "N019_retry_c": {
       "identifier": "N019_retry_c",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C017",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C017",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q021_1": {
       "identifier": "Q021_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_C_defib",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Defib_C"
-      },
-      "nextIdentifier": "CC_C_defib"
+      "questDefinitionIdentifier": "Quest_Defib_C",
+      "quest": null
     },
     "N020": {
       "identifier": "N020",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q022",
       "speakerName": "시스템",
       "dialogueContent": "에피네프린 투여를 위한 준비를 합니다. 에피네프린 앰퓰과 5cc 주사기를 획득해 약물이 든 주사기를 완성하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q022",
-      "playTTS": true,
-      "autoAdvanceSeconds": 5.0
+      "portraitSpriteIdentifier": null
     },
     "Q022": {
       "identifier": "Q022",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V026",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Epi_D"
-      },
-      "nextIdentifier": "V026"
+      "questDefinitionIdentifier": "Quest_Epi_D",
+      "quest": null
     },
     "V026": {
       "identifier": "V026",
       "nodeType": "Validator",
+      "nextIdentifier": "N020_1",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -2983,22 +2748,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N020_1",
       "waitForCondition": true
     },
     "N020_1": {
       "identifier": "N020_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V026_1",
       "speakerName": "시스템",
       "dialogueContent": "Push용 생리식염수를 준비합니다. 20cc 생리식염수와 20cc 주사기를 클릭해 획득하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V026_1",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V026_1": {
       "identifier": "V026_1",
       "nodeType": "Validator",
+      "nextIdentifier": "N020_2",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -3020,22 +2783,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N020_2",
       "waitForCondition": true
     },
     "N020_2": {
       "identifier": "N020_2",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V026_2",
       "speakerName": "시스템",
       "dialogueContent": "준비된 에피네프린 1mg을 클릭해 선택한 뒤, 중심정맥관을 클릭해 투여하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V026_2",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V026_2": {
       "identifier": "V026_2",
       "nodeType": "Validator",
+      "nextIdentifier": "D027",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -3051,31 +2812,28 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "D027",
       "waitForCondition": true
     },
     "D027": {
       "identifier": "D027",
       "nodeType": "Dialogue",
+      "nextIdentifier": "N020_3",
       "speakerName": "간호사 D",
       "dialogueContent": "에피네프린 1mg 투여했습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N020_3",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "N020_3": {
       "identifier": "N020_3",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V026_3",
       "speakerName": "시스템",
       "dialogueContent": "동일한 방법으로 준비된 생리식염수 20cc를 투여해 루멘 내 잔여 약물을 주입합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V026_3",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V026_3": {
       "identifier": "V026_3",
       "nodeType": "Validator",
+      "nextIdentifier": "D027_1",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -3091,24 +2849,22 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "D027_1",
       "waitForCondition": true
     },
     "D027_1": {
       "identifier": "D027_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "L010",
       "speakerName": "간호사 D",
       "dialogueContent": "생리식염수 20cc 투여했습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "L010",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "L010": {
       "identifier": "L010",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C019"
+      "nextIdentifier": "C019",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C019": {
       "identifier": "C019",
@@ -3119,22 +2875,18 @@
       "options": [
         {
           "displayText": "약 1~2분에 한 번",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N020_retry_a"
         },
         {
           "displayText": "약 3~5분에 한 번",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "L011"
         },
         {
           "displayText": "약 5~10분에 한 번",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N020_retry_a"
         },
         {
           "displayText": "누군가 시킬 때 마다",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N020_retry_a"
         }
       ]
@@ -3142,19 +2894,17 @@
     "N020_retry_a": {
       "identifier": "N020_retry_a",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C019",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 에피네프린은 3~5분에 한 번 투여합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C019",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "L011": {
       "identifier": "L011",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C020"
+      "nextIdentifier": "C020",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C020": {
       "identifier": "C020",
@@ -3165,17 +2915,14 @@
       "options": [
         {
           "displayText": "약물만 주입",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N020_retry_b"
         },
         {
           "displayText": "약물 주입 후 생리식염수 주입",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N020_retry_b"
         },
         {
           "displayText": "약물 주입 후 생리식염수 주입, 이후 팔 들어올리기",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "Q022_1"
         }
       ]
@@ -3183,58 +2930,54 @@
     "N020_retry_b": {
       "identifier": "N020_retry_b",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C020",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 심장에 빠르게 도달시키기 위해 생리식염수 주입 후 팔을 들어올려야 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C020",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q022_1": {
       "identifier": "Q022_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_D_epi",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Epi_D"
-      },
-      "nextIdentifier": "CC_D_epi"
+      "questDefinitionIdentifier": "Quest_Epi_D",
+      "quest": null
     },
     "D028": {
       "identifier": "D028",
       "nodeType": "Dialogue",
+      "nextIdentifier": "E031",
       "speakerName": "의사 NPC",
       "dialogueContent": "2분 지났습니다. 리듬 확인하겠습니다. 모두 떨어져 주세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "E031",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "E031": {
       "identifier": "E031",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "E032",
       "eventIdentifier": "stop_ambu_and_comp",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "E032"
+      "moveNextBehavior": "WaitUntilDone"
     },
     "E032": {
       "identifier": "E032",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "D029",
       "eventIdentifier": "asystole_monitor_ui",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "D029"
+      "moveNextBehavior": "WaitUntilDone"
     },
     "D029": {
       "identifier": "D029",
       "nodeType": "Dialogue",
+      "nextIdentifier": "P006",
       "speakerName": "의사 NPC",
       "dialogueContent": "Asystole입니다. 가슴압박과 앰부배깅 하시던 간호사 A, B 선생님끼리 교대 후 계속 가슴압박 해주세요. 간호사 C, D 선생님께서도 교대해서 역할을 수행해 주세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "P006",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "P006": {
       "identifier": "P006",
       "nodeType": "Parallel",
+      "nextIdentifier": "D033",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Reallocation",
@@ -3275,32 +3018,29 @@
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         }
-      ],
-      "nextIdentifier": "D033"
+      ]
     },
     "N021": {
       "identifier": "N021",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q023",
       "speakerName": "시스템",
       "dialogueContent": "환자의 가슴을 클릭해 가슴압박을 시작하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q023",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q023": {
       "identifier": "Q023",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V027",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_ChestComp_A"
-      },
-      "nextIdentifier": "V027"
+      "questDefinitionIdentifier": "Quest_ChestComp_A",
+      "quest": null
     },
     "V027": {
       "identifier": "V027",
       "nodeType": "Validator",
+      "nextIdentifier": "E033",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -3316,22 +3056,21 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E033",
       "waitForCondition": true
     },
     "E033": {
       "identifier": "E033",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "L012",
       "eventIdentifier": "start_chest_compression",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "L012"
+      "moveNextBehavior": "Immediately"
     },
     "L012": {
       "identifier": "L012",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C021"
+      "nextIdentifier": "C021",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C021": {
       "identifier": "C021",
@@ -3342,17 +3081,14 @@
       "options": [
         {
           "displayText": "약 4cm",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N021_retry_a"
         },
         {
           "displayText": "약 5cm",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "L013"
         },
         {
           "displayText": "약 6cm",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N021_retry_a"
         }
       ]
@@ -3360,19 +3096,17 @@
     "N021_retry_a": {
       "identifier": "N021_retry_a",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C021",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C021",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "L013": {
       "identifier": "L013",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C022"
+      "nextIdentifier": "C022",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C022": {
       "identifier": "C022",
@@ -3383,12 +3117,10 @@
       "options": [
         {
           "displayText": "양측 유두선상의 중간지점",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N021_retry_b"
         },
         {
           "displayText": "흉골 하부 1/2 지점",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "L014"
         }
       ]
@@ -3396,19 +3128,17 @@
     "N021_retry_b": {
       "identifier": "N021_retry_b",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C022",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C022",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "L014": {
       "identifier": "L014",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C023"
+      "nextIdentifier": "C023",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C023": {
       "identifier": "C023",
@@ -3419,17 +3149,14 @@
       "options": [
         {
           "displayText": "분당 약 80~100회",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N021_retry_c"
         },
         {
           "displayText": "분당 약 100~120회",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "L015"
         },
         {
           "displayText": "분당 약 120~140회",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N021_retry_c"
         }
       ]
@@ -3437,19 +3164,17 @@
     "N021_retry_c": {
       "identifier": "N021_retry_c",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C023",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C023",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "L015": {
       "identifier": "L015",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C024"
+      "nextIdentifier": "C024",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C024": {
       "identifier": "C024",
@@ -3460,17 +3185,14 @@
       "options": [
         {
           "displayText": "지쳐도 한 사람이 계속 가슴압박을 수행한다.",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N021_retry_d"
         },
         {
           "displayText": "뼈가 부러진 것 같으면 멈춘다.",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N021_retry_d"
         },
         {
           "displayText": "충분한 이완을 제공한다.",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "Q023_1"
         }
       ]
@@ -3478,46 +3200,41 @@
     "N021_retry_d": {
       "identifier": "N021_retry_d",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C024",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C024",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q023_1": {
       "identifier": "Q023_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_A_chestcomp",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_ChestComp_A"
-      },
-      "nextIdentifier": "CC_A_chestcomp"
+      "questDefinitionIdentifier": "Quest_ChestComp_A",
+      "quest": null
     },
     "N022": {
       "identifier": "N022",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q024",
       "speakerName": "시스템",
       "dialogueContent": "앰부백을 클릭해 산소 공급을 시작하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q024",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q024": {
       "identifier": "Q024",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V028",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Ambu_B"
-      },
-      "nextIdentifier": "V028"
+      "questDefinitionIdentifier": "Quest_Ambu_B",
+      "quest": null
     },
     "V028": {
       "identifier": "V028",
       "nodeType": "Validator",
+      "nextIdentifier": "E034",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -3533,22 +3250,21 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E034",
       "waitForCondition": true
     },
     "E034": {
       "identifier": "E034",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "L016",
       "eventIdentifier": "start_ambubagging",
-      "moveNextBehavior": "Immediately",
-      "nextIdentifier": "L016"
+      "moveNextBehavior": "Immediately"
     },
     "L016": {
       "identifier": "L016",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C025"
+      "nextIdentifier": "C025",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C025": {
       "identifier": "C025",
@@ -3559,12 +3275,10 @@
       "options": [
         {
           "displayText": "약 600ml (엄지, 검지, 중지를 이용해 백을 짠다)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "L017"
         },
         {
           "displayText": "약 1500ml (다섯 손가락 모두를 이용해 백을 짠다)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N022_retry_a"
         }
       ]
@@ -3572,19 +3286,17 @@
     "N022_retry_a": {
       "identifier": "N022_retry_a",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C025",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C025",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "L017": {
       "identifier": "L017",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C026"
+      "nextIdentifier": "C026",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C026": {
       "identifier": "C026",
@@ -3595,17 +3307,14 @@
       "options": [
         {
           "displayText": "10초에 1번 (분당 약 6회)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N022_retry_b"
         },
         {
           "displayText": "6초에 1번 (분당 약 10회)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "Q024_1"
         },
         {
           "displayText": "3초에 1번 (분당 약 20회)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N022_retry_b"
         }
       ]
@@ -3613,46 +3322,41 @@
     "N022_retry_b": {
       "identifier": "N022_retry_b",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C026",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 6초에 1번씩 눌러야 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C026",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q024_1": {
       "identifier": "Q024_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_B_ambu",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Ambu_B"
-      },
-      "nextIdentifier": "CC_B_ambu"
+      "questDefinitionIdentifier": "Quest_Ambu_B",
+      "quest": null
     },
     "N023": {
       "identifier": "N023",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q025",
       "speakerName": "시스템",
       "dialogueContent": "에피네프린 투여를 위한 준비를 합니다. 에피네프린 앰퓰과 5cc 주사기를 획득해 약물이 든 주사기를 완성하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q025",
-      "playTTS": true,
-      "autoAdvanceSeconds": 5.0
+      "portraitSpriteIdentifier": null
     },
     "Q025": {
       "identifier": "Q025",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V029",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Epi_C"
-      },
-      "nextIdentifier": "V029"
+      "questDefinitionIdentifier": "Quest_Epi_C",
+      "quest": null
     },
     "V029": {
       "identifier": "V029",
       "nodeType": "Validator",
+      "nextIdentifier": "N023_1",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -3674,22 +3378,20 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N023_1",
       "waitForCondition": true
     },
     "N023_1": {
       "identifier": "N023_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V029_1",
       "speakerName": "시스템",
       "dialogueContent": "Push용 생리식염수를 준비합니다. 20cc 생리식염수와 20cc 주사기를 클릭해 획득하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V029_1",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V029_1": {
       "identifier": "V029_1",
       "nodeType": "Validator",
+      "nextIdentifier": "D030",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -3711,31 +3413,28 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "D030",
       "waitForCondition": true
     },
     "D030": {
       "identifier": "D030",
       "nodeType": "Dialogue",
+      "nextIdentifier": "N023_2",
       "speakerName": "의사 NPC",
       "dialogueContent": "에피네프린 첫 투여 시점부터 4분 지났습니다. 간호사 C 선생님, 바로 에피네프린과 생리식염수 20cc 투여해주세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N023_2",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "N023_2": {
       "identifier": "N023_2",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V029_2",
       "speakerName": "시스템",
       "dialogueContent": "준비된 에피네프린 1mg을 클릭해 선택한 뒤, 중심정맥관을 클릭해 투여하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V029_2",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V029_2": {
       "identifier": "V029_2",
       "nodeType": "Validator",
+      "nextIdentifier": "D031",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -3751,31 +3450,28 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "D031",
       "waitForCondition": true
     },
     "D031": {
       "identifier": "D031",
       "nodeType": "Dialogue",
+      "nextIdentifier": "N023_3",
       "speakerName": "간호사 D",
       "dialogueContent": "에피네프린 1mg 투여했습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N023_3",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "N023_3": {
       "identifier": "N023_3",
       "nodeType": "Dialogue",
+      "nextIdentifier": "V029_3",
       "speakerName": "시스템",
       "dialogueContent": "동일한 방법으로 준비된 생리식염수 20cc를 투여해 루멘 내 잔여 약물을 주입합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "V029_3",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "V029_3": {
       "identifier": "V029_3",
       "nodeType": "Validator",
+      "nextIdentifier": "D031_1",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -3791,24 +3487,22 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "D031_1",
       "waitForCondition": true
     },
     "D031_1": {
       "identifier": "D031_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "L018",
       "speakerName": "간호사 D",
       "dialogueContent": "생리식염수 20cc 투여했습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "L018",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "L018": {
       "identifier": "L018",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C027"
+      "nextIdentifier": "C027",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C027": {
       "identifier": "C027",
@@ -3819,22 +3513,18 @@
       "options": [
         {
           "displayText": "약 1~2분에 한 번",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N023_retry_a"
         },
         {
           "displayText": "약 3~5분에 한 번",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "L019"
         },
         {
           "displayText": "약 5~10분에 한 번",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N023_retry_a"
         },
         {
           "displayText": "누군가 시킬 때 마다",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N023_retry_a"
         }
       ]
@@ -3842,19 +3532,17 @@
     "N023_retry_a": {
       "identifier": "N023_retry_a",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C027",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 에피네프린은 3~5분에 한 번 투여합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C027",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "L019": {
       "identifier": "L019",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C028"
+      "nextIdentifier": "C028",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C028": {
       "identifier": "C028",
@@ -3865,17 +3553,14 @@
       "options": [
         {
           "displayText": "약물만 주입",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N023_retry_b"
         },
         {
           "displayText": "약물 주입 후 생리식염수 주입",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N023_retry_b"
         },
         {
           "displayText": "약물 주입 후 생리식염수 주입, 이후 팔 들어올리기",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "Q025_1"
         }
       ]
@@ -3883,46 +3568,41 @@
     "N023_retry_b": {
       "identifier": "N023_retry_b",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C028",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 심장에 빠르게 도달시키기 위해 생리식염수 주입 후 팔을 들어올려야 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C028",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q025_1": {
       "identifier": "Q025_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_C_epi",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Epi_C"
-      },
-      "nextIdentifier": "CC_C_epi"
+      "questDefinitionIdentifier": "Quest_Epi_C",
+      "quest": null
     },
     "N024": {
       "identifier": "N024",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q026",
       "speakerName": "시스템",
       "dialogueContent": "제세동기를 클릭해 역할을 부여받으세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q026",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q026": {
       "identifier": "Q026",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V030",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Defib_D"
-      },
-      "nextIdentifier": "V030"
+      "questDefinitionIdentifier": "Quest_Defib_D",
+      "quest": null
     },
     "V030": {
       "identifier": "V030",
       "nodeType": "Validator",
+      "nextIdentifier": "S004",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -3938,31 +3618,28 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "S004",
       "waitForCondition": true
     },
     "S004": {
       "identifier": "S004",
       "nodeType": "Sound",
-      "soundResourceIdentifier": "defib_on_sound",
-      "waitUntilFinished": true,
-      "nextIdentifier": "D032"
+      "nextIdentifier": "D032",
+      "soundResourceIdentifier": "defib_on_sound"
     },
     "D032": {
       "identifier": "D032",
       "nodeType": "Dialogue",
+      "nextIdentifier": "L020",
       "speakerName": "간호사 D",
       "dialogueContent": "제세동기 준비가 완료되었습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "L020",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "L020": {
       "identifier": "L020",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C029"
+      "nextIdentifier": "C029",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C029": {
       "identifier": "C029",
@@ -3973,22 +3650,18 @@
       "options": [
         {
           "displayText": "Asystole(무수축)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N024_retry_a"
         },
         {
           "displayText": "PEA(무맥성 전기활동)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N024_retry_a"
         },
         {
           "displayText": "VT(맥박이 있는 심실빈맥)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N024_retry_a"
         },
         {
           "displayText": "VF(심실세동)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "L021"
         }
       ]
@@ -3996,19 +3669,17 @@
     "N024_retry_a": {
       "identifier": "N024_retry_a",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C029",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C029",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "L021": {
       "identifier": "L021",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C030"
+      "nextIdentifier": "C030",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C030": {
       "identifier": "C030",
@@ -4019,12 +3690,10 @@
       "options": [
         {
           "displayText": "150~200J(줄)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "L022"
         },
         {
           "displayText": "360J(줄)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N024_retry_b"
         }
       ]
@@ -4032,19 +3701,17 @@
     "N024_retry_b": {
       "identifier": "N024_retry_b",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C030",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 150~200J(줄)이 정답입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C030",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "L022": {
       "identifier": "L022",
       "nodeType": "Delay",
-      "durationSeconds": 4.0,
-      "waitUntil": "WaitUntilDone",
-      "nextIdentifier": "C031"
+      "nextIdentifier": "C031",
+      "durationSeconds": 4,
+      "waitUntil": "WaitUntilDone"
     },
     "C031": {
       "identifier": "C031",
@@ -4055,22 +3722,18 @@
       "options": [
         {
           "displayText": "꼬인 수액 줄을 풀어준다.",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N024_retry_c"
         },
         {
           "displayText": "의료진이 손을 대어도 괜찮다.",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N024_retry_c"
         },
         {
           "displayText": "의사의 지시가 있을 때에만 실시한다.",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N024_retry_c"
         },
         {
           "displayText": "전기충격 전 모두 환자에게서 떨어지도록 지시한다.",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "Q026_1"
         }
       ]
@@ -4078,78 +3741,71 @@
     "N024_retry_c": {
       "identifier": "N024_retry_c",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C031",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C031",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q026_1": {
       "identifier": "Q026_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_D_defib",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Defib_D"
-      },
-      "nextIdentifier": "CC_D_defib"
+      "questDefinitionIdentifier": "Quest_Defib_D",
+      "quest": null
     },
     "D033": {
       "identifier": "D033",
       "nodeType": "Dialogue",
+      "nextIdentifier": "E035",
       "speakerName": "의사 NPC",
       "dialogueContent": "2분 지났습니다. 리듬 확인하겠습니다. 모두 떨어져 주세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "E035",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "E035": {
       "identifier": "E035",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "E036",
       "eventIdentifier": "stop_ambu_and_comp",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "E036"
+      "moveNextBehavior": "WaitUntilDone"
     },
     "E036": {
       "identifier": "E036",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "D034",
       "eventIdentifier": "rosc_monitor_ui",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "D034"
+      "moveNextBehavior": "WaitUntilDone"
     },
     "D034": {
       "identifier": "D034",
       "nodeType": "Dialogue",
+      "nextIdentifier": "N025",
       "speakerName": "의사 NPC",
       "dialogueContent": "QRS 보입니다. 간호사 A 선생님, 환자 맥박 있는지 확인해주세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N025",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "N025": {
       "identifier": "N025",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q027",
       "speakerName": "시스템",
       "dialogueContent": "환자의 목을 클릭해서 경동맥을 촉지합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q027",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q027": {
       "identifier": "Q027",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V031",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Check_Pulse_ROSC"
-      },
-      "nextIdentifier": "V031"
+      "questDefinitionIdentifier": "Quest_Check_Pulse_ROSC",
+      "quest": null
     },
     "V031": {
       "identifier": "V031",
       "nodeType": "Validator",
+      "nextIdentifier": "Q027_1",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -4165,40 +3821,37 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "Q027_1",
       "waitForCondition": true
     },
     "Q027_1": {
       "identifier": "Q027_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "D035",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Check_Pulse_ROSC"
-      },
-      "nextIdentifier": "D035"
+      "questDefinitionIdentifier": "Quest_Check_Pulse_ROSC",
+      "quest": null
     },
     "D035": {
       "identifier": "D035",
       "nodeType": "Dialogue",
+      "nextIdentifier": "D036",
       "speakerName": "간호사 A",
       "dialogueContent": "환자 맥박 느껴집니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "D036",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "D036": {
       "identifier": "D036",
       "nodeType": "Dialogue",
+      "nextIdentifier": "P007",
       "speakerName": "의사 NPC",
       "dialogueContent": "환자 ROSC 되었습니다. 제가 검사랑 협진 의뢰 할테니 간호사 D 선생님이 의식상태 확인해주세요. 간호사 B 선생님, 의복 제거해서 추가 손상 있는지 사정해주세요. 간호사 A 선생님께서는 다시 분류구역으로 이동해서 환자 분류해주세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "P007",
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     },
     "P007": {
       "identifier": "P007",
       "nodeType": "Parallel",
+      "nextIdentifier": "D037",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Reallocation",
@@ -4230,32 +3883,29 @@
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         }
-      ],
-      "nextIdentifier": "D037"
+      ]
     },
     "N026": {
       "identifier": "N026",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q028",
       "speakerName": "시스템",
       "dialogueContent": "중증도 분류 구역으로 이동하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q028",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q028": {
       "identifier": "Q028",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V032",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Return_Triage"
-      },
-      "nextIdentifier": "V032"
+      "questDefinitionIdentifier": "Quest_Return_Triage",
+      "quest": null
     },
     "V032": {
       "identifier": "V032",
       "nodeType": "Validator",
+      "nextIdentifier": "E037",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -4271,49 +3921,45 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "E037",
       "waitForCondition": true
     },
     "E037": {
       "identifier": "E037",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "Q028_1",
       "eventIdentifier": "player_a_move_to_triage",
-      "moveNextBehavior": "WaitUntilDone",
-      "nextIdentifier": "Q028_1"
+      "moveNextBehavior": "WaitUntilDone"
     },
     "Q028_1": {
       "identifier": "Q028_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_A_triagearea",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Return_Triage"
-      },
-      "nextIdentifier": "CC_A_triagearea"
+      "questDefinitionIdentifier": "Quest_Return_Triage",
+      "quest": null
     },
     "N027": {
       "identifier": "N027",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q029",
       "speakerName": "시스템",
       "dialogueContent": "가위를 클릭해 획득하고, 환자를 클릭해 의복을 제거하세요.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q029",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q029": {
       "identifier": "Q029",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V033",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Cut_Clothing"
-      },
-      "nextIdentifier": "V033"
+      "questDefinitionIdentifier": "Quest_Cut_Clothing",
+      "quest": null
     },
     "V033": {
       "identifier": "V033",
       "nodeType": "Validator",
+      "nextIdentifier": "S005",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -4335,59 +3981,52 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "S005",
       "waitForCondition": true
     },
     "S005": {
       "identifier": "S005",
       "nodeType": "Sound",
-      "soundResourceIdentifier": "cutting_sound",
-      "waitUntilFinished": true,
-      "nextIdentifier": "N027_1"
+      "nextIdentifier": "N027_1",
+      "soundResourceIdentifier": "cutting_sound"
     },
     "N027_1": {
       "identifier": "N027_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q029_1",
       "speakerName": "시스템",
       "dialogueContent": "추가 외상은 확인되지 않습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q029_1",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q029_1": {
       "identifier": "Q029_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_B_cut_patient_a",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Cut_Clothing"
-      },
-      "nextIdentifier": "CC_B_cut_patient_a"
+      "questDefinitionIdentifier": "Quest_Cut_Clothing",
+      "quest": null
     },
     "N028": {
       "identifier": "N028",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q030",
       "speakerName": "시스템",
       "dialogueContent": "환자를 클릭해 환자의 의식 상태를 사정하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q030",
-      "playTTS": true,
-      "autoAdvanceSeconds": 3.0
+      "portraitSpriteIdentifier": null
     },
     "Q030": {
       "identifier": "Q030",
       "nodeType": "QuestControl",
+      "nextIdentifier": "V034",
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Check_GCS_ROSC"
-      },
-      "nextIdentifier": "V034"
+      "questDefinitionIdentifier": "Quest_Check_GCS_ROSC",
+      "quest": null
     },
     "V034": {
       "identifier": "V034",
       "nodeType": "Validator",
+      "nextIdentifier": "N028_1",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -4403,28 +4042,23 @@
       ],
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
-      "nextIdentifier": "N028_1",
       "waitForCondition": true
     },
     "N028_1": {
       "identifier": "N028_1",
       "nodeType": "Dialogue",
+      "nextIdentifier": "N028_2",
       "speakerName": "시스템",
       "dialogueContent": "환자의 의식 상태를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "N028_2",
-      "playTTS": true,
-      "autoAdvanceSeconds": 5.0
+      "portraitSpriteIdentifier": null
     },
     "N028_2": {
       "identifier": "N028_2",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C032",
       "speakerName": "시스템",
       "dialogueContent": "환자를 불렀을 때 응답이 없고, 환자의 옆구리를 꼬집었을 때 불편해하며 피하려 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C032",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "C032": {
       "identifier": "C032",
@@ -4435,22 +4069,18 @@
       "options": [
         {
           "displayText": "A(Alert, 완전히 깨어 있음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_a"
         },
         {
           "displayText": "V(Verbal response, 음성에 반응 있음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_a"
         },
         {
           "displayText": "P(Pain response, 통증에 반응 있음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_3"
         },
         {
           "displayText": "U(Unconsciousness, 반응 없음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_a"
         }
       ]
@@ -4458,22 +4088,18 @@
     "N028_retry_a": {
       "identifier": "N028_retry_a",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C032",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 다른 자극에는 반응이 없다가, 통증에 반응을 하고 있습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C032",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "N028_3": {
       "identifier": "N028_3",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C033",
       "speakerName": "시스템",
       "dialogueContent": "[관찰] 추가 사정으로 GCS를 확인합니다. 먼저 Eye Opening(E) 반응을 확인합니다. 옆구리를 꼬집자 잠시 눈을 떴다가 다시 감습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C033",
-      "playTTS": true,
-      "autoAdvanceSeconds": 5.0
+      "portraitSpriteIdentifier": null
     },
     "C033": {
       "identifier": "C033",
@@ -4484,22 +4110,18 @@
       "options": [
         {
           "displayText": "4점(자발적)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_b"
         },
         {
           "displayText": "3점(명령)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_b"
         },
         {
           "displayText": "2점(통증)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_4"
         },
         {
           "displayText": "1점(반응 없음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_b"
         }
       ]
@@ -4507,22 +4129,18 @@
     "N028_retry_b": {
       "identifier": "N028_retry_b",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C033",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 통증 자극에만 반응했음을 유의하십시오.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C033",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "N028_4": {
       "identifier": "N028_4",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C034",
       "speakerName": "시스템",
       "dialogueContent": "[관찰] 다음은 Verbal Response(V)입니다. 현재 기관내삽관이 시행되어있는 상태입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C034",
-      "playTTS": true,
-      "autoAdvanceSeconds": 6.0
+      "portraitSpriteIdentifier": null
     },
     "C034": {
       "identifier": "C034",
@@ -4533,32 +4151,26 @@
       "options": [
         {
           "displayText": "5점(적절한 답변)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
           "displayText": "4점(혼란)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
           "displayText": "3점(부적절한 답변)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
           "displayText": "2점(신음소리)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
           "displayText": "1점(반응 없음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
           "displayText": "E(기관삽관)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_5"
         }
       ]
@@ -4566,22 +4178,18 @@
     "N028_retry_c": {
       "identifier": "N028_retry_c",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C034",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 기관삽관을 하는 경우 E로 처리(표기)합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C034",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "N028_5": {
       "identifier": "N028_5",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C035",
       "speakerName": "시스템",
       "dialogueContent": "[관찰] 마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 움찔거리며 움직이려 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C035",
-      "playTTS": true,
-      "autoAdvanceSeconds": 5.0
+      "portraitSpriteIdentifier": null
     },
     "C035": {
       "identifier": "C035",
@@ -4592,32 +4200,26 @@
       "options": [
         {
           "displayText": "6점(명령 수행)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
           "displayText": "5점(통증 원인을 치우려고 손을 뻗음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
           "displayText": "4점(통증에 회피)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_6"
         },
         {
           "displayText": "3점(이상 굴곡)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
           "displayText": "2점(이상 신전)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
           "displayText": "1점(반응 없음)",
-          "displayIconIdentifier": null,
           "nextNodeIdentifier": "N028_retry_d"
         }
       ]
@@ -4625,41 +4227,35 @@
     "N028_retry_d": {
       "identifier": "N028_retry_d",
       "nodeType": "Dialogue",
+      "nextIdentifier": "C035",
       "speakerName": "시스템",
       "dialogueContent": "오답입니다. 통증으로부터 회피하려 합니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "C035",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "N028_6": {
       "identifier": "N028_6",
       "nodeType": "Dialogue",
+      "nextIdentifier": "Q030_1",
       "speakerName": "시스템",
       "dialogueContent": "GCS 측정 완료. E2 / V(E) / M4 = 총 6E점 입니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": "Q030_1",
-      "playTTS": true,
-      "autoAdvanceSeconds": 4.0
+      "portraitSpriteIdentifier": null
     },
     "Q030_1": {
       "identifier": "Q030_1",
       "nodeType": "QuestControl",
+      "nextIdentifier": "CC_D_gcs_patient_a_rosc",
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "quest": {
-        "Id": "Quest_Check_GCS_ROSC"
-      },
-      "nextIdentifier": "CC_D_gcs_patient_a_rosc"
+      "questDefinitionIdentifier": "Quest_Check_GCS_ROSC",
+      "quest": null
     },
     "D037": {
       "identifier": "D037",
       "nodeType": "Dialogue",
+      "nextIdentifier": null,
       "speakerName": "시스템",
       "dialogueContent": "시나리오 A 환자 대응 종료. 흉부외과로 환자를 이관하였습니다.",
-      "portraitSpriteIdentifier": null,
-      "nextIdentifier": null,
-      "playTTS": true
+      "portraitSpriteIdentifier": null
     }
   }
 }
