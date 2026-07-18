@@ -43,6 +43,15 @@ namespace MultiplayerInfrastructure.Editor
     private const string ScenarioExtension = ".scenario.json";
     private const string ScenarioEditorExtension = ".scenario.editor.json";
 
+    // 자동 배치(AutoLayoutNodes) 튜닝 파라미터.
+    // - AutoLayoutColumnSpacing: 열(depth) 간 가로 간격.
+    // - AutoLayoutRowSpacing: 같은 열에 세로로 쌓이는 노드 간 세로 간격.
+    // - AutoLayoutColumnsPerBand: 한 밴드(가로 줄)에 들어갈 최대 열 개수.
+    //   이 값을 넘어가면 아래 밴드로 접고 진행 방향을 좌우 반전한다.
+    private const float AutoLayoutColumnSpacing = 380f;
+    private const float AutoLayoutRowSpacing = 240f;
+    private const int AutoLayoutColumnsPerBand = 6;
+
     /// <summary>
     /// Ensures a scenario file path uses the ".scenario.json" extension. Paths already
     /// ending in ".scenario.json" are returned unchanged; a plain ".json" path is upgraded.
@@ -1191,16 +1200,64 @@ namespace MultiplayerInfrastructure.Editor
         if (!depth.ContainsKey(id)) depth[id] = maxDepth + 1;
       }
 
-      const float spacingX = 380f;
-      const float spacingY = 240f;
-      foreach (var group in depth.GroupBy(kvp => kvp.Value).OrderBy(g => g.Key))
+      // 뱀 형태(serpentine / boustrophedon) 배치.
+      // - 연결된 노드는 depth(열)가 1씩 증가하므로 가까이 배치된다.
+      // - 같은 depth에 동시에 연결된 노드들은 세로로 나란히 쌓는다.
+      // - depth가 columnsPerBand 이상 오른쪽으로 이어지면 아래 밴드로 내려가고
+      //   진행 방향을 좌우 반전시켜, 오른쪽 끝에서 왼쪽으로 되돌아온다.
+      // 간격/접힘 기준은 클래스 상단의 AutoLayout* 상수로 조정한다.
+      const float spacingX = AutoLayoutColumnSpacing;
+      const float spacingY = AutoLayoutRowSpacing;
+      const int columnsPerBand = AutoLayoutColumnsPerBand;
+
+      // 각 depth(열)에 몇 개의 노드가 세로로 쌓이는지 미리 계산해,
+      // 밴드가 아래로 내려갈 때 겹치지 않도록 밴드 높이를 잡는다.
+      var groupsByDepth = depth
+        .GroupBy(kvp => kvp.Value)
+        .ToDictionary(g => g.Key, g => g.Select(kvp => kvp.Key).OrderBy(id => id).ToList());
+
+      // 밴드(bandIndex = depth / columnsPerBand) 별로 가장 많이 쌓인 열의 노드 수를 구한다.
+      var bandRowCount = new Dictionary<int, int>();
+      foreach (var kvp in groupsByDepth)
       {
-        var nodesInDepth = group.Select(kvp => kvp.Key).OrderBy(id => id).ToList();
+        int band = kvp.Key / columnsPerBand;
+        int rows = kvp.Value.Count;
+        if (!bandRowCount.TryGetValue(band, out var existing) || rows > existing)
+          bandRowCount[band] = rows;
+      }
+
+      // 각 밴드의 시작 y 오프셋(윗쪽 누적 높이)을 계산한다.
+      var bandYOffset = new Dictionary<int, float>();
+      float accumulatedY = 0f;
+      int maxBand = bandRowCount.Count > 0 ? bandRowCount.Keys.Max() : 0;
+      for (int band = 0; band <= maxBand; band++)
+      {
+        bandYOffset[band] = accumulatedY;
+        int rows = bandRowCount.TryGetValue(band, out var r) ? r : 1;
+        // 밴드 사이에 한 칸 여유를 두어 세로로 쌓인 노드와 다음 밴드가 겹치지 않게 한다.
+        accumulatedY += (rows + 1) * spacingY;
+      }
+
+      foreach (var kvp in groupsByDepth.OrderBy(g => g.Key))
+      {
+        int d = kvp.Key;
+        var nodesInDepth = kvp.Value;
+
+        int band = d / columnsPerBand;
+        int columnInBand = d % columnsPerBand;
+
+        // 짝수 밴드는 왼→오, 홀수 밴드는 오→왼 방향으로 진행한다.
+        bool leftToRight = (band % 2) == 0;
+        int effectiveColumn = leftToRight ? columnInBand : (columnsPerBand - 1 - columnInBand);
+
+        float x = effectiveColumn * spacingX;
+        float yBase = bandYOffset.TryGetValue(band, out var yo) ? yo : band * spacingY;
+
         for (int i = 0; i < nodesInDepth.Count; i++)
         {
           var id = nodesInDepth[i];
           if (!nodeViews.TryGetValue(id, out var view)) continue;
-          var pos = new Vector2(group.Key * spacingX, i * spacingY);
+          var pos = new Vector2(x, yBase + i * spacingY);
           view.SetPosition(new Rect(pos, view.DefaultSize));
         }
       }
