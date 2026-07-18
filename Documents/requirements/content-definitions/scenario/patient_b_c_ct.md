@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "2-implementing"
 status: active
-updated: 2026-07-09
+updated: 2026-07-18
 flags: ["refactor-required"]
 ---
 
@@ -25,8 +25,46 @@ flags: ["refactor-required"]
 | 시작 노드 Identifier | SPAWN_B |
 | 시나리오 식별자(JSON) | patient_b_c_ct |
 
-> 본 문서는 JSON 정본(`Assets/Modules/TriageTrainer/Resources/Scenario/patient_b_c_ct.scenario.json`)을 기준으로 재작성되었다.
-> 식별자/이벤트/시그널은 모두 snake_case JSON 정본을 따른다(R1). 활력 체온은 원본(_origin) 기준 37.8°로 통일하였다(R7/e-1).
+> 2026-07-18 연결성 감사부터 기존 `patient_b_c_ct.scenario.json`은 검증 근거로 사용하지 않는다.
+> 이 Markdown과 현재 Scenario node/schema 및 gameplay producer 구현을 기준으로 새 JSON을 생성한다.
+> 활력 체온은 원본(_origin) 기준 37.8°로 통일하였다(R7/e-1).
+
+## JSON 변환 전 연결성 감사 (2026-07-18)
+
+### 구조 감사 결과
+
+| 검사 | 결과 | 변환 규칙 |
+|---|---|---|
+| 시작점 및 도달성 | `SPAWN_B`에서 문서의 220개 노드가 모두 도달 가능 | 시작 노드는 `SPAWN_B`로 고정한다. |
+| 일반 전이 | 정의되지 않은 일반 `NextIdentifier`/선택지 대상 없음 | 설명 괄호는 식별자에 포함하지 않고, 종료 노드 `N092`만 `null`로 변환한다. |
+| 병렬 합류 | 5개 `Parallel`과 10개 완료 표식이 대응됨 | `CC_*`는 별도 노드가 아니라 브랜치 종료 표식으로 직렬화한다. |
+| 이벤트 | 고유 `EventIdentifier` 20개가 모두 `TriageScenarioEventBootstrap`에 등록됨 | Requirements 검증에서 handler 등록을 필수로 한다. |
+| 퀘스트 | 12개 `Quest_*`가 식별자만 있고 title/content/task definition이 없음 | 빈 inline quest를 만들지 않고 Q-BC-1 해결 후 definition을 참조한다. |
+| 런타임 신호 | 고유 신호 42개 중 22개가 둘 이상의 Validator에서 재사용됨 | sticky RuntimeState를 환자·행위 단위로 분리하거나 소비 후 clear해야 한다. |
+
+### 플레이 차단 항목과 보완 위치
+
+| ID | 위치 | 부족한 연결 | 처리 |
+|---|---|---|---|
+| SPAWN-BC-1 | `SPAWN_B`, `SPAWN_C` | Unity import에서 `patient_b`의 `PatientTypeBMale`, `patient_c`의 `PatientTypeBFemale` prefab이 FishNet `DefaultPrefabObjects`에 등록되지 않아 `PrefabId`가 미할당된 것으로 확인됐다. 현재 상태로 network spawn하면 런타임 `ObjectId 65535` 오류가 발생한다. | Fish-Networking Spawnable Prefabs에 두 원본 prefab을 등록하고 reserialize한 뒤, Production profile에서 각 EntityPreset의 `SpawnablePreset` capability를 다시 증명한다. |
+| ROLE-BC-1 | `P009`~`P013` | `ByRole`은 player tag만 사용하지만 NurseA~D와 태그의 선행 매핑이 없다. 또한 `P009` 상위 태그와 `P012`/`P013` 하위 태그가 다르고 `bleeding_control`은 양쪽 환자 그룹에 중복된다. | **인간 판단 필요:** 세션 role→tag 표를 확정하고 Scenario 시작 전 공급 계약으로 선언한다. 한 플레이어가 동시에 양쪽 환자 브랜치에 배정되지 않도록 태그를 배타적으로 구성한다. |
+| SIGNAL-BC-1 | `V040_A`/`V040_C`, `V040_B`/`V040_D` | 같은 들것 신호를 두 번 기다린다. 신호가 sticky라 첫 파지 후 두 번째 Validator도 즉시 통과하여 2인 파지를 증명하지 못한다. | `grab_stretcher_patient_b_a/c`, `grab_stretcher_patient_c_b/d`처럼 손잡이별 신호로 분리하고 각 grab point producer에 연결한다. |
+| SIGNAL-BC-2 | `V039` | `enter_triage_zone` 하나의 존재 여부로는 세 명 도착을 셀 수 없다. | 환자별 `enter_triage_zone_patient_b/c/dummy_b` 신호 3개 또는 수량 기반 zone tracker를 사용한다. |
+| SIGNAL-BC-3 | B/C의 장비·처치 Validator | 장비 획득·전극·펜라이트·산소·장갑·거즈 신호 22개가 환자 B와 C 흐름에서 재사용된다. B가 올린 신호 때문에 C 흐름이 실제 행동 없이 통과할 수 있다. | 환자별 결과 신호로 분리한다. 단순 공용 아이템 획득은 브랜치 진입 시 clear한 뒤 재획득을 요구할지, 한 번 준비한 공용 물품을 재사용할지 인간이 확정한다. 환자 적용 결과는 반드시 `_patient_b`/`_patient_c`로 분리한다. |
+| SIGNAL-BC-4 | `V036`, `V046`, `V048`, `V050`, `V052`~`V055`, `V065`, `V069`, `V071`~`V074` | 문서가 선행 구현 필요로 표시한 신호 producer가 없다. `WaitForCondition=true`이므로 `OnFailure=Ignore`여도 자동 통과하지 않고 무한 대기한다. 일부 120초 `ForceAdvance`는 실패를 숨길 뿐 정상 플레이 검증이 아니다. | 정식 gameplay callback에서 동일 신호를 Raise한다. timeout은 접근성/복구 정책으로만 유지하고 producer 대체로 사용하지 않는다. |
+| CRAFT-BC-1 | `V052`~`V055`, `V071`~`V074` | `humidifierbottle`, `sterile_distilled_water`, `flowmeter`와 recipe 2개가 없어 산소화 준비물을 만들 수 없다. | ItemDefinition 3개와 `humidifierbottle_ready`, `oxyflowmeter` recipe를 먼저 등록한다. |
+| Q-BC-1 | `Q031`~`Q042_1` | 12개 quest가 식별자만 있어 실제 오버레이 내용과 완료 task가 비어 있다. | 주변 Dialogue와 Validator를 기반으로 별도 quest definition 12개를 작성하고 Add/Remove가 같은 identifier를 참조하게 한다. |
+| PRESET-BC-1 | `PRESET_B`, `PRESET_C` | 문서가 요구하는 체온과 SpO2는 현재 `PatientMedicalStatePreset` 필드가 아니다. | 현재 가능한 의료 상태는 preset에 넣고, 체온·SpO2는 monitor event/profile 요구사항으로 명시한다. 스키마 확장 여부는 별도 인간 판단으로 남긴다. |
+| END-BC-1 | `N092` 및 종료 조건 | fade-out 요구가 서술에만 있고 `N092`는 Dialogue 후 종료된다. | fade handler가 확정되면 `E_END_BC_FADE -> N092`를 명시한다. 현재는 종료 메시지는 동작하지만 fade 연출은 미충족으로 기록한다. |
+
+### 변환 승인 조건
+
+- ROLE-BC-1의 역할 태그 공급 계약이 확정되어야 한다.
+- SPAWN-BC-1의 FishNet spawnable prefab 등록이 완료되어야 한다.
+- 들것 파지와 구역 도착을 각각 참여자/환자 단위로 계측해야 한다.
+- 환자별 처치 결과 신호를 분리하고 미배선 producer를 구현해야 한다.
+- 산소 조합 재료·레시피 및 12개 quest definition을 등록해야 한다.
+- Requirements Supports Production 검증에서 unresolved `Error`가 0개여야 한다.
 
 ### 노드 수 요약
 
@@ -78,7 +116,7 @@ flags: ["refactor-required"]
 interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 분류한다.
 
 - **자동 계측 완료**(설정만으로 동작): `enter_triage_zone`(구역 진입, 단 인원수 검증은 별도), `apply_electrode`, `apply_gauze`, `apply_plaster_on_gauze`, `wear_glove`.
-- **선행 구현 필요**(게임플레이 미구현, 배선 전 자동 통과): `insert_iv_b_right`, `insert_iv_c_left`, `close_vital_ui_b`, `close_vital_ui_c`, `click_patient_b_face`, `click_patient_c_face`, `click_flowmeter`, `click_humidifierbottle`, `click_sterile_distilled_water`(구 `click_sdw`), `click_nasal`, `click_dummy_b`.
+- **선행 구현 필요**(게임플레이 미구현, 미배선 시 무한 대기 또는 명시된 timeout 복구): `insert_iv_b_right`, `insert_iv_c_left`, `close_vital_ui_b`, `close_vital_ui_c`, `click_patient_b_face`, `click_patient_c_face`, `click_flowmeter`, `click_humidifierbottle`, `click_sterile_distilled_water`(구 `click_sdw`), `click_nasal`, `click_dummy_b`.
 - **에디터 Identifier 정합 필요**(코드는 있으나 프리팹/에디터 매핑 확정 필요): `check_gcs_patient_b`, `check_gcs_patient_c`, `check_vital_patient_b`, `check_vital_patient_c`, `click_patient_b`, `click_patient_c`.
 
 ## 시나리오 본문
@@ -259,7 +297,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | E039 |
 
-- [ ] f: `click_patient_b`는 §5.3상 신체부위/장비 클릭 계열(에디터 Identifier 정합 필요). 배선 전 `onFailure: Ignore` 자동 통과.
+- [ ] f: `click_patient_b`는 §5.3상 신체부위/장비 클릭 계열(에디터 Identifier 정합 필요). `WaitForCondition=true`이므로 미배선 시 자동 통과하지 않고 무한 대기한다.
 
 ---
 
@@ -626,8 +664,8 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 
 | Identifier | CompletionConditionIdentifier | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
 |---|---|---|---|---|
-| V040_A | CC_A_C_patientB_complete | triage_lead, bleeding_control | - | Any |
-| V040_B | CC_B_D_patientC_complete | airway_team, iv_team | - | Any |
+| V040_A | CC_A_C_patient_b_complete | triage_lead, bleeding_control | - | Any |
+| V040_B | CC_B_D_patient_c_complete | airway_team, iv_team | - | Any |
 
 > R10 참고: P009 상위 브랜치 태그(V040_A: triage_lead/bleeding_control, V040_B: airway_team/iv_team)와 하위 P010/P011/P012/P013 태그가 불일치한다(상세는 상단 "역할·태그 정리(예비)"). 저작 원본 그대로 보존한다. P009만 matchMode=Any, 나머지 병렬은 All.
 
@@ -710,8 +748,8 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 
 | Identifier | CompletionConditionIdentifier | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
 |---|---|---|---|---|
-| N035 | CC_A_gcs_patientB | neuro_assessment | - | All |
-| N043 | CC_C_vital_patientB | vital_team | - | All |
+| N035 | CC_A_gcs_patient_b | neuro_assessment | - | All |
+| N043 | CC_C_vital_patient_b | vital_team | - | All |
 
 ====================================================
 # [P010 병렬 브랜치 1] 플레이어 A (환자 B 의식 사정)
@@ -1091,7 +1129,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_GCS_B |
-| **NextIdentifier** | 문자열 | CC_A_gcs_patientB (P010 브랜치 N035 완료 조건) |
+| **NextIdentifier** | 문자열 | CC_A_gcs_patient_b |
 
 ====================================================
 # [P010 병렬 브랜치 2] 플레이어 C (환자 B 활력징후 사정)
@@ -1273,7 +1311,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | Q034_1 |
 
-- [ ] f: `close_vital_ui_b`는 §5.3상 "선행 메커닉 필요(모니터 UI 토글 콜백 미구현)". 배선 전 자동 통과.
+- [ ] f: `close_vital_ui_b`는 §5.3상 "선행 메커닉 필요(모니터 UI 토글 콜백 미구현)". 미배선 시 `V046`에서 무한 대기한다.
 
 ---
 
@@ -1286,7 +1324,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_Vital_B |
-| **NextIdentifier** | 문자열 | CC_C_vital_patientB (P010 브랜치 N043 완료 조건) |
+| **NextIdentifier** | 문자열 | CC_C_vital_patient_b |
 
 ====================================================
 # [P010 병렬 종료 및 P011 진입 (환자 B)]
@@ -1338,8 +1376,8 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 
 | Identifier | CompletionConditionIdentifier | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
 |---|---|---|---|---|
-| N048 | CC_A_pupil_iv_patientB | pupil_check | - | All |
-| N052 | CC_C_nasal_pressure_patientB | bleeding_control | - | All |
+| N048 | CC_A_pupil_iv_patient_b | pupil_check | - | All |
+| N052 | CC_C_nasal_pressure_patient_b | bleeding_control | - | All |
 
 ====================================================
 # [P011 병렬 브랜치 1] 플레이어 A (동공 확인 및 IV 확보)
@@ -1416,7 +1454,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **OnWaitTimeout** | ScenarioValidatorOnWaitTimeout | ForceAdvance |
 | **NextIdentifier** | 문자열 | E045 |
 
-- [ ] f: `click_patient_b_face`는 §5.3상 "선행 메커닉 필요(신체부위 클릭 미구현)". 타임아웃 설정됨. 배선 전 자동 통과.
+- [ ] f: `click_patient_b_face`는 §5.3상 "선행 메커닉 필요(신체부위 클릭 미구현)". 타임아웃 후 `ForceAdvance`되지만 이는 정상 완료가 아닌 복구 경로다.
 
 ---
 
@@ -1506,7 +1544,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **OnWaitTimeout** | ScenarioValidatorOnWaitTimeout | ForceAdvance |
 | **NextIdentifier** | 문자열 | E046 |
 
-- [ ] f: `insert_iv_b_right`는 §5.3상 "선행 메커닉 필요(정맥 삽입 미구현)". 타임아웃 설정됨. 배선 전 자동 통과.
+- [ ] f: `insert_iv_b_right`는 §5.3상 "선행 메커닉 필요(정맥 삽입 미구현)". 타임아웃 후 `ForceAdvance`되지만 정상 완료 신호 producer가 필요하다.
 
 ---
 
@@ -1604,7 +1642,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_Pupil_IV_B |
-| **NextIdentifier** | 문자열 | CC_A_pupil_iv_patientB (P011 브랜치 N048 완료 조건) |
+| **NextIdentifier** | 문자열 | CC_A_pupil_iv_patient_b |
 
 ====================================================
 # [P011 병렬 브랜치 2] 플레이어 C (환자 B 산소 투여 및 지혈)
@@ -1667,7 +1705,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 
 > R5: 구 `A012`(CombineItem, humidifierbottle_ready) 노드를 노드 흐름에서 제거하고 V052 → N054 로 재연결한다.
 - [ ] 조합은 crafting 시스템으로 처리. 이 지점은 `humidifierbottle_ready` 가 준비되어 있어야 진행. 단 해당 레시피는 재료(`humidifierbottle`, `sterile_distilled_water`) 미존재로 **등록 보류** 상태(crafting-recipes.md 참조).
-- [ ] f: `click_humidifierbottle`/`click_sterile_distilled_water`(구 `click_sdw`)는 §5.3상 "선행 메커닉 필요(장비 클릭 미구현)". 배선 전 자동 통과.
+- [ ] f: `click_humidifierbottle`/`click_sterile_distilled_water`(구 `click_sdw`)는 §5.3상 "선행 메커닉 필요(장비 클릭 미구현)". 미배선 시 `V052`에서 무한 대기한다.
 
 ---
 
@@ -2060,7 +2098,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_BleedingControl_B |
-| **NextIdentifier** | 문자열 | CC_C_nasal_pressure_patientB (P011 브랜치 N052 완료 조건) |
+| **NextIdentifier** | 문자열 | CC_C_nasal_pressure_patient_b |
 
 ====================================================
 # [P011 병렬 종료 (환자 B 처치 완료)]
@@ -2077,7 +2115,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **AutoAdvanceSeconds** | 실수(float) | 4.0 |
 | **PlayTTS** | bool | true |
-| **NextIdentifier** | 문자열 | CC_A_C_patientB_complete (P009 브랜치 V040_A 완료 조건) |
+| **NextIdentifier** | 문자열 | CC_A_C_patient_b_complete |
 
 ====================================================
 # [P009 병렬 브랜치 2] 환자 C 처치 그룹 (플레이어 B, D)
@@ -2160,8 +2198,8 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 
 | Identifier | CompletionConditionIdentifier | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
 |---|---|---|---|---|
-| N064 | CC_B_gcs_patientC | neuro_assessment | - | All |
-| N072 | CC_D_vital_patientC | vital_team | - | All |
+| N064 | CC_B_gcs_patient_c | neuro_assessment | - | All |
+| N072 | CC_D_vital_patient_c | vital_team | - | All |
 
 ====================================================
 # [P012 병렬 브랜치 1] 플레이어 B (환자 C 의식 사정)
@@ -2543,7 +2581,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_GCS_C |
-| **NextIdentifier** | 문자열 | CC_B_gcs_patientC (P012 브랜치 N064 완료 조건) |
+| **NextIdentifier** | 문자열 | CC_B_gcs_patient_c |
 
 ====================================================
 # [P012 병렬 브랜치 2] 플레이어 D (환자 C 활력징후 사정)
@@ -2725,7 +2763,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | Q039_1 |
 
-- [ ] f: `close_vital_ui_c`는 §5.3상 "선행 메커닉 필요(모니터 UI 토글 콜백 미구현)". 배선 전 자동 통과.
+- [ ] f: `close_vital_ui_c`는 §5.3상 "선행 메커닉 필요(모니터 UI 토글 콜백 미구현)". 미배선 시 `V065`에서 무한 대기한다.
 
 ---
 
@@ -2738,7 +2776,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_Vital_C |
-| **NextIdentifier** | 문자열 | CC_D_vital_patientC (P012 브랜치 N072 완료 조건) |
+| **NextIdentifier** | 문자열 | CC_D_vital_patient_c |
 
 ====================================================
 # [P012 병렬 종료 및 P013 진입 (환자 C)]
@@ -2790,8 +2828,8 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 
 | Identifier | CompletionConditionIdentifier | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
 |---|---|---|---|---|
-| N077 | CC_B_pupil_iv_patientC | pupil_check | - | All |
-| N081 | CC_D_nasal_pressure_patientC | bleeding_control | - | All |
+| N077 | CC_B_pupil_iv_patient_c | pupil_check | - | All |
+| N081 | CC_D_nasal_pressure_patient_c | bleeding_control | - | All |
 
 ====================================================
 # [P013 병렬 브랜치 1] 플레이어 B (동공 확인 및 IV 확보)
@@ -2866,7 +2904,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | E052 |
 
-- [ ] f: `click_patient_c_face`는 §5.3상 "선행 메커닉 필요(신체부위 클릭 미구현)". 배선 전 자동 통과.
+- [ ] f: `click_patient_c_face`는 §5.3상 "선행 메커닉 필요(신체부위 클릭 미구현)". 타임아웃 후 `ForceAdvance`되지만 이는 정상 완료가 아닌 복구 경로다.
 
 ---
 
@@ -2958,7 +2996,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **OnWaitTimeout** | ScenarioValidatorOnWaitTimeout | ForceAdvance |
 | **NextIdentifier** | 문자열 | E053 |
 
-- [ ] f: `insert_iv_c_left`는 §5.3상 "선행 메커닉 필요(정맥 삽입 미구현)". 타임아웃 설정됨. 배선 전 자동 통과.
+- [ ] f: `insert_iv_c_left`는 §5.3상 "선행 메커닉 필요(정맥 삽입 미구현)". 타임아웃 후 `ForceAdvance`되지만 정상 완료 신호 producer가 필요하다.
 
 ---
 
@@ -3056,7 +3094,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_Pupil_IV_C |
-| **NextIdentifier** | 문자열 | CC_B_pupil_iv_patientC (P013 브랜치 N077 완료 조건) |
+| **NextIdentifier** | 문자열 | CC_B_pupil_iv_patient_c |
 
 ====================================================
 # [P013 병렬 브랜치 2] 플레이어 D (환자 C 산소 투여 및 지혈)
@@ -3510,7 +3548,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_BleedingControl_C |
-| **NextIdentifier** | 문자열 | CC_D_nasal_pressure_patientC (P013 브랜치 N081 완료 조건) |
+| **NextIdentifier** | 문자열 | CC_D_nasal_pressure_patient_c |
 
 ====================================================
 # [P013 병렬 종료 (환자 C 처치 완료)]
@@ -3527,7 +3565,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **AutoAdvanceSeconds** | 실수(float) | 4.0 |
 | **PlayTTS** | bool | true |
-| **NextIdentifier** | 문자열 | CC_B_D_patientC_complete (P009 브랜치 V040_B 완료 조건) |
+| **NextIdentifier** | 문자열 | CC_B_D_patient_c_complete |
 
 ====================================================
 # [P009 병렬 종료 및 최종 브리핑 / CT실 이송]

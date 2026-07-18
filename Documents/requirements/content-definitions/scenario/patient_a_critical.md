@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "2-implementing"
 status: active
-updated: 2026-07-12
+updated: 2026-07-18
 flags: ["refactor-required"]
 ---
 
@@ -27,8 +27,59 @@ flags: ["refactor-required"]
 - [x] a-3: 콘텐츠 노출 화자명은 `시스템`(한글), 기술/식별자 표기는 `System`(영문)으로 정규화함.
 - [x] a-2: MoveNextBehavior/WaitUntil 열거값을 엔진 정본(`Immediately`/`WaitUntilDone`)으로 정규화함(구 md `Immediate` 폐기).
 - [x] a-1/a-2: EventIdentifier·Validator 시그널·아이템 식별자를 JSON/C# 정본 snake_case로 통일함.
-- [ ] a-1 잔여: 병렬 브랜치의 `CompletionConditionIdentifier`(예: `CC_B_vitalcheck_patientA`, `CC_C_gcs_patientA`, `CC_D_gcs_patientA_rosc` 등)는 JSON 정본이 아직 camelCase(`patientA`)를 유지하고 있어 본 문서도 JSON에 맞춰 그대로 표기함. 이들은 EventIdentifier/시그널/아이템이 아니라 병렬 합류 라벨이므로 snake_case 전환 시 JSON·엔진과 동시 갱신 필요. 인간 작업자 확정 요망(→ `CC_*_patient_a` 계열로 통일할지 결정).
-  - 인간 작업자 코멘트: `CC_*_patient_a` 계열로 통일
+- [x] a-1 잔여: 병렬 브랜치의 `CompletionConditionIdentifier`는 인간 작업자 코멘트에 따라 `CC_*_patient_a` 계열로 통일함. 이 값은 독립 노드가 아니라 병렬 브랜치 종료 표식이며, 브랜치의 마지막 노드가 이 식별자로 전이할 때 `Parallel` 실행기가 완료로 소비한다(2026-07-18).
+
+## JSON 변환 전 연결성 감사 (2026-07-18)
+
+이 절은 기존 `patient_a_critical.scenario.json`을 참조하지 않고 이 문서만으로 그래프를 재구성한 결과다.
+변환기는 아래의 **확정 보완 규칙**을 적용해야 하며, **차단 항목**이 해결되지 않은 상태에서는 플레이 가능
+Scenario로 판정하면 안 된다.
+
+### 구조 감사 결과
+
+| 검사 | 결과 | 변환 규칙 |
+|---|---|---|
+| 시작점 및 도달성 | `SPAWN_A`에서 문서의 337개 노드가 모두 도달 가능 | 시작 노드는 `SPAWN_A`로 고정한다. |
+| 일반 전이 | 정의되지 않은 일반 `NextIdentifier`/선택지 대상 없음 | `(end)`만 JSON의 `null`로 변환한다. |
+| 병렬 합류 | 6개 `Parallel`과 21개 완료 표식의 시작·종료 연결이 대응됨 | `CC_*`는 `nodes`에 만들지 않고 `CompletionConditionIdentifier` 및 브랜치 마지막 `nextIdentifier`에 같은 문자열로 기록한다. |
+| 이벤트 | 문서의 고유 `EventIdentifier` 30개가 모두 `TriageScenarioEventBootstrap`에 등록됨 | `InvokeEvent`로 보존하되 Requirements 검증에서 handler 등록을 필수로 한다. |
+| 열거값 | 문서의 `WaitAll`은 현재 엔진/schema에 존재하지 않음 | 모든 병렬 노드의 `WaitMode`를 정본 `All`로 보정했다. |
+| 퀘스트 | 23개 퀘스트가 식별자만 있고 제목·본문·완료조건 정의가 없음 | 빈 inline quest를 만들지 않는다. 아래 차단 항목 Q-1 해결 전 JSON 변환 보류. |
+| 종료 연결 | `D037` 뒤 fade-out·종료 메시지·다음 Scenario 연결이 서술에만 있음 | 아래 차단 항목 END-1의 인간 결정을 받아 명시 노드를 추가한다. |
+
+### 확정 보완 규칙
+
+1. `RequiredRoleIdentifiers` 열은 현재 `ScenarioParallelBranch` JSON 필드가 아니므로 출력하지 않는다.
+   런타임 할당은 `requiredPlayerTags`, `forbiddenPlayerTags`, `requiredPlayerTagsMatchMode`만 사용한다.
+2. `FailureNextIdentifier=null`이고 `WaitForCondition=true`인 Validator는 무한 대기 게이트로 유지한다.
+   단, 아래 S-1 신호 생산자 계약에 포함되지 않은 신호를 기다리는 Validator는 생성하지 않는다.
+3. `Quest_*`를 Add/Remove하는 두 노드는 동일한 대소문자 식별자를 사용해야 한다. 변환 시 임의로
+   `questDefinitionIdentifier`로 치환하지 않고, Q-1에서 확정한 quest definition을 참조한다.
+4. `CC_*_patientA`였던 합류 표식은 모두 `CC_*_patient_a`로 정규화한다.
+
+### 플레이 차단 항목과 인간 판단 위치
+
+| ID | 위치 | 부족한 연결 | 처리 |
+|---|---|---|---|
+| SPAWN-A-1 | `SPAWN_A` | Unity import에서 `patient_a`의 `PatientTypeA` prefab이 FishNet `DefaultPrefabObjects`에 등록되지 않아 `PrefabId`가 미할당된 것으로 확인됐다. 현재 상태로 network spawn하면 런타임 `ObjectId 65535` 오류가 발생한다. | Fish-Networking Spawnable Prefabs에 원본 prefab을 등록하고 reserialize한 뒤, Production profile에서 `EntityPreset(patient_a)`의 `SpawnablePreset` capability를 다시 증명한다. |
+| ROLE-1 | `P002`, `P003`, `P004`, `P005`, `P006`, `P007` 진입 전 | `ByRole`은 플레이어 태그만 읽지만, 이 문서에는 NurseA~D와 역할 태그를 연결·부여하는 진입 노드가 없다. 태그가 없으면 `Reallocation` 이후에도 브랜치 할당이 보장되지 않는다. | **인간 판단 필요:** 로비/세션이 `triage_lead`, `airway_team`, `neuro_assessment` 등 모든 태그를 선행 부여하는지 확정한다. 아니라면 Scenario 시작 전용 role→tag 바인더 구현 후 `SPAWN_A`의 선행 요구사항으로 둔다. |
+| ROLE-2 | `P004`의 `N008`, `N011` 브랜치 | 한 브랜치에 각각 `NurseB, NurseA`와 `NurseD, NurseC` 두 역할을 적었지만 현재 `ByRole`은 한 브랜치에 한 플레이어만 배정한다. `requiredPlayerTagsMatchMode=All`은 두 사람이 아니라 한 사람이 두 태그를 모두 가져야 한다는 뜻이다. | **인간 판단 필요:** (a) 한 명이 전체 브랜치를 수행하도록 역할 표기를 단일화하거나, (b) `N008`의 삽관/산소 및 `N011`의 IV/보조 흐름을 별도 병렬 브랜치와 합류점으로 분리한다. |
+| S-1 | `V011_1`, `V013`, `V014_1~V014_4`, `V015`, `V015_1`, `V015_3~V015_4`, `V017_1`, `V018`, `V023_1`, `V024`, `V025~V025_1`, `V027`, `V030`, `V033` | 20개 신호에 실제 gameplay producer가 연결되지 않았다고 문서에 표시되어 있다. 하나라도 생산되지 않으면 해당 Validator에서 영구 정지한다. | 각 노드의 기존 `(b) 선행 구현 필요` 주석을 producer 작업 목록으로 사용한다. 구현 전에는 Debug emitter를 정식 producer로 간주하지 않는다. |
+| CRAFT-1 | `V015`~`V015_4` 산소 공급 흐름 | `humidifierbottle`, `sterile_distilled_water`, `flowmeter`와 두 조합 레시피가 없어 `humidifierbottle_ready`/`oxyflowmeter`를 만들 수 없다. | **필수 보충:** 재료 ItemDefinition 3개와 recipe 2개를 등록한다. 미등록 상태에서는 이 브랜치를 제거하거나 자동 통과시키지 않는다. |
+| Q-1 | 모든 `Q006`~`Q030_1` | 23개 `Quest_*`가 표시용 식별자만 있고 title/content/task definition이 없다. 식별자만 가진 inline quest는 빈 오버레이를 만들며 플레이 안내가 느슨해진다. | **인간 콘텐츠 확정 필요:** 각 Add 노드 주변 Dialogue와 이어지는 Validator 조건을 기반으로 title, questContent, task display text를 확정해 별도 quest definition으로 작성한다. Remove 노드는 같은 definition identifier를 사용한다. |
+| IV-1 | `V017` | 18G 2개가 필요한 서술과 신호 3개/`TargetCount` 의미가 일치하지 않는다. 동일 식별자의 두 번째 획득을 `RegistryContains`로 구분할 수 없다. | **인간 판단 필요:** 좌·우 18G를 `click_18g_left/right`로 분리하거나, 수량 기반 quest condition으로 교체한다. |
+| END-1 | `D037` 및 종료 조건 | 문서는 fade-out, 종료 메시지, 다음 Scenario 진행을 요구하지만 `D037 -> (end)`만 정의한다. | **인간 판단 필요:** 다음 Scenario identifier를 확정한다. 이후 `D037 -> END_FADE_OUT -> END_MESSAGE -> START_NEXT_SCENARIO` 연결을 추가하고, 마지막 노드만 `null`로 둔다. |
+
+### 변환 승인 조건
+
+- ROLE-1과 ROLE-2의 할당 정책이 확정되어야 한다.
+- SPAWN-A-1의 FishNet spawnable prefab 등록이 완료되어야 한다.
+- S-1의 20개 신호에 정식 producer와 동일 식별자가 연결되어야 한다.
+- CRAFT-1의 아이템·레시피가 등록되어야 한다.
+- Q-1의 23개 quest definition이 작성되어야 한다.
+- IV-1의 18G 수량 판정과 END-1의 다음 Scenario identifier가 확정되어야 한다.
+- 변환 후 Requirements Supports에서 NPC/entity/item/event/quest/runtime-signal 요구사항을 컴파일하고,
+  Production profile에서 unresolved `Error`가 0개여야 플레이 가능으로 승인한다.
 
 ## 조합(crafting) 참조 (d-2)
 
@@ -134,7 +185,7 @@ flags: ["refactor-required"]
 | **Identifier** | 문자열 | P002 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Parallel |
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P002_Branches 표 참조]** |
-| **WaitMode** | ScenarioParallelWaitMode | WaitAll |
+| **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
 | **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
 | **NextIdentifier** | 문자열 | Q006_1 |
@@ -295,7 +346,7 @@ flags: ["refactor-required"]
 | **Identifier** | 문자열 | P003 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Parallel |
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P003_Branches 표 참조]** |
-| **WaitMode** | ScenarioParallelWaitMode | WaitAll |
+| **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
 | **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
 | **NextIdentifier** | 문자열 | D010 |
@@ -304,9 +355,9 @@ flags: ["refactor-required"]
 
 | Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
 |---|---|---|---|---|---|
-| N005 | CC_B_vitalcheck_patientA | NurseB | airway_team | - | All |
-| N006 | CC_C_gcs_patientA | NurseC | neuro_assessment | - | All |
-| N007 | CC_D_suction_patientA | NurseD | suction_team | - | All |
+| N005 | CC_B_vitalcheck_patient_a | NurseB | airway_team | - | All |
+| N006 | CC_C_gcs_patient_a | NurseC | neuro_assessment | - | All |
+| N007 | CC_D_suction_patient_a | NurseD | suction_team | - | All |
 
 
 ---
@@ -457,7 +508,7 @@ flags: ["refactor-required"]
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_Check_Vital_PatientA |
-| **NextIdentifier** | 문자열 | CC_B_vitalcheck_patientA |
+| **NextIdentifier** | 문자열 | CC_B_vitalcheck_patient_a |
 
 
 ---
@@ -786,7 +837,7 @@ flags: ["refactor-required"]
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_Check_GCS_PatientA |
-| **NextIdentifier** | 문자열 | CC_C_gcs_patientA |
+| **NextIdentifier** | 문자열 | CC_C_gcs_patient_a |
 
 
 ---
@@ -1062,7 +1113,7 @@ flags: ["refactor-required"]
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_Stabilizer_And_Suction_PatientA |
-| **NextIdentifier** | 문자열 | CC_D_suction_patientA |
+| **NextIdentifier** | 문자열 | CC_D_suction_patient_a |
 
 
 ---
@@ -1146,7 +1197,7 @@ flags: ["refactor-required"]
 | **Identifier** | 문자열 | P004 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Parallel |
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P004_Branches 표 참조]** |
-| **WaitMode** | ScenarioParallelWaitMode | WaitAll |
+| **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
 | **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
 | **NextIdentifier** | 문자열 | D022 |
@@ -1155,9 +1206,9 @@ flags: ["refactor-required"]
 
 | Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
 |---|---|---|---|---|---|
-| N008 | CC_B_intubation_A_oxy_patientA | NurseB, NurseA | airway_team, triage_lead | - | All |
-| N010 | CC_C_stopbleeding_patientA | NurseC | bleeding_control | - | All |
-| N011 | CC_D_iv_patientA | NurseD, NurseC | iv_team, access_support | - | All |
+| N008 | CC_B_intubation_A_oxy_patient_a | NurseB, NurseA | airway_team, triage_lead | - | All |
+| N010 | CC_C_stopbleeding_patient_a | NurseC | bleeding_control | - | All |
+| N011 | CC_D_iv_patient_a | NurseD, NurseC | iv_team, access_support | - | All |
 
 
 ---
@@ -1830,7 +1881,7 @@ flags: ["refactor-required"]
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_Oxygen_PatientA |
-| **NextIdentifier** | 문자열 | CC_B_intubation_A_oxy_patientA |
+| **NextIdentifier** | 문자열 | CC_B_intubation_A_oxy_patient_a |
 
 
 ---
@@ -2074,7 +2125,7 @@ flags: ["refactor-required"]
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_BleedingControl_PatientA |
-| **NextIdentifier** | 문자열 | CC_C_stopbleeding_patientA |
+| **NextIdentifier** | 문자열 | CC_C_stopbleeding_patient_a |
 
 
 ---
@@ -2616,7 +2667,7 @@ flags: ["refactor-required"]
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_Lv1_Fluids |
-| **NextIdentifier** | 문자열 | CC_D_iv_patientA |
+| **NextIdentifier** | 문자열 | CC_D_iv_patient_a |
 
 
 ---
@@ -2767,7 +2818,7 @@ flags: ["refactor-required"]
 | **Identifier** | 문자열 | P005 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Parallel |
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P005_Branches 표 참조]** |
-| **WaitMode** | ScenarioParallelWaitMode | WaitAll |
+| **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
 | **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
 | **NextIdentifier** | 문자열 | D028 |
@@ -4117,7 +4168,7 @@ flags: ["refactor-required"]
 | **Identifier** | 문자열 | P006 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Parallel |
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P006_Branches 표 참조]** |
-| **WaitMode** | ScenarioParallelWaitMode | WaitAll |
+| **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
 | **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
 | **NextIdentifier** | 문자열 | D033 |
@@ -5350,7 +5401,7 @@ flags: ["refactor-required"]
 | **Identifier** | 문자열 | P007 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Parallel |
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P007_Branches 표 참조]** |
-| **WaitMode** | ScenarioParallelWaitMode | WaitAll |
+| **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
 | **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
 | **NextIdentifier** | 문자열 | D037 |
@@ -5360,8 +5411,8 @@ flags: ["refactor-required"]
 | Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
 |---|---|---|---|---|---|
 | N026 | CC_A_triagearea | NurseA | triage_lead | - | All |
-| N027 | CC_B_cut_patientA | NurseB | procedure_team | - | All |
-| N028 | CC_D_gcs_patientA_rosc | NurseD | neuro_assessment | - | All |
+| N027 | CC_B_cut_patient_a | NurseB | procedure_team | - | All |
+| N028 | CC_D_gcs_patient_a_rosc | NurseD | neuro_assessment | - | All |
 
 
 ---
@@ -5545,7 +5596,7 @@ flags: ["refactor-required"]
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_Cut_Clothing |
-| **NextIdentifier** | 문자열 | CC_B_cut_patientA |
+| **NextIdentifier** | 문자열 | CC_B_cut_patient_a |
 
 
 ---
@@ -5861,7 +5912,7 @@ flags: ["refactor-required"]
 | **Operation** | ScenarioQuestOperation | Remove |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_Check_GCS_ROSC |
-| **NextIdentifier** | 문자열 | CC_D_gcs_patientA_rosc |
+| **NextIdentifier** | 문자열 | CC_D_gcs_patient_a_rosc |
 
 
 ---
