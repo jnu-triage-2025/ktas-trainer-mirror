@@ -96,7 +96,7 @@ blocking 이어야 한다. 그러나 신호 배선이 끝나기 전에 핵심 �
 **운영자 작업**: 각 환자(`PatientController`)의 `Identifier` 를 `patient_a` / `patient_b` / `patient_c` 로
 지정하면 `click_patient_a`, `select_patient_b` 등의 게이트가 통과된다.
 
-> 주의: `click_patient_b_face/c_face`(동공반사용 얼굴 클릭)와 `click_chest`(가슴압박 위치 클릭),
+> 주의: `click_patient_b_face/c_face`(동공반사용 얼굴 클릭)와 `interact_chest`(가슴압박 위치 상호작용),
 > `check_*`(AVPU/GCS/활력/맥박/동공 사정), `click_to_start_comp` 는 별도의 신체부위/사정 인터랙션이라
 > 위 환자-선택 신호로는 충족되지 않는다. 이들은 해당 신체부위 클릭/사정 UI 확정 지점에서 별도 Raise 필요([부분] 잔여).
 
@@ -130,9 +130,9 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
   아이템(식별자 `plasma_solution_1000ml`)을 신설·등록하고, 시나리오 조건 `sig.click_ps1` →
   `sig.click_plasma_solution_1000ml` 로 정합했다. 이제 모든 아이템 픽업 게이트가 식별자와 1:1 일치한다.
   (단, 아이콘 스프라이트/3D 모델 리소스는 별도 추가 필요 — `ValidateItemResources` 경고 참조.)
-- **아이템 픽업이 아닌 click 조건(별도 처리)**: `click_chest`, `click_patient_a/b/c`, `click_patient_*_face`,
-  `click_patient_chest`, `click_defib`, `click_to_start_comp`, `click_flowmeter`, `click_oxyflow_wall`,
-  `click_humidifierbottle`, `click_tpiece`, `click_nasal`, `click_sdw`, `click_neckstabilizer`,
+- **아이템 픽업이 아닌 상호작용 조건(별도 처리)**: `interact_chest`, `click_patient_a/b/c`, `click_patient_*_face`,
+  `interact_patient_chest`, `interact_defib`, `click_to_start_comp`, `interact_oxyflow_wall`,
+  `interact_tpiece`, `click_nasal`,
   `click_dummy_a/b` → 환자/장비/더미 클릭 또는 조립 산출물(prepared) 이므로 각 해당 인터랙션 지점에서 Raise.
 
 권장: 표기 불일치 9건은 시나리오 조건명을 아이템 식별자로 통일(JSON 일괄 치환)하는 편이 단순하다.
@@ -175,9 +175,9 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
 - 신호 전용 존(시나리오 그래프 미지정)도 허용된다 → 게이트 통과 전용 트리거로 배치 가능.
 대상: `enter_triage_zone`, `arrive_triagearea` (필요 시 `enter_treatmentroom` 등 추가).
 
-### click_flowmeter / click_oxyflow_wall / close_vital_ui_* / show_* — [부분]
-UI/장비 클릭. 해당 UI 확정 또는 장비 클릭 콜백에 연결. 대상: `click_flowmeter`, `click_oxyflow_wall`,
-`close_vital_ui_b/c`, `show_vital_patient_a`, `click_defib`, `click_penlight`, `click_nasal_and_connect_nasal_and_o2`,
+### click_flowmeter / interact_oxyflow_wall / close_vital_ui_* / show_* — [부분]
+UI/장비 상호작용. 해당 UI 확정 또는 장비 상호작용 콜백에 연결. 대상: `click_flowmeter`, `interact_oxyflow_wall`,
+`close_vital_ui_b/c`, `show_vital_patient_a`, `interact_defib`, `click_penlight`, `click_nasal_and_connect_nasal_and_o2`,
 `click_o2_line_and_click_tpiece_and_connect_tpiece_and_oxyflow`, `click_scissors_and_remove_patient_clothing`,
 `click_defibpad_and_click_patient_chest`, `click_ns_20cc_and_click_syringe_20cc`, `click_ns1_and_iv_set`, `click_ps1_and_iv_set`, `click_ps1_and_click_blood`, `click_20g_and_click_iv_set_and_click_ns1`, `click_dummyA`, `click_dummy_b`.
 
@@ -242,9 +242,9 @@ syringe_5cc, vital_set, wall_suction, yankauer`
   `remove_intu_stylet`, `remove_tpiece`, `remove_patient_clothing`.
 - 의사 NPC 전달: `pass_laryngoscope`, `pass_et_tube_ready`, `pass_syringe`, `pass_central_line_set`.
 - 모니터 UI 토글: `show_vital_patient_a`, `close_vital_ui_b/c`(바이탈 UI 열기/닫기 콜백 필요).
-- 신체부위/장비 클릭: `click_chest`, `click_patient_chest`, `click_to_start_comp`, `click_defib`,
-  `click_flowmeter`, `click_oxyflow_wall`, `click_humidifierbottle`, `click_sdw`, `click_tpiece`,
-  `click_neckstabilizer`, `click_nasal`, `click_patient_b_face`, `click_patient_c_face`,
+- 신체부위/장비 상호작용: `interact_chest`, `interact_patient_chest`, `click_to_start_comp`, `interact_defib`,
+  `interact_oxyflow_wall`, `interact_tpiece`,
+  `click_nasal`, `click_patient_b_face`, `click_patient_c_face`,
   `click_dummy_b`, `move_defibcart_to_patient`.
 
 > 검증 방법: 배선 전이라도 `/scenario signal <cond>` 커맨드로 각 게이트가 막히고 열리는지 수동 확인 가능.
@@ -274,11 +274,63 @@ syringe_5cc, vital_set, wall_suction, yankauer`
 > 다른 시나리오 문서에서도 "여러 변형 중 하나면 통과" 게이트가 필요하면 **먼저 (B) 방식**(사용 시점
 > 대표 시그널)으로 표현할 것. 개별 변형 아이템을 OR 로 나열해야만 하는 경우에 한해 (A) 를 검토한다.
 
-### (A) 시스템 레벨 대응 — Validator OR(Any) 매칭 모드 (제안됨, 미반영)
+### (A) 시스템 레벨 대응 — Validator OR(Any) 매칭 모드
 
 - 콘텐츠만으로 표현이 어려운 경우(예: 픽업 단계에서 변형 중 하나 보유를 검사)를 위해, Validator
   `RegistryContains` 에 root condition 별 `matchMode: All|Any` 를 도입하는 시스템 확장을 제안했다.
-- `matchMode: Any` 이면 나열한 규칙 중 하나만 충족돼도 통과한다. 기본값 `All` 은 기존 AND 동작 유지.
-- `MultiplayerInfrastructure` 변경이므로 Feature Proposal 로 분리했다(반영 전, 하위호환 보장):
-  `Agents/Proposals/scheduled/2026-07-09-scenario-validator-any-match-mode/`.
+- `matchMode: "Any"` 이면 나열한 규칙 중 하나만 충족돼도 통과한다. 기본값 `All`(필드 생략 가능)은
+  기존 AND 동작을 유지한다. 이 모드는 root condition별로 적용된다.
+- 예시:
+  ```json
+  { "condition": "RegistryContains", "matchMode": "Any", "validationRules": [
+    { "type": "Registry", "condition": "Contains", "registryType": "RuntimeState", "registryIdentifier": "sig.push_epi_variant_a" },
+    { "type": "Registry", "condition": "Contains", "registryType": "RuntimeState", "registryIdentifier": "sig.push_epi_variant_b" }
+  ] }
+  ```
 - (A) 반영 후에도 **우선순위는 (B)** 이며, (A) 는 (B)로 표현이 어려운 게이트에만 사용한다.
+
+## 7. 조건부 신호 리스너 노드(SignalListener) — 2026-07-18
+
+게임플레이가 이미 올린 원본 신호를 특정 시나리오 단계에서만 관찰해, 선행 조건이 모두 충족된
+경우에만 후속 신호로 변환하고 싶을 때 사용한다. 시나리오 그래프에 `SignalListener` 노드로
+리스너를 등록/해제한다. 원본 신호 자체를 만들지 않으며, 실제 gameplay handler 가 올린 이벤트만
+변환한다. 조건 평가는 Validator 의 `RegistryContains`(RuntimeState `Contains`)와 동일 기준을 쓴다.
+
+### 7.1 동작 규칙
+
+- `operation: "Register"` 는 `listenerIdentifier` 로 리스너를 등록한다. 동일 식별자 재등록은 교체한다.
+- `sourceSignalIdentifier` 가 올라오는 순간, `requiredSignalIdentifiers` 가 **모두** 올라가 있으면
+  `outputSignalIdentifier` 를 한 번 Raise 한다.
+- `consumeOnce: true`(기본값)면 첫 발생 후 리스너를 자동 제거한다. `false` 면 원본 신호가 올라올
+  때마다 조건을 재평가한다.
+- `operation: "Unregister"` 는 해당 `listenerIdentifier` 리스너를 제거한다.
+- 시나리오 시작/종료 시 모든 리스너가 정리된다(세션 누수 방지).
+- 신호 식별자는 `sig.` 접두사로 정규화된다(접두사 생략 입력 허용).
+
+### 7.2 재진입·중복 방어(주의)
+
+- 호스트(서버=클라)에서는 서버 권위 기록 + 미러 ObserversRpc 로 동일 신호가 두 번 도착할 수 있다.
+  `RegisterLocal` 은 최초 상태 전이에서만 `OnSignalRegistered` 를 발생시켜(멱등화) 중복 Raise 를 막는다.
+- output 이 다른 리스너의 source 인 정당한 체이닝은 지원한다. 다만 `output == source`, `consumeOnce=false`
+  같은 순환 정의는 재진입 큐 가드로 무한 루프를 막지만, 콘텐츠 설계상 순환은 피한다.
+
+### 7.3 예시
+
+```json
+{
+  "nodeType": "SignalListener",
+  "identifier": "listen_oxygen_done",
+  "operation": "Register",
+  "listenerIdentifier": "oxygen_completion_gate",
+  "sourceSignalIdentifier": "sig.connect_oxygen",
+  "requiredSignalIdentifiers": ["sig.enter_treatment_room"],
+  "outputSignalIdentifier": "sig.oxygen_ready",
+  "consumeOnce": true,
+  "next": "validate_oxygen_ready"
+}
+```
+
+위 노드는 플레이어가 처치실에 진입한 상태(`sig.enter_treatment_room`)에서 산소를 연결
+(`sig.connect_oxygen`)했을 때에만 `sig.oxygen_ready` 를 올린다. 후속 Validator 는 이 출력 신호를
+`RegistryContains`(RuntimeState)로 검사하면 된다. 관찰을 종료하려면 별도 `operation: "Unregister"`
+노드로 `oxygen_completion_gate` 를 해제한다.

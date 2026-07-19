@@ -246,18 +246,22 @@ namespace MultiplayerInfrastructure.Player
         case StaticPlacedItemVanishMode.VanishedGlobalOnPickup:
         {
           StaticPlacedItemService.EnsureGlobalRemains(entityIdentifier, staticItem.InitialRemains);
-          if (StaticPlacedItemService.GetGlobalRemains(entityIdentifier, staticItem.InitialRemains) <= 0)
+          int currentRemains = StaticPlacedItemService.GetGlobalRemains(entityIdentifier, staticItem.InitialRemains);
+          if (currentRemains <= 0)
             return false;
 
-          if (decreaseBy > 0)
-            StaticPlacedItemService.DecreaseGlobalRemains(entityIdentifier, decreaseBy, staticItem.InitialRemains);
+          // 예약 복원은 실제로 줄인 양만 되돌려야 한다. 보상 설정의 감소량이 남은 수량보다
+          // 큰 경우에도 Remains가 음수가 되거나 복원 후 초기 상한을 넘지 않도록 제한한다.
+          int reservedDecrease = Mathf.Min(decreaseBy, currentRemains);
+          if (reservedDecrease > 0)
+            StaticPlacedItemService.DecreaseGlobalRemains(entityIdentifier, reservedDecrease, staticItem.InitialRemains);
 
           pending = new PendingStaticPickup
           {
             ClaimantClientId = claimant.ClientId,
             UserIdentifier = null,
             VanishMode = StaticPlacedItemVanishMode.VanishedGlobalOnPickup,
-            DecreasedBy = decreaseBy,
+            DecreasedBy = reservedDecrease,
           };
           return true;
         }
@@ -269,18 +273,20 @@ namespace MultiplayerInfrastructure.Player
             return false;
 
           StaticPlacedItemService.EnsureLocalRemains(entityIdentifier, userIdentifier, staticItem.InitialRemains);
-          if (StaticPlacedItemService.GetLocalRemains(entityIdentifier, userIdentifier, staticItem.InitialRemains) <= 0)
+          int currentRemains = StaticPlacedItemService.GetLocalRemains(entityIdentifier, userIdentifier, staticItem.InitialRemains);
+          if (currentRemains <= 0)
             return false;
 
-          if (decreaseBy > 0)
-            StaticPlacedItemService.DecreaseLocalRemains(entityIdentifier, userIdentifier, decreaseBy, staticItem.InitialRemains);
+          int reservedDecrease = Mathf.Min(decreaseBy, currentRemains);
+          if (reservedDecrease > 0)
+            StaticPlacedItemService.DecreaseLocalRemains(entityIdentifier, userIdentifier, reservedDecrease, staticItem.InitialRemains);
 
           pending = new PendingStaticPickup
           {
             ClaimantClientId = claimant.ClientId,
             UserIdentifier = userIdentifier,
             VanishMode = StaticPlacedItemVanishMode.VanishedLocalOnPickup,
-            DecreasedBy = decreaseBy,
+            DecreasedBy = reservedDecrease,
           };
           return true;
         }

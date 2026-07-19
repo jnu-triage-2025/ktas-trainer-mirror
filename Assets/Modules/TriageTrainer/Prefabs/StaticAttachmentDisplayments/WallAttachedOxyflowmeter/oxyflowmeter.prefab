@@ -133,4 +133,4 @@ MonoBehaviour:
   _shareMode: 0
   _consumeCount: 1
   _attachDisplayText: "\uC0B0\uC18C \uC720\uB7C9\uACC4 \uC124\uCE58"
-  _attachCompletionSignal: 
+  _attachCompletionSignal: interact_oxyflow_wall

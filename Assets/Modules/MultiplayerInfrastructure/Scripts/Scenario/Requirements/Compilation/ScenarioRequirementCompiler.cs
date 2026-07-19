@@ -371,6 +371,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
         Register<ScenarioParallelNode>(ScenarioNodeType.Parallel, ExtractParallel),
         Register<ScenarioInvokeEventNode>(ScenarioNodeType.InvokeEvent, (value, output) => AddEvent(value, output, "eventIdentifier", "event-invocation", value.EventIdentifier, true)),
         Register<ScenarioServerInternalSignalNode>(ScenarioNodeType.ServerInternalSignal, NoRequirements),
+        Register<ScenarioSignalListenerNode>(ScenarioNodeType.SignalListener, ExtractSignalListener),
         Register<ScenarioValidatorNode>(ScenarioNodeType.Validator, ExtractValidator),
         Register<ScenarioQuestControlNode>(ScenarioNodeType.QuestControl, ExtractQuest),
         Register<ScenarioQuestWaypointHighlightNode>(ScenarioNodeType.QuestWaypointHighlight, (value, output) => output.Add(value, "waypointIdentifier", "waypoint-highlight", ScenarioRequirementKind.SpatialAnchor, value.WaypointIdentifier, true, ScenarioRequirementAvailability.WhenNodeReached, ScenarioRequirementExpectedSupply.Scene, ScenarioRequirementDirection.Consumes, ScenarioRequirementCapability.HighlightableWaypoint)),
@@ -502,6 +503,15 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       output.Add(node, "targetIdentifier", "interaction-target-not-consumed", ScenarioRequirementKind.Interactable, node.TargetIdentifier, false, ScenarioRequirementAvailability.NotConsumed, ScenarioRequirementExpectedSupply.Scene, ScenarioRequirementDirection.Consumes, ScenarioRequirementCapability.Interactable);
       output.Add(node, "requiredItemIdentifier", "interaction-item-not-consumed", ScenarioRequirementKind.ItemDefinition, node.RequiredItemIdentifier, false, ScenarioRequirementAvailability.NotConsumed, ScenarioRequirementExpectedSupply.External);
       AddEvent(node, output, "completionConditionIdentifier", "interaction-completion", node.CompletionConditionIdentifier, false);
+    }
+
+    private static void ExtractSignalListener(ScenarioSignalListenerNode node, ScenarioRequirementBuilder output)
+    {
+      AddRuntimeSignal(node, output, "sourceSignalIdentifier", "signal-listener-source", node.SourceSignalIdentifier, ScenarioRequirementDirection.Consumes, ScenarioRequirementExpectedSupply.Gameplay);
+      AddRuntimeSignal(node, output, "outputSignalIdentifier", "signal-listener-output", node.OutputSignalIdentifier, ScenarioRequirementDirection.Produces, ScenarioRequirementExpectedSupply.Scenario);
+      if (node.RequiredSignalIdentifiers == null) return;
+      for (var index = 0; index < node.RequiredSignalIdentifiers.Count; index++)
+        AddRuntimeSignal(node, output, $"requiredSignalIdentifiers[{index}]", "signal-listener-required", node.RequiredSignalIdentifiers[index], ScenarioRequirementDirection.Consumes, ScenarioRequirementExpectedSupply.Gameplay);
     }
 
     private static void ExtractCombine(ScenarioCombineItemNode node, ScenarioRequirementBuilder output)
@@ -767,8 +777,14 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
         ScenarioRequirementDirection.Produces, authority, null, capabilities);
     }
 
+    private static void AddRuntimeSignal(IScenarioNode node, ScenarioRequirementBuilder output, string fieldPath, string usage, string identifier, ScenarioRequirementDirection direction, ScenarioRequirementExpectedSupply supply)
+      => output.Add(node, fieldPath, usage, ScenarioRequirementKind.RuntimeSignal, NormalizeRuntimeSignal(identifier), false, ScenarioRequirementAvailability.WhenNodeReached, supply, direction);
+
     private static string NormalizeRuntimeSignal(string identifier)
     {
+      // Unregister 리스너 노드처럼 source/output 이 비어 있을 수 있다. null/공백은 그대로
+      // 넘겨 Add 가 SIR100 진단 처리(required=false 시 무시)하도록 한다.
+      if (string.IsNullOrWhiteSpace(identifier)) return identifier;
       var trimmed = identifier.Trim();
       return trimmed.StartsWith("sig.", StringComparison.Ordinal) ? trimmed : "sig." + trimmed;
     }

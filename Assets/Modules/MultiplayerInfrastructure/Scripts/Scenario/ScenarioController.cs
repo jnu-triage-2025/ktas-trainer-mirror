@@ -392,6 +392,7 @@ namespace MultiplayerInfrastructure.Scenario
       _globalAdvanceSuppressionDepth = 0;
       ResetNodeVisitOrders(graph.Identifier);
       ScenarioInteractionSignals.ClearAllInternalSignals();
+      ScenarioConditionalSignalListeners.ClearAll();
 
       // 이전 시나리오에서 남았을 수 있는 모든 타이머/표시를 새 시나리오 시작 시 정리한다.
       ScenarioTimeRelay.ClearAllAuthoritative();
@@ -519,6 +520,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 브랜치 체인이 계속 돌면서 _currentGraph 역참조에서 NullReferenceException 이 발생한다.
       StopAllCoroutines();
       ScenarioInteractionSignals.ClearAllInternalSignals();
+      ScenarioConditionalSignalListeners.ClearAll();
 
       // 시나리오가 남긴 모든 타이머/표시를 정리한다.
       // 명시적 정리 없이 종료(또는 조기/오류 종료)하더라도 다음 시나리오로 새어 나가지 않게 한다.
@@ -711,6 +713,9 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioServerInternalSignalNode internalSignal:
           StartCoroutine(ExecuteServerInternalSignalNode(internalSignal));
+          break;
+        case ScenarioSignalListenerNode signalListener:
+          ExecuteSignalListenerNode(signalListener);
           break;
         case ScenarioValidatorNode validator:
           StartCoroutine(ExecuteValidatorNode(validator));
@@ -3175,6 +3180,16 @@ namespace MultiplayerInfrastructure.Scenario
       Advance();
     }
 
+    private void ExecuteSignalListenerNode(ScenarioSignalListenerNode node)
+    {
+      if (node == null || string.IsNullOrWhiteSpace(node.ListenerIdentifier)) { Advance(); return; }
+      if (node.Operation == ScenarioSignalListenerOperation.Unregister)
+        ScenarioConditionalSignalListeners.Unregister(node.ListenerIdentifier);
+      else
+        ScenarioConditionalSignalListeners.Register(node.ListenerIdentifier, node.SourceSignalIdentifier, node.OutputSignalIdentifier, node.RequiredSignalIdentifiers, node.ConsumeOnce);
+      Advance();
+    }
+
     private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, string joinNodeIdentifier, int? branchOwnerClientId)
     {
       var previousOwner = _scenarioOwnerClientId;
@@ -3326,6 +3341,9 @@ namespace MultiplayerInfrastructure.Scenario
             break;
           case ScenarioCombineItemNode combineItem:
             yield return ExecuteCombineItemNode(combineItem);
+            break;
+          case ScenarioSignalListenerNode signalListener:
+            ExecuteSignalListenerNode(signalListener);
             break;
           case ScenarioDialogueNode dialogue:
             // 브랜치 내 다이얼로그: interactionRequired면 자동 닫힘 없이 입력으로만 닫힌다.
@@ -4104,38 +4122,72 @@ namespace MultiplayerInfrastructure.Scenario
             return false;
           }
 
+          bool anyMode = rootCondition.MatchMode == ScenarioValidatorMatchMode.Any;
+          bool anyMatched = false;
+          var anyModeFailures = anyMode ? new List<string>() : null;
+
           for (int i = 0; i < rules.Count; i++)
           {
             var rule = rules[i];
             if (rule == null)
             {
+              if (anyMode)
+              {
+                anyModeFailures.Add($"rule[{i}] is null.");
+              }
               continue;
             }
 
+            string misconfiguration = null;
             if (rule.Type != ScenarioValidatorRuleType.Registry)
             {
-              failureReason = $"rule[{i}] has unsupported type '{rule.Type}'.";
-              return false;
+              misconfiguration = $"rule[{i}] has unsupported type '{rule.Type}'.";
             }
-
-            if (rule.Condition != ScenarioValidatorRuleCondition.Contains)
+            else if (rule.Condition != ScenarioValidatorRuleCondition.Contains)
             {
-              failureReason = $"rule[{i}] has unsupported condition '{rule.Condition}'.";
-              return false;
+              misconfiguration = $"rule[{i}] has unsupported condition '{rule.Condition}'.";
             }
 
             var ruleIdentifier = rule.RegistryIdentifier?.Trim();
-            if (string.IsNullOrWhiteSpace(ruleIdentifier))
+            if (misconfiguration == null && string.IsNullOrWhiteSpace(ruleIdentifier))
             {
-              failureReason = $"rule[{i}] registryIdentifier is null or empty.";
+              misconfiguration = $"rule[{i}] registryIdentifier is null or empty.";
+            }
+
+            if (misconfiguration != null)
+            {
+              if (anyMode)
+              {
+                anyModeFailures.Add(misconfiguration);
+                continue;
+              }
+
+              failureReason = misconfiguration;
               return false;
             }
 
-            if (!Registry.Registry.Contains(rule.RegistryType, ruleIdentifier))
+            bool matched = Registry.Registry.Contains(rule.RegistryType, ruleIdentifier);
+            if (anyMode)
+            {
+              if (matched)
+              {
+                anyMatched = true;
+                break;
+              }
+
+              anyModeFailures.Add($"rule[{i}] identifier '{ruleIdentifier}' is not registered in {rule.RegistryType}.");
+            }
+            else if (!matched)
             {
               failureReason = $"rule[{i}] identifier '{ruleIdentifier}' is not registered in {rule.RegistryType}.";
               return false;
             }
+          }
+
+          if (anyMode && !anyMatched)
+          {
+            failureReason = $"no rule matched (Any mode). details: {string.Join(" | ", anyModeFailures)}";
+            return false;
           }
 
           return true;

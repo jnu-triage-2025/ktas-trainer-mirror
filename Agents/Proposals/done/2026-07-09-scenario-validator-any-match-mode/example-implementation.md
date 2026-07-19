@@ -1,8 +1,7 @@
 # 예시 구현: Validator OR(Any) 매칭 모드
 
 > 본 문서는 [Feature Proposal](./Feature%20Proposal%20-%20Scenario%20Validator%20Any%20Match%20Mode.md)
-> 의 예시 구현이다. `MultiplayerInfrastructure` 실제 반영은 인간 작업자 승인 후 진행한다.
-> 모든 변경은 하위호환(필드 미지정 시 기존 `All`/AND 동작 유지)을 지킨다.
+> 의 구현 근거다. 실제 반영은 하위호환(필드 미지정 시 기존 `All`/AND 동작 유지)을 지킨다.
 > 참조 라인 번호는 2026-07-09 시점 기준이며, 실제 반영 시 최신 파일로 재확인한다.
 
 ---

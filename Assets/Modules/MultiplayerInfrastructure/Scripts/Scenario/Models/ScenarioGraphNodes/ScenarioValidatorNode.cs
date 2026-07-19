@@ -50,6 +50,16 @@ namespace MultiplayerInfrastructure.Scenario
     Contains
   }
 
+  /// <summary>
+  /// RegistryContains root condition의 ValidationRules 결합 방식이다.
+  /// 기본값인 <see cref="All"/>은 기존의 AND 동작을 유지한다.
+  /// </summary>
+  public enum ScenarioValidatorMatchMode
+  {
+    All,
+    Any
+  }
+
   [Serializable]
   public sealed class ScenarioValidatorRule
   {
@@ -67,6 +77,7 @@ namespace MultiplayerInfrastructure.Scenario
     public string PlayerTag { get; set; }
     public ScenarioValidatorPlayerScope PlayerScope { get; set; } = ScenarioValidatorPlayerScope.Any;
     public IReadOnlyList<ScenarioValidatorRule> ValidationRules { get; set; } = new List<ScenarioValidatorRule>();
+    public ScenarioValidatorMatchMode MatchMode { get; set; } = ScenarioValidatorMatchMode.All;
   }
 
   public enum ScenarioValidatorOnFailure

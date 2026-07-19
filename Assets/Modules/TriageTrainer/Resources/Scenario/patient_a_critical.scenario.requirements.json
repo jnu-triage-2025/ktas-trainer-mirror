@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "scenarioIdentifier": "patient_a_critical",
   "source": {
-    "scenarioSha256": "802b8e5d71b558d27cd9acd58b7a00f262c013144f1e724e7c7139623d699297",
+    "scenarioSha256": "b5bbfa8eb1e468800c804013f0b7de1f6074953e806b200f17d0ba7a4818341d",
     "generatedAtUtc": null
   },
   "declarations": [
@@ -1017,7 +1017,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.click_chest"
+        "identifier": "sig.interact_chest"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1030,7 +1030,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.click_defib"
+        "identifier": "sig.interact_defib"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1121,7 +1121,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.click_humidifierbottle"
+        "identifier": "sig.click_humidifier_bottle"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1160,7 +1160,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.click_neckstabilizer"
+        "identifier": "sig.apply_stabilizer_patient_a"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1212,7 +1212,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.click_oxyflow_wall"
+        "identifier": "sig.interact_oxyflow_wall"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1225,7 +1225,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.click_patient_chest"
+        "identifier": "sig.interact_patient_chest"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1368,7 +1368,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.click_tpiece"
+        "identifier": "sig.interact_tpiece"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",

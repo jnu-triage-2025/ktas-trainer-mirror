@@ -360,6 +360,7 @@
 | `targetCount` | `int` | `PlayerCount*` 조건 비교 대상 수 |
 | `playerTag` | `string` | `PlayerAssignedTag` 조건 대상 태그 |
 | `playerScope` | `ScenarioValidatorPlayerScope` | `Any`(누구든) / `All`(모두) / `Owner`(소유자) |
+| `matchMode` | `ScenarioValidatorMatchMode` | `RegistryContains` 규칙 결합 방식. `All`(기본)=모든 규칙 충족, `Any`=하나 이상 충족 |
 | `validationRules` | `IReadOnlyList<ScenarioValidatorRule>` | 추가 규칙 목록 |
 
 **`ScenarioValidatorCondition` 값:**

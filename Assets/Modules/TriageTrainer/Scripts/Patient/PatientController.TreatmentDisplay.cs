@@ -74,7 +74,7 @@ namespace TriageTrainer.Entity
 
     // ── 공유 효과 정의(별칭 키가 동일 인스턴스를 참조하여 드리프트를 방지) ──
     private static readonly ItemUseEffect CervicalCollarEffect =
-      new(TreatmentDisplay.CervicalCollarOnNeck, "apply_stabilizer_{id}", "click_neckstabilizer");
+      new(TreatmentDisplay.CervicalCollarOnNeck, "apply_stabilizer_{id}");
     private static readonly ItemUseEffect NasalCannulaEffect =
       new(TreatmentDisplay.NasalCannulaApplied, "apply_nasal_cannula", "click_nasal");
 

@@ -245,6 +245,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioCameraTargetNodeDTO camera => ConvertCameraTarget(camera),
           ScenarioInvokeEventNodeDTO invoke => ConvertInvokeEvent(invoke),
           ScenarioServerInternalSignalNodeDTO internalSignal => ConvertServerInternalSignal(internalSignal),
+          ScenarioSignalListenerNodeDTO signalListener => ConvertSignalListener(signalListener),
           ScenarioValidatorNodeDTO validator => ConvertValidator(validator),
           ScenarioParallelNodeDTO parallel => ConvertParallel(parallel),
           ScenarioQuestControlNodeDTO questControl => ConvertQuestControl(questControl),
@@ -412,6 +413,16 @@ namespace MultiplayerInfrastructure.Scenario
           SignalIdentifier = dto.SignalIdentifier,
           Operation = ParseServerInternalSignalOperation(dto.Operation),
           WaitForResolution = dto.WaitForResolution ?? true,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioSignalListenerNode ConvertSignalListener(ScenarioSignalListenerNodeDTO dto) =>
+        new ScenarioSignalListenerNode
+        {
+          Identifier = dto.Identifier, ListenerIdentifier = dto.ListenerIdentifier,
+          Operation = Enum.TryParse(dto.Operation, true, out ScenarioSignalListenerOperation operation) ? operation : ScenarioSignalListenerOperation.Register,
+          SourceSignalIdentifier = dto.SourceSignalIdentifier, OutputSignalIdentifier = dto.OutputSignalIdentifier,
+          RequiredSignalIdentifiers = dto.RequiredSignalIdentifiers ?? new List<string>(), ConsumeOnce = dto.ConsumeOnce ?? true,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -1109,6 +1120,8 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioNPCMoveNode npcMove => ConvertToDTO(npcMove),
           ScenarioCameraTargetNode camera => ConvertToDTO(camera),
           ScenarioInvokeEventNode invoke => ConvertToDTO(invoke),
+          ScenarioServerInternalSignalNode internalSignal => ConvertToDTO(internalSignal),
+          ScenarioSignalListenerNode signalListener => ConvertToDTO(signalListener),
           ScenarioValidatorNode validator => ConvertToDTO(validator),
           ScenarioParallelNode parallel => ConvertToDTO(parallel),
           ScenarioQuestControlNode questControl => ConvertToDTO(questControl),
@@ -1290,6 +1303,18 @@ namespace MultiplayerInfrastructure.Scenario
           Operation = node.Operation.ToString(),
           WaitForResolution = node.WaitForResolution,
           NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioSignalListenerNodeDTO ConvertToDTO(ScenarioSignalListenerNode node) =>
+        new ScenarioSignalListenerNodeDTO
+        {
+          NodeType = "SignalListener", Identifier = node.Identifier, ListenerIdentifier = node.ListenerIdentifier,
+          Operation = node.Operation.ToString(), SourceSignalIdentifier = node.SourceSignalIdentifier,
+          OutputSignalIdentifier = node.OutputSignalIdentifier,
+          RequiredSignalIdentifiers = node.RequiredSignalIdentifiers?.ToList() ?? new List<string>(),
+          // 기본값(true)일 때만 필드를 생략하고, false 는 명시적으로 기록한다.
+          // (읽기 측 `dto.ConsumeOnce ?? true` 와 짝을 이뤄 false 가 라운드트립되도록 한다.)
+          ConsumeOnce = node.ConsumeOnce ? (bool?)null : false, NextIdentifier = node.NextIdentifier
         };
 
     private static ScenarioChatPrintNodeDTO ConvertToDTO(ScenarioChatPrintNode node) =>
@@ -1567,7 +1592,8 @@ namespace MultiplayerInfrastructure.Scenario
           TargetCount = each.TargetCount ?? 0,
           PlayerTag = each.PlayerTag,
           PlayerScope = ParseValidatorPlayerScope(each.PlayerScope),
-          ValidationRules = ParseValidatorRules(each.ValidationRules)
+          ValidationRules = ParseValidatorRules(each.ValidationRules),
+          MatchMode = ParseValidatorMatchMode(each.MatchMode)
         });
       }
 
@@ -1595,11 +1621,27 @@ namespace MultiplayerInfrastructure.Scenario
           TargetCount = each.TargetCount,
           PlayerTag = each.PlayerTag,
           PlayerScope = each.PlayerScope.ToString(),
-          ValidationRules = ConvertValidatorRulesToDTO(each.ValidationRules)
+          ValidationRules = ConvertValidatorRulesToDTO(each.ValidationRules),
+          MatchMode = each.MatchMode == ScenarioValidatorMatchMode.All ? null : each.MatchMode.ToString()
         });
       }
 
       return dtoConditions;
+    }
+
+    private static ScenarioValidatorMatchMode ParseValidatorMatchMode(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        return ScenarioValidatorMatchMode.All;
+      }
+
+      if (Enum.TryParse(value, ignoreCase: true, out ScenarioValidatorMatchMode parsed))
+      {
+        return parsed;
+      }
+
+      throw new JsonException($"Unknown ScenarioValidatorMatchMode '{value}'.");
     }
 
     private static IReadOnlyList<ScenarioValidatorRule> ParseValidatorRules(List<ScenarioValidatorNodeDTO.ScenarioValidatorRuleDTO> rules)

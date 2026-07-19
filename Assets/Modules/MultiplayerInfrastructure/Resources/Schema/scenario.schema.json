@@ -61,6 +61,7 @@
             "CameraTarget",
             "InvokeEvent",
             "ServerInternalSignal",
+            "SignalListener",
             "Validator",
             "Parallel",
             "QuestControl",
@@ -221,6 +222,21 @@
           },
           "then": {
             "$ref": "#/$defs/ScenarioServerInternalSignalNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "SignalListener"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioSignalListenerNode"
           }
         },
         {
@@ -1215,6 +1231,63 @@
         }
       ]
     },
+    "ScenarioSignalListenerNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "SignalListener"
+            },
+            "listenerIdentifier": {
+              "type": "string",
+              "minLength": 1
+            },
+            "operation": {
+              "type": "string",
+              "enum": [
+                "Register",
+                "Unregister"
+              ],
+              "default": "Register"
+            },
+            "sourceSignalIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "outputSignalIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "requiredSignalIdentifiers": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "consumeOnce": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": true
+            }
+          },
+          "required": [
+            "listenerIdentifier"
+          ]
+        }
+      ]
+    },
     "ScenarioValidatorNode": {
       "allOf": [
         {
@@ -1325,6 +1398,15 @@
             "Owner"
           ],
           "default": "Any"
+        },
+        "matchMode": {
+          "type": "string",
+          "enum": [
+            "All",
+            "Any"
+          ],
+          "default": "All",
+          "description": "RegistryContains validationRules 결합 방식. All(기본)=모든 규칙 충족, Any=하나 이상 충족."
         },
         "validationRules": {
           "type": [

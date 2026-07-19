@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "scenarioIdentifier": "patient_b_c_ct",
   "source": {
-    "scenarioSha256": "c0345366824ffa76a6e369cd0a5a63e5e798e65da845aa63718100f6d0a5e81f",
+    "scenarioSha256": "231f86eb89a2edc019548873ef047e416c23778ac68d9b9c74a928c301ecb718",
     "generatedAtUtc": null
   },
   "declarations": [
@@ -752,7 +752,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.click_humidifierbottle"
+        "identifier": "sig.click_humidifier_bottle"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
