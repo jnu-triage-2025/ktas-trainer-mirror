@@ -392,6 +392,7 @@ namespace MultiplayerInfrastructure.Scenario
       _globalAdvanceSuppressionDepth = 0;
       ResetNodeVisitOrders(graph.Identifier);
       ScenarioInteractionSignals.ClearAllInternalSignals();
+      ScenarioConditionalSignalListeners.ClearAll();
 
       // 이전 시나리오에서 남았을 수 있는 모든 타이머/표시를 새 시나리오 시작 시 정리한다.
       ScenarioTimeRelay.ClearAllAuthoritative();
@@ -519,6 +520,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 브랜치 체인이 계속 돌면서 _currentGraph 역참조에서 NullReferenceException 이 발생한다.
       StopAllCoroutines();
       ScenarioInteractionSignals.ClearAllInternalSignals();
+      ScenarioConditionalSignalListeners.ClearAll();
 
       // 시나리오가 남긴 모든 타이머/표시를 정리한다.
       // 명시적 정리 없이 종료(또는 조기/오류 종료)하더라도 다음 시나리오로 새어 나가지 않게 한다.
@@ -711,6 +713,9 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioServerInternalSignalNode internalSignal:
           StartCoroutine(ExecuteServerInternalSignalNode(internalSignal));
+          break;
+        case ScenarioSignalListenerNode signalListener:
+          ExecuteSignalListenerNode(signalListener);
           break;
         case ScenarioValidatorNode validator:
           StartCoroutine(ExecuteValidatorNode(validator));
@@ -3175,6 +3180,16 @@ namespace MultiplayerInfrastructure.Scenario
       Advance();
     }
 
+    private void ExecuteSignalListenerNode(ScenarioSignalListenerNode node)
+    {
+      if (node == null || string.IsNullOrWhiteSpace(node.ListenerIdentifier)) { Advance(); return; }
+      if (node.Operation == ScenarioSignalListenerOperation.Unregister)
+        ScenarioConditionalSignalListeners.Unregister(node.ListenerIdentifier);
+      else
+        ScenarioConditionalSignalListeners.Register(node.ListenerIdentifier, node.SourceSignalIdentifier, node.OutputSignalIdentifier, node.RequiredSignalIdentifiers, node.ConsumeOnce);
+      Advance();
+    }
+
     private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, string joinNodeIdentifier, int? branchOwnerClientId)
     {
       var previousOwner = _scenarioOwnerClientId;
@@ -3326,6 +3341,9 @@ namespace MultiplayerInfrastructure.Scenario
             break;
           case ScenarioCombineItemNode combineItem:
             yield return ExecuteCombineItemNode(combineItem);
+            break;
+          case ScenarioSignalListenerNode signalListener:
+            ExecuteSignalListenerNode(signalListener);
             break;
           case ScenarioDialogueNode dialogue:
             // 브랜치 내 다이얼로그: interactionRequired면 자동 닫힘 없이 입력으로만 닫힌다.

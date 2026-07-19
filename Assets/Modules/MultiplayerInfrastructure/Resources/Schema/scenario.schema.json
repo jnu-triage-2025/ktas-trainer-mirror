@@ -61,6 +61,7 @@
             "CameraTarget",
             "InvokeEvent",
             "ServerInternalSignal",
+            "SignalListener",
             "Validator",
             "Parallel",
             "QuestControl",
@@ -221,6 +222,21 @@
           },
           "then": {
             "$ref": "#/$defs/ScenarioServerInternalSignalNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "SignalListener"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioSignalListenerNode"
           }
         },
         {
@@ -1211,6 +1227,63 @@
           },
           "required": [
             "signalIdentifier"
+          ]
+        }
+      ]
+    },
+    "ScenarioSignalListenerNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "SignalListener"
+            },
+            "listenerIdentifier": {
+              "type": "string",
+              "minLength": 1
+            },
+            "operation": {
+              "type": "string",
+              "enum": [
+                "Register",
+                "Unregister"
+              ],
+              "default": "Register"
+            },
+            "sourceSignalIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "outputSignalIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "requiredSignalIdentifiers": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "consumeOnce": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": true
+            }
+          },
+          "required": [
+            "listenerIdentifier"
           ]
         }
       ]

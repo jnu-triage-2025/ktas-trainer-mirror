@@ -11,6 +11,7 @@ namespace MultiplayerInfrastructure.Scenario
     Parallel,
     InvokeEvent,
     ServerInternalSignal,
+    SignalListener,
     Validator,
     QuestControl,
     QuestWaypointHighlight,

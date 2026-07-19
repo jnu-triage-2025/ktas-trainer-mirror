@@ -225,6 +225,11 @@ namespace MultiplayerInfrastructure.Scenario.Preflight
           Row("targetIdentifier", "ScenarioInteractionSignals", "always", ScenarioRuntimeLookupClassification.Internal),
           Row("signalIdentifier", "ScenarioInteractionSignals", "always", ScenarioRuntimeLookupClassification.Internal))),
 
+        Register<ScenarioSignalListenerNode>(ScenarioNodeType.SignalListener, Rows(
+          Row("sourceSignalIdentifier", "ScenarioInteractionSignals.OnSignalRegistered", "non-empty", ScenarioRuntimeLookupClassification.External),
+          Row("requiredSignalIdentifiers[]", "Registry.Contains(RuntimeState)", "non-empty", ScenarioRuntimeLookupClassification.External),
+          Row("outputSignalIdentifier", "ScenarioInteractionSignals.Raise", "non-empty", ScenarioRuntimeLookupClassification.Internal))),
+
         Register<ScenarioValidatorNode>(ScenarioNodeType.Validator, Rows(
           Row("rootConditions[].validationRules[].registryIdentifier", "Registry.Contains<rule.registryType>", "RegistryContains/Registry/Contains", ScenarioRuntimeLookupClassification.External),
           Row("rootConditions[].playerTag", "PlayerTagService+UserDescriptorService", "PlayerAssignedTag", ScenarioRuntimeLookupClassification.External)), CollectValidator),

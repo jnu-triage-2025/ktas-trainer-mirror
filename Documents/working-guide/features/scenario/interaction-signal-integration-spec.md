@@ -288,3 +288,49 @@ syringe_5cc, vital_set, wall_suction, yankauer`
   ] }
   ```
 - (A) 반영 후에도 **우선순위는 (B)** 이며, (A) 는 (B)로 표현이 어려운 게이트에만 사용한다.
+
+## 7. 조건부 신호 리스너 노드(SignalListener) — 2026-07-18
+
+게임플레이가 이미 올린 원본 신호를 특정 시나리오 단계에서만 관찰해, 선행 조건이 모두 충족된
+경우에만 후속 신호로 변환하고 싶을 때 사용한다. 시나리오 그래프에 `SignalListener` 노드로
+리스너를 등록/해제한다. 원본 신호 자체를 만들지 않으며, 실제 gameplay handler 가 올린 이벤트만
+변환한다. 조건 평가는 Validator 의 `RegistryContains`(RuntimeState `Contains`)와 동일 기준을 쓴다.
+
+### 7.1 동작 규칙
+
+- `operation: "Register"` 는 `listenerIdentifier` 로 리스너를 등록한다. 동일 식별자 재등록은 교체한다.
+- `sourceSignalIdentifier` 가 올라오는 순간, `requiredSignalIdentifiers` 가 **모두** 올라가 있으면
+  `outputSignalIdentifier` 를 한 번 Raise 한다.
+- `consumeOnce: true`(기본값)면 첫 발생 후 리스너를 자동 제거한다. `false` 면 원본 신호가 올라올
+  때마다 조건을 재평가한다.
+- `operation: "Unregister"` 는 해당 `listenerIdentifier` 리스너를 제거한다.
+- 시나리오 시작/종료 시 모든 리스너가 정리된다(세션 누수 방지).
+- 신호 식별자는 `sig.` 접두사로 정규화된다(접두사 생략 입력 허용).
+
+### 7.2 재진입·중복 방어(주의)
+
+- 호스트(서버=클라)에서는 서버 권위 기록 + 미러 ObserversRpc 로 동일 신호가 두 번 도착할 수 있다.
+  `RegisterLocal` 은 최초 상태 전이에서만 `OnSignalRegistered` 를 발생시켜(멱등화) 중복 Raise 를 막는다.
+- output 이 다른 리스너의 source 인 정당한 체이닝은 지원한다. 다만 `output == source`, `consumeOnce=false`
+  같은 순환 정의는 재진입 큐 가드로 무한 루프를 막지만, 콘텐츠 설계상 순환은 피한다.
+
+### 7.3 예시
+
+```json
+{
+  "nodeType": "SignalListener",
+  "identifier": "listen_oxygen_done",
+  "operation": "Register",
+  "listenerIdentifier": "oxygen_completion_gate",
+  "sourceSignalIdentifier": "sig.connect_oxygen",
+  "requiredSignalIdentifiers": ["sig.enter_treatment_room"],
+  "outputSignalIdentifier": "sig.oxygen_ready",
+  "consumeOnce": true,
+  "next": "validate_oxygen_ready"
+}
+```
+
+위 노드는 플레이어가 처치실에 진입한 상태(`sig.enter_treatment_room`)에서 산소를 연결
+(`sig.connect_oxygen`)했을 때에만 `sig.oxygen_ready` 를 올린다. 후속 Validator 는 이 출력 신호를
+`RegistryContains`(RuntimeState)로 검사하면 된다. 관찰을 종료하려면 별도 `operation: "Unregister"`
+노드로 `oxygen_completion_gate` 를 해제한다.

@@ -107,7 +107,18 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
+      // 상태 전이 여부를 먼저 판정한다. 서버 권위 기록 후 미러 ObserversRpc 가 호스트 로컬에서도
+      // 실행되어 동일 신호가 연달아 두 번 기록될 수 있는데(서버=클라), 이미 올라간 신호에 대해
+      // 로그/이벤트를 재발생시키면 조건부 리스너의 중복 Raise 나 로그 중복이 발생한다.
+      // Registry.Register 자체는 멱등하므로 항상 호출해 각 피어 레지스트리 동기화는 유지하되,
+      // GameLogService/OnSignalRegistered 는 최초 전이에서만 발생시킨다.
+      bool wasAlreadyRaised = Registry.Registry.Contains(RegistryType.RuntimeState, normalizedSignalId);
       Registry.Registry.Register(RegistryType.RuntimeState, normalizedSignalId, true);
+      if (wasAlreadyRaised)
+      {
+        return;
+      }
+
       GameLogService.WriteSignal($"Signal raised: {normalizedSignalId}", normalizedSignalId);
       OnSignalRegistered?.Invoke(normalizedSignalId);
     }
