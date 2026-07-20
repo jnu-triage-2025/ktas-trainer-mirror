@@ -64,7 +64,7 @@
     "PRESET_C": {
       "identifier": "PRESET_C",
       "nodeType": "PatientMedicalStatePreset",
-      "nextIdentifier": "E038",
+      "nextIdentifier": "BIND_B_GAUZE_APPLIED",
       "targetEntityIdentifier": "patient_c",
       "transitionMode": "Immediate",
       "sex": "Female",
@@ -86,6 +86,54 @@
       "bodyTemperatureCelsius": 37.8,
       "spo2": 93,
       "isCardiacArrest": false
+    },
+    "BIND_B_GAUZE_APPLIED": {
+      "identifier": "BIND_B_GAUZE_APPLIED",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_gauze_applied_patient_b",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_b",
+      "eventName": "TreatmentApplied",
+      "eventKey": "GauzePatchedOnLeftArm",
+      "outputSignalIdentifier": "apply_gauze_patient_b",
+      "consumeOnce": true,
+      "nextIdentifier": "BIND_B_GAUZE_DRESSING"
+    },
+    "BIND_B_GAUZE_DRESSING": {
+      "identifier": "BIND_B_GAUZE_DRESSING",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_gauze_dressing_patient_b",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_b",
+      "eventName": "TreatmentApplied",
+      "eventKey": "GauzeDressingDoneOnLeftArm",
+      "outputSignalIdentifier": "apply_plaster_on_gauze_patient_b",
+      "consumeOnce": true,
+      "nextIdentifier": "BIND_C_GAUZE_APPLIED"
+    },
+    "BIND_C_GAUZE_APPLIED": {
+      "identifier": "BIND_C_GAUZE_APPLIED",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_gauze_applied_patient_c",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_c",
+      "eventName": "TreatmentApplied",
+      "eventKey": "GauzePatchedOnLeftArm",
+      "outputSignalIdentifier": "apply_gauze_patient_c",
+      "consumeOnce": true,
+      "nextIdentifier": "BIND_C_GAUZE_DRESSING"
+    },
+    "BIND_C_GAUZE_DRESSING": {
+      "identifier": "BIND_C_GAUZE_DRESSING",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_gauze_dressing_patient_c",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_c",
+      "eventName": "TreatmentApplied",
+      "eventKey": "GauzeDressingDoneOnLeftArm",
+      "outputSignalIdentifier": "apply_plaster_on_gauze_patient_c",
+      "consumeOnce": true,
+      "nextIdentifier": "E038"
     },
     "E038": {
       "identifier": "E038",

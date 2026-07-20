@@ -42,6 +42,16 @@ flags: ["refactor-required"]
 | 퀘스트 | 12개 `Quest_*`가 식별자만 있고 title/content/task definition이 없음 | 빈 inline quest를 만들지 않고 Q-BC-1 해결 후 definition을 참조한다. |
 | 런타임 신호 | 고유 신호 42개 중 22개가 둘 이상의 Validator에서 재사용됨 | sticky RuntimeState를 환자·행위 단위로 분리하거나 소비 후 clear해야 한다. |
 
+#### 환자 상태 → Scenario 신호 바인딩 (2026-07-20)
+
+`PRESET_C` 다음에 `BIND_B_GAUZE_APPLIED`, `BIND_B_GAUZE_DRESSING`,
+`BIND_C_GAUZE_APPLIED`, `BIND_C_GAUZE_DRESSING`을 직렬로 둔다. 각 노드는 해당 환자의
+`TreatmentApplied` 상태 이벤트를 구독하고, B/C의 좌측 상완 상태인
+`GauzePatchedOnLeftArm`/`GauzeDressingDoneOnLeftArm`
+전이를 각각 `apply_gauze_patient_b/c` 및 `apply_plaster_on_gauze_patient_b/c` signal로 변환한다.
+따라서 `V058`/`V059`와 `V077`/`V078`은 다른 환자의 sticky signal로 통과할 수 없다. 이 네 signal의
+정본 producer는 ItemUse 코드가 아니라 `EntityStateSignalBinding` 노드다.
+
 ### 플레이 차단 항목과 보완 위치
 
 | ID | 위치 | 부족한 연결 | 처리 |

@@ -85,14 +85,14 @@ namespace TriageTrainer.Entity
     // 추가 매핑하거나 향후 부위 조준으로 확장). 신호는 시나리오 게이트 조건명과 일치시킨다.
     //
     // 환자별 결과 신호(SIGNAL-BC-3): 다수 환자가 같은 처치를 받는 흐름(B/C)에서는 공용 sticky 신호
-    // (예: apply_gauze) 하나로는 B가 올린 신호로 C 게이트가 무행동 통과하는 문제가 있다. 따라서
-    // 각 처치는 (1) 하위 호환용 공용 신호와 (2) "{id}" 를 환자 Identifier 로 치환한 환자별 신호를
-    // 함께 발신한다. 시나리오 게이트는 환자별 신호(예: apply_gauze_patient_b)를 사용해 구분한다.
+    // (예: apply_gauze) 하나로는 B가 올린 신호로 C 게이트가 무행동 통과하는 문제가 있다. 거즈/플라스터의
+    // 환자별 신호는 이 컨트롤러가 직접 만들지 않고, patient_b_c_ct 그래프의 EntityStateSignalBinding 이
+    // TreatmentApplied 상태 전이를 관찰해 발신한다. 따라서 신호의 대상 환자는 Scenario 데이터에서 명시된다.
     private static readonly Dictionary<string, ItemUseEffect> ItemUseEffects = new()
     {
       // 부착형(시각 표현 동반)
-      { "gauze",          new ItemUseEffect(TreatmentDisplay.GauzePatchedOnThorax, "apply_gauze", "apply_gauze_{id}") },
-      { "plaster",        new ItemUseEffect(TreatmentDisplay.GauzeDressingDoneOnThorax, "apply_plaster_on_gauze", "apply_plaster_on_gauze_{id}", "apply_plaster_on_intu", "apply_plaster_on_intu_{id}") },
+      { "gauze",          new ItemUseEffect(TreatmentDisplay.GauzePatchedOnThorax, "apply_gauze") },
+      { "plaster",        new ItemUseEffect(TreatmentDisplay.GauzeDressingDoneOnThorax, "apply_plaster_on_gauze", "apply_plaster_on_intu", "apply_plaster_on_intu_{id}") },
       { "gloves",         new ItemUseEffect(TreatmentDisplay.None, "wear_glove", "wear_glove_{id}") },
       // 실제 아이템 식별자(cervical_collar / nasalcannula)가 프로덕션 경로의 키.
       // 구 명칭(neckstabilizer / nasal)은 디버그 훅(Debug_ApplyItemUse) 호환용 별칭이며,
@@ -121,8 +121,9 @@ namespace TriageTrainer.Entity
           || !ItemUseEffects.TryGetValue(itemIdentifier, out var effect))
         return false;
 
-      if (effect.Display != TreatmentDisplay.None)
-        ShowTreatmentDisplay(effect.Display);
+      TreatmentDisplay resolvedDisplay = ResolveTreatmentDisplayForPatient(effect.Display);
+      if (resolvedDisplay != TreatmentDisplay.None)
+        ShowTreatmentDisplay(resolvedDisplay);
 
       bool raised = false;
       if (effect.SignalTemplates != null)
@@ -138,7 +139,28 @@ namespace TriageTrainer.Entity
         }
       }
 
-      return raised || effect.Display != TreatmentDisplay.None;
+      return raised || resolvedDisplay != TreatmentDisplay.None;
+    }
+
+    /// <summary>
+    /// 거즈/드레싱의 기본 표현은 환자 A의 흉부 손상 기준으로 작성돼 있다. 환자 B/C는
+    /// 시나리오 정의상 좌측 상완 손상이므로 같은 item use가 해당 환자의 상태에는 좌측 상완
+    /// 전이를 만들어야 한다. 이 분기는 표시 전용 데이터에 임상 상태를 중복하지 않고,
+    /// 컨트롤러에서 대상 환자의 상태 전이만 선택한다.
+    /// </summary>
+    private TreatmentDisplay ResolveTreatmentDisplayForPatient(TreatmentDisplay display)
+    {
+      bool isPatientBOrC = string.Equals(Identifier, "patient_b", System.StringComparison.Ordinal)
+                           || string.Equals(Identifier, "patient_c", System.StringComparison.Ordinal);
+      if (!isPatientBOrC)
+        return display;
+
+      return display switch
+      {
+        TreatmentDisplay.GauzePatchedOnThorax => TreatmentDisplay.GauzePatchedOnLeftArm,
+        TreatmentDisplay.GauzeDressingDoneOnThorax => TreatmentDisplay.GauzeDressingDoneOnLeftArm,
+        _ => display,
+      };
     }
 
     /// <summary>
