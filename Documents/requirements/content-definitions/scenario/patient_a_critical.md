@@ -63,7 +63,7 @@ Scenario로 판정하면 안 된다.
 |---|---|---|---|
 | SPAWN-A-1 | `SPAWN_A` | Unity import에서 `patient_a`의 `PatientTypeA` prefab이 FishNet `DefaultPrefabObjects`에 등록되지 않아 `PrefabId`가 미할당된 것으로 확인됐다. 현재 상태로 network spawn하면 런타임 `ObjectId 65535` 오류가 발생한다. | Fish-Networking Spawnable Prefabs에 원본 prefab을 등록하고 reserialize한 뒤, Production profile에서 `EntityPreset(patient_a)`의 `SpawnablePreset` capability를 다시 증명한다. (인간 작업자 의견: `EntityPreset` 시스템과 Assets/Modules/TriageTrainer/ScriptableObjects/EntityPreset Registry Requirements SO 에 의해 처리 가능할 것임)     |
 | ROLE-1 | `P002`, `P003`, `P004`, `P005`, `P006`, `P007` 진입 전 | ~~`ByRole`의 역할 태그 공급 계약이 없었다.~~ **해결:** `disaster_intro`의 `C_role_select`가 현재 플레이어에게 `nurse_a`~`nurse_d` 식별 태그와 해당 역할 facet 태그를 함께 부여한다. | 환자 A/B/C는 intro 역할 선택 뒤에 시작하는 시나리오다. CPR 교대(P005/P006)는 facet 재사용을 피하기 위해 `nurse_a`~`nurse_d` 식별 태그로 고정 배정한다. |
-| ROLE-2 | `P004`의 `N008`, `N011` 브랜치 | 한 브랜치에 각각 `NurseB, NurseA`와 `NurseD, NurseC` 두 역할을 적었지만 현재 `ByRole`은 한 브랜치에 한 플레이어만 배정한다. `requiredPlayerTagsMatchMode=All`은 두 사람이 아니라 한 사람이 두 태그를 모두 가져야 한다는 뜻이다. | **인간 판단 필요:** (a) 한 명이 전체 브랜치를 수행하도록 역할 표기를 단일화하거나, (b) `N008`의 삽관/산소 및 `N011`의 IV/보조 흐름을 별도 병렬 브랜치와 합류점으로 분리한다. |
+| ROLE-2 | `P004`의 `N008`, `N011` 브랜치 | 한 브랜치에 각각 `NurseB, NurseA`와 `NurseD, NurseC` 두 역할을 적었지만 현재 `ByRole`은 한 브랜치에 한 플레이어만 배정한다. `requiredPlayerTagsMatchMode=All`은 두 사람이 아니라 한 사람이 두 태그를 모두 가져야 한다는 뜻이다. 공유 signal(P1)은 `ScenarioNetworkRelay`로 구현됐지만, `ChatService`가 각 클라이언트에서 로컬 그래프를 독립 시작하므로 역할별 다인 브랜치 배정·표현을 권위적으로 동기화하는 P2/P3는 아직 없다. | **선행 런타임 구현 + 인간 판단 필요:** 먼저 G-8 제안의 서버 권위 실행(P2: 서버 플레이어 풀/배정, P3: 단일 그래프 실행 및 TargetRpc 표현)을 구현한다. 그 뒤 (a) 한 명이 전체 브랜치를 수행하도록 역할 표기를 단일화하거나, (b) `N008`의 삽관/산소 및 `N011`의 IV/보조 흐름을 별도 병렬 브랜치와 합류점으로 분리한다. |
 | S-1 | `V011_1`, `V014_1~V014_4`, `V018`, `V023_1`, `V024`, `V025~V025_1`, `V027`, `V030`, `V033` | 실제 코드·문서 대조 결과, 정식 producer가 없는 신호는 10개다: `show_vital_patient_a`, `pass_laryngoscope`, `pass_et_tube_ready`, `remove_intu_stylet`, `pass_syringe`, `pass_central_line_set`, `remove_tpiece`, `click_to_start_comp`, `move_defibcart_to_patient`, `remove_patient_clothing`. 하나라도 생산되지 않으면 해당 Validator에서 영구 정지한다. | 각 노드의 기존 `(b) 선행 구현 필요` 주석을 producer 작업 목록으로 사용한다. `pass_*`는 이미 있는 `ItemSubmissionConfig`/`ItemSubmissionInteractable`로 구현 가능하나, 의사 NPC identifier·제출 상호작용 identifier·배치 위치의 콘텐츠 정의가 먼저 필요하다. Debug emitter를 정식 producer로 간주하지 않는다. |
 | Q-1 | 모든 `Q006`~`Q030_1` | ~~23개 `Quest_*`가 표시용 식별자만 있어 빈 오버레이를 만들었다.~~ **해결:** `Resources/Quest/patient_a_critical.quests.quest.json`에 23개 definition의 title/description/questContent를 작성했고, Add/Remove가 같은 definition identifier를 참조한다. | Scenario Validator가 완료를 판단하고 QuestControl이 명시적으로 Remove한다. 따라서 이 안내형 quest에 별도 자동 완료 task를 추가하지 않는다. |
 | IV-1 | `V017` / `V017_1` / `V017_3` | ~~18G 2개가 필요한 서술과 신호 3개/`TargetCount` 의미가 일치하지 않는다. 동일 식별자의 두 번째 획득을 `RegistryContains`로 구분할 수 없다.~~ **부분 해결(2026-07-20):** 삽입 단계를 좌/우로 분리. `PatientController.IntravenousLineCannula` 가 삽입 순서로 좌→우를 결정론적 배정하고 `insert_iv_patient_a_left` / `insert_iv_patient_a_right` 신호를 발신(+게이지별 처치 표현). 우측 삽입 게이트 `V017_3` 신설(`N011_3 → V017_3 → E021`). | **획득(V017) 수량 판정은 미해결:** 좌·우 획득 신호 분리 또는 인벤토리 수량 quest condition(`InventoryContains`, `Count=2`)은 여전히 인간 확정 필요. 삽입 좌/우 producer 는 구현 완료. |
@@ -71,7 +71,7 @@ Scenario로 판정하면 안 된다.
 
 ### 변환 승인 조건
 
-- ROLE-1과 ROLE-2의 할당 정책이 확정되어야 한다.
+- ROLE-2의 다인 협업 할당 정책과 서버 권위 실행(P2/P3)이 확정·구현되어야 한다.
 - SPAWN-A-1의 FishNet spawnable prefab 등록이 완료되어야 한다.
 - S-1의 10개 신호에 정식 producer와 동일 식별자가 연결되어야 한다.
 - Q-1의 23개 quest definition이 작성되어야 한다.
