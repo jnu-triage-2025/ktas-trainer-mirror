@@ -62,6 +62,13 @@ namespace TriageTrainer.Entity
     [SerializeField] private bool _intravenousLineCannulaInteractable = true;
 
     /// <summary>
+    /// 정맥라인 캐뉼라 삽입 좌/우 팔 배정. 별도 팔별 상호작용 지점이 없으므로, 삽입 순서로 좌→우를
+    /// 결정론적으로 배정한다(시나리오 A의 좌측 우선 흐름과 일치). 좌·우가 모두 채워지면 더 이상 삽입하지 않는다.
+    /// </summary>
+    private bool _cannulaLeftArmInserted;
+    private bool _cannulaRightArmInserted;
+
+    /// <summary>
     /// Preset/Config: 정맥라인 캐뉼라(18G~20G) 상호작용 기능 지원 여부.
     /// </summary>
     public bool IntravenousLineCannulaSupported
@@ -152,7 +159,8 @@ namespace TriageTrainer.Entity
 
     /// <summary>
     /// 정맥라인 캐뉼라 삽입(상호작용 확정)을 처리한다.
-    /// 시나리오 게이팅 신호를 올리고, 힌트를 즉시 갱신한다.
+    /// 좌/우 팔을 결정론적으로 배정하고, 게이지(18G/20G)에 맞는 처치 표현을 켜고,
+    /// 좌/우별 시나리오 게이팅 신호를 올린다. 힌트를 즉시 갱신한다.
     /// </summary>
     private void PerformIntravenousLineCannulaInsertion(Transform interactor)
     {
@@ -164,13 +172,52 @@ namespace TriageTrainer.Entity
       if (!CanInteractIntravenousLineCannula || !IsHandlingIntravenousLineCannula(player))
         return;
 
-      // 처치 표현 및 상세 삽입 로직(좌/우 팔 구분, 아이템 소비 등)은 후속 작업에서 연결한다.
-      // 여기서는 시나리오 게이팅 신호만 올려 흐름이 진행되도록 한다.
-      string signal = ResolveSignalTemplate("apply_intravenous_line_cannula_{id}");
-      if (!string.IsNullOrWhiteSpace(signal))
-        MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(signal);
+      // ── 좌/우 팔 배정 ── 별도 팔별 지점이 없으므로 좌측 우선으로 채운다.
+      bool isLeft;
+      if (!_cannulaLeftArmInserted)
+        isLeft = true;
+      else if (!_cannulaRightArmInserted)
+        isLeft = false;
+      else
+        return; // 양팔 모두 삽입 완료 → 추가 삽입 없음
+
+      // ── 게이지 판정(18G / 20G) ── 손에 든 아이템 식별자로 구분한다.
+      string heldIdentifier = player.HandlingItem?.CurrentIdentifier;
+      bool is18G = string.Equals(heldIdentifier, TriageTrainer.ItemDefinitions.Cannula18g.Identifier, StringComparison.Ordinal);
+
+      // ── 처치 표현(게이지 + 좌/우) ──
+      TreatmentDisplay display = (is18G, isLeft) switch
+      {
+        (true, true) => TreatmentDisplay.Syringe18GInsertedIntoLeftArm,
+        (true, false) => TreatmentDisplay.Syringe18GInsertedIntoRightArm,
+        (false, true) => TreatmentDisplay.Syringe20GInsertedIntoLeftArm,
+        (false, false) => TreatmentDisplay.Syringe20GInsertedIntoRightArm,
+      };
+      ShowTreatmentDisplay(display);
+
+      // 배정 상태 기록(다음 삽입은 반대 팔로).
+      if (isLeft) _cannulaLeftArmInserted = true;
+      else _cannulaRightArmInserted = true;
+
+      // ── 시나리오 게이팅 신호 ──
+      // (1) 하위 호환: 좌/우 미구분 신호. (2) 좌/우별 신호(insert_iv_{id}_left / _right).
+      string side = isLeft ? "left" : "right";
+      RaiseCannulaSignal("apply_intravenous_line_cannula_{id}");
+      RaiseCannulaSignal($"insert_iv_{{id}}_{side}");
+
+      // 양팔 모두 채워지면 더 이상 상호작용을 노출하지 않는다.
+      if (_cannulaLeftArmInserted && _cannulaRightArmInserted)
+        _intravenousLineCannulaInteractable = false;
 
       player.RefreshInteractableHintsNow();
+    }
+
+    /// <summary>캐뉼라 신호 템플릿을 환자 Identifier 로 치환해 발신한다(빈 값이면 생략).</summary>
+    private void RaiseCannulaSignal(string template)
+    {
+      string signal = ResolveSignalTemplate(template);
+      if (!string.IsNullOrWhiteSpace(signal))
+        MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(signal);
     }
   }
 }

@@ -159,9 +159,16 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
   `check_gcs_patient_b/c`, `check_vital_patient_b/c`.
 - 잔여: `show_vital_patient_a`, `close_vital_ui_b/c` 는 바이탈 모니터 UI 열기/닫기 콜백이 필요(미구현).
 
-### insert_* / remove_* (삽입/제거) — [없음]
-정맥 캐뉼라 삽입(연결과 구분), 스타일렛/T-piece 제거 등은 전용 메커닉이 없어 선행 구현이 필요하다.
-대상: `insert_iv_patient_a_left`, `insert_iv_b_right`, `insert_iv_c_left`, `remove_intu_stylet`, `remove_tpiece`.
+### insert_* / remove_* (삽입/제거) — [정맥 캐뉼라 좌/우 계측 완료(2026-07-20), 나머지 없음]
+정맥 캐뉼라 삽입(연결과 구분)은 `PatientController.IntravenousLineCannula` 에 배선되었다. 플레이어가
+캐뉼라(18G/20G)를 들고 환자와 상호작용하면, 삽입 순서로 **좌→우** 팔을 결정론적으로 배정하여
+`insert_iv_{id}_left` / `insert_iv_{id}_right` 신호를 발신하고(하위 호환용 `apply_intravenous_line_cannula_{id}` 도 함께),
+게이지별 처치 표현(`Syringe{18G|20G}InsertedInto{Left|Right}Arm`)을 켠다. 양팔이 채워지면 상호작용이 닫힌다.
+- **운영자 작업**: 환자 `PatientController` 의 `IntravenousLineCannulaConfig.Supported = true`. 시나리오는
+  `sig.insert_iv_patient_a_left` / `sig.insert_iv_patient_a_right` Validator 로 좌/우 삽입을 게이팅한다
+  (환자 A는 `V017_1`/`V017_3`).
+- 스타일렛/T-piece 제거 등은 여전히 전용 메커닉이 없어 선행 구현 필요.
+대상(구현됨): `insert_iv_patient_a_left`, `insert_iv_patient_a_right`. 대상(미구현): `insert_iv_b_right`, `insert_iv_c_left`(환자 B/C 지원 설정 시 동일 로직으로 동작), `remove_intu_stylet`, `remove_tpiece`.
 
 ### pass_* (의사 NPC 전달) — [없음/부분]
 아이템을 NPC 에게 건네는 인터랙션. NPC 상호작용 완료 지점 필요. 대상: `pass_laryngoscope`,

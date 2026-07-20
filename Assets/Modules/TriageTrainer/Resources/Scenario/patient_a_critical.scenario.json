@@ -1687,10 +1687,31 @@
     "N011_3": {
       "identifier": "N011_3",
       "nodeType": "Dialogue",
-      "nextIdentifier": "E021",
+      "nextIdentifier": "V017_3",
       "speakerName": "시스템",
-      "dialogueContent": "한쪽 정맥로가 확보되어, 반대쪽 팔에도 자동으로 18G 캐뉼라 및 플라즈마 솔루션 연결이 진행됩니다.",
+      "dialogueContent": "한쪽 정맥로가 확보되었습니다. 반대쪽 팔에도 18G 캐뉼라를 삽입하십시오.",
       "portraitSpriteIdentifier": null
+    },
+    "V017_3": {
+      "identifier": "V017_3",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.insert_iv_patient_a_right"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "nextIdentifier": "E021",
+      "waitForCondition": true
     },
     "E021": {
       "identifier": "E021",
