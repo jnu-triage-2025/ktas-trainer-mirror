@@ -55,6 +55,7 @@ namespace MultiplayerInfrastructure.Scenario
         "ChatPrint" => Deserialize<ScenarioChatPrintNodeDTO>(root, options),
         "ExecuteCommand" => Deserialize<ScenarioExecuteCommandNodeDTO>(root, options),
         "TimeControl" => Deserialize<ScenarioTimeControlNodeDTO>(root, options),
+        "EntityStateSignalBinding" => Deserialize<ScenarioEntityStateSignalBindingNodeDTO>(root, options),
         _ => throw new JsonException($"Unknown nodeType '{nodeType}'.")
       };
     }

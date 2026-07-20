@@ -293,10 +293,14 @@ namespace TriageTrainer.Entity
 
     private void NotifyMedicalStateChanged()
     {
+      var snapshot = _medicalState;
+
+      // 세분화 상태 이벤트(OnVitalChanged) + 시나리오 바인딩 디스패치.
+      RaiseVitalChangedEvent(snapshot);
+
       if (_medicalStateListeners.Count == 0)
         return;
 
-      var snapshot = _medicalState;
       foreach (var listener in _medicalStateListeners)
       {
         listener?.HandleMedicalStateChanged(snapshot);

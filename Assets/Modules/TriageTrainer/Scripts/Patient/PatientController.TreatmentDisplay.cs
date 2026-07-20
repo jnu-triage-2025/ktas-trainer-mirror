@@ -204,11 +204,17 @@ namespace TriageTrainer.Entity
       if (!IsTreatmentDisplaySupported(state, display))
         return;
 
+      // 실제 플래그 전이(false→true / true→false)일 때만 상태 이벤트를 발생시킨다.
+      bool previous = GetDisplayStateFlag(state, display, fromSupports: false);
+
       SetDisplayStateFlag(state, display, active);
 
       var go = GetDisplayChildObject(state, display);
       if (go != null)
         go.SetActive(active);
+
+      if (previous != active)
+        RaiseTreatmentStateEvent(display, active);
     }
 
     private static bool IsTreatmentDisplaySupported(PatientDisplayState state, TreatmentDisplay display)

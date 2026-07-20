@@ -59,7 +59,7 @@
 | 2 | 지연 실행(Delay) | (A) | `ScenarioDelayNode` 이미 존재(`nodeType:"Delay"`) |
 | 3 | 참여자·대상별 신호 식별/수량 계측 | (C) | 4-b와 연동. 신규 노드/tracker 필요 |
 | 4-a | 이벤트→추가 신호 등록 노드 | (A) | `ScenarioSignalListenerNode` 이미 존재 |
-| 4-b | Patient state 재구현 + 이벤트 리스너 + ScenarioNode 처리 | (C) | 아래 상세 |
+| 4-b | Patient state 재구현 + 이벤트 리스너 + ScenarioNode 처리 | (B) 구현 완료 | 아래 "부록 2" 참조 |
 | 5 | 미구현 게임플레이 신호 producer | (C) | 4-b 선행. 튜토리얼은 우선 스킵 |
 | 6 | 퀘스트 완료→시나리오 signal/분기 | (A) 부분 | `OnCompleteSignalIdentifier` + `quest.completed.<id>` 존재 |
 | 7 | 체온/SpO2 프리셋 확장 | (B) | 본 제안으로 구현 완료 |
@@ -70,12 +70,52 @@
 
 **3. 참여자·대상별 신호 식별 및 수량 계측** — 들것 2인 파지(손잡이/참여자별), 트리아지 구역 도착(환자별/인원 수량), 환자 B/C 처치(공용 sticky 대신 환자별 결과 신호), A의 18G 2개(좌·우별 또는 인벤토리 수량). 현재 signal은 전역 sticky 문자열 키라 대상별/수량 개념이 없다. 키 네임스페이싱(`sig.iv_18g.{patient}.{side}`) + count tracker 또는 전용 노드(`SignalCounter`/`TargetedSignal`) 신설 필요. 4-b 선행.
 
-**4-b. Patient state 재구현 + 이벤트 리스너 + ScenarioNode 처리** — 현재 `PatientDisplayState` 는 치료/부착 시각물 전용 데이터이고(적용은 `PatientController.TreatmentDisplay.cs`), 의료 상태 변경 통지는 push 인터페이스 `IMedicalStateListener.HandleMedicalStateChanged` 하나뿐이다. 지목된 세분화 이벤트(`On~Changed/Applied/Removed/Submitted`)와 그 이벤트를 ScenarioGraphNode 로 처리하는 경로는 아직 없다. 요구: (1) display/medical 값을 명시 state로 정리하고 세분화 이벤트 노출, (2) 각 이벤트가 raise할 신호를 노드로 선언·처리(4-a `SignalListener` 확장 또는 전용 바인딩 노드), (3) 리스너 목록 검토용 반환/문서화. 리스크 중~높음(환자 컨트롤러 광범위 리팩터 + 네트워크 동기).
+**4-b. Patient state 재구현 + 이벤트 리스너 + ScenarioNode 처리** — **구현 완료(2026-07-20). 아래 "부록 2" 참조.**
 
 **5. 미구현 게임플레이 신호 producer** — 환자 A(기관내 삽관 전달·스타일렛 제거·주사기 전달 등 ~20개), 환자 B/C(IV 삽입, 활력 UI 닫기, 얼굴/비강 장비 클릭, 더미 클릭 등). 튜토리얼(이동/모자 NPC 대화/waypoint/택배/제출)은 우선 스킵. 환자 producer는 4-b 완료 후.
 
 ### 진행 순서 제안
 1. (완료) 7. 체온/SpO2 프리셋 확장
-2. 4-b Patient state/이벤트 리팩터 (설계 문서 선행 권장)
-3. 3 + 5 환자별 신호 producer / 대상·수량 계측 (4-b 의존)
+2. (완료) 4-b Patient state 이벤트 + 시나리오 연동 — 부록 2
+3. 3 + 5 환자별 신호 producer / 대상·수량 계측 (4-b 의존) — 다음 단계
 4. 1 다인 협업 브랜치 (독립 설계 문서, 멀티플레이 결정성 검증 포함)
+
+---
+
+## 부록 2: 4-b Patient 상태 이벤트 + 시나리오 연동 (구현 완료)
+
+### 개요
+환자 상태 변경을 세분화된 C# 이벤트로 노출하고, 그 이벤트를 시나리오 신호로 변환하는 범용 경로를 추가했다. 값 이중화 없이(기존 `PatientMedicalState`/`PatientDisplayState`/트리아지 SyncVar 가 값을 그대로 보유) 변경 시점만 이벤트로 노출한다.
+
+### 추가한 이벤트 (검토용 목록)
+`PatientController.StateEvents.cs` 에 C# 이벤트로 노출하며, 런타임 `GetStateEventNames()` 가 동일 목록을 반환한다.
+
+| 이벤트 이름(문자열) | C# 이벤트 | 인자(key) | 발생 지점 |
+|---|---|---|---|
+| `TreatmentApplied` | `OnTreatmentApplied(TreatmentDisplay)` | 처치 표시 항목명 | `SetTreatmentDisplay` (false→true 전이) |
+| `TreatmentRemoved` | `OnTreatmentRemoved(TreatmentDisplay)` | 처치 표시 항목명 | `SetTreatmentDisplay` (true→false 전이) |
+| `VitalChanged` | `OnVitalChanged(PatientMedicalState)` | (없음) | `NotifyMedicalStateChanged` |
+| `TriageSubmitted` | `OnTriageSubmitted(TriageLevel)` | 트리아지 등급명 | `ApplyAssessedTriage` / `ApplyAssessedTriageLocalOnly` |
+
+### 시나리오 연동
+- 범용 인터페이스 `MultiplayerInfrastructure.Entity.IScenarioEntityStateEventSource` — 엔티티가 명명된 상태 이벤트에 리스너를 등록/해제하고 지원 이벤트 목록을 노출. `PatientController` 가 구현.
+- 신규 시나리오 노드 `EntityStateSignalBinding` (`ScenarioNodeType.EntityStateSignalBinding`) — 대상 엔티티의 상태 이벤트(+선택적 `eventKey` 필터)를 관찰해 `outputSignalIdentifier` 신호를 `ScenarioInteractionSignals.Raise` 로 발신. `operation` Register/Unregister, `consumeOnce` 지원.
+- 런타임 추적/정리: `ScenarioEntityStateSignalBindings` (등록/해제/시나리오 시작·종료 시 ClearAll). 동일 (엔티티,이벤트) 다중 바인딩도 콜백 보관+재구성으로 정확히 해제.
+- 이벤트는 서버(호스트) 권위 상태 적용 지점에서 발생하므로 신호 발신이 서버 권위로 전 피어에 전파된다.
+
+### 변경/추가 파일
+- 신규(MI): `Scripts/Entity/IScenarioEntityStateEventSource.cs`, `Scripts/Scenario/ScenarioEntityStateSignalBindings.cs`, `Scripts/Scenario/Models/ScenarioGraphNodes/ScenarioEntityStateSignalBindingNode.cs`, `.../ScenarioGraphNodesDTO/ScenarioEntityStateSignalBindingNodeDTO.cs`
+- 신규(TriageTrainer): `Scripts/Patient/PatientController.StateEvents.cs`
+- 신규(콘텐츠): `Resources/Scenario/entity_state_signal_binding_debug.scenario.json`
+- 수정(MI): `ScenarioNodeType`, `ScenarioController`(switch 2곳 + Execute/Resolve + ClearAll 2곳), `ScenarioGraphLoader`(convert 왕복 + dispatch 2곳), `ScenarioNodeDTOConverter`, `ScenarioRequirementCompiler`(등록+extractor), `ScenarioNodeRuntimeLookupRegistry`(등록), `Resources/Schema/scenario.schema.json`(enum+dispatch+$defs), Editor `ScenarioNodeFactory`
+- 수정(TriageTrainer): `PatientController.TreatmentDisplay.cs`(전이 이벤트 훅), `PatientController.MedicalState.cs`(VitalChanged 훅), `PatientController.Triage.cs`(TriageSubmitted 훅 2곳)
+
+### 검증
+- 스키마: `EntityStateSignalBinding` 노드가 포함된 그래프가 schema 검증 통과, `bindingIdentifier` 누락은 거부됨.
+- 노드 카탈로그 불변식: 노드 타입 32종 + `TagModification` 별칭 = 33 discriminator, RequirementCompiler / RuntimeLookupRegistry 완전성 검사 유지.
+- 디버그 시나리오 `entity_state_signal_binding_debug.scenario.json` 로 처치 완료/트리아지 제출 → 신호 발생 흐름 수동 확인 가능.
+
+### 남은 확장(연기)
+- 동일 (엔티티,이벤트)에 서로 다른 `eventKey` 다중 바인딩은 동작하나, 향후 콜백 단위 해제 API 로 정교화 여지 있음.
+- 에디터 그래프 UI(SearchWindow/InspectorView)에는 신규 노드 항목 미노출(JSON 저작은 완전 지원). 별도 에디터 확장으로 후속.
+- 3/5 환자별 신호 producer 는 이 이벤트/노드를 활용해 다음 단계에서 구현.

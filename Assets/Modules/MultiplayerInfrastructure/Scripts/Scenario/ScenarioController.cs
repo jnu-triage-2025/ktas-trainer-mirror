@@ -393,6 +393,7 @@ namespace MultiplayerInfrastructure.Scenario
       ResetNodeVisitOrders(graph.Identifier);
       ScenarioInteractionSignals.ClearAllInternalSignals();
       ScenarioConditionalSignalListeners.ClearAll();
+      ScenarioEntityStateSignalBindings.ClearAll();
 
       // 이전 시나리오에서 남았을 수 있는 모든 타이머/표시를 새 시나리오 시작 시 정리한다.
       ScenarioTimeRelay.ClearAllAuthoritative();
@@ -521,6 +522,7 @@ namespace MultiplayerInfrastructure.Scenario
       StopAllCoroutines();
       ScenarioInteractionSignals.ClearAllInternalSignals();
       ScenarioConditionalSignalListeners.ClearAll();
+      ScenarioEntityStateSignalBindings.ClearAll();
 
       // 시나리오가 남긴 모든 타이머/표시를 정리한다.
       // 명시적 정리 없이 종료(또는 조기/오류 종료)하더라도 다음 시나리오로 새어 나가지 않게 한다.
@@ -716,6 +718,9 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioSignalListenerNode signalListener:
           ExecuteSignalListenerNode(signalListener);
+          break;
+        case ScenarioEntityStateSignalBindingNode stateBinding:
+          ExecuteEntityStateSignalBindingNode(stateBinding);
           break;
         case ScenarioValidatorNode validator:
           StartCoroutine(ExecuteValidatorNode(validator));
@@ -3190,6 +3195,81 @@ namespace MultiplayerInfrastructure.Scenario
       Advance();
     }
 
+    /// <summary>
+    /// EntityStateSignalBinding 노드를 실행한다: 대상 엔티티의
+    /// <see cref="Entity.IScenarioEntityStateEventSource"/> 에 상태 이벤트 → 신호 바인딩을 등록/해제한다.
+    /// </summary>
+    private void ExecuteEntityStateSignalBindingNode(ScenarioEntityStateSignalBindingNode node)
+    {
+      if (node == null || string.IsNullOrWhiteSpace(node.BindingIdentifier))
+      {
+        Advance();
+        return;
+      }
+
+      if (node.Operation == ScenarioEntityStateSignalBindingOperation.Unregister)
+      {
+        ScenarioEntityStateSignalBindings.Unregister(node.BindingIdentifier);
+        Advance();
+        return;
+      }
+
+      string entityIdentifier = ResolveEntityStateBindingTargetIdentifier(node);
+      if (string.IsNullOrWhiteSpace(entityIdentifier))
+      {
+        Debug.LogWarning($"[ScenarioController] EntityStateSignalBinding '{node.Identifier}' target identifier is missing.");
+        Advance();
+        return;
+      }
+
+      if (!Registry.Registry.TryGetEntity(entityIdentifier, out var entityDescriptor)
+          || entityDescriptor?.GameObject == null)
+      {
+        Debug.LogWarning($"[ScenarioController] EntityStateSignalBinding '{node.Identifier}' target '{entityIdentifier}' was not found.");
+        Advance();
+        return;
+      }
+
+      var source = entityDescriptor.GameObject.GetComponentInChildren<Entity.IScenarioEntityStateEventSource>(true);
+      if (source == null)
+      {
+        Debug.LogWarning($"[ScenarioController] EntityStateSignalBinding '{node.Identifier}' target '{entityIdentifier}' has no IScenarioEntityStateEventSource.");
+        Advance();
+        return;
+      }
+
+      bool ok = ScenarioEntityStateSignalBindings.Register(
+        node.BindingIdentifier,
+        source,
+        node.EventName,
+        node.EventKey,
+        node.OutputSignalIdentifier,
+        node.ConsumeOnce);
+
+      if (!ok)
+      {
+        Debug.LogWarning($"[ScenarioController] EntityStateSignalBinding '{node.Identifier}' failed to register event '{node.EventName}' on target '{entityIdentifier}'.");
+      }
+
+      Advance();
+    }
+
+    private string ResolveEntityStateBindingTargetIdentifier(ScenarioEntityStateSignalBindingNode node)
+    {
+      if (node == null)
+        return string.Empty;
+
+      if (!string.IsNullOrWhiteSpace(node.TargetEntityIdentifier))
+        return node.TargetEntityIdentifier;
+
+      if (string.IsNullOrWhiteSpace(node.TargetEntityStateKey))
+        return string.Empty;
+
+      return _stateStore.TryGetValue(node.TargetEntityStateKey, out var value)
+        ? value
+        : string.Empty;
+    }
+
     private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, string joinNodeIdentifier, int? branchOwnerClientId)
     {
       var previousOwner = _scenarioOwnerClientId;
@@ -3344,6 +3424,9 @@ namespace MultiplayerInfrastructure.Scenario
             break;
           case ScenarioSignalListenerNode signalListener:
             ExecuteSignalListenerNode(signalListener);
+            break;
+          case ScenarioEntityStateSignalBindingNode stateBinding:
+            ExecuteEntityStateSignalBindingNode(stateBinding);
             break;
           case ScenarioDialogueNode dialogue:
             // 브랜치 내 다이얼로그: interactionRequired면 자동 닫힘 없이 입력으로만 닫힌다.

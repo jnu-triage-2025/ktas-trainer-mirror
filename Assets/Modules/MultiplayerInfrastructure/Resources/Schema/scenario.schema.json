@@ -84,7 +84,8 @@
             "ChatPrint",
             "ExecuteCommand",
             "TimeControl",
-            "DisinteractableDialogue"
+            "DisinteractableDialogue",
+            "EntityStateSignalBinding"
           ]
         }
       },
@@ -102,6 +103,21 @@
           },
           "then": {
             "$ref": "#/$defs/ScenarioDisinteractableDialogueNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "EntityStateSignalBinding"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioEntityStateSignalBindingNode"
           }
         },
         {
@@ -1284,6 +1300,72 @@
           },
           "required": [
             "listenerIdentifier"
+          ]
+        }
+      ]
+    },
+    "ScenarioEntityStateSignalBindingNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "EntityStateSignalBinding"
+            },
+            "bindingIdentifier": {
+              "type": "string",
+              "minLength": 1
+            },
+            "operation": {
+              "type": "string",
+              "enum": [
+                "Register",
+                "Unregister"
+              ],
+              "default": "Register"
+            },
+            "targetEntityIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "targetEntityStateKey": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "eventName": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "eventKey": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "outputSignalIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "consumeOnce": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": false
+            }
+          },
+          "required": [
+            "bindingIdentifier"
           ]
         }
       ]

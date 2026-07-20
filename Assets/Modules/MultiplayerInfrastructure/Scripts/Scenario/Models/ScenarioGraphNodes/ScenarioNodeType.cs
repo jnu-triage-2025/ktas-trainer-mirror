@@ -33,5 +33,6 @@ namespace MultiplayerInfrastructure.Scenario
     ExecuteCommand,
     TimeControl,
     DisinteractableDialogue,
+    EntityStateSignalBinding,
   }
 }

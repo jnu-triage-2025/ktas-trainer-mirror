@@ -269,6 +269,10 @@ namespace TriageTrainer.Entity
       UpdateTriageOverheadLabel(level);
 
       ApplyAssessableChangePolicy(level);
+
+      // 세분화 상태 이벤트(OnTriageSubmitted) + 시나리오 바인딩 디스패치.
+      // 서버 권위 컨텍스트에서 발생하므로 시나리오 신호 Raise 가 서버 권위로 동작한다.
+      RaiseTriageSubmittedEvent(level);
     }
 
     // 재노출 정책은 서버 권위 SyncVar(_assessable)를 통해 전 피어에 일관되게 반영한다.
@@ -313,6 +317,9 @@ namespace TriageTrainer.Entity
 
       ApplyAssessableChangePolicy(level);
       UpdateTriageOverheadLabel(level);
+
+      // 오프라인 컨텍스트에서도 세분화 상태 이벤트를 발생시킨다.
+      RaiseTriageSubmittedEvent(level);
     }
 
     // ── 인게임 오버헤드 태그(환자 위 트리아지 표기) ──

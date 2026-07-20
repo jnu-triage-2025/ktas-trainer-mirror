@@ -1,0 +1,109 @@
+{
+  "identifier": "entity_state_signal_binding_debug",
+  "tags": [],
+  "nodes": {
+    "intro_print": {
+      "identifier": "intro_print",
+      "nodeType": "ChatPrint",
+      "message": "[상태 이벤트 바인딩 디버그] 환자 'patient_a' 의 처치/활력/트리아지 상태 이벤트를 시나리오 신호로 변환합니다.",
+      "targets": "UnityConsole, InGameChat",
+      "broadcast": true,
+      "nextIdentifier": "bind_ett_done"
+    },
+    "bind_ett_done": {
+      "identifier": "bind_ett_done",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_ett_done_patient_a",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_a",
+      "eventName": "TreatmentApplied",
+      "eventKey": "EndotrachealTubeInsertDone",
+      "outputSignalIdentifier": "et_tube_done_patient_a",
+      "consumeOnce": true,
+      "nextIdentifier": "bind_triage"
+    },
+    "bind_triage": {
+      "identifier": "bind_triage",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_triage_submitted_patient_a",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_a",
+      "eventName": "TriageSubmitted",
+      "outputSignalIdentifier": "triage_submitted_patient_a",
+      "nextIdentifier": "wait_ett_done"
+    },
+    "wait_ett_done": {
+      "identifier": "wait_ett_done",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.et_tube_done_patient_a"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "nextIdentifier": "print_ett_done",
+      "waitForCondition": true
+    },
+    "print_ett_done": {
+      "identifier": "print_ett_done",
+      "nodeType": "ChatPrint",
+      "message": "[상태 이벤트 바인딩 디버그] 환자 A 기관내 삽관 완료 표시가 적용되어 신호가 발생했습니다.",
+      "targets": "UnityConsole, InGameChat",
+      "broadcast": true,
+      "nextIdentifier": "wait_triage"
+    },
+    "wait_triage": {
+      "identifier": "wait_triage",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.triage_submitted_patient_a"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "nextIdentifier": "print_triage",
+      "waitForCondition": true
+    },
+    "print_triage": {
+      "identifier": "print_triage",
+      "nodeType": "ChatPrint",
+      "message": "[상태 이벤트 바인딩 디버그] 환자 A 트리아지 등급이 제출되어 신호가 발생했습니다.",
+      "targets": "UnityConsole, InGameChat",
+      "broadcast": true,
+      "nextIdentifier": "unbind_triage"
+    },
+    "unbind_triage": {
+      "identifier": "unbind_triage",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_triage_submitted_patient_a",
+      "operation": "Unregister",
+      "nextIdentifier": "done_print"
+    },
+    "done_print": {
+      "identifier": "done_print",
+      "nodeType": "ChatPrint",
+      "message": "[상태 이벤트 바인딩 디버그] 완료. 트리아지 바인딩을 해제했습니다.",
+      "targets": "UnityConsole, InGameChat",
+      "broadcast": true,
+      "nextIdentifier": null
+    }
+  }
+}

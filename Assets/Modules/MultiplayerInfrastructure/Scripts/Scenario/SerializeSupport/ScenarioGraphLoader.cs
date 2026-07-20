@@ -246,6 +246,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioInvokeEventNodeDTO invoke => ConvertInvokeEvent(invoke),
           ScenarioServerInternalSignalNodeDTO internalSignal => ConvertServerInternalSignal(internalSignal),
           ScenarioSignalListenerNodeDTO signalListener => ConvertSignalListener(signalListener),
+          ScenarioEntityStateSignalBindingNodeDTO stateBinding => ConvertEntityStateSignalBinding(stateBinding),
           ScenarioValidatorNodeDTO validator => ConvertValidator(validator),
           ScenarioParallelNodeDTO parallel => ConvertParallel(parallel),
           ScenarioQuestControlNodeDTO questControl => ConvertQuestControl(questControl),
@@ -424,6 +425,23 @@ namespace MultiplayerInfrastructure.Scenario
           SourceSignalIdentifier = dto.SourceSignalIdentifier, OutputSignalIdentifier = dto.OutputSignalIdentifier,
           RequiredSignalIdentifiers = dto.RequiredSignalIdentifiers ?? new List<string>(), ConsumeOnce = dto.ConsumeOnce ?? true,
           NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioEntityStateSignalBindingNode ConvertEntityStateSignalBinding(ScenarioEntityStateSignalBindingNodeDTO dto) =>
+        new ScenarioEntityStateSignalBindingNode
+        {
+          Identifier = dto.Identifier,
+          NextIdentifier = dto.NextIdentifier,
+          BindingIdentifier = dto.BindingIdentifier,
+          Operation = Enum.TryParse(dto.Operation, true, out ScenarioEntityStateSignalBindingOperation operation)
+            ? operation
+            : ScenarioEntityStateSignalBindingOperation.Register,
+          TargetEntityIdentifier = dto.TargetEntityIdentifier,
+          TargetEntityStateKey = dto.TargetEntityStateKey,
+          EventName = dto.EventName,
+          EventKey = dto.EventKey,
+          OutputSignalIdentifier = dto.OutputSignalIdentifier,
+          ConsumeOnce = dto.ConsumeOnce ?? false,
         };
 
     private static ScenarioChatPrintNode ConvertChatPrint(ScenarioChatPrintNodeDTO dto) =>
@@ -1122,6 +1140,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioInvokeEventNode invoke => ConvertToDTO(invoke),
           ScenarioServerInternalSignalNode internalSignal => ConvertToDTO(internalSignal),
           ScenarioSignalListenerNode signalListener => ConvertToDTO(signalListener),
+          ScenarioEntityStateSignalBindingNode stateBinding => ConvertToDTO(stateBinding),
           ScenarioValidatorNode validator => ConvertToDTO(validator),
           ScenarioParallelNode parallel => ConvertToDTO(parallel),
           ScenarioQuestControlNode questControl => ConvertToDTO(questControl),
@@ -1315,6 +1334,23 @@ namespace MultiplayerInfrastructure.Scenario
           // 기본값(true)일 때만 필드를 생략하고, false 는 명시적으로 기록한다.
           // (읽기 측 `dto.ConsumeOnce ?? true` 와 짝을 이뤄 false 가 라운드트립되도록 한다.)
           ConsumeOnce = node.ConsumeOnce ? (bool?)null : false, NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioEntityStateSignalBindingNodeDTO ConvertToDTO(ScenarioEntityStateSignalBindingNode node) =>
+        new ScenarioEntityStateSignalBindingNodeDTO
+        {
+          NodeType = "EntityStateSignalBinding",
+          Identifier = node.Identifier,
+          NextIdentifier = node.NextIdentifier,
+          BindingIdentifier = node.BindingIdentifier,
+          Operation = node.Operation.ToString(),
+          TargetEntityIdentifier = node.TargetEntityIdentifier,
+          TargetEntityStateKey = node.TargetEntityStateKey,
+          EventName = node.EventName,
+          EventKey = node.EventKey,
+          OutputSignalIdentifier = node.OutputSignalIdentifier,
+          // 기본값(false)일 때 생략, true 는 명시 기록(읽기 측 `?? false` 와 짝).
+          ConsumeOnce = node.ConsumeOnce ? true : (bool?)null,
         };
 
     private static ScenarioChatPrintNodeDTO ConvertToDTO(ScenarioChatPrintNode node) =>

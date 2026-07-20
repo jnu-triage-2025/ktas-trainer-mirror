@@ -372,6 +372,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
         Register<ScenarioInvokeEventNode>(ScenarioNodeType.InvokeEvent, (value, output) => AddEvent(value, output, "eventIdentifier", "event-invocation", value.EventIdentifier, true)),
         Register<ScenarioServerInternalSignalNode>(ScenarioNodeType.ServerInternalSignal, NoRequirements),
         Register<ScenarioSignalListenerNode>(ScenarioNodeType.SignalListener, ExtractSignalListener),
+        Register<ScenarioEntityStateSignalBindingNode>(ScenarioNodeType.EntityStateSignalBinding, ExtractEntityStateSignalBinding),
         Register<ScenarioValidatorNode>(ScenarioNodeType.Validator, ExtractValidator),
         Register<ScenarioQuestControlNode>(ScenarioNodeType.QuestControl, ExtractQuest),
         Register<ScenarioQuestWaypointHighlightNode>(ScenarioNodeType.QuestWaypointHighlight, (value, output) => output.Add(value, "waypointIdentifier", "waypoint-highlight", ScenarioRequirementKind.SpatialAnchor, value.WaypointIdentifier, true, ScenarioRequirementAvailability.WhenNodeReached, ScenarioRequirementExpectedSupply.Scene, ScenarioRequirementDirection.Consumes, ScenarioRequirementCapability.HighlightableWaypoint)),
@@ -512,6 +513,23 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       if (node.RequiredSignalIdentifiers == null) return;
       for (var index = 0; index < node.RequiredSignalIdentifiers.Count; index++)
         AddRuntimeSignal(node, output, $"requiredSignalIdentifiers[{index}]", "signal-listener-required", node.RequiredSignalIdentifiers[index], ScenarioRequirementDirection.Consumes, ScenarioRequirementExpectedSupply.Gameplay);
+    }
+
+    private static void ExtractEntityStateSignalBinding(ScenarioEntityStateSignalBindingNode node, ScenarioRequirementBuilder output)
+    {
+      // Register 시에만 대상 엔티티가 필요하다(Unregister 는 식별자만으로 해제).
+      bool requiresTarget = node.Operation == ScenarioEntityStateSignalBindingOperation.Register;
+
+      // 대상 엔티티는 씬에 존재해야 하며, 소비되지 않는다(상태 이벤트를 관찰만 한다).
+      output.Add(node, "targetEntityIdentifier", "entity-state-binding-target-not-consumed",
+        ScenarioRequirementKind.Entity, node.TargetEntityIdentifier, requiresTarget,
+        ScenarioRequirementAvailability.NotConsumed, ScenarioRequirementExpectedSupply.Scene,
+        ScenarioRequirementDirection.Consumes);
+
+      // 출력 신호는 이 노드가 시나리오 신호로 생산한다.
+      AddRuntimeSignal(node, output, "outputSignalIdentifier", "entity-state-binding-output",
+        node.OutputSignalIdentifier, ScenarioRequirementDirection.Produces,
+        ScenarioRequirementExpectedSupply.Scenario);
     }
 
     private static void ExtractCombine(ScenarioCombineItemNode node, ScenarioRequirementBuilder output)
