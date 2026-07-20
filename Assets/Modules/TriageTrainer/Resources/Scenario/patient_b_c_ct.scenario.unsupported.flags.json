@@ -28,8 +28,13 @@
       "sig.click_patient_b", "sig.click_patient_c", "sig.select_patient_b", "sig.select_patient_c",
       "sig.grab_stretcher_patient_b", "sig.grab_stretcher_patient_c"
     ],
+    "wiredByTreatmentApplication_perPatient": [
+      "sig.apply_gauze_patient_b", "sig.apply_gauze_patient_c",
+      "sig.apply_plaster_on_gauze_patient_b", "sig.apply_plaster_on_gauze_patient_c",
+      "sig.wear_glove_patient_b", "sig.wear_glove_patient_c",
+      "sig.apply_electrode_patient_b", "sig.apply_electrode_patient_c"
+    ],
     "notWired_gameplayMissing": [
-      "sig.apply_electrode", "sig.apply_gauze", "sig.apply_plaster_on_gauze", "sig.wear_glove",
       "sig.insert_iv_b_right", "sig.insert_iv_c_left",
       "sig.check_gcs_patient_b", "sig.check_gcs_patient_c", "sig.check_vital_patient_b",
       "sig.check_vital_patient_c", "sig.close_vital_ui_b", "sig.close_vital_ui_c",
@@ -78,6 +83,10 @@
     {
       "date": "2026-06-25",
       "change": "G-6 실적용: 루브릭 매핑 핵심 게이트 7개(V038,V041,V058,V050,V048,V060,V069)에 waitTimeoutSeconds=120 + onWaitTimeout=ForceAdvance 부여. 미배선 신호로 인한 hang 제거 + RubricRecorder 미수행 자동 기록 활성화."
+    },
+    {
+      "date": "2026-07-20",
+      "change": "SIGNAL-BC-3 부분 해결: 처치 적용 결과 신호(장갑/거즈/플라스터/전극)를 환자별로 분리. ItemUseEffects 가 공용 신호 + '{id}' 치환 환자별 신호를 함께 발신하고, B/C Validator(V043/V057/V058/V059, V062/V076/V077/V078)가 sig.apply_*_patient_b/c 를 대기하도록 수정. notWired 의 sig.apply_electrode/apply_gauze/apply_plaster_on_gauze/wear_glove 를 wiredByTreatmentApplication_perPatient 로 이동."
     }
   ]
 }

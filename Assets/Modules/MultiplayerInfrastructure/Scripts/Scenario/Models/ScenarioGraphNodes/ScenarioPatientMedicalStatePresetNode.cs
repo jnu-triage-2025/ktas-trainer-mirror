@@ -56,6 +56,8 @@ namespace MultiplayerInfrastructure.Scenario
   /// <item><term>의료 상태/혈압</term> <term><see cref="BloodPressureDiastolic"/></term><term>int?</term></item>
   /// <item><term>의료 상태/피부</term> <term><see cref="SkinColorHue"/></term>     <term>SkinColorHue?</term></item>
   /// <item><term>의료 상태/피부</term> <term><see cref="SkinTemperatureType"/></term><term>SkinTemperatureType?</term></item>
+  /// <item><term>의료 상태/체온</term> <term><see cref="BodyTemperatureCelsius"/></term><term>float?</term></item>
+  /// <item><term>의료 상태/모니터</term><term><see cref="Spo2"/></term>            <term>int?</term></item>
   /// <item><term>의료 상태</term>      <term><see cref="IsCardiacArrest"/></term>  <term>bool?</term></item>
   /// </list>
   /// </para>
@@ -189,6 +191,22 @@ namespace MultiplayerInfrastructure.Scenario
 
     /// <summary>피부 표면 온도 유형. null이면 현재 값 유지.</summary>
     public SkinTemperatureType? SkinTemperatureType { get; set; }
+
+    // ── 체온(BodyTemperature) ──
+
+    /// <summary>
+    /// 심부 체온(°C). null이면 현재 값 유지, -1이면 측정 불가.
+    /// 적용 시 <c>PatientMedicalState.bodyTemperature.celsius</c> 와 모니터 체온(T1)에 반영된다.
+    /// </summary>
+    public float? BodyTemperatureCelsius { get; set; }
+
+    // ── 산소포화도(SpO2) ──
+
+    /// <summary>
+    /// 산소포화도(SpO2, %). null이면 현재 값 유지, -1이면 측정 불가.
+    /// 적용 시 모니터 numerics/pleth 의 SpO2 에 반영된다.
+    /// </summary>
+    public int? Spo2 { get; set; }
 
     // ── 기타 의료 상태 ──
 

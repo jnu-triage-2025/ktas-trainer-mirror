@@ -42,6 +42,8 @@ namespace MultiplayerInfrastructure.Scenario
   ///   "bloodPressureDiastolic": 40,
   ///   "skinColorHue": "Pale",
   ///   "skinTemperatureType": "Cold",
+  ///   "bodyTemperatureCelsius": 35.9,
+  ///   "spo2": 82,
   ///   "isCardiacArrest": false,
   ///   "nextIdentifier": "D005"
   /// }
@@ -182,6 +184,18 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>피부 표면 온도 유형 문자열. null이면 현재 값 유지.</summary>
     [JsonPropertyName("skinTemperatureType")]
     public string SkinTemperatureType { get; set; }
+
+    // ── 체온(BodyTemperature) ──
+
+    /// <summary>심부 체온(°C). null이면 현재 값 유지, -1이면 측정 불가. 모니터 체온(T1)에도 반영된다.</summary>
+    [JsonPropertyName("bodyTemperatureCelsius")]
+    public float? BodyTemperatureCelsius { get; set; }
+
+    // ── 산소포화도(SpO2) ──
+
+    /// <summary>산소포화도(SpO2, %). null이면 현재 값 유지, -1이면 측정 불가. 모니터 numerics/pleth SpO2에 반영된다.</summary>
+    [JsonPropertyName("spo2")]
+    public int? Spo2 { get; set; }
 
     // ── 기타 의료 상태 ──
 

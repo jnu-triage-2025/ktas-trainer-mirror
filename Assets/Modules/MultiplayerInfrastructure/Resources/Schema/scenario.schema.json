@@ -84,7 +84,9 @@
             "ChatPrint",
             "ExecuteCommand",
             "TimeControl",
-            "DisinteractableDialogue"
+            "DisinteractableDialogue",
+            "EntityStateSignalBinding",
+            "SignalCounter"
           ]
         }
       },
@@ -102,6 +104,36 @@
           },
           "then": {
             "$ref": "#/$defs/ScenarioDisinteractableDialogueNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "EntityStateSignalBinding"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioEntityStateSignalBindingNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "SignalCounter"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioSignalCounterNode"
           }
         },
         {
@@ -1284,6 +1316,121 @@
           },
           "required": [
             "listenerIdentifier"
+          ]
+        }
+      ]
+    },
+    "ScenarioEntityStateSignalBindingNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "EntityStateSignalBinding"
+            },
+            "bindingIdentifier": {
+              "type": "string",
+              "minLength": 1
+            },
+            "operation": {
+              "type": "string",
+              "enum": [
+                "Register",
+                "Unregister"
+              ],
+              "default": "Register"
+            },
+            "targetEntityIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "targetEntityStateKey": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "eventName": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "eventKey": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "outputSignalIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "consumeOnce": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": false
+            }
+          },
+          "required": [
+            "bindingIdentifier"
+          ]
+        }
+      ]
+    },
+    "ScenarioSignalCounterNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "SignalCounter"
+            },
+            "counterIdentifier": {
+              "type": "string",
+              "minLength": 1
+            },
+            "operation": {
+              "type": "string",
+              "enum": [
+                "Register",
+                "Unregister"
+              ],
+              "default": "Register"
+            },
+            "sourceSignalPrefix": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "threshold": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "default": 1
+            },
+            "outputSignalIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "counterIdentifier"
           ]
         }
       ]
@@ -2761,6 +2908,18 @@
                 "Cold",
                 "Normal",
                 null
+              ]
+            },
+            "bodyTemperatureCelsius": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "spo2": {
+              "type": [
+                "integer",
+                "null"
               ]
             },
             "isCardiacArrest": {

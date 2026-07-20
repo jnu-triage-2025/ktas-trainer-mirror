@@ -1,3 +1,4 @@
+using System;
 using FishNet.Object;
 using System.Collections.Generic;
 using UnityEngine;
@@ -76,6 +77,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private ECGParameters _targetParameters;
     private float _transitionTimer;
     private ECGRuntimeState _ecgRuntimeState;
+    private Action _closeRequested;
 
     void OnEnable()
     {
@@ -143,7 +145,43 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       root.Add(container);
       SetVisualTreeNonInteractive(root);
+      AddCloseButton(root);
       ClearRuntimeMonitorPanelSelection();
+    }
+
+    /// <summary>
+    /// 시나리오가 모니터를 열 때 설정하는 종료 콜백입니다. UI 표현과 시나리오 완료
+    /// 신호의 결합은 호출자에게 두어, 모니터 자체는 특정 환자/시나리오 식별자를 알지 않습니다.
+    /// </summary>
+    public void SetCloseRequestedHandler(Action handler)
+    {
+      _closeRequested = handler;
+    }
+
+    private void AddCloseButton(VisualElement root)
+    {
+      var closeButton = new Button(RequestClose)
+      {
+        text = "닫기",
+        name = "PatientMonitorCloseButton",
+        focusable = false,
+        pickingMode = PickingMode.Position,
+      };
+
+      closeButton.style.position = Position.Absolute;
+      closeButton.style.top = 8f;
+      closeButton.style.right = 8f;
+      closeButton.style.minWidth = 48f;
+      closeButton.style.height = 26f;
+      closeButton.style.fontSize = 12f;
+      closeButton.style.backgroundColor = new StyleColor(new Color(0.28f, 0.08f, 0.08f, 0.92f));
+      closeButton.style.color = Color.white;
+      root.Add(closeButton);
+    }
+
+    private void RequestClose()
+    {
+      _closeRequested?.Invoke();
     }
 
     private static void SetVisualTreeNonInteractive(VisualElement root)
@@ -356,7 +394,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         ecgNextBeatInterval = baseInterval;
         if (_currentParameters.irregularity > 0f && ecgNextBeatInterval != float.MaxValue)
         {
-          float variance = (Random.value - 0.5f) * 2f * _currentParameters.irregularity * baseInterval * 0.5f;
+          float variance = (UnityEngine.Random.value - 0.5f) * 2f * _currentParameters.irregularity * baseInterval * 0.5f;
           ecgNextBeatInterval += variance;
           ecgNextBeatInterval = Mathf.Max(0.2f, ecgNextBeatInterval);
         }
@@ -537,6 +575,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       bool bpmUnavailable = IsUnavailable(numerics.bpm);
       bool prUnavailable = IsUnavailable(numerics.pulseRate);
       bool nibpUnavailable = IsUnavailable(monitorNIBP.systolic) || IsUnavailable(monitorNIBP.diastolic);
+      // SpO2는 numerics.spo2(> 0f)를 우선하고, 없으면 pleth.spo2로 폴백한다.
+      // 두 값이 모두 측정 불가(-1)이면 -?- 로 표시한다.
+      bool spo2Unavailable = IsUnavailable(numerics.spo2) && IsUnavailable(monitorPleth.spo2);
 
       float bpmValue = numerics.bpm > 0f ? numerics.bpm : _currentParameters.bpm;
       float prValue = numerics.pulseRate > 0f ? numerics.pulseRate : monitorPleth.bpm;
@@ -550,7 +591,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       if (plethValueLabel != null)
       {
-        plethValueLabel.text = $"SpO2 {Mathf.RoundToInt(monitorPleth.spo2)}%";
+        plethValueLabel.text = spo2Unavailable
+          ? $"SpO2 {UnavailableDisplay}"
+          : $"SpO2 {Mathf.RoundToInt(monitorPleth.spo2)}%";
       }
 
       if (artValueLabel != null)
@@ -596,7 +639,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       if (spo2NumericLabel != null)
       {
-        spo2NumericLabel.text = $"{Mathf.RoundToInt(spo2Value)}%";
+        spo2NumericLabel.text = spo2Unavailable ? UnavailableDisplay : $"{Mathf.RoundToInt(spo2Value)}%";
       }
 
       if (artNumericLabel != null)

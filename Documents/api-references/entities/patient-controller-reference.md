@@ -100,6 +100,21 @@
 
 리스너는 `HandleMedicalStateChanged(PatientMedicalState state)`를 통해 스냅샷을 전달받는다.
 
+### 5.2.1 세분화 상태 이벤트 (State Events)
+
+`PatientController.StateEvents.cs` (부분 클래스)가 상태 변경을 세분화된 C# 이벤트로 노출하고, 범용 `IScenarioEntityStateEventSource` 를 구현한다. 값은 기존 저장소가 그대로 보유하며 이 파일은 변경 시점만 이벤트로 노출한다(값 이중화 없음).
+
+| C# 이벤트 | 인자 | 상태 이벤트 이름 | 발생 지점 |
+|---|---|---|---|
+| `OnTreatmentApplied` | `TreatmentDisplay` | `TreatmentApplied` | 처치 표시 false→true 전이 |
+| `OnTreatmentRemoved` | `TreatmentDisplay` | `TreatmentRemoved` | 처치 표시 true→false 전이 |
+| `OnVitalChanged` | `PatientMedicalState` | `VitalChanged` | 의료 상태 변경 |
+| `OnTriageSubmitted` | `TriageLevel` | `TriageSubmitted` | 트리아지 확정 |
+
+시나리오 그래프는 `EntityStateSignalBinding` 노드로 이 이벤트를 시나리오 신호로 변환할 수 있다. 상세: [IScenarioEntityStateEventSource API](../MultiplayerInfrastructure.Entity.IScenarioEntityStateEventSource.md), [ScenarioGraphNodes — EntityStateSignalBinding](../MultiplayerInfrastructure.Scenario.ScenarioGraphNodes.md).
+
+`GetStateEventNames()` 는 지원 이벤트 이름 목록을 런타임에 반환한다(검토/검증용).
+
 ### 5.3 모니터 파라미터 동기화
 
 다음 계열 프로퍼티 변경은 로컬 알림과 네트워크 동기화를 함께 수행한다.

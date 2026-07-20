@@ -19,6 +19,9 @@
 - [MultiplayerInfrastructure.Command.ChatCommandExtensions.md](./MultiplayerInfrastructure.Command.ChatCommandExtensions.md): MultiplayerInfrastructure.Command.ChatCommandExtensions
 - [MultiplayerInfrastructure.Command.TargetSelectorResolver.md](./MultiplayerInfrastructure.Command.TargetSelectorResolver.md): API 레퍼런스: `MultiplayerInfrastructure.Command.TargetSelectorResolver`
 - [MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md](./MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md): MultiplayerInfrastructure.Datapack.DatapackRuntimeService
+- [MultiplayerInfrastructure.Entity.IScenarioEntityStateEventSource.md](./MultiplayerInfrastructure.Entity.IScenarioEntityStateEventSource.md): API 레퍼런스: `MultiplayerInfrastructure.Entity.IScenarioEntityStateEventSource` (엔티티 상태 이벤트 → 시나리오 신호)
+- [MultiplayerInfrastructure.Entity.IScenarioIdentifiedEntity.md](./MultiplayerInfrastructure.Entity.IScenarioIdentifiedEntity.md): API 레퍼런스: `MultiplayerInfrastructure.Entity.IScenarioIdentifiedEntity` (엔티티 시나리오 식별자 노출)
+- [MultiplayerInfrastructure.Entity.IScenarioTriageAssessTarget.md](./MultiplayerInfrastructure.Entity.IScenarioTriageAssessTarget.md): API 레퍼런스: `MultiplayerInfrastructure.Entity.IScenarioTriageAssessTarget`
 - [MultiplayerInfrastructure.InteractableEntity.md](./MultiplayerInfrastructure.InteractableEntity.md): API 레퍼런스: `MultiplayerInfrastructure.InteractableEntity`
 - [MultiplayerInfrastructure.Item.Item.md](./MultiplayerInfrastructure.Item.Item.md): MultiplayerInfrastructure.Item.Item (Current)
 - [MultiplayerInfrastructure.ItemSystem.ItemCombineRecipe.md](./MultiplayerInfrastructure.ItemSystem.ItemCombineRecipe.md): API 레퍼런스: `MultiplayerInfrastructure.ItemSystem.ItemCombineRecipe` (아이템 자동 조합)
@@ -33,7 +36,7 @@
 - [MultiplayerInfrastructure.Registry.Problem.md](./MultiplayerInfrastructure.Registry.Problem.md): API 레퍼런스: `MultiplayerInfrastructure.Registry` (Problem 확장)
 - [MultiplayerInfrastructure.Registry.md](./MultiplayerInfrastructure.Registry.md): API 레퍼런스: `MultiplayerInfrastructure.Registry`
 - [MultiplayerInfrastructure.Scenario.ScenarioController.md](./MultiplayerInfrastructure.Scenario.ScenarioController.md): API 레퍼런스: `MultiplayerInfrastructure.Scenario.ScenarioController`
-- [MultiplayerInfrastructure.Scenario.ScenarioGraphNodes.md](./MultiplayerInfrastructure.Scenario.ScenarioGraphNodes.md): API 레퍼런스: ScenarioGraph 노드 타입 전체 레퍼런스 (29종)
+- [MultiplayerInfrastructure.Scenario.ScenarioGraphNodes.md](./MultiplayerInfrastructure.Scenario.ScenarioGraphNodes.md): API 레퍼런스: ScenarioGraph 노드 타입 전체 레퍼런스 (33종)
 - [MultiplayerInfrastructure.Scenario.Requirements.md](./MultiplayerInfrastructure.Scenario.Requirements.md): API 레퍼런스: `MultiplayerInfrastructure.Scenario.Requirements`
 - [MultiplayerInfrastructure.Editor.ScenarioGraphAuthoringWindow.md](./MultiplayerInfrastructure.Editor.ScenarioGraphAuthoringWindow.md): API 레퍼런스: `MultiplayerInfrastructure.Editor.ScenarioGraphAuthoringWindow`
 - [MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md](./MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md): API 레퍼런스: `MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry`

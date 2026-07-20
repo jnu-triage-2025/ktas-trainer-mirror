@@ -57,6 +57,10 @@
 | `ChatPrint` | `ScenarioChatPrintNode` | 채팅/콘솔 텍스트 출력 |
 | `ExecuteCommand` | `ScenarioExecuteCommandNode` | 인게임 커맨드 실행 |
 | `TimeControl` | `ScenarioTimeControlNode` | HUD 타이머 제어 |
+| `SignalListener` | `ScenarioSignalListenerNode` | 게임플레이 신호 → 조건부 시나리오 신호 변환 리스너 |
+| `EntityStateSignalBinding` | `ScenarioEntityStateSignalBindingNode` | 엔티티 상태 이벤트 → 시나리오 신호 바인딩 |
+| `SignalCounter` | `ScenarioSignalCounterNode` | 접두사 매칭 distinct 신호 수 계측 → 임계치 도달 시 신호 발신 |
+| `DisinteractableDialogue` | `ScenarioDisinteractableDialogueNode` | 상호작용 불가 안내 대사 표시 |
 
 ---
 
@@ -774,13 +778,15 @@
 | `consciousnessLocLabel` | `LOCLabel?` | 의식수준 5단계 |
 | `consciousnessPupillaryResponse` | `PupillaryResponse?` | 동공 반사 상태 |
 | `respirationAwRR` | `int?` | 분당 호흡수 (-1: 호흡 없음) |
-| `respirationTypeValue` | `RespirationType?` | 호흡 유형 |
+| `respirationType` | `RespirationType?` | 호흡 유형 (JSON 키는 `respirationType`, 도메인 프로퍼티는 `RespirationTypeValue`) |
 | `pulseRate` | `int?` | 분당 맥박수 (-1: 맥박 없음) |
 | `pulseForceType` | `BloodPulseForceType?` | 맥박 세기 유형 |
 | `bloodPressureSystolic` | `int?` | 수축기 혈압(mmHg, -1: 측정 불가) |
 | `bloodPressureDiastolic` | `int?` | 이완기 혈압(mmHg, -1: 측정 불가) |
 | `skinColorHue` | `SkinColorHue?` | 피부 색조 |
 | `skinTemperatureType` | `SkinTemperatureType?` | 피부 표면 온도 유형 |
+| `bodyTemperatureCelsius` | `float?` | 심부 체온(°C, -1: 측정 불가). 모니터 체온(T1)에 반영 |
+| `spo2` | `int?` | 산소포화도(%, -1: 측정 불가). 모니터 numerics/pleth SpO2에 반영 |
 | `isCardiacArrest` | `bool?` | 심정지 여부 |
 
 ---
@@ -918,6 +924,112 @@
 | `Remove` | timerId | 타이머 삭제 |
 
 **주의:** 카운트다운이 0에 도달해도 자동 숨김이 없습니다. `Hide` 또는 `Remove` 노드를 별도로 배치해야 합니다.
+
+---
+
+### 3.30 `SignalListener` — 게임플레이 신호 → 조건부 시나리오 신호 변환
+
+게임플레이가 올린 신호(source)를 관찰하여, 선언된 전제 신호(required)가 모두 올라와 있을 때만 후속 신호(output)를 발신하는 리스너를 등록/해제합니다. 런타임 엔진: `ScenarioConditionalSignalListeners`.
+
+```json
+{
+  "nodeType": "SignalListener",
+  "identifier": "listen_gauze_done",
+  "nextIdentifier": "next",
+  "listenerIdentifier": "gauze_done_a",
+  "operation": "Register",
+  "sourceSignalIdentifier": "apply_gauze_patient_a",
+  "outputSignalIdentifier": "gauze_ready_a",
+  "requiredSignalIdentifiers": ["wear_glove_patient_a"],
+  "consumeOnce": true
+}
+```
+
+| 필드 | 타입 | 기본값 | 설명 |
+|---|---|---|---|
+| `listenerIdentifier` | `string` | — | 리스너 식별자(등록/해제 매칭, 필수). 동일 식별자 재등록은 교체 |
+| `operation` | `ScenarioSignalListenerOperation` | `Register` | `Register` / `Unregister` |
+| `sourceSignalIdentifier` | `string` | — | 관찰할 게임플레이 신호 |
+| `outputSignalIdentifier` | `string` | — | source 발생 + required 충족 시 발신할 신호 |
+| `requiredSignalIdentifiers` | `string[]` | `[]` | 모두 올라와 있어야 output 이 발신되는 전제 신호 |
+| `consumeOnce` | `bool` | `true` | true 이면 1회 발신 후 자동 해제 |
+
+---
+
+### 3.31 `EntityStateSignalBinding` — 엔티티 상태 이벤트 → 시나리오 신호 바인딩
+
+대상 엔티티가 구현한 `IScenarioEntityStateEventSource` 의 명명된 상태 이벤트(예: 처치 적용, 활력 변경, 트리아지 제출)를 관찰하여, 발생 시 시나리오 신호를 발신합니다. 런타임 추적/정리: `ScenarioEntityStateSignalBindings`.
+
+```json
+{
+  "nodeType": "EntityStateSignalBinding",
+  "identifier": "bind_ett_done",
+  "nextIdentifier": "next",
+  "bindingIdentifier": "bind_ett_done_a",
+  "operation": "Register",
+  "targetEntityIdentifier": "patient_a",
+  "eventName": "TreatmentApplied",
+  "eventKey": "EndotrachealTubeInsertDone",
+  "outputSignalIdentifier": "et_tube_done_patient_a",
+  "consumeOnce": true
+}
+```
+
+| 필드 | 타입 | 기본값 | 설명 |
+|---|---|---|---|
+| `bindingIdentifier` | `string` | — | 바인딩 식별자(등록/해제 매칭, 필수). 동일 식별자 재등록은 교체 |
+| `operation` | `ScenarioEntityStateSignalBindingOperation` | `Register` | `Register` / `Unregister` |
+| `targetEntityIdentifier` | `string` | — | 대상 엔티티 식별자(직접). 비면 `targetEntityStateKey` 사용 |
+| `targetEntityStateKey` | `string` | — | 상태 저장소에서 대상 식별자를 조회할 키(간접) |
+| `eventName` | `string` | — | 관찰할 상태 이벤트 이름(구현체 정의) |
+| `eventKey` | `string` | — | 이벤트 세부 대상 필터. 비면 모든 발생에 매칭 |
+| `outputSignalIdentifier` | `string` | — | 이벤트 발생(+eventKey 매칭) 시 발신할 신호 |
+| `consumeOnce` | `bool` | `false` | true 이면 1회 발신 후 자동 해제 |
+
+**환자(`PatientController`)가 제공하는 `eventName`:**
+
+| eventName | eventKey(대상) | 발생 시점 |
+|---|---|---|
+| `TreatmentApplied` | 처치 표시 항목명(`TreatmentDisplay`) | 처치 표시가 새로 켜질 때 |
+| `TreatmentRemoved` | 처치 표시 항목명 | 처치 표시가 꺼질 때 |
+| `VitalChanged` | (없음) | 의료 상태 변경 시 |
+| `TriageSubmitted` | 트리아지 등급명(`TriageLevel`) | 트리아지 확정 시 |
+
+> 이벤트는 서버(호스트) 권위 상태 적용 지점에서 발생하므로 신호 발신이 전 피어에 일관되게 전파됩니다. 관련 인터페이스: [`IScenarioEntityStateEventSource`](#) (`Assets/Modules/MultiplayerInfrastructure/Scripts/Entity/IScenarioEntityStateEventSource.cs`).
+
+---
+
+### 3.32 `SignalCounter` — 접두사 매칭 distinct 신호 계측
+
+접두사(`sourceSignalPrefix`)로 시작하는 **서로 다른(distinct)** 시나리오 신호의 개수를 세어, 임계치(`threshold`)에 도달하면 출력 신호를 1회 발신합니다. 시나리오 신호는 sticky 이므로 "같은 신호 N번"은 셀 수 없고, "접두사 매칭 distinct 신호 수"를 셉니다. 런타임 엔진: `ScenarioSignalCounters`.
+
+```json
+{
+  "nodeType": "SignalCounter",
+  "identifier": "count_triage_arrivals",
+  "nextIdentifier": "next",
+  "counterIdentifier": "triage_headcount",
+  "operation": "Register",
+  "sourceSignalPrefix": "enter_triage_zone_",
+  "threshold": 3,
+  "outputSignalIdentifier": "all_arrived"
+}
+```
+
+| 필드 | 타입 | 기본값 | 설명 |
+|---|---|---|---|
+| `counterIdentifier` | `string` | — | 카운터 식별자(등록/해제 매칭, 필수). 동일 식별자 재등록은 교체 |
+| `operation` | `ScenarioSignalCounterOperation` | `Register` | `Register` / `Unregister` |
+| `sourceSignalPrefix` | `string` | — | 셀 대상 신호 접두사(정규화 후 매칭; 예: `enter_triage_zone_`) |
+| `threshold` | `int` | `1` | 매칭 distinct 신호 수가 이 값 이상이면 출력 발신(최소 1) |
+| `outputSignalIdentifier` | `string` | — | 임계치 도달 시 발신할 신호 |
+
+**동작 요약:**
+- 등록 시점에 이미 올라온 매칭 신호도 초기 카운트에 포함합니다.
+- 임계치 도달 시 출력 신호를 발신하고 카운터를 자동 해제(1회성)합니다.
+- 재진입/호스트 이중 전달은 큐 기반 디스패치로 방어합니다.
+
+**활용 예:** 트리아지 구역 도착 3명(`enter_triage_zone_*`, threshold=3), 환자 A 18G 2개(`insert_iv_patient_a_*`, threshold=2).
 
 ---
 

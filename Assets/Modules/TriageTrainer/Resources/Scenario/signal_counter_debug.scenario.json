@@ -1,0 +1,53 @@
+{
+  "identifier": "signal_counter_debug",
+  "tags": [],
+  "nodes": {
+    "intro_print": {
+      "identifier": "intro_print",
+      "nodeType": "ChatPrint",
+      "message": "[시그널 카운터 디버그] 접두사 'enter_triage_zone_' 로 시작하는 서로 다른 신호 3개가 올라오면 all_arrived 신호를 발생시킵니다. 테스트: /scenario signal enter_triage_zone_patient_b (그리고 _patient_c, _dummy_b)",
+      "targets": "UnityConsole, InGameChat",
+      "broadcast": true,
+      "nextIdentifier": "register_counter"
+    },
+    "register_counter": {
+      "identifier": "register_counter",
+      "nodeType": "SignalCounter",
+      "counterIdentifier": "triage_headcount",
+      "operation": "Register",
+      "sourceSignalPrefix": "enter_triage_zone_",
+      "threshold": 3,
+      "outputSignalIdentifier": "all_arrived",
+      "nextIdentifier": "wait_all_arrived"
+    },
+    "wait_all_arrived": {
+      "identifier": "wait_all_arrived",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.all_arrived"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "nextIdentifier": "done_print",
+      "waitForCondition": true
+    },
+    "done_print": {
+      "identifier": "done_print",
+      "nodeType": "ChatPrint",
+      "message": "[시그널 카운터 디버그] 3개 도착 신호가 모두 감지되어 all_arrived 가 발생했습니다.",
+      "targets": "UnityConsole, InGameChat",
+      "broadcast": true,
+      "nextIdentifier": null
+    }
+  }
+}

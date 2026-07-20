@@ -76,25 +76,30 @@ namespace TriageTrainer.Entity
     private static readonly ItemUseEffect CervicalCollarEffect =
       new(TreatmentDisplay.CervicalCollarOnNeck, "apply_stabilizer_{id}");
     private static readonly ItemUseEffect NasalCannulaEffect =
-      new(TreatmentDisplay.NasalCannulaApplied, "apply_nasal_cannula", "click_nasal");
+      new(TreatmentDisplay.NasalCannulaApplied, "apply_nasal_cannula");
 
     // ── 아이템 식별자 → 효과(처치표현 + 신호) 기본 매핑(하드코딩, Reset 무관) ──
     //
     // 부위가 환자별로 고정되어 있고(프리팹 hierarchy 반영) 컨트롤러는 플래그만 켜면 되므로,
     // 거즈/플라스터는 흉부 기준 표현을 기본으로 둔다(다른 부위가 필요한 환자는 해당 플래그를
     // 추가 매핑하거나 향후 부위 조준으로 확장). 신호는 시나리오 게이트 조건명과 일치시킨다.
+    //
+    // 환자별 결과 신호(SIGNAL-BC-3): 다수 환자가 같은 처치를 받는 흐름(B/C)에서는 공용 sticky 신호
+    // (예: apply_gauze) 하나로는 B가 올린 신호로 C 게이트가 무행동 통과하는 문제가 있다. 거즈/플라스터의
+    // 환자별 신호는 이 컨트롤러가 직접 만들지 않고, patient_b_c_ct 그래프의 EntityStateSignalBinding 이
+    // TreatmentApplied 상태 전이를 관찰해 발신한다. 따라서 신호의 대상 환자는 Scenario 데이터에서 명시된다.
     private static readonly Dictionary<string, ItemUseEffect> ItemUseEffects = new()
     {
       // 부착형(시각 표현 동반)
       { "gauze",          new ItemUseEffect(TreatmentDisplay.GauzePatchedOnThorax, "apply_gauze") },
-      { "plaster",        new ItemUseEffect(TreatmentDisplay.GauzeDressingDoneOnThorax, "apply_plaster_on_gauze", "apply_plaster_on_intu") },
-      { "gloves",         new ItemUseEffect(TreatmentDisplay.None, "wear_glove") },
+      { "plaster",        new ItemUseEffect(TreatmentDisplay.GauzeDressingDoneOnThorax, "apply_plaster_on_gauze", "apply_plaster_on_intu", "apply_plaster_on_intu_{id}") },
+      { "gloves",         new ItemUseEffect(TreatmentDisplay.None, "wear_glove", "wear_glove_{id}") },
       // 실제 아이템 식별자(cervical_collar / nasalcannula)가 프로덕션 경로의 키.
       // 구 명칭(neckstabilizer / nasal)은 디버그 훅(Debug_ApplyItemUse) 호환용 별칭이며,
       // 반드시 동일 인스턴스를 공유해 신호/표현이 갈라지지 않게 한다.
       { "cervical_collar", CervicalCollarEffect },
       { "neckstabilizer",  CervicalCollarEffect },
-      { "electrode",      new ItemUseEffect(TreatmentDisplay.None, "apply_electrode") },
+      { "electrode",      new ItemUseEffect(TreatmentDisplay.None, "apply_electrode", "apply_electrode_{id}") },
       { "nasalcannula",   NasalCannulaEffect },
       { "nasal",          NasalCannulaEffect },
 
@@ -116,8 +121,9 @@ namespace TriageTrainer.Entity
           || !ItemUseEffects.TryGetValue(itemIdentifier, out var effect))
         return false;
 
-      if (effect.Display != TreatmentDisplay.None)
-        ShowTreatmentDisplay(effect.Display);
+      TreatmentDisplay resolvedDisplay = ResolveTreatmentDisplayForPatient(effect.Display);
+      if (resolvedDisplay != TreatmentDisplay.None)
+        ShowTreatmentDisplay(resolvedDisplay);
 
       bool raised = false;
       if (effect.SignalTemplates != null)
@@ -133,11 +139,34 @@ namespace TriageTrainer.Entity
         }
       }
 
-      return raised || effect.Display != TreatmentDisplay.None;
+      return raised || resolvedDisplay != TreatmentDisplay.None;
     }
 
     /// <summary>
-    /// 신호 템플릿의 "{id}" 를 현재 환자 Identifier 로 치환한다(없으면 "{id}" 제거).
+    /// 거즈/드레싱의 기본 표현은 환자 A의 흉부 손상 기준으로 작성돼 있다. 환자 B/C는
+    /// 시나리오 정의상 좌측 상완 손상이므로 같은 item use가 해당 환자의 상태에는 좌측 상완
+    /// 전이를 만들어야 한다. 이 분기는 표시 전용 데이터에 임상 상태를 중복하지 않고,
+    /// 컨트롤러에서 대상 환자의 상태 전이만 선택한다.
+    /// </summary>
+    private TreatmentDisplay ResolveTreatmentDisplayForPatient(TreatmentDisplay display)
+    {
+      bool isPatientBOrC = string.Equals(Identifier, "patient_b", System.StringComparison.Ordinal)
+                           || string.Equals(Identifier, "patient_c", System.StringComparison.Ordinal);
+      if (!isPatientBOrC)
+        return display;
+
+      return display switch
+      {
+        TreatmentDisplay.GauzePatchedOnThorax => TreatmentDisplay.GauzePatchedOnLeftArm,
+        TreatmentDisplay.GauzeDressingDoneOnThorax => TreatmentDisplay.GauzeDressingDoneOnLeftArm,
+        _ => display,
+      };
+    }
+
+    /// <summary>
+    /// 신호 템플릿의 "{id}" 를 현재 환자 Identifier 로 치환한다.
+    /// "{id}" 를 포함하는 템플릿인데 환자 Identifier 가 비어 있으면, 잘못된(예: "apply_gauze_")
+    /// 환자별 신호가 발신되지 않도록 빈 문자열을 반환해 호출부가 건너뛰게 한다.
     /// </summary>
     private string ResolveSignalTemplate(string template)
     {
@@ -145,7 +174,10 @@ namespace TriageTrainer.Entity
         return template;
 
       string id = Identifier;
-      return template.Replace("{id}", string.IsNullOrWhiteSpace(id) ? string.Empty : id);
+      if (string.IsNullOrWhiteSpace(id))
+        return string.Empty;
+
+      return template.Replace("{id}", id);
     }
 
     /// <summary>
@@ -204,11 +236,17 @@ namespace TriageTrainer.Entity
       if (!IsTreatmentDisplaySupported(state, display))
         return;
 
+      // 실제 플래그 전이(false→true / true→false)일 때만 상태 이벤트를 발생시킨다.
+      bool previous = GetDisplayStateFlag(state, display, fromSupports: false);
+
       SetDisplayStateFlag(state, display, active);
 
       var go = GetDisplayChildObject(state, display);
       if (go != null)
         go.SetActive(active);
+
+      if (previous != active)
+        RaiseTreatmentStateEvent(display, active);
     }
 
     private static bool IsTreatmentDisplaySupported(PatientDisplayState state, TreatmentDisplay display)

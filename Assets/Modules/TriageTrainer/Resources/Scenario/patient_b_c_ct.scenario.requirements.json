@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "scenarioIdentifier": "patient_b_c_ct",
   "source": {
-    "scenarioSha256": "231f86eb89a2edc019548873ef047e416c23778ac68d9b9c74a928c301ecb718",
+    "scenarioSha256": "9dd61ea734533c557bb344b09b7825f8cf9ccc500244dba4ee775220930087b4",
     "generatedAtUtc": null
   },
   "declarations": [
@@ -1012,7 +1012,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.enter_triage_zone"
+        "identifier": "sig.grab_stretcher_patient_b_handle_0"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1025,7 +1025,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.grab_stretcher_patient_b"
+        "identifier": "sig.grab_stretcher_patient_b_handle_1"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1038,7 +1038,20 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.grab_stretcher_patient_c"
+        "identifier": "sig.grab_stretcher_patient_c_handle_0"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.grab_stretcher_patient_c_handle_1"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",

@@ -159,9 +159,16 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
   `check_gcs_patient_b/c`, `check_vital_patient_b/c`.
 - 잔여: `show_vital_patient_a`, `close_vital_ui_b/c` 는 바이탈 모니터 UI 열기/닫기 콜백이 필요(미구현).
 
-### insert_* / remove_* (삽입/제거) — [없음]
-정맥 캐뉼라 삽입(연결과 구분), 스타일렛/T-piece 제거 등은 전용 메커닉이 없어 선행 구현이 필요하다.
-대상: `insert_iv_patient_a_left`, `insert_iv_b_right`, `insert_iv_c_left`, `remove_intu_stylet`, `remove_tpiece`.
+### insert_* / remove_* (삽입/제거) — [정맥 캐뉼라 좌/우 계측 완료(2026-07-20), 나머지 없음]
+정맥 캐뉼라 삽입(연결과 구분)은 `PatientController.IntravenousLineCannula` 에 배선되었다. 플레이어가
+캐뉼라(18G/20G)를 들고 환자와 상호작용하면, 삽입 순서로 **좌→우** 팔을 결정론적으로 배정하여
+`insert_iv_{id}_left` / `insert_iv_{id}_right` 신호를 발신하고(하위 호환용 `apply_intravenous_line_cannula_{id}` 도 함께),
+게이지별 처치 표현(`Syringe{18G|20G}InsertedInto{Left|Right}Arm`)을 켠다. 양팔이 채워지면 상호작용이 닫힌다.
+- **운영자 작업**: 환자 `PatientController` 의 `IntravenousLineCannulaConfig.Supported = true`. 시나리오는
+  `sig.insert_iv_patient_a_left` / `sig.insert_iv_patient_a_right` Validator 로 좌/우 삽입을 게이팅한다
+  (환자 A는 `V017_1`/`V017_3`).
+- 스타일렛/T-piece 제거 등은 여전히 전용 메커닉이 없어 선행 구현 필요.
+대상(구현됨): `insert_iv_patient_a_left`, `insert_iv_patient_a_right`. 대상(미구현): `insert_iv_b_right`, `insert_iv_c_left`(환자 B/C 지원 설정 시 동일 로직으로 동작), `remove_intu_stylet`, `remove_tpiece`.
 
 ### pass_* (의사 NPC 전달) — [없음/부분]
 아이템을 NPC 에게 건네는 인터랙션. NPC 상호작용 완료 지점 필요. 대상: `pass_laryngoscope`,
@@ -174,6 +181,19 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
   조건명(예: `enter_triage_zone`, `arrive_triagearea`)을 입력한다. 비워 두면 기존 동작(신호 없음) 유지.
 - 신호 전용 존(시나리오 그래프 미지정)도 허용된다 → 게이트 통과 전용 트리거로 배치 가능.
 대상: `enter_triage_zone`, `arrive_triagearea` (필요 시 `enter_treatmentroom` 등 추가).
+
+#### 진입 엔티티별(대상별) 신호 — [계측 완료, 2026-07-20]
+`ScenarioTriggerZone` 에 옵션 필드 `_perEntitySignalTemplate`(string)가 추가되었다. 존에 진입한
+**식별된 엔티티**(`IScenarioIdentifiedEntity` 구현, 예: `PatientController`)마다 템플릿의 `{id}` 를 그
+엔티티 식별자로 치환해 신호를 올린다. `_playerTag` 필터와 무관하게 동작하며, 기본적으로 엔티티당 1회만
+발신한다(`_perEntityRaiseOncePerEntity`, distinct 계측용).
+- **운영자 작업(코드 변경 불필요)**: 트리아지 구역 `ScenarioTriggerZone` 인스펙터의
+  `_perEntitySignalTemplate` 에 `enter_triage_zone_{id}` 를 입력한다. 환자 A/B/C가 진입하면
+  `enter_triage_zone_patient_a` / `_patient_b` / `_patient_c` 가 각각 발신된다.
+- **인원 수량 게이트**: `SignalCounter` 노드(`sourceSignalPrefix: "enter_triage_zone_"`, `threshold: 3`)와
+  결합하면 서로 다른 3개 도착 신호가 모이면 `all_arrived` 같은 출력 신호를 발신한다. 예시 시나리오:
+  `Resources/Scenario/triage_zone_headcount_debug.scenario.json`.
+- 관련 API: [IScenarioIdentifiedEntity](../../../api-references/MultiplayerInfrastructure.Entity.IScenarioIdentifiedEntity.md), [SignalCounter 노드](../../../api-references/MultiplayerInfrastructure.Scenario.ScenarioGraphNodes.md).
 
 ### click_flowmeter / interact_oxyflow_wall / close_vital_ui_* / show_* — [부분]
 UI/장비 상호작용. 해당 UI 확정 또는 장비 상호작용 콜백에 연결. 대상: `click_flowmeter`, `interact_oxyflow_wall`,

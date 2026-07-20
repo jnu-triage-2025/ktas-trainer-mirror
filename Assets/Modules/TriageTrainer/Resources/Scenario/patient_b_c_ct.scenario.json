@@ -57,12 +57,14 @@
       "bloodPressureDiastolic": 86,
       "skinColorHue": "Normal",
       "skinTemperatureType": "Normal",
+      "bodyTemperatureCelsius": 37.8,
+      "spo2": 93,
       "isCardiacArrest": false
     },
     "PRESET_C": {
       "identifier": "PRESET_C",
       "nodeType": "PatientMedicalStatePreset",
-      "nextIdentifier": "E038",
+      "nextIdentifier": "BIND_B_GAUZE_APPLIED",
       "targetEntityIdentifier": "patient_c",
       "transitionMode": "Immediate",
       "sex": "Female",
@@ -81,7 +83,81 @@
       "bloodPressureDiastolic": 86,
       "skinColorHue": "Normal",
       "skinTemperatureType": "Normal",
+      "bodyTemperatureCelsius": 37.8,
+      "spo2": 93,
       "isCardiacArrest": false
+    },
+    "BIND_B_GAUZE_APPLIED": {
+      "identifier": "BIND_B_GAUZE_APPLIED",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_gauze_applied_patient_b",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_b",
+      "eventName": "TreatmentApplied",
+      "eventKey": "GauzePatchedOnLeftArm",
+      "outputSignalIdentifier": "apply_gauze_patient_b",
+      "consumeOnce": true,
+      "nextIdentifier": "BIND_B_GAUZE_DRESSING"
+    },
+    "BIND_B_GAUZE_DRESSING": {
+      "identifier": "BIND_B_GAUZE_DRESSING",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_gauze_dressing_patient_b",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_b",
+      "eventName": "TreatmentApplied",
+      "eventKey": "GauzeDressingDoneOnLeftArm",
+      "outputSignalIdentifier": "apply_plaster_on_gauze_patient_b",
+      "consumeOnce": true,
+      "nextIdentifier": "BIND_C_GAUZE_APPLIED"
+    },
+    "BIND_C_GAUZE_APPLIED": {
+      "identifier": "BIND_C_GAUZE_APPLIED",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_gauze_applied_patient_c",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_c",
+      "eventName": "TreatmentApplied",
+      "eventKey": "GauzePatchedOnLeftArm",
+      "outputSignalIdentifier": "apply_gauze_patient_c",
+      "consumeOnce": true,
+      "nextIdentifier": "BIND_C_GAUZE_DRESSING"
+    },
+    "BIND_C_GAUZE_DRESSING": {
+      "identifier": "BIND_C_GAUZE_DRESSING",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_gauze_dressing_patient_c",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_c",
+      "eventName": "TreatmentApplied",
+      "eventKey": "GauzeDressingDoneOnLeftArm",
+      "outputSignalIdentifier": "apply_plaster_on_gauze_patient_c",
+      "consumeOnce": true,
+      "nextIdentifier": "BIND_B_NASAL_APPLIED"
+    },
+    "BIND_B_NASAL_APPLIED": {
+      "identifier": "BIND_B_NASAL_APPLIED",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_nasal_applied_patient_b",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_b",
+      "eventName": "TreatmentApplied",
+      "eventKey": "NasalCannulaApplied",
+      "outputSignalIdentifier": "apply_nasal_cannula_patient_b",
+      "consumeOnce": true,
+      "nextIdentifier": "BIND_C_NASAL_APPLIED"
+    },
+    "BIND_C_NASAL_APPLIED": {
+      "identifier": "BIND_C_NASAL_APPLIED",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_nasal_applied_patient_c",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_c",
+      "eventName": "TreatmentApplied",
+      "eventKey": "NasalCannulaApplied",
+      "outputSignalIdentifier": "apply_nasal_cannula_patient_c",
+      "consumeOnce": true,
+      "nextIdentifier": "E038"
     },
     "E038": {
       "identifier": "E038",
@@ -412,11 +488,21 @@
     "Q032": {
       "identifier": "Q032",
       "nodeType": "QuestControl",
-      "nextIdentifier": "V039",
+      "nextIdentifier": "COUNT_TRIAGE_ARRIVALS",
       "operation": "Add",
       "failureStrategy": "Ignore",
       "questDefinitionIdentifier": "Quest_playerB_playerC_playerD_to_triage",
       "quest": null
+    },
+    "COUNT_TRIAGE_ARRIVALS": {
+      "identifier": "COUNT_TRIAGE_ARRIVALS",
+      "nodeType": "SignalCounter",
+      "counterIdentifier": "triage_arrivals_patient_b_c_dummy_b",
+      "operation": "Register",
+      "sourceSignalPrefix": "enter_triage_zone_",
+      "threshold": 3,
+      "outputSignalIdentifier": "all_triage_patients_arrived",
+      "nextIdentifier": "V039"
     },
     "V039": {
       "identifier": "V039",
@@ -430,7 +516,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.enter_triage_zone"
+              "registryIdentifier": "sig.all_triage_patients_arrived"
             }
           ]
         }
@@ -497,7 +583,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.grab_stretcher_patient_b"
+              "registryIdentifier": "sig.grab_stretcher_patient_b_handle_0"
             }
           ]
         }
@@ -518,7 +604,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.grab_stretcher_patient_b"
+              "registryIdentifier": "sig.grab_stretcher_patient_b_handle_1"
             }
           ]
         }
@@ -976,7 +1062,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.apply_electrode"
+              "registryIdentifier": "sig.apply_electrode_patient_b"
             }
           ]
         }
@@ -1517,7 +1603,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_nasal"
+              "registryIdentifier": "sig.apply_nasal_cannula_patient_b"
             },
             {
               "type": "Registry",
@@ -1670,7 +1756,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.wear_glove"
+              "registryIdentifier": "sig.wear_glove_patient_b"
             }
           ]
         }
@@ -1701,7 +1787,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.apply_gauze"
+              "registryIdentifier": "sig.apply_gauze_patient_b"
             }
           ]
         }
@@ -1741,7 +1827,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.apply_plaster_on_gauze"
+              "registryIdentifier": "sig.apply_plaster_on_gauze_patient_b"
             }
           ]
         }
@@ -1812,7 +1898,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.grab_stretcher_patient_c"
+              "registryIdentifier": "sig.grab_stretcher_patient_c_handle_0"
             }
           ]
         }
@@ -1833,7 +1919,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.grab_stretcher_patient_c"
+              "registryIdentifier": "sig.grab_stretcher_patient_c_handle_1"
             }
           ]
         }
@@ -2291,7 +2377,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.apply_electrode"
+              "registryIdentifier": "sig.apply_electrode_patient_c"
             }
           ]
         }
@@ -2830,7 +2916,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_nasal"
+              "registryIdentifier": "sig.apply_nasal_cannula_patient_c"
             },
             {
               "type": "Registry",
@@ -2983,7 +3069,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.wear_glove"
+              "registryIdentifier": "sig.wear_glove_patient_c"
             }
           ]
         }
@@ -3014,7 +3100,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.apply_gauze"
+              "registryIdentifier": "sig.apply_gauze_patient_c"
             }
           ]
         }
@@ -3052,7 +3138,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.apply_plaster_on_gauze"
+              "registryIdentifier": "sig.apply_plaster_on_gauze_patient_c"
             }
           ]
         }

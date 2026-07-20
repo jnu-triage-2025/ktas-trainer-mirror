@@ -293,10 +293,14 @@ namespace TriageTrainer.Entity
 
     private void NotifyMedicalStateChanged()
     {
+      var snapshot = _medicalState;
+
+      // 세분화 상태 이벤트(OnVitalChanged) + 시나리오 바인딩 디스패치.
+      RaiseVitalChangedEvent(snapshot);
+
       if (_medicalStateListeners.Count == 0)
         return;
 
-      var snapshot = _medicalState;
       foreach (var listener in _medicalStateListeners)
       {
         listener?.HandleMedicalStateChanged(snapshot);
@@ -401,6 +405,11 @@ namespace TriageTrainer.Entity
         bloodPressureDiastolic: includeNumericVitals ? (preset.BloodPressureDiastolic ?? PresetSentinelNone) : PresetSentinelNone,
         skinColorHue: preset.SkinColorHue.HasValue ? (int)preset.SkinColorHue.Value : PresetSentinelNone,
         skinTemperatureType: preset.SkinTemperatureType.HasValue ? (int)preset.SkinTemperatureType.Value : PresetSentinelNone,
+        // 체온은 float 이므로 별도 파라미터(bodyTemperatureCelsius)로 전달하고, 값 없음은 NaN 으로 인코딩한다.
+        bodyTemperatureCelsius: includeNumericVitals
+          ? (preset.BodyTemperatureCelsius ?? float.NaN)
+          : float.NaN,
+        spo2: includeNumericVitals ? (preset.Spo2 ?? PresetSentinelNone) : PresetSentinelNone,
         isCardiacArrest: preset.IsCardiacArrest.HasValue ? (preset.IsCardiacArrest.Value ? 1 : 0) : PresetSentinelNone
       );
     }
@@ -442,6 +451,8 @@ namespace TriageTrainer.Entity
       int bloodPressureDiastolic,
       int skinColorHue,
       int skinTemperatureType,
+      float bodyTemperatureCelsius,
+      int spo2,
       int isCardiacArrest)
     {
       // 서버에서는 이미 ApplyMedicalStatePreset 에서 직접 적용했으므로 중복 처리하지 않는다.
@@ -518,12 +529,22 @@ namespace TriageTrainer.Entity
           _medicalState.bloodPressure.diastolic = bloodPressureDiastolic;
       }
 
+      // 체온
+      if (!float.IsNaN(bodyTemperatureCelsius))
+      {
+        if (_medicalState.bodyTemperature == null)
+          _medicalState.bodyTemperature = new BodyTemperature();
+        _medicalState.bodyTemperature.celsius = bodyTemperatureCelsius;
+      }
+
       // 모니터 수치 구조체 브리지: 클라이언트에서도 환자 상태 모니터에 프리셋 수치가 반영되도록 한다.
       // -1(측정 불가)은 MonitorValueUnavailable 로 매핑되어 모니터에 -?- 로 표시된다.
       BridgeNumericVitalsToMonitor(
         pulseRate: pulseRate != PresetSentinelNone ? pulseRate : (int?)null,
         bloodPressureSystolic: bloodPressureSystolic != PresetSentinelNone ? bloodPressureSystolic : (int?)null,
-        bloodPressureDiastolic: bloodPressureDiastolic != PresetSentinelNone ? bloodPressureDiastolic : (int?)null);
+        bloodPressureDiastolic: bloodPressureDiastolic != PresetSentinelNone ? bloodPressureDiastolic : (int?)null,
+        bodyTemperatureCelsius: !float.IsNaN(bodyTemperatureCelsius) ? bodyTemperatureCelsius : (float?)null,
+        spo2: spo2 != PresetSentinelNone ? spo2 : (int?)null);
 
       // 피부
       if (skinColorHue != PresetSentinelNone || skinTemperatureType != PresetSentinelNone)
@@ -658,21 +679,40 @@ namespace TriageTrainer.Entity
           _medicalState.bloodPressure.diastolic = preset.BloodPressureDiastolic.Value;
       }
 
+      if (preset.BodyTemperatureCelsius.HasValue)
+      {
+        if (_medicalState.bodyTemperature == null)
+          _medicalState.bodyTemperature = new BodyTemperature();
+        _medicalState.bodyTemperature.celsius = preset.BodyTemperatureCelsius.Value;
+      }
+
       BridgeNumericVitalsToMonitor(
         pulseRate: preset.PulseRate,
         bloodPressureSystolic: preset.BloodPressureSystolic,
-        bloodPressureDiastolic: preset.BloodPressureDiastolic);
+        bloodPressureDiastolic: preset.BloodPressureDiastolic,
+        bodyTemperatureCelsius: preset.BodyTemperatureCelsius,
+        spo2: preset.Spo2);
     }
 
     /// <summary>
-    /// 프리셋 수치 vital을 모니터 수치 구조체(<c>numerics</c>/<c>nibp</c>)에 반영한다.
+    /// 프리셋 수치 vital을 모니터 수치 구조체(<c>numerics</c>/<c>nibp</c>/<c>pleth</c>/<c>temperature</c>)에 반영한다.
     /// 음수(-1 등, 측정 불가)는 <see cref="PatientMedicalState.MonitorValueUnavailable"/> 로 매핑되어
     /// 모니터에 <c>-?-</c> 로 표시된다. null(값 미지정)은 기존 모니터 값을 유지한다.
+    ///
+    /// <para>체온은 모니터 심부체온 채널(<c>temperature.t1</c>)에, SpO2는 <c>numerics.spo2</c> 와
+    /// pleth 파형 계산에 쓰이는 <c>pleth.spo2</c> 양쪽에 반영한다.</para>
     /// </summary>
-    private void BridgeNumericVitalsToMonitor(int? pulseRate, int? bloodPressureSystolic, int? bloodPressureDiastolic)
+    private void BridgeNumericVitalsToMonitor(
+      int? pulseRate,
+      int? bloodPressureSystolic,
+      int? bloodPressureDiastolic,
+      float? bodyTemperatureCelsius = null,
+      int? spo2 = null)
     {
       var numerics = _medicalState.numerics;
       var nibp = _medicalState.nibp;
+      var pleth = _medicalState.pleth;
+      var temperature = _medicalState.temperature;
 
       if (pulseRate.HasValue)
       {
@@ -686,8 +726,24 @@ namespace TriageTrainer.Entity
       if (bloodPressureDiastolic.HasValue)
         nibp.diastolic = bloodPressureDiastolic.Value < 0 ? PatientMedicalState.MonitorValueUnavailable : bloodPressureDiastolic.Value;
 
+      if (spo2.HasValue)
+      {
+        float v = spo2.Value < 0 ? PatientMedicalState.MonitorValueUnavailable : spo2.Value;
+        numerics.spo2 = v;
+        pleth.spo2 = v;
+      }
+
+      if (bodyTemperatureCelsius.HasValue)
+      {
+        temperature.t1 = bodyTemperatureCelsius.Value < 0
+          ? PatientMedicalState.MonitorValueUnavailable
+          : bodyTemperatureCelsius.Value;
+      }
+
       _medicalState.numerics = numerics;
       _medicalState.nibp = nibp;
+      _medicalState.pleth = pleth;
+      _medicalState.temperature = temperature;
     }
 
     private void EnsureMedicalStateDefaults()
@@ -735,6 +791,8 @@ namespace TriageTrainer.Entity
       float fromPulse = _medicalState.numerics.bpm;
       float fromSys = _medicalState.nibp.systolic;
       float fromDia = _medicalState.nibp.diastolic;
+      float fromTemp = _medicalState.temperature.t1;
+      float fromSpo2 = _medicalState.numerics.spo2;
 
       // 측정 불가(-1) 대상은 보간에서 제외한다.
       bool gcsUnavailable = preset.ConsciousnessGcs.HasValue && preset.ConsciousnessGcs.Value < 0;
@@ -742,6 +800,8 @@ namespace TriageTrainer.Entity
       bool pulseUnavailable = preset.PulseRate.HasValue && preset.PulseRate.Value < 0;
       bool sysUnavailable = preset.BloodPressureSystolic.HasValue && preset.BloodPressureSystolic.Value < 0;
       bool diaUnavailable = preset.BloodPressureDiastolic.HasValue && preset.BloodPressureDiastolic.Value < 0;
+      bool tempUnavailable = preset.BodyTemperatureCelsius.HasValue && preset.BodyTemperatureCelsius.Value < 0;
+      bool spo2Unavailable = preset.Spo2.HasValue && preset.Spo2.Value < 0;
 
       float elapsed = 0f;
       float sinceLastSync = 0f;
@@ -773,7 +833,16 @@ namespace TriageTrainer.Entity
             _medicalState.bloodPressure.diastolic = interpDia.Value;
         }
 
-        BridgeNumericVitalsToMonitor(interpPulse, interpSys, interpDia);
+        // 체온(float)은 정수 반올림 없이 보간한다. SpO2는 정수로 보간한다.
+        float? interpTemp = (preset.BodyTemperatureCelsius.HasValue && !tempUnavailable)
+          ? Mathf.Lerp(fromTemp, preset.BodyTemperatureCelsius.Value, t) : (float?)null;
+        int? interpSpo2 = (preset.Spo2.HasValue && !spo2Unavailable)
+          ? Mathf.RoundToInt(Mathf.Lerp(fromSpo2, preset.Spo2.Value, t)) : (int?)null;
+
+        if (interpTemp.HasValue && _medicalState.bodyTemperature != null)
+          _medicalState.bodyTemperature.celsius = interpTemp.Value;
+
+        BridgeNumericVitalsToMonitor(interpPulse, interpSys, interpDia, interpTemp, interpSpo2);
 
         // 로컬 렌더링은 매 프레임 갱신한다(호스트/오프라인 모니터가 부드럽게 보이도록).
         NotifyMedicalStateChanged();

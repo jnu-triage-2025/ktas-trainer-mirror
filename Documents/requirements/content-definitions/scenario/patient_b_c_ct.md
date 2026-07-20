@@ -42,18 +42,33 @@ flags: ["refactor-required"]
 | 퀘스트 | 12개 `Quest_*`가 식별자만 있고 title/content/task definition이 없음 | 빈 inline quest를 만들지 않고 Q-BC-1 해결 후 definition을 참조한다. |
 | 런타임 신호 | 고유 신호 42개 중 22개가 둘 이상의 Validator에서 재사용됨 | sticky RuntimeState를 환자·행위 단위로 분리하거나 소비 후 clear해야 한다. |
 
+#### 환자 상태 → Scenario 신호 바인딩 (2026-07-20)
+
+`PRESET_C` 다음에 `BIND_B_GAUZE_APPLIED`, `BIND_B_GAUZE_DRESSING`,
+`BIND_C_GAUZE_APPLIED`, `BIND_C_GAUZE_DRESSING`을 직렬로 둔다. 각 노드는 해당 환자의
+`TreatmentApplied` 상태 이벤트를 구독하고, B/C의 좌측 상완 상태인
+`GauzePatchedOnLeftArm`/`GauzeDressingDoneOnLeftArm`
+전이를 각각 `apply_gauze_patient_b/c` 및 `apply_plaster_on_gauze_patient_b/c` signal로 변환한다.
+따라서 `V058`/`V059`와 `V077`/`V078`은 다른 환자의 sticky signal로 통과할 수 없다. 이 네 signal의
+정본 producer는 ItemUse 코드가 아니라 `EntityStateSignalBinding` 노드다.
+
+같은 위치의 `BIND_B_NASAL_APPLIED`/`BIND_C_NASAL_APPLIED`는 `NasalCannulaApplied` 전이를
+`apply_nasal_cannula_patient_b/c`로 변환한다. 따라서 `V055`와 `V074`의 비강캐뉼라 적용 조건도
+환자별로 분리된다. 산소 연결 신호(`connect_nasal_and_o2`)는 실제 연결점 identifier를 환자별로
+분리해야 하므로 SIGNAL-BC-3의 남은 producer 작업으로 유지한다.
+
 ### 플레이 차단 항목과 보완 위치
 
 | ID | 위치 | 부족한 연결 | 처리 |
 |---|---|---|---|
 | SPAWN-BC-1 | `SPAWN_B`, `SPAWN_C` | Unity import에서 `patient_b`의 `PatientTypeBMale`, `patient_c`의 `PatientTypeBFemale` prefab이 FishNet `DefaultPrefabObjects`에 등록되지 않아 `PrefabId`가 미할당된 것으로 확인됐다. 현재 상태로 network spawn하면 런타임 `ObjectId 65535` 오류가 발생한다. | Fish-Networking Spawnable Prefabs에 두 원본 prefab을 등록하고 reserialize한 뒤, Production profile에서 각 EntityPreset의 `SpawnablePreset` capability를 다시 증명한다. |
 | ROLE-BC-1 | `P009`~`P013` | `ByRole`은 player tag만 사용하지만 NurseA~D와 태그의 선행 매핑이 없다. 또한 `P009` 상위 태그와 `P012`/`P013` 하위 태그가 다르고 `bleeding_control`은 양쪽 환자 그룹에 중복된다. | **인간 판단 필요:** 세션 role→tag 표를 확정하고 Scenario 시작 전 공급 계약으로 선언한다. 한 플레이어가 동시에 양쪽 환자 브랜치에 배정되지 않도록 태그를 배타적으로 구성한다. |
-| SIGNAL-BC-1 | `V040_A`/`V040_C`, `V040_B`/`V040_D` | 같은 들것 신호를 두 번 기다린다. 신호가 sticky라 첫 파지 후 두 번째 Validator도 즉시 통과하여 2인 파지를 증명하지 못한다. | `grab_stretcher_patient_b_a/c`, `grab_stretcher_patient_c_b/d`처럼 손잡이별 신호로 분리하고 각 grab point producer에 연결한다. |
-| SIGNAL-BC-2 | `V039` | `enter_triage_zone` 하나의 존재 여부로는 세 명 도착을 셀 수 없다. | 환자별 `enter_triage_zone_patient_b/c/dummy_b` 신호 3개 또는 수량 기반 zone tracker를 사용한다. |
-| SIGNAL-BC-3 | B/C의 장비·처치 Validator | 장비 획득·전극·펜라이트·산소·장갑·거즈 신호 22개가 환자 B와 C 흐름에서 재사용된다. B가 올린 신호 때문에 C 흐름이 실제 행동 없이 통과할 수 있다. | 환자별 결과 신호로 분리한다. 단순 공용 아이템 획득은 브랜치 진입 시 clear한 뒤 재획득을 요구할지, 한 번 준비한 공용 물품을 재사용할지 인간이 확정한다. 환자 적용 결과는 반드시 `_patient_b`/`_patient_c`로 분리한다. |
+| SIGNAL-BC-1 | `V040_A`/`V040_C`, `V040_B`/`V040_D` | ~~같은 들것 신호를 두 번 기다려 2인 파지를 증명하지 못한다.~~ **해결(2026-07-20):** `MovingPatientBedController`가 서버 권위 `SyncVar` 손잡이 슬롯 두 개에 client ID를 기록한다. 프리팹 `PlayerAttachPoints`도 두 개로 배선했다. | 서버가 각 슬롯을 한 client ID에만 배정하고, 각 소유 클라이언트에 follow anchor를 동기화한다. 참가자 입력은 ServerRpc로 보고되어 서버가 침대를 이동하고 transform을 ObserversRpc로 복제한다. 슬롯 0/1이 각각 `grab_stretcher_patient_b/c_handle_0/1`을 발신하며, 시나리오는 이 두 signal을 별도 Validator로 대기한다. |
+| SIGNAL-BC-2 | `COUNT_TRIAGE_ARRIVALS` → `V039` | ~~`enter_triage_zone` 하나의 존재 여부로는 세 명 도착을 셀 수 없다.~~ **해결(2026-07-20):** `ScenarioTriggerZone._perEntitySignalTemplate`(`enter_triage_zone_{id}`)로 진입 환자별 신호를 발신하고, `SignalCounter`(prefix `enter_triage_zone_`, threshold 3)로 인원 수량 게이트를 구성. | `COUNT_TRIAGE_ARRIVALS`가 `patient_b`/`patient_c`/`dummy_b`의 신호 세 개를 세어 `all_triage_patients_arrived`를 발신하고, `V039`가 이를 대기한다. 운영자는 트리아지 구역 존 인스펙터에 `enter_triage_zone_{id}`를 설정해야 한다. |
+| SIGNAL-BC-3 | B/C의 장비·처치 Validator | ~~장비 획득·전극·펜라이트·산소·장갑·거즈 신호 22개가 환자 B와 C 흐름에서 재사용된다. B가 올린 신호 때문에 C 흐름이 실제 행동 없이 통과할 수 있다.~~ **부분 해결(2026-07-20):** 거즈·플라스터·비강캐뉼라의 환자별 결과 신호는 `EntityStateSignalBinding`이 `TreatmentApplied` 전이에서 발신하며, 관련 B/C Validator가 이를 대기한다. | 나머지 장비 "획득" 성격 신호, 전극·장갑, 산소 연결 및 SIGNAL-BC-4 producer 배선은 별도 인간 확정/후속. 환자 상태 전이로 표현되는 결과는 `_patient_b`/`_patient_c`로 분리 완료. |
 | SIGNAL-BC-4 | `V036`, `V046`, `V048`, `V050`, `V052`~`V055`, `V065`, `V069`, `V071`~`V074` | 문서가 선행 구현 필요로 표시한 신호 producer가 없다. `WaitForCondition=true`이므로 `OnFailure=Ignore`여도 자동 통과하지 않고 무한 대기한다. 일부 120초 `ForceAdvance`는 실패를 숨길 뿐 정상 플레이 검증이 아니다. | 정식 gameplay callback에서 동일 신호를 Raise한다. timeout은 접근성/복구 정책으로만 유지하고 producer 대체로 사용하지 않는다. |
 | Q-BC-1 | `Q031`~`Q042_1` | 12개 quest가 식별자만 있어 실제 오버레이 내용과 완료 task가 비어 있다. | 주변 Dialogue와 Validator를 기반으로 별도 quest definition 12개를 작성하고 Add/Remove가 같은 identifier를 참조하게 한다. |
-| PRESET-BC-1 | `PRESET_B`, `PRESET_C` | 문서가 요구하는 체온과 SpO2는 현재 `PatientMedicalStatePreset` 필드가 아니다. | 현재 가능한 의료 상태는 preset에 넣고, 체온·SpO2는 monitor event/profile 요구사항으로 명시한다. 스키마 확장 여부는 별도 인간 판단으로 남긴다. |
+| PRESET-BC-1 | `PRESET_B`, `PRESET_C` | ~~문서가 요구하는 체온과 SpO2는 현재 `PatientMedicalStatePreset` 필드가 아니다.~~ **해결(2026-07-20):** `bodyTemperatureCelsius`, `spo2` 필드를 프리셋 노드/DTO/로더/컨트롤러/스키마에 추가함. | 체온 37.8°, SpO2 93%를 preset에 직접 기입. 모니터 브리지(temperature.t1, numerics/pleth.spo2) 연결 완료. |
 | END-BC-1 | `N092` 및 종료 조건 | fade-out 요구가 서술에만 있고 `N092`는 Dialogue 후 종료된다. | fade handler가 확정되면 `E_END_BC_FADE -> N092`를 명시한다. 현재는 종료 메시지는 동작하지만 fade 연출은 미충족으로 기록한다. |
 
 ### 변환 승인 조건
@@ -115,8 +130,16 @@ flags: ["refactor-required"]
 interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 분류한다.
 
 - **자동 계측 완료**(설정만으로 동작): `enter_triage_zone`(구역 진입, 단 인원수 검증은 별도), `apply_electrode`, `apply_gauze`, `apply_plaster_on_gauze`, `wear_glove`.
-- **선행 구현 필요**(게임플레이 미구현, 미배선 시 무한 대기 또는 명시된 timeout 복구): `insert_iv_b_right`, `insert_iv_c_left`, `close_vital_ui_b`, `close_vital_ui_c`, `click_patient_b_face`, `click_patient_c_face`, `click_nasal`, `click_dummy_b`. `click_humidifier_bottle`, `click_sterile_distilled_water`, `click_flowmeter`는 `MedicalItem.OnGet()`이 자동 발행한다.
+- **선행 구현 필요**(게임플레이 미구현, 미배선 시 무한 대기 또는 명시된 timeout 복구): `insert_iv_b_right`, `insert_iv_c_left`, `click_patient_b_face`, `click_patient_c_face`, `click_dummy_b`. 비강캐뉼라 적용은 `NasalCannulaApplied` 상태 바인딩으로 대체했으며, 산소 연결은 별도 연결점 producer가 필요하다. `click_humidifier_bottle`, `click_sterile_distilled_water`, `click_flowmeter`는 `MedicalItem.OnGet()`이 자동 발행한다.
+- **구현 완료(런타임 UI)**: `close_vital_ui_b`, `close_vital_ui_c` — `PatientMonitorController`가 닫기 버튼을 만들고, B/C 활성화 이벤트가 패널·모니터를 숨긴 뒤 환자별 signal을 발생시킨다.
 - **에디터 Identifier 정합 필요**(코드는 있으나 프리팹/에디터 매핑 확정 필요): `check_gcs_patient_b`, `check_gcs_patient_c`, `check_vital_patient_b`, `check_vital_patient_c`, `click_patient_b`, `click_patient_c`.
+
+### IV-BC-1 — 20G 팔/신호 계약 충돌 (인간 판단 필요)
+
+`PatientController.IntravenousLineCannula`는 캐뉼라 사용을 실제 처리하고 `insert_iv_{patientIdentifier}_{left|right}` 신호를 발생시킨다. 그러나 현재 B/C 그래프는 `insert_iv_b_right`/`insert_iv_c_left`를 기다린다. 또한 기본 구현은 좌측 우선 배정인데, 환자 B의 문서는 우측을 요구하고 B 프리팹의 20G 시각물은 좌측에만 있다. 따라서 단순 signal 별칭이나 Validator 변경은 잘못된 팔의 처치를 정상 완료로 만들 수 있다.
+
+- [ ] 환자 B/C에 실제 사용할 patient prefab(성별·팔 시각물)과 임상 지시의 좌/우를 확정한다.
+- [ ] 확정 후 팔별 interaction point 또는 patient별 최초 삽입 팔 설정을 추가하고, 그래프 조건을 실제 producer (`insert_iv_patient_b_right` 등)와 일치시킨다.
 
 ## 시나리오 본문
 
@@ -184,12 +207,14 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **BloodPressureDiastolic** | 정수 | 86 |
 | **SkinColorHue** | SkinColorHue | Normal |
 | **SkinTemperatureType** | SkinTemperatureType | Normal |
+| **BodyTemperatureCelsius** | 실수 | 37.8 |
+| **Spo2** | 정수 | 93 |
 | **IsCardiacArrest** | bool | false |
 | **NextIdentifier** | 문자열 | PRESET_C |
 
 - 원본 근거: 체온(BT) 37.8°, SpO2 93%. GCS 13(E3/V4/M6), 우측 동공 무반응(pupil_reflex_patient_b), 좌측 상완 개방성 골절.
-- [ ] SpO2/체온 필드가 PatientMedicalStatePreset 스키마에 없음. 활력 UI 이벤트(activate_vital_monitor_ui_patient_b/c)로만 표기됨. 스키마 확장 여부 확정요청.
-- [ ] 확정요청: 활력 체온 37.8(원본) vs JSON 37.3 불일치. 원본 기준 37.8 채택함. 임시치 아님(원본 확정치). JSON 갱신 필요.
+- [x] SpO2/체온 필드를 PatientMedicalStatePreset 스키마에 추가함(bodyTemperatureCelsius, spo2). 활력 UI 이벤트와 별개로 프리셋에서 직접 설정 가능.
+- [x] 활력 체온 37.8(원본) 채택. 프리셋 노드 및 JSON 정본에 37.8/93 반영.
 - [x] d-3: 환자 B/C 상태 사전설정 값 원본(_origin)에서 확인·기록.
 
 ---
@@ -220,6 +245,8 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **BloodPressureDiastolic** | 정수 | 86 |
 | **SkinColorHue** | SkinColorHue | Normal |
 | **SkinTemperatureType** | SkinTemperatureType | Normal |
+| **BodyTemperatureCelsius** | 실수 | 37.8 |
+| **Spo2** | 정수 | 93 |
 | **IsCardiacArrest** | bool | false |
 | **NextIdentifier** | 문자열 | E038 |
 
@@ -678,13 +705,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V040_A |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.grab_stretcher_patient_b (RegistryContains / RuntimeState) |
+| **Condition** | 문자열 | sig.grab_stretcher_patient_b_handle_0 (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | V040_C |
 
-- [ ] f: `grab_stretcher_patient_b` 게이트(간호사 A). 배선 상태 확정요청.
+- [x] 서버가 손잡이 0에 고유 client ID를 배정하면 `grab_stretcher_patient_b_handle_0`를 발신한다.
 
 ---
 
@@ -694,13 +721,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V040_C |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.grab_stretcher_patient_b (RegistryContains / RuntimeState) |
+| **Condition** | 문자열 | sig.grab_stretcher_patient_b_handle_1 (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | E043 |
 
-- [ ] f: `grab_stretcher_patient_b` 게이트(간호사 C). V040_A와 동일 시그널을 2회 대기하는 구조 → 2인 동시 파지 검증 배선 정합 필요.
+- [x] 서버가 손잡이 1에 다른 client ID를 배정하면 `grab_stretcher_patient_b_handle_1`를 발신한다. 한 client는 하나의 슬롯만 점유할 수 있다.
 
 ---
 
@@ -1310,7 +1337,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | Q034_1 |
 
-- [ ] f: `close_vital_ui_b`는 §5.3상 "선행 메커닉 필요(모니터 UI 토글 콜백 미구현)". 미배선 시 `V046`에서 무한 대기한다.
+- [x] f: 모니터의 `닫기` 버튼이 B 전용 callback을 통해 패널·모니터를 숨기고 `close_vital_ui_b`를 발생시킨다.
 
 ---
 
@@ -1792,13 +1819,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V055 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.click_nasal AND sig.connect_nasal_and_o2 |
+| **Condition** | 문자열 | sig.apply_nasal_cannula_patient_b AND sig.connect_nasal_and_o2 |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | N057 |
 
-- [ ] f: `click_nasal`은 §5.3상 "선행 메커닉 필요(장비 클릭 미구현)".
+- [x] f: 비강캐뉼라 적용은 `NasalCannulaApplied` → `apply_nasal_cannula_patient_b` 상태 바인딩으로 계측한다. `connect_nasal_and_o2`의 환자별 연결점 producer는 별도 배선이 필요하다.
 
 ---
 
@@ -2128,13 +2155,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V040_B |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.grab_stretcher_patient_c (RegistryContains / RuntimeState) |
+| **Condition** | 문자열 | sig.grab_stretcher_patient_c_handle_0 (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | V040_D |
 
-- [ ] f: `grab_stretcher_patient_c` 게이트(간호사 B). 배선 상태 확정요청.
+- [x] 서버가 손잡이 0에 고유 client ID를 배정하면 `grab_stretcher_patient_c_handle_0`를 발신한다.
 
 ---
 
@@ -2144,13 +2171,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V040_D |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.grab_stretcher_patient_c (RegistryContains / RuntimeState) |
+| **Condition** | 문자열 | sig.grab_stretcher_patient_c_handle_1 (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | E050 |
 
-- [ ] f: `grab_stretcher_patient_c` 게이트(간호사 D). V040_B와 동일 시그널 2회 대기 구조 → 2인 동시 파지 검증 배선 정합 필요.
+- [x] 서버가 손잡이 1에 다른 client ID를 배정하면 `grab_stretcher_patient_c_handle_1`를 발신한다. 한 client는 하나의 슬롯만 점유할 수 있다.
 
 ---
 
@@ -2762,7 +2789,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | Q039_1 |
 
-- [ ] f: `close_vital_ui_c`는 §5.3상 "선행 메커닉 필요(모니터 UI 토글 콜백 미구현)". 미배선 시 `V065`에서 무한 대기한다.
+- [x] f: 모니터의 `닫기` 버튼이 C 전용 callback을 통해 패널·모니터를 숨기고 `close_vital_ui_c`를 발생시킨다.
 
 ---
 
@@ -3244,13 +3271,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V074 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.click_nasal AND sig.connect_nasal_and_o2 |
+| **Condition** | 문자열 | sig.apply_nasal_cannula_patient_c AND sig.connect_nasal_and_o2 |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | N086 |
 
-- [ ] f: `click_nasal`은 §5.3상 "선행 메커닉 필요(장비 클릭 미구현)".
+- [x] f: 비강캐뉼라 적용은 `NasalCannulaApplied` → `apply_nasal_cannula_patient_c` 상태 바인딩으로 계측한다. `connect_nasal_and_o2`의 환자별 연결점 producer는 별도 배선이 필요하다.
 
 ---
 
