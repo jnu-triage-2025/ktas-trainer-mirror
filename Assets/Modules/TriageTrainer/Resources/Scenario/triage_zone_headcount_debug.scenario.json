@@ -1,0 +1,53 @@
+{
+  "identifier": "triage_zone_headcount_debug",
+  "tags": [],
+  "nodes": {
+    "intro_print": {
+      "identifier": "intro_print",
+      "nodeType": "ChatPrint",
+      "message": "[트리아지 구역 도착 디버그] 씬의 ScenarioTriggerZone 에 Per-Entity Signal Template 'enter_triage_zone_{id}' 를 설정하세요. 환자 3명(patient_b/patient_c/dummy_b)이 구역에 진입하면 all_arrived 가 발생합니다. 수동 테스트: /scenario signal enter_triage_zone_patient_b (그리고 _patient_c, _dummy_b)",
+      "targets": "UnityConsole, InGameChat",
+      "broadcast": true,
+      "nextIdentifier": "count_arrivals"
+    },
+    "count_arrivals": {
+      "identifier": "count_arrivals",
+      "nodeType": "SignalCounter",
+      "counterIdentifier": "triage_zone_headcount",
+      "operation": "Register",
+      "sourceSignalPrefix": "enter_triage_zone_",
+      "threshold": 3,
+      "outputSignalIdentifier": "all_arrived",
+      "nextIdentifier": "wait_all_arrived"
+    },
+    "wait_all_arrived": {
+      "identifier": "wait_all_arrived",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.all_arrived"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "nextIdentifier": "done_print",
+      "waitForCondition": true
+    },
+    "done_print": {
+      "identifier": "done_print",
+      "nodeType": "ChatPrint",
+      "message": "[트리아지 구역 도착 디버그] 환자 3명 도착 완료 감지(all_arrived).",
+      "targets": "UnityConsole, InGameChat",
+      "broadcast": true,
+      "nextIdentifier": null
+    }
+  }
+}

@@ -13,7 +13,7 @@ using MI = MultiplayerInfrastructure;
 namespace TriageTrainer.Entity
 {
   [RequireComponent(typeof(CapsuleCollider))]
-  public partial class PatientController : NetworkBehaviour, IInteractable, IReposable, IItemUseTarget, IScenarioEntityInitTarget, IScenarioTriageAssessTarget
+  public partial class PatientController : NetworkBehaviour, IInteractable, IReposable, IItemUseTarget, IScenarioEntityInitTarget, IScenarioTriageAssessTarget, IScenarioIdentifiedEntity
   {
     private const string DefaultPatientCarryAttachPointName = "PatientCarryAttachPoint";
 
@@ -42,6 +42,13 @@ namespace TriageTrainer.Entity
     private ChatUIController _chatUI;
 
     public string Identifier => EffectiveIdentifier;
+
+    /// <summary>
+    /// <see cref="IScenarioIdentifiedEntity"/> 구현: 시나리오 식별자를 노출한다(레지스트리 등록 식별자와 동일).
+    /// 트리거 존 등이 진입 엔티티의 식별자를 도메인 비의존적으로 조회하는 데 사용한다.
+    /// </summary>
+    public string ScenarioEntityIdentifier => EffectiveIdentifier;
+
     public int Weight => Mathf.Max(0, _weight);
 
     public bool IsReposed => _currentBed != null;

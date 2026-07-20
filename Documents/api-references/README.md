@@ -20,6 +20,7 @@
 - [MultiplayerInfrastructure.Command.TargetSelectorResolver.md](./MultiplayerInfrastructure.Command.TargetSelectorResolver.md): API 레퍼런스: `MultiplayerInfrastructure.Command.TargetSelectorResolver`
 - [MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md](./MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md): MultiplayerInfrastructure.Datapack.DatapackRuntimeService
 - [MultiplayerInfrastructure.Entity.IScenarioEntityStateEventSource.md](./MultiplayerInfrastructure.Entity.IScenarioEntityStateEventSource.md): API 레퍼런스: `MultiplayerInfrastructure.Entity.IScenarioEntityStateEventSource` (엔티티 상태 이벤트 → 시나리오 신호)
+- [MultiplayerInfrastructure.Entity.IScenarioIdentifiedEntity.md](./MultiplayerInfrastructure.Entity.IScenarioIdentifiedEntity.md): API 레퍼런스: `MultiplayerInfrastructure.Entity.IScenarioIdentifiedEntity` (엔티티 시나리오 식별자 노출)
 - [MultiplayerInfrastructure.Entity.IScenarioTriageAssessTarget.md](./MultiplayerInfrastructure.Entity.IScenarioTriageAssessTarget.md): API 레퍼런스: `MultiplayerInfrastructure.Entity.IScenarioTriageAssessTarget`
 - [MultiplayerInfrastructure.InteractableEntity.md](./MultiplayerInfrastructure.InteractableEntity.md): API 레퍼런스: `MultiplayerInfrastructure.InteractableEntity`
 - [MultiplayerInfrastructure.Item.Item.md](./MultiplayerInfrastructure.Item.Item.md): MultiplayerInfrastructure.Item.Item (Current)

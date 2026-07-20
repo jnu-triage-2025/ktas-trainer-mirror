@@ -175,6 +175,19 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
 - 신호 전용 존(시나리오 그래프 미지정)도 허용된다 → 게이트 통과 전용 트리거로 배치 가능.
 대상: `enter_triage_zone`, `arrive_triagearea` (필요 시 `enter_treatmentroom` 등 추가).
 
+#### 진입 엔티티별(대상별) 신호 — [계측 완료, 2026-07-20]
+`ScenarioTriggerZone` 에 옵션 필드 `_perEntitySignalTemplate`(string)가 추가되었다. 존에 진입한
+**식별된 엔티티**(`IScenarioIdentifiedEntity` 구현, 예: `PatientController`)마다 템플릿의 `{id}` 를 그
+엔티티 식별자로 치환해 신호를 올린다. `_playerTag` 필터와 무관하게 동작하며, 기본적으로 엔티티당 1회만
+발신한다(`_perEntityRaiseOncePerEntity`, distinct 계측용).
+- **운영자 작업(코드 변경 불필요)**: 트리아지 구역 `ScenarioTriggerZone` 인스펙터의
+  `_perEntitySignalTemplate` 에 `enter_triage_zone_{id}` 를 입력한다. 환자 A/B/C가 진입하면
+  `enter_triage_zone_patient_a` / `_patient_b` / `_patient_c` 가 각각 발신된다.
+- **인원 수량 게이트**: `SignalCounter` 노드(`sourceSignalPrefix: "enter_triage_zone_"`, `threshold: 3`)와
+  결합하면 서로 다른 3개 도착 신호가 모이면 `all_arrived` 같은 출력 신호를 발신한다. 예시 시나리오:
+  `Resources/Scenario/triage_zone_headcount_debug.scenario.json`.
+- 관련 API: [IScenarioIdentifiedEntity](../../../api-references/MultiplayerInfrastructure.Entity.IScenarioIdentifiedEntity.md), [SignalCounter 노드](../../../api-references/MultiplayerInfrastructure.Scenario.ScenarioGraphNodes.md).
+
 ### click_flowmeter / interact_oxyflow_wall / close_vital_ui_* / show_* — [부분]
 UI/장비 상호작용. 해당 UI 확정 또는 장비 상호작용 콜백에 연결. 대상: `click_flowmeter`, `interact_oxyflow_wall`,
 `close_vital_ui_b/c`, `show_vital_patient_a`, `interact_defib`, `click_penlight`, `click_nasal_and_connect_nasal_and_o2`,
