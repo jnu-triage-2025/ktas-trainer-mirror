@@ -5,7 +5,9 @@ using System.Linq;
 using System.Text.Json;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.Scenario.Requirements.Editor;
 using UnityEditor;
+using UnityEditor.Callbacks;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -25,6 +27,9 @@ namespace MultiplayerInfrastructure.Editor
     private VisualElement graphHost;
     private ScenarioDebugPanelView debugPanelView;
     private ScenarioSearchPanelView searchPanelView;
+    private VisualElement editContainer;
+    private ToolbarButton graphTabButton;
+    private ToolbarButton editTabButton;
 
     private ScenarioGraph graphData = new ScenarioGraph();
     private readonly Dictionary<string, ScenarioNodeView> nodeViews = new Dictionary<string, ScenarioNodeView>();
@@ -110,6 +115,26 @@ namespace MultiplayerInfrastructure.Editor
       window.Show();
     }
 
+    /// <summary>
+    /// Opens scenario documents directly from the Project window. Returning false for
+    /// every other TextAsset preserves Unity's normal asset-opening behaviour.
+    /// </summary>
+    [OnOpenAsset]
+    public static bool OpenScenarioTextAsset(int instanceID, int line)
+    {
+      var asset = EditorUtility.InstanceIDToObject(instanceID) as TextAsset;
+      var path = asset == null ? null : AssetDatabase.GetAssetPath(asset);
+      if (string.IsNullOrEmpty(path) || !path.EndsWith(ScenarioExtension, StringComparison.OrdinalIgnoreCase))
+        return false;
+
+      var window = GetWindow<ScenarioGraphAuthoringWindow>();
+      window.titleContent = new GUIContent("Scenario Graph Editor");
+      window.minSize = new Vector2(900f, 500f);
+      window.Show();
+      window.OpenGraphFromPath(Path.GetFullPath(path));
+      return true;
+    }
+
     private void OnEnable()
     {
       EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
@@ -117,11 +142,13 @@ namespace MultiplayerInfrastructure.Editor
       ConstructUI();
       CreateGraphView();
       CreateDebugPanel();
+      CreateEditTab();
       CreateSearchPanel();
       CreateInspector();
       CreateSearchWindow();
       BindGraphEvents();
       LoadBlankGraph();
+      SetActiveTab(true);
       SyncRuntimeHighlight();
     }
 
@@ -169,6 +196,8 @@ namespace MultiplayerInfrastructure.Editor
       var fileMenu = new ToolbarMenu { text = "File" };
       fileMenu.menu.AppendAction("New", _ => LoadBlankGraph());
       fileMenu.menu.AppendAction("Open", _ => OpenGraphFromJson());
+      fileMenu.menu.AppendAction("Open Selected Scenario TextAsset", _ => OpenSelectedScenarioTextAsset(),
+        _ => GetSelectedScenarioTextAsset() != null ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
       fileMenu.menu.AppendAction("Save", _ => SaveGraphToJson());
       fileMenu.menu.AppendAction("Save As...", _ => SaveGraphToJsonAs());
       fileMenu.menu.AppendAction("Validate", _ => ValidateGraphUsingRuntimeValidator());
@@ -205,6 +234,13 @@ namespace MultiplayerInfrastructure.Editor
       toolbar.Add(graphTagsField);
 
       rootVisualElement.Add(toolbar);
+
+      var tabs = new Toolbar();
+      graphTabButton = new ToolbarButton(() => SetActiveTab(true)) { text = "Graph" };
+      editTabButton = new ToolbarButton(() => SetActiveTab(false)) { text = "Edit" };
+      tabs.Add(graphTabButton);
+      tabs.Add(editTabButton);
+      rootVisualElement.Add(tabs);
 
       EnsureGraphData();
       RefreshGraphIdentifierField();
@@ -277,6 +313,78 @@ namespace MultiplayerInfrastructure.Editor
       debugPanelView = new ScenarioDebugPanelView();
       debugPanelView.OnNodeFocusRequested = FocusNodeByIdentifier;
       rootVisualElement.Add(debugPanelView);
+    }
+
+    private void CreateEditTab()
+    {
+      editContainer = new VisualElement { name = "ScenarioEditContainer" };
+      editContainer.style.flexGrow = 1f;
+      editContainer.style.paddingLeft = 12;
+      editContainer.style.paddingRight = 12;
+      editContainer.style.paddingTop = 12;
+
+      editContainer.Add(new Label("Scenario Ingame Requirements")
+      {
+        style = { unityFontStyleAndWeight = FontStyle.Bold, fontSize = 14, marginBottom = 6 }
+      });
+      editContainer.Add(new HelpBox(
+        "Requirements 작업은 기존과 같이 별도 패널에서 열립니다. 현재 Graph Editor에서 연 시나리오 파일이 자동으로 공유됩니다.",
+        HelpBoxMessageType.Info));
+      editContainer.Add(new Button(OpenRequirementsWindow) { text = "Open Scenario Ingame Requirements" });
+      editContainer.Add(new Button(OpenSelectedScenarioTextAsset) { text = "Open Selected Scenario TextAsset" });
+      rootVisualElement.Add(editContainer);
+    }
+
+    private void SetActiveTab(bool showGraph)
+    {
+      if (mainContainer != null) mainContainer.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
+      if (debugPanelView != null) debugPanelView.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
+      if (editContainer != null) editContainer.style.display = showGraph ? DisplayStyle.None : DisplayStyle.Flex;
+      graphTabButton?.SetEnabled(!showGraph);
+      editTabButton?.SetEnabled(showGraph);
+    }
+
+    private TextAsset GetCurrentScenarioTextAsset()
+    {
+      if (string.IsNullOrEmpty(currentFilePath)) return null;
+      var projectRoot = Directory.GetParent(Application.dataPath)?.FullName;
+      if (string.IsNullOrEmpty(projectRoot)) return null;
+      var relativePath = currentFilePath.Replace(projectRoot + Path.DirectorySeparatorChar, string.Empty)
+        .Replace(Path.DirectorySeparatorChar, '/');
+      return AssetDatabase.LoadAssetAtPath<TextAsset>(relativePath);
+    }
+
+    private static TextAsset GetSelectedScenarioTextAsset()
+    {
+      var asset = Selection.activeObject as TextAsset;
+      var path = asset == null ? null : AssetDatabase.GetAssetPath(asset);
+      return !string.IsNullOrEmpty(path) && path.EndsWith(ScenarioExtension, StringComparison.OrdinalIgnoreCase) ? asset : null;
+    }
+
+    private void OpenRequirementsWindow()
+    {
+      var scenarioAsset = GetCurrentScenarioTextAsset();
+      if (scenarioAsset == null)
+      {
+        EditorUtility.DisplayDialog("Scenario Ingame Requirements", "프로젝트의 .scenario.json TextAsset을 먼저 열어 주세요.", "확인");
+        return;
+      }
+
+      ScenarioRequirementsWindow.Open(scenarioAsset);
+    }
+
+    private void OpenSelectedScenarioTextAsset()
+    {
+      var asset = GetSelectedScenarioTextAsset();
+      if (asset == null)
+      {
+        EditorUtility.DisplayDialog("Open Scenario", "Project 창에서 .scenario.json TextAsset을 선택해 주세요.", "확인");
+        return;
+      }
+
+      var path = AssetDatabase.GetAssetPath(asset);
+      OpenGraphFromPath(Path.GetFullPath(path));
+      SetActiveTab(true);
     }
 
     private void CreateSearchPanel()
@@ -918,6 +1026,13 @@ namespace MultiplayerInfrastructure.Editor
     private void OpenGraphFromJson()
     {
       var path = EditorUtility.OpenFilePanel("Open Scenario JSON", Application.dataPath, "json");
+      if (string.IsNullOrEmpty(path)) return;
+
+      OpenGraphFromPath(path);
+    }
+
+    private void OpenGraphFromPath(string path)
+    {
       if (string.IsNullOrEmpty(path)) return;
 
       var json = File.ReadAllText(path);

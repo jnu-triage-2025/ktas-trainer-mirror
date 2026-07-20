@@ -28,8 +28,18 @@ namespace MultiplayerInfrastructure.Scenario.Requirements.Editor
     private readonly HashSet<string> _approvedGeneratedDeletions = new HashSet<string>(StringComparer.Ordinal);
     private string _error;
 
-    [MenuItem("Tools/Multiplayer Infrastructure/Scenario Ingame Requirements")]
-    public static void Open() => GetWindow<ScenarioRequirementsWindow>("Scenario Requirements").Show();
+    /// <summary>
+    /// Opens the requirements workflow in its own window. The graph editor uses this
+    /// entry point so both tools operate on the same scenario asset.
+    /// </summary>
+    public static void Open(TextAsset scenario = null)
+    {
+      var window = GetWindow<ScenarioRequirementsWindow>("Scenario Requirements");
+      if (scenario != null)
+        window._scenario = scenario;
+      window.Show();
+      window.Focus();
+    }
 
     private void OnGUI()
     {

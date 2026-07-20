@@ -2038,7 +2038,7 @@
           "identifier": "N017",
           "completionConditionIdentifier": "CC_A_ambu",
           "requiredPlayerTags": [
-            "airway_team"
+            "nurse_a"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -2047,7 +2047,7 @@
           "identifier": "N018",
           "completionConditionIdentifier": "CC_B_chestcomp",
           "requiredPlayerTags": [
-            "cpr_team"
+            "nurse_b"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -2056,7 +2056,7 @@
           "identifier": "N019",
           "completionConditionIdentifier": "CC_C_defib",
           "requiredPlayerTags": [
-            "defib_team"
+            "nurse_c"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -2065,7 +2065,7 @@
           "identifier": "N020",
           "completionConditionIdentifier": "CC_D_epi",
           "requiredPlayerTags": [
-            "medication_team"
+            "nurse_d"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -3009,7 +3009,7 @@
           "identifier": "N021",
           "completionConditionIdentifier": "CC_A_chestcomp",
           "requiredPlayerTags": [
-            "cpr_team"
+            "nurse_a"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -3018,7 +3018,7 @@
           "identifier": "N022",
           "completionConditionIdentifier": "CC_B_ambu",
           "requiredPlayerTags": [
-            "airway_team"
+            "nurse_b"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -3027,7 +3027,7 @@
           "identifier": "N023",
           "completionConditionIdentifier": "CC_C_epi",
           "requiredPlayerTags": [
-            "medication_team"
+            "nurse_c"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -3036,7 +3036,7 @@
           "identifier": "N024",
           "completionConditionIdentifier": "CC_D_defib",
           "requiredPlayerTags": [
-            "defib_team"
+            "nurse_d"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"

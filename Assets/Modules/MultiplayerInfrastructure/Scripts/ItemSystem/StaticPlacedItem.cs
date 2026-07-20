@@ -172,7 +172,7 @@ namespace MultiplayerInfrastructure.ItemSystem
         Debug.LogWarning(
           $"[StaticPlacedItem] '{gameObject.name}' 에 SceneItemPlacement 가 함께 존재합니다. " +
           $"SceneItemPlacement 는 물리 기반 ItemObject 를 스폰하여 아이템이 흩어지게 하므로 제거해야 합니다. " +
-          $"(Tools ▸ Multiplayer Infrastructure ▸ Static Placed Item ▸ Convert All In Active Scene 재실행 권장)",
+          "(SceneItemPlacement 변환 도구를 다시 실행하는 것을 권장)",
           this);
       }
     }

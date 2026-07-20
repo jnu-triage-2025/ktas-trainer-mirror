@@ -39,7 +39,7 @@ flags: ["refactor-required"]
 | 일반 전이 | 정의되지 않은 일반 `NextIdentifier`/선택지 대상 없음 | 설명 괄호는 식별자에 포함하지 않고, 종료 노드 `N092`만 `null`로 변환한다. |
 | 병렬 합류 | 5개 `Parallel`과 10개 완료 표식이 대응됨 | `CC_*`는 별도 노드가 아니라 브랜치 종료 표식으로 직렬화한다. |
 | 이벤트 | 고유 `EventIdentifier` 20개가 모두 `TriageScenarioEventBootstrap`에 등록됨 | Requirements 검증에서 handler 등록을 필수로 한다. |
-| 퀘스트 | 12개 `Quest_*`가 식별자만 있고 title/content/task definition이 없음 | 빈 inline quest를 만들지 않고 Q-BC-1 해결 후 definition을 참조한다. |
+| 퀘스트 | ~~12개 `Quest_*`가 식별자만 있고 title/content/task definition이 없었다.~~ **해결:** `patient_b_c_ct.quests.quest.json`에 12개 definition의 title/description/questContent를 작성했고 모든 `QuestControl` 참조가 정의와 일치한다. | 완료 조건은 각 Scenario Validator가 게이팅하고 QuestControl이 제거하므로, definition의 빈 `tasks`는 안내 전용 quest의 의도된 구성이다. |
 | 런타임 신호 | 고유 신호 42개 중 22개가 둘 이상의 Validator에서 재사용됨 | sticky RuntimeState를 환자·행위 단위로 분리하거나 소비 후 clear해야 한다. |
 
 #### 환자 상태 → Scenario 신호 바인딩 (2026-07-20)
@@ -67,7 +67,7 @@ flags: ["refactor-required"]
 | SIGNAL-BC-2 | `COUNT_TRIAGE_ARRIVALS` → `V039` | ~~`enter_triage_zone` 하나의 존재 여부로는 세 명 도착을 셀 수 없다.~~ **해결(2026-07-20):** `ScenarioTriggerZone._perEntitySignalTemplate`(`enter_triage_zone_{id}`)로 진입 환자별 신호를 발신하고, `SignalCounter`(prefix `enter_triage_zone_`, threshold 3)로 인원 수량 게이트를 구성. | `COUNT_TRIAGE_ARRIVALS`가 `patient_b`/`patient_c`/`dummy_b`의 신호 세 개를 세어 `all_triage_patients_arrived`를 발신하고, `V039`가 이를 대기한다. 운영자는 트리아지 구역 존 인스펙터에 `enter_triage_zone_{id}`를 설정해야 한다. |
 | SIGNAL-BC-3 | B/C의 장비·처치 Validator | ~~장비 획득·전극·펜라이트·산소·장갑·거즈 신호 22개가 환자 B와 C 흐름에서 재사용된다. B가 올린 신호 때문에 C 흐름이 실제 행동 없이 통과할 수 있다.~~ **부분 해결(2026-07-20):** 거즈·플라스터·비강캐뉼라의 환자별 결과 신호는 `EntityStateSignalBinding`이 `TreatmentApplied` 전이에서 발신하며, 관련 B/C Validator가 이를 대기한다. | 나머지 장비 "획득" 성격 신호, 전극·장갑, 산소 연결 및 SIGNAL-BC-4 producer 배선은 별도 인간 확정/후속. 환자 상태 전이로 표현되는 결과는 `_patient_b`/`_patient_c`로 분리 완료. |
 | SIGNAL-BC-4 | `V036`, `V046`, `V048`, `V050`, `V052`~`V055`, `V065`, `V069`, `V071`~`V074` | 문서가 선행 구현 필요로 표시한 신호 producer가 없다. `WaitForCondition=true`이므로 `OnFailure=Ignore`여도 자동 통과하지 않고 무한 대기한다. 일부 120초 `ForceAdvance`는 실패를 숨길 뿐 정상 플레이 검증이 아니다. | 정식 gameplay callback에서 동일 신호를 Raise한다. timeout은 접근성/복구 정책으로만 유지하고 producer 대체로 사용하지 않는다. |
-| Q-BC-1 | `Q031`~`Q042_1` | 12개 quest가 식별자만 있어 실제 오버레이 내용과 완료 task가 비어 있다. | 주변 Dialogue와 Validator를 기반으로 별도 quest definition 12개를 작성하고 Add/Remove가 같은 identifier를 참조하게 한다. |
+| Q-BC-1 | `Q031`~`Q042_1` | ~~12개 quest가 식별자만 있어 실제 오버레이 내용과 완료 task가 비어 있었다.~~ **해결:** `Resources/Quest/patient_b_c_ct.quests.quest.json`에 12개 definition의 title/description/questContent를 작성했고 Add/Remove가 같은 identifier를 참조한다. | 완료는 Validator가 판정하고 QuestControl이 Remove하는 안내형 quest이므로 별도 자동 완료 task는 두지 않는다. |
 | PRESET-BC-1 | `PRESET_B`, `PRESET_C` | ~~문서가 요구하는 체온과 SpO2는 현재 `PatientMedicalStatePreset` 필드가 아니다.~~ **해결(2026-07-20):** `bodyTemperatureCelsius`, `spo2` 필드를 프리셋 노드/DTO/로더/컨트롤러/스키마에 추가함. | 체온 37.8°, SpO2 93%를 preset에 직접 기입. 모니터 브리지(temperature.t1, numerics/pleth.spo2) 연결 완료. |
 | END-BC-1 | `N092` 및 종료 조건 | fade-out 요구가 서술에만 있고 `N092`는 Dialogue 후 종료된다. | fade handler가 확정되면 `E_END_BC_FADE -> N092`를 명시한다. 현재는 종료 메시지는 동작하지만 fade 연출은 미충족으로 기록한다. |
 

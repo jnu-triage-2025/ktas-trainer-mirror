@@ -338,6 +338,10 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
     private const string PlayerTagService = "mi.service.player-tag";
     private const string UserDescriptorService = "mi.service.user-descriptor";
     private const string ChatService = "mi.service.chat";
+    // ByRole branches require one authoritative player pool and a single graph execution
+    // context. ScenarioNetworkRelay (G-8 P1) mirrors signals only; it does not supply
+    // this service until G-8 P2/P3 are implemented and registered.
+    private const string ServerAuthoritativeScenarioExecutionService = "mi.service.scenario-server-authoritative-execution";
 
     private static readonly IReadOnlyDictionary<ScenarioNodeType, Registration> Registrations =
       CreateRegistrations();
@@ -498,6 +502,14 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
         }
       }
       if (hasTags) AddPlayerTagServices(node, output);
+      if (node.AllocationType == ScenarioParallelAllocationType.ByRole
+          && node.Branches != null
+          && node.Branches.Count > 1)
+      {
+        output.AddService(node, "$service.server-authoritative-execution", "parallel-by-role-authority",
+          ServerAuthoritativeScenarioExecutionService, ScenarioRequirementAvailability.BeforeScenarioStart,
+          ScenarioRequirementAuthority.Server);
+      }
     }
 
     private static void ExtractInteraction(ScenarioInteractionNode node, ScenarioRequirementBuilder output)

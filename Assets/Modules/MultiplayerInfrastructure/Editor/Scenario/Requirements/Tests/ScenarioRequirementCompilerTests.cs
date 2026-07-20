@@ -85,6 +85,30 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
     }
 
     [Test]
+    public void MultiBranchByRoleRequiresAuthoritativeScenarioExecutionService()
+    {
+      var graph = new ScenarioGraph { Identifier = "by-role-authority" };
+      graph.Add(new ScenarioParallelNode
+      {
+        Identifier = "parallel",
+        AllocationType = ScenarioParallelAllocationType.ByRole,
+        Branches = new List<ScenarioParallelBranch>
+        {
+          new ScenarioParallelBranch { Identifier = "a", RequiredPlayerTags = new List<string> { "nurse_a" } },
+          new ScenarioParallelBranch { Identifier = "b", RequiredPlayerTags = new List<string> { "nurse_b" } }
+        }
+      });
+
+      var manifest = ScenarioRequirementCompiler.CompileInferred(graph);
+      var service = manifest.Requirements.Single(value => value.Key.Equals(new ScenarioRequirementKey(
+        ScenarioRequirementKind.Service, "mi.service.scenario-server-authoritative-execution")));
+
+      Assert.That(service.EffectiveAvailability, Is.EqualTo(ScenarioRequirementAvailability.BeforeScenarioStart));
+      Assert.That(service.Authority, Is.EqualTo(ScenarioRequirementAuthority.Server));
+      Assert.That(service.Occurrences.Single().Usage, Is.EqualTo("parallel-by-role-authority"));
+    }
+
+    [Test]
     public void ValidatorAnyMatchModeLoadsAndRoundTrips()
     {
       const string json = @"{

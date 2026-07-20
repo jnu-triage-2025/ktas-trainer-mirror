@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "scenarioIdentifier": "patient_a_critical",
   "source": {
-    "scenarioSha256": "a5aef0bf69dd65bfcb68e1e498c01bdd6a71471bfdf7438b6c10cecd283aed54",
+    "scenarioSha256": "a088ea34d44cb1f49533a145ef824779cac846214174a518b379a87f2982562e",
     "generatedAtUtc": null
   },
   "declarations": [
