@@ -63,7 +63,7 @@ flags: ["refactor-required"]
 |---|---|---|---|
 | SPAWN-BC-1 | `SPAWN_B`, `SPAWN_C` | Unity import에서 `patient_b`의 `PatientTypeBMale`, `patient_c`의 `PatientTypeBFemale` prefab이 FishNet `DefaultPrefabObjects`에 등록되지 않아 `PrefabId`가 미할당된 것으로 확인됐다. 현재 상태로 network spawn하면 런타임 `ObjectId 65535` 오류가 발생한다. | Fish-Networking Spawnable Prefabs에 두 원본 prefab을 등록하고 reserialize한 뒤, Production profile에서 각 EntityPreset의 `SpawnablePreset` capability를 다시 증명한다. |
 | ROLE-BC-1 | `P009`~`P013` | `ByRole`은 player tag만 사용하지만 NurseA~D와 태그의 선행 매핑이 없다. 또한 `P009` 상위 태그와 `P012`/`P013` 하위 태그가 다르고 `bleeding_control`은 양쪽 환자 그룹에 중복된다. | **인간 판단 필요:** 세션 role→tag 표를 확정하고 Scenario 시작 전 공급 계약으로 선언한다. 한 플레이어가 동시에 양쪽 환자 브랜치에 배정되지 않도록 태그를 배타적으로 구성한다. |
-| SIGNAL-BC-1 | `V040_A`/`V040_C`, `V040_B`/`V040_D` | 같은 들것 신호를 두 번 기다린다. 신호가 sticky라 첫 파지 후 두 번째 Validator도 즉시 통과하여 2인 파지를 증명하지 못한다. 프리팹에는 `RidableAttachPointObject` 4개가 있지만 `PlayerAttachPoints` 직렬화 목록은 1개이고, 참가자·점유 상태·강제 추종·이동 입력이 모두 피어 로컬이다. | 서버 권위의 손잡이 슬롯(점유 client ID + attach point index)을 SyncVar/SyncList로 복제하고, TargetRpc로 각 참가자의 로컬 follow anchor를 배정한다. 서버가 서로 다른 client ID의 두 슬롯을 확인한 뒤에만 `grab_stretcher_patient_b_handle_0/1` 등 손잡이별 signal을 올리며, 시나리오는 이 두 signal을 별도 Validator로 대기한다. |
+| SIGNAL-BC-1 | `V040_A`/`V040_C`, `V040_B`/`V040_D` | ~~같은 들것 신호를 두 번 기다려 2인 파지를 증명하지 못한다.~~ **해결(2026-07-20):** `MovingPatientBedController`가 서버 권위 `SyncVar` 손잡이 슬롯 두 개에 client ID를 기록한다. 프리팹 `PlayerAttachPoints`도 두 개로 배선했다. | 서버가 각 슬롯을 한 client ID에만 배정하고, 각 소유 클라이언트에 follow anchor를 동기화한다. 참가자 입력은 ServerRpc로 보고되어 서버가 침대를 이동하고 transform을 ObserversRpc로 복제한다. 슬롯 0/1이 각각 `grab_stretcher_patient_b/c_handle_0/1`을 발신하며, 시나리오는 이 두 signal을 별도 Validator로 대기한다. |
 | SIGNAL-BC-2 | `COUNT_TRIAGE_ARRIVALS` → `V039` | ~~`enter_triage_zone` 하나의 존재 여부로는 세 명 도착을 셀 수 없다.~~ **해결(2026-07-20):** `ScenarioTriggerZone._perEntitySignalTemplate`(`enter_triage_zone_{id}`)로 진입 환자별 신호를 발신하고, `SignalCounter`(prefix `enter_triage_zone_`, threshold 3)로 인원 수량 게이트를 구성. | `COUNT_TRIAGE_ARRIVALS`가 `patient_b`/`patient_c`/`dummy_b`의 신호 세 개를 세어 `all_triage_patients_arrived`를 발신하고, `V039`가 이를 대기한다. 운영자는 트리아지 구역 존 인스펙터에 `enter_triage_zone_{id}`를 설정해야 한다. |
 | SIGNAL-BC-3 | B/C의 장비·처치 Validator | ~~장비 획득·전극·펜라이트·산소·장갑·거즈 신호 22개가 환자 B와 C 흐름에서 재사용된다. B가 올린 신호 때문에 C 흐름이 실제 행동 없이 통과할 수 있다.~~ **부분 해결(2026-07-20):** 거즈·플라스터·비강캐뉼라의 환자별 결과 신호는 `EntityStateSignalBinding`이 `TreatmentApplied` 전이에서 발신하며, 관련 B/C Validator가 이를 대기한다. | 나머지 장비 "획득" 성격 신호, 전극·장갑, 산소 연결 및 SIGNAL-BC-4 producer 배선은 별도 인간 확정/후속. 환자 상태 전이로 표현되는 결과는 `_patient_b`/`_patient_c`로 분리 완료. |
 | SIGNAL-BC-4 | `V036`, `V046`, `V048`, `V050`, `V052`~`V055`, `V065`, `V069`, `V071`~`V074` | 문서가 선행 구현 필요로 표시한 신호 producer가 없다. `WaitForCondition=true`이므로 `OnFailure=Ignore`여도 자동 통과하지 않고 무한 대기한다. 일부 120초 `ForceAdvance`는 실패를 숨길 뿐 정상 플레이 검증이 아니다. | 정식 gameplay callback에서 동일 신호를 Raise한다. timeout은 접근성/복구 정책으로만 유지하고 producer 대체로 사용하지 않는다. |
@@ -705,13 +705,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V040_A |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.grab_stretcher_patient_b (RegistryContains / RuntimeState) |
+| **Condition** | 문자열 | sig.grab_stretcher_patient_b_handle_0 (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | V040_C |
 
-- [ ] f: `grab_stretcher_patient_b` 게이트(간호사 A). 배선 상태 확정요청.
+- [x] 서버가 손잡이 0에 고유 client ID를 배정하면 `grab_stretcher_patient_b_handle_0`를 발신한다.
 
 ---
 
@@ -721,13 +721,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V040_C |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.grab_stretcher_patient_b (RegistryContains / RuntimeState) |
+| **Condition** | 문자열 | sig.grab_stretcher_patient_b_handle_1 (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | E043 |
 
-- [ ] f: `grab_stretcher_patient_b` 게이트(간호사 C). V040_A와 동일 시그널을 2회 대기하는 구조 → 2인 동시 파지 검증 배선 정합 필요.
+- [x] 서버가 손잡이 1에 다른 client ID를 배정하면 `grab_stretcher_patient_b_handle_1`를 발신한다. 한 client는 하나의 슬롯만 점유할 수 있다.
 
 ---
 
@@ -2155,13 +2155,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V040_B |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.grab_stretcher_patient_c (RegistryContains / RuntimeState) |
+| **Condition** | 문자열 | sig.grab_stretcher_patient_c_handle_0 (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | V040_D |
 
-- [ ] f: `grab_stretcher_patient_c` 게이트(간호사 B). 배선 상태 확정요청.
+- [x] 서버가 손잡이 0에 고유 client ID를 배정하면 `grab_stretcher_patient_c_handle_0`를 발신한다.
 
 ---
 
@@ -2171,13 +2171,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V040_D |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.grab_stretcher_patient_c (RegistryContains / RuntimeState) |
+| **Condition** | 문자열 | sig.grab_stretcher_patient_c_handle_1 (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | E050 |
 
-- [ ] f: `grab_stretcher_patient_c` 게이트(간호사 D). V040_B와 동일 시그널 2회 대기 구조 → 2인 동시 파지 검증 배선 정합 필요.
+- [x] 서버가 손잡이 1에 다른 client ID를 배정하면 `grab_stretcher_patient_c_handle_1`를 발신한다. 한 client는 하나의 슬롯만 점유할 수 있다.
 
 ---
 

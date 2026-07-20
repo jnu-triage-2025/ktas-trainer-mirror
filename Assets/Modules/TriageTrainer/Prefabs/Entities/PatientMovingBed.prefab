@@ -361,6 +361,7 @@ MonoBehaviour:
     m_Bits: 4294967295
   PlayerAttachPoints:
   - {fileID: 7425824512457748482}
+  - {fileID: 2119104018315133438}
   PatientAttachPoints:
   - {fileID: 762591555731961356}
   _attachableItemVisualPairs: []

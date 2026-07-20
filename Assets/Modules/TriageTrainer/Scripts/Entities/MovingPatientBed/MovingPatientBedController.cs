@@ -211,11 +211,7 @@ namespace TriageTrainer.Entity
 
       SyncReposedTargetTransform();
 
-      if (_participants.Count == 0)
-        return;
-
-      RefreshOwnerActionbars();
-      MoveBedFromParticipantsInput();
+      UpdateAuthoritativeParticipantMovement();
     }
 
     public void Interact(Transform interactor)
@@ -227,31 +223,7 @@ namespace TriageTrainer.Entity
       if (player == null)
         return;
 
-      int id = interactor.GetInstanceID();
-
-      if (_participants.TryGetValue(id, out var existing))
-      {
-        ExitMovingMode(player, existing);
-        _participants.Remove(id);
-        return;
-      }
-
-      if (!TryOccupyNextPlayerAttachPoint(player, out Transform attachPoint))
-      {
-        ShowThrottledMessage(interactor, "침대의 모든 이동 위치가 이미 사용 중입니다.");
-        return;
-      }
-
-      var participant = new RidingParticipant
-      {
-        Player = player,
-        Interactor = interactor,
-        AttachPoint = attachPoint,
-        LastActionbarRefreshAt = -100f,
-      };
-
-      _participants[id] = participant;
-      EnterMovingMode(participant);
+      RequestAuthoritativeParticipantToggle(player, interactor);
     }
 
     public bool CanInteract(Transform interactor)
@@ -705,6 +677,12 @@ namespace TriageTrainer.Entity
         if (!_participants.TryGetValue(key, out var participant))
           continue;
 
+        if (IsClientStarted || IsServerStarted)
+        {
+          RequestAuthoritativeParticipantToggle(participant.Player, participant.Interactor);
+          continue;
+        }
+
         ExitMovingMode(participant.Player, participant);
         _participants.Remove(key);
       }
@@ -731,6 +709,12 @@ namespace TriageTrainer.Entity
         int key = keys[i];
         if (!_participants.TryGetValue(key, out var participant))
           continue;
+
+        if (IsClientStarted || IsServerStarted)
+        {
+          RequestAuthoritativeParticipantToggle(participant.Player, participant.Interactor);
+          continue;
+        }
 
         ExitMovingMode(participant.Player, participant);
         _participants.Remove(key);
