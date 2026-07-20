@@ -488,11 +488,21 @@
     "Q032": {
       "identifier": "Q032",
       "nodeType": "QuestControl",
-      "nextIdentifier": "V039",
+      "nextIdentifier": "COUNT_TRIAGE_ARRIVALS",
       "operation": "Add",
       "failureStrategy": "Ignore",
       "questDefinitionIdentifier": "Quest_playerB_playerC_playerD_to_triage",
       "quest": null
+    },
+    "COUNT_TRIAGE_ARRIVALS": {
+      "identifier": "COUNT_TRIAGE_ARRIVALS",
+      "nodeType": "SignalCounter",
+      "counterIdentifier": "triage_arrivals_patient_b_c_dummy_b",
+      "operation": "Register",
+      "sourceSignalPrefix": "enter_triage_zone_",
+      "threshold": 3,
+      "outputSignalIdentifier": "all_triage_patients_arrived",
+      "nextIdentifier": "V039"
     },
     "V039": {
       "identifier": "V039",
@@ -506,7 +516,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.enter_triage_zone"
+              "registryIdentifier": "sig.all_triage_patients_arrived"
             }
           ]
         }
