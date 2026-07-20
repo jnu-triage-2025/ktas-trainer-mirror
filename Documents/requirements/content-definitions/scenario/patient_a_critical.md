@@ -62,7 +62,7 @@ Scenario로 판정하면 안 된다.
 | ID | 위치 | 부족한 연결 | 처리 |
 |---|---|---|---|
 | SPAWN-A-1 | `SPAWN_A` | Unity import에서 `patient_a`의 `PatientTypeA` prefab이 FishNet `DefaultPrefabObjects`에 등록되지 않아 `PrefabId`가 미할당된 것으로 확인됐다. 현재 상태로 network spawn하면 런타임 `ObjectId 65535` 오류가 발생한다. | Fish-Networking Spawnable Prefabs에 원본 prefab을 등록하고 reserialize한 뒤, Production profile에서 `EntityPreset(patient_a)`의 `SpawnablePreset` capability를 다시 증명한다. (인간 작업자 의견: `EntityPreset` 시스템과 Assets/Modules/TriageTrainer/ScriptableObjects/EntityPreset Registry Requirements SO 에 의해 처리 가능할 것임)     |
-| ROLE-1 | `P002`, `P003`, `P004`, `P005`, `P006`, `P007` 진입 전 | `ByRole`은 플레이어 태그만 읽지만, 이 문서에는 NurseA~D와 역할 태그를 연결·부여하는 진입 노드가 없다. 태그가 없으면 `Reallocation` 이후에도 브랜치 할당이 보장되지 않는다. | **인간 판단 필요:** 로비/세션이 `triage_lead`, `airway_team`, `neuro_assessment` 등 모든 태그를 선행 부여하는지 확정한다. 아니라면 Scenario 시작 전용 role→tag 바인더 구현 후 `SPAWN_A`의 선행 요구사항으로 둔다.(인간 작업자 의견: 그냥 nurse-a, nurse-b, nurse-c, nurse-d로 )   |
+| ROLE-1 | `P002`, `P003`, `P004`, `P005`, `P006`, `P007` 진입 전 | ~~`ByRole`의 역할 태그 공급 계약이 없었다.~~ **해결:** `disaster_intro`의 `C_role_select`가 현재 플레이어에게 `nurse_a`~`nurse_d` 식별 태그와 해당 역할 facet 태그를 함께 부여한다. | 환자 A/B/C는 intro 역할 선택 뒤에 시작하는 시나리오다. CPR 교대(P005/P006)는 facet 재사용을 피하기 위해 `nurse_a`~`nurse_d` 식별 태그로 고정 배정한다. |
 | ROLE-2 | `P004`의 `N008`, `N011` 브랜치 | 한 브랜치에 각각 `NurseB, NurseA`와 `NurseD, NurseC` 두 역할을 적었지만 현재 `ByRole`은 한 브랜치에 한 플레이어만 배정한다. `requiredPlayerTagsMatchMode=All`은 두 사람이 아니라 한 사람이 두 태그를 모두 가져야 한다는 뜻이다. | **인간 판단 필요:** (a) 한 명이 전체 브랜치를 수행하도록 역할 표기를 단일화하거나, (b) `N008`의 삽관/산소 및 `N011`의 IV/보조 흐름을 별도 병렬 브랜치와 합류점으로 분리한다. |
 | S-1 | `V011_1`, `V014_1~V014_4`, `V018`, `V023_1`, `V024`, `V025~V025_1`, `V027`, `V030`, `V033` | 실제 코드·문서 대조 결과, 정식 producer가 없는 신호는 10개다: `show_vital_patient_a`, `pass_laryngoscope`, `pass_et_tube_ready`, `remove_intu_stylet`, `pass_syringe`, `pass_central_line_set`, `remove_tpiece`, `click_to_start_comp`, `move_defibcart_to_patient`, `remove_patient_clothing`. 하나라도 생산되지 않으면 해당 Validator에서 영구 정지한다. | 각 노드의 기존 `(b) 선행 구현 필요` 주석을 producer 작업 목록으로 사용한다. `pass_*`는 이미 있는 `ItemSubmissionConfig`/`ItemSubmissionInteractable`로 구현 가능하나, 의사 NPC identifier·제출 상호작용 identifier·배치 위치의 콘텐츠 정의가 먼저 필요하다. Debug emitter를 정식 producer로 간주하지 않는다. |
 | Q-1 | 모든 `Q006`~`Q030_1` | 23개 `Quest_*`가 표시용 식별자만 있고 title/content/task definition이 없다. 식별자만 가진 inline quest는 빈 오버레이를 만들며 플레이 안내가 느슨해진다. | **인간 콘텐츠 확정 필요:** 각 Add 노드 주변 Dialogue와 이어지는 Validator 조건을 기반으로 title, questContent, task display text를 확정해 별도 quest definition으로 작성한다. Remove 노드는 같은 definition identifier를 사용한다. |
@@ -2828,10 +2828,10 @@ Scenario로 판정하면 안 된다.
 
 | Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
 |---|---|---|---|---|---|
-| N017 | CC_A_ambu | NurseA | airway_team | - | All |
-| N018 | CC_B_chestcomp | NurseB | cpr_team | - | All |
-| N019 | CC_C_defib | NurseC | defib_team | - | All |
-| N020 | CC_D_epi | NurseD | medication_team | - | All |
+| N017 | CC_A_ambu | NurseA | nurse_a | - | All |
+| N018 | CC_B_chestcomp | NurseB | nurse_b | - | All |
+| N019 | CC_C_defib | NurseC | nurse_c | - | All |
+| N020 | CC_D_epi | NurseD | nurse_d | - | All |
 
 
 ---
@@ -4178,10 +4178,10 @@ Scenario로 판정하면 안 된다.
 
 | Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
 |---|---|---|---|---|---|
-| N021 | CC_A_chestcomp | NurseA | cpr_team | - | All |
-| N022 | CC_B_ambu | NurseB | airway_team | - | All |
-| N023 | CC_C_epi | NurseC | medication_team | - | All |
-| N024 | CC_D_defib | NurseD | defib_team | - | All |
+| N021 | CC_A_chestcomp | NurseA | nurse_a | - | All |
+| N022 | CC_B_ambu | NurseB | nurse_b | - | All |
+| N023 | CC_C_epi | NurseC | nurse_c | - | All |
+| N024 | CC_D_defib | NurseD | nurse_d | - | All |
 
 
 ---
