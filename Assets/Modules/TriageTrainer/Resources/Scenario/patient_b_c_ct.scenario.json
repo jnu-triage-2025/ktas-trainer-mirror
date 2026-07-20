@@ -159,6 +159,10 @@
           "nextNodeIdentifier": "N029_retry_a"
         },
         {
+          "displayText": "KTAS 2(긴급)",
+          "nextNodeIdentifier": "N030"
+        },
+        {
           "displayText": "KTAS 3(응급)",
           "nextNodeIdentifier": "N029_retry_a"
         },
@@ -169,10 +173,6 @@
         {
           "displayText": "KTAS 5(비응급)",
           "nextNodeIdentifier": "N029_retry_a"
-        },
-        {
-          "displayText": "KTAS 2(긴급)",
-          "nextNodeIdentifier": "N030"
         }
       ]
     },
@@ -647,16 +647,16 @@
           "nextNodeIdentifier": "N037_retry_a"
         },
         {
+          "displayText": "V(Verbal response, 음성에 반응 있음)",
+          "nextNodeIdentifier": "N038"
+        },
+        {
           "displayText": "P(Pain response, 통증에 반응 있음)",
           "nextNodeIdentifier": "N037_retry_a"
         },
         {
           "displayText": "U(Unconsciousness, 반응 없음)",
           "nextNodeIdentifier": "N037_retry_a"
-        },
-        {
-          "displayText": "V(Verbal response, 음성에 반응 있음)",
-          "nextNodeIdentifier": "N038"
         }
       ]
     },
@@ -693,16 +693,16 @@
           "nextNodeIdentifier": "N038_retry_b"
         },
         {
+          "displayText": "3점(명령)",
+          "nextNodeIdentifier": "N039"
+        },
+        {
           "displayText": "2점(통증)",
           "nextNodeIdentifier": "N038_retry_b"
         },
         {
           "displayText": "1점(반응 없음)",
           "nextNodeIdentifier": "N038_retry_b"
-        },
-        {
-          "displayText": "3점(명령)",
-          "nextNodeIdentifier": "N039"
         }
       ]
     },
@@ -739,6 +739,10 @@
           "nextNodeIdentifier": "N039_retry_c"
         },
         {
+          "displayText": "4점(혼란)",
+          "nextNodeIdentifier": "N040"
+        },
+        {
           "displayText": "3점(부적절한 답변)",
           "nextNodeIdentifier": "N039_retry_c"
         },
@@ -749,10 +753,6 @@
         {
           "displayText": "1점(반응 없음)",
           "nextNodeIdentifier": "N039_retry_c"
-        },
-        {
-          "displayText": "4점(혼란)",
-          "nextNodeIdentifier": "N040"
         }
       ]
     },
@@ -785,6 +785,10 @@
       "playTTS": true,
       "options": [
         {
+          "displayText": "6점(명령 수행)",
+          "nextNodeIdentifier": "N041"
+        },
+        {
           "displayText": "5점(통증 원인을 치우려고 손을 뻗음)",
           "nextNodeIdentifier": "N040_retry_d"
         },
@@ -803,10 +807,6 @@
         {
           "displayText": "1점(반응 없음)",
           "nextNodeIdentifier": "N040_retry_d"
-        },
-        {
-          "displayText": "6점(명령 수행)",
-          "nextNodeIdentifier": "N041"
         }
       ]
     },
@@ -1059,7 +1059,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "V046",
       "speakerName": "시스템",
-      "dialogueContent": "혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.8도, SpO2 93% 입니다. 확인 후 모니터 창을 닫으십시오.",
+      "dialogueContent": "혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.3도, SpO2 93% 입니다. 확인 후 모니터 창을 닫으십시오.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 6,
       "playTTS": true
@@ -1099,7 +1099,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "D042",
       "speakerName": "시스템",
-      "dialogueContent": "B 환자의 의식상태는 GCS 13점, 근력 우측 5점/좌측 3점이며, 활력징후는 혈압 140/86, 맥박 120, 호흡수 24, 체온 37.8, SpO2 93% 입니다.",
+      "dialogueContent": "B 환자의 의식상태는 GCS 13점, 근력 우측 5점/좌측 3점이며, 활력징후는 혈압 140/86, 맥박 120, 호흡수 24, 체온 37.3, SpO2 93% 입니다.",
       "portraitSpriteIdentifier": null,
       "playTTS": true
     },
@@ -2374,7 +2374,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "V065",
       "speakerName": "시스템",
-      "dialogueContent": "혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.8도, SpO2 93% 입니다. 확인 후 모니터 창을 닫으십시오.",
+      "dialogueContent": "혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.3도, SpO2 93% 입니다. 확인 후 모니터 창을 닫으십시오.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 6,
       "playTTS": true
@@ -2414,7 +2414,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "D051",
       "speakerName": "시스템",
-      "dialogueContent": "C 환자의 의식상태는 GCS 13점, 근력 좌측 5점/우측 3점이며, 활력징후는 혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.8도, SpO2 93% 입니다.",
+      "dialogueContent": "C 환자의 의식상태는 GCS 13점, 근력 좌측 5점/우측 3점이며, 활력징후는 혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.3도, SpO2 93% 입니다.",
       "portraitSpriteIdentifier": null,
       "playTTS": true
     },

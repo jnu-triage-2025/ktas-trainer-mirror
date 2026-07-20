@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "2-implementing"
 status: active
-updated: 2026-07-09
+updated: 2026-07-14
 flags: ["refactor-required"]
 ---
 
@@ -68,7 +68,7 @@ flags: ["refactor-required"]
 | `connect_ps1_right` | 우측 18G에 플라즈마 솔루션 자동 연결 연출 | E022 | implemented |
 | `insert_central_line_set` | 의사 NPC가 C-line 삽입하는 연출 | E023 | implemented |
 | `lv1_ready` | Level 1 rapid infuser에 수액/혈액 장착 상태 변경 | E024 | implemented |
-| `patient_crash_ui` | 환자 상태 악화(모니터 알람+SpO2 급감) 연출 | E025 | implemented |
+| `patient_crash_ui` | 환자 상태 악화(모니터 알람+HR/RR/BP -?- 로 출력, SpO2 급감) 연출 | E025 | implemented |
 | `apply_ambu_patient_a` | 기관내관 상단에 앰부백 연결 연출 | E026 | implemented |
 | `start_ambubagging` | 앰부백 짜는 애니메이션 시작(무한 반복) | E027 · E034 | implemented |
 | `start_chest_compression` | 가슴압박 애니메이션 시작(무한 반복) | E028 · E033 | implemented |
@@ -96,21 +96,21 @@ flags: ["refactor-required"]
 | `b_c_d_to_triage` | 간호사 B, C, D가 트리아지 구역으로 이동하는 연출 | E042 | implemented |
 | `move_patient_b` | 환자 B 스트레쳐를 입원실 구역으로 이동 | E043 | implemented |
 | `activate_vital_monitor_ui_patient_b` | 환자 B 활력징후 UI 출력 + 모니터 표시 | E044 | implemented |
-| `pupil_reflex_patient_b` | 환자 B 우측 동공 고정(대광반사 이상) 연출 | E045 | implemented |
+| `pupil_reflex_patient_b` | 환자 B 좌측 동공 고정(대광반사 이상) 연출 | E045 | implemented |
 | `insert_20g_right_patient_b` | 환자 B 우측 팔 20G 카테터 삽입 연출 | E046 | implemented |
 | `connect_ns1_right_patient_b` | 환자 B 우측 20G에 생리식염수 연결 연출 | E047 | implemented |
-| `apply_gauze_patient_b` | 환자 B 상완 출혈부위 거즈 적용 연출 | E048 | implemented |
-| `apply_gauze_with_plaster_patient_b` | 환자 B 거즈를 플라스터 부착 상태로 변경 | E049 | implemented |
+| `apply_gauze_patient_b` | 환자 B 좌측 상완 및 얼굴 출혈부위 거즈 적용 연출 | E048 | implemented |
+| `apply_gauze_with_plaster_patient_b` | 환자 B 거즈 모두를 플라스터 부착 상태로 변경 | E049 | implemented |
 | `move_patient_c` | 환자 C 스트레쳐를 처치 구역으로 이동 | E050 | implemented |
 | `activate_vital_monitor_ui_patient_c` | 환자 C 활력징후 UI 출력 + 모니터 표시 | E051 | implemented |
-| `pupil_reflex_patient_c` | 환자 C 대광반사 이상 연출 | E052 | implemented |
+| `pupil_reflex_patient_c` | 환자 C 우측 동공 고정(대광반사 이상) 연출 | E052 | implemented |
 | `insert_20g_left_patient_c` | 환자 C 좌측 팔 20G 카테터 삽입 연출 | E053 | implemented |
 | `connect_ns1_left_patient_c` | 환자 C 좌측 20G에 생리식염수 연결 연출 | E054 | implemented |
-| `apply_gauze_patient_c` | 환자 C 출혈부위 거즈 적용 연출 | E055 | implemented |
-| `apply_gauze_with_plaster_patient_c` | 환자 C 거즈를 플라스터 부착 상태로 변경 | E056 | implemented |
+| `apply_gauze_patient_c` | 환자 C 우측 상완 및 얼굴 출혈부위 거즈 적용 연출 | E055 | implemented |
+| `apply_gauze_with_plaster_patient_c` | 환자 C 거즈 모두를 플라스터 부착 상태로 변경 | E056 | implemented |
 | `move_patients_to_ct` | 환자 B·C가 CT실로 이동하는 최종 연출 | E057 | implemented |
 
-- [ ] 확인: 환자 C 대광반사 좌/우 이상 방향(`pupil_reflex_patient_c`)이 환자 B와 반대인지 원본 임상 의도와 대조.
+- [x] 확인: 환자 C 대광반사 좌/우 이상 방향(`pupil_reflex_patient_c`)이 환자 B와 반대인지 원본 임상 의도와 대조. 2026-07-14 확인 완료.
 
 ---
 
