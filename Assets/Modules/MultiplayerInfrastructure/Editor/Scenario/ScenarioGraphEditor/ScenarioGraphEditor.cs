@@ -7,6 +7,7 @@ using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Scenario.Requirements.Editor;
 using UnityEditor;
+using UnityEditor.Callbacks;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -339,8 +340,8 @@ namespace MultiplayerInfrastructure.Editor
       if (mainContainer != null) mainContainer.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
       if (debugPanelView != null) debugPanelView.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
       if (editContainer != null) editContainer.style.display = showGraph ? DisplayStyle.None : DisplayStyle.Flex;
-      graphTabButton?.Enable(!showGraph);
-      editTabButton?.Enable(showGraph);
+      graphTabButton?.SetEnabled(!showGraph);
+      editTabButton?.SetEnabled(showGraph);
     }
 
     private TextAsset GetCurrentScenarioTextAsset()
