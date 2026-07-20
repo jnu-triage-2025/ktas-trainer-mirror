@@ -52,6 +52,11 @@ flags: ["refactor-required"]
 따라서 `V058`/`V059`와 `V077`/`V078`은 다른 환자의 sticky signal로 통과할 수 없다. 이 네 signal의
 정본 producer는 ItemUse 코드가 아니라 `EntityStateSignalBinding` 노드다.
 
+같은 위치의 `BIND_B_NASAL_APPLIED`/`BIND_C_NASAL_APPLIED`는 `NasalCannulaApplied` 전이를
+`apply_nasal_cannula_patient_b/c`로 변환한다. 따라서 `V055`와 `V074`의 비강캐뉼라 적용 조건도
+환자별로 분리된다. 산소 연결 신호(`connect_nasal_and_o2`)는 실제 연결점 identifier를 환자별로
+분리해야 하므로 SIGNAL-BC-3의 남은 producer 작업으로 유지한다.
+
 ### 플레이 차단 항목과 보완 위치
 
 | ID | 위치 | 부족한 연결 | 처리 |
@@ -125,7 +130,7 @@ flags: ["refactor-required"]
 interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 분류한다.
 
 - **자동 계측 완료**(설정만으로 동작): `enter_triage_zone`(구역 진입, 단 인원수 검증은 별도), `apply_electrode`, `apply_gauze`, `apply_plaster_on_gauze`, `wear_glove`.
-- **선행 구현 필요**(게임플레이 미구현, 미배선 시 무한 대기 또는 명시된 timeout 복구): `insert_iv_b_right`, `insert_iv_c_left`, `close_vital_ui_b`, `close_vital_ui_c`, `click_patient_b_face`, `click_patient_c_face`, `click_nasal`, `click_dummy_b`. `click_humidifier_bottle`, `click_sterile_distilled_water`, `click_flowmeter`는 `MedicalItem.OnGet()`이 자동 발행한다.
+- **선행 구현 필요**(게임플레이 미구현, 미배선 시 무한 대기 또는 명시된 timeout 복구): `insert_iv_b_right`, `insert_iv_c_left`, `close_vital_ui_b`, `close_vital_ui_c`, `click_patient_b_face`, `click_patient_c_face`, `click_dummy_b`. 비강캐뉼라 적용은 `NasalCannulaApplied` 상태 바인딩으로 대체했으며, 산소 연결은 별도 연결점 producer가 필요하다. `click_humidifier_bottle`, `click_sterile_distilled_water`, `click_flowmeter`는 `MedicalItem.OnGet()`이 자동 발행한다.
 - **에디터 Identifier 정합 필요**(코드는 있으나 프리팹/에디터 매핑 확정 필요): `check_gcs_patient_b`, `check_gcs_patient_c`, `check_vital_patient_b`, `check_vital_patient_c`, `click_patient_b`, `click_patient_c`.
 
 ## 시나리오 본문
@@ -1806,13 +1811,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V055 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.click_nasal AND sig.connect_nasal_and_o2 |
+| **Condition** | 문자열 | sig.apply_nasal_cannula_patient_b AND sig.connect_nasal_and_o2 |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | N057 |
 
-- [ ] f: `click_nasal`은 §5.3상 "선행 메커닉 필요(장비 클릭 미구현)".
+- [x] f: 비강캐뉼라 적용은 `NasalCannulaApplied` → `apply_nasal_cannula_patient_b` 상태 바인딩으로 계측한다. `connect_nasal_and_o2`의 환자별 연결점 producer는 별도 배선이 필요하다.
 
 ---
 
@@ -3258,13 +3263,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V074 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.click_nasal AND sig.connect_nasal_and_o2 |
+| **Condition** | 문자열 | sig.apply_nasal_cannula_patient_c AND sig.connect_nasal_and_o2 |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | N086 |
 
-- [ ] f: `click_nasal`은 §5.3상 "선행 메커닉 필요(장비 클릭 미구현)".
+- [x] f: 비강캐뉼라 적용은 `NasalCannulaApplied` → `apply_nasal_cannula_patient_c` 상태 바인딩으로 계측한다. `connect_nasal_and_o2`의 환자별 연결점 producer는 별도 배선이 필요하다.
 
 ---
 

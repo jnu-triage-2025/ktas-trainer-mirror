@@ -133,6 +133,30 @@
       "eventKey": "GauzeDressingDoneOnLeftArm",
       "outputSignalIdentifier": "apply_plaster_on_gauze_patient_c",
       "consumeOnce": true,
+      "nextIdentifier": "BIND_B_NASAL_APPLIED"
+    },
+    "BIND_B_NASAL_APPLIED": {
+      "identifier": "BIND_B_NASAL_APPLIED",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_nasal_applied_patient_b",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_b",
+      "eventName": "TreatmentApplied",
+      "eventKey": "NasalCannulaApplied",
+      "outputSignalIdentifier": "apply_nasal_cannula_patient_b",
+      "consumeOnce": true,
+      "nextIdentifier": "BIND_C_NASAL_APPLIED"
+    },
+    "BIND_C_NASAL_APPLIED": {
+      "identifier": "BIND_C_NASAL_APPLIED",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_nasal_applied_patient_c",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_c",
+      "eventName": "TreatmentApplied",
+      "eventKey": "NasalCannulaApplied",
+      "outputSignalIdentifier": "apply_nasal_cannula_patient_c",
+      "consumeOnce": true,
       "nextIdentifier": "E038"
     },
     "E038": {
@@ -1569,7 +1593,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_nasal"
+              "registryIdentifier": "sig.apply_nasal_cannula_patient_b"
             },
             {
               "type": "Registry",
@@ -2882,7 +2906,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_nasal"
+              "registryIdentifier": "sig.apply_nasal_cannula_patient_c"
             },
             {
               "type": "Registry",

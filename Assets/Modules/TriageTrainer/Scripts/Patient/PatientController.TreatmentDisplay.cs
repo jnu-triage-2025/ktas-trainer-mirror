@@ -76,7 +76,7 @@ namespace TriageTrainer.Entity
     private static readonly ItemUseEffect CervicalCollarEffect =
       new(TreatmentDisplay.CervicalCollarOnNeck, "apply_stabilizer_{id}");
     private static readonly ItemUseEffect NasalCannulaEffect =
-      new(TreatmentDisplay.NasalCannulaApplied, "apply_nasal_cannula", "click_nasal");
+      new(TreatmentDisplay.NasalCannulaApplied, "apply_nasal_cannula");
 
     // ── 아이템 식별자 → 효과(처치표현 + 신호) 기본 매핑(하드코딩, Reset 무관) ──
     //
