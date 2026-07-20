@@ -12,6 +12,10 @@ namespace TriageTrainer.Scenario
     private IEnumerator Event_ActivateVitalMonitorUiPatientC()
     {
       ResolveRuntimeReferencesIfNeeded();
+      ConfigureVitalMonitorClose(_patientCVitalMonitorController,
+        _patientCVitalMonitorObject,
+        _patientCVitalPanel,
+        "close_vital_ui_c");
       yield return ApplyMonitorProfile(_patientCVitalMonitorObject,
         _patientCVitalPanel,
         _patientCVitalMonitorController,

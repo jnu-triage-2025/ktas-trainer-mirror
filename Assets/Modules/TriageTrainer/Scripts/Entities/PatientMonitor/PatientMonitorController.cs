@@ -1,3 +1,4 @@
+using System;
 using FishNet.Object;
 using System.Collections.Generic;
 using UnityEngine;
@@ -76,6 +77,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private ECGParameters _targetParameters;
     private float _transitionTimer;
     private ECGRuntimeState _ecgRuntimeState;
+    private Action _closeRequested;
 
     void OnEnable()
     {
@@ -143,7 +145,43 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       root.Add(container);
       SetVisualTreeNonInteractive(root);
+      AddCloseButton(root);
       ClearRuntimeMonitorPanelSelection();
+    }
+
+    /// <summary>
+    /// 시나리오가 모니터를 열 때 설정하는 종료 콜백입니다. UI 표현과 시나리오 완료
+    /// 신호의 결합은 호출자에게 두어, 모니터 자체는 특정 환자/시나리오 식별자를 알지 않습니다.
+    /// </summary>
+    public void SetCloseRequestedHandler(Action handler)
+    {
+      _closeRequested = handler;
+    }
+
+    private void AddCloseButton(VisualElement root)
+    {
+      var closeButton = new Button(RequestClose)
+      {
+        text = "닫기",
+        name = "PatientMonitorCloseButton",
+        focusable = false,
+        pickingMode = PickingMode.Position,
+      };
+
+      closeButton.style.position = Position.Absolute;
+      closeButton.style.top = 8f;
+      closeButton.style.right = 8f;
+      closeButton.style.minWidth = 48f;
+      closeButton.style.height = 26f;
+      closeButton.style.fontSize = 12f;
+      closeButton.style.backgroundColor = new StyleColor(new Color(0.28f, 0.08f, 0.08f, 0.92f));
+      closeButton.style.color = Color.white;
+      root.Add(closeButton);
+    }
+
+    private void RequestClose()
+    {
+      _closeRequested?.Invoke();
     }
 
     private static void SetVisualTreeNonInteractive(VisualElement root)
