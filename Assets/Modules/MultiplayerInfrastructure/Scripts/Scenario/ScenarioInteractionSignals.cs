@@ -145,5 +145,31 @@ namespace MultiplayerInfrastructure.Scenario
 
       return Registry.Registry.Contains(RegistryType.RuntimeState, Normalize(signalId));
     }
+
+    /// <summary>
+    /// 정규화된 접두사(<paramref name="normalizedPrefix"/>)로 시작하며 현재 올라가 있는(raised)
+    /// 신호 식별자들을 반환한다. 시그널 카운터의 초기 카운트 산정에 사용한다.
+    /// </summary>
+    internal static System.Collections.Generic.IEnumerable<string> GetRaisedSignalsWithPrefix(string normalizedPrefix)
+    {
+      if (string.IsNullOrWhiteSpace(normalizedPrefix))
+      {
+        yield break;
+      }
+
+      var all = Registry.Registry.GetAll<bool>(RegistryType.RuntimeState);
+      if (all == null)
+      {
+        yield break;
+      }
+
+      foreach (var pair in all)
+      {
+        if (pair.Value && pair.Key != null && pair.Key.StartsWith(normalizedPrefix, StringComparison.Ordinal))
+        {
+          yield return pair.Key;
+        }
+      }
+    }
   }
 }

@@ -394,6 +394,7 @@ namespace MultiplayerInfrastructure.Scenario
       ScenarioInteractionSignals.ClearAllInternalSignals();
       ScenarioConditionalSignalListeners.ClearAll();
       ScenarioEntityStateSignalBindings.ClearAll();
+      ScenarioSignalCounters.ClearAll();
 
       // 이전 시나리오에서 남았을 수 있는 모든 타이머/표시를 새 시나리오 시작 시 정리한다.
       ScenarioTimeRelay.ClearAllAuthoritative();
@@ -523,6 +524,7 @@ namespace MultiplayerInfrastructure.Scenario
       ScenarioInteractionSignals.ClearAllInternalSignals();
       ScenarioConditionalSignalListeners.ClearAll();
       ScenarioEntityStateSignalBindings.ClearAll();
+      ScenarioSignalCounters.ClearAll();
 
       // 시나리오가 남긴 모든 타이머/표시를 정리한다.
       // 명시적 정리 없이 종료(또는 조기/오류 종료)하더라도 다음 시나리오로 새어 나가지 않게 한다.
@@ -721,6 +723,9 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioEntityStateSignalBindingNode stateBinding:
           ExecuteEntityStateSignalBindingNode(stateBinding);
+          break;
+        case ScenarioSignalCounterNode signalCounter:
+          ExecuteSignalCounterNode(signalCounter);
           break;
         case ScenarioValidatorNode validator:
           StartCoroutine(ExecuteValidatorNode(validator));
@@ -3270,6 +3275,26 @@ namespace MultiplayerInfrastructure.Scenario
         : string.Empty;
     }
 
+    /// <summary>
+    /// SignalCounter 노드를 실행한다: 접두사 매칭 신호의 distinct 개수를 세어 임계치 도달 시
+    /// 출력 신호를 발신하는 카운터를 등록/해제한다.
+    /// </summary>
+    private void ExecuteSignalCounterNode(ScenarioSignalCounterNode node)
+    {
+      if (node == null || string.IsNullOrWhiteSpace(node.CounterIdentifier))
+      {
+        Advance();
+        return;
+      }
+
+      if (node.Operation == ScenarioSignalCounterOperation.Unregister)
+        ScenarioSignalCounters.Unregister(node.CounterIdentifier);
+      else
+        ScenarioSignalCounters.Register(node.CounterIdentifier, node.SourceSignalPrefix, node.Threshold, node.OutputSignalIdentifier);
+
+      Advance();
+    }
+
     private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, string joinNodeIdentifier, int? branchOwnerClientId)
     {
       var previousOwner = _scenarioOwnerClientId;
@@ -3427,6 +3452,9 @@ namespace MultiplayerInfrastructure.Scenario
             break;
           case ScenarioEntityStateSignalBindingNode stateBinding:
             ExecuteEntityStateSignalBindingNode(stateBinding);
+            break;
+          case ScenarioSignalCounterNode signalCounter:
+            ExecuteSignalCounterNode(signalCounter);
             break;
           case ScenarioDialogueNode dialogue:
             // 브랜치 내 다이얼로그: interactionRequired면 자동 닫힘 없이 입력으로만 닫힌다.

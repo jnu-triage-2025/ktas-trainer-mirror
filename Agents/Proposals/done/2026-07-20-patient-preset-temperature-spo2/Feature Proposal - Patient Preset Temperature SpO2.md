@@ -57,7 +57,7 @@
 |---|------|------|------|
 | 1 | 다인 협업 병렬 브랜치 | (C) | `ByRole`은 브랜치당 1인 고정. 다인/분리·합류는 대규모 설계 변경 |
 | 2 | 지연 실행(Delay) | (A) | `ScenarioDelayNode` 이미 존재(`nodeType:"Delay"`) |
-| 3 | 참여자·대상별 신호 식별/수량 계측 | (C) | 4-b와 연동. 신규 노드/tracker 필요 |
+| 3 | 참여자·대상별 신호 식별/수량 계측 | (B) 진행 중 | 갭3(환자별 처치 신호) + SignalCounter 노드 완료. 갭1/2/4 일부 연기 |
 | 4-a | 이벤트→추가 신호 등록 노드 | (A) | `ScenarioSignalListenerNode` 이미 존재 |
 | 4-b | Patient state 재구현 + 이벤트 리스너 + ScenarioNode 처리 | (B) 구현 완료 | 아래 "부록 2" 참조 |
 | 5 | 미구현 게임플레이 신호 producer | (C) | 4-b 선행. 튜토리얼은 우선 스킵 |
@@ -119,3 +119,27 @@
 - 동일 (엔티티,이벤트)에 서로 다른 `eventKey` 다중 바인딩은 동작하나, 향후 콜백 단위 해제 API 로 정교화 여지 있음.
 - 에디터 그래프 UI(SearchWindow/InspectorView)에는 신규 노드 항목 미노출(JSON 저작은 완전 지원). 별도 에디터 확장으로 후속.
 - 3/5 환자별 신호 producer 는 이 이벤트/노드를 활용해 다음 단계에서 구현.
+
+---
+
+## 부록 3: 3/5 신호 갭 — 환자별 처치 신호 & SignalCounter (구현 완료)
+
+### 갭3: 환자 B/C 처치 환자별 결과 신호 (SIGNAL-BC-3, 완료)
+- `PatientController.TreatmentDisplay.cs` 의 `ItemUseEffects` 가 gauze/plaster/gloves/electrode 에 대해 공용 신호(하위 호환) + `{id}` 치환 환자별 신호(`apply_gauze_patient_b` 등)를 함께 발신.
+- `patient_b_c_ct.scenario.json` 의 B/C 처치 Validator 8개(V043/V057/V058/V059, V062/V076/V077/V078)를 환자별 신호로 전환.
+- `ResolveSignalTemplate` 하드닝: `Identifier` 가 비면 `{id}` 템플릿 발신 생략.
+- 환자 A는 공용 신호 유지(여전히 발신)로 무변경. `*.unsupported.flags.json` 및 요구 문서 갱신.
+
+### SignalCounter 범용 노드 (갭2/4 기반, 완료)
+- 신규 노드 `SignalCounter` (`ScenarioNodeType.SignalCounter`): 접두사(`sourceSignalPrefix`)로 시작하는 **서로 다른(distinct)** 시나리오 신호 개수를 세어, `threshold` 도달 시 `outputSignalIdentifier` 발신(1회성).
+  - sticky 신호 특성상 "같은 신호 N번" 은 불가하므로 "접두사 매칭 distinct 신호 수" 모델을 채택.
+  - 예: 트리아지 도착 3명(`enter_triage_zone_*`, threshold=3), 18G 2개(`insert_iv_patient_a_*`, threshold=2).
+- 런타임 엔진 `ScenarioSignalCounters`: `OnSignalRegistered` 관찰 + 등록 시 이미 올라온 매칭 신호 초기 카운트 포함 + 재진입/호스트 이중 전달 방어(큐 디스패치). 시나리오 시작/종료 시 ClearAll.
+- `ScenarioInteractionSignals.GetRaisedSignalsWithPrefix` 헬퍼 추가(RuntimeState 레지스트리 prefix 열거).
+- 전 배선(NodeType/Controller switch 2곳+Execute+ClearAll 2곳/Loader 왕복+dispatch/DTOConverter/RequirementCompiler/RuntimeLookupRegistry/schema/EditorFactory) 완료.
+- 디버그 시나리오 `signal_counter_debug.scenario.json`.
+
+### 남은 연기 (3/5 하위)
+- 갭1(들것 2인 파지): 손잡이 개념·신규 grab-point 프리팹/멀티플레이 상호작용 필요 → 제안서 선행 권장.
+- 갭2(트리아지 구역): `ScenarioTriggerZone` 를 대상별 신호 발신으로 확장하면 SignalCounter 와 결합해 인원 수량 게이트 완성 가능(트리거 존 확장은 후속).
+- 갭4(18G 좌/우): `IntravenousLineCannula`/`TreatmentDisplay` 에 좌/우 팔 판정+신호 추가 시 SignalCounter(threshold=2) 또는 좌/우 개별 Validator 로 게이트 가능(후속).

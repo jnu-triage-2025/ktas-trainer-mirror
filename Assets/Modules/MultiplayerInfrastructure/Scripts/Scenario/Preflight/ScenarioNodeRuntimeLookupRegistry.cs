@@ -236,6 +236,10 @@ namespace MultiplayerInfrastructure.Scenario.Preflight
           Row("eventName", "IScenarioEntityStateEventSource.RegisterStateEventListener", "operation=Register", ScenarioRuntimeLookupClassification.External),
           Row("outputSignalIdentifier", "ScenarioInteractionSignals.Raise", "non-empty", ScenarioRuntimeLookupClassification.Internal))),
 
+        Register<ScenarioSignalCounterNode>(ScenarioNodeType.SignalCounter, Rows(
+          Row("sourceSignalPrefix", "ScenarioInteractionSignals.OnSignalRegistered", "operation=Register; prefix match", ScenarioRuntimeLookupClassification.External),
+          Row("outputSignalIdentifier", "ScenarioInteractionSignals.Raise", "non-empty", ScenarioRuntimeLookupClassification.Internal))),
+
         Register<ScenarioValidatorNode>(ScenarioNodeType.Validator, Rows(
           Row("rootConditions[].validationRules[].registryIdentifier", "Registry.Contains<rule.registryType>", "RegistryContains/Registry/Contains", ScenarioRuntimeLookupClassification.External),
           Row("rootConditions[].playerTag", "PlayerTagService+UserDescriptorService", "PlayerAssignedTag", ScenarioRuntimeLookupClassification.External)), CollectValidator),

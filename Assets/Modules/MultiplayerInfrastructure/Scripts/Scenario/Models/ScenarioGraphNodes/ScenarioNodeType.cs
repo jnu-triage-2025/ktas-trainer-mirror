@@ -34,5 +34,6 @@ namespace MultiplayerInfrastructure.Scenario
     TimeControl,
     DisinteractableDialogue,
     EntityStateSignalBinding,
+    SignalCounter,
   }
 }

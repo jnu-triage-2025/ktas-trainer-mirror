@@ -75,6 +75,7 @@ namespace MultiplayerInfrastructure.Editor
       ScenarioNodeType.NpcInteractControl => new ScenarioNpcInteractControlNode(),
       ScenarioNodeType.TimeControl => new ScenarioTimeControlNode(),
       ScenarioNodeType.EntityStateSignalBinding => new ScenarioEntityStateSignalBindingNode(),
+      ScenarioNodeType.SignalCounter => new ScenarioSignalCounterNode(),
       _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
   }

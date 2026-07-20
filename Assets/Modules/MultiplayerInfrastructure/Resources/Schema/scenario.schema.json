@@ -85,7 +85,8 @@
             "ExecuteCommand",
             "TimeControl",
             "DisinteractableDialogue",
-            "EntityStateSignalBinding"
+            "EntityStateSignalBinding",
+            "SignalCounter"
           ]
         }
       },
@@ -118,6 +119,21 @@
           },
           "then": {
             "$ref": "#/$defs/ScenarioEntityStateSignalBindingNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "SignalCounter"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioSignalCounterNode"
           }
         },
         {
@@ -1366,6 +1382,55 @@
           },
           "required": [
             "bindingIdentifier"
+          ]
+        }
+      ]
+    },
+    "ScenarioSignalCounterNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "SignalCounter"
+            },
+            "counterIdentifier": {
+              "type": "string",
+              "minLength": 1
+            },
+            "operation": {
+              "type": "string",
+              "enum": [
+                "Register",
+                "Unregister"
+              ],
+              "default": "Register"
+            },
+            "sourceSignalPrefix": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "threshold": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "default": 1
+            },
+            "outputSignalIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "counterIdentifier"
           ]
         }
       ]

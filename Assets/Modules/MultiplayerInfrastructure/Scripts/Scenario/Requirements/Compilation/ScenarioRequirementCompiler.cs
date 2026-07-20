@@ -373,6 +373,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
         Register<ScenarioServerInternalSignalNode>(ScenarioNodeType.ServerInternalSignal, NoRequirements),
         Register<ScenarioSignalListenerNode>(ScenarioNodeType.SignalListener, ExtractSignalListener),
         Register<ScenarioEntityStateSignalBindingNode>(ScenarioNodeType.EntityStateSignalBinding, ExtractEntityStateSignalBinding),
+        Register<ScenarioSignalCounterNode>(ScenarioNodeType.SignalCounter, ExtractSignalCounter),
         Register<ScenarioValidatorNode>(ScenarioNodeType.Validator, ExtractValidator),
         Register<ScenarioQuestControlNode>(ScenarioNodeType.QuestControl, ExtractQuest),
         Register<ScenarioQuestWaypointHighlightNode>(ScenarioNodeType.QuestWaypointHighlight, (value, output) => output.Add(value, "waypointIdentifier", "waypoint-highlight", ScenarioRequirementKind.SpatialAnchor, value.WaypointIdentifier, true, ScenarioRequirementAvailability.WhenNodeReached, ScenarioRequirementExpectedSupply.Scene, ScenarioRequirementDirection.Consumes, ScenarioRequirementCapability.HighlightableWaypoint)),
@@ -528,6 +529,16 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
 
       // 출력 신호는 이 노드가 시나리오 신호로 생산한다.
       AddRuntimeSignal(node, output, "outputSignalIdentifier", "entity-state-binding-output",
+        node.OutputSignalIdentifier, ScenarioRequirementDirection.Produces,
+        ScenarioRequirementExpectedSupply.Scenario);
+    }
+
+    private static void ExtractSignalCounter(ScenarioSignalCounterNode node, ScenarioRequirementBuilder output)
+    {
+      // sourceSignalPrefix 는 여러 게임플레이 신호를 매칭하는 접두사이므로 단일 요구 식별자로 등록하지 않는다.
+      // (개별 매칭 신호는 각 producer/노드가 별도로 요구·생산 계약을 선언한다.)
+      // 이 노드가 임계치 도달 시 생산하는 출력 신호만 시나리오 신호 생산으로 기록한다.
+      AddRuntimeSignal(node, output, "outputSignalIdentifier", "signal-counter-output",
         node.OutputSignalIdentifier, ScenarioRequirementDirection.Produces,
         ScenarioRequirementExpectedSupply.Scenario);
     }

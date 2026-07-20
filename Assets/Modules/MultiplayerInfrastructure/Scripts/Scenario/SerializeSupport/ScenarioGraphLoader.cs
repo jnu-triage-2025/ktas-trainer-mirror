@@ -247,6 +247,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioServerInternalSignalNodeDTO internalSignal => ConvertServerInternalSignal(internalSignal),
           ScenarioSignalListenerNodeDTO signalListener => ConvertSignalListener(signalListener),
           ScenarioEntityStateSignalBindingNodeDTO stateBinding => ConvertEntityStateSignalBinding(stateBinding),
+          ScenarioSignalCounterNodeDTO signalCounter => ConvertSignalCounter(signalCounter),
           ScenarioValidatorNodeDTO validator => ConvertValidator(validator),
           ScenarioParallelNodeDTO parallel => ConvertParallel(parallel),
           ScenarioQuestControlNodeDTO questControl => ConvertQuestControl(questControl),
@@ -442,6 +443,20 @@ namespace MultiplayerInfrastructure.Scenario
           EventKey = dto.EventKey,
           OutputSignalIdentifier = dto.OutputSignalIdentifier,
           ConsumeOnce = dto.ConsumeOnce ?? false,
+        };
+
+    private static ScenarioSignalCounterNode ConvertSignalCounter(ScenarioSignalCounterNodeDTO dto) =>
+        new ScenarioSignalCounterNode
+        {
+          Identifier = dto.Identifier,
+          NextIdentifier = dto.NextIdentifier,
+          CounterIdentifier = dto.CounterIdentifier,
+          Operation = Enum.TryParse(dto.Operation, true, out ScenarioSignalCounterOperation operation)
+            ? operation
+            : ScenarioSignalCounterOperation.Register,
+          SourceSignalPrefix = dto.SourceSignalPrefix,
+          Threshold = dto.Threshold ?? 1,
+          OutputSignalIdentifier = dto.OutputSignalIdentifier,
         };
 
     private static ScenarioChatPrintNode ConvertChatPrint(ScenarioChatPrintNodeDTO dto) =>
@@ -1141,6 +1156,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioServerInternalSignalNode internalSignal => ConvertToDTO(internalSignal),
           ScenarioSignalListenerNode signalListener => ConvertToDTO(signalListener),
           ScenarioEntityStateSignalBindingNode stateBinding => ConvertToDTO(stateBinding),
+          ScenarioSignalCounterNode signalCounter => ConvertToDTO(signalCounter),
           ScenarioValidatorNode validator => ConvertToDTO(validator),
           ScenarioParallelNode parallel => ConvertToDTO(parallel),
           ScenarioQuestControlNode questControl => ConvertToDTO(questControl),
@@ -1351,6 +1367,19 @@ namespace MultiplayerInfrastructure.Scenario
           OutputSignalIdentifier = node.OutputSignalIdentifier,
           // 기본값(false)일 때 생략, true 는 명시 기록(읽기 측 `?? false` 와 짝).
           ConsumeOnce = node.ConsumeOnce ? true : (bool?)null,
+        };
+
+    private static ScenarioSignalCounterNodeDTO ConvertToDTO(ScenarioSignalCounterNode node) =>
+        new ScenarioSignalCounterNodeDTO
+        {
+          NodeType = "SignalCounter",
+          Identifier = node.Identifier,
+          NextIdentifier = node.NextIdentifier,
+          CounterIdentifier = node.CounterIdentifier,
+          Operation = node.Operation.ToString(),
+          SourceSignalPrefix = node.SourceSignalPrefix,
+          Threshold = node.Threshold,
+          OutputSignalIdentifier = node.OutputSignalIdentifier,
         };
 
     private static ScenarioChatPrintNodeDTO ConvertToDTO(ScenarioChatPrintNode node) =>
