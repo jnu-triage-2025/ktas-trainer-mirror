@@ -23,9 +23,6 @@ namespace MultiplayerInfrastructure.Editor.ItemSystem
   /// </summary>
   internal static class SceneItemPlacementConverter
   {
-    private const string MenuRoot = "Tools/Multiplayer Infrastructure/Static Placed Item/";
-    private const string ConvertSelectionMenuPath = MenuRoot + "Convert Selected SceneItemPlacements";
-    private const string ConvertSceneMenuPath = MenuRoot + "Convert All In Active Scene";
 
     /// <summary>
     /// <see cref="RunConversion"/> 의 결과 요약입니다. GUI(다이얼로그)와 배치(-batchmode) 양쪽 호출부에서 공유합니다.
@@ -48,7 +45,6 @@ namespace MultiplayerInfrastructure.Editor.ItemSystem
 
     // ── 선택 오브젝트 변환 ─────────────────────────────────────────────────
 
-    [MenuItem(ConvertSelectionMenuPath)]
     private static void ConvertSelection()
     {
       var placements = CollectFromSelection();
@@ -66,7 +62,6 @@ namespace MultiplayerInfrastructure.Editor.ItemSystem
 
     // ── 활성 씬 전체 변환 ──────────────────────────────────────────────────
 
-    [MenuItem(ConvertSceneMenuPath)]
     private static void ConvertActiveScene()
     {
       var placements = CollectFromActiveScene();

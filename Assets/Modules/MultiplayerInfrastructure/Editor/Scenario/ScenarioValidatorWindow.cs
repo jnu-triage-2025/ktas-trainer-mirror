@@ -11,7 +11,6 @@ public class ScenarioValidatorWindow : EditorWindow
   [SerializeField] private TextAsset scenarioAsset;
   [SerializeField] private bool validateWithSchema = true;
 
-  [MenuItem("Tools/Multiplayer Infrastructure/Scenario Validator")]
   public static void OpenWindow()
   {
     var window = GetWindow<ScenarioValidatorWindow>("Scenario Validator");
