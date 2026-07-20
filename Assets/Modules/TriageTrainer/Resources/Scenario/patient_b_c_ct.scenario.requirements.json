@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "scenarioIdentifier": "patient_b_c_ct",
   "source": {
-    "scenarioSha256": "231f86eb89a2edc019548873ef047e416c23778ac68d9b9c74a928c301ecb718",
+    "scenarioSha256": "d0a52dbfc0a6817a8bad595ec6a05776023f92731a927c2ec10651878623a65e",
     "generatedAtUtc": null
   },
   "declarations": [
@@ -1000,19 +1000,6 @@
       "selector": {
         "kind": "RuntimeSignal",
         "identifier": "sig.connect_wall_component_2"
-      },
-      "operation": "Override",
-      "availability": "WhenNodeReached",
-      "mustProve": true,
-      "binding": {
-        "mode": "RuntimeProduced"
-      },
-      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
-    },
-    {
-      "selector": {
-        "kind": "RuntimeSignal",
-        "identifier": "sig.enter_triage_zone"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
