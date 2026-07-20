@@ -980,7 +980,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.apply_electrode"
+              "registryIdentifier": "sig.apply_electrode_patient_b"
             }
           ]
         }
@@ -1674,7 +1674,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.wear_glove"
+              "registryIdentifier": "sig.wear_glove_patient_b"
             }
           ]
         }
@@ -1705,7 +1705,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.apply_gauze"
+              "registryIdentifier": "sig.apply_gauze_patient_b"
             }
           ]
         }
@@ -1745,7 +1745,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.apply_plaster_on_gauze"
+              "registryIdentifier": "sig.apply_plaster_on_gauze_patient_b"
             }
           ]
         }
@@ -2295,7 +2295,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.apply_electrode"
+              "registryIdentifier": "sig.apply_electrode_patient_c"
             }
           ]
         }
@@ -2987,7 +2987,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.wear_glove"
+              "registryIdentifier": "sig.wear_glove_patient_c"
             }
           ]
         }
@@ -3018,7 +3018,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.apply_gauze"
+              "registryIdentifier": "sig.apply_gauze_patient_c"
             }
           ]
         }
@@ -3056,7 +3056,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.apply_plaster_on_gauze"
+              "registryIdentifier": "sig.apply_plaster_on_gauze_patient_c"
             }
           ]
         }

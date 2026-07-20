@@ -83,18 +83,23 @@ namespace TriageTrainer.Entity
     // 부위가 환자별로 고정되어 있고(프리팹 hierarchy 반영) 컨트롤러는 플래그만 켜면 되므로,
     // 거즈/플라스터는 흉부 기준 표현을 기본으로 둔다(다른 부위가 필요한 환자는 해당 플래그를
     // 추가 매핑하거나 향후 부위 조준으로 확장). 신호는 시나리오 게이트 조건명과 일치시킨다.
+    //
+    // 환자별 결과 신호(SIGNAL-BC-3): 다수 환자가 같은 처치를 받는 흐름(B/C)에서는 공용 sticky 신호
+    // (예: apply_gauze) 하나로는 B가 올린 신호로 C 게이트가 무행동 통과하는 문제가 있다. 따라서
+    // 각 처치는 (1) 하위 호환용 공용 신호와 (2) "{id}" 를 환자 Identifier 로 치환한 환자별 신호를
+    // 함께 발신한다. 시나리오 게이트는 환자별 신호(예: apply_gauze_patient_b)를 사용해 구분한다.
     private static readonly Dictionary<string, ItemUseEffect> ItemUseEffects = new()
     {
       // 부착형(시각 표현 동반)
-      { "gauze",          new ItemUseEffect(TreatmentDisplay.GauzePatchedOnThorax, "apply_gauze") },
-      { "plaster",        new ItemUseEffect(TreatmentDisplay.GauzeDressingDoneOnThorax, "apply_plaster_on_gauze", "apply_plaster_on_intu") },
-      { "gloves",         new ItemUseEffect(TreatmentDisplay.None, "wear_glove") },
+      { "gauze",          new ItemUseEffect(TreatmentDisplay.GauzePatchedOnThorax, "apply_gauze", "apply_gauze_{id}") },
+      { "plaster",        new ItemUseEffect(TreatmentDisplay.GauzeDressingDoneOnThorax, "apply_plaster_on_gauze", "apply_plaster_on_gauze_{id}", "apply_plaster_on_intu", "apply_plaster_on_intu_{id}") },
+      { "gloves",         new ItemUseEffect(TreatmentDisplay.None, "wear_glove", "wear_glove_{id}") },
       // 실제 아이템 식별자(cervical_collar / nasalcannula)가 프로덕션 경로의 키.
       // 구 명칭(neckstabilizer / nasal)은 디버그 훅(Debug_ApplyItemUse) 호환용 별칭이며,
       // 반드시 동일 인스턴스를 공유해 신호/표현이 갈라지지 않게 한다.
       { "cervical_collar", CervicalCollarEffect },
       { "neckstabilizer",  CervicalCollarEffect },
-      { "electrode",      new ItemUseEffect(TreatmentDisplay.None, "apply_electrode") },
+      { "electrode",      new ItemUseEffect(TreatmentDisplay.None, "apply_electrode", "apply_electrode_{id}") },
       { "nasalcannula",   NasalCannulaEffect },
       { "nasal",          NasalCannulaEffect },
 
@@ -137,7 +142,9 @@ namespace TriageTrainer.Entity
     }
 
     /// <summary>
-    /// 신호 템플릿의 "{id}" 를 현재 환자 Identifier 로 치환한다(없으면 "{id}" 제거).
+    /// 신호 템플릿의 "{id}" 를 현재 환자 Identifier 로 치환한다.
+    /// "{id}" 를 포함하는 템플릿인데 환자 Identifier 가 비어 있으면, 잘못된(예: "apply_gauze_")
+    /// 환자별 신호가 발신되지 않도록 빈 문자열을 반환해 호출부가 건너뛰게 한다.
     /// </summary>
     private string ResolveSignalTemplate(string template)
     {
@@ -145,7 +152,10 @@ namespace TriageTrainer.Entity
         return template;
 
       string id = Identifier;
-      return template.Replace("{id}", string.IsNullOrWhiteSpace(id) ? string.Empty : id);
+      if (string.IsNullOrWhiteSpace(id))
+        return string.Empty;
+
+      return template.Replace("{id}", id);
     }
 
     /// <summary>
