@@ -134,6 +134,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 - **구현 완료(런타임 UI)**: `close_vital_ui_b`, `close_vital_ui_c` — `PatientMonitorController`가 닫기 버튼을 만들고, B/C 활성화 이벤트가 패널·모니터를 숨긴 뒤 환자별 signal을 발생시킨다.
 - **에디터 Identifier 정합 필요**(코드는 있으나 프리팹/에디터 매핑 확정 필요): `check_gcs_patient_b`, `check_gcs_patient_c`, `check_vital_patient_b`, `check_vital_patient_c`, `click_patient_b`, `click_patient_c`.
 
+### IV-BC-1 — 20G 팔/신호 계약 충돌 (인간 판단 필요)
+
+`PatientController.IntravenousLineCannula`는 캐뉼라 사용을 실제 처리하고 `insert_iv_{patientIdentifier}_{left|right}` 신호를 발생시킨다. 그러나 현재 B/C 그래프는 `insert_iv_b_right`/`insert_iv_c_left`를 기다린다. 또한 기본 구현은 좌측 우선 배정인데, 환자 B의 문서는 우측을 요구하고 B 프리팹의 20G 시각물은 좌측에만 있다. 따라서 단순 signal 별칭이나 Validator 변경은 잘못된 팔의 처치를 정상 완료로 만들 수 있다.
+
+- [ ] 환자 B/C에 실제 사용할 patient prefab(성별·팔 시각물)과 임상 지시의 좌/우를 확정한다.
+- [ ] 확정 후 팔별 interaction point 또는 patient별 최초 삽입 팔 설정을 추가하고, 그래프 조건을 실제 producer (`insert_iv_patient_b_right` 등)와 일치시킨다.
+
 ## 시나리오 본문
 
 ### [SPAWN_B] EntityPresetSpawnNode
