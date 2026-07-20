@@ -394,7 +394,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         ecgNextBeatInterval = baseInterval;
         if (_currentParameters.irregularity > 0f && ecgNextBeatInterval != float.MaxValue)
         {
-          float variance = (Random.value - 0.5f) * 2f * _currentParameters.irregularity * baseInterval * 0.5f;
+          float variance = (UnityEngine.Random.value - 0.5f) * 2f * _currentParameters.irregularity * baseInterval * 0.5f;
           ecgNextBeatInterval += variance;
           ecgNextBeatInterval = Mathf.Max(0.2f, ecgNextBeatInterval);
         }
