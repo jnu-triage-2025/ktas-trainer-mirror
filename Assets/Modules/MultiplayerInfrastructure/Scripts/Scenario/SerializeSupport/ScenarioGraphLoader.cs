@@ -1859,6 +1859,10 @@ namespace MultiplayerInfrastructure.Scenario
         SkinColorHue = ParseOptionalEnum<SkinColorHue>(dto.SkinColorHue),
         SkinTemperatureType = ParseOptionalEnum<SkinTemperatureType>(dto.SkinTemperatureType),
 
+        // 체온 / 산소포화도
+        BodyTemperatureCelsius = dto.BodyTemperatureCelsius,
+        Spo2 = dto.Spo2,
+
         // 기타
         IsCardiacArrest = dto.IsCardiacArrest,
       };
@@ -1919,6 +1923,10 @@ namespace MultiplayerInfrastructure.Scenario
         // 피부
         SkinColorHue = node.SkinColorHue?.ToString(),
         SkinTemperatureType = node.SkinTemperatureType?.ToString(),
+
+        // 체온 / 산소포화도
+        BodyTemperatureCelsius = node.BodyTemperatureCelsius,
+        Spo2 = node.Spo2,
 
         // 기타
         IsCardiacArrest = node.IsCardiacArrest,

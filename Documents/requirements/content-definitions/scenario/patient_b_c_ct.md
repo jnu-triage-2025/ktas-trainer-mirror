@@ -53,7 +53,7 @@ flags: ["refactor-required"]
 | SIGNAL-BC-3 | B/C의 장비·처치 Validator | 장비 획득·전극·펜라이트·산소·장갑·거즈 신호 22개가 환자 B와 C 흐름에서 재사용된다. B가 올린 신호 때문에 C 흐름이 실제 행동 없이 통과할 수 있다. | 환자별 결과 신호로 분리한다. 단순 공용 아이템 획득은 브랜치 진입 시 clear한 뒤 재획득을 요구할지, 한 번 준비한 공용 물품을 재사용할지 인간이 확정한다. 환자 적용 결과는 반드시 `_patient_b`/`_patient_c`로 분리한다. |
 | SIGNAL-BC-4 | `V036`, `V046`, `V048`, `V050`, `V052`~`V055`, `V065`, `V069`, `V071`~`V074` | 문서가 선행 구현 필요로 표시한 신호 producer가 없다. `WaitForCondition=true`이므로 `OnFailure=Ignore`여도 자동 통과하지 않고 무한 대기한다. 일부 120초 `ForceAdvance`는 실패를 숨길 뿐 정상 플레이 검증이 아니다. | 정식 gameplay callback에서 동일 신호를 Raise한다. timeout은 접근성/복구 정책으로만 유지하고 producer 대체로 사용하지 않는다. |
 | Q-BC-1 | `Q031`~`Q042_1` | 12개 quest가 식별자만 있어 실제 오버레이 내용과 완료 task가 비어 있다. | 주변 Dialogue와 Validator를 기반으로 별도 quest definition 12개를 작성하고 Add/Remove가 같은 identifier를 참조하게 한다. |
-| PRESET-BC-1 | `PRESET_B`, `PRESET_C` | 문서가 요구하는 체온과 SpO2는 현재 `PatientMedicalStatePreset` 필드가 아니다. | 현재 가능한 의료 상태는 preset에 넣고, 체온·SpO2는 monitor event/profile 요구사항으로 명시한다. 스키마 확장 여부는 별도 인간 판단으로 남긴다. |
+| PRESET-BC-1 | `PRESET_B`, `PRESET_C` | ~~문서가 요구하는 체온과 SpO2는 현재 `PatientMedicalStatePreset` 필드가 아니다.~~ **해결(2026-07-20):** `bodyTemperatureCelsius`, `spo2` 필드를 프리셋 노드/DTO/로더/컨트롤러/스키마에 추가함. | 체온 37.8°, SpO2 93%를 preset에 직접 기입. 모니터 브리지(temperature.t1, numerics/pleth.spo2) 연결 완료. |
 | END-BC-1 | `N092` 및 종료 조건 | fade-out 요구가 서술에만 있고 `N092`는 Dialogue 후 종료된다. | fade handler가 확정되면 `E_END_BC_FADE -> N092`를 명시한다. 현재는 종료 메시지는 동작하지만 fade 연출은 미충족으로 기록한다. |
 
 ### 변환 승인 조건
@@ -184,12 +184,14 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **BloodPressureDiastolic** | 정수 | 86 |
 | **SkinColorHue** | SkinColorHue | Normal |
 | **SkinTemperatureType** | SkinTemperatureType | Normal |
+| **BodyTemperatureCelsius** | 실수 | 37.8 |
+| **Spo2** | 정수 | 93 |
 | **IsCardiacArrest** | bool | false |
 | **NextIdentifier** | 문자열 | PRESET_C |
 
 - 원본 근거: 체온(BT) 37.8°, SpO2 93%. GCS 13(E3/V4/M6), 우측 동공 무반응(pupil_reflex_patient_b), 좌측 상완 개방성 골절.
-- [ ] SpO2/체온 필드가 PatientMedicalStatePreset 스키마에 없음. 활력 UI 이벤트(activate_vital_monitor_ui_patient_b/c)로만 표기됨. 스키마 확장 여부 확정요청.
-- [ ] 확정요청: 활력 체온 37.8(원본) vs JSON 37.3 불일치. 원본 기준 37.8 채택함. 임시치 아님(원본 확정치). JSON 갱신 필요.
+- [x] SpO2/체온 필드를 PatientMedicalStatePreset 스키마에 추가함(bodyTemperatureCelsius, spo2). 활력 UI 이벤트와 별개로 프리셋에서 직접 설정 가능.
+- [x] 활력 체온 37.8(원본) 채택. 프리셋 노드 및 JSON 정본에 37.8/93 반영.
 - [x] d-3: 환자 B/C 상태 사전설정 값 원본(_origin)에서 확인·기록.
 
 ---
@@ -220,6 +222,8 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **BloodPressureDiastolic** | 정수 | 86 |
 | **SkinColorHue** | SkinColorHue | Normal |
 | **SkinTemperatureType** | SkinTemperatureType | Normal |
+| **BodyTemperatureCelsius** | 실수 | 37.8 |
+| **Spo2** | 정수 | 93 |
 | **IsCardiacArrest** | bool | false |
 | **NextIdentifier** | 문자열 | E038 |
 

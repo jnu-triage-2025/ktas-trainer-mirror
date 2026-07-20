@@ -139,10 +139,13 @@ Scenario로 판정하면 안 된다.
 | **BloodPressureDiastolic** | 정수 | 40 |
 | **SkinColorHue** | 문자열 | Pale |
 | **SkinTemperatureType** | 문자열 | Cold |
+| **BodyTemperatureCelsius** | 실수 | 35.9 |
+| **Spo2** | 정수 | 82 |
 | **IsCardiacArrest** | bool | false |
 | **NextIdentifier** | 문자열 | D005 |
 
 - [x] d-3: 환자 A 상태 사전설정 값 명시됨 (원본 _origin 및 JSON 일치).
+- [x] 체온(BT) 35.9°, SpO2 82% 프리셋 필드 추가(PatientMedicalStatePreset 스키마 확장 반영).
 
 ---
 

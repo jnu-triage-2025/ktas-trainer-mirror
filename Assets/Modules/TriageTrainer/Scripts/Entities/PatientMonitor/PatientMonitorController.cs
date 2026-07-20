@@ -537,6 +537,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       bool bpmUnavailable = IsUnavailable(numerics.bpm);
       bool prUnavailable = IsUnavailable(numerics.pulseRate);
       bool nibpUnavailable = IsUnavailable(monitorNIBP.systolic) || IsUnavailable(monitorNIBP.diastolic);
+      // SpO2는 numerics.spo2(> 0f)를 우선하고, 없으면 pleth.spo2로 폴백한다.
+      // 두 값이 모두 측정 불가(-1)이면 -?- 로 표시한다.
+      bool spo2Unavailable = IsUnavailable(numerics.spo2) && IsUnavailable(monitorPleth.spo2);
 
       float bpmValue = numerics.bpm > 0f ? numerics.bpm : _currentParameters.bpm;
       float prValue = numerics.pulseRate > 0f ? numerics.pulseRate : monitorPleth.bpm;
@@ -550,7 +553,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       if (plethValueLabel != null)
       {
-        plethValueLabel.text = $"SpO2 {Mathf.RoundToInt(monitorPleth.spo2)}%";
+        plethValueLabel.text = spo2Unavailable
+          ? $"SpO2 {UnavailableDisplay}"
+          : $"SpO2 {Mathf.RoundToInt(monitorPleth.spo2)}%";
       }
 
       if (artValueLabel != null)
@@ -596,7 +601,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       if (spo2NumericLabel != null)
       {
-        spo2NumericLabel.text = $"{Mathf.RoundToInt(spo2Value)}%";
+        spo2NumericLabel.text = spo2Unavailable ? UnavailableDisplay : $"{Mathf.RoundToInt(spo2Value)}%";
       }
 
       if (artNumericLabel != null)

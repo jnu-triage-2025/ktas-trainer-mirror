@@ -34,6 +34,8 @@
       "bloodPressureDiastolic": 40,
       "skinColorHue": "Pale",
       "skinTemperatureType": "Cold",
+      "bodyTemperatureCelsius": 35.9,
+      "spo2": 82,
       "isCardiacArrest": false
     },
     "D005": {

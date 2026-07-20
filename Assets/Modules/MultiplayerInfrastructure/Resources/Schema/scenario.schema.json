@@ -2763,6 +2763,18 @@
                 null
               ]
             },
+            "bodyTemperatureCelsius": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "spo2": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
             "isCardiacArrest": {
               "type": [
                 "boolean",
