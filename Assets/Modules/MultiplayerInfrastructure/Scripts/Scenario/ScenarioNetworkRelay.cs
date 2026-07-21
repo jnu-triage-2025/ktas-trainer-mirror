@@ -2,6 +2,7 @@ using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Scenario.Requirements;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -31,6 +32,10 @@ namespace MultiplayerInfrastructure.Scenario
   public sealed class ScenarioNetworkRelay : NetworkBehaviour
   {
     private static ScenarioNetworkRelay _instance;
+    private ScenarioRequirementRuntimeRegistrationHandle _authoritativeExecutionRequirement;
+
+    /// <summary>다중 ByRole 병렬 시나리오가 요구하는 런타임 service provider 식별자.</summary>
+    public const string AuthoritativeExecutionServiceIdentifier = "mi.service.scenario-server-authoritative-execution";
 
     /// <summary>씬에 배치된 중계기 인스턴스(없으면 null).</summary>
     public static ScenarioNetworkRelay Instance => _instance;
@@ -169,10 +174,18 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       _instance = this;
+      _authoritativeExecutionRequirement = ScenarioRequirementRuntimeRegistrationRegistry.Register(
+        RegistryType.Service,
+        ScenarioRequirementKind.Service,
+        AuthoritativeExecutionServiceIdentifier,
+        this,
+        Array.Empty<ScenarioRequirementCapability>(),
+        ScenarioRequirementProviderOrigin.SceneComponent);
     }
 
     private void OnDestroy()
     {
+      _authoritativeExecutionRequirement.Dispose();
       if (_instance == this)
       {
         _instance = null;
