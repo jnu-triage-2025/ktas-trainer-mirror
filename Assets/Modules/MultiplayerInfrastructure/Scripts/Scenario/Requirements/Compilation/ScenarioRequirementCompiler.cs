@@ -339,8 +339,8 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
     private const string UserDescriptorService = "mi.service.user-descriptor";
     private const string ChatService = "mi.service.chat";
     // ByRole branches require one authoritative player pool and a single graph execution
-    // context. ScenarioNetworkRelay registers this service at runtime and the static
-    // provider catalog proves it during editor/build validation (G-8 P2/P3).
+    // context. ScenarioNetworkRelay P1은 신호만 중계하며, G-8 P2/P3가 완전히 구현·등록되기
+    // 전까지 이 service requirement를 제공하지 않는다.
     private const string ServerAuthoritativeScenarioExecutionService = "mi.service.scenario-server-authoritative-execution";
 
     private static readonly IReadOnlyDictionary<ScenarioNodeType, Registration> Registrations =

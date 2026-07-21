@@ -364,7 +364,6 @@ namespace MultiplayerInfrastructure.Scenario
       _state = State.Inactive;
       _activeOptions.Clear();
       _activeQuizNode = null;
-      ScenarioParallelAssignmentState.ClearGraph(graphIdentifier);
       _branchOptionInterceptor = null;
       _branchPromptActive = false;
       ResolveUIControllers();
@@ -453,6 +452,43 @@ namespace MultiplayerInfrastructure.Scenario
 
       SelectOption(optionIndex);
       return true;
+    }
+
+    /// <summary>
+    /// 로컬 대화 UI의 다음 진행 요청을 처리한다. 서버와 클라이언트를 겸하는 호스트에서는
+    /// 권위 상태기가 직접 노출되므로, 이 진입점에서만 owner 정책을 검사한다. 내부 자동 진행은
+    /// <see cref="Advance"/>를 계속 사용하여 원격 소유 시나리오도 서버에서 정상 진행한다.
+    /// </summary>
+    public void SubmitLocalAdvance()
+    {
+      if (_executionMode == ExecutionMode.ServerAuthoritative && !IsLocalScenarioOwner())
+      {
+        Debug.LogWarning("[ScenarioController] Ignored authoritative advance from a non-owner host UI.");
+        return;
+      }
+
+      Advance();
+    }
+
+    /// <summary>로컬 대화 UI의 선택 요청을 owner 정책에 따라 처리한다.</summary>
+    public void SubmitLocalOptionSelection(int index)
+    {
+      if (_executionMode == ExecutionMode.ServerAuthoritative && !IsLocalScenarioOwner())
+      {
+        Debug.LogWarning("[ScenarioController] Ignored authoritative choice selection from a non-owner host UI.");
+        return;
+      }
+
+      SelectOption(index);
+    }
+
+    private bool IsLocalScenarioOwner()
+    {
+      if (!_scenarioOwnerClientId.HasValue)
+        return true;
+
+      var localConnection = InstanceFinder.ClientManager?.Connection;
+      return localConnection != null && localConnection.ClientId == _scenarioOwnerClientId.Value;
     }
 
     private bool CanAcceptPresentationInput(int senderClientId, string graphIdentifier, string nodeIdentifier, State requiredState)
@@ -1116,7 +1152,7 @@ namespace MultiplayerInfrastructure.Scenario
       {
         // 호스트는 권위 상태기와 로컬 UI가 같은 Controller를 공유한다. 원격 클라이언트는
         // Relay의 ObserversRpc로만 표시하지만, 호스트에는 직접 표시해야 한다.
-        if (InstanceFinder.IsClientStarted)
+        if (InstanceFinder.IsClientStarted && IsLocalScenarioOwner())
           PresentDialogueNode(node);
         if (node.AutoAdvanceSeconds.HasValue && node.AutoAdvanceSeconds.Value > 0f)
           _dialogueAutoAdvanceRoutine = StartCoroutine(DialogueAutoAdvanceRoutine(node.AutoAdvanceSeconds.Value, node.InteractionRequired));
@@ -1256,7 +1292,7 @@ namespace MultiplayerInfrastructure.Scenario
       {
         _state = State.ExecutingChoice;
         _activeOptions = new List<ScenarioChoiceOption>(node.Options);
-        if (InstanceFinder.IsClientStarted)
+        if (InstanceFinder.IsClientStarted && IsLocalScenarioOwner())
           PresentChoice(node);
         return;
       }

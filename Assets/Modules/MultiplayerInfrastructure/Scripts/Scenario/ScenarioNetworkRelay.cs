@@ -2,7 +2,6 @@ using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Registry;
-using MultiplayerInfrastructure.Scenario.Requirements;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -25,17 +24,13 @@ namespace MultiplayerInfrastructure.Scenario
   ///   서버 컨텍스트면 직접 기록, 클라이언트 컨텍스트면 이 중계기를 통해 서버로 보고된다.
   ///
   /// 추가 범위(P3 1차): 서버가 단일 그래프 상태기를 실행하고, 클라이언트는 시작/표시/입력 보고만
-  /// 수행하도록 Dialogue·Choice의 표현 RPC를 제공한다. 다른 노드의 역할별 표현은 후속 단계에서
-  /// 같은 경로로 확장한다.
+  /// 수행하도록 Dialogue·Choice의 표현 RPC를 제공한다. 이 경로는 지원 노드 집합으로 검증된
+  /// 그래프에만 사용하며, 병렬 역할 브랜치와 미구현 표현 노드는 기존 호환 경로로 폴백한다.
   /// 단일 플레이어(호스트 단독)에서는 서버=클라 이므로 동작이 기존과 동일하다.
   /// </summary>
   public sealed class ScenarioNetworkRelay : NetworkBehaviour
   {
     private static ScenarioNetworkRelay _instance;
-    private ScenarioRequirementRuntimeRegistrationHandle _authoritativeExecutionRequirement;
-
-    /// <summary>다중 ByRole 병렬 시나리오가 요구하는 런타임 service provider 식별자.</summary>
-    public const string AuthoritativeExecutionServiceIdentifier = "mi.service.scenario-server-authoritative-execution";
 
     /// <summary>씬에 배치된 중계기 인스턴스(없으면 null).</summary>
     public static ScenarioNetworkRelay Instance => _instance;
@@ -58,6 +53,13 @@ namespace MultiplayerInfrastructure.Scenario
         return false;
       }
 
+      if (TryGetUnsupportedAuthoritativeNode(graph, out var unsupportedNode))
+      {
+        Debug.LogWarning($"[ScenarioNetworkRelay] Scenario '{scenarioIdentifier}' contains unsupported authoritative node "
+          + $"'{unsupportedNode.Identifier}' ({unsupportedNode.GetType().Name}); using the compatibility execution path.");
+        return false;
+      }
+
       var resolvedTargets = (targets ?? Enumerable.Empty<NetworkConnection>())
         .Where(target => target != null)
         .GroupBy(target => target.ClientId)
@@ -71,6 +73,31 @@ namespace MultiplayerInfrastructure.Scenario
 
       ScenarioController.Instance.StartAuthoritativeScenario(graph, null, ownerClientId >= 0 ? ownerClientId : (int?)null);
       return true;
+    }
+
+    private static bool TryGetUnsupportedAuthoritativeNode(ScenarioGraph graph, out IScenarioNode unsupportedNode)
+    {
+      foreach (var node in graph.Nodes.Values)
+      {
+        // 이 노드들은 서버 상태기만 실행하면 되고, 클라이언트별 별도 표현/입력 계약이 없다.
+        // Dialogue와 Choice만 현재 Target/Observers RPC로 완전한 표시·입력 왕복을 지원한다.
+        if (node is ScenarioDialogueNode
+            || node is ScenarioChoiceNode
+            || node is ScenarioDelayNode
+            || node is ScenarioValidatorNode
+            || node is ScenarioServerInternalSignalNode
+            || node is ScenarioSignalListenerNode
+            || node is ScenarioSignalCounterNode
+            || node is ScenarioEntityStateSignalBindingNode
+            || node is ScenarioStateUpdateNode)
+          continue;
+
+        unsupportedNode = node;
+        return true;
+      }
+
+      unsupportedNode = null;
+      return false;
     }
 
     /// <summary>서버가 현재 노드를 모든 표시 참여자에게 전달한다.</summary>
@@ -174,18 +201,10 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       _instance = this;
-      _authoritativeExecutionRequirement = ScenarioRequirementRuntimeRegistrationRegistry.Register(
-        RegistryType.Service,
-        ScenarioRequirementKind.Service,
-        AuthoritativeExecutionServiceIdentifier,
-        this,
-        Array.Empty<ScenarioRequirementCapability>(),
-        ScenarioRequirementProviderOrigin.SceneComponent);
     }
 
     private void OnDestroy()
     {
-      _authoritativeExecutionRequirement.Dispose();
       if (_instance == this)
       {
         _instance = null;
