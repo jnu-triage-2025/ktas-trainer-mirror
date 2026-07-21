@@ -77,7 +77,7 @@ TUT_START
 | ID | 위치 | 부족한 연결 | 처리 |
 |---|---|---|---|
 | TUT-START-1 | `TUT_START` 이전 | 플레이어 spawn/소유권, 튜토리얼 씬 로드 완료, NPC·waypoint·StaticPlacedObject 배치의 선행 조건이 없다. | **인간 판단 필요:** 튜토리얼 전용 scene/preset 및 Scenario 시작 시점(씬 로드 후)을 확정한다. 시작 requirements에 `npc-tutorial-guide-hat`, `delivery-storage-spot`, 택배 object를 선언한다. |
-| TUT-SIG-1 | `V_TUT_PLAYER_MOVED` | “WASD와 마우스 입력 또는 이동”은 서로 다른 완료 의미이며 현재 signal identifier/producer가 없다. | **인간 판단 필요:** 실제 위치 변위만 통과로 할지, 이동+시점 회전 모두 요구할지 확정한다. 확정 뒤 `tutorial_player_moved` producer를 PlayerController에 연결한다. |
+| TUT-SIG-1 | `V_TUT_PLAYER_MOVED` | ~~“WASD와 마우스 입력 또는 이동”은 서로 다른 완료 의미이며 현재 signal identifier/producer가 없다.~~ **해결(2026-07-21):** `BasicMovementControlTutorialQuestResolver`가 활성 `tutorial-move` 퀘스트에서 WASD, 마우스 버튼, 마우스 이동(카메라 회전) 중 하나라도 입력된 프레임의 시간을 중복 없이 누적한다. 합계가 1초를 **초과**하면 `tutorial_player_moved`를 발신하고 퀘스트를 완료한다. | `tutorial-move` definition은 `Resources/Quest/tutorial.quests.quest.json`에 등록한다. 이 전용 resolver는 `QuestManager`가 런타임에 부착한다. |
 | TUT-SIG-2 | 모자 상호작용 | NPC identifier와 interaction identifier는 있지만, 해당 interaction이 runtime signal을 Raise한다는 계약이 없다. | `npc-tutorial-guide-hat__interaction-talk-start -> tutorial_hat_talk_start` producer를 NPC prefab에 배선하고 Requirements Supports로 검증한다. |
 | TUT-FLOW-1 | “Title 발생” | Title의 UI 종류, 지속시간, 닫는 조건, 그래프 전이 여부가 정의되지 않았다. | **인간 판단 필요:** 단순 안내 UI라면 event `show_tutorial_interaction_hint`를 `Q_TUT_FIND_HAT_ADD` 직후 InvokeEvent로 추가한다. 진행을 막는 UI라면 완료 signal과 Validator를 별도 정의한다. |
 | TUT-FLOW-2 | 이동 완료 후 0.5초 | 현재 Scenario 스키마에는 일반 Delay node가 명시되어 있지 않아, 서술 그대로의 0.5초 지연을 직렬 노드로 저장할 수 없다. | **인간 판단 필요:** (a) delayed event handler가 `tutorial_move_intro_finished` signal을 Raise하게 하거나, (b) Scenario에 Delay node를 추가할지 결정한다. 그 전에는 임의의 Dialogue 자동 진행 시간으로 치환하지 않는다. |

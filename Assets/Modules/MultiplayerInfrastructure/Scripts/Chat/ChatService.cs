@@ -306,21 +306,25 @@ namespace MultiplayerInfrastructure.Chat
         return false;
       }
 
-      bool anyTarget = false;
-      foreach (var target in targets)
-      {
-        if (target == null)
-          continue;
-
-        anyTarget = true;
-        int ownerId = target.ClientId >= 0 ? (int)target.ClientId : -1;
-        TargetRunScenario(target, scenarioIdentifier, ownerId);
-      }
-
-      if (!anyTarget)
+      var resolvedTargets = targets.Where(target => target != null).ToList();
+      if (resolvedTargets.Count == 0)
       {
         error = "No target players were matched.";
         return false;
+      }
+
+      // G-8 P3: Relay가 있는 현재 구성에서는 서버가 그래프를 한 번만 실행한다.
+      // TargetRpc는 더 이상 각 클라이언트의 독립 상태기를 시작하는 데 쓰이지 않고,
+      // 표시 전용 세션 준비에만 사용된다. Relay가 없는 레거시 씬은 하위호환을 위해
+      // 기존 대상별 로컬 실행 경로를 유지한다.
+      int ownerId = resolvedTargets[0].ClientId >= 0 ? (int)resolvedTargets[0].ClientId : -1;
+      if (ScenarioNetworkRelay.TryStartAuthoritativeScenario(scenarioIdentifier, ownerId, resolvedTargets))
+        return true;
+
+      foreach (var target in resolvedTargets)
+      {
+        int targetOwnerId = target.ClientId >= 0 ? (int)target.ClientId : -1;
+        TargetRunScenario(target, scenarioIdentifier, targetOwnerId);
       }
 
       return true;

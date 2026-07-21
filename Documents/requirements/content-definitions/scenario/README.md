@@ -21,10 +21,10 @@
 - [crafting-recipes.md](./crafting-recipes.md): 시나리오 조합(crafting) 레시피 모음
 - [patient_a_critical.md](./patient_a_critical.md): scenario 환자 A 중증 처치
 - [patient_b_c_ct.md](./patient_b_c_ct.md): scenario 환자 B/C 지연 처치
+- [human-decision-context.md](./human-decision-context.md): 인간 작업자 의사결정에 필요한 실제 플레이 흐름과 콘텐츠 맥락
 
 ### 작업 가이드로 이동
 - [working-guide/features/scenario](../../../working-guide/features/scenario/README.md): 시나리오 운영/변환/검증 가이드
 
 작성 기준: Git 추적 문서(.md) 기준으로 색인하며, .gitignore 대상 파일은 제외합니다.
 <!-- DOC-INDEX:END -->
-

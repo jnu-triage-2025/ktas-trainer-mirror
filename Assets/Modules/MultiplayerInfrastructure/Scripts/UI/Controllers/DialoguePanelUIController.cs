@@ -458,7 +458,7 @@ namespace MultiplayerInfrastructure.UI
 
           if (!_currentController.IsUnityNull())
           {
-            _currentController.Advance();
+            _currentController.SubmitLocalAdvance();
           }
           return;
         }
@@ -467,7 +467,7 @@ namespace MultiplayerInfrastructure.UI
 
         if (!_currentController.IsUnityNull())
         {
-          _currentController.Advance();
+          _currentController.SubmitLocalAdvance();
         }
       }
     }
@@ -506,7 +506,7 @@ namespace MultiplayerInfrastructure.UI
       // ScenarioController에 선택 전달
       if (!_currentController.IsUnityNull())
       {
-        _currentController.SelectOption(index);
+        _currentController.SubmitLocalOptionSelection(index);
       }
     }
 

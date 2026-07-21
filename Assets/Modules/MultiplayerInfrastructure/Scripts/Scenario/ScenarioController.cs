@@ -90,6 +90,18 @@ namespace MultiplayerInfrastructure.Scenario
     private ChatService _chatService;
     private Coroutine _dialogueAutoAdvanceRoutine;
     private Coroutine _runtimeRequirementsWaitRoutine;
+    private ExecutionMode _executionMode = ExecutionMode.Local;
+
+    /// <summary>
+    /// Local은 기존 오프라인/호환 실행, ServerAuthoritative는 서버만 그래프를 순회,
+    /// ClientPresentation은 서버가 보낸 표시와 입력 보고만 담당한다.
+    /// </summary>
+    private enum ExecutionMode
+    {
+      Local,
+      ServerAuthoritative,
+      ClientPresentation,
+    }
 
     private sealed class GraphVisitHistory
     {
@@ -313,7 +325,183 @@ namespace MultiplayerInfrastructure.Scenario
 
     public void StartScenario(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId)
     {
+      _executionMode = ExecutionMode.Local;
       StartScenarioInternal(graph, startNodeIdentifier, ownerClientId, false);
+    }
+
+    /// <summary>서버 권위 시나리오를 시작한다. 그래프 순회는 이 서버 인스턴스에서만 수행한다.</summary>
+    public void StartAuthoritativeScenario(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId)
+    {
+      if (!InstanceFinder.IsOffline && !InstanceFinder.IsServerStarted)
+      {
+        Debug.LogWarning("[ScenarioController] Rejected authoritative scenario start outside server context.");
+        return;
+      }
+
+      _executionMode = ExecutionMode.ServerAuthoritative;
+      StartScenarioInternal(graph, startNodeIdentifier, ownerClientId, false);
+    }
+
+    /// <summary>
+    /// 서버가 시작을 통지한 클라이언트의 표시 전용 상태를 준비한다. 이 경로는 그래프를
+    /// 실행하거나 RuntimeState를 지우지 않는다.
+    /// </summary>
+    public void BeginPresentationScenario(ScenarioGraph graph, int? ownerClientId)
+    {
+      if (graph == null)
+      {
+        Debug.LogWarning("[ScenarioController] Cannot begin presentation for a null graph.");
+        return;
+      }
+
+      StopAllCoroutines();
+      CancelDialogueAutoAdvance();
+      _executionMode = ExecutionMode.ClientPresentation;
+      ScenarioParallelAssignmentState.ClearGraph(graph.Identifier);
+      _currentGraph = graph;
+      _currentNode = null;
+      _scenarioOwnerClientId = ownerClientId;
+      _state = State.Inactive;
+      _activeOptions.Clear();
+      _activeQuizNode = null;
+      _branchOptionInterceptor = null;
+      _branchPromptActive = false;
+      ResolveUIControllers();
+      ResolveTTSService();
+      if (!_uiController.IsUnityNull())
+      {
+        _uiController.SetInteractableHintUI(_hintUIController);
+        _uiController.StartScenario(this);
+      }
+
+      OnScenarioStarted?.Invoke();
+    }
+
+    /// <summary>서버가 보낸 노드를 클라이언트 UI에 표시한다.</summary>
+    public void PresentAuthoritativeNode(string graphIdentifier, string nodeIdentifier, bool roleScoped = false)
+    {
+      if (_executionMode != ExecutionMode.ClientPresentation
+          || _currentGraph == null
+          || !string.Equals(_currentGraph.Identifier, graphIdentifier, StringComparison.Ordinal)
+          || !_currentGraph.TryGetNode(nodeIdentifier, out var node))
+      {
+        Debug.LogWarning($"[ScenarioController] Ignored presentation node '{graphIdentifier}/{nodeIdentifier}' outside active presentation.");
+        return;
+      }
+
+      switch (node)
+      {
+        case ScenarioDialogueNode dialogue:
+          // 현재 브랜치 프롬프트의 선택 수명주기는 서버 BranchChainContext와 결합되어 있다.
+          // 전역 프롬프트처럼 현재 노드 하나만으로 검증할 수 없으므로, 역할 브랜치의
+          // Dialogue/Choice는 입력 가능한 UI로 섣불리 표시하지 않는다. Quest/waypoint 등
+          // 비입력 안내는 아래 roleScoped 경로로 안전하게 표시한다.
+          if (roleScoped)
+            break;
+          _currentNode = node;
+          PresentDialogueNode(dialogue);
+          break;
+        case ScenarioChoiceNode choice:
+          if (roleScoped)
+            break;
+          _currentNode = node;
+          _state = State.ExecutingChoice;
+          PresentChoice(choice);
+          break;
+        case ScenarioQuestControlNode questControl:
+          PresentQuestControlNode(questControl, roleScoped);
+          break;
+        case ScenarioQuestWaypointHighlightNode waypointHighlight:
+          PresentQuestWaypointHighlightNode(waypointHighlight);
+          break;
+      }
+    }
+
+    /// <summary>서버가 종료를 통지한 클라이언트 표시 상태만 정리한다.</summary>
+    public void EndPresentationScenario(string graphIdentifier)
+    {
+      if (_executionMode != ExecutionMode.ClientPresentation
+          || _currentGraph == null
+          || !string.Equals(_currentGraph.Identifier, graphIdentifier, StringComparison.Ordinal))
+        return;
+
+      CancelDialogueAutoAdvance();
+      _currentGraph = null;
+      _currentNode = null;
+      _state = State.Inactive;
+      _activeOptions.Clear();
+      _activeQuizNode = null;
+      if (!_uiController.IsUnityNull())
+        _uiController.EndScenario();
+      OnScenarioEnded?.Invoke();
+    }
+
+    internal bool TryAdvanceFromPresentation(int senderClientId, string graphIdentifier, string nodeIdentifier)
+    {
+      if (!CanAcceptPresentationInput(senderClientId, graphIdentifier, nodeIdentifier, State.ExecutingDialogue))
+        return false;
+
+      Advance();
+      return true;
+    }
+
+    internal bool TrySelectOptionFromPresentation(int senderClientId, string graphIdentifier, string nodeIdentifier, int optionIndex)
+    {
+      if (!CanAcceptPresentationInput(senderClientId, graphIdentifier, nodeIdentifier, State.ExecutingChoice))
+        return false;
+
+      SelectOption(optionIndex);
+      return true;
+    }
+
+    /// <summary>
+    /// 로컬 대화 UI의 다음 진행 요청을 처리한다. 서버와 클라이언트를 겸하는 호스트에서는
+    /// 권위 상태기가 직접 노출되므로, 이 진입점에서만 owner 정책을 검사한다. 내부 자동 진행은
+    /// <see cref="Advance"/>를 계속 사용하여 원격 소유 시나리오도 서버에서 정상 진행한다.
+    /// </summary>
+    public void SubmitLocalAdvance()
+    {
+      if (_executionMode == ExecutionMode.ServerAuthoritative && !IsLocalScenarioOwner())
+      {
+        Debug.LogWarning("[ScenarioController] Ignored authoritative advance from a non-owner host UI.");
+        return;
+      }
+
+      Advance();
+    }
+
+    /// <summary>로컬 대화 UI의 선택 요청을 owner 정책에 따라 처리한다.</summary>
+    public void SubmitLocalOptionSelection(int index)
+    {
+      if (_executionMode == ExecutionMode.ServerAuthoritative && !IsLocalScenarioOwner())
+      {
+        Debug.LogWarning("[ScenarioController] Ignored authoritative choice selection from a non-owner host UI.");
+        return;
+      }
+
+      SelectOption(index);
+    }
+
+    private bool IsLocalScenarioOwner()
+    {
+      if (!_scenarioOwnerClientId.HasValue)
+        return true;
+
+      var localConnection = InstanceFinder.ClientManager?.Connection;
+      return localConnection != null && localConnection.ClientId == _scenarioOwnerClientId.Value;
+    }
+
+    private bool CanAcceptPresentationInput(int senderClientId, string graphIdentifier, string nodeIdentifier, State requiredState)
+    {
+      if (_executionMode != ExecutionMode.ServerAuthoritative
+          || _currentGraph == null
+          || _currentNode == null
+          || _state != requiredState
+          || !string.Equals(_currentGraph.Identifier, graphIdentifier, StringComparison.Ordinal)
+          || !string.Equals(_currentNode.Identifier, nodeIdentifier, StringComparison.Ordinal))
+        return false;
+
+      return !_scenarioOwnerClientId.HasValue || _scenarioOwnerClientId.Value == senderClientId;
     }
 
     private void StartScenarioInternal(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId, bool requirementsAlreadyValidated)
@@ -401,6 +589,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       _currentGraph = graph;
       _scenarioOwnerClientId = ownerClientId;
+      ScenarioParallelAssignmentState.ClearGraph(graph.Identifier);
 
       // 시나리오가 요구하는 퀘스트 정의 include를 선로딩한다.
       QuestDefinitionRegistry.EnsureIncludesLoaded(graph.QuestDefinitionIncludes);
@@ -515,6 +704,11 @@ namespace MultiplayerInfrastructure.Scenario
     {
       // 로그 기록을 위해 그래프 ID를 먼저 캡처 (_currentGraph는 이후 null로 초기화됨)
       string endingGraphId = _currentGraph?.Identifier;
+      if (_executionMode == ExecutionMode.ServerAuthoritative && !string.IsNullOrEmpty(endingGraphId))
+      {
+        ScenarioNetworkRelay.EndAuthoritativePresentation(endingGraphId);
+        ScenarioParallelAssignmentState.ClearGraph(endingGraphId);
+      }
       CancelDialogueAutoAdvance();
 
       // 아직 진행 중인 시나리오 코루틴(특히 WaitMode.None 으로 전역 시나리오보다 오래
@@ -542,6 +736,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       ClearOptions();
       _stateStore.Clear();
+      _executionMode = ExecutionMode.Local;
 
       // UI 종료
       if (!_uiController.IsUnityNull())
@@ -572,6 +767,12 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public void Advance()
     {
+      if (_executionMode == ExecutionMode.ClientPresentation)
+      {
+        if (_currentGraph != null && _currentNode != null)
+          ScenarioNetworkRelay.RequestAdvance(_currentGraph.Identifier, _currentNode.Identifier);
+        return;
+      }
       // 브랜치 체인이 노드를 실행하는 동안에는 전역 진행을 무시한다.
       // 브랜치는 NextIdentifier 로 직접 이동하므로, 브랜치 노드 실행기가 호출한
       // Advance 가 전역 _currentNode 를 끌고 가서 시나리오를 조기 종료시키는 것을 막는다.
@@ -605,6 +806,12 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public void SelectOption(int index)
     {
+      if (_executionMode == ExecutionMode.ClientPresentation)
+      {
+        if (_currentGraph != null && _currentNode != null)
+          ScenarioNetworkRelay.RequestChoiceSelection(_currentGraph.Identifier, _currentNode.Identifier, index);
+        return;
+      }
       if (index < 0 || index >= _activeOptions.Count)
       {
         Debug.LogWarning($"[ScenarioController] Invalid option index: {index}");
@@ -688,6 +895,9 @@ namespace MultiplayerInfrastructure.Scenario
       }
       catch { /* 로그 실패는 노드 실행에 영향 없음 */ }
       OnNodeChanged?.Invoke(node);
+
+      if (_executionMode == ExecutionMode.ServerAuthoritative)
+        ScenarioNetworkRelay.PresentAuthoritativeNode(_currentGraph?.Identifier, node.Identifier);
 
       switch (node)
       {
@@ -938,16 +1148,24 @@ namespace MultiplayerInfrastructure.Scenario
       // 이전 노드의 잔여 타이머가 있다면 정리.
       CancelDialogueAutoAdvance();
 
+      if (_executionMode == ExecutionMode.ServerAuthoritative)
+      {
+        // 호스트는 권위 상태기와 로컬 UI가 같은 Controller를 공유한다. 원격 클라이언트는
+        // Relay의 ObserversRpc로만 표시하지만, 호스트에는 직접 표시해야 한다.
+        if (InstanceFinder.IsClientStarted && IsLocalScenarioOwner())
+          PresentDialogueNode(node);
+        if (node.AutoAdvanceSeconds.HasValue && node.AutoAdvanceSeconds.Value > 0f)
+          _dialogueAutoAdvanceRoutine = StartCoroutine(DialogueAutoAdvanceRoutine(node.AutoAdvanceSeconds.Value, node.InteractionRequired));
+        return;
+      }
+
       // 대화창 점유 충돌 검사(정책 적용). Cancel/Panic 이면 여기서 중단.
       if (!_uiController.IsUnityNull() && !TryClaimDialogueUI())
         return;
 
       if (!_uiController.IsUnityNull())
       {
-        _uiController.DisplayDialogue(node.SpeakerName, node.DialogueContent, node.PortraitSpriteIdentifier, node.InteractionRequired);
-
-        if (node.PlayTTS)
-          PlayInlineTTS(node.Identifier, node.DialogueContent, node.TtsVoiceIdentifier);
+        PresentDialogueNode(node);
 
         // AutoAdvanceSeconds 가 양수이면 표시 후 해당 시간 경과 시 자동 진행.
         // 그 전에 사용자가 Advance() 를 호출하면 타이머는 취소된다(중복 진행 방지).
@@ -961,6 +1179,17 @@ namespace MultiplayerInfrastructure.Scenario
         // UI 없으면 바로 진행
         Advance();
       }
+    }
+
+    private void PresentDialogueNode(ScenarioDialogueNode node)
+    {
+      _state = State.ExecutingDialogue;
+      if (_uiController.IsUnityNull())
+        return;
+
+      _uiController.DisplayDialogue(node.SpeakerName, node.DialogueContent, node.PortraitSpriteIdentifier, node.InteractionRequired);
+      if (node.PlayTTS)
+        PlayInlineTTS(node.Identifier, node.DialogueContent, node.TtsVoiceIdentifier);
     }
 
     private IEnumerator DialogueAutoAdvanceRoutine(float seconds, bool interactionRequired)
@@ -1059,6 +1288,15 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void ExecuteChoiceNode(ScenarioChoiceNode node)
     {
+      if (_executionMode == ExecutionMode.ServerAuthoritative)
+      {
+        _state = State.ExecutingChoice;
+        _activeOptions = new List<ScenarioChoiceOption>(node.Options);
+        if (InstanceFinder.IsClientStarted && IsLocalScenarioOwner())
+          PresentChoice(node);
+        return;
+      }
+
       // 대화창 점유 충돌 검사(정책 적용). Cancel/Panic 이면 여기서 중단.
       if (!_uiController.IsUnityNull() && !TryClaimDialogueUI())
         return;
@@ -1166,6 +1404,26 @@ namespace MultiplayerInfrastructure.Scenario
       Advance();
     }
 
+    /// <summary>
+    /// 서버가 이미 권위적으로 순회한 퀘스트 노드를 클라이언트 UI에만 반영한다.
+    /// 여기서는 <see cref="Advance"/>를 절대 호출하지 않아 표시 피어가 그래프 커서를 소유하지 않는다.
+    /// </summary>
+    private void PresentQuestControlNode(ScenarioQuestControlNode node, bool roleScoped)
+    {
+      if (!roleScoped && !ShouldApplyQuestControlNode(node))
+        return;
+
+      var manager = Registry.Registry.Get<QuestManager>(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>());
+      if (manager == null)
+      {
+        Debug.LogWarning("[ScenarioController] QuestManager not found on presentation client; skipping quest presentation.");
+        return;
+      }
+
+      if (!ApplyQuestOperation(manager, node) && node.FailureStrategy == ScenarioQuestFailureStrategy.Panic)
+        Debug.LogError($"[ScenarioController] Presentation quest operation failed: '{node.Identifier}'.");
+    }
+
     private bool ShouldApplyQuestControlNode(ScenarioQuestControlNode node)
     {
       if (node == null)
@@ -1219,6 +1477,18 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Advance();
+    }
+
+    /// <summary>표시 클라이언트에만 waypoint 강조를 적용한다. 그래프 진행은 서버가 담당한다.</summary>
+    private static void PresentQuestWaypointHighlightNode(ScenarioQuestWaypointHighlightNode node)
+    {
+      if (node == null || string.IsNullOrWhiteSpace(node.WaypointIdentifier))
+        return;
+
+      if (WaypointAnchor.TryGet(node.WaypointIdentifier, out var anchor))
+        anchor.Highlight();
+      else
+        Debug.LogWarning($"[ScenarioController] Presentation waypoint '{node.WaypointIdentifier}' was not found.");
     }
 
     private IEnumerator ExecuteDelayNode(ScenarioDelayNode node)
@@ -3059,6 +3329,9 @@ namespace MultiplayerInfrastructure.Scenario
         yield break;
       }
 
+      if (_executionMode == ExecutionMode.ServerAuthoritative)
+        ScenarioNetworkRelay.PublishParallelAssignments(_currentGraph?.Identifier, node.Identifier, allocation);
+
       foreach (var branch in node.Branches)
       {
         if (!_currentGraph.TryGetNode(branch.Identifier, out var branchNode))
@@ -3082,7 +3355,8 @@ namespace MultiplayerInfrastructure.Scenario
 
         // 멀티플레이어에서는 로컬 클라이언트에 할당된 브랜치만 실행한다.
         // (미할당 브랜치 체인을 로컬에서 함께 돌리면 타 역할 노드가 한 번에 실행되는 문제가 발생한다.)
-        if (assignedClientId.HasValue && localClientId.HasValue && assignedClientId.Value != localClientId.Value)
+        if (_executionMode != ExecutionMode.ServerAuthoritative
+            && assignedClientId.HasValue && localClientId.HasValue && assignedClientId.Value != localClientId.Value)
         {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
           Debug.Log($"[ScenarioController] Parallel branch '{branch.Identifier}' skipped on local client {localClientId} (assigned to {assignedClientId}).");
@@ -3297,25 +3571,13 @@ namespace MultiplayerInfrastructure.Scenario
 
     private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, string joinNodeIdentifier, int? branchOwnerClientId)
     {
-      var previousOwner = _scenarioOwnerClientId;
-      _scenarioOwnerClientId = branchOwnerClientId ?? previousOwner;
-
-      try
-      {
-        // 브랜치의 시작 노드부터 NextIdentifier 체인을 끝까지(또는 완료조건 라벨까지) 실행한다.
-        // 완료조건 식별자(completionCondition)는 보통 그래프에 실제 노드가 없는 "수렴 라벨"이며,
-        // 브랜치 체인 마지막 노드의 NextIdentifier 가 이 라벨을 가리킨다.
-        // 라벨에 도달하면 브랜치 완료로 간주한다(전역 Advance/EndScenario 를 건드리지 않음).
-        // joinNodeIdentifier(병렬 노드의 NextIdentifier)도 정지 라벨로 취급하여,
-        // 합류 노드가 브랜치와 전역 Advance 양쪽에서 이중 실행되는 것을 막는다.
-        // 브랜치 내부의 게이팅(인터랙션 완료 대기)은 체인에 포함된
-        // Validator(waitForCondition=true) 노드가 담당하므로, 라벨 도달 = 브랜치 완료가 된다.
-        yield return RunBranchChain(node, completionCondition, joinNodeIdentifier);
-      }
-      finally
-      {
-        _scenarioOwnerClientId = previousOwner;
-      }
+      // _scenarioOwnerClientId는 전역 시나리오 입력 권한을 나타내는 상태다. 병렬 코루틴이
+      // 이를 임시로 교체하면 A 브랜치가 yield한 사이 B 브랜치가 owner를 덮어써, Quest/이동 등
+      // 후속 노드가 잘못된 역할에 적용되는 경쟁 조건이 생긴다. 역할 owner는 아래의 명시적
+      // branchOwnerClientId로만 전달하고, 역할별 표현은 TargetRpc 경로에서 처리한다.
+      // 브랜치의 시작 노드부터 NextIdentifier 체인을 끝까지(또는 완료조건 라벨까지) 실행한다.
+      // 완료조건/합류 라벨 도달은 전역 Advance/EndScenario를 건드리지 않는 브랜치 완료다.
+      yield return RunBranchChain(node, completionCondition, joinNodeIdentifier, branchOwnerClientId);
     }
 
     /// <summary>
@@ -3325,7 +3587,11 @@ namespace MultiplayerInfrastructure.Scenario
     /// 다음 식별자가 비어 있거나(터미널) 완료조건 라벨(<paramref name="completionLabel"/>)과 같거나
     /// 그래프에 존재하지 않으면 브랜치를 종료한다.
     /// </summary>
-    private IEnumerator RunBranchChain(IScenarioNode startNode, string completionLabel, string joinNodeIdentifier = null)
+    private IEnumerator RunBranchChain(
+      IScenarioNode startNode,
+      string completionLabel,
+      string joinNodeIdentifier = null,
+      int? branchOwnerClientId = null)
     {
       var cursor = startNode;
       int guard = 0;
@@ -3351,6 +3617,9 @@ namespace MultiplayerInfrastructure.Scenario
 
         RecordNodeVisit(cursor);
         OnNodeChanged?.Invoke(cursor);
+
+        if (_executionMode == ExecutionMode.ServerAuthoritative && branchOwnerClientId.HasValue)
+          ScenarioNetworkRelay.PresentAuthoritativeNodeToClient(branchOwnerClientId.Value, _currentGraph.Identifier, cursor.Identifier);
 
         // 단일 노드를 실행하고 완료를 대기한다(전역 Advance 미사용).
         chainContext.NextOverride = null;
@@ -3895,11 +4164,9 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioParallelAllocationType.ByRole:
         {
           // 각 브랜치를 자격에 맞는 서로 다른 플레이어에게 1:1로 배정한다.
-          // 자격 후보가 적은 브랜치부터 그리디로 처리하여 결정적 매칭을 보장한다.
-          var assignedPlayers = new HashSet<int>();
-
-          // 브랜치별 자격 후보 목록을 미리 계산.
-          var candidatesByBranch = new Dictionary<ScenarioParallelBranch, List<int>>();
+          // 후보 산출은 현재 실행 권위(서버)의 세션/태그 상태에서 수행하고, 순수 배정 규칙은
+          // ScenarioParallelRoleAllocator로 위임한다. P2 서버 상태기와 같은 규칙을 공유한다.
+          var candidatesByBranch = new Dictionary<ScenarioParallelBranch, IReadOnlyList<int>>();
           foreach (var branch in branches)
           {
             candidatesByBranch[branch] = playerPool
@@ -3907,35 +4174,7 @@ namespace MultiplayerInfrastructure.Scenario
                 .ToList();
           }
 
-          // 후보 수가 적은(제약이 강한) 브랜치부터 처리. 동률은 원래 정의 순서 유지(안정 정렬).
-          var orderedBranches = branches
-              .Select((branch, index) => (branch, index))
-              .OrderBy(entry => candidatesByBranch[entry.branch].Count)
-              .ThenBy(entry => entry.index)
-              .Select(entry => entry.branch)
-              .ToList();
-
-          bool anyUnassigned = false;
-          foreach (var branch in orderedBranches)
-          {
-            int? pick = candidatesByBranch[branch]
-                .Where(clientId => !assignedPlayers.Contains(clientId))
-                .Select(clientId => (int?)clientId)
-                .FirstOrDefault();
-
-            if (pick != null)
-            {
-              assignedPlayers.Add(pick.Value);
-              allocation[branch] = pick;
-            }
-            else
-            {
-              allocation[branch] = null;
-              anyUnassigned = true;
-            }
-          }
-
-          if (anyUnassigned)
+          if (!ScenarioParallelRoleAllocator.TryAllocateDistinct(branches, candidatesByBranch, allocation))
           {
             // 미배정 브랜치가 존재하면 미스매치 정책에 위임한다.
             // (Ignore: null 배정 그대로 스킵 / Panic: 중단 / Reallocation: 라운드로빈 재배정)
