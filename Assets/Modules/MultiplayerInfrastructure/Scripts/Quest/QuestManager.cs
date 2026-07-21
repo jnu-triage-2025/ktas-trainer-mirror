@@ -26,9 +26,12 @@ namespace MultiplayerInfrastructure.Quest
     [SerializeField] private int _maxTracked = DefaultsQuestControl.MaxTrackedQuests;
     [SerializeField] private FeatureFlags _featureFlags = FeatureFlags.HighlightAssignedWaypoint;
     [SerializeField] private bool _autoEvaluateCompletion = true;
+    [SerializeField] private BasicMovementControlTutorialQuestResolver _basicMovementControlTutorialResolver;
 
     private readonly Dictionary<string, QuestData> _quests = new();
     private readonly List<string> _trackedQuestOrder = new();
+    // 일반 criteria 평가로 다시 false가 되어서는 안 되는 전용 gameplay resolver 완료 상태.
+    private readonly HashSet<string> _resolverCompletedQuestIds = new();
     private QuestDefinitionRegistry _definitionRegistry;
     private PlayerController _ownerPlayer;
 
@@ -78,6 +81,7 @@ namespace MultiplayerInfrastructure.Quest
     {
       Registry.Registry.Register(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>(), this);
       _definitionRegistry = Registry.Registry.Get<QuestDefinitionRegistry>(RegistryType.Service, Registry.Registry.TypeKey<QuestDefinitionRegistry>());
+      EnsureBasicMovementControlTutorialResolver();
     }
 
     private void OnDestroy()
@@ -94,6 +98,7 @@ namespace MultiplayerInfrastructure.Quest
         var existingIds = new List<string>(_quests.Keys);
         _quests.Clear();
         _trackedQuestOrder.Clear();
+        _resolverCompletedQuestIds.Clear();
         for (int i = 0; i < existingIds.Count; i++)
           UpdateQuestCompletionRuntimeState(existingIds[i], false);
       }
@@ -124,6 +129,8 @@ namespace MultiplayerInfrastructure.Quest
 
       var cloned = ResolveQuestData(quest);
       var isNewQuest = !_quests.TryGetValue(cloned.Id, out var existingQuest);
+      if (isNewQuest)
+        _resolverCompletedQuestIds.Remove(cloned.Id);
       bool wasCompleted = existingQuest?.Completed ?? false;
       bool wasTracked = !isNewQuest && _trackedQuestOrder.Contains(cloned.Id);
       if (!isNewQuest)
@@ -190,11 +197,52 @@ namespace MultiplayerInfrastructure.Quest
       return _quests.TryGetValue(questId, out var quest) && quest != null && quest.Completed;
     }
 
+    /// <summary>
+    /// 특수 게임플레이 resolver가 명시적으로 완료한 퀘스트를 반영한다.
+    /// 일반 퀘스트는 criteria 평가를 계속 사용하며, 입력 교육처럼 criteria로 표현할 수 없는
+    /// 누적 행동은 해당 resolver만 이 경로를 호출한다.
+    /// </summary>
+    public bool CompleteQuest(string questId)
+    {
+      if (string.IsNullOrWhiteSpace(questId)
+          || !_quests.TryGetValue(questId, out var quest)
+          || quest == null)
+        return false;
+
+      bool wasCompleted = quest.Completed;
+      _resolverCompletedQuestIds.Add(questId);
+      quest.Completed = true;
+      quest.Progress = new QuestProgressValue(1, 1);
+      MarkCriteriaCompleted(GetQuestTasks(quest));
+      UpdateQuestCompletionRuntimeState(questId, true);
+
+      if (quest.IsAutoComplete)
+      {
+        quest.IsTracked = false;
+        _trackedQuestOrder.Remove(questId);
+      }
+
+      ClampTrackedToLimit();
+      NotifyListChanged();
+      NotifyTrackedChanged();
+
+      if (!wasCompleted)
+        PublishCompleted(quest.Clone());
+
+      return true;
+    }
+
     private bool EvaluateQuestProgressInternal(string questId, bool? previousCompleted, out QuestData completedSnapshot)
     {
       completedSnapshot = null;
       if (string.IsNullOrWhiteSpace(questId) || !_quests.TryGetValue(questId, out var quest) || quest == null)
         return false;
+
+      if (_resolverCompletedQuestIds.Contains(questId))
+      {
+        completedSnapshot = null;
+        return true;
+      }
 
       bool wasCompleted = previousCompleted ?? quest.Completed;
       bool wasTracked = _trackedQuestOrder.Contains(questId);
@@ -244,6 +292,7 @@ namespace MultiplayerInfrastructure.Quest
 
       _quests.Remove(questId);
       _trackedQuestOrder.Remove(questId);
+      _resolverCompletedQuestIds.Remove(questId);
       UpdateQuestCompletionRuntimeState(questId, false);
 
       NotifyListChanged();
@@ -255,6 +304,7 @@ namespace MultiplayerInfrastructure.Quest
       var existingIds = new List<string>(_quests.Keys);
       _quests.Clear();
       _trackedQuestOrder.Clear();
+      _resolverCompletedQuestIds.Clear();
       for (int i = 0; i < existingIds.Count; i++)
       {
         UpdateQuestCompletionRuntimeState(existingIds[i], false);
@@ -370,6 +420,36 @@ namespace MultiplayerInfrastructure.Quest
       }
 
       return changed;
+    }
+
+    private static void MarkCriteriaCompleted(IReadOnlyList<QuestCompletionCriteria> criteria)
+    {
+      if (criteria == null)
+        return;
+
+      for (int i = 0; i < criteria.Count; i++)
+      {
+        var criterion = criteria[i];
+        if (criterion == null)
+          continue;
+
+        bool wasCompleted = criterion.Completed;
+        int target = Math.Max(1, criterion.Count);
+        criterion.Progress = new QuestProgressValue(target, target);
+        criterion.Completed = true;
+        if (!wasCompleted && !string.IsNullOrWhiteSpace(criterion.OnCompleteSignalIdentifier))
+          ScenarioInteractionSignals.Raise(criterion.OnCompleteSignalIdentifier);
+        MarkCriteriaCompleted(criterion.Conditions);
+      }
+    }
+
+    private void EnsureBasicMovementControlTutorialResolver()
+    {
+      if (_basicMovementControlTutorialResolver == null)
+        _basicMovementControlTutorialResolver = GetComponent<BasicMovementControlTutorialQuestResolver>();
+
+      if (_basicMovementControlTutorialResolver == null)
+        _basicMovementControlTutorialResolver = gameObject.AddComponent<BasicMovementControlTutorialQuestResolver>();
     }
 
     private static void ClearCompletionSignals(IReadOnlyList<QuestCompletionCriteria> criteria)

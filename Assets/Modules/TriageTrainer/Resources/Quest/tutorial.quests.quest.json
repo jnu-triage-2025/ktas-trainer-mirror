@@ -1,0 +1,24 @@
+{
+  "namespace": "",
+  "definitions": [
+    {
+      "identifier": "tutorial-move",
+      "title": "이동하기",
+      "description": "WASD와 마우스로 기본 조작을 익히세요.",
+      "questContent": "WASD 키와 마우스를 사용하여 캐릭터를 이동하세요.",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "type": "InteractionSignalReceived",
+          "signalId": "tutorial_player_moved",
+          "displayTextContent": "기본 조작 익히기",
+          "conditions": []
+        }
+      ]
+    }
+  ]
+}
