@@ -379,7 +379,7 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     /// <summary>서버가 보낸 노드를 클라이언트 UI에 표시한다.</summary>
-    public void PresentAuthoritativeNode(string graphIdentifier, string nodeIdentifier)
+    public void PresentAuthoritativeNode(string graphIdentifier, string nodeIdentifier, bool roleScoped = false)
     {
       if (_executionMode != ExecutionMode.ClientPresentation
           || _currentGraph == null
@@ -393,13 +393,27 @@ namespace MultiplayerInfrastructure.Scenario
       switch (node)
       {
         case ScenarioDialogueNode dialogue:
+          // 현재 브랜치 프롬프트의 선택 수명주기는 서버 BranchChainContext와 결합되어 있다.
+          // 전역 프롬프트처럼 현재 노드 하나만으로 검증할 수 없으므로, 역할 브랜치의
+          // Dialogue/Choice는 입력 가능한 UI로 섣불리 표시하지 않는다. Quest/waypoint 등
+          // 비입력 안내는 아래 roleScoped 경로로 안전하게 표시한다.
+          if (roleScoped)
+            break;
           _currentNode = node;
           PresentDialogueNode(dialogue);
           break;
         case ScenarioChoiceNode choice:
+          if (roleScoped)
+            break;
           _currentNode = node;
           _state = State.ExecutingChoice;
           PresentChoice(choice);
+          break;
+        case ScenarioQuestControlNode questControl:
+          PresentQuestControlNode(questControl, roleScoped);
+          break;
+        case ScenarioQuestWaypointHighlightNode waypointHighlight:
+          PresentQuestWaypointHighlightNode(waypointHighlight);
           break;
       }
     }
@@ -1354,6 +1368,26 @@ namespace MultiplayerInfrastructure.Scenario
       Advance();
     }
 
+    /// <summary>
+    /// 서버가 이미 권위적으로 순회한 퀘스트 노드를 클라이언트 UI에만 반영한다.
+    /// 여기서는 <see cref="Advance"/>를 절대 호출하지 않아 표시 피어가 그래프 커서를 소유하지 않는다.
+    /// </summary>
+    private void PresentQuestControlNode(ScenarioQuestControlNode node, bool roleScoped)
+    {
+      if (!roleScoped && !ShouldApplyQuestControlNode(node))
+        return;
+
+      var manager = Registry.Registry.Get<QuestManager>(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>());
+      if (manager == null)
+      {
+        Debug.LogWarning("[ScenarioController] QuestManager not found on presentation client; skipping quest presentation.");
+        return;
+      }
+
+      if (!ApplyQuestOperation(manager, node) && node.FailureStrategy == ScenarioQuestFailureStrategy.Panic)
+        Debug.LogError($"[ScenarioController] Presentation quest operation failed: '{node.Identifier}'.");
+    }
+
     private bool ShouldApplyQuestControlNode(ScenarioQuestControlNode node)
     {
       if (node == null)
@@ -1407,6 +1441,18 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Advance();
+    }
+
+    /// <summary>표시 클라이언트에만 waypoint 강조를 적용한다. 그래프 진행은 서버가 담당한다.</summary>
+    private static void PresentQuestWaypointHighlightNode(ScenarioQuestWaypointHighlightNode node)
+    {
+      if (node == null || string.IsNullOrWhiteSpace(node.WaypointIdentifier))
+        return;
+
+      if (WaypointAnchor.TryGet(node.WaypointIdentifier, out var anchor))
+        anchor.Highlight();
+      else
+        Debug.LogWarning($"[ScenarioController] Presentation waypoint '{node.WaypointIdentifier}' was not found.");
     }
 
     private IEnumerator ExecuteDelayNode(ScenarioDelayNode node)
@@ -3502,7 +3548,7 @@ namespace MultiplayerInfrastructure.Scenario
         // 합류 노드가 브랜치와 전역 Advance 양쪽에서 이중 실행되는 것을 막는다.
         // 브랜치 내부의 게이팅(인터랙션 완료 대기)은 체인에 포함된
         // Validator(waitForCondition=true) 노드가 담당하므로, 라벨 도달 = 브랜치 완료가 된다.
-        yield return RunBranchChain(node, completionCondition, joinNodeIdentifier);
+        yield return RunBranchChain(node, completionCondition, joinNodeIdentifier, branchOwnerClientId);
       }
       finally
       {
@@ -3517,7 +3563,11 @@ namespace MultiplayerInfrastructure.Scenario
     /// 다음 식별자가 비어 있거나(터미널) 완료조건 라벨(<paramref name="completionLabel"/>)과 같거나
     /// 그래프에 존재하지 않으면 브랜치를 종료한다.
     /// </summary>
-    private IEnumerator RunBranchChain(IScenarioNode startNode, string completionLabel, string joinNodeIdentifier = null)
+    private IEnumerator RunBranchChain(
+      IScenarioNode startNode,
+      string completionLabel,
+      string joinNodeIdentifier = null,
+      int? branchOwnerClientId = null)
     {
       var cursor = startNode;
       int guard = 0;
@@ -3543,6 +3593,9 @@ namespace MultiplayerInfrastructure.Scenario
 
         RecordNodeVisit(cursor);
         OnNodeChanged?.Invoke(cursor);
+
+        if (_executionMode == ExecutionMode.ServerAuthoritative && branchOwnerClientId.HasValue)
+          ScenarioNetworkRelay.PresentAuthoritativeNodeToClient(branchOwnerClientId.Value, _currentGraph.Identifier, cursor.Identifier);
 
         // 단일 노드를 실행하고 완료를 대기한다(전역 Advance 미사용).
         chainContext.NextOverride = null;

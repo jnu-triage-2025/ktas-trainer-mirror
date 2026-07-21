@@ -78,6 +78,27 @@ namespace MultiplayerInfrastructure.Scenario
       _instance.ObserversPresentScenarioNode(graphIdentifier, nodeIdentifier);
     }
 
+    /// <summary>병렬 역할 브랜치의 표현 노드를 배정된 클라이언트 한 명에게만 전달한다.</summary>
+    public static void PresentAuthoritativeNodeToClient(int clientId, string graphIdentifier, string nodeIdentifier)
+    {
+      if (_instance == null || !InstanceFinder.IsServerStarted
+          || string.IsNullOrWhiteSpace(graphIdentifier) || string.IsNullOrWhiteSpace(nodeIdentifier))
+        return;
+
+      var clients = InstanceFinder.ServerManager?.Clients;
+      if (clients == null)
+        return;
+
+      foreach (var pair in clients)
+      {
+        if (pair.Value != null && pair.Value.ClientId == clientId)
+        {
+          _instance.TargetPresentRoleNode(pair.Value, graphIdentifier, nodeIdentifier);
+          return;
+        }
+      }
+    }
+
     /// <summary>서버가 권위 시나리오의 종료를 표시 참여자에게 전달한다.</summary>
     public static void EndAuthoritativePresentation(string graphIdentifier)
     {
@@ -189,6 +210,12 @@ namespace MultiplayerInfrastructure.Scenario
       string[] branchIdentifiers)
     {
       ScenarioParallelAssignmentState.Apply(graphIdentifier, parallelNodeIdentifier, branchIdentifiers);
+    }
+
+    [TargetRpc]
+    private void TargetPresentRoleNode(NetworkConnection conn, string graphIdentifier, string nodeIdentifier)
+    {
+      ScenarioController.Instance?.PresentAuthoritativeNode(graphIdentifier, nodeIdentifier, roleScoped: true);
     }
 
     [ObserversRpc]
