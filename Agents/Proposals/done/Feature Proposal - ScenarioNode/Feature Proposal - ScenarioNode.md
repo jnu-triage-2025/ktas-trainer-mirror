@@ -22,7 +22,7 @@
 
 2) DelayNode
 - 일정 시간 대기 또는 조건부 대기를 표현한다.
-- 속성: Identifier, NodeType(Delay), DurationSeconds, WaitUntil(Immediately/WaitUntilDone), NextIdentifier
+- 속성: Identifier, NodeType(Delay), Duration(ScenarioTimeValue: Tick/Milliseconds/Seconds), WaitUntil(Immediately/WaitUntilDone), NextIdentifier
 
 3) InteractionNode
 - 플레이어가 특정 대상과 상호작용하거나 아이템을 사용하도록 요구한다.

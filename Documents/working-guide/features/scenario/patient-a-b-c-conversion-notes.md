@@ -204,8 +204,8 @@ Agent Manager 워크트리 2개(`scenario-patient-a-json`, `scenario-patient-bc-
   `"quest": { "Id": "Quest_Grab_Stretcher" }` (disaster_intro 와 동일하게 Id만 채움).
 - CombineItem: `inputItemIdentifiers`(배열), `outputItemIdentifier`, `autoCombine:true`.
 - Sound: `soundResourceIdentifier`, `waitUntilFinished`.
-- Delay: `durationSeconds`(숫자), `waitUntil`(`WaitUntilDone` | `Immediately`).
-  `.md`의 `4(초)` → `4`.
+- Delay: `duration`(`ScenarioTimeValue`), `waitUntil`(`WaitUntilDone` | `Immediately`).
+  `.md`의 `4(초)` → `{ "value": 4, "unit": "Seconds" }`.
 - InvokeEvent: `eventIdentifier`, `moveNextBehavior`.
   `MoveNextBehavior` 치환: **`Immediate → Immediately`**, `WaitUntilDone → WaitUntilDone`.
 

@@ -119,7 +119,7 @@
     "delay_wait": {
       "identifier": "delay_wait",
       "nodeType": "Delay",
-      "durationSeconds": 1.2,
+      "duration": { "value": 1.2, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone",
       "nextIdentifier": "interaction_inspect"
     },

@@ -51,7 +51,7 @@
     "sw_run_delay": {
       "identifier": "sw_run_delay",
       "nodeType": "Delay",
-      "durationSeconds": 3.0,
+      "duration": { "value": 3.0, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone",
       "nextIdentifier": "start_cd"
     },
@@ -76,7 +76,7 @@
     "cd_visible_delay": {
       "identifier": "cd_visible_delay",
       "nodeType": "Delay",
-      "durationSeconds": 3.0,
+      "duration": { "value": 3.0, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone",
       "nextIdentifier": "show_sw_again"
     },
@@ -109,7 +109,7 @@
     "set_sw_delay": {
       "identifier": "set_sw_delay",
       "nodeType": "Delay",
-      "durationSeconds": 2.0,
+      "duration": { "value": 2.0, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone",
       "nextIdentifier": "pause_sw"
     },
@@ -125,7 +125,7 @@
     "pause_sw_delay": {
       "identifier": "pause_sw_delay",
       "nodeType": "Delay",
-      "durationSeconds": 2.0,
+      "duration": { "value": 2.0, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone",
       "nextIdentifier": "resume_sw"
     },
@@ -141,7 +141,7 @@
     "resume_sw_delay": {
       "identifier": "resume_sw_delay",
       "nodeType": "Delay",
-      "durationSeconds": 2.0,
+      "duration": { "value": 2.0, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone",
       "nextIdentifier": "stop_sw"
     },
@@ -157,7 +157,7 @@
     "stop_sw_delay": {
       "identifier": "stop_sw_delay",
       "nodeType": "Delay",
-      "durationSeconds": 2.0,
+      "duration": { "value": 2.0, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone",
       "nextIdentifier": "show_cd_finish"
     },
@@ -173,7 +173,7 @@
     "cd_finish_delay": {
       "identifier": "cd_finish_delay",
       "nodeType": "Delay",
-      "durationSeconds": 8.0,
+      "duration": { "value": 8.0, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone",
       "nextIdentifier": "cd_finished_dialogue"
     },

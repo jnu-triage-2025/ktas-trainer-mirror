@@ -1495,9 +1495,10 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingDelay;
 
-      if (node.WaitUntil == ScenarioDelayWaitUntil.WaitUntilDone && node.DurationSeconds > 0f)
+      float durationSeconds = (float)node.Duration.ToSeconds();
+      if (node.WaitUntil == ScenarioDelayWaitUntil.WaitUntilDone && durationSeconds > 0f)
       {
-        yield return new WaitForSeconds(node.DurationSeconds);
+        yield return new WaitForSeconds(durationSeconds);
       }
 
       Advance();

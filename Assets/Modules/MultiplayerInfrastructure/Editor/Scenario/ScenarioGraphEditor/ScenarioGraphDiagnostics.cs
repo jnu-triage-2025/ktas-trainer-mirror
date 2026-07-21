@@ -484,8 +484,8 @@ namespace MultiplayerInfrastructure.Editor
 
     private static void CheckDelay(ScenarioDelayNode node, List<DiagnosticItem> items)
     {
-      if (node.DurationSeconds < 0f)
-        items.Add(new DiagnosticItem(Severity.Error, node.Identifier, $"durationSeconds={node.DurationSeconds} 는 음수입니다."));
+      if (node.Duration.Value < 0d)
+        items.Add(new DiagnosticItem(Severity.Error, node.Identifier, $"duration.value={node.Duration.Value} 는 음수입니다."));
     }
 
     private static void CheckSound(ScenarioSoundNode node, List<DiagnosticItem> items)

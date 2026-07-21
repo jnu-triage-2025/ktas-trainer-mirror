@@ -3094,7 +3094,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L001 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C010 |
 
@@ -3143,7 +3143,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L002 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C011 |
 
@@ -3276,7 +3276,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L003 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C012 |
 
@@ -3326,7 +3326,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L004 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C013 |
 
@@ -3375,7 +3375,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L005 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C014 |
 
@@ -3425,7 +3425,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L006 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C015 |
 
@@ -3627,7 +3627,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L007 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C016 |
 
@@ -3678,7 +3678,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L008 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C017 |
 
@@ -3727,7 +3727,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L009 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C018 |
 
@@ -4014,7 +4014,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L010 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C019 |
 
@@ -4065,7 +4065,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L011 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C020 |
 
@@ -4279,7 +4279,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L012 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C021 |
 
@@ -4329,7 +4329,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L013 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C022 |
 
@@ -4378,7 +4378,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L014 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C023 |
 
@@ -4428,7 +4428,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L015 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C024 |
 
@@ -4561,7 +4561,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L016 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C025 |
 
@@ -4610,7 +4610,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L017 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C026 |
 
@@ -4904,7 +4904,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L018 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C027 |
 
@@ -4955,7 +4955,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L019 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C028 |
 
@@ -5102,7 +5102,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L020 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C029 |
 
@@ -5153,7 +5153,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L021 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C030 |
 
@@ -5202,7 +5202,7 @@ Scenario로 판정하면 안 된다.
 | --- | --- | --- |
 | **Identifier** | 문자열 | L022 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Delay |
-| **DurationSeconds** | 실수(float) | 4(초) |
+| **Duration** | ScenarioTimeValue | { "value": 4, "unit": "Seconds" } |
 | **WaitUntil** | ScenarioDelayWaitUntil | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C031 |
 
