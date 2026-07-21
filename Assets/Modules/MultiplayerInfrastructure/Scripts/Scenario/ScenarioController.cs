@@ -3535,25 +3535,13 @@ namespace MultiplayerInfrastructure.Scenario
 
     private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, string joinNodeIdentifier, int? branchOwnerClientId)
     {
-      var previousOwner = _scenarioOwnerClientId;
-      _scenarioOwnerClientId = branchOwnerClientId ?? previousOwner;
-
-      try
-      {
-        // 브랜치의 시작 노드부터 NextIdentifier 체인을 끝까지(또는 완료조건 라벨까지) 실행한다.
-        // 완료조건 식별자(completionCondition)는 보통 그래프에 실제 노드가 없는 "수렴 라벨"이며,
-        // 브랜치 체인 마지막 노드의 NextIdentifier 가 이 라벨을 가리킨다.
-        // 라벨에 도달하면 브랜치 완료로 간주한다(전역 Advance/EndScenario 를 건드리지 않음).
-        // joinNodeIdentifier(병렬 노드의 NextIdentifier)도 정지 라벨로 취급하여,
-        // 합류 노드가 브랜치와 전역 Advance 양쪽에서 이중 실행되는 것을 막는다.
-        // 브랜치 내부의 게이팅(인터랙션 완료 대기)은 체인에 포함된
-        // Validator(waitForCondition=true) 노드가 담당하므로, 라벨 도달 = 브랜치 완료가 된다.
-        yield return RunBranchChain(node, completionCondition, joinNodeIdentifier, branchOwnerClientId);
-      }
-      finally
-      {
-        _scenarioOwnerClientId = previousOwner;
-      }
+      // _scenarioOwnerClientId는 전역 시나리오 입력 권한을 나타내는 상태다. 병렬 코루틴이
+      // 이를 임시로 교체하면 A 브랜치가 yield한 사이 B 브랜치가 owner를 덮어써, Quest/이동 등
+      // 후속 노드가 잘못된 역할에 적용되는 경쟁 조건이 생긴다. 역할 owner는 아래의 명시적
+      // branchOwnerClientId로만 전달하고, 역할별 표현은 TargetRpc 경로에서 처리한다.
+      // 브랜치의 시작 노드부터 NextIdentifier 체인을 끝까지(또는 완료조건 라벨까지) 실행한다.
+      // 완료조건/합류 라벨 도달은 전역 Advance/EndScenario를 건드리지 않는 브랜치 완료다.
+      yield return RunBranchChain(node, completionCondition, joinNodeIdentifier, branchOwnerClientId);
     }
 
     /// <summary>
