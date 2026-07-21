@@ -3895,11 +3895,9 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioParallelAllocationType.ByRole:
         {
           // 각 브랜치를 자격에 맞는 서로 다른 플레이어에게 1:1로 배정한다.
-          // 자격 후보가 적은 브랜치부터 그리디로 처리하여 결정적 매칭을 보장한다.
-          var assignedPlayers = new HashSet<int>();
-
-          // 브랜치별 자격 후보 목록을 미리 계산.
-          var candidatesByBranch = new Dictionary<ScenarioParallelBranch, List<int>>();
+          // 후보 산출은 현재 실행 권위(서버)의 세션/태그 상태에서 수행하고, 순수 배정 규칙은
+          // ScenarioParallelRoleAllocator로 위임한다. P2 서버 상태기와 같은 규칙을 공유한다.
+          var candidatesByBranch = new Dictionary<ScenarioParallelBranch, IReadOnlyList<int>>();
           foreach (var branch in branches)
           {
             candidatesByBranch[branch] = playerPool
@@ -3907,35 +3905,7 @@ namespace MultiplayerInfrastructure.Scenario
                 .ToList();
           }
 
-          // 후보 수가 적은(제약이 강한) 브랜치부터 처리. 동률은 원래 정의 순서 유지(안정 정렬).
-          var orderedBranches = branches
-              .Select((branch, index) => (branch, index))
-              .OrderBy(entry => candidatesByBranch[entry.branch].Count)
-              .ThenBy(entry => entry.index)
-              .Select(entry => entry.branch)
-              .ToList();
-
-          bool anyUnassigned = false;
-          foreach (var branch in orderedBranches)
-          {
-            int? pick = candidatesByBranch[branch]
-                .Where(clientId => !assignedPlayers.Contains(clientId))
-                .Select(clientId => (int?)clientId)
-                .FirstOrDefault();
-
-            if (pick != null)
-            {
-              assignedPlayers.Add(pick.Value);
-              allocation[branch] = pick;
-            }
-            else
-            {
-              allocation[branch] = null;
-              anyUnassigned = true;
-            }
-          }
-
-          if (anyUnassigned)
+          if (!ScenarioParallelRoleAllocator.TryAllocateDistinct(branches, candidatesByBranch, allocation))
           {
             // 미배정 브랜치가 존재하면 미스매치 정책에 위임한다.
             // (Ignore: null 배정 그대로 스킵 / Panic: 중단 / Reallocation: 라운드로빈 재배정)
