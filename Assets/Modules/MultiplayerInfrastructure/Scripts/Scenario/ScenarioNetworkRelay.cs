@@ -2,6 +2,7 @@ using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Registry;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -47,7 +48,7 @@ namespace MultiplayerInfrastructure.Scenario
       if (_instance == null || !InstanceFinder.IsServerStarted || string.IsNullOrWhiteSpace(scenarioIdentifier))
         return false;
 
-      if (!Registry.TryGetScenarioGraph(scenarioIdentifier, out ScenarioGraph graph, out var error))
+      if (!Registry.Registry.TryGetScenarioGraph(scenarioIdentifier, out ScenarioGraph graph, out var error))
       {
         Debug.LogWarning($"[ScenarioNetworkRelay] Failed to load authoritative scenario '{scenarioIdentifier}': {error}");
         return false;
@@ -219,7 +220,7 @@ namespace MultiplayerInfrastructure.Scenario
       if (InstanceFinder.IsServerStarted)
         return;
 
-      if (!Registry.TryGetScenarioGraph(scenarioIdentifier, out ScenarioGraph graph, out var error))
+      if (!Registry.Registry.TryGetScenarioGraph(scenarioIdentifier, out ScenarioGraph graph, out var error))
       {
         Debug.LogWarning($"[ScenarioNetworkRelay] Failed to load presentation scenario '{scenarioIdentifier}': {error}");
         return;
