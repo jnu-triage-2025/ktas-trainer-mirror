@@ -85,6 +85,46 @@ namespace MultiplayerInfrastructure.Scenario
         _instance.ObserversEndPresentationScenario(graphIdentifier);
     }
 
+    /// <summary>
+    /// 서버가 병렬 노드의 확정 배정표를 각 접속자에게 TargetRpc로 전달한다.
+    /// 빈 배열도 전송해, 해당 parallel node에서 역할을 받지 못한 클라이언트가 이전 배정을
+    /// 잘못 재사용하지 않게 한다.
+    /// </summary>
+    public static void PublishParallelAssignments(
+      string graphIdentifier,
+      string parallelNodeIdentifier,
+      IReadOnlyDictionary<ScenarioParallelBranch, int?> allocation)
+    {
+      if (_instance == null || !InstanceFinder.IsServerStarted
+          || string.IsNullOrWhiteSpace(graphIdentifier) || string.IsNullOrWhiteSpace(parallelNodeIdentifier)
+          || allocation == null)
+        return;
+
+      var branchesByClient = allocation
+        .Where(pair => pair.Key != null && pair.Value.HasValue && !string.IsNullOrWhiteSpace(pair.Key.Identifier))
+        .GroupBy(pair => pair.Value.Value)
+        .ToDictionary(
+          group => group.Key,
+          group => group.Select(pair => pair.Key.Identifier).Distinct(StringComparer.Ordinal).ToArray());
+      var clients = InstanceFinder.ServerManager?.Clients;
+      if (clients == null)
+        return;
+
+      foreach (var pair in clients)
+      {
+        var connection = pair.Value;
+        if (connection == null)
+          continue;
+
+        branchesByClient.TryGetValue((int)connection.ClientId, out var branchIdentifiers);
+        _instance.TargetAssignParallelBranches(
+          connection,
+          graphIdentifier,
+          parallelNodeIdentifier,
+          branchIdentifiers ?? Array.Empty<string>());
+      }
+    }
+
     /// <summary>표시 클라이언트가 대화 계속 입력을 서버에 보고한다.</summary>
     public static void RequestAdvance(string graphIdentifier, string nodeIdentifier)
     {
@@ -139,6 +179,16 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       ScenarioController.Instance.BeginPresentationScenario(graph, ownerClientId >= 0 ? ownerClientId : (int?)null);
+    }
+
+    [TargetRpc]
+    private void TargetAssignParallelBranches(
+      NetworkConnection conn,
+      string graphIdentifier,
+      string parallelNodeIdentifier,
+      string[] branchIdentifiers)
+    {
+      ScenarioParallelAssignmentState.Apply(graphIdentifier, parallelNodeIdentifier, branchIdentifiers);
     }
 
     [ObserversRpc]

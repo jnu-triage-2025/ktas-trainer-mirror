@@ -357,12 +357,14 @@ namespace MultiplayerInfrastructure.Scenario
       StopAllCoroutines();
       CancelDialogueAutoAdvance();
       _executionMode = ExecutionMode.ClientPresentation;
+      ScenarioParallelAssignmentState.ClearGraph(graph.Identifier);
       _currentGraph = graph;
       _currentNode = null;
       _scenarioOwnerClientId = ownerClientId;
       _state = State.Inactive;
       _activeOptions.Clear();
       _activeQuizNode = null;
+      ScenarioParallelAssignmentState.ClearGraph(graphIdentifier);
       _branchOptionInterceptor = null;
       _branchPromptActive = false;
       ResolveUIControllers();
@@ -537,6 +539,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       _currentGraph = graph;
       _scenarioOwnerClientId = ownerClientId;
+      ScenarioParallelAssignmentState.ClearGraph(graph.Identifier);
 
       // 시나리오가 요구하는 퀘스트 정의 include를 선로딩한다.
       QuestDefinitionRegistry.EnsureIncludesLoaded(graph.QuestDefinitionIncludes);
@@ -652,7 +655,10 @@ namespace MultiplayerInfrastructure.Scenario
       // 로그 기록을 위해 그래프 ID를 먼저 캡처 (_currentGraph는 이후 null로 초기화됨)
       string endingGraphId = _currentGraph?.Identifier;
       if (_executionMode == ExecutionMode.ServerAuthoritative && !string.IsNullOrEmpty(endingGraphId))
+      {
         ScenarioNetworkRelay.EndAuthoritativePresentation(endingGraphId);
+        ScenarioParallelAssignmentState.ClearGraph(endingGraphId);
+      }
       CancelDialogueAutoAdvance();
 
       // 아직 진행 중인 시나리오 코루틴(특히 WaitMode.None 으로 전역 시나리오보다 오래
@@ -3241,6 +3247,9 @@ namespace MultiplayerInfrastructure.Scenario
         yield break;
       }
 
+      if (_executionMode == ExecutionMode.ServerAuthoritative)
+        ScenarioNetworkRelay.PublishParallelAssignments(_currentGraph?.Identifier, node.Identifier, allocation);
+
       foreach (var branch in node.Branches)
       {
         if (!_currentGraph.TryGetNode(branch.Identifier, out var branchNode))
@@ -3264,7 +3273,8 @@ namespace MultiplayerInfrastructure.Scenario
 
         // 멀티플레이어에서는 로컬 클라이언트에 할당된 브랜치만 실행한다.
         // (미할당 브랜치 체인을 로컬에서 함께 돌리면 타 역할 노드가 한 번에 실행되는 문제가 발생한다.)
-        if (assignedClientId.HasValue && localClientId.HasValue && assignedClientId.Value != localClientId.Value)
+        if (_executionMode != ExecutionMode.ServerAuthoritative
+            && assignedClientId.HasValue && localClientId.HasValue && assignedClientId.Value != localClientId.Value)
         {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
           Debug.Log($"[ScenarioController] Parallel branch '{branch.Identifier}' skipped on local client {localClientId} (assigned to {assignedClientId}).");
