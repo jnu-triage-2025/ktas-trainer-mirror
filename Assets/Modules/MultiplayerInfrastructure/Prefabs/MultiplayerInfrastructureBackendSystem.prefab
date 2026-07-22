@@ -89,6 +89,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.FishNetSupports.FishNetSupport
   networkManager: {fileID: 0}
+  fallbackPlayerPrefab: {fileID: 0}
   hideNetworkHudCanvasOnSessionStart: 1
   autoStartFromRegistryWhenNoBootstrapper: 1
 --- !u!114 &1090021983889225486
@@ -794,6 +795,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: 'MI: FishNetSupports'
       objectReference: {fileID: 0}
+    - target: {fileID: 8116566379987800509, guid: bda62ecad912b4372a02192880c5dfbc, type: 3}
+      propertyPath: fallbackPlayerPrefab
+      value: 
+      objectReference: {fileID: 3332462076176395838, guid: 0420b685ca65044c2b84d5b6196621ba, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

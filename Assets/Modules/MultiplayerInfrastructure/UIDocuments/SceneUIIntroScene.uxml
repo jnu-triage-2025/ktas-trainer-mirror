@@ -4,44 +4,70 @@
 >
   <ui:Style src="SceneUIIntroScene.uss" />
   <ui:VisualElement class="root">
-    <ui:Label text="Multiplayer Session Intro" class="title" />
+    <ui:VisualElement class="intro-card">
 
-    <ui:VisualElement class="row">
-      <ui:VisualElement class="card">
-        <ui:Label text="Display Name" class="section-title" />
+      <!-- ═══ Main Menu Panel ═══ -->
+      <ui:VisualElement name="mainPanel" class="panel">
         <ui:VisualElement class="form-row">
-          <ui:Label text="Name" class="field-label" />
-          <ui:TextField name="nameField" class="text-field" placeholder-text="Player" />
+          <ui:Label text="플레이어 이름" class="field-label" />
+          <ui:TextField name="nameField" class="text-field" placeholder-text="이름을 입력하세요" />
         </ui:VisualElement>
 
         <ui:VisualElement class="stack gap">
-          <ui:Button name="btnCreateAndJoin" class="btn primary" text="Create a Session and Join" />
-          <ui:Button name="btnSearchLAN" class="btn secondary" text="Search opened session on LAN" />
-          <ui:Button name="btnJoinSelected" class="btn accent" text="Join Selected Server" />
+          <ui:Button name="btnTutorial" class="btn btn-secondary" text="튜토리얼" />
+          <ui:Button name="btnPlay" class="btn btn-primary" text="플레이" />
+          <ui:VisualElement class="btn-row center">
+            <ui:Button name="btnSettings" class="btn btn-tertiary btn-half" text="설정" />
+            <ui:Button name="btnExit" class="btn btn-danger btn-half" text="종료" />
+          </ui:VisualElement>
         </ui:VisualElement>
-
-        <ui:Label text="Discovered Sessions" class="section-title" />
-        <ui:ListView name="sessionList"
-                     class="session-list"
-                     selection-type="Single"
-                     fixed-item-height="48" />
-        <ui:Label name="emptyState" class="empty-state" text="No sessions discovered yet. Click “Search opened session on LAN”." />
       </ui:VisualElement>
 
-      <ui:VisualElement class="card direct-card">
-        <ui:Label text="Direct Join" class="section-title" />
+      <!-- ═══ Play Panel ═══ -->
+      <ui:VisualElement name="playPanel" class="panel panel-wide">
+        <ui:Button name="btnHost" class="btn btn-primary btn-host"
+                   text="이 컴퓨터를 서버로 사용하고 접속하기" />
+
+        <ui:VisualElement class="session-box">
+          <ui:TextField name="searchField" class="text-field search-field"
+                        placeholder-text="세션 검색..." />
+          <ui:ListView name="sessionList"
+                       class="session-list"
+                       selection-type="Single"
+                       fixed-item-height="48" />
+        </ui:VisualElement>
+
+        <ui:Label name="emptyState" class="empty-state"
+                  text="접속할 수 있는 로컬 네트워크의 세션을 찾고 있습니다..." />
+
+        <ui:Button name="btnJoinSelected" class="btn btn-accent" text="선택한 세션에 접속" />
+
+        <ui:VisualElement class="btn-row">
+          <ui:Button name="btnPlayBack" class="btn btn-tertiary btn-half" text="이전" />
+          <ui:Button name="btnDirectConnect" class="btn btn-secondary btn-half" text="직접 연결" />
+        </ui:VisualElement>
+      </ui:VisualElement>
+
+      <!-- ═══ Direct Connect Panel ═══ -->
+      <ui:VisualElement name="directPanel" class="panel">
         <ui:VisualElement class="form-row">
-          <ui:Label text="Address" class="field-label" />
+          <ui:Label text="주소" class="field-label" />
           <ui:TextField name="addrField" class="text-field" value="127.0.0.1" />
         </ui:VisualElement>
+
         <ui:VisualElement class="form-row">
-          <ui:Label text="Port" class="field-label" />
+          <ui:Label text="포트" class="field-label" />
           <ui:TextField name="portField" class="text-field" value="7777" />
         </ui:VisualElement>
-        <ui:Button name="btnDirectJoin" class="btn accent" text="Join" />
+
+        <ui:VisualElement class="btn-row">
+          <ui:Button name="btnDirectBack" class="btn btn-tertiary btn-half" text="이전" />
+          <ui:Button name="btnDirectJoin" class="btn btn-accent btn-half" text="접속" />
+        </ui:VisualElement>
       </ui:VisualElement>
+
     </ui:VisualElement>
 
-    <ui:Label name="statusLabel" class="status" text="Ready." />
+    <ui:Label name="statusLabel" class="status" text="" />
   </ui:VisualElement>
 </ui:UXML>
