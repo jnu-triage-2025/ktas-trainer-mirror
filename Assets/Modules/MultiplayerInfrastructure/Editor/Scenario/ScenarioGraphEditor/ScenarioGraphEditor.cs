@@ -971,11 +971,15 @@ namespace MultiplayerInfrastructure.Editor
 
         if (other is ScenarioParallelNode parallel)
         {
-          foreach (var branch in parallel.Branches)
+          for (int i = 0; i < parallel.Branches.Count; i++)
           {
+            var branch = parallel.Branches[i];
             if (branch.Identifier == id)
             {
-              branch.Identifier = null;
+              // 브랜치 identifier 는 스키마 필수(null 불허) 필드라 null 로 비우면
+              // 저장 검증이 실패한다. 자동 추가 브랜치와 같은 branch_N placeholder 로
+              // 교체해 저장 가능하고 재연결 가능한 상태를 유지한다.
+              branch.Identifier = $"branch_{i + 1}";
             }
           }
         }

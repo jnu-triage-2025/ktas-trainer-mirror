@@ -295,6 +295,17 @@ namespace MultiplayerInfrastructure.Editor
             choiceData.Options.Add(new ScenarioChoiceOption());
           }
 
+          // displayText 는 스키마 필수(null 불허) 필드다. 자동 생성된 옵션에 기본 텍스트를
+          // 미리 채워 노드 생성 직후 저장해도 검증에 실패하지 않게 한다.
+          for (int i = 0; i < choiceData.Options.Count; i++)
+          {
+            var existingOption = choiceData.Options[i];
+            if (existingOption != null && string.IsNullOrEmpty(existingOption.DisplayText))
+            {
+              existingOption.DisplayText = $"옵션 {i + 1}";
+            }
+          }
+
           foreach (var option in choiceData.Options)
           {
             AddChoiceOptionPort(option);
@@ -850,7 +861,10 @@ namespace MultiplayerInfrastructure.Editor
     {
       data.Options ??= new List<ScenarioChoiceOption>();
       while (data.Options.Count < 2)
-        data.Options.Add(new ScenarioChoiceOption());
+      {
+        // displayText 는 스키마 필수(null 불허) 필드라 자동 추가 옵션에도 기본 텍스트를 부여한다.
+        data.Options.Add(new ScenarioChoiceOption { DisplayText = $"옵션 {data.Options.Count + 1}" });
+      }
     }
 
     private static string GetChoiceOptionText(ScenarioChoiceNode data, int index)
@@ -1099,7 +1113,12 @@ namespace MultiplayerInfrastructure.Editor
           option.NextNodeIdentifier = null;
           break;
         case ScenarioParallelBranch branch:
-          branch.Identifier = null;
+          // 브랜치 identifier 는 스키마 필수(null 불허) 필드라서 null 로 비우면
+          // 저장 검증이 실패한다. 대신 placeholder 로 교체해 언제든 저장 가능하고
+          // 다시 연결할 수 있는 상태를 유지한다(재연결 시 HandlePortConnection 에서
+          // 실제 식별자가 다시 설정된다).
+          branch.Identifier = GetDisconnectedBranchPlaceholder(branch);
+          UpdateBranchPortLabel(branch);
           break;
       }
     }
@@ -1114,6 +1133,18 @@ namespace MultiplayerInfrastructure.Editor
     {
       branchPorts.TryGetValue(branch, out var port);
       return port;
+    }
+
+    /// <summary>
+    /// 연결이 해제된 병렬 브랜치에 채울 placeholder 식별자를 만든다.
+    /// 스키마는 브랜치 identifier 를 필수(null 불허)로 요구하므로 null 대신
+    /// placeholder 로 저장 가능성을 지키고, 포트는 유지되어 재연결할 수 있다.
+    /// CreateOutputPorts 의 자동 추가 브랜치와 같은 branch_N 명명 규칙을 쓴다.
+    /// </summary>
+    private string GetDisconnectedBranchPlaceholder(ScenarioParallelBranch branch)
+    {
+      var index = mutableBranches?.IndexOf(branch) ?? -1;
+      return index >= 0 ? $"branch_{index + 1}" : "branch_disconnected";
     }
 
     public void UpdateOptionPortLabel(ScenarioChoiceOption option)

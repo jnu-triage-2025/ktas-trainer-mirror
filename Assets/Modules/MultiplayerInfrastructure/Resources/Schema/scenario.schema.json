@@ -796,7 +796,11 @@
           "$ref": "#/$defs/ScenarioColor"
         },
         "nextNodeIdentifier": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "null 이면 이 선택지를 골랐을 때 시나리오가 종료된다(일반 노드의 nextIdentifier=null 과 동일한 의미)."
         }
       },
       "required": [
@@ -1920,7 +1924,11 @@
               "minimum": 0
             },
             "onCorrectNextIdentifier": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "null 이면 정답 시 nextIdentifier 로 폴백한다(런타임 ScenarioController 동작과 동일)."
             },
             "onIncorrectNextIdentifier": {
               "type": [
