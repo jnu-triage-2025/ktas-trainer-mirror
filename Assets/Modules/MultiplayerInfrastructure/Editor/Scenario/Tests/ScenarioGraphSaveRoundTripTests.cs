@@ -159,6 +159,31 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     /// <summary>
+    /// 외부 quest definition을 사용하는 QuestControl은 inline quest가 없어도 유효하다.
+    /// 에디터에서 이 노드를 선택한 뒤에도 quest:null이 유지되어야 한다.
+    /// </summary>
+    [Test]
+    public void QuestControlWithDefinitionKeepsNullInlineQuestAndSaves()
+    {
+      var graph = new ScenarioGraph { Identifier = "quest-definition-only" };
+      graph.Add(new ScenarioQuestControlNode
+      {
+        Identifier = "quest",
+        Operation = ScenarioQuestOperationType.Add,
+        FailureStrategy = ScenarioQuestFailureStrategy.Overwrite,
+        QuestDefinitionIdentifier = "tutorial-quest-crafting",
+        Quest = null
+      });
+
+      var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+      var reloadedQuest = (ScenarioQuestControlNode)reloaded.Nodes["quest"];
+
+      Assert.That(reloadedQuest.QuestDefinitionIdentifier, Is.EqualTo("tutorial-quest-crafting"));
+      Assert.That(reloadedQuest.Quest, Is.Null);
+    }
+
+    /// <summary>
     /// 저장→로드→저장 멱등성: 한 번 저장한 결과는 다시 저장해도 검증이 통과해야 한다.
     /// </summary>
     [Test]

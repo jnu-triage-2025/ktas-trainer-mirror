@@ -1383,6 +1383,7 @@ namespace MultiplayerInfrastructure.Editor
       var json = File.ReadAllText(path);
       try
       {
+        ScenarioGraphLoader.ReloadSchemaForEditor();
         var loaded = ScenarioGraphLoader.LoadFromJson(json, true);
         if (loaded == null || loaded.Nodes.Count == 0)
         {
@@ -1506,6 +1507,7 @@ namespace MultiplayerInfrastructure.Editor
 
       try
       {
+        ScenarioGraphLoader.ReloadSchemaForEditor();
         json = ScenarioGraphLoader.SaveToJson(graphData, true);
       }
       catch (Exception ex)

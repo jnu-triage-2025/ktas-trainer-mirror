@@ -625,22 +625,36 @@ namespace MultiplayerInfrastructure.Editor
     {
       data.Operation = (ScenarioQuestOperationType)EditorGUILayout.EnumPopup("Operation", data.Operation);
       data.FailureStrategy = (ScenarioQuestFailureStrategy)EditorGUILayout.EnumPopup("Failure Strategy", data.FailureStrategy);
+      data.QuestDefinitionIdentifier = EditorGUILayout.TextField(
+        "Quest Definition",
+        data.QuestDefinitionIdentifier ?? string.Empty);
 
-      if (data.Quest == null)
+      var useInlineQuestData = EditorGUILayout.Toggle("Inline Quest Data", data.Quest != null);
+      if (!useInlineQuestData)
       {
-        data.Quest = new QuestData();
+        // 외부 quest definition만 사용하는 노드는 quest:null 상태를 유지해야 한다.
+        // 인스펙터에서 노드를 선택했다는 이유만으로 빈 QuestData를 만들면 저장 JSON이
+        // 불필요하게 변경되고, 불완전한 inline quest가 스키마 검증을 실패시킨다.
+        data.Quest = null;
+      }
+      else
+      {
+        data.Quest ??= new QuestData();
       }
 
-      EditorGUILayout.Space();
-      EditorGUILayout.LabelField("Quest", EditorStyles.boldLabel);
-      data.Quest.Id = EditorGUILayout.TextField("Id", data.Quest.Id);
-      data.Quest.Title = EditorGUILayout.TextField("Title", data.Quest.Title);
-      data.Quest.WaypointIdentifier = EditorGUILayout.TextField("Waypoint Identifier", data.Quest.WaypointIdentifier);
-      EditorGUILayout.LabelField("Description");
-      data.Quest.Description = EditorGUILayout.TextArea(data.Quest.Description, GUILayout.Height(60));
-      EditorGUILayout.LabelField("Quest Content");
-      data.Quest.QuestContent = EditorGUILayout.TextArea(data.Quest.QuestContent, GUILayout.Height(40));
-      data.Quest.IsTracked = EditorGUILayout.Toggle("Track", data.Quest.IsTracked);
+      if (data.Quest != null)
+      {
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Quest", EditorStyles.boldLabel);
+        data.Quest.Id = EditorGUILayout.TextField("Id", data.Quest.Id);
+        data.Quest.Title = EditorGUILayout.TextField("Title", data.Quest.Title);
+        data.Quest.WaypointIdentifier = EditorGUILayout.TextField("Waypoint Identifier", data.Quest.WaypointIdentifier);
+        EditorGUILayout.LabelField("Description");
+        data.Quest.Description = EditorGUILayout.TextArea(data.Quest.Description, GUILayout.Height(60));
+        EditorGUILayout.LabelField("Quest Content");
+        data.Quest.QuestContent = EditorGUILayout.TextArea(data.Quest.QuestContent, GUILayout.Height(40));
+        data.Quest.IsTracked = EditorGUILayout.Toggle("Track", data.Quest.IsTracked);
+      }
 
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
