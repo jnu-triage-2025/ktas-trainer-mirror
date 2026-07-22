@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Reflection;
 using FishNet.Component.Spawning;
 using FishNet.Example;
 using FishNet.Managing;
+using FishNet.Object;
 using FishNet.Transporting;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
@@ -14,6 +16,10 @@ namespace MultiplayerInfrastructure.FishNetSupports
   public partial class FishNetSupport
   {
     private const string FallbackSpawnIdentifier = "spawnpoint-commons";
+
+    private static readonly FieldInfo PlayerSpawnerPrefabField =
+      typeof(PlayerSpawner).GetField("_playerPrefab", BindingFlags.Instance | BindingFlags.NonPublic);
+
     private LocalConnectionState _serverStateAssumed = LocalConnectionState.Stopped;
     private LocalConnectionState _clientStateAssumed = LocalConnectionState.Stopped;
     private bool _deferredPlayerSpawningPrepared;
@@ -113,6 +119,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
 
       var requiredSpawnIdentifier = ResolveRequiredSpawnIdentifier();
       ConfigurePlayerSpawnerSpawns(playerSpawners, requiredSpawnIdentifier);
+      EnsurePlayerPrefabAssigned(playerSpawners);
 
       for (int i = 0; i < playerSpawners.Length; i++)
       {
@@ -227,6 +234,72 @@ namespace MultiplayerInfrastructure.FishNetSupports
     {
       var identifier = Registry.Registry.Get<string>(RegistryType.RuntimeState, RegistryGlobalKeys.DefaultCommonSpawnPoint);
       return string.IsNullOrWhiteSpace(identifier) ? FallbackSpawnIdentifier : identifier;
+    }
+
+    /// <summary>
+    /// PlayerSpawner의 <c>_playerPrefab</c>이 null이면 자동으로 할당합니다.
+    ///
+    /// 할당 순서:
+    ///   1. <see cref="fallbackPlayerPrefab"/> (인스펙터에서 할당된 fallback)
+    ///   2. <c>Resources/Player</c> 경로 로드
+    ///
+    /// <see cref="PlayerSpawner.SetPlayerPrefab"/> 공개 API를 사용하여 할당하므로,
+    /// 이후 <see cref="FishNetDeferredPlayerSpawner.ConfigureFromPlayerSpawner"/>에서
+    /// 리플렉션으로 읽을 때 올바른 값이 반환됩니다.
+    /// </summary>
+    private void EnsurePlayerPrefabAssigned(PlayerSpawner[] playerSpawners)
+    {
+      if (playerSpawners == null || playerSpawners.Length == 0)
+        return;
+
+      NetworkObject resolvedFallback = null;
+
+      for (int i = 0; i < playerSpawners.Length; i++)
+      {
+        var spawner = playerSpawners[i];
+        if (spawner == null)
+          continue;
+
+        // 리플렉션으로 현재 _playerPrefab 확인
+        var currentPrefab = PlayerSpawnerPrefabField?.GetValue(spawner) as NetworkObject;
+        if (currentPrefab != null)
+          continue;
+
+        // Fallback 해결 (지연 — 첫 번째로 필요한 시점에 한 번만)
+        if (resolvedFallback == null)
+          resolvedFallback = ResolveFallbackPlayerPrefab();
+
+        if (resolvedFallback == null)
+        {
+          Debug.LogWarning(
+            "[FishNetSupport] PlayerSpawner에 Player 프리팹이 할당되지 않았고, " +
+            "fallback 프리팹도 찾을 수 없습니다. " +
+            "FishNetSupport 인스펙터의 fallbackPlayerPrefab을 할당하거나, " +
+            "Player 프리팹을 Resources/Player 경로에 배치하세요.");
+          return;
+        }
+
+        spawner.SetPlayerPrefab(resolvedFallback);
+        Debug.Log($"[FishNetSupport] PlayerSpawner '{spawner.gameObject.name}'의 " +
+                  $"Player 프리팹을 자동으로 할당했습니다: {resolvedFallback.name}");
+      }
+    }
+
+    private NetworkObject ResolveFallbackPlayerPrefab()
+    {
+      // 1. 인스펙터에서 할당된 fallback
+      if (fallbackPlayerPrefab != null)
+        return fallbackPlayerPrefab;
+
+      // 2. Resources/Player 경로 로드
+      var loaded = Resources.Load<NetworkObject>("Player");
+      if (loaded != null)
+      {
+        Debug.Log("[FishNetSupport] Resources/Player에서 Player 프리팹을 로드했습니다.");
+        return loaded;
+      }
+
+      return null;
     }
 
     private static void ConfigurePlayerSpawnerSpawns(PlayerSpawner[] playerSpawners, string spawnIdentifier)

@@ -1,124 +1,43 @@
+/* ═══════════════════════════════════════════════════════════════
+   SceneUIIntroScene.uss — Intro Scene UI Styles
+   ═══════════════════════════════════════════════════════════════ */
+
 .root {
   width: 100%;
   height: 100%;
-  padding: 16px;
-  box-sizing: border-box;
   background-color: #0b1220;
   color: #e5e7eb;
   flex-direction: column;
-  align-items: stretch;
-  gap: 12px;
+  justify-content: center;
+  align-items: center;
 }
 
-.title {
-  unity-font-style-and-weight: bold;
-  font-size: 20px;
-  color: #e5e7eb;
-  margin-bottom: 4px;
-}
-
-.row {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 12px;
-  width: 100%;
-  align-items: flex-start;
-}
-
-.card {
-  flex: 1 1 360px;
-  max-width: 720px;
-  min-width: 320px;
+/* ─── Centered card ─────────────────────────────────────────── */
+.intro-card {
   background-color: #0f172a;
   border: 1px solid #1f2937;
   border-radius: 12px;
-  padding: 16px;
+  padding: 24px;
+  min-width: 400px;
+  max-width: 500px;
   box-sizing: border-box;
-  gap: 10px;
 }
 
-.direct-card {
-  border: 1px solid #334155;
-}
-
-.stack {
-  display: flex;
+/* ─── Panels (screen switching) ─────────────────────────────── */
+.panel {
   flex-direction: column;
+  gap: 16px;
 }
 
-.gap {
-  gap: 8px;
+.panel-wide {
+  min-width: 520px;
 }
 
-.section-title {
-  margin-top: 10px;
-  margin-bottom: 6px;
-  unity-font-style-and-weight: bold;
-  color: #e5e7eb;
-}
-
-.btn {
-  height: 40px;
-  -unity-text-align: middle-center;
-  color: #ffffff;
-  border-radius: 8px;
-  border-width: 0px;
-  background-color: #3b82f6;
-}
-
-.btn:hover {
-  background-color: #4b8ff9;
-}
-
-.btn:disabled {
-  background-color: #4b5563;
-  color: #cbd5e1;
-}
-
-.primary {
-  background-color: #3b82f6;
-}
-
-.primary:hover {
-  background-color: #4b8ff9;
-}
-
-.secondary {
-  background-color: #6b7280;
-}
-
-.secondary:hover {
-  background-color: #7b8490;
-}
-
-.accent {
-  background-color: #22c55e;
-}
-
-.accent:hover {
-  background-color: #32cf6c;
-}
-
-.session-list {
-  min-height: 220px;
-  max-height: 340px;
-  border: 1px solid #1f2937;
-  border-radius: 8px;
-  background-color: #0a1022;
-}
-
-.empty-state {
-  margin-top: 6px;
-  color: #9ca3af;
-  font-size: 12px;
-}
-
+/* ─── Form elements ─────────────────────────────────────────── */
 .form-row {
-  display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .field-label {
@@ -127,14 +46,156 @@
 }
 
 .text-field {
-  height: 32px;
+  height: 36px;
   border: 1px solid #1f2937;
   border-radius: 6px;
   background-color: #0a0f1a;
+  color: #d1d5db;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.text-field > .unity-text-field__input {
+  color: #d1d5db;
+}
+
+.text-field:focus-within {
+  border: 1px solid #3b82f6;
+}
+
+/* ─── Buttons ───────────────────────────────────────────────── */
+.btn {
+  height: 42px;
+  -unity-text-align: middle-center;
+  color: #ffffff;
+  border-radius: 8px;
+  border-width: 0;
+  font-size: 14px;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.btn:disabled {
+  background-color: #4b5563;
+  color: #cbd5e1;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+}
+
+.btn-primary:hover {
+  background-color: #4b8ff9;
+}
+
+.btn-secondary {
+  background-color: #6366f1;
+}
+
+.btn-secondary:hover {
+  background-color: #7577f5;
+}
+
+.btn-tertiary {
+  background-color: #6b7280;
+}
+
+.btn-tertiary:hover {
+  background-color: #7b8490;
+}
+
+.btn-accent {
+  background-color: #22c55e;
+}
+
+.btn-accent:hover {
+  background-color: #32cf6c;
+}
+
+.btn-danger {
+  background-color: #dc2626;
+}
+
+.btn-danger:hover {
+  background-color: #e53e3e;
+}
+
+/* ─── Layout helpers ────────────────────────────────────────── */
+.stack {
+  flex-direction: column;
+}
+
+.gap {
+  gap: 8px;
+}
+
+.btn-row {
+  flex-direction: row;
+  gap: 8px;
+}
+
+.btn-row.center {
+  justify-content: center;
+}
+
+.btn-half {
+  flex: 1 1 0;
+}
+
+.btn-host {
+  height: 48px;
+  font-size: 15px;
+  -unity-font-style-and-weight: bold;
+}
+
+/* ─── Session list ──────────────────────────────────────────── */
+.session-box {
+  background-color: #0a1022;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  padding: 8px;
+  gap: 6px;
+}
+
+.search-field {
+  height: 32px;
+  background-color: #111827;
+  border: 1px solid #374151;
+}
+
+.session-list {
+  min-height: 160px;
+  max-height: 280px;
+  flex: 1 1 auto;
+  border: 1px solid #1f2937;
+  border-radius: 4px;
+  background-color: #0a1022;
+}
+
+.session-row-name {
+  -unity-font-style-and-weight: bold;
   color: #e5e7eb;
 }
 
-.status {
-  color: #9ca3af;
+.session-row-endpoint {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.empty-state {
+  color: #6b7280;
   font-size: 12px;
+  -unity-text-align: middle-center;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+/* ─── Status bar ────────────────────────────────────────────── */
+.status {
+  color: #6b7280;
+  font-size: 11px;
+  -unity-text-align: middle-center;
+  margin-top: 8px;
 }

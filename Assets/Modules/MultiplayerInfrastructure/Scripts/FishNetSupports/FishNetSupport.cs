@@ -15,6 +15,11 @@ namespace MultiplayerInfrastructure.FishNetSupports
     [Tooltip("If empty, FishNetSupport will query NetworkManager in hierarchy at runtime.")]
     [SerializeField] private FishNet.Managing.NetworkManager networkManager;
 
+    [Header("Player Prefab Fallback")]
+    [Tooltip("PlayerSpawner의 _playerPrefab이 비어 있을 때 자동으로 할당할 Player 프리팹. " +
+             "비어 있으면 Resources/Player 경로를 시도합니다.")]
+    [SerializeField] private FishNet.Object.NetworkObject fallbackPlayerPrefab;
+
     [Header("Network HUD")]
     [Tooltip("When true, NetworkHudCanvas objects under NetworkManager are hidden when a session starts.")]
     [SerializeField] private bool hideNetworkHudCanvasOnSessionStart = true;

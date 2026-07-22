@@ -88,7 +88,18 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<Syringe5cc>(Syringe5cc.Identifier);
       Registry.RegisterItemDefinition<BloodTransfusionSet>(BloodTransfusionSet.Identifier);
       Registry.RegisterItemDefinition<VitalSet>(VitalSet.Identifier);
+
+      // ===== 튜토리얼 아이템 =====
       Registry.RegisterItemDefinition<TutorialDeliveryPackage>(TutorialDeliveryPackage.Identifier);
+      Registry.RegisterItemDefinition<TutorialDecoyOvernightYouth>(TutorialDecoyOvernightYouth.Identifier);
+      Registry.RegisterItemDefinition<TutorialDecoy8909>(TutorialDecoy8909.Identifier);
+      Registry.RegisterItemDefinition<TutorialDecoyKimGangsanMail>(TutorialDecoyKimGangsanMail.Identifier);
+
+      // ===== 튜토리얼 시계 제작 아이템 =====
+      Registry.RegisterItemDefinition<TinIngot>(TinIngot.Identifier);
+      Registry.RegisterItemDefinition<SmallGear>(SmallGear.Identifier);
+      Registry.RegisterItemDefinition<SmallChain>(SmallChain.Identifier);
+      Registry.RegisterItemDefinition<HandyClock>(HandyClock.Identifier);
       Registry.RegisterItemDefinition<WallSuction>(WallSuction.Identifier);
       Registry.RegisterItemDefinition<Yankauer>(Yankauer.Identifier);
 
@@ -652,6 +663,16 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
           .Requires(Cannula24g.Identifier, 1)
           .Requires(Syringe50cc.Identifier, 1)
           .Requires(NormalSaline20ml.Identifier, 1)
+          .Produces(1));
+
+      // ===== 튜토리얼 시계 제작 레시피 =====
+
+      // 주석 주괴 3개 + 소형 톱니 5개 + 소형 사슬 1개 → 시계 1개
+      ItemCombineRecipeRegistry.Register(
+        new ItemCombineRecipe(HandyClock.Identifier)
+          .Requires(TinIngot.Identifier, 3)
+          .Requires(SmallGear.Identifier, 5)
+          .Requires(SmallChain.Identifier, 1)
           .Produces(1));
     }
 

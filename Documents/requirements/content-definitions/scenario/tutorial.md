@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "1-designed"
 status: active
-updated: 2026-07-19
+updated: 2026-07-22
 flags: ["refactor-required"]
 ---
 
@@ -43,15 +43,34 @@ TUT_START
                                                 -> D_TUT_HAT_STARTING_2
   -> D_TUT_HAT_STARTING_3
   -> Q_TUT_DELIVERY_ADD
+  -> DECOY_WATCHER_FORK (Parallel, waitMode: None)
+       -> [bg] branch_decoy_watch -> V_TUT_DECOY_PICKUPED -> D_TUT_DECOY_HINT
   -> V_TUT_DELIVERY_WAYPOINT_REACHED
   -> D_TUT_PACKAGE_PROMPT
   -> V_TUT_DELIVERY_PACKAGE_ACQUIRED
   -> V_TUT_DELIVERY_PACKAGE_SUBMITTED
   -> Q_TUT_DELIVERY_REMOVE
   -> D_TUT_DELIVERY_COMPLETE
+  -> D_TUT_CRAFTING_REQUEST
+  -> C_TUT_CRAFTING_ACCEPT
+  -> Q_TUT_CRAFTING_ADD
+  -> GIVE_TIN -> GIVE_GEAR -> GIVE_CHAIN
+  -> D_TUT_CRAFTING_HINT
+  -> V_TUT_CLOCK_CRAFTED
+  -> D_TUT_SUBMIT_HINT
+  -> CONFIG_CLOCK_SUBMISSION
+  -> V_TUT_CLOCK_SUBMITTED
+  -> Q_TUT_CRAFTING_REMOVE
+  -> D_TUT_CRAFTING_COMPLETE
   -> TUT_END
 ```
 
+- 시계 제작 흐름(`D_TUT_CRAFTING_REQUEST`~`D_TUT_CRAFTING_COMPLETE`)은 부분 3 감사 대사 직후에
+  연결된다. `GIVE_TIN`/`GIVE_GEAR`/`GIVE_CHAIN`은 `ExecuteCommand`(`give @s`)로 플레이어
+  인벤토리에 재료를 지급한다. `V_TUT_CLOCK_CRAFTED`는 `MedicalItem.OnGet`이 자동 발행하는
+  `sig.click_handy_clock`을 `waitForCondition` 게이트로 기다린다. `CONFIG_CLOCK_SUBMISSION`은
+  기존 택배 제출과 같은 `tutorial-guide-hat-package-submission` 대상을 재사용하며,
+  `completionSignalIdentifier`를 `tutorial.crafting.clock.submitted`로 구분한다.
 - `TUT_START`는 이 문서의 시작 노드 identifier로 사용한다. `TUT_END`만
   `nextIdentifier: null`인 종료 노드로 둔다.
 - 이동 완료 뒤에는 `DL_TUT_MOVE_CALL_DELAY`가 500 ms를 대기한 뒤 `D_TUT_CALL`로 진행한다.
@@ -83,7 +102,9 @@ TUT_START
 | TUT-QUEST-1 | `Q_TUT_MOVE_ADD`, `Q_TUT_FIND_HAT_ADD`, `Q_TUT_DELIVERY_ADD` | 세 quest에 title/content/task definition 및 Add/Remove의 공통 definition identifier가 없다. | `tutorial-move`, `tutorial-find-hat`, `tutorial-quest-delivery`의 별도 quest definition을 작성한다. delivery는 본문에 적힌 3개 task와 순서를 보존한다. |
 | TUT-SIG-3 | delivery waypoint/획득/제출 | `delivery-storage-spot` 도착, `tutorial_delivery_package` pickup, 모자에게 submit 모두 producer가 없고, quest task 완료가 Scenario signal을 Raise한다는 계약도 없다. | waypoint tracker, StaticPlacedObject pickup, NPC item-submit callback이 각각 `tutorial_delivery_waypoint_reached`, `tutorial_delivery_package_acquired`, `tutorial_delivery_package_submitted`를 Raise하도록 구현/배선한다. |
 | TUT-ASSET-1 | 택배 및 오답 아이템 | ~~택배 StaticPlacedObject의 scene object identifier·spawn 위치·item definition이 없고, “여러 개” 오답 아이템의 목록/독백 트리거도 미정이다.~~ **해결(2026-07-21):** 아래 「택배 보관소 아이템 배치 확정」의 정답 1개와 오답 3개를 StaticPlacedItem으로 배치한다. | 정답 물품만 `tutorial_delivery_package`를 지급하며, 오답 물품은 각각 1회성 독백만 재생하고 퀘스트 진행 상태를 바꾸지 않는다. |
-| TUT-END-1 | 부분 3 이후 | 감사 인사 뒤 화면 전환, 다음 Scenario, 종료 메시지 중 어느 것도 없다. | **인간 판단 필요:** 다음 Scenario identifier 또는 튜토리얼 종료 UX를 확정한다. 확정 전에는 `D_TUT_DELIVERY_COMPLETE -> TUT_END`로만 종료하고, fade/전환을 이미 존재한다고 가정하지 않는다. |
+| TUT-END-1 | 부분 4 이후 | ~~감사 인사 뒤 화면 전환, 다음 Scenario, 종료 메시지 중 어느 것도 없다.~~ **부분 4 시계 제작 퀘스트 추가(2026-07-22):** 택배 감사 대사 뒤에 시계 제작 요청→재료 지급→조합→제출 흐름이 연결된다. 최종 종료는 시계 제작 완료 대사(`D_TUT_CRAFTING_COMPLETE`) 이후이며, 화면 전환·다음 Scenario는 여전히 미결정이다. | **인간 판단 필요:** `D_TUT_CRAFTING_COMPLETE` 뒤의 종료 UX를 확정한다. 확정 전에는 `TUT_END`(`nextIdentifier: null`)로만 종료한다. |
+| TUT-CRAFT-1 | 시계 제작 아이템 | `tin_ingot`, `small_gear`, `small_chain`, `handy_clock`의 아이콘/3D 모델 리소스가 없다. | **코드 등록 완료(2026-07-22):** C# 클래스 정의 및 레지스트리 등록, 조합 레시피 등록 완료. 리소스(아이콘 스프라이트, 3D 모델 프리팹)는 추후 추가 필요. `ValidateItemResources()`에서 누락 Warning 출력은 정상. |
+| TUT-CRAFT-2 | 시계 제출 대상 | `CONFIG_CLOCK_SUBMISSION`이 `tutorial-guide-hat-package-submission`을 재사용한다. 택배 제출 후 해당 Interactable이 비활성화되어 있으면 시계 제출이 불가능하다. | 택배 제출 완료 후에도 `tutorial-guide-hat-package-submission`을 활성 상태로 유지하거나, 시계 제출 시점에 `NpcInteractControl`(`Enable`)로 재활성화해야 한다. |
 
 ### 변환 승인 조건
 
@@ -115,16 +136,44 @@ TUT_START
 바라보는 방향이다. 정답 물품은 중앙 선반에 두어 텍스트를 읽은 플레이어가 자연스럽게 선택할 수 있게
 하고, 오답 물품은 서로 다른 선반 칸에 분산해 마우스 휠 선택과 F 상호작용을 연습하게 한다.
 
-| 구분 | 표시 이름 | scene object identifier | 지급 item definition identifier | 배치 위치 | 상호작용 결과 |
-|---|---|---|---|---|---|
-| 정답 | `택배: 모자님 앞` | `tutorial-delivery-storage-package-hat-attn` | `tutorial_delivery_package` | 중앙 선반, waypoint에서 1.0 m 앞·허리 높이 | 인벤토리에 `tutorial_delivery_package` 1개를 넣는다. 이후 모자 NPC에게 제출 가능하다. |
-| 오답 | `배달: 밤샜음 청년` | `tutorial-delivery-storage-decoy-overnight-youth` | `tutorial_delivery_decoy_overnight_youth` | 좌측 상단 선반, waypoint에서 1.0 m 앞·0.7 m 좌측 | 첫 상호작용에서만 독백: “이건 모자님 앞으로 온 택배가 아닌 것 같다.” 아이템은 지급하지 않는다. |
-| 오답 | `택배: 8909` | `tutorial-delivery-storage-decoy-8909` | `tutorial_delivery_decoy_8909` | 우측 상단 선반, waypoint에서 1.0 m 앞·0.7 m 우측 | 첫 상호작용에서만 독백: “수취인 이름이 없으니 이 택배는 아닌 것 같다.” 아이템은 지급하지 않는다. |
-| 오답 | `우편: 김강산님` | `tutorial-delivery-storage-decoy-kim-gangsan-mail` | `tutorial_delivery_decoy_kim_gangsan_mail` | 좌측 하단 선반, waypoint에서 1.0 m 앞·0.7 m 좌측·0.45 m 아래 | 첫 상호작용에서만 독백: “김강산님 앞으로 온 우편물이다. 모자님께 드릴 물건이 아니다.” 아이템은 지급하지 않는다. |
+| 구분 | 표시 이름 | scene object identifier | 배치 컴포넌트 | 지급 item definition identifier | 배치 위치 | 상호작용 결과 |
+|---|---|---|---|---|---|---|
+| 정답 | `택배: 모자님 앞` | `tutorial-delivery-storage-package-hat-attn` | **StaticPlacedItem** | `tutorial_delivery_package` | 중앙 선반, waypoint에서 1.0 m 앞·허리 높이 | 인벤토리에 `tutorial_delivery_package` 1개를 넣는다. 이후 모자 NPC에게 제출 가능하다. |
+| 오답 | `배달: 밤샜음 청년` | `tutorial-delivery-storage-decoy-overnight-youth` | **ScenarioInteractable** | `tutorial_delivery_decoy_overnight_youth` | 좌측 상단 선반, waypoint에서 1.0 m 앞·0.7 m 좌측 | 상호작용 시 공통 오답 signal 발생 + DisinteractableDialogue 표시 |
+| 오답 | `택배: 8909` | `tutorial-delivery-storage-decoy-8909` | **ScenarioInteractable** | `tutorial_delivery_decoy_8909` | 우측 상단 선반, waypoint에서 1.0 m 앞·0.7 m 우측 | 상호작용 시 공통 오답 signal 발생 + DisinteractableDialogue 표시 |
+| 오답 | `우편: 김강산님` | `tutorial-delivery-storage-decoy-kim-gangsan-mail` | **ScenarioInteractable** | `tutorial_delivery_decoy_kim_gangsan_mail` | 좌측 하단 선반, waypoint에서 1.0 m 앞·0.7 m 좌측·0.45 m 아래 | 상호작용 시 공통 오답 signal 발생 + DisinteractableDialogue 표시 |
 
-오답 독백의 1회성 상태는 각 scene object identifier에 대응하는 RuntimeState signal
-`tutorial.delivery.decoy.<name>.inspected`로 기록한다. `<name>`은 각각 `overnight-youth`, `8909`,
-`kim-gangsan-mail`이다. 이 signal은 퀘스트 완료 조건이나 제출 signal에 사용하지 않는다.
+> **배치 컴포넌트 구분:** 정답 아이템은 `StaticPlacedItem`으로 배치하여 서버 권위 획득 프로토콜(예약→확인→vanish)을
+> 통해 인벤토리에 아이템을 지급한다. 오답 아이템은 `ScenarioInteractable`로 배치하여 아이템 지급 없이
+> 상호작용 signal만 발생시킨다. 오답은 인벤토리에 들어가지 않으므로 퀘스트 완료 조건에 영향을 주지 않는다.
+
+### [DECOY_WATCHER_FORK] 오답 공통 독백
+
+세 오답 아이템은 `ScenarioInteractable`로 배치되므로 아이템 지급 없이 상호작용 시
+**동일한 signal** `tutorial-decoy-package-on-pickuped`를 발생시킨다.
+정답(`StaticPlacedItem`)과 달리 인벤토리에 들어가지 않는다.
+
+시나리오 그래프에서는 `add_delivery_quest` 직후 `DECOY_WATCHER_FORK`(`Parallel`,
+`waitMode: None`)로 백그라운드 감시 브랜치를 시작한다. 이 브랜치는
+`Validator`(`waitForCondition: true`, `sig.tutorial-decoy-package-on-pickuped`)로 signal을
+기다렸다가 `DisinteractableDialogue`(“이 물건은 아닌 것 같다.”, 3초)를 표시한다.
+`waitMode: None`이므로 이 Parallel은 즉시 `nextIdentifier`(`watch_delivery_quest`)로
+진행하며, 오답 독백은 배달 퀘스트 흐름과 독립적으로 재생된다.
+
+```json
+{
+  “identifier”: “D_TUT_DECOY_HINT”,
+  “nodeType”: “DisinteractableDialogue”,
+  “speakerName”: null,
+  “dialogueContent”: “이 물건은 아닌 것 같다.”,
+  “fadeInDuration”: { “value”: 0.2, “unit”: “Seconds” },
+  “displayDuration”: { “value”: 3, “unit”: “Seconds” },
+  “fadeOutDuration”: { “value”: 0.2, “unit”: “Seconds” }
+}
+```
+
+오답 `ScenarioInteractable`은 소멸 개념이 없으므로 플레이어가 반복해 상호작용할 수 있다.
+이 signal은 퀘스트 완료 조건이나 제출 signal에 사용하지 않는다.
 
 ## 원본 시나리오 서술
 
@@ -246,3 +295,50 @@ Title 발생
     - 다이얼로그 발생
       - 발화자: "모자"
       - 텍스트: "감사합니다! 덕분에 일이 잘 해결되었네요..!"
+
+### 부분 4 — 시계 제작
+
+  1. 모자 NPC 다이얼로그
+     - 발화자: "모자"
+     - 텍스트: "아 혹시 여기 이 물건들로 시계를 만들어주실 수 있나요? 제가 손기술이 없어서.."
+
+  2. 플레이어 선택 (선택지 1개)
+     - "(수락)" → 시계 제작 흐름 진입
+
+  3. 게임 시스템: 아이템 지급 (ExecuteCommand)
+     - 주석 주괴 `tin_ingot` ×3
+     - 소형 톱니 `small_gear` ×5
+     - 소형 사슬 `small_chain` ×1
+
+  4. 퀘스트 발행: `tutorial-quest-crafting`
+     - 텍스트 콘텐츠: "시계 제작"
+     - 완료조건 (순차):
+       1. 재료 확인: tin_ingot 3, small_gear 5, small_chain 1 인벤토리 보유
+       2. 시계 조합: handy_clock 1 인벤토리 보유
+       3. 시계 제출: 모자에게 handy_clock 제출
+
+  5. 아이템 조합
+     - 사전 등록 레시피: tin_ingot 3 + small_gear 5 + small_chain 1 → handy_clock 1
+     - 플레이어가 인벤토리 UI에서 조합 수행
+
+  6. 조합 완료 후 안내 다이얼로그
+     - 발화자: "시스템"
+     - 텍스트: "시계를 조합했습니다! 모자에게 시계를 전달하세요."
+
+  7. 제출 (ItemSubmissionConfig)
+     - 대상: `tutorial-guide-hat-package-submission` (기존 택배 제출 대상 재사용)
+     - 요구 아이템: `handy_clock` ×1
+     - 완료 신호: `tutorial.crafting.clock.submitted`
+
+  8. 제출 완료 다이얼로그
+     - 발화자: "모자"
+     - 텍스트: "멋진 시계네요! 감사합니다!"
+
+  - 아이템 정의 (코드 등록만, 리소스 미포함):
+
+    | 식별자 | 표시 이름 | 스택 | 최대 |
+    |---|---|---|---|
+    | `tin_ingot` | 주석 주괴 | O | 64 |
+    | `small_gear` | 소형 톱니 | O | 64 |
+    | `small_chain` | 소형 사슬 | O | 64 |
+    | `handy_clock` | 시계 | X | 1 |

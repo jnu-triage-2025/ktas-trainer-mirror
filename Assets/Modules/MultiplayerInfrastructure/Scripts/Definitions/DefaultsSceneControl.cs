@@ -4,5 +4,6 @@ namespace MultiplayerInfrastructure.Definitions
   {
     public const string IntroSceneName = "IntroScene";
     public const string IngameSceneName = "IngameScene";
+    public const string TutorialSceneName = "TutorialScene";
   }
 }

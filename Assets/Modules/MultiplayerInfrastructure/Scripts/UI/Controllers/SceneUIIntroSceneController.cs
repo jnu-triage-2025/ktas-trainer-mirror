@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
@@ -7,12 +8,17 @@ using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Definitions;
 
 /// <summary>
-/// Controller for the Intro Scene UI.
-/// 
-/// Requiremtns when getting started from empty scene:
-/// Scenes must be added to Build Settings:
-/// - IntroScene (this)
-/// - IngameScene (gameplay)
+/// IntroScene UI 컨트롤러.
+///
+/// 세 개의 패널을 전환하며 동작합니다:
+///   1. 메인 메뉴: 플레이어 이름 입력, 튜토리얼, 플레이, 설정, 종료
+///   2. 플레이 패널: 호스트(이 컴퓨터를 서버로), LAN 세션 목록(검색), 직접 연결 진입
+///   3. 직접 연결 패널: 주소/포트 입력, 접속
+///
+/// 설정 UI는 <see cref="SettingsUIController"/>를 동적으로 생성하여 <see cref="UIOverlayStack"/>으로 표시합니다.
+///
+/// Requirements:
+///   - Scenes in Build Settings: IntroScene, IngameScene, TutorialScene
 /// </summary>
 namespace MultiplayerInfrastructure.UI
 {
@@ -21,27 +27,55 @@ namespace MultiplayerInfrastructure.UI
   {
     [Header("Scene flow")]
     [SerializeField] private string ingameSceneName = DefaultsSceneControl.IngameSceneName;
+    [SerializeField] private string tutorialSceneName = DefaultsSceneControl.TutorialSceneName;
 
     [Header("Defaults")]
     [SerializeField] private string defaultAddress = DefaultsSessionInformationModel.address;
     [SerializeField] private ushort defaultPort = DefaultsSessionInformationModel.port;
     [SerializeField] private string defaultSessionName = "MyFishSession";
 
-    private Button _btnCreateAndJoin;
-    private Button _btnSearchLAN;
-    private Button _btnJoinSelected;
-    private Button _btnDirectJoin;
-    private TextField _addrField;
-    private TextField _portField;
+    [Header("Settings UI")]
+    [SerializeField] private VisualTreeAsset settingsUxml;
+
+    // ─── Panels ────────────────────────────────────────────────────────────
+    private VisualElement _mainPanel;
+    private VisualElement _playPanel;
+    private VisualElement _directPanel;
+
+    // ─── Main menu elements ────────────────────────────────────────────────
     private TextField _nameField;
+    private Button _btnTutorial;
+    private Button _btnPlay;
+    private Button _btnSettings;
+    private Button _btnExit;
+
+    // ─── Play panel elements ───────────────────────────────────────────────
+    private Button _btnHost;
+    private TextField _searchField;
     private ListView _listView;
     private Label _emptyState;
+    private Button _btnJoinSelected;
+    private Button _btnPlayBack;
+    private Button _btnDirectConnect;
+
+    // ─── Direct connect panel elements ─────────────────────────────────────
+    private TextField _addrField;
+    private TextField _portField;
+    private Button _btnDirectBack;
+    private Button _btnDirectJoin;
+
+    // ─── Status ────────────────────────────────────────────────────────────
     private Label _status;
 
+    // ─── Data ──────────────────────────────────────────────────────────────
     private readonly List<SessionInformationModel> _items = new List<SessionInformationModel>();
     private SessionInformationModel _selected;
-
     private LanDiscoveryService _discovery;
+    private SettingsUIController _settingsController;
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Unity Lifecycle
+    // ════════════════════════════════════════════════════════════════════════
 
     private void Awake()
     {
@@ -50,17 +84,100 @@ namespace MultiplayerInfrastructure.UI
       var doc = GetComponent<UIDocument>();
       var root = doc.rootVisualElement;
 
-      _btnCreateAndJoin = root.Q<Button>("btnCreateAndJoin");
-      _btnSearchLAN = root.Q<Button>("btnSearchLAN");
-      _btnJoinSelected = root.Q<Button>("btnJoinSelected");
-      _btnDirectJoin = root.Q<Button>("btnDirectJoin");
-      _addrField = root.Q<TextField>("addrField");
-      _portField = root.Q<TextField>("portField");
+      // ── Panels ──
+      _mainPanel = root.Q<VisualElement>("mainPanel");
+      _playPanel = root.Q<VisualElement>("playPanel");
+      _directPanel = root.Q<VisualElement>("directPanel");
+
+      // ── Main menu ──
       _nameField = root.Q<TextField>("nameField");
+      _btnTutorial = root.Q<Button>("btnTutorial");
+      _btnPlay = root.Q<Button>("btnPlay");
+      _btnSettings = root.Q<Button>("btnSettings");
+      _btnExit = root.Q<Button>("btnExit");
+
+      // ── Play panel ──
+      _btnHost = root.Q<Button>("btnHost");
+      _searchField = root.Q<TextField>("searchField");
       _listView = root.Q<ListView>("sessionList");
       _emptyState = root.Q<Label>("emptyState");
+      _btnJoinSelected = root.Q<Button>("btnJoinSelected");
+      _btnPlayBack = root.Q<Button>("btnPlayBack");
+      _btnDirectConnect = root.Q<Button>("btnDirectConnect");
+
+      // ── Direct connect panel ──
+      _addrField = root.Q<TextField>("addrField");
+      _portField = root.Q<TextField>("portField");
+      _btnDirectBack = root.Q<Button>("btnDirectBack");
+      _btnDirectJoin = root.Q<Button>("btnDirectJoin");
+
+      // ── Status ──
       _status = root.Q<Label>("statusLabel");
 
+      // ── Button bindings ──
+      _btnTutorial.clicked += OnTutorial;
+      _btnPlay.clicked += () => ShowPanel(_playPanel);
+      _btnSettings.clicked += OnSettings;
+      _btnExit.clicked += OnExit;
+
+      _btnHost.clicked += OnHostAndJoin;
+      _btnJoinSelected.clicked += OnJoinSelected;
+      _btnJoinSelected.SetEnabled(false);
+      _btnPlayBack.clicked += () => ShowPanel(_mainPanel);
+      _btnDirectConnect.clicked += OnShowDirectConnect;
+
+      _btnDirectBack.clicked += () => ShowPanel(_playPanel);
+      _btnDirectJoin.clicked += OnDirectJoin;
+
+      // ── ListView setup ──
+      SetupListView();
+
+      // ── Search filter ──
+      _searchField.RegisterValueChangedCallback(_ => RefreshSessions());
+
+      // ── Defaults ──
+      _addrField.value = defaultAddress;
+      _portField.value = defaultPort.ToString();
+
+      // ── Show main menu ──
+      ShowPanel(_mainPanel);
+    }
+
+    private void OnEnable()
+    {
+      InvokeRepeating(nameof(RefreshSessions), 0.5f, 1.0f);
+    }
+
+    private void OnDisable()
+    {
+      CancelInvoke(nameof(RefreshSessions));
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Panel Switching
+    // ════════════════════════════════════════════════════════════════════════
+
+    private void ShowPanel(VisualElement panel)
+    {
+      _mainPanel.style.display = panel == _mainPanel ? DisplayStyle.Flex : DisplayStyle.None;
+      _playPanel.style.display = panel == _playPanel ? DisplayStyle.Flex : DisplayStyle.None;
+      _directPanel.style.display = panel == _directPanel ? DisplayStyle.Flex : DisplayStyle.None;
+
+      if (panel == _playPanel)
+      {
+        _discovery.StartDiscovery();
+        _discovery.ClearDiscovered();
+        RefreshSessions();
+        _listView.Rebuild();
+      }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // ListView
+    // ════════════════════════════════════════════════════════════════════════
+
+    private void SetupListView()
+    {
       _listView.makeItem = () =>
       {
         var row = new VisualElement();
@@ -69,10 +186,10 @@ namespace MultiplayerInfrastructure.UI
         row.style.paddingRight = 8;
 
         var name = new Label { name = "name" };
-        name.style.unityFontStyleAndWeight = FontStyle.Bold;
+        name.AddToClassList("session-row-name");
 
         var endpoint = new Label { name = "endpoint" };
-        endpoint.style.color = new StyleColor(new Color(0.7f, 0.75f, 0.82f));
+        endpoint.AddToClassList("session-row-endpoint");
 
         row.Add(name);
         row.Add(endpoint);
@@ -90,123 +207,37 @@ namespace MultiplayerInfrastructure.UI
       _listView.itemsSource = _items;
       _listView.selectionType = SelectionType.Single;
       _listView.onSelectionChange += OnSelectionChanged;
-
-      _btnJoinSelected.SetEnabled(false);
-      _btnCreateAndJoin.clicked += OnCreateAndJoin;
-      _btnSearchLAN.clicked += OnSearchLan;
-      _btnJoinSelected.clicked += OnJoinSelected;
-      _btnDirectJoin.clicked += OnDirectJoin;
-
-      _addrField.value = defaultAddress;
-      _portField.value = defaultPort.ToString();
     }
 
-    private void EnsureDiscoveryService()
-    {
-      _discovery = LanDiscoveryService.Instance;
-      if (_discovery == null)
-      {
-        var go = new GameObject("LanDiscoveryService");
-        _discovery = go.AddComponent<LanDiscoveryService>();
-      }
-    }
-
-    private void OnEnable()
-    {
-      InvokeRepeating(nameof(RefreshSessions), 0.5f, 1.0f);
-    }
-
-    private void OnDisable()
-    {
-      CancelInvoke(nameof(RefreshSessions));
-    }
-
-    private void OnCreateAndJoin()
-    {
-      StoreUserDisplayName();
-      StoreLaunchRequest(
-        new SessionInformationModel
-        (
-          address: defaultAddress,
-          port: defaultPort,
-          sessionName: defaultSessionName
-        ),
-        isOpeningServer: true,
-        useLanDiscovery: true);
-      SetStatus("Hosting intent set. Load your gameplay scene to start FishNet server.");
-      SwitchIngameScene();
-    }
-
-    private void OnSearchLan()
-    {
-      _discovery.StartDiscovery();
-      _discovery.ClearDiscovered();
-      RefreshSessions();
-      SetStatus("Searching for LAN sessions…");
-    }
-
-    private void OnJoinSelected()
-    {
-      if (_selected == null)
-      {
-        SetStatus("Select a server first.");
-        return;
-      }
-
-      StoreUserDisplayName();
-      StoreLaunchRequest(
-        new SessionInformationModel
-        (
-          address: _selected.Address,
-          port: _selected.Port,
-          sessionName: _selected.Name
-        ),
-        isOpeningServer: false,
-        useLanDiscovery: true);
-      SetStatus($"Join intent set: {_selected.Address}:{_selected.Port}");
-      SwitchIngameScene();
-    }
-
-    private void OnDirectJoin()
-    {
-      var ip = _addrField.value.Trim();
-      if (!ushort.TryParse(_portField.value, out ushort port))
-      {
-        SetStatus("Invalid port.");
-        return;
-      }
-
-      StoreUserDisplayName();
-      StoreLaunchRequest(
-        new SessionInformationModel
-        (
-          address: ip,
-          port: port,
-          sessionName: "Direct"
-        ),
-        isOpeningServer: false,
-        useLanDiscovery: false);
-      SetStatus($"Direct join intent set: {ip}:{port}");
-      SwitchIngameScene();
-    }
+    // ════════════════════════════════════════════════════════════════════════
+    // Session Discovery
+    // ════════════════════════════════════════════════════════════════════════
 
     private void RefreshSessions()
     {
       if (!_discovery.HasPendingUpdate() && _items.Count > 0)
-      {
         return;
-      }
 
       var snapshot = _discovery.GetDiscoveredSessions();
+
+      // Apply search filter
+      var query = _searchField?.value?.Trim();
+      IEnumerable<SessionInformationModel> filtered = snapshot;
+      if (!string.IsNullOrEmpty(query))
+      {
+        filtered = snapshot.Where(s =>
+          s.Name.Contains(query, System.StringComparison.OrdinalIgnoreCase) ||
+          s.Address.Contains(query, System.StringComparison.OrdinalIgnoreCase));
+      }
+
       _items.Clear();
-      _items.AddRange(snapshot);
+      _items.AddRange(filtered);
       _listView.Rebuild();
 
       _emptyState.style.display = _items.Count == 0 ? DisplayStyle.Flex : DisplayStyle.None;
       if (_items.Count == 0)
       {
         _selected = null;
-        _btnJoinSelected.SetEnabled(false);
       }
     }
 
@@ -221,6 +252,176 @@ namespace MultiplayerInfrastructure.UI
       _btnJoinSelected.SetEnabled(_selected != null);
     }
 
+    // ════════════════════════════════════════════════════════════════════════
+    // Actions — Main Menu
+    // ════════════════════════════════════════════════════════════════════════
+
+    private void OnTutorial()
+    {
+      StoreUserDisplayName();
+      SetStatus("튜토리얼 씬으로 이동합니다...");
+      SceneManager.LoadScene(tutorialSceneName);
+    }
+
+    private void OnSettings()
+    {
+      if (_settingsController == null)
+        CreateSettingsUI();
+
+      if (_settingsController != null)
+        UIOverlayStack.Push(_settingsController);
+    }
+
+    private void OnExit()
+    {
+#if UNITY_EDITOR
+      UnityEditor.EditorApplication.isPlaying = false;
+#else
+      Application.Quit();
+#endif
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Actions — Play Panel
+    // ════════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// 이 컴퓨터를 서버로 사용하고 접속하기.
+    /// 로컬에서 서버를 열고 클라이언트가 자동으로 접속합니다.
+    /// </summary>
+    private void OnHostAndJoin()
+    {
+      StoreUserDisplayName();
+      StoreLaunchRequest(
+        new SessionInformationModel(
+          address: defaultAddress,
+          port: defaultPort,
+          sessionName: defaultSessionName
+        ),
+        isOpeningServer: true,
+        useLanDiscovery: true);
+      SetStatus("서버를 시작하고 접속합니다...");
+      SwitchIngameScene();
+    }
+
+    private void OnShowDirectConnect()
+    {
+      if (_selected != null)
+      {
+        _addrField.value = _selected.Address;
+        _portField.value = _selected.Port.ToString();
+      }
+      ShowPanel(_directPanel);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Actions — Play Panel: Join Selected
+    // ════════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// 선택된 LAN 세션에 접속합니다.
+    /// </summary>
+    private void OnJoinSelected()
+    {
+      if (_selected == null)
+      {
+        SetStatus("서버를 먼저 선택하세요.");
+        return;
+      }
+
+      StoreUserDisplayName();
+      StoreLaunchRequest(
+        new SessionInformationModel(
+          address: _selected.Address,
+          port: _selected.Port,
+          sessionName: _selected.Name
+        ),
+        isOpeningServer: false,
+        useLanDiscovery: true);
+      SetStatus($"접속 중: {_selected.Address}:{_selected.Port}");
+      SwitchIngameScene();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Actions — Direct Connect Panel
+    // ════════════════════════════════════════════════════════════════════════
+
+    private void OnDirectJoin()
+    {
+      var ip = _addrField.value.Trim();
+      if (!ushort.TryParse(_portField.value, out ushort port))
+      {
+        SetStatus("유효하지 않은 포트입니다.");
+        return;
+      }
+
+      StoreUserDisplayName();
+      StoreLaunchRequest(
+        new SessionInformationModel(
+          address: ip,
+          port: port,
+          sessionName: "Direct"
+        ),
+        isOpeningServer: false,
+        useLanDiscovery: false);
+      SetStatus($"직접 접속 중: {ip}:{port}");
+      SwitchIngameScene();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Settings UI (Dynamic Creation)
+    // ════════════════════════════════════════════════════════════════════════
+
+    private void CreateSettingsUI()
+    {
+      // 1. Registry에서 기존 SettingsUIController 탐색
+      _settingsController = Registry.Registry.Get<SettingsUIController>(
+        RegistryType.UI,
+        Registry.Registry.TypeKey(typeof(SettingsUIController))
+      ) ?? FindFirstObjectByType<SettingsUIController>();
+
+      if (_settingsController != null) return;
+
+      // 2. UXML 에셋 로드
+      if (settingsUxml == null)
+        settingsUxml = Resources.Load<VisualTreeAsset>("SettingsUI");
+
+      if (settingsUxml == null)
+      {
+        Debug.LogWarning("[IntroUI] 설정 UI용 UXML을 찾을 수 없습니다. " +
+          "인스펙터에서 settingsUxml을 할당하거나, Resources/SettingsUI 경로에 배치하세요.");
+        return;
+      }
+
+      // 3. SettingsUI GameObject 동적 생성
+      var go = new GameObject("SettingsUI");
+      go.transform.SetParent(transform);
+
+      var doc = go.AddComponent<UIDocument>();
+      doc.visualTreeAsset = settingsUxml;
+      doc.sortingOrder = DefaultsUIDocument.SettingsUISortOrder;
+
+      var mainDoc = GetComponent<UIDocument>();
+      if (mainDoc?.panelSettings != null)
+        doc.panelSettings = mainDoc.panelSettings;
+
+      _settingsController = go.AddComponent<SettingsUIController>();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Helpers
+    // ════════════════════════════════════════════════════════════════════════
+
+    private void EnsureDiscoveryService()
+    {
+      _discovery = LanDiscoveryService.Instance;
+      if (_discovery == null)
+      {
+        var go = new GameObject("LanDiscoveryService");
+        _discovery = go.AddComponent<LanDiscoveryService>();
+      }
+    }
+
     private void StoreUserDisplayName()
     {
       var name = _nameField?.value?.Trim();
@@ -228,7 +429,10 @@ namespace MultiplayerInfrastructure.UI
         Registry.Registry.Register(RegistryType.RuntimeState, RegistryGlobalKeys.UserDisplayName, name);
     }
 
-    private void StoreLaunchRequest(SessionInformationModel sessionInformation, bool isOpeningServer, bool useLanDiscovery)
+    private void StoreLaunchRequest(
+      SessionInformationModel sessionInformation,
+      bool isOpeningServer,
+      bool useLanDiscovery)
     {
       Registry.Registry.Register(RegistryType.RuntimeState, RegistryGlobalKeys.SessionInformation, sessionInformation);
       Registry.Registry.Register(RegistryType.RuntimeState, RegistryGlobalKeys.IsOpeningServer, isOpeningServer);
@@ -250,7 +454,7 @@ namespace MultiplayerInfrastructure.UI
         Debug.LogWarning("[IntroUI] Ingame scene name is not set. Cannot switch scenes.");
         return;
       }
-      
+
       SceneManager.LoadScene(ingameSceneName);
     }
   }
