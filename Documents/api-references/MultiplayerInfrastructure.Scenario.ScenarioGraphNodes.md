@@ -449,14 +449,14 @@
   "nodeType": "Delay",
   "identifier": "wait_5_seconds",
   "nextIdentifier": "next",
-  "durationSeconds": 5.0,
+  "duration": { "value": 5.0, "unit": "Seconds" },
   "waitUntil": "WaitUntilDone"
 }
 ```
 
 | 필드 | 타입 | 기본값 | 설명 |
 |---|---|---|---|
-| `durationSeconds` | `float` | `0` | 대기 시간(초) |
+| `duration` | `ScenarioTimeValue` | `{ "value": 0, "unit": "Seconds" }` | 대기 시간과 단위(`Tick` / `Milliseconds` / `Seconds`) |
 | `waitUntil` | `ScenarioDelayWaitUntil` | `WaitUntilDone` | `Immediately`(즉시 다음 노드 진행, 지연 없이) / `WaitUntilDone`(지정 시간 완료 후 진행) |
 
 ---

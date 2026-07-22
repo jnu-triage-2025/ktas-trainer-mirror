@@ -1733,9 +1733,8 @@
             "nodeType": {
               "const": "Delay"
             },
-            "durationSeconds": {
-              "type": "number",
-              "minimum": 0
+            "duration": {
+              "$ref": "#/$defs/ScenarioTimeValue"
             },
             "waitUntil": {
               "type": "string",
@@ -1747,7 +1746,7 @@
             }
           },
           "required": [
-            "durationSeconds"
+            "duration"
           ]
         }
       ]

@@ -196,7 +196,7 @@ ParallelNode는 한 플레이어의 브랜치 실행과 합류만 책임진다. 
 |---|---|---|
 | Identifier | 문자열 | 노드의 고유 식별자 |
 | NodeType | ScenarioNodeType | ScenarioNodeType.Delay |
-| DurationSeconds | float | 대기 시간(초) |
+| Duration | ScenarioTimeValue | 대기 시간과 단위(`Tick` / `Milliseconds` / `Seconds`) |
 | WaitUntil | ScenarioDelayWaitUntil | Immediately / WaitUntilDone |
 | NextIdentifier | 문자열 | 다음 노드의 식별자 |
 

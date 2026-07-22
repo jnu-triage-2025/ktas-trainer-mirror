@@ -632,7 +632,10 @@ namespace MultiplayerInfrastructure.Editor
 
     private void DrawDelayFields(ScenarioDelayNode data)
     {
-      data.DurationSeconds = EditorGUILayout.FloatField("Duration Seconds", data.DurationSeconds);
+      var duration = data.Duration;
+      duration.Value = EditorGUILayout.DoubleField("Duration Value", duration.Value);
+      duration.Unit = (ScenarioTimeUnit)EditorGUILayout.EnumPopup("Duration Unit", duration.Unit);
+      data.Duration = duration;
       data.WaitUntil = (ScenarioDelayWaitUntil)EditorGUILayout.EnumPopup("Wait Until", data.WaitUntil);
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }

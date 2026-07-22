@@ -32,7 +32,7 @@ TUT_START
   -> Q_TUT_MOVE_ADD
   -> V_TUT_PLAYER_MOVED
   -> Q_TUT_MOVE_REMOVE
-  -> [TUT-FLOW-2: 0.5초 지연 계약]
+  -> DL_TUT_MOVE_CALL_DELAY
   -> D_TUT_CALL
   -> Q_TUT_FIND_HAT_ADD
   -> V_TUT_HAT_TALK_START
@@ -54,10 +54,9 @@ TUT_START
 
 - `TUT_START`는 이 문서의 시작 노드 identifier로 사용한다. `TUT_END`만
   `nextIdentifier: null`인 종료 노드로 둔다.
-- 이동 완료 후 0.5초 지연은 아직 노드 identifier로 고정하지 않는다. `D_TUT_CALL`의
-  `autoAdvanceSeconds`는 표시 후 자동 진행 시간이지 표시 전 지연이 아니므로 사용할 수
-  없다. **현재 스키마에 Delay node가 없으면 인간 판단 항목 TUT-FLOW-2의 handler 방식으로
-  처리한다.**
+- 이동 완료 뒤에는 `DL_TUT_MOVE_CALL_DELAY`가 500 ms를 대기한 뒤 `D_TUT_CALL`로 진행한다.
+  `D_TUT_CALL`의 `autoAdvanceSeconds`는 표시 후 자동 진행 시간이지 표시 전 지연이 아니므로
+  사용하지 않는다.
 - `V_TUT_HAT_TALK_START`는 NPC의 상호작용 identifier
   `npc-tutorial-guide-hat__interaction-talk-start`가 발생시키는
   `tutorial_hat_talk_start` signal을 기다린다. 퀘스트 완료 자체가 대화 시작을 대신하지
@@ -80,10 +79,10 @@ TUT_START
 | TUT-SIG-1 | `V_TUT_PLAYER_MOVED` | ~~“WASD와 마우스 입력 또는 이동”은 서로 다른 완료 의미이며 현재 signal identifier/producer가 없다.~~ **해결(2026-07-21):** `BasicMovementControlTutorialQuestResolver`가 활성 `tutorial-move` 퀘스트에서 WASD, 마우스 버튼, 마우스 이동(카메라 회전) 중 하나라도 입력된 프레임의 시간을 중복 없이 누적한다. 합계가 1초를 **초과**하면 `tutorial_player_moved`를 발신하고 퀘스트를 완료한다. | `tutorial-move` definition은 `Resources/Quest/tutorial.quests.quest.json`에 등록한다. 이 전용 resolver는 `QuestManager`가 런타임에 부착한다. |
 | TUT-SIG-2 | 모자 상호작용 | NPC identifier와 interaction identifier는 있지만, 해당 interaction이 runtime signal을 Raise한다는 계약이 없다. | `npc-tutorial-guide-hat__interaction-talk-start -> tutorial_hat_talk_start` producer를 NPC prefab에 배선하고 Requirements Supports로 검증한다. |
 | TUT-FLOW-1 | “Title 발생” | Title의 UI 종류, 지속시간, 닫는 조건, 그래프 전이 여부가 정의되지 않았다. | **인간 판단 필요:** 단순 안내 UI라면 event `show_tutorial_interaction_hint`를 `Q_TUT_FIND_HAT_ADD` 직후 InvokeEvent로 추가한다. 진행을 막는 UI라면 완료 signal과 Validator를 별도 정의한다. |
-| TUT-FLOW-2 | 이동 완료 후 0.5초 | 현재 Scenario 스키마에는 일반 Delay node가 명시되어 있지 않아, 서술 그대로의 0.5초 지연을 직렬 노드로 저장할 수 없다. | **인간 판단 필요:** (a) delayed event handler가 `tutorial_move_intro_finished` signal을 Raise하게 하거나, (b) Scenario에 Delay node를 추가할지 결정한다. 그 전에는 임의의 Dialogue 자동 진행 시간으로 치환하지 않는다. |
+| TUT-FLOW-2 | 이동 완료 후 0.5초 | ~~현재 Scenario 스키마에는 일반 Delay node가 명시되어 있지 않아, 서술 그대로의 0.5초 지연을 직렬 노드로 저장할 수 없다.~~ **해결(2026-07-21):** 공통 시간값 `ScenarioTimeValue`를 쓰는 `Delay` node로 명시한다. | `DL_TUT_MOVE_CALL_DELAY`의 `duration`은 `{ "value": 500, "unit": "Milliseconds" }`, `waitUntil`은 `WaitUntilDone`이다. |
 | TUT-QUEST-1 | `Q_TUT_MOVE_ADD`, `Q_TUT_FIND_HAT_ADD`, `Q_TUT_DELIVERY_ADD` | 세 quest에 title/content/task definition 및 Add/Remove의 공통 definition identifier가 없다. | `tutorial-move`, `tutorial-find-hat`, `tutorial-quest-delivery`의 별도 quest definition을 작성한다. delivery는 본문에 적힌 3개 task와 순서를 보존한다. |
 | TUT-SIG-3 | delivery waypoint/획득/제출 | `delivery-storage-spot` 도착, `tutorial_delivery_package` pickup, 모자에게 submit 모두 producer가 없고, quest task 완료가 Scenario signal을 Raise한다는 계약도 없다. | waypoint tracker, StaticPlacedObject pickup, NPC item-submit callback이 각각 `tutorial_delivery_waypoint_reached`, `tutorial_delivery_package_acquired`, `tutorial_delivery_package_submitted`를 Raise하도록 구현/배선한다. |
-| TUT-ASSET-1 | 택배 및 오답 아이템 | 택배 StaticPlacedObject의 scene object identifier·spawn 위치·item definition이 없고, “여러 개” 오답 아이템의 목록/독백 트리거도 미정이다. | 정답 object와 item definition은 필수로 확정한다. 오답 아이템은 **인간 콘텐츠 판단 필요:** 목록과 각 1회성 signal/독백을 정하거나, 첫 JSON 범위에서 제외한다고 명시한다. |
+| TUT-ASSET-1 | 택배 및 오답 아이템 | ~~택배 StaticPlacedObject의 scene object identifier·spawn 위치·item definition이 없고, “여러 개” 오답 아이템의 목록/독백 트리거도 미정이다.~~ **해결(2026-07-21):** 아래 「택배 보관소 아이템 배치 확정」의 정답 1개와 오답 3개를 StaticPlacedItem으로 배치한다. | 정답 물품만 `tutorial_delivery_package`를 지급하며, 오답 물품은 각각 1회성 독백만 재생하고 퀘스트 진행 상태를 바꾸지 않는다. |
 | TUT-END-1 | 부분 3 이후 | 감사 인사 뒤 화면 전환, 다음 Scenario, 종료 메시지 중 어느 것도 없다. | **인간 판단 필요:** 다음 Scenario identifier 또는 튜토리얼 종료 UX를 확정한다. 확정 전에는 `D_TUT_DELIVERY_COMPLETE -> TUT_END`로만 종료하고, fade/전환을 이미 존재한다고 가정하지 않는다. |
 
 ### 변환 승인 조건
@@ -91,8 +90,41 @@ TUT_START
 - TUT-START-1의 scene/preset 및 필수 배치물 requirement가 해소되어야 한다.
 - TUT-SIG-1~3의 signal producer가 실제 gameplay callback에 배선되어야 한다.
 - TUT-QUEST-1의 세 quest definition과 task 완료 계약이 등록되어야 한다.
-- TUT-FLOW-1/2 및 TUT-END-1의 인간 판단이 확정되어야 한다.
+- TUT-FLOW-1 및 TUT-END-1의 인간 판단이 확정되어야 한다.
 - 변환 후 Requirements Supports Production 검증에서 unresolved `Error`가 0개여야 한다.
+
+### [DL_TUT_MOVE_CALL_DELAY] DelayNode
+
+`Q_TUT_MOVE_REMOVE` 다음에 두고, 호출 대사 `D_TUT_CALL` 전에만 실행한다. 이동 퀘스트의
+완료 signal이나 대사 자동 진행 시간으로 이 지연을 대체하지 않는다.
+
+```json
+{
+  "identifier": "DL_TUT_MOVE_CALL_DELAY",
+  "nodeType": "Delay",
+  "duration": { "value": 500, "unit": "Milliseconds" },
+  "waitUntil": "WaitUntilDone",
+  "nextIdentifier": "D_TUT_CALL"
+}
+```
+
+### 택배 보관소 아이템 배치 확정
+
+아래 아이템은 튜토리얼 전용 씬의 waypoint `delivery-storage-spot` 주변에 `StaticPlacedItem`으로
+배치한다. 기준점은 waypoint의 정면을 향한 보관 선반이며, 좌/중/우는 플레이어가 waypoint에서 선반을
+바라보는 방향이다. 정답 물품은 중앙 선반에 두어 텍스트를 읽은 플레이어가 자연스럽게 선택할 수 있게
+하고, 오답 물품은 서로 다른 선반 칸에 분산해 마우스 휠 선택과 F 상호작용을 연습하게 한다.
+
+| 구분 | 표시 이름 | scene object identifier | 지급 item definition identifier | 배치 위치 | 상호작용 결과 |
+|---|---|---|---|---|---|
+| 정답 | `택배: 모자님 앞` | `tutorial-delivery-storage-package-hat-attn` | `tutorial_delivery_package` | 중앙 선반, waypoint에서 1.0 m 앞·허리 높이 | 인벤토리에 `tutorial_delivery_package` 1개를 넣는다. 이후 모자 NPC에게 제출 가능하다. |
+| 오답 | `배달: 밤샜음 청년` | `tutorial-delivery-storage-decoy-overnight-youth` | `tutorial_delivery_decoy_overnight_youth` | 좌측 상단 선반, waypoint에서 1.0 m 앞·0.7 m 좌측 | 첫 상호작용에서만 독백: “이건 모자님 앞으로 온 택배가 아닌 것 같다.” 아이템은 지급하지 않는다. |
+| 오답 | `택배: 8909` | `tutorial-delivery-storage-decoy-8909` | `tutorial_delivery_decoy_8909` | 우측 상단 선반, waypoint에서 1.0 m 앞·0.7 m 우측 | 첫 상호작용에서만 독백: “수취인 이름이 없으니 이 택배는 아닌 것 같다.” 아이템은 지급하지 않는다. |
+| 오답 | `우편: 김강산님` | `tutorial-delivery-storage-decoy-kim-gangsan-mail` | `tutorial_delivery_decoy_kim_gangsan_mail` | 좌측 하단 선반, waypoint에서 1.0 m 앞·0.7 m 좌측·0.45 m 아래 | 첫 상호작용에서만 독백: “김강산님 앞으로 온 우편물이다. 모자님께 드릴 물건이 아니다.” 아이템은 지급하지 않는다. |
+
+오답 독백의 1회성 상태는 각 scene object identifier에 대응하는 RuntimeState signal
+`tutorial.delivery.decoy.<name>.inspected`로 기록한다. `<name>`은 각각 `overnight-youth`, `8909`,
+`kim-gangsan-mail`이다. 이 signal은 퀘스트 완료 조건이나 제출 signal에 사용하지 않는다.
 
 ## 원본 시나리오 서술
 

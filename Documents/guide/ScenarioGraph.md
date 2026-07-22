@@ -264,7 +264,7 @@ flags: []
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
-| `durationSeconds` | `float` | 대기할 시간(초) | `2.0` |
+| `duration` | `ScenarioTimeValue` | 대기 시간과 단위. `Tick`/`Milliseconds`/`Seconds` 중 하나를 명시한다 | `{ "value": 500, "unit": "Milliseconds" }` |
 | `waitUntil` | `string` (`Immediately`\|`WaitUntilDone`) | `Immediately`=대기를 시작만 하고 즉시 다음 노드로 진행, `WaitUntilDone`=대기가 끝날 때까지 다음 노드 진행을 막음(기본값) | `WaitUntilDone` |
 | `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
 

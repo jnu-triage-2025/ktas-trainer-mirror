@@ -514,7 +514,7 @@ namespace MultiplayerInfrastructure.Scenario
         new ScenarioDelayNode
         {
           Identifier = dto.Identifier,
-          DurationSeconds = dto.DurationSeconds ?? 0f,
+          Duration = dto.Duration ?? ScenarioTimeValue.Seconds(0d),
           WaitUntil = ParseDelayWaitUntil(dto.WaitUntil),
           NextIdentifier = dto.NextIdentifier
         };
@@ -1426,7 +1426,7 @@ namespace MultiplayerInfrastructure.Scenario
         {
           NodeType = "Delay",
           Identifier = node.Identifier,
-          DurationSeconds = node.DurationSeconds,
+          Duration = node.Duration,
           WaitUntil = node.WaitUntil.ToString(),
           NextIdentifier = node.NextIdentifier
         };

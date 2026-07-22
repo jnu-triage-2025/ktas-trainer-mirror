@@ -2246,7 +2246,7 @@
       "identifier": "L001",
       "nodeType": "Delay",
       "nextIdentifier": "C010",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C010": {
@@ -2278,7 +2278,7 @@
       "identifier": "L002",
       "nodeType": "Delay",
       "nextIdentifier": "C011",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C011": {
@@ -2368,7 +2368,7 @@
       "identifier": "L003",
       "nodeType": "Delay",
       "nextIdentifier": "C012",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C012": {
@@ -2404,7 +2404,7 @@
       "identifier": "L004",
       "nodeType": "Delay",
       "nextIdentifier": "C013",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C013": {
@@ -2436,7 +2436,7 @@
       "identifier": "L005",
       "nodeType": "Delay",
       "nextIdentifier": "C014",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C014": {
@@ -2472,7 +2472,7 @@
       "identifier": "L006",
       "nodeType": "Delay",
       "nextIdentifier": "C015",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C015": {
@@ -2612,7 +2612,7 @@
       "identifier": "L007",
       "nodeType": "Delay",
       "nextIdentifier": "C016",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C016": {
@@ -2652,7 +2652,7 @@
       "identifier": "L008",
       "nodeType": "Delay",
       "nextIdentifier": "C017",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C017": {
@@ -2684,7 +2684,7 @@
       "identifier": "L009",
       "nodeType": "Delay",
       "nextIdentifier": "C018",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C018": {
@@ -2886,7 +2886,7 @@
       "identifier": "L010",
       "nodeType": "Delay",
       "nextIdentifier": "C019",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C019": {
@@ -2926,7 +2926,7 @@
       "identifier": "L011",
       "nodeType": "Delay",
       "nextIdentifier": "C020",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C020": {
@@ -3092,7 +3092,7 @@
       "identifier": "L012",
       "nodeType": "Delay",
       "nextIdentifier": "C021",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C021": {
@@ -3128,7 +3128,7 @@
       "identifier": "L013",
       "nodeType": "Delay",
       "nextIdentifier": "C022",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C022": {
@@ -3160,7 +3160,7 @@
       "identifier": "L014",
       "nodeType": "Delay",
       "nextIdentifier": "C023",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C023": {
@@ -3196,7 +3196,7 @@
       "identifier": "L015",
       "nodeType": "Delay",
       "nextIdentifier": "C024",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C024": {
@@ -3286,7 +3286,7 @@
       "identifier": "L016",
       "nodeType": "Delay",
       "nextIdentifier": "C025",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C025": {
@@ -3318,7 +3318,7 @@
       "identifier": "L017",
       "nodeType": "Delay",
       "nextIdentifier": "C026",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C026": {
@@ -3524,7 +3524,7 @@
       "identifier": "L018",
       "nodeType": "Delay",
       "nextIdentifier": "C027",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C027": {
@@ -3564,7 +3564,7 @@
       "identifier": "L019",
       "nodeType": "Delay",
       "nextIdentifier": "C028",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C028": {
@@ -3661,7 +3661,7 @@
       "identifier": "L020",
       "nodeType": "Delay",
       "nextIdentifier": "C029",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C029": {
@@ -3701,7 +3701,7 @@
       "identifier": "L021",
       "nodeType": "Delay",
       "nextIdentifier": "C030",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C030": {
@@ -3733,7 +3733,7 @@
       "identifier": "L022",
       "nodeType": "Delay",
       "nextIdentifier": "C031",
-      "durationSeconds": 4,
+      "duration": { "value": 4, "unit": "Seconds" },
       "waitUntil": "WaitUntilDone"
     },
     "C031": {
