@@ -20,6 +20,12 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public IReadOnlyList<string> QuestDefinitionIncludes { get; set; } = Array.Empty<string>();
 
+    /// <summary>
+    /// startNodeIdentifier 없이 시나리오를 시작할 때 사용할 기본 진입 노드 식별자.
+    /// null이면 nodes의 첫 요소를 사용한다(하위호환).
+    /// </summary>
+    public string DefaultEntrypoint { get; set; }
+
     public Dictionary<string, IScenarioNode> Nodes { get; } = new Dictionary<string, IScenarioNode>();
 
     public void Add(IScenarioNode node)

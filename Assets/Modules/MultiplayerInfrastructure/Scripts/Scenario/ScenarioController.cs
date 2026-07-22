@@ -612,11 +612,19 @@ namespace MultiplayerInfrastructure.Scenario
       string startId = startNodeIdentifier;
       if (string.IsNullOrEmpty(startId))
       {
-        // 첫 번째 노드 찾기 (임시 로직)
-        foreach (var node in graph.Nodes.Values)
+        // defaultEntrypoint가 선언되어 있으면 우선 사용
+        if (!string.IsNullOrEmpty(graph.DefaultEntrypoint))
         {
-          startId = node.Identifier;
-          break;
+          startId = graph.DefaultEntrypoint;
+        }
+        else
+        {
+          // 하위호환: defaultEntrypoint가 없으면 첫 번째 노드 사용
+          foreach (var node in graph.Nodes.Values)
+          {
+            startId = node.Identifier;
+            break;
+          }
         }
       }
 

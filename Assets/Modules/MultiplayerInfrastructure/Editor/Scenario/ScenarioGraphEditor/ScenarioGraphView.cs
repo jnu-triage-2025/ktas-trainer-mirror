@@ -28,7 +28,7 @@ namespace MultiplayerInfrastructure.Editor
       grid.StretchToParentSize();
 
       var miniMap = new MiniMap { anchored = true };
-      miniMap.SetPosition(new Rect(10, 10, 180, 140));
+      miniMap.SetPosition(new Rect(5, 5, 175, 135));
       Add(miniMap);
 
       graphViewChanged = OnGraphViewChanged;

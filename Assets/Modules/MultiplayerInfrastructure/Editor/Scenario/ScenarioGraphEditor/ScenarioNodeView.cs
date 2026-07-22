@@ -16,6 +16,13 @@ namespace MultiplayerInfrastructure.Editor
     private static readonly Color ExecutionBorderColor = new Color(0.29f, 0.82f, 0.47f, 1f);
     private static readonly Color ExecutionFillColor = new Color(0.12f, 0.24f, 0.16f, 0.95f);
     private static readonly Color ExecutionTitleColor = new Color(0.16f, 0.34f, 0.22f, 1f);
+    private static readonly Color DefaultTitleColor = new Color(0.18f, 0.18f, 0.18f, 1f);
+    private static readonly Color DefaultFillColor = new Color(0.16f, 0.16f, 0.16f, 1f);
+
+    // DefaultInit(기본 진입) 노드 표시용 색상. 런타임 실행 강조(초록)와 구별되도록 금색 계열을 사용한다.
+    private const string DefaultInitBadgeText = "★ Default Init";
+    private static readonly Color DefaultInitTitleColor = new Color(0.55f, 0.42f, 0.10f, 1f);
+    private static readonly Color DefaultInitBadgeColor = new Color(0.72f, 0.55f, 0.10f, 1f);
 
     public IScenarioNode Data { get; }
     public Port InputPort { get; private set; }
@@ -30,6 +37,9 @@ namespace MultiplayerInfrastructure.Editor
     private Foldout _visitHistoryFoldout;
     private Label _visitHistoryLabel;
     private VisualElement _inlineEditorContainer;
+    private Label _defaultInitBadge;
+    private bool _defaultInitMarked;
+    private bool _executionHighlighted;
     private readonly List<int> _runtimeVisitOrders = new List<int>();
 
     private readonly Dictionary<ScenarioChoiceOption, Port> choicePorts = new Dictionary<ScenarioChoiceOption, Port>();
@@ -51,6 +61,9 @@ namespace MultiplayerInfrastructure.Editor
       style.maxWidth = NodeMaxWidth;
       style.width = NodeMaxWidth;
 
+      // 타이틀바의 접기/펼치기 화살표 버튼은 사용하지 않으므로 컨테이너째 제거한다.
+      titleButtonContainer?.RemoveFromHierarchy();
+
       RefreshTitle();
       style.left = EditorPosition.x;
       style.top = EditorPosition.y;
@@ -65,6 +78,8 @@ namespace MultiplayerInfrastructure.Editor
 
     public void SetExecutionHighlighted(bool highlighted)
     {
+      _executionHighlighted = highlighted;
+
       style.borderLeftWidth = highlighted ? 4f : 1f;
       style.borderRightWidth = highlighted ? 4f : 1f;
       style.borderTopWidth = highlighted ? 4f : 1f;
@@ -78,19 +93,91 @@ namespace MultiplayerInfrastructure.Editor
 
       if (titleContainer != null)
       {
-        titleContainer.style.backgroundColor = highlighted ? ExecutionTitleColor : new Color(0.18f, 0.18f, 0.18f, 1f);
+        titleContainer.style.backgroundColor = highlighted ? ExecutionTitleColor : ResolveBaseTitleColor();
       }
 
       if (mainContainer != null)
       {
-        mainContainer.style.backgroundColor = highlighted ? ExecutionFillColor : new Color(0.16f, 0.16f, 0.16f, 1f);
+        mainContainer.style.backgroundColor = highlighted ? ExecutionFillColor : DefaultFillColor;
       }
+    }
+
+    /// <summary>
+    /// 이 노드가 시나리오의 기본 진입 노드(DefaultEntrypoint, 일명 DefaultInit)인지 표시한다.
+    /// 타이틀바에 금색 배지를 추가하고 타이틀바 색을 칠해 다른 노드와 구분한다.
+    /// 런타임 실행 강조(초록 테두리)와 독립적으로 동작하며 동시에 표시될 수 있다.
+    /// </summary>
+    public void SetDefaultInitMarked(bool marked)
+    {
+      if (_defaultInitMarked == marked)
+        return;
+
+      _defaultInitMarked = marked;
+
+      if (titleContainer != null)
+      {
+        if (marked && _defaultInitBadge == null)
+        {
+          _defaultInitBadge = BuildDefaultInitBadge();
+          titleContainer.Add(_defaultInitBadge);
+        }
+        else if (!marked && _defaultInitBadge != null)
+        {
+          titleContainer.Remove(_defaultInitBadge);
+          _defaultInitBadge = null;
+        }
+
+        if (!_executionHighlighted)
+        {
+          titleContainer.style.backgroundColor = ResolveBaseTitleColor();
+        }
+      }
+    }
+
+    private Color ResolveBaseTitleColor()
+    {
+      return _defaultInitMarked ? DefaultInitTitleColor : DefaultTitleColor;
+    }
+
+    private static Label BuildDefaultInitBadge()
+    {
+      var badge = new Label(DefaultInitBadgeText);
+      badge.style.fontSize = 9f;
+      badge.style.color = Color.white;
+      badge.style.backgroundColor = DefaultInitBadgeColor;
+      badge.style.unityFontStyleAndWeight = FontStyle.Bold;
+      badge.style.paddingLeft = 4f;
+      badge.style.paddingRight = 4f;
+      badge.style.paddingTop = 1f;
+      badge.style.paddingBottom = 1f;
+      badge.style.marginLeft = 3f;
+      badge.style.marginRight = 3f;
+      badge.style.alignSelf = Align.Center;
+      badge.style.borderTopLeftRadius = 3f;
+      badge.style.borderTopRightRadius = 3f;
+      badge.style.borderBottomLeftRadius = 3f;
+      badge.style.borderBottomRightRadius = 3f;
+      badge.tooltip = "startNodeIdentifier 없이 시나리오를 시작할 때 사용되는 기본 진입 노드(defaultEntrypoint)입니다.";
+      return badge;
     }
 
     public override void OnSelected()
     {
       base.OnSelected();
       window.NotifyNodeSelected(this);
+    }
+
+    public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
+    {
+      base.BuildContextualMenu(evt);
+
+      var isDefaultInit = window.GraphData != null
+        && !string.IsNullOrEmpty(window.GraphData.DefaultEntrypoint)
+        && window.GraphData.DefaultEntrypoint == Data?.Identifier;
+
+      evt.menu.AppendAction("Set as Default Init", _ => window.SetDefaultEntrypoint(Data?.Identifier));
+      evt.menu.AppendAction("Clear Default Init", _ => window.SetDefaultEntrypoint(null),
+        isDefaultInit ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
     }
 
     public override void SetPosition(Rect newPos)

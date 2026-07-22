@@ -14,6 +14,9 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("questDefinitionIncludes")]
     public List<string> QuestDefinitionIncludes { get; set; }
 
+    [JsonPropertyName("defaultEntrypoint")]
+    public string DefaultEntrypoint { get; set; }
+
     [JsonPropertyName("nodes")]
     public Dictionary<string, ScenarioNodeDTO> Nodes { get; set; }
   }
