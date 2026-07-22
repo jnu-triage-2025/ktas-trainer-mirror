@@ -44,6 +44,32 @@ namespace MultiplayerInfrastructure.Editor
     private TextField graphTagsField;
     private TextField defaultEntrypointField;
 
+    private const int UndoHistoryLimit = 100;
+    private const double UndoCoalesceDelaySeconds = 0.3d;
+    private readonly Stack<GraphSnapshot> undoHistory = new Stack<GraphSnapshot>();
+    private readonly Stack<GraphSnapshot> redoHistory = new Stack<GraphSnapshot>();
+    private GraphSnapshot lastCommittedSnapshot;
+    private GraphSnapshot pendingSnapshot;
+    private double pendingSnapshotChangedAt;
+    private double nextUndoPollAt;
+    private bool isRestoringSnapshot;
+
+    [Serializable]
+    private sealed class GraphSnapshot
+    {
+      public string GraphJson;
+      public ScenarioGraphEditorData EditorData;
+      public bool IsEmpty;
+      public string Identifier;
+      public string[] Tags;
+      public string[] QuestDefinitionIncludes;
+      public string DefaultEntrypoint;
+
+      public string Fingerprint => GraphJson + "\n" + JsonSerializer.Serialize(
+        EditorData,
+        new JsonSerializerOptions { IncludeFields = true });
+    }
+
     // Scenario documents are stored as "<identifier>.scenario.json"; node-layout sidecars
     // are stored as "<identifier>.scenario.editor.json".
     private const string ScenarioExtension = ".scenario.json";
@@ -140,6 +166,7 @@ namespace MultiplayerInfrastructure.Editor
     {
       EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
       EditorApplication.update += SyncRuntimeScenarioController;
+      EditorApplication.update += TrackUndoState;
       ConstructUI();
       CreateGraphView();
       CreateDebugPanel();
@@ -157,6 +184,7 @@ namespace MultiplayerInfrastructure.Editor
     {
       EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
       EditorApplication.update -= SyncRuntimeScenarioController;
+      EditorApplication.update -= TrackUndoState;
       UnbindRuntimeScenarioController();
       ClearRuntimeHighlight();
 
@@ -428,7 +456,7 @@ namespace MultiplayerInfrastructure.Editor
       searchPanelView.SetResults(results, query);
     }
 
-    /// <summary>에디터 윈도우 전역 키 핸들러. Cmd/Ctrl+F 로 검색 패널을 토글한다.</summary>
+    /// <summary>에디터 윈도우 전역 키 핸들러.</summary>
     private void OnGlobalKeyDown(KeyDownEvent evt)
     {
       bool isMac    = Application.platform == RuntimePlatform.OSXEditor;
@@ -444,7 +472,200 @@ namespace MultiplayerInfrastructure.Editor
           searchPanelView.Open();
 
         evt.StopPropagation();
-        evt.PreventDefault();
+      }
+
+      if (modifier && evt.keyCode == KeyCode.Z)
+      {
+        if (evt.shiftKey)
+          RedoGraphChange();
+        else
+          UndoGraphChange();
+
+        evt.StopPropagation();
+      }
+
+      if (modifier && evt.keyCode == KeyCode.S)
+      {
+        if (evt.shiftKey)
+          SaveGraphToJsonAs();
+        else
+          SaveGraphToJson();
+
+        evt.StopPropagation();
+      }
+    }
+
+    private void ResetUndoHistory()
+    {
+      undoHistory.Clear();
+      redoHistory.Clear();
+      pendingSnapshot = null;
+      lastCommittedSnapshot = CaptureSnapshot();
+    }
+
+    private void TrackUndoState()
+    {
+      UpdateUndoState(false);
+    }
+
+    private void UpdateUndoState(bool force)
+    {
+      if (isRestoringSnapshot || graphView == null || graphData == null)
+        return;
+
+      var now = EditorApplication.timeSinceStartup;
+      if (!force && now < nextUndoPollAt)
+        return;
+      nextUndoPollAt = now + 0.1d;
+
+      var current = CaptureSnapshot();
+      if (current == null)
+        return;
+
+      if (lastCommittedSnapshot == null)
+      {
+        lastCommittedSnapshot = current;
+        return;
+      }
+
+      var comparison = pendingSnapshot ?? lastCommittedSnapshot;
+      if (current.Fingerprint != comparison.Fingerprint)
+      {
+        pendingSnapshot = current;
+        pendingSnapshotChangedAt = now;
+      }
+
+      if (pendingSnapshot != null &&
+          now - pendingSnapshotChangedAt >= UndoCoalesceDelaySeconds)
+      {
+        CommitPendingSnapshot();
+      }
+    }
+
+    private void CommitPendingSnapshot()
+    {
+      if (pendingSnapshot == null)
+        return;
+
+      PushSnapshot(undoHistory, lastCommittedSnapshot);
+      lastCommittedSnapshot = pendingSnapshot;
+      pendingSnapshot = null;
+      redoHistory.Clear();
+    }
+
+    private void UndoGraphChange()
+    {
+      UpdateUndoState(true);
+      CommitPendingSnapshot();
+      if (undoHistory.Count == 0)
+        return;
+
+      PushSnapshot(redoHistory, lastCommittedSnapshot);
+      RestoreSnapshot(undoHistory.Pop());
+    }
+
+    private void RedoGraphChange()
+    {
+      UpdateUndoState(true);
+      CommitPendingSnapshot();
+      if (redoHistory.Count == 0)
+        return;
+
+      PushSnapshot(undoHistory, lastCommittedSnapshot);
+      RestoreSnapshot(redoHistory.Pop());
+    }
+
+    private static void PushSnapshot(Stack<GraphSnapshot> history, GraphSnapshot snapshot)
+    {
+      if (snapshot == null)
+        return;
+
+      if (history.Count >= UndoHistoryLimit)
+      {
+        var retained = history.Take(UndoHistoryLimit - 1).Reverse().ToArray();
+        history.Clear();
+        foreach (var item in retained)
+          history.Push(item);
+      }
+
+      history.Push(snapshot);
+    }
+
+    private GraphSnapshot CaptureSnapshot()
+    {
+      if (graphData == null || graphView == null)
+        return null;
+
+      var editorData = new ScenarioGraphEditorData();
+      foreach (var pair in nodeViews.OrderBy(each => each.Key))
+      {
+        if (pair.Value != null)
+          editorData.NodePositions[pair.Key] = new SerializableVector2(pair.Value.GetPosition().position);
+      }
+
+      return new GraphSnapshot
+      {
+        GraphJson = ScenarioGraphLoader.SaveToJson(graphData, false),
+        EditorData = editorData,
+        IsEmpty = graphData.Nodes.Count == 0,
+        Identifier = graphData.Identifier,
+        Tags = graphData.Tags?.ToArray() ?? Array.Empty<string>(),
+        QuestDefinitionIncludes = graphData.QuestDefinitionIncludes?.ToArray() ?? Array.Empty<string>(),
+        DefaultEntrypoint = graphData.DefaultEntrypoint
+      };
+    }
+
+    private void RestoreSnapshot(GraphSnapshot snapshot)
+    {
+      if (snapshot == null)
+        return;
+
+      isRestoringSnapshot = true;
+      try
+      {
+        graphData = snapshot.IsEmpty
+          ? new ScenarioGraph
+          {
+            Identifier = snapshot.Identifier,
+            Tags = snapshot.Tags ?? Array.Empty<string>(),
+            QuestDefinitionIncludes = snapshot.QuestDefinitionIncludes ?? Array.Empty<string>(),
+            DefaultEntrypoint = snapshot.DefaultEntrypoint
+          }
+          : ScenarioGraphLoader.LoadFromJson(snapshot.GraphJson, false);
+        nodeViews.Clear();
+        graphView.ClearGraph();
+
+        foreach (var node in graphData.Nodes.Values.OrderBy(each => each.Identifier))
+        {
+          var nodeView = graphView.AddNodeView(node);
+          var position = snapshot.EditorData != null &&
+                         snapshot.EditorData.NodePositions.TryGetValue(node.Identifier, out var savedPosition)
+            ? savedPosition.ToVector2()
+            : Vector2.zero;
+          nodeView.SetPosition(new Rect(position, nodeView.DefaultSize));
+          nodeViews[node.Identifier] = nodeView;
+        }
+
+        graphView.RestoreEdges(nodeViews);
+        inspectorView.SetTarget(null);
+        RefreshGraphIdentifierField();
+        RefreshGraphTagsField();
+        RefreshDefaultEntrypointField();
+        RefreshDefaultEntrypointMarkers();
+        SyncRuntimeHighlight();
+        RefreshRuntimeHistoryView();
+        RefreshDebugPanel();
+        lastCommittedSnapshot = snapshot;
+        pendingSnapshot = null;
+        Repaint();
+      }
+      catch (Exception ex)
+      {
+        Debug.LogException(ex);
+      }
+      finally
+      {
+        isRestoringSnapshot = false;
       }
     }
 
@@ -826,6 +1047,7 @@ namespace MultiplayerInfrastructure.Editor
       ClearRuntimeHighlight();
       RefreshRuntimeHistoryView();
       RefreshDebugPanel();
+      ResetUndoHistory();
     }
 
     private void EnsureGraphData()
@@ -1228,6 +1450,7 @@ namespace MultiplayerInfrastructure.Editor
         SyncRuntimeHighlight();
         RefreshRuntimeHistoryView();
         RefreshDebugPanel();
+        ResetUndoHistory();
       }
       catch (Exception ex)
       {
