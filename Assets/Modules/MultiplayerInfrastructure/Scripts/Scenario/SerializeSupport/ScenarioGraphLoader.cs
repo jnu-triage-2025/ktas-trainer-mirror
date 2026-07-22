@@ -68,6 +68,7 @@ namespace MultiplayerInfrastructure.Scenario
       graph.Identifier = ResolveGraphIdentifier(dto);
       graph.Tags = NormalizeTags(dto.Tags);
       graph.QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(dto.QuestDefinitionIncludes);
+      graph.DefaultEntrypoint = string.IsNullOrWhiteSpace(dto.DefaultEntrypoint) ? null : dto.DefaultEntrypoint.Trim();
 
       foreach (var pair in dto.Nodes)
       {
@@ -1131,6 +1132,7 @@ namespace MultiplayerInfrastructure.Scenario
         Identifier = string.IsNullOrWhiteSpace(graph.Identifier) ? "scenario_graph" : graph.Identifier.Trim(),
         Tags = NormalizeTags(graph.Tags).ToList(),
         QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(graph.QuestDefinitionIncludes).ToList(),
+        DefaultEntrypoint = string.IsNullOrWhiteSpace(graph.DefaultEntrypoint) ? null : graph.DefaultEntrypoint.Trim(),
         Nodes = new Dictionary<string, ScenarioNodeDTO>()
       };
 

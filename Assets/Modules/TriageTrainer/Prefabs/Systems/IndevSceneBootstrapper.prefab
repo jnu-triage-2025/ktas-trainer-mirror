@@ -48,6 +48,4 @@ MonoBehaviour:
   port: 7777
   sessionName: IndevSession
   loadSystemOverlayScene: 1
-  loadOverworldScene: 1
-  setOverworldAsActiveScene: 1
   ensureTriageSupportsOnBootstrapObject: 1

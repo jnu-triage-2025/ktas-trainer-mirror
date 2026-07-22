@@ -18,8 +18,18 @@
 
 ## UI 구성 요소
 - 상단 툴바: `New Graph`, `Add Node`, `Open File`, `Save File`, `Validate`.
+- 툴바 필드: `Graph ID`(그래프 식별자), `Tags(csv)`, `Default Init`(기본 진입 노드 식별자 — 아래 "DefaultInit 표시" 참고).
 - Graph Area(왼쪽/중앙): 그래프 캔버스(노드, 엣지, MiniMap 포함). 노드 드래그·연결·삭제 가능.
 - Inspector Panel(오른쪽): 선택된 노드의 세부 속성 편집(스크롤 가능). 노드 타입 변경 드롭다운 포함.
+
+## DefaultInit (기본 진입 노드) 표시
+- `DefaultInit`는 `startNodeIdentifier` 없이 시나리오를 시작할 때 사용되는 기본 진입 노드입니다. 시나리오 JSON의 `defaultEntrypoint` 필드에 저장되며, 값이 없으면 하위호환으로 `nodes`의 첫 번째 노드가 사용됩니다.
+- 표시: `defaultEntrypoint`가 가리키는 노드의 타이틀바에 금색 `★ Default Init` 배지와 금색 타이틀 색상이 표시됩니다(런타임 실행 강조의 초록 테두리와 동시에 표시될 수 있습니다).
+- 설정 방법:
+	- 툴바의 `Default Init` 필드에 노드 식별자를 직접 입력하거나,
+	- 노드 우클릭 메뉴에서 `Set as Default Init` / `Clear Default Init` 을 사용합니다.
+- 참조 유지: 표시된 노드의 식별자를 변경(Rename)하면 `defaultEntrypoint`도 함께 갱신되고, 노드를 삭제하면 자동으로 해제됩니다.
+- 존재하지 않는 식별자를 가리키는 경우 하단 디버그 패널에 Error 진단이 표시됩니다.
 
 ## 노드 기본 동작
 - 생성: `Add Node`로 타입을 선택하면 새 노드가 그래프에 추가됩니다. 기본 식별자는 `type_1` 형식으로 자동 생성됩니다.

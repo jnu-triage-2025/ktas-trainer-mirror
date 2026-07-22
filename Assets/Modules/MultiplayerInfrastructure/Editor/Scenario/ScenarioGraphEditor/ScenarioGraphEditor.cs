@@ -42,6 +42,7 @@ namespace MultiplayerInfrastructure.Editor
     private string currentFilePath;
     private TextField graphIdentifierField;
     private TextField graphTagsField;
+    private TextField defaultEntrypointField;
 
     // Scenario documents are stored as "<identifier>.scenario.json"; node-layout sidecars
     // are stored as "<identifier>.scenario.editor.json".
@@ -55,7 +56,7 @@ namespace MultiplayerInfrastructure.Editor
     //   이 값을 넘어가면 아래 밴드로 접고 진행 방향을 좌우 반전한다.
     private const float AutoLayoutColumnSpacing = 380f;
     private const float AutoLayoutRowSpacing = 240f;
-    private const int AutoLayoutColumnsPerBand = 6;
+    private const int AutoLayoutColumnsPerBand = 30;
 
     /// <summary>
     /// Ensures a scenario file path uses the ".scenario.json" extension. Paths already
@@ -233,6 +234,23 @@ namespace MultiplayerInfrastructure.Editor
       });
       toolbar.Add(graphTagsField);
 
+      // startNodeIdentifier 없이 시나리오를 시작할 때 사용되는 기본 진입 노드(DefaultInit) 식별자.
+      // 이 값을 가진 노드는 그래프에서 금색 "★ Default Init" 배지로 강조된다.
+      defaultEntrypointField = new TextField
+      {
+        label = "Default Init",
+        tooltip = "startNodeIdentifier 없이 시나리오를 시작할 때 사용할 기본 진입 노드 식별자(defaultEntrypoint)"
+      };
+      defaultEntrypointField.style.width = 320f;
+      defaultEntrypointField.RegisterValueChangedCallback(evt =>
+      {
+        EnsureGraphData();
+        graphData.DefaultEntrypoint = string.IsNullOrWhiteSpace(evt.newValue) ? null : evt.newValue.Trim();
+        RefreshDefaultEntrypointMarkers();
+        RefreshDebugPanel();
+      });
+      toolbar.Add(defaultEntrypointField);
+
       rootVisualElement.Add(toolbar);
 
       var tabs = new Toolbar();
@@ -245,6 +263,7 @@ namespace MultiplayerInfrastructure.Editor
       EnsureGraphData();
       RefreshGraphIdentifierField();
       RefreshGraphTagsField();
+      RefreshDefaultEntrypointField();
     }
 
     private void CreateGraphView()
@@ -505,6 +524,7 @@ namespace MultiplayerInfrastructure.Editor
       // Rebuild connections based on updated data.
       graphView.RebuildAllEdges();
       SyncRuntimeHighlight();
+      RefreshDefaultEntrypointMarkers();
       RefreshRuntimeHistoryView();
       RefreshDebugPanel();
 
@@ -791,6 +811,7 @@ namespace MultiplayerInfrastructure.Editor
       nodeView.RefreshPorts();
 
       inspectorView.SetTarget(nodeView);
+      RefreshDefaultEntrypointMarkers();
       RefreshRuntimeHistoryView();
       RefreshDebugPanel();
       return nodeView;
@@ -805,6 +826,7 @@ namespace MultiplayerInfrastructure.Editor
       currentFilePath = null;
       RefreshGraphIdentifierField();
       RefreshGraphTagsField();
+      RefreshDefaultEntrypointField();
       ClearRuntimeHighlight();
       RefreshRuntimeHistoryView();
       RefreshDebugPanel();
@@ -843,6 +865,40 @@ namespace MultiplayerInfrastructure.Editor
 
       var tags = graphData?.Tags ?? Array.Empty<string>();
       graphTagsField.SetValueWithoutNotify(string.Join(",", tags));
+    }
+
+    private void RefreshDefaultEntrypointField()
+    {
+      if (defaultEntrypointField == null)
+        return;
+
+      defaultEntrypointField.SetValueWithoutNotify(graphData?.DefaultEntrypoint ?? string.Empty);
+    }
+
+    /// <summary>
+    /// graphData.DefaultEntrypoint 와 일치하는 노드 뷰에만 "★ Default Init" 배지를 표시한다.
+    /// 그래프 로드/노드 생성·삭제·이름 변경·타입 변경 후 호출해 표시를 동기화한다.
+    /// </summary>
+    public void RefreshDefaultEntrypointMarkers()
+    {
+      var target = graphData?.DefaultEntrypoint;
+      foreach (var pair in nodeViews)
+      {
+        pair.Value?.SetDefaultInitMarked(!string.IsNullOrEmpty(target) && pair.Key == target);
+      }
+    }
+
+    /// <summary>
+    /// 기본 진입 노드(defaultEntrypoint)를 설정한다. null/빈 값은 해제.
+    /// 노드 우클릭 메뉴("Set as Default Init")에서 호출된다.
+    /// </summary>
+    public void SetDefaultEntrypoint(string identifier)
+    {
+      EnsureGraphData();
+      graphData.DefaultEntrypoint = string.IsNullOrWhiteSpace(identifier) ? null : identifier.Trim();
+      RefreshDefaultEntrypointField();
+      RefreshDefaultEntrypointMarkers();
+      RefreshDebugPanel();
     }
 
     private static IReadOnlyList<string> ParseCsvTags(string csv)
@@ -892,6 +948,13 @@ namespace MultiplayerInfrastructure.Editor
 
       nodeViews.Remove(id);
 
+      // 삭제된 노드가 기본 진입 노드(DefaultInit)였다면 해제한다.
+      if (graphData.DefaultEntrypoint == id)
+      {
+        graphData.DefaultEntrypoint = null;
+        RefreshDefaultEntrypointField();
+      }
+
       foreach (var other in graphData.Nodes.Values)
       {
         if (other.NextIdentifier == id)
@@ -937,6 +1000,7 @@ namespace MultiplayerInfrastructure.Editor
 
       inspectorView.SetTarget(null);
       SyncRuntimeHighlight();
+      RefreshDefaultEntrypointMarkers();
       RefreshRuntimeHistoryView();
       RefreshDebugPanel();
     }
@@ -1011,12 +1075,20 @@ namespace MultiplayerInfrastructure.Editor
         }
       }
 
+      // 기본 진입 노드(DefaultInit) 참조도 새 식별자로 따라간다.
+      if (graphData.DefaultEntrypoint == oldId)
+      {
+        graphData.DefaultEntrypoint = trimmed;
+      }
+
       nodeViews.Remove(oldId);
       nodeViews[trimmed] = nodeView;
 
       graphView.RebuildAllEdges();
       nodeView.RefreshTitle();
       SyncRuntimeHighlight();
+      RefreshDefaultEntrypointField();
+      RefreshDefaultEntrypointMarkers();
       RefreshRuntimeHistoryView();
       RefreshDebugPanel();
 
@@ -1096,6 +1168,8 @@ namespace MultiplayerInfrastructure.Editor
         currentFilePath = path;
         RefreshGraphIdentifierField();
         RefreshGraphTagsField();
+        RefreshDefaultEntrypointField();
+        RefreshDefaultEntrypointMarkers();
 
         ValidateResources(graphData);
         SyncRuntimeHighlight();

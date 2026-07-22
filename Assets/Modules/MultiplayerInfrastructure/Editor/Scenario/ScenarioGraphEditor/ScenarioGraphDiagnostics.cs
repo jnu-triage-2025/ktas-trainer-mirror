@@ -524,6 +524,11 @@ namespace MultiplayerInfrastructure.Editor
         items.Add(new DiagnosticItem(Severity.Info, graphLevel,
           $"진입 노드가 {entryNodes.Count}개입니다: {string.Join(", ", entryNodes.OrderBy(s => s))}"));
 
+      // defaultEntrypoint(DefaultInit) 참조 무결성: 존재하지 않는 노드를 가리키면 시작 실패로 이어진다.
+      if (!string.IsNullOrWhiteSpace(graph.DefaultEntrypoint) && !nodeIds.Contains(graph.DefaultEntrypoint))
+        items.Add(new DiagnosticItem(Severity.Error, graphLevel,
+          $"defaultEntrypoint '{graph.DefaultEntrypoint}' 가 존재하지 않는 노드를 참조합니다."));
+
       // 종료 노드: nextIdentifier가 없고 Choice/Parallel/Quiz가 아닌 노드
       var terminalCount = graph.Nodes.Values
         .Where(n => n != null
