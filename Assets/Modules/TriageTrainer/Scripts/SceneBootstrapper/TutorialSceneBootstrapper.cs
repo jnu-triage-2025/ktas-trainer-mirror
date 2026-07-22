@@ -87,6 +87,10 @@ namespace TriageTrainer.SceneBootstrapper
       PrepareDeferredPlayerSpawning();
       StartHostSession();
 
+      // 튜토리얼 씬에서는 외부 접속을 차단한다.
+      ConnectionGateService.SetPort(port);
+      ConnectionGateService.Close();
+
       ScenarioRuntimeBootstrapGate.MarkSceneReady(gameObject.scene);
 
       yield return StartScenarioAfterDelay();

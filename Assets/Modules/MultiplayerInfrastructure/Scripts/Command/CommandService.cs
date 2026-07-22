@@ -32,6 +32,7 @@ namespace MultiplayerInfrastructure.Command
       RegisterCommand(new CommandDefinition_Tp(_chatManager));
       RegisterCommand(new CommandDefinition_Permission(_chatManager));
       RegisterCommand(new CommandDefinition_Log(_chatManager));
+      RegisterCommand(new CommandDefinition_ConnGate(_chatManager));
       // RegisterCommand(new CommandDefinition_Kick(_chatManager));
     }
 

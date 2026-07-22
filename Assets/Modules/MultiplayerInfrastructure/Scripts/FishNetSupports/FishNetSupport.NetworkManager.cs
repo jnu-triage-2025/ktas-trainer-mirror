@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using System.Reflection;
 using FishNet.Component.Spawning;
+using FishNet.Connection;
 using FishNet.Example;
 using FishNet.Managing;
+using FishNet.Managing.Logging;
+using FishNet.Managing.Server;
 using FishNet.Object;
 using FishNet.Transporting;
 using MultiplayerInfrastructure.ItemSystem;
@@ -25,6 +28,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
     private bool _deferredPlayerSpawningPrepared;
     private bool _systemSceneObserverPrepared;
     private bool _serverConnectionStateSubscribed;
+    private bool _remoteConnectionStateSubscribed;
     private SystemSceneObserverBinder _systemSceneObserverBinder;
     private readonly List<GameObject> _hiddenHudObjects = new List<GameObject>();
 
@@ -178,6 +182,8 @@ namespace MultiplayerInfrastructure.FishNetSupports
       networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
       networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
       _serverConnectionStateSubscribed = true;
+
+      TrySubscribeRemoteConnectionState();
     }
 
     private void UnsubscribeServerConnectionState()
@@ -189,6 +195,51 @@ namespace MultiplayerInfrastructure.FishNetSupports
         networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
 
       _serverConnectionStateSubscribed = false;
+
+      UnsubscribeRemoteConnectionState();
+    }
+
+    private void TrySubscribeRemoteConnectionState()
+    {
+      if (_remoteConnectionStateSubscribed)
+        return;
+
+      if (networkManager.IsUnityNull() || networkManager.ServerManager == null)
+        return;
+
+      networkManager.ServerManager.OnRemoteConnectionState -= ServerManager_OnRemoteConnectionState;
+      networkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
+      _remoteConnectionStateSubscribed = true;
+    }
+
+    private void UnsubscribeRemoteConnectionState()
+    {
+      if (!_remoteConnectionStateSubscribed)
+        return;
+
+      if (!networkManager.IsUnityNull() && networkManager.ServerManager != null)
+        networkManager.ServerManager.OnRemoteConnectionState -= ServerManager_OnRemoteConnectionState;
+
+      _remoteConnectionStateSubscribed = false;
+    }
+
+    /// <summary>
+    /// 원격 클라이언트의 연결 상태 변경을 처리한다.
+    /// 커넥션 게이트가 닫혀 있으면 새로운 외부 접속을 즉시 거부한다.
+    /// 이미 접속한 클라이언트에게는 영향을 주지 않는다.
+    /// </summary>
+    private void ServerManager_OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
+    {
+      if (args.ConnectionState != RemoteConnectionState.Started)
+        return;
+
+      if (ConnectionGateService.IsOpen)
+        return;
+
+      // 게이트가 닫혀 있으므로 새로운 외부 접속을 거부한다.
+      Debug.Log($"[FishNetSupport] 커넥션 게이트가 닫혀 있어 ClientId {conn.ClientId}의 접속을 거부합니다.");
+      conn.Kick(KickReason.UnexpectedProblem, LoggingType.Common,
+        $"Connection {conn.ClientId} rejected: connection gate is closed.");
     }
 
     private void ServerManager_OnServerConnectionState(ServerConnectionStateArgs args)
@@ -199,6 +250,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
         // static Dictionary는 도메인 리로드 없이는 유지되므로 명시적 초기화가 필요하다.
         StaticPlacedItemService.ClearAll();
         StaticObjectDisplaymentService.ClearAll();
+        ConnectionGateService.ResetState();
 
         _deferredPlayerSpawningPrepared = false;
         PrepareDeferredPlayerSpawning();
@@ -213,6 +265,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
         // 서버 세션 종료: 상태를 정리하여 다음 세션이 깨끗한 상태로 시작하도록 한다.
         StaticPlacedItemService.ClearAll();
         StaticObjectDisplaymentService.ClearAll();
+        ConnectionGateService.ResetState();
         _deferredPlayerSpawningPrepared = false;
         _systemSceneObserverPrepared = false;
       }
