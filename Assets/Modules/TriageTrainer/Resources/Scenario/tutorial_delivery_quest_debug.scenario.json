@@ -35,7 +35,65 @@
       "failureStrategy": "Overwrite",
       "questDefinitionIdentifier": "tutorial-quest-delivery",
       "quest": null,
+      "nextIdentifier": "DECOY_WATCHER_FORK"
+    },
+    "DECOY_WATCHER_FORK": {
+      "identifier": "DECOY_WATCHER_FORK",
+      "nodeType": "Parallel",
+      "waitMode": "None",
+      "allocationType": "SelfAll",
+      "whenBranchingPlayerNotMatched": "Ignore",
+      "branches": [
+        {
+          "identifier": "branch_decoy_watch",
+          "completionConditionIdentifier": "decoy_branch_done",
+          "requiredPlayerTags": [],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        }
+      ],
       "nextIdentifier": "watch_delivery_quest"
+    },
+    "branch_decoy_watch": {
+      "identifier": "branch_decoy_watch",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.tutorial-decoy-package-on-pickuped"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "waitForCondition": true,
+      "nextIdentifier": "D_TUT_DECOY_HINT"
+    },
+    "D_TUT_DECOY_HINT": {
+      "identifier": "D_TUT_DECOY_HINT",
+      "nodeType": "DisinteractableDialogue",
+      "speakerName": null,
+      "dialogueContent": "이 물건은 아닌 것 같다.",
+      "portraitSpriteIdentifier": null,
+      "fadeInDuration": {
+        "value": 0.2,
+        "unit": "Seconds"
+      },
+      "displayDuration": {
+        "value": 3,
+        "unit": "Seconds"
+      },
+      "fadeOutDuration": {
+        "value": 0.2,
+        "unit": "Seconds"
+      },
+      "nextIdentifier": "decoy_branch_done"
     },
     "watch_delivery_quest": {
       "identifier": "watch_delivery_quest",
@@ -126,7 +184,157 @@
     "debug_complete": {
       "identifier": "debug_complete",
       "nodeType": "ChatPrint",
-      "message": "[택배 퀘스트 디버그] tutorial-quest-delivery 완료.",
+      "message": "[택배 퀘스트 디버그] tutorial-quest-delivery 완료. 시계 제작 퀘스트로 진행합니다.",
+      "targets": "UnityConsole, InGameChat",
+      "broadcast": false,
+      "nextIdentifier": "D_TUT_CRAFTING_REQUEST"
+    },
+    "D_TUT_CRAFTING_REQUEST": {
+      "identifier": "D_TUT_CRAFTING_REQUEST",
+      "nodeType": "Dialogue",
+      "speakerName": "모자",
+      "dialogueContent": "아 혹시 여기 이 물건들로 시계를 만들어주실 수 있나요? 제가 손기술이 없어서..",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "C_TUT_CRAFTING_ACCEPT",
+      "playTTS": true
+    },
+    "C_TUT_CRAFTING_ACCEPT": {
+      "identifier": "C_TUT_CRAFTING_ACCEPT",
+      "nodeType": "Choice",
+      "speakerName": null,
+      "dialogueContent": "",
+      "portraitSpriteIdentifier": null,
+      "options": [
+        {
+          "displayText": "(수락)",
+          "nextNodeIdentifier": "Q_TUT_CRAFTING_ADD"
+        }
+      ],
+      "nextIdentifier": null
+    },
+    "Q_TUT_CRAFTING_ADD": {
+      "identifier": "Q_TUT_CRAFTING_ADD",
+      "nodeType": "QuestControl",
+      "operation": "Add",
+      "failureStrategy": "Overwrite",
+      "questDefinitionIdentifier": "tutorial-quest-crafting",
+      "quest": null,
+      "nextIdentifier": "GIVE_TIN"
+    },
+    "GIVE_TIN": {
+      "identifier": "GIVE_TIN",
+      "nodeType": "ExecuteCommand",
+      "commandLine": "give @s tin_ingot 3",
+      "nextIdentifier": "GIVE_GEAR"
+    },
+    "GIVE_GEAR": {
+      "identifier": "GIVE_GEAR",
+      "nodeType": "ExecuteCommand",
+      "commandLine": "give @s small_gear 5",
+      "nextIdentifier": "GIVE_CHAIN"
+    },
+    "GIVE_CHAIN": {
+      "identifier": "GIVE_CHAIN",
+      "nodeType": "ExecuteCommand",
+      "commandLine": "give @s small_chain 1",
+      "nextIdentifier": "D_TUT_CRAFTING_HINT"
+    },
+    "D_TUT_CRAFTING_HINT": {
+      "identifier": "D_TUT_CRAFTING_HINT",
+      "nodeType": "Dialogue",
+      "speakerName": "시스템",
+      "dialogueContent": "재료를 모두 받았습니다. 인벤토리에서 시계를 조합하세요.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "V_TUT_CLOCK_CRAFTED",
+      "playTTS": true
+    },
+    "V_TUT_CLOCK_CRAFTED": {
+      "identifier": "V_TUT_CLOCK_CRAFTED",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.click_handy_clock"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "waitForCondition": true,
+      "nextIdentifier": "D_TUT_SUBMIT_HINT"
+    },
+    "D_TUT_SUBMIT_HINT": {
+      "identifier": "D_TUT_SUBMIT_HINT",
+      "nodeType": "Dialogue",
+      "speakerName": "시스템",
+      "dialogueContent": "시계를 조합했습니다! 모자에게 시계를 전달하세요.",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "CONFIG_CLOCK_SUBMISSION",
+      "playTTS": true
+    },
+    "CONFIG_CLOCK_SUBMISSION": {
+      "identifier": "CONFIG_CLOCK_SUBMISSION",
+      "nodeType": "ItemSubmissionConfig",
+      "targetIdentifier": "tutorial-guide-hat-package-submission",
+      "requiredItems": [
+        {
+          "itemIdentifier": "handy_clock",
+          "count": 1
+        }
+      ],
+      "completionSignalIdentifier": "tutorial.crafting.clock.submitted",
+      "enabled": true,
+      "nextIdentifier": "V_TUT_CLOCK_SUBMITTED"
+    },
+    "V_TUT_CLOCK_SUBMITTED": {
+      "identifier": "V_TUT_CLOCK_SUBMITTED",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.tutorial.crafting.clock.submitted"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "waitForCondition": true,
+      "nextIdentifier": "Q_TUT_CRAFTING_REMOVE"
+    },
+    "Q_TUT_CRAFTING_REMOVE": {
+      "identifier": "Q_TUT_CRAFTING_REMOVE",
+      "nodeType": "QuestControl",
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "tutorial-quest-crafting",
+      "quest": null,
+      "nextIdentifier": "D_TUT_CRAFTING_COMPLETE"
+    },
+    "D_TUT_CRAFTING_COMPLETE": {
+      "identifier": "D_TUT_CRAFTING_COMPLETE",
+      "nodeType": "Dialogue",
+      "speakerName": "모자",
+      "dialogueContent": "멋진 시계네요! 감사합니다!",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "TUT_CRAFTING_END",
+      "playTTS": true
+    },
+    "TUT_CRAFTING_END": {
+      "identifier": "TUT_CRAFTING_END",
+      "nodeType": "ChatPrint",
+      "message": "[튜토리얼 디버그] 시계 제작 퀘스트 완료. 튜토리얼 종료.",
       "targets": "UnityConsole, InGameChat",
       "broadcast": false,
       "nextIdentifier": null
