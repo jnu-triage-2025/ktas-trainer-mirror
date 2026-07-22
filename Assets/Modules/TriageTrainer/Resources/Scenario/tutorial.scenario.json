@@ -1,20 +1,240 @@
 {
-  "identifier": "tutorial_delivery_quest_debug",
+  "identifier": "tutorial",
   "tags": [],
   "questDefinitionIncludes": [
+    "tutorial.quests.quest",
     "tutorial_delivery.quest"
   ],
+  "defaultEntrypoint": "TUT_START",
   "nodes": {
-    "debug_intro": {
-      "identifier": "debug_intro",
+    "TUT_START": {
+      "identifier": "TUT_START",
       "nodeType": "ChatPrint",
-      "message": "[택배 퀘스트 디버그] 순차 퀘스트를 발행합니다.",
-      "targets": "UnityConsole, InGameChat",
+      "message": "튜토리얼을 시작합니다.",
+      "targets": "InGameChat",
       "broadcast": false,
-      "nextIdentifier": "configure_submission"
+      "nextIdentifier": "Q_TUT_MOVE_ADD"
     },
-    "configure_submission": {
-      "identifier": "configure_submission",
+    "Q_TUT_MOVE_ADD": {
+      "identifier": "Q_TUT_MOVE_ADD",
+      "nodeType": "QuestControl",
+      "operation": "Add",
+      "failureStrategy": "Overwrite",
+      "questDefinitionIdentifier": "tutorial-move",
+      "quest": null,
+      "nextIdentifier": "V_TUT_PLAYER_MOVED"
+    },
+    "V_TUT_PLAYER_MOVED": {
+      "identifier": "V_TUT_PLAYER_MOVED",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.tutorial_player_moved"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "waitForCondition": true,
+      "nextIdentifier": "Q_TUT_MOVE_REMOVE"
+    },
+    "Q_TUT_MOVE_REMOVE": {
+      "identifier": "Q_TUT_MOVE_REMOVE",
+      "nodeType": "QuestControl",
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "tutorial-move",
+      "quest": null,
+      "nextIdentifier": "DL_TUT_MOVE_CALL_DELAY"
+    },
+    "DL_TUT_MOVE_CALL_DELAY": {
+      "identifier": "DL_TUT_MOVE_CALL_DELAY",
+      "nodeType": "Delay",
+      "duration": { "value": 500, "unit": "Milliseconds" },
+      "waitUntil": "WaitUntilDone",
+      "nextIdentifier": "D_TUT_CALL"
+    },
+    "D_TUT_CALL": {
+      "identifier": "D_TUT_CALL",
+      "nodeType": "DisinteractableDialogue",
+      "speakerName": "???",
+      "dialogueContent": "저기요! 잠시만요!",
+      "portraitSpriteIdentifier": null,
+      "fadeInDuration": { "value": 0.2, "unit": "Seconds" },
+      "displayDuration": { "value": 2, "unit": "Seconds" },
+      "fadeOutDuration": { "value": 0.2, "unit": "Seconds" },
+      "nextIdentifier": "Q_TUT_FIND_HAT_ADD"
+    },
+    "Q_TUT_FIND_HAT_ADD": {
+      "identifier": "Q_TUT_FIND_HAT_ADD",
+      "nodeType": "QuestControl",
+      "operation": "Add",
+      "failureStrategy": "Overwrite",
+      "questDefinitionIdentifier": "tutorial-find-hat",
+      "quest": null,
+      "nextIdentifier": "IE_TUT_INTERACTION_HINT"
+    },
+    "IE_TUT_INTERACTION_HINT": {
+      "identifier": "IE_TUT_INTERACTION_HINT",
+      "nodeType": "InvokeEvent",
+      "eventIdentifier": "show_tutorial_interaction_hint",
+      "moveNextBehavior": "Immediately",
+      "nextIdentifier": "V_TUT_HAT_TALK_START"
+    },
+    "V_TUT_HAT_TALK_START": {
+      "identifier": "V_TUT_HAT_TALK_START",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.tutorial_hat_talk_start"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "waitForCondition": true,
+      "nextIdentifier": "Q_TUT_FIND_HAT_REMOVE"
+    },
+    "Q_TUT_FIND_HAT_REMOVE": {
+      "identifier": "Q_TUT_FIND_HAT_REMOVE",
+      "nodeType": "QuestControl",
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "tutorial-find-hat",
+      "quest": null,
+      "nextIdentifier": "C_TUT_GREETING"
+    },
+    "C_TUT_GREETING": {
+      "identifier": "C_TUT_GREETING",
+      "nodeType": "Choice",
+      "speakerName": "???",
+      "dialogueContent": "안녕하세요! 신규 선생님이시죠?",
+      "portraitSpriteIdentifier": null,
+      "options": [
+        {
+          "displayText": "...네..?",
+          "nextNodeIdentifier": "D_TUT_HAT_STARTING_2"
+        },
+        {
+          "displayText": "네!",
+          "nextNodeIdentifier": "D_TUT_HAT_STARTING_2"
+        },
+        {
+          "displayText": "아니요?",
+          "nextNodeIdentifier": "D_TUT_HAT_STARTING_NO_1"
+        }
+      ],
+      "nextIdentifier": null
+    },
+    "D_TUT_HAT_STARTING_NO_1": {
+      "identifier": "D_TUT_HAT_STARTING_NO_1",
+      "nodeType": "Choice",
+      "speakerName": "???",
+      "dialogueContent": "아, 아니에요? 어쩐다.. 지금 급한 일이 있어서.. 도와줄 분을 찾고 있는데..",
+      "portraitSpriteIdentifier": null,
+      "options": [
+        {
+          "displayText": "...",
+          "nextNodeIdentifier": "D_TUT_HAT_STARTING_NO_2"
+        },
+        {
+          "displayText": "...에..",
+          "nextNodeIdentifier": "D_TUT_HAT_STARTING_NO_2"
+        }
+      ],
+      "nextIdentifier": null
+    },
+    "D_TUT_HAT_STARTING_NO_2": {
+      "identifier": "D_TUT_HAT_STARTING_NO_2",
+      "nodeType": "Dialogue",
+      "speakerName": null,
+      "dialogueContent": "(모르는 사람인데, 반론은 받지 않겠다는 표정으로 뻔히 쳐다본다.)",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "D_TUT_HAT_STARTING_NO_3"
+    },
+    "D_TUT_HAT_STARTING_NO_3": {
+      "identifier": "D_TUT_HAT_STARTING_NO_3",
+      "nodeType": "Dialogue",
+      "speakerName": "???",
+      "dialogueContent": "...",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "D_TUT_HAT_STARTING_NO_4"
+    },
+    "D_TUT_HAT_STARTING_NO_4": {
+      "identifier": "D_TUT_HAT_STARTING_NO_4",
+      "nodeType": "Dialogue",
+      "speakerName": null,
+      "dialogueContent": "....",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "D_TUT_HAT_STARTING_NO_5"
+    },
+    "D_TUT_HAT_STARTING_NO_5": {
+      "identifier": "D_TUT_HAT_STARTING_NO_5",
+      "nodeType": "Dialogue",
+      "speakerName": "???",
+      "dialogueContent": "....",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "D_TUT_HAT_STARTING_NO_6"
+    },
+    "D_TUT_HAT_STARTING_NO_6": {
+      "identifier": "D_TUT_HAT_STARTING_NO_6",
+      "nodeType": "Dialogue",
+      "speakerName": null,
+      "dialogueContent": ".....",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "D_TUT_HAT_STARTING_NO_7"
+    },
+    "D_TUT_HAT_STARTING_NO_7": {
+      "identifier": "D_TUT_HAT_STARTING_NO_7",
+      "nodeType": "Dialogue",
+      "speakerName": null,
+      "dialogueContent": "....네, 그래서요?",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "D_TUT_HAT_STARTING_2"
+    },
+    "D_TUT_HAT_STARTING_2": {
+      "identifier": "D_TUT_HAT_STARTING_2",
+      "nodeType": "Dialogue",
+      "speakerName": "???",
+      "dialogueContent": "아 네! 반가워요, 저는.. 어... 일단 모자라고 불러주세요",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "D_TUT_HAT_STARTING_3",
+      "playTTS": true
+    },
+    "D_TUT_HAT_STARTING_3": {
+      "identifier": "D_TUT_HAT_STARTING_3",
+      "nodeType": "Dialogue",
+      "speakerName": "???",
+      "dialogueContent": "혹시 로비에서 택배를 가져다 주실 수 있나요? 지금 제가 여기서 움직일 수 없는 상황이라서요..",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "Q_TUT_DELIVERY_ADD",
+      "playTTS": true
+    },
+    "Q_TUT_DELIVERY_ADD": {
+      "identifier": "Q_TUT_DELIVERY_ADD",
+      "nodeType": "QuestControl",
+      "operation": "Add",
+      "failureStrategy": "Overwrite",
+      "questDefinitionIdentifier": "tutorial-quest-delivery",
+      "quest": null,
+      "nextIdentifier": "CONFIG_PACKAGE_SUBMISSION"
+    },
+    "CONFIG_PACKAGE_SUBMISSION": {
+      "identifier": "CONFIG_PACKAGE_SUBMISSION",
       "nodeType": "ItemSubmissionConfig",
       "targetIdentifier": "tutorial-guide-hat-package-submission",
       "requiredItems": [
@@ -26,15 +246,6 @@
       "completionSignalIdentifier": "tutorial.delivery.package.submitted",
       "enabled": true,
       "resultStateKey": "tutorial.delivery.submission.identifier",
-      "nextIdentifier": "add_delivery_quest"
-    },
-    "add_delivery_quest": {
-      "identifier": "add_delivery_quest",
-      "nodeType": "QuestControl",
-      "operation": "Add",
-      "failureStrategy": "Overwrite",
-      "questDefinitionIdentifier": "tutorial-quest-delivery",
-      "quest": null,
       "nextIdentifier": "DECOY_WATCHER_FORK"
     },
     "DECOY_WATCHER_FORK": {
@@ -52,7 +263,7 @@
           "requiredPlayerTagsMatchMode": "All"
         }
       ],
-      "nextIdentifier": "watch_delivery_quest"
+      "nextIdentifier": "V_TUT_DELIVERY_WAYPOINT_REACHED"
     },
     "branch_decoy_watch": {
       "identifier": "branch_decoy_watch",
@@ -81,46 +292,13 @@
       "speakerName": null,
       "dialogueContent": "이 물건은 아닌 것 같다.",
       "portraitSpriteIdentifier": null,
-      "fadeInDuration": {
-        "value": 0.2,
-        "unit": "Seconds"
-      },
-      "displayDuration": {
-        "value": 3,
-        "unit": "Seconds"
-      },
-      "fadeOutDuration": {
-        "value": 0.2,
-        "unit": "Seconds"
-      },
+      "fadeInDuration": { "value": 0.2, "unit": "Seconds" },
+      "displayDuration": { "value": 3, "unit": "Seconds" },
+      "fadeOutDuration": { "value": 0.2, "unit": "Seconds" },
       "nextIdentifier": "decoy_branch_done"
     },
-    "watch_delivery_quest": {
-      "identifier": "watch_delivery_quest",
-      "nodeType": "Parallel",
-      "waitMode": "All",
-      "allocationType": "SelfAll",
-      "whenBranchingPlayerNotMatched": "Ignore",
-      "branches": [
-        {
-          "identifier": "wait_storage_task_complete",
-          "completionConditionIdentifier": "storage_hint_branch_done",
-          "requiredPlayerTags": [],
-          "forbiddenPlayerTags": [],
-          "requiredPlayerTagsMatchMode": "All"
-        },
-        {
-          "identifier": "wait_delivery_quest_complete",
-          "completionConditionIdentifier": "quest_branch_done",
-          "requiredPlayerTags": [],
-          "forbiddenPlayerTags": [],
-          "requiredPlayerTagsMatchMode": "All"
-        }
-      ],
-      "nextIdentifier": "debug_complete"
-    },
-    "wait_storage_task_complete": {
-      "identifier": "wait_storage_task_complete",
+    "V_TUT_DELIVERY_WAYPOINT_REACHED": {
+      "identifier": "V_TUT_DELIVERY_WAYPOINT_REACHED",
       "nodeType": "Validator",
       "rootConditions": [
         {
@@ -138,30 +316,21 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "nextIdentifier": "storage_pickup_hint"
+      "nextIdentifier": "D_TUT_PACKAGE_PROMPT"
     },
-    "storage_pickup_hint": {
-      "identifier": "storage_pickup_hint",
+    "D_TUT_PACKAGE_PROMPT": {
+      "identifier": "D_TUT_PACKAGE_PROMPT",
       "nodeType": "DisinteractableDialogue",
       "speakerName": null,
       "dialogueContent": "아이템 앞에서 F 키를 눌러 택배를 획득하자.",
       "portraitSpriteIdentifier": null,
-      "fadeInDuration": {
-        "value": 0.2,
-        "unit": "Seconds"
-      },
-      "displayDuration": {
-        "value": 3,
-        "unit": "Seconds"
-      },
-      "fadeOutDuration": {
-        "value": 0.2,
-        "unit": "Seconds"
-      },
-      "nextIdentifier": "storage_hint_branch_done"
+      "fadeInDuration": { "value": 0.2, "unit": "Seconds" },
+      "displayDuration": { "value": 3, "unit": "Seconds" },
+      "fadeOutDuration": { "value": 0.2, "unit": "Seconds" },
+      "nextIdentifier": "V_TUT_DELIVERY_PACKAGE_ACQUIRED"
     },
-    "wait_delivery_quest_complete": {
-      "identifier": "wait_delivery_quest_complete",
+    "V_TUT_DELIVERY_PACKAGE_ACQUIRED": {
+      "identifier": "V_TUT_DELIVERY_PACKAGE_ACQUIRED",
       "nodeType": "Validator",
       "rootConditions": [
         {
@@ -171,7 +340,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "quest.completed.tutorial-quest-delivery"
+              "registryIdentifier": "sig.tutorial_delivery_package_acquired"
             }
           ]
         }
@@ -179,15 +348,46 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true,
-      "nextIdentifier": "quest_branch_done"
+      "nextIdentifier": "V_TUT_DELIVERY_PACKAGE_SUBMITTED"
     },
-    "debug_complete": {
-      "identifier": "debug_complete",
-      "nodeType": "ChatPrint",
-      "message": "[택배 퀘스트 디버그] tutorial-quest-delivery 완료. 시계 제작 퀘스트로 진행합니다.",
-      "targets": "UnityConsole, InGameChat",
-      "broadcast": false,
-      "nextIdentifier": "D_TUT_CRAFTING_REQUEST"
+    "V_TUT_DELIVERY_PACKAGE_SUBMITTED": {
+      "identifier": "V_TUT_DELIVERY_PACKAGE_SUBMITTED",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.tutorial.delivery.package.submitted"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "waitForCondition": true,
+      "nextIdentifier": "Q_TUT_DELIVERY_REMOVE"
+    },
+    "Q_TUT_DELIVERY_REMOVE": {
+      "identifier": "Q_TUT_DELIVERY_REMOVE",
+      "nodeType": "QuestControl",
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "tutorial-quest-delivery",
+      "quest": null,
+      "nextIdentifier": "D_TUT_DELIVERY_COMPLETE"
+    },
+    "D_TUT_DELIVERY_COMPLETE": {
+      "identifier": "D_TUT_DELIVERY_COMPLETE",
+      "nodeType": "Dialogue",
+      "speakerName": "모자",
+      "dialogueContent": "감사합니다! 덕분에 일이 잘 해결되었네요..!",
+      "portraitSpriteIdentifier": null,
+      "nextIdentifier": "D_TUT_CRAFTING_REQUEST",
+      "playTTS": true
     },
     "D_TUT_CRAFTING_REQUEST": {
       "identifier": "D_TUT_CRAFTING_REQUEST",
@@ -328,14 +528,14 @@
       "speakerName": "모자",
       "dialogueContent": "멋진 시계네요! 감사합니다!",
       "portraitSpriteIdentifier": null,
-      "nextIdentifier": "TUT_CRAFTING_END",
+      "nextIdentifier": "TUT_END",
       "playTTS": true
     },
-    "TUT_CRAFTING_END": {
-      "identifier": "TUT_CRAFTING_END",
+    "TUT_END": {
+      "identifier": "TUT_END",
       "nodeType": "ChatPrint",
-      "message": "[튜토리얼 디버그] 시계 제작 퀘스트 완료. 튜토리얼 종료.",
-      "targets": "UnityConsole, InGameChat",
+      "message": "튜토리얼이 완료되었습니다.",
+      "targets": "InGameChat",
       "broadcast": false,
       "nextIdentifier": null
     }
