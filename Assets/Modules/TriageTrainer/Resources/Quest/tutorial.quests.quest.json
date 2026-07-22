@@ -49,6 +49,25 @@
       ]
     },
     {
+      "identifier": "tutorial-find-hat",
+      "title": "사람 찾기",
+      "description": "앞에서 자신을 부르는 사람을 찾아 말을 거세요.",
+      "questContent": "앞에서 자신을 부르는 사람을 찾기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "type": "InteractionSignalReceived",
+          "signalId": "tutorial_hat_talk_start",
+          "displayTextContent": "모자에게 말 걸기",
+          "conditions": []
+        }
+      ]
+    },
+    {
       "identifier": "tutorial-move",
       "title": "이동하기",
       "description": "WASD와 마우스로 기본 조작을 익히세요.",

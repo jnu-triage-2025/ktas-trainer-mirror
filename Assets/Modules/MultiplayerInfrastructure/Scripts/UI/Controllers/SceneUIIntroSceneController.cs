@@ -135,12 +135,16 @@ namespace MultiplayerInfrastructure.UI
       // ── Search filter ──
       _searchField.RegisterValueChangedCallback(_ => RefreshSessions());
 
+      // ── Name validation (soft constraint) ──
+      _nameField.RegisterValueChangedCallback(_ => UpdateNameValidation());
+
       // ── Defaults ──
       _addrField.value = defaultAddress;
       _portField.value = defaultPort.ToString();
 
       // ── Show main menu ──
       ShowPanel(_mainPanel);
+      UpdateNameValidation();
     }
 
     private void OnEnable()
@@ -410,6 +414,26 @@ namespace MultiplayerInfrastructure.UI
 
     // ════════════════════════════════════════════════════════════════════════
     // Helpers
+    // ════════════════════════════════════════════════════════════════════════
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Name Validation (Soft Constraint)
+    // ════════════════════════════════════════════════════════════════════════
+
+    private bool IsNameValid()
+    {
+      return !string.IsNullOrWhiteSpace(_nameField?.value);
+    }
+
+    private void UpdateNameValidation()
+    {
+      bool valid = IsNameValid();
+      _btnTutorial.SetEnabled(valid);
+      _btnPlay.SetEnabled(valid);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Helpers (continued)
     // ════════════════════════════════════════════════════════════════════════
 
     private void EnsureDiscoveryService()

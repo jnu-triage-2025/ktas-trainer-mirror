@@ -91,6 +91,10 @@ namespace TriageTrainer.SceneBootstrapper
       PrepareDeferredPlayerSpawning();
       StartHostSession();
 
+      // 개발 씬에서는 기본적으로 외부 접속을 허용한다.
+      ConnectionGateService.SetPort(port);
+      ConnectionGateService.Open();
+
       ScenarioRuntimeBootstrapGate.MarkSceneReady(gameObject.scene);
     }
 

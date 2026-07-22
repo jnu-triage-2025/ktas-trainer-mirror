@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -16,6 +17,17 @@ namespace MultiplayerInfrastructure.UI
   [RequireComponent(typeof(UIDocument))]
   public class DialoguePanelUIController : UIControllerABC, IUIOverlay
   {
+    /// <summary>
+    /// 시나리오 대화의 speakerName / dialogueContent에서 플레이어 이름으로 치환되는
+    /// 이스케이프 워드입니다.
+    ///
+    /// JSON 시나리오 작성 예:
+    /// <code>
+    /// { "speakerName": "{PLAYER_NAME}", "dialogueContent": "안녕하세요, {PLAYER_NAME}씨!" }
+    /// </code>
+    /// </summary>
+    public const string PlayerNamePlaceholder = "{PLAYER_NAME}";
+
     #region Serialized Fields
 
     [Header("UI References")]
@@ -337,10 +349,10 @@ namespace MultiplayerInfrastructure.UI
       ClearSelections();
 
       if (_speakerNameLabel != null)
-        _speakerNameLabel.text = speakerName ?? string.Empty;
+        _speakerNameLabel.text = ResolvePlaceholders(speakerName ?? string.Empty);
 
       SetPortrait(portraitIdentifier);
-      _fullText = dialogueContent ?? string.Empty;
+      _fullText = ResolvePlaceholders(dialogueContent ?? string.Empty);
       _currentCharIndex = _fullText.Length;
       if (_dialogueTextLabel != null)
         _dialogueTextLabel.text = _fullText;
@@ -585,18 +597,40 @@ namespace MultiplayerInfrastructure.UI
       }
     }
 
+    /// <summary>
+    /// 텍스트 내의 이스케이프 워드를 런타임 값으로 치환합니다.
+    ///
+    /// 지원되는 플레이스홀더:
+    ///   <c>{PLAYER_NAME}</c> — IntroScene에서 입력한 플레이어 표시 이름.
+    ///   값이 없으면 빈 문자열로 치환됩니다.
+    /// </summary>
+    private static string ResolvePlaceholders(string text)
+    {
+      if (string.IsNullOrEmpty(text))
+        return text;
+
+      if (text.Contains(PlayerNamePlaceholder))
+      {
+        var playerName = Registry.Registry.Get<string>(
+          RegistryType.RuntimeState, RegistryGlobalKeys.UserDisplayName);
+        text = text.Replace(PlayerNamePlaceholder, playerName ?? string.Empty);
+      }
+
+      return text;
+    }
+
     private void PresentTextNode(string speakerName, string dialogueContent, string portraitIdentifier)
     {
       _isWaitingForInput = false;
 
       if (_speakerNameLabel != null)
       {
-        _speakerNameLabel.text = speakerName ?? "";
+        _speakerNameLabel.text = ResolvePlaceholders(speakerName ?? "");
       }
 
       SetPortrait(portraitIdentifier);
 
-      StartTyping(dialogueContent ?? "");
+      StartTyping(ResolvePlaceholders(dialogueContent ?? ""));
     }
 
     private void SetPortrait(string portraitIdentifier)

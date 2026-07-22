@@ -693,7 +693,7 @@
               "const": "DisinteractableDialogue"
             },
             "speakerName": {
-              "type": "string"
+              "type": ["string", "null"]
             },
             "dialogueContent": {
               "type": "string"
@@ -729,7 +729,7 @@
               "const": "Choice"
             },
             "speakerName": {
-              "type": "string"
+              "type": ["string", "null"]
             },
             "dialogueContent": {
               "type": "string"
@@ -1665,7 +1665,7 @@
             },
             "branches": {
               "type": "array",
-              "minItems": 2,
+              "minItems": 1,
               "items": {
                 "$ref": "#/$defs/ScenarioParallelBranch"
               }
