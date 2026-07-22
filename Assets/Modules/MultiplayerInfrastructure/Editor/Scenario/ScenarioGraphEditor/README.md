@@ -18,6 +18,7 @@
 
 ## UI 구성 요소
 - 상단 툴바: `New Graph`, `Add Node`, `Open File`, `Save File`, `Validate`.
+- 툴바 메뉴: `File`(New/Open/Save 등 — `Open Recent` 하위 메뉴 포함. 아래 "최근 연 파일" 참고).
 - 툴바 필드: `Graph ID`(그래프 식별자), `Tags(csv)`, `Default Init`(기본 진입 노드 식별자 — 아래 "DefaultInit 표시" 참고).
 - Graph Area(왼쪽/중앙): 그래프 캔버스(노드, 엣지, MiniMap 포함). 노드 드래그·연결·삭제 가능.
 - Inspector Panel(오른쪽): 선택된 노드의 세부 속성 편집(스크롤 가능). 노드 타입 변경 드롭다운 포함.
@@ -30,6 +31,11 @@
 	- 노드 우클릭 메뉴에서 `Set as Default Init` / `Clear Default Init` 을 사용합니다.
 - 참조 유지: 표시된 노드의 식별자를 변경(Rename)하면 `defaultEntrypoint`도 함께 갱신되고, 노드를 삭제하면 자동으로 해제됩니다.
 - 존재하지 않는 식별자를 가리키는 경우 하단 디버그 패널에 Error 진단이 표시됩니다.
+
+## 최근 연 파일 (Open Recent)
+- `File` 메뉴의 `Open Recent` 하위 메뉴에서 최근에 열었거나 저장한 시나리오 파일(최대 12개, 최신 순)을 바로 열 수 있습니다. 항목은 "파일이름 (상위폴더)" 형태로 표시됩니다.
+- 목록은 프로젝트 임시 폴더의 `Temp/ScenarioGraphEditor/recent_files.json` 에 저장됩니다. 버전 관리에 포함되지 않는 세션 단위 임시 저장소(에디터 종료 시 정리됨)이며, 파일 삭제 시 목록에서도 자동 제외됩니다.
+- 하위 메뉴 하단의 `Clear Recent` 로 목록을 비울 수 있습니다.
 
 ## 노드 기본 동작
 - 생성: `Add Node`로 타입을 선택하면 새 노드가 그래프에 추가됩니다. 기본 식별자는 `type_1` 형식으로 자동 생성됩니다.

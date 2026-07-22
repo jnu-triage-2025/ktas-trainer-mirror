@@ -194,15 +194,11 @@ namespace MultiplayerInfrastructure.Editor
 
       var toolbar = new Toolbar();
 
-      var fileMenu = new ToolbarMenu { text = "File" };
-      fileMenu.menu.AppendAction("New", _ => LoadBlankGraph());
-      fileMenu.menu.AppendAction("Open", _ => OpenGraphFromJson());
-      fileMenu.menu.AppendAction("Open Selected Scenario TextAsset", _ => OpenSelectedScenarioTextAsset(),
-        _ => GetSelectedScenarioTextAsset() != null ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
-      fileMenu.menu.AppendAction("Save", _ => SaveGraphToJson());
-      fileMenu.menu.AppendAction("Save As...", _ => SaveGraphToJsonAs());
-      fileMenu.menu.AppendAction("Validate", _ => ValidateGraphUsingRuntimeValidator());
-      toolbar.Add(fileMenu);
+      // File 버튼은 클릭 시 GenericMenu 를 연다.
+      // ToolbarMenu 의 DropdownMenu 는 이 Unity 버전에 하위 메뉴(서브메뉴) API 가 없어,
+      // "Open Recent" 하위 메뉴를 구성할 수 있는 GenericMenu 를 사용한다.
+      var fileButton = new ToolbarButton(ShowFileMenu) { text = "File ▼" };
+      toolbar.Add(fileButton);
 
       var addNodeButton = new ToolbarButton(OpenCreateNodeMenu) { text = "+" };
       toolbar.Add(addNodeButton);
@@ -1095,6 +1091,57 @@ namespace MultiplayerInfrastructure.Editor
       return true;
     }
 
+    /// <summary>
+    /// File 메뉴를 열어 보여준다. GenericMenu 의 경로("/" 구분) 문법으로
+    /// "Open Recent" 하위 메뉴를 Open 아래에 구성한다. 클릭 시마다 최신 상태로 만든다.
+    /// </summary>
+    private void ShowFileMenu()
+    {
+      var menu = new GenericMenu();
+
+      menu.AddItem(new GUIContent("New"), false, () => LoadBlankGraph());
+      menu.AddItem(new GUIContent("Open"), false, () => OpenGraphFromJson());
+      if (GetSelectedScenarioTextAsset() != null)
+        menu.AddItem(new GUIContent("Open Selected Scenario TextAsset"), false, () => OpenSelectedScenarioTextAsset());
+      else
+        menu.AddDisabledItem(new GUIContent("Open Selected Scenario TextAsset"));
+
+      // Open Recent 하위 메뉴 — 최근 연 파일 목록(Temp/ScenarioGraphEditor 캐시), 최신 순.
+      var recents = ScenarioGraphEditorRecentStore.LoadExisting();
+      if (recents.Count == 0)
+      {
+        menu.AddDisabledItem(new GUIContent("Open Recent/(최근 항목 없음)"));
+      }
+      else
+      {
+        foreach (var path in recents)
+        {
+          menu.AddItem(new GUIContent($"Open Recent/{GetRecentDisplayLabel(path)}"), false, () => OpenGraphFromPath(path));
+        }
+
+        menu.AddSeparator("Open Recent/");
+        menu.AddItem(new GUIContent("Open Recent/Clear Recent"), false, () => ScenarioGraphEditorRecentStore.Clear());
+      }
+
+      menu.AddSeparator(string.Empty);
+      menu.AddItem(new GUIContent("Save"), false, () => SaveGraphToJson());
+      menu.AddItem(new GUIContent("Save As..."), false, () => SaveGraphToJsonAs());
+      menu.AddItem(new GUIContent("Validate"), false, () => ValidateGraphUsingRuntimeValidator());
+
+      menu.ShowAsContext();
+    }
+
+    /// <summary>
+    /// Recent 메뉴 표시용 라벨. GenericMenu 의 "/" 는 하위 메뉴 구분자이므로 경로 대신
+    /// "파일이름 (상위폴더)" 형태로 표시한다.
+    /// </summary>
+    private static string GetRecentDisplayLabel(string path)
+    {
+      var fileName = Path.GetFileName(path);
+      var parentName = Path.GetFileName(Path.GetDirectoryName(path));
+      return string.IsNullOrEmpty(parentName) ? fileName : $"{fileName} ({parentName})";
+    }
+
     private void OpenGraphFromJson()
     {
       var path = EditorUtility.OpenFilePanel("Open Scenario JSON", Application.dataPath, "json");
@@ -1170,6 +1217,8 @@ namespace MultiplayerInfrastructure.Editor
         RefreshGraphTagsField();
         RefreshDefaultEntrypointField();
         RefreshDefaultEntrypointMarkers();
+
+        ScenarioGraphEditorRecentStore.Record(path);
 
         ValidateResources(graphData);
         SyncRuntimeHighlight();
@@ -1280,6 +1329,7 @@ namespace MultiplayerInfrastructure.Editor
 
         AssetDatabase.Refresh();
         currentFilePath = path;
+        ScenarioGraphEditorRecentStore.Record(path);
         EditorUtility.DisplayDialog("Save Completed", $"JSON 저장 완료:\n{path}", "확인");
       }
       catch (Exception ex)
