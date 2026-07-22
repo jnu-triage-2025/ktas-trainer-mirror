@@ -259,6 +259,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.CameraTarget:
         case ScenarioNodeType.InvokeEvent:
         case ScenarioNodeType.ServerInternalSignal:
+        case ScenarioNodeType.SignalListener:
+        case ScenarioNodeType.EntityStateSignalBinding:
+        case ScenarioNodeType.SignalCounter:
         case ScenarioNodeType.Validator:
         case ScenarioNodeType.QuestControl:
         case ScenarioNodeType.QuestWaypointHighlight:
@@ -275,6 +278,8 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.PatientMedicalStatePreset:
         case ScenarioNodeType.ItemSubmissionConfig:
         case ScenarioNodeType.NpcInteractControl:
+        case ScenarioNodeType.ChatPrint:
+        case ScenarioNodeType.ExecuteCommand:
         case ScenarioNodeType.TimeControl:
           DefaultOutputPort = CreateStandardOutput("Next");
           break;
