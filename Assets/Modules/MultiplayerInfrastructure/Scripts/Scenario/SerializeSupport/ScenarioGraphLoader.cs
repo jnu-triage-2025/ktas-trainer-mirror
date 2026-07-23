@@ -27,6 +27,17 @@ namespace MultiplayerInfrastructure.Scenario
       SerializerOptions.Converters.Add(new ScenarioNodeDTOConverter());
     }
 
+#if UNITY_EDITOR
+    /// <summary>
+    /// 에디터에서 스키마 TextAsset이 변경되거나 브랜치 전환으로 교체된 뒤에도
+    /// 이전 정적 캐시를 사용하지 않도록 다음 검증 전에 스키마를 다시 읽게 한다.
+    /// </summary>
+    public static void ReloadSchemaForEditor()
+    {
+      ScenarioJsonSchemaProvider.ForceReload();
+    }
+#endif
+
     public static ScenarioGraph LoadFromJson(string json, bool validateWithSchema = true)
     {
       if (string.IsNullOrWhiteSpace(json))

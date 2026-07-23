@@ -86,6 +86,12 @@ namespace MultiplayerInfrastructure.Scenario
 
         writer.WritePropertyName("branches");
         JsonSerializer.Serialize(writer, parallel.Branches, options);
+
+        // nextIdentifier 는 기본(reflection) 직렬화 경로와 동일하게 항상 기록한다.
+        // 이 수동 작성기에서 생략했더니 저장할 때마다 병렬 노드의 다음 링크가
+        // 조용히 사라져(데이터 유실) 병렬 완료 후 시나리오가 조기 종료됐다.
+        // null 이어야 하면 JSON null 로 기록된다(스키마는 ["string","null"] 허용).
+        writer.WriteString("nextIdentifier", parallel.NextIdentifier);
         writer.WriteEndObject();
         return;
       }

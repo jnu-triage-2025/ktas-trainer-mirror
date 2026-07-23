@@ -1,0 +1,184 @@
+{
+  "NodePositions": {
+    "branch_decoy_watch": {
+      "x": 6100,
+      "y": -113
+    },
+    "C_TUT_CRAFTING_ACCEPT": {
+      "x": 2673,
+      "y": 800
+    },
+    "C_TUT_GREETING": {
+      "x": 3800,
+      "y": 0
+    },
+    "CONFIG_CLOCK_SUBMISSION": {
+      "x": 5692,
+      "y": 796
+    },
+    "CONFIG_PACKAGE_SUBMISSION": {
+      "x": 5340,
+      "y": -111
+    },
+    "D_TUT_CALL": {
+      "x": 1900,
+      "y": 0
+    },
+    "D_TUT_CRAFTING_COMPLETE": {
+      "x": 6803,
+      "y": 806
+    },
+    "D_TUT_CRAFTING_HINT": {
+      "x": 4549,
+      "y": 806
+    },
+    "D_TUT_CRAFTING_REQUEST": {
+      "x": 2293,
+      "y": 800
+    },
+    "D_TUT_DECOY_HINT": {
+      "x": 6459,
+      "y": -108
+    },
+    "D_TUT_DELIVERY_COMPLETE": {
+      "x": 1907,
+      "y": 802
+    },
+    "D_TUT_HAT_STARTING_2": {
+      "x": 4227,
+      "y": -89
+    },
+    "D_TUT_HAT_STARTING_3": {
+      "x": 4606,
+      "y": -110
+    },
+    "D_TUT_HAT_STARTING_NO_1": {
+      "x": 4209,
+      "y": 279
+    },
+    "D_TUT_HAT_STARTING_NO_2": {
+      "x": 4573,
+      "y": 304
+    },
+    "D_TUT_HAT_STARTING_NO_3": {
+      "x": 4932,
+      "y": 314
+    },
+    "D_TUT_HAT_STARTING_NO_4": {
+      "x": 5317,
+      "y": 299
+    },
+    "D_TUT_HAT_STARTING_NO_5": {
+      "x": 5700,
+      "y": 306
+    },
+    "D_TUT_HAT_STARTING_NO_6": {
+      "x": 6088,
+      "y": 302
+    },
+    "D_TUT_HAT_STARTING_NO_7": {
+      "x": 6456,
+      "y": 272
+    },
+    "D_TUT_PACKAGE_PROMPT": {
+      "x": 384,
+      "y": 814
+    },
+    "D_TUT_SUBMIT_HINT": {
+      "x": 5307,
+      "y": 799
+    },
+    "DECOY_WATCHER_FORK": {
+      "x": 5723,
+      "y": -104
+    },
+    "DL_TUT_MOVE_CALL_DELAY": {
+      "x": 1520,
+      "y": 0
+    },
+    "GIVE_CHAIN": {
+      "x": 4148,
+      "y": 808
+    },
+    "GIVE_GEAR": {
+      "x": 3792,
+      "y": 809
+    },
+    "GIVE_TIN": {
+      "x": 3433,
+      "y": 800
+    },
+    "IE_TUT_INTERACTION_HINT": {
+      "x": 2663,
+      "y": 3
+    },
+    "Q_TUT_CRAFTING_ADD": {
+      "x": 3053,
+      "y": 800
+    },
+    "Q_TUT_CRAFTING_REMOVE": {
+      "x": 6426,
+      "y": 804
+    },
+    "Q_TUT_DELIVERY_ADD": {
+      "x": 4963,
+      "y": -104
+    },
+    "Q_TUT_DELIVERY_REMOVE": {
+      "x": 1544,
+      "y": 810
+    },
+    "Q_TUT_FIND_HAT_ADD": {
+      "x": 2283,
+      "y": 3
+    },
+    "Q_TUT_FIND_HAT_REMOVE": {
+      "x": 3423,
+      "y": 3
+    },
+    "Q_TUT_MOVE_ADD": {
+      "x": 372,
+      "y": -11
+    },
+    "Q_TUT_MOVE_REMOVE": {
+      "x": 1140,
+      "y": 0
+    },
+    "TUT_END": {
+      "x": 7172,
+      "y": 803
+    },
+    "TUT_START": {
+      "x": 0,
+      "y": 0
+    },
+    "V_TUT_CLOCK_CRAFTED": {
+      "x": 4929,
+      "y": 805
+    },
+    "V_TUT_CLOCK_SUBMITTED": {
+      "x": 6055,
+      "y": 793
+    },
+    "V_TUT_DELIVERY_PACKAGE_ACQUIRED": {
+      "x": 764,
+      "y": 814
+    },
+    "V_TUT_DELIVERY_PACKAGE_SUBMITTED": {
+      "x": 1164,
+      "y": 810
+    },
+    "V_TUT_DELIVERY_WAYPOINT_REACHED": {
+      "x": -5,
+      "y": 810
+    },
+    "V_TUT_HAT_TALK_START": {
+      "x": 3043,
+      "y": 3
+    },
+    "V_TUT_PLAYER_MOVED": {
+      "x": 752,
+      "y": -11
+    }
+  }
+}

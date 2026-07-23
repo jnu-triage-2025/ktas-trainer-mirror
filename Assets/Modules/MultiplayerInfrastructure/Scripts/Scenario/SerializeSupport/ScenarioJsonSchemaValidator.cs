@@ -75,7 +75,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
       catch (Exception ex)
       {
-        throw new InvalidOperationException("Failed to parse scenario schema text.", ex);
+        throw new InvalidOperationException($"Failed to parse scenario schema text: {ex.Message}", ex);
       }
     }
 

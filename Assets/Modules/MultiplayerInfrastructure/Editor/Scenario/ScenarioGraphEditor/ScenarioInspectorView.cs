@@ -167,6 +167,27 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.TimeControl:
           DrawTimeControlFields((ScenarioTimeControlNode)data);
           break;
+        case ScenarioNodeType.SignalListener:
+          DrawSignalListenerFields((ScenarioSignalListenerNode)data);
+          break;
+        case ScenarioNodeType.EntityStateSignalBinding:
+          DrawEntityStateSignalBindingFields((ScenarioEntityStateSignalBindingNode)data);
+          break;
+        case ScenarioNodeType.SignalCounter:
+          DrawSignalCounterFields((ScenarioSignalCounterNode)data);
+          break;
+        case ScenarioNodeType.ChatPrint:
+          DrawChatPrintFields((ScenarioChatPrintNode)data);
+          break;
+        case ScenarioNodeType.ExecuteCommand:
+          DrawExecuteCommandFields((ScenarioExecuteCommandNode)data);
+          break;
+        case ScenarioNodeType.ItemSubmissionConfig:
+          DrawItemSubmissionConfigFields((ScenarioItemSubmissionConfigNode)data);
+          break;
+        case ScenarioNodeType.NpcInteractControl:
+          DrawNpcInteractControlFields((ScenarioNpcInteractControlNode)data);
+          break;
       }
     }
 
@@ -604,22 +625,36 @@ namespace MultiplayerInfrastructure.Editor
     {
       data.Operation = (ScenarioQuestOperationType)EditorGUILayout.EnumPopup("Operation", data.Operation);
       data.FailureStrategy = (ScenarioQuestFailureStrategy)EditorGUILayout.EnumPopup("Failure Strategy", data.FailureStrategy);
+      data.QuestDefinitionIdentifier = EditorGUILayout.TextField(
+        "Quest Definition",
+        data.QuestDefinitionIdentifier ?? string.Empty);
 
-      if (data.Quest == null)
+      var useInlineQuestData = EditorGUILayout.Toggle("Inline Quest Data", data.Quest != null);
+      if (!useInlineQuestData)
       {
-        data.Quest = new QuestData();
+        // 외부 quest definition만 사용하는 노드는 quest:null 상태를 유지해야 한다.
+        // 인스펙터에서 노드를 선택했다는 이유만으로 빈 QuestData를 만들면 저장 JSON이
+        // 불필요하게 변경되고, 불완전한 inline quest가 스키마 검증을 실패시킨다.
+        data.Quest = null;
+      }
+      else
+      {
+        data.Quest ??= new QuestData();
       }
 
-      EditorGUILayout.Space();
-      EditorGUILayout.LabelField("Quest", EditorStyles.boldLabel);
-      data.Quest.Id = EditorGUILayout.TextField("Id", data.Quest.Id);
-      data.Quest.Title = EditorGUILayout.TextField("Title", data.Quest.Title);
-      data.Quest.WaypointIdentifier = EditorGUILayout.TextField("Waypoint Identifier", data.Quest.WaypointIdentifier);
-      EditorGUILayout.LabelField("Description");
-      data.Quest.Description = EditorGUILayout.TextArea(data.Quest.Description, GUILayout.Height(60));
-      EditorGUILayout.LabelField("Quest Content");
-      data.Quest.QuestContent = EditorGUILayout.TextArea(data.Quest.QuestContent, GUILayout.Height(40));
-      data.Quest.IsTracked = EditorGUILayout.Toggle("Track", data.Quest.IsTracked);
+      if (data.Quest != null)
+      {
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Quest", EditorStyles.boldLabel);
+        data.Quest.Id = EditorGUILayout.TextField("Id", data.Quest.Id);
+        data.Quest.Title = EditorGUILayout.TextField("Title", data.Quest.Title);
+        data.Quest.WaypointIdentifier = EditorGUILayout.TextField("Waypoint Identifier", data.Quest.WaypointIdentifier);
+        EditorGUILayout.LabelField("Description");
+        data.Quest.Description = EditorGUILayout.TextArea(data.Quest.Description, GUILayout.Height(60));
+        EditorGUILayout.LabelField("Quest Content");
+        data.Quest.QuestContent = EditorGUILayout.TextArea(data.Quest.QuestContent, GUILayout.Height(40));
+        data.Quest.IsTracked = EditorGUILayout.Toggle("Track", data.Quest.IsTracked);
+      }
 
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
@@ -676,6 +711,124 @@ namespace MultiplayerInfrastructure.Editor
           break;
       }
 
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawSignalListenerFields(ScenarioSignalListenerNode data)
+    {
+      data.ListenerIdentifier = EditorGUILayout.TextField("Listener Identifier", data.ListenerIdentifier);
+      data.Operation = (ScenarioSignalListenerOperation)EditorGUILayout.EnumPopup("Operation", data.Operation);
+      data.SourceSignalIdentifier = EditorGUILayout.TextField("Source Signal", data.SourceSignalIdentifier);
+      data.OutputSignalIdentifier = EditorGUILayout.TextField("Output Signal", data.OutputSignalIdentifier);
+
+      var requiredSignals = data.RequiredSignalIdentifiers == null || data.RequiredSignalIdentifiers.Count == 0
+        ? string.Empty
+        : string.Join(",", data.RequiredSignalIdentifiers);
+      var requiredText = EditorGUILayout.TextField("Required Signals(csv)", requiredSignals);
+      data.RequiredSignalIdentifiers = requiredText
+        .Split(',')
+        .Select(each => each.Trim())
+        .Where(each => !string.IsNullOrEmpty(each))
+        .ToList();
+
+      data.ConsumeOnce = EditorGUILayout.Toggle("Consume Once", data.ConsumeOnce);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawEntityStateSignalBindingFields(ScenarioEntityStateSignalBindingNode data)
+    {
+      data.BindingIdentifier = EditorGUILayout.TextField("Binding Identifier", data.BindingIdentifier);
+      data.Operation = (ScenarioEntityStateSignalBindingOperation)EditorGUILayout.EnumPopup("Operation", data.Operation);
+      data.TargetEntityIdentifier = EditorGUILayout.TextField("Target Entity", data.TargetEntityIdentifier);
+      data.TargetEntityStateKey = EditorGUILayout.TextField("Target Entity State Key", data.TargetEntityStateKey);
+      data.EventName = EditorGUILayout.TextField("Event Name", data.EventName);
+      data.EventKey = EditorGUILayout.TextField("Event Key", data.EventKey);
+      data.OutputSignalIdentifier = EditorGUILayout.TextField("Output Signal", data.OutputSignalIdentifier);
+      data.ConsumeOnce = EditorGUILayout.Toggle("Consume Once", data.ConsumeOnce);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawSignalCounterFields(ScenarioSignalCounterNode data)
+    {
+      data.CounterIdentifier = EditorGUILayout.TextField("Counter Identifier", data.CounterIdentifier);
+      data.Operation = (ScenarioSignalCounterOperation)EditorGUILayout.EnumPopup("Operation", data.Operation);
+      data.SourceSignalPrefix = EditorGUILayout.TextField("Source Signal Prefix", data.SourceSignalPrefix);
+      data.Threshold = EditorGUILayout.IntField("Threshold", data.Threshold);
+      data.OutputSignalIdentifier = EditorGUILayout.TextField("Output Signal", data.OutputSignalIdentifier);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawChatPrintFields(ScenarioChatPrintNode data)
+    {
+      EditorGUILayout.PrefixLabel("Message");
+      data.Message = EditorGUILayout.TextArea(data.Message ?? string.Empty, GUILayout.Height(40));
+      data.Targets = (ScenarioChatPrintTarget)EditorGUILayout.EnumFlagsField("Targets", data.Targets);
+      data.Broadcast = EditorGUILayout.Toggle("Broadcast", data.Broadcast);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawExecuteCommandFields(ScenarioExecuteCommandNode data)
+    {
+      data.CommandLine = EditorGUILayout.TextField("Command Line", data.CommandLine);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawItemSubmissionConfigFields(ScenarioItemSubmissionConfigNode data)
+    {
+      EditorGUILayout.LabelField("Target (Preset Spawn)", EditorStyles.boldLabel);
+      data.PresetIdentifier = EditorGUILayout.TextField("Preset Identifier", data.PresetIdentifier);
+      data.SpawnedEntityIdentifier = EditorGUILayout.TextField("Spawned Entity Id", data.SpawnedEntityIdentifier);
+      data.PositionSourceEntityIdentifier = EditorGUILayout.TextField("Position Source Entity", data.PositionSourceEntityIdentifier);
+      data.PositionX = EditorGUILayout.FloatField("Position X", data.PositionX);
+      data.PositionY = EditorGUILayout.FloatField("Position Y", data.PositionY);
+      data.PositionZ = EditorGUILayout.FloatField("Position Z", data.PositionZ);
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("Target (Existing Entity)", EditorStyles.boldLabel);
+      data.TargetIdentifier = EditorGUILayout.TextField("Target Identifier", data.TargetIdentifier);
+      data.TargetStateKey = EditorGUILayout.TextField("Target State Key", data.TargetStateKey);
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("Required Items", EditorStyles.boldLabel);
+
+      if (data.RequiredItems == null)
+      {
+        data.RequiredItems = new System.Collections.Generic.List<ScenarioItemRequirement>();
+      }
+
+      for (int i = 0; i < data.RequiredItems.Count; i++)
+      {
+        var req = data.RequiredItems[i] ?? new ScenarioItemRequirement();
+        data.RequiredItems[i] = req;
+
+        EditorGUILayout.BeginHorizontal();
+        req.ItemIdentifier = EditorGUILayout.TextField($"Item {i + 1}", req.ItemIdentifier);
+        req.Count = Mathf.Max(1, EditorGUILayout.IntField(req.Count, GUILayout.Width(48)));
+        if (GUILayout.Button("-", GUILayout.Width(22)))
+        {
+          data.RequiredItems.RemoveAt(i);
+          EditorGUILayout.EndHorizontal();
+          break;
+        }
+        EditorGUILayout.EndHorizontal();
+      }
+
+      if (GUILayout.Button("Add Required Item"))
+      {
+        data.RequiredItems.Add(new ScenarioItemRequirement { Count = 1 });
+      }
+
+      data.CompletionSignalIdentifier = EditorGUILayout.TextField("Completion Signal", data.CompletionSignalIdentifier);
+      data.Enabled = EditorGUILayout.Toggle("Enabled", data.Enabled);
+      data.ResultStateKey = EditorGUILayout.TextField("Result State Key", data.ResultStateKey);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawNpcInteractControlFields(ScenarioNpcInteractControlNode data)
+    {
+      data.NpcIdentifier = EditorGUILayout.TextField("NPC Identifier", data.NpcIdentifier);
+      data.InteractableIdentifier = EditorGUILayout.TextField("Interactable Identifier", data.InteractableIdentifier);
+      data.Operation = (ScenarioNpcInteractControlOperation)EditorGUILayout.EnumPopup("Operation", data.Operation);
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
 
