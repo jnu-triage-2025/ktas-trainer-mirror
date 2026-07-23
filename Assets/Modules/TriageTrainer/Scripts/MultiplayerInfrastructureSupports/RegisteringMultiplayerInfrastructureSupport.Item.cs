@@ -64,6 +64,7 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<NormalSaline1000ml>(NormalSaline1000ml.Identifier);
       Registry.RegisterItemDefinition<NormalSaline20ml>(NormalSaline20ml.Identifier);
       Registry.RegisterItemDefinition<PlasmaSolution1000ml>(PlasmaSolution1000ml.Identifier);
+      Registry.RegisterItemDefinition<Level1RapidInfuser>(Level1RapidInfuser.Identifier);
 
       // 조합 산출물(준비 완료) 아이템 — 리소스는 재료 아이템을 복사해 사용
       Registry.RegisterItemDefinition<NormalSalineIntravenousReady>(NormalSalineIntravenousReady.Identifier);

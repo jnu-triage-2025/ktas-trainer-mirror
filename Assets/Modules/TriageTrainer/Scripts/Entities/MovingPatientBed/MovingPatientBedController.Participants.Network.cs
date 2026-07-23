@@ -137,8 +137,9 @@ namespace TriageTrainer.Entity
 
     private int FindFreeParticipantHandle()
     {
-      if (_participantHandle0ClientId.Value == InvalidParticipantClientId) return 0;
-      if (_participantHandle1ClientId.Value == InvalidParticipantClientId) return 1;
+      int capacity = Mathf.Min(Mathf.Max(1, _maximumPlayerParticipants), PlayerAttachPoints.Count, 2);
+      if (capacity > 0 && _participantHandle0ClientId.Value == InvalidParticipantClientId) return 0;
+      if (capacity > 1 && _participantHandle1ClientId.Value == InvalidParticipantClientId) return 1;
       return -1;
     }
 

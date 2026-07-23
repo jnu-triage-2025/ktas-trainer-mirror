@@ -102,6 +102,7 @@ namespace TriageTrainer.Entity
     [SerializeField] private int _weight = 0;
     [SerializeField] private Transform _reposeAnchor;
     [SerializeField] private BedInteractionMode _interactionMode = BedInteractionMode.Toggle;
+    [SerializeField] private bool _enablePatientRepose = true;
 
     [Header("Movement")]
     [SerializeField, Min(0f)] private float _moveSpeed = 3.5f;
@@ -111,6 +112,7 @@ namespace TriageTrainer.Entity
 
     [Header("Attach Points")]
     [SerializeField] private List<Transform> PlayerAttachPoints = new();
+    [SerializeField, Min(1)] private int _maximumPlayerParticipants = 2;
     [SerializeField] private List<Transform> PatientAttachPoints = new();
 
     [Header("Attachable Item Visuals")]
@@ -132,7 +134,33 @@ namespace TriageTrainer.Entity
     private IInteract[] _interacts;
 
     public string Identifier => EffectiveBedIdentifier;
-    public IInteract[] Interacts => _interacts ?? Array.Empty<IInteract>();
+    public IInteract[] Interacts
+    {
+      get
+      {
+        var result = new List<IInteract>();
+        if (_interacts != null)
+        {
+          for (int i = 0; i < _interacts.Length; i++)
+          {
+            var interact = _interacts[i];
+            if (interact == null || (!_enablePatientRepose && ReferenceEquals(interact, _reposeInteract)))
+              continue;
+            result.Add(interact);
+          }
+        }
+        var providers = GetComponents<IAdditionalInteractProvider>();
+        foreach (var provider in providers)
+        {
+          if (provider?.AdditionalInteracts == null)
+            continue;
+          foreach (var interact in provider.AdditionalInteracts)
+            if (interact != null)
+              result.Add(interact);
+        }
+        return result.ToArray();
+      }
+    }
     public string DisplayText => _displayText;
     public Sprite DisplayIcon => _displayIcon;
     public bool AllowDisplayIconFallback => true;
@@ -141,6 +169,18 @@ namespace TriageTrainer.Entity
     public int Weight => Mathf.Max(0, _weight);
     public IReposable ReposedTarget => _reposedTargetComponent as IReposable;
     public int RequiredInteractorCount => Mathf.Max(Weight, ReposedTarget?.Weight ?? 0);
+
+    /// <summary>장비형 파생 구성에서 침대 조종 로직을 단일 사용자로 제한한다.</summary>
+    public void SetMaximumPlayerParticipants(int count)
+    {
+      _maximumPlayerParticipants = Mathf.Max(1, count);
+    }
+
+    /// <summary>침대 이동만 재사용하는 장비가 환자 내려놓기 메뉴를 숨길 수 있게 한다.</summary>
+    public void SetPatientReposeEnabled(bool enabled)
+    {
+      _enablePatientRepose = enabled;
+    }
 
     private void Awake()
     {
