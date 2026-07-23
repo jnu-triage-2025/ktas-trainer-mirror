@@ -10,6 +10,16 @@
       "additionalProperties": {
         "$ref": "#/$defs/SerializableVector2"
       }
+    },
+    "EdgeRoutes": {
+      "type": "object",
+      "description": "Dictionary<string, List<SerializableVector2>>",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/SerializableVector2"
+        }
+      }
     }
   },
   "required": ["NodePositions"],

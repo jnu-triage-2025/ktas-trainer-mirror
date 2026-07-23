@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json;
 using MultiplayerInfrastructure.Scenario;
 using NUnit.Framework;
 
@@ -13,6 +14,141 @@ namespace MultiplayerInfrastructure.Tests.Scenario
   /// </summary>
   public sealed class ScenarioGraphSaveRoundTripTests
   {
+    [Test]
+    public void ScenarioActingNpcsSaveAndRoundTrip()
+    {
+      var graph = new ScenarioGraph
+      {
+        Identifier = "actingNpc-round-trip",
+        ActingNpcs = new List<ScenarioActingNpcDefinition>
+        {
+          new ScenarioActingNpcDefinition
+          {
+            Identifier = "npc_doctor",
+            PresetIdentifier = "npc_doctor_preset",
+            SpawnOnStart = false,
+            DisplayName = "담당 의사",
+            PositionX = 1f,
+            RotationY = 180f,
+            Interactions = new List<ScenarioActingNpcInteractionDefinition>
+            {
+              new ScenarioActingNpcInteractionDefinition
+              {
+                Identifier = "doctor_submission",
+                InteractionType = ScenarioActingNpcInteractionType.ItemSubmission,
+                DisplayText = "물품 전달",
+                RequiredItems = new List<ScenarioActingNpcItemRequirement>
+                {
+                  new ScenarioActingNpcItemRequirement { ItemIdentifier = "laryngoscope", Count = 1 }
+                },
+                CompletionSignalIdentifier = "sig.doctor-item-received"
+              }
+            }
+          }
+        }
+      };
+      graph.Add(new ScenarioEntityPresetSpawnNode
+      {
+        Identifier = "spawn-doctor",
+        ActingNpcIdentifier = "npc_doctor",
+        NextIdentifier = "start"
+      });
+      graph.Add(new ScenarioDialogueNode { Identifier = "start", DialogueContent = "시작" });
+
+      var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+
+      Assert.That(reloaded.ActingNpcs, Has.Count.EqualTo(1));
+      Assert.That(reloaded.ActingNpcs[0].Identifier, Is.EqualTo("npc_doctor"));
+      Assert.That(reloaded.ActingNpcs[0].RotationY, Is.EqualTo(180f));
+      Assert.That(((ScenarioEntityPresetSpawnNode)reloaded.Nodes["spawn-doctor"]).ActingNpcIdentifier,
+        Is.EqualTo("npc_doctor"));
+      Assert.That(reloaded.ActingNpcs[0].Interactions, Has.Count.EqualTo(1));
+      Assert.That(
+        reloaded.ActingNpcs[0].Interactions[0].RequiredItems[0].ItemIdentifier,
+        Is.EqualTo("laryngoscope"));
+    }
+
+    [Test]
+    public void ActorInteractionsRejectEmptyRequiredItemsAndGraphWideDuplicateIdentifiers()
+    {
+      const string emptyItems = @"{
+        ""identifier"": ""invalid-items"",
+        ""actingNpcs"": [{
+          ""identifier"": ""npc"",
+          ""presetIdentifier"": ""npc-preset"",
+          ""interactions"": [{
+            ""identifier"": ""submission"",
+            ""interactionType"": ""ItemSubmission"",
+            ""requiredItems"": []
+          }]
+        }],
+        ""nodes"": {
+          ""start"": {
+            ""identifier"": ""start"",
+            ""nodeType"": ""Dialogue"",
+            ""speakerName"": ""system"",
+            ""dialogueContent"": ""start""
+          }
+        }
+      }";
+      Assert.Throws<ScenarioSchemaValidationException>(() =>
+        ScenarioGraphLoader.LoadFromJson(emptyItems, validateWithSchema: true));
+
+      const string duplicateInteraction = @"{
+        ""identifier"": ""duplicate-interaction"",
+        ""actingNpcs"": [
+          {
+            ""identifier"": ""npc-a"",
+            ""presetIdentifier"": ""npc-preset"",
+            ""interactions"": [{
+              ""identifier"": ""shared"",
+              ""interactionType"": ""StartScenario"",
+              ""scenarioIdentifier"": ""target""
+            }]
+          },
+          {
+            ""identifier"": ""npc-b"",
+            ""presetIdentifier"": ""npc-preset"",
+            ""interactions"": [{
+              ""identifier"": ""shared"",
+              ""interactionType"": ""StartScenario"",
+              ""scenarioIdentifier"": ""target""
+            }]
+          }
+        ],
+        ""nodes"": {
+          ""start"": {
+            ""identifier"": ""start"",
+            ""nodeType"": ""Dialogue"",
+            ""speakerName"": ""system"",
+            ""dialogueContent"": ""start""
+          }
+        }
+      }";
+      Assert.Throws<JsonException>(() =>
+        ScenarioGraphLoader.LoadFromJson(duplicateInteraction, validateWithSchema: true));
+    }
+
+    [Test]
+    public void ActorSpawnNodeRejectsUnknownActingNpcIdentifier()
+    {
+      const string json = @"{
+        ""identifier"": ""unknown-actingNpc-spawn"",
+        ""actingNpcs"": [],
+        ""nodes"": {
+          ""spawn"": {
+            ""identifier"": ""spawn"",
+            ""nodeType"": ""EntityPresetSpawn"",
+            ""actingNpcIdentifier"": ""not-declared""
+          }
+        }
+      }";
+
+      Assert.Throws<JsonException>(() =>
+        ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true));
+    }
+
     /// <summary>
     /// 선택지 대상이 끊긴(엣지 해제/대상 노드 삭제) 상태 — option.NextNodeIdentifier == null.
     /// 런타임은 null 을 "이 선택지는 시나리오 종료"로 취급하므로 저장도 유효해야 한다.

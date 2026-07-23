@@ -285,7 +285,8 @@ namespace MultiplayerInfrastructure.Scenario.Preflight
           Row("swapTagB", "PlayerTagService+UserDescriptorService", "operation=Swap", ScenarioRuntimeLookupClassification.External))),
 
         Register<ScenarioEntityPresetSpawnNode>(ScenarioNodeType.EntityPresetSpawn, Rows(
-          Row("presetIdentifier", "Registry:EntityPreset<EntityPresetDefinition>", "always", ScenarioRuntimeLookupClassification.External),
+          Row("presetIdentifier", "Registry:EntityPreset<EntityPresetDefinition>", "actingNpcIdentifier 비어 있음", ScenarioRuntimeLookupClassification.External),
+          Row("actingNpcIdentifier", "ScenarioGraph.ActingNpcs", "non-empty; acting NPC 정의로 spawn", ScenarioRuntimeLookupClassification.RuntimeProduced),
           Row("positionSourceEntityIdentifier", "Registry:Entity<GameObject>", "non-empty; coordinates fallback", ScenarioRuntimeLookupClassification.External),
           Row("spawnedEntityIdentifier", "SpawnedEntityRegistration", "non-empty", ScenarioRuntimeLookupClassification.RuntimeProduced)), CollectEntityPresetSpawn),
 
@@ -459,7 +460,8 @@ namespace MultiplayerInfrastructure.Scenario.Preflight
 
     private static void CollectEntityPresetSpawn(ScenarioEntityPresetSpawnNode node, ScenarioLegacyRequirementSink sink)
     {
-      sink.Add(ScenarioRequirementKind.EntityPreset, node.PresetIdentifier, node.Identifier);
+      if (string.IsNullOrWhiteSpace(node.ActingNpcIdentifier))
+        sink.Add(ScenarioRequirementKind.EntityPreset, node.PresetIdentifier, node.Identifier);
     }
 
     private static void CollectEntityInit(ScenarioEntityInitNode node, ScenarioLegacyRequirementSink sink)

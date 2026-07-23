@@ -11,6 +11,7 @@ namespace MultiplayerInfrastructure.Editor
   public class ScenarioGraphView : GraphView
   {
     private readonly ScenarioGraphAuthoringWindow window;
+    private readonly Dictionary<string, List<SerializableVector2>> edgeRoutes = new Dictionary<string, List<SerializableVector2>>();
     public Action<ScenarioNodeView> onNodeSelected;
 
     public ScenarioGraphView(ScenarioGraphAuthoringWindow window)
@@ -58,6 +59,52 @@ namespace MultiplayerInfrastructure.Editor
     public void ClearGraph()
     {
       graphElements.ForEach(RemoveElement);
+      edgeRoutes.Clear();
+    }
+
+    public void SetEdgeRoutes(Dictionary<string, List<SerializableVector2>> routes)
+    {
+      edgeRoutes.Clear();
+      if (routes == null) return;
+      foreach (var pair in routes)
+        edgeRoutes[pair.Key] = pair.Value?.ToList() ?? new List<SerializableVector2>();
+    }
+
+    public Dictionary<string, List<SerializableVector2>> CaptureEdgeRoutes()
+    {
+      var result = edgeRoutes.ToDictionary(
+        pair => pair.Key,
+        pair => pair.Value?.ToList() ?? new List<SerializableVector2>());
+
+      foreach (var reroute in graphElements.OfType<ScenarioRerouteHandle>())
+      {
+        if (!result.TryGetValue(reroute.RouteKey, out var points))
+          continue;
+        if (reroute.RouteIndex < 0 || reroute.RouteIndex >= points.Count)
+          continue;
+        points[reroute.RouteIndex] = new SerializableVector2(reroute.GetPosition().center);
+      }
+      return result;
+    }
+
+    public void RemoveEdgeRoutesForNode(string nodeIdentifier)
+    {
+      if (string.IsNullOrEmpty(nodeIdentifier)) return;
+      var prefix = nodeIdentifier + ":";
+      foreach (var key in edgeRoutes.Keys.Where(each => each.StartsWith(prefix, StringComparison.Ordinal)).ToList())
+        edgeRoutes.Remove(key);
+    }
+
+    public void RenameEdgeRoutes(string oldIdentifier, string newIdentifier)
+    {
+      if (string.IsNullOrEmpty(oldIdentifier) || string.IsNullOrEmpty(newIdentifier)) return;
+      var prefix = oldIdentifier + ":";
+      foreach (var key in edgeRoutes.Keys.Where(each => each.StartsWith(prefix, StringComparison.Ordinal)).ToList())
+      {
+        var renamedKey = newIdentifier + key.Substring(oldIdentifier.Length);
+        edgeRoutes[renamedKey] = edgeRoutes[key];
+        edgeRoutes.Remove(key);
+      }
     }
 
     public ScenarioNodeView AddNodeView(IScenarioNode data)
@@ -141,6 +188,9 @@ namespace MultiplayerInfrastructure.Editor
       {
         RemoveElement(edge);
       }
+      var reroutes = graphElements.OfType<ScenarioRerouteHandle>().ToList();
+      foreach (var reroute in reroutes)
+        RemoveElement(reroute);
       RestoreEdges(window.GraphData.Nodes.ToDictionary(kvp => kvp.Key, kvp => window.GetNodeView(kvp.Key)));
     }
 
@@ -156,17 +206,41 @@ namespace MultiplayerInfrastructure.Editor
             outputNode.HandlePortConnection(edge.output, inputNode);
           }
         }
+        if (change.edgesToCreate.Count > 0)
+          schedule.Execute(RebuildAllEdges);
       }
 
       if (change.elementsToRemove != null)
       {
+        var removedRoutePoints = change.elementsToRemove
+          .OfType<ScenarioRerouteHandle>()
+          .GroupBy(each => each.RouteKey)
+          .ToDictionary(group => group.Key, group => group.Select(each => each.RouteIndex).OrderByDescending(each => each).ToList());
+
+        foreach (var pair in removedRoutePoints)
+        {
+          if (!edgeRoutes.TryGetValue(pair.Key, out var points)) continue;
+          foreach (var index in pair.Value)
+            if (index >= 0 && index < points.Count) points.RemoveAt(index);
+          if (points.Count == 0) edgeRoutes.Remove(pair.Key);
+        }
+
+        var rebuildAfterRemoval = removedRoutePoints.Count > 0;
         foreach (var element in change.elementsToRemove)
         {
           if (element is Edge edge)
           {
-            if (edge.output?.node is ScenarioNodeView outputNode)
+            if (edge is ScenarioRoutedEdge routed && removedRoutePoints.ContainsKey(routed.RouteKey))
+              continue;
+
+            var logicalOutput = edge is ScenarioRoutedEdge routedEdge
+              ? routedEdge.LogicalOutputPort
+              : edge.output;
+            if (logicalOutput?.node is ScenarioNodeView outputNode)
             {
-              outputNode.HandlePortDisconnection(edge.output);
+              outputNode.HandlePortDisconnection(logicalOutput);
+              edgeRoutes.Remove(GetRouteKey(logicalOutput));
+              rebuildAfterRemoval |= edge is ScenarioRoutedEdge;
             }
           }
           else if (element is ScenarioNodeView nodeView)
@@ -174,6 +248,9 @@ namespace MultiplayerInfrastructure.Editor
             window.RemoveNode(nodeView);
           }
         }
+
+        if (rebuildAfterRemoval)
+          schedule.Execute(RebuildAllEdges);
       }
 
       // 엣지 변경(연결/해제)이 있으면 디버그 패널을 갱신한다.
@@ -191,14 +268,75 @@ namespace MultiplayerInfrastructure.Editor
     {
       if (output == null || input == null) return;
 
-      var edge = new Edge
+      var routeKey = GetRouteKey(output);
+      if (!edgeRoutes.TryGetValue(routeKey, out var routePoints) || routePoints.Count == 0)
+      {
+        AddRoutedEdge(output, input, routeKey, output, 0);
+        return;
+      }
+
+      Port previousOutput = output;
+      for (var index = 0; index < routePoints.Count; index++)
+      {
+        var reroute = new ScenarioRerouteHandle(routeKey, index, routePoints[index].ToVector2());
+        AddElement(reroute);
+        AddRoutedEdge(previousOutput, reroute.InputPort, routeKey, output, index);
+        previousOutput = reroute.OutputPort;
+      }
+      AddRoutedEdge(previousOutput, input, routeKey, output, routePoints.Count);
+    }
+
+    private void AddRoutedEdge(Port output, Port input, string routeKey, Port logicalOutput, int segmentIndex)
+    {
+      var edge = new ScenarioRoutedEdge
       {
         output = output,
-        input = input
+        input = input,
+        RouteKey = routeKey,
+        LogicalOutputPort = logicalOutput,
+        SegmentIndex = segmentIndex
       };
+      edge.tooltip = "연결선을 더블클릭하면 중계점을 추가합니다.";
+      edge.RegisterCallback<MouseDownEvent>(evt =>
+      {
+        if (evt.button != 0 || evt.clickCount != 2) return;
+        var graphPosition = contentViewContainer.WorldToLocal(edge.LocalToWorld(evt.localMousePosition));
+        AddReroutePoint(routeKey, edge.SegmentIndex, graphPosition);
+        evt.StopPropagation();
+      });
       edge.output.Connect(edge);
       edge.input.Connect(edge);
       AddElement(edge);
+    }
+
+    private void AddReroutePoint(string routeKey, int insertIndex, Vector2 position)
+    {
+      SyncEdgeRoutePositions();
+      if (!edgeRoutes.TryGetValue(routeKey, out var points))
+      {
+        points = new List<SerializableVector2>();
+        edgeRoutes[routeKey] = points;
+      }
+      points.Insert(Mathf.Clamp(insertIndex, 0, points.Count), new SerializableVector2(position));
+      RebuildAllEdges();
+      window.NotifyGraphStructureChanged();
+    }
+
+    private void SyncEdgeRoutePositions()
+    {
+      foreach (var reroute in graphElements.OfType<ScenarioRerouteHandle>())
+      {
+        if (!edgeRoutes.TryGetValue(reroute.RouteKey, out var points)) continue;
+        if (reroute.RouteIndex < 0 || reroute.RouteIndex >= points.Count) continue;
+        points[reroute.RouteIndex] = new SerializableVector2(reroute.GetPosition().center);
+      }
+    }
+
+    private static string GetRouteKey(Port output)
+    {
+      return output?.node is ScenarioNodeView node
+        ? $"{node.Data.Identifier}:{node.GetOutputRouteSlot(output)}"
+        : string.Empty;
     }
 
     public Vector2 ScreenToGraphPosition(Vector2 screenPosition)

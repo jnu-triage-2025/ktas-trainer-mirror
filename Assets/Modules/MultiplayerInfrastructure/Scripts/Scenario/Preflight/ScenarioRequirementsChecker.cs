@@ -176,6 +176,13 @@ namespace MultiplayerInfrastructure.Scenario.Preflight
         return ScenarioRequirementStatus.Indeterminate;
       }
 
+      if (descriptor.Occurrences.Any(occurrence =>
+            occurrence.Direction == ScenarioRequirementDirection.Produces
+            && occurrence.ExpectedSupply == ScenarioRequirementExpectedSupply.Scenario))
+      {
+        return ScenarioRequirementStatus.Satisfied;
+      }
+
       if (descriptor.Occurrences.All(occurrence => occurrence.Direction == ScenarioRequirementDirection.Produces)
           || descriptor.Kind == Canonical.ScenarioRequirementKind.RuntimeSignal
           || descriptor.Kind == Canonical.ScenarioRequirementKind.RuntimeEntityReference

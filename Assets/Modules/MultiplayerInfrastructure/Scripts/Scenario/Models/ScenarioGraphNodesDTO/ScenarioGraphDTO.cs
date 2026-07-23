@@ -17,6 +17,9 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("defaultEntrypoint")]
     public string DefaultEntrypoint { get; set; }
 
+    [JsonPropertyName("actingNpcs")]
+    public List<ScenarioActingNpcDefinitionDTO> ActingNpcs { get; set; }
+
     [JsonPropertyName("nodes")]
     public Dictionary<string, ScenarioNodeDTO> Nodes { get; set; }
   }

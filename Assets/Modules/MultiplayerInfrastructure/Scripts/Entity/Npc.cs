@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.Commons;
 using UnityEngine;
 using MultiplayerInfrastructure.Scenario.Requirements;
 
 namespace MultiplayerInfrastructure.Entity
 {
   [DisallowMultipleComponent]
-  public class Npc : Interactable
+  public class Npc : Interactable, ISpawnedEntityIdentifierReceiver
   {
     [Header("Npc")]
     [SerializeField] private NPCBaseModelSO _npcBaseModel;
@@ -28,10 +29,12 @@ namespace MultiplayerInfrastructure.Entity
     public string Identifier => _identifier;
 
     private readonly List<IInteract> _resolvedInteracts = new List<IInteract>();
+    private readonly List<IInteract> _runtimeActorInteracts = new List<IInteract>();
     private bool _interactsDirty = true;
 
     // 자동 생성된 submission Interactable 컴포넌트. 재빌드 시 재생성하지 않도록 정의별로 캐시한다.
     private readonly List<ItemSubmissionInteractable> _generatedSubmissionInteractables = new List<ItemSubmissionInteractable>();
+    private readonly List<ItemSubmissionInteractable> _generatedActorSubmissionInteractables = new List<ItemSubmissionInteractable>();
     private bool _submissionInteractablesBuilt;
 
     private bool _baseModelApplied;
@@ -153,8 +156,124 @@ namespace MultiplayerInfrastructure.Entity
         }
       }
 
+      for (int i = 0; i < _runtimeActorInteracts.Count; i++)
+      {
+        var runtimeInteract = _runtimeActorInteracts[i];
+        if (runtimeInteract != null)
+          _resolvedInteracts.Add(runtimeInteract);
+      }
+
       _interactsDirty = false;
     }
+
+    /// <summary>
+    /// EntityPresetSpawn이 요청한 런타임 식별자를 NPC/Entity 레지스트리에 동일하게 적용한다.
+    /// Instantiate의 Awake에서 프리팹 식별자로 먼저 등록된 경우에도 안전하게 재등록한다.
+    /// </summary>
+    public void ApplySpawnedEntityIdentifier(string identifier)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+        return;
+
+      UnregisterFromRegistry();
+      _identifier = identifier.Trim();
+      RegisterToRegistry();
+    }
+
+    /// <summary>시나리오 최상위 actingNpcs 정의를 이 NPC 인스턴스에 적용한다.</summary>
+    public void ConfigureScenarioActingNpc(ScenarioActingNpcDefinition actingNpc)
+    {
+      if (actingNpc == null)
+        return;
+
+      if (!string.IsNullOrWhiteSpace(actingNpc.DisplayName))
+        gameObject.name = actingNpc.DisplayName;
+
+      if (!string.IsNullOrWhiteSpace(actingNpc.Identifier))
+        ApplySpawnedEntityIdentifier(actingNpc.Identifier);
+
+      EnsureSubmissionInteractablesBuilt();
+      ClearRuntimeActorInteracts();
+      _runtimeActorInteracts.Clear();
+      if (actingNpc.Interactions == null)
+      {
+        MarkInteractsDirty();
+        return;
+      }
+
+      for (int i = 0; i < actingNpc.Interactions.Count; i++)
+      {
+        var definition = actingNpc.Interactions[i];
+        if (definition == null)
+          continue;
+
+        switch (definition.InteractionType)
+        {
+          case ScenarioActingNpcInteractionType.StartScenario:
+            if (!string.IsNullOrWhiteSpace(definition.ScenarioIdentifier))
+              _runtimeActorInteracts.Add(new ScenarioActingNpcStartInteract(this, definition));
+            break;
+          case ScenarioActingNpcInteractionType.ItemSubmission:
+            BuildRuntimeSubmissionInteract(definition, i);
+            break;
+        }
+      }
+
+      MarkInteractsDirty();
+    }
+
+    private void BuildRuntimeSubmissionInteract(ScenarioActingNpcInteractionDefinition source, int index)
+    {
+      if (source.RequiredItems == null || source.RequiredItems.Count == 0)
+        return;
+
+      var requiredItems = new List<ItemRequirement>();
+      for (int i = 0; i < source.RequiredItems.Count; i++)
+      {
+        var item = source.RequiredItems[i];
+        if (item == null || string.IsNullOrWhiteSpace(item.ItemIdentifier))
+          continue;
+        requiredItems.Add(new ItemRequirement(item.ItemIdentifier, item.Count));
+      }
+      if (requiredItems.Count == 0)
+        return;
+
+      var child = new GameObject($"{name}_ActorSubmission_{index}");
+      child.transform.SetParent(transform, false);
+      var interactable = child.AddComponent<ItemSubmissionInteractable>();
+      interactable.Configure(
+        source.Identifier,
+        new ItemSubmissionDefinition
+        {
+          displayText = string.IsNullOrWhiteSpace(source.DisplayText) ? "제출하기" : source.DisplayText,
+          title = string.IsNullOrWhiteSpace(source.Title) ? "아이템 제출" : source.Title,
+          submitButtonText = string.IsNullOrWhiteSpace(source.SubmitButtonText) ? "제출" : source.SubmitButtonText,
+          requiredItems = requiredItems,
+          completionSignalIdentifier = source.CompletionSignalIdentifier,
+          consumeOnce = source.ConsumeOnce
+        },
+        displayIcon: ResolveActorIcon(source.IconIdentifier),
+        enabled: source.Enabled);
+      _generatedSubmissionInteractables.Add(interactable);
+      _generatedActorSubmissionInteractables.Add(interactable);
+    }
+
+    private void ClearRuntimeActorInteracts()
+    {
+      for (int i = _generatedActorSubmissionInteractables.Count - 1; i >= 0; i--)
+      {
+        var interactable = _generatedActorSubmissionInteractables[i];
+        _generatedSubmissionInteractables.Remove(interactable);
+        if (interactable != null)
+          Destroy(interactable.gameObject);
+      }
+      _generatedActorSubmissionInteractables.Clear();
+    }
+
+    private static Sprite ResolveActorIcon(string identifier)
+      => string.IsNullOrWhiteSpace(identifier)
+        ? null
+        : Registry.Registry.Get<Sprite>(RegistryType.IconSprite, identifier);
 
     private void MarkInteractsDirty()
     {
@@ -361,6 +480,52 @@ namespace MultiplayerInfrastructure.Entity
       public void Interact(Transform interactor)
       {
         _npc.TryStartScenarioInteract(_definition, interactor);
+      }
+    }
+
+    private sealed class ScenarioActingNpcStartInteract : IInteract
+    {
+      private readonly Npc _npc;
+      private readonly ScenarioActingNpcInteractionDefinition _definition;
+
+      public ScenarioActingNpcStartInteract(Npc npc, ScenarioActingNpcInteractionDefinition definition)
+      {
+        _npc = npc;
+        _definition = definition;
+      }
+
+      public string DisplayText => string.IsNullOrWhiteSpace(_definition.DisplayText)
+        ? "시나리오 시작"
+        : _definition.DisplayText;
+      public Sprite DisplayIcon => ResolveActorIcon(_definition.IconIdentifier)
+        ?? Registry.Registry.Get<Sprite>(RegistryType.IconSprite, IconSpriteIdentifiers.ScenarioDefault);
+      public bool AllowDisplayIconFallback => true;
+      public Color DisplayColor => Color.white;
+
+      public void Interact(Transform interactor)
+      {
+        if (ScenarioController.Instance == null)
+        {
+          Debug.LogWarning(
+            $"[Npc] '{_npc.name}' failed to start actingNpc interaction scenario " +
+            $"'{_definition.ScenarioIdentifier}': ScenarioController.Instance is null.", _npc);
+          return;
+        }
+        if (!Registry.Registry.TryGetScenarioGraph(
+              _definition.ScenarioIdentifier, out var graph, out var error))
+        {
+          Debug.LogWarning(
+            $"[Npc] '{_npc.name}' failed to start actingNpc interaction scenario " +
+            $"'{_definition.ScenarioIdentifier}': {error}", _npc);
+          return;
+        }
+
+        int? ownerClientId = null;
+        var networkObject = interactor != null ? interactor.GetComponentInParent<NetworkObject>() : null;
+        if (networkObject != null && networkObject.Owner.IsValid)
+          ownerClientId = networkObject.Owner.ClientId;
+        ScenarioController.Instance.StartScenario(
+          graph, _definition.ScenarioStartNodeIdentifier, ownerClientId);
       }
     }
 

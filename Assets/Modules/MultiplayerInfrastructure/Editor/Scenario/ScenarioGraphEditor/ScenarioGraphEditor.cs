@@ -602,6 +602,7 @@ namespace MultiplayerInfrastructure.Editor
         if (pair.Value != null)
           editorData.NodePositions[pair.Key] = new SerializableVector2(pair.Value.GetPosition().position);
       }
+      editorData.EdgeRoutes = graphView.CaptureEdgeRoutes();
 
       return new GraphSnapshot
       {
@@ -634,6 +635,7 @@ namespace MultiplayerInfrastructure.Editor
           : ScenarioGraphLoader.LoadFromJson(snapshot.GraphJson, false);
         nodeViews.Clear();
         graphView.ClearGraph();
+        graphView.SetEdgeRoutes(snapshot.EditorData?.EdgeRoutes);
 
         foreach (var node in graphData.Nodes.Values.OrderBy(each => each.Identifier))
         {
@@ -1165,6 +1167,7 @@ namespace MultiplayerInfrastructure.Editor
       }
 
       nodeViews.Remove(id);
+      graphView.RemoveEdgeRoutesForNode(id);
 
       // 삭제된 노드가 기본 진입 노드(DefaultInit)였다면 해제한다.
       if (graphData.DefaultEntrypoint == id)
@@ -1250,6 +1253,7 @@ namespace MultiplayerInfrastructure.Editor
 
       var oldId = nodeView.Data.Identifier;
       nodeView.Data.Identifier = trimmed;
+      graphView.RenameEdgeRoutes(oldId, trimmed);
 
       graphData.Nodes.Remove(oldId);
       graphData.Nodes[trimmed] = nodeView.Data;
@@ -1437,6 +1441,7 @@ namespace MultiplayerInfrastructure.Editor
           AutoLayoutNodes();
         }
 
+        graphView.SetEdgeRoutes(editorData?.EdgeRoutes);
         graphView.RestoreEdges(nodeViews);
         inspectorView.SetTarget(null);
         currentFilePath = path;
@@ -1546,6 +1551,7 @@ namespace MultiplayerInfrastructure.Editor
           var rect = nodeView.GetPosition();
           editorData.NodePositions[pair.Key] = new SerializableVector2(rect.position);
         }
+        editorData.EdgeRoutes = graphView.CaptureEdgeRoutes();
         var editorJson = JsonSerializer.Serialize(
             editorData,
             new JsonSerializerOptions

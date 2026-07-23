@@ -79,6 +79,7 @@ namespace MultiplayerInfrastructure.Scenario
       graph.Identifier = ResolveGraphIdentifier(dto);
       graph.Tags = NormalizeTags(dto.Tags);
       graph.QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(dto.QuestDefinitionIncludes);
+      graph.ActingNpcs = ConvertActingNpcs(dto.ActingNpcs);
       graph.DefaultEntrypoint = string.IsNullOrWhiteSpace(dto.DefaultEntrypoint) ? null : dto.DefaultEntrypoint.Trim();
 
       foreach (var pair in dto.Nodes)
@@ -98,9 +99,144 @@ namespace MultiplayerInfrastructure.Scenario
         graph.Add(ConvertNode(nodeDTO));
       }
 
+      ValidateActingNpcSpawnReferences(graph);
       WarnForUndeclaredTags(graph);
 
       return graph;
+    }
+
+    private static void ValidateActingNpcSpawnReferences(ScenarioGraph graph)
+    {
+      var actingNpcIdentifiers = new HashSet<string>(
+        graph.ActingNpcs.Where(actingNpc => actingNpc != null).Select(actingNpc => actingNpc.Identifier),
+        StringComparer.Ordinal);
+      foreach (var node in graph.Nodes.Values.OfType<ScenarioEntityPresetSpawnNode>())
+      {
+        if (!string.IsNullOrWhiteSpace(node.ActingNpcIdentifier)
+            && !actingNpcIdentifiers.Contains(node.ActingNpcIdentifier))
+        {
+          throw new JsonException($"EntityPresetSpawn node '{node.Identifier}' references unknown actingNpc '{node.ActingNpcIdentifier}'.");
+        }
+      }
+    }
+
+    private static IReadOnlyList<ScenarioActingNpcDefinition> ConvertActingNpcs(
+      IEnumerable<ScenarioActingNpcDefinitionDTO> actingNpcs)
+    {
+      if (actingNpcs == null)
+        return Array.Empty<ScenarioActingNpcDefinition>();
+
+      var result = new List<ScenarioActingNpcDefinition>();
+      var identifiers = new HashSet<string>(StringComparer.Ordinal);
+      var interactionIdentifiers = new HashSet<string>(StringComparer.Ordinal);
+      foreach (var dto in actingNpcs)
+      {
+        if (dto == null)
+          continue;
+
+        var identifier = dto.Identifier?.Trim();
+        if (string.IsNullOrWhiteSpace(identifier))
+          throw new JsonException("ActingNpc identifier is required.");
+        if (!identifiers.Add(identifier))
+          throw new JsonException($"ActingNpc identifier '{identifier}' is duplicated.");
+        if (!Enum.TryParse(dto.ActingNpcType ?? "Npc", true, out ScenarioActingNpcType actingNpcType))
+          throw new JsonException($"ActingNpc '{identifier}' has unknown actingNpcType '{dto.ActingNpcType}'.");
+
+        result.Add(new ScenarioActingNpcDefinition
+        {
+          Identifier = identifier,
+          ActingNpcType = actingNpcType,
+          PresetIdentifier = dto.PresetIdentifier?.Trim(),
+          DisplayName = dto.DisplayName,
+          PositionX = dto.PositionX ?? 0f,
+          PositionY = dto.PositionY ?? 0f,
+          PositionZ = dto.PositionZ ?? 0f,
+          RotationX = dto.RotationX ?? 0f,
+          RotationY = dto.RotationY ?? 0f,
+          RotationZ = dto.RotationZ ?? 0f,
+          SpawnOnStart = dto.SpawnOnStart ?? true,
+          DespawnOnScenarioEnd = dto.DespawnOnScenarioEnd ?? true,
+          Interactions = ConvertActingNpcInteractions(identifier, dto.Interactions, interactionIdentifiers)
+        });
+      }
+
+      return result;
+    }
+
+    private static IReadOnlyList<ScenarioActingNpcInteractionDefinition> ConvertActingNpcInteractions(
+      string actingNpcIdentifier,
+      IEnumerable<ScenarioActingNpcInteractionDefinitionDTO> interactions,
+      HashSet<string> graphInteractionIdentifiers)
+    {
+      if (interactions == null)
+        return Array.Empty<ScenarioActingNpcInteractionDefinition>();
+
+      var result = new List<ScenarioActingNpcInteractionDefinition>();
+      var identifiers = new HashSet<string>(StringComparer.Ordinal);
+      foreach (var dto in interactions)
+      {
+        if (dto == null)
+          continue;
+
+        var identifier = dto.Identifier?.Trim();
+        if (string.IsNullOrWhiteSpace(identifier))
+          throw new JsonException($"ActingNpc '{actingNpcIdentifier}' interaction identifier is required.");
+        if (!identifiers.Add(identifier))
+          throw new JsonException($"ActingNpc '{actingNpcIdentifier}' interaction '{identifier}' is duplicated.");
+        if (!graphInteractionIdentifiers.Add(identifier))
+          throw new JsonException($"ActingNpc interaction identifier '{identifier}' must be unique in the scenario.");
+        if (!Enum.TryParse(dto.InteractionType, true, out ScenarioActingNpcInteractionType interactionType))
+          throw new JsonException(
+            $"ActingNpc '{actingNpcIdentifier}' interaction '{identifier}' has unknown interactionType '{dto.InteractionType}'.");
+
+        var requiredItems = ConvertActingNpcItemRequirements(dto.RequiredItems);
+        if (interactionType == ScenarioActingNpcInteractionType.StartScenario
+            && string.IsNullOrWhiteSpace(dto.ScenarioIdentifier))
+        {
+          throw new JsonException(
+            $"ActingNpc '{actingNpcIdentifier}' interaction '{identifier}' requires scenarioIdentifier.");
+        }
+        if (interactionType == ScenarioActingNpcInteractionType.ItemSubmission
+            && requiredItems.Count == 0)
+        {
+          throw new JsonException(
+            $"ActingNpc '{actingNpcIdentifier}' interaction '{identifier}' requires at least one valid required item.");
+        }
+
+        result.Add(new ScenarioActingNpcInteractionDefinition
+        {
+          Identifier = identifier,
+          InteractionType = interactionType,
+          DisplayText = dto.DisplayText,
+          IconIdentifier = dto.IconIdentifier?.Trim(),
+          ScenarioIdentifier = dto.ScenarioIdentifier?.Trim(),
+          ScenarioStartNodeIdentifier = dto.ScenarioStartNodeIdentifier?.Trim(),
+          Title = dto.Title,
+          SubmitButtonText = dto.SubmitButtonText,
+          RequiredItems = requiredItems,
+          CompletionSignalIdentifier = dto.CompletionSignalIdentifier?.Trim(),
+          ConsumeOnce = dto.ConsumeOnce ?? true,
+          Enabled = dto.Enabled ?? true
+        });
+      }
+
+      return result;
+    }
+
+    private static IReadOnlyList<ScenarioActingNpcItemRequirement> ConvertActingNpcItemRequirements(
+      IEnumerable<ScenarioActingNpcItemRequirementDTO> requirements)
+    {
+      if (requirements == null)
+        return Array.Empty<ScenarioActingNpcItemRequirement>();
+
+      return requirements
+        .Where(value => value != null && !string.IsNullOrWhiteSpace(value.ItemIdentifier))
+        .Select(value => new ScenarioActingNpcItemRequirement
+        {
+          ItemIdentifier = value.ItemIdentifier.Trim(),
+          Count = Math.Max(1, value.Count ?? 1)
+        })
+        .ToList();
     }
 
     private static IReadOnlyList<string> NormalizeTags(IEnumerable<string> tags)
@@ -659,6 +795,7 @@ namespace MultiplayerInfrastructure.Scenario
         {
           Identifier = dto.Identifier,
           PresetIdentifier = dto.PresetIdentifier,
+          ActingNpcIdentifier = dto.ActingNpcIdentifier,
           SpawnedEntityIdentifier = dto.SpawnedEntityIdentifier,
           PositionSourceEntityIdentifier = dto.PositionSourceEntityIdentifier,
           PositionX = dto.PositionX ?? 0f,
@@ -724,6 +861,7 @@ namespace MultiplayerInfrastructure.Scenario
           NodeType = "EntityPresetSpawn",
           Identifier = node.Identifier,
           PresetIdentifier = node.PresetIdentifier,
+          ActingNpcIdentifier = node.ActingNpcIdentifier,
           SpawnedEntityIdentifier = node.SpawnedEntityIdentifier,
           PositionSourceEntityIdentifier = node.PositionSourceEntityIdentifier,
           PositionX = node.PositionX,
@@ -1143,6 +1281,7 @@ namespace MultiplayerInfrastructure.Scenario
         Identifier = string.IsNullOrWhiteSpace(graph.Identifier) ? "scenario_graph" : graph.Identifier.Trim(),
         Tags = NormalizeTags(graph.Tags).ToList(),
         QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(graph.QuestDefinitionIncludes).ToList(),
+        ActingNpcs = ConvertActingNpcsToDTO(graph.ActingNpcs),
         DefaultEntrypoint = string.IsNullOrWhiteSpace(graph.DefaultEntrypoint) ? null : graph.DefaultEntrypoint.Trim(),
         Nodes = new Dictionary<string, ScenarioNodeDTO>()
       };
@@ -1153,6 +1292,54 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       return dto;
+    }
+
+    private static List<ScenarioActingNpcDefinitionDTO> ConvertActingNpcsToDTO(
+      IReadOnlyList<ScenarioActingNpcDefinition> actingNpcs)
+    {
+      if (actingNpcs == null || actingNpcs.Count == 0)
+        return null;
+
+      return actingNpcs.Where(value => value != null).Select(actingNpc => new ScenarioActingNpcDefinitionDTO
+      {
+        Identifier = actingNpc.Identifier,
+        ActingNpcType = actingNpc.ActingNpcType.ToString(),
+        PresetIdentifier = actingNpc.PresetIdentifier,
+        DisplayName = actingNpc.DisplayName,
+        PositionX = actingNpc.PositionX,
+        PositionY = actingNpc.PositionY,
+        PositionZ = actingNpc.PositionZ,
+        RotationX = actingNpc.RotationX,
+        RotationY = actingNpc.RotationY,
+        RotationZ = actingNpc.RotationZ,
+        SpawnOnStart = actingNpc.SpawnOnStart,
+        DespawnOnScenarioEnd = actingNpc.DespawnOnScenarioEnd,
+        Interactions = actingNpc.Interactions == null
+          ? null
+          : actingNpc.Interactions.Where(value => value != null).Select(interaction =>
+            new ScenarioActingNpcInteractionDefinitionDTO
+            {
+              Identifier = interaction.Identifier,
+              InteractionType = interaction.InteractionType.ToString(),
+              DisplayText = interaction.DisplayText,
+              IconIdentifier = interaction.IconIdentifier,
+              ScenarioIdentifier = interaction.ScenarioIdentifier,
+              ScenarioStartNodeIdentifier = interaction.ScenarioStartNodeIdentifier,
+              Title = interaction.Title,
+              SubmitButtonText = interaction.SubmitButtonText,
+              RequiredItems = interaction.RequiredItems == null
+                ? null
+                : interaction.RequiredItems.Where(value => value != null).Select(value =>
+                  new ScenarioActingNpcItemRequirementDTO
+                  {
+                    ItemIdentifier = value.ItemIdentifier,
+                    Count = value.Count
+                  }).ToList(),
+              CompletionSignalIdentifier = interaction.CompletionSignalIdentifier,
+              ConsumeOnce = interaction.ConsumeOnce,
+              Enabled = interaction.Enabled
+            }).ToList()
+      }).ToList();
     }
 
     private static ScenarioNodeDTO ConvertToDTO(IScenarioNode node) =>

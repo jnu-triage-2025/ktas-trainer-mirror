@@ -36,6 +36,16 @@
       "minLength": 1,
       "description": "시나리오 시작 시 startNodeIdentifier가 명시되지 않으면 이 식별자의 노드부터 실행한다. null이거나 생략하면 nodes의 첫 요소를 사용한다(하위호환)."
     },
+    "actingNpcs": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "description": "시나리오 시작 시 preset에서 생성하고 종료 시 정리할 NPC 등 actingNpc 인스턴스 정의.",
+      "items": {
+        "$ref": "#/$defs/ScenarioActingNpcDefinition"
+      }
+    },
     "nodes": {
       "type": "object",
       "description": "Dictionary<string, IScenarioNode>",
@@ -51,6 +61,176 @@
   ],
   "additionalProperties": false,
   "$defs": {
+    "ScenarioActingNpcDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "actingNpcType": {
+          "type": "string",
+          "enum": [
+            "Npc"
+          ],
+          "default": "Npc"
+        },
+        "presetIdentifier": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "displayName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "positionX": { "type": "number", "default": 0 },
+        "positionY": { "type": "number", "default": 0 },
+        "positionZ": { "type": "number", "default": 0 },
+        "rotationX": { "type": "number", "default": 0 },
+        "rotationY": { "type": "number", "default": 0 },
+        "rotationZ": { "type": "number", "default": 0 },
+        "spawnOnStart": { "type": "boolean", "default": true },
+        "despawnOnScenarioEnd": { "type": "boolean", "default": true },
+        "interactions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/ScenarioActingNpcInteractionDefinition"
+          }
+        }
+      },
+      "required": [
+        "identifier",
+        "presetIdentifier"
+      ]
+    },
+    "ScenarioActingNpcInteractionDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "interactionType": {
+          "type": "string",
+          "enum": [
+            "StartScenario",
+            "ItemSubmission"
+          ]
+        },
+        "displayText": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "iconIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scenarioIdentifier": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "scenarioStartNodeIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "submitButtonText": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "requiredItems": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/ScenarioActingNpcItemRequirement"
+          },
+          "minItems": 1
+        },
+        "completionSignalIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "consumeOnce": { "type": "boolean", "default": true },
+        "enabled": { "type": "boolean", "default": true }
+      },
+      "required": [
+        "identifier",
+        "interactionType"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "interactionType": { "const": "StartScenario" }
+            }
+          },
+          "then": {
+            "required": [
+              "scenarioIdentifier"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "interactionType": { "const": "ItemSubmission" }
+            }
+          },
+          "then": {
+            "required": [
+              "requiredItems"
+            ]
+          }
+        }
+      ]
+    },
+    "ScenarioActingNpcItemRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "itemIdentifier": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      "required": [
+        "itemIdentifier"
+      ]
+    },
     "ScenarioNode": {
       "type": "object",
       "required": [
@@ -2467,8 +2647,18 @@
               "const": "EntityPresetSpawn"
             },
             "presetIdentifier": {
-              "type": "string",
-              "minLength": 1
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "actingNpcIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "pattern": "\\S"
             },
             "spawnedEntityIdentifier": {
               "type": [
@@ -2498,8 +2688,31 @@
               ]
             }
           },
-          "required": [
-            "presetIdentifier"
+          "anyOf": [
+            {
+              "properties": {
+                "presetIdentifier": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "required": [
+                "presetIdentifier"
+              ]
+            },
+            {
+              "properties": {
+                "actingNpcIdentifier": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "required": [
+                "actingNpcIdentifier"
+              ]
+            }
           ]
         }
       ]

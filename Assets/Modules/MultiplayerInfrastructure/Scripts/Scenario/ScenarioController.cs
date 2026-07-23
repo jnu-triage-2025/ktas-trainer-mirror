@@ -91,6 +91,13 @@ namespace MultiplayerInfrastructure.Scenario
     private Coroutine _dialogueAutoAdvanceRoutine;
     private Coroutine _runtimeRequirementsWaitRoutine;
     private ExecutionMode _executionMode = ExecutionMode.Local;
+    private readonly List<ScenarioOwnedActingNpc> _scenarioOwnedActingNpcs = new List<ScenarioOwnedActingNpc>();
+
+    private sealed class ScenarioOwnedActingNpc
+    {
+      public GameObject GameObject;
+      public bool DespawnOnScenarioEnd;
+    }
 
     /// <summary>
     /// Local은 기존 오프라인/호환 실행, ServerAuthoritative는 서버만 그래프를 순회,
@@ -301,6 +308,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void OnDestroy()
     {
+      CleanupScenarioActingNpcs();
       // 이벤트 구독 해제
       ScenarioInteractable.OnScenarioRequested -= HandleScenarioRequested;
       ScenarioTriggerZone.OnScenarioRequested -= HandleScenarioRequested;
@@ -512,6 +520,9 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
+      if (!requirementsAlreadyValidated && !PrepareScenarioActingNpcs(graph))
+        return;
+
       if (_runtimeRequirementsWaitRoutine != null)
       {
         StopCoroutine(_runtimeRequirementsWaitRoutine);
@@ -558,6 +569,7 @@ namespace MultiplayerInfrastructure.Scenario
             Debug.LogError($"[ScenarioRuntime] Aborting scenario '{graph.Identifier}' before changing current scenario state.");
           if (_preflightPolicy.WarnToInGameChat)
             AppendSystemChatMessage($"[ScenarioRuntime] Scenario '{graph.Identifier}' could not start because requirements are unresolved.");
+          CleanupScenarioActingNpcs(forceDespawn: true);
           return;
         }
       }
@@ -569,6 +581,7 @@ namespace MultiplayerInfrastructure.Scenario
           && runtimeValidationMode == ScenarioRuntimeValidationMode.Off
           && !ScenarioPreflight.Run(graph, _preflightPolicy, AppendSystemChatMessage, out _))
       {
+        CleanupScenarioActingNpcs(forceDespawn: true);
         return;
       }
 
@@ -631,6 +644,7 @@ namespace MultiplayerInfrastructure.Scenario
       if (!graph.TryGetNode(startId, out var startNode))
       {
         Debug.LogError($"[ScenarioController] Start node '{startId}' not found");
+        CleanupScenarioActingNpcs(forceDespawn: true);
         return;
       }
 
@@ -696,6 +710,7 @@ namespace MultiplayerInfrastructure.Scenario
           Debug.LogError($"[ScenarioRuntime] Aborting scenario '{graph.Identifier}' because requirements did not become ready.");
         if (_preflightPolicy.WarnToInGameChat)
           AppendSystemChatMessage($"[ScenarioRuntime] Scenario '{graph.Identifier}' could not start because requirements are unresolved.");
+        CleanupScenarioActingNpcs(forceDespawn: true);
         yield break;
       }
 
@@ -731,6 +746,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 시나리오가 남긴 모든 타이머/표시를 정리한다.
       // 명시적 정리 없이 종료(또는 조기/오류 종료)하더라도 다음 시나리오로 새어 나가지 않게 한다.
       ScenarioTimeRelay.ClearAllAuthoritative();
+      CleanupScenarioActingNpcs();
 
       _currentGraph = null;
       _currentNode = null;
@@ -768,6 +784,120 @@ namespace MultiplayerInfrastructure.Scenario
           endingGraphId);
       }
       catch { /* 로그 실패는 시나리오 종료에 영향 없음 */ }
+    }
+
+    private bool PrepareScenarioActingNpcs(ScenarioGraph graph)
+    {
+      CleanupScenarioActingNpcs();
+      if (graph?.ActingNpcs == null || graph.ActingNpcs.Count == 0)
+        return true;
+
+      for (int i = 0; i < graph.ActingNpcs.Count; i++)
+      {
+        var actingNpc = graph.ActingNpcs[i];
+        if (actingNpc == null || !actingNpc.SpawnOnStart)
+          continue;
+        if (!TrySpawnScenarioActingNpc(graph, actingNpc, out var error))
+        {
+          Debug.LogError($"[ScenarioController] Failed to spawn start actingNpc '{actingNpc.Identifier}': {error}");
+          CleanupScenarioActingNpcs(forceDespawn: true);
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    private bool TrySpawnScenarioActingNpc(ScenarioGraph graph, ScenarioActingNpcDefinition actingNpc, out string error)
+    {
+      error = string.Empty;
+      if (actingNpc == null || string.IsNullOrWhiteSpace(actingNpc.Identifier))
+      {
+        error = "ActingNpc identifier is required.";
+        return false;
+      }
+      if (_scenarioOwnedActingNpcs.Any(value => value?.GameObject != null
+          && string.Equals(value.GameObject.GetComponentInChildren<Entity.Npc>(true)?.Identifier,
+            actingNpc.Identifier, StringComparison.Ordinal)))
+      {
+        error = $"ActingNpc '{actingNpc.Identifier}' is already spawned by this scenario.";
+        return false;
+      }
+      if (actingNpc.ActingNpcType != ScenarioActingNpcType.Npc)
+      {
+        error = $"Unsupported actingNpc type '{actingNpc.ActingNpcType}'.";
+        return false;
+      }
+
+      var position = new Vector3(actingNpc.PositionX, actingNpc.PositionY, actingNpc.PositionZ);
+      var rotation = Quaternion.Euler(actingNpc.RotationX, actingNpc.RotationY, actingNpc.RotationZ);
+      if (!Registry.Registry.TrySpawnEntityPreset(actingNpc.PresetIdentifier, position, rotation,
+            actingNpc.Identifier, out var spawned, out _, out error))
+      {
+        return false;
+      }
+
+      var npc = spawned != null ? spawned.GetComponentInChildren<Entity.Npc>(true) : null;
+      if (npc == null)
+      {
+        DestroyScenarioActingNpc(spawned);
+        error = $"Preset '{actingNpc.PresetIdentifier}' does not contain an Npc component.";
+        return false;
+      }
+
+      var ownedActingNpc = new ScenarioOwnedActingNpc
+      {
+        GameObject = spawned,
+        DespawnOnScenarioEnd = actingNpc.DespawnOnScenarioEnd
+      };
+      _scenarioOwnedActingNpcs.Add(ownedActingNpc);
+      try
+      {
+        npc.ConfigureScenarioActingNpc(actingNpc);
+        if (!ScenarioNetworkRelay.PublishScenarioActingNpcConfiguration(
+              graph.Identifier, actingNpc.Identifier, spawned.GetComponent<NetworkObject>()))
+        {
+          throw new InvalidOperationException(
+            "Networked scenario actingNpc requires a spawned NetworkObject and ScenarioNetworkRelay.");
+        }
+        return true;
+      }
+      catch (Exception ex)
+      {
+        error = ex.Message;
+        _scenarioOwnedActingNpcs.Remove(ownedActingNpc);
+        DestroyScenarioActingNpc(spawned);
+        return false;
+      }
+    }
+
+    private void CleanupScenarioActingNpcs(bool forceDespawn = false)
+    {
+      for (int i = _scenarioOwnedActingNpcs.Count - 1; i >= 0; i--)
+      {
+        var owned = _scenarioOwnedActingNpcs[i];
+        if (forceDespawn || owned?.DespawnOnScenarioEnd == true)
+          DestroyScenarioActingNpc(owned.GameObject);
+      }
+      _scenarioOwnedActingNpcs.Clear();
+    }
+
+    private static void DestroyScenarioActingNpc(GameObject actingNpc)
+    {
+      if (actingNpc == null)
+        return;
+
+      var networkObject = actingNpc.GetComponent<NetworkObject>();
+      if (!InstanceFinder.IsOffline
+          && InstanceFinder.IsServerStarted
+          && networkObject != null
+          && networkObject.IsSpawned)
+      {
+        InstanceFinder.ServerManager.Despawn(networkObject);
+        return;
+      }
+
+      Destroy(actingNpc);
     }
 
     /// <summary>
@@ -1864,9 +1994,41 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingEntityPresetSpawn;
 
-      if (node == null || string.IsNullOrWhiteSpace(node.PresetIdentifier))
+      if (node == null)
       {
-        Debug.LogWarning("[ScenarioController] EntityPresetSpawn node is missing presetIdentifier.");
+        Debug.LogWarning("[ScenarioController] EntityPresetSpawn node is null.");
+        Advance();
+        return;
+      }
+
+      if (!string.IsNullOrWhiteSpace(node.ActingNpcIdentifier))
+      {
+        var actingNpc = _currentGraph?.ActingNpcs?.FirstOrDefault(value => value != null
+          && string.Equals(value.Identifier, node.ActingNpcIdentifier, StringComparison.Ordinal));
+        if (actingNpc == null)
+        {
+          Debug.LogWarning($"[ScenarioController] EntityPresetSpawn '{node.Identifier}' references unknown actingNpc '{node.ActingNpcIdentifier}'.");
+          Advance();
+          return;
+        }
+        if (!TrySpawnScenarioActingNpc(_currentGraph, actingNpc, out var actorError))
+        {
+          Debug.LogWarning($"[ScenarioController] EntityPresetSpawn '{node.Identifier}' actingNpc '{node.ActingNpcIdentifier}' failed: {actorError}");
+          Advance();
+          return;
+        }
+
+        string actorStateKey = string.IsNullOrWhiteSpace(node.ResultStateKey)
+          ? $"{node.Identifier}.spawnedEntityIdentifier"
+          : node.ResultStateKey;
+        _stateStore[actorStateKey] = actingNpc.Identifier;
+        Advance();
+        return;
+      }
+
+      if (string.IsNullOrWhiteSpace(node.PresetIdentifier))
+      {
+        Debug.LogWarning("[ScenarioController] EntityPresetSpawn node requires presetIdentifier or actingNpcIdentifier.");
         Advance();
         return;
       }

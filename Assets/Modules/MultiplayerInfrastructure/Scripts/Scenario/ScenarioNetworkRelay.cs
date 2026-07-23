@@ -1,8 +1,10 @@
 using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
+using FishNet.Transporting;
 using MultiplayerInfrastructure.Registry;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -32,6 +34,14 @@ namespace MultiplayerInfrastructure.Scenario
   public sealed class ScenarioNetworkRelay : NetworkBehaviour
   {
     private static ScenarioNetworkRelay _instance;
+    private readonly List<ActingNpcConfiguration> _actingNpcConfigurations = new List<ActingNpcConfiguration>();
+
+    private sealed class ActingNpcConfiguration
+    {
+      public string GraphIdentifier;
+      public string ActingNpcIdentifier;
+      public NetworkObject NetworkObject;
+    }
 
     /// <summary>씬에 배치된 중계기 인스턴스(없으면 null).</summary>
     public static ScenarioNetworkRelay Instance => _instance;
@@ -137,6 +147,70 @@ namespace MultiplayerInfrastructure.Scenario
     {
       if (_instance != null && InstanceFinder.IsServerStarted && !string.IsNullOrWhiteSpace(graphIdentifier))
         _instance.ObserversEndPresentationScenario(graphIdentifier);
+    }
+
+    /// <summary>
+    /// 서버에서 preset spawn 후 적용한 actingNpc 식별자와 인라인 상호작용을 동일한 NetworkObject의
+    /// 원격 클라이언트 인스턴스에도 적용한다.
+    /// </summary>
+    public static bool PublishScenarioActingNpcConfiguration(
+      string graphIdentifier,
+      string actingNpcIdentifier,
+      NetworkObject actorObject)
+    {
+      if (!InstanceFinder.IsServerStarted)
+        return true;
+      if (_instance == null || actorObject == null
+          || string.IsNullOrWhiteSpace(graphIdentifier) || string.IsNullOrWhiteSpace(actingNpcIdentifier))
+        return false;
+
+      _instance.RememberActingNpcConfiguration(graphIdentifier, actingNpcIdentifier, actorObject);
+      _instance.ObserversConfigureScenarioActingNpc(graphIdentifier, actingNpcIdentifier, actorObject);
+      return true;
+    }
+
+    public override void OnStartServer()
+    {
+      base.OnStartServer();
+      InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
+    }
+
+    public override void OnStopServer()
+    {
+      if (InstanceFinder.NetworkManager?.ServerManager != null)
+        InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState -= OnRemoteConnectionState;
+      _actingNpcConfigurations.Clear();
+      base.OnStopServer();
+    }
+
+    private void RememberActingNpcConfiguration(
+      string graphIdentifier, string actingNpcIdentifier, NetworkObject networkObject)
+    {
+      _actingNpcConfigurations.RemoveAll(value => value == null || value.NetworkObject == null
+        || value.NetworkObject == networkObject);
+      _actingNpcConfigurations.Add(new ActingNpcConfiguration
+      {
+        GraphIdentifier = graphIdentifier,
+        ActingNpcIdentifier = actingNpcIdentifier,
+        NetworkObject = networkObject
+      });
+    }
+
+    private void OnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs args)
+    {
+      if (args.ConnectionState != RemoteConnectionState.Started || connection == null)
+        return;
+      StartCoroutine(SendActingNpcConfigurationsAfterSpawn(connection));
+    }
+
+    private IEnumerator SendActingNpcConfigurationsAfterSpawn(NetworkConnection connection)
+    {
+      // 새 접속자의 NetworkObject spawn 메시지가 먼저 처리되도록 한 프레임 양보한다.
+      yield return null;
+      _actingNpcConfigurations.RemoveAll(value => value == null || value.NetworkObject == null);
+      foreach (var configuration in _actingNpcConfigurations)
+        TargetConfigureScenarioActingNpc(connection, configuration.GraphIdentifier,
+          configuration.ActingNpcIdentifier, configuration.NetworkObject);
     }
 
     /// <summary>
@@ -263,6 +337,48 @@ namespace MultiplayerInfrastructure.Scenario
     private void ObserversEndPresentationScenario(string graphIdentifier)
     {
       ScenarioController.Instance?.EndPresentationScenario(graphIdentifier);
+    }
+
+    [ObserversRpc(BufferLast = false)]
+    private void ObserversConfigureScenarioActingNpc(
+      string graphIdentifier,
+      string actingNpcIdentifier,
+      NetworkObject actorObject)
+    {
+      // 호스트는 서버 경로에서 이미 동일 인스턴스를 구성했다.
+      if (InstanceFinder.IsServerStarted)
+        return;
+      if (actorObject == null)
+      {
+        Debug.LogWarning(
+          $"[ScenarioNetworkRelay] ActingNpc '{actingNpcIdentifier}' NetworkObject is unavailable on presentation client.");
+        return;
+      }
+      if (!Registry.Registry.TryGetScenarioGraph(graphIdentifier, out var graph, out var error))
+      {
+        Debug.LogWarning(
+          $"[ScenarioNetworkRelay] Failed to resolve actingNpc graph '{graphIdentifier}': {error}");
+        return;
+      }
+
+      var actingNpc = graph.ActingNpcs?.FirstOrDefault(
+        value => value != null && string.Equals(value.Identifier, actingNpcIdentifier, StringComparison.Ordinal));
+      var npc = actorObject.GetComponentInChildren<Entity.Npc>(true);
+      if (actingNpc == null || npc == null)
+      {
+        Debug.LogWarning(
+          $"[ScenarioNetworkRelay] Could not configure actingNpc '{actingNpcIdentifier}' on presentation client.");
+        return;
+      }
+
+      npc.ConfigureScenarioActingNpc(actingNpc);
+    }
+
+    [TargetRpc]
+    private void TargetConfigureScenarioActingNpc(
+      NetworkConnection connection, string graphIdentifier, string actingNpcIdentifier, NetworkObject actorObject)
+    {
+      ObserversConfigureScenarioActingNpc(graphIdentifier, actingNpcIdentifier, actorObject);
     }
 
     [ServerRpc(RequireOwnership = false)]

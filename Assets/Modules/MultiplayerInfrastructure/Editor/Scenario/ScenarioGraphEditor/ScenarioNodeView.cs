@@ -1128,6 +1128,22 @@ namespace MultiplayerInfrastructure.Editor
       }
     }
 
+    public string GetOutputRouteSlot(Port port)
+    {
+      switch (port?.userData)
+      {
+        case "next": return "next";
+        case "quiz.correct": return "quiz.correct";
+        case "quiz.incorrect": return "quiz.incorrect";
+        case ScenarioChoiceOption option:
+          return $"choice.{((ScenarioChoiceNode)Data).Options.ToList().IndexOf(option)}";
+        case ScenarioParallelBranch branch:
+          return $"parallel.{((ScenarioParallelNode)Data).Branches.ToList().IndexOf(branch)}";
+        default:
+          return "output";
+      }
+    }
+
     public Port GetPortForOption(ScenarioChoiceOption option)
     {
       choicePorts.TryGetValue(option, out var port);

@@ -20,6 +20,9 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public IReadOnlyList<string> QuestDefinitionIncludes { get; set; } = Array.Empty<string>();
 
+    /// <summary>시나리오 시작/종료 수명주기에 종속되는 NPC 등 actingNpc 정의.</summary>
+    public IReadOnlyList<ScenarioActingNpcDefinition> ActingNpcs { get; set; } = Array.Empty<ScenarioActingNpcDefinition>();
+
     /// <summary>
     /// startNodeIdentifier 없이 시나리오를 시작할 때 사용할 기본 진입 노드 식별자.
     /// null이면 nodes의 첫 요소를 사용한다(하위호환).
