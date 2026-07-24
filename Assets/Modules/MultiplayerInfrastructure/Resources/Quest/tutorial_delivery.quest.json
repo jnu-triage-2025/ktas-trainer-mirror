@@ -8,6 +8,7 @@
       "questContent": "택배 가져오기",
       "isTrackable": true,
       "isAutoComplete": true,
+      "persistProgressOnSessionEnd": false,
       "isTrackedByDefault": true,
       "scope": "Player",
       "isOrdinal": true,

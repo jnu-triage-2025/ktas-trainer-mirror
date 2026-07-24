@@ -9,6 +9,7 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("actingNpcType")] public string ActingNpcType { get; set; }
     [JsonPropertyName("presetIdentifier")] public string PresetIdentifier { get; set; }
     [JsonPropertyName("displayName")] public string DisplayName { get; set; }
+    [JsonPropertyName("showOverheadName")] public bool? ShowOverheadName { get; set; }
     [JsonPropertyName("positionX")] public float? PositionX { get; set; }
     [JsonPropertyName("positionY")] public float? PositionY { get; set; }
     [JsonPropertyName("positionZ")] public float? PositionZ { get; set; }

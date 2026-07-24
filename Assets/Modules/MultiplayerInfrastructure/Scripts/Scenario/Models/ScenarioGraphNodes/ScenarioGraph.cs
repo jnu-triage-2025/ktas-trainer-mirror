@@ -23,6 +23,9 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>시나리오 시작/종료 수명주기에 종속되는 NPC 등 actingNpc 정의.</summary>
     public IReadOnlyList<ScenarioActingNpcDefinition> ActingNpcs { get; set; } = Array.Empty<ScenarioActingNpcDefinition>();
 
+    /// <summary>시나리오 시작 전에 생성·등록할 waypoint anchor 정의.</summary>
+    public IReadOnlyList<ScenarioWaypointDefinition> Waypoints { get; set; } = Array.Empty<ScenarioWaypointDefinition>();
+
     /// <summary>
     /// startNodeIdentifier 없이 시나리오를 시작할 때 사용할 기본 진입 노드 식별자.
     /// null이면 nodes의 첫 요소를 사용한다(하위호환).

@@ -52,9 +52,10 @@ namespace MultiplayerInfrastructure.Scenario.Editor
     private static void ValidateCanonicalAcceptanceCases()
     {
       var graph = new ScenarioGraph { Identifier = "phase-acceptance" };
-      graph.Add(new ScenarioNPCMoveNode
+      graph.Add(new ScenarioNPCControlNode
       {
         Identifier = "npc-move",
+        Mode = ScenarioNPCControlMode.Control,
         NPCIdentifier = "npc-1",
         DestinationType = ScenarioMoveDestinationType.Waypoint,
         DestinationIdentifier = "waypoint-a",
@@ -73,7 +74,7 @@ namespace MultiplayerInfrastructure.Scenario.Editor
         requirement.Kind == ScenarioRequirementKind.SpatialAnchor && requirement.Identifier == "waypoint-a");
 
       Require(npc.Capabilities.Contains(ScenarioRequirementCapability.ResolvableNpcMoveTarget),
-        "NPCMove target capability was not extracted.");
+        "NPCControl target capability was not extracted.");
       Require(waypoint.Capabilities.Contains(ScenarioRequirementCapability.ProvidesPosition),
         "Waypoint position capability was not extracted.");
       Require(waypoint.Capabilities.Contains(ScenarioRequirementCapability.HighlightableWaypoint),
@@ -96,9 +97,10 @@ namespace MultiplayerInfrastructure.Scenario.Editor
     private static void ValidateSidecarAndCandidateCases()
     {
       var graph = new ScenarioGraph { Identifier = "phase2" };
-      graph.Add(new ScenarioNPCMoveNode
+      graph.Add(new ScenarioNPCControlNode
       {
         Identifier = "move",
+        Mode = ScenarioNPCControlMode.Control,
         NPCIdentifier = "npc-1",
         DestinationType = ScenarioMoveDestinationType.Waypoint,
         DestinationIdentifier = "room"
@@ -151,7 +153,7 @@ namespace MultiplayerInfrastructure.Scenario.Editor
         "\"format\":\"scenario-ingame-requirements-candidates\",\"schemaVersion\":1,\"scenarioIdentifier\":\"phase2\"," +
         "\"candidates\":[{\"kind\":\"SpatialAnchor\",\"identifier\":\"room\"," +
         "\"capabilities\":[\"HighlightableWaypoint\"]," +
-        "\"evidence\":[{\"nodeIdentifier\":\"move\",\"nodeType\":\"NPCMove\",\"fieldPath\":\"destinationIdentifier\"}]," +
+        "\"evidence\":[{\"nodeIdentifier\":\"move\",\"nodeType\":\"NPCControl\",\"fieldPath\":\"destinationIdentifier\"}]," +
         "\"suggestedBinding\":{\"mode\":\"GeneratedSceneObject\",\"factoryIdentifier\":\"mi.waypoint-anchor\"}," +
         "\"confidence\":0.9,\"reviewRequired\":true}]}";
       var candidates = ScenarioRequirementsLoader.LoadCandidates(candidateJson);

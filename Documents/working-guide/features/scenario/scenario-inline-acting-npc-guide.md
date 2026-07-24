@@ -65,7 +65,8 @@
     },
     "start": {
       "identifier": "start",
-      "nodeType": "NPCMove",
+      "nodeType": "NPCControl",
+      "mode": "Control",
       "npcIdentifier": "npc_doctor",
       "destinationType": "Position",
       "destinationX": 15,
@@ -96,11 +97,22 @@
 }
 ```
 
+현재 시나리오의 진행 신호만 발생시키는 대화형 NPC는 `Signal`을 사용한다.
+
+```json
+{
+  "identifier": "npc-talk",
+  "interactionType": "Signal",
+  "displayText": "말 걸기",
+  "completionSignalIdentifier": "npc_talk_started"
+}
+```
+
 ## 실행과 정리
 
 - `spawnOnStart`가 생략되면 `true`다. 시작 소환이 필요하면 `true`로 두고, 중간 소환은 `false`와
   `EntityPresetSpawn.actingNpcIdentifier` 조합을 사용한다.
-- actingNpc는 첫 노드 실행 전에 생성되므로 첫 노드에서 바로 `NPCMove`로 찾을 수 있다.
+- actingNpc는 첫 노드 실행 전에 생성되므로 첫 노드에서 바로 `NPCControl`로 찾을 수 있다.
 - 같은 actingNpc를 시작 소환과 노드 소환에 동시에 지정하거나, 노드에서 두 번 스폰할 수는 없다.
 - `despawnOnScenarioEnd`가 생략되면 `true`다.
 - preset 누락, 중복 actingNpc identifier 또는 `Npc` 컴포넌트 누락 시 시작을 중단하고 부분 생성물을 정리한다.

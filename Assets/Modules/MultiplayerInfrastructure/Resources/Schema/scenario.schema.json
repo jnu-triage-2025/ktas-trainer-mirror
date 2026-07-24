@@ -46,6 +46,11 @@
         "$ref": "#/$defs/ScenarioActingNpcDefinition"
       }
     },
+    "waypoints": {
+      "type": ["array", "null"],
+      "description": "시나리오 시작 전에 생성·등록할 waypoint anchor 정의.",
+      "items": { "$ref": "#/$defs/ScenarioWaypointDefinition" }
+    },
     "nodes": {
       "type": "object",
       "description": "Dictionary<string, IScenarioNode>",
@@ -61,6 +66,21 @@
   ],
   "additionalProperties": false,
   "$defs": {
+    "ScenarioWaypointDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "identifier": { "type": "string", "minLength": 1, "pattern": "\\S" },
+        "positionX": { "type": "number", "default": 0 },
+        "positionY": { "type": "number", "default": 0 },
+        "positionZ": { "type": "number", "default": 0 },
+        "rotationX": { "type": "number", "default": 0 },
+        "rotationY": { "type": "number", "default": 0 },
+        "rotationZ": { "type": "number", "default": 0 },
+        "despawnOnScenarioEnd": { "type": "boolean", "default": true }
+      },
+      "required": ["identifier"]
+    },
     "ScenarioActingNpcDefinition": {
       "type": "object",
       "additionalProperties": false,
@@ -87,6 +107,11 @@
             "string",
             "null"
           ]
+        },
+        "showOverheadName": {
+          "type": "boolean",
+          "default": false,
+          "description": "true이면 displayName을 NPC 머리 위 이름표로 표시한다."
         },
         "positionX": { "type": "number", "default": 0 },
         "positionY": { "type": "number", "default": 0 },
@@ -124,7 +149,8 @@
           "type": "string",
           "enum": [
             "StartScenario",
-            "ItemSubmission"
+            "ItemSubmission",
+            "Signal"
           ]
         },
         "displayText": {
@@ -140,9 +166,10 @@
           ]
         },
         "scenarioIdentifier": {
-          "type": "string",
-          "minLength": 1,
-          "pattern": "\\S"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "scenarioStartNodeIdentifier": {
           "type": [
@@ -169,8 +196,7 @@
           ],
           "items": {
             "$ref": "#/$defs/ScenarioActingNpcItemRequirement"
-          },
-          "minItems": 1
+          }
         },
         "completionSignalIdentifier": {
           "type": [
@@ -193,6 +219,13 @@
             }
           },
           "then": {
+            "properties": {
+              "scenarioIdentifier": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
             "required": [
               "scenarioIdentifier"
             ]
@@ -205,8 +238,33 @@
             }
           },
           "then": {
+            "properties": {
+              "requiredItems": {
+                "type": "array",
+                "minItems": 1
+              }
+            },
             "required": [
               "requiredItems"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "interactionType": { "const": "Signal" }
+            }
+          },
+          "then": {
+            "properties": {
+              "completionSignalIdentifier": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "completionSignalIdentifier"
             ]
           }
         }
@@ -245,7 +303,7 @@
             "Choice",
             "Sound",
             "PlayerMove",
-            "NPCMove",
+            "NPCControl",
             "CameraTarget",
             "InvokeEvent",
             "ServerInternalSignal",
@@ -268,7 +326,6 @@
             "TriageAssessControl",
             "PatientMedicalStatePreset",
             "ItemSubmissionConfig",
-            "NpcInteractControl",
             "ChatPrint",
             "ExecuteCommand",
             "TimeControl",
@@ -388,7 +445,7 @@
           "if": {
             "properties": {
               "nodeType": {
-                "const": "NPCMove"
+                "const": "NPCControl"
               }
             },
             "required": [
@@ -396,7 +453,7 @@
             ]
           },
           "then": {
-            "$ref": "#/$defs/ScenarioNPCMoveNode"
+            "$ref": "#/$defs/ScenarioNPCControlNode"
           }
         },
         {
@@ -736,21 +793,6 @@
           "if": {
             "properties": {
               "nodeType": {
-                "const": "NpcInteractControl"
-              }
-            },
-            "required": [
-              "nodeType"
-            ]
-          },
-          "then": {
-            "$ref": "#/$defs/ScenarioNpcInteractControlNode"
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "nodeType": {
                 "const": "ChatPrint"
               }
             },
@@ -777,8 +819,7 @@
             "$ref": "#/$defs/ScenarioExecuteCommandNode"
           }
         }
-      ],
-      "unevaluatedProperties": false
+      ]
     },
     "ScenarioBaseNode": {
       "type": "object",
@@ -1188,6 +1229,213 @@
                 "required": [
                   "moveDuration"
                 ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "ScenarioNPCControlNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": { "const": "NPCControl" },
+            "mode": {
+              "type": "string",
+              "enum": ["Update", "Control"]
+            },
+            "npcIdentifier": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "interactOperation": {
+              "type": ["string", "null"],
+              "enum": ["None", "Create", "Read", "Update", "Delete", null],
+              "default": "None"
+            },
+            "interactableIdentifier": {
+              "type": ["string", "null"]
+            },
+            "interactEnabled": {
+              "type": ["boolean", "null"]
+            },
+            "resultStateKey": {
+              "type": ["string", "null"]
+            },
+            "displayName": {
+              "type": ["string", "null"]
+            },
+            "showOverheadName": {
+              "type": ["boolean", "null"]
+            },
+            "destinationType": {
+              "type": ["string", "null"],
+              "enum": ["Position", "Waypoint", null]
+            },
+            "destinationIdentifier": {
+              "type": ["string", "null"]
+            },
+            "destinationX": {
+              "type": ["number", "null"]
+            },
+            "destinationY": {
+              "type": ["number", "null"]
+            },
+            "destinationZ": {
+              "type": ["number", "null"]
+            },
+            "ignoreGroundCheck": {
+              "type": ["boolean", "null"],
+              "default": false
+            },
+            "moveMode": {
+              "type": ["string", "null"],
+              "enum": ["Instant", "BySpeed", "ByDuration", null],
+              "default": "BySpeed"
+            },
+            "moveSpeed": {
+              "type": ["number", "null"]
+            },
+            "moveDuration": {
+              "type": ["number", "null"]
+            }
+          },
+          "required": ["mode", "npcIdentifier"],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "mode": { "const": "Update" },
+                  "interactOperation": {
+                    "enum": ["Create", "Read", "Update", "Delete"]
+                  }
+                },
+                "required": ["interactOperation"]
+              },
+              "then": {
+                "properties": {
+                  "interactableIdentifier": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  }
+                },
+                "required": ["interactableIdentifier"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "mode": { "const": "Control" }
+                },
+                "required": ["mode"]
+              },
+              "then": {
+                "required": ["destinationType"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "mode": { "const": "Update" },
+                  "interactOperation": { "const": "Update" }
+                },
+                "required": ["mode", "interactOperation"]
+              },
+              "then": {
+                "properties": {
+                  "interactEnabled": { "type": "boolean" }
+                },
+                "required": ["interactEnabled"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "mode": { "const": "Update" },
+                  "interactOperation": { "const": "Read" }
+                },
+                "required": ["mode", "interactOperation"]
+              },
+              "then": {
+                "properties": {
+                  "resultStateKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  }
+                },
+                "required": ["resultStateKey"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "mode": { "const": "Control" },
+                  "destinationType": { "const": "Position" }
+                },
+                "required": ["mode", "destinationType"]
+              },
+              "then": {
+                "properties": {
+                  "destinationX": { "type": "number" },
+                  "destinationY": { "type": "number" },
+                  "destinationZ": { "type": "number" }
+                },
+                "required": ["destinationX", "destinationY", "destinationZ"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "mode": { "const": "Control" },
+                  "destinationType": { "const": "Waypoint" }
+                },
+                "required": ["mode", "destinationType"]
+              },
+              "then": {
+                "properties": {
+                  "destinationIdentifier": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  }
+                },
+                "required": ["destinationIdentifier"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "mode": { "const": "Control" },
+                  "moveMode": { "const": "BySpeed" }
+                },
+                "required": ["mode", "moveMode"]
+              },
+              "then": {
+                "properties": {
+                  "moveSpeed": { "type": "number", "exclusiveMinimum": 0 }
+                },
+                "required": ["moveSpeed"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "mode": { "const": "Control" },
+                  "moveMode": { "const": "ByDuration" }
+                },
+                "required": ["mode", "moveMode"]
+              },
+              "then": {
+                "properties": {
+                  "moveDuration": { "type": "number", "exclusiveMinimum": 0 }
+                },
+                "required": ["moveDuration"]
               }
             }
           ]
@@ -2239,6 +2487,13 @@
               ],
               "default": "Overwrite"
             },
+            "persistProgressOnSessionEnd": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": false
+            },
             "quest": {
               "anyOf": [
                 {
@@ -2381,6 +2636,10 @@
           "type": "boolean",
           "default": false
         },
+        "PersistProgressOnSessionEnd": {
+          "type": "boolean",
+          "default": false
+        },
         "WaypointIdentifier": {
           "type": [
             "string",
@@ -2445,7 +2704,7 @@
         "ReachDistance": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "default": 1
+          "default": 2
         },
         "DisplayTextContent": {
           "type": [
@@ -3373,20 +3632,26 @@
               "type": "string",
               "minLength": 1
             },
+            "displayName": {
+              "type": ["string", "null"]
+            },
+            "showOverheadName": {
+              "type": ["boolean", "null"]
+            },
             "operation": {
               "enum": [
                 "Add",
                 "Remove",
                 "Enable",
                 "Disable",
+                "UpdateDisplay",
                 null
               ],
               "default": "Add"
             }
           },
           "required": [
-            "npcIdentifier",
-            "interactableIdentifier"
+            "npcIdentifier"
           ]
         }
       ]

@@ -1,4 +1,5 @@
 using System.Collections;
+using FishNet;
 using MultiplayerInfrastructure.FishNetSupports;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Scenario.Requirements;
@@ -42,6 +43,8 @@ namespace TriageTrainer.SceneBootstrapper
     [SerializeField] private string startNodeIdentifier;
     [Tooltip("호스트 세션 시작 후 시나리오를 시작하기 전 대기할 프레임 수. 플레이어 스폰 완료를 기다립니다.")]
     [SerializeField, Min(1)] private int scenarioStartDelayFrames = 2;
+    [Tooltip("FishNet 서버가 준비될 때까지 기다릴 최대 프레임 수.")]
+    [SerializeField, Min(1)] private int networkReadyTimeoutFrames = 600;
 
     private bool _bootstrapped;
 
@@ -101,6 +104,22 @@ namespace TriageTrainer.SceneBootstrapper
     /// </summary>
     private IEnumerator StartScenarioAfterDelay()
     {
+      int timeoutFrames = Mathf.Max(1, networkReadyTimeoutFrames);
+      int networkWaitFrames = 0;
+      while (!InstanceFinder.IsServerStarted && networkWaitFrames < timeoutFrames)
+      {
+        networkWaitFrames++;
+        yield return null;
+      }
+
+      if (!InstanceFinder.IsServerStarted)
+      {
+        Debug.LogError(
+          $"{LogPrefix} FishNet 서버가 {timeoutFrames}프레임 안에 준비되지 않아 "
+          + "튜토리얼 시나리오와 npc_tutorial_hat 자동 스폰을 시작하지 못했습니다.");
+        yield break;
+      }
+
       for (int i = 0; i < scenarioStartDelayFrames; i++)
         yield return null;
 

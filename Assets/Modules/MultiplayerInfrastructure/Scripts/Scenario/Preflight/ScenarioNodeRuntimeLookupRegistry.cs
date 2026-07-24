@@ -209,6 +209,11 @@ namespace MultiplayerInfrastructure.Scenario.Preflight
           Row("npcIdentifier", "Registry:NpcThenEntity<GameObject>", "always", ScenarioRuntimeLookupClassification.External),
           Row("destinationIdentifier", "Registry:WaypointThenInteractableEntity<Vector3>", "destinationType=Waypoint", ScenarioRuntimeLookupClassification.External))),
 
+        Register<ScenarioNPCControlNode>(ScenarioNodeType.NPCControl, Rows(
+          Row("npcIdentifier", "Registry:NpcThenEntity<GameObject>", "always", ScenarioRuntimeLookupClassification.External),
+          Row("interactableIdentifier", "Registry:InteractableEntity<MonoBehaviour>ThenEntityChild<IInteract>", "mode=Update && interactOperation!=None", ScenarioRuntimeLookupClassification.External),
+          Row("destinationIdentifier", "Registry:WaypointThenInteractableEntity<Vector3>", "mode=Control && destinationType=Waypoint", ScenarioRuntimeLookupClassification.External))),
+
         Register<ScenarioCameraTargetNode>(ScenarioNodeType.CameraTarget, Rows(
           Row("targetObjectIdentifier", "None", "current runtime does not resolve this field", ScenarioRuntimeLookupClassification.NotConsumed))),
 

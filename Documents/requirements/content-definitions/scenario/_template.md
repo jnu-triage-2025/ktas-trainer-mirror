@@ -34,7 +34,7 @@ updated: 2026-04-14
 | C___-OPT2 | ChoiceOption | DisplayText / (optional) DisplayIconIdentifier / DisplayColor / NextNodeIdentifier를 서술한다. | NextNodeIdentifier |
 | S___ | Sound | SoundResourceIdentifier를 재생한다. WaitUntilFinished 여부를 서술한다. | ___ |
 | PM___ | PlayerMove | DestinationType에 따라 이동한다. Position이면 DestinationX/Y/Z, Waypoint면 DestinationIdentifier를 명시한다. MoveMode, MoveSpeed/MoveDuration, IgnoreGroundCheck를 서술한다. | ___ |
-| NM___ | NPCMove | NPCIdentifier가 이동한다. DestinationType에 따른 목적지와 MoveMode, MoveSpeed/MoveDuration, IgnoreGroundCheck를 서술한다. | ___ |
+| NC___ | NPCControl(Control) | NPCIdentifier가 이동한다. DestinationType에 따른 목적지와 MoveMode, MoveSpeed/MoveDuration, IgnoreGroundCheck를 서술한다. | ___ |
 | CT___ | CameraTarget | TargetObjectIdentifier를 바라보도록 전환한다. OffsetX/Y/Z와 BlendTime을 서술한다. | ___ |
 | P___ | Parallel | Branches의 Identifier를 나열하고 WaitMode, AllocationType, WhenBranchingPlayerNotMatched를 요약한다. | ___ |
 | P___-B___ | ParallelBranch | 브랜치 시작 노드, CompletionConditionIdentifier, (optional) RequiredRoleIdentifiers/RequiredPlayerTags/ForbiddenPlayerTags/RequiredPlayerTagsMatchMode를 서술한다. | CompletionConditionIdentifier |

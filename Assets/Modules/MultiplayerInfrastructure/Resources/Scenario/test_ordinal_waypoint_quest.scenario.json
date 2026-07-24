@@ -18,6 +18,7 @@
       "nodeType": "QuestControl",
       "operation": "Add",
       "failureStrategy": "Overwrite",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "test.ordinal_waypoint::visit_three_waypoints",
       "quest": null,
       "nextIdentifier": null

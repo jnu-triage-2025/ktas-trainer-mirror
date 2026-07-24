@@ -29,12 +29,12 @@ _Acting NPC의 시스템 내 위치_
 
 <br />
 
-NPC 데이터는 두 단계를 거쳐 레지스터할 수 있습니다.
+NPC 데이터는 다음 절차로 레지스터하고 시나리오에서 사용할 수 있습니다.
 
 1. NPC 프리팹을 준비해 `MultiplayerInfrastructure.Entity.Npc` 컴포넌트를 추가합니다.
 2. 게임 로딩 과정에서 NPC 프리팹을 `MultiplayerInfrastructure.EntityPreset`에 등록할 수 있도록, 사전에 `EntityPresetRegistryRequirements`에 프리팹을 등록합니다.
   > [!NOTE]  
-  > 현재는 `Asseets/Modules/TriageTrainer/ScriptableObjects/EntityPreset Registry Requirements SO.asset` 파일을 유니티 에디터에서 열어, NPC 프리팹을 등록할 수 있습니다.
+  > 현재는 `Assets/Modules/TriageTrainer/ScriptableObjects/EntityPreset Registry Requirements SO.asset` 파일을 유니티 에디터에서 열어, NPC 프리팹을 등록할 수 있습니다.
   ```
   identifier: npc_doctor_preset
   fallbackEntityType: Npc
@@ -84,7 +84,7 @@ NPC 데이터는 두 단계를 거쳐 레지스터할 수 있습니다.
    - `displayName`, 위치, 회전, 생성·제거 정책은 시나리오 정의 값이 적용됩니다.
    - `spawnOnStart`를 생략하면 시나리오 시작 전에 자동 소환됩니다.
    - `despawnOnScenarioEnd`를 생략하면 시나리오 종료 시 자동 제거됩니다.
-   - 현재 지원되는 인라인 상호작용은 다른 시나리오를 시작하는 `StartScenario`와 아이템을 전달하는 `ItemSubmission`입니다.
+   - 현재 지원되는 인라인 상호작용은 다른 시나리오를 시작하는 `StartScenario`, 아이템을 전달하는 `ItemSubmission`, 상호작용 시 런타임 신호를 발생시키는 `Signal`입니다.
 
    NPC 프리팹에 미리 설정된 기본 상호작용은 삭제되거나 대체되지 않습니다. 시나리오의 `interactions`는 기본 상호작용에 추가됩니다. 따라서 같은 목적의 상호작용을 프리팹과 시나리오 양쪽에 중복 정의하지 않아야 합니다.
 
@@ -124,5 +124,7 @@ NPC 데이터는 두 단계를 거쳐 레지스터할 수 있습니다.
 - 같은 Acting NPC를 `spawnOnStart`와 `actingNpcIdentifier`로 동시에 지정하거나, 그래프에서 두 번
   소환할 수 없습니다. 재소환이 필요한 콘텐츠는 별도 despawn/re-spawn 기능이 제공되기 전까지
   서로 다른 식별자를 사용해야 합니다.
-- 중간 소환 Acting NPC를 사용하는 `NPCMove`, `NpcInteractControl` 노드는 반드시 해당
+- 중간 소환 Acting NPC를 사용하는 `NPCControl` 노드는 반드시 해당
   `EntityPresetSpawn` 이후의 모든 실행 경로에 배치해야 합니다. 요구사항 검증은 이를 오류로 검사합니다.
+- `despawnOnScenarioEnd: false`는 **정상 종료 후** NPC를 월드에 남기는 옵션입니다. 시나리오 시작이
+  실패하거나 중단되면 부분 생성 NPC는 항상 제거됩니다.

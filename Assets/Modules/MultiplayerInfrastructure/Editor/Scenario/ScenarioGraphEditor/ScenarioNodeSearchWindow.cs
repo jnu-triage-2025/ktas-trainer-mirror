@@ -27,7 +27,7 @@ namespace MultiplayerInfrastructure.Editor
             new SearchTreeEntry(new GUIContent("Choice")) { level = 1, userData = ScenarioNodeType.Choice },
             new SearchTreeEntry(new GUIContent("Sound")) { level = 1, userData = ScenarioNodeType.Sound },
             new SearchTreeEntry(new GUIContent("Player Move")) { level = 1, userData = ScenarioNodeType.PlayerMove },
-            new SearchTreeEntry(new GUIContent("NPC Move")) { level = 1, userData = ScenarioNodeType.NPCMove },
+            new SearchTreeEntry(new GUIContent("NPC Control")) { level = 1, userData = ScenarioNodeType.NPCControl },
             new SearchTreeEntry(new GUIContent("Camera Target")) { level = 1, userData = ScenarioNodeType.CameraTarget },
             new SearchTreeEntry(new GUIContent("Invoke Event")) { level = 1, userData = ScenarioNodeType.InvokeEvent },
             new SearchTreeEntry(new GUIContent("Validator")) { level = 1, userData = ScenarioNodeType.Validator },
@@ -42,7 +42,6 @@ namespace MultiplayerInfrastructure.Editor
             new SearchTreeEntry(new GUIContent("Tag Modification")) { level = 1, userData = ScenarioNodeType.PlayerTag },
             new SearchTreeEntry(new GUIContent("Play TTS")) { level = 1, userData = ScenarioNodeType.PlayTTS },
             new SearchTreeEntry(new GUIContent("Item Submission Config")) { level = 1, userData = ScenarioNodeType.ItemSubmissionConfig },
-            new SearchTreeEntry(new GUIContent("NPC Interact Control")) { level = 1, userData = ScenarioNodeType.NpcInteractControl },
             new SearchTreeEntry(new GUIContent("Time Control")) { level = 1, userData = ScenarioNodeType.TimeControl }
         };
     }

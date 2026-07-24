@@ -11,7 +11,8 @@ namespace MultiplayerInfrastructure.Scenario
   public enum ScenarioActingNpcInteractionType
   {
     StartScenario,
-    ItemSubmission
+    ItemSubmission,
+    Signal
   }
 
   /// <summary>
@@ -24,6 +25,8 @@ namespace MultiplayerInfrastructure.Scenario
     public ScenarioActingNpcType ActingNpcType { get; set; } = ScenarioActingNpcType.Npc;
     public string PresetIdentifier { get; set; }
     public string DisplayName { get; set; }
+    /// <summary>켜면 DisplayName을 NPC 머리 위 월드 공간 이름표로 표시한다.</summary>
+    public bool ShowOverheadName { get; set; }
     public float PositionX { get; set; }
     public float PositionY { get; set; }
     public float PositionZ { get; set; }

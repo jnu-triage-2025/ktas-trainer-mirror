@@ -256,6 +256,7 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.Sound:
         case ScenarioNodeType.PlayerMove:
         case ScenarioNodeType.NPCMove:
+        case ScenarioNodeType.NPCControl:
         case ScenarioNodeType.CameraTarget:
         case ScenarioNodeType.InvokeEvent:
         case ScenarioNodeType.ServerInternalSignal:
@@ -462,6 +463,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.NpcInteractControl:
           BuildNpcInteractControlInlineEditor((ScenarioNpcInteractControlNode)Data);
           break;
+        case ScenarioNodeType.NPCControl:
+          BuildNPCControlInlineEditor((ScenarioNPCControlNode)Data);
+          break;
         case ScenarioNodeType.TimeControl:
           BuildTimeControlInlineEditor((ScenarioTimeControlNode)Data);
           break;
@@ -577,6 +581,8 @@ namespace MultiplayerInfrastructure.Editor
       _inlineEditorContainer.Add(opField);
 
       AddTextField("Quest Definition", value => data.QuestDefinitionIdentifier = value, data.QuestDefinitionIdentifier);
+      AddToggleField("Persist Progress On Session End", value => data.PersistProgressOnSessionEnd = value,
+        data.PersistProgressOnSessionEnd ?? false);
       AddTextField("Quest Id", value =>
       {
         data.Quest ??= new QuestData();
@@ -742,6 +748,83 @@ namespace MultiplayerInfrastructure.Editor
           data.Operation = value;
       });
       _inlineEditorContainer.Add(opField);
+
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildNPCControlInlineEditor(ScenarioNPCControlNode data)
+    {
+      var modeField = new EnumField("Mode", data.Mode);
+      modeField.RegisterValueChangedCallback(evt =>
+      {
+        if (evt.newValue is ScenarioNPCControlMode value && value != data.Mode)
+        {
+          data.Mode = value;
+          BuildInlineEditor();
+        }
+      });
+      _inlineEditorContainer.Add(modeField);
+      AddTextField("NPC Id", value => data.NPCIdentifier = value, data.NPCIdentifier);
+
+      if (data.Mode == ScenarioNPCControlMode.Update)
+      {
+        var crudField = new EnumField("Interact CRUD", data.InteractOperation);
+        crudField.RegisterValueChangedCallback(evt =>
+        {
+          if (evt.newValue is ScenarioNPCInteractCrudOperation value && value != data.InteractOperation)
+          {
+            data.InteractOperation = value;
+            BuildInlineEditor();
+          }
+        });
+        _inlineEditorContainer.Add(crudField);
+        if (data.InteractOperation != ScenarioNPCInteractCrudOperation.None)
+          AddTextField("Interactable Id", value => data.InteractableIdentifier = value, data.InteractableIdentifier);
+        if (data.InteractOperation == ScenarioNPCInteractCrudOperation.Update)
+          AddToggleField("Interact Enabled", value => data.InteractEnabled = value, data.InteractEnabled ?? true);
+        if (data.InteractOperation == ScenarioNPCInteractCrudOperation.Read)
+          AddTextField("Result State Key", value => data.ResultStateKey = value, data.ResultStateKey);
+        AddTextField("Display Name", value => data.DisplayName = value, data.DisplayName);
+        AddToggleField("Show Overhead Name", value => data.ShowOverheadName = value, data.ShowOverheadName ?? false);
+      }
+      else
+      {
+        var destinationField = new EnumField("Destination", data.DestinationType);
+        destinationField.RegisterValueChangedCallback(evt =>
+        {
+          if (evt.newValue is ScenarioMoveDestinationType value && value != data.DestinationType)
+          {
+            data.DestinationType = value;
+            BuildInlineEditor();
+          }
+        });
+        _inlineEditorContainer.Add(destinationField);
+        if (data.DestinationType == ScenarioMoveDestinationType.Waypoint)
+        {
+          AddTextField("Waypoint Id", value => data.DestinationIdentifier = value, data.DestinationIdentifier);
+        }
+        else
+        {
+          AddOptionalFloatField("Destination X", value => data.DestinationX = value ?? 0f, data.DestinationX);
+          AddOptionalFloatField("Destination Y", value => data.DestinationY = value ?? 0f, data.DestinationY);
+          AddOptionalFloatField("Destination Z", value => data.DestinationZ = value ?? 0f, data.DestinationZ);
+        }
+        AddToggleField("Ignore Ground", value => data.IgnoreGroundCheck = value, data.IgnoreGroundCheck);
+        var moveModeField = new EnumField("Move Mode", data.MoveMode);
+        moveModeField.RegisterValueChangedCallback(evt =>
+        {
+          if (evt.newValue is ScenarioMoveMode value && value != data.MoveMode)
+          {
+            data.MoveMode = value;
+            BuildInlineEditor();
+          }
+        });
+        _inlineEditorContainer.Add(moveModeField);
+        if (data.MoveMode == ScenarioMoveMode.BySpeed)
+          AddOptionalFloatField("Move Speed", value => data.MoveSpeed = value ?? 0f, data.MoveSpeed);
+        else if (data.MoveMode == ScenarioMoveMode.ByDuration)
+          AddOptionalFloatField("Move Duration", value => data.MoveDuration = value ?? 0f, data.MoveDuration);
+      }
 
       AddNextIdentifierField(data);
     }

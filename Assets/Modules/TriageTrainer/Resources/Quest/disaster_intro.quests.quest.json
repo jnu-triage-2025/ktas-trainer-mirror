@@ -8,6 +8,7 @@
       "questContent": "활력징후 측정도구 획득",
       "isTrackable": true,
       "isAutoComplete": true,
+      "persistProgressOnSessionEnd": false,
       "isTrackedByDefault": true,
       "scope": "Player",
       "completionCriteria": [
@@ -27,6 +28,7 @@
       "questContent": "생리식염수 1L 수액백 + 수액세트 획득",
       "isTrackable": true,
       "isAutoComplete": true,
+      "persistProgressOnSessionEnd": false,
       "isTrackedByDefault": true,
       "scope": "Player",
       "completionCriteria": [
@@ -53,6 +55,7 @@
       "questContent": "플라즈마 솔루션 1L 수액백 + 수액세트 획득",
       "isTrackable": true,
       "isAutoComplete": true,
+      "persistProgressOnSessionEnd": false,
       "isTrackedByDefault": true,
       "scope": "Player",
       "completionCriteria": [
@@ -79,6 +82,7 @@
       "questContent": "수혈 세트 획득",
       "isTrackable": true,
       "isAutoComplete": true,
+      "persistProgressOnSessionEnd": false,
       "isTrackedByDefault": true,
       "scope": "Player",
       "completionCriteria": [

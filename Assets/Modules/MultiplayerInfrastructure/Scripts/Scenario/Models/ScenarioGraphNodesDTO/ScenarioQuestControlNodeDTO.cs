@@ -16,5 +16,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("quest")]
     public QuestData Quest { get; set; }
+
+    [JsonPropertyName("persistProgressOnSessionEnd")]
+    public bool? PersistProgressOnSessionEnd { get; set; }
   }
 }

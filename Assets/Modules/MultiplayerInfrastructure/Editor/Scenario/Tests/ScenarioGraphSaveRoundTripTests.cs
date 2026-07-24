@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using MultiplayerInfrastructure.Scenario;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace MultiplayerInfrastructure.Tests.Scenario
 {
@@ -14,6 +15,55 @@ namespace MultiplayerInfrastructure.Tests.Scenario
   /// </summary>
   public sealed class ScenarioGraphSaveRoundTripTests
   {
+    [Test]
+    public void SchemaReloadCanValidateMoreThanOnce()
+    {
+      const string json = @"{
+        ""identifier"": ""schema-reload-regression"",
+        ""nodes"": {
+          ""start"": {
+            ""identifier"": ""start"",
+            ""nodeType"": ""Dialogue"",
+            ""speakerName"": ""system"",
+            ""dialogueContent"": ""start""
+          }
+        }
+      }";
+
+      ScenarioGraphLoader.ReloadSchemaForEditor();
+      Assert.DoesNotThrow(() => ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true));
+
+      ScenarioGraphLoader.ReloadSchemaForEditor();
+      Assert.DoesNotThrow(() => ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true));
+    }
+
+    [Test]
+    public void ItemSubmissionConfigSavesWithSchemaValidation()
+    {
+      var graph = new ScenarioGraph { Identifier = "item-submission-schema" };
+      graph.Add(new ScenarioItemSubmissionConfigNode
+      {
+        Identifier = "configure-submission",
+        TargetIdentifier = "guide-submission",
+        RequiredItems = new List<ScenarioItemRequirement>
+        {
+          new ScenarioItemRequirement { ItemIdentifier = "handy_clock", Count = 1 }
+        },
+        CompletionSignalIdentifier = "clock-submitted"
+      });
+
+      Assert.DoesNotThrow(() => ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true));
+    }
+
+    [Test]
+    public void TutorialScenarioPassesSchemaValidation()
+    {
+      var json = System.IO.File.ReadAllText(
+        "Assets/Modules/TriageTrainer/Resources/Scenario/tutorial.scenario.json");
+
+      Assert.DoesNotThrow(() => ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true));
+    }
+
     [Test]
     public void ScenarioActingNpcsSaveAndRoundTrip()
     {
@@ -42,6 +92,13 @@ namespace MultiplayerInfrastructure.Tests.Scenario
                   new ScenarioActingNpcItemRequirement { ItemIdentifier = "laryngoscope", Count = 1 }
                 },
                 CompletionSignalIdentifier = "sig.doctor-item-received"
+              },
+              new ScenarioActingNpcInteractionDefinition
+              {
+                Identifier = "doctor_talk",
+                InteractionType = ScenarioActingNpcInteractionType.Signal,
+                DisplayText = "말 걸기",
+                CompletionSignalIdentifier = "doctor-talked"
               }
             }
           }
@@ -63,10 +120,153 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       Assert.That(reloaded.ActingNpcs[0].RotationY, Is.EqualTo(180f));
       Assert.That(((ScenarioEntityPresetSpawnNode)reloaded.Nodes["spawn-doctor"]).ActingNpcIdentifier,
         Is.EqualTo("npc_doctor"));
-      Assert.That(reloaded.ActingNpcs[0].Interactions, Has.Count.EqualTo(1));
+      Assert.That(reloaded.ActingNpcs[0].Interactions, Has.Count.EqualTo(2));
       Assert.That(
         reloaded.ActingNpcs[0].Interactions[0].RequiredItems[0].ItemIdentifier,
         Is.EqualTo("laryngoscope"));
+      Assert.That(reloaded.ActingNpcs[0].Interactions[1].InteractionType,
+        Is.EqualTo(ScenarioActingNpcInteractionType.Signal));
+      Assert.That(reloaded.ActingNpcs[0].Interactions[1].CompletionSignalIdentifier,
+        Is.EqualTo("doctor-talked"));
+    }
+
+    [Test]
+    public void NPCControlUpdateAndControlModesRoundTrip()
+    {
+      var graph = new ScenarioGraph { Identifier = "npc-control-round-trip" };
+      graph.Add(new ScenarioNPCControlNode
+      {
+        Identifier = "update",
+        Mode = ScenarioNPCControlMode.Update,
+        NPCIdentifier = "npc",
+        InteractOperation = ScenarioNPCInteractCrudOperation.Update,
+        InteractableIdentifier = "talk",
+        InteractEnabled = false,
+        DisplayName = "???",
+        ShowOverheadName = true,
+        NextIdentifier = "read"
+      });
+      graph.Add(new ScenarioNPCControlNode
+      {
+        Identifier = "read",
+        Mode = ScenarioNPCControlMode.Update,
+        NPCIdentifier = "npc",
+        InteractOperation = ScenarioNPCInteractCrudOperation.Read,
+        InteractableIdentifier = "talk",
+        ResultStateKey = "npc.talk.exists",
+        NextIdentifier = "move"
+      });
+      graph.Add(new ScenarioNPCControlNode
+      {
+        Identifier = "move",
+        Mode = ScenarioNPCControlMode.Control,
+        NPCIdentifier = "npc",
+        DestinationType = ScenarioMoveDestinationType.Waypoint,
+        DestinationIdentifier = "destination",
+        MoveMode = ScenarioMoveMode.BySpeed,
+        MoveSpeed = 2f
+      });
+
+      var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+      var update = (ScenarioNPCControlNode)reloaded.Nodes["update"];
+      var read = (ScenarioNPCControlNode)reloaded.Nodes["read"];
+      var move = (ScenarioNPCControlNode)reloaded.Nodes["move"];
+
+      Assert.That(update.InteractOperation, Is.EqualTo(ScenarioNPCInteractCrudOperation.Update));
+      Assert.That(update.InteractEnabled, Is.False);
+      Assert.That(update.DisplayName, Is.EqualTo("???"));
+      Assert.That(update.ShowOverheadName, Is.True);
+      Assert.That(read.ResultStateKey, Is.EqualTo("npc.talk.exists"));
+      Assert.That(move.Mode, Is.EqualTo(ScenarioNPCControlMode.Control));
+      Assert.That(move.DestinationIdentifier, Is.EqualTo("destination"));
+      Assert.That(move.MoveSpeed, Is.EqualTo(2f));
+    }
+
+    [Test]
+    public void LegacyNpcNodesLoadAsNPCControl()
+    {
+      const string json = @"{
+        ""identifier"": ""legacy-npc-control"",
+        ""nodes"": {
+          ""move"": {
+            ""identifier"": ""move"",
+            ""nodeType"": ""NPCMove"",
+            ""npcIdentifier"": ""npc"",
+            ""destinationType"": ""Waypoint"",
+            ""destinationIdentifier"": ""destination"",
+            ""moveMode"": ""BySpeed"",
+            ""moveSpeed"": 2
+          },
+          ""disable"": {
+            ""identifier"": ""disable"",
+            ""nodeType"": ""NpcInteractControl"",
+            ""npcIdentifier"": ""npc"",
+            ""interactableIdentifier"": ""talk"",
+            ""operation"": ""Disable""
+          }
+        }
+      }";
+
+      var graph = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+      var move = (ScenarioNPCControlNode)graph.Nodes["move"];
+      var disable = (ScenarioNPCControlNode)graph.Nodes["disable"];
+
+      Assert.That(move.Mode, Is.EqualTo(ScenarioNPCControlMode.Control));
+      Assert.That(move.DestinationIdentifier, Is.EqualTo("destination"));
+      Assert.That(disable.Mode, Is.EqualTo(ScenarioNPCControlMode.Update));
+      Assert.That(disable.InteractOperation, Is.EqualTo(ScenarioNPCInteractCrudOperation.Update));
+      Assert.That(disable.InteractEnabled, Is.False);
+    }
+
+    [Test]
+    public void NPCDisplayUpdateKeepsOverheadHeightAndRegistryDisplayNameInSync()
+    {
+      var gameObject = new GameObject("npc-display-test");
+      try
+      {
+        var npc = gameObject.AddComponent<MultiplayerInfrastructure.Entity.Npc>();
+        npc.ApplySpawnedEntityIdentifier("npc-display-test");
+        npc.SetScenarioDisplay("First", true);
+        var label = gameObject.GetComponentInChildren<TextMesh>(true);
+        Assert.That(label, Is.Not.Null);
+        float firstHeight = label.transform.localPosition.y;
+
+        npc.SetScenarioDisplay("Second", null);
+
+        Assert.That(label.transform.localPosition.y, Is.EqualTo(firstHeight).Within(0.001f));
+        Assert.That(
+          MultiplayerInfrastructure.Registry.Registry.TryGetEntity(
+            "npc-display-test", out var descriptor),
+          Is.True);
+        Assert.That(descriptor.DisplayName, Is.EqualTo("Second"));
+      }
+      finally
+      {
+        Object.DestroyImmediate(gameObject);
+      }
+    }
+
+    [Test]
+    public void NPCControlInteractUpdateRejectsNullEnabledValue()
+    {
+      const string json = @"{
+        ""identifier"": ""invalid-npc-control-update"",
+        ""nodes"": {
+          ""update"": {
+            ""identifier"": ""update"",
+            ""nodeType"": ""NPCControl"",
+            ""mode"": ""Update"",
+            ""npcIdentifier"": ""npc"",
+            ""interactOperation"": ""Update"",
+            ""interactableIdentifier"": ""talk"",
+            ""interactEnabled"": null
+          }
+        }
+      }";
+
+      Assert.Throws<ScenarioSchemaValidationException>(() =>
+        ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true));
     }
 
     [Test]
@@ -345,6 +545,37 @@ namespace MultiplayerInfrastructure.Tests.Scenario
 
       var reloaded = ScenarioGraphLoader.LoadFromJson(secondSave, validateWithSchema: true);
       Assert.That(reloaded.Nodes.Count, Is.EqualTo(3));
+    }
+
+    [Test]
+    public void ScenarioWaypointsSaveAndRoundTrip()
+    {
+      var graph = new ScenarioGraph
+      {
+        Identifier = "waypoint-round-trip",
+        Waypoints = new List<ScenarioWaypointDefinition>
+        {
+          new ScenarioWaypointDefinition
+          {
+            Identifier = "treatment-room",
+            PositionX = 12.5f,
+            PositionY = 1f,
+            PositionZ = -3.25f,
+            RotationY = 90f,
+            DespawnOnScenarioEnd = false
+          }
+        }
+      };
+      graph.Add(new ScenarioDialogueNode { Identifier = "start", DialogueContent = "시작" });
+
+      var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+
+      Assert.That(reloaded.Waypoints, Has.Count.EqualTo(1));
+      Assert.That(reloaded.Waypoints[0].Identifier, Is.EqualTo("treatment-room"));
+      Assert.That(reloaded.Waypoints[0].PositionX, Is.EqualTo(12.5f));
+      Assert.That(reloaded.Waypoints[0].RotationY, Is.EqualTo(90f));
+      Assert.That(reloaded.Waypoints[0].DespawnOnScenarioEnd, Is.False);
     }
   }
 }

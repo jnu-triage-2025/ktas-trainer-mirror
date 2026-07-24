@@ -5,7 +5,71 @@
     "tutorial.quests.quest",
     "tutorial_delivery.quest"
   ],
-  "defaultEntrypoint": "TUT_START",
+  "defaultEntrypoint": "Q_TUT_MOVE_ADD",
+  "actingNpcs": [
+    {
+      "identifier": "npc-tutorial-guide-hat",
+      "actingNpcType": "Npc",
+      "presetIdentifier": "npc_tutorial_hat",
+      "displayName": "???",
+      "showOverheadName": true,
+      "positionX": 76.4300003,
+      "positionY": 0,
+      "positionZ": 21.6000004,
+      "rotationX": 0,
+      "rotationY": 45,
+      "rotationZ": 0,
+      "spawnOnStart": true,
+      "despawnOnScenarioEnd": true,
+      "interactions": [
+        {
+          "identifier": "npc-tutorial-guide-hat__interaction-talk-start",
+          "interactionType": "Signal",
+          "displayText": "말 걸기",
+          "iconIdentifier": null,
+          "scenarioIdentifier": null,
+          "scenarioStartNodeIdentifier": null,
+          "title": null,
+          "submitButtonText": null,
+          "requiredItems": [],
+          "completionSignalIdentifier": "tutorial_hat_talk_start",
+          "consumeOnce": true,
+          "enabled": true
+        },
+        {
+          "identifier": "tutorial-guide-hat-package-submission",
+          "interactionType": "ItemSubmission",
+          "displayText": "물품 전달",
+          "iconIdentifier": null,
+          "scenarioIdentifier": null,
+          "scenarioStartNodeIdentifier": null,
+          "title": "물품 전달",
+          "submitButtonText": "전달",
+          "requiredItems": [
+            {
+              "itemIdentifier": "tutorial_delivery_package",
+              "count": 1
+            }
+          ],
+          "completionSignalIdentifier": "tutorial.delivery.package.submitted",
+          "consumeOnce": false,
+          "enabled": false
+        }
+      ]
+    }
+  ],
+  "waypoints": [
+    {
+      "identifier": "delivery-storage-spot",
+      "positionX": 30,
+      "positionY": 1,
+      "positionZ": -60,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "despawnOnScenarioEnd": true
+    }
+  ],
   "nodes": {
     "CONFIG_CLOCK_SUBMISSION": {
       "presetIdentifier": null,
@@ -254,7 +318,7 @@
     },
     "D_TUT_HAT_STARTING_2": {
       "speakerName": "???",
-      "dialogueContent": "아 네! 반가워요, 저는.. 어... 일단 모자라고 불러주세요",
+      "dialogueContent": "아 저는 모자라고 해요",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -262,10 +326,10 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_TUT_HAT_STARTING_2",
       "nodeType": "Dialogue",
-      "nextIdentifier": "D_TUT_HAT_STARTING_3"
+      "nextIdentifier": "NPC_TUT_REVEAL_HAT_NAME"
     },
     "D_TUT_HAT_STARTING_3": {
-      "speakerName": "???",
+      "speakerName": "모자",
       "dialogueContent": "혹시 로비에서 택배를 가져다 주실 수 있나요? 지금 제가 여기서 움직일 수 없는 상황이라서요..",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -439,11 +503,34 @@
       "nodeType": "InvokeEvent",
       "nextIdentifier": "V_TUT_HAT_TALK_START"
     },
+    "NPC_TUT_REVEAL_HAT_NAME": {
+      "mode": "Update",
+      "npcIdentifier": "npc-tutorial-guide-hat",
+      "interactOperation": "None",
+      "interactableIdentifier": null,
+      "interactEnabled": null,
+      "resultStateKey": null,
+      "displayName": "모자",
+      "showOverheadName": true,
+      "destinationType": "Position",
+      "destinationIdentifier": null,
+      "destinationX": 0,
+      "destinationY": 0,
+      "destinationZ": 0,
+      "ignoreGroundCheck": false,
+      "moveMode": "BySpeed",
+      "moveSpeed": 0,
+      "moveDuration": 0,
+      "identifier": "NPC_TUT_REVEAL_HAT_NAME",
+      "nodeType": "NPCControl",
+      "nextIdentifier": "D_TUT_HAT_STARTING_3"
+    },
     "Q_TUT_CRAFTING_ADD": {
       "operation": "Add",
       "failureStrategy": "Overwrite",
       "questDefinitionIdentifier": "tutorial-quest-crafting",
       "quest": null,
+      "persistProgressOnSessionEnd": false,
       "identifier": "Q_TUT_CRAFTING_ADD",
       "nodeType": "QuestControl",
       "nextIdentifier": "GIVE_TIN"
@@ -453,6 +540,7 @@
       "failureStrategy": "Ignore",
       "questDefinitionIdentifier": "tutorial-quest-crafting",
       "quest": null,
+      "persistProgressOnSessionEnd": false,
       "identifier": "Q_TUT_CRAFTING_REMOVE",
       "nodeType": "QuestControl",
       "nextIdentifier": "D_TUT_CRAFTING_COMPLETE"
@@ -462,6 +550,7 @@
       "failureStrategy": "Overwrite",
       "questDefinitionIdentifier": "tutorial-quest-delivery",
       "quest": null,
+      "persistProgressOnSessionEnd": false,
       "identifier": "Q_TUT_DELIVERY_ADD",
       "nodeType": "QuestControl",
       "nextIdentifier": "CONFIG_PACKAGE_SUBMISSION"
@@ -471,6 +560,7 @@
       "failureStrategy": "Ignore",
       "questDefinitionIdentifier": "tutorial-quest-delivery",
       "quest": null,
+      "persistProgressOnSessionEnd": false,
       "identifier": "Q_TUT_DELIVERY_REMOVE",
       "nodeType": "QuestControl",
       "nextIdentifier": "D_TUT_DELIVERY_COMPLETE"
@@ -480,6 +570,7 @@
       "failureStrategy": "Overwrite",
       "questDefinitionIdentifier": "tutorial-find-hat",
       "quest": null,
+      "persistProgressOnSessionEnd": false,
       "identifier": "Q_TUT_FIND_HAT_ADD",
       "nodeType": "QuestControl",
       "nextIdentifier": "IE_TUT_INTERACTION_HINT"
@@ -489,6 +580,7 @@
       "failureStrategy": "Ignore",
       "questDefinitionIdentifier": "tutorial-find-hat",
       "quest": null,
+      "persistProgressOnSessionEnd": false,
       "identifier": "Q_TUT_FIND_HAT_REMOVE",
       "nodeType": "QuestControl",
       "nextIdentifier": "C_TUT_GREETING"
@@ -498,6 +590,7 @@
       "failureStrategy": "Overwrite",
       "questDefinitionIdentifier": "tutorial-move",
       "quest": null,
+      "persistProgressOnSessionEnd": false,
       "identifier": "Q_TUT_MOVE_ADD",
       "nodeType": "QuestControl",
       "nextIdentifier": "V_TUT_PLAYER_MOVED"
@@ -507,6 +600,7 @@
       "failureStrategy": "Ignore",
       "questDefinitionIdentifier": "tutorial-move",
       "quest": null,
+      "persistProgressOnSessionEnd": false,
       "identifier": "Q_TUT_MOVE_REMOVE",
       "nodeType": "QuestControl",
       "nextIdentifier": "DL_TUT_MOVE_CALL_DELAY"
@@ -518,14 +612,6 @@
       "identifier": "TUT_END",
       "nodeType": "ChatPrint",
       "nextIdentifier": null
-    },
-    "TUT_START": {
-      "message": "튜토리얼을 시작합니다.",
-      "targets": null,
-      "broadcast": null,
-      "identifier": "TUT_START",
-      "nodeType": "ChatPrint",
-      "nextIdentifier": "Q_TUT_MOVE_ADD"
     },
     "V_TUT_CLOCK_CRAFTED": {
       "rootConditions": [

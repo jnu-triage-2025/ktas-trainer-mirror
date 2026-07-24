@@ -35,12 +35,29 @@ namespace MultiplayerInfrastructure.Scenario
   {
     private static ScenarioNetworkRelay _instance;
     private readonly List<ActingNpcConfiguration> _actingNpcConfigurations = new List<ActingNpcConfiguration>();
+    private readonly List<NpcControlState> _npcControlStates = new List<NpcControlState>();
 
     private sealed class ActingNpcConfiguration
     {
       public string GraphIdentifier;
       public string ActingNpcIdentifier;
       public NetworkObject NetworkObject;
+    }
+
+    private sealed class NpcControlState
+    {
+      public NetworkObject NetworkObject;
+      public string DisplayName;
+      public bool HasDisplayName;
+      public bool? ShowOverheadName;
+      public readonly Dictionary<string, NpcInteractState> Interacts =
+        new Dictionary<string, NpcInteractState>(StringComparer.Ordinal);
+    }
+
+    private sealed class NpcInteractState
+    {
+      public bool? IsAttached;
+      public bool? IsEnabled;
     }
 
     /// <summary>씬에 배치된 중계기 인스턴스(없으면 null).</summary>
@@ -100,7 +117,8 @@ namespace MultiplayerInfrastructure.Scenario
             || node is ScenarioSignalListenerNode
             || node is ScenarioSignalCounterNode
             || node is ScenarioEntityStateSignalBindingNode
-            || node is ScenarioStateUpdateNode)
+            || node is ScenarioStateUpdateNode
+            || node is ScenarioNPCControlNode)
           continue;
 
         unsupportedNode = node;
@@ -169,6 +187,21 @@ namespace MultiplayerInfrastructure.Scenario
       return true;
     }
 
+    public static void PublishNPCControlUpdate(
+      NetworkObject actorObject,
+      ScenarioNPCControlNode node)
+    {
+      if (!InstanceFinder.IsServerStarted || _instance == null || actorObject == null || node == null)
+        return;
+
+      _instance.RememberNPCControlUpdate(actorObject, node);
+      _instance.ObserversUpdateNPCControl(
+        actorObject, node.Identifier, node.DisplayName,
+        node.ShowOverheadName.HasValue, node.ShowOverheadName.GetValueOrDefault(),
+        (int)node.InteractOperation, node.InteractableIdentifier,
+        node.InteractEnabled.HasValue, node.InteractEnabled.GetValueOrDefault());
+    }
+
     public override void OnStartServer()
     {
       base.OnStartServer();
@@ -180,7 +213,52 @@ namespace MultiplayerInfrastructure.Scenario
       if (InstanceFinder.NetworkManager?.ServerManager != null)
         InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState -= OnRemoteConnectionState;
       _actingNpcConfigurations.Clear();
+      _npcControlStates.Clear();
       base.OnStopServer();
+    }
+
+    private void RememberNPCControlUpdate(NetworkObject actorObject, ScenarioNPCControlNode node)
+    {
+      _npcControlStates.RemoveAll(value => value == null || value.NetworkObject == null);
+      var state = _npcControlStates.FirstOrDefault(value => value.NetworkObject == actorObject);
+      if (state == null)
+      {
+        state = new NpcControlState { NetworkObject = actorObject };
+        _npcControlStates.Add(state);
+      }
+
+      if (!string.IsNullOrWhiteSpace(node.DisplayName))
+      {
+        state.DisplayName = node.DisplayName.Trim();
+        state.HasDisplayName = true;
+      }
+      if (node.ShowOverheadName.HasValue)
+        state.ShowOverheadName = node.ShowOverheadName;
+
+      if (node.InteractOperation == ScenarioNPCInteractCrudOperation.None
+          || node.InteractOperation == ScenarioNPCInteractCrudOperation.Read
+          || string.IsNullOrWhiteSpace(node.InteractableIdentifier))
+        return;
+
+      string identifier = node.InteractableIdentifier.Trim();
+      if (!state.Interacts.TryGetValue(identifier, out var interactState))
+      {
+        interactState = new NpcInteractState();
+        state.Interacts.Add(identifier, interactState);
+      }
+
+      switch (node.InteractOperation)
+      {
+        case ScenarioNPCInteractCrudOperation.Create:
+          interactState.IsAttached = true;
+          break;
+        case ScenarioNPCInteractCrudOperation.Delete:
+          interactState.IsAttached = false;
+          break;
+        case ScenarioNPCInteractCrudOperation.Update:
+          interactState.IsEnabled = node.InteractEnabled;
+          break;
+      }
     }
 
     private void RememberActingNpcConfiguration(
@@ -211,6 +289,37 @@ namespace MultiplayerInfrastructure.Scenario
       foreach (var configuration in _actingNpcConfigurations)
         TargetConfigureScenarioActingNpc(connection, configuration.GraphIdentifier,
           configuration.ActingNpcIdentifier, configuration.NetworkObject);
+
+      _npcControlStates.RemoveAll(value => value == null || value.NetworkObject == null);
+      foreach (var state in _npcControlStates)
+      {
+        TargetUpdateNPCControl(
+          connection, state.NetworkObject, "late-join-display",
+          state.HasDisplayName ? state.DisplayName : null,
+          state.ShowOverheadName.HasValue, state.ShowOverheadName.GetValueOrDefault(),
+          (int)ScenarioNPCInteractCrudOperation.None, null, false, false);
+
+        foreach (var pair in state.Interacts)
+        {
+          if (pair.Value.IsAttached.HasValue)
+          {
+            TargetUpdateNPCControl(
+              connection, state.NetworkObject, "late-join-interact-membership",
+              null, false, false,
+              (int)(pair.Value.IsAttached.Value
+                ? ScenarioNPCInteractCrudOperation.Create
+                : ScenarioNPCInteractCrudOperation.Delete),
+              pair.Key, false, false);
+          }
+          if (pair.Value.IsEnabled.HasValue)
+          {
+            TargetUpdateNPCControl(
+              connection, state.NetworkObject, "late-join-interact-enabled",
+              null, false, false, (int)ScenarioNPCInteractCrudOperation.Update,
+              pair.Key, true, pair.Value.IsEnabled.Value);
+          }
+        }
+      }
     }
 
     /// <summary>
@@ -372,6 +481,49 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       npc.ConfigureScenarioActingNpc(actingNpc);
+    }
+
+    [ObserversRpc(BufferLast = false)]
+    private void ObserversUpdateNPCControl(
+      NetworkObject actorObject,
+      string nodeIdentifier,
+      string displayName,
+      bool hasShowOverheadName,
+      bool showOverheadName,
+      int interactOperation,
+      string interactableIdentifier,
+      bool hasInteractEnabled,
+      bool interactEnabled)
+    {
+      if (InstanceFinder.IsServerStarted || actorObject == null)
+        return;
+
+      var npc = actorObject.GetComponentInChildren<Entity.Npc>(true);
+      ScenarioController.ApplyNPCControlUpdate(
+        npc, nodeIdentifier, displayName,
+        hasShowOverheadName ? showOverheadName : (bool?)null,
+        (ScenarioNPCInteractCrudOperation)interactOperation,
+        interactableIdentifier,
+        hasInteractEnabled ? interactEnabled : (bool?)null);
+    }
+
+    [TargetRpc]
+    private void TargetUpdateNPCControl(
+      NetworkConnection connection,
+      NetworkObject actorObject,
+      string nodeIdentifier,
+      string displayName,
+      bool hasShowOverheadName,
+      bool showOverheadName,
+      int interactOperation,
+      string interactableIdentifier,
+      bool hasInteractEnabled,
+      bool interactEnabled)
+    {
+      ObserversUpdateNPCControl(
+        actorObject, nodeIdentifier, displayName,
+        hasShowOverheadName, showOverheadName, interactOperation,
+        interactableIdentifier, hasInteractEnabled, interactEnabled);
     }
 
     [TargetRpc]

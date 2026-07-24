@@ -30,6 +30,8 @@ namespace MultiplayerInfrastructure.Editor
     private VisualElement editContainer;
     private ToolbarButton graphTabButton;
     private ToolbarButton editTabButton;
+    private ScenarioActingNpcEditorView actingNpcEditorView;
+    private ScenarioWaypointEditorView waypointEditorView;
 
     private ScenarioGraph graphData = new ScenarioGraph();
     private readonly Dictionary<string, ScenarioNodeView> nodeViews = new Dictionary<string, ScenarioNodeView>();
@@ -366,15 +368,29 @@ namespace MultiplayerInfrastructure.Editor
       editContainer.style.paddingRight = 12;
       editContainer.style.paddingTop = 12;
 
-      editContainer.Add(new Label("Scenario Ingame Requirements")
+      var scroll = new ScrollView();
+      scroll.style.flexGrow = 1f;
+      actingNpcEditorView = new ScenarioActingNpcEditorView(
+        () => graphData,
+        () =>
+        {
+          RefreshDebugPanel();
+        });
+      scroll.Add(actingNpcEditorView);
+      waypointEditorView = new ScenarioWaypointEditorView(
+        () => graphData,
+        () => RefreshDebugPanel());
+      scroll.Add(waypointEditorView);
+      scroll.Add(new Label("Scenario Ingame Requirements")
       {
         style = { unityFontStyleAndWeight = FontStyle.Bold, fontSize = 14, marginBottom = 6 }
       });
-      editContainer.Add(new HelpBox(
+      scroll.Add(new HelpBox(
         "Requirements 작업은 기존과 같이 별도 패널에서 열립니다. 현재 Graph Editor에서 연 시나리오 파일이 자동으로 공유됩니다.",
         HelpBoxMessageType.Info));
-      editContainer.Add(new Button(OpenRequirementsWindow) { text = "Open Scenario Ingame Requirements" });
-      editContainer.Add(new Button(OpenSelectedScenarioTextAsset) { text = "Open Selected Scenario TextAsset" });
+      scroll.Add(new Button(OpenRequirementsWindow) { text = "Open Scenario Ingame Requirements" });
+      scroll.Add(new Button(OpenSelectedScenarioTextAsset) { text = "Open Selected Scenario TextAsset" });
+      editContainer.Add(scroll);
       rootVisualElement.Add(editContainer);
     }
 
@@ -385,6 +401,11 @@ namespace MultiplayerInfrastructure.Editor
       if (editContainer != null) editContainer.style.display = showGraph ? DisplayStyle.None : DisplayStyle.Flex;
       graphTabButton?.SetEnabled(!showGraph);
       editTabButton?.SetEnabled(showGraph);
+      if (!showGraph)
+      {
+        actingNpcEditorView?.Refresh();
+        waypointEditorView?.Refresh();
+      }
     }
 
     private TextAsset GetCurrentScenarioTextAsset()
@@ -1336,7 +1357,7 @@ namespace MultiplayerInfrastructure.Editor
       else
         menu.AddDisabledItem(new GUIContent("Open Selected Scenario TextAsset"));
 
-      // Open Recent 하위 메뉴 — 최근 연 파일 목록(Temp/ScenarioGraphEditor 캐시), 최신 순.
+      // Open Recent 하위 메뉴 — 최근 연 파일 목록(Library/ScenarioGraphEditor 캐시), 최신 순.
       var recents = ScenarioGraphEditorRecentStore.LoadExisting();
       if (recents.Count == 0)
       {
@@ -1765,22 +1786,21 @@ namespace MultiplayerInfrastructure.Editor
 
     private void ValidateResources(ScenarioGraph graph)
     {
-      var npcNodes = graph.Nodes.Values.OfType<ScenarioNPCMoveNode>();
-      var missingNPCs = new List<string>();
-      foreach (var node in npcNodes)
-      {
-        if (!string.IsNullOrEmpty(node.NPCIdentifier)
-            && Registry.Registry.Get<GameObject>(RegistryType.Npc, node.NPCIdentifier) == null
-            && Registry.Registry.Get<GameObject>(RegistryType.Entity, node.NPCIdentifier) == null)
-        {
-          missingNPCs.Add(node.NPCIdentifier);
-        }
-      }
+      // NPCs can be created from EntityPreset requirements at runtime.  At edit
+      // time their runtime identifiers are not necessarily present in Registry,
+      // so a direct Registry lookup produces false "not registered" warnings.
+      // Runtime requirements validation owns that check with the actual providers.
+      var declaredWaypoints = new HashSet<string>(
+        graph.Waypoints?.Where(value => value != null && !string.IsNullOrWhiteSpace(value.Identifier))
+          .Select(value => value.Identifier)
+        ?? Enumerable.Empty<string>(),
+        StringComparer.Ordinal);
       var playerMoveNodes = graph.Nodes.Values.OfType<ScenarioPlayerMoveNode>().Where(n => n.DestinationType == ScenarioMoveDestinationType.Waypoint);
       var missingWaypoints = new List<string>();
       foreach (var node in playerMoveNodes)
       {
         if (!string.IsNullOrEmpty(node.DestinationIdentifier)
+            && !declaredWaypoints.Contains(node.DestinationIdentifier)
             && !Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, node.DestinationIdentifier, out _)
             && !Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, node.DestinationIdentifier, out _))
         {
@@ -1791,6 +1811,7 @@ namespace MultiplayerInfrastructure.Editor
       foreach (var node in npcMoveNodes)
       {
         if (!string.IsNullOrEmpty(node.DestinationIdentifier)
+            && !declaredWaypoints.Contains(node.DestinationIdentifier)
             && !Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, node.DestinationIdentifier, out _)
             && !Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, node.DestinationIdentifier, out _))
         {
@@ -1800,22 +1821,30 @@ namespace MultiplayerInfrastructure.Editor
           }
         }
       }
-      if (missingNPCs.Any() || missingWaypoints.Any())
+      var npcControlNodes = graph.Nodes.Values.OfType<ScenarioNPCControlNode>()
+        .Where(n => n.Mode == ScenarioNPCControlMode.Control
+                    && n.DestinationType == ScenarioMoveDestinationType.Waypoint);
+      foreach (var node in npcControlNodes)
       {
-        var message = "";
-        if (missingNPCs.Any())
+        if (!string.IsNullOrEmpty(node.DestinationIdentifier)
+            && !declaredWaypoints.Contains(node.DestinationIdentifier)
+            && !Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, node.DestinationIdentifier, out _)
+            && !Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, node.DestinationIdentifier, out _)
+            && !missingWaypoints.Contains(node.DestinationIdentifier))
         {
-          message += "다음 NPC들이 등록되지 않았습니다:\n" + string.Join("\n", missingNPCs) + "\n";
+          missingWaypoints.Add(node.DestinationIdentifier);
         }
-        if (missingWaypoints.Any())
-        {
-          message += "다음 Waypoint들이 등록되지 않았습니다:\n" + string.Join("\n", missingWaypoints);
-        }
-        EditorUtility.DisplayDialog("검증 실패", message, "확인");
+      }
+      if (missingWaypoints.Any())
+      {
+        EditorUtility.DisplayDialog(
+          "검증 실패",
+          "다음 Waypoint들이 등록되지 않았습니다:\n" + string.Join("\n", missingWaypoints),
+          "확인");
       }
       else
       {
-        EditorUtility.DisplayDialog("검증 성공", "모든 NPC와 Waypoint가 등록되었습니다.", "확인");
+        EditorUtility.DisplayDialog("검증 성공", "모든 Waypoint가 등록되었습니다.", "확인");
       }
     }
   }

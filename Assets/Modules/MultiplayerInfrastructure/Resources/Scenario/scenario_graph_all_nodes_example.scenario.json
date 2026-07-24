@@ -41,7 +41,8 @@
     },
     "npc_move_waypoint": {
       "identifier": "npc_move_waypoint",
-      "nodeType": "NPCMove",
+      "nodeType": "NPCControl",
+      "mode": "Control",
       "npcIdentifier": "doctor_1",
       "destinationType": "Waypoint",
       "destinationIdentifier": "wp_triage_room",
@@ -99,6 +100,7 @@
       "nodeType": "QuestControl",
       "operation": "Add",
       "failureStrategy": "Overwrite",
+      "persistProgressOnSessionEnd": false,
       "quest": {
         "Id": "all_nodes_quest",
         "Title": "All Nodes",

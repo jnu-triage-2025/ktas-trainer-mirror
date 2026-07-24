@@ -31,6 +31,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       var builder = new ScenarioRequirementBuilder(graph.Identifier);
       ScenarioGraphStructuralValidator.Validate(graph, builder);
       CompileActingNpcRequirements(graph, builder);
+      CompileWaypointRequirements(graph, builder);
       ValidateActingNpcSpawnOrdering(graph, builder);
       var nodes = graph.Nodes.Values
         .OrderBy(node => node?.Identifier ?? string.Empty, StringComparer.Ordinal)
@@ -159,7 +160,42 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
               ScenarioRequirementExpectedSupply.Scenario,
               ScenarioRequirementDirection.Produces);
           }
+          else if (interaction.InteractionType == ScenarioActingNpcInteractionType.Signal)
+          {
+            output.Add(
+              null, $"{interactionPath}.completionSignalIdentifier",
+              "scenario-acting-npc-signal", ScenarioRequirementKind.RuntimeSignal,
+              NormalizeActingNpcSignal(interaction.CompletionSignalIdentifier), true,
+              ScenarioRequirementAvailability.WhenNodeReached,
+              ScenarioRequirementExpectedSupply.Scenario,
+              ScenarioRequirementDirection.Produces);
+          }
         }
+      }
+    }
+
+    private static void CompileWaypointRequirements(
+      ScenarioGraph graph,
+      ScenarioRequirementBuilder output)
+    {
+      if (graph.Waypoints == null)
+        return;
+
+      for (var waypointIndex = 0; waypointIndex < graph.Waypoints.Count; waypointIndex++)
+      {
+        var waypoint = graph.Waypoints[waypointIndex];
+        if (waypoint == null)
+          continue;
+
+        output.AddWithAuthority(
+          null, $"waypoints[{waypointIndex}].identifier", "scenario-waypoint",
+          ScenarioRequirementKind.SpatialAnchor, waypoint.Identifier, true,
+          ScenarioRequirementAvailability.BeforeScenarioStart,
+          ScenarioRequirementExpectedSupply.Scenario,
+          ScenarioRequirementDirection.Produces,
+          ScenarioRequirementAuthority.Any,
+          null,
+          ScenarioRequirementCapability.ProvidesPosition);
       }
     }
 
@@ -209,6 +245,8 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
     private static bool UsesActingNpc(IScenarioNode node, string identifier)
       => node is ScenarioNPCMoveNode move
            && string.Equals(move.NPCIdentifier, identifier, StringComparison.Ordinal)
+         || node is ScenarioNPCControlNode control
+           && string.Equals(control.NPCIdentifier, identifier, StringComparison.Ordinal)
          || node is ScenarioNpcInteractControlNode interact
            && string.Equals(interact.NpcIdentifier, identifier, StringComparison.Ordinal);
 
@@ -560,6 +598,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
         Register<ScenarioSoundNode>(ScenarioNodeType.Sound, (value, output) => AddResource(value, output, "soundResourceIdentifier", "sound", ScenarioRequirementKind.AudioResource, value.SoundResourceIdentifier, true, ScenarioRequirementAvailability.WhenNodeReached)),
         Register<ScenarioPlayerMoveNode>(ScenarioNodeType.PlayerMove, ExtractPlayerMove),
         Register<ScenarioNPCMoveNode>(ScenarioNodeType.NPCMove, ExtractNpcMove),
+        Register<ScenarioNPCControlNode>(ScenarioNodeType.NPCControl, ExtractNpcControl),
         Register<ScenarioCameraTargetNode>(ScenarioNodeType.CameraTarget, (value, output) => output.Add(value, "targetObjectIdentifier", "camera-target-not-consumed", ScenarioRequirementKind.Entity, value.TargetObjectIdentifier, false, ScenarioRequirementAvailability.NotConsumed, ScenarioRequirementExpectedSupply.Scene)),
         Register<ScenarioParallelNode>(ScenarioNodeType.Parallel, ExtractParallel),
         Register<ScenarioInvokeEventNode>(ScenarioNodeType.InvokeEvent, (value, output) => AddEvent(value, output, "eventIdentifier", "event-invocation", value.EventIdentifier, true)),
@@ -675,6 +714,39 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       output.Add(node, "npcIdentifier", "npc-move-target", ScenarioRequirementKind.Npc, node.NPCIdentifier, true, ScenarioRequirementAvailability.WhenNodeReached, ScenarioRequirementExpectedSupply.Scene, ScenarioRequirementDirection.Consumes, ScenarioRequirementCapability.ResolvableNpcMoveTarget, ScenarioRequirementCapability.ProvidesPosition);
       if (node.DestinationType == ScenarioMoveDestinationType.Waypoint)
         output.Add(node, "destinationIdentifier", "movement-destination", ScenarioRequirementKind.SpatialAnchor, node.DestinationIdentifier, true, ScenarioRequirementAvailability.WhenNodeReached, ScenarioRequirementExpectedSupply.Scene, ScenarioRequirementDirection.Consumes, ScenarioRequirementCapability.ProvidesPosition);
+    }
+
+    private static void ExtractNpcControl(ScenarioNPCControlNode node, ScenarioRequirementBuilder output)
+    {
+      output.Add(node, "npcIdentifier", "npc-control-target", ScenarioRequirementKind.Npc,
+        node.NPCIdentifier, true, ScenarioRequirementAvailability.WhenNodeReached,
+        ScenarioRequirementExpectedSupply.Scene, ScenarioRequirementDirection.Consumes,
+        ScenarioRequirementCapability.RegisteredNpcComponent,
+        ScenarioRequirementCapability.ResolvableNpcMoveTarget,
+        ScenarioRequirementCapability.ProvidesPosition);
+
+      if (node.Mode == ScenarioNPCControlMode.Control
+          && node.DestinationType == ScenarioMoveDestinationType.Waypoint)
+      {
+        output.Add(node, "destinationIdentifier", "movement-destination",
+          ScenarioRequirementKind.SpatialAnchor, node.DestinationIdentifier, true,
+          ScenarioRequirementAvailability.WhenNodeReached, ScenarioRequirementExpectedSupply.Scene,
+          ScenarioRequirementDirection.Consumes, ScenarioRequirementCapability.ProvidesPosition);
+      }
+
+      if (node.Mode != ScenarioNPCControlMode.Update
+          || node.InteractOperation == ScenarioNPCInteractCrudOperation.None)
+        return;
+
+      var availability = node.InteractOperation == ScenarioNPCInteractCrudOperation.Delete
+        ? ScenarioRequirementAvailability.OptionalFallback
+        : ScenarioRequirementAvailability.WhenNodeReached;
+      var capability = node.InteractOperation == ScenarioNPCInteractCrudOperation.Update
+        ? ScenarioRequirementCapability.ToggleableInteractable
+        : ScenarioRequirementCapability.Interactable;
+      output.Add(node, "interactableIdentifier", "npc-interactable",
+        ScenarioRequirementKind.Interactable, node.InteractableIdentifier, true, availability,
+        ScenarioRequirementExpectedSupply.Scene, ScenarioRequirementDirection.Consumes, capability);
     }
 
     private static void ExtractParallel(ScenarioParallelNode node, ScenarioRequirementBuilder output)

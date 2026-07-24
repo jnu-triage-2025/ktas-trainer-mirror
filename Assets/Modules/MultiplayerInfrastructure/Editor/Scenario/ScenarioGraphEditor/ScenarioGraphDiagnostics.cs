@@ -500,6 +500,9 @@ namespace MultiplayerInfrastructure.Editor
     {
       const string graphLevel = "(graph)";
 
+      AddSessionStartActingNpcInfos(graph, items, graphLevel);
+      AddUndefinedWaypointWarnings(graph, items);
+
       // 진입 노드 감지: 다른 노드로부터 참조되지 않는 노드
       var referenced = new HashSet<string>();
       foreach (var node in graph.Nodes.Values)
@@ -539,6 +542,73 @@ namespace MultiplayerInfrastructure.Editor
         .Count();
       if (terminalCount == 0)
         items.Add(new DiagnosticItem(Severity.Warning, graphLevel, "종료 노드(nextIdentifier=null)가 없습니다."));
+    }
+
+    private static void AddUndefinedWaypointWarnings(
+        ScenarioGraph graph,
+        List<DiagnosticItem> items)
+    {
+      var definedWaypointIds = new HashSet<string>(
+        graph.Waypoints?
+          .Where(waypoint => waypoint != null && !string.IsNullOrWhiteSpace(waypoint.Identifier))
+          .Select(waypoint => waypoint.Identifier)
+        ?? Enumerable.Empty<string>(),
+        StringComparer.Ordinal);
+
+      foreach (var node in graph.Nodes.Values)
+      {
+        if (node == null)
+          continue;
+
+        string waypointId = node switch
+        {
+          ScenarioPlayerMoveNode playerMove
+            when playerMove.DestinationType == ScenarioMoveDestinationType.Waypoint
+            => playerMove.DestinationIdentifier,
+          ScenarioNPCMoveNode npcMove
+            when npcMove.DestinationType == ScenarioMoveDestinationType.Waypoint
+            => npcMove.DestinationIdentifier,
+          ScenarioNPCControlNode npcControl
+            when npcControl.Mode == ScenarioNPCControlMode.Control
+                 && npcControl.DestinationType == ScenarioMoveDestinationType.Waypoint
+            => npcControl.DestinationIdentifier,
+          ScenarioQuestWaypointHighlightNode highlight => highlight.WaypointIdentifier,
+          _ => null
+        };
+
+        if (string.IsNullOrWhiteSpace(waypointId) || definedWaypointIds.Contains(waypointId))
+          continue;
+
+        items.Add(new DiagnosticItem(
+          Severity.Warning,
+          node.Identifier,
+          $"이 시나리오 파일에서는 {waypointId} waypoint가 정의되지 않았습니다. " +
+          $"게임을 실행하기 전, 게임 시스템에 다른 방법으로 {waypointId}를 등록했는지 확인하세요."));
+      }
+    }
+
+    private static void AddSessionStartActingNpcInfos(
+        ScenarioGraph graph,
+        List<DiagnosticItem> items,
+        string graphLevel)
+    {
+      if (graph.ActingNpcs == null)
+        return;
+
+      foreach (var actingNpc in graph.ActingNpcs
+                   .Where(value => value != null
+                                   && value.SpawnOnStart
+                                   && !string.IsNullOrWhiteSpace(value.Identifier))
+                   .GroupBy(value => value.Identifier, StringComparer.Ordinal)
+                   .Select(group => group.First())
+                   .OrderBy(value => value.Identifier, StringComparer.Ordinal))
+      {
+        items.Add(new DiagnosticItem(
+          Severity.Info,
+          graphLevel,
+          $"{actingNpc.Identifier}는 세션이 시작되면 EntityPreset으로부터 로드됩니다. " +
+          "게임을 실행하기 전, 게임 시스템에서 사용중인 EntityPresetRegistryRequirementsSO에 이 NPC가 등록되어있는지 확인하세요."));
+      }
     }
   }
 }

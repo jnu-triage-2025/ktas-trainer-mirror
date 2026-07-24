@@ -25,7 +25,8 @@
 - actingNpc는 `presetIdentifier`로 기존 EntityPreset을 참조한다.
 - `Npc`가 `ISpawnedEntityIdentifierReceiver`를 구현하여 Entity/Npc registry 키를 일치시킨다.
 - `ScenarioController`가 시작 전 actingNpc를 생성하고, 종료/실패/교체 시 소유 actingNpc를 정리한다.
-- 첫 지원 상호작용은 `StartScenario`, `ItemSubmission`으로 제한한다.
+- 상호작용은 `StartScenario`, `ItemSubmission`과 단순 런타임 신호를 발생시키는 `Signal`을 지원한다.
+- Scenario Graph Editor의 Edit 탭에서 최상위 `actingNpcs`와 중첩 상호작용/필수 아이템을 수정한다.
 - 네트워크 프리팹 등록과 에셋 전달은 기존 preset catalog의 책임으로 유지한다.
 
 ### 자세한 달성 목표
@@ -34,6 +35,7 @@
 - preset이 없거나 `Npc` 컴포넌트가 없으면 시나리오 시작을 거부하고 부분 생성물을 정리한다.
 - 회전 Euler 값과 `despawnOnScenarioEnd`를 지원한다.
 - 저장-로드-저장 과정에서 actingNpc 데이터가 보존된다.
+- Graph Editor에서 추가·삭제·필드 수정한 actingNpc 데이터가 JSON 저장과 undo/redo에 포함된다.
 
 ### 문서화
 

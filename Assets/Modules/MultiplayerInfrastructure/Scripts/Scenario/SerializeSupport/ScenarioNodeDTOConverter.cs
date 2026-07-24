@@ -29,6 +29,7 @@ namespace MultiplayerInfrastructure.Scenario
         "Sound" => Deserialize<ScenarioSoundNodeDTO>(root, options),
         "PlayerMove" => Deserialize<ScenarioPlayerMoveNodeDTO>(root, options),
         "NPCMove" => Deserialize<ScenarioNPCMoveNodeDTO>(root, options),
+        "NPCControl" => Deserialize<ScenarioNPCControlNodeDTO>(root, options),
         "CameraTarget" => Deserialize<ScenarioCameraTargetNodeDTO>(root, options),
         "InvokeEvent" => Deserialize<ScenarioInvokeEventNodeDTO>(root, options),
         "ServerInternalSignal" => Deserialize<ScenarioServerInternalSignalNodeDTO>(root, options),

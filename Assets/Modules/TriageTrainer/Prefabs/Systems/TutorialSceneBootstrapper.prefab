@@ -53,3 +53,4 @@ MonoBehaviour:
   scenarioResourcePath: Scenario/tutorial.scenario
   startNodeIdentifier: 
   scenarioStartDelayFrames: 2
+  networkReadyTimeoutFrames: 600

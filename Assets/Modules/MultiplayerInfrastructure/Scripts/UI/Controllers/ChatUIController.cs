@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -14,6 +15,19 @@ namespace MultiplayerInfrastructure.UI
 
     private UIDocument _uiDocument;
     private ChatPanelElement _chatPanel;
+    private readonly List<PendingMessage> _pendingMessages = new List<PendingMessage>();
+
+    private readonly struct PendingMessage
+    {
+      public readonly string Message;
+      public readonly bool ShowToastWhenHidden;
+
+      public PendingMessage(string message, bool showToastWhenHidden)
+      {
+        Message = message;
+        ShowToastWhenHidden = showToastWhenHidden;
+      }
+    }
 
     public bool IsOpen => _chatPanel != null && _chatPanel.IsOpen;
 
@@ -25,9 +39,12 @@ namespace MultiplayerInfrastructure.UI
     private void Start()
     {
       _uiDocument = GetComponent<UIDocument>();
+      if (_uiDocument == null)
+        return;
       _uiDocument.sortingOrder = _sortingOrder;
 
       BindElement();
+      FlushPendingMessages();
       HideImmediately();
     }
 
@@ -35,8 +52,12 @@ namespace MultiplayerInfrastructure.UI
     {
       if (_uiDocument == null)
         _uiDocument = GetComponent<UIDocument>();
+      if (_uiDocument == null)
+        return;
 
       VisualElement root = _uiDocument.rootVisualElement;
+      if (root == null)
+        return;
       EnsureStyleSheet(root);
       _chatPanel = root.Q<ChatPanelElement>(_chatRootName);
 
@@ -60,7 +81,14 @@ namespace MultiplayerInfrastructure.UI
     public void AppendMessage(string message, bool showToastWhenHidden = true)
     {
       EnsurePanel();
-      _chatPanel?.AppendMessage(message, showToastWhenHidden);
+      if (_chatPanel == null)
+      {
+        _pendingMessages.Add(new PendingMessage(message, showToastWhenHidden));
+        return;
+      }
+
+      FlushPendingMessages();
+      _chatPanel.AppendMessage(message, showToastWhenHidden);
     }
 
     public void ClearLog()
@@ -173,6 +201,19 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       BindElement();
+    }
+
+    private void FlushPendingMessages()
+    {
+      if (_chatPanel == null || _pendingMessages.Count == 0)
+        return;
+
+      for (int i = 0; i < _pendingMessages.Count; i++)
+      {
+        var pending = _pendingMessages[i];
+        _chatPanel.AppendMessage(pending.Message, pending.ShowToastWhenHidden);
+      }
+      _pendingMessages.Clear();
     }
 
   }

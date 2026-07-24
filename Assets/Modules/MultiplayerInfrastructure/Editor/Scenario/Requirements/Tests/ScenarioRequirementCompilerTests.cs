@@ -34,9 +34,10 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
         ActingNpcIdentifier = "npc_doctor",
         NextIdentifier = "move"
       });
-      graph.Add(new ScenarioNPCMoveNode
+      graph.Add(new ScenarioNPCControlNode
       {
         Identifier = "move",
+        Mode = ScenarioNPCControlMode.Control,
         NPCIdentifier = "npc_doctor",
         DestinationType = ScenarioMoveDestinationType.Position
       });
@@ -74,9 +75,10 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
           }
         }
       };
-      graph.Add(new ScenarioNPCMoveNode
+      graph.Add(new ScenarioNPCControlNode
       {
         Identifier = "move",
+        Mode = ScenarioNPCControlMode.Control,
         NPCIdentifier = "npc_doctor",
         DestinationType = ScenarioMoveDestinationType.Position,
         NextIdentifier = "spawn"
@@ -97,9 +99,10 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
     public void NpcMoveAndWaypointHighlightPreserveAllOccurrencesAndCapabilities()
     {
       var graph = new ScenarioGraph { Identifier = "compiler-test" };
-      graph.Add(new ScenarioNPCMoveNode
+      graph.Add(new ScenarioNPCControlNode
       {
         Identifier = "move",
+        Mode = ScenarioNPCControlMode.Control,
         NPCIdentifier = "npc-1",
         DestinationType = ScenarioMoveDestinationType.Waypoint,
         DestinationIdentifier = " treatment-room "
@@ -119,6 +122,35 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
       Assert.That(anchor.Capabilities, Does.Contain(ScenarioRequirementCapability.HighlightableWaypoint));
       Assert.That(anchor.Occurrences, Has.Count.EqualTo(2));
       Assert.That(anchor.Occurrences.Select(value => value.FieldPath), Is.EquivalentTo(new[] { "destinationIdentifier", "waypointIdentifier" }));
+    }
+
+    [Test]
+    public void ScenarioWaypointProducesBeforeStartSpatialAnchor()
+    {
+      var graph = new ScenarioGraph
+      {
+        Identifier = "scenario-waypoint-requirements",
+        Waypoints = new List<ScenarioWaypointDefinition>
+        {
+          new ScenarioWaypointDefinition { Identifier = "triage-desk" }
+        }
+      };
+      graph.Add(new ScenarioPlayerMoveNode
+      {
+        Identifier = "move",
+        DestinationType = ScenarioMoveDestinationType.Waypoint,
+        DestinationIdentifier = "triage-desk"
+      });
+
+      var manifest = ScenarioRequirementCompiler.CompileInferred(graph);
+      var waypoint = manifest.Requirements.Single(value =>
+        value.Key.Equals(new ScenarioRequirementKey(ScenarioRequirementKind.SpatialAnchor, "triage-desk")));
+
+      Assert.That(waypoint.Occurrences.Any(value =>
+        value.Direction == ScenarioRequirementDirection.Produces
+        && value.ExpectedSupply == ScenarioRequirementExpectedSupply.Scenario
+        && value.Availability == ScenarioRequirementAvailability.BeforeScenarioStart), Is.True);
+      Assert.That(waypoint.Occurrences.Any(value => value.Direction == ScenarioRequirementDirection.Consumes), Is.True);
     }
 
     [Test]

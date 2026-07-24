@@ -28,7 +28,7 @@ actingNpc의 `spawnOnStart` 또는 `ScenarioEntityPresetSpawnNode.ActingNpcIdent
 `actingNpcIdentifier`를 쓸 때에는 actingNpc 정의가 preset·transform·상호작용을 소유한다. 노드의
 `presetIdentifier` 등 일반 preset spawn 전용 필드는 무시된다.
 
-시작 소환 actingNpc는 사전 검증 전에 등록되므로 `NPCMove`와 `NpcInteractControl`이 요구하는 NPC provider를
+시작 소환 actingNpc는 사전 검증 전에 등록되므로 `NPCControl`이 요구하는 NPC provider를
 같은 시나리오의 actingNpc 선언이 공급할 수 있다. 중간 소환 actingNpc는 해당 spawn 노드 이후에 사용해야 한다.
 
 ## 식별자 계약
@@ -42,6 +42,7 @@ actingNpc의 `spawnOnStart` 또는 `ScenarioEntityPresetSpawnNode.ActingNpcIdent
 - `StartScenario`: 경량 `IInteract` adapter를 만들고 대상 그래프를 Registry에서 찾아 시작한다.
 - `ItemSubmission`: NPC 하위에 `ItemSubmissionInteractable`을 생성하고
   `ItemSubmissionDefinition`을 구성한다.
+- `Signal`: 상호작용 시 `completionSignalIdentifier`를 런타임 신호로 발생시킨다.
 
 알 수 없는 interaction enum과 중복 identifier는 JSON 로드 단계에서 거부된다.
 
@@ -56,7 +57,7 @@ actingNpc의 `spawnOnStart` 또는 `ScenarioEntityPresetSpawnNode.ActingNpcIdent
 
 - Unity 프리팹 자체는 JSON에 직렬화하지 않는다.
 - 지원 actingNpc type은 현재 `Npc`뿐이다.
-- 지원 interaction type은 현재 `StartScenario`, `ItemSubmission`뿐이다.
+- 지원 interaction type은 `StartScenario`, `ItemSubmission`, `Signal`이다.
 - 같은 actingNpc를 중복 생성하는 것은 허용하지 않는다. 다시 생성하려면 별도 despawn/re-spawn 기능이 필요하다.
 - actingNpc별 scale, spawn anchor, 대화 한 줄 자체를 실행하는 interaction은 아직 지원하지 않는다.
 - 네트워크 actingNpc는 서버 구성 후 `ScenarioNetworkRelay`가 graph/actingNpc identifier와

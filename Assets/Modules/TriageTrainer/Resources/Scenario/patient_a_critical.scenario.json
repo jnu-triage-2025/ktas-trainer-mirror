@@ -52,6 +52,7 @@
       "nextIdentifier": "P002",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Grab_Stretcher",
       "quest": null
     },
@@ -191,6 +192,7 @@
       "nextIdentifier": "E005",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Grab_Stretcher",
       "quest": null
     },
@@ -260,6 +262,7 @@
       "nextIdentifier": "V011",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Check_Vital_PatientA",
       "quest": null
     },
@@ -342,6 +345,7 @@
       "nextIdentifier": "CC_B_vitalcheck_patient_a",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Check_Vital_PatientA",
       "quest": null
     },
@@ -359,6 +363,7 @@
       "nextIdentifier": "V012",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Check_GCS_PatientA",
       "quest": null
     },
@@ -589,6 +594,7 @@
       "nextIdentifier": "CC_C_gcs_patient_a",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Check_GCS_PatientA",
       "quest": null
     },
@@ -606,6 +612,7 @@
       "nextIdentifier": "E007",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Stabilizer_And_Suction_PatientA",
       "quest": null
     },
@@ -792,6 +799,7 @@
       "nextIdentifier": "CC_D_suction_patient_a",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Stabilizer_And_Suction_PatientA",
       "quest": null
     },
@@ -887,6 +895,7 @@
       "nextIdentifier": "E010",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Intubation_PatientA",
       "quest": null
     },
@@ -1126,6 +1135,7 @@
       "nextIdentifier": "D014",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Intubation_PatientA",
       "quest": null
     },
@@ -1159,6 +1169,7 @@
       "nextIdentifier": "V015",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Oxygen_PatientA",
       "quest": null
     },
@@ -1371,6 +1382,7 @@
       "nextIdentifier": "CC_B_intubation_A_oxy_patient_a",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Oxygen_PatientA",
       "quest": null
     },
@@ -1388,6 +1400,7 @@
       "nextIdentifier": "V016",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_BleedingControl_PatientA",
       "quest": null
     },
@@ -1545,6 +1558,7 @@
       "nextIdentifier": "CC_C_stopbleeding_patient_a",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_BleedingControl_PatientA",
       "quest": null
     },
@@ -1562,6 +1576,7 @@
       "nextIdentifier": "E017",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_IV_Line_PatientA",
       "quest": null
     },
@@ -1741,6 +1756,7 @@
       "nextIdentifier": "D019",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_IV_Line_PatientA",
       "quest": null
     },
@@ -1766,6 +1782,7 @@
       "nextIdentifier": "V018",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Cline_Assist",
       "quest": null
     },
@@ -1803,6 +1820,7 @@
       "nextIdentifier": "D020",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Cline_Assist",
       "quest": null
     },
@@ -1828,6 +1846,7 @@
       "nextIdentifier": "V019",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Lv1_Fluids",
       "quest": null
     },
@@ -1937,6 +1956,7 @@
       "nextIdentifier": "CC_D_iv_patient_a",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Lv1_Fluids",
       "quest": null
     },
@@ -1977,6 +1997,7 @@
       "nextIdentifier": "V022",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Check_Pulse",
       "quest": null
     },
@@ -2007,6 +2028,7 @@
       "nextIdentifier": "D024",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Check_Pulse",
       "quest": null
     },
@@ -2086,6 +2108,7 @@
       "nextIdentifier": "V023",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Ambu_A",
       "quest": null
     },
@@ -2316,6 +2339,7 @@
       "nextIdentifier": "CC_A_ambu",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Ambu_A",
       "quest": null
     },
@@ -2333,6 +2357,7 @@
       "nextIdentifier": "V024",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_ChestComp_B",
       "quest": null
     },
@@ -2510,6 +2535,7 @@
       "nextIdentifier": "CC_B_chestcomp",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_ChestComp_B",
       "quest": null
     },
@@ -2527,6 +2553,7 @@
       "nextIdentifier": "V025",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Defib_C",
       "quest": null
     },
@@ -2726,6 +2753,7 @@
       "nextIdentifier": "CC_C_defib",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Defib_C",
       "quest": null
     },
@@ -2743,6 +2771,7 @@
       "nextIdentifier": "V026",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Epi_D",
       "quest": null
     },
@@ -2964,6 +2993,7 @@
       "nextIdentifier": "CC_D_epi",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Epi_D",
       "quest": null
     },
@@ -3057,6 +3087,7 @@
       "nextIdentifier": "V027",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_ChestComp_A",
       "quest": null
     },
@@ -3234,6 +3265,7 @@
       "nextIdentifier": "CC_A_chestcomp",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_ChestComp_A",
       "quest": null
     },
@@ -3251,6 +3283,7 @@
       "nextIdentifier": "V028",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Ambu_B",
       "quest": null
     },
@@ -3356,6 +3389,7 @@
       "nextIdentifier": "CC_B_ambu",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Ambu_B",
       "quest": null
     },
@@ -3373,6 +3407,7 @@
       "nextIdentifier": "V029",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Epi_C",
       "quest": null
     },
@@ -3602,6 +3637,7 @@
       "nextIdentifier": "CC_C_epi",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Epi_C",
       "quest": null
     },
@@ -3619,6 +3655,7 @@
       "nextIdentifier": "V030",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Defib_D",
       "quest": null
     },
@@ -3775,6 +3812,7 @@
       "nextIdentifier": "CC_D_defib",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Defib_D",
       "quest": null
     },
@@ -3822,6 +3860,7 @@
       "nextIdentifier": "V031",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Check_Pulse_ROSC",
       "quest": null
     },
@@ -3852,6 +3891,7 @@
       "nextIdentifier": "D035",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Check_Pulse_ROSC",
       "quest": null
     },
@@ -3922,6 +3962,7 @@
       "nextIdentifier": "V032",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Return_Triage",
       "quest": null
     },
@@ -3959,6 +4000,7 @@
       "nextIdentifier": "CC_A_triagearea",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Return_Triage",
       "quest": null
     },
@@ -3976,6 +4018,7 @@
       "nextIdentifier": "V033",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Cut_Clothing",
       "quest": null
     },
@@ -4026,6 +4069,7 @@
       "nextIdentifier": "CC_B_cut_patient_a",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Cut_Clothing",
       "quest": null
     },
@@ -4043,6 +4087,7 @@
       "nextIdentifier": "V034",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Check_GCS_ROSC",
       "quest": null
     },
@@ -4269,6 +4314,7 @@
       "nextIdentifier": "CC_D_gcs_patient_a_rosc",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Check_GCS_ROSC",
       "quest": null
     },

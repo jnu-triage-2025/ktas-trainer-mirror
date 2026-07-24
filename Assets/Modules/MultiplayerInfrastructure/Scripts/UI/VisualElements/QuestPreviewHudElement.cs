@@ -15,8 +15,10 @@ namespace MultiplayerInfrastructure.UI
     private static readonly Color TitleColor = new Color(0.86f, 0.94f, 0.86f, 1f);
     private static readonly Color ContentColor = new Color(0.95f, 0.98f, 0.96f, 1f);
     private static readonly Color DescriptionColor = new Color(0.8f, 0.88f, 0.84f, 0.92f);
+    private static readonly Color HintColor = new Color(0.8f, 0.88f, 0.84f, 0.92f);
 
     private VisualElement _cards;
+    private VisualElement _detailHint;
 
     public QuestPreviewHudElement()
     {
@@ -89,6 +91,16 @@ namespace MultiplayerInfrastructure.UI
       _cards.style.flexDirection = FlexDirection.Column;
       _cards.style.alignItems = Align.FlexEnd;
       Add(_cards);
+
+      _detailHint = new Label($"[{DefaultsKeyConfiguration.OpenQuestUI}]를 눌러 자세히")
+      {
+        pickingMode = PickingMode.Ignore
+      };
+      _detailHint.style.color = HintColor;
+      _detailHint.style.fontSize = 11;
+      _detailHint.style.marginTop = 2;
+      _detailHint.style.marginRight = 4;
+      Add(_detailHint);
     }
 
     private VisualElement CreateCard(QuestData quest)
@@ -110,46 +122,26 @@ namespace MultiplayerInfrastructure.UI
       card.style.borderBottomRightRadius = 8;
       card.style.paddingLeft = 12;
       card.style.paddingRight = 12;
-      card.style.paddingTop = 10;
-      card.style.paddingBottom = 10;
+      card.style.paddingTop = 8;
+      card.style.paddingBottom = 8;
       card.style.marginBottom = 10;
       card.style.flexDirection = FlexDirection.Column;
 
       var title = new Label(quest.Title ?? string.Empty) { pickingMode = PickingMode.Ignore };
       title.style.color = TitleColor;
-      title.style.fontSize = 12;
+      title.style.fontSize = 15;
       title.style.unityFontStyleAndWeight = FontStyle.Bold;
       title.style.opacity = 0.92f;
       card.Add(title);
 
-      var description = new Label(quest.Description ?? string.Empty) { pickingMode = PickingMode.Ignore };
-      description.style.color = DescriptionColor;
-      description.style.fontSize = 11;
-      description.style.marginTop = 4;
-      description.style.whiteSpace = WhiteSpace.Normal;
-      description.style.display = string.IsNullOrWhiteSpace(quest.Description) ? DisplayStyle.None : DisplayStyle.Flex;
-      card.Add(description);
-
-      var content = new Label(quest.QuestContent ?? string.Empty) { pickingMode = PickingMode.Ignore };
+      var content = new Label(GetCurrentObjective(quest)) { pickingMode = PickingMode.Ignore };
       content.style.color = ContentColor;
       content.style.fontSize = 13;
       content.style.marginTop = 6;
-      content.style.whiteSpace = WhiteSpace.Normal;
+      content.style.whiteSpace = WhiteSpace.NoWrap;
+      content.style.overflow = Overflow.Hidden;
+      content.style.textOverflow = TextOverflow.Ellipsis;
       card.Add(content);
-
-      AddCriteria(card, QuestManager.GetQuestTasks(quest), quest.IsOrdinal);
-
-      var progress = new Label($"진행도: {FormatProgress(quest)}") { pickingMode = PickingMode.Ignore };
-      progress.style.color = quest.Completed ? AccentColor : ContentColor;
-      progress.style.fontSize = 11;
-      progress.style.marginTop = 4;
-      card.Add(progress);
-
-      var status = new Label(quest.Completed ? "상태: 완료" : "상태: 진행 중") { pickingMode = PickingMode.Ignore };
-      status.style.color = quest.Completed ? AccentColor : DescriptionColor;
-      status.style.fontSize = 11;
-      status.style.marginTop = 2;
-      card.Add(status);
 
       return card;
     }
@@ -159,15 +151,56 @@ namespace MultiplayerInfrastructure.UI
       var card = CreateCard(quest);
       card.Clear();
 
-      var completed = new Label("퀘스트 완료") { pickingMode = PickingMode.Ignore };
-      completed.style.color = AccentColor;
-      completed.style.fontSize = 16;
-      completed.style.unityFontStyleAndWeight = FontStyle.Bold;
-      completed.style.unityTextAlign = TextAnchor.MiddleCenter;
-      completed.style.paddingTop = 8;
-      completed.style.paddingBottom = 8;
-      card.Add(completed);
+      var title = new Label(quest.Title ?? string.Empty) { pickingMode = PickingMode.Ignore };
+      title.style.color = TitleColor;
+      title.style.fontSize = 15;
+      title.style.unityFontStyleAndWeight = FontStyle.Bold;
+      card.Add(title);
+
+      var objectiveRow = new VisualElement { pickingMode = PickingMode.Ignore };
+      objectiveRow.style.position = Position.Relative;
+      objectiveRow.style.marginTop = 6;
+      objectiveRow.style.alignSelf = Align.FlexStart;
+      objectiveRow.style.maxWidth = 296;
+
+      var objective = new Label(GetCurrentObjective(quest)) { pickingMode = PickingMode.Ignore };
+      objective.style.color = AccentColor;
+      objective.style.fontSize = 13;
+      objective.style.whiteSpace = WhiteSpace.NoWrap;
+      objective.style.overflow = Overflow.Hidden;
+      objective.style.textOverflow = TextOverflow.Ellipsis;
+      objectiveRow.Add(objective);
+
+      var strike = new VisualElement { pickingMode = PickingMode.Ignore };
+      strike.style.position = Position.Absolute;
+      strike.style.left = 0;
+      strike.style.right = 0;
+      strike.style.top = new Length(50, LengthUnit.Percent);
+      strike.style.height = 1;
+      strike.style.backgroundColor = AccentColor;
+      objectiveRow.Add(strike);
+      card.Add(objectiveRow);
       return card;
+    }
+
+    public static string GetCurrentObjective(QuestData quest)
+    {
+      var tasks = QuestManager.GetQuestTasks(quest);
+      if (tasks != null)
+      {
+        for (int i = 0; i < tasks.Count; i++)
+        {
+          var task = tasks[i];
+          if (task != null && !task.Completed)
+          {
+            string taskText = FormatCriterion(task);
+            if (!string.IsNullOrWhiteSpace(taskText))
+              return taskText;
+          }
+        }
+      }
+
+      return quest?.QuestContent?.Trim() ?? string.Empty;
     }
 
     private static void AddCriteria(VisualElement card, IReadOnlyList<QuestCompletionCriteria> criteria, bool isOrdinal)

@@ -7,6 +7,7 @@ namespace MultiplayerInfrastructure.Scenario
     Sound,
     PlayerMove,
     NPCMove,
+    NPCControl,
     CameraTarget,
     Parallel,
     InvokeEvent,

@@ -125,13 +125,20 @@ flags: []
 | `moveDuration` | `float` | (`moveMode`가 `ByDuration`일 때) 이동에 걸리는 시간(초) | `2.0` |
 | `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
 
-### NPCMove
+### NPCControl
 
-의사나 간호사 같은 NPC 캐릭터를 목적지로 이동시키는 노드입니다. 필드 구성은 `PlayerMove`와 완전히 동일하고, "누구를 움직이는지"만 다르다고 생각하면 됩니다. 여러 NPC를 동시에 등장·퇴장시키는 장면에서는 각 NPC마다 별도의 NPCMove 노드를 두고, 필요하면 `Parallel` 노드로 묶어 동시에 움직이게 할 수도 있습니다.
+NPC의 런타임 설정과 이동을 한 노드에서 제어합니다. `mode: Update`는 Interact CRUD 및 이름 표시를 갱신하고, `mode: Control`은 NPC 이동을 지시합니다.
 
 | 필드 이름 | 값 타입 | 값 | 예시 |
 |---|---|---|---|
-| `npcIdentifier` | `string` | 이동할 NPC의 식별자 | `npc_doctor` |
+| `mode` | `string` (`Update`\|`Control`) | 갱신 또는 이동 제어 | `Control` |
+| `npcIdentifier` | `string` | 대상 NPC의 식별자 | `npc_doctor` |
+| `interactOperation` | `string` (`None`\|`Create`\|`Read`\|`Update`\|`Delete`) | (`Update`일 때) Interact CRUD | `Update` |
+| `interactableIdentifier` | `string` | CRUD 대상 Interactable 식별자 | `submission_a` |
+| `interactEnabled` | `bool` | (`interactOperation: Update`일 때) 활성 상태 | `true` |
+| `resultStateKey` | `string` | (`interactOperation: Read`일 때) 존재 여부를 `true`/`false`로 기록할 상태 키 | `npc.interact.exists` |
+| `displayName` | `string` | (`Update`일 때) NPC 머리 위 표시 이름 | `???` |
+| `showOverheadName` | `bool` | (`Update`일 때) 머리 위 이름 표시 여부 | `true` |
 | `destinationType` | `string` (`Position`\|`Waypoint`) | 목적지 지정 방식 | `Position` |
 | `destinationIdentifier` | `string` | (`Waypoint`일 때) 목적지 웨이포인트 식별자 | `wp_bed_a` |
 | `destinationX` / `destinationY` / `destinationZ` | `float` | (`Position`일 때) 목적지 좌표 | `5.0` |
@@ -509,17 +516,6 @@ Dialogue 노드처럼 화면에 텍스트 창을 띄우지 않고, 순수하게 
 |---|---|---|---|
 | `itemIdentifier` | `string` | 요구 아이템 식별자 | `gauze` |
 | `count` | `int` | 요구 수량(기본값 1) | `2` |
-
-### NpcInteractControl
-
-NPC가 특정 시점에만 상호작용 가능하게 만들고 싶을 때 쓰는 노드입니다. 예를 들어 시나리오 중반에 도달하기 전까지는 의사 NPC에게 "아이템 제출" 기능이 없다가, 특정 지점을 지나면 이 노드로 그 기능을 활성화(`Add` 또는 `Enable`)하고, 시나리오가 끝나면 다시 비활성화(`Disable`)하는 식으로 사용합니다. 이렇게 하면 아직 준비되지 않은 상호작용을 플레이어가 미리 눌러버리는 상황을 막을 수 있습니다.
-
-| 필드 이름 | 값 타입 | 값 | 예시 |
-|---|---|---|---|
-| `npcIdentifier` | `string` | 대상 NPC의 레지스트리 식별자 | `npc_doctor` |
-| `interactableIdentifier` | `string` | 대상 Interactable의 식별자. `Add` 시 레지스트리에서 해당 식별자의 인터랙트 컴포넌트를 찾아 NPC의 커스텀 소스로 추가하고, `Enable`/`Disable` 시 대상이 토글 가능한 인터랙터블이면 활성 상태를 전환한다 | `submission_a` |
-| `operation` | `string` (`Add`\|`Remove`\|`Enable`\|`Disable`) | 수행할 동작. `Add`=추가, `Remove`=제거, `Enable`=활성화, `Disable`=비활성화(기본값 `Add`) | `Add` |
-| `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
 
 ### ChatPrint
 
