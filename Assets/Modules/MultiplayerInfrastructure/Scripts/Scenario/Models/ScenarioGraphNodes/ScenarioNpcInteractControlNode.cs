@@ -10,6 +10,8 @@ namespace MultiplayerInfrastructure.Scenario
     Enable,
     /// <summary>NPC 에 부착/등록된 Interactable 을 비활성화한다.</summary>
     Disable,
+    /// <summary>NPC의 표시명과 머리 위 이름표 표시 여부를 갱신한다.</summary>
+    UpdateDisplay,
   }
 
   /// <summary>
@@ -32,5 +34,7 @@ namespace MultiplayerInfrastructure.Scenario
     public string NpcIdentifier { get; set; }
     public string InteractableIdentifier { get; set; }
     public ScenarioNpcInteractControlOperation Operation { get; set; } = ScenarioNpcInteractControlOperation.Add;
+    public string DisplayName { get; set; }
+    public bool? ShowOverheadName { get; set; }
   }
 }

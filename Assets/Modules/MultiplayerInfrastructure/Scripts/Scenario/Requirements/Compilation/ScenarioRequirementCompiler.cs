@@ -30,6 +30,9 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
         ScenarioNodeRequirementExtractors.RegisteredNodeTypes);
       var builder = new ScenarioRequirementBuilder(graph.Identifier);
       ScenarioGraphStructuralValidator.Validate(graph, builder);
+      CompileActingNpcRequirements(graph, builder);
+      CompileWaypointRequirements(graph, builder);
+      ValidateActingNpcSpawnOrdering(graph, builder);
       var nodes = graph.Nodes.Values
         .OrderBy(node => node?.Identifier ?? string.Empty, StringComparer.Ordinal)
         .ThenBy(node => node == null ? int.MaxValue : (int)node.NodeType)
@@ -57,6 +60,230 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       }
 
       return builder.Build();
+    }
+
+    private static void CompileActingNpcRequirements(
+      ScenarioGraph graph,
+      ScenarioRequirementBuilder output)
+    {
+      if (graph.ActingNpcs == null)
+        return;
+
+      var nodeSpawnedActingNpcIdentifiers = new HashSet<string>(
+        graph.Nodes.Values
+          .OfType<ScenarioEntityPresetSpawnNode>()
+          .Where(node => !string.IsNullOrWhiteSpace(node.ActingNpcIdentifier))
+          .Select(node => node.ActingNpcIdentifier.Trim()),
+        StringComparer.Ordinal);
+
+      for (var actingNpcIndex = 0; actingNpcIndex < graph.ActingNpcs.Count; actingNpcIndex++)
+      {
+        var actingNpc = graph.ActingNpcs[actingNpcIndex];
+        if (actingNpc == null || (!actingNpc.SpawnOnStart
+            && !nodeSpawnedActingNpcIdentifiers.Contains(actingNpc.Identifier)))
+          continue;
+
+        var actingNpcPath = $"actingNpcs[{actingNpcIndex}]";
+        var availability = actingNpc.SpawnOnStart
+          ? ScenarioRequirementAvailability.BeforeScenarioStart
+          : ScenarioRequirementAvailability.WhenNodeReached;
+        output.AddWithAuthority(
+          null, $"{actingNpcPath}.presetIdentifier", "scenario-acting-npc-preset",
+          ScenarioRequirementKind.EntityPreset, actingNpc.PresetIdentifier, true,
+          availability,
+          ScenarioRequirementExpectedSupply.External,
+          ScenarioRequirementDirection.Consumes,
+          ScenarioRequirementAuthority.Server,
+          null,
+          ScenarioRequirementCapability.SpawnablePreset);
+        output.AddWithAuthority(
+          null, $"{actingNpcPath}.identifier", "scenario-acting-npc-npc",
+          ScenarioRequirementKind.Npc, actingNpc.Identifier, true,
+          availability,
+          ScenarioRequirementExpectedSupply.Scenario,
+          ScenarioRequirementDirection.Produces,
+          ScenarioRequirementAuthority.Server,
+          null,
+          ScenarioRequirementCapability.ResolvableNpcMoveTarget,
+          ScenarioRequirementCapability.RegisteredNpcComponent,
+          ScenarioRequirementCapability.ProvidesPosition);
+        output.AddWithAuthority(
+          null, $"{actingNpcPath}.identifier", "scenario-acting-npc-entity",
+          ScenarioRequirementKind.Entity, actingNpc.Identifier, true,
+          availability,
+          ScenarioRequirementExpectedSupply.Scenario,
+          ScenarioRequirementDirection.Produces,
+          ScenarioRequirementAuthority.Server,
+          null,
+          ScenarioRequirementCapability.RegisteredEntity,
+          ScenarioRequirementCapability.ProvidesPosition);
+
+        if (actingNpc.Interactions == null)
+          continue;
+        for (var interactionIndex = 0; interactionIndex < actingNpc.Interactions.Count; interactionIndex++)
+        {
+          var interaction = actingNpc.Interactions[interactionIndex];
+          if (interaction == null)
+            continue;
+          var interactionPath = $"{actingNpcPath}.interactions[{interactionIndex}]";
+          if (interaction.InteractionType == ScenarioActingNpcInteractionType.ItemSubmission)
+          {
+            output.AddWithAuthority(
+              null, $"{interactionPath}.identifier", "scenario-acting-npc-item-submission",
+              ScenarioRequirementKind.Interactable, interaction.Identifier, true,
+              availability,
+              ScenarioRequirementExpectedSupply.Scenario,
+              ScenarioRequirementDirection.Produces,
+              ScenarioRequirementAuthority.Server,
+              null,
+              ScenarioRequirementCapability.Interactable,
+              ScenarioRequirementCapability.ToggleableInteractable,
+              ScenarioRequirementCapability.ItemSubmissionTarget);
+
+            if (interaction.RequiredItems != null)
+            {
+              for (var itemIndex = 0; itemIndex < interaction.RequiredItems.Count; itemIndex++)
+              {
+                var item = interaction.RequiredItems[itemIndex];
+                output.Add(
+                  null, $"{interactionPath}.requiredItems[{itemIndex}].itemIdentifier",
+                  "scenario-acting-npc-required-item", ScenarioRequirementKind.ItemDefinition,
+                  item?.ItemIdentifier, true, availability,
+                  ScenarioRequirementExpectedSupply.External);
+              }
+            }
+            output.Add(
+              null, $"{interactionPath}.completionSignalIdentifier",
+              "scenario-acting-npc-completion-signal", ScenarioRequirementKind.RuntimeSignal,
+              NormalizeActingNpcSignal(interaction.CompletionSignalIdentifier), false,
+              ScenarioRequirementAvailability.WhenNodeReached,
+              ScenarioRequirementExpectedSupply.Scenario,
+              ScenarioRequirementDirection.Produces);
+          }
+          else if (interaction.InteractionType == ScenarioActingNpcInteractionType.Signal)
+          {
+            output.Add(
+              null, $"{interactionPath}.completionSignalIdentifier",
+              "scenario-acting-npc-signal", ScenarioRequirementKind.RuntimeSignal,
+              NormalizeActingNpcSignal(interaction.CompletionSignalIdentifier), true,
+              ScenarioRequirementAvailability.WhenNodeReached,
+              ScenarioRequirementExpectedSupply.Scenario,
+              ScenarioRequirementDirection.Produces);
+          }
+        }
+      }
+    }
+
+    private static void CompileWaypointRequirements(
+      ScenarioGraph graph,
+      ScenarioRequirementBuilder output)
+    {
+      if (graph.Waypoints == null)
+        return;
+
+      for (var waypointIndex = 0; waypointIndex < graph.Waypoints.Count; waypointIndex++)
+      {
+        var waypoint = graph.Waypoints[waypointIndex];
+        if (waypoint == null)
+          continue;
+
+        output.AddWithAuthority(
+          null, $"waypoints[{waypointIndex}].identifier", "scenario-waypoint",
+          ScenarioRequirementKind.SpatialAnchor, waypoint.Identifier, true,
+          ScenarioRequirementAvailability.BeforeScenarioStart,
+          ScenarioRequirementExpectedSupply.Scenario,
+          ScenarioRequirementDirection.Produces,
+          ScenarioRequirementAuthority.Any,
+          null,
+          ScenarioRequirementCapability.ProvidesPosition);
+      }
+    }
+
+    private static string NormalizeActingNpcSignal(string identifier)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+        return identifier;
+      var trimmed = identifier.Trim();
+      return trimmed.StartsWith("sig.", StringComparison.Ordinal) ? trimmed : "sig." + trimmed;
+    }
+
+    private static void ValidateActingNpcSpawnOrdering(
+      ScenarioGraph graph,
+      ScenarioRequirementBuilder output)
+    {
+      if (graph.ActingNpcs == null || graph.ActingNpcs.Count == 0)
+        return;
+
+      var entryIdentifier = !string.IsNullOrWhiteSpace(graph.DefaultEntrypoint)
+        ? graph.DefaultEntrypoint
+        : graph.Nodes.Values.OrderBy(node => node.Identifier, StringComparer.Ordinal).FirstOrDefault()?.Identifier;
+      if (string.IsNullOrWhiteSpace(entryIdentifier))
+        return;
+
+      foreach (var actingNpc in graph.ActingNpcs.Where(value => value != null && !value.SpawnOnStart))
+      {
+        var spawnNodes = new HashSet<string>(graph.Nodes.Values
+          .OfType<ScenarioEntityPresetSpawnNode>()
+          .Where(node => string.Equals(node.ActingNpcIdentifier, actingNpc.Identifier, StringComparison.Ordinal))
+          .Select(node => node.Identifier), StringComparer.Ordinal);
+        if (spawnNodes.Count == 0)
+          continue;
+
+        foreach (var consumer in graph.Nodes.Values.Where(node => UsesActingNpc(node, actingNpc.Identifier)))
+        {
+          if (IsReachableWithoutNodes(graph, entryIdentifier, consumer.Identifier, spawnNodes))
+          {
+            output.AddStructuralDiagnostic("SGR116", "ActingNpcMayBeUsedBeforeSpawn", consumer,
+              "npcIdentifier", actingNpc.Identifier,
+              $"Acting NPC '{actingNpc.Identifier}' can be used before an EntityPresetSpawn node creates it.",
+              "Set spawnOnStart to true or ensure every path to this node passes through the actingNpcIdentifier spawn node.");
+          }
+        }
+      }
+    }
+
+    private static bool UsesActingNpc(IScenarioNode node, string identifier)
+      => node is ScenarioNPCMoveNode move
+           && string.Equals(move.NPCIdentifier, identifier, StringComparison.Ordinal)
+         || node is ScenarioNPCControlNode control
+           && string.Equals(control.NPCIdentifier, identifier, StringComparison.Ordinal)
+         || node is ScenarioNpcInteractControlNode interact
+           && string.Equals(interact.NpcIdentifier, identifier, StringComparison.Ordinal);
+
+    private static bool IsReachableWithoutNodes(
+      ScenarioGraph graph, string startIdentifier, string targetIdentifier, HashSet<string> blockedIdentifiers)
+    {
+      var pending = new Queue<string>();
+      var visited = new HashSet<string>(StringComparer.Ordinal);
+      pending.Enqueue(startIdentifier);
+      while (pending.Count > 0)
+      {
+        var identifier = pending.Dequeue();
+        if (!visited.Add(identifier) || blockedIdentifiers.Contains(identifier))
+          continue;
+        if (string.Equals(identifier, targetIdentifier, StringComparison.Ordinal))
+          return true;
+        if (!graph.Nodes.TryGetValue(identifier, out var node) || node == null)
+          continue;
+        foreach (var next in GetOutgoingIdentifiers(node))
+          pending.Enqueue(next);
+      }
+      return false;
+    }
+
+    private static IEnumerable<string> GetOutgoingIdentifiers(IScenarioNode node)
+    {
+      if (!string.IsNullOrWhiteSpace(node.NextIdentifier)) yield return node.NextIdentifier;
+      if (node is ScenarioChoiceNode choice && choice.Options != null)
+        foreach (var option in choice.Options)
+          if (!string.IsNullOrWhiteSpace(option?.NextNodeIdentifier)) yield return option.NextNodeIdentifier;
+      if (node is ScenarioQuizNode quiz)
+      {
+        if (!string.IsNullOrWhiteSpace(quiz.OnCorrectNextIdentifier)) yield return quiz.OnCorrectNextIdentifier;
+        if (!string.IsNullOrWhiteSpace(quiz.OnIncorrectNextIdentifier)) yield return quiz.OnIncorrectNextIdentifier;
+      }
+      if (node is ScenarioValidatorNode validator && !string.IsNullOrWhiteSpace(validator.FailureNextIdentifier))
+        yield return validator.FailureNextIdentifier;
     }
   }
 
@@ -371,6 +598,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
         Register<ScenarioSoundNode>(ScenarioNodeType.Sound, (value, output) => AddResource(value, output, "soundResourceIdentifier", "sound", ScenarioRequirementKind.AudioResource, value.SoundResourceIdentifier, true, ScenarioRequirementAvailability.WhenNodeReached)),
         Register<ScenarioPlayerMoveNode>(ScenarioNodeType.PlayerMove, ExtractPlayerMove),
         Register<ScenarioNPCMoveNode>(ScenarioNodeType.NPCMove, ExtractNpcMove),
+        Register<ScenarioNPCControlNode>(ScenarioNodeType.NPCControl, ExtractNpcControl),
         Register<ScenarioCameraTargetNode>(ScenarioNodeType.CameraTarget, (value, output) => output.Add(value, "targetObjectIdentifier", "camera-target-not-consumed", ScenarioRequirementKind.Entity, value.TargetObjectIdentifier, false, ScenarioRequirementAvailability.NotConsumed, ScenarioRequirementExpectedSupply.Scene)),
         Register<ScenarioParallelNode>(ScenarioNodeType.Parallel, ExtractParallel),
         Register<ScenarioInvokeEventNode>(ScenarioNodeType.InvokeEvent, (value, output) => AddEvent(value, output, "eventIdentifier", "event-invocation", value.EventIdentifier, true)),
@@ -486,6 +714,39 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       output.Add(node, "npcIdentifier", "npc-move-target", ScenarioRequirementKind.Npc, node.NPCIdentifier, true, ScenarioRequirementAvailability.WhenNodeReached, ScenarioRequirementExpectedSupply.Scene, ScenarioRequirementDirection.Consumes, ScenarioRequirementCapability.ResolvableNpcMoveTarget, ScenarioRequirementCapability.ProvidesPosition);
       if (node.DestinationType == ScenarioMoveDestinationType.Waypoint)
         output.Add(node, "destinationIdentifier", "movement-destination", ScenarioRequirementKind.SpatialAnchor, node.DestinationIdentifier, true, ScenarioRequirementAvailability.WhenNodeReached, ScenarioRequirementExpectedSupply.Scene, ScenarioRequirementDirection.Consumes, ScenarioRequirementCapability.ProvidesPosition);
+    }
+
+    private static void ExtractNpcControl(ScenarioNPCControlNode node, ScenarioRequirementBuilder output)
+    {
+      output.Add(node, "npcIdentifier", "npc-control-target", ScenarioRequirementKind.Npc,
+        node.NPCIdentifier, true, ScenarioRequirementAvailability.WhenNodeReached,
+        ScenarioRequirementExpectedSupply.Scene, ScenarioRequirementDirection.Consumes,
+        ScenarioRequirementCapability.RegisteredNpcComponent,
+        ScenarioRequirementCapability.ResolvableNpcMoveTarget,
+        ScenarioRequirementCapability.ProvidesPosition);
+
+      if (node.Mode == ScenarioNPCControlMode.Control
+          && node.DestinationType == ScenarioMoveDestinationType.Waypoint)
+      {
+        output.Add(node, "destinationIdentifier", "movement-destination",
+          ScenarioRequirementKind.SpatialAnchor, node.DestinationIdentifier, true,
+          ScenarioRequirementAvailability.WhenNodeReached, ScenarioRequirementExpectedSupply.Scene,
+          ScenarioRequirementDirection.Consumes, ScenarioRequirementCapability.ProvidesPosition);
+      }
+
+      if (node.Mode != ScenarioNPCControlMode.Update
+          || node.InteractOperation == ScenarioNPCInteractCrudOperation.None)
+        return;
+
+      var availability = node.InteractOperation == ScenarioNPCInteractCrudOperation.Delete
+        ? ScenarioRequirementAvailability.OptionalFallback
+        : ScenarioRequirementAvailability.WhenNodeReached;
+      var capability = node.InteractOperation == ScenarioNPCInteractCrudOperation.Update
+        ? ScenarioRequirementCapability.ToggleableInteractable
+        : ScenarioRequirementCapability.Interactable;
+      output.Add(node, "interactableIdentifier", "npc-interactable",
+        ScenarioRequirementKind.Interactable, node.InteractableIdentifier, true, availability,
+        ScenarioRequirementExpectedSupply.Scene, ScenarioRequirementDirection.Consumes, capability);
     }
 
     private static void ExtractParallel(ScenarioParallelNode node, ScenarioRequirementBuilder output)
@@ -605,6 +866,13 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
 
     private static void ExtractPresetSpawn(ScenarioEntityPresetSpawnNode node, ScenarioRequirementBuilder output)
     {
+      if (!string.IsNullOrWhiteSpace(node.ActingNpcIdentifier))
+      {
+        AddRuntimeEntityReferenceProducer(node, output, node.ResultStateKey,
+          $"{node.Identifier}.spawnedEntityIdentifier", "spawned-actingNpc-reference",
+          ScenarioRequirementAuthority.Server);
+        return;
+      }
       AddPreset(node, output, "presetIdentifier", node.PresetIdentifier, true, ScenarioRequirementAuthority.Any);
       AddPositionSource(node, output, node.PositionSourceEntityIdentifier);
       AddRuntimeEntityReferenceProducer(node, output, node.ResultStateKey, $"{node.Identifier}.spawnedEntityIdentifier", "spawned-entity-reference", ScenarioRequirementAuthority.Any);

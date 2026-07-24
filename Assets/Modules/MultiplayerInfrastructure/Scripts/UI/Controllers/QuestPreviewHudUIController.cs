@@ -109,6 +109,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void HandleTrackedChanged(IReadOnlyList<QuestData> tracked)
     {
+      QueueCompletedObjectivesBeforeRefresh(tracked);
       _trackedQuests = tracked ?? Array.Empty<QuestData>();
       for (int i = _completedQuests.Count - 1; i >= 0; i--)
       {
@@ -130,6 +131,45 @@ namespace MultiplayerInfrastructure.UI
       if (quest == null || !quest.IsTracked)
         return;
 
+      // 추적 목록 갱신에서 마지막 목표를 이미 완료 표시로 전환한 경우에는
+      // 그 목표를 유지한다. 그래야 퀘스트 전체 완료 시에도 직전 목표가 취소선으로 보인다.
+      if (!_completionExpiryByQuestId.ContainsKey(quest.Id))
+        QueueCompletedPreview(quest);
+    }
+
+    private void QueueCompletedObjectivesBeforeRefresh(IReadOnlyList<QuestData> nextTracked)
+    {
+      if (_trackedQuests == null || nextTracked == null)
+        return;
+
+      for (int i = 0; i < _trackedQuests.Count; i++)
+      {
+        var previous = _trackedQuests[i];
+        if (previous == null || previous.Completed)
+          continue;
+
+        QuestData next = null;
+        for (int j = 0; j < nextTracked.Count; j++)
+        {
+          if (nextTracked[j] != null && nextTracked[j].Id == previous.Id)
+          {
+            next = nextTracked[j];
+            break;
+          }
+        }
+
+        if (next == null)
+          continue;
+
+        string previousObjective = QuestPreviewHudElement.GetCurrentObjective(previous);
+        string nextObjective = QuestPreviewHudElement.GetCurrentObjective(next);
+        if (!string.IsNullOrWhiteSpace(previousObjective) && previousObjective != nextObjective)
+          QueueCompletedPreview(previous);
+      }
+    }
+
+    private void QueueCompletedPreview(QuestData quest)
+    {
       _completedQuests.RemoveAll(each => each != null && each.Id == quest.Id);
       _completedQuests.Insert(0, quest.Clone());
       double expiresAt = Time.realtimeSinceStartupAsDouble + _questCompletionDisplayDuration.ToSeconds();
@@ -166,6 +206,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void Update()
     {
+      SynchronizeTrackedWaypointMarkers();
+
       if (_trackedWaypointIdentifiers.Count == 0)
       {
         return;
@@ -190,9 +232,10 @@ namespace MultiplayerInfrastructure.UI
 
     private void RefreshTrackedWaypoints(IReadOnlyList<QuestData> tracked)
     {
-      _trackedWaypointIdentifiers.Clear();
+      var nextWaypointIdentifiers = new HashSet<string>(StringComparer.Ordinal);
       if (tracked == null)
       {
+        HideRemovedWaypointMarkers(nextWaypointIdentifiers);
         return;
       }
 
@@ -200,7 +243,36 @@ namespace MultiplayerInfrastructure.UI
       {
         var waypointIdentifiers = QuestManager.GetActiveWaypointIdentifiers(quest);
         for (int i = 0; i < waypointIdentifiers.Count; i++)
-          _trackedWaypointIdentifiers.Add(waypointIdentifiers[i]);
+          nextWaypointIdentifiers.Add(waypointIdentifiers[i]);
+      }
+
+      HideRemovedWaypointMarkers(nextWaypointIdentifiers);
+      foreach (var waypointIdentifier in nextWaypointIdentifiers)
+        _trackedWaypointIdentifiers.Add(waypointIdentifier);
+
+      SynchronizeTrackedWaypointMarkers();
+    }
+
+    private void HideRemovedWaypointMarkers(HashSet<string> nextWaypointIdentifiers)
+    {
+      foreach (var waypointIdentifier in _trackedWaypointIdentifiers)
+      {
+        if (!nextWaypointIdentifiers.Contains(waypointIdentifier)
+            && WaypointAnchor.TryGet(waypointIdentifier, out var anchor))
+          anchor.SetQuestMarkerVisible(false);
+      }
+
+      _trackedWaypointIdentifiers.Clear();
+    }
+
+    private void SynchronizeTrackedWaypointMarkers()
+    {
+      foreach (var waypointIdentifier in _trackedWaypointIdentifiers)
+      {
+        // 시나리오 시작 직후에는 퀘스트 HUD가 waypoint 생성보다 먼저 갱신될 수 있다.
+        // 매 프레임의 idempotent 호출로 늦게 등록된 anchor도 즉시 목표 마커를 받게 한다.
+        if (WaypointAnchor.TryGet(waypointIdentifier, out var anchor))
+          anchor.SetQuestMarkerVisible(true);
       }
     }
 

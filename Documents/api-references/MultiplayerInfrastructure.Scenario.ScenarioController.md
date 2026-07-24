@@ -33,7 +33,7 @@ public enum State
     ExecutingChoice,              // 선택지 표시 중
     ExecutingSound,               // 사운드 재생 중 (구현 예정)
     ExecutingPlayerMove,          // 플레이어 이동 중 (구현 예정)
-    ExecutingNPCMove,             // NPC 이동 중 (구현 예정)
+    ExecutingNPCControl,          // NPC 갱신 또는 이동 제어 중
     ExecutingCameraTarget,        // 카메라 타겟 전환 중 (구현 예정)
     ExecutingInvokeEvent,         // 외부 이벤트 핸들러 실행 중
     ExecutingValidator,           // 조건 검사 중
@@ -148,7 +148,7 @@ public void SelectOption(int index)
 | `StateUpdate` | `ExecutingStateUpdate` | 내부 상태 변수 갱신 (구현 예정) |
 | `Sound` | `ExecutingSound` | 사운드 재생 (구현 예정) |
 | `PlayerMove` | `ExecutingPlayerMove` | 플레이어 이동 (구현 예정) |
-| `NPCMove` | `ExecutingNPCMove` | NPC 이동 (구현 예정) |
+| `NPCControl` | `ExecutingNPCControl` | NPC 표시/Interact 갱신 또는 이동 제어 |
 | `CameraTarget` | `ExecutingCameraTarget` | 카메라 타겟 전환 (구현 예정) |
 | `Interaction` | `ExecutingInteraction` | 인터랙션 대기 (구현 예정) |
 | `CombineItem` | `ExecutingCombineItem` | 아이템 합성 (구현 예정) |

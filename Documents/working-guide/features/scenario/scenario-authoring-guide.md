@@ -26,7 +26,7 @@ updated: 2026-07-03
 - `C###`: Choice
 - `S###`: Sound
 - `PM###`: PlayerMove
-- `NM###`: NPCMove
+- `NC###`: NPCControl
 - `CT###`: CameraTarget
 - `P###`: Parallel
 - `P###-B#`: ParallelBranch

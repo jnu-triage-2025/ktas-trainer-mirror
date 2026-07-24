@@ -74,14 +74,21 @@ ScenarioNode는 표현하고자 하는 내용에 따라 다양하게 데이터�
 | MoveDuration | float | (ByDuration일 때) 이동 시간 |
 | NextIdentifier | 문자열 | 다음 노드의 식별자 |
 
-### NPCMoveNode
+### NPCControlNode
 
 | 속성 | 타입 | 설명 |
 |---|---|---|
 | Identifier | 문자열 | 노드의 고유 식별자 |
-| NodeType | ScenarioNodeType | ScenarioNodeType.NPCMove |
-| NPCIdentifier | 문자열 | 이동할 NPC 식별자 |
-| DestinationType | ScenarioMoveDestinationType | Position 또는 Waypoint |
+| NodeType | ScenarioNodeType | ScenarioNodeType.NPCControl |
+| Mode | ScenarioNPCControlMode | Update 또는 Control |
+| NPCIdentifier | 문자열 | 대상 NPC 식별자 |
+| InteractOperation | ScenarioNPCInteractCrudOperation | (Update일 때) None / Create / Read / Update / Delete |
+| InteractableIdentifier | 문자열 | (Update일 때) CRUD 대상 Interactable 식별자 |
+| InteractEnabled | bool? | (Interact Update일 때) 활성 상태 |
+| ResultStateKey | 문자열 | (Interact Read일 때) 존재 여부를 `true`/`false`로 기록할 상태 키 |
+| DisplayName | 문자열 | (Update일 때) 표시 이름 |
+| ShowOverheadName | bool? | (Update일 때) 머리 위 이름 표시 여부 |
+| DestinationType | ScenarioMoveDestinationType | (Control일 때) Position 또는 Waypoint |
 | DestinationIdentifier | 문자열 | (Waypoint일 때) 목적지 식별자 |
 | DestinationX | float | (Position일 때) 목적지 X |
 | DestinationY | float | (Position일 때) 목적지 Y |

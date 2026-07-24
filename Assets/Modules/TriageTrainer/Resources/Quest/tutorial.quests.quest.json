@@ -8,6 +8,7 @@
       "questContent": "시계 제작",
       "isTrackable": true,
       "isAutoComplete": true,
+      "persistProgressOnSessionEnd": false,
       "isTrackedByDefault": true,
       "scope": "Player",
       "isOrdinal": true,
@@ -55,6 +56,7 @@
       "questContent": "앞에서 자신을 부르는 사람을 찾기",
       "isTrackable": true,
       "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
       "isTrackedByDefault": true,
       "scope": "Player",
       "isOrdinal": false,
@@ -62,7 +64,7 @@
         {
           "type": "InteractionSignalReceived",
           "signalId": "tutorial_hat_talk_start",
-          "displayTextContent": "모자에게 말 걸기",
+          "displayTextContent": "???에게 말 걸기",
           "conditions": []
         }
       ]
@@ -74,6 +76,7 @@
       "questContent": "WASD 키와 마우스를 사용하여 캐릭터를 이동하세요.",
       "isTrackable": true,
       "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
       "isTrackedByDefault": true,
       "scope": "Player",
       "isOrdinal": false,
@@ -81,7 +84,7 @@
         {
           "type": "InteractionSignalReceived",
           "signalId": "tutorial_player_moved",
-          "displayTextContent": "기본 조작 익히기",
+          "displayTextContent": "w, a, s, d 키로 이동, 마우스 움직임으로 카메라 이동",
           "conditions": []
         }
       ]

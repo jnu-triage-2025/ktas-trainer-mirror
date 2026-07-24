@@ -16,6 +16,7 @@
 - [moving-patient-bed-and-patient.md](./moving-patient-bed-and-patient.md): Moving Patient Bed / Patient API Reference (Current)
 - [npc-multi-interact-and-icon-reference.md](./npc-multi-interact-and-icon-reference.md): NPC Multi-Interact & Icon Reference API
 - [patient-controller-reference.md](./patient-controller-reference.md): API 레퍼런스: `TriageTrainer.Entity.PatientController`
+- [scenario-inline-acting-npc.md](./scenario-inline-acting-npc.md): 시나리오 인라인 Acting NPC 데이터·수명주기 API
 
 작성 기준: Git 추적 문서(.md) 기준으로 색인하며, .gitignore 대상 파일은 제외합니다.
 <!-- DOC-INDEX:END -->

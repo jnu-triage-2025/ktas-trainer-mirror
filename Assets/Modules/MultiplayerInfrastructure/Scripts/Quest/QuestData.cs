@@ -21,6 +21,8 @@ namespace MultiplayerInfrastructure.Quest
     public bool IsTracked { get; set; }
     public bool IsTrackable { get; set; } = true;
     public bool IsAutoComplete { get; set; }
+    /// <summary>세션이 종료된 뒤에도 이 퀘스트의 진행 상태를 유지할지 여부입니다.</summary>
+    public bool PersistProgressOnSessionEnd { get; set; }
     public string WaypointIdentifier { get; set; }
 
     public QuestData()
@@ -63,7 +65,8 @@ namespace MultiplayerInfrastructure.Quest
         CompletionCriteria = CloneCriteria(CompletionCriteria),
         Scope = Scope,
         IsTrackable = IsTrackable,
-        IsAutoComplete = IsAutoComplete
+        IsAutoComplete = IsAutoComplete,
+        PersistProgressOnSessionEnd = PersistProgressOnSessionEnd
       };
     }
 
@@ -119,11 +122,13 @@ namespace MultiplayerInfrastructure.Quest
   [Serializable]
   public sealed class QuestCompletionCriteria
   {
+    public const float DefaultReachDistance = 2f;
+
     public QuestCompletionCriteriaType Type { get; set; } = QuestCompletionCriteriaType.InventoryContains;
     public string ItemId { get; set; }
     public string SignalId { get; set; }
     public string WaypointIdentifier { get; set; }
-    public float ReachDistance { get; set; } = 1f;
+    public float ReachDistance { get; set; } = DefaultReachDistance;
     public string DisplayTextContent { get; set; }
     public string OnCompleteSignalIdentifier { get; set; }
     public int Count { get; set; } = 1;
@@ -193,6 +198,8 @@ namespace MultiplayerInfrastructure.Quest
     public string WaypointIdentifier { get; set; }
     public bool IsTrackable { get; set; } = true;
     public bool IsAutoComplete { get; set; }
+    /// <summary>세션 종료 후에도 이 정의에서 생성된 퀘스트 진행 상태를 유지할지 여부입니다.</summary>
+    public bool PersistProgressOnSessionEnd { get; set; }
     public bool IsTrackedByDefault { get; set; }
     public QuestScopeType Scope { get; set; } = QuestScopeType.Player;
     public bool IsOrdinal { get; set; }
@@ -210,6 +217,7 @@ namespace MultiplayerInfrastructure.Quest
         WaypointIdentifier = WaypointIdentifier,
         IsTrackable = IsTrackable,
         IsAutoComplete = IsAutoComplete,
+        PersistProgressOnSessionEnd = PersistProgressOnSessionEnd,
         IsTrackedByDefault = IsTrackedByDefault,
         Scope = Scope,
         IsOrdinal = IsOrdinal,

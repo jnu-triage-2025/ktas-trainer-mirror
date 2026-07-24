@@ -16,6 +16,7 @@ namespace MultiplayerInfrastructure.Editor
       ScenarioNodeType.Sound => new ScenarioSoundNode(),
       ScenarioNodeType.PlayerMove => new ScenarioPlayerMoveNode(),
       ScenarioNodeType.NPCMove => new ScenarioNPCMoveNode(),
+      ScenarioNodeType.NPCControl => new ScenarioNPCControlNode(),
       ScenarioNodeType.CameraTarget => new ScenarioCameraTargetNode(),
       ScenarioNodeType.Parallel => new ScenarioParallelNode
       {

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using FishNet.Managing;
+using FishNet.Transporting;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
@@ -34,6 +36,8 @@ namespace MultiplayerInfrastructure.Quest
     private readonly HashSet<string> _resolverCompletedQuestIds = new();
     private QuestDefinitionRegistry _definitionRegistry;
     private PlayerController _ownerPlayer;
+    private NetworkManager _networkManager;
+    private bool _subscribedToSessionLifecycle;
 
     public event Action<IReadOnlyList<QuestData>> OnQuestListChanged;
     public event Action<IReadOnlyList<QuestData>> OnTrackedQuestsChanged;
@@ -82,11 +86,55 @@ namespace MultiplayerInfrastructure.Quest
       Registry.Registry.Register(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>(), this);
       _definitionRegistry = Registry.Registry.Get<QuestDefinitionRegistry>(RegistryType.Service, Registry.Registry.TypeKey<QuestDefinitionRegistry>());
       EnsureBasicMovementControlTutorialResolver();
+      SubscribeToSessionLifecycle();
     }
 
     private void OnDestroy()
     {
+      UnsubscribeFromSessionLifecycle();
       Registry.Registry.Unregister(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>());
+    }
+
+    private void Start()
+    {
+      // QuestManager가 NetworkManager보다 먼저 초기화되는 씬 구성을 지원한다.
+      SubscribeToSessionLifecycle();
+    }
+
+    private void SubscribeToSessionLifecycle()
+    {
+      if (_subscribedToSessionLifecycle)
+        return;
+
+      _networkManager = FindAnyObjectByType<NetworkManager>();
+      if (_networkManager == null)
+        return;
+
+      _networkManager.ServerManager.OnServerConnectionState += OnServerConnectionState;
+      _networkManager.ClientManager.OnClientConnectionState += OnClientConnectionState;
+      _subscribedToSessionLifecycle = true;
+    }
+
+    private void UnsubscribeFromSessionLifecycle()
+    {
+      if (!_subscribedToSessionLifecycle || _networkManager == null)
+        return;
+
+      _networkManager.ServerManager.OnServerConnectionState -= OnServerConnectionState;
+      _networkManager.ClientManager.OnClientConnectionState -= OnClientConnectionState;
+      _subscribedToSessionLifecycle = false;
+    }
+
+    private void OnServerConnectionState(ServerConnectionStateArgs args)
+    {
+      if (args.ConnectionState == LocalConnectionState.Stopped)
+        ResetProgressForSessionEnd();
+    }
+
+    private void OnClientConnectionState(ClientConnectionStateArgs args)
+    {
+      if (args.ConnectionState == LocalConnectionState.Stopped)
+        ResetProgressForSessionEnd();
     }
 
     public void SetQuests(IEnumerable<QuestData> quests, bool clearExisting = true)
@@ -309,6 +357,40 @@ namespace MultiplayerInfrastructure.Quest
       {
         UpdateQuestCompletionRuntimeState(existingIds[i], false);
       }
+      NotifyListChanged();
+      NotifyTrackedChanged();
+    }
+
+    /// <summary>
+    /// 세션 종료 시 기본 정책(진행 상태 초기화)을 적용한다.
+    /// <see cref="QuestData.PersistProgressOnSessionEnd"/>가 true인 퀘스트만 유지한다.
+    /// </summary>
+    public void ResetProgressForSessionEnd()
+    {
+      var removedIds = new List<string>();
+      foreach (var pair in _quests)
+      {
+        if (pair.Value?.PersistProgressOnSessionEnd == true)
+          continue;
+
+        removedIds.Add(pair.Key);
+      }
+
+      if (removedIds.Count == 0)
+        return;
+
+      for (int i = 0; i < removedIds.Count; i++)
+      {
+        string questId = removedIds[i];
+        if (_quests.TryGetValue(questId, out var quest))
+          ClearCompletionSignals(GetQuestTasks(quest));
+
+        _quests.Remove(questId);
+        _trackedQuestOrder.Remove(questId);
+        _resolverCompletedQuestIds.Remove(questId);
+        UpdateQuestCompletionRuntimeState(questId, false);
+      }
+
       NotifyListChanged();
       NotifyTrackedChanged();
     }
@@ -667,6 +749,7 @@ namespace MultiplayerInfrastructure.Quest
         WaypointIdentifier = definition.WaypointIdentifier ?? string.Empty,
         IsTrackable = definition.IsTrackable,
         IsAutoComplete = definition.IsAutoComplete,
+        PersistProgressOnSessionEnd = definition.PersistProgressOnSessionEnd,
         IsTracked = definition.IsTrackable && definition.IsTrackedByDefault,
         Scope = definition.Scope,
         IsOrdinal = definition.IsOrdinal,

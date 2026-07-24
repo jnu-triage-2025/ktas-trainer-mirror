@@ -57,7 +57,7 @@ namespace MultiplayerInfrastructure.Scenario
     private ScenarioConcurrencyConflictPolicy _concurrencyConflictPolicy = ScenarioConcurrencyConflictPolicy.Warn;
 
     [Header("Validator Block Logging")]
-    [Tooltip("Validator 게이트가 조건 미충족으로 진행을 막기 시작할 때 오류를 기록할 대상.")]
+    [Tooltip("Validator 게이트가 조건 미충족으로 대기를 시작할 때 상태를 기록할 대상.")]
     [SerializeField]
     private ScenarioValidatorBlockLogTarget _validatorBlockLogTargets =
       ScenarioValidatorBlockLogTarget.UnityConsole | ScenarioValidatorBlockLogTarget.SessionLog;
@@ -91,6 +91,20 @@ namespace MultiplayerInfrastructure.Scenario
     private Coroutine _dialogueAutoAdvanceRoutine;
     private Coroutine _runtimeRequirementsWaitRoutine;
     private ExecutionMode _executionMode = ExecutionMode.Local;
+    private readonly List<ScenarioOwnedActingNpc> _scenarioOwnedActingNpcs = new List<ScenarioOwnedActingNpc>();
+    private readonly List<ScenarioOwnedWaypoint> _scenarioOwnedWaypoints = new List<ScenarioOwnedWaypoint>();
+
+    private sealed class ScenarioOwnedActingNpc
+    {
+      public GameObject GameObject;
+      public bool DespawnOnScenarioEnd;
+    }
+
+    private sealed class ScenarioOwnedWaypoint
+    {
+      public GameObject GameObject;
+      public bool DespawnOnScenarioEnd;
+    }
 
     /// <summary>
     /// Local은 기존 오프라인/호환 실행, ServerAuthoritative는 서버만 그래프를 순회,
@@ -131,6 +145,7 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingSound,
       ExecutingPlayerMove,
       ExecutingNPCMove,
+      ExecutingNPCControl,
       ExecutingCameraTarget,
       ExecutingInvokeEvent,
       ExecutingValidator,
@@ -301,6 +316,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void OnDestroy()
     {
+      CleanupScenarioActingNpcs();
+      CleanupScenarioWaypoints();
       // 이벤트 구독 해제
       ScenarioInteractable.OnScenarioRequested -= HandleScenarioRequested;
       ScenarioTriggerZone.OnScenarioRequested -= HandleScenarioRequested;
@@ -512,6 +529,9 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
+      if (!requirementsAlreadyValidated && !PrepareScenarioOwnedObjects(graph))
+        return;
+
       if (_runtimeRequirementsWaitRoutine != null)
       {
         StopCoroutine(_runtimeRequirementsWaitRoutine);
@@ -558,6 +578,8 @@ namespace MultiplayerInfrastructure.Scenario
             Debug.LogError($"[ScenarioRuntime] Aborting scenario '{graph.Identifier}' before changing current scenario state.");
           if (_preflightPolicy.WarnToInGameChat)
             AppendSystemChatMessage($"[ScenarioRuntime] Scenario '{graph.Identifier}' could not start because requirements are unresolved.");
+          CleanupScenarioActingNpcs(forceDespawn: true);
+          CleanupScenarioWaypoints(forceDespawn: true);
           return;
         }
       }
@@ -569,6 +591,8 @@ namespace MultiplayerInfrastructure.Scenario
           && runtimeValidationMode == ScenarioRuntimeValidationMode.Off
           && !ScenarioPreflight.Run(graph, _preflightPolicy, AppendSystemChatMessage, out _))
       {
+        CleanupScenarioActingNpcs(forceDespawn: true);
+        CleanupScenarioWaypoints(forceDespawn: true);
         return;
       }
 
@@ -631,6 +655,8 @@ namespace MultiplayerInfrastructure.Scenario
       if (!graph.TryGetNode(startId, out var startNode))
       {
         Debug.LogError($"[ScenarioController] Start node '{startId}' not found");
+        CleanupScenarioActingNpcs(forceDespawn: true);
+        CleanupScenarioWaypoints(forceDespawn: true);
         return;
       }
 
@@ -696,6 +722,8 @@ namespace MultiplayerInfrastructure.Scenario
           Debug.LogError($"[ScenarioRuntime] Aborting scenario '{graph.Identifier}' because requirements did not become ready.");
         if (_preflightPolicy.WarnToInGameChat)
           AppendSystemChatMessage($"[ScenarioRuntime] Scenario '{graph.Identifier}' could not start because requirements are unresolved.");
+        CleanupScenarioActingNpcs(forceDespawn: true);
+        CleanupScenarioWaypoints(forceDespawn: true);
         yield break;
       }
 
@@ -731,6 +759,8 @@ namespace MultiplayerInfrastructure.Scenario
       // 시나리오가 남긴 모든 타이머/표시를 정리한다.
       // 명시적 정리 없이 종료(또는 조기/오류 종료)하더라도 다음 시나리오로 새어 나가지 않게 한다.
       ScenarioTimeRelay.ClearAllAuthoritative();
+      CleanupScenarioActingNpcs();
+      CleanupScenarioWaypoints();
 
       _currentGraph = null;
       _currentNode = null;
@@ -768,6 +798,181 @@ namespace MultiplayerInfrastructure.Scenario
           endingGraphId);
       }
       catch { /* 로그 실패는 시나리오 종료에 영향 없음 */ }
+    }
+
+    private bool PrepareScenarioOwnedObjects(ScenarioGraph graph)
+    {
+      if (!PrepareScenarioActingNpcs(graph))
+        return false;
+      if (PrepareScenarioWaypoints(graph))
+        return true;
+
+      CleanupScenarioActingNpcs(forceDespawn: true);
+      return false;
+    }
+
+    private bool PrepareScenarioActingNpcs(ScenarioGraph graph)
+    {
+      CleanupScenarioActingNpcs();
+      if (graph?.ActingNpcs == null || graph.ActingNpcs.Count == 0)
+        return true;
+
+      for (int i = 0; i < graph.ActingNpcs.Count; i++)
+      {
+        var actingNpc = graph.ActingNpcs[i];
+        if (actingNpc == null || !actingNpc.SpawnOnStart)
+          continue;
+        if (!TrySpawnScenarioActingNpc(graph, actingNpc, out var error))
+        {
+          Debug.LogError($"[ScenarioController] Failed to spawn start actingNpc '{actingNpc.Identifier}': {error}");
+          CleanupScenarioActingNpcs(forceDespawn: true);
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    private bool PrepareScenarioWaypoints(ScenarioGraph graph)
+    {
+      CleanupScenarioWaypoints();
+      if (graph?.Waypoints == null || graph.Waypoints.Count == 0)
+        return true;
+
+      foreach (var waypoint in graph.Waypoints)
+      {
+        if (waypoint == null)
+          continue;
+        if (string.IsNullOrWhiteSpace(waypoint.Identifier))
+        {
+          Debug.LogError("[ScenarioController] Scenario waypoint identifier is required.");
+          CleanupScenarioWaypoints(forceDespawn: true);
+          return false;
+        }
+        if (WaypointAnchor.TryGet(waypoint.Identifier, out _))
+        {
+          Debug.LogError($"[ScenarioController] Waypoint '{waypoint.Identifier}' already exists in the scene.");
+          CleanupScenarioWaypoints(forceDespawn: true);
+          return false;
+        }
+
+        var target = new GameObject($"ScenarioWaypoint_{waypoint.Identifier}");
+        target.transform.SetPositionAndRotation(
+          new Vector3(waypoint.PositionX, waypoint.PositionY, waypoint.PositionZ),
+          Quaternion.Euler(waypoint.RotationX, waypoint.RotationY, waypoint.RotationZ));
+        var anchor = target.AddComponent<WaypointAnchor>();
+        anchor.ConfigureIdentifier(waypoint.Identifier);
+        _scenarioOwnedWaypoints.Add(new ScenarioOwnedWaypoint
+        {
+          GameObject = target,
+          DespawnOnScenarioEnd = waypoint.DespawnOnScenarioEnd
+        });
+      }
+
+      return true;
+    }
+
+    private bool TrySpawnScenarioActingNpc(ScenarioGraph graph, ScenarioActingNpcDefinition actingNpc, out string error)
+    {
+      error = string.Empty;
+      if (actingNpc == null || string.IsNullOrWhiteSpace(actingNpc.Identifier))
+      {
+        error = "ActingNpc identifier is required.";
+        return false;
+      }
+      if (_scenarioOwnedActingNpcs.Any(value => value?.GameObject != null
+          && string.Equals(value.GameObject.GetComponentInChildren<Entity.Npc>(true)?.Identifier,
+            actingNpc.Identifier, StringComparison.Ordinal)))
+      {
+        error = $"ActingNpc '{actingNpc.Identifier}' is already spawned by this scenario.";
+        return false;
+      }
+      if (actingNpc.ActingNpcType != ScenarioActingNpcType.Npc)
+      {
+        error = $"Unsupported actingNpc type '{actingNpc.ActingNpcType}'.";
+        return false;
+      }
+
+      var position = new Vector3(actingNpc.PositionX, actingNpc.PositionY, actingNpc.PositionZ);
+      var rotation = Quaternion.Euler(actingNpc.RotationX, actingNpc.RotationY, actingNpc.RotationZ);
+      if (!Registry.Registry.TrySpawnEntityPreset(actingNpc.PresetIdentifier, position, rotation,
+            actingNpc.Identifier, out var spawned, out _, out error))
+      {
+        return false;
+      }
+
+      var npc = spawned != null ? spawned.GetComponentInChildren<Entity.Npc>(true) : null;
+      if (npc == null)
+      {
+        DestroyScenarioActingNpc(spawned);
+        error = $"Preset '{actingNpc.PresetIdentifier}' does not contain an Npc component.";
+        return false;
+      }
+
+      var ownedActingNpc = new ScenarioOwnedActingNpc
+      {
+        GameObject = spawned,
+        DespawnOnScenarioEnd = actingNpc.DespawnOnScenarioEnd
+      };
+      _scenarioOwnedActingNpcs.Add(ownedActingNpc);
+      try
+      {
+        npc.ConfigureScenarioActingNpc(actingNpc);
+        if (!ScenarioNetworkRelay.PublishScenarioActingNpcConfiguration(
+              graph.Identifier, actingNpc.Identifier, spawned.GetComponent<NetworkObject>()))
+        {
+          throw new InvalidOperationException(
+            "Networked scenario actingNpc requires a spawned NetworkObject and ScenarioNetworkRelay.");
+        }
+        return true;
+      }
+      catch (Exception ex)
+      {
+        error = ex.Message;
+        _scenarioOwnedActingNpcs.Remove(ownedActingNpc);
+        DestroyScenarioActingNpc(spawned);
+        return false;
+      }
+    }
+
+    private void CleanupScenarioActingNpcs(bool forceDespawn = false)
+    {
+      for (int i = _scenarioOwnedActingNpcs.Count - 1; i >= 0; i--)
+      {
+        var owned = _scenarioOwnedActingNpcs[i];
+        if (forceDespawn || owned?.DespawnOnScenarioEnd == true)
+          DestroyScenarioActingNpc(owned.GameObject);
+      }
+      _scenarioOwnedActingNpcs.Clear();
+    }
+
+    private void CleanupScenarioWaypoints(bool forceDespawn = false)
+    {
+      for (int i = _scenarioOwnedWaypoints.Count - 1; i >= 0; i--)
+      {
+        var owned = _scenarioOwnedWaypoints[i];
+        if (forceDespawn || owned?.DespawnOnScenarioEnd == true)
+          Destroy(owned.GameObject);
+      }
+      _scenarioOwnedWaypoints.Clear();
+    }
+
+    private static void DestroyScenarioActingNpc(GameObject actingNpc)
+    {
+      if (actingNpc == null)
+        return;
+
+      var networkObject = actingNpc.GetComponent<NetworkObject>();
+      if (!InstanceFinder.IsOffline
+          && InstanceFinder.IsServerStarted
+          && networkObject != null
+          && networkObject.IsSpawned)
+      {
+        InstanceFinder.ServerManager.Despawn(networkObject);
+        return;
+      }
+
+      Destroy(actingNpc);
     }
 
     /// <summary>
@@ -926,6 +1131,9 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioNPCMoveNode npcMove:
           StartCoroutine(ExecuteNPCMoveNode(npcMove));
+          break;
+        case ScenarioNPCControlNode npcControl:
+          StartCoroutine(ExecuteNPCControlNode(npcControl));
           break;
         case ScenarioCameraTargetNode camera:
           StartCoroutine(ExecuteCameraTargetNode(camera));
@@ -1864,9 +2072,41 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingEntityPresetSpawn;
 
-      if (node == null || string.IsNullOrWhiteSpace(node.PresetIdentifier))
+      if (node == null)
       {
-        Debug.LogWarning("[ScenarioController] EntityPresetSpawn node is missing presetIdentifier.");
+        Debug.LogWarning("[ScenarioController] EntityPresetSpawn node is null.");
+        Advance();
+        return;
+      }
+
+      if (!string.IsNullOrWhiteSpace(node.ActingNpcIdentifier))
+      {
+        var actingNpc = _currentGraph?.ActingNpcs?.FirstOrDefault(value => value != null
+          && string.Equals(value.Identifier, node.ActingNpcIdentifier, StringComparison.Ordinal));
+        if (actingNpc == null)
+        {
+          Debug.LogWarning($"[ScenarioController] EntityPresetSpawn '{node.Identifier}' references unknown actingNpc '{node.ActingNpcIdentifier}'.");
+          Advance();
+          return;
+        }
+        if (!TrySpawnScenarioActingNpc(_currentGraph, actingNpc, out var actorError))
+        {
+          Debug.LogWarning($"[ScenarioController] EntityPresetSpawn '{node.Identifier}' actingNpc '{node.ActingNpcIdentifier}' failed: {actorError}");
+          Advance();
+          return;
+        }
+
+        string actorStateKey = string.IsNullOrWhiteSpace(node.ResultStateKey)
+          ? $"{node.Identifier}.spawnedEntityIdentifier"
+          : node.ResultStateKey;
+        _stateStore[actorStateKey] = actingNpc.Identifier;
+        Advance();
+        return;
+      }
+
+      if (string.IsNullOrWhiteSpace(node.PresetIdentifier))
+      {
+        Debug.LogWarning("[ScenarioController] EntityPresetSpawn node requires presetIdentifier or actingNpcIdentifier.");
         Advance();
         return;
       }
@@ -2044,6 +2284,13 @@ namespace MultiplayerInfrastructure.Scenario
       if (npc == null)
       {
         Debug.LogWarning($"[ScenarioController] NpcInteractControl '{node.Identifier}': NPC '{node.NpcIdentifier}' not found.");
+        Advance();
+        return;
+      }
+
+      if (node.Operation == ScenarioNpcInteractControlOperation.UpdateDisplay)
+      {
+        npc.SetScenarioDisplay(node.DisplayName, node.ShowOverheadName);
         Advance();
         return;
       }
@@ -2569,6 +2816,8 @@ namespace MultiplayerInfrastructure.Scenario
     {
       string questId = ResolveQuestId(node);
       var questData = BuildQuestPayload(node, questId);
+      if (questData != null && node.PersistProgressOnSessionEnd.HasValue)
+        questData.PersistProgressOnSessionEnd = node.PersistProgressOnSessionEnd.Value;
 
       switch (node.Operation)
       {
@@ -2947,6 +3196,128 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Advance();
+    }
+
+    private IEnumerator ExecuteNPCControlNode(ScenarioNPCControlNode node)
+    {
+      _state = State.ExecutingNPCControl;
+
+      if (node == null || string.IsNullOrWhiteSpace(node.NPCIdentifier))
+      {
+        Debug.LogWarning($"[ScenarioController] NPCControl '{node?.Identifier}': npcIdentifier is missing.");
+        Advance();
+        yield break;
+      }
+
+      var npcObject = Registry.Registry.Get<GameObject>(RegistryType.Npc, node.NPCIdentifier)
+                      ?? Registry.Registry.Get<GameObject>(RegistryType.Entity, node.NPCIdentifier);
+      var npc = npcObject != null ? npcObject.GetComponentInChildren<Entity.Npc>(true) : null;
+      if (npcObject == null || npc == null)
+      {
+        Debug.LogWarning($"[ScenarioController] NPCControl '{node.Identifier}': NPC '{node.NPCIdentifier}' not found.");
+        Advance();
+        yield break;
+      }
+
+      if (node.Mode == ScenarioNPCControlMode.Update)
+      {
+        bool interactableFound = ApplyNPCControlUpdate(
+          npc, node.Identifier, node.DisplayName, node.ShowOverheadName,
+          node.InteractOperation, node.InteractableIdentifier, node.InteractEnabled);
+        if (node.InteractOperation == ScenarioNPCInteractCrudOperation.Read
+            && !string.IsNullOrWhiteSpace(node.ResultStateKey))
+        {
+          _stateStore[node.ResultStateKey.Trim()] = interactableFound ? "true" : "false";
+        }
+        ScenarioNetworkRelay.PublishNPCControlUpdate(
+          npc.GetComponentInParent<NetworkObject>(), node);
+
+        Advance();
+        yield break;
+      }
+
+      if (!TryResolveMoveDestination(node.DestinationType, node.DestinationIdentifier,
+            node.DestinationX, node.DestinationY, node.DestinationZ, out var destination))
+      {
+        Debug.LogWarning($"[ScenarioController] NPCControl '{node.Identifier}': destination could not be resolved.");
+        Advance();
+        yield break;
+      }
+
+      var animation = npcObject.GetComponentInChildren<HumanoidAnimationController>(true);
+      try
+      {
+        yield return MoveNpcRoutine(npcObject.transform, animation, destination,
+          node.MoveMode, node.MoveSpeed, node.MoveDuration, node.IgnoreGroundCheck);
+      }
+      finally
+      {
+        if (animation != null)
+          animation.SetBool(NpcWalkAnimationParameterName, false);
+      }
+
+      Advance();
+    }
+
+    internal static bool ApplyNPCControlUpdate(
+      Entity.Npc npc,
+      string nodeIdentifier,
+      string displayName,
+      bool? showOverheadName,
+      ScenarioNPCInteractCrudOperation interactOperation,
+      string interactableIdentifier,
+      bool? interactEnabled)
+    {
+      if (npc == null)
+        return false;
+
+      npc.SetScenarioDisplay(displayName, showOverheadName);
+      if (interactOperation == ScenarioNPCInteractCrudOperation.None)
+        return false;
+
+      MonoBehaviour interactableComponent = null;
+      if (!string.IsNullOrWhiteSpace(interactableIdentifier))
+      {
+        interactableComponent = Registry.Registry.Get<MonoBehaviour>(
+          RegistryType.InteractableEntity, interactableIdentifier);
+
+        if (interactableComponent == null
+            && Registry.Registry.TryGetEntity(interactableIdentifier, out var descriptor)
+            && descriptor?.GameObject != null)
+        {
+          interactableComponent = descriptor.GameObject.GetComponentInChildren<IInteract>(true) as MonoBehaviour;
+        }
+      }
+
+      switch (interactOperation)
+      {
+        case ScenarioNPCInteractCrudOperation.Create:
+          if (interactableComponent == null || !npc.AddCustomInteractSource(interactableComponent))
+            Debug.LogWarning($"[ScenarioController] NPCControl '{nodeIdentifier}': interactable '{interactableIdentifier}' is missing or does not implement IInteract for Create.");
+          break;
+
+        case ScenarioNPCInteractCrudOperation.Read:
+          if (interactableComponent == null)
+            Debug.LogWarning($"[ScenarioController] NPCControl '{nodeIdentifier}': interactable '{interactableIdentifier}' was not found.");
+          break;
+
+        case ScenarioNPCInteractCrudOperation.Update:
+          if (interactableComponent is IInteractToggleable toggleable)
+            toggleable.SetEnabled(interactEnabled ?? true);
+          else
+            Debug.LogWarning($"[ScenarioController] NPCControl '{nodeIdentifier}': interactable '{interactableIdentifier}' does not implement IInteractToggleable.");
+          break;
+
+        case ScenarioNPCInteractCrudOperation.Delete:
+          if (interactableComponent != null)
+            npc.RemoveCustomInteractSource(interactableComponent);
+          break;
+      }
+
+      var ownerPlayer = Registry.Registry.GetFirstEntityComponent<PlayerController>(
+        EntityType.Player, each => each != null && each.IsOwner);
+      ownerPlayer?.RefreshInteractableHintsNow();
+      return interactableComponent != null;
     }
 
     /// <summary>
@@ -3631,8 +4002,11 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioNetworkRelay.PresentAuthoritativeNodeToClient(branchOwnerClientId.Value, _currentGraph.Identifier, cursor.Identifier);
 
         // 단일 노드를 실행하고 완료를 대기한다(전역 Advance 미사용).
+        // 분기 코루틴이 실제로 MoveNext 되는 순간에만 전역 Advance 를 억제한다.
+        // 대기 중인 WaitMode.None 분기가 억제 상태를 계속 점유하면 메인 체인의
+        // Advance 까지 차단되므로, 코루틴 전체 수명 동안 억제해서는 안 된다.
         chainContext.NextOverride = null;
-        yield return ExecuteBranchNode(cursor, chainContext);
+        yield return RunWithGlobalAdvanceSuppressed(ExecuteBranchNode(cursor, chainContext));
 
         // 노드 대기 도중 시나리오가 종료되어 그래프가 해제됐을 수 있으므로 재확인한다.
         if (_currentGraph == null)
@@ -3689,151 +4063,194 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     private IEnumerator ExecuteBranchNode(IScenarioNode node, BranchChainContext context)
     {
-      // 브랜치 노드 실행기가 내부적으로 전역 Advance 를 호출하더라도 전역 시나리오 커서가
-      // 끌려가지 않도록, 브랜치 노드 실행 구간 동안 전역 Advance 를 억제한다.
-      // 브랜치 진행은 RunBranchChain 이 NextIdentifier 로만 수행한다.
-      _globalAdvanceSuppressionDepth++;
+      switch (node)
+      {
+        case ScenarioDelayNode delay:
+          yield return ExecuteDelayNode(delay);
+          break;
+        case ScenarioInvokeEventNode invoke:
+          // WaitUntilDone/Immediately 모두 실행기 말미에 전역 Advance 를 호출하지만,
+          // RunWithGlobalAdvanceSuppressed 가 각 MoveNext 순간에만 이를 억제한다.
+          if (invoke.MoveNextBehavior == ScenarioInvokeEventMoveNextBehavior.WaitUntilDone)
+          {
+            yield return ExecuteInvokeEventNode(invoke);
+          }
+          else
+          {
+            StartCoroutine(RunWithGlobalAdvanceSuppressed(ExecuteInvokeEventNode(invoke)));
+          }
+          break;
+        case ScenarioSoundNode sound:
+          yield return ExecuteSoundNode(sound);
+          break;
+        case ScenarioValidatorNode validator:
+          yield return ExecuteValidatorGate(validator);
+          break;
+        case ScenarioInteractionNode interaction:
+          yield return ExecuteInteractionNode(interaction);
+          break;
+        case ScenarioCombineItemNode combineItem:
+          yield return ExecuteCombineItemNode(combineItem);
+          break;
+        case ScenarioSignalListenerNode signalListener:
+          ExecuteSignalListenerNode(signalListener);
+          break;
+        case ScenarioEntityStateSignalBindingNode stateBinding:
+          ExecuteEntityStateSignalBindingNode(stateBinding);
+          break;
+        case ScenarioSignalCounterNode signalCounter:
+          ExecuteSignalCounterNode(signalCounter);
+          break;
+        case ScenarioDialogueNode dialogue:
+          // 브랜치 내 다이얼로그: interactionRequired면 자동 닫힘 없이 입력으로만 닫힌다.
+          // 다른 그래프/흐름이 대화창을 점유 중이면 정책을 적용한다(교차 그래프 충돌만 검사).
+          if (!_uiController.IsUnityNull() && !TryClaimDialogueUI(considerBranchPrompt: false))
+          {
+            // Cancel: 이 다이얼로그를 표시하지 않고 브랜치 체인을 종료.
+            // Panic: EndScenario 로 _currentGraph 가 정리됨.
+            yield break;
+          }
+          if (!_uiController.IsUnityNull())
+          {
+            _uiController.DisplayDialogue(
+              dialogue.SpeakerName,
+              dialogue.DialogueContent,
+              dialogue.PortraitSpriteIdentifier,
+              dialogue.InteractionRequired);
+          }
+
+          var waitSeconds = (dialogue.AutoAdvanceSeconds.HasValue && dialogue.AutoAdvanceSeconds.Value > 0f)
+            ? dialogue.AutoAdvanceSeconds.Value
+            : 0f;
+
+          if (waitSeconds > 0f)
+          {
+            yield return new WaitForSeconds(waitSeconds);
+          }
+          break;
+        case ScenarioDisinteractableDialogueNode disinteractableDialogue:
+          yield return ExecuteDisinteractableDialogueNode(disinteractableDialogue);
+          break;
+        case ScenarioChoiceNode choice:
+          // 브랜치 내 선택지: 전역 커서 대신 선택 결과를 NextOverride 로 전달한다.
+          yield return ExecuteChoiceNodeInBranch(choice, context);
+          break;
+        case ScenarioQuizNode quiz:
+          yield return ExecuteQuizNodeInBranch(quiz, context);
+          break;
+        case ScenarioQuestControlNode questControl:
+          ExecuteQuestControlNode(questControl);
+          break;
+        case ScenarioQuestWaypointHighlightNode waypointHighlight:
+          ExecuteQuestWaypointHighlightNode(waypointHighlight);
+          break;
+        case ScenarioStateUpdateNode stateUpdate:
+          ExecuteStateUpdateNode(stateUpdate);
+          break;
+        case ScenarioPlayerTagNode playerTag:
+          ExecutePlayerTagNode(playerTag);
+          break;
+        case ScenarioPlayTTSNode playTTS:
+          yield return ExecutePlayTTSNode(playTTS);
+          break;
+        case ScenarioPlayerMoveNode playerMove:
+          yield return ExecutePlayerMoveNode(playerMove);
+          break;
+        case ScenarioNPCMoveNode npcMove:
+          yield return ExecuteNPCMoveNode(npcMove);
+          break;
+        case ScenarioNPCControlNode npcControl:
+          yield return ExecuteNPCControlNode(npcControl);
+          break;
+        case ScenarioCameraTargetNode cameraTarget:
+          yield return ExecuteCameraTargetNode(cameraTarget);
+          break;
+        case ScenarioServerInternalSignalNode internalSignal:
+          yield return ExecuteServerInternalSignalNode(internalSignal);
+          break;
+        case ScenarioEntityPresetSpawnNode entityPresetSpawn:
+          ExecuteEntityPresetSpawnNode(entityPresetSpawn);
+          break;
+        case ScenarioEntityTagNode entityTag:
+          ExecuteEntityTagNode(entityTag);
+          break;
+        case ScenarioEntityInitNode entityInit:
+          ExecuteEntityInitNode(entityInit);
+          break;
+        case ScenarioTriageAssessControlNode triageAssess:
+          ExecuteTriageAssessControlNode(triageAssess);
+          break;
+        case ScenarioItemSubmissionConfigNode itemSubmission:
+          ExecuteItemSubmissionConfigNode(itemSubmission);
+          break;
+        case ScenarioNpcInteractControlNode npcInteractControl:
+          ExecuteNpcInteractControlNode(npcInteractControl);
+          break;
+        case ScenarioChatPrintNode chatPrint:
+          ExecuteChatPrintNode(chatPrint);
+          break;
+        case ScenarioExecuteCommandNode executeCommand:
+          ExecuteExecuteCommandNode(executeCommand);
+          break;
+        case ScenarioParallelNode nestedParallel:
+          // 중첩 병렬: 내부 브랜치 완료까지 대기(말미의 전역 Advance 는 억제됨).
+          yield return ExecuteParallelNode(nestedParallel);
+          break;
+        default:
+          Debug.LogWarning($"[ScenarioController] Unsupported node type in branch chain: {node.GetType().Name} (id='{node.Identifier}'). Skipping.");
+          break;
+      }
+    }
+
+    /// <summary>
+    /// 분기 노드 코루틴을 실행하되, 해당 코루틴(및 중첩 IEnumerator)이 실제로
+    /// MoveNext 되는 동안에만 전역 Advance 를 억제한다.
+    /// </summary>
+    private IEnumerator RunWithGlobalAdvanceSuppressed(IEnumerator routine)
+    {
+      if (routine == null)
+        yield break;
+
       try
       {
-        switch (node)
+        while (true)
         {
-          case ScenarioDelayNode delay:
-            yield return ExecuteDelayNode(delay);
-            break;
-          case ScenarioInvokeEventNode invoke:
-            // WaitUntilDone/Immediately 모두 실행기 말미에 전역 Advance 를 호출하지만,
-            // 억제 카운터로 무시된다. Immediately(fire-and-forget) 의 경우 핸들러 코루틴이
-            // 이 메서드 종료 후 끝날 수 있어, 그 시점까지 억제가 유지되도록 전용 래퍼로 감싼다.
-            if (invoke.MoveNextBehavior == ScenarioInvokeEventMoveNextBehavior.WaitUntilDone)
-            {
-              yield return ExecuteInvokeEventNode(invoke);
-            }
-            else
-            {
-              StartCoroutine(RunInvokeEventSuppressed(invoke));
-            }
-            break;
-          case ScenarioSoundNode sound:
-            yield return ExecuteSoundNode(sound);
-            break;
-          case ScenarioValidatorNode validator:
-            yield return ExecuteValidatorGate(validator);
-            break;
-          case ScenarioInteractionNode interaction:
-            yield return ExecuteInteractionNode(interaction);
-            break;
-          case ScenarioCombineItemNode combineItem:
-            yield return ExecuteCombineItemNode(combineItem);
-            break;
-          case ScenarioSignalListenerNode signalListener:
-            ExecuteSignalListenerNode(signalListener);
-            break;
-          case ScenarioEntityStateSignalBindingNode stateBinding:
-            ExecuteEntityStateSignalBindingNode(stateBinding);
-            break;
-          case ScenarioSignalCounterNode signalCounter:
-            ExecuteSignalCounterNode(signalCounter);
-            break;
-          case ScenarioDialogueNode dialogue:
-            // 브랜치 내 다이얼로그: interactionRequired면 자동 닫힘 없이 입력으로만 닫힌다.
-            // 다른 그래프/흐름이 대화창을 점유 중이면 정책을 적용한다(교차 그래프 충돌만 검사).
-            if (!_uiController.IsUnityNull() && !TryClaimDialogueUI(considerBranchPrompt: false))
-            {
-              // Cancel: 이 다이얼로그를 표시하지 않고 브랜치 체인을 종료.
-              // Panic: EndScenario 로 _currentGraph 가 정리됨.
-              yield break;
-            }
-            if (!_uiController.IsUnityNull())
-            {
-              _uiController.DisplayDialogue(
-                dialogue.SpeakerName,
-                dialogue.DialogueContent,
-                dialogue.PortraitSpriteIdentifier,
-                dialogue.InteractionRequired);
-            }
+          bool hasNext;
+          object yielded = null;
+          _globalAdvanceSuppressionDepth++;
+          try
+          {
+            hasNext = routine.MoveNext();
+            if (hasNext)
+              yielded = routine.Current;
+          }
+          finally
+          {
+            _globalAdvanceSuppressionDepth--;
+          }
 
-            var waitSeconds = (dialogue.AutoAdvanceSeconds.HasValue && dialogue.AutoAdvanceSeconds.Value > 0f)
-              ? dialogue.AutoAdvanceSeconds.Value
-              : 0f;
+          if (!hasNext)
+            yield break;
 
-            if (waitSeconds > 0f)
-            {
-              yield return new WaitForSeconds(waitSeconds);
-            }
-            break;
-          case ScenarioDisinteractableDialogueNode disinteractableDialogue:
-            yield return ExecuteDisinteractableDialogueNode(disinteractableDialogue);
-            break;
-          case ScenarioChoiceNode choice:
-            // 브랜치 내 선택지: 전역 커서 대신 선택 결과를 NextOverride 로 전달한다.
-            yield return ExecuteChoiceNodeInBranch(choice, context);
-            break;
-          case ScenarioQuizNode quiz:
-            yield return ExecuteQuizNodeInBranch(quiz, context);
-            break;
-          case ScenarioQuestControlNode questControl:
-            ExecuteQuestControlNode(questControl);
-            break;
-          case ScenarioQuestWaypointHighlightNode waypointHighlight:
-            ExecuteQuestWaypointHighlightNode(waypointHighlight);
-            break;
-          case ScenarioStateUpdateNode stateUpdate:
-            ExecuteStateUpdateNode(stateUpdate);
-            break;
-          case ScenarioPlayerTagNode playerTag:
-            ExecutePlayerTagNode(playerTag);
-            break;
-          case ScenarioPlayTTSNode playTTS:
-            yield return ExecutePlayTTSNode(playTTS);
-            break;
-          case ScenarioPlayerMoveNode playerMove:
-            yield return ExecutePlayerMoveNode(playerMove);
-            break;
-          case ScenarioNPCMoveNode npcMove:
-            yield return ExecuteNPCMoveNode(npcMove);
-            break;
-          case ScenarioCameraTargetNode cameraTarget:
-            yield return ExecuteCameraTargetNode(cameraTarget);
-            break;
-          case ScenarioServerInternalSignalNode internalSignal:
-            yield return ExecuteServerInternalSignalNode(internalSignal);
-            break;
-          case ScenarioEntityPresetSpawnNode entityPresetSpawn:
-            ExecuteEntityPresetSpawnNode(entityPresetSpawn);
-            break;
-          case ScenarioEntityTagNode entityTag:
-            ExecuteEntityTagNode(entityTag);
-            break;
-          case ScenarioEntityInitNode entityInit:
-            ExecuteEntityInitNode(entityInit);
-            break;
-          case ScenarioTriageAssessControlNode triageAssess:
-            ExecuteTriageAssessControlNode(triageAssess);
-            break;
-          case ScenarioItemSubmissionConfigNode itemSubmission:
-            ExecuteItemSubmissionConfigNode(itemSubmission);
-            break;
-          case ScenarioNpcInteractControlNode npcInteractControl:
-            ExecuteNpcInteractControlNode(npcInteractControl);
-            break;
-          case ScenarioChatPrintNode chatPrint:
-            ExecuteChatPrintNode(chatPrint);
-            break;
-          case ScenarioExecuteCommandNode executeCommand:
-            ExecuteExecuteCommandNode(executeCommand);
-            break;
-          case ScenarioParallelNode nestedParallel:
-            // 중첩 병렬: 내부 브랜치 완료까지 대기(말미의 전역 Advance 는 억제됨).
-            yield return ExecuteParallelNode(nestedParallel);
-            break;
-          default:
-            Debug.LogWarning($"[ScenarioController] Unsupported node type in branch chain: {node.GetType().Name} (id='{node.Identifier}'). Skipping.");
-            break;
+          if (yielded is IEnumerator nested)
+            yield return RunWithGlobalAdvanceSuppressed(nested);
+          else
+            yield return yielded;
         }
       }
       finally
       {
-        _globalAdvanceSuppressionDepth--;
+        // StopCoroutine/시나리오 종료로 래퍼가 중단돼도 원래 코루틴의 finally
+        // 정리 로직이 실행되게 한다. Dispose 중 발생하는 Advance 역시 분기 진행이므로 억제한다.
+        _globalAdvanceSuppressionDepth++;
+        try
+        {
+          (routine as IDisposable)?.Dispose();
+        }
+        finally
+        {
+          _globalAdvanceSuppressionDepth--;
+        }
       }
     }
 
@@ -3975,24 +4392,6 @@ namespace MultiplayerInfrastructure.Scenario
       context.NextOverride = ResolveQuizTarget(node, isCorrect);
 
       ClearOptions();
-    }
-
-    /// <summary>
-    /// 브랜치 내부의 fire-and-forget InvokeEvent 핸들러 코루틴을 실행하는 동안
-    /// 전역 Advance 억제를 유지한다. 핸들러가 이 노드 실행 완료 이후에 끝나며
-    /// 말미의 전역 Advance 를 호출하더라도 전역 시나리오 커서를 끌고 가지 않게 한다.
-    /// </summary>
-    private IEnumerator RunInvokeEventSuppressed(ScenarioInvokeEventNode invoke)
-    {
-      _globalAdvanceSuppressionDepth++;
-      try
-      {
-        yield return ExecuteInvokeEventNode(invoke);
-      }
-      finally
-      {
-        _globalAdvanceSuppressionDepth--;
-      }
     }
 
     private IEnumerator WaitForAny(List<BranchCompletionTracker> trackers)
@@ -4749,11 +5148,11 @@ namespace MultiplayerInfrastructure.Scenario
         ? "condition evaluated to false"
         : reason;
       var graphIdentifier = _currentGraph?.Identifier ?? "<unknown>";
-      var message = $"Validator gate blocked scenario progress: graph='{graphIdentifier}', node='{node.Identifier}', reason={resolvedReason}";
+      var message = $"Validator gate is waiting for its condition: graph='{graphIdentifier}', node='{node.Identifier}', reason={resolvedReason}";
 
       if ((_validatorBlockLogTargets & ScenarioValidatorBlockLogTarget.UnityConsole) != 0)
       {
-        Debug.LogError($"[ScenarioController] {message}", this);
+        Debug.LogWarning($"[ScenarioController] {message}", this);
       }
 
       if ((_validatorBlockLogTargets & ScenarioValidatorBlockLogTarget.InGameChat) != 0)
@@ -4763,7 +5162,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       if ((_validatorBlockLogTargets & ScenarioValidatorBlockLogTarget.SessionLog) != 0)
       {
-        GameLogService.WriteScenario($"ERROR: {message}", graphIdentifier);
+        GameLogService.WriteScenario($"WAITING: {message}", graphIdentifier);
       }
     }
 
@@ -4779,7 +5178,18 @@ namespace MultiplayerInfrastructure.Scenario
         Registry.Registry.TryGet<ChatUIController>(RegistryType.UI, Registry.Registry.TypeKey<ChatUIController>(), out _chatUIController);
       }
 
-      _chatUIController?.AppendMessage($"<color=#FFD700>[System]</color> {message}", true);
+      if (_chatUIController == null)
+        return;
+
+      try
+      {
+        _chatUIController.AppendMessage($"<color=#FFD700>[System]</color> {message}", true);
+      }
+      catch (Exception ex)
+      {
+        // 부가 UI가 아직 초기화되지 않았거나 파괴 중이어도 시나리오 진행은 중단하지 않는다.
+        Debug.LogWarning($"[ScenarioController] System chat message could not be displayed: {ex.Message}");
+      }
     }
 
     #endregion

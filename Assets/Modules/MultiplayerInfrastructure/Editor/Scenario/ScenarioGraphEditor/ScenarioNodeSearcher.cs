@@ -270,6 +270,14 @@ namespace MultiplayerInfrastructure.Editor
           Add("destinationIdentifier", nm.DestinationIdentifier);
           break;
 
+        case ScenarioNPCControlNode nc:
+          Add("npcIdentifier",          nc.NPCIdentifier);
+          Add("interactableIdentifier", nc.InteractableIdentifier);
+          Add("resultStateKey",          nc.ResultStateKey);
+          Add("displayName",             nc.DisplayName);
+          Add("destinationIdentifier",   nc.DestinationIdentifier);
+          break;
+
         case ScenarioPlayerMoveNode pm:
           Add("destinationIdentifier", pm.DestinationIdentifier);
           break;

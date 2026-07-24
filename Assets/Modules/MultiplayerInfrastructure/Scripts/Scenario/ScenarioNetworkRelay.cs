@@ -1,8 +1,10 @@
 using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
+using FishNet.Transporting;
 using MultiplayerInfrastructure.Registry;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -32,6 +34,31 @@ namespace MultiplayerInfrastructure.Scenario
   public sealed class ScenarioNetworkRelay : NetworkBehaviour
   {
     private static ScenarioNetworkRelay _instance;
+    private readonly List<ActingNpcConfiguration> _actingNpcConfigurations = new List<ActingNpcConfiguration>();
+    private readonly List<NpcControlState> _npcControlStates = new List<NpcControlState>();
+
+    private sealed class ActingNpcConfiguration
+    {
+      public string GraphIdentifier;
+      public string ActingNpcIdentifier;
+      public NetworkObject NetworkObject;
+    }
+
+    private sealed class NpcControlState
+    {
+      public NetworkObject NetworkObject;
+      public string DisplayName;
+      public bool HasDisplayName;
+      public bool? ShowOverheadName;
+      public readonly Dictionary<string, NpcInteractState> Interacts =
+        new Dictionary<string, NpcInteractState>(StringComparer.Ordinal);
+    }
+
+    private sealed class NpcInteractState
+    {
+      public bool? IsAttached;
+      public bool? IsEnabled;
+    }
 
     /// <summary>씬에 배치된 중계기 인스턴스(없으면 null).</summary>
     public static ScenarioNetworkRelay Instance => _instance;
@@ -90,7 +117,8 @@ namespace MultiplayerInfrastructure.Scenario
             || node is ScenarioSignalListenerNode
             || node is ScenarioSignalCounterNode
             || node is ScenarioEntityStateSignalBindingNode
-            || node is ScenarioStateUpdateNode)
+            || node is ScenarioStateUpdateNode
+            || node is ScenarioNPCControlNode)
           continue;
 
         unsupportedNode = node;
@@ -137,6 +165,161 @@ namespace MultiplayerInfrastructure.Scenario
     {
       if (_instance != null && InstanceFinder.IsServerStarted && !string.IsNullOrWhiteSpace(graphIdentifier))
         _instance.ObserversEndPresentationScenario(graphIdentifier);
+    }
+
+    /// <summary>
+    /// 서버에서 preset spawn 후 적용한 actingNpc 식별자와 인라인 상호작용을 동일한 NetworkObject의
+    /// 원격 클라이언트 인스턴스에도 적용한다.
+    /// </summary>
+    public static bool PublishScenarioActingNpcConfiguration(
+      string graphIdentifier,
+      string actingNpcIdentifier,
+      NetworkObject actorObject)
+    {
+      if (!InstanceFinder.IsServerStarted)
+        return true;
+      if (_instance == null || actorObject == null
+          || string.IsNullOrWhiteSpace(graphIdentifier) || string.IsNullOrWhiteSpace(actingNpcIdentifier))
+        return false;
+
+      _instance.RememberActingNpcConfiguration(graphIdentifier, actingNpcIdentifier, actorObject);
+      _instance.ObserversConfigureScenarioActingNpc(graphIdentifier, actingNpcIdentifier, actorObject);
+      return true;
+    }
+
+    public static void PublishNPCControlUpdate(
+      NetworkObject actorObject,
+      ScenarioNPCControlNode node)
+    {
+      if (!InstanceFinder.IsServerStarted || _instance == null || actorObject == null || node == null)
+        return;
+
+      _instance.RememberNPCControlUpdate(actorObject, node);
+      _instance.ObserversUpdateNPCControl(
+        actorObject, node.Identifier, node.DisplayName,
+        node.ShowOverheadName.HasValue, node.ShowOverheadName.GetValueOrDefault(),
+        (int)node.InteractOperation, node.InteractableIdentifier,
+        node.InteractEnabled.HasValue, node.InteractEnabled.GetValueOrDefault());
+    }
+
+    public override void OnStartServer()
+    {
+      base.OnStartServer();
+      InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
+    }
+
+    public override void OnStopServer()
+    {
+      if (InstanceFinder.NetworkManager?.ServerManager != null)
+        InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState -= OnRemoteConnectionState;
+      _actingNpcConfigurations.Clear();
+      _npcControlStates.Clear();
+      base.OnStopServer();
+    }
+
+    private void RememberNPCControlUpdate(NetworkObject actorObject, ScenarioNPCControlNode node)
+    {
+      _npcControlStates.RemoveAll(value => value == null || value.NetworkObject == null);
+      var state = _npcControlStates.FirstOrDefault(value => value.NetworkObject == actorObject);
+      if (state == null)
+      {
+        state = new NpcControlState { NetworkObject = actorObject };
+        _npcControlStates.Add(state);
+      }
+
+      if (!string.IsNullOrWhiteSpace(node.DisplayName))
+      {
+        state.DisplayName = node.DisplayName.Trim();
+        state.HasDisplayName = true;
+      }
+      if (node.ShowOverheadName.HasValue)
+        state.ShowOverheadName = node.ShowOverheadName;
+
+      if (node.InteractOperation == ScenarioNPCInteractCrudOperation.None
+          || node.InteractOperation == ScenarioNPCInteractCrudOperation.Read
+          || string.IsNullOrWhiteSpace(node.InteractableIdentifier))
+        return;
+
+      string identifier = node.InteractableIdentifier.Trim();
+      if (!state.Interacts.TryGetValue(identifier, out var interactState))
+      {
+        interactState = new NpcInteractState();
+        state.Interacts.Add(identifier, interactState);
+      }
+
+      switch (node.InteractOperation)
+      {
+        case ScenarioNPCInteractCrudOperation.Create:
+          interactState.IsAttached = true;
+          break;
+        case ScenarioNPCInteractCrudOperation.Delete:
+          interactState.IsAttached = false;
+          break;
+        case ScenarioNPCInteractCrudOperation.Update:
+          interactState.IsEnabled = node.InteractEnabled;
+          break;
+      }
+    }
+
+    private void RememberActingNpcConfiguration(
+      string graphIdentifier, string actingNpcIdentifier, NetworkObject networkObject)
+    {
+      _actingNpcConfigurations.RemoveAll(value => value == null || value.NetworkObject == null
+        || value.NetworkObject == networkObject);
+      _actingNpcConfigurations.Add(new ActingNpcConfiguration
+      {
+        GraphIdentifier = graphIdentifier,
+        ActingNpcIdentifier = actingNpcIdentifier,
+        NetworkObject = networkObject
+      });
+    }
+
+    private void OnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs args)
+    {
+      if (args.ConnectionState != RemoteConnectionState.Started || connection == null)
+        return;
+      StartCoroutine(SendActingNpcConfigurationsAfterSpawn(connection));
+    }
+
+    private IEnumerator SendActingNpcConfigurationsAfterSpawn(NetworkConnection connection)
+    {
+      // 새 접속자의 NetworkObject spawn 메시지가 먼저 처리되도록 한 프레임 양보한다.
+      yield return null;
+      _actingNpcConfigurations.RemoveAll(value => value == null || value.NetworkObject == null);
+      foreach (var configuration in _actingNpcConfigurations)
+        TargetConfigureScenarioActingNpc(connection, configuration.GraphIdentifier,
+          configuration.ActingNpcIdentifier, configuration.NetworkObject);
+
+      _npcControlStates.RemoveAll(value => value == null || value.NetworkObject == null);
+      foreach (var state in _npcControlStates)
+      {
+        TargetUpdateNPCControl(
+          connection, state.NetworkObject, "late-join-display",
+          state.HasDisplayName ? state.DisplayName : null,
+          state.ShowOverheadName.HasValue, state.ShowOverheadName.GetValueOrDefault(),
+          (int)ScenarioNPCInteractCrudOperation.None, null, false, false);
+
+        foreach (var pair in state.Interacts)
+        {
+          if (pair.Value.IsAttached.HasValue)
+          {
+            TargetUpdateNPCControl(
+              connection, state.NetworkObject, "late-join-interact-membership",
+              null, false, false,
+              (int)(pair.Value.IsAttached.Value
+                ? ScenarioNPCInteractCrudOperation.Create
+                : ScenarioNPCInteractCrudOperation.Delete),
+              pair.Key, false, false);
+          }
+          if (pair.Value.IsEnabled.HasValue)
+          {
+            TargetUpdateNPCControl(
+              connection, state.NetworkObject, "late-join-interact-enabled",
+              null, false, false, (int)ScenarioNPCInteractCrudOperation.Update,
+              pair.Key, true, pair.Value.IsEnabled.Value);
+          }
+        }
+      }
     }
 
     /// <summary>
@@ -263,6 +446,91 @@ namespace MultiplayerInfrastructure.Scenario
     private void ObserversEndPresentationScenario(string graphIdentifier)
     {
       ScenarioController.Instance?.EndPresentationScenario(graphIdentifier);
+    }
+
+    [ObserversRpc(BufferLast = false)]
+    private void ObserversConfigureScenarioActingNpc(
+      string graphIdentifier,
+      string actingNpcIdentifier,
+      NetworkObject actorObject)
+    {
+      // 호스트는 서버 경로에서 이미 동일 인스턴스를 구성했다.
+      if (InstanceFinder.IsServerStarted)
+        return;
+      if (actorObject == null)
+      {
+        Debug.LogWarning(
+          $"[ScenarioNetworkRelay] ActingNpc '{actingNpcIdentifier}' NetworkObject is unavailable on presentation client.");
+        return;
+      }
+      if (!Registry.Registry.TryGetScenarioGraph(graphIdentifier, out var graph, out var error))
+      {
+        Debug.LogWarning(
+          $"[ScenarioNetworkRelay] Failed to resolve actingNpc graph '{graphIdentifier}': {error}");
+        return;
+      }
+
+      var actingNpc = graph.ActingNpcs?.FirstOrDefault(
+        value => value != null && string.Equals(value.Identifier, actingNpcIdentifier, StringComparison.Ordinal));
+      var npc = actorObject.GetComponentInChildren<Entity.Npc>(true);
+      if (actingNpc == null || npc == null)
+      {
+        Debug.LogWarning(
+          $"[ScenarioNetworkRelay] Could not configure actingNpc '{actingNpcIdentifier}' on presentation client.");
+        return;
+      }
+
+      npc.ConfigureScenarioActingNpc(actingNpc);
+    }
+
+    [ObserversRpc(BufferLast = false)]
+    private void ObserversUpdateNPCControl(
+      NetworkObject actorObject,
+      string nodeIdentifier,
+      string displayName,
+      bool hasShowOverheadName,
+      bool showOverheadName,
+      int interactOperation,
+      string interactableIdentifier,
+      bool hasInteractEnabled,
+      bool interactEnabled)
+    {
+      if (InstanceFinder.IsServerStarted || actorObject == null)
+        return;
+
+      var npc = actorObject.GetComponentInChildren<Entity.Npc>(true);
+      ScenarioController.ApplyNPCControlUpdate(
+        npc, nodeIdentifier, displayName,
+        hasShowOverheadName ? showOverheadName : (bool?)null,
+        (ScenarioNPCInteractCrudOperation)interactOperation,
+        interactableIdentifier,
+        hasInteractEnabled ? interactEnabled : (bool?)null);
+    }
+
+    [TargetRpc]
+    private void TargetUpdateNPCControl(
+      NetworkConnection connection,
+      NetworkObject actorObject,
+      string nodeIdentifier,
+      string displayName,
+      bool hasShowOverheadName,
+      bool showOverheadName,
+      int interactOperation,
+      string interactableIdentifier,
+      bool hasInteractEnabled,
+      bool interactEnabled)
+    {
+      ObserversUpdateNPCControl(
+        actorObject, nodeIdentifier, displayName,
+        hasShowOverheadName, showOverheadName, interactOperation,
+        interactableIdentifier, hasInteractEnabled, interactEnabled);
+    }
+
+    [TargetRpc]
+    private void TargetConfigureScenarioActingNpc(
+      NetworkConnection connection, string graphIdentifier, string actingNpcIdentifier, NetworkObject actorObject)
+    {
+      ObserversConfigureScenarioActingNpc(graphIdentifier, actingNpcIdentifier, actorObject);
     }
 
     [ServerRpc(RequireOwnership = false)]

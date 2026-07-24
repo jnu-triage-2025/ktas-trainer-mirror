@@ -8,6 +8,7 @@
       "questContent": "세 웨이포인트를 순서대로 방문",
       "isTrackable": true,
       "isAutoComplete": true,
+      "persistProgressOnSessionEnd": false,
       "isTrackedByDefault": true,
       "scope": "Player",
       "isOrdinal": true,

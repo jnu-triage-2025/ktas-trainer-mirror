@@ -191,6 +191,7 @@
       "nextIdentifier": "V035",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Triage_patientB_patientC",
       "quest": null
     },
@@ -473,6 +474,7 @@
       "nextIdentifier": "D039",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Triage_patientB_patientC",
       "quest": null
     },
@@ -491,6 +493,7 @@
       "nextIdentifier": "COUNT_TRIAGE_ARRIVALS",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_playerB_playerC_playerD_to_triage",
       "quest": null
     },
@@ -531,6 +534,7 @@
       "nextIdentifier": "E042",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_playerB_playerC_playerD_to_triage",
       "quest": null
     },
@@ -674,6 +678,7 @@
       "nextIdentifier": "V041",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_GCS_B",
       "quest": null
     },
@@ -985,6 +990,7 @@
       "nextIdentifier": "CC_A_gcs_patient_b",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_GCS_B",
       "quest": null
     },
@@ -1004,6 +1010,7 @@
       "nextIdentifier": "V042",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Vital_B",
       "quest": null
     },
@@ -1177,6 +1184,7 @@
       "nextIdentifier": "CC_C_vital_patient_b",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Vital_B",
       "quest": null
     },
@@ -1242,6 +1250,7 @@
       "nextIdentifier": "V047",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Pupil_IV_B",
       "quest": null
     },
@@ -1460,6 +1469,7 @@
       "nextIdentifier": "CC_A_pupil_iv_patient_b",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Pupil_IV_B",
       "quest": null
     },
@@ -1489,6 +1499,7 @@
       "nextIdentifier": "V052",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Nasal_B",
       "quest": null
     },
@@ -1679,6 +1690,7 @@
       "nextIdentifier": "N058",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Nasal_B",
       "quest": null
     },
@@ -1698,6 +1710,7 @@
       "nextIdentifier": "V056",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_BleedingControl_B",
       "quest": null
     },
@@ -1873,6 +1886,7 @@
       "nextIdentifier": "CC_C_nasal_pressure_patient_b",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_BleedingControl_B",
       "quest": null
     },
@@ -1989,6 +2003,7 @@
       "nextIdentifier": "V060",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_GCS_C",
       "quest": null
     },
@@ -2300,6 +2315,7 @@
       "nextIdentifier": "CC_B_gcs_patient_c",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_GCS_C",
       "quest": null
     },
@@ -2319,6 +2335,7 @@
       "nextIdentifier": "V061",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Vital_C",
       "quest": null
     },
@@ -2492,6 +2509,7 @@
       "nextIdentifier": "CC_D_vital_patient_c",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Vital_C",
       "quest": null
     },
@@ -2557,6 +2575,7 @@
       "nextIdentifier": "V066",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Pupil_IV_C",
       "quest": null
     },
@@ -2773,6 +2792,7 @@
       "nextIdentifier": "CC_B_pupil_iv_patient_c",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Pupil_IV_C",
       "quest": null
     },
@@ -2802,6 +2822,7 @@
       "nextIdentifier": "V071",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Nasal_C",
       "quest": null
     },
@@ -2992,6 +3013,7 @@
       "nextIdentifier": "N087",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Nasal_C",
       "quest": null
     },
@@ -3011,6 +3033,7 @@
       "nextIdentifier": "V075",
       "operation": "Add",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_BleedingControl_C",
       "quest": null
     },
@@ -3184,6 +3207,7 @@
       "nextIdentifier": "CC_D_nasal_pressure_patient_c",
       "operation": "Remove",
       "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_BleedingControl_C",
       "quest": null
     },

@@ -12,5 +12,11 @@ namespace MultiplayerInfrastructure.Scenario
     public ScenarioQuestFailureStrategy FailureStrategy { get; set; } = ScenarioQuestFailureStrategy.Overwrite;
     public string QuestDefinitionIdentifier { get; set; }
     public QuestData Quest { get; set; }
+
+    /// <summary>
+    /// null이면 QuestDefinition/인라인 QuestData의 설정을 사용합니다.
+    /// 지정하면 해당 QuestControl 실행으로 생성·갱신되는 퀘스트의 세션 종료 후 진행 유지 여부를 덮어씁니다.
+    /// </summary>
+    public bool? PersistProgressOnSessionEnd { get; set; }
   }
 }

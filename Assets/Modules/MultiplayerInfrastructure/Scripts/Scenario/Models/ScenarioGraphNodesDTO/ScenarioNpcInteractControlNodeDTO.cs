@@ -12,5 +12,11 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("operation")]
     public string Operation { get; set; }
+
+    [JsonPropertyName("displayName")]
+    public string DisplayName { get; set; }
+
+    [JsonPropertyName("showOverheadName")]
+    public bool? ShowOverheadName { get; set; }
   }
 }

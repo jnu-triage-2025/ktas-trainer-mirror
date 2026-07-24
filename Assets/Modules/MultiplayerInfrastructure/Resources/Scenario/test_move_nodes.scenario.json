@@ -6,7 +6,7 @@
       "identifier": "dialogue_start",
       "nodeType": "Dialogue",
       "speakerName": "Guide",
-      "dialogueContent": "ScenarioPlayerMoveNode / ScenarioNPCMoveNode 테스트 시나리오입니다. 테스트할 이동 방식을 선택하세요.",
+      "dialogueContent": "ScenarioPlayerMoveNode / ScenarioNPCControlNode 테스트 시나리오입니다. 테스트할 이동 방식을 선택하세요.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": "choice_move_mode"
     },
@@ -56,7 +56,8 @@
     },
     "npc_move_position": {
       "identifier": "npc_move_position",
-      "nodeType": "NPCMove",
+      "nodeType": "NPCControl",
+      "mode": "Control",
       "npcIdentifier": "demo_scenario_giving_npc",
       "destinationType": "Position",
       "destinationIdentifier": null,
@@ -73,7 +74,7 @@
       "identifier": "dialogue_npc_move_position_done",
       "nodeType": "Dialogue",
       "speakerName": "Guide",
-      "dialogueContent": "NPCMove(Position) 완료: demo_scenario_giving_npc 가 좌표 (-6, 1.3, -3.3) 로 이동했습니다. Position 방식 테스트가 끝났습니다.",
+      "dialogueContent": "NPCControl(Control/Position) 완료: demo_scenario_giving_npc 가 좌표 (-6, 1.3, -3.3) 로 이동했습니다. Position 방식 테스트가 끝났습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": null
     },
@@ -101,7 +102,8 @@
     },
     "npc_move_waypoint": {
       "identifier": "npc_move_waypoint",
-      "nodeType": "NPCMove",
+      "nodeType": "NPCControl",
+      "mode": "Control",
       "npcIdentifier": "demo_scenario_giving_npc",
       "destinationType": "Waypoint",
       "destinationIdentifier": "treatment-room-enterance",
@@ -118,7 +120,7 @@
       "identifier": "dialogue_npc_move_waypoint_done",
       "nodeType": "Dialogue",
       "speakerName": "Guide",
-      "dialogueContent": "NPCMove(Waypoint) 완료: demo_scenario_giving_npc 가 treatment-room-enterance 로 이동했습니다. Waypoint 방식 테스트가 끝났습니다.",
+      "dialogueContent": "NPCControl(Control/Waypoint) 완료: demo_scenario_giving_npc 가 treatment-room-enterance 로 이동했습니다. Waypoint 방식 테스트가 끝났습니다.",
       "portraitSpriteIdentifier": null,
       "nextIdentifier": null
     }

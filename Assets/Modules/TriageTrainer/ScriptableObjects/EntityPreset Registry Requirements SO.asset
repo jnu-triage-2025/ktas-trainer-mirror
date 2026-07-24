@@ -61,3 +61,9 @@ MonoBehaviour:
     displayName: 
     isNetworked: 1
     childReferences: []
+  - identifier: npc_tutorial_hat
+    fallbackEntityType: 0
+    prefab: {fileID: 275932254276783438, guid: 59fe0d10151974704bdde45177a6e205, type: 3}
+    displayName: "\uBAA8\uC790"
+    isNetworked: 1
+    childReferences: []

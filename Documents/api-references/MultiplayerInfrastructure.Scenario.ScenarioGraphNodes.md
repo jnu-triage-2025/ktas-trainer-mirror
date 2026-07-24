@@ -32,7 +32,7 @@
 | `Choice` | `ScenarioChoiceNode` | 분기 선택지 |
 | `Sound` | `ScenarioSoundNode` | 사운드 재생 |
 | `PlayerMove` | `ScenarioPlayerMoveNode` | 플레이어 이동 |
-| `NPCMove` | `ScenarioNPCMoveNode` | NPC 이동 |
+| `NPCControl` | `ScenarioNPCControlNode` | NPC 설정 갱신 및 이동 제어 |
 | `CameraTarget` | `ScenarioCameraTargetNode` | 카메라 타겟 전환 |
 | `Parallel` | `ScenarioParallelNode` | 병렬 브랜치 실행 |
 | `InvokeEvent` | `ScenarioInvokeEventNode` | 외부 이벤트 핸들러 호출 |
@@ -53,7 +53,6 @@
 | `TriageAssessControl` | `ScenarioTriageAssessControlNode` | 트리아지 평가 활성/비활성 |
 | `PatientMedicalStatePreset` | `ScenarioPatientMedicalStatePresetNode` | 환자 의료 상태 일괄 설정 |
 | `ItemSubmissionConfig` | `ScenarioItemSubmissionConfigNode` | 아이템 제출 Interactable 설정 |
-| `NpcInteractControl` | `ScenarioNpcInteractControlNode` | NPC Interactable 활성/비활성 |
 | `ChatPrint` | `ScenarioChatPrintNode` | 채팅/콘솔 텍스트 출력 |
 | `ExecuteCommand` | `ScenarioExecuteCommandNode` | 인게임 커맨드 실행 |
 | `TimeControl` | `ScenarioTimeControlNode` | HUD 타이머 제어 |
@@ -186,19 +185,28 @@
 
 ---
 
-### 3.5 `NPCMove` — NPC 이동
+### 3.5 `NPCControl` — NPC 갱신 및 이동 제어
 
-`PlayerMove`와 동일한 이동 필드에 추가로:
+`mode`에 따라 NPC의 표시/Interact를 갱신하거나 이동을 지시한다.
 
 | 필드 | 타입 | 설명 |
 |---|---|---|
-| `npcIdentifier` | `string` | 이동시킬 NPC 엔티티 식별자 |
+| `mode` | `ScenarioNPCControlMode` | `Update` 또는 `Control` |
+| `npcIdentifier` | `string` | 대상 NPC 엔티티 식별자 |
+| `interactOperation` | `ScenarioNPCInteractCrudOperation` | `None` / `Create` / `Read` / `Update` / `Delete` |
+| `interactableIdentifier` | `string` | Interact CRUD 대상 식별자 |
+| `interactEnabled` | `bool?` | `Update` 시 Interactable 활성 상태 |
+| `resultStateKey` | `string` | `Read` 결과를 `true`/`false`로 기록할 상태 키 |
+| `displayName` | `string` | NPC 표시 이름 |
+| `showOverheadName` | `bool?` | 머리 위 이름 표시 여부 |
+| `destinationType` 이하 | PlayerMove와 동일 | `Control` 모드의 이동 설정 |
 
 ```json
 {
-  "nodeType": "NPCMove",
+  "nodeType": "NPCControl",
   "identifier": "doctor_move",
   "nextIdentifier": "next",
+  "mode": "Control",
   "npcIdentifier": "doctor_npc",
   "destinationType": "Waypoint",
   "destinationIdentifier": "treatment_room"
@@ -825,16 +833,20 @@
 
 ---
 
-### 3.26 `NpcInteractControl` — NPC Interactable 활성/비활성
+### 3.26 `NPCControl(Update)` — NPC Interact 및 표시 갱신
 
 ```json
 {
-  "nodeType": "NpcInteractControl",
+  "nodeType": "NPCControl",
   "identifier": "enable_doctor_submit",
   "nextIdentifier": "next",
+  "mode": "Update",
   "npcIdentifier": "doctor_npc",
+  "interactOperation": "Update",
   "interactableIdentifier": "doctor_submission_interact",
-  "operation": "Enable"
+  "interactEnabled": true,
+  "displayName": "???",
+  "showOverheadName": true
 }
 ```
 
@@ -842,7 +854,11 @@
 |---|---|---|---|
 | `npcIdentifier` | `string` | — | 대상 NPC 엔티티 식별자 |
 | `interactableIdentifier` | `string` | — | 대상 Interactable 식별자 |
-| `operation` | `ScenarioNpcInteractControlOperation` | `Add` | `Add`(소스 추가) / `Remove`(소스 제거) / `Enable`(활성화) / `Disable`(비활성화) |
+| `interactOperation` | `ScenarioNPCInteractCrudOperation` | `None` | `Create`(NPC 소스 추가) / `Read`(존재 확인) / `Update`(활성 상태 변경) / `Delete`(NPC 소스 제거) |
+| `interactEnabled` | `bool?` | `null` | `Update`에서 적용할 활성 상태 |
+| `resultStateKey` | `string` | `null` | `Read`에서 Interactable 존재 여부를 기록할 상태 키 |
+| `displayName` | `string` | `null` | 변경할 표시 이름 |
+| `showOverheadName` | `bool?` | `null` | 머리 위 이름 표시 여부 |
 
 ---
 

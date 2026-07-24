@@ -12,12 +12,97 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
   public sealed class ScenarioRequirementCompilerTests
   {
     [Test]
+    public void ScenarioActingNpcProducesNpcAndConsumesPreset()
+    {
+      var graph = new ScenarioGraph
+      {
+        Identifier = "actingNpc-requirements",
+        DefaultEntrypoint = "spawn-doctor",
+        ActingNpcs = new List<ScenarioActingNpcDefinition>
+        {
+          new ScenarioActingNpcDefinition
+          {
+            Identifier = "npc_doctor",
+            PresetIdentifier = "npc_doctor_preset",
+            SpawnOnStart = false
+          }
+        }
+      };
+      graph.Add(new ScenarioEntityPresetSpawnNode
+      {
+        Identifier = "spawn-doctor",
+        ActingNpcIdentifier = "npc_doctor",
+        NextIdentifier = "move"
+      });
+      graph.Add(new ScenarioNPCControlNode
+      {
+        Identifier = "move",
+        Mode = ScenarioNPCControlMode.Control,
+        NPCIdentifier = "npc_doctor",
+        DestinationType = ScenarioMoveDestinationType.Position
+      });
+
+      var manifest = ScenarioRequirementCompiler.CompileInferred(graph);
+      var npc = manifest.Requirements.Single(value =>
+        value.Key.Equals(new ScenarioRequirementKey(ScenarioRequirementKind.Npc, "npc_doctor")));
+      var preset = manifest.Requirements.Single(value =>
+        value.Key.Equals(new ScenarioRequirementKey(ScenarioRequirementKind.EntityPreset, "npc_doctor_preset")));
+
+      Assert.That(npc.Occurrences.Any(value =>
+        value.Direction == ScenarioRequirementDirection.Produces
+        && value.ExpectedSupply == ScenarioRequirementExpectedSupply.Scenario), Is.True);
+      Assert.That(npc.Occurrences.Any(value =>
+        value.Direction == ScenarioRequirementDirection.Consumes), Is.True);
+      Assert.That(preset.Occurrences.Single().Direction, Is.EqualTo(ScenarioRequirementDirection.Consumes));
+      Assert.That(preset.Capabilities, Does.Contain(ScenarioRequirementCapability.SpawnablePreset));
+      Assert.That(manifest.IsValid, Is.True);
+    }
+
+    [Test]
+    public void ActingNpcUsedBeforeSpawnProducesStructuralDiagnostic()
+    {
+      var graph = new ScenarioGraph
+      {
+        Identifier = "acting-npc-order",
+        DefaultEntrypoint = "move",
+        ActingNpcs = new List<ScenarioActingNpcDefinition>
+        {
+          new ScenarioActingNpcDefinition
+          {
+            Identifier = "npc_doctor",
+            PresetIdentifier = "npc_doctor_preset",
+            SpawnOnStart = false
+          }
+        }
+      };
+      graph.Add(new ScenarioNPCControlNode
+      {
+        Identifier = "move",
+        Mode = ScenarioNPCControlMode.Control,
+        NPCIdentifier = "npc_doctor",
+        DestinationType = ScenarioMoveDestinationType.Position,
+        NextIdentifier = "spawn"
+      });
+      graph.Add(new ScenarioEntityPresetSpawnNode
+      {
+        Identifier = "spawn",
+        ActingNpcIdentifier = "npc_doctor"
+      });
+
+      var manifest = ScenarioRequirementCompiler.CompileInferred(graph);
+
+      Assert.That(manifest.IsValid, Is.False);
+      Assert.That(manifest.Diagnostics.Select(value => value.Code), Does.Contain("SGR116"));
+    }
+
+    [Test]
     public void NpcMoveAndWaypointHighlightPreserveAllOccurrencesAndCapabilities()
     {
       var graph = new ScenarioGraph { Identifier = "compiler-test" };
-      graph.Add(new ScenarioNPCMoveNode
+      graph.Add(new ScenarioNPCControlNode
       {
         Identifier = "move",
+        Mode = ScenarioNPCControlMode.Control,
         NPCIdentifier = "npc-1",
         DestinationType = ScenarioMoveDestinationType.Waypoint,
         DestinationIdentifier = " treatment-room "
@@ -37,6 +122,35 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
       Assert.That(anchor.Capabilities, Does.Contain(ScenarioRequirementCapability.HighlightableWaypoint));
       Assert.That(anchor.Occurrences, Has.Count.EqualTo(2));
       Assert.That(anchor.Occurrences.Select(value => value.FieldPath), Is.EquivalentTo(new[] { "destinationIdentifier", "waypointIdentifier" }));
+    }
+
+    [Test]
+    public void ScenarioWaypointProducesBeforeStartSpatialAnchor()
+    {
+      var graph = new ScenarioGraph
+      {
+        Identifier = "scenario-waypoint-requirements",
+        Waypoints = new List<ScenarioWaypointDefinition>
+        {
+          new ScenarioWaypointDefinition { Identifier = "triage-desk" }
+        }
+      };
+      graph.Add(new ScenarioPlayerMoveNode
+      {
+        Identifier = "move",
+        DestinationType = ScenarioMoveDestinationType.Waypoint,
+        DestinationIdentifier = "triage-desk"
+      });
+
+      var manifest = ScenarioRequirementCompiler.CompileInferred(graph);
+      var waypoint = manifest.Requirements.Single(value =>
+        value.Key.Equals(new ScenarioRequirementKey(ScenarioRequirementKind.SpatialAnchor, "triage-desk")));
+
+      Assert.That(waypoint.Occurrences.Any(value =>
+        value.Direction == ScenarioRequirementDirection.Produces
+        && value.ExpectedSupply == ScenarioRequirementExpectedSupply.Scenario
+        && value.Availability == ScenarioRequirementAvailability.BeforeScenarioStart), Is.True);
+      Assert.That(waypoint.Occurrences.Any(value => value.Direction == ScenarioRequirementDirection.Consumes), Is.True);
     }
 
     [Test]

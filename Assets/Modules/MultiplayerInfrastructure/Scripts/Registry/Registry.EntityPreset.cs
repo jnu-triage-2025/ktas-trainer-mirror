@@ -310,6 +310,12 @@ namespace MultiplayerInfrastructure.Registry
       {
         InstanceFinder.ServerManager.Spawn(go);
       }
+      else if (InstanceFinder.IsOffline)
+      {
+        // 오프라인 실행에서는 Instantiate 된 로컬 인스턴스가 최종 인스턴스다.
+        // 복제 대상이 없으므로 NetworkObject 스폰이나 경고가 필요하지 않다.
+        return;
+      }
       else
       {
         Debug.LogWarning(

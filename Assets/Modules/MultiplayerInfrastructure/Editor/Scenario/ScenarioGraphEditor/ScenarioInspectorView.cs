@@ -107,6 +107,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.NPCMove:
           DrawNPCMoveFields((ScenarioNPCMoveNode)data);
           break;
+        case ScenarioNodeType.NPCControl:
+          DrawNPCControlFields((ScenarioNPCControlNode)data);
+          break;
         case ScenarioNodeType.CameraTarget:
           DrawCameraTargetFields((ScenarioCameraTargetNode)data);
           break;
@@ -358,6 +361,51 @@ namespace MultiplayerInfrastructure.Editor
           break;
         default:
           break;
+      }
+
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawNPCControlFields(ScenarioNPCControlNode data)
+    {
+      data.Mode = (ScenarioNPCControlMode)EditorGUILayout.EnumPopup("Mode", data.Mode);
+      data.NPCIdentifier = EditorGUILayout.TextField("NPC Identifier", data.NPCIdentifier);
+
+      if (data.Mode == ScenarioNPCControlMode.Update)
+      {
+        data.InteractOperation = (ScenarioNPCInteractCrudOperation)EditorGUILayout.EnumPopup(
+          "Interact CRUD", data.InteractOperation);
+        if (data.InteractOperation != ScenarioNPCInteractCrudOperation.None)
+          data.InteractableIdentifier = EditorGUILayout.TextField("Interactable Identifier", data.InteractableIdentifier);
+        if (data.InteractOperation == ScenarioNPCInteractCrudOperation.Update)
+          data.InteractEnabled = EditorGUILayout.Toggle("Interact Enabled", data.InteractEnabled ?? true);
+        if (data.InteractOperation == ScenarioNPCInteractCrudOperation.Read)
+          data.ResultStateKey = EditorGUILayout.TextField("Result State Key", data.ResultStateKey);
+        data.DisplayName = NullableTextField("Display Name", data.DisplayName);
+        data.ShowOverheadName = NullableBoolField("Show Overhead Name", data.ShowOverheadName);
+      }
+      else
+      {
+        data.DestinationType = (ScenarioMoveDestinationType)EditorGUILayout.EnumPopup(
+          "Destination Type", data.DestinationType);
+        if (data.DestinationType == ScenarioMoveDestinationType.Position)
+        {
+          data.DestinationX = EditorGUILayout.FloatField("Destination X", data.DestinationX);
+          data.DestinationY = EditorGUILayout.FloatField("Destination Y", data.DestinationY);
+          data.DestinationZ = EditorGUILayout.FloatField("Destination Z", data.DestinationZ);
+        }
+        else
+        {
+          data.DestinationIdentifier = EditorGUILayout.TextField(
+            "Waypoint Identifier", data.DestinationIdentifier);
+        }
+
+        data.IgnoreGroundCheck = EditorGUILayout.Toggle("Ignore Ground Check", data.IgnoreGroundCheck);
+        data.MoveMode = (ScenarioMoveMode)EditorGUILayout.EnumPopup("Move Mode", data.MoveMode);
+        if (data.MoveMode == ScenarioMoveMode.BySpeed)
+          data.MoveSpeed = EditorGUILayout.FloatField("Move Speed", data.MoveSpeed);
+        else if (data.MoveMode == ScenarioMoveMode.ByDuration)
+          data.MoveDuration = EditorGUILayout.FloatField("Move Duration", data.MoveDuration);
       }
 
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
@@ -625,6 +673,9 @@ namespace MultiplayerInfrastructure.Editor
     {
       data.Operation = (ScenarioQuestOperationType)EditorGUILayout.EnumPopup("Operation", data.Operation);
       data.FailureStrategy = (ScenarioQuestFailureStrategy)EditorGUILayout.EnumPopup("Failure Strategy", data.FailureStrategy);
+      bool persistProgress = data.PersistProgressOnSessionEnd ?? false;
+      persistProgress = EditorGUILayout.Toggle("Persist Progress On Session End", persistProgress);
+      data.PersistProgressOnSessionEnd = persistProgress;
       data.QuestDefinitionIdentifier = EditorGUILayout.TextField(
         "Quest Definition",
         data.QuestDefinitionIdentifier ?? string.Empty);
@@ -654,9 +705,65 @@ namespace MultiplayerInfrastructure.Editor
         EditorGUILayout.LabelField("Quest Content");
         data.Quest.QuestContent = EditorGUILayout.TextArea(data.Quest.QuestContent, GUILayout.Height(40));
         data.Quest.IsTracked = EditorGUILayout.Toggle("Track", data.Quest.IsTracked);
+        data.Quest.PersistProgressOnSessionEnd = EditorGUILayout.Toggle(
+          "Persist Progress On Session End", data.Quest.PersistProgressOnSessionEnd);
+
+        DrawQuestWaypointReachedCriteria(data.Quest.Tasks, "Tasks", true);
+        DrawQuestWaypointReachedCriteria(data.Quest.CompletionCriteria, "Completion Criteria", true);
       }
 
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private static void DrawQuestWaypointReachedCriteria(
+      System.Collections.Generic.List<QuestCompletionCriteria> criteria,
+      string label,
+      bool allowAdd)
+    {
+      if (criteria == null)
+        return;
+
+      bool hasWaypointReached = false;
+      for (int i = 0; i < criteria.Count; i++)
+      {
+        var criterion = criteria[i];
+        if (criterion == null)
+          continue;
+
+        if (criterion.Type == QuestCompletionCriteriaType.WaypointReached)
+        {
+          if (!hasWaypointReached)
+          {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField($"{label} / WaypointReached", EditorStyles.boldLabel);
+            hasWaypointReached = true;
+          }
+
+          criterion.WaypointIdentifier = EditorGUILayout.TextField(
+            $"Waypoint [{i}]",
+            criterion.WaypointIdentifier ?? string.Empty);
+          criterion.ReachDistance = Mathf.Max(
+            0.01f,
+            EditorGUILayout.FloatField($"Detection Range [{i}] (m)", criterion.ReachDistance));
+
+          if (GUILayout.Button($"Remove WaypointReached [{i}]"))
+          {
+            criteria.RemoveAt(i);
+            i--;
+            continue;
+          }
+        }
+
+        DrawQuestWaypointReachedCriteria(criterion.Conditions, $"{label} [{i}]", false);
+      }
+
+      if (allowAdd && GUILayout.Button($"Add WaypointReached to {label}"))
+      {
+        criteria.Add(new QuestCompletionCriteria
+        {
+          Type = QuestCompletionCriteriaType.WaypointReached
+        });
+      }
     }
 
     private void DrawQuestWaypointHighlightFields(ScenarioQuestWaypointHighlightNode data)

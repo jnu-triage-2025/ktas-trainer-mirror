@@ -9,9 +9,8 @@ namespace MultiplayerInfrastructure.Editor
 {
   /// <summary>
   /// Scenario Graph Editor의 "최근 연 파일(Open Recent)" 목록 저장소.
-  /// 목록은 프로젝트 임시 폴더(Temp/ScenarioGraphEditor/recent_files.json)에 저장되므로
-  /// 버전 관리에 포함되지 않는다. Temp 는 에디터가 종료되면 정리되므로
-  /// 최근 목록은 에디터 세션 단위로만 유지된다.
+  /// 목록은 프로젝트 로컬 캐시(Library/ScenarioGraphEditor/recent_files.json)에 저장된다.
+  /// 이 경로는 버전 관리에 포함되지 않지만 Unity 재시작 후에도 유지된다.
   /// </summary>
   public static class ScenarioGraphEditorRecentStore
   {
@@ -30,7 +29,7 @@ namespace MultiplayerInfrastructure.Editor
       get
       {
         var root = GetProjectRoot();
-        return string.IsNullOrEmpty(root) ? null : Path.Combine(root, "Temp", CacheDirectoryName, CacheFileName);
+        return string.IsNullOrEmpty(root) ? null : Path.Combine(root, "Library", CacheDirectoryName, CacheFileName);
       }
     }
 
@@ -85,9 +84,17 @@ namespace MultiplayerInfrastructure.Editor
     private static List<string> LoadRaw()
     {
       var file = CacheFilePath;
-      if (string.IsNullOrEmpty(file) || !File.Exists(file))
+      if (string.IsNullOrEmpty(file))
         return new List<string>();
 
+      if (!File.Exists(file))
+        return new List<string>();
+
+      return ReadPaths(file);
+    }
+
+    private static List<string> ReadPaths(string file)
+    {
       try
       {
         var json = File.ReadAllText(file);

@@ -278,7 +278,7 @@ bool running = ScenarioController.Instance.IsActive;
 | `Delay` | 일정 시간 대기 후 진행 |
 | `Notification` | 알림 메시지 표시 |
 | `PlayerMove` | (구현 예정) 플레이어 이동 |
-| `NPCMove` | (구현 예정) NPC 이동 |
+| `NPCControl` | NPC 표시/Interact 갱신 및 이동 제어 |
 | `CameraTarget` | (구현 예정) 카메라 타겟 전환 |
 | `Parallel` | 복수 브랜치를 동시 또는 순차 실행 |
 | `Validator` | 플레이어 수 등 조건 검사 |

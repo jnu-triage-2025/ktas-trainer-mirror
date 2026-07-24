@@ -209,6 +209,11 @@ namespace MultiplayerInfrastructure.Scenario.Preflight
           Row("npcIdentifier", "Registry:NpcThenEntity<GameObject>", "always", ScenarioRuntimeLookupClassification.External),
           Row("destinationIdentifier", "Registry:WaypointThenInteractableEntity<Vector3>", "destinationType=Waypoint", ScenarioRuntimeLookupClassification.External))),
 
+        Register<ScenarioNPCControlNode>(ScenarioNodeType.NPCControl, Rows(
+          Row("npcIdentifier", "Registry:NpcThenEntity<GameObject>", "always", ScenarioRuntimeLookupClassification.External),
+          Row("interactableIdentifier", "Registry:InteractableEntity<MonoBehaviour>ThenEntityChild<IInteract>", "mode=Update && interactOperation!=None", ScenarioRuntimeLookupClassification.External),
+          Row("destinationIdentifier", "Registry:WaypointThenInteractableEntity<Vector3>", "mode=Control && destinationType=Waypoint", ScenarioRuntimeLookupClassification.External))),
+
         Register<ScenarioCameraTargetNode>(ScenarioNodeType.CameraTarget, Rows(
           Row("targetObjectIdentifier", "None", "current runtime does not resolve this field", ScenarioRuntimeLookupClassification.NotConsumed))),
 
@@ -285,7 +290,8 @@ namespace MultiplayerInfrastructure.Scenario.Preflight
           Row("swapTagB", "PlayerTagService+UserDescriptorService", "operation=Swap", ScenarioRuntimeLookupClassification.External))),
 
         Register<ScenarioEntityPresetSpawnNode>(ScenarioNodeType.EntityPresetSpawn, Rows(
-          Row("presetIdentifier", "Registry:EntityPreset<EntityPresetDefinition>", "always", ScenarioRuntimeLookupClassification.External),
+          Row("presetIdentifier", "Registry:EntityPreset<EntityPresetDefinition>", "actingNpcIdentifier 비어 있음", ScenarioRuntimeLookupClassification.External),
+          Row("actingNpcIdentifier", "ScenarioGraph.ActingNpcs", "non-empty; acting NPC 정의로 spawn", ScenarioRuntimeLookupClassification.RuntimeProduced),
           Row("positionSourceEntityIdentifier", "Registry:Entity<GameObject>", "non-empty; coordinates fallback", ScenarioRuntimeLookupClassification.External),
           Row("spawnedEntityIdentifier", "SpawnedEntityRegistration", "non-empty", ScenarioRuntimeLookupClassification.RuntimeProduced)), CollectEntityPresetSpawn),
 
@@ -459,7 +465,8 @@ namespace MultiplayerInfrastructure.Scenario.Preflight
 
     private static void CollectEntityPresetSpawn(ScenarioEntityPresetSpawnNode node, ScenarioLegacyRequirementSink sink)
     {
-      sink.Add(ScenarioRequirementKind.EntityPreset, node.PresetIdentifier, node.Identifier);
+      if (string.IsNullOrWhiteSpace(node.ActingNpcIdentifier))
+        sink.Add(ScenarioRequirementKind.EntityPreset, node.PresetIdentifier, node.Identifier);
     }
 
     private static void CollectEntityInit(ScenarioEntityInitNode node, ScenarioLegacyRequirementSink sink)

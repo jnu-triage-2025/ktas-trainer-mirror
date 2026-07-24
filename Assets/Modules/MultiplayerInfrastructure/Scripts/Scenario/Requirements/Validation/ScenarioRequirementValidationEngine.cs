@@ -49,6 +49,12 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       if (requirement.IsSuppressed && requirement.Suppression.ExpiresOnUtc >= DateTime.UtcNow.Date)
         return Result(requirement, ScenarioRequirementValidationStatus.Suppressed);
       if (requirement.EffectiveAvailability == ScenarioRequirementAvailability.NotConsumed) return Result(requirement, ScenarioRequirementValidationStatus.NotConsumed);
+      if (requirement.Occurrences.Any(value =>
+            value.Direction == ScenarioRequirementDirection.Produces
+            && value.ExpectedSupply == ScenarioRequirementExpectedSupply.Scenario))
+      {
+        return Result(requirement, ScenarioRequirementValidationStatus.Satisfied);
+      }
       if (requirement.EffectiveAvailability == ScenarioRequirementAvailability.OptionalFallback && requirement.Cardinality.Minimum == 0)
       {
         var optionalMatches = snapshot.Providers.Where(value => value.Key.Equals(requirement.Key)).ToArray();

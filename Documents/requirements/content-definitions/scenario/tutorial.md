@@ -94,9 +94,9 @@ TUT_START
 
 | ID | 위치 | 부족한 연결 | 처리 |
 |---|---|---|---|
-| TUT-START-1 | `TUT_START` 이전 | 플레이어 spawn/소유권, 튜토리얼 씬 로드 완료, NPC·waypoint·StaticPlacedObject 배치의 선행 조건이 없다. | **인간 판단 필요:** 튜토리얼 전용 scene/preset 및 Scenario 시작 시점(씬 로드 후)을 확정한다. 시작 requirements에 `npc-tutorial-guide-hat`, `delivery-storage-spot`, 택배 object를 선언한다. |
+| TUT-START-1 | `TUT_START` 이전 | 플레이어 spawn/소유권, 튜토리얼 씬 로드 완료, waypoint·StaticPlacedObject 배치의 선행 조건이 없다. 모자 NPC는 `actingNpcs`의 `npc-tutorial-guide-hat`가 `npc_tutorial_hat` preset으로 시작 전에 생성한다. | **인간 판단 필요:** 튜토리얼 전용 scene 및 Scenario 시작 시점(씬 로드 후)을 확정한다. 시작 requirements에 `delivery-storage-spot`, 택배 object를 선언한다. |
 | TUT-SIG-1 | `V_TUT_PLAYER_MOVED` | ~~“WASD와 마우스 입력 또는 이동”은 서로 다른 완료 의미이며 현재 signal identifier/producer가 없다.~~ **해결(2026-07-21):** `BasicMovementControlTutorialQuestResolver`가 활성 `tutorial-move` 퀘스트에서 WASD, 마우스 버튼, 마우스 이동(카메라 회전) 중 하나라도 입력된 프레임의 시간을 중복 없이 누적한다. 합계가 1초를 **초과**하면 `tutorial_player_moved`를 발신하고 퀘스트를 완료한다. | `tutorial-move` definition은 `Resources/Quest/tutorial.quests.quest.json`에 등록한다. 이 전용 resolver는 `QuestManager`가 런타임에 부착한다. |
-| TUT-SIG-2 | 모자 상호작용 | NPC identifier와 interaction identifier는 있지만, 해당 interaction이 runtime signal을 Raise한다는 계약이 없다. | `npc-tutorial-guide-hat__interaction-talk-start -> tutorial_hat_talk_start` producer를 NPC prefab에 배선하고 Requirements Supports로 검증한다. |
+| TUT-SIG-2 | 모자 상호작용 | `actingNpcs[npc-tutorial-guide-hat]`의 `Signal` 상호작용 `npc-tutorial-guide-hat__interaction-talk-start`가 `tutorial_hat_talk_start`를 발생시킨다. | Requirements Supports에서 RuntimeSignal producer와 validator consumer를 검증한다. |
 | TUT-FLOW-1 | “Title 발생” | Title의 UI 종류, 지속시간, 닫는 조건, 그래프 전이 여부가 정의되지 않았다. | **인간 판단 필요:** 단순 안내 UI라면 event `show_tutorial_interaction_hint`를 `Q_TUT_FIND_HAT_ADD` 직후 InvokeEvent로 추가한다. 진행을 막는 UI라면 완료 signal과 Validator를 별도 정의한다. |
 | TUT-FLOW-2 | 이동 완료 후 0.5초 | ~~현재 Scenario 스키마에는 일반 Delay node가 명시되어 있지 않아, 서술 그대로의 0.5초 지연을 직렬 노드로 저장할 수 없다.~~ **해결(2026-07-21):** 공통 시간값 `ScenarioTimeValue`를 쓰는 `Delay` node로 명시한다. | `DL_TUT_MOVE_CALL_DELAY`의 `duration`은 `{ "value": 500, "unit": "Milliseconds" }`, `waitUntil`은 `WaitUntilDone`이다. |
 | TUT-QUEST-1 | `Q_TUT_MOVE_ADD`, `Q_TUT_FIND_HAT_ADD`, `Q_TUT_DELIVERY_ADD` | 세 quest에 title/content/task definition 및 Add/Remove의 공통 definition identifier가 없다. | `tutorial-move`, `tutorial-find-hat`, `tutorial-quest-delivery`의 별도 quest definition을 작성한다. delivery는 본문에 적힌 3개 task와 순서를 보존한다. |
@@ -104,7 +104,7 @@ TUT_START
 | TUT-ASSET-1 | 택배 및 오답 아이템 | ~~택배 StaticPlacedObject의 scene object identifier·spawn 위치·item definition이 없고, “여러 개” 오답 아이템의 목록/독백 트리거도 미정이다.~~ **해결(2026-07-21):** 아래 「택배 보관소 아이템 배치 확정」의 정답 1개와 오답 3개를 StaticPlacedItem으로 배치한다. | 정답 물품만 `tutorial_delivery_package`를 지급하며, 오답 물품은 각각 1회성 독백만 재생하고 퀘스트 진행 상태를 바꾸지 않는다. |
 | TUT-END-1 | 부분 4 이후 | ~~감사 인사 뒤 화면 전환, 다음 Scenario, 종료 메시지 중 어느 것도 없다.~~ **부분 4 시계 제작 퀘스트 추가(2026-07-22):** 택배 감사 대사 뒤에 시계 제작 요청→재료 지급→조합→제출 흐름이 연결된다. 최종 종료는 시계 제작 완료 대사(`D_TUT_CRAFTING_COMPLETE`) 이후이며, 화면 전환·다음 Scenario는 여전히 미결정이다. | **인간 판단 필요:** `D_TUT_CRAFTING_COMPLETE` 뒤의 종료 UX를 확정한다. 확정 전에는 `TUT_END`(`nextIdentifier: null`)로만 종료한다. |
 | TUT-CRAFT-1 | 시계 제작 아이템 | `tin_ingot`, `small_gear`, `small_chain`, `handy_clock`의 아이콘/3D 모델 리소스가 없다. | **코드 등록 완료(2026-07-22):** C# 클래스 정의 및 레지스트리 등록, 조합 레시피 등록 완료. 리소스(아이콘 스프라이트, 3D 모델 프리팹)는 추후 추가 필요. `ValidateItemResources()`에서 누락 Warning 출력은 정상. |
-| TUT-CRAFT-2 | 시계 제출 대상 | `CONFIG_CLOCK_SUBMISSION`이 `tutorial-guide-hat-package-submission`을 재사용한다. 택배 제출 후 해당 Interactable이 비활성화되어 있으면 시계 제출이 불가능하다. | 택배 제출 완료 후에도 `tutorial-guide-hat-package-submission`을 활성 상태로 유지하거나, 시계 제출 시점에 `NpcInteractControl`(`Enable`)로 재활성화해야 한다. |
+| TUT-CRAFT-2 | 시계 제출 대상 | `CONFIG_CLOCK_SUBMISSION`이 `tutorial-guide-hat-package-submission`을 재사용한다. 택배 제출 후 해당 Interactable이 비활성화되어 있으면 시계 제출이 불가능하다. | 택배 제출 완료 후에도 `tutorial-guide-hat-package-submission`을 활성 상태로 유지하거나, 시계 제출 시점에 `NPCControl`(`Update`, `interactOperation: Update`)로 재활성화해야 한다. |
 
 ### 변환 승인 조건
 

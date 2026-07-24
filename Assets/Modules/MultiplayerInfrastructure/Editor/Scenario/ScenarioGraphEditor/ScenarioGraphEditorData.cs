@@ -6,6 +6,7 @@ namespace MultiplayerInfrastructure.Editor
   public sealed class ScenarioGraphEditorData
   {
     public Dictionary<string, SerializableVector2> NodePositions { get; set; } = new Dictionary<string, SerializableVector2>();
+    public Dictionary<string, List<SerializableVector2>> EdgeRoutes { get; set; } = new Dictionary<string, List<SerializableVector2>>();
   }
 
   // Lightweight serializable vector to avoid UnityEngine.Vector2 cycles in System.Text.Json

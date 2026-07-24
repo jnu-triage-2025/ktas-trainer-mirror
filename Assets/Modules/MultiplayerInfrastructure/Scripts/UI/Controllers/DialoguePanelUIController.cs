@@ -465,7 +465,7 @@ namespace MultiplayerInfrastructure.UI
       {
         if (_currentDialogueInteractionRequired)
         {
-          DismissInteractionRequiredDialogue();
+          DismissDialogue();
           OnAdvanceRequested?.Invoke();
 
           if (!_currentController.IsUnityNull())
@@ -475,6 +475,9 @@ namespace MultiplayerInfrastructure.UI
           return;
         }
 
+        // 일반 대화도 다음 노드가 퀘스트/신호 대기처럼 UI를 표시하지 않는 노드일 수 있다.
+        // 이때 패널과 오버레이를 먼저 해제하지 않으면 이전 대화가 화면에 남는다.
+        DismissDialogue();
         OnAdvanceRequested?.Invoke();
 
         if (!_currentController.IsUnityNull())
@@ -761,7 +764,7 @@ namespace MultiplayerInfrastructure.UI
         _dialoguePanel.style.opacity = 1f;
     }
 
-    public void DismissInteractionRequiredDialogue()
+    public void DismissDialogue()
     {
       _isTyping = false;
       _isWaitingForInput = false;
@@ -780,6 +783,14 @@ namespace MultiplayerInfrastructure.UI
       // 일반 모드로 복귀한다. 이후 다음 Dialogue/Choice 표시 시 다시 Dialogue 모드로 전환된다.
       if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.IsDialogueMode)
         _interactableHintUI.ExitDialogueMode();
+    }
+
+    /// <summary>
+    /// 이전 API 호환용 별칭입니다. 상호작용 필수 여부와 관계없이 현재 대화 UI를 닫습니다.
+    /// </summary>
+    public void DismissInteractionRequiredDialogue()
+    {
+      DismissDialogue();
     }
 
     private void EnsureDialogueModeActive()
