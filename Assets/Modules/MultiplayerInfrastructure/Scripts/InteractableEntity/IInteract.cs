@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace MultiplayerInfrastructure.InteractableEntity
 {
@@ -34,5 +35,14 @@ namespace MultiplayerInfrastructure.InteractableEntity
     /// <param name="model"></param>
     /// <param name="interactor"></param>
     void Interact(Transform interactor);
+  }
+
+  /// <summary>
+  /// 기존 <see cref="IInteractable"/> 컨트롤러에 같은 GameObject의 기능 컴포넌트가
+  /// 조건부 상호작용 항목을 보탤 때 사용한다.
+  /// </summary>
+  public interface IAdditionalInteractProvider
+  {
+    IEnumerable<IInteract> AdditionalInteracts { get; }
   }
 }

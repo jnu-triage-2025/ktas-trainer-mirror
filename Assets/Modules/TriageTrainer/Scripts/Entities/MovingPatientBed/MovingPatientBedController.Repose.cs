@@ -63,7 +63,6 @@ namespace TriageTrainer.Entity
 
       _runtimeIdentifierSync.OnChange += OnBedRuntimeIdentifierChanged;
       _reposedTargetIdentifier.OnChange += OnReposedTargetIdentifierChanged;
-      OnStartClient_ParticipantNetwork();
 
       // 스폰 페이로드로 동기화된 식별자로 모든 피어에서 등록한다.
       RegisterBedEntity();
@@ -76,7 +75,6 @@ namespace TriageTrainer.Entity
     {
       _runtimeIdentifierSync.OnChange -= OnBedRuntimeIdentifierChanged;
       _reposedTargetIdentifier.OnChange -= OnReposedTargetIdentifierChanged;
-      OnStopClient_ParticipantNetwork();
 
       // 침대가 디스폰될 때 결합되어 있던 환자의 로컬 참조(_currentBed)를 정리해 댕글링을 방지한다.
       ClearReposeLinkLocal();

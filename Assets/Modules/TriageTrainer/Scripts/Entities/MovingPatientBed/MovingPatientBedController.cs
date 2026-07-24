@@ -12,7 +12,7 @@ using MI = MultiplayerInfrastructure;
 
 namespace TriageTrainer.Entity
 {
-  public partial class MovingPatientBedController : Ridable, IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver, IEntityPresetParentLinkReceiver
+  public partial class MovingPatientBedController : MinecraftBoadLikeControl, IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver, IEntityPresetParentLinkReceiver
   {
     private const string DefaultPlayerAttachPointName = "PlayerAttachPoint";
     private const string DefaultPatientAttachPointName = "PatientAttachPoint";
@@ -25,20 +25,6 @@ namespace TriageTrainer.Entity
 
       public string ItemIdentifier => _itemIdentifier;
       public GameObject VisualObject => _visualObject;
-    }
-
-    public enum BedInteractionMode
-    {
-      Toggle = 0,
-      Hold = 1
-    }
-
-    private sealed class RidingParticipant
-    {
-      public PlayerController Player;
-      public Transform Interactor;
-      public Transform AttachPoint;
-      public float LastActionbarRefreshAt;
     }
 
     private sealed class BedReposeInteract : IInteract, IInteractorConditional
@@ -101,16 +87,10 @@ namespace TriageTrainer.Entity
     [Header("Bed")]
     [SerializeField] private int _weight = 0;
     [SerializeField] private Transform _reposeAnchor;
-    [SerializeField] private BedInteractionMode _interactionMode = BedInteractionMode.Toggle;
-
-    [Header("Movement")]
-    [SerializeField, Min(0f)] private float _moveSpeed = 3.5f;
-    [SerializeField, Min(0f)] private float _turnSpeed = 120f;
-    [SerializeField] private float _forwardYawOffsetDegrees = -90f;
-    [SerializeField] private LayerMask _movementBlockingMask = ~0;
+    [SerializeField] private bool _enablePatientRepose = true;
 
     [Header("Attach Points")]
-    [SerializeField] private List<Transform> PlayerAttachPoints = new();
+    [SerializeField, Min(1)] private int _maximumPlayerParticipants = 2;
     [SerializeField] private List<Transform> PatientAttachPoints = new();
 
     [Header("Attachable Item Visuals")]
@@ -120,19 +100,42 @@ namespace TriageTrainer.Entity
     [SerializeField] private MonoBehaviour _reposedTargetComponent;
 
     private readonly Dictionary<string, GameObject> _attachableVisualMap = new(StringComparer.Ordinal);
-    private readonly Dictionary<int, RidingParticipant> _participants = new();
     private readonly Dictionary<string, float> _lastNoticeByInteractor = new(StringComparer.Ordinal);
     private readonly HashSet<string> _attachedItemIdentifiers = new(StringComparer.Ordinal);
-    private readonly List<PlayerController> _playerAttachPointOccupants = new();
     private readonly List<MonoBehaviour> _patientAttachPointOccupants = new();
 
     private ChatUIController _chatUI;
-    private TitleUIController _titleUI;
     private BedReposeInteract _reposeInteract;
     private IInteract[] _interacts;
 
     public string Identifier => EffectiveBedIdentifier;
-    public IInteract[] Interacts => _interacts ?? Array.Empty<IInteract>();
+    public IInteract[] Interacts
+    {
+      get
+      {
+        var result = new List<IInteract>();
+        if (_interacts != null)
+        {
+          for (int i = 0; i < _interacts.Length; i++)
+          {
+            var interact = _interacts[i];
+            if (interact == null || (!_enablePatientRepose && ReferenceEquals(interact, _reposeInteract)))
+              continue;
+            result.Add(interact);
+          }
+        }
+        var providers = GetComponents<IAdditionalInteractProvider>();
+        foreach (var provider in providers)
+        {
+          if (provider?.AdditionalInteracts == null)
+            continue;
+          foreach (var interact in provider.AdditionalInteracts)
+            if (interact != null)
+              result.Add(interact);
+        }
+        return result.ToArray();
+      }
+    }
     public string DisplayText => _displayText;
     public Sprite DisplayIcon => _displayIcon;
     public bool AllowDisplayIconFallback => true;
@@ -142,9 +145,25 @@ namespace TriageTrainer.Entity
     public IReposable ReposedTarget => _reposedTargetComponent as IReposable;
     public int RequiredInteractorCount => Mathf.Max(Weight, ReposedTarget?.Weight ?? 0);
 
+    /// <summary>장비형 파생 구성에서 침대 조종 로직을 단일 사용자로 제한한다.</summary>
+    public void SetMaximumPlayerParticipants(int count)
+    {
+      _maximumPlayerParticipants = Mathf.Max(1, count);
+    }
+
+    /// <summary>침대 이동만 재사용하는 장비가 환자 내려놓기 메뉴를 숨길 수 있게 한다.</summary>
+    public void SetPatientReposeEnabled(bool enabled)
+    {
+      _enablePatientRepose = enabled;
+    }
+
     private void Awake()
     {
-      Awake_Ridable();
+      Awake_MinecraftBoadLikeControl();
+      Configure(
+        _maximumPlayerParticipants,
+        ConstantString.HintExitPatientBedMovingMode);
+      ParticipantAssigned += OnMinecraftBoadParticipantAssigned;
       _reposeInteract = new BedReposeInteract(this);
       _interacts = new IInteract[] { this, _reposeInteract };
       InitializeAttachPoints();
@@ -190,28 +209,16 @@ namespace TriageTrainer.Entity
 
     private void OnDestroy()
     {
-      foreach (var each in _participants)
-      {
-        var participant = each.Value;
-        if (participant?.Player != null)
-          ExitMovingMode(participant.Player, participant);
-      }
-
-      _participants.Clear();
+      ParticipantAssigned -= OnMinecraftBoadParticipantAssigned;
 
       UnregisterBedEntity();
     }
 
     private void Update()
     {
-      if (_interactionMode == BedInteractionMode.Hold)
-        CleanupReleasedHoldInteractors();
-
-      CleanupExitKeyParticipants();
-
       SyncReposedTargetTransform();
-
-      UpdateAuthoritativeParticipantMovement();
+      SetMinimumMovementDivisor(RequiredInteractorCount);
+      Update_MinecraftBoadLikeControl();
     }
 
     public void Interact(Transform interactor)
@@ -219,11 +226,7 @@ namespace TriageTrainer.Entity
       if (interactor == null)
         return;
 
-      var player = interactor.GetComponentInParent<PlayerController>();
-      if (player == null)
-        return;
-
-      RequestAuthoritativeParticipantToggle(player, interactor);
+      Toggle(interactor);
     }
 
     public bool CanInteract(Transform interactor)
@@ -235,11 +238,22 @@ namespace TriageTrainer.Entity
       if (player != null && player.IsCarryingReposable)
         return false;
 
-      return !_participants.ContainsKey(interactor.GetInstanceID());
+      return CanToggle(interactor);
+    }
+
+    private void OnMinecraftBoadParticipantAssigned(int handle)
+    {
+      string patientIdentifier = _reposedTargetIdentifier.Value;
+      if (!string.IsNullOrWhiteSpace(patientIdentifier))
+        MI.Scenario.ScenarioInteractionSignals.Raise(
+          $"grab_stretcher_{patientIdentifier}_handle_{handle}");
     }
 
     public bool TryReposeTarget(IReposable target, Transform interactor = null)
     {
+      if (!_enablePatientRepose)
+        return false;
+
       if (target == null)
         return false;
 
@@ -347,83 +361,38 @@ namespace TriageTrainer.Entity
       return true;
     }
 
-    private void EnterMovingMode(RidingParticipant participant)
-    {
-      if (participant?.Player == null)
-        return;
-
-      participant.Player.AlignYawTo(GetBedForwardDirection());
-      participant.Player.SetForcedFollowAnchor(participant.AttachPoint);
-      TryShowActionbar(participant);
-      participant.Player.RefreshInteractableHintsNow();
-    }
-
-    private void ExitMovingMode(PlayerController player, RidingParticipant participant)
-    {
-      player?.ClearForcedFollowAnchor(participant?.AttachPoint);
-      ReleasePlayerAttachPoint(player);
-      player?.RefreshInteractableHintsNow();
-    }
-
     private void InitializeAttachPoints()
     {
-      EnsureDefaultPlayerAttachPoint();
-      EnsureDefaultPatientAttachPoint();
-
-      if (PlayerAttachPoints.Count == 0)
+      if (_enablePatientRepose)
       {
-        var playerAttachObjects = GetComponentsInChildren<RidableAttachPointObject>(true);
-        for (int i = 0; i < playerAttachObjects.Length; i++)
+        EnsureDefaultPatientAttachPoint();
+
+        if (PatientAttachPoints.Count == 0)
         {
-          var attach = playerAttachObjects[i];
-          if (attach != null)
-            PlayerAttachPoints.Add(attach.transform);
+          var patientAttachObjects = GetComponentsInChildren<MovingPatientBedPatientAttachPointObject>(true);
+          for (int i = 0; i < patientAttachObjects.Length; i++)
+          {
+            var attach = patientAttachObjects[i];
+            if (attach != null)
+              PatientAttachPoints.Add(attach.transform);
+          }
         }
       }
-
-      if (PatientAttachPoints.Count == 0)
+      else
       {
-        var patientAttachObjects = GetComponentsInChildren<MovingPatientBedPatientAttachPointObject>(true);
-        for (int i = 0; i < patientAttachObjects.Length; i++)
-        {
-          var attach = patientAttachObjects[i];
-          if (attach != null)
-            PatientAttachPoints.Add(attach.transform);
-        }
+        PatientAttachPoints.Clear();
       }
-
-      _playerAttachPointOccupants.Clear();
-      for (int i = 0; i < PlayerAttachPoints.Count; i++)
-        _playerAttachPointOccupants.Add(null);
 
       _patientAttachPointOccupants.Clear();
       for (int i = 0; i < PatientAttachPoints.Count; i++)
         _patientAttachPointOccupants.Add(null);
     }
 
-    private void EnsureDefaultPlayerAttachPoint()
-    {
-      if (PlayerAttachPoints.Count > 0)
-        return;
-
-      var existing = GetComponentInChildren<RidableAttachPointObject>(true);
-      if (existing != null)
-      {
-        PlayerAttachPoints.Add(existing.transform);
-        return;
-      }
-
-      var go = new GameObject(DefaultPlayerAttachPointName);
-      var attach = go.AddComponent<RidableAttachPointObject>();
-      var attachTransform = attach.transform;
-      attachTransform.SetParent(transform, false);
-      attachTransform.localPosition = new Vector3(0f, 0f, -0.8f);
-      attachTransform.localRotation = Quaternion.identity;
-      PlayerAttachPoints.Add(attachTransform);
-    }
-
     private void EnsureDefaultPatientAttachPoint()
     {
+      if (!_enablePatientRepose)
+        return;
+
       if (PatientAttachPoints.Count > 0)
         return;
 
@@ -441,42 +410,6 @@ namespace TriageTrainer.Entity
       attachTransform.localPosition = new Vector3(0f, 0.9f, 0f);
       attachTransform.localRotation = Quaternion.identity;
       PatientAttachPoints.Add(attachTransform);
-    }
-
-    private bool TryOccupyNextPlayerAttachPoint(PlayerController player, out Transform attachPoint)
-    {
-      attachPoint = null;
-      if (player == null)
-        return false;
-
-      for (int i = 0; i < _playerAttachPointOccupants.Count; i++)
-      {
-        if (_playerAttachPointOccupants[i] != null)
-          continue;
-
-        _playerAttachPointOccupants[i] = player;
-        attachPoint = PlayerAttachPoints[i] != null ? PlayerAttachPoints[i] : transform;
-        return true;
-      }
-
-      return false;
-    }
-
-    private bool ReleasePlayerAttachPoint(PlayerController player)
-    {
-      if (player == null)
-        return false;
-
-      for (int i = 0; i < _playerAttachPointOccupants.Count; i++)
-      {
-        if (_playerAttachPointOccupants[i] != player)
-          continue;
-
-        _playerAttachPointOccupants[i] = null;
-        return true;
-      }
-
-      return false;
     }
 
     private bool TryOccupyNextPatientAttachPoint(MonoBehaviour patient, out Transform attachPoint)
@@ -573,156 +506,6 @@ namespace TriageTrainer.Entity
       patient.transform.SetPositionAndRotation(worldPosition, worldRotation);
     }
 
-    private void RefreshOwnerActionbars()
-    {
-      // Intentionally no-op. Actionbar hint is shown once on mode entry.
-    }
-
-    private void TryShowActionbar(RidingParticipant participant)
-    {
-      if (participant?.Player == null || !participant.Player.IsOwner)
-        return;
-
-      if (_titleUI == null)
-        _titleUI = Registry.Get<TitleUIController>(RegistryType.UI, Registry.TypeKey<TitleUIController>());
-
-      if (_titleUI == null)
-        return;
-
-      participant.LastActionbarRefreshAt = Time.time;
-      _titleUI.ShowActionbar(ConstantString.HintExitPatientBedMovingMode);
-    }
-
-    private void MoveBedFromParticipantsInput()
-    {
-      int participantCount = 0;
-      float summedForwardInput = 0f;
-      float summedTurnInput = 0f;
-
-      foreach (var each in _participants)
-      {
-        var participant = each.Value;
-        var player = participant?.Player;
-        if (player == null)
-          continue;
-
-        participantCount++;
-
-        var localInput = player.CurrentMoveInputVector;
-        summedForwardInput += localInput.z;
-        summedTurnInput += localInput.x;
-      }
-
-      if (participantCount <= 0)
-        return;
-
-      int requiredWeight = RequiredInteractorCount;
-      int divisor = requiredWeight > 0 ? Mathf.Max(participantCount, requiredWeight) : participantCount;
-      divisor = Mathf.Max(1, divisor);
-
-      float forwardRatio = Mathf.Clamp(summedForwardInput / divisor, -1f, 1f);
-      float turnRatio = Mathf.Clamp(summedTurnInput / divisor, -1f, 1f);
-
-      if (Mathf.Abs(turnRatio) > 0.0001f)
-      {
-        float yawDelta = turnRatio * _turnSpeed * Time.deltaTime;
-        transform.Rotate(0f, yawDelta, 0f, Space.World);
-      }
-
-      if (Mathf.Abs(forwardRatio) <= 0.0001f)
-        return;
-
-      Vector3 bedForward = GetBedForwardDirection();
-      Vector3 desiredMove = bedForward * (forwardRatio * _moveSpeed * Time.deltaTime);
-      Vector3 target = transform.position + desiredMove;
-
-      if (Physics.Linecast(transform.position, target, _movementBlockingMask, QueryTriggerInteraction.Ignore))
-        return;
-
-      transform.position = target;
-    }
-
-    private Vector3 GetBedForwardDirection()
-    {
-      Quaternion forwardBasis = Quaternion.Euler(0f, _forwardYawOffsetDegrees, 0f);
-      Vector3 bedForward = (forwardBasis * transform.forward).normalized;
-      bedForward.y = 0f;
-      if (bedForward.sqrMagnitude <= 0.0001f)
-        return transform.forward;
-
-      return bedForward;
-    }
-
-    private void CleanupReleasedHoldInteractors()
-    {
-      var keys = ListPool<int>.Get();
-      foreach (var each in _participants)
-      {
-        var participant = each.Value;
-        var interactor = participant?.Interactor;
-        if (interactor == null)
-        {
-          keys.Add(each.Key);
-          continue;
-        }
-
-        var player = participant.Player;
-        if (player != null && player.IsOwner && !Input.GetKey(MI.Definitions.DefaultsKeyConfiguration.InteractInteractableObject))
-          keys.Add(each.Key);
-      }
-
-      for (int i = 0; i < keys.Count; i++)
-      {
-        int key = keys[i];
-        if (!_participants.TryGetValue(key, out var participant))
-          continue;
-
-        if (IsClientStarted || IsServerStarted)
-        {
-          RequestAuthoritativeParticipantToggle(participant.Player, participant.Interactor);
-          continue;
-        }
-
-        ExitMovingMode(participant.Player, participant);
-        _participants.Remove(key);
-      }
-
-      ListPool<int>.Release(keys);
-    }
-
-    private void CleanupExitKeyParticipants()
-    {
-      var keys = ListPool<int>.Get();
-      foreach (var each in _participants)
-      {
-        var participant = each.Value;
-        var player = participant?.Player;
-        if (player == null || !player.IsOwner)
-          continue;
-
-        if (Input.GetKeyDown(KeyCode.LeftShift))
-          keys.Add(each.Key);
-      }
-
-      for (int i = 0; i < keys.Count; i++)
-      {
-        int key = keys[i];
-        if (!_participants.TryGetValue(key, out var participant))
-          continue;
-
-        if (IsClientStarted || IsServerStarted)
-        {
-          RequestAuthoritativeParticipantToggle(participant.Player, participant.Interactor);
-          continue;
-        }
-
-        ExitMovingMode(participant.Player, participant);
-        _participants.Remove(key);
-      }
-
-      ListPool<int>.Release(keys);
-    }
-
     private void ShowThrottledMessage(Transform interactor, string message)
     {
       if (interactor == null || string.IsNullOrWhiteSpace(message))
@@ -767,19 +550,12 @@ namespace TriageTrainer.Entity
         _reposeAnchor = transform;
       RebuildAttachableVisualMap();
 
-      for (int i = PlayerAttachPoints.Count - 1; i >= 0; i--)
-      {
-        if (PlayerAttachPoints[i] == null)
-          PlayerAttachPoints.RemoveAt(i);
-      }
-
       for (int i = PatientAttachPoints.Count - 1; i >= 0; i--)
       {
         if (PatientAttachPoints[i] == null)
           PatientAttachPoints.RemoveAt(i);
       }
 
-      EnsureDefaultPlayerAttachPoint();
       EnsureDefaultPatientAttachPoint();
     }
 
@@ -793,28 +569,5 @@ namespace TriageTrainer.Entity
       Gizmos.DrawLine(_reposeAnchor.position, _reposeAnchor.position + _reposeAnchor.up * 0.4f);
     }
 
-    private static class ListPool<T>
-    {
-      [ThreadStatic] private static List<T> _cache;
-
-      public static List<T> Get()
-      {
-        var list = _cache;
-        if (list == null)
-          return new List<T>();
-
-        _cache = null;
-        return list;
-      }
-
-      public static void Release(List<T> list)
-      {
-        if (list == null)
-          return;
-
-        list.Clear();
-        _cache = list;
-      }
-    }
   }
 }

@@ -12,6 +12,7 @@ namespace MultiplayerInfrastructure.Registry
     Npc,
     Patient,
     MovingPatientBed,
+    Level1RapidInfuser,
     Waypoint,
     ScenarioInteractable,
     ScenarioTriggerZone,
