@@ -6,11 +6,20 @@
 
 NPC는 캐릭터 모델과 애니메이션 데이터 뿐 아니라, 이름, 퀘스트 발생, 그 외의 상호작용 데이터들을 포함할 수 있습니다. 이러한 데이터가 게임 시스템과 연계되어 동작하기 위해서 레지스트리를 사용합니다.
 
-### Acting NPC란?
+```
+┌──────────────NPC─────────────────┐
+│ ┌───────EntityPreset NPC────────┐│
+│ │ ┌───────Acting NPC──────────┐ ││
+│ │ │                           │ ││
+│ │ └───────────────────────────┘ ││
+│ └───────────────────────────────┘│
+└──────────────────────────────────┘
+```
+_Acting NPC의 시스템 내 위치_  
 
-**Acting NPC**는 특정 시나리오의 진행에 따라 생성·구성·정리되는 NPC 인스턴스입니다. Unity 프리팹은
-외형과 공통 컴포넌트를 제공하고, 시나리오의 `actingNpcs` 정의는 해당 프리팹을 어떤 식별자·이름·위치·회전·상호작용으로
-사용할지 결정합니다. 즉, 프리팹은 재사용 가능한 원형이고 Acting NPC는 시나리오 안에서 실제 역할을 수행하는 인스턴스입니다.
+<br />
+
+대부분의 상황에서는 애니메이션(선택)과 자체적인 컨트롤 스크립트(선택)를 부착해 프리팹 상태로 만들어놓은 NPC를 EntityPreset로서 등록하고, 시나리오에서 Acting NPC로서 소환하는 방식으로 사용합니다. 시나리오 파일을 통해 EntityPreset화된 NPC에, 다이얼로그, 대화 상호작용, 퀘스트 진행 등의 추가 데이터를 추가하여, 인게임에서 시스템이 플레이 도중 스폰할 수 있도록 지원하면 Acting NPC라고 합니다.  
 
 - `actingNpcs[].identifier`: 시나리오 안에서 NPC를 찾고 제어하기 위한 인스턴스 식별자입니다.
 - `actingNpcs[].presetIdentifier`: EntityPreset 레지스트리에 등록된 NPC 프리팹 식별자입니다.
@@ -18,10 +27,14 @@ NPC는 캐릭터 모델과 애니메이션 데이터 뿐 아니라, 이름, 퀘�
 - `spawnOnStart: false`와 `EntityPresetSpawn.actingNpcIdentifier`: 그래프가 해당 노드에 도달했을 때 생성합니다.
 - `despawnOnScenarioEnd`: 정상적인 시나리오 종료 시 인스턴스를 제거할지 정합니다. 시작 실패나 중단 시에는 값과 관계없이 생성된 Acting NPC를 정리합니다.
 
+<br />
+
 NPC 데이터는 두 단계를 거쳐 레지스터할 수 있습니다.
 
 1. NPC 프리팹을 준비해 `MultiplayerInfrastructure.Entity.Npc` 컴포넌트를 추가합니다.
 2. 게임 로딩 과정에서 NPC 프리팹을 `MultiplayerInfrastructure.EntityPreset`에 등록할 수 있도록, 사전에 `EntityPresetRegistryRequirements`에 프리팹을 등록합니다.
+  > [!NOTE]  
+  > 현재는 `Asseets/Modules/TriageTrainer/ScriptableObjects/EntityPreset Registry Requirements SO.asset` 파일을 유니티 에디터에서 열어, NPC 프리팹을 등록할 수 있습니다.
   ```
   identifier: npc_doctor_preset
   fallbackEntityType: Npc
@@ -113,5 +126,3 @@ NPC 데이터는 두 단계를 거쳐 레지스터할 수 있습니다.
   서로 다른 식별자를 사용해야 합니다.
 - 중간 소환 Acting NPC를 사용하는 `NPCMove`, `NpcInteractControl` 노드는 반드시 해당
   `EntityPresetSpawn` 이후의 모든 실행 경로에 배치해야 합니다. 요구사항 검증은 이를 오류로 검사합니다.
-- `despawnOnScenarioEnd: false`는 **정상 종료 후** NPC를 월드에 남기는 옵션입니다. 시나리오 시작이
-  실패하거나 중단되면 부분 생성 NPC는 항상 제거됩니다.
