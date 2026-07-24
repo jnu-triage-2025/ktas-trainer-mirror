@@ -708,16 +708,17 @@ namespace MultiplayerInfrastructure.Editor
         data.Quest.PersistProgressOnSessionEnd = EditorGUILayout.Toggle(
           "Persist Progress On Session End", data.Quest.PersistProgressOnSessionEnd);
 
-        DrawQuestWaypointReachedCriteria(data.Quest.Tasks, "Tasks");
-        DrawQuestWaypointReachedCriteria(data.Quest.CompletionCriteria, "Completion Criteria");
+        DrawQuestWaypointReachedCriteria(data.Quest.Tasks, "Tasks", true);
+        DrawQuestWaypointReachedCriteria(data.Quest.CompletionCriteria, "Completion Criteria", true);
       }
 
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
 
     private static void DrawQuestWaypointReachedCriteria(
-      System.Collections.Generic.IReadOnlyList<QuestCompletionCriteria> criteria,
-      string label)
+      System.Collections.Generic.List<QuestCompletionCriteria> criteria,
+      string label,
+      bool allowAdd)
     {
       if (criteria == null)
         return;
@@ -744,9 +745,24 @@ namespace MultiplayerInfrastructure.Editor
           criterion.ReachDistance = Mathf.Max(
             0.01f,
             EditorGUILayout.FloatField($"Detection Range [{i}] (m)", criterion.ReachDistance));
+
+          if (GUILayout.Button($"Remove WaypointReached [{i}]"))
+          {
+            criteria.RemoveAt(i);
+            i--;
+            continue;
+          }
         }
 
-        DrawQuestWaypointReachedCriteria(criterion.Conditions, $"{label} [{i}]");
+        DrawQuestWaypointReachedCriteria(criterion.Conditions, $"{label} [{i}]", false);
+      }
+
+      if (allowAdd && GUILayout.Button($"Add WaypointReached to {label}"))
+      {
+        criteria.Add(new QuestCompletionCriteria
+        {
+          Type = QuestCompletionCriteriaType.WaypointReached
+        });
       }
     }
 
