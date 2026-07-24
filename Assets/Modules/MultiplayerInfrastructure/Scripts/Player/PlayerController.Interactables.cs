@@ -67,7 +67,7 @@ namespace MultiplayerInfrastructure.Player
 
     private void HandleNearbyUpdated(IReadOnlyList<IInteractable> nearby)
     {
-#if UNITY_EDITOR && (DEBUG == true)
+#if UNITY_EDITOR && (DEBUG == true) && false
       Debug.Log($"[PlayerController] Nearby interactables updated: {nearby.Count} items found.");
 #endif
       if (_interactableHintUI == null) return;

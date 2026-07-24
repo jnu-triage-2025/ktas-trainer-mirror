@@ -132,6 +132,22 @@ namespace MultiplayerInfrastructure.UI
         }));
     }
 
+    /// <summary>
+    /// Displays an actionbar message until the caller explicitly clears it.
+    /// Use this for stateful controls whose exit instruction must remain visible.
+    /// </summary>
+    public void ShowPersistentActionbar(string actionbar)
+    {
+      if (!EnsureElement())
+        return;
+
+      StopActionbarRoutine();
+      _titleElement.ActionbarText = actionbar ?? string.Empty;
+      _titleElement.ActionbarOpacity = 1f;
+      _actionbarActive = !string.IsNullOrWhiteSpace(actionbar);
+      UpdateRootVisibility();
+    }
+
     public void ClearTitle()
     {
       StopTitleRoutine();

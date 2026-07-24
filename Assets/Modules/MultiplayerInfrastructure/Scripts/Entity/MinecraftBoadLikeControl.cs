@@ -314,12 +314,15 @@ namespace MultiplayerInfrastructure.Entity
       {
         _titleUI ??= Registry.Registry.Get<TitleUIController>(
           RegistryType.UI, Registry.Registry.TypeKey<TitleUIController>());
-        _titleUI?.ShowActionbar(_exitHint);
+        _titleUI?.ShowPersistentActionbar(_exitHint);
       }
     }
 
     private void ExitLocal(LocalParticipant participant)
     {
+      if (participant?.Player != null && participant.Player.IsOwner)
+        _titleUI?.ClearActionbar();
+
       participant?.Player?.ClearForcedFollowAnchor(participant.AttachPoint);
       participant?.Player?.RefreshInteractableHintsNow();
     }
