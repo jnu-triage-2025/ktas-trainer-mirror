@@ -21,5 +21,11 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("fadeOutDuration")]
     public ScenarioTimeValue? FadeOutDuration { get; set; }
+
+    [JsonPropertyName("playTTS")]
+    public bool? PlayTTS { get; set; }
+
+    [JsonPropertyName("ttsVoiceIdentifier")]
+    public string TtsVoiceIdentifier { get; set; }
   }
 }

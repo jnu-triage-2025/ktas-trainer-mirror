@@ -244,6 +244,8 @@
         "value": 0.20000000000000001,
         "unit": "Seconds"
       },
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
       "identifier": "D_TUT_CALL",
       "nodeType": "DisinteractableDialogue",
       "nextIdentifier": "Q_TUT_FIND_HAT_ADD"

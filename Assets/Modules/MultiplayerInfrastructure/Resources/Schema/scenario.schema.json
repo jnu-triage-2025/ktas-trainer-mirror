@@ -941,6 +941,13 @@
             "fadeOutDuration": {
               "$ref": "#/$defs/ScenarioTimeValue",
               "default": { "value": 0.5, "unit": "Seconds" }
+            },
+            "playTTS": {
+              "type": ["boolean", "null"],
+              "default": false
+            },
+            "ttsVoiceIdentifier": {
+              "type": ["string", "null"]
             }
           },
           "required": ["speakerName", "dialogueContent"]
@@ -2704,7 +2711,7 @@
         "ReachDistance": {
           "type": "number",
           "exclusiveMinimum": 0,
-          "default": 2
+          "default": 4
         },
         "DisplayTextContent": {
           "type": [
