@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
@@ -29,11 +30,11 @@ namespace TriageTrainer.Entity
   }
 
   /// <summary>
-  /// MovingPatientBedController와 같은 GameObject에 붙여 이동은 침대 구현에 위임하고,
-  /// 약물 및 환자 수액 연결 상태만 서버 권위로 관리한다.
+  /// 급속 주입기의 상호작용과 상태를 소유한다. 이동은 도메인 독립 공통 모듈
+  /// <see cref="MinecraftBoadLikeControl"/> 에 위임한다.
   /// </summary>
-  [RequireComponent(typeof(MovingPatientBedController))]
-  public sealed class Level1RapidInfuserController : NetworkBehaviour, IAdditionalInteractProvider
+  public sealed class Level1RapidInfuserController : MinecraftBoadLikeControl,
+    IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver
   {
     private enum FluidKind : byte
     {
@@ -87,10 +88,16 @@ namespace TriageTrainer.Entity
     [SerializeField] private bool _initialHasPlasmaSolution;
     [SerializeField] private string _initialConnectedPatientIdentifier;
 
+    [Header("Identity / interaction")]
+    [SerializeField] private string _displayText = "Level 1 급속 주입기 조종";
+    [SerializeField] private Sprite _displayIcon;
+
     private readonly SyncVar<bool> _hasNormalSaline = new(false);
     private readonly SyncVar<bool> _hasPlasmaSolution = new(false);
     private readonly SyncVar<string> _connectedPatientIdentifier = new(string.Empty);
+    private readonly SyncVar<string> _runtimeIdentifier = new(string.Empty);
     private IInteract[] _fluidInteracts;
+    private string _registeredIdentifier;
     private int _pendingSalineClientId = -1;
     private int _pendingPlasmaClientId = -1;
     private float _pendingSalineExpiresAt;
@@ -104,6 +111,20 @@ namespace TriageTrainer.Entity
         new AddFluidInteract(this, FluidKind.NormalSaline),
         new AddFluidInteract(this, FluidKind.PlasmaSolution)
       };
+
+    public IInteract[] Interacts
+    {
+      get
+      {
+        var result = new List<IInteract> { this };
+        result.AddRange(AdditionalInteracts);
+        return result.ToArray();
+      }
+    }
+    public string DisplayText => _displayText;
+    public Sprite DisplayIcon => _displayIcon;
+    public bool AllowDisplayIconFallback => true;
+    public Color DisplayColor => Color.white;
 
     public bool HasNormalSaline => IsClientStarted || IsServerStarted
       ? _hasNormalSaline.Value
@@ -119,9 +140,8 @@ namespace TriageTrainer.Entity
 
     private void Awake()
     {
-      var movementController = GetComponent<MovingPatientBedController>();
-      movementController.SetMaximumPlayerParticipants(1);
-      movementController.SetPatientReposeEnabled(false);
+      Awake_MinecraftBoadLikeControl();
+      Configure(1);
       if (_ivConnectionPoint != null)
       {
         _ivConnectionPoint.OnConnected += OnIntravenousLineConnected;
@@ -132,11 +152,14 @@ namespace TriageTrainer.Entity
 
     private void OnDestroy()
     {
+      UnregisterEntity();
       if (_ivConnectionPoint == null)
         return;
       _ivConnectionPoint.OnConnected -= OnIntravenousLineConnected;
       _ivConnectionPoint.OnDisconnected -= OnIntravenousLineDisconnected;
     }
+
+    private void Update() => Update_MinecraftBoadLikeControl();
 
     public override void OnStartServer()
     {
@@ -152,6 +175,8 @@ namespace TriageTrainer.Entity
       base.OnStartClient();
       _hasNormalSaline.OnChange += OnFluidChanged;
       _hasPlasmaSolution.OnChange += OnFluidChanged;
+      _runtimeIdentifier.OnChange += OnRuntimeIdentifierChanged;
+      RegisterEntity();
       ApplyDisplays();
     }
 
@@ -159,7 +184,53 @@ namespace TriageTrainer.Entity
     {
       _hasNormalSaline.OnChange -= OnFluidChanged;
       _hasPlasmaSolution.OnChange -= OnFluidChanged;
+      _runtimeIdentifier.OnChange -= OnRuntimeIdentifierChanged;
+      UnregisterEntity();
       base.OnStopClient();
+    }
+
+    public void Interact(Transform interactor) => Toggle(interactor);
+
+    public bool CanInteract(Transform interactor) => CanToggle(interactor);
+
+    public void ApplySpawnedEntityIdentifier(string identifier)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+        return;
+      string value = identifier.Trim();
+      if (IsServerStarted)
+        _runtimeIdentifier.Value = value;
+      _registeredIdentifier = value;
+      RegisterEntity();
+    }
+
+    private void OnRuntimeIdentifierChanged(string previous, string next, bool asServer)
+    {
+      UnregisterEntity();
+      _registeredIdentifier = next;
+      RegisterEntity();
+    }
+
+    private void RegisterEntity()
+    {
+      string identifier = !string.IsNullOrWhiteSpace(_runtimeIdentifier.Value)
+        ? _runtimeIdentifier.Value
+        : _registeredIdentifier;
+      if (string.IsNullOrWhiteSpace(identifier))
+        return;
+      _registeredIdentifier = identifier;
+      Registry.RegisterEntity(
+        identifier,
+        EntityType.Level1RapidInfuser,
+        gameObject,
+        _displayText,
+        isNetworked: IsClientStarted || IsServerStarted);
+    }
+
+    private void UnregisterEntity()
+    {
+      if (!string.IsNullOrWhiteSpace(_registeredIdentifier))
+        Registry.UnregisterEntity(_registeredIdentifier);
     }
 
     public Level1RapidInfuserState CaptureState() => new()
