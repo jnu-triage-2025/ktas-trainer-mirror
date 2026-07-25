@@ -68,8 +68,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a8e8788858df4e30ba3a74daa3a7a19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.UI.TitleUIController
-  _uiDocument: {fileID: 0}
-  _titleStyleSheet: {fileID: 0}
+  _uiDocument: {fileID: 1547775486639578947}
+  _titleStyleSheet: {fileID: 7433441132597879392, guid: cbde549e2403c44d49e04d57445ac7bb, type: 3}
   _defaultFadeInTicks: 10
   _defaultStayTicks: 70
   _defaultFadeOutTicks: 20

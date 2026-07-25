@@ -61,7 +61,6 @@ namespace MultiplayerInfrastructure.UI
 
     public void ClearAll()
     {
-      Debug.Log($"[TitleUI][DBG] ClearAll called stack={System.Environment.StackTrace}", this);
       StopAllRoutines();
       if (_titleElement != null)
         _titleElement.ClearAll();
@@ -118,7 +117,6 @@ namespace MultiplayerInfrastructure.UI
       if (!EnsureElement())
         return;
 
-      Debug.Log($"[TitleUI][DBG] ShowActionbar (non-persistent) text=\"{actionbar}\"", this);
       StopActionbarRoutine();
       _titleElement.ActionbarText = actionbar ?? string.Empty;
 
@@ -141,36 +139,13 @@ namespace MultiplayerInfrastructure.UI
     public void ShowPersistentActionbar(string actionbar)
     {
       if (!EnsureElement())
-      {
-        Debug.Log($"[TitleUI][DBG] ShowPersistentActionbar FAILED EnsureElement text=\"{actionbar}\"", this);
         return;
-      }
 
       StopActionbarRoutine();
       _titleElement.ActionbarText = actionbar ?? string.Empty;
       _titleElement.ActionbarOpacity = 1f;
       _actionbarActive = !string.IsNullOrWhiteSpace(actionbar);
       UpdateRootVisibility();
-
-      // UI Toolkit은 같은 프레임엔 style이 확정되지 않으므로 1프레임 뒤에 layout/visibility 검증.
-      StartCoroutine(LogActionbarResolvedStateDeferred());
-      Debug.Log($"[TitleUI][DBG] ShowPersistentActionbar text=\"{actionbar}\" active={_actionbarActive}", this);
-    }
-
-    private System.Collections.IEnumerator LogActionbarResolvedStateDeferred()
-    {
-      yield return null;
-      if (_titleElement == null)
-      {
-        Debug.Log("[TitleUI][DBG] deferred state: _titleElement is null", this);
-        yield break;
-      }
-      var ab = _titleElement.Q<Label>(name: "actionbar-label");
-      Debug.Log($"[TitleUI][DBG] resolved state: root.visible={_titleElement.visible} root.display={_titleElement.resolvedStyle.display} root.op={_titleElement.resolvedStyle.opacity} root.classHidden={_titleElement.ClassListContains("title-ui--hidden")}", this);
-      if (ab != null)
-        Debug.Log($"[TitleUI][DBG] actionbar resolved: visible={ab.visible} display={ab.resolvedStyle.display} opacity={ab.resolvedStyle.opacity} classHidden={ab.ClassListContains("is-hidden")} worldBound={ab.worldBound}", this);
-      else
-        Debug.Log("[TitleUI][DBG] actionbar label lookup by name FAILED (Q<Label>(actionbar-label))", this);
     }
 
     public void ClearTitle()
@@ -189,7 +164,6 @@ namespace MultiplayerInfrastructure.UI
 
     public void ClearActionbar()
     {
-      Debug.Log($"[TitleUI][DBG] ClearActionbar called stack={System.Environment.StackTrace}", this);
       StopActionbarRoutine();
       if (_titleElement != null)
         _titleElement.ActionbarText = string.Empty;
@@ -201,9 +175,12 @@ namespace MultiplayerInfrastructure.UI
     private void BindElement()
     {
       if (_uiDocument == null)
+        _uiDocument = GetComponent<UIDocument>();
+
+      var root = _uiDocument != null ? _uiDocument.rootVisualElement : null;
+      if (root == null)
         return;
 
-      var root = _uiDocument.rootVisualElement;
       EnsureStyleSheet(root);
       _titleElement = root.Q<TitleUIElement>("title-ui-root");
 
@@ -226,11 +203,25 @@ namespace MultiplayerInfrastructure.UI
 
     private bool EnsureElement()
     {
-      if (_titleElement != null)
+      if (_uiDocument == null)
+        _uiDocument = GetComponent<UIDocument>();
+
+      var currentRoot = _uiDocument != null ? _uiDocument.rootVisualElement : null;
+      if (currentRoot == null)
+        return false;
+
+      // UIDocument는 활성화 과정에서 rootVisualElement를 다시 만들 수 있다. 특히 이
+      // 컨트롤러가 network-spawned 백엔드 프리팹의 자식일 때 Awake에서 잡은 요소는
+      // detached tree가 되어 style/text를 바꿔도 화면에 렌더링되지 않는다.
+      // 현재 live document root의 요소인지 매 표시 시점에 확인하고 다시 바인딩한다.
+      var currentElement = currentRoot.Q<TitleUIElement>("title-ui-root");
+      if (_titleElement != null &&
+          _titleElement == currentElement)
         return true;
 
       BindElement();
-      return _titleElement != null;
+      return _titleElement != null &&
+             _titleElement == currentRoot.Q<TitleUIElement>("title-ui-root");
     }
 
     private void ApplyDefaultTimes()
