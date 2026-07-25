@@ -88,6 +88,7 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<Syringe50cc>(Syringe50cc.Identifier);
       Registry.RegisterItemDefinition<Syringe5cc>(Syringe5cc.Identifier);
       Registry.RegisterItemDefinition<BloodTransfusionSet>(BloodTransfusionSet.Identifier);
+      Registry.RegisterItemDefinition<PatientMonitor>(PatientMonitor.Identifier);
       Registry.RegisterItemDefinition<VitalSet>(VitalSet.Identifier);
 
       // ===== 튜토리얼 아이템 =====
