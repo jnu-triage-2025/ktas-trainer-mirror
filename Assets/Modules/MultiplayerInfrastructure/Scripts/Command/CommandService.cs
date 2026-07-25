@@ -19,6 +19,7 @@ namespace MultiplayerInfrastructure.Command
 
       RegisterCommand(new CommandDefinition_Help(_chatManager, this));
       RegisterCommand(new CommandDefinition_Gamemode(_chatManager));
+      RegisterCommand(new CommandDefinition_Speed(_chatManager));
       RegisterCommand(new CommandDefinition_Item(_chatManager));
       RegisterCommand(new CommandDefinition_Give(_chatManager));
       RegisterCommand(new CommandDefinition_Clean(_chatManager));
