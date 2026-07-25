@@ -91,7 +91,7 @@
       "resultStateKey": null,
       "identifier": "CONFIG_CLOCK_SUBMISSION",
       "nodeType": "ItemSubmissionConfig",
-      "nextIdentifier": "V_TUT_CLOCK_SUBMITTED"
+      "nextIdentifier": "Q_TUT_DELIVERY_REMOVE"
     },
     "CONFIG_PACKAGE_SUBMISSION": {
       "presetIdentifier": null,
@@ -115,6 +115,23 @@
       "nodeType": "ItemSubmissionConfig",
       "nextIdentifier": "DECOY_WATCHER_FORK"
     },
+    "CONFIG_PACKAGE_SUBMISSION_HIDE": {
+      "presetIdentifier": null,
+      "spawnedEntityIdentifier": null,
+      "positionSourceEntityIdentifier": null,
+      "positionX": 0,
+      "positionY": 0,
+      "positionZ": 0,
+      "targetIdentifier": "tutorial-guide-hat-package-submission",
+      "targetStateKey": null,
+      "requiredItems": null,
+      "completionSignalIdentifier": null,
+      "enabled": false,
+      "resultStateKey": null,
+      "identifier": "CONFIG_PACKAGE_SUBMISSION_HIDE",
+      "nodeType": "ItemSubmissionConfig",
+      "nextIdentifier": "CONFIG_CLOCK_SUBMISSION"
+    },
     "C_TUT_CRAFTING_ACCEPT": {
       "speakerName": null,
       "dialogueContent": "",
@@ -129,7 +146,7 @@
             "b": 1,
             "a": 1
           },
-          "nextNodeIdentifier": "Q_TUT_CRAFTING_ADD"
+          "nextNodeIdentifier": "GIVE_TIN"
         },
         {
           "displayText": "옵션 2",
@@ -268,11 +285,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": true,
+      "playTTS": null,
       "ttsVoiceIdentifier": null,
       "identifier": "D_TUT_CRAFTING_HINT",
       "nodeType": "Dialogue",
-      "nextIdentifier": "V_TUT_CLOCK_CRAFTED"
+      "nextIdentifier": "V_TUT_CLOCK_SUBMITTED"
     },
     "D_TUT_CRAFTING_REQUEST": {
       "speakerName": "모자",
@@ -302,6 +319,8 @@
         "value": 0.20000000000000001,
         "unit": "Seconds"
       },
+      "playTTS": null,
+      "ttsVoiceIdentifier": null,
       "identifier": "D_TUT_DECOY_HINT",
       "nodeType": "DisinteractableDialogue",
       "nextIdentifier": "decoy_branch_done"
@@ -464,27 +483,17 @@
         "value": 0.20000000000000001,
         "unit": "Seconds"
       },
+      "playTTS": null,
+      "ttsVoiceIdentifier": null,
       "identifier": "D_TUT_PACKAGE_PROMPT",
       "nodeType": "DisinteractableDialogue",
       "nextIdentifier": "V_TUT_DELIVERY_PACKAGE_ACQUIRED"
-    },
-    "D_TUT_SUBMIT_HINT": {
-      "speakerName": "시스템",
-      "dialogueContent": "시계를 조합했습니다! 모자에게 시계를 전달하세요.",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "identifier": "D_TUT_SUBMIT_HINT",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "CONFIG_CLOCK_SUBMISSION"
     },
     "GIVE_CHAIN": {
       "commandLine": "give small_chain 1 @s",
       "identifier": "GIVE_CHAIN",
       "nodeType": "ExecuteCommand",
-      "nextIdentifier": "D_TUT_CRAFTING_HINT"
+      "nextIdentifier": "Q_TUT_CRAFTING_ADD"
     },
     "GIVE_GEAR": {
       "commandLine": "give small_gear 5 @s",
@@ -535,7 +544,7 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q_TUT_CRAFTING_ADD",
       "nodeType": "QuestControl",
-      "nextIdentifier": "GIVE_TIN"
+      "nextIdentifier": "D_TUT_CRAFTING_HINT"
     },
     "Q_TUT_CRAFTING_REMOVE": {
       "operation": "Remove",
@@ -608,39 +617,12 @@
       "nextIdentifier": "DL_TUT_MOVE_CALL_DELAY"
     },
     "TUT_END": {
-      "message": "튜토리얼이 완료되었습니다.",
+      "message": "튜토리얼이 완료되었습니다. esc키를 눌러 타이틀 화면으로 되돌아가세요.",
       "targets": null,
       "broadcast": null,
       "identifier": "TUT_END",
       "nodeType": "ChatPrint",
       "nextIdentifier": null
-    },
-    "V_TUT_CLOCK_CRAFTED": {
-      "rootConditions": [
-        {
-          "condition": "RegistryContains",
-          "targetCount": 0,
-          "playerTag": null,
-          "playerScope": "Any",
-          "validationRules": [
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_handy_clock"
-            }
-          ]
-        }
-      ],
-      "onFailure": "Ignore",
-      "failureReportTargets": "UnityConsole",
-      "failureNextIdentifier": null,
-      "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
-      "identifier": "V_TUT_CLOCK_CRAFTED",
-      "nodeType": "Validator",
-      "nextIdentifier": "D_TUT_SUBMIT_HINT"
     },
     "V_TUT_CLOCK_SUBMITTED": {
       "rootConditions": [
@@ -721,7 +703,7 @@
       "onWaitTimeout": null,
       "identifier": "V_TUT_DELIVERY_PACKAGE_SUBMITTED",
       "nodeType": "Validator",
-      "nextIdentifier": "Q_TUT_DELIVERY_REMOVE"
+      "nextIdentifier": "CONFIG_PACKAGE_SUBMISSION_HIDE"
     },
     "V_TUT_DELIVERY_WAYPOINT_REACHED": {
       "rootConditions": [

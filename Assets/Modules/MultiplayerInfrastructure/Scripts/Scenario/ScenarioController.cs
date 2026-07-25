@@ -2237,7 +2237,12 @@ namespace MultiplayerInfrastructure.Scenario
         }
 
         if (!string.IsNullOrWhiteSpace(node.CompletionSignalIdentifier))
+        {
+          // 이전 실행/단계에서 남아있는 완료 신호를 정리해, 이번 제출 단계가 실제 제출 1회를 요구하도록 보장한다.
+          ScenarioInteractionSignals.Clear(node.CompletionSignalIdentifier);
           interactable.SetCompletionSignal(node.CompletionSignalIdentifier);
+          interactable.ResetCompletion();
+        }
 
         interactable.SetEnabled(node.Enabled);
       }

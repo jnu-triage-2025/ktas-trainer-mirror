@@ -118,6 +118,8 @@ namespace MultiplayerInfrastructure.Player
       {
         OnInventoryChangedAndReturn(true);
         item.OnGet(this);
+        // 월드 습득 등 이 경로로 획득한 아이템은 획득 훅이 발행되었으므로 지연 획득 상태를 해제한다.
+        item.DeferredOnGet = false;
         // 조합은 이제 인벤토리 UI 의 조합 패널을 통해 수동으로 수행한다(자동 조합 비활성).
         // 기존 자동 조합 로직은 GetCraftableRecipes / TryCraftRecipe 로 대체되었다.
         // if (!_isCombining)
@@ -234,6 +236,14 @@ namespace MultiplayerInfrastructure.Player
     /// 재료가 충분하면 인벤토리에서 재료를 소비하고, 생성된 결과 아이템 인스턴스를 반환한다.
     /// (결과 아이템은 인벤토리에 추가하지 않는다 — 호출자(조합 패널)가 커서로 pickup 처리)
     /// 재료가 부족하거나 결과 생성에 실패하면 null 을 반환한다.
+    ///
+    /// 조합 결과물은 커서(held item)로 지급된 뒤 인벤토리 슬롯에 배치되는데, 이 배치 경로
+    /// (InventoryUIView 의 slot.SetItem/Push)는 <see cref="TryAddItemToInventory"/> 를 우회하므로
+    /// 획득 훅(<see cref="ItemSystem.Item.OnGet"/>)이 생략된다. 이를 보완하려고 조합 "시점"에 OnGet 을
+    /// 호출하면 아이템이 아직 인벤토리에 없는 상태에서 획득 신호가 먼저 발행되는 문제가 있다.
+    /// 따라서 여기서는 결과 아이템에 <see cref="ItemSystem.Item.DeferredOnGet"/> 플래그만 설정하고,
+    /// 실제 인벤토리 진입 시점(InventoryUIController 가 슬롯 배치 감지)에 OnGet 이 발행되도록 한다.
+    /// MedicalItem 은 OnGet 에서 시나리오 게이팅/퀘스트 신호(sig.&lt;id&gt;, sig.click_&lt;id&gt;)를 발행한다.
     /// </summary>
     public ItemSystem.Item TryCraftRecipe(string outputItemIdentifier)
     {
@@ -276,6 +286,11 @@ namespace MultiplayerInfrastructure.Player
       }
 
       outputItem.CurrentStackCount = matched.OutputItemCount;
+
+      // 조합 결과물은 커서로 지급되어 인벤토리 배치 시 TryAddItemToInventory 를 우회한다.
+      // 실제 인벤토리 진입 시점에 획득 훅(OnGet)이 발행되도록 지연 획득 플래그를 설정한다(위 XML 주석 참조).
+      outputItem.DeferredOnGet = true;
+
       return outputItem;
     }
 

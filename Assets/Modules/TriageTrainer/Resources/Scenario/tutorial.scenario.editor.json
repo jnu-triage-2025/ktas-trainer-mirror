@@ -1,11 +1,11 @@
 {
   "NodePositions": {
     "branch_decoy_watch": {
-      "x": 6564,
-      "y": -137
+      "x": 6717,
+      "y": -146
     },
     "C_TUT_CRAFTING_ACCEPT": {
-      "x": 2673,
+      "x": 3814,
       "y": 800
     },
     "C_TUT_GREETING": {
@@ -13,123 +13,123 @@
       "y": 0
     },
     "CONFIG_CLOCK_SUBMISSION": {
-      "x": 5692,
-      "y": 796
+      "x": 2300,
+      "y": 804
     },
     "CONFIG_PACKAGE_SUBMISSION": {
-      "x": 5804,
-      "y": -135
+      "x": 5917,
+      "y": -138
+    },
+    "CONFIG_PACKAGE_SUBMISSION_HIDE": {
+      "x": 1922,
+      "y": 809
     },
     "D_TUT_CALL": {
       "x": 1900,
       "y": 0
     },
     "D_TUT_CRAFTING_COMPLETE": {
-      "x": 6803,
-      "y": 806
+      "x": 3053,
+      "y": 1395
     },
     "D_TUT_CRAFTING_HINT": {
-      "x": 4549,
-      "y": 806
+      "x": 1940,
+      "y": 1395
     },
     "D_TUT_CRAFTING_REQUEST": {
-      "x": 2293,
+      "x": 3434,
       "y": 800
     },
     "D_TUT_DECOY_HINT": {
-      "x": 6923,
-      "y": -132
+      "x": 7103,
+      "y": -129
     },
     "D_TUT_DELIVERY_COMPLETE": {
-      "x": 1907,
+      "x": 3048,
       "y": 802
     },
     "D_TUT_HAT_STARTING_2": {
-      "x": 4227,
-      "y": -89
+      "x": 4371,
+      "y": -129
     },
     "D_TUT_HAT_STARTING_3": {
-      "x": 5070,
-      "y": -134
+      "x": 5150,
+      "y": -140
     },
     "D_TUT_HAT_STARTING_NO_1": {
-      "x": 4209,
-      "y": 279
+      "x": 4185,
+      "y": 275
     },
     "D_TUT_HAT_STARTING_NO_2": {
-      "x": 4573,
-      "y": 304
+      "x": 4546,
+      "y": 282
     },
     "D_TUT_HAT_STARTING_NO_3": {
-      "x": 4932,
-      "y": 314
+      "x": 4908,
+      "y": 310
     },
     "D_TUT_HAT_STARTING_NO_4": {
-      "x": 5317,
-      "y": 299
+      "x": 5293,
+      "y": 295
     },
     "D_TUT_HAT_STARTING_NO_5": {
-      "x": 5700,
-      "y": 306
-    },
-    "D_TUT_HAT_STARTING_NO_6": {
-      "x": 6088,
+      "x": 5676,
       "y": 302
     },
+    "D_TUT_HAT_STARTING_NO_6": {
+      "x": 6064,
+      "y": 298
+    },
     "D_TUT_HAT_STARTING_NO_7": {
-      "x": 6456,
-      "y": 272
+      "x": 6432,
+      "y": 268
     },
     "D_TUT_PACKAGE_PROMPT": {
-      "x": 384,
-      "y": 814
-    },
-    "D_TUT_SUBMIT_HINT": {
-      "x": 5307,
-      "y": 799
+      "x": 728,
+      "y": 822
     },
     "DECOY_WATCHER_FORK": {
-      "x": 6187,
-      "y": -128
+      "x": 6303,
+      "y": -140
     },
     "DL_TUT_MOVE_CALL_DELAY": {
       "x": 1520,
       "y": 0
     },
     "GIVE_CHAIN": {
-      "x": 4148,
-      "y": 808
+      "x": 1190,
+      "y": 1392
     },
     "GIVE_GEAR": {
-      "x": 3792,
-      "y": 809
+      "x": 834,
+      "y": 1393
     },
     "GIVE_TIN": {
-      "x": 3433,
-      "y": 800
+      "x": 475,
+      "y": 1384
     },
     "IE_TUT_INTERACTION_HINT": {
       "x": 2663,
       "y": 3
     },
     "NPC_TUT_REVEAL_HAT_NAME": {
-      "x": 4656,
-      "y": -125
+      "x": 4757,
+      "y": -137
     },
     "Q_TUT_CRAFTING_ADD": {
-      "x": 3053,
-      "y": 800
+      "x": 1571,
+      "y": 1394
     },
     "Q_TUT_CRAFTING_REMOVE": {
-      "x": 6426,
-      "y": 804
+      "x": 2676,
+      "y": 1393
     },
     "Q_TUT_DELIVERY_ADD": {
-      "x": 5427,
-      "y": -128
+      "x": 5528,
+      "y": -140
     },
     "Q_TUT_DELIVERY_REMOVE": {
-      "x": 1544,
+      "x": 2685,
       "y": 810
     },
     "Q_TUT_FIND_HAT_ADD": {
@@ -149,28 +149,24 @@
       "y": 0
     },
     "TUT_END": {
-      "x": 7172,
-      "y": 803
-    },
-    "V_TUT_CLOCK_CRAFTED": {
-      "x": 4929,
-      "y": 805
+      "x": 3422,
+      "y": 1392
     },
     "V_TUT_CLOCK_SUBMITTED": {
-      "x": 6055,
-      "y": 793
+      "x": 2305,
+      "y": 1382
     },
     "V_TUT_DELIVERY_PACKAGE_ACQUIRED": {
-      "x": 764,
-      "y": 814
+      "x": 1108,
+      "y": 822
     },
     "V_TUT_DELIVERY_PACKAGE_SUBMITTED": {
-      "x": 1164,
-      "y": 810
+      "x": 1508,
+      "y": 818
     },
     "V_TUT_DELIVERY_WAYPOINT_REACHED": {
-      "x": -5,
-      "y": 810
+      "x": 339,
+      "y": 818
     },
     "V_TUT_HAT_TALK_START": {
       "x": 3043,
@@ -181,5 +177,26 @@
       "y": -11
     }
   },
-  "EdgeRoutes": {}
+  "EdgeRoutes": {
+    "D_TUT_HAT_STARTING_NO_7:next": [
+      {
+        "x": 6855.27051,
+        "y": 250.83989
+      },
+      {
+        "x": 4261.21875,
+        "y": 241.662811
+      }
+    ],
+    "C_TUT_CRAFTING_ACCEPT:choice.0": [
+      {
+        "x": 4276.94043,
+        "y": 1285.56787
+      },
+      {
+        "x": 300.582245,
+        "y": 1295.42981
+      }
+    ]
+  }
 }

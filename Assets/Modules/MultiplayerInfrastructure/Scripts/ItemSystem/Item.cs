@@ -141,6 +141,17 @@ namespace MultiplayerInfrastructure.ItemSystem
     public string CurrentSerializedDerivedAttributes { get; protected set; }
     #endregion
 
+    #region Instance/Acquisition
+    /// <summary>
+    /// 획득 훅(<see cref="OnGet"/>)이 아직 발행되지 않은 "지연 획득" 상태인지 여부.
+    /// 조합 결과처럼 아이템이 먼저 커서(held item)로 지급되어 인벤토리 배치 시
+    /// <see cref="Player.PlayerController.TryAddItemToInventory"/> 를 거치지 않는 경우,
+    /// 실제 인벤토리에 진입한 시점에 OnGet 을 발행하도록 인벤토리 컨트롤러가 이 플래그를 참고한다.
+    /// 월드 습득 등 TryAddItemToInventory 경로에서는 OnGet 호출과 함께 즉시 해제된다.
+    /// </summary>
+    public bool DeferredOnGet { get; set; }
+    #endregion
+
     // =========================================================================
     // CONSTRUCTOR
     // =========================================================================
