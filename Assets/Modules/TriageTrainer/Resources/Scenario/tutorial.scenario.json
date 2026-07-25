@@ -147,17 +147,6 @@
             "a": 1
           },
           "nextNodeIdentifier": "GIVE_TIN"
-        },
-        {
-          "displayText": "옵션 2",
-          "displayIconIdentifier": null,
-          "displayColor": {
-            "r": 0,
-            "g": 0,
-            "b": 0,
-            "a": 0
-          },
-          "nextNodeIdentifier": null
         }
       ],
       "playTTS": null,

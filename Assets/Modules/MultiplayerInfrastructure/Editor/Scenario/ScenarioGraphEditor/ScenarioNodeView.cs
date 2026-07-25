@@ -517,20 +517,24 @@ namespace MultiplayerInfrastructure.Editor
 
     private void BuildChoiceInlineEditor(ScenarioChoiceNode data)
     {
+      data.Options ??= new List<ScenarioChoiceOption>();
       AddTextField("Speaker", value => data.SpeakerName = value, data.SpeakerName);
       AddTextAreaField("Dialogue", value => data.DialogueContent = value, data.DialogueContent);
       AddTextField("Option 1", value =>
       {
-        EnsureChoiceOptions(data);
-        data.Options[0].DisplayText = value;
-        UpdateOptionPortLabel(data.Options[0]);
-      }, GetChoiceOptionText(data, 0));
+        var option = EnsureChoiceOptionEditable(data, 0);
+        option.DisplayText = value;
+        UpdateOptionPortLabel(option);
+      }, GetChoiceOptionText(data, 0, "옵션 1"));
       AddTextField("Option 2", value =>
       {
-        EnsureChoiceOptions(data);
-        data.Options[1].DisplayText = value;
-        UpdateOptionPortLabel(data.Options[1]);
-      }, GetChoiceOptionText(data, 1));
+        if (data.Options.Count <= 1 && string.IsNullOrEmpty(value))
+          return;
+
+        var option = EnsureChoiceOptionEditable(data, 1);
+        option.DisplayText = value;
+        UpdateOptionPortLabel(option);
+      }, GetChoiceOptionText(data, 1, string.Empty));
       AddNextIdentifierField(data);
     }
 
@@ -947,20 +951,27 @@ namespace MultiplayerInfrastructure.Editor
       _inlineEditorContainer.Add(row);
     }
 
-    private static void EnsureChoiceOptions(ScenarioChoiceNode data)
+    private ScenarioChoiceOption EnsureChoiceOptionEditable(ScenarioChoiceNode data, int index)
     {
       data.Options ??= new List<ScenarioChoiceOption>();
-      while (data.Options.Count < 2)
+      while (data.Options.Count <= index)
       {
-        // displayText 는 스키마 필수(null 불허) 필드라 자동 추가 옵션에도 기본 텍스트를 부여한다.
-        data.Options.Add(new ScenarioChoiceOption { DisplayText = $"옵션 {data.Options.Count + 1}" });
+        var option = new ScenarioChoiceOption { DisplayText = $"옵션 {data.Options.Count + 1}" };
+        data.Options.Add(option);
+        AddChoiceOptionPort(option);
       }
+
+      var editable = data.Options[index] ??= new ScenarioChoiceOption { DisplayText = $"옵션 {index + 1}" };
+      if (choicePorts.TryGetValue(editable, out _) == false)
+        AddChoiceOptionPort(editable);
+      return editable;
     }
 
-    private static string GetChoiceOptionText(ScenarioChoiceNode data, int index)
+    private static string GetChoiceOptionText(ScenarioChoiceNode data, int index, string fallback)
     {
-      EnsureChoiceOptions(data);
-      return data.Options[index]?.DisplayText ?? string.Empty;
+      if (data?.Options == null || index < 0 || index >= data.Options.Count || data.Options[index] == null)
+        return fallback;
+      return data.Options[index].DisplayText ?? string.Empty;
     }
 
     private void RefreshSummaryLabel()
