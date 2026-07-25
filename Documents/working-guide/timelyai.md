@@ -93,5 +93,7 @@
   - xAI Grok 4.5
 
 <sup>1</sup>: 정확도/효율성/속도/쿼터 사용량 고려 만족도 좋았던 모델
+
 <sup>2</sup>: 정확도가 높았지만 쿼터를 매우 많이 소모하는 모델
+
 <sup>3</sup>: [Fable 5급](https://news.hada.io/topic?id=30446) 모델
