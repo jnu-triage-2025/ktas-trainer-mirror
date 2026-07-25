@@ -617,7 +617,7 @@
       "nextIdentifier": "DL_TUT_MOVE_CALL_DELAY"
     },
     "TUT_END": {
-      "message": "튜토리얼이 완료되었습니다.",
+      "message": "튜토리얼이 완료되었습니다. esc키를 눌러 타이틀 화면으로 되돌아가세요.",
       "targets": null,
       "broadcast": null,
       "identifier": "TUT_END",
