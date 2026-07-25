@@ -36,9 +36,9 @@ namespace MultiplayerInfrastructure.ItemSystem
   /// <example>
   /// <code>
   /// [IntendedMissingItemSprite]
-  /// public class BandageItem : Item
+  /// public class Gauze : MedicalItem
   /// {
-  ///   public const string Identifier = "bandage";
+  ///   public const string Identifier = "gauze";
   /// }
   /// </code>
   /// </example>

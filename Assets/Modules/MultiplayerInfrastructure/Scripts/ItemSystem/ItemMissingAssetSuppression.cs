@@ -67,20 +67,27 @@ namespace MultiplayerInfrastructure.ItemSystem
 
         foreach (var t in types)
         {
-          if (t == null || t.IsAbstract || !itemType.IsAssignableFrom(t)) continue;
+          try
+          {
+            if (t == null || t.IsAbstract || !itemType.IsAssignableFrom(t)) continue;
 
-          bool hasModel = t.GetCustomAttribute<IntendedMissing3DModelAttribute>() != null;
-          bool hasSprite = t.GetCustomAttribute<IntendedMissingItemSpriteAttribute>() != null;
+            bool hasModel = t.GetCustomAttribute<IntendedMissing3DModelAttribute>() != null;
+            bool hasSprite = t.GetCustomAttribute<IntendedMissingItemSpriteAttribute>() != null;
 
-          if (!hasModel && !hasSprite) continue;
+            if (!hasModel && !hasSprite) continue;
 
-          // Identifier const 값을 리플렉션으로 읽기
-          var idField = t.GetField("Identifier", ConstFlags);
-          string identifier = idField?.GetValue(null) as string;
-          if (string.IsNullOrWhiteSpace(identifier)) continue;
+            // Identifier const 값을 리플렉션으로 읽기
+            var idField = t.GetField("Identifier", ConstFlags);
+            string identifier = idField?.GetValue(null) as string;
+            if (string.IsNullOrWhiteSpace(identifier)) continue;
 
-          if (hasModel)  _suppressedModelIdentifiers.Add(identifier);
-          if (hasSprite) _suppressedSpriteIdentifiers.Add(identifier);
+            if (hasModel)  _suppressedModelIdentifiers.Add(identifier);
+            if (hasSprite) _suppressedSpriteIdentifiers.Add(identifier);
+          }
+          catch
+          {
+            // 개별 타입 리플렉션 실패(TypeLoadException 등)는 무시하고 다음 타입으로 진행
+          }
         }
       }
     }
@@ -94,10 +101,19 @@ namespace MultiplayerInfrastructure.ItemSystem
     public static bool ShouldSuppressModelMissingWarning(Item item)
     {
       if (item == null) return false;
-      var t = item.GetType();
-      if (_modelCacheByType.TryGetValue(t, out var cached)) return cached;
-      bool has = t.GetCustomAttribute<IntendedMissing3DModelAttribute>() != null;
-      _modelCacheByType[t] = has;
+      return ShouldSuppressModelMissingWarning(item.GetType());
+    }
+
+    /// <summary>
+    /// 지정 Type에 <see cref="IntendedMissing3DModelAttribute"/> 가
+    /// 적용되어 있는지 확인합니다. 결과는 타입별로 캐시됩니다.
+    /// </summary>
+    public static bool ShouldSuppressModelMissingWarning(Type itemType)
+    {
+      if (itemType == null) return false;
+      if (_modelCacheByType.TryGetValue(itemType, out var cached)) return cached;
+      bool has = itemType.GetCustomAttribute<IntendedMissing3DModelAttribute>() != null;
+      _modelCacheByType[itemType] = has;
       return has;
     }
 
@@ -108,10 +124,19 @@ namespace MultiplayerInfrastructure.ItemSystem
     public static bool ShouldSuppressSpriteMissingWarning(Item item)
     {
       if (item == null) return false;
-      var t = item.GetType();
-      if (_spriteCacheByType.TryGetValue(t, out var cached)) return cached;
-      bool has = t.GetCustomAttribute<IntendedMissingItemSpriteAttribute>() != null;
-      _spriteCacheByType[t] = has;
+      return ShouldSuppressSpriteMissingWarning(item.GetType());
+    }
+
+    /// <summary>
+    /// 지정 Type에 <see cref="IntendedMissingItemSpriteAttribute"/> 가
+    /// 적용되어 있는지 확인합니다. 결과는 타입별로 캐시됩니다.
+    /// </summary>
+    public static bool ShouldSuppressSpriteMissingWarning(Type itemType)
+    {
+      if (itemType == null) return false;
+      if (_spriteCacheByType.TryGetValue(itemType, out var cached)) return cached;
+      bool has = itemType.GetCustomAttribute<IntendedMissingItemSpriteAttribute>() != null;
+      _spriteCacheByType[itemType] = has;
       return has;
     }
 

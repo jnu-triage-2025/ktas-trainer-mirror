@@ -324,8 +324,18 @@ namespace TriageTrainer.Entity
         // 환자에게 IV 수액 공급원 해제를 알림
         if (patient != null)
         {
-          bool isLeftArm = IsLeftArmConnectionPoint(otherPoint);
-          patient.ClearIVFluidConnection(isLeftArm);
+          if (otherPoint != null)
+          {
+            // 연결점 식별자로 좌/우 팔을 판정해 해당 쪽만 해제
+            bool isLeftArm = IsLeftArmConnectionPoint(otherPoint);
+            patient.ClearIVFluidConnection(isLeftArm);
+          }
+          else
+          {
+            // 연결점이 파괴되어 팔을 판정할 수 없으므로 양쪽 모두 해제
+            patient.ClearIVFluidConnection(isLeftArm: true);
+            patient.ClearIVFluidConnection(isLeftArm: false);
+          }
         }
         ConnectPatient(null);
       }

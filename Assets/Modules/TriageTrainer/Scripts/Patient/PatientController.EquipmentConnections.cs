@@ -47,6 +47,38 @@ namespace TriageTrainer.Entity
     /// </summary>
     public event Action<string, MonoBehaviour> OnEquipmentDisconnected;
 
+    // ── 공통 알림 헬퍼 ──
+    //
+    // 모든 장비 슬롯 교체에서 동일한 순서(해제→연결)의 이벤트를 발생시킨다.
+    // Unity fake-null(파괴된 MonoBehaviour)도 안전하게 처리한다.
+
+    /// <summary>
+    /// 장비 슬롯 교체에 따른 로그, C# 이벤트, 시나리오 상태 이벤트를 발생시킨다.
+    /// 항상 <b>해제(disconnect) → 연결(connect)</b> 순서로 발생한다.
+    /// <paramref name="previous"/> 와 <paramref name="next"/> 가 동일하면(ReferenceEquals) 아무것도 하지 않는다.
+    /// </summary>
+    private void NotifyEquipmentSwap(string equipmentType, MonoBehaviour previous, MonoBehaviour next)
+    {
+      if (ReferenceEquals(previous, next))
+        return;
+
+      // 1) 해제 알림 (이전 장비가 실제로 존재했던 경우)
+      if (previous != null)
+      {
+        LogConnectionChange(equipmentType, connected: false, previous);
+        OnEquipmentDisconnected?.Invoke(equipmentType, previous);
+        RaiseEquipmentStateEvent(equipmentType, connected: false);
+      }
+
+      // 2) 연결 알림 (새 장비가 실제로 존재하는 경우)
+      if (next != null)
+      {
+        LogConnectionChange(equipmentType, connected: true, next);
+        OnEquipmentConnected?.Invoke(equipmentType, next);
+        RaiseEquipmentStateEvent(equipmentType, connected: true);
+      }
+    }
+
     // ── Patient Monitor (환자 상태 모니터 역참조) ──
 
     /// <summary>현재 이 환자를 모니터링 중인 환자 모니터. 없으면 null.</summary>
@@ -64,39 +96,21 @@ namespace TriageTrainer.Entity
 
       var previous = _monitoringPatientMonitor;
       _monitoringPatientMonitor = monitor;
-
-      if (previous != null)
-      {
-        LogConnectionChange(EquipmentTypePatientMonitor, connected: false, previous);
-        OnEquipmentDisconnected?.Invoke(EquipmentTypePatientMonitor, previous);
-        RaiseEquipmentStateEvent(EquipmentTypePatientMonitor, connected: false);
-      }
-
-      if (monitor != null)
-      {
-        LogConnectionChange(EquipmentTypePatientMonitor, connected: true, monitor);
-        OnEquipmentConnected?.Invoke(EquipmentTypePatientMonitor, monitor);
-        RaiseEquipmentStateEvent(EquipmentTypePatientMonitor, connected: true);
-      }
+      NotifyEquipmentSwap(EquipmentTypePatientMonitor, previous, monitor);
     }
 
     /// <summary>
     /// 환자 모니터가 이 환자에 대한 모니터링을 해제할 때 호출한다.
+    /// 현재 바인딩된 모니터와 동일한 모니터만 해제할 수 있다(다른 모니터의 오작동 방지).
     /// </summary>
     public void ClearMonitoringPatientMonitor(PatientMonitorController monitor)
     {
-      if (monitor != null && !ReferenceEquals(_monitoringPatientMonitor, monitor))
+      if (!ReferenceEquals(_monitoringPatientMonitor, monitor))
         return;
 
       var previous = _monitoringPatientMonitor;
       _monitoringPatientMonitor = null;
-
-      if (previous != null)
-      {
-        LogConnectionChange(EquipmentTypePatientMonitor, connected: false, previous);
-        OnEquipmentDisconnected?.Invoke(EquipmentTypePatientMonitor, previous);
-        RaiseEquipmentStateEvent(EquipmentTypePatientMonitor, connected: false);
-      }
+      NotifyEquipmentSwap(EquipmentTypePatientMonitor, previous, null);
     }
 
     // ── IV Fluid (수액백 / 급속주입기) ──
@@ -114,16 +128,26 @@ namespace TriageTrainer.Entity
     public MonoBehaviour IVFluidRightArm => _ivFluidRightArm;
 
     /// <summary>
-    /// IV 수액 연결을 설정한다.
+    /// IV 수액 연결을 설정한다. 기존 연결이 있으면 해제 후 새 연결로 교체한다.
     /// </summary>
     /// <param name="isLeftArm">true=좌측 팔, false=우측 팔</param>
-    /// <param name="fluidSource">수액 공급원 컴포넌트(침대 또는 급속주입기)</param>
+    /// <param name="fluidSource">수액 공급원 컴포넌트(침대 또는 급속주입기). null이면 해제.</param>
     public void SetIVFluidConnection(bool isLeftArm, MonoBehaviour fluidSource)
     {
       if (isLeftArm)
-        SetIVFluidConnectionInternal(ref _ivFluidLeftArm, EquipmentTypeIVFluidLeftArm, fluidSource);
+      {
+        var previous = _ivFluidLeftArm;
+        if (ReferenceEquals(previous, fluidSource)) return;
+        _ivFluidLeftArm = fluidSource;
+        NotifyEquipmentSwap(EquipmentTypeIVFluidLeftArm, previous, fluidSource);
+      }
       else
-        SetIVFluidConnectionInternal(ref _ivFluidRightArm, EquipmentTypeIVFluidRightArm, fluidSource);
+      {
+        var previous = _ivFluidRightArm;
+        if (ReferenceEquals(previous, fluidSource)) return;
+        _ivFluidRightArm = fluidSource;
+        NotifyEquipmentSwap(EquipmentTypeIVFluidRightArm, previous, fluidSource);
+      }
     }
 
     /// <summary>
@@ -132,33 +156,7 @@ namespace TriageTrainer.Entity
     /// <param name="isLeftArm">true=좌측 팔, false=우측 팔</param>
     public void ClearIVFluidConnection(bool isLeftArm)
     {
-      if (isLeftArm)
-        SetIVFluidConnectionInternal(ref _ivFluidLeftArm, EquipmentTypeIVFluidLeftArm, null);
-      else
-        SetIVFluidConnectionInternal(ref _ivFluidRightArm, EquipmentTypeIVFluidRightArm, null);
-    }
-
-    private void SetIVFluidConnectionInternal(ref MonoBehaviour slot, string equipmentType, MonoBehaviour fluidSource)
-    {
-      if (ReferenceEquals(slot, fluidSource))
-        return;
-
-      var previous = slot;
-      slot = fluidSource;
-
-      if (previous != null)
-      {
-        LogConnectionChange(equipmentType, connected: false, previous);
-        OnEquipmentDisconnected?.Invoke(equipmentType, previous);
-        RaiseEquipmentStateEvent(equipmentType, connected: false);
-      }
-
-      if (fluidSource != null)
-      {
-        LogConnectionChange(equipmentType, connected: true, fluidSource);
-        OnEquipmentConnected?.Invoke(equipmentType, fluidSource);
-        RaiseEquipmentStateEvent(equipmentType, connected: true);
-      }
+      SetIVFluidConnection(isLeftArm, null);
     }
 
     // ── Wall Suction (벽면 석션) — future use ──
@@ -175,19 +173,7 @@ namespace TriageTrainer.Entity
 
       var previous = _connectedWallSuction;
       _connectedWallSuction = suction;
-
-      if (suction != null)
-      {
-        LogConnectionChange(EquipmentTypeWallSuction, connected: true, suction);
-        OnEquipmentConnected?.Invoke(EquipmentTypeWallSuction, suction);
-        RaiseEquipmentStateEvent(EquipmentTypeWallSuction, connected: true);
-      }
-      else if (previous != null)
-      {
-        LogConnectionChange(EquipmentTypeWallSuction, connected: false, previous);
-        OnEquipmentDisconnected?.Invoke(EquipmentTypeWallSuction, previous);
-        RaiseEquipmentStateEvent(EquipmentTypeWallSuction, connected: false);
-      }
+      NotifyEquipmentSwap(EquipmentTypeWallSuction, previous, suction);
     }
 
     public void ClearConnectedWallSuction()
@@ -209,19 +195,7 @@ namespace TriageTrainer.Entity
 
       var previous = _connectedOxyflowmeter;
       _connectedOxyflowmeter = flowmeter;
-
-      if (flowmeter != null)
-      {
-        LogConnectionChange(EquipmentTypeOxyflowmeter, connected: true, flowmeter);
-        OnEquipmentConnected?.Invoke(EquipmentTypeOxyflowmeter, flowmeter);
-        RaiseEquipmentStateEvent(EquipmentTypeOxyflowmeter, connected: true);
-      }
-      else if (previous != null)
-      {
-        LogConnectionChange(EquipmentTypeOxyflowmeter, connected: false, previous);
-        OnEquipmentDisconnected?.Invoke(EquipmentTypeOxyflowmeter, previous);
-        RaiseEquipmentStateEvent(EquipmentTypeOxyflowmeter, connected: false);
-      }
+      NotifyEquipmentSwap(EquipmentTypeOxyflowmeter, previous, flowmeter);
     }
 
     public void ClearConnectedOxyflowmeter()
@@ -237,32 +211,23 @@ namespace TriageTrainer.Entity
     /// <summary>
     /// 침대 연결 변경 시 기존 SetCurrentBed() 에서 호출되는 브리지.
     /// EquipmentConnected/Disconnected 이벤트와 로그를 발생시킨다.
+    /// <c>SetCurrentBed</c> 내부에서만 호출되어야 한다(private).
     /// </summary>
-    internal void NotifyBedConnectionChanged(MovingPatientBedController previousBed, MovingPatientBedController newBed)
+    private void NotifyBedConnectionChanged(MovingPatientBedController previousBed, MovingPatientBedController newBed)
     {
-      if (ReferenceEquals(previousBed, newBed))
-        return;
-
-      if (previousBed != null)
-      {
-        LogConnectionChange(EquipmentTypeBed, connected: false, previousBed);
-        OnEquipmentDisconnected?.Invoke(EquipmentTypeBed, previousBed);
-        RaiseEquipmentStateEvent(EquipmentTypeBed, connected: false);
-      }
-
-      if (newBed != null)
-      {
-        LogConnectionChange(EquipmentTypeBed, connected: true, newBed);
-        OnEquipmentConnected?.Invoke(EquipmentTypeBed, newBed);
-        RaiseEquipmentStateEvent(EquipmentTypeBed, connected: true);
-      }
+      NotifyEquipmentSwap(EquipmentTypeBed, previousBed, newBed);
     }
 
     // ── Logging ──
 
+    /// <summary>
+    /// 장비 연결 변경을 로그로 기록한다. Unity fake-null(파괴된 MonoBehaviour)을 안전하게 처리한다.
+    /// </summary>
     private void LogConnectionChange(string equipmentType, bool connected, MonoBehaviour equipment)
     {
-      string equipmentName = equipment != null ? equipment.gameObject.name : "(null)";
+      // Unity의 == 연산자는 파괴된 오브젝트를 null로 판정하므로,
+      // C# ReferenceEquals 대신 == null 을 사용해 fake-null을 방어한다.
+      string equipmentName = (equipment == null) ? "(null)" : equipment.gameObject.name;
       string action = connected ? "connected" : "disconnected";
       string message = $"Equipment {action}: patient='{Identifier}' type={equipmentType} equipment={equipmentName}";
 
@@ -308,8 +273,9 @@ namespace TriageTrainer.Entity
 
     private static string FormatRef(object obj)
     {
+      if (obj is MonoBehaviour mb)
+        return mb == null ? "(destroyed)" : mb.gameObject.name;
       if (obj == null) return "(not connected)";
-      if (obj is MonoBehaviour mb) return mb.gameObject.name;
       return obj.ToString();
     }
   }

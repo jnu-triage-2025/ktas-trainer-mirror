@@ -1,3 +1,4 @@
+using System;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.ItemSystem;
 using UnityEngine;
@@ -12,13 +13,23 @@ namespace MultiplayerInfrastructure.Registry
 
     /// <summary>
     /// identifier에 해당하는 아이콘 스프라이트를 반환합니다.
+    /// <see cref="GetOrLoadIconSprite(string, Type)"/> 를 사용할 수 없는 경우에만 사용합니다.
+    /// </summary>
+    public static Sprite GetOrLoadIconSprite(string identifier)
+      => GetOrLoadIconSprite(identifier, null);
+
+    /// <summary>
+    /// identifier에 해당하는 아이콘 스프라이트를 반환합니다.
     ///
     /// 조회 우선순위:
     ///   1. IconSprite 레지스트리 (이미 등록된 Sprite 또는 string 경로로부터 지연 로드)
     ///   2. Resources/{DefaultsItemRegistry.ItemTexturesPath}/{identifier} 에서 직접 로드
     ///   3. DefaultsResource.FallbackSprite 반환
+    ///
+    /// <paramref name="itemType"/> 을 전달하면 <see cref="IntendedMissingItemSpriteAttribute"/>
+    /// 기반 Type 검사를 우선 수행하여 더 정확한 억제 판정이 가능합니다.
     /// </summary>
-    public static Sprite GetOrLoadIconSprite(string identifier)
+    public static Sprite GetOrLoadIconSprite(string identifier, Type itemType)
     {
       if (string.IsNullOrWhiteSpace(identifier))
         return DefaultsResource.FallbackSprite;
@@ -35,15 +46,23 @@ namespace MultiplayerInfrastructure.Registry
         return sprite;
       }
 
-      if (!ItemMissingAssetSuppression.ShouldSuppressSpriteMissingWarning(identifier))
+      // 3. 억제 판정: Type 기반(정확) → identifier 기반(폴백)
+      bool suppressed = itemType != null
+        ? ItemMissingAssetSuppression.ShouldSuppressSpriteMissingWarning(itemType)
+        : ItemMissingAssetSuppression.ShouldSuppressSpriteMissingWarning(identifier);
+
+      if (!suppressed)
       {
+        string hint = itemType != null
+          ? $"{itemType.Name} 클래스에 [IntendedMissingItemSprite] 특성을 적용하세요."
+          : $"의도된 누락이면 해당 Item 클래스에 [IntendedMissingItemSprite] 특성을 적용하거나, " +
+            $"Item 클래스가 아닌 식별자라면 " +
+            $"{nameof(ItemMissingAssetSuppression)}.{nameof(ItemMissingAssetSuppression.RegisterSuppressedSpriteIdentifier)}" +
+            $"(\"{identifier}\") 로 등록하세요.";
+
         Debug.LogWarning(
           $"[Registry] IconSprite '{identifier}' 를 찾지 못했습니다. " +
-          $"경로: Resources/{DefaultsItemRegistry.ItemTexturesPath}/{identifier} " +
-          $"의도된 누락이면 해당 Item 클래스에 [IntendedMissingItemSprite] 특성을 적용하거나, " +
-          $"Item 클래스가 아닌 식별자라면 " +
-          $"{nameof(ItemMissingAssetSuppression)}.{nameof(ItemMissingAssetSuppression.RegisterSuppressedSpriteIdentifier)}" +
-          $"(\"{identifier}\") 로 등록하세요.");
+          $"경로: Resources/{DefaultsItemRegistry.ItemTexturesPath}/{identifier} " + hint);
       }
       return DefaultsResource.FallbackSprite;
     }

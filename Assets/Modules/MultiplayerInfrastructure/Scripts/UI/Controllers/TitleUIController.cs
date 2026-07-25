@@ -151,7 +151,26 @@ namespace MultiplayerInfrastructure.UI
       _titleElement.ActionbarOpacity = 1f;
       _actionbarActive = !string.IsNullOrWhiteSpace(actionbar);
       UpdateRootVisibility();
+
+      // UI Toolkit은 같은 프레임엔 style이 확정되지 않으므로 1프레임 뒤에 layout/visibility 검증.
+      StartCoroutine(LogActionbarResolvedStateDeferred());
       Debug.Log($"[TitleUI][DBG] ShowPersistentActionbar text=\"{actionbar}\" active={_actionbarActive}", this);
+    }
+
+    private System.Collections.IEnumerator LogActionbarResolvedStateDeferred()
+    {
+      yield return null;
+      if (_titleElement == null)
+      {
+        Debug.Log("[TitleUI][DBG] deferred state: _titleElement is null", this);
+        yield break;
+      }
+      var ab = _titleElement.Q<Label>(name: "actionbar-label");
+      Debug.Log($"[TitleUI][DBG] resolved state: root.visible={_titleElement.visible} root.display={_titleElement.resolvedStyle.display} root.op={_titleElement.resolvedStyle.opacity} root.classHidden={_titleElement.ClassListContains("title-ui--hidden")}", this);
+      if (ab != null)
+        Debug.Log($"[TitleUI][DBG] actionbar resolved: visible={ab.visible} display={ab.resolvedStyle.display} opacity={ab.resolvedStyle.opacity} classHidden={ab.ClassListContains("is-hidden")} worldBound={ab.worldBound}", this);
+      else
+        Debug.Log("[TitleUI][DBG] actionbar label lookup by name FAILED (Q<Label>(actionbar-label))", this);
     }
 
     public void ClearTitle()

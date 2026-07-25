@@ -46,8 +46,12 @@ namespace MultiplayerInfrastructure.Entity
     private int _minimumMovementDivisor = 1;
     private TitleUIController _titleUI;
 
-    /// <summary>로컬 참여자가 탑승한 프레임 번호(--1 이면 미참여). 탑승 시 이미 눌려 있던 LeftShift 로 인한 즉시 퇴장을 막는 데 사용한다.</summary>
-    private int _lastEnterFrame = -1;
+    /// <summary>
+    /// 종료 키(LeftShift) 상태를 추적하여 "탑승과 동시/직후에 무의미하게 잡힌 종료 키"로 인한 즉시 퇴장을 막는다.
+    /// - <c>false</c>: 탑승 시 LeftShift 가 눌려 있었거나, 아직 한 번도 release 된 적이 없는 상태. LeftShift down 을 퇴장으로 처리하지 않는다.
+    /// - <c>true</c>: LeftShift 가 release 된 이후 다시 down edge 가 들어와야 퇴장을 허용한다.
+    /// </summary>
+    private bool _exitKeyReady;
 
     public event Action<int> ParticipantAssigned;
 
@@ -325,7 +329,7 @@ namespace MultiplayerInfrastructure.Entity
       player.AlignYawTo(GetForwardDirection());
       player.SetForcedFollowAnchor(participant.AttachPoint);
       player.RefreshInteractableHintsNow();
-      _lastEnterFrame = Time.frameCount;
+      _exitKeyReady = false;
       Debug.Log($"[MinecraftBoatLike][DBG] EnterLocal called player={player.GetInstanceID()} isOwner={player.IsOwner} exitHint=\"{_exitHint}\" networkOnly={IsClientStarted || IsServerStarted} leftShiftHeld={Input.GetKey(KeyCode.LeftShift)}", this);
       if (player.IsOwner)
       {
@@ -351,18 +355,23 @@ namespace MultiplayerInfrastructure.Entity
 
     private void HandleLocalExitInput()
     {
-      if (!Input.GetKeyDown(KeyCode.LeftShift))
-        return;
-
-      // 탑승과 같은 프레임에 잡힌 LeftShift down edge는 무시한다.
-      // 플레이어가 달리기를 유지한 채 보트/침대에 탑승(interact)하는 경우,
-      // EnterLocal 직후 이 Update 가 같은 프레임에 LeftShift down 을 잡아
-      // 즉시 퇴장(ExitLocal)시키고 actionbar 를 clear 하는 경쟁이 발생한다.
-      if (Time.frameCount == _lastEnterFrame)
+      // LeftShift 가 release 된 적이 있어야 다시 down edge 일 때만 퇴장을 허용한다.
+      // 이렇게 하면:
+      // 1) 보트/침대에 탑승한 동일/직후 프레임에 이미 눌려 있던 LeftShift down edge 가 잡혀 즉시 퇴장(actionbar clear)되는 문제,
+      // 2) 탑승 직후 무의식적으로 LeftShift 를 건드렸을 때 actionbar 가 사라지는 문제를 막는다.
+      // LeftShift 가 눌려 있다가 떼어지는 순간 == true 로 전환되어 다음 down edge 부터 유효.
+      if (!_exitKeyReady)
       {
-        Debug.Log($"[MinecraftBoatLike][DBG] HandleLocalExitInput LeftShift-Down SUPPRESSED on enter-frame={Time.frameCount}", this);
+        if (Input.GetKeyUp(KeyCode.LeftShift))
+        {
+          _exitKeyReady = true;
+          Debug.Log("[MinecraftBoatLike][DBG] ExitKey armed (LeftShift released)", this);
+        }
         return;
       }
+
+      if (!Input.GetKeyDown(KeyCode.LeftShift))
+        return;
 
       bool anyOwner = false;
       foreach (var pair in _localParticipants)

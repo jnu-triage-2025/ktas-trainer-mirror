@@ -178,7 +178,7 @@ namespace MultiplayerInfrastructure.ItemSystem
       CurrentColor = UnityEngine.ColorUtility.TryParseHtmlString(Color, out var parsed)
         ? parsed
         : UnityEngine.Color.white;
-      CurrentItemIconTexture = Registry.Registry.GetOrLoadIconSprite(Identifier);
+      CurrentItemIconTexture = Registry.Registry.GetOrLoadIconSprite(Identifier, GetType());
 
       // Stack
       IsCurrentlyStackable = IsStackable;
