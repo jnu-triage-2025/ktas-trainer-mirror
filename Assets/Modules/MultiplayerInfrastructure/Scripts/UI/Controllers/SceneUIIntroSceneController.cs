@@ -79,6 +79,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void Awake()
     {
+      ApplyIntroCursorPolicy();
       EnsureDiscoveryService();
 
       var doc = GetComponent<UIDocument>();
@@ -149,6 +150,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void OnEnable()
     {
+      ApplyIntroCursorPolicy();
       InvokeRepeating(nameof(RefreshSessions), 0.5f, 1.0f);
     }
 
@@ -480,6 +482,12 @@ namespace MultiplayerInfrastructure.UI
       }
 
       SceneManager.LoadScene(ingameSceneName);
+    }
+
+    private static void ApplyIntroCursorPolicy()
+    {
+      UnityEngine.Cursor.lockState = CursorLockMode.None;
+      UnityEngine.Cursor.visible = true;
     }
   }
 }

@@ -390,7 +390,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": false,
       "ttsVoiceIdentifier": null,
       "identifier": "D_TUT_HAT_STARTING_NO_2",
       "nodeType": "Dialogue",

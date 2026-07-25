@@ -2,7 +2,7 @@
 
 ## 인증 키 발급받기
 
-![](./_static/timelyai-settings.png)
+![](./_static/timelyai/timelyai-settings.png)
 
 [전남대학교 AI 8종 서비스의 API 키 발급 페이지](https://aioni.jnu.ac.kr/jnu/settings/api-key)에서 API 키를 발급받습니다.  
 
@@ -10,13 +10,13 @@
 
 [Kilo Code 익스텐션](https://marketplace.visualstudio.com/items?itemName=kilocode.Kilo-Code)을 Visual Studio Code에 설치합니다.  
 
-![](./_static/kilocode-tab-btn.png)  
+![](./_static/timelyai/kilocode-tab-btn.png)  
 
-![](./_static/kilocode-settings-btn.png)  
+![](./_static/timelyai/kilocode-settings-btn.png)  
 
 설치 후, Visual Studio Code 좌측에서 Kilo Code 탭을 열어, Kilo Code 설정에 접근합니다.  
 
-![](./_static/kilocode-settings-provider-custom.png)  
+![](./_static/timelyai/kilocode-settings-provider-custom.png)  
 
 이어서 Kilo Code 설정 > Provider > Custom provider를 `Connect` 합니다.
 
@@ -30,7 +30,7 @@
 
 \*: 자유롭게 수정 가능
 
-![](./_static/kilocode-models-found.png)  
+![](./_static/timelyai/kilocode-models-found.png)  
 
 위 정보를 입력하면 아래의 Models 항목에 자동으로 AI 모델 목록이 로드됩니다. Add \# model(s) 합니다. (최초 설정 시에는 수백개 모델 정보가 로드됨)
 
@@ -38,7 +38,7 @@
 
 ## AI 사용
 
-![](./_static/kilocode-dashboard.png)  
+![](./_static/timelyai/kilocode-dashboard.png)  
 
 모델을 선택하고 프롬프트를 입력합니다.  
 
