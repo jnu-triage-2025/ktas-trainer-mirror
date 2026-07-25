@@ -11,7 +11,7 @@ namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
   /// 프로젝트 내 모든 시나리오 그래프(JSON)를 스캔하여, PlayTTS 플래그가 켜져 있고
-  /// 변수를 포함하지 않는(=bake 가능한) 인라인 텍스트(Dialogue/Choice/Quiz 콘텐츠)를 수집하고
+  /// 변수를 포함하지 않는(=bake 가능한) 인라인 텍스트(Dialogue/DisinteractableDialogue/Choice/Quiz 콘텐츠)를 수집하고
   /// 사전 합성(bake)한다.
   ///
   /// 이 클래스는 에디터 전용(<c>#if UNITY_EDITOR</c>)이지만 <c>Editor</c> 폴더 밖(런타임 어셈블리)에
@@ -214,6 +214,11 @@ namespace MultiplayerInfrastructure.Scenario
           case ScenarioDialogueNode dialogue when dialogue.PlayTTS:
             AddJob(graph.Identifier, dialogue.Identifier, dialogue.DialogueContent, streamingAssetsPath, result,
               voiceIdentifier: dialogue.TtsVoiceIdentifier);
+            break;
+
+          case ScenarioDisinteractableDialogueNode disinteractable when disinteractable.PlayTTS:
+            AddJob(graph.Identifier, disinteractable.Identifier, disinteractable.DialogueContent, streamingAssetsPath, result,
+              voiceIdentifier: disinteractable.TtsVoiceIdentifier);
             break;
 
           case ScenarioChoiceNode choice when choice.PlayTTS:

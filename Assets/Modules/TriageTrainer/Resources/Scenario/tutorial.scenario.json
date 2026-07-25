@@ -244,6 +244,8 @@
         "value": 0.20000000000000001,
         "unit": "Seconds"
       },
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
       "identifier": "D_TUT_CALL",
       "nodeType": "DisinteractableDialogue",
       "nextIdentifier": "Q_TUT_FIND_HAT_ADD"
@@ -479,19 +481,19 @@
       "nextIdentifier": "CONFIG_CLOCK_SUBMISSION"
     },
     "GIVE_CHAIN": {
-      "commandLine": "give @s small_chain 1",
+      "commandLine": "give small_chain 1 @s",
       "identifier": "GIVE_CHAIN",
       "nodeType": "ExecuteCommand",
       "nextIdentifier": "D_TUT_CRAFTING_HINT"
     },
     "GIVE_GEAR": {
-      "commandLine": "give @s small_gear 5",
+      "commandLine": "give small_gear 5 @s",
       "identifier": "GIVE_GEAR",
       "nodeType": "ExecuteCommand",
       "nextIdentifier": "GIVE_CHAIN"
     },
     "GIVE_TIN": {
-      "commandLine": "give @s tin_ingot 3",
+      "commandLine": "give tin_ingot 3 @s",
       "identifier": "GIVE_TIN",
       "nodeType": "ExecuteCommand",
       "nextIdentifier": "GIVE_GEAR"
@@ -679,7 +681,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.tutorial_delivery_package_acquired"
+              "registryIdentifier": "sig.tutorial_delivery_package"
             }
           ]
         }

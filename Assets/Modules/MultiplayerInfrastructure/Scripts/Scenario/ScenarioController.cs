@@ -1443,6 +1443,8 @@ namespace MultiplayerInfrastructure.Scenario
           node.SpeakerName,
           node.DialogueContent,
           node.PortraitSpriteIdentifier);
+        if (node.PlayTTS)
+          PlayInlineTTS(node.Identifier, node.DialogueContent, node.TtsVoiceIdentifier);
         yield return FadeDisinteractableDialogue(0f, 1f, fadeInSeconds);
       }
       else
@@ -2753,7 +2755,7 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     /// <summary>
-    /// 시나리오 그래프의 인라인 텍스트(Dialogue/Choice/Quiz 콘텐츠)를 TTS로 재생한다.
+    /// 시나리오 그래프의 인라인 텍스트(Dialogue/DisinteractableDialogue/Choice/Quiz 콘텐츠)를 TTS로 재생한다.
     /// baked WAV가 있으면 우선 재생하고, 없으면 즉석 합성한다.
     /// TTSService/AudioSource 참조가 없거나 텍스트가 비어 있으면 아무 작업도 하지 않는다.
     /// 텍스트 표시와 병렬로 재생되며(대기하지 않음), 다음 노드 진행을 막지 않는다.
@@ -5104,9 +5106,15 @@ namespace MultiplayerInfrastructure.Scenario
         {
           Debug.LogWarning($"[ScenarioController] ExecuteCommand node '{node.Identifier}' could not resolve ChatService; command skipped.");
         }
-        else if (!chatService.TryExecuteSystemCommand(node.CommandLine.Trim(), out var result))
+        else
         {
-          Debug.LogWarning($"[ScenarioController] ExecuteCommand node '{node.Identifier}' failed: {result}");
+          // 시나리오 owner의 연결을 실행 컨텍스트로 전달해, 커맨드의 대상 셀렉터(@s 등)가
+          // 시나리오 대상 플레이어를 가리키도록 한다. 권한은 시스템 권한으로 우회된다.
+          var ownerConnection = ResolveOwnerConnection();
+          if (!chatService.TryExecuteSystemCommand(node.CommandLine.Trim(), ownerConnection, out var result))
+          {
+            Debug.LogWarning($"[ScenarioController] ExecuteCommand node '{node.Identifier}' failed: {result}");
+          }
         }
       }
 
@@ -5120,8 +5128,45 @@ namespace MultiplayerInfrastructure.Scenario
         return _chatService;
       }
 
-      Registry.Registry.TryGet<ChatService>(RegistryType.Service, Registry.Registry.TypeKey<ChatService>(), out _chatService);
+      if (Registry.Registry.TryGet<ChatService>(RegistryType.Service, Registry.Registry.TypeKey<ChatService>(), out _chatService))
+      {
+        return _chatService;
+      }
+
+      // ChatService가 어떤 GameObject에 배치되어 있든(분리 배치 포함) 해결할 수 있도록
+      // 레지스트리 미등록 시 씬 전역 검색으로 폴백한다.
+      _chatService = FindFirstObjectByType<ChatService>(FindObjectsInactive.Include);
       return _chatService;
+    }
+
+    /// <summary>
+    /// 시나리오 owner 클라이언트의 서버 측 연결을 반환한다. owner가 없으면(시스템 시나리오)
+    /// 호스트/오프라인의 로컬 연결을 폴백으로 사용하며, 서버 전용 컨텍스트에서는 null을 반환한다.
+    /// </summary>
+    private NetworkConnection ResolveOwnerConnection()
+    {
+      if (_scenarioOwnerClientId.HasValue)
+      {
+        var serverManager = InstanceFinder.ServerManager;
+        if (serverManager != null)
+        {
+          foreach (var kvp in serverManager.Clients)
+          {
+            var candidate = kvp.Value;
+            if (candidate != null && candidate.ClientId == _scenarioOwnerClientId.Value)
+            {
+              return candidate;
+            }
+          }
+        }
+
+        return null;
+      }
+
+      // ClientManager.Connection은 미접속 시 null이 아니라 EmptyConnection(ClientId -1)이므로
+      // IsValid로 걸러내지 않으면 시스템 메시지/RPC가 잘못된 연결로 발송된다.
+      var localConnection = InstanceFinder.ClientManager?.Connection;
+      return localConnection != null && localConnection.IsValid ? localConnection : null;
     }
 
     private void ReportValidatorFailure(ScenarioValidatorNode node, string reason)

@@ -29,12 +29,32 @@ namespace MultiplayerInfrastructure.Chat
     private readonly Dictionary<int, float> _lastMessageTimes = new();
     private readonly Dictionary<int, int> _lastProblemSheetGradeByClientId = new();
 
+    /// <summary>
+    /// 시스템 권한 실행(TryExecuteSystemCommand) 재진입 깊이. 0보다 크면 커맨드 정의가
+    /// 발생시킨 시스템 메시지를 플레이어 채팅창이 아닌 서버 로그로만 기록한다.
+    /// (시나리오 ExecuteCommand 노드가 owner 컨텍스트로 실행되더라도 성공/진행 메시지를
+    /// 플레이어에게 스팸하지 않도록 한다.)
+    /// </summary>
+    private int _systemExecutionContextDepth;
+
     void Awake()
     {
+      // ChatService / ChatCommandService / ChatUIController 는 서로 다른 GameObject에
+      // 배치될 수 있다. 직렬화된 참조 → 같은 GameObject → 씬 전역 순으로 해결한다.
+      // (GetComponent는 비활성 GameObject의 컴포넌트도 반환하므로, 전역 fallback도
+      // 비활성 객체를 포함해 동일하게 동작하도록 Include를 사용한다.)
+      Registry.Registry.Register(RegistryType.Service, Registry.Registry.TypeKey<ChatService>(), this);
+
       if (_uiController == null)
         _uiController = GetComponent<ChatUIController>();
+      if (_uiController == null)
+        _uiController = FindFirstObjectByType<ChatUIController>(FindObjectsInactive.Include);
+
       if (_commandService == null)
         _commandService = GetComponent<ChatCommandService>();
+      if (_commandService == null)
+        _commandService = FindFirstObjectByType<ChatCommandService>(FindObjectsInactive.Include);
+
       if (_datapackRuntime == null)
         _datapackRuntime = GetComponent<DatapackRuntimeService>();
 
@@ -50,6 +70,22 @@ namespace MultiplayerInfrastructure.Chat
       _commandService.Initialize(this);
 
       _uiController.OnSubmitted += HandleLocalSubmission;
+    }
+
+    private void OnDestroy()
+    {
+      // 분리 배치 시 ChatUIController는 ChatService(NetworkObject)보다 오래 생존할 수 있으므로
+      // 구독을 명시적으로 해제한다. (같은 GameObject 구성에서도 재스폰 중복 구독을 방지한다.)
+      if (_uiController != null)
+        _uiController.OnSubmitted -= HandleLocalSubmission;
+
+      // 재스폰 등으로 새 인스턴스가 이미 등록되었다면 그 등록을 지우지 않도록
+      // 현재 등록된 인스턴스가 자신일 때만 해제한다.
+      if (Registry.Registry.TryGet<ChatService>(RegistryType.Service, Registry.Registry.TypeKey<ChatService>(), out var registered)
+          && registered == this)
+      {
+        Registry.Registry.Unregister(RegistryType.Service, Registry.Registry.TypeKey<ChatService>());
+      }
     }
     
     private void HandleLocalSubmission(string raw)
@@ -278,7 +314,8 @@ namespace MultiplayerInfrastructure.Chat
 
     public void SendSystemMessage(NetworkConnection conn, string message)
     {
-      if (conn != null)
+      // 시스템 권한 실행 중에는 메시지를 대상 플레이어에게 보내지 않고 서버 로그로만 기록한다.
+      if (conn != null && _systemExecutionContextDepth == 0)
         TargetReceiveSystemMessage(conn, message);
       else
         Debug.Log($"[System] {message}");
@@ -472,14 +509,42 @@ namespace MultiplayerInfrastructure.Chat
 
     public bool TryExecuteSystemCommand(string commandLine, out string result)
     {
-      // 서버 콘솔 커맨드 로그 기록
-      GameLogService.WriteCommand($"/{commandLine} (by server)", "server");
-      return TryExecuteCommandInternal(commandLine, null, out result);
+      return TryExecuteSystemCommand(commandLine, null, out result);
     }
 
-    private bool TryExecuteCommandInternal(string commandLine, NetworkConnection sender, out string result)
+    /// <summary>
+    /// 서버 권한으로 커맨드를 실행한다. <paramref name="executionContext"/>는 대상 셀렉터(@s 등)
+    /// 해결에만 사용되며, 권한 검사는 수행되지 않는다(시스템 권한 실행). 실행 중 커맨드 정의가
+    /// 발생시킨 시스템 메시지는 플레이어 채팅창이 아닌 서버 로그로 기록된다.
+    /// 시나리오 ExecuteCommand 노드처럼 "서버가 특정 플레이어를 대신해" 실행하는 경우
+    /// 해당 플레이어의 연결을 컨텍스트로 전달한다.
+    /// </summary>
+    public bool TryExecuteSystemCommand(string commandLine, NetworkConnection executionContext, out string result)
     {
-      if (!TryExecuteCommandLineWithPipeline(commandLine, sender, out var outputValues, out var error, out bool alreadyReported))
+      // 서버 콘솔 커맨드 로그 기록
+      GameLogService.WriteCommand($"/{commandLine} (by server)", "server");
+
+      _systemExecutionContextDepth++;
+      try
+      {
+        return TryExecuteCommandInternal(commandLine, executionContext, out result, bypassPermissionCheck: true);
+      }
+      finally
+      {
+        _systemExecutionContextDepth--;
+      }
+    }
+
+    private bool TryExecuteCommandInternal(string commandLine, NetworkConnection sender, out string result, bool bypassPermissionCheck = false)
+    {
+      if (_commandService == null)
+      {
+        result = "ChatCommandService is not available.";
+        SendSystemMessage(sender, result);
+        return false;
+      }
+
+      if (!TryExecuteCommandLineWithPipeline(commandLine, sender, out var outputValues, out var error, out bool alreadyReported, bypassPermissionCheck))
       {
         result = string.IsNullOrWhiteSpace(error) ? "Command execution failed." : error;
 
@@ -498,7 +563,7 @@ namespace MultiplayerInfrastructure.Chat
       return true;
     }
 
-    private bool TryExecuteCommandLineWithPipeline(string commandLine, NetworkConnection sender, out List<string> outputValues, out string error, out bool alreadyReported)
+    private bool TryExecuteCommandLineWithPipeline(string commandLine, NetworkConnection sender, out List<string> outputValues, out string error, out bool alreadyReported, bool bypassPermissionCheck = false)
     {
       outputValues = new List<string>();
       error = string.Empty;
@@ -519,12 +584,12 @@ namespace MultiplayerInfrastructure.Chat
       }
 
       bool suppressFirstStageMessages = stages.Length > 1;
-      if (!TryExecuteParallelStage(stages[0], sender, suppressFirstStageMessages, out outputValues, out error, out alreadyReported))
+      if (!TryExecuteParallelStage(stages[0], sender, suppressFirstStageMessages, out outputValues, out error, out alreadyReported, bypassPermissionCheck))
         return false;
 
       for (int i = 1; i < stages.Length; i++)
       {
-        if (!TryExecutePipeTargetStage(stages[i], outputValues, sender, out outputValues, out error, out alreadyReported))
+        if (!TryExecutePipeTargetStage(stages[i], outputValues, sender, out outputValues, out error, out alreadyReported, bypassPermissionCheck))
           return false;
       }
 
@@ -537,7 +602,8 @@ namespace MultiplayerInfrastructure.Chat
       bool suppressSystemMessages,
       out List<string> outputValues,
       out string error,
-      out bool alreadyReported)
+      out bool alreadyReported,
+      bool bypassPermissionCheck = false)
     {
       outputValues = new List<string>();
       error = string.Empty;
@@ -552,7 +618,7 @@ namespace MultiplayerInfrastructure.Chat
 
       for (int i = 0; i < commands.Length; i++)
       {
-        if (!TryExecuteSingleCommand(commands[i], sender, suppressSystemMessages, out var values, out error, out alreadyReported))
+        if (!TryExecuteSingleCommand(commands[i], sender, suppressSystemMessages, out var values, out error, out alreadyReported, bypassPermissionCheck))
           return false;
 
         if (values != null && values.Count > 0)
@@ -568,7 +634,8 @@ namespace MultiplayerInfrastructure.Chat
       NetworkConnection sender,
       out List<string> outputValues,
       out string error,
-      out bool alreadyReported)
+      out bool alreadyReported,
+      bool bypassPermissionCheck = false)
     {
       outputValues = new List<string>();
       error = string.Empty;
@@ -599,7 +666,7 @@ namespace MultiplayerInfrastructure.Chat
         stage = resolved;
       }
 
-      if (!TryExecuteParallelStage(stage, sender, suppressSystemMessages: false, out outputValues, out error, out alreadyReported))
+      if (!TryExecuteParallelStage(stage, sender, suppressSystemMessages: false, out outputValues, out error, out alreadyReported, bypassPermissionCheck))
         return false;
 
       return true;
@@ -635,7 +702,8 @@ namespace MultiplayerInfrastructure.Chat
       bool suppressSystemMessages,
       out IReadOnlyList<string> pipelineValues,
       out string error,
-      out bool alreadyReported)
+      out bool alreadyReported,
+      bool bypassPermissionCheck = false)
     {
       pipelineValues = Array.Empty<string>();
       error = string.Empty;
@@ -657,7 +725,7 @@ namespace MultiplayerInfrastructure.Chat
       string command = parts[0];
       string[] args = parts.Length > 1 ? parts[1..] : Array.Empty<string>();
 
-      bool handled = _commandService.TryExecute(command, args, sender, suppressSystemMessages, out pipelineValues, out error);
+      bool handled = _commandService.TryExecute(command, args, sender, suppressSystemMessages, bypassPermissionCheck, out pipelineValues, out error);
       if (!handled)
       {
         error = $"Unknown command: {command}";

@@ -83,7 +83,7 @@ namespace MultiplayerInfrastructure.Scenario
       EditorGUILayout.Space(8);
       EditorGUILayout.LabelField("Scenario Inline Audio Baker", EditorStyles.boldLabel);
       EditorGUILayout.HelpBox(
-        "PlayTTS가 켜진 Dialogue/Choice/Quiz 노드의 변수 없는 인라인 텍스트를 사전 합성합니다.",
+        "PlayTTS가 켜진 Dialogue/DisinteractableDialogue/Choice/Quiz 노드의 변수 없는 인라인 텍스트를 사전 합성합니다.",
         MessageType.Info);
 
       EditorGUILayout.Space(4);

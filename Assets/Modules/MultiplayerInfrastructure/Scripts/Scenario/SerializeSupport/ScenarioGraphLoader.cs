@@ -569,6 +569,8 @@ namespace MultiplayerInfrastructure.Scenario
           FadeInDuration = dto.FadeInDuration ?? ScenarioTimeValue.Seconds(0.5d),
           DisplayDuration = dto.DisplayDuration ?? ScenarioTimeValue.Seconds(1.5d),
           FadeOutDuration = dto.FadeOutDuration ?? ScenarioTimeValue.Seconds(0.5d),
+          PlayTTS = dto.PlayTTS ?? false,
+          TtsVoiceIdentifier = dto.TtsVoiceIdentifier,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -1609,6 +1611,8 @@ namespace MultiplayerInfrastructure.Scenario
           FadeInDuration = node.FadeInDuration,
           DisplayDuration = node.DisplayDuration,
           FadeOutDuration = node.FadeOutDuration,
+          PlayTTS = node.PlayTTS ? true : (bool?)null,
+          TtsVoiceIdentifier = string.IsNullOrEmpty(node.TtsVoiceIdentifier) ? null : node.TtsVoiceIdentifier,
           NextIdentifier = node.NextIdentifier
         };
 

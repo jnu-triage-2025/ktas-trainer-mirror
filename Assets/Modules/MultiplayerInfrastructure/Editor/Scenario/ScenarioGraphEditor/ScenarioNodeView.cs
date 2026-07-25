@@ -510,6 +510,8 @@ namespace MultiplayerInfrastructure.Editor
       AddTimeValueField("Fade In", data.FadeInDuration, value => data.FadeInDuration = value);
       AddTimeValueField("Display", data.DisplayDuration, value => data.DisplayDuration = value);
       AddTimeValueField("Fade Out", data.FadeOutDuration, value => data.FadeOutDuration = value);
+      AddToggleField("Play TTS", value => data.PlayTTS = value, data.PlayTTS);
+      AddTextField("TTS Voice", value => data.TtsVoiceIdentifier = value, data.TtsVoiceIdentifier);
       AddNextIdentifierField(data);
     }
 

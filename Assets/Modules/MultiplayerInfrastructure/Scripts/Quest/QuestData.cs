@@ -122,7 +122,7 @@ namespace MultiplayerInfrastructure.Quest
   [Serializable]
   public sealed class QuestCompletionCriteria
   {
-    public const float DefaultReachDistance = 2f;
+    public const float DefaultReachDistance = 4f;
 
     public QuestCompletionCriteriaType Type { get; set; } = QuestCompletionCriteriaType.InventoryContains;
     public string ItemId { get; set; }

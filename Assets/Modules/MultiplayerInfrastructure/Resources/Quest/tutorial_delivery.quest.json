@@ -16,7 +16,7 @@
         {
           "type": "WaypointReached",
           "waypointIdentifier": "delivery-storage-spot",
-          "reachDistance": 1.5,
+          "reachDistance": 5,
           "displayTextContent": "택배 보관소로 가기",
           "onCompleteSignalIdentifier": "tutorial.quest.delivery.storage.reached",
           "conditions": []
