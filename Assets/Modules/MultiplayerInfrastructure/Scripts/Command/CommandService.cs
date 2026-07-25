@@ -62,6 +62,23 @@ namespace MultiplayerInfrastructure.Command
       out IReadOnlyList<string> pipelineValues,
       out string error)
     {
+      return TryExecute(commandName, args, sender, suppressSystemMessages, bypassPermissionCheck: false, out pipelineValues, out error);
+    }
+
+    /// <summary>
+    /// 커맨드를 실행한다. <paramref name="bypassPermissionCheck"/>가 true면 sender 컨텍스트는
+    /// 대상 셀렉터(@s 등) 해결과 메시지 라우팅에만 사용되고 권한 검사는 건너뛴다
+    /// (서버/시나리오 등 시스템 권한 실행).
+    /// </summary>
+    public bool TryExecute(
+      string commandName,
+      string[] args,
+      NetworkConnection sender,
+      bool suppressSystemMessages,
+      bool bypassPermissionCheck,
+      out IReadOnlyList<string> pipelineValues,
+      out string error)
+    {
       pipelineValues = System.Array.Empty<string>();
       error = string.Empty;
 
@@ -79,10 +96,10 @@ namespace MultiplayerInfrastructure.Command
       }
 
       // ── 권한 검사 ────────────────────────────────────────────────────────────
-      // sender == null (서버 콘솔) 또는 IsHost 이면 항상 허용.
+      // sender == null (서버 콘솔), IsHost, 또는 시스템 권한 실행(bypassPermissionCheck)이면 항상 허용.
       // 그 외 클라이언트는 PermissionService 를 통해 role 기반 검사를 수행한다.
       // Legacy RequiresAdmin flag 는 PermissionService 로드에 실패한 경우의 fallback으로 사용한다.
-      if (sender != null && !sender.IsHost)
+      if (!bypassPermissionCheck && sender != null && !sender.IsHost)
       {
         PermissionService.EnsureLoaded();
         string userIdentifier = ResolveUserIdentifier(sender);
