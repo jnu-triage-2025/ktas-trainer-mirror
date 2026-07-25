@@ -31,6 +31,12 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private float _rotationX = 0;
     
     public bool canMove = true;
+
+    // Awake 시점에 직렬화된 _walkingSpeed 값을 보관하여 /speed default 로 복원할 때 사용한다.
+    private float _defaultWalkingSpeed;
+    public float WalkingSpeed => _walkingSpeed;
+    public float DefaultWalkingSpeed => _defaultWalkingSpeed;
+
     [SerializeField] private bool _isRunning = false;
     public bool IsRunning => _isRunning;
     [SerializeField] private bool _isCursorLocked = false;
@@ -65,8 +71,32 @@ namespace MultiplayerInfrastructure.Player
     void Awake_Movement()
     {
       _characterController = GetComponent<CharacterController>();
+      _defaultWalkingSpeed = _walkingSpeed;
       InitializeCameraAttachPoint();
       LockCursor();
+    }
+
+    /// <summary>
+    /// 서버에서 걷기 속도를 변경하고 모든 클라이언트에 동기화한다.
+    /// </summary>
+    internal void ApplyWalkingSpeedServer(float value)
+    {
+      if (!IsServer) return;
+
+      _walkingSpeed = value;
+      RpcApplyWalkingSpeed(value);
+      ApplyWalkingSpeedLocal(value);
+    }
+
+    [ObserversRpc(BufferLast = true)]
+    private void RpcApplyWalkingSpeed(float value)
+    {
+      ApplyWalkingSpeedLocal(value);
+    }
+
+    private void ApplyWalkingSpeedLocal(float value)
+    {
+      _walkingSpeed = value;
     }
 
     void Update_Movement()

@@ -94,6 +94,7 @@ namespace MultiplayerInfrastructure.Permission
         {
           "help",
           "gamemode",
+          "speed",
           "give",
           "clean",
           "tag",
