@@ -1,4 +1,22 @@
-# 시나리오 그래프 작성
+# 시나리오 그래프 작업하기
+
+<table>
+    <tbody>
+        <tr colspan="2">
+            <td>목차</td>
+        </tr>
+        <tr>
+            <td>1.</td>
+            <td><a href="#일반론">일반론</a></td>
+        </tr>
+        <tr>
+            <td>2.</td>
+            <td><a href="#작업-방법">작업 방법</a></td>
+        </tr>
+    </tbody>
+</table>
+
+## 일반론
 
 시나리오 그래프를 작성하고 수정하는 데 있어서는 세 가지 방법을 사용합니다.  
 
@@ -14,7 +32,7 @@
     - 간단한 시나리오 수정
     - Visual Studio Code 상에서 수정
 
-## AI 사용
+### AI 사용
 
 ![](./_static/authoring-scenario-graph/claude-code-graph-debug.png)  
 
@@ -32,7 +50,7 @@
 
 만약 유니티에서 오류가 발생하여 게임이 제대로 실행되지 않는다면, 별다른 코멘트 없이 오류 메시지를 그대로 전달하여 문제를 수정할 수 있습니다.  
 
-## 유니티 에디터에서 Scenario Graph Editor 사용
+### 유니티 에디터에서 Scenario Graph Editor 사용
 
 ![](./_static/authoring-scenario-graph/scen-ingame.png)  
 
@@ -52,7 +70,7 @@
 
 _AI는 유니티 에디터의 전체 로그를 로드하여 문제 상황을 파악할 수 있으므로, 위와 같이 오류 메시지 일부를 복사-붙여넣기하여 지시문을 작성할 수도 있습니다._  
 
-## 시나리오 그래프의 `.scenario.json` 파일 직접 편집
+### 시나리오 그래프의 `.scenario.json` 파일 직접 편집
 
 어떤 옵션의 On/Off 설정, 구체적인 수치나 텍스트를 수정할 때는 텍스트 에디터에서 직접 값을 편집할 수도 있습니다. 특히 AI를 사용하여 시나리오 그래프를 수정하는 도중인 경우에는, 다른 두 방법(AI 사용<sup>1</sup>, Scenario Graph Editor<sup>2</sup>)은 사용하기 어려울 수 있습니다.
 
@@ -70,3 +88,23 @@ _AI는 유니티 에디터의 전체 로그를 로드하여 문제 상황을 파
 
 > [!WARNING]  
 > AI가 작업 중에 직접 수정하는 과정에서, AI가 지시문 실행 시점과 차이를 식별하게되어 작업이 평소보다 늦어질 수 있습니다. 상황에 따라 판단하여 작업하는 편이 좋습니다.  
+
+## 작업 방법
+
+게임 실행
+- 방법 1: IngameScene에서 플레이
+    - FishNet UI의 Start Server -> Start Client 차례로 클릭
+    - 클릭이 안되면 esc키 누르고 게임을 정지한 후 게임 재시작  
+      ![](./_static/authoring-scenario-graph/fishnet-ui.png)  
+- 방법 2: IntroScene에서 플레이
+    - 플레이어 이름 입력 -> "이 컴퓨터를 서버로 사용하고 접속하기"
+      ![](./_static/authoring-scenario-graph/ingame-use-local-session.png)  
+
+![](./_static/authoring-scenario-graph/ingame.png)
+
+시나리오 실행
+1. 채팅창(`t`키)을 열어 `/scenario list` 입력
+    ![](./_static/authoring-scenario-graph/ingame-scenario-list.png)  
+2. Available scenarios 목록에서 원하는 시나리오를 게임 시스템이 제대로 인식하고 있는지 확인
+3. `/scenario execute @s <시나리오 식별자>`를 입력해서 시나리오 실행
+    ![](./_static/authoring-scenario-graph/ingame-scenario-exec.png)
