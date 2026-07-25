@@ -1,8 +1,11 @@
+using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Scenario;
 
 namespace TriageTrainer.ItemDefinitions
 {
+  [IntendedMissing3DModelAttribute]
+  [IntendedMissingItemSpriteAttribute]
   public class TutorialDecoyKimGangsanMail : MedicalItem
   {
     public const string Identifier = "tutorial_delivery_decoy_kim_gangsan_mail";

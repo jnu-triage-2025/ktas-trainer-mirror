@@ -17,7 +17,7 @@ namespace MultiplayerInfrastructure.Quest
     public const string QuestIdentifier = "tutorial-move";
     public const string CompletionSignalIdentifier = "tutorial_player_moved";
 
-    private const float RequiredInputSeconds = 3f;
+    private const float RequiredInputSeconds = 2f;
     private const float MouseDeltaEpsilon = 0.0001f;
 
     private QuestManager _questManager;

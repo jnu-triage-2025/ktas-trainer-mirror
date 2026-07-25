@@ -1,5 +1,7 @@
+using MultiplayerInfrastructure.ItemSystem;
 namespace TriageTrainer.ItemDefinitions
 {
+  [IntendedMissing3DModelAttribute]
   public class SmallChain : MedicalItem
   {
     public const string Identifier = "small_chain";

@@ -46,6 +46,9 @@ namespace MultiplayerInfrastructure.Entity
     private int _minimumMovementDivisor = 1;
     private TitleUIController _titleUI;
 
+    /// <summary>로컬 참여자가 탑승한 프레임 번호(--1 이면 미참여). 탑승 시 이미 눌려 있던 LeftShift 로 인한 즉시 퇴장을 막는 데 사용한다.</summary>
+    private int _lastEnterFrame = -1;
+
     public event Action<int> ParticipantAssigned;
 
     public int Capacity => Mathf.Min(Mathf.Max(1, _maximumParticipants), _playerAttachPoints.Count, 2);
@@ -106,6 +109,8 @@ namespace MultiplayerInfrastructure.Entity
       if (player == null)
         return;
 
+      Debug.Log($"[MinecraftBoatLike][DBG] Toggle player={player.GetInstanceID()} isOwner={player.IsOwner} network={(IsClientStarted || IsServerStarted)} isServer={IsServerStarted} isLocalParticipant={IsLocalParticipant(player)}", this);
+
       if (!IsClientStarted && !IsServerStarted)
       {
         ToggleOffline(player);
@@ -113,7 +118,10 @@ namespace MultiplayerInfrastructure.Entity
       }
 
       if (player.Owner == null || !player.Owner.IsValid)
+      {
+        Debug.Log("[MinecraftBoatLike][DBG] Toggle SKIP invalid owner", this);
         return;
+      }
       if (IsServerStarted)
         ToggleOnServer(player.Owner.ClientId);
       else if (!_togglePending)
@@ -278,10 +286,14 @@ namespace MultiplayerInfrastructure.Entity
     {
       _togglePending = false;
       if (!TryGetLocalOwnerPlayer(out var player))
+      {
+        Debug.Log($"[MinecraftBoatLike][DBG] ApplyLocalParticipant no local owner player localParticipants={_localParticipants.Count}", this);
         return;
+      }
 
       int key = player.GetInstanceID();
       int handle = FindHandle(player.Owner.ClientId);
+      Debug.Log($"[MinecraftBoatLike][DBG] ApplyLocalParticipant key={key} handle={handle} participant0={_participant0.Value} participant1={_participant1.Value} containsKey={_localParticipants.ContainsKey(key)}", this);
       if (handle < 0)
       {
         if (_localParticipants.TryGetValue(key, out var existing))
@@ -300,7 +312,10 @@ namespace MultiplayerInfrastructure.Entity
     private void EnterLocal(PlayerController player, int handle)
     {
       if (handle < 0 || handle >= _playerAttachPoints.Count)
+      {
+        Debug.LogWarning($"[MinecraftBoatLike][DBG] EnterLocal SKIP handle={handle} out of range (count={_playerAttachPoints.Count}) player={(player != null)} isOwner={(player != null && player.IsOwner)}", this);
         return;
+      }
       var participant = new LocalParticipant
       {
         Player = player,
@@ -310,18 +325,25 @@ namespace MultiplayerInfrastructure.Entity
       player.AlignYawTo(GetForwardDirection());
       player.SetForcedFollowAnchor(participant.AttachPoint);
       player.RefreshInteractableHintsNow();
+      _lastEnterFrame = Time.frameCount;
+      Debug.Log($"[MinecraftBoatLike][DBG] EnterLocal called player={player.GetInstanceID()} isOwner={player.IsOwner} exitHint=\"{_exitHint}\" networkOnly={IsClientStarted || IsServerStarted} leftShiftHeld={Input.GetKey(KeyCode.LeftShift)}", this);
       if (player.IsOwner)
       {
         _titleUI ??= Registry.Registry.Get<TitleUIController>(
           RegistryType.UI, Registry.Registry.TypeKey<TitleUIController>());
+        Debug.Log($"[MinecraftBoatLike][DBG] EnterLocal resolved _titleUI={(_titleUI != null)}", this);
         _titleUI?.ShowPersistentActionbar(_exitHint);
+        Debug.Log($"[MinecraftBoatLike][DBG] EnterLocal ShowPersistentActionbar invoked", this);
       }
     }
 
     private void ExitLocal(LocalParticipant participant)
     {
       if (participant?.Player != null && participant.Player.IsOwner)
+      {
+        Debug.Log($"[MinecraftBoatLike][DBG] ExitLocal called player={participant.Player.GetInstanceID()} isOwner={participant.Player.IsOwner}", this);
         _titleUI?.ClearActionbar();
+      }
 
       participant?.Player?.ClearForcedFollowAnchor(participant.AttachPoint);
       participant?.Player?.RefreshInteractableHintsNow();
@@ -331,6 +353,21 @@ namespace MultiplayerInfrastructure.Entity
     {
       if (!Input.GetKeyDown(KeyCode.LeftShift))
         return;
+
+      // 탑승과 같은 프레임에 잡힌 LeftShift down edge는 무시한다.
+      // 플레이어가 달리기를 유지한 채 보트/침대에 탑승(interact)하는 경우,
+      // EnterLocal 직후 이 Update 가 같은 프레임에 LeftShift down 을 잡아
+      // 즉시 퇴장(ExitLocal)시키고 actionbar 를 clear 하는 경쟁이 발생한다.
+      if (Time.frameCount == _lastEnterFrame)
+      {
+        Debug.Log($"[MinecraftBoatLike][DBG] HandleLocalExitInput LeftShift-Down SUPPRESSED on enter-frame={Time.frameCount}", this);
+        return;
+      }
+
+      bool anyOwner = false;
+      foreach (var pair in _localParticipants)
+        if (pair.Value?.Player != null && pair.Value.Player.IsOwner) { anyOwner = true; break; }
+      Debug.Log($"[MinecraftBoatLike][DBG] HandleLocalExitInput LeftShift-Down fired localParticipants={_localParticipants.Count} anyOwner={anyOwner}", this);
       foreach (var pair in _localParticipants)
       {
         if (pair.Value?.Player == null || !pair.Value.Player.IsOwner)

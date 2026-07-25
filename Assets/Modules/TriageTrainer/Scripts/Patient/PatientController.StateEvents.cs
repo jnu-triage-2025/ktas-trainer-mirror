@@ -32,6 +32,8 @@ namespace TriageTrainer.Entity
   /// <item><term>TreatmentRemoved</term><term><see cref="OnTreatmentRemoved"/></term><term>처치 표시 항목명</term></item>
   /// <item><term>VitalChanged</term><term><see cref="OnVitalChanged"/></term><term>(없음)</term></item>
   /// <item><term>TriageSubmitted</term><term><see cref="OnTriageSubmitted"/></term><term>트리아지 등급명(<see cref="TriageLevel"/>)</term></item>
+  /// <item><term>EquipmentConnected</term><term>(C# 이벤트 없음)</term><term>장비 유형명(<see cref="EquipmentTypeBed"/>/<see cref="EquipmentTypePatientMonitor"/> 등)</term></item>
+  /// <item><term>EquipmentDisconnected</term><term>(C# 이벤트 없음)</term><term>장비 유형명</term></item>
   /// </list>
   /// </summary>
   public partial class PatientController : IScenarioEntityStateEventSource
@@ -57,6 +59,11 @@ namespace TriageTrainer.Entity
     public const string StateEventTreatmentRemoved = "TreatmentRemoved";
     public const string StateEventVitalChanged = "VitalChanged";
     public const string StateEventTriageSubmitted = "TriageSubmitted";
+
+    /// <summary>장비가 환자에게 연결되었을 때 발생. key는 장비 유형명(<see cref="EquipmentTypeBed"/> 등).</summary>
+    public const string StateEventEquipmentConnected = "EquipmentConnected";
+    /// <summary>장비가 환자로부터 해제되었을 때 발생. key는 장비 유형명.</summary>
+    public const string StateEventEquipmentDisconnected = "EquipmentDisconnected";
 
     /// <summary>
     /// 시나리오 <c>EntityStateSignalBinding</c> 노드가 (eventName, key) 조합에 대해 등록한 핸들러.
@@ -87,6 +94,8 @@ namespace TriageTrainer.Entity
       StateEventTreatmentRemoved,
       StateEventVitalChanged,
       StateEventTriageSubmitted,
+      StateEventEquipmentConnected,
+      StateEventEquipmentDisconnected,
     };
 
     /// <inheritdoc />

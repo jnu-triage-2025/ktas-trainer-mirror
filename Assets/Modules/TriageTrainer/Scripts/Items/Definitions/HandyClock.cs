@@ -1,5 +1,7 @@
+using MultiplayerInfrastructure.ItemSystem;
 namespace TriageTrainer.ItemDefinitions
 {
+  [IntendedMissing3DModelAttribute]
   public class HandyClock : MedicalItem
   {
     public const string Identifier = "handy_clock";

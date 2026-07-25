@@ -1473,7 +1473,6 @@ namespace MultiplayerInfrastructure.Editor
 
         ScenarioGraphEditorRecentStore.Record(path);
 
-        ValidateResources(graphData);
         SyncRuntimeHighlight();
         RefreshRuntimeHistoryView();
         RefreshDebugPanel();
@@ -1784,68 +1783,5 @@ namespace MultiplayerInfrastructure.Editor
       }
     }
 
-    private void ValidateResources(ScenarioGraph graph)
-    {
-      // NPCs can be created from EntityPreset requirements at runtime.  At edit
-      // time their runtime identifiers are not necessarily present in Registry,
-      // so a direct Registry lookup produces false "not registered" warnings.
-      // Runtime requirements validation owns that check with the actual providers.
-      var declaredWaypoints = new HashSet<string>(
-        graph.Waypoints?.Where(value => value != null && !string.IsNullOrWhiteSpace(value.Identifier))
-          .Select(value => value.Identifier)
-        ?? Enumerable.Empty<string>(),
-        StringComparer.Ordinal);
-      var playerMoveNodes = graph.Nodes.Values.OfType<ScenarioPlayerMoveNode>().Where(n => n.DestinationType == ScenarioMoveDestinationType.Waypoint);
-      var missingWaypoints = new List<string>();
-      foreach (var node in playerMoveNodes)
-      {
-        if (!string.IsNullOrEmpty(node.DestinationIdentifier)
-            && !declaredWaypoints.Contains(node.DestinationIdentifier)
-            && !Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, node.DestinationIdentifier, out _)
-            && !Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, node.DestinationIdentifier, out _))
-        {
-          missingWaypoints.Add(node.DestinationIdentifier);
-        }
-      }
-      var npcMoveNodes = graph.Nodes.Values.OfType<ScenarioNPCMoveNode>().Where(n => n.DestinationType == ScenarioMoveDestinationType.Waypoint);
-      foreach (var node in npcMoveNodes)
-      {
-        if (!string.IsNullOrEmpty(node.DestinationIdentifier)
-            && !declaredWaypoints.Contains(node.DestinationIdentifier)
-            && !Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, node.DestinationIdentifier, out _)
-            && !Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, node.DestinationIdentifier, out _))
-        {
-          if (!missingWaypoints.Contains(node.DestinationIdentifier))
-          {
-            missingWaypoints.Add(node.DestinationIdentifier);
-          }
-        }
-      }
-      var npcControlNodes = graph.Nodes.Values.OfType<ScenarioNPCControlNode>()
-        .Where(n => n.Mode == ScenarioNPCControlMode.Control
-                    && n.DestinationType == ScenarioMoveDestinationType.Waypoint);
-      foreach (var node in npcControlNodes)
-      {
-        if (!string.IsNullOrEmpty(node.DestinationIdentifier)
-            && !declaredWaypoints.Contains(node.DestinationIdentifier)
-            && !Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, node.DestinationIdentifier, out _)
-            && !Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, node.DestinationIdentifier, out _)
-            && !missingWaypoints.Contains(node.DestinationIdentifier))
-        {
-          missingWaypoints.Add(node.DestinationIdentifier);
-        }
-      }
-      if (missingWaypoints.Any())
-      {
-        EditorUtility.DisplayDialog(
-          "검증 실패",
-          "다음 Waypoint들이 등록되지 않았습니다:\n" + string.Join("\n", missingWaypoints),
-          "확인");
-      }
-      else
-      {
-        EditorUtility.DisplayDialog("검증 성공", "모든 Waypoint가 등록되었습니다.", "확인");
-      }
-    }
   }
 }

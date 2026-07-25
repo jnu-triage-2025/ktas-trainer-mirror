@@ -1,5 +1,7 @@
+using MultiplayerInfrastructure.ItemSystem;
 namespace TriageTrainer.ItemDefinitions
 {
+  [IntendedMissing3DModelAttribute]
   public class TutorialDeliveryPackage : MedicalItem
   {
     public const string Identifier = "tutorial_delivery_package";

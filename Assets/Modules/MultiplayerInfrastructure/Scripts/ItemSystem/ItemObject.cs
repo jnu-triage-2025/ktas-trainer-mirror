@@ -126,9 +126,13 @@ namespace MultiplayerInfrastructure.ItemSystem
       }
       else
       {
-        Debug.LogWarning(
-          $"[ItemObject] 모델 프리팹을 찾지 못했습니다. (경로: Resources/{path}) " +
-          $"기본 큐브로 대체합니다.");
+        if (!ItemMissingAssetSuppression.ShouldSuppressModelMissingWarning(Item))
+        {
+          Debug.LogWarning(
+            $"[ItemObject] 모델 프리팹을 찾지 못했습니다. (경로: Resources/{path}) " +
+            $"기본 큐브로 대체합니다. 의도된 누락이면 {Item.GetType().Name} 클래스에 " +
+            $"[IntendedMissing3DModel] 특성을 적용하세요.");
+        }
         GroundedModel = GameObject.CreatePrimitive(PrimitiveType.Cube);
         GroundedModel.name  = "ItemGroundedModel";
         GroundedModel.transform.SetParent(transform, false);

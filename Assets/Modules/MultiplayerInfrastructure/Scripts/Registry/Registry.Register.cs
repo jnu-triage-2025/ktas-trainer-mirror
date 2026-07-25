@@ -31,7 +31,14 @@ namespace MultiplayerInfrastructure.Registry
         string resourcePath = entry.Path;
         if (Resources.Load<Sprite>(resourcePath) == null)
         {
-          Debug.LogWarning($"[Registry] Failed to load icon sprite '{entry.Identifier}' from '{resourcePath}'.");
+          if (!MultiplayerInfrastructure.ItemSystem.ItemMissingAssetSuppression
+                .ShouldSuppressSpriteMissingWarning(entry.Identifier))
+          {
+            Debug.LogWarning(
+              $"[Registry] Failed to load icon sprite '{entry.Identifier}' from '{resourcePath}'. " +
+              $"의도된 누락이면 해당 Item 클래스에 [IntendedMissingItemSprite] 특성을 적용하거나, " +
+              $"ItemMissingAssetSuppression.RegisterSuppressedSpriteIdentifier(\"{entry.Identifier}\") 로 등록하세요.");
+          }
           continue;
         }
 

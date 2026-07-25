@@ -107,9 +107,11 @@ namespace TriageTrainer.Entity
 
     public void SetCurrentBed(MovingPatientBedController bed)
     {
+      var previous = _currentBed;
       _currentBed = bed;
       OnMovingPatientBedAttachedStateChanged(_currentBed != null || _isMovingPatientBedAttached);
       Update_Animation();
+      NotifyBedConnectionChanged(previous, bed);
     }
 
     public void OnMovingPatientBedAttachedEnter()

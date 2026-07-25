@@ -301,7 +301,13 @@ namespace TriageTrainer.Entity
 
       var patient = otherPoint.GetComponentInParent<PatientController>();
       if (patient != null)
+      {
         ConnectPatient(patient);
+
+        // 환자에게 IV 수액 공급원 연결을 알림(좌/우 팔은 환자 측 연결점 식별자로 판정).
+        bool isLeftArm = IsLeftArmConnectionPoint(otherPoint);
+        patient.SetIVFluidConnection(isLeftArm, this);
+      }
     }
 
     private void OnIntravenousLineDisconnected(
@@ -314,7 +320,27 @@ namespace TriageTrainer.Entity
       var patient = otherPoint != null ? otherPoint.GetComponentInParent<PatientController>() : null;
       if (patient == null ||
           string.Equals(ConnectedPatientIdentifier, patient.Identifier, StringComparison.Ordinal))
+      {
+        // 환자에게 IV 수액 공급원 해제를 알림
+        if (patient != null)
+        {
+          bool isLeftArm = IsLeftArmConnectionPoint(otherPoint);
+          patient.ClearIVFluidConnection(isLeftArm);
+        }
         ConnectPatient(null);
+      }
+    }
+
+    /// <summary>
+    /// 환자 측 IV 연결 지점이 좌측 팔인지 판정한다.
+    /// 지점 Identifier 에 "left" 가 포함되면 좌측, 아니면 우측으로 간주한다.
+    /// </summary>
+    private static bool IsLeftArmConnectionPoint(IntravenousLineConnectionPoint point)
+    {
+      if (point == null || string.IsNullOrWhiteSpace(point.Identifier))
+        return true;
+
+      return point.Identifier.Contains("left", StringComparison.OrdinalIgnoreCase);
     }
 
     private bool HasFluid(FluidKind kind) =>

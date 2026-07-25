@@ -61,6 +61,7 @@ namespace MultiplayerInfrastructure.UI
 
     public void ClearAll()
     {
+      Debug.Log($"[TitleUI][DBG] ClearAll called stack={System.Environment.StackTrace}", this);
       StopAllRoutines();
       if (_titleElement != null)
         _titleElement.ClearAll();
@@ -117,6 +118,7 @@ namespace MultiplayerInfrastructure.UI
       if (!EnsureElement())
         return;
 
+      Debug.Log($"[TitleUI][DBG] ShowActionbar (non-persistent) text=\"{actionbar}\"", this);
       StopActionbarRoutine();
       _titleElement.ActionbarText = actionbar ?? string.Empty;
 
@@ -139,13 +141,17 @@ namespace MultiplayerInfrastructure.UI
     public void ShowPersistentActionbar(string actionbar)
     {
       if (!EnsureElement())
+      {
+        Debug.Log($"[TitleUI][DBG] ShowPersistentActionbar FAILED EnsureElement text=\"{actionbar}\"", this);
         return;
+      }
 
       StopActionbarRoutine();
       _titleElement.ActionbarText = actionbar ?? string.Empty;
       _titleElement.ActionbarOpacity = 1f;
       _actionbarActive = !string.IsNullOrWhiteSpace(actionbar);
       UpdateRootVisibility();
+      Debug.Log($"[TitleUI][DBG] ShowPersistentActionbar text=\"{actionbar}\" active={_actionbarActive}", this);
     }
 
     public void ClearTitle()
@@ -164,6 +170,7 @@ namespace MultiplayerInfrastructure.UI
 
     public void ClearActionbar()
     {
+      Debug.Log($"[TitleUI][DBG] ClearActionbar called stack={System.Environment.StackTrace}", this);
       StopActionbarRoutine();
       if (_titleElement != null)
         _titleElement.ActionbarText = string.Empty;

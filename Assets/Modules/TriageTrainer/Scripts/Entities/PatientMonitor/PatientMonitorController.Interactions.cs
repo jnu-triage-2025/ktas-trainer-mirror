@@ -63,6 +63,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private void OnDisable()
     {
       ExitSelectionModeForAll();
+      if (_monitoringPatient != null)
+        _monitoringPatient.ClearMonitoringPatientMonitor(this);
       UnregisterMedicalStateSubscription();
       DisableTrackingLine();
     }
@@ -70,6 +72,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private void OnDestroy()
     {
       ExitSelectionModeForAll();
+      if (_monitoringPatient != null)
+        _monitoringPatient.ClearMonitoringPatientMonitor(this);
       UnregisterMedicalStateSubscription();
       ReleaseTrackingLineResources();
     }

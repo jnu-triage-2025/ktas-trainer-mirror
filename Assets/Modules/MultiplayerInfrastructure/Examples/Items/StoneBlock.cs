@@ -17,6 +17,8 @@ namespace MultiplayerInfrastructure.ItemSystem.Examples
   /// ■ 월드에 스폰:
   ///   ItemObject.Spawn(stone, spawnPosition);
   /// </summary>
+  [IntendedMissing3DModelAttribute]
+  [IntendedMissingItemSpriteAttribute]
   public class StoneBlock : Item
   {
     // ── Definitions ────────────────────────────────────────────────────────

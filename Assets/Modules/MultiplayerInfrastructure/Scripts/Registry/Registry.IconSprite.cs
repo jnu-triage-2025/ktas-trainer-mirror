@@ -1,4 +1,5 @@
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.ItemSystem;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Registry
@@ -34,9 +35,16 @@ namespace MultiplayerInfrastructure.Registry
         return sprite;
       }
 
-      Debug.LogWarning(
-        $"[Registry] IconSprite '{identifier}' 를 찾지 못했습니다. " +
-        $"경로: Resources/{DefaultsItemRegistry.ItemTexturesPath}/{identifier}");
+      if (!ItemMissingAssetSuppression.ShouldSuppressSpriteMissingWarning(identifier))
+      {
+        Debug.LogWarning(
+          $"[Registry] IconSprite '{identifier}' 를 찾지 못했습니다. " +
+          $"경로: Resources/{DefaultsItemRegistry.ItemTexturesPath}/{identifier} " +
+          $"의도된 누락이면 해당 Item 클래스에 [IntendedMissingItemSprite] 특성을 적용하거나, " +
+          $"Item 클래스가 아닌 식별자라면 " +
+          $"{nameof(ItemMissingAssetSuppression)}.{nameof(ItemMissingAssetSuppression.RegisterSuppressedSpriteIdentifier)}" +
+          $"(\"{identifier}\") 로 등록하세요.");
+      }
       return DefaultsResource.FallbackSprite;
     }
 
