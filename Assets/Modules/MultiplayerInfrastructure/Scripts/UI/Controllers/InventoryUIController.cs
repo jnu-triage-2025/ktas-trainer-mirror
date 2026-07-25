@@ -30,6 +30,12 @@ namespace MultiplayerInfrastructure.UI
     private InventoryUIView _view;
     private HotbarUIController _hotbarUI;
 
+    /// <summary>
+    /// 조합으로 생성되어 커서로 지급된 뒤 아직 인벤토리 진입이 확인되지 않은 결과 아이템.
+    /// 인벤토리 배치(슬롯 변화)가 감지되면 이 아이템의 지연 획득 훅(OnGet)을 발행한다.
+    /// </summary>
+    private ItemSystem.Item _pendingAcquisition;
+
     public bool IsOpened => _view != null && _view.IsVisible;
 
     public event Action OverlayPushed;
@@ -127,13 +133,18 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>
     /// 조합 패널에서 선택된 레시피의 조합을 요청받아 실행한다.
     /// 재료를 소비하고 생성된 결과 아이템을 반환한다(뷰가 커서로 pickup 처리).
+    /// 결과 아이템에는 지연 획득 플래그(<see cref="ItemSystem.Item.DeferredOnGet"/>)가 설정되어 있으며,
+    /// 인벤토리 진입이 확인되면 <see cref="HandleSlotsMutated"/> 에서 획득 훅(OnGet)을 발행한다.
     /// </summary>
     private ItemSystem.Item HandleCraftRequest(InventoryUIView.CraftableRecipeDisplay recipe)
     {
       if (recipe == null) return null;
       var player = ResolveOwningPlayer();
       if (player == null) return null;
-      return player.TryCraftRecipe(recipe.OutputIdentifier);
+      var crafted = player.TryCraftRecipe(recipe.OutputIdentifier);
+      if (crafted != null && crafted.DeferredOnGet)
+        _pendingAcquisition = crafted;
+      return crafted;
     }
 
     /// <summary>커서 스택 한도를 초과한 조합 결과 잔량을 인벤토리로 돌려보낸다.</summary>
@@ -204,6 +215,36 @@ namespace MultiplayerInfrastructure.UI
 
       // 슬롯 변화(집기/놓기/조합)에 따라 조합 가능 목록/필요 아이템 표시를 즉시 갱신.
       RefreshCraftableRecipes();
+
+      // 조합 결과물(커서 지급)이 인벤토리에 진입했으면 지연된 획득 훅(OnGet)을 발행.
+      TryResolvePendingAcquisition();
+    }
+
+    /// <summary>
+    /// 조합으로 커서에 지급된 결과 아이템이 인벤토리 슬롯에 배치되었는지 확인하고,
+    /// 진입이 확인되면 지연된 획득 훅(<see cref="ItemSystem.Item.OnGet"/>)을 발행한다.
+    ///
+    /// 조합 결과물은 커서로 지급되어 슬롯 배치 시 <see cref="PlayerController.TryAddItemToInventory"/>
+    /// 를 우회하므로(뷰가 slot.SetItem/Push 로 직접 배치) 획득 훅이 생략된다. 이 메서드가 슬롯 변화를
+    /// 감지해 실제 인벤토리 진입 시점에 OnGet 을 발행함으로써, MedicalItem 의 획득 신호
+    /// (sig.&lt;id&gt;, sig.click_&lt;id&gt>) 등 획득 훅 로직이 조합 결과물에도 일관되게 동작한다.
+    /// </summary>
+    private void TryResolvePendingAcquisition()
+    {
+      var pending = _pendingAcquisition;
+      if (pending == null || !pending.DeferredOnGet)
+        return;
+
+      var player = ResolveOwningPlayer();
+      if (player == null)
+        return;
+
+      if (player.CountItemInInventory(pending.CurrentIdentifier) <= 0)
+        return;
+
+      _pendingAcquisition = null;
+      pending.DeferredOnGet = false;
+      pending.OnGet(player);
     }
 
     private void HandleItemDroppedOutside(ItemSystem.Item item)

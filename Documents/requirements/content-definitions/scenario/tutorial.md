@@ -49,21 +49,27 @@ TUT_START
   -> D_TUT_PACKAGE_PROMPT
   -> V_TUT_DELIVERY_PACKAGE_ACQUIRED
   -> V_TUT_DELIVERY_PACKAGE_SUBMITTED
+  -> CONFIG_PACKAGE_SUBMISSION_HIDE (ItemSubmissionConfig, enabled: false — 택배 제출 인터랙션 비활성)
+  -> CONFIG_CLOCK_SUBMISSION (ItemSubmissionConfig, enabled: true, handy_clock 요구 — 시계 제출 인터랙션 즉시 활성화)
   -> Q_TUT_DELIVERY_REMOVE
   -> D_TUT_DELIVERY_COMPLETE
   -> D_TUT_CRAFTING_REQUEST
   -> C_TUT_CRAFTING_ACCEPT
-  -> Q_TUT_CRAFTING_ADD
   -> GIVE_TIN -> GIVE_GEAR -> GIVE_CHAIN
+  -> Q_TUT_CRAFTING_ADD
   -> D_TUT_CRAFTING_HINT
-  -> V_TUT_CLOCK_CRAFTED
-  -> D_TUT_SUBMIT_HINT
-  -> CONFIG_CLOCK_SUBMISSION
   -> V_TUT_CLOCK_SUBMITTED
   -> Q_TUT_CRAFTING_REMOVE
   -> D_TUT_CRAFTING_COMPLETE
   -> TUT_END
 ```
+
+> **제출 인터랙션 재구성 시점(2026-07-25 개정):** 제출 인터랙션(`tutorial-guide-hat-package-submission`)
+> 재구성은 시계 "제작 완료"가 아니라 **택배 제출 완료 직후** 이루어진다. 택배 인터랙션을 비활성
+> (`CONFIG_PACKAGE_SUBMISSION_HIDE`)하고 곧바로 시계 제출용으로 재활성(`CONFIG_CLOCK_SUBMISSION`,
+> `handy_clock` 요구)한다. 제작 완료는 시나리오 게이트가 아니라 시계 제출 퀘스트의 서브목표
+> (획득 시 `OnGet` 신호 `sig.click_handy_clock`)로 추적한다. 따라서 제작 게이트 `V_TUT_CLOCK_CRAFTED`와
+> `D_TUT_SUBMIT_HINT`는 제거했다.
 
 - 시계 제작 흐름(`D_TUT_CRAFTING_REQUEST`~`D_TUT_CRAFTING_COMPLETE`)은 부분 3 감사 대사 직후에
   연결된다. `GIVE_TIN`/`GIVE_GEAR`/`GIVE_CHAIN`은 `ExecuteCommand`(`give @s`)로 플레이어
@@ -104,7 +110,8 @@ TUT_START
 | TUT-ASSET-1 | 택배 및 오답 아이템 | ~~택배 StaticPlacedObject의 scene object identifier·spawn 위치·item definition이 없고, “여러 개” 오답 아이템의 목록/독백 트리거도 미정이다.~~ **해결(2026-07-21):** 아래 「택배 보관소 아이템 배치 확정」의 정답 1개와 오답 3개를 StaticPlacedItem으로 배치한다. | 정답 물품만 `tutorial_delivery_package`를 지급하며, 오답 물품은 각각 1회성 독백만 재생하고 퀘스트 진행 상태를 바꾸지 않는다. |
 | TUT-END-1 | 부분 4 이후 | ~~감사 인사 뒤 화면 전환, 다음 Scenario, 종료 메시지 중 어느 것도 없다.~~ **부분 4 시계 제작 퀘스트 추가(2026-07-22):** 택배 감사 대사 뒤에 시계 제작 요청→재료 지급→조합→제출 흐름이 연결된다. 최종 종료는 시계 제작 완료 대사(`D_TUT_CRAFTING_COMPLETE`) 이후이며, 화면 전환·다음 Scenario는 여전히 미결정이다. | **인간 판단 필요:** `D_TUT_CRAFTING_COMPLETE` 뒤의 종료 UX를 확정한다. 확정 전에는 `TUT_END`(`nextIdentifier: null`)로만 종료한다. |
 | TUT-CRAFT-1 | 시계 제작 아이템 | `tin_ingot`, `small_gear`, `small_chain`, `handy_clock`의 아이콘/3D 모델 리소스가 없다. | **코드 등록 완료(2026-07-22):** C# 클래스 정의 및 레지스트리 등록, 조합 레시피 등록 완료. 리소스(아이콘 스프라이트, 3D 모델 프리팹)는 추후 추가 필요. `ValidateItemResources()`에서 누락 Warning 출력은 정상. |
-| TUT-CRAFT-2 | 시계 제출 대상 | `CONFIG_CLOCK_SUBMISSION`이 `tutorial-guide-hat-package-submission`을 재사용한다. 택배 제출 후 해당 Interactable이 비활성화되어 있으면 시계 제출이 불가능하다. | 택배 제출 완료 후에도 `tutorial-guide-hat-package-submission`을 활성 상태로 유지하거나, 시계 제출 시점에 `NPCControl`(`Update`, `interactOperation: Update`)로 재활성화해야 한다. |
+| TUT-CRAFT-2 | 시계 제출 대상 | `CONFIG_CLOCK_SUBMISSION`이 `tutorial-guide-hat-package-submission`을 재사용한다. 택배 제출 후 해당 Interactable이 택배 요구 상태로 잔존하면 시계 제출 UX가 깨진다. | **해결(2026-07-25 개정):** 제출 인터랙션 재구성을 제작 완료가 아닌 **택배 제출 완료 직후**로 이동했다. `V_TUT_DELIVERY_PACKAGE_SUBMITTED` 직후 `CONFIG_PACKAGE_SUBMISSION_HIDE`(`enabled: false`)로 택배 인터랙션을 비활성(잔존 제거)하고, **곧바로** `CONFIG_CLOCK_SUBMISSION`(`enabled: true`, `handy_clock` 요구)으로 동일 대상을 시계 제출용으로 재활성화·재구성한다. 이후 `GIVE_*`(재료 지급) → `Q_TUT_CRAFTING_ADD`(퀘스트 활성화) 순서로 진행한다. |
+| TUT-CRAFT-3 | 시계 조합 게이팅 신호 | 구 설계는 `V_TUT_CLOCK_CRAFTED`가 `MedicalItem.OnGet`의 `sig.click_handy_clock`을 `waitForCondition`으로 기다려 제출 인터랙션 재구성을 게이팅했다. 그러나 (a) 조합 결과는 커서로 지급되어 인벤토리 배치 시 `TryAddItemToInventory`를 우회(`slot.SetItem`/`Push`)하므로 `OnGet`이 호출되지 않아 신호가 영원히 올라오지 않고(**무한 대기**), (b) 제출 인터랙션 재구성을 제작 완료에 결합할 이유가 없었다. | **해결(2026-07-25 개정):** ① 시나리오에서 제작 게이트 `V_TUT_CLOCK_CRAFTED`/`D_TUT_SUBMIT_HINT`를 제거하고 제출 인터랙션을 택배 제출 직후 즉시 재구성(TUT-CRAFT-2). ② 제작 완료 추적을 **퀘스트 서브목표**로 이동: `tutorial-quest-crafting`을 `InteractionSignalReceived click_handy_clock`(시계 제작) + `InteractionSignalReceived tutorial.crafting.clock.submitted`(시계 제출) 2개로 정비. ③ 시스템: 조합 결과 `OnGet` 누락을 **지연 획득(Deferred OnGet)** 으로 수정 — `Item.DeferredOnGet` 플래그를 `TryCraftRecipe`가 설정하고, `InventoryUIController`가 인벤토리 진입 감지 시 `OnGet`을 발행(제작 시점이 아닌 실제 획득 시점). 제안서: `Agents/Proposals/2026-07-25-crafting-result-onget-acquisition/`. 인벤토리 내 아이템 이동은 `OnGet` 미발생(회귀 없음). |
 
 ### 변환 승인 조건
 

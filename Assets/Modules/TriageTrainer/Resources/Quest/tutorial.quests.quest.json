@@ -14,31 +14,9 @@
       "isOrdinal": true,
       "tasks": [
         {
-          "type": "InventoryContains",
-          "itemId": "tin_ingot",
-          "count": 3,
-          "displayTextContent": "재료 확인: 주석 주괴 3개",
-          "conditions": []
-        },
-        {
-          "type": "InventoryContains",
-          "itemId": "small_gear",
-          "count": 5,
-          "displayTextContent": "재료 확인: 소형 톱니 5개",
-          "conditions": []
-        },
-        {
-          "type": "InventoryContains",
-          "itemId": "small_chain",
-          "count": 1,
-          "displayTextContent": "재료 확인: 소형 사슬 1개",
-          "conditions": []
-        },
-        {
-          "type": "InventoryContains",
-          "itemId": "handy_clock",
-          "count": 1,
-          "displayTextContent": "시계 조합하기",
+          "type": "InteractionSignalReceived",
+          "signalId": "click_handy_clock",
+          "displayTextContent": "시계 제작하기",
           "conditions": []
         },
         {
