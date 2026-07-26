@@ -251,6 +251,9 @@ namespace MultiplayerInfrastructure.Editor
       var editButton = new ToolbarButton(ShowEditMenu) { text = "Edit ▼" };
       toolbar.Add(editButton);
 
+      var viewButton = new ToolbarButton(ShowViewMenu) { text = "View ▼" };
+      toolbar.Add(viewButton);
+
       var addNodeButton = new ToolbarButton(OpenCreateNodeMenu) { text = "+" };
       toolbar.Add(addNodeButton);
 
@@ -1415,6 +1418,16 @@ namespace MultiplayerInfrastructure.Editor
         menu.AddItem(new GUIContent("Relocate Nodes"), false, RelocateNodes);
       else
         menu.AddDisabledItem(new GUIContent("Relocate Nodes"));
+      menu.ShowAsContext();
+    }
+
+    private void ShowViewMenu()
+    {
+      var menu = new GenericMenu();
+      if (graphView != null)
+        menu.AddItem(new GUIContent("Reset Minimap"), false, graphView.ResetMiniMap);
+      else
+        menu.AddDisabledItem(new GUIContent("Reset Minimap"));
       menu.ShowAsContext();
     }
 

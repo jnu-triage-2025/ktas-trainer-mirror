@@ -10,7 +10,9 @@ namespace MultiplayerInfrastructure.Editor
 {
   public class ScenarioGraphView : GraphView
   {
+    private static readonly Rect DefaultMiniMapRect = new Rect(5f, 5f, 175f, 135f);
     private readonly ScenarioGraphAuthoringWindow window;
+    private readonly ScenarioGraphMiniMap miniMap;
     private readonly Dictionary<string, List<SerializableVector2>> edgeRoutes = new Dictionary<string, List<SerializableVector2>>();
     public Action<ScenarioNodeView> onNodeSelected;
 
@@ -28,11 +30,15 @@ namespace MultiplayerInfrastructure.Editor
       Insert(0, grid);
       grid.StretchToParentSize();
 
-      var miniMap = new MiniMap { anchored = true };
-      miniMap.SetPosition(new Rect(5, 5, 175, 135));
-      Add(miniMap);
+      miniMap = new ScenarioGraphMiniMap(this, DefaultMiniMapRect);
+      hierarchy.Add(miniMap);
 
       graphViewChanged = OnGraphViewChanged;
+    }
+
+    public void ResetMiniMap()
+    {
+      miniMap.Reset(DefaultMiniMapRect);
     }
 
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
