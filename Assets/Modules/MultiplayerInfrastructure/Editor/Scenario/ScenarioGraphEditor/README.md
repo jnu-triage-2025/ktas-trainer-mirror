@@ -17,8 +17,9 @@
 7. `Validate`로 저장-로드 루틴을 통해 구조적 유효성(역직렬화 가능 여부)을 확인합니다.
 
 ## UI 구성 요소
-- 상단 툴바: `New Graph`, `Add Node`, `Open File`, `Save File`, `Validate`.
-- 툴바 메뉴: `File`(New/Open/Save 등 — `Open Recent` 하위 메뉴 포함. 아래 "최근 연 파일" 참고).
+- 상단 툴바: `File`, `Edit`, 노드 추가, 검색 및 그래프 메타데이터 필드.
+- 툴바 메뉴: `File`(New/Open/Save 등 — `Open Recent` 하위 메뉴 포함), `Edit`(`Relocate Nodes`).
+- 화면 탭: `Graph`(그래프 편집), `Definitions`(Acting NPC, Waypoint 및 Requirements 정의 편집).
 - 툴바 필드: `Graph ID`(그래프 식별자), `Tags(csv)`, `Default Init`(기본 진입 노드 식별자 — 아래 "DefaultInit 표시" 참고).
 - Graph Area(왼쪽/중앙): 그래프 캔버스(노드, 엣지, MiniMap 포함). 노드 드래그·연결·삭제 가능.
 - Inspector Panel(오른쪽): 선택된 노드의 세부 속성 편집(스크롤 가능). 노드 타입 변경 드롭다운 포함.
@@ -61,6 +62,7 @@
 
 ## 자동 레이아웃 (AutoLayout)
 - `.scenario.editor.json`이 존재하지 않을 때 자동으로 실행됩니다.
+- 상단 `Edit → Relocate Nodes`를 선택하면 현재 그래프에도 같은 자동 배치를 수동으로 다시 적용할 수 있습니다. 기존 수동 edge reroute 지점은 초기화되며, 전체 작업은 Undo/Redo 기록에 포함됩니다.
 - 자동 배치가 실행되는 동안 `Scenario Graph Auto Layout` 진행 팝업을 표시합니다. 연결 분석, 레이어 계산, 교차 최소화, 좌표 적용 단계를 진행률과 함께 확인할 수 있으며 완료 또는 오류 시 자동으로 닫힙니다.
 - Sugiyama 계층형 방식으로 순방향 연결을 좌→우 레이어에 배치하고, median sweep으로 연결선 교차를 줄입니다.
 - 한 노드에서 여러 후속 노드로 분기하면 후속 노드는 모두 다음 레이어의 같은 `x` 좌표에 세로로 나열됩니다. 개수 제한은 없습니다.

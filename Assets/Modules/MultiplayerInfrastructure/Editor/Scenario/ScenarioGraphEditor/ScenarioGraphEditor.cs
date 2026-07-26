@@ -27,9 +27,9 @@ namespace MultiplayerInfrastructure.Editor
     private VisualElement graphHost;
     private ScenarioDebugPanelView debugPanelView;
     private ScenarioSearchPanelView searchPanelView;
-    private VisualElement editContainer;
+    private VisualElement definitionsContainer;
     private ToolbarButton graphTabButton;
-    private ToolbarButton editTabButton;
+    private ToolbarButton definitionsTabButton;
     private ScenarioActingNpcEditorView actingNpcEditorView;
     private ScenarioWaypointEditorView waypointEditorView;
 
@@ -190,7 +190,7 @@ namespace MultiplayerInfrastructure.Editor
       ConstructUI();
       CreateGraphView();
       CreateDebugPanel();
-      CreateEditTab();
+      CreateDefinitionsTab();
       CreateSearchPanel();
       CreateInspector();
       CreateSearchWindow();
@@ -248,6 +248,9 @@ namespace MultiplayerInfrastructure.Editor
       var fileButton = new ToolbarButton(ShowFileMenu) { text = "File ▼" };
       toolbar.Add(fileButton);
 
+      var editButton = new ToolbarButton(ShowEditMenu) { text = "Edit ▼" };
+      toolbar.Add(editButton);
+
       var addNodeButton = new ToolbarButton(OpenCreateNodeMenu) { text = "+" };
       toolbar.Add(addNodeButton);
 
@@ -299,9 +302,9 @@ namespace MultiplayerInfrastructure.Editor
 
       var tabs = new Toolbar();
       graphTabButton = new ToolbarButton(() => SetActiveTab(true)) { text = "Graph" };
-      editTabButton = new ToolbarButton(() => SetActiveTab(false)) { text = "Edit" };
+      definitionsTabButton = new ToolbarButton(() => SetActiveTab(false)) { text = "Definitions" };
       tabs.Add(graphTabButton);
-      tabs.Add(editTabButton);
+      tabs.Add(definitionsTabButton);
       rootVisualElement.Add(tabs);
 
       EnsureGraphData();
@@ -378,13 +381,13 @@ namespace MultiplayerInfrastructure.Editor
       rootVisualElement.Add(debugPanelView);
     }
 
-    private void CreateEditTab()
+    private void CreateDefinitionsTab()
     {
-      editContainer = new VisualElement { name = "ScenarioEditContainer" };
-      editContainer.style.flexGrow = 1f;
-      editContainer.style.paddingLeft = 12;
-      editContainer.style.paddingRight = 12;
-      editContainer.style.paddingTop = 12;
+      definitionsContainer = new VisualElement { name = "ScenarioDefinitionsContainer" };
+      definitionsContainer.style.flexGrow = 1f;
+      definitionsContainer.style.paddingLeft = 12;
+      definitionsContainer.style.paddingRight = 12;
+      definitionsContainer.style.paddingTop = 12;
 
       var scroll = new ScrollView();
       scroll.style.flexGrow = 1f;
@@ -408,17 +411,17 @@ namespace MultiplayerInfrastructure.Editor
         HelpBoxMessageType.Info));
       scroll.Add(new Button(OpenRequirementsWindow) { text = "Open Scenario Ingame Requirements" });
       scroll.Add(new Button(OpenSelectedScenarioTextAsset) { text = "Open Selected Scenario TextAsset" });
-      editContainer.Add(scroll);
-      rootVisualElement.Add(editContainer);
+      definitionsContainer.Add(scroll);
+      rootVisualElement.Add(definitionsContainer);
     }
 
     private void SetActiveTab(bool showGraph)
     {
       if (mainContainer != null) mainContainer.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
       if (debugPanelView != null) debugPanelView.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
-      if (editContainer != null) editContainer.style.display = showGraph ? DisplayStyle.None : DisplayStyle.Flex;
+      if (definitionsContainer != null) definitionsContainer.style.display = showGraph ? DisplayStyle.None : DisplayStyle.Flex;
       graphTabButton?.SetEnabled(!showGraph);
-      editTabButton?.SetEnabled(showGraph);
+      definitionsTabButton?.SetEnabled(showGraph);
       if (!showGraph)
       {
         actingNpcEditorView?.Refresh();
@@ -1403,6 +1406,39 @@ namespace MultiplayerInfrastructure.Editor
       menu.AddItem(new GUIContent("Validate"), false, () => ValidateGraphUsingRuntimeValidator());
 
       menu.ShowAsContext();
+    }
+
+    private void ShowEditMenu()
+    {
+      var menu = new GenericMenu();
+      if (nodeViews.Count > 0)
+        menu.AddItem(new GUIContent("Relocate Nodes"), false, RelocateNodes);
+      else
+        menu.AddDisabledItem(new GUIContent("Relocate Nodes"));
+      menu.ShowAsContext();
+    }
+
+    private void RelocateNodes()
+    {
+      if (nodeViews.Count == 0)
+        return;
+
+      // 현재 위치와 수동 라우팅을 먼저 Undo 기준점으로 확정한다.
+      UpdateUndoState(true);
+      CommitPendingSnapshot();
+
+      AutoLayoutNodes(true);
+
+      // 사이드카가 없는 최초 로드와 같은 상태로 맞춘다. 기존 reroute 지점은
+      // 새 노드 배치와 맞지 않으므로 제거한 뒤 논리 연결에서 다시 만든다.
+      graphView.SetEdgeRoutes(null);
+      graphView.RebuildAllEdges();
+      graphView.FrameAll();
+      RefreshDebugPanel();
+
+      // Relocate 전체를 한 번의 Undo 대상으로 기록한다.
+      UpdateUndoState(true);
+      CommitPendingSnapshot();
     }
 
     private static string GetRevealFileMenuLabel()
