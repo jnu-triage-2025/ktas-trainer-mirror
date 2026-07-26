@@ -1425,9 +1425,9 @@ namespace MultiplayerInfrastructure.Editor
     {
       var menu = new GenericMenu();
       if (graphView != null)
-        menu.AddItem(new GUIContent("Reset Minimap"), false, graphView.ResetMiniMap);
+        menu.AddItem(new GUIContent("Reset Preview"), false, graphView.ResetMiniMap);
       else
-        menu.AddDisabledItem(new GUIContent("Reset Minimap"));
+        menu.AddDisabledItem(new GUIContent("Reset Preview"));
       menu.ShowAsContext();
     }
 
