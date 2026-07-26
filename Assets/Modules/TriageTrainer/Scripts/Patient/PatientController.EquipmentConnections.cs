@@ -154,8 +154,12 @@ namespace TriageTrainer.Entity
     /// IV 수액 연결을 해제한다.
     /// </summary>
     /// <param name="isLeftArm">true=좌측 팔, false=우측 팔</param>
-    public void ClearIVFluidConnection(bool isLeftArm)
+    public void ClearIVFluidConnection(bool isLeftArm, MonoBehaviour expectedSource = null)
     {
+      var current = isLeftArm ? _ivFluidLeftArm : _ivFluidRightArm;
+      if (expectedSource != null && !ReferenceEquals(current, expectedSource))
+        return;
+
       SetIVFluidConnection(isLeftArm, null);
     }
 

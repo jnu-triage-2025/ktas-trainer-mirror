@@ -23,6 +23,8 @@ namespace MultiplayerInfrastructure.UI
     private Coroutine _actionbarRoutine;
     private bool _titleActive;
     private bool _actionbarActive;
+    private string _currentTitle = string.Empty;
+    private string _currentActionbar = string.Empty;
     private string _pendingSubtitle = string.Empty;
 
     private float _fadeInSeconds;
@@ -62,11 +64,14 @@ namespace MultiplayerInfrastructure.UI
     public void ClearAll()
     {
       StopAllRoutines();
-      if (_titleElement != null)
-        _titleElement.ClearAll();
-
       _titleActive = false;
       _actionbarActive = false;
+      _currentTitle = string.Empty;
+      _currentActionbar = string.Empty;
+      _pendingSubtitle = string.Empty;
+      EnsureElement();
+      if (_titleElement != null)
+        _titleElement.ClearAll();
       UpdateRootVisibility();
     }
 
@@ -81,7 +86,8 @@ namespace MultiplayerInfrastructure.UI
         subtitle = _pendingSubtitle;
 
       _pendingSubtitle = subtitle ?? string.Empty;
-      _titleElement.TitleText = title ?? string.Empty;
+      _currentTitle = title ?? string.Empty;
+      _titleElement.TitleText = _currentTitle;
       _titleElement.SubtitleText = _pendingSubtitle;
 
       _titleActive = true;
@@ -93,6 +99,7 @@ namespace MultiplayerInfrastructure.UI
           _titleElement.TitleText = string.Empty;
           _titleElement.SubtitleText = string.Empty;
           _pendingSubtitle = string.Empty;
+          _currentTitle = string.Empty;
           _titleActive = false;
           UpdateRootVisibility();
         }));
@@ -105,7 +112,8 @@ namespace MultiplayerInfrastructure.UI
 
       if (_titleActive || !string.IsNullOrWhiteSpace(_titleElement.TitleText))
       {
-        _titleElement.SubtitleText = subtitle ?? string.Empty;
+        _pendingSubtitle = subtitle ?? string.Empty;
+        _titleElement.SubtitleText = _pendingSubtitle;
         return;
       }
 
@@ -118,7 +126,8 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       StopActionbarRoutine();
-      _titleElement.ActionbarText = actionbar ?? string.Empty;
+      _currentActionbar = actionbar ?? string.Empty;
+      _titleElement.ActionbarText = _currentActionbar;
 
       _actionbarActive = true;
       UpdateRootVisibility();
@@ -127,6 +136,7 @@ namespace MultiplayerInfrastructure.UI
         onCompleted: () =>
         {
           _titleElement.ActionbarText = string.Empty;
+          _currentActionbar = string.Empty;
           _actionbarActive = false;
           UpdateRootVisibility();
         }));
@@ -142,7 +152,8 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       StopActionbarRoutine();
-      _titleElement.ActionbarText = actionbar ?? string.Empty;
+      _currentActionbar = actionbar ?? string.Empty;
+      _titleElement.ActionbarText = _currentActionbar;
       _titleElement.ActionbarOpacity = 1f;
       _actionbarActive = !string.IsNullOrWhiteSpace(actionbar);
       UpdateRootVisibility();
@@ -151,24 +162,28 @@ namespace MultiplayerInfrastructure.UI
     public void ClearTitle()
     {
       StopTitleRoutine();
+      _titleActive = false;
+      _currentTitle = string.Empty;
+      _pendingSubtitle = string.Empty;
+      EnsureElement();
       if (_titleElement != null)
       {
         _titleElement.TitleText = string.Empty;
         _titleElement.SubtitleText = string.Empty;
-        _pendingSubtitle = string.Empty;
       }
 
-      _titleActive = false;
       UpdateRootVisibility();
     }
 
     public void ClearActionbar()
     {
       StopActionbarRoutine();
+      _actionbarActive = false;
+      _currentActionbar = string.Empty;
+      EnsureElement();
       if (_titleElement != null)
         _titleElement.ActionbarText = string.Empty;
 
-      _actionbarActive = false;
       UpdateRootVisibility();
     }
 
@@ -190,6 +205,13 @@ namespace MultiplayerInfrastructure.UI
         EnsureStyleSheet(_titleElement);
         root.Add(_titleElement);
       }
+
+      _titleElement.TitleText = _currentTitle;
+      _titleElement.SubtitleText = _pendingSubtitle;
+      _titleElement.ActionbarText = _currentActionbar;
+      _titleElement.CenterOpacity = _titleActive ? 1f : 0f;
+      _titleElement.ActionbarOpacity = _actionbarActive ? 1f : 0f;
+      _titleElement.SetVisible(_titleActive || _actionbarActive);
     }
 
     private void EnsureStyleSheet(VisualElement element)

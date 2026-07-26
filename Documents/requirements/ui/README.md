@@ -26,6 +26,10 @@
 - [miui_problem_sheet.md](./miui_problem_sheet.md): 문제지/문제 풀이 UI
 - [miui_quest_panel.md](./miui_quest_panel.md): 퀘스트 패널 UI
 - [miui_quest_preview_hud.md](./miui_quest_preview_hud.md): 퀘스트 프리뷰 HUD UI
+- [miui_triage_assessment.md](./miui_triage_assessment.md): 트리아지 평가 UI
+- [ui-controllers-requirements.md](./ui-controllers-requirements.md): UI 컨트롤러 요구사항
+- [ui-visual-elements-requirements.md](./ui-visual-elements-requirements.md): UI VisualElement 요구사항
+- [web-design-ai-handoff.md](./web-design-ai-handoff.md): 웹 디자인 AI용 UI 리디자인 핸드오프
 
 작성 기준: Git 추적 문서(.md) 기준으로 색인하며, .gitignore 대상 파일은 제외합니다.
 <!-- DOC-INDEX:END -->

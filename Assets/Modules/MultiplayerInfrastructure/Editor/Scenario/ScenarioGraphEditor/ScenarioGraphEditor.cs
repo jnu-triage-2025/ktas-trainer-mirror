@@ -27,9 +27,9 @@ namespace MultiplayerInfrastructure.Editor
     private VisualElement graphHost;
     private ScenarioDebugPanelView debugPanelView;
     private ScenarioSearchPanelView searchPanelView;
-    private VisualElement editContainer;
+    private VisualElement definitionsContainer;
     private ToolbarButton graphTabButton;
-    private ToolbarButton editTabButton;
+    private ToolbarButton definitionsTabButton;
     private ScenarioActingNpcEditorView actingNpcEditorView;
     private ScenarioWaypointEditorView waypointEditorView;
 
@@ -77,14 +77,32 @@ namespace MultiplayerInfrastructure.Editor
     private const string ScenarioExtension = ".scenario.json";
     private const string ScenarioEditorExtension = ".scenario.editor.json";
 
-    // 자동 배치(AutoLayoutNodes) 튜닝 파라미터.
-    // - AutoLayoutColumnSpacing: 열(depth) 간 가로 간격.
-    // - AutoLayoutRowSpacing: 같은 열에 세로로 쌓이는 노드 간 세로 간격.
-    // - AutoLayoutColumnsPerBand: 한 밴드(가로 줄)에 들어갈 최대 열 개수.
-    //   이 값을 넘어가면 아래 밴드로 접고 진행 방향을 좌우 반전한다.
-    private const float AutoLayoutColumnSpacing = 380f;
+    // Sugiyama 계층형 자동 배치 튜닝 파라미터.
+    // 레이어는 좌→우 진행이며, 같은 부모에서 뻗는 후속 노드는 다음
+    // 레이어의 동일한 x 좌표에 세로로 쌓인다.
+    private const float AutoLayoutColumnSpacing = 420f;
     private const float AutoLayoutRowSpacing = 240f;
-    private const int AutoLayoutColumnsPerBand = 30;
+    private const int AutoLayoutCrossingReductionPasses = 6;
+    private const int AutoLayoutCoordinateAssignmentPasses = 4;
+
+    private readonly struct LayoutScore
+    {
+      public readonly int CrossingCount;
+      public readonly float VerticalEdgeCost;
+
+      public LayoutScore(int crossingCount, float verticalEdgeCost)
+      {
+        CrossingCount = crossingCount;
+        VerticalEdgeCost = verticalEdgeCost;
+      }
+    }
+
+    private sealed class LayeredLayoutGraph
+    {
+      public Dictionary<string, int> Layer { get; } = new Dictionary<string, int>();
+      public Dictionary<string, List<string>> Forward { get; } = new Dictionary<string, List<string>>();
+      public Dictionary<string, List<string>> Incoming { get; } = new Dictionary<string, List<string>>();
+    }
 
     /// <summary>
     /// Ensures a scenario file path uses the ".scenario.json" extension. Paths already
@@ -172,7 +190,7 @@ namespace MultiplayerInfrastructure.Editor
       ConstructUI();
       CreateGraphView();
       CreateDebugPanel();
-      CreateEditTab();
+      CreateDefinitionsTab();
       CreateSearchPanel();
       CreateInspector();
       CreateSearchWindow();
@@ -230,6 +248,9 @@ namespace MultiplayerInfrastructure.Editor
       var fileButton = new ToolbarButton(ShowFileMenu) { text = "File ▼" };
       toolbar.Add(fileButton);
 
+      var editButton = new ToolbarButton(ShowEditMenu) { text = "Edit ▼" };
+      toolbar.Add(editButton);
+
       var addNodeButton = new ToolbarButton(OpenCreateNodeMenu) { text = "+" };
       toolbar.Add(addNodeButton);
 
@@ -281,9 +302,9 @@ namespace MultiplayerInfrastructure.Editor
 
       var tabs = new Toolbar();
       graphTabButton = new ToolbarButton(() => SetActiveTab(true)) { text = "Graph" };
-      editTabButton = new ToolbarButton(() => SetActiveTab(false)) { text = "Edit" };
+      definitionsTabButton = new ToolbarButton(() => SetActiveTab(false)) { text = "Definitions" };
       tabs.Add(graphTabButton);
-      tabs.Add(editTabButton);
+      tabs.Add(definitionsTabButton);
       rootVisualElement.Add(tabs);
 
       EnsureGraphData();
@@ -360,13 +381,13 @@ namespace MultiplayerInfrastructure.Editor
       rootVisualElement.Add(debugPanelView);
     }
 
-    private void CreateEditTab()
+    private void CreateDefinitionsTab()
     {
-      editContainer = new VisualElement { name = "ScenarioEditContainer" };
-      editContainer.style.flexGrow = 1f;
-      editContainer.style.paddingLeft = 12;
-      editContainer.style.paddingRight = 12;
-      editContainer.style.paddingTop = 12;
+      definitionsContainer = new VisualElement { name = "ScenarioDefinitionsContainer" };
+      definitionsContainer.style.flexGrow = 1f;
+      definitionsContainer.style.paddingLeft = 12;
+      definitionsContainer.style.paddingRight = 12;
+      definitionsContainer.style.paddingTop = 12;
 
       var scroll = new ScrollView();
       scroll.style.flexGrow = 1f;
@@ -390,17 +411,17 @@ namespace MultiplayerInfrastructure.Editor
         HelpBoxMessageType.Info));
       scroll.Add(new Button(OpenRequirementsWindow) { text = "Open Scenario Ingame Requirements" });
       scroll.Add(new Button(OpenSelectedScenarioTextAsset) { text = "Open Selected Scenario TextAsset" });
-      editContainer.Add(scroll);
-      rootVisualElement.Add(editContainer);
+      definitionsContainer.Add(scroll);
+      rootVisualElement.Add(definitionsContainer);
     }
 
     private void SetActiveTab(bool showGraph)
     {
       if (mainContainer != null) mainContainer.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
       if (debugPanelView != null) debugPanelView.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
-      if (editContainer != null) editContainer.style.display = showGraph ? DisplayStyle.None : DisplayStyle.Flex;
+      if (definitionsContainer != null) definitionsContainer.style.display = showGraph ? DisplayStyle.None : DisplayStyle.Flex;
       graphTabButton?.SetEnabled(!showGraph);
-      editTabButton?.SetEnabled(showGraph);
+      definitionsTabButton?.SetEnabled(showGraph);
       if (!showGraph)
       {
         actingNpcEditorView?.Refresh();
@@ -1377,9 +1398,66 @@ namespace MultiplayerInfrastructure.Editor
       menu.AddSeparator(string.Empty);
       menu.AddItem(new GUIContent("Save"), false, () => SaveGraphToJson());
       menu.AddItem(new GUIContent("Save As..."), false, () => SaveGraphToJsonAs());
+      if (!string.IsNullOrEmpty(currentFilePath) && File.Exists(currentFilePath))
+        menu.AddItem(new GUIContent(GetRevealFileMenuLabel()), false, RevealCurrentFile);
+      else
+        menu.AddDisabledItem(new GUIContent(GetRevealFileMenuLabel()));
+      menu.AddSeparator(string.Empty);
       menu.AddItem(new GUIContent("Validate"), false, () => ValidateGraphUsingRuntimeValidator());
 
       menu.ShowAsContext();
+    }
+
+    private void ShowEditMenu()
+    {
+      var menu = new GenericMenu();
+      if (nodeViews.Count > 0)
+        menu.AddItem(new GUIContent("Relocate Nodes"), false, RelocateNodes);
+      else
+        menu.AddDisabledItem(new GUIContent("Relocate Nodes"));
+      menu.ShowAsContext();
+    }
+
+    private void RelocateNodes()
+    {
+      if (nodeViews.Count == 0)
+        return;
+
+      // 현재 위치와 수동 라우팅을 먼저 Undo 기준점으로 확정한다.
+      UpdateUndoState(true);
+      CommitPendingSnapshot();
+
+      AutoLayoutNodes(true);
+
+      // 사이드카가 없는 최초 로드와 같은 상태로 맞춘다. 기존 reroute 지점은
+      // 새 노드 배치와 맞지 않으므로 제거한 뒤 논리 연결에서 다시 만든다.
+      graphView.SetEdgeRoutes(null);
+      graphView.RebuildAllEdges();
+      graphView.FrameAll();
+      RefreshDebugPanel();
+
+      // Relocate 전체를 한 번의 Undo 대상으로 기록한다.
+      UpdateUndoState(true);
+      CommitPendingSnapshot();
+    }
+
+    private static string GetRevealFileMenuLabel()
+    {
+      return Application.platform switch
+      {
+        RuntimePlatform.OSXEditor => "Reveal in Finder",
+        RuntimePlatform.WindowsEditor => "Show in File Explorer",
+        RuntimePlatform.LinuxEditor => "Show in File Manager",
+        _ => "Show in File Manager"
+      };
+    }
+
+    private void RevealCurrentFile()
+    {
+      if (string.IsNullOrEmpty(currentFilePath) || !File.Exists(currentFilePath))
+        return;
+
+      EditorUtility.RevealInFinder(Path.GetFullPath(currentFilePath));
     }
 
     /// <summary>
@@ -1459,7 +1537,7 @@ namespace MultiplayerInfrastructure.Editor
 
         if (editorData == null)
         {
-          AutoLayoutNodes();
+          AutoLayoutNodes(true);
         }
 
         graphView.SetEdgeRoutes(editorData?.EdgeRoutes);
@@ -1638,123 +1716,507 @@ namespace MultiplayerInfrastructure.Editor
       nodeViews[nodeView.Data.Identifier] = nodeView;
     }
 
-    private void AutoLayoutNodes()
+    private void AutoLayoutNodes(bool showProgress = false)
     {
       if (nodeViews.Count == 0) return;
 
-      // Compute incoming edge counts
-      var incoming = nodeViews.Keys.ToDictionary(id => id, id => 0);
+      try
+      {
+        ReportAutoLayoutProgress(showProgress, 0.02f, "자동 배치를 준비하는 중...");
+        AutoLayoutNodesInternal(showProgress);
+      }
+      finally
+      {
+        if (showProgress)
+          EditorUtility.ClearProgressBar();
+      }
+    }
+
+    private void AutoLayoutNodesInternal(bool showProgress)
+    {
+      var identifiers = nodeViews.Keys.OrderBy(id => id, StringComparer.Ordinal).ToList();
+      var outgoing = identifiers.ToDictionary(id => id, _ => new List<string>());
       foreach (var node in graphData.Nodes.Values)
       {
-        foreach (var tgt in GetOutgoingTargets(node))
+        if (node == null || !outgoing.TryGetValue(node.Identifier, out var targets)) continue;
+        targets.AddRange(GetOutgoingTargets(node)
+          .Where(outgoing.ContainsKey)
+          .Distinct());
+      }
+      ReportAutoLayoutProgress(showProgress, 0.12f, "그래프 연결을 분석하는 중...");
+
+      // DFS로 역방향(순환) 간선을 제외한다. 이 간선들은 화면에서는 그대로
+      // 보이지만 레이어 순서를 강제하지 않아 진행 경로가 뒤로 밀리지 않는다.
+      var forward = BuildAcyclicEdges(identifiers, outgoing);
+      var incoming = identifiers.ToDictionary(id => id, _ => new List<string>());
+      foreach (var pair in forward)
+        foreach (var target in pair.Value)
+          incoming[target].Add(pair.Key);
+      ReportAutoLayoutProgress(showProgress, 0.22f, "순환 연결을 정규화하는 중...");
+
+      // Longest-path layering: 모든 순방향 간선의 대상이 출발 노드보다
+      // 오른쪽 레이어에 놓이도록 한다.
+      var realNodeLayer = AssignLayers(identifiers, forward, incoming);
+      ReportAutoLayoutProgress(showProgress, 0.34f, "노드 레이어를 계산하는 중...");
+
+      // Sugiyama 정규화: 긴 간선을 중간 레이어의 dummy vertex 체인으로
+      // 분리하여, 교차 최소화가 모든 간선을 인접 레이어 단위로 처리하게 한다.
+      var layoutGraph = NormalizeLongEdges(realNodeLayer, forward);
+      var layers = layoutGraph.Layer.GroupBy(pair => pair.Value)
+        .OrderBy(group => group.Key)
+        .ToDictionary(group => group.Key, group => group
+          .Select(pair => pair.Key)
+          .OrderBy(id => id, StringComparer.Ordinal)
+          .ToList());
+      ReportAutoLayoutProgress(showProgress, 0.44f, "긴 연결을 레이어별로 분할하는 중...");
+
+      ReduceCrossings(
+        layers,
+        layoutGraph.Layer,
+        layoutGraph.Forward,
+        layoutGraph.Incoming,
+        (completed, total) =>
         {
-          if (incoming.ContainsKey(tgt)) incoming[tgt]++;
-        }
+          var progress = 0.44f + 0.38f * completed / Math.Max(1f, total);
+          ReportAutoLayoutProgress(
+            showProgress,
+            progress,
+            $"연결선 교차를 줄이는 중... ({completed}/{total})");
+        });
+      ReportAutoLayoutProgress(showProgress, 0.86f, "노드 세로 좌표를 정렬하는 중...");
+      var y = AssignVerticalCoordinates(
+        layers, layoutGraph.Layer, layoutGraph.Forward, layoutGraph.Incoming);
+      ReportAutoLayoutProgress(showProgress, 0.94f, "노드 위치를 적용하는 중...");
+
+      // 모든 실노드의 가장 이른 레이어를 GraphView의 왼쪽 끝(x = 0)으로 둔다.
+      var leftmostLayer = realNodeLayer.Count > 0 ? realNodeLayer.Values.Min() : 0;
+      foreach (var pair in realNodeLayer)
+      {
+        if (!nodeViews.TryGetValue(pair.Key, out var view)) continue;
+        view.SetPosition(new Rect(
+          new Vector2((pair.Value - leftmostLayer) * AutoLayoutColumnSpacing, y[pair.Key]),
+          view.DefaultSize));
+      }
+      ReportAutoLayoutProgress(showProgress, 1f, "그래프 노드 배치를 완료했습니다.");
+    }
+
+    private static void ReportAutoLayoutProgress(bool showProgress, float progress, string message)
+    {
+      if (!showProgress) return;
+      EditorUtility.DisplayProgressBar(
+        "Scenario Graph Auto Layout",
+        message,
+        Mathf.Clamp01(progress));
+    }
+
+    private static LayeredLayoutGraph NormalizeLongEdges(
+      IReadOnlyDictionary<string, int> realNodeLayer,
+      IReadOnlyDictionary<string, List<string>> forward)
+    {
+      var graph = new LayeredLayoutGraph();
+      foreach (var pair in realNodeLayer)
+      {
+        graph.Layer[pair.Key] = pair.Value;
+        graph.Forward[pair.Key] = new List<string>();
+        graph.Incoming[pair.Key] = new List<string>();
       }
 
-      var entries = incoming.Where(kvp => kvp.Value == 0).Select(kvp => kvp.Key).ToList();
-      if (entries.Count == 0)
+      var dummyIndex = 0;
+      foreach (var pair in forward)
       {
-        entries = nodeViews.Keys.OrderBy(id => id).Take(1).ToList();
-      }
-
-      var depth = new Dictionary<string, int>();
-      var queue = new Queue<string>();
-      foreach (var id in entries)
-      {
-        depth[id] = 0;
-        queue.Enqueue(id);
-      }
-
-      while (queue.Count > 0)
-      {
-        var current = queue.Dequeue();
-        var currentDepth = depth[current];
-        // 노드로 등록되지 않은 식별자(completionConditionIdentifier 등)는 건너뛴다.
-        if (!graphData.Nodes.TryGetValue(current, out var node))
-          continue;
-        foreach (var tgt in GetOutgoingTargets(node))
+        foreach (var target in pair.Value)
         {
-          if (!depth.ContainsKey(tgt))
+          var previous = pair.Key;
+          var sourceLayer = realNodeLayer[pair.Key];
+          var targetLayer = realNodeLayer[target];
+          for (var intermediateLayer = sourceLayer + 1;
+               intermediateLayer < targetLayer;
+               intermediateLayer++)
           {
-            depth[tgt] = currentDepth + 1;
-            queue.Enqueue(tgt);
+            var dummy = $"__scenario_layout_dummy_{dummyIndex++}";
+            graph.Layer[dummy] = intermediateLayer;
+            graph.Forward[dummy] = new List<string>();
+            graph.Incoming[dummy] = new List<string>();
+            AddLayoutEdge(graph, previous, dummy);
+            previous = dummy;
           }
-          else
-          {
-            depth[tgt] = Math.Min(depth[tgt], currentDepth + 1);
-          }
+          AddLayoutEdge(graph, previous, target);
         }
       }
+      return graph;
+    }
 
-      // Any nodes not reached: place after deepest layer
-      var maxDepth = depth.Count > 0 ? depth.Values.Max() : 0;
-      foreach (var id in nodeViews.Keys)
+    private static void AddLayoutEdge(LayeredLayoutGraph graph, string source, string target)
+    {
+      graph.Forward[source].Add(target);
+      graph.Incoming[target].Add(source);
+    }
+
+    private static Dictionary<string, List<string>> BuildAcyclicEdges(
+      IReadOnlyList<string> identifiers, IReadOnlyDictionary<string, List<string>> outgoing)
+    {
+      var forward = identifiers.ToDictionary(id => id, _ => new List<string>());
+      var state = identifiers.ToDictionary(id => id, _ => 0);
+
+      void Visit(string source)
       {
-        if (!depth.ContainsKey(id)) depth[id] = maxDepth + 1;
-      }
-
-      // 뱀 형태(serpentine / boustrophedon) 배치.
-      // - 연결된 노드는 depth(열)가 1씩 증가하므로 가까이 배치된다.
-      // - 같은 depth에 동시에 연결된 노드들은 세로로 나란히 쌓는다.
-      // - depth가 columnsPerBand 이상 오른쪽으로 이어지면 아래 밴드로 내려가고
-      //   진행 방향을 좌우 반전시켜, 오른쪽 끝에서 왼쪽으로 되돌아온다.
-      // 간격/접힘 기준은 클래스 상단의 AutoLayout* 상수로 조정한다.
-      const float spacingX = AutoLayoutColumnSpacing;
-      const float spacingY = AutoLayoutRowSpacing;
-      const int columnsPerBand = AutoLayoutColumnsPerBand;
-
-      // 각 depth(열)에 몇 개의 노드가 세로로 쌓이는지 미리 계산해,
-      // 밴드가 아래로 내려갈 때 겹치지 않도록 밴드 높이를 잡는다.
-      var groupsByDepth = depth
-        .GroupBy(kvp => kvp.Value)
-        .ToDictionary(g => g.Key, g => g.Select(kvp => kvp.Key).OrderBy(id => id).ToList());
-
-      // 밴드(bandIndex = depth / columnsPerBand) 별로 가장 많이 쌓인 열의 노드 수를 구한다.
-      var bandRowCount = new Dictionary<int, int>();
-      foreach (var kvp in groupsByDepth)
-      {
-        int band = kvp.Key / columnsPerBand;
-        int rows = kvp.Value.Count;
-        if (!bandRowCount.TryGetValue(band, out var existing) || rows > existing)
-          bandRowCount[band] = rows;
-      }
-
-      // 각 밴드의 시작 y 오프셋(윗쪽 누적 높이)을 계산한다.
-      var bandYOffset = new Dictionary<int, float>();
-      float accumulatedY = 0f;
-      int maxBand = bandRowCount.Count > 0 ? bandRowCount.Keys.Max() : 0;
-      for (int band = 0; band <= maxBand; band++)
-      {
-        bandYOffset[band] = accumulatedY;
-        int rows = bandRowCount.TryGetValue(band, out var r) ? r : 1;
-        // 밴드 사이에 한 칸 여유를 두어 세로로 쌓인 노드와 다음 밴드가 겹치지 않게 한다.
-        accumulatedY += (rows + 1) * spacingY;
-      }
-
-      foreach (var kvp in groupsByDepth.OrderBy(g => g.Key))
-      {
-        int d = kvp.Key;
-        var nodesInDepth = kvp.Value;
-
-        int band = d / columnsPerBand;
-        int columnInBand = d % columnsPerBand;
-
-        // 짝수 밴드는 왼→오, 홀수 밴드는 오→왼 방향으로 진행한다.
-        bool leftToRight = (band % 2) == 0;
-        int effectiveColumn = leftToRight ? columnInBand : (columnsPerBand - 1 - columnInBand);
-
-        float x = effectiveColumn * spacingX;
-        float yBase = bandYOffset.TryGetValue(band, out var yo) ? yo : band * spacingY;
-
-        for (int i = 0; i < nodesInDepth.Count; i++)
+        state[source] = 1;
+        foreach (var target in outgoing[source])
         {
-          var id = nodesInDepth[i];
-          if (!nodeViews.TryGetValue(id, out var view)) continue;
-          var pos = new Vector2(x, yBase + i * spacingY);
-          view.SetPosition(new Rect(pos, view.DefaultSize));
+          // 현재 DFS 경로로 되돌아가는 간선은 feedback edge로 취급한다.
+          if (state[target] == 1) continue;
+          forward[source].Add(target);
+          if (state[target] == 0) Visit(target);
+        }
+        state[source] = 2;
+      }
+
+      foreach (var id in identifiers)
+        if (state[id] == 0) Visit(id);
+      return forward;
+    }
+
+    private static Dictionary<string, int> AssignLayers(
+      IReadOnlyList<string> identifiers,
+      IReadOnlyDictionary<string, List<string>> forward,
+      IReadOnlyDictionary<string, List<string>> incoming)
+    {
+      var indegree = identifiers.ToDictionary(id => id, id => incoming[id].Count);
+      var ready = new SortedSet<string>(identifiers.Where(id => indegree[id] == 0), StringComparer.Ordinal);
+      var layer = identifiers.ToDictionary(id => id, _ => 0);
+
+      while (ready.Count > 0)
+      {
+        var source = ready.Min;
+        ready.Remove(source);
+        foreach (var target in forward[source])
+        {
+          layer[target] = Math.Max(layer[target], layer[source] + 1);
+          if (--indegree[target] == 0) ready.Add(target);
         }
       }
+      return layer;
+    }
+
+    private static void ReduceCrossings(
+      IReadOnlyDictionary<int, List<string>> layers,
+      IReadOnlyDictionary<string, int> layer,
+      IReadOnlyDictionary<string, List<string>> forward,
+      IReadOnlyDictionary<string, List<string>> incoming,
+      Action<int, int> onPassCompleted = null)
+    {
+      var orderedLayers = layers.Keys.OrderBy(value => value).ToList();
+      var bestScore = EvaluateLayout(layers, layer, forward);
+      var bestOrder = CloneLayerOrder(layers);
+
+      for (var pass = 0; pass < AutoLayoutCrossingReductionPasses; pass++)
+      {
+        Sweep(orderedLayers, 1, incoming, layer, layers, forward);
+        Sweep(orderedLayers, -1, forward, layer, layers, forward);
+        TransposeLayers(orderedLayers, layers, layer, forward);
+
+        var score = EvaluateLayout(layers, layer, forward);
+        if (IsBetter(score, bestScore))
+        {
+          bestScore = score;
+          bestOrder = CloneLayerOrder(layers);
+        }
+
+        onPassCompleted?.Invoke(pass + 1, AutoLayoutCrossingReductionPasses);
+      }
+
+      RestoreLayerOrder(layers, bestOrder);
+    }
+
+    private static void Sweep(
+      IReadOnlyList<int> orderedLayers, int direction,
+      IReadOnlyDictionary<string, List<string>> neighbors,
+      IReadOnlyDictionary<string, int> layer,
+      IReadOnlyDictionary<int, List<string>> layers,
+      IReadOnlyDictionary<string, List<string>> forward)
+    {
+      var start = direction > 0 ? 1 : orderedLayers.Count - 2;
+      var end = direction > 0 ? orderedLayers.Count : -1;
+      for (var index = start; index != end; index += direction)
+      {
+        var positions = layers.ToDictionary(pair => pair.Key,
+          pair => pair.Value.Select((id, order) => new { id, order })
+            .ToDictionary(pair => pair.id, pair => pair.order));
+        layers[orderedLayers[index]].Sort((left, right) =>
+        {
+          var leftMedian = MedianNeighborOrder(left, neighbors, layer, positions);
+          var rightMedian = MedianNeighborOrder(right, neighbors, layer, positions);
+          var comparison = leftMedian.CompareTo(rightMedian);
+          if (comparison != 0) return comparison;
+
+          // 같은 부모에서 갈라지는 대상은 부모 노드 위치가 같아 median도 같다.
+          // 이때 실제 출력 포트의 위→아래 순서로 정렬해야 연결선이 교차하지 않는다.
+          if (direction > 0)
+          {
+            var leftPortOrder = MedianIncomingPortOrder(left, neighbors, forward);
+            var rightPortOrder = MedianIncomingPortOrder(right, neighbors, forward);
+            comparison = leftPortOrder.CompareTo(rightPortOrder);
+            if (comparison != 0) return comparison;
+          }
+
+          return StringComparer.Ordinal.Compare(left, right);
+        });
+      }
+    }
+
+    private static float MedianNeighborOrder(string id,
+      IReadOnlyDictionary<string, List<string>> neighbors,
+      IReadOnlyDictionary<string, int> layer,
+      IReadOnlyDictionary<int, Dictionary<string, int>> positions)
+    {
+      var orders = neighbors[id]
+        .Where(other => layer[other] != layer[id] && positions[layer[other]].ContainsKey(other))
+        .Select(other => (float)positions[layer[other]][other]).OrderBy(value => value).ToList();
+      return orders.Count == 0 ? float.MaxValue : orders[orders.Count / 2];
+    }
+
+    private static float MedianIncomingPortOrder(
+      string target,
+      IReadOnlyDictionary<string, List<string>> incoming,
+      IReadOnlyDictionary<string, List<string>> forward)
+    {
+      var orders = incoming[target]
+        .Select(source => forward[source].IndexOf(target))
+        .Where(index => index >= 0)
+        .OrderBy(index => index)
+        .ToList();
+      if (orders.Count == 0) return float.MaxValue;
+
+      var middle = orders.Count / 2;
+      return orders.Count % 2 == 1
+        ? orders[middle]
+        : (orders[middle - 1] + orders[middle]) * 0.5f;
+    }
+
+    private static Dictionary<int, List<string>> CloneLayerOrder(
+      IReadOnlyDictionary<int, List<string>> layers)
+    {
+      return layers.ToDictionary(pair => pair.Key, pair => pair.Value.ToList());
+    }
+
+    private static void RestoreLayerOrder(
+      IReadOnlyDictionary<int, List<string>> layers,
+      IReadOnlyDictionary<int, List<string>> savedOrder)
+    {
+      foreach (var pair in savedOrder)
+      {
+        layers[pair.Key].Clear();
+        layers[pair.Key].AddRange(pair.Value);
+      }
+    }
+
+    private static void TransposeLayers(
+      IReadOnlyList<int> orderedLayers,
+      IReadOnlyDictionary<int, List<string>> layers,
+      IReadOnlyDictionary<string, int> layer,
+      IReadOnlyDictionary<string, List<string>> forward)
+    {
+      var improved = true;
+      while (improved)
+      {
+        improved = false;
+        foreach (var layerIndex in orderedLayers)
+        {
+          var nodes = layers[layerIndex];
+          for (var index = 0; index + 1 < nodes.Count; index++)
+          {
+            var before = EvaluateLayout(layers, layer, forward);
+            (nodes[index], nodes[index + 1]) = (nodes[index + 1], nodes[index]);
+            var after = EvaluateLayout(layers, layer, forward);
+            if (IsBetter(after, before))
+            {
+              improved = true;
+            }
+            else
+            {
+              (nodes[index], nodes[index + 1]) = (nodes[index + 1], nodes[index]);
+            }
+          }
+        }
+      }
+    }
+
+    private static LayoutScore EvaluateLayout(
+      IReadOnlyDictionary<int, List<string>> layers,
+      IReadOnlyDictionary<string, int> layer,
+      IReadOnlyDictionary<string, List<string>> forward)
+    {
+      return new LayoutScore(
+        CountCrossings(layers, layer, forward),
+        CalculateVerticalEdgeCost(layers, layer, forward));
+    }
+
+    private static bool IsBetter(LayoutScore candidate, LayoutScore current)
+    {
+      if (candidate.CrossingCount != current.CrossingCount)
+        return candidate.CrossingCount < current.CrossingCount;
+
+      return candidate.VerticalEdgeCost < current.VerticalEdgeCost - 0.001f;
+    }
+
+    private static float CalculateVerticalEdgeCost(
+      IReadOnlyDictionary<int, List<string>> layers,
+      IReadOnlyDictionary<string, int> layer,
+      IReadOnlyDictionary<string, List<string>> forward)
+    {
+      var centeredPositions = layers.ToDictionary(
+        pair => pair.Key,
+        pair =>
+        {
+          var center = (pair.Value.Count - 1) * 0.5f;
+          return pair.Value.Select((id, index) => new { id, position = index - center })
+            .ToDictionary(item => item.id, item => item.position);
+        });
+
+      var cost = 0f;
+      foreach (var pair in forward)
+      {
+        var sourceLayer = layer[pair.Key];
+        var sourcePosition = centeredPositions[sourceLayer][pair.Key];
+        var portCenter = (pair.Value.Count - 1) * 0.5f;
+        for (var portIndex = 0; portIndex < pair.Value.Count; portIndex++)
+        {
+          var target = pair.Value[portIndex];
+          var targetPosition = centeredPositions[layer[target]][target];
+          // 포트 묶음의 위·아래 위치도 작은 가중치로 반영한다.
+          var sourceEndpoint = sourcePosition + (portIndex - portCenter) * 0.1f;
+          cost += Mathf.Abs(targetPosition - sourceEndpoint);
+        }
+      }
+      return cost;
+    }
+
+    private static int CountCrossings(
+      IReadOnlyDictionary<int, List<string>> layers,
+      IReadOnlyDictionary<string, int> layer,
+      IReadOnlyDictionary<string, List<string>> forward)
+    {
+      var positions = layers.ToDictionary(
+        pair => pair.Key,
+        pair => pair.Value.Select((id, index) => new { id, index })
+          .ToDictionary(item => item.id, item => item.index));
+      var edgesByLayerPair = new Dictionary<(int source, int target), List<(float source, int target)>>();
+
+      foreach (var pair in forward)
+      {
+        var sourceLayer = layer[pair.Key];
+        var sourceNodeOrder = positions[sourceLayer][pair.Key];
+        var portCount = Math.Max(1, pair.Value.Count);
+        for (var portIndex = 0; portIndex < pair.Value.Count; portIndex++)
+        {
+          var target = pair.Value[portIndex];
+          var targetLayer = layer[target];
+          var key = (sourceLayer, targetLayer);
+          if (!edgesByLayerPair.TryGetValue(key, out var endpoints))
+          {
+            endpoints = new List<(float source, int target)>();
+            edgesByLayerPair[key] = endpoints;
+          }
+
+          // 같은 노드의 여러 출력도 실제 포트 순서가 비교되도록 작은 분수를 더한다.
+          var sourceEndpoint = sourceNodeOrder + (portIndex + 1f) / (portCount + 1f);
+          endpoints.Add((sourceEndpoint, positions[targetLayer][target]));
+        }
+      }
+
+      var crossings = 0;
+      foreach (var endpoints in edgesByLayerPair.Values)
+      {
+        for (var left = 0; left < endpoints.Count; left++)
+        {
+          for (var right = left + 1; right < endpoints.Count; right++)
+          {
+            var sourceDelta = endpoints[left].source - endpoints[right].source;
+            var targetDelta = endpoints[left].target - endpoints[right].target;
+            if (sourceDelta * targetDelta < 0f)
+              crossings++;
+          }
+        }
+      }
+      return crossings;
+    }
+
+    private static Dictionary<string, float> AssignVerticalCoordinates(
+      IReadOnlyDictionary<int, List<string>> layers,
+      IReadOnlyDictionary<string, int> layer,
+      IReadOnlyDictionary<string, List<string>> forward,
+      IReadOnlyDictionary<string, List<string>> incoming)
+    {
+      // 각 레이어를 자체 중심 기준으로 초기화한다. 이후 하향/상향 sweep에서
+      // 부모는 자식 묶음의 중심으로, 자식은 부모의 중심으로 당겨진다.
+      var y = new Dictionary<string, float>();
+      foreach (var pair in layers)
+      {
+        var center = (pair.Value.Count - 1) * AutoLayoutRowSpacing * 0.5f;
+        for (var index = 0; index < pair.Value.Count; index++)
+          y[pair.Value[index]] = index * AutoLayoutRowSpacing - center;
+      }
+
+      var orderedLayers = layers.Keys.OrderBy(value => value).ToList();
+      for (var pass = 0; pass < AutoLayoutCoordinateAssignmentPasses; pass++)
+      {
+        foreach (var layerIndex in orderedLayers)
+          AlignLayerAroundNeighbors(layers[layerIndex], incoming, y);
+        for (var index = orderedLayers.Count - 1; index >= 0; index--)
+          AlignLayerAroundNeighbors(layers[orderedLayers[index]], forward, y);
+      }
+
+      // GraphView의 일반적인 양수 좌표 영역에서 시작하도록 전체 결과만 이동한다.
+      var minimum = y.Count > 0 ? y.Values.Min() : 0f;
+      foreach (var id in layer.Keys)
+        y[id] -= minimum;
+      return y;
+    }
+
+    private static void AlignLayerAroundNeighbors(
+      IReadOnlyList<string> nodes,
+      IReadOnlyDictionary<string, List<string>> neighbors,
+      IDictionary<string, float> y)
+    {
+      if (nodes.Count == 0) return;
+
+      var desired = nodes
+        .Select(id => MedianCoordinate(neighbors[id], y, y[id]))
+        .ToList();
+      var placed = new float[nodes.Count];
+      placed[0] = desired[0];
+      for (var index = 1; index < nodes.Count; index++)
+      {
+        placed[index] = Mathf.Max(
+          desired[index],
+          placed[index - 1] + AutoLayoutRowSpacing);
+      }
+
+      // 충돌 해소가 한쪽 방향으로만 밀어내지 않도록 레이어 전체를 원래
+      // 목표 중심으로 되돌린다. 분기 부모가 자식 묶음의 중앙에 놓이게 된다.
+      var desiredCenter = desired.Average();
+      var placedCenter = placed.Average();
+      var offset = desiredCenter - placedCenter;
+      for (var index = 0; index < nodes.Count; index++)
+        y[nodes[index]] = placed[index] + offset;
+    }
+
+    private static float MedianCoordinate(
+      IEnumerable<string> identifiers,
+      IDictionary<string, float> y,
+      float fallback)
+    {
+      var coordinates = identifiers
+        .Where(y.ContainsKey)
+        .Select(id => y[id])
+        .OrderBy(value => value)
+        .ToList();
+      if (coordinates.Count == 0) return fallback;
+
+      var middle = coordinates.Count / 2;
+      return coordinates.Count % 2 == 1
+        ? coordinates[middle]
+        : (coordinates[middle - 1] + coordinates[middle]) * 0.5f;
     }
 
     private static IEnumerable<string> GetOutgoingTargets(IScenarioNode node)
@@ -1780,6 +2242,12 @@ namespace MultiplayerInfrastructure.Editor
         {
           if (!string.IsNullOrEmpty(branch.Identifier)) yield return branch.Identifier;
         }
+      }
+
+      if (node is ScenarioQuizNode quiz)
+      {
+        if (!string.IsNullOrEmpty(quiz.OnCorrectNextIdentifier)) yield return quiz.OnCorrectNextIdentifier;
+        if (!string.IsNullOrEmpty(quiz.OnIncorrectNextIdentifier)) yield return quiz.OnIncorrectNextIdentifier;
       }
     }
 

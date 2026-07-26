@@ -32,6 +32,7 @@ namespace MultiplayerInfrastructure.Entity
     [SerializeField, Min(0f)] private float _turnSpeed = 120f;
     [SerializeField] private float _forwardYawOffsetDegrees = -90f;
     [SerializeField] private LayerMask _movementBlockingMask = ~0;
+    [SerializeField, Min(0f)] private float _maximumToggleDistance = 3f;
     [SerializeField] private string _exitHint = "왼쪽 Shift 키를 누르면 조종을 종료합니다.";
 
     [Header("Attach points")]
@@ -122,7 +123,7 @@ namespace MultiplayerInfrastructure.Entity
       if (player.Owner == null || !player.Owner.IsValid)
         return;
       if (IsServerStarted)
-        ToggleOnServer(player.Owner.ClientId);
+        TryToggleOnServer(player.Owner.ClientId, player);
       else if (!_togglePending)
       {
         _togglePending = true;
@@ -133,11 +134,14 @@ namespace MultiplayerInfrastructure.Entity
     [ServerRpc(RequireOwnership = false)]
     private void CmdToggle(NetworkConnection sender = null)
     {
-      if (sender != null && sender.IsValid)
-        ToggleOnServer(sender.ClientId);
+      if (sender == null || !sender.IsValid ||
+          !TryResolvePlayer(sender.ClientId, out var player))
+        return;
+
+      TryToggleOnServer(sender.ClientId, player);
     }
 
-    private void ToggleOnServer(int clientId)
+    private bool TryToggleOnServer(int clientId, PlayerController player)
     {
       int handle = FindHandle(clientId);
       if (handle >= 0)
@@ -147,14 +151,18 @@ namespace MultiplayerInfrastructure.Entity
       }
       else
       {
+        if (!IsWithinToggleDistance(player))
+          return false;
+
         handle = FindFreeHandle();
         if (handle < 0)
-          return;
+          return false;
         SetHandle(handle, clientId);
         _serverInputs[clientId] = Vector2.zero;
         ParticipantAssigned?.Invoke(handle);
       }
       ApplyLocalParticipant();
+      return true;
     }
 
     private void UpdateNetworkMovement()
@@ -316,6 +324,7 @@ namespace MultiplayerInfrastructure.Entity
       _localParticipants[player.GetInstanceID()] = participant;
       player.AlignYawTo(GetForwardDirection());
       player.SetForcedFollowAnchor(participant.AttachPoint);
+      player.SetRidableControlActive(this);
       player.RefreshInteractableHintsNow();
       _exitKeyReady = false;
       if (player.IsOwner)
@@ -332,6 +341,7 @@ namespace MultiplayerInfrastructure.Entity
         _titleUI?.ClearActionbar();
 
       participant?.Player?.ClearForcedFollowAnchor(participant.AttachPoint);
+      participant?.Player?.ClearRidableControlActive(this);
       participant?.Player?.RefreshInteractableHintsNow();
     }
 
@@ -423,6 +433,42 @@ namespace MultiplayerInfrastructure.Entity
         go.AddComponent<RidableAttachPointObject>();
         _playerAttachPoints.Add(go.transform);
       }
+    }
+
+    private bool IsWithinToggleDistance(PlayerController player)
+    {
+      if (player == null)
+        return false;
+
+      float maximumSqrDistance = _maximumToggleDistance * _maximumToggleDistance;
+      Vector3 playerPosition = player.transform.position;
+      if ((playerPosition - transform.position).sqrMagnitude <= maximumSqrDistance)
+        return true;
+
+      for (int i = 0; i < _playerAttachPoints.Count; i++)
+      {
+        var attachPoint = _playerAttachPoints[i];
+        if (attachPoint != null &&
+            (playerPosition - attachPoint.position).sqrMagnitude <= maximumSqrDistance)
+          return true;
+      }
+
+      return false;
+    }
+
+    private static bool TryResolvePlayer(int clientId, out PlayerController player)
+    {
+      player = null;
+      if (!Registry.Registry.TryGetEntityByClientId(clientId, out var descriptor) ||
+          descriptor?.GameObject == null)
+        return false;
+
+      player = descriptor.GameObject.GetComponent<PlayerController>() ??
+               descriptor.GameObject.GetComponentInChildren<PlayerController>(true);
+      return player != null &&
+             player.Owner != null &&
+             player.Owner.IsValid &&
+             player.Owner.ClientId == clientId;
     }
 
     private static bool TryGetLocalOwnerPlayer(out PlayerController player)

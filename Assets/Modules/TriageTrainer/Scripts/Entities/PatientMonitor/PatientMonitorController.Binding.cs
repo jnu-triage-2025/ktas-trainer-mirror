@@ -16,6 +16,10 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       if (ReferenceEquals(_monitoringPatient, patient))
         return;
 
+      var existingMonitor = patient != null ? patient.MonitoringPatientMonitor : null;
+      if (existingMonitor != null && !ReferenceEquals(existingMonitor, this))
+        existingMonitor.SetMonitoringPatient(null);
+
       var previousPatient = _monitoringPatient;
 
       // 이전 환자에게 이 모니터가 더 이상 감시하지 않음을 알림
