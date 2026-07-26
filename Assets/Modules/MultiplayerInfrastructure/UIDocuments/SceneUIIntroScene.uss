@@ -57,7 +57,7 @@
 /* TextField의 실제 입력 요소와 placeholder 상태는 별도 USS 클래스다.
    루트나 내부 컨테이너에 색을 주면 상태별 색이 뒤섞일 수 있으므로 직접 지정한다. */
 .text-field .unity-base-text-field__input {
-  color: #e6edf7;
+  color: #354a67;
 }
 
 .text-field .unity-base-text-field__input--placeholder {

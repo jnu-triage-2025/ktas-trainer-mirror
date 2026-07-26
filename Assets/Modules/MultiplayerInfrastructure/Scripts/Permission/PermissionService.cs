@@ -156,8 +156,6 @@ namespace MultiplayerInfrastructure.Permission
         string json = File.ReadAllText(path);
         var loaded = JsonUtility.FromJson<PermissionsFileJson>(json);
         _file = ConvertFromJson(loaded);
-        if (MigrateDefaultOperatorGamerulePermission())
-          Save();
         _loaded = true;
         Debug.Log($"[PermissionService] Loaded from '{path}'.");
       }
@@ -167,32 +165,6 @@ namespace MultiplayerInfrastructure.Permission
         _file = BuildDefaultFile();
         _loaded = true;
       }
-    }
-
-    /// <summary>
-    /// gamerule 도입 전 생성된 기본 permissions.json을 호환 이관한다.
-    /// 기존 기본 operator 권한(permission, log)과 정확히 일치하는 경우에만 추가하므로,
-    /// 서버 관리자가 별도로 구성한 권한 정책에는 개입하지 않는다.
-    /// </summary>
-    private static bool MigrateDefaultOperatorGamerulePermission()
-    {
-      if (!_file.permissions.TryGetValue("operator", out var operatorRole) ||
-          operatorRole?.permissions == null ||
-          operatorRole.permissions.Exists(permission =>
-            string.Equals(permission, "gamerule", StringComparison.OrdinalIgnoreCase)))
-        return false;
-
-      bool isLegacyDefaultOperator = operatorRole.permissions.Count == 2 &&
-        operatorRole.permissions.Exists(permission =>
-          string.Equals(permission, "permission", StringComparison.OrdinalIgnoreCase)) &&
-        operatorRole.permissions.Exists(permission =>
-          string.Equals(permission, "log", StringComparison.OrdinalIgnoreCase));
-      if (!isLegacyDefaultOperator)
-        return false;
-
-      operatorRole.permissions.Add("gamerule");
-      Debug.Log("[PermissionService] Migrated legacy operator role with gamerule permission.");
-      return true;
     }
 
     /// <summary>현재 상태를 파일에 저장한다.</summary>

@@ -1,5 +1,6 @@
 {
   "identifier": "scenario_graph_extended_nodes_example",
+  "defaultEntrypoint": "intro_notification",
   "tags": [
     "airway",
     "triage_lead",

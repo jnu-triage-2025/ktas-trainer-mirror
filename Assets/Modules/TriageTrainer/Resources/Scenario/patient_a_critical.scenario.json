@@ -1,5 +1,6 @@
 {
   "identifier": "patient_a_critical",
+  "defaultEntrypoint": "SPAWN_A",
   "tags": [],
   "questDefinitionIncludes": [
     "patient_a_critical.quests.quest"

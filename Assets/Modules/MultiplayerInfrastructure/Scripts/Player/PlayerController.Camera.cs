@@ -50,7 +50,7 @@ namespace MultiplayerInfrastructure.Player
       }
 
       // Ensure camera sticks to the local owner's attach point even if other events tried to retarget.
-      if (_camControl.FollowingCameraHolder != CameraHolderTransform)
+      if (_camControl.FollowingCameraHolder != CameraAttachPoint?.PivotTransform)
         _camControl.SetTarget(this);
     }
 

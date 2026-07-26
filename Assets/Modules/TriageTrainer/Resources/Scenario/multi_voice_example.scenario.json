@@ -1,5 +1,6 @@
 {
   "identifier": "multi_voice_example",
+  "defaultEntrypoint": "narrator_intro",
   "tags": [],
   "nodes": {
     "narrator_intro": {

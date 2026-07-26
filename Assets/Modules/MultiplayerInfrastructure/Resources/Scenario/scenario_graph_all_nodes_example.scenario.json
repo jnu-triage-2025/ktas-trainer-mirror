@@ -1,5 +1,6 @@
 {
   "identifier": "scenario_graph_all_nodes_example",
+  "defaultEntrypoint": "dialogue_intro",
   "tags": ["airway", "triage_lead", "support", "observer"],
   "nodes": {
     "dialogue_intro": {

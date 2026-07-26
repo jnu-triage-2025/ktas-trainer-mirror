@@ -30,7 +30,6 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("  <target>", "@self, display name, entity id, or @selector."),
     };
     public string PermissionIdentifier => "tag";
-    public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
 

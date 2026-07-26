@@ -7,7 +7,7 @@ using MultiplayerInfrastructure.Registry;
 namespace MultiplayerInfrastructure.Command
 {
   /// <summary>
-  /// Groups item-related commands while preserving the legacy top-level /give command.
+  /// Groups item-related commands.
   /// </summary>
   public class CommandDefinition_Item : IChatCommandModel, IChatCommandUsage
   {
@@ -15,11 +15,10 @@ namespace MultiplayerInfrastructure.Command
     public string Description => "Manage and inspect registered items.";
     public System.Collections.Generic.IReadOnlyList<UsageLine> UsageLines => new[]
     {
-      new UsageLine("item give <item> [count] [target]", "Give an item. Same as /give."),
+      new UsageLine("item give <item> [count] [target]", "Give an item."),
       new UsageLine("item list", "List all registered items."),
     };
     public string PermissionIdentifier => "give";
-    public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
     private readonly CommandDefinition_Give _giveCommand;

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Encodings.Web;
 using UnityEngine;
@@ -47,17 +46,15 @@ namespace MultiplayerInfrastructure.Scenario
         throw new ArgumentException("Scenario json text is null or empty.", nameof(json));
       }
 
-      var normalizedJson = MigrateLegacyNpcControlJson(json);
-
       if (validateWithSchema)
       {
-        ScenarioJsonSchemaValidator.Validate(normalizedJson);
+        ScenarioJsonSchemaValidator.Validate(json);
       }
 
       ScenarioGraphDTO dto;
       try
       {
-        dto = JsonSerializer.Deserialize<ScenarioGraphDTO>(normalizedJson, SerializerOptions);
+        dto = JsonSerializer.Deserialize<ScenarioGraphDTO>(json, SerializerOptions);
       }
       catch (JsonException ex)
       {
@@ -65,97 +62,6 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       return ToDomain(dto);
-    }
-
-    private static string MigrateLegacyNpcControlJson(string json)
-    {
-      if (json.IndexOf("\"NPCMove\"", StringComparison.Ordinal) < 0
-          && json.IndexOf("\"NpcInteractControl\"", StringComparison.Ordinal) < 0)
-        return json;
-
-      StrictJsonPropertyValidator.RejectDuplicateProperties(json);
-      using var document = JsonDocument.Parse(json, new JsonDocumentOptions
-      {
-        AllowTrailingCommas = true,
-        CommentHandling = JsonCommentHandling.Skip
-      });
-      using var stream = new MemoryStream();
-      using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
-        WriteMigratedLegacyNpcElement(writer, document.RootElement);
-      return Encoding.UTF8.GetString(stream.ToArray());
-    }
-
-    private static void WriteMigratedLegacyNpcElement(Utf8JsonWriter writer, JsonElement element)
-    {
-      if (element.ValueKind == JsonValueKind.Object)
-      {
-        string nodeType = element.TryGetProperty("nodeType", out var nodeTypeElement)
-          && nodeTypeElement.ValueKind == JsonValueKind.String
-            ? nodeTypeElement.GetString()
-            : null;
-        bool legacyMove = string.Equals(nodeType, "NPCMove", StringComparison.Ordinal);
-        bool legacyInteract = string.Equals(nodeType, "NpcInteractControl", StringComparison.Ordinal);
-
-        writer.WriteStartObject();
-        foreach (var property in element.EnumerateObject())
-        {
-          if ((legacyMove || legacyInteract)
-              && string.Equals(property.Name, "nodeType", StringComparison.Ordinal))
-          {
-            writer.WriteString("nodeType", "NPCControl");
-            writer.WriteString("mode", legacyMove ? "Control" : "Update");
-            continue;
-          }
-
-          if (legacyInteract && string.Equals(property.Name, "operation", StringComparison.Ordinal))
-            continue;
-
-          writer.WritePropertyName(property.Name);
-          WriteMigratedLegacyNpcElement(writer, property.Value);
-        }
-
-        if (legacyInteract)
-        {
-          string operation = element.TryGetProperty("operation", out var operationElement)
-              && operationElement.ValueKind == JsonValueKind.String
-            ? operationElement.GetString()
-            : "Add";
-          switch (operation)
-          {
-            case "Remove":
-              writer.WriteString("interactOperation", "Delete");
-              break;
-            case "Enable":
-              writer.WriteString("interactOperation", "Update");
-              writer.WriteBoolean("interactEnabled", true);
-              break;
-            case "Disable":
-              writer.WriteString("interactOperation", "Update");
-              writer.WriteBoolean("interactEnabled", false);
-              break;
-            case "UpdateDisplay":
-              writer.WriteString("interactOperation", "None");
-              break;
-            default:
-              writer.WriteString("interactOperation", "Create");
-              break;
-          }
-        }
-
-        writer.WriteEndObject();
-        return;
-      }
-
-      if (element.ValueKind == JsonValueKind.Array)
-      {
-        writer.WriteStartArray();
-        foreach (var item in element.EnumerateArray())
-          WriteMigratedLegacyNpcElement(writer, item);
-        writer.WriteEndArray();
-        return;
-      }
-
-      element.WriteTo(writer);
     }
 
     private static ScenarioGraph ToDomain(ScenarioGraphDTO dto)
@@ -176,7 +82,9 @@ namespace MultiplayerInfrastructure.Scenario
       graph.QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(dto.QuestDefinitionIncludes);
       graph.ActingNpcs = ConvertActingNpcs(dto.ActingNpcs);
       graph.Waypoints = ConvertWaypoints(dto.Waypoints);
-      graph.DefaultEntrypoint = string.IsNullOrWhiteSpace(dto.DefaultEntrypoint) ? null : dto.DefaultEntrypoint.Trim();
+      graph.DefaultEntrypoint = dto.DefaultEntrypoint?.Trim();
+      if (string.IsNullOrWhiteSpace(graph.DefaultEntrypoint))
+        throw new JsonException("'defaultEntrypoint' is required.");
 
       foreach (var pair in dto.Nodes)
       {
@@ -194,6 +102,9 @@ namespace MultiplayerInfrastructure.Scenario
 
         graph.Add(ConvertNode(nodeDTO));
       }
+
+      if (!graph.TryGetNode(graph.DefaultEntrypoint, out _))
+        throw new JsonException($"defaultEntrypoint '{graph.DefaultEntrypoint}' does not reference a node.");
 
       ValidateActingNpcSpawnReferences(graph);
       WarnForUndeclaredTags(graph);

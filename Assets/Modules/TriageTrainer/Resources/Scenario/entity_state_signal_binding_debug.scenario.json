@@ -1,5 +1,6 @@
 {
   "identifier": "entity_state_signal_binding_debug",
+  "defaultEntrypoint": "intro_print",
   "tags": [],
   "nodes": {
     "intro_print": {

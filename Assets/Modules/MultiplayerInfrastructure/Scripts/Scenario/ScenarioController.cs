@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using MultiplayerInfrastructure.Chat;
+using MultiplayerInfrastructure.Command;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.UI;
 using MultiplayerInfrastructure.Camera;
@@ -640,15 +641,6 @@ namespace MultiplayerInfrastructure.Scenario
         if (!string.IsNullOrEmpty(graph.DefaultEntrypoint))
         {
           startId = graph.DefaultEntrypoint;
-        }
-        else
-        {
-          // 하위호환: defaultEntrypoint가 없으면 첫 번째 노드 사용
-          foreach (var node in graph.Nodes.Values)
-          {
-            startId = node.Identifier;
-            break;
-          }
         }
       }
 
@@ -5106,17 +5098,24 @@ namespace MultiplayerInfrastructure.Scenario
 
       if (InstanceFinder.IsServerStarted || InstanceFinder.IsOffline)
       {
-        var chatService = ResolveChatService();
-        if (chatService == null)
+        // 아이템 지급은 채팅 명령 서비스가 아니라 /give와 공유하는 지급 도메인 로직을 직접 호출한다.
+        // 시나리오 실행은 UI/권한/채팅 전송과 무관한 서버 작업이므로 명령 파이프라인을 거치지 않는다.
+        var ownerConnection = ResolveOwnerConnection();
+        if (TryExecuteScenarioGive(node.CommandLine, ownerConnection, out var giveSucceeded, out var giveResult))
         {
-          Debug.LogWarning($"[ScenarioController] ExecuteCommand node '{node.Identifier}' could not resolve ChatService; command skipped.");
+          if (giveSucceeded)
+            Debug.Log($"[ScenarioController] ExecuteCommand node '{node.Identifier}': {giveResult}");
+          else
+            Debug.LogWarning($"[ScenarioController] ExecuteCommand node '{node.Identifier}' failed: {giveResult}");
         }
         else
         {
-          // 시나리오 owner의 연결을 실행 컨텍스트로 전달해, 커맨드의 대상 셀렉터(@s 등)가
-          // 시나리오 대상 플레이어를 가리키도록 한다. 권한은 시스템 권한으로 우회된다.
-          var ownerConnection = ResolveOwnerConnection();
-          if (!chatService.TryExecuteSystemCommand(node.CommandLine.Trim(), ownerConnection, out var result))
+          var chatService = ResolveChatService();
+          if (chatService == null)
+          {
+            Debug.LogWarning($"[ScenarioController] ExecuteCommand node '{node.Identifier}' could not resolve ChatService; command skipped.");
+          }
+          else if (!chatService.TryExecuteSystemCommand(node.CommandLine.Trim(), ownerConnection, out var result))
           {
             Debug.LogWarning($"[ScenarioController] ExecuteCommand node '{node.Identifier}' failed: {result}");
           }
@@ -5124,6 +5123,23 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Advance();
+    }
+
+    private static bool TryExecuteScenarioGive(string commandLine, NetworkConnection ownerConnection, out bool succeeded, out string result)
+    {
+      succeeded = false;
+      result = string.Empty;
+      string normalized = commandLine?.Trim().TrimStart('/');
+      if (string.IsNullOrWhiteSpace(normalized))
+        return false;
+
+      string[] tokens = normalized.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
+      if (tokens.Length == 0 || !string.Equals(tokens[0], "give", StringComparison.OrdinalIgnoreCase))
+        return false;
+
+      string[] giveArguments = tokens.Skip(1).ToArray();
+      succeeded = CommandDefinition_Give.TryExecuteGive(ownerConnection, giveArguments, out result);
+      return true;
     }
 
     private ChatService ResolveChatService()

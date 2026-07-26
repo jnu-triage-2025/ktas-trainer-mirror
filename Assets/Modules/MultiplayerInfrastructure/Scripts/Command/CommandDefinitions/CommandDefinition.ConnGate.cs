@@ -14,7 +14,6 @@ namespace MultiplayerInfrastructure.Command
     public string CommandEntry => "conngate";
     public string Description => "Open or close the server connection gate for external clients.";
     public string PermissionIdentifier => "conngate";
-    public bool RequiresAdmin => true;
 
     public IReadOnlyList<UsageLine> UsageLines => new[]
     {

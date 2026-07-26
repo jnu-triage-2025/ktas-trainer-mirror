@@ -133,16 +133,11 @@ namespace MultiplayerInfrastructure.Editor
       if (scenarioPath.EndsWith(ScenarioExtension, StringComparison.OrdinalIgnoreCase))
         return scenarioPath.Substring(0, scenarioPath.Length - ScenarioExtension.Length) + ScenarioEditorExtension;
 
-      // Fallback for legacy plain ".json" paths.
-      if (scenarioPath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-        return scenarioPath.Substring(0, scenarioPath.Length - ".json".Length) + ScenarioEditorExtension;
-
       return scenarioPath + ScenarioEditorExtension;
     }
 
     /// <summary>
-    /// Derives the scenario identifier from a file path, stripping both the ".scenario.json"
-    /// (or legacy ".json") extension and any residual ".scenario" suffix.
+    /// Derives the scenario identifier from a ".scenario.json" file path.
     /// </summary>
     private static string GetScenarioIdentifierFromPath(string path)
     {

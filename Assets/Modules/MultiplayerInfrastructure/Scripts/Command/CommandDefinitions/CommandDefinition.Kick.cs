@@ -13,7 +13,6 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("  <target>", "Target display name or client ID."),
     };
     public string PermissionIdentifier => "kick";
-    public bool RequiresAdmin => true;
 
     private readonly ChatService _manager;
 

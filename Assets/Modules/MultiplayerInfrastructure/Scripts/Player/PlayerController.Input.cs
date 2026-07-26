@@ -29,7 +29,6 @@ namespace MultiplayerInfrastructure.Player
 
     void Start_Input()
     {
-      KeyBindingRepository.MigrateDefaultKey("run", KeyCode.LeftShift, KeyCode.LeftControl);
       _chatUI = Registry.Registry.Get<ChatUIController>(RegistryType.UI, Registry.Registry.TypeKey<ChatUIController>());
       EnsureEscapeMenuController();
     }

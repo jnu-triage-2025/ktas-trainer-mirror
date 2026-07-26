@@ -1,5 +1,6 @@
 {
   "identifier": "test_ordinal_waypoint_quest",
+  "defaultEntrypoint": "dialogue_start",
   "tags": [],
   "questDefinitionIncludes": [
     "test_ordinal_waypoint.quest"

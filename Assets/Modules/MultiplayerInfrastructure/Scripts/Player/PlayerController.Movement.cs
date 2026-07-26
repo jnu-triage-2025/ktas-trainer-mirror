@@ -57,11 +57,6 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private CameraAttachPoint _cameraAttachPoint;
     public CameraAttachPoint CameraAttachPoint => _cameraAttachPoint;
 
-    /// <summary>
-    /// 카메라 부착점의 피벗 Transform입니다. 기존 호출부 호환을 위해 유지합니다.
-    /// </summary>
-    public Transform CameraHolderTransform => _cameraAttachPoint != null ? _cameraAttachPoint.PivotTransform : null;
-
     private Transform _forcedFollowAnchor;
     private UnityEngine.Object _activeRidableControl;
     private bool _jumpAnimationRequestedThisFrame;

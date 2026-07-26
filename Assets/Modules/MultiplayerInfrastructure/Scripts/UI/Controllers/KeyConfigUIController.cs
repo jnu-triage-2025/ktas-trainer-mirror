@@ -77,8 +77,6 @@ namespace MultiplayerInfrastructure.UI
     {
       base.Awake();
 
-      KeyBindingRepository.MigrateDefaultKey("run", KeyCode.LeftShift, KeyCode.LeftControl);
-
       // 기본 바인딩 복사본 보존
       _defaultBindings = new List<KeyBindingEntry>(_bindings.Count);
       foreach (var entry in _bindings)

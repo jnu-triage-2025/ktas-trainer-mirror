@@ -1,5 +1,6 @@
 {
   "identifier": "signal_counter_debug",
+  "defaultEntrypoint": "intro_print",
   "tags": [],
   "nodes": {
     "intro_print": {

@@ -200,9 +200,7 @@ namespace TriageTrainer.Entity
       else _cannulaRightArmInserted = true;
 
       // ── 시나리오 게이팅 신호 ──
-      // (1) 하위 호환: 좌/우 미구분 신호. (2) 좌/우별 신호(insert_iv_{id}_left / _right).
       string side = isLeft ? "left" : "right";
-      RaiseCannulaSignal("apply_intravenous_line_cannula_{id}");
       RaiseCannulaSignal($"insert_iv_{{id}}_{side}");
 
       // 양팔 모두 채워지면 더 이상 상호작용을 노출하지 않는다.

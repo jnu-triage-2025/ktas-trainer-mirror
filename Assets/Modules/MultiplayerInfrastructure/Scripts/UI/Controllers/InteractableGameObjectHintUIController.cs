@@ -92,26 +92,6 @@ namespace MultiplayerInfrastructure.UI
         _hintList = _uiDocument.rootVisualElement.Q<InteractableObjectHintList>();
       }
 
-      if (_hintList == null && _uiDocument != null)
-      {
-        var legacyScroll = _uiDocument.rootVisualElement.Q<ScrollView>("interactable-scroll");
-        if (legacyScroll != null)
-        {
-          _hintList = new InteractableObjectHintList();
-          var parent = legacyScroll.parent;
-          if (parent != null)
-          {
-            var index = parent.IndexOf(legacyScroll);
-            legacyScroll.RemoveFromHierarchy();
-            parent.Insert(index, _hintList);
-          }
-          else
-          {
-            _uiDocument.rootVisualElement.Add(_hintList);
-          }
-        }
-      }
-
       ValidateRequirementsAndWarn();
     }
 

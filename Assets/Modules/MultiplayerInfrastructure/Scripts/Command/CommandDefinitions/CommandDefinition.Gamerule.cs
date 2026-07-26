@@ -22,7 +22,6 @@ namespace MultiplayerInfrastructure.Command
     };
 
     public string PermissionIdentifier => "gamerule";
-    public bool RequiresAdmin => true;
 
     private readonly ChatService _chat;
 

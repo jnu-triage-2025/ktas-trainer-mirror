@@ -28,7 +28,6 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("  <scenario>", "Registered scenario identifier."),
     };
     public string PermissionIdentifier => "scenario";
-    public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
 
@@ -483,7 +482,6 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("  [index]", "1-based problem number; opens only that one."),
     };
     public string PermissionIdentifier => "problemsheet";
-    public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
 

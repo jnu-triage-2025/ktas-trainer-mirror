@@ -1,5 +1,6 @@
 {
   "identifier": "test_time_control",
+  "defaultEntrypoint": "intro",
   "tags": [],
   "nodes": {
     "intro": {

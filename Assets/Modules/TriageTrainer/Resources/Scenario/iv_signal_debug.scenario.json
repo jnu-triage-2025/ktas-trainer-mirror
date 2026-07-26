@@ -1,5 +1,6 @@
 {
   "identifier": "iv_signal_debug",
+  "defaultEntrypoint": "flow1_intro_print",
   "tags": [],
   "nodes": {
     "flow1_intro_print": {

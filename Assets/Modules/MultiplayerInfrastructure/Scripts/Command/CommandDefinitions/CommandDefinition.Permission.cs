@@ -48,7 +48,6 @@ namespace MultiplayerInfrastructure.Command
     };
 
     public string PermissionIdentifier => "permission";
-    public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
 

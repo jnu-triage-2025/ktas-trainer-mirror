@@ -39,10 +39,6 @@ namespace MultiplayerInfrastructure.UI
 
     private void InitKeyData()
     {
-      // 이전 버전의 기본 달리기 키(Left Shift)만 Ctrl로 이관한다.
-      // 사용자가 다른 키를 직접 지정한 경우에는 해당 선택을 보존한다.
-      KeyBindingRepository.MigrateDefaultKey("run", KeyCode.LeftShift, KeyCode.LeftControl);
-
       _defaultBindings = new List<KeyBindingEntry>(_bindings.Count);
       foreach (var entry in _bindings)
         _defaultBindings.Add(new KeyBindingEntry(entry.actionId, entry.actionDisplayName, entry.boundKey));

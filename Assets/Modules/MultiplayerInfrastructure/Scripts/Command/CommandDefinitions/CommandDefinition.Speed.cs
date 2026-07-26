@@ -19,7 +19,6 @@ namespace MultiplayerInfrastructure.Command
     };
 
     public string PermissionIdentifier => "speed";
-    public bool RequiresAdmin => false;
 
     private readonly ChatService _manager;
 

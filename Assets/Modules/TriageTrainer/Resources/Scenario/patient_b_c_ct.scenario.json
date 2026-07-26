@@ -1,5 +1,6 @@
 {
   "identifier": "patient_b_c_ct",
+  "defaultEntrypoint": "SPAWN_B",
   "tags": [],
   "questDefinitionIncludes": [
     "patient_b_c_ct.quests.quest"

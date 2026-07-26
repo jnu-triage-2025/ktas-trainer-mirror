@@ -7,7 +7,6 @@ using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace MultiplayerInfrastructure.Entity
 {
@@ -36,7 +35,6 @@ namespace MultiplayerInfrastructure.Entity
     [SerializeField] private string _exitHint = "탈것 내리기 키를 누르면 조종을 종료합니다.";
 
     [Header("Attach points")]
-    [FormerlySerializedAs("PlayerAttachPoints")]
     [SerializeField] private List<Transform> _playerAttachPoints = new();
 
     private readonly SyncVar<int> _participant0 = new(InvalidClientId);

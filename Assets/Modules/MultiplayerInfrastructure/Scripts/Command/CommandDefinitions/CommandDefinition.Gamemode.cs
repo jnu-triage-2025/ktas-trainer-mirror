@@ -15,7 +15,6 @@ namespace MultiplayerInfrastructure.Command
     };
 
     public string PermissionIdentifier => "gamemode";
-    public bool RequiresAdmin => false;
 
     private readonly ChatService _manager;
 

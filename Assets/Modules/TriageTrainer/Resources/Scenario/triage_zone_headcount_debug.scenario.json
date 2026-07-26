@@ -1,5 +1,6 @@
 {
   "identifier": "triage_zone_headcount_debug",
+  "defaultEntrypoint": "intro_print",
   "tags": [],
   "nodes": {
     "intro_print": {

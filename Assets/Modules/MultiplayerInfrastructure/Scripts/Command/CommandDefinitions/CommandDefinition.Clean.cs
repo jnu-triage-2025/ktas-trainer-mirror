@@ -16,7 +16,6 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("clean <item> <count>", "Remove up to count of one item."),
     };
     public string PermissionIdentifier => "clean";
-    public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
 

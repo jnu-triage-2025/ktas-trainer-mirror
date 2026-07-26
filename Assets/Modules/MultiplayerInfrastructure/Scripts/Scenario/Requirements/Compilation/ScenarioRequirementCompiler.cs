@@ -214,9 +214,7 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
       if (graph.ActingNpcs == null || graph.ActingNpcs.Count == 0)
         return;
 
-      var entryIdentifier = !string.IsNullOrWhiteSpace(graph.DefaultEntrypoint)
-        ? graph.DefaultEntrypoint
-        : graph.Nodes.Values.OrderBy(node => node.Identifier, StringComparer.Ordinal).FirstOrDefault()?.Identifier;
+      var entryIdentifier = graph.DefaultEntrypoint;
       if (string.IsNullOrWhiteSpace(entryIdentifier))
         return;
 

@@ -1,7 +1,6 @@
 using System;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects
 {
@@ -10,7 +9,6 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects
   {
     public string identifier;
 
-    [FormerlySerializedAs("entityType")]
     [Tooltip("폴백 등록용 EntityType(기본값 Undefined). 프리팹이 스스로 레지스트리에 등록하는 컴포넌트" +
              "(ISpawnedEntityIdentifierReceiver, 예: PatientController/MovingPatientBedController) 를 가지면 " +
              "이 값은 무시되고 컴포넌트가 자기 EntityType 으로 등록한다. " +

@@ -243,11 +243,11 @@ namespace MultiplayerInfrastructure.Player
       if (_viewmodelRoot != null)
         return;
 
-      if (CameraHolderTransform == null)
+      if (CameraAttachPoint?.PivotTransform == null)
         return;
 
       var go = new GameObject("HeldItemViewmodelRoot");
-      go.transform.SetParent(CameraHolderTransform, false);
+      go.transform.SetParent(CameraAttachPoint.PivotTransform, false);
       go.transform.localPosition = _viewmodelLocalPosition;
       go.transform.localRotation = Quaternion.Euler(_viewmodelLocalEuler);
       go.transform.localScale = _viewmodelLocalScale;

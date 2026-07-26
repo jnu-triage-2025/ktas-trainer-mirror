@@ -190,12 +190,9 @@ namespace MultiplayerInfrastructure.Registry
       var registry = ResolveRegistry(RegistryType.ScenarioGraph);
       if (!registry.TryGetValue(identifier, out var definition))
       {
-        // Fallback: allow scenario JSONs under Resources/Scenario to be resolved
-        // without explicit preload wiring in every scene. Scenario documents use the
-        // ".scenario.json" extension, so Unity exposes them as "<identifier>.scenario";
-        // also try the bare identifier for backward compatibility.
-        var textAsset = Resources.Load<TextAsset>($"Scenario/{identifier}{ScenarioGraphAssetSuffix}")
-          ?? Resources.Load<TextAsset>($"Scenario/{identifier}");
+        // Scenario documents use the ".scenario.json" extension, so Unity exposes them
+        // as "<identifier>.scenario".
+        var textAsset = Resources.Load<TextAsset>($"Scenario/{identifier}{ScenarioGraphAssetSuffix}");
         if (textAsset != null)
         {
           registry[identifier] = textAsset;

@@ -1,5 +1,6 @@
 {
   "identifier": "test_move_nodes",
+  "defaultEntrypoint": "dialogue_start",
   "tags": [],
   "nodes": {
     "dialogue_start": {

@@ -13,7 +13,7 @@ namespace MultiplayerInfrastructure.Command
   ///
   /// 밀도는 tick / ms / seconds 단위로 지정하며, 기본값은 1초에 1회이다.
   /// 이 설정은 서버 권위이므로 서버(호스트/콘솔)에서만 조정할 수 있다.
-  /// (모든 명령 실행은 서버에서 수행되며, RequiresAdmin 으로 호스트/콘솔로 제한한다.)
+  /// (모든 명령 실행은 서버에서 수행되며, PermissionService 권한으로 접근을 제한한다.)
   /// </summary>
   public class CommandDefinition_TimeSync : IChatCommandModel, IChatCommandUsage
   {
@@ -29,7 +29,6 @@ namespace MultiplayerInfrastructure.Command
 
     // 서버(호스트/콘솔)에서만 조정 가능하게 한다.
     public string PermissionIdentifier => "timesync";
-    public bool RequiresAdmin => true;
 
     private readonly ChatService _chat;
 

@@ -110,7 +110,7 @@ namespace MultiplayerInfrastructure.Player
       if (target == null || target == this) return;
       if (_camControl == null) return;
 
-      _spectateFollowTarget = target.CameraHolderTransform;
+      _spectateFollowTarget = target.CameraAttachPoint?.PivotTransform;
       _isSpectateFollowing = _spectateFollowTarget != null;
 
       if (_isSpectateFollowing)
@@ -119,8 +119,8 @@ namespace MultiplayerInfrastructure.Player
 
     private void StopSpectateFollow()
     {
-      if (_camControl != null && CameraHolderTransform != null)
-        _camControl.FollowingCameraHolder = CameraHolderTransform;
+      if (_camControl != null && CameraAttachPoint?.PivotTransform != null)
+        _camControl.FollowingCameraHolder = CameraAttachPoint.PivotTransform;
 
       _isSpectateFollowing = false;
       _spectateFollowTarget = null;

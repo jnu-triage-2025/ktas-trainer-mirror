@@ -20,7 +20,6 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("  [target]", "@s, <clientId>, fish:<id>. Default: you."),
     };
     public string PermissionIdentifier => "give";
-    public bool RequiresAdmin => false;
 
     private readonly ChatService _chat;
 
@@ -34,17 +33,33 @@ namespace MultiplayerInfrastructure.Command
       if (_chat == null)
         return;
 
+      if (!TryExecuteGive(sender, args, out string message))
+      {
+        _chat.SendSystemMessage(sender, message);
+        return;
+      }
+
+      _chat.SendSystemMessage(sender, message);
+    }
+
+    /// <summary>
+    /// 아이템 지급의 도메인 로직. 채팅 명령과 시나리오 노드가 동일한 검증·인벤토리·초과분 드롭
+    /// 처리를 사용하도록, UI/권한/채팅 전송과 분리한다.
+    /// </summary>
+    public static bool TryExecuteGive(NetworkConnection sender, string[] args, out string message)
+    {
+      message = string.Empty;
       if (args == null || args.Length == 0)
       {
-        _chat.SendSystemMessage(sender, "Usage: /give <item_identifier> [count=1] [target_identifier]");
-        return;
+        message = "Usage: /give <item_identifier> [count=1] [target_identifier]";
+        return false;
       }
 
       string itemIdentifier = args[0];
       if (!Registry.Registry.Contains(RegistryType.Item, itemIdentifier))
       {
-        _chat.SendSystemMessage(sender, $"Item '{itemIdentifier}' is not registered.");
-        return;
+        message = $"Item '{itemIdentifier}' is not registered.";
+        return false;
       }
 
       int count = 1;
@@ -56,8 +71,8 @@ namespace MultiplayerInfrastructure.Command
         {
           if (parsedCount <= 0)
           {
-            _chat.SendSystemMessage(sender, "Count must be greater than 0.");
-            return;
+            message = "Count must be greater than 0.";
+            return false;
           }
 
           count = parsedCount;
@@ -72,27 +87,27 @@ namespace MultiplayerInfrastructure.Command
 
       if (args.Length > 3)
       {
-        _chat.SendSystemMessage(sender, "Usage: /give <item_identifier> [count=1] [target_identifier]");
-        return;
+        message = "Usage: /give <item_identifier> [count=1] [target_identifier]";
+        return false;
       }
 
       if (!TryResolveTargetConnection(sender, targetIdentifier, out var targetConn, out var resolveError))
       {
-        _chat.SendSystemMessage(sender, resolveError);
-        return;
+        message = resolveError;
+        return false;
       }
 
       if (!TryGetPlayerController(targetConn, out var targetPlayer))
       {
-        _chat.SendSystemMessage(sender, "Target is not available.");
-        return;
+        message = "Target is not available.";
+        return false;
       }
 
       var toGive = Registry.Registry.CreateItemInstance(itemIdentifier);
       if (toGive == null)
       {
-        _chat.SendSystemMessage(sender, $"Item '{itemIdentifier}' data is unavailable.");
-        return;
+        message = $"Item '{itemIdentifier}' data is unavailable.";
+        return false;
       }
       toGive.CurrentStackCount = count;
 
@@ -107,14 +122,15 @@ namespace MultiplayerInfrastructure.Command
 
       if (fullyAdded)
       {
-        _chat.SendSystemMessage(sender, $"Gave {delivered}x '{itemIdentifier}' to target {targetConn.ClientId}.");
-        return;
+        message = $"Gave {delivered}x '{itemIdentifier}' to target {targetConn.ClientId}.";
+        return true;
       }
 
-      _chat.SendSystemMessage(sender, $"Gave {delivered}x '{itemIdentifier}' to target {targetConn.ClientId}. Dropped {dropped}x in front because inventory was full.");
+      message = $"Gave {delivered}x '{itemIdentifier}' to target {targetConn.ClientId}. Dropped {dropped}x in front because inventory was full.";
+      return true;
     }
 
-    private bool TryResolveTargetConnection(NetworkConnection sender, string rawTarget, out NetworkConnection target, out string error)
+    private static bool TryResolveTargetConnection(NetworkConnection sender, string rawTarget, out NetworkConnection target, out string error)
     {
       target = null;
       error = string.Empty;
@@ -194,7 +210,7 @@ namespace MultiplayerInfrastructure.Command
       return false;
     }
 
-    private NetworkConnection FindConnectionByClientId(int clientId)
+    private static NetworkConnection FindConnectionByClientId(int clientId)
     {
       var clients = InstanceFinder.ServerManager?.Clients;
       if (clients == null)
@@ -210,7 +226,7 @@ namespace MultiplayerInfrastructure.Command
       return null;
     }
 
-    private bool TryGetPlayerController(NetworkConnection conn, out PlayerController controller)
+    private static bool TryGetPlayerController(NetworkConnection conn, out PlayerController controller)
     {
       controller = null;
       if (conn == null || conn.FirstObject == null)

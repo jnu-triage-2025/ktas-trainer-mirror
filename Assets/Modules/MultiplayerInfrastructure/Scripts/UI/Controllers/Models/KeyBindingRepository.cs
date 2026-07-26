@@ -79,23 +79,6 @@ namespace MultiplayerInfrastructure.UI
         : defaultKey;
     }
 
-    /// <summary>
-    /// 기본 키가 바뀐 항목의 기존 기본값만 새 기본값으로 옮긴다.
-    /// 사용자가 다른 키로 직접 지정한 값은 유지한다.
-    /// </summary>
-    public static void MigrateDefaultKey(string actionId, KeyCode previousDefault, KeyCode newDefault)
-    {
-      if (string.IsNullOrEmpty(actionId))
-        return;
-
-      string prefsKey = PrefsKeyPrefix + actionId;
-      if (!PlayerPrefs.HasKey(prefsKey) || (KeyCode)PlayerPrefs.GetInt(prefsKey) != previousDefault)
-        return;
-
-      PlayerPrefs.SetInt(prefsKey, (int)newDefault);
-      PlayerPrefs.Save();
-    }
-
     // ──────────────────────────────────────────────────────────────────────────
     // 초기화
     // ──────────────────────────────────────────────────────────────────────────

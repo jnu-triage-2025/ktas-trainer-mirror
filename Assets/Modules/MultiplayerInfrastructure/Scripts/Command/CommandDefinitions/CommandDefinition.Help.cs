@@ -15,7 +15,6 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("<command> -h", "Show detailed usage (also --help, /?)."),
     };
     public string PermissionIdentifier => "help";
-    public bool RequiresAdmin => false;
 
     private readonly ChatService _manager;
     private readonly ChatCommandService _service;

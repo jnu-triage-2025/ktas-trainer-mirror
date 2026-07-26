@@ -22,12 +22,6 @@ namespace MultiplayerInfrastructure.Command
     /// </summary>
     string PermissionIdentifier { get; }
 
-    /// <summary>
-    /// Legacy admin-only flag. PermissionService 로 대체되었으나 하위 호환을 위해 유지.
-    /// PermissionService 가 로드되지 않은 경우의 fallback으로 사용된다.
-    /// </summary>
-    bool RequiresAdmin { get; }
-
     void Execute(NetworkConnection sender, string[] args);
   }
 

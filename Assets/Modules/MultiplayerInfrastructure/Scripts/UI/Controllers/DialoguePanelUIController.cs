@@ -210,9 +210,8 @@ namespace MultiplayerInfrastructure.UI
       _root = _uiDocument.rootVisualElement;
       if (_root == null) return;
 
-      // UXML uses a custom DialogueElement named "dialogue-element"; keep a VisualElement fallback.
       _dialogueElement = _root.Q<DialogueElement>("dialogue-element");
-      _dialoguePanel = _dialogueElement != null ? _dialogueElement : _root.Q<VisualElement>("dialogue-panel");
+      _dialoguePanel = _dialogueElement;
       _speakerNameLabel = _root.Q<Label>("speaker-name");
       _dialogueTextLabel = _root.Q<Label>("dialogue-text");
       _portraitImage = _root.Q<VisualElement>("portrait-image");
@@ -783,14 +782,6 @@ namespace MultiplayerInfrastructure.UI
       // 일반 모드로 복귀한다. 이후 다음 Dialogue/Choice 표시 시 다시 Dialogue 모드로 전환된다.
       if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.IsDialogueMode)
         _interactableHintUI.ExitDialogueMode();
-    }
-
-    /// <summary>
-    /// 이전 API 호환용 별칭입니다. 상호작용 필수 여부와 관계없이 현재 대화 UI를 닫습니다.
-    /// </summary>
-    public void DismissInteractionRequiredDialogue()
-    {
-      DismissDialogue();
     }
 
     private void EnsureDialogueModeActive()

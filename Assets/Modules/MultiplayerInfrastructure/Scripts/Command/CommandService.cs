@@ -100,23 +100,13 @@ namespace MultiplayerInfrastructure.Command
       // ── 권한 검사 ────────────────────────────────────────────────────────────
       // sender == null (서버 콘솔), IsHost, 또는 시스템 권한 실행(bypassPermissionCheck)이면 항상 허용.
       // 그 외 클라이언트는 PermissionService 를 통해 role 기반 검사를 수행한다.
-      // Legacy RequiresAdmin flag 는 PermissionService 로드에 실패한 경우의 fallback으로 사용한다.
       if (!bypassPermissionCheck && sender != null && !sender.IsHost)
       {
         PermissionService.EnsureLoaded();
         string userIdentifier = ResolveUserIdentifier(sender);
         string permId = command.PermissionIdentifier;
 
-        bool denied;
-        if (!string.IsNullOrWhiteSpace(permId))
-        {
-          denied = !PermissionService.HasPermission(userIdentifier, permId);
-        }
-        else
-        {
-          // PermissionIdentifier 없는 커맨드는 RequiresAdmin fallback 사용
-          denied = command.RequiresAdmin;
-        }
+        bool denied = !PermissionService.HasPermission(userIdentifier, permId);
 
         if (denied)
         {
