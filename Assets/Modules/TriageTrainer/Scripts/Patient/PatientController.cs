@@ -6,6 +6,7 @@ using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
+using TriageTrainer.Entity.IntravenousLine;
 using UnityEngine;
 
 using MI = MultiplayerInfrastructure;
@@ -32,7 +33,8 @@ namespace TriageTrainer.Entity
     [SerializeField] private int _weight = 4;
 
     [Header("Runtime")]
-    [SerializeField] private MovingPatientBedController _currentBed;
+    [SerializeField] private PatientSupportExternalRefs _supportExternalRefs;
+    [SerializeField] private IntravenousLineConnectionPoint _ivAttachmentPoint;
     [SerializeField] private Transform _carryAttachPoint;
     [SerializeField] private bool _isMovingPatientBedAttached;
     [SerializeField] private bool _isPlayerAttached;
@@ -51,16 +53,25 @@ namespace TriageTrainer.Entity
 
     public int Weight => Mathf.Max(0, _weight);
 
-    public bool IsReposed => _currentBed != null;
-    public MovingPatientBedController CurrentBed => _currentBed;
+    public bool IsReposed => _supportExternalRefs.PatientBed != null;
+    public MovingPatientBedController CurrentBed => _supportExternalRefs.PatientBed;
+    public PatientSupportExternalRefs SupportExternalRefs => _supportExternalRefs;
+    /// <summary>여러 수액 줄 연결을 허용하는 환자 IV attachment point.</summary>
+    public IntravenousLineConnectionPoint IvAttachmentPoint => _ivAttachmentPoint;
     public Transform CarryAttachPoint => _carryAttachPoint != null ? _carryAttachPoint : transform;
     public bool IsMovingPatientBedAttached => _isMovingPatientBedAttached;
     public bool IsPlayerAttached => _isPlayerAttached;
+
+    /// <summary>
+    /// 환자가 플레이어에게 들린 상태가 아닐 때만 수행 가능한 정지 상태 사정/분류의 공통 게이트.
+    /// </summary>
+    public bool CanPerformTriageOrAssessment => !_isPlayerAttached;
 
     private void Awake()
     {
       Awake_Animation();
       EnsureCarryAttachPoint();
+      EnsureIvAttachmentPoint();
       InitializeCollider();
       EnsureMedicalStateDefaults();
       _weight = Mathf.Max(0, _weight);
@@ -107,9 +118,9 @@ namespace TriageTrainer.Entity
 
     public void SetCurrentBed(MovingPatientBedController bed)
     {
-      var previous = _currentBed;
-      _currentBed = bed;
-      OnMovingPatientBedAttachedStateChanged(_currentBed != null || _isMovingPatientBedAttached);
+      var previous = _supportExternalRefs.PatientBed;
+      _supportExternalRefs.PatientBed = bed;
+      OnMovingPatientBedAttachedStateChanged(_supportExternalRefs.PatientBed != null || _isMovingPatientBedAttached);
       Update_Animation();
       NotifyBedConnectionChanged(previous, bed);
     }
@@ -124,7 +135,7 @@ namespace TriageTrainer.Entity
     public void OnMovingPatientBedAttachedExit()
     {
       _isMovingPatientBedAttached = false;
-      OnMovingPatientBedAttachedStateChanged(_currentBed != null || _isMovingPatientBedAttached);
+      OnMovingPatientBedAttachedStateChanged(CurrentBed != null || _isMovingPatientBedAttached);
       Update_Animation();
     }
 
@@ -178,6 +189,23 @@ namespace TriageTrainer.Entity
       _carryAttachPoint.SetParent(transform, false);
       _carryAttachPoint.localPosition = new Vector3(0f, 1.0f, 0.2f);
       _carryAttachPoint.localRotation = Quaternion.identity;
+    }
+
+    private void EnsureIvAttachmentPoint()
+    {
+      if (_ivAttachmentPoint == null)
+        _ivAttachmentPoint = GetComponentInChildren<IntravenousLineConnectionPoint>(true);
+
+      if (_ivAttachmentPoint == null)
+      {
+        var pointObject = new GameObject("IVAttachmentPoint");
+        pointObject.transform.SetParent(transform, false);
+        pointObject.transform.localPosition = new Vector3(0f, 1.1f, 0.35f);
+        pointObject.transform.localRotation = Quaternion.identity;
+        _ivAttachmentPoint = pointObject.AddComponent<IntravenousLineConnectionPoint>();
+      }
+
+      _ivAttachmentPoint.SetAllowsMultipleConnections(true);
     }
 
     private void OnValidate()

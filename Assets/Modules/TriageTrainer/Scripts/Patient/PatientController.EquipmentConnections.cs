@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using MultiplayerInfrastructure.Logging;
 using TriageTrainer.Entity.PatientMonitor.Models;
@@ -6,6 +7,48 @@ using UnityEngine;
 
 namespace TriageTrainer.Entity
 {
+  /// <summary>환자에 외부 장비가 연결된 상태를 모아 보관하는 참조 묶음.</summary>
+  [Serializable]
+  public struct PatientSupportExternalRefs
+  {
+    [SerializeField] private MovingPatientBedController _patientBed;
+    [SerializeField] private List<MonoBehaviour> _intravenousFluids;
+    [SerializeField] private WallAttachedWallSuction _suctionWall;
+    [SerializeField] private WallAttachedOxyflowmeter _oxyflowmeter;
+
+    public MovingPatientBedController PatientBed
+    {
+      get => _patientBed;
+      set => _patientBed = value;
+    }
+
+    public IReadOnlyList<MonoBehaviour> IntravenousFluids => _intravenousFluids ??= new List<MonoBehaviour>();
+    public WallAttachedWallSuction SuctionWall
+    {
+      get => _suctionWall;
+      set => _suctionWall = value;
+    }
+
+    public WallAttachedOxyflowmeter Oxyflowmeter
+    {
+      get => _oxyflowmeter;
+      set => _oxyflowmeter = value;
+    }
+
+    public void SetIntravenousFluid(int index, MonoBehaviour fluidSource)
+    {
+      _intravenousFluids ??= new List<MonoBehaviour>();
+      while (_intravenousFluids.Count <= index)
+        _intravenousFluids.Add(null);
+      _intravenousFluids[index] = fluidSource;
+    }
+
+    public MonoBehaviour GetIntravenousFluid(int index) =>
+      _intravenousFluids != null && index >= 0 && index < _intravenousFluids.Count
+        ? _intravenousFluids[index]
+        : null;
+  }
+
   /// <summary>
   /// 환자-장비 연결 상태 추적 파셜.
   ///
@@ -118,14 +161,8 @@ namespace TriageTrainer.Entity
     // 좌/우 팔 각각 하나의 수액 공급원(침대 IV 스탠드 수액백 또는 Level1RapidInfuser)을
     // 추적한다. MonoBehaviour 로 타입을 완화하여 두 유형 모두 수용한다.
 
-    /// <summary>좌측 팔에 연결된 수액 공급원(침대 또는 급속주입기). 없으면 null.</summary>
-    private MonoBehaviour _ivFluidLeftArm;
-
-    /// <summary>우측 팔에 연결된 수액 공급원(침대 또는 급속주입기). 없으면 null.</summary>
-    private MonoBehaviour _ivFluidRightArm;
-
-    public MonoBehaviour IVFluidLeftArm => _ivFluidLeftArm;
-    public MonoBehaviour IVFluidRightArm => _ivFluidRightArm;
+    public MonoBehaviour IVFluidLeftArm => _supportExternalRefs.GetIntravenousFluid(0);
+    public MonoBehaviour IVFluidRightArm => _supportExternalRefs.GetIntravenousFluid(1);
 
     /// <summary>
     /// IV 수액 연결을 설정한다. 기존 연결이 있으면 해제 후 새 연결로 교체한다.
@@ -136,16 +173,16 @@ namespace TriageTrainer.Entity
     {
       if (isLeftArm)
       {
-        var previous = _ivFluidLeftArm;
+        var previous = _supportExternalRefs.GetIntravenousFluid(0);
         if (ReferenceEquals(previous, fluidSource)) return;
-        _ivFluidLeftArm = fluidSource;
+        _supportExternalRefs.SetIntravenousFluid(0, fluidSource);
         NotifyEquipmentSwap(EquipmentTypeIVFluidLeftArm, previous, fluidSource);
       }
       else
       {
-        var previous = _ivFluidRightArm;
+        var previous = _supportExternalRefs.GetIntravenousFluid(1);
         if (ReferenceEquals(previous, fluidSource)) return;
-        _ivFluidRightArm = fluidSource;
+        _supportExternalRefs.SetIntravenousFluid(1, fluidSource);
         NotifyEquipmentSwap(EquipmentTypeIVFluidRightArm, previous, fluidSource);
       }
     }
@@ -156,7 +193,7 @@ namespace TriageTrainer.Entity
     /// <param name="isLeftArm">true=좌측 팔, false=우측 팔</param>
     public void ClearIVFluidConnection(bool isLeftArm, MonoBehaviour expectedSource = null)
     {
-      var current = isLeftArm ? _ivFluidLeftArm : _ivFluidRightArm;
+      var current = isLeftArm ? IVFluidLeftArm : IVFluidRightArm;
       if (expectedSource != null && !ReferenceEquals(current, expectedSource))
         return;
 
@@ -166,17 +203,15 @@ namespace TriageTrainer.Entity
     // ── Wall Suction (벽면 석션) — future use ──
 
     /// <summary>현재 이 환자에 연결된 벽면 석션. 연결 메커니즘 미구현(null=미연결).</summary>
-    private WallAttachedWallSuction _connectedWallSuction;
-
-    public WallAttachedWallSuction ConnectedWallSuction => _connectedWallSuction;
+    public WallAttachedWallSuction ConnectedWallSuction => _supportExternalRefs.SuctionWall;
 
     public void SetConnectedWallSuction(WallAttachedWallSuction suction)
     {
-      if (ReferenceEquals(_connectedWallSuction, suction))
+      if (ReferenceEquals(_supportExternalRefs.SuctionWall, suction))
         return;
 
-      var previous = _connectedWallSuction;
-      _connectedWallSuction = suction;
+      var previous = _supportExternalRefs.SuctionWall;
+      _supportExternalRefs.SuctionWall = suction;
       NotifyEquipmentSwap(EquipmentTypeWallSuction, previous, suction);
     }
 
@@ -188,17 +223,15 @@ namespace TriageTrainer.Entity
     // ── Oxygen Flowmeter (산소 유량계) — future use ──
 
     /// <summary>현재 이 환자에 연결된 산소 유량계. 연결 메커니즘 미구현(null=미연결).</summary>
-    private WallAttachedOxyflowmeter _connectedOxyflowmeter;
-
-    public WallAttachedOxyflowmeter ConnectedOxyflowmeter => _connectedOxyflowmeter;
+    public WallAttachedOxyflowmeter ConnectedOxyflowmeter => _supportExternalRefs.Oxyflowmeter;
 
     public void SetConnectedOxyflowmeter(WallAttachedOxyflowmeter flowmeter)
     {
-      if (ReferenceEquals(_connectedOxyflowmeter, flowmeter))
+      if (ReferenceEquals(_supportExternalRefs.Oxyflowmeter, flowmeter))
         return;
 
-      var previous = _connectedOxyflowmeter;
-      _connectedOxyflowmeter = flowmeter;
+      var previous = _supportExternalRefs.Oxyflowmeter;
+      _supportExternalRefs.Oxyflowmeter = flowmeter;
       NotifyEquipmentSwap(EquipmentTypeOxyflowmeter, previous, flowmeter);
     }
 
@@ -258,12 +291,12 @@ namespace TriageTrainer.Entity
     {
       var sb = new StringBuilder();
       sb.AppendLine($"Patient '{Identifier}' Equipment Connections:");
-      sb.AppendLine($"  Bed            : {FormatRef(_currentBed)}");
+      sb.AppendLine($"  Bed            : {FormatRef(_supportExternalRefs.PatientBed)}");
       sb.AppendLine($"  Monitor        : {FormatRef(_monitoringPatientMonitor)}");
-      sb.AppendLine($"  IV Left Arm    : {FormatRef(_ivFluidLeftArm)}");
-      sb.AppendLine($"  IV Right Arm   : {FormatRef(_ivFluidRightArm)}");
-      sb.AppendLine($"  Wall Suction   : {FormatRef(_connectedWallSuction)}");
-      sb.AppendLine($"  Oxyflowmeter   : {FormatRef(_connectedOxyflowmeter)}");
+      sb.AppendLine($"  IV Left Arm    : {FormatRef(IVFluidLeftArm)}");
+      sb.AppendLine($"  IV Right Arm   : {FormatRef(IVFluidRightArm)}");
+      sb.AppendLine($"  Wall Suction   : {FormatRef(_supportExternalRefs.SuctionWall)}");
+      sb.AppendLine($"  Oxyflowmeter   : {FormatRef(_supportExternalRefs.Oxyflowmeter)}");
       return sb.ToString();
     }
 

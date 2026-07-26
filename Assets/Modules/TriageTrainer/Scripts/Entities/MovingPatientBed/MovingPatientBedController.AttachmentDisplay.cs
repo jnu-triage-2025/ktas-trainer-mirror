@@ -29,8 +29,8 @@ namespace TriageTrainer.Entity
       }
 
       public string DisplayText => _kind == IntravenousFluidKind.NormalSaline
-        ? "Normal Saline 아이템을 수액걸이에 달기"
-        : "Plasma Solution 아이템을 수액걸이에 달기";
+        ? "N/S 수액 걸기"
+        : "P/S 수액 걸기";
       public Sprite DisplayIcon => null;
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;

@@ -91,7 +91,7 @@ namespace TriageTrainer.Entity
 
     private bool IsLyingAnimationState()
     {
-      return _currentBed != null || _isMovingPatientBedAttached;
+      return CurrentBed != null || _isMovingPatientBedAttached;
     }
 
     private void ApplyRuntimeAnimatorController()

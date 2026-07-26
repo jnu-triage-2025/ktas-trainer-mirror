@@ -52,7 +52,7 @@ namespace TriageTrainer.Entity.IntravenousLine
         if (!_owner.IsInteractEnabled(InteractIdStartConnectionMode))
           return false;
 
-        if (_owner.HasAnyConnection)
+        if (!_owner.CanAcceptAdditionalConnection)
           return false;
 
         if (player.IsIntravenousLineConnectionMode)
@@ -95,7 +95,7 @@ namespace TriageTrainer.Entity.IntravenousLine
         if (!_owner.IsInteractEnabled(InteractIdConnectHere))
           return false;
 
-        if (_owner.HasAnyConnection)
+        if (!_owner.CanAcceptAdditionalConnection)
           return false;
 
         if (!player.IsIntravenousLineConnectionMode)
@@ -192,6 +192,10 @@ namespace TriageTrainer.Entity.IntravenousLine
     [Header("Runtime")]
     [SerializeField] private List<GameObject> _connectedLineObjects = new();
 
+    [Header("Connection Capacity")]
+    [Tooltip("활성화하면 이 지점에 여러 수액 줄을 연결할 수 있습니다.")]
+    [SerializeField] private bool _allowMultipleConnections;
+
     private List<IInteract> _interacts = new();
     private Dictionary<string, InteractConfig> _interactConfigMap = new(StringComparer.Ordinal);
 
@@ -234,6 +238,12 @@ namespace TriageTrainer.Entity.IntravenousLine
         return false;
       }
     }
+
+    /// <summary>이 지점이 수액 줄을 하나 더 받을 수 있는지 여부.</summary>
+    public bool CanAcceptAdditionalConnection => _allowMultipleConnections || !HasAnyConnection;
+
+    /// <summary>환자 IV attachment point 등에서 여러 줄 연결을 허용하도록 설정한다.</summary>
+    public void SetAllowsMultipleConnections(bool allow) => _allowMultipleConnections = allow;
 
     private void Awake()
     {

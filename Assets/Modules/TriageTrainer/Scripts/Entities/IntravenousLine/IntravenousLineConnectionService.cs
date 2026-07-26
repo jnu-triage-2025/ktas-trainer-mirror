@@ -164,7 +164,7 @@ namespace TriageTrainer.Entity.IntravenousLine
       if (ReferenceEquals(startPoint, endPoint))
         return false;
 
-      if (startPoint.HasAnyConnection || endPoint.HasAnyConnection)
+      if (!startPoint.CanAcceptAdditionalConnection || !endPoint.CanAcceptAdditionalConnection)
         return false;
 
       if (!CanConnectBetweenDifferentOwners(startPoint, endPoint, out _))

@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using TriageTrainer.Entity;
+using TriageTrainer.Entity.IntravenousLine;
 using UnityEngine;
 
 namespace TriageTrainer.Tests
@@ -32,6 +33,33 @@ namespace TriageTrainer.Tests
       {
         Object.DestroyImmediate(replacementSourceObject);
         Object.DestroyImmediate(firstSourceObject);
+        Object.DestroyImmediate(patientObject);
+      }
+    }
+
+    [Test]
+    public void PatientIvAttachmentPointAllowsMultipleLines()
+    {
+      var patientObject = new GameObject("patient-iv-attachment-test");
+      var firstLine = new GameObject("first-iv-line");
+      var secondLine = new GameObject("second-iv-line");
+
+      try
+      {
+        var patient = patientObject.AddComponent<PatientController>();
+
+        Assert.That(patient.IvAttachmentPoint, Is.Not.Null);
+        Assert.That(patient.IvAttachmentPoint.CanAcceptAdditionalConnection, Is.True);
+
+        patient.IvAttachmentPoint.RegisterConnectedLineObject(firstLine);
+        patient.IvAttachmentPoint.RegisterConnectedLineObject(secondLine);
+
+        Assert.That(patient.IvAttachmentPoint.CanAcceptAdditionalConnection, Is.True);
+      }
+      finally
+      {
+        Object.DestroyImmediate(secondLine);
+        Object.DestroyImmediate(firstLine);
         Object.DestroyImmediate(patientObject);
       }
     }

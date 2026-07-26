@@ -38,7 +38,7 @@ namespace TriageTrainer.Entity
       public Color DisplayColor => Color.white;
       public bool CanInteract(Transform interactor)
       {
-        return _owner.IsInteractEnabled(InteractIdLiftFromBed) && _owner._currentBed != null;
+        return _owner.IsInteractEnabled(InteractIdLiftFromBed) && _owner.CurrentBed != null;
       }
       public void Interact(Transform interactor)
       {
@@ -59,7 +59,7 @@ namespace TriageTrainer.Entity
         if (!_owner.IsInteractEnabled(InteractIdCarry))
           return false;
 
-        if (_owner._currentBed != null)
+        if (_owner.CurrentBed != null)
           return false;
 
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
@@ -258,7 +258,7 @@ namespace TriageTrainer.Entity
 
     private void TryLiftFromBed(Transform interactor)
     {
-      if (_currentBed == null)
+      if (CurrentBed == null)
         return;
 
       if (interactor == null)
@@ -274,7 +274,7 @@ namespace TriageTrainer.Entity
         return;
       }
 
-      if (!_currentBed.TryLiftTarget(player, out _))
+      if (!CurrentBed.TryLiftTarget(player, out _))
       {
         ShowThrottledMessage(interactor, "환자를 침대에서 들어올릴 수 없습니다.");
         return;
@@ -306,7 +306,7 @@ namespace TriageTrainer.Entity
 
     private void TryCarryByInteractor(Transform interactor)
     {
-      if (_currentBed != null)
+      if (CurrentBed != null)
         return;
 
       if (interactor == null)
