@@ -777,12 +777,16 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       int missingIconCount = 0;
       int missingModelCount = 0;
 
-      foreach (string id in registeredItems.Keys)
+      foreach (var entry in registeredItems)
       {
+        string id = entry.Key;
+        Type itemType = entry.Value;
+
         // ── 아이콘 스프라이트 ─────────────────────────────────────────────────
         string iconPath = $"{DefaultsItemRegistry.ItemTexturesPath}/{id}";
         var sprite = Resources.Load<Sprite>(iconPath);
-        if (sprite == null)
+        if (sprite == null &&
+            !ItemMissingAssetSuppression.ShouldSuppressSpriteMissingWarning(itemType))
         {
           Debug.LogWarning(
             $"[MultiplayerInfrastructureRegisterSupport] 아이콘 스프라이트 누락 " +
@@ -793,7 +797,8 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
         // ── 3D 모델 프리팹 ────────────────────────────────────────────────────
         string modelPath = $"{ModelRootPath}/{id}";
         var prefab = Resources.Load<GameObject>(modelPath);
-        if (prefab == null)
+        if (prefab == null &&
+            !ItemMissingAssetSuppression.ShouldSuppressModelMissingWarning(itemType))
         {
           Debug.LogWarning(
             $"[MultiplayerInfrastructureRegisterSupport] 3D 모델 프리팹 누락 " +
