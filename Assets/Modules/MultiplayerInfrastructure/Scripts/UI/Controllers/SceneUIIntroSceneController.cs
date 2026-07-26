@@ -401,15 +401,17 @@ namespace MultiplayerInfrastructure.UI
 
       // 3. SettingsUI GameObject 동적 생성
       var go = new GameObject("SettingsUI");
-      go.transform.SetParent(transform);
-
       var doc = go.AddComponent<UIDocument>();
-      doc.visualTreeAsset = settingsUxml;
-      doc.sortingOrder = DefaultsUIDocument.SettingsUISortOrder;
 
+      // Intro UI 컨트롤러의 자식으로 두면 UIDocument가 부모 문서의 중첩 UI로 취급되어
+      // 좌표계가 카드/컨트롤러 범위로 제한된다. 설정은 별도 화면 오버레이이므로 씬 루트를 유지한다.
       var mainDoc = GetComponent<UIDocument>();
       if (mainDoc?.panelSettings != null)
         doc.panelSettings = mainDoc.panelSettings;
+
+      // PanelSettings를 먼저 지정해야 UXML이 처음부터 Intro 화면과 동일한 패널 좌표계에 붙는다.
+      doc.visualTreeAsset = settingsUxml;
+      doc.sortingOrder = DefaultsUIDocument.SettingsUISortOrder;
 
       _settingsController = go.AddComponent<SettingsUIController>();
     }

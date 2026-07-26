@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Logging
@@ -26,6 +27,17 @@ namespace MultiplayerInfrastructure.Logging
   /// </summary>
   public static class GameLogService
   {
+    public readonly struct SessionLogClearResult
+    {
+      public bool Success { get; }
+      public string Message { get; }
+
+      public SessionLogClearResult(bool success, string message)
+      {
+        Success = success;
+        Message = message ?? string.Empty;
+      }
+    }
     // ── 상수 ──────────────────────────────────────────────────────────────────
 
     /// <summary>로그 파일을 저장하는 하위 디렉터리 이름.</summary>
@@ -291,6 +303,77 @@ namespace MultiplayerInfrastructure.Logging
     }
 
     /// <summary>
+    /// 로컬에 저장된 모든 세션 로그를 제거한다. 현재 기록 중인 로그는 먼저 닫은 뒤 제거하고,
+    /// 제거 후에는 동일한 컨텍스트로 새 로그를 다시 시작한다.
+    /// macOS에서는 휴지통 이동을 우선 시도하며, 지원하지 않는 플랫폼 또는 실패 시 영구 삭제한다.
+    /// </summary>
+    public static async Task<SessionLogClearResult> ClearAllSessionLogsAsync()
+    {
+      string context = _contextLabel;
+      bool restartAfterClear = _initialized;
+      // Application.persistentDataPath는 Unity 메인 스레드에서만 접근 가능하므로,
+      // 워커 작업에 넘길 절대 경로를 여기서 먼저 확정한다.
+      string logDirectory = LogRootPath;
+
+      try
+      {
+        if (restartAfterClear)
+          Shutdown();
+
+        _entries.Clear();
+        var result = await Task.Run(() => ClearSessionLogFiles(logDirectory));
+        string message = result.Message;
+        if (restartAfterClear && result.Success)
+          message += " 현재 세션 로그는 계속 기록됩니다.";
+        return new SessionLogClearResult(result.Success, message);
+      }
+      catch (Exception ex)
+      {
+        return new SessionLogClearResult(false, $"세션 로그 제거에 실패했습니다: {ex.Message}");
+      }
+      finally
+      {
+        if (restartAfterClear)
+          Initialize(context);
+      }
+    }
+
+    private static SessionLogClearResult ClearSessionLogFiles(string directory)
+    {
+      if (!Directory.Exists(directory))
+        return new SessionLogClearResult(true, "삭제할 세션 로그가 없습니다.");
+
+      string[] files = Directory.GetFiles(directory, "*.log", SearchOption.TopDirectoryOnly);
+      // macOS Finder는 휴지통 이동마다 효과음을 낸다. 파일별 이동 대신 로그 폴더 전체를
+      // 한 번만 이동하면 사용자에게 들리는 효과음과 Finder 호출 횟수를 모두 줄일 수 있다.
+      if (TryMovePathToTrash(directory))
+      {
+        return new SessionLogClearResult(
+          true,
+          $"세션 로그 {files.Length}개가 포함된 로그 폴더를 휴지통으로 이동했습니다.");
+      }
+
+      // 폴더 단위 휴지통 이동을 지원하지 않거나 실패한 플랫폼의 폴백: 기존처럼 파일별 제거.
+      int trashedCount = 0;
+      int deletedCount = 0;
+      for (int i = 0; i < files.Length; i++)
+      {
+        if (TryMovePathToTrash(files[i]))
+          trashedCount++;
+        else
+        {
+          File.Delete(files[i]);
+          deletedCount++;
+        }
+      }
+
+      string message = files.Length == 0
+        ? "삭제할 세션 로그가 없습니다."
+        : $"세션 로그 {files.Length}개를 제거했습니다. (휴지통 {trashedCount}개, 영구 삭제 {deletedCount}개)";
+      return new SessionLogClearResult(true, message);
+    }
+
+    /// <summary>
     /// 로그 루트 폴더를 파일 탐색기(OS 네이티브)로 연다.
     /// 에디터와 빌드에서만 동작한다. 배치(헤드리스) 모드에서는 경로만 출력한다.
     /// </summary>
@@ -342,6 +425,31 @@ namespace MultiplayerInfrastructure.Logging
       {
         Debug.LogWarning($"[GameLogService] Failed to open log folder: {ex.Message}");
       }
+    }
+
+    private static bool TryMovePathToTrash(string path)
+    {
+#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+      try
+      {
+        string escapedPath = path.Replace("\\", "\\\\").Replace("\"", "\\\"");
+        var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+          FileName = "/usr/bin/osascript",
+          ArgumentList = { "-e", $"tell application \"Finder\" to delete POSIX file \"{escapedPath}\"" },
+          UseShellExecute = false,
+          CreateNoWindow = true,
+        });
+        process?.WaitForExit();
+        return process != null && process.ExitCode == 0 && !File.Exists(path) && !Directory.Exists(path);
+      }
+      catch
+      {
+        return false;
+      }
+#else
+      return false;
+#endif
     }
 
     /// <summary>버퍼를 강제 플러시한다.</summary>

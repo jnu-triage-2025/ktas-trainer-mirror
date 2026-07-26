@@ -117,6 +117,7 @@ namespace MultiplayerInfrastructure.Permission
         permissions = new List<string>
         {
           "permission",
+          "gamerule",
           "log",
         },
       };

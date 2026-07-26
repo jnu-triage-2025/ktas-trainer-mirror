@@ -27,6 +27,7 @@ namespace MultiplayerInfrastructure.UI
   {
     public enum SettingsTab
     {
+      General,
       Key,
       Graphics,
     }
@@ -44,12 +45,13 @@ namespace MultiplayerInfrastructure.UI
     private Label _statusLabel;
 
     private readonly Dictionary<SettingsTab, Button> _tabButtons = new();
-    private SettingsTab _activeTab = SettingsTab.Key;
+    private SettingsTab _activeTab = SettingsTab.General;
     private bool _isVisible;
 
     // 각 탭 컨텐츠 루트(지연 생성 후 캐시). 탭 전환 시 파괴하지 않고 detach/attach 한다.
     private VisualElement _keyTabContent;
     private VisualElement _graphicsTabContent;
+    private VisualElement _generalTabContent;
 
     // ──────────────────────────────────────────────────────────────────────────
     // Unity 라이프사이클
@@ -91,6 +93,7 @@ namespace MultiplayerInfrastructure.UI
       DetachChrome();
       DetachKeyTab();
       DetachGraphicsTab();
+      DetachGeneralTab();
       base.OnDestroy();
     }
 
@@ -128,11 +131,15 @@ namespace MultiplayerInfrastructure.UI
       else
         Debug.LogError("[SettingsUI] close-button을 UXML에서 찾을 수 없습니다.");
 
+      _root?.RegisterCallback<GeometryChangedEvent>(HandleRootGeometryChanged);
+
       // 탭 컨텐츠 캐시는 root가 바뀌면 무효이므로 폐기 후 재생성한다.
       DetachKeyTab();
       DetachGraphicsTab();
+      DetachGeneralTab();
       _keyTabContent = null;
       _graphicsTabContent = null;
+      _generalTabContent = null;
 
       BuildTabBar();
       ShowTab(_activeTab, force: true);
@@ -141,6 +148,16 @@ namespace MultiplayerInfrastructure.UI
     private void DetachChrome()
     {
       if (_closeButton != null) _closeButton.clicked -= HandleCloseClicked;
+      _root?.UnregisterCallback<GeometryChangedEvent>(HandleRootGeometryChanged);
+    }
+
+    private void HandleRootGeometryChanged(GeometryChangedEvent evt)
+    {
+      if (_root == null)
+        return;
+
+      bool compact = evt.newRect.width < 720f || evt.newRect.height < 520f;
+      _root.EnableInClassList("settings__root--compact", compact);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -154,6 +171,7 @@ namespace MultiplayerInfrastructure.UI
       _tabBar.Clear();
       _tabButtons.Clear();
 
+      AddTabButton(SettingsTab.General, "일반");
       AddTabButton(SettingsTab.Key, "키 설정");
       AddTabButton(SettingsTab.Graphics, "그래픽 설정");
     }
@@ -183,6 +201,9 @@ namespace MultiplayerInfrastructure.UI
 
       switch (tab)
       {
+        case SettingsTab.General:
+          _tabContent.Add(EnsureGeneralTabContent());
+          break;
         case SettingsTab.Key:
           _tabContent.Add(EnsureKeyTabContent());
           RefreshKeyTab();

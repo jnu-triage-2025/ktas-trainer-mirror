@@ -23,6 +23,7 @@ namespace MultiplayerInfrastructure.UI
     private VisualElement _logViewportFrame;
     private VisualElement _scrollbarTrack;
     private VisualElement _scrollbarThumb;
+    private ReusableVerticalScrollbar _reusableScrollbar;
     private TextField _inputField;
     private VisualElement _toastPanel;
     private VisualElement _toastContainer;
@@ -176,48 +177,17 @@ namespace MultiplayerInfrastructure.UI
       _logContent.RegisterCallback<GeometryChangedEvent>(_ => RefreshScrollLayout());
       _logView.contentContainer.Add(_logContent);
 
-      _scrollbarTrack = new VisualElement
-      {
-        name = "chat-scrollbar-track",
-        pickingMode = PickingMode.Position
-      };
-      _scrollbarTrack.AddToClassList("chat-scrollbar-track");
-      _scrollbarTrack.style.position = Position.Absolute;
-      _scrollbarTrack.style.right = 7;
-      _scrollbarTrack.style.top = 10;
-      _scrollbarTrack.style.bottom = 10;
-      _scrollbarTrack.style.width = 8;
-      _scrollbarTrack.style.backgroundColor = new Color(1f, 1f, 1f, 0.08f);
-      _scrollbarTrack.style.borderTopLeftRadius = 4;
-      _scrollbarTrack.style.borderTopRightRadius = 4;
-      _scrollbarTrack.style.borderBottomLeftRadius = 4;
-      _scrollbarTrack.style.borderBottomRightRadius = 4;
-      _scrollbarTrack.RegisterCallback<GeometryChangedEvent>(_ => UpdateScrollbar());
-      _scrollbarTrack.RegisterCallback<PointerDownEvent>(HandleScrollbarTrackPointerDown);
-
-      _scrollbarThumb = new VisualElement
-      {
-        name = "chat-scrollbar-thumb",
-        pickingMode = PickingMode.Position
-      };
-      _scrollbarThumb.AddToClassList("chat-scrollbar-thumb");
-      _scrollbarThumb.style.position = Position.Absolute;
-      _scrollbarThumb.style.left = 1;
-      _scrollbarThumb.style.top = 0;
-      _scrollbarThumb.style.width = 6;
-      _scrollbarThumb.style.minHeight = 28;
-      _scrollbarThumb.style.backgroundColor = new Color(0.349f, 0.816f, 0.498f, 0.72f);
-      _scrollbarThumb.style.borderTopLeftRadius = 3;
-      _scrollbarThumb.style.borderTopRightRadius = 3;
-      _scrollbarThumb.style.borderBottomLeftRadius = 3;
-      _scrollbarThumb.style.borderBottomRightRadius = 3;
-      _scrollbarThumb.RegisterCallback<PointerDownEvent>(HandleScrollbarPointerDown);
-      _scrollbarThumb.RegisterCallback<PointerMoveEvent>(HandleScrollbarPointerMove);
-      _scrollbarThumb.RegisterCallback<PointerUpEvent>(HandleScrollbarPointerUp);
-      _scrollbarThumb.RegisterCallback<PointerCaptureOutEvent>(_ => EndScrollbarDrag());
-
-      _scrollbarTrack.Add(_scrollbarThumb);
-      _logViewportFrame.Add(_scrollbarTrack);
+      // 채팅과 설정 화면이 동일한 모듈형 스크롤바를 사용한다.
+      var scrollbar = new ReusableVerticalScrollbar { name = "chat-scrollbar-track" };
+      scrollbar.AddToClassList("chat-scrollbar-track");
+      scrollbar.Thumb.name = "chat-scrollbar-thumb";
+      scrollbar.Thumb.AddToClassList("chat-scrollbar-thumb");
+      scrollbar.ScrollNormalizedRequested += normalized =>
+        SetScrollOffset(normalized * GetMaximumScrollOffset());
+      _scrollbarTrack = scrollbar;
+      _scrollbarThumb = scrollbar.Thumb;
+      _reusableScrollbar = scrollbar;
+      _logViewportFrame.Add(scrollbar);
 
       var inputRow = new VisualElement();
       inputRow.AddToClassList("chat-input-row");
@@ -438,28 +408,15 @@ namespace MultiplayerInfrastructure.UI
 
     private void UpdateScrollbar()
     {
-      if (_logView == null || _scrollbarTrack == null || _scrollbarThumb == null)
+      if (_logView == null || _reusableScrollbar == null)
         return;
 
       float viewportHeight = _logView.contentViewport.layout.height;
       float contentHeight = GetLogContentHeight();
-      float trackHeight = _scrollbarTrack.contentRect.height;
-      if (viewportHeight <= 0f || contentHeight <= 0f || trackHeight <= 0f)
+      if (viewportHeight <= 0f || contentHeight <= 0f)
         return;
 
-      float thumbHeight = contentHeight > viewportHeight
-        ? Mathf.Max(28f, trackHeight * viewportHeight / contentHeight)
-        : trackHeight;
-      thumbHeight = Mathf.Min(trackHeight, thumbHeight);
-
-      float maximumOffset = Mathf.Max(0f, contentHeight - viewportHeight);
-      float normalized = maximumOffset > Mathf.Epsilon
-        ? Mathf.Clamp01(_scrollOffsetY / maximumOffset)
-        : 0f;
-
-      _scrollbarThumb.style.height = thumbHeight;
-      _scrollbarThumb.style.top = (trackHeight - thumbHeight) * normalized;
-      _scrollbarThumb.EnableInClassList("disabled", maximumOffset <= Mathf.Epsilon);
+      _reusableScrollbar.SetMetrics(viewportHeight, contentHeight, _scrollOffsetY);
     }
 
     private void ApplyInlineStyles()

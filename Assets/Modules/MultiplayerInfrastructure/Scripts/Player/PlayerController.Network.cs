@@ -62,6 +62,7 @@ namespace MultiplayerInfrastructure.Player
       UserDescriptorService.Register(Owner.ClientId, descriptor);
       RegisterPlayerEntity();
       OnStartServer_PlayerModel();
+      InitializeRunningSpeedMultiplierServer();
       SyncPlayerTagsToObservers();
     }
 

@@ -33,7 +33,7 @@ namespace MultiplayerInfrastructure.Entity
     [SerializeField] private float _forwardYawOffsetDegrees = -90f;
     [SerializeField] private LayerMask _movementBlockingMask = ~0;
     [SerializeField, Min(0f)] private float _maximumToggleDistance = 3f;
-    [SerializeField] private string _exitHint = "왼쪽 Shift 키를 누르면 조종을 종료합니다.";
+    [SerializeField] private string _exitHint = "탈것 내리기 키를 누르면 조종을 종료합니다.";
 
     [Header("Attach points")]
     [FormerlySerializedAs("PlayerAttachPoints")]
@@ -48,9 +48,7 @@ namespace MultiplayerInfrastructure.Entity
     private TitleUIController _titleUI;
 
     /// <summary>
-    /// 종료 키(LeftShift) 상태를 추적하여 "탑승과 동시/직후에 무의미하게 잡힌 종료 키"로 인한 즉시 퇴장을 막는다.
-    /// - <c>false</c>: 탑승 시 LeftShift 가 눌려 있었거나, 아직 한 번도 release 된 적이 없는 상태. LeftShift down 을 퇴장으로 처리하지 않는다.
-    /// - <c>true</c>: LeftShift 가 release 된 이후 다시 down edge 가 들어와야 퇴장을 허용한다.
+    /// 종료 키 상태를 추적하여 탑승과 동시/직후의 입력으로 즉시 퇴장하는 것을 막는다.
     /// </summary>
     private bool _exitKeyReady;
 
@@ -347,21 +345,23 @@ namespace MultiplayerInfrastructure.Entity
 
     private void HandleLocalExitInput()
     {
-      // LeftShift 가 release 된 적이 있어야 다시 down edge 일 때만 퇴장을 허용한다.
+      KeyCode exitKey = KeyBindingRepository.GetBoundKey("dismount", KeyCode.LeftShift);
+
+      // 종료 키가 release 된 적이 있어야 다시 down edge 일 때만 퇴장을 허용한다.
       // 이렇게 하면:
-      // 1) 보트/침대에 탑승한 동일/직후 프레임에 이미 눌려 있던 LeftShift down edge 가 잡혀 즉시 퇴장(actionbar clear)되는 문제,
-      // 2) 탑승 직후 무의식적으로 LeftShift 를 건드렸을 때 actionbar 가 사라지는 문제를 막는다.
-      // LeftShift 가 눌려 있다가 떼어지는 순간 == true 로 전환되어 다음 down edge 부터 유효.
+      // 1) 보트/침대에 탑승한 동일/직후 프레임의 종료 키 down edge로 즉시 퇴장하는 문제,
+      // 2) 탑승 직후 무의식적인 종료 키 입력으로 actionbar가 사라지는 문제를 막는다.
+      // 종료 키가 눌린 뒤 떼어지는 순간 true로 전환되어, 다음 down edge부터 유효하다.
       if (!_exitKeyReady)
       {
-        if (Input.GetKeyUp(KeyCode.LeftShift))
+        if (Input.GetKeyUp(exitKey))
         {
           _exitKeyReady = true;
         }
         return;
       }
 
-      if (!Input.GetKeyDown(KeyCode.LeftShift))
+      if (!Input.GetKeyDown(exitKey))
         return;
 
       foreach (var pair in _localParticipants)

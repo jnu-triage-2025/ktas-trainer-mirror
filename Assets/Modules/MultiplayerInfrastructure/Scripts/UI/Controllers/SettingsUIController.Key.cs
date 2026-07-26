@@ -17,7 +17,8 @@ namespace MultiplayerInfrastructure.UI
       new KeyBindingEntry("move_backward",  "뒤로 이동",      KeyCode.S),
       new KeyBindingEntry("move_left",      "좌측 이동",      KeyCode.A),
       new KeyBindingEntry("move_right",     "우측 이동",      KeyCode.D),
-      new KeyBindingEntry("run",            "달리기",         KeyCode.LeftShift),
+      new KeyBindingEntry("run",            "달리기",         KeyCode.LeftControl),
+      new KeyBindingEntry("dismount",       "탈것 내리기",    KeyCode.LeftShift),
       new KeyBindingEntry("jump",           "점프",           KeyCode.Space),
       new KeyBindingEntry("interact",       "상호작용",       KeyCode.E),
       new KeyBindingEntry("inventory",      "인벤토리",       KeyCode.I),
@@ -28,6 +29,7 @@ namespace MultiplayerInfrastructure.UI
     private List<KeyBindingEntry> _defaultBindings;
 
     private ScrollView _keyScroll;
+    private OverflowScrollView _keyOverflowScroll;
     private KeyboardLayoutElement _keyboard;
     private readonly List<KeyConfigEntryElement> _entryElements = new();
     private readonly Dictionary<string, KeyConfigEntryElement> _actionIdToEntry = new();
@@ -37,6 +39,10 @@ namespace MultiplayerInfrastructure.UI
 
     private void InitKeyData()
     {
+      // 이전 버전의 기본 달리기 키(Left Shift)만 Ctrl로 이관한다.
+      // 사용자가 다른 키를 직접 지정한 경우에는 해당 선택을 보존한다.
+      KeyBindingRepository.MigrateDefaultKey("run", KeyCode.LeftShift, KeyCode.LeftControl);
+
       _defaultBindings = new List<KeyBindingEntry>(_bindings.Count);
       foreach (var entry in _bindings)
         _defaultBindings.Add(new KeyBindingEntry(entry.actionId, entry.actionDisplayName, entry.boundKey));
@@ -64,9 +70,10 @@ namespace MultiplayerInfrastructure.UI
       listTitle.AddToClassList("settings__panel-title");
       listPanel.Add(listTitle);
 
-      _keyScroll = new ScrollView(ScrollViewMode.Vertical);
-      _keyScroll.AddToClassList("settings__key-scroll");
-      listPanel.Add(_keyScroll);
+      _keyOverflowScroll = new OverflowScrollView();
+      _keyOverflowScroll.AddToClassList("settings__key-scroll");
+      _keyScroll = _keyOverflowScroll.ScrollView;
+      listPanel.Add(_keyOverflowScroll);
 
       content.Add(listPanel);
 
@@ -126,6 +133,7 @@ namespace MultiplayerInfrastructure.UI
       _actionIdToEntry.Clear();
       _keyboard = null;
       _keyScroll = null;
+      _keyOverflowScroll = null;
     }
 
     // ──────────────────────────────────────────────────────────────────────────

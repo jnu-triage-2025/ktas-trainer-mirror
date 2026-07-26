@@ -35,7 +35,7 @@ namespace MultiplayerInfrastructure.UI
       if (_graphicsTabContent != null)
         return _graphicsTabContent;
 
-      var content = new VisualElement();
+      var content = new OverflowScrollView();
       content.AddToClassList("settings__graphics-tab-wrapper");
 
       // ── 텍스처 품질 섹션 ─────────────────────────────────────
@@ -54,7 +54,7 @@ namespace MultiplayerInfrastructure.UI
       _graphicsOptionsContainer.AddToClassList("settings__graphics-options");
       textureSection.Add(_graphicsOptionsContainer);
 
-      content.Add(textureSection);
+      content.Content.Add(textureSection);
 
       // ── UI 배율 섹션 ────────────────────────────────────────
       var uiScaleSection = new VisualElement();
@@ -73,7 +73,7 @@ namespace MultiplayerInfrastructure.UI
       _uiScaleOptionsContainer.AddToClassList("settings__graphics-options");
       uiScaleSection.Add(_uiScaleOptionsContainer);
 
-      content.Add(uiScaleSection);
+      content.Content.Add(uiScaleSection);
 
       // ── 카메라 시점(POV) 섹션 ────────────────────────────────
       var povSection = new VisualElement();
@@ -102,7 +102,7 @@ namespace MultiplayerInfrastructure.UI
       povRow.Add(_povValueLabel);
 
       povSection.Add(povRow);
-      content.Add(povSection);
+      content.Content.Add(povSection);
 
       // 텍스처 품질 옵션 채우기
       PopulateTextureOptions();

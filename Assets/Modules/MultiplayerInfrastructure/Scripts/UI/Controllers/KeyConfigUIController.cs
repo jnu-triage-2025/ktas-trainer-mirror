@@ -34,7 +34,8 @@ namespace MultiplayerInfrastructure.UI
       new KeyBindingEntry("move_backward",  "뒤로 이동",      KeyCode.S),
       new KeyBindingEntry("move_left",      "좌측 이동",      KeyCode.A),
       new KeyBindingEntry("move_right",     "우측 이동",      KeyCode.D),
-      new KeyBindingEntry("run",            "달리기",         KeyCode.LeftShift),
+      new KeyBindingEntry("run",            "달리기",         KeyCode.LeftControl),
+      new KeyBindingEntry("dismount",       "탈것 내리기",    KeyCode.LeftShift),
       new KeyBindingEntry("jump",           "점프",           KeyCode.Space),
       new KeyBindingEntry("interact",       "상호작용",       KeyCode.E),
       new KeyBindingEntry("inventory",      "인벤토리",       KeyCode.I),
@@ -75,6 +76,8 @@ namespace MultiplayerInfrastructure.UI
     protected override void Awake()
     {
       base.Awake();
+
+      KeyBindingRepository.MigrateDefaultKey("run", KeyCode.LeftShift, KeyCode.LeftControl);
 
       // 기본 바인딩 복사본 보존
       _defaultBindings = new List<KeyBindingEntry>(_bindings.Count);

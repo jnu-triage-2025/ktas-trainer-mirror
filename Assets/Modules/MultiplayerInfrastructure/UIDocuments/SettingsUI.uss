@@ -77,6 +77,7 @@
   display: flex;
   flex-direction: row;
   gap: 4px;
+  flex-wrap: wrap;
   flex-shrink: 0;
 }
 
@@ -120,6 +121,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow: hidden;
 }
 
 /* 탭 컨텐츠의 최상위 래퍼(코드에서 생성)는 남는 높이를 채운다. */
@@ -192,6 +194,11 @@
   min-height: 0;
 }
 
+.settings__general-tab-wrapper {
+  flex-grow: 1;
+  min-height: 0;
+}
+
 /* ── 액션(초기화 등) 버튼 행 ────────────────────────────────── */
 .settings__actions {
   display: flex;
@@ -200,6 +207,11 @@
   justify-content: flex-end;
   flex-shrink: 0;
   margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.settings__actions--start {
+  justify-content: flex-start;
 }
 
 .settings__primary-btn {
@@ -242,6 +254,21 @@
   background-color: #2a2a32;
 }
 
+.settings__danger-btn {
+  height: 34px;
+  min-width: 120px;
+  font-size: 13px;
+  color: #fff3f3;
+  background-color: #8f3030;
+  border-radius: 6px;
+  border-width: 1px;
+  border-color: #b64848;
+  padding: 0 16px;
+}
+
+.settings__danger-btn:hover { background-color: #aa3939; }
+.settings__danger-btn:active { background-color: #742626; }
+
 /* ============================================================
    키 설정 탭
    ============================================================ */
@@ -283,7 +310,7 @@
   border-color: #2e2e3a;
 }
 
-.settings__key-scroll > #unity-content-container {
+.settings__key-scroll #unity-content-container {
   padding: 4px;
 }
 
@@ -486,7 +513,7 @@
   display: flex;
   flex-direction: row;
   gap: 10px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 /* 텍스처 품질 옵션 타일 (TextureQualityOptionElement) */
@@ -614,4 +641,47 @@
   font-size: 12px;
   color: #d0d0e8;
   -unity-text-align: middle-right;
+}
+
+/* 좁거나 낮은 해상도에서는 고정 폭/높이 요소를 세로 흐름과 내부 스크롤로 전환한다. */
+.settings__root--compact .settings__panel {
+  padding: 8px;
+  gap: 7px;
+}
+
+.settings__root--compact .settings__tab-button {
+  min-width: 76px;
+  padding: 0 10px;
+}
+
+.settings__root--compact .settings__key-content {
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.settings__root--compact .settings__key-list-panel {
+  width: auto;
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-height: 120px;
+}
+
+.settings__root--compact .settings__key-keyboard-panel {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.settings__root--compact .settings__key-keyboard {
+  height: 170px;
+}
+
+.settings__root--compact .settings__graphics-options {
+  gap: 6px;
+}
+
+.settings__root--compact .texture-quality-option,
+.settings__root--compact .ui-scale-option {
+  min-width: 76px;
+  padding: 9px 6px;
 }

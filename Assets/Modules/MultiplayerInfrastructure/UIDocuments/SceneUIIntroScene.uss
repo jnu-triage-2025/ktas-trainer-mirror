@@ -50,13 +50,18 @@
   border: 1px solid #1f2937;
   border-radius: 6px;
   background-color: #0a0f1a;
-  color: #d1d5db;
   padding-left: 8px;
   padding-right: 8px;
 }
 
-.text-field > .unity-text-field__input {
-  color: #d1d5db;
+/* TextField의 실제 입력 요소와 placeholder 상태는 별도 USS 클래스다.
+   루트나 내부 컨테이너에 색을 주면 상태별 색이 뒤섞일 수 있으므로 직접 지정한다. */
+.text-field .unity-base-text-field__input {
+  color: #323e53;
+}
+
+.text-field .unity-base-text-field__input--placeholder {
+  color: #8291ad;
 }
 
 .text-field:focus-within {

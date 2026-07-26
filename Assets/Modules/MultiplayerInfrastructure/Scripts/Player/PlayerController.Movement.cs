@@ -1,5 +1,7 @@
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Camera;
+using MultiplayerInfrastructure.UI;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -11,7 +13,6 @@ namespace MultiplayerInfrastructure.Player
     // Movement Configuration
     [Header("PlayerObject Configuration")]
     [SerializeField] private float _walkingSpeed = 7.5f;
-    [SerializeField] private float _runningSpeed = 11.5f;
     [SerializeField] private float _jumpSpeed = 8.0f;
     [SerializeField] private float _gravity = 20.0f;
     [SerializeField] private float _spectatorMoveSpeed = 10.0f;
@@ -36,6 +37,12 @@ namespace MultiplayerInfrastructure.Player
     private float _defaultWalkingSpeed;
     public float WalkingSpeed => _walkingSpeed;
     public float DefaultWalkingSpeed => _defaultWalkingSpeed;
+
+    private const float DefaultRunningSpeedMultiplier = 1.5f;
+    private static float _serverRunningSpeedMultiplier = DefaultRunningSpeedMultiplier;
+    private readonly SyncVar<float> _runningSpeedMultiplier = new(DefaultRunningSpeedMultiplier);
+    public float RunningSpeedMultiplier => _runningSpeedMultiplier.Value;
+    public static float ServerRunningSpeedMultiplier => _serverRunningSpeedMultiplier;
 
     [SerializeField] private bool _isRunning = false;
     public bool IsRunning => _isRunning;
@@ -88,6 +95,28 @@ namespace MultiplayerInfrastructure.Player
       _walkingSpeed = value;
       RpcApplyWalkingSpeed(value);
       ApplyWalkingSpeedLocal(value);
+    }
+
+    /// <summary>
+    /// 서버 전체의 달리기 배율을 변경하고, 현재 및 이후 플레이어에게 동기화한다.
+    /// </summary>
+    public static void ApplyRunningSpeedMultiplierServer(float value)
+    {
+      _serverRunningSpeedMultiplier = value;
+
+      var players = UnityEngine.Object.FindObjectsByType<PlayerController>(
+        FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      foreach (var player in players)
+      {
+        if (player != null && player.IsServer)
+          player._runningSpeedMultiplier.Value = value;
+      }
+    }
+
+    private void InitializeRunningSpeedMultiplierServer()
+    {
+      if (IsServer)
+        _runningSpeedMultiplier.Value = _serverRunningSpeedMultiplier;
     }
 
     [ObserversRpc(BufferLast = true)]
@@ -145,13 +174,15 @@ namespace MultiplayerInfrastructure.Player
         return;
       }
 
-      _isRunning = Input.GetKey(_keyMovingRunning);
+      KeyCode runningKey = KeyBindingRepository.GetBoundKey("run", _keyMovingRunning);
+      _isRunning = Input.GetKey(runningKey);
 
       _forwardSpeed = transform.TransformDirection(Vector3.forward);
       _rightSpeed = transform.TransformDirection(Vector3.right);
       
-      float curSpeedX = canMove ? (_isRunning ? _runningSpeed : _walkingSpeed) * Input.GetAxis("Vertical") : 0;
-      float curSpeedY = canMove ? (_isRunning ? _runningSpeed : _walkingSpeed) * Input.GetAxis("Horizontal") : 0;
+      float movementSpeed = _isRunning ? _walkingSpeed * _runningSpeedMultiplier.Value : _walkingSpeed;
+      float curSpeedX = canMove ? movementSpeed * Input.GetAxis("Vertical") : 0;
+      float curSpeedY = canMove ? movementSpeed * Input.GetAxis("Horizontal") : 0;
       float movementDirectionY = _moveDirection.y;
       _moveDirection = (_forwardSpeed * curSpeedX) + (_rightSpeed * curSpeedY);
 

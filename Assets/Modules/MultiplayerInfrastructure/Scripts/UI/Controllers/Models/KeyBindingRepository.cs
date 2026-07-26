@@ -64,6 +64,38 @@ namespace MultiplayerInfrastructure.UI
       return anyLoaded;
     }
 
+    /// <summary>
+    /// 설정 화면과 실제 게임 입력이 같은 PlayerPrefs 바인딩을 사용하도록 현재 키를 조회한다.
+    /// 아직 저장된 값이 없으면 <paramref name="defaultKey"/>를 사용한다.
+    /// </summary>
+    public static KeyCode GetBoundKey(string actionId, KeyCode defaultKey)
+    {
+      if (string.IsNullOrEmpty(actionId))
+        return defaultKey;
+
+      string prefsKey = PrefsKeyPrefix + actionId;
+      return PlayerPrefs.HasKey(prefsKey)
+        ? (KeyCode)PlayerPrefs.GetInt(prefsKey)
+        : defaultKey;
+    }
+
+    /// <summary>
+    /// 기본 키가 바뀐 항목의 기존 기본값만 새 기본값으로 옮긴다.
+    /// 사용자가 다른 키로 직접 지정한 값은 유지한다.
+    /// </summary>
+    public static void MigrateDefaultKey(string actionId, KeyCode previousDefault, KeyCode newDefault)
+    {
+      if (string.IsNullOrEmpty(actionId))
+        return;
+
+      string prefsKey = PrefsKeyPrefix + actionId;
+      if (!PlayerPrefs.HasKey(prefsKey) || (KeyCode)PlayerPrefs.GetInt(prefsKey) != previousDefault)
+        return;
+
+      PlayerPrefs.SetInt(prefsKey, (int)newDefault);
+      PlayerPrefs.Save();
+    }
+
     // ──────────────────────────────────────────────────────────────────────────
     // 초기화
     // ──────────────────────────────────────────────────────────────────────────
