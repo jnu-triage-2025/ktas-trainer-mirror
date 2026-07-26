@@ -275,7 +275,7 @@ namespace MultiplayerInfrastructure.Player
       if (Input.GetMouseButtonDown(0)) TriggerAttack();
       if (Input.GetMouseButtonDown(1)) TriggerUseItem();
 
-      if (Input.GetKeyDown(KeyCode.LeftShift))
+      if (!IsRidableControlActive && Input.GetKeyDown(KeyCode.LeftShift))
       {
         if (TryDropCarriedReposable(out _))
           RefreshInteractableHintsNow();

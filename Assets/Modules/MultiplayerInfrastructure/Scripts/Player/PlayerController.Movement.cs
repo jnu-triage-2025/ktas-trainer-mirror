@@ -56,6 +56,7 @@ namespace MultiplayerInfrastructure.Player
     public Transform CameraHolderTransform => _cameraAttachPoint != null ? _cameraAttachPoint.PivotTransform : null;
 
     private Transform _forcedFollowAnchor;
+    private UnityEngine.Object _activeRidableControl;
     private bool _jumpAnimationRequestedThisFrame;
 
     // 시나리오 등 스크립트가 플레이어 위치를 직접 제어하는 동안 true.
@@ -64,6 +65,7 @@ namespace MultiplayerInfrastructure.Player
     private bool _scriptedMovementActive;
 
     public bool IsMovementPositionOverridden => _forcedFollowAnchor != null;
+    public bool IsRidableControlActive => _activeRidableControl != null;
 
     public Vector3 CurrentMoveInputVector
       => new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
@@ -230,6 +232,19 @@ if (Input.GetButton("Jump") && canMove && _characterController.isGrounded)
 
       _forcedFollowAnchor = null;
       _moveDirection = Vector3.zero;
+    }
+
+    internal void SetRidableControlActive(UnityEngine.Object control)
+    {
+      _activeRidableControl = control;
+    }
+
+    internal void ClearRidableControlActive(UnityEngine.Object control)
+    {
+      if (control != null && _activeRidableControl != control)
+        return;
+
+      _activeRidableControl = null;
     }
 
     public void AlignYawTo(Vector3 worldForward)
