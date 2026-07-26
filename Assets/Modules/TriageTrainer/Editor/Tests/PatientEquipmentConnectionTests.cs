@@ -63,5 +63,28 @@ namespace TriageTrainer.Tests
         Object.DestroyImmediate(patientObject);
       }
     }
+
+    [Test]
+    public void CarryingPatientDisablesTriageAndAssessmentGate()
+    {
+      var patientObject = new GameObject("patient-carry-assessment-gate-test");
+
+      try
+      {
+        var patient = patientObject.AddComponent<PatientController>();
+
+        Assert.That(patient.CanPerformTriageOrAssessment, Is.True);
+
+        patient.OnPlayerAttachedEnter();
+        Assert.That(patient.CanPerformTriageOrAssessment, Is.False);
+
+        patient.OnPlayerAttachedExit();
+        Assert.That(patient.CanPerformTriageOrAssessment, Is.True);
+      }
+      finally
+      {
+        Object.DestroyImmediate(patientObject);
+      }
+    }
   }
 }

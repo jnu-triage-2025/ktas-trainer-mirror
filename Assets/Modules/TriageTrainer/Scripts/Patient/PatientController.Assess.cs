@@ -76,7 +76,7 @@ namespace TriageTrainer.Entity
       public bool CanInteract(Transform interactor)
       {
         var cfg = Config;
-        if (cfg == null || !cfg.Enabled)
+        if (cfg == null || !cfg.Enabled || !_owner.CanPerformTriageOrAssessment)
           return false;
 
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
@@ -169,7 +169,7 @@ namespace TriageTrainer.Entity
     private void PerformAssess(string actionIdentifier)
     {
       var cfg = GetAssessAction(actionIdentifier);
-      if (cfg == null || !cfg.Enabled)
+      if (cfg == null || !cfg.Enabled || !CanPerformTriageOrAssessment)
         return;
 
       // 인스펙터 AssessSignal 우선, 없으면 식별자 규칙 기반 코드 기본값(Reset 무관)으로 폴백.

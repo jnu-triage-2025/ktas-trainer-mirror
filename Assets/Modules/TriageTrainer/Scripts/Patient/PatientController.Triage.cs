@@ -91,7 +91,7 @@ namespace TriageTrainer.Entity
 
       public bool CanInteract(Transform interactor)
       {
-        if (!_owner.EffectiveAssessable)
+        if (!_owner.EffectiveAssessable || !_owner.CanPerformTriageOrAssessment)
           return false;
 
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
@@ -191,7 +191,7 @@ namespace TriageTrainer.Entity
     /// </summary>
     private void BeginTriageAssessment(Transform interactor)
     {
-      if (!EffectiveAssessable)
+      if (!EffectiveAssessable || !CanPerformTriageOrAssessment)
         return;
 
       var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
@@ -213,7 +213,7 @@ namespace TriageTrainer.Entity
     /// </summary>
     public void SubmitTriageAssessment(TriageLevel level)
     {
-      if (!IsValidAssessedTriage(level))
+      if (!CanPerformTriageOrAssessment || !IsValidAssessedTriage(level))
         return;
 
       SetAssessedTriageNetworked(level);
@@ -253,7 +253,7 @@ namespace TriageTrainer.Entity
     private void ApplyAssessedTriage(TriageLevel level)
     {
       // 서버 권위 게이트: 현재 평가 가능 상태가 아니면 거부(클라이언트 게이트 우회 방지).
-      if (!EffectiveAssessable)
+      if (!EffectiveAssessable || !CanPerformTriageOrAssessment)
         return;
 
       // 값 검증: 정의되지 않은 enum/미분류 값 거부(조작된 RPC 방지).
