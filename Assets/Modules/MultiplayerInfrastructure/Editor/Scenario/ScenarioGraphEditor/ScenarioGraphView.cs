@@ -31,6 +31,7 @@ namespace MultiplayerInfrastructure.Editor
       grid.StretchToParentSize();
 
       miniMap = new ScenarioGraphMiniMap(this, DefaultMiniMapRect);
+      miniMap.RectChanged = SaveMiniMapLayout;
       hierarchy.Add(miniMap);
 
       graphViewChanged = OnGraphViewChanged;
@@ -39,6 +40,16 @@ namespace MultiplayerInfrastructure.Editor
     public void ResetMiniMap()
     {
       miniMap.Reset(DefaultMiniMapRect);
+    }
+
+    public void SetMiniMapRect(Rect rect)
+    {
+      miniMap.Reset(rect);
+    }
+
+    private void SaveMiniMapLayout(Rect rect)
+    {
+      window.SaveMiniMapLayout(rect);
     }
 
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)

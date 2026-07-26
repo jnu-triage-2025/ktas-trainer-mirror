@@ -1557,6 +1557,14 @@ namespace MultiplayerInfrastructure.Editor
         graphView.RestoreEdges(nodeViews);
         inspectorView.SetTarget(null);
         currentFilePath = path;
+        if (ScenarioGraphEditorRecentStore.TryLoadMiniMapLayout(path, out var miniMapLayout))
+        {
+          graphView.SetMiniMapRect(new Rect(
+            miniMapLayout.X,
+            miniMapLayout.Y,
+            miniMapLayout.Width,
+            miniMapLayout.Height));
+        }
         RefreshGraphIdentifierField();
         RefreshGraphTagsField();
         RefreshDefaultEntrypointField();
@@ -1574,6 +1582,12 @@ namespace MultiplayerInfrastructure.Editor
         Debug.LogException(ex);
         EditorUtility.DisplayDialog("JSON Load Failed", ex.Message, "확인");
       }
+    }
+
+    public void SaveMiniMapLayout(Rect rect)
+    {
+      if (!string.IsNullOrEmpty(currentFilePath))
+        ScenarioGraphEditorRecentStore.SaveMiniMapLayout(currentFilePath, rect);
     }
 
     private void SaveGraphToJson()

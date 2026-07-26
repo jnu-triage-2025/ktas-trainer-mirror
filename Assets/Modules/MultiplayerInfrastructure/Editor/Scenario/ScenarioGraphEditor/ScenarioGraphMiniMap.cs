@@ -51,6 +51,7 @@ namespace MultiplayerInfrastructure.Editor
     private Vector2 interactionStartMouse;
     private Rect graphBounds;
     private Rect currentRect;
+    public Action<Rect> RectChanged;
 
     public ScenarioGraphMiniMap(ScenarioGraphView graphView, Rect initialRect)
     {
@@ -214,6 +215,7 @@ namespace MultiplayerInfrastructure.Editor
       style.top = rect.y;
       style.width = rect.width;
       style.height = rect.height;
+      RectChanged?.Invoke(rect);
       MarkDirtyRepaint();
     }
 

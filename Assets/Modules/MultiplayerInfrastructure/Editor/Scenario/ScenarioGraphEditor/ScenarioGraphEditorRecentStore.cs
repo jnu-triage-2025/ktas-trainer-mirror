@@ -9,7 +9,7 @@ namespace MultiplayerInfrastructure.Editor
 {
   /// <summary>
   /// Scenario Graph Editor의 "최근 연 파일(Open Recent)" 목록 저장소.
-  /// 목록은 프로젝트 로컬 캐시(Library/ScenarioGraphEditor/recent_files.json)에 저장된다.
+  /// 목록은 프로젝트 로컬 캐시(Library/ScenarioGraphEditor/refs.json)에 저장된다.
   /// 이 경로는 버전 관리에 포함되지 않지만 Unity 재시작 후에도 유지된다.
   /// </summary>
   public static class ScenarioGraphEditorRecentStore
@@ -17,11 +17,20 @@ namespace MultiplayerInfrastructure.Editor
     public const int MaxEntries = 12;
 
     private const string CacheDirectoryName = "ScenarioGraphEditor";
-    private const string CacheFileName = "recent_files.json";
+    private const string CacheFileName = "refs.json";
 
     private sealed class RecentFilesData
     {
       public List<string> Paths { get; set; } = new List<string>();
+      public Dictionary<string, MiniMapLayout> MiniMaps { get; set; } = new Dictionary<string, MiniMapLayout>();
+    }
+
+    public sealed class MiniMapLayout
+    {
+      public float X { get; set; }
+      public float Y { get; set; }
+      public float Width { get; set; }
+      public float Height { get; set; }
     }
 
     private static string CacheFilePath
@@ -70,7 +79,30 @@ namespace MultiplayerInfrastructure.Editor
       if (paths.Count > MaxEntries)
         paths.RemoveRange(MaxEntries, paths.Count - MaxEntries);
 
-      WritePaths(paths);
+      WriteData(paths, LoadData().MiniMaps);
+    }
+
+    public static bool TryLoadMiniMapLayout(string path, out MiniMapLayout layout)
+    {
+      layout = null;
+      var normalized = NormalizePath(path);
+      if (normalized == null)
+        return false;
+      var data = LoadData();
+      return data.MiniMaps.TryGetValue(normalized, out layout) && layout != null;
+    }
+
+    public static void SaveMiniMapLayout(string path, UnityEngine.Rect rect)
+    {
+      var normalized = NormalizePath(path);
+      if (normalized == null)
+        return;
+      var data = LoadData();
+      data.MiniMaps[normalized] = new MiniMapLayout
+      {
+        X = rect.x, Y = rect.y, Width = rect.width, Height = rect.height
+      };
+      WriteData(data.Paths, data.MiniMaps);
     }
 
     /// <summary>
@@ -78,19 +110,36 @@ namespace MultiplayerInfrastructure.Editor
     /// </summary>
     public static void Clear()
     {
-      WritePaths(new List<string>());
+      WriteData(new List<string>(), new Dictionary<string, MiniMapLayout>());
     }
 
     private static List<string> LoadRaw()
     {
+      return LoadData().Paths;
+    }
+
+    private static RecentFilesData LoadData()
+    {
       var file = CacheFilePath;
       if (string.IsNullOrEmpty(file))
-        return new List<string>();
+        return new RecentFilesData();
 
       if (!File.Exists(file))
-        return new List<string>();
+        return new RecentFilesData();
 
-      return ReadPaths(file);
+      try
+      {
+        var data = JsonSerializer.Deserialize<RecentFilesData>(File.ReadAllText(file));
+        if (data == null)
+          return new RecentFilesData();
+        data.Paths ??= new List<string>();
+        data.MiniMaps ??= new Dictionary<string, MiniMapLayout>();
+        return data;
+      }
+      catch
+      {
+        return new RecentFilesData();
+      }
     }
 
     private static List<string> ReadPaths(string file)
@@ -110,6 +159,11 @@ namespace MultiplayerInfrastructure.Editor
 
     private static void WritePaths(List<string> paths)
     {
+      WriteData(paths, LoadData().MiniMaps);
+    }
+
+    private static void WriteData(List<string> paths, Dictionary<string, MiniMapLayout> miniMaps)
+    {
       var file = CacheFilePath;
       if (string.IsNullOrEmpty(file))
         return;
@@ -118,7 +172,7 @@ namespace MultiplayerInfrastructure.Editor
       {
         Directory.CreateDirectory(Path.GetDirectoryName(file));
         var json = JsonSerializer.Serialize(
-          new RecentFilesData { Paths = paths },
+          new RecentFilesData { Paths = paths, MiniMaps = miniMaps ?? new Dictionary<string, MiniMapLayout>() },
           new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(file, json);
       }
@@ -126,6 +180,14 @@ namespace MultiplayerInfrastructure.Editor
       {
         Debug.LogWarning($"[ScenarioGraphEditor] 최근 연 파일 목록 저장 실패: {ex.Message}");
       }
+    }
+
+    private static string NormalizePath(string path)
+    {
+      if (string.IsNullOrWhiteSpace(path))
+        return null;
+      try { return Path.GetFullPath(path); }
+      catch { return null; }
     }
 
     private static string GetProjectRoot()
