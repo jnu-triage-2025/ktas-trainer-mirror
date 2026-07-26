@@ -55,6 +55,21 @@ namespace MultiplayerInfrastructure.UI
       SetSubtreePickingMode(docRoot, visible ? PickingMode.Position : PickingMode.Ignore);
     }
 
+    /// <summary>
+    /// 문서 렌더링 상태는 유지하면서 포인터 히트테스트만 전환한다.
+    /// 닫힌 채팅처럼 비대화형 알림은 계속 표시해야 하지만, 높은 sortingOrder의
+    /// 전체 화면 문서 루트가 아래 UI의 포인터 이벤트를 막아서는 안 되는 경우에 사용한다.
+    /// </summary>
+    protected static void SetDocumentRootPickingEnabled(UIDocument document, bool enabled)
+    {
+      var docRoot = document != null ? document.rootVisualElement : null;
+      if (docRoot == null)
+        return;
+
+      docRoot.style.display = DisplayStyle.Flex;
+      SetSubtreePickingMode(docRoot, enabled ? PickingMode.Position : PickingMode.Ignore);
+    }
+
     private static void SetSubtreePickingMode(VisualElement root, PickingMode mode)
     {
       if (root == null)
@@ -89,4 +104,3 @@ namespace MultiplayerInfrastructure.UI
     }
   }
 }
-

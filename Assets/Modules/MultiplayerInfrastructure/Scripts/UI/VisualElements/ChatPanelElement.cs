@@ -19,6 +19,10 @@ namespace MultiplayerInfrastructure.UI
     private readonly List<string> _inputHistory = new();
 
     private ScrollView _logView;
+    private VisualElement _logContent;
+    private VisualElement _logViewportFrame;
+    private VisualElement _scrollbarTrack;
+    private VisualElement _scrollbarThumb;
     private TextField _inputField;
     private VisualElement _toastPanel;
     private VisualElement _toastContainer;
@@ -28,6 +32,13 @@ namespace MultiplayerInfrastructure.UI
     private int _maxLogEntries = DefaultMaxLogEntries;
     private int _historyCursor = -1;
     private string _historyDraft = string.Empty;
+    private bool _isDraggingScrollbar;
+    private int _scrollbarPointerId = -1;
+    private float _scrollbarDragPointerY;
+    private float _scrollbarDragOffsetY;
+    private float _scrollOffsetY;
+    private bool _scrollToBottomPending;
+    private int _scrollToBottomRequest;
 
     private static Color StyleColorBackground = new Color(0f, 0f, 0f, 0.82f);
     private static Color StyleColorText = Color.white;
@@ -57,6 +68,7 @@ namespace MultiplayerInfrastructure.UI
       ApplyInlineStyles();
 
       BuildPanel();
+      RegisterCallback<WheelEvent>(HandleLogWheel, TrickleDown.TrickleDown);
 
       _toastSchedule = schedule.Execute(UpdateToasts).Every(100);
       _toastSchedule.Pause();
@@ -78,10 +90,32 @@ namespace MultiplayerInfrastructure.UI
       _panel.pickingMode = PickingMode.Position;
       Add(_panel);
 
+      _logViewportFrame = new VisualElement
+      {
+        name = "chat-log-frame",
+        pickingMode = PickingMode.Position
+      };
+      _logViewportFrame.AddToClassList("chat-log-frame");
+      // Critical viewport constraints are inline on purpose. If the external
+      // USS is missing or imported late, a content-sized frame grows forever
+      // and there is no overflow for the ScrollView to scroll.
+      _logViewportFrame.style.position = Position.Relative;
+      _logViewportFrame.style.width = Length.Percent(100);
+      _logViewportFrame.style.height = 200;
+      _logViewportFrame.style.minHeight = 200;
+      _logViewportFrame.style.maxHeight = 200;
+      _logViewportFrame.style.flexGrow = 0;
+      _logViewportFrame.style.flexShrink = 0;
+      _logViewportFrame.style.marginBottom = 8;
+      _logViewportFrame.style.overflow = Overflow.Hidden;
+      _panel.Add(_logViewportFrame);
+
       _logView = new ScrollView(ScrollViewMode.Vertical)
       {
         name = DefaultsChatControl.ChatLogName,
-        verticalScrollerVisibility = ScrollerVisibility.Auto,
+        // A dedicated chat scrollbar is rendered beside the ScrollView. It
+        // avoids relying on Unity-version-specific internal USS class names.
+        verticalScrollerVisibility = ScrollerVisibility.Hidden,
         horizontalScrollerVisibility = ScrollerVisibility.Hidden,
         // Must accept pointer events so the user can scroll the log with the
         // mouse wheel and drag the scrollbar. PickingMode.Ignore here would
@@ -94,17 +128,26 @@ namespace MultiplayerInfrastructure.UI
       // wheel scrolling works when hovering anywhere over the log area.
       _logView.contentViewport.pickingMode = PickingMode.Position;
       _logView.contentContainer.pickingMode = PickingMode.Position;
+      _logView.contentViewport.RegisterCallback<GeometryChangedEvent>(_ => RefreshScrollLayout());
+      // Native wheel/keyboard scrolling and the custom thumb share one offset.
+      _logView.verticalScroller.valueChanged += HandleNativeScrollValueChanged;
       _logView.AddToClassList("chat-log");
+      _logView.style.position = Position.Absolute;
+      _logView.style.left = 0;
+      _logView.style.right = 0;
+      _logView.style.top = 0;
+      _logView.style.bottom = 0;
       _logView.style.width = Length.Percent(100);
+      _logView.style.height = Length.Percent(100);
+      _logView.style.minHeight = 0;
+      _logView.style.maxHeight = 200;
+      _logView.style.flexGrow = 0;
       _logView.style.flexShrink = 0;
       _logView.style.backgroundColor = new Color(0f, 0f, 0f, 0.65f);
       _logView.style.paddingTop = 8;
       _logView.style.paddingBottom = 8;
       _logView.style.paddingLeft = 10;
-      _logView.style.paddingRight = 10;
-      _logView.style.minHeight = 140;
-      _logView.style.height = 200;
-      _logView.style.marginBottom = 8;
+      _logView.style.paddingRight = 24;
       _logView.style.borderTopWidth = 1;
       _logView.style.borderBottomWidth = 1;
       _logView.style.borderLeftWidth = 1;
@@ -118,7 +161,63 @@ namespace MultiplayerInfrastructure.UI
       _logView.style.borderBottomLeftRadius = 6;
       _logView.style.borderBottomRightRadius = 6;
       _logView.style.color = StyleColorText;
-      _panel.Add(_logView);
+      _logViewportFrame.Add(_logView);
+
+      _logContent = new VisualElement
+      {
+        name = "chat-log-content",
+        pickingMode = PickingMode.Position
+      };
+      _logContent.AddToClassList("chat-log-content");
+      _logContent.style.width = Length.Percent(100);
+      _logContent.style.flexDirection = FlexDirection.Column;
+      _logContent.style.flexGrow = 0;
+      _logContent.style.flexShrink = 0;
+      _logContent.RegisterCallback<GeometryChangedEvent>(_ => RefreshScrollLayout());
+      _logView.contentContainer.Add(_logContent);
+
+      _scrollbarTrack = new VisualElement
+      {
+        name = "chat-scrollbar-track",
+        pickingMode = PickingMode.Position
+      };
+      _scrollbarTrack.AddToClassList("chat-scrollbar-track");
+      _scrollbarTrack.style.position = Position.Absolute;
+      _scrollbarTrack.style.right = 7;
+      _scrollbarTrack.style.top = 10;
+      _scrollbarTrack.style.bottom = 10;
+      _scrollbarTrack.style.width = 8;
+      _scrollbarTrack.style.backgroundColor = new Color(1f, 1f, 1f, 0.08f);
+      _scrollbarTrack.style.borderTopLeftRadius = 4;
+      _scrollbarTrack.style.borderTopRightRadius = 4;
+      _scrollbarTrack.style.borderBottomLeftRadius = 4;
+      _scrollbarTrack.style.borderBottomRightRadius = 4;
+      _scrollbarTrack.RegisterCallback<GeometryChangedEvent>(_ => UpdateScrollbar());
+      _scrollbarTrack.RegisterCallback<PointerDownEvent>(HandleScrollbarTrackPointerDown);
+
+      _scrollbarThumb = new VisualElement
+      {
+        name = "chat-scrollbar-thumb",
+        pickingMode = PickingMode.Position
+      };
+      _scrollbarThumb.AddToClassList("chat-scrollbar-thumb");
+      _scrollbarThumb.style.position = Position.Absolute;
+      _scrollbarThumb.style.left = 1;
+      _scrollbarThumb.style.top = 0;
+      _scrollbarThumb.style.width = 6;
+      _scrollbarThumb.style.minHeight = 28;
+      _scrollbarThumb.style.backgroundColor = new Color(0.349f, 0.816f, 0.498f, 0.72f);
+      _scrollbarThumb.style.borderTopLeftRadius = 3;
+      _scrollbarThumb.style.borderTopRightRadius = 3;
+      _scrollbarThumb.style.borderBottomLeftRadius = 3;
+      _scrollbarThumb.style.borderBottomRightRadius = 3;
+      _scrollbarThumb.RegisterCallback<PointerDownEvent>(HandleScrollbarPointerDown);
+      _scrollbarThumb.RegisterCallback<PointerMoveEvent>(HandleScrollbarPointerMove);
+      _scrollbarThumb.RegisterCallback<PointerUpEvent>(HandleScrollbarPointerUp);
+      _scrollbarThumb.RegisterCallback<PointerCaptureOutEvent>(_ => EndScrollbarDrag());
+
+      _scrollbarTrack.Add(_scrollbarThumb);
+      _logViewportFrame.Add(_scrollbarTrack);
 
       var inputRow = new VisualElement();
       inputRow.AddToClassList("chat-input-row");
@@ -201,6 +300,166 @@ namespace MultiplayerInfrastructure.UI
 
       _toastPanel.Add(_toastContainer);
       Add(_toastPanel);
+    }
+
+    private void HandleLogWheel(WheelEvent evt)
+    {
+      if (!_isOpen || _logView == null || _logViewportFrame == null ||
+          !_logViewportFrame.worldBound.Contains(evt.mousePosition))
+        return;
+
+      SetScrollOffset(_scrollOffsetY + evt.delta.y * _logView.mouseWheelScrollSize);
+      evt.StopImmediatePropagation();
+    }
+
+    private void HandleScrollbarTrackPointerDown(PointerDownEvent evt)
+    {
+      if (evt.button != 0 || evt.target == _scrollbarThumb)
+        return;
+
+      float thumbHeight = _scrollbarThumb.resolvedStyle.height;
+      float requestedTop = evt.localPosition.y - thumbHeight * 0.5f;
+      SetScrollFromThumbTop(requestedTop);
+      evt.StopImmediatePropagation();
+    }
+
+    private void HandleScrollbarPointerDown(PointerDownEvent evt)
+    {
+      if (evt.button != 0)
+        return;
+
+      _isDraggingScrollbar = true;
+      _scrollbarPointerId = evt.pointerId;
+      _scrollbarDragPointerY = evt.position.y;
+      _scrollbarDragOffsetY = _scrollbarThumb.resolvedStyle.top;
+      _scrollbarThumb.CapturePointer(evt.pointerId);
+      _scrollbarThumb.AddToClassList("dragging");
+      evt.StopImmediatePropagation();
+    }
+
+    private void HandleScrollbarPointerMove(PointerMoveEvent evt)
+    {
+      if (!_isDraggingScrollbar || evt.pointerId != _scrollbarPointerId)
+        return;
+
+      SetScrollFromThumbTop(_scrollbarDragOffsetY + evt.position.y - _scrollbarDragPointerY);
+      evt.StopImmediatePropagation();
+    }
+
+    private void HandleScrollbarPointerUp(PointerUpEvent evt)
+    {
+      if (!_isDraggingScrollbar || evt.pointerId != _scrollbarPointerId)
+        return;
+
+      if (_scrollbarThumb.HasPointerCapture(evt.pointerId))
+        _scrollbarThumb.ReleasePointer(evt.pointerId);
+      EndScrollbarDrag();
+      evt.StopImmediatePropagation();
+    }
+
+    private void EndScrollbarDrag()
+    {
+      _isDraggingScrollbar = false;
+      _scrollbarPointerId = -1;
+      _scrollbarThumb?.RemoveFromClassList("dragging");
+    }
+
+    private void SetScrollFromThumbTop(float requestedTop)
+    {
+      if (_scrollbarTrack == null || _scrollbarThumb == null || _logView == null)
+        return;
+
+      float travel = Mathf.Max(0f,
+        _scrollbarTrack.contentRect.height - _scrollbarThumb.resolvedStyle.height);
+      float normalized = travel > Mathf.Epsilon
+        ? Mathf.Clamp01(requestedTop / travel)
+        : 0f;
+      SetScrollOffset(normalized * GetMaximumScrollOffset());
+    }
+
+    private void SetScrollOffset(float offset)
+    {
+      if (_logView == null)
+        return;
+
+      _scrollOffsetY = Mathf.Clamp(offset, 0f, GetMaximumScrollOffset());
+      Vector2 nativeOffset = _logView.scrollOffset;
+      if (!Mathf.Approximately(nativeOffset.y, _scrollOffsetY))
+        _logView.scrollOffset = new Vector2(nativeOffset.x, _scrollOffsetY);
+      UpdateScrollbar();
+    }
+
+    private void HandleNativeScrollValueChanged(float value)
+    {
+      _scrollOffsetY = Mathf.Clamp(value, 0f, GetMaximumScrollOffset());
+      UpdateScrollbar();
+    }
+
+    private float GetMaximumScrollOffset()
+    {
+      if (_logView == null || _logContent == null)
+        return 0f;
+
+      return Mathf.Max(0f, GetLogContentHeight() - _logView.contentViewport.layout.height);
+    }
+
+    private float GetLogContentHeight()
+    {
+      if (_logContent == null)
+        return 0f;
+
+      float height = 0f;
+      for (int i = 0; i < _logContent.childCount; i++)
+      {
+        VisualElement child = _logContent[i];
+        if (child == null)
+          continue;
+
+        Rect childLayout = child.layout;
+        if (!float.IsNaN(childLayout.yMax))
+          height = Mathf.Max(height, childLayout.yMax);
+      }
+
+      return Mathf.Max(height, _logContent.layout.height);
+    }
+
+    private void RefreshScrollLayout()
+    {
+      if (_scrollToBottomPending)
+      {
+        ApplyScrollToBottom();
+        return;
+      }
+
+      // ScrollView owns the content transform. Keep the custom thumb in sync
+      // with its authoritative offset after style/layout recalculation.
+      SetScrollOffset(_logView != null ? _logView.scrollOffset.y : _scrollOffsetY);
+    }
+
+    private void UpdateScrollbar()
+    {
+      if (_logView == null || _scrollbarTrack == null || _scrollbarThumb == null)
+        return;
+
+      float viewportHeight = _logView.contentViewport.layout.height;
+      float contentHeight = GetLogContentHeight();
+      float trackHeight = _scrollbarTrack.contentRect.height;
+      if (viewportHeight <= 0f || contentHeight <= 0f || trackHeight <= 0f)
+        return;
+
+      float thumbHeight = contentHeight > viewportHeight
+        ? Mathf.Max(28f, trackHeight * viewportHeight / contentHeight)
+        : trackHeight;
+      thumbHeight = Mathf.Min(trackHeight, thumbHeight);
+
+      float maximumOffset = Mathf.Max(0f, contentHeight - viewportHeight);
+      float normalized = maximumOffset > Mathf.Epsilon
+        ? Mathf.Clamp01(_scrollOffsetY / maximumOffset)
+        : 0f;
+
+      _scrollbarThumb.style.height = thumbHeight;
+      _scrollbarThumb.style.top = (trackHeight - thumbHeight) * normalized;
+      _scrollbarThumb.EnableInClassList("disabled", maximumOffset <= Mathf.Epsilon);
     }
 
     private void ApplyInlineStyles()
@@ -349,7 +608,7 @@ namespace MultiplayerInfrastructure.UI
       // at the bottom, so scrolling up to read history is not interrupted.
       bool stickToBottom = IsScrolledToBottom();
 
-      _logView.contentContainer.Add(entry);
+      _logContent.Add(entry);
       _logEntries.Enqueue(entry);
 
       TrimLogIfNeeded();
@@ -371,18 +630,14 @@ namespace MultiplayerInfrastructure.UI
       if (_logView == null)
         return true;
 
-      var scroller = _logView.verticalScroller;
-      if (scroller == null)
-        return true;
-
-      float range = scroller.highValue - scroller.lowValue;
+      float range = GetMaximumScrollOffset();
       // No scrollable range yet: treat as bottom so the first messages show.
       if (range <= Mathf.Epsilon)
         return true;
 
       // Allow a small threshold so minor offsets still count as "at bottom".
       const float bottomThreshold = 4f;
-      return scroller.value >= scroller.highValue - bottomThreshold;
+      return _scrollOffsetY >= range - bottomThreshold;
     }
 
     public void ClearLog()
@@ -393,7 +648,8 @@ namespace MultiplayerInfrastructure.UI
         entry?.RemoveFromHierarchy();
       }
 
-      _logView?.contentContainer.Clear();
+      _logContent?.Clear();
+      SetScrollOffset(0f);
     }
 
     private void TrimLogIfNeeded()
@@ -410,18 +666,43 @@ namespace MultiplayerInfrastructure.UI
       if (_logView == null)
         return;
 
+      _scrollToBottomPending = true;
+      int request = ++_scrollToBottomRequest;
+      ScheduleScrollToBottomPass(request, 4);
+    }
+
+    private void ScheduleScrollToBottomPass(int request, int passesRemaining)
+    {
       _logView.schedule.Execute(() =>
       {
-        var content = _logView.contentContainer;
-        if (content.childCount > 0)
+        if (request != _scrollToBottomRequest || _logView == null)
+          return;
+
+        ApplyScrollToBottom();
+
+        if (passesRemaining > 1)
         {
-          var last = content[content.childCount - 1];
-          _logView.ScrollTo(last);
+          ScheduleScrollToBottomPass(request, passesRemaining - 1);
+          return;
         }
 
-        if (_logView.verticalScroller != null)
-          _logView.verticalScroller.value = _logView.verticalScroller.highValue;
-      });
+        _scrollToBottomPending = false;
+      }).ExecuteLater(16);
+    }
+
+    private void ApplyScrollToBottom()
+    {
+      if (_logView == null || _logContent == null || _logContent.childCount == 0)
+        return;
+
+      // ScrollTo uses ScrollView's resolved layout. The explicit offsets keep
+      // the custom scrollbar synchronized during the few frames in which a
+      // hidden panel becomes visible and its scroll range is recalculated.
+      VisualElement lastEntry = _logContent[_logContent.childCount - 1];
+      _logView.ScrollTo(lastEntry);
+      if (_logView.verticalScroller != null)
+        _logView.verticalScroller.value = _logView.verticalScroller.highValue;
+      SetScrollOffset(GetMaximumScrollOffset());
     }
 
     private void ShowToast(string message)

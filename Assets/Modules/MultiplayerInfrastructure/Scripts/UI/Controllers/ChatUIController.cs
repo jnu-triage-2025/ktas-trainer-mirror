@@ -176,6 +176,7 @@ namespace MultiplayerInfrastructure.UI
     private void ShowPanel()
     {
       EnsurePanel();
+      SetDocumentRootPickingEnabled(_uiDocument, true);
       _chatPanel?.SetOpen(true);
       _chatPanel?.FocusInput();
       _chatPanel?.ClearToasts();
@@ -185,6 +186,7 @@ namespace MultiplayerInfrastructure.UI
     {
       _chatPanel?.SetOpen(false);
       _chatPanel?.ClearInput();
+      SetDocumentRootPickingEnabled(_uiDocument, false);
     }
 
     private void HideImmediately()
@@ -193,6 +195,7 @@ namespace MultiplayerInfrastructure.UI
       _chatPanel?.SetOpen(false);
       _chatPanel?.ClearInput();
       _chatPanel?.ClearToasts();
+      SetDocumentRootPickingEnabled(_uiDocument, false);
     }
 
     private void EnsurePanel()

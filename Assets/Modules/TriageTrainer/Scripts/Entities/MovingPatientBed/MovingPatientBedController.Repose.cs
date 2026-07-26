@@ -49,6 +49,7 @@ namespace TriageTrainer.Entity
     public override void OnStartServer()
     {
       base.OnStartServer();
+      OnIntravenousAttachmentStartServer();
 
       // 사전 결합 지정이 있으면 권위값으로 적용한다(스폰 즉시 결합 → 전 피어 복제).
       if (!string.IsNullOrWhiteSpace(_initialReposedTargetIdentifier))
@@ -63,6 +64,7 @@ namespace TriageTrainer.Entity
 
       _runtimeIdentifierSync.OnChange += OnBedRuntimeIdentifierChanged;
       _reposedTargetIdentifier.OnChange += OnReposedTargetIdentifierChanged;
+      OnIntravenousAttachmentStartClient();
 
       // 스폰 페이로드로 동기화된 식별자로 모든 피어에서 등록한다.
       RegisterBedEntity();
@@ -75,6 +77,7 @@ namespace TriageTrainer.Entity
     {
       _runtimeIdentifierSync.OnChange -= OnBedRuntimeIdentifierChanged;
       _reposedTargetIdentifier.OnChange -= OnReposedTargetIdentifierChanged;
+      OnIntravenousAttachmentStopClient();
 
       // 침대가 디스폰될 때 결합되어 있던 환자의 로컬 참조(_currentBed)를 정리해 댕글링을 방지한다.
       ClearReposeLinkLocal();

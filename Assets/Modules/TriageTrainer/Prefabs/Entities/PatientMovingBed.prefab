@@ -337,14 +337,50 @@ MonoBehaviour:
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 5796848331211291605}
   _networkObjectCache: {fileID: 5796848331211291605}
-  attachPoints: []
-  nowRidingPlayers: []
-  _intravenousStandAttached: 0
-  _intravenousStandReference: {fileID: 0}
-  _intravenousHangerAttached: 0
-  _intravenousHangerReference: {fileID: 0}
-  _intravenousFluidAttached: 0
-  _intravenousFluidReference: {fileID: 0}
+  _maximumParticipants: 1
+  _moveSpeed: 3.5
+  _turnSpeed: 120
+  _forwardYawOffsetDegrees: -90
+  _movementBlockingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  _maximumToggleDistance: 3
+  _exitHint: "\uC67C\uCABD Shift \uD0A4\uB97C \uB204\uB974\uBA74 \uC870\uC885\uC744
+    \uC885\uB8CC\uD569\uB2C8\uB2E4."
+  _playerAttachPoints:
+  - {fileID: 7425824512457748482}
+  - {fileID: 2119104018315133438}
+  _intravenousStandReference: {fileID: 6032575468207879380}
+  _intravenousHangerHangedNormalSalineReference: {fileID: 4814252600140772689}
+  _intravenousHangerHangedPlasmaSolutionReference: {fileID: 2915987674690095969}
+  _normalSalineItemIdentifiers:
+  - normal_saline_1000ml
+  - normal_saline_20ml
+  - normal_saline_intravenous_ready
+  - normal_saline_5cc_syringe
+  - normal_saline_20cc_syringe
+  - normal_saline_50cc_syringe
+  - normal_saline_16g_5cc_syringe
+  - normal_saline_16g_20cc_syringe
+  - normal_saline_16g_50cc_syringe
+  - normal_saline_18g_5cc_syringe
+  - normal_saline_18g_20cc_syringe
+  - normal_saline_18g_50cc_syringe
+  - normal_saline_20g_5cc_syringe
+  - normal_saline_20g_20cc_syringe
+  - normal_saline_20g_50cc_syringe
+  - normal_saline_22g_5cc_syringe
+  - normal_saline_22g_20cc_syringe
+  - normal_saline_22g_50cc_syringe
+  - normal_saline_24g_5cc_syringe
+  - normal_saline_24g_20cc_syringe
+  - normal_saline_24g_50cc_syringe
+  _plasmaSolutionItemIdentifiers:
+  - plasma_solution_1000ml
+  - plasma_solution_intravenous_ready
+  _initialIntravenousStandInstalled: 0
+  _initialNormalSalineInstalled: 0
+  _initialPlasmaSolutionInstalled: 0
   _entityTypeIdentifier: moving_patient_bed
   _displayText: "\uC774\uB3D9\uC2DD \uD658\uC790 \uCE68\uB300"
   _displayIcon: {fileID: 0}
@@ -352,16 +388,8 @@ MonoBehaviour:
   _reposeDisplayIcon: {fileID: 0}
   _weight: 0
   _reposeAnchor: {fileID: 4813026280041569582}
-  _interactionMode: 0
-  _moveSpeed: 3.5
-  _turnSpeed: 120
-  _forwardYawOffsetDegrees: -90
-  _movementBlockingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  PlayerAttachPoints:
-  - {fileID: 7425824512457748482}
-  - {fileID: 2119104018315133438}
+  _enablePatientRepose: 1
+  _maximumPlayerParticipants: 2
   PatientAttachPoints:
   - {fileID: 762591555731961356}
   _attachableItemVisualPairs: []
@@ -596,7 +624,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
   connectionService: {fileID: 0}
-  _identifier: ps1
+  _identifier: ps1_001
   _autoGenerateIdentifier: 1
   _displayIcon: {fileID: 0}
   _interactConfigs:
@@ -721,7 +749,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
   connectionService: {fileID: 0}
-  _identifier: ns1_001
+  _identifier: ns1
   _autoGenerateIdentifier: 1
   _displayIcon: {fileID: 0}
   _interactConfigs:
@@ -801,6 +829,11 @@ PrefabInstance:
       addedObject: {fileID: 2539040610948633051}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6f43f75233b7b4ad7b3d0da6850a4403, type: 3}
+--- !u!1 &6032575468207879380 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2449143898509177346, guid: 6f43f75233b7b4ad7b3d0da6850a4403, type: 3}
+  m_PrefabInstance: {fileID: 8234013931072407254}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &6409699523747409518 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3077871467300661432, guid: 6f43f75233b7b4ad7b3d0da6850a4403, type: 3}

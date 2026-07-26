@@ -133,6 +133,7 @@ namespace TriageTrainer.Entity
             if (interact != null)
               result.Add(interact);
         }
+        AddIntravenousFluidInteracts(result);
         return result.ToArray();
       }
     }
@@ -168,6 +169,7 @@ namespace TriageTrainer.Entity
       _interacts = new IInteract[] { this, _reposeInteract };
       InitializeAttachPoints();
       RebuildAttachableVisualMap();
+      InitializeIntravenousAttachmentDisplay();
       if (_reposeAnchor == null)
         _reposeAnchor = transform;
       // Note: Entity identifier is assigned by server via SetIdentifier().
@@ -500,8 +502,6 @@ namespace TriageTrainer.Entity
         worldPosition += patientAnchor.TransformVector(localOffset);
         worldRotation = patientAnchor.rotation * localRotationOffset;
       }
-
-      SyncPatientAttachmentVisuals(patientAnchor);
 
       patient.transform.SetPositionAndRotation(worldPosition, worldRotation);
     }

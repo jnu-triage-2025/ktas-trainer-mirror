@@ -3,7 +3,6 @@ namespace MultiplayerInfrastructure.Definitions
   public static class DefaultsUIDocument
   {
     public const float CrosshairUISortOrder = 1f;
-    public const float ChatPanelUISortOrder = 3f;
     public const float QuestPanelUISortOrder = 4f;
     public const float QuestPreviewHudSortOrder = 2f;
     public const float HeldItemHudSortOrder = 2.5f;
@@ -17,6 +16,10 @@ namespace MultiplayerInfrastructure.Definitions
     public const float SettingsUISortOrder = 8f;
     public const float ProblemSheetUISortOrder = 9f;
     public const float TriageAssessmentUISortOrder = 9.5f;
+    // Chat is opened through UIOverlayStack and must receive pointer/wheel input
+    // above every passive HUD and modal document. Its document root is made
+    // non-interactable while closed by ChatUIController.
+    public const float ChatPanelUISortOrder = 10f;
     public const float EntityOverheadLabelSortOrder = 2.2f;
   }
 }
