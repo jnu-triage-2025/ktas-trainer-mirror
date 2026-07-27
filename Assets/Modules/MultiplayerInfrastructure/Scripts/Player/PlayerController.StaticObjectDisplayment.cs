@@ -45,6 +45,53 @@ namespace MultiplayerInfrastructure.Player
 
     private const float StaticObjectApplyInFlightTimeout = 2f;
 
+    /// <summary>
+    /// 서버 전역 표시 상태를 해제하고 요청자에게 아이템 하나를 지급합니다.
+    /// 맵에 사전 배치된 설치물을 회수할 때 사용합니다.
+    /// </summary>
+    public void TryClearStaticObjectDisplaymentAndGrantItem(string entityIdentifier, string itemIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(entityIdentifier) || string.IsNullOrWhiteSpace(itemIdentifier))
+        return;
+      if (!IsSpawned || IsServerStarted)
+        ServerClearStaticObjectDisplaymentAndGrantItem(entityIdentifier, itemIdentifier, Owner);
+      else
+        CmdClearStaticObjectDisplaymentAndGrantItem(entityIdentifier, itemIdentifier);
+    }
+
+    [ServerRpc]
+    private void CmdClearStaticObjectDisplaymentAndGrantItem(
+      string entityIdentifier, string itemIdentifier, NetworkConnection sender = null)
+    {
+      ServerClearStaticObjectDisplaymentAndGrantItem(entityIdentifier, itemIdentifier, sender ?? Owner);
+    }
+
+    private void ServerClearStaticObjectDisplaymentAndGrantItem(
+      string entityIdentifier, string itemIdentifier, NetworkConnection claimant)
+    {
+      if (claimant == null || (Owner != null && Owner.IsValid && claimant.ClientId != Owner.ClientId))
+        return;
+      if (!TryGetStaticObjectDisplayment(entityIdentifier, out var displayment) || displayment == null ||
+          !StaticObjectDisplaymentService.IsShown(entityIdentifier))
+        return;
+      float sqrDistance = (displayment.transform.position - ResolveServerPickupOriginPosition()).sqrMagnitude;
+      if (sqrDistance > MaxStaticObjectDisplaymentApplyDistanceSqr)
+        return;
+      if (!StaticObjectDisplaymentService.ClearShown(entityIdentifier))
+        return;
+
+      RpcHideStaticObjectDisplaymentGlobal(entityIdentifier);
+      TargetGrantStaticObjectDisplaymentItem(claimant, itemIdentifier);
+    }
+
+    [TargetRpc]
+    private void TargetGrantStaticObjectDisplaymentItem(NetworkConnection connection, string itemIdentifier)
+    {
+      var item = Registry.Registry.CreateItemInstance(itemIdentifier);
+      if (item == null) return;
+      if (!TryAddItemToInventory(item)) TryDropItemInFront(item);
+    }
+
     // ── 진입점 (Owner) ─────────────────────────────────────────────────────
 
     /// <summary>
@@ -288,6 +335,14 @@ namespace MultiplayerInfrastructure.Player
         displayment.ApplyShownFromNetwork();
 
       // 표시 상태 변화로 상호작용 노출 조건이 달라질 수 있으므로 힌트를 즉시 갱신한다.
+      RefreshInteractableHintsNow();
+    }
+
+    [ObserversRpc]
+    private void RpcHideStaticObjectDisplaymentGlobal(string entityIdentifier)
+    {
+      if (TryGetStaticObjectDisplayment(entityIdentifier, out var displayment) && displayment != null)
+        displayment.ApplyHiddenFromNetwork();
       RefreshInteractableHintsNow();
     }
 

@@ -4,6 +4,7 @@ using MultiplayerInfrastructure.FishNetSupports;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Scenario.Requirements;
 using MultiplayerInfrastructure.Session;
+using MultiplayerInfrastructure.UI;
 using TriageTrainer.MultiplayerInfrastructureSupports;
 using TriageTrainer.Scenario;
 using UnityEngine;
@@ -76,27 +77,30 @@ namespace TriageTrainer.SceneBootstrapper
 
     private IEnumerator BootstrapRoutine()
     {
-      // Hide FishNet logo/HUD as early as possible, before any scene loading.
-      HideFishNetHud();
-
-      if (loadSystemOverlayScene)
+      using (LoadingScreen.Begin("튜토리얼 환경을 준비하는 중..."))
       {
-        yield return LoadSceneIfNeeded(SystemOverlaySceneName);
+        // Hide FishNet logo/HUD as early as possible, before any scene loading.
+        HideFishNetHud();
+
+        if (loadSystemOverlayScene)
+        {
+          yield return LoadSceneIfNeeded(SystemOverlaySceneName);
+        }
+
+        // Ensure newly-loaded scene objects complete Awake/OnEnable before networking starts.
+        yield return null;
+
+        PrepareDeferredPlayerSpawning();
+        StartHostSession();
+
+        // 튜토리얼 씬에서는 외부 접속을 차단한다.
+        ConnectionGateService.SetPort(port);
+        ConnectionGateService.Close();
+
+        ScenarioRuntimeBootstrapGate.MarkSceneReady(gameObject.scene);
+
+        yield return StartScenarioAfterDelay();
       }
-
-      // Ensure newly-loaded scene objects complete Awake/OnEnable before networking starts.
-      yield return null;
-
-      PrepareDeferredPlayerSpawning();
-      StartHostSession();
-
-      // 튜토리얼 씬에서는 외부 접속을 차단한다.
-      ConnectionGateService.SetPort(port);
-      ConnectionGateService.Close();
-
-      ScenarioRuntimeBootstrapGate.MarkSceneReady(gameObject.scene);
-
-      yield return StartScenarioAfterDelay();
     }
 
     /// <summary>
@@ -229,7 +233,10 @@ namespace TriageTrainer.SceneBootstrapper
       }
 
       while (!operation.isDone)
+      {
+        LoadingScreen.Report($"{sceneName}을 준비하는 중...", operation.progress / 0.9f);
         yield return null;
+      }
     }
   }
 }

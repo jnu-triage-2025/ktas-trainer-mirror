@@ -52,6 +52,7 @@ namespace MultiplayerInfrastructure.Player
       Update_Raycast();
       Update_Inventory();
       Update_Item();
+      Update_PlaceableItemPreview();
     }
 
     void LateUpdate()

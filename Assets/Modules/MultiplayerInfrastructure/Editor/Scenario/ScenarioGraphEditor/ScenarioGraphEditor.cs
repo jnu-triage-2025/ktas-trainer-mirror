@@ -1033,7 +1033,8 @@ namespace MultiplayerInfrastructure.Editor
             displayLabel,
             nodeView.Data,
             timing.EnteredAt,
-            timing.ExitedAt));
+            timing.ExitedAt,
+            runtimeScenarioController.GetNodeVisitNotes(graphData.Identifier, visitOrder)));
         }
       }
 

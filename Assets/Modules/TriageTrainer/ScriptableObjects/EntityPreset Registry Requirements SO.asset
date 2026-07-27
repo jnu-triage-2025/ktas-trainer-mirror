@@ -67,3 +67,9 @@ MonoBehaviour:
     displayName: "\uBAA8\uC790"
     isNetworked: 1
     childReferences: []
+  - identifier: level1_rapid_infuser
+    fallbackEntityType: 5
+    prefab: {fileID: 6673793964106904184, guid: 443870cc6703f42719b5008c60cb8db5, type: 3}
+    displayName: "Level 1 \uAE09\uC18D \uC8FC\uC785\uAE30"
+    isNetworked: 1
+    childReferences: []

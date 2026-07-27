@@ -2,6 +2,7 @@ using System.Collections;
 using MultiplayerInfrastructure.FishNetSupports;
 using MultiplayerInfrastructure.Scenario.Requirements;
 using MultiplayerInfrastructure.Session;
+using MultiplayerInfrastructure.UI;
 using TriageTrainer.MultiplayerInfrastructureSupports;
 using TriageTrainer.Scenario;
 using UnityEngine;
@@ -66,25 +67,28 @@ namespace TriageTrainer.SceneBootstrapper
 
     private IEnumerator BootstrapRoutine()
     {
-      // Hide FishNet logo/HUD as early as possible, before any scene loading.
-      HideFishNetHud();
-
-      if (loadSystemOverlayScene)
+      using (LoadingScreen.Begin("개발 환경을 준비하는 중..."))
       {
-        yield return LoadSceneIfNeeded(SystemOverlaySceneName);
+        // Hide FishNet logo/HUD as early as possible, before any scene loading.
+        HideFishNetHud();
+
+        if (loadSystemOverlayScene)
+        {
+          yield return LoadSceneIfNeeded(SystemOverlaySceneName);
+        }
+
+        // Ensure newly-loaded scene objects complete Awake/OnEnable before networking starts.
+        yield return null;
+
+        PrepareDeferredPlayerSpawning();
+        StartHostSession();
+
+        // 개발 씬에서는 기본적으로 외부 접속을 허용한다.
+        ConnectionGateService.SetPort(port);
+        ConnectionGateService.Open();
+
+        ScenarioRuntimeBootstrapGate.MarkSceneReady(gameObject.scene);
       }
-
-      // Ensure newly-loaded scene objects complete Awake/OnEnable before networking starts.
-      yield return null;
-
-      PrepareDeferredPlayerSpawning();
-      StartHostSession();
-
-      // 개발 씬에서는 기본적으로 외부 접속을 허용한다.
-      ConnectionGateService.SetPort(port);
-      ConnectionGateService.Open();
-
-      ScenarioRuntimeBootstrapGate.MarkSceneReady(gameObject.scene);
     }
 
     private static void HideFishNetHud()
@@ -143,7 +147,10 @@ namespace TriageTrainer.SceneBootstrapper
       }
 
       while (!operation.isDone)
+      {
+        LoadingScreen.Report($"{sceneName}을 준비하는 중...", operation.progress / 0.9f);
         yield return null;
+      }
     }
   }
 }

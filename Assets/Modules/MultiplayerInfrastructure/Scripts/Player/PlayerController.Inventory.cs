@@ -422,6 +422,20 @@ namespace MultiplayerInfrastructure.Player
       return dropped;
     }
 
+    /// <summary>
+    /// 설치형 엔티티 등을 아이템으로 되돌릴 때, 지정 위치에 획득 가능한 월드 아이템을 생성한다.
+    /// </summary>
+    public bool TrySpawnWorldItem(ItemSystem.Item itemData, Vector3 position, Vector3 throwForce)
+    {
+      if (itemData == null || itemData.CurrentStackCount <= 0)
+        return false;
+
+      bool spawned = RequestDropWorldItem(itemData, position, throwForce);
+      if (spawned)
+        itemData.OnThrow(this);
+      return spawned;
+    }
+
     public bool TryPickupWorldItem(ItemObject itemObject)
     {
       if (itemObject == null || itemObject.Item == null)

@@ -16,6 +16,7 @@ namespace MultiplayerInfrastructure.Editor
     public readonly IScenarioNode NodeData;
     public readonly DateTime EnteredAt;
     public readonly DateTime? ExitedAt;
+    public readonly IReadOnlyList<string> Notes;
 
     public ScenarioRuntimeHistoryEntry(
       int sequence,
@@ -23,7 +24,8 @@ namespace MultiplayerInfrastructure.Editor
       string displayLabel,
       IScenarioNode nodeData = null,
       DateTime enteredAt = default,
-      DateTime? exitedAt = null)
+      DateTime? exitedAt = null,
+      IReadOnlyList<string> notes = null)
     {
       Sequence = sequence;
       NodeIdentifier = nodeIdentifier;
@@ -31,6 +33,7 @@ namespace MultiplayerInfrastructure.Editor
       NodeData = nodeData;
       EnteredAt = enteredAt;
       ExitedAt = exitedAt;
+      Notes = notes ?? Array.Empty<string>();
     }
   }
 
@@ -182,7 +185,9 @@ namespace MultiplayerInfrastructure.Editor
         var entry = entries[index];
         var button = new Button(() => OnNodeSelected?.Invoke(entry.NodeIdentifier))
         {
-          text = $"{entry.Sequence}. {entry.DisplayLabel}",
+          text = entry.Notes.Count > 0
+            ? $"⚠ {entry.Sequence}. {entry.DisplayLabel} (flow override)"
+            : $"{entry.Sequence}. {entry.DisplayLabel}",
           tooltip = entry.NodeIdentifier
         };
         button.style.unityTextAlign = TextAnchor.MiddleLeft;
@@ -264,6 +269,10 @@ namespace MultiplayerInfrastructure.Editor
             writer.WriteLine($"     Label: {entry.DisplayLabel}");
             writer.WriteLine($"     Entered At: {entry.EnteredAt:yyyy-MM-dd HH:mm:ss.fff}");
             writer.WriteLine($"     Exited At: {(entry.ExitedAt.HasValue ? entry.ExitedAt.Value.ToString("yyyy-MM-dd HH:mm:ss.fff") : "In progress")}");
+            foreach (var note in entry.Notes)
+            {
+              writer.WriteLine($"     Flow Override: {note}");
+            }
 
             // 다음 노드로 넘어가는 흐름 및 조건(브랜칭, 선택, 퀴즈, 게이트 등) 서술
             if (i < currentEntries.Count - 1)

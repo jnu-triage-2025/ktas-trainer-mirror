@@ -262,6 +262,18 @@ namespace MultiplayerInfrastructure.Entity
       return changed;
     }
 
+    /// <summary>
+    /// 서버(또는 오프라인 실행)가 조종 오브젝트의 위치를 즉시 보정할 때 사용한다.
+    /// 서버에서 적용한 값은 모든 관찰 클라이언트에도 같은 프레임에 전달된다.
+    /// </summary>
+    protected void SetAuthoritativeTransform(Vector3 position, Quaternion rotation)
+    {
+      transform.SetPositionAndRotation(position, rotation);
+
+      if (IsServerStarted)
+        RpcApplyTransform(position, rotation);
+    }
+
     [ObserversRpc]
     private void RpcApplyTransform(Vector3 position, Quaternion rotation)
     {

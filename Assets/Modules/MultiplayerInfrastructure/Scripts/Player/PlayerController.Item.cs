@@ -145,6 +145,10 @@ namespace MultiplayerInfrastructure.Player
 
     private ActionResult InvokeAttack()
     {
+      var itemizable = RaycastHitObject?.GetComponentInParent<IItemizableWorldEntity>();
+      if (itemizable != null && itemizable.RequestItemization(this))
+        return ActionResult.Cancelled;
+
       if (HandlingItem == null)
         return ActionResult.Passed;
       _attackTarget = RaycastTargetEntity();

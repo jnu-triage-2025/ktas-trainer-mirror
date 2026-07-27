@@ -266,7 +266,7 @@ namespace MultiplayerInfrastructure.UI
     {
       StoreUserDisplayName();
       SetStatus("튜토리얼 씬으로 이동합니다...");
-      SceneManager.LoadScene(tutorialSceneName);
+      StartCoroutine(LoadingScreen.LoadSceneAsync(tutorialSceneName, "튜토리얼을 준비하는 중..."));
     }
 
     private void OnSettings()
@@ -483,7 +483,7 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      SceneManager.LoadScene(ingameSceneName);
+      StartCoroutine(LoadingScreen.LoadSceneAsync(ingameSceneName, "세션을 준비하는 중..."));
     }
 
     private static void ApplyIntroCursorPolicy()

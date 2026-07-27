@@ -3,6 +3,7 @@ using FishNet;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Scenario;
 
 namespace MultiplayerInfrastructure.Command
 {
@@ -19,6 +20,8 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("gamerule", "Show available game rules."),
       new UsageLine("gamerule runningSpeedMultiplier", "Show the current running speed multiplier."),
       new UsageLine("gamerule runningSpeedMultiplier <number>", "Set running speed multiplier (0~10; default 1.5)."),
+      new UsageLine("gamerule IgnoreTagAssignFullSatisfactionOnScenarioPlay", "Show whether missing scenario player-tag gates are ignored."),
+      new UsageLine("gamerule IgnoreTagAssignFullSatisfactionOnScenarioPlay <true|false>", "Ignore missing scenario player-tag gates (default true)."),
     };
 
     public string PermissionIdentifier => "gamerule";
@@ -41,13 +44,33 @@ namespace MultiplayerInfrastructure.Command
       if (args == null || args.Length == 0)
       {
         _chat.SendSystemMessage(sender,
-          $"Game rules:\n  runningSpeedMultiplier = {Format(PlayerController.ServerRunningSpeedMultiplier)}");
+          $"Game rules:\n  runningSpeedMultiplier = {Format(PlayerController.ServerRunningSpeedMultiplier)}\n  IgnoreTagAssignFullSatisfactionOnScenarioPlay = {ScenarioGameRules.IgnoreTagAssignFullSatisfactionOnScenarioPlay}");
+        return;
+      }
+
+      if (string.Equals(args[0], "IgnoreTagAssignFullSatisfactionOnScenarioPlay", System.StringComparison.OrdinalIgnoreCase))
+      {
+        if (args.Length == 1)
+        {
+          _chat.SendSystemMessage(sender,
+            $"IgnoreTagAssignFullSatisfactionOnScenarioPlay = {ScenarioGameRules.IgnoreTagAssignFullSatisfactionOnScenarioPlay}");
+          return;
+        }
+
+        if (args.Length != 2 || !bool.TryParse(args[1], out var enabled))
+        {
+          _chat.SendSystemMessage(sender, "IgnoreTagAssignFullSatisfactionOnScenarioPlay must be true or false.");
+          return;
+        }
+
+        ScenarioGameRules.IgnoreTagAssignFullSatisfactionOnScenarioPlay = enabled;
+        _chat.SendSystemMessage(sender, $"Set IgnoreTagAssignFullSatisfactionOnScenarioPlay to {enabled}.");
         return;
       }
 
       if (!string.Equals(args[0], "runningSpeedMultiplier", System.StringComparison.OrdinalIgnoreCase))
       {
-        _chat.SendSystemMessage(sender, $"Unknown game rule '{args[0]}'. Use runningSpeedMultiplier.");
+        _chat.SendSystemMessage(sender, $"Unknown game rule '{args[0]}'. Use runningSpeedMultiplier or IgnoreTagAssignFullSatisfactionOnScenarioPlay.");
         return;
       }
 

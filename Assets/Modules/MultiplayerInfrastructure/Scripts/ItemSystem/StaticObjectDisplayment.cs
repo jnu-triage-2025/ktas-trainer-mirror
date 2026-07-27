@@ -197,6 +197,12 @@ namespace MultiplayerInfrastructure.ItemSystem
       Show();
     }
 
+    /// <summary>서버 전역 상태가 해제됐을 때 모든 클라이언트의 로컬 표현을 숨깁니다.</summary>
+    public virtual void ApplyHiddenFromNetwork()
+    {
+      Hide();
+    }
+
     /// <summary>
     /// 표시(설치/적용)가 <b>권위 경로에서 최초로 확정</b>되었을 때 한 번만 호출되는 훅입니다.
     ///

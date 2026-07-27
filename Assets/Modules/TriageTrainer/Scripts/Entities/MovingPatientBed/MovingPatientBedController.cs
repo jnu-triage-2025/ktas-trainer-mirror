@@ -89,6 +89,10 @@ namespace TriageTrainer.Entity
     [SerializeField] private Transform _reposeAnchor;
     [SerializeField] private bool _enablePatientRepose = true;
 
+    [Header("Positioning Snap")]
+    [SerializeField] private bool _enablePositioningSnap = true;
+    [SerializeField, Min(0f)] private float _positioningSnapReleasePadding = 0.2f;
+
     [Header("Attach Points")]
     [SerializeField, Min(1)] private int _maximumPlayerParticipants = 2;
     [SerializeField] private List<Transform> PatientAttachPoints = new();
@@ -107,6 +111,7 @@ namespace TriageTrainer.Entity
     private ChatUIController _chatUI;
     private BedReposeInteract _reposeInteract;
     private IInteract[] _interacts;
+    private MovingPatientBedPositioningPoint _latchedPositioningPoint;
 
     public string Identifier => EffectiveBedIdentifier;
     public IInteract[] Interacts
@@ -221,6 +226,56 @@ namespace TriageTrainer.Entity
       SyncReposedTargetTransform();
       SetMinimumMovementDivisor(RequiredInteractorCount);
       Update_MinecraftBoadLikeControl();
+      TrySnapToPositioningPoint();
+    }
+
+    private void TrySnapToPositioningPoint()
+    {
+      if (!_enablePositioningSnap || (!IsServerStarted && IsClientStarted))
+        return;
+
+      if (_latchedPositioningPoint != null)
+      {
+        float releaseDistance = _latchedPositioningPoint.SnapDistance + _positioningSnapReleasePadding;
+        Vector3 offset = transform.position - _latchedPositioningPoint.Position;
+        offset.y = 0f;
+        if (offset.sqrMagnitude <= releaseDistance * releaseDistance)
+          return;
+
+        _latchedPositioningPoint = null;
+      }
+
+      MovingPatientBedPositioningPoint nearest = FindNearestPositioningPoint();
+      if (nearest == null)
+        return;
+
+      _latchedPositioningPoint = nearest;
+      SetAuthoritativeTransform(nearest.Position, nearest.Rotation);
+    }
+
+    private MovingPatientBedPositioningPoint FindNearestPositioningPoint()
+    {
+      MovingPatientBedPositioningPoint[] points = FindObjectsByType<MovingPatientBedPositioningPoint>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      MovingPatientBedPositioningPoint nearest = null;
+      float nearestDistanceSquared = float.MaxValue;
+
+      for (int i = 0; i < points.Length; i++)
+      {
+        MovingPatientBedPositioningPoint point = points[i];
+        if (point == null || !point.isActiveAndEnabled || !point.IsWithinSnapDistance(transform.position))
+          continue;
+
+        Vector3 offset = transform.position - point.Position;
+        offset.y = 0f;
+        float distanceSquared = offset.sqrMagnitude;
+        if (distanceSquared < nearestDistanceSquared)
+        {
+          nearest = point;
+          nearestDistanceSquared = distanceSquared;
+        }
+      }
+
+      return nearest;
     }
 
     public void Interact(Transform interactor)
@@ -546,6 +601,7 @@ namespace TriageTrainer.Entity
     private void OnValidate()
     {
       _weight = Mathf.Max(0, _weight);
+      _positioningSnapReleasePadding = Mathf.Max(0f, _positioningSnapReleasePadding);
       if (_reposeAnchor == null)
         _reposeAnchor = transform;
       RebuildAttachableVisualMap();

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using FishNet.Connection;
+using FishNet;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Entity;
@@ -8,6 +9,7 @@ using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using TriageTrainer.Entity.IntravenousLine;
+using TriageTrainer.ItemDefinitions;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -34,7 +36,8 @@ namespace TriageTrainer.Entity
   /// <see cref="MinecraftBoadLikeControl"/> 에 위임한다.
   /// </summary>
   public sealed class Level1RapidInfuserController : MinecraftBoadLikeControl,
-    IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver
+    IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver,
+    IItemizableWorldEntity
   {
     private enum FluidKind : byte
     {
@@ -192,6 +195,60 @@ namespace TriageTrainer.Entity
     public void Interact(Transform interactor) => Toggle(interactor);
 
     public bool CanInteract(Transform interactor) => CanToggle(interactor);
+
+    /// <summary>
+    /// 좌클릭한 설치형 주입기를 획득 가능한 월드 아이템으로 되돌린다.
+    /// 네트워크에서는 서버가 거리 검증 후 아이템을 스폰하고 엔티티를 despawn한다.
+    /// </summary>
+    public bool RequestItemization(PlayerController player)
+    {
+      if (player == null || !IsWithinInteractionDistance(player))
+        return false;
+
+      if (!IsClientStarted && !IsServerStarted)
+        return SpawnItemAndDespawn(player);
+
+      if (IsServerStarted)
+        return SpawnItemAndDespawn(player);
+
+      CmdRequestItemization();
+      return true;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdRequestItemization(NetworkConnection sender = null)
+    {
+      var player = sender != null && sender.IsValid ? FindPlayer(sender.ClientId) : null;
+      if (player != null && IsWithinInteractionDistance(player))
+        SpawnItemAndDespawn(player);
+    }
+
+    private bool SpawnItemAndDespawn(PlayerController player)
+    {
+      var item = MultiplayerInfrastructure.Registry.Registry.CreateItemInstance(Level1RapidInfuser.Identifier);
+      if (item == null)
+      {
+        Debug.LogWarning("[Level1RapidInfuser] Failed to create item while itemizing.", this);
+        return false;
+      }
+
+      Vector3 direction = player.transform.position - transform.position;
+      direction.y = 0f;
+      if (direction.sqrMagnitude < 0.001f)
+        direction = transform.forward;
+      direction.Normalize();
+
+      Vector3 position = transform.position + Vector3.up * 0.35f;
+      if (!player.TrySpawnWorldItem(item, position, direction * 1.25f))
+        return false;
+
+      var networkObject = GetComponent<NetworkObject>();
+      if (IsServerStarted && networkObject != null && networkObject.IsSpawned)
+        InstanceFinder.ServerManager.Despawn(networkObject);
+      else
+        Destroy(gameObject);
+      return true;
+    }
 
     public void ApplySpawnedEntityIdentifier(string identifier)
     {

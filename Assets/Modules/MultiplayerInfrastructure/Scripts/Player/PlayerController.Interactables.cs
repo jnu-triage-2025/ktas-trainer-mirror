@@ -18,6 +18,7 @@ namespace MultiplayerInfrastructure.Player
     [Header("Dialogue")]
     [Tooltip("씬에 배치된 DialoguePanelUIController 참조 (Inspector에서 할당하거나 태그/이름으로 검색)")]
     [SerializeField] private DialoguePanelUIController _dialoguePanelUIController;
+    private ILocalInteractionFocus _focusedInteraction;
 
     void OnStartClient_Interactables()
     {
@@ -63,6 +64,7 @@ namespace MultiplayerInfrastructure.Player
         _detector.NearbyUpdated -= HandleNearbyUpdated;
 
       OnDestroy_Item();
+      OnDestroy_PlaceableItemPreview();
     }
 
     private void HandleNearbyUpdated(IReadOnlyList<IInteractable> nearby)
@@ -99,6 +101,7 @@ namespace MultiplayerInfrastructure.Player
 
       // UpdateInteractables를 사용하여 모드에 따라 적절히 처리
       _interactableHintUI.UpdateInteractables(interacts);
+      RefreshLocalInteractionFocus();
     }
 
     public void RefreshInteractableHintsNow()
@@ -147,6 +150,19 @@ namespace MultiplayerInfrastructure.Player
         _interactableHintUI.MoveSelected(-1);
       if (Input.GetKeyDown(KeyCode.Equals) || Input.GetKeyDown(KeyCode.Plus) || Input.GetKeyDown(KeyCode.KeypadPlus))
         _interactableHintUI.MoveSelected(1);
+
+      RefreshLocalInteractionFocus();
+    }
+
+    private void RefreshLocalInteractionFocus()
+    {
+      var next = _interactableHintUI?.GetSelected() as ILocalInteractionFocus;
+      if (ReferenceEquals(next, _focusedInteraction))
+        return;
+
+      _focusedInteraction?.SetLocalInteractionFocused(false);
+      _focusedInteraction = next;
+      _focusedInteraction?.SetLocalInteractionFocused(true);
     }
   }
 }

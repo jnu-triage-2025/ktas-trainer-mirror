@@ -100,6 +100,7 @@ namespace MultiplayerInfrastructure.Scenario
     private List<ScenarioChoiceOption> _activeOptions = new();
     private ScenarioQuizNode _activeQuizNode;
     private readonly Dictionary<string, GraphVisitHistory> _graphVisitHistory = new Dictionary<string, GraphVisitHistory>();
+    private readonly HashSet<string> _reportedTagGateBypasses = new HashSet<string>();
     private readonly Dictionary<string, string> _stateStore = new Dictionary<string, string>();
     private int _activeMainNodeVisitSequence;
     private int? _scenarioOwnerClientId;
@@ -138,6 +139,7 @@ namespace MultiplayerInfrastructure.Scenario
     {
       public readonly Dictionary<string, List<int>> NodeVisitOrders = new Dictionary<string, List<int>>();
       public readonly Dictionary<int, ScenarioNodeVisitTiming> VisitTimings = new Dictionary<int, ScenarioNodeVisitTiming>();
+      public readonly Dictionary<int, List<string>> VisitNotes = new Dictionary<int, List<string>>();
       public int Sequence;
     }
 
@@ -250,6 +252,20 @@ namespace MultiplayerInfrastructure.Scenario
              && _graphVisitHistory.TryGetValue(graphIdentifier, out var history)
              && history != null
              && history.VisitTimings.TryGetValue(sequence, out timing);
+    }
+
+    /// <summary>지정한 노드 방문에서 발생한 흐름 변경/경고 메모를 반환한다.</summary>
+    public IReadOnlyList<string> GetNodeVisitNotes(string graphIdentifier, int sequence)
+    {
+      if (!string.IsNullOrWhiteSpace(graphIdentifier)
+          && _graphVisitHistory.TryGetValue(graphIdentifier, out var history)
+          && history != null
+          && history.VisitNotes.TryGetValue(sequence, out var notes))
+      {
+        return notes;
+      }
+
+      return Array.Empty<string>();
     }
 
     #endregion
@@ -1271,6 +1287,7 @@ namespace MultiplayerInfrastructure.Scenario
     private void ResetNodeVisitOrders()
     {
       _graphVisitHistory.Clear();
+      _reportedTagGateBypasses.Clear();
       _activeMainNodeVisitSequence = 0;
     }
 
@@ -1282,6 +1299,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       _graphVisitHistory[graphIdentifier] = new GraphVisitHistory();
+      _reportedTagGateBypasses.Clear();
       _activeMainNodeVisitSequence = 0;
     }
 
@@ -1314,6 +1332,51 @@ namespace MultiplayerInfrastructure.Scenario
 
       orders.Insert(0, sequence);
       return sequence;
+    }
+
+    private void ReportIgnoredTagGate(string subject, string reason)
+    {
+      var graphIdentifier = _currentGraph?.Identifier ?? "<unknown>";
+      var nodeIdentifier = _currentNode?.Identifier ?? "<unknown>";
+      var dedupeKey = $"{graphIdentifier}|{nodeIdentifier}|{subject}|{reason}";
+      if (!_reportedTagGateBypasses.Add(dedupeKey))
+      {
+        return;
+      }
+
+      var message = $"[ScenarioController] WARNING: IgnoreTagAssignFullSatisfactionOnScenarioPlay bypassed tag gate. graph='{graphIdentifier}', node='{nodeIdentifier}', subject='{subject}', reason={reason}";
+      Debug.LogWarning(message, this);
+      AppendSystemChatMessage(message);
+      GameLogService.WriteScenario(message, graphIdentifier);
+      AddCurrentVisitNote(message);
+    }
+
+    private void AddCurrentVisitNote(string message)
+    {
+      var graphIdentifier = _currentGraph?.Identifier;
+      if (_activeMainNodeVisitSequence > 0
+          && !string.IsNullOrWhiteSpace(graphIdentifier)
+          && _graphVisitHistory.TryGetValue(graphIdentifier, out var history)
+          && history != null)
+      {
+        if (!history.VisitNotes.TryGetValue(_activeMainNodeVisitSequence, out var notes))
+        {
+          notes = new List<string>();
+          history.VisitNotes[_activeMainNodeVisitSequence] = notes;
+        }
+        notes.Add(message);
+      }
+    }
+
+    private bool TryIgnoreMissingTagGate(string subject, string reason)
+    {
+      if (!ScenarioGameRules.IgnoreTagAssignFullSatisfactionOnScenarioPlay)
+      {
+        return false;
+      }
+
+      ReportIgnoredTagGate(subject, reason);
+      return true;
     }
 
     private void CompleteNodeVisit(int sequence)
@@ -4754,7 +4817,7 @@ namespace MultiplayerInfrastructure.Scenario
               allocation[branch] = null;
             }
           }
-          Debug.LogWarning($"[ScenarioController] Parallel allocation ignored mismatch: branches {branchCount}, players {playerCount}.");
+          ReportIgnoredParallelAllocation(node, branchCount, playerCount, playerPool, assignNull);
           return true;
         case ScenarioParallelMismatchHandling.Reallocation:
           if (playerCount == 0)
@@ -4775,6 +4838,36 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
+    private void ReportIgnoredParallelAllocation(
+      ScenarioParallelNode node,
+      int branchCount,
+      int playerCount,
+      List<int> playerPool,
+      bool allBranchesSkipped)
+    {
+      var graphIdentifier = _currentGraph?.Identifier ?? "<unknown>";
+      var activePlayers = playerPool == null || playerPool.Count == 0
+        ? "none"
+        : string.Join(", ", playerPool);
+      var nextNode = string.IsNullOrWhiteSpace(node?.NextIdentifier) ? "<end scenario>" : node.NextIdentifier;
+      var branchRequirements = string.Join("; ", (node?.Branches ?? Array.Empty<ScenarioParallelBranch>())
+        .Select(branch =>
+        {
+          var tags = branch?.RequiredPlayerTags?.Where(tag => !string.IsNullOrWhiteSpace(tag)).ToArray() ?? Array.Empty<string>();
+          return $"{branch?.Identifier ?? "<unknown>"} requires [{string.Join(", ", tags)}]";
+        }));
+
+      var outcome = allBranchesSkipped
+        ? $"All {branchCount} branches were left unassigned and skipped; WaitMode={node?.WaitMode} therefore completes immediately and advances to '{nextNode}'."
+        : $"One or more branches were left unassigned; configured mismatch handling continues toward '{nextNode}'.";
+      var message = $"[ScenarioController] WARNING: Parallel allocation mismatch was ignored. graph='{graphIdentifier}', node='{node?.Identifier}', allocation={node?.AllocationType}, activePlayers=[{activePlayers}], {outcome} Requirements: {branchRequirements}";
+
+      Debug.LogWarning(message, this);
+      AppendSystemChatMessage(message);
+      GameLogService.WriteScenario(message, graphIdentifier);
+      AddCurrentVisitNote(message);
+    }
+
     private bool IsPlayerEligibleForBranch(ScenarioParallelBranch branch, int clientId)
     {
       if (branch == null)
@@ -4788,7 +4881,7 @@ namespace MultiplayerInfrastructure.Scenario
             || session == null
             || string.IsNullOrWhiteSpace(session.Identifier))
         {
-          return false;
+          return TryIgnoreMissingTagGate(branch.Identifier, $"player descriptor for clientId {clientId} is unavailable while required tags are configured");
         }
 
         var requiredTags = branch.RequiredPlayerTags
@@ -4805,7 +4898,7 @@ namespace MultiplayerInfrastructure.Scenario
           bool hasAnyTag = requiredTags.Any(requiredTag => PlayerTagService.HasTag(session.Identifier, requiredTag));
           if (!hasAnyTag)
           {
-            return false;
+            return TryIgnoreMissingTagGate(branch.Identifier, $"player '{session.Identifier}' has none of the required tags [{string.Join(", ", requiredTags)}]");
           }
         }
         else
@@ -4814,7 +4907,7 @@ namespace MultiplayerInfrastructure.Scenario
           {
             if (!PlayerTagService.HasTag(session.Identifier, requiredTag))
             {
-              return false;
+              return TryIgnoreMissingTagGate(branch.Identifier, $"player '{session.Identifier}' is missing required tag '{requiredTag}'");
             }
           }
         }
@@ -4878,7 +4971,7 @@ namespace MultiplayerInfrastructure.Scenario
           continue;
         }
 
-        if (!EvaluateValidatorRootCondition(rootCondition, out var rootReason))
+        if (!EvaluateValidatorRootCondition(node, rootCondition, out var rootReason))
         {
           failureReason = $"rootCondition[{i}] failed: {rootReason}";
           return false;
@@ -4895,7 +4988,7 @@ namespace MultiplayerInfrastructure.Scenario
       return true;
     }
 
-    private bool EvaluateValidatorRootCondition(ScenarioValidatorRootCondition rootCondition, out string failureReason)
+    private bool EvaluateValidatorRootCondition(ScenarioValidatorNode node, ScenarioValidatorRootCondition rootCondition, out string failureReason)
     {
       failureReason = null;
       // 서버 구동 중에는 서버의 접속자 목록을 사용한다.
@@ -5040,7 +5133,7 @@ namespace MultiplayerInfrastructure.Scenario
           if (users == null || users.Count == 0)
           {
             failureReason = "no registered users found for player tag validation.";
-            return false;
+            return TryIgnoreMissingTagGate(node.Identifier, failureReason);
           }
 
           switch (rootCondition.PlayerScope)
@@ -5053,7 +5146,7 @@ namespace MultiplayerInfrastructure.Scenario
                 return true;
               }
               failureReason = $"no registered player has tag '{tag}'.";
-              return false;
+              return TryIgnoreMissingTagGate(node.Identifier, failureReason);
             case ScenarioValidatorPlayerScope.All:
             {
               var missingPlayer = users.Values.FirstOrDefault(each => each == null
@@ -5068,14 +5161,14 @@ namespace MultiplayerInfrastructure.Scenario
                   ? missingPlayer.DisplayName
                   : missingPlayer.Identifier ?? "<unknown>";
               failureReason = $"player '{missingLabel}' does not have required tag '{tag}'.";
-              return false;
+              return TryIgnoreMissingTagGate(node.Identifier, failureReason);
             }
             case ScenarioValidatorPlayerScope.Owner:
             {
               if (_scenarioOwnerClientId == null)
               {
                 failureReason = "owner client id is not assigned for owner-scope tag validation.";
-                return false;
+                return TryIgnoreMissingTagGate(node.Identifier, failureReason);
               }
 
               if (!UserDescriptorService.TryGetByClientId(_scenarioOwnerClientId.Value, out var owner)
@@ -5083,7 +5176,7 @@ namespace MultiplayerInfrastructure.Scenario
                   || string.IsNullOrWhiteSpace(owner.Identifier))
               {
                 failureReason = $"owner descriptor not found for clientId {_scenarioOwnerClientId.Value}.";
-                return false;
+                return TryIgnoreMissingTagGate(node.Identifier, failureReason);
               }
 
               if (PlayerTagService.HasTag(owner.Identifier, tag))
@@ -5095,7 +5188,7 @@ namespace MultiplayerInfrastructure.Scenario
                   ? owner.DisplayName
                   : owner.Identifier;
               failureReason = $"owner player '{ownerLabel}' does not have tag '{tag}'.";
-              return false;
+              return TryIgnoreMissingTagGate(node.Identifier, failureReason);
             }
             default:
               failureReason = $"unknown player scope '{rootCondition.PlayerScope}'.";
