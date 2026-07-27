@@ -69,6 +69,14 @@ namespace MultiplayerInfrastructure.Player
 
     void Update_Item()
     {
+      // 설치체 회수는 일반 공격 입력 경로(UI/상호작용 처리에서 소비될 수 있음)에 의존하지 않는다.
+      // Update_Raycast 직후 실행되므로 이번 프레임의 카메라 조준 대상을 즉시 처리한다.
+      if (Input.GetMouseButtonDown(0) && TryItemizeRaycastTarget())
+      {
+        attackTriggered = false;
+        return;
+      }
+
       ResolveHandledItemTriggered();
     }
 
@@ -146,14 +154,19 @@ namespace MultiplayerInfrastructure.Player
 
     private ActionResult InvokeAttack()
     {
-      var itemizable = RaycastHitObject?.GetComponentInParent<IItemizableWorldEntity>();
-      if (itemizable != null && itemizable.RequestItemization(this))
+      if (TryItemizeRaycastTarget())
         return ActionResult.Cancelled;
 
       if (HandlingItem == null)
         return ActionResult.Passed;
       _attackTarget = RaycastTargetEntity();
       return HandlingItem.OnAttack(this, _attackTarget);
+    }
+
+    private bool TryItemizeRaycastTarget()
+    {
+      var itemizable = RaycastHitObject?.GetComponentInParent<IItemizableWorldEntity>();
+      return itemizable != null && itemizable.RequestItemization(this);
     }
 
     /// <summary>
@@ -210,6 +223,21 @@ namespace MultiplayerInfrastructure.Player
       foreach (var pair in Registry.Registry.GetAllEntities())
       {
         var candidate = pair.Value?.GameObject?.GetComponentInChildren<IItemizableWorldEntity>(true);
+        if (candidate is not Component component)
+          continue;
+
+        float distanceSquared = (component.transform.position - position).sqrMagnitude;
+        if (distanceSquared > nearestDistanceSquared)
+          continue;
+        nearest = candidate;
+        nearestDistanceSquared = distanceSquared;
+      }
+
+      // 씬에 미리 배치된 엔티티는 EntityPreset을 거치지 않아 레지스트리 식별자가 없을 수 있다.
+      // 서버 물리 월드에서 직접 조회해도 최종적으로 대상의 거리 검증이 수행되므로 안전하다.
+      foreach (var collider in Physics.OverlapSphere(position, 0.75f, ~0, QueryTriggerInteraction.Collide))
+      {
+        var candidate = collider.GetComponentInParent<IItemizableWorldEntity>();
         if (candidate is not Component component)
           continue;
 

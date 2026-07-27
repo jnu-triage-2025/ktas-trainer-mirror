@@ -1,4 +1,5 @@
 using System;
+using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Registry;
@@ -11,6 +12,8 @@ namespace MultiplayerInfrastructure.Player
   {
     private const string Level1RapidInfuserItemIdentifier = "level1_rapid_infuser";
     private const string Level1RapidInfuserEntityPresetIdentifier = "level1_rapid_infuser";
+    [Header("Placeable entity prefabs")]
+    [SerializeField] private GameObject _level1RapidInfuserEntityPrefab;
     private const float PlaceableDistance = 1.75f;
     private const float PlaceableRequestTimeout = 3f;
 
@@ -26,6 +29,11 @@ namespace MultiplayerInfrastructure.Player
     /// 소유 클라이언트의 로컬 인벤토리와 서버의 월드 스폰을 예약/확정 프로토콜로 연결한다.
     /// 인벤토리는 서버 PlayerController 복제본에 존재하지 않으므로 서버에서 직접 소비하지 않는다.
     /// </summary>
+    public void RequestPlaceHeldEntityPrefab(string itemIdentifier)
+      => RequestPlaceHeldEntityPreset(itemIdentifier, Level1RapidInfuserItemIdentifier);
+
+    // 예약/확정 RPC는 설치체 종류 키를 함께 보관한다. 현재 키는 아이템 식별자와 동일하며,
+    // 실제 프리팹은 EntityPreset이 아닌 직렬화된 _level1RapidInfuserEntityPrefab 참조를 사용한다.
     public void RequestPlaceHeldEntityPreset(string itemIdentifier, string entityPresetIdentifier)
     {
       if (!IsSupportedPlaceable(itemIdentifier, entityPresetIdentifier))
@@ -147,20 +155,25 @@ namespace MultiplayerInfrastructure.Player
     private bool TrySpawnPlaceableEntityPreset(string itemIdentifier, string entityPresetIdentifier)
     {
       GetPlaceablePose(out Vector3 position, out Quaternion rotation);
-      if (!Registry.Registry.TrySpawnEntityPreset(
-            entityPresetIdentifier,
-            position,
-            rotation,
-            out _,
-            out _,
-            out string error))
+      var prefab = _level1RapidInfuserEntityPrefab;
+      if (prefab == null)
       {
         Debug.LogWarning(
-          $"[PlayerController] Failed to spawn placeable '{itemIdentifier}' from " +
-          $"entity preset '{entityPresetIdentifier}': {error}",
+          $"[PlayerController] Placeable entity prefab is not assigned for '{itemIdentifier}'.",
           this);
         return false;
       }
+
+      var receiver = prefab.GetComponent<ISpawnedEntityIdentifierReceiver>();
+      var networkObject = prefab.GetComponent<NetworkObject>();
+      if (receiver == null || (IsServerStarted && networkObject == null))
+        return false;
+
+      var spawned = UnityEngine.Object.Instantiate(prefab, position, rotation);
+      receiver = spawned.GetComponent<ISpawnedEntityIdentifierReceiver>();
+      receiver.ApplySpawnedEntityIdentifier($"{itemIdentifier}:{Guid.NewGuid():N}");
+      if (IsServerStarted)
+        InstanceFinder.ServerManager.Spawn(spawned);
       return true;
     }
 
@@ -191,12 +204,10 @@ namespace MultiplayerInfrastructure.Player
 
     private bool TryCreatePlaceablePreview()
     {
-      if (!Registry.Registry.TryGetEntityPreset(
-            Level1RapidInfuserEntityPresetIdentifier,
-            out var preset) || preset?.Prefab == null)
+      if (_level1RapidInfuserEntityPrefab == null)
         return false;
 
-      _placeablePreview = UnityEngine.Object.Instantiate(preset.Prefab);
+      _placeablePreview = UnityEngine.Object.Instantiate(_level1RapidInfuserEntityPrefab);
       _placeablePreview.name = "PlacementPreview_Level1RapidInfuser";
 
       foreach (var behaviour in _placeablePreview.GetComponentsInChildren<Behaviour>(true))

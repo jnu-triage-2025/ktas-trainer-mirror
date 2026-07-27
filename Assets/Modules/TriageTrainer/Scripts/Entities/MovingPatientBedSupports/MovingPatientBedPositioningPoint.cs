@@ -11,6 +11,9 @@ namespace TriageTrainer.Entity
   /// </summary>
   public sealed class MovingPatientBedPositioningPoint : MonoBehaviour
   {
+    [Header("Identity")]
+    [SerializeField] private string _identifier;
+
     [Header("Snap")]
     [SerializeField, Min(0.01f)] private float _snapDistance = 1f;
 
@@ -19,6 +22,8 @@ namespace TriageTrainer.Entity
     [SerializeField, Min(0f)] private float _displayHeight = 0.03f;
 
     public float SnapDistance => _snapDistance;
+    /// <summary>시나리오 신호와 세션 로그에서 이 위치를 식별하는 안정적인 키.</summary>
+    public string Identifier => _identifier == null ? string.Empty : _identifier.Trim();
     public Vector3 Position => transform.position;
     public Quaternion Rotation => transform.rotation;
 
@@ -31,6 +36,7 @@ namespace TriageTrainer.Entity
 
     private void OnValidate()
     {
+      _identifier = _identifier == null ? string.Empty : _identifier.Trim();
       _snapDistance = Mathf.Max(0.01f, _snapDistance);
       _occupiedSize.x = Mathf.Max(0.01f, _occupiedSize.x);
       _occupiedSize.y = Mathf.Max(0.01f, _occupiedSize.y);

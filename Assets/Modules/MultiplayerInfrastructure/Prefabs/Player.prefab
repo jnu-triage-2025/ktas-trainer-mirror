@@ -271,6 +271,7 @@ MonoBehaviour:
   _keySpectatorFlyDown: 304
   _keyOpenQuestUI: 106
   _keyDropHeldItem: 113
+  _level1RapidInfuserEntityPrefab: {fileID: 6673793964106904184, guid: 443870cc6703f42719b5008c60cb8db5, type: 3}
   _detector: {fileID: 0}
   _interactableHintUI: {fileID: 0}
   _dialoguePanelUIController: {fileID: 0}

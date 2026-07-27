@@ -6,6 +6,7 @@ using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
+using MultiplayerInfrastructure.Logging;
 using UnityEngine;
 
 using MI = MultiplayerInfrastructure;
@@ -251,6 +252,24 @@ namespace TriageTrainer.Entity
 
       _latchedPositioningPoint = nearest;
       SetAuthoritativeTransform(nearest.Position, nearest.Rotation);
+      PublishPositioningPointReached(nearest);
+    }
+
+    private void PublishPositioningPointReached(MovingPatientBedPositioningPoint point)
+    {
+      if (point == null || string.IsNullOrWhiteSpace(point.Identifier))
+      {
+        if (point != null)
+          Debug.LogWarning($"[MovingPatientBed] Positioning point '{point.name}' has no identifier; snap event was not published.", point);
+        return;
+      }
+
+      string pointIdentifier = point.Identifier;
+      string signalIdentifier = $"patient_bed_position_reached_{pointIdentifier}";
+      MI.Scenario.ScenarioInteractionSignals.Raise(signalIdentifier);
+      GameLogService.WriteInteraction(
+        $"Patient bed reached positioning point: bed={Identifier}, point={pointIdentifier}",
+        pointIdentifier);
     }
 
     private MovingPatientBedPositioningPoint FindNearestPositioningPoint()
