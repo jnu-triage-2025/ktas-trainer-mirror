@@ -105,6 +105,7 @@ namespace TriageTrainer.Entity
     private int _pendingPlasmaClientId = -1;
     private float _pendingSalineExpiresAt;
     private float _pendingPlasmaExpiresAt;
+    private bool _itemizationPending;
     private const float InteractionDistance = 3f;
     private const float FluidRequestTimeout = 3f;
 
@@ -196,31 +197,46 @@ namespace TriageTrainer.Entity
 
     public bool CanInteract(Transform interactor) => CanToggle(interactor);
 
+    public string ItemizationEntityIdentifier => _registeredIdentifier;
+
+    // PlayerController의 공격 처리와 별개로, 설치체 자체의 Collider 클릭도 회수 요청으로 취급한다.
+    // 카메라 레이캐스트 레이어/입력 소비 상태 때문에 Attack 경로가 건너뛰어져도 회수할 수 있다.
+    private void OnMouseDown()
+    {
+      var player = FindLocalOwnerPlayer();
+      if (player != null)
+        RequestItemization(player);
+    }
+
     /// <summary>
     /// 좌클릭한 설치형 주입기를 획득 가능한 월드 아이템으로 되돌린다.
     /// 네트워크에서는 서버가 거리 검증 후 아이템을 스폰하고 엔티티를 despawn한다.
     /// </summary>
     public bool RequestItemization(PlayerController player)
     {
+      if (_itemizationPending)
+        return true;
       if (player == null || !IsWithinInteractionDistance(player))
         return false;
 
-      if (!IsClientStarted && !IsServerStarted)
-        return SpawnItemAndDespawn(player);
-
-      if (IsServerStarted)
-        return SpawnItemAndDespawn(player);
-
-      CmdRequestItemization();
-      return true;
+      bool accepted = player.RequestItemization(this);
+      if (accepted && !InstanceFinder.IsServerStarted && player.IsSpawned)
+        _itemizationPending = true;
+      return accepted;
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    private void CmdRequestItemization(NetworkConnection sender = null)
+    public bool TryItemizeOnServer(PlayerController player)
     {
-      var player = sender != null && sender.IsValid ? FindPlayer(sender.ClientId) : null;
-      if (player != null && IsWithinInteractionDistance(player))
-        SpawnItemAndDespawn(player);
+      if (_itemizationPending)
+        return false;
+      if (player == null || !IsWithinInteractionDistance(player))
+        return false;
+
+      _itemizationPending = true;
+      bool itemized = SpawnItemAndDespawn(player);
+      if (!itemized)
+        _itemizationPending = false;
+      return itemized;
     }
 
     private bool SpawnItemAndDespawn(PlayerController player)
@@ -243,7 +259,7 @@ namespace TriageTrainer.Entity
         return false;
 
       var networkObject = GetComponent<NetworkObject>();
-      if (IsServerStarted && networkObject != null && networkObject.IsSpawned)
+      if (InstanceFinder.IsServerStarted && networkObject != null && networkObject.IsSpawned)
         InstanceFinder.ServerManager.Despawn(networkObject);
       else
         Destroy(gameObject);
