@@ -145,6 +145,15 @@ namespace MultiplayerInfrastructure.Command
     }
 
     /// <summary>
+    /// 이름으로 등록된 명령어를 조회합니다.
+    /// Tab 자동완성 서비스(<see cref="ChatCommandCompletionService"/>)에서 사용합니다.
+    /// </summary>
+    public bool TryGetCommand(string name, out IChatCommandModel command)
+    {
+      return _commands.TryGetValue(name?.ToLowerInvariant() ?? string.Empty, out command);
+    }
+
+    /// <summary>
     /// NetworkConnection 으로부터 UserDescriptor 의 Identifier(UUID) 를 조회한다.
     /// 조회에 실패하면 빈 문자열을 반환 (PermissionService 는 빈 identifier 를 default role 로 처리한다).
     /// </summary>

@@ -60,6 +60,9 @@ namespace MultiplayerInfrastructure.UI
     public bool IsOpen => _isOpen;
     public string InputText => _inputField?.text ?? string.Empty;
 
+    /// <summary>현재 입력창의 커서 위치.</summary>
+    public int CursorPosition => _inputField?.cursorIndex ?? 0;
+
     public ChatPanelElement()
     {
       name = DefaultsChatControl.ChatRootName;

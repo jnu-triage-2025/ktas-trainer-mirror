@@ -105,6 +105,7 @@ namespace TriageTrainer.Entity
 
       // 사용형(시각 표현 없음 또는 별도 이벤트가 표현 담당)
       { "yankauer",            new ItemUseEffect(TreatmentDisplay.None, "suction_{id}") },
+      { "yankauer_suction_ready", new ItemUseEffect(TreatmentDisplay.None, "suction_{id}") },
       { "yankauer_ready",      new ItemUseEffect(TreatmentDisplay.None, "suction_{id}") },
       { "ambubag",             new ItemUseEffect(TreatmentDisplay.AmbuBagAttachedToEndotrachealTube, "start_ambu") },
       { "epinephrine_ampule",  new ItemUseEffect(TreatmentDisplay.None, "push_epi") },

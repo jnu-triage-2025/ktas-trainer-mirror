@@ -61,11 +61,14 @@ namespace TriageTrainer.Entity
       Gizmos.DrawWireCube(Vector3.zero, size);
       Gizmos.matrix = previousMatrix;
 
-      Vector3 arrowStart = center - transform.forward * (_occupiedSize.y * 0.25f);
-      Vector3 arrowEnd = center + transform.forward * (_occupiedSize.y * 0.45f);
+      // 표시용 화살표만 반시계 90도 회전한다. 스냅 방향(transform.rotation)은 유지한다.
+      Vector3 arrowForward = Quaternion.AngleAxis(-90f, transform.up) * transform.forward;
+      Vector3 arrowRight = Quaternion.AngleAxis(-90f, transform.up) * transform.right;
+      Vector3 arrowStart = center - arrowForward * (_occupiedSize.y * 0.25f);
+      Vector3 arrowEnd = center + arrowForward * (_occupiedSize.y * 0.45f);
       Gizmos.DrawLine(arrowStart, arrowEnd);
-      Gizmos.DrawLine(arrowEnd, arrowEnd - transform.forward * 0.22f + transform.right * 0.12f);
-      Gizmos.DrawLine(arrowEnd, arrowEnd - transform.forward * 0.22f - transform.right * 0.12f);
+      Gizmos.DrawLine(arrowEnd, arrowEnd - arrowForward * 0.22f + arrowRight * 0.12f);
+      Gizmos.DrawLine(arrowEnd, arrowEnd - arrowForward * 0.22f - arrowRight * 0.12f);
       Gizmos.DrawWireSphere(center, 0.06f);
       Gizmos.color = previousColor;
 
