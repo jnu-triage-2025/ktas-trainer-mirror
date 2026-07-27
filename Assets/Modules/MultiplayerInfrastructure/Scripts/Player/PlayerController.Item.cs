@@ -1,4 +1,5 @@
 using FishNet.Object;
+using FishNet.Connection;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
@@ -153,6 +154,72 @@ namespace MultiplayerInfrastructure.Player
         return ActionResult.Passed;
       _attackTarget = RaycastTargetEntity();
       return HandlingItem.OnAttack(this, _attackTarget);
+    }
+
+    /// <summary>
+    /// 설치형 엔티티 회수를 PlayerController의 네트워크 경로로 중계한다.
+    /// 설치체 프리팹의 NetworkBehaviour 직렬화 상태와 무관하게, 소유 플레이어의 ServerRpc가
+    /// 서버에서 대상 식별자를 검증한 후 회수를 수행한다.
+    /// </summary>
+    public bool RequestItemization(IItemizableWorldEntity target)
+    {
+      if (target is not Component targetComponent)
+        return false;
+
+      string entityIdentifier = target.ItemizationEntityIdentifier ?? string.Empty;
+      Vector3 targetPosition = targetComponent.transform.position;
+
+      if (!IsSpawned || IsServerStarted)
+        return target.TryItemizeOnServer(this);
+
+      CmdRequestItemization(entityIdentifier, targetPosition);
+      return true;
+    }
+
+    [ServerRpc]
+    private void CmdRequestItemization(
+      string entityIdentifier,
+      Vector3 targetPosition,
+      NetworkConnection sender = null)
+    {
+      if (sender == null || !sender.IsValid || Owner == null || !Owner.IsValid ||
+          sender.ClientId != Owner.ClientId)
+        return;
+
+      IItemizableWorldEntity target = null;
+      if (!string.IsNullOrWhiteSpace(entityIdentifier) &&
+          Registry.Registry.TryGetEntity(entityIdentifier.Trim(), out var descriptor) &&
+          descriptor?.GameObject != null)
+        target = descriptor.GameObject.GetComponentInChildren<IItemizableWorldEntity>(true);
+
+      // 프리팹의 NetworkBehaviour 직렬화가 갱신되기 전에도 클라이언트에는 런타임 식별자가
+      // 아직 전달되지 않을 수 있다. 이 경우 클릭 위치와 가장 가까운 등록 엔티티만 허용한다.
+      if (target == null)
+        target = FindItemizableNear(targetPosition);
+      if (target == null)
+        return;
+
+      target.TryItemizeOnServer(this);
+    }
+
+    private static IItemizableWorldEntity FindItemizableNear(Vector3 position)
+    {
+      const float maximumDistanceSquared = 0.75f * 0.75f;
+      IItemizableWorldEntity nearest = null;
+      float nearestDistanceSquared = maximumDistanceSquared;
+      foreach (var pair in Registry.Registry.GetAllEntities())
+      {
+        var candidate = pair.Value?.GameObject?.GetComponentInChildren<IItemizableWorldEntity>(true);
+        if (candidate is not Component component)
+          continue;
+
+        float distanceSquared = (component.transform.position - position).sqrMagnitude;
+        if (distanceSquared > nearestDistanceSquared)
+          continue;
+        nearest = candidate;
+        nearestDistanceSquared = distanceSquared;
+      }
+      return nearest;
     }
 
     private ActionResult InvokeUseItem()

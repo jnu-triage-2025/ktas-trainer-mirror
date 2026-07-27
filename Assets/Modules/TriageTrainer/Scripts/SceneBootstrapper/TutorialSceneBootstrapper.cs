@@ -1,5 +1,6 @@
 using System.Collections;
 using FishNet;
+using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.FishNetSupports;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Scenario.Requirements;
@@ -77,7 +78,7 @@ namespace TriageTrainer.SceneBootstrapper
 
     private IEnumerator BootstrapRoutine()
     {
-      using (LoadingScreen.Begin("튜토리얼 환경을 준비하는 중..."))
+      using (LoadingScreen.Begin())
       {
         // Hide FishNet logo/HUD as early as possible, before any scene loading.
         HideFishNetHud();
@@ -234,7 +235,7 @@ namespace TriageTrainer.SceneBootstrapper
 
       while (!operation.isDone)
       {
-        LoadingScreen.Report($"{sceneName}을 준비하는 중...", operation.progress / 0.9f);
+        LoadingScreen.Report(DefaultsLoadingScreen.GetSceneLoadingMessage(sceneName), operation.progress / 0.9f);
         yield return null;
       }
     }

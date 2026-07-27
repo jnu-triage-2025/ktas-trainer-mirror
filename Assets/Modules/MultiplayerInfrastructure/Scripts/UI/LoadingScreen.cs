@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using MultiplayerInfrastructure.Definitions;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -14,16 +15,17 @@ namespace MultiplayerInfrastructure.UI
   {
     private static LoadingScreen _instance;
     private static int _activeOperations;
-    private static string _message = "로딩 중...";
+    private static string _message = DefaultsLoadingScreen.GenericLoadingMessage;
     private static float? _progress;
     private static int _hideAfterFrame = -1;
+    private static bool _sceneTransitionInProgress;
 
     /// <summary>로딩 상태를 시작하고, Dispose 시 해당 작업을 완료합니다.</summary>
-    public static IDisposable Begin(string message = "로딩 중...")
+    public static IDisposable Begin(string message = DefaultsLoadingScreen.GenericLoadingMessage)
     {
       EnsureInstance();
       _activeOperations++;
-      _message = string.IsNullOrWhiteSpace(message) ? "로딩 중..." : message;
+      _message = string.IsNullOrWhiteSpace(message) ? DefaultsLoadingScreen.GenericLoadingMessage : message;
       _progress = null;
       _hideAfterFrame = -1;
       return new Operation();
@@ -40,23 +42,45 @@ namespace MultiplayerInfrastructure.UI
       _progress = progress.HasValue ? Mathf.Clamp01(progress.Value) : null;
     }
 
-    /// <summary>단일 씬 전환에 사용하는 공통 코루틴입니다.</summary>
-    public static IEnumerator LoadSceneAsync(string sceneName, string message = "화면을 준비하는 중...")
+    /// <summary>
+    /// 단일 씬 전환을 시작합니다. 코루틴은 이 영구 오브젝트가 실행하므로
+    /// 출발 씬의 UI가 파괴되어도 로딩 작업의 종료 처리가 보장됩니다.
+    /// </summary>
+    public static void LoadSceneAsync(string sceneName, string message = null)
+    {
+      if (_sceneTransitionInProgress)
+        return;
+
+      EnsureInstance();
+      _sceneTransitionInProgress = true;
+      _instance.StartCoroutine(LoadSceneRoutine(
+        sceneName,
+        string.IsNullOrWhiteSpace(message) ? DefaultsLoadingScreen.GetSceneLoadingMessage(sceneName) : message));
+    }
+
+    private static IEnumerator LoadSceneRoutine(string sceneName, string message)
     {
       using (Begin(message))
       {
-        var operation = SceneManager.LoadSceneAsync(sceneName);
-        if (operation == null)
+        try
         {
-          Debug.LogWarning($"[LoadingScreen] Failed to start scene load for '{sceneName}'.");
-          yield break;
-        }
+          var operation = SceneManager.LoadSceneAsync(sceneName);
+          if (operation == null)
+          {
+            Debug.LogWarning($"[LoadingScreen] Failed to start scene load for '{sceneName}'.");
+            yield break;
+          }
 
-        while (!operation.isDone)
+          while (!operation.isDone)
+          {
+            // Unity AsyncOperation은 활성화 직전 0.9에서 멈출 수 있어 사용자에게는 100%로 보이지 않게 한다.
+            Report(message, Mathf.Clamp01(operation.progress / 0.9f) * 0.99f);
+            yield return null;
+          }
+        }
+        finally
         {
-          // Unity AsyncOperation은 활성화 직전 0.9에서 멈출 수 있어 사용자에게는 100%로 보이지 않게 한다.
-          Report(message, Mathf.Clamp01(operation.progress / 0.9f) * 0.99f);
-          yield return null;
+          _sceneTransitionInProgress = false;
         }
       }
     }

@@ -172,7 +172,7 @@ namespace MultiplayerInfrastructure.UI
           fishNetSupport.StopServer();
       }
 
-      StartCoroutine(LoadingScreen.LoadSceneAsync(introSceneName, "메인 메뉴로 돌아가는 중..."));
+      LoadingScreen.LoadSceneAsync(introSceneName);
     }
 
     public void OnOverlayPushed()
