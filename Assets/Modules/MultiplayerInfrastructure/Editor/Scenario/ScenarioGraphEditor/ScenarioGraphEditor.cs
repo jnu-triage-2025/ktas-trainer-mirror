@@ -1026,7 +1026,14 @@ namespace MultiplayerInfrastructure.Editor
 
         foreach (var visitOrder in visitOrders)
         {
-          entries.Add(new ScenarioRuntimeHistoryEntry(visitOrder, pair.Key, displayLabel, nodeView.Data));
+          runtimeScenarioController.TryGetNodeVisitTiming(graphData.Identifier, visitOrder, out var timing);
+          entries.Add(new ScenarioRuntimeHistoryEntry(
+            visitOrder,
+            pair.Key,
+            displayLabel,
+            nodeView.Data,
+            timing.EnteredAt,
+            timing.ExitedAt));
         }
       }
 

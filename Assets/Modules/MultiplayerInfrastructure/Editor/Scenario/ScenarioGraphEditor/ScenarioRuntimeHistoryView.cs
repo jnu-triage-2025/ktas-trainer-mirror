@@ -14,13 +14,23 @@ namespace MultiplayerInfrastructure.Editor
     public readonly string NodeIdentifier;
     public readonly string DisplayLabel;
     public readonly IScenarioNode NodeData;
+    public readonly DateTime EnteredAt;
+    public readonly DateTime? ExitedAt;
 
-    public ScenarioRuntimeHistoryEntry(int sequence, string nodeIdentifier, string displayLabel, IScenarioNode nodeData = null)
+    public ScenarioRuntimeHistoryEntry(
+      int sequence,
+      string nodeIdentifier,
+      string displayLabel,
+      IScenarioNode nodeData = null,
+      DateTime enteredAt = default,
+      DateTime? exitedAt = null)
     {
       Sequence = sequence;
       NodeIdentifier = nodeIdentifier;
       DisplayLabel = displayLabel;
       NodeData = nodeData;
+      EnteredAt = enteredAt;
+      ExitedAt = exitedAt;
     }
   }
 
@@ -252,6 +262,8 @@ namespace MultiplayerInfrastructure.Editor
             writer.WriteLine($"[{entry.Sequence:00}] ID: {entry.NodeIdentifier}");
             writer.WriteLine($"     Type: {entry.NodeData?.NodeType.ToString() ?? "Unknown"}");
             writer.WriteLine($"     Label: {entry.DisplayLabel}");
+            writer.WriteLine($"     Entered At: {entry.EnteredAt:yyyy-MM-dd HH:mm:ss.fff}");
+            writer.WriteLine($"     Exited At: {(entry.ExitedAt.HasValue ? entry.ExitedAt.Value.ToString("yyyy-MM-dd HH:mm:ss.fff") : "In progress")}");
 
             // 다음 노드로 넘어가는 흐름 및 조건(브랜칭, 선택, 퀴즈, 게이트 등) 서술
             if (i < currentEntries.Count - 1)

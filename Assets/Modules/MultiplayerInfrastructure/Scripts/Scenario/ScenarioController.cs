@@ -25,6 +25,21 @@ using TriageTrainer.Entity;
 
 namespace MultiplayerInfrastructure.Scenario
 {
+  /// <summary>단일 노드 방문의 진입 및 이탈 시각.</summary>
+  public readonly struct ScenarioNodeVisitTiming
+  {
+    public int Sequence { get; }
+    public DateTime EnteredAt { get; }
+    public DateTime? ExitedAt { get; }
+
+    public ScenarioNodeVisitTiming(int sequence, DateTime enteredAt, DateTime? exitedAt)
+    {
+      Sequence = sequence;
+      EnteredAt = enteredAt;
+      ExitedAt = exitedAt;
+    }
+  }
+
   /// <summary>
   /// 시나리오 흐름을 제어합니다.
   /// UI 제어는 ScenarioPanelUIController에 위임합니다.
@@ -86,6 +101,7 @@ namespace MultiplayerInfrastructure.Scenario
     private ScenarioQuizNode _activeQuizNode;
     private readonly Dictionary<string, GraphVisitHistory> _graphVisitHistory = new Dictionary<string, GraphVisitHistory>();
     private readonly Dictionary<string, string> _stateStore = new Dictionary<string, string>();
+    private int _activeMainNodeVisitSequence;
     private int? _scenarioOwnerClientId;
     private ChatUIController _chatUIController;
     private ChatService _chatService;
@@ -121,6 +137,7 @@ namespace MultiplayerInfrastructure.Scenario
     private sealed class GraphVisitHistory
     {
       public readonly Dictionary<string, List<int>> NodeVisitOrders = new Dictionary<string, List<int>>();
+      public readonly Dictionary<int, ScenarioNodeVisitTiming> VisitTimings = new Dictionary<int, ScenarioNodeVisitTiming>();
       public int Sequence;
     }
 
@@ -223,6 +240,16 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       return GetNodeVisitOrders(_currentGraph.Identifier, nodeIdentifier);
+    }
+
+    /// <summary>지정한 방문 순서의 노드 진입/이탈 시각을 반환한다.</summary>
+    public bool TryGetNodeVisitTiming(string graphIdentifier, int sequence, out ScenarioNodeVisitTiming timing)
+    {
+      timing = default;
+      return !string.IsNullOrWhiteSpace(graphIdentifier)
+             && _graphVisitHistory.TryGetValue(graphIdentifier, out var history)
+             && history != null
+             && history.VisitTimings.TryGetValue(sequence, out timing);
     }
 
     #endregion
@@ -730,6 +757,9 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public void EndScenario()
     {
+      CompleteNodeVisit(_activeMainNodeVisitSequence);
+      CompleteOpenNodeVisits();
+      _activeMainNodeVisitSequence = 0;
       // 로그 기록을 위해 그래프 ID를 먼저 캡처 (_currentGraph는 이후 null로 초기화됨)
       string endingGraphId = _currentGraph?.Identifier;
       if (_executionMode == ExecutionMode.ServerAuthoritative && !string.IsNullOrEmpty(endingGraphId))
@@ -1090,7 +1120,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void ExecuteNode(IScenarioNode node)
     {
-      RecordNodeVisit(node);
+      CompleteNodeVisit(_activeMainNodeVisitSequence);
+      _activeMainNodeVisitSequence = RecordNodeVisit(node);
       LogNodeExecution(node);
       try
       {
@@ -1240,6 +1271,7 @@ namespace MultiplayerInfrastructure.Scenario
     private void ResetNodeVisitOrders()
     {
       _graphVisitHistory.Clear();
+      _activeMainNodeVisitSequence = 0;
     }
 
     private void ResetNodeVisitOrders(string graphIdentifier)
@@ -1250,18 +1282,19 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       _graphVisitHistory[graphIdentifier] = new GraphVisitHistory();
+      _activeMainNodeVisitSequence = 0;
     }
 
-    private void RecordNodeVisit(IScenarioNode node)
+    private int RecordNodeVisit(IScenarioNode node)
     {
       if (node == null || string.IsNullOrWhiteSpace(node.Identifier))
       {
-        return;
+        return 0;
       }
 
       if (_currentGraph == null || string.IsNullOrWhiteSpace(_currentGraph.Identifier))
       {
-        return;
+        return 0;
       }
 
       if (!_graphVisitHistory.TryGetValue(_currentGraph.Identifier, out var history) || history == null)
@@ -1271,13 +1304,57 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       history.Sequence++;
+      var sequence = history.Sequence;
+      history.VisitTimings[sequence] = new ScenarioNodeVisitTiming(sequence, DateTime.Now, null);
       if (!history.NodeVisitOrders.TryGetValue(node.Identifier, out var orders) || orders == null)
       {
         orders = new List<int>();
         history.NodeVisitOrders[node.Identifier] = orders;
       }
 
-      orders.Insert(0, history.Sequence);
+      orders.Insert(0, sequence);
+      return sequence;
+    }
+
+    private void CompleteNodeVisit(int sequence)
+    {
+      if (sequence <= 0 || _currentGraph == null || string.IsNullOrWhiteSpace(_currentGraph.Identifier)
+          || !_graphVisitHistory.TryGetValue(_currentGraph.Identifier, out var history)
+          || history == null
+          || !history.VisitTimings.TryGetValue(sequence, out var timing)
+          || timing.ExitedAt.HasValue)
+      {
+        return;
+      }
+
+      history.VisitTimings[sequence] = new ScenarioNodeVisitTiming(sequence, timing.EnteredAt, DateTime.Now);
+    }
+
+    /// <summary>시나리오 종료 시 병렬 브랜치를 포함한 진행 중 방문을 모두 닫는다.</summary>
+    private void CompleteOpenNodeVisits()
+    {
+      if (_currentGraph == null || string.IsNullOrWhiteSpace(_currentGraph.Identifier)
+          || !_graphVisitHistory.TryGetValue(_currentGraph.Identifier, out var history)
+          || history == null)
+      {
+        return;
+      }
+
+      var exitedAt = DateTime.Now;
+      var openSequences = new List<int>();
+      foreach (var pair in history.VisitTimings)
+      {
+        if (!pair.Value.ExitedAt.HasValue)
+        {
+          openSequences.Add(pair.Key);
+        }
+      }
+
+      foreach (var sequence in openSequences)
+      {
+        var timing = history.VisitTimings[sequence];
+        history.VisitTimings[sequence] = new ScenarioNodeVisitTiming(sequence, timing.EnteredAt, exitedAt);
+      }
     }
 
     /// <summary>
@@ -3994,7 +4071,7 @@ namespace MultiplayerInfrastructure.Scenario
           yield break;
         }
 
-        RecordNodeVisit(cursor);
+        var branchVisitSequence = RecordNodeVisit(cursor);
         OnNodeChanged?.Invoke(cursor);
 
         if (_executionMode == ExecutionMode.ServerAuthoritative && branchOwnerClientId.HasValue)
@@ -4006,6 +4083,7 @@ namespace MultiplayerInfrastructure.Scenario
         // Advance 까지 차단되므로, 코루틴 전체 수명 동안 억제해서는 안 된다.
         chainContext.NextOverride = null;
         yield return RunWithGlobalAdvanceSuppressed(ExecuteBranchNode(cursor, chainContext));
+        CompleteNodeVisit(branchVisitSequence);
 
         // 노드 대기 도중 시나리오가 종료되어 그래프가 해제됐을 수 있으므로 재확인한다.
         if (_currentGraph == null)
