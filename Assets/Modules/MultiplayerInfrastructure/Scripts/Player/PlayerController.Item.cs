@@ -16,7 +16,9 @@ namespace MultiplayerInfrastructure.Player
     {
       string full = $"[PlayerRapidInfuser] player='{name}' owner={IsOwner} server={IsServerStarted} client={IsClientStarted} {message}";
       GameLogService.Write(warning ? GameLogCategory.Misc : GameLogCategory.Interaction, full, RapidInfuserFlowTag);
+#if UNITY_EDITOR && false
       if (warning) Debug.LogWarning(full, this); else Debug.Log(full, this);
+#endif
     }
     [SerializeField] private bool attackTriggered = false;
     [SerializeField] private bool useItemTriggered = false;
