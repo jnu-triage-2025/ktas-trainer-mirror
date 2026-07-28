@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "scenarioIdentifier": "patient_a_critical",
   "source": {
-    "scenarioSha256": "e0ca3993566f59c75982606c16e3de4dda1fc755a5a0b8bd5fce9a5c4b75afb1",
+    "scenarioSha256": "5edb451ce28e90a886d0e18de795ec432b29b17e85d57695c51cc0b041220fb2",
     "generatedAtUtc": null
   },
   "declarations": [
@@ -1537,7 +1537,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.grab_stretcher_a"
+        "identifier": "sig.grab_stretcher_patient_a_handle_0"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1550,7 +1550,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.grab_stretcher_b"
+        "identifier": "sig.grab_stretcher_patient_a_handle_1"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1563,7 +1563,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.grab_stretcher_c"
+        "identifier": "sig.grab_stretcher_patient_a_handle_2"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1576,7 +1576,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.grab_stretcher_d"
+        "identifier": "sig.grab_stretcher_patient_a_handle_3"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",

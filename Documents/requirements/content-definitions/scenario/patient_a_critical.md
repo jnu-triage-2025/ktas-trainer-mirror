@@ -491,8 +491,8 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.grab_stretcher_a |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.grab_stretcher_a [들것 잡기(grab 지점 Identifier 정합), spec §5.1~5.3].
-
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.grab_stretcher_a [들것 잡기(grab 지점 Identifier 정합), spec §5.1~5.3].
+-> **2027-07-28. AI의 권고에 따라 sig.grab_stretcher_patient_a_handle_0 으로 입력 완료.
 
 ---
 
@@ -515,8 +515,8 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.grab_stretcher_b |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.grab_stretcher_b [들것 잡기(grab 지점 Identifier 정합), spec §5.1~5.3].
-
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.grab_stretcher_b [들것 잡기(grab 지점 Identifier 정합), spec §5.1~5.3].
+-> **2027-07-28. AI의 권고에 따라 sig.grab_stretcher_patient_a_handle_1 으로 입력 완료.
 
 ---
 
@@ -539,8 +539,8 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.grab_stretcher_c |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.grab_stretcher_c [들것 잡기(grab 지점 Identifier 정합), spec §5.1~5.3].
-
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.grab_stretcher_c [들것 잡기(grab 지점 Identifier 정합), spec §5.1~5.3].
+-> **2027-07-28. AI의 권고에 따라 sig.grab_stretcher_patient_a_handle_2 으로 입력 완료.
 
 ---
 
@@ -563,8 +563,8 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.grab_stretcher_d |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.grab_stretcher_d [들것 잡기(grab 지점 Identifier 정합), spec §5.1~5.3].
-
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.grab_stretcher_d [들것 잡기(grab 지점 Identifier 정합), spec §5.1~5.3].
+-> **2027-07-28. AI의 권고에 따라 sig.grab_stretcher_patient_a_handle_3 으로 입력 완료.
 
 ---
 
@@ -683,7 +683,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.click_vital_set |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_vital_set [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_vital_set [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2027-07-28 완료
 
 
 ---
@@ -722,7 +722,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.show_vital_patient_a |
 
 
-- [x] (b) 배선 완료(2026-07-28): sig.show_vital_patient_a. `PatientTypeA`의 `assess_vital` 액션에 `_assessSignal=show_vital_patient_a` 정합했고, `PatientController.PerformAssess()` 완료 시 `ScenarioInteractionSignals.Raise("show_vital_patient_a")` 경로를 사용한다. (검증 상태: 미검증)
+- [x] (b) **배선 완료(2026-07-28): sig.show_vital_patient_a. `PatientTypeA`의 `assess_vital` 액션에 `_assessSignal=show_vital_patient_a` 정합했고, `PatientController.PerformAssess()` 완료 시 `ScenarioInteractionSignals.Raise("show_vital_patient_a")` 경로를 사용한다. (검증 상태: 미검증)
 
 
 ---
@@ -834,7 +834,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.check_avpu_gcs_patient_a |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.check_avpu_gcs_patient_a [사정(PatientController Assess 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.check_avpu_gcs_patient_a [사정(PatientController Assess 자동), spec §5.1~5.3]. **2027-07-28 완료
 
 
 ---
@@ -1184,7 +1184,7 @@ SPAWN_A
 - [x] 명명충돌 확정요청: 산출물명 `yankauer_ready` → 정본 `yankauer_suction_ready` 확정(crafting-recipes.md §확정 요청 [x], 2026-07-09).
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_wall_suction, sig.click_suction_line, sig.click_yankauer [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_wall_suction, sig.click_suction_line, sig.click_yankauer [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2027-07-28 완료
 
 - [x] 목 고정대는 클릭 대상이 아니라 환자에게 사용하는 아이템이다. `cervical_collar` 사용이 기존 환자 표시 상태를 켜고 `sig.apply_stabilizer_patient_a`를 올린다.
 
@@ -1239,7 +1239,7 @@ SPAWN_A
 
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.apply_stabilizer_patient_a [부착형 적용/착용(Item Apply Signal), spec §5.1~5.3].
-
+**검토 필요. 현재 neckstabilizer 혹은 cervical_collar 혹은 stabilizer 아이템이 확인되지 않습니다 
 
 ---
 
@@ -1277,8 +1277,8 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.connect_wall_component_1 |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.connect_wall_component_1 [연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3].
-
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.connect_wall_component_1 [연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3].
+-> **2026-07-28 완료. Wall Attached Wall Suction의 Attach Completion Signal에 connect_wall_component_1 추가함
 
 ---
 
@@ -1316,8 +1316,8 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.connect_wall_component_and_yankauer |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.connect_wall_component_and_yankauer [연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3].
-
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.connect_wall_component_and_yankauer [연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3].
+-> **2026-07-28 완료. 그러나 LineConnectionPoint 연결에 대한 검증 필요
 
 ---
 
