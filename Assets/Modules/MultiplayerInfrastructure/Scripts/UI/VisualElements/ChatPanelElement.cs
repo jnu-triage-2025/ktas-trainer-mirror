@@ -25,6 +25,7 @@ namespace MultiplayerInfrastructure.UI
     private VisualElement _scrollbarThumb;
     private ReusableVerticalScrollbar _reusableScrollbar;
     private TextField _inputField;
+    private VisualElement _textInputElement;
     private VisualElement _toastPanel;
     private VisualElement _toastContainer;
     private VisualElement _panel;
@@ -40,6 +41,13 @@ namespace MultiplayerInfrastructure.UI
     private float _scrollOffsetY;
     private bool _scrollToBottomPending;
     private int _scrollToBottomRequest;
+
+    /// <summary>
+    /// Raised for keyboard input in the chat field. The controller uses this
+    /// to invalidate a Tab-cycling session when the user edits the text or
+    /// navigates with another key.
+    /// </summary>
+    public event System.Action<KeyCode> InputKeyPressed;
 
     private static Color StyleColorBackground = new Color(0f, 0f, 0f, 0.82f);
     private static Color StyleColorText = Color.white;
@@ -59,6 +67,25 @@ namespace MultiplayerInfrastructure.UI
 
     public bool IsOpen => _isOpen;
     public string InputText => _inputField?.text ?? string.Empty;
+    public bool IsInputFocused
+    {
+      get
+      {
+        if (_inputField == null || _inputField.panel == null)
+          return false;
+
+        Focusable focused = _inputField.panel.focusController?.focusedElement;
+        VisualElement focusedElement = focused as VisualElement;
+        while (focusedElement != null)
+        {
+          if (focusedElement == _inputField)
+            return true;
+          focusedElement = focusedElement.parent;
+        }
+
+        return false;
+      }
+    }
 
     /// <summary>현재 입력창의 커서 위치.</summary>
     public int CursorPosition => _inputField?.cursorIndex ?? 0;
@@ -230,14 +257,15 @@ namespace MultiplayerInfrastructure.UI
       _inputField.AddToClassList("chat-input");
       _inputField.style.color = StyleColorText;
       
-      var _textInputField = _inputField.Q("unity-text-input");
-      _textInputField.style.backgroundColor = Color.clear;
-      _textInputField.style.borderTopWidth = 0;
-      _textInputField.style.borderBottomWidth = 0;
-      _textInputField.style.borderLeftWidth = 0;
-      _textInputField.style.borderRightWidth = 0;
+      _textInputElement = _inputField.Q("unity-text-input");
+      _textInputElement.style.backgroundColor = Color.clear;
+      _textInputElement.style.borderTopWidth = 0;
+      _textInputElement.style.borderBottomWidth = 0;
+      _textInputElement.style.borderLeftWidth = 0;
+      _textInputElement.style.borderRightWidth = 0;
 
       inputBg.Add(_inputField);
+      _inputField.RegisterCallback<KeyDownEvent>(HandleInputKeyDown);
 
       _toastPanel = new VisualElement
       {
@@ -486,6 +514,18 @@ namespace MultiplayerInfrastructure.UI
       _inputField.Focus();
       _inputField.cursorIndex = _inputField.text.Length;
       _inputField.selectIndex = _inputField.cursorIndex;
+    }
+
+    public void ApplyInput(string text, int cursorPos)
+    {
+      if (_inputField == null)
+        return;
+
+      _inputField.SetValueWithoutNotify(text ?? string.Empty);
+      FocusInput();
+      int clampedCursor = Mathf.Clamp(cursorPos, 0, _inputField.text.Length);
+      _inputField.cursorIndex = clampedCursor;
+      _inputField.selectIndex = clampedCursor;
     }
 
     public string ConsumeInput()
@@ -772,6 +812,14 @@ namespace MultiplayerInfrastructure.UI
       _inputField.SetValueWithoutNotify(text);
       ResetHistoryCursor();
       FocusInput();
+    }
+
+    private void HandleInputKeyDown(KeyDownEvent evt)
+    {
+      if (evt.keyCode == KeyCode.Tab)
+        evt.PreventDefault();
+
+      InputKeyPressed?.Invoke(evt.keyCode);
     }
 
     private void AddInputHistory(string text)

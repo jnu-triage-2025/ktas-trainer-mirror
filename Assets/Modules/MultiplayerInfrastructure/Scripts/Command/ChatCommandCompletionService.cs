@@ -27,6 +27,7 @@ namespace MultiplayerInfrastructure.Command
     private int _completionIndex;
     private int _completionTokenStart;
     private int _completionTokenEnd;
+    private int _completionCursorPosition;
 
     public ChatCommandCompletionService(ChatCommandService commandService)
     {
@@ -44,10 +45,15 @@ namespace MultiplayerInfrastructure.Command
     public (string text, int cursorPos)? HandleTabPress(string currentText, int cursorPos)
     {
       if (string.IsNullOrEmpty(currentText))
+      {
+        ResetSession();
         return null;
+      }
+
+      cursorPos = Mathf.Clamp(cursorPos, 0, currentText.Length);
 
       // 1) 기존 세션이 있고, 현재 텍스트가 마지막 후보 적용 결과와 일치하면 → 다음 후보로 순환
-      if (_hasActiveSession && IsContinuationOfCurrentSession(currentText))
+      if (_hasActiveSession && IsContinuationOfCurrentSession(currentText, cursorPos))
       {
         _completionIndex = (_completionIndex + 1) % _completionCandidates.Count;
         return BuildResult(_completionCandidates[_completionIndex]);
@@ -58,7 +64,10 @@ namespace MultiplayerInfrastructure.Command
         out int tokenStart, out int tokenEnd);
 
       if (candidates == null || candidates.Count == 0)
+      {
+        ResetSession();
         return null;
+      }
 
       _completionOriginalText = currentText;
       _completionCandidates = candidates;
@@ -67,7 +76,9 @@ namespace MultiplayerInfrastructure.Command
       _completionTokenEnd = tokenEnd;
       _hasActiveSession = true;
 
-      return BuildResult(_completionCandidates[0]);
+      var result = BuildResult(_completionCandidates[0]);
+      _completionCursorPosition = result.cursorPos;
+      return result;
     }
 
     /// <summary>
@@ -81,6 +92,7 @@ namespace MultiplayerInfrastructure.Command
       _completionIndex = 0;
       _completionTokenStart = 0;
       _completionTokenEnd = 0;
+      _completionCursorPosition = 0;
     }
 
     // ── 내부: 세션 연속성 확인 ──────────────────────────────────────────
@@ -89,14 +101,16 @@ namespace MultiplayerInfrastructure.Command
     /// 현재 입력창 텍스트가 마지막 후보를 적용한 결과와 일치하는지 확인합니다.
     /// 일치하면 사용자가 다른 키를 누르지 않고 Tab만 연속으로 누른 것으로 판단합니다.
     /// </summary>
-    private bool IsContinuationOfCurrentSession(string currentText)
+    private bool IsContinuationOfCurrentSession(string currentText, int cursorPos)
     {
       if (_completionCandidates == null || _completionCandidates.Count == 0)
         return false;
 
       string lastApplied = _completionCandidates[_completionIndex];
-      var (expectedText, _) = BuildResult(lastApplied);
-      return string.Equals(currentText, expectedText, StringComparison.Ordinal);
+      int expectedCursorPosition = _completionCursorPosition;
+      var expectedResult = BuildResult(lastApplied);
+      return string.Equals(currentText, expectedResult.text, StringComparison.Ordinal)
+        && cursorPos == expectedCursorPosition;
     }
 
     /// <summary>
@@ -107,9 +121,26 @@ namespace MultiplayerInfrastructure.Command
     {
       string before = _completionOriginalText.Substring(0, _completionTokenStart);
       string after = _completionOriginalText.Substring(_completionTokenEnd);
-      string newText = before + candidate + " " + after;
-      int newCursorPos = before.Length + candidate.Length + 1; // +1 for trailing space
+      // Do not add a second separator when the original token is followed by
+      // whitespace (for example, completing "/gi foo" must not produce
+      // "/give  foo"). A trailing space is still added at the end of the
+      // input so the next argument can be typed immediately.
+      bool needsSeparator = after.Length == 0 || !char.IsWhiteSpace(after[0]);
+      string separator = needsSeparator ? " " : string.Empty;
+      string newText = before + candidate + separator + after;
+      int existingSeparatorLength = needsSeparator ? 0 : CountLeadingWhitespace(after);
+      int newCursorPos = before.Length + candidate.Length
+        + separator.Length + existingSeparatorLength;
+      _completionCursorPosition = newCursorPos;
       return (newText, newCursorPos);
+    }
+
+    private static int CountLeadingWhitespace(string value)
+    {
+      int count = 0;
+      while (count < value.Length && char.IsWhiteSpace(value[count]))
+        count++;
+      return count;
     }
 
     // ── 내부: 컨텍스트 파싱 및 후보 수집 ───────────────────────────────
@@ -117,13 +148,15 @@ namespace MultiplayerInfrastructure.Command
     private List<string> CollectCandidates(string text, int cursorPos,
       out int tokenStart, out int tokenEnd)
     {
+      cursorPos = Mathf.Clamp(cursorPos, 0, text.Length);
+
       // 1) 커서 위치에서 현재 토큰의 경계를 찾습니다
       tokenStart = cursorPos;
-      while (tokenStart > 0 && text[tokenStart - 1] != ' ')
+      while (tokenStart > 0 && !IsTokenSeparator(text[tokenStart - 1]))
         tokenStart--;
 
       tokenEnd = cursorPos;
-      while (tokenEnd < text.Length && text[tokenEnd] != ' ')
+      while (tokenEnd < text.Length && !IsTokenSeparator(text[tokenEnd]))
         tokenEnd++;
 
       string partial = text.Substring(tokenStart, tokenEnd - tokenStart);
@@ -137,13 +170,15 @@ namespace MultiplayerInfrastructure.Command
 
       // 3) 명령어 모드: 첫 토큰(명령어 이름) 경계를 확인
       int commandNameStart = 1; // '/' 바로 다음
-      int firstSpace = text.IndexOf(' ', commandNameStart);
+      int firstSpace = FindTokenSeparator(text, commandNameStart);
 
       // 커서가 명령어 이름 위에 있는 경우
       if (firstSpace < 0 || tokenStart < firstSpace)
       {
         // 명령어 이름 자동완성
-        partial = text.Substring(commandNameStart, tokenEnd - commandNameStart);
+        // Command candidates include the leading slash because that slash is
+        // part of the replacement token. Keep it in the filter as well.
+        partial = "/" + text.Substring(commandNameStart, tokenEnd - commandNameStart);
         tokenStart = 0; // '/' 부터 치환하여 '/command' 형태로 완성
         tokenEnd = firstSpace >= 0 ? firstSpace : text.Length;
         return FilterCandidates(CollectCommandNames(), partial);
@@ -155,7 +190,7 @@ namespace MultiplayerInfrastructure.Command
       // 현재 토큰 이전의 인수들을 추출
       string argsRegion = text.Substring(firstSpace + 1, tokenStart - firstSpace - 1);
       string[] previousArgs = argsRegion.Length > 0
-        ? argsRegion.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+        ? argsRegion.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
         : Array.Empty<string>();
 
       int argIndex = previousArgs.Length;
@@ -169,7 +204,11 @@ namespace MultiplayerInfrastructure.Command
         {
           var provided = completionProvider.GetCompletions(argIndex, previousArgs, partial);
           if (provided != null && provided.Count > 0)
-            return FilterCandidates(provided, partial);
+          {
+            var filteredProvided = FilterCandidates(provided, partial);
+            if (filteredProvided != null && filteredProvided.Count > 0)
+              return filteredProvided;
+          }
         }
         catch (Exception ex)
         {
@@ -177,11 +216,170 @@ namespace MultiplayerInfrastructure.Command
         }
       }
 
+      // Commands can expose their syntax through IChatCommandUsage without
+      // having to duplicate every literal subcommand in a second API. This
+      // also provides dynamic candidates for the common placeholders used by
+      // the command definitions (item, target, waypoint, and so on).
+      if (_commandService != null
+          && _commandService.TryGetCommand(commandName, out var usageCommand))
+      {
+        var usageCandidates = CollectUsageCandidates(usageCommand, argIndex, previousArgs, partial);
+        if (usageCandidates.Count > 0)
+          return FilterCandidates(usageCandidates, partial);
+      }
+
       // Fallback: @ 셀렉터 자동완성
       if (partial.StartsWith("@", StringComparison.Ordinal))
         return FilterCandidates(CollectTargetSelectors(), partial);
 
       return null;
+    }
+
+    private static bool IsTokenSeparator(char value)
+    {
+      return char.IsWhiteSpace(value);
+    }
+
+    private static int FindTokenSeparator(string text, int startIndex)
+    {
+      for (int i = startIndex; i < text.Length; i++)
+      {
+        if (IsTokenSeparator(text[i]))
+          return i;
+      }
+
+      return -1;
+    }
+
+    private List<string> CollectUsageCandidates(
+      IChatCommandModel command,
+      int argIndex,
+      string[] previousArgs,
+      string partial)
+    {
+      var result = new List<string>();
+      if (!(command is IChatCommandUsage usageProvider)
+          || usageProvider.UsageLines == null)
+        return result;
+
+      foreach (var usageLine in usageProvider.UsageLines)
+      {
+        string[] tokens = TokenizeUsage(usageLine.Syntax);
+        if (tokens.Length == 0)
+          continue;
+
+        // UsageLine entries are normally prefixed with the command name. A
+        // continuation entry such as "<target>" has no command token and is
+        // not useful for locating a subcommand path.
+        if (!string.Equals(tokens[0], command.CommandEntry, StringComparison.OrdinalIgnoreCase))
+          continue;
+
+        int argumentCount = tokens.Length - 1;
+        if (argIndex >= argumentCount)
+          continue;
+
+        bool pathMatches = true;
+        for (int i = 0; i < argIndex; i++)
+        {
+          if (!MatchesUsageToken(tokens[i + 1], previousArgs[i]))
+          {
+            pathMatches = false;
+            break;
+          }
+        }
+
+        if (!pathMatches)
+          continue;
+
+        string currentToken = tokens[argIndex + 1];
+        var currentCandidates = new List<string>();
+        if (IsUsagePlaceholder(currentToken))
+        {
+          currentCandidates.AddRange(GetPlaceholderCandidates(currentToken));
+
+          // Optional positional arguments such as `/give <item> [count]
+          // [target]` may legally skip the count. Offer the following target
+          // candidates at the count position when the user has started typing
+          // a non-numeric token.
+          if (currentCandidates.Count == 0
+              && currentToken[0] == '['
+              && !string.IsNullOrEmpty(partial)
+              && !int.TryParse(partial, out _)
+              && argIndex + 2 < tokens.Length
+              && IsUsagePlaceholder(tokens[argIndex + 2]))
+          {
+            currentCandidates.AddRange(GetPlaceholderCandidates(tokens[argIndex + 2]));
+          }
+        }
+        else if (!IsCoordinateLiteral(currentToken))
+        {
+          currentCandidates.Add(currentToken);
+        }
+
+        result.AddRange(currentCandidates);
+      }
+
+      return result.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    private static bool IsCoordinateLiteral(string token)
+    {
+      return string.Equals(token, "x", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(token, "y", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(token, "z", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string[] TokenizeUsage(string syntax)
+    {
+      if (string.IsNullOrWhiteSpace(syntax))
+        return Array.Empty<string>();
+
+      return syntax.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    private static bool MatchesUsageToken(string usageToken, string actualToken)
+    {
+      if (IsUsagePlaceholder(usageToken))
+        return true;
+
+      return string.Equals(usageToken, actualToken, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsUsagePlaceholder(string token)
+    {
+      return token.Length >= 2
+        && ((token[0] == '<' && token[token.Length - 1] == '>')
+          || (token[0] == '[' && token[token.Length - 1] == ']'));
+    }
+
+    private List<string> GetPlaceholderCandidates(string token)
+    {
+      string inner = token.Substring(1, token.Length - 2);
+      string[] alternatives = inner.Split('|');
+      if (alternatives.Length > 1)
+        return alternatives.ToList();
+
+      string key = inner.Replace("_", string.Empty).Replace("-", string.Empty).ToLowerInvariant();
+      if (key.Contains("item"))
+        return CollectItemIdentifiers();
+      if (key.Contains("target") || key.Contains("player") || key.Contains("user") || key.Contains("name"))
+        return CollectPlayersAndSelectors();
+      if (key.Contains("waypoint"))
+        return CollectWaypointIdentifiers();
+      if (key.Contains("preset"))
+        return CollectEntityPresetIdentifiers();
+      if (key.Contains("scenario"))
+        return CollectScenarioIdentifiers();
+      if (key.Contains("problem"))
+        return CollectProblemSetIdentifiers();
+      if (key.Contains("model") || key.Contains("character"))
+        return CollectPlayerModelIdentifiers();
+      if (key.Contains("command"))
+        return CollectCommandNames()
+          .Select(value => value.TrimStart('/'))
+          .ToList();
+
+      return new List<string>();
     }
 
     // ── 내부: 후보 소스 ──────────────────────────────────────────────
@@ -197,8 +395,10 @@ namespace MultiplayerInfrastructure.Command
           result.Add("/" + cmd.CommandEntry);
       }
 
-      result.Sort(StringComparer.OrdinalIgnoreCase);
-      return result;
+      return result
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+        .ToList();
     }
 
     private List<string> CollectPlayerNames()
@@ -220,8 +420,11 @@ namespace MultiplayerInfrastructure.Command
 
       // 타겟 셀렉터도 함께 제공
       result.AddRange(TargetSelectors);
-      result.Sort(StringComparer.OrdinalIgnoreCase);
-      return result;
+      return result
+        .Where(value => !string.IsNullOrWhiteSpace(value))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+        .ToList();
     }
 
     private static List<string> CollectTargetSelectors()
@@ -247,10 +450,16 @@ namespace MultiplayerInfrastructure.Command
         filtered = new List<string>();
         for (int i = 0; i < candidates.Count; i++)
         {
-          if (candidates[i].StartsWith(partial, StringComparison.OrdinalIgnoreCase))
+          if (!string.IsNullOrEmpty(candidates[i])
+              && candidates[i].StartsWith(partial, StringComparison.OrdinalIgnoreCase))
             filtered.Add(candidates[i]);
         }
       }
+
+      filtered = filtered
+        .Where(value => !string.IsNullOrEmpty(value))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
 
       if (filtered.Count == 0)
         return null;
@@ -362,8 +571,11 @@ namespace MultiplayerInfrastructure.Command
       }
 
       result.AddRange(TargetSelectors);
-      result.Sort(StringComparer.OrdinalIgnoreCase);
-      return result;
+      return result
+        .Where(value => !string.IsNullOrWhiteSpace(value))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+        .ToList();
     }
   }
 }

@@ -3,10 +3,11 @@ using System.Collections.Generic;
 namespace MultiplayerInfrastructure.Command
 {
   /// <summary>
-  /// 명령어가 Tab 키 자동완성 후보를 제공할 수 있게 하는 선택적 인터페이스.
+  /// 명령어가 Tab 키 자동완성 후보를 직접 제공할 수 있게 하는 선택적 인터페이스.
   /// <para>
-  /// 구현하지 않은 명령어도 명령어 이름 자동완성은 지원되지만,
-  /// 인수(argument) 자동완성은 제공되지 않습니다.
+  /// 구현하지 않은 명령어도 Usage 정의에 기반한 하위 명령어·일반 인수
+  /// 자동완성을 지원합니다. 이 인터페이스는 런타임 데이터나 복잡한
+  /// 맥락처럼 Usage만으로 표현할 수 없는 후보를 제공할 때 사용합니다.
   /// </para>
   /// </summary>
   public interface IChatCommandCompletion

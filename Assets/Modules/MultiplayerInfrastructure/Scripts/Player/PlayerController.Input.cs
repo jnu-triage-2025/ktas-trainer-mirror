@@ -195,6 +195,12 @@ namespace MultiplayerInfrastructure.Player
         return;
       }
 
+      if (Input.GetKeyDown(KeyCode.Tab))
+      {
+        _chatUI.HandleTabKey();
+        return;
+      }
+
       if (Input.GetKeyDown(KeyCode.UpArrow))
       {
         _chatUI.HandleHistoryPreviousKey();

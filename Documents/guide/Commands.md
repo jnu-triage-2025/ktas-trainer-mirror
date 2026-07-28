@@ -1,5 +1,6 @@
 # 명령어
 
+채팅 커맨드의 Tab 자동완성을 새 커맨드에서도 사용하거나 확장해야 한다면 [Tab 자동완성 구현·확장 가이드](../working-guide/features/command/tab-autocomplete.md)를 참고합니다.
 
 
 ## 동시 실행과 대화창 점유 충돌(Concurrency Conflict Policy)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MultiplayerInfrastructure.Command;
 using MultiplayerInfrastructure.Definitions;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -15,6 +16,8 @@ namespace MultiplayerInfrastructure.UI
 
     private UIDocument _uiDocument;
     private ChatPanelElement _chatPanel;
+    private ChatCommandCompletionService _completionService;
+    private bool _chatPanelInputEventsBound;
     private readonly List<PendingMessage> _pendingMessages = new List<PendingMessage>();
 
     private readonly struct PendingMessage
@@ -44,6 +47,7 @@ namespace MultiplayerInfrastructure.UI
       _uiDocument.sortingOrder = _sortingOrder;
 
       BindElement();
+      ResolveCompletionService();
       FlushPendingMessages();
       HideImmediately();
     }
@@ -67,6 +71,35 @@ namespace MultiplayerInfrastructure.UI
         EnsureStyleSheet(_chatPanel);
         root.Add(_chatPanel);
       }
+
+      if (!_chatPanelInputEventsBound)
+      {
+        _chatPanel.InputKeyPressed += HandleInputKeyPressed;
+        _chatPanelInputEventsBound = true;
+      }
+    }
+
+    private void ResolveCompletionService()
+    {
+      if (_completionService != null)
+        return;
+
+      var commandService = FindFirstObjectByType<ChatCommandService>(FindObjectsInactive.Include);
+      // The chat UI can start before the network service is spawned. Do not
+      // permanently cache a completion service with a null command source;
+      // HandleTabKey will retry this lookup after the service appears.
+      if (commandService != null)
+        _completionService = new ChatCommandCompletionService(commandService);
+    }
+
+    private void HandleInputKeyPressed(KeyCode keyCode)
+    {
+      // The actual Tab action is handled from PlayerController.Input so it is
+      // consistent with Return/Escape/history handling. The UI event only
+      // prevents focus traversal and tells the completion session when the
+      // user started editing or used another navigation key.
+      if (keyCode != KeyCode.Tab)
+        _completionService?.ResetSession();
     }
 
     private void EnsureStyleSheet(VisualElement ve)
@@ -112,6 +145,8 @@ namespace MultiplayerInfrastructure.UI
     public void OpenWithCommandStart()
     {
       Open();
+      ResolveCompletionService();
+      _completionService?.ResetSession();
       _chatPanel?.PushInput("/");
     }
     public void Close()
@@ -132,6 +167,7 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       string text = _chatPanel.ConsumeInput();
+      _completionService?.ResetSession();
       OnSubmitted?.Invoke(text);
       Close();
     }
@@ -142,7 +178,29 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       OnCancelled?.Invoke();
+      _completionService?.ResetSession();
       Close();
+    }
+
+    /// <summary>
+    /// Handles a Tab press while the chat input is focused. Returns silently
+    /// when there are no candidates so Tab remains harmless in normal chat.
+    /// </summary>
+    public void HandleTabKey()
+    {
+      if (_chatPanel == null || !IsOpen)
+        return;
+
+      if (!_chatPanel.IsInputFocused)
+        return;
+
+      ResolveCompletionService();
+      var result = _completionService?.HandleTabPress(
+        _chatPanel.InputText,
+        _chatPanel.CursorPosition);
+
+      if (result.HasValue)
+        _chatPanel.ApplyInput(result.Value.text, result.Value.cursorPos);
     }
 
     public void HandleHistoryPreviousKey()
@@ -151,6 +209,7 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       _chatPanel?.RecallPreviousInput();
+      _completionService?.ResetSession();
     }
 
     public void HandleHistoryNextKey()
@@ -159,6 +218,7 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       _chatPanel?.RecallNextInput();
+      _completionService?.ResetSession();
     }
 
     public void OnOverlayPushed()
@@ -184,6 +244,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void HidePanel()
     {
+      _completionService?.ResetSession();
       _chatPanel?.SetOpen(false);
       _chatPanel?.ClearInput();
       SetDocumentRootPickingEnabled(_uiDocument, false);
@@ -191,6 +252,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void HideImmediately()
     {
+      _completionService?.ResetSession();
       EnsurePanel();
       _chatPanel?.SetOpen(false);
       _chatPanel?.ClearInput();
@@ -217,6 +279,14 @@ namespace MultiplayerInfrastructure.UI
         _chatPanel.AppendMessage(pending.Message, pending.ShowToastWhenHidden);
       }
       _pendingMessages.Clear();
+    }
+
+    protected override void OnDestroy()
+    {
+      if (_chatPanelInputEventsBound && _chatPanel != null)
+        _chatPanel.InputKeyPressed -= HandleInputKeyPressed;
+
+      base.OnDestroy();
     }
 
   }

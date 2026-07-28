@@ -8,6 +8,7 @@
 특정 기능별 작업 가이드를 정리합니다.
 
 ### 하위 폴더
+- [command](./command/README.md): 채팅 커맨드 구현·확장 가이드
 - [items](./items/README.md): 아이템 관련 기능별 작업 가이드
 - [scenario](./scenario/README.md): 시나리오 운영/변환/검증 가이드
 - [ui](./ui/README.md): UI(UIDocument/오버레이) 작업 가이드
