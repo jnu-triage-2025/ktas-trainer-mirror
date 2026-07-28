@@ -15,6 +15,7 @@ namespace MultiplayerInfrastructure.Command
   ///
   /// 지원하는 형태:
   ///   /tp x y z                   — 자기 자신을 (x, y, z) 로 이동
+  ///   /tp ~x ~y ~z                — 자기 자신의 현재 위치를 기준으로 이동
   ///   /tp &lt;player&gt; x y z          — player 를 (x, y, z) 로 이동
   ///   /tp &lt;player&gt;                — 자기 자신을 player 위치로 이동
   ///   /tp &lt;player1&gt; &lt;player2&gt;      — player1 을 player2 위치로 이동
@@ -29,6 +30,7 @@ namespace MultiplayerInfrastructure.Command
     public System.Collections.Generic.IReadOnlyList<UsageLine> UsageLines => new[]
     {
       new UsageLine("tp x y z",                "Teleport yourself to (x, y, z)."),
+      new UsageLine("tp ~x ~y ~z",             "Teleport yourself relative to the current position; each axis may be absolute or relative."),
       new UsageLine("tp <player> x y z",       "Teleport player to (x, y, z)."),
       new UsageLine("tp <player>",             "Teleport yourself to player."),
       new UsageLine("tp <player1> <player2>",  "Teleport player1 to player2."),
@@ -60,17 +62,17 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
-      // /tp x y z  (3 floats → teleport self)
-      if (args.Length == 3 && TryParseFiniteFloat(args[0], out float x3) && TryParseFiniteFloat(args[1], out float y3) && TryParseFiniteFloat(args[2], out float z3))
+      // /tp x y z  (3 coordinates → teleport self; coordinates may be absolute or relative)
+      if (args.Length == 3 && AreCoordinateTokens(args))
       {
-        HandleSelfToXyz(sender, new Vector3(x3, y3, z3));
+        HandleSelfToCoordinates(sender, args);
         return;
       }
 
-      // /tp <player> x y z  (4 args, last 3 are floats → teleport player to coords)
-      if (args.Length == 4 && TryParseFiniteFloat(args[1], out float x4) && TryParseFiniteFloat(args[2], out float y4) && TryParseFiniteFloat(args[3], out float z4))
+      // /tp <player> x y z  (last 3 coordinates may be absolute or relative)
+      if (args.Length == 4 && AreCoordinateTokens(args, 1))
       {
-        HandlePlayerToXyz(sender, args[0], new Vector3(x4, y4, z4));
+        HandlePlayerToCoordinates(sender, args[0], args, 1);
         return;
       }
 
@@ -94,11 +96,17 @@ namespace MultiplayerInfrastructure.Command
     // ── Handlers ─────────────────────────────────────────────────────────────
 
     /// /tp x y z
-    private void HandleSelfToXyz(NetworkConnection sender, Vector3 destination)
+    private void HandleSelfToCoordinates(NetworkConnection sender, string[] args)
     {
       if (!TryResolveController(sender, sender, out var controller, out string error))
       {
         _chat.SendSystemMessage(sender, error);
+        return;
+      }
+
+      if (!TryParseDestination(args, 0, controller.transform.position, out Vector3 destination))
+      {
+        SendUsage(sender);
         return;
       }
 
@@ -107,7 +115,7 @@ namespace MultiplayerInfrastructure.Command
     }
 
     /// /tp <player> x y z
-    private void HandlePlayerToXyz(NetworkConnection sender, string playerToken, Vector3 destination)
+    private void HandlePlayerToCoordinates(NetworkConnection sender, string playerToken, string[] args, int coordinateStart)
     {
       if (!TryResolveController(playerToken, sender, out var controller, out string error))
       {
@@ -118,6 +126,12 @@ namespace MultiplayerInfrastructure.Command
       if (!IsAdminOrSelf(sender, controller))
       {
         _chat.SendSystemMessage(sender, "Permission denied: you can only teleport yourself.");
+        return;
+      }
+
+      if (!TryParseDestination(args, coordinateStart, controller.transform.position, out Vector3 destination))
+      {
+        SendUsage(sender);
         return;
       }
 
@@ -200,6 +214,53 @@ namespace MultiplayerInfrastructure.Command
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private static bool AreCoordinateTokens(string[] args, int startIndex = 0)
+    {
+      return args != null
+          && args.Length >= startIndex + 3
+          && TryParseCoordinate(args[startIndex], 0f, out _)
+          && TryParseCoordinate(args[startIndex + 1], 0f, out _)
+          && TryParseCoordinate(args[startIndex + 2], 0f, out _);
+    }
+
+    private static bool TryParseDestination(string[] args, int startIndex, Vector3 origin, out Vector3 destination)
+    {
+      destination = Vector3.zero;
+      if (!AreCoordinateTokens(args, startIndex))
+        return false;
+
+      if (!TryParseCoordinate(args[startIndex], origin.x, out float x)
+          || !TryParseCoordinate(args[startIndex + 1], origin.y, out float y)
+          || !TryParseCoordinate(args[startIndex + 2], origin.z, out float z))
+        return false;
+
+      destination = new Vector3(x, y, z);
+      return true;
+    }
+
+    /// 절대좌표(예: 3), 상대좌표(예: ~, ~3, ~-1)를 파싱합니다.
+    private static bool TryParseCoordinate(string token, float origin, out float value)
+    {
+      value = 0f;
+      if (string.IsNullOrEmpty(token))
+        return false;
+
+      if (token[0] == '~')
+      {
+        string offsetToken = token.Substring(1);
+        if (offsetToken.Length == 0)
+          value = origin;
+        else if (!TryParseFiniteFloat(offsetToken, out float offset))
+          return false;
+        else
+          value = origin + offset;
+
+        return float.IsFinite(value);
+      }
+
+      return TryParseFiniteFloat(token, out value);
+    }
 
     private static void Teleport(PlayerController controller, Vector3 position)
     {
