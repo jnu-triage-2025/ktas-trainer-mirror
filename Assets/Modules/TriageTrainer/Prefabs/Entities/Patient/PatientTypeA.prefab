@@ -170,10 +170,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e794a1dae1454908ba448af46d61805, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.PatientController
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 4111524619819356577}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 4111524619819356577}
   _runtimeAnimatorController: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
+  _assessActions: []
   _capsuleCollider: {fileID: 3415111579364395856}
   _standingCapsuleCenter: {x: 0, y: 0.9, z: 0}
   _standingCapsuleHeight: 1.8
@@ -191,11 +192,19 @@ MonoBehaviour:
   _monitorSelectDisplayText: "\uC774 \uD658\uC790\uB97C \uBAA8\uB2C8\uD130\uB9C1"
   _monitorSelectDisplayIcon: {fileID: 0}
   _weight: 4
-  _attachableItemVisualPairs: []
-  _currentBed: {fileID: 0}
+  _supportExternalRefs:
+    _patientBed: {fileID: 0}
+    _intravenousFluids: []
+    _suctionWall: {fileID: 0}
+    _oxyflowmeter: {fileID: 0}
+    _suctionWalls: []
+    _oxyflowmeters: []
+  _ivAttachmentPoint: {fileID: 0}
   _carryAttachPoint: {fileID: 7385633622512896465}
   _isMovingPatientBedAttached: 0
   _isPlayerAttached: 0
+  _debugTreatmentDisplay: 11
+  _debugItemIdentifier: gauze
   _interactConfigs:
   - _identifier: lift_from_bed
     _enabled: 1
@@ -203,6 +212,11 @@ MonoBehaviour:
     _enabled: 1
   - _identifier: monitor_select
     _enabled: 1
+  _intravenousLineCannulaConfig:
+    _supported: 0
+    _displayText: 
+    _displayIcon: {fileID: 0}
+  _intravenousLineCannulaInteractable: 1
   _medicalState:
     isCardiacArrest: 0
     ecg:
@@ -257,6 +271,12 @@ MonoBehaviour:
       v4: 0
       v5: 0
       v6: 0
+  _triageConfig:
+    _assessable: 0
+    _changeAssessableOnAssessDone: 0
+    _displayText: 
+    _displayIcon: {fileID: 0}
+  _triageLabelAnchor: {fileID: 0}
 --- !u!114 &4111524619819356577
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -275,7 +295,8 @@ MonoBehaviour:
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours: []
+  NetworkBehaviours:
+  - {fileID: 7653721158556900860}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -286,7 +307,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: 0
+  _initializedTimestamp: -8584163878672830418
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -301,15 +322,15 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 65535
+  <PrefabId>k__BackingField: 7
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 3584526928423580773
   SceneId: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
-    Rotation: {x: 0, y: 0, z: 0, w: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    IsValid: 0
+    Rotation: {x: 0, y: 0, z: 0, w: 1}
+    Scale: {x: 1, y: 1, z: 1}
+    IsValid: 1
 --- !u!1 &8082596318175774275
 GameObject:
   m_ObjectHideFlags: 0

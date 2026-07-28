@@ -294,13 +294,14 @@ GAP-G1~G3(병렬 실행·게이팅 계층)은 별도 제안서
   - (+ 각자 식별 태그 nurse_a~d)
 - 검증(정적 시뮬레이션): 단일 역할 브랜치는 전부 1:1 매칭(intro 3/3, 환자A 20/20, 환자B·C 8/8),
   MULTI(중복 매칭) 0건. dangling 참조 0, 스키마 통과.
-- **2인 협업 브랜치(=원본상 2인 공동 수행) — `matchMode:Any` 적용 완료**: 아래 3개는 한 명이
-  두 태그를 모두 가질 수 없는 협업 브랜치였다(이전엔 `matchMode:All` 로 매칭 0건).
-  - 환자A `P004/N008` `airway_team+triage_lead` (B+A 기관내삽관 보조)
+- **대체 담당 브랜치 — `matchMode:Any` 적용 완료**: 아래 브랜치는 한 명이 두 태그를 모두 가질 수
+  없는 원본 협업 서술을 현재 엔진의 단일 담당 배정으로 정규화했다(이전엔 `matchMode:All`로 매칭 0건).
+  - 환자A `P004/N008` `airway_team` 또는 `triage_lead` (기관내삽관·산소 담당 1명)
+  - 환자A `P004/N011` `iv_team` 또는 `access_support` (IV·C-line 보조 담당 1명)
   - 환자B/C `P009/V040_A` `bleeding_control+triage_lead` (A+C 환자 B 이송)
   - 환자B/C `P009/V040_B` `airway_team+iv_team` (B+D 환자 C 이송)
-  → `requiredPlayerTagsMatchMode = Any` 로 변경하여, 두 협업 간호사가 모두 적격(MULTI)이 되도록 했다.
-    이는 "두 명이 함께 수행"하는 원본 의도와 일치한다(`SelfAll` 할당이 양쪽에 브랜치를 제공).
+  → 환자 A P004는 `requiredPlayerTagsMatchMode = Any`로 변경하여 브랜치당 한 명의 대체 담당자가
+    전체 흐름을 수행한다. P009의 B/C 이동 브랜치는 기존 변환 정책을 유지한다.
 - **CPR 교대(P005→P006) — 해소 완료(식별자 태그 방식)**: 분석 결과 facet 태그(airway_team/cpr_team)는
   비-CPR 병렬에서도 재사용되어(예: P003 N005 airway=활력측정 담당 B vs P005 N017 airway=앰부 담당 A)
   같은 facet 이 병렬마다 다른 간호사를 가리킨다. 따라서 `PlayerTag Swap` 으로 facet 을 교환하는

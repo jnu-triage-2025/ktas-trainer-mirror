@@ -183,6 +183,11 @@ namespace TriageTrainer.Entity
 
       // ── 게이지 판정(18G / 20G) ── 손에 든 아이템 식별자로 구분한다.
       string heldIdentifier = player.HandlingItem?.CurrentIdentifier;
+      // 캐뉼라는 팔 하나당 하나씩 소비한다. 첫 삽입 뒤에는 플레이어가 두 번째
+      // 캐뉼라를 다시 획득해야 하므로, 두 팔 처치에 18G 2개를 사전 보유할 필요가 없다.
+      if (player.RemoveItemFromInventory(heldIdentifier, 1) != 1)
+        return;
+
       bool is18G = string.Equals(heldIdentifier, TriageTrainer.ItemDefinitions.Cannula18g.Identifier, StringComparison.Ordinal);
 
       // ── 처치 표현(게이지 + 좌/우) ──

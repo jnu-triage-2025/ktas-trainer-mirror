@@ -10,7 +10,7 @@ flags: ["refactor-required"]
 
 # 환자 A/B/C 시나리오 인게임 실행 셋업 가이드 (운영자용)
 
-이 문서는 변환된 시나리오(`disaster_intro` → `patient_a_critical` → `patient_b_c_ct`)를
+이 문서는 변환된 시나리오(`disaster_intro`, `patient_a_critical`, `patient_b_c_ct`)를
 실제 플레이모드에서 실행하기 위해 **비개발 운영자**가 Unity 에디터에서 수행할 셋업 절차를 정리한다.
 코드/JSON 작업(이벤트 키 정합, 역할 태그 부여)은 이미 완료되었고, 남은 것은 **씬 배치 + 인스펙터 연결**이다.
 
@@ -31,7 +31,7 @@ flags: ["refactor-required"]
   인트로를 거치면 각 플레이어에게 역할 태그가 부여된다.
 
 > 중요: `patient_a_critical` / `patient_b_c_ct` 는 역할 태그가 **이미 부여된 상태**를 가정한다.
-> 따라서 정상 플레이 흐름은 반드시 **`disaster_intro` → 환자 A → 환자 B/C 순서**로 진행해야 한다.
+> `patient_a_critical`은 독립 종료하며, `patient_b_c_ct`는 다음 시나리오가 아니라 관리자가 별도 실행한다.
 > 환자 시나리오만 단독 실행하려면 아래 §4 의 `/tag` 수동 부여가 필요하다.
 
 ---
@@ -97,9 +97,10 @@ flags: ["refactor-required"]
 ```
 
 - 인트로의 "역할을 선택하세요" Choice 에서 각 플레이어가 한 명씩(A/B/C/D) 선택하면 역할 태그가 부여된다.
-- 인트로 종료 후 환자 A, 환자 B/C 시나리오를 순서대로 실행한다:
+- 인트로 종료 후 환자 A를 실행한다. 환자 A 종료 후 환자 B/C는 필요할 때 별도로 실행한다:
   ```
   /scenario execute @s patient_a_critical
+  # 관리자 필요 시 별도 실행
   /scenario execute @s patient_b_c_ct
   ```
 
@@ -119,9 +120,10 @@ flags: ["refactor-required"]
 
 - **도메인 인터랙션 게이트(`todo.validate.*`)**: 현재 핸들러 미등록 → 학습자 수행 검증 없이 자동 진행(스킵).
   실제 "수행해야 진행" 게이트는 TODO-SPEC-2 구현 후 동작.
-- **2인 협업 브랜치**(환자A P004/N008, 환자B/C P009/V040_A·B): `matchMode:All` 로 한 명이 두 태그를
-  요구받아 단일 간호사로 매칭되지 않음 → 해당 브랜치는 스킵될 수 있음. `matchMode:Any` 전환 또는
-  멀티플레이어 할당(TODO-SPEC-3) 필요.
+- **환자 A P004/N008·N011 브랜치**: `matchMode:Any`로 확정했다. N008은 `airway_team` 또는
+  `triage_lead`, N011은 `iv_team` 또는 `access_support` 중 하나의 태그를 가진 플레이어 1명이
+  각 브랜치 전체를 수행한다. 이는 2인 동시 협업이 아니라 대체 담당 정책이다.
+- **환자 B/C P009/V040_A·B**: 다중 역할 태그의 실제 배정 정책은 별도 확인이 필요하다.
 - **CPR 역할 교대(P005→P006)**: 정적 태그로는 교대 불가 → TODO-SPEC-3(`PlayerTag Swap`) 대기.
 - **Dialogue 자동 진행 시간**: 변환 시 드롭 → TODO-SPEC-1 대기.
 

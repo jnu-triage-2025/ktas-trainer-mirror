@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "scenarioIdentifier": "patient_b_c_ct",
   "source": {
-    "scenarioSha256": "9dd61ea734533c557bb344b09b7825f8cf9ccc500244dba4ee775220930087b4",
+    "scenarioSha256": "c17833fe54ef56b89d58f5bdd7dae4d045f58d42b8358833e97cf07386bf9904",
     "generatedAtUtc": null
   },
   "declarations": [
@@ -1064,7 +1064,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.insert_iv_b_right"
+        "identifier": "sig.insert_iv_patient_b_left"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1077,7 +1077,33 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.insert_iv_c_left"
+        "identifier": "sig.insert_iv_patient_b_right"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.insert_iv_patient_c_left"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.insert_iv_patient_c_right"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",

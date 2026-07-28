@@ -1385,12 +1385,19 @@
       "rootConditions": [
         {
           "condition": "RegistryContains",
+          "matchMode": "Any",
           "validationRules": [
             {
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.insert_iv_b_right"
+              "registryIdentifier": "sig.insert_iv_patient_b_left"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.insert_iv_patient_b_right"
             }
           ]
         }
@@ -2708,12 +2715,19 @@
       "rootConditions": [
         {
           "condition": "RegistryContains",
+          "matchMode": "Any",
           "validationRules": [
             {
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.insert_iv_c_left"
+              "registryIdentifier": "sig.insert_iv_patient_c_left"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.insert_iv_patient_c_right"
             }
           ]
         }

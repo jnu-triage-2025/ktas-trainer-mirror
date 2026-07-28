@@ -45,7 +45,7 @@ Scenario로 판정하면 안 된다.
 | 이벤트 | 문서의 고유 `EventIdentifier` 30개가 모두 `TriageScenarioEventBootstrap`에 등록됨 | `InvokeEvent`로 보존하되 Requirements 검증에서 handler 등록을 필수로 한다. |
 | 열거값 | 문서의 `WaitAll`은 현재 엔진/schema에 존재하지 않음 | 모든 병렬 노드의 `WaitMode`를 정본 `All`로 보정했다. |
 | 퀘스트 | ~~23개 퀘스트가 식별자만 있고 제목·본문·완료조건 정의가 없었다.~~ **해결:** `patient_a_critical.quests.quest.json`에 23개 definition의 title/description/questContent를 작성했고 모든 `QuestControl` 참조가 정의와 일치한다. | 이 그래프는 Validator가 플레이 완료를 게이팅하고 `QuestControl(Remove)`가 오버레이를 내리므로, definition의 빈 `tasks`는 자동 완료 조건이 아닌 안내 전용 퀘스트라는 의도된 구성이다. |
-| 종료 연결 | `D037` 뒤 fade-out·종료 메시지·다음 Scenario 연결이 서술에만 있음 | 아래 차단 항목 END-1의 인간 결정을 받아 명시 노드를 추가한다. |
+| 종료 연결 | `D037` 뒤 fade-out·종료 메시지·다음 Scenario 연결이 서술에만 있음 | **해결:** 환자 A는 `D037`을 마지막 노드로 종료하며 `nextIdentifier=null`이 의도된 구성이다. 다음 시나리오 자동 연결은 없다. |
 
 ### 확정 보완 규칙
 
@@ -61,13 +61,13 @@ Scenario로 판정하면 안 된다.
 
 | ID | 위치 | 부족한 연결 | 처리 |
 |---|---|---|---|
-| SPAWN-A-1 | `SPAWN_A` | Unity import에서 `patient_a`의 `PatientTypeA` prefab이 FishNet `DefaultPrefabObjects`에 등록되지 않아 `PrefabId`가 미할당된 것으로 확인됐다. 현재 상태로 network spawn하면 런타임 `ObjectId 65535` 오류가 발생한다. | Fish-Networking Spawnable Prefabs에 원본 prefab을 등록하고 reserialize한 뒤, Production profile에서 `EntityPreset(patient_a)`의 `SpawnablePreset` capability를 다시 증명한다. (인간 작업자 의견: `EntityPreset` 시스템과 Assets/Modules/TriageTrainer/ScriptableObjects/EntityPreset Registry Requirements SO 에 의해 처리 가능할 것임)     |
+| SPAWN-A-1 | `SPAWN_A` | ~~Unity import에서 `patient_a`의 `PatientTypeA` prefab이 FishNet `DefaultPrefabObjects`에 등록되지 않아 `PrefabId`가 미할당된 것으로 확인됐다. 현재 상태로 network spawn하면 런타임 `ObjectId 65535` 오류가 발생한다.~~ **해결(2026-07-28):** `PatientTypeA.prefab`이 `_isSpawnable: 1`, `PrefabId: 7`로 reserialize되었고 `patient_a` EntityPreset이 해당 prefab을 참조한다. | FishNet spawnable prefab 등록 상태를 확인했다. Production profile의 `SpawnablePreset` capability 검증만 최종 실행하면 된다. |
 | ROLE-1 | `P002`, `P003`, `P004`, `P005`, `P006`, `P007` 진입 전 | ~~`ByRole`의 역할 태그 공급 계약이 없었다.~~ **해결:** `disaster_intro`의 `C_role_select`가 현재 플레이어에게 `nurse_a`~`nurse_d` 식별 태그와 해당 역할 facet 태그를 함께 부여한다. | 환자 A/B/C는 intro 역할 선택 뒤에 시작하는 시나리오다. CPR 교대(P005/P006)는 facet 재사용을 피하기 위해 `nurse_a`~`nurse_d` 식별 태그로 고정 배정한다. |
-| ROLE-2 | `P004`의 `N008`, `N011` 브랜치 | 한 브랜치에 각각 `NurseB, NurseA`와 `NurseD, NurseC` 두 역할을 적었지만 현재 `ByRole`은 한 브랜치에 한 플레이어만 배정한다. `requiredPlayerTagsMatchMode=All`은 두 사람이 아니라 한 사람이 두 태그를 모두 가져야 한다는 뜻이다. 공유 signal(P1)은 `ScenarioNetworkRelay`로 구현됐지만, `ChatService`가 각 클라이언트에서 로컬 그래프를 독립 시작하므로 역할별 다인 브랜치 배정·표현을 권위적으로 동기화하는 P2/P3는 아직 없다. Requirements Supports는 다중 `ByRole`에 `mi.service.scenario-server-authoritative-execution`을 시작 전 요구사항으로 추론하므로, P2/P3 provider가 없는 현재 상태를 Production 승인에서 차단한다. | **선행 런타임 구현 + 인간 판단 필요:** 먼저 G-8 제안의 서버 권위 실행(P2: 서버 플레이어 풀/배정, P3: 단일 그래프 실행 및 TargetRpc 표현)을 구현하고 service provider를 등록한다. 그 뒤 (a) 한 명이 전체 브랜치를 수행하도록 역할 표기를 단일화하거나, (b) `N008`의 삽관/산소 및 `N011`의 IV/보조 흐름을 별도 병렬 브랜치와 합류점으로 분리한다. |
+| ROLE-2 | `P004`의 `N008`, `N011` 브랜치 | 현재 `ByRole`은 한 브랜치에 한 플레이어를 배정하므로 두 역할을 동시에 요구하는 `matchMode=All`은 실제 매칭이 불가능하다. | **해결(2026-07-28):** 두 브랜치 모두 `requiredPlayerTagsMatchMode=Any`로 변경했다. `N008`은 `airway_team` 또는 `triage_lead` 중 하나의 태그를 가진 플레이어 1명이 삽관·산소 흐름 전체를 담당하고, `N011`은 `iv_team` 또는 `access_support` 중 하나의 태그를 가진 플레이어 1명이 IV·C-line 보조 흐름 전체를 담당한다. 이 정책은 2인 동시 협업을 표현하지 않으며, 각 브랜치의 두 역할은 대체 담당 자격이다. 서버 권위 실행은 기존 `ByRole` 다중 브랜치 실행을 위해 유지한다. |
 | S-1 | `V011_1`, `V014_1~V014_4`, `V018`, `V023_1`, `V024`, `V025~V025_1`, `V027`, `V030`, `V033` | 실제 코드·문서 대조 결과, 정식 producer가 없는 신호는 10개다: `show_vital_patient_a`, `pass_laryngoscope`, `pass_et_tube_ready`, `remove_intu_stylet`, `pass_syringe`, `pass_central_line_set`, `remove_tpiece`, `click_to_start_comp`, `move_defibcart_to_patient`, `remove_patient_clothing`. 하나라도 생산되지 않으면 해당 Validator에서 영구 정지한다. | 각 노드의 기존 `(b) 선행 구현 필요` 주석을 producer 작업 목록으로 사용한다. `pass_*`의 NPC identifier·제출 상호작용 identifier·배치 위치는 아래 **의사 NPC 제출 producer 콘텐츠 확정**에서 확정했다. 나머지 6개 producer는 해당 주석의 전용 게임플레이 상호작용으로 구현한다. Debug emitter를 정식 producer로 간주하지 않는다. |
 | Q-1 | 모든 `Q006`~`Q030_1` | ~~23개 `Quest_*`가 표시용 식별자만 있어 빈 오버레이를 만들었다.~~ **해결:** `Resources/Quest/patient_a_critical.quests.quest.json`에 23개 definition의 title/description/questContent를 작성했고, Add/Remove가 같은 definition identifier를 참조한다. | Scenario Validator가 완료를 판단하고 QuestControl이 명시적으로 Remove한다. 따라서 이 안내형 quest에 별도 자동 완료 task를 추가하지 않는다. |
-| IV-1 | `V017` / `V017_1` / `V017_3` | ~~18G 2개가 필요한 서술과 신호 3개/`TargetCount` 의미가 일치하지 않는다. 동일 식별자의 두 번째 획득을 `RegistryContains`로 구분할 수 없다.~~ **부분 해결(2026-07-20):** 삽입 단계를 좌/우로 분리. `PatientController.IntravenousLineCannula` 가 삽입 순서로 좌→우를 결정론적 배정하고 `insert_iv_patient_a_left` / `insert_iv_patient_a_right` 신호를 발신(+게이지별 처치 표현). 우측 삽입 게이트 `V017_3` 신설(`N011_3 → V017_3 → E021`). | **획득(V017) 수량 판정은 미해결:** 좌·우 획득 신호 분리 또는 인벤토리 수량 quest condition(`InventoryContains`, `Count=2`)은 여전히 인간 확정 필요. 삽입 좌/우 producer 는 구현 완료. |
-| END-1 | `D037` 및 종료 조건 | 문서는 fade-out, 종료 메시지, 다음 Scenario 진행을 요구하지만 `D037 -> (end)`만 정의한다. | **인간 판단 필요:** 다음 Scenario identifier를 확정한다. 이후 `D037 -> END_FADE_OUT -> END_MESSAGE -> START_NEXT_SCENARIO` 연결을 추가하고, 마지막 노드만 `null`로 둔다. |
+| IV-1 | `V017` / `V017_1` / `V017_3` | **해결(2026-07-28):** 18G는 두 개를 사전에 동시에 획득하지 않는다. 첫 번째 18G를 획득해 좌측 삽입 시 1개를 소비하고, `N011_3` 안내 후 두 번째 18G를 다시 획득해 우측 삽입 시 1개를 소비한다. 삽입은 `insert_iv_patient_a_left` / `insert_iv_patient_a_right`로 좌·우를 구분한다. | `click_18g`는 준비 단계에서 첫 번째 18G 보유를 확인하는 단일 신호로 유지한다. 두 번째 18G는 두 번째 삽입 직전에 별도 획득하며, 실제 소비는 삽입 완료 코드가 담당한다. |
+| END-1 | `D037` 및 종료 조건 | `D037`이 마지막 노드이며 `nextIdentifier=null`이다. | **해결(2026-07-28):** 환자 A는 이 지점에서 독립 종료한다. `patient_b_c_ct`는 다음 시나리오가 아니며 관리자가 별도 실행한다. |
 
 ### 의사 NPC 제출 producer 콘텐츠 확정
 
@@ -89,11 +89,11 @@ Scenario로 판정하면 안 된다.
 
 ### 변환 승인 조건
 
-- ROLE-2의 다인 협업 할당 정책과 서버 권위 실행(P2/P3)이 확정·구현되어야 한다.
-- SPAWN-A-1의 FishNet spawnable prefab 등록이 완료되어야 한다.
+- ROLE-2의 대체 담당 할당 정책은 확정되었다. `matchMode=Any`로 각 P004 브랜치를 한 명의 적격 플레이어가 수행하며, 서버 권위 실행은 기존 `ByRole` 다중 브랜치 실행을 위해 유지한다.
+- SPAWN-A-1의 FishNet spawnable prefab 등록은 완료되었다(`PatientTypeA.prefab`, `PrefabId: 7`). Production profile의 `SpawnablePreset` capability 최종 검증이 남아 있다.
 - S-1의 10개 신호에 정식 producer와 동일 식별자가 연결되어야 한다.
 - Q-1의 23개 quest definition이 작성되어야 한다.
-- IV-1의 18G 수량 판정과 END-1의 다음 Scenario identifier가 확정되어야 한다.
+- IV-1의 18G 순차 획득·소비 정책과 END-1의 독립 종료(`D037 -> null`)가 반영되어야 한다.
 - 변환 후 Requirements Supports에서 NPC/entity/item/event/quest/runtime-signal 요구사항을 컴파일하고,
   Production profile에서 unresolved `Error`가 0개여야 플레이 가능으로 승인한다.
 
@@ -1174,7 +1174,7 @@ Scenario로 판정하면 안 된다.
 | **Identifier** | 문자열 | D011 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 의사 NPC |
-| **DialogueContent** | 문자열 | 기도 확보를 위해 intubation을 시행하겠습니다. 간호사 B 선생님은 삽관 보조해주세요. |
+| **DialogueContent** | 문자열 | 기도 확보를 위해 intubation을 시행하겠습니다. 삽관·산소 담당 간호사 선생님은 보조해주세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | D012 |
 
@@ -1202,7 +1202,7 @@ Scenario로 판정하면 안 된다.
 | **Identifier** | 문자열 | D013 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 의사 NPC |
-| **DialogueContent** | 문자열 | 간호사 D 선생님은 수액 투여를 위해 양팔에 IV 라인 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션 달겠습니다. |
+| **DialogueContent** | 문자열 | IV·C-line 보조 담당 간호사 선생님은 수액 투여를 위해 양팔에 IV 라인을 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션을 연결하겠습니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | P004 |
 
@@ -1225,15 +1225,15 @@ Scenario로 판정하면 안 된다.
 
 | Identifier | CompletionConditionIdentifier | RequiredRoleIdentifiers | RequiredPlayerTags | ForbiddenPlayerTags | RequiredPlayerTagsMatchMode |
 |---|---|---|---|---|---|
-| N008 | CC_B_intubation_A_oxy_patient_a | NurseB, NurseA | airway_team, triage_lead | - | All |
+| N008 | CC_B_intubation_A_oxy_patient_a | NurseB 또는 NurseA | airway_team, triage_lead | - | Any |
 | N010 | CC_C_stopbleeding_patient_a | NurseC | bleeding_control | - | All |
-| N011 | CC_D_iv_patient_a | NurseD, NurseC | iv_team, access_support | - | All |
+| N011 | CC_D_iv_patient_a | NurseD 또는 NurseC | iv_team, access_support | - | Any |
 
 
 ---
 
 
-<!-- ================= [P004 병렬 브랜치 1] 플레이어 B & A (기관내삽관 및 산소 공급) ================= -->
+<!-- ================= [P004 병렬 브랜치 1] 플레이어 B 또는 A (기관내삽관 및 산소 공급) ================= -->
 
 ### [N008] DialogueNode
 
@@ -1595,7 +1595,7 @@ Scenario로 판정하면 안 된다.
 | **Identifier** | 문자열 | D015 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 의사 NPC |
-| **DialogueContent** | 문자열 | 삽관이 끝났고, 자발호흡이 있으니 간호사 A 선생님이 T-piece 연결하고 산소 10L 주면서 산소포화도 모니터링 해주세요. |
+| **DialogueContent** | 문자열 | 삽관이 끝났고, 자발호흡이 있으니 삽관·산소 담당 간호사 선생님이 T-piece를 연결하고 산소 10L를 공급하며 산소포화도를 모니터링해주세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | N009 |
 
@@ -2150,7 +2150,7 @@ Scenario로 판정하면 안 된다.
 ---
 
 
-<!-- ================= [P004 병렬 브랜치 3] 플레이어 D & C (IV 라인 및 C-line 보조) ================= -->
+<!-- ================= [P004 병렬 브랜치 3] 플레이어 D 또는 C (IV 라인 및 C-line 보조) ================= -->
 
 ### [N011] DialogueNode
 
@@ -2218,7 +2218,7 @@ Scenario로 판정하면 안 된다.
 - [x] a-1 아이템 식별자 정합(구 md→JSON 정본): click_ns1→click_normal_saline_1000ml, click_ps1→click_plasma_solution_1000ml (interaction-signal-integration-spec §2 참조).
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_18g, sig.click_normal_saline_1000ml, sig.click_plasma_solution_1000ml [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
-- [ ] 개수 불일치 확정요청: 구 md는 TargetCount 4(18G 2개 + 수액 2종)였으나 JSON 정본은 시그널 룰 3개(`click_18g`, `click_normal_saline_1000ml`, `click_plasma_solution_1000ml`)로 축약됨. 18G 2개를 각각 계측할지, 준비된 생리식염수/플라즈마 수액세트(정본 `normal_saline_intravenous_ready`/`plasma_solution_intravenous_ready`, 구 `ns1_ready`/`ps1_ready`, 레지스트리 등록 완료 2026-07-09)를 픽업 완료로 간주할지 확정 필요.
+- [x] 개수 정책 확정(2026-07-28): 준비 단계에서는 18G 1개와 수액 2종을 확인한다. 첫 18G는 좌측 삽입 시 소비하고, 두 번째 18G는 `N011_3` 이후 다시 획득해 우측 삽입 시 소비한다. 따라서 `click_18g` 단일 신호를 2회 획득 판정으로 확장하지 않는다.
 
 ---
 
@@ -2270,6 +2270,7 @@ Scenario로 판정하면 안 된다.
 
 
 - [x] (b) 배선 완료(2026-07-20): `sig.insert_iv_patient_a_left` 는 `PatientController.IntravenousLineCannula.PerformIntravenousLineCannulaInsertion` 이 좌측(첫 삽입) 확정 시 발신한다. 우측은 `sig.insert_iv_patient_a_right`(V017_3 게이트) 로 이어진다. 게이지(18G/20G)별 처치 표현(`Syringe{18G|20G}InsertedInto{Left|Right}Arm`)도 함께 켜진다.
+- 환자 외부 장비 상태 기술자 `PatientSupportExternalRefs`는 `IntravenousFluids`를 `List<MonoBehaviour>`로 보관하며 index 0/1을 각각 좌측/우측 IV 수액 슬롯으로 사용한다. `IVFluidLeftArm`과 `IVFluidRightArm`은 이 목록을 통해 노출되며, 이는 캐뉼라 삽입 신호의 좌/우 상태와 별개의 연결 상태다.
 
 
 ---
@@ -2346,7 +2347,7 @@ Scenario로 판정하면 안 된다.
 | **Identifier** | 문자열 | N011_3 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 한쪽 정맥로가 확보되어, 반대쪽 팔에도 자동으로 18G 캐뉼라 및 플라즈마 솔루션 연결이 진행됩니다. |
+| **DialogueContent** | 문자열 | 한쪽 정맥로가 확보되었습니다. 18G 캐뉼라를 하나 더 획득해 선택한 뒤, 반대쪽 팔에도 삽입하십시오. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | E021 |
@@ -5959,6 +5960,6 @@ Scenario로 판정하면 안 된다.
 | 항목 | 내용 |
 |---|---|
 | 종료 노드 | D037 |
-| 종료 연출/설명 | ROSC 이후 신경학적 확인과 전신 노출을 마친 뒤, 검은 화면으로 fade out 되며 "시나리오 A 환자 대응 종료. 흉부외과로 환자를 이관하였습니다." 메세지를 표시하며 종료된다. 이후 다시 밝아지며 다음 시나리오로 이어진다. |
+| 종료 연출/설명 | ROSC 이후 신경학적 확인과 전신 노출을 마친 뒤, 검은 화면으로 fade out 되며 "시나리오 A 환자 대응 종료. 흉부외과로 환자를 이관하였습니다." 메시지를 표시하고 독립 종료한다. 다음 시나리오 자동 전환은 없다. `patient_b_c_ct`는 관리자가 별도 실행한다. |
 
 - [x] R9: 종료 노드 = D037, NextIdentifier = (end)/null. JSON과 일치.

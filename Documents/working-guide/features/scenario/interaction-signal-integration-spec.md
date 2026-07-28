@@ -167,8 +167,12 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
 - **운영자 작업**: 환자 `PatientController` 의 `IntravenousLineCannulaConfig.Supported = true`. 시나리오는
   `sig.insert_iv_patient_a_left` / `sig.insert_iv_patient_a_right` Validator 로 좌/우 삽입을 게이팅한다
   (환자 A는 `V017_1`/`V017_3`).
+- 환자 외부 장비 상태 기술자 `PatientSupportExternalRefs`는 `IntravenousFluids`를 `List<MonoBehaviour>`로
+  보관하며 index 0/1을 각각 좌측/우측 IV 수액 슬롯으로 사용한다. `IVFluidLeftArm`과 `IVFluidRightArm`은
+  이 목록을 통해 노출된다. 이는 캐뉼라 삽입 신호의 좌/우 상태와 별개의 연결 상태다.
 - 스타일렛/T-piece 제거 등은 여전히 전용 메커닉이 없어 선행 구현 필요.
-대상(구현됨): `insert_iv_patient_a_left`, `insert_iv_patient_a_right`. 대상(미구현): `insert_iv_b_right`, `insert_iv_c_left`(환자 B/C 지원 설정 시 동일 로직으로 동작), `remove_intu_stylet`, `remove_tpiece`.
+대상(구현됨): `insert_iv_patient_a_left/right`, `insert_iv_patient_b_left/right`, `insert_iv_patient_c_left/right` producer. B/C 시나리오 Validator는 환자별 좌·우 신호 중 하나를 받는 `RegistryContains(matchMode=Any)`로 구성한다. 실제 팔·프리팹 시각물 설정이 확정되지 않은 경우에는 신호 OR이 잘못된 팔 처치를 정상 처리할 수 있으므로 콘텐츠 확정이 선행되어야 한다. `remove_intu_stylet`, `remove_tpiece`는 여전히 전용 메커닉이 필요하다.
+- 캐뉼라 삽입 완료 시 `PlayerController.RemoveItemFromInventory(<held cannula identifier>, 1)`로 해당 캐뉼라 1개를 소비한다. 따라서 환자 A의 양측 삽입은 18G 2개를 사전 보유하는 방식이 아니라, 첫 삽입 전 1개 획득·소비 후 두 번째 삽입 전 1개 재획득·소비하는 흐름이다. `click_18g`는 준비 단계의 첫 획득 확인용 단일 신호로 유지한다.
 
 ### pass_* (의사 NPC 전달) — [없음/부분]
 아이템을 NPC 에게 건네는 인터랙션. NPC 상호작용 완료 지점 필요. 대상: `pass_laryngoscope`,
@@ -258,8 +262,7 @@ syringe_5cc, vital_set, wall_suction, yankauer`
   `check_vital_patient_b/c` → 환자 프리팹 **Assess Actions**(`assessSignal`)에 매핑(§2 사정 절).
 
 선행 메커닉 필요(미구현):
-- 정맥 삽입/제거: `insert_iv_patient_a_left`, `insert_iv_b_right`, `insert_iv_c_left`,
-  `remove_intu_stylet`, `remove_tpiece`, `remove_patient_clothing`.
+- 정맥 제거: `remove_intu_stylet`, `remove_tpiece`, `remove_patient_clothing`.
 - 의사 NPC 전달: `pass_laryngoscope`, `pass_et_tube_ready`, `pass_syringe`, `pass_central_line_set`.
 - 모니터 UI 토글: `show_vital_patient_a`, `close_vital_ui_b/c`(바이탈 UI 열기/닫기 콜백 필요).
 - 신체부위/장비 상호작용: `interact_chest`, `interact_patient_chest`, `click_to_start_comp`, `interact_defib`,

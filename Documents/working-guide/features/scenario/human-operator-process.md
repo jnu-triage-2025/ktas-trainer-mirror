@@ -186,14 +186,14 @@ flags: []
 1. `/scenario execute @s disaster_intro` — 인트로부터 시작.
    - "역할을 선택하세요" 선택지에서 각 플레이어가 A/B/C/D 중 하나를 선택 → 역할 태그 자동 부여.
 2. `/scenario execute @s patient_a_critical`
-3. `/scenario execute @s patient_b_c_ct`
+3. 환자 B/C가 필요할 때 관리자가 `/scenario execute @s patient_b_c_ct`를 별도로 실행
 
 > 환자 시나리오만 단독 테스트 시: `/tag add @self <역할태그>` 로 수동 부여
 > (역할 태그 집합은 [`patient-a-b-c-conversion-notes.md`](./patient-a-b-c-conversion-notes.md) "초기 역할 태그 부여" 표).
 
 ## 단계 5. 검증
 
-- [ ] 인트로 → 환자 A → 환자 B/C 전 구간이 끊김 없이 진행된다.
+- [ ] 인트로 → 환자 A가 정상 종료되고, 관리자가 별도 실행한 환자 B/C도 정상 진행된다.
 - [ ] Console 의 "Registry snapshot" 에서 환자/모니터/간호사 식별자가 등록되어 보인다.
 - [ ] `No handler registered for event '...'` 경고가 `todo.*` 외에는 없다.
 - [ ] (게이팅 활성화 시) 해당 인터랙션을 수행해야 다음 단계로 진행된다
@@ -216,4 +216,4 @@ flags: []
 2. 환자/더미/간호사/침대/모니터 오브젝트 배치 + 식별자 지정(특히 환자 = `patient_a/_b/_c`).
 3. IV/산소/모니터 연결 지점 `Identifier` 를 connect_* 조건명으로 지정.
 4. `plasma_solution_1000ml` 리소스 배치(선택).
-5. `/scenario execute @s disaster_intro` → 역할 선택 → 환자 A → 환자 B/C 순서로 실행·검증.
+5. `/scenario execute @s disaster_intro` → 역할 선택 → 환자 A 실행·검증. 환자 B/C는 관리자가 별도 실행·검증.

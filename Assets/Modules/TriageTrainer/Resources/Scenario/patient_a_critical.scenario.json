@@ -824,7 +824,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "D012",
       "speakerName": "의사 NPC",
-      "dialogueContent": "기도 확보를 위해 intubation을 시행하겠습니다. 간호사 B 선생님은 삽관 보조해주세요.",
+      "dialogueContent": "기도 확보를 위해 intubation을 시행하겠습니다. 삽관·산소 담당 간호사 선생님은 보조해주세요.",
       "portraitSpriteIdentifier": null
     },
     "D012": {
@@ -840,7 +840,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "P004",
       "speakerName": "의사 NPC",
-      "dialogueContent": "간호사 D 선생님은 수액 투여를 위해 양팔에 IV 라인 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션 달겠습니다.",
+      "dialogueContent": "IV·C-line 보조 담당 간호사 선생님은 수액 투여를 위해 양팔에 IV 라인을 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션을 연결하겠습니다.",
       "portraitSpriteIdentifier": null
     },
     "P004": {
@@ -859,7 +859,7 @@
             "triage_lead"
           ],
           "forbiddenPlayerTags": [],
-          "requiredPlayerTagsMatchMode": "All"
+          "requiredPlayerTagsMatchMode": "Any"
         },
         {
           "identifier": "N010",
@@ -878,7 +878,7 @@
             "access_support"
           ],
           "forbiddenPlayerTags": [],
-          "requiredPlayerTagsMatchMode": "All"
+          "requiredPlayerTagsMatchMode": "Any"
         }
       ]
     },
@@ -1153,7 +1153,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "N009",
       "speakerName": "의사 NPC",
-      "dialogueContent": "삽관이 끝났고, 자발호흡이 있으니 간호사 A 선생님이 T-piece 연결하고 산소 10L 주면서 산소포화도 모니터링 해주세요.",
+      "dialogueContent": "삽관이 끝났고, 자발호흡이 있으니 삽관·산소 담당 간호사 선생님이 T-piece를 연결하고 산소 10L를 공급하며 산소포화도를 모니터링해주세요.",
       "portraitSpriteIdentifier": null
     },
     "N009": {
@@ -1705,7 +1705,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "V017_3",
       "speakerName": "시스템",
-      "dialogueContent": "한쪽 정맥로가 확보되었습니다. 반대쪽 팔에도 18G 캐뉼라를 삽입하십시오.",
+      "dialogueContent": "한쪽 정맥로가 확보되었습니다. 18G 캐뉼라를 하나 더 획득해 선택한 뒤, 반대쪽 팔에도 삽입하십시오.",
       "portraitSpriteIdentifier": null
     },
     "V017_3": {
