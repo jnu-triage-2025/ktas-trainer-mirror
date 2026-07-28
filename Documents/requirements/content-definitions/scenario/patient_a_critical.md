@@ -1355,7 +1355,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.suction_patient_a |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.suction_patient_a [아이템 사용(Item Use Signal), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.suction_patient_a [아이템 사용(Item Use Signal), spec §5.1~5.3]. **2026-07-29 확인 완료
 
 
 ---
@@ -1559,7 +1559,7 @@ SPAWN_A
 
 - [x] a-1 아이템 식별자 정합(구 md→JSON 정본): click_laryngo_blade→click_laryngoscope_blade, click_laryngo_handle→click_laryngoscope_handle, click_et_tube→click_endotracheal_tube (interaction-signal-integration-spec §2 참조).
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_laryngoscope_blade, sig.click_laryngoscope_handle, sig.click_endotracheal_tube, sig.click_stylet, sig.click_plaster, sig.click_syringe_5cc [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_laryngoscope_blade, sig.click_laryngoscope_handle, sig.click_endotracheal_tube, sig.click_stylet, sig.click_plaster, sig.click_syringe_5cc [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2026-07-29 확인 완료.
 
 
 ---
