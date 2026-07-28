@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -57,6 +58,109 @@ namespace TriageTrainer.Entity
       _occupiedSize.x = Mathf.Max(0.01f, _occupiedSize.x);
       _occupiedSize.y = Mathf.Max(0.01f, _occupiedSize.y);
       _displayHeight = Mathf.Max(0f, _displayHeight);
+    }
+
+    private GameObject _runtimeHint;
+    private Renderer _runtimeFill;
+    private LineRenderer _runtimeOutline;
+    private Material _runtimeFillMaterial;
+    private Material _runtimeOutlineMaterial;
+
+    private void Awake()
+    {
+      CreateRuntimeHint();
+    }
+
+    private void Update()
+    {
+      if (_runtimeHint == null)
+        CreateRuntimeHint();
+
+      bool visible = false;
+      MovingPatientBedController[] beds = FindObjectsByType<MovingPatientBedController>(
+        FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      for (int i = 0; i < beds.Length; i++)
+      {
+        if (beds[i] != null && beds[i].isActiveAndEnabled && beds[i].IsLocallyControlled)
+        {
+          visible = true;
+          break;
+        }
+      }
+
+      if (_runtimeHint != null)
+        _runtimeHint.SetActive(visible);
+    }
+
+    private void CreateRuntimeHint()
+    {
+      if (_runtimeHint != null)
+        return;
+
+      _runtimeHint = new GameObject("PositioningPointHint");
+      _runtimeHint.transform.SetParent(transform, false);
+      _runtimeHint.transform.localPosition = Vector3.up * _displayHeight;
+      _runtimeHint.transform.localRotation = Quaternion.identity;
+
+      GameObject fill = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      fill.name = "Fill";
+      fill.transform.SetParent(_runtimeHint.transform, false);
+      fill.transform.localScale = new Vector3(_occupiedSize.x, 0.01f, _occupiedSize.y);
+      Destroy(fill.GetComponent<Collider>());
+      _runtimeFill = fill.GetComponent<Renderer>();
+      _runtimeFill.shadowCastingMode = ShadowCastingMode.Off;
+      _runtimeFill.receiveShadows = false;
+
+      GameObject outline = new GameObject("Outline");
+      outline.transform.SetParent(_runtimeHint.transform, false);
+      _runtimeOutline = outline.AddComponent<LineRenderer>();
+      _runtimeOutline.useWorldSpace = false;
+      _runtimeOutline.loop = true;
+      _runtimeOutline.positionCount = 4;
+      _runtimeOutline.widthMultiplier = 0.025f;
+      _runtimeOutline.shadowCastingMode = ShadowCastingMode.Off;
+      _runtimeOutline.receiveShadows = false;
+      _runtimeOutline.SetPositions(new[]
+      {
+        new Vector3(-_occupiedSize.x * 0.5f, 0.008f, -_occupiedSize.y * 0.5f),
+        new Vector3(-_occupiedSize.x * 0.5f, 0.008f,  _occupiedSize.y * 0.5f),
+        new Vector3( _occupiedSize.x * 0.5f, 0.008f,  _occupiedSize.y * 0.5f),
+        new Vector3( _occupiedSize.x * 0.5f, 0.008f, -_occupiedSize.y * 0.5f)
+      });
+
+      Shader shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
+      if (shader == null)
+        return;
+      _runtimeFillMaterial = CreateHintMaterial(shader, new Color(0.1f, 0.8f, 1f, 0.22f), "Fill");
+      _runtimeOutlineMaterial = CreateHintMaterial(shader, new Color(0.1f, 0.8f, 1f, 0.95f), "Outline");
+      _runtimeFill.sharedMaterial = _runtimeFillMaterial;
+      _runtimeOutline.sharedMaterial = _runtimeOutlineMaterial;
+      _runtimeOutline.startColor = new Color(0.1f, 0.8f, 1f, 0.95f);
+      _runtimeOutline.endColor = _runtimeOutline.startColor;
+      _runtimeHint.SetActive(false);
+    }
+
+    private static Material CreateHintMaterial(Shader shader, Color color, string suffix)
+    {
+      var material = new Material(shader) { name = "PositioningPointHintMaterial_" + suffix };
+      if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
+      if (material.HasProperty("_Color")) material.SetColor("_Color", color);
+      material.SetOverrideTag("RenderType", "Transparent");
+      material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+      material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+      material.SetInt("_ZWrite", 0);
+      material.renderQueue = (int)RenderQueue.Transparent;
+      return material;
+    }
+
+    private void OnDestroy()
+    {
+      if (_runtimeFillMaterial != null)
+        Destroy(_runtimeFillMaterial);
+      if (_runtimeOutlineMaterial != null)
+        Destroy(_runtimeOutlineMaterial);
+      if (_runtimeHint != null)
+        Destroy(_runtimeHint);
     }
 
     private void OnDrawGizmos()
