@@ -220,6 +220,11 @@ namespace MultiplayerInfrastructure.ItemSystem
     {
     }
 
+    /// <summary>표시(설치)가 권위 경로에서 해제되었을 때 한 번 호출되는 훅입니다.</summary>
+    public virtual void OnHiddenConfirmed()
+    {
+    }
+
     /// <summary>
     /// 표시(설치/적용)를 요청합니다. <see cref="ShareMode"/> 에 따라 전파 경로가 달라집니다.
     ///

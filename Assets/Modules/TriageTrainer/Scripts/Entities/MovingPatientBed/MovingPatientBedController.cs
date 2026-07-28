@@ -150,6 +150,7 @@ namespace TriageTrainer.Entity
 
     public int Weight => Mathf.Max(0, _weight);
     public IReposable ReposedTarget => _reposedTargetComponent as IReposable;
+    public MovingPatientBedPositioningPoint LatchedPositioningPoint => _latchedPositioningPoint;
     public int RequiredInteractorCount => Mathf.Max(Weight, ReposedTarget?.Weight ?? 0);
 
     /// <summary>장비형 파생 구성에서 침대 조종 로직을 단일 사용자로 제한한다.</summary>

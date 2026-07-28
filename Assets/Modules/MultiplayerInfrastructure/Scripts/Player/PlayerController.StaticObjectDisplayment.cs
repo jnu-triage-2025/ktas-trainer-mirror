@@ -80,6 +80,7 @@ namespace MultiplayerInfrastructure.Player
       if (!StaticObjectDisplaymentService.ClearShown(entityIdentifier))
         return;
 
+      displayment.OnHiddenConfirmed();
       RpcHideStaticObjectDisplaymentGlobal(entityIdentifier);
       TargetGrantStaticObjectDisplaymentItem(claimant, itemIdentifier);
     }

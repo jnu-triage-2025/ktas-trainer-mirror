@@ -1,6 +1,7 @@
 using System;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
+using TriageTrainer.Scenario;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -131,7 +132,13 @@ namespace TriageTrainer.Entity
     /// </summary>
     public override void OnShownConfirmed()
     {
+      TriageWorldInteractionSignals.RaiseWallSuctionInstalled(EntityIdentifier);
       RaiseCompletionSignalIfAny();
+    }
+
+    public override void OnHiddenConfirmed()
+    {
+      TriageWorldInteractionSignals.RaiseWallSuctionRemoved(EntityIdentifier);
     }
 
     /// <summary>설치 상태를 해제하고 다시 숨긴다(관리자 리셋/시나리오 되돌림 등에서 사용하는 로컬 표현 API).</summary>

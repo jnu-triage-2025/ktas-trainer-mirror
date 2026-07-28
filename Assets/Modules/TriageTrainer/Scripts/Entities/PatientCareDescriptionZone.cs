@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TriageTrainer.Scenario;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -24,6 +25,8 @@ namespace TriageTrainer.Entity
     [SerializeField] private string _identifier;
 
     private readonly Dictionary<PatientController, int> _patientColliderCounts = new();
+    private readonly Dictionary<MovingPatientBedController, int> _bedColliderCounts = new();
+    private readonly HashSet<MovingPatientBedController> _snappedBeds = new();
     private readonly List<WallAttachedWallSuction> _wallSuction = new();
     private readonly List<WallAttachedOxyflowmeter> _oxyflowmeters = new();
     private BoxCollider _collider;
@@ -76,30 +79,25 @@ namespace TriageTrainer.Entity
     private void OnTriggerEnter(Collider other)
     {
       PatientController patient = other.GetComponentInParent<PatientController>();
-      if (patient == null) return;
-
-      _patientColliderCounts.TryGetValue(patient, out int count);
-      _patientColliderCounts[patient] = count + 1;
-      if (count == 0)
-        Connect(patient);
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-      PatientController patient = other.GetComponentInParent<PatientController>();
-      if (patient == null || !_patientColliderCounts.TryGetValue(patient, out int count)) return;
-
-      if (count > 1)
+      if (patient != null)
       {
-        _patientColliderCounts[patient] = count - 1;
+        _patientColliderCounts.TryGetValue(patient, out int count);
+        _patientColliderCounts[patient] = count + 1;
+        if (count == 0)
+        {
+          Connect(patient);
+          TriageWorldInteractionSignals.RaiseCareZonePatientEntered(Identifier, patient.Identifier);
+        }
         return;
       }
 
-      _patientColliderCounts.Remove(patient);
-      if (_wallSuction.Count > 0 && ReferenceEquals(patient.ConnectedWallSuction, _wallSuction[0]))
-        patient.SetConnectedWallSuctionConnections(null);
-      if (_oxyflowmeters.Count > 0 && ReferenceEquals(patient.ConnectedOxyflowmeter, _oxyflowmeters[0]))
-        patient.SetConnectedOxyflowmeterConnections(null);
+      MovingPatientBedController bed = other.GetComponentInParent<MovingPatientBedController>();
+      if (bed == null) return;
+      _bedColliderCounts.TryGetValue(bed, out int bedCount);
+      _bedColliderCounts[bed] = bedCount + 1;
+      if (bedCount == 0)
+        TriageWorldInteractionSignals.RaiseCareZoneBedEntered(Identifier, bed.Identifier);
+      UpdateBedSnapSignal(bed);
     }
 
     private void OnTriggerStay(Collider other)
@@ -107,6 +105,64 @@ namespace TriageTrainer.Entity
       PatientController patient = other.GetComponentInParent<PatientController>();
       if (patient != null && _patientColliderCounts.ContainsKey(patient))
         Connect(patient);
+
+      MovingPatientBedController bed = other.GetComponentInParent<MovingPatientBedController>();
+      if (bed != null && _bedColliderCounts.ContainsKey(bed))
+        UpdateBedSnapSignal(bed);
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+      PatientController patient = other.GetComponentInParent<PatientController>();
+      if (patient != null)
+      {
+        if (!_patientColliderCounts.TryGetValue(patient, out int count)) return;
+        if (count > 1)
+        {
+          _patientColliderCounts[patient] = count - 1;
+          return;
+        }
+        _patientColliderCounts.Remove(patient);
+        if (_wallSuction.Count > 0 && ReferenceEquals(patient.ConnectedWallSuction, _wallSuction[0]))
+          patient.SetConnectedWallSuctionConnections(null);
+        if (_oxyflowmeters.Count > 0 && ReferenceEquals(patient.ConnectedOxyflowmeter, _oxyflowmeters[0]))
+          patient.SetConnectedOxyflowmeterConnections(null);
+        TriageWorldInteractionSignals.RaiseCareZonePatientExited(Identifier, patient.Identifier);
+        return;
+      }
+
+      MovingPatientBedController bed = other.GetComponentInParent<MovingPatientBedController>();
+      if (bed == null || !_bedColliderCounts.TryGetValue(bed, out int bedCount)) return;
+      if (bedCount > 1)
+      {
+        _bedColliderCounts[bed] = bedCount - 1;
+        return;
+      }
+      _bedColliderCounts.Remove(bed);
+      _snappedBeds.Remove(bed);
+      TriageWorldInteractionSignals.RaiseCareZoneBedExited(Identifier, bed.Identifier);
+    }
+
+    private void UpdateBedSnapSignal(MovingPatientBedController bed)
+    {
+      MovingPatientBedPositioningPoint point = bed.LatchedPositioningPoint;
+      bool snappedInThisZone = point != null && IsPointInside(point.transform.position);
+      if (!snappedInThisZone)
+      {
+        _snappedBeds.Remove(bed);
+        return;
+      }
+
+      if (_snappedBeds.Add(bed))
+        TriageWorldInteractionSignals.RaiseCareZoneBedSnapped(Identifier, bed.Identifier, point.Identifier);
+    }
+
+    private bool IsPointInside(Vector3 worldPosition)
+    {
+      Vector3 local = transform.InverseTransformPoint(worldPosition) - _center;
+      return Mathf.Abs(local.x) <= _size.x * 0.5f
+        && Mathf.Abs(local.y) <= _size.y * 0.5f
+        && Mathf.Abs(local.z) <= _size.z * 0.5f;
     }
 
     private void Connect(PatientController patient)
