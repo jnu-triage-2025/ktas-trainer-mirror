@@ -10,6 +10,7 @@ using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using TriageTrainer.Entity.IntravenousLine;
 using TriageTrainer.ItemDefinitions;
+using MultiplayerInfrastructure.Logging;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -39,6 +40,15 @@ namespace TriageTrainer.Entity
     IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver,
     IItemizableWorldEntity
   {
+    private const string FlowTag = "RapidInfuserFlow";
+    private void LogFlow(string message, bool warning = false)
+    {
+      string role = IsServerStarted ? "server" : (IsClientStarted ? "client" : "offline");
+      string id = string.IsNullOrWhiteSpace(_registeredIdentifier) ? "<unregistered>" : _registeredIdentifier;
+      string full = $"[LV1RapidInfuser] role={role} object='{name}' id='{id}' {message}";
+      GameLogService.Write(warning ? GameLogCategory.Misc : GameLogCategory.Interaction, full, FlowTag);
+      if (warning) Debug.LogWarning(full, this); else Debug.Log(full, this);
+    }
     private enum FluidKind : byte
     {
       NormalSaline,
@@ -204,6 +214,7 @@ namespace TriageTrainer.Entity
     private void OnMouseDown()
     {
       var player = FindLocalOwnerPlayer();
+      LogFlow($"OnMouseDown player={(player == null ? "<null>" : player.name)}");
       if (player != null)
         RequestItemization(player);
     }
@@ -214,10 +225,14 @@ namespace TriageTrainer.Entity
     /// </summary>
     public bool RequestItemization(PlayerController player)
     {
+      LogFlow($"RequestItemization player={(player == null ? "<null>" : player.name)} pending={_itemizationPending} distanceOk={IsWithinInteractionDistance(player)}");
       if (_itemizationPending)
         return true;
       if (player == null || !IsWithinInteractionDistance(player))
+      {
+        LogFlow("RequestItemization rejected: invalid player or interaction distance", true);
         return false;
+      }
 
       bool accepted = player.RequestItemization(this);
       if (accepted && !InstanceFinder.IsServerStarted && player.IsSpawned)
@@ -227,13 +242,18 @@ namespace TriageTrainer.Entity
 
     public bool TryItemizeOnServer(PlayerController player)
     {
+      LogFlow($"TryItemizeOnServer player={(player == null ? "<null>" : player.name)} pending={_itemizationPending} distanceOk={IsWithinInteractionDistance(player)}");
       if (_itemizationPending)
         return false;
       if (player == null || !IsWithinInteractionDistance(player))
+      {
+        LogFlow("TryItemizeOnServer rejected: invalid player or interaction distance", true);
         return false;
+      }
 
       _itemizationPending = true;
       bool itemized = SpawnItemAndDespawn(player);
+      LogFlow($"TryItemizeOnServer result={itemized}");
       if (!itemized)
         _itemizationPending = false;
       return itemized;
@@ -241,9 +261,11 @@ namespace TriageTrainer.Entity
 
     private bool SpawnItemAndDespawn(PlayerController player)
     {
+      LogFlow($"SpawnItemAndDespawn begin player={player.name}");
       var item = MultiplayerInfrastructure.Registry.Registry.CreateItemInstance(Level1RapidInfuser.Identifier);
       if (item == null)
       {
+        LogFlow("SpawnItemAndDespawn failed: item instance creation", true);
         Debug.LogWarning("[Level1RapidInfuser] Failed to create item while itemizing.", this);
         return false;
       }
@@ -256,13 +278,17 @@ namespace TriageTrainer.Entity
 
       Vector3 position = transform.position + Vector3.up * 0.35f;
       if (!player.TrySpawnWorldItem(item, position, direction * 1.25f))
+      {
+        LogFlow($"SpawnItemAndDespawn failed: TrySpawnWorldItem position={position}", true);
         return false;
+      }
 
       var networkObject = GetComponent<NetworkObject>();
       if (InstanceFinder.IsServerStarted && networkObject != null && networkObject.IsSpawned)
         InstanceFinder.ServerManager.Despawn(networkObject);
       else
         Destroy(gameObject);
+      LogFlow($"SpawnItemAndDespawn success despawnedNetworkObject={networkObject != null && networkObject.IsSpawned}");
       return true;
     }
 

@@ -5,11 +5,19 @@ using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using MultiplayerInfrastructure.Entity;
 using UnityEngine;
+using MultiplayerInfrastructure.Logging;
 
 namespace MultiplayerInfrastructure.Player
 {
   public partial class PlayerController
   {
+    private const string RapidInfuserFlowTag = "RapidInfuserFlow";
+    private void LogRapidInfuser(string message, bool warning = false)
+    {
+      string full = $"[PlayerRapidInfuser] player='{name}' owner={IsOwner} server={IsServerStarted} client={IsClientStarted} {message}";
+      GameLogService.Write(warning ? GameLogCategory.Misc : GameLogCategory.Interaction, full, RapidInfuserFlowTag);
+      if (warning) Debug.LogWarning(full, this); else Debug.Log(full, this);
+    }
     [SerializeField] private bool attackTriggered = false;
     [SerializeField] private bool useItemTriggered = false;
     private Entity.Entity _attackTarget;
@@ -165,8 +173,12 @@ namespace MultiplayerInfrastructure.Player
 
     private bool TryItemizeRaycastTarget()
     {
-      var itemizable = RaycastHitObject?.GetComponentInParent<IItemizableWorldEntity>();
-      return itemizable != null && itemizable.RequestItemization(this);
+      var hit = RaycastHitObject;
+      var itemizable = hit?.GetComponentInParent<IItemizableWorldEntity>();
+      LogRapidInfuser($"raycast hit={(hit == null ? "<null>" : hit.name)} itemizable={(itemizable == null ? "<null>" : itemizable.ItemizationEntityIdentifier)}");
+      bool result = itemizable != null && itemizable.RequestItemization(this);
+      if (itemizable != null) LogRapidInfuser($"raycast itemization result={result}");
+      return result;
     }
 
     /// <summary>
@@ -176,16 +188,22 @@ namespace MultiplayerInfrastructure.Player
     /// </summary>
     public bool RequestItemization(IItemizableWorldEntity target)
     {
+      LogRapidInfuser($"RequestItemization target={(target == null ? "<null>" : target.ItemizationEntityIdentifier)}");
       if (target is not Component targetComponent)
-        return false;
+      { LogRapidInfuser("RequestItemization rejected: target is not Component", true); return false; }
 
       string entityIdentifier = target.ItemizationEntityIdentifier ?? string.Empty;
       Vector3 targetPosition = targetComponent.transform.position;
 
       if (!IsSpawned || IsServerStarted)
-        return target.TryItemizeOnServer(this);
+      {
+        bool result = target.TryItemizeOnServer(this);
+        LogRapidInfuser($"RequestItemization direct-server result={result}");
+        return result;
+      }
 
       CmdRequestItemization(entityIdentifier, targetPosition);
+      LogRapidInfuser($"RequestItemization RPC sent entity='{entityIdentifier}' position={targetPosition}");
       return true;
     }
 
@@ -195,9 +213,10 @@ namespace MultiplayerInfrastructure.Player
       Vector3 targetPosition,
       NetworkConnection sender = null)
     {
+      LogRapidInfuser($"CmdRequestItemization received sender={(sender == null ? "<null>" : sender.ClientId.ToString())} entity='{entityIdentifier}' position={targetPosition}");
       if (sender == null || !sender.IsValid || Owner == null || !Owner.IsValid ||
           sender.ClientId != Owner.ClientId)
-        return;
+      { LogRapidInfuser("CmdRequestItemization rejected: sender/owner validation", true); return; }
 
       IItemizableWorldEntity target = null;
       if (!string.IsNullOrWhiteSpace(entityIdentifier) &&
@@ -210,9 +229,13 @@ namespace MultiplayerInfrastructure.Player
       if (target == null)
         target = FindItemizableNear(targetPosition);
       if (target == null)
+      {
+        LogRapidInfuser("CmdRequestItemization rejected: target not found", true);
         return;
+      }
 
-      target.TryItemizeOnServer(this);
+      bool result = target.TryItemizeOnServer(this);
+      LogRapidInfuser($"CmdRequestItemization target resolved='{target.ItemizationEntityIdentifier}' result={result}");
     }
 
     private static IItemizableWorldEntity FindItemizableNear(Vector3 position)

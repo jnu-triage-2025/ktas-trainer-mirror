@@ -51,10 +51,30 @@ namespace MultiplayerInfrastructure.Player
       // 뷰포트 중앙(0.5, 0.5)에서 레이 생성
       var ray = camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
 
-      if (Physics.Raycast(ray, out var hit, _raycastMaxDistance, _raycastLayerMask))
+      // The ray often starts inside the local player's collider. A single Raycast
+      // therefore reports Player(Clone) and hides the world object behind it.
+      // Select the nearest hit that is not part of this PlayerController.
+      var hits = Physics.RaycastAll(ray, _raycastMaxDistance, _raycastLayerMask, QueryTriggerInteraction.Ignore);
+      RaycastHit nearestHit = default;
+      bool foundHit = false;
+      float nearestDistance = float.MaxValue;
+      for (int i = 0; i < hits.Length; i++)
+      {
+        var candidate = hits[i];
+        if (candidate.collider == null || candidate.collider.GetComponentInParent<PlayerController>() == this)
+          continue;
+        if (candidate.distance < nearestDistance)
+        {
+          nearestDistance = candidate.distance;
+          nearestHit = candidate;
+          foundHit = true;
+        }
+      }
+
+      if (foundHit)
       {
         RaycastHasHit = true;
-        RaycastHit = hit;
+        RaycastHit = nearestHit;
       }
       else
       {
