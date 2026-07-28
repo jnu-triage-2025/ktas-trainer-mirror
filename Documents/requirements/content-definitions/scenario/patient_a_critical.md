@@ -173,11 +173,11 @@ SPAWN_A
 
 | Gate ID | 분류 | 현재 상태 | 결정/구현 필요 | 담당 | 증빙 |
 |---|---|---|---|---|---|
-| SPAWN-A-1 | Runtime | 미해결 | FishNet Spawnable 등록 + 재직렬화 | 구현자 | Play Mode 시작 성공, ObjectId 65535 미발생 |
-| ROLE-2 | Design+Runtime | 미해결 | P004 다중역할 정책 A/B 확정 + 반영 | 주도자 | P004 교착 없음, 문서/JSON 동일 |
-| S-1 | Runtime | 미해결 | 미배선 producer 연결(10개) | 구현자 | 각 Validator 1회 상호작용으로 통과 |
-| IV-1 | Design | 미해결 | V017 18G 2개 판정 방식 확정(A/B) | 주도자 | V017~V017_3 오탐/미탐 없음 |
-| END-1 | Design+Content | 미해결 | 종료 UX/다음 scenario 확정 | 주도자 | D037 이후 명시 노드 체인 동작 |
+| SPAWN-A-1 | Runtime | 해결(2026-07-28) | FishNet Spawnable 등록 + 재직렬화는 완료, Production profile capability 최종 검증만 잔여 | 구현자 | `PatientTypeA.prefab` spawn 정상, ObjectId 65535 미재현 |
+| ROLE-2 | Design+Runtime | 해결(2026-07-28) | P004 정책 A안 확정 및 반영(`requiredPlayerTagsMatchMode=Any`) | 주도자 | P004 교착 없음, 문서/JSON 동일 |
+| S-1 | Runtime | 부분해결(2026-07-28) | 잔여 미배선 producer(B-02, B-03, B-05, B-06) 연결 및 실플레이 검증 | 구현자 | 잔여 4개 외 항목 배선완료, 전체 E2E 검증 미완료 |
+| IV-1 | Design | 해결(2026-07-28) | V017 18G 순차 획득·소비 및 좌/우 삽입 분리 확정 반영 | 주도자 | V017~V017_3 규칙 문서/JSON 일치 |
+| END-1 | Design+Content | 해결(2026-07-28) | 종료 정책 확정(`D037 -> null` 독립 종료) | 주도자 | D037 이후 종료 조건 문서/JSON 일치 |
 
 ### 의사 NPC 제출 producer 콘텐츠 확정
 
@@ -217,20 +217,23 @@ SPAWN_A
 #### DECISION-ROLE-2 (P004 다중 역할)
 - 선택지 A: 한 브랜치=한 수행자 규칙으로 문구/태그 단순화
 - 선택지 B: N008/N011을 다인 병렬 하위 브랜치로 분해
-- 현재 상태: 미확정
-- 확정 후 수정 대상: P004 branches, N008/N011 주변 안내 문구, 관련 CompletionCondition
+- 현재 상태: 확정(2026-07-28)
+- 확정안: A (단일 수행자 규칙, `requiredPlayerTagsMatchMode=Any`)
+- 반영 대상: P004 branches, N008/N011 주변 안내 문구, 관련 CompletionCondition 반영 완료
 
 #### DECISION-IV-1 (V017 18G 2개 판정)
 - 선택지 A: 좌/우 획득 신호 분리
 - 선택지 B: 인벤토리 수량 조건(Count=2)
-- 현재 상태: 미확정
-- 확정 후 수정 대상: V017 rules, V017 설명 주석, 검증 절차
+- 현재 상태: 확정(2026-07-28)
+- 확정안: A (삽입 신호 좌/우 분리: `insert_iv_patient_a_left/right`)
+- 반영 대상: V017 rules/설명 주석 반영 완료(실플레이 검증은 별도)
 
 #### DECISION-END-1 (종료 UX/다음 시나리오)
 - 선택지 A: D037 -> END_FADE_OUT -> END_MESSAGE -> START_NEXT_SCENARIO -> null
 - 선택지 B: D037 -> END_MESSAGE -> null (임시)
-- 현재 상태: 미확정
-- 확정 후 수정 대상: 종료 조건 절, 변환 승인 조건, JSON 종료 노드 체인
+- 현재 상태: 확정(2026-07-28)
+- 확정안: B 변형 (환자 A 독립 종료: `D037 -> null`)
+- 반영 대상: 종료 조건 절, 변환 승인 조건, JSON 종료 연결 반영 완료
 
 <!-- WORK-OVERLAY:START -->
 ### 변환 안전 작업 오버레이 (삭제 가능)
@@ -249,10 +252,10 @@ SPAWN_A
 
 | ID | Node | 작업 유형 | 필요한 작업 | 검토/결정 포인트 | 완료 기준 |
 |---|---|---|---|---|---|
-| SPAWN-A-1 | `SPAWN_A` | 배선/환경 | `patient_a` prefab을 FishNet Spawnable에 등록 및 재직렬화 | Production profile에서 SpawnablePreset capability 확인 | 시작 시 spawn 오류 없음 |
-| ROLE-2 | `P004` (`N008`,`N011`) | 결정 | 다중 역할 정책 확정: (A) 단일 수행자 단순화, (B) 병렬 분해 | 엔진 `ByRole` 1브랜치 1인 정책과 합치 여부 | `P004` 진입 교착/역할 미배정 0 |
-| IV-1 | `V017` 계열 | 결정 | 18G 2개 판정 방식 확정: (A) 좌/우 획득 신호 분리, (B) 인벤토리 Count=2 | 획득 의미와 삽입 의미 분리 여부 | `V017~V017_3` 오탐/미탐 0 |
-| END-1 | `D037` 이후 | 결정 | 종료 체인(`fade-out`, 메시지, 다음 scenario) 확정 및 노드 명시 | 마지막 `null` 노드 1개 원칙 | 문서 종료 서술=그래프 종료 연결 일치 |
+| SPAWN-A-1 | `SPAWN_A` | 배선/환경 | `patient_a` prefab을 FishNet Spawnable에 등록 및 재직렬화 | Production profile에서 SpawnablePreset capability 확인 | 해결(2026-07-28), 최종 capability 검증만 잔여 |
+| ROLE-2 | `P004` (`N008`,`N011`) | 결정 | 다중 역할 정책 확정: (A) 단일 수행자 단순화, (B) 병렬 분해 | 엔진 `ByRole` 1브랜치 1인 정책과 합치 여부 | 해결(2026-07-28), A안 반영 완료 |
+| IV-1 | `V017` 계열 | 결정 | 18G 2개 판정 방식 확정: (A) 좌/우 획득 신호 분리, (B) 인벤토리 Count=2 | 획득 의미와 삽입 의미 분리 여부 | 해결(2026-07-28), A안 반영 완료 |
+| END-1 | `D037` 이후 | 결정 | 종료 체인(`fade-out`, 메시지, 다음 scenario) 확정 및 노드 명시 | 마지막 `null` 노드 1개 원칙 | 해결(2026-07-28), 독립 종료 정책 반영 |
 
 #### B. 미배선 producer (S-1) + 보조 상호작용
 
@@ -340,7 +343,7 @@ SPAWN_A
 - ROLE-2의 대체 담당 할당 정책은 확정되었다. `matchMode=Any`로 각 P004 브랜치를 한 명의 적격 플레이어가 수행하며, 서버 권위 실행은 기존 `ByRole` 다중 브랜치 실행을 위해 유지한다.
 - SPAWN-A-1의 FishNet spawnable prefab 등록은 완료되었다(`PatientTypeA.prefab`, `PrefabId: 7`). Production profile의 `SpawnablePreset` capability 최종 검증이 남아 있다.
 - S-1의 10개 신호에 정식 producer와 동일 식별자가 연결되어야 한다.
-- Q-1의 23개 quest definition이 작성되어야 한다.
+- Q-1의 23개 quest definition 작성과 Add/Remove 참조 일치는 완료되었다.
 - IV-1의 18G 순차 획득·소비 정책과 END-1의 독립 종료(`D037 -> null`)가 반영되어야 한다.
 - 변환 후 Requirements Supports에서 NPC/entity/item/event/quest/runtime-signal 요구사항을 컴파일하고,
   Production profile에서 unresolved `Error`가 0개여야 플레이 가능으로 승인한다.
@@ -2674,7 +2677,31 @@ SPAWN_A
 | **DialogueContent** | 문자열 | 한쪽 정맥로가 확보되었습니다. 18G 캐뉼라를 하나 더 획득해 선택한 뒤, 반대쪽 팔에도 삽입하십시오. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
+| **NextIdentifier** | 문자열 | V017_3 |
+
+
+---
+
+### [V017_3] ValidatorNode
+
+| 속성 | 타입 | 설명 |
+| --- | --- | --- |
+| **Identifier** | 문자열 | V017_3 |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
+| **Condition** | ScenarioValidatorCondition | RegistryContains |
+| **WaitForCondition** | bool | true |
+| **OnFailure** | ScenarioValidatorOnFailure | Ignore |
+| **FailureNextIdentifier** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | E021 |
+
+#### [V017_3_Rules] 검증 규칙 (RuntimeState 시그널)
+
+| type | condition | registryType | registryIdentifier |
+| --- | --- | --- | --- |
+| Registry | Contains | RuntimeState | sig.insert_iv_patient_a_right |
+
+
+- [x] (b) 배선 완료(2026-07-20): `sig.insert_iv_patient_a_right` 는 `PatientController.IntravenousLineCannula.PerformIntravenousLineCannulaInsertion` 이 우측(두 번째 삽입) 확정 시 발신한다. 좌측은 `sig.insert_iv_patient_a_left`(V017_1 게이트)에서 선행 확인된다. 게이지(18G/20G)별 처치 표현(`Syringe{18G|20G}InsertedInto{Left|Right}Arm`)도 함께 켜진다.
 
 
 ---
