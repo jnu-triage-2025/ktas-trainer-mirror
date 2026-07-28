@@ -1602,7 +1602,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.move_defibcart_to_patient"
+        "identifier": "sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",

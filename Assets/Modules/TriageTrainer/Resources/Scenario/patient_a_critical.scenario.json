@@ -1264,13 +1264,13 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "V015_3",
       "speakerName": "시스템",
-      "dialogueContent": "산소줄과 T-piece를 각각 클릭해 획득하고, 산소 유량계와 환자에게 삽입된 기관내관을 각각 클릭해 연결하세요.",
+      "dialogueContent": "산소줄을 먼저 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null
     },
     "V015_3": {
       "identifier": "V015_3",
       "nodeType": "Validator",
-      "nextIdentifier": "E014",
+      "nextIdentifier": "N009_3_1",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -1280,13 +1280,59 @@
               "condition": "Contains",
               "registryType": "RuntimeState",
               "registryIdentifier": "sig.click_o2_line"
-            },
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "waitForCondition": true
+    },
+    "N009_3_1": {
+      "identifier": "N009_3_1",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "V015_3_1",
+      "speakerName": "시스템",
+      "dialogueContent": "환자에게 삽입된 기관내관을 클릭해 T-piece를 장착하세요.",
+      "portraitSpriteIdentifier": null
+    },
+    "V015_3_1": {
+      "identifier": "V015_3_1",
+      "nodeType": "Validator",
+      "nextIdentifier": "N009_3_2",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
             {
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
               "registryIdentifier": "sig.interact_tpiece"
-            },
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "waitForCondition": true
+    },
+    "N009_3_2": {
+      "identifier": "N009_3_2",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "V015_3_2",
+      "speakerName": "시스템",
+      "dialogueContent": "장착된 T-piece와 벽면 유량계를 각각 클릭해 라인을 연결하세요.",
+      "portraitSpriteIdentifier": null
+    },
+    "V015_3_2": {
+      "identifier": "V015_3_2",
+      "nodeType": "Validator",
+      "nextIdentifier": "E014",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
             {
               "type": "Registry",
               "condition": "Contains",
@@ -2570,7 +2616,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.move_defibcart_to_patient"
+              "registryIdentifier": "sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient"
             }
           ]
         }

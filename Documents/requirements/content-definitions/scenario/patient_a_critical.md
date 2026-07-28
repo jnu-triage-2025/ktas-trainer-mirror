@@ -4,11 +4,13 @@ doc_type: requirement
 domain: content-definitions
 progress: "2-implementing"
 status: active
-updated: 2026-07-18
+updated: 2026-07-28
 flags: ["refactor-required"]
 ---
 
 # scenario 환자 A 중증 처치
+
+> 이 문서는 기존 `patient_a_critical.scenario.json` 또는 과거 변환 산출물을 복사/부분 재사용하지 않고, 본문에 명시된 계약(노드 연결, Validator 신호, 이벤트 핸들러, 퀘스트 정의, 기술 노트, 코멘트)만으로 실행 가능한 시나리오를 재구성하는 것을 목표로 한다.
 
 ## 기본 정보
 
@@ -34,6 +36,103 @@ flags: ["refactor-required"]
 이 절은 기존 `patient_a_critical.scenario.json`을 참조하지 않고 이 문서만으로 그래프를 재구성한 결과다.
 변환기는 아래의 **확정 보완 규칙**을 적용해야 하며, **차단 항목**이 해결되지 않은 상태에서는 플레이 가능
 Scenario로 판정하면 안 된다.
+
+### 확정 보완 연결 (실행 안전 그래프)
+
+아래 연결은 현재 문서의 노드 정의를 실행 관점에서 재정렬한 요약이다. 목적은 "중간 영구 정지(무한 대기)"를 유발하는 누락 신호/누락 합류를 사전에 식별하는 데 있다.
+
+```text
+SPAWN_A
+  -> PRESET_A
+  -> D005
+  -> Q006(들것 이동) -> P002(ByRole 4분기) -> Q006_1
+  -> E005(처치실 이동)
+  -> D006
+  -> P003(활력/GCS/흡인) -> D010
+  -> E009 -> D011 -> D012 -> D013
+  -> P004(삽관·산소 / 지혈 / IV·C-line) -> D022
+  -> E025 -> D023 -> N016 -> Q018 -> V022 -> D024 -> D025
+  -> P005(CPR 1주기 병렬) -> D028 -> E031 -> E032 -> D029
+  -> P006(CPR 2주기 병렬) -> D033 -> E035 -> E036 -> D034 -> N025
+  -> Q027 -> V031 -> D035 -> D036
+  -> P007(ROSC 후 병렬) -> D037
+  -> (end)
+```
+
+- `CC_*` 식별자는 독립 노드가 아니라 병렬 브랜치 완료 표식이다. 각 브랜치 마지막 노드는 해당 `CompletionConditionIdentifier`로 전이되어야 하며, 누락 시 `Parallel` 합류가 해제되지 않는다.
+- `Validator(waitForCondition=true, failureNextIdentifier=null)`는 의도적으로 무한 대기다. 따라서 producer 미배선 신호가 남아 있으면 실제 플레이에서 해당 지점이 하드 스톱된다.
+
+### 기술 노트/코멘트 반영 지침 (변환 시 강제)
+
+이 문서의 "기술 노트"와 "코멘트"는 설명 텍스트가 아니라 **실행 계약**으로 취급한다.
+
+1. **(a) 자동 계측 가능** 표시는 "새 신호를 만들라"는 의미가 아니다.
+   - 기존 자동 producer(`MedicalItem.OnGet`, `Item Use`, `ScenarioTriggerZone`,
+     `IntravenousLineConnectionPoint`, `PatientController Assess`)에 식별자만 정합시킨다.
+   - 변환 시 임의의 디버그 이벤트/임시 emitter를 정식 producer로 대체하지 않는다.
+2. **(b) 선행 구현 필요(미배선)** 표시는 시나리오 실행 차단 신호다.
+   - 해당 Validator는 제거/완화하지 않고 유지한다.
+   - 대신 미구현 상태를 "인간 검토 메모"로 남겨 승인 전 해결 대상으로 추적한다.
+3. **코멘트 기반 분기 의도**(예: OR 게이트, 교대 학습 루프, 오답 재진입)는 축약 금지다.
+   - Choice 오답 루프를 제거하거나 단축하면 교육 의도가 손상된다.
+4. **QuestControl Add/Remove 페어**는 동일 식별자 유지가 원칙이다.
+   - 안내형 quest는 Validator 게이팅 + Remove로 종료되므로, 자동 완료 task를 임의 추가하지 않는다.
+5. **ByRole 병렬 실행**은 현재 엔진 제약을 따른다.
+   - 한 브랜치에 다중 역할을 기대하는 표기가 있더라도, 실제 배정 정책은 ROLE-2 메모 확정 전
+     단정하지 않는다.
+
+### 인간 검토 메모 (미확정/차단 항목)
+
+아래 메모는 "없는 내용을 임의 보강하지 않기" 위한 고정 메모다. 각 메모는 해당 위치의 변환/구현 작업 티켓에 그대로 첨부한다.
+
+| 메모 ID | 위치 | 인간 검토 메모 |
+|---|---|---|
+| HR-SPAWN-A-1 | `SPAWN_A` | `patient_a` prefab의 FishNet spawnable 등록/재직렬화 완료 전에는 시작 노드를 Production 승인하지 않는다. |
+| HR-ROLE-2 | `P004` (`N008`, `N011`) | `ByRole` 다중 인원 브랜치 정책을 확정한다. (a) 단일 수행자로 단순화, (b) 병렬 브랜치 분해 중 하나를 선택하고 근거를 남긴다. |
+| HR-S-1 | `V011_1`, `V014_1~V014_4`, `V018`, `V023_1`, `V024`, `V025~V025_1`, `V027`, `V030`, `V033` | 미배선 10개 producer의 실제 상호작용 소스와 callback 위치를 확정한다. 디버그 emitter는 불인정한다. |
+| HR-IV-1 | `V017` 계열 | 18G 2개 획득 판정을 `좌/우 획득 신호 분리` 또는 `인벤토리 수량 조건` 중 하나로 확정한다. 확정 전에는 V017 계열을 임의 완화하지 않는다. |
+| HR-END-1 | `D037` 이후 | 종료 UX(페이드아웃, 종료 메시지, 다음 scenario identifier)를 확정한다. 확정 전에는 `(end)` 직결 유지가 임시안이다. |
+
+
+### 인간 검토 작업 지시서 (작업 편의용)
+
+아래는 인간 작업자가 바로 실행할 수 있도록 각 HR 항목을 **요구 작업 단위**로 재작성한 목록이다.
+
+| 작업 ID | 선행 조건 | 요구 작업(필수) | 완료 판정(증빙) |
+|---|---|---|---|
+| TASK-HR-SPAWN-A-1 | Unity 프로젝트 열림 | `patient_a` 원본 prefab을 FishNet Spawnable Prefabs에 등록하고 재직렬화한다. | Play Mode에서 `SPAWN_A` 시작 시 `ObjectId 65535` 오류가 재현되지 않고, Production profile에서 `EntityPreset(patient_a)` capability 검증이 통과한다. |
+| TASK-HR-ROLE-2 | ROLE-1 태그 공급 유지 | `P004`의 다중 역할 브랜치 정책을 하나로 확정한다: (A) 단일 수행자 규칙으로 문구/태그 정리, (B) 브랜치를 다인 병렬 구조로 분해. | `P004` 진입 시 역할 미배정/교착이 없고, 선택한 정책이 문서(`ROLE-2`)와 scenario JSON에 동일하게 반영된다. |
+| TASK-HR-S-1 | 각 상호작용 프리팹 접근 가능 | 미배선 10개 신호의 producer를 실제 gameplay callback에 연결한다. (`show_vital_patient_a`, `pass_laryngoscope`, `pass_et_tube_ready`, `remove_intu_stylet`, `pass_syringe`, `pass_central_line_set`, `remove_tpiece`, `click_to_start_comp`, `move_defibcart_to_patient`, `remove_patient_clothing`) | 각 Validator가 목표 상호작용 1회 수행으로 통과하고, 디버그/수동 emitter 없이도 end-to-end 진행이 가능하다. |
+| TASK-HR-IV-1 | `insert_iv_patient_a_left/right` 배선 완료 | 18G 2개 획득 판정 방식을 확정하고 V017 계열 규칙을 통일한다: (A) 좌/우 획득 신호 분리, (B) 인벤토리 수량 조건(`Count=2`) 사용. | V017~V017_3 구간에서 획득/삽입 의미가 충돌하지 않고, 오탐/미탐 없이 좌우 IV 완료까지 진행된다. |
+| TASK-HR-END-1 | `D037` 도달 가능 | 종료 UX를 확정한다: fade-out 이벤트, 종료 메시지 표시, 다음 scenario identifier 연결. | `D037` 이후 연출이 서술과 동일하며 마지막 노드 1개만 `null` 종료를 사용한다. |
+
+### 작업 후 문서 수정 규칙 (추가/삭제 허용 범위)
+
+인간 검토 작업 완료 후 문서를 갱신할 때 아래 규칙을 따른다.
+
+1. **반드시 수정할 항목**
+   - 해당 HR 행의 상태를 "미확정"에서 "해결"로 바꾸고, 해결 날짜와 근거(어떤 컴포넌트/콜백에서 해결했는지)를 한 줄로 기록한다.
+   - 관련 `(b) 선행 구현 필요` 주석을 `[x] 배선 완료(YYYY-MM-DD)` 형식으로 전환한다.
+   - `변환 승인 조건`에서 해소된 차단 항목을 반영한다.
+
+2. **추가해도 되는 항목**
+   - 실제 구현 경로(프리팹/스크립트/이벤트 식별자) 참조 한 줄.
+   - 검증 절차(재현 단계 2~4줄)와 검증 결과 요약.
+   - 선택지 확정 근거(왜 A/B 중 하나를 선택했는지) 한 단락.
+
+3. **삭제/완화하면 안 되는 항목**
+   - `Validator(waitForCondition=true, failureNextIdentifier=null)` 자체를 임의 삭제/즉시 통과로 변경.
+   - 교육 의도용 Choice 오답 루프/코멘트 분기 축약.
+   - Add/Remove Quest 페어 불일치(식별자 변경 포함).
+   - "미해결" 상태인데 HR 메모만 삭제하는 행위.
+
+4. **삭제해도 되는 항목(조건부)**
+   - 동일 의미 중복 메모/구현 전 임시 주석은, 해결 근거가 본문 다른 위치에 남아 있을 때만 삭제 가능.
+   - `인간 검토 메모`의 특정 행은 해당 항목이 해결되고, 해결 근거가 `플레이 차단 항목` 또는 노드 주석에 이관된 경우에만 삭제 가능.
+
+5. **JSON 동기화 규칙**
+   - 문서에서 확정한 식별자/분기/종료 연결은 `Assets/Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json`에 동일하게 반영한다.
+   - 문서와 JSON이 불일치하면 문서를 우선 기준으로 보고 불일치 항목을 즉시 메모로 남긴다.
 
 ### 구조 감사 결과
 
@@ -69,6 +168,17 @@ Scenario로 판정하면 안 된다.
 | IV-1 | `V017` / `V017_1` / `V017_3` | **해결(2026-07-28):** 18G는 두 개를 사전에 동시에 획득하지 않는다. 첫 번째 18G를 획득해 좌측 삽입 시 1개를 소비하고, `N011_3` 안내 후 두 번째 18G를 다시 획득해 우측 삽입 시 1개를 소비한다. 삽입은 `insert_iv_patient_a_left` / `insert_iv_patient_a_right`로 좌·우를 구분한다. | `click_18g`는 준비 단계에서 첫 번째 18G 보유를 확인하는 단일 신호로 유지한다. 두 번째 18G는 두 번째 삽입 직전에 별도 획득하며, 실제 소비는 삽입 완료 코드가 담당한다. |
 | END-1 | `D037` 및 종료 조건 | `D037`이 마지막 노드이며 `nextIdentifier=null`이다. | **해결(2026-07-28):** 환자 A는 이 지점에서 독립 종료한다. `patient_b_c_ct`는 다음 시나리오가 아니며 관리자가 별도 실행한다. |
 
+아래 표의 상태는 **변환 전 단일 차단 게이트**를 기준으로 갱신한다.
+### **변환 전 단일 차단 게이트 (작업판)**
+
+| Gate ID | 분류 | 현재 상태 | 결정/구현 필요 | 담당 | 증빙 |
+|---|---|---|---|---|---|
+| SPAWN-A-1 | Runtime | 미해결 | FishNet Spawnable 등록 + 재직렬화 | 구현자 | Play Mode 시작 성공, ObjectId 65535 미발생 |
+| ROLE-2 | Design+Runtime | 미해결 | P004 다중역할 정책 A/B 확정 + 반영 | 주도자 | P004 교착 없음, 문서/JSON 동일 |
+| S-1 | Runtime | 미해결 | 미배선 producer 연결(10개) | 구현자 | 각 Validator 1회 상호작용으로 통과 |
+| IV-1 | Design | 미해결 | V017 18G 2개 판정 방식 확정(A/B) | 주도자 | V017~V017_3 오탐/미탐 없음 |
+| END-1 | Design+Content | 미해결 | 종료 UX/다음 scenario 확정 | 주도자 | D037 이후 명시 노드 체인 동작 |
+
 ### 의사 NPC 제출 producer 콘텐츠 확정
 
 환자 A의 10개 producer 콘텐츠 대상 중 `pass_*` 네 건은 `ItemSubmissionConfig`와
@@ -86,6 +196,144 @@ Scenario로 판정하면 안 된다.
 
 구현 시 각 상호작용은 해당 단계에서만 활성화하고, 완료 신호를 표의 `sig.pass_*` 값으로 발신한다.
 완료 또는 다음 제출 단계 전에는 이전 상호작용을 비활성화하여, 같은 물품을 잘못 제출하는 일을 막는다.
+
+### **미배선 신호 계약표 (S-1)**
+
+| TaskID | Signal | 소비 Validator | Producer 위치(오브젝트/프리팹) | 콜백/트리거 | 상태 | 검증 |
+|---|---|---|---|---|---|---|
+| B-01 | sig.show_vital_patient_a | V011_1 | patient_a / PatientController.AssessActions(assess_vital) | PatientController.PerformAssess() (assess_vital) 완료 시 ScenarioInteractionSignals.Raise("show_vital_patient_a") | 배선완료(2026-07-28, PatientTypeA.assess_vital._assessSignal 정합 + PerformAssess Raise 경로 확인) | 미검증 |
+| B-02 | sig.pass_laryngoscope | V014_1 | npc-doctor-1 제출 상호작용 | ItemSubmission 완료 | 미해결 | 미검증 |
+| B-03 | sig.pass_et_tube_ready | V014_2 | npc-doctor-1 제출 상호작용 | ItemSubmission 완료 | 미해결 | 미검증 |
+| B-04 | sig.remove_intu_stylet | V014_3 | OverworldScene / endotracheal_tube_ready_A / EtTubeStyletInteractPoint(ScenarioActionInteractable) | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("remove_intu_stylet") | 배선완료(2026-07-28, PatientTypeA.EtTubeStyletInteractPoint._completionSignal 정합 확인) | 미검증 |
+| B-05 | sig.pass_syringe | V014_4 | npc-doctor-1 제출 상호작용 | ItemSubmission 완료 | 미해결 | 미검증 |
+| B-06 | sig.pass_central_line_set | V018 | npc-doctor-1 제출 상호작용 | ItemSubmission 완료 | 미해결 | 미검증 |
+| B-07 | sig.remove_tpiece | V023_1 | OverworldScene / patient_a T-piece connected visual / TPieceRemoveInteractPoint(ScenarioActionInteractable) | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("remove_tpiece") | 배선완료(2026-07-28, PatientTypeA.TPieceRemoveInteractPoint._completionSignal 정합 확인) | 미검증 |
+| B-08 | sig.click_to_start_comp | V024 | OverworldScene / patient_a chest interaction point / ChestCompStartInteractPoint(ScenarioActionInteractable) | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("click_to_start_comp") | 배선완료(2026-07-28, PatientTypeA.ChestCompStartInteractPoint._completionSignal 정합 확인) | 미검증 |
+| B-09 | sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient | V025 | Defib cart(MovingPatientBedController: `defib_cart_a`) + defibcart_to_patient(MovingPatientBedPositioningPoint) | PublishPositioningPointReached() -> Raise("patient_bed_position_reached_defib_cart_a_defibcart_to_patient") | 배선완료(2026-07-28, MovingPatientBedController scoped signal 발신 + OverworldScene defib_cart_a/defibcart_to_patient 정합 확인) | 미검증 |
+| B-10 | sig.remove_patient_clothing | V033 | OverworldScene / patient_a 흉부 클릭 포인트(PatientClothingCutPoint) / ScenarioActionInteractable | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("remove_patient_clothing") 발신 | 배선완료(2026-07-28, PatientTypeA.PatientClothingCutPoint._completionSignal 정합 확인) | 미검증 |
+
+### **결정 카드 (주도자 확정 필요)**
+
+#### DECISION-ROLE-2 (P004 다중 역할)
+- 선택지 A: 한 브랜치=한 수행자 규칙으로 문구/태그 단순화
+- 선택지 B: N008/N011을 다인 병렬 하위 브랜치로 분해
+- 현재 상태: 미확정
+- 확정 후 수정 대상: P004 branches, N008/N011 주변 안내 문구, 관련 CompletionCondition
+
+#### DECISION-IV-1 (V017 18G 2개 판정)
+- 선택지 A: 좌/우 획득 신호 분리
+- 선택지 B: 인벤토리 수량 조건(Count=2)
+- 현재 상태: 미확정
+- 확정 후 수정 대상: V017 rules, V017 설명 주석, 검증 절차
+
+#### DECISION-END-1 (종료 UX/다음 시나리오)
+- 선택지 A: D037 -> END_FADE_OUT -> END_MESSAGE -> START_NEXT_SCENARIO -> null
+- 선택지 B: D037 -> END_MESSAGE -> null (임시)
+- 현재 상태: 미확정
+- 확정 후 수정 대상: 종료 조건 절, 변환 승인 조건, JSON 종료 노드 체인
+
+<!-- WORK-OVERLAY:START -->
+### 변환 안전 작업 오버레이 (삭제 가능)
+
+이 절은 인간 작업자의 검토/결정 편의를 위한 **작업 오버레이**다. 시나리오 노드 계약 본문이 아니며,
+`WORK-OVERLAY:START/END` 블록은 변환기 입력에서 제외(또는 무시)해도 된다.
+
+#### 오버레이 사용 규칙
+
+1. 각 행의 `Node`를 본문의 `### [Node]`에서 검색해 해당 위치를 바로 열람한다.
+2. `작업 유형`이 `결정`인 항목은 주도자 확정 후 본문 계약 문장으로 승격한다.
+3. `작업 유형`이 `배선`인 항목은 Unity 상호작용/콜백 연결 후 `(b)` 주석을 `[x] 배선 완료(YYYY-MM-DD)`로 갱신한다.
+4. 모든 항목이 해결되면 이 오버레이 절은 통째로 삭제 가능하다(삭제 전 본문 반영 필수).
+
+#### A. 차단/결정 항목 (우선 처리)
+
+| ID | Node | 작업 유형 | 필요한 작업 | 검토/결정 포인트 | 완료 기준 |
+|---|---|---|---|---|---|
+| SPAWN-A-1 | `SPAWN_A` | 배선/환경 | `patient_a` prefab을 FishNet Spawnable에 등록 및 재직렬화 | Production profile에서 SpawnablePreset capability 확인 | 시작 시 spawn 오류 없음 |
+| ROLE-2 | `P004` (`N008`,`N011`) | 결정 | 다중 역할 정책 확정: (A) 단일 수행자 단순화, (B) 병렬 분해 | 엔진 `ByRole` 1브랜치 1인 정책과 합치 여부 | `P004` 진입 교착/역할 미배정 0 |
+| IV-1 | `V017` 계열 | 결정 | 18G 2개 판정 방식 확정: (A) 좌/우 획득 신호 분리, (B) 인벤토리 Count=2 | 획득 의미와 삽입 의미 분리 여부 | `V017~V017_3` 오탐/미탐 0 |
+| END-1 | `D037` 이후 | 결정 | 종료 체인(`fade-out`, 메시지, 다음 scenario) 확정 및 노드 명시 | 마지막 `null` 노드 1개 원칙 | 문서 종료 서술=그래프 종료 연결 일치 |
+
+#### B. 미배선 producer (S-1) + 보조 상호작용
+
+| Node | Signal | 작업 유형 | 필요한 작업 | 완료 기준 |
+|---|---|---|---|---|
+| `V011_1` | `sig.show_vital_patient_a` | 배선 | 활력 측정 완료 콜백에서 signal raise 연결 | 1회 측정으로 `V011_1` 통과 |
+| `V014_1` | `sig.pass_laryngoscope` | 배선 | `npc-doctor-1` 제출 상호작용 완료 시 raise | 1회 제출로 `V014_1` 통과 |
+| `V014_2` | `sig.pass_et_tube_ready` | 배선 | `npc-doctor-1` 제출 상호작용 완료 시 raise | 1회 제출로 `V014_2` 통과 |
+| `V014_3` | `sig.remove_intu_stylet` | 배선 | 기관내관 스타일렛 제거 상호작용 완료 콜백 연결 | 1회 제거로 `V014_3` 통과 |
+| `V014_4` | `sig.pass_syringe` | 배선 | `npc-doctor-1` 제출 상호작용 완료 시 raise | 1회 제출로 `V014_4` 통과 |
+| `V018` | `sig.pass_central_line_set` | 배선 | `npc-doctor-1` 제출 상호작용 완료 시 raise | 1회 제출로 `V018` 통과 |
+| `V023_1` | `sig.remove_tpiece` | 배선 | T-piece 분리 상호작용 완료 콜백 연결 | 1회 분리로 `V023_1` 통과 |
+| `V024` | `sig.click_to_start_comp` | 배선 | 가슴압박 시작 상호작용 콜백 연결 | 1회 시작으로 `V024` 통과 |
+| `V025` | `sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient` | 배선 | 제세동 카트 이동 완료 콜백 연결(`defib_cart_a` + `defibcart_to_patient`) | 1회 이동으로 `V025` 통과 |
+| `V033` | `sig.remove_patient_clothing` | 배선 | 의복 제거 상호작용 완료 콜백 연결 | 1회 제거로 `V033` 통과 |
+| `V015_3` | `sig.click_o2_line` | 정합(보조) | 산소줄 획득 신호를 선행 단계로 고정 | `V015_3` 통과 |
+| `V015_3_1` | `sig.interact_tpiece` | 배선(보조) | `endotracheal_tube_A` 클릭 지점에 `ScenarioActionInteractable` 설정(장착 단계) | `V015_3_1` 통과 |
+| `V015_3_2` | `sig.connect_tpiece_and_oxyflow` | 정합(보조) | T-piece 측/벽 유량계 측 연결점 Identifier 정합(연결 완료 신호) | `V015_3_2` 통과 |
+| `V015_4` | `sig.interact_oxyflow_wall` | 배선(보조) | 벽 유량계 Attach completion signal 설정 | `V015_4` 통과 |
+| `V025_1` | `sig.interact_patient_chest` | 배선(보조) | 환자 흉부 collider에 `ScenarioActionInteractable` 설정 | `V025_1` 통과 |
+| `V027` | `sig.interact_chest` | 배선(보조) | 가슴압박 위치 collider에 `ScenarioActionInteractable` 설정 | `V027` 통과 |
+| `V030` | `sig.interact_defib` | 배선(보조) | 제세동기 collider에 `ScenarioActionInteractable` 설정 | `V030` 통과 |
+
+#### C. 자동 계측/정합 확인 항목 (A-타입)
+
+| Node | Signal | 작업 유형 | 필요한 작업 | 완료 기준 |
+|---|---|---|---|---|
+| `V010_A` | `sig.grab_stretcher_a` | 정합 | grab 지점 Identifier 정합 | 1회 잡기로 통과 |
+| `V010_B` | `sig.grab_stretcher_b` | 정합 | grab 지점 Identifier 정합 | 1회 잡기로 통과 |
+| `V010_C` | `sig.grab_stretcher_c` | 정합 | grab 지점 Identifier 정합 | 1회 잡기로 통과 |
+| `V010_D` | `sig.grab_stretcher_d` | 정합 | grab 지점 Identifier 정합 | 1회 잡기로 통과 |
+| `V011` | `sig.click_vital_set` | 정합 | `MedicalItem.OnGet` 자동 발행 식별자 정합 | 1회 획득으로 통과 |
+| `V012` | `sig.check_avpu_gcs_patient_a` | 정합 | Assess callback 식별자 정합 | 1회 사정으로 통과 |
+| `V013` | `sig.click_wall_suction`, `sig.click_suction_line`, `sig.click_yankauer` | 정합 | 아이템 획득 자동 발행 식별자 정합 | 3개 획득 후 통과 |
+| `V013_1` | `sig.apply_stabilizer_patient_a` | 정합 | Item Apply signal 식별자 정합 | 적용 후 통과 |
+| `V013_2` | `sig.connect_wall_component_1` | 정합 | 연결지점 signal 식별자 정합 | 연결 후 통과 |
+| `V013_3` | `sig.connect_wall_component_and_yankauer` | 정합 | 연결지점 signal 식별자 정합 | 연결 후 통과 |
+| `V013_4` | `sig.suction_patient_a` | 정합 | Item Use signal 식별자 정합 | 사용 후 통과 |
+| `V014` | `sig.click_laryngoscope_blade`, `sig.click_laryngoscope_handle`, `sig.click_endotracheal_tube`, `sig.click_stylet`, `sig.click_plaster`, `sig.click_syringe_5cc` | 정합 | 획득 자동 발행 식별자 정합 | 6개 획득 후 통과 |
+| `V014_5` | `sig.apply_plaster_on_intu` | 정합 | Item Apply signal 식별자 정합 | 적용 후 통과 |
+| `V015_2` | `sig.connect_wall_component_2` | 정합 | 연결지점 signal 식별자 정합 | 연결 후 통과 |
+| `V015_3` | `sig.click_o2_line` | 정합 | 획득 signal 식별자 정합 | 선행 획득 통과 |
+| `V015_3_1` | `sig.interact_tpiece` | 정합/배선 | 기관내관 클릭 상호작용 지점 completion signal 정합 | 장착 단계 통과 |
+| `V015_3_2` | `sig.connect_tpiece_and_oxyflow` | 정합 | 연결지점 signal 식별자 정합 | 실제 연결 완료 통과 |
+| `V016` | `sig.click_gloves`, `sig.click_gauze`, `sig.click_plaster` | 정합 | 획득 자동 발행 식별자 정합 | 3개 획득 후 통과 |
+| `V016_1` | `sig.wear_glove` | 정합 | Item Apply signal 식별자 정합 | 착용 후 통과 |
+| `V016_2` | `sig.apply_gauze` | 정합 | Item Apply signal 식별자 정합 | 적용 후 통과 |
+| `V016_3` | `sig.apply_plaster_on_gauze` | 정합 | Item Apply signal 식별자 정합 | 적용 후 통과 |
+| `V017` | `sig.click_18g`, `sig.click_normal_saline_1000ml`, `sig.click_plasma_solution_1000ml` | 정합/결정연계 | 자동 발행 정합 + IV-1 확정안 반영 | 확정안 기준 통과 |
+| `V017_2` | `sig.connect_cannula_and_ns1` | 정합 | 연결지점 signal 식별자 정합 | 연결 후 통과 |
+| `V019` | `sig.click_plasma_solution_1000ml`, `sig.click_blood_transfusion_set` | 정합 | 획득 자동 발행 정합 | 2개 획득 후 통과 |
+| `V019_1` | `sig.connect_ps1_to_lv1` | 정합 | 연결지점 signal 식별자 정합 | 연결 후 통과 |
+| `V020` | `sig.connect_blood_to_lv1` | 정합 | 연결지점 signal 식별자 정합 | 연결 후 통과 |
+| `V022` | `sig.check_pulse_patient_a` | 정합 | Assess callback 식별자 정합 | 1회 사정 통과 |
+| `V023` | `sig.click_ambubag`, `sig.click_reservoir_bag` | 정합 | 획득 자동 발행 정합 | 2개 획득 후 통과 |
+| `V023_2` | `sig.connect_ambubag`, `sig.connect_o2_to_ambu` | 정합 | 연결지점 signal 식별자 정합 | 2연결 통과 |
+| `V023_4` | `sig.start_ambu` | 정합 | Item Use signal 식별자 정합 | 사용 후 통과 |
+| `V025_1` | `sig.click_defibpad` | 정합 | 획득 자동 발행 정합 | 획득 후 통과 |
+| `V026` | `sig.click_epinephrine_ampule`, `sig.click_syringe_5cc` | 정합 | 획득 자동 발행 정합 | 2개 획득 통과 |
+| `V026_1` | `sig.click_normal_saline_20ml`, `sig.click_syringe_20cc` | 정합 | 획득 자동 발행 정합 | 2개 획득 통과 |
+| `V026_2` | `sig.push_epi` | 정합 | Item Use signal 식별자 정합(OR 게이트 정책 유지) | 투여 후 통과 |
+| `V026_3` | `sig.push_ns` | 정합 | Item Use signal 식별자 정합 | 투여 후 통과 |
+| `V028` | `sig.start_ambu` | 정합 | Item Use signal 식별자 정합 | 사용 후 통과 |
+| `V029` | `sig.click_epinephrine_ampule`, `sig.click_syringe_5cc` | 정합 | 획득 자동 발행 정합 | 2개 획득 통과 |
+| `V029_1` | `sig.click_normal_saline_20ml`, `sig.click_syringe_20cc` | 정합 | 획득 자동 발행 정합 | 2개 획득 통과 |
+| `V029_2` | `sig.push_epi` | 정합 | Item Use signal 식별자 정합(OR 게이트 정책 유지) | 투여 후 통과 |
+| `V029_3` | `sig.push_ns` | 정합 | Item Use signal 식별자 정합 | 투여 후 통과 |
+| `V031` | `sig.check_pulse_patient_a` | 정합 | Assess callback 식별자 정합 | 1회 사정 통과 |
+| `V032` | `sig.arrive_triagearea` | 정합 | `ScenarioTriggerZone` 진입 signal 정합 | 구역 진입 통과 |
+| `V033` | `sig.click_scissors` | 정합 | 획득 자동 발행 정합 | 획득 후 통과 |
+| `V034` | `sig.check_gcs_a_rosc` | 정합 | Assess callback 식별자 정합 | 1회 사정 통과 |
+
+#### D. 변환기 안전 장치
+
+- 이 오버레이 절은 실행 노드 정의가 아니므로, 변환기에서 무시하거나 변환 전 삭제해도 된다.
+- 본문 노드 계약(`### [Identifier]`)과 충돌하는 식별자를 이 절에서 새로 정의하지 않는다.
+- 이 절을 삭제하더라도, 확정된 결정/배선 결과는 각 노드 본문과 차단 표에 반드시 이관한다.
+
+<!-- WORK-OVERLAY:END -->
+
+-----
 
 ### 변환 승인 조건
 
@@ -471,7 +719,7 @@ Scenario로 판정하면 안 된다.
 | Registry | Contains | RuntimeState | sig.show_vital_patient_a |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.show_vital_patient_a. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [x] (b) 배선 완료(2026-07-28): sig.show_vital_patient_a. `PatientTypeA`의 `assess_vital` 액션에 `_assessSignal=show_vital_patient_a` 정합했고, `PatientController.PerformAssess()` 완료 시 `ScenarioInteractionSignals.Raise("show_vital_patient_a")` 경로를 사용한다. (검증 상태: 미검증)
 
 
 ---
@@ -1451,7 +1699,7 @@ Scenario로 판정하면 안 된다.
 | Registry | Contains | RuntimeState | sig.remove_intu_stylet |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.remove_intu_stylet. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [x] (b) 배선 완료(2026-07-28): sig.remove_intu_stylet. `PatientTypeA`의 `EtTubeStyletInteractPoint(ScenarioActionInteractable)`에 `_completionSignal=remove_intu_stylet` 정합했고, `ScenarioActionInteractable.Interact()` 완료 시 Raise 경로를 사용한다. (검증 상태: 미검증)
 
 
 ---
@@ -1751,7 +1999,7 @@ Scenario로 판정하면 안 된다.
 | **Identifier** | 문자열 | N009_3 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 산소줄과 T-piece를 각각 클릭해 획득하고, 산소 유량계와 환자에게 삽입된 기관내관을 각각 클릭해 연결하세요. |
+| **DialogueContent** | 문자열 | 산소줄을 먼저 클릭해 획득하세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 6.0 |
 | **NextIdentifier** | 문자열 | V015_3 |
@@ -1769,20 +2017,96 @@ Scenario로 판정하면 안 된다.
 | **WaitForCondition** | bool | true |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
-| **NextIdentifier** | 문자열 | E014 |
+| **NextIdentifier** | 문자열 | N009_3_1 |
 
 #### [V015_3_Rules] 검증 규칙 (RuntimeState 시그널)
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
 | Registry | Contains | RuntimeState | sig.click_o2_line |
+
+
+- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_o2_line [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
+
+
+---
+
+### [N009_3_1] DialogueNode
+
+| 속성 | 타입 | 설명 |
+| --- | --- | --- |
+| **Identifier** | 문자열 | N009_3_1 |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | 시스템 |
+| **DialogueContent** | 문자열 | 환자에게 삽입된 기관내관을 클릭해 T-piece를 장착하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
+| **NextIdentifier** | 문자열 | V015_3_1 |
+
+
+---
+
+### [V015_3_1] ValidatorNode
+
+| 속성 | 타입 | 설명 |
+| --- | --- | --- |
+| **Identifier** | 문자열 | V015_3_1 |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
+| **Condition** | ScenarioValidatorCondition | RegistryContains |
+| **WaitForCondition** | bool | true |
+| **OnFailure** | ScenarioValidatorOnFailure | Ignore |
+| **FailureNextIdentifier** | 문자열/null | null |
+| **NextIdentifier** | 문자열 | N009_3_2 |
+
+#### [V015_3_1_Rules] 검증 규칙 (RuntimeState 시그널)
+
+| type | condition | registryType | registryIdentifier |
+| --- | --- | --- | --- |
 | Registry | Contains | RuntimeState | sig.interact_tpiece |
+
+
+- [ ] `endotracheal_tube_A` 클릭 지점에 `ScenarioActionInteractable`을 배선하고 completion signal을 `interact_tpiece`로 설정한다.
+
+- [ ] `interact_tpiece` 완료 시 `TPieceSet_A` 시각 오브젝트가 활성화되어야 한다(장착 완료 표현).
+
+
+---
+
+### [N009_3_2] DialogueNode
+
+| 속성 | 타입 | 설명 |
+| --- | --- | --- |
+| **Identifier** | 문자열 | N009_3_2 |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | 시스템 |
+| **DialogueContent** | 문자열 | 장착된 T-piece와 벽면 유량계를 각각 클릭해 라인을 연결하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
+| **NextIdentifier** | 문자열 | V015_3_2 |
+
+
+---
+
+### [V015_3_2] ValidatorNode
+
+| 속성 | 타입 | 설명 |
+| --- | --- | --- |
+| **Identifier** | 문자열 | V015_3_2 |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
+| **Condition** | ScenarioValidatorCondition | RegistryContains |
+| **WaitForCondition** | bool | true |
+| **OnFailure** | ScenarioValidatorOnFailure | Ignore |
+| **FailureNextIdentifier** | 문자열/null | null |
+| **NextIdentifier** | 문자열 | E014 |
+
+#### [V015_3_2_Rules] 검증 규칙 (RuntimeState 시그널)
+
+| type | condition | registryType | registryIdentifier |
+| --- | --- | --- | --- |
 | Registry | Contains | RuntimeState | sig.connect_tpiece_and_oxyflow |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_o2_line, sig.connect_tpiece_and_oxyflow [아이템 픽업(MedicalItem.OnGet 자동) / 연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3].
+- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.connect_tpiece_and_oxyflow [연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3].
 
-- [ ] T-piece 오브젝트에 `ScenarioActionInteractable`을 붙이고 completion signal을 `interact_tpiece`로 설정한다.
+- [ ] `connect_tpiece_and_oxyflow`는 T-piece 측 연결점과 벽 유량계 측 연결점의 실제 연결 완료로 발신되어야 한다.
 
 
 ---
@@ -2946,7 +3270,7 @@ Scenario로 판정하면 안 된다.
 | Registry | Contains | RuntimeState | sig.remove_tpiece |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.remove_tpiece. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [x] (b) 배선 완료(2026-07-28): sig.remove_tpiece. `PatientTypeA`의 `TPieceRemoveInteractPoint(ScenarioActionInteractable)`에 `_completionSignal=remove_tpiece` 정합했고, `ScenarioActionInteractable.Interact()` 완료 시 Raise 경로를 사용한다. (검증 상태: 미검증)
 
 
 ---
@@ -3253,7 +3577,7 @@ Scenario로 판정하면 안 된다.
 | Registry | Contains | RuntimeState | sig.click_to_start_comp |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.click_to_start_comp. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [x] (b) 배선 완료(2026-07-28): sig.click_to_start_comp. `PatientTypeA`의 `ChestCompStartInteractPoint(ScenarioActionInteractable)`에 `_completionSignal=click_to_start_comp` 정합했고, `ScenarioActionInteractable.Interact()` 완료 시 Raise 경로를 사용한다. (검증 상태: 미검증)
 
 
 ---
@@ -3532,10 +3856,10 @@ Scenario로 판정하면 안 된다.
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.move_defibcart_to_patient |
+| Registry | Contains | RuntimeState | sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.move_defibcart_to_patient. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [x] (b) 배선 완료(2026-07-28): sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient. `MovingPatientBedController.PublishPositioningPointReached()`의 scoped signal(`patient_bed_position_reached_{mover}_{point}`) 발신 경로를 사용하며, `OverworldScene`의 mover=`defib_cart_a`, point=`defibcart_to_patient` 정합을 확인했다. (검증 상태: 미검증)
 
 
 ---
@@ -3717,7 +4041,7 @@ Scenario로 판정하면 안 된다.
 | **DialogueContent** | 문자열 | 오답입니다. 150~200J(줄)이 정답입니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
-| **NextIdentifier** | 문자열 | C016 |
+| **NextIdentifier** | 문자열 | C017 |
 
 
 ---
@@ -3768,7 +4092,7 @@ Scenario로 판정하면 안 된다.
 | **DialogueContent** | 문자열 | 오답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
-| **NextIdentifier** | 문자열 | C017 |
+| **NextIdentifier** | 문자열 | C018 |
 
 
 ---
@@ -5574,7 +5898,7 @@ Scenario로 판정하면 안 된다.
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_scissors [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
 
-- [ ] (b) 선행 구현 필요(미배선): sig.remove_patient_clothing. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [x] (b) 배선 완료(2026-07-28): sig.remove_patient_clothing. `PatientTypeA`의 `PatientClothingCutPoint(ScenarioActionInteractable)`에 `_completionSignal=remove_patient_clothing` 정합했고, `ScenarioActionInteractable.Interact()` 완료 시 Raise 경로를 사용한다. (검증 상태: 미검증)
 
 
 ---

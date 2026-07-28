@@ -98,6 +98,10 @@ namespace TriageTrainer.Entity
     [SerializeField, Min(1)] private int _maximumPlayerParticipants = 2;
     [SerializeField] private List<Transform> PatientAttachPoints = new();
 
+    [Header("Positioning Point Filter")]
+    [Tooltip("비어 있으면 모든 MovingPatientBedPositioningPoint를 대상으로 스냅합니다. 값이 있으면 해당 Identifier 목록만 스냅 대상으로 허용합니다.")]
+    [SerializeField] private List<string> _allowedPositioningPointIdentifiers = new();
+
     [Header("Attachable Item Visuals")]
     [SerializeField] private List<AttachableItemVisualPair> _attachableItemVisualPairs = new();
 
@@ -268,6 +272,14 @@ namespace TriageTrainer.Entity
       string pointIdentifier = point.Identifier;
       string signalIdentifier = $"patient_bed_position_reached_{pointIdentifier}";
       MI.Scenario.ScenarioInteractionSignals.Raise(signalIdentifier);
+
+      string moverIdentifier = Identifier;
+      if (!string.IsNullOrWhiteSpace(moverIdentifier))
+      {
+        string scopedSignalIdentifier = $"patient_bed_position_reached_{moverIdentifier}_{pointIdentifier}";
+        MI.Scenario.ScenarioInteractionSignals.Raise(scopedSignalIdentifier);
+      }
+
       GameLogService.WriteInteraction(
         $"Patient bed reached positioning point: bed={Identifier}, point={pointIdentifier}",
         pointIdentifier);
@@ -285,6 +297,9 @@ namespace TriageTrainer.Entity
         if (point == null || !point.isActiveAndEnabled || !point.IsWithinSnapDistance(transform.position))
           continue;
 
+        if (!IsPositioningPointAllowed(point))
+          continue;
+
         Vector3 offset = transform.position - point.Position;
         offset.y = 0f;
         float distanceSquared = offset.sqrMagnitude;
@@ -296,6 +311,31 @@ namespace TriageTrainer.Entity
       }
 
       return nearest;
+    }
+
+    private bool IsPositioningPointAllowed(MovingPatientBedPositioningPoint point)
+    {
+      if (point == null)
+        return false;
+
+      if (_allowedPositioningPointIdentifiers == null || _allowedPositioningPointIdentifiers.Count == 0)
+        return true;
+
+      string identifier = point.Identifier;
+      if (string.IsNullOrWhiteSpace(identifier))
+        return false;
+
+      for (int i = 0; i < _allowedPositioningPointIdentifiers.Count; i++)
+      {
+        string allowed = _allowedPositioningPointIdentifiers[i];
+        if (string.IsNullOrWhiteSpace(allowed))
+          continue;
+
+        if (string.Equals(allowed.Trim(), identifier, StringComparison.Ordinal))
+          return true;
+      }
+
+      return false;
     }
 
     public void Interact(Transform interactor)
@@ -633,6 +673,21 @@ namespace TriageTrainer.Entity
       }
 
       EnsureDefaultPatientAttachPoint();
+
+      if (_allowedPositioningPointIdentifiers != null)
+      {
+        for (int i = _allowedPositioningPointIdentifiers.Count - 1; i >= 0; i--)
+        {
+          string value = _allowedPositioningPointIdentifiers[i];
+          if (string.IsNullOrWhiteSpace(value))
+          {
+            _allowedPositioningPointIdentifiers.RemoveAt(i);
+            continue;
+          }
+
+          _allowedPositioningPointIdentifiers[i] = value.Trim();
+        }
+      }
     }
 
     private void OnDrawGizmosSelected()
