@@ -201,16 +201,16 @@ SPAWN_A
 
 | TaskID | Signal | 소비 Validator | Producer 위치(오브젝트/프리팹) | 콜백/트리거 | 상태 | 검증 |
 |---|---|---|---|---|---|---|
-| B-01 | sig.show_vital_patient_a | V011_1 | patient_a / PatientController.AssessActions(assess_vital) | PatientController.PerformAssess() (assess_vital) 완료 시 ScenarioInteractionSignals.Raise("show_vital_patient_a") | 미해결 | 미검증 |
+| B-01 | sig.show_vital_patient_a | V011_1 | patient_a / PatientController.AssessActions(assess_vital) | PatientController.PerformAssess() (assess_vital) 완료 시 ScenarioInteractionSignals.Raise("show_vital_patient_a") | 배선완료(2026-07-28, PatientTypeA.assess_vital._assessSignal 정합 + PerformAssess Raise 경로 확인) | 미검증 |
 | B-02 | sig.pass_laryngoscope | V014_1 | npc-doctor-1 제출 상호작용 | ItemSubmission 완료 | 미해결 | 미검증 |
 | B-03 | sig.pass_et_tube_ready | V014_2 | npc-doctor-1 제출 상호작용 | ItemSubmission 완료 | 미해결 | 미검증 |
-| B-04 | sig.remove_intu_stylet | V014_3 | OverworldScene / endotracheal_tube_ready_A / EtTubeStyletInteractPoint(ScenarioActionInteractable) | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("remove_intu_stylet") | 미해결 | 미검증 |
+| B-04 | sig.remove_intu_stylet | V014_3 | OverworldScene / endotracheal_tube_ready_A / EtTubeStyletInteractPoint(ScenarioActionInteractable) | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("remove_intu_stylet") | 배선완료(2026-07-28, PatientTypeA.EtTubeStyletInteractPoint._completionSignal 정합 확인) | 미검증 |
 | B-05 | sig.pass_syringe | V014_4 | npc-doctor-1 제출 상호작용 | ItemSubmission 완료 | 미해결 | 미검증 |
 | B-06 | sig.pass_central_line_set | V018 | npc-doctor-1 제출 상호작용 | ItemSubmission 완료 | 미해결 | 미검증 |
-| B-07 | sig.remove_tpiece | V023_1 | OverworldScene / patient_a T-piece connected visual / TPieceRemoveInteractPoint(ScenarioActionInteractable) | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("remove_tpiece") | 미해결 | 미검증 |
-| B-08 | sig.click_to_start_comp | V024 | OverworldScene / patient_a chest interaction point / ChestCompStartInteractPoint(ScenarioActionInteractable) | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("click_to_start_comp") | 미해결 | 미검증 |
-| B-09 | sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient | V025 | Defib cart(MovingPatientBedController: `defib_cart_a`) + defibcart_to_patient(MovingPatientBedPositioningPoint) | PublishPositioningPointReached() -> Raise("patient_bed_position_reached_defib_cart_a_defibcart_to_patient") | 미해결 | 미검증 |
-| B-10 | sig.remove_patient_clothing | V033 | OverworldScene / patient_a 흉부 클릭 포인트(PatientClothingCutPoint) / ScenarioActionInteractable | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("remove_patient_clothing") 발신 | 미해결 | 미검증 |
+| B-07 | sig.remove_tpiece | V023_1 | OverworldScene / patient_a T-piece connected visual / TPieceRemoveInteractPoint(ScenarioActionInteractable) | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("remove_tpiece") | 배선완료(2026-07-28, PatientTypeA.TPieceRemoveInteractPoint._completionSignal 정합 확인) | 미검증 |
+| B-08 | sig.click_to_start_comp | V024 | OverworldScene / patient_a chest interaction point / ChestCompStartInteractPoint(ScenarioActionInteractable) | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("click_to_start_comp") | 배선완료(2026-07-28, PatientTypeA.ChestCompStartInteractPoint._completionSignal 정합 확인) | 미검증 |
+| B-09 | sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient | V025 | Defib cart(MovingPatientBedController: `defib_cart_a`) + defibcart_to_patient(MovingPatientBedPositioningPoint) | PublishPositioningPointReached() -> Raise("patient_bed_position_reached_defib_cart_a_defibcart_to_patient") | 배선완료(2026-07-28, MovingPatientBedController scoped signal 발신 + OverworldScene defib_cart_a/defibcart_to_patient 정합 확인) | 미검증 |
+| B-10 | sig.remove_patient_clothing | V033 | OverworldScene / patient_a 흉부 클릭 포인트(PatientClothingCutPoint) / ScenarioActionInteractable | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("remove_patient_clothing") 발신 | 배선완료(2026-07-28, PatientTypeA.PatientClothingCutPoint._completionSignal 정합 확인) | 미검증 |
 
 ### **결정 카드 (주도자 확정 필요)**
 
@@ -719,7 +719,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.show_vital_patient_a |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.show_vital_patient_a. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [x] (b) 배선 완료(2026-07-28): sig.show_vital_patient_a. `PatientTypeA`의 `assess_vital` 액션에 `_assessSignal=show_vital_patient_a` 정합했고, `PatientController.PerformAssess()` 완료 시 `ScenarioInteractionSignals.Raise("show_vital_patient_a")` 경로를 사용한다. (검증 상태: 미검증)
 
 
 ---
@@ -1699,7 +1699,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.remove_intu_stylet |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.remove_intu_stylet. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [x] (b) 배선 완료(2026-07-28): sig.remove_intu_stylet. `PatientTypeA`의 `EtTubeStyletInteractPoint(ScenarioActionInteractable)`에 `_completionSignal=remove_intu_stylet` 정합했고, `ScenarioActionInteractable.Interact()` 완료 시 Raise 경로를 사용한다. (검증 상태: 미검증)
 
 
 ---
@@ -3269,7 +3269,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.remove_tpiece |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.remove_tpiece. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [x] (b) 배선 완료(2026-07-28): sig.remove_tpiece. `PatientTypeA`의 `TPieceRemoveInteractPoint(ScenarioActionInteractable)`에 `_completionSignal=remove_tpiece` 정합했고, `ScenarioActionInteractable.Interact()` 완료 시 Raise 경로를 사용한다. (검증 상태: 미검증)
 
 
 ---
@@ -3576,7 +3576,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.click_to_start_comp |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.click_to_start_comp. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [x] (b) 배선 완료(2026-07-28): sig.click_to_start_comp. `PatientTypeA`의 `ChestCompStartInteractPoint(ScenarioActionInteractable)`에 `_completionSignal=click_to_start_comp` 정합했고, `ScenarioActionInteractable.Interact()` 완료 시 Raise 경로를 사용한다. (검증 상태: 미검증)
 
 
 ---
@@ -3858,7 +3858,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient. 제세동 카트(`defib_cart_a`)가 `defibcart_to_patient` 포지셔닝 포인트에 도달했을 때 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [x] (b) 배선 완료(2026-07-28): sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient. `MovingPatientBedController.PublishPositioningPointReached()`의 scoped signal(`patient_bed_position_reached_{mover}_{point}`) 발신 경로를 사용하며, `OverworldScene`의 mover=`defib_cart_a`, point=`defibcart_to_patient` 정합을 확인했다. (검증 상태: 미검증)
 
 
 ---
@@ -5897,7 +5897,7 @@ SPAWN_A
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_scissors [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
 
-- [ ] (b) 선행 구현 필요(미배선): sig.remove_patient_clothing. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 인간 작업자 확정 요망.
+- [x] (b) 배선 완료(2026-07-28): sig.remove_patient_clothing. `PatientTypeA`의 `PatientClothingCutPoint(ScenarioActionInteractable)`에 `_completionSignal=remove_patient_clothing` 정합했고, `ScenarioActionInteractable.Interact()` 완료 시 Raise 경로를 사용한다. (검증 상태: 미검증)
 
 
 ---
