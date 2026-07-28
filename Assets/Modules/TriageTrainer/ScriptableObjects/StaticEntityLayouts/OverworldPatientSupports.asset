@@ -193,7 +193,7 @@ MonoBehaviour:
       useDefaultPosition: 0
       position: {x: -64, y: 0, z: -23}
       useDefaultRotation: 0
-      rotationEuler: {x: 90, y: -90, z: 0}
+      rotationEuler: {x: 0, y: 90, z: 0}
       useDefaultOccupiedSize: 1
       occupiedSize: {x: 2.2, y: 1}
       useDefaultDisplayHeight: 1
