@@ -392,6 +392,8 @@ MonoBehaviour:
   _maximumPlayerParticipants: 2
   PatientAttachPoints:
   - {fileID: 762591555731961356}
+  _allowedPositioningPointIdentifiers:
+  - bed-snap-point-0-0
   _attachableItemVisualPairs: []
   _reposedTargetComponent: {fileID: 0}
   _initialReposedTargetIdentifier: 
