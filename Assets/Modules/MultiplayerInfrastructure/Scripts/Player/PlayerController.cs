@@ -44,6 +44,9 @@ namespace MultiplayerInfrastructure.Player
 
     void Update()
     {
+      if (IsServerStarted)
+        UpdateServerWorldItemTransforms();
+
       if (!IsOwner) return;
       Update_Input();
       Update_Movement();

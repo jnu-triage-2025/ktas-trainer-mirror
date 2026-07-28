@@ -29,6 +29,9 @@ namespace MultiplayerInfrastructure.Player
     private static readonly System.Collections.Generic.Dictionary<string, PendingWorldItemPickup> _pendingWorldItemPickups = new(StringComparer.Ordinal);
     private const float MaxWorldItemPickupDistance = 4f;
     private const float MaxWorldItemPickupDistanceSqr = MaxWorldItemPickupDistance * MaxWorldItemPickupDistance;
+    private const float WorldItemTransformSyncInterval = 0.1f;
+    private static PlayerController _worldItemTransformSyncAuthority;
+    private float _nextWorldItemTransformSyncTime;
 
     // ── SyncVars ─────────────────────────────────────────────────────────────
     // 서버가 설정하고 모든 클라이언트로 자동 전파됩니다.
@@ -51,6 +54,8 @@ namespace MultiplayerInfrastructure.Player
     public override void OnStartServer()
     {
       base.OnStartServer();
+
+      _worldItemTransformSyncAuthority ??= this;
 
       // 서버가 UserDescriptor를 발급하고 SyncVar에 설정
       var descriptor = UserDescriptor.CreateDefault();
@@ -76,6 +81,9 @@ namespace MultiplayerInfrastructure.Player
 
     public override void OnStopServer()
     {
+      if (ReferenceEquals(_worldItemTransformSyncAuthority, this))
+        _worldItemTransformSyncAuthority = null;
+
       PlayerGamemodeService.UnregisterPlayer(this);
       Registry.Registry.UnregisterEntity(_entityIdentifier.Value);
       PlayerTagService.ClearTags(_userIdentifier.Value);
@@ -97,6 +105,44 @@ namespace MultiplayerInfrastructure.Player
       RestorePendingPickupsForClaimant();
 
       base.OnStopServer();
+    }
+
+    private void UpdateServerWorldItemTransforms()
+    {
+      if (!IsServerStarted)
+        return;
+
+      // 현재 담당 플레이어가 종료된 경우 남아 있는 서버 플레이어가 이어받는다.
+      _worldItemTransformSyncAuthority ??= this;
+      if (!ReferenceEquals(_worldItemTransformSyncAuthority, this) ||
+          Time.time < _nextWorldItemTransformSyncTime)
+        return;
+
+      _nextWorldItemTransformSyncTime = Time.time + WorldItemTransformSyncInterval;
+      foreach (var pair in Registry.Registry.GetAllEntities(EntityType.ItemObject))
+      {
+        var descriptor = pair.Value;
+        var itemObject = descriptor?.GameObject?.GetComponent<ItemObject>();
+        if (itemObject == null)
+          continue;
+
+        RpcSyncWorldItemTransform(
+          descriptor.Identifier,
+          itemObject.AuthoritativePosition,
+          itemObject.AuthoritativeRotation,
+          itemObject.IsGrounded);
+      }
+    }
+
+    [ObserversRpc]
+    private void RpcSyncWorldItemTransform(
+      string entityIdentifier,
+      Vector3 position,
+      Quaternion rotation,
+      bool grounded)
+    {
+      var itemObject = Registry.Registry.Get<ItemObject>(RegistryType.Entity, entityIdentifier);
+      itemObject?.ApplyAuthoritativeState(position, rotation, grounded);
     }
 
     /// <summary>

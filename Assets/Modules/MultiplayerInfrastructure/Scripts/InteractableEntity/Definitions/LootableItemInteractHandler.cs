@@ -7,7 +7,7 @@ namespace MultiplayerInfrastructure.InteractableEntity.Definitions
   /// <summary>
   /// 월드에 드롭된 아이템(<see cref="ItemObject"/>)을 플레이어가 획득할 수 있도록 합니다.
   ///
-  /// ItemObject.Spawn() 에서 자동으로 추가됩니다.
+  /// 필요할 때 별도로 부착할 수 있는 레거시 상호작용 핸들러입니다.
   /// NearbyInteractablesDetector 가 같은 GameObject의 Collider를 통해 감지하며,
   /// 플레이어가 상호작용(E 키)하면 Interact()가 호출됩니다.
   /// </summary>

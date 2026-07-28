@@ -1,5 +1,5 @@
 using System.Collections;
-using MultiplayerInfrastructure.InteractableEntity.Definitions;
+using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
@@ -15,7 +15,6 @@ namespace MultiplayerInfrastructure.ItemSystem
   /// ■ 사용 방법
   ///   var obj = ItemObject.Spawn(myStoneItem, transform.position);
   /// </summary>
-  [RequireComponent(typeof(Rigidbody))]
   public class ItemObject : MonoBehaviour
   {
     // ─── 3D 모델 Resources 루트 경로 ───────────────────────────────────────────
@@ -35,19 +34,30 @@ namespace MultiplayerInfrastructure.ItemSystem
     public GameObject GroundedModel { get; private set; }
 
     // ─── 내부 ──────────────────────────────────────────────────────────────────
-    private Rigidbody _rigidbody;
     private Coroutine _animCoroutine;
+    private bool _isGrounded;
+    private float _nextAutoPickupAttemptTime;
+    private Vector3 _groundedPosition;
+    private Quaternion _groundedRotation;
+    private bool _groundedPoseInitialized;
+    private static PlayerController _localPlayer;
+
+    private const float GroundedBobAmplitude = 0.02f;
+    private const float GroundedBobFrequency = 0.5f;
+    private const float GroundedRotationSpeed = 20f;
+    private const float AutoPickupRadius = 1.3f;
+    private const float AutoPickupRetryInterval = 0.5f;
 
     // ─── 팩토리 메서드 ─────────────────────────────────────────────────────────
 
     /// <summary>
     /// 지정 위치에 Item을 나타내는 ItemObject를 즉석으로 생성합니다.
-    /// Rigidbody, Collider는 자동으로 추가됩니다.
+    /// Collider는 자동으로 추가되며, 이동은 Rigidbody 없이 transform으로 처리됩니다.
     /// </summary>
     /// <param name="item">데이터 소스. null 불가.</param>
     /// <param name="position">월드 스폰 위치.</param>
     /// <param name="throwForce">
-    /// 0보다 크면 Rigidbody에 해당 방향으로 impulse를 가합니다. (드롭/던지기)
+    /// 기존 호출부 호환을 위해 유지되는 인자입니다. 현재 월드 아이템은 물리 impulse를 사용하지 않습니다.
     /// </param>
     public static ItemObject Spawn(Item item, Vector3 position, Vector3? throwForce = null, string entityIdentifier = null)
     {
@@ -66,24 +76,97 @@ namespace MultiplayerInfrastructure.ItemSystem
       // 박스 콜라이더 기본 추가 (모델 로드 후 적절히 조정 가능)
       var collider = go.AddComponent<BoxCollider>();
       collider.size = Vector3.one * 0.3f;
+      collider.isTrigger = true;
 
       var comp = go.AddComponent<ItemObject>();
       comp.Initialize(item, entityIdentifier);
 
-      // IInteractable 등록 — NearbyInteractablesDetector가 감지할 수 있도록
-      go.AddComponent<LootableItemInteractHandler>();
-
-      if (throwForce.HasValue && throwForce.Value.sqrMagnitude > 0.0001f)
-        comp._rigidbody.AddForce(throwForce.Value, ForceMode.Impulse);
+      // Rigidbody 물리 대신 transform 기반으로 부유/회전한다.
+      // throwForce는 기존 호출부 호환을 위해 인자로만 유지한다.
+      comp.SetGrounded();
 
       return comp;
     }
 
     // ─── 초기화 ───────────────────────────────────────────────────────────────
 
-    private void Awake()
+    private void Update()
     {
-      _rigidbody = GetComponent<Rigidbody>();
+      AnimateGroundedState();
+      TryAutoPickup();
+    }
+
+    private void SetGrounded()
+    {
+      _isGrounded = true;
+      _groundedPoseInitialized = false;
+    }
+
+    private void AnimateGroundedState()
+    {
+      // SceneItemPlacement가 Spawn 직후 회전을 적용할 수 있으므로 첫 프레임에 기준 포즈를 캡처한다.
+      if (!_groundedPoseInitialized)
+      {
+        _groundedPosition = transform.position;
+        _groundedRotation = transform.rotation;
+        _groundedPoseInitialized = true;
+      }
+
+      float elapsed = Time.time;
+      transform.position = _groundedPosition + Vector3.up *
+        (Mathf.Sin(elapsed * Mathf.PI * 2f * GroundedBobFrequency) * GroundedBobAmplitude);
+      transform.rotation = _groundedRotation *
+        Quaternion.Euler(0f, elapsed * GroundedRotationSpeed, 0f);
+    }
+
+    private void TryAutoPickup()
+    {
+      if (Time.time < _nextAutoPickupAttemptTime || Item == null)
+        return;
+
+      var player = ResolveLocalPlayer();
+      if (player == null)
+        return;
+
+      if ((player.transform.position - transform.position).sqrMagnitude >
+          AutoPickupRadius * AutoPickupRadius)
+        return;
+
+      _nextAutoPickupAttemptTime = Time.time + AutoPickupRetryInterval;
+      if (string.IsNullOrWhiteSpace(Identifier))
+        player.TryPickupWorldItem(this);
+      else
+        player.TryPickupWorldItem(Identifier);
+    }
+
+    private static PlayerController ResolveLocalPlayer()
+    {
+      if (_localPlayer != null && _localPlayer.IsOwner)
+        return _localPlayer;
+
+      _localPlayer = Registry.Registry.GetFirstEntityComponent<PlayerController>(
+        EntityType.Player,
+        each => each != null && each.IsOwner);
+      return _localPlayer;
+    }
+
+    /// <summary>서버 권위 물리 동기화에 사용하는 현재 상태입니다.</summary>
+    public bool IsGrounded => _isGrounded;
+    public Vector3 AuthoritativePosition
+      => _isGrounded && _groundedPoseInitialized ? _groundedPosition : transform.position;
+    public Quaternion AuthoritativeRotation
+      => _isGrounded && _groundedPoseInitialized ? _groundedRotation : transform.rotation;
+    /// <summary>서버에서 받은 물리/부유 상태를 클라이언트 표현에 적용합니다.</summary>
+    public void ApplyAuthoritativeState(
+      Vector3 position,
+      Quaternion rotation,
+      bool grounded)
+    {
+      _isGrounded = grounded;
+      transform.SetPositionAndRotation(position, rotation);
+      _groundedPosition = position;
+      _groundedRotation = rotation;
+      _groundedPoseInitialized = grounded;
     }
 
     private void OnDestroy()
@@ -97,6 +180,7 @@ namespace MultiplayerInfrastructure.ItemSystem
       Item = item;
       Identifier = entityIdentifier;
       LoadModel();
+      ConfigureNonBlockingColliders();
 
       if (!string.IsNullOrWhiteSpace(Identifier))
       {
@@ -123,6 +207,7 @@ namespace MultiplayerInfrastructure.ItemSystem
         GroundedModel.transform.SetParent(transform, false);
         GroundedModel.transform.localPosition = Vector3.zero;
         GroundedModel.transform.localRotation = Quaternion.identity;
+        RemoveModelRigidbodies();
       }
       else
       {
@@ -140,6 +225,41 @@ namespace MultiplayerInfrastructure.ItemSystem
         // 기본 BoxCollider는 이미 추가했으므로 큐브의 콜라이더는 제거
         var primCollider = GroundedModel.GetComponent<Collider>();
         if (primCollider != null) Destroy(primCollider);
+      }
+    }
+
+    /// <summary>
+    /// 모델 프리팹에 포함된 Rigidbody를 제거합니다.
+    /// 월드 아이템의 이동과 회전은 ItemObject가 transform으로 직접 처리하므로,
+    /// 모델 자체의 Rigidbody가 별도 물리 시뮬레이션을 시작하면 회전 중심이 분리됩니다.
+    /// </summary>
+    private void RemoveModelRigidbodies()
+    {
+      var rigidbodies = GetComponentsInChildren<Rigidbody>(includeInactive: true);
+      for (int i = 0; i < rigidbodies.Length; i++)
+      {
+        var rigidbody = rigidbodies[i];
+        if (rigidbody == null)
+          continue;
+
+        rigidbody.isKinematic = true;
+        rigidbody.useGravity = false;
+        Destroy(rigidbody);
+      }
+    }
+
+    /// <summary>
+    /// 월드 아이템의 Collider는 감지/거리 계산 용도일 뿐 플레이어 이동을 막으면 안 됩니다.
+    /// 특히 Rigidbody를 제거한 모델 프리팹의 일반 Collider는 정적 장애물처럼 동작할 수 있으므로
+    /// 아이템 계층 전체를 Trigger로 강제한다.
+    /// </summary>
+    private void ConfigureNonBlockingColliders()
+    {
+      var colliders = GetComponentsInChildren<Collider>(includeInactive: true);
+      for (int i = 0; i < colliders.Length; i++)
+      {
+        if (colliders[i] != null)
+          colliders[i].isTrigger = true;
       }
     }
 
