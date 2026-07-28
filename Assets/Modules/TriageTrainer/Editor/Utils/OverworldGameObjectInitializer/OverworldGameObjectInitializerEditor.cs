@@ -1,6 +1,9 @@
+using System.Collections.Generic;
+using System.Linq;
 using TriageTrainer.Utils;
 using UnityEditor;
 using UnityEngine;
+using TriageTrainer.Entity;
 
 namespace TriageTrainer.Editor.Utils
 {
@@ -12,6 +15,7 @@ namespace TriageTrainer.Editor.Utils
     private Vector3 treatmentRoomEnterance = OverworldGameObjectInitializer.DefaultTreatmentRoomEnterance;
     private string commonSpawnPointIdentifier = OverworldGameObjectInitializer.CommonSpawnPointIdentifier;
     private Vector3 commonSpawnPoint = OverworldGameObjectInitializer.DefaultCommonSpawnPoint;
+    private readonly List<StaticEntityLayoutDefinition> staticEntityLayouts = new();
 
     [MenuItem("Tools/Triage Trainer/Overworld GameObject Initializer")]
     private static void Open()
@@ -44,6 +48,14 @@ namespace TriageTrainer.Editor.Utils
       );
 
       EditorGUILayout.Space(8f);
+      EditorGUILayout.LabelField("Static Entity Layout", EditorStyles.boldLabel);
+      int layoutCount = Mathf.Max(0, EditorGUILayout.IntField("Layout Count", staticEntityLayouts.Count));
+      while (staticEntityLayouts.Count < layoutCount) staticEntityLayouts.Add(null);
+      while (staticEntityLayouts.Count > layoutCount) staticEntityLayouts.RemoveAt(staticEntityLayouts.Count - 1);
+      for (int i = 0; i < staticEntityLayouts.Count; i++)
+        staticEntityLayouts[i] = (StaticEntityLayoutDefinition)EditorGUILayout.ObjectField(
+          $"Layout Definition {i + 1}", staticEntityLayouts[i], typeof(StaticEntityLayoutDefinition), false);
+      EditorGUILayout.HelpBox("Layout asset의 정의에 따라 MovingPatientBedPositioningPoint, Wall 장비, PatientCareDescriptionZone을 생성합니다.", MessageType.None);
 
       if (GUILayout.Button("Reset Values", GUILayout.Height(22f)))
       {
@@ -64,6 +76,21 @@ namespace TriageTrainer.Editor.Utils
             commonSpawnPointIdentifier,
             commonSpawnPoint
           );
+          var seenIdentifiers = new HashSet<string>();
+          foreach (var layout in staticEntityLayouts.Where(value => value != null))
+          {
+            if (string.IsNullOrWhiteSpace(layout.identifier))
+            {
+              Debug.LogWarning("identifier가 비어 있는 StaticEntityLayout을 건너뜁니다.", layout);
+              continue;
+            }
+            if (!seenIdentifiers.Add(layout.identifier.Trim()))
+            {
+              Debug.LogWarning($"중복된 StaticEntityLayout identifier를 건너뜁니다: {layout.identifier}", layout);
+              continue;
+            }
+            OverworldGameObjectInitializer.SetStaticEntityLayouts(layout);
+          }
         }
 
         if (GUILayout.Button("Delete", GUILayout.Height(22f)))
@@ -81,6 +108,7 @@ namespace TriageTrainer.Editor.Utils
       treatmentRoomEnterance = OverworldGameObjectInitializer.DefaultTreatmentRoomEnterance;
       commonSpawnPointIdentifier = OverworldGameObjectInitializer.CommonSpawnPointIdentifier;
       commonSpawnPoint = OverworldGameObjectInitializer.DefaultCommonSpawnPoint;
+      staticEntityLayouts.Clear();
     }
   }
 }

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Entity.Patient;
+using TriageTrainer.Utils;
+using UnityEngine;
 
 namespace MultiplayerInfrastructure.Editor
 {
@@ -47,8 +49,25 @@ namespace MultiplayerInfrastructure.Editor
 
       // 그래프 수준 검사
       CheckGraphLevel(graph, nodeIds, items);
+      CheckGeneratedStaticLayouts(items);
 
       return items;
+    }
+
+    private static void CheckGeneratedStaticLayouts(List<DiagnosticItem> items)
+    {
+      var roots = UnityEngine.Object.FindObjectsByType<GeneratedByOverworldGameObjectInitializerEditor>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+      foreach (var root in roots)
+      {
+        for (int i = 0; i < root.transform.childCount; i++)
+        {
+          var name = root.transform.GetChild(i).name;
+          if (name.StartsWith("static_entities:", StringComparison.Ordinal))
+            items.Add(new DiagnosticItem(Severity.Info, "(static-layout)", $"StaticEntityLayout present: {name}"));
+        }
+      }
+      if (roots.Length == 0)
+        items.Add(new DiagnosticItem(Severity.Warning, "(static-layout)", "GeneratedByOverworldGameObjectInitializerEditor가 씬에 없습니다."));
     }
 
     // ── 노드 수준 검사 ────────────────────────────────────────────────────────

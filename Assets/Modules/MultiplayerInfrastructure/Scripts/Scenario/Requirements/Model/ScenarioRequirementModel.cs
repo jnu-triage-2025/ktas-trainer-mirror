@@ -25,7 +25,8 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
     QuestDefinition,
     PlayerTagState,
     RuntimeEntityReference,
-    Service
+    Service,
+    StaticEntityLayout
   }
 
   public enum ScenarioRequirementCapability

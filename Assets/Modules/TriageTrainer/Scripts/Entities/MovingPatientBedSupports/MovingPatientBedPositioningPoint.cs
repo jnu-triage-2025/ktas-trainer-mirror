@@ -27,6 +27,22 @@ namespace TriageTrainer.Entity
     public Vector3 Position => transform.position;
     public Quaternion Rotation => transform.rotation;
 
+    public void SetIdentifierForEditor(string identifier)
+    {
+      _identifier = identifier == null ? string.Empty : identifier.Trim();
+    }
+
+    public void SetIdentifier(string identifier)
+    {
+      _identifier = identifier == null ? string.Empty : identifier.Trim();
+    }
+
+    public void ConfigureOccupiedArea(Vector2 occupiedSizeValue, float displayHeightValue)
+    {
+      _occupiedSize = new Vector2(Mathf.Max(0.01f, occupiedSizeValue.x), Mathf.Max(0.01f, occupiedSizeValue.y));
+      _displayHeight = Mathf.Max(0f, displayHeightValue);
+    }
+
     public bool IsWithinSnapDistance(Vector3 worldPosition)
     {
       Vector3 offset = worldPosition - transform.position;

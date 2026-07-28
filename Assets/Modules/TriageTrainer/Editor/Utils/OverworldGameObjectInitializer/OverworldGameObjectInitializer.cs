@@ -3,6 +3,7 @@ using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
 using TriageTrainer.Utils;
+using TriageTrainer.Entity;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -53,6 +54,88 @@ namespace TriageTrainer.Editor.Utils
       {
         DestroyObject(generated.gameObject);
       }
+    }
+
+    public static void SetStaticEntityLayouts(StaticEntityLayoutDefinition definition)
+    {
+      if (definition == null)
+        throw new System.ArgumentNullException(nameof(definition));
+      if (!definition.Validate(out var validationError))
+        throw new System.ArgumentException(validationError, nameof(definition));
+
+      var root = GetOrCreateGeneratedRoot().transform;
+      var childName = "static_entities:" + definition.identifier.Trim();
+      var existing = root.Find(childName);
+      if (existing != null) DestroyObject(existing.gameObject);
+      var layoutRoot = new GameObject(childName).transform;
+      layoutRoot.SetParent(root, false);
+#if UNITY_EDITOR
+      if (!Application.isPlaying) Undo.RegisterCreatedObjectUndo(layoutRoot.gameObject, "Create Static Entity Layout");
+#endif
+
+      foreach (var group in definition.groups ?? new System.Collections.Generic.List<StaticEntityLayoutGroup>())
+      {
+        if (group.entities == null) continue;
+        foreach (var entity in group.entities)
+        {
+          if (string.IsNullOrWhiteSpace(entity.identifier)) continue;
+          GameObject instance;
+          instance = entity.type == StaticEntityLayoutType.WallSuction
+            ? InstantiatePrefab(definition.wallSuctionPrefab)
+            : entity.type == StaticEntityLayoutType.Oxyflowmeter
+              ? InstantiatePrefab(definition.oxyflowmeterPrefab)
+              : new GameObject(entity.identifier);
+          if (instance == null) continue;
+          instance.name = entity.identifier;
+          instance.transform.SetParent(layoutRoot, false);
+          if (!entity.useDefaultPosition)
+            instance.transform.localPosition = entity.position;
+          if (!entity.useDefaultRotation)
+            instance.transform.localRotation = Quaternion.Euler(entity.rotationEuler);
+          if (entity.type == StaticEntityLayoutType.MovingPatientBedPositioningPoint)
+          {
+            var point = instance.AddComponent<MovingPatientBedPositioningPoint>();
+            point.SetIdentifierForEditor(entity.identifier);
+            if (!entity.useDefaultOccupiedSize || !entity.useDefaultDisplayHeight)
+              point.ConfigureOccupiedArea(
+                entity.useDefaultOccupiedSize ? new Vector2(2.2f, 1f) : entity.occupiedSize,
+                entity.useDefaultDisplayHeight ? 0.03f : entity.displayHeight);
+          }
+          else if (entity.type == StaticEntityLayoutType.PatientCareDescriptionZone)
+          {
+            var collider = instance.AddComponent<BoxCollider>();
+            collider.isTrigger = true;
+            collider.size = entity.zoneSize == Vector3.zero ? Vector3.one : entity.zoneSize;
+            var zone = instance.AddComponent<PatientCareDescriptionZone>();
+            zone.SetIdentifierForEditor(entity.identifier);
+            zone.ConfigureArea(
+              entity.useDefaultZoneCenter ? new Vector3(0f, 1.5f, 0f) : entity.zoneCenter,
+              entity.useDefaultZoneSize ? new Vector3(3f, 3.5f, 3f) : entity.zoneSize);
+          }
+          else if (entity.type == StaticEntityLayoutType.WallSuction || entity.type == StaticEntityLayoutType.Oxyflowmeter)
+            SetStaticObjectIdentifier(instance, entity.identifier);
+#if UNITY_EDITOR
+          if (!Application.isPlaying) Undo.RegisterCreatedObjectUndo(instance, "Create Static Entity");
+#endif
+        }
+      }
+    }
+
+    private static void SetStaticObjectIdentifier(GameObject instance, string identifier)
+    {
+      var component = instance.GetComponent<MultiplayerInfrastructure.ItemSystem.StaticObjectDisplayment>();
+      var field = component == null ? null : typeof(MultiplayerInfrastructure.ItemSystem.StaticObjectDisplayment)
+        .GetField("_entityIdentifier", BindingFlags.Instance | BindingFlags.NonPublic);
+      field?.SetValue(component, identifier.Trim());
+    }
+
+    private static GameObject InstantiatePrefab(GameObject prefab)
+    {
+      if (prefab == null) return null;
+#if UNITY_EDITOR
+      if (!Application.isPlaying) return (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+#endif
+      return Object.Instantiate(prefab);
     }
 
     private static GeneratedByOverworldGameObjectInitializerEditor GetOrCreateGeneratedRoot()

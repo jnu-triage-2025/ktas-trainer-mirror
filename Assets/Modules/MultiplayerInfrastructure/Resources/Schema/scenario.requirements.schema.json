@@ -13,7 +13,7 @@
   "required": ["format", "schemaVersion", "scenarioIdentifier", "source", "declarations", "suppressions"],
   "additionalProperties": false,
   "$defs": {
-    "kind": { "enum": ["Entity", "Npc", "Interactable", "SpatialAnchor", "SpawnPoint", "EntityPreset", "ItemDefinition", "EventHandler", "RegistryEntry", "RuntimeSignal", "AudioResource", "SpriteResource", "TtsTranscript", "TtsVoice", "QuestDefinition", "PlayerTagState", "RuntimeEntityReference", "Service"] },
+    "kind": { "enum": ["Entity", "Npc", "Interactable", "SpatialAnchor", "SpawnPoint", "EntityPreset", "ItemDefinition", "EventHandler", "RegistryEntry", "RuntimeSignal", "AudioResource", "SpriteResource", "TtsTranscript", "TtsVoice", "QuestDefinition", "PlayerTagState", "RuntimeEntityReference", "Service", "StaticEntityLayout"] },
     "capability": { "enum": ["RegisteredEntity", "ResolvableNpcMoveTarget", "RegisteredNpcComponent", "ProvidesPosition", "HighlightableWaypoint", "Interactable", "ToggleableInteractable", "ItemSubmissionTarget", "ScenarioEntityInitTarget", "ScenarioTriageAssessTarget", "PatientMedicalStateTarget", "SpawnablePreset", "InvokableEventHandler", "LoadableResource", "ResolvableQuestDefinition"] },
     "selector": {
       "type": "object",

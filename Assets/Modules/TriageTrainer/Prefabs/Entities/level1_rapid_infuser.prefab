@@ -121,7 +121,8 @@ MonoBehaviour:
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours: []
+  NetworkBehaviours:
+  - {fileID: 5340489160048738215}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -147,7 +148,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 65535
+  <PrefabId>k__BackingField: 0
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 721455797063137774
   SceneId: 0
@@ -168,9 +169,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00a34db0dafa43baa6288591a786df27, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.Level1RapidInfuserController
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 7834965369927725955}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 7834965369927725955}
   _maximumParticipants: 1
   _moveSpeed: 3.5
   _turnSpeed: 120

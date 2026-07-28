@@ -15,6 +15,8 @@ namespace TriageTrainer.Entity
     [SerializeField] private List<MonoBehaviour> _intravenousFluids;
     [SerializeField] private WallAttachedWallSuction _suctionWall;
     [SerializeField] private WallAttachedOxyflowmeter _oxyflowmeter;
+    [SerializeField] private List<WallAttachedWallSuction> _suctionWalls;
+    [SerializeField] private List<WallAttachedOxyflowmeter> _oxyflowmeters;
 
     public MovingPatientBedController PatientBed
     {
@@ -33,6 +35,29 @@ namespace TriageTrainer.Entity
     {
       get => _oxyflowmeter;
       set => _oxyflowmeter = value;
+    }
+
+    public IReadOnlyList<WallAttachedWallSuction> SuctionWalls => _suctionWalls ??= new List<WallAttachedWallSuction>();
+    public IReadOnlyList<WallAttachedOxyflowmeter> Oxyflowmeters => _oxyflowmeters ??= new List<WallAttachedOxyflowmeter>();
+
+    public void SetSuctionWalls(IReadOnlyList<WallAttachedWallSuction> sources)
+    {
+      _suctionWalls ??= new List<WallAttachedWallSuction>();
+      _suctionWalls.Clear();
+      if (sources != null)
+        for (int i = 0; i < sources.Count; i++)
+          if (sources[i] != null && !_suctionWalls.Contains(sources[i])) _suctionWalls.Add(sources[i]);
+      SuctionWall = _suctionWalls.Count > 0 ? _suctionWalls[0] : null;
+    }
+
+    public void SetOxyflowmeters(IReadOnlyList<WallAttachedOxyflowmeter> sources)
+    {
+      _oxyflowmeters ??= new List<WallAttachedOxyflowmeter>();
+      _oxyflowmeters.Clear();
+      if (sources != null)
+        for (int i = 0; i < sources.Count; i++)
+          if (sources[i] != null && !_oxyflowmeters.Contains(sources[i])) _oxyflowmeters.Add(sources[i]);
+      Oxyflowmeter = _oxyflowmeters.Count > 0 ? _oxyflowmeters[0] : null;
     }
 
     public void SetIntravenousFluid(int index, MonoBehaviour fluidSource)
@@ -212,12 +237,26 @@ namespace TriageTrainer.Entity
 
       var previous = _supportExternalRefs.SuctionWall;
       _supportExternalRefs.SuctionWall = suction;
+      _supportExternalRefs.SetSuctionWalls(suction == null ? null : new[] { suction });
       NotifyEquipmentSwap(EquipmentTypeWallSuction, previous, suction);
+    }
+
+    public void SetConnectedWallSuctionConnections(IReadOnlyList<WallAttachedWallSuction> sources)
+    {
+      var previous = ConnectedWallSuction;
+      _supportExternalRefs.SetSuctionWalls(sources);
+      NotifyEquipmentSwap(EquipmentTypeWallSuction, previous, ConnectedWallSuction);
     }
 
     public void ClearConnectedWallSuction()
     {
       SetConnectedWallSuction(null);
+    }
+
+    public void ClearConnectedWallSuction(WallAttachedWallSuction expected)
+    {
+      if (expected != null && ReferenceEquals(_supportExternalRefs.SuctionWall, expected))
+        SetConnectedWallSuction(null);
     }
 
     // ── Oxygen Flowmeter (산소 유량계) — future use ──
@@ -232,12 +271,26 @@ namespace TriageTrainer.Entity
 
       var previous = _supportExternalRefs.Oxyflowmeter;
       _supportExternalRefs.Oxyflowmeter = flowmeter;
+      _supportExternalRefs.SetOxyflowmeters(flowmeter == null ? null : new[] { flowmeter });
       NotifyEquipmentSwap(EquipmentTypeOxyflowmeter, previous, flowmeter);
+    }
+
+    public void SetConnectedOxyflowmeterConnections(IReadOnlyList<WallAttachedOxyflowmeter> sources)
+    {
+      var previous = ConnectedOxyflowmeter;
+      _supportExternalRefs.SetOxyflowmeters(sources);
+      NotifyEquipmentSwap(EquipmentTypeOxyflowmeter, previous, ConnectedOxyflowmeter);
     }
 
     public void ClearConnectedOxyflowmeter()
     {
       SetConnectedOxyflowmeter(null);
+    }
+
+    public void ClearConnectedOxyflowmeter(WallAttachedOxyflowmeter expected)
+    {
+      if (expected != null && ReferenceEquals(_supportExternalRefs.Oxyflowmeter, expected))
+        SetConnectedOxyflowmeter(null);
     }
 
     // ── Bed connection event bridging ──

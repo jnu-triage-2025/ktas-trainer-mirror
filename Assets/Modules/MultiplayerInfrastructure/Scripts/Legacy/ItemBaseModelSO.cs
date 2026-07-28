@@ -5,7 +5,7 @@ using MultiplayerInfrastructure.Player;
 using UnityEngine;
 
 [Serializable]
-[CreateAssetMenu(fileName = "New Item Base Model", menuName = "MultiplayerInfrastructure/Item Base Model")]
+[CreateAssetMenu(fileName = "New Item Base Model", menuName = "Multiplayer Infrastructure/Item Base Model")]
 public class ItemBaseModelSO : ScriptableObject
 {
   /// <summary>
