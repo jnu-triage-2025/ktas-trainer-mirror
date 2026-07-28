@@ -25,6 +25,7 @@ namespace MultiplayerInfrastructure.Chat
     [SerializeField] private ChatUIController _uiController;
     [SerializeField] private ChatCommandService _commandService;
     [SerializeField] private DatapackRuntimeService _datapackRuntime;
+    public ChatCommandService CommandService => _commandService;
     
     private readonly Dictionary<int, float> _lastMessageTimes = new();
     private readonly Dictionary<int, int> _lastProblemSheetGradeByClientId = new();

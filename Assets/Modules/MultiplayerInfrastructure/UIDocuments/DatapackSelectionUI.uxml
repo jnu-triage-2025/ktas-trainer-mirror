@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:Style src="DatapackSelectionUI.uss" />
+  <ui:VisualElement class="datapack-root">
+    <ui:VisualElement class="datapack-card">
+      <ui:VisualElement class="datapack-header">
+        <ui:Label class="datapack-title" text="데이터 팩 선택" />
+        <ui:Label class="datapack-subtitle" text="활성 데이터 팩을 선택하고 적용 순서를 정합니다." />
+        <ui:Label class="datapack-help" text="오른쪽 목록은 위에 있을수록 우선순위가 높습니다." />
+      </ui:VisualElement>
+
+      <ui:VisualElement class="datapack-columns">
+        <ui:VisualElement class="datapack-column">
+          <ui:Label class="datapack-column-title" text="사용 가능" />
+          <ui:Label class="datapack-column-description" text="인식된 비활성 데이터 팩" />
+          <ui:ListView name="availableList" class="datapack-list" fixed-item-height="76" selection-type="None" />
+        </ui:VisualElement>
+        <ui:VisualElement class="datapack-column">
+          <ui:Label class="datapack-column-title" text="활성화됨" />
+          <ui:Label class="datapack-column-description" text="위 항목부터 높은 우선순위" />
+          <ui:ListView name="activeList" class="datapack-list" fixed-item-height="76" selection-type="None" />
+        </ui:VisualElement>
+      </ui:VisualElement>
+
+      <ui:VisualElement class="datapack-footer">
+        <ui:Label name="statusLabel" class="datapack-status" text="" />
+        <ui:Button name="openFolderButton" class="btn btn-secondary datapack-open-folder" text="폴더 열기" />
+        <ui:Button name="doneButton" class="btn btn-primary datapack-done" text="완료" />
+      </ui:VisualElement>
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

@@ -1,7 +1,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using FishNet;
+using FishNet.Managing;
+using FishNet.Transporting;
 using MultiplayerInfrastructure.Chat;
+using MultiplayerInfrastructure.Logging;
+using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Scenario;
 using UnityEngine;
 
@@ -13,10 +21,23 @@ namespace MultiplayerInfrastructure.Datapack
     [SerializeField] private List<TextAsset> _bootstrapDatapacks = new();
 
     private readonly Dictionary<string, LoadedDatapack> _loaded = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<InjectedEventHandler>> _eventStacks = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, ScenarioEventIdentifierRegistry.ScenarioEventHandler> _eventBaseHandlers = new(StringComparer.Ordinal);
+    private readonly List<PendingGameRule> _pendingGameRules = new();
+    private NetworkManager _networkManager;
+
+    private sealed class PendingGameRule
+    {
+      public string PackId;
+      public string Name;
+      public string Value;
+    }
 
     private sealed class LoadedDatapack
     {
       public string PackId;
+      public DatapackDefinition Definition;
+      public readonly List<string> RegisteredAliases = new();
       public readonly List<Coroutine> RunningCoroutines = new();
       public readonly List<InjectedEventHandler> InjectedHandlers = new();
     }
@@ -25,19 +46,50 @@ namespace MultiplayerInfrastructure.Datapack
     {
       public string EventIdentifier;
       public ScenarioEventIdentifierRegistry.ScenarioEventHandler RegisteredHandler;
-      public ScenarioEventIdentifierRegistry.ScenarioEventHandler PreviousHandler;
     }
 
     private void Awake()
     {
+      _networkManager = FindAnyObjectByType<NetworkManager>();
       if (_chatService == null)
         _chatService = GetComponent<ChatService>();
       if (_chatService == null)
         _chatService = FindFirstObjectByType<ChatService>();
     }
 
+    private void OnEnable()
+    {
+      if (_networkManager == null)
+        _networkManager = FindAnyObjectByType<NetworkManager>();
+      if (_networkManager != null)
+        _networkManager.ServerManager.OnServerConnectionState += OnServerConnectionState;
+    }
+
+    private void OnDisable()
+    {
+      if (_networkManager != null)
+        _networkManager.ServerManager.OnServerConnectionState -= OnServerConnectionState;
+    }
+
     private void Start()
     {
+      PrepareRuntimeDatapackFolder();
+
+      // The host's selection is the authoritative session configuration.
+      // On a standalone development scene, an empty selection means all valid packs.
+      var selected = Registry.Registry.Get<List<string>>(RegistryType.RuntimeState, RegistryGlobalKeys.SelectedDatapackIds)
+        ?? new List<string>(SessionConfigurationService.DatapackIds);
+      if (selected != null && selected.Count > 0)
+      {
+        var files = ScanDatapacks();
+        for (int i = selected.Count - 1; i >= 0; i--)
+        {
+          var file = files.FirstOrDefault(x => x.IsValid && x.PackId == selected[i]);
+          if (file != null)
+            RegisterDatapackFromJson(file.Json, file.FileName, out _);
+        }
+      }
+
       foreach (var textAsset in _bootstrapDatapacks)
       {
         if (textAsset == null || string.IsNullOrWhiteSpace(textAsset.text))
@@ -96,8 +148,18 @@ namespace MultiplayerInfrastructure.Datapack
 
       var loaded = new LoadedDatapack
       {
-        PackId = definition.packId
+        PackId = definition.packId,
+        Definition = definition
       };
+
+      // Register low-priority definitions first. The last registration wins for aliases.
+      if (definition.commandAliases != null)
+        foreach (var alias in definition.commandAliases)
+          if (alias != null && !string.IsNullOrWhiteSpace(alias.name) && !string.IsNullOrWhiteSpace(alias.target))
+          {
+            _chatService?.CommandService?.RegisterAlias(alias.name, alias.target, definition.packId);
+            loaded.RegisteredAliases.Add(alias.name);
+          }
 
       if (definition.periodicCommands != null)
       {
@@ -115,26 +177,52 @@ namespace MultiplayerInfrastructure.Datapack
 
       if (definition.eventHandlers != null)
       {
+        var registeredEventIdentifiers = new HashSet<string>(StringComparer.Ordinal);
         for (int i = 0; i < definition.eventHandlers.Length; i++)
         {
           var entry = definition.eventHandlers[i];
           if (entry == null || string.IsNullOrWhiteSpace(entry.eventIdentifier) || string.IsNullOrWhiteSpace(entry.command))
             continue;
+          if (!registeredEventIdentifiers.Add(entry.eventIdentifier))
+          {
+            Debug.LogWarning($"[DatapackRuntimeService] Duplicate event handler '{entry.eventIdentifier}' in datapack '{definition.packId}'. Later entry ignored.");
+            continue;
+          }
 
-          ScenarioEventIdentifierRegistry.TryGetHandler(entry.eventIdentifier, out var previousHandler);
+          ScenarioEventIdentifierRegistry.ScenarioEventHandler baseHandler;
+          if (!_eventStacks.ContainsKey(entry.eventIdentifier))
+            ScenarioEventIdentifierRegistry.TryGetHandler(entry.eventIdentifier, out baseHandler);
+          else
+            baseHandler = _eventBaseHandlers[entry.eventIdentifier];
+          if (!_eventStacks.ContainsKey(entry.eventIdentifier))
+            _eventBaseHandlers[entry.eventIdentifier] = baseHandler;
+
           ScenarioEventIdentifierRegistry.ScenarioEventHandler injected = () => ExecuteInjectedEventCommandRoutine(definition.packId, entry.eventIdentifier, entry.command);
 
           ScenarioEventIdentifierRegistry.Register(entry.eventIdentifier, injected);
-          loaded.InjectedHandlers.Add(new InjectedEventHandler
+          var registration = new InjectedEventHandler
           {
             EventIdentifier = entry.eventIdentifier,
-            RegisteredHandler = injected,
-            PreviousHandler = previousHandler
-          });
+            RegisteredHandler = injected
+          };
+          loaded.InjectedHandlers.Add(registration);
+          if (!_eventStacks.TryGetValue(entry.eventIdentifier, out var stack))
+            _eventStacks[entry.eventIdentifier] = stack = new List<InjectedEventHandler>();
+          stack.Add(registration);
         }
       }
 
       _loaded[definition.packId] = loaded;
+      if (definition.gameRules != null)
+        foreach (var rule in definition.gameRules)
+          if (rule != null && !string.IsNullOrWhiteSpace(rule.name) && rule.value != null)
+          {
+            var pending = new PendingGameRule { PackId = definition.packId, Name = rule.name, Value = rule.value };
+            if (InstanceFinder.IsServerStarted)
+              ExecuteGameRule(pending);
+            else
+              _pendingGameRules.Add(pending);
+          }
       Debug.Log($"[DatapackRuntimeService] Registered datapack '{definition.packId}' from '{sourceName}'.");
       return true;
     }
@@ -154,15 +242,31 @@ namespace MultiplayerInfrastructure.Datapack
           StopCoroutine(routine);
       }
 
+      for (int i = 0; i < loaded.RegisteredAliases.Count; i++)
+        _chatService?.CommandService?.UnregisterAlias(loaded.RegisteredAliases[i], loaded.PackId);
+
       for (int i = 0; i < loaded.InjectedHandlers.Count; i++)
       {
         var injected = loaded.InjectedHandlers[i];
         if (injected == null || string.IsNullOrWhiteSpace(injected.EventIdentifier))
           continue;
 
-        ScenarioEventIdentifierRegistry.Unregister(injected.EventIdentifier);
-        if (injected.PreviousHandler != null)
-          ScenarioEventIdentifierRegistry.Register(injected.EventIdentifier, injected.PreviousHandler);
+        if (_eventStacks.TryGetValue(injected.EventIdentifier, out var stack))
+        {
+          stack.Remove(injected);
+          if (stack.Count == 0)
+            _eventStacks.Remove(injected.EventIdentifier);
+        }
+
+        if (!ScenarioEventIdentifierRegistry.Unregister(injected.EventIdentifier, injected.RegisteredHandler))
+          continue;
+        var replacement = stack != null && stack.Count > 0
+          ? stack[stack.Count - 1].RegisteredHandler
+          : (_eventBaseHandlers.TryGetValue(injected.EventIdentifier, out var baseHandler) ? baseHandler : null);
+        if (replacement != null)
+          ScenarioEventIdentifierRegistry.Register(injected.EventIdentifier, replacement);
+        if (stack == null || stack.Count == 0)
+          _eventBaseHandlers.Remove(injected.EventIdentifier);
       }
 
       _loaded.Remove(packId);
@@ -173,6 +277,103 @@ namespace MultiplayerInfrastructure.Datapack
     public IReadOnlyCollection<string> GetLoadedDatapackIds()
     {
       return _loaded.Keys;
+    }
+
+    public static List<DatapackFileInfo> ScanDatapacks()
+    {
+      var result = new List<DatapackFileInfo>();
+      string root = GameLogService.DatapackRootPath;
+      if (!Directory.Exists(root))
+        return result;
+
+      var packIds = new HashSet<string>(StringComparer.Ordinal);
+      string[] paths;
+      try
+      {
+        paths = Directory.GetFiles(root, "*.datapack.json", SearchOption.AllDirectories)
+          .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+          .ToArray();
+      }
+      catch (Exception ex)
+      {
+        Debug.LogWarning($"[DatapackRuntimeService] Failed to scan '{root}': {ex.Message}");
+        return result;
+      }
+
+      foreach (var path in paths)
+      {
+        string json = string.Empty;
+        string error = string.Empty;
+        try { json = File.ReadAllText(path); } catch (Exception ex) { error = ex.Message; }
+        DatapackDefinition definition = null;
+        if (string.IsNullOrWhiteSpace(error))
+        {
+          try { definition = JsonUtility.FromJson<DatapackDefinition>(json); }
+          catch (Exception ex) { error = ex.Message; }
+          if (definition == null || string.IsNullOrWhiteSpace(definition.packId))
+            error = "packId is required.";
+          else if (!packIds.Add(definition.packId))
+            error = $"Duplicate packId '{definition.packId}'.";
+        }
+        result.Add(new DatapackFileInfo(Path.GetFileName(path), path, json, definition, error));
+      }
+      result.Sort((a, b) => string.Compare(a.FileName, b.FileName, StringComparison.OrdinalIgnoreCase));
+      return result;
+    }
+
+    public static void EnsureRuntimeDatapackFolder()
+    {
+      string root = GameLogService.DatapackRootPath;
+      try { Directory.CreateDirectory(root); }
+      catch (Exception ex)
+      {
+        Debug.LogWarning($"[DatapackRuntimeService] Failed to create datapack folder '{root}': {ex.Message}");
+        return;
+      }
+      string source = Path.Combine(Application.streamingAssetsPath, "DataPacks");
+      if (!Directory.Exists(source))
+        return;
+      string[] sourcePaths;
+      try { sourcePaths = Directory.GetFiles(source, "*.datapack.json", SearchOption.AllDirectories); }
+      catch (Exception ex)
+      {
+        Debug.LogWarning($"[DatapackRuntimeService] Failed to read built-in datapacks from '{source}': {ex.Message}");
+        return;
+      }
+      foreach (string sourcePath in sourcePaths)
+      {
+        try
+        {
+          string relative = sourcePath.Substring(source.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+          string destination = Path.Combine(root, relative);
+          Directory.CreateDirectory(Path.GetDirectoryName(destination));
+          File.Copy(sourcePath, destination, true);
+        }
+        catch (Exception ex)
+        {
+          Debug.LogWarning($"[DatapackRuntimeService] Failed to copy built-in datapack '{sourcePath}': {ex.Message}");
+        }
+      }
+    }
+
+    private static void PrepareRuntimeDatapackFolder() => EnsureRuntimeDatapackFolder();
+
+    private void OnServerConnectionState(ServerConnectionStateArgs args)
+    {
+      if (args.ConnectionState != LocalConnectionState.Started)
+        return;
+      for (int i = 0; i < _pendingGameRules.Count; i++)
+      {
+        var pending = _pendingGameRules[i];
+        if (_loaded.ContainsKey(pending.PackId))
+          ExecuteGameRule(pending);
+      }
+      _pendingGameRules.Clear();
+    }
+
+    private void ExecuteGameRule(PendingGameRule rule)
+    {
+      ExecuteSystemCommand(rule.PackId, $"gamerule {rule.Name} {rule.Value}", "session-start");
     }
 
     private IEnumerator PeriodicCommandRoutine(string packId, string rawCommand, float intervalSeconds, bool runImmediately)
@@ -227,5 +428,20 @@ namespace MultiplayerInfrastructure.Datapack
 
       return trimmed;
     }
+  }
+
+  public sealed class DatapackFileInfo
+  {
+    public string FileName { get; }
+    public string Path { get; }
+    public string Json { get; }
+    public DatapackDefinition Definition { get; }
+    public string Error { get; }
+    public bool IsValid => Definition != null && string.IsNullOrWhiteSpace(Error);
+    public string PackId => Definition?.packId ?? string.Empty;
+    public string DisplayName => string.IsNullOrWhiteSpace(Definition?.displayName) ? FileName : Definition.displayName;
+
+    public DatapackFileInfo(string fileName, string path, string json, DatapackDefinition definition, string error)
+    { FileName = fileName; Path = path; Json = json; Definition = definition; Error = error ?? string.Empty; }
   }
 }

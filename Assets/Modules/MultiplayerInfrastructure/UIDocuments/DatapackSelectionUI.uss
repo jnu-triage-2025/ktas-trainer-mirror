@@ -1,0 +1,196 @@
+/* DatapackSelectionUI — IntroScene UI와 동일한 dark navy / blue-indigo 언어 */
+
+.datapack-root {
+  width: 100%;
+  height: 100%;
+  background-color: #0b1220;
+  color: #e5e7eb;
+  align-items: center;
+  justify-content: center;
+}
+
+.datapack-card {
+  width: 90%;
+  height: 88%;
+  min-width: 760px;
+  min-height: 560px;
+  max-width: 1280px;
+  max-height: 820px;
+  background-color: #0f172a;
+  border-width: 1px;
+  border-color: #1f2937;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.datapack-header {
+  flex-shrink: 0;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.datapack-title {
+  color: #f8fafc;
+  font-size: 24px;
+  -unity-font-style-and-weight: bold;
+  -unity-text-align: middle-center;
+}
+
+.datapack-subtitle {
+  color: #cbd5e1;
+  font-size: 13px;
+  margin-top: 6px;
+  -unity-text-align: middle-center;
+}
+
+.datapack-help,
+.datapack-column-description {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.datapack-help {
+  margin-top: 4px;
+  -unity-text-align: middle-center;
+}
+
+.datapack-columns {
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-height: 0;
+  flex-direction: row;
+  gap: 16px;
+}
+
+.datapack-column {
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  background-color: #0a1022;
+  border-width: 1px;
+  border-color: #1f2937;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.datapack-column-title {
+  color: #e5e7eb;
+  font-size: 15px;
+  -unity-font-style-and-weight: bold;
+}
+
+.datapack-column-description {
+  margin-top: 3px;
+  margin-bottom: 8px;
+}
+
+.datapack-list {
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-height: 0;
+  background-color: #0a1022;
+  border-width: 1px;
+  border-color: #1f2937;
+  border-radius: 6px;
+}
+
+.datapack-row {
+  min-height: 76px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  flex-direction: row;
+  align-items: center;
+  border-bottom-width: 1px;
+  border-color: #1f2937;
+}
+
+.datapack-row__text {
+  flex-grow: 1;
+  color: #e5e7eb;
+  font-size: 12px;
+  white-space: normal;
+}
+
+.datapack-row__text--invalid {
+  color: #fca5a5;
+}
+
+.datapack-row__button {
+  height: 30px;
+  min-width: 72px;
+  margin-left: 5px;
+  padding-left: 8px;
+  padding-right: 8px;
+  color: #e5e7eb;
+  background-color: #25252e;
+  border-width: 1px;
+  border-color: #3a3a46;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.datapack-row__button:hover {
+  background-color: #2e3c5c;
+  border-color: #3b82f6;
+}
+
+.datapack-row__button--activate {
+  background-color: #1e2a4a;
+  border-color: #2d7cf4;
+  color: #dbeafe;
+}
+
+.datapack-footer {
+  flex-shrink: 0;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 16px;
+  min-height: 42px;
+}
+
+.datapack-status {
+  color: #fbbf24;
+  font-size: 11px;
+  flex-grow: 1;
+  flex-shrink: 1;
+  white-space: normal;
+}
+
+.btn {
+  height: 42px;
+  -unity-text-align: middle-center;
+  color: #ffffff;
+  border-radius: 8px;
+  border-width: 0;
+  font-size: 14px;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+}
+
+.btn-primary:hover {
+  background-color: #4b8ff9;
+}
+
+.datapack-done {
+  width: 160px;
+  flex-shrink: 0;
+}
+
+.datapack-open-folder {
+  width: 160px;
+  flex-shrink: 0;
+  margin-left: 8px;
+  background-color: #6366f1;
+}
+
+.datapack-open-folder:hover {
+  background-color: #7577f5;
+}

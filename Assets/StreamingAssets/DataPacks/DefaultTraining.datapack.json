@@ -1,0 +1,11 @@
+{
+  "packId": "default-training",
+  "displayName": "기본 훈련 규칙",
+  "gameRules": [
+    { "name": "runningSpeedMultiplier", "value": "1.5" },
+    { "name": "IgnoreTagAssignFullSatisfactionOnScenarioPlay", "value": "true" }
+  ],
+  "commandAliases": [
+    { "name": "rules", "target": "/gamerule" }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schema/ktas-datapack.scheme.json",
+  "title": "KTAS Trainer Datapack",
+  "description": "Runtime configuration format for files named *.datapack.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["packId"],
+  "properties": {
+    "packId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]*$",
+      "description": "Globally unique runtime identifier."
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional name shown in the IntroScene selector."
+    },
+    "gameRules": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/gameRule" },
+      "description": "Rules applied when the server session starts."
+    },
+    "commandAliases": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/commandAlias" },
+      "description": "Custom slash commands forwarding to an existing command."
+    },
+    "periodicCommands": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/periodicCommand" }
+    },
+    "eventHandlers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/eventHandler" }
+    }
+  },
+  "$defs": {
+    "command": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^\\S(?:.*\\S)?$",
+      "description": "A command line, with or without the leading slash."
+    },
+    "gameRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "pattern": "^[a-zA-Z][a-zA-Z0-9._-]*$" },
+        "value": { "type": "string", "minLength": 1 }
+      }
+    },
+    "commandAlias": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "target"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "pattern": "^[a-zA-Z][a-zA-Z0-9._:-]*$" },
+        "target": { "$ref": "#/$defs/command" }
+      }
+    },
+    "periodicCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command"],
+      "properties": {
+        "command": { "$ref": "#/$defs/command" },
+        "intervalSeconds": { "type": "number", "exclusiveMinimum": 0 },
+        "runImmediately": { "type": "boolean" }
+      }
+    },
+    "eventHandler": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eventIdentifier", "command"],
+      "properties": {
+        "eventIdentifier": { "type": "string", "minLength": 1, "pattern": "^\\S+$" },
+        "command": { "$ref": "#/$defs/command" }
+      }
+    }
+  }
+}

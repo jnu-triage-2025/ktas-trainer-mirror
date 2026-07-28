@@ -27,6 +27,7 @@
       <ui:VisualElement name="playPanel" class="panel panel-wide">
         <ui:Button name="btnHost" class="btn btn-primary btn-host"
                    text="이 컴퓨터를 서버로 사용하고 접속하기" />
+        <ui:Button name="btnDatapacks" class="btn btn-secondary btn-host" text="데이터 팩..." />
 
         <ui:VisualElement class="session-box">
           <ui:TextField name="searchField" class="text-field search-field"

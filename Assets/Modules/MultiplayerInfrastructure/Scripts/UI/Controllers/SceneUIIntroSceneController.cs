@@ -36,6 +36,7 @@ namespace MultiplayerInfrastructure.UI
 
     [Header("Settings UI")]
     [SerializeField] private VisualTreeAsset settingsUxml;
+    [SerializeField] private VisualTreeAsset datapackSelectionUxml;
 
     // ─── Panels ────────────────────────────────────────────────────────────
     private VisualElement _mainPanel;
@@ -51,6 +52,7 @@ namespace MultiplayerInfrastructure.UI
 
     // ─── Play panel elements ───────────────────────────────────────────────
     private Button _btnHost;
+    private Button _btnDatapacks;
     private TextField _searchField;
     private ListView _listView;
     private Label _emptyState;
@@ -72,6 +74,7 @@ namespace MultiplayerInfrastructure.UI
     private SessionInformationModel _selected;
     private LanDiscoveryService _discovery;
     private SettingsUIController _settingsController;
+    private DatapackSelectionUIController _datapackController;
 
     // ════════════════════════════════════════════════════════════════════════
     // Unity Lifecycle
@@ -79,6 +82,11 @@ namespace MultiplayerInfrastructure.UI
 
     private void Awake()
     {
+      var sessionConfiguration = SessionConfigurationService.Current;
+      defaultAddress = sessionConfiguration.address;
+      defaultPort = sessionConfiguration.port;
+      defaultSessionName = sessionConfiguration.sessionName;
+
       ApplyIntroCursorPolicy();
       EnsureDiscoveryService();
 
@@ -99,6 +107,7 @@ namespace MultiplayerInfrastructure.UI
 
       // ── Play panel ──
       _btnHost = root.Q<Button>("btnHost");
+      _btnDatapacks = root.Q<Button>("btnDatapacks");
       _searchField = root.Q<TextField>("searchField");
       _listView = root.Q<ListView>("sessionList");
       _emptyState = root.Q<Label>("emptyState");
@@ -122,6 +131,7 @@ namespace MultiplayerInfrastructure.UI
       _btnExit.clicked += OnExit;
 
       _btnHost.clicked += OnHostAndJoin;
+      _btnDatapacks.clicked += OnDatapacks;
       _btnJoinSelected.clicked += OnJoinSelected;
       _btnJoinSelected.SetEnabled(false);
       _btnPlayBack.clicked += () => ShowPanel(_mainPanel);
@@ -276,6 +286,23 @@ namespace MultiplayerInfrastructure.UI
 
       if (_settingsController != null)
         UIOverlayStack.Push(_settingsController);
+    }
+
+    private void OnDatapacks()
+    {
+      if (_datapackController != null) return;
+      var go = new GameObject("DatapackSelectionUI");
+      var mainDoc = GetComponent<UIDocument>();
+      if (datapackSelectionUxml == null)
+        datapackSelectionUxml = Resources.Load<VisualTreeAsset>("DatapackSelectionUI");
+      if (datapackSelectionUxml == null)
+      {
+        Debug.LogError("[IntroUI] 데이터 팩 선택 UI용 UXML을 찾을 수 없습니다.");
+        Destroy(go);
+        return;
+      }
+      _datapackController = go.AddComponent<DatapackSelectionUIController>();
+      _datapackController.Initialize(datapackSelectionUxml, mainDoc.panelSettings, () => _datapackController = null);
     }
 
     private void OnExit()

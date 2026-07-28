@@ -42,6 +42,7 @@ namespace MultiplayerInfrastructure.Logging
 
     /// <summary>로그 파일을 저장하는 하위 디렉터리 이름.</summary>
     public const string LogSubfolder = "GameLogs";
+    public const string DatapackSubfolder = "DataPacks";
 
     /// <summary>메모리에 보관하는 최대 엔트리 수 (순환 버퍼 상한).</summary>
     private const int MaxCachedEntries = 4096;
@@ -66,6 +67,9 @@ namespace MultiplayerInfrastructure.Logging
     /// <summary>로그 루트 폴더 경로.</summary>
     public static string LogRootPath =>
       Path.Combine(Application.persistentDataPath, LogSubfolder);
+
+    public static string DatapackRootPath =>
+      Path.Combine(Application.persistentDataPath, DatapackSubfolder);
 
     // ── 컨텍스트 ──────────────────────────────────────────────────────────────
 
@@ -104,6 +108,8 @@ namespace MultiplayerInfrastructure.Logging
         string dir = LogRootPath;
         if (!Directory.Exists(dir))
           Directory.CreateDirectory(dir);
+        if (!Directory.Exists(DatapackRootPath))
+          Directory.CreateDirectory(DatapackRootPath);
 
         string slug = GameSessionService.GetSessionSlug();
         _currentLogFilePath = Path.Combine(dir, $"{slug}.log");
@@ -378,17 +384,23 @@ namespace MultiplayerInfrastructure.Logging
     /// 에디터와 빌드에서만 동작한다. 배치(헤드리스) 모드에서는 경로만 출력한다.
     /// </summary>
     public static void OpenLogFolder()
+      => OpenFolderAtPath(LogRootPath, "Log");
+
+    /// <summary>데이터팩이 저장되는 DataPacks 폴더를 연다.</summary>
+    public static void OpenDatapackFolder()
+      => OpenFolderAtPath(DatapackRootPath, "Datapack");
+
+    private static void OpenFolderAtPath(string dir, string label)
     {
       try
       {
-        string dir = LogRootPath;
         if (!Directory.Exists(dir))
           Directory.CreateDirectory(dir);
 
         // 배치(헤드리스 서버) 모드에서는 Process.Start 불가 — 경로만 출력
         if (Application.isBatchMode)
         {
-          Debug.Log($"[GameLogService] Log folder (batch mode): {dir}");
+          Debug.Log($"[GameLogService] {label} folder (batch mode): {dir}");
           return;
         }
 
@@ -418,12 +430,12 @@ namespace MultiplayerInfrastructure.Logging
           UseShellExecute = false,
         });
 #else
-        Debug.Log($"[GameLogService] Log folder: {dir}");
+        Debug.Log($"[GameLogService] {label} folder: {dir}");
 #endif
       }
       catch (Exception ex)
       {
-        Debug.LogWarning($"[GameLogService] Failed to open log folder: {ex.Message}");
+        Debug.LogWarning($"[GameLogService] Failed to open {label.ToLowerInvariant()} folder: {ex.Message}");
       }
     }
 

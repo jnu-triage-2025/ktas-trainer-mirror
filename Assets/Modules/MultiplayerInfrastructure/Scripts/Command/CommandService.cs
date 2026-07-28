@@ -11,6 +11,7 @@ namespace MultiplayerInfrastructure.Command
   public class ChatCommandService : MonoBehaviour
   {
     private readonly Dictionary<string, IChatCommandModel> _commands = new();
+    private readonly Dictionary<string, List<DatapackCommandAlias>> _datapackAliases = new();
     private ChatService _chatManager;
 
     public void Initialize(ChatService manager)
@@ -49,6 +50,44 @@ namespace MultiplayerInfrastructure.Command
         return;
 
       _commands[key] = command;
+    }
+
+    public void RegisterAlias(string alias, string target, string ownerId = null)
+    {
+      if (string.IsNullOrWhiteSpace(alias) || string.IsNullOrWhiteSpace(target))
+        return;
+      string key = alias.Trim().TrimStart('/').ToLowerInvariant();
+      string normalizedTarget = target.Trim().TrimStart('/');
+      string[] targetParts = normalizedTarget.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+      if (targetParts.Length == 0)
+        return;
+      if (string.Equals(key, targetParts[0], StringComparison.OrdinalIgnoreCase))
+        return;
+      if (key == "help" || (_commands.TryGetValue(key, out var existing) && !(existing is DatapackCommandAlias)))
+        return;
+      var registered = new DatapackCommandAlias(this, key, normalizedTarget, ownerId);
+      if (!_datapackAliases.TryGetValue(key, out var history))
+        _datapackAliases[key] = history = new List<DatapackCommandAlias>();
+      history.Add(registered);
+      _commands[key] = registered;
+    }
+
+    public void UnregisterAlias(string alias, string ownerId)
+    {
+      string key = alias?.Trim().TrimStart('/').ToLowerInvariant();
+      if (string.IsNullOrWhiteSpace(key) || !_datapackAliases.TryGetValue(key, out var history))
+        return;
+      history.RemoveAll(entry => string.Equals(entry.OwnerId, ownerId, StringComparison.Ordinal));
+      if (history.Count == 0)
+      {
+        _datapackAliases.Remove(key);
+        _commands.Remove(key);
+        return;
+      }
+      if (_commands.TryGetValue(key, out var current)
+          && current is DatapackCommandAlias currentAlias
+          && string.Equals(currentAlias.OwnerId, ownerId, StringComparison.Ordinal))
+        _commands[key] = history[history.Count - 1];
     }
 
     public bool TryExecute(string commandName, string[] args, NetworkConnection sender)

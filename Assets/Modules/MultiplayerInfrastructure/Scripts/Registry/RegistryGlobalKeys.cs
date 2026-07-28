@@ -14,5 +14,6 @@ namespace MultiplayerInfrastructure.Registry
     /// 개발용 씬에서 직접 실행 시 이 키는 존재하지 않으며, UUID 앞 8자리가 대신 사용됩니다.
     /// </summary>
     public const string UserDisplayName = "UserDisplayName";
+    public const string SelectedDatapackIds = "SelectedDatapackIds";
   }
 }

@@ -32,6 +32,15 @@ namespace MultiplayerInfrastructure.Scenario
       return Handlers.Remove(identifier);
     }
 
+    public static bool Unregister(string identifier, ScenarioEventHandler expectedHandler)
+    {
+      if (string.IsNullOrWhiteSpace(identifier) || expectedHandler == null)
+        return false;
+      if (!Handlers.TryGetValue(identifier, out var current) || current != expectedHandler)
+        return false;
+      return Handlers.Remove(identifier);
+    }
+
     public static bool TryGetHandler(string identifier, out ScenarioEventHandler handler)
     {
       handler = null;
