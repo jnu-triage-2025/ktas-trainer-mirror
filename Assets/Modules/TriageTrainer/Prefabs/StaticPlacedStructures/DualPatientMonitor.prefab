@@ -448,7 +448,7 @@ MonoBehaviour:
     v4: 0
     v5: 0
     v6: 0
-  _showTrackingLine: 1
+  _showTrackingLine: 0
   _showTrackingLineForDefaultPatient: 0
   _trackingLineStart: {fileID: 0}
   _trackingLineWidth: 0.02
