@@ -11,6 +11,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
   [RequireComponent(typeof(UIDocument))]
   public partial class PatientMonitorController : NetworkBehaviour
   {
+    public enum DisplayMode
+    {
+      OnePlane,
+      TwoPlane
+    }
+
     public enum ECGDisplayMode
     {
       Preset,
@@ -34,6 +40,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     [SerializeField, Min(1f)] private float horizontalSecondsVisible = 12f;
 
     [Header("Layout")]
+    [SerializeField] private DisplayMode displayLayout = DisplayMode.OnePlane;
     [SerializeField, Min(0f)] private float panelPadding = 4f;
     [SerializeField, Min(0f)] private float rowSpacing = 2f;
     [SerializeField, Min(28f)] private float minRowHeight = 44f;
@@ -78,6 +85,16 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private float _transitionTimer;
     private ECGRuntimeState _ecgRuntimeState;
     private Action _closeRequested;
+    private readonly List<TriageTrainer.Entity.PatientMonitor.PatientMonitorDisplayView> _displayViews = new();
+
+    public DisplayMode CurrentDisplayMode => displayLayout;
+
+    public void SetDisplayMode(DisplayMode mode)
+    {
+      displayLayout = mode;
+      if (isActiveAndEnabled && uiDocument != null)
+        ConfigureDisplayLayout();
+    }
 
     void OnEnable()
     {
@@ -88,7 +105,67 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       PullParametersFromPatientState();
       ecgNextBeatInterval = ComputeBaseInterval(_currentParameters.bpm);
       CreateGraphUI();
+      ConfigureDisplayLayout();
       UpdateTrackingLine();
+    }
+
+    private void ConfigureDisplayLayout()
+    {
+      _displayViews.Clear();
+      var root = uiDocument != null ? uiDocument.rootVisualElement : null;
+      if (displayLayout == DisplayMode.OnePlane)
+      {
+        if (root != null) root.style.display = DisplayStyle.Flex;
+        HideChildPlaneDocuments();
+        return;
+      }
+
+      // Parent controller는 데이터/상태를 소유하고, 자식 UIDocument는 출력 대상만 소유합니다.
+      if (root != null) root.style.display = DisplayStyle.None;
+      var planes = GetComponentsInChildren<TriageTrainer.Entity.PatientMonitor.PatientMonitorPlane>(true);
+      bool hasGraphPlane = false;
+      bool hasMetricsPlane = false;
+      for (int i = 0; i < planes.Length; i++)
+      {
+        var plane = planes[i];
+        if (plane == null || plane.transform == transform || plane.Document == null)
+          continue;
+
+        var childRoot = plane.Document.rootVisualElement;
+        if (childRoot == null)
+          continue;
+
+        var view = new TriageTrainer.Entity.PatientMonitor.PatientMonitorDisplayView(plane.Type);
+        childRoot.style.display = DisplayStyle.Flex;
+        view.Build(plane.Document, new[] { ecgColor, plethColor, artColor, cvpColor }, lineThickness,
+          Mathf.Clamp(ResolveHorizontalPoints(), 80, 2400), RequestClose);
+        _displayViews.Add(view);
+        hasGraphPlane |= plane.Type == TriageTrainer.Entity.PatientMonitor.PatientMonitorPlaneType.Graph;
+        hasMetricsPlane |= plane.Type == TriageTrainer.Entity.PatientMonitor.PatientMonitorPlaneType.Metrics;
+      }
+
+      if (!hasGraphPlane || !hasMetricsPlane)
+      {
+        Debug.LogWarning("[PatientMonitorController] TwoPlane 모드에는 Graph와 Metrics 타입의 PatientMonitorPlane 자식이 각각 필요합니다.", this);
+        displayLayout = DisplayMode.OnePlane;
+        _displayViews.Clear();
+        if (root != null) root.style.display = DisplayStyle.Flex;
+        HideChildPlaneDocuments();
+      }
+    }
+
+    private void HideChildPlaneDocuments()
+    {
+      var planes = GetComponentsInChildren<TriageTrainer.Entity.PatientMonitor.PatientMonitorPlane>(true);
+      for (int i = 0; i < planes.Length; i++)
+      {
+        if (planes[i] == null || planes[i].Document == null)
+          continue;
+
+        var childRoot = planes[i].Document.rootVisualElement;
+        if (childRoot != null)
+          childRoot.style.display = DisplayStyle.None;
+      }
     }
 
     void CreateGraphUI()
@@ -414,9 +491,16 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       float artCycleNorm = CalculateCycleNorm(currentTime, 0f, monitorART.bpm);
       float cvpCycleNorm = CalculateCycleNorm(currentTime, 0f, monitorCVP.bpm);
 
-      plethGraphElement.AddValue(PlethWaveformCalculator.Calculate(monitorPleth, plethCycleNorm));
-      artGraphElement.AddValue(ARTWaveformCalculator.Calculate(monitorART, artCycleNorm));
-      cvpGraphElement.AddValue(CVPWaveformCalculator.Calculate(monitorCVP, cvpCycleNorm));
+      float plethVoltage = PlethWaveformCalculator.Calculate(monitorPleth, plethCycleNorm);
+      float artVoltage = ARTWaveformCalculator.Calculate(monitorART, artCycleNorm);
+      float cvpVoltage = CVPWaveformCalculator.Calculate(monitorCVP, cvpCycleNorm);
+      plethGraphElement.AddValue(plethVoltage);
+      artGraphElement.AddValue(artVoltage);
+      cvpGraphElement.AddValue(cvpVoltage);
+      for (int i = 0; i < _displayViews.Count; i++)
+      {
+        _displayViews[i].AddSamples(ecgVoltage, plethVoltage, artVoltage, cvpVoltage);
+      }
     }
 
     private static float CalculateCycleNorm(float time, float beatTime, float bpm)
@@ -468,6 +552,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         artGraphElement.MaxPoints = horizontalPoints;
         cvpGraphElement.MaxPoints = horizontalPoints;
       }
+
+      if (isActiveAndEnabled && uiDocument != null)
+        ConfigureDisplayLayout();
     }
 
     private int ResolveHorizontalPoints()
@@ -680,6 +767,29 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       {
         float deltaT = Mathf.Abs(monitorTemperature.t1 - monitorTemperature.t2);
         deltaTNumericLabel.text = $"{deltaT:0.0}°C";
+      }
+
+      if (_displayViews.Count > 0)
+      {
+        string st =
+          $"I {monitorSTLeads.i:+0.0;-0.0;0.0} II {monitorSTLeads.ii:+0.0;-0.0;0.0} III {monitorSTLeads.iii:+0.0;-0.0;0.0}\n" +
+          $"aVR {monitorSTLeads.avr:+0.0;-0.0;0.0} aVL {monitorSTLeads.avl:+0.0;-0.0;0.0} aVF {monitorSTLeads.avf:+0.0;-0.0;0.0}\n" +
+          $"V1 {monitorSTLeads.v1:+0.0;-0.0;0.0} V2 {monitorSTLeads.v2:+0.0;-0.0;0.0} V3 {monitorSTLeads.v3:+0.0;-0.0;0.0}\n" +
+          $"V4 {monitorSTLeads.v4:+0.0;-0.0;0.0} V5 {monitorSTLeads.v5:+0.0;-0.0;0.0} V6 {monitorSTLeads.v6:+0.0;-0.0;0.0}";
+        string[] metrics = {
+          bpmUnavailable ? UnavailableDisplay : $"{Mathf.RoundToInt(bpmValue)}",
+          $"{Mathf.RoundToInt(numerics.pvcs)}", st,
+          prUnavailable ? UnavailableDisplay : $"{Mathf.RoundToInt(prValue)}", $"{piValue:0.00}",
+          spo2Unavailable ? UnavailableDisplay : $"{Mathf.RoundToInt(spo2Value)}%",
+          $"{Mathf.RoundToInt(monitorART.systolic)}/{Mathf.RoundToInt(monitorART.diastolic)} ({Mathf.RoundToInt(monitorART.diastolic + (monitorART.systolic - monitorART.diastolic) / 3f)}) mmHg",
+          $"{monitorCVP.mean:0.0} mmHg",
+          nibpUnavailable ? UnavailableDisplay : $"{Mathf.RoundToInt(monitorNIBP.systolic)}/{Mathf.RoundToInt(monitorNIBP.diastolic)} ({Mathf.RoundToInt(monitorNIBP.diastolic + (monitorNIBP.systolic - monitorNIBP.diastolic) / 3f)}) mmHg",
+          $"{Mathf.Abs(monitorTemperature.t1 - monitorTemperature.t2):0.0}°C", $"{monitorTemperature.t1:0.0}°C", $"{monitorTemperature.t2:0.0}°C" };
+        for (int i = 0; i < _displayViews.Count; i++)
+        {
+          _displayViews[i].SetGraphValues(ecgValueLabel?.text, plethValueLabel?.text, artValueLabel?.text, cvpValueLabel?.text);
+          _displayViews[i].SetMetricValues(metrics);
+        }
       }
     }
   }

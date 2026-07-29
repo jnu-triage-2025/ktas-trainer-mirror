@@ -60,7 +60,9 @@ namespace TriageTrainer.Entity.PatientMonitor
       _runtimePanelSettings.name = _originalPanelSettings.name + " (Runtime)";
       _document.panelSettings = _runtimePanelSettings;
 
-      _renderTexture = new RenderTexture(_resolution.x, _resolution.y, _depthBuffer, _format)
+      var plane = GetComponent<PatientMonitorPlane>();
+      Vector2Int resolution = plane != null ? plane.LowResolution : _resolution;
+      _renderTexture = new RenderTexture(resolution.x, resolution.y, _depthBuffer, _format)
       {
         name = $"{gameObject.name}_UIDocumentRT",
         filterMode = _filterMode

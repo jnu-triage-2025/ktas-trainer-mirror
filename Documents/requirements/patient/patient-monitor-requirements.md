@@ -19,6 +19,15 @@ PatientMonitor는 환자 활력징후 파형을 시각화하는 기능이다. �
 - UI Toolkit 문서는 월드 표면(RenderTexture) 출력 경로를 지원해야 하며, 대상 머티리얼 텍스처 슬롯 바인딩이 가능해야 한다.
 - 코드 구조는 `Models` 폴더 내에서 도메인별 `Parameters + WaveformCalculator` 패턴을 유지해야 한다.
 
+## 표시 모드
+
+- `PatientMonitorController.DisplayMode.OnePlane`은 기존 월드 평면 또는 단일 `UIDocument`에 전체 모니터를 표시한다.
+- `PatientMonitorController.DisplayMode.TwoPlane`은 컨트롤러의 자식에서 `PatientMonitorPlane` 컴포넌트를 타입으로 검색한다.
+  - `Graph` 자식: ECG/PLETH/ART/CVP 파형 및 파형별 수치
+  - `Metrics` 자식: ST, BPM, PR, SpO2, 혈압, 체온 등 나머지 수치
+- 각 자식에는 `UIDocument`를 함께 두고 필요하면 `UIDocumentWorldSurfaceBinder`를 추가한다. `PatientMonitorPlane`의 기본 RenderTexture는 960×720(4:3) 저해상도 프로파일이다.
+- 표시 뷰는 `PatientMonitorDisplayView`로 분리되어 있어 동일한 데이터 공급을 UI `UIDocument` 출력에도 재사용할 수 있다.
+
 ## 기술적 세부 사항
 
 - `PatientMonitorController`가 4개 파형 샘플 계산과 그래프 반영(Update 루프)을 담당한다.
