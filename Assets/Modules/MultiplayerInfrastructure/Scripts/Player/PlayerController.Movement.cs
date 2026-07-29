@@ -85,7 +85,7 @@ namespace MultiplayerInfrastructure.Player
     /// </summary>
     internal void ApplyWalkingSpeedServer(float value)
     {
-      if (!IsServer) return;
+      if (!IsServerInitialized) return;
 
       _walkingSpeed = value;
       RpcApplyWalkingSpeed(value);
@@ -103,14 +103,14 @@ namespace MultiplayerInfrastructure.Player
         FindObjectsInactive.Exclude, FindObjectsSortMode.None);
       foreach (var player in players)
       {
-        if (player != null && player.IsServer)
+        if (player != null && player.IsServerInitialized)
           player._runningSpeedMultiplier.Value = value;
       }
     }
 
     private void InitializeRunningSpeedMultiplierServer()
     {
-      if (IsServer)
+      if (IsServerInitialized)
         _runningSpeedMultiplier.Value = _serverRunningSpeedMultiplier;
     }
 

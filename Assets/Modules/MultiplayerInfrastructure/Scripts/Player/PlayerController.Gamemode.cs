@@ -19,7 +19,7 @@ namespace MultiplayerInfrastructure.Player
 
     internal void ApplyGamemodeServer(PlayerGamemode mode)
     {
-      if (!IsServer) return;
+      if (!IsServerInitialized) return;
 
       _gamemode = mode;
       RpcApplyGamemode(mode);

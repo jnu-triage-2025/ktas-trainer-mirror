@@ -62,7 +62,7 @@ namespace TriageTrainer.Tests.PupilReflexSandbox
     {
       snapshots.Clear();
 
-      PupilReflexSandboxBootstrap[] bootstraps = UnityEngine.Object.FindObjectsOfType<PupilReflexSandboxBootstrap>(true);
+      PupilReflexSandboxBootstrap[] bootstraps = UnityEngine.Object.FindObjectsByType<PupilReflexSandboxBootstrap>(FindObjectsInactive.Include, FindObjectsSortMode.None);
       for (int i = 0; i < bootstraps.Length; i++)
       {
         PupilReflexSandboxBootstrap bootstrap = bootstraps[i];

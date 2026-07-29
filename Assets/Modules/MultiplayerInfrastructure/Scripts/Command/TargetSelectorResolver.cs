@@ -457,7 +457,7 @@ namespace MultiplayerInfrastructure.Command
 
     private static List<PlayerInfo> GetAllPlayerInfos()
     {
-      var found = UnityEngine.Object.FindObjectsOfType<PlayerController>();
+      var found = UnityEngine.Object.FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
       var result = new List<PlayerInfo>(found.Length);
 
       foreach (var player in found)
@@ -477,7 +477,7 @@ namespace MultiplayerInfrastructure.Command
       if (sender == null)
         return false;
 
-      var players = UnityEngine.Object.FindObjectsOfType<PlayerController>();
+      var players = UnityEngine.Object.FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
       foreach (var player in players)
       {
         if (player != null && player.Owner == sender)

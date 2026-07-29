@@ -341,7 +341,7 @@ namespace TriageTrainer.Tests.PupilReflexSandbox
 
       if (autoDiscoverEyes)
       {
-        PupilReflexEye[] discovered = FindObjectsOfType<PupilReflexEye>();
+        PupilReflexEye[] discovered = FindObjectsByType<PupilReflexEye>(FindObjectsSortMode.None);
         for (int i = 0; i < discovered.Length; i++)
         {
           PupilReflexEye eye = discovered[i];

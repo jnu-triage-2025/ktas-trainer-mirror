@@ -304,7 +304,7 @@ namespace MultiplayerInfrastructure.Editor
 
       graphBounds = CalculateGraphBounds(nodes);
       var contentPoint = UnmapGraphPoint(localPoint, body);
-      var scale = graphView.viewTransform.scale;
+      var scale = graphView.resolvedStyle.scale.value;
       var viewportCenter = new Vector2(graphView.layout.width * 0.5f, graphView.layout.height * 0.5f);
       var position = new Vector3(
         viewportCenter.x - contentPoint.x * scale.x,

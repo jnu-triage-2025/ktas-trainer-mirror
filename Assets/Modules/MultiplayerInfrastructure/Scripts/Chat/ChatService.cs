@@ -326,7 +326,7 @@ namespace MultiplayerInfrastructure.Chat
     {
       error = string.Empty;
 
-      if (!IsServer)
+      if (!IsServerInitialized)
       {
         error = "Scenario execution can only be invoked on the server.";
         return false;
@@ -372,7 +372,7 @@ namespace MultiplayerInfrastructure.Chat
     {
       error = string.Empty;
 
-      if (!IsServer)
+      if (!IsServerInitialized)
       {
         error = "Validator block logging can only be changed on the server.";
         return false;
@@ -451,7 +451,7 @@ namespace MultiplayerInfrastructure.Chat
     {
       error = string.Empty;
 
-      if (!IsServer)
+      if (!IsServerInitialized)
       {
         error = "ProblemSheet execution can only be invoked on the server.";
         return false;
@@ -793,7 +793,7 @@ namespace MultiplayerInfrastructure.Chat
     {
       error = string.Empty;
 
-      if (!IsServer)
+      if (!IsServerInitialized)
       {
         error = "Title command can only be invoked on the server.";
         return false;

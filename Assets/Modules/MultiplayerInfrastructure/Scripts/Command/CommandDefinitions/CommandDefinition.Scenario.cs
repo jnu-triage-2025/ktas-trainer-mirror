@@ -423,7 +423,7 @@ namespace MultiplayerInfrastructure.Command
 
     private List<PlayerController> GetAllPlayerControllers()
     {
-      var found = UnityEngine.Object.FindObjectsOfType<PlayerController>();
+      var found = UnityEngine.Object.FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
       var result = new List<PlayerController>(found.Length);
 
       foreach (var player in found)
@@ -761,7 +761,7 @@ namespace MultiplayerInfrastructure.Command
 
     private List<PlayerController> GetAllPlayerControllers()
     {
-      var found = UnityEngine.Object.FindObjectsOfType<PlayerController>();
+      var found = UnityEngine.Object.FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
       var result = new List<PlayerController>(found.Length);
 
       foreach (var player in found)
