@@ -316,6 +316,7 @@ namespace TriageTrainer.Scenario
 
     private void OnDisable()
     {
+      DisposePatientBCFinalFadeOverlay();
       for (int i = 0; i < _registeredEventIds.Count; i++)
       {
         Registry.UnregisterScenarioEvent(_registeredEventIds[i]);

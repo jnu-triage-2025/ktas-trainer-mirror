@@ -54,22 +54,34 @@ flags: ["refactor-required"]
 
 같은 위치의 `BIND_B_NASAL_APPLIED`/`BIND_C_NASAL_APPLIED`는 `NasalCannulaApplied` 전이를
 `apply_nasal_cannula_patient_b/c`로 변환한다. 따라서 `V055`와 `V074`의 비강캐뉼라 적용 조건도
-환자별로 분리된다. 산소 연결 신호(`connect_nasal_and_o2`)는 실제 연결점 identifier를 환자별로
-분리해야 하므로 SIGNAL-BC-3의 남은 producer 작업으로 유지한다.
+환자별로 분리된다. 산소·석션 사용 신호는 `PatientCareDescriptionZone`이 환자 객체에 장비를
+연결한 뒤 `EquipmentConnected` 상태 이벤트를 환자별 `use_wall_suction_patient_b/c`,
+`connect_oxyflowmeter_patient_b/c` 신호로 변환한다.
 
 ### 플레이 차단 항목과 보완 위치
 
 | ID | 위치 | 부족한 연결 | 처리 |
 |---|---|---|---|
 | SPAWN-BC-1 | `SPAWN_B`, `SPAWN_C` | Unity import에서 `patient_b`의 `PatientTypeBMale`, `patient_c`의 `PatientTypeBFemale` prefab이 FishNet `DefaultPrefabObjects`에 등록되지 않아 `PrefabId`가 미할당된 것으로 확인됐다. 현재 상태로 network spawn하면 런타임 `ObjectId 65535` 오류가 발생한다. | Fish-Networking Spawnable Prefabs에 두 원본 prefab을 등록하고 reserialize한 뒤, Production profile에서 각 EntityPreset의 `SpawnablePreset` capability를 다시 증명한다. |
-| ROLE-BC-1 | `P009`~`P013` | `ByRole`은 player tag만 사용하지만 NurseA~D와 태그의 선행 매핑이 없다. 또한 `P009` 상위 태그와 `P012`/`P013` 하위 태그가 다르고 `bleeding_control`은 양쪽 환자 그룹에 중복된다. | **인간 판단 필요:** 세션 role→tag 표를 확정하고 Scenario 시작 전 공급 계약으로 선언한다. 한 플레이어가 동시에 양쪽 환자 브랜치에 배정되지 않도록 태그를 배타적으로 구성한다. |
+| ROLE-BC-1 | `P009`~`P013` | 기능 태그와 간호사 역할의 선행 매핑이 없고, 상·하위 브랜치 태그가 불일치했다. | **해결(2026-07-29):** `patient_b_c_ct`의 루트 태그를 `nurse_a`~`nurse_d`로 고정하고 모든 Parallel 브랜치를 단일 식별자 태그로 재매핑했다. P009/P010/P012는 A/B, P011/P013은 C/D가 각각 1:1로 배정된다. `matchMode`도 모두 `All`로 통일했고 `whenBranchingPlayerNotMatched=Panic`으로 자격 없는 재배정을 금지했다. 역할 선택은 `disaster_intro`가 부여하는 동일 식별자 태그를 공급 계약으로 사용한다. |
 | SIGNAL-BC-1 | `V040_A`/`V040_C`, `V040_B`/`V040_D` | ~~같은 들것 신호를 두 번 기다려 2인 파지를 증명하지 못한다.~~ **해결(2026-07-20):** `MovingPatientBedController`가 서버 권위 `SyncVar` 손잡이 슬롯 두 개에 client ID를 기록한다. 프리팹 `PlayerAttachPoints`도 두 개로 배선했다. | 서버가 각 슬롯을 한 client ID에만 배정하고, 각 소유 클라이언트에 follow anchor를 동기화한다. 참가자 입력은 ServerRpc로 보고되어 서버가 침대를 이동하고 transform을 ObserversRpc로 복제한다. 슬롯 0/1이 각각 `grab_stretcher_patient_b/c_handle_0/1`을 발신하며, 시나리오는 이 두 signal을 별도 Validator로 대기한다. |
 | SIGNAL-BC-2 | `COUNT_TRIAGE_ARRIVALS` → `V039` | ~~`enter_triage_zone` 하나의 존재 여부로는 세 명 도착을 셀 수 없다.~~ **해결(2026-07-20):** `ScenarioTriggerZone._perEntitySignalTemplate`(`enter_triage_zone_{id}`)로 진입 환자별 신호를 발신하고, `SignalCounter`(prefix `enter_triage_zone_`, threshold 3)로 인원 수량 게이트를 구성. | `COUNT_TRIAGE_ARRIVALS`가 `patient_b`/`patient_c`/`dummy_b`의 신호 세 개를 세어 `all_triage_patients_arrived`를 발신하고, `V039`가 이를 대기한다. 운영자는 트리아지 구역 존 인스펙터에 `enter_triage_zone_{id}`를 설정해야 한다. |
-| SIGNAL-BC-3 | B/C의 장비·처치 Validator | ~~장비 획득·전극·펜라이트·산소·장갑·거즈 신호 22개가 환자 B와 C 흐름에서 재사용된다. B가 올린 신호 때문에 C 흐름이 실제 행동 없이 통과할 수 있다.~~ **부분 해결(2026-07-20):** 거즈·플라스터·비강캐뉼라의 환자별 결과 신호는 `EntityStateSignalBinding`이 `TreatmentApplied` 전이에서 발신하며, 관련 B/C Validator가 이를 대기한다. | 나머지 장비 "획득" 성격 신호, 전극·장갑, 산소 연결 및 SIGNAL-BC-4 producer 배선은 별도 인간 확정/후속. 환자 상태 전이로 표현되는 결과는 `_patient_b`/`_patient_c`로 분리 완료. |
-| SIGNAL-BC-4 | `V036`, `V046`, `V048`, `V050`, `V052`~`V055`, `V065`, `V069`, `V071`~`V074` | 문서가 선행 구현 필요로 표시한 신호 producer가 없다. `WaitForCondition=true`이므로 `OnFailure=Ignore`여도 자동 통과하지 않고 무한 대기한다. 일부 120초 `ForceAdvance`는 실패를 숨길 뿐 정상 플레이 검증이 아니다. | 정식 gameplay callback에서 동일 신호를 Raise한다. timeout은 접근성/복구 정책으로만 유지하고 producer 대체로 사용하지 않는다. |
+| SIGNAL-BC-3 | B/C의 장비·처치 Validator | ~~장비 획득·전극·펜라이트·산소·장갑·거즈 신호 22개가 환자 B와 C 흐름에서 재사용된다. B가 올린 신호 때문에 C 흐름이 실제 행동 없이 통과할 수 있다.~~ **부분 해결(2026-07-20):** 거즈·플라스터·비강캐뉼라의 환자별 결과 신호는 `EntityStateSignalBinding`이 `TreatmentApplied` 전이에서 발신한다. **해결(2026-07-29):** `PatientCareDescriptionZone`의 환자별 `EquipmentConnected` 이벤트로 wall suction/oxyflowmeter 사용 신호를 분리했다. | 장비 획득·전극·장갑 등 공용 아이템 신호는 기존 풀을 공유하지만, 환자에게 연결되는 장비 결과는 `_patient_b`/`_patient_c`로 분리된다. |
+| SIGNAL-BC-4 | `V036`, `V046`, `V048`, `V050`, `V052`~`V055`, `V065`, `V069`, `V071`~`V074` | ~~문서가 선행 구현 필요로 표시한 신호 producer가 없다.~~ **부분 해결(2026-07-29):** V054/V073의 wall suction과 V055/V074의 oxyflowmeter는 Zone → PatientController → EntityStateSignalBinding 경로를 사용한다. | 남은 미배선 gameplay producer는 GCS/활력/얼굴/더미 상호작용 및 트리아지 Zone 설정이다. |
 | Q-BC-1 | `Q031`~`Q042_1` | ~~12개 quest가 식별자만 있어 실제 오버레이 내용과 완료 task가 비어 있었다.~~ **해결:** `Resources/Quest/patient_b_c_ct.quests.quest.json`에 12개 definition의 title/description/questContent를 작성했고 Add/Remove가 같은 identifier를 참조한다. | 완료는 Validator가 판정하고 QuestControl이 Remove하는 안내형 quest이므로 별도 자동 완료 task는 두지 않는다. |
 | PRESET-BC-1 | `PRESET_B`, `PRESET_C` | ~~문서가 요구하는 체온과 SpO2는 현재 `PatientMedicalStatePreset` 필드가 아니다.~~ **해결(2026-07-20):** `bodyTemperatureCelsius`, `spo2` 필드를 프리셋 노드/DTO/로더/컨트롤러/스키마에 추가함. | 체온 37.8°, SpO2 93%를 preset에 직접 기입. 모니터 브리지(temperature.t1, numerics/pleth.spo2) 연결 완료. |
-| END-BC-1 | `N092` 및 종료 조건 | fade-out 요구가 서술에만 있고 `N092`는 Dialogue 후 종료된다. | fade handler가 확정되면 `E_END_BC_FADE -> N092`를 명시한다. 현재는 종료 메시지는 동작하지만 fade 연출은 미충족으로 기록한다. |
+| END-BC-1 | `N092` 및 종료 조건 | ~~fade-out 요구가 서술에만 있고 `N092`는 Dialogue 후 종료된다.~~ | **해결(2026-07-29):** `N092 → E_END_BC_FADE`를 추가하고 `fade_out_patient_b_c` 이벤트가 런타임 검은 화면 오버레이를 1초간 0→1로 보간한 뒤 종료한다. 저장소에는 `CameraFade` 구현이 없어 이를 새로 참조하지 않고 Canvas/Image 기반 오버레이로 구현했다. |
+
+### PatientCareDescriptionZone 장비 귀속 계약 (2026-07-29)
+
+- Zone 안에 환자 한 명만 들어온다(`zone_patient_b` ↔ `patient_b`, `zone_patient_c` ↔ `patient_c`).
+- Zone은 `IsAttached=true`인 `wall_suction`과 `oxyflowmeter`만 환자 장비로 연결한다.
+- 장비 종류별 Zone 내 활성 인스턴스는 정확히 하나여야 하며, 2개 이상이면 연결을 무효화하고 경고한다.
+- Zone → `PatientController.EquipmentConnected` → `EntityStateSignalBinding` 순서로 환자별 신호를 발신한다.
+- V054/V073은 `use_wall_suction_patient_b/c`, V055/V074는 `connect_oxyflowmeter_patient_b/c`를 기다린다.
+- 시나리오 시작/종료 시 `sig.*` RuntimeState를 초기화하여 재실행 시 이전 플레이의 sticky 신호가 게이트를 통과시키지 않도록 한다.
+- Zone에는 `MovingPatientBedPositioningPoint`가 하나 있어야 하며, 베드 스냅은 별도 배치 검증 대상이다.
+- Zone당 활성 환자는 한 명만 허용하며, 환자가 Zone 내부 positioning point에 고정된 침대에 연결된 경우에만 장비를 귀속한다.
 
 ### 변환 승인 조건
 
@@ -101,19 +113,16 @@ flags: ["refactor-required"]
 - [x] 명명충돌/통합 확정요청: `oxyflowmeter_b`/`oxyflowmeter_c` 는 레시피·입력이 동일하므로 단일 `oxyflowmeter` 로 통합 확정(환자 B·C 공용). (crafting-recipes.md §확정 요청 [x], 2026-07-09).
 - [x] 산소화 재료(`humidifier_bottle`, `sterile_distilled_water`, `flowmeter`)와 레시피(`humidifier_sterile_distilled_water_bottle`, `oxyflowmeter`)가 등록됨(crafting-recipes.md 참조).
 
-## 역할·태그 정리(예비) (R10, c)
+## 역할·태그 정리 (R10, c; 2026-07-29 확정)
 
-본 시나리오 및 patient_a 계열에서 등장/예정된 역할 태그를 한 곳에 정리한다. **아래는 예비 정리이며, 로직을 조용히 수정하지 않는다.** 병렬 노드의 태그는 저작 원본 그대로 보존한다.
+`patient_b_c_ct`에서는 기능 태그를 사용하지 않고 플레이어 식별자 태그만 사용한다. `patient_a_critical`의 CPR 교대 등 다른 시나리오의 기능 태그 의미는 이번 변경 범위에 포함하지 않는다.
 
 | 역할 태그 | 본 시나리오 사용처(병렬) | 비고 |
 |---|---|---|
-| `triage_lead` | P009 V040_A(환자 B 그룹) | 시나리오 tags 목록에 포함 |
-| `bleeding_control` | P009 V040_A(환자 B 그룹), P011 N052(환자 B), P013 N081(환자 C) | **B그룹·C그룹 중복 사용** |
-| `airway_team` | P009 V040_B(환자 C 그룹) | 상위 브랜치 태그 |
-| `iv_team` | P009 V040_B(환자 C 그룹) | 상위 브랜치 태그 |
-| `neuro_assessment` | P010 N035(환자 B), P012 N064(환자 C) | |
-| `vital_team` | P010 N043(환자 B), P012 N072(환자 C) | |
-| `pupil_check` | P011 N048(환자 B), P013 N077(환자 C) | |
+| `nurse_a` | P009/P010/P012 첫 번째 브랜치 | 식별자 역할 |
+| `nurse_b` | P009/P010/P012 두 번째 브랜치 | 식별자 역할 |
+| `nurse_c` | P011/P013 첫 번째 브랜치 | 식별자 역할 |
+| `nurse_d` | P011/P013 두 번째 브랜치 | 식별자 역할 |
 | `cpr_team` | (본 시나리오 미사용) | patient_a 계열에서 사용 |
 | `defib_team` | (본 시나리오 미사용) | patient_a 계열 |
 | `medication_team` | (본 시나리오 미사용) | patient_a 계열 |
@@ -121,9 +130,11 @@ flags: ["refactor-required"]
 | `suction_team` | (본 시나리오 미사용) | patient_a 계열 |
 | `procedure_team` | (본 시나리오 미사용) | patient_a 계열 |
 | `support_team` | (본 시나리오 미사용) | patient_a 계열 |
-| `nurse_a` / `nurse_b` / `nurse_c` / `nurse_d` | 플레이어-역할 매핑(RequiredRoleIdentifiers) | 개별 간호사 역할 |
+| JSON 루트 `tags` | `nurse_a`, `nurse_b`, `nurse_c`, `nurse_d` | 시나리오가 허용하는 태그의 정본 |
 
-- [ ] c: 역할↔태그 매핑을 한 곳에서 확정 필요. P009(C브랜치) 상위 태그(airway_team/iv_team)와 하위 P012/P013 태그(neuro_assessment/vital_team/pupil_check/bleeding_control) 불일치. bleeding_control 이 환자 B그룹·C그룹에 중복. P009만 matchMode=Any, 나머지 All. 인간 작업자 정리 요망.
+- [x] c: 역할↔태그 매핑 확정. 기능 태그의 중복 및 상·하위 브랜치 불일치를 제거하고 식별자 태그로 통일했다.
+
+> 단순화의 범위는 `patient_b_c_ct` JSON과 이 시나리오의 다섯 Parallel에 한정한다. `patient_a_critical`의 기능 태그는 CPR 교대와 별도 역할 의미를 가지므로 자동 치환하지 않는다. A까지 확장하려면 CPR 사이클·인트로 역할 부여·모든 A 브랜치의 1:1 매핑을 별도 회귀 검증해야 한다.
 
 ## 시그널 배선 상태(요약) (R11, f)
 
@@ -684,7 +695,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P009_Branches 표 참조]** |
 | **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
-| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
+| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Panic |
 | **NextIdentifier** | 문자열 | D058 |
 
 #### [P009_Branches] 브랜치 목록 (ScenarioParallelBranch)
@@ -768,7 +779,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P010_Branches 표 참조]** |
 | **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
-| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
+| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Panic |
 | **NextIdentifier** | 문자열 | D041 |
 
 #### [P010_Branches] 브랜치 목록 (ScenarioParallelBranch)
@@ -1396,7 +1407,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P011_Branches 표 참조]** |
 | **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
-| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
+| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Panic |
 | **NextIdentifier** | 문자열 | N062 |
 
 #### [P011_Branches] 브랜치 목록 (ScenarioParallelBranch)
@@ -1791,7 +1802,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V054 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.connect_wall_component_2 (RegistryContains / RuntimeState) |
+| **Condition** | 문자열 | sig.use_wall_suction_patient_b (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
@@ -1820,13 +1831,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V055 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.apply_nasal_cannula_patient_b AND sig.connect_nasal_and_o2 |
+| **Condition** | 문자열 | sig.apply_nasal_cannula_patient_b AND sig.use_wall_suction_patient_b AND sig.connect_oxyflowmeter_patient_b |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | N057 |
 
-- [x] f: 비강캐뉼라 적용은 `NasalCannulaApplied` → `apply_nasal_cannula_patient_b` 상태 바인딩으로 계측한다. `connect_nasal_and_o2`의 환자별 연결점 producer는 별도 배선이 필요하다.
+- [x] f: 비강캐뉼라는 환자 상태 바인딩으로, wall suction/oxyflowmeter는 `PatientCareDescriptionZone`의 환자별 `EquipmentConnected` 바인딩으로 계측한다.
 
 ---
 
@@ -2218,7 +2229,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P012_Branches 표 참조]** |
 | **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
-| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
+| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Panic |
 | **NextIdentifier** | 문자열 | D049 |
 
 #### [P012_Branches] 브랜치 목록 (ScenarioParallelBranch)
@@ -2848,7 +2859,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P013_Branches 표 참조]** |
 | **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
-| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
+| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Panic |
 | **NextIdentifier** | 문자열 | N091 |
 
 #### [P013_Branches] 브랜치 목록 (ScenarioParallelBranch)
@@ -3243,7 +3254,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V073 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.connect_wall_component_2 (RegistryContains / RuntimeState) |
+| **Condition** | 문자열 | sig.use_wall_suction_patient_c (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
@@ -3272,13 +3283,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V074 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.apply_nasal_cannula_patient_c AND sig.connect_nasal_and_o2 |
+| **Condition** | 문자열 | sig.apply_nasal_cannula_patient_c AND sig.use_wall_suction_patient_c AND sig.connect_oxyflowmeter_patient_c |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | N086 |
 
-- [x] f: 비강캐뉼라 적용은 `NasalCannulaApplied` → `apply_nasal_cannula_patient_c` 상태 바인딩으로 계측한다. `connect_nasal_and_o2`의 환자별 연결점 producer는 별도 배선이 필요하다.
+- [x] f: 비강캐뉼라는 환자 상태 바인딩으로, wall suction/oxyflowmeter는 `PatientCareDescriptionZone`의 환자별 `EquipmentConnected` 바인딩으로 계측한다.
 
 ---
 
@@ -3637,7 +3648,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **AutoAdvanceSeconds** | 실수(float) | 10.0 |
 | **PlayTTS** | bool | true |
-| **NextIdentifier** | 문자열/null | null (종료 노드) |
+| **NextIdentifier** | 문자열/null | E_END_BC_FADE |
 
 - 본 노드가 실제 종료 노드이다(NextIdentifier가 null/공백). R9 참조.
 
@@ -3645,10 +3656,10 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 
 | 항목 | 내용 |
 |---|---|
-| 종료 노드 | N092 |
-| 종료 연출/설명 | 두 환자 모두 CT실 도달 후 최종 브리핑(D058) → CT 이송(E057) → 종료 메시지(N092)로 종료된다. 검은 화면으로 fade out 되며 "시나리오 B, C 환자 대응 종료. 모든 시나리오를 수행하였습니다." 메세지를 표시하며 종료된다. |
+| 종료 노드 | E_END_BC_FADE 이후 종료 |
+| 종료 연출/설명 | 두 환자 모두 CT실 도달 후 최종 브리핑(D058) → CT 이송(E057) → 종료 메시지(N092, 10초) → `fade_out_patient_b_c`(1초) → 시나리오 종료. 검은 화면은 종료 메시지 표시 후 덮인다. |
 
-- [ ] b-1 수정: 구 종료조건 표의 D063은 미정의 노드였음. 실제 종료 노드 N092로 정정함(맥락상 CT 이송 후 종료 메시지 노드).
+- [x] b-1 수정: 구 종료조건 표의 D063은 미정의 노드였으며 N092 및 최종 fade 이벤트로 정정했다.
 
 ## 후속 확인 체크리스트 (요약)
 
@@ -3664,4 +3675,4 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 - [x] R10: 역할·태그 정리(예비) 섹션 추가, 불일치 항목 checklist 명시.
 - [x] R11: Validator 게이트별 배선 상태 주석(자동 계측 완료 / 선행 구현 필요 / 에디터 Identifier 정합 필요).
 - [x] R12: 더미 B(dummy_b) 분류용 더미, 처치 노드 없음 명시.
-- [ ] JSON 정본 갱신 필요: (1) 체온 37.3→37.8, (2) 환자 C divergence 폐기 및 B와 동일화, (3) PRESET_B/PRESET_C 노드 신설, (4) A012~A015 조합노드 제거 및 재연결. 인간 작업자/임상 검수 요망.
+- [ ] JSON/씬 후속 필요: 미배선 gameplay producer 및 씬 배선. (체온 대사 37.8 정정, 최종 fade 이벤트, PRESET_B/PRESET_C, 환자 C 상태 통일, 조합노드 제거·재연결은 반영 완료.)

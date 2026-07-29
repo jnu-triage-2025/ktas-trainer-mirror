@@ -1,7 +1,12 @@
 {
   "identifier": "patient_b_c_ct",
   "defaultEntrypoint": "SPAWN_B",
-  "tags": [],
+  "tags": [
+    "nurse_a",
+    "nurse_b",
+    "nurse_c",
+    "nurse_d"
+  ],
   "questDefinitionIncludes": [
     "patient_b_c_ct.quests.quest"
   ],
@@ -157,6 +162,54 @@
       "eventName": "TreatmentApplied",
       "eventKey": "NasalCannulaApplied",
       "outputSignalIdentifier": "apply_nasal_cannula_patient_c",
+      "consumeOnce": true,
+      "nextIdentifier": "BIND_B_WALL_SUCTION_CONNECTED"
+    },
+    "BIND_B_WALL_SUCTION_CONNECTED": {
+      "identifier": "BIND_B_WALL_SUCTION_CONNECTED",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_wall_suction_connected_patient_b",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_b",
+      "eventName": "EquipmentConnected",
+      "eventKey": "WallSuction",
+      "outputSignalIdentifier": "use_wall_suction_patient_b",
+      "consumeOnce": true,
+      "nextIdentifier": "BIND_B_OXYFLOWMETER_CONNECTED"
+    },
+    "BIND_B_OXYFLOWMETER_CONNECTED": {
+      "identifier": "BIND_B_OXYFLOWMETER_CONNECTED",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_oxyflowmeter_connected_patient_b",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_b",
+      "eventName": "EquipmentConnected",
+      "eventKey": "Oxyflowmeter",
+      "outputSignalIdentifier": "connect_oxyflowmeter_patient_b",
+      "consumeOnce": true,
+      "nextIdentifier": "BIND_C_WALL_SUCTION_CONNECTED"
+    },
+    "BIND_C_WALL_SUCTION_CONNECTED": {
+      "identifier": "BIND_C_WALL_SUCTION_CONNECTED",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_wall_suction_connected_patient_c",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_c",
+      "eventName": "EquipmentConnected",
+      "eventKey": "WallSuction",
+      "outputSignalIdentifier": "use_wall_suction_patient_c",
+      "consumeOnce": true,
+      "nextIdentifier": "BIND_C_OXYFLOWMETER_CONNECTED"
+    },
+    "BIND_C_OXYFLOWMETER_CONNECTED": {
+      "identifier": "BIND_C_OXYFLOWMETER_CONNECTED",
+      "nodeType": "EntityStateSignalBinding",
+      "bindingIdentifier": "bind_oxyflowmeter_connected_patient_c",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_c",
+      "eventName": "EquipmentConnected",
+      "eventKey": "Oxyflowmeter",
+      "outputSignalIdentifier": "connect_oxyflowmeter_patient_c",
       "consumeOnce": true,
       "nextIdentifier": "E038"
     },
@@ -552,27 +605,25 @@
       "nextIdentifier": "D058",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
         {
           "identifier": "V040_A",
           "completionConditionIdentifier": "CC_A_C_patient_b_complete",
           "requiredPlayerTags": [
-            "triage_lead",
-            "bleeding_control"
+            "nurse_a"
           ],
           "forbiddenPlayerTags": [],
-          "requiredPlayerTagsMatchMode": "Any"
+          "requiredPlayerTagsMatchMode": "All"
         },
         {
           "identifier": "V040_B",
           "completionConditionIdentifier": "CC_B_D_patient_c_complete",
           "requiredPlayerTags": [
-            "airway_team",
-            "iv_team"
+            "nurse_b"
           ],
           "forbiddenPlayerTags": [],
-          "requiredPlayerTagsMatchMode": "Any"
+          "requiredPlayerTagsMatchMode": "All"
         }
       ]
     },
@@ -641,13 +692,13 @@
       "nextIdentifier": "D041",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
         {
           "identifier": "N035",
           "completionConditionIdentifier": "CC_A_gcs_patient_b",
           "requiredPlayerTags": [
-            "neuro_assessment"
+            "nurse_a"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -656,7 +707,7 @@
           "identifier": "N043",
           "completionConditionIdentifier": "CC_C_vital_patient_b",
           "requiredPlayerTags": [
-            "vital_team"
+            "nurse_b"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -1153,7 +1204,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "V046",
       "speakerName": "시스템",
-      "dialogueContent": "혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.3도, SpO2 93% 입니다. 확인 후 모니터 창을 닫으십시오.",
+      "dialogueContent": "혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.8도, SpO2 93% 입니다. 확인 후 모니터 창을 닫으십시오.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 6,
       "playTTS": true
@@ -1194,7 +1245,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "D042",
       "speakerName": "시스템",
-      "dialogueContent": "B 환자의 의식상태는 GCS 13점, 근력 우측 5점/좌측 3점이며, 활력징후는 혈압 140/86, 맥박 120, 호흡수 24, 체온 37.3, SpO2 93% 입니다.",
+      "dialogueContent": "B 환자의 의식상태는 GCS 13점, 근력 우측 5점/좌측 3점이며, 활력징후는 혈압 140/86, 맥박 120, 호흡수 24, 체온 37.8, SpO2 93% 입니다.",
       "portraitSpriteIdentifier": null,
       "playTTS": true
     },
@@ -1203,7 +1254,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "P011",
       "speakerName": "의사 NPC",
-      "dialogueContent": "간호사 A 선생님, 펜라이트로 동공반사 확인해주시고 생리식염수 1L로 IV라인 확보해주세요. 간호사 C 선생님, 산소포화도가 조금 낮으니 비강캐뉼라로 3L 주시고 지혈도 해주세요.",
+      "dialogueContent": "간호사 C 선생님, 펜라이트로 동공반사 확인해주시고 생리식염수 1L로 IV라인 확보해주세요. 간호사 D 선생님, 산소포화도가 조금 낮으니 비강캐뉼라로 3L 주시고 지혈도 해주세요.",
       "portraitSpriteIdentifier": null,
       "playTTS": true
     },
@@ -1213,13 +1264,13 @@
       "nextIdentifier": "N062",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
         {
           "identifier": "N048",
           "completionConditionIdentifier": "CC_A_pupil_iv_patient_b",
           "requiredPlayerTags": [
-            "pupil_check"
+            "nurse_c"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -1228,7 +1279,7 @@
           "identifier": "N052",
           "completionConditionIdentifier": "CC_C_nasal_pressure_patient_b",
           "requiredPlayerTags": [
-            "bleeding_control"
+            "nurse_d"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -1457,7 +1508,7 @@
       "identifier": "D044",
       "nodeType": "Dialogue",
       "nextIdentifier": "D045",
-      "speakerName": "간호사 A",
+      "speakerName": "간호사 C",
       "dialogueContent": "정맥로가 확보되었습니다.",
       "portraitSpriteIdentifier": null,
       "playTTS": true
@@ -1466,7 +1517,7 @@
       "identifier": "D045",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q035_1",
-      "speakerName": "간호사 A",
+      "speakerName": "간호사 C",
       "dialogueContent": "환자의 우측 동공이 빛에 반응하지 않습니다. 추가 검사가 필요해 보입니다. IV 라인도 확보되었습니다.",
       "portraitSpriteIdentifier": null,
       "playTTS": true
@@ -1591,7 +1642,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.connect_wall_component_2"
+              "registryIdentifier": "sig.use_wall_suction_patient_b"
             }
           ]
         }
@@ -1628,7 +1679,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.connect_nasal_and_o2"
+              "registryIdentifier": "sig.connect_oxyflowmeter_patient_b"
             }
           ]
         }
@@ -1687,7 +1738,7 @@
       "identifier": "D046",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q036_1",
-      "speakerName": "간호사 C",
+      "speakerName": "간호사 D",
       "dialogueContent": "산소 투여가 완료되었습니다.",
       "portraitSpriteIdentifier": null,
       "playTTS": true
@@ -1874,7 +1925,7 @@
       "identifier": "D047",
       "nodeType": "Dialogue",
       "nextIdentifier": "D048",
-      "speakerName": "간호사 C",
+      "speakerName": "간호사 D",
       "dialogueContent": "지혈 중입니다.",
       "portraitSpriteIdentifier": null,
       "playTTS": true
@@ -1883,7 +1934,7 @@
       "identifier": "D048",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q037_1",
-      "speakerName": "간호사 C",
+      "speakerName": "간호사 D",
       "dialogueContent": "산소 적용 및 지혈이 완료되었습니다.",
       "portraitSpriteIdentifier": null,
       "playTTS": true
@@ -1973,13 +2024,13 @@
       "nextIdentifier": "D049",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
         {
           "identifier": "N064",
           "completionConditionIdentifier": "CC_B_gcs_patient_c",
           "requiredPlayerTags": [
-            "neuro_assessment"
+            "nurse_a"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -1988,7 +2039,7 @@
           "identifier": "N072",
           "completionConditionIdentifier": "CC_D_vital_patient_c",
           "requiredPlayerTags": [
-            "vital_team"
+            "nurse_b"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -2485,7 +2536,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "V065",
       "speakerName": "시스템",
-      "dialogueContent": "혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.3도, SpO2 93% 입니다. 확인 후 모니터 창을 닫으십시오.",
+      "dialogueContent": "혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.8도, SpO2 93% 입니다. 확인 후 모니터 창을 닫으십시오.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 6,
       "playTTS": true
@@ -2526,7 +2577,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "D051",
       "speakerName": "시스템",
-      "dialogueContent": "C 환자의 의식상태는 GCS 13점, 근력 좌측 5점/우측 3점이며, 활력징후는 혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.3도, SpO2 93% 입니다.",
+      "dialogueContent": "C 환자의 의식상태는 GCS 13점, 근력 좌측 5점/우측 3점이며, 활력징후는 혈압 140/86mmHg, 맥박 120회/분, 호흡수 24회/분, 체온 37.8도, SpO2 93% 입니다.",
       "portraitSpriteIdentifier": null,
       "playTTS": true
     },
@@ -2535,7 +2586,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "P013",
       "speakerName": "의사 NPC",
-      "dialogueContent": "간호사 B 선생님, 펜라이트로 동공반사 확인해주시고 생리식염수 1L로 IV라인 확보해주세요. 간호사 D 선생님, 산소포화도가 조금 낮으니 비강캐뉼라로 3L 주시고 지혈도 해주세요.",
+      "dialogueContent": "간호사 C 선생님, 펜라이트로 동공반사 확인해주시고 생리식염수 1L로 IV라인 확보해주세요. 간호사 D 선생님, 산소포화도가 조금 낮으니 비강캐뉼라로 3L 주시고 지혈도 해주세요.",
       "portraitSpriteIdentifier": null,
       "playTTS": true
     },
@@ -2545,13 +2596,13 @@
       "nextIdentifier": "N091",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
         {
           "identifier": "N077",
           "completionConditionIdentifier": "CC_B_pupil_iv_patient_c",
           "requiredPlayerTags": [
-            "pupil_check"
+            "nurse_c"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -2560,7 +2611,7 @@
           "identifier": "N081",
           "completionConditionIdentifier": "CC_D_nasal_pressure_patient_c",
           "requiredPlayerTags": [
-            "bleeding_control"
+            "nurse_d"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -2650,7 +2701,7 @@
       "identifier": "D052",
       "nodeType": "Dialogue",
       "nextIdentifier": "N079",
-      "speakerName": "간호사 B",
+      "speakerName": "간호사 C",
       "dialogueContent": "우측 동공에 비해 좌측 동공이 빛에 반응하지 않습니다. 추가 평가가 필요합니다.",
       "portraitSpriteIdentifier": null,
       "playTTS": true
@@ -2787,7 +2838,7 @@
       "identifier": "D053",
       "nodeType": "Dialogue",
       "nextIdentifier": "D054",
-      "speakerName": "간호사 B",
+      "speakerName": "간호사 C",
       "dialogueContent": "정맥로가 확보되었습니다.",
       "portraitSpriteIdentifier": null,
       "playTTS": true
@@ -2796,7 +2847,7 @@
       "identifier": "D054",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q040_1",
-      "speakerName": "간호사 B",
+      "speakerName": "간호사 C",
       "dialogueContent": "환자의 좌측 동공이 빛에 반응하지 않습니다. 추가 검사가 필요해 보입니다. IV 라인도 확보되었습니다.",
       "portraitSpriteIdentifier": null,
       "playTTS": true
@@ -2921,7 +2972,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.connect_wall_component_2"
+              "registryIdentifier": "sig.use_wall_suction_patient_c"
             }
           ]
         }
@@ -2958,7 +3009,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.connect_nasal_and_o2"
+              "registryIdentifier": "sig.connect_oxyflowmeter_patient_c"
             }
           ]
         }
@@ -3255,12 +3306,19 @@
     "N092": {
       "identifier": "N092",
       "nodeType": "Dialogue",
-      "nextIdentifier": null,
+      "nextIdentifier": "E_END_BC_FADE",
       "speakerName": "시스템",
       "dialogueContent": "시나리오 B, C 환자 대응 종료. 모든 시나리오를 수행하였습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 10,
       "playTTS": true
+    },
+    "E_END_BC_FADE": {
+      "identifier": "E_END_BC_FADE",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": null,
+      "eventIdentifier": "fade_out_patient_b_c",
+      "moveNextBehavior": "WaitUntilDone"
     }
   }
 }
