@@ -7,12 +7,14 @@ using System.Collections.Generic;
 using FishNet.Object;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
+using TriageTrainer.Entity.LineConnection;
+using TriageTrainer.ItemDefinitions;
 using UnityEngine;
 
 namespace TriageTrainer.Entity.IntravenousLine
 {
   [RequireComponent(typeof(SphereCollider))]
-  public class IntravenousLineConnectionPoint : NetworkBehaviour, IInteractable
+  public class IntravenousLineConnectionPoint : LineConnectionPoint, IInteractable
   {
     [Serializable]
     public class InteractConfig
@@ -60,7 +62,7 @@ namespace TriageTrainer.Entity.IntravenousLine
           return false;
 
         var controller = _owner.ResolveController();
-        return controller != null && controller.HasAnyRequiredItem(player);
+        return controller != null && _owner.HasRequiredItem(player);
       }
 
       public void Interact(Transform interactor)
@@ -106,12 +108,14 @@ namespace TriageTrainer.Entity.IntravenousLine
         if (controller == null)
           return false;
 
-        if (!controller.HasAnyRequiredItem(player))
+        if (!_owner.HasRequiredItem(player))
           return false;
 
         return controller.HasPendingStartPoint(player, out var startPoint)
           && startPoint != null
-          && !ReferenceEquals(startPoint, _owner);
+          && !ReferenceEquals(startPoint, _owner)
+          && startPoint.CanConnectTo(_owner)
+          && _owner.CanConnectTo(startPoint);
       }
 
       public void Interact(Transform interactor)
@@ -180,7 +184,7 @@ namespace TriageTrainer.Entity.IntravenousLine
     public const string DisconnectedSignalPrefix = "iv_disconnected_";
 
     [Header("Service")]
-    [SerializeField] private IntravenousLineConnectionService connectionService;
+    [SerializeField] private LineConnectionService connectionService;
 
     [Header("Identifier")]
     [SerializeField] private string _identifier;
@@ -189,13 +193,6 @@ namespace TriageTrainer.Entity.IntravenousLine
     [Header("Interact")]
     [SerializeField] private Sprite _displayIcon;
     [SerializeField] private List<InteractConfig> _interactConfigs = new();
-
-    [Header("Runtime")]
-    [SerializeField] private List<GameObject> _connectedLineObjects = new();
-
-    [Header("Connection Capacity")]
-    [Tooltip("활성화하면 이 지점에 여러 수액 줄을 연결할 수 있습니다.")]
-    [SerializeField] private bool _allowMultipleConnections;
 
     private List<IInteract> _interacts = new();
     private Dictionary<string, InteractConfig> _interactConfigMap = new(StringComparer.Ordinal);
@@ -224,35 +221,6 @@ namespace TriageTrainer.Entity.IntravenousLine
 
     public string Identifier => _identifier;
     public IInteract[] Interacts => _interacts.ToArray();
-
-    /// <summary>
-    /// Returns the NetworkObject that owns this point, including a parent object.
-    /// Connection points are intentionally child markers and do not require a
-    /// NetworkObject on their own GameObject.
-    /// </summary>
-    public NetworkObject OwningNetworkObject => GetComponentInParent<NetworkObject>();
-
-    public bool HasAnyConnection
-    {
-      get
-      {
-        for (int i = _connectedLineObjects.Count - 1; i >= 0; i--)
-        {
-          if (_connectedLineObjects[i] != null)
-            return true;
-
-          _connectedLineObjects.RemoveAt(i);
-        }
-
-        return false;
-      }
-    }
-
-    /// <summary>이 지점이 수액 줄을 하나 더 받을 수 있는지 여부.</summary>
-    public bool CanAcceptAdditionalConnection => _allowMultipleConnections || !HasAnyConnection;
-
-    /// <summary>환자 IV attachment point 등에서 여러 줄 연결을 허용하도록 설정한다.</summary>
-    public void SetAllowsMultipleConnections(bool allow) => _allowMultipleConnections = allow;
 
     private void Awake()
     {
@@ -370,7 +338,6 @@ namespace TriageTrainer.Entity.IntravenousLine
     private void EnsureRuntimeCollections()
     {
       _interactConfigs ??= new List<InteractConfig>();
-      _connectedLineObjects ??= new List<GameObject>();
       _interacts ??= new List<IInteract>();
       _interactConfigMap ??= new Dictionary<string, InteractConfig>(StringComparer.Ordinal);
     }
@@ -429,17 +396,6 @@ namespace TriageTrainer.Entity.IntravenousLine
       return false;
     }
 
-    public void RegisterConnectedLineObject(GameObject lineObject)
-    {
-      if (lineObject == null)
-        return;
-
-      if (_connectedLineObjects.Contains(lineObject))
-        return;
-
-      _connectedLineObjects.Add(lineObject);
-    }
-
     /// <summary>
     /// 연결 작업 시작(한 점 연결)을 알린다. C# 이벤트를 발화하고, 인게임 서버에
     /// 이 지점 Identifier 와 함께 "연결 시도" 시그널을 올린다.
@@ -450,6 +406,8 @@ namespace TriageTrainer.Entity.IntravenousLine
       RaiseSignalWithIdentifier(ConnectStartSignalPrefix);
     }
 
+    public override void NotifyConnectionStarted() => NotifyConnectStart();
+
     /// <summary>
     /// 연결 완료를 알린다. C# 이벤트를 발화하고, 인게임 서버에 이 지점 Identifier 와
     /// 함께 "연결 완료" 시그널을 올린다.
@@ -459,6 +417,9 @@ namespace TriageTrainer.Entity.IntravenousLine
       OnConnected?.Invoke(this, other);
       RaiseSignalWithIdentifier(ConnectedSignalPrefix);
     }
+
+    public override void NotifyLineConnected(LineConnectionPoint other) =>
+      NotifyConnected(other as IntravenousLineConnectionPoint);
 
     /// <summary>
     /// 줄 하나의 연결 끊김을 알린다. C# 이벤트를 발화하고, 인게임 서버에 이 지점
@@ -472,6 +433,17 @@ namespace TriageTrainer.Entity.IntravenousLine
       RaiseSignalWithIdentifier(DisconnectedSignalPrefix);
     }
 
+    public override void NotifyLineDisconnected(LineConnectionPoint other) =>
+      NotifyDisconnected(other as IntravenousLineConnectionPoint);
+
+    public override void NotifyConnectionCompleted(LineConnectionPoint other)
+    {
+      if (other is not IntravenousLineConnectionPoint otherPoint)
+        return;
+
+      RaiseConnectionSignals(otherPoint);
+    }
+
     private void RaiseSignalWithIdentifier(string signalPrefix)
     {
       if (string.IsNullOrWhiteSpace(_identifier))
@@ -480,40 +452,42 @@ namespace TriageTrainer.Entity.IntravenousLine
       MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise($"{signalPrefix}{_identifier}");
     }
 
-    public void UnregisterConnectedLineObject(GameObject lineObject)
+    private void RaiseConnectionSignals(IntravenousLineConnectionPoint other)
     {
-      if (lineObject == null)
-        return;
+      string otherIdentifier = other != null ? other.Identifier : null;
 
-      _connectedLineObjects.Remove(lineObject);
+      if (!string.IsNullOrWhiteSpace(otherIdentifier))
+        MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(otherIdentifier);
+
+      if (!string.IsNullOrWhiteSpace(_identifier))
+        MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(_identifier);
+
+      if (!string.IsNullOrWhiteSpace(_identifier) && !string.IsNullOrWhiteSpace(otherIdentifier))
+        MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise($"{_identifier}__{otherIdentifier}");
     }
 
-    public bool TryGetAnyConnectedLineObject(out GameObject lineObject)
+    public override void ApplyLineMaterial(LineRenderer lineRenderer)
     {
-      EnsureRuntimeCollections();
-
-      for (int i = 0; i < _connectedLineObjects.Count; i++)
-      {
-        var each = _connectedLineObjects[i];
-        if (each == null)
-          continue;
-
-        lineObject = each;
-        return true;
-      }
-
-      lineObject = null;
-      return false;
+      base.ApplyLineMaterial(lineRenderer);
     }
 
-    public IntravenousLineConnectionService ResolveController()
+    public bool HasRequiredItem(PlayerController player) =>
+      player != null && player.CountItemInInventory(IntravenousSet.Identifier) > 0;
+
+    public bool TryConsumeRequiredItem(PlayerController player) =>
+      player != null && player.RemoveItemFromInventory(IntravenousSet.Identifier, 1) > 0;
+
+    public override bool TryConsumeConnectionRequirement(PlayerController player) =>
+      TryConsumeRequiredItem(player);
+
+    public LineConnectionService ResolveController()
     {
       if (connectionService != null)
         return connectionService;
 
-      connectionService = FindFirstObjectByType<IntravenousLineConnectionService>(FindObjectsInactive.Include);
+      connectionService = FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
       if (connectionService == null)
-        connectionService = FindAnyObjectByType<IntravenousLineConnectionService>(FindObjectsInactive.Include);
+        connectionService = FindAnyObjectByType<LineConnectionService>(FindObjectsInactive.Include);
 
       return connectionService;
     }

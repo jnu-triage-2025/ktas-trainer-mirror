@@ -240,7 +240,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4839410482699465486, guid: 100d1a7266ab748b7ac3d6e8b8258c83, type: 3}
       propertyPath: m_Name
-      value: 'TT: IntravenousLineConnectionService'
+      value: 'TT: LineConnectionService'
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -1,4 +1,5 @@
 using FishNet.Object;
+using TriageTrainer.Entity.LineConnection;
 using UnityEngine;
 
 namespace TriageTrainer.Entity.AEDLine
@@ -7,12 +8,11 @@ namespace TriageTrainer.Entity.AEDLine
   /// Marks the position where an AED line can be connected.
   /// This component is network-aware; connection behavior will be implemented separately.
   /// </summary>
-  public sealed class AEDLineConnectionPoint : NetworkBehaviour
+  public sealed class AEDLineConnectionPoint : LineConnectionPoint
   {
-    // 기능 구현 예약: AEDLine 연결 동작은 별도 작업자가 담당한다.
-    /// <summary>
-    /// Returns the NetworkObject that owns this point, including a parent object.
-    /// </summary>
-    public NetworkObject OwningNetworkObject => GetComponentInParent<NetworkObject>();
+    public override void ApplyLineMaterial(LineRenderer lineRenderer)
+    {
+      base.ApplyLineMaterial(lineRenderer);
+    }
   }
 }

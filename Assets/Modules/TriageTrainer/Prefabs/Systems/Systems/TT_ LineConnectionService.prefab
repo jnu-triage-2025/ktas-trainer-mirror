@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3772514090246467229}
   - component: {fileID: 6356846574764430413}
   m_Layer: 0
-  m_Name: TT_ IntravenousLineConnectionService
+  m_Name: TT_ LineConnectionService
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -44,7 +44,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e991346c255fe4316abd9d648a745682, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionService
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.LineConnection.LineConnectionService
   _linesRoot: {fileID: 7631477232276920592}
   _lineWidth: 0.01
   _lineColor: {r: 0.94, g: 0.98, b: 1, a: 0.18}

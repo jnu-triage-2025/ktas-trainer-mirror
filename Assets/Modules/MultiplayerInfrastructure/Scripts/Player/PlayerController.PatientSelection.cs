@@ -17,6 +17,14 @@ namespace MultiplayerInfrastructure.Player
 
     public bool IsPatientSelectionMode => _isPatientSelectionMode;
     public bool IsIntravenousLineConnectionMode => _isIntravenousLineConnectionMode;
+    public bool IsLineConnectionMode => _isIntravenousLineConnectionMode;
+
+    /// <summary>
+    /// Generic line-connection API. The serialized IV-named backing field is
+    /// retained to preserve existing scene and prefab data.
+    /// </summary>
+    public void SetLineConnectionMode(bool enabled, bool showActionbarHint = true) =>
+      SetIntravenousLineConnectionMode(enabled, showActionbarHint);
 
     public void SetPatientSelectionMode(bool enabled)
     {
@@ -79,7 +87,7 @@ namespace MultiplayerInfrastructure.Player
 
     private void NotifyIntravenousLineConnectionModeCancelled()
     {
-      var controllers = FindObjectsByType<TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionService>(
+      var controllers = FindObjectsByType<TriageTrainer.Entity.LineConnection.LineConnectionService>(
         FindObjectsInactive.Exclude,
         FindObjectsSortMode.None);
 
