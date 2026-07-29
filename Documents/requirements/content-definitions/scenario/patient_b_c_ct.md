@@ -63,7 +63,7 @@ flags: ["refactor-required"]
 | ID | 위치 | 부족한 연결 | 처리 |
 |---|---|---|---|
 | SPAWN-BC-1 | `SPAWN_B`, `SPAWN_C` | Unity import에서 `patient_b`의 `PatientTypeBMale`, `patient_c`의 `PatientTypeBFemale` prefab이 FishNet `DefaultPrefabObjects`에 등록되지 않아 `PrefabId`가 미할당된 것으로 확인됐다. 현재 상태로 network spawn하면 런타임 `ObjectId 65535` 오류가 발생한다. | Fish-Networking Spawnable Prefabs에 두 원본 prefab을 등록하고 reserialize한 뒤, Production profile에서 각 EntityPreset의 `SpawnablePreset` capability를 다시 증명한다. |
-| ROLE-BC-1 | `P009`~`P013` | 기능 태그와 간호사 역할의 선행 매핑이 없고, 상·하위 브랜치 태그가 불일치했다. | **해결(2026-07-29):** `patient_b_c_ct`의 루트 태그를 `nurse_a`~`nurse_d`로 고정하고 모든 Parallel 브랜치를 단일 식별자 태그로 재매핑했다. P009/P010/P012는 A/B, P011/P013은 C/D가 각각 1:1로 배정된다. `matchMode`도 모두 `All`로 통일했다. 역할 선택은 `disaster_intro`가 부여하는 동일 식별자 태그를 공급 계약으로 사용한다. |
+| ROLE-BC-1 | `P009`~`P013` | 기능 태그와 간호사 역할의 선행 매핑이 없고, 상·하위 브랜치 태그가 불일치했다. | **해결(2026-07-29):** `patient_b_c_ct`의 루트 태그를 `nurse_a`~`nurse_d`로 고정하고 모든 Parallel 브랜치를 단일 식별자 태그로 재매핑했다. P009/P010/P012는 A/B, P011/P013은 C/D가 각각 1:1로 배정된다. `matchMode`도 모두 `All`로 통일했고 `whenBranchingPlayerNotMatched=Panic`으로 자격 없는 재배정을 금지했다. 역할 선택은 `disaster_intro`가 부여하는 동일 식별자 태그를 공급 계약으로 사용한다. |
 | SIGNAL-BC-1 | `V040_A`/`V040_C`, `V040_B`/`V040_D` | ~~같은 들것 신호를 두 번 기다려 2인 파지를 증명하지 못한다.~~ **해결(2026-07-20):** `MovingPatientBedController`가 서버 권위 `SyncVar` 손잡이 슬롯 두 개에 client ID를 기록한다. 프리팹 `PlayerAttachPoints`도 두 개로 배선했다. | 서버가 각 슬롯을 한 client ID에만 배정하고, 각 소유 클라이언트에 follow anchor를 동기화한다. 참가자 입력은 ServerRpc로 보고되어 서버가 침대를 이동하고 transform을 ObserversRpc로 복제한다. 슬롯 0/1이 각각 `grab_stretcher_patient_b/c_handle_0/1`을 발신하며, 시나리오는 이 두 signal을 별도 Validator로 대기한다. |
 | SIGNAL-BC-2 | `COUNT_TRIAGE_ARRIVALS` → `V039` | ~~`enter_triage_zone` 하나의 존재 여부로는 세 명 도착을 셀 수 없다.~~ **해결(2026-07-20):** `ScenarioTriggerZone._perEntitySignalTemplate`(`enter_triage_zone_{id}`)로 진입 환자별 신호를 발신하고, `SignalCounter`(prefix `enter_triage_zone_`, threshold 3)로 인원 수량 게이트를 구성. | `COUNT_TRIAGE_ARRIVALS`가 `patient_b`/`patient_c`/`dummy_b`의 신호 세 개를 세어 `all_triage_patients_arrived`를 발신하고, `V039`가 이를 대기한다. 운영자는 트리아지 구역 존 인스펙터에 `enter_triage_zone_{id}`를 설정해야 한다. |
 | SIGNAL-BC-3 | B/C의 장비·처치 Validator | ~~장비 획득·전극·펜라이트·산소·장갑·거즈 신호 22개가 환자 B와 C 흐름에서 재사용된다. B가 올린 신호 때문에 C 흐름이 실제 행동 없이 통과할 수 있다.~~ **부분 해결(2026-07-20):** 거즈·플라스터·비강캐뉼라의 환자별 결과 신호는 `EntityStateSignalBinding`이 `TreatmentApplied` 전이에서 발신한다. **해결(2026-07-29):** `PatientCareDescriptionZone`의 환자별 `EquipmentConnected` 이벤트로 wall suction/oxyflowmeter 사용 신호를 분리했다. | 장비 획득·전극·장갑 등 공용 아이템 신호는 기존 풀을 공유하지만, 환자에게 연결되는 장비 결과는 `_patient_b`/`_patient_c`로 분리된다. |
@@ -79,7 +79,9 @@ flags: ["refactor-required"]
 - 장비 종류별 Zone 내 활성 인스턴스는 정확히 하나여야 하며, 2개 이상이면 연결을 무효화하고 경고한다.
 - Zone → `PatientController.EquipmentConnected` → `EntityStateSignalBinding` 순서로 환자별 신호를 발신한다.
 - V054/V073은 `use_wall_suction_patient_b/c`, V055/V074는 `connect_oxyflowmeter_patient_b/c`를 기다린다.
+- 시나리오 시작/종료 시 `sig.*` RuntimeState를 초기화하여 재실행 시 이전 플레이의 sticky 신호가 게이트를 통과시키지 않도록 한다.
 - Zone에는 `MovingPatientBedPositioningPoint`가 하나 있어야 하며, 베드 스냅은 별도 배치 검증 대상이다.
+- Zone당 활성 환자는 한 명만 허용하며, 환자가 Zone 내부 positioning point에 고정된 침대에 연결된 경우에만 장비를 귀속한다.
 
 ### 변환 승인 조건
 
@@ -693,7 +695,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P009_Branches 표 참조]** |
 | **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
-| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
+| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Panic |
 | **NextIdentifier** | 문자열 | D058 |
 
 #### [P009_Branches] 브랜치 목록 (ScenarioParallelBranch)
@@ -777,7 +779,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P010_Branches 표 참조]** |
 | **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
-| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
+| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Panic |
 | **NextIdentifier** | 문자열 | D041 |
 
 #### [P010_Branches] 브랜치 목록 (ScenarioParallelBranch)
@@ -1405,7 +1407,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P011_Branches 표 참조]** |
 | **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
-| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
+| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Panic |
 | **NextIdentifier** | 문자열 | N062 |
 
 #### [P011_Branches] 브랜치 목록 (ScenarioParallelBranch)
@@ -1800,7 +1802,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V054 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.connect_wall_component_2 (RegistryContains / RuntimeState) |
+| **Condition** | 문자열 | sig.use_wall_suction_patient_b (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
@@ -2227,7 +2229,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P012_Branches 표 참조]** |
 | **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
-| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
+| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Panic |
 | **NextIdentifier** | 문자열 | D049 |
 
 #### [P012_Branches] 브랜치 목록 (ScenarioParallelBranch)
@@ -2857,7 +2859,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Branches** | ScenarioParallelBranch 목록 | **[하단 P013_Branches 표 참조]** |
 | **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
-| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
+| **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Panic |
 | **NextIdentifier** | 문자열 | N091 |
 
 #### [P013_Branches] 브랜치 목록 (ScenarioParallelBranch)
@@ -3252,7 +3254,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V073 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.connect_wall_component_2 (RegistryContains / RuntimeState) |
+| **Condition** | 문자열 | sig.use_wall_suction_patient_c (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |

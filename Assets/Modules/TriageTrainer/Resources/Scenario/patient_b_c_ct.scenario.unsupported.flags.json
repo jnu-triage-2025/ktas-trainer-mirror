@@ -10,7 +10,7 @@
     "allValidatorsOnFailure": "Ignore",
     "compositeConditionHandling": "원본의 'A, B, C' 다중 조건은 단일 합성 신호가 아니라 개별 validationRules(각각 sig.<cond>) 다중 룰로 분해됨. 기본은 AND이며, B/C IV 삽입처럼 좌·우 중 하나를 허용하는 게이트는 matchMode=Any를 사용한다.",
     "dialogueDuration": "원본 Duration 은 Dialogue 노드 autoAdvanceSeconds 로 복원되어 런타임에서 소비됨(ScenarioController.cs).",
-    "parallelAllocation": "Parallel.allocationType=ByRole, waitMode=All, whenBranchingPlayerNotMatched=Reallocation(2026-06-25 변경, 기존 Ignore) 로 변환. patient_b_c_ct는 2026-07-29부터 requiredPlayerTags를 nurse_a~nurse_d 식별자 태그로 단순화하고 각 Parallel의 두 브랜치를 서로 다른 간호사에게 1:1 배정한다. 인원 부족 시 Reallocation으로 모든 처치 브랜치가 실행되지만 재배정 시 태그 자격은 보장되지 않는다."
+    "parallelAllocation": "Parallel.allocationType=ByRole, waitMode=All, whenBranchingPlayerNotMatched=Panic. patient_b_c_ct는 2026-07-29부터 requiredPlayerTags를 nurse_a~nurse_d 식별자 태그로 단순화하고 각 Parallel의 두 브랜치를 서로 다른 간호사에게 1:1 배정한다. 네 태그가 모두 충족되지 않으면 자격 없는 플레이어로 재배정하지 않고 시나리오를 중단한다."
   },
   "gateSignalCoverage": {
     "description": "각 Validator 게이트가 기대하는 sig.* 신호를, 현재 게임플레이 코드가 올리는지 분류한다.",
@@ -21,8 +21,7 @@
     ],
     "wiredByConnection": [
       "sig.connect_cannula_and_ns1_patient_b", "sig.connect_cannula_and_ns1_patient_c",
-      "sig.connect_patient_and_monitor_b", "sig.connect_patient_and_monitor_patient_c",
-      "sig.connect_wall_component_2"
+      "sig.connect_patient_and_monitor_b", "sig.connect_patient_and_monitor_patient_c"
     ],
     "wiredByPatientCareZone": [
       "sig.use_wall_suction_patient_b", "sig.use_wall_suction_patient_c",
@@ -95,7 +94,7 @@
     },
     {
       "date": "2026-06-25",
-      "change": "S-3: 5개 Parallel 노드의 whenBranchingPlayerNotMatched 를 Ignore→Reallocation 으로 변경(인원 부족 시 처치 브랜치 누락 방지). 변환규칙 문서에 정책 표 추가."
+      "change": "S-3: 5개 Parallel 노드의 whenBranchingPlayerNotMatched 를 Panic 으로 변경하여 nurse_a~nurse_d 자격 없는 재배정을 방지."
     },
     {
       "date": "2026-06-25",

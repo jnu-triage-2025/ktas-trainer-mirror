@@ -25,6 +25,8 @@ namespace TriageTrainer.Entity
     [SerializeField] private bool _includeUnattachedEquipment = false;
     [Tooltip("Zone 안에 같은 장비가 여러 개면 환자 연결을 무효화하고 배치 오류를 보고합니다.")]
     [SerializeField] private bool _requireExactlyOneEquipment = true;
+    [Tooltip("환자 장비 판정 전에 환자가 이 Zone 안의 positioning point에 고정된 침대에 연결되어 있어야 합니다.")]
+    [SerializeField] private bool _requireBedSnapForPatient = true;
     [SerializeField] private string _identifier;
 
     private readonly Dictionary<PatientController, int> _patientColliderCounts = new();
@@ -34,6 +36,11 @@ namespace TriageTrainer.Entity
     private readonly List<WallAttachedOxyflowmeter> _oxyflowmeters = new();
     private bool _warnedMultipleWallSuction;
     private bool _warnedMultipleOxyflowmeter;
+    private bool _warnedMissingEquipment;
+    private bool _warnedMissingPositioningPoint;
+    private PatientController _activePatient;
+    private WallAttachedWallSuction _connectedWallSuction;
+    private WallAttachedOxyflowmeter _connectedOxyflowmeter;
     private BoxCollider _collider;
 
     public IReadOnlyList<WallAttachedWallSuction> WallSuction => _wallSuction;
@@ -62,6 +69,8 @@ namespace TriageTrainer.Entity
       _collider = GetComponent<BoxCollider>();
       _collider.isTrigger = true;
       ApplyCollider();
+      RefreshEquipment();
+      WarnIfConfigurationInvalid();
     }
 
     private void OnValidate()
@@ -86,10 +95,16 @@ namespace TriageTrainer.Entity
       PatientController patient = other.GetComponentInParent<PatientController>();
       if (patient != null)
       {
+        if (_activePatient != null && !ReferenceEquals(_activePatient, patient))
+        {
+          Debug.LogWarning($"[PatientCareDescriptionZone] '{Identifier}' already owns patient '{_activePatient.Identifier}'; ignoring '{patient.Identifier}'.", this);
+          return;
+        }
         _patientColliderCounts.TryGetValue(patient, out int count);
         _patientColliderCounts[patient] = count + 1;
         if (count == 0)
         {
+          _activePatient = patient;
           Connect(patient);
           TriageWorldInteractionSignals.RaiseCareZonePatientEntered(Identifier, patient.Identifier);
         }
@@ -128,10 +143,14 @@ namespace TriageTrainer.Entity
           return;
         }
         _patientColliderCounts.Remove(patient);
-        if (_wallSuction.Count > 0 && ReferenceEquals(patient.ConnectedWallSuction, _wallSuction[0]))
+        if (ReferenceEquals(_activePatient, patient))
+          _activePatient = null;
+        if (ReferenceEquals(patient.ConnectedWallSuction, _connectedWallSuction))
           patient.SetConnectedWallSuctionConnections(null);
-        if (_oxyflowmeters.Count > 0 && ReferenceEquals(patient.ConnectedOxyflowmeter, _oxyflowmeters[0]))
+        if (ReferenceEquals(patient.ConnectedOxyflowmeter, _connectedOxyflowmeter))
           patient.SetConnectedOxyflowmeterConnections(null);
+        _connectedWallSuction = null;
+        _connectedOxyflowmeter = null;
         TriageWorldInteractionSignals.RaiseCareZonePatientExited(Identifier, patient.Identifier);
         return;
       }
@@ -172,9 +191,20 @@ namespace TriageTrainer.Entity
 
     private void Connect(PatientController patient)
     {
+      if (_requireBedSnapForPatient && !IsPatientSupportedInZone(patient))
+      {
+        patient.SetConnectedWallSuctionConnections(null);
+        patient.SetConnectedOxyflowmeterConnections(null);
+        return;
+      }
       RefreshEquipment();
-      patient.SetConnectedWallSuctionConnections(GetUsableWallSuctionSources());
-      patient.SetConnectedOxyflowmeterConnections(GetUsableOxyflowmeterSources());
+      WarnIfConfigurationInvalid();
+      IReadOnlyList<WallAttachedWallSuction> suction = GetUsableWallSuctionSources();
+      IReadOnlyList<WallAttachedOxyflowmeter> flowmeter = GetUsableOxyflowmeterSources();
+      _connectedWallSuction = suction != null && suction.Count == 1 ? suction[0] : null;
+      _connectedOxyflowmeter = flowmeter != null && flowmeter.Count == 1 ? flowmeter[0] : null;
+      patient.SetConnectedWallSuctionConnections(suction);
+      patient.SetConnectedOxyflowmeterConnections(flowmeter);
     }
 
     private IReadOnlyList<WallAttachedWallSuction> GetUsableWallSuctionSources()
@@ -223,6 +253,37 @@ namespace TriageTrainer.Entity
         WallAttachedOxyflowmeter flowmeter = hits[i].GetComponentInParent<WallAttachedOxyflowmeter>();
         if (flowmeter != null && (_includeUnattachedEquipment || flowmeter.IsAttached) && !_oxyflowmeters.Contains(flowmeter)) _oxyflowmeters.Add(flowmeter);
       }
+    }
+
+    private bool IsPatientSupportedInZone(PatientController patient)
+    {
+      MovingPatientBedController bed = patient.CurrentBed;
+      MovingPatientBedPositioningPoint point = bed == null ? null : bed.LatchedPositioningPoint;
+      return bed != null && point != null && IsPointInside(point.transform.position);
+    }
+
+    private void WarnIfConfigurationInvalid()
+    {
+      if (_wallSuction.Count == 0 || _oxyflowmeters.Count == 0)
+      {
+        if (!_warnedMissingEquipment)
+        {
+          Debug.LogWarning($"[PatientCareDescriptionZone] '{Identifier}' requires one active wall_suction and one active oxyflowmeter.", this);
+          _warnedMissingEquipment = true;
+        }
+      }
+      else _warnedMissingEquipment = false;
+
+      MovingPatientBedPositioningPoint[] points = FindObjectsByType<MovingPatientBedPositioningPoint>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      bool hasPoint = false;
+      for (int i = 0; i < points.Length; i++)
+        if (IsPointInside(points[i].transform.position)) { hasPoint = true; break; }
+      if (!hasPoint && !_warnedMissingPositioningPoint)
+      {
+        Debug.LogWarning($"[PatientCareDescriptionZone] '{Identifier}' has no positioning point inside its bounds.", this);
+        _warnedMissingPositioningPoint = true;
+      }
+      else if (hasPoint) _warnedMissingPositioningPoint = false;
     }
 
     private void OnDrawGizmos()

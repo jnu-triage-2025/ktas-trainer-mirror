@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "scenarioIdentifier": "patient_b_c_ct",
   "source": {
-    "scenarioSha256": "cac459083aa5bc1ee61ff7f49452289b95b97a3059358bf6eba58145787adc5e",
+    "scenarioSha256": "15b539e00dd4581c36ceb862ddb44ab1d99ed9e6c009c18faab472bd3d474351",
     "generatedAtUtc": null
   },
   "declarations": [

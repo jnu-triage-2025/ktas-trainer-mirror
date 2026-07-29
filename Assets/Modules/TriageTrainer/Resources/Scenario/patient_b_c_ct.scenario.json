@@ -605,7 +605,7 @@
       "nextIdentifier": "D058",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
         {
           "identifier": "V040_A",
@@ -692,7 +692,7 @@
       "nextIdentifier": "D041",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
         {
           "identifier": "N035",
@@ -1264,7 +1264,7 @@
       "nextIdentifier": "N062",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
         {
           "identifier": "N048",
@@ -2024,7 +2024,7 @@
       "nextIdentifier": "D049",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
         {
           "identifier": "N064",
@@ -2596,7 +2596,7 @@
       "nextIdentifier": "N091",
       "waitMode": "All",
       "allocationType": "ByRole",
-      "whenBranchingPlayerNotMatched": "Reallocation",
+      "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
         {
           "identifier": "N077",
