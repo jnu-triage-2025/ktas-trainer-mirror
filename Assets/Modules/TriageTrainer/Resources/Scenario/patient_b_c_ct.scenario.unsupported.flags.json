@@ -3,14 +3,14 @@
   "sourceScenario": "Documents/requirements/content-definitions/scenario/patient_b_c_ct.md",
   "generatedFrom": "patient_b_c_ct conversion",
   "schemaNote": "이 파일은 변환 산출물(patient_b_c_ct.json)의 '실제 상태'를 반영하도록 2026-06-25 재작성되었다. 이전 버전은 Validator 들이 InvokeEvent(todo.validate.*) 스텁으로 강등되었다고 기록했으나, 실제 JSON 은 정상 Validator(condition=RegistryContains, registryType=RuntimeState, waitForCondition=true)로 변환 완료되었다. 또한 이전 gameplaySignalsToRaise 의 조합(_and_) 신호는 폐기되었고, 실제 JSON 은 복합 조건을 개별 validationRules(개별 sig.* 룰)로 분해한다.",
-  "status": "변환 완료. Validator 게이트는 모두 onFailure=Ignore이며, waitForCondition=true 게이트는 신호 미수신 시 대기한다. 게임플레이의 sig.* 신호 배선이 채워질수록 '수행해야 진행'이 점진 활성화된다.",
+  "status": "변환 완료. 2026-07-29 역할 태그 단순화를 반영했다. Validator 게이트는 모두 onFailure=Ignore이며, waitForCondition=true 게이트는 신호 미수신 시 대기한다. 게임플레이의 sig.* 신호 배선이 채워질수록 '수행해야 진행'이 점진 활성화된다.",
   "conversionState": {
     "validatorCount": 47,
     "allValidatorsWaitForCondition": true,
     "allValidatorsOnFailure": "Ignore",
     "compositeConditionHandling": "원본의 'A, B, C' 다중 조건은 단일 합성 신호가 아니라 개별 validationRules(각각 sig.<cond>) 다중 룰로 분해됨. 기본은 AND이며, B/C IV 삽입처럼 좌·우 중 하나를 허용하는 게이트는 matchMode=Any를 사용한다.",
     "dialogueDuration": "원본 Duration 은 Dialogue 노드 autoAdvanceSeconds 로 복원되어 런타임에서 소비됨(ScenarioController.cs).",
-    "parallelAllocation": "Parallel.allocationType=ByRole, waitMode=All, whenBranchingPlayerNotMatched=Reallocation(2026-06-25 변경, 기존 Ignore) 로 변환. requiredPlayerTags 로 역할 분배(환자 B: A+C, 환자 C: B+D). 인원 부족 시 라운드로빈 재배정으로 모든 처치 브랜치가 실행됨(재배정 시 태그 자격 미적용)."
+    "parallelAllocation": "Parallel.allocationType=ByRole, waitMode=All, whenBranchingPlayerNotMatched=Reallocation(2026-06-25 변경, 기존 Ignore) 로 변환. patient_b_c_ct는 2026-07-29부터 requiredPlayerTags를 nurse_a~nurse_d 식별자 태그로 단순화하고 각 Parallel의 두 브랜치를 서로 다른 간호사에게 1:1 배정한다. 인원 부족 시 Reallocation으로 모든 처치 브랜치가 실행되지만 재배정 시 태그 자격은 보장되지 않는다."
   },
   "gateSignalCoverage": {
     "description": "각 Validator 게이트가 기대하는 sig.* 신호를, 현재 게임플레이 코드가 올리는지 분류한다.",
@@ -22,7 +22,11 @@
     "wiredByConnection": [
       "sig.connect_cannula_and_ns1_patient_b", "sig.connect_cannula_and_ns1_patient_c",
       "sig.connect_patient_and_monitor_b", "sig.connect_patient_and_monitor_patient_c",
-      "sig.connect_wall_component_2", "sig.connect_nasal_and_o2"
+      "sig.connect_wall_component_2"
+    ],
+    "wiredByPatientCareZone": [
+      "sig.use_wall_suction_patient_b", "sig.use_wall_suction_patient_c",
+      "sig.connect_oxyflowmeter_patient_b", "sig.connect_oxyflowmeter_patient_c"
     ],
     "wiredByPatientInteraction_partial": [
       "sig.click_patient_b", "sig.click_patient_c", "sig.select_patient_b", "sig.select_patient_c",
@@ -38,7 +42,7 @@
     ],
     "notWired_gameplayMissing": [
       "sig.check_gcs_patient_b", "sig.check_gcs_patient_c", "sig.check_vital_patient_b",
-      "sig.check_vital_patient_c", "sig.close_vital_ui_b", "sig.close_vital_ui_c",
+      "sig.check_vital_patient_c",
       "sig.click_dummy_b", "sig.click_patient_b_face", "sig.click_patient_c_face",
       "sig.click_flowmeter", "sig.click_humidifier", "sig.click_sdw", "sig.click_nasal",
       "sig.enter_triage_zone"
@@ -47,7 +51,7 @@
   "manualSetupRequired": [
     "의료 아이템 프리팹 Identifier ↔ sig.click_<id> 정합(환자 A 와 동일 풀 공유).",
     "더미 환자(dummy_b), 환자 B/C 의 PatientController Identifier 를 patient_b / patient_c / dummy_b 로 지정.",
-    "비강캐뉼라 연결지점 Identifier 를 connect_nasal_and_o2 등 조건명으로 지정.",
+    "patient_b/patient_c별 PatientCareDescriptionZone에 활성 wall_suction과 oxyflowmeter를 각각 하나씩 배치하고 Zone-환자 매핑을 확정.",
     "중증도 분류 구역 트리거의 진입 카운트 → enter_triage_zone 신호 배선(현재 미구현)."
   ],
   "dataInconsistencies": [
@@ -55,20 +59,32 @@
       "sourceField": "종료 조건 표 - 종료 노드",
       "reported": "D063",
       "issue": "종료 조건 표는 종료 노드를 D063으로 명시하나, 본문에 [D063] 노드 정의가 없음(최고 D-노드는 D058). 실제 그래프 종료 노드는 N092(nextIdentifier=null).",
-      "resolution": "N092 를 터미널 노드로 사용 중. 원저자 확인 후 종료 조건 표를 N092 로 보정 권장.",
+      "resolution": "N092 를 터미널 노드로 사용 중이며 요구사항의 종료 노드 표도 N092로 정정했다.",
       "todoId": "TODO-DATA-5",
-      "status": "open"
+      "status": "resolved"
     },
     {
       "sourceField": "환자 B 활력징후(SpO2/체온)",
       "issue": "원본 기본정보(체온 37.8) 와 변환 본문(체온 37.3, SpO2 93%) 불일치. 변환 시 BT 37.3 / SpO2 93% 로 정규화함.",
-      "resolution": "임상 검수 후 확정 필요.",
+      "resolution": "프리셋·요구사항·JSON 활력 대사 4곳을 모두 37.8°/93%로 정정했다.",
       "todoId": "TODO-DATA-6",
-      "status": "open"
+      "status": "resolved"
     }
   ],
   "note": "테스트: /scenario signal <cond> 커맨드로 게이트 통과 검증 가능. 미배선 신호 배선 가이드: Documents/requirements/content-definitions/scenario/interaction-signal-integration-spec.md. 참고 제안서: Agents/Proposals/완료/2026-06-24-scenario-parallel-execution/",
   "history": [
+    {
+      "date": "2026-07-29",
+      "change": "ROLE-BC-1 해결: patient_b_c_ct 루트 tags와 P009~P013의 모든 requiredPlayerTags를 nurse_a~nurse_d 식별자 태그로 단순화하고 브랜치별 1:1 배정을 확정."
+    },
+    {
+      "date": "2026-07-29",
+      "change": "체온 대사 4곳을 37.3°→37.8°로 정정하고 N092 뒤 E_END_BC_FADE/fade_out_patient_b_c를 추가했다. 저장소에 CameraFade 구현은 없어 런타임 Canvas/Image 검은 화면 오버레이를 사용한다."
+    },
+    {
+      "date": "2026-07-29",
+      "change": "SIGNAL-BC-3/4 부분 해결: PatientCareDescriptionZone이 활성 장비만 환자에 연결하고, EquipmentConnected(WallSuction/Oxyflowmeter)를 patient_b/c 전용 신호로 변환하도록 Scenario 바인딩을 추가."
+    },
     {
       "date": "2026-06-24",
       "change": "ByRole 병렬 분배와 Validator(waitForCondition) 게이팅 엔진 구현 및 JSON 반영. Dialogue.Duration 을 autoAdvanceSeconds 로 복원."

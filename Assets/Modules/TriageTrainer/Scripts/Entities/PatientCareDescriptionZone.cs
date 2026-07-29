@@ -21,7 +21,10 @@ namespace TriageTrainer.Entity
     [Header("Recognition Area")]
     [SerializeField] private Vector3 _size = new(2.4f, 3.5f, 3f);
     [SerializeField] private Vector3 _center = new(0f, 1.5f, 0f);
-    [SerializeField] private bool _includeUnattachedEquipment = true;
+    [Tooltip("비활성(미설치) 장비를 환자에게 연결할지 여부입니다. 실제 사용 판정 Zone은 false를 사용해야 합니다.")]
+    [SerializeField] private bool _includeUnattachedEquipment = false;
+    [Tooltip("Zone 안에 같은 장비가 여러 개면 환자 연결을 무효화하고 배치 오류를 보고합니다.")]
+    [SerializeField] private bool _requireExactlyOneEquipment = true;
     [SerializeField] private string _identifier;
 
     private readonly Dictionary<PatientController, int> _patientColliderCounts = new();
@@ -29,6 +32,8 @@ namespace TriageTrainer.Entity
     private readonly HashSet<MovingPatientBedController> _snappedBeds = new();
     private readonly List<WallAttachedWallSuction> _wallSuction = new();
     private readonly List<WallAttachedOxyflowmeter> _oxyflowmeters = new();
+    private bool _warnedMultipleWallSuction;
+    private bool _warnedMultipleOxyflowmeter;
     private BoxCollider _collider;
 
     public IReadOnlyList<WallAttachedWallSuction> WallSuction => _wallSuction;
@@ -168,8 +173,40 @@ namespace TriageTrainer.Entity
     private void Connect(PatientController patient)
     {
       RefreshEquipment();
-      patient.SetConnectedWallSuctionConnections(_wallSuction);
-      patient.SetConnectedOxyflowmeterConnections(_oxyflowmeters);
+      patient.SetConnectedWallSuctionConnections(GetUsableWallSuctionSources());
+      patient.SetConnectedOxyflowmeterConnections(GetUsableOxyflowmeterSources());
+    }
+
+    private IReadOnlyList<WallAttachedWallSuction> GetUsableWallSuctionSources()
+    {
+      if (!_requireExactlyOneEquipment || _wallSuction.Count <= 1)
+      {
+        _warnedMultipleWallSuction = false;
+        return _wallSuction;
+      }
+
+      if (!_warnedMultipleWallSuction)
+      {
+        Debug.LogWarning($"[PatientCareDescriptionZone] '{Identifier}' has {_wallSuction.Count} active wall_suction objects; patient connection is suppressed until exactly one remains.", this);
+        _warnedMultipleWallSuction = true;
+      }
+      return null;
+    }
+
+    private IReadOnlyList<WallAttachedOxyflowmeter> GetUsableOxyflowmeterSources()
+    {
+      if (!_requireExactlyOneEquipment || _oxyflowmeters.Count <= 1)
+      {
+        _warnedMultipleOxyflowmeter = false;
+        return _oxyflowmeters;
+      }
+
+      if (!_warnedMultipleOxyflowmeter)
+      {
+        Debug.LogWarning($"[PatientCareDescriptionZone] '{Identifier}' has {_oxyflowmeters.Count} active oxyflowmeter objects; patient connection is suppressed until exactly one remains.", this);
+        _warnedMultipleOxyflowmeter = true;
+      }
+      return null;
     }
 
     private void RefreshEquipment()
