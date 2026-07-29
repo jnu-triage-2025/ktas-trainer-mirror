@@ -5,6 +5,10 @@ using FishNet.Managing.Client;
 using FishNet.Transporting;
 using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Session;
+using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.FishNetSupports;
+using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.SceneManagement;
@@ -26,6 +30,7 @@ namespace TriageTrainer.SceneBootstrapper
     private Label _title;
     private Label _detail;
     private Label _logPath;
+    private Button _titleButton;
     private bool _connectionAttempted;
     private bool _connected;
     private string _latestError;
@@ -56,6 +61,8 @@ namespace TriageTrainer.SceneBootstrapper
     private void OnDestroy()
     {
       Application.logMessageReceivedThreaded -= OnUnityLogMessage;
+      if (_titleButton != null)
+        _titleButton.clicked -= HandleTitleButtonClicked;
     }
 
     /// <summary>선택된 네트워크 엔드포인트에 대한 연결 시도를 시작했음을 표시합니다.</summary>
@@ -196,6 +203,28 @@ namespace TriageTrainer.SceneBootstrapper
       _title = root.Q<Label>("failure-title");
       _detail = root.Q<Label>("failure-detail");
       _logPath = root.Q<Label>("failure-log-path");
+      var titleButton = root.Q<Button>("failure-title-button");
+      if (_titleButton != titleButton)
+      {
+        if (_titleButton != null)
+          _titleButton.clicked -= HandleTitleButtonClicked;
+        _titleButton = titleButton;
+        if (_titleButton != null)
+          _titleButton.clicked += HandleTitleButtonClicked;
+      }
+    }
+
+    private void HandleTitleButtonClicked()
+    {
+      var fishNetSupport = FishNetSupport.Instance ?? FindFirstObjectByType<FishNetSupport>();
+      if (fishNetSupport != null)
+      {
+        fishNetSupport.StopClient();
+        if (Registry.Registry.Get<bool>(RegistryGlobalKeys.IsOpeningServer))
+          fishNetSupport.StopServer();
+      }
+
+      LoadingScreen.LoadSceneAsync(DefaultsSceneControl.IntroSceneName);
     }
   }
 }
