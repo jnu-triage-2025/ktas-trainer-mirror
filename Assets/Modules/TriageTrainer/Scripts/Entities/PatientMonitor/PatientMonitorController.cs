@@ -69,6 +69,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     [SerializeField, Min(1f)] private float horizontalSecondsVisible = 12f;
 
     [Header("Layout")]
+    [Tooltip("모니터 콘텐츠를 화면 대부분으로 확대하는 '자세히 보기' Overlay를 표시합니다.")]
+    [SerializeField] private bool _enableDetailedContentOverlay = true;
     [SerializeField, Min(0f)] private float panelPadding = 4f;
     [SerializeField, Min(0f)] private float rowSpacing = 2f;
     [SerializeField, Min(28f)] private float minRowHeight = 44f;
@@ -113,8 +115,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private float _transitionTimer;
     private ECGRuntimeState _ecgRuntimeState;
     private Action _closeRequested;
+    private VisualElement _singleMonitorContent;
+    private VisualElement _singleMonitorContentParent;
+    private Button _singleDetailButton;
     protected readonly List<TriageTrainer.Entity.PatientMonitor.PatientMonitorDisplayView> _displayViews = new();
 
+    public bool EnableDetailedContentOverlay => _enableDetailedContentOverlay;
     protected virtual void OnEnable()
     {
       // DualPatientMonitorController creates missing display children before calling base.OnEnable.
@@ -196,8 +202,59 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       container.Add(body);
 
       root.Add(container);
-      SetVisualTreeNonInteractive(root);
+      BuildSingleDetailOverlay(root, container);
+      SetVisualTreeNonInteractive(container);
       ClearRuntimeMonitorPanelSelection();
+    }
+
+    private void BuildSingleDetailOverlay(VisualElement root, VisualElement content)
+    {
+      _singleMonitorContent = content;
+      _singleMonitorContentParent = root;
+      _singleDetailButton = new Button(OpenSingleDetail)
+      {
+        name = "PatientMonitorDetailButton",
+        text = "자세히 보기"
+      };
+      _singleDetailButton.style.position = Position.Absolute;
+      _singleDetailButton.style.right = 12f;
+      _singleDetailButton.style.top = 12f;
+      _singleDetailButton.style.height = 28f;
+      _singleDetailButton.style.fontSize = 12f;
+      _singleDetailButton.style.display = _enableDetailedContentOverlay ? DisplayStyle.Flex : DisplayStyle.None;
+      root.Add(_singleDetailButton);
+
+    }
+
+    protected virtual void OpenDetailedContentOverlay() => OpenSingleDetail();
+
+    protected virtual void CloseDetailedContentOverlay() => CloseSingleDetail();
+
+    private void OpenSingleDetail()
+    {
+      if (!_enableDetailedContentOverlay || _singleMonitorContent == null)
+        return;
+
+      if (!TriageTrainer.Entity.PatientMonitor.PatientMonitorDetailOverlay.Open(
+            this,
+            new[] { _singleMonitorContent },
+            RestoreSingleMonitorContent))
+        return;
+
+      if (_singleDetailButton != null)
+        _singleDetailButton.style.display = DisplayStyle.None;
+    }
+
+    private void CloseSingleDetail()
+    {
+      TriageTrainer.Entity.PatientMonitor.PatientMonitorDetailOverlay.Close(this);
+    }
+
+    private void RestoreSingleMonitorContent()
+    {
+      _singleMonitorContentParent?.Add(_singleMonitorContent);
+      if (_singleDetailButton != null)
+        _singleDetailButton.style.display = _enableDetailedContentOverlay ? DisplayStyle.Flex : DisplayStyle.None;
     }
 
     /// <summary>

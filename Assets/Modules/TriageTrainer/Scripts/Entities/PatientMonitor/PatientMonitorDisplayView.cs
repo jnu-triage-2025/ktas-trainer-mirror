@@ -14,13 +14,19 @@ namespace TriageTrainer.Entity.PatientMonitor
     private PatientMonitorGraphElement[] _graphs;
     private Label[] _graphValues;
     private Label[] _metricValues;
+    private VisualElement _generatedRoot;
+    private VisualElement _contentRoot;
+    private Button _openDetailButton;
+    private bool _detailOverlayEnabled;
+    private Action _detailRequested;
 
     public PatientMonitorDisplayView(PatientMonitorPlaneType type)
     {
       _type = type;
     }
 
-    public void Build(UIDocument document, Color[] colors, float lineThickness, int points, Action closeRequested)
+    public void Build(UIDocument document, Color[] colors, float lineThickness, int points,
+      bool detailOverlayEnabled, Action detailRequested)
     {
       if (document == null || document.rootVisualElement == null)
         return;
@@ -28,15 +34,22 @@ namespace TriageTrainer.Entity.PatientMonitor
       VisualElement root = document.rootVisualElement;
       root.Q<VisualElement>(GeneratedRootName)?.RemoveFromHierarchy();
 
-      var generatedRoot = new VisualElement { name = GeneratedRootName };
-      generatedRoot.style.flexGrow = 1f;
-      generatedRoot.style.backgroundColor = new StyleColor(new Color(0.05f, 0.05f, 0.05f));
-      generatedRoot.style.paddingLeft = 8f;
-      generatedRoot.style.paddingRight = 8f;
-      generatedRoot.style.paddingTop = 8f;
-      generatedRoot.style.paddingBottom = 8f;
-      generatedRoot.style.overflow = Overflow.Hidden;
-      root.Add(generatedRoot);
+      _detailOverlayEnabled = detailOverlayEnabled;
+      _detailRequested = detailRequested;
+      _generatedRoot = new VisualElement { name = GeneratedRootName };
+      _generatedRoot.style.flexGrow = 1f;
+      _generatedRoot.style.backgroundColor = new StyleColor(new Color(0.05f, 0.05f, 0.05f));
+      _generatedRoot.style.paddingLeft = 8f;
+      _generatedRoot.style.paddingRight = 8f;
+      _generatedRoot.style.paddingTop = 8f;
+      _generatedRoot.style.paddingBottom = 8f;
+      _generatedRoot.style.overflow = Overflow.Hidden;
+      root.Add(_generatedRoot);
+
+      _contentRoot = new VisualElement { name = "PatientMonitorContent" };
+      _contentRoot.style.flexGrow = 1f;
+      _contentRoot.style.overflow = Overflow.Hidden;
+      _generatedRoot.Add(_contentRoot);
 
       _graphs = new PatientMonitorGraphElement[4];
       _graphValues = new Label[4];
@@ -44,8 +57,8 @@ namespace TriageTrainer.Entity.PatientMonitor
 
       if (_type == PatientMonitorPlaneType.Metrics)
       {
-        BuildMetrics(generatedRoot);
-        SetGeneratedNonInteractive(generatedRoot);
+        BuildMetrics(_contentRoot);
+        BuildDetailOverlay();
         return;
       }
 
@@ -100,8 +113,42 @@ namespace TriageTrainer.Entity.PatientMonitor
         _graphValues[i] = value;
       }
 
-      generatedRoot.Add(column);
-      SetGeneratedNonInteractive(generatedRoot);
+      _contentRoot.Add(column);
+      BuildDetailOverlay();
+    }
+
+    private void BuildDetailOverlay()
+    {
+      _openDetailButton = new Button(() => _detailRequested?.Invoke())
+      {
+        name = "PatientMonitorDetailButton",
+        text = "자세히 보기"
+      };
+      _openDetailButton.style.position = Position.Absolute;
+      _openDetailButton.style.right = 12f;
+      _openDetailButton.style.top = 12f;
+      _openDetailButton.style.height = 28f;
+      _openDetailButton.style.paddingLeft = 10f;
+      _openDetailButton.style.paddingRight = 10f;
+      _openDetailButton.style.fontSize = 12f;
+      _openDetailButton.style.display = _detailOverlayEnabled ? DisplayStyle.Flex : DisplayStyle.None;
+      _generatedRoot.Add(_openDetailButton);
+
+      SetGeneratedNonInteractive(_contentRoot);
+    }
+    public VisualElement ContentRoot => _contentRoot;
+
+    public void RestoreContentToMonitor()
+    {
+      if (_generatedRoot == null || _contentRoot == null)
+        return;
+
+      _generatedRoot.Add(_contentRoot);
+      _contentRoot.style.paddingLeft = StyleKeyword.Null;
+      _contentRoot.style.paddingRight = StyleKeyword.Null;
+      _contentRoot.style.marginLeft = StyleKeyword.Null;
+      if (_openDetailButton != null)
+        _openDetailButton.style.display = _detailOverlayEnabled ? DisplayStyle.Flex : DisplayStyle.None;
     }
 
     private static void SetGeneratedNonInteractive(VisualElement root)

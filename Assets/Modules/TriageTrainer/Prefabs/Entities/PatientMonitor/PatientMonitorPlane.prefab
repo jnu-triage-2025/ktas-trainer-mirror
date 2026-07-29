@@ -170,6 +170,7 @@ MonoBehaviour:
   lineThickness: 2
   resolution: 2400
   horizontalSecondsVisible: 12
+  _enableDetailedContentOverlay: 1
   panelPadding: 4
   rowSpacing: 2
   minRowHeight: 44

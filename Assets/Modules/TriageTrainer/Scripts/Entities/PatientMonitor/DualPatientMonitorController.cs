@@ -78,7 +78,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
           new[] { ecgColor, plethColor, artColor, cvpColor },
           lineThickness,
           Mathf.Clamp(ResolveHorizontalPoints(), 80, 2400),
-          RequestClose);
+          EnableDetailedContentOverlay,
+          OpenDetailedContentOverlay);
         _displayViews.Add(view);
 
         hasGraphPlane |= plane.Type == TriageTrainer.Entity.PatientMonitor.PatientMonitorPlaneType.Graph;
@@ -95,6 +96,35 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       if (parentRoot != null)
         parentRoot.style.display = DisplayStyle.Flex;
       HideChildPlaneDocuments(planes);
+    }
+
+    protected override void OpenDetailedContentOverlay()
+    {
+      if (!EnableDetailedContentOverlay || _displayViews.Count == 0)
+        return;
+
+      var contents = new System.Collections.Generic.List<UnityEngine.UIElements.VisualElement>(_displayViews.Count);
+      for (int i = 0; i < _displayViews.Count; i++)
+      {
+        if (_displayViews[i].ContentRoot != null)
+          contents.Add(_displayViews[i].ContentRoot);
+      }
+
+      TriageTrainer.Entity.PatientMonitor.PatientMonitorDetailOverlay.Open(
+        this,
+        contents,
+        RestoreDualMonitorContents);
+    }
+
+    protected override void CloseDetailedContentOverlay()
+    {
+      TriageTrainer.Entity.PatientMonitor.PatientMonitorDetailOverlay.Close(this);
+    }
+
+    private void RestoreDualMonitorContents()
+    {
+      for (int i = 0; i < _displayViews.Count; i++)
+        _displayViews[i].RestoreContentToMonitor();
     }
 
     private void EnsureDisplayPlaneObjects()

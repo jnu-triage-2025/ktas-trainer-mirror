@@ -24,6 +24,21 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       }
     }
 
+    private sealed class MonitorDetailInteract : IInteract
+    {
+      private readonly PatientMonitorController _owner;
+      public MonitorDetailInteract(PatientMonitorController owner) { _owner = owner; }
+      public string DisplayText => "자세히 보기";
+      public Sprite DisplayIcon => _owner._interactIcon;
+      public bool AllowDisplayIconFallback => true;
+      public Color DisplayColor => Color.white;
+      public void Interact(Transform interactor)
+      {
+        if (_owner.IsInteractEnabled(InteractIdDetailOverlay))
+          _owner.OpenDetailedContentOverlay();
+      }
+    }
+
     [Serializable]
     public class InteractEntry
     {
@@ -45,6 +60,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     }
 
     private const string InteractIdSelectPatient = "select_patient_mode";
+    private const string InteractIdDetailOverlay = "detail_overlay";
 
     protected bool IsPatientTrackingMethodEnabled(PatientTrackingMethod method)
       => (_patientTrackingMethod & method) == method;
@@ -67,6 +83,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     protected virtual void OnDisable()
     {
+      CloseDetailedContentOverlay();
       ExitSelectionModeForAll();
       UnconfigurePatientTracking();
       if (_monitoringPatient != null)
@@ -88,10 +105,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private void BuildInteracts()
     {
       EnsureInteractEntry(InteractIdSelectPatient, IsPatientTrackingMethodEnabled(PatientTrackingMethod.Interactable));
+      EnsureInteractEntry(InteractIdDetailOverlay, EnableDetailedContentOverlay);
       RebuildInteractEntryMap();
 
       _interacts.Clear();
       _interacts.Add(new MonitorSelectModeInteract(this));
+      _interacts.Add(new MonitorDetailInteract(this));
     }
 
     private void EnsureInteractEntry(string identifier, bool enabled)
@@ -102,7 +121,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         if (each == null || !string.Equals(each.Identifier, identifier, StringComparison.Ordinal))
           continue;
 
-        if (string.Equals(identifier, InteractIdSelectPatient, StringComparison.Ordinal))
+        if (string.Equals(identifier, InteractIdSelectPatient, StringComparison.Ordinal) ||
+            string.Equals(identifier, InteractIdDetailOverlay, StringComparison.Ordinal))
           each.Enabled = enabled;
         return;
       }
