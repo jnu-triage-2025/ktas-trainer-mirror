@@ -9,6 +9,7 @@ namespace TriageTrainer.Entity.OxyLine
   /// </summary>
   public sealed class OxyLineConnectionPoint : NetworkBehaviour
   {
+    // 기능 구현 예약: OxyLine 연결 동작은 별도 작업자가 담당한다.
     /// <summary>
     /// Returns the NetworkObject that owns this point, including a parent object.
     /// This keeps the point usable as a child marker of a networked prefab.
