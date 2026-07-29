@@ -150,7 +150,7 @@ namespace MultiplayerInfrastructure.Editor.TTS
       //   · bake가 필요하면: [지금 bake + 정리] / [취소] / [그대로 재생]
       //   · orphan만 있으면:  [지금 정리] / [취소] / [그대로 재생]
       string primaryLabel = scan.NeedsBake
-        ? (scan.HasOrphans ? "지금 bake + 정리" : "지금 bake")
+        ? (scan.HasOrphans ? "지금 bake 하고 정리" : "지금 bake")
         : "지금 정리";
 
       int choice = EditorUtility.DisplayDialogComplex(
