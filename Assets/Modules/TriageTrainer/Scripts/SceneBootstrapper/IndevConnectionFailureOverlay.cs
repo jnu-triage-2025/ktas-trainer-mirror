@@ -1,5 +1,6 @@
 using System.Collections;
 using System;
+using System.Collections.Generic;
 using FishNet;
 using FishNet.Managing.Client;
 using FishNet.Transporting;
@@ -37,6 +38,8 @@ namespace TriageTrainer.SceneBootstrapper
     private string _latestError;
     private string _endpoint = "127.0.0.1:7777";
     private Coroutine _subscriptionRoutine;
+    private bool _worldCleanupStarted;
+    private bool _failureVisible;
 
     private void Awake()
     {
@@ -57,6 +60,17 @@ namespace TriageTrainer.SceneBootstrapper
       if (_subscriptionRoutine != null)
         StopCoroutine(_subscriptionRoutine);
       Unsubscribe();
+    }
+
+    private void Update()
+    {
+      // PlayerController may re-lock the cursor for one or more frames while the
+      // world scene is being unloaded. Keep the terminal screen clickable throughout.
+      if (_failureVisible)
+      {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+      }
     }
 
     private void OnDestroy()
@@ -152,6 +166,7 @@ namespace TriageTrainer.SceneBootstrapper
 
     private void ShowFailure(string reason)
     {
+      _failureVisible = true;
       string safeReason = string.IsNullOrWhiteSpace(reason) ? "알 수 없는 연결 오류" : reason.Trim();
       string diagnostic = string.IsNullOrWhiteSpace(_latestError)
         ? safeReason
@@ -181,12 +196,23 @@ namespace TriageTrainer.SceneBootstrapper
       _logPath.text = $"자세한 내용은 세션 로그를 참조하세요.\n{GameLogService.CurrentLogFilePath ?? "로그 경로를 확인할 수 없습니다."}";
       _screen.RemoveFromClassList(HiddenClass);
 
+      // A rebinding flow may still own the mouse and keep the cursor locked.
+      // The failure screen is a terminal UI, so always restore pointer interaction.
+      Cursor.lockState = CursorLockMode.None;
+      Cursor.visible = true;
+      if (!_worldCleanupStarted)
+      {
+        _worldCleanupStarted = true;
+        StartCoroutine(UnloadWorldScenes());
+      }
+
       if (gameObject.scene.IsValid() && gameObject.scene.isLoaded)
         SceneManager.SetActiveScene(gameObject.scene);
     }
 
     private void Hide()
     {
+      _failureVisible = false;
       if (_screen != null)
         _screen.AddToClassList(HiddenClass);
     }
@@ -226,6 +252,37 @@ namespace TriageTrainer.SceneBootstrapper
       }
 
       LoadingScreen.LoadSceneAsync(DefaultsSceneControl.IntroSceneName);
+    }
+
+    private IEnumerator UnloadWorldScenes()
+    {
+      // Keep SystemOverlayScene alive because it owns FishNetSupport and the shared
+      // event system. The failure scene remains active; only world rendering scenes
+      // are removed from the additive session.
+      var scenes = new List<Scene>();
+      for (int i = 0; i < SceneManager.sceneCount; i++)
+      {
+        var scene = SceneManager.GetSceneAt(i);
+        if (scene.IsValid() && scene.isLoaded && IsWorldScene(scene.name))
+          scenes.Add(scene);
+      }
+
+      for (int i = 0; i < scenes.Count; i++)
+      {
+        var operation = SceneManager.UnloadSceneAsync(scenes[i]);
+        if (operation == null)
+          continue;
+        while (!operation.isDone)
+          yield return null;
+      }
+    }
+
+    private static bool IsWorldScene(string sceneName)
+    {
+      return string.Equals(sceneName, "IndevScene", StringComparison.Ordinal)
+        || string.Equals(sceneName, "TutorialScene", StringComparison.Ordinal)
+        || string.Equals(sceneName, "IngameScene", StringComparison.Ordinal)
+        || string.Equals(sceneName, "OverworldScene", StringComparison.Ordinal);
     }
   }
 }
