@@ -73,8 +73,8 @@ namespace TriageTrainer.SceneBootstrapper
       // world scene is being unloaded. Keep the terminal screen clickable throughout.
       if (_failureVisible)
       {
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        UnityEngine.Cursor.lockState = CursorLockMode.None;
+        UnityEngine.Cursor.visible = true;
       }
     }
 
@@ -195,8 +195,8 @@ namespace TriageTrainer.SceneBootstrapper
       BindDocument();
       // A rebinding flow may still own the mouse and keep the cursor locked.
       // The failure screen is a terminal UI, so always restore pointer interaction.
-      Cursor.lockState = CursorLockMode.None;
-      Cursor.visible = true;
+      UnityEngine.Cursor.lockState = CursorLockMode.None;
+      UnityEngine.Cursor.visible = true;
       EnsurePointerInput();
       StartWorldCleanup();
 
