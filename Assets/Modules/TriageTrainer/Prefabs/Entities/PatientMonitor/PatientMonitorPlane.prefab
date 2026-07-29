@@ -237,13 +237,10 @@ MonoBehaviour:
   _showTrackingLine: 1
   _showTrackingLineForDefaultPatient: 0
   _trackingLineStart: {fileID: 0}
-  _trackingLineStartOffset: {x: 0, y: 1, z: 0}
-  _trackingLineEndOffset: {x: 0, y: 1, z: 0}
   _trackingLineWidth: 0.02
   _trackingLineColor: {r: 1, g: 1, b: 1, a: 1}
-  _trackingDashLength: 0.2
-  _trackingDashGap: 0.2
-  _trackingDashFlowFromTarget: 1
+  _trackingDashLength: 0.1
+  _trackingDashGap: 0.1
   _trackingDashScrollSpeed: 0.9
   _trackingSparkleIntensity: 0.2
   _trackingSparkleSpeed: 2.2

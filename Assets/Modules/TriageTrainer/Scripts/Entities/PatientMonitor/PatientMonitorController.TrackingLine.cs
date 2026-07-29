@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace TriageTrainer.Entity.PatientMonitor.Models
@@ -8,13 +9,10 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     [SerializeField] private bool _showTrackingLine = true;
     [SerializeField] private bool _showTrackingLineForDefaultPatient = false;
     [SerializeField] private Transform _trackingLineStart;
-    [SerializeField] private Vector3 _trackingLineStartOffset = new Vector3(0f, 1f, 0f);
-    [SerializeField] private Vector3 _trackingLineEndOffset = new Vector3(0f, 1f, 0f);
     [SerializeField, Min(0.001f)] private float _trackingLineWidth = 0.02f;
     [SerializeField] private Color _trackingLineColor = new Color(1f, 1f, 1f, 1f);
-    [SerializeField, Min(0.01f)] private float _trackingDashLength = 0.2f;
-    [SerializeField, Min(0.01f)] private float _trackingDashGap = 0.2f;
-    [SerializeField] private bool _trackingDashFlowFromTarget = true;
+    [SerializeField, Min(0.01f)] private float _trackingDashLength = 0.1f;
+    [SerializeField, Min(0.01f)] private float _trackingDashGap = 0.1f;
     [SerializeField, Min(0f)] private float _trackingDashScrollSpeed = 0.9f;
     [SerializeField, Range(0f, 0.6f)] private float _trackingSparkleIntensity = 0.2f;
     [SerializeField, Min(0f)] private float _trackingSparkleSpeed = 2.2f;
@@ -23,11 +21,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private LineRenderer _trackingLineRenderer;
     private Material _trackingLineMaterial;
-    private Texture2D _trackingLineTexture;
-    private float _trackingDashOffset;
-    private float _trackingTextureScaleX = 1f;
-    private MaterialPropertyBlock _trackingLinePropertyBlock;
-    private static readonly int MainTexStId = Shader.PropertyToID("_MainTex_ST");
+    private float _trackingDashDistance;
+    private readonly List<LineRenderer> _trackingDashRenderers = new();
 
     private void EnsureTrackingLineRenderer()
     {
@@ -39,6 +34,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       if (_trackingLineRenderer == null)
         return;
+
+      if (_trackingDashRenderers.Count == 0)
+        _trackingDashRenderers.Add(_trackingLineRenderer);
 
       EnsureTrackingLineMaterial();
       ApplyTrackingLineSettings();
@@ -78,61 +76,36 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         name = "PatientMonitorTrackingLine",
         hideFlags = HideFlags.DontSave
       };
-
-      _trackingLineTexture = CreateDashTexture();
-      _trackingLineMaterial.mainTexture = _trackingLineTexture;
-      _trackingLineRenderer.material = _trackingLineMaterial;
-    }
-
-    private Texture2D CreateDashTexture()
-    {
-      // Repeating alpha pattern for dashed line rendering.
-      var texture = new Texture2D(8, 1, TextureFormat.RGBA32, false)
-      {
-        name = "PatientMonitorTrackingLineDash",
-        wrapMode = TextureWrapMode.Repeat,
-        filterMode = FilterMode.Bilinear,
-        hideFlags = HideFlags.DontSave
-      };
-
-      texture.SetPixels(new[]
-      {
-        new Color(1f, 1f, 1f, 0f),
-        new Color(1f, 1f, 1f, 0.35f),
-        new Color(1f, 1f, 1f, 0.7f),
-        new Color(1f, 1f, 1f, 1f),
-        new Color(1f, 1f, 1f, 0.7f),
-        new Color(1f, 1f, 1f, 0.35f),
-        new Color(1f, 1f, 1f, 0f),
-        new Color(1f, 1f, 1f, 0f)
-      });
-
-      texture.Apply();
-      return texture;
     }
 
     private void ApplyTrackingLineSettings()
     {
-      if (_trackingLineRenderer == null)
+      if (_trackingLineRenderer == null || _trackingLineMaterial == null)
         return;
 
-      _trackingLineRenderer.useWorldSpace = true;
-      _trackingLineRenderer.alignment = LineAlignment.View;
-      _trackingLineRenderer.textureMode = LineTextureMode.Tile;
-      _trackingLineRenderer.numCornerVertices = 0;
-      _trackingLineRenderer.numCapVertices = 0;
-      _trackingLineRenderer.startWidth = _trackingLineWidth;
-      _trackingLineRenderer.endWidth = _trackingLineWidth;
-      _trackingLineRenderer.startColor = _trackingLineColor;
-      _trackingLineRenderer.endColor = _trackingLineColor;
-      _trackingLineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-      _trackingLineRenderer.receiveShadows = false;
-      _trackingLineRenderer.motionVectorGenerationMode = UnityEngine.MotionVectorGenerationMode.ForceNoMotion;
+      _trackingLineMaterial.color = _trackingLineColor;
+      for (int i = 0; i < _trackingDashRenderers.Count; i++)
+        ConfigureDashRenderer(_trackingDashRenderers[i]);
+    }
 
-      if (_trackingLineMaterial != null)
-        _trackingLineMaterial.color = _trackingLineColor;
+    private void ConfigureDashRenderer(LineRenderer renderer)
+    {
+      if (renderer == null)
+        return;
 
-      ApplyTextureTransform();
+      renderer.useWorldSpace = true;
+      renderer.alignment = LineAlignment.View;
+      renderer.textureMode = LineTextureMode.Stretch;
+      renderer.numCornerVertices = 0;
+      renderer.numCapVertices = 0;
+      renderer.startWidth = _trackingLineWidth;
+      renderer.endWidth = _trackingLineWidth;
+      renderer.startColor = _trackingLineColor;
+      renderer.endColor = _trackingLineColor;
+      renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+      renderer.receiveShadows = false;
+      renderer.motionVectorGenerationMode = UnityEngine.MotionVectorGenerationMode.ForceNoMotion;
+      renderer.material = _trackingLineMaterial;
     }
 
     private void UpdateTrackingLine()
@@ -151,19 +124,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       }
 
       EnsureTrackingLineRenderer();
-      if (_trackingLineRenderer == null)
+      if (_trackingLineRenderer == null || _trackingLineMaterial == null)
         return;
 
       Vector3 start = ResolveTrackingStartPosition();
       Vector3 end = ResolveTrackingEndPosition(target);
-
-      _trackingLineRenderer.positionCount = 2;
-      _trackingLineRenderer.SetPosition(0, start);
-      _trackingLineRenderer.SetPosition(1, end);
-      SetTrackingLineEnabled(true);
-
-      UpdateDashTiling(start, end);
-      UpdateDashScroll();
+      UpdateDashSegments(start, end);
       UpdateSparkle();
     }
 
@@ -181,62 +147,77 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private Vector3 ResolveTrackingStartPosition()
     {
       var startTransform = _trackingLineStart != null ? _trackingLineStart : transform;
-      return startTransform.TransformPoint(_trackingLineStartOffset);
+      return startTransform.position;
     }
 
     private Vector3 ResolveTrackingEndPosition(PatientController target)
     {
-      var targetTransform = target != null ? target.transform : null;
-      if (targetTransform == null)
-        return ResolveTrackingStartPosition();
-
-      return targetTransform.TransformPoint(_trackingLineEndOffset);
+      return target != null ? target.transform.position : ResolveTrackingStartPosition();
     }
 
-    private void UpdateDashTiling(Vector3 start, Vector3 end)
+    private void UpdateDashSegments(Vector3 start, Vector3 end)
     {
-      if (_trackingLineMaterial == null)
-        return;
-
       float length = Vector3.Distance(start, end);
       float patternLength = Mathf.Max(0.01f, _trackingDashLength + _trackingDashGap);
-      _trackingTextureScaleX = length / patternLength;
-      ApplyTextureTransform();
+      if (length <= Mathf.Epsilon)
+      {
+        DisableUnusedDashRenderers(0);
+        return;
+      }
+
+      // Positive distance moves each dash from the monitor toward the patient.
+      _trackingDashDistance = Mathf.Repeat(
+        _trackingDashDistance + Time.unscaledDeltaTime * _trackingDashScrollSpeed,
+        patternLength);
+
+      Vector3 direction = (end - start) / length;
+      int rendererIndex = 0;
+      int firstPattern = Mathf.FloorToInt(-_trackingDashDistance / patternLength) - 1;
+      int lastPattern = Mathf.CeilToInt((length - _trackingDashDistance) / patternLength);
+      for (int patternIndex = firstPattern; patternIndex <= lastPattern; patternIndex++)
+      {
+        float dashStart = _trackingDashDistance + patternIndex * patternLength;
+        float dashEnd = dashStart + _trackingDashLength;
+        float clippedStart = Mathf.Max(0f, dashStart);
+        float clippedEnd = Mathf.Min(length, dashEnd);
+        if (clippedEnd <= clippedStart)
+          continue;
+
+        var renderer = GetOrCreateDashRenderer(rendererIndex++);
+        renderer.positionCount = 2;
+        renderer.SetPosition(0, start + direction * clippedStart);
+        renderer.SetPosition(1, start + direction * clippedEnd);
+        renderer.enabled = true;
+      }
+
+      DisableUnusedDashRenderers(rendererIndex);
     }
 
-    private void UpdateDashScroll()
+    private LineRenderer GetOrCreateDashRenderer(int index)
     {
-      if (_trackingLineMaterial == null || _trackingDashScrollSpeed <= 0f)
-        return;
+      while (_trackingDashRenderers.Count <= index)
+      {
+        GameObject dashObject = new GameObject($"{TrackingLineObjectName}_Dash{_trackingDashRenderers.Count}");
+        dashObject.transform.SetParent(transform, false);
+        var renderer = dashObject.AddComponent<LineRenderer>();
+        _trackingDashRenderers.Add(renderer);
+        ConfigureDashRenderer(renderer);
+      }
 
-      float direction = _trackingDashFlowFromTarget ? -1f : 1f;
-      _trackingDashOffset = Mathf.Repeat(
-        _trackingDashOffset + (Time.unscaledDeltaTime * _trackingDashScrollSpeed * direction),
-        1f);
-
-      ApplyTextureTransform();
+      return _trackingDashRenderers[index];
     }
 
-    private void ApplyTextureTransform()
+    private void DisableUnusedDashRenderers(int usedCount)
     {
-      if (_trackingLineRenderer == null)
-        return;
-
-      if (_trackingLinePropertyBlock == null)
-        _trackingLinePropertyBlock = new MaterialPropertyBlock();
-
-      _trackingLineRenderer.GetPropertyBlock(_trackingLinePropertyBlock);
-      _trackingLinePropertyBlock.SetVector(
-        MainTexStId,
-        new Vector4(_trackingTextureScaleX, 1f, _trackingDashOffset, 0f));
-      _trackingLineRenderer.SetPropertyBlock(_trackingLinePropertyBlock);
+      for (int i = usedCount; i < _trackingDashRenderers.Count; i++)
+      {
+        if (_trackingDashRenderers[i] != null)
+          _trackingDashRenderers[i].enabled = false;
+      }
     }
 
     private void UpdateSparkle()
     {
-      if (_trackingLineRenderer == null)
-        return;
-
       float pulse = 1f;
       if (_trackingSparkleIntensity > 0f && _trackingSparkleSpeed > 0f)
       {
@@ -250,17 +231,25 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         _trackingLineColor.b * pulse,
         _trackingLineColor.a);
 
-      _trackingLineRenderer.startColor = color;
-      _trackingLineRenderer.endColor = color;
-
       if (_trackingLineMaterial != null)
         _trackingLineMaterial.color = color;
+      for (int i = 0; i < _trackingDashRenderers.Count; i++)
+      {
+        var renderer = _trackingDashRenderers[i];
+        if (renderer == null)
+          continue;
+        renderer.startColor = color;
+        renderer.endColor = color;
+      }
     }
 
     private void SetTrackingLineEnabled(bool enabled)
     {
-      if (_trackingLineRenderer != null)
-        _trackingLineRenderer.enabled = enabled;
+      for (int i = 0; i < _trackingDashRenderers.Count; i++)
+      {
+        if (_trackingDashRenderers[i] != null)
+          _trackingDashRenderers[i].enabled = enabled;
+      }
     }
 
     private void DisableTrackingLine()
@@ -273,11 +262,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       if (_trackingLineMaterial != null)
         Destroy(_trackingLineMaterial);
 
-      if (_trackingLineTexture != null)
-        Destroy(_trackingLineTexture);
-
       _trackingLineMaterial = null;
-      _trackingLineTexture = null;
+      _trackingDashRenderers.Clear();
     }
   }
 }
