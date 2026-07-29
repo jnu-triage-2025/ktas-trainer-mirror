@@ -3,7 +3,7 @@
   "sourceScenario": "Documents/requirements/content-definitions/scenario/patient_b_c_ct.md",
   "generatedFrom": "patient_b_c_ct conversion",
   "schemaNote": "이 파일은 변환 산출물(patient_b_c_ct.json)의 '실제 상태'를 반영하도록 2026-06-25 재작성되었다. 이전 버전은 Validator 들이 InvokeEvent(todo.validate.*) 스텁으로 강등되었다고 기록했으나, 실제 JSON 은 정상 Validator(condition=RegistryContains, registryType=RuntimeState, waitForCondition=true)로 변환 완료되었다. 또한 이전 gameplaySignalsToRaise 의 조합(_and_) 신호는 폐기되었고, 실제 JSON 은 복합 조건을 개별 validationRules(개별 sig.* 룰)로 분해한다.",
-  "status": "변환 완료. 2026-07-29 역할 태그 단순화를 반영했다. Validator 게이트는 모두 onFailure=Ignore이며, waitForCondition=true 게이트는 신호 미수신 시 대기한다. 게임플레이의 sig.* 신호 배선이 채워질수록 '수행해야 진행'이 점진 활성화된다.",
+  "status": "구조 변환 완료, 닫힌 플레이 미승인. 2026-07-29 재감사 결과는 Documents/working-guide/features/scenario/patient-b-c-closed-scenario-audit.md를 기준으로 한다. Validator 게이트는 모두 onFailure=Ignore이며, waitForCondition=true 게이트는 신호 미수신 시 대기한다.",
   "conversionState": {
     "validatorCount": 47,
     "allValidatorsWaitForCondition": true,
@@ -39,19 +39,19 @@
       "sig.wear_glove_patient_b", "sig.wear_glove_patient_c",
       "sig.apply_electrode_patient_b", "sig.apply_electrode_patient_c"
     ],
-    "notWired_gameplayMissing": [
+    "notWired_or_editorUnproven": [
       "sig.check_gcs_patient_b", "sig.check_gcs_patient_c", "sig.check_vital_patient_b",
       "sig.check_vital_patient_c",
-      "sig.click_dummy_b", "sig.click_patient_b_face", "sig.click_patient_c_face",
-      "sig.click_flowmeter", "sig.click_humidifier", "sig.click_sdw", "sig.click_nasal",
-      "sig.enter_triage_zone"
+      "sig.click_dummy_b", "sig.click_patient_b_face", "sig.click_patient_c_face"
     ]
   },
   "manualSetupRequired": [
     "의료 아이템 프리팹 Identifier ↔ sig.click_<id> 정합(환자 A 와 동일 풀 공유).",
     "더미 환자(dummy_b), 환자 B/C 의 PatientController Identifier 를 patient_b / patient_c / dummy_b 로 지정.",
     "patient_b/patient_c별 PatientCareDescriptionZone에 활성 wall_suction과 oxyflowmeter를 각각 하나씩 배치하고 Zone-환자 매핑을 확정.",
-    "중증도 분류 구역 트리거의 진입 카운트 → enter_triage_zone 신호 배선(현재 미구현)."
+    "중증도 분류 구역 트리거에 enter_triage_zone_{id} template을 설정하고 3개 entity signal counter를 플레이 검증.",
+    "dummy_b 전용 프리팹과 EntityPreset을 등록하고 spawn/분류 상호작용을 검증.",
+    "IngameScene의 B/C 연출 대상, UI, 처치 침대, CT point, 시각물, 간호사 Transform 참조를 Registry 또는 Inspector로 확정."
   ],
   "dataInconsistencies": [
     {
@@ -64,10 +64,10 @@
     },
     {
       "sourceField": "환자 B 활력징후(SpO2/체온)",
-      "issue": "원본 기본정보(체온 37.8) 와 변환 본문(체온 37.3, SpO2 93%) 불일치. 변환 시 BT 37.3 / SpO2 93% 로 정규화함.",
+      "issue": "원본 기본정보(체온 37.8) 와 과거 변환 본문(체온 37.3, SpO2 93%) 불일치.",
       "resolution": "프리셋·요구사항·JSON 활력 대사 4곳을 모두 37.8°/93%로 정정했다.",
       "todoId": "TODO-DATA-6",
-      "status": "resolved"
+      "status": "resolved; historical record retained for traceability"
     }
   ],
   "note": "테스트: /scenario signal <cond> 커맨드로 게이트 통과 검증 가능. 미배선 신호 배선 가이드: Documents/requirements/content-definitions/scenario/interaction-signal-integration-spec.md. 참고 제안서: Agents/Proposals/완료/2026-06-24-scenario-parallel-execution/",
