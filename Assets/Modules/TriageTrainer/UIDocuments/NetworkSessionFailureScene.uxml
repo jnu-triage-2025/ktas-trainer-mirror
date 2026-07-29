@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:Style src="NetworkSessionFailureScene.uss" />
+  <ui:VisualElement name="failure-screen" class="failure-screen is-hidden" picking-mode="Ignore">
+    <ui:VisualElement class="failure-card">
+      <ui:Label name="failure-title" class="failure-title" text="서버 연결이 종료되었습니다" />
+      <ui:Label name="failure-detail" class="failure-detail" text="" />
+      <ui:Label name="failure-log-path" class="failure-log-path" text="" />
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

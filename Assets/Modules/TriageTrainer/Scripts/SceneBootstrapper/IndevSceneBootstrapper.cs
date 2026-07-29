@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Net;
+using System.Net.Sockets;
 using MultiplayerInfrastructure.FishNetSupports;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Scenario.Requirements;
@@ -26,6 +28,7 @@ namespace TriageTrainer.SceneBootstrapper
   {
     private const string LogPrefix = "[IndevSceneBootstrapper]";
     private const string SystemOverlaySceneName = "SystemOverlayScene";
+    private const string ConnectionFailureSceneName = "NetworkSessionFailureScene";
 
     [Header("Session")]
     [SerializeField] private string address = "127.0.0.1";
@@ -39,6 +42,7 @@ namespace TriageTrainer.SceneBootstrapper
     [SerializeField] private bool ensureTriageSupportsOnBootstrapObject = true;
 
     private bool _bootstrapped;
+    private IndevConnectionFailureOverlay _connectionFailureOverlay;
 
     private void Start()
     {
@@ -78,15 +82,14 @@ namespace TriageTrainer.SceneBootstrapper
           yield return LoadSceneIfNeeded(SystemOverlaySceneName);
         }
 
+        yield return LoadSceneIfNeeded(ConnectionFailureSceneName);
+        _connectionFailureOverlay = FindAnyObjectByType<IndevConnectionFailureOverlay>();
+
         // Ensure newly-loaded scene objects complete Awake/OnEnable before networking starts.
         yield return null;
 
         PrepareDeferredPlayerSpawning();
-        StartHostSession();
-
-        // 개발 씬에서는 기본적으로 외부 접속을 허용한다.
-        ConnectionGateService.SetPort(port);
-        ConnectionGateService.Open();
+        StartSessionOrConnectToExistingServer();
 
         ScenarioRuntimeBootstrapGate.MarkSceneReady(gameObject.scene);
       }
@@ -98,25 +101,100 @@ namespace TriageTrainer.SceneBootstrapper
       fishNetSupport?.SetNetworkHudCanvasVisible(false);
     }
 
-    private void StartHostSession()
+    private void StartSessionOrConnectToExistingServer()
     {
+      _connectionFailureOverlay?.BeginConnectionAttempt(address, port);
+
       var fishNetSupport = FishNetSupport.Instance ?? FindAnyObjectByType<FishNetSupport>();
       if (fishNetSupport == null)
       {
+        _connectionFailureOverlay?.ShowConnectionError("네트워크 세션 서비스를 찾을 수 없습니다.");
         Debug.LogWarning($"{LogPrefix} FishNetSupport was not found in the scene.");
         return;
       }
 
       var sessionInformation = new SessionInformationModel(address, port, sessionName);
 
-      var started = fishNetSupport.StartSession(sessionInformation, isOpeningServer: true);
+      bool portOccupied = IsPortOccupied(address, port, out string probeError);
+      bool isOpeningServer = !portOccupied;
+      if (!string.IsNullOrWhiteSpace(probeError))
+      {
+        Debug.LogWarning($"{LogPrefix} 포트 점유 여부를 확인하지 못했습니다: {probeError}. 서버 시작을 시도합니다.");
+      }
+
+      if (portOccupied)
+      {
+        Debug.Log($"{LogPrefix} 포트 {port}가 이미 사용 중입니다. 기존 서버에 클라이언트로 접속합니다.");
+      }
+
+      var started = fishNetSupport.StartSession(sessionInformation, isOpeningServer);
       if (!started)
       {
-        Debug.LogWarning($"{LogPrefix} FishNetSupport failed to start the host session.");
+        string reason = isOpeningServer
+          ? "서버 세션을 시작할 수 없습니다."
+          : "기존 서버에 연결을 시작할 수 없습니다.";
+        _connectionFailureOverlay?.ShowConnectionError(reason);
+        Debug.LogWarning($"{LogPrefix} FishNetSupport failed to start the requested session.");
         return;
       }
 
-      Debug.Log($"{LogPrefix} Host session started. Endpoint={address}:{port}");
+      // 서버를 실제로 연 경우에만 외부 접속 게이트와 LAN 브로드캐스트를 연다.
+      ConnectionGateService.SetPort(port);
+      if (isOpeningServer)
+        ConnectionGateService.Open();
+      else
+        ConnectionGateService.Close();
+
+      Debug.Log($"{LogPrefix} Session started. Mode={(isOpeningServer ? "Host" : "Client")}, Endpoint={address}:{port}");
+    }
+
+    private static bool IsPortOccupied(string host, ushort targetPort, out string error)
+    {
+      error = null;
+      IPAddress[] addresses;
+      try
+      {
+        addresses = Dns.GetHostAddresses(string.IsNullOrWhiteSpace(host) ? "127.0.0.1" : host);
+      }
+      catch (SocketException ex)
+      {
+        error = ex.Message;
+        return false;
+      }
+
+      bool hasIpv4Address = false;
+      for (int i = 0; i < addresses.Length; i++)
+      {
+        if (addresses[i].AddressFamily != AddressFamily.InterNetwork)
+          continue;
+
+        hasIpv4Address = true;
+
+        try
+        {
+          using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
+          {
+            ExclusiveAddressUse = true,
+          };
+          socket.Bind(new IPEndPoint(addresses[i], targetPort));
+        }
+        catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
+        {
+          return true;
+        }
+        catch (SocketException ex)
+        {
+          error = ex.Message;
+          return false;
+        }
+      }
+
+      if (!hasIpv4Address)
+      {
+        error = $"'{host}'에 IPv4 주소가 없습니다.";
+      }
+
+      return false;
     }
 
     private static void PrepareDeferredPlayerSpawning()

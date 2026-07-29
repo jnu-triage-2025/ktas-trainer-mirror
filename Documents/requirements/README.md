@@ -46,7 +46,7 @@ updated: 2026-04-14
 - [quest](./quest/README.md): 문서 3개
 - [registry](./registry/README.md): 문서 7개
 - [scenario](./scenario/README.md): 문서 9개
-- [session](./session/README.md): 문서 2개
+- [session](./session/README.md): 문서 3개
 - [traceability](./traceability/README.md): 문서 4개
 - [ui](./ui/README.md): 문서 17개
 

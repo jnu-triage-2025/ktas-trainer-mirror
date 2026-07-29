@@ -58,6 +58,7 @@
 
 ### 문서 — TriageTrainer
 
+- [TriageTrainer.SceneBootstrapper.IndevConnectionFailureOverlay.md](./TriageTrainer.SceneBootstrapper.IndevConnectionFailureOverlay.md): API 레퍼런스: Indev 연결 종료 전체 화면 UI
 - [TriageTrainer.Entity.PatientMonitor.md](./TriageTrainer.Entity.PatientMonitor.md): API 레퍼런스: TriageTrainer.Entity.PatientMonitor
 - [TriageTrainer.ItemDefinitions.MedicalItem.md](./TriageTrainer.ItemDefinitions.MedicalItem.md): API 레퍼런스: `TriageTrainer.ItemDefinitions.MedicalItem` (기반 클래스 및 전체 아이템 목록)
 - [TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel.md](./TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel.md): API 레퍼런스: `TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel`
