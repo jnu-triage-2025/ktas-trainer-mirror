@@ -14,6 +14,8 @@ using RegistryStore = MultiplayerInfrastructure.Registry.Registry;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 
 namespace TriageTrainer.SceneBootstrapper
 {
@@ -39,7 +41,10 @@ namespace TriageTrainer.SceneBootstrapper
     private string _endpoint = "127.0.0.1:7777";
     private Coroutine _subscriptionRoutine;
     private bool _worldCleanupStarted;
+    private bool _worldCleanupCompleted;
     private bool _failureVisible;
+    private bool _titleTransitionStarted;
+    private Coroutine _worldCleanupRoutine;
 
     private void Awake()
     {
@@ -87,6 +92,12 @@ namespace TriageTrainer.SceneBootstrapper
       _connected = false;
       _latestError = null;
       _endpoint = $"{address}:{port}";
+      if (_worldCleanupRoutine != null)
+        StopCoroutine(_worldCleanupRoutine);
+      _worldCleanupStarted = false;
+      _worldCleanupCompleted = false;
+      _worldCleanupRoutine = null;
+      _titleTransitionStarted = false;
       Hide();
     }
 
@@ -182,6 +193,13 @@ namespace TriageTrainer.SceneBootstrapper
       Debug.LogError(dump);
 
       BindDocument();
+      // A rebinding flow may still own the mouse and keep the cursor locked.
+      // The failure screen is a terminal UI, so always restore pointer interaction.
+      Cursor.lockState = CursorLockMode.None;
+      Cursor.visible = true;
+      EnsurePointerInput();
+      StartWorldCleanup();
+
       if (_screen == null)
         return;
 
@@ -195,16 +213,6 @@ namespace TriageTrainer.SceneBootstrapper
       _detail.text = safeReason;
       _logPath.text = $"자세한 내용은 세션 로그를 참조하세요.\n{GameLogService.CurrentLogFilePath ?? "로그 경로를 확인할 수 없습니다."}";
       _screen.RemoveFromClassList(HiddenClass);
-
-      // A rebinding flow may still own the mouse and keep the cursor locked.
-      // The failure screen is a terminal UI, so always restore pointer interaction.
-      Cursor.lockState = CursorLockMode.None;
-      Cursor.visible = true;
-      if (!_worldCleanupStarted)
-      {
-        _worldCleanupStarted = true;
-        StartCoroutine(UnloadWorldScenes());
-      }
 
       if (gameObject.scene.IsValid() && gameObject.scene.isLoaded)
         SceneManager.SetActiveScene(gameObject.scene);
@@ -243,6 +251,16 @@ namespace TriageTrainer.SceneBootstrapper
 
     private void HandleTitleButtonClicked()
     {
+      if (_titleTransitionStarted)
+        return;
+
+      _titleTransitionStarted = true;
+      _titleButton?.SetEnabled(false);
+      StartCoroutine(ReturnToTitleRoutine());
+    }
+
+    private IEnumerator ReturnToTitleRoutine()
+    {
       var fishNetSupport = FishNetSupport.Instance ?? FindFirstObjectByType<FishNetSupport>();
       if (fishNetSupport != null)
       {
@@ -251,7 +269,21 @@ namespace TriageTrainer.SceneBootstrapper
           fishNetSupport.StopServer();
       }
 
+      StartWorldCleanup();
+      while (!_worldCleanupCompleted)
+        yield return null;
+
       LoadingScreen.LoadSceneAsync(DefaultsSceneControl.IntroSceneName);
+    }
+
+    private void StartWorldCleanup()
+    {
+      if (_worldCleanupStarted)
+        return;
+
+      _worldCleanupStarted = true;
+      _worldCleanupCompleted = false;
+      _worldCleanupRoutine = StartCoroutine(UnloadWorldScenes());
     }
 
     private IEnumerator UnloadWorldScenes()
@@ -263,7 +295,7 @@ namespace TriageTrainer.SceneBootstrapper
       for (int i = 0; i < SceneManager.sceneCount; i++)
       {
         var scene = SceneManager.GetSceneAt(i);
-        if (scene.IsValid() && scene.isLoaded && IsWorldScene(scene.name))
+        if (scene.IsValid() && scene.isLoaded && IsWorldScene(scene))
           scenes.Add(scene);
       }
 
@@ -275,14 +307,53 @@ namespace TriageTrainer.SceneBootstrapper
         while (!operation.isDone)
           yield return null;
       }
+
+      _worldCleanupCompleted = true;
+      _worldCleanupRoutine = null;
     }
 
-    private static bool IsWorldScene(string sceneName)
+    private static bool IsWorldScene(Scene scene)
     {
-      return string.Equals(sceneName, "IndevScene", StringComparison.Ordinal)
-        || string.Equals(sceneName, "TutorialScene", StringComparison.Ordinal)
-        || string.Equals(sceneName, "IngameScene", StringComparison.Ordinal)
-        || string.Equals(sceneName, "OverworldScene", StringComparison.Ordinal);
+      string sceneName = scene.name;
+      if (string.Equals(sceneName, "SystemOverlayScene", StringComparison.Ordinal)
+          || string.Equals(sceneName, "NetworkSessionFailureScene", StringComparison.Ordinal)
+          || string.Equals(sceneName, DefaultsSceneControl.IntroSceneName, StringComparison.Ordinal))
+        return false;
+
+      if (string.Equals(sceneName, "IndevScene", StringComparison.Ordinal)
+          || string.Equals(sceneName, "TutorialScene", StringComparison.Ordinal)
+          || string.Equals(sceneName, "IngameScene", StringComparison.Ordinal)
+          || string.Equals(sceneName, "OverworldScene", StringComparison.Ordinal))
+        return true;
+
+      var roots = scene.GetRootGameObjects();
+      for (int i = 0; i < roots.Length; i++)
+      {
+        if (roots[i].GetComponentInChildren<IndevSceneBootstrapper>(true) != null
+            || roots[i].GetComponentInChildren<TutorialSceneBootstrapper>(true) != null
+            || roots[i].GetComponentInChildren<UnitySceneSupports.IngameScene.IngameSceneBootstrapper>(true) != null)
+          return true;
+      }
+
+      return false;
+    }
+
+    private static void EnsurePointerInput()
+    {
+      var eventSystem = EventSystem.current
+        ?? FindFirstObjectByType<EventSystem>(FindObjectsInactive.Include);
+      if (eventSystem == null)
+      {
+        var go = new GameObject("EventSystem");
+        eventSystem = go.AddComponent<EventSystem>();
+      }
+
+      eventSystem.enabled = true;
+      var inputModule = eventSystem.GetComponent<InputSystemUIInputModule>()
+        ?? eventSystem.gameObject.AddComponent<InputSystemUIInputModule>();
+      inputModule.enabled = true;
+      if (inputModule.actionsAsset == null || inputModule.point.action == null || inputModule.leftClick.action == null)
+        inputModule.AssignDefaultActions();
     }
   }
 }
