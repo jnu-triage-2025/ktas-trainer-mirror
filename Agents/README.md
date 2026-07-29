@@ -1,11 +1,8 @@
 # Agents
 
-AI 프롬프트(지시문) 템플릿 및 결과 자료
-
-- [Actually Used](./Actually%20Used) : 실제로 AI에게 제공되어 사용된 프롬프트 및 결과물
-- [Examples](./Examples) : 프롬프트 템플릿 예시
 - [Templates](./Templates) : 프롬프트 템플릿 원본
 - [Proposals](./Proposals) : AI가 구현의 부족함을 확인하고 작성한 기능 제안서
+- [Skills](./Skills) : AI가 로컬 도구를 사용할 때 지침
 
 ## 실제 사용 방법
 
