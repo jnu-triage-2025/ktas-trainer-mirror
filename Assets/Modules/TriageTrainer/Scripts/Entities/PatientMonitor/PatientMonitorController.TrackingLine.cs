@@ -152,7 +152,11 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private Vector3 ResolveTrackingEndPosition(PatientController target)
     {
-      return target != null ? target.transform.position : ResolveTrackingStartPosition();
+      if (target == null)
+        return ResolveTrackingStartPosition();
+
+      var endpoint = target.GetComponentInChildren<PatientMonitorTrackingLineEndpoint>(true);
+      return endpoint != null ? endpoint.transform.position : target.transform.position;
     }
 
     private void UpdateDashSegments(Vector3 start, Vector3 end)

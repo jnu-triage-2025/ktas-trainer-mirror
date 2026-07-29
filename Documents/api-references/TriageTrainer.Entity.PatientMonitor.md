@@ -8,6 +8,7 @@
 > - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/PatientMonitorController.Interactions.cs`
 > - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/PatientMonitorController.Parameters.cs`
 > - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/PatientMonitorController.TrackingLine.cs`
+> - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/PatientMonitorTrackingLineEndpoint.cs`
 > - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/PatientMonitorGraphVisualElement.cs`
 > - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/UIDocumentWorldSurfaceBinder.cs`
 > - `Assets/Modules/TriageTrainer/Scripts/Entities/PatientMonitor/Models/*.cs`
@@ -78,11 +79,21 @@ PatientMonitor 모듈은 UI Toolkit 기반 환자 모니터를 월드 오브젝�
 - `PlethParameters` + `PlethWaveformCalculator`
 - `PatientMonitorParameters`(통합 컨테이너)
 
-## 5. 시나리오 연동
+## 5. Tracking Line 도착점
+
+Tracking Line을 사용하는 환자 프리팹은 루트가 아닌 환자 몸 위치로 선이 도착하도록 설정해야 한다.
+
+1. 환자 프리팹의 루트 아래에 `PatientMonitorTrackingLineEndpoint` 컴포넌트를 가진 Empty Child Object를 추가한다.
+2. Empty Child의 위치를 환자 몸통을 가리키는 위치로 조정한다.
+3. `PatientMonitorController`는 모니터링 대상 환자의 하위에서 이 컴포넌트를 찾아 Tracking Line의 도착점으로 사용한다.
+
+컴포넌트가 없으면 호환성을 위해 환자 루트 Transform을 도착점으로 사용하므로, 선이 발바닥/루트 피벗으로 향할 수 있다. 따라서 Tracking Line을 지원하는 모든 환자 프리팹에는 Endpoint를 추가해야 한다.
+
+## 6. 시나리오 연동
 
 시나리오 이벤트 계층(`TriageScenarioEventBootstrap`)은 환자 상태 변화에 따라 모니터 파라미터를 갱신한다. 이를 통해 UI 표시(모니터 on/off)와 파형 상태 전환이 시나리오 진행과 일치한다.
 
-## 6. 관련 문서
+## 7. 관련 문서
 
 - `Documents/requirements/patient/patient-monitor-requirements.md`
 - `Documents/api-references/TriageTrainer.Scenario.TriageScenarioEventBootstrap.md`

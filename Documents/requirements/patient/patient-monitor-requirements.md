@@ -40,6 +40,13 @@ PatientMonitor는 환자 활력징후 파형을 시각화하는 기능이다. �
 - 네트워크 동기화는 FishNet `SyncVar` 및 `ServerRpc` 기반으로 수행된다.
 - `TriageScenarioEventBootstrap` 이벤트(예: patient_crash_ui, asystole_monitor_ui, ROSC_monitor_ui)와 연동해 상태 전환을 수행한다.
 
+## 환자 프리팹 Tracking Line 도착점
+
+- Tracking Line을 표시하는 PatientMonitor는 환자 루트가 아니라 환자 몸통을 도착점으로 사용해야 한다.
+- 모든 환자 프리팹은 루트 하위에 `PatientMonitorTrackingLineEndpoint` 컴포넌트를 가진 Empty Child Object를 포함해야 한다.
+- 해당 Empty Child를 환자 몸통 위치에 배치한다. PatientMonitor는 모니터링 대상의 하위에서 이 Marker를 자동 탐색해 Tracking Line의 도착점으로 연결한다.
+- Marker가 없으면 환자 루트 Transform으로 fallback하므로, 발바닥 또는 루트 피벗에 선이 연결될 수 있다.
+
 ## 참조
 
 - [api:TriageTrainer.Entity.PatientMonitor](../../api-references/TriageTrainer.Entity.PatientMonitor.md)
