@@ -405,8 +405,8 @@ namespace TriageTrainer.Entity.IntravenousLine
         return false;
       }
 
-      var startNetworkObject = startPoint.GetComponentInParent<NetworkObject>();
-      var endNetworkObject = endPoint.GetComponentInParent<NetworkObject>();
+      var startNetworkObject = startPoint.OwningNetworkObject;
+      var endNetworkObject = endPoint.OwningNetworkObject;
 
       if (startNetworkObject != null && endNetworkObject != null)
       {

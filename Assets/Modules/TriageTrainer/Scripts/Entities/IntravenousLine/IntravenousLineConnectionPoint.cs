@@ -4,6 +4,7 @@ using UnityEditor;
 
 using System;
 using System.Collections.Generic;
+using FishNet.Object;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using UnityEngine;
@@ -11,7 +12,7 @@ using UnityEngine;
 namespace TriageTrainer.Entity.IntravenousLine
 {
   [RequireComponent(typeof(SphereCollider))]
-  public class IntravenousLineConnectionPoint : MonoBehaviour, IInteractable
+  public class IntravenousLineConnectionPoint : NetworkBehaviour, IInteractable
   {
     [Serializable]
     public class InteractConfig
@@ -223,6 +224,14 @@ namespace TriageTrainer.Entity.IntravenousLine
 
     public string Identifier => _identifier;
     public IInteract[] Interacts => _interacts.ToArray();
+
+    /// <summary>
+    /// Returns the NetworkObject that owns this point, including a parent object.
+    /// Connection points are intentionally child markers and do not require a
+    /// NetworkObject on their own GameObject.
+    /// </summary>
+    public NetworkObject OwningNetworkObject => GetComponentInParent<NetworkObject>();
+
     public bool HasAnyConnection
     {
       get
