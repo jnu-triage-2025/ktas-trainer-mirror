@@ -84,6 +84,11 @@ namespace TriageTrainer.SceneBootstrapper
 
         yield return LoadSceneIfNeeded(ConnectionFailureSceneName);
         _connectionFailureOverlay = FindAnyObjectByType<IndevConnectionFailureOverlay>();
+        if (_connectionFailureOverlay == null)
+        {
+          Debug.LogError($"{LogPrefix} Required scene '{ConnectionFailureSceneName}' or its overlay could not be loaded. Network startup was cancelled.");
+          yield break;
+        }
 
         // Ensure newly-loaded scene objects complete Awake/OnEnable before networking starts.
         yield return null;
@@ -103,12 +108,12 @@ namespace TriageTrainer.SceneBootstrapper
 
     private void StartSessionOrConnectToExistingServer()
     {
-      _connectionFailureOverlay?.BeginConnectionAttempt(address, port);
+      _connectionFailureOverlay.BeginConnectionAttempt(address, port);
 
       var fishNetSupport = FishNetSupport.Instance ?? FindAnyObjectByType<FishNetSupport>();
       if (fishNetSupport == null)
       {
-        _connectionFailureOverlay?.ShowConnectionError("네트워크 세션 서비스를 찾을 수 없습니다.");
+        _connectionFailureOverlay.ShowConnectionError("네트워크 세션 서비스를 찾을 수 없습니다.");
         Debug.LogWarning($"{LogPrefix} FishNetSupport was not found in the scene.");
         return;
       }
@@ -133,7 +138,7 @@ namespace TriageTrainer.SceneBootstrapper
         string reason = isOpeningServer
           ? "서버 세션을 시작할 수 없습니다."
           : "기존 서버에 연결을 시작할 수 없습니다.";
-        _connectionFailureOverlay?.ShowConnectionError(reason);
+        _connectionFailureOverlay.ShowConnectionError(reason);
         Debug.LogWarning($"{LogPrefix} FishNetSupport failed to start the requested session.");
         return;
       }
@@ -146,6 +151,35 @@ namespace TriageTrainer.SceneBootstrapper
         ConnectionGateService.Close();
 
       Debug.Log($"{LogPrefix} Session started. Mode={(isOpeningServer ? "Host" : "Client")}, Endpoint={address}:{port}");
+
+      if (isOpeningServer)
+        StartCoroutine(FallbackToExistingServerIfHostBindFails(fishNetSupport, sessionInformation));
+    }
+
+    private IEnumerator FallbackToExistingServerIfHostBindFails(
+      FishNetSupport fishNetSupport,
+      SessionInformationModel sessionInformation)
+    {
+      const float timeoutSeconds = 3f;
+      float deadline = Time.realtimeSinceStartup + timeoutSeconds;
+      while (Time.realtimeSinceStartup < deadline)
+      {
+        if (fishNetSupport.IsServerStarted || fishNetSupport.IsClientStarted)
+          yield break;
+        yield return null;
+      }
+
+      if (fishNetSupport.IsServerStarted || fishNetSupport.IsClientStarted)
+        yield break;
+
+      Debug.LogWarning($"{LogPrefix} Host binding did not reach a started state. Retrying as a client against the existing server.");
+      if (!fishNetSupport.ConnectToExistingServer(sessionInformation))
+      {
+        _connectionFailureOverlay.ShowConnectionError("기존 서버에 연결을 시작할 수 없습니다.");
+        yield break;
+      }
+
+      ConnectionGateService.Close();
     }
 
     private static bool IsPortOccupied(string host, ushort targetPort, out string error)

@@ -1,4 +1,5 @@
 using System.Collections;
+using System;
 using FishNet;
 using FishNet.Managing.Client;
 using FishNet.Transporting;
@@ -124,12 +125,21 @@ namespace TriageTrainer.SceneBootstrapper
       if (type != LogType.Error && type != LogType.Exception && type != LogType.Assert)
         return;
 
-      if (!_connectionAttempted || string.IsNullOrWhiteSpace(condition) || condition.StartsWith(LogPrefix))
+      if (!_connectionAttempted || string.IsNullOrWhiteSpace(condition) || condition.StartsWith(LogPrefix) || !IsNetworkDiagnostic(condition))
         return;
 
-      _latestError = string.IsNullOrWhiteSpace(stackTrace)
+      _latestError ??= string.IsNullOrWhiteSpace(stackTrace)
         ? condition
         : $"{condition}\n{stackTrace}";
+    }
+
+    private static bool IsNetworkDiagnostic(string condition)
+    {
+      return condition.IndexOf("FishNet", StringComparison.OrdinalIgnoreCase) >= 0
+        || condition.IndexOf("Tugboat", StringComparison.OrdinalIgnoreCase) >= 0
+        || condition.IndexOf("transport", StringComparison.OrdinalIgnoreCase) >= 0
+        || condition.IndexOf("connection", StringComparison.OrdinalIgnoreCase) >= 0
+        || condition.IndexOf("connect", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     private void ShowFailure(string reason)
@@ -151,6 +161,12 @@ namespace TriageTrainer.SceneBootstrapper
       BindDocument();
       if (_screen == null)
         return;
+
+      if (_title == null || _detail == null || _logPath == null)
+      {
+        Debug.LogError($"{LogPrefix} Failure UXML is missing one or more required labels.");
+        return;
+      }
 
       _title.text = "서버 연결이 종료되었습니다";
       _detail.text = safeReason;

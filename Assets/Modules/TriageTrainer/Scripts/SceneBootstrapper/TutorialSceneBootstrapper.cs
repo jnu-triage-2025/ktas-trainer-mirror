@@ -95,7 +95,12 @@ namespace TriageTrainer.SceneBootstrapper
         yield return null;
 
         var connectionFailureOverlay = FindAnyObjectByType<IndevConnectionFailureOverlay>();
-        connectionFailureOverlay?.BeginConnectionAttempt(address, port);
+        if (connectionFailureOverlay == null)
+        {
+          Debug.LogError($"{LogPrefix} Required scene '{ConnectionFailureSceneName}' or its overlay could not be loaded. Network startup was cancelled.");
+          yield break;
+        }
+        connectionFailureOverlay.BeginConnectionAttempt(address, port);
 
         PrepareDeferredPlayerSpawning();
         StartHostSession();
