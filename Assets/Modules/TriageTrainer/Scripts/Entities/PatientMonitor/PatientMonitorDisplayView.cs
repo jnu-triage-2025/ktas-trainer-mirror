@@ -38,8 +38,6 @@ namespace TriageTrainer.Entity.PatientMonitor
       generatedRoot.style.overflow = Overflow.Hidden;
       root.Add(generatedRoot);
 
-      AddCloseButton(generatedRoot, closeRequested);
-
       _graphs = new PatientMonitorGraphElement[4];
       _graphValues = new Label[4];
       _metricValues = new Label[12];
@@ -119,24 +117,6 @@ namespace TriageTrainer.Entity.PatientMonitor
           stack.Push(current[i]);
       }
 
-      var closeButton = root.Q<Button>("PatientMonitorCloseButton");
-      if (closeButton != null)
-        closeButton.pickingMode = PickingMode.Position;
-    }
-
-    private static void AddCloseButton(VisualElement root, Action closeRequested)
-    {
-      var button = new Button(() => closeRequested?.Invoke()) { text = "닫기", name = "PatientMonitorCloseButton" };
-      button.style.position = Position.Absolute;
-      button.style.top = 8f;
-      button.style.right = 8f;
-      button.style.minWidth = 48f;
-      button.style.height = 26f;
-      button.style.fontSize = 12f;
-      button.style.backgroundColor = new StyleColor(new Color(0.28f, 0.08f, 0.08f, 0.92f));
-      button.style.color = Color.white;
-      button.focusable = false;
-      root.Add(button);
     }
 
     private void BuildMetrics(VisualElement root)

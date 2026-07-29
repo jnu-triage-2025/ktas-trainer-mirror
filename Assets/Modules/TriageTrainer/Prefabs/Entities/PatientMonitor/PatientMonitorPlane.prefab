@@ -161,6 +161,8 @@ MonoBehaviour:
   sampleRate: 200
   rhythmTransitionSeconds: 0.35
   patientState: {fileID: 0}
+  _patientTrackingMethod: 2
+  _onEnterAnotherPatientAlreadyPatientExists: 0
   ecgColor: {r: 0, g: 1, b: 0, a: 1}
   plethColor: {r: 0, g: 1, b: 0.53, a: 1}
   artColor: {r: 1, g: 0.33, b: 0.33, a: 1}

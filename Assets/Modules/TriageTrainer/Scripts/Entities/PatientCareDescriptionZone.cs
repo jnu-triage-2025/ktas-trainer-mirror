@@ -18,6 +18,8 @@ namespace TriageTrainer.Entity
   [RequireComponent(typeof(BoxCollider))]
   public sealed class PatientCareDescriptionZone : MonoBehaviour
   {
+    public event System.Action<PatientController> PatientEntered;
+    public event System.Action<PatientController> PatientExited;
     [Header("Recognition Area")]
     [SerializeField] private Vector3 _size = new(2.4f, 3.5f, 3f);
     [SerializeField] private Vector3 _center = new(0f, 1.5f, 0f);
@@ -46,6 +48,15 @@ namespace TriageTrainer.Entity
     public IReadOnlyList<WallAttachedWallSuction> WallSuction => _wallSuction;
     public IReadOnlyList<WallAttachedOxyflowmeter> Oxyflowmeters => _oxyflowmeters;
     public string Identifier => _identifier;
+    public PatientController CurrentPatient => _activePatient;
+
+    public bool ContainsWorldPosition(Vector3 worldPosition)
+    {
+      Vector3 local = transform.InverseTransformPoint(worldPosition) - _center;
+      return Mathf.Abs(local.x) <= _size.x * 0.5f
+        && Mathf.Abs(local.y) <= _size.y * 0.5f
+        && Mathf.Abs(local.z) <= _size.z * 0.5f;
+    }
 
     public void SetIdentifierForEditor(string identifier)
     {
@@ -95,18 +106,23 @@ namespace TriageTrainer.Entity
       PatientController patient = other.GetComponentInParent<PatientController>();
       if (patient != null)
       {
+        _patientColliderCounts.TryGetValue(patient, out int count);
+        bool firstCollider = count == 0;
+        _patientColliderCounts[patient] = count + 1;
+
         if (_activePatient != null && !ReferenceEquals(_activePatient, patient))
         {
           Debug.LogWarning($"[PatientCareDescriptionZone] '{Identifier}' already owns patient '{_activePatient.Identifier}'; ignoring '{patient.Identifier}'.", this);
+          if (firstCollider)
+            PatientEntered?.Invoke(patient);
           return;
         }
-        _patientColliderCounts.TryGetValue(patient, out int count);
-        _patientColliderCounts[patient] = count + 1;
-        if (count == 0)
+        if (firstCollider)
         {
           _activePatient = patient;
           Connect(patient);
           TriageWorldInteractionSignals.RaiseCareZonePatientEntered(Identifier, patient.Identifier);
+          PatientEntered?.Invoke(patient);
         }
         return;
       }
@@ -123,7 +139,7 @@ namespace TriageTrainer.Entity
     private void OnTriggerStay(Collider other)
     {
       PatientController patient = other.GetComponentInParent<PatientController>();
-      if (patient != null && _patientColliderCounts.ContainsKey(patient))
+      if (patient != null && ReferenceEquals(_activePatient, patient) && _patientColliderCounts.ContainsKey(patient))
         Connect(patient);
 
       MovingPatientBedController bed = other.GetComponentInParent<MovingPatientBedController>();
@@ -144,7 +160,10 @@ namespace TriageTrainer.Entity
         }
         _patientColliderCounts.Remove(patient);
         if (ReferenceEquals(_activePatient, patient))
+        {
           _activePatient = null;
+          PatientExited?.Invoke(patient);
+        }
         if (ReferenceEquals(patient.ConnectedWallSuction, _connectedWallSuction))
           patient.SetConnectedWallSuctionConnections(null);
         if (ReferenceEquals(patient.ConnectedOxyflowmeter, _connectedOxyflowmeter))
@@ -152,6 +171,17 @@ namespace TriageTrainer.Entity
         _connectedWallSuction = null;
         _connectedOxyflowmeter = null;
         TriageWorldInteractionSignals.RaiseCareZonePatientExited(Identifier, patient.Identifier);
+
+        foreach (var occupant in _patientColliderCounts)
+        {
+          if (occupant.Key == null)
+            continue;
+
+          _activePatient = occupant.Key;
+          Connect(_activePatient);
+          PatientEntered?.Invoke(_activePatient);
+          break;
+        }
         return;
       }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using TriageTrainer.Entity;
@@ -45,6 +46,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private const string InteractIdSelectPatient = "select_patient_mode";
 
+    protected bool IsPatientTrackingMethodEnabled(PatientTrackingMethod method)
+      => (_patientTrackingMethod & method) == method;
+
     [Header("Interact")]
     [SerializeField] private Sprite _interactIcon;
     [SerializeField] private List<InteractEntry> _interactEntries = new();
@@ -63,6 +67,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     protected virtual void OnDisable()
     {
       ExitSelectionModeForAll();
+      UnconfigurePatientTracking();
       if (_monitoringPatient != null)
         _monitoringPatient.ClearMonitoringPatientMonitor(this);
       UnregisterMedicalStateSubscription();
@@ -72,6 +77,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     protected virtual void OnDestroy()
     {
       ExitSelectionModeForAll();
+      UnconfigurePatientTracking();
       if (_monitoringPatient != null)
         _monitoringPatient.ClearMonitoringPatientMonitor(this);
       UnregisterMedicalStateSubscription();
@@ -80,7 +86,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private void BuildInteracts()
     {
-      EnsureInteractEntry(InteractIdSelectPatient, true);
+      EnsureInteractEntry(InteractIdSelectPatient, IsPatientTrackingMethodEnabled(PatientTrackingMethod.Interactable));
       RebuildInteractEntryMap();
 
       _interacts.Clear();
@@ -95,6 +101,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         if (each == null || !string.Equals(each.Identifier, identifier, StringComparison.Ordinal))
           continue;
 
+        if (string.Equals(identifier, InteractIdSelectPatient, StringComparison.Ordinal))
+          each.Enabled = enabled;
         return;
       }
 
@@ -252,6 +260,71 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       SetMonitoringPatient(patient);
       ExitSelectionModeFor(player);
+    }
+
+    private PatientCareDescriptionZone _patientCareZone;
+
+    protected void ConfigurePatientTracking()
+    {
+      if (!IsPatientTrackingMethodEnabled(PatientTrackingMethod.DependsOnPatientCareZone))
+        return;
+
+      _patientCareZone = FindObjectsByType<PatientCareDescriptionZone>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
+        .FirstOrDefault(zone => zone != null && zone.ContainsWorldPosition(transform.position));
+      if (_patientCareZone == null)
+        return;
+
+      _patientCareZone.PatientEntered += HandleCareZonePatientEntered;
+      _patientCareZone.PatientExited += HandleCareZonePatientExited;
+      if (_patientCareZone.CurrentPatient != null)
+        ApplyCareZonePatient(_patientCareZone.CurrentPatient);
+    }
+
+    protected void UnconfigurePatientTracking()
+    {
+      if (_patientCareZone == null)
+        return;
+
+      _patientCareZone.PatientEntered -= HandleCareZonePatientEntered;
+      _patientCareZone.PatientExited -= HandleCareZonePatientExited;
+      _patientCareZone = null;
+    }
+
+    protected void UpdatePatientTrackingLocation()
+    {
+      if (!IsPatientTrackingMethodEnabled(PatientTrackingMethod.DependsOnPatientCareZone))
+        return;
+
+      if (_patientCareZone == null || !_patientCareZone.ContainsWorldPosition(transform.position))
+      {
+        UnconfigurePatientTracking();
+        ConfigurePatientTracking();
+      }
+    }
+
+    private void HandleCareZonePatientEntered(PatientController patient)
+    {
+      if (patient == null)
+        return;
+
+      if (_monitoringPatient != null &&
+          _onEnterAnotherPatientAlreadyPatientExists == OnEnterAnotherPatientAlreadyPatientExists.IgnoreNewEnter)
+        return;
+
+      ApplyCareZonePatient(patient);
+    }
+
+    private void HandleCareZonePatientExited(PatientController patient)
+    {
+      if (ReferenceEquals(_monitoringPatient, patient))
+        SetMonitoringPatient(null);
+    }
+
+    private void ApplyCareZonePatient(PatientController patient)
+    {
+      if (_monitoringPatient == null ||
+          _onEnterAnotherPatientAlreadyPatientExists == OnEnterAnotherPatientAlreadyPatientExists.Refresh)
+        SetMonitoringPatient(patient);
     }
   }
 }

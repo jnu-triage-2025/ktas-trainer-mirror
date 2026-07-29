@@ -8,12 +8,37 @@ using TriageTrainer.Entity.Patient;
 
 namespace TriageTrainer.Entity.PatientMonitor.Models
 {
+  [System.Flags]
+  public enum PatientTrackingMethod
+  {
+    None = 0,
+    DependsOnPatientCareZone = 1 << 0,
+    Interactable = 1 << 1
+  }
+
+  public enum OnEnterAnotherPatientAlreadyPatientExists
+  {
+    Refresh,
+    IgnoreNewEnter
+  }
+
   /// <summary>
   /// PatientMonitor의 공통 데이터/네트워크/파형 기반입니다.
   /// 실제 출력 정책은 SinglePatientMonitorController 또는 DualPatientMonitorController가 담당합니다.
   /// </summary>
   public abstract partial class PatientMonitorController : NetworkBehaviour
   {
+    protected virtual void Reset()
+    {
+      _patientTrackingMethod = PatientTrackingMethod.Interactable;
+      _onEnterAnotherPatientAlreadyPatientExists = OnEnterAnotherPatientAlreadyPatientExists.Refresh;
+    }
+
+    protected void SetDefaultPatientTrackingMethod(PatientTrackingMethod method)
+    {
+      _patientTrackingMethod = method;
+    }
+
     public enum ECGDisplayMode
     {
       Preset,
@@ -26,6 +51,13 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     [SerializeField, Min(0f)] private float sampleRate = 200f;
     [SerializeField, Min(0f)] private float rhythmTransitionSeconds = 0.35f;
     [SerializeField] private PatientController patientState;
+
+    [Header("환자 추적 방법")]
+    [SerializeField] private PatientTrackingMethod _patientTrackingMethod = PatientTrackingMethod.Interactable;
+    [SerializeField] private OnEnterAnotherPatientAlreadyPatientExists _onEnterAnotherPatientAlreadyPatientExists = OnEnterAnotherPatientAlreadyPatientExists.Refresh;
+
+    public PatientTrackingMethod PatientTrackingMethod => _patientTrackingMethod;
+    public OnEnterAnotherPatientAlreadyPatientExists OnEnterAnotherPatientAlreadyPatientExists => _onEnterAnotherPatientAlreadyPatientExists;
 
     [Header("Graph Appearance")]
     public Color ecgColor = Color.green;
@@ -90,6 +122,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       _currentParameters = ResolveConfiguredParameters();
       _targetParameters = _currentParameters;
       PullParametersFromPatientState();
+      ConfigurePatientTracking();
       ecgNextBeatInterval = ComputeBaseInterval(_currentParameters.bpm);
       if (BuildsSinglePlaneGraphic)
         CreateGraphUI();
@@ -161,7 +194,6 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       root.Add(container);
       SetVisualTreeNonInteractive(root);
-      AddCloseButton(root);
       ClearRuntimeMonitorPanelSelection();
     }
 
@@ -172,27 +204,6 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     public void SetCloseRequestedHandler(Action handler)
     {
       _closeRequested = handler;
-    }
-
-    private void AddCloseButton(VisualElement root)
-    {
-      var closeButton = new Button(RequestClose)
-      {
-        text = "닫기",
-        name = "PatientMonitorCloseButton",
-        focusable = false,
-        pickingMode = PickingMode.Position,
-      };
-
-      closeButton.style.position = Position.Absolute;
-      closeButton.style.top = 8f;
-      closeButton.style.right = 8f;
-      closeButton.style.minWidth = 48f;
-      closeButton.style.height = 26f;
-      closeButton.style.fontSize = 12f;
-      closeButton.style.backgroundColor = new StyleColor(new Color(0.28f, 0.08f, 0.08f, 0.92f));
-      closeButton.style.color = Color.white;
-      root.Add(closeButton);
     }
 
     protected void RequestClose()
@@ -373,6 +384,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     protected virtual void Update()
     {
+      UpdatePatientTrackingLocation();
       UpdateTrackingLine();
       if (ecgGraphElement == null && _displayViews.Count == 0) return;
 
@@ -467,7 +479,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     // 인스펙터에서 값 변경 시 실시간 반영을 위해
     protected virtual void OnValidate()
     {
-      EnsureInteractEntry(InteractIdSelectPatient, true);
+      EnsureInteractEntry(InteractIdSelectPatient, IsPatientTrackingMethodEnabled(PatientTrackingMethod.Interactable));
       RebuildInteractEntryMap();
 
       _targetParameters = ResolveConfiguredParameters();
@@ -494,6 +506,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       if (isActiveAndEnabled && uiDocument != null)
         ConfigureDisplayLayout();
+
+      if (Application.isPlaying && isActiveAndEnabled)
+      {
+        UnconfigurePatientTracking();
+        ConfigurePatientTracking();
+      }
     }
 
     protected int ResolveHorizontalPoints()
