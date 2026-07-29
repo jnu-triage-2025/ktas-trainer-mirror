@@ -18,6 +18,7 @@ namespace TriageTrainer.Scenario
       RegisterEvent_PupilReflexPatientB();
       RegisterEvent_PupilReflexPatientC();
       RegisterEvent_MovePatientsToCt();
+      RegisterEvent_FadeOutPatientBC();
       RegisterEvent_ApplyGauzePatientB();
       RegisterEvent_ApplyGauzeWithPlasterPatientB();
       RegisterEvent_ApplyGauzePatientC();

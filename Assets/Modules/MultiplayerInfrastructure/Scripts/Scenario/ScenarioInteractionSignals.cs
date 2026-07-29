@@ -135,6 +135,21 @@ namespace MultiplayerInfrastructure.Scenario
       GameLogService.WriteSignal($"Signal cleared: {normalizedSignalId}", normalizedSignalId);
     }
 
+    /// <summary>
+    /// 현재 실행에 속한 일회성 gameplay signal을 모두 제거한다.
+    /// RuntimeState는 sticky 저장소이므로 시나리오 재실행 전에 반드시 호출해야 한다.
+    /// </summary>
+    public static void ClearAllRaisedSignals()
+    {
+      var all = Registry.Registry.GetAll<bool>(RegistryType.RuntimeState);
+      if (all == null) return;
+      foreach (var pair in all)
+      {
+        if (pair.Value && pair.Key != null && pair.Key.StartsWith(Prefix, StringComparison.Ordinal))
+          UnregisterLocal(pair.Key);
+      }
+    }
+
     /// <summary>신호가 올라가 있는지 조회한다(Validator 의 RegistryContains 와 동일 기준).</summary>
     public static bool IsRaised(string signalId)
     {

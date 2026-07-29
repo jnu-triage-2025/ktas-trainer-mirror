@@ -648,6 +648,7 @@ namespace MultiplayerInfrastructure.Scenario
       _globalAdvanceSuppressionDepth = 0;
       ResetNodeVisitOrders(graph.Identifier);
       ScenarioInteractionSignals.ClearAllInternalSignals();
+      ScenarioInteractionSignals.ClearAllRaisedSignals();
       ScenarioConditionalSignalListeners.ClearAll();
       ScenarioEntityStateSignalBindings.ClearAll();
       ScenarioSignalCounters.ClearAll();
@@ -790,6 +791,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 브랜치 체인이 계속 돌면서 _currentGraph 역참조에서 NullReferenceException 이 발생한다.
       StopAllCoroutines();
       ScenarioInteractionSignals.ClearAllInternalSignals();
+      ScenarioInteractionSignals.ClearAllRaisedSignals();
       ScenarioConditionalSignalListeners.ClearAll();
       ScenarioEntityStateSignalBindings.ClearAll();
       ScenarioSignalCounters.ClearAll();
