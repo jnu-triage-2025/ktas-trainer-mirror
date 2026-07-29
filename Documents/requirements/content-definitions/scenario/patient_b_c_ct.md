@@ -62,11 +62,12 @@ flags: ["refactor-required"]
 
 | ID | 위치 | 부족한 연결 | 처리 |
 |---|---|---|---|
-| SPAWN-BC-1 | `SPAWN_B`, `SPAWN_C` | Unity import에서 `patient_b`의 `PatientTypeBMale`, `patient_c`의 `PatientTypeBFemale` prefab이 FishNet `DefaultPrefabObjects`에 등록되지 않아 `PrefabId`가 미할당된 것으로 확인됐다. 현재 상태로 network spawn하면 런타임 `ObjectId 65535` 오류가 발생한다. | Fish-Networking Spawnable Prefabs에 두 원본 prefab을 등록하고 reserialize한 뒤, Production profile에서 각 EntityPreset의 `SpawnablePreset` capability를 다시 증명한다. |
+| SPAWN-BC-1 | `SPAWN_B`, `SPAWN_C` | **해결 확인(2026-07-29 감사):** `PatientTypeBMale`/`PatientTypeBFemale`에 NetworkObject, PatientController, CapsuleCollider가 있고 두 GUID가 `DefaultPrefabObjects.asset`에 등록되어 있다. | 프리팹 구성/등록은 완료로 기록한다. 호스트·원격 결합 spawn 플레이 검증은 별도 운영 조건이다. |
+| SPAWN-BC-2 | `SPAWN_DUMMY_B` | `dummy_b`를 spawn하는 JSON 노드는 있으나 EntityPreset Requirements SO와 전용 프리팹 등록을 찾지 못했다. | 분류용 dummy prefab을 확정하고 `dummy_b` preset/NetworkObject/producer를 등록한다. |
 | ROLE-BC-1 | `P009`~`P013` | 기능 태그와 간호사 역할의 선행 매핑이 없고, 상·하위 브랜치 태그가 불일치했다. | **해결(2026-07-29):** `patient_b_c_ct`의 루트 태그를 `nurse_a`~`nurse_d`로 고정하고 모든 Parallel 브랜치를 단일 식별자 태그로 재매핑했다. P009/P010/P012는 A/B, P011/P013은 C/D가 각각 1:1로 배정된다. `matchMode`도 모두 `All`로 통일했고 `whenBranchingPlayerNotMatched=Panic`으로 자격 없는 재배정을 금지했다. 역할 선택은 `disaster_intro`가 부여하는 동일 식별자 태그를 공급 계약으로 사용한다. |
 | SIGNAL-BC-1 | `V040_A`/`V040_C`, `V040_B`/`V040_D` | ~~같은 들것 신호를 두 번 기다려 2인 파지를 증명하지 못한다.~~ **해결(2026-07-20):** `MovingPatientBedController`가 서버 권위 `SyncVar` 손잡이 슬롯 두 개에 client ID를 기록한다. 프리팹 `PlayerAttachPoints`도 두 개로 배선했다. | 서버가 각 슬롯을 한 client ID에만 배정하고, 각 소유 클라이언트에 follow anchor를 동기화한다. 참가자 입력은 ServerRpc로 보고되어 서버가 침대를 이동하고 transform을 ObserversRpc로 복제한다. 슬롯 0/1이 각각 `grab_stretcher_patient_b/c_handle_0/1`을 발신하며, 시나리오는 이 두 signal을 별도 Validator로 대기한다. |
-| SIGNAL-BC-2 | `COUNT_TRIAGE_ARRIVALS` → `V039` | ~~`enter_triage_zone` 하나의 존재 여부로는 세 명 도착을 셀 수 없다.~~ **해결(2026-07-20):** `ScenarioTriggerZone._perEntitySignalTemplate`(`enter_triage_zone_{id}`)로 진입 환자별 신호를 발신하고, `SignalCounter`(prefix `enter_triage_zone_`, threshold 3)로 인원 수량 게이트를 구성. | `COUNT_TRIAGE_ARRIVALS`가 `patient_b`/`patient_c`/`dummy_b`의 신호 세 개를 세어 `all_triage_patients_arrived`를 발신하고, `V039`가 이를 대기한다. 운영자는 트리아지 구역 존 인스펙터에 `enter_triage_zone_{id}`를 설정해야 한다. |
-| SIGNAL-BC-3 | B/C의 장비·처치 Validator | ~~장비 획득·전극·펜라이트·산소·장갑·거즈 신호 22개가 환자 B와 C 흐름에서 재사용된다. B가 올린 신호 때문에 C 흐름이 실제 행동 없이 통과할 수 있다.~~ **부분 해결(2026-07-20):** 거즈·플라스터·비강캐뉼라의 환자별 결과 신호는 `EntityStateSignalBinding`이 `TreatmentApplied` 전이에서 발신한다. **해결(2026-07-29):** `PatientCareDescriptionZone`의 환자별 `EquipmentConnected` 이벤트로 wall suction/oxyflowmeter 사용 신호를 분리했다. | 장비 획득·전극·장갑 등 공용 아이템 신호는 기존 풀을 공유하지만, 환자에게 연결되는 장비 결과는 `_patient_b`/`_patient_c`로 분리된다. |
+| SIGNAL-BC-2 | `COUNT_TRIAGE_ARRIVALS` → `V039` | **코드/JSON 구성은 완료, 씬 배선은 미확인:** `ScenarioTriggerZone._perEntitySignalTemplate`(`enter_triage_zone_{id}`)와 `SignalCounter`(prefix `enter_triage_zone_`, threshold 3)가 구현되어 있다. 그러나 현재 씬 직렬화에서 해당 template 설정을 확인하지 못했다. | 트리아지 존에 `enter_triage_zone_{id}`를 설정하고 B/C/dummy의 세 신호가 실제로 counter를 통과하는지 검증한다. |
+| SIGNAL-BC-3 | B/C의 장비·처치 Validator | **코드/JSON 분리는 완료, 씬·상호작용 검증은 미완료:** 거즈·플라스터·비강캐뉼라·wall suction·oxyflowmeter 결과 신호는 환자별로 분리되어 있다. | 실제 장비 배치, PatientCareDescriptionZone 귀속, 아이템 Identifier, 환자별 상호작용 결과를 플레이에서 검증한다. |
 | SIGNAL-BC-4 | `V036`, `V046`, `V048`, `V050`, `V052`~`V055`, `V065`, `V069`, `V071`~`V074` | ~~문서가 선행 구현 필요로 표시한 신호 producer가 없다.~~ **부분 해결(2026-07-29):** V054/V073의 wall suction과 V055/V074의 oxyflowmeter는 Zone → PatientController → EntityStateSignalBinding 경로를 사용한다. | 남은 미배선 gameplay producer는 GCS/활력/얼굴/더미 상호작용 및 트리아지 Zone 설정이다. |
 | Q-BC-1 | `Q031`~`Q042_1` | ~~12개 quest가 식별자만 있어 실제 오버레이 내용과 완료 task가 비어 있었다.~~ **해결:** `Resources/Quest/patient_b_c_ct.quests.quest.json`에 12개 definition의 title/description/questContent를 작성했고 Add/Remove가 같은 identifier를 참조한다. | 완료는 Validator가 판정하고 QuestControl이 Remove하는 안내형 quest이므로 별도 자동 완료 task는 두지 않는다. |
 | PRESET-BC-1 | `PRESET_B`, `PRESET_C` | ~~문서가 요구하는 체온과 SpO2는 현재 `PatientMedicalStatePreset` 필드가 아니다.~~ **해결(2026-07-20):** `bodyTemperatureCelsius`, `spo2` 필드를 프리셋 노드/DTO/로더/컨트롤러/스키마에 추가함. | 체온 37.8°, SpO2 93%를 preset에 직접 기입. 모니터 브리지(temperature.t1, numerics/pleth.spo2) 연결 완료. |
@@ -86,7 +87,8 @@ flags: ["refactor-required"]
 ### 변환 승인 조건
 
 - ROLE-BC-1의 역할 태그 공급 계약이 확정되어야 한다.
-- SPAWN-BC-1의 FishNet spawnable prefab 등록이 완료되어야 한다.
+- SPAWN-BC-1의 FishNet spawnable prefab 등록은 완료 확인되었다.
+- SPAWN-BC-2의 `dummy_b` EntityPreset과 spawn 계약이 완료되어야 한다.
 - 들것 파지와 구역 도착을 각각 참여자/환자 단위로 계측해야 한다.
 - 환자별 처치 결과 신호를 분리하고 미배선 producer를 구현해야 한다.
 - 12개 quest definition을 등록해야 한다.
@@ -140,7 +142,7 @@ flags: ["refactor-required"]
 
 interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 분류한다.
 
-- **자동 계측 완료**(설정만으로 동작): `enter_triage_zone`(구역 진입, 단 인원수 검증은 별도), `apply_electrode`, `apply_gauze`, `apply_plaster_on_gauze`, `wear_glove`.
+- **자동 계측 완료**(코드 경로 존재, 씬/아이템 설정 검증 필요): `enter_triage_zone`(구역 진입, 단 인원수 검증은 별도), `apply_electrode`, `apply_gauze`, `apply_plaster_on_gauze`, `wear_glove`.
 - **선행 구현 필요**(게임플레이 미구현, 미배선 시 무한 대기 또는 명시된 timeout 복구): `click_patient_b_face`, `click_patient_c_face`, `click_dummy_b`. IV 삽입 producer는 구현되어 `insert_iv_{patientIdentifier}_{left|right}`를 발행하며, B/C Validator는 좌·우 중 하나를 받는 `matchMode=Any`로 갱신했다. 다만 실제 사용할 팔·프리팹 시각물·임상 지시는 여전히 확정이 필요하다. 비강캐뉼라 적용은 `NasalCannulaApplied` 상태 바인딩으로 대체했으며, 산소 연결은 별도 연결점 producer가 필요하다. `click_humidifier_bottle`, `click_sterile_distilled_water`, `click_flowmeter`는 `MedicalItem.OnGet()`이 자동 발행한다.
 - **구현 완료(런타임 UI)**: `close_vital_ui_b`, `close_vital_ui_c` — `PatientMonitorController`가 닫기 버튼을 만들고, B/C 활성화 이벤트가 패널·모니터를 숨긴 뒤 환자별 signal을 발생시킨다.
 - **에디터 Identifier 정합 필요**(코드는 있으나 프리팹/에디터 매핑 확정 필요): `check_gcs_patient_b`, `check_gcs_patient_c`, `check_vital_patient_b`, `check_vital_patient_c`, `click_patient_b`, `click_patient_c`.
@@ -233,7 +235,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 
 ### [PRESET_C] PatientMedicalStatePresetNode
 
-> R8: 원본은 환자 C를 "환자 B와 동일 부상"으로 명시한다. 현행 JSON/구 md의 divergence(C=무릎 하단 출혈 / 한쪽 팔)는 폐기하고 B와 동일(좌측 상완 개방성 골절 + 두부 손상)로 통일한다.
+> R8 감사 정정: JSON의 PatientMedicalStatePreset에는 부상 부위가 직접 저장되지 않는다. C의 JSON 치료 binding은 좌측 상완을 사용하지만 C 프리팹의 치료 표시 지원은 우측 상완이므로, 좌측 상완 기준으로 프리팹·binding·대사·근력 사정을 함께 검수해야 한다.
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
@@ -263,7 +265,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **NextIdentifier** | 문자열 | E038 |
 
 - 부상/활력은 환자 B와 동일(좌측 상완 개방성 골절 + 두부 손상, GCS 13). 동공은 C 브랜치 저작 원본대로 좌측 무반응(pupil_reflex_patient_c)을 유지한다. 거즈/지혈 부위는 "좌측 상완"으로 통일.
-- [ ] 확정요청: 원본은 환자 C를 'B와 동일 부상'으로 명시. 현행 JSON의 C=무릎하단/한쪽팔 divergence는 폐기하고 B와 동일(좌측 상완)로 통일함. JSON 갱신 및 임상 검수 필요.
+- [ ] JSON에는 부상 부위가 직접 저장되지 않는다. 현재 C의 JSON state binding은 좌측 상완을 사용하지만 `PatientTypeBFemale.prefab`의 치료 표시 지원은 우측 상완을 사용하므로, 임상 저작·프리팹 시각물·상태 binding을 좌/우 한 방향으로 확정하고 검수한다.
 
 ---
 
@@ -2159,7 +2161,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 # [P009 병렬 브랜치 2] 환자 C 처치 그룹 (플레이어 B, D)
 ====================================================
 
-> R8: 환자 C의 부상/활력은 환자 B와 동일(좌측 상완 개방성 골절 + 두부 손상, GCS 13, 동일 활력)로 통일한다. 지혈/거즈 부위는 좌측 상완. 동공 무반응 측은 C 브랜치 저작 원본대로 좌측(pupil_reflex_patient_c). GCS 근력 사정의 좌우 표현은 JSON 저작 원본을 보존한다.
+> R8 감사 기준: C의 활력/GCS는 B와 동일하게 유지한다. 지혈/거즈 JSON binding은 좌측 상완이며, 동공 무반응은 좌측이다. C 프리팹의 치료 표시 지원은 우측 상완이므로 좌측 상완 기준의 시각물과 GCS 근력 사정 좌우를 임상 검수한다.
 
 ### [V040_B] ValidatorNode
 
@@ -3670,9 +3672,9 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 - [x] R5: CombineItem 노드(A012/A013/A014/A015) 제거 및 재연결. 조합(crafting) 참조 섹션 추가.
 - [x] R6: Delay 노드 불필요(도입하지 않음). `Immediate` 오타 잔존 없음.
 - [x] R7: PRESET_B/PRESET_C(PatientMedicalStatePreset) 추가. 체온 37.8° 채택.
-- [x] R8: 환자 C 부상/활력을 환자 B와 동일(좌측 상완)로 통일.
+- [ ] R8: 환자 C의 좌측 상완 JSON binding, 프리팹 치료 시각물, 근력 사정 대사를 같은 방향으로 임상 검수.
 - [x] R9: 종료 노드 D063 → N092 정정.
 - [x] R10: 역할·태그 정리(예비) 섹션 추가, 불일치 항목 checklist 명시.
 - [x] R11: Validator 게이트별 배선 상태 주석(자동 계측 완료 / 선행 구현 필요 / 에디터 Identifier 정합 필요).
 - [x] R12: 더미 B(dummy_b) 분류용 더미, 처치 노드 없음 명시.
-- [ ] JSON/씬 후속 필요: 미배선 gameplay producer 및 씬 배선. (체온 대사 37.8 정정, 최종 fade 이벤트, PRESET_B/PRESET_C, 환자 C 상태 통일, 조합노드 제거·재연결은 반영 완료.)
+- [ ] JSON/씬 후속 필요: `dummy_b` preset 등록, 미배선 gameplay producer, 트리아지 per-entity zone 배선, Bootstrap 연출 참조, C 좌/우 임상·시각물 정합, Production Requirements 검증.
