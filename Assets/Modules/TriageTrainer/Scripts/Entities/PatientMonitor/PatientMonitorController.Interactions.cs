@@ -55,12 +55,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     public IInteract[] Interacts => _interacts.ToArray();
 
-    private void Awake()
+    protected virtual void Awake()
     {
       BuildInteracts();
     }
 
-    private void OnDisable()
+    protected virtual void OnDisable()
     {
       ExitSelectionModeForAll();
       if (_monitoringPatient != null)
@@ -69,7 +69,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       DisableTrackingLine();
     }
 
-    private void OnDestroy()
+    protected virtual void OnDestroy()
     {
       ExitSelectionModeForAll();
       if (_monitoringPatient != null)

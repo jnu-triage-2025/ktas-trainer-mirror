@@ -149,9 +149,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 5369227849851395551}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8c593455c7ffa4b24a14d0a9416d5327, type: 3}
+  m_Script: {fileID: 11500000, guid: 3f51c2f5c9c647d08d2f5f4d43cf7c61, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.PatientMonitor.Models.PatientMonitorController
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.PatientMonitor.Models.SinglePatientMonitorController
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 0}
   _networkObjectCache: {fileID: 6016408113005942236}

@@ -36,9 +36,25 @@ namespace TriageTrainer.Entity.PatientMonitor
         _document = GetComponent<UIDocument>();
       }
 
-      if (_document == null || _document.panelSettings == null)
+      if (_document == null)
       {
-        Debug.LogError("[UIDocumentWorldSurfaceBinder] UIDocument 또는 PanelSettings가 없습니다.", this);
+        Debug.LogError("[UIDocumentWorldSurfaceBinder] UIDocument이 없습니다.", this);
+        enabled = false;
+        return;
+      }
+
+      if (_document.parentUI != null)
+      {
+        Debug.LogError(
+          "[UIDocumentWorldSurfaceBinder] RenderTexture 출력 UIDocument는 다른 UIDocument의 자식일 수 없습니다. 별도 PanelSettings를 사용하도록 계층을 분리하십시오.",
+          this);
+        enabled = false;
+        return;
+      }
+
+      if (_document.panelSettings == null)
+      {
+        Debug.LogError("[UIDocumentWorldSurfaceBinder] PanelSettings가 없습니다.", this);
         enabled = false;
         return;
       }
@@ -46,7 +62,10 @@ namespace TriageTrainer.Entity.PatientMonitor
       if (_targetRenderer == null)
       {
         _targetRenderer = GetComponent<MeshRenderer>();
-        Debug.LogWarning("[UIDocumentWorldSurfaceBinder] 대상 MeshRenderer가 지정되지 않아, 오브젝트의 MeshRenderer를 사용합니다.", this);
+        if (_targetRenderer == null)
+          _targetRenderer = GetComponentInChildren<MeshRenderer>(true);
+
+        Debug.LogWarning("[UIDocumentWorldSurfaceBinder] 대상 MeshRenderer가 지정되지 않아, 오브젝트 또는 하위 오브젝트의 MeshRenderer를 사용합니다.", this);
       }
       if (_targetRenderer == null)
       {

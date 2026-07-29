@@ -21,12 +21,15 @@ PatientMonitor는 환자 활력징후 파형을 시각화하는 기능이다. �
 
 ## 표시 모드
 
-- `PatientMonitorController.DisplayMode.OnePlane`은 기존 월드 평면 또는 단일 `UIDocument`에 전체 모니터를 표시한다.
-- `PatientMonitorController.DisplayMode.TwoPlane`은 컨트롤러의 자식에서 `PatientMonitorPlane` 컴포넌트를 타입으로 검색한다.
-  - `Graph` 자식: ECG/PLETH/ART/CVP 파형 및 파형별 수치
-  - `Metrics` 자식: ST, BPM, PR, SpO2, 혈압, 체온 등 나머지 수치
-- 각 자식에는 `UIDocument`를 함께 두고 필요하면 `UIDocumentWorldSurfaceBinder`를 추가한다. `PatientMonitorPlane`의 기본 RenderTexture는 960×720(4:3) 저해상도 프로파일이다.
-- 표시 뷰는 `PatientMonitorDisplayView`로 분리되어 있어 동일한 데이터 공급을 UI `UIDocument` 출력에도 재사용할 수 있다.
+- `SinglePatientMonitorController`는 기존 모니터 구현을 보존하며 단일 `UIDocument`에 전체 모니터 그래픽을 표시한다.
+- `DualPatientMonitorController`는 컨트롤러의 자식에서 `PatientMonitorPlane` 컴포넌트를 타입으로 검색한다.
+  - `DualPatientMonitorGraphPartController`와 `DualPatientMonitorMetricsPartController` 컴포넌트가 붙은 자식 오브젝트가 없으면 컨트롤러가 두 오브젝트를 자동 생성하고 부모 `UIDocument`의 `PanelSettings`를 연결한다.
+  - `DualPatientMonitorGraphPartController` 자식: ECG/PLETH/ART/CVP 파형 및 파형별 수치
+  - `DualPatientMonitorMetricsPartController` 자식: ST, BPM, PR, SpO2, 혈압, 체온 등 나머지 수치
+  - Dual 컨트롤러 부모에는 `UIDocument`를 두지 않고, 컨트롤러의 `_panelSettings`에 PanelSettings asset을 지정한다. 각 자식 UIDocument는 이 PanelSettings를 사용해 독립 패널로 동작한다. `PatientMonitorPlane`의 기본 RenderTexture는 960×720(4:3) 저해상도 프로파일이다.
+  - Graph/Metrics 자식 또는 그 하위 오브젝트에 `MeshRenderer`가 있으면 해당 메시 표면에 텍스처를 출력한다. 메시가 없고 `createDefaultSurfaceWhenMissing`이 켜져 있으면 자식 아래에 Quad와 `UIDocumentWorldSurfaceBinder`를 자동 생성한다.
+  - 월드 텍스처용 자식 `UIDocument`는 부모 `UIDocument`의 UI 계층에서 분리한 독립 PanelSettings를 사용해야 한다. 이를 지키지 않으면 Unity의 `UIDocument.set_panelSettings` assertion이 발생한다.
+- `PatientMonitorDisplayView`가 그래프/UI 그래픽 데이터 원본을 렌더링하고 닫기 버튼 Overlay를 포함한다. `UIDocumentWorldSurfaceBinder`는 이 출력 결과를 인게임 텍스처로 바인딩한다.
 
 ## 기술적 세부 사항
 

@@ -8,15 +8,12 @@ using TriageTrainer.Entity.Patient;
 
 namespace TriageTrainer.Entity.PatientMonitor.Models
 {
-  [RequireComponent(typeof(UIDocument))]
-  public partial class PatientMonitorController : NetworkBehaviour
+  /// <summary>
+  /// PatientMonitor의 공통 데이터/네트워크/파형 기반입니다.
+  /// 실제 출력 정책은 SinglePatientMonitorController 또는 DualPatientMonitorController가 담당합니다.
+  /// </summary>
+  public abstract partial class PatientMonitorController : NetworkBehaviour
   {
-    public enum DisplayMode
-    {
-      OnePlane,
-      TwoPlane
-    }
-
     public enum ECGDisplayMode
     {
       Preset,
@@ -40,7 +37,6 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     [SerializeField, Min(1f)] private float horizontalSecondsVisible = 12f;
 
     [Header("Layout")]
-    [SerializeField] private DisplayMode displayLayout = DisplayMode.OnePlane;
     [SerializeField, Min(0f)] private float panelPadding = 4f;
     [SerializeField, Min(0f)] private float rowSpacing = 2f;
     [SerializeField, Min(28f)] private float minRowHeight = 44f;
@@ -50,7 +46,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     [SerializeField, Min(100f)] private float numericsPanelMinWidth = 136f;
     [SerializeField, Min(120f)] private float numericsPanelMaxWidth = 208f;
 
-    private UIDocument uiDocument;
+    protected UIDocument uiDocument;
     private PatientMonitorGraphElement ecgGraphElement;
     private PatientMonitorGraphElement plethGraphElement;
     private PatientMonitorGraphElement artGraphElement;
@@ -85,18 +81,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private float _transitionTimer;
     private ECGRuntimeState _ecgRuntimeState;
     private Action _closeRequested;
-    private readonly List<TriageTrainer.Entity.PatientMonitor.PatientMonitorDisplayView> _displayViews = new();
+    protected readonly List<TriageTrainer.Entity.PatientMonitor.PatientMonitorDisplayView> _displayViews = new();
 
-    public DisplayMode CurrentDisplayMode => displayLayout;
-
-    public void SetDisplayMode(DisplayMode mode)
-    {
-      displayLayout = mode;
-      if (isActiveAndEnabled && uiDocument != null)
-        ConfigureDisplayLayout();
-    }
-
-    void OnEnable()
+    protected virtual void OnEnable()
     {
       uiDocument = GetComponent<UIDocument>();
       ResolvePatientStateIfNeeded();
@@ -104,68 +91,20 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       _targetParameters = _currentParameters;
       PullParametersFromPatientState();
       ecgNextBeatInterval = ComputeBaseInterval(_currentParameters.bpm);
-      CreateGraphUI();
+      if (BuildsSinglePlaneGraphic)
+        CreateGraphUI();
       ConfigureDisplayLayout();
       UpdateTrackingLine();
     }
 
-    private void ConfigureDisplayLayout()
+    protected virtual bool BuildsSinglePlaneGraphic => true;
+
+    protected virtual void ConfigureDisplayLayout()
     {
       _displayViews.Clear();
       var root = uiDocument != null ? uiDocument.rootVisualElement : null;
-      if (displayLayout == DisplayMode.OnePlane)
-      {
-        if (root != null) root.style.display = DisplayStyle.Flex;
-        HideChildPlaneDocuments();
-        return;
-      }
-
-      // Parent controller는 데이터/상태를 소유하고, 자식 UIDocument는 출력 대상만 소유합니다.
-      if (root != null) root.style.display = DisplayStyle.None;
-      var planes = GetComponentsInChildren<TriageTrainer.Entity.PatientMonitor.PatientMonitorPlane>(true);
-      bool hasGraphPlane = false;
-      bool hasMetricsPlane = false;
-      for (int i = 0; i < planes.Length; i++)
-      {
-        var plane = planes[i];
-        if (plane == null || plane.transform == transform || plane.Document == null)
-          continue;
-
-        var childRoot = plane.Document.rootVisualElement;
-        if (childRoot == null)
-          continue;
-
-        var view = new TriageTrainer.Entity.PatientMonitor.PatientMonitorDisplayView(plane.Type);
-        childRoot.style.display = DisplayStyle.Flex;
-        view.Build(plane.Document, new[] { ecgColor, plethColor, artColor, cvpColor }, lineThickness,
-          Mathf.Clamp(ResolveHorizontalPoints(), 80, 2400), RequestClose);
-        _displayViews.Add(view);
-        hasGraphPlane |= plane.Type == TriageTrainer.Entity.PatientMonitor.PatientMonitorPlaneType.Graph;
-        hasMetricsPlane |= plane.Type == TriageTrainer.Entity.PatientMonitor.PatientMonitorPlaneType.Metrics;
-      }
-
-      if (!hasGraphPlane || !hasMetricsPlane)
-      {
-        Debug.LogWarning("[PatientMonitorController] TwoPlane 모드에는 Graph와 Metrics 타입의 PatientMonitorPlane 자식이 각각 필요합니다.", this);
-        displayLayout = DisplayMode.OnePlane;
-        _displayViews.Clear();
-        if (root != null) root.style.display = DisplayStyle.Flex;
-        HideChildPlaneDocuments();
-      }
-    }
-
-    private void HideChildPlaneDocuments()
-    {
-      var planes = GetComponentsInChildren<TriageTrainer.Entity.PatientMonitor.PatientMonitorPlane>(true);
-      for (int i = 0; i < planes.Length; i++)
-      {
-        if (planes[i] == null || planes[i].Document == null)
-          continue;
-
-        var childRoot = planes[i].Document.rootVisualElement;
-        if (childRoot != null)
-          childRoot.style.display = DisplayStyle.None;
-      }
+      if (root != null)
+        root.style.display = DisplayStyle.Flex;
     }
 
     void CreateGraphUI()
@@ -256,7 +195,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       root.Add(closeButton);
     }
 
-    private void RequestClose()
+    protected void RequestClose()
     {
       _closeRequested?.Invoke();
     }
@@ -432,10 +371,10 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       return graph;
     }
 
-    void Update()
+    protected virtual void Update()
     {
       UpdateTrackingLine();
-      if (ecgGraphElement == null) return;
+      if (ecgGraphElement == null && _displayViews.Count == 0) return;
 
       PullParametersFromPatientState();
       currentTime += Time.deltaTime;
@@ -485,7 +424,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       float ecgCycleNorm = CalculateCycleNorm(currentTime, ecgLastBeatTime, _currentParameters.bpm);
       float ecgVoltage = ECGWaveformCalculator.Calculate(_currentParameters, rhythmPreset, ecgCycleNorm, dt, ref _ecgRuntimeState);
-      ecgGraphElement.AddValue(ecgVoltage);
+      ecgGraphElement?.AddValue(ecgVoltage);
 
       float plethCycleNorm = CalculateCycleNorm(currentTime, 0f, monitorPleth.bpm);
       float artCycleNorm = CalculateCycleNorm(currentTime, 0f, monitorART.bpm);
@@ -494,9 +433,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       float plethVoltage = PlethWaveformCalculator.Calculate(monitorPleth, plethCycleNorm);
       float artVoltage = ARTWaveformCalculator.Calculate(monitorART, artCycleNorm);
       float cvpVoltage = CVPWaveformCalculator.Calculate(monitorCVP, cvpCycleNorm);
-      plethGraphElement.AddValue(plethVoltage);
-      artGraphElement.AddValue(artVoltage);
-      cvpGraphElement.AddValue(cvpVoltage);
+      plethGraphElement?.AddValue(plethVoltage);
+      artGraphElement?.AddValue(artVoltage);
+      cvpGraphElement?.AddValue(cvpVoltage);
       for (int i = 0; i < _displayViews.Count; i++)
       {
         _displayViews[i].AddSamples(ecgVoltage, plethVoltage, artVoltage, cvpVoltage);
@@ -526,7 +465,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     }
 
     // 인스펙터에서 값 변경 시 실시간 반영을 위해
-    private void OnValidate()
+    protected virtual void OnValidate()
     {
       EnsureInteractEntry(InteractIdSelectPatient, true);
       RebuildInteractEntryMap();
@@ -557,7 +496,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         ConfigureDisplayLayout();
     }
 
-    private int ResolveHorizontalPoints()
+    protected int ResolveHorizontalPoints()
     {
       int byTime = Mathf.RoundToInt(sampleRate * horizontalSecondsVisible);
       return Mathf.Clamp(byTime, 10, resolution);
