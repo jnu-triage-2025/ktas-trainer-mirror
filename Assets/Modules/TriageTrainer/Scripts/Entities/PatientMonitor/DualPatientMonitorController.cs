@@ -77,9 +77,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
           plane.Document,
           new[] { ecgColor, plethColor, artColor, cvpColor },
           lineThickness,
-          Mathf.Clamp(ResolveHorizontalPoints(), 80, 2400),
-          EnableDetailedContentOverlay,
-          OpenDetailedContentOverlay);
+          Mathf.Clamp(ResolveHorizontalPoints(), 80, 2400));
         _displayViews.Add(view);
 
         hasGraphPlane |= plane.Type == TriageTrainer.Entity.PatientMonitor.PatientMonitorPlaneType.Graph;

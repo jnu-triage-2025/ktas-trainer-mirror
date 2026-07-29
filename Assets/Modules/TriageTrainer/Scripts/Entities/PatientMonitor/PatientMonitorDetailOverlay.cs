@@ -134,9 +134,7 @@ namespace TriageTrainer.Entity.PatientMonitor
         name = "PatientMonitorDetailCloseButton",
         text = "✕"
       };
-      closeButton.style.width = 42f;
-      closeButton.style.height = 34f;
-      closeButton.style.fontSize = 20f;
+      ApplyCloseButtonStyle(closeButton);
       header.Add(title);
       header.Add(closeButton);
 
@@ -196,6 +194,41 @@ namespace TriageTrainer.Entity.PatientMonitor
       root.pickingMode = mode;
       for (int i = 0; i < root.childCount; i++)
         SetPickingMode(root[i], mode);
+    }
+
+    private static void ApplyCloseButtonStyle(Button button)
+    {
+      if (button == null)
+        return;
+
+      var normalColor = new Color(0.55f, 0.11f, 0.14f);
+      var hoverColor = new Color(0.82f, 0.18f, 0.22f);
+      var pressedColor = new Color(0.38f, 0.06f, 0.08f);
+
+      button.style.width = 42f;
+      button.style.height = 34f;
+      button.style.fontSize = 20f;
+      button.style.color = Color.white;
+      button.style.unityFontStyleAndWeight = FontStyle.Bold;
+      button.style.unityTextAlign = TextAnchor.MiddleCenter;
+      button.style.backgroundColor = new StyleColor(normalColor);
+      button.style.borderTopWidth = 1f;
+      button.style.borderBottomWidth = 1f;
+      button.style.borderLeftWidth = 1f;
+      button.style.borderRightWidth = 1f;
+      button.style.borderTopColor = new StyleColor(new Color(1f, 1f, 1f, 0.45f));
+      button.style.borderBottomColor = new StyleColor(new Color(0.18f, 0.01f, 0.02f));
+      button.style.borderLeftColor = new StyleColor(new Color(1f, 1f, 1f, 0.3f));
+      button.style.borderRightColor = new StyleColor(new Color(0.18f, 0.01f, 0.02f));
+      button.style.borderTopLeftRadius = 5f;
+      button.style.borderTopRightRadius = 5f;
+      button.style.borderBottomLeftRadius = 5f;
+      button.style.borderBottomRightRadius = 5f;
+
+      button.RegisterCallback<MouseEnterEvent>(_ => button.style.backgroundColor = new StyleColor(hoverColor));
+      button.RegisterCallback<MouseLeaveEvent>(_ => button.style.backgroundColor = new StyleColor(normalColor));
+      button.RegisterCallback<MouseDownEvent>(_ => button.style.backgroundColor = new StyleColor(pressedColor));
+      button.RegisterCallback<MouseUpEvent>(_ => button.style.backgroundColor = new StyleColor(hoverColor));
     }
   }
 }

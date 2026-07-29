@@ -117,7 +117,6 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private Action _closeRequested;
     private VisualElement _singleMonitorContent;
     private VisualElement _singleMonitorContentParent;
-    private Button _singleDetailButton;
     protected readonly List<TriageTrainer.Entity.PatientMonitor.PatientMonitorDisplayView> _displayViews = new();
 
     public bool EnableDetailedContentOverlay => _enableDetailedContentOverlay;
@@ -202,28 +201,10 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       container.Add(body);
 
       root.Add(container);
-      BuildSingleDetailOverlay(root, container);
+      _singleMonitorContent = container;
+      _singleMonitorContentParent = root;
       SetVisualTreeNonInteractive(container);
       ClearRuntimeMonitorPanelSelection();
-    }
-
-    private void BuildSingleDetailOverlay(VisualElement root, VisualElement content)
-    {
-      _singleMonitorContent = content;
-      _singleMonitorContentParent = root;
-      _singleDetailButton = new Button(OpenSingleDetail)
-      {
-        name = "PatientMonitorDetailButton",
-        text = "자세히 보기"
-      };
-      _singleDetailButton.style.position = Position.Absolute;
-      _singleDetailButton.style.right = 12f;
-      _singleDetailButton.style.top = 12f;
-      _singleDetailButton.style.height = 28f;
-      _singleDetailButton.style.fontSize = 12f;
-      _singleDetailButton.style.display = _enableDetailedContentOverlay ? DisplayStyle.Flex : DisplayStyle.None;
-      root.Add(_singleDetailButton);
-
     }
 
     protected virtual void OpenDetailedContentOverlay() => OpenSingleDetail();
@@ -241,8 +222,6 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
             RestoreSingleMonitorContent))
         return;
 
-      if (_singleDetailButton != null)
-        _singleDetailButton.style.display = DisplayStyle.None;
     }
 
     private void CloseSingleDetail()
@@ -253,8 +232,6 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private void RestoreSingleMonitorContent()
     {
       _singleMonitorContentParent?.Add(_singleMonitorContent);
-      if (_singleDetailButton != null)
-        _singleDetailButton.style.display = _enableDetailedContentOverlay ? DisplayStyle.Flex : DisplayStyle.None;
     }
 
     /// <summary>

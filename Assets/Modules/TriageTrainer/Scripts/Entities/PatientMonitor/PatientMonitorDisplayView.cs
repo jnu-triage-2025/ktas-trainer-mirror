@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -16,17 +15,13 @@ namespace TriageTrainer.Entity.PatientMonitor
     private Label[] _metricValues;
     private VisualElement _generatedRoot;
     private VisualElement _contentRoot;
-    private Button _openDetailButton;
-    private bool _detailOverlayEnabled;
-    private Action _detailRequested;
 
     public PatientMonitorDisplayView(PatientMonitorPlaneType type)
     {
       _type = type;
     }
 
-    public void Build(UIDocument document, Color[] colors, float lineThickness, int points,
-      bool detailOverlayEnabled, Action detailRequested)
+    public void Build(UIDocument document, Color[] colors, float lineThickness, int points)
     {
       if (document == null || document.rootVisualElement == null)
         return;
@@ -34,8 +29,6 @@ namespace TriageTrainer.Entity.PatientMonitor
       VisualElement root = document.rootVisualElement;
       root.Q<VisualElement>(GeneratedRootName)?.RemoveFromHierarchy();
 
-      _detailOverlayEnabled = detailOverlayEnabled;
-      _detailRequested = detailRequested;
       _generatedRoot = new VisualElement { name = GeneratedRootName };
       _generatedRoot.style.flexGrow = 1f;
       _generatedRoot.style.backgroundColor = new StyleColor(new Color(0.05f, 0.05f, 0.05f));
@@ -58,7 +51,7 @@ namespace TriageTrainer.Entity.PatientMonitor
       if (_type == PatientMonitorPlaneType.Metrics)
       {
         BuildMetrics(_contentRoot);
-        BuildDetailOverlay();
+        SetGeneratedNonInteractive(_contentRoot);
         return;
       }
 
@@ -114,26 +107,6 @@ namespace TriageTrainer.Entity.PatientMonitor
       }
 
       _contentRoot.Add(column);
-      BuildDetailOverlay();
-    }
-
-    private void BuildDetailOverlay()
-    {
-      _openDetailButton = new Button(() => _detailRequested?.Invoke())
-      {
-        name = "PatientMonitorDetailButton",
-        text = "자세히 보기"
-      };
-      _openDetailButton.style.position = Position.Absolute;
-      _openDetailButton.style.right = 12f;
-      _openDetailButton.style.top = 12f;
-      _openDetailButton.style.height = 28f;
-      _openDetailButton.style.paddingLeft = 10f;
-      _openDetailButton.style.paddingRight = 10f;
-      _openDetailButton.style.fontSize = 12f;
-      _openDetailButton.style.display = _detailOverlayEnabled ? DisplayStyle.Flex : DisplayStyle.None;
-      _generatedRoot.Add(_openDetailButton);
-
       SetGeneratedNonInteractive(_contentRoot);
     }
     public VisualElement ContentRoot => _contentRoot;
@@ -147,8 +120,6 @@ namespace TriageTrainer.Entity.PatientMonitor
       _contentRoot.style.paddingLeft = StyleKeyword.Null;
       _contentRoot.style.paddingRight = StyleKeyword.Null;
       _contentRoot.style.marginLeft = StyleKeyword.Null;
-      if (_openDetailButton != null)
-        _openDetailButton.style.display = _detailOverlayEnabled ? DisplayStyle.Flex : DisplayStyle.None;
     }
 
     private static void SetGeneratedNonInteractive(VisualElement root)

@@ -6,7 +6,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
   public partial class PatientMonitorController
   {
     [Header("Tracking Line")]
-    [SerializeField] private bool _showTrackingLine = true;
+    [SerializeField] private bool _showTrackingLine = false;
     [SerializeField] private bool _showTrackingLineForDefaultPatient = false;
     [SerializeField] private Transform _trackingLineStart;
     [SerializeField, Min(0.001f)] private float _trackingLineWidth = 0.02f;
