@@ -24,10 +24,11 @@ namespace TriageTrainer.SceneBootstrapper
   {
     private const string LogPrefix = "[TutorialSceneBootstrapper]";
     private const string SystemOverlaySceneName = "SystemOverlayScene";
+    private const string ConnectionFailureSceneName = "NetworkSessionFailureScene";
 
     [Header("Session")]
     [SerializeField] private string address = "127.0.0.1";
-    [SerializeField] private ushort port = 7777;
+    [SerializeField] private ushort port = 37891;
     [SerializeField] private string sessionName = "TutorialSession";
 
     [Header("Additive Scenes")]
@@ -88,8 +89,18 @@ namespace TriageTrainer.SceneBootstrapper
           yield return LoadSceneIfNeeded(SystemOverlaySceneName);
         }
 
+        yield return LoadSceneIfNeeded(ConnectionFailureSceneName);
+
         // Ensure newly-loaded scene objects complete Awake/OnEnable before networking starts.
         yield return null;
+
+        var connectionFailureOverlay = FindAnyObjectByType<IndevConnectionFailureOverlay>();
+        if (connectionFailureOverlay == null)
+        {
+          Debug.LogError($"{LogPrefix} Required scene '{ConnectionFailureSceneName}' or its overlay could not be loaded. Network startup was cancelled.");
+          yield break;
+        }
+        connectionFailureOverlay.BeginConnectionAttempt(address, port);
 
         PrepareDeferredPlayerSpawning();
         StartHostSession();
@@ -189,6 +200,7 @@ namespace TriageTrainer.SceneBootstrapper
       var fishNetSupport = FishNetSupport.Instance ?? FindAnyObjectByType<FishNetSupport>();
       if (fishNetSupport == null)
       {
+        FindAnyObjectByType<IndevConnectionFailureOverlay>()?.ShowConnectionError("네트워크 세션 서비스를 찾을 수 없습니다.");
         Debug.LogWarning($"{LogPrefix} FishNetSupport was not found in the scene.");
         return;
       }
@@ -198,6 +210,7 @@ namespace TriageTrainer.SceneBootstrapper
       var started = fishNetSupport.StartSession(sessionInformation, isOpeningServer: true);
       if (!started)
       {
+        FindAnyObjectByType<IndevConnectionFailureOverlay>()?.ShowConnectionError("서버 세션을 시작할 수 없습니다.");
         Debug.LogWarning($"{LogPrefix} FishNetSupport failed to start the host session.");
         return;
       }

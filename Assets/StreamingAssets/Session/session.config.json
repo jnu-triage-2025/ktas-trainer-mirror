@@ -1,6 +1,6 @@
 {
   "address": "localhost",
-  "port": 7777,
+  "port": 37891,
   "sessionName": "MyFishSession",
   "datapacks": [
     "usability"

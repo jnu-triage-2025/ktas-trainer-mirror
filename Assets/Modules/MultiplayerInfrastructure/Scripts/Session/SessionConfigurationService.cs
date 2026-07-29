@@ -9,7 +9,7 @@ namespace MultiplayerInfrastructure.Session
   public sealed class SessionConfiguration
   {
     public string address = "localhost";
-    public ushort port = 7777;
+    public ushort port = 37891;
     public string sessionName = "MyFishSession";
     public string[] datapacks = Array.Empty<string>();
   }

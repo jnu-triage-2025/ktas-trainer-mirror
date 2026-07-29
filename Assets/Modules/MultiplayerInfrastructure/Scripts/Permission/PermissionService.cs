@@ -119,6 +119,7 @@ namespace MultiplayerInfrastructure.Permission
           "permission",
           "gamerule",
           "log",
+          "server",
         },
       };
 

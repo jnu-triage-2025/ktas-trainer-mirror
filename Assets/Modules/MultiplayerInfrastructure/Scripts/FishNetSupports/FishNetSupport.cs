@@ -1,4 +1,6 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Session;
 
@@ -96,7 +98,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
       if (FindAnyObjectByType<UnitySceneSupports.IngameScene.IngameSceneBootstrapper>() != null)
         return;
 
-      HandleSessionInformationAlreadyConfigured();
+      StartCoroutine(HandleSessionInformationAlreadyConfiguredRoutine());
     }
 
     /// <summary>
@@ -132,6 +134,23 @@ namespace MultiplayerInfrastructure.FishNetSupports
       return true;
     }
 
+    public bool IsServerStarted => networkManager != null && networkManager.ServerManager.Started;
+    public bool IsClientStarted => networkManager != null && networkManager.ClientManager.Started;
+
+    public bool ConnectToExistingServer(SessionInformationModel sessionInformation)
+    {
+      if (sessionInformation == null || !ResolveNetworkManagerInHierarchy())
+        return false;
+
+      ConfigureTransport(sessionInformation);
+      if (IsServerStarted)
+        StopServer();
+      if (IsClientStarted)
+        StopClient();
+      StartClient();
+      return true;
+    }
+
     private void HandleSessionInformationAlreadyConfigured()
     {
       if (!Registry.Registry.Get<bool>(RegistryType.RuntimeState, RegistryGlobalKeys.LoadedFromIntroScene))
@@ -151,6 +170,46 @@ namespace MultiplayerInfrastructure.FishNetSupports
         RegistryGlobalKeys.IsOpeningServer);
 
       StartSession(sessionInformation, isOpeningServer);
+    }
+
+    private IEnumerator HandleSessionInformationAlreadyConfiguredRoutine()
+    {
+      if (!Registry.Registry.Get<bool>(RegistryType.RuntimeState, RegistryGlobalKeys.LoadedFromIntroScene))
+        yield break;
+
+      const string failureSceneName = "NetworkSessionFailureScene";
+      var failureScene = SceneManager.GetSceneByName(failureSceneName);
+      if (!failureScene.IsValid() || !failureScene.isLoaded)
+      {
+        var operation = SceneManager.LoadSceneAsync(failureSceneName, LoadSceneMode.Additive);
+        if (operation == null)
+        {
+          Debug.LogError($"[FishNetSupport] Failed to load required scene '{failureSceneName}'. Network startup was cancelled.");
+          yield break;
+        }
+        while (!operation.isDone)
+          yield return null;
+      }
+
+      var overlay = FindAnyObjectByType<TriageTrainer.SceneBootstrapper.IndevConnectionFailureOverlay>();
+      if (overlay == null)
+      {
+        Debug.LogError($"[FishNetSupport] Required scene '{failureSceneName}' has no connection failure overlay. Network startup was cancelled.");
+        yield break;
+      }
+
+      var sessionInformation = Registry.Registry.Get<SessionInformationModel>(
+        RegistryType.RuntimeState, RegistryGlobalKeys.SessionInformation);
+      if (sessionInformation == null)
+      {
+        overlay.ShowConnectionError("세션 정보가 없습니다.");
+        yield break;
+      }
+
+      var isOpeningServer = Registry.Registry.Get<bool>(RegistryType.RuntimeState, RegistryGlobalKeys.IsOpeningServer);
+      overlay.BeginConnectionAttempt(sessionInformation.Address, sessionInformation.Port);
+      if (!StartSession(sessionInformation, isOpeningServer))
+        overlay.ShowConnectionError("네트워크 세션을 시작할 수 없습니다.");
     }
   }
 }

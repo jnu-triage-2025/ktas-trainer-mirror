@@ -6,6 +6,7 @@ using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Session;
+using MultiplayerInfrastructure.Server;
 using MultiplayerInfrastructure.Tag;
 using UnityEngine;
 using FishNet.Connection;
@@ -62,6 +63,13 @@ namespace MultiplayerInfrastructure.Player
       _entityIdentifier.Value = BuildPlayerEntityIdentifier(descriptor.Identifier);
       _userIdentifier.Value  = descriptor.Identifier;
       _userDisplayName.Value = descriptor.DisplayName;
+
+      if (ServerBanService.IsBanned(descriptor.DisplayName))
+      {
+        Debug.LogWarning($"[PlayerController] Banned player '{descriptor.DisplayName}' attempted to connect.");
+        Owner?.Disconnect(true);
+        return;
+      }
 
       PlayerGamemodeService.RegisterPlayer(this);
       UserDescriptorService.Register(Owner.ClientId, descriptor);
