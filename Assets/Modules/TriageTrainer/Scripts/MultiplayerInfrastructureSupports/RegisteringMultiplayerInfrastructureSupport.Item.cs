@@ -45,6 +45,7 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<Cannula20g>(Cannula20g.Identifier);
       Registry.RegisterItemDefinition<Cannula22g>(Cannula22g.Identifier);
       Registry.RegisterItemDefinition<Cannula24g>(Cannula24g.Identifier);
+      Registry.RegisterItemDefinition<BloodBag>(BloodBag.Identifier);
       Registry.RegisterItemDefinition<CentralLineSet>(CentralLineSet.Identifier);
       Registry.RegisterItemDefinition<DefibPad>(DefibPad.Identifier);
       Registry.RegisterItemDefinition<ElasticBand>(ElasticBand.Identifier);
