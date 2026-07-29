@@ -115,7 +115,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.grab_stretcher_a"
+              "registryIdentifier": "sig.grab_stretcher_patient_a_handle_0"
             }
           ]
         }
@@ -136,7 +136,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.grab_stretcher_b"
+              "registryIdentifier": "sig.grab_stretcher_patient_a_handle_1"
             }
           ]
         }
@@ -157,7 +157,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.grab_stretcher_c"
+              "registryIdentifier": "sig.grab_stretcher_patient_a_handle_2"
             }
           ]
         }
@@ -178,7 +178,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.grab_stretcher_d"
+              "registryIdentifier": "sig.grab_stretcher_patient_a_handle_3"
             }
           ]
         }

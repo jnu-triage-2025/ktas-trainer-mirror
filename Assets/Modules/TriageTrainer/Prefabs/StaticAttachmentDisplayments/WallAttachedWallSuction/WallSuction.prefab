@@ -121,7 +121,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayColor: {r: 1, g: 1, b: 1, a: 1}
   _entityIdentifier: wall_suction:WallSuction-(8):95daf99f331749aab989e1b4346d35a1
-  _initiallyVisible: 1
+  _initiallyVisible: 0
   _toggleByActiveState: 0
   _shareMode: 0
   _consumeCount: 1
