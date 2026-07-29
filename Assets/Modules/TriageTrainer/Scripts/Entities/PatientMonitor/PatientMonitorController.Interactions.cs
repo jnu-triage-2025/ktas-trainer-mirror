@@ -207,6 +207,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         return;
 
       _selectionModePlayers[player.GetInstanceID()] = player;
+      BeginNetworkSelection(player);
       player.SetPatientSelectionMode(true);
 
       var patients = FindObjectsByType<PatientController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
@@ -228,6 +229,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         return;
 
       _selectionModePlayers.Remove(player.GetInstanceID());
+      EndNetworkSelection(player);
       player.SetPatientSelectionMode(false);
       if (_selectionModePlayers.Count <= 0)
       {
@@ -262,6 +264,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       for (int i = 0; i < values.Count; i++)
       {
+        EndNetworkSelection(values[i]);
         values[i]?.SetPatientSelectionMode(false);
         values[i]?.RefreshInteractableHintsNow();
       }
@@ -280,7 +283,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         return;
 
       SetMonitoringPatient(patient);
-      ExitSelectionModeFor(player);
+      if (!IsClientStarted || IsServerStarted)
+        ExitSelectionModeFor(player);
     }
 
     private PatientCareDescriptionZone _patientCareZone;
@@ -325,6 +329,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private void HandleCareZonePatientEntered(PatientController patient)
     {
+      if ((IsServerStarted || IsClientStarted) && !IsServerStarted)
+        return;
+
       if (patient == null)
         return;
 
@@ -337,12 +344,18 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private void HandleCareZonePatientExited(PatientController patient)
     {
+      if ((IsServerStarted || IsClientStarted) && !IsServerStarted)
+        return;
+
       if (ReferenceEquals(_monitoringPatient, patient))
         SetMonitoringPatient(null);
     }
 
     private void ApplyCareZonePatient(PatientController patient)
     {
+      if ((IsServerStarted || IsClientStarted) && !IsServerStarted)
+        return;
+
       if (_monitoringPatient == null ||
           _onEnterAnotherPatientAlreadyPatientExists == OnEnterAnotherPatientAlreadyPatientExists.Refresh)
         SetMonitoringPatient(patient);

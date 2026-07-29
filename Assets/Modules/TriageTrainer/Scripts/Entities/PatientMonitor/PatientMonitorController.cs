@@ -421,6 +421,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     protected virtual void Update()
     {
+      TryResolvePendingMonitoringPatient();
       UpdatePatientTrackingLocation();
       UpdateTrackingLine();
       if (ecgGraphElement == null && _displayViews.Count == 0) return;

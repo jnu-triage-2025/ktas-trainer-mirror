@@ -1,3 +1,11 @@
+using FishNet.Connection;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
+using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Registry;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace TriageTrainer.Entity.PatientMonitor.Models
@@ -7,18 +15,213 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     [Header("Monitoring")]
     [SerializeField] private PatientController _monitoringPatient;
 
+    // PatientController references are local Unity objects. Replicate the stable runtime
+    // identifier instead, then resolve it on each peer after the patient has spawned.
+    private readonly SyncVar<string> _monitoringPatientIdentifier = new(string.Empty);
+
     private PatientController _subscribedPatient;
+    private string _pendingMonitoringPatientIdentifier;
+    private readonly HashSet<int> _serverSelectionClientIds = new();
 
     public PatientController MonitoringPatient => _monitoringPatient;
 
     public void SetMonitoringPatient(PatientController patient)
+    {
+      if (IsServerStarted)
+      {
+        SetMonitoringPatientOnServer(patient);
+        return;
+      }
+
+      if (IsClientStarted)
+      {
+        CmdRequestMonitoringPatient(patient != null ? patient.Identifier : string.Empty);
+        return;
+      }
+
+      ApplyMonitoringPatient(patient);
+    }
+
+    public override void OnStartServer()
+    {
+      base.OnStartServer();
+      SetMonitoringPatientOnServer(_monitoringPatient);
+    }
+
+    public override void OnStartClient()
+    {
+      base.OnStartClient();
+      _monitoringPatientIdentifier.OnChange += OnMonitoringPatientIdentifierChanged;
+      ApplyMonitoringPatientIdentifier(_monitoringPatientIdentifier.Value);
+    }
+
+    public override void OnStopClient()
+    {
+      _monitoringPatientIdentifier.OnChange -= OnMonitoringPatientIdentifierChanged;
+      _pendingMonitoringPatientIdentifier = null;
+      base.OnStopClient();
+    }
+
+    private void SetMonitoringPatientOnServer(PatientController patient)
+    {
+      ApplyMonitoringPatient(patient);
+      _monitoringPatientIdentifier.Value = patient != null ? patient.Identifier : string.Empty;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdRequestMonitoringPatient(string identifier, NetworkConnection sender = null)
+    {
+      var player = sender != null && sender.IsValid ? FindPlayer(sender.ClientId) : null;
+      if (player == null)
+        return;
+
+      if (!_serverSelectionClientIds.Contains(sender.ClientId) ||
+          (player.transform.position - transform.position).sqrMagnitude > 9f)
+      {
+        TargetConfirmMonitoringPatient(sender, false);
+        return;
+      }
+
+      if (string.IsNullOrWhiteSpace(identifier))
+      {
+        SetMonitoringPatientOnServer(null);
+        _serverSelectionClientIds.Remove(sender.ClientId);
+        TargetConfirmMonitoringPatient(sender, true);
+        return;
+      }
+
+      var patient = FindPatient(identifier);
+      if (patient == null || (patient.transform.position - transform.position).sqrMagnitude > 25f)
+      {
+        TargetConfirmMonitoringPatient(sender, false);
+        return;
+      }
+
+      SetMonitoringPatientOnServer(patient);
+      _serverSelectionClientIds.Remove(sender.ClientId);
+      TargetConfirmMonitoringPatient(sender, true);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdBeginMonitoringPatientSelection(NetworkConnection sender = null)
+    {
+      var player = sender != null && sender.IsValid ? FindPlayer(sender.ClientId) : null;
+      if (player == null || (player.transform.position - transform.position).sqrMagnitude > 9f)
+        return;
+
+      _serverSelectionClientIds.Add(sender.ClientId);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdEndMonitoringPatientSelection(NetworkConnection sender = null)
+    {
+      if (sender != null && sender.IsValid)
+        _serverSelectionClientIds.Remove(sender.ClientId);
+    }
+
+    [TargetRpc]
+    private void TargetConfirmMonitoringPatient(NetworkConnection connection, bool accepted)
+    {
+      var player = FindLocalOwnerPlayer();
+      if (player == null)
+        return;
+
+      if (accepted)
+        ExitSelectionModeFor(player);
+      else
+        player.RefreshInteractableHintsNow();
+    }
+
+    private void BeginNetworkSelection(PlayerController player)
+    {
+      if (player == null || player.Owner == null)
+        return;
+
+      if (IsServerStarted)
+        _serverSelectionClientIds.Add(player.Owner.ClientId);
+      else if (IsClientStarted)
+        CmdBeginMonitoringPatientSelection();
+    }
+
+    private void EndNetworkSelection(PlayerController player)
+    {
+      if (player == null || player.Owner == null)
+        return;
+
+      if (IsServerStarted)
+        _serverSelectionClientIds.Remove(player.Owner.ClientId);
+      else if (IsClientStarted)
+        CmdEndMonitoringPatientSelection();
+    }
+
+    private void OnMonitoringPatientIdentifierChanged(string previous, string next, bool asServer)
+    {
+      if (!asServer)
+        ApplyMonitoringPatientIdentifier(next);
+    }
+
+    private void ApplyMonitoringPatientIdentifier(string identifier)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+      {
+        _pendingMonitoringPatientIdentifier = null;
+        ApplyMonitoringPatient(null);
+        return;
+      }
+
+      var patient = FindPatient(identifier);
+      if (patient == null)
+      {
+        _pendingMonitoringPatientIdentifier = identifier;
+        return;
+      }
+
+      _pendingMonitoringPatientIdentifier = null;
+      ApplyMonitoringPatient(patient);
+    }
+
+    private void TryResolvePendingMonitoringPatient()
+    {
+      if (!string.IsNullOrWhiteSpace(_pendingMonitoringPatientIdentifier))
+        ApplyMonitoringPatientIdentifier(_pendingMonitoringPatientIdentifier);
+    }
+
+    private static PatientController FindPatient(string identifier)
+    {
+      if (Registry.TryGetEntity(identifier, out var descriptor) &&
+          descriptor?.GameObject != null &&
+          descriptor.GameObject.TryGetComponent(out PatientController registeredPatient))
+        return registeredPatient;
+
+      return FindObjectsByType<PatientController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
+        .FirstOrDefault(patient => patient != null && string.Equals(patient.Identifier, identifier, StringComparison.Ordinal));
+    }
+
+    private static PlayerController FindPlayer(int clientId)
+    {
+      return FindObjectsByType<PlayerController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
+        .FirstOrDefault(player => player != null && player.Owner != null && player.Owner.ClientId == clientId);
+    }
+
+    private static PlayerController FindLocalOwnerPlayer()
+    {
+      return FindObjectsByType<PlayerController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
+        .FirstOrDefault(player => player != null && player.IsOwner);
+    }
+
+    private void ApplyMonitoringPatient(PatientController patient)
     {
       if (ReferenceEquals(_monitoringPatient, patient))
         return;
 
       var existingMonitor = patient != null ? patient.MonitoringPatientMonitor : null;
       if (existingMonitor != null && !ReferenceEquals(existingMonitor, this))
-        existingMonitor.SetMonitoringPatient(null);
+      {
+        if (IsServerStarted)
+          existingMonitor.SetMonitoringPatientOnServer(null);
+        else
+          existingMonitor.ApplyMonitoringPatient(null);
+      }
 
       var previousPatient = _monitoringPatient;
 
