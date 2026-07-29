@@ -1,5 +1,84 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1582032648431365702
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7820200844335860656}
+  - component: {fileID: 4099956238603553349}
+  - component: {fileID: 1599706029501451718}
+  m_Layer: 0
+  m_Name: TPieceLinePort
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7820200844335860656
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1582032648431365702}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.22047421, y: -0.6603774, z: -0.25270164, w: 0.671889}
+  m_LocalPosition: {x: -0.008, y: 0.001, z: 0.497}
+  m_LocalScale: {x: 5, y: 5, z: 5}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4919284887355661886}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &4099956238603553349
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1582032648431365702}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.002
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1599706029501451718
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1582032648431365702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
+  connectionService: {fileID: 0}
+  _identifier: connect_tpiece_and_oxyflow
+  _autoGenerateIdentifier: 0
+  _displayIcon: {fileID: 0}
+  _interactConfigs:
+  - _identifier: intravenous_line_connect_mode_start
+    _enabled: 1
+  - _identifier: intravenous_line_connect_here
+    _enabled: 1
+  - _identifier: intravenous_line_disconnect
+    _enabled: 1
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
 --- !u!1 &2407634092771371427
 GameObject:
   m_ObjectHideFlags: 0
@@ -556,6 +635,159 @@ MonoBehaviour:
     Rotation: {x: 0, y: 0, z: 0, w: 0}
     Scale: {x: 0, y: 0, z: 0}
     IsValid: 0
+--- !u!1 &7900168916465225989
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2881257266150291502}
+  - component: {fileID: 9064149477906735673}
+  - component: {fileID: 8076526843573955949}
+  m_Layer: 0
+  m_Name: EtTubeTPieceInteractPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2881257266150291502
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7900168916465225989}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.65919226, y: 0.6128857, z: 0.33241495, w: -0.28166822}
+  m_LocalPosition: {x: -0.331, y: -0.014, z: 0.046}
+  m_LocalScale: {x: 3.333333, y: 3.333333, z: 3.333333}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6763674504739594240}
+  m_LocalEulerAnglesHint: {x: -2.07, y: -128.37, z: -95.171}
+--- !u!65 &9064149477906735673
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7900168916465225989}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.05, y: 0.05, z: 0.2}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &8076526843573955949
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7900168916465225989}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
+  _displayText: "T-Piece \uC5F0\uACB0"
+  _displayIcon: {fileID: 0}
+  _completionSignal: interact_tpiece
+  _enabled: 1
+  _consumeOnce: 1
+  _activateOnInteract:
+  - {fileID: 8803091818943228428}
+  _deactivateOnInteract: []
+--- !u!1 &8062058885430462183
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1636981057599855980}
+  - component: {fileID: 3216173183027842814}
+  - component: {fileID: 6325382686929469769}
+  m_Layer: 6
+  m_Name: 18g_left_port
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1636981057599855980
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8062058885430462183}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.01, y: -0.03, z: 0.471}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1292753068838552530}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &3216173183027842814
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8062058885430462183}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.005
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &6325382686929469769
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8062058885430462183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
+  connectionService: {fileID: 0}
+  _identifier: patient_a_cannula_left_port
+  _autoGenerateIdentifier: 0
+  _displayIcon: {fileID: 0}
+  _interactConfigs:
+  - _identifier: intravenous_line_connect_mode_start
+    _enabled: 1
+  - _identifier: intravenous_line_connect_here
+    _enabled: 1
+  - _identifier: intravenous_line_disconnect
+    _enabled: 1
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
 --- !u!1 &8082596318175774275
 GameObject:
   m_ObjectHideFlags: 0
@@ -728,7 +960,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 6141462866024127057, guid: 725da5030db72454897523ed24b78f5b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2881257266150291502}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 725da5030db72454897523ed24b78f5b, type: 3}
 --- !u!4 &6763674504739594240 stripped
@@ -1394,7 +1629,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 4624285548898848676, guid: dcee9fb4b31b241c7b77b0892829d4cb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1636981057599855980}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: dcee9fb4b31b241c7b77b0892829d4cb, type: 3}
 --- !u!4 &1292753068838552530 stripped
@@ -1779,7 +2017,13 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4119068775169196016, guid: d4174b4e5c88443ff8db6f952e6ca386, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4984117549430283029}
-    m_AddedComponents: []
+    - targetCorrespondingSourceObject: {fileID: 4119068775169196016, guid: d4174b4e5c88443ff8db6f952e6ca386, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7820200844335860656}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 524614307319040962, guid: d4174b4e5c88443ff8db6f952e6ca386, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 483546825361859540}
   m_SourcePrefab: {fileID: 100100000, guid: d4174b4e5c88443ff8db6f952e6ca386, type: 3}
 --- !u!4 &4919284887355661886 stripped
 Transform:
@@ -1791,3 +2035,24 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 524614307319040962, guid: d4174b4e5c88443ff8db6f952e6ca386, type: 3}
   m_PrefabInstance: {fileID: 9037898377694863822}
   m_PrefabAsset: {fileID: 0}
+--- !u!135 &483546825361859540
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8803091818943228428}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.50022805
+  m_Center: {x: 0.000821151, y: 0.000042209238, z: -0.00003080075}

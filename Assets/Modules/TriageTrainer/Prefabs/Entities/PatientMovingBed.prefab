@@ -389,6 +389,8 @@ MonoBehaviour:
   _weight: 0
   _reposeAnchor: {fileID: 4813026280041569582}
   _enablePatientRepose: 1
+  _enablePositioningSnap: 1
+  _positioningSnapReleasePadding: 0.2
   _maximumPlayerParticipants: 2
   PatientAttachPoints:
   - {fileID: 762591555731961356}
@@ -626,7 +628,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
   connectionService: {fileID: 0}
-  _identifier: ps1_001
+  _identifier: ps1
   _autoGenerateIdentifier: 1
   _displayIcon: {fileID: 0}
   _interactConfigs:
@@ -637,6 +639,7 @@ MonoBehaviour:
   - _identifier: intravenous_line_disconnect
     _enabled: 1
   _connectedLineObjects: []
+  _allowMultipleConnections: 0
 --- !u!1001 &5624645098008020992
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -751,8 +754,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
   connectionService: {fileID: 0}
-  _identifier: ns1
-  _autoGenerateIdentifier: 1
+  _identifier: connect_cannula_and_ns1
+  _autoGenerateIdentifier: 0
   _displayIcon: {fileID: 0}
   _interactConfigs:
   - _identifier: intravenous_line_connect_mode_start
@@ -762,6 +765,7 @@ MonoBehaviour:
   - _identifier: intravenous_line_disconnect
     _enabled: 1
   _connectedLineObjects: []
+  _allowMultipleConnections: 0
 --- !u!4 &5297492751155490795 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 24c0ebb0fa3a841c2acca70cc66081c7, type: 3}

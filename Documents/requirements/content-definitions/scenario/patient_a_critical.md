@@ -1793,7 +1793,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.apply_plaster_on_intu |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.apply_plaster_on_intu [부착형 적용/착용(Item Apply Signal), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.apply_plaster_on_intu [부착형 적용/착용(Item Apply Signal), spec §5.1~5.3]. **2026-07-29 완료, 그러나 검증 필요함.
 
 
 ---
@@ -1990,7 +1990,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.connect_wall_component_2 |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.connect_wall_component_2 [연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.connect_wall_component_2 [연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3]. **2026-07-29 완료.
 
 
 ---
@@ -2029,7 +2029,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.click_o2_line |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_o2_line [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_o2_line [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2026-07-29 완료.
 
 
 ---
@@ -2067,9 +2067,9 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.interact_tpiece |
 
 
-- [ ] `endotracheal_tube_A` 클릭 지점에 `ScenarioActionInteractable`을 배선하고 completion signal을 `interact_tpiece`로 설정한다.
+- [x] `endotracheal_tube_A` 클릭 지점에 `ScenarioActionInteractable`을 배선하고 completion signal을 `interact_tpiece`로 설정한다. **2026-07-29 완료
 
-- [ ] `interact_tpiece` 완료 시 `TPieceSet_A` 시각 오브젝트가 활성화되어야 한다(장착 완료 표현).
+- [x] `interact_tpiece` 완료 시 `TPieceSet_A` 시각 오브젝트가 활성화되어야 한다(장착 완료 표현). **2026-07-29 완료
 
 
 ---
@@ -2107,10 +2107,10 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.connect_tpiece_and_oxyflow |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.connect_tpiece_and_oxyflow [연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.connect_tpiece_and_oxyflow [연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3]. **2026-07-29 완료
 
 - [ ] `connect_tpiece_and_oxyflow`는 T-piece 측 연결점과 벽 유량계 측 연결점의 실제 연결 완료로 발신되어야 한다.
-
+-> 검증 필요
 
 ---
 
@@ -2161,7 +2161,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.interact_oxyflow_wall |
 
 
-- [ ] 벽 유량계 `WallAttachedOxyflowmeter`의 Attach Completion Signal을 `interact_oxyflow_wall`로 설정한다.
+- [x] 벽 유량계 `WallAttachedOxyflowmeter`의 Attach Completion Signal을 `interact_oxyflow_wall`로 설정한다. **2026-07-29 완료.
 
 
 ---
@@ -2287,7 +2287,7 @@ SPAWN_A
 
 - [x] a-1 아이템 식별자 정합(구 md→JSON 정본): click_glove→click_gloves (interaction-signal-integration-spec §2 참조).
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_gloves, sig.click_gauze, sig.click_plaster [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_gloves, sig.click_gauze, sig.click_plaster [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2026-07-29 완료
 
 
 ---
@@ -2326,7 +2326,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.wear_glove |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.wear_glove [부착형 적용/착용(Item Apply Signal), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.wear_glove [부착형 적용/착용(Item Apply Signal), spec §5.1~5.3]. **2026-07-29 확인 완료
 
 
 ---
@@ -2366,7 +2366,7 @@ SPAWN_A
 
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.apply_gauze [부착형 적용/착용(Item Apply Signal), spec §5.1~5.3].
-
+-> 검증 필요
 
 ---
 
@@ -2418,7 +2418,7 @@ SPAWN_A
 
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.apply_plaster_on_gauze [부착형 적용/착용(Item Apply Signal), spec §5.1~5.3].
-
+-> 검증 필요
 
 ---
 
@@ -2537,14 +2537,15 @@ SPAWN_A
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.click_18g |
+| Registry | Contains | RuntimeState | sig.click_cannula_18g |
 | Registry | Contains | RuntimeState | sig.click_normal_saline_1000ml |
 | Registry | Contains | RuntimeState | sig.click_plasma_solution_1000ml |
 
 
 - [x] a-1 아이템 식별자 정합(구 md→JSON 정본): click_ns1→click_normal_saline_1000ml, click_ps1→click_plasma_solution_1000ml (interaction-signal-integration-spec §2 참조).
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_18g, sig.click_normal_saline_1000ml, sig.click_plasma_solution_1000ml [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_cannula_18g, sig.click_normal_saline_1000ml, sig.click_plasma_solution_1000ml [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2026-07-29 확인 완료
+
 - [x] 개수 정책 확정(2026-07-28): 준비 단계에서는 18G 1개와 수액 2종을 확인한다. 첫 18G는 좌측 삽입 시 소비하고, 두 번째 18G는 `N011_3` 이후 다시 획득해 우측 삽입 시 소비한다. 따라서 `click_18g` 단일 신호를 2회 획득 판정으로 확장하지 않는다.
 
 ---
@@ -2649,7 +2650,8 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.connect_cannula_and_ns1 |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.connect_cannula_and_ns1 [연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.connect_cannula_and_ns1 [연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3]. **2026-07-29 완료.
+PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port 오브젝트 추가 및 Intravenous Line Connection Point 컴포넌트 추가 및 Shpere Collider로 연결될 위치에 고정 완료. 환자 베드에 자식 오브젝트로 추가된 ns1의 identifier를 connect_cannula_and_ns1으로, 환자 좌측 팔에 삽입된 18g_left_port의 identifier를 patient_a_cannula_left_port로 입력
 
 
 ---
