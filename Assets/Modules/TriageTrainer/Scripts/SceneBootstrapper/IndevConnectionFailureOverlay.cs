@@ -9,6 +9,7 @@ using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.FishNetSupports;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
+using RegistryStore = MultiplayerInfrastructure.Registry.Registry;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.SceneManagement;
@@ -220,7 +221,7 @@ namespace TriageTrainer.SceneBootstrapper
       if (fishNetSupport != null)
       {
         fishNetSupport.StopClient();
-        if (Registry.Registry.Get<bool>(RegistryGlobalKeys.IsOpeningServer))
+        if (RegistryStore.Get<bool>(RegistryType.RuntimeState, RegistryGlobalKeys.IsOpeningServer))
           fishNetSupport.StopServer();
       }
 
