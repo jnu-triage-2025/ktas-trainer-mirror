@@ -117,6 +117,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     protected virtual void OnEnable()
     {
+      // DualPatientMonitorController creates missing display children before calling base.OnEnable.
+      // Calculate the auto-managed collider after that structure is complete.
+      EnsureInteractionCollider();
       uiDocument = GetComponent<UIDocument>();
       ResolvePatientStateIfNeeded();
       _currentParameters = ResolveConfiguredParameters();
@@ -479,6 +482,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     // 인스펙터에서 값 변경 시 실시간 반영을 위해
     protected virtual void OnValidate()
     {
+      EnsureInteractionCollider();
       EnsureInteractEntry(InteractIdSelectPatient, IsPatientTrackingMethodEnabled(PatientTrackingMethod.Interactable));
       RebuildInteractEntryMap();
 

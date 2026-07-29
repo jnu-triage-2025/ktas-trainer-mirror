@@ -61,6 +61,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     protected virtual void Awake()
     {
+      EnsureInteractionCollider();
       BuildInteracts();
     }
 
