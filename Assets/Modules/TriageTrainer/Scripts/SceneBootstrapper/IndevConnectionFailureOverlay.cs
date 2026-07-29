@@ -38,7 +38,7 @@ namespace TriageTrainer.SceneBootstrapper
     private bool _connectionAttempted;
     private bool _connected;
     private string _latestError;
-    private string _endpoint = "127.0.0.1:7777";
+    private string _endpoint = "127.0.0.1:37891";
     private Coroutine _subscriptionRoutine;
     private bool _worldCleanupStarted;
     private bool _worldCleanupCompleted;

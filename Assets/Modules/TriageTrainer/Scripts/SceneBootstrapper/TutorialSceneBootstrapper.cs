@@ -28,7 +28,7 @@ namespace TriageTrainer.SceneBootstrapper
 
     [Header("Session")]
     [SerializeField] private string address = "127.0.0.1";
-    [SerializeField] private ushort port = 7777;
+    [SerializeField] private ushort port = 37891;
     [SerializeField] private string sessionName = "TutorialSession";
 
     [Header("Additive Scenes")]
