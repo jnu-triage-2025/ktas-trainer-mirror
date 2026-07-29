@@ -37,7 +37,13 @@ namespace MultiplayerInfrastructure.Command
       RegisterCommand(new CommandDefinition_Permission(_chatManager));
       RegisterCommand(new CommandDefinition_Log(_chatManager));
       RegisterCommand(new CommandDefinition_ConnGate(_chatManager));
-      // RegisterCommand(new CommandDefinition_Kick(_chatManager));
+      var serverCommand = new CommandDefinition_Server(_chatManager);
+      RegisterCommand(serverCommand);
+      RegisterCommand(new CommandDefinition_ServerAlias(serverCommand, "stop", "stop"));
+      RegisterCommand(new CommandDefinition_ServerAlias(serverCommand, "kick", "kick"));
+      RegisterCommand(new CommandDefinition_ServerAlias(serverCommand, "ban", "ban"));
+      RegisterCommand(new CommandDefinition_ServerAlias(serverCommand, "unban", "unban"));
+      RegisterCommand(new CommandDefinition_ServerAlias(serverCommand, "banlist", "banlist"));
     }
 
     private void RegisterCommand(IChatCommandModel command)
