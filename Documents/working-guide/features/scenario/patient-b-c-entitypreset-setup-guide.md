@@ -13,18 +13,18 @@ flags: []
 `patient_b_c_ct` 시나리오의 `patient_b` / `patient_c` 를 **환자 A와 동일하게 침대에 누운 결합 상태로 스폰**하기 위한 절차.
 
 - 매핑(확정): `patient_b` → **PatientTypeBMale**, `patient_c` → **PatientTypeBFemale**.
-- `dummy_b` 는 별도 콘텐츠로, 본 가이드 범위 밖이다(§5 참고).
+- `dummy_b` 는 별도 콘텐츠지만 `patient_b_c_ct`의 `SPAWN_DUMMY_B`가 직접 요구하므로
+  닫힌 플레이 승인 범위에 포함한다(§5 참고 및 [닫힌 플레이 감사](patient-b-c-closed-scenario-audit.md)).
 - 결합 방식은 환자 A와 동일: 환자 프리셋이 침대 프리셋을 `unwrapOnSpawn + linkChildToParent` 로 함께 스폰.
   자세한 원리는 [`patient-bed-combined-preset-guide.md`](./patient-bed-combined-preset-guide.md).
 
-> **중요(현재 상태)**: SO 의 프리셋 항목(`patient_b`/`bed_b`/`patient_c`/`bed_c`)은 이미 추가되어 있다.
-> 그러나 `PatientTypeBMale.prefab` / `PatientTypeBFemale.prefab` 는 현재 **`NetworkObject` 와 `PatientController` 가 없는
-> 불완전한 프리팹**이다(상태 데이터 컴포넌트 `PatientTypeBMaleState/FemaleState` 만 있음). 따라서 아래 §1 의
-> 프리팹 완성 작업을 끝내야 정상 스폰된다(완성 전 스폰하면 `ObjectId 65535` 오류가 난다).
+> **현재 상태(2026-07-29 감사)**: SO의 `patient_b`/`bed_b`/`patient_c`/`bed_c`와
+> 두 B/C 프리팹의 NetworkObject, PatientController, CapsuleCollider, FishNet spawnable
+> 등록은 확인되었다. 아래 절차는 신규 변경 후 회귀 검증용으로 유지한다.
 
 ---
 
-## 1단계 — 환자 B 프리팹 완성 (에디터, 필수)
+## 1단계 — 환자 B/C 프리팹 회귀 검증 (에디터, 필수)
 
 `PatientTypeA.prefab` 를 기준 템플릿으로 삼아, Male/Female 프리팹에 동일한 핵심 컴포넌트를 추가한다.
 
@@ -32,10 +32,10 @@ flags: []
 - `Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeBMale.prefab`
 - `Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeBFemale.prefab`
 
-각 프리팹의 **루트 GameObject** 에 다음을 추가/구성한다(=`PatientTypeA` 와 동일 구조).
+각 프리팹의 **루트 GameObject** 에 다음 구성이 존재하는지 확인한다(=`PatientTypeA` 와 동일 구조).
 
-1. **`NetworkObject`** (FishNet) 컴포넌트 추가. `Is Spawnable` 체크 확인.
-2. **`PatientController`** (`TriageTrainer.Entity.PatientController`) 컴포넌트 추가.
+1. **`NetworkObject`** (FishNet) 컴포넌트와 `Is Spawnable` 확인.
+2. **`PatientController`** (`TriageTrainer.Entity.PatientController`) 컴포넌트와 참조 확인.
    - `PatientTypeA` 의 PatientController 인스펙터 값을 참고해 동일 항목을 채운다.
    - Identity `_identifier`: 기본값은 무관(스폰 시 프리셋이 `patient_b`/`patient_c` 로 주입·복제함). 헷갈리지 않게 `patient_b`/`patient_c` 로 적어둬도 된다.
    - Display(lift/carry/monitor_select 텍스트·아이콘), Patient `_weight`, Collider(standing/lying 캡슐), Animation `_runtimeAnimatorController`(`PatientCharacterModel.controller`), Visual 매핑 등.
@@ -47,9 +47,9 @@ flags: []
 > 팁: 가장 안전한 방법은 `PatientTypeA.prefab` 를 열어 루트의 `NetworkObject`/`PatientController`/`CapsuleCollider`
 > 컴포넌트를 "Copy Component" → B 프리팹 루트에 "Paste Component As New" 한 뒤, 모델/상태 참조만 B 에 맞게 교체하는 것이다.
 
-## 2단계 — FishNet Spawnable Prefabs 등록 (필수)
+## 2단계 — FishNet Spawnable Prefabs 회귀 검증 (필수)
 
-새로 `NetworkObject` 를 갖게 된 B 프리팹은 FishNet 프리팹 컬렉션에 등록되어야 한다.
+두 프리팹의 GUID가 FishNet 프리팹 컬렉션에 등록되어 있어야 한다.
 
 1. 플레이모드 종료.
 2. Unity 메뉴 **Fish-Networking > Utility > Reserialize NetworkObjects**(또는 **Refresh Default Prefabs**) 실행.
@@ -85,17 +85,19 @@ flags: []
    환자가 침대에 누운 상태(누운 애니메이션/자세)로 나오는지 확인.
 4. 호스트뿐 아니라 **원격 클라이언트**에서도 동일하게 결합 상태로 보이는지 확인(식별자 SyncVar 복제 동작 검증).
 
-## 5단계 — dummy_b (별도)
+## 5단계 — dummy_b (시나리오 필수)
 
 `SPAWN_DUMMY_B` 노드는 `dummy_b` 프리셋을 스폰한다. 더미 B 는 Male/Female 환자와 다른 별도 오브젝트이므로,
-용도에 맞는 프리팹을 정해 별도 EntityPreset(`dummy_b`)으로 등록해야 한다(본 가이드 범위 밖).
+용도에 맞는 프리팹을 정해 별도 EntityPreset(`dummy_b`)으로 등록해야 한다. 현재 저장소
+감사에서는 해당 preset과 전용 프리팹을 확인하지 못했으므로 닫힌 플레이의 미완료 항목이다.
 침대 결합이 필요하면 `patient_b`/`patient_c` 와 동일한 패턴(`unwrapOnSpawn + linkChildToParent`)을 적용한다.
 
 ## 체크리스트
 
-- [ ] PatientTypeBMale/Female 루트에 `NetworkObject`(IsSpawnable) + `PatientController` + `CapsuleCollider` 추가.
-- [ ] 상태 컴포넌트(`PatientTypeBMaleState`/`FemaleState`)의 누운 자세/콜라이더 오프셋 확인.
-- [ ] Reserialize 후 `DefaultPrefabObjects.asset` 에 두 B 프리팹 guid 포함 확인.
-- [ ] SO 에 `patient_b`/`bed_b`/`patient_c`/`bed_c` 등록 + 각 환자에 unwrap+link 침대 참조.
+- [x] PatientTypeBMale/Female 루트에 `NetworkObject`(IsSpawnable) + `PatientController` + `CapsuleCollider` 존재.
+- [ ] 상태 컴포넌트(`PatientTypeBMaleState`/`FemaleState`)의 누운 자세/콜라이더 오프셋 플레이 검증.
+- [x] `DefaultPrefabObjects.asset` 에 두 B/C 프리팹 GUID 포함.
+- [x] SO 에 `patient_b`/`bed_b`/`patient_c`/`bed_c` 등록 + 각 환자에 unwrap+link 침대 참조.
 - [ ] "Validate Presets (Editor)" 경고 없음.
 - [ ] 디버거로 결합 스폰 확인(호스트 + 원격 클라).
+- [ ] `dummy_b` 프리팹/EntityPreset 등록 및 분류 클릭 producer 검증.
