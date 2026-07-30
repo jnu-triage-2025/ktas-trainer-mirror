@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using FishNet.Object;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.LineConnection;
 using TriageTrainer.ItemDefinitions;
 using UnityEngine;
@@ -36,13 +37,14 @@ namespace TriageTrainer.Entity.IntravenousLine
       }
     }
 
-    private sealed class StartConnectionInteract : IInteract, IInteractorConditional
+    private sealed class StartConnectionInteract : IInteract, IInteractorConditional, IInteractDisplayIcons
     {
       private readonly IntravenousLineConnectionPoint _owner;
       public StartConnectionInteract(IntravenousLineConnectionPoint owner) { _owner = owner; }
 
       public string DisplayText => "수액 줄 연결 시작";
       public Sprite DisplayIcon => _owner._displayIcon;
+      public IReadOnlyList<Sprite> DisplayIcons => new[] { Icon.ClearRightBottom, IntravenousSetIcon };
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;
 
@@ -78,6 +80,12 @@ namespace TriageTrainer.Entity.IntravenousLine
         controller.BeginConnectionMode(player, _owner);
       }
     }
+
+    private const string IntravenousSetIconPath = "Textures/Items/intravenous_set";
+    private static Sprite _intravenousSetIcon;
+    private static Sprite IntravenousSetIcon => _intravenousSetIcon != null
+      ? _intravenousSetIcon
+      : _intravenousSetIcon = Resources.Load<Sprite>(IntravenousSetIconPath);
 
     private sealed class ConnectHereInteract : IInteract, IInteractorConditional
     {

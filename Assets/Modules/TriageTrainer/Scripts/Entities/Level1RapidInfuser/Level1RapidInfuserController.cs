@@ -8,6 +8,7 @@ using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.IntravenousLine;
 using TriageTrainer.ItemDefinitions;
 using MultiplayerInfrastructure.Logging;
@@ -55,10 +56,11 @@ namespace TriageTrainer.Entity
       PlasmaSolution
     }
 
-    private sealed class AddFluidInteract : IInteract, IInteractorConditional
+    private sealed class AddFluidInteract : IInteract, IInteractorConditional, IInteractDisplayIcons
     {
       private readonly Level1RapidInfuserController _owner;
       private readonly FluidKind _kind;
+      private Sprite _heldItemIcon;
 
       public AddFluidInteract(Level1RapidInfuserController owner, FluidKind kind)
       {
@@ -70,6 +72,7 @@ namespace TriageTrainer.Entity
         ? "Normal Saline 추가"
         : "Plasma Solution 추가";
       public Sprite DisplayIcon => null;
+      public IReadOnlyList<Sprite> DisplayIcons => new[] { Icon.ClearRightBottom, _heldItemIcon };
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;
 
@@ -77,6 +80,7 @@ namespace TriageTrainer.Entity
       {
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
         string id = player?.HandlingItem?.CurrentIdentifier;
+        _heldItemIcon = player?.HandlingItem?.CurrentItemIconTexture;
         return !_owner.HasFluid(_kind) && IsFluidFamily(id, _kind);
       }
 

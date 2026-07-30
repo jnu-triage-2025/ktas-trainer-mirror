@@ -147,6 +147,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "T-piece \uC5F0\uACB0 \uD574\uC81C"
   _displayIcon: {fileID: 0}
+  _displayIcons:
+  - {fileID: 21300000, guid: f8ff01aa8ad3d4422a18da03d0df62f9, type: 3}
+  - {fileID: 21300000, guid: 2fde9781086d2438bbae1fa505d6ebc9, type: 3}
   _completionSignal: remove_tpiece
   _enabled: 1
   _consumeOnce: 1
@@ -221,6 +224,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "\uC758\uBCF5 \uC81C\uAC70"
   _displayIcon: {fileID: 0}
+  _displayIcons:
+  - {fileID: 21300000, guid: f8ff01aa8ad3d4422a18da03d0df62f9, type: 3}
+  - {fileID: 21300000, guid: 4758627ce08de40c291256855083d71f, type: 3}
   _completionSignal: remove_patient_clothing
   _enabled: 1
   _consumeOnce: 1
@@ -932,6 +938,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "\uC2A4\uD0C0\uC77C\uB81B \uC81C\uAC70"
   _displayIcon: {fileID: 0}
+  _displayIcons:
+  - {fileID: 21300000, guid: f8ff01aa8ad3d4422a18da03d0df62f9, type: 3}
+  - {fileID: 21300000, guid: 283b03c81bf804e01be34092f397c7f5, type: 3}
   _completionSignal: remove_intu_stylet
   _enabled: 1
   _consumeOnce: 1

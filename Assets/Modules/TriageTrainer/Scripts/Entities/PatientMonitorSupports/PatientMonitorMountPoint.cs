@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.UI;
 using TriageTrainer.ItemDefinitions;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -17,12 +19,13 @@ namespace TriageTrainer.Entity.PatientMonitor
   [RequireComponent(typeof(Collider))]
   public sealed class PatientMonitorMountPoint : StaticObjectDisplayment
   {
-    private sealed class InstallInteract : IInteract, IInteractorConditional, ILocalInteractionFocus
+    private sealed class InstallInteract : IInteract, IInteractorConditional, ILocalInteractionFocus, IInteractDisplayIcons
     {
       private readonly PatientMonitorMountPoint _owner;
       public InstallInteract(PatientMonitorMountPoint owner) => _owner = owner;
       public string DisplayText => "환자 모니터 부착";
       public Sprite DisplayIcon => _owner._interactIcon;
+      public IReadOnlyList<Sprite> DisplayIcons => _owner.InstallDisplayIcons;
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;
       public bool CanInteract(Transform interactor) => _owner.CanInstall(interactor);
@@ -53,6 +56,8 @@ namespace TriageTrainer.Entity.PatientMonitor
     private readonly RetrieveInteract _retrieveInteract;
     private GameObject _preview;
     private Material _previewMaterial;
+    private Sprite _installItemIcon;
+    private IReadOnlyList<Sprite> InstallDisplayIcons => new[] { Icon.ClearRightBottom, _installItemIcon };
 
     protected override string EntityIdPrefix => "patient-monitor-mount";
 
@@ -97,6 +102,7 @@ namespace TriageTrainer.Entity.PatientMonitor
     private bool CanInstall(Transform interactor)
     {
       var player = ResolvePlayer(interactor);
+      _installItemIcon = player?.HandlingItem?.CurrentItemIconTexture;
       return !IsVisible && player != null &&
              string.Equals(player.HandlingItem?.CurrentIdentifier, PatientMonitorItem.Identifier, StringComparison.Ordinal) &&
              player.CountItemInInventory(PatientMonitorItem.Identifier) > 0;

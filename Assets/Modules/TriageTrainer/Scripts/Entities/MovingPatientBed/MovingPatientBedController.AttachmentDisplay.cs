@@ -5,6 +5,7 @@ using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -17,10 +18,11 @@ namespace TriageTrainer.Entity
       PlasmaSolution
     }
 
-    private sealed class HangIntravenousFluidInteract : IInteract, IInteractorConditional
+    private sealed class HangIntravenousFluidInteract : IInteract, IInteractorConditional, IInteractDisplayIcons
     {
       private readonly MovingPatientBedController _owner;
       private readonly IntravenousFluidKind _kind;
+      private Sprite _heldItemIcon;
 
       public HangIntravenousFluidInteract(MovingPatientBedController owner, IntravenousFluidKind kind)
       {
@@ -32,12 +34,14 @@ namespace TriageTrainer.Entity
         ? "N/S 수액 걸기"
         : "P/S 수액 걸기";
       public Sprite DisplayIcon => null;
+      public IReadOnlyList<Sprite> DisplayIcons => new[] { Icon.ClearRightBottom, _heldItemIcon };
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;
 
       public bool CanInteract(Transform interactor)
       {
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+        _heldItemIcon = player?.HandlingItem?.CurrentItemIconTexture;
         return !_owner.IsIntravenousFluidInstalled(_kind) &&
                _owner.IsIntravenousFluidItem(player?.HandlingItem?.CurrentIdentifier, _kind);
       }

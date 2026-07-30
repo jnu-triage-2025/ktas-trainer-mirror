@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Scenario;
@@ -11,11 +12,12 @@ namespace TriageTrainer.Scenario
   /// </summary>
   [DisallowMultipleComponent]
   [RequireComponent(typeof(Collider))]
-  public sealed class ScenarioActionInteractable : MonoBehaviour, IInteractable, IInteract, IInteractorConditional, IInteractToggleable
+  public sealed class ScenarioActionInteractable : MonoBehaviour, IInteractable, IInteract, IInteractorConditional, IInteractToggleable, IInteractDisplayIcons
   {
     [Header("Scenario Action")]
     [SerializeField] private string _displayText = "상호작용";
     [SerializeField] private Sprite _displayIcon;
+    [SerializeField] private List<Sprite> _displayIcons = new();
     [SerializeField] private string _completionSignal;
     [SerializeField] private bool _enabled = true;
     [SerializeField] private bool _consumeOnce = true;
@@ -31,6 +33,7 @@ namespace TriageTrainer.Scenario
     public IInteract[] Interacts => new IInteract[] { this };
     public string DisplayText => _displayText;
     public Sprite DisplayIcon => _displayIcon;
+    public IReadOnlyList<Sprite> DisplayIcons => _displayIcons;
     public bool AllowDisplayIconFallback => true;
     public Color DisplayColor => Color.white;
 

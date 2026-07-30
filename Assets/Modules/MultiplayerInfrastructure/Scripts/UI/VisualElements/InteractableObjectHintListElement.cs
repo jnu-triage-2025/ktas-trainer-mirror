@@ -126,7 +126,12 @@ namespace MultiplayerInfrastructure.UI
 
       _iconContainer = new VisualElement();
       _iconContainer.AddToClassList("interactable-icon-container");
-      _iconContainer.style.flexDirection = FlexDirection.Row;
+      // 여러 아이콘은 하나의 정사각형 슬롯 안에서 레이어로 합성한다.
+      // 목록의 첫 아이콘(Clear/Fail 오버레이)이 항상 가장 위에 표시된다.
+      _iconContainer.style.width = IconSlotSize;
+      _iconContainer.style.height = IconSlotSize;
+      _iconContainer.style.minWidth = IconSlotSize;
+      _iconContainer.style.minHeight = IconSlotSize;
       _iconContainer.style.alignItems = Align.Center;
       _iconContainer.style.marginRight = 6;
       contentWrapper.Add(_iconContainer);
@@ -225,6 +230,9 @@ namespace MultiplayerInfrastructure.UI
         holder.style.height = IconSlotSize;
         holder.style.minWidth = IconSlotSize;
         holder.style.minHeight = IconSlotSize;
+        holder.style.position = Position.Absolute;
+        holder.style.left = 0;
+        holder.style.top = 0;
         holder.style.borderTopLeftRadius = 5;
         holder.style.borderTopRightRadius = 5;
         holder.style.borderBottomLeftRadius = 5;
@@ -235,9 +243,10 @@ namespace MultiplayerInfrastructure.UI
         holder.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Center);
         holder.style.backgroundRepeat = new StyleBackgroundRepeat(StyleKeyword.None);
         holder.style.opacity = 0.95f;
-        if (_iconHolders.Count > 0) holder.style.marginLeft = 2;
         _iconHolders.Add(holder);
-        _iconContainer.Add(holder);
+        // UI Toolkit은 나중 형제일수록 위에 그린다. 새 레이어는 앞에 삽입하여
+        // DisplayIcons의 첫 항목(Clear/Fail)을 마지막 자식, 즉 최상단으로 유지한다.
+        _iconContainer.Insert(0, holder);
       }
 
       return _iconHolders[index];

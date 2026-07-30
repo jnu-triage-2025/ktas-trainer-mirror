@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.UI;
 using TriageTrainer.Scenario;
 using UnityEngine;
 
@@ -52,8 +54,10 @@ namespace TriageTrainer.Entity
     /// 서버 권위 프로토콜(ServerShared)에서는 모든 클라이언트에서 동일하게 반영됩니다.
     /// </summary>
     public bool IsAttached { get; private set; }
+    private Sprite _heldItemIcon;
 
     protected override string EntityIdPrefix => "wall_suction";
+    public override IReadOnlyList<Sprite> DisplayIcons => new[] { Icon.ClearRightBottom, _heldItemIcon };
 
     public override string DisplayText
     {
@@ -90,6 +94,7 @@ namespace TriageTrainer.Entity
       if (player == null)
         return false;
 
+      _heldItemIcon = player.HandlingItem?.CurrentItemIconTexture;
       return IsHandlingWallSuction(player);
     }
 
