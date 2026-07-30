@@ -236,9 +236,7 @@ namespace MultiplayerInfrastructure.UI
     private void ShowPanel()
     {
       EnsurePanel();
-      SetDocumentRootPickingEnabled(_uiDocument, true);
-      if (_uiDocument?.rootVisualElement != null)
-        _uiDocument.rootVisualElement.style.display = DisplayStyle.Flex;
+      SetDocumentVisible(_uiDocument, true);
       _chatPanel?.SetOpen(true);
       _chatPanel?.FocusInput();
       _chatPanel?.ClearToasts();
@@ -249,9 +247,7 @@ namespace MultiplayerInfrastructure.UI
       _completionService?.ResetSession();
       _chatPanel?.SetOpen(false);
       _chatPanel?.ClearInput();
-      SetDocumentRootPickingEnabled(_uiDocument, false);
-      if (_uiDocument?.rootVisualElement != null)
-        _uiDocument.rootVisualElement.style.display = DisplayStyle.None;
+      SetDocumentVisible(_uiDocument, false);
     }
 
     private void HideImmediately()
@@ -261,9 +257,7 @@ namespace MultiplayerInfrastructure.UI
       _chatPanel?.SetOpen(false);
       _chatPanel?.ClearInput();
       _chatPanel?.ClearToasts();
-      SetDocumentRootPickingEnabled(_uiDocument, false);
-      if (_uiDocument?.rootVisualElement != null)
-        _uiDocument.rootVisualElement.style.display = DisplayStyle.None;
+      SetDocumentVisible(_uiDocument, false);
     }
 
     private void EnsurePanel()

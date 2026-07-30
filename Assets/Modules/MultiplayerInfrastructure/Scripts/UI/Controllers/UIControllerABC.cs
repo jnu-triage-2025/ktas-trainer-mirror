@@ -78,6 +78,20 @@ namespace MultiplayerInfrastructure.UI
       SetSubtreePickingMode(docRoot, enabled ? PickingMode.Position : PickingMode.Ignore);
     }
 
+    /// <summary>
+    /// UIDocument의 화면 표시와 전체 하위 트리 픽킹 상태를 한 번에 변경합니다.
+    /// 모달 UI는 열 때 true, 닫을 때 false를 호출해야 합니다.
+    /// </summary>
+    protected static void SetDocumentVisible(UIDocument document, bool visible)
+    {
+      var docRoot = document != null ? document.rootVisualElement : null;
+      if (docRoot == null)
+        return;
+
+      docRoot.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+      SetSubtreePickingMode(docRoot, visible ? PickingMode.Position : PickingMode.Ignore);
+    }
+
     private static void SetSubtreePickingMode(VisualElement root, PickingMode mode)
     {
       if (root == null)
