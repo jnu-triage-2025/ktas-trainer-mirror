@@ -53,6 +53,11 @@ namespace MultiplayerInfrastructure.UI
       // - 표시할 때: Position으로 복구하여 버튼/슬롯 등 내부 인터랙션을 활성화한다.
       //   (라벨/아이콘 등 비인터랙션 요소가 Position이 되어도 클릭 동작에는 영향이 없다.)
       SetSubtreePickingMode(docRoot, visible ? PickingMode.Position : PickingMode.Ignore);
+
+      Debug.Log(
+        $"[UIInputDiagnostic] UIDocument='{document.name}' visible={visible} " +
+        $"rootPickingMode={docRoot.pickingMode} rootDisplay={docRoot.resolvedStyle.display}",
+        document);
     }
 
     /// <summary>
@@ -60,6 +65,9 @@ namespace MultiplayerInfrastructure.UI
     /// 닫힌 채팅처럼 비대화형 알림은 계속 표시해야 하지만, 높은 sortingOrder의
     /// 전체 화면 문서 루트가 아래 UI의 포인터 이벤트를 막아서는 안 되는 경우에 사용한다.
     /// </summary>
+    // 새 UI 컨트롤러는 표시 상태와 picking 상태를 반드시 함께 관리해야 한다.
+    // 닫힌 UI를 display=None만으로 숨기거나 루트만 Ignore하면, 자식 VisualElement가
+    // 다른 UI의 클릭을 가로챌 수 있으므로 이 헬퍼를 사용해 전체 서브트리를 전환한다.
     protected static void SetDocumentRootPickingEnabled(UIDocument document, bool enabled)
     {
       var docRoot = document != null ? document.rootVisualElement : null;

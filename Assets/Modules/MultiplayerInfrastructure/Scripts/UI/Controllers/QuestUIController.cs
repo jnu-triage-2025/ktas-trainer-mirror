@@ -165,6 +165,9 @@ namespace MultiplayerInfrastructure.UI
     private void ShowPanel()
     {
       EnsurePanel();
+      SetDocumentRootPickingEnabled(_uiDocument, true);
+      if (_uiDocument?.rootVisualElement != null)
+        _uiDocument.rootVisualElement.style.display = DisplayStyle.Flex;
       _questPanel?.SetOpen(true);
     }
 
@@ -172,12 +175,18 @@ namespace MultiplayerInfrastructure.UI
     {
       if (_questPanel != null)
         _questPanel.SetOpen(false);
+      SetDocumentRootPickingEnabled(_uiDocument, false);
+      if (_uiDocument?.rootVisualElement != null)
+        _uiDocument.rootVisualElement.style.display = DisplayStyle.None;
     }
 
     private void HideImmediately()
     {
       EnsurePanel();
       _questPanel?.SetOpen(false);
+      SetDocumentRootPickingEnabled(_uiDocument, false);
+      if (_uiDocument?.rootVisualElement != null)
+        _uiDocument.rootVisualElement.style.display = DisplayStyle.None;
     }
 
   }

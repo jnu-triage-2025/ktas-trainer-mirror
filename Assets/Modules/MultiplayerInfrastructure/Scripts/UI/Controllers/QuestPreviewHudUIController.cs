@@ -57,6 +57,7 @@ namespace MultiplayerInfrastructure.UI
         _uiDocument = GetComponent<UIDocument>();
 
       var root = _uiDocument.rootVisualElement;
+      SetDocumentRootPickingEnabled(_uiDocument, false);
       EnsureStyleSheet(root);
 
       _hudElement = root.Q<QuestPreviewHudElement>(_rootName);

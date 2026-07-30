@@ -39,6 +39,11 @@ namespace TriageTrainer.Entity.PatientMonitor
       _generatedRoot.style.overflow = Overflow.Hidden;
       root.Add(_generatedRoot);
 
+      // 이 모니터는 월드 표시 전용이며 화면 UI 입력 표면이 아니다.
+      // 동적 UI를 추가할 때는 콘텐츠뿐 아니라 생성 컨테이너까지 전체 서브트리를
+      // 반드시 Ignore해야 한다. 자식만 Ignore하면 컨테이너가 UI 히트 대상이 된다.
+      SetGeneratedNonInteractive(_generatedRoot);
+
       _contentRoot = new VisualElement { name = "PatientMonitorContent" };
       _contentRoot.style.flexGrow = 1f;
       _contentRoot.style.overflow = Overflow.Hidden;

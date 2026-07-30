@@ -68,8 +68,10 @@ namespace MultiplayerInfrastructure.UI
       _uiDocument = GetComponent<UIDocument>();
       _uiDocument.sortingOrder = _sortingOrder;
       _root = _uiDocument.rootVisualElement;
+      // 비차단 HUD는 루트만 Ignore하면 자식 Label이 여전히 포인터를 가로챌 수 있다.
+      // 새 자식 VisualElement를 추가할 때도 반드시 전체 서브트리를 Ignore로 유지한다.
       if (_root != null)
-        _root.pickingMode = PickingMode.Ignore;
+        SetSubtreePickingMode(_root, PickingMode.Ignore);
     }
 
     protected override void OnDestroy()
@@ -109,6 +111,8 @@ namespace MultiplayerInfrastructure.UI
           Element = new EntityOverheadLabelElement(),
         };
         _root.Add(entry.Element);
+        // 오버헤드 라벨은 표시 전용이다. 다른 모달 UI의 클릭을 막지 않도록 생성 직후 전체를 Ignore한다.
+        SetSubtreePickingMode(entry.Element, PickingMode.Ignore);
         _entries[target] = entry;
       }
 
@@ -140,8 +144,18 @@ namespace MultiplayerInfrastructure.UI
       {
         _root = _uiDocument.rootVisualElement;
         if (_root != null)
-          _root.pickingMode = PickingMode.Ignore;
+          SetSubtreePickingMode(_root, PickingMode.Ignore);
       }
+    }
+
+    private static void SetSubtreePickingMode(VisualElement root, PickingMode mode)
+    {
+      if (root == null)
+        return;
+
+      root.pickingMode = mode;
+      for (int i = 0; i < root.childCount; i++)
+        SetSubtreePickingMode(root[i], mode);
     }
 
     // 인스펙터 지정 카메라를 우선 사용하고, 없으면 Camera.main 을 1회 조회해 캐시한다.

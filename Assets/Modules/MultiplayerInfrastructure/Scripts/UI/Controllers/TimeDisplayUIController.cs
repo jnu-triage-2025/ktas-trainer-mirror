@@ -61,6 +61,8 @@ namespace MultiplayerInfrastructure.UI
       if (root == null)
         return;
 
+      SetDocumentRootPickingEnabled(_uiDocument, false);
+
       // 코드 전용 구성: 요소를 C# 으로 생성해 부착한다.
       // (재바인딩 시 중복 부착을 막기 위해 기존 요소가 있으면 재사용한다.)
       _element = root.Q<TimeDisplayElement>(TimeDisplayElement.RootName);

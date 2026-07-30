@@ -213,6 +213,7 @@ namespace TriageTrainer.SceneBootstrapper
       _detail.text = safeReason;
       _logPath.text = $"자세한 내용은 세션 로그를 참조하세요.\n{GameLogService.CurrentLogFilePath ?? "로그 경로를 확인할 수 없습니다."}";
       _screen.RemoveFromClassList(HiddenClass);
+      SetPickingMode(_document.rootVisualElement, PickingMode.Position);
 
       if (gameObject.scene.IsValid() && gameObject.scene.isLoaded)
         SceneManager.SetActiveScene(gameObject.scene);
@@ -223,6 +224,19 @@ namespace TriageTrainer.SceneBootstrapper
       _failureVisible = false;
       if (_screen != null)
         _screen.AddToClassList(HiddenClass);
+
+      if (_document != null && _document.rootVisualElement != null)
+        SetPickingMode(_document.rootVisualElement, PickingMode.Ignore);
+    }
+
+    private static void SetPickingMode(VisualElement root, PickingMode mode)
+    {
+      if (root == null)
+        return;
+
+      root.pickingMode = mode;
+      for (int i = 0; i < root.childCount; i++)
+        SetPickingMode(root[i], mode);
     }
 
     private void BindDocument()
@@ -233,6 +247,9 @@ namespace TriageTrainer.SceneBootstrapper
       var root = _document != null ? _document.rootVisualElement : null;
       if (root == null)
         return;
+
+      if (!_failureVisible)
+        SetPickingMode(root, PickingMode.Ignore);
 
       _screen = root.Q<VisualElement>("failure-screen");
       _title = root.Q<Label>("failure-title");

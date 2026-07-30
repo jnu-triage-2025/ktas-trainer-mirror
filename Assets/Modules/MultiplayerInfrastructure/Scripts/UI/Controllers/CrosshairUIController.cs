@@ -50,6 +50,7 @@ namespace MultiplayerInfrastructure.UI
       }
 
       var root = _uiDocument.rootVisualElement;
+      SetDocumentRootPickingEnabled(_uiDocument, false);
       _crosshairElement = root.Q<CrosshairElement>("crosshair-root");
 
       if (_crosshairElement == null)

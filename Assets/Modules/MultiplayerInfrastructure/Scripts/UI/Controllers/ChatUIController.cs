@@ -237,6 +237,8 @@ namespace MultiplayerInfrastructure.UI
     {
       EnsurePanel();
       SetDocumentRootPickingEnabled(_uiDocument, true);
+      if (_uiDocument?.rootVisualElement != null)
+        _uiDocument.rootVisualElement.style.display = DisplayStyle.Flex;
       _chatPanel?.SetOpen(true);
       _chatPanel?.FocusInput();
       _chatPanel?.ClearToasts();
@@ -248,6 +250,8 @@ namespace MultiplayerInfrastructure.UI
       _chatPanel?.SetOpen(false);
       _chatPanel?.ClearInput();
       SetDocumentRootPickingEnabled(_uiDocument, false);
+      if (_uiDocument?.rootVisualElement != null)
+        _uiDocument.rootVisualElement.style.display = DisplayStyle.None;
     }
 
     private void HideImmediately()
@@ -258,6 +262,8 @@ namespace MultiplayerInfrastructure.UI
       _chatPanel?.ClearInput();
       _chatPanel?.ClearToasts();
       SetDocumentRootPickingEnabled(_uiDocument, false);
+      if (_uiDocument?.rootVisualElement != null)
+        _uiDocument.rootVisualElement.style.display = DisplayStyle.None;
     }
 
     private void EnsurePanel()

@@ -3,6 +3,9 @@ using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 using MultiplayerInfrastructure.UI;
 using Unity.VisualScripting;
+using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
+using UnityEngine.UIElements;
 
 namespace MultiplayerInfrastructure.Player
 {
@@ -35,6 +38,47 @@ namespace MultiplayerInfrastructure.Player
 
     public void Update_Input()
     {
+      bool legacyLeftClick = Input.GetMouseButtonDown(0);
+      bool newLeftClick = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
+      bool legacyEscape = Input.GetKeyDown(KeyCode.Escape);
+      bool newEscape = Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
+      if (legacyLeftClick || newLeftClick || legacyEscape || newEscape)
+      {
+        Debug.Log(
+          $"[UIInputDiagnostic] PlayerController input " +
+          $"legacyLeftClick={legacyLeftClick} newLeftClick={newLeftClick} " +
+          $"legacyEscape={legacyEscape} newEscape={newEscape} " +
+          $"isOwner={IsOwner} isClient={IsClientStarted} active={isActiveAndEnabled}",
+          this);
+
+        if (legacyLeftClick || newLeftClick)
+        {
+          var eventSystem = EventSystem.current;
+          var documents = FindObjectsByType<UIDocument>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+          string picked = "<none>";
+          foreach (var document in documents)
+          {
+            var panel = document != null ? document.rootVisualElement?.panel : null;
+            if (panel == null)
+              continue;
+
+            var element = panel.Pick(Input.mousePosition);
+            if (element != null)
+            {
+              picked = $"{document.name}:{element.name}({element.GetType().Name})";
+              break;
+            }
+          }
+
+          Debug.Log(
+            $"[UIInputDiagnostic] pointer eventSystem={(eventSystem == null ? "<null>" : eventSystem.name)} " +
+            $"pointerOverUI={eventSystem != null && eventSystem.IsPointerOverGameObject()} " +
+            $"currentInputModule='{eventSystem?.currentInputModule?.GetType().Name ?? "<null>"}' " +
+            $"uiToolkitPick='{picked}'",
+            this);
+        }
+      }
+
       if (Input.GetKeyDown(KeyCode.F)) Debug.Log($"[PlayerController] F key pressed. IsOwner: {IsOwner}, IsClient: {IsClient}, IsServer: {IsServerInitialized}");
 
       HandleChatInput();
