@@ -1,6 +1,7 @@
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.UI;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -37,7 +38,10 @@ namespace MultiplayerInfrastructure.UI
     private readonly VisualElement _keyHint;
     private readonly VisualElement _scrollHint;
     private readonly Label _keyText;
-    private readonly VisualElement _iconHolder;
+    private const float IconSlotSize = 22f;
+
+    private readonly VisualElement _iconContainer;
+    private readonly List<VisualElement> _iconHolders = new();
     private readonly Label _contentText;
 
     public IInteract Interact { get; private set; }
@@ -120,24 +124,12 @@ namespace MultiplayerInfrastructure.UI
       contentWrapper.style.maxWidth = ContentWrapperWidth;
       contentWrapper.style.flexShrink = 0;
 
-      _iconHolder = new VisualElement();
-      _iconHolder.AddToClassList("interactable-icon-holder");
-      _iconHolder.style.width = 22;
-      _iconHolder.style.height = 22;
-      _iconHolder.style.minWidth = 22;
-      _iconHolder.style.minHeight = 22;
-      _iconHolder.style.borderTopLeftRadius = 5;
-      _iconHolder.style.borderTopRightRadius = 5;
-      _iconHolder.style.borderBottomLeftRadius = 5;
-      _iconHolder.style.borderBottomRightRadius = 5;
-      _iconHolder.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
-      _iconHolder.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Center);
-      _iconHolder.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Center);
-      _iconHolder.style.backgroundRepeat = new StyleBackgroundRepeat(StyleKeyword.None);
-      _iconHolder.style.opacity = 0.95f;
-      // _iconHolder.style.boxShadow = new StyleBoxShadow(new BoxShadow(new Color(0f, 0f, 0f, 0.25f), 0, 0, 6, 0));
-      _iconHolder.style.marginRight = 6;
-      contentWrapper.Add(_iconHolder);
+      _iconContainer = new VisualElement();
+      _iconContainer.AddToClassList("interactable-icon-container");
+      _iconContainer.style.flexDirection = FlexDirection.Row;
+      _iconContainer.style.alignItems = Align.Center;
+      _iconContainer.style.marginRight = 6;
+      contentWrapper.Add(_iconContainer);
 
       _contentText = new Label();
       _contentText.AddToClassList("interactable-content-text");
@@ -167,20 +159,7 @@ namespace MultiplayerInfrastructure.UI
       Interact = interact;
       _keyText.text = keyLabel ?? string.Empty;
 
-      var iconSprite = interact?.DisplayIcon;
-      if (iconSprite == null && (interact?.AllowDisplayIconFallback ?? true))
-        iconSprite = mode == InteractableHintUIMode.Dialogue ? dialogueIcon : DefaultsResource.FallbackSprite;
-
-      if (iconSprite != null)
-      {
-        _iconHolder.style.backgroundImage = new StyleBackground(iconSprite);
-        _iconHolder.style.backgroundColor = Color.clear;
-      }
-      else
-      {
-        _iconHolder.style.backgroundImage = StyleKeyword.None;
-        _iconHolder.style.backgroundColor = interact?.DisplayColor ?? Color.clear;
-      }
+      BindIcons(interact, mode, dialogueIcon);
 
       _contentText.text = interact?.DisplayText ?? string.Empty;
 
@@ -188,6 +167,80 @@ namespace MultiplayerInfrastructure.UI
       EnableInClassList("dialogue-selection", mode == InteractableHintUIMode.Dialogue);
       _contentText.EnableInClassList("dialogue-selection-text", mode == InteractableHintUIMode.Dialogue);
       _keyHint.style.opacity = isSelected ? 1f : 0f;
+    }
+
+    private void BindIcons(IInteract interact, InteractableHintUIMode mode, Sprite dialogueIcon)
+    {
+      var icons = interact as IInteractDisplayIcons;
+      var displayedSprites = new HashSet<Sprite>();
+      int iconCount = 0;
+
+      if (icons?.DisplayIcons != null)
+      {
+        foreach (var sprite in icons.DisplayIcons)
+        {
+          if (sprite == null || !displayedSprites.Add(sprite)) continue;
+          ConfigureIconHolder(iconCount++, sprite, Color.clear);
+        }
+      }
+
+      // 목록 아이콘에 더해, 기존 구현체의 동적/override 단일 아이콘도 표시한다.
+      // 같은 Sprite가 목록에 이미 있으면 중복 표시하지 않는다.
+      var displayIcon = interact?.DisplayIcon;
+      if (displayIcon != null && displayedSprites.Add(displayIcon))
+        ConfigureIconHolder(iconCount++, displayIcon, Color.clear);
+
+      if (iconCount == 0)
+      {
+        var fallbackIcon = (interact?.AllowDisplayIconFallback ?? true)
+          ? mode == InteractableHintUIMode.Dialogue ? dialogueIcon : DefaultsResource.FallbackSprite
+          : null;
+
+        // fallback을 명시적으로 끈 경우에도 기존처럼 DisplayColor를 가진 빈 슬롯을 유지한다.
+        ConfigureIconHolder(iconCount++, fallbackIcon, interact?.DisplayColor ?? Color.clear);
+      }
+
+      for (int i = iconCount; i < _iconHolders.Count; i++)
+        _iconHolders[i].style.display = DisplayStyle.None;
+    }
+
+    private void ConfigureIconHolder(int index, Sprite sprite, Color fallbackColor)
+    {
+      var holder = GetIconHolder(index);
+      holder.style.display = DisplayStyle.Flex;
+      if (sprite != null)
+        holder.style.backgroundImage = new StyleBackground(sprite);
+      else
+        holder.style.backgroundImage = StyleKeyword.None;
+      holder.style.backgroundColor = sprite != null ? Color.clear : fallbackColor;
+    }
+
+    private VisualElement GetIconHolder(int index)
+    {
+      while (_iconHolders.Count <= index)
+      {
+        var holder = new VisualElement();
+        holder.AddToClassList("interactable-icon-holder");
+        holder.style.width = IconSlotSize;
+        holder.style.height = IconSlotSize;
+        holder.style.minWidth = IconSlotSize;
+        holder.style.minHeight = IconSlotSize;
+        holder.style.borderTopLeftRadius = 5;
+        holder.style.borderTopRightRadius = 5;
+        holder.style.borderBottomLeftRadius = 5;
+        holder.style.borderBottomRightRadius = 5;
+        // Contain은 정사각형 슬롯을 넘지 않으면서 스프라이트의 원본 비율을 보존합니다.
+        holder.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+        holder.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Center);
+        holder.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Center);
+        holder.style.backgroundRepeat = new StyleBackgroundRepeat(StyleKeyword.None);
+        holder.style.opacity = 0.95f;
+        if (_iconHolders.Count > 0) holder.style.marginLeft = 2;
+        _iconHolders.Add(holder);
+        _iconContainer.Add(holder);
+      }
+
+      return _iconHolders[index];
     }
   }
 }

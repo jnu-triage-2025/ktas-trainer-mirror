@@ -38,6 +38,15 @@ namespace MultiplayerInfrastructure.InteractableEntity
   }
 
   /// <summary>
+  /// 하나의 상호작용 항목에 여러 표시 아이콘을 제공할 때 구현합니다.
+  /// 각 아이콘은 힌트 UI에서 독립된 정사각형 슬롯에 원본 비율을 유지해 표시됩니다.
+  /// </summary>
+  public interface IInteractDisplayIcons
+  {
+    IReadOnlyList<Sprite> DisplayIcons { get; }
+  }
+
+  /// <summary>
   /// 기존 <see cref="IInteractable"/> 컨트롤러에 같은 GameObject의 기능 컴포넌트가
   /// 조건부 상호작용 항목을 보탤 때 사용한다.
   /// </summary>
