@@ -4,6 +4,7 @@ using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Scenario;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
@@ -270,7 +271,8 @@ namespace MultiplayerInfrastructure.Player
           && displayment != null)
       {
         // "최초 확정 시 정확히 한 번" 부수효과(예: 시나리오 신호)를 서버 컨텍스트에서 처리한다.
-        displayment.OnShownConfirmed();
+        using (ScenarioSignalPlayerContext.Push(claimant))
+          displayment.OnShownConfirmed();
       }
 
       // 모든 클라이언트에 표시(설치/적용)를 브로드캐스트.

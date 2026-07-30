@@ -2,7 +2,10 @@ using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Transporting;
+using MultiplayerInfrastructure.Chat;
+using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Session;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -62,6 +65,21 @@ namespace MultiplayerInfrastructure.Scenario
 
     /// <summary>씬에 배치된 중계기 인스턴스(없으면 null).</summary>
     public static ScenarioNetworkRelay Instance => _instance;
+
+    /// <summary>서버 권위 신호 파라미터 저장소를 모든 피어에서 비운다.</summary>
+    public static void FlushSignalParametersAuthoritative()
+    {
+      if (InstanceFinder.IsServerStarted)
+      {
+        ScenarioSignalParameterStore.FlushLocal();
+        if (_instance != null)
+          _instance.RpcMirrorFlushSignalParameters();
+        return;
+      }
+
+      if (InstanceFinder.IsOffline || _instance == null)
+        ScenarioSignalParameterStore.FlushLocal();
+    }
 
     /// <summary>
     /// 서버에서 그래프를 한 번만 시작하고, 선택된 클라이언트에는 표시 전용 세션을 준비시킨다.
@@ -205,6 +223,7 @@ namespace MultiplayerInfrastructure.Scenario
     public override void OnStartServer()
     {
       base.OnStartServer();
+      ScenarioSignalParameterStore.FlushLocal();
       InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
     }
 
@@ -214,6 +233,7 @@ namespace MultiplayerInfrastructure.Scenario
         InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState -= OnRemoteConnectionState;
       _actingNpcConfigurations.Clear();
       _npcControlStates.Clear();
+      ScenarioSignalParameterStore.FlushLocal();
       base.OnStopServer();
     }
 
@@ -289,6 +309,15 @@ namespace MultiplayerInfrastructure.Scenario
       foreach (var configuration in _actingNpcConfigurations)
         TargetConfigureScenarioActingNpc(connection, configuration.GraphIdentifier,
           configuration.ActingNpcIdentifier, configuration.NetworkObject);
+
+      // 재접속 클라이언트의 정적 미러에 이전 세션 값이 남지 않도록, 스냅샷 적용 전에 비운다.
+      TargetFlushSignalParameters(connection);
+      foreach (var signal in ScenarioSignalParameterStore.GetAll())
+      {
+        TargetMirrorScenarioSignalParameter(connection, signal.SignalIdentifier,
+          signal.PlayerIdentifier, signal.PlayerDisplayName, signal.ParameterJson,
+          signal.OccurredAtUtcTicks, signal.Sequence);
+      }
 
       _npcControlStates.RemoveAll(value => value == null || value.NetworkObject == null);
       foreach (var state in _npcControlStates)
@@ -557,7 +586,7 @@ namespace MultiplayerInfrastructure.Scenario
     /// 신호를 권위적으로 올린다. 서버면 즉시 기록, 클라이언트면 서버로 보고한다.
     /// 중계기가 없거나 네트워크가 비활성이면 로컬에 기록(단일 플레이어/오프라인 폴백).
     /// </summary>
-    public static void RaiseAuthoritative(string normalizedSignalId)
+    public static void RaiseAuthoritative(string normalizedSignalId, string parameterJson = null)
     {
       if (string.IsNullOrWhiteSpace(normalizedSignalId))
       {
@@ -569,23 +598,82 @@ namespace MultiplayerInfrastructure.Scenario
       //  다른 클라이언트의 게이트가 통과되지 않는다.)
       if (InstanceFinder.IsServerStarted)
       {
-        ScenarioInteractionSignals.RegisterLocal(normalizedSignalId);
-        if (_instance != null)
+        if (ScenarioSignalPlayerContext.TryGetCurrent(out string playerIdentifier, out string playerDisplayName))
         {
-          _instance.RpcMirrorRaiseScenarioSignal(normalizedSignalId);
+          RaiseOnServer(normalizedSignalId, parameterJson, playerIdentifier, playerDisplayName, null);
+          return;
         }
+        RaiseOnServer(normalizedSignalId, parameterJson,
+          ScenarioSignalParameterStore.ServerPlayerIdentifier,
+          ScenarioSignalParameterStore.ServerPlayerIdentifier, null);
         return;
       }
 
       // 클라이언트 컨텍스트: 중계기로 서버 보고.
       if (_instance != null && InstanceFinder.IsClientStarted)
       {
-        _instance.CmdRaiseScenarioSignal(normalizedSignalId);
+        _instance.CmdRaiseScenarioSignal(normalizedSignalId, parameterJson);
         return;
       }
 
       // 네트워크 비활성/중계기 부재: 로컬 폴백.
+      if (ScenarioSignalPlayerContext.TryGetCurrent(out string localPlayerIdentifier, out string localPlayerDisplayName))
+      {
+        RaiseOnServer(normalizedSignalId, parameterJson, localPlayerIdentifier, localPlayerDisplayName, null);
+        return;
+      }
+      RaiseOnServer(normalizedSignalId, parameterJson,
+        ScenarioSignalParameterStore.ServerPlayerIdentifier,
+        ScenarioSignalParameterStore.ServerPlayerIdentifier, null);
+    }
+
+    /// <summary>서버 명령·시스템이 명시한 플레이어 귀속으로 신호를 기록한다.</summary>
+    public static bool RaiseAuthoritativeForPlayer(string normalizedSignalId, string parameterJson,
+      string playerIdentifier, string playerDisplayName, NetworkConnection sender = null)
+    {
+      if (string.IsNullOrWhiteSpace(normalizedSignalId))
+        return false;
+
+      if (InstanceFinder.IsServerStarted || InstanceFinder.IsOffline || _instance == null)
+        return RaiseOnServer(normalizedSignalId, parameterJson, playerIdentifier, playerDisplayName, sender);
+
+      // 클라이언트가 임의의 플레이어 귀속을 지정할 수 없게 한다. 이 경로는 서버 명령 전용이다.
+      _instance.CmdRaiseScenarioSignal(normalizedSignalId, parameterJson);
+      return true;
+    }
+
+    private static bool RaiseOnServer(string normalizedSignalId, string parameterJson,
+      string playerIdentifier, string playerDisplayName, NetworkConnection sender)
+    {
+      if (!TryValidateAuthoritativeSignalInput(normalizedSignalId, parameterJson, out string validationError))
+      {
+        ReportRejectedInput(normalizedSignalId, parameterJson, validationError, sender);
+        return false;
+      }
+      if (!ScenarioSignalParameterStore.TryValidateJson(parameterJson, out _))
+      {
+        ReportInvalidParameter(normalizedSignalId, parameterJson, sender);
+        return false;
+      }
+
+      // 파라미터 저장소는 감사·조회용 부가 상태다. 포화되어도 실제 시나리오 신호는 반드시 발생시킨다.
       ScenarioInteractionSignals.RegisterLocal(normalizedSignalId);
+      if (!ScenarioSignalParameterStore.CanRecord(normalizedSignalId, playerIdentifier, out string capacityError))
+      {
+        ReportStorageLimit(normalizedSignalId, playerIdentifier, capacityError, sender);
+        if (_instance != null && InstanceFinder.IsServerStarted)
+          _instance.RpcMirrorRaiseScenarioSignalOnly(normalizedSignalId);
+        return false;
+      }
+
+      ScenarioSignalParameter value = ScenarioSignalParameterStore.RecordAuthoritative(
+        normalizedSignalId, playerIdentifier, playerDisplayName, parameterJson);
+      if (_instance != null && InstanceFinder.IsServerStarted)
+      {
+        _instance.RpcMirrorRaiseScenarioSignal(normalizedSignalId, value.PlayerIdentifier,
+          value.PlayerDisplayName, value.ParameterJson, value.OccurredAtUtcTicks, value.Sequence);
+      }
+      return true;
     }
 
     /// <summary>신호를 권위적으로 내린다(사이클 반복 등에서 재설정).</summary>
@@ -617,6 +705,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     /// <summary>신호 식별자 최대 길이(자원 고갈 방지용 방어선).</summary>
     private const int MaxSignalIdentifierLength = 256;
+    private const int MaxSignalParameterLength = 4096;
 
     /// <summary>
     /// 클라이언트가 보고한 신호 식별자의 서버측 검증.
@@ -635,11 +724,28 @@ namespace MultiplayerInfrastructure.Scenario
         return false;
       }
 
-      return normalizedSignalId.StartsWith(ScenarioInteractionSignals.Prefix, System.StringComparison.Ordinal);
+      return normalizedSignalId.StartsWith(ScenarioInteractionSignals.Prefix, System.StringComparison.Ordinal)
+        && !normalizedSignalId.Any(char.IsControl);
+    }
+
+    private static bool TryValidateAuthoritativeSignalInput(string normalizedSignalId, string parameterJson, out string error)
+    {
+      error = string.Empty;
+      if (!IsValidClientSignal(normalizedSignalId))
+      {
+        error = "시그널 식별자는 'sig.' 접두사, 최대 256자, 제어문자 없음 조건을 만족해야 합니다.";
+        return false;
+      }
+      if (parameterJson != null && parameterJson.Length > MaxSignalParameterLength)
+      {
+        error = $"시그널 매개변수는 최대 {MaxSignalParameterLength}자까지 허용됩니다.";
+        return false;
+      }
+      return true;
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void CmdRaiseScenarioSignal(string normalizedSignalId)
+    private void CmdRaiseScenarioSignal(string normalizedSignalId, string parameterJson, NetworkConnection sender = null)
     {
       if (!IsValidClientSignal(normalizedSignalId))
       {
@@ -647,10 +753,14 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
-      ScenarioInteractionSignals.RegisterLocal(normalizedSignalId);
-      // 서버 기록 후 모든 클라이언트(호스트 포함)에 미러링하여
-      // 각 피어 로컬의 Validator 폴링이 통과되도록 한다.
-      RpcMirrorRaiseScenarioSignal(normalizedSignalId);
+      string playerIdentifier = ScenarioSignalParameterStore.ServerPlayerIdentifier;
+      string playerDisplayName = playerIdentifier;
+      if (sender != null && UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor))
+      {
+        playerIdentifier = descriptor.Identifier;
+        playerDisplayName = descriptor.DisplayName;
+      }
+      RaiseOnServer(normalizedSignalId, parameterJson, playerIdentifier, playerDisplayName, sender);
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -670,10 +780,66 @@ namespace MultiplayerInfrastructure.Scenario
     /// 서버의 권위 신호 기록을 모든 클라이언트 로컬 레지스트리로 미러링한다.
     /// </summary>
     [ObserversRpc(BufferLast = false)]
-    private void RpcMirrorRaiseScenarioSignal(string normalizedSignalId)
+    private void RpcMirrorRaiseScenarioSignal(string normalizedSignalId, string playerIdentifier,
+      string playerDisplayName, string parameterJson, long occurredAtUtcTicks, long sequence)
     {
       // 호스트(서버=클라)에서는 이미 서버 경로에서 기록되었으므로 중복 기록해도 무해(idempotent)하다.
       ScenarioInteractionSignals.RegisterLocal(normalizedSignalId);
+      ScenarioSignalParameterStore.ApplyMirror(new ScenarioSignalParameter(normalizedSignalId,
+        playerIdentifier, playerDisplayName, parameterJson, occurredAtUtcTicks, sequence));
+    }
+
+    [ObserversRpc(BufferLast = false)]
+    private void RpcMirrorRaiseScenarioSignalOnly(string normalizedSignalId)
+      => ScenarioInteractionSignals.RegisterLocal(normalizedSignalId);
+
+    [TargetRpc]
+    private void TargetMirrorScenarioSignalParameter(NetworkConnection connection, string normalizedSignalId,
+      string playerIdentifier, string playerDisplayName, string parameterJson, long occurredAtUtcTicks, long sequence)
+    {
+      ScenarioInteractionSignals.RegisterLocal(normalizedSignalId);
+      ScenarioSignalParameterStore.ApplyMirror(new ScenarioSignalParameter(normalizedSignalId,
+        playerIdentifier, playerDisplayName, parameterJson, occurredAtUtcTicks, sequence));
+    }
+
+    [TargetRpc]
+    private void TargetFlushSignalParameters(NetworkConnection connection)
+      => ScenarioSignalParameterStore.ApplySnapshotFromServer(null);
+
+    [ObserversRpc(BufferLast = false)]
+    private void RpcMirrorFlushSignalParameters()
+      => ScenarioSignalParameterStore.FlushLocal();
+
+    private static void ReportInvalidParameter(string normalizedSignalId, string parameterJson, NetworkConnection sender)
+    {
+      string message = $"시그널 ({normalizedSignalId})의 매개변수 ({parameterJson ?? "null"})는 올바른 JSON 형식이 아닙니다.";
+      Debug.LogError($"[ScenarioNetworkRelay] {message}");
+      GameLogService.WriteSignal($"Signal parameter rejected: signal={ScenarioSignalParameterStore.FormatForLog(normalizedSignalId)}, parameter={ScenarioSignalParameterStore.FormatForLog(parameterJson)}", ScenarioSignalParameterStore.FormatForLog(normalizedSignalId));
+      if (sender != null
+          && Registry.Registry.TryGet<ChatService>(RegistryType.Service, Registry.Registry.TypeKey<ChatService>(), out var chat))
+        chat.SendSystemMessage(sender, message);
+    }
+
+    private static void ReportRejectedInput(string normalizedSignalId, string parameterJson,
+      string reason, NetworkConnection sender)
+    {
+      string message = $"시그널 ({normalizedSignalId})을 수락하지 못했습니다: {reason}";
+      Debug.LogWarning($"[ScenarioNetworkRelay] {message}");
+      GameLogService.WriteSignal($"Signal rejected: signal={ScenarioSignalParameterStore.FormatForLog(normalizedSignalId)}, parameter={ScenarioSignalParameterStore.FormatForLog(parameterJson)}, reason={ScenarioSignalParameterStore.FormatForLog(reason)}", ScenarioSignalParameterStore.FormatForLog(normalizedSignalId));
+      if (sender != null
+          && Registry.Registry.TryGet<ChatService>(RegistryType.Service, Registry.Registry.TypeKey<ChatService>(), out var chat))
+        chat.SendSystemMessage(sender, message);
+    }
+
+    private static void ReportStorageLimit(string normalizedSignalId, string playerIdentifier,
+      string error, NetworkConnection sender)
+    {
+      string message = $"시그널 ({normalizedSignalId})의 매개변수를 저장하지 못했습니다: {error}";
+      Debug.LogWarning($"[ScenarioNetworkRelay] {message}");
+      GameLogService.WriteSignal($"Signal parameter rejected: signal={ScenarioSignalParameterStore.FormatForLog(normalizedSignalId)}, player={ScenarioSignalParameterStore.FormatForLog(playerIdentifier)}, reason={ScenarioSignalParameterStore.FormatForLog(error)}", ScenarioSignalParameterStore.FormatForLog(normalizedSignalId));
+      if (sender != null
+          && Registry.Registry.TryGet<ChatService>(RegistryType.Service, Registry.Registry.TypeKey<ChatService>(), out var chat))
+        chat.SendSystemMessage(sender, message);
     }
 
     [ObserversRpc(BufferLast = false)]
