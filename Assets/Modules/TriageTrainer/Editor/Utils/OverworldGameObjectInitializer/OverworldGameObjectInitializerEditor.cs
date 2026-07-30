@@ -15,7 +15,8 @@ namespace TriageTrainer.Editor.Utils
     private Vector3 treatmentRoomEnterance = OverworldGameObjectInitializer.DefaultTreatmentRoomEnterance;
     private string commonSpawnPointIdentifier = OverworldGameObjectInitializer.CommonSpawnPointIdentifier;
     private Vector3 commonSpawnPoint = OverworldGameObjectInitializer.DefaultCommonSpawnPoint;
-    private readonly List<StaticEntityLayoutDefinition> staticEntityLayouts = new();
+    [SerializeField] private List<StaticEntityLayoutDefinition> staticEntityLayouts = new();
+    private SerializedObject serializedWindow;
 
     [MenuItem("Tools/Triage Trainer/Overworld GameObject Initializer")]
     private static void Open()
@@ -24,8 +25,19 @@ namespace TriageTrainer.Editor.Utils
       window.minSize = new Vector2(360f, 170f);
     }
 
+    private void OnEnable()
+    {
+      serializedWindow = new SerializedObject(this);
+      if (staticEntityLayouts.Count == 0)
+      {
+        staticEntityLayouts.Add(AssetDatabase.LoadAssetAtPath<StaticEntityLayoutDefinition>(
+          "Assets/Modules/TriageTrainer/ScriptableObjects/StaticEntityLayouts/OverworldPatientSupports.asset"));
+      }
+    }
+
     private void OnGUI()
     {
+      serializedWindow.Update();
       EditorGUILayout.HelpBox(
         "시나리오 진행 중에 오버월드에서 사용할 주요한 게임 오브젝트들을 생성합니다.",
         MessageType.Info
@@ -49,17 +61,16 @@ namespace TriageTrainer.Editor.Utils
 
       EditorGUILayout.Space(8f);
       EditorGUILayout.LabelField("Static Entity Layout", EditorStyles.boldLabel);
-      int layoutCount = Mathf.Max(0, EditorGUILayout.IntField("Layout Count", staticEntityLayouts.Count));
-      while (staticEntityLayouts.Count < layoutCount) staticEntityLayouts.Add(null);
-      while (staticEntityLayouts.Count > layoutCount) staticEntityLayouts.RemoveAt(staticEntityLayouts.Count - 1);
-      for (int i = 0; i < staticEntityLayouts.Count; i++)
-        staticEntityLayouts[i] = (StaticEntityLayoutDefinition)EditorGUILayout.ObjectField(
-          $"Layout Definition {i + 1}", staticEntityLayouts[i], typeof(StaticEntityLayoutDefinition), false);
+      EditorGUILayout.PropertyField(
+        serializedWindow.FindProperty(nameof(staticEntityLayouts)),
+        new GUIContent("Layout Definitions"), true);
+      serializedWindow.ApplyModifiedProperties();
       EditorGUILayout.HelpBox("Layout asset의 정의에 따라 MovingPatientBedPositioningPoint, Wall 장비, PatientCareDescriptionZone을 생성합니다.", MessageType.None);
 
       if (GUILayout.Button("Reset Values", GUILayout.Height(22f)))
       {
         ResetValues();
+        serializedWindow.Update();
       }
 
       EditorGUILayout.Space(4f);
@@ -98,6 +109,8 @@ namespace TriageTrainer.Editor.Utils
           OverworldGameObjectInitializer.Delete();
         }
       }
+
+      serializedWindow.ApplyModifiedProperties();
     }
 
     private void ResetValues()
@@ -109,6 +122,8 @@ namespace TriageTrainer.Editor.Utils
       commonSpawnPointIdentifier = OverworldGameObjectInitializer.CommonSpawnPointIdentifier;
       commonSpawnPoint = OverworldGameObjectInitializer.DefaultCommonSpawnPoint;
       staticEntityLayouts.Clear();
+      staticEntityLayouts.Add(AssetDatabase.LoadAssetAtPath<StaticEntityLayoutDefinition>(
+        "Assets/Modules/TriageTrainer/ScriptableObjects/StaticEntityLayouts/OverworldPatientSupports.asset"));
     }
   }
 }
