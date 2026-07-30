@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MultiplayerInfrastructure.Logging;
+using TriageTrainer.Scenario;
 using TriageTrainer.Entity.PatientMonitor.Models;
 using UnityEngine;
 
@@ -136,6 +137,7 @@ namespace TriageTrainer.Entity
         LogConnectionChange(equipmentType, connected: false, previous);
         OnEquipmentDisconnected?.Invoke(equipmentType, previous);
         RaiseEquipmentStateEvent(equipmentType, connected: false);
+        TriageWorldInteractionSignals.RaisePatientEquipmentDisconnected(Identifier, equipmentType, previous);
       }
 
       // 2) 연결 알림 (새 장비가 실제로 존재하는 경우)
@@ -144,6 +146,7 @@ namespace TriageTrainer.Entity
         LogConnectionChange(equipmentType, connected: true, next);
         OnEquipmentConnected?.Invoke(equipmentType, next);
         RaiseEquipmentStateEvent(equipmentType, connected: true);
+        TriageWorldInteractionSignals.RaisePatientEquipmentConnected(Identifier, equipmentType, next);
       }
     }
 

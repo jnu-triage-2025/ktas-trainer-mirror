@@ -649,6 +649,7 @@ namespace MultiplayerInfrastructure.Scenario
       ResetNodeVisitOrders(graph.Identifier);
       ScenarioInteractionSignals.ClearAllInternalSignals();
       ScenarioInteractionSignals.ClearAllRaisedSignals();
+      ScenarioNetworkRelay.FlushSignalParametersAuthoritative();
       ScenarioConditionalSignalListeners.ClearAll();
       ScenarioEntityStateSignalBindings.ClearAll();
       ScenarioSignalCounters.ClearAll();

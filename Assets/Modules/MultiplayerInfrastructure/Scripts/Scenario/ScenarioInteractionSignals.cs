@@ -49,13 +49,20 @@ namespace MultiplayerInfrastructure.Scenario
     /// 네트워크가 비활성이거나 중계기가 없으면 로컬에 기록(단일 플레이어/오프라인).
     /// </summary>
     public static void Raise(string signalId)
+      => Raise(signalId, null);
+
+    /// <summary>
+    /// JSON 문자열 파라미터와 함께 인터랙션 완료 신호를 올린다.
+    /// 네트워크 세션에서는 서버가 JSON 문법을 검증하고 발신 플레이어별 마지막 값을 권위적으로 기록한다.
+    /// </summary>
+    public static void Raise(string signalId, string parameterJson)
     {
       if (string.IsNullOrWhiteSpace(signalId))
       {
         return;
       }
 
-      ScenarioNetworkRelay.RaiseAuthoritative(Normalize(signalId));
+      ScenarioNetworkRelay.RaiseAuthoritative(Normalize(signalId), parameterJson);
     }
 
     /// <summary>신호를 내린다. 서버 권한 경로로 라우팅한다(사이클 반복 등에서 재설정 시 사용).</summary>

@@ -138,19 +138,31 @@ namespace TriageTrainer.Entity
     public override void OnShownConfirmed()
     {
       TriageWorldInteractionSignals.RaiseOxyflowmeterInstalled(EntityIdentifier);
+      TriageWorldInteractionSignals.RaiseOxyflowmeterEnabled(EntityIdentifier);
       RaiseCompletionSignalIfAny();
     }
 
     public override void OnHiddenConfirmed()
     {
+      IsAttached = false;
       TriageWorldInteractionSignals.RaiseOxyflowmeterRemoved(EntityIdentifier);
+      TriageWorldInteractionSignals.RaiseOxyflowmeterDisabled(EntityIdentifier);
+    }
+
+    public override void ApplyHiddenFromNetwork()
+    {
+      IsAttached = false;
+      base.ApplyHiddenFromNetwork();
     }
 
     /// <summary>설치 상태를 해제하고 다시 숨긴다(관리자 리셋/시나리오 되돌림 등에서 사용하는 로컬 표현 API).</summary>
     public void Detach()
     {
+      if (!IsAttached)
+        return;
       IsAttached = false;
       Hide();
+      OnHiddenConfirmed();
     }
 
     // ── 헬퍼 ─────────────────────────────────────────────────────────────────

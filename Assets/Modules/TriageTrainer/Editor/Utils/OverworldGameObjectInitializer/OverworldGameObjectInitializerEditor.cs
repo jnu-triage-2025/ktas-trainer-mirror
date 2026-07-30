@@ -15,7 +15,19 @@ namespace TriageTrainer.Editor.Utils
     private Vector3 treatmentRoomEnterance = OverworldGameObjectInitializer.DefaultTreatmentRoomEnterance;
     private string commonSpawnPointIdentifier = OverworldGameObjectInitializer.CommonSpawnPointIdentifier;
     private Vector3 commonSpawnPoint = OverworldGameObjectInitializer.DefaultCommonSpawnPoint;
+    private Vector3 patientBSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientBSpawnWaypoint;
+    private Vector3 patientCSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientCSpawnWaypoint;
+    private Vector3 dummyBSpawnWaypoint = OverworldGameObjectInitializer.DefaultDummyBSpawnWaypoint;
+    private Vector3 ctPatientBWaypoint = OverworldGameObjectInitializer.DefaultCtPatientBWaypoint;
+    private Vector3 ctPatientCWaypoint = OverworldGameObjectInitializer.DefaultCtPatientCWaypoint;
+    private string patientBSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientBSpawnWaypointIdentifier;
+    private string patientCSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientCSpawnWaypointIdentifier;
+    private string dummyBSpawnWaypointIdentifier = OverworldGameObjectInitializer.DummyBSpawnWaypointIdentifier;
+    private string ctPatientBWaypointIdentifier = OverworldGameObjectInitializer.CtPatientBWaypointIdentifier;
+    private string ctPatientCWaypointIdentifier = OverworldGameObjectInitializer.CtPatientCWaypointIdentifier;
+    private Vector2 scrollPosition;
     [SerializeField] private List<StaticEntityLayoutDefinition> staticEntityLayouts = new();
+    [SerializeField] private MonoScript initializerScript;
     private SerializedObject serializedWindow;
 
     [MenuItem("Tools/Triage Trainer/Overworld GameObject Initializer")]
@@ -28,6 +40,8 @@ namespace TriageTrainer.Editor.Utils
     private void OnEnable()
     {
       serializedWindow = new SerializedObject(this);
+      initializerScript = AssetDatabase.LoadAssetAtPath<MonoScript>(
+        "Assets/Modules/TriageTrainer/Editor/Utils/OverworldGameObjectInitializer/OverworldGameObjectInitializer.cs");
       if (staticEntityLayouts.Count == 0)
       {
         staticEntityLayouts.Add(AssetDatabase.LoadAssetAtPath<StaticEntityLayoutDefinition>(
@@ -38,22 +52,29 @@ namespace TriageTrainer.Editor.Utils
     private void OnGUI()
     {
       serializedWindow.Update();
+      scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
       EditorGUILayout.HelpBox(
-        "시나리오 진행 중에 오버월드에서 사용할 주요한 게임 오브젝트들을 생성합니다.",
+        "시나리오 진행 중에 오버월드에서 사용할 주요한 게임 오브젝트들을 생성합니다.\n이 값 필드들은 OverworldGameObjectInitializerEditor.cs의 코드를 수정하여야 필드를 추가할 수 있습니다. 또한 아래 필드들이 수정 가능한 상태인 것은 조정 소요가 있을 때, 임시로 값을 수정해서 확인하기 위함입니다. 만약 영구적으로 값을 수정해야 한다면 코드 리터럴을 수정해야 합니다.",
         MessageType.Info
       );
+      using (new EditorGUI.DisabledScope(true))
+      {
+        EditorGUILayout.ObjectField("더블클릭으로 열기:", initializerScript, typeof(MonoScript), false);
+      }
       EditorGUILayout.Space(4f);
       EditorGUILayout.LabelField("Waypoints", EditorStyles.boldLabel);
 
-      buildingIdentifier = EditorGUILayout.TextField("Building Identifier", buildingIdentifier);
-      buildingEnterance = EditorGUILayout.Vector3Field("BuildingEnterance", buildingEnterance);
-      treatmentIdentifier = EditorGUILayout.TextField("Treatment Identifier", treatmentIdentifier);
-      treatmentRoomEnterance = EditorGUILayout.Vector3Field("TreatmentRoomEnterance", treatmentRoomEnterance);
+      DrawWaypointFields("Building Entrance", ref buildingIdentifier, ref buildingEnterance);
+      DrawWaypointFields("Treatment Room Entrance", ref treatmentIdentifier, ref treatmentRoomEnterance);
+      DrawWaypointFields("Patient B Spawn", ref patientBSpawnWaypointIdentifier, ref patientBSpawnWaypoint);
+      DrawWaypointFields("Patient C Spawn", ref patientCSpawnWaypointIdentifier, ref patientCSpawnWaypoint);
+      DrawWaypointFields("Dummy B Spawn", ref dummyBSpawnWaypointIdentifier, ref dummyBSpawnWaypoint);
+      DrawWaypointFields("CT Patient B", ref ctPatientBWaypointIdentifier, ref ctPatientBWaypoint);
+      DrawWaypointFields("CT Patient C", ref ctPatientCWaypointIdentifier, ref ctPatientCWaypoint);
 
       EditorGUILayout.Space(4f);
       EditorGUILayout.LabelField("Spawnpoints", EditorStyles.boldLabel);
-      commonSpawnPointIdentifier = EditorGUILayout.TextField("Common Identifier", commonSpawnPointIdentifier);
-      commonSpawnPoint = EditorGUILayout.Vector3Field("Common SpawnPoint", commonSpawnPoint);
+      DrawWaypointFields("Spawnpoint Commons (player-only)", ref commonSpawnPointIdentifier, ref commonSpawnPoint);
       EditorGUILayout.HelpBox(
         "Set 실행 시 FishNet PlayerSpawner의 Spawns 배열이 CommonSpawnPoint 하나로 설정됩니다.",
         MessageType.None
@@ -67,13 +88,15 @@ namespace TriageTrainer.Editor.Utils
       serializedWindow.ApplyModifiedProperties();
       EditorGUILayout.HelpBox("Layout asset의 정의에 따라 MovingPatientBedPositioningPoint, Wall 장비, PatientCareDescriptionZone을 생성합니다.", MessageType.None);
 
+      EditorGUILayout.Space(8f);
+      EditorGUILayout.LabelField("Apply", EditorStyles.boldLabel);
       if (GUILayout.Button("Reset Values", GUILayout.Height(22f)))
       {
         ResetValues();
         serializedWindow.Update();
       }
 
-      EditorGUILayout.Space(4f);
+      EditorGUILayout.Space(2f);
 
       using (new EditorGUILayout.HorizontalScope())
       {
@@ -85,7 +108,12 @@ namespace TriageTrainer.Editor.Utils
             treatmentIdentifier,
             treatmentRoomEnterance,
             commonSpawnPointIdentifier,
-            commonSpawnPoint
+            commonSpawnPoint,
+            patientBSpawnWaypointIdentifier, patientBSpawnWaypoint,
+            patientCSpawnWaypointIdentifier, patientCSpawnWaypoint,
+            dummyBSpawnWaypointIdentifier, dummyBSpawnWaypoint,
+            ctPatientBWaypointIdentifier, ctPatientBWaypoint,
+            ctPatientCWaypointIdentifier, ctPatientCWaypoint
           );
           var seenIdentifiers = new HashSet<string>();
           foreach (var layout in staticEntityLayouts.Where(value => value != null))
@@ -110,7 +138,9 @@ namespace TriageTrainer.Editor.Utils
         }
       }
 
+      EditorGUILayout.Space(4f);
       serializedWindow.ApplyModifiedProperties();
+      EditorGUILayout.EndScrollView();
     }
 
     private void ResetValues()
@@ -121,9 +151,39 @@ namespace TriageTrainer.Editor.Utils
       treatmentRoomEnterance = OverworldGameObjectInitializer.DefaultTreatmentRoomEnterance;
       commonSpawnPointIdentifier = OverworldGameObjectInitializer.CommonSpawnPointIdentifier;
       commonSpawnPoint = OverworldGameObjectInitializer.DefaultCommonSpawnPoint;
+      patientBSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientBSpawnWaypoint;
+      patientCSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientCSpawnWaypoint;
+      dummyBSpawnWaypoint = OverworldGameObjectInitializer.DefaultDummyBSpawnWaypoint;
+      ctPatientBWaypoint = OverworldGameObjectInitializer.DefaultCtPatientBWaypoint;
+      ctPatientCWaypoint = OverworldGameObjectInitializer.DefaultCtPatientCWaypoint;
+      patientBSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientBSpawnWaypointIdentifier;
+      patientCSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientCSpawnWaypointIdentifier;
+      dummyBSpawnWaypointIdentifier = OverworldGameObjectInitializer.DummyBSpawnWaypointIdentifier;
+      ctPatientBWaypointIdentifier = OverworldGameObjectInitializer.CtPatientBWaypointIdentifier;
+      ctPatientCWaypointIdentifier = OverworldGameObjectInitializer.CtPatientCWaypointIdentifier;
       staticEntityLayouts.Clear();
       staticEntityLayouts.Add(AssetDatabase.LoadAssetAtPath<StaticEntityLayoutDefinition>(
         "Assets/Modules/TriageTrainer/ScriptableObjects/StaticEntityLayouts/OverworldPatientSupports.asset"));
+    }
+
+    private static void DrawWaypointFields(string title, ref string identifier, ref Vector3 value)
+    {
+      using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+      {
+        EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
+        identifier = EditorGUILayout.TextField("Identifier", identifier);
+        value = EditorGUILayout.Vector3Field("Value", value);
+      }
+    }
+
+    private static void DrawWaypointFields(string title, string identifier, ref Vector3 value)
+    {
+      using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+      {
+        EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Identifier", identifier);
+        value = EditorGUILayout.Vector3Field("Value", value);
+      }
     }
   }
 }

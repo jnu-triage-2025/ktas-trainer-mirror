@@ -84,6 +84,22 @@ namespace TriageTrainer.Entity
       WarnIfConfigurationInvalid();
     }
 
+    private void OnEnable()
+    {
+      TriageWorldInteractionSignals.RaiseCareZoneEnabled(Identifier);
+    }
+
+    private void OnDisable()
+    {
+      if (_activePatient != null)
+        ReleaseEquipmentIfOwned(_activePatient);
+      _activePatient = null;
+      _patientColliderCounts.Clear();
+      _bedColliderCounts.Clear();
+      _snappedBeds.Clear();
+      TriageWorldInteractionSignals.RaiseCareZoneDisabled(Identifier);
+    }
+
     private void OnValidate()
     {
       _size.x = Mathf.Max(0.01f, _size.x);
@@ -159,28 +175,27 @@ namespace TriageTrainer.Entity
           return;
         }
         _patientColliderCounts.Remove(patient);
-        if (ReferenceEquals(_activePatient, patient))
+        bool wasActivePatient = ReferenceEquals(_activePatient, patient);
+        if (wasActivePatient)
         {
           _activePatient = null;
           PatientExited?.Invoke(patient);
+          ReleaseEquipmentIfOwned(patient);
+          TriageWorldInteractionSignals.RaiseCareZonePatientExited(Identifier, patient.Identifier);
         }
-        if (ReferenceEquals(patient.ConnectedWallSuction, _connectedWallSuction))
-          patient.SetConnectedWallSuctionConnections(null);
-        if (ReferenceEquals(patient.ConnectedOxyflowmeter, _connectedOxyflowmeter))
-          patient.SetConnectedOxyflowmeterConnections(null);
-        _connectedWallSuction = null;
-        _connectedOxyflowmeter = null;
-        TriageWorldInteractionSignals.RaiseCareZonePatientExited(Identifier, patient.Identifier);
 
-        foreach (var occupant in _patientColliderCounts)
+        if (wasActivePatient)
         {
-          if (occupant.Key == null)
-            continue;
+          foreach (var occupant in _patientColliderCounts)
+          {
+            if (occupant.Key == null)
+              continue;
 
-          _activePatient = occupant.Key;
-          Connect(_activePatient);
-          PatientEntered?.Invoke(_activePatient);
-          break;
+            _activePatient = occupant.Key;
+            Connect(_activePatient);
+            PatientEntered?.Invoke(_activePatient);
+            break;
+          }
         }
         return;
       }
@@ -221,10 +236,19 @@ namespace TriageTrainer.Entity
 
     private void Connect(PatientController patient)
     {
+      WallAttachedWallSuction previousSuction = _connectedWallSuction;
+      WallAttachedOxyflowmeter previousOxyflowmeter = _connectedOxyflowmeter;
+      bool ownsPreviousSuction = previousSuction != null && ReferenceEquals(patient.ConnectedWallSuction, previousSuction);
+      bool ownsPreviousOxyflowmeter = previousOxyflowmeter != null && ReferenceEquals(patient.ConnectedOxyflowmeter, previousOxyflowmeter);
       if (_requireBedSnapForPatient && !IsPatientSupportedInZone(patient))
       {
-        patient.SetConnectedWallSuctionConnections(null);
-        patient.SetConnectedOxyflowmeterConnections(null);
+        if (ownsPreviousSuction || ownsPreviousOxyflowmeter)
+          ReleaseEquipmentIfOwned(patient);
+        else
+        {
+          _connectedWallSuction = null;
+          _connectedOxyflowmeter = null;
+        }
         return;
       }
       RefreshEquipment();
@@ -235,6 +259,37 @@ namespace TriageTrainer.Entity
       _connectedOxyflowmeter = flowmeter != null && flowmeter.Count == 1 ? flowmeter[0] : null;
       patient.SetConnectedWallSuctionConnections(suction);
       patient.SetConnectedOxyflowmeterConnections(flowmeter);
+      if (ownsPreviousSuction && !ReferenceEquals(previousSuction, patient.ConnectedWallSuction))
+      {
+        TriageWorldInteractionSignals.RaiseCareZonePatientEquipmentDisconnected(Identifier, patient.Identifier, PatientController.EquipmentTypeWallSuction, previousSuction);
+      }
+      if (patient.ConnectedWallSuction != null && !ReferenceEquals(previousSuction, patient.ConnectedWallSuction))
+        TriageWorldInteractionSignals.RaiseCareZonePatientEquipmentConnected(Identifier, patient.Identifier, PatientController.EquipmentTypeWallSuction, patient.ConnectedWallSuction);
+      if (ownsPreviousOxyflowmeter && !ReferenceEquals(previousOxyflowmeter, patient.ConnectedOxyflowmeter))
+      {
+        TriageWorldInteractionSignals.RaiseCareZonePatientEquipmentDisconnected(Identifier, patient.Identifier, PatientController.EquipmentTypeOxyflowmeter, previousOxyflowmeter);
+      }
+      if (patient.ConnectedOxyflowmeter != null && !ReferenceEquals(previousOxyflowmeter, patient.ConnectedOxyflowmeter))
+        TriageWorldInteractionSignals.RaiseCareZonePatientEquipmentConnected(Identifier, patient.Identifier, PatientController.EquipmentTypeOxyflowmeter, patient.ConnectedOxyflowmeter);
+    }
+
+    private void ReleaseEquipmentIfOwned(PatientController patient)
+    {
+      if (patient == null)
+        return;
+
+      if (_connectedWallSuction != null && ReferenceEquals(patient.ConnectedWallSuction, _connectedWallSuction))
+      {
+        TriageWorldInteractionSignals.RaiseCareZonePatientEquipmentDisconnected(Identifier, patient.Identifier, PatientController.EquipmentTypeWallSuction, _connectedWallSuction);
+        patient.SetConnectedWallSuctionConnections(null);
+      }
+      if (_connectedOxyflowmeter != null && ReferenceEquals(patient.ConnectedOxyflowmeter, _connectedOxyflowmeter))
+      {
+        TriageWorldInteractionSignals.RaiseCareZonePatientEquipmentDisconnected(Identifier, patient.Identifier, PatientController.EquipmentTypeOxyflowmeter, _connectedOxyflowmeter);
+        patient.SetConnectedOxyflowmeterConnections(null);
+      }
+      _connectedWallSuction = null;
+      _connectedOxyflowmeter = null;
     }
 
     private IReadOnlyList<WallAttachedWallSuction> GetUsableWallSuctionSources()

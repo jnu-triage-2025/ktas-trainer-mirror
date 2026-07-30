@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using TriageTrainer.Scenario;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -69,6 +70,16 @@ namespace TriageTrainer.Entity
     private void Awake()
     {
       CreateRuntimeHint();
+    }
+
+    private void OnEnable()
+    {
+      TriageWorldInteractionSignals.RaisePatientBedPositioningPointEnabled(Identifier);
+    }
+
+    private void OnDisable()
+    {
+      TriageWorldInteractionSignals.RaisePatientBedPositioningPointDisabled(Identifier);
     }
 
     private void Update()

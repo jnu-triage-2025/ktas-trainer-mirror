@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Command;
@@ -678,23 +679,73 @@ namespace MultiplayerInfrastructure.Chat
       if (string.IsNullOrEmpty(input))
         return Array.Empty<string>();
 
-      var parts = input.Split(separator);
-      for (int i = 0; i < parts.Length; i++)
+      var parts = new List<string>();
+      var current = new StringBuilder();
+      bool inString = false;
+      bool escaped = false;
+      foreach (char character in input)
       {
-        parts[i] = parts[i].Trim();
+        if (character == '"' && !escaped)
+          inString = !inString;
+        if (character == separator && !inString)
+        {
+          parts.Add(current.ToString().Trim());
+          current.Clear();
+          escaped = false;
+          continue;
+        }
+        current.Append(character);
+        escaped = character == '\\' && !escaped;
+        if (character != '\\')
+          escaped = false;
       }
+      parts.Add(current.ToString().Trim());
 
       if (!removeEmpty)
-        return parts;
+        return parts.ToArray();
 
-      var filtered = new List<string>(parts.Length);
-      for (int i = 0; i < parts.Length; i++)
+      var filtered = new List<string>(parts.Count);
+      for (int i = 0; i < parts.Count; i++)
       {
         if (!string.IsNullOrEmpty(parts[i]))
           filtered.Add(parts[i]);
       }
 
       return filtered.ToArray();
+    }
+
+    /// <summary>인용 문자열 내부의 공백을 보존하여 명령 인자를 토큰화한다.</summary>
+    private static string[] TokenizeCommandLine(string commandLine)
+    {
+      if (string.IsNullOrWhiteSpace(commandLine))
+        return Array.Empty<string>();
+
+      var tokens = new List<string>();
+      var current = new StringBuilder();
+      bool inString = false;
+      bool escaped = false;
+      foreach (char character in commandLine)
+      {
+        if (character == '"' && !escaped)
+          inString = !inString;
+        if (char.IsWhiteSpace(character) && !inString)
+        {
+          if (current.Length > 0)
+          {
+            tokens.Add(current.ToString());
+            current.Clear();
+          }
+          escaped = false;
+          continue;
+        }
+        current.Append(character);
+        escaped = character == '\\' && !escaped;
+        if (character != '\\')
+          escaped = false;
+      }
+      if (current.Length > 0)
+        tokens.Add(current.ToString());
+      return tokens.ToArray();
     }
 
     private bool TryExecuteSingleCommand(
@@ -716,7 +767,7 @@ namespace MultiplayerInfrastructure.Chat
         return false;
       }
 
-      string[] parts = commandLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+      string[] parts = TokenizeCommandLine(commandLine);
       if (parts.Length == 0)
       {
         error = "Usage: /help";

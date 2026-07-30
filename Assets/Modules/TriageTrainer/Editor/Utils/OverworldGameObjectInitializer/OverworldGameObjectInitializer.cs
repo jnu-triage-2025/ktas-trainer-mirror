@@ -20,6 +20,19 @@ namespace TriageTrainer.Editor.Utils
     public static readonly Vector3 DefaultCommonSpawnPoint = new(-73f, 1f, -7.5f);
     public const string CommonSpawnPointIdentifier = "spawnpoint-commons";
 
+    // patient_b_c_ct spatial anchors. These are intentionally plain WaypointAnchor
+    // objects: runtime patient/preset spawns resolve their destinations by ID.
+    public const string PatientBSpawnWaypointIdentifier = "patient_b:spawn";
+    public const string PatientCSpawnWaypointIdentifier = "patient_c:spawn";
+    public const string DummyBSpawnWaypointIdentifier = "dummy_b:spawn";
+    public const string CtPatientBWaypointIdentifier = "ct:patient_b";
+    public const string CtPatientCWaypointIdentifier = "ct:patient_c";
+    public static readonly Vector3 DefaultPatientBSpawnWaypoint = new(-1f, -1f, -1f);
+    public static readonly Vector3 DefaultPatientCSpawnWaypoint = new(-1f, -1f, -1f);
+    public static readonly Vector3 DefaultDummyBSpawnWaypoint = new(-1f, -1f, -1f);
+    public static readonly Vector3 DefaultCtPatientBWaypoint = new(-1f, -1f, -1f);
+    public static readonly Vector3 DefaultCtPatientCWaypoint = new(-1f, -1f, -1f);
+
     public static void Set()
     {
       Set(
@@ -28,22 +41,37 @@ namespace TriageTrainer.Editor.Utils
         TreatmentRoomEnteranceIdentifier,
         DefaultTreatmentRoomEnterance,
         CommonSpawnPointIdentifier,
-        DefaultCommonSpawnPoint
+        DefaultCommonSpawnPoint,
+        PatientBSpawnWaypointIdentifier, DefaultPatientBSpawnWaypoint,
+        PatientCSpawnWaypointIdentifier, DefaultPatientCSpawnWaypoint,
+        DummyBSpawnWaypointIdentifier, DefaultDummyBSpawnWaypoint,
+        CtPatientBWaypointIdentifier, DefaultCtPatientBWaypoint,
+        CtPatientCWaypointIdentifier, DefaultCtPatientCWaypoint
       );
     }
 
     public static void Set(
       string buildingIdentifier,
       Vector3 buildingEnterance,
-      string treatmentIdentifier,
-      Vector3 treatmentRoomEnterance,
-      string commonSpawnPointIdentifier,
-      Vector3 commonSpawnPoint)
+        string treatmentIdentifier,
+        Vector3 treatmentRoomEnterance,
+        string commonSpawnPointIdentifier,
+        Vector3 commonSpawnPoint,
+        string patientBSpawnWaypointIdentifier, Vector3 patientBSpawnWaypoint,
+        string patientCSpawnWaypointIdentifier, Vector3 patientCSpawnWaypoint,
+        string dummyBSpawnWaypointIdentifier, Vector3 dummyBSpawnWaypoint,
+        string ctPatientBWaypointIdentifier, Vector3 ctPatientBWaypoint,
+        string ctPatientCWaypointIdentifier, Vector3 ctPatientCWaypoint)
     {
       var generatedRoot = GetOrCreateGeneratedRoot();
       DeleteChildren(generatedRoot.transform);
       CreateWaypoint(generatedRoot.transform, buildingIdentifier, buildingEnterance);
       CreateWaypoint(generatedRoot.transform, treatmentIdentifier, treatmentRoomEnterance);
+      CreateWaypoint(generatedRoot.transform, patientBSpawnWaypointIdentifier, patientBSpawnWaypoint);
+      CreateWaypoint(generatedRoot.transform, patientCSpawnWaypointIdentifier, patientCSpawnWaypoint);
+      CreateWaypoint(generatedRoot.transform, dummyBSpawnWaypointIdentifier, dummyBSpawnWaypoint);
+      CreateWaypoint(generatedRoot.transform, ctPatientBWaypointIdentifier, ctPatientBWaypoint);
+      CreateWaypoint(generatedRoot.transform, ctPatientCWaypointIdentifier, ctPatientCWaypoint);
       CreateSpawnPoint(generatedRoot.transform, commonSpawnPointIdentifier, commonSpawnPoint);
     }
 
@@ -190,7 +218,7 @@ namespace TriageTrainer.Editor.Utils
       waypointObject.transform.position = position;
 
       var waypointAnchor = waypointObject.AddComponent<WaypointAnchor>();
-      SetWaypointIdentifier(waypointAnchor, identifier);
+      waypointAnchor.ConfigureIdentifier(identifier);
 
 #if UNITY_EDITOR
       if (!Application.isPlaying)
@@ -217,15 +245,6 @@ namespace TriageTrainer.Editor.Utils
 #endif
 
       return spawnPointObject.transform;
-    }
-
-    private static void SetWaypointIdentifier(WaypointAnchor waypointAnchor, string identifier)
-    {
-      var field = typeof(WaypointAnchor).GetField("identifier", BindingFlags.Instance | BindingFlags.NonPublic);
-      if (field == null)
-        return;
-
-      field.SetValue(waypointAnchor, identifier);
     }
 
     private static void DestroyObject(Object target)

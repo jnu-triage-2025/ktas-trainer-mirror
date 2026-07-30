@@ -220,6 +220,43 @@ namespace MultiplayerInfrastructure.Entity
       return count > 0 && ApplyMovement(forward, turn, count);
     }
 
+    /// <summary>
+    /// 현재 서버 이동에 실제 입력을 제공하는 참가자가 정확히 한 명일 때만 그 연결을 반환한다.
+    /// 협동 이동처럼 행동 주체가 여럿인 경우에는 임의의 한 명에게 후속 이벤트를 귀속하지 않는다.
+    /// </summary>
+    protected bool TryGetSingleMovingParticipantConnection(out NetworkConnection connection)
+    {
+      connection = null;
+      if (!IsServerStarted)
+        return false;
+
+      int contributingClientId = InvalidClientId;
+      int[] clientIds = { _participant0.Value, _participant1.Value };
+      for (int i = 0; i < clientIds.Length; i++)
+      {
+        int clientId = clientIds[i];
+        if (clientId < 0)
+          continue;
+
+        Vector2 input = Vector2.zero;
+        if (TryGetLocalOwnerPlayer(out var host) && host.Owner.ClientId == clientId)
+          input = new Vector2(host.CurrentMoveInputVector.z, host.CurrentMoveInputVector.x);
+        else if (_serverInputs.TryGetValue(clientId, out var reportedInput))
+          input = reportedInput;
+
+        if (input.sqrMagnitude <= 0.00000001f)
+          continue;
+        if (contributingClientId != InvalidClientId)
+          return false;
+        contributingClientId = clientId;
+      }
+
+      if (contributingClientId == InvalidClientId || !TryResolvePlayer(contributingClientId, out var player))
+        return false;
+      connection = player.Owner;
+      return connection != null && connection.IsValid;
+    }
+
     private void MoveFromLocalParticipants()
     {
       int count = 0;
