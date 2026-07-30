@@ -12,6 +12,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void Update()
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
       if (!Input.GetMouseButtonDown(0))
         return;
 
@@ -24,6 +25,7 @@ namespace MultiplayerInfrastructure.UI
         $"pointerOverUI={current != null && current.IsPointerOverGameObject()} " +
         $"selected='{current?.currentSelectedGameObject?.name ?? "<null>"}'",
         this);
+#endif
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -73,11 +75,13 @@ namespace MultiplayerInfrastructure.UI
       if (inputModule.actionsAsset == null || !hasValidBindings)
         inputModule.AssignDefaultActions();
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
       Debug.Log(
         $"[UIInputDiagnostic] EventSystem='{current.name}' enabled={current.enabled} " +
         $"currentInputModule='{current.currentInputModule?.GetType().Name ?? "<null>"}' " +
         $"inputSystemModuleEnabled={inputModule.enabled} hasValidBindings={hasValidBindings}",
         current);
+#endif
     }
 
     private static EventSystem ResolveEventSystem()

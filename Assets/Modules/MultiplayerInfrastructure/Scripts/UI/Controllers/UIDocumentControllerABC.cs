@@ -7,6 +7,8 @@ namespace MultiplayerInfrastructure.UI
   /// <summary>
   /// UIDocument를 제어하는 모든 MonoBehaviour 기반 UI의 공통 부모입니다.
   /// 표시 상태와 포인터 히트테스트 상태를 항상 함께 관리합니다.
+  /// 새 UIDocument 기반 UI 컨트롤러는 반드시 이 클래스를 직접 또는 UIControllerABC를 통해 상속해야 합니다.
+  /// NetworkBehaviour 등 단일 상속 때문에 불가능한 경우에는 UIDocumentInteractionPolicy를 사용해야 합니다.
   /// </summary>
   public abstract class UIDocumentControllerABC : MonoBehaviour
   {
@@ -33,10 +35,6 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     protected static void SetDocumentRootPickingEnabled(UIDocument document, bool enabled)
     {
-      var docRoot = document != null ? document.rootVisualElement : null;
-      if (docRoot == null)
-        return;
-
       UIDocumentInteractionPolicy.SetPickingEnabled(document, enabled);
     }
 
@@ -46,10 +44,6 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     protected static void SetDocumentVisible(UIDocument document, bool visible)
     {
-      var docRoot = document != null ? document.rootVisualElement : null;
-      if (docRoot == null)
-        return;
-
       UIDocumentInteractionPolicy.SetVisible(document, visible);
     }
 
@@ -58,12 +52,8 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     protected IEnumerator NeutralizeDocumentRootWhenReady(UIDocument document)
     {
-      int guard = 0;
-      while ((document == null || document.rootVisualElement == null) && guard < 10)
-      {
-        guard++;
+      while (document != null && document.rootVisualElement == null)
         yield return null;
-      }
 
       SetDocumentVisible(document, false);
     }

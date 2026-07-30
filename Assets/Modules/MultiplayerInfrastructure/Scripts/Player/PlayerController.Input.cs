@@ -38,6 +38,7 @@ namespace MultiplayerInfrastructure.Player
 
     public void Update_Input()
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
       bool legacyLeftClick = Input.GetMouseButtonDown(0);
       bool newLeftClick = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
       bool legacyEscape = Input.GetKeyDown(KeyCode.Escape);
@@ -78,6 +79,7 @@ namespace MultiplayerInfrastructure.Player
             this);
         }
       }
+#endif
 
       if (Input.GetKeyDown(KeyCode.F)) Debug.Log($"[PlayerController] F key pressed. IsOwner: {IsOwner}, IsClient: {IsClient}, IsServer: {IsServerInitialized}");
 
