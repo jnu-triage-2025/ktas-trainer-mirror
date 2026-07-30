@@ -24,7 +24,7 @@ namespace TriageTrainer.SceneBootstrapper
   /// 모든 세션 부트스트래퍼가 같은 씬을 미리 로드하므로, 장애 표시 시 추가 씬 로딩이 없습니다.
   /// </summary>
   [DisallowMultipleComponent]
-  public sealed class IndevConnectionFailureOverlay : MonoBehaviour
+  public sealed class IndevConnectionFailureOverlay : UIDocumentControllerABC
   {
     private const string LogPrefix = "[NetworkSessionFailure]";
     private const string HiddenClass = "is-hidden";
@@ -213,7 +213,7 @@ namespace TriageTrainer.SceneBootstrapper
       _detail.text = safeReason;
       _logPath.text = $"자세한 내용은 세션 로그를 참조하세요.\n{GameLogService.CurrentLogFilePath ?? "로그 경로를 확인할 수 없습니다."}";
       _screen.RemoveFromClassList(HiddenClass);
-      SetPickingMode(_document.rootVisualElement, PickingMode.Position);
+      SetDocumentVisible(_document, true);
 
       if (gameObject.scene.IsValid() && gameObject.scene.isLoaded)
         SceneManager.SetActiveScene(gameObject.scene);
@@ -224,19 +224,7 @@ namespace TriageTrainer.SceneBootstrapper
       _failureVisible = false;
       if (_screen != null)
         _screen.AddToClassList(HiddenClass);
-
-      if (_document != null && _document.rootVisualElement != null)
-        SetPickingMode(_document.rootVisualElement, PickingMode.Ignore);
-    }
-
-    private static void SetPickingMode(VisualElement root, PickingMode mode)
-    {
-      if (root == null)
-        return;
-
-      root.pickingMode = mode;
-      for (int i = 0; i < root.childCount; i++)
-        SetPickingMode(root[i], mode);
+      SetDocumentVisible(_document, false);
     }
 
     private void BindDocument()
@@ -249,7 +237,7 @@ namespace TriageTrainer.SceneBootstrapper
         return;
 
       if (!_failureVisible)
-        SetPickingMode(root, PickingMode.Ignore);
+        SetDocumentVisible(_document, false);
 
       _screen = root.Q<VisualElement>("failure-screen");
       _title = root.Q<Label>("failure-title");

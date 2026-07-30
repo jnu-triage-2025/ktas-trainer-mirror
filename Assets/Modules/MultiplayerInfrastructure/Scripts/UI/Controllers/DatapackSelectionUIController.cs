@@ -12,7 +12,7 @@ namespace MultiplayerInfrastructure.UI
   /// Data-only controller for DatapackSelectionUI. Layout and visual styling live in
   /// DatapackSelectionUI.uxml/.uss, matching the IntroScene UIDocument workflow.
   /// </summary>
-  public sealed class DatapackSelectionUIController : MonoBehaviour
+  public sealed class DatapackSelectionUIController : UIDocumentControllerABC
   {
     private readonly List<DatapackFileInfo> _available = new();
     private readonly List<DatapackFileInfo> _active = new();
@@ -28,6 +28,7 @@ namespace MultiplayerInfrastructure.UI
       document.panelSettings = panelSettings;
       document.visualTreeAsset = visualTreeAsset;
       document.sortingOrder = 100;
+      SetDocumentVisible(document, true);
 
       var root = document.rootVisualElement;
       _availableView = root.Q<ListView>("availableList");

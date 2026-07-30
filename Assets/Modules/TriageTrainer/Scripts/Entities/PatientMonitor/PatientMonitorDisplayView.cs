@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UIElements;
+using MultiplayerInfrastructure.UI;
 
 namespace TriageTrainer.Entity.PatientMonitor
 {
@@ -129,17 +130,18 @@ namespace TriageTrainer.Entity.PatientMonitor
 
     private static void SetGeneratedNonInteractive(VisualElement root)
     {
-      var stack = new System.Collections.Generic.Stack<VisualElement>();
-      stack.Push(root);
-      while (stack.Count > 0)
-      {
-        var current = stack.Pop();
-        current.pickingMode = PickingMode.Ignore;
-        current.focusable = false;
-        for (int i = 0; i < current.childCount; i++)
-          stack.Push(current[i]);
-      }
+      UIDocumentInteractionPolicy.SetSubtreePickingMode(root, PickingMode.Ignore);
+      SetSubtreeNonFocusable(root);
+    }
 
+    private static void SetSubtreeNonFocusable(VisualElement root)
+    {
+      if (root == null)
+        return;
+
+      root.focusable = false;
+      for (int i = 0; i < root.childCount; i++)
+        SetSubtreeNonFocusable(root[i]);
     }
 
     private void BuildMetrics(VisualElement root)

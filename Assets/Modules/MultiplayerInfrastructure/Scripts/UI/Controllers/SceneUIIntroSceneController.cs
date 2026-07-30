@@ -23,7 +23,7 @@ using MultiplayerInfrastructure.Definitions;
 namespace MultiplayerInfrastructure.UI
 {
   [RequireComponent(typeof(UIDocument))]
-  public class SceneUIIntroSceneController : MonoBehaviour
+  public class SceneUIIntroSceneController : UIDocumentControllerABC
   {
     [Header("Scene flow")]
     [SerializeField] private string ingameSceneName = DefaultsSceneControl.IngameSceneName;
@@ -91,6 +91,7 @@ namespace MultiplayerInfrastructure.UI
       EnsureDiscoveryService();
 
       var doc = GetComponent<UIDocument>();
+      SetDocumentVisible(doc, true);
       var root = doc.rootVisualElement;
 
       // ── Panels ──
