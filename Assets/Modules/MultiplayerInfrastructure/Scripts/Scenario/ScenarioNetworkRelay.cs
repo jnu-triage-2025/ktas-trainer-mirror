@@ -37,6 +37,9 @@ namespace MultiplayerInfrastructure.Scenario
   public sealed class ScenarioNetworkRelay : NetworkBehaviour
   {
     private static ScenarioNetworkRelay _instance;
+    private const int MaxSignalUpdatesPerPlayerPerWindow = 30;
+    private const float SignalUpdateWindowSeconds = 1f;
+    private static readonly Dictionary<string, Queue<float>> SignalUpdateTimesByPlayer = new(StringComparer.Ordinal);
     private readonly List<ActingNpcConfiguration> _actingNpcConfigurations = new List<ActingNpcConfiguration>();
     private readonly List<NpcControlState> _npcControlStates = new List<NpcControlState>();
 
@@ -72,13 +75,17 @@ namespace MultiplayerInfrastructure.Scenario
       if (InstanceFinder.IsServerStarted)
       {
         ScenarioSignalParameterStore.FlushLocal();
+        SignalUpdateTimesByPlayer.Clear();
         if (_instance != null)
           _instance.RpcMirrorFlushSignalParameters();
         return;
       }
 
       if (InstanceFinder.IsOffline || _instance == null)
+      {
         ScenarioSignalParameterStore.FlushLocal();
+        SignalUpdateTimesByPlayer.Clear();
+      }
     }
 
     /// <summary>
@@ -224,6 +231,7 @@ namespace MultiplayerInfrastructure.Scenario
     {
       base.OnStartServer();
       ScenarioSignalParameterStore.FlushLocal();
+      SignalUpdateTimesByPlayer.Clear();
       InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
     }
 
@@ -234,6 +242,7 @@ namespace MultiplayerInfrastructure.Scenario
       _actingNpcConfigurations.Clear();
       _npcControlStates.Clear();
       ScenarioSignalParameterStore.FlushLocal();
+      SignalUpdateTimesByPlayer.Clear();
       base.OnStopServer();
     }
 
@@ -655,6 +664,11 @@ namespace MultiplayerInfrastructure.Scenario
         ReportInvalidParameter(normalizedSignalId, parameterJson, sender);
         return false;
       }
+      if (!TryConsumeSignalUpdateQuota(playerIdentifier, out string rateLimitError))
+      {
+        ReportRateLimit(normalizedSignalId, playerIdentifier, rateLimitError, sender);
+        return false;
+      }
 
       // 파라미터 저장소는 감사·조회용 부가 상태다. 포화되어도 실제 시나리오 신호는 반드시 발생시킨다.
       ScenarioInteractionSignals.RegisterLocal(normalizedSignalId);
@@ -741,6 +755,29 @@ namespace MultiplayerInfrastructure.Scenario
         error = $"시그널 매개변수는 최대 {MaxSignalParameterLength}자까지 허용됩니다.";
         return false;
       }
+      return true;
+    }
+
+    private static bool TryConsumeSignalUpdateQuota(string playerIdentifier, out string error)
+    {
+      error = string.Empty;
+      if (string.IsNullOrWhiteSpace(playerIdentifier))
+        playerIdentifier = ScenarioSignalParameterStore.ServerPlayerIdentifier;
+
+      float now = Time.realtimeSinceStartup;
+      if (!SignalUpdateTimesByPlayer.TryGetValue(playerIdentifier, out var times))
+      {
+        times = new Queue<float>();
+        SignalUpdateTimesByPlayer.Add(playerIdentifier, times);
+      }
+      while (times.Count > 0 && now - times.Peek() >= SignalUpdateWindowSeconds)
+        times.Dequeue();
+      if (times.Count >= MaxSignalUpdatesPerPlayerPerWindow)
+      {
+        error = $"플레이어별 시그널 갱신 한도({MaxSignalUpdatesPerPlayerPerWindow}/{SignalUpdateWindowSeconds:0.#}초)에 도달했습니다.";
+        return false;
+      }
+      times.Enqueue(now);
       return true;
     }
 
@@ -837,6 +874,17 @@ namespace MultiplayerInfrastructure.Scenario
       string message = $"시그널 ({normalizedSignalId})의 매개변수를 저장하지 못했습니다: {error}";
       Debug.LogWarning($"[ScenarioNetworkRelay] {message}");
       GameLogService.WriteSignal($"Signal parameter rejected: signal={ScenarioSignalParameterStore.FormatForLog(normalizedSignalId)}, player={ScenarioSignalParameterStore.FormatForLog(playerIdentifier)}, reason={ScenarioSignalParameterStore.FormatForLog(error)}", ScenarioSignalParameterStore.FormatForLog(normalizedSignalId));
+      if (sender != null
+          && Registry.Registry.TryGet<ChatService>(RegistryType.Service, Registry.Registry.TypeKey<ChatService>(), out var chat))
+        chat.SendSystemMessage(sender, message);
+    }
+
+    private static void ReportRateLimit(string normalizedSignalId, string playerIdentifier,
+      string error, NetworkConnection sender)
+    {
+      string message = $"시그널 ({normalizedSignalId})을 수락하지 못했습니다: {error}";
+      Debug.LogWarning($"[ScenarioNetworkRelay] {message}");
+      GameLogService.WriteSignal($"Signal rate limited: signal={ScenarioSignalParameterStore.FormatForLog(normalizedSignalId)}, player={ScenarioSignalParameterStore.FormatForLog(playerIdentifier)}, reason={ScenarioSignalParameterStore.FormatForLog(error)}", ScenarioSignalParameterStore.FormatForLog(normalizedSignalId));
       if (sender != null
           && Registry.Registry.TryGet<ChatService>(RegistryType.Service, Registry.Registry.TypeKey<ChatService>(), out var chat))
         chat.SendSystemMessage(sender, message);

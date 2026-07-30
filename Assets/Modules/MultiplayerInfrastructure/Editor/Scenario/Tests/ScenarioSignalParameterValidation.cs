@@ -45,6 +45,31 @@ namespace MultiplayerInfrastructure.Tests.Scenario
           && contextual.PlayerDisplayName == "Charlie",
           "서버 콜백 플레이어 컨텍스트가 신호 발신자로 보존되지 않았습니다.");
 
+        IDisposable outerContext = ScenarioSignalPlayerContext.Push("player-outer", "Outer");
+        IDisposable innerContext = ScenarioSignalPlayerContext.Push("player-inner", "Inner");
+        outerContext.Dispose();
+        ScenarioInteractionSignals.Raise("validation.context-out-of-order", "true");
+        Require(ScenarioSignalParameterStore.TryGetForPlayer("validation.context-out-of-order", "player-inner", out _),
+          "순서 밖 컨텍스트 해제가 내부 플레이어 컨텍스트를 제거했습니다.");
+        innerContext.Dispose();
+        ScenarioInteractionSignals.Raise("validation.context-after-dispose", "true");
+        Require(ScenarioSignalParameterStore.TryGetForPlayer("validation.context-after-dispose",
+          ScenarioSignalParameterStore.ServerPlayerIdentifier, out _),
+          "모든 컨텍스트 해제 후 플레이어 컨텍스트가 남아 있습니다.");
+
+        ScenarioNetworkRelay.FlushSignalParametersAuthoritative();
+        for (int i = 0; i < 30; i++)
+        {
+          Require(ScenarioNetworkRelay.RaiseAuthoritativeForPlayer(
+            ScenarioInteractionSignals.Normalize($"validation.rate.{i}"), "0", "rate-player", "Rate"),
+            "플레이어별 갱신 한도 안의 신호가 거부되었습니다.");
+        }
+        Require(!ScenarioNetworkRelay.RaiseAuthoritativeForPlayer(
+          ScenarioInteractionSignals.Normalize("validation.rate.overflow"), "0", "rate-player", "Rate"),
+          "플레이어별 갱신 한도를 넘는 신호가 수락되었습니다.");
+        Require(!ScenarioInteractionSignals.IsRaised("validation.rate.overflow"),
+          "갱신 한도를 넘은 실제 시나리오 신호가 발생했습니다.");
+
         MethodInfo tokenize = typeof(ChatService).GetMethod("TokenizeCommandLine",
           BindingFlags.Static | BindingFlags.NonPublic);
         string[] tokens = tokenize?.Invoke(null, new object[] { "signal raise validation.command {\"memo\":\"a  b|c&d\"}" }) as string[];
@@ -89,8 +114,13 @@ namespace MultiplayerInfrastructure.Tests.Scenario
         Registry.Registry.Unregister(RegistryType.RuntimeState, ScenarioInteractionSignals.Normalize(Signal));
         Registry.Registry.Unregister(RegistryType.RuntimeState, ScenarioInteractionSignals.Normalize("validation.invalid"));
         Registry.Registry.Unregister(RegistryType.RuntimeState, ScenarioInteractionSignals.Normalize("validation.context"));
+        Registry.Registry.Unregister(RegistryType.RuntimeState, ScenarioInteractionSignals.Normalize("validation.context-out-of-order"));
+        Registry.Registry.Unregister(RegistryType.RuntimeState, ScenarioInteractionSignals.Normalize("validation.context-after-dispose"));
         Registry.Registry.Unregister(RegistryType.RuntimeState, ScenarioInteractionSignals.Normalize("validation.stale"));
         Registry.Registry.Unregister(RegistryType.RuntimeState, ScenarioInteractionSignals.Normalize("validation.snapshot"));
+        for (int i = 0; i < 30; i++)
+          Registry.Registry.Unregister(RegistryType.RuntimeState, ScenarioInteractionSignals.Normalize($"validation.rate.{i}"));
+        Registry.Registry.Unregister(RegistryType.RuntimeState, ScenarioInteractionSignals.Normalize("validation.rate.overflow"));
         for (int i = 0; i < ScenarioSignalParameterStore.MaxStoredEntries; i++)
           Registry.Registry.Unregister(RegistryType.RuntimeState, ScenarioInteractionSignals.Normalize($"validation.capacity.{i}"));
         Registry.Registry.Unregister(RegistryType.RuntimeState, ScenarioInteractionSignals.Normalize("validation.capacity.overflow"));

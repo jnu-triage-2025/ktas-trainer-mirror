@@ -241,6 +241,18 @@ namespace TriageTrainer.Entity
       if (!_enablePositioningSnap || (!IsServerStarted && IsClientStarted))
         return;
 
+      // 단독 이동자의 입력으로 스냅이 발생했을 때만 해당 플레이어를 신호 발신자로 보존한다.
+      // 협동 이동 및 외부 서버 보정은 행동 주체가 불명확하므로 서버 발신으로 기록한다.
+      using (IDisposable signalContext = TryGetSingleMovingParticipantConnection(out var mover)
+               ? MI.Scenario.ScenarioSignalPlayerContext.Push(mover)
+               : null)
+      {
+        TrySnapToPositioningPointWithSignalContext();
+      }
+    }
+
+    private void TrySnapToPositioningPointWithSignalContext()
+    {
       if (_latchedPositioningPoint != null)
       {
         float releaseDistance = _latchedPositioningPoint.SnapDistance + _positioningSnapReleasePadding;

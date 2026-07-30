@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Session;
+using UnityEngine;
 
 namespace MultiplayerInfrastructure.Scenario
 {
@@ -11,13 +12,13 @@ namespace MultiplayerInfrastructure.Scenario
   /// </summary>
   public static class ScenarioSignalPlayerContext
   {
-    private static readonly Stack<Context> Contexts = new();
+    private static readonly List<Context> Contexts = new();
 
     internal static bool TryGetCurrent(out string playerIdentifier, out string playerDisplayName)
     {
       if (Contexts.Count > 0)
       {
-        Context context = Contexts.Peek();
+        Context context = Contexts[Contexts.Count - 1];
         playerIdentifier = context.PlayerIdentifier;
         playerDisplayName = context.PlayerDisplayName;
         return true;
@@ -46,11 +47,12 @@ namespace MultiplayerInfrastructure.Scenario
         ? ScenarioSignalParameterStore.ServerPlayerIdentifier
         : playerIdentifier.Trim();
       string displayName = string.IsNullOrWhiteSpace(playerDisplayName) ? identifier : playerDisplayName.Trim();
-      Contexts.Push(new Context(identifier, displayName));
-      return new Scope();
+      var context = new Context(identifier, displayName);
+      Contexts.Add(context);
+      return new Scope(context);
     }
 
-    private readonly struct Context
+    private sealed class Context
     {
       public string PlayerIdentifier { get; }
       public string PlayerDisplayName { get; }
@@ -64,15 +66,23 @@ namespace MultiplayerInfrastructure.Scenario
 
     private sealed class Scope : IDisposable
     {
+      private readonly Context _context;
       private bool _disposed;
+
+      public Scope(Context context) => _context = context;
 
       public void Dispose()
       {
         if (_disposed)
           return;
         _disposed = true;
-        if (Contexts.Count > 0)
-          Contexts.Pop();
+
+        int index = Contexts.LastIndexOf(_context);
+        if (index < 0)
+          return;
+        if (index != Contexts.Count - 1)
+          Debug.LogWarning("[ScenarioSignalPlayerContext] Scope was disposed out of order; preserving nested player context.");
+        Contexts.RemoveAt(index);
       }
     }
   }

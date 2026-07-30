@@ -11,6 +11,8 @@ namespace MultiplayerInfrastructure.Command
   /// <summary>시나리오 신호의 JSON 파라미터 값을 조회·발신·초기화하는 운영 명령.</summary>
   public sealed class CommandDefinition_Signal : IChatCommandModel, IChatCommandUsage
   {
+    private const int MaxListEntries = 20;
+    private const int MaxListResponseCharacters = 6000;
     public string CommandEntry => "signal";
     public string Description => "Inspect and manage scenario signal JSON parameters.";
     public System.Collections.Generic.IReadOnlyList<UsageLine> UsageLines => new[]
@@ -121,16 +123,33 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
       string identifier = args != null && args.Length == 2 ? args[1] : null;
-      var values = ScenarioSignalParameterStore.GetAll(identifier).Take(20).ToArray();
+      var allValues = ScenarioSignalParameterStore.GetAll(identifier).ToArray();
+      var values = allValues.Take(MaxListEntries).ToArray();
       if (values.Length == 0)
       {
         LogQuery(sender, "list", identifier == null ? "*" : ScenarioInteractionSignals.Normalize(identifier), "count=0");
         Send(sender, "No stored scenario signal parameter values.");
         return;
       }
+      var lines = new System.Collections.Generic.List<string>();
+      int responseLength = 0;
+      bool truncated = allValues.Length > values.Length;
+      foreach (ScenarioSignalParameter value in values)
+      {
+        string line = Format(value);
+        int addedLength = line.Length + (lines.Count > 0 ? 1 : 0);
+        if (responseLength + addedLength > MaxListResponseCharacters)
+        {
+          truncated = true;
+          break;
+        }
+        lines.Add(line);
+        responseLength += addedLength;
+      }
       LogQuery(sender, "list", identifier == null ? "*" : ScenarioInteractionSignals.Normalize(identifier),
-        $"count={values.Length}, values={string.Join(" | ", values.Select(Format))}");
-      Send(sender, string.Join('\n', values.Select(Format)));
+        $"available={allValues.Length}, returned={lines.Count}, truncated={truncated}");
+      string suffix = truncated ? "\n… output truncated; narrow by signal or player." : string.Empty;
+      Send(sender, string.Join('\n', lines) + suffix);
     }
 
     private void Flush(NetworkConnection sender)
