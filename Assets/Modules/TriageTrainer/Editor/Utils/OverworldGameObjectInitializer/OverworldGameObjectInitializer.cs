@@ -92,7 +92,12 @@ namespace TriageTrainer.Editor.Utils
             instance.transform.localPosition = entity.position;
           if (!entity.useDefaultRotation)
             instance.transform.localRotation = Quaternion.Euler(entity.rotationEuler);
-          if (entity.type == StaticEntityLayoutType.MovingPatientBedPositioningPoint)
+          if (entity.type == StaticEntityLayoutType.WaypointAnchor)
+          {
+            var waypoint = instance.AddComponent<WaypointAnchor>();
+            waypoint.ConfigureIdentifier(entity.identifier);
+          }
+          else if (entity.type == StaticEntityLayoutType.MovingPatientBedPositioningPoint)
           {
             var point = instance.AddComponent<MovingPatientBedPositioningPoint>();
             point.SetIdentifierForEditor(entity.identifier);

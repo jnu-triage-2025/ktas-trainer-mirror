@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "scenarioIdentifier": "patient_b_c_ct",
   "source": {
-    "scenarioSha256": "15b539e00dd4581c36ceb862ddb44ab1d99ed9e6c009c18faab472bd3d474351",
+    "scenarioSha256": "408f36a7fa1196292b80f9af37bdafc8c378ad1002d432a656ee1442f39555d4",
     "generatedAtUtc": null
   },
   "declarations": [
@@ -960,7 +960,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.connect_oxyflowmeter_patient_b"
+        "identifier": "sig.equipment_connected_oxyflowmeter_patient_b"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -999,7 +999,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.use_wall_suction_patient_b"
+        "identifier": "sig.equipment_connected_wall_suction_patient_b"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1153,7 +1153,7 @@
       "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
     },
     {
-      "selector": { "kind": "RuntimeSignal", "identifier": "sig.use_wall_suction_patient_c" },
+      "selector": { "kind": "RuntimeSignal", "identifier": "sig.equipment_connected_wall_suction_patient_c" },
       "operation": "Override",
       "availability": "WhenNodeReached",
       "mustProve": true,
@@ -1161,7 +1161,7 @@
       "notes": "PatientCareDescriptionZone이 환자 C에 연결한 wall suction 상태에서 발신하는 신호입니다."
     },
     {
-      "selector": { "kind": "RuntimeSignal", "identifier": "sig.connect_oxyflowmeter_patient_c" },
+      "selector": { "kind": "RuntimeSignal", "identifier": "sig.equipment_connected_oxyflowmeter_patient_c" },
       "operation": "Override",
       "availability": "WhenNodeReached",
       "mustProve": true,

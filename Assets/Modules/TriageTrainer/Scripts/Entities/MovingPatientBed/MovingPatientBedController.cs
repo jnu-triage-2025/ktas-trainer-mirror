@@ -7,6 +7,7 @@ using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using MultiplayerInfrastructure.Logging;
+using TriageTrainer.Scenario;
 using UnityEngine;
 
 using MI = MultiplayerInfrastructure;
@@ -248,6 +249,7 @@ namespace TriageTrainer.Entity
         if (offset.sqrMagnitude <= releaseDistance * releaseDistance)
           return;
 
+        TriageWorldInteractionSignals.RaisePatientBedPositioningPointUnlatched(Identifier, _latchedPositioningPoint.Identifier);
         _latchedPositioningPoint = null;
       }
 
@@ -257,6 +259,7 @@ namespace TriageTrainer.Entity
 
       _latchedPositioningPoint = nearest;
       SetAuthoritativeTransform(nearest.Position, nearest.Rotation);
+      TriageWorldInteractionSignals.RaisePatientBedPositioningPointLatched(Identifier, nearest.Identifier);
       PublishPositioningPointReached(nearest);
     }
 

@@ -24,8 +24,8 @@
       "sig.connect_patient_and_monitor_b", "sig.connect_patient_and_monitor_patient_c"
     ],
     "wiredByPatientCareZone": [
-      "sig.use_wall_suction_patient_b", "sig.use_wall_suction_patient_c",
-      "sig.connect_oxyflowmeter_patient_b", "sig.connect_oxyflowmeter_patient_c"
+      "sig.equipment_connected_wall_suction_patient_b", "sig.equipment_connected_wall_suction_patient_c",
+      "sig.equipment_connected_oxyflowmeter_patient_b", "sig.equipment_connected_oxyflowmeter_patient_c"
     ],
     "wiredByPatientInteraction_partial": [
       "sig.click_patient_b", "sig.click_patient_c", "sig.select_patient_b", "sig.select_patient_c",

@@ -55,8 +55,9 @@ flags: ["refactor-required"]
 같은 위치의 `BIND_B_NASAL_APPLIED`/`BIND_C_NASAL_APPLIED`는 `NasalCannulaApplied` 전이를
 `apply_nasal_cannula_patient_b/c`로 변환한다. 따라서 `V055`와 `V074`의 비강캐뉼라 적용 조건도
 환자별로 분리된다. 산소·석션 사용 신호는 `PatientCareDescriptionZone`이 환자 객체에 장비를
-연결한 뒤 `EquipmentConnected` 상태 이벤트를 환자별 `use_wall_suction_patient_b/c`,
-`connect_oxyflowmeter_patient_b/c` 신호로 변환한다.
+연결한 뒤 `EquipmentConnected` 상태 이벤트를 환자별
+`equipment_connected_wall_suction_patient_b/c`,
+`equipment_connected_oxyflowmeter_patient_b/c` 신호로 변환한다.
 
 ### 플레이 차단 항목과 보완 위치
 
@@ -79,7 +80,7 @@ flags: ["refactor-required"]
 - Zone은 `IsAttached=true`인 `wall_suction`과 `oxyflowmeter`만 환자 장비로 연결한다.
 - 장비 종류별 Zone 내 활성 인스턴스는 정확히 하나여야 하며, 2개 이상이면 연결을 무효화하고 경고한다.
 - Zone → `PatientController.EquipmentConnected` → `EntityStateSignalBinding` 순서로 환자별 신호를 발신한다.
-- V054/V073은 `use_wall_suction_patient_b/c`, V055/V074는 `connect_oxyflowmeter_patient_b/c`를 기다린다.
+- V054/V073은 `equipment_connected_wall_suction_patient_b/c`, V055/V074는 `equipment_connected_oxyflowmeter_patient_b/c`를 기다린다.
 - 시나리오 시작/종료 시 `sig.*` RuntimeState를 초기화하여 재실행 시 이전 플레이의 sticky 신호가 게이트를 통과시키지 않도록 한다.
 - Zone에는 `MovingPatientBedPositioningPoint`가 하나 있어야 하며, 베드 스냅은 별도 배치 검증 대상이다.
 - Zone당 활성 환자는 한 명만 허용하며, 환자가 Zone 내부 positioning point에 고정된 침대에 연결된 경우에만 장비를 귀속한다.
@@ -1804,7 +1805,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V054 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.use_wall_suction_patient_b (RegistryContains / RuntimeState) |
+| **Condition** | 문자열 | sig.equipment_connected_wall_suction_patient_b (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
@@ -1833,7 +1834,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V055 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.apply_nasal_cannula_patient_b AND sig.use_wall_suction_patient_b AND sig.connect_oxyflowmeter_patient_b |
+| **Condition** | 문자열 | sig.apply_nasal_cannula_patient_b AND sig.equipment_connected_wall_suction_patient_b AND sig.equipment_connected_oxyflowmeter_patient_b |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
@@ -3256,7 +3257,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V073 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.use_wall_suction_patient_c (RegistryContains / RuntimeState) |
+| **Condition** | 문자열 | sig.equipment_connected_wall_suction_patient_c (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
@@ -3285,7 +3286,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V074 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.apply_nasal_cannula_patient_c AND sig.use_wall_suction_patient_c AND sig.connect_oxyflowmeter_patient_c |
+| **Condition** | 문자열 | sig.apply_nasal_cannula_patient_c AND sig.equipment_connected_wall_suction_patient_c AND sig.equipment_connected_oxyflowmeter_patient_c |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |

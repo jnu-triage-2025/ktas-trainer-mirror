@@ -17,6 +17,21 @@ MonoBehaviour:
   oxyflowmeterPrefab: {fileID: 1394811325700612776, guid: 1c79c98d39b2746bea8a2d4cc857559d, type: 3}
   groups:
   - entities:
+    - type: 4
+      identifier: -1
+      useDefaultPosition: 0
+      position: {x: -1, y: -1, z: -1}
+      useDefaultRotation: 0
+      rotationEuler: {x: -1, y: -1, z: -1}
+      useDefaultOccupiedSize: 0
+      occupiedSize: {x: -1, y: -1}
+      useDefaultDisplayHeight: 0
+      displayHeight: -1
+      useDefaultZoneCenter: 0
+      zoneCenter: {x: -1, y: -1, z: -1}
+      useDefaultZoneSize: 0
+      zoneSize: {x: -1, y: -1, z: -1}
+  - entities:
     - type: 0
       identifier: zone_0:bed_snap_point
       useDefaultPosition: 0
