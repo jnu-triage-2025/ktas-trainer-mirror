@@ -5,28 +5,9 @@ using UnityEngine.SceneManagement;
 
 namespace MultiplayerInfrastructure.UI
 {
-  [DefaultExecutionOrder(-5000)]
-  public sealed class UIRuntimeEventSystemGuard : MonoBehaviour
+  public static class UIRuntimeEventSystemGuard
   {
     private static bool _bootstrapped;
-
-    private void Update()
-    {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-      if (!Input.GetMouseButtonDown(0))
-        return;
-
-      EventSystem current = EventSystem.current;
-      Debug.Log(
-        $"[UIInputDiagnostic] leftClick mousePosition={Input.mousePosition} " +
-        $"eventSystem={(current == null ? "<null>" : current.name)} " +
-        $"eventSystemEnabled={current != null && current.enabled} " +
-        $"currentInputModule='{current?.currentInputModule?.GetType().Name ?? "<null>"}' " +
-        $"pointerOverUI={current != null && current.IsPointerOverGameObject()} " +
-        $"selected='{current?.currentSelectedGameObject?.name ?? "<null>"}'",
-        this);
-#endif
-    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Bootstrap()
@@ -35,13 +16,6 @@ namespace MultiplayerInfrastructure.UI
         return;
 
       _bootstrapped = true;
-      var diagnostic = Object.FindFirstObjectByType<UIRuntimeEventSystemGuard>();
-      if (diagnostic == null)
-      {
-        var diagnosticObject = new GameObject(nameof(UIRuntimeEventSystemGuard));
-        diagnostic = diagnosticObject.AddComponent<UIRuntimeEventSystemGuard>();
-        Object.DontDestroyOnLoad(diagnosticObject);
-      }
       SceneManager.sceneLoaded += OnSceneLoaded;
       EnsureValidEventSystem();
     }
@@ -75,13 +49,6 @@ namespace MultiplayerInfrastructure.UI
       if (inputModule.actionsAsset == null || !hasValidBindings)
         inputModule.AssignDefaultActions();
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-      Debug.Log(
-        $"[UIInputDiagnostic] EventSystem='{current.name}' enabled={current.enabled} " +
-        $"currentInputModule='{current.currentInputModule?.GetType().Name ?? "<null>"}' " +
-        $"inputSystemModuleEnabled={inputModule.enabled} hasValidBindings={hasValidBindings}",
-        current);
-#endif
     }
 
     private static EventSystem ResolveEventSystem()

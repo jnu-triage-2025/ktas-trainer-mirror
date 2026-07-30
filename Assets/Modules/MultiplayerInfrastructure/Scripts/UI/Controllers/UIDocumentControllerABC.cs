@@ -18,15 +18,6 @@ namespace MultiplayerInfrastructure.UI
     protected static void SetDocumentRootInteractable(UIDocument document, bool visible)
     {
       SetDocumentVisible(document, visible);
-
-      var docRoot = document != null ? document.rootVisualElement : null;
-      if (docRoot != null)
-      {
-        Debug.Log(
-          $"[UIInputDiagnostic] UIDocument='{document.name}' visible={visible} " +
-          $"rootPickingMode={docRoot.pickingMode} rootDisplay={docRoot.resolvedStyle.display}",
-          document);
-      }
     }
 
     /// <summary>
