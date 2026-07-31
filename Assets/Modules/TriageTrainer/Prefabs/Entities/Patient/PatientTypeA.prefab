@@ -1,5 +1,226 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &395488033911256930
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1061566787071246315}
+  - component: {fileID: 3031631455920444454}
+  - component: {fileID: 3831690334991073964}
+  m_Layer: 0
+  m_Name: AmbuReadyInteract_R2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1061566787071246315
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 395488033911256930}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.00051, y: 0, z: 0}
+  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 77100895042544767}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &3031631455920444454
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 395488033911256930}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.09, y: 0.05, z: 0.05}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &3831690334991073964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 395488033911256930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
+  _displayText: "\uC570\uBD80\uBC30\uAE45 \uC2DC\uC791"
+  _displayIcon: {fileID: 0}
+  _completionSignal: start_ambu_r2
+  _enabled: 1
+  _consumeOnce: 1
+  _activateOnInteract: []
+  _deactivateOnInteract: []
+--- !u!1 &1381168070861292904
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7773253716970843625}
+  - component: {fileID: 665731370429126897}
+  - component: {fileID: 2514878013891004208}
+  m_Layer: 0
+  m_Name: ChestCompStartInteractPoint_2nd
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7773253716970843625
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1381168070861292904}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.005, y: 0.147, z: 0.078}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3714386319514714883}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &665731370429126897
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1381168070861292904}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.35, y: 0.25, z: 0.25}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &2514878013891004208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1381168070861292904}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
+  _displayText: "\uAC00\uC2B4\uC555\uBC15 \uC2DC\uC791"
+  _displayIcon: {fileID: 0}
+  _completionSignal: interact_chest
+  _enabled: 1
+  _consumeOnce: 1
+  _activateOnInteract: []
+  _deactivateOnInteract: []
+--- !u!1 &1533989979856596171
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6086397247962047667}
+  - component: {fileID: 1420158905838627957}
+  - component: {fileID: 1974408119851067527}
+  m_Layer: 0
+  m_Name: PatientChestInteractPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6086397247962047667
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1533989979856596171}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.041948617, y: -3.5157967e-11, z: 5.672459e-12, w: 0.99911976}
+  m_LocalPosition: {x: -0.015, y: 0.142, z: 0.098}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3714386319514714883}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1420158905838627957
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1533989979856596171}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.35, y: 0.2, z: 0.3}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1974408119851067527
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1533989979856596171}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
+  _displayText: "\uC81C\uC138\uB3D9 \uD328\uB4DC \uBD80\uCC29"
+  _displayIcon: {fileID: 0}
+  _completionSignal: interact_patient_chest
+  _enabled: 1
+  _consumeOnce: 1
+  _activateOnInteract:
+  - {fileID: 8316904770520101598}
+  - {fileID: 2773350314614107974}
+  _deactivateOnInteract: []
 --- !u!1 &1582032648431365702
 GameObject:
   m_ObjectHideFlags: 0
@@ -64,8 +285,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 0}
+  _networkObjectCache: {fileID: 0}
   connectionService: {fileID: 0}
   _identifier: connect_tpiece_and_oxyflow
   _autoGenerateIdentifier: 0
@@ -79,6 +303,79 @@ MonoBehaviour:
     _enabled: 1
   _connectedLineObjects: []
   _allowMultipleConnections: 0
+--- !u!1 &2224266580779621743
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6739716524419680860}
+  - component: {fileID: 6268667717625966582}
+  - component: {fileID: 2503204984754699386}
+  m_Layer: 0
+  m_Name: AmbuReadyInteract_R1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6739716524419680860
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2224266580779621743}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.00051, y: -0, z: -0}
+  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 77100895042544767}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &6268667717625966582
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2224266580779621743}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.09, y: 0.05, z: 0.05}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &2503204984754699386
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2224266580779621743}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
+  _displayText: "\uC570\uBD80\uBC30\uAE45 \uC2DC\uC791"
+  _displayIcon: {fileID: 0}
+  _completionSignal: start_ambu_r1
+  _enabled: 1
+  _consumeOnce: 1
+  _activateOnInteract: []
+  _deactivateOnInteract: []
 --- !u!1 &2407634092771371427
 GameObject:
   m_ObjectHideFlags: 0
@@ -147,9 +444,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "T-piece \uC5F0\uACB0 \uD574\uC81C"
   _displayIcon: {fileID: 0}
-  _displayIcons:
-  - {fileID: 21300000, guid: f8ff01aa8ad3d4422a18da03d0df62f9, type: 3}
-  - {fileID: 21300000, guid: 2fde9781086d2438bbae1fa505d6ebc9, type: 3}
   _completionSignal: remove_tpiece
   _enabled: 1
   _consumeOnce: 1
@@ -224,9 +518,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "\uC758\uBCF5 \uC81C\uAC70"
   _displayIcon: {fileID: 0}
-  _displayIcons:
-  - {fileID: 21300000, guid: f8ff01aa8ad3d4422a18da03d0df62f9, type: 3}
-  - {fileID: 21300000, guid: 4758627ce08de40c291256855083d71f, type: 3}
   _completionSignal: remove_patient_clothing
   _enabled: 1
   _consumeOnce: 1
@@ -344,50 +635,6 @@ Transform:
   - {fileID: 7300000000000000002}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &7300000000000000001
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7300000000000000002}
-  - component: {fileID: 7300000000000000003}
-  m_Layer: 0
-  m_Name: PatientMonitorTrackingLineEndpoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &7300000000000000002
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7300000000000000001}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.05, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1827749486389943084}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7300000000000000003
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7300000000000000001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b0a3f69c7d44a5c8f5f0b3a5dbf03ad, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: TriageTrainer.Entity.PatientMonitor.Models::PatientMonitorTrackingLineEndpoint
 --- !u!114 &6000008013074765727
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -530,6 +777,21 @@ MonoBehaviour:
     _displayText: "\uD65C\uB825\uC9D5\uD6C4 \uC0AC\uC815"
     _displayIcon: {fileID: 0}
     _assessSignal: show_vital_patient_a
+    _enabled: 1
+  - _identifier: assess_pulse_r1
+    _displayText: "\uB9E5\uBC15 \uD655\uC778"
+    _displayIcon: {fileID: 0}
+    _assessSignal: check_pulse_patient_a
+    _enabled: 1
+  - _identifier: assess_pulse_r2
+    _displayText: "\uB9E5\uBC15 \uD655\uC778"
+    _displayIcon: {fileID: 0}
+    _assessSignal: check_pulse_patient_a
+    _enabled: 0
+  - _identifier: assess_gcs_rosc
+    _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC7AC\uC0AC\uC815"
+    _displayIcon: {fileID: 0}
+    _assessSignal: check_gcs_a_rosc
     _enabled: 1
   _capsuleCollider: {fileID: 3415111579364395856}
   _standingCapsuleCenter: {x: 0, y: 0.9, z: 0}
@@ -686,6 +948,50 @@ MonoBehaviour:
     Rotation: {x: 0, y: 0, z: 0, w: 0}
     Scale: {x: 0, y: 0, z: 0}
     IsValid: 0
+--- !u!1 &7300000000000000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7300000000000000002}
+  - component: {fileID: 7300000000000000003}
+  m_Layer: 0
+  m_Name: PatientMonitorTrackingLineEndpoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7300000000000000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7300000000000000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.05, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1827749486389943084}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7300000000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7300000000000000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b0a3f69c7d44a5c8f5f0b3a5dbf03ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TriageTrainer.Entity.PatientMonitor.Models::PatientMonitorTrackingLineEndpoint
 --- !u!1 &7900168916465225989
 GameObject:
   m_ObjectHideFlags: 0
@@ -826,6 +1132,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 0}
+  _networkObjectCache: {fileID: 0}
   connectionService: {fileID: 0}
   _identifier: patient_a_cannula_left_port
   _autoGenerateIdentifier: 0
@@ -938,9 +1247,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "\uC2A4\uD0C0\uC77C\uB81B \uC81C\uAC70"
   _displayIcon: {fileID: 0}
-  _displayIcons:
-  - {fileID: 21300000, guid: f8ff01aa8ad3d4422a18da03d0df62f9, type: 3}
-  - {fileID: 21300000, guid: 283b03c81bf804e01be34092f397c7f5, type: 3}
   _completionSignal: remove_intu_stylet
   _enabled: 1
   _consumeOnce: 1
@@ -1183,6 +1489,85 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4925616480542645151, guid: c024efd2adf10405faee8a53a11ca8f4, type: 3}
   m_PrefabInstance: {fileID: 2211892319359523629}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &8316904770520101598 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7915547531022232051, guid: c024efd2adf10405faee8a53a11ca8f4, type: 3}
+  m_PrefabInstance: {fileID: 2211892319359523629}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &2228971976608843622
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 3714386319514714883}
+    m_Modifications:
+    - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.120000005
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.12
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.12000002
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.20902325
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.14131536
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.12882403
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.72030175
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.2869908
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.5312251
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.34146988
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 48.659
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 59.526
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: -23.835
+      objectReference: {fileID: 0}
+    - target: {fileID: 7363404276600931727, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+      propertyPath: m_Name
+      value: normal_saline_5cc_syringe
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+--- !u!4 &5513161784921438482 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+  m_PrefabInstance: {fileID: 2228971976608843622}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &3112350528359825355
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1397,6 +1782,12 @@ PrefabInstance:
       addedObject: {fileID: 4255065025544747937}
     - targetCorrespondingSourceObject: {fileID: 2064399331188945149, guid: 4f8c75352164f473fbc3b4cf9174ddd1, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 2692606339917132637}
+    - targetCorrespondingSourceObject: {fileID: 2064399331188945149, guid: 4f8c75352164f473fbc3b4cf9174ddd1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5513161784921438482}
+    - targetCorrespondingSourceObject: {fileID: 2064399331188945149, guid: 4f8c75352164f473fbc3b4cf9174ddd1, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 8518885305056764545}
     - targetCorrespondingSourceObject: {fileID: 2064399331188945149, guid: 4f8c75352164f473fbc3b4cf9174ddd1, type: 3}
       insertIndex: -1
@@ -1409,7 +1800,13 @@ PrefabInstance:
       addedObject: {fileID: 6550897218526314674}
     - targetCorrespondingSourceObject: {fileID: 2064399331188945149, guid: 4f8c75352164f473fbc3b4cf9174ddd1, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 6086397247962047667}
+    - targetCorrespondingSourceObject: {fileID: 2064399331188945149, guid: 4f8c75352164f473fbc3b4cf9174ddd1, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 7322220135363801094}
+    - targetCorrespondingSourceObject: {fileID: 2064399331188945149, guid: 4f8c75352164f473fbc3b4cf9174ddd1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7773253716970843625}
     - targetCorrespondingSourceObject: {fileID: 7700827978184584704, guid: 4f8c75352164f473fbc3b4cf9174ddd1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1292753068838552530}
@@ -1525,7 +1922,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 4416502670699358882, guid: d3033c3cec6a1450c83d253bcb6bff4a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6739716524419680860}
+    - targetCorrespondingSourceObject: {fileID: 4416502670699358882, guid: d3033c3cec6a1450c83d253bcb6bff4a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1061566787071246315}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d3033c3cec6a1450c83d253bcb6bff4a, type: 3}
 --- !u!4 &77100895042544767 stripped
@@ -1847,6 +2250,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8612a53ba007a46dfb1aad36ef685471, type: 3}
+--- !u!1 &2773350314614107974 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9177393966679282854, guid: 8612a53ba007a46dfb1aad36ef685471, type: 3}
+  m_PrefabInstance: {fileID: 6422217020341877728}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &6210746503260581840 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1085734005848495152, guid: 8612a53ba007a46dfb1aad36ef685471, type: 3}
@@ -2000,6 +2408,84 @@ GameObject:
 Transform:
   m_CorrespondingSourceObject: {fileID: 877330694562944328, guid: 1325bfd5ffb114696bf64b11cbc6b525, type: 3}
   m_PrefabInstance: {fileID: 7283181811640818871}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &8589004859509542185
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 3714386319514714883}
+    m_Modifications:
+    - target: {fileID: 5939202663577173620, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.080000006
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.08
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.080000006
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.21122564
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.20894177
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.1349124
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7825435
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.14640626
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.5812299
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.16841245
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 23.567
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 69.826
+      objectReference: {fileID: 0}
+    - target: {fileID: 5939202663577173620, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: -10.908
+      objectReference: {fileID: 0}
+    - target: {fileID: 7363404276600931727, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: m_Name
+      value: epinephrine_5cc_syringe
+      objectReference: {fileID: 0}
+    - target: {fileID: 7363404276600931727, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+--- !u!4 &2692606339917132637 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5939202663577173620, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+  m_PrefabInstance: {fileID: 8589004859509542185}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &9037898377694863822
 PrefabInstance:

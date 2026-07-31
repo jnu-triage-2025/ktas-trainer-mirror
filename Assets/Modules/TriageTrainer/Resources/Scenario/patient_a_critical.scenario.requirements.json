@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "scenarioIdentifier": "patient_a_critical",
   "source": {
-    "scenarioSha256": "5edb451ce28e90a886d0e18de795ec432b29b17e85d57695c51cc0b041220fb2",
+    "scenarioSha256": "6074addc294084ec1ba8c49175bdfd54d0dfff35194b484b7aeb28639510c1d4",
     "generatedAtUtc": null
   },
   "declarations": [
@@ -965,7 +965,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.check_pulse_patient_a"
+        "identifier": "sig.check_pulse_patient_a_r1"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -978,7 +978,20 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.click_18g"
+        "identifier": "sig.check_pulse_patient_a_r2"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.click_cannula_18g"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1005,32 +1018,6 @@
       "selector": {
         "kind": "RuntimeSignal",
         "identifier": "sig.click_blood_transfusion_set"
-      },
-      "operation": "Override",
-      "availability": "WhenNodeReached",
-      "mustProve": true,
-      "binding": {
-        "mode": "RuntimeProduced"
-      },
-      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
-    },
-    {
-      "selector": {
-        "kind": "RuntimeSignal",
-        "identifier": "sig.interact_chest"
-      },
-      "operation": "Override",
-      "availability": "WhenNodeReached",
-      "mustProve": true,
-      "binding": {
-        "mode": "RuntimeProduced"
-      },
-      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
-    },
-    {
-      "selector": {
-        "kind": "RuntimeSignal",
-        "identifier": "sig.interact_defib"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1160,19 +1147,6 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.apply_stabilizer_patient_a"
-      },
-      "operation": "Override",
-      "availability": "WhenNodeReached",
-      "mustProve": true,
-      "binding": {
-        "mode": "RuntimeProduced"
-      },
-      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
-    },
-    {
-      "selector": {
-        "kind": "RuntimeSignal",
         "identifier": "sig.click_normal_saline_1000ml"
       },
       "operation": "Override",
@@ -1200,32 +1174,6 @@
       "selector": {
         "kind": "RuntimeSignal",
         "identifier": "sig.click_o2_line"
-      },
-      "operation": "Override",
-      "availability": "WhenNodeReached",
-      "mustProve": true,
-      "binding": {
-        "mode": "RuntimeProduced"
-      },
-      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
-    },
-    {
-      "selector": {
-        "kind": "RuntimeSignal",
-        "identifier": "sig.interact_oxyflow_wall"
-      },
-      "operation": "Override",
-      "availability": "WhenNodeReached",
-      "mustProve": true,
-      "binding": {
-        "mode": "RuntimeProduced"
-      },
-      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
-    },
-    {
-      "selector": {
-        "kind": "RuntimeSignal",
-        "identifier": "sig.interact_patient_chest"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1356,19 +1304,6 @@
       "selector": {
         "kind": "RuntimeSignal",
         "identifier": "sig.click_to_start_comp"
-      },
-      "operation": "Override",
-      "availability": "WhenNodeReached",
-      "mustProve": true,
-      "binding": {
-        "mode": "RuntimeProduced"
-      },
-      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
-    },
-    {
-      "selector": {
-        "kind": "RuntimeSignal",
-        "identifier": "sig.interact_tpiece"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1602,6 +1537,84 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
+        "identifier": "sig.insert_iv_patient_a_right"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.interact_chest"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.interact_defib"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.interact_oxyflow_wall"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.interact_patient_chest"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.interact_tpiece"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
         "identifier": "sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient"
       },
       "operation": "Override",
@@ -1667,7 +1680,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.push_epi"
+        "identifier": "sig.push_epi_r1"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1680,7 +1693,33 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.push_ns"
+        "identifier": "sig.push_epi_r2"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.push_ns_r1"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.push_ns_r2"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
@@ -1745,7 +1784,20 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.start_ambu"
+        "identifier": "sig.start_ambu_r1"
+      },
+      "operation": "Override",
+      "availability": "WhenNodeReached",
+      "mustProve": true,
+      "binding": {
+        "mode": "RuntimeProduced"
+      },
+      "notes": "Validator 도달 전에 authoritative gameplay producer가 등록해야 하는 신호입니다."
+    },
+    {
+      "selector": {
+        "kind": "RuntimeSignal",
+        "identifier": "sig.start_ambu_r2"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",
