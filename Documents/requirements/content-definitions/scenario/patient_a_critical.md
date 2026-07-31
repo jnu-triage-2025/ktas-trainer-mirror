@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "2-implementing"
 status: active
-updated: 2026-07-28
+updated: 2026-07-31
 flags: ["refactor-required"]
 ---
 
@@ -43,6 +43,7 @@ Scenario로 판정하면 안 된다.
 
 ```text
 SPAWN_A
+  -> SPAWN_DOCTOR
   -> PRESET_A
   -> D005
   -> Q006(들것 이동) -> P002(ByRole 4분기) -> Q006_1
@@ -165,7 +166,7 @@ SPAWN_A
 | ROLE-2 | `P004`의 `N008`, `N011` 브랜치 | 현재 `ByRole`은 한 브랜치에 한 플레이어를 배정하므로 두 역할을 동시에 요구하는 `matchMode=All`은 실제 매칭이 불가능하다. | **해결(2026-07-28):** 두 브랜치 모두 `requiredPlayerTagsMatchMode=Any`로 변경했다. `N008`은 `airway_team` 또는 `triage_lead` 중 하나의 태그를 가진 플레이어 1명이 삽관·산소 흐름 전체를 담당하고, `N011`은 `iv_team` 또는 `access_support` 중 하나의 태그를 가진 플레이어 1명이 IV·C-line 보조 흐름 전체를 담당한다. 이 정책은 2인 동시 협업을 표현하지 않으며, 각 브랜치의 두 역할은 대체 담당 자격이다. 서버 권위 실행은 기존 `ByRole` 다중 브랜치 실행을 위해 유지한다. |
 | S-1 | `V011_1`, `V014_1~V014_4`, `V018`, `V023_1`, `V024`, `V025~V025_1`, `V027`, `V030`, `V033` | 실제 코드·문서 대조 결과, 정식 producer가 없는 신호는 10개다: `show_vital_patient_a`, `pass_laryngoscope`, `pass_et_tube_ready`, `remove_intu_stylet`, `pass_syringe`, `pass_central_line_set`, `remove_tpiece`, `click_to_start_comp`, `move_defibcart_to_patient`, `remove_patient_clothing`. 하나라도 생산되지 않으면 해당 Validator에서 영구 정지한다. | 각 노드의 기존 `(b) 선행 구현 필요` 주석을 producer 작업 목록으로 사용한다. `pass_*`의 NPC identifier·제출 상호작용 identifier·배치 위치는 아래 **의사 NPC 제출 producer 콘텐츠 확정**에서 확정했다. 나머지 6개 producer는 해당 주석의 전용 게임플레이 상호작용으로 구현한다. Debug emitter를 정식 producer로 간주하지 않는다. |
 | Q-1 | 모든 `Q006`~`Q030_1` | ~~23개 `Quest_*`가 표시용 식별자만 있어 빈 오버레이를 만들었다.~~ **해결:** `Resources/Quest/patient_a_critical.quests.quest.json`에 23개 definition의 title/description/questContent를 작성했고, Add/Remove가 같은 definition identifier를 참조한다. | Scenario Validator가 완료를 판단하고 QuestControl이 명시적으로 Remove한다. 따라서 이 안내형 quest에 별도 자동 완료 task를 추가하지 않는다. |
-| IV-1 | `V017` / `V017_1` / `V017_3` | **해결(2026-07-28):** 18G는 두 개를 사전에 동시에 획득하지 않는다. 첫 번째 18G를 획득해 좌측 삽입 시 1개를 소비하고, `N011_3` 안내 후 두 번째 18G를 다시 획득해 우측 삽입 시 1개를 소비한다. 삽입은 `insert_iv_patient_a_left` / `insert_iv_patient_a_right`로 좌·우를 구분한다. | `click_18g`는 준비 단계에서 첫 번째 18G 보유를 확인하는 단일 신호로 유지한다. 두 번째 18G는 두 번째 삽입 직전에 별도 획득하며, 실제 소비는 삽입 완료 코드가 담당한다. |
+| IV-1 | `V017` / `V017_1` / `V017_3` | **해결(2026-07-28):** 18G는 두 개를 사전에 동시에 획득하지 않는다. 첫 번째 18G를 획득해 좌측 삽입 시 1개를 소비하고, `N011_3` 안내 후 두 번째 18G를 다시 획득해 우측 삽입 시 1개를 소비한다. 삽입은 `insert_iv_patient_a_left` / `insert_iv_patient_a_right`로 좌·우를 구분한다. | `click_cannula_18g`는 준비 단계에서 첫 번째 18G 보유를 확인하는 단일 신호로 유지한다. 두 번째 18G는 두 번째 삽입 직전에 별도 획득하며, 실제 소비는 삽입 완료 코드가 담당한다. |
 | END-1 | `D037` 및 종료 조건 | `D037`이 마지막 노드이며 `nextIdentifier=null`이다. | **해결(2026-07-28):** 환자 A는 이 지점에서 독립 종료한다. `patient_b_c_ct`는 다음 시나리오가 아니며 관리자가 별도 실행한다. |
 
 아래 표의 상태는 **변환 전 단일 차단 게이트**를 기준으로 갱신한다.
@@ -175,24 +176,24 @@ SPAWN_A
 |---|---|---|---|---|---|
 | SPAWN-A-1 | Runtime | 해결(2026-07-28) | FishNet Spawnable 등록 + 재직렬화는 완료, Production profile capability 최종 검증만 잔여 | 구현자 | `PatientTypeA.prefab` spawn 정상, ObjectId 65535 미재현 |
 | ROLE-2 | Design+Runtime | 해결(2026-07-28) | P004 정책 A안 확정 및 반영(`requiredPlayerTagsMatchMode=Any`) | 주도자 | P004 교착 없음, 문서/JSON 동일 |
-| S-1 | Runtime | 부분해결(2026-07-28) | 잔여 미배선 producer(B-02, B-03, B-05, B-06) 연결 및 실플레이 검증 | 구현자 | 잔여 4개 외 항목 배선완료, 전체 E2E 검증 미완료 |
+| S-1 | Runtime | 부분해결(2026-07-31) | 잔여 과업은 실플레이 검증. B-02/B-03/B-05/B-06은 `ItemSubmissionConfig` 노드(`ISC_PASS_*`) 추가로 그래프 배선 완료 | 구현자 | `N008_1 -> ISC_PASS_LARYNGOSCOPE -> V014_1`, `N008_2 -> ISC_PASS_ET_TUBE -> V014_2`, `N008_4 -> ISC_PASS_SYRINGE -> V014_4`, `Q014 -> ISC_PASS_CENTRAL_LINE_SET -> V018` |
 | IV-1 | Design | 해결(2026-07-28) | V017 18G 순차 획득·소비 및 좌/우 삽입 분리 확정 반영 | 주도자 | V017~V017_3 규칙 문서/JSON 일치 |
 | END-1 | Design+Content | 해결(2026-07-28) | 종료 정책 확정(`D037 -> null` 독립 종료) | 주도자 | D037 이후 종료 조건 문서/JSON 일치 |
 
 ### 의사 NPC 제출 producer 콘텐츠 확정
 
 환자 A의 10개 producer 콘텐츠 대상 중 `pass_*` 네 건은 `ItemSubmissionConfig`와
-`ItemSubmissionInteractable`로 구현한다. 의사 NPC 식별자는 모두 **`npc-doctor-1`**로 고정한다.
-제출 상호작용은 별도 바닥 오브젝트를 만들지 않고 **`npc-doctor-1`에 부착**한다. 즉,
-`positionSourceEntityIdentifier`는 `npc-doctor-1`이고, 제출 위치는 시나리오 진행 시점의 의사 NPC
+`ItemSubmissionInteractable`로 구현한다. 의사 NPC 식별자는 모두 **`npc-doctor-patient-a-critical`**로 고정한다.
+제출 상호작용은 별도 바닥 오브젝트를 만들지 않고 **`npc-doctor-patient-a-critical`에 부착**한다. 즉,
+`positionSourceEntityIdentifier`는 `npc-doctor-patient-a-critical`이고, 제출 위치는 시나리오 진행 시점의 의사 NPC
 현재 위치다.
 
 | Validator / 완료 신호 | 제출 내용 | 의사 NPC identifier | 제출 상호작용 identifier | 제출 위치 |
 |---|---|---|---|---|
-| `V014_1` / `sig.pass_laryngoscope` | 조립 완료한 후두경 | `npc-doctor-1` | `patient-a-doctor-submit-laryngoscope` | `npc-doctor-1`에 부착(의사 NPC 현재 위치) |
-| `V014_2` / `sig.pass_et_tube_ready` | 준비 완료한 기관내관 | `npc-doctor-1` | `patient-a-doctor-submit-et-tube` | `npc-doctor-1`에 부착(의사 NPC 현재 위치) |
-| `V014_4` / `sig.pass_syringe` | 5 cc 주사기 | `npc-doctor-1` | `patient-a-doctor-submit-5cc-syringe` | `npc-doctor-1`에 부착(의사 NPC 현재 위치) |
-| `V018` / `sig.pass_central_line_set` | C-line set | `npc-doctor-1` | `patient-a-doctor-submit-central-line-set` | `npc-doctor-1`에 부착(의사 NPC 현재 위치) |
+| `V014_1` / `sig.pass_laryngoscope` | 조립 완료한 후두경 | `npc-doctor-patient-a-critical` | `patient-a-doctor-submit-laryngoscope` | `npc-doctor-patient-a-critical`에 부착(의사 NPC 현재 위치) |
+| `V014_2` / `sig.pass_et_tube_ready` | 준비 완료한 기관내관 | `npc-doctor-patient-a-critical` | `patient-a-doctor-submit-et-tube` | `npc-doctor-patient-a-critical`에 부착(의사 NPC 현재 위치) |
+| `V014_4` / `sig.pass_syringe` | 5 cc 주사기 | `npc-doctor-patient-a-critical` | `patient-a-doctor-submit-5cc-syringe` | `npc-doctor-patient-a-critical`에 부착(의사 NPC 현재 위치) |
+| `V018` / `sig.pass_central_line_set` | C-line set | `npc-doctor-patient-a-critical` | `patient-a-doctor-submit-central-line-set` | `npc-doctor-patient-a-critical`에 부착(의사 NPC 현재 위치) |
 
 구현 시 각 상호작용은 해당 단계에서만 활성화하고, 완료 신호를 표의 `sig.pass_*` 값으로 발신한다.
 완료 또는 다음 제출 단계 전에는 이전 상호작용을 비활성화하여, 같은 물품을 잘못 제출하는 일을 막는다.
@@ -202,11 +203,11 @@ SPAWN_A
 | TaskID | Signal | 소비 Validator | Producer 위치(오브젝트/프리팹) | 콜백/트리거 | 상태 | 검증 |
 |---|---|---|---|---|---|---|
 | B-01 | sig.show_vital_patient_a | V011_1 | patient_a / PatientController.AssessActions(assess_vital) | PatientController.PerformAssess() (assess_vital) 완료 시 ScenarioInteractionSignals.Raise("show_vital_patient_a") | 배선완료(2026-07-28, PatientTypeA.assess_vital._assessSignal 정합 + PerformAssess Raise 경로 확인) | 미검증 |
-| B-02 | sig.pass_laryngoscope | V014_1 | npc-doctor-1 제출 상호작용 | ItemSubmission 완료 | 미해결 | 미검증 |
-| B-03 | sig.pass_et_tube_ready | V014_2 | npc-doctor-1 제출 상호작용 | ItemSubmission 완료 | 미해결 | 미검증 |
+| B-02 | sig.pass_laryngoscope | V014_1 | `ISC_PASS_LARYNGOSCOPE` (`ItemSubmissionConfig`) -> `patient-a-doctor-submit-laryngoscope` | ItemSubmission 완료 | 배선완료(2026-07-31, `N008_1` 다음에 `ISC_PASS_LARYNGOSCOPE` 추가) | 미검증 |
+| B-03 | sig.pass_et_tube_ready | V014_2 | `ISC_PASS_ET_TUBE` (`ItemSubmissionConfig`) -> `patient-a-doctor-submit-et-tube` | ItemSubmission 완료 | 배선완료(2026-07-31, `N008_2` 다음에 `ISC_PASS_ET_TUBE` 추가) | 미검증 |
 | B-04 | sig.remove_intu_stylet | V014_3 | OverworldScene / endotracheal_tube_ready_A / EtTubeStyletInteractPoint(ScenarioActionInteractable) | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("remove_intu_stylet") | 배선완료(2026-07-28, PatientTypeA.EtTubeStyletInteractPoint._completionSignal 정합 확인) | 미검증 |
-| B-05 | sig.pass_syringe | V014_4 | npc-doctor-1 제출 상호작용 | ItemSubmission 완료 | 미해결 | 미검증 |
-| B-06 | sig.pass_central_line_set | V018 | npc-doctor-1 제출 상호작용 | ItemSubmission 완료 | 미해결 | 미검증 |
+| B-05 | sig.pass_syringe | V014_4 | `ISC_PASS_SYRINGE` (`ItemSubmissionConfig`) -> `patient-a-doctor-submit-5cc-syringe` | ItemSubmission 완료 | 배선완료(2026-07-31, `N008_4` 다음에 `ISC_PASS_SYRINGE` 추가) | 미검증 |
+| B-06 | sig.pass_central_line_set | V018 | `ISC_PASS_CENTRAL_LINE_SET` (`ItemSubmissionConfig`) -> `patient-a-doctor-submit-central-line-set` | ItemSubmission 완료 | 배선완료(2026-07-31, `Q014` 다음에 `ISC_PASS_CENTRAL_LINE_SET` 추가) | 미검증 |
 | B-07 | sig.remove_tpiece | V023_1 | OverworldScene / patient_a T-piece connected visual / TPieceRemoveInteractPoint(ScenarioActionInteractable) | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("remove_tpiece") | 배선완료(2026-07-28, PatientTypeA.TPieceRemoveInteractPoint._completionSignal 정합 확인) | 미검증 |
 | B-08 | sig.click_to_start_comp | V024 | OverworldScene / patient_a chest interaction point / ChestCompStartInteractPoint(ScenarioActionInteractable) | ScenarioActionInteractable.Interact() 완료 시 ScenarioInteractionSignals.Raise("click_to_start_comp") | 배선완료(2026-07-28, PatientTypeA.ChestCompStartInteractPoint._completionSignal 정합 확인) | 미검증 |
 | B-09 | sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient | V025 | Defib cart(MovingPatientBedController: `defib_cart_a`) + defibcart_to_patient(MovingPatientBedPositioningPoint) | PublishPositioningPointReached() -> Raise("patient_bed_position_reached_defib_cart_a_defibcart_to_patient") | 배선완료(2026-07-28, MovingPatientBedController scoped signal 발신 + OverworldScene defib_cart_a/defibcart_to_patient 정합 확인) | 미검증 |
@@ -262,11 +263,11 @@ SPAWN_A
 | Node | Signal | 작업 유형 | 필요한 작업 | 완료 기준 |
 |---|---|---|---|---|
 | `V011_1` | `sig.show_vital_patient_a` | 배선 | 활력 측정 완료 콜백에서 signal raise 연결 | 1회 측정으로 `V011_1` 통과 |
-| `V014_1` | `sig.pass_laryngoscope` | 배선 | `npc-doctor-1` 제출 상호작용 완료 시 raise | 1회 제출로 `V014_1` 통과 |
-| `V014_2` | `sig.pass_et_tube_ready` | 배선 | `npc-doctor-1` 제출 상호작용 완료 시 raise | 1회 제출로 `V014_2` 통과 |
+| `V014_1` | `sig.pass_laryngoscope` | 배선 | `npc-doctor-patient-a-critical` 제출 상호작용 완료 시 raise | 1회 제출로 `V014_1` 통과 |
+| `V014_2` | `sig.pass_et_tube_ready` | 배선 | `npc-doctor-patient-a-critical` 제출 상호작용 완료 시 raise | 1회 제출로 `V014_2` 통과 |
 | `V014_3` | `sig.remove_intu_stylet` | 배선 | 기관내관 스타일렛 제거 상호작용 완료 콜백 연결 | 1회 제거로 `V014_3` 통과 |
-| `V014_4` | `sig.pass_syringe` | 배선 | `npc-doctor-1` 제출 상호작용 완료 시 raise | 1회 제출로 `V014_4` 통과 |
-| `V018` | `sig.pass_central_line_set` | 배선 | `npc-doctor-1` 제출 상호작용 완료 시 raise | 1회 제출로 `V018` 통과 |
+| `V014_4` | `sig.pass_syringe` | 배선 | `npc-doctor-patient-a-critical` 제출 상호작용 완료 시 raise | 1회 제출로 `V014_4` 통과 |
+| `V018` | `sig.pass_central_line_set` | 배선 | `npc-doctor-patient-a-critical` 제출 상호작용 완료 시 raise | 1회 제출로 `V018` 통과 |
 | `V023_1` | `sig.remove_tpiece` | 배선 | T-piece 분리 상호작용 완료 콜백 연결 | 1회 분리로 `V023_1` 통과 |
 | `V024` | `sig.click_to_start_comp` | 배선 | 가슴압박 시작 상호작용 콜백 연결 | 1회 시작으로 `V024` 통과 |
 | `V025` | `sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient` | 배선 | 제세동 카트 이동 완료 콜백 연결(`defib_cart_a` + `defibcart_to_patient`) | 1회 이동으로 `V025` 통과 |
@@ -283,10 +284,10 @@ SPAWN_A
 
 | Node | Signal | 작업 유형 | 필요한 작업 | 완료 기준 |
 |---|---|---|---|---|
-| `V010_A` | `sig.grab_stretcher_a` | 정합 | grab 지점 Identifier 정합 | 1회 잡기로 통과 |
-| `V010_B` | `sig.grab_stretcher_b` | 정합 | grab 지점 Identifier 정합 | 1회 잡기로 통과 |
-| `V010_C` | `sig.grab_stretcher_c` | 정합 | grab 지점 Identifier 정합 | 1회 잡기로 통과 |
-| `V010_D` | `sig.grab_stretcher_d` | 정합 | grab 지점 Identifier 정합 | 1회 잡기로 통과 |
+| `V010_A` | `sig.grab_stretcher_patient_a_handle_0` | 정합 | grab 지점 Identifier 정합 | 1회 잡기로 통과 |
+| `V010_B` | `sig.grab_stretcher_patient_a_handle_1` | 정합 | grab 지점 Identifier 정합 | 1회 잡기로 통과 |
+| `V010_C` | `sig.grab_stretcher_patient_a_handle_2` | 정합 | grab 지점 Identifier 정합 | 1회 잡기로 통과 |
+| `V010_D` | `sig.grab_stretcher_patient_a_handle_3` | 정합 | grab 지점 Identifier 정합 | 1회 잡기로 통과 |
 | `V011` | `sig.click_vital_set` | 정합 | `MedicalItem.OnGet` 자동 발행 식별자 정합 | 1회 획득으로 통과 |
 | `V012` | `sig.check_avpu_gcs_patient_a` | 정합 | Assess callback 식별자 정합 | 1회 사정으로 통과 |
 | `V013` | `sig.click_wall_suction`, `sig.click_suction_line`, `sig.click_yankauer` | 정합 | 아이템 획득 자동 발행 식별자 정합 | 3개 획득 후 통과 |
@@ -304,26 +305,26 @@ SPAWN_A
 | `V016_1` | `sig.wear_glove` | 정합 | Item Apply signal 식별자 정합 | 착용 후 통과 |
 | `V016_2` | `sig.apply_gauze` | 정합 | Item Apply signal 식별자 정합 | 적용 후 통과 |
 | `V016_3` | `sig.apply_plaster_on_gauze` | 정합 | Item Apply signal 식별자 정합 | 적용 후 통과 |
-| `V017` | `sig.click_18g`, `sig.click_normal_saline_1000ml`, `sig.click_plasma_solution_1000ml` | 정합/결정연계 | 자동 발행 정합 + IV-1 확정안 반영 | 확정안 기준 통과 |
+| `V017` | `sig.click_cannula_18g`, `sig.click_normal_saline_1000ml`, `sig.click_plasma_solution_1000ml` | 정합/결정연계 | 자동 발행 정합 + IV-1 확정안 반영 | 확정안 기준 통과 |
 | `V017_2` | `sig.connect_cannula_and_ns1` | 정합 | 연결지점 signal 식별자 정합 | 연결 후 통과 |
 | `V019` | `sig.click_plasma_solution_1000ml`, `sig.click_blood_transfusion_set` | 정합 | 획득 자동 발행 정합 | 2개 획득 후 통과 |
 | `V019_1` | `sig.connect_ps1_to_lv1` | 정합 | 연결지점 signal 식별자 정합 | 연결 후 통과 |
 | `V020` | `sig.connect_blood_to_lv1` | 정합 | 연결지점 signal 식별자 정합 | 연결 후 통과 |
-| `V022` | `sig.check_pulse_patient_a` | 정합 | Assess callback 식별자 정합 | 1회 사정 통과 |
+| `V022` | `sig.check_pulse_patient_a_r1` | 정합 | Assess callback 식별자 정합 | 1회 사정 통과 |
 | `V023` | `sig.click_ambubag`, `sig.click_reservoir_bag` | 정합 | 획득 자동 발행 정합 | 2개 획득 후 통과 |
 | `V023_2` | `sig.connect_ambubag`, `sig.connect_o2_to_ambu` | 정합 | 연결지점 signal 식별자 정합 | 2연결 통과 |
-| `V023_4` | `sig.start_ambu` | 정합 | Item Use signal 식별자 정합 | 사용 후 통과 |
+| `V023_4` | `sig.start_ambu_r1` | 정합 | Item Use signal 식별자 정합 | 사용 후 통과 |
 | `V025_1` | `sig.click_defibpad` | 정합 | 획득 자동 발행 정합 | 획득 후 통과 |
 | `V026` | `sig.click_epinephrine_ampule`, `sig.click_syringe_5cc` | 정합 | 획득 자동 발행 정합 | 2개 획득 통과 |
 | `V026_1` | `sig.click_normal_saline_20ml`, `sig.click_syringe_20cc` | 정합 | 획득 자동 발행 정합 | 2개 획득 통과 |
-| `V026_2` | `sig.push_epi` | 정합 | Item Use signal 식별자 정합(OR 게이트 정책 유지) | 투여 후 통과 |
-| `V026_3` | `sig.push_ns` | 정합 | Item Use signal 식별자 정합 | 투여 후 통과 |
-| `V028` | `sig.start_ambu` | 정합 | Item Use signal 식별자 정합 | 사용 후 통과 |
+| `V026_2` | `sig.push_epi_r1` | 정합 | Item Use signal 식별자 정합(OR 게이트 정책 유지) | 투여 후 통과 |
+| `V026_3` | `sig.push_ns_r1` | 정합 | Item Use signal 식별자 정합 | 투여 후 통과 |
+| `V028` | `sig.start_ambu_r2` | 정합 | Item Use signal 식별자 정합 | 사용 후 통과 |
 | `V029` | `sig.click_epinephrine_ampule`, `sig.click_syringe_5cc` | 정합 | 획득 자동 발행 정합 | 2개 획득 통과 |
 | `V029_1` | `sig.click_normal_saline_20ml`, `sig.click_syringe_20cc` | 정합 | 획득 자동 발행 정합 | 2개 획득 통과 |
-| `V029_2` | `sig.push_epi` | 정합 | Item Use signal 식별자 정합(OR 게이트 정책 유지) | 투여 후 통과 |
-| `V029_3` | `sig.push_ns` | 정합 | Item Use signal 식별자 정합 | 투여 후 통과 |
-| `V031` | `sig.check_pulse_patient_a` | 정합 | Assess callback 식별자 정합 | 1회 사정 통과 |
+| `V029_2` | `sig.push_epi_r2` | 정합 | Item Use signal 식별자 정합(OR 게이트 정책 유지) | 투여 후 통과 |
+| `V029_3` | `sig.push_ns_r2` | 정합 | Item Use signal 식별자 정합 | 투여 후 통과 |
+| `V031` | `sig.check_pulse_patient_a_r2` | 정합 | Assess callback 식별자 정합 | 1회 사정 통과 |
 | `V032` | `sig.arrive_triagearea` | 정합 | `ScenarioTriggerZone` 진입 signal 정합 | 구역 진입 통과 |
 | `V033` | `sig.click_scissors` | 정합 | 획득 자동 발행 정합 | 획득 후 통과 |
 | `V034` | `sig.check_gcs_a_rosc` | 정합 | Assess callback 식별자 정합 | 1회 사정 통과 |
@@ -374,6 +375,25 @@ SPAWN_A
 
 시나리오 시작 시 환자 A 엔티티를 스폰하고 의료 상태를 사전설정한다. 시작 노드는 `SPAWN_A`이다.
 
+### [actingNpcs[0]] 의사 NPC 선언
+
+| 속성 | 타입 | 설명 |
+| --- | --- | --- |
+| **Identifier** | 문자열 | npc-doctor-patient-a-critical |
+| **ActingNpcType** | 문자열 | Npc |
+| **PresetIdentifier** | 문자열 | npc_doctor_preset |
+| **DisplayName** | 문자열 | 의사 NPC |
+| **ShowOverheadName** | bool | true |
+| **PositionX / PositionY / PositionZ** | 실수 | 0.0 / 0.0 / 0.0 |
+| **RotationX / RotationY / RotationZ** | 실수 | 0.0 / 180.0 / 0.0 |
+| **SpawnOnStart** | bool | false |
+| **DespawnOnScenarioEnd** | bool | true |
+| **Interactions** | 배열 | [`patient-a-doctor-submit-laryngoscope`, `patient-a-doctor-submit-et-tube`, `patient-a-doctor-submit-5cc-syringe`, `patient-a-doctor-submit-central-line-set`] |
+
+- [x] actingNpcs-1: 의사 NPC는 시나리오 소유 `actingNpcs`로 선언하고, 그래프 노드에서 명시적으로 소환한다.
+
+---
+
 ### [SPAWN_A] EntityPresetSpawnNode
 
 | 속성 | 타입 | 설명 |
@@ -384,7 +404,25 @@ SPAWN_A
 | **SpawnedEntityIdentifier** | 문자열 | patient_a |
 | **PositionSourceEntityIdentifier** | 문자열/null | null |
 | **PositionX / PositionY / PositionZ** | 실수 | 0.0 / 0.0 / 0.0 |
+| **NextIdentifier** | 문자열 | SPAWN_DOCTOR |
+
+---
+
+### [SPAWN_DOCTOR] EntityPresetSpawnNode
+
+| 속성 | 타입 | 설명 |
+| --- | --- | --- |
+| **Identifier** | 문자열 | SPAWN_DOCTOR |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.EntityPresetSpawn |
+| **ActingNpcIdentifier** | 문자열 | npc-doctor-patient-a-critical |
+| **PresetIdentifier** | 문자열/null | null |
+| **SpawnedEntityIdentifier** | 문자열/null | null |
+| **PositionSourceEntityIdentifier** | 문자열/null | null |
+| **PositionX / PositionY / PositionZ** | 실수 | 0.0 / 0.0 / 0.0 |
+| **ResultStateKey** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | PRESET_A |
+
+- [x] actingNpcs-2: `SPAWN_A -> SPAWN_DOCTOR -> PRESET_A` 순서로 연결해, 의사 NPC가 이후 단계에서 참조되기 전에 먼저 생성되도록 보장한다.
 
 ---
 
@@ -488,7 +526,7 @@ SPAWN_A
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.grab_stretcher_a |
+| Registry | Contains | RuntimeState | sig.grab_stretcher_patient_a_handle_0 |
 
 
 - [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.grab_stretcher_a [들것 잡기(grab 지점 Identifier 정합), spec §5.1~5.3].
@@ -512,7 +550,7 @@ SPAWN_A
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.grab_stretcher_b |
+| Registry | Contains | RuntimeState | sig.grab_stretcher_patient_a_handle_1 |
 
 
 - [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.grab_stretcher_b [들것 잡기(grab 지점 Identifier 정합), spec §5.1~5.3].
@@ -536,7 +574,7 @@ SPAWN_A
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.grab_stretcher_c |
+| Registry | Contains | RuntimeState | sig.grab_stretcher_patient_a_handle_2 |
 
 
 - [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.grab_stretcher_c [들것 잡기(grab 지점 Identifier 정합), spec §5.1~5.3].
@@ -560,7 +598,7 @@ SPAWN_A
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.grab_stretcher_d |
+| Registry | Contains | RuntimeState | sig.grab_stretcher_patient_a_handle_3 |
 
 
 - [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.grab_stretcher_d [들것 잡기(grab 지점 Identifier 정합), spec §5.1~5.3].
@@ -1587,6 +1625,20 @@ SPAWN_A
 | **DialogueContent** | 문자열 | 완성된 후두경을 의사에게 전달하세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
+| **NextIdentifier** | 문자열 | ISC_PASS_LARYNGOSCOPE |
+
+
+---
+
+### [ISC_PASS_LARYNGOSCOPE] ItemSubmissionConfigNode
+
+| 속성 | 타입 | 설명 |
+| --- | --- | --- |
+| **Identifier** | 문자열 | ISC_PASS_LARYNGOSCOPE |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.ItemSubmissionConfig |
+| **TargetIdentifier** | 문자열 | patient-a-doctor-submit-laryngoscope |
+| **RequiredItems** | 배열 | [{ itemIdentifier: laryngoscope, count: 1 }] |
+| **CompletionSignalIdentifier** | 문자열 | sig.pass_laryngoscope |
 | **NextIdentifier** | 문자열 | V014_1 |
 
 
@@ -1611,8 +1663,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.pass_laryngoscope |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.pass_laryngoscope. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 의사 NPC·제출 상호작용·배치 위치는 [의사 NPC 제출 producer 콘텐츠 확정](#의사-npc-제출-producer-콘텐츠-확정)에서 확정했다.
-
+- [x] (b) 배선 완료(2026-07-31): `N008_1 -> ISC_PASS_LARYNGOSCOPE -> V014_1`로 전이 체인을 확정했다. `ISC_PASS_LARYNGOSCOPE`는 `patient-a-doctor-submit-laryngoscope` 대상에 `requiredItems(laryngoscope x1)`를 설정하고 제출 완료 시 `sig.pass_laryngoscope`를 발신한다. (검증 상태: 미검증)
 
 ---
 
@@ -1626,6 +1677,20 @@ SPAWN_A
 | **DialogueContent** | 문자열 | 완성된 기관내관을 의사에게 전달하세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
+| **NextIdentifier** | 문자열 | ISC_PASS_ET_TUBE |
+
+
+---
+
+### [ISC_PASS_ET_TUBE] ItemSubmissionConfigNode
+
+| 속성 | 타입 | 설명 |
+| --- | --- | --- |
+| **Identifier** | 문자열 | ISC_PASS_ET_TUBE |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.ItemSubmissionConfig |
+| **TargetIdentifier** | 문자열 | patient-a-doctor-submit-et-tube |
+| **RequiredItems** | 배열 | [{ itemIdentifier: endotracheal_tube_ready, count: 1 }] |
+| **CompletionSignalIdentifier** | 문자열 | sig.pass_et_tube_ready |
 | **NextIdentifier** | 문자열 | V014_2 |
 
 
@@ -1650,8 +1715,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.pass_et_tube_ready |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.pass_et_tube_ready. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 의사 NPC·제출 상호작용·배치 위치는 [의사 NPC 제출 producer 콘텐츠 확정](#의사-npc-제출-producer-콘텐츠-확정)에서 확정했다.
-
+- [x] (b) 배선 완료(2026-07-31): `N008_2 -> ISC_PASS_ET_TUBE -> V014_2`로 전이 체인을 확정했다. `ISC_PASS_ET_TUBE`는 `patient-a-doctor-submit-et-tube` 대상에 `requiredItems(endotracheal_tube_ready x1)`를 설정하고 제출 완료 시 `sig.pass_et_tube_ready`를 발신한다. (검증 상태: 미검증)
 
 ---
 
@@ -1730,6 +1794,20 @@ SPAWN_A
 | **DialogueContent** | 문자열 | 5cc 주사기를 의사에게 전달하세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
+| **NextIdentifier** | 문자열 | ISC_PASS_SYRINGE |
+
+
+---
+
+### [ISC_PASS_SYRINGE] ItemSubmissionConfigNode
+
+| 속성 | 타입 | 설명 |
+| --- | --- | --- |
+| **Identifier** | 문자열 | ISC_PASS_SYRINGE |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.ItemSubmissionConfig |
+| **TargetIdentifier** | 문자열 | patient-a-doctor-submit-5cc-syringe |
+| **RequiredItems** | 배열 | [{ itemIdentifier: syringe_5cc, count: 1 }] |
+| **CompletionSignalIdentifier** | 문자열 | sig.pass_syringe |
 | **NextIdentifier** | 문자열 | V014_4 |
 
 
@@ -1754,8 +1832,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.pass_syringe |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.pass_syringe. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 의사 NPC·제출 상호작용·배치 위치는 [의사 NPC 제출 producer 콘텐츠 확정](#의사-npc-제출-producer-콘텐츠-확정)에서 확정했다.
-
+- [x] (b) 배선 완료(2026-07-31): `N008_4 -> ISC_PASS_SYRINGE -> V014_4`로 전이 체인을 확정했다. `ISC_PASS_SYRINGE`는 `patient-a-doctor-submit-5cc-syringe` 대상에 `requiredItems(syringe_5cc x1)`를 설정하고 제출 완료 시 `sig.pass_syringe`를 발신한다. (검증 상태: 미검증)
 
 ---
 
@@ -2547,6 +2624,7 @@ SPAWN_A
 - [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_cannula_18g, sig.click_normal_saline_1000ml, sig.click_plasma_solution_1000ml [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2026-07-29 확인 완료
 
 - [x] 개수 정책 확정(2026-07-28): 준비 단계에서는 18G 1개와 수액 2종을 확인한다. 첫 18G는 좌측 삽입 시 소비하고, 두 번째 18G는 `N011_3` 이후 다시 획득해 우측 삽입 시 소비한다. 따라서 `click_18g` 단일 신호를 2회 획득 판정으로 확장하지 않는다.
+-> **2026-07-29 click_cannula_18g로 변경함
 
 ---
 
@@ -2800,6 +2878,20 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | **Operation** | ScenarioQuestOperation | Add |
 | **FailureStrategy** | ScenarioQuestFailureStrategy | Ignore |
 | **Quest** | ScenarioQuestData | Quest_Cline_Assist |
+| **NextIdentifier** | 문자열 | ISC_PASS_CENTRAL_LINE_SET |
+
+
+---
+
+### [ISC_PASS_CENTRAL_LINE_SET] ItemSubmissionConfigNode
+
+| 속성 | 타입 | 설명 |
+| --- | --- | --- |
+| **Identifier** | 문자열 | ISC_PASS_CENTRAL_LINE_SET |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.ItemSubmissionConfig |
+| **TargetIdentifier** | 문자열 | patient-a-doctor-submit-central-line-set |
+| **RequiredItems** | 배열 | [{ itemIdentifier: central_line_set, count: 1 }] |
+| **CompletionSignalIdentifier** | 문자열 | sig.pass_central_line_set |
 | **NextIdentifier** | 문자열 | V018 |
 
 
@@ -2824,8 +2916,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | Registry | Contains | RuntimeState | sig.pass_central_line_set |
 
 
-- [ ] (b) 선행 구현 필요(미배선): sig.pass_central_line_set. 게임플레이 인터랙션/완료 콜백 구현 후 Raise 필요 (spec §5.3). 의사 NPC·제출 상호작용·배치 위치는 [의사 NPC 제출 producer 콘텐츠 확정](#의사-npc-제출-producer-콘텐츠-확정)에서 확정했다.
-
+- [x] (b) 배선 완료(2026-07-31): `Q014 -> ISC_PASS_CENTRAL_LINE_SET -> V018`로 전이 체인을 확정했다. `ISC_PASS_CENTRAL_LINE_SET`는 `patient-a-doctor-submit-central-line-set` 대상에 `requiredItems(central_line_set x1)`를 설정하고 제출 완료 시 `sig.pass_central_line_set`를 발신한다. (검증 상태: 미검증)
 
 ---
 
@@ -3134,10 +3225,10 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.check_pulse_patient_a |
+| Registry | Contains | RuntimeState | sig.check_pulse_patient_a_r1 |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.check_pulse_patient_a [사정(PatientController Assess 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.check_pulse_patient_a [사정(PatientController Assess 자동), spec §5.1~5.3]. **2026-07-29 완료. 환자 A 프리팹의 Patient Controller 중 Assess Actions로 assess_pulse 추가. 2026-07-30 기존 registryIdentifier였던 sig.check_pulse_patient_a 를 sig.check_pulse_patient_a_r1로 변경. 환자 A 프리팹(PatientTypeA)에 Patient Controller 컴포넌트 내 Assess Action으로 assess_pulse_r1 변경 완료.
 
 
 ---
@@ -3260,7 +3351,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | Registry | Contains | RuntimeState | sig.click_reservoir_bag |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_ambubag, sig.click_reservoir_bag [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_ambubag, sig.click_reservoir_bag [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2026-07-29 확인 완료
 
 
 ---
@@ -3421,10 +3512,12 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.start_ambu |
+| Registry | Contains | RuntimeState | sig.start_ambu_r1 |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.start_ambu [아이템 사용(Item Use Signal), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.start_ambu [아이템 사용(Item Use Signal), spec §5.1~5.3]. **2026-07-29 확인 완료
+
+- [x] **2026-07-30 sig.start_ambu를 sig.start_ambu_r1로 변경, patient_a_critical.scenario.requirements.json에도 반영함.
 
 
 ---
@@ -3607,7 +3700,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 
 
 - [x] (b) 배선 완료(2026-07-28): sig.click_to_start_comp. `PatientTypeA`의 `ChestCompStartInteractPoint(ScenarioActionInteractable)`에 `_completionSignal=click_to_start_comp` 정합했고, `ScenarioActionInteractable.Interact()` 완료 시 Raise 경로를 사용한다. (검증 상태: 미검증)
-
+-> **2026-07-29 ChestCompStartInteractPoint 오브젝트를 추가하여 배정함. 그러나 V027노드와 같은 역할을 하기에 중복되지 않는지/겹치지 않는지 검토가 필요함.
 
 ---
 
@@ -3928,9 +4021,9 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | Registry | Contains | RuntimeState | sig.interact_patient_chest |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_defibpad [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_defibpad [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2026-07-29 확인 완료
 
-- [ ] 환자 A 흉부 부위 collider에 `ScenarioActionInteractable`을 붙이고 completion signal을 `interact_patient_chest`로 설정한다.
+- [x] 환자 A 흉부 부위 collider에 `ScenarioActionInteractable`을 붙이고 completion signal을 `interact_patient_chest`로 설정한다. 또한 Activate On Interact에 defibpad_midaxillary_A와 defibpad_subclavicle_A를 추가하였다. ** 2026_07-30 작업 완료
 
 
 ---
@@ -4199,7 +4292,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 
 - [x] a-1 아이템 식별자 정합(구 md→JSON 정본): click_epi→click_epinephrine_ampule (interaction-signal-integration-spec §2 참조).
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_epinephrine_ampule, sig.click_syringe_5cc [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_epinephrine_ampule, sig.click_syringe_5cc [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2026-07-29 완료
 
 
 ---
@@ -4246,7 +4339,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 
 - [x] a-1 아이템 식별자 정합(구 md→JSON 정본): click_ns_20cc→click_normal_saline_20ml (interaction-signal-integration-spec §2 참조).
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_normal_saline_20ml, sig.click_syringe_20cc [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_normal_saline_20ml, sig.click_syringe_20cc [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2026-07-30 확인 완료, 검증 필요
 
 
 ---
@@ -4282,16 +4375,18 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.push_epi |
+| Registry | Contains | RuntimeState | sig.push_epi_r1 |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.push_epi [아이템 사용(Item Use Signal), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.push_epi [아이템 사용(Item Use Signal), spec §5.1~5.3].
+-> **2026-07-30 환자 A 프리팹 아래에 주사기 프리팹 추가 완료(epinephrine_5cc_syringe), 검토 및 연결 필요. registryIdentifier를 sig.push_epi_r1으로 수정
 
 > OR 게이트 처리(B, 우선 채택): 에피네프린 주사기는 완제품이 18종(용량·게이지 변형)으로 존재하나,
 > 이 게이트는 개별 변형 픽업이 아니라 **사용 시점 대표 시그널 `sig.push_epi`** 로 검사하므로 어떤 변형을
 > 조합·투여했든 통과한다(OR 자연 성립). 정책 근거: `interaction-signal-integration-spec.md` §6,
 > `crafting-recipes.md` §확정 요청 (*1).
 
+[V026_2, V026_3, V029_2, V029_3에 대한 요구사항: (에피네프린이 담긴 주사기 상호작용 -> 중심정맥관에 나타나고 주입된 것으로 간주 -> 다음 노드에서 생리식염수가 담긴 주사기 상호작용 -> 중심정맥관에 나타나고 주입된 것으로 간주 -> 이후 모두 사라짐) 이 과정을 염두에 두고 작업이 필요합니다]
 
 ---
 
@@ -4340,11 +4435,13 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.push_ns |
+| Registry | Contains | RuntimeState | sig.push_ns_r1 |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.push_ns [아이템 사용(Item Use Signal), spec §5.1~5.3].
+- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.push_ns_r1 [아이템 사용(Item Use Signal), spec §5.1~5.3].
+-> **2026-07-30 환자 A 프리팹 아래에 주사기 프리팹 추가 완료(normal_saline_5cc_syringe), 검토 및 연결 필요. 기존 sig.push_ns에서 sig.push_ns_r1으로 수정 (V029_3과 겹치기 때문)
 
+[V026_2, V026_3, V029_2, V029_3에 대한 요구사항: (에피네프린이 담긴 주사기 상호작용 -> 중심정맥관에 나타나고 주입된 것으로 간주 -> 다음 노드에서 생리식염수가 담긴 주사기 상호작용 -> 중심정맥관에 나타나고 주입된 것으로 간주 -> 이후 모두 사라짐) 이 과정을 염두에 두고 작업이 필요합니다]
 
 ---
 
@@ -4609,7 +4706,8 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | Registry | Contains | RuntimeState | sig.interact_chest |
 
 
-- [ ] 환자 A 흉부 압박 위치 collider에 `ScenarioActionInteractable`을 붙이고 completion signal을 `interact_chest`로 설정한다.
+- [x] 환자 A 흉부 압박 위치 collider에 `ScenarioActionInteractable`을 붙이고 completion signal을 `interact_chest`로 설정한다.
+-> **2026-07-30 ChestCompStartInteractPoint_2nd 오브젝트를 추가하여 배정함. 그러나 V024노드와 같은 역할을 하기에 중복되지 않는지/겹치지 않는지 검토가 필요함.
 
 
 ---
@@ -4888,11 +4986,13 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.start_ambu |
+| Registry | Contains | RuntimeState | sig.start_ambu_r2 |
 
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.start_ambu [아이템 사용(Item Use Signal), spec §5.1~5.3].
+-> **2026-07-30 sig.start_ambu를 sig.start_ambu_r1로 변경,그러나 V023_4노드와 같은 역할을 하기에 중복되지 않는지/겹치지 않는지 검토가 필요함.
 
+- [x] **2026-07-30 sig.start_ambu를 sig.start_ambu_r2로 변경, patient_a_critical.scenario.requirements.json에도 반영함.
 
 ---
 
@@ -5079,7 +5179,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 - [x] 명명충돌 확정요청: 산출물명 구 `epi_ready`/`epinephrine_syringe` → 정본 `epinephrine_5cc_syringe` 확정(crafting-recipes.md §확정 요청 [x], 2026-07-09).
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_epinephrine_ampule, sig.click_syringe_5cc [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_epinephrine_ampule, sig.click_syringe_5cc [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2026-07-30 완료
 
 
 ---
@@ -5124,7 +5224,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 - [x] 명명충돌 확정요청: 구 `ns_20cc(_ready)` 산출물 제거 → 규칙적 산출물 `normal_saline_20cc_syringe`(관계 1) 대체 확정(crafting-recipes.md §확정 요청 [x], 2026-07-09).
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_normal_saline_20ml, sig.click_syringe_20cc [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_normal_saline_20ml, sig.click_syringe_20cc [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2026-07-30 완료
 
 
 ---
@@ -5174,10 +5274,14 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.push_epi |
+| Registry | Contains | RuntimeState | sig.push_epi_r2 |
 
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.push_epi [아이템 사용(Item Use Signal), spec §5.1~5.3].
+-> **2026-07-30 환자 A 프리팹 아래에 주사기 프리팹 추가 완료(epinephrine_5cc_syringe), 검토 및 연결 필요. registryIdentifier를 sig.push_epi_r2으로 수정
+
+[V026_2, V026_3, V029_2, V029_3에 대한 요구사항: (에피네프린이 담긴 주사기 상호작용 -> 중심정맥관에 나타나고 주입된 것으로 간주 -> 다음 노드에서 생리식염수가 담긴 주사기 상호작용 -> 중심정맥관에 나타나고 주입된 것으로 간주 -> 이후 모두 사라짐) 이 과정을 염두에 두고 작업이 필요합니다]
+
 
 > OR 게이트 처리(B, 우선 채택): V026_2 와 동일하게 사용 시점 대표 시그널 `sig.push_epi` 로 검사하여
 > 에피네프린 주사기 18종 변형 중 어느 것을 투여해도 통과한다. 정책: `interaction-signal-integration-spec.md` §6.
@@ -5230,11 +5334,13 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.push_ns |
+| Registry | Contains | RuntimeState | sig.push_ns_r2 |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.push_ns [아이템 사용(Item Use Signal), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.push_ns [아이템 사용(Item Use Signal), spec §5.1~5.3].
+**2026-07-30 완료. 기존 sig.push_ns에서 sig.push_ns_r2으로 수정 (V026_3과 겹치기 때문)
 
+[V026_2, V026_3, V029_2, V029_3에 대한 요구사항: (에피네프린이 담긴 주사기 상호작용 -> 중심정맥관에 나타나고 주입된 것으로 간주 -> 다음 노드에서 생리식염수가 담긴 주사기 상호작용 -> 중심정맥관에 나타나고 주입된 것으로 간주 -> 이후 모두 사라짐) 이 과정을 염두에 두고 작업이 필요합니다]
 
 ---
 
@@ -5418,7 +5524,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | Registry | Contains | RuntimeState | sig.interact_defib |
 
 
-- [ ] 제세동기 collider에 `ScenarioActionInteractable`을 붙이고 completion signal을 `interact_defib`로 설정한다.
+- [x] 제세동기 collider에 `ScenarioActionInteractable`을 붙이고 completion signal을 `interact_defib`로 설정한다. **2026-07-30 완료
 
 
 ---
@@ -5717,10 +5823,10 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.check_pulse_patient_a |
+| Registry | Contains | RuntimeState | sig.check_pulse_patient_a_r2 |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.check_pulse_patient_a [사정(PatientController Assess 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.check_pulse_patient_a [사정(PatientController Assess 자동), spec §5.1~5.3]. **2026-07-30 완료. 기존 registryIdentifier인 sig.check_pulse_patient_a에서 sig.check_pulse_patient_a_r2로 변경. 환자 A 프리팹(PatientTypeA)에 Patient Controller 컴포넌트 내 Assess Action으로 assess_pulse_r2 추가 완료.
 
 
 ---
@@ -5842,7 +5948,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.arrive_triagearea [구역 진입(ScenarioTriggerZone), spec §5.1~5.3].
-
+** 보류
 
 ---
 
@@ -5925,7 +6031,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | Registry | Contains | RuntimeState | sig.remove_patient_clothing |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_scissors [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_scissors [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3].
 
 - [x] (b) 배선 완료(2026-07-28): sig.remove_patient_clothing. `PatientTypeA`의 `PatientClothingCutPoint(ScenarioActionInteractable)`에 `_completionSignal=remove_patient_clothing` 정합했고, `ScenarioActionInteractable.Interact()` 완료 시 Raise 경로를 사용한다. (검증 상태: 미검증)
 
@@ -6025,7 +6131,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | Registry | Contains | RuntimeState | sig.check_gcs_a_rosc |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.check_gcs_a_rosc [사정(PatientController Assess 자동), spec §5.1~5.3].
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.check_gcs_a_rosc [사정(PatientController Assess 자동), spec §5.1~5.3]. **2026-07-30 완료. 환자 A 프리팹 내 Patient Controller 컴포넌트, Assess Actions에 assess_gcs_rosc 추가 완료
 
 
 ---

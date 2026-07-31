@@ -67,3 +67,9 @@ MonoBehaviour:
     displayName: "\uBAA8\uC790"
     isNetworked: 1
     childReferences: []
+  - identifier: npc_doctor_preset
+    fallbackEntityType: 0
+    prefab: {fileID: 275932254276783438, guid: 8a6fda5491f6443ca3501361d5a41ac4, type: 3}
+    displayName: "\uB2F4\uB2F9 \uC758\uC0AC"
+    isNetworked: 1
+    childReferences: []
