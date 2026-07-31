@@ -24,6 +24,14 @@ namespace TriageTrainer.Entity.LineConnection
     [SerializeField] private Transform _linesRoot;
 
     [Header("Line Visual")]
+    [SerializeField] private Material _intravenousLineMaterial;
+    [SerializeField] private Material _aedLineMaterial;
+    [SerializeField] private Material _oxyLineMaterial;
+    [SerializeField] private Material _suctionLineMaterial;
+    [SerializeField, Range(0f, 1f)] private float _intravenousLineElasticity = 0.15f;
+    [SerializeField, Range(0f, 1f)] private float _aedLineElasticity = 0.15f;
+    [SerializeField, Range(0f, 1f)] private float _oxyLineElasticity = 0.15f;
+    [SerializeField, Range(0f, 1f)] private float _suctionLineElasticity = 0.15f;
     [SerializeField, Min(0.001f)] private float _lineWidth = 0.01f;
     [SerializeField] private Color _lineColor = new Color(0.94f, 0.98f, 1f, 0.18f);
 
@@ -62,6 +70,10 @@ namespace TriageTrainer.Entity.LineConnection
       EnsureLinesRoot();
       _lineSegments = Mathf.Max(2, _lineSegments);
       _lineSagAmount = Mathf.Max(0f, _lineSagAmount);
+      _intravenousLineElasticity = Mathf.Clamp01(_intravenousLineElasticity);
+      _aedLineElasticity = Mathf.Clamp01(_aedLineElasticity);
+      _oxyLineElasticity = Mathf.Clamp01(_oxyLineElasticity);
+      _suctionLineElasticity = Mathf.Clamp01(_suctionLineElasticity);
       _simulationStepsPerFrame = Mathf.Max(1, _simulationStepsPerFrame);
       _solverIterations = Mathf.Max(1, _solverIterations);
       _gravityScale = Mathf.Clamp01(_gravityScale);
@@ -230,6 +242,7 @@ namespace TriageTrainer.Entity.LineConnection
         lineRenderer,
         _lineSegments,
         _lineSagAmount,
+        GetLineElasticity(startPoint),
         _usePhysicsSimulation,
         _simulationStepsPerFrame,
         _solverIterations,
@@ -351,8 +364,23 @@ namespace TriageTrainer.Entity.LineConnection
       return true;
     }
 
-    private static void ApplyLineMaterial(LineConnectionPoint point, LineRenderer lineRenderer)
+    private void ApplyLineMaterial(LineConnectionPoint point, LineRenderer lineRenderer)
     {
+      var lineMaterial = point switch
+      {
+        IntravenousLineConnectionPoint => _intravenousLineMaterial,
+        AEDLineConnectionPoint => _aedLineMaterial,
+        OxyLineConnectionPoint => _oxyLineMaterial,
+        SuctionLineConnectionPoint => _suctionLineMaterial,
+        _ => null,
+      };
+
+      if (lineMaterial != null)
+      {
+        lineRenderer.sharedMaterial = lineMaterial;
+        return;
+      }
+
       switch (point)
       {
         case IntravenousLineConnectionPoint intravenousPoint:
@@ -373,6 +401,18 @@ namespace TriageTrainer.Entity.LineConnection
       }
     }
 
+    private float GetLineElasticity(LineConnectionPoint point)
+    {
+      return point switch
+      {
+        IntravenousLineConnectionPoint => _intravenousLineElasticity,
+        AEDLineConnectionPoint => _aedLineElasticity,
+        OxyLineConnectionPoint => _oxyLineElasticity,
+        SuctionLineConnectionPoint => _suctionLineElasticity,
+        _ => 0f,
+      };
+    }
+
   }
 
   public class LineConnectionRuntime : MonoBehaviour
@@ -383,6 +423,7 @@ namespace TriageTrainer.Entity.LineConnection
 
     [SerializeField, Min(2)] private int _segments = 18;
     [SerializeField, Min(0f)] private float _sagAmount = 0.015f;
+    [SerializeField, Range(0f, 1f)] private float _elasticity = 0.15f;
 
     [SerializeField] private bool _usePhysicsSimulation = true;
     [SerializeField, Min(1)] private int _simulationStepsPerFrame = 2;
@@ -412,6 +453,7 @@ namespace TriageTrainer.Entity.LineConnection
       LineRenderer lineRenderer,
       int segments,
       float sagAmount,
+      float elasticity,
       bool usePhysicsSimulation,
       int simulationStepsPerFrame,
       int solverIterations,
@@ -429,6 +471,7 @@ namespace TriageTrainer.Entity.LineConnection
 
       _segments = Mathf.Max(2, segments);
       _sagAmount = Mathf.Max(0f, sagAmount);
+      _elasticity = Mathf.Clamp01(elasticity);
 
       _usePhysicsSimulation = usePhysicsSimulation;
       _simulationStepsPerFrame = Mathf.Max(1, simulationStepsPerFrame);
@@ -500,7 +543,7 @@ namespace TriageTrainer.Entity.LineConnection
       {
         float t = i / (count - 1f);
         Vector3 point = Vector3.Lerp(start, end, t);
-        point += Vector3.down * (Mathf.Sin(t * Mathf.PI) * _sagAmount);
+        point += Vector3.down * (Mathf.Sin(t * Mathf.PI) * _sagAmount * (1f + _elasticity));
         _points[i] = point;
       }
 
@@ -572,7 +615,7 @@ namespace TriageTrainer.Entity.LineConnection
       {
         float t = i / (count - 1f);
         Vector3 point = Vector3.Lerp(start, end, t);
-        point += Vector3.down * (Mathf.Sin(t * Mathf.PI) * _sagAmount);
+        point += Vector3.down * (Mathf.Sin(t * Mathf.PI) * _sagAmount * (1f + _elasticity));
 
         _points[i] = point;
         _previousPoints[i] = point;
@@ -608,7 +651,9 @@ namespace TriageTrainer.Entity.LineConnection
           continue;
 
         float distanceError = distance - targetLength;
-        Vector3 correction = delta * (distanceError / distance);
+        // Elasticity reduces constraint stiffness, allowing the line to stretch.
+        float stiffness = Mathf.Lerp(1f, 0.1f, _elasticity);
+        Vector3 correction = delta * (distanceError / distance) * stiffness;
 
         if (i == 0)
         {

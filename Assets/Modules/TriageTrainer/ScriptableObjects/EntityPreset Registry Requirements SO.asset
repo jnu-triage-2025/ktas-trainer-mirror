@@ -67,3 +67,15 @@ MonoBehaviour:
     displayName: "\uBAA8\uC790"
     isNetworked: 1
     childReferences: []
+  - identifier: patient_dummy_d_a
+    fallbackEntityType: 0
+    prefab: {fileID: 1909068193049070239, guid: 2180ad435aaca4c44a3aba28ee8412ca, type: 3}
+    displayName: 
+    isNetworked: 1
+    childReferences: []
+  - identifier: patient_dummy_d_b
+    fallbackEntityType: 0
+    prefab: {fileID: 2574628634766077341, guid: af3814dd0bc4347e889e3cf06ec0bb9b, type: 3}
+    displayName: 
+    isNetworked: 1
+    childReferences: []
