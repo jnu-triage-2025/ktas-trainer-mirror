@@ -115,7 +115,7 @@ MonoBehaviour:
   - {fileID: -2615499957622416118}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects:
-  - {fileID: 332250014535888278}
+  - {fileID: 1446250469611030381}
   - {fileID: 5757268981635084215}
   - {fileID: 4285661680897093736}
   - {fileID: 2384611455480762286}
@@ -1399,12 +1399,12 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4954082000254014966, guid: fbda63f688cf94b7c90dec4931313edf, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4954082000254014966, guid: fbda63f688cf94b7c90dec4931313edf, type: 3}
       propertyPath: SceneId
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4954082000254014966, guid: fbda63f688cf94b7c90dec4931313edf, type: 3}
+      propertyPath: WasActiveDuringEdit
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4954082000254014966, guid: fbda63f688cf94b7c90dec4931313edf, type: 3}
       propertyPath: _initializedTimestamp
@@ -1420,7 +1420,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4954082000254014966, guid: fbda63f688cf94b7c90dec4931313edf, type: 3}
       propertyPath: InitializedParentNetworkBehaviour
-      value:
+      value: 
       objectReference: {fileID: -2615499957622416118}
     - target: {fileID: 4954082000254014966, guid: fbda63f688cf94b7c90dec4931313edf, type: 3}
       propertyPath: SerializedTransformProperties.Rotation.x
@@ -1436,14 +1436,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8976755218381050655, guid: fbda63f688cf94b7c90dec4931313edf, type: 3}
       propertyPath: _uiController
-      value:
+      value: 
       objectReference: {fileID: 5937404417528951248}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fbda63f688cf94b7c90dec4931313edf, type: 3}
---- !u!114 &332250014535888278 stripped
+--- !u!114 &1446250469611030381 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4954082000254014966, guid: fbda63f688cf94b7c90dec4931313edf, type: 3}
   m_PrefabInstance: {fileID: 5823843125384467099}
@@ -1452,7 +1452,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: FishNet.Runtime::FishNet.Object.NetworkObject
 --- !u!4 &7759024873899097603 stripped
 Transform:

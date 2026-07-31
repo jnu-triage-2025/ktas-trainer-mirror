@@ -73,6 +73,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Entity.Npc
   _displayText: "\uB9D0 \uAC78\uAE30"
   _displayIcon: {fileID: 0}
+  _displayIcons: []
   _displayColor: {r: 1, g: 1, b: 1, a: 1}
   _npcBaseModel: {fileID: 0}
   _identifier: npc-doctor-1

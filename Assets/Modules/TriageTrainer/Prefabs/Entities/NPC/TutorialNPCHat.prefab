@@ -73,6 +73,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Entity.Npc
   _displayText: "\uB9D0 \uAC78\uAE30"
   _displayIcon: {fileID: 0}
+  _displayIcons: []
   _displayColor: {r: 1, g: 1, b: 1, a: 1}
   _npcBaseModel: {fileID: 0}
   _identifier: npc-tutorial-guide-hat
@@ -109,7 +110,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584167310264217588
+  _initializedTimestamp: -8584161294349901418
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -124,7 +125,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 14
+  <PrefabId>k__BackingField: 17
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 13998352978872276367
   SceneId: 0

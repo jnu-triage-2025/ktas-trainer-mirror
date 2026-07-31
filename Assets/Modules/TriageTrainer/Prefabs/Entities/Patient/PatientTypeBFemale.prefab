@@ -38,50 +38,6 @@ Transform:
   - {fileID: 7200000000000000002}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &7200000000000000001
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7200000000000000002}
-  - component: {fileID: 7200000000000000003}
-  m_Layer: 0
-  m_Name: PatientMonitorTrackingLineEndpoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &7200000000000000002
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7200000000000000001}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.05, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3508104974660169203}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7200000000000000003
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7200000000000000001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b0a3f69c7d44a5c8f5f0b3a5dbf03ad, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: TriageTrainer.Entity.PatientMonitor.Models::PatientMonitorTrackingLineEndpoint
 --- !u!114 &3850785483627365576
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -215,10 +171,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e794a1dae1454908ba448af46d61805, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.PatientController
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 6759064965544079288}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 6759064965544079288}
   _runtimeAnimatorController: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
+  _assessActions: []
   _capsuleCollider: {fileID: 6481162045202206273}
   _standingCapsuleCenter: {x: 0, y: 0.9, z: 0}
   _standingCapsuleHeight: 1.8
@@ -236,11 +193,19 @@ MonoBehaviour:
   _monitorSelectDisplayText: "\uC774 \uD658\uC790\uB97C \uBAA8\uB2C8\uD130\uB9C1"
   _monitorSelectDisplayIcon: {fileID: 0}
   _weight: 4
-  _attachableItemVisualPairs: []
-  _currentBed: {fileID: 0}
+  _supportExternalRefs:
+    _patientBed: {fileID: 0}
+    _intravenousFluids: []
+    _suctionWall: {fileID: 0}
+    _oxyflowmeter: {fileID: 0}
+    _suctionWalls: []
+    _oxyflowmeters: []
+  _ivAttachmentPoint: {fileID: 0}
   _carryAttachPoint: {fileID: 8298302873564096653}
   _isMovingPatientBedAttached: 0
   _isPlayerAttached: 0
+  _debugTreatmentDisplay: 11
+  _debugItemIdentifier: gauze
   _interactConfigs:
   - _identifier: lift_from_bed
     _enabled: 1
@@ -248,6 +213,11 @@ MonoBehaviour:
     _enabled: 1
   - _identifier: monitor_select
     _enabled: 1
+  _intravenousLineCannulaConfig:
+    _supported: 0
+    _displayText: 
+    _displayIcon: {fileID: 0}
+  _intravenousLineCannulaInteractable: 1
   _medicalState:
     isCardiacArrest: 0
     ecg:
@@ -302,6 +272,12 @@ MonoBehaviour:
       v4: 0
       v5: 0
       v6: 0
+  _triageConfig:
+    _assessable: 0
+    _changeAssessableOnAssessDone: 0
+    _displayText: 
+    _displayIcon: {fileID: 0}
+  _triageLabelAnchor: {fileID: 0}
 --- !u!114 &6759064965544079288
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -320,7 +296,8 @@ MonoBehaviour:
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours: []
+  NetworkBehaviours:
+  - {fileID: 3859099019089065873}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -331,7 +308,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: 0
+  _initializedTimestamp: -8584161294349901418
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -346,15 +323,15 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 65535
+  <PrefabId>k__BackingField: 14
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 12329446773789765797
   SceneId: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
-    Rotation: {x: 0, y: 0, z: 0, w: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    IsValid: 0
+    Rotation: {x: 0, y: 0, z: 0, w: 1}
+    Scale: {x: 1, y: 1, z: 1}
+    IsValid: 1
 --- !u!1 &3059064153231568963
 GameObject:
   m_ObjectHideFlags: 0
@@ -386,6 +363,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3508104974660169203}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7200000000000000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7200000000000000002}
+  - component: {fileID: 7200000000000000003}
+  m_Layer: 0
+  m_Name: PatientMonitorTrackingLineEndpoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7200000000000000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7200000000000000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.05, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3508104974660169203}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7200000000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7200000000000000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b0a3f69c7d44a5c8f5f0b3a5dbf03ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TriageTrainer.Entity.PatientMonitor.Models::PatientMonitorTrackingLineEndpoint
 --- !u!1001 &1135039510427838272
 PrefabInstance:
   m_ObjectHideFlags: 0

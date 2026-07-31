@@ -419,6 +419,8 @@ MonoBehaviour:
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
   - {fileID: 8619811087951219274}
+  - {fileID: 2760192767522612315}
+  - {fileID: 2610733516066013773}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -429,7 +431,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584193287592937588
+  _initializedTimestamp: -8584161294349901418
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -444,7 +446,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 2
+  <PrefabId>k__BackingField: 3
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 2010774629898478706
   SceneId: 0
@@ -627,6 +629,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
+  _componentIndexCache: 2
+  _addedNetworkObject: {fileID: 0}
+  _networkObjectCache: {fileID: 5796848331211291605}
+  _lineMaterial: {fileID: 0}
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
   connectionService: {fileID: 0}
   _identifier: ps1
   _autoGenerateIdentifier: 1
@@ -638,8 +646,6 @@ MonoBehaviour:
     _enabled: 1
   - _identifier: intravenous_line_disconnect
     _enabled: 1
-  _connectedLineObjects: []
-  _allowMultipleConnections: 0
 --- !u!1001 &5624645098008020992
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -753,6 +759,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
+  _componentIndexCache: 1
+  _addedNetworkObject: {fileID: 0}
+  _networkObjectCache: {fileID: 5796848331211291605}
+  _lineMaterial: {fileID: 0}
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
   connectionService: {fileID: 0}
   _identifier: connect_cannula_and_ns1
   _autoGenerateIdentifier: 0
@@ -764,8 +776,6 @@ MonoBehaviour:
     _enabled: 1
   - _identifier: intravenous_line_disconnect
     _enabled: 1
-  _connectedLineObjects: []
-  _allowMultipleConnections: 0
 --- !u!4 &5297492751155490795 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 24c0ebb0fa3a841c2acca70cc66081c7, type: 3}

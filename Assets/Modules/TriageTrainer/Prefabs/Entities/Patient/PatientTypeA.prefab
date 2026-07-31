@@ -68,6 +68,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "\uC570\uBD80\uBC30\uAE45 \uC2DC\uC791"
   _displayIcon: {fileID: 0}
+  _displayIcons: []
   _completionSignal: start_ambu_r2
   _enabled: 1
   _consumeOnce: 1
@@ -141,6 +142,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "\uAC00\uC2B4\uC555\uBC15 \uC2DC\uC791"
   _displayIcon: {fileID: 0}
+  _displayIcons: []
   _completionSignal: interact_chest
   _enabled: 1
   _consumeOnce: 1
@@ -214,6 +216,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "\uC81C\uC138\uB3D9 \uD328\uB4DC \uBD80\uCC29"
   _displayIcon: {fileID: 0}
+  _displayIcons: []
   _completionSignal: interact_patient_chest
   _enabled: 1
   _consumeOnce: 1
@@ -290,6 +293,9 @@ MonoBehaviour:
   _componentIndexCache: 255
   _addedNetworkObject: {fileID: 0}
   _networkObjectCache: {fileID: 0}
+  _lineMaterial: {fileID: 0}
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
   connectionService: {fileID: 0}
   _identifier: connect_tpiece_and_oxyflow
   _autoGenerateIdentifier: 0
@@ -301,8 +307,6 @@ MonoBehaviour:
     _enabled: 1
   - _identifier: intravenous_line_disconnect
     _enabled: 1
-  _connectedLineObjects: []
-  _allowMultipleConnections: 0
 --- !u!1 &2224266580779621743
 GameObject:
   m_ObjectHideFlags: 0
@@ -371,6 +375,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "\uC570\uBD80\uBC30\uAE45 \uC2DC\uC791"
   _displayIcon: {fileID: 0}
+  _displayIcons: []
   _completionSignal: start_ambu_r1
   _enabled: 1
   _consumeOnce: 1
@@ -444,6 +449,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "T-piece \uC5F0\uACB0 \uD574\uC81C"
   _displayIcon: {fileID: 0}
+  _displayIcons: []
   _completionSignal: remove_tpiece
   _enabled: 1
   _consumeOnce: 1
@@ -518,6 +524,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "\uC758\uBCF5 \uC81C\uAC70"
   _displayIcon: {fileID: 0}
+  _displayIcons: []
   _completionSignal: remove_patient_clothing
   _enabled: 1
   _consumeOnce: 1
@@ -591,6 +598,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "\uAC00\uC2B4\uC555\uBC15 \uC2DC\uC791"
   _displayIcon: {fileID: 0}
+  _displayIcons: []
   _completionSignal: click_to_start_comp
   _enabled: 1
   _consumeOnce: 1
@@ -1060,6 +1068,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "T-Piece \uC5F0\uACB0"
   _displayIcon: {fileID: 0}
+  _displayIcons: []
   _completionSignal: interact_tpiece
   _enabled: 1
   _consumeOnce: 1
@@ -1135,6 +1144,9 @@ MonoBehaviour:
   _componentIndexCache: 255
   _addedNetworkObject: {fileID: 0}
   _networkObjectCache: {fileID: 0}
+  _lineMaterial: {fileID: 0}
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
   connectionService: {fileID: 0}
   _identifier: patient_a_cannula_left_port
   _autoGenerateIdentifier: 0
@@ -1146,8 +1158,6 @@ MonoBehaviour:
     _enabled: 1
   - _identifier: intravenous_line_disconnect
     _enabled: 1
-  _connectedLineObjects: []
-  _allowMultipleConnections: 0
 --- !u!1 &8082596318175774275
 GameObject:
   m_ObjectHideFlags: 0
@@ -1247,6 +1257,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "\uC2A4\uD0C0\uC77C\uB81B \uC81C\uAC70"
   _displayIcon: {fileID: 0}
+  _displayIcons: []
   _completionSignal: remove_intu_stylet
   _enabled: 1
   _consumeOnce: 1

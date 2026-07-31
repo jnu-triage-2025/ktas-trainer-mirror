@@ -271,7 +271,7 @@ MonoBehaviour:
   _keySpectatorFlyDown: 304
   _keyOpenQuestUI: 106
   _keyDropHeldItem: 113
-  _level1RapidInfuserEntityPrefab: {fileID: 6673793964106904184, guid: 443870cc6703f42719b5008c60cb8db5, type: 3}
+  _keyCameraDistanceModifier: 308
   _detector: {fileID: 0}
   _interactableHintUI: {fileID: 0}
   _dialoguePanelUIController: {fileID: 0}
@@ -284,7 +284,6 @@ MonoBehaviour:
   _viewmodelLocalScale: {x: 1, y: 1, z: 1}
   _viewmodelLayerName: Viewmodel
   _walkingSpeed: 7.5
-  _runningSpeed: 11.5
   _jumpSpeed: 8
   _gravity: 20
   _spectatorMoveSpeed: 10
@@ -299,9 +298,10 @@ MonoBehaviour:
   _isRunning: 0
   _isCursorLocked: 0
   _characterController: {fileID: 0}
-  _cameraHolderTransform: {fileID: 0}
+  _cameraAttachPoint: {fileID: 0}
   _isPatientSelectionMode: 0
   _isIntravenousLineConnectionMode: 0
+  _level1RapidInfuserEntityPrefab: {fileID: 6673793964106904184, guid: 443870cc6703f42719b5008c60cb8db5, type: 3}
   _questUIController: {fileID: 0}
   _questPreviewHudUIController: {fileID: 0}
   _raycastLayerMask:
@@ -354,7 +354,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584193287592937588
+  _initializedTimestamp: -8584161294349901418
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -369,7 +369,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 9
+  <PrefabId>k__BackingField: 10
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 6603010548494297973
   SceneId: 0
