@@ -577,6 +577,51 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void AutoLayoutStacksVisibleComponentsVertically()
+    {
+      var identifiers = new[] { "a", "b", "c", "d" };
+      var outgoing = new Dictionary<string, List<string>>
+      {
+        ["a"] = new List<string> { "b" },
+        ["b"] = new List<string>(),
+        ["c"] = new List<string> { "d" },
+        ["d"] = new List<string>()
+      };
+      var layer = new Dictionary<string, int>
+      {
+        ["a"] = 0,
+        ["b"] = 1,
+        ["c"] = 0,
+        ["d"] = 1
+      };
+      var y = new Dictionary<string, float>
+      {
+        ["a"] = 0f,
+        ["b"] = 0f,
+        ["c"] = 0f,
+        ["d"] = 0f
+      };
+      var method = typeof(ScenarioGraphAuthoringWindow).GetMethod(
+        "PackVisibleComponents",
+        BindingFlags.Static | BindingFlags.NonPublic);
+
+      Assert.That(method, Is.Not.Null);
+      var packed = (Dictionary<string, Vector2>)method.Invoke(null, new object[]
+      {
+        identifiers,
+        outgoing,
+        layer,
+        y
+      });
+
+      Assert.That(packed["a"].x, Is.EqualTo(0f));
+      Assert.That(packed["b"].x, Is.EqualTo(420f));
+      Assert.That(packed["c"].x, Is.EqualTo(0f));
+      Assert.That(packed["d"].x, Is.EqualTo(420f));
+      Assert.That(packed["c"].y - packed["a"].y, Is.GreaterThanOrEqualTo(400f));
+    }
+
+    [Test]
     public void AutoLayoutAssignsOneLaneToUnambiguousLinearPath()
     {
       var layers = new Dictionary<int, List<string>>

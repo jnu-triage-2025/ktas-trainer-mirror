@@ -82,6 +82,8 @@ namespace MultiplayerInfrastructure.Editor
     // 레이어의 동일한 x 좌표에 세로로 쌓인다.
     private const float AutoLayoutColumnSpacing = 420f;
     private const float AutoLayoutRowSpacing = 240f;
+    private const float AutoLayoutComponentPadding = 240f;
+    private const float AutoLayoutNodeHeight = 160f;
     private const int AutoLayoutCrossingReductionPasses = 6;
 
     private readonly struct LayoutScore
@@ -1860,15 +1862,16 @@ namespace MultiplayerInfrastructure.Editor
       ReportAutoLayoutProgress(showProgress, 0.86f, "노드 세로 좌표를 정렬하는 중...");
       var y = AssignVerticalCoordinates(
         layers, layoutGraph.Layer, layoutGraph.Forward, layoutGraph.Incoming);
+      var packedPositions = PackVisibleComponents(
+        identifiers, visibleOutgoing, realNodeLayer, y);
       ReportAutoLayoutProgress(showProgress, 0.94f, "노드 위치를 적용하는 중...");
 
-      // 모든 실노드의 가장 이른 레이어를 GraphView의 왼쪽 끝(x = 0)으로 둔다.
-      var leftmostLayer = realNodeLayer.Count > 0 ? realNodeLayer.Values.Min() : 0;
       foreach (var pair in realNodeLayer)
       {
         if (!nodeViews.TryGetValue(pair.Key, out var view)) continue;
+        var position = packedPositions[pair.Key];
         view.SetPosition(new Rect(
-          new Vector2((pair.Value - leftmostLayer) * AutoLayoutColumnSpacing, y[pair.Key]),
+          position,
           view.DefaultSize));
       }
       ReportAutoLayoutProgress(showProgress, 1f, "그래프 노드 배치를 완료했습니다.");
@@ -2062,6 +2065,77 @@ namespace MultiplayerInfrastructure.Editor
         if (!changed)
           break;
       }
+    }
+
+    private static Dictionary<string, Vector2> PackVisibleComponents(
+      IReadOnlyList<string> identifiers,
+      IReadOnlyDictionary<string, List<string>> visibleOutgoing,
+      IReadOnlyDictionary<string, int> layer,
+      IReadOnlyDictionary<string, float> y)
+    {
+      var adjacency = identifiers.ToDictionary(id => id, _ => new HashSet<string>());
+      foreach (var pair in visibleOutgoing)
+      {
+        foreach (var target in pair.Value)
+        {
+          if (!adjacency.ContainsKey(target))
+            continue;
+
+          // Weak components include feedback links so a retry loop remains in the
+          // same visual block even though feedback edges are omitted from layering.
+          adjacency[pair.Key].Add(target);
+          adjacency[target].Add(pair.Key);
+        }
+      }
+
+      var components = new List<List<string>>();
+      var visited = new HashSet<string>(StringComparer.Ordinal);
+      foreach (var identifier in identifiers.OrderBy(id => id, StringComparer.Ordinal))
+      {
+        if (!visited.Add(identifier))
+          continue;
+
+        var component = new List<string>();
+        var pending = new Stack<string>();
+        pending.Push(identifier);
+        while (pending.Count > 0)
+        {
+          var current = pending.Pop();
+          component.Add(current);
+          foreach (var neighbor in adjacency[current].OrderBy(id => id, StringComparer.Ordinal))
+          {
+            if (visited.Add(neighbor))
+              pending.Push(neighbor);
+          }
+        }
+        components.Add(component);
+      }
+
+      var orderedComponents = components
+        .OrderBy(component => component.Min(id => layer[id]))
+        .ThenBy(component => component.Min(id => id), StringComparer.Ordinal)
+        .ToList();
+      var packed = new Dictionary<string, Vector2>();
+      var nextComponentY = 0f;
+
+      foreach (var component in orderedComponents)
+      {
+        var minimumLayer = component.Min(id => layer[id]);
+        var minimumY = component.Min(id => y[id]);
+        var maximumY = component.Max(id => y[id]) - minimumY + AutoLayoutNodeHeight;
+        var offsetY = nextComponentY - minimumY;
+
+        foreach (var id in component)
+        {
+          packed[id] = new Vector2(
+            (layer[id] - minimumLayer) * AutoLayoutColumnSpacing,
+            y[id] + offsetY);
+        }
+
+        nextComponentY += maximumY + AutoLayoutComponentPadding;
+      }
+
+      return packed;
     }
 
     private static void ReduceCrossings(
