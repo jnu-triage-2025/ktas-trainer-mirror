@@ -20,6 +20,10 @@ namespace TriageTrainer.Editor
     private const string BakedRotateGizmoPrefabPath = "Assets/Modules/TriageTrainer/Editor/Prefabs/RotateGizmoBaked.prefab";
     private const string BakedRotateGizmoMeshDirectory = "Assets/Modules/TriageTrainer/Editor/Prefabs/RotateGizmoBakedMeshes";
     private const string PreviewSkyboxMaterialPath = "Assets/Modules/TriageTrainer/Editor/Materials/LineMaterialPreview/Skybox.mat";
+    private const string IntravenousLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineconnectionService/IntravenousLine.mat";
+    private const string AEDLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineconnectionService/AEDLine.mat";
+    private const string OxyLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineconnectionService/OxyLine.mat";
+    private const string SuctionLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineconnectionService/SuctionLine.mat";
     private enum LineType
     {
       Intravenous,
@@ -126,6 +130,7 @@ namespace TriageTrainer.Editor
       _preview = new PreviewRenderUtility();
       _preview.cameraFieldOfView = 30f;
       ConfigurePreviewSkybox();
+      LoadDefaultLineMaterials();
 
       _previewLineObject = new GameObject("Line Material Preview Line");
       _previewLineObject.hideFlags = HideFlags.HideAndDontSave;
@@ -151,6 +156,15 @@ namespace TriageTrainer.Editor
 
       UpdateServiceImplementationScript();
       UpdateImplementationScript();
+    }
+
+    private void LoadDefaultLineMaterials()
+    {
+      _intravenousMaterial = AssetDatabase.LoadAssetAtPath<Material>(IntravenousLineMaterialPath);
+      _aedMaterial = AssetDatabase.LoadAssetAtPath<Material>(AEDLineMaterialPath);
+      _oxyMaterial = AssetDatabase.LoadAssetAtPath<Material>(OxyLineMaterialPath);
+      _suctionMaterial = AssetDatabase.LoadAssetAtPath<Material>(SuctionLineMaterialPath);
+      _material = GetSelectedLineMaterial();
     }
 
     private bool TryCreateBakedGizmo()
@@ -273,6 +287,10 @@ namespace TriageTrainer.Editor
       // Reference the implementation of service
       using (new EditorGUI.DisabledScope(true))
         EditorGUILayout.ObjectField("", _serviceImplementation, typeof(MonoScript), false);
+      EditorGUILayout.Space(6f);
+
+      EditorGUILayout.HelpBox("LineType을 지정하면 각 라인 타입에 대해 사전 설정된 기본값을 로드합니다. 아래의 Rendering Settings 값은 이 화면에서 일시적으로 시뮬레이션 되는 것으로, 실제로는 Implementation 항목의 코드를 직접 수정하여야 합니다.", MessageType.Info);
+      EditorGUILayout.Space(6f);
 
       EditorGUILayout.LabelField("Line Rendering Settings", EditorStyles.boldLabel);
       EditorGUI.BeginChangeCheck();
@@ -289,6 +307,9 @@ namespace TriageTrainer.Editor
       _material = (Material)EditorGUILayout.ObjectField("Material", _material, typeof(Material), false);
       _lineWidth = EditorGUILayout.Slider("Line Width", _lineWidth, 0.01f, 0.25f);
       _elasticity = EditorGUILayout.Slider("Elasticity", _elasticity, 0f, 1f);
+      EditorGUILayout.Space(6f);
+
+      EditorGUILayout.LabelField("Rendering", EditorStyles.boldLabel);
       DrawVector3Row("Start Point", ref _startPoint);
       DrawVector3Row("End Point", ref _endPoint);
       EditorGUILayout.Space(6f);
@@ -297,11 +318,7 @@ namespace TriageTrainer.Editor
 
       if (GUILayout.Button("Reset Values", GUILayout.Width(120f)))
       {
-        _material = null;
-        _intravenousMaterial = null;
-        _aedMaterial = null;
-        _oxyMaterial = null;
-        _suctionMaterial = null;
+        LoadDefaultLineMaterials();
         _lineWidth = 0.08f;
         _elasticity = 0.15f;
         _startPoint = new Vector3(-0.9f, 0.15f, 0f);
@@ -660,9 +677,19 @@ namespace TriageTrainer.Editor
 
     private void DrawGizmoAxisLabel(Rect rect, Vector3 direction, Color color, string label)
     {
-      // Each label is deliberately placed beyond the positive end of its axis.
-      float labelDistance = _bakedRotateGizmoObject != null ? 2.2f : 0.82f;
-      Vector2 position = WorldToPreview(_gizmoPosition + direction * _gizmoScale * labelDistance, rect);
+      // Keep labels attached to the gizmo in screen space. Projecting a long
+      // world-space offset makes the labels drift to the edge when the window
+      // becomes narrow because the preview camera's aspect ratio changes.
+      Vector2 center = WorldToPreview(_gizmoPosition, rect);
+      Vector2 axisEnd = WorldToPreview(_gizmoPosition + direction * _gizmoScale, rect);
+      Vector2 screenDirection = axisEnd - center;
+      if (screenDirection.sqrMagnitude < 0.01f)
+        screenDirection = Vector2.up;
+      else
+        screenDirection.Normalize();
+
+      const float labelDistance = 34f;
+      Vector2 position = center + screenDirection * labelDistance;
       var previousColor = GUI.color;
       GUI.color = color;
       GUI.Label(new Rect(position.x - 5f, position.y - 10f, 18f, 20f), label, EditorStyles.boldLabel);
