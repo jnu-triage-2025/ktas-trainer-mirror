@@ -310,6 +310,7 @@ namespace TriageTrainer.Editor
       EditorGUILayout.Space(6f);
 
       EditorGUILayout.LabelField("Rendering", EditorStyles.boldLabel);
+      EditorGUILayout.HelpBox("두 점은 아래의 미리보기 화면 속 점을 드래그해서도 움직일 수 있습니다.", MessageType.Info);
       DrawVector3Row("Start Point", ref _startPoint);
       DrawVector3Row("End Point", ref _endPoint);
       EditorGUILayout.Space(6f);
