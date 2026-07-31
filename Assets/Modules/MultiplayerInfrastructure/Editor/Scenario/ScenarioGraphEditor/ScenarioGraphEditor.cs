@@ -1769,33 +1769,73 @@ namespace MultiplayerInfrastructure.Editor
     private void AutoLayoutNodesInternal(bool showProgress)
     {
       var identifiers = nodeViews.Keys.OrderBy(id => id, StringComparer.Ordinal).ToList();
-      var outgoing = identifiers.ToDictionary(id => id, _ => new List<string>());
+      var visibleOutgoing = identifiers.ToDictionary(id => id, _ => new List<string>());
+      var continuationByParallel = new Dictionary<string, string>();
+      var branchesByParallel = new Dictionary<string, List<string>>();
       foreach (var node in graphData.Nodes.Values)
       {
-        if (node == null || !outgoing.TryGetValue(node.Identifier, out var targets)) continue;
-        targets.AddRange(GetOutgoingTargets(node)
-          .Where(outgoing.ContainsKey)
-          .Distinct());
+        if (node == null || !visibleOutgoing.TryGetValue(node.Identifier, out var targets)) continue;
+
+        // Keep one entry per rendered output port. Several Choice options may point to
+        // the same retry node, but they still leave the node at different vertical ports
+        // and therefore must remain distinct during crossing reduction.
+        targets.AddRange(GetVisibleOutgoingTargets(node)
+          .Where(visibleOutgoing.ContainsKey));
+
+        if (node is ScenarioParallelNode parallel)
+        {
+          branchesByParallel[node.Identifier] = parallel.Branches
+            .Where(branch => !string.IsNullOrEmpty(branch.Identifier) &&
+                             visibleOutgoing.ContainsKey(branch.Identifier))
+            .Select(branch => branch.Identifier)
+            .Distinct()
+            .ToList();
+          if (!string.IsNullOrEmpty(node.NextIdentifier) &&
+              visibleOutgoing.ContainsKey(node.NextIdentifier))
+          {
+            continuationByParallel[node.Identifier] = node.NextIdentifier;
+          }
+        }
       }
       ReportAutoLayoutProgress(showProgress, 0.12f, "그래프 연결을 분석하는 중...");
 
+      // Parallel.NextIdentifier is a semantic ordering constraint, not a rendered edge.
+      // Keep it in the layering graph so phases remain connected, while excluding it
+      // from crossing reduction and vertical alignment below.
+      var constraintOutgoing = visibleOutgoing.ToDictionary(
+        pair => pair.Key,
+        pair => pair.Value.ToList());
+      foreach (var pair in continuationByParallel)
+        constraintOutgoing[pair.Key].Insert(0, pair.Value);
+
       // DFS로 역방향(순환) 간선을 제외한다. 이 간선들은 화면에서는 그대로
       // 보이지만 레이어 순서를 강제하지 않아 진행 경로가 뒤로 밀리지 않는다.
-      var forward = BuildAcyclicEdges(identifiers, outgoing);
+      var constraintForward = BuildAcyclicEdges(identifiers, constraintOutgoing);
+      var visibleForward = constraintForward.ToDictionary(
+        pair => pair.Key,
+        pair => pair.Value.Where(target =>
+          !continuationByParallel.TryGetValue(pair.Key, out var continuation) ||
+          !string.Equals(target, continuation, StringComparison.Ordinal)).ToList());
       var incoming = identifiers.ToDictionary(id => id, _ => new List<string>());
-      foreach (var pair in forward)
+      foreach (var pair in constraintForward)
         foreach (var target in pair.Value)
           incoming[target].Add(pair.Key);
       ReportAutoLayoutProgress(showProgress, 0.22f, "순환 연결을 정규화하는 중...");
 
       // Longest-path layering: 모든 순방향 간선의 대상이 출발 노드보다
       // 오른쪽 레이어에 놓이도록 한다.
-      var realNodeLayer = AssignLayers(identifiers, forward, incoming);
+      var realNodeLayer = AssignLayers(identifiers, constraintForward, incoming);
+      PushParallelContinuations(
+        realNodeLayer,
+        constraintForward,
+        visibleForward,
+        continuationByParallel,
+        branchesByParallel);
       ReportAutoLayoutProgress(showProgress, 0.34f, "노드 레이어를 계산하는 중...");
 
       // Sugiyama 정규화: 긴 간선을 중간 레이어의 dummy vertex 체인으로
       // 분리하여, 교차 최소화가 모든 간선을 인접 레이어 단위로 처리하게 한다.
-      var layoutGraph = NormalizeLongEdges(realNodeLayer, forward);
+      var layoutGraph = NormalizeLongEdges(realNodeLayer, visibleForward);
       var layers = layoutGraph.Layer.GroupBy(pair => pair.Value)
         .OrderBy(group => group.Key)
         .ToDictionary(group => group.Key, group => group
@@ -1930,6 +1970,98 @@ namespace MultiplayerInfrastructure.Editor
         }
       }
       return layer;
+    }
+
+    private static void PushParallelContinuations(
+      IDictionary<string, int> nodeLayer,
+      IReadOnlyDictionary<string, List<string>> constraintForward,
+      IReadOnlyDictionary<string, List<string>> visibleForward,
+      IReadOnlyDictionary<string, string> continuationByParallel,
+      IReadOnlyDictionary<string, List<string>> branchesByParallel)
+    {
+      if (continuationByParallel.Count == 0)
+        return;
+
+      var continuationBoundaries = new HashSet<string>(
+        continuationByParallel.Values,
+        StringComparer.Ordinal);
+
+      // Moving an earlier continuation also moves every later phase through the
+      // constraint DAG. Revisit the small Parallel set until all branch-depth
+      // constraints are stable; the DAG propagation makes this converge quickly.
+      var maximumPasses = Math.Max(1, continuationByParallel.Count + 1);
+      for (var pass = 0; pass < maximumPasses; pass++)
+      {
+        var changed = false;
+        var orderedParallels = continuationByParallel.Keys
+          .OrderBy(id => nodeLayer.TryGetValue(id, out var value) ? value : int.MaxValue)
+          .ThenBy(id => id, StringComparer.Ordinal)
+          .ToList();
+
+        foreach (var parallel in orderedParallels)
+        {
+          if (!nodeLayer.TryGetValue(parallel, out var parallelLayer) ||
+              !continuationByParallel.TryGetValue(parallel, out var continuation) ||
+              !nodeLayer.ContainsKey(continuation))
+          {
+            continue;
+          }
+
+          var deepestBranchLayer = parallelLayer;
+          var visited = new HashSet<string>(StringComparer.Ordinal);
+          var pending = new Stack<string>();
+          if (branchesByParallel.TryGetValue(parallel, out var branches))
+          {
+            for (var index = branches.Count - 1; index >= 0; index--)
+              pending.Push(branches[index]);
+          }
+
+          while (pending.Count > 0)
+          {
+            var id = pending.Pop();
+            if (!nodeLayer.ContainsKey(id) ||
+                continuationBoundaries.Contains(id) ||
+                !visited.Add(id))
+            {
+              continue;
+            }
+
+            deepestBranchLayer = Math.Max(deepestBranchLayer, nodeLayer[id]);
+            if (!visibleForward.TryGetValue(id, out var successors))
+              continue;
+
+            for (var index = successors.Count - 1; index >= 0; index--)
+              pending.Push(successors[index]);
+          }
+
+          var requiredLayer = deepestBranchLayer + 1;
+          if (nodeLayer[continuation] >= requiredLayer)
+            continue;
+
+          nodeLayer[continuation] = requiredLayer;
+          changed = true;
+
+          // Preserve every existing DAG constraint after shifting the continuation.
+          var propagation = new Queue<string>();
+          propagation.Enqueue(continuation);
+          while (propagation.Count > 0)
+          {
+            var source = propagation.Dequeue();
+            foreach (var target in constraintForward[source])
+            {
+              var targetLayer = nodeLayer[source] + 1;
+              if (nodeLayer[target] >= targetLayer)
+                continue;
+
+              nodeLayer[target] = targetLayer;
+              propagation.Enqueue(target);
+            }
+          }
+        }
+
+        if (!changed)
+          break;
+      }
     }
 
     private static void ReduceCrossings(
@@ -2332,15 +2464,11 @@ namespace MultiplayerInfrastructure.Editor
       return visited == roots.Count;
     }
 
-    private static IEnumerable<string> GetOutgoingTargets(IScenarioNode node)
+    private static IEnumerable<string> GetVisibleOutgoingTargets(IScenarioNode node)
     {
       if (node == null) yield break;
 
-      // Parallel.NextIdentifier is not rendered as a regular GraphView edge, but it is
-      // still the semantic continuation after all branches complete. Keep it as a
-      // layout constraint so each post-parallel phase does not become a disconnected
-      // component and drift far away during coordinate assignment.
-      if (!string.IsNullOrEmpty(node.NextIdentifier))
+      if (node is not ScenarioParallelNode && !string.IsNullOrEmpty(node.NextIdentifier))
       {
         yield return node.NextIdentifier;
       }

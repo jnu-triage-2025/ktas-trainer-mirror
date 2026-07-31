@@ -469,12 +469,12 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     /// <summary>
-    /// 자동 배치는 화면에 표시되는 병렬 브랜치뿐 아니라 모든 브랜치가 끝난 뒤의
-    /// 의미적 전이도 수집해야 한다. 이를 누락하면 병렬 단계마다 그래프 컴포넌트가
-    /// 끊어져 세로 좌표가 비정상적으로 커진다.
+    /// 화면에 그리지 않는 Parallel continuation은 표시 간선 교차 계산에 섞지 않는다.
+    /// continuation은 별도의 레이어 제약으로 처리해야 실제 포트의 교차 점수와 화면이
+    /// 일치한다.
     /// </summary>
     [Test]
-    public void AutoLayoutIncludesParallelContinuationAndBranches()
+    public void AutoLayoutVisibleTargetsContainParallelBranchesOnly()
     {
       var parallel = new ScenarioParallelNode
       {
@@ -487,7 +487,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
         NextIdentifier = "after_parallel"
       };
       var method = typeof(ScenarioGraphAuthoringWindow).GetMethod(
-        "GetOutgoingTargets",
+        "GetVisibleOutgoingTargets",
         BindingFlags.Static | BindingFlags.NonPublic);
 
       Assert.That(method, Is.Not.Null);
@@ -495,7 +495,85 @@ namespace MultiplayerInfrastructure.Tests.Scenario
         .Cast<string>()
         .ToArray();
 
-      Assert.That(targets, Is.EqualTo(new[] { "after_parallel", "stage_a", "stage_b" }));
+      Assert.That(targets, Is.EqualTo(new[] { "stage_a", "stage_b" }));
+    }
+
+    [Test]
+    public void AutoLayoutPreservesChoicePortsThatShareTarget()
+    {
+      var choice = new ScenarioChoiceNode
+      {
+        Identifier = "choice",
+        Options = new List<ScenarioChoiceOption>
+        {
+          new ScenarioChoiceOption { DisplayText = "A", NextNodeIdentifier = "retry" },
+          new ScenarioChoiceOption { DisplayText = "B", NextNodeIdentifier = "retry" },
+          new ScenarioChoiceOption { DisplayText = "C", NextNodeIdentifier = "success" }
+        }
+      };
+      var method = typeof(ScenarioGraphAuthoringWindow).GetMethod(
+        "GetVisibleOutgoingTargets",
+        BindingFlags.Static | BindingFlags.NonPublic);
+
+      Assert.That(method, Is.Not.Null);
+      var targets = ((IEnumerable)method.Invoke(null, new object[] { choice }))
+        .Cast<string>()
+        .ToArray();
+
+      Assert.That(targets, Is.EqualTo(new[] { "retry", "retry", "success" }));
+    }
+
+    [Test]
+    public void AutoLayoutPlacesParallelContinuationAfterDeepestBranch()
+    {
+      var layer = new Dictionary<string, int>
+      {
+        ["parallel"] = 0,
+        ["branch_start"] = 1,
+        ["branch_end"] = 2,
+        ["continuation"] = 1,
+        ["after"] = 2
+      };
+      var constraintForward = new Dictionary<string, List<string>>
+      {
+        ["parallel"] = new List<string> { "continuation", "branch_start" },
+        ["branch_start"] = new List<string> { "branch_end" },
+        ["branch_end"] = new List<string>(),
+        ["continuation"] = new List<string> { "after" },
+        ["after"] = new List<string>()
+      };
+      var visibleForward = new Dictionary<string, List<string>>
+      {
+        ["parallel"] = new List<string> { "branch_start" },
+        ["branch_start"] = new List<string> { "branch_end" },
+        ["branch_end"] = new List<string>(),
+        ["continuation"] = new List<string> { "after" },
+        ["after"] = new List<string>()
+      };
+      var continuationByParallel = new Dictionary<string, string>
+      {
+        ["parallel"] = "continuation"
+      };
+      var branchesByParallel = new Dictionary<string, List<string>>
+      {
+        ["parallel"] = new List<string> { "branch_start" }
+      };
+      var method = typeof(ScenarioGraphAuthoringWindow).GetMethod(
+        "PushParallelContinuations",
+        BindingFlags.Static | BindingFlags.NonPublic);
+
+      Assert.That(method, Is.Not.Null);
+      method.Invoke(null, new object[]
+      {
+        layer,
+        constraintForward,
+        visibleForward,
+        continuationByParallel,
+        branchesByParallel
+      });
+
+      Assert.That(layer["continuation"], Is.EqualTo(3));
+      Assert.That(layer["after"], Is.EqualTo(4));
     }
 
     [Test]
