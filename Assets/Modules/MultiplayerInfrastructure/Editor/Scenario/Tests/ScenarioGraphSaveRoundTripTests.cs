@@ -499,7 +499,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
-    public void AutoLayoutStraightensUnambiguousLinearPath()
+    public void AutoLayoutAssignsOneLaneToUnambiguousLinearPath()
     {
       var layers = new Dictionary<int, List<string>>
       {
@@ -519,25 +519,24 @@ namespace MultiplayerInfrastructure.Tests.Scenario
         ["b"] = new List<string> { "a" },
         ["c"] = new List<string> { "b" }
       };
-      var y = new Dictionary<string, float>
-      {
-        ["a"] = 100f,
-        ["b"] = 340f,
-        ["c"] = 580f
-      };
+      var layer = layers
+        .SelectMany(pair => pair.Value.Select(id => new { id, layer = pair.Key }))
+        .ToDictionary(item => item.id, item => item.layer);
       var method = typeof(ScenarioGraphAuthoringWindow).GetMethod(
-        "StraightenLinearSegments",
+        "AssignVerticalCoordinates",
         BindingFlags.Static | BindingFlags.NonPublic);
 
       Assert.That(method, Is.Not.Null);
-      method.Invoke(null, new object[] { layers, forward, incoming, y });
+      var y = (Dictionary<string, float>)method.Invoke(
+        null,
+        new object[] { layers, layer, forward, incoming });
 
       Assert.That(y["b"], Is.EqualTo(y["a"]));
       Assert.That(y["c"], Is.EqualTo(y["a"]));
     }
 
     [Test]
-    public void AutoLayoutDoesNotStraightenLinearPathIntoOccupiedLane()
+    public void AutoLayoutMovesAlignmentBlocksWithoutOverlappingOccupiedLane()
     {
       var layers = new Dictionary<int, List<string>>
       {
@@ -556,20 +555,20 @@ namespace MultiplayerInfrastructure.Tests.Scenario
         ["b"] = new List<string> { "a" },
         ["occupied"] = new List<string>()
       };
-      var y = new Dictionary<string, float>
-      {
-        ["a"] = 100f,
-        ["b"] = 340f,
-        ["occupied"] = 200f
-      };
+      var layer = layers
+        .SelectMany(pair => pair.Value.Select(id => new { id, layer = pair.Key }))
+        .ToDictionary(item => item.id, item => item.layer);
       var method = typeof(ScenarioGraphAuthoringWindow).GetMethod(
-        "StraightenLinearSegments",
+        "AssignVerticalCoordinates",
         BindingFlags.Static | BindingFlags.NonPublic);
 
       Assert.That(method, Is.Not.Null);
-      method.Invoke(null, new object[] { layers, forward, incoming, y });
+      var y = (Dictionary<string, float>)method.Invoke(
+        null,
+        new object[] { layers, layer, forward, incoming });
 
-      Assert.That(y["b"], Is.EqualTo(340f));
+      Assert.That(y["b"], Is.EqualTo(y["a"]));
+      Assert.That(y["occupied"] - y["b"], Is.GreaterThanOrEqualTo(240f));
     }
 
     [Test]

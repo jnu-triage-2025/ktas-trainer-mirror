@@ -687,7 +687,7 @@ namespace MultiplayerInfrastructure.Editor
           nodeViews[node.Identifier] = nodeView;
         }
 
-        graphView.RestoreEdges(nodeViews);
+        graphView.RestoreEdgesAfterLayout(nodeViews);
         inspectorView.SetTarget(null);
         RefreshGraphIdentifierField();
         RefreshGraphTagsField();
@@ -1556,8 +1556,12 @@ namespace MultiplayerInfrastructure.Editor
         }
 
         graphView.SetEdgeRoutes(editorData?.EdgeRoutes);
-        graphView.RestoreEdges(nodeViews);
-        graphView.UpdateZoomRangeToFitAllNodes();
+        graphView.RestoreEdgesAfterLayout(nodeViews);
+        graphView.schedule.Execute(() =>
+        {
+          graphView.UpdateZoomRangeToFitAllNodes();
+          graphView.RefreshEdgeGeometry();
+        }).ExecuteLater(1);
         inspectorView.SetTarget(null);
         currentFilePath = path;
         if (ScenarioGraphEditorRecentStore.TryLoadMiniMapLayout(path, out var miniMapLayout))
@@ -2177,56 +2181,155 @@ namespace MultiplayerInfrastructure.Editor
       IReadOnlyDictionary<string, List<string>> forward,
       IReadOnlyDictionary<string, List<string>> incoming)
     {
-      // Crossing reduction has already fixed the order inside each layer. Place that
-      // order at a bounded, fixed interval first; repeated median-coordinate sweeps can
-      // relay collision offsets through a large graph and inflate a few thousand pixels
-      // of useful content into tens of thousands of vertical pixels.
-      var y = new Dictionary<string, float>();
-      foreach (var pair in layers)
+      // Build vertical-alignment blocks as part of coordinate assignment. A 1:1 edge
+      // can share a horizontal lane when merging its endpoint blocks preserves every
+      // layer's order and cannot expand the result beyond the densest layer.
+      var parent = layer.Keys.ToDictionary(id => id, id => id);
+      var maximumDepth = Math.Max(0, layers.Values.Max(nodes => nodes.Count) - 1);
+
+      string FindRoot(IReadOnlyDictionary<string, string> parents, string id)
       {
-        var center = (pair.Value.Count - 1) * AutoLayoutRowSpacing * 0.5f;
-        for (var index = 0; index < pair.Value.Count; index++)
-          y[pair.Value[index]] = index * AutoLayoutRowSpacing - center;
+        while (parents[id] != id)
+          id = parents[id];
+        return id;
       }
 
-      // Snap unambiguous 1:1 segments onto their predecessor's lane when it is free.
-      StraightenLinearSegments(layers, forward, incoming, y);
-
-      // GraphView의 일반적인 양수 좌표 영역에서 시작하도록 전체 결과만 이동한다.
-      var minimum = y.Count > 0 ? y.Values.Min() : 0f;
-      foreach (var id in layer.Keys)
-        y[id] -= minimum;
-      return y;
-    }
-
-    private static void StraightenLinearSegments(
-      IReadOnlyDictionary<int, List<string>> layers,
-      IReadOnlyDictionary<string, List<string>> forward,
-      IReadOnlyDictionary<string, List<string>> incoming,
-      IDictionary<string, float> y)
-    {
       foreach (var layerIndex in layers.Keys.OrderBy(value => value))
       {
-        var nodes = layers[layerIndex];
-        foreach (var id in nodes)
+        foreach (var id in layers[layerIndex])
         {
           if (!incoming.TryGetValue(id, out var predecessors) || predecessors.Count != 1)
             continue;
 
           var predecessor = predecessors[0];
-          if (!forward.TryGetValue(predecessor, out var successors) ||
-              successors.Count != 1 ||
-              !y.TryGetValue(predecessor, out var desired))
+          if (!forward.TryGetValue(predecessor, out var successors) || successors.Count != 1)
             continue;
 
-          var laneIsFree = nodes.All(other =>
-            other == id ||
-            !y.TryGetValue(other, out var otherY) ||
-            Mathf.Abs(otherY - desired) >= AutoLayoutRowSpacing);
-          if (laneIsFree)
-            y[id] = desired;
+          var trialParent = parent.ToDictionary(pair => pair.Key, pair => pair.Value);
+          var leftRoot = FindRoot(trialParent, predecessor);
+          var rightRoot = FindRoot(trialParent, id);
+          if (leftRoot == rightRoot)
+            continue;
+
+          var root = StringComparer.Ordinal.Compare(leftRoot, rightRoot) <= 0 ? leftRoot : rightRoot;
+          var child = root == leftRoot ? rightRoot : leftRoot;
+          trialParent[child] = root;
+
+          if (TryCalculateAlignmentBlockDepths(
+                layers, trialParent, maximumDepth, out _))
+            parent = trialParent;
         }
       }
+
+      if (!TryCalculateAlignmentBlockDepths(
+            layers, parent, maximumDepth, out var blockDepth))
+      {
+        // The unmerged graph always satisfies this constraint, but retain a deterministic
+        // bounded fallback for malformed input.
+        parent = layer.Keys.ToDictionary(id => id, id => id);
+        TryCalculateAlignmentBlockDepths(layers, parent, maximumDepth, out blockDepth);
+      }
+
+      // Start each block near the average of its members' centered layer positions.
+      // Then satisfy block ordering in topological order. Nodes in one block receive
+      // exactly one y coordinate, so straight segments are never repaired after layout.
+      var desiredByBlock = new Dictionary<string, List<float>>();
+      foreach (var pair in layers)
+      {
+        var center = (pair.Value.Count - 1) * 0.5f;
+        for (var index = 0; index < pair.Value.Count; index++)
+        {
+          var root = FindRoot(parent, pair.Value[index]);
+          if (!desiredByBlock.TryGetValue(root, out var desired))
+          {
+            desired = new List<float>();
+            desiredByBlock[root] = desired;
+          }
+          desired.Add((index - center) * AutoLayoutRowSpacing);
+        }
+      }
+
+      var blockY = desiredByBlock.ToDictionary(
+        pair => pair.Key,
+        pair => pair.Value.Average());
+      foreach (var root in blockDepth.OrderBy(pair => pair.Value).ThenBy(pair => pair.Key).Select(pair => pair.Key))
+      {
+        foreach (var pair in layers)
+        {
+          var nodes = pair.Value;
+          for (var index = 0; index + 1 < nodes.Count; index++)
+          {
+            var upper = FindRoot(parent, nodes[index]);
+            var lower = FindRoot(parent, nodes[index + 1]);
+            if (upper == root && upper != lower)
+              blockY[lower] = Mathf.Max(blockY[lower], blockY[upper] + AutoLayoutRowSpacing);
+          }
+        }
+      }
+
+      // GraphView의 일반적인 양수 좌표 영역에서 시작하도록 전체 결과만 이동한다.
+      var minimum = blockY.Count > 0 ? blockY.Values.Min() : 0f;
+      var y = new Dictionary<string, float>();
+      foreach (var id in layer.Keys)
+        y[id] = blockY[FindRoot(parent, id)] - minimum;
+      return y;
+    }
+
+    private static bool TryCalculateAlignmentBlockDepths(
+      IReadOnlyDictionary<int, List<string>> layers,
+      IReadOnlyDictionary<string, string> parent,
+      int maximumDepth,
+      out Dictionary<string, int> depth)
+    {
+      string FindRoot(string id)
+      {
+        while (parent[id] != id)
+          id = parent[id];
+        return id;
+      }
+
+      var roots = new HashSet<string>(parent.Keys.Select(FindRoot));
+      var constraints = roots.ToDictionary(root => root, _ => new HashSet<string>());
+      var indegree = roots.ToDictionary(root => root, _ => 0);
+      foreach (var nodes in layers.Values)
+      {
+        for (var index = 0; index + 1 < nodes.Count; index++)
+        {
+          var upper = FindRoot(nodes[index]);
+          var lower = FindRoot(nodes[index + 1]);
+          if (upper == lower)
+          {
+            depth = null;
+            return false;
+          }
+          if (constraints[upper].Add(lower))
+            indegree[lower]++;
+        }
+      }
+
+      var ready = new SortedSet<string>(
+        roots.Where(root => indegree[root] == 0),
+        StringComparer.Ordinal);
+      depth = roots.ToDictionary(root => root, _ => 0);
+      var visited = 0;
+      while (ready.Count > 0)
+      {
+        var root = ready.Min;
+        ready.Remove(root);
+        visited++;
+        foreach (var lower in constraints[root])
+        {
+          depth[lower] = Math.Max(depth[lower], depth[root] + 1);
+          if (depth[lower] > maximumDepth)
+          {
+            depth = null;
+            return false;
+          }
+          if (--indegree[lower] == 0)
+            ready.Add(lower);
+        }
+      }
+      return visited == roots.Count;
     }
 
     private static IEnumerable<string> GetOutgoingTargets(IScenarioNode node)

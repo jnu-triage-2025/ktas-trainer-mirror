@@ -18,6 +18,7 @@ namespace MultiplayerInfrastructure.Editor
     private readonly ScenarioGraphAuthoringWindow window;
     private readonly ScenarioGraphMiniMap miniMap;
     private readonly Dictionary<string, List<SerializableVector2>> edgeRoutes = new Dictionary<string, List<SerializableVector2>>();
+    private int graphContentVersion;
     public Action<ScenarioNodeView> onNodeSelected;
 
     public ScenarioGraphView(ScenarioGraphAuthoringWindow window)
@@ -29,6 +30,10 @@ namespace MultiplayerInfrastructure.Editor
       this.AddManipulator(new ContentZoomer());
       this.AddManipulator(new ContentDragger());
       this.AddManipulator(new SelectionDragger());
+      // Unity 6 RectangleSelector는 클릭 대상이 배경인지 검사하지 않는다.
+      // SelectionDragger가 먼저 노드 드래그를 처리할 기회를 준 다음,
+      // GraphElement에서 시작한 이벤트만 RectangleSelector 앞에서 차단한다.
+      RegisterCallback<MouseDownEvent>(PreventRectangleSelectionFromGraphElements);
       this.AddManipulator(new RectangleSelector());
 
       var grid = new GridBackground();
@@ -66,6 +71,16 @@ namespace MultiplayerInfrastructure.Editor
         return;
       }
 
+      // Graph를 연 직후에는 UI Toolkit layout이 아직 NaN일 수 있다.
+      // NaN을 SetupZoom에 전달하면 GraphView.minScale도 NaN이 되고,
+      // EdgeControl.ComputeLayout의 padding 계산까지 전파되어 모든 연결선
+      // layout이 NaN이 된다.
+      if (!IsFinitePositive(layout.width) || !IsFinitePositive(layout.height))
+      {
+        SetupZoom(DefaultMinimumScale, DefaultMaximumScale);
+        return;
+      }
+
       var bounds = nodes[0].GetPosition();
       for (var index = 1; index < nodes.Count; index++)
       {
@@ -82,7 +97,17 @@ namespace MultiplayerInfrastructure.Editor
       var requiredScale = Mathf.Min(
         viewportWidth / Mathf.Max(1f, bounds.width),
         viewportHeight / Mathf.Max(1f, bounds.height)) * FrameAllViewportFill;
+      if (!IsFinitePositive(requiredScale))
+      {
+        SetupZoom(DefaultMinimumScale, DefaultMaximumScale);
+        return;
+      }
       SetupZoom(Mathf.Min(DefaultMinimumScale, requiredScale), DefaultMaximumScale);
+    }
+
+    private static bool IsFinitePositive(float value)
+    {
+      return !float.IsNaN(value) && !float.IsInfinity(value) && value > 0f;
     }
 
     public void FrameAllNodes()
@@ -94,6 +119,18 @@ namespace MultiplayerInfrastructure.Editor
     private void SaveMiniMapLayout(Rect rect)
     {
       window.SaveMiniMapLayout(rect);
+    }
+
+    private static void PreventRectangleSelectionFromGraphElements(MouseDownEvent evt)
+    {
+      if (evt.button != 0)
+        return;
+
+      var target = evt.target as VisualElement;
+      var graphElement = target as GraphElement ??
+                         target?.GetFirstAncestorOfType<GraphElement>();
+      if (graphElement != null)
+        evt.StopImmediatePropagation();
     }
 
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
@@ -119,6 +156,7 @@ namespace MultiplayerInfrastructure.Editor
 
     public void ClearGraph()
     {
+      graphContentVersion++;
       graphElements.ForEach(RemoveElement);
       edgeRoutes.Clear();
     }
@@ -171,6 +209,9 @@ namespace MultiplayerInfrastructure.Editor
     public ScenarioNodeView AddNodeView(IScenarioNode data)
     {
       var nodeView = new ScenarioNodeView(window, this, data);
+      nodeView.RegisterCallback<GeometryChangedEvent>(_ => RefreshEdgeGeometry());
+      nodeView.Query<Port>().ForEach(
+        port => port.RegisterCallback<GeometryChangedEvent>(_ => RefreshEdgeGeometry()));
       AddElement(nodeView);
       window.RegisterNodeView(nodeView);
       return nodeView;
@@ -239,6 +280,43 @@ namespace MultiplayerInfrastructure.Editor
             CreateEdge(port, targetView.InputPort);
           }
         }
+      }
+    }
+
+    /// <summary>
+    /// 노드와 포트의 UI Toolkit geometry가 확정된 뒤 연결선을 복원한다.
+    /// 저장 위치를 적용한 직후 Edge를 만들면 포트의 이전/초기 좌표를 사용하여
+    /// 연결선 끝점이 노드에 붙지 않는 경우가 있다.
+    /// </summary>
+    public void RestoreEdgesAfterLayout(Dictionary<string, ScenarioNodeView> nodeViews)
+    {
+      var expectedVersion = graphContentVersion;
+      schedule.Execute(() =>
+      {
+        if (expectedVersion != graphContentVersion)
+          return;
+
+        RestoreEdges(nodeViews);
+        schedule.Execute(() =>
+        {
+          if (expectedVersion != graphContentVersion)
+            return;
+          RefreshEdgeGeometry();
+        }).ExecuteLater(1);
+      }).ExecuteLater(1);
+    }
+
+    public void RefreshEdgeGeometry()
+    {
+      foreach (var edge in graphElements.OfType<Edge>())
+      {
+        // Unity 6 Edge.UpdateEdgeControl()은 m_EndPointsDirty가 false이면
+        // 포트 좌표를 다시 읽지 않는다. 동일 포트를 setter에 다시 넣으면
+        // 공개 API 경로로 dirty 플래그가 설정되고 끝점이 즉시 재계산된다.
+        edge.output = edge.output;
+        edge.input = edge.input;
+        edge.UpdateEdgeControl();
+        edge.MarkDirtyRepaint();
       }
     }
 
