@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using FishNet.Object;
 using MultiplayerInfrastructure.Player;
 using TriageTrainer.Entity.AEDLine;
-using TriageTrainer.Entity.LineConnection;
 using TriageTrainer.Entity.OxyLine;
 using TriageTrainer.Entity.SuctionLine;
 using TriageTrainer.Entity.IntravenousLine;
@@ -24,10 +23,6 @@ namespace TriageTrainer.Entity.LineConnection
     [SerializeField] private Transform _linesRoot;
 
     [Header("Line Visual")]
-    [SerializeField] private Material _intravenousLineMaterial;
-    [SerializeField] private Material _aedLineMaterial;
-    [SerializeField] private Material _oxyLineMaterial;
-    [SerializeField] private Material _suctionLineMaterial;
     [SerializeField, Range(0f, 1f)] private float _intravenousLineElasticity = 0.15f;
     [SerializeField, Range(0f, 1f)] private float _aedLineElasticity = 0.15f;
     [SerializeField, Range(0f, 1f)] private float _oxyLineElasticity = 0.15f;
@@ -366,39 +361,13 @@ namespace TriageTrainer.Entity.LineConnection
 
     private void ApplyLineMaterial(LineConnectionPoint point, LineRenderer lineRenderer)
     {
-      var lineMaterial = point switch
+      if (point != null && point.LineMaterial != null)
       {
-        IntravenousLineConnectionPoint => _intravenousLineMaterial,
-        AEDLineConnectionPoint => _aedLineMaterial,
-        OxyLineConnectionPoint => _oxyLineMaterial,
-        SuctionLineConnectionPoint => _suctionLineMaterial,
-        _ => null,
-      };
-
-      if (lineMaterial != null)
-      {
-        lineRenderer.sharedMaterial = lineMaterial;
+        lineRenderer.sharedMaterial = point.LineMaterial;
         return;
       }
 
-      switch (point)
-      {
-        case IntravenousLineConnectionPoint intravenousPoint:
-          intravenousPoint.ApplyLineMaterial(lineRenderer);
-          break;
-        case AEDLineConnectionPoint aedPoint:
-          aedPoint.ApplyLineMaterial(lineRenderer);
-          break;
-        case OxyLineConnectionPoint oxyPoint:
-          oxyPoint.ApplyLineMaterial(lineRenderer);
-          break;
-        case SuctionLineConnectionPoint suctionPoint:
-          suctionPoint.ApplyLineMaterial(lineRenderer);
-          break;
-        default:
-          point?.ApplyLineMaterial(lineRenderer);
-          break;
-      }
+      point?.ApplyLineMaterial(lineRenderer);
     }
 
     private float GetLineElasticity(LineConnectionPoint point)

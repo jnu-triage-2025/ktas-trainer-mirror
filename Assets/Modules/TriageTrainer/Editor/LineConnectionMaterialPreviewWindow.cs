@@ -1,6 +1,13 @@
+using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.ProBuilder;
+using TriageTrainer.Entity.AEDLine;
+using TriageTrainer.Entity.IntravenousLine;
+using TriageTrainer.Entity.OxyLine;
+using TriageTrainer.Entity.SuctionLine;
+using TriageTrainer.Entity.LineConnection;
 
 namespace TriageTrainer.Editor
 {
@@ -13,7 +20,7 @@ namespace TriageTrainer.Editor
     private const string BakedRotateGizmoPrefabPath = "Assets/Modules/TriageTrainer/Editor/Prefabs/RotateGizmoBaked.prefab";
     private const string BakedRotateGizmoMeshDirectory = "Assets/Modules/TriageTrainer/Editor/Prefabs/RotateGizmoBakedMeshes";
     private const string PreviewSkyboxMaterialPath = "Assets/Modules/TriageTrainer/Editor/Materials/LineMaterialPreview/Skybox.mat";
-    private enum AttachPointKind
+    private enum LineType
     {
       Intravenous,
       AED,
@@ -21,8 +28,14 @@ namespace TriageTrainer.Editor
       Suction,
     }
 
-    private AttachPointKind _attachPointKind;
+    private LineType _lineType;
+    private MonoScript _serviceImplementation;
+    private MonoScript _implementation;
     private Material _material;
+    private Material _intravenousMaterial;
+    private Material _aedMaterial;
+    private Material _oxyMaterial;
+    private Material _suctionMaterial;
     private float _lineWidth = 0.08f;
     private float _elasticity = 0.15f;
     private Vector3 _previewPivot = new Vector3(0.45f, -0.05f, 0f);
@@ -46,6 +59,15 @@ namespace TriageTrainer.Editor
     private Material _previewLineMaterial;
     private Material _previewLineMaterialSource;
     private Material _previewSkyboxMaterial;
+
+    private static readonly IReadOnlyDictionary<LineType, Type> LineTypeImplementations =
+      new Dictionary<LineType, Type>
+      {
+        { LineType.Intravenous, typeof(IntravenousLineConnectionPoint) },
+        { LineType.AED, typeof(AEDLineConnectionPoint) },
+        { LineType.Oxy, typeof(OxyLineConnectionPoint) },
+        { LineType.Suction, typeof(SuctionLineConnectionPoint) },
+      };
 
     [MenuItem("Tools/Triage Trainer/Line Connection Material Preview")]
     private static void Open()
@@ -126,6 +148,9 @@ namespace TriageTrainer.Editor
 
       if (!TryCreateBakedGizmo())
         CreateGuaranteedGizmo();
+
+      UpdateServiceImplementationScript();
+      UpdateImplementationScript();
     }
 
     private bool TryCreateBakedGizmo()
@@ -245,9 +270,22 @@ namespace TriageTrainer.Editor
 
     private void OnGUI()
     {
+      // Reference the implementation of service
+      using (new EditorGUI.DisabledScope(true))
+        EditorGUILayout.ObjectField("", _serviceImplementation, typeof(MonoScript), false);
+
       EditorGUILayout.LabelField("Line Rendering Settings", EditorStyles.boldLabel);
       EditorGUI.BeginChangeCheck();
-      _attachPointKind = (AttachPointKind)EditorGUILayout.EnumPopup("AttachPoint", _attachPointKind);
+      var selectedLineType = (LineType)EditorGUILayout.EnumPopup("LineType", _lineType);
+      if (selectedLineType != _lineType)
+      {
+        StoreSelectedLineMaterial();
+        _lineType = selectedLineType;
+        UpdateImplementationScript();
+        _material = GetSelectedLineMaterial();
+      }
+      using (new EditorGUI.DisabledScope(true))
+        EditorGUILayout.ObjectField("Implementation", _implementation, typeof(MonoScript), false);
       _material = (Material)EditorGUILayout.ObjectField("Material", _material, typeof(Material), false);
       _lineWidth = EditorGUILayout.Slider("Line Width", _lineWidth, 0.01f, 0.25f);
       _elasticity = EditorGUILayout.Slider("Elasticity", _elasticity, 0f, 1f);
@@ -260,6 +298,10 @@ namespace TriageTrainer.Editor
       if (GUILayout.Button("Reset Values", GUILayout.Width(120f)))
       {
         _material = null;
+        _intravenousMaterial = null;
+        _aedMaterial = null;
+        _oxyMaterial = null;
+        _suctionMaterial = null;
         _lineWidth = 0.08f;
         _elasticity = 0.15f;
         _startPoint = new Vector3(-0.9f, 0.15f, 0f);
@@ -287,6 +329,62 @@ namespace TriageTrainer.Editor
       HandlePreviewInput(previewRect);
       DrawPreview(previewRect, _lineWidth);
       Repaint();
+    }
+
+    private void StoreSelectedLineMaterial()
+    {
+      switch (_lineType)
+      {
+        case LineType.Intravenous: _intravenousMaterial = _material; break;
+        case LineType.AED: _aedMaterial = _material; break;
+        case LineType.Oxy: _oxyMaterial = _material; break;
+        case LineType.Suction: _suctionMaterial = _material; break;
+      }
+    }
+
+    private Material GetSelectedLineMaterial()
+    {
+      return _lineType switch
+      {
+        LineType.Intravenous => _intravenousMaterial,
+        LineType.AED => _aedMaterial,
+        LineType.Oxy => _oxyMaterial,
+        LineType.Suction => _suctionMaterial,
+        _ => null,
+      };
+    }
+
+    private void UpdateImplementationScript()
+    {
+      _implementation = null;
+      if (!LineTypeImplementations.TryGetValue(_lineType, out var implementationType))
+        return;
+
+      var guids = AssetDatabase.FindAssets($"t:MonoScript {implementationType.Name}");
+      for (int i = 0; i < guids.Length; i++)
+      {
+        var script = AssetDatabase.LoadAssetAtPath<MonoScript>(AssetDatabase.GUIDToAssetPath(guids[i]));
+        if (script != null && script.GetClass() == implementationType)
+        {
+          _implementation = script;
+          return;
+        }
+      }
+    }
+
+    private void UpdateServiceImplementationScript()
+    {
+      _serviceImplementation = null;
+      var guids = AssetDatabase.FindAssets($"t:MonoScript {nameof(LineConnectionService)}");
+      for (int i = 0; i < guids.Length; i++)
+      {
+        var script = AssetDatabase.LoadAssetAtPath<MonoScript>(AssetDatabase.GUIDToAssetPath(guids[i]));
+        if (script != null && script.GetClass() == typeof(LineConnectionService))
+        {
+          _serviceImplementation = script;
+          return;
+        }
+      }
     }
 
     private void ConfigurePreviewSkybox()
