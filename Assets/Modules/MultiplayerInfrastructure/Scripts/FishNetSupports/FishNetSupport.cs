@@ -81,6 +81,19 @@ namespace MultiplayerInfrastructure.FishNetSupports
 
     private void OnDestroy()
     {
+      // Unity 에디터에서 Play Mode를 종료할 때 씬 오브젝트가 먼저 정리되면
+      // FishNet이 생성한 Player(Clone)이 씬에 남아 있다는 경고가 발생할 수 있다.
+      // 네트워크 연결을 먼저 종료해 PlayerController의 OnStop* 생명주기와
+      // FishNet 디스폰 처리가 완료되도록 한다.
+      if (networkManager != null)
+      {
+        if (networkManager.ClientManager != null && networkManager.ClientManager.Started)
+          networkManager.ClientManager.StopConnection();
+
+        if (networkManager.ServerManager != null && networkManager.ServerManager.Started)
+          networkManager.ServerManager.StopConnection(true);
+      }
+
       if (_instance == this)
         _instance = null;
     }

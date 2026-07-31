@@ -104,7 +104,8 @@ namespace TriageTrainer.SceneBootstrapper
     /// <summary>세션 시작 API 자체가 실패했을 때 즉시 오류 화면을 표시합니다.</summary>
     public void ShowConnectionError(string message)
     {
-      ShowFailure(string.IsNullOrWhiteSpace(message) ? "서버에 연결할 수 없습니다." : message);
+      var detail = string.IsNullOrWhiteSpace(message) ? "서버에 연결할 수 없습니다." : message;
+      ShowFailure(NetworkSessionFailure.ConnectionError(detail));
     }
 
     private IEnumerator SubscribeWhenReady()
@@ -144,13 +145,14 @@ namespace TriageTrainer.SceneBootstrapper
 
       if (_connected)
       {
-        ShowFailure("서버가 종료되었습니다.");
+        ShowFailure(NetworkSessionFailure.ServerShutdownFailure("서버가 종료되었습니다."));
         return;
       }
 
-      ShowFailure(string.IsNullOrWhiteSpace(_latestError)
-        ? "서버에 연결할 수 없습니다."
-        : $"오류가 발생했습니다: {_latestError}");
+      ShowFailure(NetworkSessionFailure.ConnectionRefusedFailure(
+        string.IsNullOrWhiteSpace(_latestError)
+          ? "서버에 연결할 수 없습니다."
+          : $"오류가 발생했습니다: {_latestError}"));
     }
 
     private void OnUnityLogMessage(string condition, string stackTrace, LogType type)
@@ -175,14 +177,15 @@ namespace TriageTrainer.SceneBootstrapper
         || condition.IndexOf("connect", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
-    private void ShowFailure(string reason)
+    private void ShowFailure(NetworkSessionFailure failure)
     {
       _failureVisible = true;
-      string safeReason = string.IsNullOrWhiteSpace(reason) ? "알 수 없는 연결 오류" : reason.Trim();
+      failure ??= NetworkSessionFailure.ConnectionError("알 수 없는 연결 오류");
+      string safeReason = failure.Detail;
       string diagnostic = string.IsNullOrWhiteSpace(_latestError)
         ? safeReason
         : $"{safeReason}; latestError={_latestError}";
-      string dump = $"{LogPrefix} endpoint={_endpoint}; reason={diagnostic}";
+      string dump = $"{LogPrefix} {failure} endpoint={_endpoint}; detail={diagnostic}";
 
       if (!GameLogService.IsInitialized)
       {
@@ -190,7 +193,10 @@ namespace TriageTrainer.SceneBootstrapper
         GameLogService.Initialize("client");
       }
       GameLogService.WriteSystem(dump);
-      Debug.LogError(dump);
+      if (failure.IsLegitimate)
+        Debug.Log(dump);
+      else
+        Debug.LogError(dump);
 
       BindDocument();
       // A rebinding flow may still own the mouse and keep the cursor locked.
