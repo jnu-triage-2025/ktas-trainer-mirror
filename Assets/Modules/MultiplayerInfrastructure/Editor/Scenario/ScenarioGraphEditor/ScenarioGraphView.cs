@@ -11,6 +11,10 @@ namespace MultiplayerInfrastructure.Editor
   public class ScenarioGraphView : GraphView
   {
     private static readonly Rect DefaultMiniMapRect = new Rect(5f, 5f, 175f, 135f);
+    private const float DefaultMinimumScale = 0.05f;
+    private const float DefaultMaximumScale = 4f;
+    private const float FrameAllPadding = 80f;
+    private const float FrameAllViewportFill = 0.9f;
     private readonly ScenarioGraphAuthoringWindow window;
     private readonly ScenarioGraphMiniMap miniMap;
     private readonly Dictionary<string, List<SerializableVector2>> edgeRoutes = new Dictionary<string, List<SerializableVector2>>();
@@ -21,6 +25,7 @@ namespace MultiplayerInfrastructure.Editor
       this.window = window;
       style.flexGrow = 1f;
 
+      SetupZoom(DefaultMinimumScale, DefaultMaximumScale);
       this.AddManipulator(new ContentZoomer());
       this.AddManipulator(new ContentDragger());
       this.AddManipulator(new SelectionDragger());
@@ -45,6 +50,45 @@ namespace MultiplayerInfrastructure.Editor
     public void SetMiniMapRect(Rect rect)
     {
       miniMap.Reset(rect);
+    }
+
+    /// <summary>
+    /// Lowers GraphView's zoom-out limit only as far as the current node bounds require.
+    /// This keeps normal zoom sensitivity while allowing Frame All and manual zooming to
+    /// reach the same complete graph extent that the Preview displays.
+    /// </summary>
+    public void UpdateZoomRangeToFitAllNodes()
+    {
+      var nodes = graphElements.OfType<Node>().ToList();
+      if (nodes.Count == 0)
+      {
+        SetupZoom(DefaultMinimumScale, DefaultMaximumScale);
+        return;
+      }
+
+      var bounds = nodes[0].GetPosition();
+      for (var index = 1; index < nodes.Count; index++)
+      {
+        var nodeRect = nodes[index].GetPosition();
+        bounds = Rect.MinMaxRect(
+          Mathf.Min(bounds.xMin, nodeRect.xMin),
+          Mathf.Min(bounds.yMin, nodeRect.yMin),
+          Mathf.Max(bounds.xMax, nodeRect.xMax),
+          Mathf.Max(bounds.yMax, nodeRect.yMax));
+      }
+
+      var viewportWidth = Mathf.Max(1f, layout.width - FrameAllPadding * 2f);
+      var viewportHeight = Mathf.Max(1f, layout.height - FrameAllPadding * 2f);
+      var requiredScale = Mathf.Min(
+        viewportWidth / Mathf.Max(1f, bounds.width),
+        viewportHeight / Mathf.Max(1f, bounds.height)) * FrameAllViewportFill;
+      SetupZoom(Mathf.Min(DefaultMinimumScale, requiredScale), DefaultMaximumScale);
+    }
+
+    public void FrameAllNodes()
+    {
+      UpdateZoomRangeToFitAllNodes();
+      FrameAll();
     }
 
     private void SaveMiniMapLayout(Rect rect)

@@ -1,5 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Text.Json;
+using MultiplayerInfrastructure.Editor;
 using MultiplayerInfrastructure.Scenario;
 using NUnit.Framework;
 using UnityEngine;
@@ -462,6 +466,152 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       var reloadedParallel = (ScenarioParallelNode)reloaded.Nodes["parallel"];
       Assert.That(reloadedParallel.NextIdentifier, Is.EqualTo("after_parallel"),
           "병렬 노드의 nextIdentifier 가 저장 라운드트립에서 유실되면 안 된다.");
+    }
+
+    /// <summary>
+    /// 자동 배치는 화면에 표시되는 병렬 브랜치뿐 아니라 모든 브랜치가 끝난 뒤의
+    /// 의미적 전이도 수집해야 한다. 이를 누락하면 병렬 단계마다 그래프 컴포넌트가
+    /// 끊어져 세로 좌표가 비정상적으로 커진다.
+    /// </summary>
+    [Test]
+    public void AutoLayoutIncludesParallelContinuationAndBranches()
+    {
+      var parallel = new ScenarioParallelNode
+      {
+        Identifier = "parallel",
+        Branches = new List<ScenarioParallelBranch>
+        {
+          new ScenarioParallelBranch { Identifier = "stage_a" },
+          new ScenarioParallelBranch { Identifier = "stage_b" }
+        },
+        NextIdentifier = "after_parallel"
+      };
+      var method = typeof(ScenarioGraphAuthoringWindow).GetMethod(
+        "GetOutgoingTargets",
+        BindingFlags.Static | BindingFlags.NonPublic);
+
+      Assert.That(method, Is.Not.Null);
+      var targets = ((IEnumerable)method.Invoke(null, new object[] { parallel }))
+        .Cast<string>()
+        .ToArray();
+
+      Assert.That(targets, Is.EqualTo(new[] { "after_parallel", "stage_a", "stage_b" }));
+    }
+
+    [Test]
+    public void AutoLayoutStraightensUnambiguousLinearPath()
+    {
+      var layers = new Dictionary<int, List<string>>
+      {
+        [0] = new List<string> { "a" },
+        [1] = new List<string> { "b" },
+        [2] = new List<string> { "c" }
+      };
+      var forward = new Dictionary<string, List<string>>
+      {
+        ["a"] = new List<string> { "b" },
+        ["b"] = new List<string> { "c" },
+        ["c"] = new List<string>()
+      };
+      var incoming = new Dictionary<string, List<string>>
+      {
+        ["a"] = new List<string>(),
+        ["b"] = new List<string> { "a" },
+        ["c"] = new List<string> { "b" }
+      };
+      var y = new Dictionary<string, float>
+      {
+        ["a"] = 100f,
+        ["b"] = 340f,
+        ["c"] = 580f
+      };
+      var method = typeof(ScenarioGraphAuthoringWindow).GetMethod(
+        "StraightenLinearSegments",
+        BindingFlags.Static | BindingFlags.NonPublic);
+
+      Assert.That(method, Is.Not.Null);
+      method.Invoke(null, new object[] { layers, forward, incoming, y });
+
+      Assert.That(y["b"], Is.EqualTo(y["a"]));
+      Assert.That(y["c"], Is.EqualTo(y["a"]));
+    }
+
+    [Test]
+    public void AutoLayoutDoesNotStraightenLinearPathIntoOccupiedLane()
+    {
+      var layers = new Dictionary<int, List<string>>
+      {
+        [0] = new List<string> { "a" },
+        [1] = new List<string> { "b", "occupied" }
+      };
+      var forward = new Dictionary<string, List<string>>
+      {
+        ["a"] = new List<string> { "b" },
+        ["b"] = new List<string>(),
+        ["occupied"] = new List<string>()
+      };
+      var incoming = new Dictionary<string, List<string>>
+      {
+        ["a"] = new List<string>(),
+        ["b"] = new List<string> { "a" },
+        ["occupied"] = new List<string>()
+      };
+      var y = new Dictionary<string, float>
+      {
+        ["a"] = 100f,
+        ["b"] = 340f,
+        ["occupied"] = 200f
+      };
+      var method = typeof(ScenarioGraphAuthoringWindow).GetMethod(
+        "StraightenLinearSegments",
+        BindingFlags.Static | BindingFlags.NonPublic);
+
+      Assert.That(method, Is.Not.Null);
+      method.Invoke(null, new object[] { layers, forward, incoming, y });
+
+      Assert.That(y["b"], Is.EqualTo(340f));
+    }
+
+    [Test]
+    public void AutoLayoutVerticalRangeIsBoundedByDensestLayer()
+    {
+      var layers = new Dictionary<int, List<string>>
+      {
+        [0] = new List<string> { "a" },
+        [1] = new List<string> { "b", "side_1", "side_2" },
+        [2] = new List<string> { "c", "side_3" }
+      };
+      var layer = layers
+        .SelectMany(pair => pair.Value.Select(id => new { id, layer = pair.Key }))
+        .ToDictionary(item => item.id, item => item.layer);
+      var forward = new Dictionary<string, List<string>>
+      {
+        ["a"] = new List<string> { "b" },
+        ["b"] = new List<string> { "c" },
+        ["c"] = new List<string>(),
+        ["side_1"] = new List<string> { "side_3" },
+        ["side_2"] = new List<string>(),
+        ["side_3"] = new List<string>()
+      };
+      var incoming = new Dictionary<string, List<string>>
+      {
+        ["a"] = new List<string>(),
+        ["b"] = new List<string> { "a" },
+        ["c"] = new List<string> { "b" },
+        ["side_1"] = new List<string>(),
+        ["side_2"] = new List<string>(),
+        ["side_3"] = new List<string> { "side_1" }
+      };
+      var method = typeof(ScenarioGraphAuthoringWindow).GetMethod(
+        "AssignVerticalCoordinates",
+        BindingFlags.Static | BindingFlags.NonPublic);
+
+      Assert.That(method, Is.Not.Null);
+      var y = (Dictionary<string, float>)method.Invoke(
+        null,
+        new object[] { layers, layer, forward, incoming });
+
+      Assert.That(y.Values.Max() - y.Values.Min(), Is.LessThanOrEqualTo(480f));
     }
 
     /// <summary>

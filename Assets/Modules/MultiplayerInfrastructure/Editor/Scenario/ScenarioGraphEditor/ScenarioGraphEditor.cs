@@ -83,7 +83,6 @@ namespace MultiplayerInfrastructure.Editor
     private const float AutoLayoutColumnSpacing = 420f;
     private const float AutoLayoutRowSpacing = 240f;
     private const int AutoLayoutCrossingReductionPasses = 6;
-    private const int AutoLayoutCoordinateAssignmentPasses = 4;
 
     private readonly struct LayoutScore
     {
@@ -1449,7 +1448,7 @@ namespace MultiplayerInfrastructure.Editor
       // 새 노드 배치와 맞지 않으므로 제거한 뒤 논리 연결에서 다시 만든다.
       graphView.SetEdgeRoutes(null);
       graphView.RebuildAllEdges();
-      graphView.FrameAll();
+      graphView.FrameAllNodes();
       RefreshDebugPanel();
 
       // Relocate 전체를 한 번의 Undo 대상으로 기록한다.
@@ -1558,6 +1557,7 @@ namespace MultiplayerInfrastructure.Editor
 
         graphView.SetEdgeRoutes(editorData?.EdgeRoutes);
         graphView.RestoreEdges(nodeViews);
+        graphView.UpdateZoomRangeToFitAllNodes();
         inspectorView.SetTarget(null);
         currentFilePath = path;
         if (ScenarioGraphEditorRecentStore.TryLoadMiniMapLayout(path, out var miniMapLayout))
@@ -2177,8 +2177,10 @@ namespace MultiplayerInfrastructure.Editor
       IReadOnlyDictionary<string, List<string>> forward,
       IReadOnlyDictionary<string, List<string>> incoming)
     {
-      // 각 레이어를 자체 중심 기준으로 초기화한다. 이후 하향/상향 sweep에서
-      // 부모는 자식 묶음의 중심으로, 자식은 부모의 중심으로 당겨진다.
+      // Crossing reduction has already fixed the order inside each layer. Place that
+      // order at a bounded, fixed interval first; repeated median-coordinate sweeps can
+      // relay collision offsets through a large graph and inflate a few thousand pixels
+      // of useful content into tens of thousands of vertical pixels.
       var y = new Dictionary<string, float>();
       foreach (var pair in layers)
       {
@@ -2187,14 +2189,8 @@ namespace MultiplayerInfrastructure.Editor
           y[pair.Value[index]] = index * AutoLayoutRowSpacing - center;
       }
 
-      var orderedLayers = layers.Keys.OrderBy(value => value).ToList();
-      for (var pass = 0; pass < AutoLayoutCoordinateAssignmentPasses; pass++)
-      {
-        foreach (var layerIndex in orderedLayers)
-          AlignLayerAroundNeighbors(layers[layerIndex], incoming, y);
-        for (var index = orderedLayers.Count - 1; index >= 0; index--)
-          AlignLayerAroundNeighbors(layers[orderedLayers[index]], forward, y);
-      }
+      // Snap unambiguous 1:1 segments onto their predecessor's lane when it is free.
+      StraightenLinearSegments(layers, forward, incoming, y);
 
       // GraphView의 일반적인 양수 좌표 영역에서 시작하도록 전체 결과만 이동한다.
       var minimum = y.Count > 0 ? y.Values.Min() : 0f;
@@ -2203,57 +2199,45 @@ namespace MultiplayerInfrastructure.Editor
       return y;
     }
 
-    private static void AlignLayerAroundNeighbors(
-      IReadOnlyList<string> nodes,
-      IReadOnlyDictionary<string, List<string>> neighbors,
+    private static void StraightenLinearSegments(
+      IReadOnlyDictionary<int, List<string>> layers,
+      IReadOnlyDictionary<string, List<string>> forward,
+      IReadOnlyDictionary<string, List<string>> incoming,
       IDictionary<string, float> y)
     {
-      if (nodes.Count == 0) return;
-
-      var desired = nodes
-        .Select(id => MedianCoordinate(neighbors[id], y, y[id]))
-        .ToList();
-      var placed = new float[nodes.Count];
-      placed[0] = desired[0];
-      for (var index = 1; index < nodes.Count; index++)
+      foreach (var layerIndex in layers.Keys.OrderBy(value => value))
       {
-        placed[index] = Mathf.Max(
-          desired[index],
-          placed[index - 1] + AutoLayoutRowSpacing);
+        var nodes = layers[layerIndex];
+        foreach (var id in nodes)
+        {
+          if (!incoming.TryGetValue(id, out var predecessors) || predecessors.Count != 1)
+            continue;
+
+          var predecessor = predecessors[0];
+          if (!forward.TryGetValue(predecessor, out var successors) ||
+              successors.Count != 1 ||
+              !y.TryGetValue(predecessor, out var desired))
+            continue;
+
+          var laneIsFree = nodes.All(other =>
+            other == id ||
+            !y.TryGetValue(other, out var otherY) ||
+            Mathf.Abs(otherY - desired) >= AutoLayoutRowSpacing);
+          if (laneIsFree)
+            y[id] = desired;
+        }
       }
-
-      // 충돌 해소가 한쪽 방향으로만 밀어내지 않도록 레이어 전체를 원래
-      // 목표 중심으로 되돌린다. 분기 부모가 자식 묶음의 중앙에 놓이게 된다.
-      var desiredCenter = desired.Average();
-      var placedCenter = placed.Average();
-      var offset = desiredCenter - placedCenter;
-      for (var index = 0; index < nodes.Count; index++)
-        y[nodes[index]] = placed[index] + offset;
-    }
-
-    private static float MedianCoordinate(
-      IEnumerable<string> identifiers,
-      IDictionary<string, float> y,
-      float fallback)
-    {
-      var coordinates = identifiers
-        .Where(y.ContainsKey)
-        .Select(id => y[id])
-        .OrderBy(value => value)
-        .ToList();
-      if (coordinates.Count == 0) return fallback;
-
-      var middle = coordinates.Count / 2;
-      return coordinates.Count % 2 == 1
-        ? coordinates[middle]
-        : (coordinates[middle - 1] + coordinates[middle]) * 0.5f;
     }
 
     private static IEnumerable<string> GetOutgoingTargets(IScenarioNode node)
     {
       if (node == null) yield break;
 
-      if (node is not ScenarioParallelNode && !string.IsNullOrEmpty(node.NextIdentifier))
+      // Parallel.NextIdentifier is not rendered as a regular GraphView edge, but it is
+      // still the semantic continuation after all branches complete. Keep it as a
+      // layout constraint so each post-parallel phase does not become a disconnected
+      // component and drift far away during coordinate assignment.
+      if (!string.IsNullOrEmpty(node.NextIdentifier))
       {
         yield return node.NextIdentifier;
       }
