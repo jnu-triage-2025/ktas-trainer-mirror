@@ -57,13 +57,13 @@ flags: []
 **방식 A — 환자별 프리셋(권장, 현재 시나리오 반영됨)**
 - `EntityPresetRegistryRequirementsSO` 에 환자별 프리셋을 **3개** 등록한다(각각 그 환자의 의학적 상태/외형을
   프리팹에 구성):
-  - `patient_a` (심정지/흉부 관통상 프리팹), `patient_b`, `patient_c`, 그리고 분류용 `dummy_b`
+  - `patient_a` (심정지/흉부 관통상 프리팹), `patient_b`, `patient_c`, 그리고 분류용 `patient_dummy_d_b`
   - 각 항목: `fallbackEntityType=Undefined`(그대로 둠), `prefab=해당 환자 프리팹`, `isNetworked=true`.
     (환자는 `PatientController` 가 스스로 `EntityType.Patient` 로 등록하므로 `fallbackEntityType` 는 사용되지 않는다.
      자가 등록 컴포넌트가 없는 단순 프리팹에만 `fallbackEntityType` 를 적절히 지정한다.)
 - 시나리오 시작부 `EntityPresetSpawn` 노드가 각 프리셋에서 스폰한다(현재 JSON 값):
   - `patient_a_critical` / `SPAWN_A` → `presetIdentifier=patient_a`, `spawnedEntityIdentifier=patient_a`
-  - `patient_b_c_ct` / `SPAWN_B`·`SPAWN_C`·`SPAWN_DUMMY_B` → `patient_b`·`patient_c`·`dummy_b`
+  - `patient_b_c_ct` / `SPAWN_B`·`SPAWN_C`·`SPAWN_PATIENT_DUMMY_D_B` → `patient_b`·`patient_c`·`patient_dummy_d_b`
 - (환자 A/B/C 프리팹이 외형은 같고 의학 상태만 다르면, 같은 베이스 프리팹을 복제해 인스펙터의
   `_medicalState` 만 다르게 채운 3개 프리팹으로 만든다.)
 
@@ -86,7 +86,7 @@ flags: []
 | 종류 | 식별자 |
 |---|---|
 | 간호사(NPC) | `NurseA`~`NurseD` |
-| 침대(분류/처치) | `patientABed`, `dummyABed`, `patientATreatmentBed` 등 |
+| 침대(분류/처치) | `patientABed`, `patientDummyDABed`, `patientATreatmentBed` 등 |
 | 모니터 | `patientA_monitor`, `patientB_monitor`, `patientC_monitor` |
 
 이들은 현재 씬 배치 + 식별자 지정(또는 부트스트랩 인스펙터 연결)로 다룬다. 필요 시 환자와 동일하게

@@ -7,9 +7,9 @@ namespace TriageTrainer.Scenario
   {
     private void RegisterPatientBCEvents()
     {
-      RegisterEvent_TriagePatientBPatientCDummyB();
+      RegisterEvent_TriagePatientBPatientCPatientDummyDB();
       RegisterEvent_ShowPatientBUi();
-      RegisterEvent_ShowDummyBUi();
+      RegisterEvent_ShowPatientDummyDBUi();
       RegisterEvent_ShowPatientCUi();
       RegisterEvent_MovePatientB();
       RegisterEvent_MovePatientC();

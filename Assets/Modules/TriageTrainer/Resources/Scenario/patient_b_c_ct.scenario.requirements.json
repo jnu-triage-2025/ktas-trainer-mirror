@@ -10,7 +10,7 @@
     {
       "selector": {
         "kind": "EntityPreset",
-        "identifier": "dummy_b"
+        "identifier": "patient_dummy_d_b"
       },
       "operation": "Override",
       "capabilities": [
@@ -314,7 +314,7 @@
     {
       "selector": {
         "kind": "EventHandler",
-        "identifier": "show_dummy_b_ui"
+        "identifier": "show_patient_dummy_d_b_ui"
       },
       "operation": "Override",
       "capabilities": [
@@ -362,7 +362,7 @@
     {
       "selector": {
         "kind": "EventHandler",
-        "identifier": "triage_patient_b_patient_c_dummy_b"
+        "identifier": "triage_patient_b_patient_c_patient_dummy_d_b"
       },
       "operation": "Override",
       "capabilities": [
@@ -674,7 +674,7 @@
     {
       "selector": {
         "kind": "RuntimeSignal",
-        "identifier": "sig.click_dummy_b"
+        "identifier": "sig.click_patient_dummy_d_b"
       },
       "operation": "Override",
       "availability": "WhenNodeReached",

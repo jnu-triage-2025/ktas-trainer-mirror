@@ -29,9 +29,9 @@ updated: 2026-04-14
 
 | EventIdentifier | 설명 | 호출 시점 | 구현 위치 | 상태 |
 |---|---|---|---|---|
-| triage_patientA_dummyA | 환자 A와 더미 A가 중증도 분류 구역으로 이송되어 들어오는 연출. (각각의 캐릭터가 Stretcher에 누워있는 상태로 진입) | 시나리오 시작 후, 간호사 A가 준비를 마친 직후 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |
+| triage_patientA_patientDummyDA | 환자 A와 patient_dummy_d_a가 중증도 분류 구역으로 이송되어 들어오는 연출. (각각의 캐릭터가 Stretcher에 누워있는 상태로 진입) | 시나리오 시작 후, 간호사 A가 준비를 마친 직후 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |
 | show_patientA_ui | 환자 A의 외견 및 상태 정보를 보여주는 UI 패널 활성화. [출력될 정보: - 현재 의식 상태: 대화가 불가능하고, 신음소리만을 내고 있음<br>- 흉부 관통상 및 흉부에서 다량의 출혈 관찰됨<br>- 빈맥<br>- 불규칙한 서호흡<br>- 피부는 창백하고 차가움<br>- C/C: 다량의 출혈] | 간호사 A가 중증도 분류를 위해 환자 A 클릭 시 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |
-| show_dummyA_ui | 더미 A의 외견 및 상태 정보를 보여주는 UI 패널 활성화. [출력될 정보: - 현재 의식 상태: 원활한 대화 가능함<br>- 활력징후 정상<br>- 사지의 약간의 타박상<br>- C/C: 하지 통증] | 간호사 A가 중증도 분류를 위해 더미 A 클릭 시 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |
+| show_patientDummyDA_ui | patient_dummy_d_a의 외견 및 상태 정보를 보여주는 UI 패널 활성화. [출력될 정보: - 현재 의식 상태: 원활한 대화 가능함<br>- 활력징후 정상<br>- 사지의 약간의 타박상<br>- C/C: 하지 통증] | 간호사 A가 중증도 분류를 위해 patient_dummy_d_a 클릭 시 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |
 | B_C_D_to_triage | 간호사 B, C, D 캐릭터가 환자 이송을 돕기 위해 트리아지 구역으로 이동하는 연출. | 간호사 A의 분류가 끝나고 이송 요청 대사 출력 후 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |
 
 ---
@@ -77,9 +77,9 @@ updated: 2026-04-14
 
 | EventIdentifier | 설명 | 호출 시점 | 구현 위치 | 상태 |
 |---|---|---|---|---|
-| triage_patientB_patientC_dummyB | 시나리오 B 환자, 더미 B, 시나리오 C 환자가 응급실 트리아지 구역으로 이송되어 들어오는 연출. | 시나리오 시작 직후 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |
+| triage_patientB_patientC_patientDummyDB | 시나리오 B 환자, patient_dummy_d_b, 시나리오 C 환자가 응급실 트리아지 구역으로 이송되어 들어오는 연출. | 시나리오 시작 직후 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |
 | show_patientB_ui | 환자 B의 외견 및 상태 정보를 보여주는 UI 패널 활성화. [출력될 정보: - 현재 의식 상태: 대화 가능하나 반응이 느려 약간의 기면(drowsy) 상태로 보임<br>- 왼쪽 팔과 다리의 근력이 비교적 약함<br>- 빈맥<br>- 빈호흡<br>- 상완 부위 출혈 지속 중<br>- 머리에 타박상 및 약간의 출혈 보임<br>- C/C: 두통] | 간호사 A가 환자 B 클릭(V035) 시 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |
-| show_dummyB_ui | 더미 B의 외견 및 상태 정보를 보여주는 UI 패널 활성화. [출력될 정보: - 현재 의식 상태: 원활한 대화 가능함<br>- 활력징후 정상<br>- 사지에 약간의 타박상<br>- C/C: 어깨 통증] | 간호사 A가 더미 B 클릭(V036) 시 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |
+| show_patientDummyDB_ui | patient_dummy_d_b의 외견 및 상태 정보를 보여주는 UI 패널 활성화. [출력될 정보: - 현재 의식 상태: 원활한 대화 가능함<br>- 활력징후 정상<br>- 사지에 약간의 타박상<br>- C/C: 어깨 통증] | 간호사 A가 patient_dummy_d_b 클릭(V036) 시 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |
 | show_patient_c_ui | 환자 C의 외견 및 상태 정보를 보여주는 UI 패널 활성화. [출력될 정보: - 현재 의식 상태: 대화 가능하나 반응이 느려 약간의 기면(drowsy) 상태로 보임<br>- 한쪽 팔 근력이 비교적 약함<br>- 빈맥<br>- 빈호흡<br>- 무릎 하단 부위 출혈 지속 중<br>- 머리에 타박상 및 약간의 출혈 보임<br>- C/C: 어지러움] | 간호사 A가 환자 C 클릭(V037) 시 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |
 | B_C_D_to_triage | 간호사 3명(B,C,D)이 트리아지 구역으로 이동해오는 연출 (환자 이송 준비).  | 간호사 A가 분류를 마친(Q032_1) 직후 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |
 | move_patientB | 환자 B가 누운 스트레쳐가 입원실 구역으로 이동. [세 개 구역 중 아무 곳이나 상관없으나, 가능하면 동선의 단축을 위해 간호사 구역에 가장 가까운 침대로 배정] | 간호사 A, C가 환자 B 스트레쳐를 잡은(V040_C) 직후 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |

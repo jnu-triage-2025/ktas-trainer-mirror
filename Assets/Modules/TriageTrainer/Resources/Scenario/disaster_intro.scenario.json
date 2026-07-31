@@ -200,7 +200,7 @@
     "E001": {
       "identifier": "E001",
       "nodeType": "InvokeEvent",
-      "eventIdentifier": "triage_patientA_dummyA",
+      "eventIdentifier": "triage_patient_a_patient_dummy_d_a",
       "moveNextBehavior": "WaitUntilDone",
       "nextIdentifier": "D003_1"
     },
@@ -310,7 +310,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_dummy_a"
+              "registryIdentifier": "sig.click_patient_dummy_d_a"
             }
           ]
         }
@@ -323,7 +323,7 @@
     "E003": {
       "identifier": "E003",
       "nodeType": "InvokeEvent",
-      "eventIdentifier": "show_dummyA_ui",
+      "eventIdentifier": "show_patient_dummy_d_a_ui",
       "moveNextBehavior": "WaitUntilDone",
       "nextIdentifier": "C002"
     },

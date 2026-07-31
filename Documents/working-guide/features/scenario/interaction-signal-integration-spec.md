@@ -133,7 +133,7 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
 - **아이템 픽업이 아닌 상호작용 조건(별도 처리)**: `interact_chest`, `click_patient_a/b/c`, `click_patient_*_face`,
   `interact_patient_chest`, `interact_defib`, `click_to_start_comp`, `interact_oxyflow_wall`,
   `interact_tpiece`, `click_nasal`,
-  `click_dummy_a/b` → 환자/장비/더미 클릭 또는 조립 산출물(prepared) 이므로 각 해당 인터랙션 지점에서 Raise.
+  `click_patient_dummy_d_a/b` → 환자/장비/더미 클릭 또는 조립 산출물(prepared) 이므로 각 해당 인터랙션 지점에서 Raise.
 
 권장: 표기 불일치 9건은 시나리오 조건명을 아이템 식별자로 통일(JSON 일괄 치환)하는 편이 단순하다.
 
@@ -203,7 +203,7 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
 UI/장비 상호작용. 해당 UI 확정 또는 장비 상호작용 콜백에 연결. 대상: `click_flowmeter`, `interact_oxyflow_wall`,
 `close_vital_ui_b/c`, `show_vital_patient_a`, `interact_defib`, `click_penlight`, `click_nasal_and_connect_nasal_and_o2`,
 `click_o2_line_and_click_tpiece_and_connect_tpiece_and_oxyflow`, `click_scissors_and_remove_patient_clothing`,
-`click_defibpad_and_click_patient_chest`, `click_ns_20cc_and_click_syringe_20cc`, `click_ns1_and_iv_set`, `click_ps1_and_iv_set`, `click_ps1_and_click_blood`, `click_20g_and_click_iv_set_and_click_ns1`, `click_dummyA`, `click_dummy_b`.
+`click_defibpad_and_click_patient_chest`, `click_ns_20cc_and_click_syringe_20cc`, `click_ns1_and_iv_set`, `click_ps1_and_iv_set`, `click_ps1_and_click_blood`, `click_20g_and_click_iv_set_and_click_ns1`, `click_patientDummyDA`, `click_patient_dummy_d_b`.
 
 ## 3. 권장 진행 순서
 
@@ -240,7 +240,7 @@ syringe_5cc, vital_set, wall_suction, yankauer`
 ### 5.2 환자/연결지점 Identifier 지정 (코드 변경 불필요, 에디터 설정 필수)
 아래는 코드는 자동으로 신호를 올리지만, **에디터에서 Identifier 를 조건명으로 맞춰야** 통과한다.
 
-- [ ] `PatientController` Identifier: 환자 A=`patient_a`, B=`patient_b`, C=`patient_c`, 더미=`dummy_b`.
+- [ ] `PatientController` Identifier: 환자 A=`patient_a`, B=`patient_b`, C=`patient_c`, 더미=`patient_dummy_d_b`.
 - [ ] IV/산소/벽/모니터 연결지점(`IntravenousLineConnectionPoint`) Identifier 를 조건명으로 지정:
       `connect_cannula_and_ns1`, `connect_cannula_and_ns1_patient_b`, `connect_cannula_and_ns1_patient_c`,
       `connect_wall_component_1`, `connect_wall_component_2`, `connect_wall_component_and_yankauer`,
@@ -268,7 +268,7 @@ syringe_5cc, vital_set, wall_suction, yankauer`
 - 신체부위/장비 상호작용: `interact_chest`, `interact_patient_chest`, `click_to_start_comp`, `interact_defib`,
   `interact_oxyflow_wall`, `interact_tpiece`,
   `click_nasal`, `click_patient_b_face`, `click_patient_c_face`,
-  `click_dummy_b`, `move_defibcart_to_patient`.
+  `click_patient_dummy_d_b`, `move_defibcart_to_patient`.
 
 > 검증 방법: 배선 전이라도 `/scenario signal <cond>` 커맨드로 각 게이트가 막히고 열리는지 수동 확인 가능.
 

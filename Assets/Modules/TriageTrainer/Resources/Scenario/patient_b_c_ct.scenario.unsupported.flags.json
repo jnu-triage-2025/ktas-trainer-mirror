@@ -42,15 +42,15 @@
     "notWired_or_editorUnproven": [
       "sig.check_gcs_patient_b", "sig.check_gcs_patient_c", "sig.check_vital_patient_b",
       "sig.check_vital_patient_c",
-      "sig.click_dummy_b", "sig.click_patient_b_face", "sig.click_patient_c_face"
+      "sig.click_patient_dummy_d_b", "sig.click_patient_b_face", "sig.click_patient_c_face"
     ]
   },
   "manualSetupRequired": [
     "의료 아이템 프리팹 Identifier ↔ sig.click_<id> 정합(환자 A 와 동일 풀 공유).",
-    "더미 환자(dummy_b), 환자 B/C 의 PatientController Identifier 를 patient_b / patient_c / dummy_b 로 지정.",
+    "더미 환자(patient_dummy_d_b), 환자 B/C 의 PatientController Identifier 를 patient_b / patient_c / patient_dummy_d_b 로 지정.",
     "patient_b/patient_c별 PatientCareDescriptionZone에 활성 wall_suction과 oxyflowmeter를 각각 하나씩 배치하고 Zone-환자 매핑을 확정.",
     "중증도 분류 구역 트리거에 enter_triage_zone_{id} template을 설정하고 3개 entity signal counter를 플레이 검증.",
-    "dummy_b 전용 프리팹과 EntityPreset을 등록하고 spawn/분류 상호작용을 검증.",
+    "patient_dummy_d_b 전용 프리팹과 EntityPreset을 등록하고 spawn/분류 상호작용을 검증.",
     "IngameScene의 B/C 연출 대상, UI, 처치 침대, CT point, 시각물, 간호사 Transform 참조를 Registry 또는 Inspector로 확정."
   ],
   "dataInconsistencies": [

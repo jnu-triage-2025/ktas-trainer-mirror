@@ -23,7 +23,7 @@ ScriptableObject, 씬 직렬화 데이터를 다시 대조한 결과다. 여기�
 | 환자 B/C 프리팹 핵심 컴포넌트 | 완료 | 두 프리팹에 NetworkObject, PatientController, CapsuleCollider 존재 |
 | FishNet spawnable 등록 | 완료 | 두 프리팹 GUID가 `DefaultPrefabObjects.asset`에 존재 |
 | `patient_b`/`patient_c` preset | 완료 | EntityPreset Requirements SO에 베드 결합 포함 등록 |
-| `dummy_b` preset | 미완료 | JSON은 spawn하지만 EntityPreset Requirements SO와 프리팹 등록 근거가 없음 |
+| `patient_dummy_d_b` preset | 미완료 | JSON은 spawn하지만 EntityPreset Requirements SO와 프리팹 등록 근거가 없음 |
 | B/C 씬 연출 참조 | 검증 필요 | IngameScene의 B/C 오브젝트·UI·침대·CT·간호사 Transform 참조가 비어 있음 |
 | 트리아지 도착 counter | 미완료 | 씬에서 `enter_triage_zone_{id}` producer 설정을 찾지 못함 |
 | GCS/활력/얼굴/더미 상호작용 | 미완료 또는 매핑 검증 필요 | 요구 신호 producer 및 프리팹 Identifier 매핑이 확인되지 않음 |
@@ -42,18 +42,18 @@ ScriptableObject, 씬 직렬화 데이터를 다시 대조한 결과다. 여기�
 
 ### 현재도 유효한 문제
 
-#### 1. `dummy_b` spawn 계약이 닫히지 않음
+#### 1. `patient_dummy_d_b` spawn 계약이 닫히지 않음
 
-`patient_b_c_ct.scenario.json`은 `SPAWN_DUMMY_B`에서 `dummy_b`를 요구한다.
+`patient_b_c_ct.scenario.json`은 `SPAWN_PATIENT_DUMMY_D_B`에서 `patient_dummy_d_b`를 요구한다.
 그러나 [EntityPreset Registry Requirements SO](../../../../Assets/Modules/TriageTrainer/ScriptableObjects/EntityPreset%20Registry%20Requirements%20SO.asset)
-에는 `dummy_b` entry가 없고, 저장소에서 전용 프리팹도 확인되지 않는다.
+에는 `patient_dummy_d_b` entry가 없고, 저장소에서 전용 프리팹도 확인되지 않는다.
 
 필요한 작업:
 
 - 분류용 더미 프리팹 확정
 - NetworkObject/필요한 상호작용 컴포넌트 구성
-- `dummy_b` EntityPreset 등록
-- `click_dummy_b` producer 연결
+- `patient_dummy_d_b` EntityPreset 등록
+- `click_patient_dummy_d_b` producer 연결
 - 호스트와 원격 클라이언트 spawn 검증
 
 #### 2. 씬 연출 연결이 파일상 증명되지 않음
@@ -84,7 +84,7 @@ JSON의 `V039`는 `sig.all_triage_patients_arrived`를 기다리고, counter는
 
 - `enter_triage_zone_patient_b`
 - `enter_triage_zone_patient_c`
-- `enter_triage_zone_dummy_b`
+- `enter_triage_zone_patient_dummy_d_b`
 
 #### 4. 상호작용 신호 producer/Identifier가 닫히지 않음
 
@@ -94,7 +94,7 @@ JSON은 53개의 고유 `sig.*` 신호를 참조한다. 현재 코드·문서 �
 - `check_gcs_patient_b/c`
 - `check_vital_patient_b/c`
 - `click_patient_b_face`, `click_patient_c_face`
-- `click_dummy_b`
+- `click_patient_dummy_d_b`
 - `click_patient_b`, `click_patient_c`
 - `select_patient_b`, `select_patient_c`
 - 베드 손잡이 4개 신호
@@ -147,7 +147,7 @@ JSON은 53개의 고유 `sig.*` 신호를 참조한다. 현재 코드·문서 �
 다음 조건을 모두 만족하기 전에는 `patient_b_c_ct.scenario.json`을 Production용
 완료본으로 승인하지 않는다.
 
-1. `dummy_b` preset과 spawn 결과가 호스트/원격에서 확인될 것
+1. `patient_dummy_d_b` preset과 spawn 결과가 호스트/원격에서 확인될 것
 2. B/C의 Registry 및 Bootstrap 참조가 모두 해석될 것
 3. 트리아지 세 엔티티의 per-entity signal이 counter를 통과할 것
 4. 모든 필수 Validator의 gameplay producer와 Identifier 매핑이 증명될 것

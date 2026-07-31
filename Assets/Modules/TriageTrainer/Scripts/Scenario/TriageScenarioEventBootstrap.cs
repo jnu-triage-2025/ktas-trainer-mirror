@@ -28,30 +28,30 @@ namespace TriageTrainer.Scenario
     [SerializeField] private TextAsset _disasterIntroMvpGraph;
     [SerializeField] private string _disasterIntroMvpGraphIdentifier = "disaster_intro_mvp";
 
-    [Header("triage_patientA_dummyA")]
+    [Header("triage_patient_a_patient_dummy_d_a")]
     [SerializeField] private string _patientAEntityIdentifier = "patientA";
     [SerializeField] private string[] _patientAAliases = { "patientA", "patient_a", "patient" };
-    [SerializeField] private string _dummyAEntityIdentifier = "dummyA";
-    [SerializeField] private string[] _dummyAAliases = { "dummyA", "dummy_a", "dummy" };
+    [SerializeField] private string _patientDummyDAEntityIdentifier = "patientDummyDA";
+    [SerializeField] private string[] _patientDummyDAAliases = { "patientDummyDA", "patient_dummy_d_a" };
     [SerializeField] private string _patientABedEntityIdentifier = "patientABed";
     [SerializeField] private string[] _patientABedAliases = { "patientABed", "patient_a_bed", "bedA" };
-    [SerializeField] private string _dummyABedEntityIdentifier = "dummyABed";
-    [SerializeField] private string[] _dummyABedAliases = { "dummyABed", "dummy_a_bed", "bedDummyA" };
+    [SerializeField] private string _patientDummyDABedEntityIdentifier = "patientDummyDABed";
+    [SerializeField] private string[] _patientDummyDABedAliases = { "patientDummyDABed", "patient_dummy_d_a_bed" };
     [SerializeField] private GameObject _patientAObject;
-    [SerializeField] private GameObject _dummyAObject;
+    [SerializeField] private GameObject _patientDummyDAObject;
     [SerializeField] private GameObject _patientABedObject;
-    [SerializeField] private GameObject _dummyABedObject;
+    [SerializeField] private GameObject _patientDummyDABedObject;
     [SerializeField] private Transform _patientASpawnPoint;
-    [SerializeField] private Transform _dummyASpawnPoint;
+    [SerializeField] private Transform _patientDummyDASpawnPoint;
     [SerializeField] private Transform _patientABedSpawnPoint;
-    [SerializeField] private Transform _dummyABedSpawnPoint;
+    [SerializeField] private Transform _patientDummyDABedSpawnPoint;
     [SerializeField, Min(0f)] private float _spawnMoveDurationSeconds = 0f;
     [SerializeField] private bool _autoAttachPatientsToBeds = true;
     [SerializeField] private bool _preferMovingBedsForSpawn = true;
 
-    [Header("show_patientA_ui / show_dummyA_ui")]
+    [Header("show_patientA_ui / show_patientDummyDA_ui")]
     [SerializeField] private GameObject _patientAUiPanel;
-    [SerializeField] private GameObject _dummyAUiPanel;
+    [SerializeField] private GameObject _patientDummyDAUiPanel;
     [SerializeField, Min(0f)] private float _uiPanelAutoHideSeconds = 0f;
 
     [Header("patient_a_critical (P1 MVP)")]
@@ -179,18 +179,18 @@ namespace TriageTrainer.Scenario
     [SerializeField] private string[] _patientBAliases = { "patientB", "patient_b" };
     [SerializeField] private string _patientCEntityIdentifier = "patientC";
     [SerializeField] private string[] _patientCAliases = { "patientC", "patient_c" };
-    [SerializeField] private string _dummyBEntityIdentifier = "dummyB";
-    [SerializeField] private string[] _dummyBAliases = { "dummyB", "dummy_b" };
+    [SerializeField] private string _patientDummyDBEntityIdentifier = "patientDummyDB";
+    [SerializeField] private string[] _patientDummyDBAliases = { "patientDummyDB", "patient_dummy_d_b" };
     [SerializeField] private GameObject _patientBObject;
     [SerializeField] private GameObject _patientCObject;
-    [SerializeField] private GameObject _dummyBObject;
+    [SerializeField] private GameObject _patientDummyDBObject;
     [SerializeField] private Transform _patientBSpawnPoint;
     [SerializeField] private Transform _patientCSpawnPoint;
-    [SerializeField] private Transform _dummyBSpawnPoint;
+    [SerializeField] private Transform _patientDummyDBSpawnPoint;
     [SerializeField, Min(0f)] private float _patientBcdSpawnMoveDurationSeconds = 0f;
     [SerializeField] private GameObject _patientBUiPanel;
     [SerializeField] private GameObject _patientCUiPanel;
-    [SerializeField] private GameObject _dummyBUiPanel;
+    [SerializeField] private GameObject _patientDummyDBUiPanel;
     [SerializeField] private string _patientBTreatmentBedEntityIdentifier = "patientBTreatmentBed";
     [SerializeField] private string[] _patientBTreatmentBedAliases = { "patientBTreatmentBed", "patient_b_treatment_bed", "treatmentBedB" };
     [SerializeField] private string _patientCTreatmentBedEntityIdentifier = "patientCTreatmentBed";
@@ -392,9 +392,9 @@ namespace TriageTrainer.Scenario
 
       // Frequently toggled panels/visuals.
       AppendMissingIfNull(missing, nameof(_patientAUiPanel), _patientAUiPanel);
-      AppendMissingIfNull(missing, nameof(_dummyAUiPanel), _dummyAUiPanel);
+      AppendMissingIfNull(missing, nameof(_patientDummyDAUiPanel), _patientDummyDAUiPanel);
       AppendMissingIfNull(missing, nameof(_patientBUiPanel), _patientBUiPanel);
-      AppendMissingIfNull(missing, nameof(_dummyBUiPanel), _dummyBUiPanel);
+      AppendMissingIfNull(missing, nameof(_patientDummyDBUiPanel), _patientDummyDBUiPanel);
       AppendMissingIfNull(missing, nameof(_patientCUiPanel), _patientCUiPanel);
       AppendMissingIfNull(missing, nameof(_suctionChecklistUiPanel), _suctionChecklistUiPanel);
       AppendMissingIfNull(missing, nameof(_intuChecklistUiPanel), _intuChecklistUiPanel);
@@ -452,14 +452,14 @@ namespace TriageTrainer.Scenario
       _patientAObject = ResolveEntityObject(_patientAObject, _patientAEntityIdentifier);
       _patientAObject ??= ResolveByAliases(_patientAAliases);
 
-      _dummyAObject = ResolveEntityObject(_dummyAObject, _dummyAEntityIdentifier);
-      _dummyAObject ??= ResolveByAliases(_dummyAAliases);
+      _patientDummyDAObject = ResolveEntityObject(_patientDummyDAObject, _patientDummyDAEntityIdentifier);
+      _patientDummyDAObject ??= ResolveByAliases(_patientDummyDAAliases);
 
       _patientABedObject = ResolveEntityObject(_patientABedObject, _patientABedEntityIdentifier);
       _patientABedObject ??= ResolveByAliases(_patientABedAliases);
 
-      _dummyABedObject = ResolveEntityObject(_dummyABedObject, _dummyABedEntityIdentifier);
-      _dummyABedObject ??= ResolveByAliases(_dummyABedAliases);
+      _patientDummyDABedObject = ResolveEntityObject(_patientDummyDABedObject, _patientDummyDABedEntityIdentifier);
+      _patientDummyDABedObject ??= ResolveByAliases(_patientDummyDABedAliases);
 
       _patientATreatmentBedObject = ResolveEntityObject(_patientATreatmentBedObject, _patientATreatmentBedEntityIdentifier);
       _patientATreatmentBedObject ??= ResolveByAliases(_patientATreatmentBedAliases);
@@ -475,8 +475,8 @@ namespace TriageTrainer.Scenario
       _patientBObject ??= ResolveByAliases(_patientBAliases);
       _patientCObject = ResolveEntityObject(_patientCObject, _patientCEntityIdentifier);
       _patientCObject ??= ResolveByAliases(_patientCAliases);
-      _dummyBObject = ResolveEntityObject(_dummyBObject, _dummyBEntityIdentifier);
-      _dummyBObject ??= ResolveByAliases(_dummyBAliases);
+      _patientDummyDBObject = ResolveEntityObject(_patientDummyDBObject, _patientDummyDBEntityIdentifier);
+      _patientDummyDBObject ??= ResolveByAliases(_patientDummyDBAliases);
 
       _nurseATransform = ResolveEntityTransform(_nurseATransform, _nurseAEntityIdentifier);
       _nurseATransform ??= ResolveByAliases(_nurseAAliases)?.transform;
@@ -641,14 +641,14 @@ namespace TriageTrainer.Scenario
     private void LogUnresolvedTargetsIfAny()
     {
       bool unresolved = _patientAObject == null
-                        || _dummyAObject == null
+                        || _patientDummyDAObject == null
                         || _patientABedObject == null
-                        || _dummyABedObject == null
+                        || _patientDummyDABedObject == null
                         || _patientATreatmentBedObject == null
                         || _patientAVitalMonitorObject == null
                         || _patientBObject == null
                         || _patientCObject == null
-                        || _dummyBObject == null
+                        || _patientDummyDBObject == null
                         || _patientBTreatmentBedObject == null
                         || _patientCTreatmentBedObject == null
                         || _patientBVitalMonitorObject == null
@@ -665,14 +665,14 @@ namespace TriageTrainer.Scenario
       var sb = new StringBuilder(256);
       sb.AppendLine("[TriageScenarioEventBootstrap] Unresolved targets after auto-resolve:");
       if (_patientAObject == null) sb.AppendLine("- patientA (set _patientAEntityIdentifier or aliases)");
-      if (_dummyAObject == null) sb.AppendLine("- dummyA (set _dummyAEntityIdentifier or aliases)");
+      if (_patientDummyDAObject == null) sb.AppendLine("- patientDummyDA (set _patientDummyDAEntityIdentifier or aliases)");
       if (_patientABedObject == null) sb.AppendLine("- patientABed (set _patientABedEntityIdentifier or aliases)");
-      if (_dummyABedObject == null) sb.AppendLine("- dummyABed (set _dummyABedEntityIdentifier or aliases)");
+      if (_patientDummyDABedObject == null) sb.AppendLine("- patientDummyDABed (set _patientDummyDABedEntityIdentifier or aliases)");
       if (_patientATreatmentBedObject == null) sb.AppendLine("- patientATreatmentBed (set _patientATreatmentBedEntityIdentifier or aliases)");
       if (_patientAVitalMonitorObject == null) sb.AppendLine("- patientAMonitor (set _patientAVitalMonitorEntityIdentifier or aliases)");
       if (_patientBObject == null) sb.AppendLine("- patientB (set _patientBEntityIdentifier or aliases)");
       if (_patientCObject == null) sb.AppendLine("- patientC (set _patientCEntityIdentifier or aliases)");
-      if (_dummyBObject == null) sb.AppendLine("- dummyB (set _dummyBEntityIdentifier or aliases)");
+      if (_patientDummyDBObject == null) sb.AppendLine("- patientDummyDB (set _patientDummyDBEntityIdentifier or aliases)");
       if (_patientBTreatmentBedObject == null) sb.AppendLine("- patientBTreatmentBed (set _patientBTreatmentBedEntityIdentifier or aliases)");
       if (_patientCTreatmentBedObject == null) sb.AppendLine("- patientCTreatmentBed (set _patientCTreatmentBedEntityIdentifier or aliases)");
       if (_patientBVitalMonitorObject == null) sb.AppendLine("- patientBMonitor (set _patientBVitalMonitorEntityIdentifier or aliases)");
@@ -955,14 +955,14 @@ namespace TriageTrainer.Scenario
       Debug.Log("[TriageScenarioEventBootstrap] Core smoke test started.", this);
 
       // Intro + patient A critical core flow.
-      yield return RunSmokeStep("triage_patientA_dummyA", Event_TriagePatientAAndDummyA);
+      yield return RunSmokeStep("triage_patient_a_patient_dummy_d_a", Event_TriagePatientAAndPatientDummyDA);
       yield return RunSmokeStep("show_patientA_ui", Event_ShowPatientAUi);
-      yield return RunSmokeStep("show_dummyA_ui", Event_ShowDummyAUi);
+      yield return RunSmokeStep("show_patient_dummy_d_a_ui", Event_ShowPatientDummyDAUi);
       yield return RunSmokeStep("move_patientA_to_treatmentroom", Event_MovePatientAToTreatmentRoom);
       yield return RunSmokeStep("activate_vital_monitor_ui_patientA", Event_ActivateVitalMonitorUiPatientA);
 
       // Patient B/C entry + transition flow.
-      yield return RunSmokeStep("triage_patientB_patientC_dummyB", Event_TriagePatientBPatientCDummyB);
+      yield return RunSmokeStep("triage_patient_b_patient_c_patient_dummy_d_b", Event_TriagePatientBPatientCPatientDummyDB);
       yield return RunSmokeStep("move_patientB", Event_MovePatientB);
       yield return RunSmokeStep("move_patientC", Event_MovePatientC);
       yield return RunSmokeStep("move_patients_to_CT", Event_MovePatientsToCt);

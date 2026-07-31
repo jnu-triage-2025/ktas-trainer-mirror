@@ -10,13 +10,157 @@ flags: ["refactor-required"]
 
 # scenario 환자 B/C 지연 처치
 
+## 줄글 시나리오
+
+재난 현장에 환자 B, 환자 C, 그리고 분류를 위한 더미 환자 1명이 이송되어 온다. 세 환자는 먼저 트리아지 구역에 도착하고, 간호사들은 환자의 상태를 확인할 준비를 한다.
+
+시스템이 안내한다.
+
+“환자 세 명이 이송되었습니다. 간호사 A가 중증도 분류를 시행합니다.”
+
+간호사 A는 환자들을 왼쪽부터 차례로 살핀다. 환자 B를 클릭하여 의식과 상태를 확인한 뒤, 중증도 분류 결과를 선택한다. 환자 B는 **KTAS 2, 긴급 환자**로 판정된다.
+
+이어서 더미 환자의 상태를 확인한다. 더미 환자는 **KTAS 5, 비응급 환자**로 분류된다.
+
+마지막으로 환자 C를 확인한다. 환자 C 역시 **KTAS 2, 긴급 환자**로 판정된다.
+
+간호사 A가 팀원들에게 말한다.
+
+“KTAS 2로 분류된 환자 두 명을 처치 구역으로 이송하겠습니다. 간호사 B, C, D 선생님, 이동을 도와주세요.”
+
+간호사들은 환자 B와 환자 C를 처치 구역으로 옮긴다. 두 환자가 모두 트리아지 구역을 빠져나와 처치 구역에 도착하면 본격적인 처치가 시작된다.
+
+### 환자 B 처치
+
+먼저 환자 B를 처치 구역으로 이동시킨다. 환자 B가 도착하자 시스템이 역할을 나눈다.
+
+“간호사 A는 의식상태를, 간호사 B는 활력징후를 사정하세요.”
+
+간호사 A는 환자 B에게 말을 걸고 반응을 확인한다. 환자 B는 목소리에 반응하지만 완전히 깨어 있는 상태는 아니다. 간호사 A는 차례로 눈뜨기, 언어 반응, 운동 반응을 확인한다.
+
+환자 B의 상태는 다음과 같이 평가된다.
+
+- 눈뜨기: 소리에 반응함
+- 언어 반응: 혼란스러운 대답을 함
+- 운동 반응: 명령을 수행함
+- 총 GCS: 13점
+- 근력: 오른쪽 5점, 왼쪽 3점
+
+간호사 A가 판단을 보고한다.
+
+“환자 B의 GCS는 13점입니다. 오른쪽 근력은 5점, 왼쪽 근력은 3점입니다.”
+
+한편 간호사 B는 환자 B의 활력징후를 확인한다. 활력징후 측정 도구와 전극, 전극 케이블을 준비하고 환자에게 연결한다. 모니터에 환자 B의 상태가 표시된다.
+
+환자 B의 주요 활력징후는 다음과 같다.
+
+- 호흡수: 분당 24회
+- 맥박: 분당 120회
+- 혈압: 140/86mmHg
+- 체온: 37.8도
+- 산소포화도: 93%
+
+간호사 B가 활력징후를 확인하는 동안 간호사 C와 간호사 D도 각각 맡은 처치를 시작한다.
+
+간호사 C는 환자의 동공 반응을 확인하기 위해 펜라이트를 준비한다. 양쪽 눈에 빛을 비추어 동공 반응을 비교한다. 환자 B는 한쪽 동공 반응에 이상이 나타난다.
+
+동공 반응을 확인한 뒤, 간호사 C는 오른쪽 팔에 20게이지 정맥로를 확보한다. 정맥로가 확보되면 생리식염수 수액을 연결한다.
+
+간호사 D는 환자 B에게 비강 캐뉼라를 적용하여 산소를 공급한다. 이어서 산소 공급 장치와 벽면 흡인 장치를 연결한다. 환자 B의 출혈 부위에는 거즈를 대고 압박 지혈을 시행한다. 이후 거즈 위에 플라스터를 붙여 처치를 마무리한다.
+
+간호사 D가 말한다.
+
+“산소 투여가 완료되었습니다.”
+
+잠시 뒤 팀원들이 처치 결과를 확인한다.
+
+“산소 적용과 지혈이 완료되었습니다.”
+
+환자 B에 대한 의식 평가, 활력징후 확인, 동공 반응 검사, 정맥로 확보, 산소 공급, 지혈 처치가 모두 끝난다.
+
+시스템이 알린다.
+
+“환자 B에 대한 간호 중재가 완료되었습니다.”
+
+### 환자 C 처치
+
+이제 환자 C를 처치 구역으로 이동시킨다.
+
+환자 C가 도착하자 시스템이 안내한다.
+
+“처치 구역에 도착했습니다. 즉시 의식상태 사정 및 활력징후 사정을 시작하세요.”
+
+이번에도 간호사 A는 의식상태를 확인하고, 간호사 B는 활력징후를 측정한다.
+
+간호사 A는 환자 C에게 말을 걸고 반응을 관찰한다. 환자 C 역시 목소리에 반응하지만 혼란스러운 상태이다. 간호사 A는 눈뜨기, 언어 반응, 운동 반응을 차례로 평가한다.
+
+환자 C의 상태는 다음과 같이 평가된다.
+
+- 눈뜨기: 소리에 반응함
+- 언어 반응: 혼란스러운 대답을 함
+- 운동 반응: 명령을 수행함
+- 총 GCS: 13점
+- 근력: 왼쪽 5점, 오른쪽 3점
+
+간호사 B는 환자 C의 활력징후를 측정하기 위해 장비를 준비한다. 측정 도구와 전극, 전극 케이블을 연결하고 모니터를 작동시킨다.
+
+환자 C의 활력징후도 환자 B와 비슷하게 관찰된다.
+
+- 호흡수: 분당 24회
+- 맥박: 분당 120회
+- 혈압: 140/86mmHg
+- 체온: 37.8도
+- 산소포화도: 93%
+
+간호사 B가 평가 결과를 보고한다.
+
+“환자 C의 GCS는 13점입니다. 왼쪽 근력은 5점, 오른쪽 근력은 3점입니다.”
+
+이어서 간호사 C는 환자 C의 동공 반응을 확인한다. 펜라이트로 양쪽 눈을 비추어 반응을 비교한 결과, 환자 C 역시 한쪽 동공 반응에 이상이 관찰된다.
+
+간호사 C는 왼쪽 팔에 20게이지 정맥로를 확보하고 생리식염수 수액을 연결한다.
+
+간호사 D는 환자 C에게 비강 캐뉼라를 적용하고 산소를 공급한다. 벽면 흡인 장치를 연결한 뒤, 출혈 부위에 거즈를 대고 압박한다. 출혈이 멎으면 거즈 위에 플라스터를 붙인다.
+
+간호사 D가 처치 결과를 알린다.
+
+“산소 투여가 완료되었습니다.”
+
+잠시 후 최종 확인이 이어진다.
+
+“산소 적용과 지혈이 완료되었습니다.”
+
+환자 C에 대해서도 의식상태 평가, 활력징후 측정, 동공 반응 검사, 정맥로 확보, 산소 공급, 지혈 처치가 모두 끝난다.
+
+시스템이 알린다.
+
+“환자 C에 대한 간호 중재가 완료되었습니다.”
+
+### CT실 이송
+
+환자 B와 환자 C에 대한 처치가 모두 끝나자 의사 NPC가 환자들의 상태를 종합한다. 의사는 두 환자의 의식상태와 좌우 근력 차이, 비정상적인 동공 반응을 다시 확인한다.
+
+의사가 말한다.
+
+“기전과 사정 결과를 보니 뇌손상이 의심됩니다. 활력징후는 비교적 안정되어 있으니 지금 Brain CT를 찍겠습니다. 환자를 CT실로 이동시켜 주세요.”
+
+간호사들은 환자 B와 환자 C를 CT실로 이동시킬 준비를 한다. 간호사 A, B, C, D가 함께 환자들을 이송하고, 의사 NPC도 CT실로 이동한다.
+
+환자들이 CT실에 도착하면 모든 처치 절차가 완료된다.
+
+시스템이 안내한다.
+
+“시나리오 B, C 환자 대응 종료. 모든 시나리오를 수행하였습니다.”
+
+화면이 서서히 어두워지고, 환자 B와 환자 C의 처치 시나리오가 종료된다.
+
 ## 기본 정보
 
 | 항목 | 내용 |
 |---|---|
 | 제목 | 환자 B/C: 뇌손상 의심 및 좌측 상완 개방성 골절 대응 |
 | 요약 | 환자를 처치 구역으로 이동시키고 의식/활력징후 사정, 산소화, 지혈, IV 확보, 동공 반응 확인 후 CT실로 이동한다. |
-| 주요 등장인물 | 플레이어 A/B/C/D, 의사 NPC, 환자 B, 환자 C(환자 B와 동일 부상), 더미 B(분류용) |
+| 주요 등장인물 | 플레이어 A/B/C/D, 의사 NPC, 환자 B, 환자 C(환자 B와 동일 부상), patient_dummy_d_b(분류용) |
 | 주요 장소 | 처치 구역, CT실 |
 | 리소스 식별자 - 사운드 | tape_sound |
 | 리소스 식별자 - 초상화 | 없음 |
@@ -64,7 +208,7 @@ flags: ["refactor-required"]
 | ID | 위치 | 부족한 연결 | 처리 |
 |---|---|---|---|
 | SPAWN-BC-1 | `SPAWN_B`, `SPAWN_C` | **해결 확인(2026-07-29 감사):** `PatientTypeBMale`/`PatientTypeBFemale`에 NetworkObject, PatientController, CapsuleCollider가 있고 두 GUID가 `DefaultPrefabObjects.asset`에 등록되어 있다. | 프리팹 구성/등록은 완료로 기록한다. 호스트·원격 결합 spawn 플레이 검증은 별도 운영 조건이다. |
-| SPAWN-BC-2 | `SPAWN_DUMMY_B` | `dummy_b`를 spawn하는 JSON 노드는 있으나 EntityPreset Requirements SO와 전용 프리팹 등록을 찾지 못했다. | 분류용 dummy prefab을 확정하고 `dummy_b` preset/NetworkObject/producer를 등록한다. |
+| SPAWN-BC-2 | `SPAWN_PATIENT_DUMMY_D_B` | `patient_dummy_d_b`를 spawn하는 JSON 노드는 있으나 EntityPreset Requirements SO와 전용 프리팹 등록을 찾지 못했다. | 분류용 dummy prefab을 확정하고 `patient_dummy_d_b` preset/NetworkObject/producer를 등록한다. |
 | ROLE-BC-1 | `P009`~`P013` | 기능 태그와 간호사 역할의 선행 매핑이 없고, 상·하위 브랜치 태그가 불일치했다. | **해결(2026-07-29):** `patient_b_c_ct`의 루트 태그를 `nurse_a`~`nurse_d`로 고정하고 모든 Parallel 브랜치를 단일 식별자 태그로 재매핑했다. P009/P010/P012는 A/B, P011/P013은 C/D가 각각 1:1로 배정된다. `matchMode`도 모두 `All`로 통일했고 `whenBranchingPlayerNotMatched=Panic`으로 자격 없는 재배정을 금지했다. 역할 선택은 `disaster_intro`가 부여하는 동일 식별자 태그를 공급 계약으로 사용한다. |
 | SIGNAL-BC-1 | `V040_A`/`V040_C`, `V040_B`/`V040_D` | ~~같은 들것 신호를 두 번 기다려 2인 파지를 증명하지 못한다.~~ **해결(2026-07-20):** `MovingPatientBedController`가 서버 권위 `SyncVar` 손잡이 슬롯 두 개에 client ID를 기록한다. 프리팹 `PlayerAttachPoints`도 두 개로 배선했다. | 서버가 각 슬롯을 한 client ID에만 배정하고, 각 소유 클라이언트에 follow anchor를 동기화한다. 참가자 입력은 ServerRpc로 보고되어 서버가 침대를 이동하고 transform을 ObserversRpc로 복제한다. 슬롯 0/1이 각각 `grab_stretcher_patient_b/c_handle_0/1`을 발신하며, 시나리오는 이 두 signal을 별도 Validator로 대기한다. |
 | SIGNAL-BC-2 | `COUNT_TRIAGE_ARRIVALS` → `V039` | **코드/JSON 구성은 완료, 씬 배선은 미확인:** `ScenarioTriggerZone._perEntitySignalTemplate`(`enter_triage_zone_{id}`)와 `SignalCounter`(prefix `enter_triage_zone_`, threshold 3)가 구현되어 있다. 그러나 현재 씬 직렬화에서 해당 template 설정을 확인하지 못했다. | 트리아지 존에 `enter_triage_zone_{id}`를 설정하고 B/C/dummy의 세 신호가 실제로 counter를 통과하는지 검증한다. |
@@ -89,7 +233,7 @@ flags: ["refactor-required"]
 
 - ROLE-BC-1의 역할 태그 공급 계약이 확정되어야 한다.
 - SPAWN-BC-1의 FishNet spawnable prefab 등록은 완료 확인되었다.
-- SPAWN-BC-2의 `dummy_b` EntityPreset과 spawn 계약이 완료되어야 한다.
+- SPAWN-BC-2의 `patient_dummy_d_b` EntityPreset과 spawn 계약이 완료되어야 한다.
 - 들것 파지와 구역 도착을 각각 참여자/환자 단위로 계측해야 한다.
 - 환자별 처치 결과 신호를 분리하고 미배선 producer를 구현해야 한다.
 - 12개 quest definition을 등록해야 한다.
@@ -144,7 +288,7 @@ flags: ["refactor-required"]
 interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 분류한다.
 
 - **자동 계측 완료**(코드 경로 존재, 씬/아이템 설정 검증 필요): `enter_triage_zone`(구역 진입, 단 인원수 검증은 별도), `apply_electrode`, `apply_gauze`, `apply_plaster_on_gauze`, `wear_glove`.
-- **선행 구현 필요**(게임플레이 미구현, 미배선 시 무한 대기 또는 명시된 timeout 복구): `click_patient_b_face`, `click_patient_c_face`, `click_dummy_b`. IV 삽입 producer는 구현되어 `insert_iv_{patientIdentifier}_{left|right}`를 발행하며, B/C Validator는 좌·우 중 하나를 받는 `matchMode=Any`로 갱신했다. 다만 실제 사용할 팔·프리팹 시각물·임상 지시는 여전히 확정이 필요하다. 비강캐뉼라 적용은 `NasalCannulaApplied` 상태 바인딩으로 대체했으며, 산소 연결은 별도 연결점 producer가 필요하다. `click_humidifier_bottle`, `click_sterile_distilled_water`, `click_flowmeter`는 `MedicalItem.OnGet()`이 자동 발행한다.
+- **선행 구현 필요**(게임플레이 미구현, 미배선 시 무한 대기 또는 명시된 timeout 복구): `click_patient_b_face`, `click_patient_c_face`, `click_patient_dummy_d_b`. IV 삽입 producer는 구현되어 `insert_iv_{patientIdentifier}_{left|right}`를 발행하며, B/C Validator는 좌·우 중 하나를 받는 `matchMode=Any`로 갱신했다. 다만 실제 사용할 팔·프리팹 시각물·임상 지시는 여전히 확정이 필요하다. 비강캐뉼라 적용은 `NasalCannulaApplied` 상태 바인딩으로 대체했으며, 산소 연결은 별도 연결점 producer가 필요하다. `click_humidifier_bottle`, `click_sterile_distilled_water`, `click_flowmeter`는 `MedicalItem.OnGet()`이 자동 발행한다.
 - **구현 완료(런타임 UI)**: `close_vital_ui_b`, `close_vital_ui_c` — `PatientMonitorController`가 닫기 버튼을 만들고, B/C 활성화 이벤트가 패널·모니터를 숨긴 뒤 환자별 signal을 발생시킨다.
 - **에디터 Identifier 정합 필요**(코드는 있으나 프리팹/에디터 매핑 확정 필요): `check_gcs_patient_b`, `check_gcs_patient_c`, `check_vital_patient_b`, `check_vital_patient_c`, `click_patient_b`, `click_patient_c`.
 
@@ -178,21 +322,21 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.EntityPresetSpawn |
 | **PresetIdentifier** | 문자열 | patient_c |
 | **SpawnedEntityIdentifier** | 문자열 | patient_c |
-| **NextIdentifier** | 문자열 | SPAWN_DUMMY_B |
+| **NextIdentifier** | 문자열 | SPAWN_PATIENT_DUMMY_D_B |
 
 ---
 
-### [SPAWN_DUMMY_B] EntityPresetSpawnNode
+### [SPAWN_PATIENT_DUMMY_D_B] EntityPresetSpawnNode
 
 | 속성 | 타입 | 설명 |
 | :--- | :--- | :--- |
-| **Identifier** | 문자열 | SPAWN_DUMMY_B |
+| **Identifier** | 문자열 | SPAWN_PATIENT_DUMMY_D_B |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.EntityPresetSpawn |
-| **PresetIdentifier** | 문자열 | dummy_b |
-| **SpawnedEntityIdentifier** | 문자열 | dummy_b |
+| **PresetIdentifier** | 문자열 | patient_dummy_d_b |
+| **SpawnedEntityIdentifier** | 문자열 | patient_dummy_d_b |
 | **NextIdentifier** | 문자열 | PRESET_B |
 
-- [ ] 더미 B(dummy_b)는 분류용 더미이며 처치 노드는 없음(의도). SPAWN_DUMMY_B 스폰만 존재(R12).
+- [ ] patient_dummy_d_b(patient_dummy_d_b)는 분류용 더미이며 처치 노드는 없음(의도). SPAWN_PATIENT_DUMMY_D_B 스폰만 존재(R12).
 
 ---
 
@@ -276,7 +420,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | E038 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | triage_patient_b_patient_c_dummy_b |
+| **EventIdentifier** | 문자열 | triage_patient_b_patient_c_patient_dummy_d_b |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | D038 |
 
@@ -415,13 +559,13 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V036 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | sig.click_dummy_b (RegistryContains / RuntimeState) |
+| **Condition** | 문자열 | sig.click_patient_dummy_d_b (RegistryContains / RuntimeState) |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
 | **WaitForCondition** | bool | true |
 | **NextIdentifier** | 문자열 | E040 |
 
-- [ ] f: `click_dummy_b`는 §5.3상 선행 메커닉 필요(신체부위/장비 클릭). 더미 B 분류용 게이트.
+- [ ] f: `click_patient_dummy_d_b`는 §5.3상 선행 메커닉 필요(신체부위/장비 클릭). patient_dummy_d_b 분류용 게이트.
 
 ---
 
@@ -431,7 +575,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | E040 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | show_dummy_b_ui |
+| **EventIdentifier** | 문자열 | show_patient_dummy_d_b_ui |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C037 |
 
@@ -3666,7 +3810,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 
 ## 후속 확인 체크리스트 (요약)
 
-- [x] R1: 이벤트/시그널/아이템 식별자를 JSON 정본 snake_case로 통일(`triage_patient_b_patient_c_dummy_b`, `show_patient_b_ui`, `move_patient_b`, `move_patients_to_ct`, `b_c_d_to_triage`, `pupil_reflex_patient_c` 등). Validator 조건을 `sig.*` RuntimeState registryIdentifier로 표기. 아이템 정합(`click_gloves`/`click_intravenous_set`/`click_normal_saline_1000ml`) 반영.
+- [x] R1: 이벤트/시그널/아이템 식별자를 JSON 정본 snake_case로 통일(`triage_patient_b_patient_c_patient_dummy_d_b`, `show_patient_b_ui`, `move_patient_b`, `move_patients_to_ct`, `b_c_d_to_triage`, `pupil_reflex_patient_c` 등). Validator 조건을 `sig.*` RuntimeState registryIdentifier로 표기. 아이템 정합(`click_gloves`/`click_intravenous_set`/`click_normal_saline_1000ml`) 반영.
 - [x] R2: MoveNextBehavior `Immediate`→`Immediately` (E046/E047/E053/E054).
 - [x] R3: 플레이어 대면 System 대사 화자를 `시스템`으로 정규화.
 - [x] R4: 주석을 checklist(`- [ ]`/`- [x]`) 문법으로 통일.
@@ -3677,5 +3821,5 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 - [x] R9: 종료 노드 D063 → N092 정정.
 - [x] R10: 역할·태그 정리(예비) 섹션 추가, 불일치 항목 checklist 명시.
 - [x] R11: Validator 게이트별 배선 상태 주석(자동 계측 완료 / 선행 구현 필요 / 에디터 Identifier 정합 필요).
-- [x] R12: 더미 B(dummy_b) 분류용 더미, 처치 노드 없음 명시.
-- [ ] JSON/씬 후속 필요: `dummy_b` preset 등록, 미배선 gameplay producer, 트리아지 per-entity zone 배선, Bootstrap 연출 참조, C 좌/우 임상·시각물 정합, Production Requirements 검증.
+- [x] R12: patient_dummy_d_b(patient_dummy_d_b) 분류용 더미, 처치 노드 없음 명시.
+- [ ] JSON/씬 후속 필요: `patient_dummy_d_b` preset 등록, 미배선 gameplay producer, 트리아지 per-entity zone 배선, Bootstrap 연출 참조, C 좌/우 임상·시각물 정합, Production Requirements 검증.

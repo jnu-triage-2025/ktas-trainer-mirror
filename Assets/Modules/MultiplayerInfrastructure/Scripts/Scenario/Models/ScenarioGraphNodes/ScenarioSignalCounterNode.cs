@@ -13,7 +13,7 @@ namespace MultiplayerInfrastructure.Scenario
   /// </para>
   /// <list type="bullet">
   /// <item>트리아지 구역 도착 3명: prefix <c>enter_triage_zone_</c> 로
-  ///   <c>enter_triage_zone_patient_b</c> / <c>_patient_c</c> / <c>_dummy_b</c> 3개를 세어 threshold=3.</item>
+  ///   <c>enter_triage_zone_patient_b</c> / <c>_patient_c</c> / <c>_patient_dummy_d_b</c> 3개를 세어 threshold=3.</item>
   /// <item>환자 A 18G 2개: prefix <c>insert_iv_patient_a_</c> 로
   ///   <c>insert_iv_patient_a_left</c> / <c>_right</c> 2개를 세어 threshold=2.</item>
   /// </list>

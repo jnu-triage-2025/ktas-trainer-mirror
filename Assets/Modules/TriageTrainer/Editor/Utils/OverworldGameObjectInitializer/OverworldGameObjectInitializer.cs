@@ -24,12 +24,12 @@ namespace TriageTrainer.Editor.Utils
     // objects: runtime patient/preset spawns resolve their destinations by ID.
     public const string PatientBSpawnWaypointIdentifier = "patient_b:spawn";
     public const string PatientCSpawnWaypointIdentifier = "patient_c:spawn";
-    public const string DummyBSpawnWaypointIdentifier = "dummy_b:spawn";
+    public const string PatientDummyDBSpawnWaypointIdentifier = "patient_dummy_d_b:spawn";
     public const string CtPatientBWaypointIdentifier = "ct:patient_b";
     public const string CtPatientCWaypointIdentifier = "ct:patient_c";
     public static readonly Vector3 DefaultPatientBSpawnWaypoint = new(-1f, -1f, -1f);
     public static readonly Vector3 DefaultPatientCSpawnWaypoint = new(-1f, -1f, -1f);
-    public static readonly Vector3 DefaultDummyBSpawnWaypoint = new(-1f, -1f, -1f);
+    public static readonly Vector3 DefaultPatientDummyDBSpawnWaypoint = new(-1f, -1f, -1f);
     public static readonly Vector3 DefaultCtPatientBWaypoint = new(-1f, -1f, -1f);
     public static readonly Vector3 DefaultCtPatientCWaypoint = new(-1f, -1f, -1f);
 
@@ -44,7 +44,7 @@ namespace TriageTrainer.Editor.Utils
         DefaultCommonSpawnPoint,
         PatientBSpawnWaypointIdentifier, DefaultPatientBSpawnWaypoint,
         PatientCSpawnWaypointIdentifier, DefaultPatientCSpawnWaypoint,
-        DummyBSpawnWaypointIdentifier, DefaultDummyBSpawnWaypoint,
+        PatientDummyDBSpawnWaypointIdentifier, DefaultPatientDummyDBSpawnWaypoint,
         CtPatientBWaypointIdentifier, DefaultCtPatientBWaypoint,
         CtPatientCWaypointIdentifier, DefaultCtPatientCWaypoint
       );
@@ -59,7 +59,7 @@ namespace TriageTrainer.Editor.Utils
         Vector3 commonSpawnPoint,
         string patientBSpawnWaypointIdentifier, Vector3 patientBSpawnWaypoint,
         string patientCSpawnWaypointIdentifier, Vector3 patientCSpawnWaypoint,
-        string dummyBSpawnWaypointIdentifier, Vector3 dummyBSpawnWaypoint,
+        string patientDummyDBSpawnWaypointIdentifier, Vector3 patientDummyDBSpawnWaypoint,
         string ctPatientBWaypointIdentifier, Vector3 ctPatientBWaypoint,
         string ctPatientCWaypointIdentifier, Vector3 ctPatientCWaypoint)
     {
@@ -69,7 +69,7 @@ namespace TriageTrainer.Editor.Utils
       CreateWaypoint(generatedRoot.transform, treatmentIdentifier, treatmentRoomEnterance);
       CreateWaypoint(generatedRoot.transform, patientBSpawnWaypointIdentifier, patientBSpawnWaypoint);
       CreateWaypoint(generatedRoot.transform, patientCSpawnWaypointIdentifier, patientCSpawnWaypoint);
-      CreateWaypoint(generatedRoot.transform, dummyBSpawnWaypointIdentifier, dummyBSpawnWaypoint);
+      CreateWaypoint(generatedRoot.transform, patientDummyDBSpawnWaypointIdentifier, patientDummyDBSpawnWaypoint);
       CreateWaypoint(generatedRoot.transform, ctPatientBWaypointIdentifier, ctPatientBWaypoint);
       CreateWaypoint(generatedRoot.transform, ctPatientCWaypointIdentifier, ctPatientCWaypoint);
       CreateSpawnPoint(generatedRoot.transform, commonSpawnPointIdentifier, commonSpawnPoint);

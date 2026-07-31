@@ -53,8 +53,8 @@ flags: ["refactor-required"]
 | 구분 | 식별자 | 비고 |
 |---|---|---|
 | 환자 | `patientA`, `patientB`, `patientC` | 본 처치 대상 |
-| 더미 환자 | `dummyA`, `dummyB` | 분류용 더미 |
-| 침대(분류) | `patientABed`, `dummyABed` | 초기 이송용 |
+| 더미 환자 | `patientDummyDA`, `patientDummyDB` | 분류용 더미 |
+| 침대(분류) | `patientABed`, `patientDummyDABed` | 초기 이송용 |
 | 침대(처치) | `patientATreatmentBed`, `patientBTreatmentBed`, `patientCTreatmentBed` | 처치실 베드 |
 | 모니터 | `patientA_monitor`, `patientB_monitor`, `patientC_monitor` | 활력징후 모니터 |
 | 간호사(NPC) | `NurseA`, `NurseB`, `NurseC`, `NurseD` | 이동/연출 대상 |

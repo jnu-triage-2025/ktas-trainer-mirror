@@ -6,9 +6,9 @@ namespace TriageTrainer.Scenario
   {
     private void RegisterIntroAndPatientAEvents()
     {
-      RegisterEvent_TriagePatientAAndDummyA();
+      RegisterEvent_TriagePatientAAndPatientDummyDA();
       RegisterEvent_ShowPatientAUi();
-      RegisterEvent_ShowDummyAUi();
+      RegisterEvent_ShowPatientDummyDAUi();
       RegisterEvent_BcdToTriage();
       RegisterEvent_MovePatientAToTreatmentRoom();
       RegisterEvent_ActivateVitalMonitorUiPatientA();

@@ -6,7 +6,7 @@
     "intro_print": {
       "identifier": "intro_print",
       "nodeType": "ChatPrint",
-      "message": "[트리아지 구역 도착 디버그] 씬의 ScenarioTriggerZone 에 Per-Entity Signal Template 'enter_triage_zone_{id}' 를 설정하세요. 환자 3명(patient_b/patient_c/dummy_b)이 구역에 진입하면 all_arrived 가 발생합니다. 수동 테스트: /scenario signal enter_triage_zone_patient_b (그리고 _patient_c, _dummy_b)",
+      "message": "[트리아지 구역 도착 디버그] 씬의 ScenarioTriggerZone 에 Per-Entity Signal Template 'enter_triage_zone_{id}' 를 설정하세요. 환자 3명(patient_b/patient_c/patient_dummy_d_b)이 구역에 진입하면 all_arrived 가 발생합니다. 수동 테스트: /scenario signal enter_triage_zone_patient_b (그리고 _patient_c, _patient_dummy_d_b)",
       "targets": "UnityConsole, InGameChat",
       "broadcast": true,
       "nextIdentifier": "count_arrivals"

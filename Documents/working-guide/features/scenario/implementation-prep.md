@@ -20,12 +20,12 @@ updated: 2026-04-14
 - _patientCVitalMonitorEntityIdentifier = patientC_monitor
 
 별칭 기반 휴리스틱 조회(키 불확실 환경 대비):
-- _patientAAliases / _dummyAAliases
-- _patientABedAliases / _dummyABedAliases
+- _patientAAliases / _patientDummyDAAliases
+- _patientABedAliases / _patientDummyDABedAliases
 - _nurseBAliases / _nurseCAliases / _nurseDAliases
 - _nurseAAliases / _nurseBAliases / _nurseCAliases / _nurseDAliases
 - _patientATreatmentBedAliases / _patientAVitalMonitorAliases
-- _patientBAliases / _patientCAliases / _dummyBAliases
+- _patientBAliases / _patientCAliases / _patientDummyDBAliases
 - _patientBTreatmentBedAliases / _patientCTreatmentBedAliases
 - _patientBVitalMonitorAliases / _patientCVitalMonitorAliases
 - 조회 순서:
@@ -33,7 +33,7 @@ updated: 2026-04-14
 	2) Npc 컴포넌트의 Identifier / GameObject.name 매칭
 	3) GameObject.Find(alias)
 
-triage_patientA_dummyA 이벤트 동작(현재 MVP+):
+triage_patientA_patientDummyDA 이벤트 동작(현재 MVP+):
 - _autoAttachPatientsToBeds = true 이면 환자(GameObject의 PatientController)를 침대(GameObject의 MovingPatientBedController)에 TryReposeTarget으로 연결 시도
 - _preferMovingBedsForSpawn = true 이고 침대 오브젝트가 있으면 환자 대신 침대를 스폰 포인트로 이동
 - 침대 참조가 없거나 연결 실패하면 기존 환자/더미 직접 이동 경로로 자동 fallback
@@ -74,10 +74,10 @@ patient_a_critical P1 이벤트 동작(현재 MVP):
 	- 모니터/패널이 비활성이면 자동 활성화 후 적용
 
 patient_b_c_ct intro 이벤트 동작(현재 MVP):
-- triage_patientB_patientC_dummyB:
-	- patientB/patientC/dummyB 오브젝트 활성화 후 지정 스폰 포인트로 이동
+- triage_patientB_patientC_patientDummyDB:
+	- patientB/patientC/patientDummyDB 오브젝트 활성화 후 지정 스폰 포인트로 이동
 	- _patientBcdSpawnMoveDurationSeconds=0이면 즉시 배치
-- show_patientB_ui / show_dummyB_ui / show_patient_c_ui:
+- show_patientB_ui / show_patientDummyDB_ui / show_patient_c_ui:
 	- 각 대상 UI 패널을 _uiPanelAutoHideSeconds 규칙으로 표시
 - move_patientB / move_patientC:
 	- treatment bed 우선 이동, 없으면 patient 오브젝트 직접 이동 fallback
@@ -108,12 +108,12 @@ patient_b_c_ct intro 이벤트 동작(현재 MVP):
 실측 결과(현재 리포지토리):
 - Primary Registry Preload NPC SO / Entity SO / Interactable Entity SO는 모두 비어 있다.
 - NPCRegistry.asset Entries도 비어 있다.
-- 따라서 코드 정적 분석만으로 patientA/dummyA/NurseB/C/D 키를 확정할 수 없다.
+- 따라서 코드 정적 분석만으로 patientA/patientDummyDA/NurseB/C/D 키를 확정할 수 없다.
 
 키 확정 절차:
 - TriageScenarioEventBootstrap의 _logRegistrySnapshotOnEnable = true 유지
 - 플레이모드 진입 후 Console의 "Registry snapshot" 로그에서 실제 key를 확인
-- 확인된 key를 _patientAEntityIdentifier / _dummyAEntityIdentifier / _nurseBEntityIdentifier ... 에 반영
+- 확인된 key를 _patientAEntityIdentifier / _patientDummyDAEntityIdentifier / _nurseBEntityIdentifier ... 에 반영
 - 미해결 대상은 자동으로 "Unresolved targets after auto-resolve" 경고 로그가 출력된다.
 - 컴포넌트 우클릭 ContextMenu의 "Validate Event Wiring" 실행 시, 핵심 참조 누락 필드를 즉시 보고한다.
 - 컴포넌트 우클릭 ContextMenu의 "Run Core Smoke Test" 실행 시 핵심 이벤트를 순차 호출해 기본 흐름을 빠르게 검증한다.

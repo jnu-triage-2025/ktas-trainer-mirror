@@ -24,19 +24,19 @@
     "SPAWN_C": {
       "identifier": "SPAWN_C",
       "nodeType": "EntityPresetSpawn",
-      "nextIdentifier": "SPAWN_DUMMY_B",
+      "nextIdentifier": "SPAWN_PATIENT_DUMMY_D_B",
       "presetIdentifier": "patient_c",
       "spawnedEntityIdentifier": "patient_c",
       "positionX": 0,
       "positionY": 0,
       "positionZ": 0
     },
-    "SPAWN_DUMMY_B": {
-      "identifier": "SPAWN_DUMMY_B",
+    "SPAWN_PATIENT_DUMMY_D_B": {
+      "identifier": "SPAWN_PATIENT_DUMMY_D_B",
       "nodeType": "EntityPresetSpawn",
       "nextIdentifier": "PRESET_B",
-      "presetIdentifier": "dummy_b",
-      "spawnedEntityIdentifier": "dummy_b",
+      "presetIdentifier": "patient_dummy_d_b",
+      "spawnedEntityIdentifier": "patient_dummy_d_b",
       "positionX": 0,
       "positionY": 0,
       "positionZ": 0
@@ -217,7 +217,7 @@
       "identifier": "E038",
       "nodeType": "InvokeEvent",
       "nextIdentifier": "D038",
-      "eventIdentifier": "triage_patient_b_patient_c_dummy_b",
+      "eventIdentifier": "triage_patient_b_patient_c_patient_dummy_d_b",
       "moveNextBehavior": "WaitUntilDone"
     },
     "D038": {
@@ -339,7 +339,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_dummy_b"
+              "registryIdentifier": "sig.click_patient_dummy_d_b"
             }
           ]
         }
@@ -352,7 +352,7 @@
       "identifier": "E040",
       "nodeType": "InvokeEvent",
       "nextIdentifier": "C037",
-      "eventIdentifier": "show_dummy_b_ui",
+      "eventIdentifier": "show_patient_dummy_d_b_ui",
       "moveNextBehavior": "WaitUntilDone"
     },
     "C037": {
@@ -554,7 +554,7 @@
     "COUNT_TRIAGE_ARRIVALS": {
       "identifier": "COUNT_TRIAGE_ARRIVALS",
       "nodeType": "SignalCounter",
-      "counterIdentifier": "triage_arrivals_patient_b_c_dummy_b",
+      "counterIdentifier": "triage_arrivals_patient_b_c_patient_dummy_d_b",
       "operation": "Register",
       "sourceSignalPrefix": "enter_triage_zone_",
       "threshold": 3,

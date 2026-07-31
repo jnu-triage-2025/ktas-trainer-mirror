@@ -17,12 +17,12 @@ namespace TriageTrainer.Editor.Utils
     private Vector3 commonSpawnPoint = OverworldGameObjectInitializer.DefaultCommonSpawnPoint;
     private Vector3 patientBSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientBSpawnWaypoint;
     private Vector3 patientCSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientCSpawnWaypoint;
-    private Vector3 dummyBSpawnWaypoint = OverworldGameObjectInitializer.DefaultDummyBSpawnWaypoint;
+    private Vector3 patientDummyDBSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientDummyDBSpawnWaypoint;
     private Vector3 ctPatientBWaypoint = OverworldGameObjectInitializer.DefaultCtPatientBWaypoint;
     private Vector3 ctPatientCWaypoint = OverworldGameObjectInitializer.DefaultCtPatientCWaypoint;
     private string patientBSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientBSpawnWaypointIdentifier;
     private string patientCSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientCSpawnWaypointIdentifier;
-    private string dummyBSpawnWaypointIdentifier = OverworldGameObjectInitializer.DummyBSpawnWaypointIdentifier;
+    private string patientDummyDBSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientDummyDBSpawnWaypointIdentifier;
     private string ctPatientBWaypointIdentifier = OverworldGameObjectInitializer.CtPatientBWaypointIdentifier;
     private string ctPatientCWaypointIdentifier = OverworldGameObjectInitializer.CtPatientCWaypointIdentifier;
     private Vector2 scrollPosition;
@@ -68,7 +68,7 @@ namespace TriageTrainer.Editor.Utils
       DrawWaypointFields("Treatment Room Entrance", ref treatmentIdentifier, ref treatmentRoomEnterance);
       DrawWaypointFields("Patient B Spawn", ref patientBSpawnWaypointIdentifier, ref patientBSpawnWaypoint);
       DrawWaypointFields("Patient C Spawn", ref patientCSpawnWaypointIdentifier, ref patientCSpawnWaypoint);
-      DrawWaypointFields("Dummy B Spawn", ref dummyBSpawnWaypointIdentifier, ref dummyBSpawnWaypoint);
+      DrawWaypointFields("Patient Dummy D B Spawn", ref patientDummyDBSpawnWaypointIdentifier, ref patientDummyDBSpawnWaypoint);
       DrawWaypointFields("CT Patient B", ref ctPatientBWaypointIdentifier, ref ctPatientBWaypoint);
       DrawWaypointFields("CT Patient C", ref ctPatientCWaypointIdentifier, ref ctPatientCWaypoint);
 
@@ -111,7 +111,7 @@ namespace TriageTrainer.Editor.Utils
             commonSpawnPoint,
             patientBSpawnWaypointIdentifier, patientBSpawnWaypoint,
             patientCSpawnWaypointIdentifier, patientCSpawnWaypoint,
-            dummyBSpawnWaypointIdentifier, dummyBSpawnWaypoint,
+            patientDummyDBSpawnWaypointIdentifier, patientDummyDBSpawnWaypoint,
             ctPatientBWaypointIdentifier, ctPatientBWaypoint,
             ctPatientCWaypointIdentifier, ctPatientCWaypoint
           );
@@ -153,12 +153,12 @@ namespace TriageTrainer.Editor.Utils
       commonSpawnPoint = OverworldGameObjectInitializer.DefaultCommonSpawnPoint;
       patientBSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientBSpawnWaypoint;
       patientCSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientCSpawnWaypoint;
-      dummyBSpawnWaypoint = OverworldGameObjectInitializer.DefaultDummyBSpawnWaypoint;
+      patientDummyDBSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientDummyDBSpawnWaypoint;
       ctPatientBWaypoint = OverworldGameObjectInitializer.DefaultCtPatientBWaypoint;
       ctPatientCWaypoint = OverworldGameObjectInitializer.DefaultCtPatientCWaypoint;
       patientBSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientBSpawnWaypointIdentifier;
       patientCSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientCSpawnWaypointIdentifier;
-      dummyBSpawnWaypointIdentifier = OverworldGameObjectInitializer.DummyBSpawnWaypointIdentifier;
+      patientDummyDBSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientDummyDBSpawnWaypointIdentifier;
       ctPatientBWaypointIdentifier = OverworldGameObjectInitializer.CtPatientBWaypointIdentifier;
       ctPatientCWaypointIdentifier = OverworldGameObjectInitializer.CtPatientCWaypointIdentifier;
       staticEntityLayouts.Clear();

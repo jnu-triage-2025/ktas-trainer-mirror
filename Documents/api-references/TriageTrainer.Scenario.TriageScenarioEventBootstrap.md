@@ -52,7 +52,7 @@ ContextMenu:
 | 섹션 | 목적 |
 |---|---|
 | Scenario Graph Registration | 런타임 그래프 식별자/에셋 등록 |
-| triage_patientA_dummyA | 환자/베드/스폰 포인트 연결 |
+| triage_patientA_patientDummyDA | 환자/베드/스폰 포인트 연결 |
 | patient_a_critical (P1 MVP) | 모니터/체크리스트/시각 오브젝트 제어 |
 | patient_b_c_ct intro (MVP) | 환자 B/C 스폰, 모니터, CT 이동 |
 | B_C_D_to_triage | 간호사 이동 연출 |

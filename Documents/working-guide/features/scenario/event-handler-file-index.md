@@ -21,9 +21,9 @@ TriageTrainer 시나리오 이벤트 구현 파일 인덱스입니다.
 
 ## Intro
 
-- triage_patientA_dummyA: Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.triage_patientA_dummyA.cs
+- triage_patientA_patientDummyDA: Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.triage_patientA_patientDummyDA.cs
 - show_patientA_ui: Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.show_patientA_ui.cs
-- show_dummyA_ui: Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.show_dummyA_ui.cs
+- show_patientDummyDA_ui: Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.show_patientDummyDA_ui.cs
 - B_C_D_to_triage: Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.B_C_D_to_triage.cs
 
 ## Patient A
@@ -61,9 +61,9 @@ TriageTrainer 시나리오 이벤트 구현 파일 인덱스입니다.
 
 ## Patient B/C
 
-- triage_patientB_patientC_dummyB: Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.triage_patientB_patientC_dummyB.cs
+- triage_patientB_patientC_patientDummyDB: Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.triage_patientB_patientC_patientDummyDB.cs
 - show_patientB_ui: Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.show_patientB_ui.cs
-- show_dummyB_ui: Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.show_dummyB_ui.cs
+- show_patientDummyDB_ui: Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.show_patientDummyDB_ui.cs
 - show_patient_c_ui: Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.show_patient_c_ui.cs
 - move_patientB: Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.move_patientB.cs
 - move_patientC: Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.move_patientC.cs

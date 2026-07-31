@@ -213,7 +213,7 @@ updated: 2026-04-14
 |---|---|---|
 | **Identifier** | 문자열 | E001 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | triage_patientA_dummyA |
+| **EventIdentifier** | 문자열 | triage_patientA_patientDummyDA |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | D003_1 |
 
@@ -330,7 +330,7 @@ updated: 2026-04-14
 |---|---|---|
 | **Identifier** | 문자열 | V003 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | Click_dummyA |
+| **Condition** | 문자열 | Click_patientDummyDA |
 | **TargetCount** | 정수 | 1 |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열 |  |
@@ -344,7 +344,7 @@ updated: 2026-04-14
 |---|---|---|
 | **Identifier** | 문자열 | E003 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | show_dummyA_ui |
+| **EventIdentifier** | 문자열 | show_patientDummyDA_ui |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C002 |
 

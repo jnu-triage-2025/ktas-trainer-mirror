@@ -33,12 +33,12 @@ flags: ["refactor-required"]
 
 | EventIdentifier | 설명 | 호출 시점 | 구현 위치 | 상태 |
 |---|---|---|---|---|
-| `triage_patient_a_dummy_a` | 환자 A와 더미 A가 중증도 분류 구역으로 이송되는 연출(각 캐릭터 Stretcher에 누운 상태로 진입) | 시나리오 시작 후 간호사 A 준비 직후 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |
+| `triage_patient_a_patient_dummy_d_a` | 환자 A와 patient_dummy_d_a가 중증도 분류 구역으로 이송되는 연출(각 캐릭터 Stretcher에 누운 상태로 진입) | 시나리오 시작 후 간호사 A 준비 직후 | Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs | implemented |
 | `show_patient_a_ui` | 환자 A 외견/상태 정보 UI 패널 활성화 | 간호사 A가 환자 A 클릭 시 | 〃 | implemented |
-| `show_dummy_a_ui` | 더미 A 외견/상태 정보 UI 패널 활성화 | 간호사 A가 더미 A 클릭 시 | 〃 | implemented |
+| `show_patient_dummy_d_a_ui` | patient_dummy_d_a 외견/상태 정보 UI 패널 활성화 | 간호사 A가 patient_dummy_d_a 클릭 시 | 〃 | implemented |
 | `b_c_d_to_triage` | 간호사 B, C, D가 이송을 돕기 위해 트리아지 구역으로 이동하는 연출 | 간호사 A 분류 종료·이송 요청 대사 후 | 〃 | implemented |
 
-- [ ] 확인: disaster_intro JSON은 현재 `triage_patientA_dummyA` 등 camelCase 잔재가 있는지 재점검하고 snake_case로 정합 필요.
+- [ ] 확인: disaster_intro JSON은 현재 `triage_patientA_patientDummyDA` 등 camelCase 잔재가 있는지 재점검하고 snake_case로 정합 필요.
 
 ---
 
@@ -85,13 +85,13 @@ flags: ["refactor-required"]
 
 ## 3. 환자 B, C 지연 처치 (patient_b_c_ct)
 
-> JSON 정본(snake_case) 기준. 구(舊)레지스트리의 camelCase(`triage_patientB_patientC_dummyB`, `show_patientB_ui`, `move_patientB`, `move_patients_to_CT`, `B_C_D_to_triage` 등)는 폐기한다.
+> JSON 정본(snake_case) 기준. 구(舊)레지스트리의 camelCase(`triage_patientB_patientC_patientDummyDB`, `show_patientB_ui`, `move_patientB`, `move_patients_to_CT`, `B_C_D_to_triage` 등)는 폐기한다.
 
 | EventIdentifier | 설명 | 호출 시점(노드) | 상태 |
 |---|---|---|---|
-| `triage_patient_b_patient_c_dummy_b` | 환자 B, 더미 B, 환자 C가 트리아지 구역으로 이송되는 연출 | E038 | implemented |
+| `triage_patient_b_patient_c_patient_dummy_d_b` | 환자 B, patient_dummy_d_b, 환자 C가 트리아지 구역으로 이송되는 연출 | E038 | implemented |
 | `show_patient_b_ui` | 환자 B 외견/상태 정보 UI 패널 활성화 | E039 | implemented |
-| `show_dummy_b_ui` | 더미 B 외견/상태 정보 UI 패널 활성화 | E040 | implemented |
+| `show_patient_dummy_d_b_ui` | patient_dummy_d_b 외견/상태 정보 UI 패널 활성화 | E040 | implemented |
 | `show_patient_c_ui` | 환자 C 외견/상태 정보 UI 패널 활성화 | E041 | implemented |
 | `b_c_d_to_triage` | 간호사 B, C, D가 트리아지 구역으로 이동하는 연출 | E042 | implemented |
 | `move_patient_b` | 환자 B 스트레쳐를 입원실 구역으로 이동 | E043 | implemented |
@@ -120,8 +120,8 @@ flags: ["refactor-required"]
 
 | 구 식별자 (deprecated) | 신 식별자 (정본) |
 |---|---|
-| `triage_patientA_dummyA` | `triage_patient_a_dummy_a` |
-| `show_patientA_ui` / `show_dummyA_ui` | `show_patient_a_ui` / `show_dummy_a_ui` |
+| `triage_patientA_patientDummyDA` | `triage_patient_a_patient_dummy_d_a` |
+| `show_patientA_ui` / `show_patientDummyDA_ui` | `show_patient_a_ui` / `show_patient_dummy_d_a_ui` |
 | `move_patientA_to_treatmentroom` | `move_patient_a_to_treatmentroom` |
 | `activate_vital_monitor_ui_patientA` | `activate_vital_monitor_ui_patient_a` |
 | `vitalinfo_1_patientA` | `vitalinfo_1_patient_a` |
@@ -129,8 +129,8 @@ flags: ["refactor-required"]
 | `Apply_ambu_patientA` | `apply_ambu_patient_a` |
 | `ROSC_monitor_ui` | `rosc_monitor_ui` |
 | `playerA_move_to_triage` | `player_a_move_to_triage` |
-| `triage_patientB_patientC_dummyB` | `triage_patient_b_patient_c_dummy_b` |
-| `show_patientB_ui` / `show_dummyB_ui` | `show_patient_b_ui` / `show_dummy_b_ui` |
+| `triage_patientB_patientC_patientDummyDB` | `triage_patient_b_patient_c_patient_dummy_d_b` |
+| `show_patientB_ui` / `show_patientDummyDB_ui` | `show_patient_b_ui` / `show_patient_dummy_d_b_ui` |
 | `B_C_D_to_triage` | `b_c_d_to_triage` |
 | `move_patientB` / `move_patientC` | `move_patient_b` / `move_patient_c` |
 | `activate_vital_monitor_ui_patientB/C` | `activate_vital_monitor_ui_patient_b/c` |

@@ -111,7 +111,7 @@
 ### 4.3 Unity 에디터 설정 검수 (배선 전제 — 미설정 시 hang)
 - [ ] **의료 아이템 프리팹 Identifier ↔ `sig.click_<id>` 1:1 정합**: gloves, endotracheal_tube, plasma_solution_1000ml, electrode, penlight, 20g 등. (flags.json은 2026-06-25 기준 일치라 기록 → 현 시점 재확인)
 - [ ] **연결 지점(`IntravenousLineConnectionPoint`) Identifier**를 조건명으로 설정: connect_cannula_and_ns1(_b/_c), connect_wall_component_1/2, connect_wall_component_and_yankauer, connect_patient_and_monitor_b/c, connect_nasal_and_o2 등.
-- [ ] **환자/더미 `PatientController` Identifier**: `patient_a` / `patient_b` / `patient_c` / `dummy_b` 로 지정(click_/select_/grab_ 게이트 전제).
+- [ ] **환자/더미 `PatientController` Identifier**: `patient_a` / `patient_b` / `patient_c` / `patient_dummy_d_b` 로 지정(click_/select_/grab_ 게이트 전제).
 - [ ] **웨이포인트 존재 확인**: `wp_treatment_room`, `wp_treatment_area`, `wp_ct_room`.
 - [ ] **사운드 클립 배치**: `S001`의 `tape_sound` 등 `Resources/Sound/<id>` 존재(없으면 스킵되지만 연출 누락).
 

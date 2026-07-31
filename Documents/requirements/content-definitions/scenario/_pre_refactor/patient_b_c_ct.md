@@ -30,7 +30,7 @@ updated: 2026-04-14
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | E038 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | triage_patientB_patientC_dummyB |
+| **EventIdentifier** | 문자열 | triage_patientB_patientC_patientDummyDB |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | D038 |
 
@@ -160,7 +160,7 @@ updated: 2026-04-14
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | V036 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
-| **Condition** | 문자열 | Click_dummyB |
+| **Condition** | 문자열 | Click_patientDummyDB |
 | **TargetCount** | 정수 | 1 |
 | **OnFailure** | ScenarioValidatorOnFailure | |
 | **FailureNextIdentifier** | 문자열 | |
@@ -174,7 +174,7 @@ updated: 2026-04-14
 | :--- | :--- | :--- |
 | **Identifier** | 문자열 | E040 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
-| **EventIdentifier** | 문자열 | show_dummyB_ui |
+| **EventIdentifier** | 문자열 | show_patientDummyDB_ui |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | WaitUntilDone |
 | **NextIdentifier** | 문자열 | C037 |
 
@@ -3224,7 +3224,7 @@ updated: 2026-04-14
 
  시나리오 B 환자에 대한 정보를 UI창으로 띄우고, "- 현재 의식 상태: 대화 가능하나 반응이 느려 약간의 기면(drowsy) 상태로 보임, - [왼쪽 팔과 다리의 근력이 비교적 약함], - 빈맥, - 빈호흡, - 상완 부위 출혈 지속 중, - 머리에 타박상 및 약간의 출혈 보임, - C/C: 두통"으로 출력한다. 
 
- 더미 B 환자에 대한 정보를 UI창으로 띄우고, "- 현재 의식 상태: 원활한 대화 가능함, - 활력징후 정상, - 사지의 약간의 타박상, - C/C: 어깨 통증"으로 출력한다. 
+ patient_dummy_d_b 환자에 대한 정보를 UI창으로 띄우고, "- 현재 의식 상태: 원활한 대화 가능함, - 활력징후 정상, - 사지의 약간의 타박상, - C/C: 어깨 통증"으로 출력한다. 
  
  시나리오 C 환자에 대한 정보를 UI창으로 띄우고, "- 현재 의식 상태: 대화 가능하나 반응이 느려 약간의 기면(drowsy) 상태로 보임, - 한쪽 팔 근력이 비교적 약함, - 빈맥, - 빈호흡, - 무릎 하단 부위 출혈 지속 중, - 머리에 타박상 및 약간의 출혈 보임, - C/C: 어지러움"으로 출력한다. 
 

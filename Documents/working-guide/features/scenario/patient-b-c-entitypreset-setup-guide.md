@@ -13,7 +13,7 @@ flags: []
 `patient_b_c_ct` 시나리오의 `patient_b` / `patient_c` 를 **환자 A와 동일하게 침대에 누운 결합 상태로 스폰**하기 위한 절차.
 
 - 매핑(확정): `patient_b` → **PatientTypeBMale**, `patient_c` → **PatientTypeBFemale**.
-- `dummy_b` 는 별도 콘텐츠지만 `patient_b_c_ct`의 `SPAWN_DUMMY_B`가 직접 요구하므로
+- `patient_dummy_d_b` 는 별도 콘텐츠지만 `patient_b_c_ct`의 `SPAWN_PATIENT_DUMMY_D_B`가 직접 요구하므로
   닫힌 플레이 승인 범위에 포함한다(§5 참고 및 [닫힌 플레이 감사](patient-b-c-closed-scenario-audit.md)).
 - 결합 방식은 환자 A와 동일: 환자 프리셋이 침대 프리셋을 `unwrapOnSpawn + linkChildToParent` 로 함께 스폰.
   자세한 원리는 [`patient-bed-combined-preset-guide.md`](./patient-bed-combined-preset-guide.md).
@@ -85,10 +85,10 @@ flags: []
    환자가 침대에 누운 상태(누운 애니메이션/자세)로 나오는지 확인.
 4. 호스트뿐 아니라 **원격 클라이언트**에서도 동일하게 결합 상태로 보이는지 확인(식별자 SyncVar 복제 동작 검증).
 
-## 5단계 — dummy_b (시나리오 필수)
+## 5단계 — patient_dummy_d_b (시나리오 필수)
 
-`SPAWN_DUMMY_B` 노드는 `dummy_b` 프리셋을 스폰한다. 더미 B 는 Male/Female 환자와 다른 별도 오브젝트이므로,
-용도에 맞는 프리팹을 정해 별도 EntityPreset(`dummy_b`)으로 등록해야 한다. 현재 저장소
+`SPAWN_PATIENT_DUMMY_D_B` 노드는 `patient_dummy_d_b` 프리셋을 스폰한다. patient_dummy_d_b 는 Male/Female 환자와 다른 별도 오브젝트이므로,
+용도에 맞는 프리팹을 정해 별도 EntityPreset(`patient_dummy_d_b`)으로 등록해야 한다. 현재 저장소
 감사에서는 해당 preset과 전용 프리팹을 확인하지 못했으므로 닫힌 플레이의 미완료 항목이다.
 침대 결합이 필요하면 `patient_b`/`patient_c` 와 동일한 패턴(`unwrapOnSpawn + linkChildToParent`)을 적용한다.
 
@@ -100,4 +100,4 @@ flags: []
 - [x] SO 에 `patient_b`/`bed_b`/`patient_c`/`bed_c` 등록 + 각 환자에 unwrap+link 침대 참조.
 - [ ] "Validate Presets (Editor)" 경고 없음.
 - [ ] 디버거로 결합 스폰 확인(호스트 + 원격 클라).
-- [ ] `dummy_b` 프리팹/EntityPreset 등록 및 분류 클릭 producer 검증.
+- [ ] `patient_dummy_d_b` 프리팹/EntityPreset 등록 및 분류 클릭 producer 검증.
