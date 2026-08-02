@@ -21,6 +21,9 @@ Overworld 초기 세팅에서 반복적으로 필요한 웨이포인트/스폰 �
 - `Set` 실행 시 생성 루트(`GeneratedByOverworldGameObjectInitializerEditor`) 아래에 다음 오브젝트를 재생성
   - `Waypoint_{buildingIdentifier}`
   - `Waypoint_{treatmentIdentifier}`
+  - 환자 B/C/더미 D 스폰 웨이포인트
+  - 시나리오 B 트리아지 도착 웨이포인트와 `ScenarioTriggerZone`
+  - 환자 B/C CT 웨이포인트
   - `SpawnPoint_{commonSpawnPointIdentifier}`
 - `Delete` 실행 시 생성 마커가 붙은 루트/하위 오브젝트를 일괄 삭제
 
@@ -39,6 +42,12 @@ Overworld 초기 세팅에서 반복적으로 필요한 웨이포인트/스폰 �
 - 공용 스폰 포인트
   - identifier: `spawnpoint-commons`
   - position: `(-73.0, 1.0, -7.5)`
+- 시나리오 B 공간 앵커
+  - 환자 B: `scen_b:patient_spawnpoint_b`
+  - 환자 C: `scen_b:patient_spawnpoint_c`
+  - 더미 D: `scen_b:patient_spawnpoint_dummy_d_a`
+  - 간호사 도착: `scen_b:quest_arrival_triage_area`
+  - 기본 position: 모두 `(-1.0, -1.0, -1.0)`이며 씬 담당자가 실제 좌표로 바꿔야 함
 
 ---
 
@@ -47,21 +56,19 @@ Overworld 초기 세팅에서 반복적으로 필요한 웨이포인트/스폰 �
 ### `Set(...)`
 
 ```csharp
-public static void Set(
-  string buildingIdentifier,
-  Vector3 buildingEnterance,
-  string treatmentIdentifier,
-  Vector3 treatmentRoomEnterance,
-  string commonSpawnPointIdentifier,
-  Vector3 commonSpawnPoint)
+public static void Set(/* 기본 입구/스폰, 시나리오 B와 CT 웨이포인트, 정적 엔티티 레이아웃 */)
 ```
 
 동작 순서:
 
 1. 생성 루트를 찾거나 생성 (`GetOrCreateGeneratedRoot`)
 2. 루트 하위 기존 생성물 제거 (`DeleteChildren`)
-3. 웨이포인트 2개 생성 (`CreateWaypoint`)
-4. 스폰 포인트 1개 생성 (`CreateSpawnPoint`)
+3. 기본·시나리오 B·CT 웨이포인트 생성 (`CreateWaypoint`)
+4. 트리아지 도착 위치에 8×3×8 크기의 신호 존 생성 (`CreateScenarioSignalZone`)
+5. 스폰 포인트와 선택적 정적 엔티티 레이아웃 생성
+
+도착 존은 일반 진입 신호 `quest_arrival_triage_area`와 플레이어별
+`quest_arrival_triage_area_{id}`를 진입마다 발생시킨다. 시나리오 한 실행 안에서는 sticky RuntimeState와 distinct 식별자 집계가 중복 완료를 막고, 다음 실행에서는 RuntimeState가 초기화되므로 같은 플레이어도 다시 도착으로 계측된다.
 
 중복 루트가 이미 존재하면 첫 번째만 남기고 나머지는 제거합니다.
 
@@ -125,6 +132,9 @@ field?.SetValue(waypointAnchor, identifier);
 
 - Building/Treatment 식별자 + 좌표
 - Common SpawnPoint 식별자 + 좌표
+- Scenario B 환자 B/C/더미 D 스폰 및 간호사 도착 식별자 + 좌표
+- CT 환자 B/C 식별자 + 좌표
+- 정적 엔티티 레이아웃 목록
 
 버튼:
 
@@ -142,5 +152,7 @@ field?.SetValue(waypointAnchor, identifier);
 
 - identifier는 씬 전역에서 유일하게 유지
 - `Set` 후 Hierarchy에 생성 루트가 1개인지 확인
+- Scenario B 기본 좌표 `(-1, -1, -1)`를 실제 트리아지 공간 좌표로 교체
+- 도착 존에서 네 플레이어의 distinct 신호가 집계되고, 시나리오 재실행 후 같은 플레이어의 진입도 다시 집계되는지 확인
 - 플레이 시작 후 Registry에서 `RegistryType.SpawnPoint` 조회 검증
 - `WaypointAnchor` 내부 식별자 필드명 변경 시 Reflection 코드 동시 수정

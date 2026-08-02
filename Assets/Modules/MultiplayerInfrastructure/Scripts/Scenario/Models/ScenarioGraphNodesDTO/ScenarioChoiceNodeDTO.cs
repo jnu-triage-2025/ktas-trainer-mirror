@@ -17,6 +17,12 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("options")]
     public List<ScenarioChoiceOptionDTO> Options { get; set; }
 
+    [JsonPropertyName("assessmentIdentifier")]
+    public string AssessmentIdentifier { get; set; }
+
+    [JsonPropertyName("correctOptionIndex")]
+    public int? CorrectOptionIndex { get; set; }
+
     [JsonPropertyName("playTTS")]
     public bool? PlayTTS { get; set; }
 

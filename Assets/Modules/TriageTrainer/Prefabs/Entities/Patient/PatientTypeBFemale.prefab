@@ -214,7 +214,7 @@ MonoBehaviour:
   - _identifier: monitor_select
     _enabled: 1
   _intravenousLineCannulaConfig:
-    _supported: 0
+    _supported: 1
     _displayText: 
     _displayIcon: {fileID: 0}
   _intravenousLineCannulaInteractable: 1

@@ -64,8 +64,8 @@ namespace TriageTrainer.Entity
     [SerializeField] private bool _intravenousLineCannulaInteractable = true;
 
     /// <summary>
-    /// 정맥라인 캐뉼라 삽입 좌/우 팔 배정. 별도 팔별 상호작용 지점이 없으므로, 삽입 순서로 좌→우를
-    /// 결정론적으로 배정한다(시나리오 A의 좌측 우선 흐름과 일치). 좌·우가 모두 채워지면 더 이상 삽입하지 않는다.
+    /// 정맥라인 캐뉼라 삽입 좌/우 팔 상태. 처치 표시 프리셋이 한쪽 팔만 지원하면 그 팔을 우선하고,
+    /// 양쪽 모두 지원하면 좌측부터 결정론적으로 배정한다. 좌·우가 모두 채워지면 더 이상 삽입하지 않는다.
     /// </summary>
     private bool _cannulaLeftArmInserted;
     private bool _cannulaRightArmInserted;
@@ -177,32 +177,38 @@ namespace TriageTrainer.Entity
       if (!CanInteractIntravenousLineCannula || !IsHandlingIntravenousLineCannula(player))
         return;
 
-      // ── 좌/우 팔 배정 ── 별도 팔별 지점이 없으므로 좌측 우선으로 채운다.
+      // ── 게이지 판정(18G / 20G) ── 손에 든 아이템 식별자로 구분한다.
+      string heldIdentifier = player.HandlingItem?.CurrentIdentifier;
+      bool is18G = string.Equals(heldIdentifier, TriageTrainer.ItemDefinitions.Cannula18g.Identifier, StringComparison.Ordinal);
+      var leftDisplay = is18G
+        ? TreatmentDisplay.Syringe18GInsertedIntoLeftArm
+        : TreatmentDisplay.Syringe20GInsertedIntoLeftArm;
+      var rightDisplay = is18G
+        ? TreatmentDisplay.Syringe18GInsertedIntoRightArm
+        : TreatmentDisplay.Syringe20GInsertedIntoRightArm;
+
+      // ── 좌/우 팔 배정 ── 환자 모델이 한쪽 표현만 지원하면 그 팔을 우선한다.
+      bool supportsLeft = IsTreatmentDisplaySupported(leftDisplay);
+      bool supportsRight = IsTreatmentDisplaySupported(rightDisplay);
       bool isLeft;
-      if (!_cannulaLeftArmInserted)
+      if (supportsRight && !supportsLeft && !_cannulaRightArmInserted)
+        isLeft = false;
+      else if (supportsLeft && !supportsRight && !_cannulaLeftArmInserted)
+        isLeft = true;
+      else if (!_cannulaLeftArmInserted)
         isLeft = true;
       else if (!_cannulaRightArmInserted)
         isLeft = false;
       else
         return; // 양팔 모두 삽입 완료 → 추가 삽입 없음
 
-      // ── 게이지 판정(18G / 20G) ── 손에 든 아이템 식별자로 구분한다.
-      string heldIdentifier = player.HandlingItem?.CurrentIdentifier;
       // 캐뉼라는 팔 하나당 하나씩 소비한다. 첫 삽입 뒤에는 플레이어가 두 번째
       // 캐뉼라를 다시 획득해야 하므로, 두 팔 처치에 18G 2개를 사전 보유할 필요가 없다.
       if (player.RemoveItemFromInventory(heldIdentifier, 1) != 1)
         return;
 
-      bool is18G = string.Equals(heldIdentifier, TriageTrainer.ItemDefinitions.Cannula18g.Identifier, StringComparison.Ordinal);
-
       // ── 처치 표현(게이지 + 좌/우) ──
-      TreatmentDisplay display = (is18G, isLeft) switch
-      {
-        (true, true) => TreatmentDisplay.Syringe18GInsertedIntoLeftArm,
-        (true, false) => TreatmentDisplay.Syringe18GInsertedIntoRightArm,
-        (false, true) => TreatmentDisplay.Syringe20GInsertedIntoLeftArm,
-        (false, false) => TreatmentDisplay.Syringe20GInsertedIntoRightArm,
-      };
+      TreatmentDisplay display = isLeft ? leftDisplay : rightDisplay;
       ShowTreatmentDisplay(display);
 
       // 배정 상태 기록(다음 삽입은 반대 팔로).

@@ -308,6 +308,26 @@ namespace MultiplayerInfrastructure.UI
     }
 
     /// <summary>
+    /// 표시 전용 역할 브랜치의 현재 노드 UI만 닫고 시나리오 프레젠테이션 연결은 유지한다.
+    /// 다음 TargetRpc 노드가 같은 컨트롤러를 다시 사용할 수 있다.
+    /// </summary>
+    public void DismissPresentationNode()
+    {
+      _isTyping = false;
+      _isWaitingForInput = false;
+      _inputContext = DialogueInputContext.None;
+      _pendingChoiceOptions = null;
+      ClearSelections();
+
+      if (!_interactableHintUI.IsUnityNull())
+        _interactableHintUI.ExitDialogueMode();
+
+      HidePanel();
+      if (UIOverlayStack.IsTop(this))
+        UIOverlayStack.Pop();
+    }
+
+    /// <summary>
     /// 대화 노드 표시
     /// </summary>
     public void DisplayDialogue(string speakerName, string dialogueContent, string portraitIdentifier)

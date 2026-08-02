@@ -7,6 +7,9 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("eventIdentifier")]
     public string EventIdentifier { get; set; }
 
+    [JsonPropertyName("invokeOnRoleClient")]
+    public bool? InvokeOnRoleClient { get; set; }
+
     [JsonPropertyName("moveNextBehavior")]
     public string MoveNextBehavior { get; set; }
   }

@@ -109,6 +109,7 @@ namespace MultiplayerInfrastructure.Scenario
     private Coroutine _dialogueAutoAdvanceRoutine;
     private Coroutine _runtimeRequirementsWaitRoutine;
     private ExecutionMode _executionMode = ExecutionMode.Local;
+    private bool _currentPresentationNodeRoleScoped;
     private readonly List<ScenarioOwnedActingNpc> _scenarioOwnedActingNpcs = new List<ScenarioOwnedActingNpc>();
     private readonly List<ScenarioOwnedWaypoint> _scenarioOwnedWaypoints = new List<ScenarioOwnedWaypoint>();
 
@@ -421,12 +422,15 @@ namespace MultiplayerInfrastructure.Scenario
       ScenarioParallelAssignmentState.ClearGraph(graph.Identifier);
       _currentGraph = graph;
       _currentNode = null;
+      _currentPresentationNodeRoleScoped = false;
       _scenarioOwnerClientId = ownerClientId;
       _state = State.Inactive;
       _activeOptions.Clear();
       _activeQuizNode = null;
       _branchOptionInterceptor = null;
       _branchPromptActive = false;
+      _activeRemoteBranchPromptClients.Clear();
+      _remoteBranchChoiceSelections.Clear();
       ResolveUIControllers();
       ResolveTTSService();
       if (!_uiController.IsUnityNull())
@@ -453,21 +457,18 @@ namespace MultiplayerInfrastructure.Scenario
       switch (node)
       {
         case ScenarioDialogueNode dialogue:
-          // 현재 브랜치 프롬프트의 선택 수명주기는 서버 BranchChainContext와 결합되어 있다.
-          // 전역 프롬프트처럼 현재 노드 하나만으로 검증할 수 없으므로, 역할 브랜치의
-          // Dialogue/Choice는 입력 가능한 UI로 섣불리 표시하지 않는다. Quest/waypoint 등
-          // 비입력 안내는 아래 roleScoped 경로로 안전하게 표시한다.
-          if (roleScoped)
-            break;
           _currentNode = node;
+          _currentPresentationNodeRoleScoped = roleScoped;
           PresentDialogueNode(dialogue);
           break;
         case ScenarioChoiceNode choice:
-          if (roleScoped)
-            break;
           _currentNode = node;
+          _currentPresentationNodeRoleScoped = roleScoped;
           _state = State.ExecutingChoice;
           PresentChoice(choice);
+          break;
+        case ScenarioInvokeEventNode invokeEvent when roleScoped && invokeEvent.InvokeOnRoleClient:
+          StartCoroutine(ExecutePresentationEvent(invokeEvent.EventIdentifier));
           break;
         case ScenarioQuestControlNode questControl:
           PresentQuestControlNode(questControl, roleScoped);
@@ -476,6 +477,29 @@ namespace MultiplayerInfrastructure.Scenario
           PresentQuestWaypointHighlightNode(waypointHighlight);
           break;
       }
+    }
+
+    private IEnumerator ExecutePresentationEvent(string eventIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(eventIdentifier)
+          || !ScenarioEventIdentifierRegistry.TryGetHandler(eventIdentifier, out var handler))
+      {
+        Debug.LogWarning($"[ScenarioController] No presentation handler registered for event '{eventIdentifier}'.");
+        yield break;
+      }
+
+      IEnumerator routine = null;
+      try
+      {
+        routine = handler?.Invoke();
+      }
+      catch (Exception ex)
+      {
+        Debug.LogException(ex);
+      }
+
+      if (routine != null)
+        yield return StartCoroutine(routine);
     }
 
     /// <summary>서버가 종료를 통지한 클라이언트 표시 상태만 정리한다.</summary>
@@ -489,6 +513,7 @@ namespace MultiplayerInfrastructure.Scenario
       CancelDialogueAutoAdvance();
       _currentGraph = null;
       _currentNode = null;
+      _currentPresentationNodeRoleScoped = false;
       _state = State.Inactive;
       _activeOptions.Clear();
       _activeQuizNode = null;
@@ -508,6 +533,9 @@ namespace MultiplayerInfrastructure.Scenario
 
     internal bool TrySelectOptionFromPresentation(int senderClientId, string graphIdentifier, string nodeIdentifier, int optionIndex)
     {
+      if (TryResolveRemoteBranchChoice(senderClientId, graphIdentifier, nodeIdentifier, optionIndex))
+        return true;
+
       if (!CanAcceptPresentationInput(senderClientId, graphIdentifier, nodeIdentifier, State.ExecutingChoice))
         return false;
 
@@ -675,6 +703,8 @@ namespace MultiplayerInfrastructure.Scenario
       // (이전 실행이 EndScenario 를 거치지 않고 덮어써진 경우, 스테일 점유자가 새 시나리오
       //  자신의 대화 노드를 오탐(충돌)하게 만드는 것을 방지한다.)
       _branchPromptActive = false;
+      _activeRemoteBranchPromptClients.Clear();
+      _remoteBranchChoiceSelections.Clear();
       if (!_uiController.IsUnityNull())
         _uiController.ClearDialogueOwner();
 
@@ -812,6 +842,8 @@ namespace MultiplayerInfrastructure.Scenario
       // (StopAllCoroutines 로 강제 종료된 프롬프트 코루틴의 finally 가 실행되지 않을 수 있음)
       _branchOptionInterceptor = null;
       _branchPromptActive = false;
+      _activeRemoteBranchPromptClients.Clear();
+      _remoteBranchChoiceSelections.Clear();
 
       ClearOptions();
       _stateStore.Clear();
@@ -913,7 +945,11 @@ namespace MultiplayerInfrastructure.Scenario
       return true;
     }
 
-    private bool TrySpawnScenarioActingNpc(ScenarioGraph graph, ScenarioActingNpcDefinition actingNpc, out string error)
+    private bool TrySpawnScenarioActingNpc(
+      ScenarioGraph graph,
+      ScenarioActingNpcDefinition actingNpc,
+      out string error,
+      Vector3? positionOverride = null)
     {
       error = string.Empty;
       if (actingNpc == null || string.IsNullOrWhiteSpace(actingNpc.Identifier))
@@ -934,7 +970,8 @@ namespace MultiplayerInfrastructure.Scenario
         return false;
       }
 
-      var position = new Vector3(actingNpc.PositionX, actingNpc.PositionY, actingNpc.PositionZ);
+      var position = positionOverride
+        ?? new Vector3(actingNpc.PositionX, actingNpc.PositionY, actingNpc.PositionZ);
       var rotation = Quaternion.Euler(actingNpc.RotationX, actingNpc.RotationY, actingNpc.RotationZ);
       if (!Registry.Registry.TrySpawnEntityPreset(actingNpc.PresetIdentifier, position, rotation,
             actingNpc.Identifier, out var spawned, out _, out error))
@@ -1064,6 +1101,8 @@ namespace MultiplayerInfrastructure.Scenario
       {
         if (_currentGraph != null && _currentNode != null)
           ScenarioNetworkRelay.RequestChoiceSelection(_currentGraph.Identifier, _currentNode.Identifier, index);
+        if (_currentPresentationNodeRoleScoped && !_uiController.IsUnityNull())
+          _uiController.DismissPresentationNode();
         return;
       }
       if (index < 0 || index >= _activeOptions.Count)
@@ -1090,6 +1129,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       var option = _activeOptions[index];
       OnOptionSelected?.Invoke(option);
+      RecordChoiceAssessment(_currentNode as ScenarioChoiceNode, index);
       try
       {
         GameLogService.WriteScenario(
@@ -1116,6 +1156,48 @@ namespace MultiplayerInfrastructure.Scenario
       {
         EndScenario();
       }
+    }
+
+    #endregion
+
+    #region Scenario text and assessment log
+
+    private string ResolveScenarioText(string value, int? explicitClientId = null)
+    {
+      int? clientId = explicitClientId;
+      if (!clientId.HasValue && InstanceFinder.IsClientStarted)
+      {
+        var local = InstanceFinder.ClientManager?.Connection;
+        if (local != null)
+          clientId = local.ClientId;
+      }
+      if (!clientId.HasValue)
+        clientId = _scenarioOwnerClientId;
+
+      return ScenarioTextResolver.Resolve(value, clientId);
+    }
+
+    private void RecordChoiceAssessment(ScenarioChoiceNode node, int selectedIndex)
+    {
+      if (node == null || string.IsNullOrWhiteSpace(node.AssessmentIdentifier))
+        return;
+
+      string selected = node.Options != null && selectedIndex >= 0 && selectedIndex < node.Options.Count
+        ? node.Options[selectedIndex]?.DisplayText
+        : null;
+      string intended = node.CorrectOptionIndex.HasValue
+          && node.Options != null
+          && node.CorrectOptionIndex.Value >= 0
+          && node.CorrectOptionIndex.Value < node.Options.Count
+        ? node.Options[node.CorrectOptionIndex.Value]?.DisplayText
+        : null;
+      string correct = node.CorrectOptionIndex.HasValue
+        ? (selectedIndex == node.CorrectOptionIndex.Value).ToString()
+        : "unknown";
+
+      GameLogService.WriteScenario(
+        $"Choice assessment: assessment={node.AssessmentIdentifier}, selectedIndex={selectedIndex}, selected='{selected}', intendedIndex={node.CorrectOptionIndex?.ToString() ?? "null"}, intended='{intended}', correct={correct}",
+        _currentGraph?.Identifier);
     }
 
     #endregion
@@ -1538,9 +1620,11 @@ namespace MultiplayerInfrastructure.Scenario
       if (_uiController.IsUnityNull())
         return;
 
-      _uiController.DisplayDialogue(node.SpeakerName, node.DialogueContent, node.PortraitSpriteIdentifier, node.InteractionRequired);
+      string speaker = ResolveScenarioText(node.SpeakerName);
+      string content = ResolveScenarioText(node.DialogueContent);
+      _uiController.DisplayDialogue(speaker, content, node.PortraitSpriteIdentifier, node.InteractionRequired);
       if (node.PlayTTS)
-        PlayInlineTTS(node.Identifier, node.DialogueContent, node.TtsVoiceIdentifier);
+        PlayInlineTTS(node.Identifier, content, node.TtsVoiceIdentifier);
     }
 
     private IEnumerator DialogueAutoAdvanceRoutine(float seconds, bool interactionRequired)
@@ -1552,6 +1636,13 @@ namespace MultiplayerInfrastructure.Scenario
       {
         if (interactionRequired)
           yield break;
+
+        if (_executionMode == ExecutionMode.ClientPresentation && _currentPresentationNodeRoleScoped)
+        {
+          if (!_uiController.IsUnityNull())
+            _uiController.DismissPresentationNode();
+          yield break;
+        }
 
         Advance();
       }
@@ -1574,12 +1665,14 @@ namespace MultiplayerInfrastructure.Scenario
 
       if (!_uiController.IsUnityNull())
       {
+        string speaker = ResolveScenarioText(node.SpeakerName);
+        string content = ResolveScenarioText(node.DialogueContent);
         _uiController.DisplayDisinteractableDialogue(
-          node.SpeakerName,
-          node.DialogueContent,
+          speaker,
+          content,
           node.PortraitSpriteIdentifier);
         if (node.PlayTTS)
-          PlayInlineTTS(node.Identifier, node.DialogueContent, node.TtsVoiceIdentifier);
+          PlayInlineTTS(node.Identifier, content, node.TtsVoiceIdentifier);
         yield return FadeDisinteractableDialogue(0f, 1f, fadeInSeconds);
       }
       else
@@ -1666,10 +1759,14 @@ namespace MultiplayerInfrastructure.Scenario
     {
       if (!_uiController.IsUnityNull())
       {
-        _uiController.DisplayChoice(node.SpeakerName, node.DialogueContent, node.PortraitSpriteIdentifier, node.Options);
+        _uiController.DisplayChoice(
+          ResolveScenarioText(node.SpeakerName),
+          ResolveScenarioText(node.DialogueContent),
+          node.PortraitSpriteIdentifier,
+          node.Options);
 
         if (node.PlayTTS)
-          PlayInlineTTS(node.Identifier, node.DialogueContent, node.TtsVoiceIdentifier);
+          PlayInlineTTS(node.Identifier, ResolveScenarioText(node.DialogueContent), node.TtsVoiceIdentifier);
       }
 
       _activeOptions = new List<ScenarioChoiceOption>(node.Options);
@@ -2226,7 +2323,25 @@ namespace MultiplayerInfrastructure.Scenario
           Advance();
           return;
         }
-        if (!TrySpawnScenarioActingNpc(_currentGraph, actingNpc, out var actorError))
+        Vector3? actorSpawnPosition = null;
+        if (!string.IsNullOrWhiteSpace(node.PositionSourceEntityIdentifier))
+        {
+          if (TryResolveSpawnPositionSource(node.PositionSourceEntityIdentifier, out var resolvedPosition))
+          {
+            actorSpawnPosition = resolvedPosition;
+          }
+          else
+          {
+            Debug.LogWarning(
+              $"[ScenarioController] EntityPresetSpawn '{node.Identifier}' position source " +
+              $"'{node.PositionSourceEntityIdentifier}' was not found. Using actingNpc definition position.");
+          }
+        }
+        if (!TrySpawnScenarioActingNpc(
+              _currentGraph,
+              actingNpc,
+              out var actorError,
+              actorSpawnPosition))
         {
           Debug.LogWarning($"[ScenarioController] EntityPresetSpawn '{node.Identifier}' actingNpc '{node.ActingNpcIdentifier}' failed: {actorError}");
           Advance();
@@ -2249,12 +2364,8 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Vector3 spawnPosition = new Vector3(node.PositionX, node.PositionY, node.PositionZ);
-      if (!string.IsNullOrWhiteSpace(node.PositionSourceEntityIdentifier)
-          && Registry.Registry.TryGetEntity(node.PositionSourceEntityIdentifier, out var sourceDescriptor)
-          && sourceDescriptor?.GameObject != null)
-      {
-        spawnPosition = sourceDescriptor.GameObject.transform.position;
-      }
+      if (TryResolveSpawnPositionSource(node.PositionSourceEntityIdentifier, out var resolvedSpawnPosition))
+        spawnPosition = resolvedSpawnPosition;
 
       if (!Registry.Registry.TrySpawnEntityPreset(
             node.PresetIdentifier,
@@ -2282,6 +2393,31 @@ namespace MultiplayerInfrastructure.Scenario
       _stateStore[stateKey] = spawnedIdentifier;
 
       Advance();
+    }
+
+    private static bool TryResolveSpawnPositionSource(
+      string sourceIdentifier,
+      out Vector3 position)
+    {
+      if (!string.IsNullOrWhiteSpace(sourceIdentifier))
+      {
+        if (Registry.Registry.TryGetEntity(sourceIdentifier, out var sourceDescriptor)
+            && sourceDescriptor?.GameObject != null)
+        {
+          position = sourceDescriptor.GameObject.transform.position;
+          return true;
+        }
+
+        if (Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, sourceIdentifier, out var waypoint)
+            || Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, sourceIdentifier, out waypoint))
+        {
+          position = waypoint;
+          return true;
+        }
+      }
+
+      position = default;
+      return false;
     }
 
     /// <summary>
@@ -3751,10 +3887,9 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>
     /// 브랜치 체인 내부에서 Validator 를 게이트로 평가한다(전역 Advance 미사용).
     /// WaitForCondition=true 이면 조건 충족까지 폴링 대기한다.
-    /// false 이면 1회 평가하고, 실패 시 OnFailure 정책 중 Panic 만 브랜치를 즉시 중단한다
-    /// (브랜치 내부에서는 EndScenario/전역 Branching 을 일으키지 않고 통과 진행한다).
+    /// false 이면 1회 평가하고, Branching은 브랜치 로컬 커서를 바꾸며 Panic은 시나리오를 중단한다.
     /// </summary>
-    private IEnumerator ExecuteValidatorGate(ScenarioValidatorNode node)
+    private IEnumerator ExecuteValidatorGate(ScenarioValidatorNode node, BranchChainContext context)
     {
       if (node.WaitForCondition)
       {
@@ -3772,10 +3907,13 @@ namespace MultiplayerInfrastructure.Scenario
         switch (node.OnWaitTimeout)
         {
           case ScenarioValidatorWaitTimeoutBehavior.ForceAdvance:
-          case ScenarioValidatorWaitTimeoutBehavior.FailBranch:
             // 브랜치 체인은 NextIdentifier 로 진행하므로, 대기를 끝내면 체인이 다음 노드로 이동한다.
-            // (브랜치 내부에는 전역 실패 분기가 없으므로 FailBranch 도 동일하게 게이트만 해제한다.)
             Debug.LogWarning($"[ScenarioController] Branch validator gate '{node.Identifier}' timed out after {node.WaitTimeoutSeconds}s; releasing gate (미수행 기록).");
+            yield break;
+
+          case ScenarioValidatorWaitTimeoutBehavior.FailBranch:
+            if (!string.IsNullOrWhiteSpace(node.FailureNextIdentifier))
+              context.NextOverride = node.FailureNextIdentifier;
             yield break;
 
           case ScenarioValidatorWaitTimeoutBehavior.WarnAndKeepWaiting:
@@ -3796,7 +3934,15 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       ReportValidatorFailure(node, failureReason);
-      // 브랜치 내부에서는 진행을 막지 않고 통과한다(병렬 합류 흐름 보호).
+      if (node.OnFailure == ScenarioValidatorOnFailure.Branching
+          && !string.IsNullOrWhiteSpace(node.FailureNextIdentifier))
+      {
+        context.NextOverride = node.FailureNextIdentifier;
+      }
+      else if (node.OnFailure == ScenarioValidatorOnFailure.Panic)
+      {
+        EndScenario();
+      }
       yield break;
     }
 
@@ -4119,7 +4265,7 @@ namespace MultiplayerInfrastructure.Scenario
       int guard = 0;
       const int maxNodes = 10000; // 순환 방지 안전장치.
       // 브랜치 체인별 실행 컨텍스트(동시 실행되는 다른 브랜치와 상태를 공유하지 않는다).
-      var chainContext = new BranchChainContext();
+      var chainContext = new BranchChainContext(branchOwnerClientId);
 
       while (cursor != null)
       {
@@ -4194,8 +4340,23 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>브랜치 체인 단위의 실행 컨텍스트. 선택 결과에 따른 다음 노드 오버라이드를 전달한다.</summary>
     private sealed class BranchChainContext
     {
+      public BranchChainContext(int? ownerClientId) => OwnerClientId = ownerClientId;
+
+      public int? OwnerClientId { get; }
+
       /// <summary>Choice/Quiz 등 선택 결과가 다음 노드를 결정하는 경우 설정된다.</summary>
       public string NextOverride;
+    }
+
+    private bool ShouldPresentBranchLocally(BranchChainContext context)
+    {
+      if (_executionMode != ExecutionMode.ServerAuthoritative || !context.OwnerClientId.HasValue)
+        return true;
+
+      var local = InstanceFinder.IsClientStarted
+        ? InstanceFinder.ClientManager?.Connection
+        : null;
+      return local != null && local.ClientId == context.OwnerClientId.Value;
     }
 
     /// <summary>
@@ -4212,6 +4373,13 @@ namespace MultiplayerInfrastructure.Scenario
           yield return ExecuteDelayNode(delay);
           break;
         case ScenarioInvokeEventNode invoke:
+          if (invoke.InvokeOnRoleClient
+              && context.OwnerClientId.HasValue
+              && !ShouldPresentBranchLocally(context))
+          {
+            // TargetPresentRoleNode가 배정 클라이언트에서 표시용 핸들러를 실행한다.
+            break;
+          }
           // WaitUntilDone/Immediately 모두 실행기 말미에 전역 Advance 를 호출하지만,
           // RunWithGlobalAdvanceSuppressed 가 각 MoveNext 순간에만 이를 억제한다.
           if (invoke.MoveNextBehavior == ScenarioInvokeEventMoveNextBehavior.WaitUntilDone)
@@ -4227,7 +4395,7 @@ namespace MultiplayerInfrastructure.Scenario
           yield return ExecuteSoundNode(sound);
           break;
         case ScenarioValidatorNode validator:
-          yield return ExecuteValidatorGate(validator);
+          yield return ExecuteValidatorGate(validator, context);
           break;
         case ScenarioInteractionNode interaction:
           yield return ExecuteInteractionNode(interaction);
@@ -4247,19 +4415,26 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioDialogueNode dialogue:
           // 브랜치 내 다이얼로그: interactionRequired면 자동 닫힘 없이 입력으로만 닫힌다.
           // 다른 그래프/흐름이 대화창을 점유 중이면 정책을 적용한다(교차 그래프 충돌만 검사).
-          if (!_uiController.IsUnityNull() && !TryClaimDialogueUI(considerBranchPrompt: false))
+          bool presentBranchDialogueLocally = ShouldPresentBranchLocally(context);
+          if (presentBranchDialogueLocally
+              && !_uiController.IsUnityNull()
+              && !TryClaimDialogueUI(considerBranchPrompt: false))
           {
             // Cancel: 이 다이얼로그를 표시하지 않고 브랜치 체인을 종료.
             // Panic: EndScenario 로 _currentGraph 가 정리됨.
             yield break;
           }
-          if (!_uiController.IsUnityNull())
+          if (presentBranchDialogueLocally && !_uiController.IsUnityNull())
           {
+            string speakerName = ResolveScenarioText(dialogue.SpeakerName, context.OwnerClientId);
+            string dialogueContent = ResolveScenarioText(dialogue.DialogueContent, context.OwnerClientId);
             _uiController.DisplayDialogue(
-              dialogue.SpeakerName,
-              dialogue.DialogueContent,
+              speakerName,
+              dialogueContent,
               dialogue.PortraitSpriteIdentifier,
               dialogue.InteractionRequired);
+            if (dialogue.PlayTTS)
+              PlayInlineTTS(dialogue.Identifier, dialogueContent, dialogue.TtsVoiceIdentifier);
           }
 
           var waitSeconds = (dialogue.AutoAdvanceSeconds.HasValue && dialogue.AutoAdvanceSeconds.Value > 0f)
@@ -4403,10 +4578,13 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     private Action<int> _branchOptionInterceptor;
 
+    private readonly Dictionary<string, BranchOptionSelection> _remoteBranchChoiceSelections = new(StringComparer.Ordinal);
+    private readonly HashSet<int> _activeRemoteBranchPromptClients = new();
+
     /// <summary>
-    /// 브랜치 프롬프트(Choice/Quiz)가 화면에 표시 중인 동안 true.
-    /// 다이얼로그 UI와 인터셉터는 하나뿐이므로, 동시 실행 브랜치의 프롬프트는
-    /// 이 플래그로 직렬화한다(덮어쓰기 시 미해결 브랜치가 영구 대기하는 교착 방지).
+    /// 이 컨트롤러의 로컬 화면에 브랜치 프롬프트(Choice/Quiz)가 표시 중인 동안 true.
+    /// 로컬 다이얼로그 UI와 인터셉터는 하나뿐이므로 로컬 프롬프트만 직렬화한다.
+    /// 원격 프롬프트는 대상 클라이언트별 잠금으로 독립적으로 진행한다.
     /// </summary>
     private bool _branchPromptActive;
 
@@ -4415,50 +4593,96 @@ namespace MultiplayerInfrastructure.Scenario
     {
       public bool Resolved;
       public int Index = -1;
+      public int OptionCount;
+    }
+
+    private static string BuildRemoteBranchChoiceKey(int clientId, string graphIdentifier, string nodeIdentifier)
+      => $"{clientId}|{graphIdentifier}|{nodeIdentifier}";
+
+    private bool TryResolveRemoteBranchChoice(
+      int senderClientId,
+      string graphIdentifier,
+      string nodeIdentifier,
+      int optionIndex)
+    {
+      string key = BuildRemoteBranchChoiceKey(senderClientId, graphIdentifier, nodeIdentifier);
+      if (!_remoteBranchChoiceSelections.TryGetValue(key, out var selection)
+          || selection == null
+          || selection.Resolved
+          || optionIndex < 0
+          || optionIndex >= selection.OptionCount)
+        return false;
+
+      selection.Index = optionIndex;
+      selection.Resolved = true;
+      return true;
     }
 
     /// <summary>
-    /// 브랜치 프롬프트 실행 공용 루틴: (1) 다른 브랜치 프롬프트가 끝날 때까지 대기(직렬화),
+    /// 브랜치 프롬프트 실행 공용 루틴: (1) 같은 화면의 다른 브랜치 프롬프트가 끝날 때까지 대기(직렬화),
     /// (2) present 콜백으로 UI 표시, (3) 인터셉터로 선택을 수신할 때까지 대기.
     /// 시나리오 종료 시 selection.Resolved == false 상태로 종료된다.
     /// </summary>
-    private IEnumerator RunBranchPrompt(Action present, BranchOptionSelection selection)
+    private IEnumerator RunBranchPrompt(
+      Action present,
+      BranchOptionSelection selection,
+      string nodeIdentifier,
+      int? branchOwnerClientId)
     {
-      // 직렬화: 다른 브랜치의 프롬프트가 진행 중이면 순서를 기다린다.
-      while (_branchPromptActive)
+      int? localClientId = InstanceFinder.IsClientStarted
+        ? InstanceFinder.ClientManager?.Connection?.ClientId
+        : null;
+      bool remotePrompt = branchOwnerClientId.HasValue
+        && (!localClientId.HasValue || localClientId.Value != branchOwnerClientId.Value);
+
+      // 로컬 프롬프트는 단일 UI를 공유하고, 원격 프롬프트는 같은 대상 클라이언트의
+      // 단일 UI만 공유한다. 서로 다른 원격 클라이언트의 프롬프트는 병렬 진행한다.
+      while (remotePrompt
+               ? _activeRemoteBranchPromptClients.Contains(branchOwnerClientId.Value)
+               : _branchPromptActive)
       {
         if (_currentGraph == null)
-        {
           yield break;
-        }
         yield return null;
       }
 
       if (_currentGraph == null)
-      {
         yield break;
-      }
 
       // 다른 그래프/흐름이 이미 대화창을 점유 중이면 정책을 적용한다.
-      // (같은 그래프 내 동시 프롬프트는 위 _branchPromptActive 직렬화로 이미 처리되므로
+      // (같은 화면의 동시 프롬프트는 위 화면별 직렬화로 이미 처리되므로
       //  considerBranchPrompt: false 로 교차 그래프 점유만 검사한다.)
-      if (!TryClaimDialogueUI(considerBranchPrompt: false))
+      if (!remotePrompt && !TryClaimDialogueUI(considerBranchPrompt: false))
       {
         // Cancel: 이 브랜치 프롬프트를 표시하지 않고 미해결 상태로 종료.
         // Panic: TryClaimDialogueUI 내부 EndScenario 로 _currentGraph 가 이미 정리됨.
         yield break;
       }
 
-      _branchPromptActive = true;
+      if (remotePrompt)
+        _activeRemoteBranchPromptClients.Add(branchOwnerClientId.Value);
+      else
+        _branchPromptActive = true;
+      string remoteKey = null;
       try
       {
-        present();
-
-        _branchOptionInterceptor = index =>
+        if (remotePrompt)
         {
-          selection.Resolved = true;
-          selection.Index = index;
-        };
+          remoteKey = BuildRemoteBranchChoiceKey(
+            branchOwnerClientId.Value,
+            _currentGraph?.Identifier,
+            nodeIdentifier);
+          _remoteBranchChoiceSelections[remoteKey] = selection;
+        }
+        else
+        {
+          present();
+          _branchOptionInterceptor = index =>
+          {
+            selection.Resolved = true;
+            selection.Index = index;
+          };
+        }
 
         while (!selection.Resolved)
         {
@@ -4472,7 +4696,12 @@ namespace MultiplayerInfrastructure.Scenario
       }
       finally
       {
-        _branchPromptActive = false;
+        if (!string.IsNullOrEmpty(remoteKey))
+          _remoteBranchChoiceSelections.Remove(remoteKey);
+        if (remotePrompt)
+          _activeRemoteBranchPromptClients.Remove(branchOwnerClientId.Value);
+        else
+          _branchPromptActive = false;
       }
     }
 
@@ -4484,11 +4713,12 @@ namespace MultiplayerInfrastructure.Scenario
     private IEnumerator ExecuteChoiceNodeInBranch(ScenarioChoiceNode node, BranchChainContext context)
     {
       var selection = new BranchOptionSelection();
+      selection.OptionCount = node.Options?.Count ?? 0;
       yield return RunBranchPrompt(() =>
       {
         _state = State.ExecutingChoice;
         PresentChoice(node);
-      }, selection);
+      }, selection, node.Identifier, context.OwnerClientId);
 
       if (!selection.Resolved)
       {
@@ -4499,6 +4729,7 @@ namespace MultiplayerInfrastructure.Scenario
       {
         var option = node.Options[selection.Index];
         OnOptionSelected?.Invoke(option);
+        RecordChoiceAssessment(node, selection.Index);
         context.NextOverride = option.NextNodeIdentifier;
       }
 
@@ -4519,11 +4750,12 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       var selection = new BranchOptionSelection();
+      selection.OptionCount = node.Options?.Count ?? 0;
       yield return RunBranchPrompt(() =>
       {
         _state = State.ExecutingQuiz;
         PresentQuiz(node);
-      }, selection);
+      }, selection, node.Identifier, context.OwnerClientId);
 
       if (!selection.Resolved)
       {

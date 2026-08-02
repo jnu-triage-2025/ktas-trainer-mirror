@@ -32,6 +32,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
       {
         Identifier = "spawn-doctor",
         ActingNpcIdentifier = "npc_doctor",
+        PositionSourceEntityIdentifier = "doctor-spawnpoint",
         NextIdentifier = "move"
       });
       graph.Add(new ScenarioNPCControlNode
@@ -47,6 +48,8 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
         value.Key.Equals(new ScenarioRequirementKey(ScenarioRequirementKind.Npc, "npc_doctor")));
       var preset = manifest.Requirements.Single(value =>
         value.Key.Equals(new ScenarioRequirementKey(ScenarioRequirementKind.EntityPreset, "npc_doctor_preset")));
+      var spawnpoint = manifest.Requirements.Single(value =>
+        value.Key.Equals(new ScenarioRequirementKey(ScenarioRequirementKind.Entity, "doctor-spawnpoint")));
 
       Assert.That(npc.Occurrences.Any(value =>
         value.Direction == ScenarioRequirementDirection.Produces
@@ -55,6 +58,9 @@ namespace MultiplayerInfrastructure.Tests.Scenario.Requirements
         value.Direction == ScenarioRequirementDirection.Consumes), Is.True);
       Assert.That(preset.Occurrences.Single().Direction, Is.EqualTo(ScenarioRequirementDirection.Consumes));
       Assert.That(preset.Capabilities, Does.Contain(ScenarioRequirementCapability.SpawnablePreset));
+      Assert.That(spawnpoint.Capabilities, Does.Contain(ScenarioRequirementCapability.ProvidesPosition));
+      Assert.That(spawnpoint.EffectiveAvailability, Is.EqualTo(ScenarioRequirementAvailability.WhenNodeReached));
+      Assert.That(spawnpoint.Occurrences.Single().FieldPath, Is.EqualTo("positionSourceEntityIdentifier"));
       Assert.That(manifest.IsValid, Is.True);
     }
 

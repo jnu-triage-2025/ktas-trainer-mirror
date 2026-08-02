@@ -866,6 +866,11 @@ namespace MultiplayerInfrastructure.Scenario.Requirements
     {
       if (!string.IsNullOrWhiteSpace(node.ActingNpcIdentifier))
       {
+        if (!string.IsNullOrWhiteSpace(node.PositionSourceEntityIdentifier))
+        {
+          AddEntity(node, output, "positionSourceEntityIdentifier", "acting-npc-position-source",
+            node.PositionSourceEntityIdentifier, true, ScenarioRequirementCapability.ProvidesPosition);
+        }
         AddRuntimeEntityReferenceProducer(node, output, node.ResultStateKey,
           $"{node.Identifier}.spawnedEntityIdentifier", "spawned-actingNpc-reference",
           ScenarioRequirementAuthority.Server);

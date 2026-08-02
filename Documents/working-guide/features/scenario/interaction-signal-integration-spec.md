@@ -191,6 +191,9 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
 **식별된 엔티티**(`IScenarioIdentifiedEntity` 구현, 예: `PatientController`)마다 템플릿의 `{id}` 를 그
 엔티티 식별자로 치환해 신호를 올린다. `_playerTag` 필터와 무관하게 동작하며, 기본적으로 엔티티당 1회만
 발신한다(`_perEntityRaiseOncePerEntity`, distinct 계측용).
+- 반복 실행해야 하는 시나리오 존은 `_perEntityRaiseOncePerEntity=false`로 설정한다. 예를 들어
+  `patient_b_c_ct`의 간호사 도착 존은 진입마다 신호를 재발행하고, 실행 중 distinct 처리는
+  `SignalCounter`와 sticky RuntimeState가 담당하여 다음 시나리오 실행에서도 같은 플레이어를 다시 계측한다.
 - **운영자 작업(코드 변경 불필요)**: 트리아지 구역 `ScenarioTriggerZone` 인스펙터의
   `_perEntitySignalTemplate` 에 `enter_triage_zone_{id}` 를 입력한다. 환자 A/B/C가 진입하면
   `enter_triage_zone_patient_a` / `_patient_b` / `_patient_c` 가 각각 발신된다.

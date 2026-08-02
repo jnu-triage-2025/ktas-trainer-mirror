@@ -22,6 +22,8 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("gamerule runningSpeedMultiplier <number>", "Set running speed multiplier (0~10; default 1.5)."),
       new UsageLine("gamerule IgnoreTagAssignFullSatisfactionOnScenarioPlay", "Show whether missing scenario player-tag gates are ignored."),
       new UsageLine("gamerule IgnoreTagAssignFullSatisfactionOnScenarioPlay <true|false>", "Ignore missing scenario player-tag gates (default true)."),
+      new UsageLine("gamerule UseMicInRecognitionCheck [true|false]", "Allow microphone volume for patient recognition checks (default false)."),
+      new UsageLine("gamerule DisableInteractionInRecognitionCheck [true|false]", "Disable click interaction for recognition checks; microphone must be enabled."),
     };
 
     public string PermissionIdentifier => "gamerule";
@@ -44,7 +46,7 @@ namespace MultiplayerInfrastructure.Command
       if (args == null || args.Length == 0)
       {
         _chat.SendSystemMessage(sender,
-          $"Game rules:\n  runningSpeedMultiplier = {Format(PlayerController.ServerRunningSpeedMultiplier)}\n  IgnoreTagAssignFullSatisfactionOnScenarioPlay = {ScenarioGameRules.IgnoreTagAssignFullSatisfactionOnScenarioPlay}");
+          $"Game rules:\n  runningSpeedMultiplier = {Format(PlayerController.ServerRunningSpeedMultiplier)}\n  IgnoreTagAssignFullSatisfactionOnScenarioPlay = {ScenarioGameRules.IgnoreTagAssignFullSatisfactionOnScenarioPlay}\n  UseMicInRecognitionCheck = {ScenarioGameRules.UseMicInRecognitionCheck}\n  DisableInteractionInRecognitionCheck = {ScenarioGameRules.DisableInteractionInRecognitionCheck}");
         return;
       }
 
@@ -68,9 +70,25 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
+      if (string.Equals(args[0], "UseMicInRecognitionCheck", System.StringComparison.OrdinalIgnoreCase))
+      {
+        HandleRecognitionRule(sender, args, "UseMicInRecognitionCheck",
+          ScenarioGameRules.UseMicInRecognitionCheck,
+          ScenarioGameRules.TrySetUseMicInRecognitionCheck);
+        return;
+      }
+
+      if (string.Equals(args[0], "DisableInteractionInRecognitionCheck", System.StringComparison.OrdinalIgnoreCase))
+      {
+        HandleRecognitionRule(sender, args, "DisableInteractionInRecognitionCheck",
+          ScenarioGameRules.DisableInteractionInRecognitionCheck,
+          ScenarioGameRules.TrySetDisableInteractionInRecognitionCheck);
+        return;
+      }
+
       if (!string.Equals(args[0], "runningSpeedMultiplier", System.StringComparison.OrdinalIgnoreCase))
       {
-        _chat.SendSystemMessage(sender, $"Unknown game rule '{args[0]}'. Use runningSpeedMultiplier or IgnoreTagAssignFullSatisfactionOnScenarioPlay.");
+        _chat.SendSystemMessage(sender, $"Unknown game rule '{args[0]}'. Use /gamerule to list available rules.");
         return;
       }
 
@@ -95,5 +113,35 @@ namespace MultiplayerInfrastructure.Command
     }
 
     private static string Format(float value) => value.ToString("0.##", CultureInfo.InvariantCulture);
+
+    private delegate bool RecognitionRuleSetter(bool value, out string error);
+
+    private void HandleRecognitionRule(
+      NetworkConnection sender,
+      string[] args,
+      string ruleName,
+      bool currentValue,
+      RecognitionRuleSetter setter)
+    {
+      if (args.Length == 1)
+      {
+        _chat.SendSystemMessage(sender, $"{ruleName} = {currentValue}");
+        return;
+      }
+
+      if (args.Length != 2 || !bool.TryParse(args[1], out var value))
+      {
+        _chat.SendSystemMessage(sender, $"{ruleName} must be true or false.");
+        return;
+      }
+
+      if (!setter(value, out var error))
+      {
+        _chat.SendSystemMessage(sender, error);
+        return;
+      }
+
+      _chat.SendSystemMessage(sender, $"Set {ruleName} to {value}.");
+    }
   }
 }

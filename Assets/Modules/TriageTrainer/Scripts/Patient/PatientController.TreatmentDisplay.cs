@@ -230,24 +230,50 @@ namespace TriageTrainer.Entity
         return;
 
       var state = GetPatientDisplayState();
-      if (state == null)
+      if (state != null)
+      {
+        // DisplaySupports 가 명시적으로 false 인 항목은 이 환자 모델이 표현 불가 → 무시(데이터 기준).
+        if (!IsTreatmentDisplaySupported(state, display))
+          return;
+
+        // 실제 플래그 전이(false→true / true→false)일 때만 상태 이벤트를 발생시킨다.
+        bool previous = GetDisplayStateFlag(state, display, fromSupports: false);
+        SetDisplayStateFlag(state, display, active);
+
+        var go = GetDisplayChildObject(state, display);
+        if (go != null)
+          go.SetActive(active);
+
+        if (previous != active)
+          RaiseTreatmentStateEvent(display, active);
+        return;
+      }
+
+      // 기존 환자 프리팹은 PatientDisplayState 대신 PatientStateABC 내부에 처치 표시 상태를
+      // 직렬화한다. 마이그레이션 전 프리팹도 같은 표시·상태 이벤트 계약을 유지한다.
+      var legacyState = GetPatientState()?.TreatmentDisplayState;
+      if (legacyState == null || !IsTreatmentDisplaySupported(legacyState, display))
         return;
 
-      // DisplaySupports 가 명시적으로 false 인 항목은 이 환자 모델이 표현 불가 → 무시(데이터 기준).
-      if (!IsTreatmentDisplaySupported(state, display))
-        return;
+      bool legacyPrevious = GetDisplayStateFlag(legacyState, display, fromSupports: false);
+      SetDisplayStateFlag(legacyState, display, active);
 
-      // 실제 플래그 전이(false→true / true→false)일 때만 상태 이벤트를 발생시킨다.
-      bool previous = GetDisplayStateFlag(state, display, fromSupports: false);
+      var legacyGo = GetDisplayChildObject(legacyState, display);
+      if (legacyGo != null)
+        legacyGo.SetActive(active);
 
-      SetDisplayStateFlag(state, display, active);
-
-      var go = GetDisplayChildObject(state, display);
-      if (go != null)
-        go.SetActive(active);
-
-      if (previous != active)
+      if (legacyPrevious != active)
         RaiseTreatmentStateEvent(display, active);
+    }
+
+    private bool IsTreatmentDisplaySupported(TreatmentDisplay display)
+    {
+      var state = GetPatientDisplayState();
+      if (state != null)
+        return IsTreatmentDisplaySupported(state, display);
+
+      var legacyState = GetPatientState()?.TreatmentDisplayState;
+      return legacyState != null && IsTreatmentDisplaySupported(legacyState, display);
     }
 
     private static bool IsTreatmentDisplaySupported(PatientDisplayState state, TreatmentDisplay display)
@@ -257,9 +283,24 @@ namespace TriageTrainer.Entity
              || GetDisplayStateFlag(state, display, fromSupports: true);
     }
 
+    private static bool IsTreatmentDisplaySupported(PatientTreatmentDisplayStateABC state, TreatmentDisplay display)
+    {
+      return GetDisplayChildObject(state, display) != null
+             || GetDisplayStateFlag(state, display, fromSupports: true);
+    }
+
     private static GameObject GetDisplayChildObject(PatientDisplayState state, TreatmentDisplay d)
     {
-      var c = state.ChildGameObjects;
+      return GetDisplayChildObject(state?.ChildGameObjects, d);
+    }
+
+    private static GameObject GetDisplayChildObject(PatientTreatmentDisplayStateABC state, TreatmentDisplay d)
+    {
+      return GetDisplayChildObject(state?.ChildGameObjects, d);
+    }
+
+    private static GameObject GetDisplayChildObject(PatientTreatmentDisplayingChildGameObjects c, TreatmentDisplay d)
+    {
       if (c == null)
         return null;
 
@@ -297,6 +338,18 @@ namespace TriageTrainer.Entity
     private static void SetDisplayStateFlag(PatientDisplayState state, TreatmentDisplay d, bool v)
     {
       ref var m = ref state.DisplayState;
+      SetDisplayStateFlag(ref m, d, v);
+    }
+
+    private static void SetDisplayStateFlag(PatientTreatmentDisplayStateABC state, TreatmentDisplay d, bool v)
+    {
+      var m = state.DisplayState;
+      SetDisplayStateFlag(ref m, d, v);
+      state.DisplayState = m;
+    }
+
+    private static void SetDisplayStateFlag(ref PatientTreatmentDisplayModel m, TreatmentDisplay d, bool v)
+    {
       switch (d)
       {
         case TreatmentDisplay.Syringe18GInsertedIntoLeftArm: m.Syringe18GInsertedIntoLeftArm = v; break;
@@ -331,6 +384,17 @@ namespace TriageTrainer.Entity
     {
       // 읽기 전용이므로 구조체 복사본을 사용한다(ref 불필요).
       var m = fromSupports ? state.DisplaySupports : state.DisplayState;
+      return GetDisplayStateFlag(m, d);
+    }
+
+    private static bool GetDisplayStateFlag(PatientTreatmentDisplayStateABC state, TreatmentDisplay d, bool fromSupports)
+    {
+      var m = fromSupports ? state.DisplaySupports : state.DisplayState;
+      return GetDisplayStateFlag(m, d);
+    }
+
+    private static bool GetDisplayStateFlag(PatientTreatmentDisplayModel m, TreatmentDisplay d)
+    {
       switch (d)
       {
         case TreatmentDisplay.Syringe18GInsertedIntoLeftArm: return m.Syringe18GInsertedIntoLeftArm;

@@ -63,6 +63,7 @@
 - [TriageTrainer.ItemDefinitions.MedicalItem.md](./TriageTrainer.ItemDefinitions.MedicalItem.md): API 레퍼런스: `TriageTrainer.ItemDefinitions.MedicalItem` (기반 클래스 및 전체 아이템 목록)
 - [TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel.md](./TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel.md): API 레퍼런스: `TriageTrainer.MultiplayerInfrastructureSupports.RegisteringMultiplayerInfrastructureSupport.PlayerModel`
 - [TriageTrainer.Patient.TriageLevelInfo.md](./TriageTrainer.Patient.TriageLevelInfo.md): API 레퍼런스: `TriageTrainer.Patient.TriageLevelInfo`
+- [TriageTrainer.Patient.RecognitionCheck.md](./TriageTrainer.Patient.RecognitionCheck.md): API 레퍼런스: 환자 의식 확인 입력
 - [TriageTrainer.Scenario.Rubric.RubricRecorder.md](./TriageTrainer.Scenario.Rubric.RubricRecorder.md): API 레퍼런스: `TriageTrainer.Scenario.Rubric.RubricRecorder`
 - [TriageTrainer.Scenario.TriageScenarioEventBootstrap.md](./TriageTrainer.Scenario.TriageScenarioEventBootstrap.md): API 레퍼런스: TriageTrainer.Scenario.TriageScenarioEventBootstrap
 - [TriageTrainer.UI.TriageAssessmentUIController.md](./TriageTrainer.UI.TriageAssessmentUIController.md): API 레퍼런스: `TriageTrainer.UI.TriageAssessmentUIController`

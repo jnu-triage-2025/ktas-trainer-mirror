@@ -110,6 +110,8 @@
   "portraitSpriteIdentifier": null,
   "playTTS": false,
   "ttsVoiceIdentifier": null,
+  "assessmentIdentifier": "patient_b_gcs_eye",
+  "correctOptionIndex": 1,
   "options": [
     {
       "displayText": "수액 투여",
@@ -132,9 +134,23 @@
 | `options[].displayIconIdentifier` | `string` | 선택지 아이콘 식별자 (null 가능) |
 | `options[].displayColor` | `Color` | 선택지 표시 색상 |
 | `options[].nextNodeIdentifier` | `string` | 선택 시 이동할 노드 식별자 |
+| `assessmentIdentifier` | `string` | 교육 평가 로그에 사용할 안정적인 문항 식별자. 빈 값이면 일반 선택으로 취급 |
+| `correctOptionIndex` | `int?` | 의도된 정답 옵션의 0 기반 인덱스. null이면 정답 여부를 기록하지 않음 |
 
 **동작:** `ExecutingChoice`로 전환. `SelectOption(index)` 호출 시 선택된 `options[index].nextNodeIdentifier`로 분기.  
+`assessmentIdentifier`가 있으면 선택 인덱스, 의도 정답 인덱스, 정답 여부를 세션 로그에 함께 기록한다.
 **주의:** 선택지가 없으면 다음 노드로 진행 불가.
+
+### 3.2.1 표시 문자열의 플레이어 지정자
+
+Dialogue와 Choice의 화자·본문, 병렬 브랜치 안내 문자열은 다음 지정자를 지원한다.
+
+| 형식 | 의미 |
+|---|---|
+| `@s` | 해당 안내를 받는 현재 플레이어의 표시명. 확인할 수 없으면 원문 `@s` 유지 |
+| `@t=[tag, fallback]` | 태그를 가진 플레이어의 표시명. 없으면 fallback을 다시 해석 |
+
+태그 대상이 여러 명이면 플레이어 식별자 오름차순의 첫 대상을 선택한다. fallback에는 일반 문자열뿐 아니라 `@s` 또는 중첩된 `@t=[...]`를 사용할 수 있다.
 
 ---
 
@@ -296,6 +312,7 @@
   "identifier": "trigger_patient_collapse",
   "nextIdentifier": "next",
   "eventIdentifier": "patient_a_collapse",
+  "invokeOnRoleClient": false,
   "moveNextBehavior": "WaitUntilDone"
 }
 ```
@@ -303,10 +320,12 @@
 | 필드 | 타입 | 기본값 | 설명 |
 |---|---|---|---|
 | `eventIdentifier` | `string` | — | `ScenarioEventIdentifierRegistry`에 등록된 이벤트 식별자 |
+| `invokeOnRoleClient` | `bool` | `false` | 역할 브랜치에서 배정 클라이언트의 표시용 이벤트 핸들러도 실행할지 여부 |
 | `moveNextBehavior` | `ScenarioInvokeEventMoveNextBehavior` | `WaitUntilDone` | `False`(수동 진행) / `Immediately`(발화 즉시 진행) / `WaitUntilDone`(핸들러 완료 대기) |
 
 **동작:** `ScenarioEventIdentifierRegistry`에서 `eventIdentifier`에 해당하는 핸들러를 찾아 실행합니다.  
 `MoveNextBehavior.WaitUntilDone`이면 핸들러가 `UniTask`를 반환할 경우 완료를 기다립니다.
+`invokeOnRoleClient`는 활력 UI처럼 역할 플레이어의 로컬 화면에서 실행되어야 하는 이벤트에만 사용합니다. 원격 역할이면 서버의 동일 핸들러 실행을 생략하고 배정 클라이언트가 실행하며, 호스트 역할이면 서버/호스트에서 한 번 실행합니다.
 
 ---
 

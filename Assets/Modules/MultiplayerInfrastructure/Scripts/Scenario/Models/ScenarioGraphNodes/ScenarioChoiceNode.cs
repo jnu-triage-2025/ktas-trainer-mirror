@@ -14,6 +14,12 @@ namespace MultiplayerInfrastructure.Scenario
 
     public List<ScenarioChoiceOption> Options { get; set; }
 
+    /// <summary>교육 평가 로그에 사용할 안정적인 항목 식별자. 비어 있으면 일반 선택으로 취급한다.</summary>
+    public string AssessmentIdentifier { get; set; }
+
+    /// <summary>의도된 정답 옵션 인덱스. null이면 정답 여부를 기록하지 않는다.</summary>
+    public int? CorrectOptionIndex { get; set; }
+
     /// <summary>
     /// true이면 <see cref="DialogueContent"/> 를 표시할 때 TTS로 함께 재생한다.
     /// 변수를 포함하지 않는 콘텐츠는 에디터에서 사전 합성(bake)될 수 있으며,
