@@ -213,13 +213,6 @@
           "requiredPlayerTags": [],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
-        },
-        {
-          "identifier": "branch_2",
-          "completionConditionIdentifier": null,
-          "requiredPlayerTags": [],
-          "forbiddenPlayerTags": [],
-          "requiredPlayerTagsMatchMode": "All"
         }
       ],
       "nextIdentifier": "V_TUT_DELIVERY_WAYPOINT_REACHED"
