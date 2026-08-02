@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !FISHNET_THREADED_COLLIDER_ROLLBACK
+using System;
 using System.Runtime.CompilerServices;
 using GameKit.Dependencies.Utilities;
 using UnityEngine;
@@ -19,5 +20,6 @@ namespace FishNet.Component.ColliderRollback
             Manual
         }
 
-        }
+    }
 }
+#endif
