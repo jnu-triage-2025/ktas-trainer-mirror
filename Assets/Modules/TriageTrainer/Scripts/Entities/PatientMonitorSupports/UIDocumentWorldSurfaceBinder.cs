@@ -10,7 +10,6 @@ namespace TriageTrainer.Entity.PatientMonitor
     [Header("Target Surface")]
     [SerializeField] private MeshRenderer _targetRenderer;
     [SerializeField] private string _texturePropertyName = "_BaseMap";
-    [SerializeField] private bool _instantiateMaterial = true;
 
     [Header("RenderTexture")]
     [SerializeField] private Vector2Int _resolution = new Vector2Int(2400, 1200);
@@ -22,7 +21,8 @@ namespace TriageTrainer.Entity.PatientMonitor
     private PanelSettings _originalPanelSettings;
     private PanelSettings _runtimePanelSettings;
     private RenderTexture _renderTexture;
-    private Material _runtimeMaterial;
+    private MaterialPropertyBlock _originalPropertyBlock;
+    private MaterialPropertyBlock _runtimePropertyBlock;
 
     private void Awake()
     {
@@ -90,13 +90,17 @@ namespace TriageTrainer.Entity.PatientMonitor
 
       _runtimePanelSettings.targetTexture = _renderTexture;
 
-      if (_instantiateMaterial)
-      {
-        _runtimeMaterial = new Material(_targetRenderer.material);
-        _targetRenderer.material = _runtimeMaterial;
-      }
+      // Renderer.material instantiates a Material and may synchronously compile its
+      // shader. In MPPM virtual players on macOS this can enter Unity's native modal
+      // progress backend while a scene is loading and crash the Editor. A property
+      // block applies the per-renderer texture without material instantiation.
+      _originalPropertyBlock = new MaterialPropertyBlock();
+      _targetRenderer.GetPropertyBlock(_originalPropertyBlock);
 
-      _targetRenderer.material.SetTexture(_texturePropertyName, _renderTexture);
+      _runtimePropertyBlock = new MaterialPropertyBlock();
+      _targetRenderer.GetPropertyBlock(_runtimePropertyBlock);
+      _runtimePropertyBlock.SetTexture(Shader.PropertyToID(_texturePropertyName), _renderTexture);
+      _targetRenderer.SetPropertyBlock(_runtimePropertyBlock);
       ClearRuntimeMonitorPanelSelection();
     }
 
@@ -131,6 +135,14 @@ namespace TriageTrainer.Entity.PatientMonitor
         _runtimePanelSettings.targetTexture = null;
       }
 
+      if (_targetRenderer != null && _originalPropertyBlock != null)
+      {
+        _targetRenderer.SetPropertyBlock(_originalPropertyBlock);
+      }
+
+      _originalPropertyBlock = null;
+      _runtimePropertyBlock = null;
+
       if (_renderTexture != null)
       {
         if (_renderTexture.IsCreated())
@@ -140,12 +152,6 @@ namespace TriageTrainer.Entity.PatientMonitor
 
         Destroy(_renderTexture);
         _renderTexture = null;
-      }
-
-      if (_runtimeMaterial != null)
-      {
-        Destroy(_runtimeMaterial);
-        _runtimeMaterial = null;
       }
 
       if (_runtimePanelSettings != null)

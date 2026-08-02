@@ -101,8 +101,15 @@ namespace MultiplayerInfrastructure.Performance
       // TextureQuality 열거형 값이 masterTextureLimit과 1:1 대응합니다.
       QualitySettings.globalTextureMipmapLimit = (int)quality;
 
-      // Texture Streaming 활성화 (활성화해두면 mipmapping 효율 향상)
+      // Unity 6000.2 macOS Editor의 TextureStreamingManager가 씬 로드 직후
+      // Material shader compilation을 동기 실행하면 native modal progress
+      // backend에서 MPPM virtual player가 crash할 수 있다. Editor에서만
+      // streaming을 끄고 실제 Player 빌드에서는 기존 동작을 유지한다.
+#if UNITY_EDITOR_OSX
+      QualitySettings.streamingMipmapsActive = false;
+#else
       QualitySettings.streamingMipmapsActive = true;
+#endif
     }
 
     private static void Save(TextureQuality quality)
