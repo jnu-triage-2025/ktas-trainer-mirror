@@ -28,7 +28,7 @@ namespace TriageTrainer.Scenario
       RegisterEvent_Insert20gLeftPatientC();
       RegisterEvent_ConnectNs1LeftPatientC();
       RegisterEvent_AttachPatientBedPairs();
-      RegisterPatientBRecognitionEvents();
+      RegisterPatientBCRecognitionEvents();
     }
 
   }

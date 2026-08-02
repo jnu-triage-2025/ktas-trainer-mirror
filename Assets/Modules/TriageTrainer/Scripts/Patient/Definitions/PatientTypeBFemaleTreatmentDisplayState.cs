@@ -12,7 +12,7 @@ namespace TriageTrainer.Patient
     [field: SerializeField]
     public override PatientTreatmentDisplayModel DisplaySupports { get; set; } = new PatientTreatmentDisplayModel
     {
-      Syringe20GInsertedIntoRightArm = true,
+      Syringe20GInsertedIntoLeftArm = true,
       NasalCannulaApplied = true,
       GauzePatchedOnRightArm = true,
       GauzeDressingDoneOnRightArm = true,

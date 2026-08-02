@@ -22,7 +22,7 @@
 - [patient-a-b-c-play-setup-guide.md](./patient-a-b-c-play-setup-guide.md): 환자 A/B/C 시나리오 인게임 실행 셋업 가이드 (운영자용)
 - [patient-bed-combined-preset-guide.md](./patient-bed-combined-preset-guide.md): 환자 + 환자침대 결합 프리셋 구성 가이드 (운영자용)
 - [patient-b-c-entitypreset-setup-guide.md](./patient-b-c-entitypreset-setup-guide.md): 환자 B/C(PatientTypeB Male/Female) EntityPreset 구성 가이드 (운영자용)
-- [patient-b-recognition-check-setup-guide.md](./patient-b-recognition-check-setup-guide.md): 환자 B 의식 확인·역할 분기 설정 가이드
+- [patient-b-recognition-check-setup-guide.md](./patient-b-recognition-check-setup-guide.md): 환자 B/C 의식 확인·역할 분기 설정 가이드
 - [remaining-implementation-checklist.md](./remaining-implementation-checklist.md): 남은 이벤트 구현 체크리스트
 - [rubric-recorder-setup-guide.md](./rubric-recorder-setup-guide.md): 평가 루브릭 기록 코어(RubricRecorder) 설정 가이드
 - [scenario-authoring-guide.md](./scenario-authoring-guide.md): 시나리오 작성 가이드

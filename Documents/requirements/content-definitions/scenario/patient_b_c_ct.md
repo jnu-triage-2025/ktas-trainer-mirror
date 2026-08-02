@@ -16,18 +16,22 @@ flags: ["refactor-required"]
 - 기술 노트
   1. 트리아지 구역에 환자 B, C, 더미 D를 각각 스폰한다. 각자 고유의 point를 갖는다.
     - `scen_b:patient_spawnpoint_b`, `scen_b:patient_spawnpoint_c`, `scen_b:patient_spawnpoint_dummy_d_a`
-  2. (스폰이 완료되면 시작):
+  2. 의사 NPC를 의사 전용 스폰 지점에 스폰한다.
+    - NPC 식별자: `npc-doctor-patient-b-c-ct`
+    - 스폰 지점 식별자: `scen_b:doctor_spawnpoint`
+    - `npc_doctor_preset`을 위 식별자 지점의 위치에 스폰한다.
+  3. (스폰이 완료되면 시작):
     - DisinteractableDialogue
       - Speaker: "구내방송"
       - Content: "트리아지 구역에 응급 환자 세명 이송. 담당자는 지금 바로 와주세요."
       - TTS: true
-  3. (2 항목과 동시에 시작) 기술 노트: 간호사들이 트리아지 구역으로 이동하도록 퀘스트를 발행한다.
+  4. (3 항목과 동시에 시작) 기술 노트: 간호사들이 트리아지 구역으로 이동하도록 퀘스트를 발행한다.
     - 제목: "환자 도착"
     - 목표
       - 표기: "트리아지 구역에 도착한 환자 확인"
       - 처리: waypoint 도달을 만족하면 완료 처리되는 퀘스트 발행
         - `scen_b:quest_arrival_triage_area`
-  
+
 플레이어들이 트리아지 구역에 도착하면 다음과 같이 처리:
 1. `nurse_a` 역할인 인물
   1. 퀘스트 발행(*1)
@@ -66,6 +70,10 @@ flags: ["refactor-required"]
     - zone이 있다면 zone 구현을 따르기, 다만 관련하여 대비된 것이 없으므로 OverworldInitializer에 내용추가해두어야 함
 
 위 퀘스트 완료 시 (*2) 내용 시작
+
+- 의사 NPC `npc-doctor-patient-b-c-ct`를 환자 처치 구역의 의사 위치로 이동시킨다.
+  - 목적지 waypoint 식별자: `scen_b:doctor_care_area_waypoint`
+  - 의사 NPC가 해당 식별자 지점에 도착한 뒤 환자 B 처치 지시와 역할별 처치를 시작한다.
 
 ### 환자 B 처치
 
@@ -107,7 +115,7 @@ flags: ["refactor-required"]
             - 이후 이 목표 완료 처리
         - 이에 관해서 설정 추가:
           - `/gamerule UseMicInRecognitionCheck true` (default: false)
-            - true로 설정하면 마이크를 사용하여 환자에게 말을 걸어 의식 상태를 확인할 수 있음 
+            - true로 설정하면 마이크를 사용하여 환자에게 말을 걸어 의식 상태를 확인할 수 있음
           - `/gamerule DisableInteractionInRecognitionCheck false` (default: false)
             - true로 설정하면 Interaction을 사용하여 환자에게 말을 걸어 의식 상태를 확인하는 것이 불가능함. 마이크로만 의식 상태를 확인할 수 있음.
           - `UseMicInRecognitionCheck=false && DisableInteractionInRecognitionCheck=true`이면 두 값이 위와 같이 설정되는 것은 불가능하다는 오류를 발생시키고 직전의 게임룰 변경 시도를 무시함. (즉, 두 값이 동시에 (usemic, disableinteract)=(false, true)가 되도록 설정할 수 없음)
@@ -218,7 +226,7 @@ flags: ["refactor-required"]
     3. ChoiceDialogue
       - Speaker: (플레이어 이름)
       - Content: "환자의 GCS E는..."
-      - Choices: 
+      - Choices:
         - "E 4"
           - "아니야, 이 환자는 소리에 반응하고 있어. E 3으로 분류해야해."
         - "E 3"
@@ -234,7 +242,7 @@ flags: ["refactor-required"]
     4. ChoiceDialogue
       - Speaker: (플레이어 이름)
       - Content: "환자의 GCS V는..."
-      - Choices: 
+      - Choices:
         - "V 5"
           - "아니야, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류해야해."
         - "V 4"
@@ -252,7 +260,7 @@ flags: ["refactor-required"]
     5. ChoiceDialogue
       - Speaker: (플레이어 이름)
       - Content: "환자의 GCS M은..."
-      - Choices: 
+      - Choices:
         - "M 6"
           - "맞아, 이 환자는 지시를 따라주었어. M 6으로 분류하자."
         - "M 5"
@@ -374,7 +382,7 @@ flags: ["refactor-required"]
       1. ChoiceDialogue 발생: 서브목표1에서 열었던 환자 모니터 자세히 보기를 닫으면 발생(`nurse_b`에 대해서, 시그널 송수신 관계로 처리하면 될 것)
         - Speaker: (플레이어 이름)
         - Content: "이 환자는.."
-        - Choices: 
+        - Choices:
           - "호흡 수 분당 20회, 맥박 분당 100회": 오답 노드로 진행
           - "호흡 수 분당 20회, 맥박 분당 120회": 오답 노드로 진행
           - "호흡 수 분당 24회, 맥박 분당 120회": 정답 노드로 진행
@@ -497,7 +505,7 @@ flags: ["refactor-required"]
               - Speaker: (플레이어 이름)
               - Content: "(비강 캐뉼라를 환자에게 적용했다.)"
             2. 조건 분기처리
-              - 만약 oxy 오브젝트나 플래그값이 비활성화 상태라면 
+              - 만약 oxy 오브젝트나 플래그값이 비활성화 상태라면
                 - Dialogue
                   - Speaker: (플레이어 이름)
                   - Content: "(산소 공급 장치가 연결되어 있지 않다.)"
@@ -533,7 +541,7 @@ flags: ["refactor-required"]
               - Speaker: (플레이어 이름)
               - Content: "(출혈이 멎어, 거즈 위에 플라스터를 붙였다.)"
             3. 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
-      
+
 - 전체 인원의 퀘스트가 "퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기" 상태(*a)라면 퀘스트 완료처리
 - 기술 노트: 디버그 편의를 위해 시작할 때 nurse_* 태그를 가진 플레이어가 몇 명인지 파악해두기, 인원수만큼 퀘스트 목표가 (*a) 상태가 되면 퀘스트 완료 처리하도록 구현
 
@@ -541,9 +549,10 @@ flags: ["refactor-required"]
 
 ### 이번 변환 범위
 
-- 데이터 정본은 `## 줄글 시나리오` 시작부터 `### 환자 B 처치` 본문 종료까지이다.
-- `### 환자 C 처치`와 `### CT실 이송`은 이번 그래프에 포함하지 않는다.
-- 새 `patient_b_c_ct.scenario.json`은 환자 B 처치 완료 안내에서 종료하며 162개 노드로 구성한다.
+- 데이터 정본은 `## 줄글 시나리오` 시작부터 `### 환자 C 처치` 본문 종료까지이다.
+- `### 환자 C 처치`는 환자 B 처치 서브그래프를 복제하고 환자·퀘스트·신호·문구·좌우 평가 파라미터만 C 값으로 바꾼다.
+- `### CT실 이송`은 이번 그래프에 포함하지 않는다.
+- `patient_b_c_ct.scenario.json`은 환자 C 간호 중재 완료 안내에서 종료하며 265개 노드로 구성한다.
 
 ### 본문 우선 해석과 이전 버전 사용 결과
 
@@ -551,6 +560,10 @@ flags: ["refactor-required"]
 - 환자 B 동공은 현재 본문대로 좌측 무반응, 우측 반응으로 확정한다. 반대 방향을 적은 이전 기록은 무시한다.
 - 환자 B 20G 정맥로의 팔은 현재 본문에 명시되지 않아 이전 버전과 기존 시각물 계약을 참고하여 오른팔로 확정한다.
 - 환자 B 활력은 GCS 13(E3/V4/M6), RR 24, HR 120, BP 140/86mmHg, BT 37.8℃, SpO2 93%로 확정한다.
+- 환자 C 활력과 GCS는 환자 B와 동일하며, 근력은 현재 C 본문대로 좌측 5점·우측 3점으로 바꾼다.
+- 환자 C 동공은 현재 본문과 이전 데이터가 일치하는 좌측 무반응·우측 반응으로 확정한다.
+- 환자 C 20G 정맥로는 현재 본문과 `PatientTypeBFemale` 시각물이 일치하는 좌측 팔로 확정한다. 지혈 부위는 현재 본문에 좌우가 없으므로 프리팹이 지원하는 우측 팔 표시를 사용한다.
+- 앞선 공통 이동 퀘스트가 환자 B와 C의 처치 구역 도착을 모두 확인하므로, C 본문의 “이제 환자 C를 처치 구역으로 이동”은 중복 이동 이벤트가 아니라 B 완료 후 C 처치로 전환하는 도착 안내로 해석한다.
 - 분류용 엔티티는 `patient_dummy_d_b`이다. 현재 본문에 명시된 공간 식별자 `scen_b:patient_spawnpoint_dummy_d_a`는 이름의 `d_a`가 엔티티명과 다르지만 명시값이므로 그대로 사용한다.
 
 ### 선행 구현 완료 사항
@@ -564,7 +577,12 @@ flags: ["refactor-required"]
 - `/gamerule UseMicInRecognitionCheck`와 `/gamerule DisableInteractionInRecognitionCheck`를 추가했다. `(false, true)` 변경은 오류와 함께 거부되며 직전 값을 유지한다.
 - `usability` 데이터팩은 `(UseMicInRecognitionCheck, DisableInteractionInRecognitionCheck)=(true, false)`를 적용한다.
 - PlayerController가 시나리오 식별자를 노출하고, Overworld Initializer가 `scen_b:*` 스폰/도착 앵커와 `quest_arrival_triage_area_{id}` 도착 신호 존을 생성한다.
+- EntityPresetSpawn은 일반 엔티티와 acting NPC 모두 `positionSourceEntityIdentifier`로 지정한 waypoint 위치를 해석한다. 이에 따라 의사 NPC를 전용 spawnpoint에 생성할 수 있다.
+- 의사 NPC는 시나리오 시작 시 `scen_b:doctor_spawnpoint`에서 생성되고, 환자 B/C가 처치 구역에 배치되면 `NPCControl(mode=Control)`로 `scen_b:doctor_care_area_waypoint`까지 이동한다.
+- 환자 C 처치 시작 시에도 환자 B와 동일하게 의사가 `nurse_c`에게 동공반사·정맥로 확보를, `nurse_d`에게 산소 공급·지혈을 지시한 뒤 역할별 처치를 시작한다.
 - 처치 구역 도착 신호는 실제 zone 이름과 무관한 `carezone_patient_entered_patient_b/c`도 함께 발신한다. 그래프는 이 환자 범위 신호로 B/C 이동 완료를 판정한다.
+- 환자 C 의식·근력·동공 확인 이벤트는 환자 B와 동일한 `nurse_a` 역할 검증과 마이크/상호작용 입력 경로를 사용하되, 완료 신호를 `patient_c_*`로 분리한다.
+- 환자 C 활력 UI는 `invokeOnRoleClient=true`로 `nurse_b` 클라이언트에서 열고 `close_vital_ui_c`로 서버 진행을 재개한다.
 
 ### 데이터 연결 계약
 
@@ -573,87 +591,524 @@ flags: ["refactor-required"]
 | 환자 스폰 위치 | `scen_b:patient_spawnpoint_b`, `scen_b:patient_spawnpoint_c`, `scen_b:patient_spawnpoint_dummy_d_a` |
 | 간호사 도착 위치 | `scen_b:quest_arrival_triage_area` |
 | 간호사 도착 계측 | `quest_arrival_triage_area_{player-id}` 4개 distinct |
+| 의사 NPC | `npc-doctor-patient-b-c-ct` (`npc_doctor_preset`) |
+| 의사 초기 스폰 위치 | `scen_b:doctor_spawnpoint` |
+| 의사 환자 처치 위치 | `scen_b:doctor_care_area_waypoint` |
 | 환자 처치구역 도착 | `carezone_patient_entered_patient_b`, `carezone_patient_entered_patient_c` |
 | 환자 B 정맥로 | `insert_iv_patient_b_right`, `connect_cannula_and_ns1_patient_b` |
 | 환자 B 산소/지혈 | `apply_nasal_cannula_patient_b`, `equipment_connected_oxyflowmeter_patient_b`, `apply_gauze_patient_b`, `apply_plaster_on_gauze_patient_b` |
+| 환자 C 정맥로 | `insert_iv_patient_c_left`, `connect_cannula_and_ns1_patient_c` |
+| 환자 C 산소/지혈 | `apply_nasal_cannula_patient_c`, `equipment_connected_oxyflowmeter_patient_c`, `apply_gauze_patient_c`, `apply_plaster_on_gauze_patient_c` |
 
 ### 에디터 설정 필요 사항
 
-- Overworld Initializer의 기본 `scen_b:*` 위치는 안전한 미확정값 `(-1, -1, -1)`이다. 씬 담당자가 실제 트리아지 위치를 지정하고 **Set**을 실행해야 한다.
+- Overworld Initializer의 기본 `scen_b:*` 위치는 안전한 미확정값 `(-1, -1, -1)`이다. 씬 담당자가 환자 위치와 함께 `scen_b:doctor_spawnpoint`, `scen_b:doctor_care_area_waypoint`의 실제 위치를 지정하고 **Set**을 실행해야 한다.
 - 처치 구역의 기존 `PatientCareDescriptionZone`, 베드 스냅 포인트, oxyflowmeter가 실제 씬에 배치되어야 한다.
 - 네 역할 태그 `nurse_a`~`nurse_d`가 모두 공급되지 않으면 `Panic` 정책에 따라 역할 병렬 처리를 시작하지 않는다.
 
 ### 환자 C 처치
 
-이제 환자 C를 처치 구역으로 이동시킨다.
+(*3: 환자 B 처치 완료 후 시작)
 
-환자 C가 도착하자 시스템이 안내한다.
+환자 C 처치하기
+- `nurse_a`에게 퀘스트 발행
+  - 제목: "환자 의식 상태 확인"
+  - 목표
+    - 표기: "환자 C의 의식 상태를 사정하기"
+    - 처리: 환자 C의 의식 상태를 사정하면 완료 처리.
+      - 서브목표 1: "환자 C에게 말 걸기"
+        - 기술 노트: 이 목표는 두 가지 방법으로 완료 가능하도록 함
+          - "말 걸기" Interaction (이 서브목표가 주어졌을 때만 이 인터렉션 활성화하기)
+            - 이 인터렉션이 활성화되면 다음 재생
+              - DisinteractableDialogue
+                - Speaker: (플레이어 이름)
+                - Content: "환자분..! 말씀 들리세요?"
+                - TTS: false
+              - DisinteractableDialogue
+                - Speaker: "환자 C"
+                - Content: "으으.. 아.. 어디지..?"
+                - TTS: true
+              - DisinteractableDialogue
+                - Speaker: null
+                - Content: (환자는 잠시 눈을 뜨더니 다시 눈을 감는다.)
+                - TTS: false
+            - 이후 이 목표 완료 처리
+          - 마이크 사용하여 실제로 볼륨을 넣기 (구현을 추가해야함: 구현 추가시 마이크 권한을 요구하는 os 환경에 대해서 대응하여야 함. 이 때 타이틀 등에서 사전에 마이크 권한을 request하기)
+            - 볼륨이 1초 이상 일정치를 넘으면 다음 재생
+              - DisinteractableDialogue
+                - Speaker: "환자 C"
+                - Content: "으으.. 아.. 어디지..?"
+                - TTS: true
+              - DisinteractableDialogue
+                - Speaker: null
+                - Content: (환자는 잠시 눈을 뜨더니 다시 눈을 감는다.)
+                - TTS: false
+            - 이후 이 목표 완료 처리
+        - 이에 관해서 설정 추가:
+          - `/gamerule UseMicInRecognitionCheck true` (default: false)
+            - true로 설정하면 마이크를 사용하여 환자에게 말을 걸어 의식 상태를 확인할 수 있음
+          - `/gamerule DisableInteractionInRecognitionCheck false` (default: false)
+            - true로 설정하면 Interaction을 사용하여 환자에게 말을 걸어 의식 상태를 확인하는 것이 불가능함. 마이크로만 의식 상태를 확인할 수 있음.
+          - `UseMicInRecognitionCheck=false && DisableInteractionInRecognitionCheck=true`이면 두 값이 위와 같이 설정되는 것은 불가능하다는 오류를 발생시키고 직전의 게임룰 변경 시도를 무시함. (즉, 두 값이 동시에 (usemic, disableinteract)=(false, true)가 되도록 설정할 수 없음)
+        - 이 게임룰 값을 데이터팩에서도 설정 가능함. `usability` 데이터팩에 (usemic, disableinteract)=(true, false)로 설정
+        - 기술노트: (후순위) 마이크 구현이 마무리된 후 이후에 고도화 작업에서는 마이크 사용 중에는 마이크 아이콘 띄우기 추가할 것
+      - 서브목표 2: "환자 C에게 계속해서 말 걸어보기"
+        - "말 걸기" Interaction (이 서브목표가 주어졌을 때만 이 인터렉션 활성화하기)
+          - 이 인터렉션이 활성화되면 다음 재생
+            - DisinteractableDialogue
+              - Speaker: (플레이어 이름)
+              - Content: "환자분..!"
+              - TTS: false
+            - DisinteractableDialogue
+              - Speaker: "환자 C"
+              - Content: "으으으..! 아..! 왜요..!!"
+              - TTS: true
+            - DisinteractableDialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(이 환자는 말에 조금 늦게 반응하고 있다.)"
+              - TTS: false
+          - 이후 이 목표 완료 처리
+        - 마이크 사용하여 실제로 볼륨을 넣기
+          - 볼륨이 1초 이상 일정치를 넘으면 다음 재생
+            - DisinteractableDialogue
+              - Speaker: "환자 C"
+              - Content: "으으으..! 아..! 왜요..!!"
+              - TTS: true
+            - DisinteractableDialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(이 환자는 말에 조금 늦게 반응하고 있다.)"
+              - TTS: false
+          - 이후 이 목표 완료 처리
+      - 서브 목표 3: "계속해서 환자 C의 상태 확인하기"
+         - "말 걸기" Interaction (이 서브목표가 주어졌을 때만 이 인터렉션 활성화하기)
+          - 이 인터렉션이 활성화되면 다음 재생
+            - DisinteractableDialogue
+              - Speaker: (플레이어 이름)
+              - Content: "여기가 어딘지 아시겠어요?"
+              - TTS: false
+            - DisinteractableDialogue
+              - Speaker: "환자 C"
+              - Content: "으으악...! 과장님 제가 분명...!!! 기안 올린거 처리해달라고..!"
+              - TTS: true
+            - DisinteractableDialogue
+              - Speaker: (플레이어 이름)
+              - Content: "..."
+              - TTS: false
+            - DisinteractableDialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(이 환자는 무슨 일이 있었는지 기억을 못하는 것 같다.)"
+              - TTS: false
+          - 이후 이 목표 완료 처리
+        - 마이크 사용하여 실제로 볼륨을 넣기
+          - 볼륨이 1초 이상 일정치를 넘으면 다음 재생
+            - DisinteractableDialogue
+              - Speaker: "환자 C"
+              - Content: "으으악...! 과장님 제가 분명...!!! 기안 올린거 처리해달라고..!"
+              - TTS: true
+            - DisinteractableDialogue
+              - Speaker: (플레이어 이름)
+              - Content: "..."
+              - TTS: false
+            - DisinteractableDialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(이 환자는 무슨 일이 있었는지 기억을 못하는 것 같다.)"
+              - TTS: false
+          - 이후 이 목표 완료 처리
+      - 서브 목표 4: "계속해서 환자 C의 상태 확인하기"
+        - "말 걸기" Interaction (이 서브목표가 주어졌을 때만 이 인터렉션 활성화하기)
+          - 이 인터렉션이 활성화되면 다음 재생
+            - DisinteractableDialogue
+              - Speaker: (플레이어 이름)
+              - Content: "환자분..! 환자분!! 다리 한번 펴보실래요?"
+              - TTS: false
+            - DisinteractableDialogue
+              - Speaker: "환자 C"
+              - Content: "으으으...! 날 가만히 둬..!!"
+              - TTS: true
+            - DisinteractableDialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(불평을 하면서도 환자는 다리를 움직인다.)"
+              - TTS: false
+          - 이후 이 목표 완료 처리
+      - 서브 목표를 차례로 완료 시 이 퀘스트를 완료 처리하고 다음의 퀘스트 발행
+  - 제목: "환자 의식 상태 확인"
+    - 목표
+      - 표기: "환자 C의 상태 정리하기"
+      - 처리: 없음. 다음에 이어지는 다이얼로그를 완료하면 목표 달성 처리
+    1. Dialogue
+      - Speaker: (플레이어 이름)
+      - Content: "이 환자의 상태를 정리해보자."
+    2. ChoiceDialogue
+      - Speaker: (플레이어 이름)
+      - Content: "환자의 AVPU는..."
+      - Choices
+        - "AVPU A"
+          - "아니야, 이 환자는 정확하게 답변을 하지 못하고 있어. V로 분류해야해."
+        - "AVPU P"
+          - "아니야, 이 환자는 대답도 하고 있어. V로 분류해야해."
+        - "AVPU U"
+          - "아니야, 이 환자는 대답도 하고 있어. V로 분류해야해."
+        - "AVPU V"
+          - "질문에 대답은 하지만 정확한 답변을 하지 못하고 있으니 V로 분류하자."
+      - 기술 노트: 세션 로그의 다음의 내용 저장
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 이후 모든 선택지 다음(3.)으로 이동
+    3. ChoiceDialogue
+      - Speaker: (플레이어 이름)
+      - Content: "환자의 GCS E는..."
+      - Choices:
+        - "E 4"
+          - "아니야, 이 환자는 소리에 반응하고 있어. E 3으로 분류해야해."
+        - "E 3"
+          - "맞아, 이 환자는 소리에 반응하고 있어. E 3으로 분류하자."
+        - "E 2"
+          - "아니야, 이 환자는 소리에 반응하고 있어. E 3으로 분류해야해."
+        - "E 1"
+          - "아니야, 이 환자는 소리에 반응하고 있어. E 3으로 분류해야해."
+      - 기술 노트: 세션 로그의 다음의 내용 저장
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 이후 모든 선택지 다음(4.)으로 이동
+    4. ChoiceDialogue
+      - Speaker: (플레이어 이름)
+      - Content: "환자의 GCS V는..."
+      - Choices:
+        - "V 5"
+          - "아니야, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류해야해."
+        - "V 4"
+          - "맞아, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류하자."
+        - "V 3"
+          - "아니야, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류해야해."
+        - "V 2"
+          - "아니야, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류해야해."
+        - "V 1"
+          - "아니야, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류해야해."
+      - 기술 노트: 세션 로그의 다음의 내용 저장
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 이후 모든 선택지 다음(5.)으로 이동
+    5. ChoiceDialogue
+      - Speaker: (플레이어 이름)
+      - Content: "환자의 GCS M은..."
+      - Choices:
+        - "M 6"
+          - "맞아, 이 환자는 지시를 따라주었어. M 6으로 분류하자."
+        - "M 5"
+          - "아니야, 이 환자는 지시를 따라주었어. M 6으로 분류해야해."
+        - "M 4"
+          - "아니야, 이 환자는 지시를 따라주었어. M 6으로 분류해야해."
+        - "M 3"
+          - "아니야, 이 환자는 지시를 따라주었어. M 6으로 분류해야해."
+        - "M 2"
+          - "아니야, 이 환자는 지시를 따라주었어. M 6으로 분류해야해."
+        - "M 1"
+          - "아니야, 이 환자는 지시를 따라주었어. M 6으로 분류해야해."
+      - 기술 노트: 세션 로그의 다음의 내용 저장
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 이후 모든 선택지 다음(6.)으로 이동
+    6. Dialogue
+      - Speaker: (플레이어 이름)
+      - Content: "E는 3, V는 4.. M은 6이었으니까.."
+    7. Dialouge
+      - Speaker: (플레이어 이름)
+      - Content: "E3 / V4 / M6, GCS 13점입니다."
+    8. Dialogue
+      - Speaker: (플레이어 이름)
+      - Content: "근력은 어떻지..?"
+    9. 퀘스트 발행
+      - 제목: "환자 근력 확인"
+      - 목표
+        - 표기: "환자 C의 근력을 확인하기"
+        - 처리: 환자 C 근력 확인 인터렉션을 완료하면 완료 처리
+          - 퀘스트 발행 시 환자 C의 근력 확인 인터렉션 활성화
+          - "근력 확인" Interaction
+            - 이 인터렉션이 활성화되면 다음 재생
+              - Dialogue
+                - Speaker: (플레이어 이름)
+                - Content: "환자분 오른쪽 다리 한번 들어보세요."
+              - ChoiceDialogue
+                - Speaker: "환자 C"
+                - Content: "..으 (오른쪽 다리를 들어올린다.)"
+                - Choices(1개)
+                  - Content: "(환자의 다리를 누른다.)"
+              - Dialogue
+                - Speaker: (플레이어 이름)
+                - Content: "환자의 다리가 맥없이 눌린다."
+              - Dialogue
+                - Speaker: (플레이어 이름)
+                - Content: "환자분 이번엔 왼쪽 다리 한번 들어보세요."
+              - ChoiceDialogue
+                - Speaker: "환자 C"
+                - Content: "... (왼쪽 다리를 들어올린다.)"
+                - Choices(1개)
+                  - Content: "(환자의 다리를 누른다.)"
+              - Dialogue
+                - Speaker: (플레이어 이름)
+                - Content: "눌리지 않는다."
+            - 여기까지 진행되면 퀘스트 완료 처리
+      - 퀘스트 완료시 10번으로 진행
+    10. ChoiceDialogue
+      - Speaker: (플레이어 이름)
+      - Content: "환자의 좌측 근력은"
+      - Choices:
+        - "5점입니다": 정답 노드로 진행
+        - "4점입니다": 오답 노드로 진행
+        - "3점입니다": 오답 노드로 진행
+        - "2점입니다": 오답 노드로 진행
+        - "1점입니다": 오답 노드로 진행
+      - 다음 노드:
+        - 오답 노드:
+          - Dialogue
+            - Speaker: (nurse_c 태그를 갖는 플레이어명, fallback: "???")
+            - Content: "방금 이쪽 다리 그냥 눌리지 않았나요? 좌측은 5점으로 고치죠."
+        - 정답 노드:
+          - Dialogue
+            - Speaker: (플레이어 이름)
+            - Content: "(5점으로 기록했다.)"
+      - 기술 노트: nurse_c 태그를 가져오는 로직 관련 구현
+        - 아래의 로직이 필요함
+          - 태그를 기준으로 플레이어 이름을 쿼리
+          - 쿼리한 플레이어 이름이 있으면 그 이름을 Speaker에 표시
+        - 이것을 다음과 같은 지정자로 표현
+          - 위 사례에서는 이 값으로 사용 `@t=[nurse_c, ???]`, ???는 지정자 문자 `@`를 갖지 않으므로 string으로 fallback 처리되어야 함
+          - 이 지정자는 `@t=[태그명, fallback(string 혹은 다른 지정자)]` 형식으로 구성된다. 태그명을 기준으로 대상을 쿼리하고, 없으면 fallback string 을 사용한다.
+          - 예: `/tp @t=[jumper, @a] ~ ~100 ~` -- jumper 태그를 가진 플레이어가 있으면 그 플레이어를, 없으면 모든 플레이어를 공중으로 이동시킴
+      - 기술 노트: 세션 로그의 다음의 내용 저장
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+    11. ChoiceDialogue
+      - Speaker: (플레이어 이름)
+      - Content: "환자의 우측 근력은"
+      - Choices:
+        - "5점입니다": 오답 노드로 진행
+        - "4점입니다": 오답 노드로 진행
+        - "3점입니다": 정답 노드로 진행
+        - "2점입니다": 오답 노드로 진행
+        - "1점입니다": 오답 노드로 진행
+      - 다음 노드:
+        - 오답 노드:
+          1. Dialogue
+            - Speaker: (nurse_c 태그를 갖는 플레이어명, fallback: "???")
+            - Content: "방금 이쪽 다리 그냥 눌리지 않았나요? 우측은 3점으로 고치죠."
+            - 이후 정답 노드로 이동
+        - 정답 노드:
+          1. Dialogue
+            - Speaker: (플레이어 이름)
+            - Content: "(3점으로 기록했다.)"
+    12. Dialogue
+      - Speaker: (플레이어 이름)
+      - Content: "이 환자 GCS 13점, Motor Grade 좌측 5, 우측 3 입니다."
+    - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_b`에게 퀘스트 발행
+  - 제목: "환자 활력징후 확인"
+  - 목표
+    1. 서브목표 1
+      - 표기: "환자 C의 활력징후를 환자 모니터를 통해 확인하기"
+      - `nurse_b` 플레이어가 환자 C가 위치한 CareZone에 있는 환자모니터에서 자세히 보기 상호작용 수행
+    2. 서브목표 2
+      - 표기: "환자 C의 활력징후를 보고하기"
+      - 처리: 아래의 다이얼로그를 모두 끝내면 완료 처리
+      1. ChoiceDialogue 발생: 서브목표1에서 열었던 환자 모니터 자세히 보기를 닫으면 발생(`nurse_b`에 대해서, 시그널 송수신 관계로 처리하면 될 것)
+        - Speaker: (플레이어 이름)
+        - Content: "이 환자는.."
+        - Choices:
+          - "호흡 수 분당 20회, 맥박 분당 100회": 오답 노드로 진행
+          - "호흡 수 분당 20회, 맥박 분당 120회": 오답 노드로 진행
+          - "호흡 수 분당 24회, 맥박 분당 120회": 정답 노드로 진행
+          - "호흡 수 분당 24회, 맥박 분당 140회": 오답 노드로 진행
+          - "호흡 수 분당 30회, 맥박 분당 140회": 오답 노드로 진행
+        - 다음 노드:
+          - 오답 노드:
+            1. Dialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(호흡수 분당 24회, 맥박 분당 120회였어.)"
+              - 이후 정답 노드로 이동
+          - 정답 노드:
+            1. Dialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(호흡수 분당 24회, 맥박 분당 120회로 보고하고 기록했다.)"
+              - 이후 다음 노드로 이동
+      2. ChoiceDialogue
+        - Speaker: (플레이어 이름)
+        - Content: "혈압은..."
+        - Choices:
+          - "혈압 120/80mmHg": 오답 노드로 진행
+          - "혈압 130/85mmHg": 오답 노드로 진행
+          - "혈압 140/86mmHg": 정답 노드로 진행
+          - "혈압 150/90mmHg": 오답 노드로 진행
+          - "혈압 160/100mmHg": 오답 노드로 진행
+        - 다음 노드:
+          - 오답 노드:
+            1. Dialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(혈압은 140/86mmHg였어.)"
+              - 이후 정답 노드로 이동
+          - 정답 노드:
+            1. Dialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(혈압 140/86mmHg로 보고하고 기록했다.)"
+              - 이후 다음 노드로 이동
+      3. ChoiceDialogue
+        - Speaker: (플레이어 이름)
+        - Content: "체온은..."
+        - Choices:
+          - "체온 37.3도, 산소포화도 90%": 오답 노드로 진행
+          - "체온 37.3도, 산소포화도 93%": 오답 노드로 진행
+          - "체온 37.8도, 산소포화도 93%": 정답 노드로 진행
+          - "체온 38.0도, 산소포화도 95%": 오답 노드로 진행
+          - "체온 38.5도, 산소포화도 95%": 오답 노드로 진행
+        - 다음 노드:
+          - 오답 노드:
+            1. Dialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(체온은 37.8도, 산소포화도는 93%였어.)"
+              - 이후 정답 노드로 이동
+          - 정답 노드:
+            1. Dialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(체온 37.8도, 산소포화도 93%로 보고하고 기록했다.)"
+              - 이후 다음 노드로 이동
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_c`에게 퀘스트 발행
+  - 제목: "환자 동공반사 및 정맥로 확보"
+  - 목표: ""
+  - 퀘스트 발행과 함께 다음 처리 수행:
+    1. Dialogue
+      - Speaker: "의사"
+      - Content: "@t=[nurse_c, @s]선생님, 이 환자 동공반사 확인하고 N/S로 IV 확보해 주세요."
+      - 목표 표기를 변경 "환자 C의 동공반사 확인하기"로 변경
+    2. Dialogue
+      - Speaker: "의사"
+      - Content: "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강캐뉼라로 3L 주시고 지혈해 주세요."
+    3. "동공반사 확인" Interaction 활성화
+      - Interaction 활성화 시 다음 재생
+        1. Dialogue
+          - Speaker: (플레이어 이름)
+          - Content: "(펜라이트를 환자의 양쪽 눈에 비춘다.)"
+        2. Dialogue
+          - Speaker: (플레이어 이름)
+          - Content: "(이 환자의 좌측 동공이 빛에 반응하지 않는다.)"
+        3. Dialogue
+          - Speaker: (플레이어 이름)
+          - Content: "(이 환자의 우측 동공은 빛에 반응한다.)"
+        4. 퀘스트 "환자 C의 동공반사 확인하기" 목표를 완료처리
+        5. 퀘스트 목표 표기를 "환자 C의 좌측 팔 정맥로 확보하기"로 변경
+        6. "좌측 팔 정맥로 확보" Interaction 활성화
+          - Interaction 활성화 시 다음 재생
+            - 인벤토리에 `cannula_20g` 아이템이 있는지 확인
+              - 없다면 다음 재생
+                1. Dialogue
+                  - Speaker: (플레이어 이름)
+                  - Content: "(정맥로 확보에 사용할 20게이지 캐뉼라를 갖고 있지 않다.)"
+                2. Dialogue
+                  - Speaker: (플레이어 이름)
+                  - Content: "(20게이지 캐뉼라를 찾자.)"
+              - 있다면 다음 처리
+                - 환자 Display State Descriptor에서 좌측 팔 정맥로 확보 상태를 표시하는 오브젝트, 상태 플래그를 활성화
+                - 환자가 붙어있는 환자 침대의 Attachment에서 normal saline 부분 오브젝트의 iv line 연결 포인트 로드, iv line 연결 포인트와 정맥로 확보 상태를 표시하는 오브젝트를 iv line connection 처리
+                - 기술 노트: 이와 관련한 로직을 미리 구현하고 그래프 노드로 연결시키기
+                - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_d`에게 퀘스트 발행
+  - 제목: "환자 산소 공급 및 지혈"
+  - 목표: ""
+  - 퀘스트 발행과 함께 다음 처리 수행:
+    1. Dialogue
+      - Speaker: "의사"
+      - Content: "@t=[nurse_c, ???]선생님, 이 환자 동공반사 확인하고 N/S로 IV 확보해 주세요."
+    2. Dialogue
+      - Speaker: "의사"
+      - Content: "@t=[nurse_d, @s]선생님, 산포도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요."
+      - 퀘스트 목표 표기를 "환자 C에게 산소 공급하기"로 변경
+    4. "비강 캐뉼라 적용" Interaction 활성화
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `nasal_cannula` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(비강 캐뉼라를 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(비강 캐뉼라를 찾자.)"
+          - 있다면 다음 처리
+            1. Dialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(비강 캐뉼라를 환자에게 적용했다.)"
+            2. 조건 분기처리
+              - 만약 oxy 오브젝트나 플래그값이 비활성화 상태라면
+                - Dialogue
+                  - Speaker: (플레이어 이름)
+                  - Content: "(산소 공급 장치가 연결되어 있지 않다.)"
+                - Dialogue
+                  - Speaker: (플레이어 이름)
+                  - Content: "(산소 공급 장치를 찾아 연결하자.)"
+              - 만약 oxy 오브젝트나 플래그값이 활성화 상태라면
+                - 환자 Display State Descriptor에서 산소 공급 장치 오브젝트를 참조, 상태 플래그를 활성화
+                  - 기술 노트: 오브젝트가 Display되었다는 플래그와 산소 공급 장치가 연결되었다는 플래그를 분리해 고려, 관려해야함
+                - 환자가 위치한 CareZone의 flowmeter 오브젝트를 참조, 이 오브젝트의 하위에 위치한 Oxy connection point 오브젝트를 참조하여 환자의 oxy connection point와 연결되도록 처리
+              - 기술 노트: 이와 관련한 로직을 미리 구현하고 그래프 노드로 연결시키기
+            - 이후 퀘스트의 목표를 완료처리
+            - Dialogue
+              - Speaker: (플레이어 이름)
+              - Content: "산소 넣었습니다."
+            - 퀘스트 목표 표기를 "환자 C 지혈하기"로 변경
+    5. "지혈" Interaction 활성화
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `gauze` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(거즈와 플라스터를 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(거즈와 플라스터를 찾자.)"
+          - 있다면 다음 처리
+            1. Dialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(거즈를 출혈 부위에 대고 압박 지혈을 시행했다.)"
+            2. 1초 지연
+            3. Dialogue
+              - Speaker: (플레이어 이름)
+              - Content: "(출혈이 멎어, 거즈 위에 플라스터를 붙였다.)"
+            3. 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
 
-“처치 구역에 도착했습니다. 즉시 의식상태 사정 및 활력징후 사정을 시작하세요.”
-
-이번에도 간호사 A는 의식상태를 확인하고, 간호사 B는 활력징후를 측정한다.
-
-간호사 A는 환자 C에게 말을 걸고 반응을 관찰한다. 환자 C 역시 목소리에 반응하지만 혼란스러운 상태이다. 간호사 A는 눈뜨기, 언어 반응, 운동 반응을 차례로 평가한다.
-
-환자 C의 상태는 다음과 같이 평가된다.
-
-- 눈뜨기: 소리에 반응함
-- 언어 반응: 혼란스러운 대답을 함
-- 운동 반응: 명령을 수행함
-- 총 GCS: 13점
-- 근력: 왼쪽 5점, 오른쪽 3점
-
-간호사 B는 환자 C의 활력징후를 측정하기 위해 장비를 준비한다. 측정 도구와 전극, 전극 케이블을 연결하고 모니터를 작동시킨다.
-
-환자 C의 활력징후도 환자 B와 비슷하게 관찰된다.
-
-- 호흡수: 분당 24회
-- 맥박: 분당 120회
-- 혈압: 140/86mmHg
-- 체온: 37.8도
-- 산소포화도: 93%
-
-간호사 B가 평가 결과를 보고한다.
-
-“환자 C의 GCS는 13점입니다. 왼쪽 근력은 5점, 오른쪽 근력은 3점입니다.”
-
-이어서 간호사 C는 환자 C의 동공 반응을 확인한다. 펜라이트로 양쪽 눈을 비추어 반응을 비교한 결과, 환자 C 역시 한쪽 동공 반응에 이상이 관찰된다.
-
-간호사 C는 왼쪽 팔에 20게이지 정맥로를 확보하고 생리식염수 수액을 연결한다.
-
-간호사 D는 환자 C에게 비강 캐뉼라를 적용하고 산소를 공급한다. 벽면 흡인 장치를 연결한 뒤, 출혈 부위에 거즈를 대고 압박한다. 출혈이 멎으면 거즈 위에 플라스터를 붙인다.
-
-간호사 D가 처치 결과를 알린다.
-
-“산소 투여가 완료되었습니다.”
-
-잠시 후 최종 확인이 이어진다.
-
-“산소 적용과 지혈이 완료되었습니다.”
-
-환자 C에 대해서도 의식상태 평가, 활력징후 측정, 동공 반응 검사, 정맥로 확보, 산소 공급, 지혈 처치가 모두 끝난다.
-
-시스템이 알린다.
-
-“환자 C에 대한 간호 중재가 완료되었습니다.”
+- 전체 인원의 퀘스트가 "퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기" 상태(*a)라면 퀘스트 완료처리
+- 기술 노트: 디버그 편의를 위해 시작할 때 nurse_* 태그를 가진 플레이어가 몇 명인지 파악해두기, 인원수만큼 퀘스트 목표가 (*a) 상태가 되면 퀘스트 완료 처리하도록 구현
 
 ### CT실 이송
 
-환자 B와 환자 C에 대한 처치가 모두 끝나자 의사 NPC가 환자들의 상태를 종합한다. 의사는 두 환자의 의식상태와 좌우 근력 차이, 비정상적인 동공 반응을 다시 확인한다.
+- 환자 C 퀘스트 완료 시 시작
+- 콘텐츠
+  1. 지연 2초
+  2. DisinteractableDialogue
+    - Speaker: "의사"
+    - Content: "음.."
+    - TTS: true
+  3. Dialogue
+    - Speaker: "의사"
+    - Content: "남성 환자는 E3 / V4 / M6, GCS 13점, 근력 좌측 5점, 우측 3점, 호흡수24, 맥박120, 혈압 140/86, 체온 37.8, 산소포화도 93%..."
+  4. Dialogue
+    - Speaker: "의사"
+    - Content: "여성 환자는 E3 / V4 / M6, GCS 13점, 근력 좌측 5점, 우측 3점, 호흡수24, 맥박120, 혈압 140/86, 체온 37.8, 산소포화도 93%..."
+  5. Dialogue
+    - Speaker: "의사"
+    - Content: "두분 다 뇌손상이 의심되니 브레인 CT 찍어봅시다. 환자들 CT실로 옮겨주세요."
+  6. 퀘스트 발행
+    - 제목: "환자 CT실 이송"
+    - 목표
+      1. 서브목표 1
+        - 표기: "환자 B를 CT실로 이동시키기"
+        - 처리: 환자 B를 CT실로 이동시키면 완료 처리
+      2. 서브목표 2
+        - 표기: "환자 C를 CT실로 이동시키기"
+        - 처리: 환자 C를 CT실로 이동시키면 완료 처리
 
-의사가 말한다.
-
-“기전과 사정 결과를 보니 뇌손상이 의심됩니다. 활력징후는 비교적 안정되어 있으니 지금 Brain CT를 찍겠습니다. 환자를 CT실로 이동시켜 주세요.”
-
-간호사들은 환자 B와 환자 C를 CT실로 이동시킬 준비를 한다. 간호사 A, B, C, D가 함께 환자들을 이송하고, 의사 NPC도 CT실로 이동한다.
-
-환자들이 CT실에 도착하면 모든 처치 절차가 완료된다.
-
-시스템이 안내한다.
-
-“시나리오 B, C 환자 대응 종료. 모든 시나리오를 수행하였습니다.”
-
-화면이 서서히 어두워지고, 환자 B와 환자 C의 처치 시나리오가 종료된다.
+위의 6. 환자 CT실 이송 퀘스트 완료 시 다음 처리 수행
+1. Delay 1초
+2. Title
+  - Content: 시나리오 종료
+  - Subtitle: 시나리오를 완료하였습니다.
 
 
 # 이전 버전 데이터
@@ -792,17 +1247,17 @@ flags: ["refactor-required"]
 interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 분류한다.
 
 - **자동 계측 완료**(코드 경로 존재, 씬/아이템 설정 검증 필요): `enter_triage_zone`(구역 진입, 단 인원수 검증은 별도), `apply_electrode`, `apply_gauze`, `apply_plaster_on_gauze`, `wear_glove`.
-- **선행 구현 필요**(게임플레이 미구현, 미배선 시 무한 대기 또는 명시된 timeout 복구): `click_patient_b_face`, `click_patient_c_face`, `click_patient_dummy_d_b`. IV 삽입 producer는 구현되어 `insert_iv_{patientIdentifier}_{left|right}`를 발행한다. 환자 B는 프리팹의 우측 팔 표시 지원과 본문 지시를 일치시켜 최초 20G 삽입을 우측에 배정한다. 환자 C의 팔은 아직 임상·프리팹 정합 확인이 필요하다. 비강캐뉼라 적용은 `NasalCannulaApplied` 상태 바인딩으로 대체했으며, 산소 연결은 별도 연결점 producer가 필요하다. `click_humidifier_bottle`, `click_sterile_distilled_water`, `click_flowmeter`는 `MedicalItem.OnGet()`이 자동 발행한다.
+- **선행 구현 필요**(게임플레이 미구현, 미배선 시 무한 대기 또는 명시된 timeout 복구): `click_patient_b_face`, `click_patient_c_face`, `click_patient_dummy_d_b`. IV 삽입 producer는 `insert_iv_{patientIdentifier}_{left|right}`를 발행하며 환자 B는 우측, 환자 C는 좌측 표시와 본문 지시를 사용한다. 비강캐뉼라 적용은 `NasalCannulaApplied` 상태 바인딩으로 대체했으며, 산소 연결은 별도 연결점 producer가 필요하다. `click_humidifier_bottle`, `click_sterile_distilled_water`, `click_flowmeter`는 `MedicalItem.OnGet()`이 자동 발행한다.
 - **구현 완료(런타임 UI)**: `close_vital_ui_b`, `close_vital_ui_c` — `PatientMonitorController`가 닫기 버튼을 만들고, B/C 활성화 이벤트가 패널·모니터를 숨긴 뒤 환자별 signal을 발생시킨다.
 - **에디터 Identifier 정합 필요**(코드는 있으나 프리팹/에디터 매핑 확정 필요): `check_gcs_patient_b`, `check_gcs_patient_c`, `check_vital_patient_b`, `check_vital_patient_c`, `click_patient_b`, `click_patient_c`.
 
 ### IV-BC-1 — 20G 팔/신호 계약
 
-`PatientController.IntravenousLineCannula`는 캐뉼라 사용을 실제 처리하고 `insert_iv_{patientIdentifier}_{left|right}` 신호를 발생시킨다. 처치 표시 프리셋이 한쪽 팔만 지원하면 해당 팔을 우선하고, 양쪽이면 좌측부터 배정한다. B/C 그래프는 좌·우 신호 중 하나를 받는 `RegistryContains(matchMode=Any)`를 유지한다.
+`PatientController.IntravenousLineCannula`는 캐뉼라 사용을 실제 처리하고 `insert_iv_{patientIdentifier}_{left|right}` 신호를 발생시킨다. 처치 표시 프리셋이 한쪽 팔만 지원하면 해당 팔을 우선하고, 양쪽이면 좌측부터 배정한다. 현재 그래프는 환자 B의 우측 신호와 환자 C의 좌측 신호를 각각 명시적으로 기다린다.
 
 - [x] 환자 B는 `PatientTypeBMale` 우측 정맥로 표시를 활성화하고 본문 지시대로 우측 팔을 우선한다(2026-08-02).
-- [ ] 환자 C에 실제 사용할 patient prefab과 임상 지시의 좌/우를 확정한다.
-- [x] 그래프 Validator를 실제 producer 신호의 좌·우 OR 조건으로 갱신했다(`matchMode=Any`, 2026-07-28).
+- [x] 환자 C는 `PatientTypeBFemale` 좌측 정맥로 표시를 활성화하고 본문 지시대로 좌측 팔을 우선한다(2026-08-02).
+- [x] 그래프 Validator를 환자 B 우측·환자 C 좌측 producer 신호와 일치시켰다(2026-08-02).
 - [x] 프리셋의 단일 지원 팔을 우선하는 최초 삽입 팔 선택을 구현했다(2026-08-02).
 
 ## 시나리오 본문

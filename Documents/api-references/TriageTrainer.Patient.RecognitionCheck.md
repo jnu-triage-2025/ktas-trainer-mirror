@@ -49,6 +49,14 @@ public void ActivateRecognitionCheck(
 | `activate_patient_b_recognition_4` | `patient_b_recognition_4` | 비허용 |
 | `activate_patient_b_strength_check` | `patient_b_strength_checked` | 비허용 |
 | `activate_patient_b_pupil_check` | `patient_b_pupil_checked` | 비허용 |
+| `activate_patient_c_recognition_1` | `patient_c_recognition_1` | 허용 |
+| `activate_patient_c_recognition_2` | `patient_c_recognition_2` | 허용 |
+| `activate_patient_c_recognition_3` | `patient_c_recognition_3` | 허용 |
+| `activate_patient_c_recognition_4` | `patient_c_recognition_4` | 비허용 |
+| `activate_patient_c_strength_check` | `patient_c_strength_checked` | 비허용 |
+| `activate_patient_c_pupil_check` | `patient_c_pupil_checked` | 비허용 |
+
+각 이벤트는 식별자에 해당하는 환자 B 또는 C의 `PatientController`만 활성화한다. 두 환자의 단계와 완료 신호는 서로 공유하지 않는다.
 
 ## 네트워크 동작
 

@@ -16,7 +16,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     /// <summary>
     /// scenario 최상위 actingNpcs 정의를 참조해 같은 actingNpc 구성 경로로 스폰한다.
-    /// 지정하면 preset/위치/상호작용은 actingNpc 정의를 사용한다.
+    /// 지정하면 preset/기본 위치/상호작용은 actingNpc 정의를 사용한다.
+    /// <see cref="PositionSourceEntityIdentifier"/>가 있으면 해당 위치만 actingNpc 기본 위치보다 우선한다.
     /// </summary>
     public string ActingNpcIdentifier { get; set; }
 

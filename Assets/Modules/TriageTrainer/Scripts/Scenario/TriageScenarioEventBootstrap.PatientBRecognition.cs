@@ -6,32 +6,52 @@ namespace TriageTrainer.Scenario
 {
   public partial class TriageScenarioEventBootstrap
   {
-    private void RegisterPatientBRecognitionEvents()
+    private void RegisterPatientBCRecognitionEvents()
     {
-      RegisterRecognition("activate_patient_b_recognition_1", "patient_b_recognition_1", true, "말 걸기");
-      RegisterRecognition("activate_patient_b_recognition_2", "patient_b_recognition_2", true, "말 걸기");
-      RegisterRecognition("activate_patient_b_recognition_3", "patient_b_recognition_3", true, "말 걸기");
-      RegisterRecognition("activate_patient_b_recognition_4", "patient_b_recognition_4", false, "말 걸기");
-      RegisterRecognition("activate_patient_b_strength_check", "patient_b_strength_checked", false, "근력 확인");
-      RegisterRecognition("activate_patient_b_pupil_check", "patient_b_pupil_checked", false, "동공반사 확인");
+      RegisterRecognition("activate_patient_b_recognition_1", false, "patient_b_recognition_1", true, "말 걸기");
+      RegisterRecognition("activate_patient_b_recognition_2", false, "patient_b_recognition_2", true, "말 걸기");
+      RegisterRecognition("activate_patient_b_recognition_3", false, "patient_b_recognition_3", true, "말 걸기");
+      RegisterRecognition("activate_patient_b_recognition_4", false, "patient_b_recognition_4", false, "말 걸기");
+      RegisterRecognition("activate_patient_b_strength_check", false, "patient_b_strength_checked", false, "근력 확인");
+      RegisterRecognition("activate_patient_b_pupil_check", false, "patient_b_pupil_checked", false, "동공반사 확인");
+      RegisterRecognition("activate_patient_c_recognition_1", true, "patient_c_recognition_1", true, "말 걸기");
+      RegisterRecognition("activate_patient_c_recognition_2", true, "patient_c_recognition_2", true, "말 걸기");
+      RegisterRecognition("activate_patient_c_recognition_3", true, "patient_c_recognition_3", true, "말 걸기");
+      RegisterRecognition("activate_patient_c_recognition_4", true, "patient_c_recognition_4", false, "말 걸기");
+      RegisterRecognition("activate_patient_c_strength_check", true, "patient_c_strength_checked", false, "근력 확인");
+      RegisterRecognition("activate_patient_c_pupil_check", true, "patient_c_pupil_checked", false, "동공반사 확인");
       Register("reset_patient_b_c_triage_attempt", Event_ResetPatientBCTriageAttempt);
       Register("complete_patient_b_c_triage", Event_CompletePatientBCTriage);
     }
 
-    private void RegisterRecognition(string eventIdentifier, string completionSignal, bool allowMicrophone, string displayText)
+    private void RegisterRecognition(
+      string eventIdentifier,
+      bool targetPatientC,
+      string completionSignal,
+      bool allowMicrophone,
+      string displayText)
     {
-      Register(eventIdentifier, () => Event_ActivatePatientBRecognition(completionSignal, allowMicrophone, displayText));
+      Register(eventIdentifier,
+        () => Event_ActivatePatientRecognition(targetPatientC, completionSignal, allowMicrophone, displayText));
     }
 
-    private IEnumerator Event_ActivatePatientBRecognition(string completionSignal, bool allowMicrophone, string displayText)
+    private IEnumerator Event_ActivatePatientRecognition(
+      bool targetPatientC,
+      string completionSignal,
+      bool allowMicrophone,
+      string displayText)
     {
       ResolveRuntimeReferencesIfNeeded();
-      var patient = _patientBObject != null
-        ? _patientBObject.GetComponentInChildren<PatientController>(true)
+      var target = targetPatientC ? _patientCObject : _patientBObject;
+      var patient = target != null
+        ? target.GetComponentInChildren<PatientController>(true)
         : null;
       if (patient == null)
       {
-        UnityEngine.Debug.LogError($"[TriageScenarioEventBootstrap] patient_b recognition target is missing ({completionSignal}).", this);
+        string patientIdentifier = targetPatientC ? "patient_c" : "patient_b";
+        UnityEngine.Debug.LogError(
+          $"[TriageScenarioEventBootstrap] {patientIdentifier} recognition target is missing ({completionSignal}).",
+          this);
         yield break;
       }
 

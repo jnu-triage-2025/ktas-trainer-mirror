@@ -945,7 +945,11 @@ namespace MultiplayerInfrastructure.Scenario
       return true;
     }
 
-    private bool TrySpawnScenarioActingNpc(ScenarioGraph graph, ScenarioActingNpcDefinition actingNpc, out string error)
+    private bool TrySpawnScenarioActingNpc(
+      ScenarioGraph graph,
+      ScenarioActingNpcDefinition actingNpc,
+      out string error,
+      Vector3? positionOverride = null)
     {
       error = string.Empty;
       if (actingNpc == null || string.IsNullOrWhiteSpace(actingNpc.Identifier))
@@ -966,7 +970,8 @@ namespace MultiplayerInfrastructure.Scenario
         return false;
       }
 
-      var position = new Vector3(actingNpc.PositionX, actingNpc.PositionY, actingNpc.PositionZ);
+      var position = positionOverride
+        ?? new Vector3(actingNpc.PositionX, actingNpc.PositionY, actingNpc.PositionZ);
       var rotation = Quaternion.Euler(actingNpc.RotationX, actingNpc.RotationY, actingNpc.RotationZ);
       if (!Registry.Registry.TrySpawnEntityPreset(actingNpc.PresetIdentifier, position, rotation,
             actingNpc.Identifier, out var spawned, out _, out error))
@@ -2318,7 +2323,25 @@ namespace MultiplayerInfrastructure.Scenario
           Advance();
           return;
         }
-        if (!TrySpawnScenarioActingNpc(_currentGraph, actingNpc, out var actorError))
+        Vector3? actorSpawnPosition = null;
+        if (!string.IsNullOrWhiteSpace(node.PositionSourceEntityIdentifier))
+        {
+          if (TryResolveSpawnPositionSource(node.PositionSourceEntityIdentifier, out var resolvedPosition))
+          {
+            actorSpawnPosition = resolvedPosition;
+          }
+          else
+          {
+            Debug.LogWarning(
+              $"[ScenarioController] EntityPresetSpawn '{node.Identifier}' position source " +
+              $"'{node.PositionSourceEntityIdentifier}' was not found. Using actingNpc definition position.");
+          }
+        }
+        if (!TrySpawnScenarioActingNpc(
+              _currentGraph,
+              actingNpc,
+              out var actorError,
+              actorSpawnPosition))
         {
           Debug.LogWarning($"[ScenarioController] EntityPresetSpawn '{node.Identifier}' actingNpc '{node.ActingNpcIdentifier}' failed: {actorError}");
           Advance();
@@ -2341,12 +2364,8 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Vector3 spawnPosition = new Vector3(node.PositionX, node.PositionY, node.PositionZ);
-      if (!string.IsNullOrWhiteSpace(node.PositionSourceEntityIdentifier)
-          && Registry.Registry.TryGetEntity(node.PositionSourceEntityIdentifier, out var sourceDescriptor)
-          && sourceDescriptor?.GameObject != null)
-      {
-        spawnPosition = sourceDescriptor.GameObject.transform.position;
-      }
+      if (TryResolveSpawnPositionSource(node.PositionSourceEntityIdentifier, out var resolvedSpawnPosition))
+        spawnPosition = resolvedSpawnPosition;
 
       if (!Registry.Registry.TrySpawnEntityPreset(
             node.PresetIdentifier,
@@ -2374,6 +2393,31 @@ namespace MultiplayerInfrastructure.Scenario
       _stateStore[stateKey] = spawnedIdentifier;
 
       Advance();
+    }
+
+    private static bool TryResolveSpawnPositionSource(
+      string sourceIdentifier,
+      out Vector3 position)
+    {
+      if (!string.IsNullOrWhiteSpace(sourceIdentifier))
+      {
+        if (Registry.Registry.TryGetEntity(sourceIdentifier, out var sourceDescriptor)
+            && sourceDescriptor?.GameObject != null)
+        {
+          position = sourceDescriptor.GameObject.transform.position;
+          return true;
+        }
+
+        if (Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, sourceIdentifier, out var waypoint)
+            || Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, sourceIdentifier, out waypoint))
+        {
+          position = waypoint;
+          return true;
+        }
+      }
+
+      position = default;
+      return false;
     }
 
     /// <summary>
