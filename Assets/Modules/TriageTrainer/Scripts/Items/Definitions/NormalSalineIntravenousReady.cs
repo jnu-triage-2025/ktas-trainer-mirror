@@ -8,7 +8,7 @@ namespace TriageTrainer.ItemDefinitions
   public class NormalSalineIntravenousReady : MedicalItem
   {
     public const string Identifier   = "normal_saline_intravenous_ready";
-    public const string DisplayName  = "식염수 수액 세트";
-    public const string Description  = "생리식염수 1L 가 연결된 수액 세트입니다.";
+    public const string DisplayName  = "준비된 생리식염수 1L 수액백";
+    public const string Description  = "준비된 생리식염수 1L 수액백";
   }
 }
