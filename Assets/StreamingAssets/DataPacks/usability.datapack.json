@@ -1,6 +1,10 @@
 {
   "packId": "usability",
   "displayName": "편의기능 데이터팩",
+  "gameRules": [
+    { "name": "UseMicInRecognitionCheck", "value": "true" },
+    { "name": "DisableInteractionInRecognitionCheck", "value": "false" }
+  ],
   "commandAliases": [
     { "name": "nurse_a", "target": "/tag add @self nurse_a" },
     { "name": "nurse_b", "target": "/tag add @self nurse_b" },

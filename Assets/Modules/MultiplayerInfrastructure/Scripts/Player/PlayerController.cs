@@ -1,5 +1,6 @@
 using FishNet.Object;
 using MultiplayerInfrastructure.Camera;
+using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
@@ -7,10 +8,11 @@ using UnityEngine;
 namespace MultiplayerInfrastructure.Player
 {
   [RequireComponent(typeof(InteractableEntityResolver))]
-  public partial class PlayerController : NetworkBehaviour
+  public partial class PlayerController : NetworkBehaviour, IScenarioIdentifiedEntity
   {
     [SerializeField] private Entity.Entity _playerEntity;
     public Entity.Entity PlayerEntity => _playerEntity;
+    public string ScenarioEntityIdentifier => UserIdentifier;
 
     NearbyInteractablesDetector _interactiveDetector;
     public NearbyInteractablesDetector InteractiveDetector => _interactiveDetector;

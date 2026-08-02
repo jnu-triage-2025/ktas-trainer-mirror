@@ -52,12 +52,14 @@ namespace TriageTrainer.Entity
 
       // 트리아지 상태값 동기화 구독 + 초기 오버헤드 태그 반영.
       InitializeTriageSync();
+      InitializeRecognitionCheckSync();
       UpdateTriageOverheadLabel(AssessedTriage);
     }
 
     public override void OnStopClient()
     {
       TeardownTriageSync();
+      TeardownRecognitionCheckSync();
       DestroyTriageOverheadLabel();
       _runtimeIdentifier.OnChange -= OnRuntimeIdentifierChanged;
       UnregisterPatientEntity();
@@ -66,6 +68,7 @@ namespace TriageTrainer.Entity
 
     private void OnDestroy()
     {
+      TeardownRecognitionCheckSync();
       UnregisterPatientEntity();
     }
 

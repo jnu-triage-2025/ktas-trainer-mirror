@@ -15,7 +15,13 @@ namespace TriageTrainer.Scenario
     public static void RaiseOxyflowmeterRemoved(string equipmentIdentifier) => Raise("oxyflowmeter_removed", equipmentIdentifier);
     public static void RaiseOxyflowmeterEnabled(string equipmentIdentifier) => Raise("oxyflowmeter_enabled", equipmentIdentifier);
     public static void RaiseOxyflowmeterDisabled(string equipmentIdentifier) => Raise("oxyflowmeter_disabled", equipmentIdentifier);
-    public static void RaiseCareZonePatientEntered(string zoneIdentifier, string patientIdentifier) => Raise("carezone_patient_entered", zoneIdentifier, patientIdentifier);
+    public static void RaiseCareZonePatientEntered(string zoneIdentifier, string patientIdentifier)
+    {
+      Raise("carezone_patient_entered", zoneIdentifier, patientIdentifier);
+      // 시나리오가 씬별 zone 식별자에 결합되지 않고 "이 환자가 어떤 처치 구역에 도착했는가"만
+      // 기다릴 수 있는 안정적인 환자 범위 신호도 함께 제공한다.
+      Raise("carezone_patient_entered", patientIdentifier);
+    }
     public static void RaiseCareZonePatientExited(string zoneIdentifier, string patientIdentifier) => Raise("carezone_patient_exited", zoneIdentifier, patientIdentifier);
     public static void RaiseCareZoneEnabled(string zoneIdentifier) => Raise("carezone_enabled", zoneIdentifier);
     public static void RaiseCareZoneDisabled(string zoneIdentifier) => Raise("carezone_disabled", zoneIdentifier);

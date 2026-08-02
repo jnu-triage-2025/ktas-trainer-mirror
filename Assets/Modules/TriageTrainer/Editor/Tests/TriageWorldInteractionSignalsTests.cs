@@ -60,5 +60,25 @@ namespace TriageTrainer.Tests
         ScenarioInteractionSignals.Clear("patient_bed_positioning_point_unlatched_bed_b_zone_1:bed_snap_point");
       }
     }
+
+    [Test]
+    public void CareZonePatientEnteredAlsoRaisesZoneIndependentPatientSignal()
+    {
+      var raised = new List<string>();
+      void Capture(string signal) => raised.Add(signal);
+      ScenarioInteractionSignals.OnSignalRegistered += Capture;
+      try
+      {
+        TriageWorldInteractionSignals.RaiseCareZonePatientEntered("zone_0:zone", "patient_b");
+        Assert.That(raised, Does.Contain("sig.carezone_patient_entered_zone_0:zone_patient_b"));
+        Assert.That(raised, Does.Contain("sig.carezone_patient_entered_patient_b"));
+      }
+      finally
+      {
+        ScenarioInteractionSignals.OnSignalRegistered -= Capture;
+        foreach (string signal in raised)
+          ScenarioInteractionSignals.Clear(signal);
+      }
+    }
   }
 }

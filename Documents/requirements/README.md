@@ -2,7 +2,7 @@
 title: "기능 요구사항"
 doc_type: requirement
 status: active
-updated: 2026-04-14
+updated: 2026-08-02
 ---
 
 # 기능 요구사항

@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "2-implementing"
 status: active
-updated: 2026-07-18
+updated: 2026-08-02
 flags: ["refactor-required"]
 ---
 
@@ -537,6 +537,52 @@ flags: ["refactor-required"]
 - 전체 인원의 퀘스트가 "퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기" 상태(*a)라면 퀘스트 완료처리
 - 기술 노트: 디버그 편의를 위해 시작할 때 nurse_* 태그를 가진 플레이어가 몇 명인지 파악해두기, 인원수만큼 퀘스트 목표가 (*a) 상태가 되면 퀘스트 완료 처리하도록 구현
 
+## 2026-08-02 데이터화 확정 사항
+
+### 이번 변환 범위
+
+- 데이터 정본은 `## 줄글 시나리오` 시작부터 `### 환자 B 처치` 본문 종료까지이다.
+- `### 환자 C 처치`와 `### CT실 이송`은 이번 그래프에 포함하지 않는다.
+- 새 `patient_b_c_ct.scenario.json`은 환자 B 처치 완료 안내에서 종료하며 162개 노드로 구성한다.
+
+### 본문 우선 해석과 이전 버전 사용 결과
+
+- 환자 B는 현재 본문의 “남성 환자”를 정본으로 삼아 `sex=Male`로 설정한다. 이전 버전의 `Female` 값은 모순되므로 무시한다.
+- 환자 B 동공은 현재 본문대로 좌측 무반응, 우측 반응으로 확정한다. 반대 방향을 적은 이전 기록은 무시한다.
+- 환자 B 20G 정맥로의 팔은 현재 본문에 명시되지 않아 이전 버전과 기존 시각물 계약을 참고하여 오른팔로 확정한다.
+- 환자 B 활력은 GCS 13(E3/V4/M6), RR 24, HR 120, BP 140/86mmHg, BT 37.8℃, SpO2 93%로 확정한다.
+- 분류용 엔티티는 `patient_dummy_d_b`이다. 현재 본문에 명시된 공간 식별자 `scen_b:patient_spawnpoint_dummy_d_a`는 이름의 `d_a`가 엔티티명과 다르지만 명시값이므로 그대로 사용한다.
+
+### 선행 구현 완료 사항
+
+- `Parallel(ByRole)`의 원격 역할 브랜치에서 Dialogue/Choice를 해당 클라이언트에 표시하고, `(clientId, graph, node)`가 일치하는 선택만 서버 브랜치에 반영한다.
+- 병렬 브랜치 안의 Validator가 `Branching`/`FailBranch`를 브랜치 로컬 전이로 처리하도록 보완했다. 이에 따라 오분류 안내 → 진행 신호/퀘스트 초기화 → 재분류 루프를 데이터로 구성한다.
+- `@t=[태그, fallback]`와 `@s` 텍스트 지정자를 구현했다. 태그 대상이 없으면 일반 문자열 또는 중첩 지정자인 fallback을 사용한다.
+- Choice에 `assessmentIdentifier`, `correctOptionIndex`를 추가했다. 세션 로그에는 선택 답, 의도 답, 정답 여부가 함께 기록된다.
+- 의식 확인은 활성 단계에만 “말 걸기” 상호작용을 노출한다. 1~3단계는 마이크 RMS 음량이 0.02 이상으로 1초간 유지되어도 완료되며, 4단계는 상호작용만 사용한다.
+- 애플리케이션 시작 후 마이크 권한을 미리 요청한다. 마이크 장치/권한이 없으면 상호작용 경로를 유지한다.
+- `/gamerule UseMicInRecognitionCheck`와 `/gamerule DisableInteractionInRecognitionCheck`를 추가했다. `(false, true)` 변경은 오류와 함께 거부되며 직전 값을 유지한다.
+- `usability` 데이터팩은 `(UseMicInRecognitionCheck, DisableInteractionInRecognitionCheck)=(true, false)`를 적용한다.
+- PlayerController가 시나리오 식별자를 노출하고, Overworld Initializer가 `scen_b:*` 스폰/도착 앵커와 `quest_arrival_triage_area_{id}` 도착 신호 존을 생성한다.
+- 처치 구역 도착 신호는 실제 zone 이름과 무관한 `carezone_patient_entered_patient_b/c`도 함께 발신한다. 그래프는 이 환자 범위 신호로 B/C 이동 완료를 판정한다.
+
+### 데이터 연결 계약
+
+| 구분 | 확정 식별자/신호 |
+|---|---|
+| 환자 스폰 위치 | `scen_b:patient_spawnpoint_b`, `scen_b:patient_spawnpoint_c`, `scen_b:patient_spawnpoint_dummy_d_a` |
+| 간호사 도착 위치 | `scen_b:quest_arrival_triage_area` |
+| 간호사 도착 계측 | `quest_arrival_triage_area_{player-id}` 4개 distinct |
+| 환자 처치구역 도착 | `carezone_patient_entered_patient_b`, `carezone_patient_entered_patient_c` |
+| 환자 B 정맥로 | `insert_iv_patient_b_right`, `connect_cannula_and_ns1_patient_b` |
+| 환자 B 산소/지혈 | `apply_nasal_cannula_patient_b`, `equipment_connected_oxyflowmeter_patient_b`, `apply_gauze_patient_b`, `apply_plaster_on_gauze_patient_b` |
+
+### 에디터 설정 필요 사항
+
+- Overworld Initializer의 기본 `scen_b:*` 위치는 안전한 미확정값 `(-1, -1, -1)`이다. 씬 담당자가 실제 트리아지 위치를 지정하고 **Set**을 실행해야 한다.
+- 처치 구역의 기존 `PatientCareDescriptionZone`, 베드 스냅 포인트, oxyflowmeter가 실제 씬에 배치되어야 한다.
+- 네 역할 태그 `nurse_a`~`nurse_d`가 모두 공급되지 않으면 `Panic` 정책에 따라 역할 병렬 처리를 시작하지 않는다.
+
 ### 환자 C 처치
 
 이제 환자 C를 처치 구역으로 이동시킨다.
@@ -746,17 +792,18 @@ flags: ["refactor-required"]
 interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 분류한다.
 
 - **자동 계측 완료**(코드 경로 존재, 씬/아이템 설정 검증 필요): `enter_triage_zone`(구역 진입, 단 인원수 검증은 별도), `apply_electrode`, `apply_gauze`, `apply_plaster_on_gauze`, `wear_glove`.
-- **선행 구현 필요**(게임플레이 미구현, 미배선 시 무한 대기 또는 명시된 timeout 복구): `click_patient_b_face`, `click_patient_c_face`, `click_patient_dummy_d_b`. IV 삽입 producer는 구현되어 `insert_iv_{patientIdentifier}_{left|right}`를 발행하며, B/C Validator는 좌·우 중 하나를 받는 `matchMode=Any`로 갱신했다. 다만 실제 사용할 팔·프리팹 시각물·임상 지시는 여전히 확정이 필요하다. 비강캐뉼라 적용은 `NasalCannulaApplied` 상태 바인딩으로 대체했으며, 산소 연결은 별도 연결점 producer가 필요하다. `click_humidifier_bottle`, `click_sterile_distilled_water`, `click_flowmeter`는 `MedicalItem.OnGet()`이 자동 발행한다.
+- **선행 구현 필요**(게임플레이 미구현, 미배선 시 무한 대기 또는 명시된 timeout 복구): `click_patient_b_face`, `click_patient_c_face`, `click_patient_dummy_d_b`. IV 삽입 producer는 구현되어 `insert_iv_{patientIdentifier}_{left|right}`를 발행한다. 환자 B는 프리팹의 우측 팔 표시 지원과 본문 지시를 일치시켜 최초 20G 삽입을 우측에 배정한다. 환자 C의 팔은 아직 임상·프리팹 정합 확인이 필요하다. 비강캐뉼라 적용은 `NasalCannulaApplied` 상태 바인딩으로 대체했으며, 산소 연결은 별도 연결점 producer가 필요하다. `click_humidifier_bottle`, `click_sterile_distilled_water`, `click_flowmeter`는 `MedicalItem.OnGet()`이 자동 발행한다.
 - **구현 완료(런타임 UI)**: `close_vital_ui_b`, `close_vital_ui_c` — `PatientMonitorController`가 닫기 버튼을 만들고, B/C 활성화 이벤트가 패널·모니터를 숨긴 뒤 환자별 signal을 발생시킨다.
 - **에디터 Identifier 정합 필요**(코드는 있으나 프리팹/에디터 매핑 확정 필요): `check_gcs_patient_b`, `check_gcs_patient_c`, `check_vital_patient_b`, `check_vital_patient_c`, `click_patient_b`, `click_patient_c`.
 
-### IV-BC-1 — 20G 팔/신호 계약 충돌 (인간 판단 필요)
+### IV-BC-1 — 20G 팔/신호 계약
 
-`PatientController.IntravenousLineCannula`는 캐뉼라 사용을 실제 처리하고 `insert_iv_{patientIdentifier}_{left|right}` 신호를 발생시킨다. B/C 그래프는 `sig.insert_iv_patient_b_left/right`, `sig.insert_iv_patient_c_left/right` 중 하나를 받는 `RegistryContains(matchMode=Any)`로 갱신했다. 기본 구현은 좌측 우선 배정이므로, 실제 사용할 팔·프리팹 시각물·임상 지시가 일치하는지는 여전히 확인해야 한다.
+`PatientController.IntravenousLineCannula`는 캐뉼라 사용을 실제 처리하고 `insert_iv_{patientIdentifier}_{left|right}` 신호를 발생시킨다. 처치 표시 프리셋이 한쪽 팔만 지원하면 해당 팔을 우선하고, 양쪽이면 좌측부터 배정한다. B/C 그래프는 좌·우 신호 중 하나를 받는 `RegistryContains(matchMode=Any)`를 유지한다.
 
-- [ ] 환자 B/C에 실제 사용할 patient prefab(성별·팔 시각물)과 임상 지시의 좌/우를 확정한다.
+- [x] 환자 B는 `PatientTypeBMale` 우측 정맥로 표시를 활성화하고 본문 지시대로 우측 팔을 우선한다(2026-08-02).
+- [ ] 환자 C에 실제 사용할 patient prefab과 임상 지시의 좌/우를 확정한다.
 - [x] 그래프 Validator를 실제 producer 신호의 좌·우 OR 조건으로 갱신했다(`matchMode=Any`, 2026-07-28).
-- [ ] 환자별 실제 삽입 팔과 프리팹 시각물을 확정하고, 필요하면 팔별 interaction point 또는 patient별 최초 삽입 팔 설정을 추가한다.
+- [x] 프리셋의 단일 지원 팔을 우선하는 최초 삽입 팔 선택을 구현했다(2026-08-02).
 
 ## 시나리오 본문
 

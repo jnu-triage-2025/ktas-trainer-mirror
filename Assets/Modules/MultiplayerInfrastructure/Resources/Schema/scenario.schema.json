@@ -981,6 +981,13 @@
                 "$ref": "#/$defs/ScenarioChoiceOption"
               }
             },
+            "assessmentIdentifier": {
+              "type": ["string", "null"]
+            },
+            "correctOptionIndex": {
+              "type": ["integer", "null"],
+              "minimum": 0
+            },
             "playTTS": {
               "type": [
                 "boolean",
@@ -1649,6 +1656,13 @@
             },
             "eventIdentifier": {
               "type": "string"
+            },
+            "invokeOnRoleClient": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": false
             },
             "moveNextBehavior": {
               "type": "string",

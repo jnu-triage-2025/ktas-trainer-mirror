@@ -540,6 +540,8 @@ namespace MultiplayerInfrastructure.Scenario
         PortraitSpriteIdentifier = dto.PortraitSpriteIdentifier,
         PlayTTS = dto.PlayTTS ?? false,
         TtsVoiceIdentifier = string.IsNullOrEmpty(dto.TtsVoiceIdentifier) ? null : dto.TtsVoiceIdentifier,
+        AssessmentIdentifier = dto.AssessmentIdentifier,
+        CorrectOptionIndex = dto.CorrectOptionIndex,
         Options = options
       };
     }
@@ -637,6 +639,7 @@ namespace MultiplayerInfrastructure.Scenario
         {
           Identifier = dto.Identifier,
           EventIdentifier = dto.EventIdentifier,
+          InvokeOnRoleClient = dto.InvokeOnRoleClient ?? false,
           MoveNextBehavior = ParseInvokeEventMoveNext(dto.MoveNextBehavior),
           NextIdentifier = dto.NextIdentifier
         };
@@ -1553,6 +1556,8 @@ namespace MultiplayerInfrastructure.Scenario
         PortraitSpriteIdentifier = node.PortraitSpriteIdentifier,
         PlayTTS = node.PlayTTS ? true : (bool?)null,
         TtsVoiceIdentifier = string.IsNullOrEmpty(node.TtsVoiceIdentifier) ? null : node.TtsVoiceIdentifier,
+        AssessmentIdentifier = node.AssessmentIdentifier,
+        CorrectOptionIndex = node.CorrectOptionIndex,
         NextIdentifier = null,
         Options = new List<ScenarioChoiceOptionDTO>()
       };
@@ -1682,6 +1687,7 @@ namespace MultiplayerInfrastructure.Scenario
           NodeType = "InvokeEvent",
           Identifier = node.Identifier,
           EventIdentifier = node.EventIdentifier,
+          InvokeOnRoleClient = node.InvokeOnRoleClient ? true : (bool?)null,
           MoveNextBehavior = node.MoveNextBehavior.ToString(),
           NextIdentifier = node.NextIdentifier
         };
