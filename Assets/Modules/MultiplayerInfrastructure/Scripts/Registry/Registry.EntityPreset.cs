@@ -148,6 +148,7 @@ namespace MultiplayerInfrastructure.Registry
           error = $"Failed to spawn entity preset '{identifier}'.";
           return false;
         }
+        MultiplayerInfrastructure.Performance.MppmLiteMode.StripVisuals(spawned);
 
         // 1) 계층 부착(비-unwrap 하위 스폰일 때만).
         //    FishNet 규칙: "루트를 스폰하면 그 아래 이미 nested 된 NetworkObject 도 함께 스폰된다."

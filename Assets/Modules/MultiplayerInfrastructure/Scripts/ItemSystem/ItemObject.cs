@@ -1,4 +1,5 @@
 using System.Collections;
+using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
@@ -195,6 +196,7 @@ namespace MultiplayerInfrastructure.ItemSystem
     private void LoadModel()
     {
       if (Item == null) return;
+      if (MppmLiteMode.IsActive) return;
 
       string path = $"{ModelRootPath}/{Item.CurrentIdentifier}";
       var prefab = Resources.Load<GameObject>(path);

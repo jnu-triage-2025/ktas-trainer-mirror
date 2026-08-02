@@ -1,5 +1,6 @@
 using FishNet.Object;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using Unity.VisualScripting;
@@ -67,6 +68,11 @@ namespace MultiplayerInfrastructure.Camera
       if (!IsOwner) return;
 
       _holder.Initialize();
+
+      // 네트워크 스폰 뒤 생성된 소유자 카메라에도 저장된 FOV/후처리 설정을 적용한다.
+      Registry.Registry.Get<TexturePerformanceService>(
+          RegistryType.Service, Registry.Registry.TypeKey<TexturePerformanceService>())
+        ?.ReapplySceneSettings();
     }
 
     public CameraViewMode CurrentViewMode

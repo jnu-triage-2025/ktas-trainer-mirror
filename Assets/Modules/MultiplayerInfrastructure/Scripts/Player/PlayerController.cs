@@ -2,6 +2,7 @@ using FishNet.Object;
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
@@ -69,6 +70,7 @@ namespace MultiplayerInfrastructure.Player
     {
       base.OnStartClient();
       OnStartClient_AnyPeer();   // 모든 클라이언트 — owner 여부 무관
+      MppmLiteMode.StripVisuals(gameObject);
       if (!IsOwner) return;
 
       OnStartClient_UIOverlaySync();

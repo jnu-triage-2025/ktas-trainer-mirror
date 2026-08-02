@@ -516,6 +516,31 @@
   flex-wrap: wrap;
 }
 
+.settings__graphics-field-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 30px;
+  gap: 12px;
+  padding: 2px 4px;
+}
+
+.settings__graphics-field-row:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+.settings__graphics-field-label {
+  width: 220px;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #b8b8ca;
+}
+
+.settings__graphics-field-control {
+  flex-grow: 1;
+  min-width: 180px;
+}
+
 /* 텍스처 품질 옵션 타일 (TextureQualityOptionElement) */
 .texture-quality-option {
   flex: 1;
@@ -678,6 +703,16 @@
 
 .settings__root--compact .settings__graphics-options {
   gap: 6px;
+}
+
+.settings__root--compact .settings__graphics-field-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+}
+
+.settings__root--compact .settings__graphics-field-label {
+  width: auto;
 }
 
 .settings__root--compact .texture-quality-option,

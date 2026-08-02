@@ -3,6 +3,7 @@ using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Performance;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -170,6 +171,7 @@ namespace MultiplayerInfrastructure.Player
         return false;
 
       var spawned = UnityEngine.Object.Instantiate(prefab, position, rotation);
+      MppmLiteMode.StripVisuals(spawned);
       receiver = spawned.GetComponent<ISpawnedEntityIdentifierReceiver>();
       receiver.ApplySpawnedEntityIdentifier($"{itemIdentifier}:{Guid.NewGuid():N}");
       if (IsServerStarted)
@@ -182,6 +184,12 @@ namespace MultiplayerInfrastructure.Player
     /// </summary>
     private void Update_PlaceableItemPreview()
     {
+      if (MppmLiteMode.IsActive)
+      {
+        SetPlaceablePreviewVisible(false);
+        return;
+      }
+
       bool shouldShow = IsOwner &&
                         HandlingItem != null &&
                         IsSupportedPlaceable(

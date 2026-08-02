@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
@@ -297,6 +298,8 @@ namespace MultiplayerInfrastructure.ItemSystem
     private void LoadModelIfNeeded()
     {
       if (_loadedModel != null || !TryGetPrimaryReward(out var primary))
+        return;
+      if (MppmLiteMode.IsActive)
         return;
 
       string path = $"{ModelRootPath}/{primary.ItemIdentifier}";

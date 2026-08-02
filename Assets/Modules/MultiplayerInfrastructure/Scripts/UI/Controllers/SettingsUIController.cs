@@ -250,6 +250,7 @@ namespace MultiplayerInfrastructure.UI
       NeutralizeLabelsByClass("settings__section-desc");
       NeutralizeLabelsByClass("settings__panel-title");
       NeutralizeLabelsByClass("settings__pov-value");
+      NeutralizeLabelsByClass("settings__graphics-field-label");
     }
 
     private void NeutralizeLabelsByClass(string className)

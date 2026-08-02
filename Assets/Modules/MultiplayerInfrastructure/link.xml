@@ -1,0 +1,6 @@
+<linker>
+  <!-- Graphics profiles update URP properties whose setters are internal in URP 17. -->
+  <assembly fullname="Unity.RenderPipelines.Universal.Runtime">
+    <type fullname="UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset" preserve="all" />
+  </assembly>
+</linker>

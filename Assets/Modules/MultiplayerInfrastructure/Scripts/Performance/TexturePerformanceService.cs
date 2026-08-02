@@ -1,132 +1,290 @@
 using System;
+using System.Reflection;
+using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI.Models;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 
 namespace MultiplayerInfrastructure.Performance
 {
   /// <summary>
-  /// 텍스처 성능 품질을 관리하는 서비스입니다.
-  ///
-  /// 역할:
-  ///   - <see cref="TextureQuality"/> 열거형에 따라 <see cref="QualitySettings.masterTextureLimit"/>을 적용합니다.
-  ///   - <see cref="PlayerPrefs"/>를 통해 설정을 저장하고 불러옵니다.
-  ///   - 설정 변경 시 <see cref="OnQualityChanged"/> 이벤트를 발행합니다.
-  ///   - Registry.Entity에 등록되어 외부에서 조회 가능합니다.
-  ///
-  /// 씬에 하나만 배치하세요.
+  /// 종합 그래픽 설정을 저장하고 즉시 적용하는 서비스입니다.
+  /// 기존 텍스처 품질 API는 하위 호환을 위해 유지합니다.
   /// </summary>
   public class TexturePerformanceService : MonoBehaviour
   {
-    // ──────────────────────────────────────────────────────────────────────────
-    // 상수
-    // ──────────────────────────────────────────────────────────────────────────
-    private const string PlayerPrefsKey = "MultiplayerInfrastructure.TextureQuality";
-    private static readonly TextureQuality DefaultQuality = TextureQuality.High;
+    private const string PlayerPrefsKey = "MultiplayerInfrastructure.GraphicsSettings.v2";
+    private GraphicsSettingsData _currentSettings;
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // 이벤트
-    // ──────────────────────────────────────────────────────────────────────────
-    /// <summary>텍스처 품질이 변경되었을 때 새 품질 값이 전달됩니다.</summary>
     public event Action<TextureQuality> OnQualityChanged;
+    public event Action<GraphicsSettingsData> OnSettingsChanged;
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // 상태
-    // ──────────────────────────────────────────────────────────────────────────
-    private TextureQuality _currentQuality;
+    public GraphicsSettingsData CurrentSettings => _currentSettings?.Clone();
+    public GraphicsQualityProfile CurrentProfile
+      => _currentSettings?.Profile ?? GraphicsQualityPresets.DefaultProfile;
+    public TextureQuality CurrentQuality
+      => (TextureQuality)Mathf.Clamp(_currentSettings?.TextureMipmapLimit ?? 2, 0, 3);
 
-    /// <summary>현재 적용된 텍스처 품질 단계입니다.</summary>
-    public TextureQuality CurrentQuality => _currentQuality;
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // Unity 라이프사이클
-    // ──────────────────────────────────────────────────────────────────────────
     private void Awake()
     {
       Registry.Registry.Register(
         RegistryType.Service,
         Registry.Registry.TypeKey<TexturePerformanceService>(),
-        this
-      );
+        this);
 
       LoadAndApply();
+      SceneManager.sceneLoaded += HandleSceneLoaded;
     }
 
     private void OnDestroy()
     {
+      SceneManager.sceneLoaded -= HandleSceneLoaded;
       Registry.Registry.Unregister(
         RegistryType.Service,
-        Registry.Registry.TypeKey<TexturePerformanceService>()
-      );
+        Registry.Registry.TypeKey<TexturePerformanceService>());
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // 공개 API
-    // ──────────────────────────────────────────────────────────────────────────
+    public void SetProfile(GraphicsQualityProfile profile)
+    {
+      if (profile == GraphicsQualityProfile.Custom)
+        return;
 
-    /// <summary>
-    /// 텍스처 품질을 설정하고 즉시 적용한 뒤 PlayerPrefs에 저장합니다.
-    /// </summary>
-    /// <param name="quality">적용할 품질 단계</param>
+      var next = GraphicsQualityPresets.Create(profile);
+      PreserveDisplaySettings(_currentSettings, next);
+      SetSettings(next);
+    }
+
+    public void SetSettings(GraphicsSettingsData settings)
+    {
+      if (settings == null)
+        throw new ArgumentNullException(nameof(settings));
+
+      _currentSettings = settings.Clone();
+      _currentSettings.Sanitize();
+      ApplyToUnity(_currentSettings, applyDisplay: true);
+      Save(_currentSettings);
+
+      OnQualityChanged?.Invoke(CurrentQuality);
+      OnSettingsChanged?.Invoke(CurrentSettings);
+      Debug.Log($"[GraphicsPerformance] 설정 적용: {_currentSettings.Profile}");
+    }
+
+    /// <summary>기존 텍스처 설정 호출자를 위한 호환 API입니다.</summary>
     public void SetQuality(TextureQuality quality)
     {
-      if (_currentQuality == quality) return;
-
-      _currentQuality = quality;
-      ApplyToUnity(quality);
-      Save(quality);
-
-      OnQualityChanged?.Invoke(quality);
-      Debug.Log($"[TexturePerformanceService] 텍스처 품질 변경: {quality} (masterTextureLimit={QualitySettings.globalTextureMipmapLimit})");
+      var next = CurrentSettings ?? GraphicsQualityPresets.Create(GraphicsQualityPresets.DefaultProfile);
+      next.Profile = GraphicsQualityProfile.Custom;
+      next.TextureMipmapLimit = (int)quality;
+      SetSettings(next);
     }
 
-    /// <summary>
-    /// 저장된 설정을 불러와 적용합니다.
-    /// Awake에서 자동으로 호출됩니다.
-    /// </summary>
+    public void ResetToDefault() => SetProfile(GraphicsQualityPresets.DefaultProfile);
+
     public void LoadAndApply()
     {
-      var quality = Load();
-      _currentQuality = quality;
-      ApplyToUnity(quality);
-      Debug.Log($"[TexturePerformanceService] 텍스처 품질 불러오기: {quality}");
+      _currentSettings = Load();
+
+      // MPPM Lite는 사용자 저장값보다 우선하며 PlayerPrefs를 덮어쓰지 않는다.
+      if (MppmLiteMode.IsActive)
+        _currentSettings = MppmLiteMode.CreateSettings();
+
+      ApplyToUnity(_currentSettings, applyDisplay: !MppmLiteMode.IsActive);
+      Debug.Log($"[GraphicsPerformance] 설정 불러오기: {_currentSettings.Profile}" +
+                (MppmLiteMode.IsActive ? " (MPPM Lite)" : string.Empty));
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // 내부 구현
-    // ──────────────────────────────────────────────────────────────────────────
+    public void ReapplySceneSettings() => ApplySceneSettings(_currentSettings);
 
-    private static void ApplyToUnity(TextureQuality quality)
+    private void HandleSceneLoaded(Scene _, LoadSceneMode __) => ApplySceneSettings(_currentSettings);
+
+    internal static void ApplyToUnity(GraphicsSettingsData settings, bool applyDisplay)
     {
-      // TextureQuality 열거형 값이 masterTextureLimit과 1:1 대응합니다.
-      QualitySettings.globalTextureMipmapLimit = (int)quality;
+      if (settings == null)
+        return;
 
-      // Unity 6000.2 macOS Editor의 TextureStreamingManager가 씬 로드 직후
-      // Material shader compilation을 동기 실행하면 native modal progress
-      // backend에서 MPPM virtual player가 crash할 수 있다. Editor에서만
-      // streaming을 끄고 실제 Player 빌드에서는 기존 동작을 유지한다.
+      settings.Sanitize();
+      QualitySettings.vSyncCount = settings.VSync ? 1 : 0;
+      Application.targetFrameRate = settings.VSync ? -1 :
+        settings.FrameRateLimit <= 0 ? -1 : settings.FrameRateLimit;
+      QualitySettings.globalTextureMipmapLimit = settings.TextureMipmapLimit;
+      QualitySettings.anisotropicFiltering = settings.AnisotropicFiltering;
 #if UNITY_EDITOR_OSX
-      QualitySettings.streamingMipmapsActive = false;
+      // Main Editor는 기존 macOS shader-progress crash 우회를 유지한다.
+      // 카메라를 끄는 MPPM Lite clone만 제한된 예산의 streaming을 사용한다.
+      QualitySettings.streamingMipmapsActive = MppmLiteMode.IsActive && settings.TextureStreaming;
 #else
-      QualitySettings.streamingMipmapsActive = true;
+      QualitySettings.streamingMipmapsActive = settings.TextureStreaming;
 #endif
+      QualitySettings.streamingMipmapsMemoryBudget = settings.TextureStreamingBudgetMb;
+      QualitySettings.antiAliasing = ToQualitySettingsAntiAliasing(settings.AntiAliasing);
+      QualitySettings.shadows = settings.Shadows
+        ? UnityEngine.ShadowQuality.All
+        : UnityEngine.ShadowQuality.Disable;
+      QualitySettings.shadowResolution = ToUnityShadowResolution(settings.ShadowResolution);
+      QualitySettings.shadowDistance = settings.ShadowDistance;
+      QualitySettings.shadowCascades = settings.ShadowCascades;
+      QualitySettings.lodBias = settings.LodBias;
+      QualitySettings.maximumLODLevel = settings.MaximumLodLevel;
+      QualitySettings.pixelLightCount = settings.PixelLightCount;
+      QualitySettings.realtimeReflectionProbes = settings.RealtimeReflectionProbes;
+      QualitySettings.softParticles = settings.SoftParticles;
+
+      ApplyUrpSettings(settings);
+      ApplySceneSettings(settings);
+
+      if (applyDisplay)
+      {
+        var refresh = settings.RefreshRate > 0
+          ? new RefreshRate { numerator = (uint)settings.RefreshRate, denominator = 1 }
+          : Screen.currentResolution.refreshRateRatio;
+        Screen.SetResolution(
+          settings.ResolutionWidth,
+          settings.ResolutionHeight,
+          settings.FullScreenMode,
+          refresh);
+      }
     }
 
-    private static void Save(TextureQuality quality)
+    private static void ApplyUrpSettings(GraphicsSettingsData settings)
     {
-      PlayerPrefs.SetInt(PlayerPrefsKey, (int)quality);
+      var asset = GraphicsPipelineRuntimeAsset.GetOrCreate();
+      if (asset == null)
+        return;
+
+      asset.renderScale = settings.RenderScale;
+      asset.supportsHDR = settings.Hdr;
+      asset.supportsCameraDepthTexture = settings.DepthTexture;
+      asset.supportsCameraOpaqueTexture = settings.OpaqueTexture;
+      asset.msaaSampleCount = (int)settings.AntiAliasing;
+      SetUrpProperty(asset, "supportsMainLightShadows", settings.Shadows);
+      asset.mainLightShadowmapResolution = (int)settings.ShadowResolution;
+      asset.shadowDistance = settings.ShadowDistance;
+      asset.shadowCascadeCount = settings.ShadowCascades;
+      SetUrpProperty(asset, "additionalLightsRenderingMode", settings.AdditionalLights switch
+      {
+        GraphicsAdditionalLights.Disabled => LightRenderingMode.Disabled,
+        GraphicsAdditionalLights.PerVertex => LightRenderingMode.PerVertex,
+        _ => LightRenderingMode.PerPixel,
+      });
+      asset.maxAdditionalLightsCount = settings.AdditionalLightsPerObject;
+      SetUrpProperty(asset, "supportsAdditionalLightShadows",
+        settings.Shadows && settings.AdditionalLightShadows);
+      SetUrpProperty(asset, "supportsSoftShadows", settings.Shadows && settings.SoftShadows);
+      SetUrpProperty(asset, "reflectionProbeBlending", settings.ReflectionProbeBlending);
+      SetUrpProperty(asset, "reflectionProbeBoxProjection", settings.ReflectionProbeBoxProjection);
+      SetUrpProperty(asset, "reflectionProbeAtlas",
+        settings.ReflectionProbeBlending || settings.ReflectionProbeBoxProjection);
+    }
+
+    private static void SetUrpProperty<T>(UniversalRenderPipelineAsset asset, string propertyName, T value)
+    {
+      var property = typeof(UniversalRenderPipelineAsset).GetProperty(
+        propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+      property?.SetValue(asset, value);
+    }
+
+    private static void ApplySceneSettings(GraphicsSettingsData settings)
+    {
+      if (settings == null)
+        return;
+
+      var camera = MainCameraController.Instance?.Camera;
+      if (camera == null)
+        return;
+
+      camera.allowDynamicResolution = settings.DynamicResolution;
+      camera.fieldOfView = settings.FieldOfView;
+      if (camera.TryGetComponent<UniversalAdditionalCameraData>(out var cameraData))
+        cameraData.renderPostProcessing = settings.PostProcessing;
+    }
+
+    public static int ToQualitySettingsAntiAliasing(GraphicsAntiAliasing value)
+      => value == GraphicsAntiAliasing.Disabled ? 0 : (int)value;
+
+    private static UnityEngine.ShadowResolution ToUnityShadowResolution(GraphicsShadowResolution value)
+      => value switch
+      {
+        GraphicsShadowResolution.Low => UnityEngine.ShadowResolution.Low,
+        GraphicsShadowResolution.Medium => UnityEngine.ShadowResolution.Medium,
+        GraphicsShadowResolution.High => UnityEngine.ShadowResolution.High,
+        _ => UnityEngine.ShadowResolution.VeryHigh,
+      };
+
+    private static void PreserveDisplaySettings(GraphicsSettingsData source, GraphicsSettingsData destination)
+    {
+      if (source == null || destination == null)
+        return;
+
+      destination.ResolutionWidth = source.ResolutionWidth;
+      destination.ResolutionHeight = source.ResolutionHeight;
+      destination.FullScreenMode = source.FullScreenMode;
+      destination.RefreshRate = source.RefreshRate;
+      destination.FieldOfView = source.FieldOfView;
+    }
+
+    private static void Save(GraphicsSettingsData settings)
+    {
+      PlayerPrefs.SetString(PlayerPrefsKey, JsonUtility.ToJson(settings));
       PlayerPrefs.Save();
     }
 
-    private static TextureQuality Load()
+    private static GraphicsSettingsData Load()
     {
       if (!PlayerPrefs.HasKey(PlayerPrefsKey))
-        return DefaultQuality;
+        return GraphicsQualityPresets.Create(GraphicsQualityPresets.DefaultProfile);
 
-      var raw = PlayerPrefs.GetInt(PlayerPrefsKey, (int)DefaultQuality);
-      return Enum.IsDefined(typeof(TextureQuality), raw)
-        ? (TextureQuality)raw
-        : DefaultQuality;
+      try
+      {
+        var loaded = JsonUtility.FromJson<GraphicsSettingsData>(PlayerPrefs.GetString(PlayerPrefsKey));
+        if (loaded != null)
+        {
+          loaded.Sanitize();
+          return loaded;
+        }
+      }
+      catch (Exception exception)
+      {
+        Debug.LogWarning($"[GraphicsPerformance] 저장 설정을 읽지 못해 낮음 기본값을 사용합니다: {exception.Message}");
+      }
+
+      return GraphicsQualityPresets.Create(GraphicsQualityPresets.DefaultProfile);
+    }
+  }
+
+  internal static class GraphicsPipelineRuntimeAsset
+  {
+    private static UniversalRenderPipelineAsset _runtimeAsset;
+
+    public static UniversalRenderPipelineAsset GetOrCreate()
+    {
+      if (_runtimeAsset != null)
+        return _runtimeAsset;
+
+      var source = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
+      if (source == null)
+        return null;
+
+      _runtimeAsset = UnityEngine.Object.Instantiate(source);
+      _runtimeAsset.name = source.name + " (Runtime Graphics Settings)";
+      _runtimeAsset.hideFlags = HideFlags.DontSave;
+      QualitySettings.renderPipeline = _runtimeAsset;
+      return _runtimeAsset;
+    }
+
+    public static void Release(RenderPipelineAsset restoreAsset)
+    {
+      QualitySettings.renderPipeline = restoreAsset;
+      if (_runtimeAsset != null)
+      {
+        if (Application.isPlaying)
+          UnityEngine.Object.Destroy(_runtimeAsset);
+        else
+          UnityEngine.Object.DestroyImmediate(_runtimeAsset);
+      }
+      _runtimeAsset = null;
     }
   }
 }

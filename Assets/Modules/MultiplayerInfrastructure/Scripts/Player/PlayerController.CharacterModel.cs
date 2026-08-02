@@ -1,5 +1,6 @@
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -96,6 +97,13 @@ namespace MultiplayerInfrastructure.Player
 
       _currentPlayerModelIdentifier = modelIdentifier;
 
+      // Lite 클론은 네트워크상의 모델 선택 상태만 유지하고 시각 프리팹은 로드하지 않는다.
+      if (MppmLiteMode.IsActive)
+      {
+        ClearResolvedPlayerModelLocal();
+        return;
+      }
+
       if (!TryResolvePlayerModelObject(modelIdentifier, out var resolvedModelObject))
       {
         if (TryResolvePlayerModelObject(FallbackPlayerModelIdentifier, out var fallbackModelObject))
@@ -114,7 +122,9 @@ namespace MultiplayerInfrastructure.Player
         return;
       }
 
-      ApplyResolvedPlayerModelLocal(resolvedModelObject, applyCharacterControllerCenter: true);
+      ApplyResolvedPlayerModelLocal(
+        resolvedModelObject,
+        applyCharacterControllerCenter: true);
     }
 
     private void ApplyResolvedPlayerModelLocal(GameObject modelObject, bool applyCharacterControllerCenter)

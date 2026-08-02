@@ -6,6 +6,7 @@ using MultiplayerInfrastructure.UI;
 using MultiplayerInfrastructure.Entity;
 using UnityEngine;
 using MultiplayerInfrastructure.Logging;
+using MultiplayerInfrastructure.Performance;
 
 namespace MultiplayerInfrastructure.Player
 {
@@ -361,7 +362,7 @@ namespace MultiplayerInfrastructure.Player
 
     private void EnsureViewmodelRoot()
     {
-      if (!_enableViewmodel || !IsOwner)
+      if (!_enableViewmodel || !IsOwner || MppmLiteMode.IsActive)
         return;
 
       if (_viewmodelRoot != null)
@@ -382,6 +383,12 @@ namespace MultiplayerInfrastructure.Player
     {
       if (!_enableViewmodel || !IsOwner)
         return;
+
+      if (MppmLiteMode.IsActive)
+      {
+        ClearViewmodel();
+        return;
+      }
 
       EnsureViewmodelRoot();
       if (_viewmodelRoot == null)
