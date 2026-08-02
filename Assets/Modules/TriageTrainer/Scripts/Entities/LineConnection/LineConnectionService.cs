@@ -7,6 +7,7 @@ using TriageTrainer.Entity.OxyLine;
 using TriageTrainer.Entity.SuctionLine;
 using TriageTrainer.Entity.IntravenousLine;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace TriageTrainer.Entity.LineConnection
 {
@@ -23,11 +24,15 @@ namespace TriageTrainer.Entity.LineConnection
     [SerializeField] private Transform _linesRoot;
 
     [Header("Line Visual")]
-    [SerializeField, Range(0f, 1f)] private float _intravenousLineElasticity = 0.15f;
-    [SerializeField, Range(0f, 1f)] private float _aedLineElasticity = 0.15f;
-    [SerializeField, Range(0f, 1f)] private float _oxyLineElasticity = 0.15f;
-    [SerializeField, Range(0f, 1f)] private float _suctionLineElasticity = 0.15f;
-    [SerializeField, Min(0.001f)] private float _lineWidth = 0.01f;
+    [SerializeField, Range(0f, 1f)] private float _intravenousLineElasticity = 0.21f;
+    [SerializeField, Range(0f, 1f)] private float _aedLineElasticity = 0.3f;
+    [SerializeField, Range(0f, 1f)] private float _oxyLineElasticity = 0.2f;
+    [SerializeField, Range(0f, 1f)] private float _suctionLineElasticity = 0.13f;
+    [FormerlySerializedAs("_lineWidth")]
+    [SerializeField, Min(0.001f)] private float _intravenousLineWidth = 0.03f;
+    [SerializeField, Min(0.001f)] private float _aedLineWidth = 0.03f;
+    [SerializeField, Min(0.001f)] private float _oxyLineWidth = 0.035f;
+    [SerializeField, Min(0.001f)] private float _suctionLineWidth = 0.04f;
     [SerializeField] private Color _lineColor = new Color(0.94f, 0.98f, 1f, 0.18f);
 
     [Header("Line Shape")]
@@ -69,6 +74,10 @@ namespace TriageTrainer.Entity.LineConnection
       _aedLineElasticity = Mathf.Clamp01(_aedLineElasticity);
       _oxyLineElasticity = Mathf.Clamp01(_oxyLineElasticity);
       _suctionLineElasticity = Mathf.Clamp01(_suctionLineElasticity);
+      _intravenousLineWidth = Mathf.Max(0.001f, _intravenousLineWidth);
+      _aedLineWidth = Mathf.Max(0.001f, _aedLineWidth);
+      _oxyLineWidth = Mathf.Max(0.001f, _oxyLineWidth);
+      _suctionLineWidth = Mathf.Max(0.001f, _suctionLineWidth);
       _simulationStepsPerFrame = Mathf.Max(1, _simulationStepsPerFrame);
       _solverIterations = Mathf.Max(1, _solverIterations);
       _gravityScale = Mathf.Clamp01(_gravityScale);
@@ -221,8 +230,9 @@ namespace TriageTrainer.Entity.LineConnection
       lineRenderer.textureMode = LineTextureMode.Stretch;
       lineRenderer.numCornerVertices = 6;
       lineRenderer.numCapVertices = 6;
-      lineRenderer.startWidth = _lineWidth;
-      lineRenderer.endWidth = _lineWidth;
+      float lineWidth = GetLineWidth(startPoint);
+      lineRenderer.startWidth = lineWidth;
+      lineRenderer.endWidth = lineWidth;
       lineRenderer.startColor = _lineColor;
       lineRenderer.endColor = _lineColor;
       lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -379,6 +389,18 @@ namespace TriageTrainer.Entity.LineConnection
         OxyLineConnectionPoint => _oxyLineElasticity,
         SuctionLineConnectionPoint => _suctionLineElasticity,
         _ => 0f,
+      };
+    }
+
+    private float GetLineWidth(LineConnectionPoint point)
+    {
+      return point switch
+      {
+        IntravenousLineConnectionPoint => _intravenousLineWidth,
+        AEDLineConnectionPoint => _aedLineWidth,
+        OxyLineConnectionPoint => _oxyLineWidth,
+        SuctionLineConnectionPoint => _suctionLineWidth,
+        _ => 0.01f,
       };
     }
 
