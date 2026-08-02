@@ -8,6 +8,13 @@ namespace MultiplayerInfrastructure.Performance.Tests
 {
   public sealed class MppmLiteModePlayModeTests
   {
+    [TearDown]
+    public void TearDown()
+    {
+      if (MppmLiteMode.IsActive)
+        MppmLiteMode.DeactivateForTests();
+    }
+
     [Test]
     public void MainEditor_IsNeverMistakenForLiteClone()
     {
@@ -50,6 +57,50 @@ namespace MultiplayerInfrastructure.Performance.Tests
       Assert.That(QualitySettings.antiAliasing, Is.EqualTo(0));
       Assert.That(asset.msaaSampleCount, Is.EqualTo(1));
       Assert.That(Application.targetFrameRate, Is.EqualTo(15));
+    }
+
+    [Test]
+    public void LiteLifecycle_DisablesAndRestoresVisualComponentsWithoutDestroyingThem()
+    {
+      var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      var renderer = root.GetComponent<Renderer>();
+      var document = root.AddComponent<UnityEngine.UIElements.UIDocument>();
+      var audioSource = root.AddComponent<AudioSource>();
+      var initiallyDisabledLight = root.AddComponent<Light>();
+      initiallyDisabledLight.enabled = false;
+      bool originalAudioPaused = AudioListener.pause;
+      float originalAudioVolume = AudioListener.volume;
+
+      try
+      {
+        MppmLiteMode.ActivateForTests();
+        AudioListener.pause = !originalAudioPaused;
+        AudioListener.volume = 0f;
+        MppmLiteMode.StripVisuals(root);
+
+        Assert.That(renderer, Is.Not.Null);
+        Assert.That(document, Is.Not.Null);
+        Assert.That(audioSource, Is.Not.Null);
+        Assert.That(renderer.enabled, Is.False);
+        Assert.That(document.enabled, Is.False);
+        Assert.That(audioSource.enabled, Is.False);
+        Assert.That(initiallyDisabledLight.enabled, Is.False);
+
+        MppmLiteMode.DeactivateForTests();
+
+        Assert.That(renderer.enabled, Is.True);
+        Assert.That(document.enabled, Is.True);
+        Assert.That(audioSource.enabled, Is.True);
+        Assert.That(initiallyDisabledLight.enabled, Is.False);
+        Assert.That(AudioListener.pause, Is.EqualTo(originalAudioPaused));
+        Assert.That(AudioListener.volume, Is.EqualTo(originalAudioVolume).Within(0.001f));
+      }
+      finally
+      {
+        if (MppmLiteMode.IsActive)
+          MppmLiteMode.DeactivateForTests();
+        Object.DestroyImmediate(root);
+      }
     }
   }
 }

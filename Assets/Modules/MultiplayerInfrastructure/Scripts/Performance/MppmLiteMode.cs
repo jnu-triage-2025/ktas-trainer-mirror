@@ -1,5 +1,5 @@
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
@@ -21,13 +21,18 @@ namespace MultiplayerInfrastructure.Performance
     private static LiteRuntimeState _savedState;
     private static bool _hasSavedState;
     private static MppmLiteRuntimeGuard _guard;
+    private static readonly Dictionary<int, BehaviourState> DisabledBehaviours = new();
+    private static readonly Dictionary<int, RendererState> DisabledRenderers = new();
+    private static readonly Dictionary<int, AudioSourceState> DisabledAudioSources = new();
+    private static readonly Dictionary<int, ParticleSystemState> StoppedParticleSystems = new();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetState()
     {
       SceneManager.sceneLoaded -= HandleSceneLoaded;
-      RestoreRuntimeState();
       IsActive = false;
+      RestoreVisualStates();
+      RestoreRuntimeState();
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -89,67 +94,86 @@ namespace MultiplayerInfrastructure.Performance
         return;
 
       for (int i = 0; i < SceneManager.sceneCount; i++)
-        StripSceneVisuals(SceneManager.GetSceneAt(i), scheduleUnload: false);
-      ScheduleUnusedAssetUnload();
+        StripSceneVisuals(SceneManager.GetSceneAt(i));
     }
 
-    /// <summary>동적으로 생성된 객체의 표현 계층을 Lite 클론에서 즉시 제거합니다.</summary>
+    /// <summary>
+    /// 동적으로 생성된 객체의 표현 컴포넌트를 Lite 클론에서 비활성화합니다.
+    /// 원래 상태는 기록되며 Lite 해제 시 복원됩니다.
+    /// </summary>
     public static void StripVisuals(GameObject root)
     {
       if (!IsActive || root == null)
         return;
 
-      foreach (var camera in root.GetComponentsInChildren<UnityEngine.Camera>(true))
-        camera.enabled = false;
-
-      DestroyComponents(root.GetComponentsInChildren<UIDocument>(true));
-      DestroyComponents(root.GetComponentsInChildren<Renderer>(true));
-      DestroyComponents(root.GetComponentsInChildren<MeshFilter>(true));
-      DestroyComponents(root.GetComponentsInChildren<Light>(true));
-      DestroyComponents(root.GetComponentsInChildren<ReflectionProbe>(true));
-      DestroyComponents(root.GetComponentsInChildren<Volume>(true));
+      DisableBehaviours(root.GetComponentsInChildren<UnityEngine.Camera>(true));
+      DisableBehaviours(root.GetComponentsInChildren<UIDocument>(true));
+      DisableRenderers(root.GetComponentsInChildren<Renderer>(true));
+      DisableBehaviours(root.GetComponentsInChildren<Light>(true));
+      DisableBehaviours(root.GetComponentsInChildren<ReflectionProbe>(true));
+      DisableBehaviours(root.GetComponentsInChildren<Volume>(true));
 
       foreach (var source in root.GetComponentsInChildren<AudioSource>(true))
       {
+        int id = source.GetInstanceID();
+        if (!DisabledAudioSources.ContainsKey(id))
+          DisabledAudioSources.Add(id, new AudioSourceState(source, source.enabled, source.isPlaying));
         source.Stop();
-        UnityEngine.Object.Destroy(source);
+        source.enabled = false;
       }
 
       foreach (var particle in root.GetComponentsInChildren<ParticleSystem>(true))
       {
+        int id = particle.GetInstanceID();
+        if (!StoppedParticleSystems.ContainsKey(id))
+          StoppedParticleSystems.Add(id, new ParticleSystemState(particle, particle.isPlaying));
         particle.Stop(withChildren: true, ParticleSystemStopBehavior.StopEmittingAndClear);
-        UnityEngine.Object.Destroy(particle);
       }
-
-      ScheduleUnusedAssetUnload();
     }
 
     internal static void Deactivate()
     {
       SceneManager.sceneLoaded -= HandleSceneLoaded;
-      RestoreRuntimeState();
       IsActive = false;
+      RestoreVisualStates();
+      RestoreRuntimeState();
       _guard = null;
     }
 
-    private static void StripSceneVisuals(Scene scene, bool scheduleUnload = true)
+    private static void StripSceneVisuals(Scene scene)
     {
       if (!IsActive || !scene.IsValid() || !scene.isLoaded)
         return;
 
       foreach (var root in scene.GetRootGameObjects())
         StripVisuals(root);
-
-      if (scheduleUnload)
-        ScheduleUnusedAssetUnload();
     }
 
-    private static void DestroyComponents<T>(T[] components) where T : Component
+    private static void DisableBehaviours<T>(T[] components) where T : Behaviour
     {
       foreach (var component in components)
       {
-        if (component != null)
-          UnityEngine.Object.Destroy(component);
+        if (component == null)
+          continue;
+
+        int id = component.GetInstanceID();
+        if (!DisabledBehaviours.ContainsKey(id))
+          DisabledBehaviours.Add(id, new BehaviourState(component, component.enabled));
+        component.enabled = false;
+      }
+    }
+
+    private static void DisableRenderers(Renderer[] renderers)
+    {
+      foreach (var renderer in renderers)
+      {
+        if (renderer == null)
+          continue;
+
+        int id = renderer.GetInstanceID();
+        if (!DisabledRenderers.ContainsKey(id))
+          DisabledRenderers.Add(id, new RendererState(renderer, renderer.enabled));
+        renderer.enabled = false;
       }
     }
 
@@ -168,11 +192,48 @@ namespace MultiplayerInfrastructure.Performance
       _guard = guardObject.AddComponent<MppmLiteRuntimeGuard>();
     }
 
-    private static void ScheduleUnusedAssetUnload()
+    private static void RestoreVisualStates()
     {
-      if (_guard != null)
-        _guard.ScheduleUnusedAssetUnload();
+      foreach (var state in DisabledBehaviours.Values)
+      {
+        if (state.Component != null)
+          state.Component.enabled = state.Enabled;
+      }
+      foreach (var state in DisabledRenderers.Values)
+      {
+        if (state.Renderer != null)
+          state.Renderer.enabled = state.Enabled;
+      }
+      foreach (var state in DisabledAudioSources.Values)
+      {
+        if (state.Source == null)
+          continue;
+        state.Source.enabled = state.Enabled;
+        if (state.WasPlaying && state.Enabled)
+          state.Source.Play();
+      }
+      foreach (var state in StoppedParticleSystems.Values)
+      {
+        if (state.System != null && state.WasPlaying)
+          state.System.Play(withChildren: true);
+      }
+
+      DisabledBehaviours.Clear();
+      DisabledRenderers.Clear();
+      DisabledAudioSources.Clear();
+      StoppedParticleSystems.Clear();
     }
+
+#if UNITY_INCLUDE_TESTS
+    internal static void ActivateForTests()
+    {
+      ResetState();
+      IsActive = true;
+      CaptureRuntimeState();
+    }
+
+    internal static void DeactivateForTests() => Deactivate();
+#endif
 
     private static void CaptureRuntimeState()
     {
@@ -260,26 +321,57 @@ namespace MultiplayerInfrastructure.Performance
         QualitySettings.softParticles = SoftParticles;
       }
     }
+
+    private readonly struct BehaviourState
+    {
+      public readonly Behaviour Component;
+      public readonly bool Enabled;
+      public BehaviourState(Behaviour component, bool enabled)
+      {
+        Component = component;
+        Enabled = enabled;
+      }
+    }
+
+    private readonly struct RendererState
+    {
+      public readonly Renderer Renderer;
+      public readonly bool Enabled;
+      public RendererState(Renderer renderer, bool enabled)
+      {
+        Renderer = renderer;
+        Enabled = enabled;
+      }
+    }
+
+    private readonly struct AudioSourceState
+    {
+      public readonly AudioSource Source;
+      public readonly bool Enabled;
+      public readonly bool WasPlaying;
+      public AudioSourceState(AudioSource source, bool enabled, bool wasPlaying)
+      {
+        Source = source;
+        Enabled = enabled;
+        WasPlaying = wasPlaying;
+      }
+    }
+
+    private readonly struct ParticleSystemState
+    {
+      public readonly ParticleSystem System;
+      public readonly bool WasPlaying;
+      public ParticleSystemState(ParticleSystem system, bool wasPlaying)
+      {
+        System = system;
+        WasPlaying = wasPlaying;
+      }
+    }
   }
 
-  /// <summary>표현 컴포넌트 제거 뒤 미사용 에셋을 한 번만 묶어서 언로드합니다.</summary>
+  /// <summary>Lite 프로세스 종료 시 전역 및 표현 상태를 복원합니다.</summary>
   internal sealed class MppmLiteRuntimeGuard : MonoBehaviour
   {
-    private Coroutine _unloadCoroutine;
-
-    public void ScheduleUnusedAssetUnload()
-    {
-      if (_unloadCoroutine == null)
-        _unloadCoroutine = StartCoroutine(UnloadUnusedAssetsNextFrame());
-    }
-
-    private IEnumerator UnloadUnusedAssetsNextFrame()
-    {
-      yield return null;
-      yield return Resources.UnloadUnusedAssets();
-      _unloadCoroutine = null;
-    }
-
     private void OnDestroy() => MppmLiteMode.Deactivate();
   }
 }

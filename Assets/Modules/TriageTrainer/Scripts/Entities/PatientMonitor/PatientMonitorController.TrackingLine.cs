@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MultiplayerInfrastructure.Performance;
 using UnityEngine;
 
 namespace TriageTrainer.Entity.PatientMonitor.Models
@@ -26,7 +27,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private void EnsureTrackingLineRenderer()
     {
-      if (!_showTrackingLine)
+      if (!_showTrackingLine || MppmLiteMode.IsActive)
         return;
 
       if (_trackingLineRenderer == null && !TryResolveTrackingLineRenderer())
@@ -110,6 +111,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private void UpdateTrackingLine()
     {
+      if (MppmLiteMode.IsActive)
+      {
+        SetTrackingLineEnabled(false);
+        return;
+      }
+
       if (!_showTrackingLine)
       {
         SetTrackingLineEnabled(false);

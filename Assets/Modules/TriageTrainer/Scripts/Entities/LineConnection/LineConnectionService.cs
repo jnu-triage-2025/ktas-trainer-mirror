@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using FishNet.Object;
+using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.Player;
 using TriageTrainer.Entity.AEDLine;
 using TriageTrainer.Entity.OxyLine;
@@ -223,22 +224,26 @@ namespace TriageTrainer.Entity.LineConnection
       var lineObject = new GameObject($"Line_{startPoint.name}_to_{endPoint.name}");
       lineObject.transform.SetParent(_linesRoot, false);
 
-      var lineRenderer = lineObject.AddComponent<LineRenderer>();
-      lineRenderer.positionCount = 0;
-      lineRenderer.useWorldSpace = true;
-      lineRenderer.alignment = LineAlignment.View;
-      lineRenderer.textureMode = LineTextureMode.Stretch;
-      lineRenderer.numCornerVertices = 6;
-      lineRenderer.numCapVertices = 6;
-      float lineWidth = GetLineWidth(startPoint);
-      lineRenderer.startWidth = lineWidth;
-      lineRenderer.endWidth = lineWidth;
-      lineRenderer.startColor = _lineColor;
-      lineRenderer.endColor = _lineColor;
-      lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-      lineRenderer.receiveShadows = false;
-      lineRenderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
-      ApplyLineMaterial(startPoint, lineRenderer);
+      LineRenderer lineRenderer = null;
+      if (!MppmLiteMode.IsActive)
+      {
+        lineRenderer = lineObject.AddComponent<LineRenderer>();
+        lineRenderer.positionCount = 0;
+        lineRenderer.useWorldSpace = true;
+        lineRenderer.alignment = LineAlignment.View;
+        lineRenderer.textureMode = LineTextureMode.Stretch;
+        lineRenderer.numCornerVertices = 6;
+        lineRenderer.numCapVertices = 6;
+        float lineWidth = GetLineWidth(startPoint);
+        lineRenderer.startWidth = lineWidth;
+        lineRenderer.endWidth = lineWidth;
+        lineRenderer.startColor = _lineColor;
+        lineRenderer.endColor = _lineColor;
+        lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        lineRenderer.receiveShadows = false;
+        lineRenderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+        ApplyLineMaterial(startPoint, lineRenderer);
+      }
 
       var runtime = lineObject.AddComponent<LineConnectionRuntime>();
       runtime.Bind(

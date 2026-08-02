@@ -257,6 +257,7 @@ namespace MultiplayerInfrastructure.Performance
   internal static class GraphicsPipelineRuntimeAsset
   {
     private static UniversalRenderPipelineAsset _runtimeAsset;
+    private static RenderPipelineAsset _sourceAsset;
 
     public static UniversalRenderPipelineAsset GetOrCreate()
     {
@@ -267,6 +268,7 @@ namespace MultiplayerInfrastructure.Performance
       if (source == null)
         return null;
 
+      _sourceAsset = source;
       _runtimeAsset = UnityEngine.Object.Instantiate(source);
       _runtimeAsset.name = source.name + " (Runtime Graphics Settings)";
       _runtimeAsset.hideFlags = HideFlags.DontSave;
@@ -276,7 +278,8 @@ namespace MultiplayerInfrastructure.Performance
 
     public static void Release(RenderPipelineAsset restoreAsset)
     {
-      QualitySettings.renderPipeline = restoreAsset;
+      // 이미 생성된 런타임 복제본을 캡처한 호출자도 파괴 예정 객체를 다시 지정하지 않게 한다.
+      QualitySettings.renderPipeline = restoreAsset == _runtimeAsset ? _sourceAsset : restoreAsset;
       if (_runtimeAsset != null)
       {
         if (Application.isPlaying)
@@ -285,6 +288,7 @@ namespace MultiplayerInfrastructure.Performance
           UnityEngine.Object.DestroyImmediate(_runtimeAsset);
       }
       _runtimeAsset = null;
+      _sourceAsset = null;
     }
   }
 }
