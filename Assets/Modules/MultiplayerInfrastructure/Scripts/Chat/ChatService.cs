@@ -830,7 +830,20 @@ namespace MultiplayerInfrastructure.Chat
       ReceiveChatObserversRpc($"<color=#FFD700>[System]</color> {message}");
     }
 
-    public string GetDisplayName(NetworkConnection conn) => conn?.ClientId.ToString() ?? "Server";
+    public string GetDisplayName(NetworkConnection conn)
+    {
+      if (conn == null)
+        return "Server";
+
+      if (UserDescriptorService.TryGetByClientId(conn.ClientId, out var descriptor)
+          && !string.IsNullOrWhiteSpace(descriptor.DisplayName))
+      {
+        return descriptor.DisplayName;
+      }
+
+      // 플레이어 스폰 전 등 설명자가 아직 등록되지 않은 경우에만 연결 ID를 예비값으로 사용한다.
+      return conn.ClientId.ToString();
+    }
 
     private TitleUIController GetTitleUIController()
     {
