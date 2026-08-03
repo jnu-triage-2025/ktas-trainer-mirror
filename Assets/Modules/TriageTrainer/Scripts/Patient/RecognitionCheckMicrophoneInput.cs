@@ -17,7 +17,9 @@ namespace TriageTrainer.Entity
     private float _aboveThresholdSeconds;
     private readonly float[] _samples = new float[SampleCount];
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    // Request microphone access before the first scene is shown so gameplay is
+    // not interrupted by the platform permission dialog later.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void EnsureCreated()
     {
       if (_instance != null)
@@ -45,15 +47,10 @@ namespace TriageTrainer.Entity
         _instance.StopRecording();
     }
 
-    private IEnumerator RequestPermissionEarly()
-    {
-      if (!Application.HasUserAuthorization(UserAuthorization.Microphone))
-        yield return Application.RequestUserAuthorization(UserAuthorization.Microphone);
-    }
-
     private void EnsureRecording()
     {
       if (_clip != null || _targets.Count == 0
+          || !_permissionRequestCompleted
           || !Application.HasUserAuthorization(UserAuthorization.Microphone)
           || Microphone.devices == null || Microphone.devices.Length == 0)
         return;
@@ -99,6 +96,16 @@ namespace TriageTrainer.Entity
       _clip = null;
       _device = null;
       _aboveThresholdSeconds = 0f;
+    }
+
+    private bool _permissionRequestCompleted;
+
+    private IEnumerator RequestPermissionEarly()
+    {
+      if (!Application.HasUserAuthorization(UserAuthorization.Microphone))
+        yield return Application.RequestUserAuthorization(UserAuthorization.Microphone);
+
+      _permissionRequestCompleted = true;
     }
   }
 }
