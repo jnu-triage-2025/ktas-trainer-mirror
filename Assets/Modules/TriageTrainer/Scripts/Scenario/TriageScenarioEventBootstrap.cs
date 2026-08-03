@@ -7,7 +7,6 @@ using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
-using MultiplayerInfrastructure.Scenario.Requirements;
 using TriageTrainer.Entity;
 using TriageTrainer.Entity.Patient;
 using TriageTrainer.Entity.PatientMonitor;
@@ -306,7 +305,6 @@ namespace TriageTrainer.Scenario
     {
       RegisterIntroAndPatientAEvents();
       RegisterPatientBCEvents();
-      ScenarioRuntimeBootstrapGate.MarkSceneReady(gameObject.scene);
 
       if (_logRegistrySnapshotOnEnable)
       {

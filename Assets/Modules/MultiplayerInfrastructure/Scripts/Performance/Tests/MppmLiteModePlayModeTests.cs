@@ -25,6 +25,16 @@ namespace MultiplayerInfrastructure.Performance.Tests
     public void AdditionalEditor_ActivatesLiteWithoutManualTagging()
     {
       Assert.That(MppmLiteMode.ShouldActivate(true, false, new string[0]), Is.True);
+      Assert.That(MppmLiteMode.ShouldUseHeadlessVisuals(true, new string[0]), Is.False);
+    }
+
+    [Test]
+    public void HeadlessLiteTag_IsRequiredToHideMppmVisuals()
+    {
+      Assert.That(MppmLiteMode.ShouldUseHeadlessVisuals(true,
+        new[] { MppmLiteMode.HeadlessLiteTag }), Is.True);
+      Assert.That(MppmLiteMode.ShouldUseHeadlessVisuals(false,
+        new[] { MppmLiteMode.HeadlessLiteTag }), Is.False);
     }
 
     [Test]
@@ -43,20 +53,38 @@ namespace MultiplayerInfrastructure.Performance.Tests
     [Test]
     public void LiteSettings_ApplyToQualitySettingsAndRuntimeUrpAsset()
     {
-      var settings = MppmLiteMode.CreateSettings();
-      TexturePerformanceService.ApplyToUnity(settings, applyDisplay: false);
+      var cameraObject = new GameObject("MPPM Lite Camera");
+      var camera = cameraObject.AddComponent<UnityEngine.Camera>();
+      var cameraData = cameraObject.AddComponent<UniversalAdditionalCameraData>();
+      camera.allowHDR = true;
+      camera.allowMSAA = true;
+      cameraData.renderPostProcessing = true;
 
-      var asset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
-      Assert.That(asset, Is.Not.Null);
-      Assert.That(asset.renderScale, Is.EqualTo(0.5f).Within(0.001f));
-      Assert.That(asset.supportsHDR, Is.False);
-      Assert.That(asset.supportsMainLightShadows, Is.False);
-      Assert.That(asset.additionalLightsRenderingMode, Is.EqualTo(LightRenderingMode.Disabled));
-      Assert.That(QualitySettings.globalTextureMipmapLimit, Is.EqualTo(3));
-      Assert.That(QualitySettings.streamingMipmapsMemoryBudget, Is.EqualTo(64));
-      Assert.That(QualitySettings.antiAliasing, Is.EqualTo(0));
-      Assert.That(asset.msaaSampleCount, Is.EqualTo(1));
-      Assert.That(Application.targetFrameRate, Is.EqualTo(15));
+      try
+      {
+        var settings = MppmLiteMode.CreateSettings();
+        TexturePerformanceService.ApplyToUnity(settings, applyDisplay: false);
+
+        var asset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
+        Assert.That(asset, Is.Not.Null);
+        Assert.That(asset.renderScale, Is.EqualTo(0.5f).Within(0.001f));
+        Assert.That(asset.supportsHDR, Is.False);
+        Assert.That(asset.supportsMainLightShadows, Is.False);
+        Assert.That(asset.additionalLightsRenderingMode, Is.EqualTo(LightRenderingMode.Disabled));
+        Assert.That(QualitySettings.globalTextureMipmapLimit, Is.EqualTo(3));
+        Assert.That(QualitySettings.streamingMipmapsMemoryBudget, Is.EqualTo(64));
+        Assert.That(QualitySettings.antiAliasing, Is.EqualTo(0));
+        Assert.That(asset.msaaSampleCount, Is.EqualTo(1));
+        Assert.That(Application.targetFrameRate, Is.EqualTo(15));
+        Assert.That(camera.allowHDR, Is.False);
+        Assert.That(camera.allowMSAA, Is.False);
+        Assert.That(cameraData.renderPostProcessing, Is.False);
+        Assert.That(camera.enabled, Is.True);
+      }
+      finally
+      {
+        Object.DestroyImmediate(cameraObject);
+      }
     }
 
     [Test]
@@ -94,6 +122,31 @@ namespace MultiplayerInfrastructure.Performance.Tests
         Assert.That(initiallyDisabledLight.enabled, Is.False);
         Assert.That(AudioListener.pause, Is.EqualTo(originalAudioPaused));
         Assert.That(AudioListener.volume, Is.EqualTo(originalAudioVolume).Within(0.001f));
+      }
+      finally
+      {
+        if (MppmLiteMode.IsActive)
+          MppmLiteMode.DeactivateForTests();
+        Object.DestroyImmediate(root);
+      }
+    }
+
+    [Test]
+    public void VisibleLiteSession_DoesNotDisableCameraOrRenderers()
+    {
+      var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      var camera = root.AddComponent<UnityEngine.Camera>();
+      var renderer = root.GetComponent<Renderer>();
+
+      try
+      {
+        MppmLiteMode.ActivateForTests(headless: false);
+        MppmLiteMode.StripVisuals(root);
+
+        Assert.That(MppmLiteMode.IsActive, Is.True);
+        Assert.That(MppmLiteMode.IsHeadless, Is.False);
+        Assert.That(camera.enabled, Is.True);
+        Assert.That(renderer.enabled, Is.True);
       }
       finally
       {

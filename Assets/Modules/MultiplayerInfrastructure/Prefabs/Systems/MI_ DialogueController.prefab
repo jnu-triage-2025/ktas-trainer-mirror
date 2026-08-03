@@ -205,14 +205,6 @@ MonoBehaviour:
   _hintUIController: {fileID: 0}
   _ttsService: {fileID: 1000000000000000003}
   _ttsAudioSource: {fileID: 1000000000000000005}
-  _preflightEnabled: 1
-  _preflightPolicy:
-    WarnToConsole: 1
-    WarnToInGameChat: 1
-    MissingBehavior: 0
-  _runtimeRequirementsValidationMode: 1
-  _runtimeRequirementsReadinessTimeoutSeconds: 10
-  _runtimeRequirementsReadinessPollIntervalSeconds: 0.1
   _concurrencyConflictPolicy: 0
   _validatorBlockLogTargets: 5
   _state: 0

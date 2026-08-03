@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Sockets;
 using MultiplayerInfrastructure.FishNetSupports;
 using MultiplayerInfrastructure.Definitions;
-using MultiplayerInfrastructure.Scenario.Requirements;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.UI;
 using TriageTrainer.MultiplayerInfrastructureSupports;
@@ -96,7 +95,6 @@ namespace TriageTrainer.SceneBootstrapper
         PrepareDeferredPlayerSpawning();
         StartSessionOrConnectToExistingServer();
 
-        ScenarioRuntimeBootstrapGate.MarkSceneReady(gameObject.scene);
       }
     }
 

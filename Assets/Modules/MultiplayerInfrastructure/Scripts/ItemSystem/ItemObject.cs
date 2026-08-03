@@ -196,7 +196,7 @@ namespace MultiplayerInfrastructure.ItemSystem
     private void LoadModel()
     {
       if (Item == null) return;
-      if (MppmLiteMode.IsActive) return;
+      if (MppmLiteMode.IsHeadless) return;
 
       string path = $"{ModelRootPath}/{Item.CurrentIdentifier}";
       var prefab = Resources.Load<GameObject>(path);

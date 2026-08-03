@@ -1,85 +1,178 @@
 fileFormatVersion: 2
 guid: 34cc1fbc1a4a17247ad55306cf392a68
+AssetOrigin:
+  serializedVersion: 1
+  productId: 16272
+  packageName: NYC Block #6
+  packageVersion: 1.1
+  assetPath: Assets/OutPost/Resources/Assets/Trafficlight.fbx
+  uploadId: 219610
 ModelImporter:
-  serializedVersion: 19
-  fileIDToRecycleName:
-    100000: polymsh
-    100002: polymsh1
-    100004: polymsh1_ncl1_1
-    100006: polymsh3
-    100008: //RootNode
-    100010: polymsh4
-    400000: polymsh
-    400002: polymsh1
-    400004: polymsh1_ncl1_1
-    400006: polymsh3
-    400008: //RootNode
-    400010: polymsh4
-    2300000: polymsh
-    2300002: polymsh1
-    2300004: polymsh1_ncl1_1
-    2300006: polymsh3
-    2300008: polymsh4
-    3300000: polymsh
-    3300002: polymsh1
-    3300004: polymsh1_ncl1_1
-    3300006: polymsh3
-    3300008: polymsh4
-    4300000: polymsh1
-    4300002: polymsh3
-    4300004: polymsh1_ncl1_1
-    4300006: polymsh
-    4300008: polymsh4
-    9500000: //RootNode
+  serializedVersion: 24200
+  internalIDToNameTable:
+  - first:
+      1: 100000
+    second: polymsh
+  - first:
+      1: 100002
+    second: polymsh1
+  - first:
+      1: 100004
+    second: polymsh1_ncl1_1
+  - first:
+      1: 100006
+    second: polymsh3
+  - first:
+      1: 100008
+    second: //RootNode
+  - first:
+      1: 100010
+    second: polymsh4
+  - first:
+      4: 400000
+    second: polymsh
+  - first:
+      4: 400002
+    second: polymsh1
+  - first:
+      4: 400004
+    second: polymsh1_ncl1_1
+  - first:
+      4: 400006
+    second: polymsh3
+  - first:
+      4: 400008
+    second: //RootNode
+  - first:
+      4: 400010
+    second: polymsh4
+  - first:
+      23: 2300000
+    second: polymsh
+  - first:
+      23: 2300002
+    second: polymsh1
+  - first:
+      23: 2300004
+    second: polymsh1_ncl1_1
+  - first:
+      23: 2300006
+    second: polymsh3
+  - first:
+      23: 2300008
+    second: polymsh4
+  - first:
+      33: 3300000
+    second: polymsh
+  - first:
+      33: 3300002
+    second: polymsh1
+  - first:
+      33: 3300004
+    second: polymsh1_ncl1_1
+  - first:
+      33: 3300006
+    second: polymsh3
+  - first:
+      33: 3300008
+    second: polymsh4
+  - first:
+      43: 4300000
+    second: polymsh1
+  - first:
+      43: 4300002
+    second: polymsh3
+  - first:
+      43: 4300004
+    second: polymsh1_ncl1_1
+  - first:
+      43: 4300006
+    second: polymsh
+  - first:
+      43: 4300008
+    second: polymsh4
+  - first:
+      95: 9500000
+    second: //RootNode
+  externalObjects: {}
   materials:
-    importMaterials: 1
+    materialImportMode: 1
     materialName: 2
     materialSearch: 1
+    materialLocation: 0
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
     resampleCurves: 1
     optimizeGameObjects: 0
-    motionNodeName: 
-    rigImportErrors: 
-    rigImportWarnings: 
-    animationImportErrors: 
-    animationImportWarnings: 
-    animationRetargetingWarnings: 
+    removeConstantScaleCurves: 0
+    motionNodeName:
+    animationImportErrors:
+    animationImportWarnings:
+    animationRetargetingWarnings:
     animationDoRetargetingWarnings: 0
-    animationCompression: 1
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 3
     animationRotationError: 0.5
     animationPositionError: 0.5
     animationScaleError: 0.5
     animationWrapMode: 0
     extraExposedTransformPaths: []
+    extraUserProperties: []
     clipAnimations: []
-    isReadable: 1
+    isReadable: 0
   meshes:
     lODScreenPercentages: []
     globalScale: 1
     meshCompression: 0
     addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importPhysicalCameras: 0
+    importVisibility: 0
     importBlendShapes: 1
+    importCameras: 0
+    importLights: 0
+    nodeNameCollisionStrategy: 0
+    fileIdsGeneration: 1
     swapUVChannels: 0
     generateSecondaryUV: 1
     useFileUnits: 1
-    optimizeMeshForGPU: 1
     keepQuads: 0
     weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
+    meshOptimizationFlags: -1
+    indexFormat: 1
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 0
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
     secondaryUVPackMargin: 4
     useFileScale: 0
+    strictVertexDataChecks: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0
     tangentImportMode: 4
+    normalCalculationMode: 0
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 1
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
   importAnimation: 1
-  copyAvatar: 0
   humanDescription:
-    serializedVersion: 2
+    serializedVersion: 3
     human: []
     skeleton: []
     armTwist: 0.5
@@ -89,22 +182,20 @@ ModelImporter:
     armStretch: 0.05
     legStretch: 0.05
     feetSpacing: 0
-    rootMotionBoneName: 
-    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    globalScale: 1
+    rootMotionBoneName:
     hasTranslationDoF: 0
     hasExtraRoot: 0
     skeletonHasParents: 0
   lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 2
   humanoidOversampling: 1
+  avatarSetup: 1
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 0
+  importBlendShapeDeformPercent: 0
+  remapMaterialsIfMaterialImportModeIsNone: 1
   additionalBone: 0
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 16272
-  packageName: NYC Block #6
-  packageVersion: 1.1
-  assetPath: Assets/OutPost/Resources/Assets/Trafficlight.fbx
-  uploadId: 219610
+  userData:
+  assetBundleName:
+  assetBundleVariant:

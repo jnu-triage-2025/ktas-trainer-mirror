@@ -184,7 +184,7 @@ namespace MultiplayerInfrastructure.Player
     /// </summary>
     private void Update_PlaceableItemPreview()
     {
-      if (MppmLiteMode.IsActive)
+      if (MppmLiteMode.IsHeadless)
       {
         SetPlaceablePreviewVisible(false);
         return;

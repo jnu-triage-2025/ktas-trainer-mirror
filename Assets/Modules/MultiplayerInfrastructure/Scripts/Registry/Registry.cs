@@ -4,7 +4,6 @@ using MultiplayerInfrastructure.ItemSystem;
 using ISItem = MultiplayerInfrastructure.ItemSystem.Item;
 using MultiplayerInfrastructure.Scenario;
 using UnityEngine;
-using MultiplayerInfrastructure.Scenario.Requirements;
 
 namespace MultiplayerInfrastructure.Registry
 {
@@ -695,13 +694,6 @@ namespace MultiplayerInfrastructure.Registry
 
       Register(RegistryType.ScenarioEvent, identifier, handler);
       ScenarioEventIdentifierRegistry.Register(identifier, handler);
-      ScenarioRequirementRuntimeRegistrationRegistry.RegisterExternal(
-        RegistryType.ScenarioEvent,
-        ScenarioRequirementKind.EventHandler,
-        identifier,
-        "registry:scenario-event",
-        new[] { ScenarioRequirementCapability.InvokableEventHandler },
-        ScenarioRequirementProviderOrigin.RegistryPreloaderDeclaration);
     }
 
     /// <summary>
@@ -722,11 +714,6 @@ namespace MultiplayerInfrastructure.Registry
 
       Unregister(RegistryType.ScenarioEvent, identifier);
       ScenarioEventIdentifierRegistry.Unregister(identifier);
-      ScenarioRequirementRuntimeRegistrationRegistry.UnregisterExternal(
-        RegistryType.ScenarioEvent,
-        ScenarioRequirementKind.EventHandler,
-        identifier,
-        "registry:scenario-event");
     }
 
     /// <summary>

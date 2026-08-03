@@ -1,6 +1,7 @@
 {
   "PlayerTags": [
-    "FullClient"
+    "FullClient",
+    "HeadlessLite"
   ],
   "version": "1.6.3"
 }

@@ -3,7 +3,6 @@ using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
-using MultiplayerInfrastructure.Scenario.Requirements;
 
 namespace MultiplayerInfrastructure.InteractableEntity
 {
@@ -42,7 +41,6 @@ namespace MultiplayerInfrastructure.InteractableEntity
     private ItemSubmissionDefinition _runtimeDefinition;
     private bool _completed;
     private string _registeredIdentifier;
-    private ScenarioRequirementRuntimeRegistrationHandle _runtimeEvidence;
     private bool _initialized;
 
     public string Identifier => _identifier;
@@ -131,7 +129,6 @@ namespace MultiplayerInfrastructure.InteractableEntity
       _registeredIdentifier = _identifier;
       Registry.Registry.Register(RegistryType.InteractableEntity, _registeredIdentifier, this);
       Registry.Registry.RegisterEntity(_registeredIdentifier, EntityType.ScenarioInteractable, gameObject, displayName: gameObject.name);
-      _runtimeEvidence = ScenarioRequirementRuntimeRegistrationRegistry.Register(RegistryType.InteractableEntity, ScenarioRequirementKind.Interactable, _registeredIdentifier, this, new[] { ScenarioRequirementCapability.Interactable, ScenarioRequirementCapability.ItemSubmissionTarget });
     }
 
     private void UnregisterFromRegistry()
@@ -141,7 +138,6 @@ namespace MultiplayerInfrastructure.InteractableEntity
 
       Registry.Registry.Unregister(RegistryType.InteractableEntity, _registeredIdentifier);
       Registry.Registry.UnregisterEntity(_registeredIdentifier);
-      _runtimeEvidence.Dispose();
       _registeredIdentifier = null;
     }
 

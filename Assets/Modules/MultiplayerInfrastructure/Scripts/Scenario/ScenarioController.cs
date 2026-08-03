@@ -12,8 +12,6 @@ using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
-using MultiplayerInfrastructure.Scenario.Preflight;
-using MultiplayerInfrastructure.Scenario.Requirements;
 using MultiplayerInfrastructure.TTS;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Logging;
@@ -58,14 +56,6 @@ namespace MultiplayerInfrastructure.Scenario
     [SerializeField] private ScenarioTTSService _ttsService;
     [SerializeField] private AudioSource _ttsAudioSource;
 
-    [Header("Preflight (사전 요구사항 검증)")]
-    [Tooltip("시나리오 시작 직전에 그래프가 요구하는 씬/레지스트리 요소가 준비되어 있는지 점검한다.")]
-    [SerializeField] private bool _preflightEnabled = true;
-    [SerializeField]
-    private ScenarioPreflightPolicy _preflightPolicy = ScenarioPreflightPolicy.Default;
-    [SerializeField] private ScenarioRuntimeValidationMode _runtimeRequirementsValidationMode = ScenarioRuntimeValidationMode.ReportOnly;
-    [SerializeField, Min(0f)] private float _runtimeRequirementsReadinessTimeoutSeconds = 10f;
-    [SerializeField, Min(0.01f)] private float _runtimeRequirementsReadinessPollIntervalSeconds = 0.1f;
 
     [Header("Concurrency (동시 실행 충돌)")]
     [Tooltip("두 개 이상의 시나리오 흐름이 동시에 대화창 UI(Dialogue/Choice/Quiz)를 점유하려 할 때의 처리 정책.")]
@@ -107,7 +97,6 @@ namespace MultiplayerInfrastructure.Scenario
     private ChatUIController _chatUIController;
     private ChatService _chatService;
     private Coroutine _dialogueAutoAdvanceRoutine;
-    private Coroutine _runtimeRequirementsWaitRoutine;
     private ExecutionMode _executionMode = ExecutionMode.Local;
     private bool _currentPresentationNodeRoleScoped;
     private readonly List<ScenarioOwnedActingNpc> _scenarioOwnedActingNpcs = new List<ScenarioOwnedActingNpc>();
@@ -286,9 +275,6 @@ namespace MultiplayerInfrastructure.Scenario
     private void Reset()
     {
       // 컴포넌트를 처음 붙일 때 Preflight 정책을 안전한 기본값(콘솔/인게임챗 둘 다 경고 + 계속 진행)으로 초기화한다.
-      _preflightEnabled = true;
-      _preflightPolicy = ScenarioPreflightPolicy.Default;
-      _runtimeRequirementsValidationMode = ScenarioRuntimeValidationMode.ReportOnly;
       // 동시 실행 충돌 정책 기본값: 경고 후 계속 진행(기존 동작 유지).
       _concurrencyConflictPolicy = ScenarioConcurrencyConflictPolicy.Warn;
       _validatorBlockLogTargets =
@@ -388,7 +374,7 @@ namespace MultiplayerInfrastructure.Scenario
     public void StartScenario(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId)
     {
       _executionMode = ExecutionMode.Local;
-      StartScenarioInternal(graph, startNodeIdentifier, ownerClientId, false);
+      StartScenarioInternal(graph, startNodeIdentifier, ownerClientId);
     }
 
     /// <summary>서버 권위 시나리오를 시작한다. 그래프 순회는 이 서버 인스턴스에서만 수행한다.</summary>
@@ -401,7 +387,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       _executionMode = ExecutionMode.ServerAuthoritative;
-      StartScenarioInternal(graph, startNodeIdentifier, ownerClientId, false);
+      StartScenarioInternal(graph, startNodeIdentifier, ownerClientId);
     }
 
     /// <summary>
@@ -593,7 +579,7 @@ namespace MultiplayerInfrastructure.Scenario
       return !_scenarioOwnerClientId.HasValue || _scenarioOwnerClientId.Value == senderClientId;
     }
 
-    private void StartScenarioInternal(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId, bool requirementsAlreadyValidated)
+    private void StartScenarioInternal(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId)
     {
       if (graph == null)
       {
@@ -601,72 +587,8 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
-      if (!requirementsAlreadyValidated && !PrepareScenarioOwnedObjects(graph))
+      if (!PrepareScenarioOwnedObjects(graph))
         return;
-
-      if (_runtimeRequirementsWaitRoutine != null)
-      {
-        StopCoroutine(_runtimeRequirementsWaitRoutine);
-        _runtimeRequirementsWaitRoutine = null;
-      }
-
-      var runtimeValidationMode = requirementsAlreadyValidated
-        ? ScenarioRuntimeValidationMode.Off
-        : _runtimeRequirementsValidationMode;
-      if (runtimeValidationMode == ScenarioRuntimeValidationMode.ReportOnly
-          && _preflightPolicy.MissingBehavior == ScenarioPreflightMissingBehavior.AbortStart)
-        runtimeValidationMode = ScenarioRuntimeValidationMode.AbortScenarioStart;
-      // Runtime requirements mode is the authoritative switch.  The legacy
-      // preflight checkbox must not silently disable an explicitly configured
-      // strict runtime gate.
-      if (!requirementsAlreadyValidated && runtimeValidationMode != ScenarioRuntimeValidationMode.Off)
-      {
-        // No composition profile is passed here: this base controller stays
-        // project-agnostic and does not resolve TriageTrainer scene roles.  The
-        // runtime validator therefore treats fixed scene-role scopes as
-        // unprovable (Indeterminate) rather than falsely reporting WrongScene
-        // (proposal §15).  A concrete bootstrap module that knows its
-        // composition may call the validator/bootstrap gate with a resolved
-        // composition to enforce scope.
-        var runtimeValidation = ScenarioRuntimeRequirementsValidator.Validate(
-          graph,
-          runtimeValidationMode,
-          CreateRuntimeRequirementsValidationContext());
-        if (_preflightPolicy.WarnToConsole)
-        {
-          foreach (var diagnostic in runtimeValidation.Diagnostics.Where(value => value.Severity >= ScenarioRequirementDiagnosticSeverity.Warning))
-            Debug.LogWarning($"[ScenarioRuntime] {diagnostic.Code}: {diagnostic.Message}");
-        }
-        if (runtimeValidation.Readiness == ScenarioRuntimeReadiness.NotReady
-            && (runtimeValidationMode == ScenarioRuntimeValidationMode.AbortScenarioStart
-                || runtimeValidationMode == ScenarioRuntimeValidationMode.AbortSessionBootstrap))
-        {
-          _runtimeRequirementsWaitRoutine = StartCoroutine(WaitForRuntimeRequirementsAndStart(graph, startNodeIdentifier, ownerClientId, runtimeValidationMode));
-          return;
-        }
-        if (runtimeValidation.ShouldAbort)
-        {
-          if (_preflightPolicy.WarnToConsole)
-            Debug.LogError($"[ScenarioRuntime] Aborting scenario '{graph.Identifier}' before changing current scenario state.");
-          if (_preflightPolicy.WarnToInGameChat)
-            AppendSystemChatMessage($"[ScenarioRuntime] Scenario '{graph.Identifier}' could not start because requirements are unresolved.");
-          CleanupScenarioActingNpcs(forceDespawn: true);
-          CleanupScenarioWaypoints(forceDespawn: true);
-          return;
-        }
-      }
-
-      // The canonical runtime validator is the sole gate whenever enabled.
-      // Retain legacy preflight only for explicit runtime-validation Off mode.
-      if (!requirementsAlreadyValidated
-          && _preflightEnabled
-          && runtimeValidationMode == ScenarioRuntimeValidationMode.Off
-          && !ScenarioPreflight.Run(graph, _preflightPolicy, AppendSystemChatMessage, out _))
-      {
-        CleanupScenarioActingNpcs(forceDespawn: true);
-        CleanupScenarioWaypoints(forceDespawn: true);
-        return;
-      }
 
       // 이전 시나리오 실행에서 남은 코루틴(병렬 브랜치 등)이 있으면 새 시나리오 시작 전에 정리한다.
       StopAllCoroutines();
@@ -752,52 +674,6 @@ namespace MultiplayerInfrastructure.Scenario
 
       // 첫 노드 실행
       ExecuteNode(startNode);
-    }
-
-    private static ScenarioRuntimeValidationContext CreateRuntimeRequirementsValidationContext()
-    {
-      var offline = InstanceFinder.IsOffline;
-      var isServer = offline || InstanceFinder.IsServerStarted;
-      var isClient = offline || InstanceFinder.IsClientStarted;
-      // HostOnly means "an integrated host is running both server and client in
-      // the same networked process" (proposal §5).  Offline/single-player is
-      // not a networked host, so a HostOnly requirement must not be enforced
-      // there; deriving isHost from the offline server/client fallback would
-      // wrongly activate HostOnly in plain single-player play.
-      var isHost = !offline && InstanceFinder.IsServerStarted && InstanceFinder.IsClientStarted;
-      return new ScenarioRuntimeValidationContext(
-        ScenarioRequirementAuthority.Any,
-        isServer,
-        isClient,
-        isHost);
-    }
-
-    private IEnumerator WaitForRuntimeRequirementsAndStart(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId, ScenarioRuntimeValidationMode validationMode)
-    {
-      ScenarioRuntimeValidationResult completed = null;
-      yield return ScenarioRuntimeRequirementsValidator.WaitUntilReady(
-        graph,
-        validationMode,
-        CreateRuntimeRequirementsValidationContext(),
-        _runtimeRequirementsReadinessTimeoutSeconds,
-        _runtimeRequirementsReadinessPollIntervalSeconds,
-        value => completed = value);
-      _runtimeRequirementsWaitRoutine = null;
-      if (completed == null || completed.ShouldAbort)
-      {
-        if (_preflightPolicy.WarnToConsole)
-          Debug.LogError($"[ScenarioRuntime] Aborting scenario '{graph.Identifier}' because requirements did not become ready.");
-        if (_preflightPolicy.WarnToInGameChat)
-          AppendSystemChatMessage($"[ScenarioRuntime] Scenario '{graph.Identifier}' could not start because requirements are unresolved.");
-        CleanupScenarioActingNpcs(forceDespawn: true);
-        CleanupScenarioWaypoints(forceDespawn: true);
-        yield break;
-      }
-
-      // The successful readiness result is already the canonical validation
-      // result for this start request.  Do not re-enter via Off mode, which
-      // would invoke the legacy preflight and could reverse that decision.
-      StartScenarioInternal(graph, startNodeIdentifier, ownerClientId, true);
     }
 
     /// <summary>

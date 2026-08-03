@@ -191,15 +191,29 @@ namespace MultiplayerInfrastructure.Performance
       if (settings == null)
         return;
 
-      var camera = MainCameraController.Instance?.Camera;
-      if (camera == null)
-        return;
+      // Main camera 외의 overlay/보조 카메라도 자체 HDR/MSAA RenderTexture를 만들 수 있다.
+      // MPPM을 포함한 저사양 프로파일에서는 모든 카메라에 동일한 버퍼 정책을 적용한다.
+      foreach (var camera in FindAllCameras())
+      {
+        if (camera == null)
+          continue;
 
-      camera.allowDynamicResolution = settings.DynamicResolution;
-      camera.fieldOfView = settings.FieldOfView;
-      if (camera.TryGetComponent<UniversalAdditionalCameraData>(out var cameraData))
-        cameraData.renderPostProcessing = settings.PostProcessing;
+        camera.allowHDR = settings.Hdr;
+        camera.allowMSAA = settings.AntiAliasing != GraphicsAntiAliasing.Disabled;
+        camera.allowDynamicResolution = settings.DynamicResolution;
+        if (camera.TryGetComponent<UniversalAdditionalCameraData>(out var cameraData))
+          cameraData.renderPostProcessing = settings.PostProcessing;
+      }
+
+      var mainCamera = MainCameraController.Instance?.Camera;
+      if (mainCamera != null)
+        mainCamera.fieldOfView = settings.FieldOfView;
     }
+
+    private static UnityEngine.Camera[] FindAllCameras()
+      => UnityEngine.Object.FindObjectsByType<UnityEngine.Camera>(
+        FindObjectsInactive.Include,
+        FindObjectsSortMode.None);
 
     public static int ToQualitySettingsAntiAliasing(GraphicsAntiAliasing value)
       => value == GraphicsAntiAliasing.Disabled ? 0 : (int)value;
