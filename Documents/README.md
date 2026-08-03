@@ -53,3 +53,4 @@
 - [2026-02-16: Interactable/NPC/Icon 구조 개편](./changes/2026-02-16-interactable-npc-icon-refactor.md)
 - [2026-03-26: Registry Preloader Validation 도구 개편](./changes/2026-03-26-registry-preloader-validation-tooling.md)
 - [2026-06-29: Scenario Graph Editor runtime highlight](./changes/2026-06-29-scenario-graph-editor-runtime-highlight.md)
+- [2026-08-03: MPPM 메모리 최적화](./changes/2026-08-03-mppm-memory-optimization.md)

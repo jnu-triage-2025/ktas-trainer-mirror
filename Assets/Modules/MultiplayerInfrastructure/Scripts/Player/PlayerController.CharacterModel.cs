@@ -98,7 +98,7 @@ namespace MultiplayerInfrastructure.Player
       _currentPlayerModelIdentifier = modelIdentifier;
 
       // Lite 클론은 네트워크상의 모델 선택 상태만 유지하고 시각 프리팹은 로드하지 않는다.
-      if (MppmLiteMode.IsActive)
+      if (MppmLiteMode.IsHeadless)
       {
         ClearResolvedPlayerModelLocal();
         return;

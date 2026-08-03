@@ -11,13 +11,16 @@ using Unity.Multiplayer.Playmode;
 namespace MultiplayerInfrastructure.Performance
 {
   /// <summary>
-  /// MPPM 추가 Editor 인스턴스를 사람의 조작 없이 저메모리 논리 클라이언트로 전환합니다.
+  /// MPPM 추가 Editor 인스턴스를 저사양 클라이언트로 전환합니다.
+  /// 기본 세션은 조작할 수 있도록 화면을 유지하고, HeadlessLite 태그에서만 표현을 숨깁니다.
   /// Main Editor와 일반 Player 빌드에는 절대로 적용하지 않습니다.
   /// </summary>
   public static class MppmLiteMode
   {
     public const string FullClientTag = "FullClient";
+    public const string HeadlessLiteTag = "HeadlessLite";
     public static bool IsActive { get; private set; }
+    public static bool IsHeadless { get; private set; }
     private static LiteRuntimeState _savedState;
     private static bool _hasSavedState;
     private static MppmLiteRuntimeGuard _guard;
@@ -31,6 +34,7 @@ namespace MultiplayerInfrastructure.Performance
     {
       SceneManager.sceneLoaded -= HandleSceneLoaded;
       IsActive = false;
+      IsHeadless = false;
       RestoreVisualStates();
       RestoreRuntimeState();
     }
@@ -39,12 +43,15 @@ namespace MultiplayerInfrastructure.Performance
     private static void Initialize()
     {
 #if UNITY_EDITOR
+      var tags = CurrentPlayer.ReadOnlyTags();
       IsActive = ShouldActivate(
         runningInEditor: true,
         isMainEditor: CurrentPlayer.IsMainEditor,
-        tags: CurrentPlayer.ReadOnlyTags());
+        tags: tags);
+      IsHeadless = ShouldUseHeadlessVisuals(IsActive, tags);
 #else
       IsActive = false;
+      IsHeadless = false;
 #endif
 
       if (!IsActive)
@@ -54,10 +61,15 @@ namespace MultiplayerInfrastructure.Performance
       TexturePerformanceService.ApplyToUnity(CreateSettings(), applyDisplay: false);
       AudioListener.pause = true;
       AudioListener.volume = 0f;
-      SceneManager.sceneLoaded += HandleSceneLoaded;
       EnsureRuntimeGuard();
-      ApplySceneOverrides();
-      Debug.Log("[MPPM Lite] 가상 플레이어 저메모리 모드를 자동 적용했습니다.");
+      if (IsHeadless)
+      {
+        SceneManager.sceneLoaded += HandleSceneLoaded;
+        ApplySceneOverrides();
+      }
+      Debug.Log(IsHeadless
+        ? "[MPPM Lite] Headless 저메모리 모드를 적용했습니다."
+        : "[MPPM Lite] 조작 가능한 저사양 화면 모드를 적용했습니다.");
     }
 
     internal static bool ShouldActivate(bool runningInEditor, bool isMainEditor, string[] tags)
@@ -66,6 +78,9 @@ namespace MultiplayerInfrastructure.Performance
         return false;
       return tags == null || Array.IndexOf(tags, FullClientTag) < 0;
     }
+
+    internal static bool ShouldUseHeadlessVisuals(bool liteActive, string[] tags)
+      => liteActive && tags != null && Array.IndexOf(tags, HeadlessLiteTag) >= 0;
 
     public static GraphicsSettingsData CreateSettings()
     {
@@ -90,7 +105,7 @@ namespace MultiplayerInfrastructure.Performance
 
     internal static void ApplySceneOverrides()
     {
-      if (!IsActive)
+      if (!IsHeadless)
         return;
 
       for (int i = 0; i < SceneManager.sceneCount; i++)
@@ -103,7 +118,7 @@ namespace MultiplayerInfrastructure.Performance
     /// </summary>
     public static void StripVisuals(GameObject root)
     {
-      if (!IsActive || root == null)
+      if (!IsHeadless || root == null)
         return;
 
       DisableBehaviours(root.GetComponentsInChildren<UnityEngine.Camera>(true));
@@ -135,6 +150,7 @@ namespace MultiplayerInfrastructure.Performance
     {
       SceneManager.sceneLoaded -= HandleSceneLoaded;
       IsActive = false;
+      IsHeadless = false;
       RestoreVisualStates();
       RestoreRuntimeState();
       _guard = null;
@@ -225,10 +241,11 @@ namespace MultiplayerInfrastructure.Performance
     }
 
 #if UNITY_INCLUDE_TESTS
-    internal static void ActivateForTests()
+    internal static void ActivateForTests(bool headless = true)
     {
       ResetState();
       IsActive = true;
+      IsHeadless = headless;
       CaptureRuntimeState();
     }
 

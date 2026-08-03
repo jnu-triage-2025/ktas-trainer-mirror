@@ -27,7 +27,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private void EnsureTrackingLineRenderer()
     {
-      if (!_showTrackingLine || MppmLiteMode.IsActive)
+      if (!_showTrackingLine || MppmLiteMode.IsHeadless)
         return;
 
       if (_trackingLineRenderer == null && !TryResolveTrackingLineRenderer())
@@ -111,7 +111,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private void UpdateTrackingLine()
     {
-      if (MppmLiteMode.IsActive)
+      if (MppmLiteMode.IsHeadless)
       {
         SetTrackingLineEnabled(false);
         return;

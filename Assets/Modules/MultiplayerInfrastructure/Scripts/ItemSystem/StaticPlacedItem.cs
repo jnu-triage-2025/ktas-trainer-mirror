@@ -299,7 +299,7 @@ namespace MultiplayerInfrastructure.ItemSystem
     {
       if (_loadedModel != null || !TryGetPrimaryReward(out var primary))
         return;
-      if (MppmLiteMode.IsActive)
+      if (MppmLiteMode.IsHeadless)
         return;
 
       string path = $"{ModelRootPath}/{primary.ItemIdentifier}";

@@ -225,7 +225,7 @@ namespace TriageTrainer.Entity.LineConnection
       lineObject.transform.SetParent(_linesRoot, false);
 
       LineRenderer lineRenderer = null;
-      if (!MppmLiteMode.IsActive)
+      if (!MppmLiteMode.IsHeadless)
       {
         lineRenderer = lineObject.AddComponent<LineRenderer>();
         lineRenderer.positionCount = 0;

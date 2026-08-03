@@ -362,7 +362,7 @@ namespace MultiplayerInfrastructure.Player
 
     private void EnsureViewmodelRoot()
     {
-      if (!_enableViewmodel || !IsOwner || MppmLiteMode.IsActive)
+      if (!_enableViewmodel || !IsOwner || MppmLiteMode.IsHeadless)
         return;
 
       if (_viewmodelRoot != null)
@@ -384,7 +384,7 @@ namespace MultiplayerInfrastructure.Player
       if (!_enableViewmodel || !IsOwner)
         return;
 
-      if (MppmLiteMode.IsActive)
+      if (MppmLiteMode.IsHeadless)
       {
         ClearViewmodel();
         return;

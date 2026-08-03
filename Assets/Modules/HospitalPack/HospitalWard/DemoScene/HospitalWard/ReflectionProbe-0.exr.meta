@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 8838ee9bc05c4c4499c2c12bcdf5da13
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80725
+  packageName: Hospital Recovery Room
+  packageVersion: 3.0
+  assetPath: Assets/HospitalPack/HospitalWard/DemoScene/HospitalWard/ReflectionProbe-0.exr
+  uploadId: 822420
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -69,7 +76,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -97,28 +104,21 @@ TextureImporter:
     serializedVersion: 2
     sprites: []
     outline: []
-    customData: 
+    customData:
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID:
     internalID: 0
     vertices: []
-    indices: 
+    indices:
     edges: []
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
     nameFileIdTable: {}
-  mipmapLimitGroupName: 
+  mipmapLimitGroupName:
   pSDRemoveMatte: 0
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 80725
-  packageName: Hospital Recovery Room
-  packageVersion: 3.0
-  assetPath: Assets/HospitalPack/HospitalWard/DemoScene/HospitalWard/ReflectionProbe-0.exr
-  uploadId: 822420
+  userData:
+  assetBundleName:
+  assetBundleVariant:

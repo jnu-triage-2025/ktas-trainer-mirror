@@ -25,6 +25,16 @@ namespace MultiplayerInfrastructure.Performance.Tests
     public void AdditionalEditor_ActivatesLiteWithoutManualTagging()
     {
       Assert.That(MppmLiteMode.ShouldActivate(true, false, new string[0]), Is.True);
+      Assert.That(MppmLiteMode.ShouldUseHeadlessVisuals(true, new string[0]), Is.False);
+    }
+
+    [Test]
+    public void HeadlessLiteTag_IsRequiredToHideMppmVisuals()
+    {
+      Assert.That(MppmLiteMode.ShouldUseHeadlessVisuals(true,
+        new[] { MppmLiteMode.HeadlessLiteTag }), Is.True);
+      Assert.That(MppmLiteMode.ShouldUseHeadlessVisuals(false,
+        new[] { MppmLiteMode.HeadlessLiteTag }), Is.False);
     }
 
     [Test]
@@ -94,6 +104,31 @@ namespace MultiplayerInfrastructure.Performance.Tests
         Assert.That(initiallyDisabledLight.enabled, Is.False);
         Assert.That(AudioListener.pause, Is.EqualTo(originalAudioPaused));
         Assert.That(AudioListener.volume, Is.EqualTo(originalAudioVolume).Within(0.001f));
+      }
+      finally
+      {
+        if (MppmLiteMode.IsActive)
+          MppmLiteMode.DeactivateForTests();
+        Object.DestroyImmediate(root);
+      }
+    }
+
+    [Test]
+    public void VisibleLiteSession_DoesNotDisableCameraOrRenderers()
+    {
+      var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      var camera = root.AddComponent<UnityEngine.Camera>();
+      var renderer = root.GetComponent<Renderer>();
+
+      try
+      {
+        MppmLiteMode.ActivateForTests(headless: false);
+        MppmLiteMode.StripVisuals(root);
+
+        Assert.That(MppmLiteMode.IsActive, Is.True);
+        Assert.That(MppmLiteMode.IsHeadless, Is.False);
+        Assert.That(camera.enabled, Is.True);
+        Assert.That(renderer.enabled, Is.True);
       }
       finally
       {
