@@ -13,7 +13,7 @@ namespace MultiplayerInfrastructure.Player
     [Header("Key Configuration")]
     [SerializeField] private KeyCode _keyMovingRunning = KeyCode.LeftControl;
     [SerializeField] private KeyCode _keyToggleInventory = KeyCode.E;
-    [SerializeField] private KeyCode _keySwitchCameraViewMode = KeyCode.P;
+    [SerializeField] private KeyCode _keySwitchCameraViewMode = KeyCode.K;
     [SerializeField] private KeyCode _keyOpenEscMenu = KeyCode.Escape;
     [SerializeField] private KeyCode _keyToggleChat = DefaultsKeyConfiguration.OpenChatUI;
     [SerializeField] private KeyCode _keyToggleCommand = DefaultsKeyConfiguration.OpenChatUIWithCommand;

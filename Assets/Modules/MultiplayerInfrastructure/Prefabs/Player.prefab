@@ -261,7 +261,7 @@ MonoBehaviour:
   _hotbarUI: {fileID: 0}
   _keyMovingRunning: 306
   _keyToggleInventory: 101
-  _keySwitchCameraViewMode: 112
+  _keySwitchCameraViewMode: 107
   _keyOpenEscMenu: 27
   _keyToggleChat: 116
   _keyToggleCommand: 47
