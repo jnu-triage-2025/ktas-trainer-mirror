@@ -1,0 +1,40 @@
+stages:
+  - build
+
+variables:
+  BUILD_NAME: "ktas-trainer"
+  BUILD_PATH: "build"
+  GIT_DEPTH: "1"
+
+.manual-local-build:
+  stage: build
+  allow_failure: false
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - if: '$CI_PIPELINE_SOURCE == "pipeline"'
+      when: manual
+    - when: never
+build-windows:
+  extends: .manual-local-build
+  tags:
+    - macos-unity
+  variables:
+    BUILD_TARGET: "StandaloneWindows64"
+  before_script:
+    - test -f "Tools/CI/build-unity.sh"
+    - chmod +x "Tools/CI/build-unity.sh"
+  script:
+    - "Tools/CI/build-unity.sh"
+
+build-macos:
+  extends: .manual-local-build
+  tags:
+    - macos-unity
+  variables:
+    BUILD_TARGET: "StandaloneOSX"
+  before_script:
+    - test -f "Tools/CI/build-unity.sh"
+    - chmod +x "Tools/CI/build-unity.sh"
+  script:
+    - "Tools/CI/build-unity.sh"
