@@ -41,7 +41,7 @@ namespace MultiplayerInfrastructure.UI
 
       var service = GetGraphicsService();
       _pendingGraphics = service?.CurrentSettings ??
-                         GraphicsQualityPresets.Create(GraphicsQualityPresets.DefaultProfile);
+                         GraphicsQualityPresets.Create(GraphicsQualityPresets.RuntimeDefaultProfile);
       BuildGraphicsForm();
     }
 
@@ -88,7 +88,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void BuildProfileSection()
     {
-      var section = AddSection("품질 프로파일", "매우 낮음부터 매우 높음까지 전체 옵션 묶음을 선택합니다. 기본값은 항상 낮음입니다.");
+      var section = AddSection("품질 프로파일", "매우 낮음부터 매우 높음까지 전체 옵션 묶음을 선택합니다. 런타임 기본값은 보통입니다.");
       _profileField = new DropdownField(
         new System.Collections.Generic.List<string>
         {
@@ -232,11 +232,11 @@ namespace MultiplayerInfrastructure.UI
       var reset = new Button(() =>
       {
         var display = _pendingGraphics;
-        _pendingGraphics = GraphicsQualityPresets.Create(GraphicsQualityPresets.DefaultProfile);
+        _pendingGraphics = GraphicsQualityPresets.Create(GraphicsQualityPresets.RuntimeDefaultProfile);
         CopyDisplaySettings(display, _pendingGraphics);
         BuildGraphicsForm();
-        SetStatusText("낮음 기본값을 불러왔습니다. 적용 버튼을 눌러 저장하세요.");
-      }) { text = "낮음 기본값" };
+        SetStatusText("보통 기본값을 불러왔습니다. 적용 버튼을 눌러 저장하세요.");
+      }) { text = "보통 기본값" };
       reset.AddToClassList("settings__secondary-btn");
 
       var apply = new Button(() =>

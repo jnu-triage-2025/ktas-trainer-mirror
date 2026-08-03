@@ -24,7 +24,7 @@ namespace MultiplayerInfrastructure.Performance
 
     public GraphicsSettingsData CurrentSettings => _currentSettings?.Clone();
     public GraphicsQualityProfile CurrentProfile
-      => _currentSettings?.Profile ?? GraphicsQualityPresets.DefaultProfile;
+      => _currentSettings?.Profile ?? GraphicsQualityPresets.RuntimeDefaultProfile;
     public TextureQuality CurrentQuality
       => (TextureQuality)Mathf.Clamp(_currentSettings?.TextureMipmapLimit ?? 2, 0, 3);
 
@@ -75,13 +75,13 @@ namespace MultiplayerInfrastructure.Performance
     /// <summary>기존 텍스처 설정 호출자를 위한 호환 API입니다.</summary>
     public void SetQuality(TextureQuality quality)
     {
-      var next = CurrentSettings ?? GraphicsQualityPresets.Create(GraphicsQualityPresets.DefaultProfile);
+      var next = CurrentSettings ?? GraphicsQualityPresets.Create(GraphicsQualityPresets.RuntimeDefaultProfile);
       next.Profile = GraphicsQualityProfile.Custom;
       next.TextureMipmapLimit = (int)quality;
       SetSettings(next);
     }
 
-    public void ResetToDefault() => SetProfile(GraphicsQualityPresets.DefaultProfile);
+    public void ResetToDefault() => SetProfile(GraphicsQualityPresets.RuntimeDefaultProfile);
 
     public void LoadAndApply()
     {
@@ -248,7 +248,7 @@ namespace MultiplayerInfrastructure.Performance
     private static GraphicsSettingsData Load()
     {
       if (!PlayerPrefs.HasKey(PlayerPrefsKey))
-        return GraphicsQualityPresets.Create(GraphicsQualityPresets.DefaultProfile);
+        return GraphicsQualityPresets.Create(GraphicsQualityPresets.RuntimeDefaultProfile);
 
       try
       {
@@ -261,10 +261,10 @@ namespace MultiplayerInfrastructure.Performance
       }
       catch (Exception exception)
       {
-        Debug.LogWarning($"[GraphicsPerformance] 저장 설정을 읽지 못해 낮음 기본값을 사용합니다: {exception.Message}");
+        Debug.LogWarning($"[GraphicsPerformance] 저장 설정을 읽지 못해 보통 기본값을 사용합니다: {exception.Message}");
       }
 
-      return GraphicsQualityPresets.Create(GraphicsQualityPresets.DefaultProfile);
+      return GraphicsQualityPresets.Create(GraphicsQualityPresets.RuntimeDefaultProfile);
     }
   }
 

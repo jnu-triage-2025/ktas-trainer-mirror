@@ -16,6 +16,14 @@ namespace MultiplayerInfrastructure.Editor.Performance.Tests
         Is.EqualTo(GraphicsQualityProfile.Low));
     }
 
+    [Test]
+    public void RuntimeDefaultProfile_IsMedium()
+    {
+      Assert.That(GraphicsQualityPresets.RuntimeDefaultProfile, Is.EqualTo(GraphicsQualityProfile.Medium));
+      Assert.That(GraphicsQualityPresets.Create(GraphicsQualityPresets.RuntimeDefaultProfile).Profile,
+        Is.EqualTo(GraphicsQualityProfile.Medium));
+    }
+
     [TestCase(GraphicsQualityProfile.VeryLow)]
     [TestCase(GraphicsQualityProfile.Low)]
     [TestCase(GraphicsQualityProfile.Medium)]

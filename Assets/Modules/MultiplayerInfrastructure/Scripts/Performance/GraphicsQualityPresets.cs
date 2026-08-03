@@ -5,7 +5,11 @@ namespace MultiplayerInfrastructure.Performance
   /// <summary>프로젝트의 5단계 권장 그래픽 프리셋을 생성합니다.</summary>
   public static class GraphicsQualityPresets
   {
+    /// <summary>에디터와 프로젝트 베이스라인에서 사용하는 기본 프로파일입니다.</summary>
     public const GraphicsQualityProfile DefaultProfile = GraphicsQualityProfile.Low;
+
+    /// <summary>플레이어 설정이 없을 때 런타임에서 사용하는 기본 프로파일입니다.</summary>
+    public const GraphicsQualityProfile RuntimeDefaultProfile = GraphicsQualityProfile.Medium;
 
     public static GraphicsSettingsData Create(GraphicsQualityProfile profile)
     {
