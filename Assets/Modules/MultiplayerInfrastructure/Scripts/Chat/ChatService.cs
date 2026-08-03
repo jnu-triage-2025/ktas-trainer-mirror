@@ -165,7 +165,11 @@ namespace MultiplayerInfrastructure.Chat
     }
 
     [TargetRpc]
-    private void TargetRunScenario(NetworkConnection conn, string scenarioIdentifier, int ownerClientId)
+    private void TargetRunScenario(
+      NetworkConnection conn,
+      string scenarioIdentifier,
+      int ownerClientId,
+      bool allowMultipleRoleBranchesForSinglePlayer)
     {
       if (!Registry.Registry.TryGetScenarioGraph(scenarioIdentifier, out ScenarioGraph graph, out string error))
       {
@@ -179,6 +183,8 @@ namespace MultiplayerInfrastructure.Chat
         return;
       }
 
+      // 호환 실행 경로에서는 클라이언트가 자체 상태기를 실행하므로 서버의 확정 규칙을 먼저 적용한다.
+      ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer = allowMultipleRoleBranchesForSinglePlayer;
       int? owner = ownerClientId >= 0 ? ownerClientId : (int?)null;
       ScenarioController.Instance.StartScenario(graph, null, owner);
     }
@@ -363,7 +369,11 @@ namespace MultiplayerInfrastructure.Chat
       foreach (var target in resolvedTargets)
       {
         int targetOwnerId = target.ClientId >= 0 ? (int)target.ClientId : -1;
-        TargetRunScenario(target, scenarioIdentifier, targetOwnerId);
+        TargetRunScenario(
+          target,
+          scenarioIdentifier,
+          targetOwnerId,
+          ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer);
       }
 
       return true;

@@ -3863,8 +3863,13 @@ namespace MultiplayerInfrastructure.Scenario
 
       var runningCoroutines = new List<Coroutine>();
       var runningTrackers = new List<BranchCompletionTracker>();
+      var routinesByClient = new Dictionary<int, List<IEnumerator>>();
       int? localClientId = (int?)InstanceFinder.ClientManager?.Connection?.ClientId;
       var players = GetActivePlayerIds();
+      bool sequenceRoleBranches = ShouldAllowSinglePlayerRoleBranches(
+        node,
+        players.Count,
+        ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer);
       var allocation = new Dictionary<ScenarioParallelBranch, int?>();
 
       if (!TryAllocateParallel(node, players, allocation))
@@ -3881,6 +3886,11 @@ namespace MultiplayerInfrastructure.Scenario
         if (!_currentGraph.TryGetNode(branch.Identifier, out var branchNode))
         {
           Debug.LogWarning($"[ScenarioController] Parallel branch target '{branch.Identifier}' not found.");
+          if (node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
+          {
+            EndScenario();
+            yield break;
+          }
           continue;
         }
 
@@ -3914,9 +3924,28 @@ namespace MultiplayerInfrastructure.Scenario
         // 브랜치 종단이 합류 노드를 가리키는 그래프에서, 합류 노드가 브랜치에서 1회 +
         // 전역 Advance 에서 1회 총 2회 실행되는 것을 방지한다.
         var tracker = new BranchCompletionTracker();
-        var coroutine = StartCoroutine(RunTrackedBranch(branchNode, branch.CompletionConditionIdentifier, node.NextIdentifier, assignedClientId, tracker));
-        runningCoroutines.Add(coroutine);
         runningTrackers.Add(tracker);
+        var routine = RunTrackedBranch(branchNode, branch.CompletionConditionIdentifier, node.NextIdentifier, assignedClientId, tracker);
+        if (!sequenceRoleBranches)
+        {
+          runningCoroutines.Add(StartCoroutine(routine));
+          continue;
+        }
+
+        var clientKey = assignedClientId ?? int.MinValue;
+        if (!routinesByClient.TryGetValue(clientKey, out var routines))
+        {
+          routines = new List<IEnumerator>();
+          routinesByClient[clientKey] = routines;
+        }
+        routines.Add(routine);
+      }
+
+      // 한 플레이어에게 여러 역할 브랜치가 배정되면 UI와 입력이 겹치지 않도록
+      // 그래프에 정의된 순서대로 실행한다. 플레이어별 시퀀스끼리는 계속 병렬 실행한다.
+      foreach (var routines in routinesByClient.Values)
+      {
+        runningCoroutines.Add(StartCoroutine(RunSequentially(routines)));
       }
 
       // WaitMode에 따라 대기
@@ -3947,6 +3976,12 @@ namespace MultiplayerInfrastructure.Scenario
     private sealed class BranchCompletionTracker
     {
       public bool Completed;
+    }
+
+    private static IEnumerator RunSequentially(IReadOnlyList<IEnumerator> routines)
+    {
+      for (var index = 0; index < routines.Count; index++)
+        yield return routines[index];
     }
 
     private IEnumerator RunTrackedBranch(IScenarioNode branchNode, string completionCondition, string joinNodeIdentifier, int? assignedClientId, BranchCompletionTracker tracker)
@@ -4108,10 +4143,48 @@ namespace MultiplayerInfrastructure.Scenario
       if (node.Operation == ScenarioSignalCounterOperation.Unregister)
         ScenarioSignalCounters.Unregister(node.CounterIdentifier);
       else
-        ScenarioSignalCounters.Register(node.CounterIdentifier, node.SourceSignalPrefix, node.Threshold, node.OutputSignalIdentifier);
+        ScenarioSignalCounters.Register(
+          node.CounterIdentifier,
+          node.SourceSignalPrefix,
+          ResolveSignalCounterThreshold(
+            _currentGraph?.Identifier,
+            node,
+            GetActivePlayerIds().Count,
+            ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer),
+          node.OutputSignalIdentifier);
 
       Advance();
     }
+
+    private static int ResolveSignalCounterThreshold(
+      string graphIdentifier,
+      ScenarioSignalCounterNode node,
+      int activePlayerCount,
+      bool allowMultipleRoleBranchesForSinglePlayer)
+    {
+      // patient_b_c_ct의 도착 신호는 플레이어별 distinct 신호 네 개를 전제로 한다.
+      // 한 세션이 모든 역할을 맡는 디버그 모드에서만 해당 계약을 한 명 도착으로 축소한다.
+      if (allowMultipleRoleBranchesForSinglePlayer
+          && activePlayerCount == 1
+          && string.Equals(graphIdentifier, "patient_b_c_ct", StringComparison.Ordinal)
+          && string.Equals(node?.CounterIdentifier, "scen_b_nurse_arrivals", StringComparison.Ordinal)
+          && string.Equals(node.SourceSignalPrefix, "quest_arrival_triage_area_", StringComparison.Ordinal)
+          && string.Equals(node.OutputSignalIdentifier, "all_nurses_arrived_triage", StringComparison.Ordinal))
+      {
+        return 1;
+      }
+
+      return node?.Threshold ?? 1;
+    }
+
+    private static bool ShouldAllowSinglePlayerRoleBranches(
+      ScenarioParallelNode node,
+      int activePlayerCount,
+      bool enabled)
+      => enabled
+        && activePlayerCount == 1
+        && node?.AllocationType == ScenarioParallelAllocationType.ByRole
+        && node.WaitMode == ScenarioWaitMode.All;
 
     private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, string joinNodeIdentifier, int? branchOwnerClientId)
     {
@@ -4835,6 +4908,17 @@ namespace MultiplayerInfrastructure.Scenario
 
           if (!ScenarioParallelRoleAllocator.TryAllocateDistinct(branches, candidatesByBranch, allocation))
           {
+            if (ShouldAllowSinglePlayerRoleBranches(
+                  node,
+                  playerPool.Count,
+                  ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer)
+                && ScenarioParallelRoleAllocator.TryAllocateAllToPlayer(
+                  branches, candidatesByBranch, playerPool[0], allocation))
+            {
+              Debug.Log($"[ScenarioController] ByRole branches assigned sequentially to single player {playerPool[0]}.");
+              return true;
+            }
+
             // 미배정 브랜치가 존재하면 미스매치 정책에 위임한다.
             // (Ignore: null 배정 그대로 스킵 / Panic: 중단 / Reallocation: 라운드로빈 재배정)
             int unmatchedCount = allocation.Count(kvp => kvp.Value == null);
@@ -4846,7 +4930,10 @@ namespace MultiplayerInfrastructure.Scenario
 
             if (node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Reallocation)
             {
-              return HandleParallelMismatch(node, branches.Count, playerPool.Count, playerPool, allocation, assignNull: false);
+              // ByRole의 distinct matching이 실패했다면 같은 후보 집합으로 중복 없는 재배정은 불가능하다.
+              // 공통 round-robin은 역할 자격을 무시하고 한 플레이어에게 UI 브랜치를 겹쳐 배정하므로 금지한다.
+              Debug.LogWarning("[ScenarioController] ByRole reallocation cannot complete without duplicate player assignments.");
+              return false;
             }
 
             // Ignore: null 배정 유지(해당 브랜치 스킵).

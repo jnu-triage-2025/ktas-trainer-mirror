@@ -22,6 +22,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("gamerule runningSpeedMultiplier <number>", "Set running speed multiplier (0~10; default 1.5)."),
       new UsageLine("gamerule IgnoreTagAssignFullSatisfactionOnScenarioPlay", "Show whether missing scenario player-tag gates are ignored."),
       new UsageLine("gamerule IgnoreTagAssignFullSatisfactionOnScenarioPlay <true|false>", "Ignore missing scenario player-tag gates (default true)."),
+      new UsageLine("gamerule AllowMultipleRoleBranchesForSinglePlayer [true|false]", "Run multiple eligible role branches sequentially for one player (default true)."),
       new UsageLine("gamerule UseMicInRecognitionCheck [true|false]", "Allow microphone volume for patient recognition checks (default false)."),
       new UsageLine("gamerule DisableInteractionInRecognitionCheck [true|false]", "Disable click interaction for recognition checks; microphone must be enabled."),
     };
@@ -46,7 +47,7 @@ namespace MultiplayerInfrastructure.Command
       if (args == null || args.Length == 0)
       {
         _chat.SendSystemMessage(sender,
-          $"Game rules:\n  runningSpeedMultiplier = {Format(PlayerController.ServerRunningSpeedMultiplier)}\n  IgnoreTagAssignFullSatisfactionOnScenarioPlay = {ScenarioGameRules.IgnoreTagAssignFullSatisfactionOnScenarioPlay}\n  UseMicInRecognitionCheck = {ScenarioGameRules.UseMicInRecognitionCheck}\n  DisableInteractionInRecognitionCheck = {ScenarioGameRules.DisableInteractionInRecognitionCheck}");
+          $"Game rules:\n  runningSpeedMultiplier = {Format(PlayerController.ServerRunningSpeedMultiplier)}\n  IgnoreTagAssignFullSatisfactionOnScenarioPlay = {ScenarioGameRules.IgnoreTagAssignFullSatisfactionOnScenarioPlay}\n  AllowMultipleRoleBranchesForSinglePlayer = {ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer}\n  UseMicInRecognitionCheck = {ScenarioGameRules.UseMicInRecognitionCheck}\n  DisableInteractionInRecognitionCheck = {ScenarioGameRules.DisableInteractionInRecognitionCheck}");
         return;
       }
 
@@ -67,6 +68,26 @@ namespace MultiplayerInfrastructure.Command
 
         ScenarioGameRules.IgnoreTagAssignFullSatisfactionOnScenarioPlay = enabled;
         _chat.SendSystemMessage(sender, $"Set IgnoreTagAssignFullSatisfactionOnScenarioPlay to {enabled}.");
+        return;
+      }
+
+      if (string.Equals(args[0], "AllowMultipleRoleBranchesForSinglePlayer", System.StringComparison.OrdinalIgnoreCase))
+      {
+        if (args.Length == 1)
+        {
+          _chat.SendSystemMessage(sender,
+            $"AllowMultipleRoleBranchesForSinglePlayer = {ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer}");
+          return;
+        }
+
+        if (args.Length != 2 || !bool.TryParse(args[1], out var enabled))
+        {
+          _chat.SendSystemMessage(sender, "AllowMultipleRoleBranchesForSinglePlayer must be true or false.");
+          return;
+        }
+
+        ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer = enabled;
+        _chat.SendSystemMessage(sender, $"Set AllowMultipleRoleBranchesForSinglePlayer to {enabled}.");
         return;
       }
 
