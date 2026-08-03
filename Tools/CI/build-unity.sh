@@ -36,7 +36,18 @@ find_unity_executable() {
 
 unity_executable="$(find_unity_executable)"
 
-mkdir -p "${project_path}/${BUILD_PATH}"
+build_directory="${project_path}/${BUILD_PATH}"
+case "${build_directory}" in
+  "${project_path}"/*) ;;
+  *)
+    echo "BUILD_PATH must resolve inside the Unity project directory." >&2
+    exit 1
+    ;;
+esac
+
+log_path="${build_directory}/unity-${BUILD_TARGET}.log"
+mkdir -p "${build_directory}"
+trap 'rm -rf -- "${build_directory}"' EXIT
 
 "${unity_executable}" \
   -batchmode \

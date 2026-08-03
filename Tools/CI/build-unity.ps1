@@ -16,7 +16,13 @@ if ([string]::IsNullOrWhiteSpace($env:BUILD_PATH)) {
 }
 
 $projectPath = if ($env:CI_PROJECT_DIR) { $env:CI_PROJECT_DIR } else { (Get-Location).Path }
-$buildPath = Join-Path $projectPath $env:BUILD_PATH
+$projectPath = [IO.Path]::GetFullPath($projectPath)
+$buildPath = [IO.Path]::GetFullPath((Join-Path $projectPath $env:BUILD_PATH))
+$projectPathPrefix = $projectPath.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+if (-not $buildPath.StartsWith($projectPathPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+    throw 'BUILD_PATH must resolve inside the Unity project directory.'
+}
+
 $logPath = Join-Path $buildPath "unity-$($env:BUILD_TARGET).log"
 
 if ([string]::IsNullOrWhiteSpace($env:UNITY_EXECUTABLE)) {
@@ -26,8 +32,12 @@ if ([string]::IsNullOrWhiteSpace($env:UNITY_EXECUTABLE)) {
         throw "Could not determine the Unity version from $versionFile."
     }
 
-    $unityCandidate = Join-Path ${env:ProgramFiles} "Unity/Hub/Editor/$version/Editor/Unity.exe"
-    if (-not (Test-Path -LiteralPath $unityCandidate -PathType Leaf)) {
+    $unityCandidates = @(
+        (Join-Path $env:ProgramFiles "Unity/Hub/Editor/$version/Editor/Unity.exe"),
+        (Join-Path ${env:ProgramFiles(x86)} "Unity/Hub/Editor/$version/Editor/Unity.exe")
+    )
+    $unityCandidate = $unityCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+    if ([string]::IsNullOrWhiteSpace($unityCandidate)) {
         throw "Unity $version was not found in the standard Unity Hub location. Install it, or set UNITY_EXECUTABLE locally."
     }
 
@@ -36,16 +46,23 @@ if ([string]::IsNullOrWhiteSpace($env:UNITY_EXECUTABLE)) {
 
 New-Item -ItemType Directory -Path $buildPath -Force | Out-Null
 
-& $env:UNITY_EXECUTABLE `
-    -batchmode `
-    -nographics `
-    -silent-crashes `
-    -quit `
-    -projectPath $projectPath `
-    -buildTarget $env:BUILD_TARGET `
-    -executeMethod GitLabBuild.Build `
-    -logFile $logPath
+try {
+    & $env:UNITY_EXECUTABLE `
+        -batchmode `
+        -nographics `
+        -silent-crashes `
+        -quit `
+        -projectPath $projectPath `
+        -buildTarget $env:BUILD_TARGET `
+        -executeMethod GitLabBuild.Build `
+        -logFile $logPath
 
-if ($LASTEXITCODE -ne 0) {
-    throw "Unity build failed with exit code $LASTEXITCODE. See $logPath."
+    if ($LASTEXITCODE -ne 0) {
+        throw "Unity build failed with exit code $LASTEXITCODE. See $logPath."
+    }
+}
+finally {
+    if (Test-Path -LiteralPath $buildPath) {
+        Remove-Item -LiteralPath $buildPath -Recurse -Force
+    }
 }

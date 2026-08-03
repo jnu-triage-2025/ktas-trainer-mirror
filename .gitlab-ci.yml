@@ -18,14 +18,19 @@ variables:
 build-windows:
   extends: .manual-local-build
   tags:
-    - macos-unity
+    - build-on-commit
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: on_success
+    - when: never
   variables:
     BUILD_TARGET: "StandaloneWindows64"
   before_script:
-    - test -f "Tools/CI/build-unity.sh"
-    - chmod +x "Tools/CI/build-unity.sh"
+    - 'if (-not (Test-Path -LiteralPath "Tools/CI/build-unity.ps1" -PathType Leaf)) { throw "Tools/CI/build-unity.ps1 was not found." }'
   script:
-    - "Tools/CI/build-unity.sh"
+    - '& .\Tools\CI\build-unity.ps1'
+  after_script:
+    - 'if (Test-Path -LiteralPath $env:BUILD_PATH) { Remove-Item -LiteralPath $env:BUILD_PATH -Recurse -Force }'
 
 build-macos:
   extends: .manual-local-build
@@ -38,3 +43,5 @@ build-macos:
     - chmod +x "Tools/CI/build-unity.sh"
   script:
     - "Tools/CI/build-unity.sh"
+  after_script:
+    - rm -rf -- "${BUILD_PATH:?}"
