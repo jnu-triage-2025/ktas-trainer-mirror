@@ -206,9 +206,22 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       if (_panelSettings == null)
       {
-        Debug.LogError(
-          "[DualPatientMonitorController] _panelSettings가 비어 있습니다. Graph/Metrics 자식 UIDocument에 사용할 PanelSettings를 지정하십시오.",
-          this);
+        var childDocuments = GetComponentsInChildren<UIDocument>(true);
+        for (var i = 0; i < childDocuments.Length; i++)
+        {
+          if (childDocuments[i] == null || childDocuments[i].transform == transform || childDocuments[i].panelSettings == null)
+            continue;
+
+          _panelSettings = childDocuments[i].panelSettings;
+          break;
+        }
+
+        if (_panelSettings == null)
+        {
+          Debug.LogError(
+            "[DualPatientMonitorController] _panelSettings가 비어 있습니다. Graph/Metrics 자식 UIDocument에 사용할 PanelSettings를 지정하십시오.",
+            this);
+        }
       }
     }
 

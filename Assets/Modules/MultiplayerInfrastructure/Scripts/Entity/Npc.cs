@@ -5,7 +5,6 @@ using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Commons;
 using UnityEngine;
-using MultiplayerInfrastructure.Scenario.Requirements;
 
 namespace MultiplayerInfrastructure.Entity
 {
@@ -39,8 +38,6 @@ namespace MultiplayerInfrastructure.Entity
 
     private bool _baseModelApplied;
     private string _registeredIdentifier;
-    private ScenarioRequirementRuntimeRegistrationHandle _npcEvidence;
-    private ScenarioRequirementRuntimeRegistrationHandle _entityEvidence;
     private TextMesh _scenarioOverheadNameLabel;
     private UnityEngine.Camera _overheadNameLabelCamera;
     private bool _scenarioOverheadNameVisible;
@@ -85,8 +82,6 @@ namespace MultiplayerInfrastructure.Entity
       _registeredIdentifier = _identifier;
       Registry.Registry.Register(RegistryType.Npc, _registeredIdentifier, gameObject);
       Registry.Registry.RegisterEntity(_registeredIdentifier, EntityType.Npc, gameObject, displayName: gameObject.name);
-      _npcEvidence = ScenarioRequirementRuntimeRegistrationRegistry.Register(RegistryType.Npc, ScenarioRequirementKind.Npc, _registeredIdentifier, this, new[] { ScenarioRequirementCapability.ResolvableNpcMoveTarget, ScenarioRequirementCapability.RegisteredNpcComponent, ScenarioRequirementCapability.ProvidesPosition });
-      _entityEvidence = ScenarioRequirementRuntimeRegistrationRegistry.Register(RegistryType.Entity, ScenarioRequirementKind.Entity, _registeredIdentifier, this, new[] { ScenarioRequirementCapability.RegisteredEntity });
     }
 
     private void UnregisterFromRegistry()
@@ -96,8 +91,6 @@ namespace MultiplayerInfrastructure.Entity
 
       Registry.Registry.Unregister(RegistryType.Npc, _registeredIdentifier);
       Registry.Registry.UnregisterEntity(_registeredIdentifier);
-      _npcEvidence.Dispose();
-      _entityEvidence.Dispose();
       _registeredIdentifier = null;
     }
 

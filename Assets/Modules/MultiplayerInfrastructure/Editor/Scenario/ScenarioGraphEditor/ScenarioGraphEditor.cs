@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text.Json;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
-using MultiplayerInfrastructure.Scenario.Requirements.Editor;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.Experimental.GraphView;
@@ -401,14 +400,6 @@ namespace MultiplayerInfrastructure.Editor
         () => graphData,
         () => RefreshDebugPanel());
       scroll.Add(waypointEditorView);
-      scroll.Add(new Label("Scenario Ingame Requirements")
-      {
-        style = { unityFontStyleAndWeight = FontStyle.Bold, fontSize = 14, marginBottom = 6 }
-      });
-      scroll.Add(new HelpBox(
-        "Requirements 작업은 기존과 같이 별도 패널에서 열립니다. 현재 Graph Editor에서 연 시나리오 파일이 자동으로 공유됩니다.",
-        HelpBoxMessageType.Info));
-      scroll.Add(new Button(OpenRequirementsWindow) { text = "Open Scenario Ingame Requirements" });
       scroll.Add(new Button(OpenSelectedScenarioTextAsset) { text = "Open Selected Scenario TextAsset" });
       definitionsContainer.Add(scroll);
       rootVisualElement.Add(definitionsContainer);
@@ -443,18 +434,6 @@ namespace MultiplayerInfrastructure.Editor
       var asset = Selection.activeObject as TextAsset;
       var path = asset == null ? null : AssetDatabase.GetAssetPath(asset);
       return !string.IsNullOrEmpty(path) && path.EndsWith(ScenarioExtension, StringComparison.OrdinalIgnoreCase) ? asset : null;
-    }
-
-    private void OpenRequirementsWindow()
-    {
-      var scenarioAsset = GetCurrentScenarioTextAsset();
-      if (scenarioAsset == null)
-      {
-        EditorUtility.DisplayDialog("Scenario Ingame Requirements", "프로젝트의 .scenario.json TextAsset을 먼저 열어 주세요.", "확인");
-        return;
-      }
-
-      ScenarioRequirementsWindow.Open(scenarioAsset);
     }
 
     private void OpenSelectedScenarioTextAsset()

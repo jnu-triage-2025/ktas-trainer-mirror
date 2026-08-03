@@ -3,7 +3,6 @@ using FishNet;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.FishNetSupports;
 using MultiplayerInfrastructure.Scenario;
-using MultiplayerInfrastructure.Scenario.Requirements;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.UI;
 using TriageTrainer.MultiplayerInfrastructureSupports;
@@ -109,7 +108,6 @@ namespace TriageTrainer.SceneBootstrapper
         ConnectionGateService.SetPort(port);
         ConnectionGateService.Close();
 
-        ScenarioRuntimeBootstrapGate.MarkSceneReady(gameObject.scene);
 
         yield return StartScenarioAfterDelay();
       }

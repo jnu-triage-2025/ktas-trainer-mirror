@@ -2,6 +2,9 @@ using System.Collections.Generic;
 using MultiplayerInfrastructure.Entity;
 using TriageTrainer.Entity;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace MultiplayerInfrastructure.Player
 {
@@ -37,6 +40,12 @@ namespace MultiplayerInfrastructure.Player
 
     private void EnsureCarryAttachPoint()
     {
+#if UNITY_EDITOR
+      // Prefab Asset 내부에서는 OnValidate가 호출되어도 자식 생성/재부모화를
+      // 수행하지 않는다. Prefab Asset의 Transform 계층을 직접 변경할 수 없다.
+      if (!Application.isPlaying && PrefabUtility.IsPartOfPrefabAsset(this))
+        return;
+#endif
       if (_reposableCarryAnchor != null && !_reposableCarryAnchor.IsChildOf(transform))
       {
         Debug.LogWarning("[PlayerController] ReposableCarryAnchor must be under the player hierarchy. Rebinding anchor.", this);
