@@ -55,5 +55,8 @@
 - MPPM PlayMode 테스트 8개 통과
 - `git diff --check` 통과
 
-세션당 6GB는 현재 목표값이다. 자산 재임포트 후 동일 씬에서 실제 프로세스 메모리를 다시 측정하고, 초과 시 MPPM 전용 씬 오브젝트 및 렌더링 리소스 경량화를 수행한다.
+## 후속 렌더링 경량화
 
+MPPM 저사양 설정을 Main Camera뿐 아니라 overlay 및 보조 Camera에도 적용한다. 모든 카메라에서 HDR, MSAA, Dynamic Resolution, URP Post Processing 상태를 현재 그래픽 프로파일에 맞춰 통일한다. MPPM의 VeryLow 프로파일에서는 카메라 자체는 유지하면서 HDR/MSAA 중간 RenderTexture와 후처리 버퍼 생성을 차단한다.
+
+세션당 6GB는 현재 목표값이다. 자산 재임포트 후 동일 씬에서 실제 프로세스 메모리를 다시 측정하고, 초과 시 MPPM 전용 씬 오브젝트 및 렌더링 리소스 경량화를 수행한다.

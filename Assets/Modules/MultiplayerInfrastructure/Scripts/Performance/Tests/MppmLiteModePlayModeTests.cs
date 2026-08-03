@@ -53,20 +53,38 @@ namespace MultiplayerInfrastructure.Performance.Tests
     [Test]
     public void LiteSettings_ApplyToQualitySettingsAndRuntimeUrpAsset()
     {
-      var settings = MppmLiteMode.CreateSettings();
-      TexturePerformanceService.ApplyToUnity(settings, applyDisplay: false);
+      var cameraObject = new GameObject("MPPM Lite Camera");
+      var camera = cameraObject.AddComponent<UnityEngine.Camera>();
+      var cameraData = cameraObject.AddComponent<UniversalAdditionalCameraData>();
+      camera.allowHDR = true;
+      camera.allowMSAA = true;
+      cameraData.renderPostProcessing = true;
 
-      var asset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
-      Assert.That(asset, Is.Not.Null);
-      Assert.That(asset.renderScale, Is.EqualTo(0.5f).Within(0.001f));
-      Assert.That(asset.supportsHDR, Is.False);
-      Assert.That(asset.supportsMainLightShadows, Is.False);
-      Assert.That(asset.additionalLightsRenderingMode, Is.EqualTo(LightRenderingMode.Disabled));
-      Assert.That(QualitySettings.globalTextureMipmapLimit, Is.EqualTo(3));
-      Assert.That(QualitySettings.streamingMipmapsMemoryBudget, Is.EqualTo(64));
-      Assert.That(QualitySettings.antiAliasing, Is.EqualTo(0));
-      Assert.That(asset.msaaSampleCount, Is.EqualTo(1));
-      Assert.That(Application.targetFrameRate, Is.EqualTo(15));
+      try
+      {
+        var settings = MppmLiteMode.CreateSettings();
+        TexturePerformanceService.ApplyToUnity(settings, applyDisplay: false);
+
+        var asset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
+        Assert.That(asset, Is.Not.Null);
+        Assert.That(asset.renderScale, Is.EqualTo(0.5f).Within(0.001f));
+        Assert.That(asset.supportsHDR, Is.False);
+        Assert.That(asset.supportsMainLightShadows, Is.False);
+        Assert.That(asset.additionalLightsRenderingMode, Is.EqualTo(LightRenderingMode.Disabled));
+        Assert.That(QualitySettings.globalTextureMipmapLimit, Is.EqualTo(3));
+        Assert.That(QualitySettings.streamingMipmapsMemoryBudget, Is.EqualTo(64));
+        Assert.That(QualitySettings.antiAliasing, Is.EqualTo(0));
+        Assert.That(asset.msaaSampleCount, Is.EqualTo(1));
+        Assert.That(Application.targetFrameRate, Is.EqualTo(15));
+        Assert.That(camera.allowHDR, Is.False);
+        Assert.That(camera.allowMSAA, Is.False);
+        Assert.That(cameraData.renderPostProcessing, Is.False);
+        Assert.That(camera.enabled, Is.True);
+      }
+      finally
+      {
+        Object.DestroyImmediate(cameraObject);
+      }
     }
 
     [Test]
