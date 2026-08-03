@@ -18,7 +18,7 @@ variables:
 build-windows:
   extends: .manual-local-build
   tags:
-    - macos-shapelayer-macbook-air-m4
+    - macos-unity
   variables:
     BUILD_TARGET: "StandaloneWindows64"
   before_script:
@@ -30,7 +30,7 @@ build-windows:
 build-macos:
   extends: .manual-local-build
   tags:
-    - macos-shapelayer-macbook-air-m4
+    - macos-unity
   variables:
     BUILD_TARGET: "StandaloneOSX"
   before_script:
