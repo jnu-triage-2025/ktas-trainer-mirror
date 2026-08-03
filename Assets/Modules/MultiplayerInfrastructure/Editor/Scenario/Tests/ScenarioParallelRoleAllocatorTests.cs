@@ -69,5 +69,51 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       Assert.That(candidates[third], Does.Contain(allocation[third].Value));
       Assert.That(allocation.Values, Is.Unique);
     }
+
+    [Test]
+    public void AllocatesEveryEligibleBranchToSinglePlayer()
+    {
+      var first = new ScenarioParallelBranch { Identifier = "first" };
+      var second = new ScenarioParallelBranch { Identifier = "second" };
+      var branches = new[] { first, second };
+      var candidates = new Dictionary<ScenarioParallelBranch, IReadOnlyList<int>>
+      {
+        [first] = new[] { 7 },
+        [second] = new[] { 7 }
+      };
+      var allocation = new Dictionary<ScenarioParallelBranch, int?>();
+
+      var complete = ScenarioParallelRoleAllocator.TryAllocateAllToPlayer(
+        branches, candidates, 7, allocation);
+
+      Assert.That(complete, Is.True);
+      Assert.That(allocation[first], Is.EqualTo(7));
+      Assert.That(allocation[second], Is.EqualTo(7));
+    }
+
+    [Test]
+    public void DoesNotAllocateSinglePlayerWhenAnyBranchIsIneligible()
+    {
+      var first = new ScenarioParallelBranch { Identifier = "first" };
+      var second = new ScenarioParallelBranch { Identifier = "second" };
+      var branches = new[] { first, second };
+      var candidates = new Dictionary<ScenarioParallelBranch, IReadOnlyList<int>>
+      {
+        [first] = new[] { 7 },
+        [second] = new[] { 8 }
+      };
+      var allocation = new Dictionary<ScenarioParallelBranch, int?>
+      {
+        [first] = 7,
+        [second] = null
+      };
+
+      var complete = ScenarioParallelRoleAllocator.TryAllocateAllToPlayer(
+        branches, candidates, 7, allocation);
+
+      Assert.That(complete, Is.False);
+      Assert.That(allocation[first], Is.EqualTo(7));
+      Assert.That(allocation[second], Is.Null);
+    }
   }
 }

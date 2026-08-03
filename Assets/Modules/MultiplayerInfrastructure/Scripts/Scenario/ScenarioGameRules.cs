@@ -9,6 +9,11 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public static bool IgnoreTagAssignFullSatisfactionOnScenarioPlay { get; set; } = true;
 
+    /// <summary>
+    /// true이면 단일 활성 플레이어가 모든 ByRole 브랜치에 적격일 때 여러 브랜치를 순차 실행하도록 허용한다.
+    /// </summary>
+    public static bool AllowMultipleRoleBranchesForSinglePlayer { get; set; } = true;
+
     /// <summary>의식 확인 상호작용에서 로컬 마이크 음량 입력을 허용한다.</summary>
     public static bool UseMicInRecognitionCheck { get; private set; }
 

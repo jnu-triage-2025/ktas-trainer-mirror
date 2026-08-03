@@ -49,6 +49,13 @@ namespace TriageTrainer.Tests
       Assert.That(graph.Nodes.Values.OfType<ScenarioChoiceNode>()
         .Count(value => !string.IsNullOrWhiteSpace(value.AssessmentIdentifier)), Is.EqualTo(18));
 
+      var nurseArrivalCounter = graph.Nodes["COUNT_NURSE_ARRIVAL"] as ScenarioSignalCounterNode;
+      Assert.That(nurseArrivalCounter, Is.Not.Null);
+      Assert.That(nurseArrivalCounter.CounterIdentifier, Is.EqualTo("scen_b_nurse_arrivals"));
+      Assert.That(nurseArrivalCounter.SourceSignalPrefix, Is.EqualTo("quest_arrival_triage_area_"));
+      Assert.That(nurseArrivalCounter.Threshold, Is.EqualTo(4));
+      Assert.That(nurseArrivalCounter.OutputSignalIdentifier, Is.EqualTo("all_nurses_arrived_triage"));
+
       foreach (string nodeIdentifier in new[]
                {
                  "BIND_TRIAGE_B_CORRECT",

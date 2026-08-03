@@ -247,7 +247,9 @@ namespace MultiplayerInfrastructure.UI
       _completionService?.ResetSession();
       _chatPanel?.SetOpen(false);
       _chatPanel?.ClearInput();
-      SetDocumentVisible(_uiDocument, false);
+      // 닫힌 채팅도 수신 메시지 토스트를 표시해야 한다. 문서는 남기되 전체
+      // 트리의 입력 처리를 비활성화해 게임 조작을 가로채지 않도록 한다.
+      SetDocumentRootPickingEnabled(_uiDocument, false);
     }
 
     private void HideImmediately()
@@ -257,7 +259,7 @@ namespace MultiplayerInfrastructure.UI
       _chatPanel?.SetOpen(false);
       _chatPanel?.ClearInput();
       _chatPanel?.ClearToasts();
-      SetDocumentVisible(_uiDocument, false);
+      SetDocumentRootPickingEnabled(_uiDocument, false);
     }
 
     private void EnsurePanel()

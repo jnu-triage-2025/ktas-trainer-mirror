@@ -71,6 +71,30 @@ namespace MultiplayerInfrastructure.Scenario
       return complete;
     }
 
+    /// <summary>모든 브랜치에 적격인 단일 플레이어를 각 브랜치에 중복 배정한다.</summary>
+    public static bool TryAllocateAllToPlayer(
+      IReadOnlyList<ScenarioParallelBranch> branches,
+      IReadOnlyDictionary<ScenarioParallelBranch, IReadOnlyList<int>> candidatesByBranch,
+      int clientId,
+      IDictionary<ScenarioParallelBranch, int?> allocation)
+    {
+      if (branches == null) throw new ArgumentNullException(nameof(branches));
+      if (candidatesByBranch == null) throw new ArgumentNullException(nameof(candidatesByBranch));
+      if (allocation == null) throw new ArgumentNullException(nameof(allocation));
+
+      for (var index = 0; index < branches.Count; index++)
+      {
+        if (!Contains(GetCandidates(candidatesByBranch, branches[index]), clientId))
+          return false;
+      }
+
+      allocation.Clear();
+      for (var index = 0; index < branches.Count; index++)
+        allocation[branches[index]] = clientId;
+
+      return true;
+    }
+
     private static bool TryAssign(
       ScenarioParallelBranch branch,
       IReadOnlyDictionary<ScenarioParallelBranch, IReadOnlyList<int>> candidatesByBranch,
@@ -99,5 +123,16 @@ namespace MultiplayerInfrastructure.Scenario
       => branch != null && candidatesByBranch.TryGetValue(branch, out var candidates) && candidates != null
         ? candidates
         : Array.Empty<int>();
+
+    private static bool Contains(IReadOnlyList<int> candidates, int clientId)
+    {
+      for (var index = 0; index < candidates.Count; index++)
+      {
+        if (candidates[index] == clientId)
+          return true;
+      }
+
+      return false;
+    }
   }
 }

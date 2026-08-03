@@ -205,6 +205,7 @@ namespace MultiplayerInfrastructure.Camera
         _maxThirdPersonDistance
       );
 
+      UpdateViewModeForThirdPersonDistance();
       UpdateCameraDistance();
     }
 
@@ -220,7 +221,21 @@ namespace MultiplayerInfrastructure.Camera
       );
       _desiredDistanceInitialized = true;
 
+      UpdateViewModeForThirdPersonDistance();
       UpdateCameraDistance();
+    }
+
+    // 3인칭 POV를 최소 거리까지 당기면 1인칭으로 전환합니다.
+    // 1인칭 상태에서 POV 값을 다시 늘리면 3인칭으로 복귀합니다.
+    private void UpdateViewModeForThirdPersonDistance()
+    {
+      bool isAtMinimumDistance =
+        _desiredThirdPersonDistance <= _minThirdPersonDistance + Mathf.Epsilon;
+
+      if (isAtMinimumDistance)
+        _currentViewMode = CameraViewMode.FirstPerson;
+      else if (_currentViewMode == CameraViewMode.FirstPerson)
+        _currentViewMode = CameraViewMode.ThirdPerson;
     }
 
     /// <summary>

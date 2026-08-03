@@ -3,6 +3,7 @@ using FishNet.Object.Synchronizing;
 using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Camera;
+using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Session;
@@ -73,6 +74,7 @@ namespace MultiplayerInfrastructure.Player
 
       PlayerGamemodeService.RegisterPlayer(this);
       UserDescriptorService.Register(Owner.ClientId, descriptor);
+      BroadcastConnectionMessage($"{descriptor.DisplayName}가 들어왔습니다.");
       RegisterPlayerEntity();
       OnStartServer_PlayerModel();
       InitializeRunningSpeedMultiplierServer();
@@ -89,6 +91,8 @@ namespace MultiplayerInfrastructure.Player
 
     public override void OnStopServer()
     {
+      string displayName = _userDisplayName.Value;
+
       if (ReferenceEquals(_worldItemTransformSyncAuthority, this))
         _worldItemTransformSyncAuthority = null;
 
@@ -96,6 +100,8 @@ namespace MultiplayerInfrastructure.Player
       Registry.Registry.UnregisterEntity(_entityIdentifier.Value);
       PlayerTagService.ClearTags(_userIdentifier.Value);
       UserDescriptorService.Unregister(_userIdentifier.Value);
+      if (!string.IsNullOrWhiteSpace(displayName))
+        BroadcastConnectionMessage($"{displayName}가 나갔습니다.");
 
       // 이 플레이어가 승인받았으나 확정(성공/실패)하지 못한 정적 아이템 픽업 예약이 있으면
       // 선점 감소한 Remains 를 복원한다. 아래 ClearUser 보다 먼저 수행해야 Local 예약 복원이 유효하다.
@@ -113,6 +119,12 @@ namespace MultiplayerInfrastructure.Player
       RestorePendingPickupsForClaimant();
 
       base.OnStopServer();
+    }
+
+    private static void BroadcastConnectionMessage(string message)
+    {
+      if (Registry.Registry.TryGet<ChatService>(RegistryType.Service, Registry.Registry.TypeKey<ChatService>(), out var chatService))
+        chatService.BroadcastSystemMessage(message);
     }
 
     private void UpdateServerWorldItemTransforms()

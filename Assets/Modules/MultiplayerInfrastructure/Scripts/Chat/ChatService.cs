@@ -165,7 +165,11 @@ namespace MultiplayerInfrastructure.Chat
     }
 
     [TargetRpc]
-    private void TargetRunScenario(NetworkConnection conn, string scenarioIdentifier, int ownerClientId)
+    private void TargetRunScenario(
+      NetworkConnection conn,
+      string scenarioIdentifier,
+      int ownerClientId,
+      bool allowMultipleRoleBranchesForSinglePlayer)
     {
       if (!Registry.Registry.TryGetScenarioGraph(scenarioIdentifier, out ScenarioGraph graph, out string error))
       {
@@ -179,6 +183,8 @@ namespace MultiplayerInfrastructure.Chat
         return;
       }
 
+      // 호환 실행 경로에서는 클라이언트가 자체 상태기를 실행하므로 서버의 확정 규칙을 먼저 적용한다.
+      ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer = allowMultipleRoleBranchesForSinglePlayer;
       int? owner = ownerClientId >= 0 ? ownerClientId : (int?)null;
       ScenarioController.Instance.StartScenario(graph, null, owner);
     }
@@ -363,7 +369,11 @@ namespace MultiplayerInfrastructure.Chat
       foreach (var target in resolvedTargets)
       {
         int targetOwnerId = target.ClientId >= 0 ? (int)target.ClientId : -1;
-        TargetRunScenario(target, scenarioIdentifier, targetOwnerId);
+        TargetRunScenario(
+          target,
+          scenarioIdentifier,
+          targetOwnerId,
+          ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer);
       }
 
       return true;
@@ -825,12 +835,30 @@ namespace MultiplayerInfrastructure.Chat
              + input.Substring(index + 2);
     }
 
+    /// <summary>서버에서 모든 접속자에게 시스템 메시지를 채팅으로 전파합니다.</summary>
+    [Server]
     public void BroadcastSystemMessage(string message)
     {
+      if (string.IsNullOrWhiteSpace(message))
+        return;
+
       ReceiveChatObserversRpc($"<color=#FFD700>[System]</color> {message}");
     }
 
-    public string GetDisplayName(NetworkConnection conn) => conn?.ClientId.ToString() ?? "Server";
+    public string GetDisplayName(NetworkConnection conn)
+    {
+      if (conn == null)
+        return "Server";
+
+      if (UserDescriptorService.TryGetByClientId(conn.ClientId, out var descriptor)
+          && !string.IsNullOrWhiteSpace(descriptor.DisplayName))
+      {
+        return descriptor.DisplayName;
+      }
+
+      // 플레이어 스폰 전 등 설명자가 아직 등록되지 않은 경우에만 연결 ID를 예비값으로 사용한다.
+      return conn.ClientId.ToString();
+    }
 
     private TitleUIController GetTitleUIController()
     {

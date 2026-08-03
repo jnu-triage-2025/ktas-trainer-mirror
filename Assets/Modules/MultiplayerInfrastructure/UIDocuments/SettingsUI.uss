@@ -541,6 +541,81 @@
   min-width: 180px;
 }
 
+/* DropdownField / EnumField 본체 */
+.settings__graphics-field-control.unity-base-popup-field {
+  min-height: 30px;
+  color: #d0d0e8;
+}
+
+.settings__graphics-field-control > .unity-base-popup-field__input {
+  min-height: 30px;
+  padding-left: 10px;
+  padding-right: 8px;
+  background-color: #25252e;
+  border-width: 1px;
+  border-color: #3a3a46;
+  border-radius: 5px;
+}
+
+.settings__graphics-field-control > .unity-base-popup-field__input:hover {
+  background-color: #2e2e3a;
+  border-color: #5050a0;
+}
+
+.settings__graphics-field-control > .unity-base-popup-field__input:focus {
+  background-color: #1e2a4a;
+  border-color: #2d7cf4;
+}
+
+.settings__graphics-field-control .unity-base-popup-field__text {
+  color: #d0d0e8;
+  font-size: 12px;
+}
+
+.settings__graphics-field-control .unity-base-popup-field__arrow {
+  -unity-background-image-tint-color: #7878a0;
+}
+
+/* DropdownField / EnumField를 펼쳤을 때 패널 루트에 생성되는 선택 목록 */
+.unity-base-dropdown__container-outer {
+  padding: 3px;
+  background-color: #1c1c22;
+  border-width: 1px;
+  border-color: #44444e;
+  border-radius: 5px;
+}
+
+.unity-base-dropdown__container-inner {
+  background-color: #1c1c22;
+}
+
+.unity-base-dropdown__item {
+  min-height: 28px;
+  padding: 4px 8px;
+  color: #b8b8ca;
+  background-color: #1c1c22;
+  border-radius: 4px;
+}
+
+.unity-base-dropdown__item:hover {
+  color: #f0f0f5;
+  background-color: #2e2e3a;
+}
+
+.unity-base-dropdown__item:checked {
+  color: #5a9fff;
+  background-color: #1e2a4a;
+  -unity-font-style: bold;
+}
+
+.unity-base-dropdown__checkmark {
+  -unity-background-image-tint-color: #5a9fff;
+}
+
+.unity-base-dropdown__label {
+  font-size: 12px;
+}
+
 /* 텍스처 품질 옵션 타일 (TextureQualityOptionElement) */
 .texture-quality-option {
   flex: 1;

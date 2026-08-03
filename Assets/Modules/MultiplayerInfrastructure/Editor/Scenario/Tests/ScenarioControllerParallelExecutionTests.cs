@@ -43,6 +43,98 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       }
     }
 
+    [Test]
+    public void AssignedBranchesAreYieldedInDefinitionOrder()
+    {
+      var runSequentially = typeof(ScenarioController).GetMethod(
+        "RunSequentially",
+        BindingFlags.Static | BindingFlags.NonPublic);
+      var first = Probe(null);
+      var second = Probe(null);
+
+      Assert.That(runSequentially, Is.Not.Null);
+      var sequence = (IEnumerator)runSequentially.Invoke(null, new object[]
+      {
+        new[] { first, second }
+      });
+
+      Assert.That(sequence.MoveNext(), Is.True);
+      Assert.That(sequence.Current, Is.SameAs(first));
+      Assert.That(sequence.MoveNext(), Is.True);
+      Assert.That(sequence.Current, Is.SameAs(second));
+      Assert.That(sequence.MoveNext(), Is.False);
+    }
+
+    [TestCase(true, 1, "patient_b_c_ct", "scen_b_nurse_arrivals", "quest_arrival_triage_area_", "all_nurses_arrived_triage", 1)]
+    [TestCase(false, 1, "patient_b_c_ct", "scen_b_nurse_arrivals", "quest_arrival_triage_area_", "all_nurses_arrived_triage", 4)]
+    [TestCase(true, 2, "patient_b_c_ct", "scen_b_nurse_arrivals", "quest_arrival_triage_area_", "all_nurses_arrived_triage", 4)]
+    [TestCase(true, 1, "other", "scen_b_nurse_arrivals", "quest_arrival_triage_area_", "all_nurses_arrived_triage", 4)]
+    [TestCase(true, 1, "patient_b_c_ct", "other", "quest_arrival_triage_area_", "all_nurses_arrived_triage", 4)]
+    public void NurseArrivalThresholdIsReducedOnlyForSinglePlayerDebugMode(
+      bool enabled,
+      int activePlayerCount,
+      string graphIdentifier,
+      string counterIdentifier,
+      string sourcePrefix,
+      string outputSignal,
+      int expected)
+    {
+      var resolveThreshold = typeof(ScenarioController).GetMethod(
+        "ResolveSignalCounterThreshold",
+        BindingFlags.Static | BindingFlags.NonPublic);
+      var node = new ScenarioSignalCounterNode
+      {
+        CounterIdentifier = counterIdentifier,
+        SourceSignalPrefix = sourcePrefix,
+        OutputSignalIdentifier = outputSignal,
+        Threshold = 4
+      };
+
+      Assert.That(resolveThreshold, Is.Not.Null);
+      var actual = (int)resolveThreshold.Invoke(null, new object[]
+      {
+        graphIdentifier,
+        node,
+        activePlayerCount,
+        enabled
+      });
+
+      Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    [TestCase(true, 1, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.All, true)]
+    [TestCase(false, 1, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.All, false)]
+    [TestCase(true, 2, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.All, false)]
+    [TestCase(true, 1, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.Any, false)]
+    [TestCase(true, 1, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.None, false)]
+    [TestCase(true, 1, ScenarioParallelAllocationType.SelfAll, ScenarioWaitMode.All, false)]
+    public void MultipleRoleBranchesAreAllowedOnlyForSinglePlayerAllWaitMode(
+      bool enabled,
+      int activePlayerCount,
+      ScenarioParallelAllocationType allocationType,
+      ScenarioWaitMode waitMode,
+      bool expected)
+    {
+      var shouldAllow = typeof(ScenarioController).GetMethod(
+        "ShouldAllowSinglePlayerRoleBranches",
+        BindingFlags.Static | BindingFlags.NonPublic);
+      var node = new ScenarioParallelNode
+      {
+        AllocationType = allocationType,
+        WaitMode = waitMode
+      };
+
+      Assert.That(shouldAllow, Is.Not.Null);
+      var actual = (bool)shouldAllow.Invoke(null, new object[]
+      {
+        node,
+        activePlayerCount,
+        enabled
+      });
+
+      Assert.That(actual, Is.EqualTo(expected));
+    }
+
     private static IEnumerator Probe(Action onMoveNext)
     {
       onMoveNext?.Invoke();
