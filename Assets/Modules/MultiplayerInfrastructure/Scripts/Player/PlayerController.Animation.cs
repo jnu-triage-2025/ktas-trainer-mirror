@@ -44,7 +44,6 @@ namespace MultiplayerInfrastructure.Player
     private void OnValidate()
     {
       EnsureDefaultRuntimeAnimatorController();
-      OnValidate_ReposableCarry();
     }
 #endif
 
