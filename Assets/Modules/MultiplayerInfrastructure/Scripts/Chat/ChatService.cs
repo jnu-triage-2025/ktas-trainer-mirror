@@ -835,8 +835,13 @@ namespace MultiplayerInfrastructure.Chat
              + input.Substring(index + 2);
     }
 
+    /// <summary>서버에서 모든 접속자에게 시스템 메시지를 채팅으로 전파합니다.</summary>
+    [Server]
     public void BroadcastSystemMessage(string message)
     {
+      if (string.IsNullOrWhiteSpace(message))
+        return;
+
       ReceiveChatObserversRpc($"<color=#FFD700>[System]</color> {message}");
     }
 
