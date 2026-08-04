@@ -11,6 +11,18 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("tags")]
     public List<string> Tags { get; set; }
 
+    [JsonPropertyName("activeRoleTags")]
+    public List<string> ActiveRoleTags { get; set; }
+
+    [JsonPropertyName("skipAbsentRoleBranches")]
+    public bool? SkipAbsentRoleBranches { get; set; }
+
+    [JsonPropertyName("clientSignalIdentifiers")]
+    public List<string> ClientSignalIdentifiers { get; set; }
+
+    [JsonPropertyName("clientSignalPrefixes")]
+    public List<string> ClientSignalPrefixes { get; set; }
+
     [JsonPropertyName("questDefinitionIncludes")]
     public List<string> QuestDefinitionIncludes { get; set; }
 

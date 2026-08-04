@@ -60,6 +60,25 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void ClientSignalContractSavesAndRoundTripsWithSchemaValidation()
+    {
+      var graph = new ScenarioGraph
+      {
+        Identifier = "client-signal-contract",
+        DefaultEntrypoint = "start",
+        ClientSignalIdentifiers = new[] { "sig.assess_patient" },
+        ClientSignalPrefixes = new[] { "sig.zone_player_" }
+      };
+      graph.Add(new ScenarioDialogueNode { Identifier = "start", DialogueContent = "start" });
+
+      string json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+
+      Assert.That(reloaded.ClientSignalIdentifiers, Is.EqualTo(new[] { "sig.assess_patient" }));
+      Assert.That(reloaded.ClientSignalPrefixes, Is.EqualTo(new[] { "sig.zone_player_" }));
+    }
+
+    [Test]
     public void TutorialScenarioPassesSchemaValidation()
     {
       var json = System.IO.File.ReadAllText(
@@ -817,6 +836,34 @@ namespace MultiplayerInfrastructure.Tests.Scenario
 
       var reloaded = ScenarioGraphLoader.LoadFromJson(secondSave, validateWithSchema: true);
       Assert.That(reloaded.Nodes.Count, Is.EqualTo(3));
+    }
+
+    [Test]
+    public void ActiveRoleRosterOptionsSaveAndRoundTrip()
+    {
+      var graph = new ScenarioGraph
+      {
+        Identifier = "active-role-roster",
+        DefaultEntrypoint = "counter",
+        ActiveRoleTags = new[] { "nurse_a", "nurse_b" },
+        SkipAbsentRoleBranches = true
+      };
+      graph.Add(new ScenarioSignalCounterNode
+      {
+        Identifier = "counter",
+        CounterIdentifier = "arrivals",
+        SourceSignalPrefix = "arrival_",
+        Threshold = 4,
+        UseActiveRoleRosterThreshold = true,
+        OutputSignalIdentifier = "arrived"
+      });
+
+      var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+
+      Assert.That(reloaded.ActiveRoleTags, Is.EqualTo(new[] { "nurse_a", "nurse_b" }));
+      Assert.That(reloaded.SkipAbsentRoleBranches, Is.True);
+      Assert.That(((ScenarioSignalCounterNode)reloaded.Nodes["counter"]).UseActiveRoleRosterThreshold, Is.True);
     }
 
     [Test]

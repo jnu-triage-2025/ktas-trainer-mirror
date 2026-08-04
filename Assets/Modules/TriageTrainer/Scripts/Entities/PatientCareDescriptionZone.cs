@@ -86,11 +86,15 @@ namespace TriageTrainer.Entity
 
     private void OnEnable()
     {
+      WallAttachedWallSuction.AttachmentStateChanged += OnWallSuctionAttachmentStateChanged;
+      WallAttachedOxyflowmeter.AttachmentStateChanged += OnOxyflowmeterAttachmentStateChanged;
       TriageWorldInteractionSignals.RaiseCareZoneEnabled(Identifier);
     }
 
     private void OnDisable()
     {
+      WallAttachedWallSuction.AttachmentStateChanged -= OnWallSuctionAttachmentStateChanged;
+      WallAttachedOxyflowmeter.AttachmentStateChanged -= OnOxyflowmeterAttachmentStateChanged;
       if (_activePatient != null)
         ReleaseEquipmentIfOwned(_activePatient);
       _activePatient = null;
@@ -98,6 +102,24 @@ namespace TriageTrainer.Entity
       _bedColliderCounts.Clear();
       _snappedBeds.Clear();
       TriageWorldInteractionSignals.RaiseCareZoneDisabled(Identifier);
+    }
+
+    private void OnWallSuctionAttachmentStateChanged(WallAttachedWallSuction equipment, bool attached)
+    {
+      RefreshActivePatientEquipment();
+    }
+
+    private void OnOxyflowmeterAttachmentStateChanged(WallAttachedOxyflowmeter equipment, bool attached)
+    {
+      RefreshActivePatientEquipment();
+    }
+
+    private void RefreshActivePatientEquipment()
+    {
+      if (_activePatient != null)
+        Connect(_activePatient);
+      else
+        RefreshEquipment();
     }
 
     private void OnValidate()

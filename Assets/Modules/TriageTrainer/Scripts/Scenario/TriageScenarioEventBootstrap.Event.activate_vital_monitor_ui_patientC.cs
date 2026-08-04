@@ -12,7 +12,14 @@ namespace TriageTrainer.Scenario
     private IEnumerator Event_ActivateVitalMonitorUiPatientC()
     {
       ResolveRuntimeReferencesIfNeeded();
+      ResolvePatientVitalMonitor(_patientCObject,
+        ref _patientCVitalMonitorObject,
+        ref _patientCVitalMonitorController);
+      var patient = _patientCObject != null
+        ? _patientCObject.GetComponentInChildren<TriageTrainer.Entity.PatientController>(true)
+        : null;
       ConfigureVitalMonitorClose(_patientCVitalMonitorController,
+        patient,
         _patientCVitalMonitorObject,
         _patientCVitalPanel,
         "close_vital_ui_c");
@@ -22,6 +29,7 @@ namespace TriageTrainer.Scenario
         _patientCInitialMonitorParameters,
         _applyPatientCInitialMonitorProfile,
         "환자 C 활력징후 모니터를 활성화했습니다.");
+      _patientCVitalMonitorController?.OpenPresentation();
     }
   }
 }

@@ -9,6 +9,7 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("operation")] public string Operation { get; set; }
     [JsonPropertyName("sourceSignalPrefix")] public string SourceSignalPrefix { get; set; }
     [JsonPropertyName("threshold")] public int? Threshold { get; set; }
+    [JsonPropertyName("useActiveRoleRosterThreshold")] public bool? UseActiveRoleRosterThreshold { get; set; }
     [JsonPropertyName("outputSignalIdentifier")] public string OutputSignalIdentifier { get; set; }
   }
 }

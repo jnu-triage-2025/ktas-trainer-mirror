@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Reflection;
 using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.Registry;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -65,43 +66,6 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       Assert.That(sequence.MoveNext(), Is.False);
     }
 
-    [TestCase(true, 1, "patient_b_c_ct", "scen_b_nurse_arrivals", "quest_arrival_triage_area_", "all_nurses_arrived_triage", 1)]
-    [TestCase(false, 1, "patient_b_c_ct", "scen_b_nurse_arrivals", "quest_arrival_triage_area_", "all_nurses_arrived_triage", 4)]
-    [TestCase(true, 2, "patient_b_c_ct", "scen_b_nurse_arrivals", "quest_arrival_triage_area_", "all_nurses_arrived_triage", 4)]
-    [TestCase(true, 1, "other", "scen_b_nurse_arrivals", "quest_arrival_triage_area_", "all_nurses_arrived_triage", 4)]
-    [TestCase(true, 1, "patient_b_c_ct", "other", "quest_arrival_triage_area_", "all_nurses_arrived_triage", 4)]
-    public void NurseArrivalThresholdIsReducedOnlyForSinglePlayerDebugMode(
-      bool enabled,
-      int activePlayerCount,
-      string graphIdentifier,
-      string counterIdentifier,
-      string sourcePrefix,
-      string outputSignal,
-      int expected)
-    {
-      var resolveThreshold = typeof(ScenarioController).GetMethod(
-        "ResolveSignalCounterThreshold",
-        BindingFlags.Static | BindingFlags.NonPublic);
-      var node = new ScenarioSignalCounterNode
-      {
-        CounterIdentifier = counterIdentifier,
-        SourceSignalPrefix = sourcePrefix,
-        OutputSignalIdentifier = outputSignal,
-        Threshold = 4
-      };
-
-      Assert.That(resolveThreshold, Is.Not.Null);
-      var actual = (int)resolveThreshold.Invoke(null, new object[]
-      {
-        graphIdentifier,
-        node,
-        activePlayerCount,
-        enabled
-      });
-
-      Assert.That(actual, Is.EqualTo(expected));
-    }
-
     [TestCase(true, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.All, true)]
     [TestCase(false, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.All, false)]
     [TestCase(true, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.Any, false)]
@@ -130,6 +94,98 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       });
 
       Assert.That(actual, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void BranchQuestControlExecutionAcceptsExplicitOwner()
+    {
+      var executeQuestControl = typeof(ScenarioController).GetMethod(
+        "ExecuteQuestControlNode",
+        BindingFlags.Instance | BindingFlags.NonPublic,
+        null,
+        new[] { typeof(ScenarioQuestControlNode), typeof(int?) },
+        null);
+
+      Assert.That(executeQuestControl, Is.Not.Null,
+        "Role-parallel QuestControl must receive the branch owner instead of consulting only scenario ownership.");
+    }
+
+    [Test]
+    public void DynamicRosterCounterRequiresExactExpectedPlayerSignals()
+    {
+      const string output = "test.roster.complete";
+      try
+      {
+        ScenarioSignalCounters.Register(
+          "roster",
+          "test.roster.arrival_",
+          4,
+          output,
+          () => new[]
+          {
+            ScenarioInteractionSignals.Normalize("test.roster.arrival_alice"),
+            ScenarioInteractionSignals.Normalize("test.roster.arrival_bob")
+          });
+
+        ScenarioInteractionSignals.Raise("test.roster.arrival_alice");
+        ScenarioInteractionSignals.Raise("test.roster.arrival_patient");
+        Assert.That(ScenarioInteractionSignals.IsRaised(output), Is.False);
+
+        ScenarioInteractionSignals.Raise("test.roster.arrival_bob");
+        Assert.That(ScenarioInteractionSignals.IsRaised(output), Is.True);
+      }
+      finally
+      {
+        ClearRosterCounterSignals(output);
+      }
+    }
+
+    [Test]
+    public void DynamicRosterCounterReevaluatesAfterDisconnectShrink()
+    {
+      const string output = "test.roster.complete";
+      bool bobConnected = true;
+      try
+      {
+        ScenarioSignalCounters.Register(
+          "roster",
+          "test.roster.arrival_",
+          4,
+          output,
+          () => bobConnected
+            ? new[]
+            {
+              ScenarioInteractionSignals.Normalize("test.roster.arrival_alice"),
+              ScenarioInteractionSignals.Normalize("test.roster.arrival_bob")
+            }
+            : new[] { ScenarioInteractionSignals.Normalize("test.roster.arrival_alice") });
+
+        ScenarioInteractionSignals.Raise("test.roster.arrival_alice");
+        Assert.That(ScenarioInteractionSignals.IsRaised(output), Is.False);
+
+        bobConnected = false;
+        ScenarioSignalCounters.RefreshDynamicThresholds();
+        Assert.That(ScenarioInteractionSignals.IsRaised(output), Is.True);
+      }
+      finally
+      {
+        ClearRosterCounterSignals(output);
+      }
+    }
+
+    private static void ClearRosterCounterSignals(string output)
+    {
+      ScenarioSignalCounters.ClearAll();
+      foreach (var signal in new[]
+               {
+                 "test.roster.arrival_alice",
+                 "test.roster.arrival_bob",
+                 "test.roster.arrival_patient",
+                 output
+               })
+      {
+        Registry.Registry.Unregister(RegistryType.RuntimeState, ScenarioInteractionSignals.Normalize(signal));
+      }
     }
 
     private static IEnumerator Probe(Action onMoveNext)

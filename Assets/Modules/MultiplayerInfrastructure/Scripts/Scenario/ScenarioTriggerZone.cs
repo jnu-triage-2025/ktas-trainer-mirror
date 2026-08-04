@@ -41,6 +41,9 @@ namespace MultiplayerInfrastructure.Scenario
              "SignalCounter 로 도착 인원 수를 셀 때 중복 발신을 방지한다.")]
     [SerializeField] private bool _perEntityRaiseOncePerEntity = true;
 
+    [Tooltip("Only PlayerController entities may raise the per-entity signal.")]
+    [SerializeField] private bool _perEntityPlayersOnly;
+
     [Header("Debug")]
     [SerializeField] private bool _debugTriggerLogs = false;
 
@@ -207,6 +210,8 @@ namespace MultiplayerInfrastructure.Scenario
         return;
 
       var identified = other.GetComponentInParent<IScenarioIdentifiedEntity>();
+      if (_perEntityPlayersOnly && identified is not Player.PlayerController)
+        return;
       string id = identified?.ScenarioEntityIdentifier;
       if (string.IsNullOrWhiteSpace(id))
       {

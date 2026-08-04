@@ -1,4 +1,13 @@
 using System.Collections.Generic;
+using System.Text.Json;
+using FishNet;
+using FishNet.Connection;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
+using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Session;
+using MultiplayerInfrastructure.Tag;
+using TriageTrainer.Entity.IntravenousLine;
 using UnityEngine;
 using TriageTrainer.Patient;
 
@@ -101,6 +110,7 @@ namespace TriageTrainer.Entity
       { "neckstabilizer",  CervicalCollarEffect },
       { "electrode",      new ItemUseEffect(TreatmentDisplay.None, "apply_electrode", "apply_electrode_{id}") },
       { "nasalcannula",   NasalCannulaEffect },
+      { "nasal_cannula", NasalCannulaEffect },
       { "nasal",          NasalCannulaEffect },
 
       // 사용형(시각 표현 없음 또는 별도 이벤트가 표현 담당)
@@ -122,9 +132,23 @@ namespace TriageTrainer.Entity
           || !ItemUseEffects.TryGetValue(itemIdentifier, out var effect))
         return false;
 
+      if (!CanApplyPatientBCItem(itemIdentifier))
+        return false;
+
+      if (IsPatientBC && IsClientInitialized && !IsServerStarted)
+      {
+        CmdApplyPatientBCItemUse(itemIdentifier);
+        return true;
+      }
+
       TreatmentDisplay resolvedDisplay = ResolveTreatmentDisplayForPatient(effect.Display);
       if (resolvedDisplay != TreatmentDisplay.None)
-        ShowTreatmentDisplay(resolvedDisplay);
+      {
+        if (IsPatientBC && IsServerStarted)
+          SetTreatmentDisplayNetworked(resolvedDisplay, true);
+        else
+          ShowTreatmentDisplay(resolvedDisplay);
+      }
 
       bool raised = false;
       if (effect.SignalTemplates != null)
@@ -140,14 +164,16 @@ namespace TriageTrainer.Entity
         }
       }
 
-      return raised || resolvedDisplay != TreatmentDisplay.None;
+      bool applied = raised || resolvedDisplay != TreatmentDisplay.None;
+      if (applied)
+        NotifyPatientBCItemApplied(itemIdentifier);
+      return applied;
     }
 
     /// <summary>
     /// 거즈/드레싱의 기본 표현은 환자 A의 흉부 손상 기준으로 작성돼 있다. 환자 B/C는
-    /// 시나리오 정의상 좌측 상완 손상이므로 같은 item use가 해당 환자의 상태에는 좌측 상완
-    /// 전이를 만들어야 한다. 이 분기는 표시 전용 데이터에 임상 상태를 중복하지 않고,
-    /// 컨트롤러에서 대상 환자의 상태 전이만 선택한다.
+    /// 각 프리팹이 지원하는 팔 표현으로 전환한다. 현재 B는 좌측, C는 우측 표현을 지원하지만,
+    /// 여기서는 환자 식별자에 방향을 중복 하드코딩하지 않고 프리팹 지원 상태를 권위로 사용한다.
     /// </summary>
     private TreatmentDisplay ResolveTreatmentDisplayForPatient(TreatmentDisplay display)
     {
@@ -156,12 +182,17 @@ namespace TriageTrainer.Entity
       if (!isPatientBOrC)
         return display;
 
-      return display switch
-      {
-        TreatmentDisplay.GauzePatchedOnThorax => TreatmentDisplay.GauzePatchedOnLeftArm,
-        TreatmentDisplay.GauzeDressingDoneOnThorax => TreatmentDisplay.GauzeDressingDoneOnLeftArm,
-        _ => display,
-      };
+      if (display == TreatmentDisplay.GauzePatchedOnThorax)
+        return IsTreatmentDisplaySupported(TreatmentDisplay.GauzePatchedOnRightArm)
+          ? TreatmentDisplay.GauzePatchedOnRightArm
+          : TreatmentDisplay.GauzePatchedOnLeftArm;
+
+      if (display == TreatmentDisplay.GauzeDressingDoneOnThorax)
+        return IsTreatmentDisplaySupported(TreatmentDisplay.GauzeDressingDoneOnRightArm)
+          ? TreatmentDisplay.GauzeDressingDoneOnRightArm
+          : TreatmentDisplay.GauzeDressingDoneOnLeftArm;
+
+      return display;
     }
 
     /// <summary>
@@ -424,6 +455,444 @@ namespace TriageTrainer.Entity
         case TreatmentDisplay.IntravenousFluidAttached: return m.IntravenousFluidAttached;
         default: return false;
       }
+    }
+
+    private enum PatientBCTreatmentStage
+    {
+      Inactive,
+      AwaitingPupil,
+      AwaitingIv,
+      AwaitingNormalSaline,
+      AwaitingNasalCannula,
+      AwaitingOxygen,
+      AwaitingGauze,
+      AwaitingPlaster,
+      Complete,
+    }
+
+    private readonly SyncVar<PatientBCTreatmentStage> _patientBCNurseCStage =
+      new(PatientBCTreatmentStage.Inactive);
+    private readonly SyncVar<PatientBCTreatmentStage> _patientBCNurseDStage =
+      new(PatientBCTreatmentStage.Inactive);
+    private bool _patientBCRequiresOxygenDetach;
+    private bool _patientBCObservedOxygenDetach;
+    private bool _patientBCFreshOxygenInstalled;
+    private bool _patientBCPendingNormalSalineConnection;
+    private string _patientBCPendingNormalSalineActorIdentifier;
+    private string _patientBCPendingNormalSalineActorDisplayName;
+    private IntravenousLineConnectionPoint _patientBCPhysicalNormalSalinePoint;
+    private const string NurseCRoleTag = "nurse_c";
+    private const string NurseDRoleTag = "nurse_d";
+    private const float PatientBCTreatmentInteractionDistance = 3f;
+
+    private bool IsPatientBC =>
+      string.Equals(Identifier, "patient_b", System.StringComparison.Ordinal)
+      || string.Equals(Identifier, "patient_c", System.StringComparison.Ordinal);
+
+    public void ActivatePatientBCNurseCStage()
+    {
+      if (!IsPatientBC)
+        return;
+      if (!IsServerStarted && !InstanceFinder.IsOffline)
+      {
+        Debug.LogWarning("[PatientController] B/C nurse C stage activation is server-authoritative.", this);
+        return;
+      }
+
+      _patientBCNurseCStage.Value = PatientBCTreatmentStage.AwaitingPupil;
+      _patientBCPendingNormalSalineConnection = false;
+      _patientBCPhysicalNormalSalinePoint = null;
+      _cannulaLeftArmInserted = false;
+      _cannulaRightArmInserted = false;
+      _intravenousLineCannulaInteractable = true;
+      SetTreatmentDisplayNetworked(TreatmentDisplay.Syringe20GInsertedIntoLeftArm, false);
+      SetTreatmentDisplayNetworked(TreatmentDisplay.Syringe20GInsertedIntoRightArm, false);
+      ClearPatientBCSignals(
+        $"{Identifier}_pupil_checked",
+        $"insert_iv_{Identifier}_left",
+        $"insert_iv_{Identifier}_right",
+        $"connect_cannula_and_ns1_{Identifier}");
+    }
+
+    public bool ActivatePatientBCNurseDStage()
+    {
+      if (!IsPatientBC)
+        return false;
+      if (!IsServerStarted && !InstanceFinder.IsOffline)
+      {
+        Debug.LogWarning("[PatientController] B/C nurse D stage activation is server-authoritative.", this);
+        return false;
+      }
+
+      _patientBCRequiresOxygenDetach = ConnectedOxyflowmeter != null;
+      _patientBCObservedOxygenDetach = false;
+      _patientBCFreshOxygenInstalled = false;
+      _patientBCNurseDStage.Value = PatientBCTreatmentStage.AwaitingNasalCannula;
+      SetTreatmentDisplayNetworked(TreatmentDisplay.NasalCannulaApplied, false);
+      SetTreatmentDisplayNetworked(
+        ResolveTreatmentDisplayForPatient(TreatmentDisplay.GauzePatchedOnThorax), false);
+      SetTreatmentDisplayNetworked(
+        ResolveTreatmentDisplayForPatient(TreatmentDisplay.GauzeDressingDoneOnThorax), false);
+      ClearPatientBCSignals(
+        $"apply_nasal_cannula_{Identifier}",
+        $"equipment_connected_oxyflowmeter_{Identifier}",
+        $"apply_gauze_{Identifier}",
+        $"apply_plaster_on_gauze_{Identifier}");
+      return _patientBCRequiresOxygenDetach;
+    }
+
+    private void NotifyPatientBCPupilCompleted()
+    {
+      if (IsPatientBC && (IsServerStarted || InstanceFinder.IsOffline))
+        TryAdvancePatientBCNurseCStage(PatientBCTreatmentStage.AwaitingPupil, PatientBCTreatmentStage.AwaitingIv);
+    }
+
+    private bool CanPerformPatientBCIv() =>
+      !IsPatientBC || _patientBCNurseCStage.Value == PatientBCTreatmentStage.AwaitingIv;
+
+    public bool TryCompletePatientBCNormalSalineConnection(
+      IntravenousLineConnectionPoint salinePoint = null)
+    {
+      if (!IsPatientBC)
+        return true;
+      if (IsServerStarted || InstanceFinder.IsOffline)
+      {
+        if (!HasPhysicalPatientBCNormalSalineConnection(salinePoint))
+          return false;
+        if (salinePoint != null)
+          _patientBCPhysicalNormalSalinePoint = salinePoint;
+        if (TryCompletePatientBCNormalSalineConnectionAuthoritative())
+          return true;
+
+        if (MI.Scenario.ScenarioSignalPlayerContext.TryGetCurrent(
+              out var actorIdentifier, out var actorDisplayName))
+          RememberPatientBCNormalSalineConnection(actorIdentifier, actorDisplayName);
+        return false;
+      }
+      if (IsClientInitialized)
+        CmdCompletePatientBCNormalSalineConnection(salinePoint);
+      return false;
+    }
+
+    private bool TryCompletePatientBCNormalSalineConnectionAuthoritative()
+    {
+      if (!HasPhysicalPatientBCNormalSalineConnection())
+        return false;
+      if (!TryAdvancePatientBCNurseCStage(PatientBCTreatmentStage.AwaitingNormalSaline,
+            PatientBCTreatmentStage.Complete))
+        return false;
+
+      const string signal = "connect_cannula_and_ns1";
+      MI.Scenario.ScenarioInteractionSignals.Raise($"{signal}_{Identifier}");
+      MI.Scenario.ScenarioInteractionSignals.Raise(signal,
+        JsonSerializer.Serialize(new { patientIdentifier = Identifier }));
+      return true;
+    }
+
+    private bool HasPhysicalPatientBCNormalSalineConnection(
+      IntravenousLineConnectionPoint salinePoint = null)
+    {
+      if (IvAttachmentPoint == null)
+        return false;
+
+      if (salinePoint != null)
+        return string.Equals(salinePoint.Identifier, "connect_cannula_and_ns1",
+                 System.StringComparison.Ordinal)
+               && IvAttachmentPoint.IsPhysicallyConnectedTo(salinePoint);
+
+      var points = FindObjectsByType<IntravenousLineConnectionPoint>(
+        FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      for (int i = 0; i < points.Length; i++)
+      {
+        var point = points[i];
+        if (point != null
+            && string.Equals(point.Identifier, "connect_cannula_and_ns1", System.StringComparison.Ordinal)
+            && IvAttachmentPoint.IsPhysicallyConnectedTo(point))
+          return true;
+      }
+      return false;
+    }
+
+    private void RememberPatientBCNormalSalineConnection(string actorIdentifier, string actorDisplayName)
+    {
+      _patientBCPendingNormalSalineConnection = true;
+      _patientBCPendingNormalSalineActorIdentifier = actorIdentifier;
+      _patientBCPendingNormalSalineActorDisplayName = actorDisplayName;
+    }
+
+    public void NotifyPatientBCNormalSalineDisconnected(IntravenousLineConnectionPoint salinePoint)
+    {
+      if (!IsPatientBC || salinePoint == null)
+        return;
+      if (IsServerStarted || InstanceFinder.IsOffline)
+      {
+        ClearPatientBCNormalSalineConnection(salinePoint);
+        return;
+      }
+      if (IsClientInitialized)
+        CmdClearPatientBCNormalSalineConnection(salinePoint);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdClearPatientBCNormalSalineConnection(
+      IntravenousLineConnectionPoint salinePoint,
+      NetworkConnection sender = null)
+    {
+      if (!TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player, out _, out _)
+          || salinePoint == null
+          || !IsWithinPatientBCTreatmentDistance(player, salinePoint.transform.position))
+        return;
+      ClearPatientBCNormalSalineConnection(salinePoint);
+    }
+
+    private void ClearPatientBCNormalSalineConnection(IntravenousLineConnectionPoint salinePoint)
+    {
+      if (!ReferenceEquals(_patientBCPhysicalNormalSalinePoint, salinePoint))
+        return;
+      _patientBCPhysicalNormalSalinePoint = null;
+      _patientBCPendingNormalSalineConnection = false;
+    }
+
+    private void TryCreditPendingPatientBCNormalSalineConnection()
+    {
+      if (!_patientBCPendingNormalSalineConnection || !HasPhysicalPatientBCNormalSalineConnection())
+        return;
+
+      using (MI.Scenario.ScenarioSignalPlayerContext.Push(
+               _patientBCPendingNormalSalineActorIdentifier,
+               _patientBCPendingNormalSalineActorDisplayName))
+      {
+        if (TryCompletePatientBCNormalSalineConnectionAuthoritative())
+          _patientBCPendingNormalSalineConnection = false;
+      }
+    }
+
+    private bool CanApplyPatientBCItem(string itemIdentifier)
+    {
+      if (!IsPatientBC)
+        return true;
+
+      return itemIdentifier switch
+      {
+        "nasalcannula" or "nasal_cannula" or "nasal" =>
+          _patientBCNurseDStage.Value == PatientBCTreatmentStage.AwaitingNasalCannula,
+        "gauze" => _patientBCNurseDStage.Value == PatientBCTreatmentStage.AwaitingGauze,
+        "plaster" => _patientBCNurseDStage.Value == PatientBCTreatmentStage.AwaitingPlaster,
+        _ => false,
+      };
+    }
+
+    private void NotifyPatientBCItemApplied(string itemIdentifier)
+    {
+      if (!IsPatientBC)
+        return;
+
+      TryAdvancePatientBCItemStageAuthoritative(itemIdentifier);
+    }
+
+    private void TryAdvancePatientBCItemStageAuthoritative(string itemIdentifier)
+    {
+      if ((itemIdentifier == "nasalcannula" || itemIdentifier == "nasal_cannula" || itemIdentifier == "nasal")
+          && TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingNasalCannula,
+            PatientBCTreatmentStage.AwaitingOxygen))
+      {
+        if (_patientBCFreshOxygenInstalled
+            && ShouldCreditPatientBCEquipmentConnection(EquipmentTypeOxyflowmeter))
+          RaiseEquipmentStateEvent(EquipmentTypeOxyflowmeter, connected: true);
+      }
+      else if (itemIdentifier == "gauze")
+        TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingGauze,
+          PatientBCTreatmentStage.AwaitingPlaster);
+      else if (itemIdentifier == "plaster")
+        TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingPlaster,
+          PatientBCTreatmentStage.Complete);
+    }
+
+    private bool ShouldCreditPatientBCEquipmentConnection(string equipmentType)
+    {
+      if (!IsPatientBC || !string.Equals(equipmentType, EquipmentTypeOxyflowmeter, System.StringComparison.Ordinal))
+        return true;
+      if (!IsServerStarted && !InstanceFinder.IsOffline)
+      {
+        if (IsClientInitialized)
+          CmdCompletePatientBCOxygenConnection();
+        return false;
+      }
+
+      if (_patientBCNurseDStage.Value == PatientBCTreatmentStage.Inactive)
+        return false;
+      if (_patientBCRequiresOxygenDetach && !_patientBCObservedOxygenDetach)
+        return false;
+
+      _patientBCFreshOxygenInstalled = true;
+      return TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingOxygen,
+        PatientBCTreatmentStage.AwaitingGauze);
+    }
+
+    private void NotifyPatientBCEquipmentDisconnected(string equipmentType, MonoBehaviour equipment)
+    {
+      if (!IsPatientBC
+          || _patientBCNurseDStage.Value == PatientBCTreatmentStage.Inactive
+          || !string.Equals(equipmentType, EquipmentTypeOxyflowmeter, System.StringComparison.Ordinal))
+        return;
+
+      _patientBCFreshOxygenInstalled = false;
+      if (_patientBCRequiresOxygenDetach)
+        _patientBCObservedOxygenDetach = true;
+    }
+
+    private bool TryAdvancePatientBCNurseCStage(PatientBCTreatmentStage expected, PatientBCTreatmentStage next)
+    {
+      if (_patientBCNurseCStage.Value != expected)
+        return false;
+      _patientBCNurseCStage.Value = next;
+      return true;
+    }
+
+    private bool TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage expected, PatientBCTreatmentStage next)
+    {
+      if (_patientBCNurseDStage.Value != expected)
+        return false;
+      _patientBCNurseDStage.Value = next;
+      return true;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdApplyPatientBCItemUse(string itemIdentifier, NetworkConnection sender = null)
+    {
+      if (!IsPatientBC
+          || !CanApplyPatientBCItem(itemIdentifier)
+          || !TryValidatePatientBCTreatmentActor(sender, NurseDRoleTag, out var player,
+            out var actorIdentifier, out var actorDisplayName)
+          || player.CountItemInInventory(itemIdentifier) < 1
+          || player.RemoveItemFromInventory(itemIdentifier, 1) != 1)
+        return;
+
+      using (MI.Scenario.ScenarioSignalPlayerContext.Push(actorIdentifier, actorDisplayName))
+        ApplyItemUse(itemIdentifier);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdCompletePatientBCNormalSalineConnection(
+      IntravenousLineConnectionPoint salinePoint,
+      NetworkConnection sender = null)
+    {
+      if (!IsPatientBC
+          || !TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player, out var actorIdentifier,
+            out var actorDisplayName)
+          || salinePoint == null
+          || !string.Equals(salinePoint.Identifier, "connect_cannula_and_ns1",
+            System.StringComparison.Ordinal)
+          || !HasPhysicalPatientBCNormalSalineConnection(salinePoint)
+          || !IsWithinPatientBCTreatmentDistance(player, salinePoint.transform.position))
+        return;
+
+      _patientBCPhysicalNormalSalinePoint = salinePoint;
+      using (MI.Scenario.ScenarioSignalPlayerContext.Push(actorIdentifier, actorDisplayName))
+      {
+        if (!TryCompletePatientBCNormalSalineConnectionAuthoritative())
+          RememberPatientBCNormalSalineConnection(actorIdentifier, actorDisplayName);
+      }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdCompletePatientBCOxygenConnection(NetworkConnection sender = null)
+    {
+      if (!IsPatientBC
+          || !TryValidatePatientBCTreatmentActor(sender, NurseDRoleTag, out var player, out var actorIdentifier,
+            out var actorDisplayName)
+          || ConnectedOxyflowmeter == null
+          || !ConnectedOxyflowmeter.IsAttached
+          || !IsWithinPatientBCTreatmentDistance(
+            player, ConnectedOxyflowmeter.transform.position))
+        return;
+
+      using (MI.Scenario.ScenarioSignalPlayerContext.Push(actorIdentifier, actorDisplayName))
+      {
+        if (ShouldCreditPatientBCEquipmentConnection(EquipmentTypeOxyflowmeter))
+          RaiseEquipmentStateEvent(EquipmentTypeOxyflowmeter, connected: true);
+      }
+    }
+
+    private bool TryValidatePatientBCTreatmentActor(PlayerController player, string requiredRoleTag)
+    {
+      if (InstanceFinder.IsOffline)
+        return player != null && IsWithinPatientBCTreatmentDistance(player);
+      return player != null
+             && player.Owner != null
+             && player.Owner.IsValid
+             && !string.IsNullOrWhiteSpace(player.UserIdentifier)
+             && PlayerTagService.HasTag(player.UserIdentifier, requiredRoleTag)
+             && IsWithinPatientBCTreatmentDistance(player);
+    }
+
+    private bool TryValidatePatientBCTreatmentActor(
+      NetworkConnection sender,
+      string requiredRoleTag,
+      out PlayerController player,
+      out string actorIdentifier,
+      out string actorDisplayName)
+    {
+      player = null;
+      actorIdentifier = null;
+      actorDisplayName = null;
+      if (sender == null
+          || !sender.IsValid
+          || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
+          || descriptor == null
+          || string.IsNullOrWhiteSpace(descriptor.Identifier)
+          || !PlayerTagService.HasTag(descriptor.Identifier, requiredRoleTag))
+        return false;
+
+      var players = FindObjectsByType<PlayerController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      for (int i = 0; i < players.Length; i++)
+      {
+        var candidate = players[i];
+        if (candidate?.Owner == null
+            || !candidate.Owner.IsValid
+            || candidate.Owner.ClientId != sender.ClientId
+            || !string.Equals(candidate.UserIdentifier, descriptor.Identifier, System.StringComparison.Ordinal))
+          continue;
+        player = candidate;
+        break;
+      }
+
+      if (!IsPatientBCTreatmentActorValid(
+            player,
+            actorKnown: player != null,
+            hasRequiredRole: true))
+        return false;
+      actorIdentifier = descriptor.Identifier;
+      actorDisplayName = descriptor.DisplayName;
+      return true;
+    }
+
+    private bool IsWithinPatientBCTreatmentDistance(PlayerController player) =>
+      IsWithinPatientBCTreatmentDistance(player, transform.position);
+
+    private static bool IsWithinPatientBCTreatmentDistance(PlayerController player, Vector3 targetPosition) =>
+      player != null
+      && (player.transform.position - targetPosition).sqrMagnitude
+      <= PatientBCTreatmentInteractionDistance * PatientBCTreatmentInteractionDistance;
+
+    private bool IsPatientBCTreatmentActorValid(
+      PlayerController player,
+      bool actorKnown,
+      bool hasRequiredRole) =>
+      actorKnown && hasRequiredRole && IsWithinPatientBCTreatmentDistance(player);
+
+    public bool CanPlayerCompletePatientBCNormalSalineConnection(PlayerController player) =>
+      !IsPatientBC || TryValidatePatientBCTreatmentActor(player, NurseCRoleTag);
+
+    public bool CanAuthoritativelyConnectPatientBCNormalSaline() =>
+      IsPatientBC
+      && (_patientBCNurseCStage.Value == PatientBCTreatmentStage.AwaitingIv
+          || _patientBCNurseCStage.Value == PatientBCTreatmentStage.AwaitingNormalSaline);
+
+    private static void ClearPatientBCSignals(params string[] signals)
+    {
+      for (int i = 0; i < signals.Length; i++)
+        MI.Scenario.ScenarioInteractionSignals.Clear(signals[i]);
     }
   }
 }

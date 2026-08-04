@@ -14,7 +14,7 @@ namespace MultiplayerInfrastructure.Scenario
   {
     private static readonly List<Context> Contexts = new();
 
-    internal static bool TryGetCurrent(out string playerIdentifier, out string playerDisplayName)
+    public static bool TryGetCurrent(out string playerIdentifier, out string playerDisplayName)
     {
       if (Contexts.Count > 0)
       {

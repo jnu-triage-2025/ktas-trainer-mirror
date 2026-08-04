@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MultiplayerInfrastructure.Scenario
 {
@@ -28,6 +29,7 @@ namespace MultiplayerInfrastructure.Scenario
       public int Threshold;
       public string Output;        // 정규화된 출력 신호
       public readonly HashSet<string> Matched = new(StringComparer.Ordinal);
+      public Func<IReadOnlyCollection<string>> ExpectedSignals;
     }
 
     private static readonly Dictionary<string, Counter> Counters = new(StringComparer.Ordinal);
@@ -40,6 +42,14 @@ namespace MultiplayerInfrastructure.Scenario
 
     /// <summary>카운터를 등록한다. 동일 식별자 재등록은 교체한다. 등록 즉시 임계치를 충족하면 바로 발신한다.</summary>
     public static bool Register(string identifier, string sourcePrefix, int threshold, string output)
+      => Register(identifier, sourcePrefix, threshold, output, null);
+
+    public static bool Register(
+      string identifier,
+      string sourcePrefix,
+      int threshold,
+      string output,
+      Func<IReadOnlyCollection<string>> expectedSignals)
     {
       if (string.IsNullOrWhiteSpace(identifier)
           || string.IsNullOrWhiteSpace(sourcePrefix)
@@ -55,6 +65,7 @@ namespace MultiplayerInfrastructure.Scenario
         Prefix = ScenarioInteractionSignals.Normalize(sourcePrefix),
         Threshold = effectiveThreshold,
         Output = ScenarioInteractionSignals.Normalize(output),
+        ExpectedSignals = expectedSignals,
       };
 
       // 이미 올라와 있는 매칭 신호를 초기 카운트에 포함한다.
@@ -78,6 +89,13 @@ namespace MultiplayerInfrastructure.Scenario
       Counters.Clear();
       PendingSignals.Clear();
       _isDispatching = false;
+    }
+
+    /// <summary>Re-evaluates counters whose expected signal set can change as players disconnect.</summary>
+    public static void RefreshDynamicThresholds()
+    {
+      foreach (var counter in Counters.Values.ToArray())
+        FireIfReady(counter);
     }
 
     private static void EnqueueImmediateFire(Counter counter)
@@ -141,7 +159,12 @@ namespace MultiplayerInfrastructure.Scenario
 
     private static void FireIfReady(Counter counter)
     {
-      if (counter.Matched.Count < counter.Threshold) return;
+      if (counter.ExpectedSignals != null)
+      {
+        var expected = counter.ExpectedSignals() ?? Array.Empty<string>();
+        if (expected.Count == 0 || expected.Any(signal => !counter.Matched.Contains(signal))) return;
+      }
+      else if (counter.Matched.Count < counter.Threshold) return;
 
       // 1회성: 발신 전에 제거하여 재진입/중복 발신을 방지한다.
       Counters.Remove(counter.Identifier);

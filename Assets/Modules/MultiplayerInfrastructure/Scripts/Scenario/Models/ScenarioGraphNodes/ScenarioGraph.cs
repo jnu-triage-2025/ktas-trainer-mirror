@@ -14,6 +14,18 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public IReadOnlyList<string> Tags { get; set; } = Array.Empty<string>();
 
+    /// <summary>Connected player roles which form this graph's authoritative active roster.</summary>
+    public IReadOnlyList<string> ActiveRoleTags { get; set; } = Array.Empty<string>();
+
+    /// <summary>Allows ByRole branches for declared roles absent from the active roster to be skipped.</summary>
+    public bool SkipAbsentRoleBranches { get; set; }
+
+    /// <summary>Exact generic signals that clients may report for this graph.</summary>
+    public IReadOnlyList<string> ClientSignalIdentifiers { get; set; } = Array.Empty<string>();
+
+    /// <summary>Generic client signal prefixes. Use only for bounded, gameplay-owned namespaces.</summary>
+    public IReadOnlyList<string> ClientSignalPrefixes { get; set; } = Array.Empty<string>();
+
     /// <summary>
     /// 이 시나리오에서 사용할 퀘스트 정의 include 목록.
     /// 각 항목은 Resources/Quest 하위 .quest.json(TextAsset) 파일명을 가리킨다.

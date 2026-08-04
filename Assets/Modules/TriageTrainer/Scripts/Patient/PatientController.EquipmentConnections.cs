@@ -136,6 +136,7 @@ namespace TriageTrainer.Entity
       {
         LogConnectionChange(equipmentType, connected: false, previous);
         OnEquipmentDisconnected?.Invoke(equipmentType, previous);
+        NotifyPatientBCEquipmentDisconnected(equipmentType, previous);
         RaiseEquipmentStateEvent(equipmentType, connected: false);
         TriageWorldInteractionSignals.RaisePatientEquipmentDisconnected(Identifier, equipmentType, previous);
       }
@@ -145,8 +146,11 @@ namespace TriageTrainer.Entity
       {
         LogConnectionChange(equipmentType, connected: true, next);
         OnEquipmentConnected?.Invoke(equipmentType, next);
-        RaiseEquipmentStateEvent(equipmentType, connected: true);
-        TriageWorldInteractionSignals.RaisePatientEquipmentConnected(Identifier, equipmentType, next);
+        if (ShouldCreditPatientBCEquipmentConnection(equipmentType))
+        {
+          RaiseEquipmentStateEvent(equipmentType, connected: true);
+          TriageWorldInteractionSignals.RaisePatientEquipmentConnected(Identifier, equipmentType, next);
+        }
       }
     }
 

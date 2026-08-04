@@ -395,7 +395,10 @@ MonoBehaviour:
   PatientAttachPoints:
   - {fileID: 762591555731961356}
   _allowedPositioningPointIdentifiers:
-  - bed-snap-point-0-0
+  - zone_0:bed_snap_point
+  - zone_1:bed_snap_point
+  - zone_2:bed_snap_point
+  - zone_3:bed_snap_point
   _attachableItemVisualPairs: []
   _reposedTargetComponent: {fileID: 0}
   _initialReposedTargetIdentifier: 
