@@ -67,8 +67,8 @@ try {
         -executeMethod GitLabBuild.Build `
         -logFile $logPath
 
-    $unityExitCode = if ($null -eq $LASTEXITCODE) { 'unknown' } else { $LASTEXITCODE }
-    if ($unityExitCode -ne 0) {
+    $unityExitCode = $LASTEXITCODE
+    if ($null -ne $unityExitCode -and $unityExitCode -ne 0) {
         throw "Unity build failed with exit code $unityExitCode. See $logPath."
     }
 }
