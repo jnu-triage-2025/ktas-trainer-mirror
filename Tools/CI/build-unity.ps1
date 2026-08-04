@@ -23,11 +23,15 @@ if (-not $buildPath.StartsWith($projectPathPrefix, [StringComparison]::OrdinalIg
     throw 'BUILD_PATH must resolve inside the Unity project directory.'
 }
 
-$logPath = Join-Path $buildPath "unity-$($env:BUILD_TARGET).log"
 $logArtifactPath = if ($env:UNITY_LOG_ARTIFACT_PATH) {
     [IO.Path]::GetFullPath((Join-Path $projectPath $env:UNITY_LOG_ARTIFACT_PATH))
 } else {
     $null
+}
+$logPath = if ($logArtifactPath) {
+    $logArtifactPath
+} else {
+    Join-Path $buildPath "unity-$($env:BUILD_TARGET).log"
 }
 
 if ([string]::IsNullOrWhiteSpace($env:UNITY_EXECUTABLE)) {
@@ -50,6 +54,7 @@ if ([string]::IsNullOrWhiteSpace($env:UNITY_EXECUTABLE)) {
 }
 
 New-Item -ItemType Directory -Path $buildPath -Force | Out-Null
+New-Item -ItemType Directory -Path (Split-Path -Parent $logPath) -Force | Out-Null
 
 try {
     & $env:UNITY_EXECUTABLE `
@@ -62,15 +67,14 @@ try {
         -executeMethod GitLabBuild.Build `
         -logFile $logPath
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "Unity build failed with exit code $LASTEXITCODE. See $logPath."
+    $unityExitCode = if ($null -eq $LASTEXITCODE) { 'unknown' } else { $LASTEXITCODE }
+    if ($unityExitCode -ne 0) {
+        throw "Unity build failed with exit code $unityExitCode. See $logPath."
     }
 }
 finally {
-    if ($logArtifactPath -and (Test-Path -LiteralPath $logPath -PathType Leaf)) {
-        $logArtifactDirectory = Split-Path -Parent $logArtifactPath
-        New-Item -ItemType Directory -Path $logArtifactDirectory -Force | Out-Null
-        Copy-Item -LiteralPath $logPath -Destination $logArtifactPath -Force
+    if ($logArtifactPath -and -not (Test-Path -LiteralPath $logPath -PathType Leaf)) {
+        Set-Content -LiteralPath $logPath -Value 'Unity did not create a log file.'
     }
 
     if (Test-Path -LiteralPath $buildPath) {
