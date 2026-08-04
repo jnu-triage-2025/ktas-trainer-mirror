@@ -95,6 +95,38 @@ namespace MultiplayerInfrastructure.Scenario
       return true;
     }
 
+    /// <summary>
+    /// 가능한 한 서로 다른 플레이어에게 역할을 배정한 뒤, 남은 브랜치는 적격 플레이어에게
+    /// 중복 배정합니다. 중복 배정된 브랜치는 호출자가 플레이어별로 순차 실행해야 합니다.
+    /// </summary>
+    public static bool TryAllocateAllowingDuplicates(
+      IReadOnlyList<ScenarioParallelBranch> branches,
+      IReadOnlyDictionary<ScenarioParallelBranch, IReadOnlyList<int>> candidatesByBranch,
+      IDictionary<ScenarioParallelBranch, int?> allocation)
+    {
+      if (branches == null) throw new ArgumentNullException(nameof(branches));
+      if (candidatesByBranch == null) throw new ArgumentNullException(nameof(candidatesByBranch));
+      if (allocation == null) throw new ArgumentNullException(nameof(allocation));
+
+      TryAllocateDistinct(branches, candidatesByBranch, allocation);
+
+      foreach (var branch in branches)
+      {
+        if (allocation.TryGetValue(branch, out var assignedClientId) && assignedClientId.HasValue)
+          continue;
+
+        var candidates = GetCandidates(candidatesByBranch, branch);
+        if (candidates.Count == 0)
+          return false;
+
+        // 후보 목록은 호출자가 결정적으로 구성한다. 첫 후보를 택해 모든 피어에서 같은
+        // 중복 역할 배정 결과를 얻는다.
+        allocation[branch] = candidates[0];
+      }
+
+      return true;
+    }
+
     private static bool TryAssign(
       ScenarioParallelBranch branch,
       IReadOnlyDictionary<ScenarioParallelBranch, IReadOnlyList<int>> candidatesByBranch,

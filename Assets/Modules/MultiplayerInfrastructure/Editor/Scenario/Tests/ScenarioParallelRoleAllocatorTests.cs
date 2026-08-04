@@ -115,5 +115,50 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       Assert.That(allocation[first], Is.EqualTo(7));
       Assert.That(allocation[second], Is.Null);
     }
+
+    [Test]
+    public void KeepsDistinctAssignmentsAndDuplicatesOnlyUnmatchedRoles()
+    {
+      var airway = new ScenarioParallelBranch { Identifier = "airway" };
+      var circulation = new ScenarioParallelBranch { Identifier = "circulation" };
+      var support = new ScenarioParallelBranch { Identifier = "support" };
+      var branches = new[] { airway, circulation, support };
+      var candidates = new Dictionary<ScenarioParallelBranch, IReadOnlyList<int>>
+      {
+        [airway] = new[] { 1 },
+        [circulation] = new[] { 1 },
+        [support] = new[] { 2 }
+      };
+      var allocation = new Dictionary<ScenarioParallelBranch, int?>();
+
+      var complete = ScenarioParallelRoleAllocator.TryAllocateAllowingDuplicates(
+        branches, candidates, allocation);
+
+      Assert.That(complete, Is.True);
+      Assert.That(allocation[airway], Is.EqualTo(1));
+      Assert.That(allocation[circulation], Is.EqualTo(1));
+      Assert.That(allocation[support], Is.EqualTo(2));
+    }
+
+    [Test]
+    public void DoesNotAllocateWhenARequiredRoleHasNoEligiblePlayer()
+    {
+      var first = new ScenarioParallelBranch { Identifier = "first" };
+      var second = new ScenarioParallelBranch { Identifier = "second" };
+      var branches = new[] { first, second };
+      var candidates = new Dictionary<ScenarioParallelBranch, IReadOnlyList<int>>
+      {
+        [first] = new[] { 1 },
+        [second] = new int[0]
+      };
+      var allocation = new Dictionary<ScenarioParallelBranch, int?>();
+
+      var complete = ScenarioParallelRoleAllocator.TryAllocateAllowingDuplicates(
+        branches, candidates, allocation);
+
+      Assert.That(complete, Is.False);
+      Assert.That(allocation[first], Is.EqualTo(1));
+      Assert.That(allocation[second], Is.Null);
+    }
   }
 }

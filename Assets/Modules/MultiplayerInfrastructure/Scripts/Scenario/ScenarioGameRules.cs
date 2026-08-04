@@ -10,7 +10,7 @@ namespace MultiplayerInfrastructure.Scenario
     public static bool IgnoreTagAssignFullSatisfactionOnScenarioPlay { get; set; } = true;
 
     /// <summary>
-    /// true이면 단일 활성 플레이어가 모든 ByRole 브랜치에 적격일 때 여러 브랜치를 순차 실행하도록 허용한다.
+    /// true이면 한 플레이어에게 여러 ByRole 브랜치가 배정된 경우 해당 브랜치들을 순차 실행하도록 허용한다.
     /// </summary>
     public static bool AllowMultipleRoleBranchesForSinglePlayer { get; set; } = true;
 

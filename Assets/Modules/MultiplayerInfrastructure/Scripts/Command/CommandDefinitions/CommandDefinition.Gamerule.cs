@@ -22,7 +22,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("gamerule runningSpeedMultiplier <number>", "Set running speed multiplier (0~10; default 1.5)."),
       new UsageLine("gamerule IgnoreTagAssignFullSatisfactionOnScenarioPlay", "Show whether missing scenario player-tag gates are ignored."),
       new UsageLine("gamerule IgnoreTagAssignFullSatisfactionOnScenarioPlay <true|false>", "Ignore missing scenario player-tag gates (default true)."),
-      new UsageLine("gamerule AllowMultipleRoleBranchesForSinglePlayer [true|false]", "Run multiple eligible role branches sequentially for one player (default true)."),
+      new UsageLine("gamerule AllowMultipleRoleBranchesForSinglePlayer [true|false]", "Run duplicate role branches sequentially for each assigned player (default true)."),
       new UsageLine("gamerule UseMicInRecognitionCheck [true|false]", "Allow microphone volume for patient recognition checks (default false)."),
       new UsageLine("gamerule DisableInteractionInRecognitionCheck [true|false]", "Disable click interaction for recognition checks; microphone must be enabled."),
     };

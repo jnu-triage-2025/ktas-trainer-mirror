@@ -3866,9 +3866,8 @@ namespace MultiplayerInfrastructure.Scenario
       var routinesByClient = new Dictionary<int, List<IEnumerator>>();
       int? localClientId = (int?)InstanceFinder.ClientManager?.Connection?.ClientId;
       var players = GetActivePlayerIds();
-      bool sequenceRoleBranches = ShouldAllowSinglePlayerRoleBranches(
+      bool sequenceRoleBranches = ShouldAllowMultipleRoleBranches(
         node,
-        players.Count,
         ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer);
       var allocation = new Dictionary<ScenarioParallelBranch, int?>();
 
@@ -4177,12 +4176,10 @@ namespace MultiplayerInfrastructure.Scenario
       return node?.Threshold ?? 1;
     }
 
-    private static bool ShouldAllowSinglePlayerRoleBranches(
+    private static bool ShouldAllowMultipleRoleBranches(
       ScenarioParallelNode node,
-      int activePlayerCount,
       bool enabled)
       => enabled
-        && activePlayerCount == 1
         && node?.AllocationType == ScenarioParallelAllocationType.ByRole
         && node.WaitMode == ScenarioWaitMode.All;
 
@@ -4908,14 +4905,13 @@ namespace MultiplayerInfrastructure.Scenario
 
           if (!ScenarioParallelRoleAllocator.TryAllocateDistinct(branches, candidatesByBranch, allocation))
           {
-            if (ShouldAllowSinglePlayerRoleBranches(
+            if (ShouldAllowMultipleRoleBranches(
                   node,
-                  playerPool.Count,
                   ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer)
-                && ScenarioParallelRoleAllocator.TryAllocateAllToPlayer(
-                  branches, candidatesByBranch, playerPool[0], allocation))
+                && ScenarioParallelRoleAllocator.TryAllocateAllowingDuplicates(
+                  branches, candidatesByBranch, allocation))
             {
-              Debug.Log($"[ScenarioController] ByRole branches assigned sequentially to single player {playerPool[0]}.");
+              Debug.Log("[ScenarioController] ByRole branches with duplicate player assignments will run sequentially per player.");
               return true;
             }
 

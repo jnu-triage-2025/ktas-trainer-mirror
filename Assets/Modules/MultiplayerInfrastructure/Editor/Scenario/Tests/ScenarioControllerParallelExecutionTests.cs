@@ -102,21 +102,19 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       Assert.That(actual, Is.EqualTo(expected));
     }
 
-    [TestCase(true, 1, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.All, true)]
-    [TestCase(false, 1, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.All, false)]
-    [TestCase(true, 2, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.All, false)]
-    [TestCase(true, 1, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.Any, false)]
-    [TestCase(true, 1, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.None, false)]
-    [TestCase(true, 1, ScenarioParallelAllocationType.SelfAll, ScenarioWaitMode.All, false)]
-    public void MultipleRoleBranchesAreAllowedOnlyForSinglePlayerAllWaitMode(
+    [TestCase(true, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.All, true)]
+    [TestCase(false, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.All, false)]
+    [TestCase(true, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.Any, false)]
+    [TestCase(true, ScenarioParallelAllocationType.ByRole, ScenarioWaitMode.None, false)]
+    [TestCase(true, ScenarioParallelAllocationType.SelfAll, ScenarioWaitMode.All, false)]
+    public void MultipleRoleBranchesAreAllowedForAnyPlayerCountInAllWaitMode(
       bool enabled,
-      int activePlayerCount,
       ScenarioParallelAllocationType allocationType,
       ScenarioWaitMode waitMode,
       bool expected)
     {
       var shouldAllow = typeof(ScenarioController).GetMethod(
-        "ShouldAllowSinglePlayerRoleBranches",
+        "ShouldAllowMultipleRoleBranches",
         BindingFlags.Static | BindingFlags.NonPublic);
       var node = new ScenarioParallelNode
       {
@@ -128,7 +126,6 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       var actual = (bool)shouldAllow.Invoke(null, new object[]
       {
         node,
-        activePlayerCount,
         enabled
       });
 
