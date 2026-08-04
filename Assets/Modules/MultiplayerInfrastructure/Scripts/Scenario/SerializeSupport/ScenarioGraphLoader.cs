@@ -79,6 +79,10 @@ namespace MultiplayerInfrastructure.Scenario
       var graph = new ScenarioGraph();
       graph.Identifier = ResolveGraphIdentifier(dto);
       graph.Tags = NormalizeTags(dto.Tags);
+      graph.ActiveRoleTags = NormalizeTags(dto.ActiveRoleTags);
+      graph.SkipAbsentRoleBranches = dto.SkipAbsentRoleBranches ?? false;
+      graph.ClientSignalIdentifiers = ResolveClientSignalIdentifiers(dto, graph.Identifier);
+      graph.ClientSignalPrefixes = NormalizeSignalContract(dto.ClientSignalPrefixes);
       graph.QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(dto.QuestDefinitionIncludes);
       graph.ActingNpcs = ConvertActingNpcs(dto.ActingNpcs);
       graph.Waypoints = ConvertWaypoints(dto.Waypoints);
@@ -126,6 +130,35 @@ namespace MultiplayerInfrastructure.Scenario
         }
       }
     }
+
+    private static IReadOnlyList<string> ResolveClientSignalIdentifiers(ScenarioGraphDTO dto, string graphIdentifier)
+    {
+      if (dto.ClientSignalIdentifiers != null)
+        return NormalizeSignalContract(dto.ClientSignalIdentifiers);
+
+      // The pre-contract Patient A graph historically used generic client reports for its interaction gates.
+      // Keep only this audited legacy graph compatible; every other undeclared graph defaults to deny.
+      if (!string.Equals(graphIdentifier, "patient_a_critical", StringComparison.Ordinal))
+        return Array.Empty<string>();
+
+      return dto.Nodes?.Values
+        .OfType<ScenarioValidatorNodeDTO>()
+        .SelectMany(node => node.RootConditions ?? new List<ScenarioValidatorNodeDTO.ScenarioValidatorRootConditionDTO>())
+        .SelectMany(root => root.ValidationRules ?? new List<ScenarioValidatorNodeDTO.ScenarioValidatorRuleDTO>())
+        .Where(rule => string.Equals(rule.RegistryType, nameof(RegistryType.RuntimeState), StringComparison.OrdinalIgnoreCase))
+        .Select(rule => rule.RegistryIdentifier)
+        .Where(value => !string.IsNullOrWhiteSpace(value))
+        .Select(ScenarioInteractionSignals.Normalize)
+        .Distinct(StringComparer.Ordinal)
+        .ToArray() ?? Array.Empty<string>();
+    }
+
+    private static IReadOnlyList<string> NormalizeSignalContract(IEnumerable<string> values)
+      => values?
+        .Where(value => !string.IsNullOrWhiteSpace(value))
+        .Select(value => ScenarioInteractionSignals.Normalize(value))
+        .Distinct(StringComparer.Ordinal)
+        .ToArray() ?? Array.Empty<string>();
 
     private static IReadOnlyList<ScenarioActingNpcDefinition> ConvertActingNpcs(
       IEnumerable<ScenarioActingNpcDefinitionDTO> actingNpcs)
@@ -693,6 +726,7 @@ namespace MultiplayerInfrastructure.Scenario
             : ScenarioSignalCounterOperation.Register,
           SourceSignalPrefix = dto.SourceSignalPrefix,
           Threshold = dto.Threshold ?? 1,
+          UseActiveRoleRosterThreshold = dto.UseActiveRoleRosterThreshold ?? false,
           OutputSignalIdentifier = dto.OutputSignalIdentifier,
         };
 
@@ -1391,6 +1425,10 @@ namespace MultiplayerInfrastructure.Scenario
       {
         Identifier = string.IsNullOrWhiteSpace(graph.Identifier) ? "scenario_graph" : graph.Identifier.Trim(),
         Tags = NormalizeTags(graph.Tags).ToList(),
+        ActiveRoleTags = NormalizeTags(graph.ActiveRoleTags).ToList(),
+        SkipAbsentRoleBranches = graph.SkipAbsentRoleBranches ? true : (bool?)null,
+        ClientSignalIdentifiers = NormalizeSignalContract(graph.ClientSignalIdentifiers).ToList(),
+        ClientSignalPrefixes = NormalizeSignalContract(graph.ClientSignalPrefixes).ToList(),
         QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(graph.QuestDefinitionIncludes).ToList(),
         ActingNpcs = ConvertActingNpcsToDTO(graph.ActingNpcs),
         Waypoints = ConvertWaypointsToDTO(graph.Waypoints),
@@ -1743,6 +1781,7 @@ namespace MultiplayerInfrastructure.Scenario
           Operation = node.Operation.ToString(),
           SourceSignalPrefix = node.SourceSignalPrefix,
           Threshold = node.Threshold,
+          UseActiveRoleRosterThreshold = node.UseActiveRoleRosterThreshold ? true : (bool?)null,
           OutputSignalIdentifier = node.OutputSignalIdentifier,
         };
 

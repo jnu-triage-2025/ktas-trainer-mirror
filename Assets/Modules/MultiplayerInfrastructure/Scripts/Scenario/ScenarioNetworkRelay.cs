@@ -40,6 +40,7 @@ namespace MultiplayerInfrastructure.Scenario
     private const int MaxSignalUpdatesPerPlayerPerWindow = 30;
     private const float SignalUpdateWindowSeconds = 1f;
     private static readonly Dictionary<string, Queue<float>> SignalUpdateTimesByPlayer = new(StringComparer.Ordinal);
+    private static readonly ScenarioClientSignalAuthorization ClientSignalAuthorization = new();
     private readonly List<ActingNpcConfiguration> _actingNpcConfigurations = new List<ActingNpcConfiguration>();
     private readonly List<NpcControlState> _npcControlStates = new List<NpcControlState>();
 
@@ -232,6 +233,7 @@ namespace MultiplayerInfrastructure.Scenario
       base.OnStartServer();
       ScenarioSignalParameterStore.FlushLocal();
       SignalUpdateTimesByPlayer.Clear();
+      ClientSignalAuthorization.ClearScenario();
       InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
     }
 
@@ -243,6 +245,7 @@ namespace MultiplayerInfrastructure.Scenario
       _npcControlStates.Clear();
       ScenarioSignalParameterStore.FlushLocal();
       SignalUpdateTimesByPlayer.Clear();
+      ClientSignalAuthorization.ClearAll();
       base.OnStopServer();
     }
 
@@ -305,6 +308,11 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void OnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs args)
     {
+      if (args.ConnectionState == RemoteConnectionState.Stopped && connection != null)
+      {
+        ClientSignalAuthorization.Revoke(connection.ClientId);
+        return;
+      }
       if (args.ConnectionState != RemoteConnectionState.Started || connection == null)
         return;
       StartCoroutine(SendActingNpcConfigurationsAfterSpawn(connection));
@@ -651,6 +659,28 @@ namespace MultiplayerInfrastructure.Scenario
       return true;
     }
 
+    /// <summary>
+    /// 서버가 그래프 밖의 검증된 gameplay RPC에 일시적인 client signal capability를 부여한다.
+    /// 기본적으로 raise만 허용하며 clear는 별도로 명시해야 한다.
+    /// </summary>
+    public static bool GrantClientSignalCapability(int clientId, string signalId,
+      bool allowClear = false, bool isPrefix = false)
+    {
+      if (!InstanceFinder.IsServerStarted || clientId < 0 || string.IsNullOrWhiteSpace(signalId))
+        return false;
+      ClientSignalAuthorization.Grant(clientId, ScenarioInteractionSignals.Normalize(signalId), allowClear, isPrefix);
+      return true;
+    }
+
+    public static void RevokeClientSignalCapabilities(int clientId)
+      => ClientSignalAuthorization.Revoke(clientId);
+
+    internal static void ConfigureClientSignalAuthorization(ScenarioGraph graph)
+      => ClientSignalAuthorization.ConfigureScenario(graph);
+
+    internal static void ClearClientSignalAuthorization()
+      => ClientSignalAuthorization.ClearAll();
+
     private static bool RaiseOnServer(string normalizedSignalId, string parameterJson,
       string playerIdentifier, string playerDisplayName, NetworkConnection sender)
     {
@@ -790,22 +820,41 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
-      string playerIdentifier = ScenarioSignalParameterStore.ServerPlayerIdentifier;
-      string playerDisplayName = playerIdentifier;
-      if (sender != null && UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor))
+      if (sender == null || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
+          || string.IsNullOrWhiteSpace(descriptor.Identifier))
       {
-        playerIdentifier = descriptor.Identifier;
-        playerDisplayName = descriptor.DisplayName;
+        ReportRejectedInput(normalizedSignalId, parameterJson,
+          "발신 플레이어를 서버 세션에서 확인할 수 없습니다.", sender);
+        return;
       }
+      if (!ClientSignalAuthorization.CanRaise(
+            sender.ClientId, descriptor.Identifier, normalizedSignalId, out string authorizationError))
+      {
+        ReportRejectedInput(normalizedSignalId, parameterJson, authorizationError, sender);
+        return;
+      }
+
+      string playerIdentifier = descriptor.Identifier;
+      string playerDisplayName = descriptor.DisplayName;
       RaiseOnServer(normalizedSignalId, parameterJson, playerIdentifier, playerDisplayName, sender);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void CmdClearScenarioSignal(string normalizedSignalId)
+    private void CmdClearScenarioSignal(string normalizedSignalId, NetworkConnection sender = null)
     {
       if (!IsValidClientSignal(normalizedSignalId))
       {
         Debug.LogWarning($"[ScenarioNetworkRelay] Rejected invalid client signal clear: '{normalizedSignalId}'");
+        return;
+      }
+
+      string authorizationError = null;
+      if (sender == null || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
+          || string.IsNullOrWhiteSpace(descriptor.Identifier)
+          || !ClientSignalAuthorization.CanClear(sender.ClientId, normalizedSignalId, out authorizationError))
+      {
+        ReportRejectedInput(normalizedSignalId, null,
+          authorizationError ?? "발신 플레이어를 서버 세션에서 확인할 수 없습니다.", sender);
         return;
       }
 
@@ -895,5 +944,167 @@ namespace MultiplayerInfrastructure.Scenario
     {
       ScenarioInteractionSignals.UnregisterLocal(normalizedSignalId);
     }
+  }
+
+  /// <summary>
+  /// Client-origin generic signal RPC의 서버측 capability 집합. 그래프가 소비하는 입력만 허용하고,
+  /// 그래프가 생성하는 출력은 동일 식별자가 validator에 있어도 client 입력에서 제외한다.
+  /// </summary>
+  public sealed class ScenarioClientSignalAuthorization
+  {
+    private readonly HashSet<string> _expectedRaises = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _allowedPrefixes = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _serverOnlySignals = new(StringComparer.Ordinal);
+    private readonly Dictionary<int, List<Capability>> _capabilities = new();
+
+    private readonly struct Capability
+    {
+      public readonly string Signal;
+      public readonly bool AllowClear;
+      public readonly bool IsPrefix;
+
+      public Capability(string signal, bool allowClear, bool isPrefix)
+      {
+        Signal = signal;
+        AllowClear = allowClear;
+        IsPrefix = isPrefix;
+      }
+
+      public bool Matches(string signal) => IsPrefix
+        ? signal.StartsWith(Signal, StringComparison.Ordinal)
+        : string.Equals(signal, Signal, StringComparison.Ordinal);
+    }
+
+    public void ConfigureScenario(ScenarioGraph graph)
+    {
+      ClearAll();
+      if (graph == null)
+        return;
+
+      foreach (var node in graph.Nodes.Values)
+      {
+        switch (node)
+        {
+          case ScenarioSignalCounterNode counter:
+            AddServerOnly(counter.OutputSignalIdentifier);
+            break;
+          case ScenarioSignalListenerNode listener:
+            AddServerOnly(listener.OutputSignalIdentifier);
+            break;
+          case ScenarioEntityStateSignalBindingNode binding:
+            AddServerOnly(binding.OutputSignalIdentifier);
+            break;
+          case ScenarioItemSubmissionConfigNode submission:
+            AddServerOnly(submission.CompletionSignalIdentifier);
+            break;
+        }
+      }
+
+      foreach (var actingNpc in graph.ActingNpcs ?? Array.Empty<ScenarioActingNpcDefinition>())
+      foreach (var interaction in actingNpc?.Interactions ?? Array.Empty<ScenarioActingNpcInteractionDefinition>())
+        AddServerOnly(interaction?.CompletionSignalIdentifier);
+
+      foreach (var signal in graph.ClientSignalIdentifiers ?? Array.Empty<string>())
+        AddExpected(signal);
+      foreach (var prefix in graph.ClientSignalPrefixes ?? Array.Empty<string>())
+        AddPrefix(prefix);
+
+      _expectedRaises.ExceptWith(_serverOnlySignals);
+    }
+
+    public void ClearScenario()
+    {
+      _expectedRaises.Clear();
+      _allowedPrefixes.Clear();
+      _serverOnlySignals.Clear();
+    }
+
+    public void ClearAll()
+    {
+      ClearScenario();
+      _capabilities.Clear();
+    }
+
+    public void Grant(int clientId, string normalizedSignalId, bool allowClear = false, bool isPrefix = false)
+    {
+      if (clientId < 0 || string.IsNullOrWhiteSpace(normalizedSignalId))
+        return;
+      if (!_capabilities.TryGetValue(clientId, out var values))
+      {
+        values = new List<Capability>();
+        _capabilities.Add(clientId, values);
+      }
+      values.Add(new Capability(normalizedSignalId, allowClear, isPrefix));
+    }
+
+    public void Revoke(int clientId) => _capabilities.Remove(clientId);
+
+    public bool CanRaise(int clientId, string playerIdentifier, string normalizedSignalId, out string error)
+    {
+      if (HasCapability(clientId, normalizedSignalId, requireClear: false))
+      {
+        error = null;
+        return true;
+      }
+      if (_serverOnlySignals.Contains(normalizedSignalId))
+      {
+        error = "서버 검증 gameplay 상태에서만 발생할 수 있는 신호입니다.";
+        return false;
+      }
+      if (_expectedRaises.Contains(normalizedSignalId))
+      {
+        error = null;
+        return true;
+      }
+
+      foreach (var prefix in _allowedPrefixes)
+      {
+        if (normalizedSignalId.StartsWith(prefix, StringComparison.Ordinal))
+        {
+          error = null;
+          return true;
+        }
+      }
+
+      error = "활성 시나리오가 이 client-origin 신호를 기대하지 않으며 capability도 없습니다.";
+      return false;
+    }
+
+    public bool CanClear(int clientId, string normalizedSignalId, out string error)
+    {
+      if (HasCapability(clientId, normalizedSignalId, requireClear: true))
+      {
+        error = null;
+        return true;
+      }
+      error = "client-origin signal clear는 명시적인 clear capability 없이는 허용되지 않습니다.";
+      return false;
+    }
+
+    private bool HasCapability(int clientId, string signal, bool requireClear)
+      => _capabilities.TryGetValue(clientId, out var values)
+         && values.Any(value => (!requireClear || value.AllowClear) && value.Matches(signal));
+
+    private void AddExpected(string signal)
+    {
+      string normalized = ScenarioInteractionSignals.Normalize(signal);
+      if (!string.IsNullOrWhiteSpace(normalized))
+        _expectedRaises.Add(normalized);
+    }
+
+    private void AddPrefix(string signal)
+    {
+      string normalized = ScenarioInteractionSignals.Normalize(signal);
+      if (!string.IsNullOrWhiteSpace(normalized))
+        _allowedPrefixes.Add(normalized);
+    }
+
+    private void AddServerOnly(string signal)
+    {
+      string normalized = ScenarioInteractionSignals.Normalize(signal);
+      if (!string.IsNullOrWhiteSpace(normalized))
+        _serverOnlySignals.Add(normalized);
+    }
+
   }
 }

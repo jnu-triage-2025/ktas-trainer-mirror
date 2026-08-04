@@ -83,7 +83,7 @@ namespace TriageTrainer.Editor.Utils
         string ctPatientCWaypointIdentifier, Vector3 ctPatientCWaypoint)
     {
       var generatedRoot = GetOrCreateGeneratedRoot();
-      DeleteChildren(generatedRoot.transform);
+      DeleteGeneratedScenarioObjects(generatedRoot.transform);
       CreateWaypoint(generatedRoot.transform, buildingIdentifier, buildingEnterance);
       CreateWaypoint(generatedRoot.transform, treatmentIdentifier, treatmentRoomEnterance);
       CreateWaypoint(generatedRoot.transform, patientBSpawnWaypointIdentifier, patientBSpawnWaypoint);
@@ -97,7 +97,9 @@ namespace TriageTrainer.Editor.Utils
         triageArrivalWaypointIdentifier,
         triageArrivalWaypoint,
         new Vector3(8f, 3f, 8f),
-        "quest_arrival_triage_area_{id}");
+        new[] { "quest_arrival_triage_area" },
+        "quest_arrival_triage_area_{id}",
+        perEntityPlayersOnly: true);
       CreateWaypoint(generatedRoot.transform, ctPatientBWaypointIdentifier, ctPatientBWaypoint);
       CreateWaypoint(generatedRoot.transform, ctPatientCWaypointIdentifier, ctPatientCWaypoint);
       // B/C target anchors intentionally share a position. One generous arrival zone records
@@ -107,7 +109,9 @@ namespace TriageTrainer.Editor.Utils
         ctPatientBWaypointIdentifier,
         ctPatientBWaypoint,
         new Vector3(8f, 3f, 8f),
-        "ct_patient_arrived_{id}");
+        System.Array.Empty<string>(),
+        "ct_patient_arrived_{id}",
+        perEntityPlayersOnly: false);
       CreateSpawnPoint(generatedRoot.transform, commonSpawnPointIdentifier, commonSpawnPoint);
     }
 
@@ -238,11 +242,13 @@ namespace TriageTrainer.Editor.Utils
       return generated;
     }
 
-    private static void DeleteChildren(Transform parent)
+    private static void DeleteGeneratedScenarioObjects(Transform parent)
     {
       for (int i = parent.childCount - 1; i >= 0; i--)
       {
         var child = parent.GetChild(i);
+        if (child.name.StartsWith("static_entities:", System.StringComparison.Ordinal))
+          continue;
         DestroyObject(child.gameObject);
       }
     }
@@ -288,7 +294,9 @@ namespace TriageTrainer.Editor.Utils
       string identifier,
       Vector3 position,
       Vector3 size,
-      string perEntitySignalTemplate)
+      string[] enterSignals,
+      string perEntitySignalTemplate,
+      bool perEntityPlayersOnly)
     {
       var zoneObject = new GameObject($"ScenarioZone_{identifier}");
       zoneObject.transform.SetParent(parent, false);
@@ -299,8 +307,9 @@ namespace TriageTrainer.Editor.Utils
       var zone = zoneObject.AddComponent<MultiplayerInfrastructure.Scenario.ScenarioTriggerZone>();
       SetPrivateField(zone, "_identifier", identifier);
       SetPrivateField(zone, "_triggerOnce", false);
-      SetPrivateField(zone, "_raiseSignalsOnEnter", new[] { "quest_arrival_triage_area" });
+      SetPrivateField(zone, "_raiseSignalsOnEnter", enterSignals ?? System.Array.Empty<string>());
       SetPrivateField(zone, "_perEntitySignalTemplate", perEntitySignalTemplate);
+      SetPrivateField(zone, "_perEntityPlayersOnly", perEntityPlayersOnly);
       // RuntimeState의 도착 신호는 시나리오 시작마다 초기화된다. 존 자체가 엔티티를
       // 영구 기억하면 두 번째 실행에서 신호가 재발행되지 않으므로 진입마다 발행한다.
       SetPrivateField(zone, "_perEntityRaiseOncePerEntity", false);

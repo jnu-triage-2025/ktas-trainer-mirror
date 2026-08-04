@@ -9,8 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3508104974660169203}
+  - component: {fileID: 3850785483627365576}
+  - component: {fileID: 6481162045202206273}
+  - component: {fileID: 3859099019089065873}
   - component: {fileID: 6759064965544079288}
-  - component: {fileID: 6332135449134980225}
   m_Layer: 0
   m_Name: PatientTypeDDummyB
   m_TagString: Untagged
@@ -32,8 +34,113 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5410227854486041306}
+  - {fileID: 8298302873564096653}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3850785483627365576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2574628634766077341}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 124417309ef5e42e1afe61ea5d37c6c6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Patient.PatientTypeBFemaleState
+  positionOnLayingOnPatientMovingBed: {x: 0, y: -0.95, z: -0.2}
+  eulerAnglesOnLayingOnPatientMovingBed: {x: 0, y: 0, z: 0}
+  colliderCenterOnLayingOnPatientMovingBed: {x: 0, y: 1, z: 0}
+  colliderHeightOnLayingOnPatientMovingBed: 1.8
+  colliderRadiusOnLayingOnPatientMovingBed: 0.3
+  colliderDirectionOnLayingOnPatientMovingBed: 2
+  treatmentDisplayState:
+    <DisplaySupports>k__BackingField: {}
+    <DisplayState>k__BackingField: {}
+    <PatientModelGameObject>k__BackingField: {fileID: 8100000000000000001}
+    <ChildGameObjects>k__BackingField: {}
+--- !u!136 &6481162045202206273
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2574628634766077341}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.3
+  m_Height: 1.8
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.9, z: 0}
+--- !u!114 &3859099019089065873
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2574628634766077341}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e794a1dae1454908ba448af46d61805, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.PatientController
+  _componentIndexCache: 0
+  _addedNetworkObject: {fileID: 6759064965544079288}
+  _networkObjectCache: {fileID: 6759064965544079288}
+  _runtimeAnimatorController: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
+  _assessActions: []
+  _capsuleCollider: {fileID: 6481162045202206273}
+  _standingCapsuleCenter: {x: 0, y: 0.9, z: 0}
+  _standingCapsuleHeight: 1.8
+  _standingCapsuleRadius: 0.3
+  _standingCapsuleDirection: 1
+  _lyingCapsuleCenter: {x: 0, y: 0.45, z: 0}
+  _lyingCapsuleHeight: 1.8
+  _lyingCapsuleRadius: 0.3
+  _lyingCapsuleDirection: 2
+  _identifier: patient_dummy_d_b
+  _weight: 4
+  _supportExternalRefs:
+    _patientBed: {fileID: 0}
+    _intravenousFluids: []
+    _suctionWall: {fileID: 0}
+    _oxyflowmeter: {fileID: 0}
+    _suctionWalls: []
+    _oxyflowmeters: []
+  _ivAttachmentPoint: {fileID: 0}
+  _carryAttachPoint: {fileID: 8298302873564096653}
+  _isMovingPatientBedAttached: 0
+  _isPlayerAttached: 0
+  _interactConfigs:
+  - _identifier: lift_from_bed
+    _enabled: 1
+  - _identifier: carry_patient
+    _enabled: 1
+  - _identifier: monitor_select
+    _enabled: 1
+  _intravenousLineCannulaConfig:
+    _supported: 0
+    _displayText:
+    _displayIcon: {fileID: 0}
+  _intravenousLineCannulaInteractable: 0
+  _medicalState: {}
+  _triageConfig:
+    _assessable: 0
+    _changeAssessableOnAssessDone: 2
+    _displayText:
+    _displayIcon: {fileID: 0}
+  _triageLabelAnchor: {fileID: 0}
 --- !u!114 &6759064965544079288
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -53,7 +160,7 @@ MonoBehaviour:
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
-  - {fileID: 6332135449134980225}
+  - {fileID: 3859099019089065873}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -88,21 +195,37 @@ MonoBehaviour:
     Rotation: {x: 0, y: 0, z: 0, w: 1}
     Scale: {x: 1, y: 1, z: 1}
     IsValid: 1
---- !u!114 &6332135449134980225
-MonoBehaviour:
+--- !u!1 &3059064153231568963
+GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2574628634766077341}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8a6a39c46bf52104ba8efe3100bce3f7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FishNet.Runtime::FishNet.Object.EmptyNetworkBehaviour
-  _componentIndexCache: 0
-  _addedNetworkObject: {fileID: 6759064965544079288}
-  _networkObjectCache: {fileID: 6759064965544079288}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8298302873564096653}
+  m_Layer: 0
+  m_Name: PatientCarryAttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8298302873564096653
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3059064153231568963}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1, z: 0.2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3508104974660169203}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &3320320782521077664
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -171,5 +294,10 @@ PrefabInstance:
 --- !u!4 &5410227854486041306 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7278058586554793338, guid: 430aae6d67763443b8e4c51bbcc51683, type: 3}
+  m_PrefabInstance: {fileID: 3320320782521077664}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &8100000000000000001 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7947458155882227648, guid: 430aae6d67763443b8e4c51bbcc51683, type: 3}
   m_PrefabInstance: {fileID: 3320320782521077664}
   m_PrefabAsset: {fileID: 0}

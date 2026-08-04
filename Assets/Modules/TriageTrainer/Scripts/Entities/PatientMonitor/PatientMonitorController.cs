@@ -5,6 +5,11 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UIElements;
 using TriageTrainer.Entity.Patient;
+using FishNet;
+using FishNet.Connection;
+using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.Session;
+using MultiplayerInfrastructure.Tag;
 
 namespace TriageTrainer.Entity.PatientMonitor.Models
 {
@@ -211,6 +216,11 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     protected virtual void CloseDetailedContentOverlay() => CloseSingleDetail();
 
+    public void OpenPresentation()
+    {
+      OpenDetailedContentOverlay();
+    }
+
     private void OpenSingleDetail()
     {
       if (!_enableDetailedContentOverlay || _singleMonitorContent == null)
@@ -219,7 +229,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       if (!TriageTrainer.Entity.PatientMonitor.PatientMonitorDetailOverlay.Open(
             this,
             new[] { _singleMonitorContent },
-            RestoreSingleMonitorContent))
+            RestoreSingleMonitorContent,
+            RequestClose))
         return;
 
     }
@@ -243,9 +254,110 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       _closeRequested = handler;
     }
 
+    private string _scenarioClosePatientIdentifier;
+    private string _scenarioCloseSignal;
+    private bool _scenarioCloseArmed;
+
+    public void ArmScenarioClose(PatientController patient, string completionSignal, Action closePresentation)
+    {
+      if (patient == null || string.IsNullOrWhiteSpace(completionSignal))
+        return;
+
+      string normalizedSignal = ScenarioInteractionSignals.Normalize(completionSignal);
+      if (InstanceFinder.IsOffline)
+      {
+        _scenarioClosePatientIdentifier = patient.Identifier;
+        _scenarioCloseSignal = normalizedSignal;
+        _scenarioCloseArmed = true;
+      }
+
+      SetCloseRequestedHandler(() =>
+      {
+        closePresentation?.Invoke();
+        if (InstanceFinder.IsOffline)
+        {
+          if (_scenarioCloseArmed)
+          {
+            _scenarioCloseArmed = false;
+            ScenarioInteractionSignals.Raise(normalizedSignal);
+          }
+          return;
+        }
+        if (InstanceFinder.IsServerStarted)
+          TryCompleteScenarioClose(InstanceFinder.ClientManager?.Connection, patient, normalizedSignal);
+        else if (IsClientInitialized)
+          CmdCompleteScenarioClose(patient, normalizedSignal);
+      });
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdCompleteScenarioClose(PatientController patient, string normalizedSignal,
+      NetworkConnection sender = null)
+      => TryCompleteScenarioClose(sender, patient, normalizedSignal);
+
+    internal bool TryCompleteScenarioClose(NetworkConnection sender, PatientController patient,
+      string normalizedSignal)
+    {
+      if (patient == null
+          || !IsValidPatientBCMonitorClose(patient.Identifier, normalizedSignal)
+          || !IsAuthoritativeCareZoneMonitorForPatient(this, patient))
+        return false;
+
+      if (InstanceFinder.IsOffline)
+      {
+        if (!_scenarioCloseArmed
+            || !string.Equals(patient.Identifier, _scenarioClosePatientIdentifier, StringComparison.Ordinal)
+            || !string.Equals(normalizedSignal, _scenarioCloseSignal, StringComparison.Ordinal))
+          return false;
+      }
+      else if (sender == null
+               || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
+               || descriptor == null
+               || !PlayerTagService.HasTag(descriptor.Identifier, "nurse_b")
+               || ScenarioController.Instance == null
+               || !ScenarioController.Instance.CanAcceptPatientBCMonitorClose(sender.ClientId, normalizedSignal))
+        return false;
+
+      _scenarioCloseArmed = false;
+      using (ScenarioSignalPlayerContext.Push(sender))
+        ScenarioInteractionSignals.Raise(normalizedSignal);
+      return true;
+    }
+
+    internal static bool IsAuthoritativeCareZoneMonitorForPatient(
+      PatientMonitorController monitor,
+      PatientController patient)
+    {
+      if (monitor == null || patient == null)
+        return false;
+
+      var zones = FindObjectsByType<PatientCareDescriptionZone>(
+        FindObjectsInactive.Exclude,
+        FindObjectsSortMode.None);
+      for (int i = 0; i < zones.Length; i++)
+      {
+        var zone = zones[i];
+        if (zone != null
+            && ReferenceEquals(zone.CurrentPatient, patient)
+            && zone.ContainsWorldPosition(patient.transform.position)
+            && zone.ContainsWorldPosition(monitor.transform.position))
+          return true;
+      }
+
+      return false;
+    }
+
+    private static bool IsValidPatientBCMonitorClose(string patientIdentifier, string signal)
+      => string.Equals(patientIdentifier, "patient_b", StringComparison.Ordinal)
+         && string.Equals(signal, "sig.close_vital_ui_b", StringComparison.Ordinal)
+         || string.Equals(patientIdentifier, "patient_c", StringComparison.Ordinal)
+         && string.Equals(signal, "sig.close_vital_ui_c", StringComparison.Ordinal);
+
     protected void RequestClose()
     {
-      _closeRequested?.Invoke();
+      var handler = _closeRequested;
+      _closeRequested = null;
+      handler?.Invoke();
     }
 
     private static void SetVisualTreeNonInteractive(VisualElement root)

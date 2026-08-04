@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
@@ -153,9 +154,21 @@ namespace TriageTrainer.Entity
       if (string.IsNullOrWhiteSpace(heldIdentifier))
         return false;
 
+      return CanPerformPatientBCIv() && IsCannulaGaugeAllowed(heldIdentifier);
+    }
+
+    private bool IsCannulaGaugeAllowed(string itemIdentifier)
+    {
+      // patient_b_c_ct requires a 20G line. Scope this restriction to its two
+      // runtime patient identifiers so existing 18G-capable scenarios keep working.
+      if ((string.Equals(Identifier, "patient_b", StringComparison.Ordinal)
+           || string.Equals(Identifier, "patient_c", StringComparison.Ordinal))
+          && !string.Equals(itemIdentifier, TriageTrainer.ItemDefinitions.Cannula20g.Identifier, StringComparison.Ordinal))
+        return false;
+
       for (int i = 0; i < IntravenousLineCannulaItemIdentifiers.Length; i++)
       {
-        if (string.Equals(heldIdentifier, IntravenousLineCannulaItemIdentifiers[i], StringComparison.Ordinal))
+        if (string.Equals(itemIdentifier, IntravenousLineCannulaItemIdentifiers[i], StringComparison.Ordinal))
           return true;
       }
 
@@ -202,6 +215,16 @@ namespace TriageTrainer.Entity
       else
         return; // 양팔 모두 삽입 완료 → 추가 삽입 없음
 
+      string side = isLeft ? "left" : "right";
+      if (IsPatientBC && IsClientInitialized && !IsServerStarted)
+      {
+        CmdCompletePatientBCIv(side, heldIdentifier);
+        return;
+      }
+
+      if (IsPatientBC && !TryValidatePatientBCTreatmentActor(player, NurseCRoleTag))
+        return;
+
       // 캐뉼라는 팔 하나당 하나씩 소비한다. 첫 삽입 뒤에는 플레이어가 두 번째
       // 캐뉼라를 다시 획득해야 하므로, 두 팔 처치에 18G 2개를 사전 보유할 필요가 없다.
       if (player.RemoveItemFromInventory(heldIdentifier, 1) != 1)
@@ -215,9 +238,7 @@ namespace TriageTrainer.Entity
       if (isLeft) _cannulaLeftArmInserted = true;
       else _cannulaRightArmInserted = true;
 
-      // ── 시나리오 게이팅 신호 ──
-      string side = isLeft ? "left" : "right";
-      RaiseCannulaSignal($"insert_iv_{{id}}_{side}");
+      CompletePatientBCIvOrRaiseExistingSignal(side, heldIdentifier);
 
       // 양팔 모두 채워지면 더 이상 상호작용을 노출하지 않는다.
       if (_cannulaLeftArmInserted && _cannulaRightArmInserted)
@@ -232,6 +253,61 @@ namespace TriageTrainer.Entity
       string signal = ResolveSignalTemplate(template);
       if (!string.IsNullOrWhiteSpace(signal))
         MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(signal);
+    }
+
+    private void CompletePatientBCIvOrRaiseExistingSignal(string side, string itemIdentifier)
+    {
+      if (!IsPatientBC)
+      {
+        RaiseCannulaSignal($"insert_iv_{{id}}_{side}");
+        return;
+      }
+
+      if (IsServerStarted || FishNet.InstanceFinder.IsOffline)
+      {
+        if (TryAdvancePatientBCIvStageAuthoritative())
+          RaiseCannulaSignal($"insert_iv_{{id}}_{side}");
+      }
+      else if (IsClientInitialized)
+      {
+        CmdCompletePatientBCIv(side, itemIdentifier);
+      }
+    }
+
+    private bool TryAdvancePatientBCIvStageAuthoritative()
+    {
+      if (!TryAdvancePatientBCNurseCStage(PatientBCTreatmentStage.AwaitingIv,
+            PatientBCTreatmentStage.AwaitingNormalSaline))
+        return false;
+
+      TryCreditPendingPatientBCNormalSalineConnection();
+      return true;
+    }
+
+    [FishNet.Object.ServerRpc(RequireOwnership = false)]
+    private void CmdCompletePatientBCIv(string side, string itemIdentifier, FishNet.Connection.NetworkConnection sender = null)
+    {
+      if (!IsPatientBC
+          || (side != "left" && side != "right")
+          || !string.Equals(itemIdentifier, TriageTrainer.ItemDefinitions.Cannula20g.Identifier,
+            StringComparison.Ordinal)
+          || !TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player, out var actorIdentifier,
+            out var actorDisplayName)
+          || !CanPerformPatientBCIv()
+          || player.CountItemInInventory(itemIdentifier) < 1
+          || !TryAdvancePatientBCIvStageAuthoritative())
+        return;
+
+      if (player.RemoveItemFromInventory(itemIdentifier, 1) != 1)
+        return;
+
+      using (ScenarioSignalPlayerContext.Push(actorIdentifier, actorDisplayName))
+      {
+        SetTreatmentDisplayNetworked(side == "left"
+          ? TreatmentDisplay.Syringe20GInsertedIntoLeftArm
+          : TreatmentDisplay.Syringe20GInsertedIntoRightArm, true);
+        RaiseCannulaSignal($"insert_iv_{{id}}_{side}");
+      }
     }
   }
 }

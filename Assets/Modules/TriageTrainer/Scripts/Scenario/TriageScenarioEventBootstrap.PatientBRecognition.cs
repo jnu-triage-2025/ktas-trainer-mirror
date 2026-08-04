@@ -1,6 +1,7 @@
 using System.Collections;
 using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Entity;
+using TriageTrainer.Entity.Patient;
 
 namespace TriageTrainer.Scenario
 {
@@ -20,6 +21,7 @@ namespace TriageTrainer.Scenario
       RegisterRecognition("activate_patient_c_recognition_4", true, "patient_c_recognition_4", false, "말 걸기");
       RegisterRecognition("activate_patient_c_strength_check", true, "patient_c_strength_checked", false, "근력 확인");
       RegisterRecognition("activate_patient_c_pupil_check", true, "patient_c_pupil_checked", false, "동공반사 확인");
+      Register("evaluate_patient_b_c_triage", Event_EvaluatePatientBCTriage);
       Register("reset_patient_b_c_triage_attempt", Event_ResetPatientBCTriageAttempt);
       Register("complete_patient_b_c_triage", Event_CompletePatientBCTriage);
     }
@@ -69,7 +71,8 @@ namespace TriageTrainer.Scenario
         "triage_submitted_patient_dummy_d_b",
         "triage_correct_patient_b",
         "triage_correct_patient_c",
-        "triage_correct_patient_dummy_d_b"
+        "triage_correct_patient_dummy_d_b",
+        "patient_b_c_triage_current_correct"
       };
       foreach (string signal in signals)
         ScenarioInteractionSignals.Clear(signal);
@@ -78,6 +81,40 @@ namespace TriageTrainer.Scenario
       SetPatientTriageAssessable(_patientCObject, true);
       SetPatientTriageAssessable(_patientDummyDBObject, true);
       yield break;
+    }
+
+    private IEnumerator Event_EvaluatePatientBCTriage()
+    {
+      ResolveRuntimeReferencesIfNeeded();
+      ScenarioInteractionSignals.Clear("patient_b_c_triage_current_correct");
+
+      if (ArePatientBCTriageAssignmentsCorrect(
+            _patientBObject,
+            _patientCObject,
+            _patientDummyDBObject))
+      {
+        ScenarioInteractionSignals.Raise("patient_b_c_triage_current_correct");
+      }
+
+      yield break;
+    }
+
+    private static bool ArePatientBCTriageAssignmentsCorrect(params UnityEngine.GameObject[] targets)
+    {
+      foreach (var target in targets)
+      {
+        var patient = target != null
+          ? target.GetComponentInChildren<PatientController>(true)
+          : null;
+        if (patient == null
+            || patient.AssessedTriage == TriageLevel.Unassessed
+            || patient.AssessedTriage != patient.IntendedTriage)
+        {
+          return false;
+        }
+      }
+
+      return true;
     }
 
     private IEnumerator Event_CompletePatientBCTriage()

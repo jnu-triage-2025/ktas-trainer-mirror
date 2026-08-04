@@ -111,7 +111,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       TriageTrainer.Entity.PatientMonitor.PatientMonitorDetailOverlay.Open(
         this,
         contents,
-        RestoreDualMonitorContents);
+        RestoreDualMonitorContents,
+        RequestClose);
     }
 
     protected override void CloseDetailedContentOverlay()

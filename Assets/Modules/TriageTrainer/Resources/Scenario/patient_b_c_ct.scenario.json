@@ -1,5 +1,7 @@
 {
   "identifier": "patient_b_c_ct",
+  "clientSignalIdentifiers": [],
+  "clientSignalPrefixes": [],
   "defaultEntrypoint": "SPAWN_B",
   "tags": [
     "nurse_a",
@@ -7,6 +9,8 @@
     "nurse_c",
     "nurse_d"
   ],
+  "activeRoleTags": ["nurse_a", "nurse_b", "nurse_c", "nurse_d"],
+  "skipAbsentRoleBranches": true,
   "questDefinitionIncludes": [
     "patient_b_c_ct.quests.quest"
   ],
@@ -305,17 +309,36 @@
     "COUNT_NURSE_ARRIVAL": {
       "identifier": "COUNT_NURSE_ARRIVAL",
       "nodeType": "SignalCounter",
-      "nextIdentifier": "ANNOUNCE",
+      "nextIdentifier": "P_ANNOUNCE_ARRIVAL",
       "counterIdentifier": "scen_b_nurse_arrivals",
       "operation": "Register",
       "sourceSignalPrefix": "quest_arrival_triage_area_",
       "threshold": 4,
+      "useActiveRoleRosterThreshold": true,
       "outputSignalIdentifier": "all_nurses_arrived_triage"
+    },
+    "P_ANNOUNCE_ARRIVAL": {
+      "identifier": "P_ANNOUNCE_ARRIVAL",
+      "nodeType": "Parallel",
+      "nextIdentifier": "P_TRIAGE",
+      "waitMode": "All",
+      "allocationType": "SelfAll",
+      "whenBranchingPlayerNotMatched": "Panic",
+      "branches": [
+        {
+          "identifier": "ANNOUNCE",
+          "completionConditionIdentifier": "CC_ANNOUNCE"
+        },
+        {
+          "identifier": "P_ARRIVAL",
+          "completionConditionIdentifier": "CC_ARRIVAL"
+        }
+      ]
     },
     "ANNOUNCE": {
       "identifier": "ANNOUNCE",
       "nodeType": "Dialogue",
-      "nextIdentifier": "P_ARRIVAL",
+      "nextIdentifier": "CC_ANNOUNCE",
       "speakerName": "구내방송",
       "dialogueContent": "트리아지 구역에 응급 환자 세명 이송. 담당자는 지금 바로 와주세요.",
       "portraitSpriteIdentifier": null,
@@ -326,7 +349,7 @@
     "P_ARRIVAL": {
       "identifier": "P_ARRIVAL",
       "nodeType": "Parallel",
-      "nextIdentifier": "P_TRIAGE",
+      "nextIdentifier": "CC_ARRIVAL",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Panic",
@@ -613,7 +636,7 @@
     "TRIAGE_WAIT_ALL": {
       "identifier": "TRIAGE_WAIT_ALL",
       "nodeType": "Validator",
-      "nextIdentifier": "TRIAGE_CHECK_CORRECT",
+      "nextIdentifier": "TRIAGE_EVALUATE_CURRENT",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -643,6 +666,13 @@
       "failureNextIdentifier": null,
       "waitForCondition": true
     },
+    "TRIAGE_EVALUATE_CURRENT": {
+      "identifier": "TRIAGE_EVALUATE_CURRENT",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "TRIAGE_CHECK_CORRECT",
+      "eventIdentifier": "evaluate_patient_b_c_triage",
+      "moveNextBehavior": "WaitUntilDone"
+    },
     "TRIAGE_CHECK_CORRECT": {
       "identifier": "TRIAGE_CHECK_CORRECT",
       "nodeType": "Validator",
@@ -655,19 +685,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.triage_correct_patient_b"
-            },
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.triage_correct_patient_c"
-            },
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.triage_correct_patient_dummy_d_b"
+              "registryIdentifier": "sig.patient_b_c_triage_current_correct"
             }
           ]
         }
@@ -1127,7 +1145,7 @@
     "P_B_CARE": {
       "identifier": "P_B_CARE",
       "nodeType": "Parallel",
-      "nextIdentifier": "B_COMPLETE",
+      "nextIdentifier": "P_B_WAIT_REMOVE",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Panic",
@@ -1168,6 +1186,20 @@
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         }
+      ]
+    },
+    "P_B_WAIT_REMOVE": {
+      "identifier": "P_B_WAIT_REMOVE",
+      "nodeType": "Parallel",
+      "nextIdentifier": "B_COMPLETE",
+      "waitMode": "All",
+      "allocationType": "ByRole",
+      "whenBranchingPlayerNotMatched": "Panic",
+      "branches": [
+        { "identifier": "A_STRENGTH_REMOVE", "completionConditionIdentifier": "CC_B_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "B_VITAL_REMOVE", "completionConditionIdentifier": "CC_B_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_PUPIL_REMOVE", "completionConditionIdentifier": "CC_B_C", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "D_REMOVE", "completionConditionIdentifier": "CC_B_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
       ]
     },
     "A_RECOG_Q": {
@@ -1693,11 +1725,21 @@
     "A_GCS_SUM2": {
       "identifier": "A_GCS_SUM2",
       "nodeType": "Dialogue",
-      "nextIdentifier": "A_STRENGTH_Q",
+      "nextIdentifier": "A_STRENGTH_TRANSITION",
       "speakerName": "@s",
       "dialogueContent": "E3 / V4 / M6, GCS 13점입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
+      "playTTS": false
+    },
+    "A_STRENGTH_TRANSITION": {
+      "identifier": "A_STRENGTH_TRANSITION",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "A_STRENGTH_Q",
+      "speakerName": "@s",
+      "dialogueContent": "이제 근력을 확인해 보자.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": 1,
       "playTTS": false
     },
     "A_STRENGTH_Q": {
@@ -1917,12 +1959,25 @@
     "A_FINAL_SUMMARY": {
       "identifier": "A_FINAL_SUMMARY",
       "nodeType": "Dialogue",
-      "nextIdentifier": "A_STRENGTH_REMOVE",
+      "nextIdentifier": "A_STRENGTH_WAIT_UPDATE",
       "speakerName": "@s",
       "dialogueContent": "이 환자 GCS 13점, Motor Grade 우측 5, 좌측3 입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
+    },
+    "A_STRENGTH_WAIT_UPDATE": {
+      "identifier": "A_STRENGTH_WAIT_UPDATE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_B_A",
+      "operation": "Update",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_B_Wait",
+      "quest": {
+        "Id": "Quest_B_Strength",
+        "DefinitionIdentifier": "Quest_B_Wait"
+      }
     },
     "A_STRENGTH_REMOVE": {
       "identifier": "A_STRENGTH_REMOVE",
@@ -2122,7 +2177,7 @@
     "B_TEMP_WRONG": {
       "identifier": "B_TEMP_WRONG",
       "nodeType": "Dialogue",
-      "nextIdentifier": "B_VITAL_REMOVE",
+      "nextIdentifier": "B_VITAL_WAIT_UPDATE",
       "speakerName": "@s",
       "dialogueContent": "(체온은 37.8도, 산소포화도는 93%였어.)",
       "portraitSpriteIdentifier": null,
@@ -2132,12 +2187,25 @@
     "B_TEMP_CORRECT": {
       "identifier": "B_TEMP_CORRECT",
       "nodeType": "Dialogue",
-      "nextIdentifier": "B_VITAL_REMOVE",
+      "nextIdentifier": "B_VITAL_WAIT_UPDATE",
       "speakerName": "@s",
       "dialogueContent": "(체온 37.8도, 산소포화도 93%로 보고하고 기록했다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
+    },
+    "B_VITAL_WAIT_UPDATE": {
+      "identifier": "B_VITAL_WAIT_UPDATE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_B_B",
+      "operation": "Update",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_B_Wait",
+      "quest": {
+        "Id": "Quest_B_Vital",
+        "DefinitionIdentifier": "Quest_B_Wait"
+      }
     },
     "B_VITAL_REMOVE": {
       "identifier": "B_VITAL_REMOVE",
@@ -2152,12 +2220,19 @@
     "C_PUPIL_Q": {
       "identifier": "C_PUPIL_Q",
       "nodeType": "QuestControl",
-      "nextIdentifier": "C_PUPIL_ACT",
+      "nextIdentifier": "C_TREATMENT_ACTIVATE",
       "operation": "Add",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_B_Pupil_IV",
       "quest": null
+    },
+    "C_TREATMENT_ACTIVATE": {
+      "identifier": "C_TREATMENT_ACTIVATE",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "C_PUPIL_ACT",
+      "eventIdentifier": "activate_patient_b_nurse_c_treatment",
+      "moveNextBehavior": "WaitUntilDone"
     },
     "C_PUPIL_ACT": {
       "identifier": "C_PUPIL_ACT",
@@ -2241,7 +2316,7 @@
     "C_NS_WAIT": {
       "identifier": "C_NS_WAIT",
       "nodeType": "Validator",
-      "nextIdentifier": "C_PUPIL_REMOVE",
+      "nextIdentifier": "C_PUPIL_WAIT_UPDATE",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -2259,6 +2334,19 @@
       "failureNextIdentifier": null,
       "waitForCondition": true
     },
+    "C_PUPIL_WAIT_UPDATE": {
+      "identifier": "C_PUPIL_WAIT_UPDATE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_B_C",
+      "operation": "Update",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_B_Wait",
+      "quest": {
+        "Id": "Quest_B_Pupil_IV",
+        "DefinitionIdentifier": "Quest_B_Wait"
+      }
+    },
     "C_PUPIL_REMOVE": {
       "identifier": "C_PUPIL_REMOVE",
       "nodeType": "QuestControl",
@@ -2272,12 +2360,19 @@
     "D_OXY_Q": {
       "identifier": "D_OXY_Q",
       "nodeType": "QuestControl",
-      "nextIdentifier": "D_NASAL_WAIT",
+      "nextIdentifier": "D_TREATMENT_ACTIVATE",
       "operation": "Add",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_B_Oxygen_Bleeding",
       "quest": null
+    },
+    "D_TREATMENT_ACTIVATE": {
+      "identifier": "D_TREATMENT_ACTIVATE",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "D_NASAL_WAIT",
+      "eventIdentifier": "activate_patient_b_nurse_d_treatment",
+      "moveNextBehavior": "WaitUntilDone"
     },
     "D_NASAL_WAIT": {
       "identifier": "D_NASAL_WAIT",
@@ -2406,12 +2501,25 @@
     "D_PLASTER_DONE": {
       "identifier": "D_PLASTER_DONE",
       "nodeType": "Dialogue",
-      "nextIdentifier": "D_REMOVE",
+      "nextIdentifier": "D_WAIT_UPDATE",
       "speakerName": "@s",
       "dialogueContent": "(출혈이 멎어, 거즈 위에 플라스터를 붙였다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 1,
       "playTTS": false
+    },
+    "D_WAIT_UPDATE": {
+      "identifier": "D_WAIT_UPDATE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_B_D",
+      "operation": "Update",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_B_Wait",
+      "quest": {
+        "Id": "Quest_B_Oxygen_Bleeding",
+        "DefinitionIdentifier": "Quest_B_Wait"
+      }
     },
     "D_REMOVE": {
       "identifier": "D_REMOVE",
@@ -2478,7 +2586,7 @@
     "P_C_CARE": {
       "identifier": "P_C_CARE",
       "nodeType": "Parallel",
-      "nextIdentifier": "C_COMPLETE",
+      "nextIdentifier": "P_C_WAIT_REMOVE",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Panic",
@@ -2519,6 +2627,20 @@
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         }
+      ]
+    },
+    "P_C_WAIT_REMOVE": {
+      "identifier": "P_C_WAIT_REMOVE",
+      "nodeType": "Parallel",
+      "nextIdentifier": "C_COMPLETE",
+      "waitMode": "All",
+      "allocationType": "ByRole",
+      "whenBranchingPlayerNotMatched": "Panic",
+      "branches": [
+        { "identifier": "C_A_STRENGTH_REMOVE", "completionConditionIdentifier": "CC_C_A", "requiredPlayerTags": ["nurse_a"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_B_VITAL_REMOVE", "completionConditionIdentifier": "CC_C_B", "requiredPlayerTags": ["nurse_b"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_C_PUPIL_REMOVE", "completionConditionIdentifier": "CC_C_C", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
+        { "identifier": "C_D_REMOVE", "completionConditionIdentifier": "CC_C_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
       ]
     },
     "C_A_RECOG_Q": {
@@ -3044,11 +3166,21 @@
     "C_A_GCS_SUM2": {
       "identifier": "C_A_GCS_SUM2",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_A_STRENGTH_Q",
+      "nextIdentifier": "C_A_STRENGTH_TRANSITION",
       "speakerName": "@s",
       "dialogueContent": "E3 / V4 / M6, GCS 13점입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
+      "playTTS": false
+    },
+    "C_A_STRENGTH_TRANSITION": {
+      "identifier": "C_A_STRENGTH_TRANSITION",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "C_A_STRENGTH_Q",
+      "speakerName": "@s",
+      "dialogueContent": "이제 근력을 확인해 보자.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": 1,
       "playTTS": false
     },
     "C_A_STRENGTH_Q": {
@@ -3268,12 +3400,25 @@
     "C_A_FINAL_SUMMARY": {
       "identifier": "C_A_FINAL_SUMMARY",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_A_STRENGTH_REMOVE",
+      "nextIdentifier": "C_A_STRENGTH_WAIT_UPDATE",
       "speakerName": "@s",
       "dialogueContent": "이 환자 GCS 13점, Motor Grade 좌측 5, 우측 3 입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
+    },
+    "C_A_STRENGTH_WAIT_UPDATE": {
+      "identifier": "C_A_STRENGTH_WAIT_UPDATE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_C_A",
+      "operation": "Update",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_C_Wait",
+      "quest": {
+        "Id": "Quest_C_Strength",
+        "DefinitionIdentifier": "Quest_C_Wait"
+      }
     },
     "C_A_STRENGTH_REMOVE": {
       "identifier": "C_A_STRENGTH_REMOVE",
@@ -3473,7 +3618,7 @@
     "C_B_TEMP_WRONG": {
       "identifier": "C_B_TEMP_WRONG",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_B_VITAL_REMOVE",
+      "nextIdentifier": "C_B_VITAL_WAIT_UPDATE",
       "speakerName": "@s",
       "dialogueContent": "(체온은 37.8도, 산소포화도는 93%였어.)",
       "portraitSpriteIdentifier": null,
@@ -3483,12 +3628,25 @@
     "C_B_TEMP_CORRECT": {
       "identifier": "C_B_TEMP_CORRECT",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_B_VITAL_REMOVE",
+      "nextIdentifier": "C_B_VITAL_WAIT_UPDATE",
       "speakerName": "@s",
       "dialogueContent": "(체온 37.8도, 산소포화도 93%로 보고하고 기록했다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
+    },
+    "C_B_VITAL_WAIT_UPDATE": {
+      "identifier": "C_B_VITAL_WAIT_UPDATE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_C_B",
+      "operation": "Update",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_C_Wait",
+      "quest": {
+        "Id": "Quest_C_Vital",
+        "DefinitionIdentifier": "Quest_C_Wait"
+      }
     },
     "C_B_VITAL_REMOVE": {
       "identifier": "C_B_VITAL_REMOVE",
@@ -3503,12 +3661,19 @@
     "C_C_PUPIL_Q": {
       "identifier": "C_C_PUPIL_Q",
       "nodeType": "QuestControl",
-      "nextIdentifier": "C_C_PUPIL_ACT",
+      "nextIdentifier": "C_C_TREATMENT_ACTIVATE",
       "operation": "Add",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_C_Pupil_IV",
       "quest": null
+    },
+    "C_C_TREATMENT_ACTIVATE": {
+      "identifier": "C_C_TREATMENT_ACTIVATE",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "C_C_PUPIL_ACT",
+      "eventIdentifier": "activate_patient_c_nurse_c_treatment",
+      "moveNextBehavior": "WaitUntilDone"
     },
     "C_C_PUPIL_ACT": {
       "identifier": "C_C_PUPIL_ACT",
@@ -3592,7 +3757,7 @@
     "C_C_NS_WAIT": {
       "identifier": "C_C_NS_WAIT",
       "nodeType": "Validator",
-      "nextIdentifier": "C_C_PUPIL_REMOVE",
+      "nextIdentifier": "C_C_PUPIL_WAIT_UPDATE",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -3610,6 +3775,19 @@
       "failureNextIdentifier": null,
       "waitForCondition": true
     },
+    "C_C_PUPIL_WAIT_UPDATE": {
+      "identifier": "C_C_PUPIL_WAIT_UPDATE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_C_C",
+      "operation": "Update",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_C_Wait",
+      "quest": {
+        "Id": "Quest_C_Pupil_IV",
+        "DefinitionIdentifier": "Quest_C_Wait"
+      }
+    },
     "C_C_PUPIL_REMOVE": {
       "identifier": "C_C_PUPIL_REMOVE",
       "nodeType": "QuestControl",
@@ -3623,12 +3801,19 @@
     "C_D_OXY_Q": {
       "identifier": "C_D_OXY_Q",
       "nodeType": "QuestControl",
-      "nextIdentifier": "C_D_NASAL_WAIT",
+      "nextIdentifier": "C_D_TREATMENT_ACTIVATE",
       "operation": "Add",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_C_Oxygen_Bleeding",
       "quest": null
+    },
+    "C_D_TREATMENT_ACTIVATE": {
+      "identifier": "C_D_TREATMENT_ACTIVATE",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "C_D_NASAL_WAIT",
+      "eventIdentifier": "activate_patient_c_nurse_d_treatment",
+      "moveNextBehavior": "WaitUntilDone"
     },
     "C_D_NASAL_WAIT": {
       "identifier": "C_D_NASAL_WAIT",
@@ -3757,12 +3942,25 @@
     "C_D_PLASTER_DONE": {
       "identifier": "C_D_PLASTER_DONE",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_D_REMOVE",
+      "nextIdentifier": "C_D_WAIT_UPDATE",
       "speakerName": "@s",
       "dialogueContent": "(출혈이 멎어, 거즈 위에 플라스터를 붙였다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 1,
       "playTTS": false
+    },
+    "C_D_WAIT_UPDATE": {
+      "identifier": "C_D_WAIT_UPDATE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_C_D",
+      "operation": "Update",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_C_Wait",
+      "quest": {
+        "Id": "Quest_C_Oxygen_Bleeding",
+        "DefinitionIdentifier": "Quest_C_Wait"
+      }
     },
     "C_D_REMOVE": {
       "identifier": "C_D_REMOVE",
@@ -3819,7 +4017,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "CT_DOCTOR_C_SUMMARY",
       "speakerName": "의사",
-      "dialogueContent": "남성 환자는 E3 / V4 / M6, GCS 13점, 근력 좌측 5점, 우측 3점, 호흡수 24, 맥박 120, 혈압 140/86, 체온 37.8, 산소포화도 93%...",
+      "dialogueContent": "남성 환자는 E3, V4, M6으로 GCS 13점입니다. 근력은 우측 5점, 좌측 3점이며, 호흡수는 분당 24회, 맥박은 분당 120회, 혈압은 140/86mmHg, 체온은 37.8도, 산소포화도는 93%입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": true
@@ -3847,7 +4045,7 @@
     "P_CT_TRANSPORT": {
       "identifier": "P_CT_TRANSPORT",
       "nodeType": "Parallel",
-      "nextIdentifier": "CT_SCENARIO_COMPLETE",
+      "nextIdentifier": "CT_FINAL_DELAY",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Panic",
@@ -3857,6 +4055,13 @@
         { "identifier": "CT_C_Q", "completionConditionIdentifier": "CC_CT_C", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
         { "identifier": "CT_D_Q", "completionConditionIdentifier": "CC_CT_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
       ]
+    },
+    "CT_FINAL_DELAY": {
+      "identifier": "CT_FINAL_DELAY",
+      "nodeType": "Delay",
+      "nextIdentifier": "CT_SCENARIO_COMPLETE",
+      "duration": { "value": 1, "unit": "Seconds" },
+      "waitUntil": "WaitUntilDone"
     },
     "CT_A_Q": {
       "identifier": "CT_A_Q",

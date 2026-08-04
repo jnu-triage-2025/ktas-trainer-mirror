@@ -1,12 +1,15 @@
+using System;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
+using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -15,28 +18,65 @@ namespace TriageTrainer.Entity
   public partial class PatientController
   {
     private const string RecognitionRoleTag = "nurse_a";
+    private const float RecognitionInteractionDistance = 1.3f;
+    private static readonly Vector3 RecognitionInteractionOffset = new(0f, 1f, 0f);
 
     private sealed class PatientRecognitionCheckInteract : IInteract, IInteractorConditional
     {
       private readonly PatientController _owner;
       public PatientRecognitionCheckInteract(PatientController owner) => _owner = owner;
-      public string DisplayText => string.IsNullOrWhiteSpace(_owner._recognitionDisplayText.Value)
+      public string DisplayText => RecognitionCheckMicrophoneInput.IsUnavailable
         ? "말 걸기"
-        : _owner._recognitionDisplayText.Value;
+        : string.IsNullOrWhiteSpace(_owner._recognitionDisplayText.Value)
+          ? "말 걸기"
+          : _owner._recognitionDisplayText.Value;
       public Sprite DisplayIcon => null;
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;
 
       public bool CanInteract(Transform interactor)
       {
-        if (!_owner._recognitionCheckActive.Value || !_owner._recognitionInteractionEnabled.Value)
+        bool microphoneFallback = _owner._recognitionMicrophoneEnabled.Value
+                                  && RecognitionCheckMicrophoneInput.IsUnavailable;
+        if (!_owner._recognitionCheckActive.Value
+            || (!_owner._recognitionInteractionEnabled.Value && !microphoneFallback))
           return false;
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
         return IsRecognitionRolePlayer(player);
       }
 
       public void Interact(Transform interactor)
-        => _owner.RequestRecognitionCheckCompletion(interactor?.GetComponentInParent<PlayerController>());
+        => _owner.RequestRecognitionCheckCompletion(
+          interactor?.GetComponentInParent<PlayerController>(),
+          microphone: false);
+    }
+
+    private sealed class PatientRecognitionMicrophoneInteract : IInteract, IInteractorConditional
+    {
+      private readonly PatientController _owner;
+      public PatientRecognitionMicrophoneInteract(PatientController owner) => _owner = owner;
+      public string DisplayText => "마이크 다시 사용하기";
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => true;
+      public Color DisplayColor => Color.white;
+
+      public bool CanInteract(Transform interactor)
+      {
+        if (!_owner._recognitionCheckActive.Value
+            || !_owner._recognitionMicrophoneEnabled.Value
+            || !RecognitionCheckMicrophoneInput.IsUnavailable)
+          return false;
+        var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+        return IsRecognitionRolePlayer(player);
+      }
+
+      public void Interact(Transform interactor)
+      {
+        var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+        if (!IsRecognitionRolePlayer(player))
+          return;
+        RecognitionCheckMicrophoneInput.Retry(_owner.OnRecognitionMicrophoneRetryCompleted);
+      }
     }
 
     private readonly SyncVar<bool> _recognitionCheckActive = new(false);
@@ -44,23 +84,88 @@ namespace TriageTrainer.Entity
     private readonly SyncVar<bool> _recognitionMicrophoneEnabled = new(false);
     private readonly SyncVar<string> _recognitionCompletionSignal = new(string.Empty);
     private readonly SyncVar<string> _recognitionDisplayText = new("말 걸기");
+    private RecognitionCheckMicrophoneInput.Availability _lastReportedMicrophoneAvailability =
+      RecognitionCheckMicrophoneInput.Availability.Ready;
 
-    private void AddRecognitionCheckInteract() => _interacts.Add(new PatientRecognitionCheckInteract(this));
+    private void AddRecognitionCheckInteract()
+    {
+      _interacts.Add(new PatientRecognitionCheckInteract(this));
+      _interacts.Add(new PatientRecognitionMicrophoneInteract(this));
+    }
 
     private void InitializeRecognitionCheckSync()
     {
       _recognitionCheckActive.OnChange += OnRecognitionCheckActiveChanged;
+      RecognitionCheckMicrophoneInput.AvailabilityChanged += OnRecognitionMicrophoneAvailabilityChanged;
       RefreshRecognitionMicrophoneMonitoring();
     }
 
     private void TeardownRecognitionCheckSync()
     {
       _recognitionCheckActive.OnChange -= OnRecognitionCheckActiveChanged;
+      RecognitionCheckMicrophoneInput.AvailabilityChanged -= OnRecognitionMicrophoneAvailabilityChanged;
       RecognitionCheckMicrophoneInput.StopMonitoring(this);
     }
 
     private void OnRecognitionCheckActiveChanged(bool previous, bool next, bool asServer)
-      => RefreshRecognitionMicrophoneMonitoring();
+    {
+      if (!next)
+        _lastReportedMicrophoneAvailability = RecognitionCheckMicrophoneInput.Availability.Ready;
+      RefreshRecognitionMicrophoneMonitoring();
+      OnRecognitionMicrophoneAvailabilityChanged();
+    }
+
+    private void OnRecognitionMicrophoneAvailabilityChanged()
+    {
+      RefreshRecognitionInteractableHints();
+      if (!_recognitionCheckActive.Value || !_recognitionMicrophoneEnabled.Value)
+        return;
+
+      var availability = RecognitionCheckMicrophoneInput.CurrentAvailability;
+      if (!RecognitionCheckMicrophoneInput.IsUnavailableState(availability)
+          || availability == _lastReportedMicrophoneAvailability)
+        return;
+
+      ShowRecognitionMicrophoneGuidance(availability, false);
+    }
+
+    private static void RefreshRecognitionInteractableHints()
+    {
+      var players = UnityEngine.Object.FindObjectsByType<PlayerController>(
+        FindObjectsInactive.Exclude,
+        FindObjectsSortMode.None);
+      foreach (var player in players)
+      {
+        if (player != null && player.IsOwner)
+          player.RefreshInteractableHintsNow();
+      }
+    }
+
+    private void OnRecognitionMicrophoneRetryCompleted(RecognitionCheckMicrophoneInput.Availability availability)
+    {
+      if (!RecognitionCheckMicrophoneInput.IsUnavailableState(availability))
+        return;
+
+      ShowRecognitionMicrophoneGuidance(availability, true);
+    }
+
+    private void ShowRecognitionMicrophoneGuidance(
+      RecognitionCheckMicrophoneInput.Availability availability,
+      bool force)
+    {
+      if (!force && availability == _lastReportedMicrophoneAvailability)
+        return;
+      _lastReportedMicrophoneAvailability = availability;
+      string guidance = RecognitionCheckMicrophoneInput.GetUnavailableGuidance(availability);
+      if (string.IsNullOrWhiteSpace(guidance))
+        return;
+      if (_chatUI == null)
+        _chatUI = Registry.Get<ChatUIController>(RegistryType.UI, Registry.TypeKey<ChatUIController>());
+      if (_chatUI != null)
+        _chatUI.AppendMessage($"<color=#FFD700>[System]</color> {guidance}", true);
+      else
+        Debug.LogWarning($"[PatientController] {guidance}", this);
+    }
 
     private void RefreshRecognitionMicrophoneMonitoring()
     {
@@ -106,12 +211,9 @@ namespace TriageTrainer.Entity
         return;
 
       bool mic = allowMicrophone && ScenarioGameRules.UseMicInRecognitionCheck;
-      bool interaction = !ScenarioGameRules.DisableInteractionInRecognitionCheck;
-      if (!mic && !interaction)
-      {
-        Debug.LogError("[PatientController] Recognition check has no enabled input path.", this);
-        return;
-      }
+      bool interaction = ShouldEnableRecognitionInteraction(
+        mic,
+        ScenarioGameRules.DisableInteractionInRecognitionCheck);
 
       _recognitionCompletionSignal.Value = completionSignal?.Trim() ?? string.Empty;
       _recognitionDisplayText.Value = string.IsNullOrWhiteSpace(displayText) ? "말 걸기" : displayText.Trim();
@@ -121,62 +223,101 @@ namespace TriageTrainer.Entity
       RefreshRecognitionMicrophoneMonitoring();
     }
 
-    internal void RequestRecognitionCheckCompletion(PlayerController requester = null)
+    private static bool ShouldEnableRecognitionInteraction(bool microphoneEnabled, bool interactionDisabled)
+      => !microphoneEnabled || !interactionDisabled;
+
+    internal void RequestRecognitionCheckCompletion(PlayerController requester = null, bool microphone = false)
     {
       if (IsServerStarted || InstanceFinder.IsOffline)
       {
-        if (!InstanceFinder.IsOffline)
+        if (!InstanceFinder.IsOffline && !IsRecognitionRolePlayer(requester))
         {
-          string requesterIdentifier = requester?.UserIdentifier;
-          if (string.IsNullOrWhiteSpace(requesterIdentifier))
-          {
-            var local = InstanceFinder.ClientManager?.Connection;
-            if (local != null
-                && UserDescriptorService.TryGetByClientId(local.ClientId, out var descriptor)
-                && descriptor != null)
-              requesterIdentifier = descriptor.Identifier;
-          }
-
-          if (!IsRecognitionRoleIdentifier(requesterIdentifier))
-          {
-            Debug.LogWarning("[PatientController] Rejected recognition completion from a player without nurse_a.", this);
-            return;
-          }
+          Debug.LogWarning("[PatientController] Rejected recognition completion from a player without nurse_a.", this);
+          return;
         }
 
-        CompleteRecognitionCheckAuthoritative();
+        TryCompleteRecognitionCheckAuthoritative(requester, microphone);
         return;
       }
 
       if (IsClientInitialized)
-        CmdCompleteRecognitionCheck();
+        CmdCompleteRecognitionCheck(microphone);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void CmdCompleteRecognitionCheck(NetworkConnection sender = null)
+    private void CmdCompleteRecognitionCheck(bool microphone, NetworkConnection sender = null)
     {
-      if (sender == null
-          || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
-          || descriptor == null
-          || !IsRecognitionRoleIdentifier(descriptor.Identifier))
+      if (!TryResolveRecognitionPlayer(sender, out var requester)
+          || !IsRecognitionRolePlayer(requester))
       {
         Debug.LogWarning("[PatientController] Rejected recognition completion RPC from a player without nurse_a.", this);
         return;
       }
 
-      CompleteRecognitionCheckAuthoritative();
+      TryCompleteRecognitionCheckAuthoritative(requester, microphone);
     }
 
-    private void CompleteRecognitionCheckAuthoritative()
+    private static bool TryResolveRecognitionPlayer(NetworkConnection sender, out PlayerController player)
     {
-      if (!_recognitionCheckActive.Value)
-        return;
+      player = null;
+      if (sender == null || !sender.IsValid
+          || !Registry.TryGetEntityByClientId(sender.ClientId, out var descriptor)
+          || descriptor?.GameObject == null)
+        return false;
+
+      player = descriptor.GameObject.GetComponent<PlayerController>()
+               ?? descriptor.GameObject.GetComponentInChildren<PlayerController>(true);
+      return player != null
+             && player.Owner != null
+             && player.Owner.IsValid
+             && player.Owner.ClientId == sender.ClientId;
+    }
+
+    private bool TryCompleteRecognitionCheckAuthoritative(PlayerController requester, bool microphone)
+    {
+      if (!CanCompleteRecognitionCheck(requester, microphone))
+      {
+        Debug.LogWarning("[PatientController] Rejected unavailable or remote recognition completion.", this);
+        return false;
+      }
 
       string signal = _recognitionCompletionSignal.Value;
       _recognitionCheckActive.Value = false;
       RefreshRecognitionMicrophoneMonitoring();
+      if (string.Equals(signal, $"{Identifier}_pupil_checked", StringComparison.Ordinal))
+        NotifyPatientBCPupilCompleted();
       if (!string.IsNullOrWhiteSpace(signal))
         ScenarioInteractionSignals.Raise(signal);
+      return true;
+    }
+
+    private bool CanCompleteRecognitionCheck(PlayerController requester, bool microphone)
+    {
+      if (!_recognitionCheckActive.Value
+          || !isActiveAndEnabled
+          || !gameObject.activeInHierarchy
+          || _capsuleCollider == null
+          || !_capsuleCollider.enabled
+          || (microphone
+            ? !_recognitionMicrophoneEnabled.Value
+            : !_recognitionInteractionEnabled.Value
+              && !_recognitionMicrophoneEnabled.Value))
+        return false;
+
+      return InstanceFinder.IsOffline
+        ? requester == null || IsWithinRecognitionInteractionDistance(requester)
+        : requester != null && IsWithinRecognitionInteractionDistance(requester);
+    }
+
+    private bool IsWithinRecognitionInteractionDistance(PlayerController requester)
+    {
+      if (requester == null || !requester.isActiveAndEnabled || !requester.gameObject.activeInHierarchy)
+        return false;
+
+      Vector3 detectionPosition = requester.transform.position + RecognitionInteractionOffset;
+      Vector3 closestPoint = _capsuleCollider.ClosestPoint(detectionPosition);
+      return (closestPoint - detectionPosition).sqrMagnitude
+             <= RecognitionInteractionDistance * RecognitionInteractionDistance;
     }
   }
 }

@@ -171,9 +171,8 @@ namespace TriageTrainer.Entity.IntravenousLine
         if (controller == null)
           return;
 
-        controller.DisconnectFromPoint(_owner);
-
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+        controller.DisconnectFromPoint(_owner, player);
         player?.RefreshInteractableHintsNow();
       }
     }
@@ -429,6 +428,9 @@ namespace TriageTrainer.Entity.IntravenousLine
     public override void NotifyLineConnected(LineConnectionPoint other) =>
       NotifyConnected(other as IntravenousLineConnectionPoint);
 
+    public override void NotifyReplicatedLineConnected(LineConnectionPoint other) =>
+      OnConnected?.Invoke(this, other as IntravenousLineConnectionPoint);
+
     /// <summary>
     /// 줄 하나의 연결 끊김을 알린다. C# 이벤트를 발화하고, 인게임 서버에 이 지점
     /// Identifier 와 함께 "연결 끊김" 시그널을 올린다. 끊긴 줄마다 호출되며,
@@ -439,10 +441,21 @@ namespace TriageTrainer.Entity.IntravenousLine
     {
       OnDisconnected?.Invoke(this, other);
       RaiseSignalWithIdentifier(DisconnectedSignalPrefix);
+      if (IsNormalSalineConnectionPair(other))
+      {
+        var patient = ResolveConnectionPatient(other);
+        var salinePoint = string.Equals(_identifier, "connect_cannula_and_ns1", StringComparison.Ordinal)
+          ? this
+          : other;
+        patient?.NotifyPatientBCNormalSalineDisconnected(salinePoint);
+      }
     }
 
     public override void NotifyLineDisconnected(LineConnectionPoint other) =>
       NotifyDisconnected(other as IntravenousLineConnectionPoint);
+
+    public override void NotifyReplicatedLineDisconnected(LineConnectionPoint other) =>
+      OnDisconnected?.Invoke(this, other as IntravenousLineConnectionPoint);
 
     public override void NotifyConnectionCompleted(LineConnectionPoint other)
     {
@@ -450,6 +463,17 @@ namespace TriageTrainer.Entity.IntravenousLine
         return;
 
       RaiseConnectionSignals(otherPoint);
+    }
+
+    public override bool CanPlayerCompleteConnection(PlayerController player, LineConnectionPoint other)
+    {
+      if (other is not IntravenousLineConnectionPoint otherPoint)
+        return false;
+      if (!IsNormalSalineConnectionPair(otherPoint))
+        return true;
+
+      var patient = ResolveConnectionPatient(otherPoint);
+      return patient == null || patient.CanPlayerCompletePatientBCNormalSalineConnection(player);
     }
 
     private void RaiseSignalWithIdentifier(string signalPrefix)
@@ -463,15 +487,59 @@ namespace TriageTrainer.Entity.IntravenousLine
     private void RaiseConnectionSignals(IntravenousLineConnectionPoint other)
     {
       string otherIdentifier = other != null ? other.Identifier : null;
+      bool normalSalineHandledByPatient = TryCompletePatientScopedNormalSalineConnection(other);
 
-      if (!string.IsNullOrWhiteSpace(otherIdentifier))
+      if (!string.IsNullOrWhiteSpace(otherIdentifier)
+          && !(normalSalineHandledByPatient && string.Equals(otherIdentifier,
+            "connect_cannula_and_ns1", StringComparison.Ordinal)))
         MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(otherIdentifier);
 
-      if (!string.IsNullOrWhiteSpace(_identifier))
+      if (!string.IsNullOrWhiteSpace(_identifier)
+          && !(normalSalineHandledByPatient && string.Equals(_identifier,
+            "connect_cannula_and_ns1", StringComparison.Ordinal)))
         MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(_identifier);
 
       if (!string.IsNullOrWhiteSpace(_identifier) && !string.IsNullOrWhiteSpace(otherIdentifier))
         MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise($"{_identifier}__{otherIdentifier}");
+    }
+
+    private bool TryCompletePatientScopedNormalSalineConnection(IntravenousLineConnectionPoint other)
+    {
+      if (!IsNormalSalineConnectionPair(other))
+        return false;
+
+      PatientController patient = ResolveConnectionPatient(other);
+
+      string patientIdentifier = patient?.Identifier;
+      if (string.Equals(patientIdentifier, "patient_b", StringComparison.Ordinal)
+          || string.Equals(patientIdentifier, "patient_c", StringComparison.Ordinal))
+      {
+        var salinePoint = string.Equals(_identifier, "connect_cannula_and_ns1", StringComparison.Ordinal)
+          ? this
+          : other;
+        patient.TryCompletePatientBCNormalSalineConnection(salinePoint);
+        return true;
+      }
+
+      return false;
+    }
+
+    private bool IsNormalSalineConnectionPair(IntravenousLineConnectionPoint other) =>
+      string.Equals(_identifier, "connect_cannula_and_ns1", StringComparison.Ordinal)
+      || string.Equals(other?.Identifier, "connect_cannula_and_ns1", StringComparison.Ordinal);
+
+    private PatientController ResolveConnectionPatient(IntravenousLineConnectionPoint other)
+    {
+      PatientController patient = GetComponentInParent<PatientController>();
+      if (patient == null && other != null)
+        patient = other.GetComponentInParent<PatientController>();
+      if (patient != null)
+        return patient;
+
+      var bed = GetComponentInParent<MovingPatientBedController>();
+      if (bed == null && other != null)
+        bed = other.GetComponentInParent<MovingPatientBedController>();
+      return bed?.ReposedTarget as PatientController;
     }
 
     public override void ApplyLineMaterial(LineRenderer lineRenderer)

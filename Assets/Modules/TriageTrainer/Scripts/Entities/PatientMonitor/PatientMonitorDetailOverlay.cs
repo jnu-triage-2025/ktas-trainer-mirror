@@ -19,6 +19,7 @@ namespace TriageTrainer.Entity.PatientMonitor
     private readonly UIDocument _document;
     private object _owner;
     private Action _restoreContent;
+    private Action _closed;
 
     private PatientMonitorDetailOverlay(PanelSettings panelSettings)
     {
@@ -30,7 +31,10 @@ namespace TriageTrainer.Entity.PatientMonitor
       SetDocumentVisible(false);
     }
 
-    public static bool Open(object owner, IReadOnlyList<VisualElement> contents, Action restoreContent)
+    public static bool Open(object owner,
+      IReadOnlyList<VisualElement> contents,
+      Action restoreContent,
+      Action closed = null)
     {
       if (owner == null || contents == null || contents.Count == 0)
         return false;
@@ -42,7 +46,7 @@ namespace TriageTrainer.Entity.PatientMonitor
         return false;
       }
 
-      return overlay.Show(owner, contents, restoreContent);
+      return overlay.Show(owner, contents, restoreContent, closed);
     }
 
     public static void Close(object owner)
@@ -87,18 +91,23 @@ namespace TriageTrainer.Entity.PatientMonitor
       return null;
     }
 
-    private bool Show(object owner, IReadOnlyList<VisualElement> contents, Action restoreContent)
+    private bool Show(object owner,
+      IReadOnlyList<VisualElement> contents,
+      Action restoreContent,
+      Action closed)
     {
       if (_owner != null)
         Close(_owner);
 
       _owner = owner;
       _restoreContent = restoreContent;
+      _closed = closed;
       var root = _document.rootVisualElement;
       if (root == null)
       {
         _owner = null;
         _restoreContent = null;
+        _closed = null;
         Debug.LogError("[PatientMonitorDetailOverlay] UIDocument rootVisualElement를 준비하지 못했습니다.");
         return false;
       }
@@ -172,10 +181,13 @@ namespace TriageTrainer.Entity.PatientMonitor
     public void OnOverlayPopped()
     {
       var restore = _restoreContent;
+      var closed = _closed;
       _owner = null;
       _restoreContent = null;
+      _closed = null;
       SetDocumentVisible(false);
       restore?.Invoke();
+      closed?.Invoke();
       OverlayPopped?.Invoke();
     }
 

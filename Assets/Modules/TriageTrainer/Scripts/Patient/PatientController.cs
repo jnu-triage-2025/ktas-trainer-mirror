@@ -92,7 +92,7 @@ namespace TriageTrainer.Entity
       if (string.IsNullOrWhiteSpace(itemIdentifier))
         return false;
 
-      return ApplyItemUse(itemIdentifier);
+      return ApplyAndConsumeItemUse(user, itemIdentifier);
     }
 
     public bool TryAttachCurrentHandlingItem(MI.Entity.Entity actorEntity)
@@ -110,10 +110,36 @@ namespace TriageTrainer.Entity
         if (string.IsNullOrWhiteSpace(itemIdentifier))
           return false;
 
-        return ApplyItemUse(itemIdentifier);
+        return ApplyAndConsumeItemUse(actorEntity, itemIdentifier);
       }
 
       return false;
+    }
+
+    private bool ApplyAndConsumeItemUse(MI.Entity.Entity user, string itemIdentifier)
+    {
+      PlayerController sourcePlayer = null;
+      var players = FindObjectsByType<PlayerController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      foreach (var player in players)
+      {
+        if (player != null && ReferenceEquals(player.PlayerEntity, user))
+        {
+          sourcePlayer = player;
+          break;
+        }
+      }
+
+      // Debug/tests can apply without a player. Real player use must own the item.
+      if (sourcePlayer != null && sourcePlayer.CountItemInInventory(itemIdentifier) < 1)
+        return false;
+
+      if (IsPatientBC && IsClientInitialized && !IsServerStarted)
+        return ApplyItemUse(itemIdentifier);
+
+      if (!ApplyItemUse(itemIdentifier))
+        return false;
+
+      return sourcePlayer == null || sourcePlayer.RemoveItemFromInventory(itemIdentifier, 1) == 1;
     }
 
     public void SetCurrentBed(MovingPatientBedController bed)

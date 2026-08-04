@@ -18,6 +18,29 @@
         "minLength": 1
       }
     },
+    "activeRoleTags": {
+      "type": ["array", "null"],
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true,
+      "description": "Declared player role tags used to build the server-authoritative active roster."
+    },
+    "skipAbsentRoleBranches": {
+      "type": ["boolean", "null"],
+      "default": false,
+      "description": "Allows ByRole branches for declared roles absent from the active roster to be skipped."
+    },
+    "clientSignalIdentifiers": {
+      "type": ["array", "null"],
+      "items": { "type": "string", "minLength": 1, "pattern": "^sig\\.\\S+$" },
+      "uniqueItems": true,
+      "description": "Exact generic scenario signals that an authenticated client may report. Omitted or empty denies generic client raises unless an audited legacy migration applies."
+    },
+    "clientSignalPrefixes": {
+      "type": ["array", "null"],
+      "items": { "type": "string", "minLength": 5, "pattern": "^sig\\.\\S+$" },
+      "uniqueItems": true,
+      "description": "Explicit generic client signal namespaces. Prefix authorization is not inferred from validators or counters."
+    },
     "questDefinitionIncludes": {
       "type": [
         "array",
@@ -1880,6 +1903,10 @@
               ],
               "minimum": 1,
               "default": 1
+            },
+            "useActiveRoleRosterThreshold": {
+              "type": ["boolean", "null"],
+              "default": false
             },
             "outputSignalIdentifier": {
               "type": [

@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Generic;
+using FishNet;
+using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.Session;
+using MultiplayerInfrastructure.Tag;
 using TriageTrainer.Entity.AEDLine;
 using TriageTrainer.Entity.OxyLine;
 using TriageTrainer.Entity.SuctionLine;
@@ -19,6 +24,18 @@ namespace TriageTrainer.Entity.LineConnection
     {
       public PlayerController Player;
       public LineConnectionPoint StartPoint;
+    }
+
+    private readonly struct ActiveConnectionPair
+    {
+      public ActiveConnectionPair(LineConnectionPoint first, LineConnectionPoint second)
+      {
+        First = first;
+        Second = second;
+      }
+
+      public LineConnectionPoint First { get; }
+      public LineConnectionPoint Second { get; }
     }
 
     [Header("Hierarchy")]
@@ -55,6 +72,9 @@ namespace TriageTrainer.Entity.LineConnection
     [SerializeField] private QueryTriggerInteraction _triggerInteraction = QueryTriggerInteraction.Ignore;
 
     private readonly Dictionary<int, PendingConnectionContext> _pendingConnections = new();
+    private readonly List<ActiveConnectionPair> _activeAuthoritativePairs = new();
+    private readonly List<ActiveConnectionPair> _snapshotStalePairs = new();
+    private bool _applyingReplicatedSnapshot;
 
     private void Awake()
     {
@@ -154,6 +174,22 @@ namespace TriageTrainer.Entity.LineConnection
       if (!CanConnectBetweenDifferentOwners(startPoint, endPoint, out _))
         return false;
 
+      if (!startPoint.CanPlayerCompleteConnection(player, endPoint)
+          || !endPoint.CanPlayerCompleteConnection(player, startPoint))
+        return false;
+
+      if (!InstanceFinder.IsOffline)
+      {
+        if (IsServerFor(player))
+          TryCompleteConnectionOnServer(startPoint, endPoint, player.Owner);
+        else
+          endPoint.RequestAuthoritativeConnection(startPoint);
+        ClearPendingFor(player);
+        player.SetLineConnectionMode(false, false);
+        player.RefreshInteractableHintsNow();
+        return true;
+      }
+
       if (!startPoint.TryConsumeConnectionRequirement(player))
       {
         player.SetLineConnectionMode(false, false);
@@ -162,8 +198,7 @@ namespace TriageTrainer.Entity.LineConnection
         return false;
       }
 
-      var lineObject = CreateLineObject(startPoint, endPoint);
-      if (lineObject == null)
+      if (!CreateAndRegisterConnection(startPoint, endPoint))
       {
         player.SetLineConnectionMode(false, false);
         ClearPendingFor(player);
@@ -171,16 +206,99 @@ namespace TriageTrainer.Entity.LineConnection
         return false;
       }
 
-      startPoint.RegisterConnectedLineObject(lineObject);
-      endPoint.RegisterConnectedLineObject(lineObject);
-
-      startPoint.NotifyConnectionCompleted(endPoint);
-      startPoint.NotifyLineConnected(endPoint);
-      endPoint.NotifyLineConnected(startPoint);
+      using (ScenarioSignalPlayerContext.Push(player.Owner))
+      {
+        startPoint.NotifyConnectionCompleted(endPoint);
+        startPoint.NotifyLineConnected(endPoint);
+        endPoint.NotifyLineConnected(startPoint);
+      }
 
       ClearPendingFor(player);
       player.SetLineConnectionMode(false, false);
       player.RefreshInteractableHintsNow();
+      return true;
+    }
+
+    internal bool TryCompleteConnectionOnServer(
+      LineConnectionPoint startPoint,
+      LineConnectionPoint endPoint,
+      NetworkConnection sender)
+    {
+      if (!TryResolveSenderPlayer(sender, out var player)
+          || !ValidateAuthoritativeConnection(player, startPoint, endPoint, sender, out _)
+          || !startPoint.TryConsumeConnectionRequirement(player)
+          || !CreateAndRegisterConnection(startPoint, endPoint))
+        return false;
+
+      AddAuthoritativePair(startPoint, endPoint);
+
+      using (ScenarioSignalPlayerContext.Push(sender))
+      {
+        startPoint.NotifyConnectionCompleted(endPoint);
+        startPoint.NotifyLineConnected(endPoint);
+        endPoint.NotifyLineConnected(startPoint);
+      }
+
+      endPoint.BroadcastAuthoritativeConnection(startPoint);
+      return true;
+    }
+
+    internal bool ValidateAuthoritativeConnection(
+      PlayerController player,
+      LineConnectionPoint startPoint,
+      LineConnectionPoint endPoint,
+      NetworkConnection sender,
+      out string reason)
+    {
+      reason = string.Empty;
+      if (player == null || startPoint == null || endPoint == null || ReferenceEquals(startPoint, endPoint))
+      {
+        reason = "missing or identical connection endpoint";
+        return false;
+      }
+      if (!startPoint.IsSpawned || !endPoint.IsSpawned)
+      {
+        reason = "endpoint is not server-spawned";
+        return false;
+      }
+      if (!startPoint.CanAcceptAdditionalConnection || !endPoint.CanAcceptAdditionalConnection
+          || !startPoint.CanConnectTo(endPoint) || !endPoint.CanConnectTo(startPoint)
+          || !CanConnectBetweenDifferentOwners(startPoint, endPoint, out reason))
+        return false;
+      if (!IsWithinConnectionDistance(player, startPoint)
+          || !IsWithinConnectionDistance(player, endPoint))
+      {
+        reason = "player is too far from an endpoint";
+        return false;
+      }
+      if (!startPoint.CanPlayerCompleteConnection(player, endPoint)
+          || !endPoint.CanPlayerCompleteConnection(player, startPoint))
+      {
+        reason = "endpoint rejected player";
+        return false;
+      }
+
+      if (!TryResolvePatientBCNormalSalineContext(startPoint, endPoint, out var patient, out var salinePoint))
+        return true;
+      if (!IsExactPatientNormalSalineEndpointPair(patient, salinePoint, startPoint, endPoint))
+      {
+        reason = "saline endpoint is not connected to the exact patient IV endpoint";
+        return false;
+      }
+      if (sender == null || !sender.IsValid
+          || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
+          || descriptor == null
+          || string.IsNullOrWhiteSpace(descriptor.Identifier)
+          || !PlayerTagService.HasTag(descriptor.Identifier, "nurse_c"))
+      {
+        reason = "sender is not nurse_c";
+        return false;
+      }
+      if (!patient.CanAuthoritativelyConnectPatientBCNormalSaline())
+      {
+        reason = "patient is not awaiting IV or normal saline";
+        return false;
+      }
       return true;
     }
 
@@ -195,10 +313,16 @@ namespace TriageTrainer.Entity.LineConnection
       player.RefreshInteractableHintsNow();
     }
 
-    public void DisconnectFromPoint(LineConnectionPoint point)
+    public void DisconnectFromPoint(LineConnectionPoint point, PlayerController player = null)
     {
       if (point == null)
         return;
+
+      if (!InstanceFinder.IsOffline)
+      {
+        point.RequestAuthoritativeDisconnect(player);
+        return;
+      }
 
       bool destroyedAny = false;
       while (point.TryGetAnyConnectedLineObject(out var each) && each != null)
@@ -214,6 +338,181 @@ namespace TriageTrainer.Entity.LineConnection
           players[i]?.RefreshInteractableHintsNow();
       }
     }
+
+    internal bool DisconnectFromPointOnServer(LineConnectionPoint point, NetworkConnection sender)
+    {
+      if (point == null || !TryResolveSenderPlayer(sender, out var player)
+          || !IsWithinConnectionDistance(player, point))
+        return false;
+
+      bool destroyedAny = false;
+      while (point.TryGetAnyConnectedLineObject(out var lineObject) && lineObject != null)
+      {
+        if (!lineObject.TryGetComponent<LineConnectionRuntime>(out var runtime)
+            || runtime == null)
+          break;
+        var other = ReferenceEquals(runtime.StartPoint, point) ? runtime.EndPoint : runtime.StartPoint;
+        RemoveAuthoritativePair(point, other);
+        DestroyLineObject(lineObject);
+        point.BroadcastAuthoritativeDisconnect(other);
+        destroyedAny = true;
+      }
+      return destroyedAny;
+    }
+
+    internal void ReplayAuthoritativeTopologySnapshot(
+      LineConnectionPoint rpcAnchor,
+      NetworkConnection target)
+    {
+      if (rpcAnchor == null || target == null || !target.IsValid)
+        return;
+
+      PruneInvalidAuthoritativePairs();
+      rpcAnchor.SendTopologySnapshotBegin(target);
+      for (int i = 0; i < _activeAuthoritativePairs.Count; i++)
+      {
+        var pair = _activeAuthoritativePairs[i];
+        rpcAnchor.SendTopologySnapshotPair(target, pair.First, pair.Second);
+      }
+      rpcAnchor.SendTopologySnapshotEnd(target);
+    }
+
+    public void BeginReplicatedTopologySnapshot()
+    {
+      _applyingReplicatedSnapshot = true;
+      _snapshotStalePairs.Clear();
+      EnsureLinesRoot();
+      if (_linesRoot == null)
+        return;
+      var runtimes = _linesRoot.GetComponentsInChildren<LineConnectionRuntime>(true);
+      for (int i = 0; i < runtimes.Length; i++)
+      {
+        var runtime = runtimes[i];
+        if (runtime != null && runtime.StartPoint != null && runtime.EndPoint != null)
+          _snapshotStalePairs.Add(new ActiveConnectionPair(runtime.StartPoint, runtime.EndPoint));
+      }
+    }
+
+    public bool ApplyReplicatedSnapshotPair(
+      LineConnectionPoint first,
+      LineConnectionPoint second)
+    {
+      if (!_applyingReplicatedSnapshot)
+        return false;
+      RemovePairFromList(_snapshotStalePairs, first, second);
+      return ApplyReplicatedConnection(first, second);
+    }
+
+    public void EndReplicatedTopologySnapshot()
+    {
+      for (int i = 0; i < _snapshotStalePairs.Count; i++)
+      {
+        var pair = _snapshotStalePairs[i];
+        ApplyReplicatedDisconnect(pair.First, pair.Second);
+      }
+      _snapshotStalePairs.Clear();
+      _applyingReplicatedSnapshot = false;
+    }
+
+    public bool ApplyReplicatedConnection(LineConnectionPoint first, LineConnectionPoint second)
+    {
+      if (first == null || second == null || first.IsPhysicallyConnectedTo(second))
+        return false;
+      if (!CreateAndRegisterConnection(first, second))
+        return false;
+      first.NotifyReplicatedLineConnected(second);
+      second.NotifyReplicatedLineConnected(first);
+      return true;
+    }
+
+    public bool ApplyReplicatedDisconnect(LineConnectionPoint first, LineConnectionPoint second)
+    {
+      if (first == null || second == null)
+        return false;
+      if (!first.TryGetConnectedLineObjectTo(second, out var lineObject))
+        return false;
+      DestroyLineObject(lineObject, notifyEndpoints: false);
+      first.NotifyReplicatedLineDisconnected(second);
+      second.NotifyReplicatedLineDisconnected(first);
+      return true;
+    }
+
+    public bool CreateAndRegisterConnection(LineConnectionPoint startPoint, LineConnectionPoint endPoint)
+    {
+      if (startPoint == null || endPoint == null || startPoint.IsPhysicallyConnectedTo(endPoint))
+        return false;
+      var lineObject = CreateLineObject(startPoint, endPoint);
+      if (lineObject == null)
+        return false;
+      startPoint.RegisterConnectedLineObject(lineObject);
+      endPoint.RegisterConnectedLineObject(lineObject);
+      return true;
+    }
+
+    public int ActiveAuthoritativePairCount
+    {
+      get
+      {
+        PruneInvalidAuthoritativePairs();
+        return _activeAuthoritativePairs.Count;
+      }
+    }
+
+    public bool AddAuthoritativePair(LineConnectionPoint first, LineConnectionPoint second)
+    {
+      if (first == null || second == null || ReferenceEquals(first, second)
+          || ContainsAuthoritativePair(first, second))
+        return false;
+      _activeAuthoritativePairs.Add(new ActiveConnectionPair(first, second));
+      return true;
+    }
+
+    public bool RemoveAuthoritativePair(LineConnectionPoint first, LineConnectionPoint second)
+    {
+      return RemovePairFromList(_activeAuthoritativePairs, first, second);
+    }
+
+    private static bool RemovePairFromList(
+      List<ActiveConnectionPair> pairs,
+      LineConnectionPoint first,
+      LineConnectionPoint second)
+    {
+      for (int i = pairs.Count - 1; i >= 0; i--)
+      {
+        var pair = pairs[i];
+        if ((ReferenceEquals(pair.First, first) && ReferenceEquals(pair.Second, second))
+            || (ReferenceEquals(pair.First, second) && ReferenceEquals(pair.Second, first)))
+        {
+          pairs.RemoveAt(i);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    public bool ContainsAuthoritativePair(LineConnectionPoint first, LineConnectionPoint second)
+    {
+      for (int i = 0; i < _activeAuthoritativePairs.Count; i++)
+      {
+        var pair = _activeAuthoritativePairs[i];
+        if ((ReferenceEquals(pair.First, first) && ReferenceEquals(pair.Second, second))
+            || (ReferenceEquals(pair.First, second) && ReferenceEquals(pair.Second, first)))
+          return true;
+      }
+      return false;
+    }
+
+    private void PruneInvalidAuthoritativePairs()
+    {
+      for (int i = _activeAuthoritativePairs.Count - 1; i >= 0; i--)
+      {
+        var pair = _activeAuthoritativePairs[i];
+        if (pair.First == null || pair.Second == null
+            || !pair.First.IsPhysicallyConnectedTo(pair.Second))
+          _activeAuthoritativePairs.RemoveAt(i);
+      }
+    }
+
 
     private GameObject CreateLineObject(LineConnectionPoint startPoint, LineConnectionPoint endPoint)
     {
@@ -267,7 +566,7 @@ namespace TriageTrainer.Entity.LineConnection
       return lineObject;
     }
 
-    private void DestroyLineObject(GameObject lineObject)
+    private void DestroyLineObject(GameObject lineObject, bool notifyEndpoints = true)
     {
       if (lineObject == null)
         return;
@@ -286,8 +585,11 @@ namespace TriageTrainer.Entity.LineConnection
 
       Destroy(lineObject);
 
-      startPoint?.NotifyLineDisconnected(endPoint);
-      endPoint?.NotifyLineDisconnected(startPoint);
+      if (notifyEndpoints)
+      {
+        startPoint?.NotifyLineDisconnected(endPoint);
+        endPoint?.NotifyLineDisconnected(startPoint);
+      }
     }
 
     private void EnsureLinesRoot()
@@ -373,6 +675,60 @@ namespace TriageTrainer.Entity.LineConnection
 
       return true;
     }
+
+    private static bool IsServerFor(PlayerController player) =>
+      player != null && player.IsServerStarted;
+
+    private static bool IsWithinConnectionDistance(PlayerController player, LineConnectionPoint point) =>
+      player != null && point != null
+      && (player.transform.position - point.transform.position).sqrMagnitude <= 9f;
+
+    private static bool TryResolveSenderPlayer(NetworkConnection sender, out PlayerController player)
+    {
+      player = null;
+      if (sender == null || !sender.IsValid
+          || !MultiplayerInfrastructure.Registry.Registry.TryGetEntityByClientId(sender.ClientId, out var entity)
+          || entity?.GameObject == null)
+        return false;
+      player = entity.GameObject.GetComponent<PlayerController>()
+               ?? entity.GameObject.GetComponentInChildren<PlayerController>(true);
+      return player != null && player.Owner != null && player.Owner.IsValid
+             && player.Owner.ClientId == sender.ClientId;
+    }
+
+    private static bool TryResolvePatientBCNormalSalineContext(
+      LineConnectionPoint startPoint,
+      LineConnectionPoint endPoint,
+      out TriageTrainer.Entity.PatientController patient,
+      out IntravenousLineConnectionPoint salinePoint)
+    {
+      patient = startPoint.GetComponentInParent<TriageTrainer.Entity.PatientController>()
+                ?? endPoint.GetComponentInParent<TriageTrainer.Entity.PatientController>();
+      if (patient == null)
+      {
+        var bed = startPoint.GetComponentInParent<TriageTrainer.Entity.MovingPatientBedController>()
+                  ?? endPoint.GetComponentInParent<TriageTrainer.Entity.MovingPatientBedController>();
+        patient = bed?.ReposedTarget as TriageTrainer.Entity.PatientController;
+      }
+      salinePoint = startPoint as IntravenousLineConnectionPoint;
+      if (salinePoint == null || !string.Equals(salinePoint.Identifier, "connect_cannula_and_ns1", StringComparison.Ordinal))
+        salinePoint = endPoint as IntravenousLineConnectionPoint;
+      return patient != null
+             && (string.Equals(patient.Identifier, "patient_b", StringComparison.Ordinal)
+                 || string.Equals(patient.Identifier, "patient_c", StringComparison.Ordinal))
+             && salinePoint != null
+             && string.Equals(salinePoint.Identifier, "connect_cannula_and_ns1", StringComparison.Ordinal);
+    }
+
+    public static bool IsExactPatientNormalSalineEndpointPair(
+      TriageTrainer.Entity.PatientController patient,
+      IntravenousLineConnectionPoint salinePoint,
+      LineConnectionPoint startPoint,
+      LineConnectionPoint endPoint) =>
+      patient != null && salinePoint != null
+      && !ReferenceEquals(startPoint, endPoint)
+      && ((ReferenceEquals(startPoint, salinePoint) && ReferenceEquals(endPoint, patient.IvAttachmentPoint))
+          || (ReferenceEquals(endPoint, salinePoint) && ReferenceEquals(startPoint, patient.IvAttachmentPoint)));
 
     private void ApplyLineMaterial(LineConnectionPoint point, LineRenderer lineRenderer)
     {

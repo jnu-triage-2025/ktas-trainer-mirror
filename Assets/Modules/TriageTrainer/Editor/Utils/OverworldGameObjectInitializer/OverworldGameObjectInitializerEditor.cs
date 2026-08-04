@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TriageTrainer.Utils;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using TriageTrainer.Entity;
 
@@ -9,6 +10,10 @@ namespace TriageTrainer.Editor.Utils
 {
   public sealed class OverworldGameObjectInitializerEditor : EditorWindow
   {
+    private const string OverworldScenePath = "Assets/Scenes/OverworldScene.unity";
+    private const string DefaultStaticLayoutPath =
+      "Assets/Modules/TriageTrainer/ScriptableObjects/StaticEntityLayouts/OverworldPatientSupports.asset";
+
     private string buildingIdentifier = OverworldGameObjectInitializer.BuildingEnteranceIdentifier;
     private Vector3 buildingEnterance = OverworldGameObjectInitializer.DefaultBuildingEnterance;
     private string treatmentIdentifier = OverworldGameObjectInitializer.TreatmentRoomEnteranceIdentifier;
@@ -51,7 +56,36 @@ namespace TriageTrainer.Editor.Utils
       if (staticEntityLayouts.Count == 0)
       {
         staticEntityLayouts.Add(AssetDatabase.LoadAssetAtPath<StaticEntityLayoutDefinition>(
-          "Assets/Modules/TriageTrainer/ScriptableObjects/StaticEntityLayouts/OverworldPatientSupports.asset"));
+          DefaultStaticLayoutPath));
+      }
+    }
+
+    [MenuItem("Tools/Triage Trainer/Apply Default Overworld Wiring")]
+    public static void ApplyDefaultOverworldWiring()
+    {
+      if (EditorApplication.isPlaying)
+        throw new System.InvalidOperationException("Overworld wiring cannot be generated in play mode.");
+
+      var previousSetup = EditorSceneManager.GetSceneManagerSetup();
+      try
+      {
+        var scene = EditorSceneManager.OpenScene(OverworldScenePath, OpenSceneMode.Single);
+        var layout = AssetDatabase.LoadAssetAtPath<StaticEntityLayoutDefinition>(DefaultStaticLayoutPath);
+        if (layout == null)
+          throw new System.InvalidOperationException($"Missing default static layout: {DefaultStaticLayoutPath}");
+
+        OverworldGameObjectInitializer.Set();
+        OverworldGameObjectInitializer.SetStaticEntityLayouts(layout);
+        EditorSceneManager.MarkSceneDirty(scene);
+        if (!EditorSceneManager.SaveScene(scene))
+          throw new System.InvalidOperationException($"Failed to save scene: {OverworldScenePath}");
+        AssetDatabase.SaveAssets();
+        Debug.Log($"[OverworldInitializer] Saved default world wiring to {OverworldScenePath}.");
+      }
+      finally
+      {
+        if (!Application.isBatchMode)
+          EditorSceneManager.RestoreSceneManagerSetup(previousSetup);
       }
     }
 
@@ -181,7 +215,7 @@ namespace TriageTrainer.Editor.Utils
       ctPatientCWaypointIdentifier = OverworldGameObjectInitializer.CtPatientCTargetPositionWaypointIdentifier;
       staticEntityLayouts.Clear();
       staticEntityLayouts.Add(AssetDatabase.LoadAssetAtPath<StaticEntityLayoutDefinition>(
-        "Assets/Modules/TriageTrainer/ScriptableObjects/StaticEntityLayouts/OverworldPatientSupports.asset"));
+        DefaultStaticLayoutPath));
     }
 
     private static void DrawWaypointFields(string title, ref string identifier, ref Vector3 value)

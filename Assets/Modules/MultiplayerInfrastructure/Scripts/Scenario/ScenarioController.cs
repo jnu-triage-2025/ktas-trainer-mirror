@@ -18,6 +18,7 @@ using MultiplayerInfrastructure.Logging;
 using FishNet.Object;
 using FishNet;
 using FishNet.Connection;
+using FishNet.Transporting;
 using Unity.VisualScripting;
 using TriageTrainer.Entity;
 
@@ -101,6 +102,7 @@ namespace MultiplayerInfrastructure.Scenario
     private bool _currentPresentationNodeRoleScoped;
     private readonly List<ScenarioOwnedActingNpc> _scenarioOwnedActingNpcs = new List<ScenarioOwnedActingNpc>();
     private readonly List<ScenarioOwnedWaypoint> _scenarioOwnedWaypoints = new List<ScenarioOwnedWaypoint>();
+    private readonly Dictionary<int, int> _activeRoleBranchDepthByClientId = new Dictionary<int, int>();
 
     private sealed class ScenarioOwnedActingNpc
     {
@@ -206,6 +208,23 @@ namespace MultiplayerInfrastructure.Scenario
     public State CurrentState => _state;
     public IScenarioNode CurrentNode => _currentNode;
     public ScenarioGraph CurrentGraph => _currentGraph;
+
+    public bool CanAcceptPatientBCMonitorClose(int senderClientId, string normalizedSignal)
+    {
+      if (_executionMode != ExecutionMode.ServerAuthoritative
+          || _currentGraph == null
+          || !string.Equals(_currentGraph.Identifier, "patient_b_c_ct", StringComparison.Ordinal)
+          || !_activeRoleBranchDepthByClientId.ContainsKey(senderClientId)
+          || ScenarioInteractionSignals.IsRaised(normalizedSignal))
+        return false;
+
+      string openNode = string.Equals(normalizedSignal, "sig.close_vital_ui_b", StringComparison.Ordinal)
+        ? "B_VITAL_OPEN"
+        : string.Equals(normalizedSignal, "sig.close_vital_ui_c", StringComparison.Ordinal)
+          ? "C_B_VITAL_OPEN"
+          : null;
+      return openNode != null && GetNodeVisitOrders(_currentGraph.Identifier, openNode).Count > 0;
+    }
     public IReadOnlyList<int> GetNodeVisitOrders(string graphIdentifier, string nodeIdentifier)
     {
       if (string.IsNullOrWhiteSpace(graphIdentifier) || string.IsNullOrWhiteSpace(nodeIdentifier))
@@ -343,6 +362,8 @@ namespace MultiplayerInfrastructure.Scenario
       // 이벤트 구독
       ScenarioInteractable.OnScenarioRequested += HandleScenarioRequested;
       ScenarioTriggerZone.OnScenarioRequested += HandleScenarioRequested;
+      if (InstanceFinder.ServerManager != null)
+        InstanceFinder.ServerManager.OnRemoteConnectionState += HandleRemoteConnectionState;
     }
 
     private void OnDestroy()
@@ -352,11 +373,32 @@ namespace MultiplayerInfrastructure.Scenario
       // 이벤트 구독 해제
       ScenarioInteractable.OnScenarioRequested -= HandleScenarioRequested;
       ScenarioTriggerZone.OnScenarioRequested -= HandleScenarioRequested;
+      if (InstanceFinder.ServerManager != null)
+        InstanceFinder.ServerManager.OnRemoteConnectionState -= HandleRemoteConnectionState;
 
       if (_instance == this)
       {
         _instance = null;
       }
+    }
+
+    private void Update()
+    {
+      if (IsActive)
+        ScenarioSignalCounters.RefreshDynamicThresholds();
+    }
+
+    private void HandleRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs args)
+    {
+      if (args.ConnectionState != RemoteConnectionState.Stopped
+          || connection == null
+          || !_activeRoleBranchDepthByClientId.ContainsKey(connection.ClientId))
+        return;
+
+      var message = $"[ScenarioController] Aborting scenario because client {connection.ClientId} disconnected during an assigned ByRole branch.";
+      Debug.LogError(message, this);
+      GameLogService.WriteScenario(message, _currentGraph?.Identifier);
+      EndScenario();
     }
 
     #endregion
@@ -596,6 +638,7 @@ namespace MultiplayerInfrastructure.Scenario
       // StopAllCoroutines 로 강제 종료된 브랜치 코루틴은 finally 가 실행되지 않아
       // 억제 카운터가 불균형 상태로 남을 수 있으므로 명시적으로 초기화한다.
       _globalAdvanceSuppressionDepth = 0;
+      _activeRoleBranchDepthByClientId.Clear();
       ResetNodeVisitOrders(graph.Identifier);
       ScenarioInteractionSignals.ClearAllInternalSignals();
       ScenarioInteractionSignals.ClearAllRaisedSignals();
@@ -609,6 +652,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       _currentGraph = graph;
       _scenarioOwnerClientId = ownerClientId;
+      ScenarioNetworkRelay.ConfigureClientSignalAuthorization(graph);
       ScenarioParallelAssignmentState.ClearGraph(graph.Identifier);
 
       // 시나리오가 요구하는 퀘스트 정의 include를 선로딩한다.
@@ -702,6 +746,7 @@ namespace MultiplayerInfrastructure.Scenario
       ScenarioConditionalSignalListeners.ClearAll();
       ScenarioEntityStateSignalBindings.ClearAll();
       ScenarioSignalCounters.ClearAll();
+      ScenarioNetworkRelay.ClearClientSignalAuthorization();
 
       // 시나리오가 남긴 모든 타이머/표시를 정리한다.
       // 명시적 정리 없이 종료(또는 조기/오류 종료)하더라도 다음 시나리오로 새어 나가지 않게 한다.
@@ -714,6 +759,7 @@ namespace MultiplayerInfrastructure.Scenario
       _state = State.Inactive;
       // 강제 종료된 브랜치 코루틴의 finally 가 실행되지 않을 수 있으므로 억제 카운터를 초기화한다.
       _globalAdvanceSuppressionDepth = 0;
+      _activeRoleBranchDepthByClientId.Clear();
       // 브랜치 Choice/Quiz 대기 중 종료된 경우 남은 인터셉터/프롬프트 상태를 정리한다.
       // (StopAllCoroutines 로 강제 종료된 프롬프트 코루틴의 finally 가 실행되지 않을 수 있음)
       _branchOptionInterceptor = null;
@@ -1701,11 +1747,11 @@ namespace MultiplayerInfrastructure.Scenario
       return clip;
     }
 
-    private void ExecuteQuestControlNode(ScenarioQuestControlNode node)
+    private void ExecuteQuestControlNode(ScenarioQuestControlNode node, int? ownerClientId)
     {
       _state = State.ExecutingQuestControl;
 
-      if (!ShouldApplyQuestControlNode(node))
+      if (!ShouldApplyQuestControlNode(node, ownerClientId))
       {
         Advance();
         return;
@@ -1730,13 +1776,16 @@ namespace MultiplayerInfrastructure.Scenario
       Advance();
     }
 
+    private void ExecuteQuestControlNode(ScenarioQuestControlNode node)
+      => ExecuteQuestControlNode(node, _scenarioOwnerClientId);
+
     /// <summary>
     /// 서버가 이미 권위적으로 순회한 퀘스트 노드를 클라이언트 UI에만 반영한다.
     /// 여기서는 <see cref="Advance"/>를 절대 호출하지 않아 표시 피어가 그래프 커서를 소유하지 않는다.
     /// </summary>
     private void PresentQuestControlNode(ScenarioQuestControlNode node, bool roleScoped)
     {
-      if (!roleScoped && !ShouldApplyQuestControlNode(node))
+      if (!roleScoped && !ShouldApplyQuestControlNode(node, _scenarioOwnerClientId))
         return;
 
       var manager = Registry.Registry.Get<QuestManager>(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>());
@@ -1750,14 +1799,14 @@ namespace MultiplayerInfrastructure.Scenario
         Debug.LogError($"[ScenarioController] Presentation quest operation failed: '{node.Identifier}'.");
     }
 
-    private bool ShouldApplyQuestControlNode(ScenarioQuestControlNode node)
+    private bool ShouldApplyQuestControlNode(ScenarioQuestControlNode node, int? ownerClientId)
     {
       if (node == null)
         return false;
 
       // 시나리오 owner가 지정된 경우, 퀘스트 노드는 해당 owner 클라이언트에서만 적용한다.
       // 그렇지 않으면 모든 피어에서 동일 퀘스트가 동시에 등록되어 역할별 분기가 깨질 수 있다.
-      if (!_scenarioOwnerClientId.HasValue)
+      if (!ownerClientId.HasValue)
       {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         Debug.Log($"[ScenarioController] QuestControl '{node.Identifier}' apply=true (ownerClientId is null)");
@@ -1770,14 +1819,14 @@ namespace MultiplayerInfrastructure.Scenario
       {
         // 서버 전용 컨텍스트(로컬 클라이언트 없음)에서는 클라이언트 전용 퀘스트 적용을 건너뛴다.
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"[ScenarioController] QuestControl '{node.Identifier}' apply=false (local connection is null, ownerClientId={_scenarioOwnerClientId})");
+        Debug.Log($"[ScenarioController] QuestControl '{node.Identifier}' apply=false (local connection is null, ownerClientId={ownerClientId})");
 #endif
         return false;
       }
 
-      bool apply = localConn.ClientId == _scenarioOwnerClientId.Value;
+      bool apply = localConn.ClientId == ownerClientId.Value;
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-      Debug.Log($"[ScenarioController] QuestControl '{node.Identifier}' apply={apply} (ownerClientId={_scenarioOwnerClientId}, localClientId={localConn.ClientId})");
+      Debug.Log($"[ScenarioController] QuestControl '{node.Identifier}' apply={apply} (ownerClientId={ownerClientId}, localClientId={localConn.ClientId})");
 #endif
       return apply;
     }
@@ -3880,6 +3929,15 @@ namespace MultiplayerInfrastructure.Scenario
       if (_executionMode == ExecutionMode.ServerAuthoritative)
         ScenarioNetworkRelay.PublishParallelAssignments(_currentGraph?.Identifier, node.Identifier, allocation);
 
+      if (node.AllocationType == ScenarioParallelAllocationType.ByRole)
+      {
+        foreach (var assignedClientId in allocation.Values.Where(value => value.HasValue))
+        {
+          _activeRoleBranchDepthByClientId.TryGetValue(assignedClientId.Value, out var depth);
+          _activeRoleBranchDepthByClientId[assignedClientId.Value] = depth + 1;
+        }
+      }
+
       foreach (var branch in node.Branches)
       {
         if (!_currentGraph.TryGetNode(branch.Identifier, out var branchNode))
@@ -3895,7 +3953,9 @@ namespace MultiplayerInfrastructure.Scenario
 
         allocation.TryGetValue(branch, out var assignedClientId);
 
-        if (assignedClientId == null && node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Ignore)
+        if (assignedClientId == null
+            && (_currentGraph?.SkipAbsentRoleBranches == true && IsDeclaredRoleAbsent(branch)
+                || node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Ignore))
         {
           continue; // skipped branch
         }
@@ -3968,6 +4028,19 @@ namespace MultiplayerInfrastructure.Scenario
       // (기존의 무조건 EndScenario 호출은 병렬 이후 노드를 모두 건너뛰고
       //  WaitMode.None 브랜치를 StopAllCoroutines 로 즉시 종료시키는 버그였다.)
       // NextIdentifier 가 없으면 Advance 가 EndScenario 로 폴백한다.
+      if (node.AllocationType == ScenarioParallelAllocationType.ByRole)
+      {
+        foreach (var assignedClientId in allocation.Values.Where(value => value.HasValue))
+        {
+          if (!_activeRoleBranchDepthByClientId.TryGetValue(assignedClientId.Value, out var depth))
+            continue;
+          if (depth <= 1)
+            _activeRoleBranchDepthByClientId.Remove(assignedClientId.Value);
+          else
+            _activeRoleBranchDepthByClientId[assignedClientId.Value] = depth - 1;
+        }
+      }
+
       Advance();
     }
 
@@ -4142,38 +4215,33 @@ namespace MultiplayerInfrastructure.Scenario
       if (node.Operation == ScenarioSignalCounterOperation.Unregister)
         ScenarioSignalCounters.Unregister(node.CounterIdentifier);
       else
+      {
+        Func<IReadOnlyCollection<string>> expectedSignals = null;
+        int threshold = node.Threshold;
+        if (node.UseActiveRoleRosterThreshold)
+        {
+          if (!TryGetActiveRoleRoster(out var roster, out var error))
+          {
+            Debug.LogError($"[ScenarioController] SignalCounter active-role roster failed: {error}", this);
+            EndScenario();
+            return;
+          }
+
+          threshold = roster.Count;
+          expectedSignals = () => TryGetActiveRoleRoster(out var current, out _)
+            ? current.Select(entry => ScenarioInteractionSignals.Normalize(node.SourceSignalPrefix + entry.PlayerIdentifier)).ToArray()
+            : Array.Empty<string>();
+        }
+
         ScenarioSignalCounters.Register(
           node.CounterIdentifier,
           node.SourceSignalPrefix,
-          ResolveSignalCounterThreshold(
-            _currentGraph?.Identifier,
-            node,
-            GetActivePlayerIds().Count,
-            ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer),
-          node.OutputSignalIdentifier);
-
-      Advance();
-    }
-
-    private static int ResolveSignalCounterThreshold(
-      string graphIdentifier,
-      ScenarioSignalCounterNode node,
-      int activePlayerCount,
-      bool allowMultipleRoleBranchesForSinglePlayer)
-    {
-      // patient_b_c_ct의 도착 신호는 플레이어별 distinct 신호 네 개를 전제로 한다.
-      // 한 세션이 모든 역할을 맡는 디버그 모드에서만 해당 계약을 한 명 도착으로 축소한다.
-      if (allowMultipleRoleBranchesForSinglePlayer
-          && activePlayerCount == 1
-          && string.Equals(graphIdentifier, "patient_b_c_ct", StringComparison.Ordinal)
-          && string.Equals(node?.CounterIdentifier, "scen_b_nurse_arrivals", StringComparison.Ordinal)
-          && string.Equals(node.SourceSignalPrefix, "quest_arrival_triage_area_", StringComparison.Ordinal)
-          && string.Equals(node.OutputSignalIdentifier, "all_nurses_arrived_triage", StringComparison.Ordinal))
-      {
-        return 1;
+          threshold,
+          node.OutputSignalIdentifier,
+          expectedSignals);
       }
 
-      return node?.Threshold ?? 1;
+      Advance();
     }
 
     private static bool ShouldAllowMultipleRoleBranches(
@@ -4403,7 +4471,7 @@ namespace MultiplayerInfrastructure.Scenario
           yield return ExecuteQuizNodeInBranch(quiz, context);
           break;
         case ScenarioQuestControlNode questControl:
-          ExecuteQuestControlNode(questControl);
+          ExecuteQuestControlNode(questControl, context.OwnerClientId);
           break;
         case ScenarioQuestWaypointHighlightNode waypointHighlight:
           ExecuteQuestWaypointHighlightNode(waypointHighlight);
@@ -4788,6 +4856,62 @@ namespace MultiplayerInfrastructure.Scenario
       return ids;
     }
 
+    private sealed class ActiveRoleRosterEntry
+    {
+      public string Role;
+      public int ClientId;
+      public string PlayerIdentifier;
+    }
+
+    private bool TryGetActiveRoleRoster(out List<ActiveRoleRosterEntry> roster, out string error)
+    {
+      roster = new List<ActiveRoleRosterEntry>();
+      error = null;
+      var declaredRoles = _currentGraph?.ActiveRoleTags?
+        .Where(role => !string.IsNullOrWhiteSpace(role))
+        .Distinct(StringComparer.Ordinal)
+        .ToArray() ?? Array.Empty<string>();
+      if (declaredRoles.Length == 0)
+      {
+        error = "graph has no activeRoleTags";
+        return false;
+      }
+
+      var holderByRole = new Dictionary<string, ActiveRoleRosterEntry>(StringComparer.Ordinal);
+      foreach (var clientId in GetActivePlayerIds())
+      {
+        if (!UserDescriptorService.TryGetByClientId(clientId, out var player)
+            || player == null
+            || string.IsNullOrWhiteSpace(player.Identifier))
+          continue;
+
+        var roles = declaredRoles.Where(role => PlayerTagService.HasTag(player.Identifier, role)).ToArray();
+        if (roles.Length == 0)
+          continue;
+        if (roles.Length > 1)
+        {
+          error = $"player '{player.Identifier}' has multiple active roles [{string.Join(", ", roles)}]";
+          return false;
+        }
+
+        var entry = new ActiveRoleRosterEntry
+        {
+          Role = roles[0],
+          ClientId = clientId,
+          PlayerIdentifier = player.Identifier
+        };
+        if (holderByRole.TryGetValue(entry.Role, out var duplicate))
+        {
+          error = $"duplicate active role '{entry.Role}' on players '{duplicate.PlayerIdentifier}' and '{entry.PlayerIdentifier}'";
+          return false;
+        }
+        holderByRole.Add(entry.Role, entry);
+      }
+
+      roster.AddRange(holderByRole.Values.OrderBy(entry => Array.IndexOf(declaredRoles, entry.Role)));
+      return true;
+    }
+
     /// <summary>
     /// 병렬 브랜치 할당용 결정적 난수 생성기를 만든다.
     /// 모든 피어가 동일 그래프/노드/방문 순서를 공유하므로, 이를 시드로 쓰면
@@ -4892,6 +5016,9 @@ namespace MultiplayerInfrastructure.Scenario
         }
         case ScenarioParallelAllocationType.ByRole:
         {
+          if (_currentGraph?.ActiveRoleTags?.Count > 0)
+            return TryAllocateActiveRoleParallel(node, branches, allocation);
+
           // 각 브랜치를 자격에 맞는 서로 다른 플레이어에게 1:1로 배정한다.
           // 후보 산출은 현재 실행 권위(서버)의 세션/태그 상태에서 수행하고, 순수 배정 규칙은
           // ScenarioParallelRoleAllocator로 위임한다. P2 서버 상태기와 같은 규칙을 공유한다.
@@ -5062,7 +5189,7 @@ namespace MultiplayerInfrastructure.Scenario
       AddCurrentVisitNote(message);
     }
 
-    private bool IsPlayerEligibleForBranch(ScenarioParallelBranch branch, int clientId)
+    private bool IsPlayerEligibleForBranch(ScenarioParallelBranch branch, int clientId, bool allowTagGateBypass = true)
     {
       if (branch == null)
       {
@@ -5075,7 +5202,8 @@ namespace MultiplayerInfrastructure.Scenario
             || session == null
             || string.IsNullOrWhiteSpace(session.Identifier))
         {
-          return TryIgnoreMissingTagGate(branch.Identifier, $"player descriptor for clientId {clientId} is unavailable while required tags are configured");
+          return allowTagGateBypass
+            && TryIgnoreMissingTagGate(branch.Identifier, $"player descriptor for clientId {clientId} is unavailable while required tags are configured");
         }
 
         var requiredTags = branch.RequiredPlayerTags
@@ -5092,7 +5220,8 @@ namespace MultiplayerInfrastructure.Scenario
           bool hasAnyTag = requiredTags.Any(requiredTag => PlayerTagService.HasTag(session.Identifier, requiredTag));
           if (!hasAnyTag)
           {
-            return TryIgnoreMissingTagGate(branch.Identifier, $"player '{session.Identifier}' has none of the required tags [{string.Join(", ", requiredTags)}]");
+            return allowTagGateBypass
+              && TryIgnoreMissingTagGate(branch.Identifier, $"player '{session.Identifier}' has none of the required tags [{string.Join(", ", requiredTags)}]");
           }
         }
         else
@@ -5101,7 +5230,8 @@ namespace MultiplayerInfrastructure.Scenario
           {
             if (!PlayerTagService.HasTag(session.Identifier, requiredTag))
             {
-              return TryIgnoreMissingTagGate(branch.Identifier, $"player '{session.Identifier}' is missing required tag '{requiredTag}'");
+              return allowTagGateBypass
+                && TryIgnoreMissingTagGate(branch.Identifier, $"player '{session.Identifier}' is missing required tag '{requiredTag}'");
             }
           }
         }
@@ -5131,6 +5261,71 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       return true;
+    }
+
+    private bool TryAllocateActiveRoleParallel(
+      ScenarioParallelNode node,
+      IReadOnlyList<ScenarioParallelBranch> branches,
+      IDictionary<ScenarioParallelBranch, int?> allocation)
+    {
+      if (!TryGetActiveRoleRoster(out var roster, out var error))
+      {
+        Debug.LogError($"[ScenarioController] ByRole active roster failed: {error}", this);
+        return false;
+      }
+
+      var roles = new HashSet<string>(_currentGraph.ActiveRoleTags, StringComparer.Ordinal);
+      var holderByRole = roster.ToDictionary(entry => entry.Role, StringComparer.Ordinal);
+      bool singlePlayerDebug = ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer && roster.Count == 1;
+      foreach (var branch in branches)
+      {
+        var branchRoles = branch.RequiredPlayerTags?
+          .Where(tag => roles.Contains(tag))
+          .Distinct(StringComparer.Ordinal)
+          .ToArray() ?? Array.Empty<string>();
+        if (branchRoles.Length != 1)
+        {
+          Debug.LogError($"[ScenarioController] ByRole branch '{branch.Identifier}' must require exactly one activeRoleTag.", this);
+          return false;
+        }
+
+        if (singlePlayerDebug)
+        {
+          allocation[branch] = roster[0].ClientId;
+          continue;
+        }
+
+        if (holderByRole.TryGetValue(branchRoles[0], out var holder))
+        {
+          if (!IsPlayerEligibleForBranch(branch, holder.ClientId, allowTagGateBypass: false))
+          {
+            Debug.LogError($"[ScenarioController] ByRole holder for '{branchRoles[0]}' does not strictly satisfy branch '{branch.Identifier}'.", this);
+            return false;
+          }
+          allocation[branch] = holder.ClientId;
+          continue;
+        }
+
+        if (!_currentGraph.SkipAbsentRoleBranches)
+        {
+          Debug.LogError($"[ScenarioController] ByRole branch '{branch.Identifier}' has no connected holder for role '{branchRoles[0]}'.", this);
+          return false;
+        }
+
+        allocation[branch] = null;
+      }
+
+      return true;
+    }
+
+    private bool IsDeclaredRoleAbsent(ScenarioParallelBranch branch)
+    {
+      if (!TryGetActiveRoleRoster(out var roster, out _))
+        return false;
+      var activeRoles = new HashSet<string>(roster.Select(entry => entry.Role), StringComparer.Ordinal);
+      var declaredRoles = new HashSet<string>(_currentGraph.ActiveRoleTags, StringComparer.Ordinal);
+      var branchRoles = branch?.RequiredPlayerTags?.Where(declaredRoles.Contains).ToArray() ?? Array.Empty<string>();
+      return branchRoles.Length == 1 && !activeRoles.Contains(branchRoles[0]);
     }
 
     private static void Shuffle(IList<int> list, System.Random random)

@@ -35,6 +35,8 @@ namespace TriageTrainer.Entity
   [DisallowMultipleComponent]
   public class WallAttachedOxyflowmeter : StaticObjectDisplayment
   {
+    public static event Action<WallAttachedOxyflowmeter, bool> AttachmentStateChanged;
+
     /// <summary>설치(장착) 상호작용으로 인정하는, 손에 든 아이템 식별자입니다.</summary>
     private const string RequiredItemIdentifier = TriageTrainer.ItemDefinitions.Oxyflowmeter.Identifier;
 
@@ -44,6 +46,9 @@ namespace TriageTrainer.Entity
 
     [Tooltip("상호작용 힌트에 표시할 문구입니다.")]
     [SerializeField] private string _attachDisplayText = "산소 유량계 설치";
+
+    [Tooltip("설치된 산소 유량계를 회수할 때 표시할 문구입니다.")]
+    [SerializeField] private string _detachDisplayText = "산소 유량계 회수";
 
     [Tooltip("설치(적용) 완료 시 인게임 서버로 올릴 시나리오 신호입니다. 비우면 신호를 올리지 않습니다.")]
     [SerializeField] private string _attachCompletionSignal;
@@ -67,6 +72,9 @@ namespace TriageTrainer.Entity
         if (!string.IsNullOrWhiteSpace(baseText))
           return baseText;
 
+        if (IsAttached)
+          return string.IsNullOrWhiteSpace(_detachDisplayText) ? "산소 유량계 회수" : _detachDisplayText;
+
         return string.IsNullOrWhiteSpace(_attachDisplayText) ? "산소 유량계 설치" : _attachDisplayText;
       }
     }
@@ -76,7 +84,7 @@ namespace TriageTrainer.Entity
     /// </summary>
     protected override void ApplyInitialVisibility()
     {
-      IsAttached = false;
+      SetAttached(false);
       Hide();
     }
 
@@ -87,12 +95,15 @@ namespace TriageTrainer.Entity
     /// </summary>
     public override bool CanInteract(Transform interactor)
     {
-      if (IsAttached)
-        return false;
-
       var player = ResolvePlayer(interactor);
       if (player == null)
         return false;
+
+      if (IsAttached)
+      {
+        _heldItemIcon = null;
+        return true;
+      }
 
       _heldItemIcon = player.HandlingItem?.CurrentItemIconTexture;
       return IsHandlingOxyflowmeter(player);
@@ -102,13 +113,17 @@ namespace TriageTrainer.Entity
 
     public override void Interact(Transform interactor)
     {
-      if (!CanInteract(interactor))
-        return;
-
       var player = ResolvePlayer(interactor);
-      if (player == null)
+      if (player == null || !CanInteract(interactor))
       {
-        Debug.LogWarning("[WallAttachedOxyflowmeter] interactor 에서 PlayerController 를 찾지 못했습니다.", this);
+        if (player == null)
+          Debug.LogWarning("[WallAttachedOxyflowmeter] interactor 에서 PlayerController 를 찾지 못했습니다.", this);
+        return;
+      }
+
+      if (IsAttached)
+      {
+        player.TryClearStaticObjectDisplaymentAndGrantItem(EntityIdentifier, RequiredItemIdentifier);
         return;
       }
 
@@ -127,7 +142,7 @@ namespace TriageTrainer.Entity
     /// </summary>
     public override void ApplyShownFromNetwork()
     {
-      IsAttached = true;
+      SetAttached(true);
       Show();
     }
 
@@ -137,6 +152,7 @@ namespace TriageTrainer.Entity
     /// </summary>
     public override void OnShownConfirmed()
     {
+      SetAttached(true);
       TriageWorldInteractionSignals.RaiseOxyflowmeterInstalled(EntityIdentifier);
       TriageWorldInteractionSignals.RaiseOxyflowmeterEnabled(EntityIdentifier);
       RaiseCompletionSignalIfAny();
@@ -144,14 +160,14 @@ namespace TriageTrainer.Entity
 
     public override void OnHiddenConfirmed()
     {
-      IsAttached = false;
+      SetAttached(false);
       TriageWorldInteractionSignals.RaiseOxyflowmeterRemoved(EntityIdentifier);
       TriageWorldInteractionSignals.RaiseOxyflowmeterDisabled(EntityIdentifier);
     }
 
     public override void ApplyHiddenFromNetwork()
     {
-      IsAttached = false;
+      SetAttached(false);
       base.ApplyHiddenFromNetwork();
     }
 
@@ -160,7 +176,6 @@ namespace TriageTrainer.Entity
     {
       if (!IsAttached)
         return;
-      IsAttached = false;
       Hide();
       OnHiddenConfirmed();
     }
@@ -175,6 +190,14 @@ namespace TriageTrainer.Entity
         return false;
 
       return string.Equals(heldIdentifier, RequiredItemIdentifier, StringComparison.Ordinal);
+    }
+
+    private void SetAttached(bool attached)
+    {
+      if (IsAttached == attached)
+        return;
+      IsAttached = attached;
+      AttachmentStateChanged?.Invoke(this, attached);
     }
 
     private void RaiseCompletionSignalIfAny()
