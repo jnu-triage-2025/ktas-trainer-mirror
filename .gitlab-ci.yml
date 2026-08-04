@@ -5,6 +5,11 @@ variables:
   BUILD_NAME: "ktas-trainer"
   BUILD_PATH: "build"
   GIT_DEPTH: "1"
+  # Applied to GitLab Runner's checkout Git process, before any job script runs.
+  # This lets it remove Unity PackageCache entries whose paths exceed MAX_PATH.
+  GIT_CONFIG_COUNT: "1"
+  GIT_CONFIG_KEY_0: "core.longpaths"
+  GIT_CONFIG_VALUE_0: "true"
 
 .manual-local-build:
   stage: build
