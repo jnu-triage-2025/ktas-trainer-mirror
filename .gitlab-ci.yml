@@ -30,10 +30,16 @@ build-windows:
     - when: never
   variables:
     BUILD_TARGET: "StandaloneWindows64"
+    UNITY_LOG_ARTIFACT_PATH: "artifacts/unity-StandaloneWindows64.log"
   before_script:
     - 'if (-not (Test-Path -LiteralPath "Tools/CI/build-unity.ps1" -PathType Leaf)) { throw "Tools/CI/build-unity.ps1 was not found." }'
   script:
     - '& .\Tools\CI\build-unity.ps1'
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - artifacts/unity-StandaloneWindows64.log
   after_script:
     - 'if (Test-Path -LiteralPath $env:BUILD_PATH) { Remove-Item -LiteralPath $env:BUILD_PATH -Recurse -Force }'
 

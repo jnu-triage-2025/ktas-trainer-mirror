@@ -24,6 +24,11 @@ if (-not $buildPath.StartsWith($projectPathPrefix, [StringComparison]::OrdinalIg
 }
 
 $logPath = Join-Path $buildPath "unity-$($env:BUILD_TARGET).log"
+$logArtifactPath = if ($env:UNITY_LOG_ARTIFACT_PATH) {
+    [IO.Path]::GetFullPath((Join-Path $projectPath $env:UNITY_LOG_ARTIFACT_PATH))
+} else {
+    $null
+}
 
 if ([string]::IsNullOrWhiteSpace($env:UNITY_EXECUTABLE)) {
     $versionFile = Join-Path $projectPath 'ProjectSettings/ProjectVersion.txt'
@@ -62,6 +67,12 @@ try {
     }
 }
 finally {
+    if ($logArtifactPath -and (Test-Path -LiteralPath $logPath -PathType Leaf)) {
+        $logArtifactDirectory = Split-Path -Parent $logArtifactPath
+        New-Item -ItemType Directory -Path $logArtifactDirectory -Force | Out-Null
+        Copy-Item -LiteralPath $logPath -Destination $logArtifactPath -Force
+    }
+
     if (Test-Path -LiteralPath $buildPath) {
         Remove-Item -LiteralPath $buildPath -Recurse -Force
     }
