@@ -12,7 +12,7 @@ namespace TriageTrainer.Tests
   public sealed class PatientBCScenarioDataTests
   {
     [Test]
-    public void PatientBCScenarioLoadsWithSchemaAndStopsAfterPatientC()
+    public void PatientBCScenarioLoadsWithSchemaAndCompletesAfterCTTransport()
     {
       string path = Path.Combine(
         Application.dataPath,
@@ -20,7 +20,7 @@ namespace TriageTrainer.Tests
       var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
 
       Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
-      Assert.That(graph.Nodes, Has.Count.EqualTo(265));
+      Assert.That(graph.Nodes, Has.Count.EqualTo(284));
       Assert.That(graph.ActingNpcs, Has.Count.EqualTo(1));
       Assert.That(graph.ActingNpcs.Single().Identifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
       Assert.That(graph.ActingNpcs.Single().PresetIdentifier, Is.EqualTo("npc_doctor_preset"));
@@ -44,8 +44,23 @@ namespace TriageTrainer.Tests
       Assert.That(graph.Nodes["C_DOC_D"].NextIdentifier, Is.EqualTo("P_C_CARE"));
       Assert.That(graph.Nodes.ContainsKey("P_C_CARE"), Is.True);
       Assert.That(graph.Nodes.ContainsKey("C_COMPLETE"), Is.True);
-      Assert.That(graph.Nodes["C_COMPLETE"].NextIdentifier, Is.Null);
-      Assert.That(graph.Nodes.Keys.Any(value => value.Contains("CT_")), Is.False);
+      Assert.That(graph.Nodes["C_COMPLETE"].NextIdentifier, Is.EqualTo("CT_DELAY"));
+      Assert.That(graph.Nodes.ContainsKey("P_CT_TRANSPORT"), Is.True);
+      Assert.That(graph.Nodes["P_CT_TRANSPORT"].NextIdentifier, Is.EqualTo("CT_SCENARIO_COMPLETE"));
+      Assert.That(graph.Nodes["CT_SCENARIO_COMPLETE"].NextIdentifier, Is.Null);
+
+      foreach (string nodeIdentifier in new[] { "CT_A_WAIT", "CT_B_WAIT", "CT_C_WAIT", "CT_D_WAIT" })
+      {
+        var transportWait = graph.Nodes[nodeIdentifier] as ScenarioValidatorNode;
+        Assert.That(transportWait, Is.Not.Null, nodeIdentifier);
+        var signalIdentifiers = transportWait.RootConditions.Single().ValidationRules
+          .Select(rule => rule.RegistryIdentifier);
+        Assert.That(signalIdentifiers, Is.EquivalentTo(new[]
+        {
+          "sig.ct_patient_arrived_patient_b",
+          "sig.ct_patient_arrived_patient_c"
+        }));
+      }
       Assert.That(graph.Nodes.Values.OfType<ScenarioChoiceNode>()
         .Count(value => !string.IsNullOrWhiteSpace(value.AssessmentIdentifier)), Is.EqualTo(18));
 

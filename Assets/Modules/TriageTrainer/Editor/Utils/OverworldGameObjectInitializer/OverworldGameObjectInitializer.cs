@@ -23,21 +23,28 @@ namespace TriageTrainer.Editor.Utils
     // patient_b_c_ct spatial anchors. These are intentionally plain WaypointAnchor
     // objects: runtime patient/preset spawns resolve their destinations by ID.
     public const string PatientBSpawnWaypointIdentifier = "scen_b:patient_spawnpoint_b";
+    public static readonly Vector3 DefaultPatientBSpawnWaypoint = new(-73f, 1f, 2.3f);
+
     public const string PatientCSpawnWaypointIdentifier = "scen_b:patient_spawnpoint_c";
+    public static readonly Vector3 DefaultPatientCSpawnWaypoint = new(-72f, 1f, 2.3f);
+
     public const string PatientDummyDBSpawnWaypointIdentifier = "scen_b:patient_spawnpoint_dummy_d_a";
+    public static readonly Vector3 DefaultPatientDummyDBSpawnWaypoint = new(-71f, 1f, 2.3f);
+
     public const string TriageArrivalWaypointIdentifier = "scen_b:quest_arrival_triage_area";
+    public static readonly Vector3 DefaultTriageArrivalWaypoint = new(-67f, 1f, -15.5f);
+
     public const string DoctorSpawnWaypointIdentifier = "scen_b:doctor_spawnpoint";
+    public static readonly Vector3 DefaultDoctorSpawnWaypoint = new(-82f, 1f, -35f);
+
     public const string DoctorCareAreaWaypointIdentifier = "scen_b:doctor_care_area_waypoint";
-    public const string CtPatientBWaypointIdentifier = "ct:patient_b";
-    public const string CtPatientCWaypointIdentifier = "ct:patient_c";
-    public static readonly Vector3 DefaultPatientBSpawnWaypoint = new(-1f, -1f, -1f);
-    public static readonly Vector3 DefaultPatientCSpawnWaypoint = new(-1f, -1f, -1f);
-    public static readonly Vector3 DefaultPatientDummyDBSpawnWaypoint = new(-1f, -1f, -1f);
-    public static readonly Vector3 DefaultTriageArrivalWaypoint = new(-1f, -1f, -1f);
-    public static readonly Vector3 DefaultDoctorSpawnWaypoint = new(-1f, -1f, -1f);
-    public static readonly Vector3 DefaultDoctorCareAreaWaypoint = new(-1f, -1f, -1f);
-    public static readonly Vector3 DefaultCtPatientBWaypoint = new(-1f, -1f, -1f);
-    public static readonly Vector3 DefaultCtPatientCWaypoint = new(-1f, -1f, -1f);
+    public static readonly Vector3 DefaultDoctorCareAreaWaypoint = new(-67f, 1f, -15.5f);
+
+    public const string CtPatientBTargetPositionWaypointIdentifier = "ct:patient_target_pos_b";
+    public static readonly Vector3 DefaultCtPatientBTargetPositionWaypoint = new(-80f, 1f, -18.3f);
+
+    public const string CtPatientCTargetPositionWaypointIdentifier = "ct:patient_target_pos_c";
+    public static readonly Vector3 DefaultCtPatientCTargetPositionWaypoint = new(-80f, 1f, -18.3f);
 
     public static void Set()
     {
@@ -54,8 +61,8 @@ namespace TriageTrainer.Editor.Utils
         TriageArrivalWaypointIdentifier, DefaultTriageArrivalWaypoint,
         DoctorSpawnWaypointIdentifier, DefaultDoctorSpawnWaypoint,
         DoctorCareAreaWaypointIdentifier, DefaultDoctorCareAreaWaypoint,
-        CtPatientBWaypointIdentifier, DefaultCtPatientBWaypoint,
-        CtPatientCWaypointIdentifier, DefaultCtPatientCWaypoint
+        CtPatientBTargetPositionWaypointIdentifier, DefaultCtPatientBTargetPositionWaypoint,
+        CtPatientCTargetPositionWaypointIdentifier, DefaultCtPatientCTargetPositionWaypoint
       );
     }
 
@@ -93,6 +100,14 @@ namespace TriageTrainer.Editor.Utils
         "quest_arrival_triage_area_{id}");
       CreateWaypoint(generatedRoot.transform, ctPatientBWaypointIdentifier, ctPatientBWaypoint);
       CreateWaypoint(generatedRoot.transform, ctPatientCWaypointIdentifier, ctPatientCWaypoint);
+      // B/C target anchors intentionally share a position. One generous arrival zone records
+      // each identified patient independently, so minor placement differences still count.
+      CreateScenarioSignalZone(
+        generatedRoot.transform,
+        ctPatientBWaypointIdentifier,
+        ctPatientBWaypoint,
+        new Vector3(8f, 3f, 8f),
+        "ct_patient_arrived_{id}");
       CreateSpawnPoint(generatedRoot.transform, commonSpawnPointIdentifier, commonSpawnPoint);
     }
 

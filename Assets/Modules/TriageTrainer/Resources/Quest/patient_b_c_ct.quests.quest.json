@@ -249,6 +249,32 @@
       "scope": "Player",
       "isOrdinal": false,
       "tasks": []
+    },
+    {
+      "identifier": "Quest_Transport_BC_To_CT",
+      "title": "환자 CT실 이송",
+      "description": "환자 B와 환자 C를 CT실로 이송합니다.",
+      "questContent": "환자 B와 환자 C를 CT실로 이동시키기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "type": "InteractionSignalReceived",
+          "signalId": "ct_patient_arrived_patient_b",
+          "displayTextContent": "환자 B를 CT실로 이동시키기",
+          "count": 1
+        },
+        {
+          "type": "InteractionSignalReceived",
+          "signalId": "ct_patient_arrived_patient_c",
+          "displayTextContent": "환자 C를 CT실로 이동시키기",
+          "count": 1
+        }
+      ]
     }
   ]
 }
