@@ -1,0 +1,9 @@
+{
+  "packId": "debugging",
+  "displayName": "디버깅 데이터팩",
+  "commandAliases": [
+    { "name": "nurseall", "target": "/tag add @self nurse_a; /tag add @self nurse_b; /tag add @self nurse_c; /tag add @self nurse_d" },
+    { "name": "scen-a", "target": "/scenario execute @a patient_a_critical" },
+    { "name": "scen-b", "target": "/scenario execute @a patient_b_c_ct" }
+  ]
+}
