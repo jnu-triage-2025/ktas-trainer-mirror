@@ -15,7 +15,7 @@ variables:
 test-editmode:
   stage: test
   tags:
-    - macos-unity
+    - build-on-commit
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push"'
       when: on_success
@@ -23,10 +23,9 @@ test-editmode:
       when: on_success
     - when: never
   before_script:
-    - test -f "Tools/CI/test-unity.sh"
-    - chmod +x "Tools/CI/test-unity.sh"
+    - 'if (-not (Test-Path -LiteralPath "Tools/CI/test-unity.ps1" -PathType Leaf)) { throw "Tools/CI/test-unity.ps1 was not found." }'
   script:
-    - "Tools/CI/test-unity.sh"
+    - '& .\Tools\CI\test-unity.ps1'
   artifacts:
     when: always
     expire_in: 1 week
