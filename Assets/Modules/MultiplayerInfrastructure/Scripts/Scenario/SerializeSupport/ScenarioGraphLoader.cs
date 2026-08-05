@@ -925,6 +925,9 @@ namespace MultiplayerInfrastructure.Scenario
           PositionX = dto.PositionX ?? 0f,
           PositionY = dto.PositionY ?? 0f,
           PositionZ = dto.PositionZ ?? 0f,
+          RotationX = dto.RotationX ?? 0f,
+          RotationY = dto.RotationY ?? 0f,
+          RotationZ = dto.RotationZ ?? 0f,
           ResultStateKey = dto.ResultStateKey,
           NextIdentifier = dto.NextIdentifier
         };
@@ -991,6 +994,9 @@ namespace MultiplayerInfrastructure.Scenario
           PositionX = node.PositionX,
           PositionY = node.PositionY,
           PositionZ = node.PositionZ,
+          RotationX = node.RotationX,
+          RotationY = node.RotationY,
+          RotationZ = node.RotationZ,
           ResultStateKey = node.ResultStateKey,
           NextIdentifier = node.NextIdentifier
         };

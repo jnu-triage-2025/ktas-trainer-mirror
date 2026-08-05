@@ -23,13 +23,13 @@ namespace TriageTrainer.Editor.Utils
     // patient_b_c_ct spatial anchors. These are intentionally plain WaypointAnchor
     // objects: runtime patient/preset spawns resolve their destinations by ID.
     public const string PatientBSpawnWaypointIdentifier = "scen_b:patient_spawnpoint_b";
-    public static readonly Vector3 DefaultPatientBSpawnWaypoint = new(-73f, 1f, 2.3f);
+    public static readonly Vector3 DefaultPatientBSpawnWaypoint = new(-73f, 0f, 2.3f);
 
     public const string PatientCSpawnWaypointIdentifier = "scen_b:patient_spawnpoint_c";
-    public static readonly Vector3 DefaultPatientCSpawnWaypoint = new(-72f, 1f, 2.3f);
+    public static readonly Vector3 DefaultPatientCSpawnWaypoint = new(-72f, 0f, 2.3f);
 
     public const string PatientDummyDBSpawnWaypointIdentifier = "scen_b:patient_spawnpoint_dummy_d_a";
-    public static readonly Vector3 DefaultPatientDummyDBSpawnWaypoint = new(-71f, 1f, 2.3f);
+    public static readonly Vector3 DefaultPatientDummyDBSpawnWaypoint = new(-71f, 0f, 2.3f);
 
     public const string TriageArrivalWaypointIdentifier = "scen_b:quest_arrival_triage_area";
     public static readonly Vector3 DefaultTriageArrivalWaypoint = new(-67f, 1f, -15.5f);

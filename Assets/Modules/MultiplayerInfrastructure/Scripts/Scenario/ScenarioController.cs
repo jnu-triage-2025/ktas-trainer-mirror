@@ -2295,7 +2295,7 @@ namespace MultiplayerInfrastructure.Scenario
       if (!Registry.Registry.TrySpawnEntityPreset(
             node.PresetIdentifier,
             spawnPosition,
-            Quaternion.identity,
+            Quaternion.Euler(node.RotationX, node.RotationY, node.RotationZ),
             node.SpawnedEntityIdentifier,
             out _,
             out var spawnedDescriptor,

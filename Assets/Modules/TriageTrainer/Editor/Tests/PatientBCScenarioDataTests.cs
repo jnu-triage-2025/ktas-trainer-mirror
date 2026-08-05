@@ -215,6 +215,13 @@ namespace TriageTrainer.Tests
       Assert.That(graph.ActingNpcs.Single().Identifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
       Assert.That(graph.ActingNpcs.Single().PresetIdentifier, Is.EqualTo("npc_doctor_preset"));
 
+      var patientBSpawn = graph.Nodes["SPAWN_B"] as ScenarioEntityPresetSpawnNode;
+      var patientCSpawn = graph.Nodes["SPAWN_C"] as ScenarioEntityPresetSpawnNode;
+      Assert.That(patientBSpawn, Is.Not.Null);
+      Assert.That(patientCSpawn, Is.Not.Null);
+      Assert.That(patientBSpawn.RotationY, Is.EqualTo(-90f));
+      Assert.That(patientCSpawn.RotationY, Is.EqualTo(-90f));
+
       var doctorSpawn = graph.Nodes["SPAWN_DOCTOR"] as ScenarioEntityPresetSpawnNode;
       Assert.That(doctorSpawn, Is.Not.Null);
       Assert.That(doctorSpawn.ActingNpcIdentifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
@@ -938,6 +945,18 @@ namespace TriageTrainer.Tests
         Assert.That(identifiers, Does.Contain(OverworldGameObjectInitializer.DoctorCareAreaWaypointIdentifier));
         Assert.That(identifiers, Does.Contain(OverworldGameObjectInitializer.CtPatientBTargetPositionWaypointIdentifier));
         Assert.That(identifiers, Does.Contain(OverworldGameObjectInitializer.CtPatientCTargetPositionWaypointIdentifier));
+
+        foreach (string patientSpawnIdentifier in new[]
+                 {
+                   OverworldGameObjectInitializer.PatientBSpawnWaypointIdentifier,
+                   OverworldGameObjectInitializer.PatientCSpawnWaypointIdentifier,
+                   OverworldGameObjectInitializer.PatientDummyDBSpawnWaypointIdentifier
+                 })
+        {
+          var patientSpawnAnchor = anchors.Single(anchor => anchor.Identifier == patientSpawnIdentifier);
+          Assert.That(patientSpawnAnchor.transform.position.y, Is.EqualTo(0f).Within(0.001f),
+            $"Patient/bed preset spawn anchor '{patientSpawnIdentifier}' must remain on the floor.");
+        }
 
         var zones = UnityEngine.Object.FindObjectsByType<ScenarioTriggerZone>(
           FindObjectsInactive.Include, FindObjectsSortMode.None);

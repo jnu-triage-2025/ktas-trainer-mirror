@@ -131,6 +131,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       {
         Identifier = "spawn-doctor",
         ActingNpcIdentifier = "npc_doctor",
+        RotationY = -90f,
         NextIdentifier = "start"
       });
       graph.Add(new ScenarioDialogueNode { Identifier = "start", DialogueContent = "시작" });
