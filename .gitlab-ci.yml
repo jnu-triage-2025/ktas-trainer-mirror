@@ -1,4 +1,5 @@
 stages:
+  - test
   - build
 
 variables:
@@ -12,7 +13,7 @@ variables:
   GIT_CONFIG_VALUE_0: "true"
 
 test-editmode:
-  stage: build
+  stage: test
   tags:
     - build-on-commit
   rules:
