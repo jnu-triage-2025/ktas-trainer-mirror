@@ -143,6 +143,8 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       Assert.That(reloaded.ActingNpcs[0].RotationY, Is.EqualTo(180f));
       Assert.That(((ScenarioEntityPresetSpawnNode)reloaded.Nodes["spawn-doctor"]).ActingNpcIdentifier,
         Is.EqualTo("npc_doctor"));
+      Assert.That(((ScenarioEntityPresetSpawnNode)reloaded.Nodes["spawn-doctor"]).RotationY,
+        Is.EqualTo(-90f));
       Assert.That(reloaded.ActingNpcs[0].Interactions, Has.Count.EqualTo(2));
       Assert.That(
         reloaded.ActingNpcs[0].Interactions[0].RequiredItems[0].ItemIdentifier,
