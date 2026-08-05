@@ -482,6 +482,13 @@ namespace MultiplayerInfrastructure.Editor
       bool isMac    = Application.platform == RuntimePlatform.OSXEditor;
       bool modifier = isMac ? evt.commandKey : evt.ctrlKey;
 
+      // 진단 항목을 마지막으로 클릭한 경우 GraphView 포커스와 무관하게 Ctrl+C로 복사한다.
+      if (evt.ctrlKey && evt.keyCode == KeyCode.C && debugPanelView != null && debugPanelView.TryCopySelectedItem())
+      {
+        evt.StopPropagation();
+        return;
+      }
+
       if (modifier && evt.keyCode == KeyCode.F)
       {
         if (searchPanelView == null) return;
