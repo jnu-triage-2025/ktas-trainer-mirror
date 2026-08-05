@@ -2986,6 +2986,15 @@
             "positionZ": {
               "type": "number"
             },
+            "rotationX": {
+              "type": "number"
+            },
+            "rotationY": {
+              "type": "number"
+            },
+            "rotationZ": {
+              "type": "number"
+            },
             "resultStateKey": {
               "type": [
                 "string",

@@ -528,6 +528,14 @@ namespace MultiplayerInfrastructure.Editor
       {
         if (node == null) continue;
         if (!string.IsNullOrEmpty(node.NextIdentifier)) referenced.Add(node.NextIdentifier);
+        if (node is ScenarioValidatorNode v
+            && (v.OnFailure == ScenarioValidatorOnFailure.Branching
+                || (v.WaitForCondition
+                    && v.OnWaitTimeout == ScenarioValidatorWaitTimeoutBehavior.FailBranch))
+            && !string.IsNullOrEmpty(v.FailureNextIdentifier))
+        {
+          referenced.Add(v.FailureNextIdentifier);
+        }
         if (node is ScenarioChoiceNode c)
           foreach (var o in c.Options) if (!string.IsNullOrEmpty(o?.NextNodeIdentifier)) referenced.Add(o.NextNodeIdentifier);
         if (node is ScenarioParallelNode p)

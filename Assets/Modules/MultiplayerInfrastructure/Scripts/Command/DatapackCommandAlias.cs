@@ -23,12 +23,25 @@ namespace MultiplayerInfrastructure.Command
     {
       if (_executionDepth >= 32)
         return;
-      string[] targetParts = _target.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-      if (targetParts.Length == 0)
-        return;
-      string[] forwarded = targetParts.Skip(1).Concat(args ?? Array.Empty<string>()).ToArray();
+
+      string[] commands = _target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
       _executionDepth++;
-      try { _service.TryExecute(targetParts[0], forwarded, sender); }
+      try
+      {
+        for (int i = 0; i < commands.Length; i++)
+        {
+          string[] targetParts = commands[i].Trim().TrimStart('/').Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+          if (targetParts.Length == 0)
+            continue;
+
+          // Alias arguments are appended to the final command only, keeping chained setup
+          // commands deterministic while preserving single-command alias behavior.
+          string[] forwarded = targetParts.Skip(1)
+            .Concat(i == commands.Length - 1 ? args ?? Array.Empty<string>() : Array.Empty<string>())
+            .ToArray();
+          _service.TryExecute(targetParts[0], forwarded, sender);
+        }
+      }
       finally { _executionDepth--; }
     }
   }

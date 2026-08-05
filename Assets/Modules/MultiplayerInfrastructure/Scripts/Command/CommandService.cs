@@ -65,11 +65,15 @@ namespace MultiplayerInfrastructure.Command
         return;
       string key = alias.Trim().TrimStart('/').ToLowerInvariant();
       string normalizedTarget = target.Trim().TrimStart('/');
-      string[] targetParts = normalizedTarget.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-      if (targetParts.Length == 0)
+      string[] targets = normalizedTarget.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+      if (targets.Length == 0)
         return;
-      if (string.Equals(key, targetParts[0], StringComparison.OrdinalIgnoreCase))
-        return;
+      foreach (string entry in targets)
+      {
+        string[] targetParts = entry.Trim().TrimStart('/').Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (targetParts.Length > 0 && string.Equals(key, targetParts[0], StringComparison.OrdinalIgnoreCase))
+          return;
+      }
       if (key == "help" || (_commands.TryGetValue(key, out var existing) && !(existing is DatapackCommandAlias)))
         return;
       var registered = new DatapackCommandAlias(this, key, normalizedTarget, ownerId);

@@ -44,6 +44,7 @@ namespace MultiplayerInfrastructure.Editor
     private static readonly Color ColorBadgeInfo     = new Color(0.15f, 0.45f, 0.70f, 1f);
     private static readonly Color ColorDimText       = new Color(0.65f, 0.65f, 0.65f, 1f);
     private static readonly Color ColorGraphLevel    = new Color(0.70f, 0.90f, 0.70f, 1f);
+    private static readonly Color ColorItemSelected  = new Color(0.20f, 0.38f, 0.58f, 1f);
     // 리사이즈 핸들: 어두운 배경과 구별되는 중간 밝기 + 호버/드래그 시 파란색 강조
     private static readonly Color ColorResizeIdle    = new Color(0.30f, 0.30f, 0.30f, 1f);
     private static readonly Color ColorResizeHover   = new Color(0.40f, 0.65f, 1.00f, 1f);
@@ -61,6 +62,8 @@ namespace MultiplayerInfrastructure.Editor
 
     private bool  _panelExpanded  = true;
     private float _expandedHeight = PanelExpandedDefault;
+    private string _selectedItemMessage;
+    private VisualElement _selectedItemRow;
 
     private readonly Dictionary<string, bool> _groupExpanded = new();
 
@@ -273,6 +276,8 @@ namespace MultiplayerInfrastructure.Editor
     public void Refresh(IReadOnlyList<ScenarioGraphDiagnostics.DiagnosticItem> items)
     {
       _listContainer.Clear();
+      _selectedItemMessage = null;
+      _selectedItemRow = null;
 
       if (items == null || items.Count == 0)
       {
@@ -402,7 +407,7 @@ namespace MultiplayerInfrastructure.Editor
       return wrapper;
     }
 
-    private static VisualElement BuildItemRow(ScenarioGraphDiagnostics.DiagnosticItem item)
+    private VisualElement BuildItemRow(ScenarioGraphDiagnostics.DiagnosticItem item)
     {
       var row = new VisualElement();
       row.style.flexDirection = FlexDirection.Row;
@@ -429,9 +434,42 @@ namespace MultiplayerInfrastructure.Editor
       msgLabel.style.whiteSpace = WhiteSpace.Normal;
       msgLabel.style.flexGrow = 1f;
 
+      row.RegisterCallback<ClickEvent>(_ => SelectItemRow(row, item.Message));
+      row.AddManipulator(new ContextualMenuManipulator(evt =>
+      {
+        evt.menu.AppendAction("Copy", _ =>
+        {
+          SelectItemRow(row, item.Message);
+          CopyItemMessage(item.Message);
+        });
+      }));
+
       row.Add(iconLabel);
       row.Add(msgLabel);
       return row;
+    }
+
+    private void SelectItemRow(VisualElement row, string message)
+    {
+      if (_selectedItemRow != null)
+        _selectedItemRow.style.backgroundColor = StyleKeyword.None;
+
+      _selectedItemRow = row;
+      _selectedItemMessage = message;
+      _selectedItemRow.style.backgroundColor = ColorItemSelected;
+    }
+
+    /// <summary>선택된 진단 항목이 있으면 해당 메시지를 클립보드에 복사한다.</summary>
+    public bool TryCopySelectedItem()
+    {
+      if (string.IsNullOrEmpty(_selectedItemMessage)) return false;
+      CopyItemMessage(_selectedItemMessage);
+      return true;
+    }
+
+    private static void CopyItemMessage(string message)
+    {
+      GUIUtility.systemCopyBuffer = message;
     }
 
     private static VisualElement BuildBadge(string text, Color bgColor)

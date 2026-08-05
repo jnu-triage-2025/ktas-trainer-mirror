@@ -1112,6 +1112,9 @@ namespace MultiplayerInfrastructure.Editor
       data.PositionX = EditorGUILayout.FloatField("Position X", data.PositionX);
       data.PositionY = EditorGUILayout.FloatField("Position Y", data.PositionY);
       data.PositionZ = EditorGUILayout.FloatField("Position Z", data.PositionZ);
+      data.RotationX = EditorGUILayout.FloatField("Rotation X", data.RotationX);
+      data.RotationY = EditorGUILayout.FloatField("Rotation Y", data.RotationY);
+      data.RotationZ = EditorGUILayout.FloatField("Rotation Z", data.RotationZ);
       data.ResultStateKey = EditorGUILayout.TextField("Result State Key", data.ResultStateKey);
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }

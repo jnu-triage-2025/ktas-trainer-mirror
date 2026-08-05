@@ -42,7 +42,10 @@
       "positionSourceEntityIdentifier": "scen_b:patient_spawnpoint_b",
       "positionX": 0,
       "positionY": 0,
-      "positionZ": 0
+      "positionZ": 0,
+      "rotationX": 0,
+      "rotationY": -90,
+      "rotationZ": 0
     },
     "SPAWN_C": {
       "identifier": "SPAWN_C",
@@ -53,7 +56,10 @@
       "positionSourceEntityIdentifier": "scen_b:patient_spawnpoint_c",
       "positionX": 0,
       "positionY": 0,
-      "positionZ": 0
+      "positionZ": 0,
+      "rotationX": 0,
+      "rotationY": -90,
+      "rotationZ": 0
     },
     "SPAWN_DUMMY": {
       "identifier": "SPAWN_DUMMY",
@@ -64,7 +70,10 @@
       "positionSourceEntityIdentifier": "scen_b:patient_spawnpoint_dummy_d_a",
       "positionX": 0,
       "positionY": 0,
-      "positionZ": 0
+      "positionZ": 0,
+      "rotationX": 0,
+      "rotationY": -90,
+      "rotationZ": 0
     },
     "SPAWN_DOCTOR": {
       "identifier": "SPAWN_DOCTOR",
@@ -320,18 +329,14 @@
     "P_ANNOUNCE_ARRIVAL": {
       "identifier": "P_ANNOUNCE_ARRIVAL",
       "nodeType": "Parallel",
-      "nextIdentifier": "P_TRIAGE",
-      "waitMode": "All",
+      "nextIdentifier": "P_ARRIVAL",
+      "waitMode": "None",
       "allocationType": "SelfAll",
       "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
         {
           "identifier": "ANNOUNCE",
           "completionConditionIdentifier": "CC_ANNOUNCE"
-        },
-        {
-          "identifier": "P_ARRIVAL",
-          "completionConditionIdentifier": "CC_ARRIVAL"
         }
       ]
     },
@@ -349,7 +354,7 @@
     "P_ARRIVAL": {
       "identifier": "P_ARRIVAL",
       "nodeType": "Parallel",
-      "nextIdentifier": "CC_ARRIVAL",
+      "nextIdentifier": "P_TRIAGE",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Panic",

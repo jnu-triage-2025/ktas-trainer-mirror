@@ -50,7 +50,7 @@ flags: []
 
 `gameRules`는 서버 세션 시작 시 적용된다. IntroScene의 활성 목록에서 위에 있는 팩이 높은 우선순위를 가지며, 같은 게임 규칙은 낮은 팩부터 높은 팩 순서로 적용된다.
 
-`commandAliases`의 `name`은 `/` 없이 작성한다. 예를 들어 `rules`는 `/rules`가 `/gamerule`을 실행하도록 만든다. 별칭 대상 명령의 권한 검사는 대상 명령에 대해 다시 수행된다.
+`commandAliases`의 `name`은 `/` 없이 작성한다. 예를 들어 `rules`는 `/rules`가 `/gamerule`을 실행하도록 만든다. 별칭 대상 명령의 권한 검사는 대상 명령에 대해 다시 수행된다. `target`에 세미콜론(`;`)으로 여러 명령을 연결하면 순서대로 실행하며, alias에 전달한 추가 인수는 마지막 명령에만 전달된다.
 
 예를 들어 `usability.datapack.json`은 다음 명령어를 제공한다.
 
