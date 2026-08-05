@@ -257,11 +257,27 @@ namespace TriageTrainer.Tests
       var announcementAndArrival = graph.Nodes["P_ANNOUNCE_ARRIVAL"] as ScenarioParallelNode;
       Assert.That(announcementAndArrival, Is.Not.Null);
       Assert.That(announcementAndArrival.AllocationType, Is.EqualTo(ScenarioParallelAllocationType.SelfAll));
+      Assert.That(announcementAndArrival.WaitMode, Is.EqualTo(ScenarioWaitMode.None));
       Assert.That(announcementAndArrival.Branches.Select(branch => branch.Identifier),
-        Is.EquivalentTo(new[] { "ANNOUNCE", "P_ARRIVAL" }));
+        Is.EqualTo(new[] { "ANNOUNCE" }));
       Assert.That(graph.Nodes["COUNT_NURSE_ARRIVAL"].NextIdentifier, Is.EqualTo("P_ANNOUNCE_ARRIVAL"));
+      Assert.That(graph.Nodes["P_ANNOUNCE_ARRIVAL"].NextIdentifier, Is.EqualTo("P_ARRIVAL"));
       Assert.That(graph.Nodes["ANNOUNCE"].NextIdentifier, Is.EqualTo("CC_ANNOUNCE"));
-      Assert.That(graph.Nodes["P_ARRIVAL"].NextIdentifier, Is.EqualTo("CC_ARRIVAL"));
+      Assert.That(graph.Nodes["P_ARRIVAL"].NextIdentifier, Is.EqualTo("P_TRIAGE"));
+
+      foreach (string role in new[] { "A", "B", "C", "D" })
+      {
+        var arrivalQuest = graph.Nodes[$"ARR_{role}_Q"] as ScenarioQuestControlNode;
+        var arrivalWait = graph.Nodes[$"ARR_{role}_WAIT"] as ScenarioValidatorNode;
+        Assert.That(arrivalQuest, Is.Not.Null, role);
+        Assert.That(arrivalQuest.Operation, Is.EqualTo(ScenarioQuestOperationType.Add), role);
+        Assert.That(arrivalQuest.QuestDefinitionIdentifier, Is.EqualTo("Quest_Arrive_Triage"), role);
+        Assert.That(arrivalQuest.NextIdentifier, Is.EqualTo($"ARR_{role}_WAIT"), role);
+        Assert.That(arrivalWait, Is.Not.Null, role);
+        Assert.That(arrivalWait.WaitForCondition, Is.True, role);
+        Assert.That(arrivalWait.RootConditions.Single().ValidationRules.Single().RegistryIdentifier,
+          Is.EqualTo("sig.all_nurses_arrived_triage"), role);
+      }
 
       foreach (string nodeIdentifier in new[] { "CT_A_WAIT", "CT_B_WAIT", "CT_C_WAIT", "CT_D_WAIT" })
       {

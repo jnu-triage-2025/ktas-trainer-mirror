@@ -97,6 +97,62 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void EmptyInitialActiveRoleRosterKeepsByRoleParallelWaiting()
+    {
+      var gameObject = new GameObject("scenario-empty-active-roster-test");
+      var controller = gameObject.AddComponent<ScenarioController>();
+      var currentGraph = typeof(ScenarioController).GetField(
+        "_currentGraph",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+      var waitForRoster = typeof(ScenarioController).GetMethod(
+        "WaitForInitialActiveRoleRoster",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+
+      try
+      {
+        currentGraph.SetValue(controller, new ScenarioGraph
+        {
+          Identifier = "empty-roster-test",
+          ActiveRoleTags = new[] { "nurse_a" },
+          SkipAbsentRoleBranches = true
+        });
+        var node = new ScenarioParallelNode
+        {
+          Identifier = "ROLE_PARALLEL",
+          AllocationType = ScenarioParallelAllocationType.ByRole,
+          WaitMode = ScenarioWaitMode.All
+        };
+
+        Assert.That(waitForRoster, Is.Not.Null);
+        var routine = (IEnumerator)waitForRoster.Invoke(controller, new object[] { node });
+        Assert.That(routine.MoveNext(), Is.True,
+          "빈 초기 roster에서는 Parallel 할당을 시작하지 않고 역할 등록을 기다려야 합니다.");
+        Assert.That(routine.Current, Is.Null);
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(gameObject);
+      }
+    }
+
+    [TestCase(true, 1, true)]
+    [TestCase(false, 1, false)]
+    [TestCase(true, 0, false)]
+    [TestCase(true, 2, false)]
+    public void MultipleActiveRolesAreAcceptedOnlyForSinglePlayerDebug(
+      bool enabled,
+      int activePlayerCount,
+      bool expected)
+    {
+      var shouldAllow = typeof(ScenarioController).GetMethod(
+        "ShouldAllowMultipleActiveRolesForSinglePlayer",
+        BindingFlags.Static | BindingFlags.NonPublic);
+
+      Assert.That(shouldAllow, Is.Not.Null);
+      Assert.That(shouldAllow.Invoke(null, new object[] { enabled, activePlayerCount }), Is.EqualTo(expected));
+    }
+
+    [Test]
     public void BranchQuestControlExecutionAcceptsExplicitOwner()
     {
       var executeQuestControl = typeof(ScenarioController).GetMethod(

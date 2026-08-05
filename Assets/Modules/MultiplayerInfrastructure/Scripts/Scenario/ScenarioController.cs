@@ -3920,6 +3920,16 @@ namespace MultiplayerInfrastructure.Scenario
         ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer);
       var allocation = new Dictionary<ScenarioParallelBranch, int?>();
 
+      // activeRoleTags 기반 그래프는 플레이어/태그 등록이 완료되기 전에 첫 Parallel에
+      // 도달할 수 있다. 이때 빈 roster를 "모든 역할 부재"로 해석하면 skipAbsentRoleBranches가
+      // 모든 분기를 건너뛰고 WaitMode.All이 즉시 완료되어 분기 내부 게이트를 전부 우회한다.
+      // 최소 한 역할이 확인된 뒤에만 실제 부재 역할을 계산한다.
+      yield return WaitForInitialActiveRoleRoster(node);
+      if (_currentGraph == null)
+      {
+        yield break;
+      }
+
       if (!TryAllocateParallel(node, players, allocation))
       {
         EndScenario();
@@ -4250,6 +4260,35 @@ namespace MultiplayerInfrastructure.Scenario
       => enabled
         && node?.AllocationType == ScenarioParallelAllocationType.ByRole
         && node.WaitMode == ScenarioWaitMode.All;
+
+    private IEnumerator WaitForInitialActiveRoleRoster(ScenarioParallelNode node)
+    {
+      if (node?.AllocationType != ScenarioParallelAllocationType.ByRole
+          || _currentGraph?.SkipAbsentRoleBranches != true
+          || _currentGraph.ActiveRoleTags == null
+          || _currentGraph.ActiveRoleTags.Count == 0)
+      {
+        yield break;
+      }
+
+      bool reported = false;
+      while (_currentGraph != null)
+      {
+        if (!TryGetActiveRoleRoster(out var roster, out _)
+            || roster.Count > 0)
+        {
+          yield break;
+        }
+
+        if (!reported)
+        {
+          Debug.Log($"[ScenarioController] Parallel '{node.Identifier}' is waiting for the initial active-role roster.");
+          reported = true;
+        }
+
+        yield return null;
+      }
+    }
 
     private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, string joinNodeIdentifier, int? branchOwnerClientId)
     {
@@ -4878,39 +4917,53 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       var holderByRole = new Dictionary<string, ActiveRoleRosterEntry>(StringComparer.Ordinal);
-      foreach (var clientId in GetActivePlayerIds())
+      var activePlayers = GetActivePlayerIds()
+        .Select(clientId => UserDescriptorService.TryGetByClientId(clientId, out var player)
+          ? (ClientId: clientId, Player: player)
+          : (ClientId: clientId, Player: null))
+        .Where(each => each.Player != null && !string.IsNullOrWhiteSpace(each.Player.Identifier))
+        .ToArray();
+      bool allowSinglePlayerMultipleRoles = ShouldAllowMultipleActiveRolesForSinglePlayer(
+        ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer,
+        activePlayers.Length);
+
+      foreach (var activePlayer in activePlayers)
       {
-        if (!UserDescriptorService.TryGetByClientId(clientId, out var player)
-            || player == null
-            || string.IsNullOrWhiteSpace(player.Identifier))
-          continue;
+        var clientId = activePlayer.ClientId;
+        var player = activePlayer.Player;
 
         var roles = declaredRoles.Where(role => PlayerTagService.HasTag(player.Identifier, role)).ToArray();
         if (roles.Length == 0)
           continue;
-        if (roles.Length > 1)
+        if (roles.Length > 1 && !allowSinglePlayerMultipleRoles)
         {
           error = $"player '{player.Identifier}' has multiple active roles [{string.Join(", ", roles)}]";
           return false;
         }
 
-        var entry = new ActiveRoleRosterEntry
+        foreach (var role in roles)
         {
-          Role = roles[0],
-          ClientId = clientId,
-          PlayerIdentifier = player.Identifier
-        };
-        if (holderByRole.TryGetValue(entry.Role, out var duplicate))
-        {
-          error = $"duplicate active role '{entry.Role}' on players '{duplicate.PlayerIdentifier}' and '{entry.PlayerIdentifier}'";
-          return false;
+          var entry = new ActiveRoleRosterEntry
+          {
+            Role = role,
+            ClientId = clientId,
+            PlayerIdentifier = player.Identifier
+          };
+          if (holderByRole.TryGetValue(entry.Role, out var duplicate))
+          {
+            error = $"duplicate active role '{entry.Role}' on players '{duplicate.PlayerIdentifier}' and '{entry.PlayerIdentifier}'";
+            return false;
+          }
+          holderByRole.Add(entry.Role, entry);
         }
-        holderByRole.Add(entry.Role, entry);
       }
 
       roster.AddRange(holderByRole.Values.OrderBy(entry => Array.IndexOf(declaredRoles, entry.Role)));
       return true;
     }
+
+    private static bool ShouldAllowMultipleActiveRolesForSinglePlayer(bool enabled, int activePlayerCount)
+      => enabled && activePlayerCount == 1;
 
     /// <summary>
     /// 병렬 브랜치 할당용 결정적 난수 생성기를 만든다.
@@ -5276,7 +5329,8 @@ namespace MultiplayerInfrastructure.Scenario
 
       var roles = new HashSet<string>(_currentGraph.ActiveRoleTags, StringComparer.Ordinal);
       var holderByRole = roster.ToDictionary(entry => entry.Role, StringComparer.Ordinal);
-      bool singlePlayerDebug = ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer && roster.Count == 1;
+      bool singlePlayerDebug = ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer
+                               && roster.Select(entry => entry.ClientId).Distinct().Count() == 1;
       foreach (var branch in branches)
       {
         var branchRoles = branch.RequiredPlayerTags?

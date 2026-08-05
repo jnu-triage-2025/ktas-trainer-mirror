@@ -329,18 +329,14 @@
     "P_ANNOUNCE_ARRIVAL": {
       "identifier": "P_ANNOUNCE_ARRIVAL",
       "nodeType": "Parallel",
-      "nextIdentifier": "P_TRIAGE",
-      "waitMode": "All",
+      "nextIdentifier": "P_ARRIVAL",
+      "waitMode": "None",
       "allocationType": "SelfAll",
       "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
         {
           "identifier": "ANNOUNCE",
           "completionConditionIdentifier": "CC_ANNOUNCE"
-        },
-        {
-          "identifier": "P_ARRIVAL",
-          "completionConditionIdentifier": "CC_ARRIVAL"
         }
       ]
     },
@@ -358,7 +354,7 @@
     "P_ARRIVAL": {
       "identifier": "P_ARRIVAL",
       "nodeType": "Parallel",
-      "nextIdentifier": "CC_ARRIVAL",
+      "nextIdentifier": "P_TRIAGE",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Panic",
