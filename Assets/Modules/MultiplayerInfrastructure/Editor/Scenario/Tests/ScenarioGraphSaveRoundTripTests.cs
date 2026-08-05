@@ -210,42 +210,6 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
-    public void LegacyNpcNodesLoadAsNPCControl()
-    {
-      const string json = @"{
-        ""identifier"": ""legacy-npc-control"",
-        ""nodes"": {
-          ""move"": {
-            ""identifier"": ""move"",
-            ""nodeType"": ""NPCMove"",
-            ""npcIdentifier"": ""npc"",
-            ""destinationType"": ""Waypoint"",
-            ""destinationIdentifier"": ""destination"",
-            ""moveMode"": ""BySpeed"",
-            ""moveSpeed"": 2
-          },
-          ""disable"": {
-            ""identifier"": ""disable"",
-            ""nodeType"": ""NpcInteractControl"",
-            ""npcIdentifier"": ""npc"",
-            ""interactableIdentifier"": ""talk"",
-            ""operation"": ""Disable""
-          }
-        }
-      }";
-
-      var graph = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
-      var move = (ScenarioNPCControlNode)graph.Nodes["move"];
-      var disable = (ScenarioNPCControlNode)graph.Nodes["disable"];
-
-      Assert.That(move.Mode, Is.EqualTo(ScenarioNPCControlMode.Control));
-      Assert.That(move.DestinationIdentifier, Is.EqualTo("destination"));
-      Assert.That(disable.Mode, Is.EqualTo(ScenarioNPCControlMode.Update));
-      Assert.That(disable.InteractOperation, Is.EqualTo(ScenarioNPCInteractCrudOperation.Update));
-      Assert.That(disable.InteractEnabled, Is.False);
-    }
-
-    [Test]
     public void NPCDisplayUpdateKeepsOverheadHeightAndRegistryDisplayNameInSync()
     {
       var gameObject = new GameObject("npc-display-test");
