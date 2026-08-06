@@ -174,27 +174,11 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 6759064965544079288}
   _networkObjectCache: {fileID: 6759064965544079288}
   _runtimeAnimatorController: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
-  _assessActions:
-  - _identifier: assess_avpu_gcs
-    _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC0AC\uC815(AVPU/GCS)"
-    _displayIcon: {fileID: 0}
-    _assessSignal: 
-    _enabled: 0
-  - _identifier: assess_pulse
-    _displayText: "\uB9E5\uBC15 \uD655\uC778"
-    _displayIcon: {fileID: 0}
-    _assessSignal: 
-    _enabled: 0
-  - _identifier: assess_gcs
-    _displayText: "GCS \uC7AC\uC0AC\uC815"
-    _displayIcon: {fileID: 0}
-    _assessSignal: 
-    _enabled: 0
-  - _identifier: assess_vital
-    _displayText: "\uD65C\uB825\uC9D5\uD6C4 \uC0AC\uC815"
-    _displayIcon: {fileID: 0}
-    _assessSignal: 
-    _enabled: 0
+  _assessActions: [{_identifier: assess_avpu_gcs, _displayText: "\uC758\uC2DD\uC0C1\uD0DC
+        \uC0AC\uC815(AVPU/GCS)", _displayIcon: {fileID: 0}, _assessSignal: '', _enabled: 0},
+    {_identifier: assess_pulse, _displayText: "\uB9E5\uBC15 \uD655\uC778", _displayIcon: {fileID: 0}, _assessSignal: '', _enabled: 0},
+    {_identifier: assess_gcs, _displayText: "GCS \uC7AC\uC0AC\uC815", _displayIcon: {fileID: 0}, _assessSignal: '', _enabled: 0},
+    {_identifier: assess_vital, _displayText: "\uD65C\uB825\uC9D5\uD6C4 \uC0AC\uC815", _displayIcon: {fileID: 0}, _assessSignal: '', _enabled: 0}]
   _capsuleCollider: {fileID: 6481162045202206273}
   _standingCapsuleCenter: {x: 0, y: 0.9, z: 0}
   _standingCapsuleHeight: 1.8
@@ -239,60 +223,7 @@ MonoBehaviour:
     _displayText: 
     _displayIcon: {fileID: 0}
   _intravenousLineCannulaInteractable: 0
-  _medicalState:
-    isCardiacArrest: 0
-    ecg:
-      bpm: 75
-      irregularity: 0
-      pAmp: 0.15
-      pWidth: 0.04
-      qAmp: -0.15
-      rAmp: 1.2
-      sAmp: -0.25
-      tAmp: 0.3
-      tWidth: 0.08
-      uAmp: 0
-      stElevation: 0
-      noise: 0.02
-      qrsWidthScale: 1
-    art:
-      bpm: 75
-      systolic: 120
-      diastolic: 80
-      noise: 0.2
-    cvp:
-      bpm: 75
-      mean: 12
-      noise: 0.2
-    pleth:
-      bpm: 75
-      spo2: 99
-      noise: 0.2
-    numerics:
-      bpm: 60
-      pvcs: 0
-      pulseRate: 74
-      perfusionIndex: 3
-      spo2: 99
-    nibp:
-      systolic: 120
-      diastolic: 82
-    temperature:
-      t1: 36.5
-      t2: 32.3
-    stLeads:
-      i: 0
-      ii: 0
-      iii: 0
-      avr: 0
-      avl: 0
-      avf: 0
-      v1: 0
-      v2: 0
-      v3: 0
-      v4: 0
-      v5: 0
-      v6: 0
+  _medicalState: {isCardiacArrest: 0, ecg: {bpm: 75, irregularity: 0, pAmp: 0.15, pWidth: 0.04, qAmp: -0.15, rAmp: 1.2, sAmp: -0.25, tAmp: 0.3, tWidth: 0.08, uAmp: 0, stElevation: 0, noise: 0.02, qrsWidthScale: 1}, art: {bpm: 75, systolic: 120, diastolic: 80, noise: 0.2}, cvp: {bpm: 75, mean: 12, noise: 0.2}, pleth: {bpm: 75, spo2: 99, noise: 0.2}, numerics: {bpm: 60, pvcs: 0, pulseRate: 74, perfusionIndex: 3, spo2: 99}, nibp: {systolic: 120, diastolic: 82}, temperature: {t1: 36.5, t2: 32.3}, stLeads: {i: 0, ii: 0, iii: 0, avr: 0, avl: 0, avf: 0, v1: 0, v2: 0, v3: 0, v4: 0, v5: 0, v6: 0}}
   _triageConfig:
     _assessable: 0
     _changeAssessableOnAssessDone: 2
@@ -453,7 +384,7 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 3a5160290ffd9441ba895a6f3f31a15e, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
+      propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: e6bf9c732337e47b2a7669340d265cae, type: 2}
     - target: {fileID: 919132149155446097, guid: 3a5160290ffd9441ba895a6f3f31a15e, type: 3}
