@@ -309,7 +309,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.PatientMonitor.UIDocumentWorldSurfaceBinder
   _targetRenderer: {fileID: 0}
   _texturePropertyName: _BaseMap
-  _instantiateMaterial: 1
   _resolution: {x: 2400, y: 1200}
   _depthBuffer: 24
   _format: 0
@@ -490,10 +489,14 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584161294349901418
+  _initializedTimestamp: -8584156786973574348
+  _localLevelOfDetailCalculationType: 0
+  _useLevelOfDetail: 0
+  _useRootLevelOfDetail: 1
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
+  _localReconcileCorrectionType: 2
   _graphicalObject: {fileID: 0}
   _detachGraphicalObject: 0
   _enableStateForwarding: 1
@@ -505,7 +508,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 22
+  <PrefabId>k__BackingField: 23
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 15406188215509226224
   SceneId: 0
@@ -620,7 +623,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.PatientMonitor.UIDocumentWorldSurfaceBinder
   _targetRenderer: {fileID: 0}
   _texturePropertyName: _BaseMap
-  _instantiateMaterial: 1
   _resolution: {x: 2400, y: 1200}
   _depthBuffer: 24
   _format: 0
