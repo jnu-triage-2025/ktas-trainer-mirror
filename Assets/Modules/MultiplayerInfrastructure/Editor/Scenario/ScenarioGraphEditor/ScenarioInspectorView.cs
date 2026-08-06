@@ -680,6 +680,9 @@ namespace MultiplayerInfrastructure.Editor
         "Quest Definition",
         data.QuestDefinitionIdentifier ?? string.Empty);
 
+      if (data.Quest == null)
+        DrawReferencedQuestDefinition(data.QuestDefinitionIdentifier);
+
       var useInlineQuestData = EditorGUILayout.Toggle("Inline Quest Data", data.Quest != null);
       if (!useInlineQuestData)
       {
@@ -713,6 +716,79 @@ namespace MultiplayerInfrastructure.Editor
       }
 
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private static void DrawReferencedQuestDefinition(string identifier)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+      {
+        EditorGUILayout.HelpBox("Quest Definition 또는 Inline Quest Data를 지정해야 합니다.", MessageType.Warning);
+        return;
+      }
+
+      if (!QuestDefinitionRegistry.TryGetGlobal(identifier, out var definition) || definition == null)
+      {
+        EditorGUILayout.HelpBox(
+          $"Quest Definition '{identifier}'를 Resources/Quest에서 찾을 수 없습니다. " +
+          "Scenario의 questDefinitionIncludes와 definition identifier를 확인하세요.",
+          MessageType.Warning);
+        return;
+      }
+
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("Referenced Quest Definition (Read Only)", EditorStyles.boldLabel);
+      EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+      EditorGUILayout.LabelField("Identifier", definition.Identifier);
+      EditorGUILayout.LabelField("Title", string.IsNullOrWhiteSpace(definition.Title) ? "(없음)" : definition.Title);
+      EditorGUILayout.LabelField("Description", string.IsNullOrWhiteSpace(definition.Description) ? "(없음)" : definition.Description);
+      EditorGUILayout.LabelField("Quest Content", string.IsNullOrWhiteSpace(definition.QuestContent) ? "(없음)" : definition.QuestContent);
+      EditorGUILayout.LabelField("Scope", definition.Scope.ToString());
+      EditorGUILayout.LabelField("Tracked By Default", definition.IsTrackedByDefault.ToString());
+      EditorGUILayout.LabelField("Trackable", definition.IsTrackable.ToString());
+      EditorGUILayout.LabelField("Auto Complete", definition.IsAutoComplete.ToString());
+      EditorGUILayout.LabelField("Ordinal", definition.IsOrdinal.ToString());
+      EditorGUILayout.LabelField("Persist Progress", definition.PersistProgressOnSessionEnd.ToString());
+      EditorGUILayout.LabelField("Waypoint", string.IsNullOrWhiteSpace(definition.WaypointIdentifier) ? "(없음)" : definition.WaypointIdentifier);
+      DrawQuestCriteriaPreview("Tasks", definition.Tasks);
+      DrawQuestCriteriaPreview("Completion Criteria", definition.CompletionCriteria);
+      EditorGUILayout.EndVertical();
+    }
+
+    private static void DrawQuestCriteriaPreview(string label, System.Collections.Generic.IReadOnlyList<QuestCompletionCriteria> criteria)
+    {
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+      if (criteria == null || criteria.Count == 0)
+      {
+        EditorGUILayout.LabelField("(정의된 항목 없음)");
+        return;
+      }
+
+      for (int index = 0; index < criteria.Count; index++)
+        DrawQuestCriterionPreview(criteria[index], index + 1, 0);
+    }
+
+    private static void DrawQuestCriterionPreview(QuestCompletionCriteria criterion, int index, int depth)
+    {
+      if (criterion == null)
+        return;
+
+      string indent = new string(' ', depth * 2);
+      string target = criterion.Type switch
+      {
+        QuestCompletionCriteriaType.WaypointReached => $"waypoint={criterion.WaypointIdentifier}, distance={criterion.ReachDistance:0.##}m",
+        QuestCompletionCriteriaType.InteractionSignalReceived => $"signal={criterion.SignalId}",
+        QuestCompletionCriteriaType.InventoryContains => $"item={criterion.ItemId}",
+        _ => string.Empty
+      };
+      string display = string.IsNullOrWhiteSpace(criterion.DisplayTextContent) ? "" : $", text={criterion.DisplayTextContent}";
+      EditorGUILayout.LabelField($"{indent}{index}. {criterion.Type} (count={criterion.Count}{(string.IsNullOrWhiteSpace(target) ? string.Empty : $", {target}")}{display})");
+
+      if (criterion.Conditions == null)
+        return;
+
+      for (int childIndex = 0; childIndex < criterion.Conditions.Count; childIndex++)
+        DrawQuestCriterionPreview(criterion.Conditions[childIndex], childIndex + 1, depth + 1);
     }
 
     private static void DrawQuestWaypointReachedCriteria(

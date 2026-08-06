@@ -212,7 +212,7 @@ namespace TriageTrainer.Tests
       var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
 
        Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
-       Assert.That(graph.Nodes, Has.Count.EqualTo(308));
+       Assert.That(graph.Nodes, Has.Count.EqualTo(310));
        Assert.That(graph.ClientSignalPrefixes, Is.EqualTo(new[] { "sig.quest_arrival_triage_area_" }));
       Assert.That(graph.ActingNpcs, Has.Count.EqualTo(1));
       Assert.That(graph.ActingNpcs.Single().Identifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
@@ -267,13 +267,15 @@ namespace TriageTrainer.Tests
       var announcementAndArrival = graph.Nodes["P_ANNOUNCE_ARRIVAL"] as ScenarioParallelNode;
       Assert.That(announcementAndArrival, Is.Not.Null);
       Assert.That(announcementAndArrival.AllocationType, Is.EqualTo(ScenarioParallelAllocationType.SelfAll));
-      Assert.That(announcementAndArrival.WaitMode, Is.EqualTo(ScenarioWaitMode.None));
+      // 도착 퀘스트는 안내 방송이 끝난 뒤에만 발행되어야 한다. 그렇지 않으면 방송 스킵과
+      // 다음 병렬 흐름의 퀘스트 표시가 같은 UI 상태를 동시에 갱신한다.
+      Assert.That(announcementAndArrival.WaitMode, Is.EqualTo(ScenarioWaitMode.All));
       Assert.That(announcementAndArrival.Branches.Select(branch => branch.Identifier),
-        Is.EqualTo(new[] { "ANNOUNCE" }));
+        Is.EqualTo(new[] { "ANNOUNCE", "P_ARRIVAL" }));
        Assert.That(graph.Nodes["COUNT_NURSE_ARRIVAL"].NextIdentifier, Is.EqualTo("P_ANNOUNCE_ARRIVAL"));
-      Assert.That(graph.Nodes["P_ANNOUNCE_ARRIVAL"].NextIdentifier, Is.EqualTo("P_ARRIVAL"));
+      Assert.That(graph.Nodes["P_ANNOUNCE_ARRIVAL"].NextIdentifier, Is.EqualTo("ARRIVAL_QUEST_COMPLETION_DELAY"));
       Assert.That(graph.Nodes["ANNOUNCE"].NextIdentifier, Is.EqualTo("CC_ANNOUNCE"));
-       Assert.That(graph.Nodes["P_ARRIVAL"].NextIdentifier, Is.EqualTo("ARRIVAL_QUEST_COMPLETION_DELAY"));
+      Assert.That(graph.Nodes["P_ARRIVAL"].NextIdentifier, Is.EqualTo("CC_ARRIVAL"));
        var arrivalQuestCompletionDelay = graph.Nodes["ARRIVAL_QUEST_COMPLETION_DELAY"] as ScenarioDelayNode;
        Assert.That(arrivalQuestCompletionDelay, Is.Not.Null);
        Assert.That(arrivalQuestCompletionDelay.Duration.ToSeconds(), Is.EqualTo(0.25d));
@@ -313,6 +315,8 @@ namespace TriageTrainer.Tests
       Assert.That(nurseArrivalCounter.CounterIdentifier, Is.EqualTo("scen_b_nurse_arrivals"));
       Assert.That(nurseArrivalCounter.SourceSignalPrefix, Is.EqualTo("quest_arrival_triage_area_"));
       Assert.That(nurseArrivalCounter.Threshold, Is.EqualTo(4));
+      Assert.That(nurseArrivalCounter.UseActiveRoleRosterThreshold, Is.True,
+        "도착 완료는 고정 역할 수가 아니라 현재 활성 플레이어의 도착 신호를 기준으로 해야 한다.");
       Assert.That(nurseArrivalCounter.OutputSignalIdentifier, Is.EqualTo("all_nurses_arrived_triage"));
 
       foreach (string nodeIdentifier in new[]
@@ -327,30 +331,44 @@ namespace TriageTrainer.Tests
         Assert.That(binding.ConsumeOnce, Is.False, $"{nodeIdentifier} must survive a retry reset");
       }
 
-      var triageEvaluation = graph.Nodes["TRIAGE_EVALUATE_CURRENT"] as ScenarioInvokeEventNode;
-      Assert.That(triageEvaluation, Is.Not.Null);
-      Assert.That(triageEvaluation.EventIdentifier, Is.EqualTo("evaluate_patient_b_c_triage"));
-       Assert.That(graph.Nodes["TRIAGE_WAIT_ALL"].NextIdentifier, Is.EqualTo("TRIAGE_EVALUATE_CURRENT"));
-       Assert.That(graph.Nodes["TRIAGE_RESET_ADD"].NextIdentifier, Is.EqualTo("TRIAGE_REENABLE_B"));
-       foreach (var expectation in new[]
-                {
-                  (Node: "TRIAGE_REENABLE_B", Patient: "patient_b", Next: "TRIAGE_REENABLE_C"),
-                  (Node: "TRIAGE_REENABLE_C", Patient: "patient_c", Next: "TRIAGE_REENABLE_D"),
-                  (Node: "TRIAGE_REENABLE_D", Patient: "patient_dummy_d_b", Next: "TRIAGE_WAIT_ALL")
-                })
-       {
-         var reenable = graph.Nodes[expectation.Node] as ScenarioTriageAssessControlNode;
-         Assert.That(reenable, Is.Not.Null, expectation.Node);
-         Assert.That(reenable.TargetEntityIdentifier, Is.EqualTo(expectation.Patient), expectation.Node);
-         Assert.That(reenable.Assessable, Is.True, expectation.Node);
-         Assert.That(reenable.NextIdentifier, Is.EqualTo(expectation.Next), expectation.Node);
-       }
+      Assert.That(graph.Nodes["TRIAGE_WAIT_ALL"].NextIdentifier, Is.EqualTo("TRIAGE_EVALUATE_CURRENT"));
+      foreach (var expectation in new[]
+               {
+                 (Node: "TRIAGE_EVALUATE_CURRENT", Signal: "sig.triage_correct_patient_b", Wrong: "TRIAGE_WRONG"),
+                 (Node: "TRIAGE_C_EVALUATE_CURRENT", Signal: "sig.triage_correct_patient_c", Wrong: "TRIAGE_RESET_REMOVE"),
+                 (Node: "TRIAGE_REENABLE_D", Signal: "sig.triage_correct_patient_dummy_d_b", Wrong: "TRIAGE_REENABLE_B")
+               })
+      {
+        var evaluation = graph.Nodes[expectation.Node] as ScenarioValidatorNode;
+        Assert.That(evaluation, Is.Not.Null, expectation.Node);
+        Assert.That(evaluation.RootConditions.Single().ValidationRules.Single().RegistryIdentifier,
+          Is.EqualTo(expectation.Signal), expectation.Node);
+        Assert.That(evaluation.FailureNextIdentifier, Is.EqualTo(expectation.Wrong), expectation.Node);
+      }
+      Assert.That((graph.Nodes["TRIAGE_RESET"] as ScenarioInvokeEventNode)?.EventIdentifier,
+        Is.EqualTo("reset_patient_b_triage_attempt"));
+      Assert.That((graph.Nodes["TRIAGE_RESET_ADD"] as ScenarioInvokeEventNode)?.EventIdentifier,
+        Is.EqualTo("reset_patient_c_triage_attempt"));
+      Assert.That((graph.Nodes["TRIAGE_REENABLE_C"] as ScenarioInvokeEventNode)?.EventIdentifier,
+        Is.EqualTo("reset_patient_dummy_d_b_triage_attempt"));
+      Assert.That(graph.Nodes["TRIAGE_CHECK_CORRECT"].NextIdentifier,
+        Is.EqualTo("TRIAGE_C_EVALUATE_CURRENT"));
+      Assert.That(graph.Nodes["TRIAGE_C_EVALUATE_CURRENT"].NextIdentifier,
+        Is.EqualTo("TRIAGE_A_REMOVE"));
+      Assert.That(graph.Nodes["TRIAGE_A_REMOVE"].NextIdentifier,
+        Is.EqualTo("TRIAGE_REENABLE_D"));
+      Assert.That(graph.Nodes["TRIAGE_REENABLE_D"].NextIdentifier,
+        Is.EqualTo("TRIAGE_COMPLETE_EVENT"));
+      Assert.That(graph.Nodes["TRIAGE_COMPLETE_EVENT"].NextIdentifier,
+        Is.EqualTo("TRIAGE_A_FINAL_REMOVE"));
+      Assert.That(graph.Nodes["TRIAGE_A_FINAL_REMOVE"].NextIdentifier,
+        Is.EqualTo("CC_TRIAGE_A"));
       var triageCorrectCheck = graph.Nodes["TRIAGE_CHECK_CORRECT"] as ScenarioValidatorNode;
       Assert.That(triageCorrectCheck, Is.Not.Null);
       Assert.That(triageCorrectCheck.RootConditions.Single().ValidationRules
         .Select(rule => rule.RegistryIdentifier), Is.EqualTo(new[]
       {
-        "sig.patient_b_c_triage_current_correct"
+        "sig.triage_submitted_patient_c"
       }));
 
       var vitalOpen = graph.Nodes["B_VITAL_OPEN"] as ScenarioInvokeEventNode;
@@ -1101,6 +1119,30 @@ namespace TriageTrainer.Tests
 
       Assert.That(allowedIdentifiers, Is.EquivalentTo(layoutIdentifiers));
       Assert.That(allowedIdentifiers, Has.Length.EqualTo(4));
+    }
+
+    [Test]
+    public void TriageArrivalZoneIsTriggerOnly()
+    {
+      var previousSetup = EditorSceneManager.GetSceneManagerSetup();
+      try
+      {
+        EditorSceneManager.OpenScene(OverworldScenePath, OpenSceneMode.Single);
+        var zone = UnityEngine.Object.FindObjectsByType<ScenarioTriggerZone>(
+          FindObjectsInactive.Include, FindObjectsSortMode.None)
+          .Single(candidate => candidate.Identifier == OverworldGameObjectInitializer.TriageArrivalWaypointIdentifier);
+        var collider = zone.GetComponent<BoxCollider>();
+
+        Assert.That(collider, Is.Not.Null);
+        Assert.That(collider.isTrigger, Is.True);
+      }
+      finally
+      {
+        if (previousSetup.Length > 0)
+          EditorSceneManager.RestoreSceneManagerSetup(previousSetup);
+        else
+          EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+      }
     }
 
     private static void AssertSignalZone(
