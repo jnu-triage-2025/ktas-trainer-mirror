@@ -103,6 +103,7 @@
       "nextIdentifier": "PRESET_C",
       "targetEntityIdentifier": "patient_b",
       "transitionMode": "Immediate",
+      "name": "많이 다친 남성 환자",
       "sex": "Male",
       "age": 53,
       "consciousnessGcs": 13,
@@ -130,6 +131,7 @@
       "nextIdentifier": "PRESET_DUMMY",
       "targetEntityIdentifier": "patient_c",
       "transitionMode": "Immediate",
+      "name": "많이 다친 여성 환자",
       "sex": "Female",
       "age": 53,
       "consciousnessGcs": 13,
@@ -157,6 +159,7 @@
       "nextIdentifier": "BIND_TRIAGE_B_ANY",
       "targetEntityIdentifier": "patient_dummy_d_b",
       "transitionMode": "Immediate",
+      "name": "조금 다친 여성 환자",
       "intendedTriage": "Level5"
     },
     "BIND_TRIAGE_B_ANY": {
@@ -338,14 +341,18 @@
     "P_ANNOUNCE_ARRIVAL": {
       "identifier": "P_ANNOUNCE_ARRIVAL",
       "nodeType": "Parallel",
-      "nextIdentifier": "P_ARRIVAL",
-      "waitMode": "None",
+      "nextIdentifier": "ARRIVAL_QUEST_COMPLETION_DELAY",
+      "waitMode": "All",
       "allocationType": "SelfAll",
       "whenBranchingPlayerNotMatched": "Panic",
       "branches": [
         {
           "identifier": "ANNOUNCE",
           "completionConditionIdentifier": "CC_ANNOUNCE"
+        },
+        {
+          "identifier": "P_ARRIVAL",
+          "completionConditionIdentifier": "CC_ARRIVAL"
         }
       ]
     },
@@ -363,7 +370,7 @@
     "P_ARRIVAL": {
       "identifier": "P_ARRIVAL",
       "nodeType": "Parallel",
-      "nextIdentifier": "ARRIVAL_QUEST_COMPLETION_DELAY",
+      "nextIdentifier": "CC_ARRIVAL",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Panic",
@@ -670,13 +677,71 @@
               "condition": "Contains",
               "registryType": "RuntimeState",
               "registryIdentifier": "sig.triage_submitted_patient_b"
-            },
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "waitForCondition": true
+    },
+    "TRIAGE_EVALUATE_CURRENT": {
+      "identifier": "TRIAGE_EVALUATE_CURRENT",
+      "nodeType": "Validator",
+      "nextIdentifier": "TRIAGE_CHECK_CORRECT",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.triage_correct_patient_b"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Branching",
+      "failureNextIdentifier": "TRIAGE_WRONG",
+      "waitForCondition": false
+    },
+    "TRIAGE_CHECK_CORRECT": {
+      "identifier": "TRIAGE_CHECK_CORRECT",
+      "nodeType": "Validator",
+      "nextIdentifier": "TRIAGE_C_EVALUATE_CURRENT",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
             {
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
               "registryIdentifier": "sig.triage_submitted_patient_c"
-            },
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "waitForCondition": true
+    },
+    "TRIAGE_COMPLETE_EVENT": {
+      "identifier": "TRIAGE_COMPLETE_EVENT",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "TRIAGE_A_FINAL_REMOVE",
+      "eventIdentifier": "complete_patient_b_c_triage",
+      "moveNextBehavior": "WaitUntilDone"
+    },
+    "TRIAGE_A_REMOVE": {
+      "identifier": "TRIAGE_A_REMOVE",
+      "nodeType": "Validator",
+      "nextIdentifier": "TRIAGE_REENABLE_D",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
             {
               "type": "Registry",
               "condition": "Contains",
@@ -689,51 +754,6 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true
-    },
-    "TRIAGE_EVALUATE_CURRENT": {
-      "identifier": "TRIAGE_EVALUATE_CURRENT",
-      "nodeType": "InvokeEvent",
-      "nextIdentifier": "TRIAGE_CHECK_CORRECT",
-      "eventIdentifier": "evaluate_patient_b_c_triage",
-      "moveNextBehavior": "WaitUntilDone"
-    },
-    "TRIAGE_CHECK_CORRECT": {
-      "identifier": "TRIAGE_CHECK_CORRECT",
-      "nodeType": "Validator",
-      "nextIdentifier": "TRIAGE_COMPLETE_EVENT",
-      "rootConditions": [
-        {
-          "condition": "RegistryContains",
-          "validationRules": [
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.patient_b_c_triage_current_correct"
-            }
-          ]
-        }
-      ],
-      "onFailure": "Branching",
-      "failureNextIdentifier": "TRIAGE_WRONG",
-      "waitForCondition": false
-    },
-    "TRIAGE_COMPLETE_EVENT": {
-      "identifier": "TRIAGE_COMPLETE_EVENT",
-      "nodeType": "InvokeEvent",
-      "nextIdentifier": "TRIAGE_A_REMOVE",
-      "eventIdentifier": "complete_patient_b_c_triage",
-      "moveNextBehavior": "WaitUntilDone"
-    },
-    "TRIAGE_A_REMOVE": {
-      "identifier": "TRIAGE_A_REMOVE",
-      "nodeType": "QuestControl",
-      "nextIdentifier": "CC_TRIAGE_A",
-      "operation": "Remove",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "Quest_Triage_Lead",
-      "quest": null
     },
     "TRIAGE_WRONG": {
       "identifier": "TRIAGE_WRONG",
@@ -749,50 +769,97 @@
     "TRIAGE_RESET": {
       "identifier": "TRIAGE_RESET",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "TRIAGE_RESET_REMOVE",
-      "eventIdentifier": "reset_patient_b_c_triage_attempt",
+      "nextIdentifier": "TRIAGE_WAIT_ALL",
+      "eventIdentifier": "reset_patient_b_triage_attempt",
       "moveNextBehavior": "WaitUntilDone"
     },
     "TRIAGE_RESET_REMOVE": {
       "identifier": "TRIAGE_RESET_REMOVE",
-      "nodeType": "QuestControl",
+      "nodeType": "Dialogue",
       "nextIdentifier": "TRIAGE_RESET_ADD",
+      "speakerName": null,
+      "dialogueContent": "(중증도가 잘못 분류된 것 같다. 다시 분류하자..)",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": 3,
+      "playTTS": false
+    },
+    "TRIAGE_RESET_ADD": {
+      "identifier": "TRIAGE_RESET_ADD",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "TRIAGE_CHECK_CORRECT",
+      "eventIdentifier": "reset_patient_c_triage_attempt",
+      "moveNextBehavior": "WaitUntilDone"
+    },
+    "TRIAGE_REENABLE_B": {
+      "identifier": "TRIAGE_REENABLE_B",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "TRIAGE_REENABLE_C",
+      "speakerName": null,
+      "dialogueContent": "(중증도가 잘못 분류된 것 같다. 다시 분류하자..)",
+      "portraitSpriteIdentifier": null,
+      "interactionRequired": false,
+      "autoAdvanceSeconds": 3,
+      "playTTS": false
+    },
+    "TRIAGE_REENABLE_C": {
+      "identifier": "TRIAGE_REENABLE_C",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "TRIAGE_A_REMOVE",
+      "eventIdentifier": "reset_patient_dummy_d_b_triage_attempt",
+      "moveNextBehavior": "WaitUntilDone"
+    },
+    "TRIAGE_REENABLE_D": {
+      "identifier": "TRIAGE_REENABLE_D",
+      "nodeType": "Validator",
+      "nextIdentifier": "TRIAGE_COMPLETE_EVENT",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.triage_correct_patient_dummy_d_b"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Branching",
+      "failureNextIdentifier": "TRIAGE_REENABLE_B",
+      "waitForCondition": false
+    },
+    "TRIAGE_C_EVALUATE_CURRENT": {
+      "identifier": "TRIAGE_C_EVALUATE_CURRENT",
+      "nodeType": "Validator",
+      "nextIdentifier": "TRIAGE_A_REMOVE",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.triage_correct_patient_c"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Branching",
+      "failureNextIdentifier": "TRIAGE_RESET_REMOVE",
+      "waitForCondition": false
+    },
+    "TRIAGE_A_FINAL_REMOVE": {
+      "identifier": "TRIAGE_A_FINAL_REMOVE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_TRIAGE_A",
       "operation": "Remove",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Triage_Lead",
       "quest": null
-    },
-    "TRIAGE_RESET_ADD": {
-      "identifier": "TRIAGE_RESET_ADD",
-      "nodeType": "QuestControl",
-      "nextIdentifier": "TRIAGE_REENABLE_B",
-      "operation": "Add",
-      "failureStrategy": "Ignore",
-      "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "Quest_Triage_Lead",
-      "quest": null
-    },
-    "TRIAGE_REENABLE_B": {
-      "identifier": "TRIAGE_REENABLE_B",
-      "nodeType": "TriageAssessControl",
-      "nextIdentifier": "TRIAGE_REENABLE_C",
-      "targetEntityIdentifier": "patient_b",
-      "assessable": true
-    },
-    "TRIAGE_REENABLE_C": {
-      "identifier": "TRIAGE_REENABLE_C",
-      "nodeType": "TriageAssessControl",
-      "nextIdentifier": "TRIAGE_REENABLE_D",
-      "targetEntityIdentifier": "patient_c",
-      "assessable": true
-    },
-    "TRIAGE_REENABLE_D": {
-      "identifier": "TRIAGE_REENABLE_D",
-      "nodeType": "TriageAssessControl",
-      "nextIdentifier": "TRIAGE_WAIT_ALL",
-      "targetEntityIdentifier": "patient_dummy_d_b",
-      "assessable": true
     },
     "TRIAGE_B_Q": {
       "identifier": "TRIAGE_B_Q",

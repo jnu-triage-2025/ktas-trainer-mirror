@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Registry;
@@ -167,6 +168,37 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void BranchDialogueAdvanceIsConsumedWithoutAdvancingMainScenario()
+    {
+      var gameObject = new GameObject("scenario-branch-dialogue-advance-test");
+      var controller = gameObject.AddComponent<ScenarioController>();
+      var interceptors = typeof(ScenarioController).GetField(
+        "_branchDialogueAdvanceInterceptors",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+      var tryAdvance = typeof(ScenarioController).GetMethod(
+        "TryAdvanceBranchDialogue",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+
+      try
+      {
+        Assert.That(interceptors, Is.Not.Null);
+        Assert.That(tryAdvance, Is.Not.Null);
+
+        bool advanced = false;
+        var values = (Dictionary<int, Action>)interceptors.GetValue(controller);
+        values[42] = () => advanced = true;
+
+        Assert.That(tryAdvance.Invoke(controller, new object[] { 42 }), Is.EqualTo(true));
+        Assert.That(advanced, Is.True);
+        Assert.That(tryAdvance.Invoke(controller, new object[] { 7 }), Is.EqualTo(false));
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(gameObject);
+      }
+    }
+
+    [Test]
     public void DynamicRosterCounterRequiresExactExpectedPlayerSignals()
     {
       const string output = "test.roster.complete";
@@ -193,6 +225,37 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       finally
       {
         ClearRosterCounterSignals(output);
+      }
+    }
+
+    [Test]
+    public void DynamicRosterCounterTreatsMultipleRolesOnOnePlayerAsOneArrival()
+    {
+      const string output = "test.roster.single-player.complete";
+      try
+      {
+        ScenarioSignalCounters.Register(
+          "single-player-roster",
+          "test.roster.arrival_",
+          4,
+          output,
+          () => new[]
+          {
+            ScenarioInteractionSignals.Normalize("test.roster.arrival_alice")
+          });
+
+        ScenarioInteractionSignals.Raise("test.roster.arrival_alice");
+
+        Assert.That(ScenarioInteractionSignals.IsRaised(output), Is.True,
+          "한 플레이어가 여러 역할을 맡아도 트리아지 도착 신호는 플레이어당 한 번이면 충분해야 합니다.");
+      }
+      finally
+      {
+        ScenarioSignalCounters.ClearAll();
+        Registry.Registry.Unregister(RegistryType.RuntimeState,
+          ScenarioInteractionSignals.Normalize("test.roster.arrival_alice"));
+        Registry.Registry.Unregister(RegistryType.RuntimeState,
+          ScenarioInteractionSignals.Normalize(output));
       }
     }
 

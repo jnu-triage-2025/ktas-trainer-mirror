@@ -44,6 +44,8 @@ namespace MultiplayerInfrastructure.Entity
     private bool _togglePending;
     private int _minimumMovementDivisor = 1;
     private TitleUIController _titleUI;
+    private int _lastLoggedMovementBlockerId;
+    private float _lastMovementBlockerLogTime = float.NegativeInfinity;
 
     /// <summary>
     /// 종료 키 상태를 추적하여 탑승과 동시/직후의 입력으로 즉시 퇴장하는 것을 막는다.
@@ -292,13 +294,89 @@ namespace MultiplayerInfrastructure.Entity
       {
         Vector3 target = transform.position +
                          GetForwardDirection() * (forwardRatio * _moveSpeed * Time.deltaTime);
-        if (!Physics.Linecast(transform.position, target, _movementBlockingMask, QueryTriggerInteraction.Ignore))
+        if (!IsMovementBlocked(transform.position, target))
         {
           transform.position = target;
           changed = true;
         }
       }
       return changed;
+    }
+
+    private bool IsMovementBlocked(Vector3 origin, Vector3 target)
+    {
+      Vector3 offset = target - origin;
+      float distance = offset.magnitude;
+      if (distance <= Mathf.Epsilon)
+        return false;
+
+      RaycastHit[] hits = Physics.RaycastAll(
+        origin,
+        offset / distance,
+        distance,
+        _movementBlockingMask,
+        QueryTriggerInteraction.Ignore);
+      for (int i = 0; i < hits.Length; i++)
+      {
+        Collider collider = hits[i].collider;
+        if (collider != null && !ShouldIgnoreMovementBlocker(collider))
+        {
+          LogMovementBlocker(hits[i], origin, target);
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    /// <summary>
+    /// Derived controls may exclude colliders that move as part of their controlled payload.
+    /// </summary>
+    protected virtual bool ShouldIgnoreMovementBlocker(Collider collider) => false;
+
+    /// <summary>
+    /// Enables collision-origin diagnostics for a specific derived controller.
+    /// </summary>
+    protected virtual bool ShouldLogMovementBlockers => false;
+
+    private void LogMovementBlocker(RaycastHit hit, Vector3 origin, Vector3 target)
+    {
+      if (!ShouldLogMovementBlockers || hit.collider == null)
+        return;
+
+      int colliderId = hit.collider.GetInstanceID();
+      if (colliderId == _lastLoggedMovementBlockerId
+          && Time.unscaledTime - _lastMovementBlockerLogTime < 1f)
+      {
+        return;
+      }
+
+      _lastLoggedMovementBlockerId = colliderId;
+      _lastMovementBlockerLogTime = Time.unscaledTime;
+
+      Collider collider = hit.collider;
+      Rigidbody body = collider.attachedRigidbody;
+      Debug.LogWarning(
+        $"[MovementBlocker] controller='{GetTransformPath(transform)}' " +
+        $"blockerPath='{GetTransformPath(collider.transform)}' " +
+        $"colliderType={collider.GetType().Name} layer={LayerMask.LayerToName(collider.gameObject.layer)}({collider.gameObject.layer}) " +
+        $"trigger={collider.isTrigger} enabled={collider.enabled} " +
+        $"rigidbody='{(body == null ? "none" : GetTransformPath(body.transform))}' " +
+        $"hitPoint={hit.point} normal={hit.normal} distance={hit.distance:F3} " +
+        $"origin={origin} target={target} boundsCenter={collider.bounds.center} boundsSize={collider.bounds.size}",
+        collider);
+    }
+
+    private static string GetTransformPath(Transform target)
+    {
+      if (target == null)
+        return "none";
+
+      var names = new List<string>();
+      for (Transform current = target; current != null; current = current.parent)
+        names.Add(current.name);
+      names.Reverse();
+      return string.Join("/", names);
     }
 
     /// <summary>

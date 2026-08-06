@@ -456,6 +456,7 @@ namespace MultiplayerInfrastructure.Scenario
       _activeOptions.Clear();
       _activeQuizNode = null;
       _branchOptionInterceptor = null;
+      _branchDialogueAdvanceInterceptors.Clear();
       _branchPromptActive = false;
       _activeRemoteBranchPromptClients.Clear();
       _remoteBranchChoiceSelections.Clear();
@@ -552,6 +553,9 @@ namespace MultiplayerInfrastructure.Scenario
 
     internal bool TryAdvanceFromPresentation(int senderClientId, string graphIdentifier, string nodeIdentifier)
     {
+      if (TryAdvanceBranchDialogue(senderClientId))
+        return true;
+
       if (!CanAcceptPresentationInput(senderClientId, graphIdentifier, nodeIdentifier, State.ExecutingDialogue))
         return false;
 
@@ -578,6 +582,9 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public void SubmitLocalAdvance()
     {
+      if (TryAdvanceBranchDialogue(GetLocalClientId()))
+        return;
+
       if (_executionMode == ExecutionMode.ServerAuthoritative && !IsLocalScenarioOwner())
       {
         Debug.LogWarning("[ScenarioController] Ignored authoritative advance from a non-owner host UI.");
@@ -619,6 +626,22 @@ namespace MultiplayerInfrastructure.Scenario
         return false;
 
       return !_scenarioOwnerClientId.HasValue || _scenarioOwnerClientId.Value == senderClientId;
+    }
+
+    private int GetLocalClientId()
+    {
+      var connection = InstanceFinder.ClientManager?.Connection;
+      return connection != null && connection.IsValid ? connection.ClientId : int.MinValue;
+    }
+
+    private bool TryAdvanceBranchDialogue(int clientId)
+    {
+      if (!_branchDialogueAdvanceInterceptors.TryGetValue(clientId, out var advance)
+          && !_branchDialogueAdvanceInterceptors.TryGetValue(int.MinValue, out advance))
+        return false;
+
+      advance();
+      return true;
     }
 
     private void StartScenarioInternal(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId)
@@ -763,6 +786,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 브랜치 Choice/Quiz 대기 중 종료된 경우 남은 인터셉터/프롬프트 상태를 정리한다.
       // (StopAllCoroutines 로 강제 종료된 프롬프트 코루틴의 finally 가 실행되지 않을 수 있음)
       _branchOptionInterceptor = null;
+      _branchDialogueAdvanceInterceptors.Clear();
       _branchPromptActive = false;
       _activeRemoteBranchPromptClients.Clear();
       _remoteBranchChoiceSelections.Clear();
@@ -4239,7 +4263,11 @@ namespace MultiplayerInfrastructure.Scenario
 
           threshold = roster.Count;
           expectedSignals = () => TryGetActiveRoleRoster(out var current, out _)
-            ? current.Select(entry => ScenarioInteractionSignals.Normalize(node.SourceSignalPrefix + entry.PlayerIdentifier)).ToArray()
+            // 한 플레이어가 여러 역할을 맡는 단독 디버그에서는 역할마다 같은 도착 신호가 생긴다.
+            // 도착 완료는 역할 수가 아니라 실제 플레이어별 1회 도착으로 판단한다.
+            ? current.Select(entry => ScenarioInteractionSignals.Normalize(node.SourceSignalPrefix + entry.PlayerIdentifier))
+              .Distinct(StringComparer.Ordinal)
+              .ToArray()
             : Array.Empty<string>();
         }
 
@@ -4494,9 +4522,27 @@ namespace MultiplayerInfrastructure.Scenario
             ? dialogue.AutoAdvanceSeconds.Value
             : 0f;
 
-          if (waitSeconds > 0f)
+          bool advanceRequested = false;
+          int dialogueOwnerClientId = context.OwnerClientId ?? int.MinValue;
+          Action advanceBranchDialogue = () => advanceRequested = true;
+          _branchDialogueAdvanceInterceptors[dialogueOwnerClientId] = advanceBranchDialogue;
+          try
           {
-            yield return new WaitForSeconds(waitSeconds);
+            if (waitSeconds > 0f)
+            {
+              float deadline = Time.time + waitSeconds;
+              yield return new WaitUntil(() => advanceRequested || Time.time >= deadline);
+            }
+            else if (dialogue.InteractionRequired)
+            {
+              yield return new WaitUntil(() => advanceRequested);
+            }
+          }
+          finally
+          {
+            if (_branchDialogueAdvanceInterceptors.TryGetValue(dialogueOwnerClientId, out var current)
+                && current == advanceBranchDialogue)
+              _branchDialogueAdvanceInterceptors.Remove(dialogueOwnerClientId);
           }
           break;
         case ScenarioDisinteractableDialogueNode disinteractableDialogue:
@@ -4630,6 +4676,8 @@ namespace MultiplayerInfrastructure.Scenario
     /// 값이 설정되어 있으면 <see cref="SelectOption"/> 이 전역 진행 대신 이 콜백을 호출한다.
     /// </summary>
     private Action<int> _branchOptionInterceptor;
+    // Branch dialogue input must complete only its branch, never Advance the enclosing main node.
+    private readonly Dictionary<int, Action> _branchDialogueAdvanceInterceptors = new();
 
     private readonly Dictionary<string, BranchOptionSelection> _remoteBranchChoiceSelections = new(StringComparer.Ordinal);
     private readonly HashSet<int> _activeRemoteBranchPromptClients = new();
