@@ -73,6 +73,7 @@ namespace TriageTrainer.Entity.LineConnection
 
     private readonly Dictionary<int, PendingConnectionContext> _pendingConnections = new();
     private readonly List<ActiveConnectionPair> _activeAuthoritativePairs = new();
+    private readonly List<ActiveConnectionPair> _automaticPairs = new();
     private readonly List<ActiveConnectionPair> _snapshotStalePairs = new();
     private bool _applyingReplicatedSnapshot;
 
@@ -449,6 +450,49 @@ namespace TriageTrainer.Entity.LineConnection
       return true;
     }
 
+    /// <summary>
+    /// Creates an authoritative connection without a player interaction or item
+    /// consumption. This is reserved for newly installed CareZone equipment.
+    /// </summary>
+    public bool TryCreateAutomaticConnection(LineConnectionPoint startPoint, LineConnectionPoint endPoint)
+    {
+      if (startPoint == null || endPoint == null || ReferenceEquals(startPoint, endPoint)
+          || startPoint.IsPhysicallyConnectedTo(endPoint)
+          || !startPoint.CanAcceptAdditionalConnection || !endPoint.CanAcceptAdditionalConnection
+          || !startPoint.CanConnectTo(endPoint) || !endPoint.CanConnectTo(startPoint)
+          || !CanConnectBetweenDifferentOwners(startPoint, endPoint, out _)
+          || (!InstanceFinder.IsOffline && (!InstanceFinder.IsServerStarted || !startPoint.IsSpawned || !endPoint.IsSpawned)))
+        return false;
+
+      if (!CreateAndRegisterConnection(startPoint, endPoint))
+        return false;
+
+      if (!InstanceFinder.IsOffline)
+        AddAuthoritativePair(startPoint, endPoint);
+      AddAutomaticPair(startPoint, endPoint);
+      startPoint.NotifyLineConnected(endPoint);
+      endPoint.NotifyLineConnected(startPoint);
+      if (!InstanceFinder.IsOffline)
+        startPoint.BroadcastAuthoritativeConnection(endPoint);
+      return true;
+    }
+
+    /// <summary>Removes only the specified automatically managed endpoint pair.</summary>
+    public bool DisconnectAutomaticConnection(LineConnectionPoint first, LineConnectionPoint second)
+    {
+      if (first == null || second == null || !ContainsAutomaticPair(first, second)
+          || !first.TryGetConnectedLineObjectTo(second, out var lineObject)
+          || (!InstanceFinder.IsOffline && !InstanceFinder.IsServerStarted))
+        return false;
+
+      RemoveAutomaticPair(first, second);
+      RemoveAuthoritativePair(first, second);
+      DestroyLineObject(lineObject);
+      if (!InstanceFinder.IsOffline)
+        first.BroadcastAuthoritativeDisconnect(second);
+      return true;
+    }
+
     public int ActiveAuthoritativePairCount
     {
       get
@@ -470,6 +514,29 @@ namespace TriageTrainer.Entity.LineConnection
     public bool RemoveAuthoritativePair(LineConnectionPoint first, LineConnectionPoint second)
     {
       return RemovePairFromList(_activeAuthoritativePairs, first, second);
+    }
+
+    private bool AddAutomaticPair(LineConnectionPoint first, LineConnectionPoint second)
+    {
+      if (first == null || second == null || ReferenceEquals(first, second) || ContainsAutomaticPair(first, second))
+        return false;
+      _automaticPairs.Add(new ActiveConnectionPair(first, second));
+      return true;
+    }
+
+    private bool RemoveAutomaticPair(LineConnectionPoint first, LineConnectionPoint second) =>
+      RemovePairFromList(_automaticPairs, first, second);
+
+    private bool ContainsAutomaticPair(LineConnectionPoint first, LineConnectionPoint second)
+    {
+      for (int i = 0; i < _automaticPairs.Count; i++)
+      {
+        var pair = _automaticPairs[i];
+        if ((ReferenceEquals(pair.First, first) && ReferenceEquals(pair.Second, second))
+            || (ReferenceEquals(pair.First, second) && ReferenceEquals(pair.Second, first)))
+          return true;
+      }
+      return false;
     }
 
     private static bool RemovePairFromList(
@@ -510,6 +577,12 @@ namespace TriageTrainer.Entity.LineConnection
         if (pair.First == null || pair.Second == null
             || !pair.First.IsPhysicallyConnectedTo(pair.Second))
           _activeAuthoritativePairs.RemoveAt(i);
+      }
+      for (int i = _automaticPairs.Count - 1; i >= 0; i--)
+      {
+        var pair = _automaticPairs[i];
+        if (pair.First == null || pair.Second == null || !pair.First.IsPhysicallyConnectedTo(pair.Second))
+          _automaticPairs.RemoveAt(i);
       }
     }
 
@@ -579,6 +652,7 @@ namespace TriageTrainer.Entity.LineConnection
         startPoint = runtime.StartPoint;
         endPoint = runtime.EndPoint;
 
+        RemoveAutomaticPair(startPoint, endPoint);
         startPoint?.UnregisterConnectedLineObject(lineObject);
         endPoint?.UnregisterConnectedLineObject(lineObject);
       }

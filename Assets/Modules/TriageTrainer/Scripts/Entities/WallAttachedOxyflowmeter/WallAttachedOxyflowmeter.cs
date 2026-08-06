@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.UI;
+using TriageTrainer.Entity.OxyLine;
 using TriageTrainer.Scenario;
 using UnityEngine;
 
@@ -36,6 +37,8 @@ namespace TriageTrainer.Entity
   public class WallAttachedOxyflowmeter : StaticObjectDisplayment
   {
     public static event Action<WallAttachedOxyflowmeter, bool> AttachmentStateChanged;
+    /// <summary>플레이어 상호작용으로 새 설치가 확정된 경우에만 발생한다.</summary>
+    public static event Action<WallAttachedOxyflowmeter> InstallationConfirmed;
 
     /// <summary>설치(장착) 상호작용으로 인정하는, 손에 든 아이템 식별자입니다.</summary>
     private const string RequiredItemIdentifier = TriageTrainer.ItemDefinitions.Oxyflowmeter.Identifier;
@@ -53,12 +56,17 @@ namespace TriageTrainer.Entity
     [Tooltip("설치(적용) 완료 시 인게임 서버로 올릴 시나리오 신호입니다. 비우면 신호를 올리지 않습니다.")]
     [SerializeField] private string _attachCompletionSignal;
 
+    [Tooltip("자동 산소 라인 연결에 사용할 유량계 측 포트입니다.")]
+    [SerializeField] private OxyLineConnectionPoint _oxyLineConnectionPoint;
+
     /// <summary>
     /// 이 산소 유량계가 벽면에 설치(적용)되었는지 여부입니다.
     /// 상호작용으로 표시된 상태를 "설치했다 / 적용했다" 로 이해하며, 이후 데이터로 사용할 수 있도록 공개합니다.
     /// 서버 권위 프로토콜에 의해 모든 클라이언트에서 동일하게 반영됩니다.
     /// </summary>
     public bool IsAttached { get; private set; }
+    /// <summary>산소 라인 자동 연결에 사용할 유량계 측 포트. 프리팹에 설정되지 않으면 null이다.</summary>
+    public OxyLineConnectionPoint OxyLineConnectionPoint => _oxyLineConnectionPoint;
     private Sprite _heldItemIcon;
 
     protected override string EntityIdPrefix => "wall_oxyflowmeter";
@@ -155,6 +163,7 @@ namespace TriageTrainer.Entity
       SetAttached(true);
       TriageWorldInteractionSignals.RaiseOxyflowmeterInstalled(EntityIdentifier);
       TriageWorldInteractionSignals.RaiseOxyflowmeterEnabled(EntityIdentifier);
+      InstallationConfirmed?.Invoke(this);
       RaiseCompletionSignalIfAny();
     }
 

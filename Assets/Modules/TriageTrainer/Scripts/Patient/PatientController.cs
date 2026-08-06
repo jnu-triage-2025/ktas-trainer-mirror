@@ -7,6 +7,8 @@ using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.IntravenousLine;
+using TriageTrainer.Entity.OxyLine;
+using TriageTrainer.Entity.SuctionLine;
 using UnityEngine;
 
 using MI = MultiplayerInfrastructure;
@@ -35,6 +37,10 @@ namespace TriageTrainer.Entity
     [Header("Runtime")]
     [SerializeField] private PatientSupportExternalRefs _supportExternalRefs;
     [SerializeField] private IntravenousLineConnectionPoint _ivAttachmentPoint;
+    [Tooltip("설치된 산소 마스크에 포함된 환자 측 산소 라인 포트입니다.")]
+    [SerializeField] private OxyLineConnectionPoint _oxygenMaskAttachmentPoint;
+    [Tooltip("환자 측 석션 라인 포트입니다.")]
+    [SerializeField] private SuctionLineConnectionPoint _suctionLineAttachmentPoint;
     [SerializeField] private Transform _carryAttachPoint;
     [SerializeField] private bool _isMovingPatientBedAttached;
     [SerializeField] private bool _isPlayerAttached;
@@ -58,6 +64,14 @@ namespace TriageTrainer.Entity
     public PatientSupportExternalRefs SupportExternalRefs => _supportExternalRefs;
     /// <summary>여러 수액 줄 연결을 허용하는 환자 IV attachment point.</summary>
     public IntravenousLineConnectionPoint IvAttachmentPoint => _ivAttachmentPoint;
+    /// <summary>설치된 산소 마스크의 환자 측 산소 라인 포트. 설정되지 않으면 null이다.</summary>
+    public OxyLineConnectionPoint OxygenMaskAttachmentPoint => _oxygenMaskAttachmentPoint != null && _oxygenMaskAttachmentPoint.isActiveAndEnabled
+      ? _oxygenMaskAttachmentPoint : null;
+    public OxyLineConnectionPoint ConfiguredOxygenMaskAttachmentPoint => _oxygenMaskAttachmentPoint;
+    /// <summary>환자 측 석션 라인 포트. 설정되지 않거나 비활성이면 null이다.</summary>
+    public SuctionLineConnectionPoint SuctionLineAttachmentPoint => _suctionLineAttachmentPoint != null && _suctionLineAttachmentPoint.isActiveAndEnabled
+      ? _suctionLineAttachmentPoint : null;
+    public SuctionLineConnectionPoint ConfiguredSuctionLineAttachmentPoint => _suctionLineAttachmentPoint;
     public Transform CarryAttachPoint => _carryAttachPoint != null ? _carryAttachPoint : transform;
     public bool IsMovingPatientBedAttached => _isMovingPatientBedAttached;
     public bool IsPlayerAttached => _isPlayerAttached;
