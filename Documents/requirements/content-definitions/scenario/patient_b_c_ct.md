@@ -68,6 +68,7 @@ flags: ["refactor-required"]
   - 처리: 환자 B, C를 처치 구역으로 이동시키면 완료 처리
     - 기술 노트: zone구현이 있는지, waypoint로 처리해야하는지는 확인해보아야 함
     - zone이 있다면 zone 구현을 따르기, 다만 관련하여 대비된 것이 없으므로 OverworldInitializer에 내용추가해두어야 함
+    - `scen_b:care_area_waypoint`
 
 위 퀘스트 완료 시 (*2) 내용 시작
 
