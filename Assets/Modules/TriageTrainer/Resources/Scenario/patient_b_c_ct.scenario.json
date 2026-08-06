@@ -1,7 +1,9 @@
 {
   "identifier": "patient_b_c_ct",
   "clientSignalIdentifiers": [],
-  "clientSignalPrefixes": [],
+  "clientSignalPrefixes": [
+    "sig.quest_arrival_triage_area_"
+  ],
   "defaultEntrypoint": "SPAWN_B",
   "tags": [
     "nurse_a",
@@ -64,7 +66,7 @@
     "SPAWN_DUMMY": {
       "identifier": "SPAWN_DUMMY",
       "nodeType": "EntityPresetSpawn",
-      "nextIdentifier": "SPAWN_DOCTOR",
+      "nextIdentifier": "ATTACH_SPAWNED_PATIENT_BEDS",
       "presetIdentifier": "patient_dummy_d_b",
       "spawnedEntityIdentifier": "patient_dummy_d_b",
       "positionSourceEntityIdentifier": "scen_b:patient_spawnpoint_dummy_d_a",
@@ -74,6 +76,13 @@
       "rotationX": 0,
       "rotationY": -90,
       "rotationZ": 0
+    },
+    "ATTACH_SPAWNED_PATIENT_BEDS": {
+      "identifier": "ATTACH_SPAWNED_PATIENT_BEDS",
+      "nodeType": "InvokeEvent",
+      "eventIdentifier": "attach_patient_bed_pairs",
+      "moveNextBehavior": "WaitUntilDone",
+      "nextIdentifier": "SPAWN_DOCTOR"
     },
     "SPAWN_DOCTOR": {
       "identifier": "SPAWN_DOCTOR",
@@ -354,7 +363,7 @@
     "P_ARRIVAL": {
       "identifier": "P_ARRIVAL",
       "nodeType": "Parallel",
-      "nextIdentifier": "P_TRIAGE",
+      "nextIdentifier": "ARRIVAL_QUEST_COMPLETION_DELAY",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Panic",
@@ -561,6 +570,16 @@
       "questDefinitionIdentifier": "Quest_Arrive_Triage",
       "quest": null
     },
+    "ARRIVAL_QUEST_COMPLETION_DELAY": {
+      "identifier": "ARRIVAL_QUEST_COMPLETION_DELAY",
+      "nodeType": "Delay",
+      "nextIdentifier": "P_TRIAGE",
+      "duration": {
+        "value": 0.25,
+        "unit": "Seconds"
+      },
+      "waitUntil": "WaitUntilDone"
+    },
     "P_TRIAGE": {
       "identifier": "P_TRIAGE",
       "nodeType": "Parallel",
@@ -747,12 +766,33 @@
     "TRIAGE_RESET_ADD": {
       "identifier": "TRIAGE_RESET_ADD",
       "nodeType": "QuestControl",
-      "nextIdentifier": "TRIAGE_WAIT_ALL",
+      "nextIdentifier": "TRIAGE_REENABLE_B",
       "operation": "Add",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Triage_Lead",
       "quest": null
+    },
+    "TRIAGE_REENABLE_B": {
+      "identifier": "TRIAGE_REENABLE_B",
+      "nodeType": "TriageAssessControl",
+      "nextIdentifier": "TRIAGE_REENABLE_C",
+      "targetEntityIdentifier": "patient_b",
+      "assessable": true
+    },
+    "TRIAGE_REENABLE_C": {
+      "identifier": "TRIAGE_REENABLE_C",
+      "nodeType": "TriageAssessControl",
+      "nextIdentifier": "TRIAGE_REENABLE_D",
+      "targetEntityIdentifier": "patient_c",
+      "assessable": true
+    },
+    "TRIAGE_REENABLE_D": {
+      "identifier": "TRIAGE_REENABLE_D",
+      "nodeType": "TriageAssessControl",
+      "nextIdentifier": "TRIAGE_WAIT_ALL",
+      "targetEntityIdentifier": "patient_dummy_d_b",
+      "assessable": true
     },
     "TRIAGE_B_Q": {
       "identifier": "TRIAGE_B_Q",

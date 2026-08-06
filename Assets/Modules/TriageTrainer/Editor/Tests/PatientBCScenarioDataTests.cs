@@ -26,6 +26,8 @@ namespace TriageTrainer.Tests
   {
     private const string PatientDummyDBPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeDDummyB.prefab";
+    private const string PatientDummyDAPrefabPath =
+      "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeDDummyA.prefab";
 
     [Test]
     public void PatientVitalMonitorResolvesFromSharedCareZoneWithoutSceneReference()
@@ -209,8 +211,9 @@ namespace TriageTrainer.Tests
         "Modules/TriageTrainer/Resources/Scenario/patient_b_c_ct.scenario.json");
       var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
 
-      Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
-      Assert.That(graph.Nodes, Has.Count.EqualTo(303));
+       Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
+       Assert.That(graph.Nodes, Has.Count.EqualTo(308));
+       Assert.That(graph.ClientSignalPrefixes, Is.EqualTo(new[] { "sig.quest_arrival_triage_area_" }));
       Assert.That(graph.ActingNpcs, Has.Count.EqualTo(1));
       Assert.That(graph.ActingNpcs.Single().Identifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
       Assert.That(graph.ActingNpcs.Single().PresetIdentifier, Is.EqualTo("npc_doctor_preset"));
@@ -220,7 +223,14 @@ namespace TriageTrainer.Tests
       Assert.That(patientBSpawn, Is.Not.Null);
       Assert.That(patientCSpawn, Is.Not.Null);
       Assert.That(patientBSpawn.RotationY, Is.EqualTo(-90f));
-      Assert.That(patientCSpawn.RotationY, Is.EqualTo(-90f));
+       Assert.That(patientCSpawn.RotationY, Is.EqualTo(-90f));
+       var attachSpawnedBeds = graph.Nodes["ATTACH_SPAWNED_PATIENT_BEDS"] as ScenarioInvokeEventNode;
+       Assert.That(attachSpawnedBeds, Is.Not.Null);
+       Assert.That(attachSpawnedBeds.EventIdentifier, Is.EqualTo("attach_patient_bed_pairs"));
+       Assert.That(attachSpawnedBeds.NextIdentifier, Is.EqualTo("SPAWN_DOCTOR"));
+       Assert.That(patientCSpawn.NextIdentifier, Is.EqualTo("SPAWN_DUMMY"));
+       Assert.That((graph.Nodes["SPAWN_DUMMY"] as ScenarioEntityPresetSpawnNode)?.NextIdentifier,
+         Is.EqualTo("ATTACH_SPAWNED_PATIENT_BEDS"));
 
       var doctorSpawn = graph.Nodes["SPAWN_DOCTOR"] as ScenarioEntityPresetSpawnNode;
       Assert.That(doctorSpawn, Is.Not.Null);
@@ -260,10 +270,14 @@ namespace TriageTrainer.Tests
       Assert.That(announcementAndArrival.WaitMode, Is.EqualTo(ScenarioWaitMode.None));
       Assert.That(announcementAndArrival.Branches.Select(branch => branch.Identifier),
         Is.EqualTo(new[] { "ANNOUNCE" }));
-      Assert.That(graph.Nodes["COUNT_NURSE_ARRIVAL"].NextIdentifier, Is.EqualTo("P_ANNOUNCE_ARRIVAL"));
+       Assert.That(graph.Nodes["COUNT_NURSE_ARRIVAL"].NextIdentifier, Is.EqualTo("P_ANNOUNCE_ARRIVAL"));
       Assert.That(graph.Nodes["P_ANNOUNCE_ARRIVAL"].NextIdentifier, Is.EqualTo("P_ARRIVAL"));
       Assert.That(graph.Nodes["ANNOUNCE"].NextIdentifier, Is.EqualTo("CC_ANNOUNCE"));
-      Assert.That(graph.Nodes["P_ARRIVAL"].NextIdentifier, Is.EqualTo("P_TRIAGE"));
+       Assert.That(graph.Nodes["P_ARRIVAL"].NextIdentifier, Is.EqualTo("ARRIVAL_QUEST_COMPLETION_DELAY"));
+       var arrivalQuestCompletionDelay = graph.Nodes["ARRIVAL_QUEST_COMPLETION_DELAY"] as ScenarioDelayNode;
+       Assert.That(arrivalQuestCompletionDelay, Is.Not.Null);
+       Assert.That(arrivalQuestCompletionDelay.Duration.ToSeconds(), Is.EqualTo(0.25d));
+       Assert.That(arrivalQuestCompletionDelay.NextIdentifier, Is.EqualTo("P_TRIAGE"));
 
       foreach (string role in new[] { "A", "B", "C", "D" })
       {
@@ -316,7 +330,21 @@ namespace TriageTrainer.Tests
       var triageEvaluation = graph.Nodes["TRIAGE_EVALUATE_CURRENT"] as ScenarioInvokeEventNode;
       Assert.That(triageEvaluation, Is.Not.Null);
       Assert.That(triageEvaluation.EventIdentifier, Is.EqualTo("evaluate_patient_b_c_triage"));
-      Assert.That(graph.Nodes["TRIAGE_WAIT_ALL"].NextIdentifier, Is.EqualTo("TRIAGE_EVALUATE_CURRENT"));
+       Assert.That(graph.Nodes["TRIAGE_WAIT_ALL"].NextIdentifier, Is.EqualTo("TRIAGE_EVALUATE_CURRENT"));
+       Assert.That(graph.Nodes["TRIAGE_RESET_ADD"].NextIdentifier, Is.EqualTo("TRIAGE_REENABLE_B"));
+       foreach (var expectation in new[]
+                {
+                  (Node: "TRIAGE_REENABLE_B", Patient: "patient_b", Next: "TRIAGE_REENABLE_C"),
+                  (Node: "TRIAGE_REENABLE_C", Patient: "patient_c", Next: "TRIAGE_REENABLE_D"),
+                  (Node: "TRIAGE_REENABLE_D", Patient: "patient_dummy_d_b", Next: "TRIAGE_WAIT_ALL")
+                })
+       {
+         var reenable = graph.Nodes[expectation.Node] as ScenarioTriageAssessControlNode;
+         Assert.That(reenable, Is.Not.Null, expectation.Node);
+         Assert.That(reenable.TargetEntityIdentifier, Is.EqualTo(expectation.Patient), expectation.Node);
+         Assert.That(reenable.Assessable, Is.True, expectation.Node);
+         Assert.That(reenable.NextIdentifier, Is.EqualTo(expectation.Next), expectation.Node);
+       }
       var triageCorrectCheck = graph.Nodes["TRIAGE_CHECK_CORRECT"] as ScenarioValidatorNode;
       Assert.That(triageCorrectCheck, Is.Not.Null);
       Assert.That(triageCorrectCheck.RootConditions.Single().ValidationRules
@@ -485,14 +513,14 @@ namespace TriageTrainer.Tests
 
       var patient = prefab.GetComponent<PatientController>();
       var networkObject = prefab.GetComponent<NetworkObject>();
-      var patientState = prefab.GetComponent<PatientTypeBFemaleState>();
+      var patientState = prefab.GetComponent<PatientDummyDState>();
       Assert.That(patient, Is.Not.Null);
       Assert.That(prefab.GetComponent<CapsuleCollider>(), Is.Not.Null);
       Assert.That(networkObject, Is.Not.Null);
       Assert.That(patientState, Is.Not.Null);
-      Assert.That(patientState.TreatmentDisplayState.PatientModelGameObject, Is.Not.Null);
-      Assert.That(patientState.TreatmentDisplayState.PatientModelGameObject.name,
-        Is.EqualTo("Scenario2Female_final"), "the intended dummy visual must remain attached");
+      Assert.That(patientState.TreatmentDisplayState.PatientModelGameObject, Is.Null);
+      Assert.That(patientState.TreatmentDisplayState.DisplaySupports,
+        Is.EqualTo(new PatientTreatmentDisplayModel()));
       Assert.That(patient.IntravenousLineCannulaSupported, Is.False);
 
       Assert.That(networkObject.NetworkBehaviours, Has.Count.EqualTo(1));
@@ -502,8 +530,61 @@ namespace TriageTrainer.Tests
 
       var requirement = presetRegistry.entityPresetRegistryRequirements.Single(
         value => value.identifier == "patient_dummy_d_b");
-      Assert.That(requirement.prefab, Is.SameAs(prefab));
-      Assert.That(requirement.isNetworked, Is.True);
+       Assert.That(requirement.prefab, Is.SameAs(prefab));
+       Assert.That(requirement.isNetworked, Is.True);
+       Assert.That(requirement.childReferences.Single().childPresetIdentifier, Is.EqualTo("bed_d_b"));
+
+       var dummyBedRequirement = presetRegistry.entityPresetRegistryRequirements.Single(
+         value => value.identifier == "bed_d_b");
+       Assert.That(dummyBedRequirement.prefab, Is.Not.Null);
+    }
+
+    [TestCase(PatientDummyDAPrefabPath, "patient_dummy_d_a")]
+    [TestCase(PatientDummyDBPrefabPath, "patient_dummy_d_b")]
+    public void PatientDummyDPrefabsSupportPatientAnimationAndInteractions(
+      string prefabPath,
+      string identifier)
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+
+      Assert.That(prefab, Is.Not.Null);
+      var patient = prefab.GetComponent<PatientController>();
+      var patientState = prefab.GetComponent<PatientDummyDState>();
+      var animator = prefab.GetComponent<Animator>();
+
+      Assert.That(patient, Is.Not.Null);
+      Assert.That(patientState, Is.Not.Null);
+      Assert.That(prefab.GetComponent<PatientTypeBFemaleState>(), Is.Null);
+      Assert.That(patient.Identifier, Is.EqualTo(identifier));
+      Assert.That(prefab.GetComponent<CapsuleCollider>(), Is.Not.Null);
+      Assert.That(prefab.GetComponent<NetworkObject>(), Is.Not.Null);
+      Assert.That(animator, Is.Not.Null, "the dummy root must expose an Animator");
+      Assert.That(animator.avatar, Is.Not.Null,
+        "the dummy Animator must use its source model Humanoid Avatar");
+      Assert.That(animator.runtimeAnimatorController, Is.Not.Null,
+        "the dummy Animator must have the shared patient animation controller");
+      Assert.That(patient.CarryAttachPoint, Is.Not.SameAs(patient.transform),
+        "the dummy must have a dedicated carry attachment point");
+      Assert.That(patient.Interacts, Has.Length.GreaterThanOrEqualTo(3));
+    }
+
+    [TestCase("Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeBMale.prefab")]
+    [TestCase("Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeBFemale.prefab")]
+    [TestCase(PatientDummyDAPrefabPath)]
+    [TestCase(PatientDummyDBPrefabPath)]
+    public void PatientBCScenarioPrefabsDisableStandardAssessActions(string prefabPath)
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+      var patient = prefab != null ? prefab.GetComponent<PatientController>() : null;
+      var field = typeof(PatientController).GetField(
+        "_assessActions",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+
+      Assert.That(patient, Is.Not.Null);
+      Assert.That(field, Is.Not.Null);
+      var actions = field.GetValue(patient) as List<PatientController.AssessActionConfig>;
+      Assert.That(actions, Has.Count.EqualTo(4));
+      Assert.That(actions.All(action => !action.Enabled), Is.True);
     }
 
     [Test]

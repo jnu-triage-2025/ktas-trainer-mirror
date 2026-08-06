@@ -17,7 +17,7 @@
         {
           "type": "WaypointReached",
           "waypointIdentifier": "scen_b:quest_arrival_triage_area",
-          "reachDistance": 4,
+          "reachDistance": 6,
           "displayTextContent": "트리아지 구역에 도착한 환자 확인",
           "count": 1
         }

@@ -36,19 +36,27 @@ namespace TriageTrainer.Scenario
     {
       ResolveRuntimeReferencesIfNeeded();
 
-      if (_patientBedPairs != null)
+      var pairs = _patientBedPairs;
+      if (pairs == null || pairs.Count == 0)
       {
-        int attached = 0;
-        foreach (var pair in _patientBedPairs)
+        pairs = new List<PatientBedPair>
         {
-          if (TryAttachPatientToBedByIdentifier(pair.patientIdentifier, pair.bedIdentifier))
-          {
-            attached++;
-          }
-        }
-
-        EmitSystemMessage($"환자-침대 결합 재설정 완료 ({attached}/{_patientBedPairs.Count}).");
+          new() { patientIdentifier = "patient_b", bedIdentifier = "bed_b" },
+          new() { patientIdentifier = "patient_c", bedIdentifier = "bed_c" },
+          new() { patientIdentifier = "patient_dummy_d_b", bedIdentifier = "bed_d_b" }
+        };
       }
+
+      int attached = 0;
+      foreach (var pair in pairs)
+      {
+        if (TryAttachPatientToBedByIdentifier(pair.patientIdentifier, pair.bedIdentifier))
+        {
+          attached++;
+        }
+      }
+
+      EmitSystemMessage($"환자-침대 결합 재설정 완료 ({attached}/{pairs.Count}).");
 
       yield break;
     }

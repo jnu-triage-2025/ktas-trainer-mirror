@@ -9,6 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2887873781022743361}
+  - component: {fileID: 3850785483627365576}
+  - component: {fileID: 6481162045202206273}
+  - component: {fileID: 3859099019089065873}
+  - component: {fileID: 6759064965544079288}
   m_Layer: 0
   m_Name: PatientTypeDDummyA
   m_TagString: Untagged
@@ -29,10 +33,362 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 8310995948041214489}
+  - {fileID: 6467832380753491256}
+  - {fileID: 8298302873564096653}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &8420657881368002034
+--- !u!114 &3850785483627365576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1909068193049070239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ee93ca5d20548298d7d2c4dfc15e158, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Patient.PatientDummyDState
+  positionOnLayingOnPatientMovingBed: {x: 0, y: -0.95, z: -0.2}
+  eulerAnglesOnLayingOnPatientMovingBed: {x: 0, y: 0, z: 0}
+  colliderCenterOnLayingOnPatientMovingBed: {x: 0, y: 1, z: 0}
+  colliderHeightOnLayingOnPatientMovingBed: 1.8
+  colliderRadiusOnLayingOnPatientMovingBed: 0.3
+  colliderDirectionOnLayingOnPatientMovingBed: 2
+  treatmentDisplayState:
+    <DisplaySupports>k__BackingField:
+      Syringe18GInsertedIntoLeftArm: 0
+      Syringe18GInsertedIntoRightArm: 0
+      Syringe20GInsertedIntoLeftArm: 0
+      Syringe20GInsertedIntoRightArm: 0
+      CentralVenousCatheterInsertedIntoSubclavian: 0
+      LaryngoscopeInserted: 0
+      EndotrachealTubeStyletInserted: 0
+      EndotrachealTubeInsertDone: 0
+      TPieceAttachedToNasalCannula: 0
+      AmbuBagAttachedToEndotrachealTube: 0
+      GauzePatchedOnThorax: 0
+      GauzeDressingDoneOnThorax: 0
+      GauzePatchedOnRightArm: 0
+      GauzeDressingDoneOnRightArm: 0
+      GauzePatchedOnLeftArm: 0
+      GauzeDressingDoneOnLeftArm: 0
+      GauzePatchedOnRightEyebrow: 0
+      GauzeDressingDoneOnRightEyebrow: 0
+      GauzePatchedOnLeftEyebrow: 0
+      GauzeDressingDoneOnLeftEyebrow: 0
+      NasalCannulaApplied: 0
+      CervicalCollarOnNeck: 0
+      IntravenousStandAttached: 0
+      IntravenousHangerAttached: 0
+      IntravenousFluidAttached: 0
+    <DisplayState>k__BackingField:
+      Syringe18GInsertedIntoLeftArm: 0
+      Syringe18GInsertedIntoRightArm: 0
+      Syringe20GInsertedIntoLeftArm: 0
+      Syringe20GInsertedIntoRightArm: 0
+      CentralVenousCatheterInsertedIntoSubclavian: 0
+      LaryngoscopeInserted: 0
+      EndotrachealTubeStyletInserted: 0
+      EndotrachealTubeInsertDone: 0
+      TPieceAttachedToNasalCannula: 0
+      AmbuBagAttachedToEndotrachealTube: 0
+      GauzePatchedOnThorax: 0
+      GauzeDressingDoneOnThorax: 0
+      GauzePatchedOnRightArm: 0
+      GauzeDressingDoneOnRightArm: 0
+      GauzePatchedOnLeftArm: 0
+      GauzeDressingDoneOnLeftArm: 0
+      GauzePatchedOnRightEyebrow: 0
+      GauzeDressingDoneOnRightEyebrow: 0
+      GauzePatchedOnLeftEyebrow: 0
+      GauzeDressingDoneOnLeftEyebrow: 0
+      NasalCannulaApplied: 0
+      CervicalCollarOnNeck: 0
+      IntravenousStandAttached: 0
+      IntravenousHangerAttached: 0
+      IntravenousFluidAttached: 0
+    <PatientModelGameObject>k__BackingField: {fileID: 0}
+    <ChildGameObjects>k__BackingField:
+      Syringe18GInsertedIntoLeftArm: {fileID: 0}
+      Syringe18GInsertedIntoRightArm: {fileID: 0}
+      Syringe20GInsertedIntoLeftArm: {fileID: 0}
+      Syringe20GInsertedIntoRightArm: {fileID: 0}
+      CentralVenousCatheterInsertedIntoSubclavian: {fileID: 0}
+      LaryngoscopeInserted: {fileID: 0}
+      EndotrachealTubeStyletInserted: {fileID: 0}
+      EndotrachealTubeInsertDone: {fileID: 0}
+      TPieceAttachedToNasalCannula: {fileID: 0}
+      AmbuBagAttachedToEndotrachealTube: {fileID: 0}
+      GauzePatchedOnThorax: {fileID: 0}
+      GauzeDressingDoneOnThorax: {fileID: 0}
+      GauzePatchedOnRightArm: {fileID: 0}
+      GauzeDressingDoneOnRightArm: {fileID: 0}
+      GauzePatchedOnLeftArm: {fileID: 0}
+      GauzeDressingDoneOnLeftArm: {fileID: 0}
+      GauzePatchedOnRightEyebrow: {fileID: 0}
+      GauzeDressingDoneOnRightEyebrow: {fileID: 0}
+      GauzePatchedOnLeftEyebrow: {fileID: 0}
+      GauzeDressingDoneOnLeftEyebrow: {fileID: 0}
+      NasalCannulaApplied: {fileID: 0}
+      CervicalCollarOnNeck: {fileID: 0}
+      IntravenousStandAttached: {fileID: 0}
+      IntravenousHangerAttached: {fileID: 0}
+      IntravenousFluidAttached: {fileID: 0}
+--- !u!136 &6481162045202206273
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1909068193049070239}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.3
+  m_Height: 1.8
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.9, z: 0}
+--- !u!114 &3859099019089065873
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1909068193049070239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e794a1dae1454908ba448af46d61805, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.PatientController
+  _componentIndexCache: 0
+  _addedNetworkObject: {fileID: 6759064965544079288}
+  _networkObjectCache: {fileID: 6759064965544079288}
+  _runtimeAnimatorController: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
+  _assessActions:
+  - _identifier: assess_avpu_gcs
+    _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC0AC\uC815(AVPU/GCS)"
+    _displayIcon: {fileID: 0}
+    _assessSignal: 
+    _enabled: 0
+  - _identifier: assess_pulse
+    _displayText: "\uB9E5\uBC15 \uD655\uC778"
+    _displayIcon: {fileID: 0}
+    _assessSignal: 
+    _enabled: 0
+  - _identifier: assess_gcs
+    _displayText: "GCS \uC7AC\uC0AC\uC815"
+    _displayIcon: {fileID: 0}
+    _assessSignal: 
+    _enabled: 0
+  - _identifier: assess_vital
+    _displayText: "\uD65C\uB825\uC9D5\uD6C4 \uC0AC\uC815"
+    _displayIcon: {fileID: 0}
+    _assessSignal: 
+    _enabled: 0
+  _capsuleCollider: {fileID: 6481162045202206273}
+  _standingCapsuleCenter: {x: 0, y: 0.9, z: 0}
+  _standingCapsuleHeight: 1.8
+  _standingCapsuleRadius: 0.3
+  _standingCapsuleDirection: 1
+  _lyingCapsuleCenter: {x: 0, y: 0.45, z: 0}
+  _lyingCapsuleHeight: 1.8
+  _lyingCapsuleRadius: 0.3
+  _lyingCapsuleDirection: 2
+  _identifier: patient_dummy_d_a
+  _liftDisplayText: "\uD658\uC790\uB97C \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
+  _liftDisplayIcon: {fileID: 0}
+  _carryDisplayText: "\uD658\uC790 \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
+  _carryDisplayIcon: {fileID: 0}
+  _monitorSelectDisplayText: "\uC774 \uD658\uC790\uB97C \uBAA8\uB2C8\uD130\uB9C1"
+  _monitorSelectDisplayIcon: {fileID: 0}
+  _weight: 4
+  _supportExternalRefs:
+    _patientBed: {fileID: 0}
+    _intravenousFluids: []
+    _suctionWall: {fileID: 0}
+    _oxyflowmeter: {fileID: 0}
+    _suctionWalls: []
+    _oxyflowmeters: []
+  _ivAttachmentPoint: {fileID: 0}
+  _oxygenMaskAttachmentPoint: {fileID: 0}
+  _suctionLineAttachmentPoint: {fileID: 0}
+  _carryAttachPoint: {fileID: 8298302873564096653}
+  _isMovingPatientBedAttached: 0
+  _isPlayerAttached: 0
+  _debugTreatmentDisplay: 11
+  _debugItemIdentifier: gauze
+  _interactConfigs:
+  - _identifier: lift_from_bed
+    _enabled: 1
+  - _identifier: carry_patient
+    _enabled: 1
+  - _identifier: monitor_select
+    _enabled: 1
+  _intravenousLineCannulaConfig:
+    _supported: 0
+    _displayText: 
+    _displayIcon: {fileID: 0}
+  _intravenousLineCannulaInteractable: 0
+  _medicalState:
+    isCardiacArrest: 0
+    ecg:
+      bpm: 75
+      irregularity: 0
+      pAmp: 0.15
+      pWidth: 0.04
+      qAmp: -0.15
+      rAmp: 1.2
+      sAmp: -0.25
+      tAmp: 0.3
+      tWidth: 0.08
+      uAmp: 0
+      stElevation: 0
+      noise: 0.02
+      qrsWidthScale: 1
+    art:
+      bpm: 75
+      systolic: 120
+      diastolic: 80
+      noise: 0.2
+    cvp:
+      bpm: 75
+      mean: 12
+      noise: 0.2
+    pleth:
+      bpm: 75
+      spo2: 99
+      noise: 0.2
+    numerics:
+      bpm: 60
+      pvcs: 0
+      pulseRate: 74
+      perfusionIndex: 3
+      spo2: 99
+    nibp:
+      systolic: 120
+      diastolic: 82
+    temperature:
+      t1: 36.5
+      t2: 32.3
+    stLeads:
+      i: 0
+      ii: 0
+      iii: 0
+      avr: 0
+      avl: 0
+      avf: 0
+      v1: 0
+      v2: 0
+      v3: 0
+      v4: 0
+      v5: 0
+      v6: 0
+  _triageConfig:
+    _assessable: 0
+    _changeAssessableOnAssessDone: 2
+    _displayText: 
+    _displayIcon: {fileID: 0}
+  _triageLabelAnchor: {fileID: 0}
+--- !u!114 &6759064965544079288
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1909068193049070239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FishNet.Runtime::FishNet.Object.NetworkObject
+  <IsNested>k__BackingField: 0
+  WasActiveDuringEdit: 0
+  WasActiveDuringEdit_Set1: 1
+  <ComponentIndex>k__BackingField: 0
+  <PredictedSpawn>k__BackingField: {fileID: 0}
+  <PredictedOwner>k__BackingField: {fileID: 0}
+  NetworkBehaviours:
+  - {fileID: 3859099019089065873}
+  InitializedParentNetworkBehaviour: {fileID: 0}
+  InitializedNestedNetworkObjects: []
+  RuntimeParentNetworkBehaviour: {fileID: 0}
+  RuntimeChildNetworkBehaviours: []
+  _isNetworked: 1
+  _isSpawnable: 1
+  _isGlobal: 0
+  _initializeOrder: 0
+  _preventDespawnOnDisconnect: 0
+  _defaultDespawnType: 0
+  _initializedTimestamp: -8584156140138443568
+  _localLevelOfDetailCalculationType: 0
+  _useLevelOfDetail: 0
+  _useRootLevelOfDetail: 1
+  NetworkObserver: {fileID: 0}
+  _enablePrediction: 0
+  _predictionType: 0
+  _localReconcileCorrectionType: 2
+  _graphicalObject: {fileID: 0}
+  _detachGraphicalObject: 0
+  _enableStateForwarding: 1
+  _networkTransform: {fileID: 0}
+  _ownerInterpolation: 1
+  _ownerSmoothedProperties: 255
+  _adaptiveInterpolation: 3
+  _spectatorSmoothedProperties: 255
+  _spectatorInterpolation: 2
+  _enableTeleport: 0
+  _teleportThreshold: 1
+  <PrefabId>k__BackingField: 1
+  <SpawnableCollectionId>k__BackingField: 0
+  <AssetPathHash>k__BackingField: 945799969484701077
+  SceneId: 0
+  SerializedTransformProperties:
+    Position: {x: 0, y: 0, z: 0}
+    Rotation: {x: 0, y: 0, z: 0, w: 1}
+    Scale: {x: 1, y: 1, z: 1}
+    IsValid: 1
+--- !u!1 &3059064153231568963
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8298302873564096653}
+  m_Layer: 0
+  m_Name: PatientCarryAttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8298302873564096653
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3059064153231568963}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1, z: 0.2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2887873781022743361}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &6793928756209242835
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -40,57 +396,85 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2887873781022743361}
     m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: 5abeee063b4364f7db2c126d5ed19013, type: 3}
+    - target: {fileID: -8679921383154817045, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5abeee063b4364f7db2c126d5ed19013, type: 3}
+    - target: {fileID: -8679921383154817045, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.9
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5abeee063b4364f7db2c126d5ed19013, type: 3}
+    - target: {fileID: -8679921383154817045, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5abeee063b4364f7db2c126d5ed19013, type: 3}
+    - target: {fileID: -8679921383154817045, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5abeee063b4364f7db2c126d5ed19013, type: 3}
+    - target: {fileID: -8679921383154817045, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: -0.00000003774895
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5abeee063b4364f7db2c126d5ed19013, type: 3}
+    - target: {fileID: -8679921383154817045, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
       propertyPath: m_LocalRotation.y
       value: -0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5abeee063b4364f7db2c126d5ed19013, type: 3}
+    - target: {fileID: -8679921383154817045, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
       propertyPath: m_LocalRotation.z
       value: -0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5abeee063b4364f7db2c126d5ed19013, type: 3}
+    - target: {fileID: -8679921383154817045, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5abeee063b4364f7db2c126d5ed19013, type: 3}
+    - target: {fileID: -8679921383154817045, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 5abeee063b4364f7db2c126d5ed19013, type: 3}
+    - target: {fileID: -8679921383154817045, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 5abeee063b4364f7db2c126d5ed19013, type: 3}
+    - target: {fileID: -8679921383154817045, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 3c69c81bb21a6465d88929b36953460c, type: 2}
+    - target: {fileID: 919132149155446097, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
       propertyPath: m_Name
-      value: Scenario1
+      value: DummyAdultMale
+      objectReference: {fileID: 0}
+    - target: {fileID: 3738259741586597632, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
+    - target: {fileID: 3738259741586597632, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 5abeee063b4364f7db2c126d5ed19013, type: 3}
---- !u!4 &8310995948041214489 stripped
+  m_SourcePrefab: {fileID: 100100000, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
+--- !u!4 &6467832380753491256 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5abeee063b4364f7db2c126d5ed19013, type: 3}
-  m_PrefabInstance: {fileID: 8420657881368002034}
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 6ec4e5e7176094cfe94f31cf8bec23cf, type: 3}
+  m_PrefabInstance: {fileID: 6793928756209242835}
   m_PrefabAsset: {fileID: 0}
