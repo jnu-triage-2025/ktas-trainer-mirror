@@ -186,6 +186,29 @@ namespace TriageTrainer.Entity
     }
 
     /// <summary>
+    /// 시나리오가 오답인 환자만 다시 분류시킬 때 사용한다. 이전 등급과 정답 제출로 닫힌
+    /// 상호작용 상태를 함께 초기화해, 재시도 인터랙션이 확실히 다시 노출되게 한다.
+    /// </summary>
+    public void ResetTriageAssessmentForRetry()
+    {
+      _triageConfig.Assessable = true;
+      _assessedTriage.Value = TriageLevel.Unassessed;
+
+      if (_patientDescriptor != null)
+        _patientDescriptor.assessedTriage = TriageLevel.Unassessed;
+
+      if (IsServerStarted)
+      {
+        _assessable.Value = true;
+        _assessableInitialized = true;
+        UpdateTriageOverheadLabel(TriageLevel.Unassessed);
+        return;
+      }
+
+      UpdateTriageOverheadLabel(TriageLevel.Unassessed);
+    }
+
+    /// <summary>
     /// 트리아지 평가를 시작한다(상호작용한 플레이어에게 트리아지 UI 를 연다).
     /// UI 는 로컬 플레이어 클라이언트에서만 열리며, 선택 결과는 <see cref="SubmitTriageAssessment"/> 로 반영된다.
     /// </summary>

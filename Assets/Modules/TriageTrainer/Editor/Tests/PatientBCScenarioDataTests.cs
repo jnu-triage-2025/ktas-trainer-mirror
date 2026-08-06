@@ -680,6 +680,27 @@ namespace TriageTrainer.Tests
       }
     }
 
+    [Test]
+    public void TriageRetryResetClearsPreviousAssessmentAndReenablesInteraction()
+    {
+      var target = CreatePatientWithTriage("patient_b", TriageTrainer.Entity.Patient.TriageLevel.Level2);
+      var patient = target.GetComponent<PatientController>();
+
+      try
+      {
+        patient.SetTriageAssessable(false);
+        patient.ResetTriageAssessmentForRetry();
+
+        Assert.That(patient.AssessedTriage, Is.EqualTo(TriageTrainer.Entity.Patient.TriageLevel.Unassessed));
+        Assert.That(patient.Descriptor.assessedTriage, Is.EqualTo(TriageTrainer.Entity.Patient.TriageLevel.Unassessed));
+        Assert.That(patient.EffectiveAssessable, Is.True);
+      }
+      finally
+      {
+        Object.DestroyImmediate(target);
+      }
+    }
+
     [TestCase(
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeBMale.prefab",
       "patient_b",

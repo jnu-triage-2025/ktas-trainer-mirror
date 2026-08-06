@@ -91,7 +91,7 @@ namespace TriageTrainer.Scenario
       ResolveRuntimeReferencesIfNeeded();
       ScenarioInteractionSignals.Clear($"triage_submitted_{patientIdentifier}");
       ScenarioInteractionSignals.Clear($"triage_correct_{patientIdentifier}");
-      SetPatientTriageAssessable(target, true);
+      target?.GetComponentInChildren<PatientController>(true)?.ResetTriageAssessmentForRetry();
       yield break;
     }
 
