@@ -34,7 +34,7 @@ MonoBehaviour:
     - type: 2
       identifier: zone_0:oxyflowmeter
       useDefaultPosition: 0
-      position: {x: -63.5619011, y: 1.4, z: -12.3857002}
+      position: {x: -63.5619, y: 1.4, z: -12.3857}
       useDefaultRotation: 0
       rotationEuler: {x: 90, y: -90, z: 0}
       useDefaultOccupiedSize: 0
@@ -48,7 +48,7 @@ MonoBehaviour:
     - type: 1
       identifier: zone_0:wall_suction
       useDefaultPosition: 0
-      position: {x: -63.385601, y: 1.3178525, z: -12.4329004}
+      position: {x: -63.3856, y: 1.3178525, z: -12.4329}
       useDefaultRotation: 0
       rotationEuler: {x: 90, y: -90, z: 0}
       useDefaultOccupiedSize: 0
@@ -72,7 +72,7 @@ MonoBehaviour:
       useDefaultZoneCenter: 0
       zoneCenter: {x: 0, y: 1.5, z: 0}
       useDefaultZoneSize: 0
-      zoneSize: {x: 3, y: 3.5, z: 3}
+      zoneSize: {x: 2.4, y: 3.5, z: 3}
   - entities:
     - type: 0
       identifier: zone_1:bed_snap_point
@@ -105,7 +105,7 @@ MonoBehaviour:
     - type: 1
       identifier: zone_1:wall_suction
       useDefaultPosition: 0
-      position: {x: -63.2736, y: 1.32300353, z: -17.982748}
+      position: {x: -63.2736, y: 1.3230035, z: -17.982748}
       useDefaultRotation: 0
       rotationEuler: {x: 90, y: 90, z: 0}
       useDefaultOccupiedSize: 0
@@ -129,7 +129,7 @@ MonoBehaviour:
       useDefaultZoneCenter: 0
       zoneCenter: {x: 0, y: 1.5, z: 0}
       useDefaultZoneSize: 0
-      zoneSize: {x: 3, y: 3.5, z: 3}
+      zoneSize: {x: 2.4, y: 3.5, z: 3}
   - entities:
     - type: 0
       identifier: zone_2:bed_snap_point
@@ -186,7 +186,7 @@ MonoBehaviour:
       useDefaultZoneCenter: 0
       zoneCenter: {x: 0, y: 1.5, z: 0}
       useDefaultZoneSize: 0
-      zoneSize: {x: 3, y: 3.5, z: 3}
+      zoneSize: {x: 2.4, y: 3.5, z: 3}
   - entities:
     - type: 0
       identifier: zone_3:bed_snap_point
@@ -243,4 +243,4 @@ MonoBehaviour:
       useDefaultZoneCenter: 0
       zoneCenter: {x: 0, y: 1.5, z: 0}
       useDefaultZoneSize: 0
-      zoneSize: {x: 3, y: 3.5, z: 3}
+      zoneSize: {x: 2.4, y: 3.5, z: 3}

@@ -270,7 +270,7 @@ namespace MultiplayerInfrastructure.Editor
       error = null;
       try
       {
-        var asset = AssetDatabase.LoadAssetAtPath<TextAsset>(assetPath);
+        var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.TextAsset>(assetPath);
         payload = JsonSerializer.Deserialize<QuestDefinitionRegistryPayload>(asset?.text, JsonOptions);
         if (payload == null) throw new InvalidDataException("빈 퀘스트 정의 문서입니다.");
         payload.Definitions ??= new List<QuestDefinition>();

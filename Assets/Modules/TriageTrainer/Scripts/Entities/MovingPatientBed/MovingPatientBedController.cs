@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using FishNet;
+using FishNet.Object;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
@@ -273,10 +275,16 @@ namespace TriageTrainer.Entity
 
     protected override bool ShouldIgnoreMovementBlocker(Collider collider)
     {
-      if (collider == null || _reposedTargetComponent == null)
+      if (collider == null)
         return false;
 
-      return collider.transform.IsChildOf(_reposedTargetComponent.transform);
+      // The bed moves at floor height. Floor colliders whose top does not rise above the
+      // bed origin must not turn a horizontal ray into a collision at tile seams.
+      if (collider.bounds.max.y <= transform.position.y + 0.01f)
+        return true;
+
+      return _reposedTargetComponent != null &&
+             collider.transform.IsChildOf(_reposedTargetComponent.transform);
     }
 
     protected override bool ShouldLogMovementBlockers => true;
@@ -299,10 +307,77 @@ namespace TriageTrainer.Entity
       if (nearest == null)
         return;
 
+      if (!TryResolvePositioningPointBedCollision(nearest))
+        return;
+
       _latchedPositioningPoint = nearest;
       SetAuthoritativeTransform(nearest.Position, nearest.Rotation);
       TriageWorldInteractionSignals.RaisePatientBedPositioningPointLatched(Identifier, nearest.Identifier);
       PublishPositioningPointReached(nearest);
+    }
+
+    /// <summary>
+    /// Resolves another bed occupying a positioning point before the incoming bed latches to it.
+    /// A patient-bearing bed is protected by default; empty beds are removed by default so stale
+    /// scenario beds do not prevent the next patient bed from reaching the point.
+    /// </summary>
+    private bool TryResolvePositioningPointBedCollision(MovingPatientBedPositioningPoint point)
+    {
+      MovingPatientBedController[] beds = FindObjectsByType<MovingPatientBedController>(
+        FindObjectsInactive.Exclude,
+        FindObjectsSortMode.None);
+      bool blockIncomingBed = false;
+
+      for (int i = 0; i < beds.Length; i++)
+      {
+        MovingPatientBedController existing = beds[i];
+        if (existing == null || existing == this || !existing.isActiveAndEnabled ||
+            !existing.IsOccupyingPositioningPoint(point))
+        {
+          continue;
+        }
+
+        if (existing.ReposedTarget != null)
+        {
+          if (point.BlockWhenPatientBedIsPresent)
+            return false;
+          if (point.BlockWhenAnyBedIsPresent)
+            blockIncomingBed = true;
+          continue;
+        }
+
+        // This explicit opt-in takes precedence over replacing an empty bed.
+        if (point.BlockWhenAnyBedIsPresent)
+        {
+          blockIncomingBed = true;
+          continue;
+        }
+
+        if (point.DespawnEmptyBedWhenPresent)
+        {
+          existing.DespawnForPositioningPointReplacement();
+          continue;
+        }
+      }
+
+      return !blockIncomingBed;
+    }
+
+    private bool IsOccupyingPositioningPoint(MovingPatientBedPositioningPoint point)
+    {
+      return _latchedPositioningPoint == point || point.IsWithinSnapDistance(transform.position);
+    }
+
+    private void DespawnForPositioningPointReplacement()
+    {
+      NetworkObject networkObject = GetComponent<NetworkObject>();
+      if (InstanceFinder.IsServerStarted && networkObject != null && networkObject.IsSpawned)
+      {
+        InstanceFinder.ServerManager.Despawn(networkObject);
+        return;
+      }
+
+      Destroy(gameObject);
     }
 
     private void PublishPositioningPointReached(MovingPatientBedPositioningPoint point)

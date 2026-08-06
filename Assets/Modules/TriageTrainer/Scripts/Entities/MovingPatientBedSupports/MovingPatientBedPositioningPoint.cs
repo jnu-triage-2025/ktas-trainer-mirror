@@ -19,6 +19,14 @@ namespace TriageTrainer.Entity
     [Header("Snap")]
     [SerializeField, Min(0.01f)] private float _snapDistance = 1f;
 
+    [Header("Bed Collision Policy")]
+    [Tooltip("환자가 결합된 침대가 이 위치 또는 스냅 범위에 있으면 새 침대의 positioning을 허용하지 않습니다.")]
+    [SerializeField] private bool _blockWhenPatientBedIsPresent = true;
+    [Tooltip("환자가 결합되지 않은 기존 침대가 이 위치 또는 스냅 범위에 있으면, 새 침대를 positioning하기 전에 기존 침대를 제거합니다.")]
+    [SerializeField] private bool _despawnEmptyBedWhenPresent = true;
+    [Tooltip("빈 침대를 자동 제거하지 않을 때, 기존 침대의 환자 유무와 관계없이 새 침대의 positioning을 허용하지 않습니다.")]
+    [SerializeField] private bool _blockWhenAnyBedIsPresent;
+
     [Header("Occupied Area")]
     [SerializeField] private Vector2 _occupiedSize = new(2.2f, 1f);
     [SerializeField, Min(0f)] private float _displayHeight = 0.03f;
@@ -28,6 +36,13 @@ namespace TriageTrainer.Entity
     public string Identifier => _identifier == null ? string.Empty : _identifier.Trim();
     public Vector3 Position => transform.position;
     public Quaternion Rotation => transform.rotation;
+
+    /// <summary>환자가 결합된 침대가 점유 중일 때 새 positioning을 차단할지 여부.</summary>
+    public bool BlockWhenPatientBedIsPresent => _blockWhenPatientBedIsPresent;
+    /// <summary>점유 중인 빈 침대를 새 positioning 전에 서버에서 제거할지 여부.</summary>
+    public bool DespawnEmptyBedWhenPresent => _despawnEmptyBedWhenPresent;
+    /// <summary>빈 침대를 제거하지 않을 때 모든 기존 침대를 차단물로 취급할지 여부.</summary>
+    public bool BlockWhenAnyBedIsPresent => _blockWhenAnyBedIsPresent;
 
     public void SetIdentifierForEditor(string identifier)
     {
