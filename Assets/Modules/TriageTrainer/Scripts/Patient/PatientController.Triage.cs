@@ -141,6 +141,7 @@ namespace TriageTrainer.Entity
     {
       // 서술된 descriptor 초깃값을 SyncVar 에 반영(서버 컨텍스트에서만 권위 기록).
       _assessedTriage.OnChange += OnAssessedTriageChanged;
+      _assessable.OnChange += OnTriageAssessableChanged;
 
       if (IsServerStarted)
       {
@@ -161,6 +162,7 @@ namespace TriageTrainer.Entity
     private void TeardownTriageSync()
     {
       _assessedTriage.OnChange -= OnAssessedTriageChanged;
+      _assessable.OnChange -= OnTriageAssessableChanged;
     }
 
     private void OnAssessedTriageChanged(TriageLevel previous, TriageLevel next, bool asServer)
@@ -170,6 +172,25 @@ namespace TriageTrainer.Entity
         _patientDescriptor.assessedTriage = next;
 
       UpdateTriageOverheadLabel(next);
+    }
+
+    private void OnTriageAssessableChanged(bool previous, bool next, bool asServer)
+    {
+      // 재시도 이벤트는 서버에서 발생한다. SyncVar 복제 후 각 클라이언트의 근처 상호작용
+      // 캐시도 갱신해야 다시 열린 트리아지 항목이 즉시 표시된다.
+      RefreshTriageInteractableHints();
+    }
+
+    private static void RefreshTriageInteractableHints()
+    {
+      var players = UnityEngine.Object.FindObjectsByType<PlayerController>(
+        FindObjectsInactive.Exclude,
+        FindObjectsSortMode.None);
+      foreach (var player in players)
+      {
+        if (player != null && player.IsOwner)
+          player.RefreshInteractableHintsNow();
+      }
     }
 
     /// <summary>시나리오 진행에 따라 트리아지 인터랙션 노출을 켜고 끈다.</summary>
@@ -183,6 +204,8 @@ namespace TriageTrainer.Entity
         _assessable.Value = assessable;
         _assessableInitialized = true;
       }
+
+      RefreshTriageInteractableHints();
     }
 
     /// <summary>
@@ -202,10 +225,12 @@ namespace TriageTrainer.Entity
         _assessable.Value = true;
         _assessableInitialized = true;
         UpdateTriageOverheadLabel(TriageLevel.Unassessed);
+        RefreshTriageInteractableHints();
         return;
       }
 
       UpdateTriageOverheadLabel(TriageLevel.Unassessed);
+      RefreshTriageInteractableHints();
     }
 
     /// <summary>

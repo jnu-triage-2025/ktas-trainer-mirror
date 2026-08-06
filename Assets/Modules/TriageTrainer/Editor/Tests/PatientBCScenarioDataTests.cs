@@ -701,6 +701,17 @@ namespace TriageTrainer.Tests
       }
     }
 
+    [Test]
+    public void TriageAssessableSyncRefreshesLocalInteractionHints()
+    {
+      var callback = typeof(PatientController).GetMethod(
+        "OnTriageAssessableChanged",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+
+      Assert.That(callback, Is.Not.Null,
+        "서버가 재시도 평가를 다시 열면 복제된 클라이언트의 상호작용 힌트도 갱신되어야 합니다.");
+    }
+
     [TestCase(
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeBMale.prefab",
       "patient_b",
