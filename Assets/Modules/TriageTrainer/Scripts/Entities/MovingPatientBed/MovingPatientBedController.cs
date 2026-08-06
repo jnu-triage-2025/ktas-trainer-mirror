@@ -271,6 +271,16 @@ namespace TriageTrainer.Entity
       }
     }
 
+    protected override bool ShouldIgnoreMovementBlocker(Collider collider)
+    {
+      if (collider == null || _reposedTargetComponent == null)
+        return false;
+
+      return collider.transform.IsChildOf(_reposedTargetComponent.transform);
+    }
+
+    protected override bool ShouldLogMovementBlockers => true;
+
     private void TrySnapToPositioningPointWithSignalContext()
     {
       if (_latchedPositioningPoint != null)
