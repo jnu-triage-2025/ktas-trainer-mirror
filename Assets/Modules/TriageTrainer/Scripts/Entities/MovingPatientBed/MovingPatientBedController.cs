@@ -81,7 +81,7 @@ namespace TriageTrainer.Entity
     private string _entityRuntimeIdentifier;
 
     [Header("Display")]
-    [SerializeField] private string _displayText = "이동식 환자 침대";
+    [SerializeField] private string _displayText = "침대로 움직이기";
     [SerializeField] private Sprite _displayIcon = null;
     [SerializeField] private string _reposeDisplayText = "환자 침대에 내려놓기";
     [SerializeField] private Sprite _reposeDisplayIcon = null;
@@ -148,7 +148,7 @@ namespace TriageTrainer.Entity
         return result.ToArray();
       }
     }
-    public string DisplayText => _displayText;
+    public string DisplayText => GetDisplayText();
     public Sprite DisplayIcon => _displayIcon;
     public bool AllowDisplayIconFallback => true;
     public Color DisplayColor => Color.white;
@@ -168,6 +168,26 @@ namespace TriageTrainer.Entity
     public void SetPatientReposeEnabled(bool enabled)
     {
       _enablePatientRepose = enabled;
+    }
+
+    public void RefreshDisplayName()
+    {
+      if (string.IsNullOrWhiteSpace(Identifier))
+        return;
+
+      Registry.UpdateEntityDisplayName(Identifier, GetDisplayText());
+    }
+
+    private string GetDisplayText()
+    {
+      if (ReposedTarget is PatientController patient
+          && patient.Descriptor != null
+          && !string.IsNullOrWhiteSpace(patient.Descriptor.name))
+      {
+        return $"{patient.Descriptor.name.Trim()}의 침대 움직이기";
+      }
+
+      return "침대로 움직이기";
     }
 
     private void Awake()

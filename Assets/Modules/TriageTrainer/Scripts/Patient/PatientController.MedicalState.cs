@@ -462,7 +462,12 @@ namespace TriageTrainer.Entity
       EnsureMedicalStateDefaults();
 
       // 환자 기술자
-      if (name != null) _patientDescriptor.name = name;
+      if (name != null)
+      {
+        _patientDescriptor.name = name;
+        RefreshPatientDisplayName();
+        CurrentBed?.RefreshDisplayName();
+      }
       if (sex != PresetSentinelNone) _patientDescriptor.sex = (Sex)sex;
       if (age != PresetSentinelNone) _patientDescriptor.age = age;
       if (bloodType != PresetSentinelNone) _patientDescriptor.bloodType = (BloodType)bloodType;
@@ -575,7 +580,11 @@ namespace TriageTrainer.Entity
 
       // ── 환자 기술자(PatientDescriptor) ──
       if (preset.Name != null)
+      {
         _patientDescriptor.name = preset.Name;
+        RefreshPatientDisplayName();
+        CurrentBed?.RefreshDisplayName();
+      }
       if (preset.Sex.HasValue)
         _patientDescriptor.sex = preset.Sex.Value;
       if (preset.Age.HasValue)
