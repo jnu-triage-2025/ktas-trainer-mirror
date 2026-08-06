@@ -718,7 +718,7 @@ namespace MultiplayerInfrastructure.Editor
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
 
-    private static void DrawReferencedQuestDefinition(string identifier)
+    private void DrawReferencedQuestDefinition(string identifier)
     {
       if (string.IsNullOrWhiteSpace(identifier))
       {
@@ -737,11 +737,13 @@ namespace MultiplayerInfrastructure.Editor
 
       EditorGUILayout.Space();
       EditorGUILayout.LabelField("Referenced Quest Definition (Read Only)", EditorStyles.boldLabel);
+      if (GUILayout.Button("Open Quest Definition in Quests"))
+        window?.OpenQuestView(definition.Identifier);
       EditorGUILayout.BeginVertical(EditorStyles.helpBox);
       EditorGUILayout.LabelField("Identifier", definition.Identifier);
       EditorGUILayout.LabelField("Title", string.IsNullOrWhiteSpace(definition.Title) ? "(없음)" : definition.Title);
       EditorGUILayout.LabelField("Description", string.IsNullOrWhiteSpace(definition.Description) ? "(없음)" : definition.Description);
-      EditorGUILayout.LabelField("Quest Content", string.IsNullOrWhiteSpace(definition.QuestContent) ? "(없음)" : definition.QuestContent);
+      DrawQuestContentLink(definition);
       EditorGUILayout.LabelField("Scope", definition.Scope.ToString());
       EditorGUILayout.LabelField("Tracked By Default", definition.IsTrackedByDefault.ToString());
       EditorGUILayout.LabelField("Trackable", definition.IsTrackable.ToString());
@@ -752,6 +754,21 @@ namespace MultiplayerInfrastructure.Editor
       DrawQuestCriteriaPreview("Tasks", definition.Tasks);
       DrawQuestCriteriaPreview("Completion Criteria", definition.CompletionCriteria);
       EditorGUILayout.EndVertical();
+    }
+
+    private void DrawQuestContentLink(QuestDefinition definition)
+    {
+      var content = string.IsNullOrWhiteSpace(definition.QuestContent) ? "(없음)" : definition.QuestContent;
+      var rect = EditorGUILayout.GetControlRect();
+      EditorGUI.LabelField(rect, "Quest Content", content);
+      if (string.IsNullOrWhiteSpace(definition.QuestContent)) return;
+
+      var currentEvent = Event.current;
+      if (currentEvent.type == EventType.MouseDown && currentEvent.button == 0 && currentEvent.clickCount == 2 && rect.Contains(currentEvent.mousePosition))
+      {
+        window?.OpenQuestView(definition.Identifier);
+        currentEvent.Use();
+      }
     }
 
     private static void DrawQuestCriteriaPreview(string label, System.Collections.Generic.IReadOnlyList<QuestCompletionCriteria> criteria)
