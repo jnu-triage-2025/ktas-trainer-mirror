@@ -13,29 +13,34 @@ namespace TriageTrainer.Editor.Utils
 {
   public static class OverworldGameObjectInitializer
   {
-    public static readonly Vector3 DefaultBuildingEnterance = new(-72.525f, 1f, 2.3f);
     public const string BuildingEnteranceIdentifier = "building-enterance";
-    public static readonly Vector3 DefaultTreatmentRoomEnterance = new(-66.5f, 1f, -10.2f);
+    public static readonly Vector3 DefaultBuildingEnterance = new(-72.525f, 1f, 2.3f);
+
     public const string TreatmentRoomEnteranceIdentifier = "treatment-room-enterance";
-    public static readonly Vector3 DefaultCommonSpawnPoint = new(-73f, 1f, -7.5f);
+    public static readonly Vector3 DefaultTreatmentRoomEnterance = new(-66.5f, 1f, -10.2f);
+    
     public const string CommonSpawnPointIdentifier = "spawnpoint-commons";
+    public static readonly Vector3 DefaultCommonSpawnPoint = new(-73f, 1f, -7.5f);
 
     // patient_b_c_ct spatial anchors. These are intentionally plain WaypointAnchor
     // objects: runtime patient/preset spawns resolve their destinations by ID.
     public const string PatientBSpawnWaypointIdentifier = "scen_b:patient_spawnpoint_b";
-    public static readonly Vector3 DefaultPatientBSpawnWaypoint = new(-73f, 0f, 2.3f);
+    public static readonly Vector3 DefaultPatientBSpawnWaypoint = new(-74f, 0f, 2.3f);
 
     public const string PatientCSpawnWaypointIdentifier = "scen_b:patient_spawnpoint_c";
     public static readonly Vector3 DefaultPatientCSpawnWaypoint = new(-72f, 0f, 2.3f);
 
     public const string PatientDummyDBSpawnWaypointIdentifier = "scen_b:patient_spawnpoint_dummy_d_a";
-    public static readonly Vector3 DefaultPatientDummyDBSpawnWaypoint = new(-71f, 0f, 2.3f);
+    public static readonly Vector3 DefaultPatientDummyDBSpawnWaypoint = new(-70f, 0f, 2.3f);
 
     public const string TriageArrivalWaypointIdentifier = "scen_b:quest_arrival_triage_area";
-    public static readonly Vector3 DefaultTriageArrivalWaypoint = new(-67f, 1f, -15.5f);
+    public static readonly Vector3 DefaultTriageArrivalWaypoint = new(-72.525f, 0f, 0.7f);
 
     public const string DoctorSpawnWaypointIdentifier = "scen_b:doctor_spawnpoint";
     public static readonly Vector3 DefaultDoctorSpawnWaypoint = new(-82f, 1f, -35f);
+
+    public const string CareAreaWaypointIdentifier = "scen_b:care_area_waypoint";
+    public static readonly Vector3 DefaultCareAreaWaypoint = new(-67f, 1f, -15.5f);
 
     public const string DoctorCareAreaWaypointIdentifier = "scen_b:doctor_care_area_waypoint";
     public static readonly Vector3 DefaultDoctorCareAreaWaypoint = new(-67f, 1f, -15.5f);
