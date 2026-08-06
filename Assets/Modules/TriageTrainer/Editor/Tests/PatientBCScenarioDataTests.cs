@@ -702,6 +702,20 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void PatientSpecificTriageRetryResolvesTargetAfterRefreshingRuntimeReferences()
+    {
+      var retry = typeof(TriageScenarioEventBootstrap).GetMethod(
+        "Event_ResetPatientBCTriageAttempt",
+        BindingFlags.Instance | BindingFlags.NonPublic,
+        null,
+        new[] { typeof(string) },
+        null);
+
+      Assert.That(retry, Is.Not.Null,
+        "환자별 재시도 이벤트는 갱신 전 GameObject를 캡처하지 않고 식별자로 대상을 다시 해석해야 합니다.");
+    }
+
+    [Test]
     public void TriageAssessableSyncRefreshesLocalInteractionHints()
     {
       var callback = typeof(PatientController).GetMethod(
