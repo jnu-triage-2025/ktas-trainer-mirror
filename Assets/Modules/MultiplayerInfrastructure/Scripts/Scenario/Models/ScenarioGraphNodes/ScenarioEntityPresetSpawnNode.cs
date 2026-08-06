@@ -33,6 +33,11 @@ namespace MultiplayerInfrastructure.Scenario
     public float PositionY { get; set; }
     public float PositionZ { get; set; }
 
+    /// <summary>스폰 루트에 적용할 월드 오일러 회전(도). Y축 음수는 위에서 볼 때 반시계 방향이다.</summary>
+    public float RotationX { get; set; }
+    public float RotationY { get; set; }
+    public float RotationZ { get; set; }
+
     public string ResultStateKey { get; set; }
   }
 }

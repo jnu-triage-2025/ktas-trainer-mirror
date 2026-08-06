@@ -26,6 +26,8 @@ namespace TriageTrainer.Tests
   {
     private const string PatientDummyDBPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeDDummyB.prefab";
+    private const string PatientDummyDAPrefabPath =
+      "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeDDummyA.prefab";
 
     [Test]
     public void PatientVitalMonitorResolvesFromSharedCareZoneWithoutSceneReference()
@@ -209,11 +211,26 @@ namespace TriageTrainer.Tests
         "Modules/TriageTrainer/Resources/Scenario/patient_b_c_ct.scenario.json");
       var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
 
-      Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
-      Assert.That(graph.Nodes, Has.Count.EqualTo(303));
+       Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
+       Assert.That(graph.Nodes, Has.Count.EqualTo(310));
+       Assert.That(graph.ClientSignalPrefixes, Is.EqualTo(new[] { "sig.quest_arrival_triage_area_" }));
       Assert.That(graph.ActingNpcs, Has.Count.EqualTo(1));
       Assert.That(graph.ActingNpcs.Single().Identifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
       Assert.That(graph.ActingNpcs.Single().PresetIdentifier, Is.EqualTo("npc_doctor_preset"));
+
+      var patientBSpawn = graph.Nodes["SPAWN_B"] as ScenarioEntityPresetSpawnNode;
+      var patientCSpawn = graph.Nodes["SPAWN_C"] as ScenarioEntityPresetSpawnNode;
+      Assert.That(patientBSpawn, Is.Not.Null);
+      Assert.That(patientCSpawn, Is.Not.Null);
+      Assert.That(patientBSpawn.RotationY, Is.EqualTo(-90f));
+       Assert.That(patientCSpawn.RotationY, Is.EqualTo(-90f));
+       var attachSpawnedBeds = graph.Nodes["ATTACH_SPAWNED_PATIENT_BEDS"] as ScenarioInvokeEventNode;
+       Assert.That(attachSpawnedBeds, Is.Not.Null);
+       Assert.That(attachSpawnedBeds.EventIdentifier, Is.EqualTo("attach_patient_bed_pairs"));
+       Assert.That(attachSpawnedBeds.NextIdentifier, Is.EqualTo("SPAWN_DOCTOR"));
+       Assert.That(patientCSpawn.NextIdentifier, Is.EqualTo("SPAWN_DUMMY"));
+       Assert.That((graph.Nodes["SPAWN_DUMMY"] as ScenarioEntityPresetSpawnNode)?.NextIdentifier,
+         Is.EqualTo("ATTACH_SPAWNED_PATIENT_BEDS"));
 
       var doctorSpawn = graph.Nodes["SPAWN_DOCTOR"] as ScenarioEntityPresetSpawnNode;
       Assert.That(doctorSpawn, Is.Not.Null);
@@ -250,11 +267,33 @@ namespace TriageTrainer.Tests
       var announcementAndArrival = graph.Nodes["P_ANNOUNCE_ARRIVAL"] as ScenarioParallelNode;
       Assert.That(announcementAndArrival, Is.Not.Null);
       Assert.That(announcementAndArrival.AllocationType, Is.EqualTo(ScenarioParallelAllocationType.SelfAll));
+      // 도착 퀘스트는 안내 방송이 끝난 뒤에만 발행되어야 한다. 그렇지 않으면 방송 스킵과
+      // 다음 병렬 흐름의 퀘스트 표시가 같은 UI 상태를 동시에 갱신한다.
+      Assert.That(announcementAndArrival.WaitMode, Is.EqualTo(ScenarioWaitMode.All));
       Assert.That(announcementAndArrival.Branches.Select(branch => branch.Identifier),
-        Is.EquivalentTo(new[] { "ANNOUNCE", "P_ARRIVAL" }));
-      Assert.That(graph.Nodes["COUNT_NURSE_ARRIVAL"].NextIdentifier, Is.EqualTo("P_ANNOUNCE_ARRIVAL"));
+        Is.EqualTo(new[] { "ANNOUNCE", "P_ARRIVAL" }));
+       Assert.That(graph.Nodes["COUNT_NURSE_ARRIVAL"].NextIdentifier, Is.EqualTo("P_ANNOUNCE_ARRIVAL"));
+      Assert.That(graph.Nodes["P_ANNOUNCE_ARRIVAL"].NextIdentifier, Is.EqualTo("ARRIVAL_QUEST_COMPLETION_DELAY"));
       Assert.That(graph.Nodes["ANNOUNCE"].NextIdentifier, Is.EqualTo("CC_ANNOUNCE"));
       Assert.That(graph.Nodes["P_ARRIVAL"].NextIdentifier, Is.EqualTo("CC_ARRIVAL"));
+       var arrivalQuestCompletionDelay = graph.Nodes["ARRIVAL_QUEST_COMPLETION_DELAY"] as ScenarioDelayNode;
+       Assert.That(arrivalQuestCompletionDelay, Is.Not.Null);
+       Assert.That(arrivalQuestCompletionDelay.Duration.ToSeconds(), Is.EqualTo(0.25d));
+       Assert.That(arrivalQuestCompletionDelay.NextIdentifier, Is.EqualTo("P_TRIAGE"));
+
+      foreach (string role in new[] { "A", "B", "C", "D" })
+      {
+        var arrivalQuest = graph.Nodes[$"ARR_{role}_Q"] as ScenarioQuestControlNode;
+        var arrivalWait = graph.Nodes[$"ARR_{role}_WAIT"] as ScenarioValidatorNode;
+        Assert.That(arrivalQuest, Is.Not.Null, role);
+        Assert.That(arrivalQuest.Operation, Is.EqualTo(ScenarioQuestOperationType.Add), role);
+        Assert.That(arrivalQuest.QuestDefinitionIdentifier, Is.EqualTo("Quest_Arrive_Triage"), role);
+        Assert.That(arrivalQuest.NextIdentifier, Is.EqualTo($"ARR_{role}_WAIT"), role);
+        Assert.That(arrivalWait, Is.Not.Null, role);
+        Assert.That(arrivalWait.WaitForCondition, Is.True, role);
+        Assert.That(arrivalWait.RootConditions.Single().ValidationRules.Single().RegistryIdentifier,
+          Is.EqualTo("sig.all_nurses_arrived_triage"), role);
+      }
 
       foreach (string nodeIdentifier in new[] { "CT_A_WAIT", "CT_B_WAIT", "CT_C_WAIT", "CT_D_WAIT" })
       {
@@ -276,6 +315,8 @@ namespace TriageTrainer.Tests
       Assert.That(nurseArrivalCounter.CounterIdentifier, Is.EqualTo("scen_b_nurse_arrivals"));
       Assert.That(nurseArrivalCounter.SourceSignalPrefix, Is.EqualTo("quest_arrival_triage_area_"));
       Assert.That(nurseArrivalCounter.Threshold, Is.EqualTo(4));
+      Assert.That(nurseArrivalCounter.UseActiveRoleRosterThreshold, Is.True,
+        "도착 완료는 고정 역할 수가 아니라 현재 활성 플레이어의 도착 신호를 기준으로 해야 한다.");
       Assert.That(nurseArrivalCounter.OutputSignalIdentifier, Is.EqualTo("all_nurses_arrived_triage"));
 
       foreach (string nodeIdentifier in new[]
@@ -290,16 +331,44 @@ namespace TriageTrainer.Tests
         Assert.That(binding.ConsumeOnce, Is.False, $"{nodeIdentifier} must survive a retry reset");
       }
 
-      var triageEvaluation = graph.Nodes["TRIAGE_EVALUATE_CURRENT"] as ScenarioInvokeEventNode;
-      Assert.That(triageEvaluation, Is.Not.Null);
-      Assert.That(triageEvaluation.EventIdentifier, Is.EqualTo("evaluate_patient_b_c_triage"));
       Assert.That(graph.Nodes["TRIAGE_WAIT_ALL"].NextIdentifier, Is.EqualTo("TRIAGE_EVALUATE_CURRENT"));
+      foreach (var expectation in new[]
+               {
+                 (Node: "TRIAGE_EVALUATE_CURRENT", Signal: "sig.triage_correct_patient_b", Wrong: "TRIAGE_WRONG"),
+                 (Node: "TRIAGE_C_EVALUATE_CURRENT", Signal: "sig.triage_correct_patient_c", Wrong: "TRIAGE_RESET_REMOVE"),
+                 (Node: "TRIAGE_REENABLE_D", Signal: "sig.triage_correct_patient_dummy_d_b", Wrong: "TRIAGE_REENABLE_B")
+               })
+      {
+        var evaluation = graph.Nodes[expectation.Node] as ScenarioValidatorNode;
+        Assert.That(evaluation, Is.Not.Null, expectation.Node);
+        Assert.That(evaluation.RootConditions.Single().ValidationRules.Single().RegistryIdentifier,
+          Is.EqualTo(expectation.Signal), expectation.Node);
+        Assert.That(evaluation.FailureNextIdentifier, Is.EqualTo(expectation.Wrong), expectation.Node);
+      }
+      Assert.That((graph.Nodes["TRIAGE_RESET"] as ScenarioInvokeEventNode)?.EventIdentifier,
+        Is.EqualTo("reset_patient_b_triage_attempt"));
+      Assert.That((graph.Nodes["TRIAGE_RESET_ADD"] as ScenarioInvokeEventNode)?.EventIdentifier,
+        Is.EqualTo("reset_patient_c_triage_attempt"));
+      Assert.That((graph.Nodes["TRIAGE_REENABLE_C"] as ScenarioInvokeEventNode)?.EventIdentifier,
+        Is.EqualTo("reset_patient_dummy_d_b_triage_attempt"));
+      Assert.That(graph.Nodes["TRIAGE_CHECK_CORRECT"].NextIdentifier,
+        Is.EqualTo("TRIAGE_C_EVALUATE_CURRENT"));
+      Assert.That(graph.Nodes["TRIAGE_C_EVALUATE_CURRENT"].NextIdentifier,
+        Is.EqualTo("TRIAGE_A_REMOVE"));
+      Assert.That(graph.Nodes["TRIAGE_A_REMOVE"].NextIdentifier,
+        Is.EqualTo("TRIAGE_REENABLE_D"));
+      Assert.That(graph.Nodes["TRIAGE_REENABLE_D"].NextIdentifier,
+        Is.EqualTo("TRIAGE_COMPLETE_EVENT"));
+      Assert.That(graph.Nodes["TRIAGE_COMPLETE_EVENT"].NextIdentifier,
+        Is.EqualTo("TRIAGE_A_FINAL_REMOVE"));
+      Assert.That(graph.Nodes["TRIAGE_A_FINAL_REMOVE"].NextIdentifier,
+        Is.EqualTo("CC_TRIAGE_A"));
       var triageCorrectCheck = graph.Nodes["TRIAGE_CHECK_CORRECT"] as ScenarioValidatorNode;
       Assert.That(triageCorrectCheck, Is.Not.Null);
       Assert.That(triageCorrectCheck.RootConditions.Single().ValidationRules
         .Select(rule => rule.RegistryIdentifier), Is.EqualTo(new[]
       {
-        "sig.patient_b_c_triage_current_correct"
+        "sig.triage_submitted_patient_c"
       }));
 
       var vitalOpen = graph.Nodes["B_VITAL_OPEN"] as ScenarioInvokeEventNode;
@@ -462,14 +531,14 @@ namespace TriageTrainer.Tests
 
       var patient = prefab.GetComponent<PatientController>();
       var networkObject = prefab.GetComponent<NetworkObject>();
-      var patientState = prefab.GetComponent<PatientTypeBFemaleState>();
+      var patientState = prefab.GetComponent<PatientDummyDState>();
       Assert.That(patient, Is.Not.Null);
       Assert.That(prefab.GetComponent<CapsuleCollider>(), Is.Not.Null);
       Assert.That(networkObject, Is.Not.Null);
       Assert.That(patientState, Is.Not.Null);
-      Assert.That(patientState.TreatmentDisplayState.PatientModelGameObject, Is.Not.Null);
-      Assert.That(patientState.TreatmentDisplayState.PatientModelGameObject.name,
-        Is.EqualTo("Scenario2Female_final"), "the intended dummy visual must remain attached");
+      Assert.That(patientState.TreatmentDisplayState.PatientModelGameObject, Is.Null);
+      Assert.That(patientState.TreatmentDisplayState.DisplaySupports,
+        Is.EqualTo(new PatientTreatmentDisplayModel()));
       Assert.That(patient.IntravenousLineCannulaSupported, Is.False);
 
       Assert.That(networkObject.NetworkBehaviours, Has.Count.EqualTo(1));
@@ -479,8 +548,61 @@ namespace TriageTrainer.Tests
 
       var requirement = presetRegistry.entityPresetRegistryRequirements.Single(
         value => value.identifier == "patient_dummy_d_b");
-      Assert.That(requirement.prefab, Is.SameAs(prefab));
-      Assert.That(requirement.isNetworked, Is.True);
+       Assert.That(requirement.prefab, Is.SameAs(prefab));
+       Assert.That(requirement.isNetworked, Is.True);
+       Assert.That(requirement.childReferences.Single().childPresetIdentifier, Is.EqualTo("bed_d_b"));
+
+       var dummyBedRequirement = presetRegistry.entityPresetRegistryRequirements.Single(
+         value => value.identifier == "bed_d_b");
+       Assert.That(dummyBedRequirement.prefab, Is.Not.Null);
+    }
+
+    [TestCase(PatientDummyDAPrefabPath, "patient_dummy_d_a")]
+    [TestCase(PatientDummyDBPrefabPath, "patient_dummy_d_b")]
+    public void PatientDummyDPrefabsSupportPatientAnimationAndInteractions(
+      string prefabPath,
+      string identifier)
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+
+      Assert.That(prefab, Is.Not.Null);
+      var patient = prefab.GetComponent<PatientController>();
+      var patientState = prefab.GetComponent<PatientDummyDState>();
+      var animator = prefab.GetComponent<Animator>();
+
+      Assert.That(patient, Is.Not.Null);
+      Assert.That(patientState, Is.Not.Null);
+      Assert.That(prefab.GetComponent<PatientTypeBFemaleState>(), Is.Null);
+      Assert.That(patient.Identifier, Is.EqualTo(identifier));
+      Assert.That(prefab.GetComponent<CapsuleCollider>(), Is.Not.Null);
+      Assert.That(prefab.GetComponent<NetworkObject>(), Is.Not.Null);
+      Assert.That(animator, Is.Not.Null, "the dummy root must expose an Animator");
+      Assert.That(animator.avatar, Is.Not.Null,
+        "the dummy Animator must use its source model Humanoid Avatar");
+      Assert.That(animator.runtimeAnimatorController, Is.Not.Null,
+        "the dummy Animator must have the shared patient animation controller");
+      Assert.That(patient.CarryAttachPoint, Is.Not.SameAs(patient.transform),
+        "the dummy must have a dedicated carry attachment point");
+      Assert.That(patient.Interacts, Has.Length.GreaterThanOrEqualTo(3));
+    }
+
+    [TestCase("Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeBMale.prefab")]
+    [TestCase("Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeBFemale.prefab")]
+    [TestCase(PatientDummyDAPrefabPath)]
+    [TestCase(PatientDummyDBPrefabPath)]
+    public void PatientBCScenarioPrefabsDisableStandardAssessActions(string prefabPath)
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+      var patient = prefab != null ? prefab.GetComponent<PatientController>() : null;
+      var field = typeof(PatientController).GetField(
+        "_assessActions",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+
+      Assert.That(patient, Is.Not.Null);
+      Assert.That(field, Is.Not.Null);
+      var actions = field.GetValue(patient) as List<PatientController.AssessActionConfig>;
+      Assert.That(actions, Has.Count.EqualTo(4));
+      Assert.That(actions.All(action => !action.Enabled), Is.True);
     }
 
     [Test]
@@ -556,6 +678,52 @@ namespace TriageTrainer.Tests
         foreach (var target in targets)
           Object.DestroyImmediate(target);
       }
+    }
+
+    [Test]
+    public void TriageRetryResetClearsPreviousAssessmentAndReenablesInteraction()
+    {
+      var target = CreatePatientWithTriage("patient_b", TriageTrainer.Entity.Patient.TriageLevel.Level2);
+      var patient = target.GetComponent<PatientController>();
+
+      try
+      {
+        patient.SetTriageAssessable(false);
+        patient.ResetTriageAssessmentForRetry();
+
+        Assert.That(patient.AssessedTriage, Is.EqualTo(TriageTrainer.Entity.Patient.TriageLevel.Unassessed));
+        Assert.That(patient.Descriptor.assessedTriage, Is.EqualTo(TriageTrainer.Entity.Patient.TriageLevel.Unassessed));
+        Assert.That(patient.EffectiveAssessable, Is.True);
+      }
+      finally
+      {
+        Object.DestroyImmediate(target);
+      }
+    }
+
+    [Test]
+    public void PatientSpecificTriageRetryResolvesTargetAfterRefreshingRuntimeReferences()
+    {
+      var retry = typeof(TriageScenarioEventBootstrap).GetMethod(
+        "Event_ResetPatientBCTriageAttempt",
+        BindingFlags.Instance | BindingFlags.NonPublic,
+        null,
+        new[] { typeof(string) },
+        null);
+
+      Assert.That(retry, Is.Not.Null,
+        "환자별 재시도 이벤트는 갱신 전 GameObject를 캡처하지 않고 식별자로 대상을 다시 해석해야 합니다.");
+    }
+
+    [Test]
+    public void TriageAssessableSyncRefreshesLocalInteractionHints()
+    {
+      var callback = typeof(PatientController).GetMethod(
+        "OnTriageAssessableChanged",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+
+      Assert.That(callback, Is.Not.Null,
+        "서버가 재시도 평가를 다시 열면 복제된 클라이언트의 상호작용 힌트도 갱신되어야 합니다.");
     }
 
     [TestCase(
@@ -939,6 +1107,18 @@ namespace TriageTrainer.Tests
         Assert.That(identifiers, Does.Contain(OverworldGameObjectInitializer.CtPatientBTargetPositionWaypointIdentifier));
         Assert.That(identifiers, Does.Contain(OverworldGameObjectInitializer.CtPatientCTargetPositionWaypointIdentifier));
 
+        foreach (string patientSpawnIdentifier in new[]
+                 {
+                   OverworldGameObjectInitializer.PatientBSpawnWaypointIdentifier,
+                   OverworldGameObjectInitializer.PatientCSpawnWaypointIdentifier,
+                   OverworldGameObjectInitializer.PatientDummyDBSpawnWaypointIdentifier
+                 })
+        {
+          var patientSpawnAnchor = anchors.Single(anchor => anchor.Identifier == patientSpawnIdentifier);
+          Assert.That(patientSpawnAnchor.transform.position.y, Is.EqualTo(0f).Within(0.001f),
+            $"Patient/bed preset spawn anchor '{patientSpawnIdentifier}' must remain on the floor.");
+        }
+
         var zones = UnityEngine.Object.FindObjectsByType<ScenarioTriggerZone>(
           FindObjectsInactive.Include, FindObjectsSortMode.None);
         AssertSignalZone(
@@ -985,6 +1165,30 @@ namespace TriageTrainer.Tests
 
       Assert.That(allowedIdentifiers, Is.EquivalentTo(layoutIdentifiers));
       Assert.That(allowedIdentifiers, Has.Length.EqualTo(4));
+    }
+
+    [Test]
+    public void TriageArrivalZoneIsTriggerOnly()
+    {
+      var previousSetup = EditorSceneManager.GetSceneManagerSetup();
+      try
+      {
+        EditorSceneManager.OpenScene(OverworldScenePath, OpenSceneMode.Single);
+        var zone = UnityEngine.Object.FindObjectsByType<ScenarioTriggerZone>(
+          FindObjectsInactive.Include, FindObjectsSortMode.None)
+          .Single(candidate => candidate.Identifier == OverworldGameObjectInitializer.TriageArrivalWaypointIdentifier);
+        var collider = zone.GetComponent<BoxCollider>();
+
+        Assert.That(collider, Is.Not.Null);
+        Assert.That(collider.isTrigger, Is.True);
+      }
+      finally
+      {
+        if (previousSetup.Length > 0)
+          EditorSceneManager.RestoreSceneManagerSetup(previousSetup);
+        else
+          EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+      }
     }
 
     private static void AssertSignalZone(

@@ -175,7 +175,11 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 6759064965544079288}
   _networkObjectCache: {fileID: 6759064965544079288}
   _runtimeAnimatorController: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
-  _assessActions: []
+  _assessActions: [{_identifier: assess_avpu_gcs, _displayText: "\uC758\uC2DD\uC0C1\uD0DC
+        \uC0AC\uC815(AVPU/GCS)", _displayIcon: {fileID: 0}, _assessSignal: '', _enabled: 0},
+    {_identifier: assess_pulse, _displayText: "\uB9E5\uBC15 \uD655\uC778", _displayIcon: {fileID: 0}, _assessSignal: '', _enabled: 0},
+    {_identifier: assess_gcs, _displayText: "GCS \uC7AC\uC0AC\uC815", _displayIcon: {fileID: 0}, _assessSignal: '', _enabled: 0},
+    {_identifier: assess_vital, _displayText: "\uD65C\uB825\uC9D5\uD6C4 \uC0AC\uC815", _displayIcon: {fileID: 0}, _assessSignal: '', _enabled: 0}]
   _capsuleCollider: {fileID: 6481162045202206273}
   _standingCapsuleCenter: {x: 0, y: 0.9, z: 0}
   _standingCapsuleHeight: 1.8

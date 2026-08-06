@@ -1302,6 +1302,12 @@ namespace MultiplayerInfrastructure.Quest
       }
     }
 
+    /// <summary>Editor authoring tools call this after changing a Resources/Quest asset.</summary>
+    public static void InvalidateResourceCache()
+    {
+      _resourceDefinitions = null;
+    }
+
     private static void EnsureResourceLoaded()
     {
       if (_resourceDefinitions != null)

@@ -122,5 +122,66 @@ namespace MultiplayerInfrastructure.Tests.Scenario
           item.Message.StartsWith("이 시나리오 파일에서는 defined-waypoint waypoint가 정의되지 않았습니다.")),
         Is.False);
     }
+
+    [Test]
+    public void ValidatorFailureBranchIsNotReportedAsAnAdditionalEntryNode()
+    {
+      var graph = new ScenarioGraph { DefaultEntrypoint = "start" };
+      graph.Add(new ScenarioValidatorNode
+      {
+        Identifier = "start",
+        NextIdentifier = "end",
+        OnFailure = ScenarioValidatorOnFailure.Branching,
+        FailureNextIdentifier = "failure"
+      });
+      graph.Add(new ScenarioDialogueNode
+      {
+        Identifier = "failure",
+        NextIdentifier = "end",
+        DialogueContent = "failed"
+      });
+      graph.Add(new ScenarioDialogueNode
+      {
+        Identifier = "end",
+        DialogueContent = "done"
+      });
+
+      Assert.That(
+        ScenarioGraphDiagnostics.Run(graph).Any(item =>
+          item.Severity == ScenarioGraphDiagnostics.Severity.Info
+          && item.Message.Contains("진입 노드가")),
+        Is.False);
+    }
+
+    [Test]
+    public void ValidatorTimeoutFailureBranchIsNotReportedAsAnAdditionalEntryNode()
+    {
+      var graph = new ScenarioGraph { DefaultEntrypoint = "start" };
+      graph.Add(new ScenarioValidatorNode
+      {
+        Identifier = "start",
+        NextIdentifier = "end",
+        WaitForCondition = true,
+        OnWaitTimeout = ScenarioValidatorWaitTimeoutBehavior.FailBranch,
+        FailureNextIdentifier = "timeout"
+      });
+      graph.Add(new ScenarioDialogueNode
+      {
+        Identifier = "timeout",
+        NextIdentifier = "end",
+        DialogueContent = "timed out"
+      });
+      graph.Add(new ScenarioDialogueNode
+      {
+        Identifier = "end",
+        DialogueContent = "done"
+      });
+
+      Assert.That(
+        ScenarioGraphDiagnostics.Run(graph).Any(item =>
+          item.Severity == ScenarioGraphDiagnostics.Severity.Info
+          && item.Message.Contains("진입 노드가")),
+        Is.False);
+    }
   }
 }

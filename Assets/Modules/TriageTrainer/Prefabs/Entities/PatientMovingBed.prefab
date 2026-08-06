@@ -382,7 +382,7 @@ MonoBehaviour:
   _initialNormalSalineInstalled: 0
   _initialPlasmaSolutionInstalled: 0
   _entityTypeIdentifier: moving_patient_bed
-  _displayText: "\uC774\uB3D9\uC2DD \uD658\uC790 \uCE68\uB300"
+  _displayText: "\uCE68\uB300\uB85C \uC6C0\uC9C1\uC774\uAE30"
   _displayIcon: {fileID: 0}
   _reposeDisplayText: "\uD658\uC790 \uCE68\uB300\uC5D0 \uB0B4\uB824\uB193\uAE30"
   _reposeDisplayIcon: {fileID: 0}

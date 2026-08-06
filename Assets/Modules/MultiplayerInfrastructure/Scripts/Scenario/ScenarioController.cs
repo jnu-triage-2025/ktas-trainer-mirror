@@ -456,6 +456,7 @@ namespace MultiplayerInfrastructure.Scenario
       _activeOptions.Clear();
       _activeQuizNode = null;
       _branchOptionInterceptor = null;
+      _branchDialogueAdvanceInterceptors.Clear();
       _branchPromptActive = false;
       _activeRemoteBranchPromptClients.Clear();
       _remoteBranchChoiceSelections.Clear();
@@ -552,6 +553,9 @@ namespace MultiplayerInfrastructure.Scenario
 
     internal bool TryAdvanceFromPresentation(int senderClientId, string graphIdentifier, string nodeIdentifier)
     {
+      if (TryAdvanceBranchDialogue(senderClientId))
+        return true;
+
       if (!CanAcceptPresentationInput(senderClientId, graphIdentifier, nodeIdentifier, State.ExecutingDialogue))
         return false;
 
@@ -578,6 +582,9 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public void SubmitLocalAdvance()
     {
+      if (TryAdvanceBranchDialogue(GetLocalClientId()))
+        return;
+
       if (_executionMode == ExecutionMode.ServerAuthoritative && !IsLocalScenarioOwner())
       {
         Debug.LogWarning("[ScenarioController] Ignored authoritative advance from a non-owner host UI.");
@@ -619,6 +626,22 @@ namespace MultiplayerInfrastructure.Scenario
         return false;
 
       return !_scenarioOwnerClientId.HasValue || _scenarioOwnerClientId.Value == senderClientId;
+    }
+
+    private int GetLocalClientId()
+    {
+      var connection = InstanceFinder.ClientManager?.Connection;
+      return connection != null && connection.IsValid ? connection.ClientId : int.MinValue;
+    }
+
+    private bool TryAdvanceBranchDialogue(int clientId)
+    {
+      if (!_branchDialogueAdvanceInterceptors.TryGetValue(clientId, out var advance)
+          && !_branchDialogueAdvanceInterceptors.TryGetValue(int.MinValue, out advance))
+        return false;
+
+      advance();
+      return true;
     }
 
     private void StartScenarioInternal(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId)
@@ -763,6 +786,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 브랜치 Choice/Quiz 대기 중 종료된 경우 남은 인터셉터/프롬프트 상태를 정리한다.
       // (StopAllCoroutines 로 강제 종료된 프롬프트 코루틴의 finally 가 실행되지 않을 수 있음)
       _branchOptionInterceptor = null;
+      _branchDialogueAdvanceInterceptors.Clear();
       _branchPromptActive = false;
       _activeRemoteBranchPromptClients.Clear();
       _remoteBranchChoiceSelections.Clear();
@@ -2295,7 +2319,7 @@ namespace MultiplayerInfrastructure.Scenario
       if (!Registry.Registry.TrySpawnEntityPreset(
             node.PresetIdentifier,
             spawnPosition,
-            Quaternion.identity,
+            Quaternion.Euler(node.RotationX, node.RotationY, node.RotationZ),
             node.SpawnedEntityIdentifier,
             out _,
             out var spawnedDescriptor,
@@ -3920,6 +3944,16 @@ namespace MultiplayerInfrastructure.Scenario
         ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer);
       var allocation = new Dictionary<ScenarioParallelBranch, int?>();
 
+      // activeRoleTags 기반 그래프는 플레이어/태그 등록이 완료되기 전에 첫 Parallel에
+      // 도달할 수 있다. 이때 빈 roster를 "모든 역할 부재"로 해석하면 skipAbsentRoleBranches가
+      // 모든 분기를 건너뛰고 WaitMode.All이 즉시 완료되어 분기 내부 게이트를 전부 우회한다.
+      // 최소 한 역할이 확인된 뒤에만 실제 부재 역할을 계산한다.
+      yield return WaitForInitialActiveRoleRoster(node);
+      if (_currentGraph == null)
+      {
+        yield break;
+      }
+
       if (!TryAllocateParallel(node, players, allocation))
       {
         EndScenario();
@@ -4229,7 +4263,11 @@ namespace MultiplayerInfrastructure.Scenario
 
           threshold = roster.Count;
           expectedSignals = () => TryGetActiveRoleRoster(out var current, out _)
-            ? current.Select(entry => ScenarioInteractionSignals.Normalize(node.SourceSignalPrefix + entry.PlayerIdentifier)).ToArray()
+            // 한 플레이어가 여러 역할을 맡는 단독 디버그에서는 역할마다 같은 도착 신호가 생긴다.
+            // 도착 완료는 역할 수가 아니라 실제 플레이어별 1회 도착으로 판단한다.
+            ? current.Select(entry => ScenarioInteractionSignals.Normalize(node.SourceSignalPrefix + entry.PlayerIdentifier))
+              .Distinct(StringComparer.Ordinal)
+              .ToArray()
             : Array.Empty<string>();
         }
 
@@ -4250,6 +4288,35 @@ namespace MultiplayerInfrastructure.Scenario
       => enabled
         && node?.AllocationType == ScenarioParallelAllocationType.ByRole
         && node.WaitMode == ScenarioWaitMode.All;
+
+    private IEnumerator WaitForInitialActiveRoleRoster(ScenarioParallelNode node)
+    {
+      if (node?.AllocationType != ScenarioParallelAllocationType.ByRole
+          || _currentGraph?.SkipAbsentRoleBranches != true
+          || _currentGraph.ActiveRoleTags == null
+          || _currentGraph.ActiveRoleTags.Count == 0)
+      {
+        yield break;
+      }
+
+      bool reported = false;
+      while (_currentGraph != null)
+      {
+        if (!TryGetActiveRoleRoster(out var roster, out _)
+            || roster.Count > 0)
+        {
+          yield break;
+        }
+
+        if (!reported)
+        {
+          Debug.Log($"[ScenarioController] Parallel '{node.Identifier}' is waiting for the initial active-role roster.");
+          reported = true;
+        }
+
+        yield return null;
+      }
+    }
 
     private IEnumerator ExecuteBranch(IScenarioNode node, string completionCondition, string joinNodeIdentifier, int? branchOwnerClientId)
     {
@@ -4455,9 +4522,27 @@ namespace MultiplayerInfrastructure.Scenario
             ? dialogue.AutoAdvanceSeconds.Value
             : 0f;
 
-          if (waitSeconds > 0f)
+          bool advanceRequested = false;
+          int dialogueOwnerClientId = context.OwnerClientId ?? int.MinValue;
+          Action advanceBranchDialogue = () => advanceRequested = true;
+          _branchDialogueAdvanceInterceptors[dialogueOwnerClientId] = advanceBranchDialogue;
+          try
           {
-            yield return new WaitForSeconds(waitSeconds);
+            if (waitSeconds > 0f)
+            {
+              float deadline = Time.time + waitSeconds;
+              yield return new WaitUntil(() => advanceRequested || Time.time >= deadline);
+            }
+            else if (dialogue.InteractionRequired)
+            {
+              yield return new WaitUntil(() => advanceRequested);
+            }
+          }
+          finally
+          {
+            if (_branchDialogueAdvanceInterceptors.TryGetValue(dialogueOwnerClientId, out var current)
+                && current == advanceBranchDialogue)
+              _branchDialogueAdvanceInterceptors.Remove(dialogueOwnerClientId);
           }
           break;
         case ScenarioDisinteractableDialogueNode disinteractableDialogue:
@@ -4591,6 +4676,8 @@ namespace MultiplayerInfrastructure.Scenario
     /// 값이 설정되어 있으면 <see cref="SelectOption"/> 이 전역 진행 대신 이 콜백을 호출한다.
     /// </summary>
     private Action<int> _branchOptionInterceptor;
+    // Branch dialogue input must complete only its branch, never Advance the enclosing main node.
+    private readonly Dictionary<int, Action> _branchDialogueAdvanceInterceptors = new();
 
     private readonly Dictionary<string, BranchOptionSelection> _remoteBranchChoiceSelections = new(StringComparer.Ordinal);
     private readonly HashSet<int> _activeRemoteBranchPromptClients = new();
@@ -4878,39 +4965,53 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       var holderByRole = new Dictionary<string, ActiveRoleRosterEntry>(StringComparer.Ordinal);
-      foreach (var clientId in GetActivePlayerIds())
+      var activePlayers = GetActivePlayerIds()
+        .Select(clientId => UserDescriptorService.TryGetByClientId(clientId, out var player)
+          ? (ClientId: clientId, Player: player)
+          : (ClientId: clientId, Player: null))
+        .Where(each => each.Player != null && !string.IsNullOrWhiteSpace(each.Player.Identifier))
+        .ToArray();
+      bool allowSinglePlayerMultipleRoles = ShouldAllowMultipleActiveRolesForSinglePlayer(
+        ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer,
+        activePlayers.Length);
+
+      foreach (var activePlayer in activePlayers)
       {
-        if (!UserDescriptorService.TryGetByClientId(clientId, out var player)
-            || player == null
-            || string.IsNullOrWhiteSpace(player.Identifier))
-          continue;
+        var clientId = activePlayer.ClientId;
+        var player = activePlayer.Player;
 
         var roles = declaredRoles.Where(role => PlayerTagService.HasTag(player.Identifier, role)).ToArray();
         if (roles.Length == 0)
           continue;
-        if (roles.Length > 1)
+        if (roles.Length > 1 && !allowSinglePlayerMultipleRoles)
         {
           error = $"player '{player.Identifier}' has multiple active roles [{string.Join(", ", roles)}]";
           return false;
         }
 
-        var entry = new ActiveRoleRosterEntry
+        foreach (var role in roles)
         {
-          Role = roles[0],
-          ClientId = clientId,
-          PlayerIdentifier = player.Identifier
-        };
-        if (holderByRole.TryGetValue(entry.Role, out var duplicate))
-        {
-          error = $"duplicate active role '{entry.Role}' on players '{duplicate.PlayerIdentifier}' and '{entry.PlayerIdentifier}'";
-          return false;
+          var entry = new ActiveRoleRosterEntry
+          {
+            Role = role,
+            ClientId = clientId,
+            PlayerIdentifier = player.Identifier
+          };
+          if (holderByRole.TryGetValue(entry.Role, out var duplicate))
+          {
+            error = $"duplicate active role '{entry.Role}' on players '{duplicate.PlayerIdentifier}' and '{entry.PlayerIdentifier}'";
+            return false;
+          }
+          holderByRole.Add(entry.Role, entry);
         }
-        holderByRole.Add(entry.Role, entry);
       }
 
       roster.AddRange(holderByRole.Values.OrderBy(entry => Array.IndexOf(declaredRoles, entry.Role)));
       return true;
     }
+
+    private static bool ShouldAllowMultipleActiveRolesForSinglePlayer(bool enabled, int activePlayerCount)
+      => enabled && activePlayerCount == 1;
 
     /// <summary>
     /// 병렬 브랜치 할당용 결정적 난수 생성기를 만든다.
@@ -5276,7 +5377,8 @@ namespace MultiplayerInfrastructure.Scenario
 
       var roles = new HashSet<string>(_currentGraph.ActiveRoleTags, StringComparer.Ordinal);
       var holderByRole = roster.ToDictionary(entry => entry.Role, StringComparer.Ordinal);
-      bool singlePlayerDebug = ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer && roster.Count == 1;
+      bool singlePlayerDebug = ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer
+                               && roster.Select(entry => entry.ClientId).Distinct().Count() == 1;
       foreach (var branch in branches)
       {
         var branchRoles = branch.RequiredPlayerTags?

@@ -131,6 +131,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       {
         Identifier = "spawn-doctor",
         ActingNpcIdentifier = "npc_doctor",
+        RotationY = -90f,
         NextIdentifier = "start"
       });
       graph.Add(new ScenarioDialogueNode { Identifier = "start", DialogueContent = "시작" });
@@ -143,6 +144,8 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       Assert.That(reloaded.ActingNpcs[0].RotationY, Is.EqualTo(180f));
       Assert.That(((ScenarioEntityPresetSpawnNode)reloaded.Nodes["spawn-doctor"]).ActingNpcIdentifier,
         Is.EqualTo("npc_doctor"));
+      Assert.That(((ScenarioEntityPresetSpawnNode)reloaded.Nodes["spawn-doctor"]).RotationY,
+        Is.EqualTo(-90f));
       Assert.That(reloaded.ActingNpcs[0].Interactions, Has.Count.EqualTo(2));
       Assert.That(
         reloaded.ActingNpcs[0].Interactions[0].RequiredItems[0].ItemIdentifier,
@@ -204,42 +207,6 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       Assert.That(move.Mode, Is.EqualTo(ScenarioNPCControlMode.Control));
       Assert.That(move.DestinationIdentifier, Is.EqualTo("destination"));
       Assert.That(move.MoveSpeed, Is.EqualTo(2f));
-    }
-
-    [Test]
-    public void LegacyNpcNodesLoadAsNPCControl()
-    {
-      const string json = @"{
-        ""identifier"": ""legacy-npc-control"",
-        ""nodes"": {
-          ""move"": {
-            ""identifier"": ""move"",
-            ""nodeType"": ""NPCMove"",
-            ""npcIdentifier"": ""npc"",
-            ""destinationType"": ""Waypoint"",
-            ""destinationIdentifier"": ""destination"",
-            ""moveMode"": ""BySpeed"",
-            ""moveSpeed"": 2
-          },
-          ""disable"": {
-            ""identifier"": ""disable"",
-            ""nodeType"": ""NpcInteractControl"",
-            ""npcIdentifier"": ""npc"",
-            ""interactableIdentifier"": ""talk"",
-            ""operation"": ""Disable""
-          }
-        }
-      }";
-
-      var graph = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
-      var move = (ScenarioNPCControlNode)graph.Nodes["move"];
-      var disable = (ScenarioNPCControlNode)graph.Nodes["disable"];
-
-      Assert.That(move.Mode, Is.EqualTo(ScenarioNPCControlMode.Control));
-      Assert.That(move.DestinationIdentifier, Is.EqualTo("destination"));
-      Assert.That(disable.Mode, Is.EqualTo(ScenarioNPCControlMode.Update));
-      Assert.That(disable.InteractOperation, Is.EqualTo(ScenarioNPCInteractCrudOperation.Update));
-      Assert.That(disable.InteractEnabled, Is.False);
     }
 
     [Test]

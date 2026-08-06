@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Registry;
@@ -97,6 +98,62 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void EmptyInitialActiveRoleRosterKeepsByRoleParallelWaiting()
+    {
+      var gameObject = new GameObject("scenario-empty-active-roster-test");
+      var controller = gameObject.AddComponent<ScenarioController>();
+      var currentGraph = typeof(ScenarioController).GetField(
+        "_currentGraph",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+      var waitForRoster = typeof(ScenarioController).GetMethod(
+        "WaitForInitialActiveRoleRoster",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+
+      try
+      {
+        currentGraph.SetValue(controller, new ScenarioGraph
+        {
+          Identifier = "empty-roster-test",
+          ActiveRoleTags = new[] { "nurse_a" },
+          SkipAbsentRoleBranches = true
+        });
+        var node = new ScenarioParallelNode
+        {
+          Identifier = "ROLE_PARALLEL",
+          AllocationType = ScenarioParallelAllocationType.ByRole,
+          WaitMode = ScenarioWaitMode.All
+        };
+
+        Assert.That(waitForRoster, Is.Not.Null);
+        var routine = (IEnumerator)waitForRoster.Invoke(controller, new object[] { node });
+        Assert.That(routine.MoveNext(), Is.True,
+          "빈 초기 roster에서는 Parallel 할당을 시작하지 않고 역할 등록을 기다려야 합니다.");
+        Assert.That(routine.Current, Is.Null);
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(gameObject);
+      }
+    }
+
+    [TestCase(true, 1, true)]
+    [TestCase(false, 1, false)]
+    [TestCase(true, 0, false)]
+    [TestCase(true, 2, false)]
+    public void MultipleActiveRolesAreAcceptedOnlyForSinglePlayerDebug(
+      bool enabled,
+      int activePlayerCount,
+      bool expected)
+    {
+      var shouldAllow = typeof(ScenarioController).GetMethod(
+        "ShouldAllowMultipleActiveRolesForSinglePlayer",
+        BindingFlags.Static | BindingFlags.NonPublic);
+
+      Assert.That(shouldAllow, Is.Not.Null);
+      Assert.That(shouldAllow.Invoke(null, new object[] { enabled, activePlayerCount }), Is.EqualTo(expected));
+    }
+
+    [Test]
     public void BranchQuestControlExecutionAcceptsExplicitOwner()
     {
       var executeQuestControl = typeof(ScenarioController).GetMethod(
@@ -108,6 +165,37 @@ namespace MultiplayerInfrastructure.Tests.Scenario
 
       Assert.That(executeQuestControl, Is.Not.Null,
         "Role-parallel QuestControl must receive the branch owner instead of consulting only scenario ownership.");
+    }
+
+    [Test]
+    public void BranchDialogueAdvanceIsConsumedWithoutAdvancingMainScenario()
+    {
+      var gameObject = new GameObject("scenario-branch-dialogue-advance-test");
+      var controller = gameObject.AddComponent<ScenarioController>();
+      var interceptors = typeof(ScenarioController).GetField(
+        "_branchDialogueAdvanceInterceptors",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+      var tryAdvance = typeof(ScenarioController).GetMethod(
+        "TryAdvanceBranchDialogue",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+
+      try
+      {
+        Assert.That(interceptors, Is.Not.Null);
+        Assert.That(tryAdvance, Is.Not.Null);
+
+        bool advanced = false;
+        var values = (Dictionary<int, Action>)interceptors.GetValue(controller);
+        values[42] = () => advanced = true;
+
+        Assert.That(tryAdvance.Invoke(controller, new object[] { 42 }), Is.EqualTo(true));
+        Assert.That(advanced, Is.True);
+        Assert.That(tryAdvance.Invoke(controller, new object[] { 7 }), Is.EqualTo(false));
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(gameObject);
+      }
     }
 
     [Test]
@@ -137,6 +225,37 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       finally
       {
         ClearRosterCounterSignals(output);
+      }
+    }
+
+    [Test]
+    public void DynamicRosterCounterTreatsMultipleRolesOnOnePlayerAsOneArrival()
+    {
+      const string output = "test.roster.single-player.complete";
+      try
+      {
+        ScenarioSignalCounters.Register(
+          "single-player-roster",
+          "test.roster.arrival_",
+          4,
+          output,
+          () => new[]
+          {
+            ScenarioInteractionSignals.Normalize("test.roster.arrival_alice")
+          });
+
+        ScenarioInteractionSignals.Raise("test.roster.arrival_alice");
+
+        Assert.That(ScenarioInteractionSignals.IsRaised(output), Is.True,
+          "한 플레이어가 여러 역할을 맡아도 트리아지 도착 신호는 플레이어당 한 번이면 충분해야 합니다.");
+      }
+      finally
+      {
+        ScenarioSignalCounters.ClearAll();
+        Registry.Registry.Unregister(RegistryType.RuntimeState,
+          ScenarioInteractionSignals.Normalize("test.roster.arrival_alice"));
+        Registry.Registry.Unregister(RegistryType.RuntimeState,
+          ScenarioInteractionSignals.Normalize(output));
       }
     }
 

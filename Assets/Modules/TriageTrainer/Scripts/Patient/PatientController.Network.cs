@@ -98,10 +98,27 @@ namespace TriageTrainer.Entity
         _registeredEntityIdentifier,
         EntityType.Patient,
         gameObject,
-        displayName: id,
+        displayName: GetPatientDisplayName(id),
         ownerUserIdentifier: null,
         clientId: null,
         isNetworked: true);
+    }
+
+    public void RefreshPatientDisplayName()
+    {
+      if (string.IsNullOrWhiteSpace(_registeredEntityIdentifier))
+        return;
+
+      Registry.UpdateEntityDisplayName(
+        _registeredEntityIdentifier,
+        GetPatientDisplayName(_registeredEntityIdentifier));
+    }
+
+    private string GetPatientDisplayName(string fallback)
+    {
+      return _patientDescriptor != null && !string.IsNullOrWhiteSpace(_patientDescriptor.name)
+        ? _patientDescriptor.name.Trim()
+        : fallback;
     }
 
     private void UnregisterPatientEntity()

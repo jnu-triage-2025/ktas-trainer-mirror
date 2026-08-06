@@ -3,6 +3,7 @@
   "port": 37891,
   "sessionName": "MyFishSession",
   "datapacks": [
-    "usability"
+    "usability",
+    "debugging"
   ]
 }

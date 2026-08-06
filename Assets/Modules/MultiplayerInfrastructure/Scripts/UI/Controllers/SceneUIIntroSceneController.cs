@@ -25,6 +25,8 @@ namespace MultiplayerInfrastructure.UI
   [RequireComponent(typeof(UIDocument))]
   public class SceneUIIntroSceneController : UIDocumentControllerABC
   {
+    private const string PlayerNamePreferenceKey = "IntroScene.PlayerName";
+
     [Header("Scene flow")]
     [SerializeField] private string ingameSceneName = DefaultsSceneControl.IngameSceneName;
     [SerializeField] private string tutorialSceneName = DefaultsSceneControl.TutorialSceneName;
@@ -148,11 +150,17 @@ namespace MultiplayerInfrastructure.UI
       _searchField.RegisterValueChangedCallback(_ => RefreshSessions());
 
       // ── Name validation (soft constraint) ──
-      _nameField.RegisterValueChangedCallback(_ => UpdateNameValidation());
+      _nameField.RegisterValueChangedCallback(evt =>
+      {
+        PersistUserDisplayName(evt.newValue);
+        UpdateNameValidation();
+      });
 
       // ── Defaults ──
       _addrField.value = defaultAddress;
       _portField.value = defaultPort.ToString();
+
+      RestoreUserDisplayName();
 
       // ── Show main menu ──
       ShowPanel(_mainPanel);
@@ -482,7 +490,37 @@ namespace MultiplayerInfrastructure.UI
     {
       var name = _nameField?.value?.Trim();
       if (!string.IsNullOrWhiteSpace(name))
+      {
+        PersistUserDisplayName(name);
         Registry.Registry.Register(RegistryType.RuntimeState, RegistryGlobalKeys.UserDisplayName, name);
+      }
+    }
+
+    private void RestoreUserDisplayName()
+    {
+      var name = PlayerPrefs.GetString(PlayerNamePreferenceKey, string.Empty).Trim();
+      if (string.IsNullOrWhiteSpace(name))
+        name = Registry.Registry.Get<string>(RegistryType.RuntimeState, RegistryGlobalKeys.UserDisplayName)?.Trim();
+
+      if (!string.IsNullOrWhiteSpace(name))
+      {
+        _nameField.value = name;
+        Registry.Registry.Register(RegistryType.RuntimeState, RegistryGlobalKeys.UserDisplayName, name);
+      }
+    }
+
+    private static void PersistUserDisplayName(string value)
+    {
+      var name = value?.Trim();
+      if (string.IsNullOrWhiteSpace(name))
+      {
+        PlayerPrefs.DeleteKey(PlayerNamePreferenceKey);
+        PlayerPrefs.Save();
+        return;
+      }
+
+      PlayerPrefs.SetString(PlayerNamePreferenceKey, name);
+      PlayerPrefs.Save();
     }
 
     private void StoreLaunchRequest(

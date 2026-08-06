@@ -27,10 +27,13 @@ namespace MultiplayerInfrastructure.Editor
     private ScenarioDebugPanelView debugPanelView;
     private ScenarioSearchPanelView searchPanelView;
     private VisualElement definitionsContainer;
+    private VisualElement questsContainer;
     private ToolbarButton graphTabButton;
     private ToolbarButton definitionsTabButton;
+    private ToolbarButton questsTabButton;
     private ScenarioActingNpcEditorView actingNpcEditorView;
     private ScenarioWaypointEditorView waypointEditorView;
+    private ScenarioQuestEditorView questEditorView;
 
     private ScenarioGraph graphData = new ScenarioGraph();
     private readonly Dictionary<string, ScenarioNodeView> nodeViews = new Dictionary<string, ScenarioNodeView>();
@@ -186,12 +189,13 @@ namespace MultiplayerInfrastructure.Editor
       CreateGraphView();
       CreateDebugPanel();
       CreateDefinitionsTab();
+      CreateQuestTab();
       CreateSearchPanel();
       CreateInspector();
       CreateSearchWindow();
       BindGraphEvents();
       LoadBlankGraph();
-      SetActiveTab(true);
+      SetActiveTab(ScenarioEditorTab.Graph);
       SyncRuntimeHighlight();
     }
 
@@ -299,10 +303,12 @@ namespace MultiplayerInfrastructure.Editor
       rootVisualElement.Add(toolbar);
 
       var tabs = new Toolbar();
-      graphTabButton = new ToolbarButton(() => SetActiveTab(true)) { text = "Graph" };
-      definitionsTabButton = new ToolbarButton(() => SetActiveTab(false)) { text = "Definitions" };
+      graphTabButton = new ToolbarButton(() => SetActiveTab(ScenarioEditorTab.Graph)) { text = "Graph" };
+      definitionsTabButton = new ToolbarButton(() => SetActiveTab(ScenarioEditorTab.Definitions)) { text = "Definitions" };
+      questsTabButton = new ToolbarButton(() => SetActiveTab(ScenarioEditorTab.Quests)) { text = "Quests" };
       tabs.Add(graphTabButton);
       tabs.Add(definitionsTabButton);
+      tabs.Add(questsTabButton);
       rootVisualElement.Add(tabs);
 
       EnsureGraphData();
@@ -405,18 +411,50 @@ namespace MultiplayerInfrastructure.Editor
       rootVisualElement.Add(definitionsContainer);
     }
 
-    private void SetActiveTab(bool showGraph)
+    private void CreateQuestTab()
     {
+      questsContainer = new VisualElement { name = "ScenarioQuestsContainer" };
+      questsContainer.style.flexGrow = 1f;
+      questsContainer.style.paddingLeft = 12;
+      questsContainer.style.paddingRight = 12;
+      questsContainer.style.paddingTop = 12;
+
+      questEditorView = new ScenarioQuestEditorView(() => graphData, FocusNodeFromQuestView);
+      questsContainer.Add(questEditorView);
+      rootVisualElement.Add(questsContainer);
+    }
+
+    private enum ScenarioEditorTab
+    {
+      Graph,
+      Definitions,
+      Quests
+    }
+
+    private void SetActiveTab(ScenarioEditorTab tab)
+    {
+      bool showGraph = tab == ScenarioEditorTab.Graph;
+      bool showDefinitions = tab == ScenarioEditorTab.Definitions;
+      bool showQuests = tab == ScenarioEditorTab.Quests;
       if (mainContainer != null) mainContainer.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
       if (debugPanelView != null) debugPanelView.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
-      if (definitionsContainer != null) definitionsContainer.style.display = showGraph ? DisplayStyle.None : DisplayStyle.Flex;
+      if (definitionsContainer != null) definitionsContainer.style.display = showDefinitions ? DisplayStyle.Flex : DisplayStyle.None;
+      if (questsContainer != null) questsContainer.style.display = showQuests ? DisplayStyle.Flex : DisplayStyle.None;
       graphTabButton?.SetEnabled(!showGraph);
-      definitionsTabButton?.SetEnabled(showGraph);
-      if (!showGraph)
-      {
-        actingNpcEditorView?.Refresh();
-        waypointEditorView?.Refresh();
-      }
+      definitionsTabButton?.SetEnabled(!showDefinitions);
+      questsTabButton?.SetEnabled(!showQuests);
+    }
+
+    internal void OpenQuestView(string definitionIdentifier)
+    {
+      SetActiveTab(ScenarioEditorTab.Quests);
+      questEditorView?.SelectDefinition(definitionIdentifier);
+    }
+
+    private void FocusNodeFromQuestView(string nodeIdentifier)
+    {
+      SetActiveTab(ScenarioEditorTab.Graph);
+      FocusNodeByIdentifier(nodeIdentifier);
     }
 
     private TextAsset GetCurrentScenarioTextAsset()
@@ -447,7 +485,7 @@ namespace MultiplayerInfrastructure.Editor
 
       var path = AssetDatabase.GetAssetPath(asset);
       OpenGraphFromPath(Path.GetFullPath(path));
-      SetActiveTab(true);
+      SetActiveTab(ScenarioEditorTab.Graph);
     }
 
     private void CreateSearchPanel()
@@ -481,6 +519,13 @@ namespace MultiplayerInfrastructure.Editor
     {
       bool isMac    = Application.platform == RuntimePlatform.OSXEditor;
       bool modifier = isMac ? evt.commandKey : evt.ctrlKey;
+
+      // 진단 항목을 마지막으로 클릭한 경우 GraphView 포커스와 무관하게 Ctrl+C로 복사한다.
+      if (evt.ctrlKey && evt.keyCode == KeyCode.C && debugPanelView != null && debugPanelView.TryCopySelectedItem())
+      {
+        evt.StopPropagation();
+        return;
+      }
 
       if (modifier && evt.keyCode == KeyCode.F)
       {
@@ -1479,9 +1524,11 @@ namespace MultiplayerInfrastructure.Editor
     {
       if (string.IsNullOrEmpty(path)) return;
 
-      var json = File.ReadAllText(path);
       try
       {
+        ReportGraphLoadProgress(0.03f, "시나리오 파일을 읽는 중...");
+        var json = File.ReadAllText(path);
+        ReportGraphLoadProgress(0.12f, "시나리오 데이터를 해석하는 중...");
         ScenarioGraphLoader.ReloadSchemaForEditor();
         var loaded = ScenarioGraphLoader.LoadFromJson(json, true);
         if (loaded == null || loaded.Nodes.Count == 0)
@@ -1493,6 +1540,19 @@ namespace MultiplayerInfrastructure.Editor
         if (string.IsNullOrWhiteSpace(graphData.Identifier))
           graphData.Identifier = GetScenarioIdentifierFromPath(path);
 
+        // Quests 탭 전환 시 AssetDatabase 검색 및 JSON 파싱을 반복하지 않도록
+        // 시나리오를 여는 동안 해당 include 문서를 미리 읽어 캐시한다.
+        questEditorView?.Preload((completed, total, message) =>
+        {
+          var progress = 0.20f + 0.15f * completed / Math.Max(1f, total);
+          ReportGraphLoadProgress(progress, message);
+        });
+        ReportGraphLoadProgress(0.36f, "정의 및 퀘스트 편집 화면을 구성하는 중...");
+        actingNpcEditorView?.Refresh();
+        waypointEditorView?.Refresh();
+        questEditorView?.Refresh();
+
+        ReportGraphLoadProgress(0.40f, "그래프 뷰를 초기화하는 중...");
         nodeViews.Clear();
         graphView.ClearGraph();
 
@@ -1501,6 +1561,7 @@ namespace MultiplayerInfrastructure.Editor
         ScenarioGraphEditorData editorData = null;
         if (File.Exists(editorPath))
         {
+          ReportGraphLoadProgress(0.44f, "그래프 레이아웃 데이터를 읽는 중...");
           var editorJson = File.ReadAllText(editorPath);
           editorData = JsonSerializer.Deserialize<ScenarioGraphEditorData>(
               editorJson,
@@ -1514,6 +1575,8 @@ namespace MultiplayerInfrastructure.Editor
 
         foreach (var node in orderedNodes)
         {
+          var progress = 0.48f + 0.32f * index / Math.Max(1f, orderedNodes.Count);
+          ReportGraphLoadProgress(progress, $"그래프 노드를 만드는 중... ({index + 1}/{orderedNodes.Count})");
           var nodeView = graphView.AddNodeView(node);
           Vector2 position;
           if (editorData != null && editorData.NodePositions.TryGetValue(node.Identifier, out var pos))
@@ -1533,9 +1596,11 @@ namespace MultiplayerInfrastructure.Editor
 
         if (editorData == null)
         {
+          ReportGraphLoadProgress(0.82f, "그래프 노드를 자동 배치하는 중...");
           AutoLayoutNodes(true);
         }
 
+        ReportGraphLoadProgress(0.91f, "그래프 연결선을 복원하는 중...");
         graphView.SetEdgeRoutes(editorData?.EdgeRoutes);
         graphView.RestoreEdgesAfterLayout(nodeViews);
         graphView.schedule.Execute(() =>
@@ -1564,12 +1629,25 @@ namespace MultiplayerInfrastructure.Editor
         RefreshRuntimeHistoryView();
         RefreshDebugPanel();
         ResetUndoHistory();
+        ReportGraphLoadProgress(1f, "시나리오 로드를 완료했습니다.");
       }
       catch (Exception ex)
       {
         Debug.LogException(ex);
         EditorUtility.DisplayDialog("JSON Load Failed", ex.Message, "확인");
       }
+      finally
+      {
+        EditorUtility.ClearProgressBar();
+      }
+    }
+
+    private static void ReportGraphLoadProgress(float progress, string message)
+    {
+      EditorUtility.DisplayProgressBar(
+        "Scenario Graph Loading",
+        message,
+        Mathf.Clamp01(progress));
     }
 
     public void SaveMiniMapLayout(Rect rect)

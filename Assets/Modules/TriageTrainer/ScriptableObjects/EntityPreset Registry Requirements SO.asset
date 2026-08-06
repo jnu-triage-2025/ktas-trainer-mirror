@@ -72,16 +72,36 @@ MonoBehaviour:
     prefab: {fileID: 1909068193049070239, guid: 2180ad435aaca4c44a3aba28ee8412ca, type: 3}
     displayName: 
     isNetworked: 1
-    childReferences: []
+    childReferences:
+    - childPresetIdentifier: bed_d_a
+      spawnedEntityIdentifier: bed_d_a
+      unwrapOnSpawn: 1
+      linkChildToParent: 1
   - identifier: patient_dummy_d_b
     fallbackEntityType: 0
     prefab: {fileID: 2574628634766077341, guid: af3814dd0bc4347e889e3cf06ec0bb9b, type: 3}
     displayName: 
     isNetworked: 1
-    childReferences: []
+    childReferences:
+    - childPresetIdentifier: bed_d_b
+      spawnedEntityIdentifier: bed_d_b
+      unwrapOnSpawn: 1
+      linkChildToParent: 1
   - identifier: npc_doctor_preset
     fallbackEntityType: 0
     prefab: {fileID: 275932254276783438, guid: 8a6fda5491f6443ca3501361d5a41ac4, type: 3}
     displayName: "\uB2F4\uB2F9 \uC758\uC0AC"
+    isNetworked: 1
+    childReferences: []
+  - identifier: bed_d_b
+    fallbackEntityType: 0
+    prefab: {fileID: 5017221584004301368, guid: 19556133e274748aebcdaaa9ee7730b9, type: 3}
+    displayName: 
+    isNetworked: 1
+    childReferences: []
+  - identifier: bed_d_a
+    fallbackEntityType: 0
+    prefab: {fileID: 5017221584004301368, guid: 19556133e274748aebcdaaa9ee7730b9, type: 3}
+    displayName: 
     isNetworked: 1
     childReferences: []

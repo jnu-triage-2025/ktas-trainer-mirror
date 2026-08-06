@@ -113,7 +113,7 @@ namespace TriageTrainer.Entity
           id,
           EntityType.MovingPatientBed,
           gameObject,
-          displayName: _displayText,
+          displayName: GetDisplayText(),
           ownerUserIdentifier: null,
           clientId: null,
           isNetworked: true);
@@ -214,6 +214,7 @@ namespace TriageTrainer.Entity
       SnapReposedTargetToAnchor(patient);
       ((IReposable)patient).OnMovingPatientBedAttachedEnter();
       patient.SetCurrentBed(this);
+      RefreshDisplayName();
     }
 
     /// <summary>로컬(이 피어)에서 환자↔침대 결합 상태를 해제한다.</summary>
@@ -238,6 +239,8 @@ namespace TriageTrainer.Entity
       {
         patient.SetCurrentBed(null);
       }
+
+      RefreshDisplayName();
     }
 
     // ── 서버 권위 진입점 ───────────────────────────────────────────────────────

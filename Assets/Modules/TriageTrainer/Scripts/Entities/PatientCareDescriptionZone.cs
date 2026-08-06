@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TriageTrainer.Entity.LineConnection;
 using TriageTrainer.Scenario;
 using UnityEngine;
 
@@ -36,6 +37,9 @@ namespace TriageTrainer.Entity
     private readonly HashSet<MovingPatientBedController> _snappedBeds = new();
     private readonly List<WallAttachedWallSuction> _wallSuction = new();
     private readonly List<WallAttachedOxyflowmeter> _oxyflowmeters = new();
+    private readonly HashSet<WallAttachedWallSuction> _newlyInstalledWallSuction = new();
+    private readonly HashSet<WallAttachedOxyflowmeter> _newlyInstalledOxyflowmeters = new();
+    private readonly HashSet<string> _warnedAutomaticLineFailures = new();
     private bool _warnedMultipleWallSuction;
     private bool _warnedMultipleOxyflowmeter;
     private bool _warnedMissingEquipment;
@@ -88,6 +92,8 @@ namespace TriageTrainer.Entity
     {
       WallAttachedWallSuction.AttachmentStateChanged += OnWallSuctionAttachmentStateChanged;
       WallAttachedOxyflowmeter.AttachmentStateChanged += OnOxyflowmeterAttachmentStateChanged;
+      WallAttachedWallSuction.InstallationConfirmed += OnWallSuctionInstallationConfirmed;
+      WallAttachedOxyflowmeter.InstallationConfirmed += OnOxyflowmeterInstallationConfirmed;
       TriageWorldInteractionSignals.RaiseCareZoneEnabled(Identifier);
     }
 
@@ -95,22 +101,47 @@ namespace TriageTrainer.Entity
     {
       WallAttachedWallSuction.AttachmentStateChanged -= OnWallSuctionAttachmentStateChanged;
       WallAttachedOxyflowmeter.AttachmentStateChanged -= OnOxyflowmeterAttachmentStateChanged;
+      WallAttachedWallSuction.InstallationConfirmed -= OnWallSuctionInstallationConfirmed;
+      WallAttachedOxyflowmeter.InstallationConfirmed -= OnOxyflowmeterInstallationConfirmed;
       if (_activePatient != null)
         ReleaseEquipmentIfOwned(_activePatient);
       _activePatient = null;
       _patientColliderCounts.Clear();
       _bedColliderCounts.Clear();
       _snappedBeds.Clear();
+      _newlyInstalledWallSuction.Clear();
+      _newlyInstalledOxyflowmeters.Clear();
+      _warnedAutomaticLineFailures.Clear();
       TriageWorldInteractionSignals.RaiseCareZoneDisabled(Identifier);
     }
 
     private void OnWallSuctionAttachmentStateChanged(WallAttachedWallSuction equipment, bool attached)
     {
+      if (!attached)
+        _newlyInstalledWallSuction.Remove(equipment);
       RefreshActivePatientEquipment();
     }
 
     private void OnOxyflowmeterAttachmentStateChanged(WallAttachedOxyflowmeter equipment, bool attached)
     {
+      if (!attached)
+        _newlyInstalledOxyflowmeters.Remove(equipment);
+      RefreshActivePatientEquipment();
+    }
+
+    private void OnWallSuctionInstallationConfirmed(WallAttachedWallSuction equipment)
+    {
+      if (equipment == null || !IsEquipmentInZone(equipment))
+        return;
+      _newlyInstalledWallSuction.Add(equipment);
+      RefreshActivePatientEquipment();
+    }
+
+    private void OnOxyflowmeterInstallationConfirmed(WallAttachedOxyflowmeter equipment)
+    {
+      if (equipment == null || !IsEquipmentInZone(equipment))
+        return;
+      _newlyInstalledOxyflowmeters.Add(equipment);
       RefreshActivePatientEquipment();
     }
 
@@ -281,14 +312,17 @@ namespace TriageTrainer.Entity
       _connectedOxyflowmeter = flowmeter != null && flowmeter.Count == 1 ? flowmeter[0] : null;
       patient.SetConnectedWallSuctionConnections(suction);
       patient.SetConnectedOxyflowmeterConnections(flowmeter);
+      ReconcileAutomaticLines(patient);
       if (ownsPreviousSuction && !ReferenceEquals(previousSuction, patient.ConnectedWallSuction))
       {
+        DisconnectAutomaticSuctionLine(patient, previousSuction);
         TriageWorldInteractionSignals.RaiseCareZonePatientEquipmentDisconnected(Identifier, patient.Identifier, PatientController.EquipmentTypeWallSuction, previousSuction);
       }
       if (patient.ConnectedWallSuction != null && !ReferenceEquals(previousSuction, patient.ConnectedWallSuction))
         TriageWorldInteractionSignals.RaiseCareZonePatientEquipmentConnected(Identifier, patient.Identifier, PatientController.EquipmentTypeWallSuction, patient.ConnectedWallSuction);
       if (ownsPreviousOxyflowmeter && !ReferenceEquals(previousOxyflowmeter, patient.ConnectedOxyflowmeter))
       {
+        DisconnectAutomaticOxyLine(patient, previousOxyflowmeter);
         TriageWorldInteractionSignals.RaiseCareZonePatientEquipmentDisconnected(Identifier, patient.Identifier, PatientController.EquipmentTypeOxyflowmeter, previousOxyflowmeter);
       }
       if (patient.ConnectedOxyflowmeter != null && !ReferenceEquals(previousOxyflowmeter, patient.ConnectedOxyflowmeter))
@@ -302,17 +336,98 @@ namespace TriageTrainer.Entity
 
       if (_connectedWallSuction != null && ReferenceEquals(patient.ConnectedWallSuction, _connectedWallSuction))
       {
+        DisconnectAutomaticSuctionLine(patient, _connectedWallSuction);
         TriageWorldInteractionSignals.RaiseCareZonePatientEquipmentDisconnected(Identifier, patient.Identifier, PatientController.EquipmentTypeWallSuction, _connectedWallSuction);
         patient.SetConnectedWallSuctionConnections(null);
       }
       if (_connectedOxyflowmeter != null && ReferenceEquals(patient.ConnectedOxyflowmeter, _connectedOxyflowmeter))
       {
+        DisconnectAutomaticOxyLine(patient, _connectedOxyflowmeter);
         TriageWorldInteractionSignals.RaiseCareZonePatientEquipmentDisconnected(Identifier, patient.Identifier, PatientController.EquipmentTypeOxyflowmeter, _connectedOxyflowmeter);
         patient.SetConnectedOxyflowmeterConnections(null);
       }
       _connectedWallSuction = null;
       _connectedOxyflowmeter = null;
     }
+
+    private void ReconcileAutomaticLines(PatientController patient)
+    {
+      if (patient == null || !IsPatientSupportedInZone(patient))
+        return;
+
+      WallAttachedOxyflowmeter oxyflowmeter = patient.ConnectedOxyflowmeter;
+      if (oxyflowmeter != null && _newlyInstalledOxyflowmeters.Contains(oxyflowmeter))
+      {
+        // TODO: Configure the oxyflowmeter prefab port and the installed oxygen-mask port in their serialized fields.
+        var equipmentPoint = oxyflowmeter.OxyLineConnectionPoint;
+        var patientPoint = patient.OxygenMaskAttachmentPoint;
+        if (TryCreateAutomaticLine(equipmentPoint, patientPoint, "oxygen"))
+          _newlyInstalledOxyflowmeters.Remove(oxyflowmeter);
+      }
+
+      WallAttachedWallSuction suction = patient.ConnectedWallSuction;
+      if (suction != null && _newlyInstalledWallSuction.Contains(suction))
+      {
+        // TODO: Configure the wall-suction and patient suction ports after the appropriate targets are finalized.
+        var equipmentPoint = suction.SuctionLineConnectionPoint;
+        var patientPoint = patient.SuctionLineAttachmentPoint;
+        if (TryCreateAutomaticLine(equipmentPoint, patientPoint, "suction"))
+          _newlyInstalledWallSuction.Remove(suction);
+      }
+    }
+
+    private bool TryCreateAutomaticLine(LineConnectionPoint equipmentPoint, LineConnectionPoint patientPoint, string lineType)
+    {
+      if (equipmentPoint == null || patientPoint == null)
+      {
+        WarnAutomaticLineFailure(lineType, "required attach point is missing");
+        return false;
+      }
+
+      var service = FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
+      if (service == null)
+      {
+        WarnAutomaticLineFailure(lineType, "LineConnectionService is missing");
+        return false;
+      }
+
+      if (equipmentPoint.IsPhysicallyConnectedTo(patientPoint)
+          || service.TryCreateAutomaticConnection(equipmentPoint, patientPoint))
+      {
+        _warnedAutomaticLineFailures.Remove(lineType);
+        return true;
+      }
+
+      WarnAutomaticLineFailure(lineType, "endpoint is unavailable, incompatible, or not server-spawned");
+      return false;
+    }
+
+    private void WarnAutomaticLineFailure(string lineType, string reason)
+    {
+      if (_warnedAutomaticLineFailures.Add(lineType))
+        Debug.LogWarning($"[PatientCareDescriptionZone] '{Identifier}' cannot auto-connect {lineType}: {reason}.", this);
+    }
+
+    private static void DisconnectAutomaticOxyLine(PatientController patient, WallAttachedOxyflowmeter equipment)
+    {
+      DisconnectAutomaticLine(equipment?.OxyLineConnectionPoint, patient?.ConfiguredOxygenMaskAttachmentPoint);
+    }
+
+    private static void DisconnectAutomaticSuctionLine(PatientController patient, WallAttachedWallSuction equipment)
+    {
+      DisconnectAutomaticLine(equipment?.SuctionLineConnectionPoint, patient?.ConfiguredSuctionLineAttachmentPoint);
+    }
+
+    private static void DisconnectAutomaticLine(LineConnectionPoint equipmentPoint, LineConnectionPoint patientPoint)
+    {
+      if (equipmentPoint == null || patientPoint == null)
+        return;
+      var service = FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
+      service?.DisconnectAutomaticConnection(equipmentPoint, patientPoint);
+    }
+
+    private bool IsEquipmentInZone(Component equipment) =>
+      equipment != null && IsPointInside(equipment.transform.position);
 
     private IReadOnlyList<WallAttachedWallSuction> GetUsableWallSuctionSources()
     {

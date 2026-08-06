@@ -23,6 +23,9 @@ namespace TriageTrainer.Scenario
       RegisterRecognition("activate_patient_c_pupil_check", true, "patient_c_pupil_checked", false, "동공반사 확인");
       Register("evaluate_patient_b_c_triage", Event_EvaluatePatientBCTriage);
       Register("reset_patient_b_c_triage_attempt", Event_ResetPatientBCTriageAttempt);
+      Register("reset_patient_b_triage_attempt", () => Event_ResetPatientBCTriageAttempt("patient_b"));
+      Register("reset_patient_c_triage_attempt", () => Event_ResetPatientBCTriageAttempt("patient_c"));
+      Register("reset_patient_dummy_d_b_triage_attempt", () => Event_ResetPatientBCTriageAttempt("patient_dummy_d_b"));
       Register("complete_patient_b_c_triage", Event_CompletePatientBCTriage);
     }
 
@@ -80,6 +83,23 @@ namespace TriageTrainer.Scenario
       SetPatientTriageAssessable(_patientBObject, true);
       SetPatientTriageAssessable(_patientCObject, true);
       SetPatientTriageAssessable(_patientDummyDBObject, true);
+      yield break;
+    }
+
+    private IEnumerator Event_ResetPatientBCTriageAttempt(string patientIdentifier)
+    {
+      ResolveRuntimeReferencesIfNeeded();
+      ScenarioInteractionSignals.Clear($"triage_submitted_{patientIdentifier}");
+      ScenarioInteractionSignals.Clear($"triage_correct_{patientIdentifier}");
+
+      var target = patientIdentifier switch
+      {
+        "patient_b" => _patientBObject,
+        "patient_c" => _patientCObject,
+        "patient_dummy_d_b" => _patientDummyDBObject,
+        _ => null
+      };
+      target?.GetComponentInChildren<PatientController>(true)?.ResetTriageAssessmentForRetry();
       yield break;
     }
 

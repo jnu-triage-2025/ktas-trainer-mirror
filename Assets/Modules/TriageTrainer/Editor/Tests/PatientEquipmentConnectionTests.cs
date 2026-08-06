@@ -5,6 +5,7 @@ using System.Text.Json;
 using TriageTrainer.Entity;
 using TriageTrainer.Entity.IntravenousLine;
 using TriageTrainer.Entity.LineConnection;
+using TriageTrainer.Entity.OxyLine;
 using UnityEngine;
 
 namespace TriageTrainer.Tests
@@ -314,6 +315,59 @@ namespace TriageTrainer.Tests
         Assert.That(second.IsPhysicallyConnectedTo(first), Is.True);
         Assert.That((bool)apply.Invoke(service, new object[] { first, second }), Is.False,
           "a host observer echo or duplicate packet must not create duplicate topology");
+      }
+      finally
+      {
+        Object.DestroyImmediate(secondObject);
+        Object.DestroyImmediate(firstObject);
+        Object.DestroyImmediate(serviceObject);
+      }
+    }
+
+    [Test]
+    public void AutomaticConnectionCreatesAndRemovesMatchingOxyTopology()
+    {
+      var serviceObject = new GameObject("line-service");
+      var firstObject = new GameObject("oxy-source-point");
+      var secondObject = new GameObject("oxy-patient-point");
+      try
+      {
+        var service = serviceObject.AddComponent<LineConnectionService>();
+        var first = firstObject.AddComponent<OxyLineConnectionPoint>();
+        var second = secondObject.AddComponent<OxyLineConnectionPoint>();
+
+        Assert.That(service.TryCreateAutomaticConnection(first, second), Is.True);
+        Assert.That(first.IsPhysicallyConnectedTo(second), Is.True);
+        Assert.That(service.TryCreateAutomaticConnection(first, second), Is.False,
+          "automatic retries must not create duplicate lines");
+        Assert.That(service.DisconnectAutomaticConnection(first, second), Is.True);
+        Assert.That(first.IsPhysicallyConnectedTo(second), Is.False);
+      }
+      finally
+      {
+        Object.DestroyImmediate(secondObject);
+        Object.DestroyImmediate(firstObject);
+        Object.DestroyImmediate(serviceObject);
+      }
+    }
+
+    [Test]
+    public void AutomaticDisconnectDoesNotRemoveManualMatchingTopology()
+    {
+      var serviceObject = new GameObject("line-service");
+      var firstObject = new GameObject("oxy-source-point");
+      var secondObject = new GameObject("oxy-patient-point");
+      try
+      {
+        var service = serviceObject.AddComponent<LineConnectionService>();
+        var first = firstObject.AddComponent<OxyLineConnectionPoint>();
+        var second = secondObject.AddComponent<OxyLineConnectionPoint>();
+
+        Assert.That(service.CreateAndRegisterConnection(first, second), Is.True,
+          "represents a player-created matching line");
+        Assert.That(service.DisconnectAutomaticConnection(first, second), Is.False,
+          "CareZone cleanup must not destroy a line it did not create");
+        Assert.That(first.IsPhysicallyConnectedTo(second), Is.True);
       }
       finally
       {
