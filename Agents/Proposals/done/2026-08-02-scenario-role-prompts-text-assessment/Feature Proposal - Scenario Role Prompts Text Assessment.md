@@ -1,3 +1,5 @@
+> 상태: **반영 완료(done, 2026-08-07)**. 역할 범위 Dialogue/Choice 원격 표시(`TargetPresentRoleNode`), `(clientId, graphId, nodeId)` 키 선택 라우팅, `@t=[tag, fallback]` 해석(`ScenarioTextResolver`), Choice 평가 데이터 계약(`AssessmentIdentifier`/`CorrectOptionIndex`)과 로그 기록이 구현됨.
+
 ### 개요
 
 시나리오 역할 브랜치 입력·동적 텍스트·선택 평가 기능은 다인 시나리오에서 특정 역할의 플레이어에게 대화와 선택지를 전달하고, 태그 기반 이름을 본문에 표시하며, 교육 평가 선택을 세션 로그에 남기기 위한 공용 Scenario 확장이다.

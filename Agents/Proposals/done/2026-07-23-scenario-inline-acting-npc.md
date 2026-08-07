@@ -1,5 +1,7 @@
 # 시나리오 인라인 NPC ActingNpc 정의
 
+> 상태: **반영 완료(done, 2026-08-07)**. `ScenarioGraph.ActingNpcs`, 로더/스키마 검증, `Npc.ConfigureScenarioActingNpc`, Graph Editor 편집 뷰(`ScenarioActingNpcEditorView`) 및 round-trip 테스트까지 구현됨.
+
 ### 개요
 
 시나리오 JSON의 최상위 `actingNpcs`에서 NPC 인스턴스의 preset, 식별자, 위치, 회전,

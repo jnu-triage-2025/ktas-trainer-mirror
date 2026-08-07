@@ -1,3 +1,5 @@
+> 상태: **반영 완료(done, 2026-08-07)**. `ScenarioGraphEditor.ShowFileMenu`의 플랫폼별 Reveal 항목(`RevealCurrentFile`), 메뉴 오픈 시 활성 상태 재평가, 미저장/삭제 파일 비활성 처리가 구현됨.
+
 ### 개요
 
 Scenario Graph Editor의 File 메뉴에서 현재 열린 시나리오 파일을 운영체제 파일 관리자에 표시하는 기능을 추가한다.

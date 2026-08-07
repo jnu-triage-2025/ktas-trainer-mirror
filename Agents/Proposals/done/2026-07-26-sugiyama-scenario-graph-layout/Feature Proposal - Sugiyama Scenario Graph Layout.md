@@ -1,3 +1,5 @@
+> 상태: **반영 완료(done, 2026-08-07)**. `ScenarioGraphEditor.AutoLayoutNodesInternal`에 Sugiyama 파이프라인(사이클 정규화, longest-path 레이어링, 더미 버텍스, median sweep/교차 감소, 좌표 정렬)이 구현됨.
+
 ### 개요
 
 Scenario Graph Authoring의 자동 배치를 Sugiyama 계층형 그래프 레이아웃으로 교체한다. 좌→우 진행 레이어를 유지하면서 교차를 줄이고, 연결된 노드를 가능한 한 같은 가로 행에 배치해 시나리오의 주 흐름을 빠르게 읽을 수 있게 한다.

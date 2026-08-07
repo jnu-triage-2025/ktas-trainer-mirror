@@ -1,3 +1,5 @@
+> 상태: **반영 완료(done, 2026-08-07)**. 커스텀 `ScenarioGraphMiniMap`(이동/리사이즈/뷰포트 탐색), View 메뉴의 Reset, 파일별 미니맵 레이아웃 저장(`ScenarioGraphEditorRecentStore`)이 구현됨. 단, 메뉴 라벨은 "Reset Minimap" 대신 "Reset Preview"로 표기됨.
+
 ### 개요
 
 Scenario Graph Editor 미니맵의 이동, 크기 조절, 뷰포트 탐색 기능을 활성화하고 기본 상태 복원 메뉴를 제공한다.

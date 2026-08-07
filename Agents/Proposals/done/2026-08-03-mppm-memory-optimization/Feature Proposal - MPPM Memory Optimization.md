@@ -1,5 +1,7 @@
 # MPPM 메모리 최적화 제안
 
+> 상태: **반영 완료(done, 2026-08-07)**. `MppmAssetImportOptimizer`(에셋 임포트 최적화 배치), `MppmLiteMode`(HeadlessLite 표현 차단 + 종료 시 상태 복구), PlayMode 테스트 8종, 변경 기록 `Documents/changes/2026-08-03-mppm-memory-optimization.md`까지 완료됨.
+
 ## 개요
 
 여러 Unity Multiplayer Play Mode(MPPM) Editor 세션을 동시에 실행할 때 세션마다 고해상도 텍스처, CPU 읽기 가능 메시, 애니메이션 원본 데이터가 중복 적재되어 시스템 메모리가 고갈되는 문제를 완화한다. 기본 MPPM 세션은 카메라와 화면을 유지해 사람이 조정할 수 있게 하며, 자동화 전용 세션만 `HeadlessLite` 태그로 표현을 끌 수 있다.

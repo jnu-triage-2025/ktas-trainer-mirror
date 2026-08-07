@@ -1,3 +1,5 @@
+> 상태: **반영 완료(done, 2026-08-07)**. 탑승 거리 서버 검증(`MinecraftBoadLikeControl`), Title UI 상태 컨트롤러 보존/재적용(`TitleUIController`), 탑승 중 LeftShift 드롭 차단(`PlayerController`), 소유자 검사 IV 해제(`PatientController.EquipmentConnections`)가 구현됨.
+
 ### 개요
 
 탑승형 장비, 환자 연결 장비, 지속 UI가 네트워크 및 Unity 오브젝트 수명주기에서도 일관된 상태를 유지하도록 런타임 상호작용 경계를 강화한다.

@@ -1,3 +1,5 @@
+> 상태: **반영 완료(done, 2026-08-07)**. `ScenarioGraphEditor.AutoLayoutNodes`의 `DisplayProgressBar` 단계별 진행 팝업과 `try/finally` 정리, 사이드카 없을 때만 자동 배치 조건이 구현됨.
+
 ### 개요
 
 Scenario Graph Editor가 에디터 사이드카 없는 그래프를 자동 배치하는 동안 단계별 진행 팝업을 표시한다.

@@ -1,3 +1,5 @@
+> 상태: **반영 완료(done, 2026-08-07)**. `ScenarioController.WaitForInitialActiveRoleRoster`와 빈 명단 대기 회귀 테스트가 구현됨(`04e8c198`). 단, 부수 데이터 권고(announce/도착 노드 분리)는 후속 커밋 `826f1082`에서 다른 게이트 구조로 대체됨.
+
 ### 개요
 
 활성 역할 명단 초기화 대기 기능은 `activeRoleTags`를 사용하는 역할 병렬 시나리오가 플레이어 및 태그 등록보다 먼저 실행되더라도, 역할 분기를 잘못 건너뛰지 않도록 하는 공용 Scenario 런타임 보강이다.

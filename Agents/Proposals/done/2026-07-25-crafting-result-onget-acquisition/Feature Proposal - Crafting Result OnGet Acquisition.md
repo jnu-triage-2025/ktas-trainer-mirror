@@ -1,5 +1,7 @@
 # 조합 결과 아이템 지연 획득 훅(Deferred OnGet) 발행
 
+> 상태: **반영 완료(done, 2026-08-07)**. `Item.DeferredOnGet` 플래그, 조합 결과물 플래그 설정(`PlayerController.Inventory`), 인벤토리 진입 시 OnGet 발행(`InventoryUIController`)이 구현됨.
+
 ### 개요
 
 플레이어가 인벤토리 조합 패널에서 아이템을 조합하면 결과 아이템은 **커서(held item)** 로
