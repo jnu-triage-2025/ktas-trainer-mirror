@@ -53,8 +53,6 @@ namespace TriageTrainer.Entity
       [Tooltip("상호작용 힌트에 표시할 문구.")]
       [SerializeField] private string _displayText;
 
-      [SerializeField] private Sprite _displayIcon;
-
       public bool Assessable
       {
         get => _assessable;
@@ -65,15 +63,12 @@ namespace TriageTrainer.Entity
 
       public string DisplayText => string.IsNullOrWhiteSpace(_displayText) ? "트리아지 분류" : _displayText;
 
-      public Sprite DisplayIcon => _displayIcon;
-
       public static TriageAssessmentConfig Default()
       {
         var cfg = new TriageAssessmentConfig();
         cfg._assessable = false;
         cfg._changeAssessableOnAssessDone = ChangeAssessableOnAssessDone.DisableAssessable;
         cfg._displayText = "트리아지 분류";
-        cfg._displayIcon = null;
         return cfg;
       }
     }
@@ -85,9 +80,10 @@ namespace TriageTrainer.Entity
       public PatientTriageInteract(PatientController owner) { _owner = owner; }
 
       public string DisplayText => _owner._triageConfig.DisplayText;
-      public Sprite DisplayIcon => _owner._triageConfig.DisplayIcon;
-      public bool AllowDisplayIconFallback => true;
-      public Color DisplayColor => TriageLevelInfo.GetColor(TriageLevel.Level3);
+      // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => false;
+      public Color DisplayColor => Color.clear;
 
       public bool CanInteract(Transform interactor)
       {

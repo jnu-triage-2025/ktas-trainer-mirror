@@ -25,11 +25,8 @@ namespace TriageTrainer.Entity
 
     [Header("Display")]
     [SerializeField] private string _liftDisplayText = "환자를 들어올리기";
-    [SerializeField] private Sprite _liftDisplayIcon = null;
     [SerializeField] private string _carryDisplayText = "환자 들어올리기";
-    [SerializeField] private Sprite _carryDisplayIcon = null;
     [SerializeField] private string _monitorSelectDisplayText = "이 환자를 모니터링";
-    [SerializeField] private Sprite _monitorSelectDisplayIcon = null;
 
     [Header("Patient")]
     [SerializeField] private int _weight = 4;
