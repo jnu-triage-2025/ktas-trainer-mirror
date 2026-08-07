@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using FishNet.Connection;
 using FishNet;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
@@ -18,6 +21,15 @@ namespace TriageTrainer.Entity
 {
   public partial class MovingPatientBedController : MinecraftBoadLikeControl, IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver, IEntityPresetParentLinkReceiver
   {
+    private static readonly FieldInfo Participant0Field =
+      typeof(MinecraftBoadLikeControl).GetField("_participant0", BindingFlags.Instance | BindingFlags.NonPublic);
+
+    private static readonly FieldInfo Participant1Field =
+      typeof(MinecraftBoadLikeControl).GetField("_participant1", BindingFlags.Instance | BindingFlags.NonPublic);
+
+    private static readonly FieldInfo ServerInputsField =
+      typeof(MinecraftBoadLikeControl).GetField("_serverInputs", BindingFlags.Instance | BindingFlags.NonPublic);
+
     private const string DefaultPlayerAttachPointName = "PlayerAttachPoint";
     private const string DefaultPatientAttachPointName = "PatientAttachPoint";
 
@@ -92,6 +104,7 @@ namespace TriageTrainer.Entity
     [SerializeField] private int _weight = 0;
     [SerializeField] private Transform _reposeAnchor;
     [SerializeField] private bool _enablePatientRepose = true;
+    [SerializeField] private bool _enableMovementInteraction = true;
 
     [Header("Positioning Snap")]
     [SerializeField] private bool _enablePositioningSnap = true;
@@ -458,6 +471,50 @@ namespace TriageTrainer.Entity
       return false;
     }
 
+    /// <summary>
+    /// 지정한 포지셔닝 포인트 식별자에 도달했을 때 즉시 스냅을 적용한다.
+    /// 서버 권위에서만 동작하며, 성공 시 기존 자동 스냅과 동일한 신호를 발행한다.
+    /// </summary>
+    public bool TryForceSnapToPositioningPoint(string pointIdentifier)
+    {
+      if (!IsServerStarted || string.IsNullOrWhiteSpace(pointIdentifier))
+        return false;
+
+      string trimmed = pointIdentifier.Trim();
+      var points = FindObjectsByType<MovingPatientBedPositioningPoint>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      MovingPatientBedPositioningPoint point = null;
+      for (int i = 0; i < points.Length; i++)
+      {
+        var candidate = points[i];
+        if (candidate == null || !candidate.isActiveAndEnabled)
+          continue;
+
+        if (string.Equals(candidate.Identifier, trimmed, StringComparison.Ordinal))
+        {
+          point = candidate;
+          break;
+        }
+      }
+
+      if (point == null)
+        return false;
+
+      if (!point.IsWithinSnapDistance(transform.position))
+        return false;
+
+      if (!IsPositioningPointAllowed(point))
+        return false;
+
+      if (!TryResolvePositioningPointBedCollision(point))
+        return false;
+
+      _latchedPositioningPoint = point;
+      SetAuthoritativeTransform(point.Position, point.Rotation);
+      TriageWorldInteractionSignals.RaisePatientBedPositioningPointLatched(Identifier, point.Identifier);
+      PublishPositioningPointReached(point);
+      return true;
+    }
+
     public void Interact(Transform interactor)
     {
       if (interactor == null)
@@ -468,6 +525,9 @@ namespace TriageTrainer.Entity
 
     public bool CanInteract(Transform interactor)
     {
+      if (!_enableMovementInteraction)
+        return false;
+
       if (interactor == null)
         return false;
 
@@ -476,6 +536,110 @@ namespace TriageTrainer.Entity
         return false;
 
       return CanToggle(interactor);
+    }
+
+    /// <summary>
+    /// 침대 이동 상호작용(손잡이 탑승/해제)을 런타임에서 활성/비활성화한다.
+    /// 비활성화 시 현재 참가자를 함께 해제할 수 있다.
+    /// </summary>
+    public void SetMovementInteractionEnabled(bool enabled, bool releaseParticipantsIfDisabled = true)
+    {
+      _enableMovementInteraction = enabled;
+      if (!enabled && releaseParticipantsIfDisabled)
+        ForceReleaseAllParticipants();
+    }
+
+    /// <summary>
+    /// 현재 침대를 잡고 있는 모든 플레이어의 조종 상태를 서버 권위로 강제 해제한다.
+    /// 스냅 직후 같은 프레임에 호출하면 참가자 고정(anchor)과 조종 상태가 동시에 해제된다.
+    /// </summary>
+    public void ForceReleaseAllParticipants()
+    {
+      if (IsServerStarted)
+      {
+        ForceReleaseAllParticipantsServerAuthoritative();
+      }
+      else if (IsClientStarted)
+      {
+        CmdForceReleaseAllParticipants();
+      }
+
+      // 로컬 오너 상태는 서버/클라이언트 모두에서 즉시 해제한다.
+      ClearLocalParticipants();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdForceReleaseAllParticipants(NetworkConnection sender = null)
+    {
+      ForceReleaseAllParticipantsServerAuthoritative();
+    }
+
+    private void ForceReleaseAllParticipantsServerAuthoritative()
+    {
+      SetParticipantHandleInvalid(Participant0Field);
+      SetParticipantHandleInvalid(Participant1Field);
+
+      if (ServerInputsField?.GetValue(this) is Dictionary<int, Vector2> serverInputs)
+        serverInputs.Clear();
+
+      // 호스트/서버 로컬 즉시 반영
+      ReleaseLocalRidableState();
+      // 원격 클라이언트의 오너 로컬 상태도 즉시 해제
+      RpcForceReleaseLocalParticipants();
+    }
+
+    private void SetParticipantHandleInvalid(FieldInfo handleField)
+    {
+      if (handleField?.GetValue(this) is SyncVar<int> handle)
+        handle.Value = -1;
+    }
+
+    [ObserversRpc]
+    private void RpcForceReleaseLocalParticipants()
+    {
+      ReleaseLocalRidableState();
+    }
+
+    private void ReleaseLocalRidableState()
+    {
+      var players = FindObjectsByType<PlayerController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      for (int i = 0; i < players.Length; i++)
+      {
+        var player = players[i];
+        if (player == null)
+          continue;
+
+        player.ClearForcedFollowAnchor();
+        player.ClearRidableControlActive(this);
+        player.RefreshInteractableHintsNow();
+      }
+    }
+
+    /// <summary>
+    /// 특정 포지셔닝 포인트 식별자를 스냅 허용 목록에 보장한다.
+    /// 허용 목록이 비어 있으면(=모든 포인트 허용) 아무 작업도 하지 않는다.
+    /// </summary>
+    public void EnsureAllowedPositioningPointIdentifier(string identifier)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+        return;
+
+      // 빈 목록은 "모든 포인트 허용" 의미이므로 추가할 필요가 없다.
+      if (_allowedPositioningPointIdentifiers == null || _allowedPositioningPointIdentifiers.Count == 0)
+        return;
+
+      string trimmed = identifier.Trim();
+      for (int i = 0; i < _allowedPositioningPointIdentifiers.Count; i++)
+      {
+        string existing = _allowedPositioningPointIdentifiers[i];
+        if (!string.IsNullOrWhiteSpace(existing)
+            && string.Equals(existing.Trim(), trimmed, StringComparison.Ordinal))
+        {
+          return;
+        }
+      }
+
+      _allowedPositioningPointIdentifiers.Add(trimmed);
     }
 
     private void OnMinecraftBoadParticipantAssigned(int handle)
