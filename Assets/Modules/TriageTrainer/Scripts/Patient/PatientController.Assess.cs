@@ -29,8 +29,6 @@ namespace TriageTrainer.Entity
       [Tooltip("상호작용 힌트에 표시할 문구. 예: 의식상태 사정, 맥박 확인.")]
       [SerializeField] private string _displayText = "사정";
 
-      [SerializeField] private Sprite _displayIcon = null;
-
       [Tooltip("이 사정을 수행했을 때 올릴 시나리오 신호 조건명(sig.* 게이팅용). 예: check_avpu_gcs_patient_a, check_pulse_patient_a.")]
       [SerializeField] private string _assessSignal;
 
@@ -38,7 +36,6 @@ namespace TriageTrainer.Entity
 
       public string Identifier => _identifier;
       public string DisplayText => _displayText;
-      public Sprite DisplayIcon => _displayIcon;
       public string AssessSignal => _assessSignal;
       public bool Enabled { get => _enabled; set => _enabled = value; }
 
@@ -69,9 +66,10 @@ namespace TriageTrainer.Entity
       private AssessActionConfig Config => _owner.GetAssessAction(_actionIdentifier);
 
       public string DisplayText => Config?.DisplayText ?? "사정";
-      public Sprite DisplayIcon => Config?.DisplayIcon;
-      public bool AllowDisplayIconFallback => true;
-      public Color DisplayColor => Color.white;
+      // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => false;
+      public Color DisplayColor => Color.clear;
 
       public bool CanInteract(Transform interactor)
       {

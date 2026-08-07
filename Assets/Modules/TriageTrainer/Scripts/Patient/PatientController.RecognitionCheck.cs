@@ -31,8 +31,9 @@ namespace TriageTrainer.Entity
           ? "말 걸기"
           : _owner._recognitionDisplayText.Value;
       public Sprite DisplayIcon => null;
-      public bool AllowDisplayIconFallback => true;
-      public Color DisplayColor => Color.white;
+      // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
+      public bool AllowDisplayIconFallback => false;
+      public Color DisplayColor => Color.clear;
 
       public bool CanInteract(Transform interactor)
       {
@@ -57,8 +58,9 @@ namespace TriageTrainer.Entity
       public PatientRecognitionMicrophoneInteract(PatientController owner) => _owner = owner;
       public string DisplayText => "마이크 다시 사용하기";
       public Sprite DisplayIcon => null;
-      public bool AllowDisplayIconFallback => true;
-      public Color DisplayColor => Color.white;
+      // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
+      public bool AllowDisplayIconFallback => false;
+      public Color DisplayColor => Color.clear;
 
       public bool CanInteract(Transform interactor)
       {

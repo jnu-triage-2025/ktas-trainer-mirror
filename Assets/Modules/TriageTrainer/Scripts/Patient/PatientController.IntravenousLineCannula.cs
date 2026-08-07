@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Scenario;
-using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -42,8 +40,6 @@ namespace TriageTrainer.Entity
       [Tooltip("상호작용 힌트에 표시할 문구.")]
       [SerializeField] private string _displayText;
 
-      [SerializeField] private Sprite _displayIcon;
-
       public bool Supported
       {
         get => _supported;
@@ -51,8 +47,6 @@ namespace TriageTrainer.Entity
       }
 
       public string DisplayText => string.IsNullOrWhiteSpace(_displayText) ? "정맥라인 캐뉼라 확보" : _displayText;
-
-      public Sprite DisplayIcon => _displayIcon;
     }
 
     [Header("Intravenous Line Cannula (정맥라인 캐뉼라)")]
@@ -104,18 +98,17 @@ namespace TriageTrainer.Entity
     /// 정맥라인 캐뉼라 상호작용 항목. 플레이어가 캐뉼라(18G/20G)를 손에 들고, 이 환자가 상호작용을
     /// 지원/가능한 상태일 때만 노출된다.
     /// </summary>
-    private sealed class PatientIntravenousLineCannulaInteract : IInteract, IInteractorConditional, IInteractDisplayIcons
+    private sealed class PatientIntravenousLineCannulaInteract : IInteract, IInteractorConditional
     {
       private readonly PatientController _owner;
-      private Sprite _heldItemIcon;
 
       public PatientIntravenousLineCannulaInteract(PatientController owner) { _owner = owner; }
 
       public string DisplayText => _owner._intravenousLineCannulaConfig.DisplayText;
-      public Sprite DisplayIcon => _owner._intravenousLineCannulaConfig.DisplayIcon;
-      public IReadOnlyList<Sprite> DisplayIcons => new[] { Icon.ClearRightBottom, _heldItemIcon };
-      public bool AllowDisplayIconFallback => true;
-      public Color DisplayColor => Color.white;
+      // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => false;
+      public Color DisplayColor => Color.clear;
 
       public bool CanInteract(Transform interactor)
       {
@@ -128,7 +121,6 @@ namespace TriageTrainer.Entity
           return false;
 
         // (2) 플레이어가 손에 든 아이템이 캐뉼라(18G/20G)인지.
-        _heldItemIcon = player.HandlingItem?.CurrentItemIconTexture;
         return _owner.IsHandlingIntravenousLineCannula(player);
       }
 

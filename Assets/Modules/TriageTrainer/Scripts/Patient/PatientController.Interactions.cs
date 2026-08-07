@@ -33,9 +33,10 @@ namespace TriageTrainer.Entity
       private readonly PatientController _owner;
       public PatientLiftInteract(PatientController owner) { _owner = owner; }
       public string DisplayText => _owner._liftDisplayText;
-      public Sprite DisplayIcon => _owner._liftDisplayIcon;
-      public bool AllowDisplayIconFallback => true;
-      public Color DisplayColor => Color.white;
+      // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => false;
+      public Color DisplayColor => Color.clear;
       public bool CanInteract(Transform interactor)
       {
         return _owner.IsInteractEnabled(InteractIdLiftFromBed) && _owner.CurrentBed != null;
@@ -51,9 +52,10 @@ namespace TriageTrainer.Entity
       private readonly PatientController _owner;
       public PatientCarryInteract(PatientController owner) { _owner = owner; }
       public string DisplayText => _owner._carryDisplayText;
-      public Sprite DisplayIcon => _owner._carryDisplayIcon;
-      public bool AllowDisplayIconFallback => true;
-      public Color DisplayColor => Color.white;
+      // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => false;
+      public Color DisplayColor => Color.clear;
       public bool CanInteract(Transform interactor)
       {
         if (!_owner.IsInteractEnabled(InteractIdCarry))
@@ -79,9 +81,10 @@ namespace TriageTrainer.Entity
       private readonly PatientController _owner;
       public PatientMonitorSelectInteract(PatientController owner) { _owner = owner; }
       public string DisplayText => _owner._monitorSelectDisplayText;
-      public Sprite DisplayIcon => _owner._monitorSelectDisplayIcon;
-      public bool AllowDisplayIconFallback => true;
-      public Color DisplayColor => Color.white;
+      // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => false;
+      public Color DisplayColor => Color.clear;
       public bool CanInteract(Transform interactor)
       {
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
