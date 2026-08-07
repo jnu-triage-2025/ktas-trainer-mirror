@@ -26,7 +26,7 @@ Documentation된Markdown 문서의 링크 대상 파일 존재 여부를 검사�
 
 Unity YAML(.unity/.prefab/.asset) 3-way 머지 도구. 이 저장소에서는 두 가지로 연결됩니다.
 
-- **merge driver**: `.gitattributes`의 `merge=unity-yaml` 매핑 + 저장소 루트 `.gitconfig`의 `unity-yaml` 드라이버 정의. `.gitconfig`는 `git config include.path ../.gitconfig`로 활성화합니다.
+- **merge driver**: `.gitattributes`의 `merge=unity-merge` 매핑 + 저장소 루트 `.gitconfig`의 `unity-merge` 드라이버 정의. `.gitconfig`는 `git config include.path ../.gitconfig`로 활성화합니다.
 - **pre-commit 훅**: `.githooks/pre-commit` — 커밋 직전에 스테이징된 Unity YAML 파일의 파싱 인덱스를 `.unity-merge/INDEX`에 갱신합니다. `git config core.hooksPath .githooks`로 활성화하며 이 저장소에만 적용됩니다.
 
 ### setup-unity-merge.sh / setup-unity-merge.bat
