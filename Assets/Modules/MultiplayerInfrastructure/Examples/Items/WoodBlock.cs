@@ -22,26 +22,26 @@ namespace MultiplayerInfrastructure.ItemSystem.Examples
   public class WoodBlock : Item
   {
     // ── Definitions ────────────────────────────────────────────────────────
-    public const string Identifier    = "wood_block";
-    public const string DisplayName   = "나무 블록";
-    public const string Description   = "가공된 목재 블록입니다. 설치하면 블록이 됩니다.";
-    public const string DetailComment = "";
-    public const string Color         = "#8B5E3C";
+    public new const string Identifier    = "wood_block";
+    public new const string DisplayName   = "나무 블록";
+    public new const string Description   = "가공된 목재 블록입니다. 설치하면 블록이 됩니다.";
+    public new const string DetailComment = "";
+    public new const string Color         = "#8B5E3C";
 
-    public const bool IsStackable   = true;
-    public const int  MaxStackCount = 64;
+    public new const bool IsStackable   = true;
+    public new const int  MaxStackCount = 64;
 
-    public const bool HasDurability           = true;
-    public const bool EnabledDeltaDurability  = true;
-    public const int  MaxDurability           = 30;
-    public const int  DeltaDurabilityOnAttack = -2;
-    public const int  DeltaDurabilityOnUse    = 0;
+    public new const bool HasDurability           = true;
+    public new const bool EnabledDeltaDurability  = true;
+    public new const int  MaxDurability           = 30;
+    public new const int  DeltaDurabilityOnAttack = -2;
+    public new const int  DeltaDurabilityOnUse    = 0;
 
-    public const float MinReach             = 0.5f;
-    public const float MaxReach             = 3.0f;
-    public const int   ItemDamage           = 2;
-    public const bool  EnabledCooldown      = false;
-    public const float CooldownMilliseconds = 0f;
+    public new const float MinReach             = 0.5f;
+    public new const float MaxReach             = 3.0f;
+    public new const int   ItemDamage           = 2;
+    public new const bool  EnabledCooldown      = false;
+    public new const float CooldownMilliseconds = 0f;
 
     // ── 생성자 ────────────────────────────────────────────────────────────
     public WoodBlock() : base() { }

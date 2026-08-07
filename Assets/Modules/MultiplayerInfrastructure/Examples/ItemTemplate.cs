@@ -33,29 +33,29 @@ namespace MultiplayerInfrastructure.ItemSystem.Examples
   public class TemplateItem : Item
   {
     // ── Definitions/Commons ──────────────────────────────────────────────
-    public const string Identifier    = "template_item";   // 레지스트리 등록 키와 일치시킬 것
-    public const string DisplayName   = "템플릿 아이템";
-    public const string Description   = "아이템 설명.";
-    public const string DetailComment = "";                 // 상세 설명 (비워도 됨)
-    public const string Color         = "white";            // HTML hex (#RRGGBB) 또는 색상 이름
+    public new const string Identifier    = "template_item";   // 레지스트리 등록 키와 일치시킬 것
+    public new const string DisplayName   = "템플릿 아이템";
+    public new const string Description   = "아이템 설명.";
+    public new const string DetailComment = "";                 // 상세 설명 (비워도 됨)
+    public new const string Color         = "white";            // HTML hex (#RRGGBB) 또는 색상 이름
 
     // ── Definitions/Stack ────────────────────────────────────────────────
-    public const bool IsStackable   = false;
-    public const int  MaxStackCount = 1;                    // IsStackable = false 면 사용되지 않음
+    public new const bool IsStackable   = false;
+    public new const int  MaxStackCount = 1;                    // IsStackable = false 면 사용되지 않음
 
     // ── Definitions/Durability ───────────────────────────────────────────
-    public const bool HasDurability           = false;
-    public const bool EnabledDeltaDurability  = false;
-    public const int  MaxDurability           = 0;
-    public const int  DeltaDurabilityOnAttack = 0;
-    public const int  DeltaDurabilityOnUse    = 0;
+    public new const bool HasDurability           = false;
+    public new const bool EnabledDeltaDurability  = false;
+    public new const int  MaxDurability           = 0;
+    public new const int  DeltaDurabilityOnAttack = 0;
+    public new const int  DeltaDurabilityOnUse    = 0;
 
     // ── Definitions/ItemUsing ────────────────────────────────────────────
-    public const float MinReach             = 0f;
-    public const float MaxReach             = 2.5f;
-    public const int   ItemDamage           = 0;
-    public const bool  EnabledCooldown      = false;
-    public const float CooldownMilliseconds = 0f;
+    public new const float MinReach             = 0f;
+    public new const float MaxReach             = 2.5f;
+    public new const int   ItemDamage           = 0;
+    public new const bool  EnabledCooldown      = false;
+    public new const float CooldownMilliseconds = 0f;
 
     // ── 파생 속성 (인스턴스별 가변 상태) ─────────────────────────────────
     // 파생 속성이 없다면 이 섹션과 아래 Serialization 섹션을 모두 삭제하세요.

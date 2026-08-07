@@ -6,8 +6,8 @@ namespace TriageTrainer.ItemDefinitions
   /// </summary>
   public class Norepinephrine5ccSyringe : MedicalItem
   {
-    public const string Identifier   = "norepinephrine_5cc_syringe";
-    public const string DisplayName  = "노르에피네프린이 든 5cc 주사기";
-    public const string Description  = "5cc 주사기에 노르에피네프린이 준비되어 있습니다.";
+    public new const string Identifier   = "norepinephrine_5cc_syringe";
+    public new const string DisplayName  = "노르에피네프린이 든 5cc 주사기";
+    public new const string Description  = "5cc 주사기에 노르에피네프린이 준비되어 있습니다.";
   }
 }

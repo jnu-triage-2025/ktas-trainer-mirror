@@ -7,8 +7,8 @@ namespace TriageTrainer.ItemDefinitions
   /// </summary>
   public class YankauerSuctionReady : MedicalItem
   {
-    public const string Identifier   = "yankauer_suction_ready";
-    public const string DisplayName  = "준비된 양커 석션";
-    public const string Description  = "석션 라인에 양커 팁이 연결되어 흡인 준비가 완료된 상태입니다.";
+    public new const string Identifier   = "yankauer_suction_ready";
+    public new const string DisplayName  = "준비된 양커 석션";
+    public new const string Description  = "석션 라인에 양커 팁이 연결되어 흡인 준비가 완료된 상태입니다.";
   }
 }

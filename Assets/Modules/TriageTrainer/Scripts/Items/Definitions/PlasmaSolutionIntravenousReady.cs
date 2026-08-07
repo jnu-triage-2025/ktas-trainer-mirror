@@ -7,8 +7,8 @@ namespace TriageTrainer.ItemDefinitions
   /// </summary>
   public class PlasmaSolutionIntravenousReady : MedicalItem
   {
-    public const string Identifier   = "plasma_solution_intravenous_ready";
-    public const string DisplayName  = "준비된 플라즈마 솔루션 1L 수액백";
-    public const string Description  = "준비된 플라즈마 솔루션 1L 수액백";
+    public new const string Identifier   = "plasma_solution_intravenous_ready";
+    public new const string DisplayName  = "준비된 플라즈마 솔루션 1L 수액백";
+    public new const string Description  = "준비된 플라즈마 솔루션 1L 수액백";
   }
 }

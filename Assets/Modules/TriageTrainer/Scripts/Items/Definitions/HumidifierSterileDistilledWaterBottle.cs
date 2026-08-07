@@ -7,8 +7,8 @@ namespace TriageTrainer.ItemDefinitions
   /// </summary>
   public class HumidifierSterileDistilledWaterBottle : MedicalItem
   {
-    public const string Identifier   = "humidifier_sterile_distilled_water_bottle";
-    public const string DisplayName  = "멸균증류수가 담긴 습윤병";
-    public const string Description  = "멸균증류수가 채워진 습윤병입니다. 유량계와 결합하여 산소 유량계를 완성합니다.";
+    public new const string Identifier   = "humidifier_sterile_distilled_water_bottle";
+    public new const string DisplayName  = "멸균증류수가 담긴 습윤병";
+    public new const string Description  = "멸균증류수가 채워진 습윤병입니다. 유량계와 결합하여 산소 유량계를 완성합니다.";
   }
 }

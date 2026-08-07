@@ -2,8 +2,8 @@ namespace TriageTrainer.ItemDefinitions
 {
   public class Swab : MedicalItem
   {
-    public const string Identifier   = "swab";
-    public const string DisplayName  = "소독솜";
-    public const string Description  = "";
+    public new const string Identifier   = "swab";
+    public new const string DisplayName  = "소독솜";
+    public new const string Description  = "";
   }
 }

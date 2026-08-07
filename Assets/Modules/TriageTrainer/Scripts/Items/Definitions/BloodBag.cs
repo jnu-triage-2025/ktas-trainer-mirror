@@ -5,8 +5,8 @@ namespace TriageTrainer.ItemDefinitions
   /// </summary>
   public class BloodBag : MedicalItem
   {
-    public const string Identifier  = "blood_bag";
-    public const string DisplayName = "혈액백";
-    public const string Description = "수혈에 사용하는 혈액이 담긴 백입니다.";
+    public new const string Identifier  = "blood_bag";
+    public new const string DisplayName = "혈액백";
+    public new const string Description = "수혈에 사용하는 혈액이 담긴 백입니다.";
   }
 }

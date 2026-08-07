@@ -16,26 +16,26 @@ namespace TriageTrainer.ItemDefinitions
   {
     // ── Definitions/Commons ──────────────────────────────────────────────
     // Identifier, DisplayName, Description 은 파생 클래스에서 const 선언
-    public const string DetailComment = "";
-    public const string Color         = "white";
+    public new const string DetailComment = "";
+    public new const string Color         = "white";
 
     // ── Definitions/Stack ────────────────────────────────────────────────
-    public const bool IsStackable   = true;
-    public const int  MaxStackCount = 64;
+    public new const bool IsStackable   = true;
+    public new const int  MaxStackCount = 64;
 
     // ── Definitions/Durability ───────────────────────────────────────────
-    public const bool HasDurability           = false;
-    public const bool EnabledDeltaDurability  = false;
-    public const int  MaxDurability           = 1;
-    public const int  DeltaDurabilityOnAttack = 0;
-    public const int  DeltaDurabilityOnUse    = 0;
+    public new const bool HasDurability           = false;
+    public new const bool EnabledDeltaDurability  = false;
+    public new const int  MaxDurability           = 1;
+    public new const int  DeltaDurabilityOnAttack = 0;
+    public new const int  DeltaDurabilityOnUse    = 0;
 
     // ── Definitions/ItemUsing ────────────────────────────────────────────
-    public const float MinReach             = 1.0f;
-    public const float MaxReach             = 2.5f;
-    public const int   ItemDamage           = 0;
-    public const bool  EnabledCooldown      = false;
-    public const float CooldownMilliseconds = 0f;
+    public new const float MinReach             = 1.0f;
+    public new const float MaxReach             = 2.5f;
+    public new const int   ItemDamage           = 0;
+    public new const bool  EnabledCooldown      = false;
+    public new const float CooldownMilliseconds = 0f;
 
     // ── 생성자 ───────────────────────────────────────────────────────────
     protected MedicalItem() : base() { }

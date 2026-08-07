@@ -2,8 +2,8 @@ namespace TriageTrainer.ItemDefinitions
 {
   public class Gauze : MedicalItem
   {
-    public const string Identifier   = "gauze";
-    public const string DisplayName  = "멸균거즈";
-    public const string Description  = "지혈 시 사용합니다.";
+    public new const string Identifier   = "gauze";
+    public new const string DisplayName  = "멸균거즈";
+    public new const string Description  = "지혈 시 사용합니다.";
   }
 }

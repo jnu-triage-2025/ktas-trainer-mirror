@@ -6,8 +6,8 @@ namespace TriageTrainer.ItemDefinitions
   /// </summary>
   public class NormalSaline22g20ccSyringe : MedicalItem
   {
-    public const string Identifier   = "normal_saline_22g_20cc_syringe";
-    public const string DisplayName  = "생리식염수가 든 22g 20cc 주사기";
-    public const string Description  = "22게이지 카테터가 연결된 20cc 주사기에 생리식염수가 준비되어 있습니다.";
+    public new const string Identifier   = "normal_saline_22g_20cc_syringe";
+    public new const string DisplayName  = "생리식염수가 든 22g 20cc 주사기";
+    public new const string Description  = "22게이지 카테터가 연결된 20cc 주사기에 생리식염수가 준비되어 있습니다.";
   }
 }

@@ -6,8 +6,8 @@ namespace TriageTrainer.ItemDefinitions
   /// </summary>
   public class Epinephrine20g50ccSyringe : MedicalItem
   {
-    public const string Identifier   = "epinephrine_20g_50cc_syringe";
-    public const string DisplayName  = "에피네프린이 든 20g 50cc 주사기";
-    public const string Description  = "20게이지 카테터가 연결된 50cc 주사기에 에피네프린이 준비되어 있습니다.";
+    public new const string Identifier   = "epinephrine_20g_50cc_syringe";
+    public new const string DisplayName  = "에피네프린이 든 20g 50cc 주사기";
+    public new const string Description  = "20게이지 카테터가 연결된 50cc 주사기에 에피네프린이 준비되어 있습니다.";
   }
 }

@@ -8,9 +8,9 @@ namespace TriageTrainer.ItemDefinitions
   [IntendedMissingItemSpriteAttribute]
   public class TutorialDecoy8909 : MedicalItem
   {
-    public const string Identifier = "tutorial_delivery_decoy_8909";
-    public const string DisplayName = "택배: 8909";
-    public const string Description = "수취인 이름이 없는 택배입니다.";
+    public new const string Identifier = "tutorial_delivery_decoy_8909";
+    public new const string DisplayName = "택배: 8909";
+    public new const string Description = "수취인 이름이 없는 택배입니다.";
 
     public new const bool IsStackable = true;
     public new const int MaxStackCount = 64;

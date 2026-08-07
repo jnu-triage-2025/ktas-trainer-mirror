@@ -2,8 +2,8 @@ namespace TriageTrainer.ItemDefinitions
 {
   public class Gloves : MedicalItem
   {
-    public const string Identifier   = "gloves";
-    public const string DisplayName  = "멸균 장갑";
-    public const string Description  = "";
+    public new const string Identifier   = "gloves";
+    public new const string DisplayName  = "멸균 장갑";
+    public new const string Description  = "";
   }
 }
