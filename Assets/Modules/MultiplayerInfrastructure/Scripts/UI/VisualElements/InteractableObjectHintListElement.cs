@@ -18,10 +18,12 @@ namespace MultiplayerInfrastructure.UI
     // 크기가 나중에 커지더라도 이 고정 높이 덕분에 행(row) 전체의 높이/세로 간격에는 영향을 주지 않는다.
     private const float KeyHintRowHeight = 16f;
 
-    // "현재 선택된 Interactable 옵션" 배경(contentWrapper)의 폭을 고정하여,
-    // DisplayText 길이에 따라 배경이 제각각으로 늘어나지 않고 항상 동일한 길이를 갖도록 한다.
-    // 텍스트가 이 폭을 초과하면 말줄임(ellipsis) 처리된다.
-    private const float ContentWrapperWidth = 220f;
+    // "현재 선택된 Interactable 옵션" 배경(contentWrapper)의 폭 규칙.
+    // 짧은 DisplayText 에서는 최소 폭으로 모든 항목의 배경 길이를 통일하고,
+    // 긴 DisplayText 는 말줄임 없이 읽을 수 있도록 콘텐츠 길이에 맞춰 최대 폭까지 늘어난다.
+    // 최대 폭을 넘는 텍스트만 말줄임(ellipsis) 처리된다.
+    private const float ContentWrapperMinWidth = 220f;
+    private const float ContentWrapperMaxWidth = 560f;
 
     private const string MouseScrollHintIconPath = "Textures/Icons/mouse-scroll";
     private static Texture2D _mouseScrollHintIcon;
@@ -118,10 +120,11 @@ namespace MultiplayerInfrastructure.UI
       contentWrapper.style.paddingBottom = 2;
       contentWrapper.style.flexDirection = FlexDirection.Row;
       contentWrapper.style.alignItems = Align.Center;
-      // DisplayText 길이와 무관하게 모든 항목의 배경 길이를 통일한다.
-      contentWrapper.style.width = ContentWrapperWidth;
-      contentWrapper.style.minWidth = ContentWrapperWidth;
-      contentWrapper.style.maxWidth = ContentWrapperWidth;
+      // 짧은 항목은 최소 폭으로 배경 길이를 통일하고, 긴 항목은 콘텐츠가 충분히
+      // 보이도록 최대 폭까지 배경이 늘어난다(폭은 auto 로 두어 내용에 맞긴다).
+      contentWrapper.style.width = StyleKeyword.Auto;
+      contentWrapper.style.minWidth = ContentWrapperMinWidth;
+      contentWrapper.style.maxWidth = ContentWrapperMaxWidth;
       contentWrapper.style.flexShrink = 0;
 
       _iconContainer = new VisualElement();
@@ -143,7 +146,7 @@ namespace MultiplayerInfrastructure.UI
       _contentText.style.unityFontStyleAndWeight = FontStyle.Bold;
       _contentText.style.unityTextOutlineWidth = 0.6f;
       _contentText.style.unityTextOutlineColor = new Color(0f, 0f, 0f, 0.70f);
-      // 고정 폭 배경 안에서 텍스트가 넘치는 경우 줄바꿈 없이 말줄임(...) 처리한다.
+      // 배경이 최대 폭에 도달해 텍스트가 넘치는 경우에만 줄바꿈 없이 말줄임(...) 처리한다.
       _contentText.style.flexShrink = 1;
       _contentText.style.flexGrow = 0;
       _contentText.style.whiteSpace = WhiteSpace.NoWrap;
