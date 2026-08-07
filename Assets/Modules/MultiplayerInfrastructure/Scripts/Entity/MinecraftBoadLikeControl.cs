@@ -500,7 +500,7 @@ namespace MultiplayerInfrastructure.Entity
       }
     }
 
-    private void ClearLocalParticipants()
+    protected void ClearLocalParticipants()
     {
       foreach (var pair in _localParticipants)
         ExitLocal(pair.Value);
