@@ -154,6 +154,175 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void ActiveRoleBranchesAssignEveryHeldRoleToSinglePlayer()
+    {
+      var branches = CreateNurseRoleBranches();
+      var allocation = new Dictionary<ScenarioParallelBranch, int?>();
+
+      var assigned = InvokeTryAssignActiveRoleBranches(
+        branches,
+        NurseRoleSet(),
+        new Dictionary<string, int>
+        {
+          ["nurse_a"] = 7,
+          ["nurse_b"] = 7,
+          ["nurse_c"] = 7,
+          ["nurse_d"] = 7
+        },
+        skipAbsentRoleBranches: true,
+        allocation,
+        out var error);
+
+      Assert.That(assigned, Is.True, error);
+      foreach (var branch in branches)
+      {
+        Assert.That(allocation[branch], Is.EqualTo(7),
+          "한 플레이어가 네 역할을 모두 맡으면 네 브랜치가 모두 그 클라이언트에 배정되어야 합니다.");
+      }
+    }
+
+    [Test]
+    public void ActiveRoleBranchesAssignOnlyHeldRolesToSinglePlayer()
+    {
+      var branches = CreateNurseRoleBranches();
+      var allocation = new Dictionary<ScenarioParallelBranch, int?>();
+
+      var assigned = InvokeTryAssignActiveRoleBranches(
+        branches,
+        NurseRoleSet(),
+        new Dictionary<string, int>
+        {
+          ["nurse_a"] = 7,
+          ["nurse_c"] = 7
+        },
+        skipAbsentRoleBranches: true,
+        allocation,
+        out var error);
+
+      Assert.That(assigned, Is.True, error);
+      Assert.That(allocation[branches[0]], Is.EqualTo(7));
+      Assert.That(allocation[branches[2]], Is.EqualTo(7));
+      Assert.That(allocation[branches[1]], Is.Null,
+        "부여되지 않은 역할(nurse_b)의 브랜치는 배정 없이 스킵되어야 합니다.");
+      Assert.That(allocation[branches[3]], Is.Null,
+        "부여되지 않은 역할(nurse_d)의 브랜치는 배정 없이 스킵되어야 합니다.");
+    }
+
+    [Test]
+    public void ActiveRoleBranchesFailForAbsentRoleWhenSkipIsDisabled()
+    {
+      var branches = CreateNurseRoleBranches();
+      var allocation = new Dictionary<ScenarioParallelBranch, int?>();
+
+      var assigned = InvokeTryAssignActiveRoleBranches(
+        branches,
+        NurseRoleSet(),
+        new Dictionary<string, int> { ["nurse_a"] = 7 },
+        skipAbsentRoleBranches: false,
+        allocation,
+        out var error);
+
+      Assert.That(assigned, Is.False);
+      Assert.That(error, Does.Contain(branches[1].Identifier));
+    }
+
+    [Test]
+    public void ActiveRoleBranchesFailWhenHolderDoesNotSatisfyBranch()
+    {
+      var branches = CreateNurseRoleBranches();
+      var allocation = new Dictionary<ScenarioParallelBranch, int?>();
+      var method = FindTryAssignActiveRoleBranchesMethod();
+      var args = new object[]
+      {
+        branches,
+        NurseRoleSet(),
+        new Dictionary<string, int>
+        {
+          ["nurse_a"] = 7,
+          ["nurse_b"] = 7,
+          ["nurse_c"] = 7,
+          ["nurse_d"] = 7
+        },
+        true,
+        (Func<ScenarioParallelBranch, int, bool>)((branch, clientId) => false),
+        allocation,
+        null
+      };
+
+      var assigned = (bool)method.Invoke(null, args);
+
+      Assert.That(assigned, Is.False);
+      Assert.That((string)args[6], Does.Contain("does not strictly satisfy"));
+    }
+
+    [Test]
+    public void ActiveRoleBranchesRequireExactlyOneActiveRoleTag()
+    {
+      var branch = new ScenarioParallelBranch
+      {
+        Identifier = "MULTI_ROLE",
+        RequiredPlayerTags = new[] { "nurse_a", "nurse_b" }
+      };
+      var allocation = new Dictionary<ScenarioParallelBranch, int?>();
+
+      var assigned = InvokeTryAssignActiveRoleBranches(
+        new[] { branch },
+        NurseRoleSet(),
+        new Dictionary<string, int> { ["nurse_a"] = 7, ["nurse_b"] = 7 },
+        skipAbsentRoleBranches: true,
+        allocation,
+        out var error);
+
+      Assert.That(assigned, Is.False);
+      Assert.That(error, Does.Contain("exactly one activeRoleTag"));
+    }
+
+    private static ScenarioParallelBranch[] CreateNurseRoleBranches()
+      => new[]
+      {
+        new ScenarioParallelBranch { Identifier = "A_RECOG_Q", RequiredPlayerTags = new[] { "nurse_a" } },
+        new ScenarioParallelBranch { Identifier = "B_VITAL_Q", RequiredPlayerTags = new[] { "nurse_b" } },
+        new ScenarioParallelBranch { Identifier = "C_PUPIL_Q", RequiredPlayerTags = new[] { "nurse_c" } },
+        new ScenarioParallelBranch { Identifier = "D_OXY_Q", RequiredPlayerTags = new[] { "nurse_d" } }
+      };
+
+    private static HashSet<string> NurseRoleSet()
+      => new HashSet<string>(StringComparer.Ordinal) { "nurse_a", "nurse_b", "nurse_c", "nurse_d" };
+
+    private static MethodInfo FindTryAssignActiveRoleBranchesMethod()
+    {
+      var method = typeof(ScenarioController).GetMethod(
+        "TryAssignActiveRoleBranches",
+        BindingFlags.Static | BindingFlags.NonPublic);
+      Assert.That(method, Is.Not.Null,
+        "ByRole 활성 역할 배정은 테스트 가능한 정적 헬퍼로 분리되어 있어야 합니다.");
+      return method;
+    }
+
+    private static bool InvokeTryAssignActiveRoleBranches(
+      IReadOnlyList<ScenarioParallelBranch> branches,
+      ISet<string> activeRoleTags,
+      IReadOnlyDictionary<string, int> holderClientIdByRole,
+      bool skipAbsentRoleBranches,
+      IDictionary<ScenarioParallelBranch, int?> allocation,
+      out string error)
+    {
+      var args = new object[]
+      {
+        branches,
+        activeRoleTags,
+        holderClientIdByRole,
+        skipAbsentRoleBranches,
+        (Func<ScenarioParallelBranch, int, bool>)((branch, clientId) => true),
+        allocation,
+        null
+      };
+      var result = (bool)FindTryAssignActiveRoleBranchesMethod().Invoke(null, args);
+      error = (string)args[6];
+      return result;
+    }
+
+    [Test]
     public void BranchQuestControlExecutionAcceptsExplicitOwner()
     {
       var executeQuestControl = typeof(ScenarioController).GetMethod(

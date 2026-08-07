@@ -5375,42 +5375,72 @@ namespace MultiplayerInfrastructure.Scenario
         return false;
       }
 
+      // 한 플레이어가 여러 역할을 맡은 경우에도 실제로 부여된 역할의 브랜치만 배정한다.
+      // 미보유 역할 브랜치는 SkipAbsentRoleBranches 정책에 따라 스킵하고, 같은 클라이언트에
+      // 중복 배정된 브랜치는 실행 단계에서 그래프 정의 순서대로 순차 실행한다.
       var roles = new HashSet<string>(_currentGraph.ActiveRoleTags, StringComparer.Ordinal);
-      var holderByRole = roster.ToDictionary(entry => entry.Role, StringComparer.Ordinal);
-      bool singlePlayerDebug = ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer
-                               && roster.Select(entry => entry.ClientId).Distinct().Count() == 1;
+      var holderClientIdByRole = roster.ToDictionary(
+        entry => entry.Role,
+        entry => entry.ClientId,
+        StringComparer.Ordinal);
+      if (!TryAssignActiveRoleBranches(
+            branches,
+            roles,
+            holderClientIdByRole,
+            _currentGraph.SkipAbsentRoleBranches,
+            (branch, clientId) => IsPlayerEligibleForBranch(branch, clientId, allowTagGateBypass: false),
+            allocation,
+            out var assignmentError))
+      {
+        Debug.LogError($"[ScenarioController] {assignmentError}", this);
+        return false;
+      }
+
+      return true;
+    }
+
+    /// <summary>
+    /// activeRoleTags 기반 ByRole 브랜치를 각 역할의 홀더에게 배정한다.
+    /// 각 브랜치는 정확히 하나의 activeRoleTag를 요구해야 하며, 연결된 홀더가 없는 역할의
+    /// 브랜치는 skipAbsentRoleBranches이면 null(스킵)로 남기고 아니면 오류로 처리한다.
+    /// 한 플레이어가 여러 역할을 보유하면 보유한 역할의 브랜치만 같은 클라이언트에 배정된다.
+    /// </summary>
+    private static bool TryAssignActiveRoleBranches(
+      IReadOnlyList<ScenarioParallelBranch> branches,
+      System.Collections.Generic.ISet<string> activeRoleTags,
+      IReadOnlyDictionary<string, int> holderClientIdByRole,
+      bool skipAbsentRoleBranches,
+      Func<ScenarioParallelBranch, int, bool> isHolderEligible,
+      IDictionary<ScenarioParallelBranch, int?> allocation,
+      out string error)
+    {
+      error = null;
       foreach (var branch in branches)
       {
         var branchRoles = branch.RequiredPlayerTags?
-          .Where(tag => roles.Contains(tag))
+          .Where(tag => activeRoleTags.Contains(tag))
           .Distinct(StringComparer.Ordinal)
           .ToArray() ?? Array.Empty<string>();
         if (branchRoles.Length != 1)
         {
-          Debug.LogError($"[ScenarioController] ByRole branch '{branch.Identifier}' must require exactly one activeRoleTag.", this);
+          error = $"ByRole branch '{branch.Identifier}' must require exactly one activeRoleTag.";
           return false;
         }
 
-        if (singlePlayerDebug)
+        if (holderClientIdByRole.TryGetValue(branchRoles[0], out var holderClientId))
         {
-          allocation[branch] = roster[0].ClientId;
-          continue;
-        }
-
-        if (holderByRole.TryGetValue(branchRoles[0], out var holder))
-        {
-          if (!IsPlayerEligibleForBranch(branch, holder.ClientId, allowTagGateBypass: false))
+          if (!isHolderEligible(branch, holderClientId))
           {
-            Debug.LogError($"[ScenarioController] ByRole holder for '{branchRoles[0]}' does not strictly satisfy branch '{branch.Identifier}'.", this);
+            error = $"ByRole holder for '{branchRoles[0]}' does not strictly satisfy branch '{branch.Identifier}'.";
             return false;
           }
-          allocation[branch] = holder.ClientId;
+          allocation[branch] = holderClientId;
           continue;
         }
 
-        if (!_currentGraph.SkipAbsentRoleBranches)
+        if (!skipAbsentRoleBranches)
         {
-          Debug.LogError($"[ScenarioController] ByRole branch '{branch.Identifier}' has no connected holder for role '{branchRoles[0]}'.", this);
+          error = $"ByRole branch '{branch.Identifier}' has no connected holder for role '{branchRoles[0]}'.";
           return false;
         }
 
