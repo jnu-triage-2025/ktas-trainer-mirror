@@ -32,7 +32,15 @@ namespace TriageTrainer.Entity
     [SerializeField] private bool _requireBedSnapForPatient = true;
     [SerializeField] private string _identifier;
 
+    /// <summary>환자 진입 폴링 주기(초).</summary>
+    private const float PatientPollIntervalSeconds = 0.15f;
+
     private readonly Dictionary<PatientController, int> _patientColliderCounts = new();
+    // 폴링 경로가 추적하는 환자 집합과 스크래치 버퍼.
+    private readonly HashSet<PatientController> _polledPatients = new();
+    private readonly HashSet<PatientController> _polledInsideScratch = new();
+    private readonly List<PatientController> _polledExitScratch = new();
+    private float _nextPatientPollTime;
     private readonly Dictionary<MovingPatientBedController, int> _bedColliderCounts = new();
     private readonly HashSet<MovingPatientBedController> _snappedBeds = new();
     private readonly List<WallAttachedWallSuction> _wallSuction = new();
@@ -107,6 +115,7 @@ namespace TriageTrainer.Entity
         ReleaseEquipmentIfOwned(_activePatient);
       _activePatient = null;
       _patientColliderCounts.Clear();
+      _polledPatients.Clear();
       _bedColliderCounts.Clear();
       _snappedBeds.Clear();
       _newlyInstalledWallSuction.Clear();
@@ -179,20 +188,8 @@ namespace TriageTrainer.Entity
         bool firstCollider = count == 0;
         _patientColliderCounts[patient] = count + 1;
 
-        if (_activePatient != null && !ReferenceEquals(_activePatient, patient))
-        {
-          Debug.LogWarning($"[PatientCareDescriptionZone] '{Identifier}' already owns patient '{_activePatient.Identifier}'; ignoring '{patient.Identifier}'.", this);
-          if (firstCollider)
-            PatientEntered?.Invoke(patient);
-          return;
-        }
         if (firstCollider)
-        {
-          _activePatient = patient;
-          Connect(patient);
-          TriageWorldInteractionSignals.RaiseCareZonePatientEntered(Identifier, patient.Identifier);
-          PatientEntered?.Invoke(patient);
-        }
+          HandlePatientEntered(patient);
         return;
       }
 
@@ -228,28 +225,8 @@ namespace TriageTrainer.Entity
           return;
         }
         _patientColliderCounts.Remove(patient);
-        bool wasActivePatient = ReferenceEquals(_activePatient, patient);
-        if (wasActivePatient)
-        {
-          _activePatient = null;
-          PatientExited?.Invoke(patient);
-          ReleaseEquipmentIfOwned(patient);
-          TriageWorldInteractionSignals.RaiseCareZonePatientExited(Identifier, patient.Identifier);
-        }
-
-        if (wasActivePatient)
-        {
-          foreach (var occupant in _patientColliderCounts)
-          {
-            if (occupant.Key == null)
-              continue;
-
-            _activePatient = occupant.Key;
-            Connect(_activePatient);
-            PatientEntered?.Invoke(_activePatient);
-            break;
-          }
-        }
+        _polledPatients.Remove(patient);
+        HandlePatientExited(patient);
         return;
       }
 
@@ -263,6 +240,103 @@ namespace TriageTrainer.Entity
       _bedColliderCounts.Remove(bed);
       _snappedBeds.Remove(bed);
       TriageWorldInteractionSignals.RaiseCareZoneBedExited(Identifier, bed.Identifier);
+    }
+
+    private void Update()
+    {
+      if (Time.time < _nextPatientPollTime)
+        return;
+      _nextPatientPollTime = Time.time + PatientPollIntervalSeconds;
+      PollPatients();
+    }
+
+    /// <summary>
+    /// 물리 트리거 없이도 환자 진입/이탈을 감지하는 폴링 경로.
+    /// 이 프로젝트의 환자·침대·Zone은 모두 Rigidbody 없이 transform 직접 갱신으로 이동하므로
+    /// 정적 콜라이더 쌍에는 OnTriggerEnter/Exit 물리 이벤트가 발생하지 않는다.
+    /// RefreshEquipment 와 같은 OverlapBox 질의로 구역 안 환자 집합을 주기적으로 비교하여
+    /// 트리거 경로와 동일한 진입/체류/이탈 처리를 수행한다.
+    /// </summary>
+    private void PollPatients()
+    {
+      Vector3 scale = transform.lossyScale;
+      Vector3 halfExtents = Vector3.Scale(_size, new Vector3(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z))) * 0.5f;
+      Collider[] hits = Physics.OverlapBox(transform.TransformPoint(_center), halfExtents, transform.rotation);
+
+      _polledInsideScratch.Clear();
+      for (int i = 0; i < hits.Length; i++)
+      {
+        PatientController patient = hits[i].GetComponentInParent<PatientController>();
+        if (patient != null)
+          _polledInsideScratch.Add(patient);
+      }
+
+      foreach (PatientController patient in _polledInsideScratch)
+      {
+        // 물리 트리거가 이미 추적 중이거나 이전 폴링에서 등록한 환자는 건너뛴다.
+        if (_patientColliderCounts.ContainsKey(patient))
+          continue;
+        _patientColliderCounts[patient] = 1;
+        _polledPatients.Add(patient);
+        HandlePatientEntered(patient);
+      }
+
+      if (_polledPatients.Count > 0)
+      {
+        _polledExitScratch.Clear();
+        foreach (PatientController patient in _polledPatients)
+        {
+          if (patient == null || !_polledInsideScratch.Contains(patient))
+            _polledExitScratch.Add(patient);
+        }
+        foreach (PatientController patient in _polledExitScratch)
+        {
+          _polledPatients.Remove(patient);
+          _patientColliderCounts.Remove(patient);
+          HandlePatientExited(patient);
+        }
+      }
+
+      // OnTriggerStay 대체: 활성 환자가 구역에 머무는 동안 장비 연결을 주기적으로 재평가한다.
+      // 침대가 환자 진입 이후 positioning point 에 스냅되는 흐름에서도 연결이 성립해야 한다.
+      if (_activePatient != null && _patientColliderCounts.ContainsKey(_activePatient))
+        Connect(_activePatient);
+    }
+
+    private void HandlePatientEntered(PatientController patient)
+    {
+      if (_activePatient != null && !ReferenceEquals(_activePatient, patient))
+      {
+        Debug.LogWarning($"[PatientCareDescriptionZone] '{Identifier}' already owns patient '{_activePatient.Identifier}'; ignoring '{patient.Identifier}'.", this);
+        PatientEntered?.Invoke(patient);
+        return;
+      }
+      _activePatient = patient;
+      Connect(patient);
+      TriageWorldInteractionSignals.RaiseCareZonePatientEntered(Identifier, patient.Identifier);
+      PatientEntered?.Invoke(patient);
+    }
+
+    private void HandlePatientExited(PatientController patient)
+    {
+      if (!ReferenceEquals(_activePatient, patient))
+        return;
+
+      _activePatient = null;
+      PatientExited?.Invoke(patient);
+      ReleaseEquipmentIfOwned(patient);
+      TriageWorldInteractionSignals.RaiseCareZonePatientExited(Identifier, patient.Identifier);
+
+      foreach (var occupant in _patientColliderCounts)
+      {
+        if (occupant.Key == null)
+          continue;
+
+        _activePatient = occupant.Key;
+        Connect(_activePatient);
+        PatientEntered?.Invoke(_activePatient);
+        break;
+      }
     }
 
     private void UpdateBedSnapSignal(MovingPatientBedController bed)
