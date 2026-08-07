@@ -1,3 +1,6 @@
 [submodule "Tools/problem-set-editor"]
 	path = Tools/problem-set-editor
 	url = https://github.com/jnu-triage-2025/problem-set-editor
+[submodule "Tools/unity-merge"]
+	path = Tools/unity-merge
+	url = https://github.com/ShapeLayer/unity-merge
