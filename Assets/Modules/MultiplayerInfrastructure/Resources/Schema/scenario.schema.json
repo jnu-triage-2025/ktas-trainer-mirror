@@ -95,7 +95,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "preset": { "type": ["string", "null"], "enum": ["F1", "F2", "F3", "F4", "F5", "M1", "M2", "M3", "M4", "M5", null] },
+        "preset": { "type": ["string", "null"], "enum": ["None", "F1", "F2", "F3", "F4", "F5", "M1", "M2", "M3", "M4", "M5", null] },
         "voiceIdentifier": { "type": ["string", "null"] },
         "voiceStyleName": { "type": ["string", "null"] },
         "language": { "type": ["string", "null"] },
@@ -1045,6 +1045,9 @@
                 "string",
                 "null"
               ]
+            },
+            "ttsVoiceProfile": {
+              "$ref": "#/$defs/ScenarioTTSVoiceProfile"
             },
             "nextIdentifier": {
               "type": "null"
@@ -2456,6 +2459,9 @@
                 "string",
                 "null"
               ]
+            },
+            "ttsVoiceProfile": {
+              "$ref": "#/$defs/ScenarioTTSVoiceProfile"
             },
             "nextIdentifier": {
               "type": [

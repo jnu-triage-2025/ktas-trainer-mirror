@@ -430,6 +430,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.Choice:
           BuildChoiceInlineEditor((ScenarioChoiceNode)Data);
           break;
+        case ScenarioNodeType.Quiz:
+          BuildQuizInlineEditor((ScenarioQuizNode)Data);
+          break;
         case ScenarioNodeType.InvokeEvent:
           BuildInvokeEventInlineEditor((ScenarioInvokeEventNode)Data);
           break;
@@ -523,7 +526,13 @@ namespace MultiplayerInfrastructure.Editor
     {
       var current = owner is ScenarioDialogueNode dialogue ? dialogue.TtsVoiceProfile
         : owner is ScenarioPlayTTSNode playTts ? playTts.TtsVoiceProfile : null;
-      var preset = new EnumField("TTS Voice Preset", current?.Preset ?? TTSVoiceStyle.F1);
+      if (current == null && owner is ScenarioDisinteractableDialogueNode disinteractable)
+        current = disinteractable.TtsVoiceProfile;
+      if (current == null && owner is ScenarioChoiceNode choice)
+        current = choice.TtsVoiceProfile;
+      if (current == null && owner is ScenarioQuizNode quiz)
+        current = quiz.TtsVoiceProfile;
+      var preset = new EnumField("TTS Voice Preset", current?.Preset ?? TTSVoiceStyle.None);
       preset.RegisterValueChangedCallback(evt =>
       {
         if (evt.newValue is TTSVoiceStyle style)
@@ -531,15 +540,55 @@ namespace MultiplayerInfrastructure.Editor
           var profile = new ScenarioTTSVoiceProfile { Preset = style };
           setProfile(profile);
           setIdentifier(profile.ToServiceProfile().VoiceIdentifier);
+          BuildInlineEditor();
         }
       });
       _inlineEditorContainer.Add(preset);
+      var customFieldStart = _inlineEditorContainer.childCount;
       AddTextField("Custom Voice JSON ID", value =>
       {
-        if (string.IsNullOrWhiteSpace(value)) return;
-        setProfile(new ScenarioTTSVoiceProfile { VoiceIdentifier = value });
-        setIdentifier(value);
+        var profile = current ?? new ScenarioTTSVoiceProfile();
+        profile.Preset = null;
+        profile.VoiceIdentifier = string.IsNullOrWhiteSpace(value) ? null : value;
+        setProfile(profile);
+        setIdentifier(profile.ToServiceProfile().VoiceIdentifier);
       }, current?.VoiceIdentifier);
+      AddTextField("Custom Style Name", value =>
+      {
+        var profile = current ?? new ScenarioTTSVoiceProfile();
+        profile.Preset = null;
+        profile.VoiceStyleName = string.IsNullOrWhiteSpace(value) ? null : value;
+        setProfile(profile);
+        setIdentifier(profile.ToServiceProfile().VoiceIdentifier);
+      }, current?.VoiceStyleName);
+      AddTextField("Custom Language", value =>
+      {
+        var profile = current ?? new ScenarioTTSVoiceProfile();
+        profile.Preset = null;
+        profile.Language = string.IsNullOrWhiteSpace(value) ? null : value;
+        setProfile(profile);
+      }, current?.Language);
+      AddPlainFloatField("Custom Speed", value =>
+      {
+        var profile = current ?? new ScenarioTTSVoiceProfile();
+        profile.Preset = null;
+        profile.Speed = value;
+        setProfile(profile);
+      }, current?.Speed ?? 0f);
+      var steps = new IntegerField("Custom Total Step") { value = current?.TotalStep ?? 0 };
+      steps.RegisterValueChangedCallback(evt =>
+      {
+        var profile = current ?? new ScenarioTTSVoiceProfile();
+        profile.Preset = null;
+        profile.TotalStep = evt.newValue;
+        setProfile(profile);
+      });
+      _inlineEditorContainer.Add(steps);
+      if (current?.Preset.HasValue == true && current.Preset.Value != TTSVoiceStyle.None)
+      {
+        for (var index = customFieldStart; index < _inlineEditorContainer.childCount; index++)
+          _inlineEditorContainer[index].SetEnabled(false);
+      }
     }
 
     private void BuildDisinteractableDialogueInlineEditor(ScenarioDisinteractableDialogueNode data)
@@ -550,7 +599,7 @@ namespace MultiplayerInfrastructure.Editor
       AddTimeValueField("Display", data.DisplayDuration, value => data.DisplayDuration = value);
       AddTimeValueField("Fade Out", data.FadeOutDuration, value => data.FadeOutDuration = value);
       AddToggleField("Play TTS", value => data.PlayTTS = value, data.PlayTTS);
-      AddTextField("TTS Voice", value => data.TtsVoiceIdentifier = value, data.TtsVoiceIdentifier);
+      AddVoiceProfileField(data, value => data.TtsVoiceProfile = value, value => data.TtsVoiceIdentifier = value);
       AddNextIdentifierField(data);
     }
 
@@ -559,6 +608,8 @@ namespace MultiplayerInfrastructure.Editor
       data.Options ??= new List<ScenarioChoiceOption>();
       AddTextField("Speaker", value => data.SpeakerName = value, data.SpeakerName);
       AddTextAreaField("Dialogue", value => data.DialogueContent = value, data.DialogueContent);
+      AddToggleField("Play TTS", value => data.PlayTTS = value, data.PlayTTS);
+      AddVoiceProfileField(data, value => data.TtsVoiceProfile = value, value => data.TtsVoiceIdentifier = value);
       AddTextField("Option 1", value =>
       {
         var option = EnsureChoiceOptionEditable(data, 0);
@@ -574,6 +625,14 @@ namespace MultiplayerInfrastructure.Editor
         option.DisplayText = value;
         UpdateOptionPortLabel(option);
       }, GetChoiceOptionText(data, 1, string.Empty));
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildQuizInlineEditor(ScenarioQuizNode data)
+    {
+      AddTextAreaField("Question", value => data.Question = value, data.Question);
+      AddToggleField("Play TTS", value => data.PlayTTS = value, data.PlayTTS);
+      AddVoiceProfileField(data, value => data.TtsVoiceProfile = value, value => data.TtsVoiceIdentifier = value);
       AddNextIdentifierField(data);
     }
 

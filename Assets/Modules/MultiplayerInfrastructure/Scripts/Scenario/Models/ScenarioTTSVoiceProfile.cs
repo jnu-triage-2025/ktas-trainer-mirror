@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using TextToSpeechService;
 
 namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>시나리오 JSON에서 사용하는 음성 스타일 사전 선택지.</summary>
+  [JsonConverter(typeof(JsonStringEnumConverter))]
   public enum TTSVoiceStyle
   {
-    F1, F2, F3, F4, F5, M1, M2, M3, M4, M5
+    None, F1, F2, F3, F4, F5, M1, M2, M3, M4, M5
   }
 
   /// <summary>
@@ -49,6 +51,7 @@ namespace MultiplayerInfrastructure.Scenario
         foreach (var style in Enum.GetValues(typeof(TTSVoiceStyle)))
         {
           var key = (TTSVoiceStyle)style;
+          if (key == TTSVoiceStyle.None) continue;
           var profile = Definitions[key];
           result.Add(new TTSVoiceProfileDefinition(key, profile.VoiceIdentifier, profile.VoiceStyleName,
             profile.Language, profile.Speed, profile.TotalStep));
@@ -92,7 +95,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     public TTSVoiceProfile ToServiceProfile()
     {
-      var profile = Preset.HasValue
+      var profile = Preset.HasValue && Preset.Value != TTSVoiceStyle.None
         ? TTSVoiceProfileDefinitions.Get(Preset.Value)
         : new TTSVoiceProfile { VoiceStyleName = "F1", Language = "ko", Speed = 1.05f, TotalStep = 5 };
       return new TTSVoiceProfile

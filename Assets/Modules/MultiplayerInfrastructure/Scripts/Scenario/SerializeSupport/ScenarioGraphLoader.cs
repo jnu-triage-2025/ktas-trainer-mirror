@@ -1921,6 +1921,7 @@ namespace MultiplayerInfrastructure.Scenario
           FeedbackIncorrect = node.FeedbackIncorrect,
           PlayTTS = node.PlayTTS ? true : (bool?)null,
           TtsVoiceIdentifier = string.IsNullOrEmpty(node.TtsVoiceIdentifier) ? null : node.TtsVoiceIdentifier,
+          TtsVoiceProfile = ConvertVoiceProfileToDTO(node.TtsVoiceProfile),
           NextIdentifier = node.NextIdentifier
         };
 
