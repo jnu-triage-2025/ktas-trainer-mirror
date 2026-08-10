@@ -5,6 +5,7 @@ using System.Reflection;
 using FishNet.Managing.Object;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Registry;
 using NUnit.Framework;
@@ -212,7 +213,7 @@ namespace TriageTrainer.Tests
       var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
 
        Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
-       Assert.That(graph.Nodes, Has.Count.EqualTo(310));
+       Assert.That(graph.Nodes, Has.Count.EqualTo(311));
        Assert.That(graph.ClientSignalPrefixes, Is.EqualTo(new[] { "sig.quest_arrival_triage_area_" }));
       Assert.That(graph.ActingNpcs, Has.Count.EqualTo(1));
       Assert.That(graph.ActingNpcs.Single().Identifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
@@ -257,7 +258,11 @@ namespace TriageTrainer.Tests
       Assert.That(graph.Nodes["P_C_WAIT_REMOVE"].NextIdentifier, Is.EqualTo("C_COMPLETE"));
       Assert.That(graph.Nodes["C_COMPLETE"].NextIdentifier, Is.EqualTo("CT_DELAY"));
       Assert.That(graph.Nodes.ContainsKey("P_CT_TRANSPORT"), Is.True);
-      Assert.That(graph.Nodes["P_CT_TRANSPORT"].NextIdentifier, Is.EqualTo("CT_FINAL_DELAY"));
+      Assert.That(graph.Nodes["P_CT_TRANSPORT"].NextIdentifier, Is.EqualTo("CT_DETACH_BEDS"));
+      var detachBeds = graph.Nodes["CT_DETACH_BEDS"] as ScenarioInvokeEventNode;
+      Assert.That(detachBeds, Is.Not.Null);
+      Assert.That(detachBeds.EventIdentifier, Is.EqualTo("detach_patient_b_c_beds"));
+      Assert.That(detachBeds.NextIdentifier, Is.EqualTo("CT_FINAL_DELAY"));
       var finalDelay = graph.Nodes["CT_FINAL_DELAY"] as ScenarioDelayNode;
       Assert.That(finalDelay, Is.Not.Null);
       Assert.That(finalDelay.Duration.ToSeconds(), Is.EqualTo(1d));
@@ -1158,13 +1163,134 @@ namespace TriageTrainer.Tests
         .ToArray();
       var bed = prefab.GetComponent<MovingPatientBedController>();
       Assert.That(bed, Is.Not.Null);
-      var allowedProperty = new SerializedObject(bed).FindProperty("_allowedPositioningPointIdentifiers");
+      var serializedBed = new SerializedObject(bed);
+      var participantAttachPoints = serializedBed.FindProperty("_playerAttachPoints");
+      Assert.That(participantAttachPoints, Is.Not.Null);
+      Assert.That(participantAttachPoints.arraySize, Is.EqualTo(4));
+      Assert.That(prefab.GetComponentsInChildren<RidableAttachPointObject>(true), Has.Length.EqualTo(4));
+
+      var allowedProperty = serializedBed.FindProperty("_allowedPositioningPointIdentifiers");
       var allowedIdentifiers = Enumerable.Range(0, allowedProperty.arraySize)
         .Select(index => allowedProperty.GetArrayElementAtIndex(index).stringValue)
         .ToArray();
 
       Assert.That(allowedIdentifiers, Is.EquivalentTo(layoutIdentifiers));
       Assert.That(allowedIdentifiers, Has.Length.EqualTo(4));
+    }
+
+    [Test]
+    public void MovingBedToggleAcknowledgementClearsPendingRequestAfterServerRejection()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(MovingBedPrefabPath);
+      var instance = Object.Instantiate(prefab);
+      try
+      {
+        var bed = instance.GetComponent<MovingPatientBedController>();
+        var pending = typeof(MinecraftBoadLikeControl).GetField(
+          "_togglePending", BindingFlags.Instance | BindingFlags.NonPublic);
+        var acknowledge = typeof(MinecraftBoadLikeControl).GetMethod(
+          "CompleteToggleRequest", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.That(pending, Is.Not.Null);
+        Assert.That(acknowledge, Is.Not.Null);
+        pending.SetValue(bed, true);
+        acknowledge.Invoke(bed, null);
+        Assert.That(pending.GetValue(bed), Is.False);
+      }
+      finally
+      {
+        Object.DestroyImmediate(instance);
+      }
+    }
+
+    [Test]
+    public void ExplicitRidableAttachPointListIsNotExpandedByChildDiscovery()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(MovingBedPrefabPath);
+      var instance = Object.Instantiate(prefab);
+      try
+      {
+        var bed = instance.GetComponent<MovingPatientBedController>();
+        var attachPointsField = typeof(MinecraftBoadLikeControl).GetField(
+          "_playerAttachPoints", BindingFlags.Instance | BindingFlags.NonPublic);
+        var resolveAttachPoints = typeof(MinecraftBoadLikeControl).GetMethod(
+          "ResolveAttachPoints", BindingFlags.Instance | BindingFlags.NonPublic);
+        var attachPoints = attachPointsField?.GetValue(bed) as List<Transform>;
+        var explicitPoint = instance.GetComponentsInChildren<RidableAttachPointObject>(true).First().transform;
+
+        Assert.That(attachPoints, Is.Not.Null);
+        Assert.That(resolveAttachPoints, Is.Not.Null);
+        attachPoints.Clear();
+        attachPoints.Add(explicitPoint);
+        resolveAttachPoints.Invoke(bed, null);
+
+        Assert.That(attachPoints, Is.EqualTo(new[] { explicitPoint }));
+      }
+      finally
+      {
+        Object.DestroyImmediate(instance);
+      }
+    }
+
+    [Test]
+    public void MovingBedForceReleaseHasNoUnownedClientRpcEntryPoint()
+    {
+      Assert.That(typeof(MovingPatientBedController).GetMethod(
+        "CmdForceReleaseAllParticipants", BindingFlags.Instance | BindingFlags.NonPublic), Is.Null);
+      Assert.That(typeof(MovingPatientBedController).GetMethod(
+        "RpcForceReleaseLocalParticipants", BindingFlags.Instance | BindingFlags.NonPublic), Is.Null);
+    }
+
+    [Test]
+    public void DetachBedResolutionWaitHasFiniteTimeout()
+    {
+      var timeout = typeof(TriageScenarioEventBootstrap).GetField(
+        "DetachBedResolutionTimeoutSeconds", BindingFlags.Static | BindingFlags.NonPublic);
+
+      Assert.That(timeout, Is.Not.Null);
+      Assert.That((float)timeout.GetRawConstantValue(), Is.GreaterThan(0f));
+    }
+
+    [Test]
+    public void MovingBedDisconnectCleanupReleasesSlotAndRemovesCachedInput()
+    {
+      const int disconnectedClientId = 17;
+      var participants = new List<int> { 8, disconnectedClientId, -1 };
+      var inputs = new Dictionary<int, Vector2>
+      {
+        [8] = Vector2.left,
+        [disconnectedClientId] = Vector2.one
+      };
+      var remove = typeof(MinecraftBoadLikeControl).GetMethod(
+        "RemoveParticipantState", BindingFlags.Static | BindingFlags.NonPublic);
+
+      Assert.That(remove, Is.Not.Null);
+      remove.Invoke(null, new object[] { participants, inputs, disconnectedClientId });
+
+      Assert.That(participants, Is.EqualTo(new[] { 8, -1, -1 }));
+      Assert.That(inputs.ContainsKey(disconnectedClientId), Is.False);
+      Assert.That(inputs.ContainsKey(8), Is.True);
+    }
+
+    [Test]
+    public void DetachBedParticipantsReportsWhetherControllerWasResolved()
+    {
+      var detach = typeof(TriageScenarioEventBootstrap).GetMethod(
+        "DetachBedParticipants", BindingFlags.Static | BindingFlags.NonPublic);
+      var missing = new GameObject("MissingMovingBedController");
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(MovingBedPrefabPath);
+      var instance = Object.Instantiate(prefab);
+      try
+      {
+        Assert.That(detach, Is.Not.Null);
+        Assert.That(detach.Invoke(null, new object[] { missing }), Is.False);
+        Assert.That(detach.Invoke(null, new object[] { instance }), Is.True);
+      }
+      finally
+      {
+        Object.DestroyImmediate(instance);
+        Object.DestroyImmediate(missing);
+      }
     }
 
     [Test]

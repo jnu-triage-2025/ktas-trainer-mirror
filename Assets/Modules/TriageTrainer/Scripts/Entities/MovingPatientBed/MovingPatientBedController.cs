@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using FishNet.Connection;
 using FishNet;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -21,15 +19,6 @@ namespace TriageTrainer.Entity
 {
   public partial class MovingPatientBedController : MinecraftBoadLikeControl, IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver, IEntityPresetParentLinkReceiver
   {
-    private static readonly FieldInfo Participant0Field =
-      typeof(MinecraftBoadLikeControl).GetField("_participant0", BindingFlags.Instance | BindingFlags.NonPublic);
-
-    private static readonly FieldInfo Participant1Field =
-      typeof(MinecraftBoadLikeControl).GetField("_participant1", BindingFlags.Instance | BindingFlags.NonPublic);
-
-    private static readonly FieldInfo ServerInputsField =
-      typeof(MinecraftBoadLikeControl).GetField("_serverInputs", BindingFlags.Instance | BindingFlags.NonPublic);
-
     private const string DefaultPlayerAttachPointName = "PlayerAttachPoint";
     private const string DefaultPatientAttachPointName = "PatientAttachPoint";
 
@@ -111,7 +100,6 @@ namespace TriageTrainer.Entity
     [SerializeField, Min(0f)] private float _positioningSnapReleasePadding = 0.2f;
 
     [Header("Attach Points")]
-    [SerializeField, Min(1)] private int _maximumPlayerParticipants = 2;
     [SerializeField] private List<Transform> PatientAttachPoints = new();
 
     [Header("Positioning Point Filter")]
@@ -173,12 +161,6 @@ namespace TriageTrainer.Entity
     public MovingPatientBedPositioningPoint LatchedPositioningPoint => _latchedPositioningPoint;
     public int RequiredInteractorCount => Mathf.Max(Weight, ReposedTarget?.Weight ?? 0);
 
-    /// <summary>장비형 파생 구성에서 침대 조종 로직을 단일 사용자로 제한한다.</summary>
-    public void SetMaximumPlayerParticipants(int count)
-    {
-      _maximumPlayerParticipants = Mathf.Max(1, count);
-    }
-
     /// <summary>침대 이동만 재사용하는 장비가 환자 내려놓기 메뉴를 숨길 수 있게 한다.</summary>
     public void SetPatientReposeEnabled(bool enabled)
     {
@@ -209,7 +191,7 @@ namespace TriageTrainer.Entity
     {
       Awake_MinecraftBoadLikeControl();
       Configure(
-        _maximumPlayerParticipants,
+        4,
         ConstantString.HintExitPatientBedMovingMode);
       ParticipantAssigned += OnMinecraftBoadParticipantAssigned;
       _reposeInteract = new BedReposeInteract(this);
@@ -555,64 +537,16 @@ namespace TriageTrainer.Entity
     /// </summary>
     public void ForceReleaseAllParticipants()
     {
+      if (!IsClientStarted && !IsServerStarted)
+      {
+        DetachAllParticipants();
+        return;
+      }
+
+      // 전체 참가자 해제는 서버 내부 작업으로만 허용한다. 원격 클라이언트는
+      // SyncList 변경 콜백을 통해 자신의 로컬 anchor/control 상태를 해제한다.
       if (IsServerStarted)
-      {
-        ForceReleaseAllParticipantsServerAuthoritative();
-      }
-      else if (IsClientStarted)
-      {
-        CmdForceReleaseAllParticipants();
-      }
-
-      // 로컬 오너 상태는 서버/클라이언트 모두에서 즉시 해제한다.
-      ClearLocalParticipants();
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    private void CmdForceReleaseAllParticipants(NetworkConnection sender = null)
-    {
-      ForceReleaseAllParticipantsServerAuthoritative();
-    }
-
-    private void ForceReleaseAllParticipantsServerAuthoritative()
-    {
-      SetParticipantHandleInvalid(Participant0Field);
-      SetParticipantHandleInvalid(Participant1Field);
-
-      if (ServerInputsField?.GetValue(this) is Dictionary<int, Vector2> serverInputs)
-        serverInputs.Clear();
-
-      // 호스트/서버 로컬 즉시 반영
-      ReleaseLocalRidableState();
-      // 원격 클라이언트의 오너 로컬 상태도 즉시 해제
-      RpcForceReleaseLocalParticipants();
-    }
-
-    private void SetParticipantHandleInvalid(FieldInfo handleField)
-    {
-      if (handleField?.GetValue(this) is SyncVar<int> handle)
-        handle.Value = -1;
-    }
-
-    [ObserversRpc]
-    private void RpcForceReleaseLocalParticipants()
-    {
-      ReleaseLocalRidableState();
-    }
-
-    private void ReleaseLocalRidableState()
-    {
-      var players = FindObjectsByType<PlayerController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-      for (int i = 0; i < players.Length; i++)
-      {
-        var player = players[i];
-        if (player == null)
-          continue;
-
-        player.ClearForcedFollowAnchor();
-        player.ClearRidableControlActive(this);
-        player.RefreshInteractableHintsNow();
-      }
+        DetachAllParticipants();
     }
 
     /// <summary>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using FishNet.Transporting;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
@@ -37,8 +38,9 @@ namespace MultiplayerInfrastructure.Entity
     [Header("Attach points")]
     [SerializeField] private List<Transform> _playerAttachPoints = new();
 
-    private readonly SyncVar<int> _participant0 = new(InvalidClientId);
-    private readonly SyncVar<int> _participant1 = new(InvalidClientId);
+    // FishNet이 서버의 슬롯 변경을 모든 관찰 클라이언트에 복제한다.
+    // 슬롯 수는 서버 시작 시 Capacity와 동일하게 고정하고 값만 변경한다.
+    private readonly SyncList<int> _participants = new();
     private readonly Dictionary<int, Vector2> _serverInputs = new();
     private readonly Dictionary<int, LocalParticipant> _localParticipants = new();
     private bool _togglePending;
@@ -54,7 +56,7 @@ namespace MultiplayerInfrastructure.Entity
 
     public event Action<int> ParticipantAssigned;
 
-    public int Capacity => Mathf.Min(Mathf.Max(1, _maximumParticipants), _playerAttachPoints.Count, 2);
+    public int Capacity => Mathf.Min(Mathf.Max(1, _maximumParticipants), _playerAttachPoints.Count);
     /// <summary>이 클라이언트에서 현재 조종 중인 참가자가 하나 이상 있는지 여부.</summary>
     public bool IsLocallyControlled => _localParticipants.Count > 0;
 
@@ -66,15 +68,32 @@ namespace MultiplayerInfrastructure.Entity
     public override void OnStartClient()
     {
       base.OnStartClient();
-      _participant0.OnChange += OnParticipantChanged;
-      _participant1.OnChange += OnParticipantChanged;
+      _participants.OnChange += OnParticipantChanged;
       ApplyLocalParticipant();
+    }
+
+    public override void OnStartServer()
+    {
+      base.OnStartServer();
+      InitializeParticipantSlots();
+      if (NetworkManager?.ServerManager != null)
+        NetworkManager.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
+    }
+
+    public override void OnStopServer()
+    {
+      if (NetworkManager?.ServerManager != null)
+        NetworkManager.ServerManager.OnRemoteConnectionState -= OnRemoteConnectionState;
+
+      for (int i = 0; i < _participants.Count; i++)
+        SetHandle(i, InvalidClientId);
+      _serverInputs.Clear();
+      base.OnStopServer();
     }
 
     public override void OnStopClient()
     {
-      _participant0.OnChange -= OnParticipantChanged;
-      _participant1.OnChange -= OnParticipantChanged;
+      _participants.OnChange -= OnParticipantChanged;
       ClearLocalParticipants();
       base.OnStopClient();
     }
@@ -131,14 +150,55 @@ namespace MultiplayerInfrastructure.Entity
       }
     }
 
+    /// <summary>
+    /// 현재 이 탈것에 붙어 있는 모든 참가자를 분리한다.
+    /// 입력 기반 하차뿐 아니라 시나리오 그래프 같은 외부 시스템에서도 동일한
+    /// 네트워크 상태 전이를 사용할 수 있도록 공개한다.
+    /// </summary>
+    public void DetachAllParticipants()
+    {
+      if (!IsClientStarted && !IsServerStarted)
+      {
+        ClearLocalParticipants();
+        return;
+      }
+
+      // 참가자 SyncList는 서버 권위 상태이므로 클라이언트에서 직접 변경하지 않는다.
+      if (!IsServerStarted)
+        return;
+
+      for (int i = 0; i < _participants.Count; i++)
+      {
+        int participant = _participants[i];
+        if (participant >= 0)
+          _serverInputs.Remove(participant);
+        SetHandle(i, InvalidClientId);
+      }
+      ApplyLocalParticipant();
+    }
+
     [ServerRpc(RequireOwnership = false)]
     private void CmdToggle(NetworkConnection sender = null)
     {
-      if (sender == null || !sender.IsValid ||
-          !TryResolvePlayer(sender.ClientId, out var player))
+      if (sender == null || !sender.IsValid)
         return;
 
-      TryToggleOnServer(sender.ClientId, player);
+      if (TryResolvePlayer(sender.ClientId, out var player))
+        TryToggleOnServer(sender.ClientId, player);
+
+      // 거절된 요청도 반드시 응답하여 클라이언트의 요청 잠금을 해제한다.
+      TargetToggleCompleted(sender);
+    }
+
+    [TargetRpc]
+    private void TargetToggleCompleted(NetworkConnection connection)
+    {
+      CompleteToggleRequest();
+    }
+
+    private void CompleteToggleRequest()
+    {
+      _togglePending = false;
     }
 
     private bool TryToggleOnServer(int clientId, PlayerController player)
@@ -201,10 +261,9 @@ namespace MultiplayerInfrastructure.Entity
       int count = 0;
       float forward = 0f;
       float turn = 0f;
-      int[] clientIds = { _participant0.Value, _participant1.Value };
-      for (int i = 0; i < clientIds.Length; i++)
+      for (int i = 0; i < _participants.Count; i++)
       {
-        int clientId = clientIds[i];
+        int clientId = _participants[i];
         if (clientId < 0)
           continue;
         count++;
@@ -233,10 +292,9 @@ namespace MultiplayerInfrastructure.Entity
         return false;
 
       int contributingClientId = InvalidClientId;
-      int[] clientIds = { _participant0.Value, _participant1.Value };
-      for (int i = 0; i < clientIds.Length; i++)
+      for (int i = 0; i < _participants.Count; i++)
       {
-        int clientId = clientIds[i];
+        int clientId = _participants[i];
         if (clientId < 0)
           continue;
 
@@ -512,26 +570,74 @@ namespace MultiplayerInfrastructure.Entity
 
     private int FindHandle(int clientId)
     {
-      if (_participant0.Value == clientId) return 0;
-      if (_participant1.Value == clientId) return 1;
+      for (int i = 0; i < _participants.Count; i++)
+        if (_participants[i] == clientId)
+          return i;
       return -1;
     }
 
     private int FindFreeHandle()
     {
-      if (Capacity > 0 && _participant0.Value == InvalidClientId) return 0;
-      if (Capacity > 1 && _participant1.Value == InvalidClientId) return 1;
+      int count = Mathf.Min(Capacity, _participants.Count);
+      for (int i = 0; i < count; i++)
+        if (_participants[i] == InvalidClientId)
+          return i;
       return -1;
     }
 
     private void SetHandle(int handle, int clientId)
     {
-      if (handle == 0) _participant0.Value = clientId;
-      else if (handle == 1) _participant1.Value = clientId;
+      if (handle >= 0 && handle < _participants.Count)
+        _participants[handle] = clientId;
     }
 
-    private void OnParticipantChanged(int previous, int next, bool asServer) =>
+    private void OnParticipantChanged(
+      SyncListOperation operation,
+      int index,
+      int previous,
+      int next,
+      bool asServer) =>
       ApplyLocalParticipant();
+
+    private void OnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs args)
+    {
+      if (args.ConnectionState != RemoteConnectionState.Stopped || connection == null)
+        return;
+
+      RemoveParticipant(connection.ClientId);
+    }
+
+    private void RemoveParticipant(int clientId)
+    {
+      RemoveParticipantState(_participants, _serverInputs, clientId);
+      ApplyLocalParticipant();
+    }
+
+    private static void RemoveParticipantState(
+      IList<int> participants,
+      IDictionary<int, Vector2> serverInputs,
+      int clientId)
+    {
+      for (int i = 0; i < participants.Count; i++)
+      {
+        if (participants[i] != clientId)
+          continue;
+        participants[i] = InvalidClientId;
+        break;
+      }
+      serverInputs.Remove(clientId);
+    }
+
+    private void InitializeParticipantSlots()
+    {
+      if (!IsServerStarted)
+        return;
+
+      while (_participants.Count < Capacity)
+        _participants.Add(InvalidClientId);
+      while (_participants.Count > Capacity)
+        _participants.RemoveAt(_participants.Count - 1);
+    }
 
     private Vector3 GetForwardDirection()
     {
@@ -544,12 +650,18 @@ namespace MultiplayerInfrastructure.Entity
     private void ResolveAttachPoints()
     {
       _playerAttachPoints.RemoveAll(each => each == null);
+
+      // 명시 목록이 없을 때만 자식 마커를 기본 참가자 위치로 사용한다.
+      // 명시된 일부 위치만 허용하려는 프리팹 구성을 자동 탐색으로 확장하지 않는다.
       if (_playerAttachPoints.Count == 0)
       {
         var points = GetComponentsInChildren<RidableAttachPointObject>(true);
         for (int i = 0; i < points.Length; i++)
-          if (points[i] != null)
-            _playerAttachPoints.Add(points[i].transform);
+        {
+          Transform point = points[i] != null ? points[i].transform : null;
+          if (point != null)
+            _playerAttachPoints.Add(point);
+        }
       }
 
       if (_playerAttachPoints.Count == 0)

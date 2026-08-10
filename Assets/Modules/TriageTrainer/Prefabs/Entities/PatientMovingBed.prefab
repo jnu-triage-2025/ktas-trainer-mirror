@@ -350,6 +350,8 @@ MonoBehaviour:
   _playerAttachPoints:
   - {fileID: 7425824512457748482}
   - {fileID: 2119104018315133438}
+  - {fileID: 6854001561358226897}
+  - {fileID: 1163232382078520351}
   _intravenousStandReference: {fileID: 6032575468207879380}
   _intravenousHangerHangedNormalSalineReference: {fileID: 4814252600140772689}
   _intravenousHangerHangedPlasmaSolutionReference: {fileID: 2915987674690095969}
@@ -391,7 +393,6 @@ MonoBehaviour:
   _enablePatientRepose: 1
   _enablePositioningSnap: 1
   _positioningSnapReleasePadding: 0.2
-  _maximumPlayerParticipants: 2
   PatientAttachPoints:
   - {fileID: 762591555731961356}
   _allowedPositioningPointIdentifiers:

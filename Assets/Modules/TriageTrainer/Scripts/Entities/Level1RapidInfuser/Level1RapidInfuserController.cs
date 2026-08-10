@@ -159,7 +159,7 @@ namespace TriageTrainer.Entity
     private void Awake()
     {
       Awake_MinecraftBoadLikeControl();
-      Configure(1);
+      Configure(1); // Level 1 Rapid Infuser는 한 명만 조종한다.
       if (_ivConnectionPoint != null)
       {
         _ivConnectionPoint.OnConnected += OnIntravenousLineConnected;

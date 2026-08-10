@@ -4157,7 +4157,7 @@
     "P_CT_TRANSPORT": {
       "identifier": "P_CT_TRANSPORT",
       "nodeType": "Parallel",
-      "nextIdentifier": "CT_FINAL_DELAY",
+      "nextIdentifier": "CT_DETACH_BEDS",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Panic",
@@ -4167,6 +4167,14 @@
         { "identifier": "CT_C_Q", "completionConditionIdentifier": "CC_CT_C", "requiredPlayerTags": ["nurse_c"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" },
         { "identifier": "CT_D_Q", "completionConditionIdentifier": "CC_CT_D", "requiredPlayerTags": ["nurse_d"], "forbiddenPlayerTags": [], "requiredPlayerTagsMatchMode": "All" }
       ]
+    },
+    "CT_DETACH_BEDS": {
+      "identifier": "CT_DETACH_BEDS",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "CT_FINAL_DELAY",
+      "eventIdentifier": "detach_patient_b_c_beds",
+      "invokeOnRoleClient": false,
+      "moveNextBehavior": "WaitUntilDone"
     },
     "CT_FINAL_DELAY": {
       "identifier": "CT_FINAL_DELAY",
