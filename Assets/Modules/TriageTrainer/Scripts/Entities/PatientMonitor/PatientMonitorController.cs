@@ -33,7 +33,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
   /// </summary>
   public abstract partial class PatientMonitorController : NetworkBehaviour
   {
-    protected virtual void Reset()
+    protected override void Reset()
     {
       _patientTrackingMethod = PatientTrackingMethod.Interactable;
       _onEnterAnotherPatientAlreadyPatientExists = OnEnterAnotherPatientAlreadyPatientExists.Refresh;

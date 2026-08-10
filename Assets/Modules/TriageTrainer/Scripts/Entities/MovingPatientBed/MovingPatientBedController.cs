@@ -876,7 +876,7 @@ namespace TriageTrainer.Entity
       }
     }
 
-    private void OnValidate()
+    protected override void OnValidate()
     {
       _weight = Mathf.Max(0, _weight);
       _positioningSnapReleasePadding = Mathf.Max(0f, _positioningSnapReleasePadding);

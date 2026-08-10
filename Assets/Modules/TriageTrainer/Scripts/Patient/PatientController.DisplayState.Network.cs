@@ -43,12 +43,12 @@ namespace TriageTrainer.Entity
     /// </summary>
     public void SetTreatmentDisplayNetworked(TreatmentDisplay display, bool active)
     {
-      if (IsServerStarted)
+      if (IsFishNetServerStarted)
       {
         SetTreatmentDisplay(display, active);
         RpcSyncTreatmentDisplay(display, active);
       }
-      else if (IsClientInitialized)
+      else if (IsFishNetClientInitialized)
       {
         CmdSetTreatmentDisplay(display, active);
       }
@@ -66,7 +66,7 @@ namespace TriageTrainer.Entity
     /// </summary>
     public void SyncAllDisplayStatesNetworked()
     {
-      if (!IsServerStarted)
+      if (!IsFishNetServerStarted)
       {
         Debug.LogWarning("[PatientController] SyncAllDisplayStatesNetworked must be called on the server.", this);
         return;
@@ -90,7 +90,7 @@ namespace TriageTrainer.Entity
     [ObserversRpc(BufferLast = true)]
     private void RpcSyncTreatmentDisplay(TreatmentDisplay display, bool active)
     {
-      if (IsServerStarted)
+      if (IsFishNetServerStarted)
         return;
 
       SetTreatmentDisplay(display, active);
@@ -108,7 +108,7 @@ namespace TriageTrainer.Entity
     [ObserversRpc(BufferLast = true)]
     private void RpcSyncAllDisplayStates(PatientTreatmentDisplayModel flags)
     {
-      if (IsServerStarted)
+      if (IsFishNetServerStarted)
         return;
 
       ApplyDisplayModelLocally(flags);
@@ -116,7 +116,7 @@ namespace TriageTrainer.Entity
 
     private void SyncAllDisplayStates(PatientTreatmentDisplayModel flags)
     {
-      if (!IsServerStarted)
+      if (!IsFishNetServerStarted)
         return;
 
       ApplyDisplayModelLocally(flags);

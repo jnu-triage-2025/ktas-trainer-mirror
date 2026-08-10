@@ -209,7 +209,7 @@ namespace TriageTrainer.Entity
     /// <summary>서버 시나리오 이벤트가 한 단계의 의식 확인을 활성화한다.</summary>
     public void ActivateRecognitionCheck(string completionSignal, bool allowMicrophone, string displayText = "말 걸기")
     {
-      if (!IsServerStarted && !InstanceFinder.IsOffline)
+      if (!IsFishNetServerStarted && !InstanceFinder.IsOffline)
         return;
 
       bool mic = allowMicrophone && ScenarioGameRules.UseMicInRecognitionCheck;
@@ -230,7 +230,7 @@ namespace TriageTrainer.Entity
 
     internal void RequestRecognitionCheckCompletion(PlayerController requester = null, bool microphone = false)
     {
-      if (IsServerStarted || InstanceFinder.IsOffline)
+      if (IsFishNetServerStarted || InstanceFinder.IsOffline)
       {
         if (!InstanceFinder.IsOffline && !IsRecognitionRolePlayer(requester))
         {
@@ -242,7 +242,7 @@ namespace TriageTrainer.Entity
         return;
       }
 
-      if (IsClientInitialized)
+      if (IsFishNetClientInitialized)
         CmdCompleteRecognitionCheck(microphone);
     }
 

@@ -208,7 +208,7 @@ namespace TriageTrainer.Entity
         return; // 양팔 모두 삽입 완료 → 추가 삽입 없음
 
       string side = isLeft ? "left" : "right";
-      if (IsPatientBC && IsClientInitialized && !IsServerStarted)
+      if (IsPatientBC && IsFishNetClientInitialized && !IsFishNetServerStarted)
       {
         CmdCompletePatientBCIv(side, heldIdentifier);
         return;
@@ -255,12 +255,12 @@ namespace TriageTrainer.Entity
         return;
       }
 
-      if (IsServerStarted || FishNet.InstanceFinder.IsOffline)
+      if (IsFishNetServerStarted || FishNet.InstanceFinder.IsOffline)
       {
         if (TryAdvancePatientBCIvStageAuthoritative())
           RaiseCannulaSignal($"insert_iv_{{id}}_{side}");
       }
-      else if (IsClientInitialized)
+      else if (IsFishNetClientInitialized)
       {
         CmdCompletePatientBCIv(side, itemIdentifier);
       }

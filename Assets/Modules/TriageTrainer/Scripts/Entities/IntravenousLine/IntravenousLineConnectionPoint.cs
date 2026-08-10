@@ -236,7 +236,7 @@ namespace TriageTrainer.Entity.IntravenousLine
       BuildInteracts();
     }
 
-    private void OnValidate()
+    protected override void OnValidate()
     {
       EnsureDefaults();
       EnsureDetectionCollider();

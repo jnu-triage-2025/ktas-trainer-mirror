@@ -139,7 +139,7 @@ namespace TriageTrainer.Entity
       _assessedTriage.OnChange += OnAssessedTriageChanged;
       _assessable.OnChange += OnTriageAssessableChanged;
 
-      if (IsServerStarted)
+      if (IsFishNetServerStarted)
       {
         // 서버가 인스펙터 초깃값을 권위 상태로 승격한다(전 피어 복제).
         _assessable.Value = _triageConfig.Assessable;
@@ -195,7 +195,7 @@ namespace TriageTrainer.Entity
       // 인스펙터 초깃값도 갱신해 두어(서버가 아직 SyncVar 를 승격하기 전 폴백 일관성) 초기 상태가 어긋나지 않게 한다.
       _triageConfig.Assessable = assessable;
 
-      if (IsServerStarted)
+      if (IsFishNetServerStarted)
       {
         _assessable.Value = assessable;
         _assessableInitialized = true;
@@ -216,7 +216,7 @@ namespace TriageTrainer.Entity
       if (_patientDescriptor != null)
         _patientDescriptor.assessedTriage = TriageLevel.Unassessed;
 
-      if (IsServerStarted)
+      if (IsFishNetServerStarted)
       {
         _assessable.Value = true;
         _assessableInitialized = true;
@@ -271,11 +271,11 @@ namespace TriageTrainer.Entity
 
     private void SetAssessedTriageNetworked(TriageLevel level)
     {
-      if (IsServerStarted)
+      if (IsFishNetServerStarted)
       {
         ApplyAssessedTriage(level);
       }
-      else if (IsClientInitialized)
+      else if (IsFishNetClientInitialized)
       {
         CmdSetAssessedTriage(level);
       }
@@ -343,7 +343,7 @@ namespace TriageTrainer.Entity
     private void SetAssessableAuthoritative(bool assessable)
     {
       _triageConfig.Assessable = assessable;
-      if (IsServerStarted)
+      if (IsFishNetServerStarted)
       {
         _assessable.Value = assessable;
         _assessableInitialized = true;

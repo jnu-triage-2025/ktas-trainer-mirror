@@ -144,7 +144,7 @@ namespace TriageTrainer.Entity
       if (sourcePlayer != null && sourcePlayer.CountItemInInventory(itemIdentifier) < 1)
         return false;
 
-      if (IsPatientBC && IsClientInitialized && !IsServerStarted)
+      if (IsPatientBC && IsFishNetClientInitialized && !IsFishNetServerStarted)
         return ApplyItemUse(itemIdentifier);
 
       if (!ApplyItemUse(itemIdentifier))

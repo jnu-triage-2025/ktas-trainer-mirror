@@ -135,7 +135,7 @@ namespace TriageTrainer.Entity
       if (!CanApplyPatientBCItem(itemIdentifier))
         return false;
 
-      if (IsPatientBC && IsClientInitialized && !IsServerStarted)
+      if (IsPatientBC && IsFishNetClientInitialized && !IsFishNetServerStarted)
       {
         CmdApplyPatientBCItemUse(itemIdentifier);
         return true;
@@ -144,7 +144,7 @@ namespace TriageTrainer.Entity
       TreatmentDisplay resolvedDisplay = ResolveTreatmentDisplayForPatient(effect.Display);
       if (resolvedDisplay != TreatmentDisplay.None)
       {
-        if (IsPatientBC && IsServerStarted)
+        if (IsPatientBC && IsFishNetServerStarted)
           SetTreatmentDisplayNetworked(resolvedDisplay, true);
         else
           ShowTreatmentDisplay(resolvedDisplay);
@@ -493,7 +493,7 @@ namespace TriageTrainer.Entity
     {
       if (!IsPatientBC)
         return;
-      if (!IsServerStarted && !InstanceFinder.IsOffline)
+      if (!IsFishNetServerStarted && !InstanceFinder.IsOffline)
       {
         Debug.LogWarning("[PatientController] B/C nurse C stage activation is server-authoritative.", this);
         return;
@@ -518,7 +518,7 @@ namespace TriageTrainer.Entity
     {
       if (!IsPatientBC)
         return false;
-      if (!IsServerStarted && !InstanceFinder.IsOffline)
+      if (!IsFishNetServerStarted && !InstanceFinder.IsOffline)
       {
         Debug.LogWarning("[PatientController] B/C nurse D stage activation is server-authoritative.", this);
         return false;
@@ -543,7 +543,7 @@ namespace TriageTrainer.Entity
 
     private void NotifyPatientBCPupilCompleted()
     {
-      if (IsPatientBC && (IsServerStarted || InstanceFinder.IsOffline))
+      if (IsPatientBC && (IsFishNetServerStarted || InstanceFinder.IsOffline))
         TryAdvancePatientBCNurseCStage(PatientBCTreatmentStage.AwaitingPupil, PatientBCTreatmentStage.AwaitingIv);
     }
 
@@ -555,7 +555,7 @@ namespace TriageTrainer.Entity
     {
       if (!IsPatientBC)
         return true;
-      if (IsServerStarted || InstanceFinder.IsOffline)
+      if (IsFishNetServerStarted || InstanceFinder.IsOffline)
       {
         if (!HasPhysicalPatientBCNormalSalineConnection(salinePoint))
           return false;
@@ -569,7 +569,7 @@ namespace TriageTrainer.Entity
           RememberPatientBCNormalSalineConnection(actorIdentifier, actorDisplayName);
         return false;
       }
-      if (IsClientInitialized)
+      if (IsFishNetClientInitialized)
         CmdCompletePatientBCNormalSalineConnection(salinePoint);
       return false;
     }
@@ -624,12 +624,12 @@ namespace TriageTrainer.Entity
     {
       if (!IsPatientBC || salinePoint == null)
         return;
-      if (IsServerStarted || InstanceFinder.IsOffline)
+      if (IsFishNetServerStarted || InstanceFinder.IsOffline)
       {
         ClearPatientBCNormalSalineConnection(salinePoint);
         return;
       }
-      if (IsClientInitialized)
+      if (IsFishNetClientInitialized)
         CmdClearPatientBCNormalSalineConnection(salinePoint);
     }
 
@@ -712,9 +712,9 @@ namespace TriageTrainer.Entity
     {
       if (!IsPatientBC || !string.Equals(equipmentType, EquipmentTypeOxyflowmeter, System.StringComparison.Ordinal))
         return true;
-      if (!IsServerStarted && !InstanceFinder.IsOffline)
+      if (!IsFishNetServerStarted && !InstanceFinder.IsOffline)
       {
-        if (IsClientInitialized)
+        if (IsFishNetClientInitialized)
           CmdCompletePatientBCOxygenConnection();
         return false;
       }
