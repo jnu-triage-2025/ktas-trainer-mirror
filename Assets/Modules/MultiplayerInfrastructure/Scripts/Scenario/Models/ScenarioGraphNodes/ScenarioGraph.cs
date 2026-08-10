@@ -38,6 +38,9 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>시나리오 시작 전에 생성·등록할 waypoint anchor 정의.</summary>
     public IReadOnlyList<ScenarioWaypointDefinition> Waypoints { get; set; } = Array.Empty<ScenarioWaypointDefinition>();
 
+    /// <summary>이 시나리오에만 적용되는 사용자 정의 TTS 프로필(JSON)입니다.</summary>
+    public IReadOnlyList<ScenarioTTSVoiceProfile> TtsVoiceProfiles { get; set; } = Array.Empty<ScenarioTTSVoiceProfile>();
+
     /// <summary>
     /// startNodeIdentifier 없이 시나리오를 시작할 때 사용할 기본 진입 노드 식별자.
     /// </summary>

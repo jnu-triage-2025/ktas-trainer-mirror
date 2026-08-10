@@ -24,5 +24,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("ttsVoiceIdentifier")]
     public string TtsVoiceIdentifier { get; set; }
+
+    [JsonPropertyName("ttsVoiceProfile")]
+    public ScenarioTTSVoiceProfileDTO TtsVoiceProfile { get; set; }
   }
 }

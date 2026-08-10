@@ -35,6 +35,9 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("waypoints")]
     public List<ScenarioWaypointDefinitionDTO> Waypoints { get; set; }
 
+    [JsonPropertyName("ttsVoiceProfiles")]
+    public List<ScenarioTTSVoiceProfileDTO> TtsVoiceProfiles { get; set; }
+
     [JsonPropertyName("nodes")]
     public Dictionary<string, ScenarioNodeDTO> Nodes { get; set; }
   }

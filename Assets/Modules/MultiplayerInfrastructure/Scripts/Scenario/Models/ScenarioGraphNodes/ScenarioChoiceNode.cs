@@ -34,5 +34,6 @@ namespace MultiplayerInfrastructure.Scenario
     /// <see cref="PlayTTS"/>가 true일 때만 효과가 있다.
     /// </summary>
     public string TtsVoiceIdentifier { get; set; }
+    public ScenarioTTSVoiceProfile TtsVoiceProfile { get; set; }
   }
 }

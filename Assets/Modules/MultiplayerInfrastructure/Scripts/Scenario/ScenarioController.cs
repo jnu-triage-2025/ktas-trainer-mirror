@@ -462,6 +462,7 @@ namespace MultiplayerInfrastructure.Scenario
       _remoteBranchChoiceSelections.Clear();
       ResolveUIControllers();
       ResolveTTSService();
+      _ttsService?.ConfigureScenarioVoiceProfiles(graph.TtsVoiceProfiles);
       if (!_uiController.IsUnityNull())
       {
         _uiController.SetInteractableHintUI(_hintUIController);
@@ -683,6 +684,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       ResolveUIControllers();
       ResolveTTSService();
+      _ttsService?.ConfigureScenarioVoiceProfiles(graph.TtsVoiceProfiles);
 
       // 이전 실행이 비상호작용 대화 fade 도중 중단된 경우 남은 UI 상태를 정리한다.
       if (!_uiController.IsUnityNull())

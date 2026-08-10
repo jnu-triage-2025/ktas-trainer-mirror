@@ -424,6 +424,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.DisinteractableDialogue:
           BuildDisinteractableDialogueInlineEditor((ScenarioDisinteractableDialogueNode)Data);
           break;
+        case ScenarioNodeType.PlayTTS:
+          BuildPlayTTSInlineEditor((ScenarioPlayTTSNode)Data);
+          break;
         case ScenarioNodeType.Choice:
           BuildChoiceInlineEditor((ScenarioChoiceNode)Data);
           break;
@@ -500,7 +503,43 @@ namespace MultiplayerInfrastructure.Editor
       AddTextAreaField("Dialogue", value => data.DialogueContent = value, data.DialogueContent);
       AddToggleField("Interaction Required", value => data.InteractionRequired = value, data.InteractionRequired);
       AddOptionalFloatField("Auto Advance (sec)", value => data.AutoAdvanceSeconds = value, data.AutoAdvanceSeconds);
+      AddToggleField("Play TTS", value => data.PlayTTS = value, data.PlayTTS);
+      AddVoiceProfileField(data, value => data.TtsVoiceProfile = value, value => data.TtsVoiceIdentifier = value);
       AddNextIdentifierField(data);
+    }
+
+    private void BuildPlayTTSInlineEditor(ScenarioPlayTTSNode data)
+    {
+      AddTextField("Transcript", value => data.TranscriptIdentifier = value, data.TranscriptIdentifier);
+      AddToggleField("Wait Until Finished", value => data.WaitUntilFinished = value, data.WaitUntilFinished);
+      AddVoiceProfileField(data, value => data.TtsVoiceProfile = value, value => data.TtsVoiceIdentifier = value);
+      AddNextIdentifierField(data);
+    }
+
+    private void AddVoiceProfileField(
+      object owner,
+      System.Action<ScenarioTTSVoiceProfile> setProfile,
+      System.Action<string> setIdentifier)
+    {
+      var current = owner is ScenarioDialogueNode dialogue ? dialogue.TtsVoiceProfile
+        : owner is ScenarioPlayTTSNode playTts ? playTts.TtsVoiceProfile : null;
+      var preset = new EnumField("TTS Voice Preset", current?.Preset ?? TTSVoiceStyle.F1);
+      preset.RegisterValueChangedCallback(evt =>
+      {
+        if (evt.newValue is TTSVoiceStyle style)
+        {
+          var profile = new ScenarioTTSVoiceProfile { Preset = style };
+          setProfile(profile);
+          setIdentifier(profile.ToServiceProfile().VoiceIdentifier);
+        }
+      });
+      _inlineEditorContainer.Add(preset);
+      AddTextField("Custom Voice JSON ID", value =>
+      {
+        if (string.IsNullOrWhiteSpace(value)) return;
+        setProfile(new ScenarioTTSVoiceProfile { VoiceIdentifier = value });
+        setIdentifier(value);
+      }, current?.VoiceIdentifier);
     }
 
     private void BuildDisinteractableDialogueInlineEditor(ScenarioDisinteractableDialogueNode data)

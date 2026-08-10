@@ -28,6 +28,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("ttsVoiceIdentifier")]
     public string TtsVoiceIdentifier { get; set; }
+    [JsonPropertyName("ttsVoiceProfile")]
+    public ScenarioTTSVoiceProfileDTO TtsVoiceProfile { get; set; }
 
     // Choice 노드는 nextIdentifier가 항상 null이어야 하므로 DTO에도 명시적으로 포함
     [JsonPropertyName("nextIdentifier")]

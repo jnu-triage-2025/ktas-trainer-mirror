@@ -365,7 +365,8 @@
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
       "autoAdvanceSeconds": 3,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F1" }
     },
     "P_ARRIVAL": {
       "identifier": "P_ARRIVAL",
@@ -1242,7 +1243,8 @@
       "dialogueContent": "@t=[nurse_c, ???]선생님, 이 환자 동공반사 확인하고 N/S로 IV 확보해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "M1" }
     },
     "DOC_D": {
       "identifier": "DOC_D",
@@ -1252,7 +1254,8 @@
       "dialogueContent": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "M1" }
     },
     "P_B_CARE": {
       "identifier": "P_B_CARE",
@@ -1370,7 +1373,8 @@
       "dialogueContent": "으으.. 아.. 어디지..?",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "M2" }
     },
     "A_REC1_NOTE": {
       "identifier": "A_REC1_NOTE",
@@ -1429,7 +1433,8 @@
       "dialogueContent": "으으으..! 아..! 왜요..!!",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "M2" }
     },
     "A_REC2_NOTE": {
       "identifier": "A_REC2_NOTE",
@@ -1488,7 +1493,8 @@
       "dialogueContent": "으으악...! 과장님 제가 분명...!!! 기안 올린거 처리해달라고..!",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "M2" }
     },
     "A_REC3_DOTS": {
       "identifier": "A_REC3_DOTS",
@@ -1557,7 +1563,8 @@
       "dialogueContent": "으으으...! 날 가만히 둬..!!",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "M2" }
     },
     "A_REC4_NOTE": {
       "identifier": "A_REC4_NOTE",
@@ -2662,7 +2669,8 @@
         "value": 0.2,
         "unit": "Seconds"
       },
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "C_ARRIVAL": {
       "identifier": "C_ARRIVAL",
@@ -2673,7 +2681,8 @@
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
       "autoAdvanceSeconds": 3,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "C_DOC_C": {
       "identifier": "C_DOC_C",
@@ -2683,7 +2692,8 @@
       "dialogueContent": "@t=[nurse_c, ???]선생님, 이 환자 동공반사 확인하고 N/S로 IV 확보해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "M1" }
     },
     "C_DOC_D": {
       "identifier": "C_DOC_D",
@@ -2693,7 +2703,8 @@
       "dialogueContent": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "M1" }
     },
     "P_C_CARE": {
       "identifier": "P_C_CARE",
@@ -2811,7 +2822,8 @@
       "dialogueContent": "으으.. 아.. 어디지..?",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F2" }
     },
     "C_A_REC1_NOTE": {
       "identifier": "C_A_REC1_NOTE",
@@ -2870,7 +2882,8 @@
       "dialogueContent": "으으으..! 아..! 왜요..!!",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F2" }
     },
     "C_A_REC2_NOTE": {
       "identifier": "C_A_REC2_NOTE",
@@ -2929,7 +2942,8 @@
       "dialogueContent": "으으악...! 과장님 제가 분명...!!! 기안 올린거 처리해달라고..!",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F2" }
     },
     "C_A_REC3_DOTS": {
       "identifier": "C_A_REC3_DOTS",
@@ -2998,7 +3012,8 @@
       "dialogueContent": "으으으...! 날 가만히 둬..!!",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F2" }
     },
     "C_A_REC4_NOTE": {
       "identifier": "C_A_REC4_NOTE",
@@ -4103,7 +4118,8 @@
         "value": 0.2,
         "unit": "Seconds"
       },
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "CT_DELAY": {
       "identifier": "CT_DELAY",
@@ -4122,7 +4138,8 @@
       "fadeInDuration": { "value": 0.2, "unit": "Seconds" },
       "displayDuration": { "value": 1, "unit": "Seconds" },
       "fadeOutDuration": { "value": 0.2, "unit": "Seconds" },
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "M1" }
     },
     "CT_DOCTOR_B_SUMMARY": {
       "identifier": "CT_DOCTOR_B_SUMMARY",
@@ -4132,7 +4149,8 @@
       "dialogueContent": "남성 환자는 E3, V4, M6으로 GCS 13점입니다. 근력은 우측 5점, 좌측 3점이며, 호흡수는 분당 24회, 맥박은 분당 120회, 혈압은 140/86mmHg, 체온은 37.8도, 산소포화도는 93%입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "M1" }
     },
     "CT_DOCTOR_C_SUMMARY": {
       "identifier": "CT_DOCTOR_C_SUMMARY",
@@ -4142,7 +4160,8 @@
       "dialogueContent": "여성 환자는 E3 / V4 / M6, GCS 13점, 근력 좌측 5점, 우측 3점, 호흡수 24, 맥박 120, 혈압 140/86, 체온 37.8, 산소포화도 93%...",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "M1" }
     },
     "CT_DOCTOR_ORDER": {
       "identifier": "CT_DOCTOR_ORDER",
@@ -4152,7 +4171,8 @@
       "dialogueContent": "두 분 다 뇌손상이 의심되니 브레인 CT 찍어봅시다. 환자들을 CT실로 옮겨주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "M1" }
     },
     "P_CT_TRANSPORT": {
       "identifier": "P_CT_TRANSPORT",
@@ -4321,7 +4341,8 @@
       "fadeInDuration": { "value": 0.2, "unit": "Seconds" },
       "displayDuration": { "value": 3, "unit": "Seconds" },
       "fadeOutDuration": { "value": 0.2, "unit": "Seconds" },
-      "playTTS": true
+      "playTTS": true,
+      "ttsVoiceProfile": { "preset": "F3" }
     }
   }
 }
