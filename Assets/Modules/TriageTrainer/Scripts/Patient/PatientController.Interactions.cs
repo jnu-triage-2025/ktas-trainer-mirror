@@ -118,7 +118,18 @@ namespace TriageTrainer.Entity
     private readonly Dictionary<string, InteractConfig> _interactConfigMap = new(StringComparer.Ordinal);
     private IMonitorSelectionRequester _activeMonitorSelectionRequester;
 
-    public IInteract[] Interacts => _interacts.ToArray();
+    public IInteract[] Interacts
+    {
+      get
+      {
+        // Inactive network-spawn prefabs and editor-instantiated patients can be queried
+        // before Awake. Returning an empty list silently makes the patient unusable until
+        // another path happens to rebuild the entries.
+        if (_interacts.Count == 0)
+          BuildInteractEntries();
+        return _interacts.ToArray();
+      }
+    }
 
     private void BuildInteractEntries()
     {

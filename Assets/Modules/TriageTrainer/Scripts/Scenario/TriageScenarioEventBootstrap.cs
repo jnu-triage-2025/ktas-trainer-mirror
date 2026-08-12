@@ -906,6 +906,14 @@ namespace TriageTrainer.Scenario
         message);
     }
 
+    private PatientController ResolvePatientAController()
+    {
+      ResolveRuntimeReferencesIfNeeded();
+      return _patientAObject != null
+        ? _patientAObject.GetComponentInChildren<PatientController>(true)
+        : null;
+    }
+
     private IEnumerator ApplyMonitorProfile(GameObject monitorObject,
       GameObject panelObject,
       PatientMonitorController monitorController,

@@ -1,6 +1,8 @@
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Registry;
 using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace MultiplayerInfrastructure.Tests.Scenario
 {
@@ -39,6 +41,8 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     [Test]
     public void Raise_WithInvalidJson_DoesNotRecordOrRaiseSignal()
     {
+      LogAssert.Expect(LogType.Error,
+        "[ScenarioNetworkRelay] 시그널 (sig.test.parameter-store)의 매개변수 ({invalid)는 올바른 JSON 형식이 아닙니다.");
       ScenarioNetworkRelay.RaiseAuthoritativeForPlayer(ScenarioInteractionSignals.Normalize(Signal), "{invalid", "player-a", "Alice");
 
       Assert.That(ScenarioSignalParameterStore.TryGetLatest(Signal, out _), Is.False);

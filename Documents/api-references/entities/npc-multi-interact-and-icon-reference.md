@@ -244,7 +244,7 @@ NPC scenario interact의 `scenarioIdentifier`에 동일 문자열을 넣어야 �
 를 기준으로 설계되어 있습니다.
 
 새 기능을 추가할 때는 항상
-1) 인터페이스 계약(`IInteract`)을 맞추고,
+1) 인터페이스 규약(`IInteract`)을 맞추고,
 2) clone 경로에 신규 필드가 반영되는지,
 3) Registry 키와 리소스 경로가 맞는지
 를 함께 점검하면 안정적으로 확장할 수 있습니다.

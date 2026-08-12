@@ -20,7 +20,10 @@
 - [event-registry.md](./event-registry.md): 시나리오 이벤트 레지스트리
 - [crafting-recipes.md](./crafting-recipes.md): 시나리오 조합(crafting) 레시피 모음
 - [patient_a_critical.md](./patient_a_critical.md): scenario 환자 A 중증 처치
+- [patient-a-critical-issue-assessment.md](./patient-a-critical-issue-assessment.md): 환자 A 중증 처치 구현 이슈 평가와 검증 현황
+- [patient-a-critical-manual-completion-checklist.md](./patient-a-critical-manual-completion-checklist.md): 환자 A 중증 처치 사람 작업자 완료 체크리스트
 - [patient_b_c_ct.md](./patient_b_c_ct.md): scenario 환자 B/C 지연 처치
+- [tutorial.md](./tutorial.md): scenario 튜토리얼
 - [human-decision-context.md](./human-decision-context.md): 인간 작업자 의사결정에 필요한 실제 플레이 흐름과 콘텐츠 맥락
 
 ### 작업 가이드로 이동

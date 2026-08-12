@@ -5,9 +5,11 @@ namespace MultiplayerInfrastructure.Scenario
   internal sealed class ScenarioEntityPresetSpawnNodeDTO : ScenarioNodeDTO
   {
     [JsonPropertyName("presetIdentifier")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string PresetIdentifier { get; set; }
 
     [JsonPropertyName("actingNpcIdentifier")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string ActingNpcIdentifier { get; set; }
 
     [JsonPropertyName("spawnedEntityIdentifier")]

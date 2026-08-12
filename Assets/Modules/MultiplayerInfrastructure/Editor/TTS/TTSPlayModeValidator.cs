@@ -61,6 +61,15 @@ namespace MultiplayerInfrastructure.Editor.TTS
     {
       if (state != PlayModeStateChange.ExitingEditMode) return;
 
+      // Command-line tests and CI cannot answer modal dialogs. Keep validation visible
+      // in the log, but never cancel or recursively restart PlayMode in batch mode.
+      if (Application.isBatchMode)
+      {
+        CheckModelsAndWarn();
+        CheckInlineBakeAndPrompt();
+        return;
+      }
+
       // ── 1단계: ONNX 모델 다운로드 여부 검사 ─────────────────────────────
       if (_skipModelCheckOnce)
       {
@@ -123,6 +132,15 @@ namespace MultiplayerInfrastructure.Editor.TTS
 
       // bake가 필요하거나(미bake/dirty) 사용하지 않는 baked 파일(orphan)이 있으면 안내한다.
       if (!scan.NeedsBake && !scan.HasOrphans) return;
+
+      if (Application.isBatchMode)
+      {
+        Debug.LogWarning(
+          $"[TTS] 배치 모드에서는 bake 대화상자를 생략합니다. " +
+          $"미bake={scan.MissingCount}, dirty={scan.DirtyCount}, orphan={scan.OrphanCount}. " +
+          "필요하면 에디터의 TTS bake 도구로 자산을 갱신하세요.");
+        return;
+      }
 
       EditorApplication.isPlaying = false;
 

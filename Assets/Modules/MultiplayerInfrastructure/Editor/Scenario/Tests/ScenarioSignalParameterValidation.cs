@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace MultiplayerInfrastructure.Tests.Scenario
 {
-  /// <summary>배치 실행에서 JSON 파라미터 신호의 핵심 서버 저장 계약을 확인한다.</summary>
+  /// <summary>배치 실행에서 JSON 파라미터 신호의 핵심 서버 저장 명세를 확인한다.</summary>
   public static class ScenarioSignalParameterValidation
   {
     private const string Signal = "validation.signal-parameter";

@@ -537,6 +537,14 @@ namespace MultiplayerInfrastructure.UI
       _pendingChoiceOptions = null;
       _inputContext = DialogueInputContext.None;
 
+      // 선택 완료 직후 이전 문제/선택지 패널을 닫는다. 다음 노드가 Delay 또는
+      // 월드 상호작용이면 새 UI가 뜰 때까지 이전 문제지가 남아 혼동을 주기 때문이다.
+      if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.IsDialogueMode)
+        _interactableHintUI.ExitDialogueMode();
+      HidePanel();
+      if (UIOverlayStack.IsTop(this))
+        UIOverlayStack.Pop();
+
       // ScenarioController에 선택 전달
       if (!_currentController.IsUnityNull())
       {

@@ -7,7 +7,7 @@ This document explains the interaction between the moving patient bed entity and
 
 ### 1. IReposable Interface
 - **File**: `Assets/Modules/MultiplayerInfrastructure/Scripts/Entity/IReposable.cs`
-- **Purpose**: Defines a contract for objects that can be placed on or carried from a surface (e.g., a bed).
+- **Purpose**: Defines an interface specification for objects that can be placed on or carried from a surface (e.g., a bed).
 - **Members**:
   - `int Weight { get; }` – Returns the weight of the object. Used by the bed to calculate required personnel for movement.
 
@@ -96,4 +96,3 @@ This document explains the interaction between the moving patient bed entity and
 - [Player Controller – Carry System](../multiplayerinfrastructure/player/playercontroller.md#reposable-carry)
 - [Scenario Event Registry](../multiplayerinfrastructure/scenario/scenarioeventidentifierregistry.md)
 - [Item Base Model SO](../triagetrainer/itembasemodelso.md)
-

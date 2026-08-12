@@ -10,7 +10,7 @@ flags: ["refactor-required"]
 
 # scenario 환자 A 중증 처치
 
-> 이 문서는 기존 `patient_a_critical.scenario.json` 또는 과거 변환 산출물을 복사/부분 재사용하지 않고, 본문에 명시된 계약(노드 연결, Validator 신호, 이벤트 핸들러, 퀘스트 정의, 기술 노트, 코멘트)만으로 실행 가능한 시나리오를 재구성하는 것을 목표로 한다.
+> 이 문서는 기존 `patient_a_critical.scenario.json` 또는 과거 변환 산출물을 복사/부분 재사용하지 않고, 본문에 명시된 명세(노드 연결, Validator 신호, 이벤트 핸들러, 퀘스트 정의, 기술 노트, 코멘트)만으로 실행 가능한 시나리오를 재구성하는 것을 목표로 한다.
 
 ## 기본 정보
 
@@ -65,7 +65,7 @@ SPAWN_A
 
 ### 기술 노트/코멘트 반영 지침 (변환 시 강제)
 
-이 문서의 "기술 노트"와 "코멘트"는 설명 텍스트가 아니라 **실행 계약**으로 취급한다.
+이 문서의 "기술 노트"와 "코멘트"는 설명 텍스트가 아니라 **실행 명세**로 취급한다.
 
 1. **(a) 자동 계측 가능** 표시는 "새 신호를 만들라"는 의미가 아니다.
    - 기존 자동 producer(`MedicalItem.OnGet`, `Item Use`, `ScenarioTriggerZone`,
@@ -152,7 +152,7 @@ SPAWN_A
 1. `RequiredRoleIdentifiers` 열은 현재 `ScenarioParallelBranch` JSON 필드가 아니므로 출력하지 않는다.
    런타임 할당은 `requiredPlayerTags`, `forbiddenPlayerTags`, `requiredPlayerTagsMatchMode`만 사용한다.
 2. `FailureNextIdentifier=null`이고 `WaitForCondition=true`인 Validator는 무한 대기 게이트로 유지한다.
-   단, 아래 S-1 신호 생산자 계약에 포함되지 않은 신호를 기다리는 Validator는 생성하지 않는다.
+   단, 아래 S-1 신호 생산자 명세에 포함되지 않은 신호를 기다리는 Validator는 생성하지 않는다.
 3. `Quest_*`를 Add/Remove하는 두 노드는 동일한 대소문자 식별자를 사용해야 한다. 변환 시 임의로
    `questDefinitionIdentifier`로 치환하지 않고, Q-1에서 확정한 quest definition을 참조한다.
 4. `CC_*_patientA`였던 합류 표식은 모두 `CC_*_patient_a`로 정규화한다.
@@ -162,7 +162,7 @@ SPAWN_A
 | ID | 위치 | 부족한 연결 | 처리 |
 |---|---|---|---|
 | SPAWN-A-1 | `SPAWN_A` | ~~Unity import에서 `patient_a`의 `PatientTypeA` prefab이 FishNet `DefaultPrefabObjects`에 등록되지 않아 `PrefabId`가 미할당된 것으로 확인됐다. 현재 상태로 network spawn하면 런타임 `ObjectId 65535` 오류가 발생한다.~~ **해결(2026-07-28):** `PatientTypeA.prefab`이 `_isSpawnable: 1`, `PrefabId: 7`로 reserialize되었고 `patient_a` EntityPreset이 해당 prefab을 참조한다. | FishNet spawnable prefab 등록 상태를 확인했다. Production profile의 `SpawnablePreset` capability 검증만 최종 실행하면 된다. |
-| ROLE-1 | `P002`, `P003`, `P004`, `P005`, `P006`, `P007` 진입 전 | ~~`ByRole`의 역할 태그 공급 계약이 없었다.~~ **해결:** `disaster_intro`의 `C_role_select`가 현재 플레이어에게 `nurse_a`~`nurse_d` 식별 태그와 해당 역할 facet 태그를 함께 부여한다. | 환자 A/B/C는 intro 역할 선택 뒤에 시작하는 시나리오다. CPR 교대(P005/P006)는 facet 재사용을 피하기 위해 `nurse_a`~`nurse_d` 식별 태그로 고정 배정한다. |
+| ROLE-1 | `P002`, `P003`, `P004`, `P005`, `P006`, `P007` 진입 전 | ~~`ByRole`의 역할 태그 공급 명세가 없었다.~~ **해결:** `disaster_intro`의 `C_role_select`가 현재 플레이어에게 `nurse_a`~`nurse_d` 식별 태그와 해당 역할 facet 태그를 함께 부여한다. | 환자 A/B/C는 intro 역할 선택 뒤에 시작하는 시나리오다. CPR 교대(P005/P006)는 facet 재사용을 피하기 위해 `nurse_a`~`nurse_d` 식별 태그로 고정 배정한다. |
 | ROLE-2 | `P004`의 `N008`, `N011` 브랜치 | 현재 `ByRole`은 한 브랜치에 한 플레이어를 배정하므로 두 역할을 동시에 요구하는 `matchMode=All`은 실제 매칭이 불가능하다. | **해결(2026-07-28):** 두 브랜치 모두 `requiredPlayerTagsMatchMode=Any`로 변경했다. `N008`은 `airway_team` 또는 `triage_lead` 중 하나의 태그를 가진 플레이어 1명이 삽관·산소 흐름 전체를 담당하고, `N011`은 `iv_team` 또는 `access_support` 중 하나의 태그를 가진 플레이어 1명이 IV·C-line 보조 흐름 전체를 담당한다. 이 정책은 2인 동시 협업을 표현하지 않으며, 각 브랜치의 두 역할은 대체 담당 자격이다. 서버 권위 실행은 기존 `ByRole` 다중 브랜치 실행을 위해 유지한다. |
 | S-1 | `V011_1`, `V014_1~V014_4`, `V018`, `V023_1`, `V024`, `V025~V025_1`, `V027`, `V030`, `V033` | 실제 코드·문서 대조 결과, 정식 producer가 없는 신호는 10개다: `show_vital_patient_a`, `pass_laryngoscope`, `pass_et_tube_ready`, `remove_intu_stylet`, `pass_syringe`, `pass_central_line_set`, `remove_tpiece`, `click_to_start_comp`, `move_defibcart_to_patient`, `remove_patient_clothing`. 하나라도 생산되지 않으면 해당 Validator에서 영구 정지한다. | 각 노드의 기존 `(b) 선행 구현 필요` 주석을 producer 작업 목록으로 사용한다. `pass_*`의 NPC identifier·제출 상호작용 identifier·배치 위치는 아래 **의사 NPC 제출 producer 콘텐츠 확정**에서 확정했다. 나머지 6개 producer는 해당 주석의 전용 게임플레이 상호작용으로 구현한다. Debug emitter를 정식 producer로 간주하지 않는다. |
 | Q-1 | 모든 `Q006`~`Q030_1` | ~~23개 `Quest_*`가 표시용 식별자만 있어 빈 오버레이를 만들었다.~~ **해결:** `Resources/Quest/patient_a_critical.quests.quest.json`에 23개 definition의 title/description/questContent를 작성했고, Add/Remove가 같은 definition identifier를 참조한다. | Scenario Validator가 완료를 판단하고 QuestControl이 명시적으로 Remove한다. 따라서 이 안내형 quest에 별도 자동 완료 task를 추가하지 않는다. |
@@ -198,7 +198,7 @@ SPAWN_A
 구현 시 각 상호작용은 해당 단계에서만 활성화하고, 완료 신호를 표의 `sig.pass_*` 값으로 발신한다.
 완료 또는 다음 제출 단계 전에는 이전 상호작용을 비활성화하여, 같은 물품을 잘못 제출하는 일을 막는다.
 
-### **미배선 신호 계약표 (S-1)**
+### **미배선 신호 명세표 (S-1)**
 
 | TaskID | Signal | 소비 Validator | Producer 위치(오브젝트/프리팹) | 콜백/트리거 | 상태 | 검증 |
 |---|---|---|---|---|---|---|
@@ -239,13 +239,13 @@ SPAWN_A
 <!-- WORK-OVERLAY:START -->
 ### 변환 안전 작업 오버레이 (삭제 가능)
 
-이 절은 인간 작업자의 검토/결정 편의를 위한 **작업 오버레이**다. 시나리오 노드 계약 본문이 아니며,
+이 절은 인간 작업자의 검토/결정 편의를 위한 **작업 오버레이**다. 시나리오 노드 명세 본문이 아니며,
 `WORK-OVERLAY:START/END` 블록은 변환기 입력에서 제외(또는 무시)해도 된다.
 
 #### 오버레이 사용 규칙
 
 1. 각 행의 `Node`를 본문의 `### [Node]`에서 검색해 해당 위치를 바로 열람한다.
-2. `작업 유형`이 `결정`인 항목은 주도자 확정 후 본문 계약 문장으로 승격한다.
+2. `작업 유형`이 `결정`인 항목은 주도자 확정 후 본문 명세 문장으로 승격한다.
 3. `작업 유형`이 `배선`인 항목은 Unity 상호작용/콜백 연결 후 `(b)` 주석을 `[x] 배선 완료(YYYY-MM-DD)`로 갱신한다.
 4. 모든 항목이 해결되면 이 오버레이 절은 통째로 삭제 가능하다(삭제 전 본문 반영 필수).
 
@@ -332,7 +332,7 @@ SPAWN_A
 #### D. 변환기 안전 장치
 
 - 이 오버레이 절은 실행 노드 정의가 아니므로, 변환기에서 무시하거나 변환 전 삭제해도 된다.
-- 본문 노드 계약(`### [Identifier]`)과 충돌하는 식별자를 이 절에서 새로 정의하지 않는다.
+- 본문 노드 명세(`### [Identifier]`)과 충돌하는 식별자를 이 절에서 새로 정의하지 않는다.
 - 이 절을 삭제하더라도, 확정된 결정/배선 결과는 각 노드 본문과 차단 표에 반드시 이관한다.
 
 <!-- WORK-OVERLAY:END -->
@@ -2563,7 +2563,7 @@ SPAWN_A
 | **Identifier** | 문자열 | N011 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 환자의 좌측과 우측 팔에 IV 라인을 확보해야 합니다. 18게이지 2개, 준비된 생리식염수 1L 수액백, 준비된 플라즈마 솔루션 1L 수액백을 클릭해 획득하십시오. |
+| **DialogueContent** | 문자열 | 환자의 양쪽 팔에 IV 라인을 순서대로 확보합니다. 먼저 18G 캐뉼라 1개와 준비된 생리식염수 1L, 플라즈마 솔루션 1L 수액백을 획득하십시오. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 6.0 |
 | **NextIdentifier** | 문자열 | Q013 |
@@ -2701,7 +2701,7 @@ SPAWN_A
 | **Identifier** | 문자열 | N011_2 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 준비된 생리식염수 1L 수액백을 클릭해 선택한 뒤, 좌측 팔에 연결된 18G 캐뉼라를 클릭해 연결하세요. |
+| **DialogueContent** | 문자열 | 준비된 생리식염수 1L 수액백을 먼저 수액 걸대에 건 뒤, 수액줄을 좌측 팔의 18G 캐뉼라에 연결하세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V017_2 |
@@ -2754,7 +2754,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | **Identifier** | 문자열 | N011_3 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 한쪽 정맥로가 확보되었습니다. 18G 캐뉼라를 하나 더 획득해 선택한 뒤, 반대쪽 팔에도 삽입하십시오. |
+| **DialogueContent** | 문자열 | 한쪽 정맥로가 확보되었습니다. 두 번째 18G 캐뉼라를 획득해 반대쪽 팔에 삽입하고, 플라즈마 솔루션 수액백을 먼저 건 뒤 연결을 준비하십시오. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | V017_3 |
@@ -3172,7 +3172,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | --- | --- | --- |
 | **Identifier** | 문자열 | D023 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
-| **SpeakerName** | 문자열 | 시스템 |
+| **SpeakerName** | 문자열 | 의사 NPC |
 | **DialogueContent** | 문자열 | 심전도만 출력되고, 다른 활력징후가 출력되지 않습니다. 간호사 B 선생님, 환자 맥박 확인해주세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | N016 |

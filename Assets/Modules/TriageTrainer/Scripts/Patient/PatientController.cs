@@ -27,6 +27,8 @@ namespace TriageTrainer.Entity
     [SerializeField] private string _liftDisplayText = "환자를 들어올리기";
     [SerializeField] private string _carryDisplayText = "환자 들어올리기";
     [SerializeField] private string _monitorSelectDisplayText = "이 환자를 모니터링";
+    [Tooltip("프리팹에서는 배치되어 있지만 시나리오 이벤트 전에는 숨겨야 하는 자식 오브젝트 이름입니다.")]
+    [SerializeField] private string[] _initiallyHiddenChildNames = Array.Empty<string>();
 
     [Header("Patient")]
     [SerializeField] private int _weight = 4;
@@ -60,7 +62,17 @@ namespace TriageTrainer.Entity
     public MovingPatientBedController CurrentBed => _supportExternalRefs.PatientBed;
     public PatientSupportExternalRefs SupportExternalRefs => _supportExternalRefs;
     /// <summary>여러 수액 줄 연결을 허용하는 환자 IV attachment point.</summary>
-    public IntravenousLineConnectionPoint IvAttachmentPoint => _ivAttachmentPoint;
+    public IntravenousLineConnectionPoint IvAttachmentPoint
+    {
+      get
+      {
+        // EditMode 생성, 비활성 프리팹 인스턴스 및 초기화 순서에 따라 Awake가 아직
+        // 실행되지 않은 상태에서도 연결 서비스가 이 지점을 조회할 수 있다.
+        // null을 그대로 노출하면 정상적인 IV 연결 완료 신호가 조용히 유실된다.
+        EnsureIvAttachmentPoint();
+        return _ivAttachmentPoint;
+      }
+    }
     /// <summary>설치된 산소 마스크의 환자 측 산소 라인 포트. 설정되지 않으면 null이다.</summary>
     public OxyLineConnectionPoint OxygenMaskAttachmentPoint => _oxygenMaskAttachmentPoint != null && _oxygenMaskAttachmentPoint.isActiveAndEnabled
       ? _oxygenMaskAttachmentPoint : null;
@@ -85,8 +97,38 @@ namespace TriageTrainer.Entity
       EnsureIvAttachmentPoint();
       InitializeCollider();
       EnsureMedicalStateDefaults();
+      InitializeTreatmentDisplaysFromConfiguredState();
+      SetNamedChildrenActive(_initiallyHiddenChildNames, false);
       _weight = Mathf.Max(0, _weight);
       BuildInteractEntries();
+    }
+
+    public bool SetNamedChildActive(string childName, bool active)
+    {
+      if (string.IsNullOrWhiteSpace(childName))
+        return false;
+
+      var children = GetComponentsInChildren<Transform>(true);
+      for (int i = 0; i < children.Length; i++)
+      {
+        var child = children[i];
+        if (child == null || !string.Equals(child.name, childName, StringComparison.Ordinal))
+          continue;
+
+        child.gameObject.SetActive(active);
+        return true;
+      }
+
+      return false;
+    }
+
+    private void SetNamedChildrenActive(string[] childNames, bool active)
+    {
+      if (childNames == null)
+        return;
+
+      for (int i = 0; i < childNames.Length; i++)
+        SetNamedChildActive(childNames[i], active);
     }
 
     public void OnAttacked(MI.Entity.Entity attacker, int damageAmount)

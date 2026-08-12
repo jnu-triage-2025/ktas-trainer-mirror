@@ -8,6 +8,7 @@ using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 using TriageTrainer.Entity.IntravenousLine;
+using TriageTrainer.ItemDefinitions;
 using UnityEngine;
 using TriageTrainer.Patient;
 
@@ -122,17 +123,46 @@ namespace TriageTrainer.Entity
       { "normal_saline_20ml",  new ItemUseEffect(TreatmentDisplay.None, "push_ns") },
     };
 
+    private int _resuscitationMedicationRound = 1;
+
+    /// <summary>동일한 조합 주사기를 사용하는 소생술 투여 회차를 전환합니다.</summary>
+    public void SetResuscitationMedicationRound(int round)
+    {
+      _resuscitationMedicationRound = Mathf.Max(1, round);
+    }
+
     /// <summary>
     /// 아이템 사용을 처리한다: (1) 매핑된 처치 표현을 켜고, (2) 매핑된 신호를 올린다.
     /// 매핑이 없으면 아무 것도 하지 않는다.
     /// </summary>
     private bool ApplyItemUse(string itemIdentifier)
     {
-      if (string.IsNullOrWhiteSpace(itemIdentifier)
-          || !ItemUseEffects.TryGetValue(itemIdentifier, out var effect))
+      if (string.IsNullOrWhiteSpace(itemIdentifier))
         return false;
 
       if (!CanApplyPatientBCItem(itemIdentifier))
+        return false;
+
+      // 조합 완료 주사기는 동일 아이템을 1·2차 투여에 재사용하므로 현재 소생술 회차에
+      // 맞는 신호를 동적으로 발신한다. 두 회차 신호를 동시에 올리면 후속 게이트가
+      // 실제 재투여 없이 통과하므로 반드시 한 회차만 발신한다.
+      if (string.Equals(itemIdentifier, Epinephrine5ccSyringe.Identifier, System.StringComparison.Ordinal))
+      {
+        if (!IsPatientA)
+          return false;
+        MI.Scenario.ScenarioInteractionSignals.Raise($"push_epi_r{_resuscitationMedicationRound}");
+        return true;
+      }
+
+      if (string.Equals(itemIdentifier, NormalSaline20ccSyringe.Identifier, System.StringComparison.Ordinal))
+      {
+        if (!IsPatientA)
+          return false;
+        MI.Scenario.ScenarioInteractionSignals.Raise($"push_ns_r{_resuscitationMedicationRound}");
+        return true;
+      }
+
+      if (!ItemUseEffects.TryGetValue(itemIdentifier, out var effect))
         return false;
 
       if (IsPatientBC && IsFishNetClientInitialized && !IsFishNetServerStarted)
@@ -222,6 +252,39 @@ namespace TriageTrainer.Entity
     public void HideTreatmentDisplay(TreatmentDisplay display) => SetTreatmentDisplay(display, false);
 
     /// <summary>
+    /// 프리팹의 직렬화된 표시 플래그를 실제 자식 GameObject 활성 상태에 적용합니다.
+    /// 프리팹 편집 편의를 위해 자식이 활성화된 채 저장되어 있어도, 스폰 시점에는
+    /// DisplayState가 참인 처치 표현만 보이도록 정렬합니다.
+    /// </summary>
+    private void InitializeTreatmentDisplaysFromConfiguredState()
+    {
+      var state = GetPatientDisplayState();
+      var legacyState = state == null ? GetPatientState()?.TreatmentDisplayState : null;
+
+      foreach (TreatmentDisplay display in System.Enum.GetValues(typeof(TreatmentDisplay)))
+      {
+        if (display == TreatmentDisplay.None)
+          continue;
+
+        bool active;
+        if (state != null)
+        {
+          if (!IsTreatmentDisplaySupported(state, display))
+            continue;
+          active = GetDisplayStateFlag(state, display, fromSupports: false);
+        }
+        else
+        {
+          if (legacyState == null || !IsTreatmentDisplaySupported(legacyState, display))
+            continue;
+          active = GetDisplayStateFlag(legacyState, display, fromSupports: false);
+        }
+
+        SetTreatmentDisplay(display, active);
+      }
+    }
+
+    /// <summary>
     /// 시나리오 EntityInit 노드가 부르는 명명된 표시 상태 설정(<see cref="MI.Entity.IScenarioEntityInitTarget"/>).
     /// <paramref name="displayStateName"/> 을 <see cref="TreatmentDisplay"/> 로 해석하여 표시/비표시한다.
     /// 환자 부착물 초기 표시 상태 설정의 진입점.
@@ -281,7 +344,7 @@ namespace TriageTrainer.Entity
       }
 
       // 기존 환자 프리팹은 PatientDisplayState 대신 PatientStateABC 내부에 처치 표시 상태를
-      // 직렬화한다. 마이그레이션 전 프리팹도 같은 표시·상태 이벤트 계약을 유지한다.
+      // 직렬화한다. 마이그레이션 전 프리팹도 같은 표시·상태 이벤트 규약을 유지한다.
       var legacyState = GetPatientState()?.TreatmentDisplayState;
       if (legacyState == null || !IsTreatmentDisplaySupported(legacyState, display))
         return;
@@ -484,6 +547,9 @@ namespace TriageTrainer.Entity
     private const string NurseCRoleTag = "nurse_c";
     private const string NurseDRoleTag = "nurse_d";
     private const float PatientBCTreatmentInteractionDistance = 3f;
+
+    private bool IsPatientA =>
+      string.Equals(Identifier, "patient_a", System.StringComparison.Ordinal);
 
     private bool IsPatientBC =>
       string.Equals(Identifier, "patient_b", System.StringComparison.Ordinal)

@@ -627,8 +627,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     }
 
     // 인스펙터에서 값 변경 시 실시간 반영을 위해
-    protected virtual void OnValidate()
+    protected override void OnValidate()
     {
+      base.OnValidate();
       EnsureInteractionCollider();
       EnsureInteractEntry(InteractIdSelectPatient, IsPatientTrackingMethodEnabled(PatientTrackingMethod.Interactable));
       RebuildInteractEntryMap();

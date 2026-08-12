@@ -126,16 +126,32 @@ namespace TriageTrainer.Entity
 
     private void OnWallSuctionAttachmentStateChanged(WallAttachedWallSuction equipment, bool attached)
     {
-      if (!attached)
+      if (attached && IsEquipmentInZone(equipment))
+      {
+        if (!_wallSuction.Contains(equipment))
+          _wallSuction.Add(equipment);
+      }
+      else
+      {
+        _wallSuction.Remove(equipment);
         _newlyInstalledWallSuction.Remove(equipment);
-      RefreshActivePatientEquipment();
+      }
+      RefreshActivePatientEquipment(refreshEquipment: false);
     }
 
     private void OnOxyflowmeterAttachmentStateChanged(WallAttachedOxyflowmeter equipment, bool attached)
     {
-      if (!attached)
+      if (attached && IsEquipmentInZone(equipment))
+      {
+        if (!_oxyflowmeters.Contains(equipment))
+          _oxyflowmeters.Add(equipment);
+      }
+      else
+      {
+        _oxyflowmeters.Remove(equipment);
         _newlyInstalledOxyflowmeters.Remove(equipment);
-      RefreshActivePatientEquipment();
+      }
+      RefreshActivePatientEquipment(refreshEquipment: false);
     }
 
     private void OnWallSuctionInstallationConfirmed(WallAttachedWallSuction equipment)
@@ -154,12 +170,15 @@ namespace TriageTrainer.Entity
       RefreshActivePatientEquipment();
     }
 
-    private void RefreshActivePatientEquipment()
+    private void RefreshActivePatientEquipment(bool refreshEquipment = true)
     {
       if (_activePatient != null)
-        Connect(_activePatient);
+        Connect(_activePatient, refreshEquipment);
       else
-        RefreshEquipment();
+      {
+        if (refreshEquipment)
+          RefreshEquipment();
+      }
     }
 
     private void OnValidate()
@@ -361,7 +380,7 @@ namespace TriageTrainer.Entity
         && Mathf.Abs(local.z) <= _size.z * 0.5f;
     }
 
-    private void Connect(PatientController patient)
+    private void Connect(PatientController patient, bool refreshEquipment = true)
     {
       WallAttachedWallSuction previousSuction = _connectedWallSuction;
       WallAttachedOxyflowmeter previousOxyflowmeter = _connectedOxyflowmeter;
@@ -378,7 +397,8 @@ namespace TriageTrainer.Entity
         }
         return;
       }
-      RefreshEquipment();
+      if (refreshEquipment)
+        RefreshEquipment();
       WarnIfConfigurationInvalid();
       IReadOnlyList<WallAttachedWallSuction> suction = GetUsableWallSuctionSources();
       IReadOnlyList<WallAttachedOxyflowmeter> flowmeter = GetUsableOxyflowmeterSources();
@@ -539,6 +559,10 @@ namespace TriageTrainer.Entity
     {
       _wallSuction.Clear();
       _oxyflowmeters.Clear();
+      // Attachment callbacks may hide/show equipment and immediately request a refresh
+      // in the same frame. With autoSyncTransforms disabled, OverlapBox otherwise sees
+      // the previous collider-enabled state and drops a freshly reinstalled device.
+      Physics.SyncTransforms();
       Vector3 scale = transform.lossyScale;
       Vector3 halfExtents = Vector3.Scale(_size, new Vector3(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z))) * 0.5f;
       Collider[] hits = Physics.OverlapBox(transform.TransformPoint(_center), halfExtents, transform.rotation);

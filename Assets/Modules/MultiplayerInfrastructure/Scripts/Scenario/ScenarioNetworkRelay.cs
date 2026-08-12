@@ -133,7 +133,7 @@ namespace MultiplayerInfrastructure.Scenario
     {
       foreach (var node in graph.Nodes.Values)
       {
-        // 이 노드들은 서버 상태기만 실행하면 되고, 클라이언트별 별도 표현/입력 계약이 없다.
+        // 이 노드들은 서버 상태기만 실행하면 되고, 클라이언트별 별도 표현/입력 명세가 없다.
         // Dialogue와 Choice만 현재 Target/Observers RPC로 완전한 표시·입력 왕복을 지원한다.
         if (node is ScenarioDialogueNode
             || node is ScenarioChoiceNode

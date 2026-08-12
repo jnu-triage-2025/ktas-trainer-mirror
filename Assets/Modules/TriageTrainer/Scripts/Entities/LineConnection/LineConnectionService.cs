@@ -657,7 +657,13 @@ namespace TriageTrainer.Entity.LineConnection
         endPoint?.UnregisterConnectedLineObject(lineObject);
       }
 
-      Destroy(lineObject);
+      // Replicated topology is also rebuilt by editor validation/tests. Destroy emits an
+      // error and leaves the object alive until end-of-frame outside play mode, which can
+      // make a disconnect immediately followed by reconnect observe stale topology.
+      if (Application.isPlaying)
+        Destroy(lineObject);
+      else
+        DestroyImmediate(lineObject);
 
       if (notifyEndpoints)
       {

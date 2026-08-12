@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace TriageTrainer.Editor.Tests
 {
-  /// <summary>배치 실행에서도 월드 신호 계약을 독립적으로 확인하는 최소 검증 명령입니다.</summary>
+  /// <summary>배치 실행에서도 월드 신호 명세를 독립적으로 확인하는 최소 검증 명령입니다.</summary>
   public static class TriageWorldInteractionSignalsValidation
   {
     [MenuItem("Tools/Triage Trainer/Validate World Interaction Signals")]

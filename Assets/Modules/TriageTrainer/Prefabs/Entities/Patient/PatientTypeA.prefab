@@ -789,12 +789,12 @@ MonoBehaviour:
   - _identifier: assess_pulse_r1
     _displayText: "\uB9E5\uBC15 \uD655\uC778"
     _displayIcon: {fileID: 0}
-    _assessSignal: check_pulse_patient_a
+    _assessSignal: check_pulse_patient_a_r1
     _enabled: 1
   - _identifier: assess_pulse_r2
     _displayText: "\uB9E5\uBC15 \uD655\uC778"
     _displayIcon: {fileID: 0}
-    _assessSignal: check_pulse_patient_a
+    _assessSignal: check_pulse_patient_a_r2
     _enabled: 0
   - _identifier: assess_gcs_rosc
     _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC7AC\uC0AC\uC815"
@@ -817,6 +817,11 @@ MonoBehaviour:
   _carryDisplayIcon: {fileID: 0}
   _monitorSelectDisplayText: "\uC774 \uD658\uC790\uB97C \uBAA8\uB2C8\uD130\uB9C1"
   _monitorSelectDisplayIcon: {fileID: 0}
+  _initiallyHiddenChildNames:
+  - defibpad_midaxillary_A
+  - defibpad_subclavicle_A
+  - epinephrine_5cc_syringe
+  - normal_saline_5cc_syringe
   _weight: 4
   _supportExternalRefs:
     _patientBed: {fileID: 0}

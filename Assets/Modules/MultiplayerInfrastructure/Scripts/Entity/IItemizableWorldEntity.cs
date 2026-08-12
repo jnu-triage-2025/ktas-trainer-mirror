@@ -3,7 +3,7 @@ using MultiplayerInfrastructure.Player;
 namespace MultiplayerInfrastructure.Entity
 {
   /// <summary>
-  /// 좌클릭으로 월드 아이템으로 되돌릴 수 있는 설치형 엔티티의 계약입니다.
+  /// 좌클릭으로 월드 아이템으로 되돌릴 수 있는 설치형 엔티티의 규약입니다.
   /// </summary>
   public interface IItemizableWorldEntity
   {

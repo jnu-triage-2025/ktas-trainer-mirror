@@ -11,6 +11,9 @@ namespace TriageTrainer.Scenario
 
     private IEnumerator Event_AsystoleMonitorUi()
     {
+      var patient = ResolvePatientAController();
+      patient?.SetResuscitationMedicationRound(2);
+
       yield return ApplyPatientAMonitorProfile(_patientAAsystoleMonitorParameters, "환자 A 무수축(Asystole) 모니터 프로필을 적용했습니다.");
     }
   }

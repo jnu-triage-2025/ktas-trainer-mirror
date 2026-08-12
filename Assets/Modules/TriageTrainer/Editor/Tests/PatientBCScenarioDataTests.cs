@@ -81,8 +81,7 @@ namespace TriageTrainer.Tests
         var patientObject = new GameObject(completionSignal.EndsWith("_b") ? "patient_b" : "patient_c");
         patientObject.SetActive(false);
         var patient = patientObject.AddComponent<PatientController>();
-        typeof(PatientController).GetField("_identifier", BindingFlags.Instance | BindingFlags.NonPublic)
-          ?.SetValue(patient, completionSignal.EndsWith("_b") ? "patient_b" : "patient_c");
+        patient.ApplySpawnedEntityIdentifier(completionSignal.EndsWith("_b") ? "patient_b" : "patient_c");
         monitor.SetPresentationPatient(patient);
         var configure = typeof(TriageScenarioEventBootstrap).GetMethod(
           "ConfigureVitalMonitorClose",
@@ -564,7 +563,7 @@ namespace TriageTrainer.Tests
 
     [TestCase(PatientDummyDAPrefabPath, "patient_dummy_d_a")]
     [TestCase(PatientDummyDBPrefabPath, "patient_dummy_d_b")]
-    public void PatientDummyDPrefabsSupportPatientAnimationAndInteractions(
+    public void PatientDummyDPrefabsSupportPatientVisualsAndInteractions(
       string prefabPath,
       string identifier)
     {
@@ -573,7 +572,8 @@ namespace TriageTrainer.Tests
       Assert.That(prefab, Is.Not.Null);
       var patient = prefab.GetComponent<PatientController>();
       var patientState = prefab.GetComponent<PatientDummyDState>();
-      var animator = prefab.GetComponent<Animator>();
+      var visual = prefab.GetComponentInChildren<Renderer>(true);
+      var animator = prefab.GetComponentInChildren<Animator>(true);
 
       Assert.That(patient, Is.Not.Null);
       Assert.That(patientState, Is.Not.Null);
@@ -581,11 +581,17 @@ namespace TriageTrainer.Tests
       Assert.That(patient.Identifier, Is.EqualTo(identifier));
       Assert.That(prefab.GetComponent<CapsuleCollider>(), Is.Not.Null);
       Assert.That(prefab.GetComponent<NetworkObject>(), Is.Not.Null);
-      Assert.That(animator, Is.Not.Null, "the dummy root must expose an Animator");
-      Assert.That(animator.avatar, Is.Not.Null,
-        "the dummy Animator must use its source model Humanoid Avatar");
-      Assert.That(animator.runtimeAnimatorController, Is.Not.Null,
-        "the dummy Animator must have the shared patient animation controller");
+      Assert.That(visual, Is.Not.Null, "the triage dummy must include its dedicated visual model");
+      // Dummy D is a classification-only static/Generic-rig model. If a future model is
+      // upgraded to Humanoid animation, require the complete animation specification rather
+      // than accepting a partially configured Animator.
+      if (animator != null)
+      {
+        Assert.That(animator.avatar, Is.Not.Null,
+          "an animated dummy must use its source model Humanoid Avatar");
+        Assert.That(animator.runtimeAnimatorController, Is.Not.Null,
+          "an animated dummy must have the shared patient animation controller");
+      }
       Assert.That(patient.CarryAttachPoint, Is.Not.SameAs(patient.transform),
         "the dummy must have a dedicated carry attachment point");
       Assert.That(patient.Interacts, Has.Length.GreaterThanOrEqualTo(3));
@@ -599,9 +605,7 @@ namespace TriageTrainer.Tests
     {
       var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
       var patient = prefab != null ? prefab.GetComponent<PatientController>() : null;
-      var field = typeof(PatientController).GetField(
-        "_assessActions",
-        BindingFlags.Instance | BindingFlags.NonPublic);
+      var field = FindInstanceField(typeof(PatientController), "_assessActions");
 
       Assert.That(patient, Is.Not.Null);
       Assert.That(field, Is.Not.Null);
@@ -884,6 +888,9 @@ namespace TriageTrainer.Tests
       try
       {
         var zone = zoneObject.AddComponent<PatientCareDescriptionZone>();
+        typeof(PatientCareDescriptionZone).GetMethod(
+            "OnEnable", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.Invoke(zone, null);
         zone.ConfigureArea(Vector3.zero, new Vector3(10f, 10f, 10f));
         SetPrivateField(zone, "_requireBedSnapForPatient", false);
         var patient = patientObject.AddComponent<PatientController>();
@@ -916,6 +923,10 @@ namespace TriageTrainer.Tests
       }
       finally
       {
+        var zone = zoneObject.GetComponent<PatientCareDescriptionZone>();
+        typeof(PatientCareDescriptionZone).GetMethod(
+            "OnDisable", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.Invoke(zone, null);
         Object.DestroyImmediate(suctionObject);
         Object.DestroyImmediate(flowmeterObject);
         Object.DestroyImmediate(patientObject);
@@ -1064,9 +1075,7 @@ namespace TriageTrainer.Tests
     {
       foreach (string fieldName in new[] { "_patientBCNurseCStage", "_patientBCNurseDStage" })
       {
-        var field = typeof(PatientController).GetField(
-          fieldName,
-          BindingFlags.Instance | BindingFlags.NonPublic);
+        var field = FindInstanceField(typeof(PatientController), fieldName);
         Assert.That(field, Is.Not.Null, fieldName);
         Assert.That(field.FieldType.IsGenericType, Is.True, fieldName);
         Assert.That(field.FieldType.GetGenericTypeDefinition(), Is.EqualTo(typeof(SyncVar<>)), fieldName);
@@ -1472,7 +1481,15 @@ namespace TriageTrainer.Tests
         methodName,
         BindingFlags.Instance | BindingFlags.NonPublic);
       Assert.That(method, Is.Not.Null, methodName);
-      return (T)method.Invoke(patient, null);
+      var parameters = method.GetParameters();
+      var arguments = new object[parameters.Length];
+      for (int i = 0; i < parameters.Length; i++)
+      {
+        Assert.That(parameters[i].IsOptional, Is.True,
+          $"{methodName} parameter '{parameters[i].Name}' requires an explicit test value.");
+        arguments[i] = System.Type.Missing;
+      }
+      return (T)method.Invoke(patient, arguments);
     }
 
     private static void InvokePrivate(PatientController patient, string methodName, object argument = null)
@@ -1486,9 +1503,21 @@ namespace TriageTrainer.Tests
 
     private static void SetPrivateField(object target, string fieldName, object value)
     {
-      var field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+      var field = FindInstanceField(target.GetType(), fieldName);
       Assert.That(field, Is.Not.Null, fieldName);
       field.SetValue(target, value);
+    }
+
+    private static FieldInfo FindInstanceField(System.Type type, string fieldName)
+    {
+      for (System.Type current = type; current != null; current = current.BaseType)
+      {
+        var field = current.GetField(fieldName,
+          BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+        if (field != null)
+          return field;
+      }
+      return null;
     }
 
     private static bool IsAuthoritativeCareZoneMonitorForPatient(
@@ -1523,9 +1552,7 @@ namespace TriageTrainer.Tests
 
     private static void SetSyncVarValue<T>(PatientController patient, string fieldName, T value)
     {
-      var field = typeof(PatientController).GetField(
-        fieldName,
-        BindingFlags.Instance | BindingFlags.NonPublic);
+      var field = FindInstanceField(patient.GetType(), fieldName);
       Assert.That(field, Is.Not.Null);
       var syncVar = field.GetValue(patient);
       var valueProperty = syncVar.GetType().GetProperty("Value");
@@ -1535,9 +1562,7 @@ namespace TriageTrainer.Tests
 
     private static T GetSyncVarValue<T>(PatientController patient, string fieldName)
     {
-      var field = typeof(PatientController).GetField(
-        fieldName,
-        BindingFlags.Instance | BindingFlags.NonPublic);
+      var field = FindInstanceField(patient.GetType(), fieldName);
       Assert.That(field, Is.Not.Null);
       var syncVar = field.GetValue(patient);
       var valueProperty = syncVar.GetType().GetProperty("Value");

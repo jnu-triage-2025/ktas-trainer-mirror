@@ -88,7 +88,7 @@ namespace TriageTrainer.Entity
     }
 
     /// <summary>
-    /// 이 오브젝트는 계약상 항상 "미설치(숨김)" 상태로 시작하므로 베이스의 <c>_initiallyVisible</c> 설정을 무시한다.
+    /// 이 오브젝트는 규약상 항상 "미설치(숨김)" 상태로 시작하므로 베이스의 <c>_initiallyVisible</c> 설정을 무시한다.
     /// </summary>
     protected override void ApplyInitialVisibility()
     {
@@ -150,8 +150,10 @@ namespace TriageTrainer.Entity
     /// </summary>
     public override void ApplyShownFromNetwork()
     {
-      SetAttached(true);
       Show();
+      // CareZone listens to the attachment event and immediately scans active
+      // colliders. Make the representation/collider visible before publishing it.
+      SetAttached(true);
     }
 
     /// <summary>

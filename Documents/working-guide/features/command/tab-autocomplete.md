@@ -140,7 +140,7 @@ provider는 `Tab`을 누를 때마다 호출될 수 있으므로 커맨드 상�
 ## 관련 구현
 
 - [`ChatCommandCompletionService.cs`](../../../../Assets/Modules/MultiplayerInfrastructure/Scripts/Command/ChatCommandCompletionService.cs): 후보 수집, 필터링, Tab 순환 세션
-- [`IChatCommandCompletion.cs`](../../../../Assets/Modules/MultiplayerInfrastructure/Scripts/Command/IChatCommandCompletion.cs): 커맨드별 동적 후보 provider 계약
+- [`IChatCommandCompletion.cs`](../../../../Assets/Modules/MultiplayerInfrastructure/Scripts/Command/IChatCommandCompletion.cs): 커맨드별 동적 후보 provider 규약
 - [`IChatCommandModel.cs`](../../../../Assets/Modules/MultiplayerInfrastructure/Scripts/Command/IChatCommandModel.cs): `IChatCommandModel`, `IChatCommandUsage`, `UsageLine` 정의
 - [`CommandService.cs`](../../../../Assets/Modules/MultiplayerInfrastructure/Scripts/Command/CommandService.cs): 커맨드 등록·조회
 - [`give-clean-datapack.md`](./give-clean-datapack.md): 기존 `/give`, `/clean` 사용법과 관련 구현 예

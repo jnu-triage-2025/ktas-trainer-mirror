@@ -3,7 +3,7 @@
 ## 시스템 명칭과 경계
 
 `MultiplayerInfrastructure.Scenario.Requirements`의 공식 제품 명칭은
-**시나리오 요구사항 계약 시스템(Scenario Requirements Contract System)**이다.
+**시나리오 요구사항 명세 시스템(Scenario Requirements Specification System)**이다.
 
 이 namespace는 scenario graph의 외부 의존성을 manifest로 만들고, 선언·씬·에셋·runtime 공급 증거가
 그 manifest를 충족하는지 검사한다. TriageTrainer의 prefab, scene 이름, 프로젝트 전용 component를
@@ -15,9 +15,9 @@
 |---|---|---|
 | `ScenarioRequirementKey` | 요구사항 키 | `(ScenarioRequirementKind, trimmed identifier)`의 Ordinal identity |
 | `ScenarioRequirementOccurrence` | 사용 위치 | node, field path, 소비/생산, availability, expected supply 기록 |
-| `ScenarioRequirementDescriptor` | 요구사항 | 키, capability 집합, cardinality, scope, authority, binding hint의 계약 |
+| `ScenarioRequirementDescriptor` | 요구사항 | 키, capability 집합, cardinality, scope, authority, binding hint의 명세 |
 | `ScenarioRequirementManifest` | 요구사항 manifest | descriptor와 compiler diagnostic의 immutable 정본 |
-| `ScenarioRequirementDiagnostic` | 계약 진단 | `SIR` 또는 `SGR` code, severity, source, key, 수정 힌트 |
+| `ScenarioRequirementDiagnostic` | 요구사항 진단 | `SIR` 또는 `SGR` code, severity, source, key, 수정 힌트 |
 | `ScenarioRequirementProvider` | 공급자 증거 | 실제/정적 공급자의 물리 identity, capability, scene role, 활성 상태 |
 | `ScenarioRequirementProviderSnapshot` | 공급자 snapshot | validation 입력으로 쓰는 안정 정렬 provider 증거 모음 |
 

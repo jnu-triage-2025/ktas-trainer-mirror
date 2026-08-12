@@ -307,7 +307,7 @@ namespace TriageTrainer.Tests
         var second = secondObject.AddComponent<IntravenousLineConnectionPoint>();
         var apply = typeof(LineConnectionService).GetMethod(
           "ApplyReplicatedConnection",
-          BindingFlags.Instance | BindingFlags.NonPublic);
+          BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         Assert.That(apply, Is.Not.Null);
 
         Assert.That((bool)apply.Invoke(service, new object[] { first, second }), Is.True);

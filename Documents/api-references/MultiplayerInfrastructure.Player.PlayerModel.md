@@ -18,7 +18,7 @@
 
 | 구성 요소 | 역할 |
 |---|---|
-| `IPlayerCharacterModelObject` | 플레이어 캐릭터 모델 계약(Animator, 중심값) |
+| `IPlayerCharacterModelObject` | 플레이어 캐릭터 모델 규약(Animator, 중심값) |
 | `PlayerCharacterModelAttachPoint` | 기존 자식 모델 제거 후 신규 모델 인스턴스를 하위에 부착 |
 | `PlayerController.CharacterModel` | 모델 ID 관리, 서버 권한 변경, SyncVar 동기화 |
 
@@ -34,7 +34,7 @@ public interface IPlayerCharacterModelObject
 }
 ```
 
-- 모델 프리팹이 플레이어 캐릭터 모델 시스템에서 유효하다는 것을 나타내는 계약입니다.
+- 모델 프리팹이 플레이어 캐릭터 모델 시스템에서 유효하다는 것을 나타내는 규약입니다.
 - `PlayerCharacterModelAttachPoint`와 `PlayerController.CharacterModel`은 등록/적용 시 이 인터페이스 구현 여부를 검증합니다.
 
 ---

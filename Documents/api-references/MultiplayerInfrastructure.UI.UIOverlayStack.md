@@ -20,7 +20,7 @@
 
 - 자료구조: `Stack<IUIOverlay>` (정적)
 - 이벤트: `StackChanged`
-- 인터페이스 계약: `IUIOverlay.OnOverlayPushed()`, `IUIOverlay.OnOverlayPopped()`
+- 인터페이스 규약: `IUIOverlay.OnOverlayPushed()`, `IUIOverlay.OnOverlayPopped()`
 
 ---
 

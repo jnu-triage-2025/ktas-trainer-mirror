@@ -1,15 +1,15 @@
 ---
-title: "Scenario 인게임 요구사항 계약"
+title: "Scenario 인게임 요구사항 명세"
 domain: "module-features.multiplayer-infrastructure"
 progress: "3-implemented"
 flags: []
 ---
 
-# 시나리오 요구사항 계약 시스템
+# 시나리오 요구사항 명세 시스템
 
-공식 영문 명칭은 **Scenario Requirements Contract System**이다. 시나리오 JSON에 적힌 식별자가 실행 가능한
+공식 영문 명칭은 **Scenario Requirements Specification System**이다. 시나리오 JSON에 적힌 식별자가 실행 가능한
 씬·레지스트리·리소스 환경과 일치하는지, 실행 전에 확인할 수 있게 하는 기능이다. 기존 Preflight의 호환
-동작은 유지하고, 더 상세한 계약은 추출·선언·검증의 세 단계로 다룬다.
+동작은 유지하고, 더 상세한 요구사항 명세는 추출·선언·검증의 세 단계로 다룬다.
 
 ## 사용자에게 보이는 결과
 
@@ -20,11 +20,11 @@ flags: []
 
 ## 확정된 용어
 
-- **요구사항(Requirement)**: `(kind, identifier)`로 식별되는 외부 환경 계약이다.
+- **요구사항(Requirement)**: `(kind, identifier)`로 식별되는 외부 환경 명세다.
 - **사용 위치(Occurrence)**: requirement를 소비/생산한 scenario node와 field path다.
 - **manifest**: graph에서 추론한 requirement와 승인된 sidecar 선언을 병합한 immutable 결과다.
 - **canonical sidecar**: 사람이 승인한 `.scenario.requirements.json`이다.
-- **candidate 문서**: AI 또는 수동 제안용 `.scenario.requirements.candidates.json`이다. 승인 전에는 canonical 계약이 아니다.
+- **candidate 문서**: AI 또는 수동 제안용 `.scenario.requirements.candidates.json`이다. 승인 전에는 canonical 요구사항 명세가 아니다.
 - **공급자(Provider)**: requirement capability를 실제로 제공하는 scene object, asset, static catalog 또는 runtime 등록이다.
 - **구성 프로필(Composition Profile)**: scenario와 씬 path/GUID 및 scene role을 연결하는 asset이다.
 - **생성 계획(Generation Plan)**: Apply 전에 확인하는 씬 object 생성/설정/삭제 작업 목록이다.

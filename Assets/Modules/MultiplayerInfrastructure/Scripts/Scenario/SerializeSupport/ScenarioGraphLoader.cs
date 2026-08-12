@@ -82,7 +82,7 @@ namespace MultiplayerInfrastructure.Scenario
       graph.ActiveRoleTags = NormalizeTags(dto.ActiveRoleTags);
       graph.SkipAbsentRoleBranches = dto.SkipAbsentRoleBranches ?? false;
       graph.ClientSignalIdentifiers = ResolveClientSignalIdentifiers(dto, graph.Identifier);
-      graph.ClientSignalPrefixes = NormalizeSignalContract(dto.ClientSignalPrefixes);
+      graph.ClientSignalPrefixes = NormalizeSignalSpecification(dto.ClientSignalPrefixes);
       graph.QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(dto.QuestDefinitionIncludes);
       graph.ActingNpcs = ConvertActingNpcs(dto.ActingNpcs);
       graph.Waypoints = ConvertWaypoints(dto.Waypoints);
@@ -135,9 +135,9 @@ namespace MultiplayerInfrastructure.Scenario
     private static IReadOnlyList<string> ResolveClientSignalIdentifiers(ScenarioGraphDTO dto, string graphIdentifier)
     {
       if (dto.ClientSignalIdentifiers != null)
-        return NormalizeSignalContract(dto.ClientSignalIdentifiers);
+        return NormalizeSignalSpecification(dto.ClientSignalIdentifiers);
 
-      // The pre-contract Patient A graph historically used generic client reports for its interaction gates.
+      // The earlier Patient A graph historically used generic client reports for its interaction gates.
       // Keep only this audited legacy graph compatible; every other undeclared graph defaults to deny.
       if (!string.Equals(graphIdentifier, "patient_a_critical", StringComparison.Ordinal))
         return Array.Empty<string>();
@@ -154,7 +154,7 @@ namespace MultiplayerInfrastructure.Scenario
         .ToArray() ?? Array.Empty<string>();
     }
 
-    private static IReadOnlyList<string> NormalizeSignalContract(IEnumerable<string> values)
+    private static IReadOnlyList<string> NormalizeSignalSpecification(IEnumerable<string> values)
       => values?
         .Where(value => !string.IsNullOrWhiteSpace(value))
         .Select(value => ScenarioInteractionSignals.Normalize(value))
@@ -1452,8 +1452,8 @@ namespace MultiplayerInfrastructure.Scenario
         Tags = NormalizeTags(graph.Tags).ToList(),
         ActiveRoleTags = NormalizeTags(graph.ActiveRoleTags).ToList(),
         SkipAbsentRoleBranches = graph.SkipAbsentRoleBranches ? true : (bool?)null,
-        ClientSignalIdentifiers = NormalizeSignalContract(graph.ClientSignalIdentifiers).ToList(),
-        ClientSignalPrefixes = NormalizeSignalContract(graph.ClientSignalPrefixes).ToList(),
+        ClientSignalIdentifiers = NormalizeSignalSpecification(graph.ClientSignalIdentifiers).ToList(),
+        ClientSignalPrefixes = NormalizeSignalSpecification(graph.ClientSignalPrefixes).ToList(),
         QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(graph.QuestDefinitionIncludes).ToList(),
         ActingNpcs = ConvertActingNpcsToDTO(graph.ActingNpcs),
         Waypoints = ConvertWaypointsToDTO(graph.Waypoints),
