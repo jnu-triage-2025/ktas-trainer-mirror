@@ -296,8 +296,9 @@ namespace MultiplayerInfrastructure.UI
         holder.style.borderTopRightRadius = 5;
         holder.style.borderBottomLeftRadius = 5;
         holder.style.borderBottomRightRadius = 5;
-        // Contain은 정사각형 슬롯을 넘지 않으면서 스프라이트의 원본 비율을 보존합니다.
-        holder.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+        // Cover는 스프라이트의 원본 비율을 보존하면서 정사각형 슬롯을 완전히 채웁니다.
+        // 슬롯보다 작은 아이콘은 넓은 변에 맞춰 확대되고, 남는 부분은 중앙 기준으로 잘립니다.
+        holder.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
         holder.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Center);
         holder.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Center);
         holder.style.backgroundRepeat = new StyleBackgroundRepeat(StyleKeyword.None);
