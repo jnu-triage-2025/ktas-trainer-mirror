@@ -102,9 +102,17 @@ namespace MultiplayerInfrastructure.UI
       _view.AddToClassList("inventory-root");
       _view.name = string.IsNullOrEmpty(_view.name) ? "InventoryRoot" : _view.name;
       _view.Initialize(columns, rows, slotTemplate, defaultIcon);
+
+      // ScrollView 콘텐츠 컨테이너에 수직 중앙 정렬 클래스를 적용한다.
+      // UXML의 ScrollView가 뷰를 감싸고 있으며, 해상도 부족 시 가로 스크롤을 제공한다.
+      var scrollView = root.Q<ScrollView>("InventoryScrollView");
+      if (scrollView != null)
+        scrollView.contentContainer.AddToClassList("inventory-scroll-content");
+
       _view.SlotsMutated += HandleSlotsMutated;
       _view.ItemDroppedOutside += HandleItemDroppedOutside;
       _view.CraftLeftoverReturned += HandleCraftLeftoverReturned;
+      _view.EquipmentSlotMutated += HandleEquipmentSlotMutated;
 
       // 조합 패널 콜백 주입: 보유 수량 조회 + 조합 실행.
       _view.SetCraftingCallbacks(ResolveHeldCount, HandleCraftRequest);
@@ -118,6 +126,7 @@ namespace MultiplayerInfrastructure.UI
       _view.SlotsMutated -= HandleSlotsMutated;
       _view.ItemDroppedOutside -= HandleItemDroppedOutside;
       _view.CraftLeftoverReturned -= HandleCraftLeftoverReturned;
+      _view.EquipmentSlotMutated -= HandleEquipmentSlotMutated;
     }
 
     private PlayerController ResolveOwningPlayer()
@@ -155,15 +164,37 @@ namespace MultiplayerInfrastructure.UI
       player?.TryAddItemToInventory(leftover);
     }
 
+    /// <summary>
+    /// 장비 슬롯의 아이템 변화(장착/해제) 발생 시 호출됩니다.
+    /// 핫바 동기화 및 조합 가능 목록 갱신을 트리거합니다.
+    /// </summary>
+    private void HandleEquipmentSlotMutated()
+    {
+      // 장비 변경 시 핫바/조합 목록도 갱신 (장비 아이템이 인벤토리에서 빠지므로)
+      EnsureHotbar();
+      _hotbarUI?.BindInventory(_view?.BoundSlots);
+      OnItemAtSelectedSlotChanged?.Invoke();
+      RefreshCraftableRecipes();
+    }
+
     private void OnDestroy()
     {
       DetachViewEvents();
+      ItemSystem.EquipmentShadowSpriteProvider.ClearCache();
     }
 
     public void UpdateInventory(IReadOnlyList<InventorySlotModelDTO> slots)
     {
       _view?.UpdateInventory(slots);
       RefreshCraftableRecipes();
+    }
+
+    /// <summary>
+    /// PlayerController 의 장비 슬롯 데이터를 뷰에 바인딩합니다.
+    /// </summary>
+    public void UpdateEquipment(IReadOnlyList<EquipmentSlotModelDTO> equipmentSlots)
+    {
+      _view?.BindEquipment(equipmentSlots);
     }
 
     /// <summary>조합 패널의 "조합 가능" 목록과 "필요 아이템" 표시를 현재 보유량 기준으로 갱신한다.</summary>

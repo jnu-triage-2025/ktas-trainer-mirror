@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1824234600703256322}
   m_Layer: 0
-  m_Name: gloves
+  m_Name: sterile_gloves
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

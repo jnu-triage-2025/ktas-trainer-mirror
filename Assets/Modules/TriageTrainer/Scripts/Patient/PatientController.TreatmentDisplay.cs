@@ -103,7 +103,8 @@ namespace TriageTrainer.Entity
       // 부착형(시각 표현 동반)
       { "gauze",          new ItemUseEffect(TreatmentDisplay.GauzePatchedOnThorax, "apply_gauze") },
       { "plaster",        new ItemUseEffect(TreatmentDisplay.GauzeDressingDoneOnThorax, "apply_plaster_on_gauze", "apply_plaster_on_intu", "apply_plaster_on_intu_{id}") },
-      { "gloves",         new ItemUseEffect(TreatmentDisplay.None, "wear_glove", "wear_glove_{id}") },
+      { "sterile_gloves", new ItemUseEffect(TreatmentDisplay.None, "wear_glove", "wear_glove_{id}") },
+      { "contaminated_gloves", new ItemUseEffect(TreatmentDisplay.None, "wear_glove", "wear_glove_{id}") },
       // 실제 아이템 식별자(cervical_collar / nasalcannula)가 프로덕션 경로의 키.
       // 구 명칭(neckstabilizer / nasal)은 디버그 훅(Debug_ApplyItemUse) 호환용 별칭이며,
       // 반드시 동일 인스턴스를 공유해 신호/표현이 갈라지지 않게 한다.

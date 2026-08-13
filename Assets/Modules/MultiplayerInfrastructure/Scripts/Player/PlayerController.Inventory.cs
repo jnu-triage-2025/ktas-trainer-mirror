@@ -20,6 +20,16 @@ namespace MultiplayerInfrastructure.Player
       sizeHeight = 4
     };
     [SerializeField] private List<InventorySlotModelDTO> _slots = new();
+
+    /// <summary>
+    /// 장비 슬롯 데이터. <see cref="_slots"/> 와 동일한 수명/소유권을 가지며,
+    /// 네트워크 동기화 및 직렬화의 대상이 됩니다.
+    /// </summary>
+    [SerializeField] private List<EquipmentSlotModelDTO> _equipmentSlots = new();
+
+    /// <summary>장비 슬롯 데이터에 대한 읽기 전용 접근자 (UI 바인딩용).</summary>
+    public IReadOnlyList<EquipmentSlotModelDTO> EquipmentSlots => _equipmentSlots;
+
     public ItemSystem.Item HandlingItem = null;
     
     private bool _inventoryVisible;
@@ -36,6 +46,10 @@ namespace MultiplayerInfrastructure.Player
       int targetCount = _inventoryConf.sizeWidth * _inventoryConf.sizeHeight;
       while (_slots.Count < targetCount)
         _slots.Add(new InventorySlotModelDTO());
+
+      // 장비 슬롯 초기화 (현재 Glove 1종, 멱등 보장).
+      if (_equipmentSlots.Count == 0)
+        _equipmentSlots.Add(new EquipmentSlotModelDTO(EquipmentSlotType.Glove));
     }
 
     void Update_Inventory()
@@ -46,6 +60,7 @@ namespace MultiplayerInfrastructure.Player
       if (_inventoryRenderRequired && _inventoryUI != null && _inventoryUI.IsOpened)
       {
         _inventoryUI.UpdateInventory(_slots);
+        _inventoryUI.UpdateEquipment(_equipmentSlots);
         _inventoryRenderRequired = false;
       }
     }
@@ -64,6 +79,7 @@ namespace MultiplayerInfrastructure.Player
       if (_inventoryVisible && _inventoryRenderRequired)
       {
         _inventoryUI.UpdateInventory(_slots);
+        _inventoryUI.UpdateEquipment(_equipmentSlots);
         _inventoryRenderRequired = false;
       }
     }

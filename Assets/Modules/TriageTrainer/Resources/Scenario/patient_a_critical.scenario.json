@@ -5427,7 +5427,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_gloves"
+              "registryIdentifier": "sig.click_sterile_gloves"
             },
             {
               "type": "Registry",

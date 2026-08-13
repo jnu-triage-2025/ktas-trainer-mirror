@@ -48,7 +48,7 @@ namespace TriageTrainer.ItemDefinitions
     /// 시나리오 조건명을 아이템 식별자에 맞추면 별도 코드 없이 획득 게이트가 통과된다.
     ///
     /// 주의: 일부 시나리오 조건명(예: click_glove, click_et_tube, click_ns1)은 아이템 식별자
-    /// (gloves, endotracheal_tube, normal_saline_1000ml)와 표기가 다르다. 이 불일치 목록과
+    /// (sterile_gloves, endotracheal_tube, normal_saline_1000ml)와 표기가 다르다. 이 불일치 목록과
     /// 처리 방침은 interaction-signal-integration-spec.md 의 "아이템 식별자 ↔ 조건명 정합" 절 참조.
     /// </summary>
     public override void OnGet(PlayerController player)
