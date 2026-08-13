@@ -13,6 +13,9 @@ namespace TriageTrainer.Entity
   /// </summary>
   public sealed class MovingPatientBedPositioningPoint : MonoBehaviour
   {
+    private static int _localBedQueryFrame = -1;
+    private static bool _hasLocallyControlledBed;
+
     [Header("Identity")]
     [SerializeField] private string _identifier;
 
@@ -102,20 +105,30 @@ namespace TriageTrainer.Entity
       if (_runtimeHint == null)
         CreateRuntimeHint();
 
-      bool visible = false;
+      if (_runtimeHint != null)
+        _runtimeHint.SetActive(HasLocallyControlledBed());
+    }
+
+    private static bool HasLocallyControlledBed()
+    {
+      // 모든 positioning point가 같은 프레임에 동일한 씬 검색을 반복하지 않도록 공유한다.
+      if (_localBedQueryFrame == Time.frameCount)
+        return _hasLocallyControlledBed;
+
+      _localBedQueryFrame = Time.frameCount;
+      _hasLocallyControlledBed = false;
       MovingPatientBedController[] beds = FindObjectsByType<MovingPatientBedController>(
         FindObjectsInactive.Exclude, FindObjectsSortMode.None);
       for (int i = 0; i < beds.Length; i++)
       {
-        if (beds[i] != null && beds[i].isActiveAndEnabled && beds[i].IsLocallyControlled)
-        {
-          visible = true;
-          break;
-        }
+        if (beds[i] == null || !beds[i].isActiveAndEnabled || !beds[i].IsLocallyControlled)
+          continue;
+
+        _hasLocallyControlledBed = true;
+        break;
       }
 
-      if (_runtimeHint != null)
-        _runtimeHint.SetActive(visible);
+      return _hasLocallyControlledBed;
     }
 
     private void CreateRuntimeHint()
