@@ -639,10 +639,6 @@ namespace MultiplayerInfrastructure.UI
       if (evt.button != 1) return;
       if (_heldItem == null || _heldItem.IsEmpty) return;
 
-      // 장비 슬롯 내부 우클릭은 중복 처리 방지
-      var target = evt.target as VisualElement;
-      if (IsWithinEquipmentPanel(target)) return;
-
       var item = _heldItem.ItemInstance;
       if (item == null) return;
 
