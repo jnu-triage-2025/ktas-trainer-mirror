@@ -157,29 +157,19 @@ namespace MultiplayerInfrastructure.UI
       title.style.unityFontStyleAndWeight = FontStyle.Bold;
       card.Add(title);
 
-      var objectiveRow = new VisualElement { pickingMode = PickingMode.Ignore };
-      objectiveRow.style.position = Position.Relative;
-      objectiveRow.style.marginTop = 6;
-      objectiveRow.style.alignSelf = Align.FlexStart;
-      objectiveRow.style.maxWidth = 296;
-
-      var objective = new Label(GetCurrentObjective(quest)) { pickingMode = PickingMode.Ignore };
+      // TextCore의 취소선 태그를 사용한다. 별도 absolute VisualElement로 선을 그리면
+      // 내용 기반 부모의 너비가 0으로 계산되는 프레임에서 선이 보이지 않을 수 있다.
+      var objective = new Label($"<s>{GetCurrentObjective(quest)}</s>") { pickingMode = PickingMode.Ignore };
+      objective.enableRichText = true;
       objective.style.color = AccentColor;
       objective.style.fontSize = 13;
+      objective.style.marginTop = 6;
+      objective.style.alignSelf = Align.FlexStart;
+      objective.style.maxWidth = 296;
       objective.style.whiteSpace = WhiteSpace.NoWrap;
       objective.style.overflow = Overflow.Hidden;
       objective.style.textOverflow = TextOverflow.Ellipsis;
-      objectiveRow.Add(objective);
-
-      var strike = new VisualElement { pickingMode = PickingMode.Ignore };
-      strike.style.position = Position.Absolute;
-      strike.style.left = 0;
-      strike.style.right = 0;
-      strike.style.top = new Length(50, LengthUnit.Percent);
-      strike.style.height = 1;
-      strike.style.backgroundColor = AccentColor;
-      objectiveRow.Add(strike);
-      card.Add(objectiveRow);
+      card.Add(objective);
       return card;
     }
 

@@ -45,11 +45,9 @@ namespace MultiplayerInfrastructure.Player
           return controller;
       }
 
-      // 타입으로 검색 (비권장: 성능 비용 있음)
       var found = FindFirstObjectByType<DialoguePanelUIController>(FindObjectsInactive.Exclude);
       if (!found.IsUnityNull())
       {
-        Debug.LogWarning("[PlayerController] DialoguePanelUIController found via FindObjectOfType. Consider assigning it directly in Inspector.");
         return found;
       }
 
