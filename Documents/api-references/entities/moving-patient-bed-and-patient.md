@@ -29,7 +29,7 @@ This document explains the interaction between the moving patient bed entity and
   - **Movement Modes**:
     - **Toggle**: Simple on/off movement.
     - **Hold**: Requires continuous input to move.
-  - **Attachment Visuals**: Maps entity identifiers to visual objects for attaching/detaching the patient model on/off the bed.
+  - **Attachment Visuals**: Maps item identifiers to visual objects via `_attachableItemVisualPairs` inspector list (runtime dictionary `_attachableVisualMap`). All visual objects are hidden at spawn (`HideAllAttachableVisuals()`); only items explicitly attached via `TryAttachItem()` become visible.
   - **Message Cooldown**: Prevents chat spam by enforcing a 3‑second cooldown on repeated interaction messages.
   - **Patient Transfer Methods**:
     - `ReposePatientOnBed(IPatient patient)` – Lays a patient onto the bed.
@@ -42,7 +42,7 @@ This document explains the interaction between the moving patient bed entity and
 - **Key Features**:
   - Default weight: `4`.
   - When lying on a bed and interacted with, the patient signals the bed to lift them (`Bed.LiftPatientFromBed()`), handing control to the player via the carry system.
-  - Visual attachment: Uses the same identifier‑to‑visual mapping as the bed to show the patient model when on the bed.
+  - Visual attachment: Uses `TreatmentDisplay` enum system (`PatientDisplayState` + `PatientTreatmentDisplayingChildGameObjects`) to manage 25 treatment display visuals. All visuals are hidden at spawn; only explicitly activated displays become visible via item use or scenario `EntityInit` commands.
   - Message Cooldown: Shares the 3‑second cooldown mechanism to avoid repetitive chat notifications.
 
 ## Interaction Flow

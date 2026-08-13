@@ -229,6 +229,7 @@ namespace TriageTrainer.Entity
 
     private void Awake()
     {
+      EnsureDisplayIcon();
       Awake_MinecraftBoadLikeControl();
       Configure(
         4,
@@ -238,6 +239,7 @@ namespace TriageTrainer.Entity
       _interacts = new IInteract[] { this, _reposeInteract };
       InitializeAttachPoints();
       RebuildAttachableVisualMap();
+      HideAllAttachableVisuals();
       InitializeIntravenousAttachmentDisplay();
       if (_reposeAnchor == null)
         _reposeAnchor = transform;
@@ -916,6 +918,20 @@ namespace TriageTrainer.Entity
       }
     }
 
+    /// <summary>
+    /// 스폰 시 모든 부착 가능 아이템 시각 오브젝트를 비활성화합니다.
+    /// 프리팹 편집 편의를 위해 자식이 활성화된 채 저장되어 있어도, 런타임에서는
+    /// <see cref="TryAttachItem"/> 호출에 의해 명시적으로 켜진 부착물만 보이도록 합니다.
+    /// </summary>
+    private void HideAllAttachableVisuals()
+    {
+      foreach (var visual in _attachableVisualMap.Values)
+      {
+        if (visual != null)
+          visual.SetActive(false);
+      }
+    }
+
     protected override void OnValidate()
     {
       _weight = Mathf.Max(0, _weight);
@@ -946,6 +962,14 @@ namespace TriageTrainer.Entity
           _allowedPositioningPointIdentifiers[i] = value.Trim();
         }
       }
+    }
+
+    private void EnsureDisplayIcon()
+    {
+      if (_displayIcon != null)
+        return;
+
+      _displayIcon = Resources.Load<Sprite>("Textures/Icons/patient_bed");
     }
 
     private void OnDrawGizmosSelected()

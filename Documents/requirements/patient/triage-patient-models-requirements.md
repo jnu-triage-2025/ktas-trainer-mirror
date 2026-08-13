@@ -24,6 +24,7 @@ TriageTrainer Patient Models는 환자 기본 프로필, 의료 상태, 처치 �
 - `PatientMedicalState`는 `bloodPressure`, `pulse`, `consciousness`, `respiration`, `requiredDrugs` 및 모니터 파라미터(`ecg/art/cvp/pleth/numerics/nibp/temperature/stLeads`)를 포함한다.
 - 타입별 상태는 `PatientStateABC`와 `PatientTreatmentDisplayStateABC` 추상 구조로 분리되며, `PatientTypeAState`, `PatientTypeBMaleState`, `PatientTypeBFemaleState` 등 파생 구현이 존재한다.
 - 표시 계층은 `PatientDisplayState`와 `PatientTreatmentDisplayingChildGameObjects`를 통해 환자 모델 자식 오브젝트 활성화 상태를 관리한다.
+- 모든 부착물 시각 오브젝트는 스폰 시점에 비활성 상태로 초기화된다(`InitializeTreatmentDisplaysFromConfiguredState`). 시나리오 `EntityInit` 노드 또는 아이템 사용에 의해 명시적으로 활성화된 부착물만 표시된다.
 
 ## 참조
 

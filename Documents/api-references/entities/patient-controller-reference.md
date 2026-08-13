@@ -76,14 +76,25 @@
 
 ## 4. 아이템 부착 시각화 API
 
-아이템 식별자와 자식 시각 오브젝트를 인스펙터 리스트로 등록하고 런타임 딕셔너리로 조회한다.
+`TreatmentDisplay` enum과 `PatientTreatmentDisplayModel` 플래그를 기반으로 처치 시각 표현을 관리한다.
 
+### 4.1 초기화 정책
+
+- 스폰 시 `InitializeTreatmentDisplaysFromConfiguredState()`가 **모든** `TreatmentDisplay` 자식 시각 오브젝트를 비활성화한다.
+- 프리팹에서 편집 편의를 위해 일부 자식이 활성화된 채 저장되어 있어도, 런타임에서는 전부 숨겨진 상태로 시작한다.
+- 시나리오(`ApplyScenarioDisplayState`) 또는 아이템 사용(`ApplyItemUse`)에 의해 명시적으로 켜진 부착물만 보인다.
+
+### 4.2 아이템 적용 흐름
+
+- `OnItemUsed(Entity user, string itemIdentifier)` / `OnAttacked(Entity attacker, int damage)`
+  - 아이템 사용/공격 이벤트 진입점
 - `TryAttachCurrentHandlingItem(Entity actorEntity)`
   - 공격/사용 주체 플레이어의 `HandlingItem.CurrentIdentifier`를 기준으로 부착 시도
-- `TryAttachItem(string itemIdentifier)`
-  - 식별자 매핑이 있으면 오브젝트 활성화
-- `OnAttacked(...)`, `OnItemUsed(...)`
-  - 위 API를 호출하는 엔트리 포인트
+- `ApplyItemUse(string itemIdentifier)`
+  - `ItemUseEffects` 코드 하드코딩 딕셔너리에서 아이템 식별자 → `TreatmentDisplay` + 시나리오 신호 매핑 조회
+  - `ShowTreatmentDisplay(display)`로 시각 오브젝트 활성화 + `ScenarioInteractionSignals.Raise()`로 신호 발신
+- `ApplyScenarioDisplayState(string displayStateName, bool active)`
+  - 시나리오 `EntityInit` 노드가 호출하는 명명된 표시 상태 설정 진입점
 
 ## 5. 의료 상태 API
 

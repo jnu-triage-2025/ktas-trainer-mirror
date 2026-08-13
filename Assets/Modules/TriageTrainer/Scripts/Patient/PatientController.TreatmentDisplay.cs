@@ -253,36 +253,39 @@ namespace TriageTrainer.Entity
     public void HideTreatmentDisplay(TreatmentDisplay display) => SetTreatmentDisplay(display, false);
 
     /// <summary>
-    /// 프리팹의 직렬화된 표시 플래그를 실제 자식 GameObject 활성 상태에 적용합니다.
-    /// 프리팹 편집 편의를 위해 자식이 활성화된 채 저장되어 있어도, 스폰 시점에는
-    /// DisplayState가 참인 처치 표현만 보이도록 정렬합니다.
+    /// 스폰 시 모든 처치 시각 표현(부착물)을 비활성화합니다.
+    /// 프리팹 편집 편의를 위해 자식이 활성화된 채 저장되어 있어도, 런타임에서는
+    /// 시나리오 또는 아이템 사용에 의해 명시적으로 켜진 부착물만 보이도록 합니다.
     /// </summary>
     private void InitializeTreatmentDisplaysFromConfiguredState()
     {
-      var state = GetPatientDisplayState();
-      var legacyState = state == null ? GetPatientState()?.TreatmentDisplayState : null;
-
       foreach (TreatmentDisplay display in System.Enum.GetValues(typeof(TreatmentDisplay)))
       {
         if (display == TreatmentDisplay.None)
           continue;
 
-        bool active;
-        if (state != null)
-        {
-          if (!IsTreatmentDisplaySupported(state, display))
-            continue;
-          active = GetDisplayStateFlag(state, display, fromSupports: false);
-        }
-        else
-        {
-          if (legacyState == null || !IsTreatmentDisplaySupported(legacyState, display))
-            continue;
-          active = GetDisplayStateFlag(legacyState, display, fromSupports: false);
-        }
-
-        SetTreatmentDisplay(display, active);
+        var go = GetTreatmentDisplayChildObject(display);
+        if (go != null)
+          go.SetActive(false);
       }
+    }
+
+    /// <summary>
+    /// 현재 환자 프리팹에서 지정된 처치 표현에 해당하는 자식 GameObject 를 찾습니다.
+    /// <see cref="PatientDisplayState"/> 와 레거시 <see cref="PatientTreatmentDisplayStateABC"/> 경로 모두 검색합니다.
+    /// </summary>
+    private GameObject GetTreatmentDisplayChildObject(TreatmentDisplay display)
+    {
+      var state = GetPatientDisplayState();
+      if (state != null)
+      {
+        var go = GetDisplayChildObject(state, display);
+        if (go != null)
+          return go;
+      }
+
+      var legacyState = GetPatientState()?.TreatmentDisplayState;
+      return legacyState != null ? GetDisplayChildObject(legacyState, display) : null;
     }
 
     /// <summary>
