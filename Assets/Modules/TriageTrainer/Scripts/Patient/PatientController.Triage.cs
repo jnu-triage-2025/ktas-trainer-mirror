@@ -4,6 +4,7 @@ using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using TriageTrainer.Entity.Patient;
+using MultiplayerInfrastructure.Commons;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -79,7 +80,16 @@ namespace TriageTrainer.Entity
 
       public PatientTriageInteract(PatientController owner) { _owner = owner; }
 
-      public string DisplayText => _owner._triageConfig.DisplayText;
+      public string DisplayText
+      {
+        get
+        {
+          var name = _owner.GetPatientDisplayName(null);
+          return !string.IsNullOrWhiteSpace(name)
+            ? $"{name}{Josa.ObjectParticle(name)} 트리아지 분류"
+            : _owner._triageConfig.DisplayText;
+        }
+      }
       // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
       public Sprite DisplayIcon => null;
       public bool AllowDisplayIconFallback => false;

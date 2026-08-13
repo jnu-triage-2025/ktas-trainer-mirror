@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Commons;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -32,7 +33,16 @@ namespace TriageTrainer.Entity
     {
       private readonly PatientController _owner;
       public PatientLiftInteract(PatientController owner) { _owner = owner; }
-      public string DisplayText => _owner._liftDisplayText;
+      public string DisplayText
+      {
+        get
+        {
+          var name = _owner.GetPatientDisplayName(null);
+          return !string.IsNullOrWhiteSpace(name)
+            ? $"{name}{Josa.ObjectParticle(name)} 들어올리기"
+            : _owner._liftDisplayText;
+        }
+      }
       // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
       public Sprite DisplayIcon => null;
       public bool AllowDisplayIconFallback => false;
@@ -51,7 +61,16 @@ namespace TriageTrainer.Entity
     {
       private readonly PatientController _owner;
       public PatientCarryInteract(PatientController owner) { _owner = owner; }
-      public string DisplayText => _owner._carryDisplayText;
+      public string DisplayText
+      {
+        get
+        {
+          var name = _owner.GetPatientDisplayName(null);
+          return !string.IsNullOrWhiteSpace(name)
+            ? $"{name}{Josa.ObjectParticle(name)} 들어올리기"
+            : _owner._carryDisplayText;
+        }
+      }
       // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
       public Sprite DisplayIcon => null;
       public bool AllowDisplayIconFallback => false;
