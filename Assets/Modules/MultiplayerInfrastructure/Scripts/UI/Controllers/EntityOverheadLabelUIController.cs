@@ -148,16 +148,6 @@ namespace MultiplayerInfrastructure.UI
       }
     }
 
-    private static void SetSubtreePickingMode(VisualElement root, PickingMode mode)
-    {
-      if (root == null)
-        return;
-
-      root.pickingMode = mode;
-      for (int i = 0; i < root.childCount; i++)
-        SetSubtreePickingMode(root[i], mode);
-    }
-
     // 인스펙터 지정 카메라를 우선 사용하고, 없으면 Camera.main 을 1회 조회해 캐시한다.
     // Camera.main 은 내부적으로 태그 검색을 수행하므로 매 프레임 호출을 피한다(캐시가 파괴되면 재조회).
     private UnityEngine.Camera ResolveCamera()

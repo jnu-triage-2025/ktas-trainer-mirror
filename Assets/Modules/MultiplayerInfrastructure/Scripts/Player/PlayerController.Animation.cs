@@ -36,13 +36,15 @@ namespace MultiplayerInfrastructure.Player
     }
 
 #if UNITY_EDITOR
-    private void Reset()
+    protected override void Reset()
     {
+      base.Reset();
       EnsureDefaultRuntimeAnimatorController();
     }
 
-    private void OnValidate()
+    protected override void OnValidate()
     {
+      base.OnValidate();
       EnsureDefaultRuntimeAnimatorController();
     }
 #endif
