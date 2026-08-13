@@ -27,7 +27,14 @@ namespace TriageTrainer.Entity.PatientMonitor
   [UxmlElement]
   public partial class PatientMonitorGraphElement : VisualElement
   {
-    private readonly List<float> dataPoints = new List<float>();
+    private const float RepaintIntervalSeconds = 1f / 20f;
+    private const int MinimumRenderedPointCount = 64;
+    private const int MaximumRenderedPointCount = 512;
+
+    private float[] _dataPoints = new float[300];
+    private int _dataPointCount;
+    private int _nextDataPointIndex;
+    private float _nextRepaintTime;
     private readonly Color _gridColor = new Color(1f, 1f, 1f, 0.08f);
     private readonly Dictionary<MonitorChannelId, GraphRange> _defaultRanges = new Dictionary<MonitorChannelId, GraphRange>
     {
@@ -54,7 +61,15 @@ namespace TriageTrainer.Entity.PatientMonitor
     public int MaxPoints
     {
       get => maxPoints;
-      set => maxPoints = Mathf.Max(2, value);
+      set
+      {
+        int newMaxPoints = Mathf.Max(2, value);
+        if (newMaxPoints == maxPoints && _dataPoints.Length == newMaxPoints)
+          return;
+
+        ResizeDataBuffer(newMaxPoints);
+        maxPoints = newMaxPoints;
+      }
     }
 
     [UxmlAttribute("line-width")]
@@ -73,12 +88,18 @@ namespace TriageTrainer.Entity.PatientMonitor
 
     public void AddValue(float value)
     {
-      dataPoints.Add(value);
-      if (dataPoints.Count > maxPoints)
-      {
-        dataPoints.RemoveAt(0);
-      }
-      MarkDirtyRepaint(); // 다시 그리기 요청
+      _dataPoints[_nextDataPointIndex] = value;
+      _nextDataPointIndex = (_nextDataPointIndex + 1) % _dataPoints.Length;
+      _dataPointCount = Mathf.Min(_dataPointCount + 1, _dataPoints.Length);
+
+      // 생체 신호 계산은 원래 sample rate로 유지하되 UI mesh 재생성은 20Hz로 제한한다.
+      // 여러 샘플이 같은 프레임에 생성돼도 그래프는 한 번만 무효화된다.
+      float now = Time.unscaledTime;
+      if (now < _nextRepaintTime)
+        return;
+
+      _nextRepaintTime = now + RepaintIntervalSeconds;
+      MarkDirtyRepaint();
     }
 
     public void SetColor(Color color) => lineColor = color;
@@ -117,14 +138,17 @@ namespace TriageTrainer.Entity.PatientMonitor
         return;
 
       DrawGrid(painter, width, height);
-      if (dataPoints.Count < 2)
+      if (_dataPointCount < 2)
         return;
 
       painter.lineWidth = lineWidth;
       painter.strokeColor = lineColor;
       painter.BeginPath();
 
-      float stepX = width / (maxPoints - 1);
+      int targetRenderedPointCount = Mathf.Clamp(Mathf.CeilToInt(width), MinimumRenderedPointCount, MaximumRenderedPointCount);
+      int renderStride = Mathf.Max(1, Mathf.CeilToInt((float)_dataPointCount / targetRenderedPointCount));
+      int renderedPointCount = Mathf.CeilToInt((float)_dataPointCount / renderStride);
+      float stepX = width / Mathf.Max(1, renderedPointCount - 1);
       float rangeSpan = Mathf.Max(0.0001f, _range.max - _range.min);
 
       float MapY(float voltage)
@@ -133,13 +157,15 @@ namespace TriageTrainer.Entity.PatientMonitor
         return height - (normalized * height);
       }
 
-      painter.MoveTo(new Vector2(0, MapY(dataPoints[0])));
+      painter.MoveTo(new Vector2(0, MapY(GetDataPoint(0))));
 
-      for (int i = 1; i < dataPoints.Count; i++)
+      int renderedIndex = 1;
+      for (int i = renderStride; i < _dataPointCount; i += renderStride)
       {
-        float x = i * stepX;
-        float y = MapY(dataPoints[i]);
+        float x = renderedIndex * stepX;
+        float y = MapY(GetDataPoint(i));
         painter.LineTo(new Vector2(x, y));
+        renderedIndex++;
       }
 
       painter.Stroke();
@@ -168,6 +194,25 @@ namespace TriageTrainer.Entity.PatientMonitor
         painter.LineTo(new Vector2(x, height));
         painter.Stroke();
       }
+    }
+
+    private float GetDataPoint(int chronologicalIndex)
+    {
+      int oldestIndex = _dataPointCount == _dataPoints.Length ? _nextDataPointIndex : 0;
+      return _dataPoints[(oldestIndex + chronologicalIndex) % _dataPoints.Length];
+    }
+
+    private void ResizeDataBuffer(int newSize)
+    {
+      var resized = new float[newSize];
+      int copyCount = Mathf.Min(_dataPointCount, newSize);
+      int sourceStart = _dataPointCount - copyCount;
+      for (int i = 0; i < copyCount; i++)
+        resized[i] = GetDataPoint(sourceStart + i);
+
+      _dataPoints = resized;
+      _dataPointCount = copyCount;
+      _nextDataPointIndex = copyCount % newSize;
     }
 
   }

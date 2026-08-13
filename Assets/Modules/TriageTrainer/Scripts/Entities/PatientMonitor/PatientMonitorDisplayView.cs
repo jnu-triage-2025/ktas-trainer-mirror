@@ -191,16 +191,24 @@ namespace TriageTrainer.Entity.PatientMonitor
     public void SetGraphValues(string ecg, string pleth, string art, string cvp)
     {
       if (_graphValues == null) return;
-      string[] values = { ecg, pleth, art, cvp };
-      for (int i = 0; i < _graphValues.Length; i++)
-        if (_graphValues[i] != null) _graphValues[i].text = values[i];
+      SetLabelText(_graphValues[0], ecg);
+      SetLabelText(_graphValues[1], pleth);
+      SetLabelText(_graphValues[2], art);
+      SetLabelText(_graphValues[3], cvp);
     }
 
     public void SetMetricValues(params string[] values)
     {
       if (_metricValues == null) return;
       for (int i = 0; i < _metricValues.Length && i < values.Length; i++)
-        if (_metricValues[i] != null) _metricValues[i].text = values[i];
+        if (_metricValues[i] != null && _metricValues[i].text != values[i])
+          _metricValues[i].text = values[i];
+    }
+
+    private static void SetLabelText(Label label, string value)
+    {
+      if (label != null && label.text != value)
+        label.text = value;
     }
   }
 }
