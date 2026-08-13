@@ -12,6 +12,7 @@ using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using MultiplayerInfrastructure.Logging;
+using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Scenario;
 using UnityEngine;
 
@@ -105,6 +106,7 @@ namespace TriageTrainer.Entity
     [SerializeField] private Transform _reposeAnchor;
     [SerializeField] private bool _enablePatientRepose = true;
     [SerializeField] private bool _enableMovementInteraction = true;
+    [SerializeField] private string _dismountCompletionSignal = "all_players_dismounted_patient_a_bed";
 
     [Header("Positioning Snap")]
     [SerializeField] private bool _enablePositioningSnap = true;
@@ -127,6 +129,7 @@ namespace TriageTrainer.Entity
     private readonly Dictionary<string, GameObject> _attachableVisualMap = new(StringComparer.Ordinal);
     private readonly Dictionary<string, float> _lastNoticeByInteractor = new(StringComparer.Ordinal);
     private readonly HashSet<string> _attachedItemIdentifiers = new(StringComparer.Ordinal);
+    private readonly HashSet<int> _dismountedClientIds = new();
     private readonly List<MonoBehaviour> _patientAttachPointOccupants = new();
 
     private ChatUIController _chatUI;
@@ -172,6 +175,42 @@ namespace TriageTrainer.Entity
     public IReposable ReposedTarget => _reposedTargetComponent as IReposable;
     public MovingPatientBedPositioningPoint LatchedPositioningPoint => _latchedPositioningPoint;
     public int RequiredInteractorCount => Mathf.Max(Weight, ReposedTarget?.Weight ?? 0);
+
+    protected override void OnServerParticipantEntered(int clientId, PlayerController player, int handle)
+    {
+      _dismountedClientIds.Remove(clientId);
+      if (_dismountedClientIds.Count == 0)
+        return;
+
+      string signal = _dismountCompletionSignal?.Trim();
+      if (string.IsNullOrWhiteSpace(signal))
+        return;
+
+      ScenarioInteractionSignals.Clear(signal);
+    }
+
+    public void ResetDismountCompletionTracking()
+    {
+      _dismountedClientIds.Clear();
+    }
+
+    protected override void OnServerParticipantExited(int clientId, PlayerController player, int handle)
+    {
+      if (clientId < 0)
+        return;
+
+      _dismountedClientIds.Add(clientId);
+
+      // 환자 A 베드는 4인 이동을 전제로 하므로, 4명이 모두 내린 시점에만 완료 신호를 발행한다.
+      if (_dismountedClientIds.Count < 4)
+        return;
+
+      string signal = _dismountCompletionSignal?.Trim();
+      if (string.IsNullOrWhiteSpace(signal))
+        return;
+
+      ScenarioInteractionSignals.Raise(signal);
+    }
 
     /// <summary>장비형 파생 구성에서 침대 조종 로직을 단일 사용자로 제한한다.</summary>
     public void SetMaximumPlayerParticipants(int count)

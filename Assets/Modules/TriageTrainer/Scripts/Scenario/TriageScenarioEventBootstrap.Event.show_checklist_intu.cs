@@ -11,8 +11,16 @@ namespace TriageTrainer.Scenario
 
     private IEnumerator Event_ShowChecklistIntu()
     {
-      SetActiveIfPresent(_intuChecklistUiPanel, true);
-      EmitSystemMessage("기관내삽관 준비물 체크리스트를 표시했습니다.");
+      ToggleChecklistPanel(ref _intuChecklistUiPanel,
+        true,
+        "기관내삽관 준비물 체크리스트를 표시했습니다.",
+        new[]
+        {
+          "IntuChecklistPanel",
+          "IntubationChecklistPanel",
+          "ChecklistIntu",
+          "삽관체크리스트"
+        });
       yield break;
     }
   }

@@ -298,6 +298,7 @@ namespace TriageTrainer.Scenario
 
     private readonly List<string> _registeredEventIds = new();
     private ChatUIController _chatUi;
+    private QuestUIController _questUi;
 
     private void Awake()
     {
@@ -810,6 +811,83 @@ namespace TriageTrainer.Scenario
       {
         target.SetActive(active);
       }
+    }
+
+    private void ToggleChecklistPanel(ref GameObject panel,
+      bool active,
+      string message,
+      string[] candidateObjectNames)
+    {
+      panel = ResolveChecklistPanel(panel, candidateObjectNames);
+      if (panel != null)
+      {
+        panel.SetActive(active);
+        EmitSystemMessage(message);
+        return;
+      }
+
+      if (_questUi == null)
+      {
+        _questUi = Registry.Get<QuestUIController>(RegistryType.UI, Registry.TypeKey<QuestUIController>());
+        _questUi ??= FindFirstObjectByType<QuestUIController>(FindObjectsInactive.Include);
+      }
+
+      if (_questUi != null)
+      {
+        if (active)
+        {
+          _questUi.Open();
+        }
+        else if (_questUi.IsOpen)
+        {
+          _questUi.Close();
+        }
+
+        EmitSystemMessage($"{message} (퀘스트 UI 폴백)");
+        return;
+      }
+
+      EmitSystemMessage($"{message} (체크리스트 UI 참조 없음)");
+    }
+
+    private static GameObject ResolveChecklistPanel(GameObject current, string[] candidateObjectNames)
+    {
+      if (current != null)
+      {
+        return current;
+      }
+
+      if (candidateObjectNames == null || candidateObjectNames.Length == 0)
+      {
+        return null;
+      }
+
+      var transforms = FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+      for (int i = 0; i < transforms.Length; i++)
+      {
+        var tr = transforms[i];
+        if (tr == null)
+        {
+          continue;
+        }
+
+        var name = tr.name;
+        for (int j = 0; j < candidateObjectNames.Length; j++)
+        {
+          var candidate = candidateObjectNames[j];
+          if (string.IsNullOrWhiteSpace(candidate))
+          {
+            continue;
+          }
+
+          if (string.Equals(name, candidate, StringComparison.OrdinalIgnoreCase))
+          {
+            return tr.gameObject;
+          }
+        }
+      }
+
+      return null;
     }
 
     private void SnapToIfPresent(GameObject target, Transform destination)

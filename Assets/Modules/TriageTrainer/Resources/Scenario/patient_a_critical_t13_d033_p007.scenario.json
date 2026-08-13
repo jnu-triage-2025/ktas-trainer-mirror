@@ -1,5 +1,5 @@
 {
-  "identifier": "patient_a_critical",
+  "identifier": "patient_a_critical_t13_d033_p007",
   "tags": [
     "access_support",
     "airway_team",
@@ -1831,7 +1831,7 @@
     },
     "D015": {
       "speakerName": "의사 NPC",
-      "dialogueContent": "삽관이 끝났고, 자발호흡이 있으니 간호사 A 선생님이 T-piece를 연결하고 산소 10L를 공급하며 산소포화도를 모니터링해주세요.",
+      "dialogueContent": "삽관이 끝났고, 자발호흡이 있으니 삽관·산소 담당 간호사 선생님이 T-piece를 연결하고 산소 10L를 공급하며 산소포화도를 모니터링해주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3006,7 +3006,7 @@
     },
     "N009_3": {
       "speakerName": "시스템",
-      "dialogueContent": "산소줄과 T-Piece를 획득하세요.",
+      "dialogueContent": "산소줄을 먼저 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4129,7 +4129,7 @@
           "requiredPlayerTagsMatchMode": "All"
         }
       ],
-      "nextIdentifier": "D037"
+      "nextIdentifier": null
     },
     "PRESET_A": {
       "targetEntityIdentifier": "patient_a",
@@ -4160,7 +4160,7 @@
       "isCardiacArrest": false,
       "identifier": "PRESET_A",
       "nodeType": "PatientMedicalStatePreset",
-      "nextIdentifier": "D005"
+      "nextIdentifier": "D033"
     },
     "Q006": {
       "operation": "Add",
@@ -5700,7 +5700,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_blood_bag"
+              "registryIdentifier": "sig.click_blood_transfusion_set"
             }
           ]
         }

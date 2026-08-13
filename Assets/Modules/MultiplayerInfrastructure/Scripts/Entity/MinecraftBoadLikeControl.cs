@@ -146,6 +146,7 @@ namespace MultiplayerInfrastructure.Entity
       int handle = FindHandle(clientId);
       if (handle >= 0)
       {
+        OnServerParticipantExited(clientId, player, handle);
         SetHandle(handle, InvalidClientId);
         _serverInputs.Remove(clientId);
       }
@@ -159,10 +160,19 @@ namespace MultiplayerInfrastructure.Entity
           return false;
         SetHandle(handle, clientId);
         _serverInputs[clientId] = Vector2.zero;
+        OnServerParticipantEntered(clientId, player, handle);
         ParticipantAssigned?.Invoke(handle);
       }
       ApplyLocalParticipant();
       return true;
+    }
+
+    protected virtual void OnServerParticipantEntered(int clientId, PlayerController player, int handle)
+    {
+    }
+
+    protected virtual void OnServerParticipantExited(int clientId, PlayerController player, int handle)
+    {
     }
 
     private void UpdateNetworkMovement()

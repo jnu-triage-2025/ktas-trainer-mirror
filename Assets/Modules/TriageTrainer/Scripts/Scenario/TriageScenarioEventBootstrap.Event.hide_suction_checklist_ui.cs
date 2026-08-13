@@ -11,8 +11,16 @@ namespace TriageTrainer.Scenario
 
     private IEnumerator Event_HideSuctionChecklistUi()
     {
-      SetActiveIfPresent(_suctionChecklistUiPanel, false);
-      EmitSystemMessage("흡인 준비물 체크리스트를 숨겼습니다.");
+      ToggleChecklistPanel(ref _suctionChecklistUiPanel,
+        false,
+        "흡인 준비물 체크리스트를 숨겼습니다.",
+        new[]
+        {
+          "SuctionChecklistPanel",
+          "SuctionChecklistUI",
+          "ChecklistSuction",
+          "흡인체크리스트"
+        });
       yield break;
     }
   }

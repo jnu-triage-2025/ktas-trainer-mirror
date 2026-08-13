@@ -161,6 +161,7 @@ namespace MultiplayerInfrastructure.Player
       if (_chatUI.IsUnityNull()) return;
 
       bool hasOtherOverlay = !UIOverlayStack.IsEmpty() && !UIOverlayStack.IsTop(_chatUI);
+      bool hasDialogueOverlayTop = !_dialoguePanelUIController.IsUnityNull() && UIOverlayStack.IsTop(_dialoguePanelUIController);
 
       if (Input.GetKeyDown(_keyToggleChat))
       {
@@ -173,7 +174,9 @@ namespace MultiplayerInfrastructure.Player
 
       if (Input.GetKeyDown(_keyToggleCommand))
       {
-        if (hasOtherOverlay)
+        // 테스트/운영 커맨드 입력은 대화창이 최상단일 때도 열 수 있게 허용한다.
+        // (Validator 게이트 대기 중 시그널 주입·조회 목적)
+        if (hasOtherOverlay && !hasDialogueOverlayTop)
           return;
 
         _chatUI.OpenWithCommandStart();

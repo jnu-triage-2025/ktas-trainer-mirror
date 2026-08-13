@@ -11,8 +11,16 @@ namespace TriageTrainer.Scenario
 
     private IEnumerator Event_ShowSuctionChecklistUi()
     {
-      SetActiveIfPresent(_suctionChecklistUiPanel, true);
-      EmitSystemMessage("흡인 준비물 체크리스트를 표시했습니다.");
+      ToggleChecklistPanel(ref _suctionChecklistUiPanel,
+        true,
+        "흡인 준비물 체크리스트를 표시했습니다.",
+        new[]
+        {
+          "SuctionChecklistPanel",
+          "SuctionChecklistUI",
+          "ChecklistSuction",
+          "흡인체크리스트"
+        });
       yield break;
     }
   }

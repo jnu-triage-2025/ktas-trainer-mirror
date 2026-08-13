@@ -49,6 +49,10 @@ namespace TriageTrainer.Scenario
         // 베드가 허용 목록 필터를 사용하는 경우에도 수동 스냅 포인트를 사용할 수 있게 보장한다.
         bed.EnsureAllowedPositioningPointIdentifier(pointIdentifier);
         bed.SetMovementInteractionEnabled(true, releaseParticipantsIfDisabled: false);
+        bed.ResetDismountCompletionTracking();
+
+        const string allDismountedSignal = "all_players_dismounted_patient_a_bed";
+        ScenarioInteractionSignals.Clear(allDismountedSignal);
 
         string globalSignal = $"patient_bed_position_reached_{pointIdentifier}";
         string scopedSignal = string.IsNullOrWhiteSpace(bed.Identifier)
@@ -89,8 +93,9 @@ namespace TriageTrainer.Scenario
         // 신호 수신 직후 한 번 더 스냅을 강제해 최종 위치/회전을 보정한다.
         bed.TryForceSnapToPositioningPoint(pointIdentifier);
 
-        // 스냅 완료와 동시에 침대 조종 참여자를 모두 해제한다.
-        bed.SetMovementInteractionEnabled(false, releaseParticipantsIfDisabled: true);
+        EmitSystemMessage("이동 종료: 플레이어 A, B, C, D는 모두 Left Shift로 침대 조종을 해제하세요.");
+        while (!ScenarioInteractionSignals.IsRaised(allDismountedSignal))
+          yield return null;
 
         EmitSystemMessage("환자 A 베드 이동 완료가 확인되었습니다.");
         yield break;
@@ -104,9 +109,6 @@ namespace TriageTrainer.Scenario
       {
         SnapToIfPresent(moveTarget, _patientATreatmentRoomPoint);
       }
-
-      if (moveTarget != null && moveTarget.TryGetComponent(out MovingPatientBedController movedBed))
-        movedBed.SetMovementInteractionEnabled(false, releaseParticipantsIfDisabled: true);
 
       EmitSystemMessage("환자 A를 처치 구역으로 이동시켰습니다.");
     }

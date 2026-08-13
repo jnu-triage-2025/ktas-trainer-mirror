@@ -11,8 +11,16 @@ namespace TriageTrainer.Scenario
 
     private IEnumerator Event_ShowIvChecklist()
     {
-      SetActiveIfPresent(_ivChecklistUiPanel, true);
-      EmitSystemMessage("IV 준비물 체크리스트를 표시했습니다.");
+      ToggleChecklistPanel(ref _ivChecklistUiPanel,
+        true,
+        "IV 준비물 체크리스트를 표시했습니다.",
+        new[]
+        {
+          "IvChecklistPanel",
+          "IVChecklistPanel",
+          "ChecklistIV",
+          "수액체크리스트"
+        });
       yield break;
     }
   }
