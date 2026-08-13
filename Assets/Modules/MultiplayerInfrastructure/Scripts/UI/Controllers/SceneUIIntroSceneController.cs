@@ -231,7 +231,7 @@ namespace MultiplayerInfrastructure.UI
 
       _listView.itemsSource = _items;
       _listView.selectionType = SelectionType.Single;
-      _listView.onSelectionChange += OnSelectionChanged;
+      _listView.selectionChanged += OnSelectionChanged;
     }
 
     // ════════════════════════════════════════════════════════════════════════
