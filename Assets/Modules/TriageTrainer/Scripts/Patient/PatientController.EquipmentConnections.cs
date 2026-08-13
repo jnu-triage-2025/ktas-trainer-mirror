@@ -69,6 +69,14 @@ namespace TriageTrainer.Entity
       _intravenousFluids[index] = fluidSource;
     }
 
+    /// <summary>Inspector Reset 직후 이전 프리팹 기본값과 같은 빈 장비 컬렉션을 만든다.</summary>
+    public void InitializeEmptyCollections()
+    {
+      _intravenousFluids = new List<MonoBehaviour>();
+      _suctionWalls = new List<WallAttachedWallSuction>();
+      _oxyflowmeters = new List<WallAttachedOxyflowmeter>();
+    }
+
     public MonoBehaviour GetIntravenousFluid(int index) =>
       _intravenousFluids != null && index >= 0 && index < _intravenousFluids.Count
         ? _intravenousFluids[index]

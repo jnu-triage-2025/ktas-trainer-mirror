@@ -9,6 +9,8 @@ using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.IntravenousLine;
 using TriageTrainer.Entity.OxyLine;
 using TriageTrainer.Entity.SuctionLine;
+using TriageTrainer.Entity.Patient;
+using TriageTrainer.Patient;
 using UnityEngine;
 
 using MI = MultiplayerInfrastructure;
@@ -292,21 +294,44 @@ namespace TriageTrainer.Entity
       _ivAttachmentPoint.SetAllowsMultipleConnections(true);
     }
 
-    private void OnValidate()
+    protected override void OnValidate()
     {
+      base.OnValidate();
       OnValidate_Animation();
       EnsureCarryAttachPoint();
       InitializeCollider();
       EnsureMedicalStateDefaults();
       _weight = Mathf.Max(0, _weight);
       EnsureDefaultInteractConfigs();
+      var state = GetPatientState();
+      RestoreLegacyDefaultsAfterInspectorResetIfNeeded(state);
+      state?.InitializeRuntimeReferences(this);
+    }
+
+    protected override void Reset()
+    {
+      base.Reset();
+      ApplySerializedDefaultsForInspectorReset();
       GetPatientState()?.InitializeRuntimeReferences(this);
     }
 
-    private void Reset()
+    private void RestoreLegacyDefaultsAfterInspectorResetIfNeeded(PatientStateABC state)
     {
-      ApplySerializedDefaultsForInspectorReset();
-      GetPatientState()?.InitializeRuntimeReferences(this);
+      if (state == null || !state.RestoresLegacyPatientControllerDefaultsOnInspectorReset)
+        return;
+
+      // Inspector 문맥 메뉴 Reset은 Unity 기본 직렬화값을 적용한 뒤 OnValidate를 호출한다.
+      // B Male/Female의 이전 프리팹 값과 구별되는 이 조합일 때만 코드 리터럴을 복구한다.
+      bool hasResetSignature = (_assessActions == null || _assessActions.Count == 0)
+                               && !_intravenousLineCannulaConfig.Supported;
+      if (!hasResetSignature)
+        return;
+
+      _supportExternalRefs.InitializeEmptyCollections();
+      ApplySerializedDefaultAssessActions();
+      _intravenousLineCannulaConfig.Supported = true;
+      EnsureDefaultRuntimeAnimatorController();
+      BuildInteractEntries();
     }
 
     /// <summary>
@@ -322,6 +347,7 @@ namespace TriageTrainer.Entity
       _initiallyHiddenChildNames = Array.Empty<string>();
       _weight = 4;
       _supportExternalRefs = default;
+      _supportExternalRefs.InitializeEmptyCollections();
       _ivAttachmentPoint = null;
       _oxygenMaskAttachmentPoint = null;
       _suctionLineAttachmentPoint = null;
@@ -343,8 +369,9 @@ namespace TriageTrainer.Entity
       _patientDescriptor = new PatientDescriptor();
       _medicalState = new PatientMedicalState();
       _interactConfigs = new List<InteractConfig>();
-      _assessActions = new List<AssessActionConfig>();
+      ApplySerializedDefaultAssessActions();
       _intravenousLineCannulaConfig = default;
+      _intravenousLineCannulaConfig.Supported = true;
       _intravenousLineCannulaInteractable = true;
       _triageConfig = TriageAssessmentConfig.Default();
       _triageLabelAnchor = null;
@@ -352,7 +379,7 @@ namespace TriageTrainer.Entity
       _debugItemIdentifier = "gauze";
 
       EnsureCarryAttachPoint();
-      EnsureIvAttachmentPoint();
+      EnsureDefaultRuntimeAnimatorController();
       InitializeCollider();
       EnsureMedicalStateDefaults();
       EnsureDefaultInteractConfigs();

@@ -35,6 +35,28 @@ namespace TriageTrainer.Tests
         Assert.That(controller.ConfiguredOxygenMaskAttachmentPoint, Is.SameAs(port));
         Assert.That(serializedField.GetValue(controller), Is.SameAs(port),
           "Reset must restore the serialized reference from the oxygen connection-point component");
+        Assert.That(controller.IntravenousLineCannulaSupported, Is.True,
+          "B Male/Female의 기존 직렬화 기본값은 캐뉼라 지원이다");
+        Assert.That(controller.SupportExternalRefs.IntravenousFluids, Is.Empty);
+        Assert.That(controller.SupportExternalRefs.SuctionWalls, Is.Empty);
+        Assert.That(controller.SupportExternalRefs.Oxyflowmeters, Is.Empty);
+
+        var assessActionsField = typeof(PatientController).GetField(
+          "_assessActions", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(assessActionsField?.GetValue(controller), Is.InstanceOf<System.Collections.IList>());
+        var assessActions = (System.Collections.IList)assessActionsField.GetValue(controller);
+        Assert.That(assessActions, Has.Count.EqualTo(4));
+        for (int i = 0; i < assessActions.Count; i++)
+          Assert.That(((PatientController.AssessActionConfig)assessActions[i]).Enabled, Is.False);
+
+        // Inspector의 Reset 메뉴는 Reset 훅 대신 기본 직렬화값 적용 후 OnValidate가
+        // 실행될 수 있으므로, 그 경로도 동일하게 이전 프리팹 기본값을 복구해야 한다.
+        assessActionsField.SetValue(controller, new System.Collections.Generic.List<PatientController.AssessActionConfig>());
+        controller.IntravenousLineCannulaSupported = false;
+        InvokeOnValidate(controller);
+
+        Assert.That(controller.IntravenousLineCannulaSupported, Is.True);
+        Assert.That((System.Collections.IList)assessActionsField.GetValue(controller), Has.Count.EqualTo(4));
       }
       finally
       {
@@ -47,6 +69,13 @@ namespace TriageTrainer.Tests
       var reset = typeof(PatientController).GetMethod("Reset", BindingFlags.Instance | BindingFlags.NonPublic);
       Assert.That(reset, Is.Not.Null);
       reset.Invoke(controller, null);
+    }
+
+    private static void InvokeOnValidate(PatientController controller)
+    {
+      var onValidate = typeof(PatientController).GetMethod("OnValidate", BindingFlags.Instance | BindingFlags.NonPublic);
+      Assert.That(onValidate, Is.Not.Null);
+      onValidate.Invoke(controller, null);
     }
 
     [Test]

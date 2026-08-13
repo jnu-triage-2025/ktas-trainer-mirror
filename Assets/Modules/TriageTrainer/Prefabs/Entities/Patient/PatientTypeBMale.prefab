@@ -171,9 +171,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e794a1dae1454908ba448af46d61805, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.PatientController
-  _componentIndexCache: 0
+  _componentIndexCache: 255
   _addedNetworkObject: {fileID: 868971026503455756}
-  _networkObjectCache: {fileID: 868971026503455756}
+  _networkObjectCache: {fileID: 0}
   _runtimeAnimatorController: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
   _assessActions:
   - _identifier: assess_avpu_gcs
@@ -215,7 +215,7 @@ MonoBehaviour:
     _suctionWalls: []
     _oxyflowmeters: []
   _ivAttachmentPoint: {fileID: 0}
-  _oxygenMaskAttachmentPoint: {fileID: 0}
+  _oxygenMaskAttachmentPoint: {fileID: 4673562941832867291}
   _suctionLineAttachmentPoint: {fileID: 0}
   _carryAttachPoint: {fileID: 5489750353886828385}
   _isMovingPatientBedAttached: 0
@@ -290,7 +290,7 @@ MonoBehaviour:
   _triageConfig:
     _assessable: 0
     _changeAssessableOnAssessDone: 0
-    _displayText: 
+    _displayText: "\uD2B8\uB9AC\uC544\uC9C0 \uBD84\uB958"
   _triageLabelAnchor: {fileID: 0}
 --- !u!114 &868971026503455756
 MonoBehaviour:
@@ -360,7 +360,6 @@ GameObject:
   m_Component:
   - component: {fileID: 8912384234428563656}
   - component: {fileID: 4673562941832867291}
-  - component: {fileID: 3897426703785462219}
   m_Layer: 0
   m_Name: nasal_cannula_oxy_point
   m_TagString: Untagged

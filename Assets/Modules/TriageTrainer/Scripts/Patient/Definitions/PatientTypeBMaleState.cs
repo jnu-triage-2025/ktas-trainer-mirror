@@ -9,6 +9,7 @@ namespace TriageTrainer.Patient
     private PatientTypeBMaleTreatmentDisplayState treatmentDisplayState = new PatientTypeBMaleTreatmentDisplayState();
 
     public override PatientTreatmentDisplayStateABC TreatmentDisplayState => treatmentDisplayState;
+    public override bool RestoresLegacyPatientControllerDefaultsOnInspectorReset => true;
 
     protected override void ConfigureRuntimeReferences(PatientController controller)
     {

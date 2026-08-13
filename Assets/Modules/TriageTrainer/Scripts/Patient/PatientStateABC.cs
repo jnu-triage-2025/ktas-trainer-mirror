@@ -30,6 +30,12 @@ namespace TriageTrainer.Patient
 
     public abstract PatientTreatmentDisplayStateABC TreatmentDisplayState { get; }
 
+    /// <summary>
+    /// 기존 프리팹 직렬화값을 코드 기본값으로 복구해야 하는 환자 유형인지 여부.
+    /// 기본값은 false이며, 해당 환자 유형만 명시적으로 opt-in 한다.
+    /// </summary>
+    public virtual bool RestoresLegacyPatientControllerDefaultsOnInspectorReset => false;
+
     protected virtual void Awake()
     {
       InitializeRuntimeReferences(GetComponent<PatientController>());
