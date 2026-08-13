@@ -23,7 +23,7 @@ namespace MultiplayerInfrastructure.UI
 
       _figure = new VisualElement();
       _figure.style.height = 180;
-      _figure.style.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+      _figure.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
       _figure.style.display = DisplayStyle.None;
       Add(_figure);
     }
