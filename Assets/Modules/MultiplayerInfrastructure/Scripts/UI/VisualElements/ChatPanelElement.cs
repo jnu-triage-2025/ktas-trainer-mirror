@@ -817,7 +817,7 @@ namespace MultiplayerInfrastructure.UI
     private void HandleInputKeyDown(KeyDownEvent evt)
     {
       if (evt.keyCode == KeyCode.Tab)
-        evt.PreventDefault();
+        evt.StopPropagation();
 
       InputKeyPressed?.Invoke(evt.keyCode);
     }

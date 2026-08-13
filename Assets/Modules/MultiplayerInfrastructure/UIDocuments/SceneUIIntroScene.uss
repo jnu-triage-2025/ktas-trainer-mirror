@@ -73,7 +73,7 @@
   color: #6e7b93;
 }
 
-.text-field:focus-within {
+.text-field:focus {
   border: 1px solid #3b82f6;
 }
 

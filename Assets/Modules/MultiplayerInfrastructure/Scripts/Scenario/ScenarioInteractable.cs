@@ -156,8 +156,9 @@ namespace MultiplayerInfrastructure.Scenario
       _displayColor = Color.white;
     }
 
-    private void OnValidate()
+    protected override void OnValidate()
     {
+      base.OnValidate();
       _cachedGraph = null;
       if (string.IsNullOrWhiteSpace(_identifier))
         _identifier = global::MultiplayerInfrastructure.Registry.EntityId.Ensure(_identifier, gameObject, "scenario-interactable");

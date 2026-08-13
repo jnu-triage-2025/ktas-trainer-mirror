@@ -177,10 +177,11 @@ namespace MultiplayerInfrastructure.UI
       RefreshCraftableRecipes();
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
       DetachViewEvents();
       ItemSystem.EquipmentShadowSpriteProvider.ClearCache();
+      base.OnDestroy();
     }
 
     public void UpdateInventory(IReadOnlyList<InventorySlotModelDTO> slots)

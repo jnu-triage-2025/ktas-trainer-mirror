@@ -149,11 +149,12 @@ namespace MultiplayerInfrastructure.UI
       }
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
       if (_closeButton != null) _closeButton.clicked -= HandleCloseClicked;
       if (_resetButton != null)  _resetButton.clicked -= HandleResetClicked;
       if (_keyboard != null)     _keyboard.OnAssignedKeyClicked -= HandleKeyboardKeyClicked;
+      base.OnDestroy();
     }
 
     // ──────────────────────────────────────────────────────────────────────────

@@ -49,8 +49,9 @@ namespace MultiplayerInfrastructure.UI
         StartCoroutine(NeutralizeDocumentRootWhenReady(_document));
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
+      base.OnDestroy();
       DetachButtonHandlers();
     }
 

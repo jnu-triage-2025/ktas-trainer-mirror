@@ -92,8 +92,10 @@ namespace MultiplayerInfrastructure.UI
         StartCoroutine(NeutralizeDocumentRootWhenReady(_document));
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
+      base.OnDestroy();
+
       if (_closeButton != null) _closeButton.clicked -= HandleCloseClicked;
       if (_applyButton != null) _applyButton.clicked -= HandleApplyClicked;
 

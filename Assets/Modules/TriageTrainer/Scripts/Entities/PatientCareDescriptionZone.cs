@@ -24,8 +24,6 @@ namespace TriageTrainer.Entity
     [Header("Recognition Area")]
     [SerializeField] private Vector3 _size = new(2.4f, 3.5f, 3f);
     [SerializeField] private Vector3 _center = new(0f, 1.5f, 0f);
-    [Tooltip("비활성(미설치) 장비를 환자에게 연결할지 여부입니다. 실제 사용 판정 Zone은 false를 사용해야 합니다.")]
-    [SerializeField] private bool _includeUnattachedEquipment = false;
     [Tooltip("Zone 안에 같은 장비가 여러 개면 환자 연결을 무효화하고 배치 오류를 보고합니다.")]
     [SerializeField] private bool _requireExactlyOneEquipment = true;
     [Tooltip("환자 장비 판정 전에 환자가 이 Zone 안의 positioning point에 고정된 침대에 연결되어 있어야 합니다.")]
@@ -46,13 +44,16 @@ namespace TriageTrainer.Entity
     private readonly List<WallAttachedWallSuction> _wallSuction = new();
     private readonly List<WallAttachedOxyflowmeter> _oxyflowmeters = new();
     private readonly HashSet<WallAttachedWallSuction> _newlyInstalledWallSuction = new();
-    private readonly HashSet<WallAttachedOxyflowmeter> _newlyInstalledOxyflowmeters = new();
     private readonly HashSet<string> _warnedAutomaticLineFailures = new();
     private bool _warnedMultipleWallSuction;
     private bool _warnedMultipleOxyflowmeter;
     private bool _warnedMissingEquipment;
     private bool _warnedMissingPositioningPoint;
     private bool _loggedEquipmentScanDiagnostic;
+    // 구성 검증용 수량이다. 장비는 시작 시 Hide() 되어 collider가 비활성일 수 있으므로,
+    // 실제 환자 연결 목록과 별도로 보관한다.
+    private int _wallSuctionInZoneCount;
+    private int _oxyflowmeterInZoneCount;
     private PatientController _activePatient;
     private WallAttachedWallSuction _connectedWallSuction;
     private WallAttachedOxyflowmeter _connectedOxyflowmeter;
@@ -94,8 +95,7 @@ namespace TriageTrainer.Entity
       _collider.isTrigger = true;
       ApplyCollider();
       RefreshEquipment();
-      // 장비(WallSuction, Oxyflowmeter)는 설계상 항상 미설치 상태로 시작하므로
-      // Awake 시점에는 IsAttached == false 여서 필터링되는 것이 정상이다.
+      // IsAttached는 장비의 플레이 중 설치 상태이며 zone 소속 판정에는 사용하지 않는다.
       // 구성 유효성 경고는 모든 오브젝트 초기화가 끝난 Start() 에서 수행한다.
     }
 
@@ -130,14 +130,13 @@ namespace TriageTrainer.Entity
       _bedColliderCounts.Clear();
       _snappedBeds.Clear();
       _newlyInstalledWallSuction.Clear();
-      _newlyInstalledOxyflowmeters.Clear();
       _warnedAutomaticLineFailures.Clear();
       TriageWorldInteractionSignals.RaiseCareZoneDisabled(Identifier);
     }
 
     private void OnWallSuctionAttachmentStateChanged(WallAttachedWallSuction equipment, bool attached)
     {
-      if (attached && IsEquipmentInZone(equipment))
+      if (IsEquipmentInZone(equipment))
       {
         if (!_wallSuction.Contains(equipment))
           _wallSuction.Add(equipment);
@@ -153,7 +152,7 @@ namespace TriageTrainer.Entity
 
     private void OnOxyflowmeterAttachmentStateChanged(WallAttachedOxyflowmeter equipment, bool attached)
     {
-      if (attached && IsEquipmentInZone(equipment))
+      if (IsEquipmentInZone(equipment))
       {
         if (!_oxyflowmeters.Contains(equipment))
           _oxyflowmeters.Add(equipment);
@@ -161,7 +160,6 @@ namespace TriageTrainer.Entity
       else
       {
         _oxyflowmeters.Remove(equipment);
-        _newlyInstalledOxyflowmeters.Remove(equipment);
       }
       RecheckConfiguration();
       RefreshActivePatientEquipment(refreshEquipment: false);
@@ -180,7 +178,6 @@ namespace TriageTrainer.Entity
     {
       if (equipment == null || !IsEquipmentInZone(equipment))
         return;
-      _newlyInstalledOxyflowmeters.Add(equipment);
       RefreshActivePatientEquipment();
       RecheckConfiguration();
     }
@@ -464,15 +461,9 @@ namespace TriageTrainer.Entity
       if (patient == null || !IsPatientSupportedInZone(patient))
         return;
 
-      WallAttachedOxyflowmeter oxyflowmeter = patient.ConnectedOxyflowmeter;
-      if (oxyflowmeter != null && _newlyInstalledOxyflowmeters.Contains(oxyflowmeter))
-      {
-        // TODO: Configure the oxyflowmeter prefab port and the installed oxygen-mask port in their serialized fields.
-        var equipmentPoint = oxyflowmeter.OxyLineConnectionPoint;
-        var patientPoint = patient.OxygenMaskAttachmentPoint;
-        if (TryCreateAutomaticLine(equipmentPoint, patientPoint, "oxygen"))
-          _newlyInstalledOxyflowmeters.Remove(oxyflowmeter);
-      }
+      // 기획 참고(대화 기록): 산소 유량계와 T-piece/비강 캐뉼라 사이는
+      // "상호작용을 실행하면 ... oxy line이 연결"된다. 따라서 이 케어존은
+      // 유량계 설치 또는 환자 진입만으로 산소 라인을 자동 생성해서는 안 된다.
 
       WallAttachedWallSuction suction = patient.ConnectedWallSuction;
       if (suction != null && _newlyInstalledWallSuction.Contains(suction))
@@ -574,49 +565,50 @@ namespace TriageTrainer.Entity
     {
       _wallSuction.Clear();
       _oxyflowmeters.Clear();
-      // Attachment callbacks may hide/show equipment and immediately request a refresh
-      // in the same frame. With autoSyncTransforms disabled, OverlapBox otherwise sees
-      // the previous collider-enabled state and drops a freshly reinstalled device.
-      Physics.SyncTransforms();
-      Vector3 scale = transform.lossyScale;
-      Vector3 halfExtents = Vector3.Scale(_size, new Vector3(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z))) * 0.5f;
-      Vector3 worldCenter = transform.TransformPoint(_center);
-      Collider[] hits = Physics.OverlapBox(worldCenter, halfExtents, transform.rotation);
-
-      int suctionComponentsFound = 0;
-      int flowmeterComponentsFound = 0;
+      _wallSuctionInZoneCount = 0;
+      _oxyflowmeterInZoneCount = 0;
       int suctionAttachedCount = 0;
       int flowmeterAttachedCount = 0;
 
-      for (int i = 0; i < hits.Length; i++)
+      // 벽면 장비는 미설치 상태에서 Hide() 되며, 이때 collider도 비활성일 수 있다.
+      // 따라서 Physics.OverlapBox로 탐색하면 씬에 배치된 장비를 범위 밖으로 오인한다.
+      // 컴포넌트를 포함해 찾은 뒤 transform 위치로 zone 포함 여부를 판정한다.
+      WallAttachedWallSuction[] suctions = FindObjectsByType<WallAttachedWallSuction>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+      for (int i = 0; i < suctions.Length; i++)
       {
-        WallAttachedWallSuction suction = hits[i].GetComponentInParent<WallAttachedWallSuction>();
-        if (suction != null && !_wallSuction.Contains(suction))
+        WallAttachedWallSuction suction = suctions[i];
+        if (suction != null && IsEquipmentInZone(suction))
         {
-          suctionComponentsFound++;
+          _wallSuctionInZoneCount++;
           if (suction.IsAttached) suctionAttachedCount++;
-          if (_includeUnattachedEquipment || suction.IsAttached) _wallSuction.Add(suction);
-        }
-        WallAttachedOxyflowmeter flowmeter = hits[i].GetComponentInParent<WallAttachedOxyflowmeter>();
-        if (flowmeter != null && !_oxyflowmeters.Contains(flowmeter))
-        {
-          flowmeterComponentsFound++;
-          if (flowmeter.IsAttached) flowmeterAttachedCount++;
-          if (_includeUnattachedEquipment || flowmeter.IsAttached) _oxyflowmeters.Add(flowmeter);
+          // IsAttached는 플레이 중 표시/설치 상태일 뿐 zone 소속 판정 조건이 아니다.
+          _wallSuction.Add(suction);
         }
       }
 
-      // 진단 로그: OverlapBox 가 장비를 찾았는지, IsAttached 필터로 제외되었는지 구분한다.
+      WallAttachedOxyflowmeter[] flowmeters = FindObjectsByType<WallAttachedOxyflowmeter>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+      for (int i = 0; i < flowmeters.Length; i++)
+      {
+        WallAttachedOxyflowmeter flowmeter = flowmeters[i];
+        if (flowmeter != null && IsEquipmentInZone(flowmeter))
+        {
+          _oxyflowmeterInZoneCount++;
+          if (flowmeter.IsAttached) flowmeterAttachedCount++;
+          // IsAttached는 플레이 중 표시/설치 상태일 뿐 zone 소속 판정 조건이 아니다.
+          _oxyflowmeters.Add(flowmeter);
+        }
+      }
+
+      // 진단 로그: zone 안의 장비가 없는지, 설치 전 상태인지 구분한다.
       // Connect() 등에서 빈번히 호출되므로 상태 전이 시 1회만 출력한다.
-      if (suctionComponentsFound == 0 || flowmeterComponentsFound == 0)
+      if (_wallSuctionInZoneCount == 0 || _oxyflowmeterInZoneCount == 0)
       {
         if (!_loggedEquipmentScanDiagnostic)
         {
           _loggedEquipmentScanDiagnostic = true;
           Debug.LogWarning(
-            $"[PatientCareDescriptionZone] '{Identifier}' OverlapBox scan: " +
-            $"totalHits={hits.Length}, wallSuctionInBounds={suctionComponentsFound}, oxyflowmeterInBounds={flowmeterComponentsFound}. " +
-            $"Center={worldCenter}, halfExtents={halfExtents}. " +
+            $"[PatientCareDescriptionZone] '{Identifier}' equipment scan: " +
+            $"wallSuctionInBounds={_wallSuctionInZoneCount}, oxyflowmeterInBounds={_oxyflowmeterInZoneCount}. " +
             $"장비 컴포넌트가 zone 범위 안에 없습니다. 장비 배치 또는 zone 크기를 확인하세요.", this);
         }
       }
@@ -626,9 +618,9 @@ namespace TriageTrainer.Entity
         {
           _loggedEquipmentScanDiagnostic = true;
           Debug.Log(
-            $"[PatientCareDescriptionZone] '{Identifier}' OverlapBox scan: " +
-            $"wallSuction={suctionComponentsFound}(attached:{suctionAttachedCount}), " +
-            $"oxyflowmeter={flowmeterComponentsFound}(attached:{flowmeterAttachedCount}). " +
+            $"[PatientCareDescriptionZone] '{Identifier}' equipment scan: " +
+            $"wallSuction={_wallSuctionInZoneCount}(attached:{suctionAttachedCount}), " +
+            $"oxyflowmeter={_oxyflowmeterInZoneCount}(attached:{flowmeterAttachedCount}). " +
             $"장비가 zone 안에 있으나 아직 설치(IsAttached)되지 않았습니다. " +
             $"플레이어가 장비 설치 상호작용을 하면 자동으로 인식됩니다.", this);
         }
@@ -660,12 +652,12 @@ namespace TriageTrainer.Entity
 
     private void WarnIfConfigurationInvalid()
     {
-      if (_wallSuction.Count == 0 || _oxyflowmeters.Count == 0)
+      if (_wallSuctionInZoneCount == 0 || _oxyflowmeterInZoneCount == 0)
       {
         if (!_warnedMissingEquipment)
         {
-          Debug.LogWarning($"[PatientCareDescriptionZone] '{Identifier}' requires one active wall_suction and one active oxyflowmeter. " +
-            $"Current: wall_suction={_wallSuction.Count}, oxyflowmeter={_oxyflowmeters.Count}.", this);
+          Debug.LogWarning($"[PatientCareDescriptionZone] '{Identifier}' requires one wall_suction and one oxyflowmeter in its bounds. " +
+            $"Current: wall_suction={_wallSuctionInZoneCount}, oxyflowmeter={_oxyflowmeterInZoneCount}.", this);
           _warnedMissingEquipment = true;
         }
       }

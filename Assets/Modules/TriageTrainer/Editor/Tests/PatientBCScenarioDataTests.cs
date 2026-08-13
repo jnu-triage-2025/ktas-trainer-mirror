@@ -31,6 +31,42 @@ namespace TriageTrainer.Tests
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeDDummyA.prefab";
 
     [Test]
+    public void CareZoneRegistersUnattachedEquipmentWithoutActiveColliders()
+    {
+      var root = new GameObject("CareZoneUnattachedEquipmentTest");
+      root.SetActive(false);
+      root.transform.position = new Vector3(10000f, 10000f, 10000f);
+      try
+      {
+        var zoneObject = new GameObject("CareZone");
+        zoneObject.transform.SetParent(root.transform);
+        var zone = zoneObject.AddComponent<PatientCareDescriptionZone>();
+        zone.ConfigureArea(Vector3.zero, new Vector3(10f, 10f, 10f));
+
+        var suctionObject = new GameObject("wall_suction");
+        suctionObject.transform.SetParent(root.transform);
+        suctionObject.AddComponent<WallAttachedWallSuction>();
+
+        var flowmeterObject = new GameObject("oxyflowmeter");
+        flowmeterObject.transform.SetParent(root.transform);
+        flowmeterObject.AddComponent<WallAttachedOxyflowmeter>();
+
+        typeof(PatientCareDescriptionZone).GetMethod(
+            "RefreshEquipment", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.Invoke(zone, null);
+
+        Assert.That(GetPrivateField<int>(zone, "_wallSuctionInZoneCount"), Is.EqualTo(1));
+        Assert.That(GetPrivateField<int>(zone, "_oxyflowmeterInZoneCount"), Is.EqualTo(1));
+        Assert.That(zone.WallSuction, Has.Count.EqualTo(1));
+        Assert.That(zone.Oxyflowmeters, Has.Count.EqualTo(1));
+      }
+      finally
+      {
+        Object.DestroyImmediate(root);
+      }
+    }
+
+    [Test]
     public void PatientVitalMonitorResolvesFromSharedCareZoneWithoutSceneReference()
     {
       var root = new GameObject("PatientBCMonitorResolutionTest");
@@ -1506,6 +1542,13 @@ namespace TriageTrainer.Tests
       var field = FindInstanceField(target.GetType(), fieldName);
       Assert.That(field, Is.Not.Null, fieldName);
       field.SetValue(target, value);
+    }
+
+    private static T GetPrivateField<T>(object target, string fieldName)
+    {
+      var field = FindInstanceField(target.GetType(), fieldName);
+      Assert.That(field, Is.Not.Null, fieldName);
+      return (T)field.GetValue(target);
     }
 
     private static FieldInfo FindInstanceField(System.Type type, string fieldName)

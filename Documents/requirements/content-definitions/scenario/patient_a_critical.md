@@ -300,7 +300,7 @@ SPAWN_A
 | `V015_2` | `sig.connect_wall_component_2` | 정합 | 연결지점 signal 식별자 정합 | 연결 후 통과 |
 | `V015_3` | `sig.click_o2_line` | 정합 | 획득 signal 식별자 정합 | 선행 획득 통과 |
 | `V015_3_1` | `sig.interact_tpiece` | 정합/배선 | 기관내관 클릭 상호작용 지점 completion signal 정합 | 장착 단계 통과 |
-| `V015_3_2` | `sig.connect_tpiece_and_oxyflow` | 정합 | 연결지점 signal 식별자 정합 | 실제 연결 완료 통과 |
+| `V015_3_2` | `sig.connect_tpiece_and_oxyflow` | 구현 대기 | T-piece 표시와 설치된 oxyflowmeter의 어느 쪽을 감지해도 `T피스에 산소 연결`을 노출하고, 실행 시 두 산소 포트를 연결한다. 현재는 권장 기획이며, 양측 `OxyLineConnectionPoint` 프리팹 배치가 선행되어야 한다. | 실제 연결 완료 통과 |
 | `V016` | `sig.click_gloves`, `sig.click_gauze`, `sig.click_plaster` | 정합 | 획득 자동 발행 식별자 정합 | 3개 획득 후 통과 |
 | `V016_1` | `sig.wear_glove` | 정합 | Item Apply signal 식별자 정합 | 착용 후 통과 |
 | `V016_2` | `sig.apply_gauze` | 정합 | Item Apply signal 식별자 정합 | 적용 후 통과 |
