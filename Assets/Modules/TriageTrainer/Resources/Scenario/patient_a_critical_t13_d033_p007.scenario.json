@@ -1,5 +1,5 @@
 {
-  "identifier": "patient_a_critical",
+  "identifier": "patient_a_critical_t13_d033_p007",
   "tags": [
     "access_support",
     "airway_team",
@@ -1831,7 +1831,7 @@
     },
     "D015": {
       "speakerName": "의사 NPC",
-      "dialogueContent": "삽관이 끝났고, 자발호흡이 있으니 간호사 A 선생님이 T-piece를 연결하고 산소 10L를 공급하며 산소포화도를 모니터링해주세요.",
+      "dialogueContent": "삽관이 끝났고, 자발호흡이 있으니 삽관·산소 담당 간호사 선생님이 T-piece를 연결하고 산소 10L를 공급하며 산소포화도를 모니터링해주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -1926,7 +1926,7 @@
       "nextIdentifier": "E025"
     },
     "D023": {
-      "speakerName": "의사 NPC",
+      "speakerName": "시스템",
       "dialogueContent": "심전도만 출력되고, 다른 활력징후가 출력되지 않습니다. 간호사 B 선생님, 환자 맥박 확인해주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -3006,7 +3006,7 @@
     },
     "N009_3": {
       "speakerName": "시스템",
-      "dialogueContent": "산소줄과 T-Piece를 획득하세요.",
+      "dialogueContent": "산소줄을 먼저 클릭해 획득하세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3114,7 +3114,7 @@
     },
     "N011": {
       "speakerName": "시스템",
-      "dialogueContent": "환자의 양쪽 팔에 IV 라인을 순서대로 확보합니다. 먼저 18G 캐뉼라 1개와 준비된 생리식염수 1L, 플라즈마 솔루션 1L 수액백을 획득하십시오.",
+      "dialogueContent": "환자의 좌측과 우측 팔에 IV 라인을 확보해야 합니다. 18게이지 2개, 준비된 생리식염수 1L 수액백, 준비된 플라즈마 솔루션 1L 수액백을 클릭해 획득하십시오.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3138,7 +3138,7 @@
     },
     "N011_2": {
       "speakerName": "시스템",
-      "dialogueContent": "준비된 생리식염수 1L 수액백을 먼저 수액 걸대에 건 뒤, 수액줄을 좌측 팔의 18G 캐뉼라에 연결하세요.",
+      "dialogueContent": "준비된 생리식염수 1L 수액백을 클릭해 선택한 뒤, 좌측 팔에 연결된 18G 캐뉼라를 클릭해 연결하세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3150,7 +3150,7 @@
     },
     "N011_3": {
       "speakerName": "시스템",
-      "dialogueContent": "한쪽 정맥로가 확보되었습니다. 두 번째 18G 캐뉼라를 획득해 반대쪽 팔에 삽입하고, 플라즈마 솔루션 수액백을 먼저 건 뒤 연결을 준비하십시오.",
+      "dialogueContent": "한쪽 정맥로가 확보되었습니다. 18G 캐뉼라를 하나 더 획득해 선택한 뒤, 반대쪽 팔에도 삽입하십시오.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -4129,7 +4129,7 @@
           "requiredPlayerTagsMatchMode": "All"
         }
       ],
-      "nextIdentifier": "D037"
+      "nextIdentifier": null
     },
     "PRESET_A": {
       "targetEntityIdentifier": "patient_a",
@@ -4160,7 +4160,7 @@
       "isCardiacArrest": false,
       "identifier": "PRESET_A",
       "nodeType": "PatientMedicalStatePreset",
-      "nextIdentifier": "D005"
+      "nextIdentifier": "D033"
     },
     "Q006": {
       "operation": "Add",
@@ -5427,7 +5427,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_sterile_gloves"
+              "registryIdentifier": "sig.click_gloves"
             },
             {
               "type": "Registry",
@@ -5700,7 +5700,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_blood_bag"
+              "registryIdentifier": "sig.click_blood_transfusion_set"
             }
           ]
         }

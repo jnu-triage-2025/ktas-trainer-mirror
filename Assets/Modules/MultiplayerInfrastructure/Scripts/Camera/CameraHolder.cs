@@ -24,7 +24,8 @@ namespace MultiplayerInfrastructure.Camera
   {
     [Header("View Mode")]
     [SerializeField] private CameraViewMode _currentViewMode = CameraViewMode.ThirdPerson;
-    [SerializeField] private float _firstPersonDistance = 0.5f;
+    [SerializeField] private float _firstPersonDistance = 0f;
+    [SerializeField] private float _firstPersonEyeHeightOffset = 0.6f;
     [SerializeField] private float _thirdPersonDistance = 3.0f;
     [SerializeField] private float _cameraModeTransitionSpeed = 5.0f;
 
@@ -153,6 +154,10 @@ namespace MultiplayerInfrastructure.Camera
       _camera.transform.position = _followingPivot.position;
       _camera.transform.rotation = _followingPivot.rotation;
 
+      // 1인칭은 피벗(부착점) 기준 눈높이로 소폭 올린다.
+      if (_currentViewMode == CameraViewMode.FirstPerson)
+        _camera.transform.position += _camera.transform.up * _firstPersonEyeHeightOffset;
+
       SmoothDistanceTransition();
       ApplyDistanceOffset();
     }
@@ -174,7 +179,7 @@ namespace MultiplayerInfrastructure.Camera
       EnsureDesiredDistanceInitialized();
 
       _targetDistance = _currentViewMode == CameraViewMode.FirstPerson
-        ? _firstPersonDistance
+        ? Mathf.Max(0f, _firstPersonDistance)
         : _desiredThirdPersonDistance;
     }
 

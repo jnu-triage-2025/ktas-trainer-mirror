@@ -1923,7 +1923,7 @@ SPAWN_A
 | **Identifier** | 문자열 | D015 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 의사 NPC |
-| **DialogueContent** | 문자열 | 삽관이 끝났고, 자발호흡이 있으니 삽관·산소 담당 간호사 선생님이 T-piece를 연결하고 산소 10L를 공급하며 산소포화도를 모니터링해주세요. |
+| **DialogueContent** | 문자열 | 삽관이 끝났고, 자발호흡이 있으니 간호사 A 선생님이 T-piece를 연결하고 산소 10L를 공급하며 산소포화도를 모니터링해주세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | N009 |
 
@@ -2079,7 +2079,7 @@ SPAWN_A
 | **Identifier** | 문자열 | N009_3 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 산소줄을 먼저 클릭해 획득하세요. |
+| **DialogueContent** | 문자열 | 산소줄과 T-Piece를 획득하세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 6.0 |
 | **NextIdentifier** | 문자열 | V015_3 |
@@ -3007,7 +3007,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
 | Registry | Contains | RuntimeState | sig.click_plasma_solution_1000ml |
-| Registry | Contains | RuntimeState | sig.click_blood_transfusion_set |
+| Registry | Contains | RuntimeState | sig.click_blood_bag |
 
 
 - [x] a-1 아이템 식별자 정합(구 md→JSON 정본): click_blood→click_blood_transfusion_set (interaction-signal-integration-spec §2 참조).
