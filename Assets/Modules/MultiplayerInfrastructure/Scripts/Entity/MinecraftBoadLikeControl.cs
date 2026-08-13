@@ -171,7 +171,10 @@ namespace MultiplayerInfrastructure.Entity
       {
         int participant = _participants[i];
         if (participant >= 0)
+        {
+          OnServerParticipantExited(participant, null, i);
           _serverInputs.Remove(participant);
+        }
         SetHandle(i, InvalidClientId);
       }
       ApplyLocalParticipant();
@@ -619,6 +622,14 @@ namespace MultiplayerInfrastructure.Entity
 
     private void RemoveParticipant(int clientId)
     {
+      for (int i = 0; i < _participants.Count; i++)
+      {
+        if (_participants[i] == clientId)
+        {
+          OnServerParticipantExited(clientId, null, i);
+          break;
+        }
+      }
       RemoveParticipantState(_participants, _serverInputs, clientId);
       ApplyLocalParticipant();
     }

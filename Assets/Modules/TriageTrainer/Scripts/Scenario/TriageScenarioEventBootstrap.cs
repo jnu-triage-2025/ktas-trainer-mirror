@@ -63,6 +63,7 @@ namespace TriageTrainer.Scenario
     [SerializeField] private bool _waitForManualPatientATransfer = true;
     [SerializeField] private string _patientATreatmentPositioningPointIdentifier = "treatmentroom_patient_a";
     [SerializeField, Min(0f)] private float _patientATransferWaitTimeoutSeconds = 0f;
+    [SerializeField, Min(0f)] private float _patientADismountWaitTimeoutSeconds = 0f;
 
     [SerializeField] private string _patientAVitalMonitorEntityIdentifier = "patientA_monitor";
     [SerializeField] private string[] _patientAVitalMonitorAliases = { "patientA_monitor", "patient_a_monitor", "monitorA" };

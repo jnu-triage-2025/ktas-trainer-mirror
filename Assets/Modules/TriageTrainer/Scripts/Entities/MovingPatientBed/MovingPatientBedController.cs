@@ -163,6 +163,7 @@ namespace TriageTrainer.Entity
     public IReposable ReposedTarget => _reposedTargetComponent as IReposable;
     public MovingPatientBedPositioningPoint LatchedPositioningPoint => _latchedPositioningPoint;
     public int RequiredInteractorCount => Mathf.Max(Weight, ReposedTarget?.Weight ?? 0);
+    public string DismountCompletionSignal => _dismountCompletionSignal?.Trim();
 
     protected override void OnServerParticipantEntered(int clientId, PlayerController player, int handle)
     {
@@ -170,7 +171,7 @@ namespace TriageTrainer.Entity
       if (_dismountedClientIds.Count == 0)
         return;
 
-      string signal = _dismountCompletionSignal?.Trim();
+      string signal = DismountCompletionSignal;
       if (string.IsNullOrWhiteSpace(signal))
         return;
 
@@ -189,21 +190,15 @@ namespace TriageTrainer.Entity
 
       _dismountedClientIds.Add(clientId);
 
-      // 환자 A 베드는 4인 이동을 전제로 하므로, 4명이 모두 내린 시점에만 완료 신호를 발행한다.
-      if (_dismountedClientIds.Count < 4)
+      // 설정된 최대 참가자 수에 도달한 시점에만 완료 신호를 발행한다.
+      if (_dismountedClientIds.Count < Capacity)
         return;
 
-      string signal = _dismountCompletionSignal?.Trim();
+      string signal = DismountCompletionSignal;
       if (string.IsNullOrWhiteSpace(signal))
         return;
 
       ScenarioInteractionSignals.Raise(signal);
-    }
-
-    /// <summary>장비형 파생 구성에서 침대 조종 로직을 단일 사용자로 제한한다.</summary>
-    public void SetMaximumPlayerParticipants(int count)
-    {
-      _maximumPlayerParticipants = Mathf.Max(1, count);
     }
 
     /// <summary>침대 이동만 재사용하는 장비가 환자 내려놓기 메뉴를 숨길 수 있게 한다.</summary>
