@@ -146,9 +146,6 @@ namespace TriageTrainer.Entity.PatientMonitor
       painter.BeginPath();
 
       int targetRenderedPointCount = Mathf.Clamp(Mathf.CeilToInt(width), MinimumRenderedPointCount, MaximumRenderedPointCount);
-      int renderStride = Mathf.Max(1, Mathf.CeilToInt((float)_dataPointCount / targetRenderedPointCount));
-      int renderedPointCount = Mathf.CeilToInt((float)_dataPointCount / renderStride);
-      float stepX = width / Mathf.Max(1, renderedPointCount - 1);
       float rangeSpan = Mathf.Max(0.0001f, _range.max - _range.min);
 
       float MapY(float voltage)
@@ -157,16 +154,50 @@ namespace TriageTrainer.Entity.PatientMonitor
         return height - (normalized * height);
       }
 
+      float MapX(int sampleIndex) => width * sampleIndex / Mathf.Max(1, _dataPointCount - 1);
+
       painter.MoveTo(new Vector2(0, MapY(GetDataPoint(0))));
 
-      int renderedIndex = 1;
-      for (int i = renderStride; i < _dataPointCount; i += renderStride)
+      // 각 시간 구간의 min/max를 시간 순서대로 보존한다. 단순 stride 샘플링은
+      // 짧은 ECG peak/PVC를 완전히 누락할 수 있으므로 의료 파형에는 부적합하다.
+      int interiorCount = Mathf.Max(0, _dataPointCount - 2);
+      int binCount = Mathf.Min(interiorCount, Mathf.Max(1, (targetRenderedPointCount - 2) / 2));
+      int lastDrawnIndex = 0;
+      for (int bin = 0; bin < binCount; bin++)
       {
-        float x = renderedIndex * stepX;
-        float y = MapY(GetDataPoint(i));
-        painter.LineTo(new Vector2(x, y));
-        renderedIndex++;
+        int start = 1 + (bin * interiorCount / binCount);
+        int end = 1 + ((bin + 1) * interiorCount / binCount);
+        if (end <= start)
+          continue;
+
+        int minIndex = start;
+        int maxIndex = start;
+        float minValue = GetDataPoint(start);
+        float maxValue = minValue;
+        for (int i = start + 1; i < end; i++)
+        {
+          float value = GetDataPoint(i);
+          if (value < minValue) { minValue = value; minIndex = i; }
+          if (value > maxValue) { maxValue = value; maxIndex = i; }
+        }
+
+        int firstIndex = Mathf.Min(minIndex, maxIndex);
+        int secondIndex = Mathf.Max(minIndex, maxIndex);
+        if (firstIndex > lastDrawnIndex)
+        {
+          painter.LineTo(new Vector2(MapX(firstIndex), MapY(GetDataPoint(firstIndex))));
+          lastDrawnIndex = firstIndex;
+        }
+        if (secondIndex > lastDrawnIndex)
+        {
+          painter.LineTo(new Vector2(MapX(secondIndex), MapY(GetDataPoint(secondIndex))));
+          lastDrawnIndex = secondIndex;
+        }
       }
+
+      int latestIndex = _dataPointCount - 1;
+      if (latestIndex > lastDrawnIndex)
+        painter.LineTo(new Vector2(width, MapY(GetDataPoint(latestIndex))));
 
       painter.Stroke();
     }
