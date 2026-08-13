@@ -1258,7 +1258,7 @@ flags: ["refactor-required"]
 interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 분류한다.
 
 - **자동 계측 완료**(코드 경로 존재, 씬/아이템 설정 검증 필요): `enter_triage_zone`(구역 진입, 단 인원수 검증은 별도), `apply_electrode`, `apply_gauze`, `apply_plaster_on_gauze`, `wear_glove`.
-- **선행 구현 필요**(게임플레이 미구현, 미배선 시 무한 대기 또는 명시된 timeout 복구): `click_patient_b_face`, `click_patient_c_face`, `click_patient_dummy_d_b`. IV 삽입 producer는 `insert_iv_{patientIdentifier}_{left|right}`를 발행하며 환자 B는 우측, 환자 C는 좌측 표시와 본문 지시를 사용한다. 비강캐뉼라 적용은 `NasalCannulaApplied` 상태 바인딩으로 대체했으며, 산소 연결은 별도 연결점 producer가 필요하다. `click_humidifier_bottle`, `click_sterile_distilled_water`, `click_flowmeter`는 `MedicalItem.OnGet()`이 자동 발행한다.
+- **선행 구현 필요**(게임플레이 미구현, 미배선 시 무한 대기 또는 명시된 timeout 복구): `click_patient_b_face`, `click_patient_c_face`, `click_patient_dummy_d_b`. IV 삽입 producer는 `insert_iv_{patientIdentifier}_{left|right}`를 발행하며 환자 B는 우측, 환자 C는 좌측 표시와 본문 지시를 사용한다. 비강캐뉼라 적용은 `NasalCannulaApplied` 상태 바인딩으로 대체했다. 채택 기획으로, 비강 캐뉼라 표시가 활성화되고 oxyflowmeter가 설치됐을 때 양쪽 어느 쪽에서도 `비강 캐뉼라에 산소 연결`을 제공하며 실행 시 두 산소 포트를 연결한다. 양측 `OxyLineConnectionPoint` 프리팹 배치는 선행 작업이다. `click_humidifier_bottle`, `click_sterile_distilled_water`, `click_flowmeter`는 `MedicalItem.OnGet()`이 자동 발행한다.
 - **구현 완료(런타임 UI)**: `close_vital_ui_b`, `close_vital_ui_c` — `PatientMonitorController`가 닫기 버튼을 만들고, B/C 활성화 이벤트가 패널·모니터를 숨긴 뒤 환자별 signal을 발생시킨다.
 - **에디터 Identifier 정합 필요**(코드는 있으나 프리팹/에디터 매핑 확정 필요): `check_gcs_patient_b`, `check_gcs_patient_c`, `check_vital_patient_b`, `check_vital_patient_c`, `click_patient_b`, `click_patient_c`.
 

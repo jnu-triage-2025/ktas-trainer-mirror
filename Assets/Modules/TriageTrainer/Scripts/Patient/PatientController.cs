@@ -77,6 +77,10 @@ namespace TriageTrainer.Entity
     public OxyLineConnectionPoint OxygenMaskAttachmentPoint => _oxygenMaskAttachmentPoint != null && _oxygenMaskAttachmentPoint.isActiveAndEnabled
       ? _oxygenMaskAttachmentPoint : null;
     public OxyLineConnectionPoint ConfiguredOxygenMaskAttachmentPoint => _oxygenMaskAttachmentPoint;
+    public void SetOxygenMaskAttachmentPointFromPatientComponent(OxyLineConnectionPoint point)
+    {
+      _oxygenMaskAttachmentPoint = point;
+    }
     /// <summary>환자 측 석션 라인 포트. 설정되지 않거나 비활성이면 null이다.</summary>
     public SuctionLineConnectionPoint SuctionLineAttachmentPoint => _suctionLineAttachmentPoint != null && _suctionLineAttachmentPoint.isActiveAndEnabled
       ? _suctionLineAttachmentPoint : null;
@@ -101,6 +105,7 @@ namespace TriageTrainer.Entity
       SetNamedChildrenActive(_initiallyHiddenChildNames, false);
       _weight = Mathf.Max(0, _weight);
       BuildInteractEntries();
+      GetPatientState()?.InitializeRuntimeReferences(this);
     }
 
     public bool SetNamedChildActive(string childName, bool active)
@@ -295,6 +300,63 @@ namespace TriageTrainer.Entity
       EnsureMedicalStateDefaults();
       _weight = Mathf.Max(0, _weight);
       EnsureDefaultInteractConfigs();
+      GetPatientState()?.InitializeRuntimeReferences(this);
+    }
+
+    private void Reset()
+    {
+      ApplySerializedDefaultsForInspectorReset();
+      GetPatientState()?.InitializeRuntimeReferences(this);
+    }
+
+    /// <summary>
+    /// PatientController가 직접 소유한 모든 Inspector 직렬화 필드의 코드 기본값이다.
+    /// 환자 유형별 값은 이 메서드 뒤 PatientStateABC가 다시 적용한다.
+    /// </summary>
+    private void ApplySerializedDefaultsForInspectorReset()
+    {
+      _identifier = "patient";
+      _liftDisplayText = "환자를 들어올리기";
+      _carryDisplayText = "환자 들어올리기";
+      _monitorSelectDisplayText = "이 환자를 모니터링";
+      _initiallyHiddenChildNames = Array.Empty<string>();
+      _weight = 4;
+      _supportExternalRefs = default;
+      _ivAttachmentPoint = null;
+      _oxygenMaskAttachmentPoint = null;
+      _suctionLineAttachmentPoint = null;
+      _carryAttachPoint = null;
+      _isMovingPatientBedAttached = false;
+      _isPlayerAttached = false;
+
+      _runtimeAnimatorController = null;
+      _capsuleCollider = null;
+      _standingCapsuleCenter = new Vector3(0f, 0.9f, 0f);
+      _standingCapsuleHeight = 1.8f;
+      _standingCapsuleRadius = 0.3f;
+      _standingCapsuleDirection = 1;
+      _lyingCapsuleCenter = new Vector3(0f, 0.45f, 0f);
+      _lyingCapsuleHeight = 1.8f;
+      _lyingCapsuleRadius = 0.3f;
+      _lyingCapsuleDirection = 2;
+
+      _patientDescriptor = new PatientDescriptor();
+      _medicalState = new PatientMedicalState();
+      _interactConfigs = new List<InteractConfig>();
+      _assessActions = new List<AssessActionConfig>();
+      _intravenousLineCannulaConfig = default;
+      _intravenousLineCannulaInteractable = true;
+      _triageConfig = TriageAssessmentConfig.Default();
+      _triageLabelAnchor = null;
+      _debugTreatmentDisplay = TreatmentDisplay.GauzePatchedOnThorax;
+      _debugItemIdentifier = "gauze";
+
+      EnsureCarryAttachPoint();
+      EnsureIvAttachmentPoint();
+      InitializeCollider();
+      EnsureMedicalStateDefaults();
+      EnsureDefaultInteractConfigs();
+      BuildInteractEntries();
     }
   }
 }

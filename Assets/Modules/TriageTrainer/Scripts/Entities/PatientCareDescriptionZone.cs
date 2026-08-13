@@ -44,7 +44,6 @@ namespace TriageTrainer.Entity
     private readonly List<WallAttachedWallSuction> _wallSuction = new();
     private readonly List<WallAttachedOxyflowmeter> _oxyflowmeters = new();
     private readonly HashSet<WallAttachedWallSuction> _newlyInstalledWallSuction = new();
-    private readonly HashSet<WallAttachedOxyflowmeter> _newlyInstalledOxyflowmeters = new();
     private readonly HashSet<string> _warnedAutomaticLineFailures = new();
     private bool _warnedMultipleWallSuction;
     private bool _warnedMultipleOxyflowmeter;
@@ -131,7 +130,6 @@ namespace TriageTrainer.Entity
       _bedColliderCounts.Clear();
       _snappedBeds.Clear();
       _newlyInstalledWallSuction.Clear();
-      _newlyInstalledOxyflowmeters.Clear();
       _warnedAutomaticLineFailures.Clear();
       TriageWorldInteractionSignals.RaiseCareZoneDisabled(Identifier);
     }
@@ -162,7 +160,6 @@ namespace TriageTrainer.Entity
       else
       {
         _oxyflowmeters.Remove(equipment);
-        _newlyInstalledOxyflowmeters.Remove(equipment);
       }
       RecheckConfiguration();
       RefreshActivePatientEquipment(refreshEquipment: false);
@@ -181,7 +178,6 @@ namespace TriageTrainer.Entity
     {
       if (equipment == null || !IsEquipmentInZone(equipment))
         return;
-      _newlyInstalledOxyflowmeters.Add(equipment);
       RefreshActivePatientEquipment();
       RecheckConfiguration();
     }
@@ -465,15 +461,9 @@ namespace TriageTrainer.Entity
       if (patient == null || !IsPatientSupportedInZone(patient))
         return;
 
-      WallAttachedOxyflowmeter oxyflowmeter = patient.ConnectedOxyflowmeter;
-      if (oxyflowmeter != null && _newlyInstalledOxyflowmeters.Contains(oxyflowmeter))
-      {
-        // TODO: Configure the oxyflowmeter prefab port and the installed oxygen-mask port in their serialized fields.
-        var equipmentPoint = oxyflowmeter.OxyLineConnectionPoint;
-        var patientPoint = patient.OxygenMaskAttachmentPoint;
-        if (TryCreateAutomaticLine(equipmentPoint, patientPoint, "oxygen"))
-          _newlyInstalledOxyflowmeters.Remove(oxyflowmeter);
-      }
+      // 기획 참고(대화 기록): 산소 유량계와 T-piece/비강 캐뉼라 사이는
+      // "상호작용을 실행하면 ... oxy line이 연결"된다. 따라서 이 케어존은
+      // 유량계 설치 또는 환자 진입만으로 산소 라인을 자동 생성해서는 안 된다.
 
       WallAttachedWallSuction suction = patient.ConnectedWallSuction;
       if (suction != null && _newlyInstalledWallSuction.Contains(suction))
