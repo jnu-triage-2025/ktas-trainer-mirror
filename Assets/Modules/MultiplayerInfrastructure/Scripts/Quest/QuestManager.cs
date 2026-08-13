@@ -42,6 +42,10 @@ namespace MultiplayerInfrastructure.Quest
     public event Action<IReadOnlyList<QuestData>> OnQuestListChanged;
     public event Action<IReadOnlyList<QuestData>> OnTrackedQuestsChanged;
     public event Action<QuestData> OnQuestCompleted;
+    public event Action<bool> OnQuestPreviewImmediateTransitionChanged;
+
+    public void SetQuestPreviewImmediateTransition(bool enabled) =>
+      OnQuestPreviewImmediateTransitionChanged?.Invoke(enabled);
 
     public IReadOnlyList<QuestData> Quests => Snapshot(_quests.Values);
     public IReadOnlyList<QuestData> TrackedQuests

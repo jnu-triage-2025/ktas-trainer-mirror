@@ -701,6 +701,8 @@ namespace MultiplayerInfrastructure.Editor
     {
       data.Operation = (ScenarioQuestOperationType)EditorGUILayout.EnumPopup("Operation", data.Operation);
       data.FailureStrategy = (ScenarioQuestFailureStrategy)EditorGUILayout.EnumPopup("Failure Strategy", data.FailureStrategy);
+      data.SkipCompletionDisplayDelay = EditorGUILayout.Toggle(
+        "Skip Completion Display Delay", data.SkipCompletionDisplayDelay);
       bool persistProgress = data.PersistProgressOnSessionEnd ?? false;
       persistProgress = EditorGUILayout.Toggle("Persist Progress On Session End", persistProgress);
       data.PersistProgressOnSessionEnd = persistProgress;

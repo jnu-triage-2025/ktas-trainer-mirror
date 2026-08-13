@@ -3043,6 +3043,22 @@ namespace MultiplayerInfrastructure.Scenario
 
     private bool ApplyQuestOperation(QuestManager manager, ScenarioQuestControlNode node)
     {
+      if (!node.SkipCompletionDisplayDelay)
+        return ApplyQuestOperationInternal(manager, node);
+
+      manager.SetQuestPreviewImmediateTransition(true);
+      try
+      {
+        return ApplyQuestOperationInternal(manager, node);
+      }
+      finally
+      {
+        manager.SetQuestPreviewImmediateTransition(false);
+      }
+    }
+
+    private bool ApplyQuestOperationInternal(QuestManager manager, ScenarioQuestControlNode node)
+    {
       string questId = ResolveQuestId(node);
       var questData = BuildQuestPayload(node, questId);
       if (questData != null && node.PersistProgressOnSessionEnd.HasValue)

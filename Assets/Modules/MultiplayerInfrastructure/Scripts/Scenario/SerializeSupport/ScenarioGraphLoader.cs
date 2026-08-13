@@ -772,6 +772,7 @@ namespace MultiplayerInfrastructure.Scenario
           FailureStrategy = ParseQuestFailureStrategy(dto.FailureStrategy),
           QuestDefinitionIdentifier = dto.QuestDefinitionIdentifier,
           Quest = dto.Quest,
+          SkipCompletionDisplayDelay = dto.SkipCompletionDisplayDelay ?? false,
           PersistProgressOnSessionEnd = dto.PersistProgressOnSessionEnd,
           NextIdentifier = dto.NextIdentifier
         };
@@ -1669,6 +1670,7 @@ namespace MultiplayerInfrastructure.Scenario
           FailureStrategy = node.FailureStrategy.ToString(),
           QuestDefinitionIdentifier = node.QuestDefinitionIdentifier,
           Quest = node.Quest,
+          SkipCompletionDisplayDelay = node.SkipCompletionDisplayDelay ? true : null,
           PersistProgressOnSessionEnd = node.PersistProgressOnSessionEnd,
           NextIdentifier = node.NextIdentifier
         };

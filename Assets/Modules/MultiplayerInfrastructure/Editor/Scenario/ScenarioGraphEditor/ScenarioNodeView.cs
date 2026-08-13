@@ -685,6 +685,8 @@ namespace MultiplayerInfrastructure.Editor
       _inlineEditorContainer.Add(opField);
 
       AddTextField("Quest Definition", value => data.QuestDefinitionIdentifier = value, data.QuestDefinitionIdentifier);
+      AddToggleField("Skip Completion Display Delay", value => data.SkipCompletionDisplayDelay = value,
+        data.SkipCompletionDisplayDelay);
       AddToggleField("Persist Progress On Session End", value => data.PersistProgressOnSessionEnd = value,
         data.PersistProgressOnSessionEnd ?? false);
       AddTextField("Quest Id", value =>

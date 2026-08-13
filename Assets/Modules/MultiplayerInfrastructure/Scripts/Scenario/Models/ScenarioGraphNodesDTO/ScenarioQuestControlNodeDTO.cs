@@ -17,6 +17,9 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("quest")]
     public QuestData Quest { get; set; }
 
+    [JsonPropertyName("skipCompletionDisplayDelay")]
+    public bool? SkipCompletionDisplayDelay { get; set; }
+
     [JsonPropertyName("persistProgressOnSessionEnd")]
     public bool? PersistProgressOnSessionEnd { get; set; }
   }
