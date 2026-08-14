@@ -96,6 +96,15 @@ namespace TriageTrainer.Entity
       SetTreatmentDisplay(display, active);
     }
 
+    /// <summary>서버에서 확정된 실제 처치 상태를 모든 관찰자에게 복제한다.</summary>
+    [ObserversRpc(BufferLast = true)]
+    private void RpcSyncTreatmentState(string[] appliedTreatments)
+    {
+      if (IsFishNetServerStarted)
+        return;
+      TreatmentState.ApplySnapshot(appliedTreatments);
+    }
+
     // 서버에서 호출: 현재 DisplayState 구조체 전체를 한 번의 RPC 로 브로드캐스트한다.
     // 다수 항목을 동시에 적용한 뒤 늦은 입장 클라이언트에 전체 상태를 전달하는 용도.
     [ServerRpc(RequireOwnership = false)]

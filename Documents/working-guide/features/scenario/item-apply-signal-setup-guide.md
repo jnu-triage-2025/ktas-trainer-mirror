@@ -14,6 +14,9 @@ updated: 2026-06-26
 
 ## 1. 설계 원칙 (데이터 / 컨트롤러 분리)
 
+- **처치 상태(권위 데이터)**: `PatientController.TreatmentState`(`PatientTreatmentState`)가 실제로 완료된
+  처치 식별자를 보관한다. Display 플래그는 이 데이터를 대신하지 않는다. 처치 변경은
+  `SetTreatmentApplied(...)`를 통해 수행하며, 이 진입점이 대응 Display 상태와 자식 오브젝트를 연달아 갱신한다.
 - **데이터**: `PatientDisplayState`(MonoBehaviour) 가 처치 표현 플래그(`DisplayState`)와 각 표현에 대응하는
   자식 GameObject 참조(`ChildGameObjects`)를 **데이터로만** 보유한다. (show/hide 로직 없음)
 - **적용(컨트롤러)**: `PatientController` 가 아이템 사용/신호를 받아 해당 플래그를 켜고
@@ -24,11 +27,18 @@ updated: 2026-06-26
 
 ## 2. 동작 흐름
 
-1. 플레이어가 아이템을 들고 환자를 **조준한 상태에서 사용** → `PlayerController.UseItem()` 이
-   크로스헤어 레이캐스트 히트에서 `IItemUseTarget`(=`PatientController`)을 찾아 `OnItemUsed(user, itemId)` 호출.
+1. 플레이어가 적용 가능한 아이템을 들고 환자에게 접근하면 환자 상호작용 메뉴에 적용 항목이 표시된다.
+   거즈 위 플라스터처럼 선행 처치가 있는 경우에는 해당 처치 상태가 완료된 뒤에만 메뉴가 표시된다.
+   선택하면 `IItemUseTarget.OnItemUsed(user, itemId)`를 호출한다. 기존 조준 후 아이템 사용 입력도 같은 경로다.
 2. `PatientController.ApplyItemUse(itemId)` 가 `ItemUseEffects` 매핑을 조회하여
-   - 매핑된 처치 표현(`TreatmentDisplay`)을 켠다(`DisplayState` 플래그 true + 자식 GameObject `SetActive(true)`),
+   - 네트워크 세션에서는 서버가 플레이어·거리·보유 아이템·적용 가능 조건을 다시 검증하고,
+   - 실제 처치 상태를 기록하고 매핑된 처치 표현(`TreatmentDisplay`)을 켠다
+     (`DisplayState` 플래그 true + 자식 GameObject `SetActive(true)`),
+   - 성공한 아이템 1개를 인벤토리에서 소비한다,
    - 매핑된 시나리오 신호(`sig.*`)를 올린다(`{id}` 는 환자 Identifier 로 치환, 서버 권한 라우팅).
+   - 공용 `sig.item_applied_to_patient`도 올리고 파라미터 JSON에 `patientType`, `itemIdentifier`,
+     `treatmentIdentifier`를 기록한다.
+   실제 처치 상태는 전체 스냅샷 RPC로 관찰자와 늦은 입장자에게 복제한다.
 3. 신호가 올라가면 대응 Validator 게이트(예: `V016_2 sig.apply_gauze`)가 통과된다.
 
 ## 3. 운영자가 해야 하는 Unity 작업
