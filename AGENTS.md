@@ -1,1 +1,1 @@
-REFER ./Agents/SKILLS/README.md
+REFER ./Agents/AGENTS.md
