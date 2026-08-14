@@ -144,6 +144,8 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: interact_chest
+  _requiredRaisedSignals:
+  - click_to_start_comp
   _enabled: 1
   _consumeOnce: 1
   _activateOnInteract: []

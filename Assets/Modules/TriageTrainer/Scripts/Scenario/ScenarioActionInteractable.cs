@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
@@ -19,6 +20,8 @@ namespace TriageTrainer.Scenario
     [SerializeField] private Sprite _displayIcon;
     [SerializeField] private List<Sprite> _displayIcons = new();
     [SerializeField] private string _completionSignal;
+    [Tooltip("이 상호작용을 노출하기 전에 RuntimeState에 이미 있어야 하는 시나리오 신호입니다.")]
+    [SerializeField] private string[] _requiredRaisedSignals = Array.Empty<string>();
     [SerializeField] private bool _enabled = true;
     [SerializeField] private bool _consumeOnce = true;
 
@@ -32,6 +35,7 @@ namespace TriageTrainer.Scenario
 
     public IInteract[] Interacts => new IInteract[] { this };
     public string DisplayText => _displayText;
+    public string CompletionSignal => _completionSignal;
     public Sprite DisplayIcon => _displayIcon;
     public IReadOnlyList<Sprite> DisplayIcons => _displayIcons;
     public bool AllowDisplayIconFallback => true;
@@ -39,7 +43,7 @@ namespace TriageTrainer.Scenario
 
     public bool CanInteract(Transform interactor)
     {
-      if (!_enabled || (_consumeOnce && _completed))
+      if (!_enabled || (_consumeOnce && _completed) || !AreRequiredSignalsRaised())
         return false;
 
       return interactor != null && interactor.GetComponentInParent<PlayerController>() != null;
@@ -64,6 +68,21 @@ namespace TriageTrainer.Scenario
       _enabled = enabled;
       if (enabled)
         _completed = false;
+    }
+
+    private bool AreRequiredSignalsRaised()
+    {
+      if (_requiredRaisedSignals == null)
+        return true;
+
+      for (int i = 0; i < _requiredRaisedSignals.Length; i++)
+      {
+        string signal = _requiredRaisedSignals[i];
+        if (!string.IsNullOrWhiteSpace(signal) && !ScenarioInteractionSignals.IsRaised(signal))
+          return false;
+      }
+
+      return true;
     }
 
     private static void SetObjectsActive(GameObject[] targets, bool active)

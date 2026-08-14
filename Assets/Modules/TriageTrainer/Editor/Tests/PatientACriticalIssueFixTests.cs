@@ -5,6 +5,7 @@ using MultiplayerInfrastructure.Scenario;
 using NUnit.Framework;
 using TriageTrainer.Entity;
 using TriageTrainer.Patient;
+using TriageTrainer.Scenario;
 using UnityEditor;
 using UnityEngine;
 
@@ -209,6 +210,35 @@ namespace TriageTrainer.Tests
       {
         ScenarioInteractionSignals.Clear("push_epi_r1");
         ScenarioInteractionSignals.Clear("push_epi_r2");
+        UnityEngine.Object.DestroyImmediate(instance);
+      }
+    }
+
+    [Test]
+    public void SecondChestCompressionActionRequiresFirstRoundCompletion()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+      var instance = UnityEngine.Object.Instantiate(prefab);
+      var interactor = new GameObject("chest-compression-interactor");
+      try
+      {
+        interactor.AddComponent<MultiplayerInfrastructure.Player.PlayerController>();
+        var secondRoundAction = System.Array.Find(
+          instance.GetComponentsInChildren<ScenarioActionInteractable>(true),
+          action => action != null && action.CompletionSignal == "interact_chest");
+        Assert.That(secondRoundAction, Is.Not.Null);
+
+        ScenarioInteractionSignals.Clear("click_to_start_comp");
+        Assert.That(secondRoundAction.CanInteract(interactor.transform), Is.False);
+
+        ScenarioInteractionSignals.Raise("click_to_start_comp");
+        Assert.That(secondRoundAction.CanInteract(interactor.transform), Is.True);
+      }
+      finally
+      {
+        ScenarioInteractionSignals.Clear("click_to_start_comp");
+        UnityEngine.Object.DestroyImmediate(interactor);
         UnityEngine.Object.DestroyImmediate(instance);
       }
     }
