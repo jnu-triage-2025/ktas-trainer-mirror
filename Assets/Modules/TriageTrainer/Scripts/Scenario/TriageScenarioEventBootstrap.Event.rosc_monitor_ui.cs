@@ -18,6 +18,7 @@ namespace TriageTrainer.Scenario
         // 두 메뉴가 동시에 나타나는 것과 r1 신호가 V031을 통과하지 못하는 것을 함께 방지한다.
         patient.SetAssessActionEnabled("assess_pulse_r1", false);
         patient.SetAssessActionEnabled("assess_pulse_r2", true);
+        patient.SetAssessActionEnabled("assess_gcs_rosc", true);
       }
 
       yield return ApplyPatientAMonitorProfile(_patientARoscMonitorParameters, "환자 A ROSC 모니터 프로필을 적용했습니다.");

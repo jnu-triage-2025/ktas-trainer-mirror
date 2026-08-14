@@ -802,7 +802,7 @@ MonoBehaviour:
     _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC7AC\uC0AC\uC815"
     _displayIcon: {fileID: 0}
     _assessSignal: check_gcs_a_rosc
-    _enabled: 1
+    _enabled: 0
   _capsuleCollider: {fileID: 3415111579364395856}
   _standingCapsuleCenter: {x: 0, y: 0.9, z: 0}
   _standingCapsuleHeight: 1.8

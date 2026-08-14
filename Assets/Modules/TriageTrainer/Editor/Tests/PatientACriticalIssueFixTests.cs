@@ -243,6 +243,30 @@ namespace TriageTrainer.Tests
       }
     }
 
+    [Test]
+    public void RoscGcsAssessmentStartsHidden()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+      var instance = UnityEngine.Object.Instantiate(prefab);
+      try
+      {
+        var controller = instance.GetComponent<PatientController>();
+        Assert.That(controller, Is.Not.Null);
+        var getAssessAction = typeof(PatientController).GetMethod(
+          "GetAssessAction", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(getAssessAction, Is.Not.Null);
+        var action = getAssessAction.Invoke(controller, new object[] { "assess_gcs_rosc" })
+          as PatientController.AssessActionConfig;
+        Assert.That(action, Is.Not.Null);
+        Assert.That(action.Enabled, Is.False);
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(instance);
+      }
+    }
+
     private static bool IsRapidInfuserItemAccepted(string kindName, string itemIdentifier)
     {
       var familyMethod = typeof(Level1RapidInfuserController).GetMethod(
