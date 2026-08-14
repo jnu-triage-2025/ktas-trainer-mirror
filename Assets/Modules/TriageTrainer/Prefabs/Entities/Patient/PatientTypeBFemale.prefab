@@ -224,7 +224,7 @@ MonoBehaviour:
   _debugItemIdentifier: gauze
   _interactConfigs:
   - _identifier: lift_from_bed
-    _enabled: 1
+    _enabled: 0
   - _identifier: carry_patient
     _enabled: 1
   - _identifier: monitor_select

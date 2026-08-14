@@ -275,7 +275,7 @@ SPAWN_A
 | `V015_3` | `sig.click_o2_line` | 정합(보조) | 산소줄 획득 신호를 선행 단계로 고정 | `V015_3` 통과 |
 | `V015_3_1` | `sig.interact_tpiece` | 배선(보조) | `endotracheal_tube_A` 클릭 지점에 `ScenarioActionInteractable` 설정(장착 단계) | `V015_3_1` 통과 |
 | `V015_3_2` | `sig.connect_tpiece_and_oxyflow` | 정합(보조) | T-piece 측/벽 유량계 측 연결점 Identifier 정합(연결 완료 신호) | `V015_3_2` 통과 |
-| `V015_4` | `sig.interact_oxyflow_wall` | 배선(보조) | 벽 유량계 Attach completion signal 설정 | `V015_4` 통과 |
+| `V015_4` | `sig.interact_oxyflow_wall` | 배선(보조) | 벽 유량계 설치 상태 상호작용 신호 설정(설치 시점이 아닌, 설치된 유량계 클릭 시 발행) | `V015_4` 통과 |
 | `V025_1` | `sig.interact_patient_chest` | 배선(보조) | 환자 흉부 collider에 `ScenarioActionInteractable` 설정 | `V025_1` 통과 |
 | `V027` | `sig.interact_chest` | 배선(보조) | 가슴압박 위치 collider에 `ScenarioActionInteractable` 설정 | `V027` 통과 |
 | `V030` | `sig.interact_defib` | 배선(보조) | 제세동기 collider에 `ScenarioActionInteractable` 설정 | `V030` 통과 |
@@ -301,7 +301,7 @@ SPAWN_A
 | `V015_3` | `sig.click_o2_line` | 정합 | 획득 signal 식별자 정합 | 선행 획득 통과 |
 | `V015_3_1` | `sig.interact_tpiece` | 정합/배선 | 기관내관 클릭 상호작용 지점 completion signal 정합 | 장착 단계 통과 |
 | `V015_3_2` | `sig.connect_tpiece_and_oxyflow` | 구현 대기 | T-piece 표시와 설치된 oxyflowmeter의 어느 쪽을 감지해도 `T피스에 산소 연결`을 노출하고, 실행 시 두 산소 포트를 연결한다. 현재는 권장 기획이며, 양측 `OxyLineConnectionPoint` 프리팹 배치가 선행되어야 한다. | 실제 연결 완료 통과 |
-| `V016` | `sig.click_gloves`, `sig.click_gauze`, `sig.click_plaster` | 정합 | 획득 자동 발행 식별자 정합 | 3개 획득 후 통과 |
+| `V016` | `sig.click_sterile_gloves`, `sig.click_gauze`, `sig.click_plaster` | 정합 | 획득 자동 발행 식별자 정합 | 3개 획득 후 통과 |
 | `V016_1` | `sig.wear_glove` | 정합 | Item Apply signal 식별자 정합 | 착용 후 통과 |
 | `V016_2` | `sig.apply_gauze` | 정합 | Item Apply signal 식별자 정합 | 적용 후 통과 |
 | `V016_3` | `sig.apply_plaster_on_gauze` | 정합 | Item Apply signal 식별자 정합 | 적용 후 통과 |
@@ -2239,6 +2239,7 @@ SPAWN_A
 
 
 - [x] 벽 유량계 `WallAttachedOxyflowmeter`의 Attach Completion Signal을 `interact_oxyflow_wall`로 설정한다. **2026-07-29 완료.
+  - 2026-08-15 정정: 설치 완료 시점에 신호가 올라 V015_3_2(라인 연결) 이전에 래치되면 V015_4가 실제 클릭 없이 자동 통과(스킵)하는 문제가 있어, Attach Completion Signal 대신 **설치 상태 상호작용 신호(Attached Interact Signal)** `interact_oxyflow_wall`를 사용한다. 설치된 유량계를 클릭하면 신호만 올리고(첫 1회), 이후 클릭은 기존처럼 회수로 동작한다.
 
 
 ---
@@ -2357,14 +2358,14 @@ SPAWN_A
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.click_gloves |
+| Registry | Contains | RuntimeState | sig.click_sterile_gloves |
 | Registry | Contains | RuntimeState | sig.click_gauze |
 | Registry | Contains | RuntimeState | sig.click_plaster |
 
 
-- [x] a-1 아이템 식별자 정합(구 md→JSON 정본): click_glove→click_gloves (interaction-signal-integration-spec §2 참조).
+- [x] a-1 아이템 식별자 정합(구 md→JSON 정본): click_glove→click_gloves (interaction-signal-integration-spec §2 참조). 이후 아이템 리네임(gloves→sterile_gloves, 2026-08-13)에 따라 click_sterile_gloves 로 재정합.
 
-- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_gloves, sig.click_gauze, sig.click_plaster [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2026-07-29 완료
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_sterile_gloves, sig.click_gauze, sig.click_plaster [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2026-07-29 완료
 
 
 ---

@@ -124,6 +124,8 @@ namespace TriageTrainer.Entity
     private BedReposeInteract _reposeInteract;
     private IInteract[] _interacts;
     private MovingPatientBedPositioningPoint _latchedPositioningPoint;
+    private readonly SyncVar<string> _positioningPointIdentifierSync = new(string.Empty);
+    private string _pendingPositioningPointIdentifier;
 
     public string Identifier => EffectiveBedIdentifier;
     public IInteract[] Interacts
@@ -198,7 +200,14 @@ namespace TriageTrainer.Entity
       if (string.IsNullOrWhiteSpace(signal))
         return;
 
-      ScenarioInteractionSignals.Raise(signal);
+      RaiseDismountCompletionSignal();
+    }
+
+    private void RaiseDismountCompletionSignal()
+    {
+      string signal = DismountCompletionSignal;
+      if (!string.IsNullOrWhiteSpace(signal))
+        ScenarioInteractionSignals.Raise(signal);
     }
 
     /// <summary>침대 이동만 재사용하는 장비가 환자 내려놓기 메뉴를 숨길 수 있게 한다.</summary>
@@ -289,6 +298,7 @@ namespace TriageTrainer.Entity
 
     private void Update()
     {
+      ResolveSyncedPositioningPointIfPending();
       SyncReposedTargetTransform();
       SetMinimumMovementDivisor(RequiredInteractorCount);
       Update_MinecraftBoadLikeControl();
@@ -336,8 +346,12 @@ namespace TriageTrainer.Entity
         if (offset.sqrMagnitude <= releaseDistance * releaseDistance)
           return;
 
-        TriageWorldInteractionSignals.RaisePatientBedPositioningPointUnlatched(Identifier, _latchedPositioningPoint.Identifier);
+        string previousPointIdentifier = _latchedPositioningPoint.Identifier;
         _latchedPositioningPoint = null;
+        SetAuthoritativePositioningPointIdentifier(string.Empty);
+        if (IsServerStarted)
+          RpcApplyUnlatchedState();
+        TriageWorldInteractionSignals.RaisePatientBedPositioningPointUnlatched(Identifier, previousPointIdentifier);
       }
 
       MovingPatientBedPositioningPoint nearest = FindNearestPositioningPoint();
@@ -349,6 +363,8 @@ namespace TriageTrainer.Entity
 
       _latchedPositioningPoint = nearest;
       SetAuthoritativeTransform(nearest.Position, nearest.Rotation);
+      ReleaseParticipantsAfterSnapIfConfigured(nearest);
+      PublishAuthoritativeSnappedState(nearest);
       TriageWorldInteractionSignals.RaisePatientBedPositioningPointLatched(Identifier, nearest.Identifier);
       PublishPositioningPointReached(nearest);
     }
@@ -534,9 +550,107 @@ namespace TriageTrainer.Entity
 
       _latchedPositioningPoint = point;
       SetAuthoritativeTransform(point.Position, point.Rotation);
+      ReleaseParticipantsAfterSnapIfConfigured(point);
+      PublishAuthoritativeSnappedState(point);
       TriageWorldInteractionSignals.RaisePatientBedPositioningPointLatched(Identifier, point.Identifier);
       PublishPositioningPointReached(point);
       return true;
+    }
+
+    private void ReleaseParticipantsAfterSnapIfConfigured(MovingPatientBedPositioningPoint point)
+    {
+      if (point != null && point.ReleaseParticipantsOnSnap)
+        ForceReleaseAllParticipants();
+    }
+
+    private void PublishAuthoritativeSnappedState(MovingPatientBedPositioningPoint point)
+    {
+      if (point == null)
+        return;
+
+      SetAuthoritativePositioningPointIdentifier(point.Identifier);
+      if (IsServerStarted)
+      {
+        // 침대 자체 RPC에서 원격 조종 상태와 스냅 참조를 먼저 적용한다. 이후 별도
+        // ScenarioNetworkRelay가 완료 신호를 보내더라도 클라이언트는 완성된 상태를 관찰한다.
+        RpcApplySnappedState(
+          point.Identifier,
+          point.Position,
+          point.Rotation,
+          point.ReleaseParticipantsOnSnap);
+      }
+    }
+
+    private void SetAuthoritativePositioningPointIdentifier(string identifier)
+    {
+      if (IsServerStarted)
+        _positioningPointIdentifierSync.Value = identifier ?? string.Empty;
+    }
+
+    [ObserversRpc]
+    private void RpcApplySnappedState(
+      string pointIdentifier,
+      Vector3 position,
+      Quaternion rotation,
+      bool releaseParticipants)
+    {
+      if (IsServerStarted)
+        return;
+
+      transform.SetPositionAndRotation(position, rotation);
+      if (releaseParticipants)
+        ClearLocalParticipants();
+      RequestPositioningPointResolution(pointIdentifier);
+    }
+
+    [ObserversRpc]
+    private void RpcApplyUnlatchedState()
+    {
+      if (!IsServerStarted)
+        RequestPositioningPointResolution(string.Empty);
+    }
+
+    private void OnPositioningPointIdentifierChanged(string previous, string next, bool asServer)
+    {
+      RequestPositioningPointResolution(next);
+    }
+
+    private void RequestPositioningPointResolution(string identifier)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+      {
+        _pendingPositioningPointIdentifier = null;
+        _latchedPositioningPoint = null;
+        return;
+      }
+
+      _pendingPositioningPointIdentifier = identifier.Trim();
+      ResolveSyncedPositioningPointIfPending();
+    }
+
+    private void ResolveSyncedPositioningPointIfPending()
+    {
+      if (string.IsNullOrWhiteSpace(_pendingPositioningPointIdentifier))
+        return;
+
+      var points = FindObjectsByType<MovingPatientBedPositioningPoint>(
+        FindObjectsInactive.Include,
+        FindObjectsSortMode.None);
+      for (int i = 0; i < points.Length; i++)
+      {
+        MovingPatientBedPositioningPoint point = points[i];
+        if (point == null || !string.Equals(
+              point.Identifier,
+              _pendingPositioningPointIdentifier,
+              StringComparison.Ordinal))
+        {
+          continue;
+        }
+
+        _latchedPositioningPoint = point;
+        _pendingPositioningPointIdentifier = null;
+        return;
+      }
     }
 
     public void Interact(Transform interactor)
@@ -577,18 +691,26 @@ namespace TriageTrainer.Entity
     /// 현재 침대를 잡고 있는 모든 플레이어의 조종 상태를 서버 권위로 강제 해제한다.
     /// 스냅 직후 같은 프레임에 호출하면 참가자 고정(anchor)과 조종 상태가 동시에 해제된다.
     /// </summary>
-    public void ForceReleaseAllParticipants()
+    public bool ForceReleaseAllParticipants()
     {
+      bool detachedAny = false;
       if (!IsClientStarted && !IsServerStarted)
       {
-        DetachAllParticipants();
-        return;
+        detachedAny = DetachAllParticipants();
+      }
+      else if (IsServerStarted)
+      {
+        // 전체 참가자 해제는 서버 내부 작업으로만 허용한다. 원격 클라이언트는
+        // SyncList 변경 콜백을 통해 자신의 로컬 anchor/control 상태를 해제한다.
+        detachedAny = DetachAllParticipants();
       }
 
-      // 전체 참가자 해제는 서버 내부 작업으로만 허용한다. 원격 클라이언트는
-      // SyncList 변경 콜백을 통해 자신의 로컬 anchor/control 상태를 해제한다.
-      if (IsServerStarted)
-        DetachAllParticipants();
+      // 자동 스냅은 정원보다 적은 인원으로 이동한 경우에도 현재 참가자를 전부
+      // 해제한 것이므로 완료다. Capacity 누적 조건과 별개로 완료 신호를 보장한다.
+      if (detachedAny && !HasParticipants)
+        RaiseDismountCompletionSignal();
+
+      return detachedAny;
     }
 
     /// <summary>

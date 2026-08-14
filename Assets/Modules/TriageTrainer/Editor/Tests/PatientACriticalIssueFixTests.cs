@@ -215,6 +215,142 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void RapidInfuserPrefabWiresIvConnectionPointAndFluidDisplays()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RapidInfuserPrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+      var instance = UnityEngine.Object.Instantiate(prefab);
+      try
+      {
+        var controller = instance.GetComponent<Level1RapidInfuserController>();
+        Assert.That(controller, Is.Not.Null);
+
+        var controllerType = typeof(Level1RapidInfuserController);
+        var ivPoint = controllerType.GetField("_ivConnectionPoint", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.GetValue(controller) as TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint;
+        Assert.That(ivPoint, Is.Not.Null,
+          "level1_rapid_infuser 프리팹에 _ivConnectionPoint 가 배선되어야 합니다(환자 라인 연결).");
+        Assert.That(ivPoint.GetComponent<SphereCollider>(), Is.Not.Null,
+          "IV 연결 지점에 접근 가능한 SphereCollider 가 있어야 합니다.");
+        Assert.That(ivPoint.GetComponent<SphereCollider>().isTrigger, Is.True);
+
+        foreach (var fieldName in new[] { "_normalSalineDisplay", "_plasmaSolutionDisplay", "_bloodTransfusionSetDisplay" })
+        {
+          var display = controllerType.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
+            ?.GetValue(controller) as GameObject;
+          Assert.That(display, Is.Not.Null, $"{fieldName} 가 프리팹에 배선되어야 합니다.");
+          Assert.That(display.activeSelf, Is.False,
+            $"{fieldName} 표시 오브젝트는 기본 비활성이어야 합니다(유체 추가 시 ApplyDisplays 가 표시).");
+        }
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(instance);
+      }
+    }
+
+    [Test]
+    public void GloveEquipViaRightClickRaisesWearGloveSignal()
+    {
+      var playerObject = new GameObject("glove-equip-player");
+      var hotbarObject = new GameObject("glove-equip-hotbar");
+      var raised = new List<string>();
+      void Capture(string signal) => raised.Add(signal);
+      ScenarioInteractionSignals.OnSignalRegistered += Capture;
+      try
+      {
+        var player = playerObject.AddComponent<MultiplayerInfrastructure.Player.PlayerController>();
+        var hotbar = hotbarObject.AddComponent<MultiplayerInfrastructure.UI.HotbarUIController>();
+
+        var gloveItem = (MultiplayerInfrastructure.ItemSystem.Item)Activator.CreateInstance(
+          typeof(TriageTrainer.ItemDefinitions.SterileGloves));
+        gloveItem.CurrentStackCount = 1;
+
+        var heldSlot = new InventorySlotModelDTO();
+        heldSlot.SetItem(gloveItem);
+        var slots = new List<InventorySlotModelDTO> { heldSlot };
+        var equipmentSlots = new List<MultiplayerInfrastructure.Player.EquipmentSlotModelDTO>
+        {
+          new MultiplayerInfrastructure.Player.EquipmentSlotModelDTO(
+            MultiplayerInfrastructure.Player.EquipmentSlotType.Glove)
+        };
+
+        var playerType = typeof(MultiplayerInfrastructure.Player.PlayerController);
+        playerType.GetField("_slots", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.SetValue(player, slots);
+        playerType.GetField("_equipmentSlots", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.SetValue(player, equipmentSlots);
+        playerType.GetField("_hotbarUI", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.SetValue(player, hotbar);
+        player.HandlingItem = gloveItem;
+
+        ScenarioInteractionSignals.Clear("wear_glove");
+        var equip = playerType.GetMethod(
+          "TryEquipHandlingItem", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(equip, Is.Not.Null);
+        bool equipped = (bool)equip.Invoke(
+          player, new object[] { MultiplayerInfrastructure.Player.EquipmentSlotType.Glove });
+
+        Assert.That(equipped, Is.True, "빈 장갑 슬롯에 장갑 장착이 성공해야 합니다.");
+        Assert.That(equipmentSlots[0].IsEmpty, Is.False, "장갑 슬롯에 아이템이 있어야 합니다.");
+        Assert.That(raised, Does.Contain("sig.wear_glove"),
+          "장갑 장착 성공 시 sig.wear_glove 신호가 1회 올라와야 합니다(V016_1 게이트).");
+      }
+      finally
+      {
+        ScenarioInteractionSignals.OnSignalRegistered -= Capture;
+        ScenarioInteractionSignals.Clear("wear_glove");
+        UnityEngine.Object.DestroyImmediate(hotbarObject);
+        UnityEngine.Object.DestroyImmediate(playerObject);
+      }
+    }
+
+    [Test]
+    public void InstalledOxyflowmeterFirstClickRaisesInteractSignalWithoutDetach()
+    {
+      var oxyObject = new GameObject("oxyflowmeter-v015-4");
+      var interactorObject = new GameObject("oxyflowmeter-interactor");
+      var raised = new List<string>();
+      void Capture(string signal) => raised.Add(signal);
+      ScenarioInteractionSignals.OnSignalRegistered += Capture;
+      try
+      {
+        oxyObject.AddComponent<BoxCollider>();
+        var oxyflowmeter = oxyObject.AddComponent<WallAttachedOxyflowmeter>();
+        typeof(WallAttachedOxyflowmeter).GetField(
+            "_attachedInteractSignal", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.SetValue(oxyflowmeter, "interact_oxyflow_wall");
+        interactorObject.AddComponent<MultiplayerInfrastructure.Player.PlayerController>();
+
+        // 설치(표시) 확정 시점에는 시나리오 신호를 올리지 않는다(설치 래치 제거 확인).
+        oxyflowmeter.ApplyShownFromNetwork();
+        Assert.That(oxyflowmeter.IsAttached, Is.True);
+        Assert.That(raised, Does.Not.Contain("sig.interact_oxyflow_wall"),
+          "설치 시점에 sig.interact_oxyflow_wall 가 올라가면 V015_4가 자동 통과(스킵)됩니다.");
+
+        // 설치 상태에서의 첫 상호작용은 신호만 올리고 회수(분리)하지 않는다.
+        // 힌트 문구도 실제 동작(신호 발행)과 일치해야 한다.
+        ScenarioInteractionSignals.Clear("interact_oxyflow_wall");
+        Assert.That(oxyflowmeter.DisplayText, Is.EqualTo("산소 유량계 조작"),
+          "신호 미발행 상태의 설치 유량계 힌트는 '회수'가 아니라 '조작'이어야 합니다.");
+        oxyflowmeter.Interact(interactorObject.transform);
+        Assert.That(raised, Does.Contain("sig.interact_oxyflow_wall"),
+          "설치된 유량계 클릭 시 sig.interact_oxyflow_wall 가 올라와야 합니다(V015_4 게이트).");
+        Assert.That(oxyflowmeter.IsAttached, Is.True,
+          "첫 상호작용은 신호만 올리고 유량계를 회수하지 않아야 합니다.");
+        Assert.That(oxyflowmeter.DisplayText, Is.EqualTo("산소 유량계 회수"),
+          "신호 발행 후에는 힌트가 회수 안내로 돌아와야 합니다.");
+      }
+      finally
+      {
+        ScenarioInteractionSignals.OnSignalRegistered -= Capture;
+        ScenarioInteractionSignals.Clear("interact_oxyflow_wall");
+        UnityEngine.Object.DestroyImmediate(interactorObject);
+        UnityEngine.Object.DestroyImmediate(oxyObject);
+      }
+    }
+
+    [Test]
     public void SecondChestCompressionActionRequiresFirstRoundCompletion()
     {
       var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
