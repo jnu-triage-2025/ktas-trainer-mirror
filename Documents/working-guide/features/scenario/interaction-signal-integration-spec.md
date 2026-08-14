@@ -184,6 +184,11 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
 - **운영자 작업(코드 변경 불필요)**: 해당 구역의 `ScenarioTriggerZone` 인스펙터 `_raiseSignalsOnEnter` 에
   조건명(예: `enter_triage_zone`, `arrive_triagearea`)을 입력한다. 비워 두면 기존 동작(신호 없음) 유지.
 - 신호 전용 존(시나리오 그래프 미지정)도 허용된다 → 게이트 통과 전용 트리거로 배치 가능.
+- **재생 게이팅(2026-08-14)**: 신호 계열 존(그래프 미지정)은 재생 중인 시나리오가 있을 때만
+  감지/발신한다(`ScenarioController.HasActiveScenario` 기준). 미재생 구간의 진입은 신호를 올리지 않고
+  오류도 남기지 않는다. "시나리오 시작 여부와 독립"은 '존 자체의 시나리오 시작 기능 유무와 무관하게
+  신호를 올릴 수 있다'는 의미이며, 이 재생 게이팅과 충돌하지 않는다. 그래프가 지정된 시나리오 시작용
+  존은 미재생 상태에서도 동작(시나리오 자동 시작)한다.
 대상: `enter_triage_zone`, `arrive_triagearea` (필요 시 `enter_treatmentroom` 등 추가).
 
 #### 진입 엔티티별(대상별) 신호 — [계측 완료, 2026-07-20]
@@ -191,6 +196,10 @@ Validator 의 `validationRules` 는 이미 개별 `sig.click_<item>` 다중 룰�
 **식별된 엔티티**(`IScenarioIdentifiedEntity` 구현, 예: `PatientController`)마다 템플릿의 `{id}` 를 그
 엔티티 식별자로 치환해 신호를 올린다. `_playerTag` 필터와 무관하게 동작하며, 기본적으로 엔티티당 1회만
 발신한다(`_perEntityRaiseOncePerEntity`, distinct 계측용).
+- **재생 게이팅(2026-08-14)**: 대상별 신호도 재생 중인 시나리오가 있을 때만 발신된다. 미재생 구간의
+  진입은 `_perEntityRaised` 에도 기록되지 않으므로, 시나리오 시작 전 통과가 재발신을 막지 않는다.
+  대상별 신호만 설정된 존(그래프/진입 신호 없음, 예: `ct:patient_target_pos_b`)에 플레이어가 진입해도
+  `Scenario graph is null ...` 오류는 더 이상 발생하지 않는다.
 - 반복 실행해야 하는 시나리오 존은 `_perEntityRaiseOncePerEntity=false`로 설정한다. 예를 들어
   `patient_b_c_ct`의 간호사 도착 존은 진입마다 신호를 재발행하고, 실행 중 distinct 처리는
   `SignalCounter`와 sticky RuntimeState가 담당하여 다음 시나리오 실행에서도 같은 플레이어를 다시 계측한다.

@@ -205,6 +205,18 @@ namespace MultiplayerInfrastructure.Scenario
     #region Properties
 
     public bool IsActive => _state != State.Inactive;
+
+    /// <summary>
+    /// 활성화된(재생 중인) 시나리오 그래프가 존재하는지 여부.
+    /// </summary>
+    /// <remarks>
+    /// Local/ServerAuthoritative/ClientPresentation 모든 실행 모드에서 그래프가 시작되어
+    /// 종료되지 않은 동안 true 이다(설정: StartScenarioInternal/BeginPresentationScenario,
+    /// 해제: EndScenario/EndPresentationScenario). <see cref="IsActive"/> 는 현재 노드 실행 상태
+    /// (_state) 기반이라 클라이언트 표시 모드나 즉시 진행 노드 체인 사이에서는 false 일 수
+    /// 있으므로, "시나리오가 재생 중인가" 판정에는 이 프로퍼티를 사용해야 한다.
+    /// </remarks>
+    public bool HasActiveScenario => _currentGraph != null;
     public State CurrentState => _state;
     public IScenarioNode CurrentNode => _currentNode;
     public ScenarioGraph CurrentGraph => _currentGraph;

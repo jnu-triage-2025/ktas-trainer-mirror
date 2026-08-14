@@ -68,6 +68,7 @@ public event Action<ScenarioChoiceOption> OnOptionSelected; // 선택지 선택�
 
 ```csharp
 public bool IsActive { get; }               // 시나리오 진행 중 여부 (State != Inactive)
+public bool HasActiveScenario { get; }      // 활성화된(재생 중인) 시나리오 그래프 존재 여부 (CurrentGraph != null)
 public State CurrentState { get; }          // 현재 상태
 public IScenarioNode CurrentNode { get; }   // 현재 노드
 public ScenarioGraph CurrentGraph { get; }  // 현재 그래프
@@ -76,6 +77,14 @@ public ScenarioGraph CurrentGraph { get; }  // 현재 그래프
 // 기본값 Warn(경고 후 진행). 인게임 커맨드 `/scenario conflictpolicy <warn|cancel|panic>` 로도 변경 가능.
 public ScenarioConcurrencyConflictPolicy ConcurrencyConflictPolicy { get; set; }
 ```
+
+**`IsActive` vs `HasActiveScenario`** (2026-08-14 추가): `IsActive`는 현재 노드 **실행 상태**(`_state`) 기반이라
+클라이언트 표시(ClientPresentation) 모드에서는 대부분 `false`이고, 서버에서도 즉시 진행 노드 체인 사이에서는
+`false`일 수 있습니다. "시나리오가 재생 중인가"를 판정할 때는 `HasActiveScenario`를 사용하세요.
+`_currentGraph`는 Local/ServerAuthoritative/ClientPresentation 모든 실행 모드에서 시나리오 시작 시 설정되고
+종료(`EndScenario`/`EndPresentationScenario`) 시 해제되므로, 서버·클라이언트·오프라인 어디서든 일관되게
+판정됩니다. 예: `ScenarioTriggerZone`은 이 프로퍼티로 "재생 중이 아니면 신호 존을 감지하지 않음" 게이팅을
+수행합니다.
 
 `ScenarioConcurrencyConflictPolicy` 값: `Warn`(경고 후 그대로 진행, 기본), `Cancel`(뒤에 점유하려 한 흐름 취소), `Panic`(전체 시나리오 `EndScenario` 중단). 충돌 감지는 대화창 점유 노드가 실제 표시되는 시점에 이루어집니다.
 
@@ -255,7 +264,7 @@ Inspector 참조를 코드로 주입할 때 사용합니다. 일반적으로 Uni
 ## 관련 문서
 
 - [multiplayer-infrastructure-overview.md](architecture/multiplayer-infrastructure-overview.md) — 시나리오 시스템 개요
-- [scenario-authoring-guide.md](../requirements/content-definitions/scenario/scenario-authoring-guide.md) — 시나리오 작성 가이드
+- [scenario-authoring-guide.md](../working-guide/features/scenario/scenario-authoring-guide.md) — 시나리오 작성 가이드
 - [scenario-graph-spec.md](../requirements/content-definitions/scenario/scenario-graph-spec.md) — 시나리오 노드 JSON 스펙
 - [api-references/MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md](MultiplayerInfrastructure.Scenario.ScenarioEventIdentifierRegistry.md) — 이벤트 등록 API
 - [api-references/TextToSpeechService.TTSService.md](TextToSpeechService.TTSService.md) — TTSService API (`PlayTTS` 노드 연동)
