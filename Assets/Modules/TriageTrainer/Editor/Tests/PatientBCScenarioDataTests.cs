@@ -1174,7 +1174,7 @@ namespace TriageTrainer.Tests
         AssertSignalZone(
           zones,
           OverworldGameObjectInitializer.TriageArrivalWaypointIdentifier,
-          new[] { "quest_arrival_triage_area" },
+          new[] { "quest_arrival_triage_area", "arrive_triagearea" },
           "quest_arrival_triage_area_{id}",
           true);
         AssertSignalZone(
