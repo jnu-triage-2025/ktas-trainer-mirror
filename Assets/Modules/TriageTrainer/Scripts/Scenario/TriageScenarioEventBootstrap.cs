@@ -471,7 +471,9 @@ namespace TriageTrainer.Scenario
       _patientAVitalMonitorObject ??= ResolveByAliases(_patientAVitalMonitorAliases);
       if (_patientAVitalMonitorController == null && _patientAVitalMonitorObject != null)
       {
-        _patientAVitalMonitorController = _patientAVitalMonitorObject.GetComponent<PatientMonitorController>();
+        // 씬의 모니터 프리팹은 컨트롤러를 루트가 아닌 하위 화면 오브젝트에 둘 수 있다.
+        // 루트만 조회하면 상태 전환 이벤트는 패널만 켜고 실제 파형은 갱신하지 못한다.
+        _patientAVitalMonitorController = _patientAVitalMonitorObject.GetComponentInChildren<PatientMonitorController>(true);
       }
 
       _patientBObject = ResolveEntityObject(_patientBObject, _patientBEntityIdentifier);
@@ -493,14 +495,14 @@ namespace TriageTrainer.Scenario
       _patientBVitalMonitorObject ??= ResolveByAliases(_patientBVitalMonitorAliases);
       if (_patientBVitalMonitorController == null && _patientBVitalMonitorObject != null)
       {
-        _patientBVitalMonitorController = _patientBVitalMonitorObject.GetComponent<PatientMonitorController>();
+        _patientBVitalMonitorController = _patientBVitalMonitorObject.GetComponentInChildren<PatientMonitorController>(true);
       }
 
       _patientCVitalMonitorObject = ResolveEntityObject(_patientCVitalMonitorObject, _patientCVitalMonitorEntityIdentifier);
       _patientCVitalMonitorObject ??= ResolveByAliases(_patientCVitalMonitorAliases);
       if (_patientCVitalMonitorController == null && _patientCVitalMonitorObject != null)
       {
-        _patientCVitalMonitorController = _patientCVitalMonitorObject.GetComponent<PatientMonitorController>();
+        _patientCVitalMonitorController = _patientCVitalMonitorObject.GetComponentInChildren<PatientMonitorController>(true);
       }
 
       _nurseBTransform = ResolveEntityTransform(_nurseBTransform, _nurseBEntityIdentifier);
