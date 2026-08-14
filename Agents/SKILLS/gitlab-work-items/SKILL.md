@@ -5,7 +5,7 @@ description: Use GitLab Work Items to inspect an issue index, verify and resolve
 
 # GitLab Work Items
 
-Use the GitLab Work Items Tool with `GITLAB_TOKEN`. Before starting the tool, source the local profile appropriate for the current shell so the configured token is available to the child process. Never print the token or include it in logs. Call `gitlab_is_available` first. A non-empty, non-whitespace token means the tool is available; availability does not prove authorization. Use `gitlab_init` only to validate a supplied token profile—never print or persist the secret.
+Use the GitLab Work Items Tool at `Tools/gitlab-work-items/gitlab_work_items.py` with `GITLAB_TOKEN`. Before starting the tool, source the local profile appropriate for the current shell so the configured token is available to the child process. Never print the token or include it in logs. Call `gitlab_is_available` first. A non-empty, non-whitespace token means the tool is available; availability does not prove authorization. Use `gitlab_init` only to validate a supplied token profile—never print or persist the secret.
 
 ## Standard workflow
 

@@ -1,6 +1,6 @@
 # GitLab Work Items Tool
 
-Dependency-free MCP server for GitLab's GraphQL API. Start it with:
+`Tools/gitlab-work-items/gitlab_work_items.py` — Dependency-free utility for GitLab's GraphQL API. Start it with:
 
 ```sh
 GITLAB_TOKEN=glpat-... python3 Tools/gitlab-work-items/gitlab_work_items.py

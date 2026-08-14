@@ -21,9 +21,11 @@ Check the local environment and install the following tools if they are not alre
 
 ## GitLab Work Items
 
-- GitLab Issue/Work Item 생성·조회·수정 요청에는 먼저 `gitlab-work-items` Skill을 사용한다.
-- Skill이 요구하는 GitLab Work Items MCP 도구(`gitlab_is_available` 등)가 현재 세션에 등록되어 있지 않으면, `curl` 등 직접 HTTP 요청으로 우회하지 않는다. 도구 부재를 사용자에게 알리고, 도구를 사용할 수 있는 세션에서 재시도하도록 요청한다.
-- GitLab MCP 도구가 등록되어 있으면 Skill의 표준 절차(가용성 확인, 프로젝트·기존 항목 확인, 증빙 기반 등록)를 따른다.
+- GitLab Issue/Work Item 생성·조회·수정 요청에는 `Tools/gitlab-work-items/` 경로의 GitLab Work Items Tool을 사용한다.
+- Tool 호출은 `Tools/gitlab-work-items/gitlab_work_items.py`를 통해 수행하며, `gitlab_is_available`, `gitlab_work_item_index`, `gitlab_get_work_item`, `gitlab_create_work_item`, `gitlab_update_work_item`, `gitlab_comment_work_item` 등의 함수를 제공한다.
+- Tool 사용 전에 `GITLAB_TOKEN` 환경 변수가 설정되어 있어야 한다. 쉘 프로필(`source ~/.profile` 또는 `source ~/.zshrc` 등)을 실행하여 토큰을 로드한다. 토큰이 없거나 인증 오류가 발생하면 사용자에게 알리고, 토큰이 설정된 세션에서 재시도하도록 요청한다.
+- `curl` 등 직접 HTTP 요청으로 우회하지 않는다.
+- Tool이 가용하면 Skill의 표준 절차(가용성 확인, 프로젝트·기존 항목 확인, 증빙 기반 등록)를 따른다.
 
 ## Index
 

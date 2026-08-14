@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Small dependency-free MCP server for GitLab GraphQL Work Items."""
+"""Dependency-free GitLab GraphQL Work Items tool (Tools/gitlab-work-items/)."""
 import json, os, sys, urllib.error, urllib.request
 
 ENDPOINT = os.getenv("GITLAB_GRAPHQL_URL", "https://gitlab.com/api/graphql")
