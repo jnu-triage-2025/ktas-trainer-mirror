@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Scenario;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -415,6 +416,8 @@ namespace MultiplayerInfrastructure.UI
             var toEquip = _heldItem.ItemInstance;
             _heldItem = null;
             equipSlot.Equip(toEquip);
+            if (equipSlot.SlotType == EquipmentSlotType.Glove)
+              ScenarioInteractionSignals.Raise("wear_glove");
             RefreshEquipmentSlotVisual(equipSlotIndex);
             UpdateHeldItemGhostVisual(null);
             NotifyEquipmentSlotMutated();
@@ -428,6 +431,8 @@ namespace MultiplayerInfrastructure.UI
           {
             var previous = equipSlot.Equip(_heldItem.ItemInstance);
             _heldItem = previous != null ? new InventorySlotModelDTO(previous) : null;
+            if (equipSlot.SlotType == EquipmentSlotType.Glove)
+              ScenarioInteractionSignals.Raise("wear_glove");
             RefreshEquipmentSlotVisual(equipSlotIndex);
             UpdateHeldItemGhostVisual(_heldItem);
             NotifyEquipmentSlotMutated();
@@ -589,6 +594,8 @@ namespace MultiplayerInfrastructure.UI
       if (taken == null) return false;
 
       equipSlot.Equip(taken);
+      if (targetSlotType == EquipmentSlotType.Glove)
+        ScenarioInteractionSignals.Raise("wear_glove");
       RefreshSlotVisual(slotIndex);
       RefreshEquipmentSlotVisual(equipIdx);
       NotifySlotsMutated();
@@ -624,6 +631,9 @@ namespace MultiplayerInfrastructure.UI
         var previous = equipSlot.Equip(heldItemInstance);
         _heldItem = previous != null ? new InventorySlotModelDTO(previous) : null;
       }
+
+      if (targetSlotType == EquipmentSlotType.Glove)
+        ScenarioInteractionSignals.Raise("wear_glove");
 
       RefreshEquipmentSlotVisual(equipIdx);
       UpdateHeldItemGhostVisual(_heldItem);

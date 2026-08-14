@@ -2,6 +2,7 @@ using FishNet.Object;
 using FishNet.Connection;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
 using MultiplayerInfrastructure.Entity;
 using UnityEngine;
@@ -297,6 +298,7 @@ namespace MultiplayerInfrastructure.Player
     /// 현재 손에 든(핫바 선택 슬롯) 아이템을 지정 장비 슬롯에 장착합니다.
     /// 스택 중 1개만 장착하며, 나머지는 슬롯에 남습니다.
     /// 장비 슬롯이 이미 차 있거나 장착 불가능한 경우 false 를 반환합니다.
+    /// 장갑 슬롯 장착에 성공하면 시나리오 게이팅 신호(sig.wear_glove)를 1회 올립니다.
     /// </summary>
     private bool TryEquipHandlingItem(EquipmentSlotType slotType)
     {
@@ -333,6 +335,8 @@ namespace MultiplayerInfrastructure.Player
       if (toEquip == null) return false;
 
       targetSlot.Equip(toEquip);
+      if (slotType == EquipmentSlotType.Glove)
+        ScenarioInteractionSignals.Raise("wear_glove");
       OnInventoryChangedAndReturn(true);
       return true;
     }

@@ -56,6 +56,14 @@ namespace TriageTrainer.Entity
     [Tooltip("설치(적용) 완료 시 인게임 서버로 올릴 시나리오 신호입니다. 비우면 신호를 올리지 않습니다.")]
     [SerializeField] private string _attachCompletionSignal;
 
+    [Tooltip("설치 상태에서 상호작용했을 때 올릴 시나리오 신호입니다. 이 신호가 아직 올라가 있지 않다면 " +
+      "상호작용은 신호만 올리고 회수는 수행하지 않습니다(이미 올라가 있으면 기존처럼 회수). 비우면 설치 상태 상호작용은 항상 회수입니다.")]
+    [SerializeField] private string _attachedInteractSignal;
+
+    [Tooltip("_attachedInteractSignal 이 아직 올라가지 않은 설치 상태에서 상호작용 힌트에 표시할 문구입니다. " +
+      "비우면 '산소 유량계 조작'을 표시합니다.")]
+    [SerializeField] private string _attachedInteractDisplayText = "산소 유량계 조작";
+
     [Tooltip("자동 산소 라인 연결에 사용할 유량계 측 포트입니다.")]
     [SerializeField] private OxyLineConnectionPoint _oxyLineConnectionPoint;
 
@@ -81,7 +89,15 @@ namespace TriageTrainer.Entity
           return baseText;
 
         if (IsAttached)
+        {
+          // 설치 상태에서 첫 상호작용이 신호 발행(회수가 아님)으로 동작하는 동안은
+          // 힌트도 그에 맞게 표시한다(실제 동작과 힌트의 불일치 방지).
+          if (!string.IsNullOrWhiteSpace(_attachedInteractSignal)
+              && !MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.IsRaised(_attachedInteractSignal))
+            return string.IsNullOrWhiteSpace(_attachedInteractDisplayText) ? "산소 유량계 조작" : _attachedInteractDisplayText;
+
           return string.IsNullOrWhiteSpace(_detachDisplayText) ? "산소 유량계 회수" : _detachDisplayText;
+        }
 
         return string.IsNullOrWhiteSpace(_attachDisplayText) ? "산소 유량계 설치" : _attachDisplayText;
       }
@@ -131,6 +147,15 @@ namespace TriageTrainer.Entity
 
       if (IsAttached)
       {
+        // 설치 상태에서의 첫 상호작용은 시나리오 신호만 올린다(예: 유량계 클릭으로 산소량 결정 단계).
+        // 신호가 이미 올라간 뒤의 상호작용은 기존처럼 회수로 처리한다.
+        if (!string.IsNullOrWhiteSpace(_attachedInteractSignal)
+            && !MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.IsRaised(_attachedInteractSignal))
+        {
+          MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(_attachedInteractSignal);
+          return;
+        }
+
         player.TryClearStaticObjectDisplaymentAndGrantItem(EntityIdentifier, RequiredItemIdentifier);
         return;
       }
