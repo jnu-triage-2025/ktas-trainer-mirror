@@ -41,8 +41,7 @@ namespace FishNet.Upgrading.Mirror.Editing
         [MenuItem("Tools/Fish-Networking/Utility/Upgrading/From Mirror/Remove Defines", false, 2)]
         private static void RemoveDefines()
         {
-            NamedBuildTarget namedBuildTarget = NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
-            string currentDefines = PlayerSettings.GetScriptingDefineSymbols(namedBuildTarget);
+            string currentDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
             /* Convert current defines into a hashset. This is so we can
              * determine if any of our defines were added. Only save playersettings
              * when a define is added. */
@@ -64,7 +63,7 @@ namespace FishNet.Upgrading.Mirror.Editing
             {
                 Debug.Log("Removed Mirror defines to player settings.");
                 string changedDefines = string.Join(";", definesHs);
-                PlayerSettings.SetScriptingDefineSymbols(namedBuildTarget, changedDefines);
+                PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup, changedDefines);
             }
         }
     }
