@@ -21,6 +21,8 @@ namespace TriageTrainer.Entity
 
     [Header("Snap")]
     [SerializeField, Min(0.01f)] private float _snapDistance = 1f;
+    [Tooltip("침대가 이 포인트에 스냅되면 침대를 조종 중인 모든 플레이어를 자동으로 분리합니다.")]
+    [SerializeField] private bool _releaseParticipantsOnSnap = true;
 
     [Header("Bed Collision Policy")]
     [Tooltip("환자가 결합된 침대가 이 위치 또는 스냅 범위에 있으면 새 침대의 positioning을 허용하지 않습니다.")]
@@ -35,6 +37,8 @@ namespace TriageTrainer.Entity
     [SerializeField, Min(0f)] private float _displayHeight = 0.03f;
 
     public float SnapDistance => _snapDistance;
+    /// <summary>스냅 완료 시 침대 조종 참가자를 모두 자동 해제할지 여부.</summary>
+    public bool ReleaseParticipantsOnSnap => _releaseParticipantsOnSnap;
     /// <summary>시나리오 신호와 세션 로그에서 이 위치를 식별하는 안정적인 키.</summary>
     public string Identifier => _identifier == null ? string.Empty : _identifier.Trim();
     public Vector3 Position => transform.position;

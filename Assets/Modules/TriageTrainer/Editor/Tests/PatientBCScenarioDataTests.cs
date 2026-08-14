@@ -1224,6 +1224,164 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void MovingBedPositioningPointReleasesParticipantsOnSnapByDefault()
+    {
+      var pointObject = new GameObject("MovingBedPositioningPointDefaultTest");
+      try
+      {
+        var point = pointObject.AddComponent<MovingPatientBedPositioningPoint>();
+        var serializedPoint = new SerializedObject(point);
+        var releaseParticipants = serializedPoint.FindProperty("_releaseParticipantsOnSnap");
+
+        Assert.That(releaseParticipants, Is.Not.Null,
+          "the per-positioning-point auto-release option must remain serialized");
+        Assert.That(point.ReleaseParticipantsOnSnap, Is.True);
+
+        releaseParticipants.boolValue = false;
+        serializedPoint.ApplyModifiedPropertiesWithoutUndo();
+        Assert.That(point.ReleaseParticipantsOnSnap, Is.False,
+          "each positioning point must be able to disable automatic release");
+      }
+      finally
+      {
+        Object.DestroyImmediate(pointObject);
+      }
+    }
+
+    [Test]
+    public void MovingBedSyncedPositioningPointIdentifierResolvesLocalReference()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(MovingBedPrefabPath);
+      var bedObject = Object.Instantiate(prefab, new Vector3(12000f, 0f, 12000f), Quaternion.identity);
+      var pointObject = new GameObject("MovingBedSyncedPointResolutionTest");
+      const string pointIdentifier = "synced_positioning_point_test";
+      try
+      {
+        var bed = bedObject.GetComponent<MovingPatientBedController>();
+        var point = pointObject.AddComponent<MovingPatientBedPositioningPoint>();
+        point.SetIdentifier(pointIdentifier);
+        var apply = typeof(MovingPatientBedController).GetMethod(
+          "OnPositioningPointIdentifierChanged",
+          BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.That(apply, Is.Not.Null);
+        apply.Invoke(bed, new object[] { string.Empty, pointIdentifier, false });
+        Assert.That(bed.LatchedPositioningPoint, Is.SameAs(point));
+
+        apply.Invoke(bed, new object[] { pointIdentifier, string.Empty, false });
+        Assert.That(bed.LatchedPositioningPoint, Is.Null);
+      }
+      finally
+      {
+        Object.DestroyImmediate(pointObject);
+        Object.DestroyImmediate(bedObject);
+      }
+    }
+
+    [Test]
+    public void MovingBedSnapReleasesPartialOccupancyBeforePublishingReachedSignal()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(MovingBedPrefabPath);
+      var bedObject = Object.Instantiate(prefab, new Vector3(10000f, 0f, 10000f), Quaternion.identity);
+      var pointObject = new GameObject("MovingBedAutoReleaseSnapTest");
+      pointObject.transform.SetPositionAndRotation(bedObject.transform.position, bedObject.transform.rotation);
+      const string pointIdentifier = "auto_release_snap_test";
+      const string reachedSignal = "sig.patient_bed_position_reached_auto_release_snap_test";
+      try
+      {
+        var bed = bedObject.GetComponent<MovingPatientBedController>();
+        var point = pointObject.AddComponent<MovingPatientBedPositioningPoint>();
+        point.SetIdentifier(pointIdentifier);
+        bed.EnsureAllowedPositioningPointIdentifier(pointIdentifier);
+        AddOfflineParticipantForTest(bed, 101);
+
+        bool? hadParticipantsWhenReachedWasPublished = null;
+        void Capture(string signal)
+        {
+          if (signal == reachedSignal)
+            hadParticipantsWhenReachedWasPublished = bed.HasParticipants;
+        }
+
+        ScenarioInteractionSignals.Clear(reachedSignal);
+        ScenarioInteractionSignals.Clear(bed.DismountCompletionSignal);
+        ScenarioInteractionSignals.OnSignalRegistered += Capture;
+        try
+        {
+          var snap = typeof(MovingPatientBedController).GetMethod(
+            "TrySnapToPositioningPointWithSignalContext",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+          Assert.That(snap, Is.Not.Null);
+          snap.Invoke(bed, null);
+        }
+        finally
+        {
+          ScenarioInteractionSignals.OnSignalRegistered -= Capture;
+        }
+
+        Assert.That(bed.HasParticipants, Is.False);
+        Assert.That(hadParticipantsWhenReachedWasPublished, Is.False,
+          "snap observers must see the fully detached state");
+        Assert.That(ScenarioInteractionSignals.IsRaised(bed.DismountCompletionSignal), Is.True,
+          "forced release must complete even when occupancy is below bed capacity");
+      }
+      finally
+      {
+        ScenarioInteractionSignals.Clear(reachedSignal);
+        Object.DestroyImmediate(pointObject);
+        Object.DestroyImmediate(bedObject);
+      }
+    }
+
+    [Test]
+    public void MovingBedSnapKeepsParticipantsWhenPointAutoReleaseIsDisabled()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(MovingBedPrefabPath);
+      var bedObject = Object.Instantiate(prefab, new Vector3(11000f, 0f, 11000f), Quaternion.identity);
+      var pointObject = new GameObject("MovingBedDisabledAutoReleaseSnapTest");
+      pointObject.transform.SetPositionAndRotation(bedObject.transform.position, bedObject.transform.rotation);
+      const string pointIdentifier = "disabled_auto_release_snap_test";
+      try
+      {
+        var bed = bedObject.GetComponent<MovingPatientBedController>();
+        var point = pointObject.AddComponent<MovingPatientBedPositioningPoint>();
+        point.SetIdentifier(pointIdentifier);
+        var serializedPoint = new SerializedObject(point);
+        serializedPoint.FindProperty("_releaseParticipantsOnSnap").boolValue = false;
+        serializedPoint.ApplyModifiedPropertiesWithoutUndo();
+        bed.EnsureAllowedPositioningPointIdentifier(pointIdentifier);
+        AddOfflineParticipantForTest(bed, 102);
+
+        var snap = typeof(MovingPatientBedController).GetMethod(
+          "TrySnapToPositioningPointWithSignalContext",
+          BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(snap, Is.Not.Null);
+        snap.Invoke(bed, null);
+
+        Assert.That(bed.HasParticipants, Is.True);
+      }
+      finally
+      {
+        Object.DestroyImmediate(pointObject);
+        Object.DestroyImmediate(bedObject);
+      }
+    }
+
+    private static void AddOfflineParticipantForTest(MinecraftBoadLikeControl controller, int key)
+    {
+      var participantType = typeof(MinecraftBoadLikeControl).GetNestedType(
+        "LocalParticipant", BindingFlags.NonPublic);
+      var participantsField = typeof(MinecraftBoadLikeControl).GetField(
+        "_localParticipants", BindingFlags.Instance | BindingFlags.NonPublic);
+      Assert.That(participantType, Is.Not.Null);
+      Assert.That(participantsField, Is.Not.Null);
+
+      object participant = System.Activator.CreateInstance(participantType, nonPublic: true);
+      var participants = participantsField.GetValue(controller) as System.Collections.IDictionary;
+      Assert.That(participants, Is.Not.Null);
+      participants.Add(key, participant);
+    }
+
+    [Test]
     public void MovingBedToggleAcknowledgementClearsPendingRequestAfterServerRejection()
     {
       var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(MovingBedPrefabPath);

@@ -57,6 +57,20 @@ namespace MultiplayerInfrastructure.Entity
     public event Action<int> ParticipantAssigned;
 
     public int Capacity => Mathf.Min(Mathf.Max(1, _maximumParticipants), _playerAttachPoints.Count);
+    /// <summary>현재 조종을 위해 이 객체에 탑승한 참가자가 하나 이상 있는지 여부.</summary>
+    public bool HasParticipants
+    {
+      get
+      {
+        for (int i = 0; i < _participants.Count; i++)
+        {
+          if (_participants[i] >= 0)
+            return true;
+        }
+
+        return _localParticipants.Count > 0;
+      }
+    }
     /// <summary>이 클라이언트에서 현재 조종 중인 참가자가 하나 이상 있는지 여부.</summary>
     public bool IsLocallyControlled => _localParticipants.Count > 0;
 
@@ -155,29 +169,33 @@ namespace MultiplayerInfrastructure.Entity
     /// 입력 기반 하차뿐 아니라 시나리오 그래프 같은 외부 시스템에서도 동일한
     /// 네트워크 상태 전이를 사용할 수 있도록 공개한다.
     /// </summary>
-    public void DetachAllParticipants()
+    public bool DetachAllParticipants()
     {
       if (!IsClientStarted && !IsServerStarted)
       {
+        bool hadParticipants = _localParticipants.Count > 0;
         ClearLocalParticipants();
-        return;
+        return hadParticipants;
       }
 
       // 참가자 SyncList는 서버 권위 상태이므로 클라이언트에서 직접 변경하지 않는다.
       if (!IsServerStarted)
-        return;
+        return false;
 
+      bool detachedAny = false;
       for (int i = 0; i < _participants.Count; i++)
       {
         int participant = _participants[i];
         if (participant >= 0)
         {
+          detachedAny = true;
           OnServerParticipantExited(participant, null, i);
           _serverInputs.Remove(participant);
         }
         SetHandle(i, InvalidClientId);
       }
       ApplyLocalParticipant();
+      return detachedAny;
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -474,8 +492,10 @@ namespace MultiplayerInfrastructure.Entity
       int key = player.GetInstanceID();
       if (_localParticipants.TryGetValue(key, out var existing))
       {
-        ExitLocal(existing);
+        // HasParticipants가 하차 완료 상태를 반영한 뒤 힌트를 갱신해야
+        // 이송 중 숨겼던 환자 인터랙션이 즉시 복원된다.
         _localParticipants.Remove(key);
+        ExitLocal(existing);
         return;
       }
 
@@ -573,9 +593,12 @@ namespace MultiplayerInfrastructure.Entity
 
     protected void ClearLocalParticipants()
     {
-      foreach (var pair in _localParticipants)
-        ExitLocal(pair.Value);
+      // 먼저 상태를 비워 ExitLocal의 힌트 갱신이 하차 완료 상태를 보도록 한다.
+      // 스냅에 의한 오프라인 일괄 해제에서도 환자 인터랙션이 즉시 복원되어야 한다.
+      var participants = new List<LocalParticipant>(_localParticipants.Values);
       _localParticipants.Clear();
+      for (int i = 0; i < participants.Count; i++)
+        ExitLocal(participants[i]);
     }
 
     private bool IsLocalParticipant(PlayerController player) =>
@@ -609,8 +632,21 @@ namespace MultiplayerInfrastructure.Entity
       int index,
       int previous,
       int next,
-      bool asServer) =>
+      bool asServer)
+    {
       ApplyLocalParticipant();
+
+      // 참가자 변화로 주변 객체의 인터랙션 노출 조건도 바뀔 수 있다.
+      // 각 피어의 로컬 플레이어 힌트를 즉시 다시 계산해 오래된 메뉴가 남지 않게 한다.
+      var players = FindObjectsByType<PlayerController>(
+        FindObjectsInactive.Exclude,
+        FindObjectsSortMode.None);
+      for (int i = 0; i < players.Length; i++)
+      {
+        if (players[i] != null && players[i].IsOwner)
+          players[i].RefreshInteractableHintsNow();
+      }
+    }
 
     private void OnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs args)
     {

@@ -141,6 +141,12 @@ namespace TriageTrainer.Entity
     {
       get
       {
+        // 침대 조종 중에는 환자에게 붙은 모든 사정/처치/이송 인터랙션을 숨긴다.
+        // 조종자가 모두 내리면 원래 목록을 그대로 반환하므로 별도 상태 복원 없이
+        // 시나리오에서 설정한 활성/비활성 상태까지 보존된다.
+        if (CurrentBed != null && CurrentBed.HasParticipants)
+          return Array.Empty<IInteract>();
+
         // Inactive network-spawn prefabs and editor-instantiated patients can be queried
         // before Awake. Returning an empty list silently makes the patient unusable until
         // another path happens to rebuild the entries.
