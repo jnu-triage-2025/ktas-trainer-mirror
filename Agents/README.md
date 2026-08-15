@@ -2,7 +2,7 @@
 
 - [Templates](./Templates) : 프롬프트 템플릿 원본
 - [Proposals](./Proposals) : AI가 구현의 부족함을 확인하고 작성한 기능 제안서
-- [Skills](./Skills) : AI가 로컬 도구를 사용할 때 지침
+- [SKILLS](./SKILLS) : AI가 로컬 도구를 사용할 때 지침
 
 ## 실제 사용 방법
 

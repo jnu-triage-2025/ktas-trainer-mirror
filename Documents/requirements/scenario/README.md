@@ -10,7 +10,7 @@
 - [scenario-entity-init-node-requirements.md](./scenario-entity-init-node-requirements.md): Scenario EntityInit 노드 요구사항
 - [scenario-entity-preset-and-tag-node-requirements.md](./scenario-entity-preset-and-tag-node-requirements.md): Scenario EntityPreset/EntityTag 노드 요구사항
 - [scenario-event-registry-requirements.md](./scenario-event-registry-requirements.md): ScenarioEventIdentifierRegistry 기능 요구사항
-- [scenario-ingame-requirements-support.md](./scenario-ingame-requirements-support.md): 시나리오 요구사항 계약 시스템
+- [scenario-ingame-requirements-support.md](./scenario-ingame-requirements-support.md): 시나리오 요구사항 명세 시스템
 - [scenario-preflight-requirements.md](./scenario-preflight-requirements.md): Scenario 사전 요구사항 검증(Preflight) 요구사항
 - [scenario-runtime-validation-requirements.md](./scenario-runtime-validation-requirements.md): Scenario 런타임 실행/검증 요구사항
 - [scenario-serialize-support-requirements.md](./scenario-serialize-support-requirements.md): Scenario SerializeSupport 기능 요구사항

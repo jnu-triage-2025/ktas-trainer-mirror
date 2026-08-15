@@ -118,6 +118,6 @@
 - `Assets/Modules/MultiplayerInfrastructure/Scripts/UI/Controllers/UIControllerABC.cs`
   (`SetDocumentRootInteractable`, `NeutralizeDocumentRootWhenReady`)
 - `Assets/Modules/MultiplayerInfrastructure/Scripts/Definitions/DefaultsUIDocument.cs` (sortingOrder 상수)
-- `Assets/Modules/MultiplayerInfrastructure/Scripts/UI/UIOverlayStack.cs` (오버레이 스택 계약)
+- `Assets/Modules/MultiplayerInfrastructure/Scripts/UI/UIOverlayStack.cs` (오버레이 스택 규약)
 - 참고 컨트롤러: `InventoryUIController`, `GraphicsSettingsUIController`, `KeyConfigUIController`,
   `GameEscapeMenuUIController`, `ProblemSheetUIController`

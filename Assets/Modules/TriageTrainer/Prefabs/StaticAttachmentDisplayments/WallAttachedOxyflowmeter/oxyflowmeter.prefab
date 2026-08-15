@@ -134,7 +134,8 @@ MonoBehaviour:
   _shareMode: 0
   _consumeCount: 1
   _attachDisplayText: "\uC0B0\uC18C \uC720\uB7C9\uACC4 \uC124\uCE58"
-  _attachCompletionSignal: interact_oxyflow_wall
+  _attachCompletionSignal: 
+  _attachedInteractSignal: interact_oxyflow_wall
 --- !u!1 &4360475459063986942
 GameObject:
   m_ObjectHideFlags: 0

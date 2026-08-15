@@ -171,15 +171,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e794a1dae1454908ba448af46d61805, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.PatientController
-  _componentIndexCache: 0
+  _componentIndexCache: 255
   _addedNetworkObject: {fileID: 868971026503455756}
-  _networkObjectCache: {fileID: 868971026503455756}
+  _networkObjectCache: {fileID: 0}
   _runtimeAnimatorController: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
-  _assessActions: [{_identifier: assess_avpu_gcs, _displayText: "\uC758\uC2DD\uC0C1\uD0DC
-        \uC0AC\uC815(AVPU/GCS)", _displayIcon: {fileID: 0}, _assessSignal: '', _enabled: 0},
-    {_identifier: assess_pulse, _displayText: "\uB9E5\uBC15 \uD655\uC778", _displayIcon: {fileID: 0}, _assessSignal: '', _enabled: 0},
-    {_identifier: assess_gcs, _displayText: "GCS \uC7AC\uC0AC\uC815", _displayIcon: {fileID: 0}, _assessSignal: '', _enabled: 0},
-    {_identifier: assess_vital, _displayText: "\uD65C\uB825\uC9D5\uD6C4 \uC0AC\uC815", _displayIcon: {fileID: 0}, _assessSignal: '', _enabled: 0}]
+  _assessActions:
+  - _identifier: assess_avpu_gcs
+    _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC0AC\uC815(AVPU/GCS)"
+    _assessSignal: 
+    _enabled: 0
+  - _identifier: assess_pulse
+    _displayText: "\uB9E5\uBC15 \uD655\uC778"
+    _assessSignal: 
+    _enabled: 0
+  - _identifier: assess_gcs
+    _displayText: "GCS \uC7AC\uC0AC\uC815"
+    _assessSignal: 
+    _enabled: 0
+  - _identifier: assess_vital
+    _displayText: "\uD65C\uB825\uC9D5\uD6C4 \uC0AC\uC815"
+    _assessSignal: 
+    _enabled: 0
   _capsuleCollider: {fileID: 1688330197099835462}
   _standingCapsuleCenter: {x: 0, y: 0.9, z: 0}
   _standingCapsuleHeight: 1.8
@@ -191,11 +203,9 @@ MonoBehaviour:
   _lyingCapsuleDirection: 2
   _identifier: patient
   _liftDisplayText: "\uD658\uC790\uB97C \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
-  _liftDisplayIcon: {fileID: 0}
   _carryDisplayText: "\uD658\uC790 \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
-  _carryDisplayIcon: {fileID: 0}
   _monitorSelectDisplayText: "\uC774 \uD658\uC790\uB97C \uBAA8\uB2C8\uD130\uB9C1"
-  _monitorSelectDisplayIcon: {fileID: 0}
+  _initiallyHiddenChildNames: []
   _weight: 4
   _supportExternalRefs:
     _patientBed: {fileID: 0}
@@ -205,6 +215,8 @@ MonoBehaviour:
     _suctionWalls: []
     _oxyflowmeters: []
   _ivAttachmentPoint: {fileID: 0}
+  _oxygenMaskAttachmentPoint: {fileID: 4673562941832867291}
+  _suctionLineAttachmentPoint: {fileID: 0}
   _carryAttachPoint: {fileID: 5489750353886828385}
   _isMovingPatientBedAttached: 0
   _isPlayerAttached: 0
@@ -212,7 +224,7 @@ MonoBehaviour:
   _debugItemIdentifier: gauze
   _interactConfigs:
   - _identifier: lift_from_bed
-    _enabled: 1
+    _enabled: 0
   - _identifier: carry_patient
     _enabled: 1
   - _identifier: monitor_select
@@ -220,7 +232,6 @@ MonoBehaviour:
   _intravenousLineCannulaConfig:
     _supported: 1
     _displayText: 
-    _displayIcon: {fileID: 0}
   _intravenousLineCannulaInteractable: 1
   _medicalState:
     isCardiacArrest: 0
@@ -279,8 +290,7 @@ MonoBehaviour:
   _triageConfig:
     _assessable: 0
     _changeAssessableOnAssessDone: 0
-    _displayText: 
-    _displayIcon: {fileID: 0}
+    _displayText: "\uD2B8\uB9AC\uC544\uC9C0 \uBD84\uB958"
   _triageLabelAnchor: {fileID: 0}
 --- !u!114 &868971026503455756
 MonoBehaviour:
@@ -340,6 +350,56 @@ MonoBehaviour:
     Rotation: {x: 0, y: 0, z: 0, w: 1}
     Scale: {x: 1, y: 1, z: 1}
     IsValid: 1
+--- !u!1 &4337226369477934879
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8912384234428563656}
+  - component: {fileID: 4673562941832867291}
+  m_Layer: 0
+  m_Name: nasal_cannula_oxy_point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8912384234428563656
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4337226369477934879}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.35612044, y: 0.07714393, z: 0.004512432, w: 0.93123937}
+  m_LocalPosition: {x: -0, y: 0.0559, z: 0.4788}
+  m_LocalScale: {x: 2.7644246, y: 1.7860987, z: 1.8877537}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7176425377073503955}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4673562941832867291
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4337226369477934879}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b76115154ba474fbe9ed4b018f1cb552, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.OxyLine.OxyLineConnectionPoint
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 868971026503455756}
+  _networkObjectCache: {fileID: 0}
+  _lineMaterial: {fileID: 0}
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
 --- !u!1 &4510681037267878421
 GameObject:
   m_ObjectHideFlags: 0
@@ -984,7 +1044,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 1630773535012426520, guid: 0e299f592b00e42b4ad9ba0983fa05d0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8912384234428563656}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0e299f592b00e42b4ad9ba0983fa05d0, type: 3}
 --- !u!1 &320928106938136668 stripped

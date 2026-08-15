@@ -21,7 +21,9 @@ namespace MultiplayerInfrastructure.UI
     private UIDocument _uiDocument;
     private QuestPreviewHudElement _hudElement;
     private bool _managerHooked;
+    private bool _skipCompletionDisplayDelay;
     private IReadOnlyList<QuestData> _trackedQuests = Array.Empty<QuestData>();
+    private IReadOnlyList<QuestData> _observedTrackedQuests = Array.Empty<QuestData>();
     private readonly List<QuestData> _completedQuests = new();
     private readonly Dictionary<string, double> _completionExpiryByQuestId = new(StringComparer.Ordinal);
     private readonly HashSet<string> _trackedWaypointIdentifiers = new(StringComparer.Ordinal);
@@ -47,6 +49,8 @@ namespace MultiplayerInfrastructure.UI
       _completedQuests.Clear();
       _completionExpiryByQuestId.Clear();
       _trackedQuests = Array.Empty<QuestData>();
+      _observedTrackedQuests = Array.Empty<QuestData>();
+      _skipCompletionDisplayDelay = false;
       RefreshTrackedWaypoints(_trackedQuests);
       RefreshHud();
     }
@@ -91,6 +95,7 @@ namespace MultiplayerInfrastructure.UI
 
       _questManager.OnTrackedQuestsChanged += HandleTrackedChanged;
       _questManager.OnQuestCompleted += HandleQuestCompleted;
+      _questManager.OnQuestPreviewImmediateTransitionChanged += HandleImmediateTransitionChanged;
       _managerHooked = true;
 
       HandleTrackedChanged(_questManager.TrackedQuests);
@@ -102,6 +107,7 @@ namespace MultiplayerInfrastructure.UI
       {
         _questManager.OnTrackedQuestsChanged -= HandleTrackedChanged;
         _questManager.OnQuestCompleted -= HandleQuestCompleted;
+        _questManager.OnQuestPreviewImmediateTransitionChanged -= HandleImmediateTransitionChanged;
       }
 
       _managerHooked = false;
@@ -110,18 +116,20 @@ namespace MultiplayerInfrastructure.UI
 
     private void HandleTrackedChanged(IReadOnlyList<QuestData> tracked)
     {
+      tracked ??= Array.Empty<QuestData>();
       QueueCompletedObjectivesBeforeRefresh(tracked);
-      _trackedQuests = tracked ?? Array.Empty<QuestData>();
+      _observedTrackedQuests = tracked;
       for (int i = _completedQuests.Count - 1; i >= 0; i--)
       {
         var completedQuest = _completedQuests[i];
-        if (completedQuest == null || IsNoLongerCompleted(completedQuest.Id))
+        if (completedQuest == null)
         {
-          if (completedQuest != null)
-            _completionExpiryByQuestId.Remove(completedQuest.Id);
           _completedQuests.RemoveAt(i);
         }
       }
+
+      if (_skipCompletionDisplayDelay || _completedQuests.Count == 0)
+        _trackedQuests = _observedTrackedQuests;
 
       RefreshHud();
       RefreshTrackedWaypoints(tracked);
@@ -129,7 +137,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void HandleQuestCompleted(QuestData quest)
     {
-      if (quest == null || !quest.IsTracked)
+      if (quest == null || !quest.IsTracked || _skipCompletionDisplayDelay)
         return;
 
       // 추적 목록 갱신에서 마지막 목표를 이미 완료 표시로 전환한 경우에는
@@ -140,12 +148,12 @@ namespace MultiplayerInfrastructure.UI
 
     private void QueueCompletedObjectivesBeforeRefresh(IReadOnlyList<QuestData> nextTracked)
     {
-      if (_trackedQuests == null || nextTracked == null)
+      if (_observedTrackedQuests == null || nextTracked == null)
         return;
 
-      for (int i = 0; i < _trackedQuests.Count; i++)
+      for (int i = 0; i < _observedTrackedQuests.Count; i++)
       {
-        var previous = _trackedQuests[i];
+        var previous = _observedTrackedQuests[i];
         if (previous == null || previous.Completed)
           continue;
 
@@ -179,14 +187,6 @@ namespace MultiplayerInfrastructure.UI
       StartCoroutine(RemoveCompletedQuestAfterDelay(quest.Id, expiresAt));
     }
 
-    private bool IsNoLongerCompleted(string questId)
-    {
-      return _questManager == null
-          || !_questManager.TryGetQuest(questId, out var currentQuest)
-          || currentQuest == null
-          || !currentQuest.Completed;
-    }
-
     private System.Collections.IEnumerator RemoveCompletedQuestAfterDelay(string questId, double expiresAt)
     {
       while (Time.realtimeSinceStartupAsDouble < expiresAt)
@@ -197,6 +197,21 @@ namespace MultiplayerInfrastructure.UI
 
       _completionExpiryByQuestId.Remove(questId);
       _completedQuests.RemoveAll(each => each != null && each.Id == questId);
+      if (_completedQuests.Count == 0)
+        _trackedQuests = _observedTrackedQuests;
+      RefreshHud();
+    }
+
+    private void HandleImmediateTransitionChanged(bool enabled)
+    {
+      _skipCompletionDisplayDelay = enabled;
+      if (!enabled)
+        return;
+
+      StopAllCoroutines();
+      _completedQuests.Clear();
+      _completionExpiryByQuestId.Clear();
+      _trackedQuests = _observedTrackedQuests;
       RefreshHud();
     }
 

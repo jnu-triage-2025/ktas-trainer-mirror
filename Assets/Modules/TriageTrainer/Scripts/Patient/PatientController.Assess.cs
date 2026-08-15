@@ -123,6 +123,23 @@ namespace TriageTrainer.Entity
     };
 
     /// <summary>
+    /// B Male/Female 프리팹에 저장되어 있던 사정 항목의 직렬화 기본값을 복원한다.
+    /// 사정은 시나리오가 활성화하기 전까지 모두 비활성으로 시작한다.
+    /// </summary>
+    private void ApplySerializedDefaultAssessActions()
+    {
+      _assessActions = new List<AssessActionConfig>(DefaultAssessActions.Length);
+      for (int i = 0; i < DefaultAssessActions.Length; i++)
+      {
+        var definition = DefaultAssessActions[i];
+        var config = new AssessActionConfig();
+        config.InitializeRuntimeDefault(definition.Id, definition.DisplayText);
+        config.Enabled = false;
+        _assessActions.Add(config);
+      }
+    }
+
+    /// <summary>
     /// 등록된 사정 동작들을 IInteract 엔트리로 추가한다(BuildInteractEntries 에서 호출).
     /// 인스펙터에 없는 표준 사정 동작은 코드 기본값으로 보충한다(직렬화 필드를 건드리지 않으므로 Reset 무관).
     /// </summary>

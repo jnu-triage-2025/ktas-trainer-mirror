@@ -82,10 +82,11 @@ namespace MultiplayerInfrastructure.Scenario
       graph.ActiveRoleTags = NormalizeTags(dto.ActiveRoleTags);
       graph.SkipAbsentRoleBranches = dto.SkipAbsentRoleBranches ?? false;
       graph.ClientSignalIdentifiers = ResolveClientSignalIdentifiers(dto, graph.Identifier);
-      graph.ClientSignalPrefixes = NormalizeSignalContract(dto.ClientSignalPrefixes);
+      graph.ClientSignalPrefixes = NormalizeSignalSpecification(dto.ClientSignalPrefixes);
       graph.QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(dto.QuestDefinitionIncludes);
       graph.ActingNpcs = ConvertActingNpcs(dto.ActingNpcs);
       graph.Waypoints = ConvertWaypoints(dto.Waypoints);
+      graph.TtsVoiceProfiles = ConvertVoiceProfiles(dto.TtsVoiceProfiles);
       graph.DefaultEntrypoint = dto.DefaultEntrypoint?.Trim();
       if (string.IsNullOrWhiteSpace(graph.DefaultEntrypoint))
         throw new JsonException("'defaultEntrypoint' is required.");
@@ -134,9 +135,9 @@ namespace MultiplayerInfrastructure.Scenario
     private static IReadOnlyList<string> ResolveClientSignalIdentifiers(ScenarioGraphDTO dto, string graphIdentifier)
     {
       if (dto.ClientSignalIdentifiers != null)
-        return NormalizeSignalContract(dto.ClientSignalIdentifiers);
+        return NormalizeSignalSpecification(dto.ClientSignalIdentifiers);
 
-      // The pre-contract Patient A graph historically used generic client reports for its interaction gates.
+      // The earlier Patient A graph historically used generic client reports for its interaction gates.
       // Keep only this audited legacy graph compatible; every other undeclared graph defaults to deny.
       if (!string.Equals(graphIdentifier, "patient_a_critical", StringComparison.Ordinal))
         return Array.Empty<string>();
@@ -153,7 +154,7 @@ namespace MultiplayerInfrastructure.Scenario
         .ToArray() ?? Array.Empty<string>();
     }
 
-    private static IReadOnlyList<string> NormalizeSignalContract(IEnumerable<string> values)
+    private static IReadOnlyList<string> NormalizeSignalSpecification(IEnumerable<string> values)
       => values?
         .Where(value => !string.IsNullOrWhiteSpace(value))
         .Select(value => ScenarioInteractionSignals.Normalize(value))
@@ -514,7 +515,8 @@ namespace MultiplayerInfrastructure.Scenario
           DisplayDuration = dto.DisplayDuration ?? ScenarioTimeValue.Seconds(1.5d),
           FadeOutDuration = dto.FadeOutDuration ?? ScenarioTimeValue.Seconds(0.5d),
           PlayTTS = dto.PlayTTS ?? false,
-          TtsVoiceIdentifier = dto.TtsVoiceIdentifier,
+          TtsVoiceProfile = ConvertVoiceProfile(dto.TtsVoiceProfile),
+          TtsVoiceIdentifier = ResolveVoiceIdentifier(dto.TtsVoiceIdentifier, dto.TtsVoiceProfile),
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -528,9 +530,22 @@ namespace MultiplayerInfrastructure.Scenario
           AutoAdvanceSeconds = dto.AutoAdvanceSeconds,
           InteractionRequired = dto.InteractionRequired ?? false,
           PlayTTS = dto.PlayTTS ?? false,
-          TtsVoiceIdentifier = string.IsNullOrEmpty(dto.TtsVoiceIdentifier) ? null : dto.TtsVoiceIdentifier,
+          TtsVoiceProfile = ConvertVoiceProfile(dto.TtsVoiceProfile),
+          TtsVoiceIdentifier = ResolveVoiceIdentifier(dto.TtsVoiceIdentifier, dto.TtsVoiceProfile),
           NextIdentifier = dto.NextIdentifier
         };
+
+    private static ScenarioTTSVoiceProfile ConvertVoiceProfile(ScenarioTTSVoiceProfileDTO dto) => dto == null ? null : new ScenarioTTSVoiceProfile
+    {
+      Preset = dto.Preset, VoiceIdentifier = dto.VoiceIdentifier, VoiceStyleName = dto.VoiceStyleName,
+      Language = dto.Language, Speed = dto.Speed ?? 0f, TotalStep = dto.TotalStep ?? 0
+    };
+
+    private static IReadOnlyList<ScenarioTTSVoiceProfile> ConvertVoiceProfiles(List<ScenarioTTSVoiceProfileDTO> profiles) =>
+      profiles?.Where(profile => profile != null).Select(ConvertVoiceProfile).ToArray() ?? Array.Empty<ScenarioTTSVoiceProfile>();
+
+    private static string ResolveVoiceIdentifier(string legacyIdentifier, ScenarioTTSVoiceProfileDTO profile) =>
+      profile == null ? (string.IsNullOrWhiteSpace(legacyIdentifier) ? null : legacyIdentifier) : ConvertVoiceProfile(profile).ToServiceProfile().VoiceIdentifier;
 
     private static ScenarioChoiceNode ConvertChoice(ScenarioChoiceNodeDTO dto)
     {
@@ -572,7 +587,8 @@ namespace MultiplayerInfrastructure.Scenario
         DialogueContent = dto.DialogueContent,
         PortraitSpriteIdentifier = dto.PortraitSpriteIdentifier,
         PlayTTS = dto.PlayTTS ?? false,
-        TtsVoiceIdentifier = string.IsNullOrEmpty(dto.TtsVoiceIdentifier) ? null : dto.TtsVoiceIdentifier,
+        TtsVoiceProfile = ConvertVoiceProfile(dto.TtsVoiceProfile),
+        TtsVoiceIdentifier = ResolveVoiceIdentifier(dto.TtsVoiceIdentifier, dto.TtsVoiceProfile),
         AssessmentIdentifier = dto.AssessmentIdentifier,
         CorrectOptionIndex = dto.CorrectOptionIndex,
         Options = options
@@ -756,6 +772,7 @@ namespace MultiplayerInfrastructure.Scenario
           FailureStrategy = ParseQuestFailureStrategy(dto.FailureStrategy),
           QuestDefinitionIdentifier = dto.QuestDefinitionIdentifier,
           Quest = dto.Quest,
+          SkipCompletionDisplayDelay = dto.SkipCompletionDisplayDelay ?? false,
           PersistProgressOnSessionEnd = dto.PersistProgressOnSessionEnd,
           NextIdentifier = dto.NextIdentifier
         };
@@ -837,7 +854,8 @@ namespace MultiplayerInfrastructure.Scenario
           FeedbackCorrect = dto.FeedbackCorrect,
           FeedbackIncorrect = dto.FeedbackIncorrect,
           PlayTTS = dto.PlayTTS ?? false,
-          TtsVoiceIdentifier = string.IsNullOrEmpty(dto.TtsVoiceIdentifier) ? null : dto.TtsVoiceIdentifier,
+          TtsVoiceProfile = ConvertVoiceProfile(dto.TtsVoiceProfile),
+          TtsVoiceIdentifier = ResolveVoiceIdentifier(dto.TtsVoiceIdentifier, dto.TtsVoiceProfile),
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -867,7 +885,8 @@ namespace MultiplayerInfrastructure.Scenario
           TranscriptIdentifier = dto.TranscriptIdentifier,
           Variables = dto.Variables ?? new Dictionary<string, string>(),
           WaitUntilFinished = dto.WaitUntilFinished ?? true,
-          TtsVoiceIdentifier = string.IsNullOrEmpty(dto.TtsVoiceIdentifier) ? null : dto.TtsVoiceIdentifier,
+          TtsVoiceProfile = ConvertVoiceProfile(dto.TtsVoiceProfile),
+          TtsVoiceIdentifier = ResolveVoiceIdentifier(dto.TtsVoiceIdentifier, dto.TtsVoiceProfile),
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -882,6 +901,7 @@ namespace MultiplayerInfrastructure.Scenario
               : null,
           WaitUntilFinished = node.WaitUntilFinished,
           TtsVoiceIdentifier = string.IsNullOrEmpty(node.TtsVoiceIdentifier) ? null : node.TtsVoiceIdentifier,
+          TtsVoiceProfile = ConvertVoiceProfileToDTO(node.TtsVoiceProfile),
           NextIdentifier = node.NextIdentifier
         };
 
@@ -1433,11 +1453,12 @@ namespace MultiplayerInfrastructure.Scenario
         Tags = NormalizeTags(graph.Tags).ToList(),
         ActiveRoleTags = NormalizeTags(graph.ActiveRoleTags).ToList(),
         SkipAbsentRoleBranches = graph.SkipAbsentRoleBranches ? true : (bool?)null,
-        ClientSignalIdentifiers = NormalizeSignalContract(graph.ClientSignalIdentifiers).ToList(),
-        ClientSignalPrefixes = NormalizeSignalContract(graph.ClientSignalPrefixes).ToList(),
+        ClientSignalIdentifiers = NormalizeSignalSpecification(graph.ClientSignalIdentifiers).ToList(),
+        ClientSignalPrefixes = NormalizeSignalSpecification(graph.ClientSignalPrefixes).ToList(),
         QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(graph.QuestDefinitionIncludes).ToList(),
         ActingNpcs = ConvertActingNpcsToDTO(graph.ActingNpcs),
         Waypoints = ConvertWaypointsToDTO(graph.Waypoints),
+        TtsVoiceProfiles = graph.TtsVoiceProfiles?.Select(ConvertVoiceProfileToDTO).ToList(),
         DefaultEntrypoint = string.IsNullOrWhiteSpace(graph.DefaultEntrypoint) ? null : graph.DefaultEntrypoint.Trim(),
         Nodes = new Dictionary<string, ScenarioNodeDTO>()
       };
@@ -1571,8 +1592,16 @@ namespace MultiplayerInfrastructure.Scenario
           FadeOutDuration = node.FadeOutDuration,
           PlayTTS = node.PlayTTS ? true : (bool?)null,
           TtsVoiceIdentifier = string.IsNullOrEmpty(node.TtsVoiceIdentifier) ? null : node.TtsVoiceIdentifier,
+          TtsVoiceProfile = ConvertVoiceProfileToDTO(node.TtsVoiceProfile),
           NextIdentifier = node.NextIdentifier
         };
+
+    private static ScenarioTTSVoiceProfileDTO ConvertVoiceProfileToDTO(ScenarioTTSVoiceProfile profile) => profile == null ? null : new ScenarioTTSVoiceProfileDTO
+    {
+      Preset = profile.Preset, VoiceIdentifier = profile.VoiceIdentifier, VoiceStyleName = profile.VoiceStyleName,
+      Language = profile.Language, Speed = profile.Speed > 0f ? profile.Speed : (float?)null,
+      TotalStep = profile.TotalStep > 0 ? profile.TotalStep : (int?)null
+    };
 
     private static ScenarioDialogueNodeDTO ConvertToDTO(ScenarioDialogueNode node) =>
         new ScenarioDialogueNodeDTO
@@ -1586,6 +1615,7 @@ namespace MultiplayerInfrastructure.Scenario
           InteractionRequired = node.InteractionRequired ? true : (bool?)null,
           PlayTTS = node.PlayTTS ? true : (bool?)null,
           TtsVoiceIdentifier = string.IsNullOrEmpty(node.TtsVoiceIdentifier) ? null : node.TtsVoiceIdentifier,
+          TtsVoiceProfile = ConvertVoiceProfileToDTO(node.TtsVoiceProfile),
           NextIdentifier = node.NextIdentifier
         };
 
@@ -1600,6 +1630,7 @@ namespace MultiplayerInfrastructure.Scenario
         PortraitSpriteIdentifier = node.PortraitSpriteIdentifier,
         PlayTTS = node.PlayTTS ? true : (bool?)null,
         TtsVoiceIdentifier = string.IsNullOrEmpty(node.TtsVoiceIdentifier) ? null : node.TtsVoiceIdentifier,
+        TtsVoiceProfile = ConvertVoiceProfileToDTO(node.TtsVoiceProfile),
         AssessmentIdentifier = node.AssessmentIdentifier,
         CorrectOptionIndex = node.CorrectOptionIndex,
         NextIdentifier = null,
@@ -1639,6 +1670,7 @@ namespace MultiplayerInfrastructure.Scenario
           FailureStrategy = node.FailureStrategy.ToString(),
           QuestDefinitionIdentifier = node.QuestDefinitionIdentifier,
           Quest = node.Quest,
+          SkipCompletionDisplayDelay = node.SkipCompletionDisplayDelay ? true : null,
           PersistProgressOnSessionEnd = node.PersistProgressOnSessionEnd,
           NextIdentifier = node.NextIdentifier
         };
@@ -1891,6 +1923,7 @@ namespace MultiplayerInfrastructure.Scenario
           FeedbackIncorrect = node.FeedbackIncorrect,
           PlayTTS = node.PlayTTS ? true : (bool?)null,
           TtsVoiceIdentifier = string.IsNullOrEmpty(node.TtsVoiceIdentifier) ? null : node.TtsVoiceIdentifier,
+          TtsVoiceProfile = ConvertVoiceProfileToDTO(node.TtsVoiceProfile),
           NextIdentifier = node.NextIdentifier
         };
 

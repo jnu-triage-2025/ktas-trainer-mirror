@@ -33,7 +33,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
   /// </summary>
   public abstract partial class PatientMonitorController : NetworkBehaviour
   {
-    protected virtual void Reset()
+    protected override void Reset()
     {
       _patientTrackingMethod = PatientTrackingMethod.Interactable;
       _onEnterAnotherPatientAlreadyPatientExists = OnEnterAnotherPatientAlreadyPatientExists.Refresh;
@@ -114,6 +114,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private float currentTime;
     private float sampleAccumulator;
+    private float _nextLabelUpdateTime;
 
     private ECGParameters _currentParameters;
     private ECGParameters _targetParameters;
@@ -555,7 +556,13 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         steps++;
       }
 
-      UpdateLabels();
+      // 수치 문자열과 UI Toolkit text mesh는 생체 신호 샘플마다 갱신할 필요가 없다.
+      // 10Hz로 제한해 문자열 할당과 text mesh 재생성을 줄인다.
+      if (Time.unscaledTime >= _nextLabelUpdateTime)
+      {
+        _nextLabelUpdateTime = Time.unscaledTime + 0.1f;
+        UpdateLabels();
+      }
     }
 
     private void TickSample(float dt)
@@ -627,8 +634,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     }
 
     // 인스펙터에서 값 변경 시 실시간 반영을 위해
-    protected virtual void OnValidate()
+    protected override void OnValidate()
     {
+      base.OnValidate();
       EnsureInteractionCollider();
       EnsureInteractEntry(InteractIdSelectPatient, IsPatientTrackingMethodEnabled(PatientTrackingMethod.Interactable));
       RebuildInteractEntryMap();

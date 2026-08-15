@@ -19,5 +19,7 @@ namespace MultiplayerInfrastructure.Registry
     ItemObject,
     /// <summary>에디터에 사전 배치되는 정적 아이템(<c>StaticPlacedItem</c>). 물리 스폰 없이 맵의 일부처럼 취급된다.</summary>
     StaticPlacedItem,
+    /// <summary>제세동 카트. 1인 조종 이동체(DefibCartController)로 동작한다.</summary>
+    DefibCart,
   }
 }

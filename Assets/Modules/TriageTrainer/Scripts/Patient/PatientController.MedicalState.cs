@@ -230,7 +230,7 @@ namespace TriageTrainer.Entity
     {
       NotifyMedicalStateChanged();
 
-      if (IsServerStarted)
+      if (IsFishNetServerStarted)
       {
         RpcSyncMonitorMedicalState(
           _medicalState.ecg,
@@ -244,7 +244,7 @@ namespace TriageTrainer.Entity
         return;
       }
 
-      if (IsClientInitialized)
+      if (IsFishNetClientInitialized)
       {
         CmdSetMonitorMedicalState(
           _medicalState.ecg,
@@ -284,7 +284,7 @@ namespace TriageTrainer.Entity
       TemperatureParameters temperature,
       STLeadValues stLeads)
     {
-      if (IsServerStarted)
+      if (IsFishNetServerStarted)
         return;
 
       SetMonitorMedicalState(ecg, art, cvp, pleth, numerics, nibp, temperature, stLeads, notify: false);
@@ -382,7 +382,7 @@ namespace TriageTrainer.Entity
     /// </summary>
     private void PropagatePresetToClients(ScenarioPatientMedicalStatePresetNode preset, bool includeNumericVitals)
     {
-      if (!IsServerStarted)
+      if (!IsFishNetServerStarted)
         return;
 
       RpcSyncVitalMedicalState(
@@ -456,7 +456,7 @@ namespace TriageTrainer.Entity
       int isCardiacArrest)
     {
       // 서버에서는 이미 ApplyMedicalStatePreset 에서 직접 적용했으므로 중복 처리하지 않는다.
-      if (IsServerStarted)
+      if (IsFishNetServerStarted)
         return;
 
       EnsureMedicalStateDefaults();
@@ -857,7 +857,7 @@ namespace TriageTrainer.Entity
         NotifyMedicalStateChanged();
 
         // 네트워크 전파는 스로틀링한다. 최종 확정 값은 루프 종료 후 PropagatePresetToClients 로 전송된다.
-        if (IsServerStarted && sinceLastSync >= GradualTransitionSyncIntervalSeconds)
+        if (IsFishNetServerStarted && sinceLastSync >= GradualTransitionSyncIntervalSeconds)
         {
           sinceLastSync = 0f;
           RpcSyncMonitorMedicalState(

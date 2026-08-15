@@ -81,6 +81,34 @@ namespace TextToSpeechService
     /// </summary>
     public bool IsDynamicCacheDirty => _dynamicCachingCount > 0;
 
+    /// <summary>시나리오가 로드한 프로필을 기존 인스펙터 프로필에 병합한다.</summary>
+    public void ConfigureScenarioVoiceProfiles(IEnumerable<TTSVoiceProfile> profiles)
+    {
+      if (profiles == null) return;
+      var merged = new List<TTSVoiceProfile>(voiceProfiles ?? Array.Empty<TTSVoiceProfile>());
+      foreach (var profile in profiles)
+      {
+        if (profile == null || string.IsNullOrWhiteSpace(profile.VoiceIdentifier)) continue;
+        var index = merged.FindIndex(value => value != null && value.VoiceIdentifier == profile.VoiceIdentifier);
+        if (index >= 0) merged[index] = profile;
+        else merged.Add(profile);
+      }
+      voiceProfiles = merged.ToArray();
+
+      // 시나리오 전환 후 등록되는 프로필도 즉시 사용할 수 있게 코어를 추가한다.
+      // 초기화 중이면 InitializeCoroutine이 voiceProfiles를 읽어 동일하게 처리한다.
+      if (!IsReady) return;
+      string streamingAssets = Application.streamingAssetsPath;
+      string onnxDir = TTSCore.GetOnnxDir(streamingAssets);
+      foreach (var profile in voiceProfiles)
+      {
+        if (profile == null || string.IsNullOrWhiteSpace(profile.VoiceIdentifier)
+            || _voiceCores.ContainsKey(profile.VoiceIdentifier)) continue;
+        _voiceCores[profile.VoiceIdentifier] = new TTSCore(
+          onnxDir, TTSCore.GetVoiceStylePath(streamingAssets, profile.VoiceStyleName ?? voiceStyleName));
+      }
+    }
+
     /// <summary>현재 진행 중인 백그라운드 캐싱 작업 수 (dirty bit 카운터)</summary>
     private int _dynamicCachingCount;
 

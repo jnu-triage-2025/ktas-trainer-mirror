@@ -13,6 +13,16 @@ namespace TriageTrainer.Entity
 
     private string _registeredEntityIdentifier;
 
+    /// <summary>
+    /// EditMode 및 pre-spawn 객체에서는 NetworkBehaviour 캐시가 아직 없을 수 있다.
+    /// FishNet 상태 프로퍼티를 직접 읽지 않고 이 안전한 경계를 사용한다.
+    /// </summary>
+    private bool IsFishNetServerStarted =>
+      NetworkObject != null && NetworkObject.NetworkManager != null && IsServerStarted;
+
+    private bool IsFishNetClientInitialized =>
+      NetworkObject != null && NetworkObject.NetworkManager != null && IsClientInitialized;
+
     private string EffectiveIdentifier =>
       string.IsNullOrWhiteSpace(_runtimeIdentifier.Value) ? _identifier : _runtimeIdentifier.Value;
 
@@ -28,7 +38,10 @@ namespace TriageTrainer.Entity
       string trimmed = identifier.Trim();
       _identifier = trimmed; // 로컬 즉시 반영(서버에서 OnStartClient 전 RaisePatientInteractionSignals 등에 대비)
 
-      if (IsServerStarted)
+      // EditMode/offline instances may have a PatientController before FishNet has
+      // populated NetworkBehaviour's NetworkObject cache. The local identifier is
+      // still valid in that state; only touch the SyncVar on an initialized server.
+      if (IsFishNetServerStarted)
       {
         _runtimeIdentifier.Value = trimmed;
       }

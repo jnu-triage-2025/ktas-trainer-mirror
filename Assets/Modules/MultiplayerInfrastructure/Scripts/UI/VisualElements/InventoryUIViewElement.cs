@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.ItemSystem;
+using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Scenario;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -21,6 +23,7 @@ namespace MultiplayerInfrastructure.UI
 
     private VisualElement _inventoryGrid;
     private VisualElement _inventoryPanel;
+    private VisualElement _equipmentPanel;
 
     private readonly List<VisualElement> _slotElements = new();
     private readonly List<InventorySlotModelDTO> _slotDataBuffer = new();
@@ -28,6 +31,8 @@ namespace MultiplayerInfrastructure.UI
 
     public event Action SlotsMutated;
     public event Action<ItemSystem.Item> ItemDroppedOutside;
+    /// <summary>장비 슬롯의 아이템 변화(장착/해제) 발생 시.</summary>
+    public event Action EquipmentSlotMutated;
 
     private InventorySlotModelDTO _heldItem;
     private VisualElement _heldItemGhost;
@@ -42,8 +47,21 @@ namespace MultiplayerInfrastructure.UI
     private Label _tooltipStack;
     private int _hoveredSlotIndex = -1;
 
+    // ── 장비 슬롯 (Equipment Panel) ──────────────────────────────────
+    /// <summary>
+    /// PlayerController 에서 바인딩된 장비 슬롯 데이터.
+    /// 뷰는 이 공유 참조를 직접 조작하므로, 변경 사항이 PlayerController 에 즉각 반영됩니다.
+    /// </summary>
+    private IReadOnlyList<EquipmentSlotModelDTO> _boundEquipmentSlots;
+    private readonly List<VisualElement> _equipmentSlotElements = new();
+    private readonly List<Image> _equipmentShadowImages = new();
+    private readonly List<Image> _equipmentIconImages = new();
+    private readonly List<Label> _equipmentCountLabels = new();
+
     public bool IsVisible => style.display != DisplayStyle.None;
     public IReadOnlyList<InventorySlotModelDTO> BoundSlots => _boundSlots ?? _slotDataBuffer;
+    /// <summary>현재 바인딩된 장비 슬롯 데이터 (PlayerController 소유).</summary>
+    public IReadOnlyList<EquipmentSlotModelDTO> EquipmentSlots => _boundEquipmentSlots;
 
     public void Initialize(int columns, int rows, VisualTreeAsset slotTemplate, Texture2D defaultIcon)
     {
@@ -57,11 +75,14 @@ namespace MultiplayerInfrastructure.UI
       _inventoryPanel = this.Q<VisualElement>("InventoryPanel") ?? _inventoryGrid.parent;
 
       BuildCraftingPanel();
+      BuildEquipmentPanel();
       CreateHeldItemGhost();
       CreateTooltip();
       RegisterCallback<PointerMoveEvent>(OnPointerMoveWhileHolding);
       RegisterCallback<PointerMoveEvent>(OnPointerMoveForTooltip);
       RegisterCallback<PointerUpEvent>(OnPointerUpOutsideSlot);
+      // 우클릭으로 손에 든 아이템을 장비 슬롯에 바로 장착 (버블링된 이벤트 처리)
+      RegisterCallback<PointerDownEvent>(OnRightClickEquipToSlot);
 
       BuildInventoryGrid();
       SetVisible(false);
@@ -276,6 +297,368 @@ namespace MultiplayerInfrastructure.UI
       Add(_tooltip);
     }
 
+    // ── 장비 슬롯 (Equipment Panel) ────────────────────────────────────────
+
+    private void BuildEquipmentPanel()
+    {
+      _equipmentPanel = this.Q<VisualElement>("EquipmentPanel");
+      var equipmentSlotsContainer = this.Q<VisualElement>("EquipmentSlots");
+      if (equipmentSlotsContainer == null) return;
+
+      // UI 요소만 생성. 실제 데이터는 BindEquipment() 에서 PlayerController 로부터 바인딩.
+      CreateEquipmentSlotUI(equipmentSlotsContainer, EquipmentSlotType.Glove, "Glove", slotIndex: 0);
+    }
+
+    /// <summary>
+    /// PlayerController 의 장비 슬롯 데이터를 뷰에 바인딩합니다.
+    /// 공유 참조를 사용하므로 뷰의 변경이 PlayerController 에 즉각 반영됩니다.
+    /// </summary>
+    public void BindEquipment(IReadOnlyList<EquipmentSlotModelDTO> equipmentSlots)
+    {
+      if (equipmentSlots == null) return;
+      _boundEquipmentSlots = equipmentSlots;
+      RefreshAllEquipmentSlotVisuals();
+    }
+
+    private void CreateEquipmentSlotUI(VisualElement container, EquipmentSlotType slotType, string label, int slotIndex)
+    {
+      var slot = new VisualElement();
+      slot.name = $"EquipmentSlot_{slotType}";
+      slot.userData = slotIndex;
+      slot.AddToClassList("equipment-slot");
+      slot.pickingMode = PickingMode.Position;
+
+      // z+2: 장비 그림자 스프라이트 (UI 위에, 아이템 아래에) — DOM 첫 번째 자식
+      // 그림자는 항상 표시. 아이템 장착 시 RefreshEquipmentSlotVisual 에서 숨김.
+      var shadowImage = new Image
+      {
+        name = "EquipmentShadow",
+        pickingMode = PickingMode.Ignore,
+      };
+      shadowImage.AddToClassList("equipment-slot__shadow");
+      shadowImage.style.display = DisplayStyle.Flex;
+      slot.Add(shadowImage);
+      _equipmentShadowImages.Add(shadowImage);
+
+      // z+3: 아이템 스프라이트 (최상위) — DOM 두 번째 자식
+      var iconImage = new Image
+      {
+        name = "EquipmentIcon",
+        pickingMode = PickingMode.Ignore,
+      };
+      iconImage.AddToClassList("equipment-slot__icon");
+      iconImage.style.display = DisplayStyle.None;
+      slot.Add(iconImage);
+      _equipmentIconImages.Add(iconImage);
+
+      // 수량 라벨
+      var countLabel = new Label
+      {
+        name = "EquipmentCount",
+        pickingMode = PickingMode.Ignore,
+        text = string.Empty,
+      };
+      countLabel.AddToClassList("equipment-slot__count");
+      slot.Add(countLabel);
+      _equipmentCountLabels.Add(countLabel);
+
+      // 슬롯 타입 라벨 (하단)
+      var typeLabel = new Label
+      {
+        name = "EquipmentLabel",
+        pickingMode = PickingMode.Ignore,
+        text = label,
+      };
+      typeLabel.AddToClassList("equipment-slot__label");
+      slot.Add(typeLabel);
+
+      int capturedIndex = slotIndex;
+      slot.RegisterCallback<PointerDownEvent>(evt => HandleEquipmentSlotClicked(capturedIndex, evt));
+      slot.RegisterCallback<PointerEnterEvent>(evt => HandleEquipmentSlotPointerEnter(capturedIndex, evt));
+      slot.RegisterCallback<PointerLeaveEvent>(_ => HandleEquipmentSlotPointerLeave(capturedIndex));
+
+      container.Add(slot);
+      _equipmentSlotElements.Add(slot);
+    }
+
+    private void HandleEquipmentSlotClicked(int equipSlotIndex, PointerDownEvent evt)
+    {
+      if (_boundEquipmentSlots == null || equipSlotIndex < 0 || equipSlotIndex >= _boundEquipmentSlots.Count) return;
+
+      // 우클릭은 장비 슬롯 자체 클릭 동작을 수행하지 않음 (버블링 허용)
+      if (evt.button == 1) return;
+
+      var equipSlot = _boundEquipmentSlots[equipSlotIndex];
+
+      if (_heldItem == null)
+      {
+        // 손이 비어 있고 장비 슬롯에 아이템이 있으면 → 집기 (장비 해제)
+        if (!equipSlot.IsEmpty)
+        {
+          var taken = equipSlot.Unequip();
+          if (taken != null)
+          {
+            _heldItem = new InventorySlotModelDTO(taken);
+            RefreshEquipmentSlotVisual(equipSlotIndex);
+            UpdateHeldItemGhostVisual(_heldItem);
+            NotifyEquipmentSlotMutated();
+          }
+        }
+      }
+      else
+      {
+        // 손에 아이템을 들고 있는 경우
+        if (equipSlot.IsEmpty)
+        {
+          // 빈 장비 슬롯에 장착 시도
+          if (equipSlot.CanAccept(_heldItem.ItemInstance))
+          {
+            var toEquip = _heldItem.ItemInstance;
+            _heldItem = null;
+            equipSlot.Equip(toEquip);
+            if (equipSlot.SlotType == EquipmentSlotType.Glove)
+              ScenarioInteractionSignals.Raise("wear_glove");
+            RefreshEquipmentSlotVisual(equipSlotIndex);
+            UpdateHeldItemGhostVisual(null);
+            NotifyEquipmentSlotMutated();
+          }
+          // 장착 불가 → 아무 동작 없음 (손에 계속 들고 있음)
+        }
+        else
+        {
+          // 장비 슬롯에 이미 아이템이 있는 경우 → 스왑 시도
+          if (equipSlot.CanAccept(_heldItem.ItemInstance))
+          {
+            var previous = equipSlot.Equip(_heldItem.ItemInstance);
+            _heldItem = previous != null ? new InventorySlotModelDTO(previous) : null;
+            if (equipSlot.SlotType == EquipmentSlotType.Glove)
+              ScenarioInteractionSignals.Raise("wear_glove");
+            RefreshEquipmentSlotVisual(equipSlotIndex);
+            UpdateHeldItemGhostVisual(_heldItem);
+            NotifyEquipmentSlotMutated();
+          }
+          // 장착 불가 → 아무 동작 없음
+        }
+      }
+
+      UpdateHeldItemGhostPosition(evt.position);
+
+      if (_heldItem != null)
+        HideTooltip();
+      else
+        ShowEquipmentTooltipForSlot(equipSlotIndex, evt.position);
+    }
+
+    private void HandleEquipmentSlotPointerEnter(int equipSlotIndex, PointerEnterEvent evt)
+    {
+      _hoveredSlotIndex = -(equipSlotIndex + 100); // 음수 코드로 장비 슬롯 hover 구분
+
+      if (_heldItem != null)
+      {
+        HideTooltip();
+        return;
+      }
+
+      ShowEquipmentTooltipForSlot(equipSlotIndex, evt.position);
+    }
+
+    private void HandleEquipmentSlotPointerLeave(int equipSlotIndex)
+    {
+      int equipmentHoverCode = -(equipSlotIndex + 100);
+      if (_hoveredSlotIndex == equipmentHoverCode)
+        _hoveredSlotIndex = -1;
+
+      HideTooltip();
+    }
+
+    private void ShowEquipmentTooltipForSlot(int equipSlotIndex, Vector2 panelPosition)
+    {
+      if (_tooltip == null || _boundEquipmentSlots == null || equipSlotIndex < 0 || equipSlotIndex >= _boundEquipmentSlots.Count)
+        return;
+
+      var equipSlot = _boundEquipmentSlots[equipSlotIndex];
+      var item = equipSlot.ItemInstance;
+      if (item == null)
+      {
+        HideTooltip();
+        return;
+      }
+
+      ShowTooltipForItem(item, panelPosition, showStack: true);
+    }
+
+    private void RefreshEquipmentSlotVisual(int equipSlotIndex)
+    {
+      if (_boundEquipmentSlots == null || equipSlotIndex < 0 || equipSlotIndex >= _boundEquipmentSlots.Count) return;
+
+      var equipSlot = _boundEquipmentSlots[equipSlotIndex];
+      var shadowImage = _equipmentShadowImages[equipSlotIndex];
+      var iconImage = _equipmentIconImages[equipSlotIndex];
+      var countLabel = _equipmentCountLabels[equipSlotIndex];
+
+      // z+2: 장비 그림자 스프라이트 — 항상 표시하되, 아이템이 장착되면 숨긴다.
+      var shadowTexture = EquipmentShadowSpriteProvider.GetShadowTexture(equipSlot.SlotType);
+      if (shadowTexture != null)
+      {
+        shadowImage.image = shadowTexture;
+        shadowImage.style.display = equipSlot.IsEmpty ? DisplayStyle.Flex : DisplayStyle.None;
+      }
+      else
+      {
+        shadowImage.style.display = DisplayStyle.None;
+      }
+
+      if (equipSlot.IsEmpty)
+      {
+        iconImage.style.display = DisplayStyle.None;
+        countLabel.text = string.Empty;
+        return;
+      }
+
+      var item = equipSlot.ItemInstance;
+
+      // z+3: 아이템 스프라이트 (장착 시에만 표시)
+      var itemSprite = item?.CurrentItemIconTexture;
+      if (itemSprite != null)
+      {
+        iconImage.image = itemSprite.texture;
+        iconImage.style.display = DisplayStyle.Flex;
+      }
+      else
+      {
+        iconImage.image = _defaultIcon;
+        iconImage.style.display = DisplayStyle.Flex;
+      }
+
+      // 수량 라벨
+      countLabel.text = item != null && item.CurrentStackCount > 1
+        ? item.CurrentStackCount.ToString()
+        : string.Empty;
+    }
+
+    private void RefreshAllEquipmentSlotVisuals()
+    {
+      if (_boundEquipmentSlots == null) return;
+      for (int i = 0; i < _boundEquipmentSlots.Count; i++)
+        RefreshEquipmentSlotVisual(i);
+    }
+
+    private void NotifyEquipmentSlotMutated()
+    {
+      EquipmentSlotMutated?.Invoke();
+    }
+
+    /// <summary>
+    /// 지정 EquipmentSlotType 에 해당하는 장비 슬롯의 인덱스를 찾습니다. 없으면 -1.
+    /// </summary>
+    private int FindEquipmentSlot(EquipmentSlotType slotType)
+    {
+      if (_boundEquipmentSlots == null) return -1;
+      for (int i = 0; i < _boundEquipmentSlots.Count; i++)
+      {
+        if (_boundEquipmentSlots[i].SlotType == slotType) return i;
+      }
+      return -1;
+    }
+
+    /// <summary>
+    /// 인벤토리 슬롯의 아이템을 장비 슬롯에 바로 장착합니다 (Shift+클릭).
+    /// 장비 슬롯이 비어 있어야 하며, 아이템이 장착 가능해야 합니다.
+    /// 성공 시 true, 실패 시 false 를 반환합니다.
+    /// </summary>
+    private bool TryEquipFromInventorySlot(int slotIndex)
+    {
+      var slotData = GetSlotModel(slotIndex);
+      if (slotData == null || slotData.IsEmpty) return false;
+
+      var item = slotData.ItemInstance;
+      if (item == null) return false;
+
+      // 장착 가능 여부 확인 (현재는 Glove 만 지원)
+      EquipmentSlotType targetSlotType;
+      if (EquipmentAttributeHelper.IsEquippableGlove(item))
+        targetSlotType = EquipmentSlotType.Glove;
+      else
+        return false;
+
+      int equipIdx = FindEquipmentSlot(targetSlotType);
+      if (equipIdx < 0) return false;
+
+      var equipSlot = _boundEquipmentSlots[equipIdx];
+
+      // 슬롯에 이미 아이템이 있으면 동작하지 않음 (Shift+클릭 규칙)
+      if (!equipSlot.IsEmpty) return false;
+
+      // 인벤토리 슬롯에서 아이템을 꺼내 장비 슬롯에 장착
+      var taken = slotData.TakeAll();
+      if (taken == null) return false;
+
+      equipSlot.Equip(taken);
+      if (targetSlotType == EquipmentSlotType.Glove)
+        ScenarioInteractionSignals.Raise("wear_glove");
+      RefreshSlotVisual(slotIndex);
+      RefreshEquipmentSlotVisual(equipIdx);
+      NotifySlotsMutated();
+      NotifyEquipmentSlotMutated();
+      return true;
+    }
+
+    /// <summary>
+    /// 손에 든 아이템을 해당 장비 슬롯에 장착합니다 (우클릭).
+    /// 장비 슬롯이 비어 있으면 장착, 이미 있으면 서로 교체합니다.
+    /// </summary>
+    private void TryEquipHeldItemToSlot(EquipmentSlotType targetSlotType)
+    {
+      if (_heldItem == null || _heldItem.IsEmpty) return;
+
+      int equipIdx = FindEquipmentSlot(targetSlotType);
+      if (equipIdx < 0) return;
+
+      var equipSlot = _boundEquipmentSlots[equipIdx];
+      var heldItemInstance = _heldItem.ItemInstance;
+
+      if (!equipSlot.CanAccept(heldItemInstance)) return;
+
+      if (equipSlot.IsEmpty)
+      {
+        // 빈 슬롯에 장착
+        equipSlot.Equip(heldItemInstance);
+        _heldItem = null;
+      }
+      else
+      {
+        // 슬롯에 이미 있으면 서로 교체: 슬롯 아이템 → 손, 손 아이템 → 슬롯
+        var previous = equipSlot.Equip(heldItemInstance);
+        _heldItem = previous != null ? new InventorySlotModelDTO(previous) : null;
+      }
+
+      if (targetSlotType == EquipmentSlotType.Glove)
+        ScenarioInteractionSignals.Raise("wear_glove");
+
+      RefreshEquipmentSlotVisual(equipIdx);
+      UpdateHeldItemGhostVisual(_heldItem);
+      NotifyEquipmentSlotMutated();
+    }
+
+    /// <summary>
+    /// 전역 우클릭 핸들러: 손에 아이템을 들고 있을 때 우클릭하면 장비 슬롯에 바로 장착/교체.
+    /// 인벤토리/장비 슬롯의 PointerDown 핸들러에서 버블링된 우클릭 이벤트를 여기서 처리합니다.
+    /// </summary>
+    private void OnRightClickEquipToSlot(PointerDownEvent evt)
+    {
+      if (evt.button != 1) return;
+      if (_heldItem == null || _heldItem.IsEmpty) return;
+
+      var item = _heldItem.ItemInstance;
+      if (item == null) return;
+
+      // 장착 가능 여부 확인 (현재는 Glove 만 지원)
+      if (EquipmentAttributeHelper.IsEquippableGlove(item))
+        TryEquipHeldItemToSlot(EquipmentSlotType.Glove);
+    }
+
+    // ── 인벤토리 슬롯 포인터 이벤트 ────────────────────────────────────────
+
     private void HandleSlotPointerEnter(int slotIndex, PointerEnterEvent evt)
     {
       _hoveredSlotIndex = slotIndex;
@@ -395,6 +778,21 @@ namespace MultiplayerInfrastructure.UI
     {
       if (slotIndex < 0 || slotIndex >= _slotElements.Count) return;
 
+      // 우클릭: 전역 우클릭 핸들러(장비 장착)로 버블링 허용
+      if (evt.button == 1) return;
+
+      // Shift + 좌클릭: [Equippable*] 아이템을 장비 슬롯에 바로 장착
+      if (evt.shiftKey && _heldItem == null)
+      {
+        var slotData = GetSlotModel(slotIndex);
+        if (slotData != null && !slotData.IsEmpty && TryEquipFromInventorySlot(slotIndex))
+        {
+          HideTooltip();
+          return;
+        }
+        // 장착 불가 아이템이면 일반 pick-up 으로 폴스루
+      }
+
       if (_heldItem == null)
         TryPickUpFromSlot(slotIndex);
       else
@@ -484,10 +882,11 @@ namespace MultiplayerInfrastructure.UI
 
       var target = evt.target as VisualElement;
 
-      // 조합 패널 위에서 손을 뗀 경우(예: 조합 목록 클릭으로 결과물을 커서에 pickup 한 직후의
-      // PointerUp)에는 아이템을 바닥에 버리지 않는다. 조합 패널은 인벤토리 UI의 정당한 영역이므로
-      // "슬롯 바깥 = 월드에 드롭" 규칙에서 제외한다.
+      // 조합 패널 또는 장비 패널 위에서 손을 뗀 경우에는 아이템을 바닥에 버리지 않는다.
+      // 이들은 인벤토리 UI의 정당한 영역이므로 "슬롯 바깥 = 월드에 드롭" 규칙에서 제외한다.
       if (IsWithinCraftingPanel(target))
+        return;
+      if (IsWithinEquipmentPanel(target))
         return;
 
       if (!TryGetSlotIndexFromEvent(target, out _))
@@ -617,6 +1016,19 @@ namespace MultiplayerInfrastructure.UI
     private void NotifySlotsMutated()
     {
       SlotsMutated?.Invoke();
+    }
+
+    /// <summary>대상 요소가 장비 패널(또는 그 자식) 내부인지 검사한다.</summary>
+    private bool IsWithinEquipmentPanel(VisualElement target)
+    {
+      if (target == null || _equipmentPanel == null) return false;
+      var cur = target;
+      while (cur != null)
+      {
+        if (cur == _equipmentPanel) return true;
+        cur = cur.parent;
+      }
+      return false;
     }
   }
 }

@@ -9,6 +9,8 @@ namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
   /// 트리거 존 진입 시 자동으로 시나리오를 시작합니다.
+  /// 신호 계열 존(그래프 미지정)은 재생 중인 시나리오가 있을 때만 감지/발신합니다
+  /// (<see cref="ScenarioController.HasActiveScenario"/> 기준).
   /// </summary>
   public class ScenarioTriggerZone : MonoBehaviour
   {
@@ -28,13 +30,14 @@ namespace MultiplayerInfrastructure.Scenario
     [SerializeField] private bool _disableAfterTrigger = false;
 
     [Header("Interaction Signals (옵션)")]
-    [Tooltip("플레이어가 존에 진입할 때 올릴 시나리오 인터랙션 신호(sig.* 게이팅용). 예: enter_triage_zone, arrive_triagearea. 비워 두면 신호를 올리지 않는다(기존 동작).")]
+    [Tooltip("플레이어가 존에 진입할 때 올릴 시나리오 인터랙션 신호(sig.* 게이팅용). 예: enter_triage_zone, arrive_triagearea. 비워 두면 신호를 올리지 않는다(기존 동작). 재생 중인 시나리오가 없으면 발신되지 않는다.")]
     [SerializeField] private string[] _raiseSignalsOnEnter = Array.Empty<string>();
 
     [Header("Per-Entity Signal (옵션)")]
     [Tooltip("진입한 '식별된 엔티티'(IScenarioIdentifiedEntity 구현, 예: 환자)마다 대상별 신호를 올릴 때 사용하는 템플릿. " +
              "'{id}' 는 진입 엔티티의 식별자로 치환된다. 예: 'enter_triage_zone_{id}' → enter_triage_zone_patient_b. " +
-             "비워 두면 대상별 신호를 올리지 않는다. 이 경로는 _playerTag 필터와 무관하게 동작한다.")]
+             "비워 두면 대상별 신호를 올리지 않는다. 이 경로는 _playerTag 필터와 무관하게 동작한다. " +
+             "재생 중인 시나리오가 없으면 발신되지 않는다.")]
     [SerializeField] private string _perEntitySignalTemplate = string.Empty;
 
     [Tooltip("대상별 신호가 이미 발신된 엔티티에는 재발신하지 않는다(distinct 계측용, 기본 true). " +
@@ -113,12 +116,34 @@ namespace MultiplayerInfrastructure.Scenario
 
     #region Trigger Logic
 
+    /// <summary>
+    /// 현재 활성화된(재생 중인) 시나리오 그래프가 존재하는지 여부.
+    /// ScenarioController 가 없는 씬에서는 false 로 간주한다.
+    /// 재생 여부 판정은 노드 실행 상태 기반(IsActive)이 아니라 그래프 존재 기반이어야
+    /// 클라이언트 표시 모드/즉시 진행 노드 체인 사이에서도 재생 중으로 올바르게 판정된다.
+    /// </summary>
+    private static bool IsScenarioPlaying =>
+      ScenarioController.Instance != null && ScenarioController.Instance.HasActiveScenario;
+
     private void TryTrigger(GameObject other)
     {
       if (!other.CompareTag(_playerTag))
       {
         if (_debugTriggerLogs)
           Debug.Log($"[ScenarioTriggerZone] Ignored '{other.name}': tag '{other.tag}' != required '{_playerTag}'.", this);
+        return;
+      }
+
+      bool hasGraph = _cachedGraph != null;
+
+      // 신호 계열 존(그래프 미지정)은 시나리오가 재생 중일 때만 감지한다.
+      // 재생 중이 아니면 올린 신호가 소비되지 않고(다음 시나리오 시작 시 모두 초기화되므로)
+      // 진입을 무시한다. 쿨다운/1회 트리거 상태도 소비하지 않는다.
+      // 시나리오 시작용 존(그래프 지정)은 재생 중이 아닐 때 유일하게 동작해야 하므로 게이팅 예외다.
+      if (!hasGraph && !IsScenarioPlaying)
+      {
+        if (_debugTriggerLogs)
+          Debug.Log("[ScenarioTriggerZone] Ignored trigger: no scenario is playing.", this);
         return;
       }
 
@@ -138,11 +163,15 @@ namespace MultiplayerInfrastructure.Scenario
 
       // 신호 전용 존(시나리오 그래프 미지정)도 허용한다: 그래프가 있으면 시나리오를 시작하고,
       // 없더라도 진입 신호(_raiseSignalsOnEnter)만 올리는 게이트 트리거로 동작할 수 있다.
-      bool hasGraph = _cachedGraph != null;
       bool hasSignals = _raiseSignalsOnEnter != null && _raiseSignalsOnEnter.Length > 0;
 
       if (!hasGraph && !hasSignals)
       {
+        // 대상별 신호 전용 존(_perEntitySignalTemplate 만 설정)은 정상 구성이다.
+        // 이 경로(플레이어 태그 필터 통과)에서는 할 일이 없으므로 조용히 반환한다.
+        if (!string.IsNullOrWhiteSpace(_perEntitySignalTemplate))
+          return;
+
         Debug.LogError("[ScenarioTriggerZone] Scenario graph is null and no enter-signals configured; nothing to trigger.", this);
         return;
       }
@@ -203,10 +232,16 @@ namespace MultiplayerInfrastructure.Scenario
     /// 진입한 오브젝트가 <see cref="IScenarioIdentifiedEntity"/> 를 구현하면, 대상별 신호 템플릿의
     /// "{id}" 를 그 식별자로 치환해 신호를 올린다(예: 환자별 트리아지 구역 도착).
     /// _playerTag 필터와 무관하게 동작하며, 기본적으로 엔티티당 1회만 발신한다.
+    /// 대상별 신호는 재생 중인 시나리오의 게이트/카운터에서만 소비되므로, 재생 중이 아니면 발신하지 않는다.
     /// </summary>
     private void TryRaisePerEntitySignal(GameObject other)
     {
       if (string.IsNullOrWhiteSpace(_perEntitySignalTemplate) || other == null)
+        return;
+
+      // 재생 중이 아니면 신호가 소비되지 않으므로 발신하지 않는다.
+      // (_perEntityRaised 가 재생 전 진입으로 오염되는 것도 함께 방지된다.)
+      if (!IsScenarioPlaying)
         return;
 
       var identified = other.GetComponentInParent<IScenarioIdentifiedEntity>();

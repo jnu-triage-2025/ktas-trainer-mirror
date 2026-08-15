@@ -60,31 +60,15 @@
 }
 
 .interactable-hint .interactable-content-wrapper {
-  background-color: var(--content-background-dark);
-
-  border-top-left-radius: 15px;
-  border-bottom-left-radius: 15px;
-  
-  border-left-width: 1px;
-  border-right-width: 1px;
-  border-top-width: 1px;
-  border-bottom-width: 1px;
-
-  border-left-color: rgba(255, 255, 255, 0.12);   /* accent on the left edge */
-  border-top-color: rgba(255, 255, 255, 0.10);
-  border-right-color: rgba(255, 255, 255, 0.06);
-  border-bottom-color: rgba(0, 0, 0, 0.38);
-  
   padding-left: 5px;
-  padding-right: 10px;
+  padding-right: 44px;
 
-  /* 짧은 DisplayText 에서는 최소 폭으로 배경 길이를 통일하고,
-     긴 DisplayText 는 콘텐츠가 충분히 보이도록 최대 폭까지 배경이 늘어난다.
-     최대 폭을 넘는 텍스트만 말줄임 처리된다. */
-  width: auto;
-  min-width: 220px;
-  max-width: 560px;
+  /* 텍스트 길이와 무관하게 모든 메뉴 항목을 같은 길이로 유지한다. */
+  width: 260px;
+  min-width: 260px;
+  max-width: 260px;
   flex-shrink: 0;
+  overflow: visible;
 }
 
 .interactable-hint .interactable-content-row {
@@ -112,8 +96,10 @@
   -unity-text-outline-width: 0.75px;
   -unity-text-outline-color: rgba(0, 0, 0, 0.70);
 
-  /* 배경이 최대 폭에 도달해 텍스트가 넘치는 경우에만 줄바꿈 없이 말줄임(...) 처리한다. */
-  flex-shrink: 1;
+  /* 배경을 넘어 일정 거리까지 표시하고, 그 이후에만 말줄임 처리한다. */
+  width: 300px;
+  max-width: 300px;
+  flex-shrink: 0;
   flex-grow: 0;
   white-space: nowrap;
   overflow: hidden;

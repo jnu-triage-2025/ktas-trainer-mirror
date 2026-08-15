@@ -26,10 +26,14 @@ namespace MultiplayerInfrastructure.Editor
     private VisualElement graphHost;
     private ScenarioDebugPanelView debugPanelView;
     private ScenarioSearchPanelView searchPanelView;
-    private VisualElement definitionsContainer;
+    private VisualElement actingNpcContainer;
+    private VisualElement waypointContainer;
+    private VisualElement voiceProfilesContainer;
     private VisualElement questsContainer;
     private ToolbarButton graphTabButton;
-    private ToolbarButton definitionsTabButton;
+    private ToolbarButton actingNpcTabButton;
+    private ToolbarButton waypointTabButton;
+    private ToolbarButton voiceProfilesTabButton;
     private ToolbarButton questsTabButton;
     private ScenarioActingNpcEditorView actingNpcEditorView;
     private ScenarioWaypointEditorView waypointEditorView;
@@ -188,7 +192,7 @@ namespace MultiplayerInfrastructure.Editor
       ConstructUI();
       CreateGraphView();
       CreateDebugPanel();
-      CreateDefinitionsTab();
+      CreateDefinitionTabs();
       CreateQuestTab();
       CreateSearchPanel();
       CreateInspector();
@@ -304,10 +308,14 @@ namespace MultiplayerInfrastructure.Editor
 
       var tabs = new Toolbar();
       graphTabButton = new ToolbarButton(() => SetActiveTab(ScenarioEditorTab.Graph)) { text = "Graph" };
-      definitionsTabButton = new ToolbarButton(() => SetActiveTab(ScenarioEditorTab.Definitions)) { text = "Definitions" };
+      actingNpcTabButton = new ToolbarButton(() => SetActiveTab(ScenarioEditorTab.ActingNpc)) { text = "Acting NPC" };
+      waypointTabButton = new ToolbarButton(() => SetActiveTab(ScenarioEditorTab.Waypoints)) { text = "Waypoints" };
+      voiceProfilesTabButton = new ToolbarButton(() => SetActiveTab(ScenarioEditorTab.VoiceProfiles)) { text = "TTS Voice Profiles" };
       questsTabButton = new ToolbarButton(() => SetActiveTab(ScenarioEditorTab.Quests)) { text = "Quests" };
       tabs.Add(graphTabButton);
-      tabs.Add(definitionsTabButton);
+      tabs.Add(actingNpcTabButton);
+      tabs.Add(waypointTabButton);
+      tabs.Add(voiceProfilesTabButton);
       tabs.Add(questsTabButton);
       rootVisualElement.Add(tabs);
 
@@ -385,30 +393,40 @@ namespace MultiplayerInfrastructure.Editor
       rootVisualElement.Add(debugPanelView);
     }
 
-    private void CreateDefinitionsTab()
+    private void CreateDefinitionTabs()
     {
-      definitionsContainer = new VisualElement { name = "ScenarioDefinitionsContainer" };
-      definitionsContainer.style.flexGrow = 1f;
-      definitionsContainer.style.paddingLeft = 12;
-      definitionsContainer.style.paddingRight = 12;
-      definitionsContainer.style.paddingTop = 12;
-
-      var scroll = new ScrollView();
-      scroll.style.flexGrow = 1f;
+      actingNpcContainer = CreateDefinitionContainer("ScenarioActingNpcContainer");
       actingNpcEditorView = new ScenarioActingNpcEditorView(
         () => graphData,
         () =>
         {
           RefreshDebugPanel();
         });
-      scroll.Add(actingNpcEditorView);
+      actingNpcContainer.Add(actingNpcEditorView);
+      rootVisualElement.Add(actingNpcContainer);
+
+      waypointContainer = CreateDefinitionContainer("ScenarioWaypointContainer");
       waypointEditorView = new ScenarioWaypointEditorView(
         () => graphData,
         () => RefreshDebugPanel());
-      scroll.Add(waypointEditorView);
-      scroll.Add(new Button(OpenSelectedScenarioTextAsset) { text = "Open Selected Scenario TextAsset" });
-      definitionsContainer.Add(scroll);
-      rootVisualElement.Add(definitionsContainer);
+      waypointContainer.Add(waypointEditorView);
+      rootVisualElement.Add(waypointContainer);
+
+      voiceProfilesContainer = CreateDefinitionContainer("ScenarioVoiceProfilesContainer");
+      voiceProfilesContainer.Add(new ScenarioTTSVoiceProfileEditorView(
+        () => graphData,
+        () => RefreshDebugPanel()));
+      rootVisualElement.Add(voiceProfilesContainer);
+    }
+
+    private static VisualElement CreateDefinitionContainer(string name)
+    {
+      var container = new VisualElement { name = name };
+      container.style.flexGrow = 1f;
+      container.style.paddingLeft = 12;
+      container.style.paddingRight = 12;
+      container.style.paddingTop = 12;
+      return container;
     }
 
     private void CreateQuestTab()
@@ -427,21 +445,29 @@ namespace MultiplayerInfrastructure.Editor
     private enum ScenarioEditorTab
     {
       Graph,
-      Definitions,
+      ActingNpc,
+      Waypoints,
+      VoiceProfiles,
       Quests
     }
 
     private void SetActiveTab(ScenarioEditorTab tab)
     {
       bool showGraph = tab == ScenarioEditorTab.Graph;
-      bool showDefinitions = tab == ScenarioEditorTab.Definitions;
+      bool showActingNpc = tab == ScenarioEditorTab.ActingNpc;
+      bool showWaypoints = tab == ScenarioEditorTab.Waypoints;
+      bool showVoiceProfiles = tab == ScenarioEditorTab.VoiceProfiles;
       bool showQuests = tab == ScenarioEditorTab.Quests;
       if (mainContainer != null) mainContainer.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
       if (debugPanelView != null) debugPanelView.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
-      if (definitionsContainer != null) definitionsContainer.style.display = showDefinitions ? DisplayStyle.Flex : DisplayStyle.None;
+      if (actingNpcContainer != null) actingNpcContainer.style.display = showActingNpc ? DisplayStyle.Flex : DisplayStyle.None;
+      if (waypointContainer != null) waypointContainer.style.display = showWaypoints ? DisplayStyle.Flex : DisplayStyle.None;
+      if (voiceProfilesContainer != null) voiceProfilesContainer.style.display = showVoiceProfiles ? DisplayStyle.Flex : DisplayStyle.None;
       if (questsContainer != null) questsContainer.style.display = showQuests ? DisplayStyle.Flex : DisplayStyle.None;
       graphTabButton?.SetEnabled(!showGraph);
-      definitionsTabButton?.SetEnabled(!showDefinitions);
+      actingNpcTabButton?.SetEnabled(!showActingNpc);
+      waypointTabButton?.SetEnabled(!showWaypoints);
+      voiceProfilesTabButton?.SetEnabled(!showVoiceProfiles);
       questsTabButton?.SetEnabled(!showQuests);
     }
 

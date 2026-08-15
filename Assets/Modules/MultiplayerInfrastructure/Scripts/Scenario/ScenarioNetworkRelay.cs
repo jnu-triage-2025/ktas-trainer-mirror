@@ -133,7 +133,7 @@ namespace MultiplayerInfrastructure.Scenario
     {
       foreach (var node in graph.Nodes.Values)
       {
-        // 이 노드들은 서버 상태기만 실행하면 되고, 클라이언트별 별도 표현/입력 계약이 없다.
+        // 이 노드들은 서버 상태기만 실행하면 되고, 클라이언트별 별도 표현/입력 명세가 없다.
         // Dialogue와 Choice만 현재 Target/Observers RPC로 완전한 표시·입력 왕복을 지원한다.
         if (node is ScenarioDialogueNode
             || node is ScenarioChoiceNode
@@ -322,6 +322,29 @@ namespace MultiplayerInfrastructure.Scenario
     {
       // 새 접속자의 NetworkObject spawn 메시지가 먼저 처리되도록 한 프레임 양보한다.
       yield return null;
+
+      // TargetRpc는 대상 접속자가 이 NetworkObject의 observer로 등록된 상태여야 한다.
+      // 한 프레임만으로 spawn/observer 등록이 완료되지 않을 수 있으므로,
+      // observer로 등록될 때까지(또는 접속이 끊기거나 타임아웃) 기다린다.
+      float observerWaitSeconds = 5f;
+      while (NetworkObject != null
+             && connection != null
+             && connection.IsActive
+             && !NetworkObject.Observers.Contains(connection))
+      {
+        observerWaitSeconds -= Time.unscaledDeltaTime;
+        if (observerWaitSeconds <= 0f)
+        {
+          Debug.LogWarning(
+            "[ScenarioNetworkRelay] Timed out waiting for observer registration; skipping late-join snapshot.");
+          yield break;
+        }
+        yield return null;
+      }
+
+      if (NetworkObject == null || connection == null || !connection.IsActive)
+        yield break;
+
       _actingNpcConfigurations.RemoveAll(value => value == null || value.NetworkObject == null);
       foreach (var configuration in _actingNpcConfigurations)
         TargetConfigureScenarioActingNpc(connection, configuration.GraphIdentifier,

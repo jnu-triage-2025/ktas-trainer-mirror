@@ -101,8 +101,7 @@ namespace TriageTrainer.Tests
         zone.ConfigureArea(Vector3.zero, new Vector3(4f, 4f, 4f));
 
         var patient = patientObject.AddComponent<PatientController>();
-        typeof(PatientController).GetField("_identifier", BindingFlags.Instance | BindingFlags.NonPublic)
-          ?.SetValue(patient, "patient_b");
+        patient.ApplySpawnedEntityIdentifier("patient_b");
 
         var poll = typeof(PatientCareDescriptionZone).GetMethod("PollPatients", BindingFlags.Instance | BindingFlags.NonPublic);
         Assert.That(poll, Is.Not.Null);

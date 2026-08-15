@@ -18,12 +18,11 @@ namespace MultiplayerInfrastructure.UI
     // 크기가 나중에 커지더라도 이 고정 높이 덕분에 행(row) 전체의 높이/세로 간격에는 영향을 주지 않는다.
     private const float KeyHintRowHeight = 16f;
 
-    // "현재 선택된 Interactable 옵션" 배경(contentWrapper)의 폭 규칙.
-    // 짧은 DisplayText 에서는 최소 폭으로 모든 항목의 배경 길이를 통일하고,
-    // 긴 DisplayText 는 말줄임 없이 읽을 수 있도록 콘텐츠 길이에 맞춰 최대 폭까지 늘어난다.
-    // 최대 폭을 넘는 텍스트만 말줄임(ellipsis) 처리된다.
-    private const float ContentWrapperMinWidth = 220f;
-    private const float ContentWrapperMaxWidth = 560f;
+    // DisplayText 길이와 관계없이 모든 메뉴 항목이 같은 폭을 사용한다.
+    private const float ContentWrapperWidth = 260f;
+    private const float ContentFadeWidth = 44f;
+    // 텍스트는 배경 우측 끝을 지나서도 일정 거리까지 읽을 수 있게 한다.
+    private const float ContentTextMaxWidth = 300f;
 
     private const string MouseScrollHintIconPath = "Textures/Icons/mouse-scroll";
     private static Texture2D _mouseScrollHintIcon;
@@ -103,29 +102,42 @@ namespace MultiplayerInfrastructure.UI
       var contentWrapper = new VisualElement();
       contentWrapper.AddToClassList("interactable-content-wrapper");
       contentWrapper.AddToClassList("interactable-content-row");
-      contentWrapper.style.backgroundColor = ContentBackground;
-      contentWrapper.style.borderTopLeftRadius = 12;
-      contentWrapper.style.borderBottomLeftRadius = 12;
-      contentWrapper.style.borderLeftWidth = 1;
-      contentWrapper.style.borderRightWidth = 1;
-      contentWrapper.style.borderTopWidth = 1;
-      contentWrapper.style.borderBottomWidth = 1;
-      contentWrapper.style.borderLeftColor = new Color(1f, 1f, 1f, 0.12f);
-      contentWrapper.style.borderTopColor = new Color(1f, 1f, 1f, 0.10f);
-      contentWrapper.style.borderRightColor = new Color(1f, 1f, 1f, 0.06f);
-      contentWrapper.style.borderBottomColor = new Color(0f, 0f, 0f, 0.38f);
       contentWrapper.style.paddingLeft = 4;
-      contentWrapper.style.paddingRight = 8;
+      contentWrapper.style.paddingRight = ContentFadeWidth;
       contentWrapper.style.paddingTop = 2;
       contentWrapper.style.paddingBottom = 2;
       contentWrapper.style.flexDirection = FlexDirection.Row;
       contentWrapper.style.alignItems = Align.Center;
-      // 짧은 항목은 최소 폭으로 배경 길이를 통일하고, 긴 항목은 콘텐츠가 충분히
-      // 보이도록 최대 폭까지 배경이 늘어난다(폭은 auto 로 두어 내용에 맞긴다).
-      contentWrapper.style.width = StyleKeyword.Auto;
-      contentWrapper.style.minWidth = ContentWrapperMinWidth;
-      contentWrapper.style.maxWidth = ContentWrapperMaxWidth;
+      contentWrapper.style.overflow = Overflow.Visible;
+      contentWrapper.style.width = ContentWrapperWidth;
+      contentWrapper.style.minWidth = ContentWrapperWidth;
+      contentWrapper.style.maxWidth = ContentWrapperWidth;
       contentWrapper.style.flexShrink = 0;
+
+      var solidBackground = new VisualElement { pickingMode = PickingMode.Ignore };
+      solidBackground.AddToClassList("interactable-content-solid-background");
+      solidBackground.style.position = Position.Absolute;
+      solidBackground.style.left = 0;
+      solidBackground.style.top = 0;
+      solidBackground.style.bottom = 0;
+      solidBackground.style.right = ContentFadeWidth;
+      solidBackground.style.backgroundColor = ContentBackground;
+      solidBackground.style.borderTopLeftRadius = 12;
+      solidBackground.style.borderBottomLeftRadius = 12;
+      contentWrapper.Add(solidBackground);
+
+      // 우측 끝은 별도 메시로 그려 배경 알파가 0까지 자연스럽게 감소하게 한다.
+      var fadeBackground = new HorizontalAlphaFadeElement(ContentBackground)
+      {
+        pickingMode = PickingMode.Ignore
+      };
+      fadeBackground.AddToClassList("interactable-content-fade-background");
+      fadeBackground.style.position = Position.Absolute;
+      fadeBackground.style.right = 0;
+      fadeBackground.style.top = 0;
+      fadeBackground.style.bottom = 0;
+      fadeBackground.style.width = ContentFadeWidth;
+      contentWrapper.Add(fadeBackground);
 
       _iconContainer = new VisualElement();
       _iconContainer.AddToClassList("interactable-icon-container");
@@ -146,8 +158,11 @@ namespace MultiplayerInfrastructure.UI
       _contentText.style.unityFontStyleAndWeight = FontStyle.Bold;
       _contentText.style.unityTextOutlineWidth = 0.6f;
       _contentText.style.unityTextOutlineColor = new Color(0f, 0f, 0f, 0.70f);
-      // 배경이 최대 폭에 도달해 텍스트가 넘치는 경우에만 줄바꿈 없이 말줄임(...) 처리한다.
-      _contentText.style.flexShrink = 1;
+      // 배경 폭과 별개로 최대 표시 폭을 확보하여 우측 그라데이션 너머까지
+      // 텍스트가 이어지되, 지나치게 긴 문구는 그 이후에만 말줄임 처리한다.
+      _contentText.style.width = ContentTextMaxWidth;
+      _contentText.style.maxWidth = ContentTextMaxWidth;
+      _contentText.style.flexShrink = 0;
       _contentText.style.flexGrow = 0;
       _contentText.style.whiteSpace = WhiteSpace.NoWrap;
       _contentText.style.overflow = Overflow.Hidden;
@@ -155,6 +170,47 @@ namespace MultiplayerInfrastructure.UI
       contentWrapper.Add(_contentText);
 
       Add(contentWrapper);
+    }
+
+    private sealed class HorizontalAlphaFadeElement : VisualElement
+    {
+      private readonly Color _leftColor;
+
+      public HorizontalAlphaFadeElement(Color leftColor)
+      {
+        _leftColor = leftColor;
+        generateVisualContent += DrawGradient;
+      }
+
+      private void DrawGradient(MeshGenerationContext context)
+      {
+        var rect = contentRect;
+        if (rect.width <= 0f || rect.height <= 0f)
+          return;
+
+        var rightColor = new Color(_leftColor.r, _leftColor.g, _leftColor.b, 0f);
+        var mesh = context.Allocate(4, 6);
+        mesh.SetNextVertex(CreateVertex(rect.xMin, rect.yMin, _leftColor));
+        mesh.SetNextVertex(CreateVertex(rect.xMax, rect.yMin, rightColor));
+        mesh.SetNextVertex(CreateVertex(rect.xMax, rect.yMax, rightColor));
+        mesh.SetNextVertex(CreateVertex(rect.xMin, rect.yMax, _leftColor));
+        mesh.SetNextIndex(0);
+        mesh.SetNextIndex(1);
+        mesh.SetNextIndex(2);
+        mesh.SetNextIndex(2);
+        mesh.SetNextIndex(3);
+        mesh.SetNextIndex(0);
+      }
+
+      private static Vertex CreateVertex(float x, float y, Color color)
+      {
+        return new Vertex
+        {
+          position = new Vector3(x, y, Vertex.nearZ),
+          tint = color,
+          uv = Vector2.zero
+        };
+      }
     }
 
     public void Bind(
@@ -240,8 +296,9 @@ namespace MultiplayerInfrastructure.UI
         holder.style.borderTopRightRadius = 5;
         holder.style.borderBottomLeftRadius = 5;
         holder.style.borderBottomRightRadius = 5;
-        // Contain은 정사각형 슬롯을 넘지 않으면서 스프라이트의 원본 비율을 보존합니다.
-        holder.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+        // Cover는 스프라이트의 원본 비율을 보존하면서 정사각형 슬롯을 완전히 채웁니다.
+        // 슬롯보다 작은 아이콘은 넓은 변에 맞춰 확대되고, 남는 부분은 중앙 기준으로 잘립니다.
+        holder.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
         holder.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Center);
         holder.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Center);
         holder.style.backgroundRepeat = new StyleBackgroundRepeat(StyleKeyword.None);

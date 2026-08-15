@@ -8,6 +8,7 @@ using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 using TriageTrainer.Entity.IntravenousLine;
+using TriageTrainer.ItemDefinitions;
 using UnityEngine;
 using TriageTrainer.Patient;
 
@@ -31,6 +32,15 @@ namespace TriageTrainer.Entity
   /// </summary>
   public partial class PatientController
   {
+    public const string TreatmentGauze = "gauze";
+    public const string TreatmentPlasterOnGauze = "plaster_on_gauze";
+    public const string TreatmentPlasterOnIntubation = "plaster_on_intubation";
+
+    [Header("Treatment State")]
+    [SerializeField] private PatientTreatmentState _treatmentState = new();
+
+    public PatientTreatmentState TreatmentState => _treatmentState ??= new PatientTreatmentState();
+
     /// <summary>
     /// 처치 시각 표현 항목. <see cref="PatientTreatmentDisplayModel"/> / <see cref="PatientTreatmentDisplayingChildGameObjects"/>
     /// 의 필드와 1:1 대응한다.
@@ -101,8 +111,10 @@ namespace TriageTrainer.Entity
     {
       // 부착형(시각 표현 동반)
       { "gauze",          new ItemUseEffect(TreatmentDisplay.GauzePatchedOnThorax, "apply_gauze") },
-      { "plaster",        new ItemUseEffect(TreatmentDisplay.GauzeDressingDoneOnThorax, "apply_plaster_on_gauze", "apply_plaster_on_intu", "apply_plaster_on_intu_{id}") },
-      { "gloves",         new ItemUseEffect(TreatmentDisplay.None, "wear_glove", "wear_glove_{id}") },
+      // plaster는 거즈/기관삽관 순서 조건에 따라 아래 ApplyItemUse에서 한 효과만 선택한다.
+      { "plaster",        new ItemUseEffect(TreatmentDisplay.GauzeDressingDoneOnThorax) },
+      { "sterile_gloves", new ItemUseEffect(TreatmentDisplay.None, "wear_glove", "wear_glove_{id}") },
+      { "contaminated_gloves", new ItemUseEffect(TreatmentDisplay.None, "wear_glove", "wear_glove_{id}") },
       // 실제 아이템 식별자(cervical_collar / nasalcannula)가 프로덕션 경로의 키.
       // 구 명칭(neckstabilizer / nasal)은 디버그 훅(Debug_ApplyItemUse) 호환용 별칭이며,
       // 반드시 동일 인스턴스를 공유해 신호/표현이 갈라지지 않게 한다.
@@ -122,33 +134,54 @@ namespace TriageTrainer.Entity
       { "normal_saline_20ml",  new ItemUseEffect(TreatmentDisplay.None, "push_ns") },
     };
 
+    private int _resuscitationMedicationRound = 1;
+
+    /// <summary>동일한 조합 주사기를 사용하는 소생술 투여 회차를 전환합니다.</summary>
+    public void SetResuscitationMedicationRound(int round)
+    {
+      _resuscitationMedicationRound = Mathf.Max(1, round);
+    }
+
     /// <summary>
     /// 아이템 사용을 처리한다: (1) 매핑된 처치 표현을 켜고, (2) 매핑된 신호를 올린다.
     /// 매핑이 없으면 아무 것도 하지 않는다.
     /// </summary>
+    private bool CanApplyItemUse(string itemIdentifier)
+    {
+      if (string.Equals(itemIdentifier, Epinephrine5ccSyringe.Identifier, System.StringComparison.Ordinal)
+          || string.Equals(itemIdentifier, NormalSaline20ccSyringe.Identifier, System.StringComparison.Ordinal))
+        return IsPatientA;
+
+      return TryResolveItemUse(itemIdentifier, out _, out _, out _);
+    }
+
     private bool ApplyItemUse(string itemIdentifier)
     {
-      if (string.IsNullOrWhiteSpace(itemIdentifier)
-          || !ItemUseEffects.TryGetValue(itemIdentifier, out var effect))
-        return false;
-
-      if (!CanApplyPatientBCItem(itemIdentifier))
-        return false;
-
-      if (IsPatientBC && IsClientInitialized && !IsServerStarted)
+      // 조합 완료 주사기는 동일 아이템을 1·2차 투여에 재사용하므로 현재 소생술 회차에
+      // 맞는 신호를 동적으로 발신한다. 두 회차 신호를 동시에 올리면 후속 게이트가
+      // 실제 재투여 없이 통과하므로 반드시 한 회차만 발신한다.
+      if (string.Equals(itemIdentifier, Epinephrine5ccSyringe.Identifier, System.StringComparison.Ordinal))
       {
-        CmdApplyPatientBCItemUse(itemIdentifier);
+        if (!IsPatientA)
+          return false;
+        MI.Scenario.ScenarioInteractionSignals.Raise($"push_epi_r{_resuscitationMedicationRound}");
         return true;
       }
 
-      TreatmentDisplay resolvedDisplay = ResolveTreatmentDisplayForPatient(effect.Display);
-      if (resolvedDisplay != TreatmentDisplay.None)
+      if (string.Equals(itemIdentifier, NormalSaline20ccSyringe.Identifier, System.StringComparison.Ordinal))
       {
-        if (IsPatientBC && IsServerStarted)
-          SetTreatmentDisplayNetworked(resolvedDisplay, true);
-        else
-          ShowTreatmentDisplay(resolvedDisplay);
+        if (!IsPatientA)
+          return false;
+        MI.Scenario.ScenarioInteractionSignals.Raise($"push_ns_r{_resuscitationMedicationRound}");
+        return true;
       }
+
+      if (!TryResolveItemUse(itemIdentifier, out var effect, out string treatmentIdentifier,
+            out TreatmentDisplay resolvedDisplay))
+        return false;
+
+      if (!SetTreatmentApplied(treatmentIdentifier, true, resolvedDisplay))
+        return false;
 
       bool raised = false;
       if (effect.SignalTemplates != null)
@@ -166,8 +199,111 @@ namespace TriageTrainer.Entity
 
       bool applied = raised || resolvedDisplay != TreatmentDisplay.None;
       if (applied)
+      {
+        RaiseGenericItemAppliedSignal(itemIdentifier, treatmentIdentifier);
         NotifyPatientBCItemApplied(itemIdentifier);
+      }
       return applied;
+    }
+
+    private bool TryResolveItemUse(
+      string itemIdentifier,
+      out ItemUseEffect effect,
+      out string treatmentIdentifier,
+      out TreatmentDisplay resolvedDisplay)
+    {
+      effect = default;
+      treatmentIdentifier = itemIdentifier;
+      resolvedDisplay = TreatmentDisplay.None;
+      if (string.IsNullOrWhiteSpace(itemIdentifier)
+          || !CanApplyPatientBCItem(itemIdentifier)
+          || !ItemUseEffects.TryGetValue(itemIdentifier, out effect))
+        return false;
+
+      if (string.Equals(itemIdentifier, "plaster", System.StringComparison.Ordinal))
+      {
+        // B/C의 단계 SyncVar는 모든 피어가 공유하는 권위 순서 상태다. 클라이언트의 로컬
+        // TreatmentState 복제 시점에 의존하지 않고 AwaitingPlaster 단계에서 메뉴를 연다.
+        if ((IsPatientBC && _patientBCNurseDStage.Value == PatientBCTreatmentStage.AwaitingPlaster)
+            || (!IsPatientBC && TreatmentState.IsApplied(TreatmentGauze)
+                && !TreatmentState.IsApplied(TreatmentPlasterOnGauze)))
+        {
+          treatmentIdentifier = TreatmentPlasterOnGauze;
+          effect = new ItemUseEffect(
+            TreatmentDisplay.GauzeDressingDoneOnThorax,
+            IsPatientBC ? null : "apply_plaster_on_gauze");
+        }
+        else if (IsPatientA
+                 && IsDisplayActive(TreatmentDisplay.EndotrachealTubeInsertDone)
+                 && !TreatmentState.IsApplied(TreatmentPlasterOnIntubation))
+        {
+          treatmentIdentifier = TreatmentPlasterOnIntubation;
+          effect = new ItemUseEffect(TreatmentDisplay.None, "apply_plaster_on_intu");
+        }
+        else
+          return false;
+      }
+
+      if (TreatmentState.IsApplied(treatmentIdentifier))
+        return false;
+
+      resolvedDisplay = ResolveTreatmentDisplayForPatient(effect.Display);
+      // 메뉴뿐 아니라 우클릭/공격 브리지 등 모든 진입점에서 지원 여부를 강제한다.
+      return resolvedDisplay == TreatmentDisplay.None || IsTreatmentDisplaySupported(resolvedDisplay);
+    }
+
+    public bool IsTreatmentApplied(string treatmentIdentifier)
+      => TreatmentState.IsApplied(treatmentIdentifier);
+
+    /// <summary>처치 상태를 권위 데이터로 변경하고 대응 Display 상태를 연달아 반영한다.</summary>
+    public bool SetTreatmentApplied(
+      string treatmentIdentifier,
+      bool applied,
+      TreatmentDisplay display = TreatmentDisplay.None)
+    {
+      if (IsFishNetClientInitialized && !IsFishNetServerStarted)
+        return false;
+
+      if (!TreatmentState.SetApplied(treatmentIdentifier, applied))
+        return false;
+
+      if (IsFishNetServerStarted)
+        RpcSyncTreatmentState(TreatmentState.CreateSnapshot());
+
+      if (display != TreatmentDisplay.None)
+      {
+        if (IsPatientBC && IsFishNetServerStarted)
+          SetTreatmentDisplayNetworked(display, applied);
+        else
+          SetTreatmentDisplay(display, applied);
+      }
+      return true;
+    }
+
+    private bool IsDisplayActive(TreatmentDisplay display)
+    {
+      var state = GetPatientDisplayState();
+      if (state != null)
+        return GetDisplayStateFlag(state, display, fromSupports: false);
+      var legacy = GetPatientState()?.TreatmentDisplayState;
+      return legacy != null && GetDisplayStateFlag(legacy, display, fromSupports: false);
+    }
+
+    internal bool CanApplyHeldTreatmentItem(string itemIdentifier)
+    {
+      return TryResolveItemUse(itemIdentifier, out _, out _, out var resolvedDisplay)
+             && resolvedDisplay != TreatmentDisplay.None;
+    }
+
+    private void RaiseGenericItemAppliedSignal(string itemIdentifier, string treatmentIdentifier)
+    {
+      string json = JsonSerializer.Serialize(new
+      {
+        patientType = Identifier,
+        itemIdentifier,
+        treatmentIdentifier
+      });
+      MI.Scenario.ScenarioInteractionSignals.Raise("item_applied_to_patient", json);
     }
 
     /// <summary>
@@ -220,6 +356,42 @@ namespace TriageTrainer.Entity
 
     /// <summary>처치 표현을 끈다(반복 사이클 리셋 등).</summary>
     public void HideTreatmentDisplay(TreatmentDisplay display) => SetTreatmentDisplay(display, false);
+
+    /// <summary>
+    /// 스폰 시 모든 처치 시각 표현(부착물)을 비활성화합니다.
+    /// 프리팹 편집 편의를 위해 자식이 활성화된 채 저장되어 있어도, 런타임에서는
+    /// 시나리오 또는 아이템 사용에 의해 명시적으로 켜진 부착물만 보이도록 합니다.
+    /// </summary>
+    private void InitializeTreatmentDisplaysFromConfiguredState()
+    {
+      foreach (TreatmentDisplay display in System.Enum.GetValues(typeof(TreatmentDisplay)))
+      {
+        if (display == TreatmentDisplay.None)
+          continue;
+
+        var go = GetTreatmentDisplayChildObject(display);
+        if (go != null)
+          go.SetActive(false);
+      }
+    }
+
+    /// <summary>
+    /// 현재 환자 프리팹에서 지정된 처치 표현에 해당하는 자식 GameObject 를 찾습니다.
+    /// <see cref="PatientDisplayState"/> 와 레거시 <see cref="PatientTreatmentDisplayStateABC"/> 경로 모두 검색합니다.
+    /// </summary>
+    private GameObject GetTreatmentDisplayChildObject(TreatmentDisplay display)
+    {
+      var state = GetPatientDisplayState();
+      if (state != null)
+      {
+        var go = GetDisplayChildObject(state, display);
+        if (go != null)
+          return go;
+      }
+
+      var legacyState = GetPatientState()?.TreatmentDisplayState;
+      return legacyState != null ? GetDisplayChildObject(legacyState, display) : null;
+    }
 
     /// <summary>
     /// 시나리오 EntityInit 노드가 부르는 명명된 표시 상태 설정(<see cref="MI.Entity.IScenarioEntityInitTarget"/>).
@@ -281,7 +453,7 @@ namespace TriageTrainer.Entity
       }
 
       // 기존 환자 프리팹은 PatientDisplayState 대신 PatientStateABC 내부에 처치 표시 상태를
-      // 직렬화한다. 마이그레이션 전 프리팹도 같은 표시·상태 이벤트 계약을 유지한다.
+      // 직렬화한다. 마이그레이션 전 프리팹도 같은 표시·상태 이벤트 규약을 유지한다.
       var legacyState = GetPatientState()?.TreatmentDisplayState;
       if (legacyState == null || !IsTreatmentDisplaySupported(legacyState, display))
         return;
@@ -485,6 +657,9 @@ namespace TriageTrainer.Entity
     private const string NurseDRoleTag = "nurse_d";
     private const float PatientBCTreatmentInteractionDistance = 3f;
 
+    private bool IsPatientA =>
+      string.Equals(Identifier, "patient_a", System.StringComparison.Ordinal);
+
     private bool IsPatientBC =>
       string.Equals(Identifier, "patient_b", System.StringComparison.Ordinal)
       || string.Equals(Identifier, "patient_c", System.StringComparison.Ordinal);
@@ -493,7 +668,7 @@ namespace TriageTrainer.Entity
     {
       if (!IsPatientBC)
         return;
-      if (!IsServerStarted && !InstanceFinder.IsOffline)
+      if (!IsFishNetServerStarted && !InstanceFinder.IsOffline)
       {
         Debug.LogWarning("[PatientController] B/C nurse C stage activation is server-authoritative.", this);
         return;
@@ -518,7 +693,7 @@ namespace TriageTrainer.Entity
     {
       if (!IsPatientBC)
         return false;
-      if (!IsServerStarted && !InstanceFinder.IsOffline)
+      if (!IsFishNetServerStarted && !InstanceFinder.IsOffline)
       {
         Debug.LogWarning("[PatientController] B/C nurse D stage activation is server-authoritative.", this);
         return false;
@@ -543,7 +718,7 @@ namespace TriageTrainer.Entity
 
     private void NotifyPatientBCPupilCompleted()
     {
-      if (IsPatientBC && (IsServerStarted || InstanceFinder.IsOffline))
+      if (IsPatientBC && (IsFishNetServerStarted || InstanceFinder.IsOffline))
         TryAdvancePatientBCNurseCStage(PatientBCTreatmentStage.AwaitingPupil, PatientBCTreatmentStage.AwaitingIv);
     }
 
@@ -555,7 +730,7 @@ namespace TriageTrainer.Entity
     {
       if (!IsPatientBC)
         return true;
-      if (IsServerStarted || InstanceFinder.IsOffline)
+      if (IsFishNetServerStarted || InstanceFinder.IsOffline)
       {
         if (!HasPhysicalPatientBCNormalSalineConnection(salinePoint))
           return false;
@@ -569,7 +744,7 @@ namespace TriageTrainer.Entity
           RememberPatientBCNormalSalineConnection(actorIdentifier, actorDisplayName);
         return false;
       }
-      if (IsClientInitialized)
+      if (IsFishNetClientInitialized)
         CmdCompletePatientBCNormalSalineConnection(salinePoint);
       return false;
     }
@@ -624,12 +799,12 @@ namespace TriageTrainer.Entity
     {
       if (!IsPatientBC || salinePoint == null)
         return;
-      if (IsServerStarted || InstanceFinder.IsOffline)
+      if (IsFishNetServerStarted || InstanceFinder.IsOffline)
       {
         ClearPatientBCNormalSalineConnection(salinePoint);
         return;
       }
-      if (IsClientInitialized)
+      if (IsFishNetClientInitialized)
         CmdClearPatientBCNormalSalineConnection(salinePoint);
     }
 
@@ -712,9 +887,9 @@ namespace TriageTrainer.Entity
     {
       if (!IsPatientBC || !string.Equals(equipmentType, EquipmentTypeOxyflowmeter, System.StringComparison.Ordinal))
         return true;
-      if (!IsServerStarted && !InstanceFinder.IsOffline)
+      if (!IsFishNetServerStarted && !InstanceFinder.IsOffline)
       {
-        if (IsClientInitialized)
+        if (IsFishNetClientInitialized)
           CmdCompletePatientBCOxygenConnection();
         return false;
       }
@@ -758,10 +933,57 @@ namespace TriageTrainer.Entity
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void CmdApplyPatientBCItemUse(string itemIdentifier, NetworkConnection sender = null)
+    private void CmdApplyPatientItemUse(string itemIdentifier, NetworkConnection sender = null)
+    {
+      if (IsPatientBC)
+      {
+        ApplyPatientBCItemUseAuthoritative(itemIdentifier, sender);
+        return;
+      }
+
+      if (!TryResolvePlayerForTreatmentSender(sender, out var player,
+            out var actorIdentifier, out var actorDisplayName)
+          || !IsWithinPatientBCTreatmentDistance(player)
+          || !CanApplyItemUse(itemIdentifier)
+          || player.CountItemInInventory(itemIdentifier) < 1
+          || player.RemoveItemFromInventory(itemIdentifier, 1) != 1)
+        return;
+
+      using (MI.Scenario.ScenarioSignalPlayerContext.Push(actorIdentifier, actorDisplayName))
+        ApplyItemUse(itemIdentifier);
+    }
+
+    private bool TryResolvePlayerForTreatmentSender(
+      NetworkConnection sender,
+      out PlayerController player,
+      out string actorIdentifier,
+      out string actorDisplayName)
+    {
+      player = null;
+      actorIdentifier = null;
+      actorDisplayName = null;
+      if (sender == null || !sender.IsValid)
+        return false;
+
+      var players = FindObjectsByType<PlayerController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      for (int i = 0; i < players.Length; i++)
+      {
+        var candidate = players[i];
+        if (candidate?.Owner == null || !candidate.Owner.IsValid
+            || candidate.Owner.ClientId != sender.ClientId)
+          continue;
+        player = candidate;
+        actorIdentifier = candidate.UserIdentifier;
+        actorDisplayName = candidate.UserIdentifier;
+        return true;
+      }
+      return false;
+    }
+
+    private void ApplyPatientBCItemUseAuthoritative(string itemIdentifier, NetworkConnection sender)
     {
       if (!IsPatientBC
-          || !CanApplyPatientBCItem(itemIdentifier)
+          || !CanApplyItemUse(itemIdentifier)
           || !TryValidatePatientBCTreatmentActor(sender, NurseDRoleTag, out var player,
             out var actorIdentifier, out var actorDisplayName)
           || player.CountItemInInventory(itemIdentifier) < 1

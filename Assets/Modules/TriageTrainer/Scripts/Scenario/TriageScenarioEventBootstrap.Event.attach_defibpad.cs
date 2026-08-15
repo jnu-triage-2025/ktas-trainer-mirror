@@ -12,6 +12,9 @@ namespace TriageTrainer.Scenario
     private IEnumerator Event_AttachDefibPad()
     {
       SetActiveIfPresent(_patientADefibPadVisual, true);
+      var patient = ResolvePatientAController();
+      patient?.SetNamedChildActive("defibpad_midaxillary_A", true);
+      patient?.SetNamedChildActive("defibpad_subclavicle_A", true);
       EmitSystemMessage("환자 A 제세동 패드 부착 연출을 적용했습니다.");
       yield break;
     }

@@ -143,13 +143,13 @@ base model -> npc 복제 경로에서 아이콘 정의값이 유지됩니다.
 ## 7) TriageTrainer 쪽 인터페이스 정합성 수정
 
 `MovingPatientBedController`, `PatientController`도
-`IInteractable.Interacts` 계약을 만족하도록 정리되었습니다.
+`IInteractable.Interacts` 규약을 만족하도록 정리되었습니다.
 
 - 각 클래스가 `IInteract`도 구현
 - `Interacts => new IInteract[] { this }`
 
 즉, 기본적으로는 단일 액션 객체지만,
-현재 인터랙트 시스템의 새로운 계약에는 정확히 맞게 동작합니다.
+현재 인터랙트 시스템의 새로운 규약에는 정확히 맞게 동작합니다.
 
 ---
 

@@ -57,7 +57,8 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<EndotrachealTubeReady>(EndotrachealTubeReady.Identifier);
       Registry.RegisterItemDefinition<FacialMask>(FacialMask.Identifier);
       Registry.RegisterItemDefinition<Gauze>(Gauze.Identifier);
-      Registry.RegisterItemDefinition<Gloves>(Gloves.Identifier);
+      Registry.RegisterItemDefinition<SterileGloves>(SterileGloves.Identifier);
+      Registry.RegisterItemDefinition<ContaminatedGloves>(ContaminatedGloves.Identifier);
       Registry.RegisterItemDefinition<IntravenousSet>(IntravenousSet.Identifier);
       Registry.RegisterItemDefinition<LaryngoscopeBlade>(LaryngoscopeBlade.Identifier);
       Registry.RegisterItemDefinition<LaryngoscopeHandle>(LaryngoscopeHandle.Identifier);

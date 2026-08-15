@@ -55,7 +55,7 @@ namespace MultiplayerInfrastructure.InteractableEntity
     IEnumerable<IInteract> AdditionalInteracts { get; }
   }
 
-  /// <summary>로컬 선택 상태에 따른 표시 효과를 위한 선택적 계약입니다.</summary>
+  /// <summary>로컬 선택 상태에 따른 표시 효과를 위한 선택적 규약입니다.</summary>
   public interface ILocalInteractionFocus
   {
     void SetLocalInteractionFocused(bool focused);

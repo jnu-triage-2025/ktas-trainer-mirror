@@ -27,5 +27,8 @@ namespace MultiplayerInfrastructure.Scenario
     /// null 또는 빈 문자열이면 TTSService의 기본 목소리를 사용한다.
     /// </summary>
     public string TtsVoiceIdentifier { get; set; }
+
+    /// <summary>사전 스타일 또는 시나리오 JSON 프로필을 직접 지정하는 노드별 TTS 프로필.</summary>
+    public ScenarioTTSVoiceProfile TtsVoiceProfile { get; set; }
   }
 }

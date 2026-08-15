@@ -1,5 +1,7 @@
 using UnityEngine;
 using TriageTrainer.Entity.Patient;
+using TriageTrainer.Entity;
+using TriageTrainer.Entity.OxyLine;
 
 namespace TriageTrainer.Patient
 {
@@ -27,5 +29,41 @@ namespace TriageTrainer.Patient
     public virtual int ColliderDirectionOnLayingOnPatientMovingBed => Mathf.Clamp(colliderDirectionOnLayingOnPatientMovingBed, 0, 2);
 
     public abstract PatientTreatmentDisplayStateABC TreatmentDisplayState { get; }
+
+    /// <summary>
+    /// 기존 프리팹 직렬화값을 코드 기본값으로 복구해야 하는 환자 유형인지 여부.
+    /// 기본값은 false이며, 해당 환자 유형만 명시적으로 opt-in 한다.
+    /// </summary>
+    public virtual bool RestoresLegacyPatientControllerDefaultsOnInspectorReset => false;
+
+    protected virtual void Awake()
+    {
+      InitializeRuntimeReferences(GetComponent<PatientController>());
+    }
+
+    public void InitializeRuntimeReferences(PatientController controller)
+    {
+      if (controller != null)
+        ConfigureRuntimeReferences(controller);
+    }
+
+    protected virtual void ConfigureRuntimeReferences(PatientController controller) { }
+
+    /// <summary>
+    /// B/C의 비강 캐뉼라는 이미 <see cref="OxyLineConnectionPoint"/>로 식별된다.
+    /// 별도 마커나 프리팹 fileID에 의존하지 않고 현재 환자 오브젝트에서 찾는다.
+    /// 다만 둘 이상이면 임의의 첫 포트를 사용하지 않는다.
+    /// </summary>
+    protected OxyLineConnectionPoint FindSingleOxygenInterface()
+    {
+      var points = GetComponentsInChildren<OxyLineConnectionPoint>(true);
+      if (points.Length == 1)
+        return points[0];
+
+      Debug.LogError(
+        $"[{GetType().Name}] 환자 산소 포트는 OxyLineConnectionPoint 하나여야 하지만 {points.Length}개입니다.",
+        this);
+      return null;
+    }
   }
 }

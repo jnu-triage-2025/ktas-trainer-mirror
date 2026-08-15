@@ -32,7 +32,7 @@ namespace MultiplayerInfrastructure.ItemSystem
     [SerializeField] private string _entityIdentifier;
 
     [Tooltip("시작 시 표시(보임) 여부. false 이면 처음에 숨겨진 상태로 시작합니다. " +
-             "일부 파생 구현은 계약상 항상 특정 초기 상태로 시작하도록 이 값을 무시(강제)할 수 있습니다.")]
+             "일부 파생 구현은 규약상 항상 특정 초기 상태로 시작하도록 이 값을 무시(강제)할 수 있습니다.")]
     [SerializeField] private bool _initiallyVisible = true;
 
     [Tooltip("표시/비표시를 게임오브젝트 활성화(SetActive)로 처리할지 여부. " +
@@ -74,7 +74,7 @@ namespace MultiplayerInfrastructure.ItemSystem
 
     /// <summary>
     /// 시작 시점의 표시 상태를 적용합니다. 기본 구현은 인스펙터의 <c>_initiallyVisible</c> 값을 따릅니다.
-    /// 계약상 항상 특정 상태로 시작해야 하는 파생 구현은 이 메서드를 오버라이드합니다.
+    /// 규약상 항상 특정 상태로 시작해야 하는 파생 구현은 이 메서드를 오버라이드합니다.
     /// </summary>
     protected virtual void ApplyInitialVisibility()
     {

@@ -218,7 +218,7 @@ namespace TriageTrainer.Entity.IntravenousLine
 
     /// <summary>
     /// 이 지점을 포함하던 수액 줄 하나가 끊겼을 때 발생한다.
-    /// 계약: "줄 단위" 이벤트다. 끊긴 줄마다 그 줄의 양 끝점에서 각각 발생하며,
+    /// 규약: "줄 단위" 이벤트다. 끊긴 줄마다 그 줄의 양 끝점에서 각각 발생하며,
     /// 지점에 다른 연결이 더 남아 있는지 여부와 무관하게 매번 발생한다
     /// (OnConnected 와 대칭). 지점이 완전히 비연결 상태가 되는 시점만 알고 싶다면
     /// 수신 측에서 <see cref="HasAnyConnection"/> 로 확인한다.
@@ -236,7 +236,7 @@ namespace TriageTrainer.Entity.IntravenousLine
       BuildInteracts();
     }
 
-    private void OnValidate()
+    protected override void OnValidate()
     {
       EnsureDefaults();
       EnsureDetectionCollider();

@@ -51,7 +51,7 @@ namespace TriageTrainer.Scenario
         bed.SetMovementInteractionEnabled(true, releaseParticipantsIfDisabled: false);
         bed.ResetDismountCompletionTracking();
 
-        const string allDismountedSignal = "all_players_dismounted_patient_a_bed";
+        string allDismountedSignal = bed.DismountCompletionSignal;
         ScenarioInteractionSignals.Clear(allDismountedSignal);
 
         string globalSignal = $"patient_bed_position_reached_{pointIdentifier}";
@@ -94,8 +94,19 @@ namespace TriageTrainer.Scenario
         bed.TryForceSnapToPositioningPoint(pointIdentifier);
 
         EmitSystemMessage("이동 종료: 플레이어 A, B, C, D는 모두 Left Shift로 침대 조종을 해제하세요.");
-        while (!ScenarioInteractionSignals.IsRaised(allDismountedSignal))
-          yield return null;
+        {
+          float dismountStartedAt = Time.time;
+          while (!ScenarioInteractionSignals.IsRaised(allDismountedSignal))
+          {
+            if (_patientADismountWaitTimeoutSeconds > 0f
+                && Time.time - dismountStartedAt >= _patientADismountWaitTimeoutSeconds)
+            {
+              Debug.LogWarning("[TriageScenarioEventBootstrap] 하차 대기 타임아웃: 강제 진행합니다.");
+              break;
+            }
+            yield return null;
+          }
+        }
 
         EmitSystemMessage("환자 A 베드 이동 완료가 확인되었습니다.");
         yield break;

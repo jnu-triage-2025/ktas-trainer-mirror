@@ -2,6 +2,7 @@ using FishNet.Object;
 using FishNet.Connection;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
 using MultiplayerInfrastructure.Entity;
 using UnityEngine;
@@ -280,8 +281,64 @@ namespace MultiplayerInfrastructure.Player
     {
       if (HandlingItem == null)
         return ActionResult.Passed;
+
+      // EquippableGlove 아이템은 우클릭 시 장비 슬롯에 장착을 우선 시도합니다.
+      // 장착에 성공하면 기본 UseItem 동작을 생략합니다(Cancelled).
+      if (EquipmentAttributeHelper.IsEquippableGlove(HandlingItem))
+      {
+        if (TryEquipHandlingItem(EquipmentSlotType.Glove))
+          return ActionResult.Cancelled;
+      }
+
       _useItemTarget = RaycastTargetEntity();
       return HandlingItem.OnUse(this, _useItemTarget);
+    }
+
+    /// <summary>
+    /// 현재 손에 든(핫바 선택 슬롯) 아이템을 지정 장비 슬롯에 장착합니다.
+    /// 스택 중 1개만 장착하며, 나머지는 슬롯에 남습니다.
+    /// 장비 슬롯이 이미 차 있거나 장착 불가능한 경우 false 를 반환합니다.
+    /// 장갑 슬롯 장착에 성공하면 시나리오 게이팅 신호(sig.wear_glove)를 1회 올립니다.
+    /// </summary>
+    private bool TryEquipHandlingItem(EquipmentSlotType slotType)
+    {
+      if (HandlingItem == null) return false;
+
+      EquipmentSlotModelDTO targetSlot = null;
+      for (int i = 0; i < _equipmentSlots.Count; i++)
+      {
+        if (_equipmentSlots[i].SlotType == slotType)
+        {
+          targetSlot = _equipmentSlots[i];
+          break;
+        }
+      }
+
+      if (targetSlot == null) return false;
+      if (!targetSlot.CanAccept(HandlingItem)) return false;
+      if (!targetSlot.IsEmpty) return false;
+
+      if (_hotbarUI == null) return false;
+      int selectedIndex = _hotbarUI.SelectedSlot;
+      if (selectedIndex < 0 || selectedIndex >= _slots.Count) return false;
+
+      var hotbarSlot = _slots[selectedIndex];
+      if (hotbarSlot == null || hotbarSlot.IsEmpty) return false;
+
+      // 스택 중 1개만 장착. 1개 초과 시 Pop, 1개 이하 시 TakeAll.
+      Item toEquip;
+      if (hotbarSlot.ItemInstance.CurrentStackCount > 1)
+        toEquip = hotbarSlot.Pop(1);
+      else
+        toEquip = hotbarSlot.TakeAll();
+
+      if (toEquip == null) return false;
+
+      targetSlot.Equip(toEquip);
+      if (slotType == EquipmentSlotType.Glove)
+        ScenarioInteractionSignals.Raise("wear_glove");
+      OnInventoryChangedAndReturn(true);
+      return true;
     }
 
     private Entity.Entity RaycastTargetEntity()

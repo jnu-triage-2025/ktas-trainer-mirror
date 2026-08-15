@@ -9,6 +9,8 @@ using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.IntravenousLine;
 using TriageTrainer.Entity.OxyLine;
 using TriageTrainer.Entity.SuctionLine;
+using TriageTrainer.Entity.Patient;
+using TriageTrainer.Patient;
 using UnityEngine;
 
 using MI = MultiplayerInfrastructure;
@@ -27,6 +29,8 @@ namespace TriageTrainer.Entity
     [SerializeField] private string _liftDisplayText = "환자를 들어올리기";
     [SerializeField] private string _carryDisplayText = "환자 들어올리기";
     [SerializeField] private string _monitorSelectDisplayText = "이 환자를 모니터링";
+    [Tooltip("프리팹에서는 배치되어 있지만 시나리오 이벤트 전에는 숨겨야 하는 자식 오브젝트 이름입니다.")]
+    [SerializeField] private string[] _initiallyHiddenChildNames = Array.Empty<string>();
 
     [Header("Patient")]
     [SerializeField] private int _weight = 4;
@@ -60,11 +64,25 @@ namespace TriageTrainer.Entity
     public MovingPatientBedController CurrentBed => _supportExternalRefs.PatientBed;
     public PatientSupportExternalRefs SupportExternalRefs => _supportExternalRefs;
     /// <summary>여러 수액 줄 연결을 허용하는 환자 IV attachment point.</summary>
-    public IntravenousLineConnectionPoint IvAttachmentPoint => _ivAttachmentPoint;
+    public IntravenousLineConnectionPoint IvAttachmentPoint
+    {
+      get
+      {
+        // EditMode 생성, 비활성 프리팹 인스턴스 및 초기화 순서에 따라 Awake가 아직
+        // 실행되지 않은 상태에서도 연결 서비스가 이 지점을 조회할 수 있다.
+        // null을 그대로 노출하면 정상적인 IV 연결 완료 신호가 조용히 유실된다.
+        EnsureIvAttachmentPoint();
+        return _ivAttachmentPoint;
+      }
+    }
     /// <summary>설치된 산소 마스크의 환자 측 산소 라인 포트. 설정되지 않으면 null이다.</summary>
     public OxyLineConnectionPoint OxygenMaskAttachmentPoint => _oxygenMaskAttachmentPoint != null && _oxygenMaskAttachmentPoint.isActiveAndEnabled
       ? _oxygenMaskAttachmentPoint : null;
     public OxyLineConnectionPoint ConfiguredOxygenMaskAttachmentPoint => _oxygenMaskAttachmentPoint;
+    public void SetOxygenMaskAttachmentPointFromPatientComponent(OxyLineConnectionPoint point)
+    {
+      _oxygenMaskAttachmentPoint = point;
+    }
     /// <summary>환자 측 석션 라인 포트. 설정되지 않거나 비활성이면 null이다.</summary>
     public SuctionLineConnectionPoint SuctionLineAttachmentPoint => _suctionLineAttachmentPoint != null && _suctionLineAttachmentPoint.isActiveAndEnabled
       ? _suctionLineAttachmentPoint : null;
@@ -85,8 +103,39 @@ namespace TriageTrainer.Entity
       EnsureIvAttachmentPoint();
       InitializeCollider();
       EnsureMedicalStateDefaults();
+      InitializeTreatmentDisplaysFromConfiguredState();
+      SetNamedChildrenActive(_initiallyHiddenChildNames, false);
       _weight = Mathf.Max(0, _weight);
       BuildInteractEntries();
+      GetPatientState()?.InitializeRuntimeReferences(this);
+    }
+
+    public bool SetNamedChildActive(string childName, bool active)
+    {
+      if (string.IsNullOrWhiteSpace(childName))
+        return false;
+
+      var children = GetComponentsInChildren<Transform>(true);
+      for (int i = 0; i < children.Length; i++)
+      {
+        var child = children[i];
+        if (child == null || !string.Equals(child.name, childName, StringComparison.Ordinal))
+          continue;
+
+        child.gameObject.SetActive(active);
+        return true;
+      }
+
+      return false;
+    }
+
+    private void SetNamedChildrenActive(string[] childNames, bool active)
+    {
+      if (childNames == null)
+        return;
+
+      for (int i = 0; i < childNames.Length; i++)
+        SetNamedChildActive(childNames[i], active);
     }
 
     public void OnAttacked(MI.Entity.Entity attacker, int damageAmount)
@@ -144,13 +193,20 @@ namespace TriageTrainer.Entity
       if (sourcePlayer != null && sourcePlayer.CountItemInInventory(itemIdentifier) < 1)
         return false;
 
-      if (IsPatientBC && IsClientInitialized && !IsServerStarted)
-        return ApplyItemUse(itemIdentifier);
+      if (IsFishNetClientInitialized && !IsFishNetServerStarted)
+      {
+        CmdApplyPatientItemUse(itemIdentifier);
+        return true;
+      }
 
-      if (!ApplyItemUse(itemIdentifier))
+      if (!CanApplyItemUse(itemIdentifier))
         return false;
 
-      return sourcePlayer == null || sourcePlayer.RemoveItemFromInventory(itemIdentifier, 1) == 1;
+      // 실제 플레이어 경로는 소비를 먼저 확정한 뒤에만 상태·Display·신호를 변경한다.
+      if (sourcePlayer != null && sourcePlayer.RemoveItemFromInventory(itemIdentifier, 1) != 1)
+        return false;
+
+      return ApplyItemUse(itemIdentifier);
     }
 
     public void SetCurrentBed(MovingPatientBedController bed)
@@ -245,14 +301,96 @@ namespace TriageTrainer.Entity
       _ivAttachmentPoint.SetAllowsMultipleConnections(true);
     }
 
-    private void OnValidate()
+    protected override void OnValidate()
     {
+      base.OnValidate();
       OnValidate_Animation();
       EnsureCarryAttachPoint();
       InitializeCollider();
       EnsureMedicalStateDefaults();
       _weight = Mathf.Max(0, _weight);
       EnsureDefaultInteractConfigs();
+      var state = GetPatientState();
+      RestoreLegacyDefaultsAfterInspectorResetIfNeeded(state);
+      state?.InitializeRuntimeReferences(this);
+    }
+
+    protected override void Reset()
+    {
+      base.Reset();
+      ApplySerializedDefaultsForInspectorReset();
+      GetPatientState()?.InitializeRuntimeReferences(this);
+    }
+
+    private void RestoreLegacyDefaultsAfterInspectorResetIfNeeded(PatientStateABC state)
+    {
+      if (state == null || !state.RestoresLegacyPatientControllerDefaultsOnInspectorReset)
+        return;
+
+      // Inspector 문맥 메뉴 Reset은 Unity 기본 직렬화값을 적용한 뒤 OnValidate를 호출한다.
+      // B Male/Female의 이전 프리팹 값과 구별되는 이 조합일 때만 코드 리터럴을 복구한다.
+      bool hasResetSignature = (_assessActions == null || _assessActions.Count == 0)
+                               && !_intravenousLineCannulaConfig.Supported;
+      if (!hasResetSignature)
+        return;
+
+      _supportExternalRefs.InitializeEmptyCollections();
+      ApplySerializedDefaultAssessActions();
+      _intravenousLineCannulaConfig.Supported = true;
+      EnsureDefaultRuntimeAnimatorController();
+      BuildInteractEntries();
+    }
+
+    /// <summary>
+    /// PatientController가 직접 소유한 모든 Inspector 직렬화 필드의 코드 기본값이다.
+    /// 환자 유형별 값은 이 메서드 뒤 PatientStateABC가 다시 적용한다.
+    /// </summary>
+    private void ApplySerializedDefaultsForInspectorReset()
+    {
+      _identifier = "patient";
+      _liftDisplayText = "환자를 들어올리기";
+      _carryDisplayText = "환자 들어올리기";
+      _monitorSelectDisplayText = "이 환자를 모니터링";
+      _initiallyHiddenChildNames = Array.Empty<string>();
+      _weight = 4;
+      _supportExternalRefs = default;
+      _supportExternalRefs.InitializeEmptyCollections();
+      _ivAttachmentPoint = null;
+      _oxygenMaskAttachmentPoint = null;
+      _suctionLineAttachmentPoint = null;
+      _carryAttachPoint = null;
+      _isMovingPatientBedAttached = false;
+      _isPlayerAttached = false;
+
+      _runtimeAnimatorController = null;
+      _capsuleCollider = null;
+      _standingCapsuleCenter = new Vector3(0f, 0.9f, 0f);
+      _standingCapsuleHeight = 1.8f;
+      _standingCapsuleRadius = 0.3f;
+      _standingCapsuleDirection = 1;
+      _lyingCapsuleCenter = new Vector3(0f, 0.45f, 0f);
+      _lyingCapsuleHeight = 1.8f;
+      _lyingCapsuleRadius = 0.3f;
+      _lyingCapsuleDirection = 2;
+
+      _patientDescriptor = new PatientDescriptor();
+      _medicalState = new PatientMedicalState();
+      _interactConfigs = new List<InteractConfig>();
+      ApplySerializedDefaultAssessActions();
+      _intravenousLineCannulaConfig = default;
+      _intravenousLineCannulaConfig.Supported = true;
+      _intravenousLineCannulaInteractable = true;
+      _triageConfig = TriageAssessmentConfig.Default();
+      _triageLabelAnchor = null;
+      _debugTreatmentDisplay = TreatmentDisplay.GauzePatchedOnThorax;
+      _debugItemIdentifier = "gauze";
+
+      EnsureCarryAttachPoint();
+      EnsureDefaultRuntimeAnimatorController();
+      InitializeCollider();
+      EnsureMedicalStateDefaults();
+      EnsureDefaultInteractConfigs();
+      BuildInteractEntries();
     }
   }
 }

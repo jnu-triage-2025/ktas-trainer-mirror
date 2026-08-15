@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Registry;
@@ -52,6 +53,12 @@ namespace MultiplayerInfrastructure.UI
     /// 다이얼로그 선택지가 변경되었을 때 발생
     /// </summary>
     public UnityEvent OnDialogueSelectionsChanged = new();
+
+    /// <summary>
+    /// 화면의 상호작용 메뉴 행을 마우스로 클릭했을 때 발생합니다.
+    /// 인덱스는 클릭 시점의 현재 목록을 기준으로 합니다.
+    /// </summary>
+    public event Action<int> InteractionClicked;
 
     #endregion
 
@@ -137,7 +144,27 @@ namespace MultiplayerInfrastructure.UI
     {
       if (_hintList == null) return;
 
-      _hintList.Rebuild(_interacts, _nowSelected, _currentMode, GetInteractKeyText(), _dialogueSelectionIcon);
+      _hintList.Rebuild(
+        _interacts,
+        _nowSelected,
+        _currentMode,
+        GetInteractKeyText(),
+        _dialogueSelectionIcon,
+        HandleInteractionClicked);
+    }
+
+    private void HandleInteractionClicked(int index)
+    {
+      if (_interacts == null || index < 0 || index >= _interacts.Count)
+        return;
+
+      _nowSelected = index;
+      InteractionClicked?.Invoke(index);
+      // 클릭 이벤트가 대화 모드를 끝내거나 목록을 변경할 수 있으므로, 현재 VisualElement를
+      // 디스패치하는 도중 트리를 재구축하지 않고 상호작용 처리가 끝난 뒤 한 번만 갱신한다.
+      if (this == null || !isActiveAndEnabled)
+        return;
+      RefreshUI();
     }
 
     private void ScrollToSelected()

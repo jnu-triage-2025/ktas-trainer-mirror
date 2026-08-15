@@ -1,8 +1,30 @@
 .inventory-ui-wrapper {
   width: 100%;
   height: 100%;
+}
+
+/* ── 가로 스크롤 래퍼 ────────────────────────────────────────────
+ * 해상도가 부족할 때 인벤토리+조합 패널이 뷰포트를 넘치면 가로 스크롤바를 표시한다.
+ * 세로 스크롤은 사용하지 않는다. */
+.inventory-scroll-view {
+  width: 100%;
+  height: 100%;
+  flex-grow: 1;
+  background-color: transparent;
+  overflow: hidden;
+}
+
+.inventory-scroll-view .unity-scroll-view__viewport {
+  overflow: hidden;
+}
+
+/* ScrollView 콘텐츠 컨테이너: 가로·세로 중앙 정렬 (C#에서 클래스 추가).
+ * 인벤토리 창(루트)을 뷰포트 중앙에 배치한다.
+ * 세로 넘침 시 상단이 잘릴 수 있으나, 현재 인벤토리 높이는 대부분의 해상도에 맞는다. */
+.inventory-scroll-content {
   align-items: center;
   justify-content: center;
+  min-height: 100%;
 }
 
 /*
@@ -11,7 +33,7 @@
  */
 .inventory-root {
   flex-direction: row;
-  align-items: center;
+  flex-shrink: 0;
   padding: 20px;
   background-color: #16213e;
   border-width: 2px;
@@ -90,6 +112,100 @@
   padding: 1px 3px;
   border-radius: 2px;
   -unity-text-align: middle-right;
+}
+
+/* ── 장비 슬롯 패널 (좌측 세로 1열) ─────────────────────────────
+ * 인벤토리 그리드 좌측에 세로로 장비 슬롯을 배치한다.
+ * 인벤토리 그리드와는 margin-right 로 간격을 확보한다.
+ * align-self: flex-start 로 인벤토리 루트(row)의 교차축(세로)에서 상단 정렬한다.
+ * 인벤토리 창 자체는 .inventory-scroll-content 에서 가로·세로 중앙 정렬을 유지한다. */
+.equipment-panel {
+  flex-shrink: 0;
+  flex-direction: column;
+  align-self: flex-start;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  margin-right: 16px;
+  padding: 10px 6px;
+  border-width: 1px;
+  border-color: #1f3a63;
+  border-radius: 10px;
+  background-color: rgba(6, 16, 32, 0.75);
+}
+
+.equipment-slots {
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+/* 장비 슬롯: 인벤토리 슬롯과 동일한 크기(54×54), 보라 계열 테두리로 구분 */
+.equipment-slot {
+  width: 54px;
+  height: 54px;
+  border-width: 2px;
+  border-color: #3a2a63;
+  border-radius: 8px;
+  background-color: rgba(18, 12, 40, 0.95);
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding: 2px;
+  position: relative;
+  transition-duration: 0.12s;
+  transition-property: border-color, background-color;
+}
+
+.equipment-slot:hover {
+  border-color: #a366ff;
+}
+
+/* 장비 슬롯 타입 라벨 (하단 중앙 작은 텍스트) */
+.equipment-slot__label {
+  position: absolute;
+  bottom: 1px;
+  left: 0;
+  right: 0;
+  font-size: 8px;
+  color: #6b7891;
+  -unity-text-align: middle-center;
+  -unity-font-style: italic;
+  pointer-events: none;
+}
+
+/* 장비 그림자 스프라이트 (z+2: UI 슬롯 배경 위에, 아이템 스프라이트 아래에)
+ * 가로·세로 중앙 정렬: (100% - 70%) / 2 = 15% 오프셋, 슬롯 대비 70% 크기, 불투명도 70%. */
+.equipment-slot__shadow {
+  position: absolute;
+  left: 15%;
+  top: 15%;
+  width: 70%;
+  height: 70%;
+  tint-color: rgba(255, 255, 255, 1);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* 아이템 스프라이트 (z+3: 최상위 — 그림자 위에 렌더링) */
+.equipment-slot__icon {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 4px;
+  bottom: 4px;
+  tint-color: white;
+  pointer-events: none;
+}
+
+/* 수량 라벨 (우하단) */
+.equipment-slot__count {
+  background-color: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 11px;
+  padding: 1px 3px;
+  border-radius: 2px;
+  -unity-text-align: middle-right;
+  pointer-events: none;
 }
 
 .held-item-ghost {
@@ -398,4 +514,50 @@
   color: #4a9eff;
   margin-top: 2px;
   -unity-text-align: middle-left;
+}
+
+/* ── 가로 스크롤바 스타일 (조합 목록 세로 스크롤바와 통일) ──────
+ * 화살표 버튼 제거 + 6px 높이의 반투명 thumb/track. */
+.inventory-scroll-view .unity-scroller--horizontal {
+  height: 6px;
+  min-height: 0;
+  margin: 0;
+}
+
+.inventory-scroll-view .unity-scroller--horizontal > .unity-scroller__low-button,
+.inventory-scroll-view .unity-scroller--horizontal > .unity-scroller__high-button {
+  width: 0;
+  height: 0;
+  min-width: 0;
+  min-height: 0;
+  display: none;
+}
+
+.inventory-scroll-view .unity-scroller--horizontal > .unity-scroller__slider {
+  height: 6px;
+  min-height: 0;
+  margin: 0;
+}
+
+.inventory-scroll-view .unity-base-slider--horizontal .unity-base-slider__dragger {
+  top: 0;
+  height: 6px;
+  margin: 0;
+}
+
+.inventory-scroll-view .unity-base-slider--horizontal .unity-base-slider__tracker {
+  background-color: rgba(74, 158, 255, 0.15);
+  border-color: transparent;
+}
+
+.inventory-scroll-view .unity-base-slider--horizontal .unity-base-slider__dragger {
+  border-width: 0;
+  border-color: transparent;
+  border-radius: 3px;
+}
+
+.inventory-scroll-view .unity-scroller--horizontal .unity-base-slider__dragger {
+  background-color: rgba(74, 158, 255, 0.55);
+  top: 0;
+  height: 6px;
 }

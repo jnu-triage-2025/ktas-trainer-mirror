@@ -52,6 +52,9 @@ namespace MultiplayerInfrastructure.Player
       {
         _dialoguePanelUIController.SetInteractableHintUI(_interactableHintUI);
       }
+
+      if (_interactableHintUI != null)
+        _interactableHintUI.InteractionClicked += HandleInteractionMenuClicked;
     }
 
     void OnDestroy()
@@ -62,6 +65,9 @@ namespace MultiplayerInfrastructure.Player
 
       if (_detector != null)
         _detector.NearbyUpdated -= HandleNearbyUpdated;
+
+      if (_interactableHintUI != null)
+        _interactableHintUI.InteractionClicked -= HandleInteractionMenuClicked;
 
       OnDestroy_Item();
       OnDestroy_PlaceableItemPreview();
@@ -133,6 +139,14 @@ namespace MultiplayerInfrastructure.Player
       if (interact == null) return;
 
       interact.Interact(transform);
+    }
+
+    private void HandleInteractionMenuClicked(int index)
+    {
+      if (!IsOwner || _interactableHintUI == null)
+        return;
+
+      TryInteractWithSelection();
     }
 
     // called from PlayerController.Input

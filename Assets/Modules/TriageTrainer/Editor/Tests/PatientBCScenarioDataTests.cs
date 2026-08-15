@@ -5,6 +5,7 @@ using System.Reflection;
 using FishNet.Managing.Object;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Registry;
 using NUnit.Framework;
@@ -28,6 +29,42 @@ namespace TriageTrainer.Tests
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeDDummyB.prefab";
     private const string PatientDummyDAPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeDDummyA.prefab";
+
+    [Test]
+    public void CareZoneRegistersUnattachedEquipmentWithoutActiveColliders()
+    {
+      var root = new GameObject("CareZoneUnattachedEquipmentTest");
+      root.SetActive(false);
+      root.transform.position = new Vector3(10000f, 10000f, 10000f);
+      try
+      {
+        var zoneObject = new GameObject("CareZone");
+        zoneObject.transform.SetParent(root.transform);
+        var zone = zoneObject.AddComponent<PatientCareDescriptionZone>();
+        zone.ConfigureArea(Vector3.zero, new Vector3(10f, 10f, 10f));
+
+        var suctionObject = new GameObject("wall_suction");
+        suctionObject.transform.SetParent(root.transform);
+        suctionObject.AddComponent<WallAttachedWallSuction>();
+
+        var flowmeterObject = new GameObject("oxyflowmeter");
+        flowmeterObject.transform.SetParent(root.transform);
+        flowmeterObject.AddComponent<WallAttachedOxyflowmeter>();
+
+        typeof(PatientCareDescriptionZone).GetMethod(
+            "RefreshEquipment", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.Invoke(zone, null);
+
+        Assert.That(GetPrivateField<int>(zone, "_wallSuctionInZoneCount"), Is.EqualTo(1));
+        Assert.That(GetPrivateField<int>(zone, "_oxyflowmeterInZoneCount"), Is.EqualTo(1));
+        Assert.That(zone.WallSuction, Has.Count.EqualTo(1));
+        Assert.That(zone.Oxyflowmeters, Has.Count.EqualTo(1));
+      }
+      finally
+      {
+        Object.DestroyImmediate(root);
+      }
+    }
 
     [Test]
     public void PatientVitalMonitorResolvesFromSharedCareZoneWithoutSceneReference()
@@ -80,8 +117,7 @@ namespace TriageTrainer.Tests
         var patientObject = new GameObject(completionSignal.EndsWith("_b") ? "patient_b" : "patient_c");
         patientObject.SetActive(false);
         var patient = patientObject.AddComponent<PatientController>();
-        typeof(PatientController).GetField("_identifier", BindingFlags.Instance | BindingFlags.NonPublic)
-          ?.SetValue(patient, completionSignal.EndsWith("_b") ? "patient_b" : "patient_c");
+        patient.ApplySpawnedEntityIdentifier(completionSignal.EndsWith("_b") ? "patient_b" : "patient_c");
         monitor.SetPresentationPatient(patient);
         var configure = typeof(TriageScenarioEventBootstrap).GetMethod(
           "ConfigureVitalMonitorClose",
@@ -212,7 +248,7 @@ namespace TriageTrainer.Tests
       var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
 
        Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
-       Assert.That(graph.Nodes, Has.Count.EqualTo(310));
+       Assert.That(graph.Nodes, Has.Count.EqualTo(311));
        Assert.That(graph.ClientSignalPrefixes, Is.EqualTo(new[] { "sig.quest_arrival_triage_area_" }));
       Assert.That(graph.ActingNpcs, Has.Count.EqualTo(1));
       Assert.That(graph.ActingNpcs.Single().Identifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
@@ -257,7 +293,11 @@ namespace TriageTrainer.Tests
       Assert.That(graph.Nodes["P_C_WAIT_REMOVE"].NextIdentifier, Is.EqualTo("C_COMPLETE"));
       Assert.That(graph.Nodes["C_COMPLETE"].NextIdentifier, Is.EqualTo("CT_DELAY"));
       Assert.That(graph.Nodes.ContainsKey("P_CT_TRANSPORT"), Is.True);
-      Assert.That(graph.Nodes["P_CT_TRANSPORT"].NextIdentifier, Is.EqualTo("CT_FINAL_DELAY"));
+      Assert.That(graph.Nodes["P_CT_TRANSPORT"].NextIdentifier, Is.EqualTo("CT_DETACH_BEDS"));
+      var detachBeds = graph.Nodes["CT_DETACH_BEDS"] as ScenarioInvokeEventNode;
+      Assert.That(detachBeds, Is.Not.Null);
+      Assert.That(detachBeds.EventIdentifier, Is.EqualTo("detach_patient_b_c_beds"));
+      Assert.That(detachBeds.NextIdentifier, Is.EqualTo("CT_FINAL_DELAY"));
       var finalDelay = graph.Nodes["CT_FINAL_DELAY"] as ScenarioDelayNode;
       Assert.That(finalDelay, Is.Not.Null);
       Assert.That(finalDelay.Duration.ToSeconds(), Is.EqualTo(1d));
@@ -559,7 +599,7 @@ namespace TriageTrainer.Tests
 
     [TestCase(PatientDummyDAPrefabPath, "patient_dummy_d_a")]
     [TestCase(PatientDummyDBPrefabPath, "patient_dummy_d_b")]
-    public void PatientDummyDPrefabsSupportPatientAnimationAndInteractions(
+    public void PatientDummyDPrefabsSupportPatientVisualsAndInteractions(
       string prefabPath,
       string identifier)
     {
@@ -568,7 +608,8 @@ namespace TriageTrainer.Tests
       Assert.That(prefab, Is.Not.Null);
       var patient = prefab.GetComponent<PatientController>();
       var patientState = prefab.GetComponent<PatientDummyDState>();
-      var animator = prefab.GetComponent<Animator>();
+      var visual = prefab.GetComponentInChildren<Renderer>(true);
+      var animator = prefab.GetComponentInChildren<Animator>(true);
 
       Assert.That(patient, Is.Not.Null);
       Assert.That(patientState, Is.Not.Null);
@@ -576,11 +617,17 @@ namespace TriageTrainer.Tests
       Assert.That(patient.Identifier, Is.EqualTo(identifier));
       Assert.That(prefab.GetComponent<CapsuleCollider>(), Is.Not.Null);
       Assert.That(prefab.GetComponent<NetworkObject>(), Is.Not.Null);
-      Assert.That(animator, Is.Not.Null, "the dummy root must expose an Animator");
-      Assert.That(animator.avatar, Is.Not.Null,
-        "the dummy Animator must use its source model Humanoid Avatar");
-      Assert.That(animator.runtimeAnimatorController, Is.Not.Null,
-        "the dummy Animator must have the shared patient animation controller");
+      Assert.That(visual, Is.Not.Null, "the triage dummy must include its dedicated visual model");
+      // Dummy D is a classification-only static/Generic-rig model. If a future model is
+      // upgraded to Humanoid animation, require the complete animation specification rather
+      // than accepting a partially configured Animator.
+      if (animator != null)
+      {
+        Assert.That(animator.avatar, Is.Not.Null,
+          "an animated dummy must use its source model Humanoid Avatar");
+        Assert.That(animator.runtimeAnimatorController, Is.Not.Null,
+          "an animated dummy must have the shared patient animation controller");
+      }
       Assert.That(patient.CarryAttachPoint, Is.Not.SameAs(patient.transform),
         "the dummy must have a dedicated carry attachment point");
       Assert.That(patient.Interacts, Has.Length.GreaterThanOrEqualTo(3));
@@ -594,9 +641,7 @@ namespace TriageTrainer.Tests
     {
       var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
       var patient = prefab != null ? prefab.GetComponent<PatientController>() : null;
-      var field = typeof(PatientController).GetField(
-        "_assessActions",
-        BindingFlags.Instance | BindingFlags.NonPublic);
+      var field = FindInstanceField(typeof(PatientController), "_assessActions");
 
       Assert.That(patient, Is.Not.Null);
       Assert.That(field, Is.Not.Null);
@@ -879,6 +924,9 @@ namespace TriageTrainer.Tests
       try
       {
         var zone = zoneObject.AddComponent<PatientCareDescriptionZone>();
+        typeof(PatientCareDescriptionZone).GetMethod(
+            "OnEnable", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.Invoke(zone, null);
         zone.ConfigureArea(Vector3.zero, new Vector3(10f, 10f, 10f));
         SetPrivateField(zone, "_requireBedSnapForPatient", false);
         var patient = patientObject.AddComponent<PatientController>();
@@ -911,6 +959,10 @@ namespace TriageTrainer.Tests
       }
       finally
       {
+        var zone = zoneObject.GetComponent<PatientCareDescriptionZone>();
+        typeof(PatientCareDescriptionZone).GetMethod(
+            "OnDisable", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.Invoke(zone, null);
         Object.DestroyImmediate(suctionObject);
         Object.DestroyImmediate(flowmeterObject);
         Object.DestroyImmediate(patientObject);
@@ -1059,9 +1111,7 @@ namespace TriageTrainer.Tests
     {
       foreach (string fieldName in new[] { "_patientBCNurseCStage", "_patientBCNurseDStage" })
       {
-        var field = typeof(PatientController).GetField(
-          fieldName,
-          BindingFlags.Instance | BindingFlags.NonPublic);
+        var field = FindInstanceField(typeof(PatientController), fieldName);
         Assert.That(field, Is.Not.Null, fieldName);
         Assert.That(field.FieldType.IsGenericType, Is.True, fieldName);
         Assert.That(field.FieldType.GetGenericTypeDefinition(), Is.EqualTo(typeof(SyncVar<>)), fieldName);
@@ -1124,7 +1174,7 @@ namespace TriageTrainer.Tests
         AssertSignalZone(
           zones,
           OverworldGameObjectInitializer.TriageArrivalWaypointIdentifier,
-          new[] { "quest_arrival_triage_area" },
+          new[] { "quest_arrival_triage_area", "arrive_triagearea" },
           "quest_arrival_triage_area_{id}",
           true);
         AssertSignalZone(
@@ -1158,13 +1208,292 @@ namespace TriageTrainer.Tests
         .ToArray();
       var bed = prefab.GetComponent<MovingPatientBedController>();
       Assert.That(bed, Is.Not.Null);
-      var allowedProperty = new SerializedObject(bed).FindProperty("_allowedPositioningPointIdentifiers");
+      var serializedBed = new SerializedObject(bed);
+      var participantAttachPoints = serializedBed.FindProperty("_playerAttachPoints");
+      Assert.That(participantAttachPoints, Is.Not.Null);
+      Assert.That(participantAttachPoints.arraySize, Is.EqualTo(4));
+      Assert.That(prefab.GetComponentsInChildren<RidableAttachPointObject>(true), Has.Length.EqualTo(4));
+
+      var allowedProperty = serializedBed.FindProperty("_allowedPositioningPointIdentifiers");
       var allowedIdentifiers = Enumerable.Range(0, allowedProperty.arraySize)
         .Select(index => allowedProperty.GetArrayElementAtIndex(index).stringValue)
         .ToArray();
 
       Assert.That(allowedIdentifiers, Is.EquivalentTo(layoutIdentifiers));
       Assert.That(allowedIdentifiers, Has.Length.EqualTo(4));
+    }
+
+    [Test]
+    public void MovingBedPositioningPointReleasesParticipantsOnSnapByDefault()
+    {
+      var pointObject = new GameObject("MovingBedPositioningPointDefaultTest");
+      try
+      {
+        var point = pointObject.AddComponent<MovingPatientBedPositioningPoint>();
+        var serializedPoint = new SerializedObject(point);
+        var releaseParticipants = serializedPoint.FindProperty("_releaseParticipantsOnSnap");
+
+        Assert.That(releaseParticipants, Is.Not.Null,
+          "the per-positioning-point auto-release option must remain serialized");
+        Assert.That(point.ReleaseParticipantsOnSnap, Is.True);
+
+        releaseParticipants.boolValue = false;
+        serializedPoint.ApplyModifiedPropertiesWithoutUndo();
+        Assert.That(point.ReleaseParticipantsOnSnap, Is.False,
+          "each positioning point must be able to disable automatic release");
+      }
+      finally
+      {
+        Object.DestroyImmediate(pointObject);
+      }
+    }
+
+    [Test]
+    public void MovingBedSyncedPositioningPointIdentifierResolvesLocalReference()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(MovingBedPrefabPath);
+      var bedObject = Object.Instantiate(prefab, new Vector3(12000f, 0f, 12000f), Quaternion.identity);
+      var pointObject = new GameObject("MovingBedSyncedPointResolutionTest");
+      const string pointIdentifier = "synced_positioning_point_test";
+      try
+      {
+        var bed = bedObject.GetComponent<MovingPatientBedController>();
+        var point = pointObject.AddComponent<MovingPatientBedPositioningPoint>();
+        point.SetIdentifier(pointIdentifier);
+        var apply = typeof(MovingPatientBedController).GetMethod(
+          "OnPositioningPointIdentifierChanged",
+          BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.That(apply, Is.Not.Null);
+        apply.Invoke(bed, new object[] { string.Empty, pointIdentifier, false });
+        Assert.That(bed.LatchedPositioningPoint, Is.SameAs(point));
+
+        apply.Invoke(bed, new object[] { pointIdentifier, string.Empty, false });
+        Assert.That(bed.LatchedPositioningPoint, Is.Null);
+      }
+      finally
+      {
+        Object.DestroyImmediate(pointObject);
+        Object.DestroyImmediate(bedObject);
+      }
+    }
+
+    [Test]
+    public void MovingBedSnapReleasesPartialOccupancyBeforePublishingReachedSignal()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(MovingBedPrefabPath);
+      var bedObject = Object.Instantiate(prefab, new Vector3(10000f, 0f, 10000f), Quaternion.identity);
+      var pointObject = new GameObject("MovingBedAutoReleaseSnapTest");
+      pointObject.transform.SetPositionAndRotation(bedObject.transform.position, bedObject.transform.rotation);
+      const string pointIdentifier = "auto_release_snap_test";
+      const string reachedSignal = "sig.patient_bed_position_reached_auto_release_snap_test";
+      try
+      {
+        var bed = bedObject.GetComponent<MovingPatientBedController>();
+        var point = pointObject.AddComponent<MovingPatientBedPositioningPoint>();
+        point.SetIdentifier(pointIdentifier);
+        bed.EnsureAllowedPositioningPointIdentifier(pointIdentifier);
+        AddOfflineParticipantForTest(bed, 101);
+
+        bool? hadParticipantsWhenReachedWasPublished = null;
+        void Capture(string signal)
+        {
+          if (signal == reachedSignal)
+            hadParticipantsWhenReachedWasPublished = bed.HasParticipants;
+        }
+
+        ScenarioInteractionSignals.Clear(reachedSignal);
+        ScenarioInteractionSignals.Clear(bed.DismountCompletionSignal);
+        ScenarioInteractionSignals.OnSignalRegistered += Capture;
+        try
+        {
+          var snap = typeof(MovingPatientBedController).GetMethod(
+            "TrySnapToPositioningPointWithSignalContext",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+          Assert.That(snap, Is.Not.Null);
+          snap.Invoke(bed, null);
+        }
+        finally
+        {
+          ScenarioInteractionSignals.OnSignalRegistered -= Capture;
+        }
+
+        Assert.That(bed.HasParticipants, Is.False);
+        Assert.That(hadParticipantsWhenReachedWasPublished, Is.False,
+          "snap observers must see the fully detached state");
+        Assert.That(ScenarioInteractionSignals.IsRaised(bed.DismountCompletionSignal), Is.True,
+          "forced release must complete even when occupancy is below bed capacity");
+      }
+      finally
+      {
+        ScenarioInteractionSignals.Clear(reachedSignal);
+        Object.DestroyImmediate(pointObject);
+        Object.DestroyImmediate(bedObject);
+      }
+    }
+
+    [Test]
+    public void MovingBedSnapKeepsParticipantsWhenPointAutoReleaseIsDisabled()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(MovingBedPrefabPath);
+      var bedObject = Object.Instantiate(prefab, new Vector3(11000f, 0f, 11000f), Quaternion.identity);
+      var pointObject = new GameObject("MovingBedDisabledAutoReleaseSnapTest");
+      pointObject.transform.SetPositionAndRotation(bedObject.transform.position, bedObject.transform.rotation);
+      const string pointIdentifier = "disabled_auto_release_snap_test";
+      try
+      {
+        var bed = bedObject.GetComponent<MovingPatientBedController>();
+        var point = pointObject.AddComponent<MovingPatientBedPositioningPoint>();
+        point.SetIdentifier(pointIdentifier);
+        var serializedPoint = new SerializedObject(point);
+        serializedPoint.FindProperty("_releaseParticipantsOnSnap").boolValue = false;
+        serializedPoint.ApplyModifiedPropertiesWithoutUndo();
+        bed.EnsureAllowedPositioningPointIdentifier(pointIdentifier);
+        AddOfflineParticipantForTest(bed, 102);
+
+        var snap = typeof(MovingPatientBedController).GetMethod(
+          "TrySnapToPositioningPointWithSignalContext",
+          BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(snap, Is.Not.Null);
+        snap.Invoke(bed, null);
+
+        Assert.That(bed.HasParticipants, Is.True);
+      }
+      finally
+      {
+        Object.DestroyImmediate(pointObject);
+        Object.DestroyImmediate(bedObject);
+      }
+    }
+
+    private static void AddOfflineParticipantForTest(MinecraftBoadLikeControl controller, int key)
+    {
+      var participantType = typeof(MinecraftBoadLikeControl).GetNestedType(
+        "LocalParticipant", BindingFlags.NonPublic);
+      var participantsField = typeof(MinecraftBoadLikeControl).GetField(
+        "_localParticipants", BindingFlags.Instance | BindingFlags.NonPublic);
+      Assert.That(participantType, Is.Not.Null);
+      Assert.That(participantsField, Is.Not.Null);
+
+      object participant = System.Activator.CreateInstance(participantType, nonPublic: true);
+      var participants = participantsField.GetValue(controller) as System.Collections.IDictionary;
+      Assert.That(participants, Is.Not.Null);
+      participants.Add(key, participant);
+    }
+
+    [Test]
+    public void MovingBedToggleAcknowledgementClearsPendingRequestAfterServerRejection()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(MovingBedPrefabPath);
+      var instance = Object.Instantiate(prefab);
+      try
+      {
+        var bed = instance.GetComponent<MovingPatientBedController>();
+        var pending = typeof(MinecraftBoadLikeControl).GetField(
+          "_togglePending", BindingFlags.Instance | BindingFlags.NonPublic);
+        var acknowledge = typeof(MinecraftBoadLikeControl).GetMethod(
+          "CompleteToggleRequest", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.That(pending, Is.Not.Null);
+        Assert.That(acknowledge, Is.Not.Null);
+        pending.SetValue(bed, true);
+        acknowledge.Invoke(bed, null);
+        Assert.That(pending.GetValue(bed), Is.False);
+      }
+      finally
+      {
+        Object.DestroyImmediate(instance);
+      }
+    }
+
+    [Test]
+    public void ExplicitRidableAttachPointListIsNotExpandedByChildDiscovery()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(MovingBedPrefabPath);
+      var instance = Object.Instantiate(prefab);
+      try
+      {
+        var bed = instance.GetComponent<MovingPatientBedController>();
+        var attachPointsField = typeof(MinecraftBoadLikeControl).GetField(
+          "_playerAttachPoints", BindingFlags.Instance | BindingFlags.NonPublic);
+        var resolveAttachPoints = typeof(MinecraftBoadLikeControl).GetMethod(
+          "ResolveAttachPoints", BindingFlags.Instance | BindingFlags.NonPublic);
+        var attachPoints = attachPointsField?.GetValue(bed) as List<Transform>;
+        var explicitPoint = instance.GetComponentsInChildren<RidableAttachPointObject>(true).First().transform;
+
+        Assert.That(attachPoints, Is.Not.Null);
+        Assert.That(resolveAttachPoints, Is.Not.Null);
+        attachPoints.Clear();
+        attachPoints.Add(explicitPoint);
+        resolveAttachPoints.Invoke(bed, null);
+
+        Assert.That(attachPoints, Is.EqualTo(new[] { explicitPoint }));
+      }
+      finally
+      {
+        Object.DestroyImmediate(instance);
+      }
+    }
+
+    [Test]
+    public void MovingBedForceReleaseHasNoUnownedClientRpcEntryPoint()
+    {
+      Assert.That(typeof(MovingPatientBedController).GetMethod(
+        "CmdForceReleaseAllParticipants", BindingFlags.Instance | BindingFlags.NonPublic), Is.Null);
+      Assert.That(typeof(MovingPatientBedController).GetMethod(
+        "RpcForceReleaseLocalParticipants", BindingFlags.Instance | BindingFlags.NonPublic), Is.Null);
+    }
+
+    [Test]
+    public void DetachBedResolutionWaitHasFiniteTimeout()
+    {
+      var timeout = typeof(TriageScenarioEventBootstrap).GetField(
+        "DetachBedResolutionTimeoutSeconds", BindingFlags.Static | BindingFlags.NonPublic);
+
+      Assert.That(timeout, Is.Not.Null);
+      Assert.That((float)timeout.GetRawConstantValue(), Is.GreaterThan(0f));
+    }
+
+    [Test]
+    public void MovingBedDisconnectCleanupReleasesSlotAndRemovesCachedInput()
+    {
+      const int disconnectedClientId = 17;
+      var participants = new List<int> { 8, disconnectedClientId, -1 };
+      var inputs = new Dictionary<int, Vector2>
+      {
+        [8] = Vector2.left,
+        [disconnectedClientId] = Vector2.one
+      };
+      var remove = typeof(MinecraftBoadLikeControl).GetMethod(
+        "RemoveParticipantState", BindingFlags.Static | BindingFlags.NonPublic);
+
+      Assert.That(remove, Is.Not.Null);
+      remove.Invoke(null, new object[] { participants, inputs, disconnectedClientId });
+
+      Assert.That(participants, Is.EqualTo(new[] { 8, -1, -1 }));
+      Assert.That(inputs.ContainsKey(disconnectedClientId), Is.False);
+      Assert.That(inputs.ContainsKey(8), Is.True);
+    }
+
+    [Test]
+    public void DetachBedParticipantsReportsWhetherControllerWasResolved()
+    {
+      var detach = typeof(TriageScenarioEventBootstrap).GetMethod(
+        "DetachBedParticipants", BindingFlags.Static | BindingFlags.NonPublic);
+      var missing = new GameObject("MissingMovingBedController");
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(MovingBedPrefabPath);
+      var instance = Object.Instantiate(prefab);
+      try
+      {
+        Assert.That(detach, Is.Not.Null);
+        Assert.That(detach.Invoke(null, new object[] { missing }), Is.False);
+        Assert.That(detach.Invoke(null, new object[] { instance }), Is.True);
+      }
+      finally
+      {
+        Object.DestroyImmediate(instance);
+        Object.DestroyImmediate(missing);
+      }
     }
 
     [Test]
@@ -1346,7 +1675,15 @@ namespace TriageTrainer.Tests
         methodName,
         BindingFlags.Instance | BindingFlags.NonPublic);
       Assert.That(method, Is.Not.Null, methodName);
-      return (T)method.Invoke(patient, null);
+      var parameters = method.GetParameters();
+      var arguments = new object[parameters.Length];
+      for (int i = 0; i < parameters.Length; i++)
+      {
+        Assert.That(parameters[i].IsOptional, Is.True,
+          $"{methodName} parameter '{parameters[i].Name}' requires an explicit test value.");
+        arguments[i] = System.Type.Missing;
+      }
+      return (T)method.Invoke(patient, arguments);
     }
 
     private static void InvokePrivate(PatientController patient, string methodName, object argument = null)
@@ -1360,9 +1697,28 @@ namespace TriageTrainer.Tests
 
     private static void SetPrivateField(object target, string fieldName, object value)
     {
-      var field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+      var field = FindInstanceField(target.GetType(), fieldName);
       Assert.That(field, Is.Not.Null, fieldName);
       field.SetValue(target, value);
+    }
+
+    private static T GetPrivateField<T>(object target, string fieldName)
+    {
+      var field = FindInstanceField(target.GetType(), fieldName);
+      Assert.That(field, Is.Not.Null, fieldName);
+      return (T)field.GetValue(target);
+    }
+
+    private static FieldInfo FindInstanceField(System.Type type, string fieldName)
+    {
+      for (System.Type current = type; current != null; current = current.BaseType)
+      {
+        var field = current.GetField(fieldName,
+          BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+        if (field != null)
+          return field;
+      }
+      return null;
     }
 
     private static bool IsAuthoritativeCareZoneMonitorForPatient(
@@ -1397,9 +1753,7 @@ namespace TriageTrainer.Tests
 
     private static void SetSyncVarValue<T>(PatientController patient, string fieldName, T value)
     {
-      var field = typeof(PatientController).GetField(
-        fieldName,
-        BindingFlags.Instance | BindingFlags.NonPublic);
+      var field = FindInstanceField(patient.GetType(), fieldName);
       Assert.That(field, Is.Not.Null);
       var syncVar = field.GetValue(patient);
       var valueProperty = syncVar.GetType().GetProperty("Value");
@@ -1409,9 +1763,7 @@ namespace TriageTrainer.Tests
 
     private static T GetSyncVarValue<T>(PatientController patient, string fieldName)
     {
-      var field = typeof(PatientController).GetField(
-        fieldName,
-        BindingFlags.Instance | BindingFlags.NonPublic);
+      var field = FindInstanceField(patient.GetType(), fieldName);
       Assert.That(field, Is.Not.Null);
       var syncVar = field.GetValue(patient);
       var valueProperty = syncVar.GetType().GetProperty("Value");

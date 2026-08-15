@@ -42,7 +42,9 @@ namespace MultiplayerInfrastructure.Registry
     {
       // Always attempt bulk preload from Resources/Scenario so all available
       // scenario TextAssets can be discovered even without explicit SO wiring.
-      Registry.PreloadScenarioGraphsFromResources(validateWithSchema: true);
+      // 시작 시에는 TextAsset 인덱스만 만들고, 실제 그래프를 처음 요청할 때
+      // 스키마 검증과 역직렬화를 수행해 로딩 정지와 검증 우회를 모두 피한다.
+      Registry.IndexScenarioGraphAssetsFromResources();
 
       if (preloadScenarioGraphSO == null || preloadScenarioGraphSO.scenarioGraphRegistryRequirements == null)
         return;

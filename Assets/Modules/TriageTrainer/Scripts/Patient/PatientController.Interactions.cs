@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Commons;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -32,7 +33,16 @@ namespace TriageTrainer.Entity
     {
       private readonly PatientController _owner;
       public PatientLiftInteract(PatientController owner) { _owner = owner; }
-      public string DisplayText => _owner._liftDisplayText;
+      public string DisplayText
+      {
+        get
+        {
+          var name = _owner.GetPatientDisplayName(null);
+          return !string.IsNullOrWhiteSpace(name)
+            ? $"{name}{Josa.ObjectParticle(name)} 들어올리기"
+            : _owner._liftDisplayText;
+        }
+      }
       // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
       public Sprite DisplayIcon => null;
       public bool AllowDisplayIconFallback => false;
@@ -51,7 +61,16 @@ namespace TriageTrainer.Entity
     {
       private readonly PatientController _owner;
       public PatientCarryInteract(PatientController owner) { _owner = owner; }
-      public string DisplayText => _owner._carryDisplayText;
+      public string DisplayText
+      {
+        get
+        {
+          var name = _owner.GetPatientDisplayName(null);
+          return !string.IsNullOrWhiteSpace(name)
+            ? $"{name}{Josa.ObjectParticle(name)} 들어올리기"
+            : _owner._carryDisplayText;
+        }
+      }
       // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
       public Sprite DisplayIcon => null;
       public bool AllowDisplayIconFallback => false;
@@ -102,6 +121,33 @@ namespace TriageTrainer.Entity
       }
     }
 
+    private sealed class PatientItemApplyInteract : IInteract, IInteractorConditional
+    {
+      private readonly PatientController _owner;
+      public PatientItemApplyInteract(PatientController owner) { _owner = owner; }
+      public string DisplayText => "환자에게 들고 있는 처치 물품 적용";
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => false;
+      public Color DisplayColor => Color.clear;
+
+      public bool CanInteract(Transform interactor)
+      {
+        var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+        string itemIdentifier = player?.HandlingItem?.CurrentIdentifier;
+        return player != null
+               && player.CountItemInInventory(itemIdentifier) > 0
+               && _owner.CanApplyHeldTreatmentItem(itemIdentifier);
+      }
+
+      public void Interact(Transform interactor)
+      {
+        var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+        string itemIdentifier = player?.HandlingItem?.CurrentIdentifier;
+        if (player?.PlayerEntity != null && _owner.CanApplyHeldTreatmentItem(itemIdentifier))
+          _owner.OnItemUsed(player.PlayerEntity, itemIdentifier);
+      }
+    }
+
     public interface IMonitorSelectionRequester
     {
       void HandlePatientSelected(PatientController patient, Transform interactor);
@@ -118,7 +164,24 @@ namespace TriageTrainer.Entity
     private readonly Dictionary<string, InteractConfig> _interactConfigMap = new(StringComparer.Ordinal);
     private IMonitorSelectionRequester _activeMonitorSelectionRequester;
 
-    public IInteract[] Interacts => _interacts.ToArray();
+    public IInteract[] Interacts
+    {
+      get
+      {
+        // 침대 조종 중에는 환자에게 붙은 모든 사정/처치/이송 인터랙션을 숨긴다.
+        // 조종자가 모두 내리면 원래 목록을 그대로 반환하므로 별도 상태 복원 없이
+        // 시나리오에서 설정한 활성/비활성 상태까지 보존된다.
+        if (CurrentBed != null && CurrentBed.HasParticipants)
+          return Array.Empty<IInteract>();
+
+        // Inactive network-spawn prefabs and editor-instantiated patients can be queried
+        // before Awake. Returning an empty list silently makes the patient unusable until
+        // another path happens to rebuild the entries.
+        if (_interacts.Count == 0)
+          BuildInteractEntries();
+        return _interacts.ToArray();
+      }
+    }
 
     private void BuildInteractEntries()
     {
@@ -129,6 +192,7 @@ namespace TriageTrainer.Entity
       _interacts.Add(new PatientLiftInteract(this));
       _interacts.Add(new PatientCarryInteract(this));
       _interacts.Add(new PatientMonitorSelectInteract(this));
+      _interacts.Add(new PatientItemApplyInteract(this));
       AddTriageInteract();
       AddAssessInteracts();
       AddRecognitionCheckInteract();

@@ -74,7 +74,7 @@ public class PlayerModelRegistryRequirementsSO : ScriptableObject
 
 ## 5. TriageTrainer 캐릭터 모델 구현체
 
-TriageTrainer는 플레이어 모델 프리팹 루트에 다음 어댑터 컴포넌트를 배치해 `IPlayerCharacterModelObject` 계약을 충족한다.
+TriageTrainer는 플레이어 모델 프리팹 루트에 다음 어댑터 컴포넌트를 배치해 `IPlayerCharacterModelObject` 규약을 충족한다.
 
 - `PlayerCharacterModelAiden`
 - `PlayerCharacterModelBrian`
@@ -89,7 +89,7 @@ TriageTrainer는 플레이어 모델 프리팹 루트에 다음 어댑터 컴포
 - `PlayerCharacterModelSerah`
 - `PlayerCharacterModelSofia`
 
-공통 계약:
+공통 규약:
 
 - `CharacterControllerCenter => (0, 1, 0)`
 - `Animator` 프로퍼티로 모델 Animator를 노출

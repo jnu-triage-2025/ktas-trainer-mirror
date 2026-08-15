@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TextToSpeechService;
+using MultiplayerInfrastructure.Scenario;
 
 namespace MultiplayerInfrastructure.TTS
 {
@@ -42,6 +43,16 @@ namespace MultiplayerInfrastructure.TTS
 
     /// <summary>동적 세그먼트 백그라운드 캐싱 진행 중 여부.</summary>
     public bool IsDynamicCacheDirty => _core != null && _core.IsDynamicCacheDirty;
+
+    /// <summary>현재 시나리오 범위의 JSON 프로필을 TTS 엔진에 등록한다.</summary>
+    public void ConfigureScenarioVoiceProfiles(IReadOnlyList<ScenarioTTSVoiceProfile> profiles)
+    {
+      if (_core == null || profiles == null) return;
+      var converted = new List<TTSVoiceProfile>();
+      foreach (var profile in profiles)
+        if (profile != null) converted.Add(profile.ToServiceProfile());
+      _core.ConfigureScenarioVoiceProfiles(converted);
+    }
 
     private void Awake()
     {

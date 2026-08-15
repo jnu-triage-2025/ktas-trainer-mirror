@@ -34,8 +34,8 @@ updated: 2026-08-02
 1. 환자 B/C 목적 구역에 `PatientCareDescriptionZone`과 베드 스냅 포인트가 있어야 한다.
 2. 환자가 들어오면 각각 `carezone_patient_entered_patient_b`, `carezone_patient_entered_patient_c` 신호가 발생하는지 확인한다.
 3. 환자 B 처치에 쓰는 활력징후 모니터, 산소유량계, 비강 캐뉼라, 거즈, 플라스터와 20G 정맥로/수액 상호작용이 씬 또는 프리셋에 존재해야 한다.
-4. 환자 B 정맥로 계약은 오른팔이며 신호는 `insert_iv_patient_b_right`, 수액 연결은 `connect_cannula_and_ns1_patient_b`이다.
-5. 환자 C 정맥로 계약은 왼팔이며 신호는 `insert_iv_patient_c_left`, 수액 연결은 `connect_cannula_and_ns1_patient_c`이다.
+4. 환자 B 정맥로 명세는 오른팔이며 신호는 `insert_iv_patient_b_right`, 수액 연결은 `connect_cannula_and_ns1_patient_b`이다.
+5. 환자 C 정맥로 명세는 왼팔이며 신호는 `insert_iv_patient_c_left`, 수액 연결은 `connect_cannula_and_ns1_patient_c`이다.
 
 ## 4. 의식 확인 입력 설정
 

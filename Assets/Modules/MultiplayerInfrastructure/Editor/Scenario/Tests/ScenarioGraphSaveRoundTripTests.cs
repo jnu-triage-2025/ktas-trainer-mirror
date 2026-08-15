@@ -24,6 +24,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     {
       const string json = @"{
         ""identifier"": ""schema-reload-regression"",
+        ""defaultEntrypoint"": ""start"",
         ""nodes"": {
           ""start"": {
             ""identifier"": ""start"",
@@ -44,10 +45,11 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     [Test]
     public void ItemSubmissionConfigSavesWithSchemaValidation()
     {
-      var graph = new ScenarioGraph { Identifier = "item-submission-schema" };
+      var graph = new ScenarioGraph { Identifier = "item-submission-schema", DefaultEntrypoint = "configure-submission" };
       graph.Add(new ScenarioItemSubmissionConfigNode
       {
         Identifier = "configure-submission",
+        PresetIdentifier = "submission-preset",
         TargetIdentifier = "guide-submission",
         RequiredItems = new List<ScenarioItemRequirement>
         {
@@ -60,16 +62,16 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
-    public void ClientSignalContractSavesAndRoundTripsWithSchemaValidation()
+    public void ClientSignalSpecificationSavesAndRoundTripsWithSchemaValidation()
     {
       var graph = new ScenarioGraph
       {
-        Identifier = "client-signal-contract",
+        Identifier = "client-signal-specification",
         DefaultEntrypoint = "start",
         ClientSignalIdentifiers = new[] { "sig.assess_patient" },
         ClientSignalPrefixes = new[] { "sig.zone_player_" }
       };
-      graph.Add(new ScenarioDialogueNode { Identifier = "start", DialogueContent = "start" });
+      graph.Add(new ScenarioDialogueNode { Identifier = "start", SpeakerName = "system", DialogueContent = "start" });
 
       string json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
       var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
@@ -88,11 +90,53 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void TtsVoicePresetStringLoadsAndRoundTrips()
+    {
+      const string sourceJson = @"{
+        ""identifier"": ""tts-voice-preset"",
+        ""defaultEntrypoint"": ""start"",
+        ""nodes"": {
+          ""start"": {
+            ""identifier"": ""start"",
+            ""nodeType"": ""Dialogue"",
+            ""speakerName"": ""시스템"",
+            ""dialogueContent"": ""안내 문구"",
+            ""playTTS"": true,
+            ""ttsVoiceProfile"": { ""preset"": ""F3"" }
+          }
+        }
+      }";
+
+      var graph = ScenarioGraphLoader.LoadFromJson(sourceJson, validateWithSchema: true);
+      var dialogue = (ScenarioDialogueNode)graph.Nodes["start"];
+
+      Assert.That(dialogue.TtsVoiceProfile.Preset, Is.EqualTo(TTSVoiceStyle.F3));
+
+      var savedJson = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      using var savedDocument = JsonDocument.Parse(savedJson);
+      var savedPreset = savedDocument.RootElement
+        .GetProperty("nodes")
+        .GetProperty("start")
+        .GetProperty("ttsVoiceProfile")
+        .GetProperty("preset")
+        .GetString();
+
+      Assert.That(savedPreset, Is.EqualTo("F3"));
+      Assert.That(
+        ((ScenarioDialogueNode)ScenarioGraphLoader
+          .LoadFromJson(savedJson, validateWithSchema: true)
+          .Nodes["start"])
+        .TtsVoiceProfile.Preset,
+        Is.EqualTo(TTSVoiceStyle.F3));
+    }
+
+    [Test]
     public void ScenarioActingNpcsSaveAndRoundTrip()
     {
       var graph = new ScenarioGraph
       {
         Identifier = "actingNpc-round-trip",
+        DefaultEntrypoint = "spawn-doctor",
         ActingNpcs = new List<ScenarioActingNpcDefinition>
         {
           new ScenarioActingNpcDefinition
@@ -134,7 +178,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
         RotationY = -90f,
         NextIdentifier = "start"
       });
-      graph.Add(new ScenarioDialogueNode { Identifier = "start", DialogueContent = "시작" });
+      graph.Add(new ScenarioDialogueNode { Identifier = "start", SpeakerName = "system", DialogueContent = "시작" });
 
       var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
       var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
@@ -159,7 +203,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     [Test]
     public void NPCControlUpdateAndControlModesRoundTrip()
     {
-      var graph = new ScenarioGraph { Identifier = "npc-control-round-trip" };
+      var graph = new ScenarioGraph { Identifier = "npc-control-round-trip", DefaultEntrypoint = "move" };
       graph.Add(new ScenarioNPCControlNode
       {
         Identifier = "update",
@@ -264,6 +308,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     {
       const string emptyItems = @"{
         ""identifier"": ""invalid-items"",
+        ""defaultEntrypoint"": ""start"",
         ""actingNpcs"": [{
           ""identifier"": ""npc"",
           ""presetIdentifier"": ""npc-preset"",
@@ -287,6 +332,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
 
       const string duplicateInteraction = @"{
         ""identifier"": ""duplicate-interaction"",
+        ""defaultEntrypoint"": ""start"",
         ""actingNpcs"": [
           {
             ""identifier"": ""npc-a"",
@@ -325,6 +371,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     {
       const string json = @"{
         ""identifier"": ""unknown-actingNpc-spawn"",
+        ""defaultEntrypoint"": ""spawn"",
         ""actingNpcs"": [],
         ""nodes"": {
           ""spawn"": {
@@ -346,10 +393,11 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     [Test]
     public void DisconnectedChoiceOptionLinkSavesAndRoundTrips()
     {
-      var graph = new ScenarioGraph { Identifier = "choice-null-link" };
+      var graph = new ScenarioGraph { Identifier = "choice-null-link", DefaultEntrypoint = "choice" };
       graph.Add(new ScenarioChoiceNode
       {
         Identifier = "choice",
+        SpeakerName = "system",
         DialogueContent = "선택하세요",
         Options = new List<ScenarioChoiceOption>
         {
@@ -357,7 +405,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
           new ScenarioChoiceOption { DisplayText = "B", NextNodeIdentifier = "end" }
         }
       });
-      graph.Add(new ScenarioDialogueNode { Identifier = "end", DialogueContent = "종료" });
+      graph.Add(new ScenarioDialogueNode { Identifier = "end", SpeakerName = "system", DialogueContent = "종료" });
 
       var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
 
@@ -374,7 +422,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     [Test]
     public void DisconnectedQuizCorrectLinkSavesAndRoundTrips()
     {
-      var graph = new ScenarioGraph { Identifier = "quiz-null-link" };
+      var graph = new ScenarioGraph { Identifier = "quiz-null-link", DefaultEntrypoint = "quiz" };
       graph.Add(new ScenarioQuizNode
       {
         Identifier = "quiz",
@@ -385,7 +433,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
         OnIncorrectNextIdentifier = null,
         NextIdentifier = "fallback"
       });
-      graph.Add(new ScenarioDialogueNode { Identifier = "fallback", DialogueContent = "폴백" });
+      graph.Add(new ScenarioDialogueNode { Identifier = "fallback", SpeakerName = "system", DialogueContent = "폴백" });
 
       var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
 
@@ -402,7 +450,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     [Test]
     public void DisconnectedParallelBranchPlaceholderSavesAndRoundTrips()
     {
-      var graph = new ScenarioGraph { Identifier = "parallel-placeholder" };
+      var graph = new ScenarioGraph { Identifier = "parallel-placeholder", DefaultEntrypoint = "parallel" };
       graph.Add(new ScenarioParallelNode
       {
         Identifier = "parallel",
@@ -413,8 +461,8 @@ namespace MultiplayerInfrastructure.Tests.Scenario
         },
         NextIdentifier = "merge"
       });
-      graph.Add(new ScenarioDialogueNode { Identifier = "stage_a", DialogueContent = "A" });
-      graph.Add(new ScenarioDialogueNode { Identifier = "merge", DialogueContent = "합류" });
+      graph.Add(new ScenarioDialogueNode { Identifier = "stage_a", SpeakerName = "system", DialogueContent = "A" });
+      graph.Add(new ScenarioDialogueNode { Identifier = "merge", SpeakerName = "system", DialogueContent = "합류" });
 
       var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
 
@@ -431,7 +479,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     [Test]
     public void ParallelNextIdentifierSurvivesSave()
     {
-      var graph = new ScenarioGraph { Identifier = "parallel-next" };
+      var graph = new ScenarioGraph { Identifier = "parallel-next", DefaultEntrypoint = "parallel" };
       graph.Add(new ScenarioParallelNode
       {
         Identifier = "parallel",
@@ -442,9 +490,9 @@ namespace MultiplayerInfrastructure.Tests.Scenario
         },
         NextIdentifier = "after_parallel"
       });
-      graph.Add(new ScenarioDialogueNode { Identifier = "stage_a", DialogueContent = "A" });
-      graph.Add(new ScenarioDialogueNode { Identifier = "stage_b", DialogueContent = "B" });
-      graph.Add(new ScenarioDialogueNode { Identifier = "after_parallel", DialogueContent = "다음" });
+      graph.Add(new ScenarioDialogueNode { Identifier = "stage_a", SpeakerName = "system", DialogueContent = "A" });
+      graph.Add(new ScenarioDialogueNode { Identifier = "stage_b", SpeakerName = "system", DialogueContent = "B" });
+      graph.Add(new ScenarioDialogueNode { Identifier = "after_parallel", SpeakerName = "system", DialogueContent = "다음" });
 
       var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
 
@@ -730,7 +778,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     [Test]
     public void ValidatorDefaultMatchModeSavesCleanly()
     {
-      var graph = new ScenarioGraph { Identifier = "validator-default" };
+      var graph = new ScenarioGraph { Identifier = "validator-default", DefaultEntrypoint = "validator" };
       graph.Add(new ScenarioValidatorNode
       {
         Identifier = "validator",
@@ -759,7 +807,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     [Test]
     public void QuestControlWithDefinitionKeepsNullInlineQuestAndSaves()
     {
-      var graph = new ScenarioGraph { Identifier = "quest-definition-only" };
+      var graph = new ScenarioGraph { Identifier = "quest-definition-only", DefaultEntrypoint = "quest" };
       graph.Add(new ScenarioQuestControlNode
       {
         Identifier = "quest",
@@ -783,11 +831,12 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     [Test]
     public void SaveLoadSaveIsIdempotentAndValid()
     {
-      var graph = new ScenarioGraph { Identifier = "round-trip" };
-      graph.Add(new ScenarioDialogueNode { Identifier = "start", DialogueContent = "시작", NextIdentifier = "choice" });
+      var graph = new ScenarioGraph { Identifier = "round-trip", DefaultEntrypoint = "start" };
+      graph.Add(new ScenarioDialogueNode { Identifier = "start", SpeakerName = "system", DialogueContent = "시작", NextIdentifier = "choice" });
       graph.Add(new ScenarioChoiceNode
       {
         Identifier = "choice",
+        SpeakerName = "system",
         DialogueContent = "선택",
         Options = new List<ScenarioChoiceOption>
         {
@@ -795,7 +844,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
           new ScenarioChoiceOption { DisplayText = "B", NextNodeIdentifier = null }
         }
       });
-      graph.Add(new ScenarioDialogueNode { Identifier = "end", DialogueContent = "끝" });
+      graph.Add(new ScenarioDialogueNode { Identifier = "end", SpeakerName = "system", DialogueContent = "끝" });
 
       var firstSave = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
       var loaded = ScenarioGraphLoader.LoadFromJson(firstSave, validateWithSchema: true);
@@ -839,6 +888,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       var graph = new ScenarioGraph
       {
         Identifier = "waypoint-round-trip",
+        DefaultEntrypoint = "start",
         Waypoints = new List<ScenarioWaypointDefinition>
         {
           new ScenarioWaypointDefinition
@@ -852,7 +902,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
           }
         }
       };
-      graph.Add(new ScenarioDialogueNode { Identifier = "start", DialogueContent = "시작" });
+      graph.Add(new ScenarioDialogueNode { Identifier = "start", SpeakerName = "system", DialogueContent = "시작" });
 
       var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
       var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);

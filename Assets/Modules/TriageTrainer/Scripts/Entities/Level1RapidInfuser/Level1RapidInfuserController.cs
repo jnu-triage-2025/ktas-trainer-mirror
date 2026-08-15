@@ -8,6 +8,7 @@ using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.IntravenousLine;
 using TriageTrainer.ItemDefinitions;
@@ -21,11 +22,12 @@ namespace TriageTrainer.Entity
   {
     public bool HasNormalSaline;
     public bool HasPlasmaSolution;
+    public bool HasBloodTransfusionSet;
     public string ConnectedPatientIdentifier;
   }
 
   /// <summary>
-  /// 환자 저장 상태가 급속 주입기 상태를 보유할 경우 구현하는 선택적 복원 계약.
+  /// 환자 저장 상태가 급속 주입기 상태를 보유할 경우 구현하는 선택적 복원 규약.
   /// PatientController 자체에 저장 형식을 강제하지 않기 위해 인터페이스로 예비한다.
   /// </summary>
   public interface ILevel1RapidInfuserStateSource
@@ -53,7 +55,8 @@ namespace TriageTrainer.Entity
     private enum FluidKind : byte
     {
       NormalSaline,
-      PlasmaSolution
+      PlasmaSolution,
+      BloodTransfusionSet
     }
 
     private sealed class AddFluidInteract : IInteract, IInteractorConditional, IInteractDisplayIcons
@@ -70,7 +73,9 @@ namespace TriageTrainer.Entity
 
       public string DisplayText => _kind == FluidKind.NormalSaline
         ? "Normal Saline 추가"
-        : "Plasma Solution 추가";
+        : _kind == FluidKind.PlasmaSolution
+          ? "Plasma Solution 연결"
+          : "Blood transfusion set 연결";
       public Sprite DisplayIcon => null;
       public IReadOnlyList<Sprite> DisplayIcons => new[] { Icon.ClearRightBottom, _heldItemIcon };
       public bool AllowDisplayIconFallback => true;
@@ -81,14 +86,14 @@ namespace TriageTrainer.Entity
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
         string id = player?.HandlingItem?.CurrentIdentifier;
         _heldItemIcon = player?.HandlingItem?.CurrentItemIconTexture;
-        return !_owner.HasFluid(_kind) && IsFluidFamily(id, _kind);
+        return _owner.CanAddFluid(_kind) && IsFluidFamily(id, _kind);
       }
 
       public void Interact(Transform interactor)
       {
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
         string id = player?.HandlingItem?.CurrentIdentifier;
-        if (player != null && IsFluidFamily(id, _kind))
+        if (player != null && _owner.CanAddFluid(_kind) && IsFluidFamily(id, _kind))
           _owner.RequestAddFluid(_kind, id, player);
       }
     }
@@ -96,6 +101,7 @@ namespace TriageTrainer.Entity
     [Header("Displays (assign on prefab)")]
     [SerializeField] private GameObject _normalSalineDisplay;
     [SerializeField] private GameObject _plasmaSolutionDisplay;
+    [SerializeField] private GameObject _bloodTransfusionSetDisplay;
 
     [Header("IV connection (assign on prefab)")]
     [SerializeField] private IntravenousLineConnectionPoint _ivConnectionPoint;
@@ -103,6 +109,7 @@ namespace TriageTrainer.Entity
     [Header("Offline / initial state")]
     [SerializeField] private bool _initialHasNormalSaline;
     [SerializeField] private bool _initialHasPlasmaSolution;
+    [SerializeField] private bool _initialHasBloodTransfusionSet;
     [SerializeField] private string _initialConnectedPatientIdentifier;
 
     [Header("Identity / interaction")]
@@ -111,14 +118,17 @@ namespace TriageTrainer.Entity
 
     private readonly SyncVar<bool> _hasNormalSaline = new(false);
     private readonly SyncVar<bool> _hasPlasmaSolution = new(false);
+    private readonly SyncVar<bool> _hasBloodTransfusionSet = new(false);
     private readonly SyncVar<string> _connectedPatientIdentifier = new(string.Empty);
     private readonly SyncVar<string> _runtimeIdentifier = new(string.Empty);
     private IInteract[] _fluidInteracts;
     private string _registeredIdentifier;
     private int _pendingSalineClientId = -1;
     private int _pendingPlasmaClientId = -1;
+    private int _pendingBloodClientId = -1;
     private float _pendingSalineExpiresAt;
     private float _pendingPlasmaExpiresAt;
+    private float _pendingBloodExpiresAt;
     private bool _itemizationPending;
     private const float InteractionDistance = 3f;
     private const float FluidRequestTimeout = 3f;
@@ -127,7 +137,8 @@ namespace TriageTrainer.Entity
       _fluidInteracts ??= new IInteract[]
       {
         new AddFluidInteract(this, FluidKind.NormalSaline),
-        new AddFluidInteract(this, FluidKind.PlasmaSolution)
+        new AddFluidInteract(this, FluidKind.PlasmaSolution),
+        new AddFluidInteract(this, FluidKind.BloodTransfusionSet)
       };
 
     public IInteract[] Interacts
@@ -150,6 +161,9 @@ namespace TriageTrainer.Entity
     public bool HasPlasmaSolution => IsClientStarted || IsServerStarted
       ? _hasPlasmaSolution.Value
       : _initialHasPlasmaSolution;
+    public bool HasBloodTransfusionSet => IsClientStarted || IsServerStarted
+      ? _hasBloodTransfusionSet.Value
+      : _initialHasBloodTransfusionSet;
     public string ConnectedPatientIdentifier => IsClientStarted || IsServerStarted
       ? _connectedPatientIdentifier.Value
       : _initialConnectedPatientIdentifier;
@@ -159,7 +173,7 @@ namespace TriageTrainer.Entity
     private void Awake()
     {
       Awake_MinecraftBoadLikeControl();
-      Configure(1);
+      Configure(1); // Level 1 Rapid Infuser는 한 명만 조종한다.
       if (_ivConnectionPoint != null)
       {
         _ivConnectionPoint.OnConnected += OnIntravenousLineConnected;
@@ -184,6 +198,7 @@ namespace TriageTrainer.Entity
       base.OnStartServer();
       _hasNormalSaline.Value = _initialHasNormalSaline;
       _hasPlasmaSolution.Value = _initialHasPlasmaSolution;
+      _hasBloodTransfusionSet.Value = _initialHasBloodTransfusionSet;
       _connectedPatientIdentifier.Value = _initialConnectedPatientIdentifier ?? string.Empty;
       ApplyDisplays();
     }
@@ -193,6 +208,7 @@ namespace TriageTrainer.Entity
       base.OnStartClient();
       _hasNormalSaline.OnChange += OnFluidChanged;
       _hasPlasmaSolution.OnChange += OnFluidChanged;
+      _hasBloodTransfusionSet.OnChange += OnFluidChanged;
       _runtimeIdentifier.OnChange += OnRuntimeIdentifierChanged;
       RegisterEntity();
       ApplyDisplays();
@@ -202,6 +218,7 @@ namespace TriageTrainer.Entity
     {
       _hasNormalSaline.OnChange -= OnFluidChanged;
       _hasPlasmaSolution.OnChange -= OnFluidChanged;
+      _hasBloodTransfusionSet.OnChange -= OnFluidChanged;
       _runtimeIdentifier.OnChange -= OnRuntimeIdentifierChanged;
       UnregisterEntity();
       base.OnStopClient();
@@ -340,6 +357,7 @@ namespace TriageTrainer.Entity
     {
       HasNormalSaline = HasNormalSaline,
       HasPlasmaSolution = HasPlasmaSolution,
+      HasBloodTransfusionSet = HasBloodTransfusionSet,
       ConnectedPatientIdentifier = ConnectedPatientIdentifier
     };
 
@@ -456,29 +474,50 @@ namespace TriageTrainer.Entity
       return point.Identifier.Contains("left", StringComparison.OrdinalIgnoreCase);
     }
 
-    private bool HasFluid(FluidKind kind) =>
-      kind == FluidKind.NormalSaline ? HasNormalSaline : HasPlasmaSolution;
+    private bool HasFluid(FluidKind kind) => kind switch
+    {
+      FluidKind.NormalSaline => HasNormalSaline,
+      FluidKind.PlasmaSolution => HasPlasmaSolution,
+      FluidKind.BloodTransfusionSet => HasBloodTransfusionSet,
+      _ => false
+    };
+
+    private bool CanAddFluid(FluidKind kind)
+    {
+      if (HasFluid(kind))
+        return false;
+
+      // 그래프는 플라즈마 연결(V019_1) 뒤에 수혈세트 연결(V020)을 검증한다.
+      // RuntimeState 신호가 sticky이므로 역순 연결을 허용하면 V020이 나중에 무행동 통과한다.
+      return kind != FluidKind.BloodTransfusionSet || HasPlasmaSolution;
+    }
 
     private static bool IsFluidFamily(string itemIdentifier, FluidKind kind)
     {
       if (string.IsNullOrWhiteSpace(itemIdentifier))
         return false;
-      string prefix = kind == FluidKind.NormalSaline ? "normal_saline" : "plasma_solution";
-      return itemIdentifier.StartsWith(prefix, StringComparison.Ordinal);
+      return kind switch
+      {
+        FluidKind.NormalSaline => itemIdentifier.StartsWith("normal_saline", StringComparison.Ordinal),
+        FluidKind.PlasmaSolution => itemIdentifier.StartsWith("plasma_solution", StringComparison.Ordinal),
+        FluidKind.BloodTransfusionSet =>
+          string.Equals(itemIdentifier, BloodTransfusionSet.Identifier, StringComparison.Ordinal),
+        _ => false
+      };
     }
 
     private void RequestAddFluid(FluidKind kind, string itemIdentifier, PlayerController player)
     {
       if (!IsClientStarted && !IsServerStarted)
       {
-        if (!HasFluid(kind) && player.RemoveItemFromInventory(itemIdentifier, 1) == 1)
+        if (CanAddFluid(kind) && player.RemoveItemFromInventory(itemIdentifier, 1) == 1)
           SetFluidOffline(kind);
         return;
       }
       if (IsServerStarted)
       {
         // 호스트의 인벤토리는 이 인스턴스에 있으므로 즉시 소비/확정할 수 있다.
-        if (!HasFluid(kind) &&
+        if (CanAddFluid(kind) &&
             IsWithinInteractionDistance(player) &&
             player.RemoveItemFromInventory(itemIdentifier, 1) == 1)
           SetFluidOnServer(kind);
@@ -490,12 +529,12 @@ namespace TriageTrainer.Entity
     [ServerRpc(RequireOwnership = false)]
     private void CmdRequestAddFluid(byte rawKind, string itemIdentifier, NetworkConnection sender = null)
     {
-      if (rawKind > (byte)FluidKind.PlasmaSolution || sender == null || !sender.IsValid)
+      if (rawKind > (byte)FluidKind.BloodTransfusionSet || sender == null || !sender.IsValid)
         return;
 
       var kind = (FluidKind)rawKind;
       var player = FindPlayer(sender.ClientId);
-      if (player == null || HasFluid(kind) || !IsFluidFamily(itemIdentifier, kind) ||
+      if (player == null || !CanAddFluid(kind) || !IsFluidFamily(itemIdentifier, kind) ||
           !IsWithinInteractionDistance(player) || HasActivePendingFluid(kind))
         return;
 
@@ -509,7 +548,7 @@ namespace TriageTrainer.Entity
       byte rawKind,
       string itemIdentifier)
     {
-      if (rawKind > (byte)FluidKind.PlasmaSolution)
+      if (rawKind > (byte)FluidKind.BloodTransfusionSet)
         return;
 
       var kind = (FluidKind)rawKind;
@@ -530,11 +569,11 @@ namespace TriageTrainer.Entity
     [ServerRpc(RequireOwnership = false)]
     private void CmdAcknowledgeFluidConsumption(byte rawKind, NetworkConnection sender = null)
     {
-      if (rawKind > (byte)FluidKind.PlasmaSolution || sender == null || !sender.IsValid)
+      if (rawKind > (byte)FluidKind.BloodTransfusionSet || sender == null || !sender.IsValid)
         return;
 
       var kind = (FluidKind)rawKind;
-      if (!MatchesPendingFluid(kind, sender.ClientId) || HasFluid(kind))
+      if (!MatchesPendingFluid(kind, sender.ClientId) || !CanAddFluid(kind))
         return;
 
       ClearPendingFluid(kind);
@@ -544,7 +583,7 @@ namespace TriageTrainer.Entity
     [ServerRpc(RequireOwnership = false)]
     private void CmdReportFluidConsumptionFailure(byte rawKind, NetworkConnection sender = null)
     {
-      if (rawKind > (byte)FluidKind.PlasmaSolution || sender == null || !sender.IsValid)
+      if (rawKind > (byte)FluidKind.BloodTransfusionSet || sender == null || !sender.IsValid)
         return;
 
       var kind = (FluidKind)rawKind;
@@ -580,6 +619,7 @@ namespace TriageTrainer.Entity
     {
       _hasNormalSaline.Value = state.HasNormalSaline;
       _hasPlasmaSolution.Value = state.HasPlasmaSolution;
+      _hasBloodTransfusionSet.Value = state.HasBloodTransfusionSet;
       _connectedPatientIdentifier.Value = state.ConnectedPatientIdentifier ?? string.Empty;
       ApplyDisplays();
     }
@@ -588,6 +628,7 @@ namespace TriageTrainer.Entity
     {
       _initialHasNormalSaline = state.HasNormalSaline;
       _initialHasPlasmaSolution = state.HasPlasmaSolution;
+      _initialHasBloodTransfusionSet = state.HasBloodTransfusionSet;
       _initialConnectedPatientIdentifier = state.ConnectedPatientIdentifier ?? string.Empty;
       ApplyDisplays();
     }
@@ -595,15 +636,27 @@ namespace TriageTrainer.Entity
     private void SetFluidOffline(FluidKind kind)
     {
       if (kind == FluidKind.NormalSaline) _initialHasNormalSaline = true;
-      else _initialHasPlasmaSolution = true;
+      else if (kind == FluidKind.PlasmaSolution) _initialHasPlasmaSolution = true;
+      else _initialHasBloodTransfusionSet = true;
       ApplyDisplays();
+      RaiseScenarioConnectionSignal(kind);
     }
 
     private void SetFluidOnServer(FluidKind kind)
     {
       if (kind == FluidKind.NormalSaline) _hasNormalSaline.Value = true;
-      else _hasPlasmaSolution.Value = true;
+      else if (kind == FluidKind.PlasmaSolution) _hasPlasmaSolution.Value = true;
+      else _hasBloodTransfusionSet.Value = true;
       ApplyDisplays();
+      RaiseScenarioConnectionSignal(kind);
+    }
+
+    private static void RaiseScenarioConnectionSignal(FluidKind kind)
+    {
+      if (kind == FluidKind.PlasmaSolution)
+        ScenarioInteractionSignals.Raise("connect_ps1_to_lv1");
+      else if (kind == FluidKind.BloodTransfusionSet)
+        ScenarioInteractionSignals.Raise("connect_blood_to_lv1");
     }
 
     private bool IsWithinInteractionDistance(PlayerController player)
@@ -615,8 +668,18 @@ namespace TriageTrainer.Entity
 
     private bool HasActivePendingFluid(FluidKind kind)
     {
-      int clientId = kind == FluidKind.NormalSaline ? _pendingSalineClientId : _pendingPlasmaClientId;
-      float expiry = kind == FluidKind.NormalSaline ? _pendingSalineExpiresAt : _pendingPlasmaExpiresAt;
+      int clientId = kind switch
+      {
+        FluidKind.NormalSaline => _pendingSalineClientId,
+        FluidKind.PlasmaSolution => _pendingPlasmaClientId,
+        _ => _pendingBloodClientId
+      };
+      float expiry = kind switch
+      {
+        FluidKind.NormalSaline => _pendingSalineExpiresAt,
+        FluidKind.PlasmaSolution => _pendingPlasmaExpiresAt,
+        _ => _pendingBloodExpiresAt
+      };
       if (clientId < 0)
         return false;
       if (Time.unscaledTime <= expiry)
@@ -634,8 +697,16 @@ namespace TriageTrainer.Entity
       }
       else
       {
-        _pendingPlasmaClientId = clientId;
-        _pendingPlasmaExpiresAt = Time.unscaledTime + FluidRequestTimeout;
+        if (kind == FluidKind.PlasmaSolution)
+        {
+          _pendingPlasmaClientId = clientId;
+          _pendingPlasmaExpiresAt = Time.unscaledTime + FluidRequestTimeout;
+        }
+        else
+        {
+          _pendingBloodClientId = clientId;
+          _pendingBloodExpiresAt = Time.unscaledTime + FluidRequestTimeout;
+        }
       }
     }
 
@@ -643,7 +714,12 @@ namespace TriageTrainer.Entity
     {
       if (!HasActivePendingFluid(kind))
         return false;
-      return (kind == FluidKind.NormalSaline ? _pendingSalineClientId : _pendingPlasmaClientId) == clientId;
+      return (kind switch
+      {
+        FluidKind.NormalSaline => _pendingSalineClientId,
+        FluidKind.PlasmaSolution => _pendingPlasmaClientId,
+        _ => _pendingBloodClientId
+      }) == clientId;
     }
 
     private void ClearPendingFluid(FluidKind kind)
@@ -655,8 +731,16 @@ namespace TriageTrainer.Entity
       }
       else
       {
-        _pendingPlasmaClientId = -1;
-        _pendingPlasmaExpiresAt = 0f;
+        if (kind == FluidKind.PlasmaSolution)
+        {
+          _pendingPlasmaClientId = -1;
+          _pendingPlasmaExpiresAt = 0f;
+        }
+        else
+        {
+          _pendingBloodClientId = -1;
+          _pendingBloodExpiresAt = 0f;
+        }
       }
     }
 
@@ -670,6 +754,7 @@ namespace TriageTrainer.Entity
     {
       if (_normalSalineDisplay != null) _normalSalineDisplay.SetActive(HasNormalSaline);
       if (_plasmaSolutionDisplay != null) _plasmaSolutionDisplay.SetActive(HasPlasmaSolution);
+      if (_bloodTransfusionSetDisplay != null) _bloodTransfusionSetDisplay.SetActive(HasBloodTransfusionSet);
     }
 
     private static PlayerController FindPlayer(int clientId)

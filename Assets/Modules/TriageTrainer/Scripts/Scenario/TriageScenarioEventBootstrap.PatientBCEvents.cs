@@ -35,6 +35,7 @@ namespace TriageTrainer.Scenario
       RegisterEvent_Insert20gLeftPatientC();
       RegisterEvent_ConnectNs1LeftPatientC();
       RegisterEvent_AttachPatientBedPairs();
+      RegisterEvent_DetachPatientBCBeds();
       Register("activate_patient_b_nurse_c_treatment", () => Event_ActivatePatientBCTreatment(false, true));
       Register("activate_patient_b_nurse_d_treatment", () => Event_ActivatePatientBCTreatment(false, false));
       Register("activate_patient_c_nurse_c_treatment", () => Event_ActivatePatientBCTreatment(true, true));

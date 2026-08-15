@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.UI;
@@ -49,7 +50,8 @@ namespace MultiplayerInfrastructure.UI
         int selectedIndex,
         InteractableHintUIMode mode,
         string keyLabel,
-        Sprite dialogueIcon)
+        Sprite dialogueIcon,
+        Action<int> onClicked = null)
     {
       contentContainer.Clear();
 
@@ -60,8 +62,17 @@ namespace MultiplayerInfrastructure.UI
 
       for (int i = 0; i < interacts.Count; i++)
       {
+        int clickedIndex = i;
         var element = new InteractableObjectHintListElement();
         element.Bind(interacts[i], keyLabel, mode, dialogueIcon, i == selectedIndex);
+        if (onClicked != null)
+        {
+          element.RegisterCallback<ClickEvent>(evt =>
+          {
+            evt.StopPropagation();
+            onClicked(clickedIndex);
+          });
+        }
         contentContainer.Add(element);
       }
 

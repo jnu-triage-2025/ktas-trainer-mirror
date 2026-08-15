@@ -201,6 +201,7 @@ namespace MultiplayerInfrastructure.Editor
       data.DialogueContent = EditorGUILayout.TextArea(data.DialogueContent, GUILayout.Height(60));
       data.PortraitSpriteIdentifier = EditorGUILayout.TextField("Portrait Sprite", data.PortraitSpriteIdentifier);
       data.PlayTTS = EditorGUILayout.Toggle("Play TTS", data.PlayTTS);
+      data.TtsVoiceProfile = DrawTtsVoiceProfile(data.TtsVoiceProfile);
       DrawTTSBakeHint(data.PlayTTS, data.DialogueContent);
     }
 
@@ -213,6 +214,8 @@ namespace MultiplayerInfrastructure.Editor
       data.FadeInDuration = DrawTimeValue("Fade In", data.FadeInDuration);
       data.DisplayDuration = DrawTimeValue("Display", data.DisplayDuration);
       data.FadeOutDuration = DrawTimeValue("Fade Out", data.FadeOutDuration);
+      data.PlayTTS = EditorGUILayout.Toggle("Play TTS", data.PlayTTS);
+      data.TtsVoiceProfile = DrawTtsVoiceProfile(data.TtsVoiceProfile);
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
 
@@ -223,6 +226,30 @@ namespace MultiplayerInfrastructure.Editor
       var unit = (ScenarioTimeUnit)EditorGUILayout.EnumPopup(value.Unit, GUILayout.Width(110));
       EditorGUILayout.EndHorizontal();
       return new ScenarioTimeValue(amount, unit);
+    }
+
+    /// <summary>노드의 TTS 프로필을 하나의 구조체 그룹으로 편집한다.</summary>
+    private static ScenarioTTSVoiceProfile DrawTtsVoiceProfile(ScenarioTTSVoiceProfile value)
+    {
+      value ??= new ScenarioTTSVoiceProfile { Preset = TTSVoiceStyle.None };
+      EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+      EditorGUILayout.LabelField("TTS Voice Profile", EditorStyles.boldLabel);
+      var preset = (TTSVoiceStyle)EditorGUILayout.EnumPopup("Preset", value.Preset ?? TTSVoiceStyle.None);
+      value.Preset = preset;
+
+      bool usePreset = preset != TTSVoiceStyle.None;
+      using (new EditorGUI.DisabledScope(usePreset))
+      {
+        value.VoiceIdentifier = EditorGUILayout.TextField("Custom Identifier", value.VoiceIdentifier);
+        value.VoiceStyleName = EditorGUILayout.TextField("Custom Style Name", value.VoiceStyleName);
+        value.Language = EditorGUILayout.TextField("Custom Language", value.Language);
+        value.Speed = EditorGUILayout.FloatField("Custom Speed", value.Speed);
+        value.TotalStep = EditorGUILayout.IntField("Custom Total Step", value.TotalStep);
+      }
+      if (usePreset)
+        EditorGUILayout.HelpBox("프리셋 사용 중에는 커스텀 필드를 수정할 수 없습니다.", MessageType.None);
+      EditorGUILayout.EndVertical();
+      return value;
     }
 
     /// <summary>
@@ -254,6 +281,7 @@ namespace MultiplayerInfrastructure.Editor
       data.DialogueContent = EditorGUILayout.TextArea(data.DialogueContent, GUILayout.Height(60));
       data.PortraitSpriteIdentifier = EditorGUILayout.TextField("Portrait Sprite", data.PortraitSpriteIdentifier);
       data.PlayTTS = EditorGUILayout.Toggle("Play TTS", data.PlayTTS);
+      data.TtsVoiceProfile = DrawTtsVoiceProfile(data.TtsVoiceProfile);
       DrawTTSBakeHint(data.PlayTTS, data.DialogueContent);
 
       EditorGUILayout.Space();
@@ -673,6 +701,8 @@ namespace MultiplayerInfrastructure.Editor
     {
       data.Operation = (ScenarioQuestOperationType)EditorGUILayout.EnumPopup("Operation", data.Operation);
       data.FailureStrategy = (ScenarioQuestFailureStrategy)EditorGUILayout.EnumPopup("Failure Strategy", data.FailureStrategy);
+      data.SkipCompletionDisplayDelay = EditorGUILayout.Toggle(
+        "Skip Completion Display Delay", data.SkipCompletionDisplayDelay);
       bool persistProgress = data.PersistProgressOnSessionEnd ?? false;
       persistProgress = EditorGUILayout.Toggle("Persist Progress On Session End", persistProgress);
       data.PersistProgressOnSessionEnd = persistProgress;
@@ -1120,6 +1150,7 @@ namespace MultiplayerInfrastructure.Editor
       data.FeedbackCorrect = EditorGUILayout.TextField("Feedback Correct", data.FeedbackCorrect);
       data.FeedbackIncorrect = EditorGUILayout.TextField("Feedback Incorrect", data.FeedbackIncorrect);
       data.PlayTTS = EditorGUILayout.Toggle("Play TTS", data.PlayTTS);
+      data.TtsVoiceProfile = DrawTtsVoiceProfile(data.TtsVoiceProfile);
       DrawTTSBakeHint(data.PlayTTS, data.Question);
       EditorGUILayout.LabelField("On Correct", data.OnCorrectNextIdentifier ?? "(미연결)");
       EditorGUILayout.LabelField("On Incorrect", data.OnIncorrectNextIdentifier ?? "(미연결)");
@@ -1137,6 +1168,7 @@ namespace MultiplayerInfrastructure.Editor
     {
       data.TranscriptIdentifier = EditorGUILayout.TextField("Transcript Identifier", data.TranscriptIdentifier);
       data.WaitUntilFinished = EditorGUILayout.Toggle("Wait Until Finished", data.WaitUntilFinished);
+      data.TtsVoiceProfile = DrawTtsVoiceProfile(data.TtsVoiceProfile);
 
       EditorGUILayout.Space();
       EditorGUILayout.LabelField("Variables (Override)", EditorStyles.boldLabel);

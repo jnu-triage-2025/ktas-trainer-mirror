@@ -102,7 +102,10 @@ namespace TriageTrainer.Editor.Utils
         triageArrivalWaypointIdentifier,
         triageArrivalWaypoint,
         new Vector3(8f, 3f, 8f),
-        new[] { "quest_arrival_triage_area" },
+        // Scenario B의 역할별 도착 집계와 Patient A t14의 공통 분류구역 도착 게이트는
+        // 같은 물리 구역을 사용한다. 둘 중 하나만 올리면 다른 시나리오가 영구 대기하므로
+        // 플레이어 진입 시 두 신호를 함께 발행한다.
+        new[] { "quest_arrival_triage_area", "arrive_triagearea" },
         "quest_arrival_triage_area_{id}",
         perEntityPlayersOnly: true);
       CreateWaypoint(generatedRoot.transform, ctPatientBWaypointIdentifier, ctPatientBWaypoint);

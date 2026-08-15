@@ -71,6 +71,10 @@
       "description": "시나리오 시작 전에 생성·등록할 waypoint anchor 정의.",
       "items": { "$ref": "#/$defs/ScenarioWaypointDefinition" }
     },
+    "ttsVoiceProfiles": {
+      "type": ["array", "null"],
+      "items": { "$ref": "#/$defs/ScenarioTTSVoiceProfile" }
+    },
     "nodes": {
       "type": "object",
       "description": "Dictionary<string, IScenarioNode>",
@@ -87,6 +91,18 @@
   ],
   "additionalProperties": false,
   "$defs": {
+    "ScenarioTTSVoiceProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preset": { "type": ["string", "null"], "enum": ["None", "F1", "F2", "F3", "F4", "F5", "M1", "M2", "M3", "M4", "M5", null] },
+        "voiceIdentifier": { "type": ["string", "null"] },
+        "voiceStyleName": { "type": ["string", "null"] },
+        "language": { "type": ["string", "null"] },
+        "speed": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "totalStep": { "type": ["integer", "null"], "minimum": 1 }
+      }
+    },
     "ScenarioWaypointDefinition": {
       "type": "object",
       "additionalProperties": false,
@@ -908,6 +924,9 @@
                 "string",
                 "null"
               ]
+            },
+            "ttsVoiceProfile": {
+              "$ref": "#/$defs/ScenarioTTSVoiceProfile"
             }
           },
           "required": [
@@ -969,6 +988,9 @@
             },
             "ttsVoiceIdentifier": {
               "type": ["string", "null"]
+            },
+            "ttsVoiceProfile": {
+              "$ref": "#/$defs/ScenarioTTSVoiceProfile"
             }
           },
           "required": ["speakerName", "dialogueContent"]
@@ -1023,6 +1045,9 @@
                 "string",
                 "null"
               ]
+            },
+            "ttsVoiceProfile": {
+              "$ref": "#/$defs/ScenarioTTSVoiceProfile"
             },
             "nextIdentifier": {
               "type": "null"
@@ -2435,6 +2460,9 @@
                 "null"
               ]
             },
+            "ttsVoiceProfile": {
+              "$ref": "#/$defs/ScenarioTTSVoiceProfile"
+            },
             "nextIdentifier": {
               "type": [
                 "string",
@@ -2814,6 +2842,9 @@
                 "string",
                 "null"
               ]
+            },
+            "ttsVoiceProfile": {
+              "$ref": "#/$defs/ScenarioTTSVoiceProfile"
             }
           },
           "required": [

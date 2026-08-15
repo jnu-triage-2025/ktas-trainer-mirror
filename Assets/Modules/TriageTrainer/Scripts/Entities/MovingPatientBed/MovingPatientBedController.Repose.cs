@@ -64,6 +64,7 @@ namespace TriageTrainer.Entity
 
       _runtimeIdentifierSync.OnChange += OnBedRuntimeIdentifierChanged;
       _reposedTargetIdentifier.OnChange += OnReposedTargetIdentifierChanged;
+      _positioningPointIdentifierSync.OnChange += OnPositioningPointIdentifierChanged;
       OnIntravenousAttachmentStartClient();
 
       // 스폰 페이로드로 동기화된 식별자로 모든 피어에서 등록한다.
@@ -71,18 +72,22 @@ namespace TriageTrainer.Entity
 
       // 스폰 패킷에 이미 담겨온 초기 SyncVar 값(또는 호스트의 서버측 값)을 즉시 반영 시도한다.
       RequestReposeResolution(_reposedTargetIdentifier.Value);
+      RequestPositioningPointResolution(_positioningPointIdentifierSync.Value);
     }
 
     public override void OnStopClient()
     {
       _runtimeIdentifierSync.OnChange -= OnBedRuntimeIdentifierChanged;
       _reposedTargetIdentifier.OnChange -= OnReposedTargetIdentifierChanged;
+      _positioningPointIdentifierSync.OnChange -= OnPositioningPointIdentifierChanged;
       OnIntravenousAttachmentStopClient();
 
       // 침대가 디스폰될 때 결합되어 있던 환자의 로컬 참조(_currentBed)를 정리해 댕글링을 방지한다.
       ClearReposeLinkLocal();
       _pendingReposeIdentifier = null;
       _hasPendingReposeResolution = false;
+      _pendingPositioningPointIdentifier = null;
+      _latchedPositioningPoint = null;
 
       UnregisterBedEntity();
 

@@ -1,20 +1,20 @@
 ---
-title: "시나리오 요구사항 계약 시스템 사용 가이드"
+title: "시나리오 요구사항 명세 시스템 사용 가이드"
 domain: "content-definitions.scenario"
 progress: "3-implemented"
 flags: []
 ---
 
-# 시나리오 요구사항 계약 시스템 사용 가이드
+# 시나리오 요구사항 명세 시스템 사용 가이드
 
 ## 이 시스템의 공식 명칭
 
-이 기능의 공식 명칭은 **시나리오 요구사항 계약 시스템**이며, 영어 코드/문서에서는
-**Scenario Requirements Contract System**이라고 한다. 약어를 새 식별자나 파일명에 쓰지 않고,
+이 기능의 공식 명칭은 **시나리오 요구사항 명세 시스템**이며, 영어 코드/문서에서는
+**Scenario Requirements Specification System**이라고 한다. 약어를 새 식별자나 파일명에 쓰지 않고,
 기존 `ScenarioRequirement*` 이름을 사용한다.
 
 이 시스템은 시나리오 그래프가 외부 세계에 요구하는 NPC, 상호작용, 위치, 리소스, 퀘스트 정의 등을
-**계약(Requirement Contract)**으로 만들고, 씬·에셋·런타임 공급자가 그 계약을 충족하는지 같은 규칙으로
+**요구사항 명세(Requirement Specification)**로 만들고, 씬·에셋·런타임 공급자가 그 명세를 충족하는지 같은 규칙으로
 확인한다. 시나리오 본문을 대신하는 도구가 아니라, 시나리오가 실행될 환경을 명확히 하는 도구다.
 
 ## 먼저 알아둘 이름
@@ -24,11 +24,11 @@ flags: []
 | 시나리오 그래프 | `*.scenario.json`, `ScenarioGraph` | 요구사항을 추출하는 원본 실행 데이터 |
 | 추론 요구사항 | inferred manifest | 그래프만 읽어 자동으로 얻은 요구사항 |
 | 요구사항 manifest | `ScenarioRequirementManifest` | 추론 결과와 승인된 선언을 합친 정본 검증 결과 |
-| 요구사항 | `ScenarioRequirementDescriptor` | 하나의 `(kind, identifier)` 계약 항목 |
+| 요구사항 | `ScenarioRequirementDescriptor` | 하나의 `(kind, identifier)` 명세 항목 |
 | 요구사항 키 | `ScenarioRequirementKey` | kind와 공백 제거 identifier의 Ordinal 조합 |
 | 사용 위치 | `ScenarioRequirementOccurrence` | 어느 node의 어느 field가 요구사항을 썼는지 기록 |
 | canonical sidecar | `*.scenario.requirements.json` | 사람이 승인한 scope, binding, factory 등 보충 선언 |
-| candidate 문서 | `*.scenario.requirements.candidates.json` | AI/수동 제안 입력. 승인 전에는 계약·씬을 바꾸지 않음 |
+| candidate 문서 | `*.scenario.requirements.candidates.json` | AI/수동 제안 입력. 승인 전에는 요구사항 명세·씬을 바꾸지 않음 |
 | 씬 binding | `ScenarioRequirementsSceneBinding` | requirement를 실제 scene object에 연결하는 컴포넌트 |
 | 구성 프로필 | `ScenarioSceneCompositionProfile` | scenario와 씬 path/GUID, role, 검증 정책의 연결 |
 | 공급자 snapshot | `ScenarioRequirementProviderSnapshot` | 현재 씬·에셋·runtime 등록에서 수집한 공급 증거 |
@@ -38,7 +38,7 @@ flags: []
 
 `kind`는 대상의 논리적 종류(`Npc`, `Interactable`, `SpatialAnchor` 등)이고, `capability`는 대상이
 실제로 제공해야 하는 기능(`ProvidesPosition`, `ItemSubmissionTarget` 등)이다. identifier만 같아도
-capability가 부족하면 계약은 충족되지 않는다.
+capability가 부족하면 요구사항 명세는 충족되지 않는다.
 
 ## 전체 흐름
 
@@ -99,7 +99,7 @@ candidate preview는 다음을 거부한다.
 - `RegistryProvided`처럼 후보 문서만으로 provider를 특정할 수 없는 binding
 
 승인한 candidate만 `Declare` 또는 `Override` declaration으로 변환해 canonical sidecar에 넣는다.
-candidate 자체는 runtime과 build 계약에 참여하지 않는다.
+candidate 자체는 runtime과 build 요구사항 명세에 참여하지 않는다.
 
 ### 2. Canonical sidecar 작성
 
@@ -113,7 +113,7 @@ candidate 자체는 runtime과 build 계약에 참여하지 않는다.
 
 - `scenarioIdentifier`는 graph identifier와 정확히 같아야 한다.
 - `source.scenarioSha256`은 scenario 원문 bytes의 SHA-256이다.
-- 자동 추출된 키를 보충할 때는 `Override`, 새 외부 계약을 추가할 때는 `Declare`를 쓴다.
+- 자동 추출된 키를 보충할 때는 `Override`, 새 외부 요구사항 명세를 추가할 때는 `Declare`를 쓴다.
 - `GeneratedSceneObject`/`PrefabInstance`는 `factoryIdentifier`가 필요하다.
 - `ExistingSceneObject`는 JSON object reference가 아니라 다음 단계의 씬 binding으로 연결한다.
 - unknown property, unknown enum, 중복 JSON property, 공백 identifier는 모두 오류다.
@@ -163,7 +163,7 @@ Apply는 Main Stage에서만 실행하고 한 번의 Undo group으로 되돌릴 
 | `Satisfied` | 하나의 물리 공급자가 필요한 capability와 cardinality를 충족함 |
 | `Missing` | 필요한 공급자가 없음. scene/binding/catalog을 추가 |
 | `MissingCapability` | identifier는 있으나 한 공급자가 요구 기능을 모두 제공하지 못함 |
-| `Duplicate` | exact-one 계약에 여러 물리 공급자가 있음 |
+| `Duplicate` | exact-one 요구사항 명세에 여러 물리 공급자가 있음 |
 | `WrongScene` | 공급자가 있으나 구성 프로필의 role이 맞지 않음 |
 | `Inactive` / `NotReady` | component가 비활성 또는 bootstrap 준비 전임 |
 | `Indeterminate` | runtime 신호·legacy registry 등으로 정적으로 증명할 수 없음 |

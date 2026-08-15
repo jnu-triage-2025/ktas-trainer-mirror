@@ -1,6 +1,6 @@
 # Scenario Inline Acting NPC API
 
-## 데이터 계약
+## 데이터 명세
 
 `ScenarioGraph.ActingNpcs`는 `IReadOnlyList<ScenarioActingNpcDefinition>`이다. 각 actingNpc는 등록된
 `EntityPresetDefinition`을 참조하며 `ScenarioController`의 실행 수명주기에 종속된다. 생성 시점은
@@ -31,7 +31,7 @@ actingNpc의 `spawnOnStart` 또는 `ScenarioEntityPresetSpawnNode.ActingNpcIdent
 시작 소환 actingNpc는 사전 검증 전에 등록되므로 `NPCControl`이 요구하는 NPC provider를
 같은 시나리오의 actingNpc 선언이 공급할 수 있다. 중간 소환 actingNpc는 해당 spawn 노드 이후에 사용해야 한다.
 
-## 식별자 계약
+## 식별자 명세
 
 `Npc`는 `ISpawnedEntityIdentifierReceiver`를 구현한다. 프리팹 `Awake`에서 임시 식별자로
 등록된 경우 기존 항목을 해제한 뒤 actingNpc identifier로 `RegistryType.Npc`와 Entity descriptor를

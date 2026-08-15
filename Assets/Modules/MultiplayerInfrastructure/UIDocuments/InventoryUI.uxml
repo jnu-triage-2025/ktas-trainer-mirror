@@ -5,10 +5,20 @@
 >
   <ui:Style src="InventoryUI.uss" />
   <ui:VisualElement name="InventoryUIWrapper" class="inventory-ui-wrapper">
-    <mi:InventoryUIView name="InventoryRoot" class="inventory-root" style="visibility: hidden;">
-      <ui:VisualElement name="InventoryPanel" class="inventory-panel">
-        <ui:VisualElement name="InventoryGrid" class="inventory-grid" />
-      </ui:VisualElement>
-    </mi:InventoryUIView>
+    <ui:ScrollView name="InventoryScrollView"
+                   class="inventory-scroll-view"
+                   horizontal-scroller-visibility="auto"
+                   vertical-scroller-visibility="hidden">
+      <mi:InventoryUIView name="InventoryRoot" class="inventory-root" style="visibility: hidden;">
+        <!-- 장비 슬롯 패널 (좌측 세로 1열) -->
+        <ui:VisualElement name="EquipmentPanel" class="equipment-panel">
+          <ui:VisualElement name="EquipmentSlots" class="equipment-slots" />
+        </ui:VisualElement>
+        <!-- 인벤토리 그리드 패널 -->
+        <ui:VisualElement name="InventoryPanel" class="inventory-panel">
+          <ui:VisualElement name="InventoryGrid" class="inventory-grid" />
+        </ui:VisualElement>
+      </mi:InventoryUIView>
+    </ui:ScrollView>
   </ui:VisualElement>
 </ui:UXML>

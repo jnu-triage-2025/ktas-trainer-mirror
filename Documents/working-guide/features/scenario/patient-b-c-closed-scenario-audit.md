@@ -42,7 +42,7 @@ ScriptableObject, 씬 직렬화 데이터를 다시 대조한 결과다. 여기�
 
 ### 현재도 유효한 문제
 
-#### 1. `patient_dummy_d_b` spawn 계약이 닫히지 않음
+#### 1. `patient_dummy_d_b` spawn 명세가 충족되지 않음
 
 `patient_b_c_ct.scenario.json`은 `SPAWN_PATIENT_DUMMY_D_B`에서 `patient_dummy_d_b`를 요구한다.
 그러나 [EntityPreset Registry Requirements SO](../../../../Assets/Modules/TriageTrainer/ScriptableObjects/EntityPreset%20Registry%20Requirements%20SO.asset)
@@ -154,4 +154,3 @@ JSON은 53개의 고유 `sig.*` 신호를 참조한다. 현재 코드·문서 �
 5. C의 좌우 부상·동공·근력·IV 시각물과 대사가 임상적으로 일치할 것
 6. 미배선 게이트가 0개이거나, 각 게이트에 승인된 timeout 복구가 있을 것
 7. Requirements Production 검증에서 unresolved Error가 0개일 것
-

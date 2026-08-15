@@ -258,6 +258,44 @@ namespace MultiplayerInfrastructure.Registry
     }
 
     /// <summary>
+    /// Registers Scenario TextAssets by identifier without parsing them. The first typed
+    /// Get/TryGet (or an explicit preload) performs schema validation and replaces the
+    /// TextAsset with the resolved graph. This keeps scene startup lightweight without
+    /// bypassing runtime validation.
+    /// </summary>
+    public static int IndexScenarioGraphAssetsFromResources()
+    {
+      EnsureBuiltInRegistryInitialized();
+
+      var registry = ResolveRegistry(RegistryType.ScenarioGraph);
+      var assets = Resources.LoadAll<TextAsset>("Scenario");
+      int indexedCount = 0;
+
+      for (int i = 0; i < assets.Length; i++)
+      {
+        var asset = assets[i];
+        if (asset == null)
+          continue;
+
+        string assetName = asset.name?.Trim();
+        if (!IsScenarioGraphAsset(assetName))
+          continue;
+
+        string key = StripScenarioGraphSuffix(assetName);
+        if (string.IsNullOrWhiteSpace(key))
+          continue;
+
+        // Do not replace an explicitly registered or already resolved graph.
+        if (!registry.TryGetValue(key, out var definition) || definition == null)
+          registry[key] = asset;
+
+        indexedCount++;
+      }
+
+      return indexedCount;
+    }
+
+    /// <summary>
     /// Asset-name suffix exposed by Unity for ScenarioGraph documents. Scenario files use
     /// the ".scenario.json" extension; Unity strips the trailing ".json", leaving
     /// ".scenario".

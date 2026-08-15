@@ -43,12 +43,12 @@ namespace TriageTrainer.Entity
     /// </summary>
     public void SetTreatmentDisplayNetworked(TreatmentDisplay display, bool active)
     {
-      if (IsServerStarted)
+      if (IsFishNetServerStarted)
       {
         SetTreatmentDisplay(display, active);
         RpcSyncTreatmentDisplay(display, active);
       }
-      else if (IsClientInitialized)
+      else if (IsFishNetClientInitialized)
       {
         CmdSetTreatmentDisplay(display, active);
       }
@@ -66,7 +66,7 @@ namespace TriageTrainer.Entity
     /// </summary>
     public void SyncAllDisplayStatesNetworked()
     {
-      if (!IsServerStarted)
+      if (!IsFishNetServerStarted)
       {
         Debug.LogWarning("[PatientController] SyncAllDisplayStatesNetworked must be called on the server.", this);
         return;
@@ -90,10 +90,19 @@ namespace TriageTrainer.Entity
     [ObserversRpc(BufferLast = true)]
     private void RpcSyncTreatmentDisplay(TreatmentDisplay display, bool active)
     {
-      if (IsServerStarted)
+      if (IsFishNetServerStarted)
         return;
 
       SetTreatmentDisplay(display, active);
+    }
+
+    /// <summary>서버에서 확정된 실제 처치 상태를 모든 관찰자에게 복제한다.</summary>
+    [ObserversRpc(BufferLast = true)]
+    private void RpcSyncTreatmentState(string[] appliedTreatments)
+    {
+      if (IsFishNetServerStarted)
+        return;
+      TreatmentState.ApplySnapshot(appliedTreatments);
     }
 
     // 서버에서 호출: 현재 DisplayState 구조체 전체를 한 번의 RPC 로 브로드캐스트한다.
@@ -108,7 +117,7 @@ namespace TriageTrainer.Entity
     [ObserversRpc(BufferLast = true)]
     private void RpcSyncAllDisplayStates(PatientTreatmentDisplayModel flags)
     {
-      if (IsServerStarted)
+      if (IsFishNetServerStarted)
         return;
 
       ApplyDisplayModelLocally(flags);
@@ -116,7 +125,7 @@ namespace TriageTrainer.Entity
 
     private void SyncAllDisplayStates(PatientTreatmentDisplayModel flags)
     {
-      if (!IsServerStarted)
+      if (!IsFishNetServerStarted)
         return;
 
       ApplyDisplayModelLocally(flags);
