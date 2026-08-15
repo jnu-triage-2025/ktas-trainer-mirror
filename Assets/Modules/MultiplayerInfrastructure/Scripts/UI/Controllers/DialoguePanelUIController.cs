@@ -458,7 +458,7 @@ namespace MultiplayerInfrastructure.UI
       // 현재 시나리오가 살아 있더라도 UI를 실제로 점유하지 않는 신호 대기 상태라면 표시할 수 있다.
       // 반대로 대화/선택 입력·오버레이가 활성화된 경우에는 종료 뒤로 미룬다.
       return _inputContext == DialogueInputContext.None && !_isTyping && !_isWaitingForInput &&
-             !HasActiveSelections && !UIOverlayStack.IsTop(this);
+             !HasActiveSelections && UIOverlayStack.IsEmpty();
     }
 
     private System.Collections.IEnumerator PresentTransientDialogueRoutine(TransientDialogueRequest request)
