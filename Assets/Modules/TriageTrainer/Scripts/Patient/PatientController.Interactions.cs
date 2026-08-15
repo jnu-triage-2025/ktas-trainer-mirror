@@ -121,6 +121,33 @@ namespace TriageTrainer.Entity
       }
     }
 
+    private sealed class PatientItemApplyInteract : IInteract, IInteractorConditional
+    {
+      private readonly PatientController _owner;
+      public PatientItemApplyInteract(PatientController owner) { _owner = owner; }
+      public string DisplayText => "환자에게 들고 있는 처치 물품 적용";
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => false;
+      public Color DisplayColor => Color.clear;
+
+      public bool CanInteract(Transform interactor)
+      {
+        var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+        string itemIdentifier = player?.HandlingItem?.CurrentIdentifier;
+        return player != null
+               && player.CountItemInInventory(itemIdentifier) > 0
+               && _owner.CanApplyHeldTreatmentItem(itemIdentifier);
+      }
+
+      public void Interact(Transform interactor)
+      {
+        var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+        string itemIdentifier = player?.HandlingItem?.CurrentIdentifier;
+        if (player?.PlayerEntity != null && _owner.CanApplyHeldTreatmentItem(itemIdentifier))
+          _owner.OnItemUsed(player.PlayerEntity, itemIdentifier);
+      }
+    }
+
     public interface IMonitorSelectionRequester
     {
       void HandlePatientSelected(PatientController patient, Transform interactor);
@@ -165,6 +192,7 @@ namespace TriageTrainer.Entity
       _interacts.Add(new PatientLiftInteract(this));
       _interacts.Add(new PatientCarryInteract(this));
       _interacts.Add(new PatientMonitorSelectInteract(this));
+      _interacts.Add(new PatientItemApplyInteract(this));
       AddTriageInteract();
       AddAssessInteracts();
       AddRecognitionCheckInteract();

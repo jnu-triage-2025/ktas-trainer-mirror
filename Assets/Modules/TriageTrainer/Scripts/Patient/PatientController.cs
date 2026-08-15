@@ -193,13 +193,20 @@ namespace TriageTrainer.Entity
       if (sourcePlayer != null && sourcePlayer.CountItemInInventory(itemIdentifier) < 1)
         return false;
 
-      if (IsPatientBC && IsFishNetClientInitialized && !IsFishNetServerStarted)
-        return ApplyItemUse(itemIdentifier);
+      if (IsFishNetClientInitialized && !IsFishNetServerStarted)
+      {
+        CmdApplyPatientItemUse(itemIdentifier);
+        return true;
+      }
 
-      if (!ApplyItemUse(itemIdentifier))
+      if (!CanApplyItemUse(itemIdentifier))
         return false;
 
-      return sourcePlayer == null || sourcePlayer.RemoveItemFromInventory(itemIdentifier, 1) == 1;
+      // 실제 플레이어 경로는 소비를 먼저 확정한 뒤에만 상태·Display·신호를 변경한다.
+      if (sourcePlayer != null && sourcePlayer.RemoveItemFromInventory(itemIdentifier, 1) != 1)
+        return false;
+
+      return ApplyItemUse(itemIdentifier);
     }
 
     public void SetCurrentBed(MovingPatientBedController bed)
