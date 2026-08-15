@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using MultiplayerInfrastructure.Scenario;
 using NUnit.Framework;
 using TriageTrainer.Entity;
@@ -17,6 +19,9 @@ namespace TriageTrainer.Tests
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeA.prefab";
     private const string RapidInfuserPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/level1_rapid_infuser.prefab";
+    private const string PatientAScenarioGlob = "patient_a_critical*.scenario.json";
+    private const string PatientAScenarioSourcePath =
+      "Documents/requirements/content-definitions/scenario/patient_a_critical.md";
 
     [Test]
     public void PatientAInstantiationAppliesInitialTreatmentDisplayState()
@@ -303,6 +308,69 @@ namespace TriageTrainer.Tests
         UnityEngine.Object.DestroyImmediate(hotbarObject);
         UnityEngine.Object.DestroyImmediate(playerObject);
       }
+    }
+
+    [Test]
+    public void PatientAMedicationDialoguesStayAlignedAcrossScenarioVariants()
+    {
+      string scenarioDirectory = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Scenario");
+      string[] scenarioFiles = Directory.GetFiles(scenarioDirectory, PatientAScenarioGlob);
+      Assert.That(scenarioFiles, Has.Length.GreaterThanOrEqualTo(21),
+        "Patient A의 기본 시나리오와 현재 배포된 변형을 모두 검증해야 합니다.");
+      Assert.That(File.Exists(Path.Combine(Directory.GetParent(Application.dataPath).FullName,
+        "Assets/Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json")),
+        Is.True, "Patient A 기본 런타임 시나리오가 누락되었습니다.");
+
+      foreach (string file in scenarioFiles)
+      {
+        string json = File.ReadAllText(file);
+        string d031 = ExtractNode(json, "D031");
+        string d0311 = ExtractNode(json, "D031_1");
+
+        Assert.That(ExtractValue(d031, "speakerName"), Is.EqualTo("간호사 C"), file);
+        Assert.That(ExtractValue(d0311, "speakerName"), Is.EqualTo("간호사 C"), file);
+        Assert.That(ExtractValue(d0311, "autoAdvanceSeconds"), Is.EqualTo("4.0"), file);
+      }
+
+      string sourcePath = Path.Combine(Directory.GetParent(Application.dataPath).FullName,
+        PatientAScenarioSourcePath);
+      Assert.That(File.Exists(sourcePath), Is.True, "Patient A 시나리오 원본 문서가 누락되었습니다.");
+      string source = File.ReadAllText(sourcePath);
+      string d031Source = ExtractSourceNode(source, "D031");
+      string d0311Source = ExtractSourceNode(source, "D031_1");
+      StringAssert.Contains("간호사 C", d031Source);
+      StringAssert.Contains("간호사 C", d0311Source);
+      StringAssert.Contains("Duration", d0311Source);
+      StringAssert.Contains("4.0", d0311Source);
+    }
+
+    private static string ExtractNode(string json, string identifier)
+    {
+      Match match = Regex.Match(json,
+        "\\\"" + Regex.Escape(identifier) + "\\\"\\s*:\\s*\\{(?<node>.*?)\\n\\s*\\},",
+        RegexOptions.Singleline);
+      Assert.That(match.Success, Is.True, $"Missing scenario node {identifier}.");
+      return match.Groups["node"].Value;
+    }
+
+    private static string ExtractValue(string node, string key)
+    {
+      Match match = Regex.Match(node,
+        "\\\"" + Regex.Escape(key) + "\\\"\\s*:\\s*(?:\\\"(?<quoted>[^\\\"]*)\\\"|(?<raw>[^,\\n]+))");
+      Assert.That(match.Success, Is.True, $"Missing {key} in scenario node.");
+      return match.Groups["quoted"].Success
+        ? match.Groups["quoted"].Value
+        : match.Groups["raw"].Value.Trim();
+    }
+
+    private static string ExtractSourceNode(string markdown, string identifier)
+    {
+      Match match = Regex.Match(markdown,
+        "### \\[" + Regex.Escape(identifier) + "\\](?<node>.*?)(?=\\n### |\\z)",
+        RegexOptions.Singleline);
+      Assert.That(match.Success, Is.True, $"Missing source scenario node {identifier}.");
+      return match.Groups["node"].Value;
     }
 
     [Test]

@@ -2034,7 +2034,7 @@
       "nextIdentifier": "N023_2"
     },
     "D031": {
-      "speakerName": "간호사 D",
+      "speakerName": "간호사 C",
       "dialogueContent": "에피네프린 1mg 투여했습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -2046,10 +2046,10 @@
       "nextIdentifier": "N023_3"
     },
     "D031_1": {
-      "speakerName": "간호사 D",
+      "speakerName": "간호사 C",
       "dialogueContent": "생리식염수 20cc 투여했습니다.",
       "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
+      "autoAdvanceSeconds": 4.0,
       "interactionRequired": null,
       "playTTS": null,
       "ttsVoiceIdentifier": null,

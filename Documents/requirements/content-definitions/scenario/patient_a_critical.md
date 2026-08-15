@@ -5296,7 +5296,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | --- | --- | --- |
 | **Identifier** | 문자열 | D031 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
-| **SpeakerName** | 문자열 | 간호사 D |
+| **SpeakerName** | 문자열 | 간호사 C |
 | **DialogueContent** | 문자열 | 에피네프린 1mg 투여했습니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | N023_3 |
@@ -5351,9 +5351,10 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | --- | --- | --- |
 | **Identifier** | 문자열 | D031_1 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
-| **SpeakerName** | 문자열 | 간호사 D |
+| **SpeakerName** | 문자열 | 간호사 C |
 | **DialogueContent** | 문자열 | 생리식염수 20cc 투여했습니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
+| **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | L018 |
 
 
