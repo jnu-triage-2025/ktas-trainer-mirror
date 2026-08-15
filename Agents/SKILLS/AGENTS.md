@@ -13,12 +13,6 @@ Check the local environment and install the following tools if they are not alre
 - It may be expected to use runtime version manager for node, dotnet, python, etc. (e.g., `nvm`, `asdf`, `pyenv`, etc.) check if the runtime version manager is installed, if not, install it using the official installation script for each runtime version manager.  
 - When install `dotnet`, install runtime that supports C# 9.0. 
 
-## Terminology
-
-- Do not use `계약` or `contract` to mean a requirement, work objective, specification, interface expectation, validation rule, or acceptance criterion.
-- Use a precise alternative such as `요구사항` (requirement), `명세` (specification), `규약` (interface convention), `검증 기준` (validation criterion), or `작업 목표` (work objective), according to context.
-- `계약` is allowed only when it means an actual legal or commercial agreement.
-
 ## GitLab Work Items
 
 - GitLab Issue/Work Item 생성·조회·수정 요청에는 `Tools/gitlab-work-items/` 경로의 GitLab Work Items Tool을 사용한다.
