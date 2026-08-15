@@ -870,7 +870,7 @@ namespace TriageTrainer.Entity
     private void TargetRefundFluidConsumption(NetworkConnection connection, string itemIdentifier)
     {
       var player = FindLocalOwnerPlayer();
-      var item = Registry.Registry.CreateItemInstance(itemIdentifier);
+      var item = MultiplayerInfrastructure.Registry.Registry.CreateItemInstance(itemIdentifier);
       if (player == null || item == null)
       {
         Debug.LogWarning($"[Level1RapidInfuser] Failed to refund '{itemIdentifier}' after cancelled fluid application.");
@@ -885,8 +885,8 @@ namespace TriageTrainer.Entity
 
     private static void PresentPlasmaRequiredDialogue()
     {
-      var dialogue = Registry.Registry.Get<DialoguePanelUIController>(
-        RegistryType.UI, Registry.Registry.TypeKey<DialoguePanelUIController>());
+      var dialogue = MultiplayerInfrastructure.Registry.Registry.Get<DialoguePanelUIController>(
+        RegistryType.UI, MultiplayerInfrastructure.Registry.Registry.TypeKey<DialoguePanelUIController>());
       if (dialogue == null)
         dialogue = FindFirstObjectByType<DialoguePanelUIController>(FindObjectsInactive.Exclude);
       if (dialogue == null)
