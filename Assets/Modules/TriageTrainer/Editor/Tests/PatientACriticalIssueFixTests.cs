@@ -161,6 +161,53 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void RapidInfuserCanPassBloodTransfusionSetWithoutPlasmaWhenConfigured()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RapidInfuserPrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+      var instance = UnityEngine.Object.Instantiate(prefab);
+      try
+      {
+        var controller = instance.GetComponent<Level1RapidInfuserController>();
+        var policyField = typeof(Level1RapidInfuserController).GetField(
+          "_bloodTransfusionSetWithoutPlasmaPolicy", BindingFlags.Instance | BindingFlags.NonPublic);
+        var canAdd = typeof(Level1RapidInfuserController).GetMethod(
+          "CanAddFluid", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.That(policyField, Is.Not.Null);
+        Assert.That(canAdd, Is.Not.Null);
+        policyField.SetValue(controller, BloodTransfusionSetWithoutPlasmaPolicy.Pass);
+
+        Assert.That((bool)canAdd.Invoke(controller, new[] { GetRapidInfuserKind("BloodTransfusionSet") }), Is.True);
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(instance);
+      }
+    }
+
+    [Test]
+    public void RapidInfuserAllowsBloodAttemptBeforePlasmaSoCancellationCanBeReported()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RapidInfuserPrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+      var instance = UnityEngine.Object.Instantiate(prefab);
+      try
+      {
+        var controller = instance.GetComponent<Level1RapidInfuserController>();
+        var canAttempt = typeof(Level1RapidInfuserController).GetMethod(
+          "CanAttemptFluid", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.That(canAttempt, Is.Not.Null);
+        Assert.That((bool)canAttempt.Invoke(controller, new[] { GetRapidInfuserKind("BloodTransfusionSet") }), Is.True);
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(instance);
+      }
+    }
+
+    [Test]
     public void RapidInfuserCaptureStateIncludesBloodTransfusionSet()
     {
       var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RapidInfuserPrefabPath);

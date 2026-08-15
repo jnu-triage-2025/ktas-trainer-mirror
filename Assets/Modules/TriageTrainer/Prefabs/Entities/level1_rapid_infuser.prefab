@@ -1,5 +1,88 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &220815000000000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 220815000000000002}
+  - component: {fileID: 220815000000000003}
+  - component: {fileID: 220815000000000004}
+  m_Layer: 0
+  m_Name: IVConnectionPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &220815000000000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 220815000000000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.044, y: 1.067, z: 0.0866}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5503860412714379286}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &220815000000000003
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 220815000000000001}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.15
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &220815000000000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 220815000000000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
+  _componentIndexCache: 1
+  _addedNetworkObject: {fileID: 0}
+  _networkObjectCache: {fileID: 7834965369927725955}
+  _lineMaterial: {fileID: 0}
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
+  connectionService: {fileID: 0}
+  _identifier: ivconnectionpoint
+  _autoGenerateIdentifier: 1
+  _displayIcon: {fileID: 0}
+  _interactConfigs:
+  - _identifier: intravenous_line_connect_mode_start
+    _enabled: 1
+  - _identifier: intravenous_line_connect_here
+    _enabled: 1
+  - _identifier: intravenous_line_disconnect
+    _enabled: 1
 --- !u!1 &4075860716570454592
 GameObject:
   m_ObjectHideFlags: 0
@@ -79,9 +162,9 @@ Transform:
   - {fileID: 5997048815558334796}
   - {fileID: 3912673176148160687}
   - {fileID: 220815000000000002}
-  - {fileID: 220815000000000012}
-  - {fileID: 220815000000000022}
-  - {fileID: 220815000000000032}
+  - {fileID: 4734673787153779022}
+  - {fileID: 870608455092702587}
+  - {fileID: 8410574243369890068}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!136 &6178040832083544218
@@ -192,9 +275,9 @@ MonoBehaviour:
   _exitHint: "\uC67C\uCABD Shift \uD0A4\uB97C \uB204\uB974\uBA74 \uC870\uC885\uC744
     \uC885\uB8CC\uD569\uB2C8\uB2E4."
   _playerAttachPoints: []
-  _normalSalineDisplay: {fileID: 220815000000000013}
-  _plasmaSolutionDisplay: {fileID: 220815000000000023}
-  _bloodTransfusionSetDisplay: {fileID: 220815000000000033}
+  _normalSalineDisplay: {fileID: 0}
+  _plasmaSolutionDisplay: {fileID: 0}
+  _bloodTransfusionSetDisplay: {fileID: 1447923669018403190}
   _ivConnectionPoint: {fileID: 220815000000000004}
   _initialHasNormalSaline: 0
   _initialHasPlasmaSolution: 0
@@ -202,6 +285,125 @@ MonoBehaviour:
   _initialConnectedPatientIdentifier: 
   _displayText: "Level 1 \uAE09\uC18D \uC8FC\uC785\uAE30 \uC870\uC885"
   _displayIcon: {fileID: 0}
+--- !u!1001 &220815000000000011
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 5503860412714379286}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 3fc6553bafe2a46b78c48e330a892722, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 3fc6553bafe2a46b78c48e330a892722, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.3
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 3fc6553bafe2a46b78c48e330a892722, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 3fc6553bafe2a46b78c48e330a892722, type: 3}
+      propertyPath: m_Name
+      value: NormalSalineDisplay
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 3fc6553bafe2a46b78c48e330a892722, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 3fc6553bafe2a46b78c48e330a892722, type: 3}
+--- !u!4 &4734673787153779022 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4802119971242277189, guid: 3fc6553bafe2a46b78c48e330a892722, type: 3}
+  m_PrefabInstance: {fileID: 220815000000000011}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &220815000000000021
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 5503860412714379286}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: be3c090be107b40cfb12d5f14c3e5ad6, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: be3c090be107b40cfb12d5f14c3e5ad6, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.3
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: be3c090be107b40cfb12d5f14c3e5ad6, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: be3c090be107b40cfb12d5f14c3e5ad6, type: 3}
+      propertyPath: m_Name
+      value: PlasmaSolutionDisplay
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: be3c090be107b40cfb12d5f14c3e5ad6, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: be3c090be107b40cfb12d5f14c3e5ad6, type: 3}
+--- !u!4 &870608455092702587 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1082407437733166446, guid: be3c090be107b40cfb12d5f14c3e5ad6, type: 3}
+  m_PrefabInstance: {fileID: 220815000000000021}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &220815000000000031
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 5503860412714379286}
+    m_Modifications:
+    - target: {fileID: 1659700661424165225, guid: f4d97cf269786440187598cfe17089fa, type: 3}
+      propertyPath: m_Name
+      value: BloodTransfusionSetDisplay
+      objectReference: {fileID: 0}
+    - target: {fileID: 1659700661424165225, guid: f4d97cf269786440187598cfe17089fa, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8622179574388572427, guid: f4d97cf269786440187598cfe17089fa, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8622179574388572427, guid: f4d97cf269786440187598cfe17089fa, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8622179574388572427, guid: f4d97cf269786440187598cfe17089fa, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.15
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f4d97cf269786440187598cfe17089fa, type: 3}
+--- !u!1 &1447923669018403190 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1659700661424165225, guid: f4d97cf269786440187598cfe17089fa, type: 3}
+  m_PrefabInstance: {fileID: 220815000000000031}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8410574243369890068 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8622179574388572427, guid: f4d97cf269786440187598cfe17089fa, type: 3}
+  m_PrefabInstance: {fileID: 220815000000000031}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &6103350986983964327
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -283,216 +485,4 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 66843549a51384d13b5c7b6e77e081e4, type: 3}
   m_PrefabInstance: {fileID: 6103350986983964327}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &220815000000000001
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 220815000000000002}
-  - component: {fileID: 220815000000000003}
-  - component: {fileID: 220815000000000004}
-  m_Layer: 0
-  m_Name: IVConnectionPoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &220815000000000002
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 220815000000000001}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.9, z: 0.2}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 5503860412714379286}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!135 &220815000000000003
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 220815000000000001}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.15
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &220815000000000004
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 220815000000000001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
-  _componentIndexCache: 1
-  _addedNetworkObject: {fileID: 0}
-  _networkObjectCache: {fileID: 7834965369927725955}
-  _lineMaterial: {fileID: 0}
-  _connectedLineObjects: []
-  _allowMultipleConnections: 0
-  connectionService: {fileID: 0}
-  _identifier: 
-  _autoGenerateIdentifier: 1
-  _displayIcon: {fileID: 0}
-  _interactConfigs:
-  - _identifier: intravenous_line_connect_mode_start
-    _enabled: 1
-  - _identifier: intravenous_line_connect_here
-    _enabled: 1
-  - _identifier: intravenous_line_disconnect
-    _enabled: 1
---- !u!1001 &220815000000000011
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 5503860412714379286}
-    m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: 3fc6553bafe2a46b78c48e330a892722, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.15
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 3fc6553bafe2a46b78c48e330a892722, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.3
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 3fc6553bafe2a46b78c48e330a892722, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 3fc6553bafe2a46b78c48e330a892722, type: 3}
-      propertyPath: m_Name
-      value: NormalSalineDisplay
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 3fc6553bafe2a46b78c48e330a892722, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 3fc6553bafe2a46b78c48e330a892722, type: 3}
---- !u!4 &220815000000000012 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3fc6553bafe2a46b78c48e330a892722, type: 3}
-  m_PrefabInstance: {fileID: 220815000000000011}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &220815000000000013 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 3fc6553bafe2a46b78c48e330a892722, type: 3}
-  m_PrefabInstance: {fileID: 220815000000000011}
-  m_PrefabAsset: {fileID: 0}
---- !u!1001 &220815000000000021
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 5503860412714379286}
-    m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: be3c090be107b40cfb12d5f14c3e5ad6, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0.15
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: be3c090be107b40cfb12d5f14c3e5ad6, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.3
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: be3c090be107b40cfb12d5f14c3e5ad6, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: be3c090be107b40cfb12d5f14c3e5ad6, type: 3}
-      propertyPath: m_Name
-      value: PlasmaSolutionDisplay
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: be3c090be107b40cfb12d5f14c3e5ad6, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: be3c090be107b40cfb12d5f14c3e5ad6, type: 3}
---- !u!4 &220815000000000022 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: be3c090be107b40cfb12d5f14c3e5ad6, type: 3}
-  m_PrefabInstance: {fileID: 220815000000000021}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &220815000000000023 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: be3c090be107b40cfb12d5f14c3e5ad6, type: 3}
-  m_PrefabInstance: {fileID: 220815000000000021}
-  m_PrefabAsset: {fileID: 0}
---- !u!1001 &220815000000000031
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 5503860412714379286}
-    m_Modifications:
-    - target: {fileID: 8622179574388572427, guid: f4d97cf269786440187598cfe17089fa, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8622179574388572427, guid: f4d97cf269786440187598cfe17089fa, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.3
-      objectReference: {fileID: 0}
-    - target: {fileID: 8622179574388572427, guid: f4d97cf269786440187598cfe17089fa, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0.15
-      objectReference: {fileID: 0}
-    - target: {fileID: 1659700661424165225, guid: f4d97cf269786440187598cfe17089fa, type: 3}
-      propertyPath: m_Name
-      value: BloodTransfusionSetDisplay
-      objectReference: {fileID: 0}
-    - target: {fileID: 1659700661424165225, guid: f4d97cf269786440187598cfe17089fa, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: f4d97cf269786440187598cfe17089fa, type: 3}
---- !u!4 &220815000000000032 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8622179574388572427, guid: f4d97cf269786440187598cfe17089fa, type: 3}
-  m_PrefabInstance: {fileID: 220815000000000031}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &220815000000000033 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1659700661424165225, guid: f4d97cf269786440187598cfe17089fa, type: 3}
-  m_PrefabInstance: {fileID: 220815000000000031}
   m_PrefabAsset: {fileID: 0}

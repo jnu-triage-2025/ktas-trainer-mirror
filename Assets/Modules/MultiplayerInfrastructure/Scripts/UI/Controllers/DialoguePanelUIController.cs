@@ -66,6 +66,8 @@ namespace MultiplayerInfrastructure.UI
 
     [SerializeField] private DialogueInputContext _inputContext = DialogueInputContext.None;
     private IReadOnlyList<ScenarioChoiceOption> _pendingChoiceOptions;
+    private readonly Queue<TransientDialogueRequest> _transientDialogueQueue = new();
+    private Coroutine _transientDialogueRoutine;
 
     // 현재 선택지들을 IInteract로 래핑
     private List<ScenarioSelectionInteractable> _currentSelections = new();
@@ -75,6 +77,22 @@ namespace MultiplayerInfrastructure.UI
       None,
       Dialogue,
       Choice,
+    }
+
+    private readonly struct TransientDialogueRequest
+    {
+      public readonly string SpeakerName;
+      public readonly string Content;
+      public readonly string PortraitIdentifier;
+      public readonly float Duration;
+
+      public TransientDialogueRequest(string speakerName, string content, string portraitIdentifier, float duration)
+      {
+        SpeakerName = speakerName;
+        Content = content;
+        PortraitIdentifier = portraitIdentifier;
+        Duration = duration;
+      }
     }
 
     #endregion
@@ -165,7 +183,8 @@ namespace MultiplayerInfrastructure.UI
       if (_uiDocument == null)
         _uiDocument = GetComponent<UIDocument>();
 
-      CacheVisualElements();
+      if (_dialoguePanel == null || _dialogueTextLabel == null)
+        CacheVisualElements();
     }
 
     private void OnEnable()
@@ -183,6 +202,8 @@ namespace MultiplayerInfrastructure.UI
       {
         UpdateTyping();
       }
+
+      TryStartQueuedTransientDialogue();
     }
 
     #endregion
@@ -395,6 +416,65 @@ namespace MultiplayerInfrastructure.UI
     public void HideDisinteractableDialogue()
     {
       Hide();
+    }
+
+    /// <summary>
+    /// 시나리오 그래프와 무관한 짧은 안내 대화를 안전하게 표시한다.
+    /// 기존 Dialogue/Choice가 UI를 점유 중이면 요청을 큐에 보관해 종료 후 재생하므로,
+    /// 시나리오 대화의 입력 상태·선택지·오버레이를 덮어쓰지 않는다.
+    /// </summary>
+    public bool TryPresentTransientDialogue(
+      string speakerName,
+      string dialogueContent,
+      float duration = 3f,
+      string portraitIdentifier = null)
+    {
+      if (_dialoguePanel == null || _dialogueTextLabel == null)
+        CacheVisualElements();
+      if (_dialoguePanel == null || _dialogueTextLabel == null)
+      {
+        Debug.LogWarning("[DialoguePanelUI] Transient dialogue cannot be presented because required UI elements are unavailable.", this);
+        return false;
+      }
+
+      _transientDialogueQueue.Enqueue(new TransientDialogueRequest(
+        speakerName ?? string.Empty,
+        dialogueContent ?? string.Empty,
+        portraitIdentifier,
+        Mathf.Max(0f, duration)));
+      TryStartQueuedTransientDialogue();
+      return true;
+    }
+
+    private void TryStartQueuedTransientDialogue()
+    {
+      if (_transientDialogueRoutine != null || _transientDialogueQueue.Count == 0 || !CanPresentTransientDialogue())
+        return;
+      _transientDialogueRoutine = StartCoroutine(PresentTransientDialogueRoutine(_transientDialogueQueue.Dequeue()));
+    }
+
+    private bool CanPresentTransientDialogue()
+    {
+      // 현재 시나리오가 살아 있더라도 UI를 실제로 점유하지 않는 신호 대기 상태라면 표시할 수 있다.
+      // 반대로 대화/선택 입력·오버레이가 활성화된 경우에는 종료 뒤로 미룬다.
+      return _inputContext == DialogueInputContext.None && !_isTyping && !_isWaitingForInput &&
+             !HasActiveSelections && !UIOverlayStack.IsTop(this);
+    }
+
+    private System.Collections.IEnumerator PresentTransientDialogueRoutine(TransientDialogueRequest request)
+    {
+      DisplayDisinteractableDialogue(request.SpeakerName, request.Content, request.PortraitIdentifier);
+      // DisplayDisinteractableDialogue는 기존 fade 연출의 시작값(0)을 설정한다.
+      // 즉석 안내는 별도 fade를 사용하지 않으므로 바로 보이는 상태로 전환한다.
+      SetDisinteractableDialogueOpacity(1f);
+      float elapsed = 0f;
+      while (elapsed < request.Duration)
+      {
+        elapsed += Time.unscaledDeltaTime;
+        yield return null;
+      }
+      HideDisinteractableDialogue();
+      _transientDialogueRoutine = null;
     }
 
     /// <summary>

@@ -35,6 +35,46 @@ namespace TriageTrainer.Entity
     bool TryGetLevel1RapidInfuserState(out Level1RapidInfuserState state);
   }
 
+  public enum BloodTransfusionSetWithoutPlasmaPolicy : byte
+  {
+    CancelTry,
+    Pass
+  }
+
+  public enum RapidInfuserFluidCancellationReason : byte
+  {
+    None,
+    AlreadyApplied,
+    PlasmaAppliedRequired,
+    UnsupportedItem,
+    PlayerUnavailable,
+    OutOfInteractionRange,
+    ItemUnavailable,
+    PendingConfirmation,
+    ConsumptionFailed
+  }
+
+  [Flags]
+  public enum BloodTransfusionSetCancellationBehaviour : byte
+  {
+    None = 0,
+    ShowPlasmaRequiredDialogue = 1 << 0
+  }
+
+  /// <summary>급속 주입기 용액 적용 수명주기 이벤트의 상세 정보다.</summary>
+  [Serializable]
+  public struct RapidInfuserFluidLifecycleEvent
+  {
+    public string FluidKind;
+    public string ItemIdentifier;
+    public string PlayerIdentifier;
+    public int PlayerClientId;
+    public string RapidInfuserIdentifier;
+    public RapidInfuserFluidCancellationReason CancellationReason;
+    public BloodTransfusionSetWithoutPlasmaPolicy BloodWithoutPlasmaPolicy;
+    public bool IsServer;
+  }
+
   /// <summary>
   /// 급속 주입기의 상호작용과 상태를 소유한다. 이동은 도메인 독립 공통 모듈
   /// <see cref="MinecraftBoadLikeControl"/> 에 위임한다.
@@ -58,6 +98,8 @@ namespace TriageTrainer.Entity
       PlasmaSolution,
       BloodTransfusionSet
     }
+
+    private const string BloodPlasmaRequiredSignal = "blood_to_lv1_requires_plasma";
 
     private sealed class AddFluidInteract : IInteract, IInteractorConditional, IInteractDisplayIcons
     {
@@ -86,14 +128,14 @@ namespace TriageTrainer.Entity
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
         string id = player?.HandlingItem?.CurrentIdentifier;
         _heldItemIcon = player?.HandlingItem?.CurrentItemIconTexture;
-        return _owner.CanAddFluid(_kind) && IsFluidFamily(id, _kind);
+        return _owner.CanAttemptFluid(_kind) && IsFluidFamily(id, _kind);
       }
 
       public void Interact(Transform interactor)
       {
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
         string id = player?.HandlingItem?.CurrentIdentifier;
-        if (player != null && _owner.CanAddFluid(_kind) && IsFluidFamily(id, _kind))
+        if (player != null && _owner.CanAttemptFluid(_kind) && IsFluidFamily(id, _kind))
           _owner.RequestAddFluid(_kind, id, player);
       }
     }
@@ -112,6 +154,12 @@ namespace TriageTrainer.Entity
     [SerializeField] private bool _initialHasBloodTransfusionSet;
     [SerializeField] private string _initialConnectedPatientIdentifier;
 
+    [Header("Blood transfusion set policy")]
+    [SerializeField] private BloodTransfusionSetWithoutPlasmaPolicy _bloodTransfusionSetWithoutPlasmaPolicy =
+      BloodTransfusionSetWithoutPlasmaPolicy.CancelTry;
+    [SerializeField] private BloodTransfusionSetCancellationBehaviour _bloodTransfusionSetCancellationBehaviour =
+      BloodTransfusionSetCancellationBehaviour.ShowPlasmaRequiredDialogue;
+
     [Header("Identity / interaction")]
     [SerializeField] private string _displayText = "Level 1 급속 주입기 조종";
     [SerializeField] private Sprite _displayIcon;
@@ -126,12 +174,25 @@ namespace TriageTrainer.Entity
     private int _pendingSalineClientId = -1;
     private int _pendingPlasmaClientId = -1;
     private int _pendingBloodClientId = -1;
-    private float _pendingSalineExpiresAt;
-    private float _pendingPlasmaExpiresAt;
-    private float _pendingBloodExpiresAt;
+    private string _pendingSalineItemIdentifier;
+    private string _pendingPlasmaItemIdentifier;
+    private string _pendingBloodItemIdentifier;
+    private float _pendingSalineLastConfirmationSentAt;
+    private float _pendingPlasmaLastConfirmationSentAt;
+    private float _pendingBloodLastConfirmationSentAt;
+    private bool _clientConfirmedSalineConsumption;
+    private bool _clientConfirmedPlasmaConsumption;
+    private bool _clientConfirmedBloodConsumption;
     private bool _itemizationPending;
     private const float InteractionDistance = 3f;
-    private const float FluidRequestTimeout = 3f;
+    private const float FluidConfirmationRetrySeconds = 1f;
+
+    public event Action<RapidInfuserFluidLifecycleEvent> OnPlasmaTry;
+    public event Action<RapidInfuserFluidLifecycleEvent> OnBloodTry;
+    public event Action<RapidInfuserFluidLifecycleEvent> OnPlasmaCancelled;
+    public event Action<RapidInfuserFluidLifecycleEvent> OnBloodCancelled;
+    public event Action<RapidInfuserFluidLifecycleEvent> OnPlasmaApplied;
+    public event Action<RapidInfuserFluidLifecycleEvent> OnBloodApplied;
 
     public IEnumerable<IInteract> AdditionalInteracts =>
       _fluidInteracts ??= new IInteract[]
@@ -179,19 +240,26 @@ namespace TriageTrainer.Entity
         _ivConnectionPoint.OnConnected += OnIntravenousLineConnected;
         _ivConnectionPoint.OnDisconnected += OnIntravenousLineDisconnected;
       }
+      OnBloodCancelled += RaiseBloodPlasmaRequiredSignal;
       ApplyDisplays();
     }
 
     private void OnDestroy()
     {
       UnregisterEntity();
+      OnBloodCancelled -= RaiseBloodPlasmaRequiredSignal;
       if (_ivConnectionPoint == null)
         return;
       _ivConnectionPoint.OnConnected -= OnIntravenousLineConnected;
       _ivConnectionPoint.OnDisconnected -= OnIntravenousLineDisconnected;
     }
 
-    private void Update() => Update_MinecraftBoadLikeControl();
+    private void Update()
+    {
+      Update_MinecraftBoadLikeControl();
+      if (IsServerStarted)
+        RetryPendingFluidConfirmations();
+    }
 
     public override void OnStartServer()
     {
@@ -483,13 +551,21 @@ namespace TriageTrainer.Entity
     };
 
     private bool CanAddFluid(FluidKind kind)
+      => GetFluidCancellationReason(kind) == RapidInfuserFluidCancellationReason.None;
+
+    // 취소 가능한 시도도 수명주기 이벤트와 사용자 피드백을 위해 상호작용으로 노출한다.
+    private bool CanAttemptFluid(FluidKind kind) => !HasFluid(kind);
+
+    private RapidInfuserFluidCancellationReason GetFluidCancellationReason(FluidKind kind)
     {
       if (HasFluid(kind))
-        return false;
+        return RapidInfuserFluidCancellationReason.AlreadyApplied;
 
-      // 그래프는 플라즈마 연결(V019_1) 뒤에 수혈세트 연결(V020)을 검증한다.
-      // RuntimeState 신호가 sticky이므로 역순 연결을 허용하면 V020이 나중에 무행동 통과한다.
-      return kind != FluidKind.BloodTransfusionSet || HasPlasmaSolution;
+      if (kind == FluidKind.BloodTransfusionSet && !HasPlasmaSolution &&
+          _bloodTransfusionSetWithoutPlasmaPolicy == BloodTransfusionSetWithoutPlasmaPolicy.CancelTry)
+        return RapidInfuserFluidCancellationReason.PlasmaAppliedRequired;
+
+      return RapidInfuserFluidCancellationReason.None;
     }
 
     private static bool IsFluidFamily(string itemIdentifier, FluidKind kind)
@@ -510,17 +586,12 @@ namespace TriageTrainer.Entity
     {
       if (!IsClientStarted && !IsServerStarted)
       {
-        if (CanAddFluid(kind) && player.RemoveItemFromInventory(itemIdentifier, 1) == 1)
-          SetFluidOffline(kind);
+        TryApplyFluidOffline(kind, itemIdentifier, player);
         return;
       }
       if (IsServerStarted)
       {
-        // 호스트의 인벤토리는 이 인스턴스에 있으므로 즉시 소비/확정할 수 있다.
-        if (CanAddFluid(kind) &&
-            IsWithinInteractionDistance(player) &&
-            player.RemoveItemFromInventory(itemIdentifier, 1) == 1)
-          SetFluidOnServer(kind);
+        TryApplyFluidOnServer(kind, itemIdentifier, player);
       }
       else
         CmdRequestAddFluid((byte)kind, itemIdentifier);
@@ -534,12 +605,16 @@ namespace TriageTrainer.Entity
 
       var kind = (FluidKind)rawKind;
       var player = FindPlayer(sender.ClientId);
-      if (player == null || !CanAddFluid(kind) || !IsFluidFamily(itemIdentifier, kind) ||
-          !IsWithinInteractionDistance(player) || HasActivePendingFluid(kind))
+      RaiseFluidTry(kind, itemIdentifier, player);
+      var cancellationReason = GetRequestCancellationReason(kind, itemIdentifier, player);
+      if (cancellationReason != RapidInfuserFluidCancellationReason.None)
+      {
+        RaiseFluidCancelled(kind, itemIdentifier, player, cancellationReason);
         return;
+      }
 
-      SetPendingFluid(kind, sender.ClientId);
-      TargetConfirmFluidConsumption(sender, rawKind, itemIdentifier);
+      SetPendingFluid(kind, sender.ClientId, itemIdentifier);
+      SendFluidConsumptionConfirmation(kind, sender);
     }
 
     [TargetRpc]
@@ -553,6 +628,11 @@ namespace TriageTrainer.Entity
 
       var kind = (FluidKind)rawKind;
       var player = FindLocalOwnerPlayer();
+      if (HasClientConfirmedConsumption(kind))
+      {
+        CmdAcknowledgeFluidConsumption(rawKind);
+        return;
+      }
       if (player == null ||
           !IsFluidFamily(itemIdentifier, kind) ||
           !string.Equals(player.HandlingItem?.CurrentIdentifier, itemIdentifier, StringComparison.Ordinal) ||
@@ -563,6 +643,7 @@ namespace TriageTrainer.Entity
         return;
       }
 
+      SetClientConfirmedConsumption(kind);
       CmdAcknowledgeFluidConsumption(rawKind);
     }
 
@@ -573,11 +654,21 @@ namespace TriageTrainer.Entity
         return;
 
       var kind = (FluidKind)rawKind;
-      if (!MatchesPendingFluid(kind, sender.ClientId) || !CanAddFluid(kind))
+      if (!MatchesPendingFluid(kind, sender.ClientId))
         return;
 
+      var player = FindPlayer(sender.ClientId);
+      var itemIdentifier = GetPendingFluidItemIdentifier(kind);
+      var cancellationReason = GetFluidCancellationReason(kind);
       ClearPendingFluid(kind);
-      SetFluidOnServer(kind);
+      if (cancellationReason != RapidInfuserFluidCancellationReason.None)
+      {
+        RaiseFluidCancelled(kind, itemIdentifier, player, cancellationReason);
+        if (player?.Owner != null && !string.IsNullOrWhiteSpace(itemIdentifier))
+          TargetRefundFluidConsumption(player.Owner, itemIdentifier);
+        return;
+      }
+      SetFluidOnServer(kind, itemIdentifier, player);
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -588,7 +679,12 @@ namespace TriageTrainer.Entity
 
       var kind = (FluidKind)rawKind;
       if (MatchesPendingFluid(kind, sender.ClientId))
+      {
+        var player = FindPlayer(sender.ClientId);
+        var itemIdentifier = GetPendingFluidItemIdentifier(kind);
         ClearPendingFluid(kind);
+        RaiseFluidCancelled(kind, itemIdentifier, player, RapidInfuserFluidCancellationReason.ConsumptionFailed);
+      }
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -633,22 +729,174 @@ namespace TriageTrainer.Entity
       ApplyDisplays();
     }
 
-    private void SetFluidOffline(FluidKind kind)
+    private void TryApplyFluidOffline(FluidKind kind, string itemIdentifier, PlayerController player)
+    {
+      RaiseFluidTry(kind, itemIdentifier, player);
+      var cancellationReason = GetRequestCancellationReason(kind, itemIdentifier, player);
+      if (cancellationReason != RapidInfuserFluidCancellationReason.None)
+      {
+        RaiseFluidCancelled(kind, itemIdentifier, player, cancellationReason);
+        return;
+      }
+
+      if (player.RemoveItemFromInventory(itemIdentifier, 1) != 1)
+      {
+        RaiseFluidCancelled(kind, itemIdentifier, player, RapidInfuserFluidCancellationReason.ConsumptionFailed);
+        return;
+      }
+      SetFluidOffline(kind, itemIdentifier, player);
+    }
+
+    private void TryApplyFluidOnServer(FluidKind kind, string itemIdentifier, PlayerController player)
+    {
+      RaiseFluidTry(kind, itemIdentifier, player);
+      var cancellationReason = GetRequestCancellationReason(kind, itemIdentifier, player);
+      if (cancellationReason != RapidInfuserFluidCancellationReason.None)
+      {
+        RaiseFluidCancelled(kind, itemIdentifier, player, cancellationReason);
+        return;
+      }
+
+      if (player.RemoveItemFromInventory(itemIdentifier, 1) != 1)
+      {
+        RaiseFluidCancelled(kind, itemIdentifier, player, RapidInfuserFluidCancellationReason.ConsumptionFailed);
+        return;
+      }
+      SetFluidOnServer(kind, itemIdentifier, player);
+    }
+
+    private RapidInfuserFluidCancellationReason GetRequestCancellationReason(
+      FluidKind kind, string itemIdentifier, PlayerController player)
+    {
+      if (player == null)
+        return RapidInfuserFluidCancellationReason.PlayerUnavailable;
+      if (!IsFluidFamily(itemIdentifier, kind))
+        return RapidInfuserFluidCancellationReason.UnsupportedItem;
+      var stateReason = GetFluidCancellationReason(kind);
+      if (stateReason != RapidInfuserFluidCancellationReason.None)
+        return stateReason;
+      if (!IsWithinInteractionDistance(player))
+        return RapidInfuserFluidCancellationReason.OutOfInteractionRange;
+      if (HasActivePendingFluid(kind))
+        return RapidInfuserFluidCancellationReason.PendingConfirmation;
+      return player.CountItemInInventory(itemIdentifier) < 1
+        ? RapidInfuserFluidCancellationReason.ItemUnavailable
+        : RapidInfuserFluidCancellationReason.None;
+    }
+
+    private void SetFluidOffline(FluidKind kind, string itemIdentifier, PlayerController player)
     {
       if (kind == FluidKind.NormalSaline) _initialHasNormalSaline = true;
       else if (kind == FluidKind.PlasmaSolution) _initialHasPlasmaSolution = true;
       else _initialHasBloodTransfusionSet = true;
       ApplyDisplays();
+      RaiseFluidApplied(kind, itemIdentifier, player);
       RaiseScenarioConnectionSignal(kind);
     }
 
-    private void SetFluidOnServer(FluidKind kind)
+    private void SetFluidOnServer(FluidKind kind, string itemIdentifier, PlayerController player)
     {
       if (kind == FluidKind.NormalSaline) _hasNormalSaline.Value = true;
       else if (kind == FluidKind.PlasmaSolution) _hasPlasmaSolution.Value = true;
       else _hasBloodTransfusionSet.Value = true;
       ApplyDisplays();
+      RaiseFluidApplied(kind, itemIdentifier, player);
       RaiseScenarioConnectionSignal(kind);
+    }
+
+    private void RaiseFluidTry(FluidKind kind, string itemIdentifier, PlayerController player)
+    {
+      if (kind == FluidKind.PlasmaSolution)
+        OnPlasmaTry?.Invoke(CreateFluidEvent(kind, itemIdentifier, player, RapidInfuserFluidCancellationReason.None));
+      else if (kind == FluidKind.BloodTransfusionSet)
+        OnBloodTry?.Invoke(CreateFluidEvent(kind, itemIdentifier, player, RapidInfuserFluidCancellationReason.None));
+    }
+
+    private void RaiseFluidCancelled(FluidKind kind, string itemIdentifier, PlayerController player,
+      RapidInfuserFluidCancellationReason reason)
+    {
+      if (kind == FluidKind.PlasmaSolution)
+        OnPlasmaCancelled?.Invoke(CreateFluidEvent(kind, itemIdentifier, player, reason));
+      else if (kind == FluidKind.BloodTransfusionSet)
+        OnBloodCancelled?.Invoke(CreateFluidEvent(kind, itemIdentifier, player, reason));
+    }
+
+    private void RaiseFluidApplied(FluidKind kind, string itemIdentifier, PlayerController player)
+    {
+      if (kind == FluidKind.PlasmaSolution)
+        OnPlasmaApplied?.Invoke(CreateFluidEvent(kind, itemIdentifier, player, RapidInfuserFluidCancellationReason.None));
+      else if (kind == FluidKind.BloodTransfusionSet)
+        OnBloodApplied?.Invoke(CreateFluidEvent(kind, itemIdentifier, player, RapidInfuserFluidCancellationReason.None));
+    }
+
+    private RapidInfuserFluidLifecycleEvent CreateFluidEvent(FluidKind kind, string itemIdentifier,
+      PlayerController player, RapidInfuserFluidCancellationReason cancellationReason) => new()
+    {
+      FluidKind = kind.ToString(),
+      ItemIdentifier = itemIdentifier ?? string.Empty,
+      PlayerIdentifier = player != null ? player.name : string.Empty,
+      PlayerClientId = player?.Owner != null ? player.Owner.ClientId : -1,
+      RapidInfuserIdentifier = _registeredIdentifier ?? string.Empty,
+      CancellationReason = cancellationReason,
+      BloodWithoutPlasmaPolicy = _bloodTransfusionSetWithoutPlasmaPolicy,
+      IsServer = IsServerStarted
+    };
+
+    private void RaiseBloodPlasmaRequiredSignal(RapidInfuserFluidLifecycleEvent lifecycleEvent)
+    {
+      if (lifecycleEvent.CancellationReason != RapidInfuserFluidCancellationReason.PlasmaAppliedRequired ||
+          (!IsServerStarted && IsClientStarted))
+        return;
+      ScenarioInteractionSignals.Raise(BloodPlasmaRequiredSignal, JsonUtility.ToJson(lifecycleEvent));
+      if ((_bloodTransfusionSetCancellationBehaviour &
+           BloodTransfusionSetCancellationBehaviour.ShowPlasmaRequiredDialogue) == 0)
+        return;
+
+      var player = FindPlayer(lifecycleEvent.PlayerClientId);
+      if (IsClientStarted && player != null && player.IsOwner)
+      {
+        PresentPlasmaRequiredDialogue();
+        return;
+      }
+      if (player?.Owner != null)
+        TargetPresentPlasmaRequiredDialogue(player.Owner);
+    }
+
+    [TargetRpc]
+    private void TargetPresentPlasmaRequiredDialogue(NetworkConnection connection)
+      => PresentPlasmaRequiredDialogue();
+
+    [TargetRpc]
+    private void TargetRefundFluidConsumption(NetworkConnection connection, string itemIdentifier)
+    {
+      var player = FindLocalOwnerPlayer();
+      var item = Registry.Registry.CreateItemInstance(itemIdentifier);
+      if (player == null || item == null)
+      {
+        Debug.LogWarning($"[Level1RapidInfuser] Failed to refund '{itemIdentifier}' after cancelled fluid application.");
+        return;
+      }
+      if (player.TryAddItemToInventory(item, out var leftover))
+        return;
+      if (leftover != null && player.TryDropItemInFront(leftover))
+        return;
+      Debug.LogWarning($"[Level1RapidInfuser] Failed to return or drop refund '{itemIdentifier}'.");
+    }
+
+    private static void PresentPlasmaRequiredDialogue()
+    {
+      var dialogue = Registry.Registry.Get<DialoguePanelUIController>(
+        RegistryType.UI, Registry.Registry.TypeKey<DialoguePanelUIController>());
+      if (dialogue == null)
+        dialogue = FindFirstObjectByType<DialoguePanelUIController>(FindObjectsInactive.Exclude);
+      if (dialogue == null)
+      {
+        Debug.LogWarning("[Level1RapidInfuser] Dialogue UI is unavailable for plasma prerequisite feedback.");
+        return;
+      }
+      dialogue.TryPresentTransientDialogue(
+        "{PLAYER_NAME}",
+        "플라즈마 솔루션을 먼저 넣어야 할 것 같다");
     }
 
     private static void RaiseScenarioConnectionSignal(FluidKind kind)
@@ -674,40 +922,101 @@ namespace TriageTrainer.Entity
         FluidKind.PlasmaSolution => _pendingPlasmaClientId,
         _ => _pendingBloodClientId
       };
-      float expiry = kind switch
-      {
-        FluidKind.NormalSaline => _pendingSalineExpiresAt,
-        FluidKind.PlasmaSolution => _pendingPlasmaExpiresAt,
-        _ => _pendingBloodExpiresAt
-      };
       if (clientId < 0)
         return false;
-      if (Time.unscaledTime <= expiry)
+      // 소비 확인은 클라이언트의 실제 인벤토리 변경 뒤에 도착한다. 시간 만료로 pending을
+      // 먼저 버리면 지연된 확인이 무시되어 아이템이 유실되므로, 연결된 플레이어가 있는 동안
+      // 보류 상태를 유지한다. 연결 해제 시에는 다음 조회에서 안전하게 정리한다.
+      if (FindPlayer(clientId) != null)
         return true;
       ClearPendingFluid(kind);
       return false;
     }
 
-    private void SetPendingFluid(FluidKind kind, int clientId)
+    private void SetPendingFluid(FluidKind kind, int clientId, string itemIdentifier)
     {
       if (kind == FluidKind.NormalSaline)
       {
         _pendingSalineClientId = clientId;
-        _pendingSalineExpiresAt = Time.unscaledTime + FluidRequestTimeout;
+        _pendingSalineItemIdentifier = itemIdentifier;
       }
       else
       {
         if (kind == FluidKind.PlasmaSolution)
         {
           _pendingPlasmaClientId = clientId;
-          _pendingPlasmaExpiresAt = Time.unscaledTime + FluidRequestTimeout;
+          _pendingPlasmaItemIdentifier = itemIdentifier;
         }
         else
         {
           _pendingBloodClientId = clientId;
-          _pendingBloodExpiresAt = Time.unscaledTime + FluidRequestTimeout;
+          _pendingBloodItemIdentifier = itemIdentifier;
         }
       }
+    }
+
+    private void RetryPendingFluidConfirmations()
+    {
+      RetryPendingFluidConfirmation(FluidKind.NormalSaline);
+      RetryPendingFluidConfirmation(FluidKind.PlasmaSolution);
+      RetryPendingFluidConfirmation(FluidKind.BloodTransfusionSet);
+    }
+
+    private void RetryPendingFluidConfirmation(FluidKind kind)
+    {
+      if (!HasActivePendingFluid(kind))
+        return;
+      float lastSentAt = kind switch
+      {
+        FluidKind.NormalSaline => _pendingSalineLastConfirmationSentAt,
+        FluidKind.PlasmaSolution => _pendingPlasmaLastConfirmationSentAt,
+        _ => _pendingBloodLastConfirmationSentAt
+      };
+      if (Time.unscaledTime - lastSentAt < FluidConfirmationRetrySeconds)
+        return;
+
+      int clientId = kind switch
+      {
+        FluidKind.NormalSaline => _pendingSalineClientId,
+        FluidKind.PlasmaSolution => _pendingPlasmaClientId,
+        _ => _pendingBloodClientId
+      };
+      var player = FindPlayer(clientId);
+      if (player?.Owner != null)
+        SendFluidConsumptionConfirmation(kind, player.Owner);
+    }
+
+    private void SendFluidConsumptionConfirmation(FluidKind kind, NetworkConnection connection)
+    {
+      SetPendingFluidConfirmationSentAt(kind, Time.unscaledTime);
+      TargetConfirmFluidConsumption(connection, (byte)kind, GetPendingFluidItemIdentifier(kind));
+    }
+
+    private void SetPendingFluidConfirmationSentAt(FluidKind kind, float value)
+    {
+      if (kind == FluidKind.NormalSaline)
+        _pendingSalineLastConfirmationSentAt = value;
+      else if (kind == FluidKind.PlasmaSolution)
+        _pendingPlasmaLastConfirmationSentAt = value;
+      else
+        _pendingBloodLastConfirmationSentAt = value;
+    }
+
+    private bool HasClientConfirmedConsumption(FluidKind kind) => kind switch
+    {
+      FluidKind.NormalSaline => _clientConfirmedSalineConsumption,
+      FluidKind.PlasmaSolution => _clientConfirmedPlasmaConsumption,
+      _ => _clientConfirmedBloodConsumption
+    };
+
+    private void SetClientConfirmedConsumption(FluidKind kind)
+    {
+      if (kind == FluidKind.NormalSaline)
+        _clientConfirmedSalineConsumption = true;
+      else if (kind == FluidKind.PlasmaSolution)
+        _clientConfirmedPlasmaConsumption = true;
+      else
+        _clientConfirmedBloodConsumption = true;
     }
 
     private bool MatchesPendingFluid(FluidKind kind, int clientId)
@@ -727,22 +1036,29 @@ namespace TriageTrainer.Entity
       if (kind == FluidKind.NormalSaline)
       {
         _pendingSalineClientId = -1;
-        _pendingSalineExpiresAt = 0f;
+        _pendingSalineItemIdentifier = null;
       }
       else
       {
         if (kind == FluidKind.PlasmaSolution)
         {
           _pendingPlasmaClientId = -1;
-          _pendingPlasmaExpiresAt = 0f;
+          _pendingPlasmaItemIdentifier = null;
         }
         else
         {
           _pendingBloodClientId = -1;
-          _pendingBloodExpiresAt = 0f;
+          _pendingBloodItemIdentifier = null;
         }
       }
     }
+
+    private string GetPendingFluidItemIdentifier(FluidKind kind) => kind switch
+    {
+      FluidKind.NormalSaline => _pendingSalineItemIdentifier,
+      FluidKind.PlasmaSolution => _pendingPlasmaItemIdentifier,
+      _ => _pendingBloodItemIdentifier
+    };
 
     private void OnFluidChanged(bool previous, bool next, bool asServer)
     {
