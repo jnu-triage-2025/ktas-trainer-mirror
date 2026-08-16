@@ -22,4 +22,8 @@
 
 ## Copyright
 
+- glove-slot: Generated using AI.
+- icon-overlay-clear__rb: Created for this project by the author. used Freesentation font(by Lee, Jr.), OFL Licensed.
+- icon-overlay-fail__rb: Created for this project by the author. used Freesentation font(by Lee, Jr.), OFL Licensed.
 - mouse-scroll: Created by kiddo from Noun Project. Licensed under CC BY-3.0. https://thenounproject.com/icon/mouse-scroll-496854/
+- question-mark: Generated using AI.
