@@ -145,8 +145,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       // Calculate the auto-managed collider after that structure is complete.
       EnsureInteractionCollider();
       uiDocument = GetComponent<UIDocument>();
-      ResolvePatientStateIfNeeded();
+      // 더미 재생 값은 환자 상태가 반영되기 전, 인스펙터에 저장된 값으로 고정한다.
       CaptureDummyParametersIfNeeded();
+      ResolvePatientStateIfNeeded();
       _currentParameters = ResolveConfiguredParameters();
       _targetParameters = _currentParameters;
       PullParametersFromPatientState();
@@ -702,6 +703,13 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         plethGraphElement.MaxPoints = horizontalPoints;
         artGraphElement.MaxPoints = horizontalPoints;
         cvpGraphElement.MaxPoints = horizontalPoints;
+
+        // 버퍼 크기만 늘리면 기존 샘플 수가 새 표시 폭을 채우지 못해 파형이
+        // 가로로 확대된다. 설정 변경 후에도 전체 폭의 기준선을 유지한다.
+        ecgGraphElement.ClearAndFillHistory(0f);
+        plethGraphElement.ClearAndFillHistory(0f);
+        artGraphElement.ClearAndFillHistory(0f);
+        cvpGraphElement.ClearAndFillHistory(0f);
       }
 
       if (isActiveAndEnabled && uiDocument != null)
@@ -709,6 +717,13 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       if (Application.isPlaying && isActiveAndEnabled)
       {
+        // Inspector에서 미연결 정책을 바꿀 때 전이 감지가 없더라도 즉시 반영한다.
+        if (IsPatientMonitorDisconnected())
+        {
+          _hasAppliedDisconnectedDisplayPolicy = false;
+          PullParametersFromPatientState();
+        }
+
         UnconfigurePatientTracking();
         ConfigurePatientTracking();
       }
