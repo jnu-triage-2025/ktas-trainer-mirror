@@ -52,7 +52,8 @@ JSON에서는 각 노드에 `"playTTS": true`와 `"ttsVoiceProfile": { "preset":
 3. **`C***` Choice 노드**: TTS를 적용하지 않는다(`playTTS` 미설정 유지).
 
 - [x] TTS-1: 위 정책을 `patient_a_critical.scenario.json`에 반영함(2026-08-16). D 접두 35개 + N 접두 101개 = 총 136개 Dialogue 노드에 `playTTS`/`ttsVoiceProfile` 기록, C 접두 Choice 노드 32개는 미적용 유지.
-- [ ] TTS-2 (인간 검토 필요): 사용 프리셋 6종(F3, F4, F5, M1, M3, M4)의 사전 bake(`Tools > Text to Speech Service > Bake Scenario Inline Audio`) 실행. bake 산출물은 `Assets/StreamingAssets/TTS/BakedInline/patient_a_critical/{프리셋}/`에 생성되어야 하며, 이는 본 문서/JSON 외 파일 변경이므로 담당 개발자 확인 후 진행한다.
+- [x] TTS-2: 사용 프리셋 6종(F3, F4, F5, M1, M3, M4)의 사전 bake 완료(2026-08-16, 커밋 96b92a39). 산출물 `Assets/StreamingAssets/TTS/BakedInline/patient_a_critical/{프리셋}/`에 136개 노드분 생성 확인(F3 105, M1 15, M4 6, F5 5, F4 3, M3 2).
+- [x] TTS-4: TTS 속도 배율을 전 시나리오 1.05 → **1.15**로 통일(2026-08-16, 커밋 96b92a39). 반영 위치: 전 시나리오 재bake(disaster_intro, patient_a_critical, patient_b_c_ct, tutorial, multi_voice_example), `MI_ TextToSpeechService`/`MI_ DialogueController` 프리팹 인스펙터, 프리셋 정의 C#(`ScenarioTTSVoiceProfile.cs`, 커밋 반영 여부 확인 필요). 향후 재bake 시 bake 창 "속도 배율"에 1.15를 입력해야 한다(창 기본값은 1.05).
 - [ ] TTS-3 (인간 검토 필요): 실플레이에서 화자별 음성 출력 및 N 접두 노드의 대상 플레이어 한정 재생 검증.
 
 ## JSON 변환 전 연결성 감사 (2026-07-18)
