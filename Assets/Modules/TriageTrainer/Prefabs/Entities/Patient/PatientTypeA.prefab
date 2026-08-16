@@ -70,6 +70,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: start_ambu_r2
+  _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
   _activateOnInteract: []
@@ -220,6 +221,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: interact_patient_chest
+  _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
   _activateOnInteract:
@@ -379,6 +381,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: start_ambu_r1
+  _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
   _activateOnInteract: []
@@ -453,6 +456,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: remove_tpiece
+  _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
   _activateOnInteract: []
@@ -528,6 +532,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: remove_patient_clothing
+  _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
   _activateOnInteract: []
@@ -602,6 +607,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: click_to_start_comp
+  _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
   _activateOnInteract: []
@@ -785,22 +791,18 @@ MonoBehaviour:
   _assessActions:
   - _identifier: assess_vital
     _displayText: "\uD65C\uB825\uC9D5\uD6C4 \uC0AC\uC815"
-    _displayIcon: {fileID: 0}
     _assessSignal: show_vital_patient_a
     _enabled: 1
   - _identifier: assess_pulse_r1
     _displayText: "\uB9E5\uBC15 \uD655\uC778"
-    _displayIcon: {fileID: 0}
     _assessSignal: check_pulse_patient_a_r1
     _enabled: 1
   - _identifier: assess_pulse_r2
     _displayText: "\uB9E5\uBC15 \uD655\uC778"
-    _displayIcon: {fileID: 0}
     _assessSignal: check_pulse_patient_a_r2
     _enabled: 0
   - _identifier: assess_gcs_rosc
     _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC7AC\uC0AC\uC815"
-    _displayIcon: {fileID: 0}
     _assessSignal: check_gcs_a_rosc
     _enabled: 0
   _capsuleCollider: {fileID: 3415111579364395856}
@@ -814,11 +816,8 @@ MonoBehaviour:
   _lyingCapsuleDirection: 2
   _identifier: patient_a
   _liftDisplayText: "\uD658\uC790\uB97C \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
-  _liftDisplayIcon: {fileID: 0}
   _carryDisplayText: "\uD658\uC790 \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
-  _carryDisplayIcon: {fileID: 0}
   _monitorSelectDisplayText: "\uC774 \uD658\uC790\uB97C \uBAA8\uB2C8\uD130\uB9C1"
-  _monitorSelectDisplayIcon: {fileID: 0}
   _initiallyHiddenChildNames:
   - defibpad_midaxillary_A
   - defibpad_subclavicle_A
@@ -833,6 +832,8 @@ MonoBehaviour:
     _suctionWalls: []
     _oxyflowmeters: []
   _ivAttachmentPoint: {fileID: 0}
+  _oxygenMaskAttachmentPoint: {fileID: 0}
+  _suctionLineAttachmentPoint: {fileID: 0}
   _carryAttachPoint: {fileID: 7385633622512896465}
   _isMovingPatientBedAttached: 0
   _isPlayerAttached: 0
@@ -848,7 +849,6 @@ MonoBehaviour:
   _intravenousLineCannulaConfig:
     _supported: 0
     _displayText: 
-    _displayIcon: {fileID: 0}
   _intravenousLineCannulaInteractable: 1
   _medicalState:
     isCardiacArrest: 0
@@ -904,11 +904,12 @@ MonoBehaviour:
       v4: 0
       v5: 0
       v6: 0
+  _treatmentState:
+    appliedTreatments: []
   _triageConfig:
     _assessable: 0
     _changeAssessableOnAssessDone: 0
     _displayText: 
-    _displayIcon: {fileID: 0}
   _triageLabelAnchor: {fileID: 0}
 --- !u!114 &4111524619819356577
 MonoBehaviour:
@@ -1084,6 +1085,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: interact_tpiece
+  _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
   _activateOnInteract:
@@ -1273,6 +1275,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: remove_intu_stylet
+  _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
   _activateOnInteract:
@@ -1541,15 +1544,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.20902325
+      value: 0.2025
       objectReference: {fileID: 0}
     - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.14131536
+      value: 0.1451
       objectReference: {fileID: 0}
     - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.12882403
+      value: 0.1291
       objectReference: {fileID: 0}
     - target: {fileID: 5939202663577173620, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1583,6 +1586,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: normal_saline_5cc_syringe
       objectReference: {fileID: 0}
+    - target: {fileID: 7805945880632391275, guid: a16ae054fb984a7e912f43e759e19109, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 1d732b2f9139946f594a4cc79abf5d91, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2502,6 +2509,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7805945880632391275, guid: 800d9c4513c54dc095fe19c2a71b3579, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 1d732b2f9139946f594a4cc79abf5d91, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
