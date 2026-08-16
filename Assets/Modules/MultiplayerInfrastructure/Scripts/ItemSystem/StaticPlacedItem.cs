@@ -55,6 +55,10 @@ namespace MultiplayerInfrastructure.ItemSystem
     [Tooltip("비우면 Resources/Models/Items/{ItemIdentifier} 프리팹을 자동 로드합니다. 직접 자식 모델을 두었다면 비워두세요.")]
     [SerializeField] private bool _autoLoadModel = false;
 
+    [Header("Vanish Presentation")]
+    [Tooltip("비어 있으면 이 GameObject 전체의 표시를 제어합니다. 부모 엔티티와 같은 GameObject에 배치한 경우에는 사라질 아이템의 시각 루트를 지정하세요.")]
+    [SerializeField] private Transform _vanishPresentationRoot;
+
     private const string ModelRootPath = "Models/Items";
 
     /// <summary>이 정적 아이템의 전역 식별자(서버/모든 클라이언트 동일).</summary>
@@ -145,6 +149,9 @@ namespace MultiplayerInfrastructure.ItemSystem
 
     /// <summary>현재 로컬 표현이 사라짐(Vanished) 상태로 적용되어 있는지.</summary>
     private bool _localVanished;
+
+    private Transform VanishPresentationRoot =>
+      _vanishPresentationRoot != null ? _vanishPresentationRoot : transform;
 
     private void Awake()
     {
@@ -420,7 +427,7 @@ namespace MultiplayerInfrastructure.ItemSystem
       switch (_vanishBehavior)
       {
         case StaticPlacedItemVanishBehavior.Deactivate:
-          gameObject.SetActive(false);
+          VanishPresentationRoot.gameObject.SetActive(false);
           break;
 
         case StaticPlacedItemVanishBehavior.DisableInteraction:
@@ -446,15 +453,15 @@ namespace MultiplayerInfrastructure.ItemSystem
     {
       _localVanished = false;
 
-      if (!gameObject.activeSelf)
-        gameObject.SetActive(true);
+      if (!VanishPresentationRoot.gameObject.activeSelf)
+        VanishPresentationRoot.gameObject.SetActive(true);
 
       SetRenderersEnabled(true);
     }
 
     private void SetRenderersEnabled(bool enabled)
     {
-      var renderers = GetComponentsInChildren<Renderer>(includeInactive: true);
+      var renderers = VanishPresentationRoot.GetComponentsInChildren<Renderer>(includeInactive: true);
       for (int i = 0; i < renderers.Length; i++)
       {
         if (renderers[i] != null)

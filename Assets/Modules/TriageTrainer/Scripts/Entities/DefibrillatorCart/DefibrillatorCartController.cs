@@ -5,6 +5,7 @@ using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
@@ -50,6 +51,7 @@ namespace TriageTrainer.Entity
     private readonly SyncVar<string> _snapPointIdentifierSync = new(string.Empty);
 
     private DefibrillatorCartSnapPoint _latchedSnapPoint;
+    private StaticPlacedItem _staticPlacedItem;
     private string _pendingSnapPointIdentifier;
     private string _entityRuntimeIdentifier;
 
@@ -61,7 +63,21 @@ namespace TriageTrainer.Entity
     public string Identifier => EffectiveIdentifier;
     public DefibrillatorCartSnapPoint LatchedSnapPoint => _latchedSnapPoint;
 
-    public IInteract[] Interacts => new IInteract[] { this };
+    public IInteract[] Interacts
+    {
+      get
+      {
+        // 제세동 패드는 카트와 동일한 감지 Collider를 사용한다. 조종 중에는
+        // 패드를 집을 수 없도록 메뉴에서 제외하고, 하차하면 다시 노출한다.
+        if (HasParticipants)
+          return new IInteract[] { this };
+
+        _staticPlacedItem ??= GetComponent<StaticPlacedItem>();
+        return _staticPlacedItem != null
+          ? new IInteract[] { this, _staticPlacedItem }
+          : new IInteract[] { this };
+      }
+    }
     public string DisplayText => _displayText;
     public Sprite DisplayIcon => _displayIcon;
     public bool AllowDisplayIconFallback => true;
@@ -71,6 +87,7 @@ namespace TriageTrainer.Entity
     {
       Awake_MinecraftBoadLikeControl();
       Configure(1); // 제세동 카트는 한 명만 조종한다.
+      _staticPlacedItem = GetComponent<StaticPlacedItem>();
     }
 
     private void OnDestroy()
