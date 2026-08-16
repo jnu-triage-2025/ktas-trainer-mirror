@@ -102,6 +102,33 @@ namespace TriageTrainer.Entity.PatientMonitor
       MarkDirtyRepaint();
     }
 
+    /// <summary>
+    /// 저장된 샘플만 제거합니다. 다음 샘플이 표시 폭 전체로 확대되어 보일 수 있으므로,
+    /// 연속적인 모니터 스크롤 표현에는 <see cref="ClearAndFillHistory"/>를 사용해야 합니다.
+    /// </summary>
+    public void ClearHistory()
+    {
+      _dataPointCount = 0;
+      _nextDataPointIndex = 0;
+      _nextRepaintTime = 0f;
+      MarkDirtyRepaint();
+    }
+
+    /// <summary>
+    /// 먼저 저장된 샘플을 제거한 뒤, 표시 폭 전체를 지정 값으로 채웁니다. 새 파형은
+    /// 오른쪽에서 시작해 기준선을 밀어내므로, 그래프가 가로로 확대되는 연출이 발생하지 않습니다.
+    /// </summary>
+    public void ClearAndFillHistory(float value)
+    {
+      ClearHistory();
+      for (int i = 0; i < _dataPoints.Length; i++)
+        _dataPoints[i] = value;
+
+      _dataPointCount = _dataPoints.Length;
+      _nextDataPointIndex = 0;
+      MarkDirtyRepaint();
+    }
+
     public void SetColor(Color color) => lineColor = color;
     public void SetLineWidth(float width) => lineWidth = width;
 

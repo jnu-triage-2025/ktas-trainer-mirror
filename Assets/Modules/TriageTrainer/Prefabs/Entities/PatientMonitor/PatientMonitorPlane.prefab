@@ -163,6 +163,7 @@ MonoBehaviour:
   patientState: {fileID: 0}
   _patientTrackingMethod: 2
   _onEnterAnotherPatientAlreadyPatientExists: 0
+  _disconnectedPatientDisplayMode: 0
   ecgColor: {r: 0, g: 1, b: 0, a: 1}
   plethColor: {r: 0, g: 1, b: 0.53, a: 1}
   artColor: {r: 1, g: 0.33, b: 0.33, a: 1}
@@ -180,7 +181,7 @@ MonoBehaviour:
   numericsPanelMinWidth: 136
   numericsPanelMaxWidth: 208
   _interactionColliderAutoManaged: 1
-  _interactIcon: {fileID: 0}
+  _interactIcon: {fileID: 21300000, guid: 7b57a78bbbf3740d7826605f0706e146, type: 3}
   _interactEntries:
   - _identifier: select_patient_mode
     _enabled: 1

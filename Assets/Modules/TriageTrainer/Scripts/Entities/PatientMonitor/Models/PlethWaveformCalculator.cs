@@ -7,6 +7,11 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
   {
     public static float Calculate(in PlethParameters parameters, float cycleNorm)
     {
+      if (parameters.bpm <= 0f)
+      {
+        return 0f;
+      }
+
       float alpha = Mathf.Max(0f, (parameters.spo2 - 80f) / 20f);
       float ampScale = Mathf.Pow(alpha, 1.5f);
 

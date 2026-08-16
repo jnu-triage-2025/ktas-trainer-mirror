@@ -85,6 +85,9 @@ namespace TriageTrainer.Entity.PatientMonitor
         graph.SetColor(colors[i]);
         graph.SetLineWidth(lineThickness);
         graph.MaxPoints = points;
+        // 그래프의 초기 이력을 기준선으로 채워, 첫 파형도 전체 폭에 맞춰
+        // 오른쪽에서 시작하고 기존 파형처럼 왼쪽으로 이동하게 한다.
+        graph.ClearAndFillHistory(0f);
         graph.SetChannel(channels[i], names[i]);
         graph.SetRange(mins[i], maxs[i]);
 
@@ -186,6 +189,15 @@ namespace TriageTrainer.Entity.PatientMonitor
       _graphs[1]?.AddValue(pleth);
       _graphs[2]?.AddValue(art);
       _graphs[3]?.AddValue(cvp);
+    }
+
+    public void ResetGraphHistoryToValue(float value)
+    {
+      if (_graphs == null || _type != PatientMonitorPlaneType.Graph)
+        return;
+
+      for (int i = 0; i < _graphs.Length; i++)
+        _graphs[i]?.ClearAndFillHistory(value);
     }
 
     public void SetGraphValues(string ecg, string pleth, string art, string cvp)

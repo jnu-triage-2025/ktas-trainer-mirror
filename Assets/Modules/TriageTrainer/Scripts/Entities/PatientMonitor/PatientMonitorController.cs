@@ -27,6 +27,15 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     IgnoreNewEnter
   }
 
+  /// <summary>환자가 연결되지 않은 동안 모니터에 표시할 데이터의 원천입니다.</summary>
+  public enum DisconnectedPatientDisplayMode
+  {
+    /// <summary>모든 수치를 측정 불가(-1)로 표시하고, 파형은 기준선으로 유지합니다.</summary>
+    UnavailableValues = 0,
+    /// <summary>인스펙터에 설정된 모니터 기본값을 더미 데이터로 재생합니다.</summary>
+    PlayDummyValues = 1
+  }
+
   /// <summary>
   /// PatientMonitor의 공통 데이터/네트워크/파형 기반입니다.
   /// 실제 출력 정책은 SinglePatientMonitorController 또는 DualPatientMonitorController가 담당합니다.
@@ -61,8 +70,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     [SerializeField] private PatientTrackingMethod _patientTrackingMethod = PatientTrackingMethod.Interactable;
     [SerializeField] private OnEnterAnotherPatientAlreadyPatientExists _onEnterAnotherPatientAlreadyPatientExists = OnEnterAnotherPatientAlreadyPatientExists.Refresh;
 
+    [Header("환자 미연결 표시")]
+    [SerializeField] private DisconnectedPatientDisplayMode _disconnectedPatientDisplayMode = DisconnectedPatientDisplayMode.UnavailableValues;
+
     public PatientTrackingMethod PatientTrackingMethod => _patientTrackingMethod;
     public OnEnterAnotherPatientAlreadyPatientExists OnEnterAnotherPatientAlreadyPatientExists => _onEnterAnotherPatientAlreadyPatientExists;
+    public DisconnectedPatientDisplayMode DisconnectedPatientDisplayMode => _disconnectedPatientDisplayMode;
 
     [Header("Graph Appearance")]
     public Color ecgColor = Color.green;
@@ -133,6 +146,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       EnsureInteractionCollider();
       uiDocument = GetComponent<UIDocument>();
       ResolvePatientStateIfNeeded();
+      CaptureDummyParametersIfNeeded();
       _currentParameters = ResolveConfiguredParameters();
       _targetParameters = _currentParameters;
       PullParametersFromPatientState();
@@ -152,6 +166,16 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       var root = uiDocument != null ? uiDocument.rootVisualElement : null;
       if (root != null)
         root.style.display = DisplayStyle.Flex;
+    }
+
+    private void ResetGraphHistoryToDisconnectedValue()
+    {
+      ecgGraphElement?.ClearAndFillHistory(0f);
+      plethGraphElement?.ClearAndFillHistory(0f);
+      artGraphElement?.ClearAndFillHistory(0f);
+      cvpGraphElement?.ClearAndFillHistory(0f);
+      for (int i = 0; i < _displayViews.Count; i++)
+        _displayViews[i].ResetGraphHistoryToValue(0f);
     }
 
     void CreateGraphUI()
@@ -522,6 +546,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       graph.SetColor(color);
       graph.SetLineWidth(lineThickness);
       graph.MaxPoints = ResolveHorizontalPoints();
+      // 생성 직후에도 전체 표시 폭만큼 기준선 이력을 확보해 새 파형이 오른쪽에서
+      // 들어와 왼쪽으로 밀리도록 한다.
+      graph.ClearAndFillHistory(0f);
       graph.SetChannel(channelId, name);
       graph.SetRange(rangeMin, rangeMax);
 
@@ -567,6 +594,15 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private void TickSample(float dt)
     {
+      // 미연결 상태에서는 남아 있는 환자 참조나 리듬 프리셋과 관계없이 어떤 파형도
+      // 생성하지 않는다. -1은 수치의 측정 불가 센티널이고, 그래프에는 모든 채널에서
+      // 가시적인 0 기준선을 넣는다.
+      if (IsDisplayingUnavailableValues())
+      {
+        AddSamplesToGraphs(0f, 0f, 0f, 0f);
+        return;
+      }
+
       float baseInterval = ComputeBaseInterval(_currentParameters.bpm);
       if (baseInterval != float.MaxValue && ecgNextBeatInterval == float.MaxValue)
       {
@@ -593,7 +629,6 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
       float ecgCycleNorm = CalculateCycleNorm(currentTime, ecgLastBeatTime, _currentParameters.bpm);
       float ecgVoltage = ECGWaveformCalculator.Calculate(_currentParameters, rhythmPreset, ecgCycleNorm, dt, ref _ecgRuntimeState);
-      ecgGraphElement?.AddValue(ecgVoltage);
 
       float plethCycleNorm = CalculateCycleNorm(currentTime, 0f, monitorPleth.bpm);
       float artCycleNorm = CalculateCycleNorm(currentTime, 0f, monitorART.bpm);
@@ -602,6 +637,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       float plethVoltage = PlethWaveformCalculator.Calculate(monitorPleth, plethCycleNorm);
       float artVoltage = ARTWaveformCalculator.Calculate(monitorART, artCycleNorm);
       float cvpVoltage = CVPWaveformCalculator.Calculate(monitorCVP, cvpCycleNorm);
+      AddSamplesToGraphs(ecgVoltage, plethVoltage, artVoltage, cvpVoltage);
+    }
+
+    private void AddSamplesToGraphs(float ecgVoltage, float plethVoltage, float artVoltage, float cvpVoltage)
+    {
+      ecgGraphElement?.AddValue(ecgVoltage);
       plethGraphElement?.AddValue(plethVoltage);
       artGraphElement?.AddValue(artVoltage);
       cvpGraphElement?.AddValue(cvpVoltage);
@@ -771,6 +812,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private void UpdateLabels()
     {
+      if (IsDisplayingUnavailableValues())
+      {
+        SetUnavailableLabels();
+        return;
+      }
+
       bool hasPatient = patientState?.Descriptor != null;
       var numerics = monitorNumerics;
 
@@ -906,6 +953,35 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
           _displayViews[i].SetGraphValues(ecgValueLabel?.text, plethValueLabel?.text, artValueLabel?.text, cvpValueLabel?.text);
           _displayViews[i].SetMetricValues(metrics);
         }
+      }
+    }
+
+    private void SetUnavailableLabels()
+    {
+      if (ecgValueLabel != null) ecgValueLabel.text = $"HR {UnavailableDisplay}";
+      if (plethValueLabel != null) plethValueLabel.text = $"SpO2 {UnavailableDisplay}";
+      if (artValueLabel != null) artValueLabel.text = UnavailableDisplay;
+      if (cvpValueLabel != null) cvpValueLabel.text = UnavailableDisplay;
+      if (bpmNumericLabel != null) bpmNumericLabel.text = UnavailableDisplay;
+      if (pvcsNumericLabel != null) pvcsNumericLabel.text = UnavailableDisplay;
+      if (stNumericLabel != null) stNumericLabel.text = UnavailableDisplay;
+      if (prNumericLabel != null) prNumericLabel.text = UnavailableDisplay;
+      if (piNumericLabel != null) piNumericLabel.text = UnavailableDisplay;
+      if (spo2NumericLabel != null) spo2NumericLabel.text = UnavailableDisplay;
+      if (artNumericLabel != null) artNumericLabel.text = UnavailableDisplay;
+      if (cvpNumericLabel != null) cvpNumericLabel.text = UnavailableDisplay;
+      if (nibpNumericLabel != null) nibpNumericLabel.text = UnavailableDisplay;
+      if (t1NumericLabel != null) t1NumericLabel.text = UnavailableDisplay;
+      if (t2NumericLabel != null) t2NumericLabel.text = UnavailableDisplay;
+      if (deltaTNumericLabel != null) deltaTNumericLabel.text = UnavailableDisplay;
+
+      for (int i = 0; i < _displayViews.Count; i++)
+      {
+        _displayViews[i].SetGraphValues(UnavailableDisplay, UnavailableDisplay, UnavailableDisplay, UnavailableDisplay);
+        _displayViews[i].SetMetricValues(
+          UnavailableDisplay, UnavailableDisplay, UnavailableDisplay, UnavailableDisplay,
+          UnavailableDisplay, UnavailableDisplay, UnavailableDisplay, UnavailableDisplay,
+          UnavailableDisplay, UnavailableDisplay, UnavailableDisplay, UnavailableDisplay);
       }
     }
   }

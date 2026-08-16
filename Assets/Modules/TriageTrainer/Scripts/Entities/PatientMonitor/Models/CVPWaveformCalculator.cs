@@ -7,6 +7,11 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
   {
     public static float Calculate(in CVPParameters parameters, float cycleNorm)
     {
+      if (parameters.bpm <= 0f)
+      {
+        return 0f;
+      }
+
       float amplitude = Mathf.Max(0.5f, parameters.mean * 0.22f);
       float dcOffset = amplitude * 0.31f;
 

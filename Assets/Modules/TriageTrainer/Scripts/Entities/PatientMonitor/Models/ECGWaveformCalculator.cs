@@ -19,6 +19,13 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       float dt,
       ref ECGRuntimeState runtimeState)
     {
+      // BPM 0은 리듬 종류와 무관하게 완전한 기준선이다. 특히 VF 분기는 자체 진폭을
+      // 생성하므로 이 검사를 먼저 수행해야 환자 미연결 0 표시가 직선으로 유지된다.
+      if (parameters.bpm <= 0f)
+      {
+        return 0f;
+      }
+
       if (rhythmType == ECGRhythmType.VentricularFibrillation)
       {
         runtimeState.fibPhase += dt * (18f + Random.Range(-6f, 6f));
@@ -26,7 +33,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
                + (Random.value - 0.5f) * parameters.noise;
       }
 
-      if (rhythmType == ECGRhythmType.Asystole || parameters.bpm <= 0f)
+      if (rhythmType == ECGRhythmType.Asystole)
       {
         return (Random.value - 0.5f) * parameters.noise;
       }

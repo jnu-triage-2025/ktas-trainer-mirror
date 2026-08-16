@@ -7,6 +7,11 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
   {
     public static float Calculate(in ARTParameters parameters, float cycleNorm)
     {
+      if (parameters.bpm <= 0f)
+      {
+        return 0f;
+      }
+
       float pulsePressure = Mathf.Max(0f, parameters.systolic - parameters.diastolic);
       float decay = cycleNorm > 0.25f
         ? -pulsePressure * 0.30f * (1f - Mathf.Exp(-5f * (cycleNorm - 0.25f)))
