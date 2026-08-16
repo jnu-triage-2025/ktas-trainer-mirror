@@ -3150,7 +3150,7 @@
     },
     "N011_3": {
       "speakerName": "시스템",
-      "dialogueContent": "한쪽 정맥로가 확보되었습니다. 두 번째 18G 캐뉼라를 획득해 반대쪽 팔에 삽입하고, 플라즈마 솔루션 수액백을 먼저 건 뒤 연결을 준비하십시오.",
+      "dialogueContent": "좌측 팔의 정맥로가 확보되었습니다. 두 번째 18G 캐뉼라를 획득해 반대쪽 팔에 삽입하고, 플라즈마 솔루션 수액백을 먼저 건 뒤 연결하십시오.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
