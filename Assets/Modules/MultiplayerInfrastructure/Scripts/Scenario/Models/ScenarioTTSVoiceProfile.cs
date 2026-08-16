@@ -21,16 +21,16 @@ namespace MultiplayerInfrastructure.Scenario
     private static readonly IReadOnlyDictionary<TTSVoiceStyle, TTSVoiceProfile> Definitions =
       new Dictionary<TTSVoiceStyle, TTSVoiceProfile>
       {
-        [TTSVoiceStyle.F1] = new TTSVoiceProfile { VoiceIdentifier = "F1", VoiceStyleName = "F1", Language = "ko", Speed = 1.05f, TotalStep = 5 },
-        [TTSVoiceStyle.F2] = new TTSVoiceProfile { VoiceIdentifier = "F2", VoiceStyleName = "F2", Language = "ko", Speed = 1.05f, TotalStep = 5 },
-        [TTSVoiceStyle.F3] = new TTSVoiceProfile { VoiceIdentifier = "F3", VoiceStyleName = "F3", Language = "ko", Speed = 1.05f, TotalStep = 5 },
-        [TTSVoiceStyle.F4] = new TTSVoiceProfile { VoiceIdentifier = "F4", VoiceStyleName = "F4", Language = "ko", Speed = 1.05f, TotalStep = 5 },
-        [TTSVoiceStyle.F5] = new TTSVoiceProfile { VoiceIdentifier = "F5", VoiceStyleName = "F5", Language = "ko", Speed = 1.05f, TotalStep = 5 },
-        [TTSVoiceStyle.M1] = new TTSVoiceProfile { VoiceIdentifier = "M1", VoiceStyleName = "M1", Language = "ko", Speed = 1.05f, TotalStep = 5 },
-        [TTSVoiceStyle.M2] = new TTSVoiceProfile { VoiceIdentifier = "M2", VoiceStyleName = "M2", Language = "ko", Speed = 1.05f, TotalStep = 5 },
-        [TTSVoiceStyle.M3] = new TTSVoiceProfile { VoiceIdentifier = "M3", VoiceStyleName = "M3", Language = "ko", Speed = 1.05f, TotalStep = 5 },
-        [TTSVoiceStyle.M4] = new TTSVoiceProfile { VoiceIdentifier = "M4", VoiceStyleName = "M4", Language = "ko", Speed = 1.05f, TotalStep = 5 },
-        [TTSVoiceStyle.M5] = new TTSVoiceProfile { VoiceIdentifier = "M5", VoiceStyleName = "M5", Language = "ko", Speed = 1.05f, TotalStep = 5 }
+        [TTSVoiceStyle.F1] = new TTSVoiceProfile { VoiceIdentifier = "F1", VoiceStyleName = "F1", Language = "ko", Speed = 1.15f, TotalStep = 5 },
+        [TTSVoiceStyle.F2] = new TTSVoiceProfile { VoiceIdentifier = "F2", VoiceStyleName = "F2", Language = "ko", Speed = 1.15f, TotalStep = 5 },
+        [TTSVoiceStyle.F3] = new TTSVoiceProfile { VoiceIdentifier = "F3", VoiceStyleName = "F3", Language = "ko", Speed = 1.15f, TotalStep = 5 },
+        [TTSVoiceStyle.F4] = new TTSVoiceProfile { VoiceIdentifier = "F4", VoiceStyleName = "F4", Language = "ko", Speed = 1.15f, TotalStep = 5 },
+        [TTSVoiceStyle.F5] = new TTSVoiceProfile { VoiceIdentifier = "F5", VoiceStyleName = "F5", Language = "ko", Speed = 1.15f, TotalStep = 5 },
+        [TTSVoiceStyle.M1] = new TTSVoiceProfile { VoiceIdentifier = "M1", VoiceStyleName = "M1", Language = "ko", Speed = 1.15f, TotalStep = 5 },
+        [TTSVoiceStyle.M2] = new TTSVoiceProfile { VoiceIdentifier = "M2", VoiceStyleName = "M2", Language = "ko", Speed = 1.15f, TotalStep = 5 },
+        [TTSVoiceStyle.M3] = new TTSVoiceProfile { VoiceIdentifier = "M3", VoiceStyleName = "M3", Language = "ko", Speed = 1.15f, TotalStep = 5 },
+        [TTSVoiceStyle.M4] = new TTSVoiceProfile { VoiceIdentifier = "M4", VoiceStyleName = "M4", Language = "ko", Speed = 1.15f, TotalStep = 5 },
+        [TTSVoiceStyle.M5] = new TTSVoiceProfile { VoiceIdentifier = "M5", VoiceStyleName = "M5", Language = "ko", Speed = 1.15f, TotalStep = 5 }
       };
 
     public static TTSVoiceProfile Get(TTSVoiceStyle style)
@@ -97,7 +97,7 @@ namespace MultiplayerInfrastructure.Scenario
     {
       var profile = Preset.HasValue && Preset.Value != TTSVoiceStyle.None
         ? TTSVoiceProfileDefinitions.Get(Preset.Value)
-        : new TTSVoiceProfile { VoiceStyleName = "F1", Language = "ko", Speed = 1.05f, TotalStep = 5 };
+        : new TTSVoiceProfile { VoiceStyleName = "F1", Language = "ko", Speed = 1.15f, TotalStep = 5 };
       return new TTSVoiceProfile
       {
         VoiceIdentifier = string.IsNullOrWhiteSpace(VoiceIdentifier) ? profile.VoiceIdentifier : VoiceIdentifier,
