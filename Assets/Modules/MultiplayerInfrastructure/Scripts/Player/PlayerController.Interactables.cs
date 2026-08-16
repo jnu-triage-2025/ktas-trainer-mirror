@@ -81,7 +81,7 @@ namespace MultiplayerInfrastructure.Player
       if (_interactableHintUI == null) return;
 
       var interacts = CollectAvailableInteracts(nearby);
-      KeepNearestExclusiveInteracts(interacts, transform);
+      KeepNearestExclusiveInteracts(interacts, _detector != null ? _detector.DetectionPosition : transform.position);
 
       // UpdateInteractables를 사용하여 모드에 따라 적절히 처리
       _interactableHintUI.UpdateInteractables(interacts);
@@ -94,25 +94,26 @@ namespace MultiplayerInfrastructure.Player
     /// 플레이어와 가장 가까운 하나를 남긴다. 이미 조건 검사에서 제외된 항목이나 다른 종류의 상호작용은
     /// 이 목록에 관여하지 않으므로 기존 동작을 유지한다.
     /// </summary>
-    internal static void KeepNearestExclusiveInteracts(List<IInteract> interacts, Transform interactor)
+    internal static void KeepNearestExclusiveInteracts(List<IInteract> interacts, Vector3 distanceReference)
     {
-      if (interacts == null || interactor == null || interacts.Count < 2)
+      if (interacts == null || interacts.Count < 2)
         return;
 
-      var nearestByGroup = new Dictionary<string, (IInteract interact, float sqrDistance)>();
+      var nearestByGroup = new Dictionary<string, (IInteract interact, float distance, int tieBreaker)>();
       for (int i = 0; i < interacts.Count; i++)
       {
         if (!(interacts[i] is INearestOnlyInteract candidate))
           continue;
 
         string group = candidate.NearestOnlyGroup;
-        Transform origin = candidate.NearestOnlyDistanceOrigin;
-        if (string.IsNullOrWhiteSpace(group) || origin == null)
+        if (string.IsNullOrWhiteSpace(group))
           continue;
 
-        float sqrDistance = (origin.position - interactor.position).sqrMagnitude;
-        if (!nearestByGroup.TryGetValue(group, out var nearest) || sqrDistance < nearest.sqrDistance)
-          nearestByGroup[group] = (interacts[i], sqrDistance);
+        float distance = NearestOnlyInteractUtility.DistanceTo(candidate, distanceReference);
+        int tieBreaker = candidate.NearestOnlyTieBreaker;
+        if (!nearestByGroup.TryGetValue(group, out var nearest)
+            || NearestOnlyInteractUtility.IsPreferred(distance, tieBreaker, nearest.distance, nearest.tieBreaker))
+          nearestByGroup[group] = (interacts[i], distance, tieBreaker);
       }
 
       for (int i = interacts.Count - 1; i >= 0; i--)
@@ -172,8 +173,12 @@ namespace MultiplayerInfrastructure.Player
       if (_detector == null || selected == null)
         return false;
 
-      var current = CollectAvailableInteracts(_detector.Nearby);
-      KeepNearestExclusiveInteracts(current, transform);
+      // 마지막 query의 Nearby 캐시가 아니라 현재 Physics 범위를 즉시 다시 조회한다.
+      // queryInterval 사이에 범위를 벗어나거나 새 후보가 들어온 경우에도 오래된 대상을 실행하지 않는다.
+      var currentlyNearby = new List<IInteractable>();
+      _detector.QueryCurrentInteractables(currentlyNearby);
+      var current = CollectAvailableInteracts(currentlyNearby);
+      KeepNearestExclusiveInteracts(current, _detector.DetectionPosition);
       for (int i = 0; i < current.Count; i++)
       {
         if (ReferenceEquals(current[i], selected))

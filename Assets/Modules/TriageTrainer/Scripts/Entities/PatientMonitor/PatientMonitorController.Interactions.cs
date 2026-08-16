@@ -10,7 +10,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 {
   public partial class PatientMonitorController : IInteractable, PatientController.IMonitorSelectionRequester, PatientController.IMedicalStateListener
   {
-    private sealed class MonitorSelectModeInteract : IInteract
+    private sealed class MonitorSelectModeInteract : IInteract, IInteractorConditional, INearestOnlyInteract
     {
       private readonly PatientMonitorController _owner;
       public MonitorSelectModeInteract(PatientMonitorController owner) { _owner = owner; }
@@ -18,13 +18,20 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       public Sprite DisplayIcon => _owner._interactIcon;
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;
+      public string NearestOnlyGroup => NearestGroupSelectPatient;
+      public Transform NearestOnlyDistanceOrigin => _owner.transform;
+      public Collider NearestOnlyCollider => _owner.GetComponent<Collider>();
+      public int NearestOnlyTieBreaker => _owner.GetInstanceID();
+      public bool CanInteract(Transform interactor) => _owner.IsInteractEnabled(InteractIdSelectPatient);
       public void Interact(Transform interactor)
       {
+        if (!CanInteract(interactor))
+          return;
         _owner.EnterSelectionMode(interactor);
       }
     }
 
-    private sealed class MonitorDetailInteract : IInteract
+    private sealed class MonitorDetailInteract : IInteract, IInteractorConditional, INearestOnlyInteract
     {
       private readonly PatientMonitorController _owner;
       public MonitorDetailInteract(PatientMonitorController owner) { _owner = owner; }
@@ -32,10 +39,16 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       public Sprite DisplayIcon => _owner._interactIcon;
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;
+      public string NearestOnlyGroup => NearestGroupDetailOverlay;
+      public Transform NearestOnlyDistanceOrigin => _owner.transform;
+      public Collider NearestOnlyCollider => _owner.GetComponent<Collider>();
+      public int NearestOnlyTieBreaker => _owner.GetInstanceID();
+      public bool CanInteract(Transform interactor) => _owner.IsInteractEnabled(InteractIdDetailOverlay);
       public void Interact(Transform interactor)
       {
-        if (_owner.IsInteractEnabled(InteractIdDetailOverlay))
-          _owner.OpenDetailedContentOverlay();
+        if (!CanInteract(interactor))
+          return;
+        _owner.OpenDetailedContentOverlay();
       }
     }
 
@@ -61,6 +74,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private const string InteractIdSelectPatient = "select_patient_mode";
     private const string InteractIdDetailOverlay = "detail_overlay";
+    private const string NearestGroupSelectPatient = "patient_monitor:select_patient_mode";
+    private const string NearestGroupDetailOverlay = "patient_monitor:detail_overlay";
+
+    // Zone 경계처럼 여러 환자 모니터 콜라이더가 Detector 범위에 함께 들어오면 같은 이름의
+    // 인터렉션을 구분할 수 없다. 각 Monitor interact가 기능별 NearestOnlyGroup을 제공하여
+    // 환자 선택과 자세히 보기는 모두 유지하되, 각 기능은 플레이어에게 가장 가까운 모니터 하나만 노출한다.
 
     protected bool IsPatientTrackingMethodEnabled(PatientTrackingMethod method)
       => (_patientTrackingMethod & method) == method;

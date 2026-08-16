@@ -69,5 +69,32 @@ namespace MultiplayerInfrastructure.InteractableEntity
   {
     string NearestOnlyGroup { get; }
     Transform NearestOnlyDistanceOrigin { get; }
+    Collider NearestOnlyCollider { get; }
+    int NearestOnlyTieBreaker { get; }
+  }
+
+  public static class NearestOnlyInteractUtility
+  {
+    // 경계에서 두 거리가 거의 같을 때 Physics 조회 순서에 따라 대상이 흔들리지 않도록
+    // 1cm 이내는 동률로 보고 안정적인 instance id로 결정한다.
+    private const float TieTolerance = 0.01f;
+
+    public static float DistanceTo(INearestOnlyInteract candidate, Vector3 referencePosition)
+    {
+      var collider = candidate.NearestOnlyCollider;
+      if (collider != null && collider.enabled && collider.gameObject.activeInHierarchy)
+        return Vector3.Distance(collider.ClosestPoint(referencePosition), referencePosition);
+
+      var origin = candidate.NearestOnlyDistanceOrigin;
+      return origin != null ? Vector3.Distance(origin.position, referencePosition) : float.PositiveInfinity;
+    }
+
+    public static bool IsPreferred(float distance, int tieBreaker, float nearestDistance, int nearestTieBreaker)
+    {
+      if (distance < nearestDistance - TieTolerance)
+        return true;
+
+      return Mathf.Abs(distance - nearestDistance) <= TieTolerance && tieBreaker < nearestTieBreaker;
+    }
   }
 }

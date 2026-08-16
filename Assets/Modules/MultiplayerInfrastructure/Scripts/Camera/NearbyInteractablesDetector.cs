@@ -33,6 +33,7 @@ namespace MultiplayerInfrastructure.Camera
     private readonly Dictionary<string, IInteract> _nearestOnly = new Dictionary<string, IInteract>();
     private readonly Dictionary<string, IInteract> _nearestOnlyScratch = new Dictionary<string, IInteract>();
     private readonly Dictionary<string, float> _nearestOnlyDistanceScratch = new Dictionary<string, float>();
+    private readonly Dictionary<string, int> _nearestOnlyTieBreakerScratch = new Dictionary<string, int>();
     private float nextQueryTime;
 
     public event Action<IReadOnlyList<IInteractable>> NearbyUpdated;
@@ -42,6 +43,7 @@ namespace MultiplayerInfrastructure.Camera
     
     public IReadOnlyList<IInteractable> Nearby => _nearby;
     public bool InteractableNearbyExists => _nearby.Count > 0;
+    public Vector3 DetectionPosition => detectBased != null ? detectBased.position + detectionOffset : transform.position;
 
     void Update()
     {
@@ -60,22 +62,7 @@ namespace MultiplayerInfrastructure.Camera
       if (Time.time < nextQueryTime) return;
       nextQueryTime = Time.time + queryInterval;
 
-      Vector3 detectionPosition = detectBased.position + detectionOffset;
-      int count = Physics.OverlapSphereNonAlloc(
-        detectionPosition,
-        detectionRedius,
-        overlapColliderBuf,
-        interactionLayerMask,
-        QueryTriggerInteraction.Collide
-      );
-      _scratch.Clear();
-      for (int i = 0; i < count; i++)
-      {
-        var collider = overlapColliderBuf[i];
-        if (collider.IsUnityNull()) continue;
-        if (collider.TryGetComponent(out IInteractable interactable) && !_scratch.Contains(interactable))
-          _scratch.Add(interactable);
-      }
+      QueryCurrentInteractables(_scratch);
 
       bool changed = HasListChanged(_nearby, _scratch);
 
@@ -84,15 +71,44 @@ namespace MultiplayerInfrastructure.Camera
 
       // 감지 집합이 그대로인 채 구역 경계를 이동해도 같은 종류의 최단 후보는 바뀔 수 있다.
       // 매 query마다 전체 UI를 다시 그리면 선택 인덱스가 흔들리므로, 실제 최단 후보가 바뀐 경우에만 알린다.
-      bool nearestOnlyChanged = UpdateNearestOnlySelections(_nearby, detectBased);
+      bool nearestOnlyChanged = UpdateNearestOnlySelections(_nearby, detectBased, DetectionPosition);
       if (changed || nearestOnlyChanged)
         NearbyUpdated?.Invoke(_nearby);
     }
 
-    private bool UpdateNearestOnlySelections(IReadOnlyList<IInteractable> interactables, Transform interactor)
+    public void QueryCurrentInteractables(List<IInteractable> results)
+    {
+      if (results == null)
+        return;
+
+      results.Clear();
+      if (detectBased.IsUnityNull())
+        return;
+
+      int count = Physics.OverlapSphereNonAlloc(
+        DetectionPosition,
+        detectionRedius,
+        overlapColliderBuf,
+        interactionLayerMask,
+        QueryTriggerInteraction.Collide);
+      for (int i = 0; i < count; i++)
+      {
+        var collider = overlapColliderBuf[i];
+        if (collider.IsUnityNull())
+          continue;
+        if (collider.TryGetComponent(out IInteractable interactable) && !results.Contains(interactable))
+          results.Add(interactable);
+      }
+    }
+
+    private bool UpdateNearestOnlySelections(
+      IReadOnlyList<IInteractable> interactables,
+      Transform interactor,
+      Vector3 distanceReference)
     {
       _nearestOnlyScratch.Clear();
       _nearestOnlyDistanceScratch.Clear();
+      _nearestOnlyTieBreakerScratch.Clear();
 
       for (int i = 0; i < interactables.Count; i++)
       {
@@ -108,14 +124,20 @@ namespace MultiplayerInfrastructure.Camera
             continue;
 
           string group = candidate.NearestOnlyGroup;
-          Transform origin = candidate.NearestOnlyDistanceOrigin;
-          if (string.IsNullOrWhiteSpace(group) || origin == null)
+          if (string.IsNullOrWhiteSpace(group))
             continue;
 
-          float sqrDistance = (origin.position - interactor.position).sqrMagnitude;
-          if (!_nearestOnlyDistanceScratch.TryGetValue(group, out float nearestDistance) || sqrDistance < nearestDistance)
+          float distance = NearestOnlyInteractUtility.DistanceTo(candidate, distanceReference);
+          int tieBreaker = candidate.NearestOnlyTieBreaker;
+          if (!_nearestOnlyDistanceScratch.TryGetValue(group, out float nearestDistance)
+              || NearestOnlyInteractUtility.IsPreferred(
+                distance,
+                tieBreaker,
+                nearestDistance,
+                _nearestOnlyTieBreakerScratch[group]))
           {
-            _nearestOnlyDistanceScratch[group] = sqrDistance;
+            _nearestOnlyDistanceScratch[group] = distance;
+            _nearestOnlyTieBreakerScratch[group] = tieBreaker;
             _nearestOnlyScratch[group] = interact;
           }
         }

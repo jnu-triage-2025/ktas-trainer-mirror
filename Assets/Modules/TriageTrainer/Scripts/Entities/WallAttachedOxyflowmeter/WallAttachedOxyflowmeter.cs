@@ -83,6 +83,8 @@ namespace TriageTrainer.Entity
     // 플레이어와 가장 가까운 하나만 힌트에 남긴다. 설치 후 조작/회수 상호작용은 그대로 노출한다.
     public string NearestOnlyGroup => IsAttached ? null : RequiredItemIdentifier;
     public Transform NearestOnlyDistanceOrigin => transform;
+    public Collider NearestOnlyCollider => GetComponent<Collider>();
+    public int NearestOnlyTieBreaker => GetInstanceID();
     public override IReadOnlyList<Sprite> DisplayIcons => new[] { Icon.ClearRightBottom, _heldItemIcon };
 
     public override string DisplayText
