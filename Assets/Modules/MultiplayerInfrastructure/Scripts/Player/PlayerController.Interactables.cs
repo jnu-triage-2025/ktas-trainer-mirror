@@ -80,34 +80,52 @@ namespace MultiplayerInfrastructure.Player
 #endif
       if (_interactableHintUI == null) return;
 
-      var interacts = new List<IInteract>();
-      if (nearby != null)
-      {
-        for (int i = 0; i < nearby.Count; i++)
-        {
-          var interactable = nearby[i];
-          if (interactable == null) continue;
-
-          var eachInteracts = interactable.Interacts;
-          if (eachInteracts == null || eachInteracts.Length == 0) continue;
-
-          for (int j = 0; j < eachInteracts.Length; j++)
-          {
-            var interact = eachInteracts[j];
-            if (interact == null)
-              continue;
-
-            if (interact is IInteractorConditional conditional && !conditional.CanInteract(transform))
-              continue;
-
-            interacts.Add(interact);
-          }
-        }
-      }
+      var interacts = CollectAvailableInteracts(nearby);
+      KeepNearestExclusiveInteracts(interacts, transform);
 
       // UpdateInteractables를 사용하여 모드에 따라 적절히 처리
       _interactableHintUI.UpdateInteractables(interacts);
       RefreshLocalInteractionFocus();
+    }
+
+    /// <summary>
+    /// 큰 Interactable Detector와 개별 콜라이더가 구역 경계에서 겹치면 같은 이름의 설치 항목이
+    /// 동시에 감지될 수 있다. INearestOnlyInteract가 같은 그룹으로 지정한 활성 후보끼리만 비교하여
+    /// 플레이어와 가장 가까운 하나를 남긴다. 이미 조건 검사에서 제외된 항목이나 다른 종류의 상호작용은
+    /// 이 목록에 관여하지 않으므로 기존 동작을 유지한다.
+    /// </summary>
+    internal static void KeepNearestExclusiveInteracts(List<IInteract> interacts, Transform interactor)
+    {
+      if (interacts == null || interactor == null || interacts.Count < 2)
+        return;
+
+      var nearestByGroup = new Dictionary<string, (IInteract interact, float sqrDistance)>();
+      for (int i = 0; i < interacts.Count; i++)
+      {
+        if (!(interacts[i] is INearestOnlyInteract candidate))
+          continue;
+
+        string group = candidate.NearestOnlyGroup;
+        Transform origin = candidate.NearestOnlyDistanceOrigin;
+        if (string.IsNullOrWhiteSpace(group) || origin == null)
+          continue;
+
+        float sqrDistance = (origin.position - interactor.position).sqrMagnitude;
+        if (!nearestByGroup.TryGetValue(group, out var nearest) || sqrDistance < nearest.sqrDistance)
+          nearestByGroup[group] = (interacts[i], sqrDistance);
+      }
+
+      for (int i = interacts.Count - 1; i >= 0; i--)
+      {
+        if (!(interacts[i] is INearestOnlyInteract candidate))
+          continue;
+
+        string group = candidate.NearestOnlyGroup;
+        if (!string.IsNullOrWhiteSpace(group)
+            && nearestByGroup.TryGetValue(group, out var nearest)
+            && !ReferenceEquals(interacts[i], nearest.interact))
+          interacts.RemoveAt(i);
+      }
     }
 
     public void RefreshInteractableHintsNow()
@@ -138,7 +156,57 @@ namespace MultiplayerInfrastructure.Player
       var interact = _interactableHintUI?.GetSelected();
       if (interact == null) return;
 
+      // UI가 갱신되는 두 query 사이에 경계를 넘으면 이전 최단 후보가 잠시 선택 상태로 남을 수 있다.
+      // 실행 직전에 현재 감지 목록과 조건을 다시 평가하여 더 먼 static entity가 활성화되지 않게 한다.
+      if (!IsCurrentlyAvailableInteract(interact))
+      {
+        RefreshInteractableHintsNow();
+        return;
+      }
+
       interact.Interact(transform);
+    }
+
+    private bool IsCurrentlyAvailableInteract(IInteract selected)
+    {
+      if (_detector == null || selected == null)
+        return false;
+
+      var current = CollectAvailableInteracts(_detector.Nearby);
+      KeepNearestExclusiveInteracts(current, transform);
+      for (int i = 0; i < current.Count; i++)
+      {
+        if (ReferenceEquals(current[i], selected))
+          return true;
+      }
+
+      return false;
+    }
+
+    private List<IInteract> CollectAvailableInteracts(IReadOnlyList<IInteractable> nearby)
+    {
+      var interacts = new List<IInteract>();
+      if (nearby == null)
+        return interacts;
+
+      for (int i = 0; i < nearby.Count; i++)
+      {
+        var eachInteracts = nearby[i]?.Interacts;
+        if (eachInteracts == null)
+          continue;
+
+        for (int j = 0; j < eachInteracts.Length; j++)
+        {
+          var interact = eachInteracts[j];
+          if (interact == null)
+            continue;
+          if (interact is IInteractorConditional conditional && !conditional.CanInteract(transform))
+            continue;
+          interacts.Add(interact);
+        }
+      }
+
+      return interacts;
     }
 
     private void HandleInteractionMenuClicked(int index)

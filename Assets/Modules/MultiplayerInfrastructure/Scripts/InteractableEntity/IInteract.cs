@@ -60,4 +60,14 @@ namespace MultiplayerInfrastructure.InteractableEntity
   {
     void SetLocalInteractionFocused(bool focused);
   }
+
+  /// <summary>
+  /// 같은 종류의 후보가 감지 범위에 여러 개 들어왔을 때 가장 가까운 상호작용 하나만 노출해야 하는 항목입니다.
+  /// 빈 그룹 키를 반환하면 현재 상태에서는 거리 필터를 적용하지 않습니다.
+  /// </summary>
+  public interface INearestOnlyInteract
+  {
+    string NearestOnlyGroup { get; }
+    Transform NearestOnlyDistanceOrigin { get; }
+  }
 }

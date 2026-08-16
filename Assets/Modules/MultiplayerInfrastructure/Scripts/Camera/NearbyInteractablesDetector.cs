@@ -30,6 +30,9 @@ namespace MultiplayerInfrastructure.Camera
     [SerializeField] private List<IInteractable> _nearby = new List<IInteractable>();
     [SerializeField] private List<IInteractable> _scratch = new List<IInteractable>();
     private readonly Collider[] overlapColliderBuf = new Collider[32];
+    private readonly Dictionary<string, IInteract> _nearestOnly = new Dictionary<string, IInteract>();
+    private readonly Dictionary<string, IInteract> _nearestOnlyScratch = new Dictionary<string, IInteract>();
+    private readonly Dictionary<string, float> _nearestOnlyDistanceScratch = new Dictionary<string, float>();
     private float nextQueryTime;
 
     public event Action<IReadOnlyList<IInteractable>> NearbyUpdated;
@@ -79,8 +82,70 @@ namespace MultiplayerInfrastructure.Camera
       _nearby.Clear();
       _nearby.AddRange(_scratch);
 
-      if (changed)
+      // 감지 집합이 그대로인 채 구역 경계를 이동해도 같은 종류의 최단 후보는 바뀔 수 있다.
+      // 매 query마다 전체 UI를 다시 그리면 선택 인덱스가 흔들리므로, 실제 최단 후보가 바뀐 경우에만 알린다.
+      bool nearestOnlyChanged = UpdateNearestOnlySelections(_nearby, detectBased);
+      if (changed || nearestOnlyChanged)
         NearbyUpdated?.Invoke(_nearby);
+    }
+
+    private bool UpdateNearestOnlySelections(IReadOnlyList<IInteractable> interactables, Transform interactor)
+    {
+      _nearestOnlyScratch.Clear();
+      _nearestOnlyDistanceScratch.Clear();
+
+      for (int i = 0; i < interactables.Count; i++)
+      {
+        var interacts = interactables[i]?.Interacts;
+        if (interacts == null)
+          continue;
+
+        for (int j = 0; j < interacts.Length; j++)
+        {
+          var interact = interacts[j];
+          if (!(interact is INearestOnlyInteract candidate)
+              || (interact is IInteractorConditional conditional && !conditional.CanInteract(interactor)))
+            continue;
+
+          string group = candidate.NearestOnlyGroup;
+          Transform origin = candidate.NearestOnlyDistanceOrigin;
+          if (string.IsNullOrWhiteSpace(group) || origin == null)
+            continue;
+
+          float sqrDistance = (origin.position - interactor.position).sqrMagnitude;
+          if (!_nearestOnlyDistanceScratch.TryGetValue(group, out float nearestDistance) || sqrDistance < nearestDistance)
+          {
+            _nearestOnlyDistanceScratch[group] = sqrDistance;
+            _nearestOnlyScratch[group] = interact;
+          }
+        }
+      }
+
+      bool changed = !HaveSameSelections(_nearestOnly, _nearestOnlyScratch);
+      if (!changed)
+        return false;
+
+      _nearestOnly.Clear();
+      foreach (var pair in _nearestOnlyScratch)
+        _nearestOnly.Add(pair.Key, pair.Value);
+      return true;
+    }
+
+    private static bool HaveSameSelections(
+      IReadOnlyDictionary<string, IInteract> previous,
+      IReadOnlyDictionary<string, IInteract> next)
+    {
+      if (previous.Count != next.Count)
+        return false;
+
+      foreach (var pair in next)
+      {
+        if (!previous.TryGetValue(pair.Key, out var previousInteract)
+            || !ReferenceEquals(previousInteract, pair.Value))
+          return false;
+      }
+
+      return true;
     }
 
     private static bool HasListChanged(List<IInteractable> previous, List<IInteractable> next)

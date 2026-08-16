@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.ItemSystem;
+using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.OxyLine;
@@ -34,7 +35,7 @@ namespace TriageTrainer.Entity
   /// </para>
   /// </summary>
   [DisallowMultipleComponent]
-  public class WallAttachedOxyflowmeter : StaticObjectDisplayment
+  public class WallAttachedOxyflowmeter : StaticObjectDisplayment, INearestOnlyInteract
   {
     public static event Action<WallAttachedOxyflowmeter, bool> AttachmentStateChanged;
     /// <summary>플레이어 상호작용으로 새 설치가 확정된 경우에만 발생한다.</summary>
@@ -78,6 +79,10 @@ namespace TriageTrainer.Entity
     private Sprite _heldItemIcon;
 
     protected override string EntityIdPrefix => "wall_oxyflowmeter";
+    // 미설치 활성화 후보가 구역 경계에서 여러 개 감지되어도 PlayerController가 같은 그룹 중
+    // 플레이어와 가장 가까운 하나만 힌트에 남긴다. 설치 후 조작/회수 상호작용은 그대로 노출한다.
+    public string NearestOnlyGroup => IsAttached ? null : RequiredItemIdentifier;
+    public Transform NearestOnlyDistanceOrigin => transform;
     public override IReadOnlyList<Sprite> DisplayIcons => new[] { Icon.ClearRightBottom, _heldItemIcon };
 
     public override string DisplayText
