@@ -132,21 +132,6 @@ namespace TriageTrainer.Entity
         break;
       }
 
-      // 제세동 카트 같이 positioning point에 스냅되는 다른 1인 조종 이동체도 힌트 표시 대상에 포함한다.
-      if (!_hasLocallyControlledBed)
-      {
-        DefibCartController[] carts = FindObjectsByType<DefibCartController>(
-          FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-        for (int i = 0; i < carts.Length; i++)
-        {
-          if (carts[i] == null || !carts[i].isActiveAndEnabled || !carts[i].IsLocallyControlled)
-            continue;
-
-          _hasLocallyControlledBed = true;
-          break;
-        }
-      }
-
       return _hasLocallyControlledBed;
     }
 
