@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "2-implementing"
 status: active
-updated: 2026-07-31
+updated: 2026-08-16
 flags: ["refactor-required"]
 ---
 
@@ -30,6 +30,30 @@ flags: ["refactor-required"]
 - [x] a-2: MoveNextBehavior/WaitUntil 열거값을 엔진 정본(`Immediately`/`WaitUntilDone`)으로 정규화함(구 md `Immediate` 폐기).
 - [x] a-1/a-2: EventIdentifier·Validator 시그널·아이템 식별자를 JSON/C# 정본 snake_case로 통일함.
 - [x] a-1 잔여: 병렬 브랜치의 `CompletionConditionIdentifier`는 인간 작업자 코멘트에 따라 `CC_*_patient_a` 계열로 통일함. 이 값은 독립 노드가 아니라 병렬 브랜치 종료 표식이며, 브랜치의 마지막 노드가 이 식별자로 전이할 때 `Parallel` 실행기가 완료로 소비한다(2026-07-18).
+
+## TTS 음성 프리셋 정책 (2026-08-16)
+
+시나리오의 대사 노드에 TTS 음성을 부여한다. 화자(`SpeakerName`)별 음성 프리셋 배정은 아래 표와 같으며,
+JSON에서는 각 노드에 `"playTTS": true`와 `"ttsVoiceProfile": { "preset": "..." }`로 기록한다.
+
+| SpeakerName | 프리셋 | 비고 |
+|---|---|---|
+| 시스템 | F3 | `patient_b_c_ct`의 시스템 화자와 동일 프리셋 |
+| 의사 NPC | M1 | `patient_b_c_ct`의 의사 화자와 동일 프리셋 |
+| 간호사 A | M3 | |
+| 간호사 B | F4 | |
+| 간호사 C | M4 | |
+| 간호사 D | F5 | |
+
+노드 명명 규칙(알파벳 접두 + 숫자 3자리)에 따른 적용 범위:
+
+1. **`D***` Dialogue 노드**: 모든 인간 참여자에게 텍스트가 보이고 TTS가 출력된다. 화자별 프리셋을 적용한다.
+2. **`N***` Dialogue 노드**: 특정 플레이어에게만 텍스트가 보이고 TTS가 출력된다. 화자별 프리셋을 동일하게 적용한다.
+3. **`C***` Choice 노드**: TTS를 적용하지 않는다(`playTTS` 미설정 유지).
+
+- [x] TTS-1: 위 정책을 `patient_a_critical.scenario.json`에 반영함(2026-08-16). D 접두 35개 + N 접두 101개 = 총 136개 Dialogue 노드에 `playTTS`/`ttsVoiceProfile` 기록, C 접두 Choice 노드 32개는 미적용 유지.
+- [ ] TTS-2 (인간 검토 필요): 사용 프리셋 6종(F3, F4, F5, M1, M3, M4)의 사전 bake(`Tools > Text to Speech Service > Bake Scenario Inline Audio`) 실행. bake 산출물은 `Assets/StreamingAssets/TTS/BakedInline/patient_a_critical/{프리셋}/`에 생성되어야 하며, 이는 본 문서/JSON 외 파일 변경이므로 담당 개발자 확인 후 진행한다.
+- [ ] TTS-3 (인간 검토 필요): 실플레이에서 화자별 음성 출력 및 N 접두 노드의 대상 플레이어 한정 재생 검증.
 
 ## JSON 변환 전 연결성 감사 (2026-07-18)
 
@@ -1463,7 +1487,7 @@ SPAWN_A
 | **Identifier** | 문자열 | D011 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 의사 NPC |
-| **DialogueContent** | 문자열 | 기도 확보를 위해 intubation을 시행하겠습니다. 삽관·산소 담당 간호사 선생님은 보조해주세요. |
+| **DialogueContent** | 문자열 | 기도 확보를 위해 intubation을 시행하겠습니다. 간호사 B 선생님은 보조해주세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | D012 |
 
@@ -4352,7 +4376,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | **Identifier** | 문자열 | N020_2 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 준비된 에피네프린 1mg을 클릭해 선택한 뒤, 중심정맥관을 클릭해 투여하세요. |
+| **DialogueContent** | 문자열 | 인벤토리에서 조합하여 준비된 에피네프린 1mg을 클릭해 선택한 뒤, 중심정맥관을 클릭해 투여하세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V026_2 |

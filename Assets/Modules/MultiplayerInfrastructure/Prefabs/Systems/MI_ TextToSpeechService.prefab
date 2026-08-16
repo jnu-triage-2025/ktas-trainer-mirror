@@ -50,7 +50,13 @@ MonoBehaviour:
   voiceStyleName: F1
   language: ko
   totalStep: 5
-  speed: 1.05
+  speed: 1.15
+  voiceProfiles:
+  - VoiceIdentifier: 
+    VoiceStyleName: 
+    Language: 
+    Speed: 0
+    TotalStep: 0
 --- !u!82 &7121865671965158268
 AudioSource:
   m_ObjectHideFlags: 0
