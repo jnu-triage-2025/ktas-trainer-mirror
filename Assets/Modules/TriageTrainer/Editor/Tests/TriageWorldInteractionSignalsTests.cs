@@ -64,24 +64,24 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
-    public void DefibCartSnapPointSignalsAreScopedByCartAndPoint()
+    public void DefibrillatorCartSnapPointSignalsAreScopedByCartAndPoint()
     {
       var raised = new List<string>();
       void Capture(string signal) => raised.Add(signal);
       ScenarioInteractionSignals.OnSignalRegistered += Capture;
       try
       {
-        TriageWorldInteractionSignals.RaiseDefibCartSnapPointLatched("defib_cart_a", "defibcart_to_patient");
-        TriageWorldInteractionSignals.RaiseDefibCartSnapPointUnlatched("defib_cart_a", "defibcart_to_patient");
+        TriageWorldInteractionSignals.RaiseDefibrillatorCartSnapPointLatched("defibrillator_cart_a", "defibrillatorcart_to_patient");
+        TriageWorldInteractionSignals.RaiseDefibrillatorCartSnapPointUnlatched("defibrillator_cart_a", "defibrillatorcart_to_patient");
 
-        Assert.That(raised, Does.Contain("sig.defib_cart_snap_point_latched_defib_cart_a_defibcart_to_patient"));
-        Assert.That(raised, Does.Contain("sig.defib_cart_snap_point_unlatched_defib_cart_a_defibcart_to_patient"));
+        Assert.That(raised, Does.Contain("sig.defibrillator_cart_snap_point_latched_defibrillator_cart_a_defibrillatorcart_to_patient"));
+        Assert.That(raised, Does.Contain("sig.defibrillator_cart_snap_point_unlatched_defibrillator_cart_a_defibrillatorcart_to_patient"));
       }
       finally
       {
         ScenarioInteractionSignals.OnSignalRegistered -= Capture;
-        ScenarioInteractionSignals.Clear("defib_cart_snap_point_latched_defib_cart_a_defibcart_to_patient");
-        ScenarioInteractionSignals.Clear("defib_cart_snap_point_unlatched_defib_cart_a_defibcart_to_patient");
+        ScenarioInteractionSignals.Clear("defibrillator_cart_snap_point_latched_defibrillator_cart_a_defibrillatorcart_to_patient");
+        ScenarioInteractionSignals.Clear("defibrillator_cart_snap_point_unlatched_defibrillator_cart_a_defibrillatorcart_to_patient");
       }
     }
 

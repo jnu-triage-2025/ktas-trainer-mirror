@@ -11,7 +11,7 @@ namespace TriageTrainer.Entity
   /// <summary>
   /// 제세동 카트가 도착했을 때 정렬될 월드상의 고정 위치와 방향을 정의한다.
   /// </summary>
-  public sealed class DefibCartSnapPoint : MonoBehaviour
+  public sealed class DefibrillatorCartSnapPoint : MonoBehaviour
   {
     private static int _localCartQueryFrame = -1;
     private static bool _hasLocallyControlledCart;
@@ -24,13 +24,13 @@ namespace TriageTrainer.Entity
     [Tooltip("제세동 카트가 이 지점에 스냅되면 카트를 조종 중인 모든 플레이어를 자동으로 분리합니다.")]
     [SerializeField] private bool _releaseParticipantsOnSnap = true;
 
-    [Header("Defib Cart Collision Policy")]
+    [Header("Defibrillator Cart Collision Policy")]
     [Tooltip("다른 제세동 카트가 이 위치 또는 스냅 범위에 있으면 새 카트의 스냅을 허용하지 않습니다.")]
-    [SerializeField] private bool _blockWhenDefibCartIsPresent = true;
+    [SerializeField] private bool _blockWhenDefibrillatorCartIsPresent = true;
     [Tooltip("기존 제세동 카트가 이 위치 또는 스냅 범위에 있으면, 새 카트를 스냅하기 전에 기존 카트를 제거합니다.")]
-    [SerializeField] private bool _despawnExistingDefibCartWhenPresent;
+    [SerializeField] private bool _despawnExistingDefibrillatorCartWhenPresent;
     [Tooltip("기존 카트를 자동 제거하지 않을 때, 모든 기존 제세동 카트를 차단물로 취급합니다.")]
-    [SerializeField] private bool _blockWhenAnyDefibCartIsPresent;
+    [SerializeField] private bool _blockWhenAnyDefibrillatorCartIsPresent;
 
     [Header("Occupied Area")]
     [SerializeField] private Vector2 _occupiedSize = new(2.2f, 1f);
@@ -41,9 +41,9 @@ namespace TriageTrainer.Entity
     public string Identifier => _identifier == null ? string.Empty : _identifier.Trim();
     public Vector3 Position => transform.position;
     public Quaternion Rotation => transform.rotation;
-    public bool BlockWhenDefibCartIsPresent => _blockWhenDefibCartIsPresent;
-    public bool DespawnExistingDefibCartWhenPresent => _despawnExistingDefibCartWhenPresent;
-    public bool BlockWhenAnyDefibCartIsPresent => _blockWhenAnyDefibCartIsPresent;
+    public bool BlockWhenDefibrillatorCartIsPresent => _blockWhenDefibrillatorCartIsPresent;
+    public bool DespawnExistingDefibrillatorCartWhenPresent => _despawnExistingDefibrillatorCartWhenPresent;
+    public bool BlockWhenAnyDefibrillatorCartIsPresent => _blockWhenAnyDefibrillatorCartIsPresent;
 
     public void SetIdentifierForEditor(string identifier) => SetIdentifier(identifier);
 
@@ -87,12 +87,12 @@ namespace TriageTrainer.Entity
 
     private void OnEnable()
     {
-      TriageWorldInteractionSignals.RaiseDefibCartSnapPointEnabled(Identifier);
+      TriageWorldInteractionSignals.RaiseDefibrillatorCartSnapPointEnabled(Identifier);
     }
 
     private void OnDisable()
     {
-      TriageWorldInteractionSignals.RaiseDefibCartSnapPointDisabled(Identifier);
+      TriageWorldInteractionSignals.RaiseDefibrillatorCartSnapPointDisabled(Identifier);
     }
 
     private void Update()
@@ -111,7 +111,7 @@ namespace TriageTrainer.Entity
 
       _localCartQueryFrame = Time.frameCount;
       _hasLocallyControlledCart = false;
-      DefibCartController[] carts = FindObjectsByType<DefibCartController>(
+      DefibrillatorCartController[] carts = FindObjectsByType<DefibrillatorCartController>(
         FindObjectsInactive.Exclude, FindObjectsSortMode.None);
       for (int i = 0; i < carts.Length; i++)
       {
@@ -130,7 +130,7 @@ namespace TriageTrainer.Entity
       if (_runtimeHint != null)
         return;
 
-      _runtimeHint = new GameObject("DefibCartSnapPointHint");
+      _runtimeHint = new GameObject("DefibrillatorCartSnapPointHint");
       _runtimeHint.transform.SetParent(transform, false);
       _runtimeHint.transform.localPosition = Vector3.up * _displayHeight;
       _runtimeHint.transform.localRotation = Quaternion.identity;
@@ -175,7 +175,7 @@ namespace TriageTrainer.Entity
 
     private static Material CreateHintMaterial(Shader shader, Color color, string suffix)
     {
-      var material = new Material(shader) { name = "DefibCartSnapPointHintMaterial_" + suffix };
+      var material = new Material(shader) { name = "DefibrillatorCartSnapPointHintMaterial_" + suffix };
       if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
       if (material.HasProperty("_Color")) material.SetColor("_Color", color);
       material.SetOverrideTag("RenderType", "Transparent");
@@ -226,7 +226,7 @@ namespace TriageTrainer.Entity
 
 #if UNITY_EDITOR
       Handles.color = new Color(0.05f, 0.45f, 0.65f, 1f);
-      Handles.Label(center + Vector3.up * 0.15f, "Defib Cart Snap Point");
+      Handles.Label(center + Vector3.up * 0.15f, "Defibrillator Cart Snap Point");
 #endif
     }
   }

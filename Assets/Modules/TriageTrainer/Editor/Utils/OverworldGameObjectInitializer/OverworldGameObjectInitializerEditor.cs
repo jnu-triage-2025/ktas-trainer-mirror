@@ -129,7 +129,7 @@ namespace TriageTrainer.Editor.Utils
         serializedWindow.FindProperty(nameof(staticEntityLayouts)),
         new GUIContent("Layout Definitions"), true);
       serializedWindow.ApplyModifiedProperties();
-      EditorGUILayout.HelpBox("Layout asset의 정의에 따라 환자 침대 포지셔닝 포인트, Defib Cart Snap Point, Wall 장비, PatientCareDescriptionZone을 생성합니다.", MessageType.None);
+      EditorGUILayout.HelpBox("Layout asset의 정의에 따라 환자 침대 포지셔닝 포인트, Defibrillator Cart Snap Point, Wall 장비, PatientCareDescriptionZone을 생성합니다.", MessageType.None);
 
       EditorGUILayout.Space(8f);
       EditorGUILayout.LabelField("Apply", EditorStyles.boldLabel);

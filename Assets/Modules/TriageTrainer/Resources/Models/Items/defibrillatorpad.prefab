@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7092460587115348216}
   - component: {fileID: 3921779823827174308}
   m_Layer: 6
-  m_Name: defibpad
+  m_Name: defibrillatorpad
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

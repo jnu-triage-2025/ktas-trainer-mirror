@@ -44,14 +44,14 @@ namespace TriageTrainer.Scenario
       Raise("patient_bed_positioning_point_enabled", pointIdentifier);
     public static void RaisePatientBedPositioningPointDisabled(string pointIdentifier) =>
       Raise("patient_bed_positioning_point_disabled", pointIdentifier);
-    public static void RaiseDefibCartSnapPointLatched(string cartIdentifier, string pointIdentifier) =>
-      Raise("defib_cart_snap_point_latched", cartIdentifier, pointIdentifier);
-    public static void RaiseDefibCartSnapPointUnlatched(string cartIdentifier, string pointIdentifier) =>
-      Raise("defib_cart_snap_point_unlatched", cartIdentifier, pointIdentifier);
-    public static void RaiseDefibCartSnapPointEnabled(string pointIdentifier) =>
-      Raise("defib_cart_snap_point_enabled", pointIdentifier);
-    public static void RaiseDefibCartSnapPointDisabled(string pointIdentifier) =>
-      Raise("defib_cart_snap_point_disabled", pointIdentifier);
+    public static void RaiseDefibrillatorCartSnapPointLatched(string cartIdentifier, string pointIdentifier) =>
+      Raise("defibrillator_cart_snap_point_latched", cartIdentifier, pointIdentifier);
+    public static void RaiseDefibrillatorCartSnapPointUnlatched(string cartIdentifier, string pointIdentifier) =>
+      Raise("defibrillator_cart_snap_point_unlatched", cartIdentifier, pointIdentifier);
+    public static void RaiseDefibrillatorCartSnapPointEnabled(string pointIdentifier) =>
+      Raise("defibrillator_cart_snap_point_enabled", pointIdentifier);
+    public static void RaiseDefibrillatorCartSnapPointDisabled(string pointIdentifier) =>
+      Raise("defibrillator_cart_snap_point_disabled", pointIdentifier);
 
     private static void Raise(string name, params string[] identifiers)
     {

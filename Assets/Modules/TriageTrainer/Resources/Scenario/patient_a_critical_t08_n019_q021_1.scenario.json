@@ -2298,14 +2298,14 @@
       "nextIdentifier": "L003"
     },
     "E029": {
-      "eventIdentifier": "attach_defibpad",
+      "eventIdentifier": "attach_defibrillatorpad",
       "moveNextBehavior": "Immediately",
       "identifier": "E029",
       "nodeType": "InvokeEvent",
       "nextIdentifier": "E030"
     },
     "E030": {
-      "eventIdentifier": "defib_ui_irregular",
+      "eventIdentifier": "defibrillator_ui_irregular",
       "moveNextBehavior": "Immediately",
       "identifier": "E030",
       "nodeType": "InvokeEvent",
@@ -4029,7 +4029,7 @@
         },
         {
           "identifier": "N019",
-          "completionConditionIdentifier": "CC_C_defib",
+          "completionConditionIdentifier": "CC_C_defibrillator",
           "requiredPlayerTags": [
             "nurse_c"
           ],
@@ -4084,7 +4084,7 @@
         },
         {
           "identifier": "N024",
-          "completionConditionIdentifier": "CC_D_defib",
+          "completionConditionIdentifier": "CC_D_defibrillator",
           "requiredPlayerTags": [
             "nurse_d"
           ],
@@ -4425,7 +4425,7 @@
     "Q021": {
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "questDefinitionIdentifier": "Quest_Defib_C",
+      "questDefinitionIdentifier": "Quest_Defibrillator_C",
       "quest": null,
       "persistProgressOnSessionEnd": false,
       "identifier": "Q021",
@@ -4435,7 +4435,7 @@
     "Q021_1": {
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "questDefinitionIdentifier": "Quest_Defib_C",
+      "questDefinitionIdentifier": "Quest_Defibrillator_C",
       "quest": null,
       "persistProgressOnSessionEnd": false,
       "identifier": "Q021_1",
@@ -4525,7 +4525,7 @@
     "Q026": {
       "operation": "Add",
       "failureStrategy": "Ignore",
-      "questDefinitionIdentifier": "Quest_Defib_D",
+      "questDefinitionIdentifier": "Quest_Defibrillator_D",
       "quest": null,
       "persistProgressOnSessionEnd": false,
       "identifier": "Q026",
@@ -4535,12 +4535,12 @@
     "Q026_1": {
       "operation": "Remove",
       "failureStrategy": "Ignore",
-      "questDefinitionIdentifier": "Quest_Defib_D",
+      "questDefinitionIdentifier": "Quest_Defibrillator_D",
       "quest": null,
       "persistProgressOnSessionEnd": false,
       "identifier": "Q026_1",
       "nodeType": "QuestControl",
-      "nextIdentifier": "CC_D_defib"
+      "nextIdentifier": "CC_D_defibrillator"
     },
     "Q027": {
       "operation": "Add",
@@ -4644,7 +4644,7 @@
       "nextIdentifier": "N017_3"
     },
     "S004": {
-      "soundResourceIdentifier": "defib_on_sound",
+      "soundResourceIdentifier": "defibrillator_on_sound",
       "waitUntilFinished": true,
       "identifier": "S004",
       "nodeType": "Sound",
@@ -5955,7 +5955,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.defib_cart_snap_point_reached_defib_cart_a_defibcart_to_patient"
+              "registryIdentifier": "sig.defibrillator_cart_snap_point_reached_defibrillator_cart_a_defibrillatorcart_to_patient"
             }
           ]
         }
@@ -5982,7 +5982,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_defibpad"
+              "registryIdentifier": "sig.click_defibrillatorpad"
             },
             {
               "type": "Registry",
@@ -6309,7 +6309,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.interact_defib"
+              "registryIdentifier": "sig.interact_defibrillator"
             }
           ]
         }

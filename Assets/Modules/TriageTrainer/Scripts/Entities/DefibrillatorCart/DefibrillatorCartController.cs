@@ -22,13 +22,13 @@ namespace TriageTrainer.Entity
   /// <see cref="MinecraftBoadLikeControl"/> 에 위임한다(<see cref="Level1RapidInfuserController"/> 와 동일한 상속 패턴).
   ///
   /// 카트가 허용된 snap point에 도달하면 서버 권위로 스냅하고 시나리오 신호
-  /// defib_cart_snap_point_reached_{카트 식별자}_{포인트 식별자} 를 발생시킨다.
+  /// defibrillator_cart_snap_point_reached_{카트 식별자}_{포인트 식별자} 를 발생시킨다.
   /// </summary>
-  public sealed class DefibCartController : MinecraftBoadLikeControl,
+  public sealed class DefibrillatorCartController : MinecraftBoadLikeControl,
     IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver
   {
     [Header("Identity")]
-    [SerializeField] private string _entityTypeIdentifier = "defib_cart_a";
+    [SerializeField] private string _entityTypeIdentifier = "defibrillator_cart_a";
 
     [Header("Display")]
     [SerializeField] private string _displayText = "제세동 카트 조종";
@@ -41,7 +41,7 @@ namespace TriageTrainer.Entity
     [SerializeField, Min(0f)] private float _snapReleasePadding = 0.2f;
 
     [Header("Snap Point Filter")]
-    [Tooltip("비어 있으면 모든 DefibCartSnapPoint를 대상으로 스냅합니다. 값이 있으면 해당 Identifier 목록만 스냅 대상으로 허용합니다.")]
+    [Tooltip("비어 있으면 모든 DefibrillatorCartSnapPoint를 대상으로 스냅합니다. 값이 있으면 해당 Identifier 목록만 스냅 대상으로 허용합니다.")]
     [FormerlySerializedAs("_allowedPositioningPointIdentifiers")]
     [SerializeField] private List<string> _allowedSnapPointIdentifiers = new();
 
@@ -49,7 +49,7 @@ namespace TriageTrainer.Entity
     private readonly SyncVar<string> _runtimeIdentifierSync = new(string.Empty);
     private readonly SyncVar<string> _snapPointIdentifierSync = new(string.Empty);
 
-    private DefibCartSnapPoint _latchedSnapPoint;
+    private DefibrillatorCartSnapPoint _latchedSnapPoint;
     private string _pendingSnapPointIdentifier;
     private string _entityRuntimeIdentifier;
 
@@ -59,7 +59,7 @@ namespace TriageTrainer.Entity
       : _entityTypeIdentifier;
 
     public string Identifier => EffectiveIdentifier;
-    public DefibCartSnapPoint LatchedSnapPoint => _latchedSnapPoint;
+    public DefibrillatorCartSnapPoint LatchedSnapPoint => _latchedSnapPoint;
 
     public IInteract[] Interacts => new IInteract[] { this };
     public string DisplayText => _displayText;
@@ -172,7 +172,7 @@ namespace TriageTrainer.Entity
       {
         Registry.RegisterEntity(
           id,
-          EntityType.DefibCart,
+          EntityType.DefibrillatorCart,
           gameObject,
           displayName: _displayText,
           ownerUserIdentifier: null,
@@ -181,7 +181,7 @@ namespace TriageTrainer.Entity
       }
       catch (Exception ex)
       {
-        Debug.LogWarning($"[DefibCart] Failed to register entity '{id}': {ex.Message}");
+        Debug.LogWarning($"[DefibrillatorCart] Failed to register entity '{id}': {ex.Message}");
       }
     }
 
@@ -222,10 +222,10 @@ namespace TriageTrainer.Entity
         SetAuthoritativeSnapPointIdentifier(string.Empty);
         if (IsServerStarted)
           RpcApplyUnlatchedState();
-        TriageWorldInteractionSignals.RaiseDefibCartSnapPointUnlatched(Identifier, previousPointIdentifier);
+        TriageWorldInteractionSignals.RaiseDefibrillatorCartSnapPointUnlatched(Identifier, previousPointIdentifier);
       }
 
-      DefibCartSnapPoint nearest = FindNearestSnapPoint();
+      DefibrillatorCartSnapPoint nearest = FindNearestSnapPoint();
       if (nearest == null)
         return;
 
@@ -236,44 +236,44 @@ namespace TriageTrainer.Entity
       SetAuthoritativeTransform(nearest.Position, nearest.Rotation);
       ReleaseParticipantsAfterSnapIfConfigured(nearest);
       PublishAuthoritativeSnappedState(nearest);
-      TriageWorldInteractionSignals.RaiseDefibCartSnapPointLatched(Identifier, nearest.Identifier);
+      TriageWorldInteractionSignals.RaiseDefibrillatorCartSnapPointLatched(Identifier, nearest.Identifier);
       PublishSnapPointReached(nearest);
     }
 
     /// <summary>
     /// 스냅 대상 위치를 점유 중인 다른 제세동 카트를 snap point 정책에 따라 처리한다.
     /// </summary>
-    private bool TryResolveSnapPointCollision(DefibCartSnapPoint point)
+    private bool TryResolveSnapPointCollision(DefibrillatorCartSnapPoint point)
     {
-      DefibCartController[] carts = FindObjectsByType<DefibCartController>(
+      DefibrillatorCartController[] carts = FindObjectsByType<DefibrillatorCartController>(
         FindObjectsInactive.Exclude,
         FindObjectsSortMode.None);
       for (int i = 0; i < carts.Length; i++)
       {
-        DefibCartController other = carts[i];
+        DefibrillatorCartController other = carts[i];
         if (other == null || other == this || !other.isActiveAndEnabled)
           continue;
 
         if (other._latchedSnapPoint != point && !point.IsWithinSnapDistance(other.transform.position))
           continue;
 
-        if (point.BlockWhenDefibCartIsPresent)
+        if (point.BlockWhenDefibrillatorCartIsPresent)
           return false;
 
-        if (point.DespawnExistingDefibCartWhenPresent)
+        if (point.DespawnExistingDefibrillatorCartWhenPresent)
         {
-          DespawnBlockingDefibCart(other);
+          DespawnBlockingDefibrillatorCart(other);
           continue;
         }
 
-        if (point.BlockWhenAnyDefibCartIsPresent)
+        if (point.BlockWhenAnyDefibrillatorCartIsPresent)
           return false;
       }
 
       return true;
     }
 
-    private static void DespawnBlockingDefibCart(DefibCartController cart)
+    private static void DespawnBlockingDefibrillatorCart(DefibrillatorCartController cart)
     {
       NetworkObject networkObject = cart.GetComponent<NetworkObject>();
       if (InstanceFinder.IsServerStarted && networkObject != null && networkObject.IsSpawned)
@@ -285,17 +285,17 @@ namespace TriageTrainer.Entity
       UnityEngine.Object.Destroy(cart.gameObject);
     }
 
-    private DefibCartSnapPoint FindNearestSnapPoint()
+    private DefibrillatorCartSnapPoint FindNearestSnapPoint()
     {
-      DefibCartSnapPoint[] points = FindObjectsByType<DefibCartSnapPoint>(
+      DefibrillatorCartSnapPoint[] points = FindObjectsByType<DefibrillatorCartSnapPoint>(
         FindObjectsInactive.Exclude,
         FindObjectsSortMode.None);
-      DefibCartSnapPoint nearest = null;
+      DefibrillatorCartSnapPoint nearest = null;
       float nearestDistanceSquared = float.MaxValue;
 
       for (int i = 0; i < points.Length; i++)
       {
-        DefibCartSnapPoint point = points[i];
+        DefibrillatorCartSnapPoint point = points[i];
         if (point == null || !point.isActiveAndEnabled || !point.IsWithinSnapDistance(transform.position))
           continue;
 
@@ -315,7 +315,7 @@ namespace TriageTrainer.Entity
       return nearest;
     }
 
-    private bool IsSnapPointAllowed(DefibCartSnapPoint point)
+    private bool IsSnapPointAllowed(DefibrillatorCartSnapPoint point)
     {
       if (point == null)
         return false;
@@ -340,13 +340,13 @@ namespace TriageTrainer.Entity
       return false;
     }
 
-    private void ReleaseParticipantsAfterSnapIfConfigured(DefibCartSnapPoint point)
+    private void ReleaseParticipantsAfterSnapIfConfigured(DefibrillatorCartSnapPoint point)
     {
       if (point != null && point.ReleaseParticipantsOnSnap)
         DetachAllParticipants();
     }
 
-    private void PublishAuthoritativeSnappedState(DefibCartSnapPoint point)
+    private void PublishAuthoritativeSnappedState(DefibrillatorCartSnapPoint point)
     {
       if (point == null)
         return;
@@ -415,12 +415,12 @@ namespace TriageTrainer.Entity
       if (string.IsNullOrWhiteSpace(_pendingSnapPointIdentifier))
         return;
 
-      var points = FindObjectsByType<DefibCartSnapPoint>(
+      var points = FindObjectsByType<DefibrillatorCartSnapPoint>(
         FindObjectsInactive.Include,
         FindObjectsSortMode.None);
       for (int i = 0; i < points.Length; i++)
       {
-        DefibCartSnapPoint point = points[i];
+        DefibrillatorCartSnapPoint point = points[i];
         if (point == null || !string.Equals(
               point.Identifier,
               _pendingSnapPointIdentifier,
@@ -435,28 +435,28 @@ namespace TriageTrainer.Entity
       }
     }
 
-    private void PublishSnapPointReached(DefibCartSnapPoint point)
+    private void PublishSnapPointReached(DefibrillatorCartSnapPoint point)
     {
       if (point == null || string.IsNullOrWhiteSpace(point.Identifier))
       {
         if (point != null)
-          Debug.LogWarning($"[DefibCart] Snap point '{point.name}' has no identifier; snap event was not published.", point);
+          Debug.LogWarning($"[DefibrillatorCart] Snap point '{point.name}' has no identifier; snap event was not published.", point);
         return;
       }
 
       string pointIdentifier = point.Identifier;
-      string signalIdentifier = $"defib_cart_snap_point_reached_{pointIdentifier}";
+      string signalIdentifier = $"defibrillator_cart_snap_point_reached_{pointIdentifier}";
       MI.Scenario.ScenarioInteractionSignals.Raise(signalIdentifier);
 
       string moverIdentifier = Identifier;
       if (!string.IsNullOrWhiteSpace(moverIdentifier))
       {
-        string scopedSignalIdentifier = $"defib_cart_snap_point_reached_{moverIdentifier}_{pointIdentifier}";
+        string scopedSignalIdentifier = $"defibrillator_cart_snap_point_reached_{moverIdentifier}_{pointIdentifier}";
         MI.Scenario.ScenarioInteractionSignals.Raise(scopedSignalIdentifier);
       }
 
       GameLogService.WriteInteraction(
-        $"Defib cart reached snap point: cart={Identifier}, point={pointIdentifier}",
+        $"Defibrillator cart reached snap point: cart={Identifier}, point={pointIdentifier}",
         pointIdentifier);
     }
 

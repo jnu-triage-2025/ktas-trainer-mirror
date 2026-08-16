@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace TriageTrainer.Entity
 {
-  public enum StaticEntityLayoutType { MovingPatientBedPositioningPoint, WallSuction, Oxyflowmeter, PatientCareDescriptionZone, DefibCartSnapPoint }
+  public enum StaticEntityLayoutType { MovingPatientBedPositioningPoint, WallSuction, Oxyflowmeter, PatientCareDescriptionZone, DefibrillatorCartSnapPoint }
   [Serializable] public struct StaticEntityTransformDefinition
   {
     public StaticEntityLayoutType type;

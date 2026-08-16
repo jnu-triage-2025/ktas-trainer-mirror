@@ -154,9 +154,9 @@ namespace TriageTrainer.Scenario
     [SerializeField] private GameObject _patientACentralLineVisual;
     [SerializeField] private GameObject _level1ReadyVisual;
     [SerializeField] private GameObject _patientAAmbuConnectedVisual;
-    [SerializeField] private GameObject _patientADefibPadVisual;
-    [SerializeField] private GameObject _defibIrregularUiPanel;
-    [SerializeField] private ECGParameters _patientADefibIrregularMonitorParameters = new ECGParameters
+    [SerializeField] private GameObject _patientADefibrillatorPadVisual;
+    [SerializeField] private GameObject _defibrillatorIrregularUiPanel;
+    [SerializeField] private ECGParameters _patientADefibrillatorIrregularMonitorParameters = new ECGParameters
     {
       bpm = 150f,
       pAmp = 0.05f,

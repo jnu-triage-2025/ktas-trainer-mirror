@@ -32,8 +32,8 @@ namespace TriageTrainer.Scenario
       RegisterEvent_InsertCentralLineSet();
       RegisterEvent_Lv1Ready();
       RegisterEvent_ApplyAmbuPatientA();
-      RegisterEvent_AttachDefibPad();
-      RegisterEvent_DefibUiIrregular();
+      RegisterEvent_AttachDefibrillatorPad();
+      RegisterEvent_DefibrillatorUiIrregular();
       RegisterEvent_StartAmbuBagging();
       RegisterEvent_StartChestCompression();
       RegisterEvent_StopAmbuAndComp();

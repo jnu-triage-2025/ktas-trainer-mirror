@@ -819,8 +819,8 @@ MonoBehaviour:
   _carryDisplayText: "\uD658\uC790 \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
   _monitorSelectDisplayText: "\uC774 \uD658\uC790\uB97C \uBAA8\uB2C8\uD130\uB9C1"
   _initiallyHiddenChildNames:
-  - defibpad_midaxillary_A
-  - defibpad_subclavicle_A
+  - defibrillatorpad_midaxillary_A
+  - defibrillatorpad_subclavicle_A
   - epinephrine_5cc_syringe
   - normal_saline_5cc_syringe
   _weight: 4
@@ -1505,7 +1505,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7915547531022232051, guid: c024efd2adf10405faee8a53a11ca8f4, type: 3}
       propertyPath: m_Name
-      value: defibpad_midaxillary_A
+      value: defibrillatorpad_midaxillary_A
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2275,7 +2275,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9177393966679282854, guid: 8612a53ba007a46dfb1aad36ef685471, type: 3}
       propertyPath: m_Name
-      value: defibpad_subclavicle_A
+      value: defibrillatorpad_subclavicle_A
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

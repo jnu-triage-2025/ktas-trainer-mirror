@@ -66,8 +66,8 @@ namespace TriageTrainer.Tests
 
         foreach (var stagedName in new[]
                  {
-                   "defibpad_midaxillary_A",
-                   "defibpad_subclavicle_A",
+                   "defibrillatorpad_midaxillary_A",
+                   "defibrillatorpad_subclavicle_A",
                    "epinephrine_5cc_syringe",
                    "normal_saline_5cc_syringe"
                  })

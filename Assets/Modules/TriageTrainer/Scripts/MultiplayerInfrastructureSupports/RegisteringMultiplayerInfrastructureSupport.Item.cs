@@ -48,7 +48,7 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<CervicalCollar>(CervicalCollar.Identifier);
       Registry.RegisterItemDefinition<BloodBag>(BloodBag.Identifier);
       Registry.RegisterItemDefinition<CentralLineSet>(CentralLineSet.Identifier);
-      Registry.RegisterItemDefinition<DefibPad>(DefibPad.Identifier);
+      Registry.RegisterItemDefinition<DefibrillatorPad>(DefibrillatorPad.Identifier);
       Registry.RegisterItemDefinition<ElasticBand>(ElasticBand.Identifier);
       Registry.RegisterItemDefinition<Electrode>(Electrode.Identifier);
       Registry.RegisterItemDefinition<ElectrodeCable>(ElectrodeCable.Identifier);
