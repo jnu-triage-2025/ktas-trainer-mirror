@@ -10,6 +10,7 @@ using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using TriageTrainer.Scenario;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 using MI = MultiplayerInfrastructure;
 
@@ -20,9 +21,8 @@ namespace TriageTrainer.Entity
   /// 탑승/점유/이동의 네트워크 구현은 도메인 독립 공통 모듈
   /// <see cref="MinecraftBoadLikeControl"/> 에 위임한다(<see cref="Level1RapidInfuserController"/> 와 동일한 상속 패턴).
   ///
-  /// 카트가 허용된 positioning point(환자 옆)에 도달하면 서버 권위로 스냅하고 시나리오 신호
-  /// patient_bed_position_reached_{카트 식별자}_{포인트 식별자} 를 발생시킨다.
-  /// 이 신호 이름은 기존 시나리오 데이터(patient_a_critical*)와의 호환을 위해 유지한다.
+  /// 카트가 허용된 snap point에 도달하면 서버 권위로 스냅하고 시나리오 신호
+  /// defib_cart_snap_point_reached_{카트 식별자}_{포인트 식별자} 를 발생시킨다.
   /// </summary>
   public sealed class DefibCartController : MinecraftBoadLikeControl,
     IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver
@@ -34,20 +34,23 @@ namespace TriageTrainer.Entity
     [SerializeField] private string _displayText = "제세동 카트 조종";
     [SerializeField] private Sprite _displayIcon;
 
-    [Header("Positioning Snap")]
-    [SerializeField] private bool _enablePositioningSnap = true;
-    [SerializeField, Min(0f)] private float _positioningSnapReleasePadding = 0.2f;
+    [Header("Snap Point")]
+    [FormerlySerializedAs("_enablePositioningSnap")]
+    [SerializeField] private bool _enableSnap = true;
+    [FormerlySerializedAs("_positioningSnapReleasePadding")]
+    [SerializeField, Min(0f)] private float _snapReleasePadding = 0.2f;
 
-    [Header("Positioning Point Filter")]
-    [Tooltip("비어 있으면 모든 MovingPatientBedPositioningPoint를 대상으로 스냅합니다. 값이 있으면 해당 Identifier 목록만 스냅 대상으로 허용합니다.")]
-    [SerializeField] private List<string> _allowedPositioningPointIdentifiers = new();
+    [Header("Snap Point Filter")]
+    [Tooltip("비어 있으면 모든 DefibCartSnapPoint를 대상으로 스냅합니다. 값이 있으면 해당 Identifier 목록만 스냅 대상으로 허용합니다.")]
+    [FormerlySerializedAs("_allowedPositioningPointIdentifiers")]
+    [SerializeField] private List<string> _allowedSnapPointIdentifiers = new();
 
     /// <summary>런타임 엔티티 식별자(서버 권위 + 전 피어 복제). 비어 있으면 _entityTypeIdentifier를 사용한다.</summary>
     private readonly SyncVar<string> _runtimeIdentifierSync = new(string.Empty);
-    private readonly SyncVar<string> _positioningPointIdentifierSync = new(string.Empty);
+    private readonly SyncVar<string> _snapPointIdentifierSync = new(string.Empty);
 
-    private MovingPatientBedPositioningPoint _latchedPositioningPoint;
-    private string _pendingPositioningPointIdentifier;
+    private DefibCartSnapPoint _latchedSnapPoint;
+    private string _pendingSnapPointIdentifier;
     private string _entityRuntimeIdentifier;
 
     private string EffectiveIdentifier =>
@@ -56,7 +59,7 @@ namespace TriageTrainer.Entity
       : _entityTypeIdentifier;
 
     public string Identifier => EffectiveIdentifier;
-    public MovingPatientBedPositioningPoint LatchedPositioningPoint => _latchedPositioningPoint;
+    public DefibCartSnapPoint LatchedSnapPoint => _latchedSnapPoint;
 
     public IInteract[] Interacts => new IInteract[] { this };
     public string DisplayText => _displayText;
@@ -77,28 +80,28 @@ namespace TriageTrainer.Entity
 
     private void Update()
     {
-      ResolveSyncedPositioningPointIfPending();
+      ResolveSyncedSnapPointIfPending();
       Update_MinecraftBoadLikeControl();
-      TrySnapToPositioningPoint();
+      TrySnapToSnapPoint();
     }
 
     public override void OnStartClient()
     {
       base.OnStartClient();
       _runtimeIdentifierSync.OnChange += OnRuntimeIdentifierChanged;
-      _positioningPointIdentifierSync.OnChange += OnPositioningPointIdentifierChanged;
+      _snapPointIdentifierSync.OnChange += OnSnapPointIdentifierChanged;
 
       // 스폰 페이로드로 동기화된 식별자로 모든 피어에서 등록한다.
       RegisterCartEntity();
-      RequestPositioningPointResolution(_positioningPointIdentifierSync.Value);
+      RequestSnapPointResolution(_snapPointIdentifierSync.Value);
     }
 
     public override void OnStopClient()
     {
       _runtimeIdentifierSync.OnChange -= OnRuntimeIdentifierChanged;
-      _positioningPointIdentifierSync.OnChange -= OnPositioningPointIdentifierChanged;
-      _pendingPositioningPointIdentifier = null;
-      _latchedPositioningPoint = null;
+      _snapPointIdentifierSync.OnChange -= OnSnapPointIdentifierChanged;
+      _pendingSnapPointIdentifier = null;
+      _latchedSnapPoint = null;
       UnregisterCartEntity();
       base.OnStopClient();
     }
@@ -188,11 +191,11 @@ namespace TriageTrainer.Entity
         Registry.UnregisterEntity(_entityRuntimeIdentifier);
     }
 
-    // ── Positioning snap ─────────────────────────────────────────────────────
+    // ── Snap point ─────────────────────────────────────────────────────
 
-    private void TrySnapToPositioningPoint()
+    private void TrySnapToSnapPoint()
     {
-      if (!_enablePositioningSnap || (!IsServerStarted && IsClientStarted))
+      if (!_enableSnap || (!IsServerStarted && IsClientStarted))
         return;
 
       // 단독 이동자의 입력으로 스냅이 발생했을 때만 해당 플레이어를 신호 발신자로 보존한다.
@@ -200,76 +203,48 @@ namespace TriageTrainer.Entity
                ? MI.Scenario.ScenarioSignalPlayerContext.Push(mover)
                : null)
       {
-        TrySnapToPositioningPointWithSignalContext();
+        TrySnapToSnapPointWithSignalContext();
       }
     }
 
-    private void TrySnapToPositioningPointWithSignalContext()
+    private void TrySnapToSnapPointWithSignalContext()
     {
-      if (_latchedPositioningPoint != null)
+      if (_latchedSnapPoint != null)
       {
-        float releaseDistance = _latchedPositioningPoint.SnapDistance + _positioningSnapReleasePadding;
-        Vector3 offset = transform.position - _latchedPositioningPoint.Position;
+        float releaseDistance = _latchedSnapPoint.SnapDistance + _snapReleasePadding;
+        Vector3 offset = transform.position - _latchedSnapPoint.Position;
         offset.y = 0f;
         if (offset.sqrMagnitude <= releaseDistance * releaseDistance)
           return;
 
-        string previousPointIdentifier = _latchedPositioningPoint.Identifier;
-        _latchedPositioningPoint = null;
-        SetAuthoritativePositioningPointIdentifier(string.Empty);
+        string previousPointIdentifier = _latchedSnapPoint.Identifier;
+        _latchedSnapPoint = null;
+        SetAuthoritativeSnapPointIdentifier(string.Empty);
         if (IsServerStarted)
           RpcApplyUnlatchedState();
-        TriageWorldInteractionSignals.RaisePatientBedPositioningPointUnlatched(Identifier, previousPointIdentifier);
+        TriageWorldInteractionSignals.RaiseDefibCartSnapPointUnlatched(Identifier, previousPointIdentifier);
       }
 
-      MovingPatientBedPositioningPoint nearest = FindNearestPositioningPoint();
+      DefibCartSnapPoint nearest = FindNearestSnapPoint();
       if (nearest == null)
         return;
 
-      if (!TryResolvePositioningPointCollision(nearest))
+      if (!TryResolveSnapPointCollision(nearest))
         return;
 
-      _latchedPositioningPoint = nearest;
+      _latchedSnapPoint = nearest;
       SetAuthoritativeTransform(nearest.Position, nearest.Rotation);
       ReleaseParticipantsAfterSnapIfConfigured(nearest);
       PublishAuthoritativeSnappedState(nearest);
-      TriageWorldInteractionSignals.RaisePatientBedPositioningPointLatched(Identifier, nearest.Identifier);
-      PublishPositioningPointReached(nearest);
+      TriageWorldInteractionSignals.RaiseDefibCartSnapPointLatched(Identifier, nearest.Identifier);
+      PublishSnapPointReached(nearest);
     }
 
     /// <summary>
-    /// 스냅 대상 위치를 점유 중인 다른 이동체를 검사한다.
-    /// 환자가 결합된 침대는 포인트 정책에 따라 스냅을 차단하고, 빈 침대는 정책에 따라 제거한다.
-    /// 다른 제세동 카트가 이미 점유 중이면 항상 차단한다.
+    /// 스냅 대상 위치를 점유 중인 다른 제세동 카트를 snap point 정책에 따라 처리한다.
     /// </summary>
-    private bool TryResolvePositioningPointCollision(MovingPatientBedPositioningPoint point)
+    private bool TryResolveSnapPointCollision(DefibCartSnapPoint point)
     {
-      MovingPatientBedController[] beds = FindObjectsByType<MovingPatientBedController>(
-        FindObjectsInactive.Exclude,
-        FindObjectsSortMode.None);
-
-      for (int i = 0; i < beds.Length; i++)
-      {
-        MovingPatientBedController existing = beds[i];
-        if (existing == null || !existing.isActiveAndEnabled || !IsOccupyingPositioningPoint(existing, point))
-          continue;
-
-        if (existing.ReposedTarget != null)
-        {
-          if (point.BlockWhenPatientBedIsPresent)
-            return false;
-          if (point.BlockWhenAnyBedIsPresent)
-            return false;
-          continue;
-        }
-
-        if (point.BlockWhenAnyBedIsPresent)
-          return false;
-
-        if (point.DespawnEmptyBedWhenPresent)
-          DespawnBlockingEmptyBed(existing);
-      }
-
       DefibCartController[] carts = FindObjectsByType<DefibCartController>(
         FindObjectsInactive.Exclude,
         FindObjectsSortMode.None);
@@ -279,45 +254,52 @@ namespace TriageTrainer.Entity
         if (other == null || other == this || !other.isActiveAndEnabled)
           continue;
 
-        if (other._latchedPositioningPoint == point || point.IsWithinSnapDistance(other.transform.position))
+        if (other._latchedSnapPoint != point && !point.IsWithinSnapDistance(other.transform.position))
+          continue;
+
+        if (point.BlockWhenDefibCartIsPresent)
+          return false;
+
+        if (point.DespawnExistingDefibCartWhenPresent)
+        {
+          DespawnBlockingDefibCart(other);
+          continue;
+        }
+
+        if (point.BlockWhenAnyDefibCartIsPresent)
           return false;
       }
 
       return true;
     }
 
-    private bool IsOccupyingPositioningPoint(MovingPatientBedController bed, MovingPatientBedPositioningPoint point)
+    private static void DespawnBlockingDefibCart(DefibCartController cart)
     {
-      return bed.LatchedPositioningPoint == point || point.IsWithinSnapDistance(bed.transform.position);
-    }
-
-    private void DespawnBlockingEmptyBed(MovingPatientBedController bed)
-    {
-      NetworkObject networkObject = bed.GetComponent<NetworkObject>();
+      NetworkObject networkObject = cart.GetComponent<NetworkObject>();
       if (InstanceFinder.IsServerStarted && networkObject != null && networkObject.IsSpawned)
       {
         InstanceFinder.ServerManager.Despawn(networkObject);
         return;
       }
 
-      Destroy(bed.gameObject);
+      UnityEngine.Object.Destroy(cart.gameObject);
     }
 
-    private MovingPatientBedPositioningPoint FindNearestPositioningPoint()
+    private DefibCartSnapPoint FindNearestSnapPoint()
     {
-      MovingPatientBedPositioningPoint[] points = FindObjectsByType<MovingPatientBedPositioningPoint>(
+      DefibCartSnapPoint[] points = FindObjectsByType<DefibCartSnapPoint>(
         FindObjectsInactive.Exclude,
         FindObjectsSortMode.None);
-      MovingPatientBedPositioningPoint nearest = null;
+      DefibCartSnapPoint nearest = null;
       float nearestDistanceSquared = float.MaxValue;
 
       for (int i = 0; i < points.Length; i++)
       {
-        MovingPatientBedPositioningPoint point = points[i];
+        DefibCartSnapPoint point = points[i];
         if (point == null || !point.isActiveAndEnabled || !point.IsWithinSnapDistance(transform.position))
           continue;
 
-        if (!IsPositioningPointAllowed(point))
+        if (!IsSnapPointAllowed(point))
           continue;
 
         Vector3 offset = transform.position - point.Position;
@@ -333,21 +315,21 @@ namespace TriageTrainer.Entity
       return nearest;
     }
 
-    private bool IsPositioningPointAllowed(MovingPatientBedPositioningPoint point)
+    private bool IsSnapPointAllowed(DefibCartSnapPoint point)
     {
       if (point == null)
         return false;
 
-      if (_allowedPositioningPointIdentifiers == null || _allowedPositioningPointIdentifiers.Count == 0)
+      if (_allowedSnapPointIdentifiers == null || _allowedSnapPointIdentifiers.Count == 0)
         return true;
 
       string identifier = point.Identifier;
       if (string.IsNullOrWhiteSpace(identifier))
         return false;
 
-      for (int i = 0; i < _allowedPositioningPointIdentifiers.Count; i++)
+      for (int i = 0; i < _allowedSnapPointIdentifiers.Count; i++)
       {
-        string allowed = _allowedPositioningPointIdentifiers[i];
+        string allowed = _allowedSnapPointIdentifiers[i];
         if (string.IsNullOrWhiteSpace(allowed))
           continue;
 
@@ -358,18 +340,18 @@ namespace TriageTrainer.Entity
       return false;
     }
 
-    private void ReleaseParticipantsAfterSnapIfConfigured(MovingPatientBedPositioningPoint point)
+    private void ReleaseParticipantsAfterSnapIfConfigured(DefibCartSnapPoint point)
     {
       if (point != null && point.ReleaseParticipantsOnSnap)
         DetachAllParticipants();
     }
 
-    private void PublishAuthoritativeSnappedState(MovingPatientBedPositioningPoint point)
+    private void PublishAuthoritativeSnappedState(DefibCartSnapPoint point)
     {
       if (point == null)
         return;
 
-      SetAuthoritativePositioningPointIdentifier(point.Identifier);
+      SetAuthoritativeSnapPointIdentifier(point.Identifier);
       if (IsServerStarted)
       {
         // 카트 자체 RPC에서 원격 조종 상태와 스냅 참조를 먼저 적용한다.
@@ -381,10 +363,10 @@ namespace TriageTrainer.Entity
       }
     }
 
-    private void SetAuthoritativePositioningPointIdentifier(string identifier)
+    private void SetAuthoritativeSnapPointIdentifier(string identifier)
     {
       if (IsServerStarted)
-        _positioningPointIdentifierSync.Value = identifier ?? string.Empty;
+        _snapPointIdentifierSync.Value = identifier ?? string.Empty;
     }
 
     [ObserversRpc]
@@ -400,82 +382,81 @@ namespace TriageTrainer.Entity
       transform.SetPositionAndRotation(position, rotation);
       if (releaseParticipants)
         ClearLocalParticipants();
-      RequestPositioningPointResolution(pointIdentifier);
+      RequestSnapPointResolution(pointIdentifier);
     }
 
     [ObserversRpc]
     private void RpcApplyUnlatchedState()
     {
       if (!IsServerStarted)
-        RequestPositioningPointResolution(string.Empty);
+        RequestSnapPointResolution(string.Empty);
     }
 
-    private void OnPositioningPointIdentifierChanged(string previous, string next, bool asServer)
+    private void OnSnapPointIdentifierChanged(string previous, string next, bool asServer)
     {
-      RequestPositioningPointResolution(next);
+      RequestSnapPointResolution(next);
     }
 
-    private void RequestPositioningPointResolution(string identifier)
+    private void RequestSnapPointResolution(string identifier)
     {
       if (string.IsNullOrWhiteSpace(identifier))
       {
-        _pendingPositioningPointIdentifier = null;
-        _latchedPositioningPoint = null;
+        _pendingSnapPointIdentifier = null;
+        _latchedSnapPoint = null;
         return;
       }
 
-      _pendingPositioningPointIdentifier = identifier.Trim();
-      ResolveSyncedPositioningPointIfPending();
+      _pendingSnapPointIdentifier = identifier.Trim();
+      ResolveSyncedSnapPointIfPending();
     }
 
-    private void ResolveSyncedPositioningPointIfPending()
+    private void ResolveSyncedSnapPointIfPending()
     {
-      if (string.IsNullOrWhiteSpace(_pendingPositioningPointIdentifier))
+      if (string.IsNullOrWhiteSpace(_pendingSnapPointIdentifier))
         return;
 
-      var points = FindObjectsByType<MovingPatientBedPositioningPoint>(
+      var points = FindObjectsByType<DefibCartSnapPoint>(
         FindObjectsInactive.Include,
         FindObjectsSortMode.None);
       for (int i = 0; i < points.Length; i++)
       {
-        MovingPatientBedPositioningPoint point = points[i];
+        DefibCartSnapPoint point = points[i];
         if (point == null || !string.Equals(
               point.Identifier,
-              _pendingPositioningPointIdentifier,
+              _pendingSnapPointIdentifier,
               StringComparison.Ordinal))
         {
           continue;
         }
 
-        _latchedPositioningPoint = point;
-        _pendingPositioningPointIdentifier = null;
+        _latchedSnapPoint = point;
+        _pendingSnapPointIdentifier = null;
         return;
       }
     }
 
-    private void PublishPositioningPointReached(MovingPatientBedPositioningPoint point)
+    private void PublishSnapPointReached(DefibCartSnapPoint point)
     {
       if (point == null || string.IsNullOrWhiteSpace(point.Identifier))
       {
         if (point != null)
-          Debug.LogWarning($"[DefibCart] Positioning point '{point.name}' has no identifier; snap event was not published.", point);
+          Debug.LogWarning($"[DefibCart] Snap point '{point.name}' has no identifier; snap event was not published.", point);
         return;
       }
 
       string pointIdentifier = point.Identifier;
-      // 신호 이름은 기존 시나리오 데이터와의 호환을 위해 patient_bed_position_reached_* 규칙을 유지한다.
-      string signalIdentifier = $"patient_bed_position_reached_{pointIdentifier}";
+      string signalIdentifier = $"defib_cart_snap_point_reached_{pointIdentifier}";
       MI.Scenario.ScenarioInteractionSignals.Raise(signalIdentifier);
 
       string moverIdentifier = Identifier;
       if (!string.IsNullOrWhiteSpace(moverIdentifier))
       {
-        string scopedSignalIdentifier = $"patient_bed_position_reached_{moverIdentifier}_{pointIdentifier}";
+        string scopedSignalIdentifier = $"defib_cart_snap_point_reached_{moverIdentifier}_{pointIdentifier}";
         MI.Scenario.ScenarioInteractionSignals.Raise(scopedSignalIdentifier);
       }
 
       GameLogService.WriteInteraction(
-        $"Defib cart reached positioning point: cart={Identifier}, point={pointIdentifier}",
+        $"Defib cart reached snap point: cart={Identifier}, point={pointIdentifier}",
         pointIdentifier);
     }
 
@@ -496,20 +477,20 @@ namespace TriageTrainer.Entity
     protected override void OnValidate()
     {
       base.OnValidate();
-      _positioningSnapReleasePadding = Mathf.Max(0f, _positioningSnapReleasePadding);
+      _snapReleasePadding = Mathf.Max(0f, _snapReleasePadding);
 
-      if (_allowedPositioningPointIdentifiers != null)
+      if (_allowedSnapPointIdentifiers != null)
       {
-        for (int i = _allowedPositioningPointIdentifiers.Count - 1; i >= 0; i--)
+        for (int i = _allowedSnapPointIdentifiers.Count - 1; i >= 0; i--)
         {
-          string value = _allowedPositioningPointIdentifiers[i];
+          string value = _allowedSnapPointIdentifiers[i];
           if (string.IsNullOrWhiteSpace(value))
           {
-            _allowedPositioningPointIdentifiers.RemoveAt(i);
+            _allowedSnapPointIdentifiers.RemoveAt(i);
             continue;
           }
 
-          _allowedPositioningPointIdentifiers[i] = value.Trim();
+          _allowedSnapPointIdentifiers[i] = value.Trim();
         }
       }
     }

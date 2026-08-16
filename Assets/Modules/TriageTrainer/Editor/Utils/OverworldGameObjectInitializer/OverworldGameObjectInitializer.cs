@@ -177,6 +177,15 @@ namespace TriageTrainer.Editor.Utils
                 entity.useDefaultOccupiedSize ? new Vector2(2.2f, 1f) : entity.occupiedSize,
                 entity.useDefaultDisplayHeight ? 0.03f : entity.displayHeight);
           }
+          else if (entity.type == StaticEntityLayoutType.DefibCartSnapPoint)
+          {
+            var point = instance.AddComponent<DefibCartSnapPoint>();
+            point.SetIdentifierForEditor(entity.identifier);
+            if (!entity.useDefaultOccupiedSize || !entity.useDefaultDisplayHeight)
+              point.ConfigureOccupiedArea(
+                entity.useDefaultOccupiedSize ? new Vector2(2.2f, 1f) : entity.occupiedSize,
+                entity.useDefaultDisplayHeight ? 0.03f : entity.displayHeight);
+          }
           else if (entity.type == StaticEntityLayoutType.PatientCareDescriptionZone)
           {
             var collider = instance.AddComponent<BoxCollider>();

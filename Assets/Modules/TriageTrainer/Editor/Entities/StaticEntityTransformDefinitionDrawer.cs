@@ -13,7 +13,7 @@ namespace TriageTrainer.Editor
     {
       int rows = 4; // type, identifier, position, rotation
       StaticEntityLayoutType type = ReadType(property);
-      if (type == StaticEntityLayoutType.MovingPatientBedPositioningPoint) rows += 2;
+      if (type == StaticEntityLayoutType.MovingPatientBedPositioningPoint || type == StaticEntityLayoutType.DefibCartSnapPoint) rows += 2;
       if (type == StaticEntityLayoutType.PatientCareDescriptionZone) rows += 2;
       return rows * EditorGUIUtility.singleLineHeight + (rows - 1) * Gap;
     }
@@ -30,7 +30,7 @@ namespace TriageTrainer.Editor
       DrawOptional(position, ref y, line, property.FindPropertyRelative("useDefaultPosition"), property.FindPropertyRelative("position"), "Position");
       DrawOptional(position, ref y, line, property.FindPropertyRelative("useDefaultRotation"), property.FindPropertyRelative("rotationEuler"), "Rotation");
 
-      if (type == StaticEntityLayoutType.MovingPatientBedPositioningPoint)
+      if (type == StaticEntityLayoutType.MovingPatientBedPositioningPoint || type == StaticEntityLayoutType.DefibCartSnapPoint)
       {
         DrawOptional(position, ref y, line, property.FindPropertyRelative("useDefaultOccupiedSize"), property.FindPropertyRelative("occupiedSize"), "Occupied Size");
         DrawOptional(position, ref y, line, property.FindPropertyRelative("useDefaultDisplayHeight"), property.FindPropertyRelative("displayHeight"), "Display Height");

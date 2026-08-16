@@ -38,6 +38,10 @@ namespace TriageTrainer.Editor.Tests
         Require(raised.Contains("sig.patient_bed_positioning_point_latched_bed_b_zone_1:bed_snap_point"),
           "침대 positioning point latch 신호에 침대·point 식별자가 포함되지 않았습니다.");
 
+        TriageWorldInteractionSignals.RaiseDefibCartSnapPointLatched("defib_cart_a", "defibcart_to_patient");
+        Require(raised.Contains("sig.defib_cart_snap_point_latched_defib_cart_a_defibcart_to_patient"),
+          "제세동 카트 snap point latch 신호에 카트·point 식별자가 포함되지 않았습니다.");
+
         suction.ApplyShownFromNetwork();
         suction.ApplyHiddenFromNetwork();
         oxyflowmeter.ApplyShownFromNetwork();

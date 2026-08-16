@@ -5955,7 +5955,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient"
+              "registryIdentifier": "sig.defib_cart_snap_point_reached_defib_cart_a_defibcart_to_patient"
             }
           ]
         }
