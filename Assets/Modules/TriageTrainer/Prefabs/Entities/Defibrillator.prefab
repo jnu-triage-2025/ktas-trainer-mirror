@@ -292,6 +292,7 @@ MonoBehaviour:
     \uC885\uB8CC\uD569\uB2C8\uB2E4."
   _playerAttachPoints:
   - {fileID: 3011096090964862379}
+  _entityIdentifier: defibrillator_cart_a
   _entityTypeIdentifier: defibrillator_cart_a
   _displayText: "\uC81C\uC138\uB3D9 \uCE74\uD2B8 \uC870\uC885"
   _displayIcon: {fileID: 0}

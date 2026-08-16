@@ -1,7 +1,5 @@
 using System;
-using FishNet;
 using FishNet.Connection;
-using FishNet.Object;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Performance;
 using UnityEngine;
@@ -33,8 +31,8 @@ namespace MultiplayerInfrastructure.Player
     public void RequestPlaceHeldEntityPrefab(string itemIdentifier)
       => RequestPlaceHeldEntityPreset(itemIdentifier, Level1RapidInfuserItemIdentifier);
 
-    // 예약/확정 RPC는 설치체 종류 키를 함께 보관한다. 현재 키는 아이템 식별자와 동일하며,
-    // 실제 프리팹은 EntityPreset이 아닌 직렬화된 _level1RapidInfuserEntityPrefab 참조를 사용한다.
+    // 예약/확정 RPC는 설치체 종류 키를 함께 보관한다. 실제 스폰은 EntityPreset 경로를 사용하고,
+    // 직렬화된 프리팹 참조는 설치 미리보기 표시용으로만 사용한다.
     public void RequestPlaceHeldEntityPreset(string itemIdentifier, string entityPresetIdentifier)
     {
       if (!IsSupportedPlaceable(itemIdentifier, entityPresetIdentifier))
@@ -156,27 +154,21 @@ namespace MultiplayerInfrastructure.Player
     private bool TrySpawnPlaceableEntityPreset(string itemIdentifier, string entityPresetIdentifier)
     {
       GetPlaceablePose(out Vector3 position, out Quaternion rotation);
-      var prefab = _level1RapidInfuserEntityPrefab;
-      if (prefab == null)
-      {
-        Debug.LogWarning(
-          $"[PlayerController] Placeable entity prefab is not assigned for '{itemIdentifier}'.",
-          this);
-        return false;
-      }
+      string instanceIdentifier = $"{itemIdentifier}:{Guid.NewGuid():N}";
+      if (Registry.Registry.TrySpawnEntityPreset(
+            entityPresetIdentifier,
+            position,
+            rotation,
+            instanceIdentifier,
+            out _,
+            out _,
+            out string error))
+        return true;
 
-      var receiver = prefab.GetComponent<ISpawnedEntityIdentifierReceiver>();
-      var networkObject = prefab.GetComponent<NetworkObject>();
-      if (receiver == null || (IsServerStarted && networkObject == null))
-        return false;
-
-      var spawned = UnityEngine.Object.Instantiate(prefab, position, rotation);
-      MppmLiteMode.StripVisuals(spawned);
-      receiver = spawned.GetComponent<ISpawnedEntityIdentifierReceiver>();
-      receiver.ApplySpawnedEntityIdentifier($"{itemIdentifier}:{Guid.NewGuid():N}");
-      if (IsServerStarted)
-        InstanceFinder.ServerManager.Spawn(spawned);
-      return true;
+      Debug.LogWarning(
+        $"[PlayerController] Failed to spawn placeable entity preset '{entityPresetIdentifier}': {error}",
+        this);
+      return false;
     }
 
     /// <summary>

@@ -105,3 +105,15 @@ MonoBehaviour:
     displayName: 
     isNetworked: 1
     childReferences: []
+  - identifier: defibrillator_cart
+    fallbackEntityType: 0
+    prefab: {fileID: 8599765504921325498, guid: 628ae8df8e3e54924aa747f6bbc3f030, type: 3}
+    displayName: "제세동 카트"
+    isNetworked: 1
+    childReferences: []
+  - identifier: level1_rapid_infuser
+    fallbackEntityType: 0
+    prefab: {fileID: 6673793964106904184, guid: 443870cc6703f42719b5008c60cb8db5, type: 3}
+    displayName: "Level 1 급속 주입기"
+    isNetworked: 1
+    childReferences: []

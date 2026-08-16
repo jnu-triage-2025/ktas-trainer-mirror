@@ -29,6 +29,8 @@ namespace TriageTrainer.Entity
     IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver
   {
     [Header("Identity")]
+    [Tooltip("씬에 사전 배치된 이 카트 인스턴스의 고유 식별자입니다. EntityPreset으로 스폰되면 스폰 요청의 식별자로 대체됩니다.")]
+    [SerializeField] private string _entityIdentifier = "defibrillator_cart_a";
     [SerializeField] private string _entityTypeIdentifier = "defibrillator_cart_a";
 
     [Header("Display")]
@@ -58,6 +60,7 @@ namespace TriageTrainer.Entity
     private string EffectiveIdentifier =>
       !string.IsNullOrWhiteSpace(_runtimeIdentifierSync.Value) ? _runtimeIdentifierSync.Value
       : !string.IsNullOrWhiteSpace(_entityRuntimeIdentifier) ? _entityRuntimeIdentifier
+      : !string.IsNullOrWhiteSpace(_entityIdentifier) ? _entityIdentifier
       : _entityTypeIdentifier;
 
     public string Identifier => EffectiveIdentifier;
@@ -113,6 +116,20 @@ namespace TriageTrainer.Entity
       RequestSnapPointResolution(_snapPointIdentifierSync.Value);
     }
 
+    public override void OnStartServer()
+    {
+      base.OnStartServer();
+      // 전용 서버에는 OnStartClient가 호출되지 않으므로 여기서도 엔티티를 등록한다.
+      RegisterCartEntity();
+    }
+
+    public override void OnStopServer()
+    {
+      // 풀링된 NetworkObject는 OnDestroy 없이 재사용될 수 있으므로 서버 수명주기에서 해제한다.
+      UnregisterCartEntity();
+      base.OnStopServer();
+    }
+
     public override void OnStopClient()
     {
       _runtimeIdentifierSync.OnChange -= OnRuntimeIdentifierChanged;
@@ -159,6 +176,10 @@ namespace TriageTrainer.Entity
         return;
 
       string trimmed = identifier.Trim();
+      if (!string.IsNullOrWhiteSpace(_entityRuntimeIdentifier) &&
+          !string.Equals(_entityRuntimeIdentifier, trimmed, StringComparison.Ordinal))
+        UnregisterCartEntity();
+
       _entityRuntimeIdentifier = trimmed;
 
       if (IsServerStarted)
@@ -171,6 +192,10 @@ namespace TriageTrainer.Entity
     {
       if (string.IsNullOrWhiteSpace(next))
         return;
+
+      if (!string.IsNullOrWhiteSpace(_entityRuntimeIdentifier) &&
+          !string.Equals(_entityRuntimeIdentifier, next, StringComparison.Ordinal))
+        UnregisterCartEntity();
 
       _entityRuntimeIdentifier = next;
       RegisterCartEntity();
@@ -206,6 +231,7 @@ namespace TriageTrainer.Entity
     {
       if (!string.IsNullOrWhiteSpace(_entityRuntimeIdentifier))
         Registry.UnregisterEntity(_entityRuntimeIdentifier);
+      _entityRuntimeIdentifier = null;
     }
 
     // ── Snap point ─────────────────────────────────────────────────────

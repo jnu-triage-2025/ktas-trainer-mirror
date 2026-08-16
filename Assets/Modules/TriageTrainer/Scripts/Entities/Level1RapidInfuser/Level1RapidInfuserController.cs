@@ -161,6 +161,8 @@ namespace TriageTrainer.Entity
       BloodTransfusionSetCancellationBehaviour.ShowPlasmaRequiredDialogue;
 
     [Header("Identity / interaction")]
+    [Tooltip("씬에 사전 배치된 이 주입기 인스턴스의 고유 식별자입니다. EntityPreset으로 스폰되면 스폰 요청의 식별자로 대체됩니다.")]
+    [SerializeField] private string _entityIdentifier = "level1_rapid_infuser_a";
     [SerializeField] private string _displayText = "Level 1 급속 주입기 조종";
     [SerializeField] private Sprite _displayIcon;
 
@@ -230,6 +232,12 @@ namespace TriageTrainer.Entity
       : _initialConnectedPatientIdentifier;
     public Transform IvConnectionPoint =>
       _ivConnectionPoint != null ? _ivConnectionPoint.transform : transform;
+    public string Identifier => EffectiveIdentifier;
+
+    private string EffectiveIdentifier =>
+      !string.IsNullOrWhiteSpace(_runtimeIdentifier.Value) ? _runtimeIdentifier.Value
+      : !string.IsNullOrWhiteSpace(_entityIdentifier) ? _entityIdentifier
+      : _registeredIdentifier;
 
     private void Awake()
     {
@@ -268,7 +276,15 @@ namespace TriageTrainer.Entity
       _hasPlasmaSolution.Value = _initialHasPlasmaSolution;
       _hasBloodTransfusionSet.Value = _initialHasBloodTransfusionSet;
       _connectedPatientIdentifier.Value = _initialConnectedPatientIdentifier ?? string.Empty;
+      RegisterEntity();
       ApplyDisplays();
+    }
+
+    public override void OnStopServer()
+    {
+      // 풀링된 NetworkObject는 OnDestroy 없이 재사용될 수 있으므로 서버 수명주기에서 해제한다.
+      UnregisterEntity();
+      base.OnStopServer();
     }
 
     public override void OnStartClient()
@@ -386,24 +402,27 @@ namespace TriageTrainer.Entity
       if (string.IsNullOrWhiteSpace(identifier))
         return;
       string value = identifier.Trim();
+      if (!string.IsNullOrWhiteSpace(_registeredIdentifier) &&
+          !string.Equals(_registeredIdentifier, value, StringComparison.Ordinal))
+        UnregisterEntity();
+
+      _entityIdentifier = value;
       if (IsServerStarted)
         _runtimeIdentifier.Value = value;
-      _registeredIdentifier = value;
       RegisterEntity();
     }
 
     private void OnRuntimeIdentifierChanged(string previous, string next, bool asServer)
     {
       UnregisterEntity();
-      _registeredIdentifier = next;
+      if (!string.IsNullOrWhiteSpace(next))
+        _entityIdentifier = next;
       RegisterEntity();
     }
 
     private void RegisterEntity()
     {
-      string identifier = !string.IsNullOrWhiteSpace(_runtimeIdentifier.Value)
-        ? _runtimeIdentifier.Value
-        : _registeredIdentifier;
+      string identifier = EffectiveIdentifier;
       if (string.IsNullOrWhiteSpace(identifier))
         return;
       _registeredIdentifier = identifier;
@@ -419,6 +438,7 @@ namespace TriageTrainer.Entity
     {
       if (!string.IsNullOrWhiteSpace(_registeredIdentifier))
         Registry.UnregisterEntity(_registeredIdentifier);
+      _registeredIdentifier = null;
     }
 
     public Level1RapidInfuserState CaptureState() => new()
