@@ -711,7 +711,7 @@ namespace MultiplayerInfrastructure.UI
       // 아이템의 CurrentColor를 이름 색으로 사용(희소도/카테고리 필드가 없으므로 색상으로 구분).
       _tooltipName.style.color = item.CurrentColor;
 
-      SetLabel(_tooltipType, item.GetType().Name);
+      SetLabel(_tooltipType, item.CurrentIdentifier);
       SetLabel(_tooltipDescription, item.CurrentDescription);
       SetLabel(_tooltipDetail, item.CurrentDetailComment);
 
