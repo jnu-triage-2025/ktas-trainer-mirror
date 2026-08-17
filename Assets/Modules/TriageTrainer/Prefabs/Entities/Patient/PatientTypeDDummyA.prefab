@@ -177,22 +177,18 @@ MonoBehaviour:
   _assessActions:
   - _identifier: assess_avpu_gcs
     _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC0AC\uC815(AVPU/GCS)"
-    _displayIcon: {fileID: 0}
     _assessSignal: 
     _enabled: 0
   - _identifier: assess_pulse
     _displayText: "\uB9E5\uBC15 \uD655\uC778"
-    _displayIcon: {fileID: 0}
     _assessSignal: 
     _enabled: 0
   - _identifier: assess_gcs
     _displayText: "GCS \uC7AC\uC0AC\uC815"
-    _displayIcon: {fileID: 0}
     _assessSignal: 
     _enabled: 0
   - _identifier: assess_vital
     _displayText: "\uD65C\uB825\uC9D5\uD6C4 \uC0AC\uC815"
-    _displayIcon: {fileID: 0}
     _assessSignal: 
     _enabled: 0
   _capsuleCollider: {fileID: 6481162045202206273}
@@ -206,11 +202,9 @@ MonoBehaviour:
   _lyingCapsuleDirection: 2
   _identifier: patient_dummy_d_a
   _liftDisplayText: "\uD658\uC790\uB97C \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
-  _liftDisplayIcon: {fileID: 0}
   _carryDisplayText: "\uD658\uC790 \uB4E4\uC5B4\uC62C\uB9AC\uAE30"
-  _carryDisplayIcon: {fileID: 0}
   _monitorSelectDisplayText: "\uC774 \uD658\uC790\uB97C \uBAA8\uB2C8\uD130\uB9C1"
-  _monitorSelectDisplayIcon: {fileID: 0}
+  _initiallyHiddenChildNames: []
   _weight: 4
   _supportExternalRefs:
     _patientBed: {fileID: 0}
@@ -237,7 +231,6 @@ MonoBehaviour:
   _intravenousLineCannulaConfig:
     _supported: 0
     _displayText: 
-    _displayIcon: {fileID: 0}
   _intravenousLineCannulaInteractable: 0
   _medicalState:
     isCardiacArrest: 0
@@ -293,11 +286,12 @@ MonoBehaviour:
       v4: 0
       v5: 0
       v6: 0
+  _treatmentState:
+    appliedTreatments: []
   _triageConfig:
     _assessable: 0
     _changeAssessableOnAssessDone: 2
     _displayText: 
-    _displayIcon: {fileID: 0}
   _triageLabelAnchor: {fileID: 0}
 --- !u!114 &6759064965544079288
 MonoBehaviour:
@@ -329,7 +323,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584156140138443568
+  _initializedTimestamp: -8584146241336337718
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1

@@ -171,9 +171,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e794a1dae1454908ba448af46d61805, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.PatientController
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 6759064965544079288}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 6759064965544079288}
   _runtimeAnimatorController: {fileID: 9100000, guid: 758dc81a7cf194485a7b78c2bae9abd6, type: 2}
   _assessActions:
   - _identifier: assess_avpu_gcs
@@ -287,6 +287,8 @@ MonoBehaviour:
       v4: 0
       v5: 0
       v6: 0
+  _treatmentState:
+    appliedTreatments: []
   _triageConfig:
     _assessable: 0
     _changeAssessableOnAssessDone: 0
@@ -312,6 +314,7 @@ MonoBehaviour:
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
   - {fileID: 3859099019089065873}
+  - {fileID: 4673562941832867292}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -322,7 +325,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584156786973574348
+  _initializedTimestamp: -8584146241336337718
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -341,7 +344,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 15
+  <PrefabId>k__BackingField: 17
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 12329446773789765797
   SceneId: 0
@@ -425,9 +428,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b76115154ba474fbe9ed4b018f1cb552, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.OxyLine.OxyLineConnectionPoint
-  _componentIndexCache: 255
+  _componentIndexCache: 1
   _addedNetworkObject: {fileID: 6759064965544079288}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 6759064965544079288}
   _lineMaterial: {fileID: 0}
   _connectedLineObjects: []
   _allowMultipleConnections: 0

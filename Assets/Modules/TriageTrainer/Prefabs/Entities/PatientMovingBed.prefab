@@ -337,6 +337,7 @@ MonoBehaviour:
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 5796848331211291605}
   _networkObjectCache: {fileID: 5796848331211291605}
+  _defaultControlIcon: {fileID: 0}
   _maximumParticipants: 1
   _moveSpeed: 3.5
   _turnSpeed: 120
@@ -391,6 +392,8 @@ MonoBehaviour:
   _weight: 0
   _reposeAnchor: {fileID: 4813026280041569582}
   _enablePatientRepose: 1
+  _enableMovementInteraction: 1
+  _dismountCompletionSignal: all_players_dismounted_patient_a_bed
   _enablePositioningSnap: 1
   _positioningSnapReleasePadding: 0.2
   PatientAttachPoints:
