@@ -176,6 +176,13 @@ def resolve_date_ref(repo: Path, spec: str, multiple: str, none: str, timezone: 
     return commit, f"{spec} → {commit[:12]}"
 
 
+def proportional_panel_scales(totals: list[int], baseline_total: int) -> list[float]:
+    """Return length scales whose squared values preserve area ratio to baseline."""
+    if baseline_total <= 0:
+        return [1.0 for _ in totals]
+    return [math.sqrt(total / baseline_total) for total in totals]
+
+
 def module_for(path: str) -> str:
     parts = Path(path).parts
     for index in range(len(parts) - 2):
@@ -439,6 +446,7 @@ def main() -> int:
     parser.add_argument("--root", default=".", help="Repository directory for current files (default: current directory).")
     parser.add_argument("--output", default="code-heatmap.svg", help="SVG output path.")
     parser.add_argument("--refs", help="Comma-separated Git refs (hashes, branches, or tags) to render side-by-side.")
+    parser.add_argument("--size-baseline", help="One exact --refs item whose total size is 100%% in proportional comparisons (default: largest snapshot).")
     parser.add_argument("--select-date-query-result-is-multiple", choices=("latest", "oldest", "median"), default="latest", help="Commit selected when a date: ref matches multiple commits (default: latest).")
     parser.add_argument("--select-date-query-result-is-none", choices=("fast-forward", "ff", "rewind", "rw"), default="fast-forward", help="Fallback when a date: ref has no match (default: fast-forward).")
     parser.add_argument("--timezone", default=local_timezone_name(), help="IANA timezone for date: refs (default: system local timezone).")
@@ -481,28 +489,46 @@ def main() -> int:
     trees = [(label, build_tree(files, args.depth)) for label, files in snapshots]
     totals = [tree.value for _, tree in trees]
     max_total = max(totals, default=1)
+    if args.size_baseline and not refs:
+        parser.error("--size-baseline requires --refs.")
+    if args.size_baseline and args.resolution_mode != "proportional":
+        parser.error("--size-baseline is only used with --resolution-mode proportional.")
+    if args.size_baseline:
+        try:
+            baseline_index = refs.index(args.size_baseline)
+        except ValueError:
+            parser.error("--size-baseline must exactly match one item in --refs.")
+        baseline_total = totals[baseline_index]
+    else:
+        baseline_total = max_total
+    panel_scales = proportional_panel_scales(totals, baseline_total)
     columns = min(3, len(trees))
     rows = math.ceil(len(trees) / columns)
     panel_w, panel_h = args.width / columns, (args.height - 58) / rows
+    canvas_scale = max(panel_scales, default=1.0) if args.resolution_mode == "proportional" else 1.0
+    render_width = math.ceil(args.width * canvas_scale)
+    render_height = math.ceil(58 + (args.height - 58) * canvas_scale)
+    cell_w, cell_h = panel_w * canvas_scale, panel_h * canvas_scale
     body = ["<style>text{font-family:Inter,Arial,sans-serif;font-weight:600}.folder{fill:#F8FAFC;stroke:#94A3B8;stroke-width:1}.file{stroke:#FFFFFF;stroke-width:0.5}.aggregate{stroke:#FFFFFF;stroke-width:0.5}</style>", f'<rect width="100%" height="100%" fill="#FFFFFF"/>', f'<text x="24" y="30" font-size="20" fill="#1E293B">Code heatmap — {html.escape(args.metric)} · depth {args.depth} · colour by {html.escape(args.color_by)}</text>']
     for index, (label, tree) in enumerate(trees):
         column, row = index % columns, index // columns
-        x, y = column * panel_w + 12, 50 + row * panel_h + 8
+        x, y = column * cell_w + 12, 50 + row * cell_h + 8
         if args.resolution_mode == "proportional":
-            factor = math.sqrt(tree.value / max_total) if max_total else 1
+            factor = panel_scales[index]
             used_w, used_h = (panel_w - 24) * factor, (panel_h - 24) * factor
         else:
             used_w, used_h = panel_w - 24, panel_h - 24
-        body.append(f'<text x="{x:.1f}" y="{y + 13:.1f}" font-size="12" fill="#334155">{html.escape(label)} — {tree.value:,}</text>')
+        percent = tree.value / baseline_total * 100 if baseline_total else 0
+        body.append(f'<text x="{x:.1f}" y="{y + 13:.1f}" font-size="12" fill="#334155">{html.escape(label)} — {tree.value:,} ({percent:.1f}%)</text>')
         body.extend(render_tree(tree, x, y + 20, used_w, used_h - 20, args.color_by, colours))
     legend_keys = sorted({(file.extension if args.color_by == "type" else file.module) for _, files in snapshots for file in files}, key=str.lower)
     for index, key in enumerate(legend_keys[:20]):
         value = key.lower().lstrip(".")
         fill = colours.get(value, PASTELS[sum(map(ord, value)) % len(PASTELS)])
         x = 24 + (index % 8) * 190
-        y = args.height - 12 - (index // 8) * 20
+        y = render_height - 12 - (index // 8) * 20
         body.append(f'<rect x="{x}" y="{y - 10}" width="11" height="11" fill="{fill}"/><text x="{x + 16}" y="{y}" font-size="10" fill="#475569">{html.escape(key)}</text>')
-    svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{args.width}" height="{args.height}" viewBox="0 0 {args.width} {args.height}">' + "".join(body) + "</svg>"
+    svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{render_width}" height="{render_height}" viewBox="0 0 {render_width} {render_height}">' + "".join(body) + "</svg>"
     try:
         Path(args.output).write_text(svg, encoding="utf-8")
     except OSError as error:

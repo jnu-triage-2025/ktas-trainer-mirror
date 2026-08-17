@@ -10,6 +10,7 @@
 uv run --project Tools/code-heatmap code-heatmap --output /tmp/code-heatmap.svg
 uv run --project Tools/code-heatmap code-heatmap --metric lines --color-by module --colors 'MultiplayerInfrastructure:#A8D8EA,TriageTrainer:#F7C5CC'
 uv run --project Tools/code-heatmap code-heatmap --refs main,HEAD~10,v1.0 --resolution-mode proportional --output /tmp/history.svg
+uv run --project Tools/code-heatmap code-heatmap --refs main,HEAD~10,v1.0 --size-baseline HEAD~10 --output /tmp/history.svg
 uv run --project Tools/code-heatmap code-heatmap --refs 'date:2026-08-17,main,date:2026-08-01-9-30' --timezone Asia/Seoul --select-date-query-result-is-multiple median --select-date-query-result-is-none rewind --output /tmp/history.svg
 uv run --project Tools/code-heatmap code-heatmap --refs main,HEAD~10 --resolution-mode fixed --output /tmp/proportions.svg
 ```
@@ -22,6 +23,7 @@ uv run --project Tools/code-heatmap code-heatmap --refs main,HEAD~10 --resolutio
 - `--metric characters|lines`: 블록 넓이의 기준(기본 `characters`).
 - `--color-by type|module`, `--colors '키:#RRGGBB,...'`: 파일 형식 또는 `Assets/Modules/<모듈>` 기준 색상 및 인라인 재정의입니다.
 - `--refs`: 커밋 해시·브랜치·태그를 쉼표로 여러 개 지정해 한 SVG에서 비교합니다.
+- `--size-baseline <ref>`: `--refs`에 정확히 포함된 한 항목을 그래픽 면적 100% 기준으로 잡습니다. 기본값은 가장 큰 시점입니다. `proportional` 모드에서만 사용하며, 각 패널 라벨에 기준 대비 비율이 표시됩니다.
 - `--refs`의 `date:...`: `date:YYYY-MM-DD`, `date:YYYY-MM-DD-h`, `date:YYYY-MM-DD-hh`, 분·초까지의 형식으로 모든 로컬·원격 참조의 커미터 날짜 구간을 지정합니다. 해시·브랜치·태그와 함께 배치할 수 있습니다.
 - `--select-date-query-result-is-multiple latest|oldest|median`: 날짜 구간에 여러 커밋이 있을 때 선택 기준(기본 `latest`)입니다.
 - `--select-date-query-result-is-none fast-forward|ff|rewind|rw`: 일치 커밋이 없을 때 날짜 구간 직후의 첫 커밋 또는 직전의 마지막 커밋을 고릅니다(기본 `fast-forward`).

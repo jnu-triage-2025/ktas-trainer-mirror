@@ -81,6 +81,10 @@ class CodeHeatmapTests(unittest.TestCase):
         self.assertEqual(MODULE.select_date_commit(entries, 201, 250, "latest", "ff"), "next")
         self.assertEqual(MODULE.select_date_commit(entries, 201, 250, "latest", "rw"), "late")
 
+    def test_size_baseline_scales_panels_by_the_selected_snapshot(self):
+        self.assertEqual(MODULE.proportional_panel_scales([100, 400], 100), [1.0, 2.0])
+        self.assertEqual(MODULE.proportional_panel_scales([100, 400], 400), [0.5, 1.0])
+
     def test_date_range_uses_timezone_dst_rules(self):
         start, end = MODULE.parse_date_range("2026-11-01", "America/New_York")
         self.assertEqual(end - start, 25 * 60 * 60)

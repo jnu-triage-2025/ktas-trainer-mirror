@@ -1,5 +1,6 @@
 using System;
 using FishNet.Connection;
+using FishNet.Object;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Performance;
 using UnityEngine;
