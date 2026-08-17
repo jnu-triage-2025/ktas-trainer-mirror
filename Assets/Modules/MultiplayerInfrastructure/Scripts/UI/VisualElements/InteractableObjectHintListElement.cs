@@ -114,30 +114,20 @@ namespace MultiplayerInfrastructure.UI
       contentWrapper.style.maxWidth = ContentWrapperWidth;
       contentWrapper.style.flexShrink = 0;
 
-      var solidBackground = new VisualElement { pickingMode = PickingMode.Ignore };
-      solidBackground.AddToClassList("interactable-content-solid-background");
-      solidBackground.style.position = Position.Absolute;
-      solidBackground.style.left = 0;
-      solidBackground.style.top = 0;
-      solidBackground.style.bottom = 0;
-      solidBackground.style.right = ContentFadeWidth;
-      solidBackground.style.backgroundColor = ContentBackground;
-      solidBackground.style.borderTopLeftRadius = 12;
-      solidBackground.style.borderBottomLeftRadius = 12;
-      contentWrapper.Add(solidBackground);
-
-      // 우측 끝은 별도 메시로 그려 배경 알파가 0까지 자연스럽게 감소하게 한다.
-      var fadeBackground = new HorizontalAlphaFadeElement(ContentBackground)
+      // 본체와 우측 그라데이션을 같은 메시로 렌더링한다. 이전에는 본체는 일반
+      // VisualElement 배경, 끝부분은 커스텀 메시였기 때문에 서로 다른 픽셀 정렬과
+      // 레이아웃 경계를 사용해 접합선이 보일 수 있었다.
+      var contentBackground = new HorizontalContentBackgroundElement(ContentBackground, ContentFadeWidth)
       {
         pickingMode = PickingMode.Ignore
       };
-      fadeBackground.AddToClassList("interactable-content-fade-background");
-      fadeBackground.style.position = Position.Absolute;
-      fadeBackground.style.right = 0;
-      fadeBackground.style.top = 0;
-      fadeBackground.style.bottom = 0;
-      fadeBackground.style.width = ContentFadeWidth;
-      contentWrapper.Add(fadeBackground);
+      contentBackground.AddToClassList("interactable-content-background");
+      contentBackground.style.position = Position.Absolute;
+      contentBackground.style.left = 0;
+      contentBackground.style.top = 0;
+      contentBackground.style.right = 0;
+      contentBackground.style.bottom = 0;
+      contentWrapper.Add(contentBackground);
 
       _iconContainer = new VisualElement();
       _iconContainer.AddToClassList("interactable-icon-container");
@@ -172,13 +162,17 @@ namespace MultiplayerInfrastructure.UI
       Add(contentWrapper);
     }
 
-    private sealed class HorizontalAlphaFadeElement : VisualElement
+    private sealed class HorizontalContentBackgroundElement : VisualElement
     {
       private readonly Color _leftColor;
+      private readonly float _fadeWidth;
+      private const float LeftCornerRadius = 12f;
+      private const int CornerSegments = 6;
 
-      public HorizontalAlphaFadeElement(Color leftColor)
+      public HorizontalContentBackgroundElement(Color leftColor, float fadeWidth)
       {
         _leftColor = leftColor;
+        _fadeWidth = fadeWidth;
         generateVisualContent += DrawGradient;
       }
 
@@ -188,18 +182,57 @@ namespace MultiplayerInfrastructure.UI
         if (rect.width <= 0f || rect.height <= 0f)
           return;
 
-        var rightColor = new Color(_leftColor.r, _leftColor.g, _leftColor.b, 0f);
+        float cornerRadius = Mathf.Min(LeftCornerRadius, rect.height * 0.5f);
+        float fadeStart = Mathf.Max(rect.xMin + cornerRadius, rect.xMax - _fadeWidth);
+        var transparentColor = new Color(_leftColor.r, _leftColor.g, _leftColor.b, 0f);
+
+        // 사각 본체와 페이드를 하나의 generateVisualContent 호출에서 생성한다.
+        DrawQuad(context, rect.xMin + cornerRadius, rect.yMin, fadeStart, rect.yMax, _leftColor, _leftColor);
+        DrawQuad(context, fadeStart, rect.yMin, rect.xMax, rect.yMax, _leftColor, transparentColor);
+
+        // 좌측의 기존 둥근 모서리도 같은 메시로 유지한다.
+        DrawQuad(context, rect.xMin, rect.yMin + cornerRadius, rect.xMin + cornerRadius, rect.yMax - cornerRadius, _leftColor, _leftColor);
+        DrawCorner(context, new Vector2(rect.xMin + cornerRadius, rect.yMin + cornerRadius), cornerRadius, Mathf.PI, Mathf.PI * 1.5f);
+        DrawCorner(context, new Vector2(rect.xMin + cornerRadius, rect.yMax - cornerRadius), cornerRadius, Mathf.PI * 0.5f, Mathf.PI);
+      }
+
+      private static void DrawQuad(MeshGenerationContext context, float left, float top, float right, float bottom, Color leftColor, Color rightColor)
+      {
+        if (right <= left || bottom <= top)
+          return;
+
         var mesh = context.Allocate(4, 6);
-        mesh.SetNextVertex(CreateVertex(rect.xMin, rect.yMin, _leftColor));
-        mesh.SetNextVertex(CreateVertex(rect.xMax, rect.yMin, rightColor));
-        mesh.SetNextVertex(CreateVertex(rect.xMax, rect.yMax, rightColor));
-        mesh.SetNextVertex(CreateVertex(rect.xMin, rect.yMax, _leftColor));
+        mesh.SetNextVertex(CreateVertex(left, top, leftColor));
+        mesh.SetNextVertex(CreateVertex(right, top, rightColor));
+        mesh.SetNextVertex(CreateVertex(right, bottom, rightColor));
+        mesh.SetNextVertex(CreateVertex(left, bottom, leftColor));
         mesh.SetNextIndex(0);
         mesh.SetNextIndex(1);
         mesh.SetNextIndex(2);
         mesh.SetNextIndex(2);
         mesh.SetNextIndex(3);
         mesh.SetNextIndex(0);
+      }
+
+      private void DrawCorner(MeshGenerationContext context, Vector2 center, float radius, float startAngle, float endAngle)
+      {
+        if (radius <= 0f)
+          return;
+
+        var mesh = context.Allocate(CornerSegments + 2, CornerSegments * 3);
+        mesh.SetNextVertex(CreateVertex(center.x, center.y, _leftColor));
+        for (int i = 0; i <= CornerSegments; i++)
+        {
+          float angle = Mathf.Lerp(startAngle, endAngle, i / (float)CornerSegments);
+          mesh.SetNextVertex(CreateVertex(center.x + Mathf.Cos(angle) * radius, center.y + Mathf.Sin(angle) * radius, _leftColor));
+        }
+
+        for (ushort i = 0; i < CornerSegments; i++)
+        {
+          mesh.SetNextIndex(0);
+          mesh.SetNextIndex((ushort)(i + 1));
+          mesh.SetNextIndex((ushort)(i + 2));
+        }
       }
 
       private static Vertex CreateVertex(float x, float y, Color color)
