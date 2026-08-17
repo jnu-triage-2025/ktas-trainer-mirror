@@ -85,6 +85,34 @@ class CodeHeatmapTests(unittest.TestCase):
         self.assertEqual(MODULE.proportional_panel_scales([100, 400], 100), [1.0, 2.0])
         self.assertEqual(MODULE.proportional_panel_scales([100, 400], 400), [0.5, 1.0])
 
+    def test_pack_panels_fills_canvas_proportional_to_weights(self):
+        rects = MODULE.pack_panels([1.0, 1.0, 1.0, 1.0], 0, 0, 400, 400)
+        self.assertEqual(len(rects), 4)
+        # Each panel should get roughly 1/4 of the total area.
+        areas = [w * h for _, _, w, h in rects]
+        total = sum(areas)
+        for area in areas:
+            self.assertAlmostEqual(area / total, 0.25, places=1)
+
+    def test_pack_panels_preserves_input_order(self):
+        rects = MODULE.pack_panels([4.0, 1.0, 2.0], 0, 0, 300, 300)
+        self.assertEqual(len(rects), 3)
+        # The first (heaviest) panel should have the largest area.
+        areas = [w * h for _, _, w, h in rects]
+        self.assertGreater(areas[0], areas[1])
+        self.assertGreater(areas[0], areas[2])
+        self.assertGreater(areas[2], areas[1])
+
+    def test_pack_panels_single_panel_fills_canvas(self):
+        rects = MODULE.pack_panels([1.0], 10, 10, 200, 100)
+        self.assertEqual(len(rects), 1)
+        x, y, w, h = rects[0]
+        self.assertAlmostEqual(w, 200, delta=1)
+        self.assertAlmostEqual(h, 100, delta=1)
+
+    def test_pack_panels_empty_returns_empty(self):
+        self.assertEqual(MODULE.pack_panels([], 0, 0, 100, 100), [])
+
     def test_date_range_uses_timezone_dst_rules(self):
         start, end = MODULE.parse_date_range("2026-11-01", "America/New_York")
         self.assertEqual(end - start, 25 * 60 * 60)

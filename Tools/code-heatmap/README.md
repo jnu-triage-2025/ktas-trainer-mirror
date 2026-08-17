@@ -28,7 +28,7 @@ uv run --project Tools/code-heatmap code-heatmap --refs main,HEAD~10 --resolutio
 - `--select-date-query-result-is-multiple latest|oldest|median`: 날짜 구간에 여러 커밋이 있을 때 선택 기준(기본 `latest`)입니다.
 - `--select-date-query-result-is-none fast-forward|ff|rewind|rw`: 일치 커밋이 없을 때 날짜 구간 직후의 첫 커밋 또는 직전의 마지막 커밋을 고릅니다(기본 `fast-forward`).
 - `--timezone`: `date:` 해석에 사용할 IANA 시간대입니다. 기본값은 시스템 지역 시간대이며, 재현 가능한 비교에는 `Asia/Seoul`처럼 명시하는 것을 권장합니다.
-- `--resolution-mode proportional|fixed`: 기본 `proportional`은 Git 시점별 총량에 비례해 패널 크기도 변화시켜 크기 차이를 보입니다. `fixed`는 모든 패널을 같은 크기로 고정해 내부 구성 비율을 비교합니다.
+- `--resolution-mode proportional|fixed`: 기본 `proportional`은 Git 시점별 총량에 비례해 패널 크기도 변화시켜 크기 차이를 보입니다. 여러 패널을 동시에 렌더링하면 squarify 알고리즘으로 패널을 밀집 배치해 빈 공간을 줄입니다. 캔버스 크기는 유효 패널 수(Herfindahl 역수)에 비례해 확장됩니다. `fixed`는 모든 패널을 같은 크기의 격자로 고정해 내부 구성 비율을 비교합니다.
 
 ## 제외 규칙
 

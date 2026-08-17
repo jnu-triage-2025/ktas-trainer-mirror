@@ -183,6 +183,28 @@ def proportional_panel_scales(totals: list[int], baseline_total: int) -> list[fl
     return [math.sqrt(total / baseline_total) for total in totals]
 
 
+def pack_panels(weights: list[float], x: float, y: float, width: float, height: float, gap: float = 0) -> list[tuple[float, float, float, float]]:
+    """Pack variable-sized panels into a rectangle using squarify.
+
+    Each panel's allocated area is proportional to its weight (which should be
+    the *area* ratio, i.e. scale²).  Returns one (x, y, w, h) per panel in the
+    same order as the input weights.
+    """
+    if not weights or width <= 0 or height <= 0:
+        return [(x, y, width, height) for _ in weights]
+    if len(weights) == 1:
+        return [(x + gap / 2, y + gap / 2, max(1.0, width - gap), max(1.0, height - gap))]
+    scale_factor = 10000 / max(weights) if max(weights) > 0 else 1
+    nodes = [Node(f"panel_{index}", f"panel_{index}", max(1, round(weight * scale_factor))) for index, weight in enumerate(weights)]
+    rects = treemap(nodes, x, y, width, height)
+    result: list[tuple[float, float, float, float] | None] = [None] * len(weights)
+    for node, rx, ry, rw, rh in rects:
+        panel_index = int(node.name.split("_", 1)[1])
+        result[panel_index] = (rx + gap / 2, ry + gap / 2, max(1.0, rw - gap), max(1.0, rh - gap))
+    # Fallback for any panel that treemap somehow dropped (should not happen).
+    return [(r if r is not None else (x, y, 1, 1)) for r in result]
+
+
 def module_for(path: str) -> str:
     parts = Path(path).parts
     for index in range(len(parts) - 2):
@@ -502,26 +524,52 @@ def main() -> int:
     else:
         baseline_total = max_total
     panel_scales = proportional_panel_scales(totals, baseline_total)
-    columns = min(3, len(trees))
-    rows = math.ceil(len(trees) / columns)
-    panel_w, panel_h = args.width / columns, (args.height - 58) / rows
-    canvas_scale = max(panel_scales, default=1.0) if args.resolution_mode == "proportional" else 1.0
-    render_width = math.ceil(args.width * canvas_scale)
-    render_height = math.ceil(58 + (args.height - 58) * canvas_scale)
-    cell_w, cell_h = panel_w * canvas_scale, panel_h * canvas_scale
+    legend_keys = sorted({(file.extension if args.color_by == "type" else file.module) for _, files in snapshots for file in files}, key=str.lower)
+    legend_rows = max(1, math.ceil(min(20, len(legend_keys)) / 8))
+    legend_height = legend_rows * 20 + 16
+    gap = 12
+    use_packed_layout = args.resolution_mode == "proportional" and len(trees) > 1
+    if use_packed_layout:
+        # Canvas grows by the effective number of panels (Herfindahl inverse)
+        # so that extreme size differences stay manageable: five equal panels
+        # give canvas_scale ≈ √5, while one dominant panel stays near 1.
+        area_weights = [s * s for s in panel_scales]
+        total_weight = sum(area_weights)
+        sum_sq = sum(w * w for w in area_weights)
+        n_effective = (total_weight * total_weight / sum_sq) if sum_sq > 0 else 1.0
+        canvas_scale = math.sqrt(n_effective)
+        render_width = math.ceil(args.width * canvas_scale)
+        render_height = math.ceil(58 + (args.height - 58) * canvas_scale)
+        available_x, available_y = gap, 50 + gap
+        available_w = render_width - 2 * gap
+        available_h = render_height - 50 - gap - legend_height - gap
+        panel_rects = pack_panels(area_weights, available_x, available_y, available_w, available_h, gap)
+    else:
+        columns = min(3, len(trees))
+        rows = math.ceil(len(trees) / columns)
+        panel_w, panel_h = args.width / columns, (args.height - 58) / rows
+        canvas_scale = max(panel_scales, default=1.0) if args.resolution_mode == "proportional" else 1.0
+        render_width = math.ceil(args.width * canvas_scale)
+        render_height = math.ceil(58 + (args.height - 58) * canvas_scale)
+        cell_w, cell_h = panel_w * canvas_scale, panel_h * canvas_scale
     body = ["<style>text{font-family:Inter,Arial,sans-serif;font-weight:600}.folder{fill:#F8FAFC;stroke:#94A3B8;stroke-width:1}.file{stroke:#FFFFFF;stroke-width:0.5}.aggregate{stroke:#FFFFFF;stroke-width:0.5}</style>", f'<rect width="100%" height="100%" fill="#FFFFFF"/>', f'<text x="24" y="30" font-size="20" fill="#1E293B">Code heatmap — {html.escape(args.metric)} · depth {args.depth} · colour by {html.escape(args.color_by)}</text>']
     for index, (label, tree) in enumerate(trees):
-        column, row = index % columns, index // columns
-        x, y = column * cell_w + 12, 50 + row * cell_h + 8
-        if args.resolution_mode == "proportional":
-            factor = panel_scales[index]
-            used_w, used_h = (panel_w - 24) * factor, (panel_h - 24) * factor
-        else:
-            used_w, used_h = panel_w - 24, panel_h - 24
         percent = tree.value / baseline_total * 100 if baseline_total else 0
-        body.append(f'<text x="{x:.1f}" y="{y + 13:.1f}" font-size="12" fill="#334155">{html.escape(label)} — {tree.value:,} ({percent:.1f}%)</text>')
-        body.extend(render_tree(tree, x, y + 20, used_w, used_h - 20, args.color_by, colours))
-    legend_keys = sorted({(file.extension if args.color_by == "type" else file.module) for _, files in snapshots for file in files}, key=str.lower)
+        if use_packed_layout:
+            px, py, pw, ph = panel_rects[index]
+            label_h = 18 if ph > 50 else 0
+            body.append(f'<text x="{px + 4:.1f}" y="{py + 14:.1f}" font-size="12" fill="#334155">{html.escape(label)} — {tree.value:,} ({percent:.1f}%)</text>')
+            body.extend(render_tree(tree, px + 4, py + label_h + 4, max(1, pw - 8), max(1, ph - label_h - 8), args.color_by, colours))
+        else:
+            column, row = index % columns, index // columns
+            x, y = column * cell_w + 12, 50 + row * cell_h + 8
+            if args.resolution_mode == "proportional":
+                factor = panel_scales[index]
+                used_w, used_h = (panel_w - 24) * factor, (panel_h - 24) * factor
+            else:
+                used_w, used_h = panel_w - 24, panel_h - 24
+            body.append(f'<text x="{x:.1f}" y="{y + 13:.1f}" font-size="12" fill="#334155">{html.escape(label)} — {tree.value:,} ({percent:.1f}%)</text>')
+            body.extend(render_tree(tree, x, y + 20, used_w, used_h - 20, args.color_by, colours))
     for index, key in enumerate(legend_keys[:20]):
         value = key.lower().lstrip(".")
         fill = colours.get(value, PASTELS[sum(map(ord, value)) % len(PASTELS)])
