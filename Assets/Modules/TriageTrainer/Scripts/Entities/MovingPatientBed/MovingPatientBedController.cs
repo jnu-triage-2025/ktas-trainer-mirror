@@ -157,7 +157,7 @@ namespace TriageTrainer.Entity
       }
     }
     public string DisplayText => GetDisplayText();
-    public Sprite DisplayIcon => _displayIcon;
+    public Sprite DisplayIcon => _displayIcon != null ? _displayIcon : ResolvedDefaultControlIcon;
     public bool AllowDisplayIconFallback => true;
     public Color DisplayColor => Color.white;
 
@@ -238,7 +238,6 @@ namespace TriageTrainer.Entity
 
     private void Awake()
     {
-      EnsureDisplayIcon();
       Awake_MinecraftBoadLikeControl();
       Configure(
         4,
@@ -1084,14 +1083,6 @@ namespace TriageTrainer.Entity
           _allowedPositioningPointIdentifiers[i] = value.Trim();
         }
       }
-    }
-
-    private void EnsureDisplayIcon()
-    {
-      if (_displayIcon != null)
-        return;
-
-      _displayIcon = Resources.Load<Sprite>("Textures/Icons/patient_bed");
     }
 
     private void OnDrawGizmosSelected()

@@ -4,6 +4,7 @@ using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
+using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
@@ -19,6 +20,44 @@ namespace MultiplayerInfrastructure.Entity
   public abstract class MinecraftBoadLikeControl : NetworkBehaviour
   {
     private const int InvalidClientId = -1;
+
+    /// <summary>
+    /// MinecraftBoadLikeControl을 사용하는 모든 조종 가능 엔티티의 기본 상호작용 아이콘
+    /// Resources 경로입니다. 인스펙터에서 아이콘을 지정하지 않으면 이 경로에서 자동으로
+    /// 스프라이트를 로드합니다. 스프라이트 파일만 이 경로에 배치하면 코드 수정 없이
+    /// 기본 아이콘이 적용됩니다.
+    /// </summary>
+    public const string DefaultControlIconResourcePath = "Textures/Icons/moving-object";
+
+    [Header("Control Display")]
+    [Tooltip("조종 상호작용의 기본 아이콘입니다. 비워 두면 Resources/" + DefaultControlIconResourcePath + " 에서 자동으로 로드합니다.")]
+    [SerializeField] private Sprite _defaultControlIcon;
+
+    private Sprite _resolvedDefaultControlIcon;
+
+    /// <summary>
+    /// 이 조종체의 기본 아이콘 스프라이트를 반환합니다.
+    /// <see cref="_defaultControlIcon"/>가 인스펙터에서 지정되면 해당 값을 사용하고,
+    /// 비어 있으면 <see cref="DefaultControlIconResourcePath"/> 경로에서 Resources.Load로
+    /// 자동 로드합니다. 로드 실패 시 <see cref="DefaultsResource.FallbackSprite"/> 를 반환합니다.
+    /// </summary>
+    protected Sprite ResolvedDefaultControlIcon
+    {
+      get
+      {
+        if (_defaultControlIcon != null)
+          return _defaultControlIcon;
+
+        if (_resolvedDefaultControlIcon == null)
+        {
+          _resolvedDefaultControlIcon = Resources.Load<Sprite>(DefaultControlIconResourcePath);
+          if (_resolvedDefaultControlIcon == null)
+            _resolvedDefaultControlIcon = DefaultsResource.FallbackSprite;
+        }
+
+        return _resolvedDefaultControlIcon;
+      }
+    }
 
     private sealed class LocalParticipant
     {

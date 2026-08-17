@@ -91,7 +91,7 @@ namespace TriageTrainer.Entity
       }
     }
     public string DisplayText => _displayText;
-    public Sprite DisplayIcon => _displayIcon;
+    public Sprite DisplayIcon => _displayIcon != null ? _displayIcon : ResolvedDefaultControlIcon;
     public bool AllowDisplayIconFallback => true;
     public Color DisplayColor => Color.white;
 
