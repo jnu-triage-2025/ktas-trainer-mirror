@@ -20,12 +20,12 @@ namespace TriageTrainer.Entity
   /// <summary>
   /// 제세동 카트의 1인 조종을 전담하는 컨트롤러.
   /// 탑승/점유/이동의 네트워크 구현은 도메인 독립 공통 모듈
-  /// <see cref="MinecraftBoadLikeControl"/> 에 위임한다(<see cref="Level1RapidInfuserController"/> 와 동일한 상속 패턴).
+  /// <see cref="MinecraftBoatLikeControl"/> 에 위임한다(<see cref="Level1RapidInfuserController"/> 와 동일한 상속 패턴).
   ///
   /// 카트가 허용된 snap point에 도달하면 서버 권위로 스냅하고 시나리오 신호
   /// defibrillator_cart_snap_point_reached_{카트 식별자}_{포인트 식별자} 를 발생시킨다.
   /// </summary>
-  public sealed class DefibrillatorCartController : MinecraftBoadLikeControl,
+  public sealed class DefibrillatorCartController : MinecraftBoatLikeControl,
     IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver
   {
     [Header("Identity")]
@@ -97,7 +97,7 @@ namespace TriageTrainer.Entity
 
     private void Awake()
     {
-      Awake_MinecraftBoadLikeControl();
+      Awake_MinecraftBoatLikeControl();
       Configure(1); // 제세동 카트는 한 명만 조종한다.
       _staticPlacedItem = GetComponent<StaticPlacedItem>();
     }
@@ -110,7 +110,7 @@ namespace TriageTrainer.Entity
     private void Update()
     {
       ResolveSyncedSnapPointIfPending();
-      Update_MinecraftBoadLikeControl();
+      Update_MinecraftBoatLikeControl();
       TrySnapToSnapPoint();
     }
 

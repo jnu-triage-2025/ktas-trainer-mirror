@@ -17,12 +17,12 @@ namespace MultiplayerInfrastructure.Entity
   /// 도메인 객체(환자 침대, 의료 장비 등)의 상태나 상호작용은 소유하지 않는다.
   /// </summary>
   [RequireComponent(typeof(NetworkObject))]
-  public abstract class MinecraftBoadLikeControl : NetworkBehaviour
+  public abstract class MinecraftBoatLikeControl : NetworkBehaviour
   {
     private const int InvalidClientId = -1;
 
     /// <summary>
-    /// MinecraftBoadLikeControl을 사용하는 모든 조종 가능 엔티티의 기본 상호작용 아이콘
+    /// MinecraftBoatLikeControl을 사용하는 모든 조종 가능 엔티티의 기본 상호작용 아이콘
     /// Resources 경로입니다. 인스펙터에서 아이콘을 지정하지 않으면 이 경로에서 자동으로
     /// 스프라이트를 로드합니다. 스프라이트 파일만 이 경로에 배치하면 코드 수정 없이
     /// 기본 아이콘이 적용됩니다.
@@ -113,7 +113,7 @@ namespace MultiplayerInfrastructure.Entity
     /// <summary>이 클라이언트에서 현재 조종 중인 참가자가 하나 이상 있는지 여부.</summary>
     public bool IsLocallyControlled => _localParticipants.Count > 0;
 
-    protected void Awake_MinecraftBoadLikeControl()
+    protected void Awake_MinecraftBoatLikeControl()
     {
       ResolveAttachPoints();
     }
@@ -151,7 +151,7 @@ namespace MultiplayerInfrastructure.Entity
       base.OnStopClient();
     }
 
-    protected void Update_MinecraftBoadLikeControl()
+    protected void Update_MinecraftBoatLikeControl()
     {
       HandleLocalExitInput();
       UpdateNetworkMovement();

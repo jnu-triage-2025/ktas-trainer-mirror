@@ -77,9 +77,9 @@ namespace TriageTrainer.Entity
 
   /// <summary>
   /// 급속 주입기의 상호작용과 상태를 소유한다. 이동은 도메인 독립 공통 모듈
-  /// <see cref="MinecraftBoadLikeControl"/> 에 위임한다.
+  /// <see cref="MinecraftBoatLikeControl"/> 에 위임한다.
   /// </summary>
-  public sealed class Level1RapidInfuserController : MinecraftBoadLikeControl,
+  public sealed class Level1RapidInfuserController : MinecraftBoatLikeControl,
     IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver,
     IItemizableWorldEntity
   {
@@ -241,7 +241,7 @@ namespace TriageTrainer.Entity
 
     private void Awake()
     {
-      Awake_MinecraftBoadLikeControl();
+      Awake_MinecraftBoatLikeControl();
       Configure(1); // Level 1 Rapid Infuser는 한 명만 조종한다.
       if (_ivConnectionPoint != null)
       {
@@ -264,7 +264,7 @@ namespace TriageTrainer.Entity
 
     private void Update()
     {
-      Update_MinecraftBoadLikeControl();
+      Update_MinecraftBoatLikeControl();
       if (IsServerStarted)
         RetryPendingFluidConfirmations();
     }

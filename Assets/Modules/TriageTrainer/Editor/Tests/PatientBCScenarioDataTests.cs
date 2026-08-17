@@ -1366,11 +1366,11 @@ namespace TriageTrainer.Tests
       }
     }
 
-    private static void AddOfflineParticipantForTest(MinecraftBoadLikeControl controller, int key)
+    private static void AddOfflineParticipantForTest(MinecraftBoatLikeControl controller, int key)
     {
-      var participantType = typeof(MinecraftBoadLikeControl).GetNestedType(
+      var participantType = typeof(MinecraftBoatLikeControl).GetNestedType(
         "LocalParticipant", BindingFlags.NonPublic);
-      var participantsField = typeof(MinecraftBoadLikeControl).GetField(
+      var participantsField = typeof(MinecraftBoatLikeControl).GetField(
         "_localParticipants", BindingFlags.Instance | BindingFlags.NonPublic);
       Assert.That(participantType, Is.Not.Null);
       Assert.That(participantsField, Is.Not.Null);
@@ -1389,9 +1389,9 @@ namespace TriageTrainer.Tests
       try
       {
         var bed = instance.GetComponent<MovingPatientBedController>();
-        var pending = typeof(MinecraftBoadLikeControl).GetField(
+        var pending = typeof(MinecraftBoatLikeControl).GetField(
           "_togglePending", BindingFlags.Instance | BindingFlags.NonPublic);
-        var acknowledge = typeof(MinecraftBoadLikeControl).GetMethod(
+        var acknowledge = typeof(MinecraftBoatLikeControl).GetMethod(
           "CompleteToggleRequest", BindingFlags.Instance | BindingFlags.NonPublic);
 
         Assert.That(pending, Is.Not.Null);
@@ -1414,9 +1414,9 @@ namespace TriageTrainer.Tests
       try
       {
         var bed = instance.GetComponent<MovingPatientBedController>();
-        var attachPointsField = typeof(MinecraftBoadLikeControl).GetField(
+        var attachPointsField = typeof(MinecraftBoatLikeControl).GetField(
           "_playerAttachPoints", BindingFlags.Instance | BindingFlags.NonPublic);
-        var resolveAttachPoints = typeof(MinecraftBoadLikeControl).GetMethod(
+        var resolveAttachPoints = typeof(MinecraftBoatLikeControl).GetMethod(
           "ResolveAttachPoints", BindingFlags.Instance | BindingFlags.NonPublic);
         var attachPoints = attachPointsField?.GetValue(bed) as List<Transform>;
         var explicitPoint = instance.GetComponentsInChildren<RidableAttachPointObject>(true).First().transform;
@@ -1464,7 +1464,7 @@ namespace TriageTrainer.Tests
         [8] = Vector2.left,
         [disconnectedClientId] = Vector2.one
       };
-      var remove = typeof(MinecraftBoadLikeControl).GetMethod(
+      var remove = typeof(MinecraftBoatLikeControl).GetMethod(
         "RemoveParticipantState", BindingFlags.Static | BindingFlags.NonPublic);
 
       Assert.That(remove, Is.Not.Null);

@@ -18,7 +18,7 @@ using MI = MultiplayerInfrastructure;
 
 namespace TriageTrainer.Entity
 {
-  public partial class MovingPatientBedController : MinecraftBoadLikeControl, IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver, IEntityPresetParentLinkReceiver
+  public partial class MovingPatientBedController : MinecraftBoatLikeControl, IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver, IEntityPresetParentLinkReceiver
   {
     private const string DefaultPlayerAttachPointName = "PlayerAttachPoint";
     private const string DefaultPatientAttachPointName = "PatientAttachPoint";
@@ -238,7 +238,7 @@ namespace TriageTrainer.Entity
 
     private void Awake()
     {
-      Awake_MinecraftBoadLikeControl();
+      Awake_MinecraftBoatLikeControl();
       Configure(
         4,
         ConstantString.HintExitPatientBedMovingMode);
@@ -300,7 +300,7 @@ namespace TriageTrainer.Entity
       ResolveSyncedPositioningPointIfPending();
       SyncReposedTargetTransform();
       SetMinimumMovementDivisor(RequiredInteractorCount);
-      Update_MinecraftBoadLikeControl();
+      Update_MinecraftBoatLikeControl();
       TrySnapToPositioningPoint();
     }
 
