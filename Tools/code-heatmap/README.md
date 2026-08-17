@@ -1,6 +1,6 @@
 # Code Heatmap
 
-독립적인 uv 프로젝트입니다. Unity 또는 서드파티 Python 패키지에 의존하지 않고, 소스 파일의 텍스트량을 주식 히트맵 같은 폴더 트리맵 SVG로 렌더합니다. 기본값은 문자 수, 루트 기준 폴더 깊이 4, 파스텔 파일 형식 색상입니다. 따라서 이 프로젝트에서는 `Assets/Modules/*/Scripts` 수준을 자연스럽게 구분합니다.
+독립적인 uv 프로젝트입니다. Unity 또는 서드파티 Python 패키지에 의존하지 않고, 소스 파일의 텍스트량을 주식 히트맵 같은 폴더 트리맵 SVG로 렌더합니다. 기본값은 문자 수, 루트 기준 폴더 깊이 5, 파스텔 파일 형식 색상입니다. 따라서 이 프로젝트에서는 `Assets/Modules/*/Scripts/*` 수준을 자연스럽게 구분합니다.
 
 ## 실행
 
@@ -18,7 +18,7 @@ uv run --project Tools/code-heatmap code-heatmap --refs main,HEAD~10 --resolutio
 
 - `--extensions`: 포함할 확장자. 기본값은 C# 계열, JSON, UXML, USS와 shader/HLSL/asmdef 파일입니다.
 - `--ignore-config`: 줄 단위 glob 제외 설정입니다. `code-heatmap.ignore.template`을 `code-heatmap.ignore`으로 복사해 사용하며, 기본 `.*`은 숨김 파일·폴더를 제외합니다. 로컬 설정 파일은 해당 프로젝트의 `.gitignore`에 포함됩니다.
-- `--depth`: 폴더 표시 깊이(기본 4). 더 깊은 경로는 마지막 블록으로 접습니다.
+- `--depth`: 폴더 표시 깊이(기본 5). 한계 깊이의 폴더는 하위 파일 전체를 합산한 하나의 집계 블록으로 표시합니다. 예를 들어 기본값은 `Assets/Modules/<모듈>/Scripts/<하위 폴더>`의 하위를 개별 파일 대신 하나의 집계 블록으로 표시합니다.
 - `--metric characters|lines`: 블록 넓이의 기준(기본 `characters`).
 - `--color-by type|module`, `--colors '키:#RRGGBB,...'`: 파일 형식 또는 `Assets/Modules/<모듈>` 기준 색상 및 인라인 재정의입니다.
 - `--refs`: 커밋 해시·브랜치·태그를 쉼표로 여러 개 지정해 한 SVG에서 비교합니다.

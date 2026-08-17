@@ -50,6 +50,10 @@ class Node:
     value: int = 0
     file: SourceFile | None = None
     children: dict[str, "Node"] = field(default_factory=dict)
+    rollup: bool = False
+    file_count: int = 0
+    type_counts: dict[str, int] = field(default_factory=dict)
+    module_counts: dict[str, int] = field(default_factory=dict)
 
 
 class DateQueryError(ValueError):
@@ -90,8 +94,17 @@ def load_ignore_patterns(path: Path) -> list[str]:
 
 def is_ignored(path: str, patterns: Iterable[str]) -> bool:
     parts = Path(path).parts
-    return any(fnmatch.fnmatchcase(path, pattern) or any(fnmatch.fnmatchcase(part, pattern) for part in parts)
-               for pattern in patterns)
+    for pattern in patterns:
+        # A trailing slash is a convenient directory form in the local config.
+        # Match both that directory itself and every descendant beneath it.
+        normalized = pattern.rstrip("/")
+        if not normalized:
+            continue
+        if (fnmatch.fnmatchcase(path, normalized)
+                or fnmatch.fnmatchcase(path, f"{normalized}/*")
+                or any(fnmatch.fnmatchcase(part, normalized) for part in parts)):
+            return True
+    return False
 
 
 def local_timezone_name() -> str:
@@ -237,18 +250,38 @@ def git_files(repo: Path, ref: str, extensions: set[str], excludes: set[str], ig
 
 def build_tree(files: Iterable[SourceFile], depth: int) -> Node:
     root = Node("Repository", "")
+
+    def record(node: Node, source: SourceFile) -> None:
+        node.file_count += 1
+        node.type_counts[source.extension] = node.type_counts.get(source.extension, 0) + 1
+        node.module_counts[source.module] = node.module_counts.get(source.module, 0) + 1
+
     for source in files:
         parts = source.path.split("/")
         folders, filename = parts[:-1], parts[-1]
         node = root
+        record(node, source)
+        if depth == 0:
+            rollup = node.children.setdefault("Contents", Node("Contents", "", rollup=True))
+            rollup.value += source.value
+            record(rollup, source)
+            continue
         for index, folder in enumerate(folders):
-            if index >= depth:
-                filename = "/".join(parts[index:])
+            # The folder at the requested maximum depth represents every file
+            # below it as one box; no individual descendants are rendered.
+            if index == depth - 1:
+                rollup_path = f"{node.path}/{folder}".strip("/")
+                rollup = node.children.setdefault(folder, Node(folder, rollup_path, rollup=True))
+                rollup.value += source.value
+                record(rollup, source)
                 break
             node = node.children.setdefault(folder, Node(folder, f"{node.path}/{folder}".strip("/")))
-        leaf = node.children.setdefault(filename, Node(filename, f"{node.path}/{filename}".strip("/")))
-        leaf.file = source
-        leaf.value += source.value
+            record(node, source)
+        else:
+            leaf = node.children.setdefault(filename, Node(filename, f"{node.path}/{filename}".strip("/")))
+            leaf.file = source
+            leaf.value += source.value
+            record(leaf, source)
     def total(node: Node) -> int:
         if node.children:
             node.value = sum(total(child) for child in node.children.values())
@@ -337,20 +370,37 @@ def render_tree(root: Node, panel_x: float, panel_y: float, panel_w: float, pane
     # with nested headers.  Leaf rectangles retain their full area at small sizes.
     outer_pad, header = 1.0, 15.0
     minimum_group_side, minimum_group_area = 5.0, 64.0
-    def colour(source: SourceFile) -> str:
-        key = source.extension if colour_by == "type" else source.module.lower()
+    def colour_for(key: str) -> str:
+        key = key.lower()
         return colours.get(key, PASTELS[sum(map(ord, key)) % len(PASTELS)] if key else fallback_colour(key))
+
+    def colour(source: SourceFile) -> str:
+        return colour_for(source.extension if colour_by == "type" else source.module)
+
+    def aggregate_colour(node: Node) -> str:
+        counts = node.type_counts if colour_by == "type" else node.module_counts
+        if not counts:
+            return "#CBD5E1"
+        key = max(counts, key=lambda item: (counts[item], item.lower()))
+        return colour_for(key)
     def descendant_count(node: Node) -> int:
+        if node.rollup:
+            return node.file_count
         if node.file:
             return 1
         return sum(descendant_count(child) for child in node.children.values())
 
-    def aggregate(node: Node, x: float, y: float, w: float, h: float) -> None:
+    def aggregate(node: Node, x: float, y: float, w: float, h: float, fill: str) -> None:
         """Represent a too-small folder without emitting unusable zero-size leaves."""
-        output.append(f'<rect class="aggregate" x="{x:.1f}" y="{y:.1f}" width="{max(0, w):.1f}" height="{max(0, h):.1f}"><title>{html.escape(node.path)} — {node.value:,} across {descendant_count(node):,} files</title></rect>')
+        output.append(f'<rect class="aggregate" x="{x:.1f}" y="{y:.1f}" width="{max(0, w):.1f}" height="{max(0, h):.1f}" fill="{fill}"><title>{html.escape(node.path)} — {node.value:,} across {descendant_count(node):,} files</title></rect>')
 
     def visit(node: Node, x: float, y: float, w: float, h: float, level: int) -> None:
         if w <= 0 or h <= 0:
+            return
+        if node.rollup:
+            fill = aggregate_colour(node)
+            aggregate(node, x, y, w, h, fill)
+            output.append(svg_text(f"{node.name} ({node.file_count:,})", x + 4, y + 13, 10, readable_text(fill), w - 8))
             return
         if node.file:
             fill = colour(node.file)
@@ -359,7 +409,7 @@ def render_tree(root: Node, panel_x: float, panel_y: float, panel_w: float, pane
             output.append(svg_text(node.name, x + 5, y + 15, 10 if h > 34 else 8, readable_text(fill), w - 8))
             return
         if min(w, h) < minimum_group_side or w * h < minimum_group_area:
-            aggregate(node, x, y, w, h)
+            aggregate(node, x, y, w, h, aggregate_colour(node))
             return
         show_header = level and w >= 80 and h >= header * 2 + 8
         if show_header:
@@ -392,7 +442,7 @@ def main() -> int:
     parser.add_argument("--select-date-query-result-is-multiple", choices=("latest", "oldest", "median"), default="latest", help="Commit selected when a date: ref matches multiple commits (default: latest).")
     parser.add_argument("--select-date-query-result-is-none", choices=("fast-forward", "ff", "rewind", "rw"), default="fast-forward", help="Fallback when a date: ref has no match (default: fast-forward).")
     parser.add_argument("--timezone", default=local_timezone_name(), help="IANA timezone for date: refs (default: system local timezone).")
-    parser.add_argument("--depth", type=int, default=4, help="Folder nesting depth from root (default: 4).")
+    parser.add_argument("--depth", type=int, default=5, help="Folder nesting depth from root (default: 5).")
     parser.add_argument("--extensions", default=DEFAULT_EXTENSIONS, help="Comma-separated extensions to include.")
     parser.add_argument("--exclude", default=DEFAULT_EXCLUDES, help="Comma-separated directories to exclude.")
     parser.add_argument("--ignore-config", type=Path, default=DEFAULT_IGNORE_CONFIG, help="Optional newline-separated glob exclusions (default: project code-heatmap.ignore).")
@@ -434,7 +484,7 @@ def main() -> int:
     columns = min(3, len(trees))
     rows = math.ceil(len(trees) / columns)
     panel_w, panel_h = args.width / columns, (args.height - 58) / rows
-    body = ["<style>text{font-family:Inter,Arial,sans-serif;font-weight:600}.folder{fill:#F8FAFC;stroke:#94A3B8;stroke-width:1}.file{stroke:#FFFFFF;stroke-width:0.5}.aggregate{fill:#CBD5E1;stroke:#FFFFFF;stroke-width:0.5}</style>", f'<rect width="100%" height="100%" fill="#FFFFFF"/>', f'<text x="24" y="30" font-size="20" fill="#1E293B">Code heatmap — {html.escape(args.metric)} · depth {args.depth} · colour by {html.escape(args.color_by)}</text>']
+    body = ["<style>text{font-family:Inter,Arial,sans-serif;font-weight:600}.folder{fill:#F8FAFC;stroke:#94A3B8;stroke-width:1}.file{stroke:#FFFFFF;stroke-width:0.5}.aggregate{stroke:#FFFFFF;stroke-width:0.5}</style>", f'<rect width="100%" height="100%" fill="#FFFFFF"/>', f'<text x="24" y="30" font-size="20" fill="#1E293B">Code heatmap — {html.escape(args.metric)} · depth {args.depth} · colour by {html.escape(args.color_by)}</text>']
     for index, (label, tree) in enumerate(trees):
         column, row = index % columns, index // columns
         x, y = column * panel_w + 12, 50 + row * panel_h + 8

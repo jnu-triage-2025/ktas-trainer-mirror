@@ -13,11 +13,16 @@ class CodeHeatmapTests(unittest.TestCase):
         self.assertEqual(MODULE.measure(b"one\ntwo\n", "lines"), 2)
         self.assertEqual(MODULE.measure("한글".encode(), "characters"), 2)
 
-    def test_depth_flattens_deeper_folders(self):
-        source = MODULE.SourceFile("Assets/Modules/Test/Scripts/A.cs", "cs", 12, "Test")
-        tree = MODULE.build_tree([source], 3)
-        leaf = tree.children["Assets"].children["Modules"].children["Test"].children["Scripts/A.cs"]
-        self.assertEqual(leaf.value, 12)
+    def test_depth_rolls_up_all_descendants_into_the_limit_folder(self):
+        files = [
+            MODULE.SourceFile("Assets/Modules/Test/Scripts/A.cs", "cs", 12, "Test"),
+            MODULE.SourceFile("Assets/Modules/Test/Scripts/Nested/B.cs", "cs", 8, "Test"),
+        ]
+        tree = MODULE.build_tree(files, 4)
+        scripts = tree.children["Assets"].children["Modules"].children["Test"].children["Scripts"]
+        self.assertTrue(scripts.rollup)
+        self.assertEqual((scripts.value, scripts.file_count, scripts.children), (20, 2, {}))
+        self.assertEqual(scripts.type_counts, {"cs": 2})
 
     def test_current_files_filters_and_excludes(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -32,6 +37,7 @@ class CodeHeatmapTests(unittest.TestCase):
         self.assertTrue(MODULE.is_ignored(".editorconfig", [".*"]))
         self.assertTrue(MODULE.is_ignored("Assets/.cache/Generated.cs", [".*"]))
         self.assertFalse(MODULE.is_ignored("Assets/Modules/Test.cs", [".*"]))
+        self.assertTrue(MODULE.is_ignored("Assets/Modules/FishNet/Runtime/Fish.cs", ["Assets/Modules/FishNet/"]))
 
     def test_missing_config_uses_template(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -51,6 +57,16 @@ class CodeHeatmapTests(unittest.TestCase):
         sizes = [(float(width), float(height)) for width, height in __import__("re").findall(r'class="file" x="[^"]+" y="[^"]+" width="([0-9.]+)" height="([0-9.]+)"', rendered)]
         self.assertEqual(len(sizes), 20)
         self.assertTrue(all(width > 0 and height > 0 for width, height in sizes))
+
+    def test_rollup_uses_its_most_common_file_type_colour(self):
+        files = [
+            MODULE.SourceFile("Assets/Foo/A.cs", "cs", 1, "(root)"),
+            MODULE.SourceFile("Assets/Foo/B.cs", "cs", 1, "(root)"),
+            MODULE.SourceFile("Assets/Foo/C.json", "json", 1, "(root)"),
+        ]
+        rendered = "".join(MODULE.render_tree(MODULE.build_tree(files, 2), 0, 0, 100, 100, "type", {}))
+        self.assertIn('class="aggregate"', rendered)
+        self.assertIn('fill="#F2C6DE"', rendered)  # Pastel selected for "cs".
 
     def test_date_range_accepts_every_supported_precision(self):
         for value, seconds in (("2026-08-17", 86400), ("2026-08-17-9", 3600), ("2026-08-17-09", 3600), ("2026-08-17-09-3", 60), ("2026-08-17-09-03", 60), ("2026-08-17-09-03-4", 1), ("2026-08-17-09-03-04", 1)):
