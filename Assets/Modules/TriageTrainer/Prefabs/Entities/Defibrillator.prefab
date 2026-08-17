@@ -75,81 +75,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed169a98e091646839ee5bb7cfe2fbae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Player.PlayerCharacterModelAttachPoint
---- !u!1 &7323318689855873138
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1852542726710143237}
-  - component: {fileID: 2035624658944006930}
-  - component: {fileID: 2381286549320826917}
-  m_Layer: 0
-  m_Name: DefibrillatorInteractPoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1852542726710143237
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7323318689855873138}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.006, y: 0, z: -0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 945844475350564008}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &2035624658944006930
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7323318689855873138}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.75, y: 0.9, z: 0.7}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &2381286549320826917
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7323318689855873138}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "\uC81C\uC138\uB3D9\uAE30 \uB2F4\uB2F9 \uC5ED\uD560 \uBD80\uC5EC\uBC1B\uAE30"
-  _displayIcon: {fileID: 0}
-  _displayIcons: []
-  _completionSignal: interact_defibrillator
-  _requiredRaisedSignals: []
-  _enabled: 1
-  _consumeOnce: 1
-  _activateOnInteract: []
-  _deactivateOnInteract: []
 --- !u!1 &8599765504921325498
 GameObject:
   m_ObjectHideFlags: 0
@@ -163,6 +88,7 @@ GameObject:
   - component: {fileID: 5564673943300397563}
   - component: {fileID: 3975287895335882444}
   - component: {fileID: 7009785598046843437}
+  - component: {fileID: 2381286549320826917}
   m_Layer: 0
   m_Name: Defibrillator
   m_TagString: Untagged
@@ -299,6 +225,28 @@ MonoBehaviour:
   _enableSnap: 1
   _snapReleasePadding: 0.2
   _allowedSnapPointIdentifiers: []
+  _scenarioActionInteractable: {fileID: 2381286549320826917}
+--- !u!114 &2381286549320826917
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8599765504921325498}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
+  _displayText: "제세동기 담당 역할 부여받기"
+  _displayIcon: {fileID: 0}
+  _displayIcons: []
+  _completionSignal: interact_defibrillator
+  _requiredRaisedSignals: []
+  _enabled: 1
+  _consumeOnce: 1
+  _activateOnInteract: []
+  _deactivateOnInteract: []
 --- !u!1 &9062602989742409466
 GameObject:
   m_ObjectHideFlags: 0
@@ -329,7 +277,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5918076727521928491}
-  - {fileID: 945844475350564008}
   - {fileID: 1416046512760241578}
   - {fileID: 8319102437475084006}
   m_Father: {fileID: 5213072964784116803}
@@ -485,10 +432,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: b3df0f3505a724a159969b8ec3c6e1ae, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1852542726710143237}
+    m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b3df0f3505a724a159969b8ec3c6e1ae, type: 3}
 --- !u!4 &945844475350564008 stripped

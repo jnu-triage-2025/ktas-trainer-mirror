@@ -48,6 +48,10 @@ namespace TriageTrainer.Entity
     [FormerlySerializedAs("_allowedPositioningPointIdentifiers")]
     [SerializeField] private List<string> _allowedSnapPointIdentifiers = new();
 
+    [Header("Scenario Action")]
+    [Tooltip("제세동기 담당 역할 부여받기 상호작용입니다. 카트 조종 중에는 자동으로 숨겨집니다.")]
+    [SerializeField] private ScenarioActionInteractable _scenarioActionInteractable;
+
     /// <summary>런타임 엔티티 식별자(서버 권위 + 전 피어 복제). 비어 있으면 _entityTypeIdentifier를 사용한다.</summary>
     private readonly SyncVar<string> _runtimeIdentifierSync = new(string.Empty);
     private readonly SyncVar<string> _snapPointIdentifierSync = new(string.Empty);
@@ -76,9 +80,14 @@ namespace TriageTrainer.Entity
           return new IInteract[] { this };
 
         _staticPlacedItem ??= GetComponent<StaticPlacedItem>();
-        return _staticPlacedItem != null
-          ? new IInteract[] { this, _staticPlacedItem }
-          : new IInteract[] { this };
+
+        // 제세동기 담당 역할 부여받기 상호작용도 조종 중에는 숨긴다.
+        var list = new List<IInteract> { this };
+        if (_staticPlacedItem != null)
+          list.Add(_staticPlacedItem);
+        if (_scenarioActionInteractable != null)
+          list.Add(_scenarioActionInteractable);
+        return list.ToArray();
       }
     }
     public string DisplayText => _displayText;
