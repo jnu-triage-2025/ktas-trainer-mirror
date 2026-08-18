@@ -1362,6 +1362,7 @@
       "speakerName": "@s",
       "dialogueContent": "남성분..! 말씀 들리세요?",
       "portraitSpriteIdentifier": null,
+      "interactionRequired": true,
       "autoAdvanceSeconds": 1,
       "playTTS": false
     },
@@ -1372,6 +1373,7 @@
       "speakerName": "남성 환자",
       "dialogueContent": "으으.. 아.. 어디지..?",
       "portraitSpriteIdentifier": null,
+      "interactionRequired": true,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
@@ -1383,7 +1385,7 @@
       "speakerName": null,
       "dialogueContent": "(환자는 잠시 눈을 뜨더니 다시 눈을 감는다.)",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": false,
+      "interactionRequired": true,
       "autoAdvanceSeconds": 3,
       "playTTS": false
     },
@@ -1422,6 +1424,7 @@
       "speakerName": "@s",
       "dialogueContent": "환자분..!",
       "portraitSpriteIdentifier": null,
+      "interactionRequired": true,
       "autoAdvanceSeconds": 1,
       "playTTS": false
     },
@@ -1432,6 +1435,7 @@
       "speakerName": "남성 환자",
       "dialogueContent": "으으으..! 아..! 왜요..!!",
       "portraitSpriteIdentifier": null,
+      "interactionRequired": true,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
@@ -1443,7 +1447,7 @@
       "speakerName": "@s",
       "dialogueContent": "(이 환자는 말에 조금 늦게 반응하고 있다.)",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": false,
+      "interactionRequired": true,
       "autoAdvanceSeconds": 3,
       "playTTS": false
     },
@@ -1482,6 +1486,7 @@
       "speakerName": "@s",
       "dialogueContent": "여기가 어딘지 아시겠어요?",
       "portraitSpriteIdentifier": null,
+      "interactionRequired": true,
       "autoAdvanceSeconds": 1,
       "playTTS": false
     },
@@ -1492,6 +1497,7 @@
       "speakerName": "남성 환자",
       "dialogueContent": "으으악...! 과장님 제가 분명...!!! 기안 올린거 처리해달라고..!",
       "portraitSpriteIdentifier": null,
+      "interactionRequired": true,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
@@ -1503,6 +1509,7 @@
       "speakerName": "@s",
       "dialogueContent": "...",
       "portraitSpriteIdentifier": null,
+      "interactionRequired": true,
       "autoAdvanceSeconds": 1,
       "playTTS": false
     },
@@ -1513,7 +1520,7 @@
       "speakerName": "@s",
       "dialogueContent": "(이 환자는 무슨 일이 있었는지 기억을 못하는 것 같다.)",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": false,
+      "interactionRequired": true,
       "autoAdvanceSeconds": 3,
       "playTTS": false
     },
@@ -1552,6 +1559,7 @@
       "speakerName": "@s",
       "dialogueContent": "환자분..! 환자분!! 다리 한번 펴보실래요?",
       "portraitSpriteIdentifier": null,
+      "interactionRequired": true,
       "autoAdvanceSeconds": 1,
       "playTTS": false
     },
@@ -1562,6 +1570,7 @@
       "speakerName": "남성 환자",
       "dialogueContent": "으으으...! 날 가만히 둬..!!",
       "portraitSpriteIdentifier": null,
+      "interactionRequired": true,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
@@ -1573,7 +1582,7 @@
       "speakerName": "@s",
       "dialogueContent": "(불평을 하면서도 환자는 다리를 움직인다.)",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": false,
+      "interactionRequired": true,
       "autoAdvanceSeconds": 3,
       "playTTS": false
     },

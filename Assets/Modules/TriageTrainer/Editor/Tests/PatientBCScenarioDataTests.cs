@@ -110,8 +110,12 @@ namespace TriageTrainer.Tests
       bootstrapObject.SetActive(false);
       var monitorObject = new GameObject("PatientMonitorTest");
       monitorObject.SetActive(false);
+      var zoneObject = new GameObject("VitalMonitorCloseCareZoneTest");
       try
       {
+        // 오프라인 닫기 완료도 케어존 검증을 통과해야 하므로 환자/모니터를 포함한 존을 구성한다.
+        var zone = zoneObject.AddComponent<PatientCareDescriptionZone>();
+        zone.ConfigureArea(Vector3.zero, new Vector3(10f, 10f, 10f));
         var bootstrap = bootstrapObject.AddComponent<TriageScenarioEventBootstrap>();
         var monitor = monitorObject.AddComponent<SinglePatientMonitorController>();
         var patientObject = new GameObject(completionSignal.EndsWith("_b") ? "patient_b" : "patient_c");
@@ -119,6 +123,7 @@ namespace TriageTrainer.Tests
         var patient = patientObject.AddComponent<PatientController>();
         patient.ApplySpawnedEntityIdentifier(completionSignal.EndsWith("_b") ? "patient_b" : "patient_c");
         monitor.SetPresentationPatient(patient);
+        SetPrivateField(zone, "_activePatient", patient);
         var configure = typeof(TriageScenarioEventBootstrap).GetMethod(
           "ConfigureVitalMonitorClose",
           BindingFlags.Instance | BindingFlags.NonPublic);
@@ -137,10 +142,11 @@ namespace TriageTrainer.Tests
         {
           Assert.That(configure, Is.Not.Null);
           Assert.That(requestClose, Is.Not.Null);
-          configure.Invoke(bootstrap, new object[] { monitor, patient, monitorObject, null, completionSignal });
+          configure.Invoke(bootstrap, new object[] { monitor, patient, completionSignal });
           requestClose.Invoke(monitor, null);
           requestClose.Invoke(monitor, null);
-          Assert.That(signalCount, Is.EqualTo(1));
+          Assert.That(signalCount, Is.EqualTo(1),
+            "arm 상태는 첫 닫기에서 소진되어야 한다.");
         }
         finally
         {
@@ -153,6 +159,7 @@ namespace TriageTrainer.Tests
       {
         Object.DestroyImmediate(monitorObject);
         Object.DestroyImmediate(bootstrapObject);
+        Object.DestroyImmediate(zoneObject);
       }
     }
 
