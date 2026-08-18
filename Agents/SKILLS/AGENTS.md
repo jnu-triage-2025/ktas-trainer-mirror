@@ -23,11 +23,11 @@ Check the local environment and install the following tools if they are not alre
 
 ## Humanize Korean
 
-- AI가 쓴 한글 텍스트의 AI 티(번역투·기계적 병렬·관용구 등 70개 패턴)를 제거해 자연스러운 한국어로 윤문한다.
-- `Tools/im-not-ai/` 경로의 humanize-korean 도구를 사용한다. 전체 절차는 `Agents/SKILLS/humanize-korean/SKILL.md`에서 오케스트레이터 전문(`Tools/im-not-ai/skills/humanize-korean/SKILL.md`)을 로드해 따른다.
-- Shim(`Tools/im-not-ai/scripts/prepare_monolith_input.py`)의 `route_hint`가 경로(light 1콜 / standard 2콜 / heavy 3+콜)를 결정하며, 사용자 명시(`--strict`, `가볍게`)가 오버라이드한다.
-- 변경률 게이트(`verify_gates.py`)와 구조 게이트가 과윤문을 결정적으로 방지한다.
-- 트리거: "AI 티 없애줘", "AI 윤문", "ChatGPT 티 제거", "번역투 고쳐", "사람이 쓴 것처럼", "humanize Korean" 등.
+- **이슈 생성**, **문서화**, **텍스트 콘텐츠 생성**, **코드 주석** 시 `Tools/im-not-ai/`의 humanize-korean 도구를 거쳐 AI 한글 티(번역투·기계적 병렬·관용구 등 70개 패턴)를 제거한다.
+- GitLab Issue 본문, 기능 제안서, Setup Guide, Documented Reference, XML documentation comments 등 한글 텍스트가 모두 대상이다.
+- 전체 절차는 `Agents/SKILLS/humanize-korean/SKILL.md`에서 오케스트레이터 전문(`Tools/im-not-ai/skills/humanize-korean/SKILL.md`)을 로드해 따른다.
+- **적용 제외:** 커밋 메시지.
+- **도구 불가 시:** `python3` 런타임 확인 → 그래도 실패하면 작업을 중단하지 말고 사용자에게 `⚠️ humanize-korean 도구를 거치지 않았습니다.` 경고를 표시하고, 생성 텍스트 최상단에 `> ⚠️ 이 텍스트는 AI 문체 순화 처리를 거치지 않았습니다.` 를 포함한다. 단, **코드 주석**에는 경고 텍스트를 삽입하지 않는다(사용자 경고만).
 
 ## Index
 

@@ -19,8 +19,8 @@ _AGENTS_DIR = os.path.join(_ROOT, "agents")
 _SKILL = os.path.join(_ROOT, "skills", "humanize-korean", "SKILL.md")
 
 # SKILL.md "에이전트 호출 규칙" 절이 선언하는 총 개수. 문구를 바꾸더라도
-# `agents/`에 N종` 형태만 유지하면 이 테스트가 계속 따라간다.
-_DECLARED_COUNT_RE = re.compile(r"`agents/`\s*에\s*(\d+)\s*종")
+# `*agents/`에 N종` 형태만 유지하면 이 테스트가 계속 따라간다.
+_DECLARED_COUNT_RE = re.compile(r"`[^`]*agents/`\s*에\s*(\d+)\s*종")
 
 # 전역 설치 대상 `~/.claude/agents/` — 실재하는 경로라 레포 경로 검사에서 뺀다.
 _GLOBAL_AGENT_DIR_RE = re.compile(r"~/\.claude/agents")
