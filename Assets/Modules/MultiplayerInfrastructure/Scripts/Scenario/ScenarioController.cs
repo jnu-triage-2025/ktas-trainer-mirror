@@ -225,21 +225,24 @@ namespace MultiplayerInfrastructure.Scenario
     public IScenarioNode CurrentNode => _currentNode;
     public ScenarioGraph CurrentGraph => _currentGraph;
 
+    /// <summary>
+    /// B/C 환자 모니터 닫기 완료 신호의 승인 여부를 판정한다.
+    ///
+    /// <para>모니터 UI 활성화 여부(arm)는 모니터 쪽 서버 권한 상태가 관리하므로, 여기서는
+    /// 실행 모드와 무관하게 '지금 이 그래프가 활성 상태이고, 발신자가 활성 역할 브랜치에
+    /// 참여 중이며, 신호가 아직 올라가지 않았는가'만 검사한다. 호환 실행 경로(Local 모드,
+    /// 그래프에 미지원 노드가 있어 릴레이가 권위 실행을 거부한 경우)에서도 호스트가 그래프를
+    /// 실행하므로 모드로 거부하면 닫기 완료가 불가능해진다.</para>
+    /// </summary>
     public bool CanAcceptPatientBCMonitorClose(int senderClientId, string normalizedSignal)
     {
-      if (_executionMode != ExecutionMode.ServerAuthoritative
-          || _currentGraph == null
+      if (_currentGraph == null
           || !string.Equals(_currentGraph.Identifier, "patient_b_c_ct", StringComparison.Ordinal)
           || !_activeRoleBranchDepthByClientId.ContainsKey(senderClientId)
           || ScenarioInteractionSignals.IsRaised(normalizedSignal))
         return false;
 
-      string openNode = string.Equals(normalizedSignal, "sig.close_vital_ui_b", StringComparison.Ordinal)
-        ? "B_VITAL_OPEN"
-        : string.Equals(normalizedSignal, "sig.close_vital_ui_c", StringComparison.Ordinal)
-          ? "C_B_VITAL_OPEN"
-          : null;
-      return openNode != null && GetNodeVisitOrders(_currentGraph.Identifier, openNode).Count > 0;
+      return true;
     }
     public IReadOnlyList<int> GetNodeVisitOrders(string graphIdentifier, string nodeIdentifier)
     {
@@ -480,6 +483,7 @@ namespace MultiplayerInfrastructure.Scenario
       ResolveUIControllers();
       ResolveTTSService();
       _ttsService?.ConfigureScenarioVoiceProfiles(graph.TtsVoiceProfiles);
+      PrewarmInlineTTSCache(graph);
       if (!_uiController.IsUnityNull())
       {
         _uiController.SetInteractableHintUI(_hintUIController);
@@ -758,6 +762,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       // PlayTTS 노드의 동적 세그먼트를 백그라운드에서 미리 합성 (캐싱)
       PrewarmTTSCache();
+      PrewarmInlineTTSCache(graph);
 
       // 첫 노드 실행
       ExecuteNode(startNode);
@@ -2964,9 +2969,16 @@ namespace MultiplayerInfrastructure.Scenario
         yield break;
       }
 
-      // TTSService가 준비될 때까지 대기
+      // TTSService가 준비될 때까지 대기(모델 누락 등으로 초기화가 실패한 경우 영구 대기하지 않는다)
+      if (!_ttsService.IsReady && !_ttsService.IsInitializationFailed)
+        yield return new WaitUntil(() => _ttsService.IsReady || _ttsService.IsInitializationFailed);
+
       if (!_ttsService.IsReady)
-        yield return new WaitUntil(() => _ttsService.IsReady);
+      {
+        Debug.LogWarning("[ScenarioController] TTSService 초기화 실패. PlayTTS 노드를 건너뜁니다.");
+        Advance();
+        yield break;
+      }
 
       // 동적 캐싱이 진행 중이면 완료될 때까지 대기
       if (_ttsService.IsDynamicCacheDirty)
@@ -3022,9 +3034,49 @@ namespace MultiplayerInfrastructure.Scenario
       if (string.IsNullOrWhiteSpace(text)) return;
 
       // IsReady를 기다리지 않는다: baked WAV는 ONNX 초기화 없이 즉시 재생 가능하고,
-      // baked가 없을 때만 내부에서 즉석 합성(초기화 완료 후 가능)으로 폴백한다.
+      // baked가 없을 때만 내부에서 초기화 완료를 기다린 뒤 즉석 합성으로 폴백한다.
       string scenarioIdentifier = _currentGraph != null ? _currentGraph.Identifier : null;
       _ttsService.PlayText(text, _ttsAudioSource, scenarioIdentifier, nodeIdentifier, voiceIdentifier);
+    }
+
+    /// <summary>
+    /// 시작 시 확정되는 텍스트 치환 결과를 기준으로, 미래 인라인 TTS의 런타임 합성 후보를
+    /// 순차 준비한다. 베이크 WAV와 이미 캐시된 텍스트는 서비스에서 즉시 건너뛴다.
+    /// </summary>
+    private void PrewarmInlineTTSCache(ScenarioGraph graph)
+    {
+      if (_ttsService == null || graph == null) return;
+      StartCoroutine(PrewarmInlineTTSCacheRoutine(graph));
+    }
+
+    private IEnumerator PrewarmInlineTTSCacheRoutine(ScenarioGraph graph)
+    {
+      // 초기 장면과 입력 처리를 먼저 안정화한 뒤, 하나씩만 합성한다.
+      yield return null;
+      foreach (var node in graph.Nodes.Values)
+      {
+        string text;
+        string voiceIdentifier;
+        switch (node)
+        {
+          case ScenarioDialogueNode dialogue when dialogue.PlayTTS:
+            text = ResolveScenarioText(dialogue.DialogueContent);
+            voiceIdentifier = dialogue.TtsVoiceIdentifier;
+            break;
+          case ScenarioDisinteractableDialogueNode dialogue when dialogue.PlayTTS:
+            text = ResolveScenarioText(dialogue.DialogueContent);
+            voiceIdentifier = dialogue.TtsVoiceIdentifier;
+            break;
+          default:
+            continue;
+        }
+
+        if (!string.IsNullOrWhiteSpace(text))
+          yield return _ttsService.PrepareInlineText(text, graph.Identifier, node.Identifier, voiceIdentifier);
+
+        // 프레임과 CPU 시간을 게임에 돌려준다. 다음 합성은 다음 간격에만 시작한다.
+        yield return new WaitForSecondsRealtime(0.25f);
+      }
     }
 
     private void HandleQuizSelection(int index, ScenarioQuizNode node)

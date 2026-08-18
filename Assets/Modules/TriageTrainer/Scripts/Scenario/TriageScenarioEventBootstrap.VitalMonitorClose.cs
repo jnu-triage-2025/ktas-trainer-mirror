@@ -1,5 +1,3 @@
-using System;
-using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Entity;
 using TriageTrainer.Entity.PatientMonitor.Models;
 using UnityEngine;
@@ -8,10 +6,10 @@ namespace TriageTrainer.Scenario
 {
   public partial class TriageScenarioEventBootstrap
   {
+    // 모니터 오브젝트는 닫기와 무관하게 항상 월드에 남는다(환자 A 모니터와 동일한 동작).
+    // 여기서는 시나리오 완료 시그널 발행만 무장(arm)한다.
     private void ConfigureVitalMonitorClose(PatientMonitorController monitorController,
       PatientController patient,
-      GameObject monitorObject,
-      GameObject panelObject,
       string completionSignal)
     {
       if (monitorController == null || patient == null || string.IsNullOrWhiteSpace(completionSignal))
@@ -19,11 +17,7 @@ namespace TriageTrainer.Scenario
         return;
       }
 
-      monitorController.ArmScenarioClose(patient, completionSignal, () =>
-      {
-        SetActiveIfPresent(panelObject, false);
-        SetActiveIfPresent(monitorObject, false);
-      });
+      monitorController.ArmScenarioClose(patient, completionSignal);
     }
 
     private void ResolvePatientVitalMonitor(GameObject patientObject,

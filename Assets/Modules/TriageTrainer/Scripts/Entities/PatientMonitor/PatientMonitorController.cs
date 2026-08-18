@@ -283,71 +283,162 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private string _scenarioClosePatientIdentifier;
     private string _scenarioCloseSignal;
     private bool _scenarioCloseArmed;
+    private Action _scenarioCloseHandler;
+    // 네트워크 세션에서 시나리오가 이 모니터의 닫기 완료를 승인했음을 나타내는 서버 권한 상태.
+    // 시나리오 이벤트(UI 활성화)가 실행된 클라이언트에서 ArmScenarioClose 로 설정되며,
+    // 실행 모드(ServerAuthoritative/호환 Local)와 무관하게 동일하게 동작한다.
+    private string _serverScenarioClosePatientIdentifier;
+    private string _serverScenarioCloseSignal;
+    private bool _serverScenarioCloseArmed;
 
-    public void ArmScenarioClose(PatientController patient, string completionSignal, Action closePresentation)
+    public void ArmScenarioClose(PatientController patient, string completionSignal)
     {
       if (patient == null || string.IsNullOrWhiteSpace(completionSignal))
         return;
 
       string normalizedSignal = ScenarioInteractionSignals.Normalize(completionSignal);
+      _scenarioClosePatientIdentifier = patient.Identifier;
+      _scenarioCloseSignal = normalizedSignal;
+
       if (InstanceFinder.IsOffline)
       {
-        _scenarioClosePatientIdentifier = patient.Identifier;
-        _scenarioCloseSignal = normalizedSignal;
         _scenarioCloseArmed = true;
       }
-
-      SetCloseRequestedHandler(() =>
+      else if (IsServerStarted)
       {
-        closePresentation?.Invoke();
+        ArmScenarioCloseOnServer(patient.Identifier, normalizedSignal);
+      }
+      else if (IsClientInitialized)
+      {
+        CmdArmScenarioClose(patient.Identifier, normalizedSignal);
+      }
+
+      void HandleScenarioCloseRequested()
+      {
+        // 모니터 오브젝트/패널은 닫아도 월드에 그대로 남는다. 오버레이 UI는 스스로 닫힌다.
         if (InstanceFinder.IsOffline)
         {
-          if (_scenarioCloseArmed)
-          {
-            _scenarioCloseArmed = false;
-            ScenarioInteractionSignals.Raise(normalizedSignal);
-          }
+          // 오프라인 arm은 시나리오 이벤트 시점에만 설정되므로 결과와 무관하게 종료 처리한다.
+          TryCompleteScenarioClose(null, patient, normalizedSignal);
           return;
         }
-        if (InstanceFinder.IsServerStarted)
-          TryCompleteScenarioClose(InstanceFinder.ClientManager?.Connection, patient, normalizedSignal);
-        else if (IsClientInitialized)
+
+        if (IsServerStarted)
+        {
+          // 호스트: 동일 인스턴스에서 즉시 승인 판정. 거부 시 재시도할 수 있도록 핸들러를 다시 등록한다.
+          if (!TryCompleteScenarioClose(InstanceFinder.ClientManager?.Connection, patient, normalizedSignal))
+            SetCloseRequestedHandler(HandleScenarioCloseRequested);
+          return;
+        }
+
+        if (IsClientInitialized)
+        {
+          // 서버가 거부하면 TargetScenarioCloseRejected 로 핸들러가 재등록되어 재시도할 수 있다.
           CmdCompleteScenarioClose(patient, normalizedSignal);
-      });
+          return;
+        }
+
+        Debug.LogWarning(
+          "[PatientMonitorController] 시나리오 모니터 닫기가 네트워크 컨텍스트 없이 요청되어 무시됩니다.", this);
+      }
+
+      _scenarioCloseHandler = HandleScenarioCloseRequested;
+      SetCloseRequestedHandler(HandleScenarioCloseRequested);
+    }
+
+    private void ArmScenarioCloseOnServer(string patientIdentifier, string normalizedSignal)
+    {
+      _serverScenarioClosePatientIdentifier = patientIdentifier;
+      _serverScenarioCloseSignal = normalizedSignal;
+      _serverScenarioCloseArmed = true;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdArmScenarioClose(string patientIdentifier, string normalizedSignal,
+      NetworkConnection sender = null)
+    {
+      // arm 자체는 권한이 아니라 '시나리오가 이 모니터를 열었다'는 사실 기록이다.
+      // 실제 권한 검증은 완료(CmdCompleteScenarioClose) 시점에 수행된다.
+      if (sender == null
+          || !UserDescriptorService.TryGetByClientId(sender.ClientId, out _))
+        return;
+
+      ArmScenarioCloseOnServer(patientIdentifier, normalizedSignal);
     }
 
     [ServerRpc(RequireOwnership = false)]
     private void CmdCompleteScenarioClose(PatientController patient, string normalizedSignal,
       NetworkConnection sender = null)
-      => TryCompleteScenarioClose(sender, patient, normalizedSignal);
+    {
+      if (TryCompleteScenarioClose(sender, patient, normalizedSignal))
+        return;
+
+      if (sender != null)
+        TargetScenarioCloseRejected(sender);
+    }
+
+    [TargetRpc]
+    private void TargetScenarioCloseRejected(NetworkConnection connection)
+    {
+      // 승인 거부 시 사용자가 다시 시도할 수 있도록 종료 핸들러를 재등록한다.
+      if (_closeRequested == null && _scenarioCloseHandler != null)
+        SetCloseRequestedHandler(_scenarioCloseHandler);
+    }
 
     internal bool TryCompleteScenarioClose(NetworkConnection sender, PatientController patient,
       string normalizedSignal)
     {
-      if (patient == null
-          || !IsValidPatientBCMonitorClose(patient.Identifier, normalizedSignal)
-          || !IsAuthoritativeCareZoneMonitorForPatient(this, patient))
+      string rejection = GetScenarioCloseRejection(sender, patient, normalizedSignal);
+      if (rejection != null)
+      {
+        Debug.LogWarning(
+          $"[PatientMonitorController] 시나리오 모니터 닫기 완료가 거부되었습니다: {rejection} " +
+          $"(patient='{(patient != null ? patient.Identifier : "<null>")}', signal='{normalizedSignal}', " +
+          $"sender={(sender != null ? sender.ClientId.ToString() : "offline/null")}, monitor='{name}')", this);
         return false;
+      }
+
+      _scenarioCloseArmed = false;
+      _serverScenarioCloseArmed = false;
+      using (ScenarioSignalPlayerContext.Push(sender))
+        ScenarioInteractionSignals.Raise(normalizedSignal);
+      return true;
+    }
+
+    private string GetScenarioCloseRejection(NetworkConnection sender, PatientController patient,
+      string normalizedSignal)
+    {
+      if (patient == null)
+        return "대상 환자가 없습니다.";
+      if (!IsValidPatientBCMonitorClose(patient.Identifier, normalizedSignal))
+        return "환자/시그널 조합이 유효하지 않습니다.";
+      if (!IsAuthoritativeCareZoneMonitorForPatient(this, patient))
+        return "모니터가 환자의 케어존 안에 있지 않습니다.";
 
       if (InstanceFinder.IsOffline)
       {
         if (!_scenarioCloseArmed
             || !string.Equals(patient.Identifier, _scenarioClosePatientIdentifier, StringComparison.Ordinal)
             || !string.Equals(normalizedSignal, _scenarioCloseSignal, StringComparison.Ordinal))
-          return false;
+          return "시나리오가 이 모니터의 닫기를 arm하지 않았습니다.";
+        return null;
       }
-      else if (sender == null
-               || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
-               || descriptor == null
-               || !PlayerTagService.HasTag(descriptor.Identifier, "nurse_b")
-               || ScenarioController.Instance == null
-               || !ScenarioController.Instance.CanAcceptPatientBCMonitorClose(sender.ClientId, normalizedSignal))
-        return false;
 
-      _scenarioCloseArmed = false;
-      using (ScenarioSignalPlayerContext.Push(sender))
-        ScenarioInteractionSignals.Raise(normalizedSignal);
-      return true;
+      if (!_serverScenarioCloseArmed
+          || !string.Equals(patient.Identifier, _serverScenarioClosePatientIdentifier, StringComparison.Ordinal)
+          || !string.Equals(normalizedSignal, _serverScenarioCloseSignal, StringComparison.Ordinal))
+        return "시나리오가 이 모니터의 닫기를 arm하지 않았습니다.";
+      if (sender == null
+          || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
+          || descriptor == null)
+        return "발신 플레이어를 서버 세션에서 확인할 수 없습니다.";
+      if (!PlayerTagService.HasTag(descriptor.Identifier, "nurse_b"))
+        return "발신 플레이어에게 nurse_b 태그가 없습니다.";
+      if (ScenarioController.Instance == null
+          || !ScenarioController.Instance.CanAcceptPatientBCMonitorClose(sender.ClientId, normalizedSignal))
+        return "시나리오 컨트롤러가 승인하지 않습니다(활성 그래프/롤 브랜치/시그널 상태 확인).";
+
+      return null;
     }
 
     internal static bool IsAuthoritativeCareZoneMonitorForPatient(

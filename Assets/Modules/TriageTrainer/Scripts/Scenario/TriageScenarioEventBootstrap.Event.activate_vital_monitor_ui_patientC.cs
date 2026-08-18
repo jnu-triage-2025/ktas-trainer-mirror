@@ -20,8 +20,6 @@ namespace TriageTrainer.Scenario
         : null;
       ConfigureVitalMonitorClose(_patientCVitalMonitorController,
         patient,
-        _patientCVitalMonitorObject,
-        _patientCVitalPanel,
         "close_vital_ui_c");
       yield return ApplyMonitorProfile(_patientCVitalMonitorObject,
         _patientCVitalPanel,
@@ -29,7 +27,6 @@ namespace TriageTrainer.Scenario
         _patientCInitialMonitorParameters,
         _applyPatientCInitialMonitorProfile,
         "많이 다친 여성 환자 활력징후 모니터를 활성화했습니다.");
-      _patientCVitalMonitorController?.OpenPresentation();
     }
   }
 }
