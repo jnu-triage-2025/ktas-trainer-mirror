@@ -1715,8 +1715,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "D005",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q006"
@@ -1727,8 +1730,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "D006",
       "nodeType": "Dialogue",
       "nextIdentifier": "P003"
@@ -1739,8 +1745,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F4"
+      },
       "identifier": "D007",
       "nodeType": "Dialogue",
       "nextIdentifier": "N005_4"
@@ -1751,8 +1760,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M4"
+      },
       "identifier": "D008",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q008_1"
@@ -1763,8 +1775,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F5"
+      },
       "identifier": "D009",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q009_1"
@@ -1775,20 +1790,26 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "D010",
       "nodeType": "Dialogue",
       "nextIdentifier": "E009"
     },
     "D011": {
       "speakerName": "의사 NPC",
-      "dialogueContent": "기도 확보를 위해 intubation을 시행하겠습니다. 삽관·산소 담당 간호사 선생님은 보조해주세요.",
+      "dialogueContent": "기도 확보를 위해 intubation을 시행하겠습니다. 간호사 B 선생님은 보조해주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D011",
       "nodeType": "Dialogue",
       "nextIdentifier": "D012"
@@ -1799,20 +1820,26 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D012",
       "nodeType": "Dialogue",
       "nextIdentifier": "D013"
     },
     "D013": {
       "speakerName": "의사 NPC",
-      "dialogueContent": "IV·C-line 보조 담당 간호사 선생님은 수액 투여를 위해 양팔에 IV 라인을 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션을 연결하겠습니다.",
+      "dialogueContent": "간호사 D 선생님은 수액 투여를 위해 양팔에 IV 라인을 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션을 연결하겠습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D013",
       "nodeType": "Dialogue",
       "nextIdentifier": "P004"
@@ -1823,20 +1850,26 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F4"
+      },
       "identifier": "D014",
       "nodeType": "Dialogue",
       "nextIdentifier": "D015"
     },
     "D015": {
       "speakerName": "의사 NPC",
-      "dialogueContent": "삽관이 끝났고, 자발호흡이 있으니 삽관·산소 담당 간호사 선생님이 T-piece를 연결하고 산소 10L를 공급하며 산소포화도를 모니터링해주세요.",
+      "dialogueContent": "삽관이 끝났고, 자발호흡이 있으니 간호사 A 선생님이 T-piece를 연결하고 산소 10L를 공급하며 산소포화도를 모니터링해주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D015",
       "nodeType": "Dialogue",
       "nextIdentifier": "N009"
@@ -1847,8 +1880,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M3"
+      },
       "identifier": "D016",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q011_1"
@@ -1859,8 +1895,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M4"
+      },
       "identifier": "D017",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q012_1"
@@ -1871,8 +1910,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F5"
+      },
       "identifier": "D018",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q013_1"
@@ -1883,8 +1925,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D019",
       "nodeType": "Dialogue",
       "nextIdentifier": "N012"
@@ -1895,8 +1940,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D020",
       "nodeType": "Dialogue",
       "nextIdentifier": "N013"
@@ -1907,8 +1955,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M4"
+      },
       "identifier": "D021",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q015_1"
@@ -1919,20 +1970,26 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D022",
       "nodeType": "Dialogue",
       "nextIdentifier": "E025"
     },
     "D023": {
-      "speakerName": "시스템",
+      "speakerName": "의사 NPC",
       "dialogueContent": "심전도만 출력되고, 다른 활력징후가 출력되지 않습니다. 간호사 B 선생님, 환자 맥박 확인해주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D023",
       "nodeType": "Dialogue",
       "nextIdentifier": "N016"
@@ -1943,8 +2000,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F4"
+      },
       "identifier": "D024",
       "nodeType": "Dialogue",
       "nextIdentifier": "D025"
@@ -1955,8 +2015,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D025",
       "nodeType": "Dialogue",
       "nextIdentifier": "P005"
@@ -1967,8 +2030,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M4"
+      },
       "identifier": "D026",
       "nodeType": "Dialogue",
       "nextIdentifier": "L007"
@@ -1979,8 +2045,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F5"
+      },
       "identifier": "D027",
       "nodeType": "Dialogue",
       "nextIdentifier": "N020_3"
@@ -1991,8 +2060,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F5"
+      },
       "identifier": "D027_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "L010"
@@ -2003,8 +2075,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D028",
       "nodeType": "Dialogue",
       "nextIdentifier": "E031"
@@ -2015,8 +2090,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D029",
       "nodeType": "Dialogue",
       "nextIdentifier": "P006"
@@ -2027,8 +2105,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D030",
       "nodeType": "Dialogue",
       "nextIdentifier": "N023_2"
@@ -2039,8 +2120,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M4"
+      },
       "identifier": "D031",
       "nodeType": "Dialogue",
       "nextIdentifier": "N023_3"
@@ -2051,8 +2135,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4.0,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M4"
+      },
       "identifier": "D031_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "L018"
@@ -2063,8 +2150,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F5"
+      },
       "identifier": "D032",
       "nodeType": "Dialogue",
       "nextIdentifier": "L020"
@@ -2075,8 +2165,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D033",
       "nodeType": "Dialogue",
       "nextIdentifier": "E035"
@@ -2087,8 +2180,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D034",
       "nodeType": "Dialogue",
       "nextIdentifier": "N025"
@@ -2099,8 +2195,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M3"
+      },
       "identifier": "D035",
       "nodeType": "Dialogue",
       "nextIdentifier": "D036"
@@ -2111,8 +2210,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D036",
       "nodeType": "Dialogue",
       "nextIdentifier": "P007"
@@ -2123,8 +2225,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "D037",
       "nodeType": "Dialogue",
       "nextIdentifier": null
@@ -2674,8 +2779,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N005",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q007"
@@ -2686,8 +2794,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N005_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "V011_1"
@@ -2698,8 +2809,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N005_4",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q007_1"
@@ -2710,8 +2824,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N006",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q008"
@@ -2722,8 +2839,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N006_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "N006_2"
@@ -2734,8 +2854,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N006_2",
       "nodeType": "Dialogue",
       "nextIdentifier": "C004"
@@ -2746,8 +2869,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N006_3",
       "nodeType": "Dialogue",
       "nextIdentifier": "C005"
@@ -2758,8 +2884,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N006_4",
       "nodeType": "Dialogue",
       "nextIdentifier": "C006"
@@ -2770,8 +2899,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N006_5",
       "nodeType": "Dialogue",
       "nextIdentifier": "C007"
@@ -2782,8 +2914,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N006_6",
       "nodeType": "Dialogue",
       "nextIdentifier": "D008"
@@ -2794,8 +2929,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N006_retry_a",
       "nodeType": "Dialogue",
       "nextIdentifier": "C004"
@@ -2806,8 +2944,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N006_retry_b",
       "nodeType": "Dialogue",
       "nextIdentifier": "C005"
@@ -2818,8 +2959,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N006_retry_c",
       "nodeType": "Dialogue",
       "nextIdentifier": "C006"
@@ -2830,8 +2974,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N006_retry_d",
       "nodeType": "Dialogue",
       "nextIdentifier": "C007"
@@ -2842,8 +2989,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N007",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q009"
@@ -2854,8 +3004,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N007_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "V013_1"
@@ -2866,8 +3019,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N007_2",
       "nodeType": "Dialogue",
       "nextIdentifier": "V013_2"
@@ -2878,8 +3034,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N007_3",
       "nodeType": "Dialogue",
       "nextIdentifier": "V013_3"
@@ -2890,8 +3049,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N007_4",
       "nodeType": "Dialogue",
       "nextIdentifier": "V013_4"
@@ -2902,8 +3064,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N008",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q010"
@@ -2914,8 +3079,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N008_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "ISC_PASS_LARYNGOSCOPE"
@@ -2926,8 +3094,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N008_2",
       "nodeType": "Dialogue",
       "nextIdentifier": "ISC_PASS_ET_TUBE"
@@ -2938,8 +3109,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N008_3",
       "nodeType": "Dialogue",
       "nextIdentifier": "V014_3"
@@ -2950,8 +3124,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N008_4",
       "nodeType": "Dialogue",
       "nextIdentifier": "ISC_PASS_SYRINGE"
@@ -2962,8 +3139,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N008_5",
       "nodeType": "Dialogue",
       "nextIdentifier": "V014_5"
@@ -2974,8 +3154,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N009",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q011"
@@ -2986,8 +3169,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N009_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "V015_1"
@@ -2998,20 +3184,26 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N009_2",
       "nodeType": "Dialogue",
       "nextIdentifier": "V015_2"
     },
     "N009_3": {
       "speakerName": "시스템",
-      "dialogueContent": "산소줄을 먼저 클릭해 획득하세요.",
+      "dialogueContent": "산소줄과 T-Piece를 획득하세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N009_3",
       "nodeType": "Dialogue",
       "nextIdentifier": "V015_3"
@@ -3022,8 +3214,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N009_3_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "V015_3_1"
@@ -3034,8 +3229,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N009_3_2",
       "nodeType": "Dialogue",
       "nextIdentifier": "V015_3_2"
@@ -3046,8 +3244,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N009_4",
       "nodeType": "Dialogue",
       "nextIdentifier": "V015_4"
@@ -3058,8 +3259,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N009_retry",
       "nodeType": "Dialogue",
       "nextIdentifier": "C008"
@@ -3070,8 +3274,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N010",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q012"
@@ -3082,8 +3289,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N010_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "V016_1"
@@ -3094,8 +3304,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N010_2",
       "nodeType": "Dialogue",
       "nextIdentifier": "V016_2"
@@ -3106,20 +3319,26 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N010_3",
       "nodeType": "Dialogue",
       "nextIdentifier": "V016_3"
     },
     "N011": {
       "speakerName": "시스템",
-      "dialogueContent": "환자의 좌측과 우측 팔에 IV 라인을 확보해야 합니다. 18게이지 2개, 준비된 생리식염수 1L 수액백, 준비된 플라즈마 솔루션 1L 수액백을 클릭해 획득하십시오.",
+      "dialogueContent": "환자의 양쪽 팔에 IV 라인을 순서대로 확보합니다. 먼저 18G 캐뉼라 1개와 준비된 생리식염수 1L, 플라즈마 솔루션 1L 수액백을 획득하십시오.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N011",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q013"
@@ -3130,32 +3349,41 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N011_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "V017_1"
     },
     "N011_2": {
       "speakerName": "시스템",
-      "dialogueContent": "준비된 생리식염수 1L 수액백을 클릭해 선택한 뒤, 좌측 팔에 연결된 18G 캐뉼라를 클릭해 연결하세요.",
+      "dialogueContent": "준비된 생리식염수 1L 수액백을 먼저 수액 걸대에 건 뒤, 수액줄을 좌측 팔의 18G 캐뉼라에 연결하세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N011_2",
       "nodeType": "Dialogue",
       "nextIdentifier": "V017_2"
     },
     "N011_3": {
       "speakerName": "시스템",
-      "dialogueContent": "한쪽 정맥로가 확보되었습니다. 18G 캐뉼라를 하나 더 획득해 선택한 뒤, 반대쪽 팔에도 삽입하십시오.",
+      "dialogueContent": "좌측 팔의 정맥로가 확보되었습니다. 두 번째 18G 캐뉼라를 획득해 반대쪽 팔에 삽입하고, 플라즈마 솔루션 수액백을 먼저 건 뒤 연결하십시오.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N011_3",
       "nodeType": "Dialogue",
       "nextIdentifier": "V017_3"
@@ -3166,8 +3394,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N012",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q014"
@@ -3178,8 +3409,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N013",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q015"
@@ -3190,8 +3424,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N013_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "V019_1"
@@ -3202,8 +3439,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N014",
       "nodeType": "Dialogue",
       "nextIdentifier": "V020"
@@ -3214,8 +3454,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N016",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q018"
@@ -3226,8 +3469,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N017",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q019"
@@ -3238,8 +3484,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N017_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "V023_1"
@@ -3250,8 +3499,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N017_2",
       "nodeType": "Dialogue",
       "nextIdentifier": "V023_2"
@@ -3262,8 +3514,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N017_3",
       "nodeType": "Dialogue",
       "nextIdentifier": "V023_4"
@@ -3274,8 +3529,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N017_retry_a",
       "nodeType": "Dialogue",
       "nextIdentifier": "C010"
@@ -3286,8 +3544,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N017_retry_b",
       "nodeType": "Dialogue",
       "nextIdentifier": "C011"
@@ -3298,8 +3559,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N018",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q020"
@@ -3310,8 +3574,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N018_retry_a",
       "nodeType": "Dialogue",
       "nextIdentifier": "C012"
@@ -3322,8 +3589,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N018_retry_b",
       "nodeType": "Dialogue",
       "nextIdentifier": "C013"
@@ -3334,8 +3604,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N018_retry_c",
       "nodeType": "Dialogue",
       "nextIdentifier": "C014"
@@ -3346,8 +3619,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N018_retry_d",
       "nodeType": "Dialogue",
       "nextIdentifier": "C015"
@@ -3358,8 +3634,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N019",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q021"
@@ -3370,8 +3649,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N019_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "V025_1"
@@ -3382,8 +3664,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N019_retry_a",
       "nodeType": "Dialogue",
       "nextIdentifier": "C016"
@@ -3394,8 +3679,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N019_retry_b",
       "nodeType": "Dialogue",
       "nextIdentifier": "C016"
@@ -3406,8 +3694,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N019_retry_c",
       "nodeType": "Dialogue",
       "nextIdentifier": "C017"
@@ -3418,8 +3709,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N020",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q022"
@@ -3430,20 +3724,26 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N020_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "V026_1"
     },
     "N020_2": {
       "speakerName": "시스템",
-      "dialogueContent": "준비된 에피네프린 1mg을 클릭해 선택한 뒤, 중심정맥관을 클릭해 투여하세요.",
+      "dialogueContent": "인벤토리에서 조합하여 준비된 에피네프린 1mg을 클릭해 선택한 뒤, 중심정맥관을 클릭해 투여하세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N020_2",
       "nodeType": "Dialogue",
       "nextIdentifier": "V026_2"
@@ -3454,8 +3754,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N020_3",
       "nodeType": "Dialogue",
       "nextIdentifier": "V026_3"
@@ -3466,8 +3769,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N020_retry_a",
       "nodeType": "Dialogue",
       "nextIdentifier": "C019"
@@ -3478,8 +3784,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N020_retry_b",
       "nodeType": "Dialogue",
       "nextIdentifier": "C020"
@@ -3490,8 +3799,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N021",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q023"
@@ -3502,8 +3814,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N021_retry_a",
       "nodeType": "Dialogue",
       "nextIdentifier": "C021"
@@ -3514,8 +3829,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N021_retry_b",
       "nodeType": "Dialogue",
       "nextIdentifier": "C022"
@@ -3526,8 +3844,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N021_retry_c",
       "nodeType": "Dialogue",
       "nextIdentifier": "C023"
@@ -3538,8 +3859,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N021_retry_d",
       "nodeType": "Dialogue",
       "nextIdentifier": "C024"
@@ -3550,8 +3874,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N022",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q024"
@@ -3562,8 +3889,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N022_retry_a",
       "nodeType": "Dialogue",
       "nextIdentifier": "C025"
@@ -3574,8 +3904,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N022_retry_b",
       "nodeType": "Dialogue",
       "nextIdentifier": "C026"
@@ -3586,8 +3919,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N023",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q025"
@@ -3598,8 +3934,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N023_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "V029_1"
@@ -3610,8 +3949,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N023_2",
       "nodeType": "Dialogue",
       "nextIdentifier": "V029_2"
@@ -3622,8 +3964,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N023_3",
       "nodeType": "Dialogue",
       "nextIdentifier": "V029_3"
@@ -3634,8 +3979,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N023_retry_a",
       "nodeType": "Dialogue",
       "nextIdentifier": "C027"
@@ -3646,8 +3994,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N023_retry_b",
       "nodeType": "Dialogue",
       "nextIdentifier": "C028"
@@ -3658,8 +4009,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N024",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q026"
@@ -3670,8 +4024,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N024_retry_a",
       "nodeType": "Dialogue",
       "nextIdentifier": "C029"
@@ -3682,8 +4039,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N024_retry_b",
       "nodeType": "Dialogue",
       "nextIdentifier": "C030"
@@ -3694,8 +4054,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N024_retry_c",
       "nodeType": "Dialogue",
       "nextIdentifier": "C031"
@@ -3706,8 +4069,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N025",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q027"
@@ -3718,8 +4084,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N026",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q028"
@@ -3730,8 +4099,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N027",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q029"
@@ -3742,8 +4114,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N027_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q029_1"
@@ -3754,8 +4129,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N028",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q030"
@@ -3766,8 +4144,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N028_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "N028_2"
@@ -3778,8 +4159,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N028_2",
       "nodeType": "Dialogue",
       "nextIdentifier": "C032"
@@ -3790,8 +4174,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N028_3",
       "nodeType": "Dialogue",
       "nextIdentifier": "C033"
@@ -3802,8 +4189,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N028_4",
       "nodeType": "Dialogue",
       "nextIdentifier": "C034"
@@ -3814,8 +4204,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N028_5",
       "nodeType": "Dialogue",
       "nextIdentifier": "C035"
@@ -3826,8 +4219,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N028_6",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q030_1"
@@ -3838,8 +4234,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N028_retry_a",
       "nodeType": "Dialogue",
       "nextIdentifier": "C032"
@@ -3850,8 +4249,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N028_retry_b",
       "nodeType": "Dialogue",
       "nextIdentifier": "C033"
@@ -3862,8 +4264,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N028_retry_c",
       "nodeType": "Dialogue",
       "nextIdentifier": "C034"
@@ -3874,8 +4279,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N028_retry_d",
       "nodeType": "Dialogue",
       "nextIdentifier": "C035"
@@ -5427,7 +5835,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_gloves"
+              "registryIdentifier": "sig.click_sterile_gloves"
             },
             {
               "type": "Registry",
@@ -5700,7 +6108,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_blood_transfusion_set"
+              "registryIdentifier": "sig.click_blood_bag"
             }
           ]
         }
