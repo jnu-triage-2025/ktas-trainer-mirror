@@ -120,10 +120,10 @@ namespace MultiplayerInfrastructure.UI
       card.style.borderTopRightRadius = 8;
       card.style.borderBottomLeftRadius = 8;
       card.style.borderBottomRightRadius = 8;
-      card.style.paddingLeft = 12;
-      card.style.paddingRight = 12;
-      card.style.paddingTop = 8;
-      card.style.paddingBottom = 8;
+      card.style.paddingLeft = 10;
+      card.style.paddingRight = 10;
+      card.style.paddingTop = 6;
+      card.style.paddingBottom = 6;
       card.style.marginBottom = 10;
       card.style.flexDirection = FlexDirection.Column;
 
@@ -137,7 +137,7 @@ namespace MultiplayerInfrastructure.UI
       var content = new Label(GetCurrentObjective(quest)) { pickingMode = PickingMode.Ignore };
       content.style.color = ContentColor;
       content.style.fontSize = 13;
-      content.style.marginTop = 6;
+      content.style.marginTop = 2;
       content.style.whiteSpace = WhiteSpace.NoWrap;
       content.style.overflow = Overflow.Hidden;
       content.style.textOverflow = TextOverflow.Ellipsis;
@@ -163,7 +163,7 @@ namespace MultiplayerInfrastructure.UI
       objective.enableRichText = true;
       objective.style.color = AccentColor;
       objective.style.fontSize = 13;
-      objective.style.marginTop = 6;
+      objective.style.marginTop = 2;
       objective.style.alignSelf = Align.FlexStart;
       objective.style.maxWidth = 296;
       objective.style.whiteSpace = WhiteSpace.NoWrap;
@@ -218,7 +218,7 @@ namespace MultiplayerInfrastructure.UI
         row.style.position = Position.Relative;
         row.style.alignSelf = Align.FlexStart;
         row.style.maxWidth = Mathf.Max(120, 296 - depth * 10);
-        row.style.marginTop = 4;
+        row.style.marginTop = 2;
         row.style.marginLeft = depth * 10;
 
         var label = new Label(displayText) { pickingMode = PickingMode.Ignore };
