@@ -4,6 +4,7 @@ using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Commons;
+using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Entity
@@ -38,8 +39,7 @@ namespace MultiplayerInfrastructure.Entity
 
     private bool _baseModelApplied;
     private string _registeredIdentifier;
-    private TextMesh _scenarioOverheadNameLabel;
-    private UnityEngine.Camera _overheadNameLabelCamera;
+    private Transform _scenarioOverheadNameAnchor;
     private bool _scenarioOverheadNameVisible;
 
     private void Awake()
@@ -228,6 +228,9 @@ namespace MultiplayerInfrastructure.Entity
       MarkInteractsDirty();
     }
 
+    // 트리아지 오버헤드 라벨(EntityOverheadLabelElement)과 같은 UI Toolkit 라벨을 이름표로 재사용한다.
+    // 같은 엘리먼트를 쓰므로 텍스트 크기/외곽선/반투명 배경이 트리아지 표기와 동일하게 렌더링되고,
+    // 색상 사각형(swatch)만 숨겨 텍스트만 표시한다.
     private void ConfigureScenarioOverheadNameLabel(string displayName)
     {
       if (string.IsNullOrWhiteSpace(displayName))
@@ -236,20 +239,44 @@ namespace MultiplayerInfrastructure.Entity
         return;
       }
 
-      if (_scenarioOverheadNameLabel == null)
-      {
-        var labelObject = new GameObject("Scenario Overhead Name");
-        labelObject.transform.SetParent(transform, false);
-        _scenarioOverheadNameLabel = labelObject.AddComponent<TextMesh>();
-        _scenarioOverheadNameLabel.anchor = TextAnchor.LowerCenter;
-        _scenarioOverheadNameLabel.alignment = TextAlignment.Center;
-        _scenarioOverheadNameLabel.fontSize = 48;
-        _scenarioOverheadNameLabel.characterSize = 0.04f;
-        _scenarioOverheadNameLabel.color = Color.white;
-      }
+      EnsureScenarioOverheadNameAnchor();
+      _scenarioOverheadNameAnchor.localPosition = new Vector3(0f, GetOverheadNameHeight(), 0f);
+      ResolveOverheadLabelUI()?.SetLabel(
+        _scenarioOverheadNameAnchor,
+        new EntityOverheadLabelUIController.LabelContent(displayName.Trim(), Color.white));
+    }
 
-      _scenarioOverheadNameLabel.text = displayName.Trim();
-      _scenarioOverheadNameLabel.transform.localPosition = new Vector3(0f, GetOverheadNameHeight(), 0f);
+    // 이름표를 띄울 머리 위 앵커. UI 컨트롤러가 이 위치를 화면에 투영해 라벨을 배치한다.
+    private void EnsureScenarioOverheadNameAnchor()
+    {
+      if (_scenarioOverheadNameAnchor != null)
+        return;
+
+      var anchorObject = new GameObject("Scenario Overhead Name Anchor");
+      anchorObject.transform.SetParent(transform, false);
+      _scenarioOverheadNameAnchor = anchorObject.transform;
+    }
+
+    // ActiveInstance 가 없으면 씬 내 컴포넌트를 직접 탐색해 폴백으로 사용한다(PatientController 와 동일한 방식).
+    // (씬에 EntityOverheadLabelUIController 가 배치되지 않은 경우 경고를 출력한다.)
+    private static EntityOverheadLabelUIController _cachedOverheadLabelUI;
+
+    private static EntityOverheadLabelUIController ResolveOverheadLabelUI()
+    {
+      var instance = EntityOverheadLabelUIController.ActiveInstance;
+      if (instance != null)
+        return instance;
+
+      if (_cachedOverheadLabelUI != null)
+        return _cachedOverheadLabelUI;
+
+      _cachedOverheadLabelUI = UnityEngine.Object.FindFirstObjectByType<EntityOverheadLabelUIController>();
+      if (_cachedOverheadLabelUI == null)
+      {
+        Debug.LogWarning("[Npc] EntityOverheadLabelUIController 를 씬에서 찾을 수 없어 머리 위 이름표를 표시하지 않습니다. " +
+                         "씬에 EntityOverheadLabelUIController + UIDocument 컴포넌트를 배치하세요.");
+      }
+      return _cachedOverheadLabelUI;
     }
 
     /// <summary>시나리오 노드가 NPC의 표시명과 머리 위 이름표를 런타임에 갱신한다.</summary>
@@ -269,7 +296,7 @@ namespace MultiplayerInfrastructure.Entity
         _scenarioOverheadNameVisible = showOverheadName.Value;
         ConfigureScenarioOverheadNameLabel(_scenarioOverheadNameVisible ? gameObject.name : null);
       }
-      else if (nameChanged && _scenarioOverheadNameLabel != null)
+      else if (nameChanged && _scenarioOverheadNameAnchor != null)
         ConfigureScenarioOverheadNameLabel(gameObject.name);
     }
 
@@ -281,9 +308,7 @@ namespace MultiplayerInfrastructure.Entity
       for (int i = 0; i < renderers.Length; i++)
       {
         var renderer = renderers[i];
-        if (renderer == null
-            || (_scenarioOverheadNameLabel != null
-                && renderer.gameObject == _scenarioOverheadNameLabel.gameObject))
+        if (renderer == null)
           continue;
 
         if (!hasBounds || renderer.bounds.max.y > maxY)
@@ -296,32 +321,20 @@ namespace MultiplayerInfrastructure.Entity
       if (!hasBounds)
         return 2f;
 
-      return transform.InverseTransformPoint(new Vector3(transform.position.x, maxY, transform.position.z)).y + 0.2f;
-    }
-
-    private void LateUpdate()
-    {
-      if (_scenarioOverheadNameLabel == null)
-        return;
-
-      if (_overheadNameLabelCamera == null)
-        _overheadNameLabelCamera = UnityEngine.Camera.main;
-
-      if (_overheadNameLabelCamera != null)
-      {
-        var cameraTransform = _overheadNameLabelCamera.transform;
-        _scenarioOverheadNameLabel.transform.rotation =
-          Quaternion.LookRotation(cameraTransform.forward, cameraTransform.up);
-      }
+      // 라벨과 머리 사이 여유 간격은 UI 컨트롤러의 worldHeightOffset 이 담당하므로 머리 상단 높이만 반환한다.
+      return transform.InverseTransformPoint(new Vector3(transform.position.x, maxY, transform.position.z)).y;
     }
 
     private void DestroyScenarioOverheadNameLabel()
     {
-      if (_scenarioOverheadNameLabel == null)
-        return;
+      // 파괴된 앵커는 컨트롤러 LateUpdate 의 stale 정리가 제거하지만, 명시적으로 먼저 해제한다.
+      EntityOverheadLabelUIController.ActiveInstance?.RemoveLabel(_scenarioOverheadNameAnchor);
 
-      Destroy(_scenarioOverheadNameLabel.gameObject);
-      _scenarioOverheadNameLabel = null;
+      if (_scenarioOverheadNameAnchor != null)
+      {
+        Destroy(_scenarioOverheadNameAnchor.gameObject);
+        _scenarioOverheadNameAnchor = null;
+      }
     }
 
     private void BuildRuntimeSubmissionInteract(ScenarioActingNpcInteractionDefinition source, int index)

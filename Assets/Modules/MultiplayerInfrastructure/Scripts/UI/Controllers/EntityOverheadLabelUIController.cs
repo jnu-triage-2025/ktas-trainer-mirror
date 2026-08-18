@@ -27,12 +27,24 @@ namespace MultiplayerInfrastructure.UI
       public readonly Color SwatchColor;
       public readonly string Text;
       public readonly Color TextColor;
+      /// <summary>색상 사각형 표시 여부. false 면 텍스트만 표시한다(예: NPC 이름표).</summary>
+      public readonly bool ShowSwatch;
 
       public LabelContent(Color swatchColor, string text, Color textColor)
       {
         SwatchColor = swatchColor;
         Text = text;
         TextColor = textColor;
+        ShowSwatch = true;
+      }
+
+      /// <summary>색상 사각형 없이 텍스트만 표시하는 라벨(예: NPC 이름표).</summary>
+      public LabelContent(string text, Color textColor)
+      {
+        SwatchColor = Color.clear;
+        Text = text;
+        TextColor = textColor;
+        ShowSwatch = false;
       }
     }
 
@@ -116,7 +128,7 @@ namespace MultiplayerInfrastructure.UI
         _entries[target] = entry;
       }
 
-      entry.Element.SetContent(content.SwatchColor, content.Text, content.TextColor);
+      entry.Element.SetContent(content.SwatchColor, content.Text, content.TextColor, content.ShowSwatch);
     }
 
     /// <summary>대상 엔티티의 라벨을 제거한다.</summary>
