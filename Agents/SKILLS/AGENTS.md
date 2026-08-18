@@ -21,6 +21,15 @@ Check the local environment and install the following tools if they are not alre
 - `curl` 등 직접 HTTP 요청으로 우회하지 않는다.
 - Tool이 가용하면 Skill의 표준 절차(가용성 확인, 프로젝트·기존 항목 확인, 증빙 기반 등록)를 따른다.
 
+## Humanize Korean
+
+- AI가 쓴 한글 텍스트의 AI 티(번역투·기계적 병렬·관용구 등 70개 패턴)를 제거해 자연스러운 한국어로 윤문한다.
+- `Tools/im-not-ai/` 경로의 humanize-korean 도구를 사용한다. 전체 절차는 `Agents/SKILLS/humanize-korean/SKILL.md`에서 오케스트레이터 전문(`Tools/im-not-ai/skills/humanize-korean/SKILL.md`)을 로드해 따른다.
+- Shim(`Tools/im-not-ai/scripts/prepare_monolith_input.py`)의 `route_hint`가 경로(light 1콜 / standard 2콜 / heavy 3+콜)를 결정하며, 사용자 명시(`--strict`, `가볍게`)가 오버라이드한다.
+- 변경률 게이트(`verify_gates.py`)와 구조 게이트가 과윤문을 결정적으로 방지한다.
+- 트리거: "AI 티 없애줘", "AI 윤문", "ChatGPT 티 제거", "번역투 고쳐", "사람이 쓴 것처럼", "humanize Korean" 등.
+
 ## Index
 
 - [Unity.md](./Unity.md) : When using Unity
+- [humanize-korean/](./humanize-korean/) : AI 한글 텍스트 윤문 (AI 티 제거)
