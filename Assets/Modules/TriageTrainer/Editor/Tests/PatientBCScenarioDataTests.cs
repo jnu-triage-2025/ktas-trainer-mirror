@@ -245,7 +245,10 @@ namespace TriageTrainer.Tests
       string path = Path.Combine(
         Application.dataPath,
         "Modules/TriageTrainer/Resources/Scenario/patient_b_c_ct.scenario.json");
-      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
+      string scenarioJson = File.ReadAllText(path);
+      StringAssert.DoesNotContain("환자 B", scenarioJson);
+      StringAssert.DoesNotContain("환자 C", scenarioJson);
+      var graph = ScenarioGraphLoader.LoadFromJson(scenarioJson, validateWithSchema: true);
 
        Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
        Assert.That(graph.Nodes, Has.Count.EqualTo(311));
@@ -280,15 +283,19 @@ namespace TriageTrainer.Tests
       Assert.That(doctorMove.DestinationType, Is.EqualTo(ScenarioMoveDestinationType.Waypoint));
       Assert.That(doctorMove.DestinationIdentifier, Is.EqualTo("scen_b:doctor_care_area_waypoint"));
       Assert.That(graph.Nodes["P_MOVE"].NextIdentifier, Is.EqualTo("MOVE_DOCTOR_TO_CARE_AREA"));
-      Assert.That(graph.Nodes.ContainsKey("B_COMPLETE"), Is.True);
-      Assert.That(graph.Nodes["B_COMPLETE"].NextIdentifier, Is.EqualTo("C_ARRIVAL"));
+      var doctorBComplete = graph.Nodes["DOC_B_COMPLETE"] as ScenarioDialogueNode;
+      Assert.That(doctorBComplete, Is.Not.Null);
+      Assert.That(doctorBComplete.SpeakerName, Is.EqualTo("의사"));
+      Assert.That(doctorBComplete.DialogueContent,
+        Is.EqualTo("이 남성 환자는 마무리하고 다음으로 넘어가죠."));
+      Assert.That(doctorBComplete.NextIdentifier, Is.EqualTo("C_ARRIVAL"));
       Assert.That(graph.Nodes["C_ARRIVAL"].NextIdentifier, Is.EqualTo("C_DOC_C"));
       Assert.That(graph.Nodes["C_DOC_C"].NextIdentifier, Is.EqualTo("C_DOC_D"));
       Assert.That(graph.Nodes["C_DOC_D"].NextIdentifier, Is.EqualTo("P_C_CARE"));
       Assert.That(graph.Nodes.ContainsKey("P_C_CARE"), Is.True);
       Assert.That(graph.Nodes.ContainsKey("C_COMPLETE"), Is.True);
       Assert.That(graph.Nodes["P_B_CARE"].NextIdentifier, Is.EqualTo("P_B_WAIT_REMOVE"));
-      Assert.That(graph.Nodes["P_B_WAIT_REMOVE"].NextIdentifier, Is.EqualTo("B_COMPLETE"));
+      Assert.That(graph.Nodes["P_B_WAIT_REMOVE"].NextIdentifier, Is.EqualTo("DOC_B_COMPLETE"));
       Assert.That(graph.Nodes["P_C_CARE"].NextIdentifier, Is.EqualTo("P_C_WAIT_REMOVE"));
       Assert.That(graph.Nodes["P_C_WAIT_REMOVE"].NextIdentifier, Is.EqualTo("C_COMPLETE"));
       Assert.That(graph.Nodes["C_COMPLETE"].NextIdentifier, Is.EqualTo("CT_DELAY"));
@@ -455,7 +462,10 @@ namespace TriageTrainer.Tests
       string questPath = Path.Combine(
         Application.dataPath,
         "Modules/TriageTrainer/Resources/Quest/patient_b_c_ct.quests.quest.json");
-      using var questDocument = JsonDocument.Parse(File.ReadAllText(questPath));
+      string questJson = File.ReadAllText(questPath);
+      StringAssert.DoesNotContain("환자 B", questJson);
+      StringAssert.DoesNotContain("환자 C", questJson);
+      using var questDocument = JsonDocument.Parse(questJson);
       var questDefinitions = questDocument.RootElement.GetProperty("definitions")
         .EnumerateArray()
         .ToDictionary(definition => definition.GetProperty("identifier").GetString());

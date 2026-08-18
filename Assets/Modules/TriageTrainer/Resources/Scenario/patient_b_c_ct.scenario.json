@@ -1306,7 +1306,7 @@
     "P_B_WAIT_REMOVE": {
       "identifier": "P_B_WAIT_REMOVE",
       "nodeType": "Parallel",
-      "nextIdentifier": "B_COMPLETE",
+      "nextIdentifier": "DOC_B_COMPLETE",
       "waitMode": "All",
       "allocationType": "ByRole",
       "whenBranchingPlayerNotMatched": "Panic",
@@ -2650,27 +2650,16 @@
       "questDefinitionIdentifier": "Quest_B_Oxygen_Bleeding",
       "quest": null
     },
-    "B_COMPLETE": {
-      "identifier": "B_COMPLETE",
-      "nodeType": "DisinteractableDialogue",
+    "DOC_B_COMPLETE": {
+      "identifier": "DOC_B_COMPLETE",
+      "nodeType": "Dialogue",
       "nextIdentifier": "C_ARRIVAL",
-      "speakerName": "시스템",
-      "dialogueContent": "환자 B에 대한 사정과 처치가 완료되었습니다.",
+      "speakerName": "의사",
+      "dialogueContent": "이 남성 환자는 마무리하고 다음으로 넘어가죠.",
       "portraitSpriteIdentifier": null,
-      "fadeInDuration": {
-        "value": 0.2,
-        "unit": "Seconds"
-      },
-      "displayDuration": {
-        "value": 3,
-        "unit": "Seconds"
-      },
-      "fadeOutDuration": {
-        "value": 0.2,
-        "unit": "Seconds"
-      },
+      "autoAdvanceSeconds": 3,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F3" }
+      "ttsVoiceProfile": { "preset": "M1" }
     },
     "C_ARRIVAL": {
       "identifier": "C_ARRIVAL",
@@ -2818,7 +2807,7 @@
       "identifier": "C_A_REC1_PATIENT",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_REC1_NOTE",
-      "speakerName": "환자 C",
+      "speakerName": "여성 환자",
       "dialogueContent": "으으.. 아.. 어디지..?",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
@@ -2878,7 +2867,7 @@
       "identifier": "C_A_REC2_PATIENT",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_REC2_NOTE",
-      "speakerName": "환자 C",
+      "speakerName": "여성 환자",
       "dialogueContent": "으으으..! 아..! 왜요..!!",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
@@ -2938,7 +2927,7 @@
       "identifier": "C_A_REC3_PATIENT",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_REC3_DOTS",
-      "speakerName": "환자 C",
+      "speakerName": "여성 환자",
       "dialogueContent": "으으악...! 과장님 제가 분명...!!! 기안 올린거 처리해달라고..!",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
@@ -3008,7 +2997,7 @@
       "identifier": "C_A_REC4_PATIENT",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_REC4_NOTE",
-      "speakerName": "환자 C",
+      "speakerName": "여성 환자",
       "dialogueContent": "으으으...! 날 가만히 둬..!!",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
@@ -3361,7 +3350,7 @@
     "C_A_RIGHT_PRESS": {
       "identifier": "C_A_RIGHT_PRESS",
       "nodeType": "Choice",
-      "speakerName": "환자 C",
+      "speakerName": "여성 환자",
       "dialogueContent": "..으 (오른쪽 다리를 들어올린다.)",
       "portraitSpriteIdentifier": null,
       "playTTS": false,
@@ -3397,7 +3386,7 @@
     "C_A_LEFT_PRESS": {
       "identifier": "C_A_LEFT_PRESS",
       "nodeType": "Choice",
-      "speakerName": "환자 C",
+      "speakerName": "여성 환자",
       "dialogueContent": "... (왼쪽 다리를 들어올린다.)",
       "portraitSpriteIdentifier": null,
       "playTTS": false,
@@ -4103,8 +4092,8 @@
       "identifier": "C_COMPLETE",
       "nodeType": "DisinteractableDialogue",
       "nextIdentifier": "CT_DELAY",
-      "speakerName": "시스템",
-      "dialogueContent": "환자 C에 대한 간호 중재가 완료되었습니다.",
+      "speakerName": "의사",
+      "dialogueContent": "이 환자도 급한 처치는 끝낸 것 같습니다.",
       "portraitSpriteIdentifier": null,
       "fadeInDuration": {
         "value": 0.2,
@@ -4119,7 +4108,7 @@
         "unit": "Seconds"
       },
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F3" }
+      "ttsVoiceProfile": { "preset": "M1" }
     },
     "CT_DELAY": {
       "identifier": "CT_DELAY",

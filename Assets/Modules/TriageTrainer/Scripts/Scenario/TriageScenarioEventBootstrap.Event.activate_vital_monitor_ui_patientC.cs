@@ -28,7 +28,7 @@ namespace TriageTrainer.Scenario
         _patientCVitalMonitorController,
         _patientCInitialMonitorParameters,
         _applyPatientCInitialMonitorProfile,
-        "환자 C 활력징후 모니터를 활성화했습니다.");
+        "많이 다친 여성 환자 활력징후 모니터를 활성화했습니다.");
       _patientCVitalMonitorController?.OpenPresentation();
     }
   }
