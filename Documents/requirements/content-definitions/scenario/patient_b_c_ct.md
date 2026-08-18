@@ -2509,7 +2509,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Identifier** | 문자열 | D042 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 의사 NPC |
-| **DialogueContent** | 문자열 | 간호사 A 선생님, 펜라이트로 동공반사 확인해주시고 생리식염수 1L로 IV라인 확보해주세요. 간호사 C 선생님, 산소포화도가 조금 낮으니 비강캐뉼라로 3L 주시고 지혈도 해주세요. |
+| **DialogueContent** | 문자열 | 간호사 A 선생님, 펜라이트로 동공반사 확인해주시고, 20게이지로 IV라인 확보하고 생리식염수 1L 수액백 연결해주세요. 간호사 C 선생님, 산소포화도가 조금 낮으니 비강캐뉼라로 3L 주시고 지혈도 해주세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **PlayTTS** | bool | true |
 | **NextIdentifier** | 문자열 | P011 |
