@@ -114,7 +114,7 @@ namespace TriageTrainer.Tests
     }
 
     [TestCase("PlasmaSolution", "plasma_solution_1000ml")]
-    [TestCase("BloodTransfusionSet", "blood_transfusion_set")]
+    [TestCase("BloodTransfusionSet", "blood_bag")]
     public void RapidInfuserAcceptsScenarioItems(string kindName, string itemIdentifier)
     {
       var kindType = typeof(Level1RapidInfuserController).GetNestedType("FluidKind", BindingFlags.NonPublic);
@@ -129,9 +129,9 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
-    public void RapidInfuserRejectsBloodBagWhenScenarioRequiresTransfusionSet()
+    public void RapidInfuserRejectsBloodTransfusionSetItem()
     {
-      Assert.That(IsRapidInfuserItemAccepted("BloodTransfusionSet", "blood_bag"), Is.False);
+      Assert.That(IsRapidInfuserItemAccepted("BloodTransfusionSet", "blood_transfusion_set"), Is.False);
     }
 
     [Test]

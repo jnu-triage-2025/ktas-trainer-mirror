@@ -620,7 +620,7 @@ namespace TriageTrainer.Entity
         FluidKind.NormalSaline => itemIdentifier.StartsWith("normal_saline", StringComparison.Ordinal),
         FluidKind.PlasmaSolution => itemIdentifier.StartsWith("plasma_solution", StringComparison.Ordinal),
         FluidKind.BloodTransfusionSet =>
-          string.Equals(itemIdentifier, BloodTransfusionSet.Identifier, StringComparison.Ordinal),
+          string.Equals(itemIdentifier, BloodBag.Identifier, StringComparison.Ordinal),
         _ => false
       };
     }

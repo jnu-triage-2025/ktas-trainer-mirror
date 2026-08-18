@@ -152,7 +152,8 @@ MonoBehaviour:
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours: []
+  NetworkBehaviours:
+  - {fileID: 3975287895335882444}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -163,7 +164,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: 0
+  _initializedTimestamp: -8584145144709380488
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -187,10 +188,10 @@ MonoBehaviour:
   <AssetPathHash>k__BackingField: 10444322195855801928
   SceneId: 0
   SerializedTransformProperties:
-    Position: {x: 0, y: 0, z: 0}
-    Rotation: {x: 0, y: 0, z: 0, w: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    IsValid: 0
+    Position: {x: -8.72298, y: 0, z: -4.36403}
+    Rotation: {x: 0, y: 0, z: 0, w: 1}
+    Scale: {x: 1, y: 1, z: 1}
+    IsValid: 1
 --- !u!114 &3975287895335882444
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -203,9 +204,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c2734dc66774e0682f4616d282ec96c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.DefibrillatorCartController
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 5564673943300397563}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 5564673943300397563}
   _defaultControlIcon: {fileID: 0}
   _maximumParticipants: 1
   _moveSpeed: 3.5

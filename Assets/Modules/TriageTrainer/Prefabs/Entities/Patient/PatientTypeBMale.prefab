@@ -215,6 +215,7 @@ MonoBehaviour:
     _suctionWalls: []
     _oxyflowmeters: []
   _ivAttachmentPoint: {fileID: 0}
+  _clineIvAttachmentPoint: {fileID: 0}
   _oxygenMaskAttachmentPoint: {fileID: 4673562941832867291}
   _suctionLineAttachmentPoint: {fileID: 0}
   _carryAttachPoint: {fileID: 5489750353886828385}
@@ -325,7 +326,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584146241336337718
+  _initializedTimestamp: -8584145144709380488
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
