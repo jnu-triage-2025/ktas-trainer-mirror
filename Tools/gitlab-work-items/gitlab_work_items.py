@@ -47,6 +47,15 @@ ITEM = "id iid title state description webUrl workItemType { name } createdAt up
 def call(name, a):
     if name == "gitlab_is_available":
         return {"available": token() is not None, "env_var": "GITLAB_TOKEN", "endpoint": ENDPOINT}
+    if name == "gitlab_verify_token":
+        try:
+            data = gql("query { currentUser { id username name } }")
+            user = data.get("currentUser") if data else None
+            if not user:
+                return {"valid": False, "reason": "GitLab returned no currentUser; the token may lack required scopes."}
+            return {"valid": True, "user": {"id": user.get("id"), "username": user.get("username"), "name": user.get("name")}, "endpoint": ENDPOINT}
+        except RuntimeError as exc:
+            return {"valid": False, "reason": str(exc)}
     if name == "gitlab_init":
         supplied = (a.get("token") or "").strip()
         return {"configured": bool(supplied), "environment_variable": "GITLAB_TOKEN",
@@ -78,6 +87,7 @@ def call(name, a):
     raise ValueError("Unknown tool: " + name)
 
 TOOLS = [{"name":"gitlab_is_available","description":"Report whether non-blank GITLAB_TOKEN is available.","inputSchema":{"type":"object","properties":{}}},
+{"name":"gitlab_verify_token","description":"Verify that the active GITLAB_TOKEN is accepted by GitLab. Calls the currentUser query and returns validity plus user info. Use this to determine whether the token is actually usable.","inputSchema":{"type":"object","properties":{}}},
 {"name":"gitlab_init","description":"Validate and echo a masked GitLab token profile; does not persist the secret.","inputSchema":{"type":"object","properties":{"token":{"type":"string"}},"required":["token"]}},
 {"name":"gitlab_work_item_index","description":"List project Work Items with pagination; use this as the issue index.","inputSchema":{"type":"object","properties":{"project_path":{"type":"string"},"first":{"type":"integer"},"after":{"type":"string"}},"required":["project_path"]}},
 {"name":"gitlab_get_work_item","description":"Load one Work Item by GitLab global ID.","inputSchema":{"type":"object","properties":{"id":{"type":"string"}},"required":["id"]}},

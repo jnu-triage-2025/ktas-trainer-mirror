@@ -38,6 +38,8 @@ namespace TriageTrainer.Entity
     [Header("Runtime")]
     [SerializeField] private PatientSupportExternalRefs _supportExternalRefs;
     [SerializeField] private IntravenousLineConnectionPoint _ivAttachmentPoint;
+    [Tooltip("C-line(중심정맥관) 환자 측 IV 연결 지점입니다. EnsureClineIvAttachmentPoint()가 보장합니다.")]
+    [SerializeField] private IntravenousLineConnectionPoint _clineIvAttachmentPoint;
     [Tooltip("설치된 산소 마스크에 포함된 환자 측 산소 라인 포트입니다.")]
     [SerializeField] private OxyLineConnectionPoint _oxygenMaskAttachmentPoint;
     [Tooltip("환자 측 석션 라인 포트입니다.")]
@@ -75,6 +77,15 @@ namespace TriageTrainer.Entity
         return _ivAttachmentPoint;
       }
     }
+    /// <summary>C-line(중심정맥관) 환자 측 IV 연결 지점. 단일 연결만 허용한다.</summary>
+    public IntravenousLineConnectionPoint ClineIvAttachmentPoint
+    {
+      get
+      {
+        EnsureClineIvAttachmentPoint();
+        return _clineIvAttachmentPoint;
+      }
+    }
     /// <summary>설치된 산소 마스크의 환자 측 산소 라인 포트. 설정되지 않으면 null이다.</summary>
     public OxyLineConnectionPoint OxygenMaskAttachmentPoint => _oxygenMaskAttachmentPoint != null && _oxygenMaskAttachmentPoint.isActiveAndEnabled
       ? _oxygenMaskAttachmentPoint : null;
@@ -101,6 +112,7 @@ namespace TriageTrainer.Entity
       Awake_Animation();
       EnsureCarryAttachPoint();
       EnsureIvAttachmentPoint();
+      EnsureClineIvAttachmentPoint();
       InitializeCollider();
       EnsureMedicalStateDefaults();
       InitializeTreatmentDisplaysFromConfiguredState();
@@ -284,10 +296,18 @@ namespace TriageTrainer.Entity
       _carryAttachPoint.localRotation = Quaternion.identity;
     }
 
+    private const string ClineIvConnectionPointIdentifier = "cline_iv_connection_point";
+
     private void EnsureIvAttachmentPoint()
     {
       if (_ivAttachmentPoint == null)
         _ivAttachmentPoint = GetComponentInChildren<IntravenousLineConnectionPoint>(true);
+
+      // C-line 연결점을 일반 IV 연결점으로 잘못 선택하지 않도록 제외한다.
+      if (_ivAttachmentPoint != null
+          && string.Equals(_ivAttachmentPoint.Identifier, ClineIvConnectionPointIdentifier,
+               StringComparison.Ordinal))
+        _ivAttachmentPoint = null;
 
       if (_ivAttachmentPoint == null)
       {
@@ -299,6 +319,61 @@ namespace TriageTrainer.Entity
       }
 
       _ivAttachmentPoint.SetAllowsMultipleConnections(true);
+    }
+
+    private void EnsureClineIvAttachmentPoint()
+    {
+      if (_clineIvAttachmentPoint != null
+          && string.Equals(_clineIvAttachmentPoint.Identifier, ClineIvConnectionPointIdentifier,
+               StringComparison.Ordinal))
+      {
+        _clineIvAttachmentPoint.SetAllowsMultipleConnections(false);
+        return;
+      }
+
+      // 기존 자식에서 C-line 식별자를 가진 연결점을 검색한다.
+      var candidates = GetComponentsInChildren<IntravenousLineConnectionPoint>(true);
+      for (int i = 0; i < candidates.Length; i++)
+      {
+        if (candidates[i] != null
+            && string.Equals(candidates[i].Identifier, ClineIvConnectionPointIdentifier,
+                 StringComparison.Ordinal))
+        {
+          _clineIvAttachmentPoint = candidates[i];
+          _clineIvAttachmentPoint.SetAllowsMultipleConnections(false);
+          return;
+        }
+      }
+
+      // 없으면 Cline_A 시각 객체 위치에 새 연결점을 생성한다.
+      var clineVisual = FindClineVisualChild();
+      var pointObject = new GameObject("ClineIVAttachmentPoint");
+      pointObject.transform.SetParent(transform, false);
+      if (clineVisual != null)
+      {
+        pointObject.transform.localPosition = clineVisual.transform.localPosition;
+        pointObject.transform.localRotation = clineVisual.transform.localRotation;
+      }
+      else
+      {
+        // Cline_A 메시 프리팹의 기본 localPosition 기준
+        pointObject.transform.localPosition = new Vector3(0.09f, 1.43f, 0.06f);
+        pointObject.transform.localRotation = Quaternion.identity;
+      }
+      _clineIvAttachmentPoint = pointObject.AddComponent<IntravenousLineConnectionPoint>();
+      _clineIvAttachmentPoint.SetIdentifier(ClineIvConnectionPointIdentifier);
+      _clineIvAttachmentPoint.SetAllowsMultipleConnections(false);
+    }
+
+    private GameObject FindClineVisualChild()
+    {
+      for (int i = 0; i < transform.childCount; i++)
+      {
+        var child = transform.GetChild(i);
+        if (child != null && string.Equals(child.name, "Cline_A", StringComparison.Ordinal))
+          return child.gameObject;
+      }
+      return null;
     }
 
     protected override void OnValidate()

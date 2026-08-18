@@ -289,6 +289,19 @@ namespace TriageTrainer.Entity
       return legacy != null && GetDisplayStateFlag(legacy, display, fromSupports: false);
     }
 
+    /// <summary>
+    /// C-line(중심정맥관) 연결이 가능한지 판정한다.
+    /// 중심정맥관 삽입 시각 표현이 활성화되어 있고, 연결 지점이 존재하며,
+    /// 아직 연결되지 않았을 때 <c>true</c>를 반환한다.
+    /// </summary>
+    public bool IsClineConnectionAvailable()
+    {
+      if (!IsDisplayActive(TreatmentDisplay.CentralVenousCatheterInsertedIntoSubclavian))
+        return false;
+      var point = ClineIvAttachmentPoint;
+      return point != null && point.CanAcceptAdditionalConnection;
+    }
+
     internal bool CanApplyHeldTreatmentItem(string itemIdentifier)
     {
       return TryResolveItemUse(itemIdentifier, out _, out _, out var resolvedDisplay)

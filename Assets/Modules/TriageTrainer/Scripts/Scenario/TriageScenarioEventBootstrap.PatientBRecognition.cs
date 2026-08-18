@@ -10,9 +10,9 @@ namespace TriageTrainer.Scenario
     private void RegisterPatientBCRecognitionEvents()
     {
       RegisterRecognition("activate_patient_b_recognition_1", false, "patient_b_recognition_1", true, "말 걸기");
-      RegisterRecognition("activate_patient_b_recognition_2", false, "patient_b_recognition_2", true, "말 걸기");
-      RegisterRecognition("activate_patient_b_recognition_3", false, "patient_b_recognition_3", true, "말 걸기");
-      RegisterRecognition("activate_patient_b_recognition_4", false, "patient_b_recognition_4", false, "말 걸기");
+      RegisterRecognition("activate_patient_b_recognition_2", false, "patient_b_recognition_2", true, "계속해서 말 걸기");
+      RegisterRecognition("activate_patient_b_recognition_3", false, "patient_b_recognition_3", true, "계속해서 말 걸기");
+      RegisterRecognition("activate_patient_b_recognition_4", false, "patient_b_recognition_4", false, "계속해서 말 걸기");
       RegisterRecognition("activate_patient_b_strength_check", false, "patient_b_strength_checked", false, "근력 확인");
       RegisterRecognition("activate_patient_b_pupil_check", false, "patient_b_pupil_checked", false, "동공반사 확인");
       RegisterRecognition("activate_patient_c_recognition_1", true, "patient_c_recognition_1", true, "말 걸기");

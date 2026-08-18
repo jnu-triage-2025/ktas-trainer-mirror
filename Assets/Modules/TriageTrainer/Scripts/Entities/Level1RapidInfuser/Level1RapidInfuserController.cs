@@ -11,6 +11,7 @@ using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.IntravenousLine;
+using TriageTrainer.Entity.LineConnection;
 using TriageTrainer.ItemDefinitions;
 using MultiplayerInfrastructure.Logging;
 using UnityEngine;
@@ -140,6 +141,27 @@ namespace TriageTrainer.Entity
       }
     }
 
+    private sealed class ConnectCLineInteract : IInteract, IInteractorConditional
+    {
+      private readonly Level1RapidInfuserController _owner;
+
+      public ConnectCLineInteract(Level1RapidInfuserController owner) { _owner = owner; }
+
+      public string DisplayText => "환자에게 C라인 연결";
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => true;
+      public Color DisplayColor => Color.white;
+
+      public bool CanInteract(Transform interactor)
+        => _owner.CanAttemptCLineConnection();
+
+      public void Interact(Transform interactor)
+      {
+        if (_owner.CanAttemptCLineConnection())
+          _owner.RequestCLineConnection();
+      }
+    }
+
     [Header("Displays (assign on prefab)")]
     [SerializeField] private GameObject _normalSalineDisplay;
     [SerializeField] private GameObject _plasmaSolutionDisplay;
@@ -201,7 +223,8 @@ namespace TriageTrainer.Entity
       {
         new AddFluidInteract(this, FluidKind.NormalSaline),
         new AddFluidInteract(this, FluidKind.PlasmaSolution),
-        new AddFluidInteract(this, FluidKind.BloodTransfusionSet)
+        new AddFluidInteract(this, FluidKind.BloodTransfusionSet),
+        new ConnectCLineInteract(this)
       };
 
     public IInteract[] Interacts
@@ -925,6 +948,109 @@ namespace TriageTrainer.Entity
         ScenarioInteractionSignals.Raise("connect_ps1_to_lv1");
       else if (kind == FluidKind.BloodTransfusionSet)
         ScenarioInteractionSignals.Raise("connect_blood_to_lv1");
+    }
+
+    // ── C-line 연결 ────────────────────────────────────────────────────
+
+    private const string CLineConnectSignal = "connect_cline_to_lv1";
+    private const string PatientAIdentifier = "patient_a";
+
+    /// <summary>
+    /// C라인 연결 상호작용 가능 여부를 판정한다.
+    /// 급속 주입기에 PlasmaSolution과 BloodTransfusionSet이 모두 장착되어 있고,
+    /// patient_a가 반경 내에 있으며, C라인 연결 지점이 열려 있어야 한다.
+    /// </summary>
+    private bool CanAttemptCLineConnection()
+    {
+      if (!HasPlasmaSolution || !HasBloodTransfusionSet)
+        return false;
+      if (_ivConnectionPoint == null)
+        return false;
+
+      var patient = FindPatientAInRange();
+      if (patient == null)
+        return false;
+
+      return patient.IsClineConnectionAvailable();
+    }
+
+    private PatientController FindPatientAInRange()
+    {
+      if (!Registry.TryGetEntity(PatientAIdentifier, out var descriptor)
+          || descriptor?.GameObject == null)
+        return null;
+
+      if (!descriptor.GameObject.TryGetComponent<PatientController>(out var patient))
+        return null;
+
+      float sqrDistance = (patient.transform.position - transform.position).sqrMagnitude;
+      if (sqrDistance > InteractionDistance * InteractionDistance)
+        return null;
+
+      return patient;
+    }
+
+    private void RequestCLineConnection()
+    {
+      LogFlow("RequestCLineConnection begin");
+      if (!IsClientStarted && !IsServerStarted)
+      {
+        TryCreateCLineConnection();
+        return;
+      }
+      if (IsServerStarted)
+        TryCreateCLineConnection();
+      else
+        CmdRequestCLineConnection();
+    }
+
+    private void TryCreateCLineConnection()
+    {
+      var patient = FindPatientAInRange();
+      if (patient == null)
+      {
+        LogFlow("TryCreateCLineConnection rejected: patient_a not in range", true);
+        return;
+      }
+
+      var clinePoint = patient.ClineIvAttachmentPoint;
+      if (clinePoint == null || _ivConnectionPoint == null)
+      {
+        LogFlow("TryCreateCLineConnection rejected: connection point missing", true);
+        return;
+      }
+
+      var service = FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
+      if (service == null)
+      {
+        LogFlow("TryCreateCLineConnection rejected: LineConnectionService unavailable", true);
+        return;
+      }
+
+      if (service.TryCreateAutomaticConnection(_ivConnectionPoint, clinePoint))
+      {
+        LogFlow("TryCreateCLineConnection success");
+        ScenarioInteractionSignals.Raise(CLineConnectSignal);
+      }
+      else
+      {
+        LogFlow("TryCreateCLineConnection failed: service rejected connection", true);
+      }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdRequestCLineConnection(NetworkConnection sender = null)
+    {
+      if (!HasPlasmaSolution || !HasBloodTransfusionSet)
+        return;
+      if (_ivConnectionPoint == null)
+        return;
+
+      var patient = FindPatientAInRange();
+      if (patient == null || !patient.IsClineConnectionAvailable())
+        return;
+
+      TryCreateCLineConnection();
     }
 
     private bool IsWithinInteractionDistance(PlayerController player)

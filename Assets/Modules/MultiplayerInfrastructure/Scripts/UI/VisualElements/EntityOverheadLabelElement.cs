@@ -9,7 +9,8 @@ namespace MultiplayerInfrastructure.UI
   /// <para>
   /// 플레이어 이름표를 머리 위에 띄우듯, 임의의 월드 엔티티 위에 "색상 사각형 + 텍스트" 형태의 라벨을 표시한다.
   /// 색상 사각형과 텍스트 색상은 독립적으로 지정할 수 있어, 트리아지 등급(색상 + 명칭) 같은 도메인 표기에
-  /// 재사용된다. 위치(화면 좌표) 갱신은 <see cref="EntityOverheadLabelUIController"/> 가 담당한다.
+  /// 재사용된다. 색상 사각형은 숨길 수 있어(NPC 이름표처럼) 텍스트만 표시할 수도 있다.
+  /// 위치(화면 좌표) 갱신은 <see cref="EntityOverheadLabelUIController"/> 가 담당한다.
   /// </para>
   /// </summary>
   public sealed class EntityOverheadLabelElement : VisualElement
@@ -23,8 +24,9 @@ namespace MultiplayerInfrastructure.UI
       style.position = Position.Absolute;
       style.flexDirection = FlexDirection.Row;
       style.alignItems = Align.Center;
-      style.paddingLeft = 3;
-      style.paddingRight = 5;
+      // Npc 이름표(Npc 의 TextMesh 배경)와 같은 수준의 여백(가로 2, 세로 1)을 유지한다.
+      style.paddingLeft = 2;
+      style.paddingRight = 2;
       style.paddingTop = 1;
       style.paddingBottom = 1;
       style.backgroundColor = new Color(0f, 0f, 0f, 0.35f);
@@ -73,9 +75,11 @@ namespace MultiplayerInfrastructure.UI
     /// <param name="swatchColor">색상 사각형의 색.</param>
     /// <param name="text">표기할 텍스트(명칭).</param>
     /// <param name="textColor">텍스트 색.</param>
-    public void SetContent(Color swatchColor, string text, Color textColor)
+    /// <param name="showSwatch">색상 사각형 표시 여부. false 면 텍스트만 표시한다(예: NPC 이름표).</param>
+    public void SetContent(Color swatchColor, string text, Color textColor, bool showSwatch = true)
     {
       _swatch.style.backgroundColor = swatchColor;
+      _swatch.style.display = showSwatch ? DisplayStyle.Flex : DisplayStyle.None;
       _text.text = text ?? string.Empty;
       _text.style.color = textColor;
     }

@@ -6108,7 +6108,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_blood_bag"
+              "registryIdentifier": "sig.click_blood_transfusion_set"
             }
           ]
         }

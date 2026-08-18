@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -76,6 +77,12 @@ namespace TextToSpeechService
     public bool IsReady { get; private set; }
 
     /// <summary>
+    /// 초기화가 실패해 더 이상 진행되지 않는지 여부 (ONNX 모델 누락, Transcript JSON 로드 실패 등).
+    /// true면 IsReady가 영원히 참이 되지 않으므로 대기하지 말고 즉시 재생을 포기해야 한다.
+    /// </summary>
+    public bool IsInitializationFailed { get; private set; }
+
+    /// <summary>
     /// 동적 세그먼트의 백그라운드 캐싱이 진행 중이거나 아직 완료되지 않음을 나타내는 dirty bit.
     /// PrepareTranscriptVariables 호출 시 true가 되고, 캐싱이 완료되면 false가 됩니다.
     /// </summary>
@@ -112,6 +119,29 @@ namespace TextToSpeechService
     /// <summary>현재 진행 중인 백그라운드 캐싱 작업 수 (dirty bit 카운터)</summary>
     private int _dynamicCachingCount;
 
+    // ONNX 세션은 동시에 추론하지 않는다. 대화 사전 합성이 플레이 중인 TTS와 경쟁하지 않게 한다.
+    private readonly object _synthesisLock = new();
+
+    private readonly object _inlineSynthesisQueueLock = new();
+    private readonly Dictionary<string, Task<float[]>> _inlineSynthesisTasks = new();
+    private readonly List<InlineSynthesisRequest> _inlinePlaybackQueue = new();
+    private readonly List<InlineSynthesisRequest> _inlinePrewarmQueue = new();
+    private InlineSynthesisRequest _activeInlineSynthesisRequest;
+    private bool _inlineSynthesisWorkerRunning;
+
+    private sealed class InlineSynthesisRequest
+    {
+      public string CacheKey;
+      public string Text;
+      public TTSCore Core;
+      public string Language;
+      public int TotalStep;
+      public float Speed;
+      public CancellationToken CancellationToken;
+      public TaskCompletionSource<float[]> Completion;
+      public bool PlaybackRequested;
+    }
+
     // =========================================================================
     // Unity 라이프사이클
     // =========================================================================
@@ -126,6 +156,7 @@ namespace TextToSpeechService
         Debug.LogError(
           $"[TTSService] ONNX 모델 파일이 없습니다: {onnxDir}\n" +
           "TTS > Download Models 메뉴에서 모델을 먼저 다운로드하세요.");
+        IsInitializationFailed = true;
         return;
       }
 
@@ -134,6 +165,15 @@ namespace TextToSpeechService
 
     private void OnDestroy()
     {
+      lock (_inlineSynthesisQueueLock)
+      {
+        foreach (var request in _inlinePlaybackQueue)
+          request.Completion.TrySetCanceled();
+        foreach (var request in _inlinePrewarmQueue)
+          request.Completion.TrySetCanceled();
+        _inlinePlaybackQueue.Clear();
+        _inlinePrewarmQueue.Clear();
+      }
       _core?.Dispose();
       foreach (var vc in _voiceCores.Values)
         vc?.Dispose();
@@ -163,6 +203,7 @@ namespace TextToSpeechService
       if (!File.Exists(transcriptPath))
       {
         Debug.LogError($"[TTSService] Transcript JSON을 찾을 수 없습니다: {transcriptPath}");
+        IsInitializationFailed = true;
         yield break;
       }
 
@@ -211,38 +252,41 @@ namespace TextToSpeechService
 
       var bgTask = Task.Run(() =>
       {
-        _core = new TTSCore(onnxDir, styleAbsPath);
-
-        // 추가 voice profile 코어 초기화
-        if (voiceProfiles != null)
+        lock (_synthesisLock)
         {
-          foreach (var profile in voiceProfiles)
-          {
-            if (profile == null || string.IsNullOrEmpty(profile.VoiceIdentifier)) continue;
-            if (_voiceCores.ContainsKey(profile.VoiceIdentifier)) continue;
+          _core = new TTSCore(onnxDir, styleAbsPath);
 
-            string profileStylePath = TTSCore.GetVoiceStylePath(sa, profile.VoiceStyleName ?? voiceStyleName);
-            _voiceCores[profile.VoiceIdentifier] = new TTSCore(onnxDir, profileStylePath);
+          // 추가 voice profile 코어 초기화
+          if (voiceProfiles != null)
+          {
+            foreach (var profile in voiceProfiles)
+            {
+              if (profile == null || string.IsNullOrEmpty(profile.VoiceIdentifier)) continue;
+              if (_voiceCores.ContainsKey(profile.VoiceIdentifier)) continue;
+
+              string profileStylePath = TTSCore.GetVoiceStylePath(sa, profile.VoiceStyleName ?? voiceStyleName);
+              _voiceCores[profile.VoiceIdentifier] = new TTSCore(onnxDir, profileStylePath);
+            }
           }
-        }
 
-        foreach (var transcript in _transcripts)
-        {
-          var segments = _segmentMap[transcript.Identifier];
-          for (int i = 0; i < segments.Count; i++)
+          foreach (var transcript in _transcripts)
           {
-            var seg    = segments[i];
-            bool baked = seg.Type == SegmentType.Static
-              && _clipCache.ContainsKey(MakeCacheKey(null, seg.Text));
-            if (baked) continue;
+            var segments = _segmentMap[transcript.Identifier];
+            for (int i = 0; i < segments.Count; i++)
+            {
+              var seg    = segments[i];
+              bool baked = seg.Type == SegmentType.Static
+                && _clipCache.ContainsKey(MakeCacheKey(null, seg.Text));
+              if (baked) continue;
 
-            string text = seg.Type == SegmentType.Static
-              ? seg.Text
-              : ResolveDefaultValue(transcript, seg.Text);
+              string text = seg.Type == SegmentType.Static
+                ? seg.Text
+                : ResolveDefaultValue(transcript, seg.Text);
 
-            string bufferKey = MakeCacheKey(null, text);
-            if (text != null && !wavBuffer.ContainsKey(bufferKey))
-              wavBuffer[bufferKey] = _core.Synthesize(text, language, totalStep, speed);
+              string bufferKey = MakeCacheKey(null, text);
+              if (text != null && !wavBuffer.ContainsKey(bufferKey))
+                wavBuffer[bufferKey] = _core.Synthesize(text, language, totalStep, speed);
+            }
           }
         }
       });
@@ -252,6 +296,7 @@ namespace TextToSpeechService
       if (bgTask.IsFaulted)
       {
         Debug.LogError($"[TTSService] 초기화 실패: {bgTask.Exception?.GetBaseException().Message}");
+        IsInitializationFailed = true;
         yield break;
       }
 
@@ -362,6 +407,64 @@ namespace TextToSpeechService
       return StartCoroutine(PlayTextCoroutine(text, audioSource, scenarioIdentifier, nodeIdentifier, voiceIdentifier));
     }
 
+    /// <summary>
+    /// 베이크되지 않은 인라인 대사를 재생 전에 캐시한다. 호출자는 여러 요청을 순차 실행하여
+    /// 플레이 중 합성 부하를 제한해야 한다.
+    /// </summary>
+    public Coroutine PrepareInlineText(
+      string text,
+      string scenarioIdentifier,
+      string nodeIdentifier,
+      string voiceIdentifier = null,
+      CancellationToken cancellationToken = default)
+    {
+      return StartCoroutine(PrepareInlineTextCoroutine(
+        text, scenarioIdentifier, nodeIdentifier, voiceIdentifier, cancellationToken));
+    }
+
+    private IEnumerator PrepareInlineTextCoroutine(
+      string text,
+      string scenarioIdentifier,
+      string nodeIdentifier,
+      string voiceIdentifier,
+      CancellationToken cancellationToken)
+    {
+      if (string.IsNullOrWhiteSpace(text)) yield break;
+
+      string cacheKey = MakeCacheKey(voiceIdentifier, text);
+      if (_clipCache.ContainsKey(cacheKey)) yield break;
+
+      if (!string.IsNullOrEmpty(scenarioIdentifier) && !string.IsNullOrEmpty(nodeIdentifier))
+      {
+        string bakedPath = TTSCore.GetBakedInlineClipPath(
+          Application.streamingAssetsPath, scenarioIdentifier, nodeIdentifier, text, voiceIdentifier);
+        if (File.Exists(bakedPath)) yield break;
+      }
+
+      if (!IsReady && !IsInitializationFailed)
+        yield return new WaitUntil(() => IsReady || IsInitializationFailed);
+
+      var core = ResolveCore(voiceIdentifier);
+      if (core == null) yield break;
+
+      var task = RequestInlineSynthesis(text, voiceIdentifier, core, highPriority: false, cancellationToken);
+      yield return new WaitUntil(() => task.IsCompleted);
+
+      if (task.IsCanceled || cancellationToken.IsCancellationRequested)
+      {
+        ReleaseInlineSynthesisTask(cacheKey);
+        yield break;
+      }
+
+      if (task.IsFaulted)
+      {
+        Debug.LogWarning($"[TTSService] 인라인 TTS 사전 합성 실패 ({text}): {task.Exception?.GetBaseException().Message}");
+        yield break;
+      }
+
+      CacheInlineClip(cacheKey, text, task.Result, core.SampleRate);
+    }
+
     private IEnumerator PlayTextCoroutine(
       string text, AudioSource audioSource, string scenarioIdentifier, string nodeIdentifier,
       string voiceIdentifier)
@@ -402,17 +505,21 @@ namespace TextToSpeechService
         }
       }
 
-      // 즉석 합성 (백그라운드)
+      // 즉석 합성 (백그라운드).
+      // PlayText는 초기화 완료 전에도 호출될 수 있다(baked WAV는 ONNX 초기화 없이 즉시 재생 가능).
+      // baked까지 없으면 즉석 합성이 필요하므로 초기화가 끝날 때까지 대기한다.
+      // 모델 누락 등으로 초기화 자체가 실패한 경우 영원히 대기하지 않도록 한다.
+      if (!IsReady && !IsInitializationFailed)
+        yield return new WaitUntil(() => IsReady || IsInitializationFailed);
+
       var core = ResolveCore(voiceIdentifier);
       if (core == null)
       {
-        Debug.LogWarning("[TTSService] PlayText: TTSCore가 초기화되지 않았습니다.");
+        Debug.LogWarning($"[TTSService] PlayText: TTSCore 초기화 실패로 재생을 건너뜁니다 ({text})");
         yield break;
       }
 
-      var (synthLang, synthStep, synthSpeed) = ResolveParams(voiceIdentifier);
-      float[] wav  = null;
-      var     task = Task.Run(() => wav = core.Synthesize(text, synthLang, synthStep, synthSpeed));
+      var task = RequestInlineSynthesis(text, voiceIdentifier, core, highPriority: true);
       yield return new WaitUntil(() => task.IsCompleted);
 
       if (task.IsFaulted)
@@ -422,8 +529,7 @@ namespace TextToSpeechService
         yield break;
       }
 
-      var synthClip = WavToClip(text, wav, core.SampleRate);
-      _clipCache[cacheKey] = synthClip;
+      var synthClip = CacheInlineClip(cacheKey, text, task.Result, core.SampleRate);
       yield return PlaySequentially(new List<AudioClip> { synthClip }, audioSource);
     }
 
@@ -467,7 +573,11 @@ namespace TextToSpeechService
 
       var (synthLang, synthStep, synthSpeed) = ResolveParams(voiceIdentifier);
       float[] wav  = null;
-      var     task = Task.Run(() => wav = core.Synthesize(text, synthLang, synthStep, synthSpeed));
+      var     task = Task.Run(() =>
+      {
+        lock (_synthesisLock)
+          wav = core.Synthesize(text, synthLang, synthStep, synthSpeed);
+      });
       yield return new WaitUntil(() => task.IsCompleted);
 
       if (task.IsFaulted)
@@ -538,10 +648,13 @@ namespace TextToSpeechService
       var wavBuffer = new Dictionary<string, float[]>();
       var task      = Task.Run(() =>
       {
-        foreach (var text in textsToCache)
+        lock (_synthesisLock)
         {
-          if (!wavBuffer.ContainsKey(text))
-            wavBuffer[text] = core.Synthesize(text, synthLang, synthStep, synthSpeed);
+          foreach (var text in textsToCache)
+          {
+            if (!wavBuffer.ContainsKey(text))
+              wavBuffer[text] = core.Synthesize(text, synthLang, synthStep, synthSpeed);
+          }
         }
       });
 
@@ -575,7 +688,9 @@ namespace TextToSpeechService
     {
       var   core = ResolveCore(voiceIdentifier);
       var   (synthLang, synthStep, synthSpeed) = ResolveParams(voiceIdentifier);
-      float[] wav = core.Synthesize(text, synthLang, synthStep, synthSpeed);
+      float[] wav;
+      lock (_synthesisLock)
+        wav = core.Synthesize(text, synthLang, synthStep, synthSpeed);
       var     clip = WavToClip(text, wav, core.SampleRate);
       string cacheKey = MakeCacheKey(voiceIdentifier, text);
       _clipCache[cacheKey] = clip;
@@ -591,6 +706,147 @@ namespace TextToSpeechService
       var clip = AudioClip.Create(name, samples.Length, channels: 1, sampleRate, stream: false);
       clip.SetData(samples, offsetSamples: 0);
       return clip;
+    }
+
+    private Task<float[]> RequestInlineSynthesis(
+      string text,
+      string voiceIdentifier,
+      TTSCore core,
+      bool highPriority,
+      CancellationToken cancellationToken = default)
+    {
+      string cacheKey = MakeCacheKey(voiceIdentifier, text);
+      lock (_inlineSynthesisQueueLock)
+      {
+        if (_inlineSynthesisTasks.TryGetValue(cacheKey, out var existing))
+        {
+          if (highPriority)
+          {
+            var queuedRequest = _inlinePrewarmQueue.Find(value => value.CacheKey == cacheKey);
+            if (queuedRequest != null)
+            {
+              _inlinePrewarmQueue.Remove(queuedRequest);
+              queuedRequest.PlaybackRequested = true;
+              _inlinePlaybackQueue.Add(queuedRequest);
+            }
+            else
+            {
+              // 이미 실행 중인 사전 합성도 재생 요청이 기다리고 있음을 표시한다.
+              // 시나리오 종료로 원래 취소 토큰이 취소되어도 결과를 재생 경로에 전달한다.
+              queuedRequest = _activeInlineSynthesisRequest?.CacheKey == cacheKey
+                ? _activeInlineSynthesisRequest
+                : _inlinePlaybackQueue.Find(value => value.CacheKey == cacheKey);
+              if (queuedRequest != null)
+                queuedRequest.PlaybackRequested = true;
+            }
+          }
+          return existing;
+        }
+
+        var (synthLang, synthStep, synthSpeed) = ResolveParams(voiceIdentifier);
+        var request = new InlineSynthesisRequest
+        {
+          CacheKey = cacheKey,
+          Text = text,
+          Core = core,
+          Language = synthLang,
+          TotalStep = synthStep,
+          Speed = synthSpeed,
+          CancellationToken = cancellationToken,
+          PlaybackRequested = highPriority,
+          Completion = new TaskCompletionSource<float[]>()
+        };
+        _inlineSynthesisTasks[cacheKey] = request.Completion.Task;
+        if (highPriority) _inlinePlaybackQueue.Add(request);
+        else _inlinePrewarmQueue.Add(request);
+
+        if (!_inlineSynthesisWorkerRunning)
+        {
+          _inlineSynthesisWorkerRunning = true;
+          _ = Task.Run(ProcessInlineSynthesisQueue);
+        }
+        return request.Completion.Task;
+      }
+    }
+
+    private void ProcessInlineSynthesisQueue()
+    {
+      while (true)
+      {
+        InlineSynthesisRequest request;
+        lock (_inlineSynthesisQueueLock)
+        {
+          if (_inlinePlaybackQueue.Count > 0)
+          {
+            request = _inlinePlaybackQueue[0];
+            _inlinePlaybackQueue.RemoveAt(0);
+          }
+          else if (_inlinePrewarmQueue.Count > 0)
+          {
+            request = _inlinePrewarmQueue[0];
+            _inlinePrewarmQueue.RemoveAt(0);
+          }
+          else
+          {
+            _inlineSynthesisWorkerRunning = false;
+            return;
+          }
+        }
+
+        try
+        {
+          lock (_inlineSynthesisQueueLock)
+            _activeInlineSynthesisRequest = request;
+          if (request.CancellationToken.IsCancellationRequested && !request.PlaybackRequested)
+          {
+            request.Completion.TrySetCanceled(request.CancellationToken);
+            continue;
+          }
+
+          float[] wav;
+          lock (_synthesisLock)
+            wav = request.Core.Synthesize(request.Text, request.Language, request.TotalStep, request.Speed);
+          request.Completion.TrySetResult(wav);
+        }
+        catch (Exception exception)
+        {
+          request.Completion.TrySetException(exception);
+        }
+        finally
+        {
+          // 성공한 작업은 메인 스레드가 AudioClip으로 전환할 때까지 유지한다.
+          // 그 사이 재생 요청이 들어와도 동일 PCM 결과를 공유해 중복 합성을 막는다.
+          if (!request.Completion.Task.IsCompletedSuccessfully)
+          {
+            lock (_inlineSynthesisQueueLock)
+              _inlineSynthesisTasks.Remove(request.CacheKey);
+          }
+          lock (_inlineSynthesisQueueLock)
+          {
+            if (_activeInlineSynthesisRequest == request)
+              _activeInlineSynthesisRequest = null;
+          }
+        }
+      }
+    }
+
+    private AudioClip CacheInlineClip(string cacheKey, string text, float[] wav, int sampleRate)
+    {
+      if (_clipCache.TryGetValue(cacheKey, out var cached))
+      {
+        ReleaseInlineSynthesisTask(cacheKey);
+        return cached;
+      }
+      var clip = WavToClip(text, wav, sampleRate);
+      _clipCache[cacheKey] = clip;
+      ReleaseInlineSynthesisTask(cacheKey);
+      return clip;
+    }
+
+    private void ReleaseInlineSynthesisTask(string cacheKey)
+    {
+      lock (_inlineSynthesisQueueLock)
+        _inlineSynthesisTasks.Remove(cacheKey);
     }
 
     // =========================================================================

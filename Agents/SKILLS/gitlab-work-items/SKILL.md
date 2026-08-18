@@ -5,7 +5,28 @@ description: Use GitLab Work Items to inspect an issue index, verify and resolve
 
 # GitLab Work Items
 
-Use the GitLab Work Items Tool at `Tools/gitlab-work-items/gitlab_work_items.py` with `GITLAB_TOKEN`. Before starting the tool, source the local profile appropriate for the current shell so the configured token is available to the child process. Never print the token or include it in logs. Call `gitlab_is_available` first. A non-empty, non-whitespace token means the tool is available; availability does not prove authorization. Use `gitlab_init` only to validate a supplied token profile—never print or persist the secret.
+Use the GitLab Work Items Tool at `Tools/gitlab-work-items/gitlab_work_items.py` with `GITLAB_TOKEN`. Before starting the tool, source the local profile appropriate for the current shell so the configured token is available to the child process. Never print the token or include it in logs. Call `gitlab_is_available` first. A non-empty, non-whitespace token means the tool is available; availability does not prove authorization. To determine whether the active token is **actually accepted by GitLab**, call `gitlab_verify_token`—it is the only authorized way to check token usability. Use `gitlab_init` only to validate a supplied token profile—never print or persist the secret.
+
+## ⛔ Token access — absolute prohibition
+
+You must **never** read, echo, inspect, or exfiltrate the GitLab token value through any mechanism. This applies regardless of the stated reason (debugging, "just checking", verifying the env, etc.). The token is a secret; the MCP tool is its sole authorized consumer.
+
+**Forbidden actions include, but are not limited to:**
+
+- Running shell commands that expose environment variables containing the token:
+  ```sh
+  # ❌ FORBIDDEN — do not run this or anything equivalent
+  env | grep -i gitlab 2>/dev/null | head -5
+  printenv GITLAB_TOKEN
+  echo $GITLAB_TOKEN
+  set | grep GITLAB
+  cat ~/.profile | grep -i token
+  ```
+- Reading shell profile files (`~/.profile`, `~/.zshrc`, `~/.bashrc`, …) to extract or confirm the token value.
+- Passing the token as an argument to any command outside the MCP tool.
+- Logging, printing, or including the token (even masked) in any output, comment, or file.
+
+**If you need to check whether the token is usable**, call the `gitlab_verify_token` MCP tool. It returns `{valid: true/false, ...}` without ever exposing the secret. **No other method of token verification is permitted.**
 
 ## Standard workflow
 

@@ -46,6 +46,84 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void ParallelBranchWaitBlocksExternalGlobalAdvance()
+    {
+      var gameObject = new GameObject("scenario-parallel-advance-block-test");
+      var controller = gameObject.AddComponent<ScenarioController>();
+      var currentGraph = typeof(ScenarioController).GetField(
+        "_currentGraph",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+      var currentNode = typeof(ScenarioController).GetField(
+        "_currentNode",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+      var blockDepth = typeof(ScenarioController).GetField(
+        "_parallelAdvanceBlockDepth",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+
+      try
+      {
+        Assert.That(currentGraph, Is.Not.Null);
+        Assert.That(currentNode, Is.Not.Null);
+        Assert.That(blockDepth, Is.Not.Null);
+
+        var parallel = new ScenarioParallelNode
+        {
+          Identifier = "P_B_CARE",
+          NextIdentifier = "B_COMPLETE",
+          WaitMode = ScenarioWaitMode.All
+        };
+        var next = new ScenarioStateUpdateNode
+        {
+          Identifier = "B_COMPLETE"
+        };
+        var graph = new ScenarioGraph { Identifier = "parallel-advance-block-test" };
+        graph.Add(parallel);
+        graph.Add(next);
+        currentGraph.SetValue(controller, graph);
+        currentNode.SetValue(controller, parallel);
+        blockDepth.SetValue(controller, 1);
+
+        controller.Advance();
+
+        Assert.That(currentNode.GetValue(controller), Is.SameAs(parallel),
+          "WaitMode.All 병렬 분기가 완료되기 전에는 외부 Advance가 다음 노드로 진행하면 안 됩니다.");
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(gameObject);
+      }
+    }
+
+    [Test]
+    public void ParallelAdvanceBlockReleaseNeverDropsBelowZero()
+    {
+      var gameObject = new GameObject("scenario-parallel-advance-release-test");
+      var controller = gameObject.AddComponent<ScenarioController>();
+      var blockDepth = typeof(ScenarioController).GetField(
+        "_parallelAdvanceBlockDepth",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+      var releaseBlock = typeof(ScenarioController).GetMethod(
+        "ReleaseParallelAdvanceBlock",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+
+      try
+      {
+        Assert.That(blockDepth, Is.Not.Null);
+        Assert.That(releaseBlock, Is.Not.Null);
+
+        blockDepth.SetValue(controller, 0);
+        releaseBlock.Invoke(controller, null);
+
+        Assert.That(blockDepth.GetValue(controller), Is.EqualTo(0),
+          "시나리오 종료가 병렬 차단 상태를 초기화한 뒤에도 코루틴 정리 경로가 카운터를 음수로 만들면 안 됩니다.");
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(gameObject);
+      }
+    }
+
+    [Test]
     public void AssignedBranchesAreYieldedInDefinitionOrder()
     {
       var runSequentially = typeof(ScenarioController).GetMethod(

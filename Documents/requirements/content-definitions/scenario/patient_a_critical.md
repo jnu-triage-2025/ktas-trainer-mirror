@@ -3033,7 +3033,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
 | Registry | Contains | RuntimeState | sig.click_plasma_solution_1000ml |
-| Registry | Contains | RuntimeState | sig.click_blood_bag |
+| Registry | Contains | RuntimeState | sig.click_blood_transfusion_set |
 
 
 - [x] a-1 아이템 식별자 정합(구 md→JSON 정본): click_blood→click_blood_transfusion_set (interaction-signal-integration-spec §2 참조).

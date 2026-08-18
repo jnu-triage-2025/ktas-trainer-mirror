@@ -94,6 +94,9 @@ namespace MultiplayerInfrastructure.UI
       UpdateRootVisibility();
       _titleRoutine = StartCoroutine(RunFadeRoutine(
         isTitle: true,
+        fadeInSeconds: _fadeInSeconds,
+        staySeconds: _staySeconds,
+        fadeOutSeconds: _fadeOutSeconds,
         onCompleted: () =>
         {
           _titleElement.TitleText = string.Empty;
@@ -122,6 +125,28 @@ namespace MultiplayerInfrastructure.UI
 
     public void ShowActionbar(string actionbar)
     {
+      ShowActionbarInternal(actionbar, _fadeInSeconds, _staySeconds, _fadeOutSeconds);
+    }
+
+    /// <summary>
+    /// 지정한 틱(20틱 = 1초) 타이밍으로 액션바를 한 번 표시한다.
+    /// 이 표시에만 타이밍이 적용되며 <see cref="SetTimes"/>의 공유 기본값은 유지된다.
+    /// </summary>
+    public void ShowActionbar(string actionbar, int fadeInTicks, int stayTicks, int fadeOutTicks)
+    {
+      ShowActionbarInternal(
+        actionbar,
+        Mathf.Max(0f, fadeInTicks) / 20f,
+        Mathf.Max(0f, stayTicks) / 20f,
+        Mathf.Max(0f, fadeOutTicks) / 20f);
+    }
+
+    private void ShowActionbarInternal(
+      string actionbar,
+      float fadeInSeconds,
+      float staySeconds,
+      float fadeOutSeconds)
+    {
       if (!EnsureElement())
         return;
 
@@ -133,6 +158,9 @@ namespace MultiplayerInfrastructure.UI
       UpdateRootVisibility();
       _actionbarRoutine = StartCoroutine(RunFadeRoutine(
         isTitle: false,
+        fadeInSeconds: fadeInSeconds,
+        staySeconds: staySeconds,
+        fadeOutSeconds: fadeOutSeconds,
         onCompleted: () =>
         {
           _titleElement.ActionbarText = string.Empty;
@@ -140,23 +168,6 @@ namespace MultiplayerInfrastructure.UI
           _actionbarActive = false;
           UpdateRootVisibility();
         }));
-    }
-
-    /// <summary>
-    /// Displays an actionbar message until the caller explicitly clears it.
-    /// Use this for stateful controls whose exit instruction must remain visible.
-    /// </summary>
-    public void ShowPersistentActionbar(string actionbar)
-    {
-      if (!EnsureElement())
-        return;
-
-      StopActionbarRoutine();
-      _currentActionbar = actionbar ?? string.Empty;
-      _titleElement.ActionbarText = _currentActionbar;
-      _titleElement.ActionbarOpacity = 1f;
-      _actionbarActive = !string.IsNullOrWhiteSpace(actionbar);
-      UpdateRootVisibility();
     }
 
     public void ClearTitle()
@@ -251,14 +262,19 @@ namespace MultiplayerInfrastructure.UI
       SetTimes(_defaultFadeInTicks, _defaultStayTicks, _defaultFadeOutTicks);
     }
 
-    private IEnumerator RunFadeRoutine(bool isTitle, System.Action onCompleted)
+    private IEnumerator RunFadeRoutine(
+      bool isTitle,
+      float fadeInSeconds,
+      float staySeconds,
+      float fadeOutSeconds,
+      System.Action onCompleted)
     {
       if (_titleElement == null)
         yield break;
 
-      float fadeIn = _fadeInSeconds;
-      float stay = _staySeconds;
-      float fadeOut = _fadeOutSeconds;
+      float fadeIn = fadeInSeconds;
+      float stay = staySeconds;
+      float fadeOut = fadeOutSeconds;
 
       SetOpacity(isTitle, 0f);
 
