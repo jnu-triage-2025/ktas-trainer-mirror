@@ -50,6 +50,10 @@ namespace MultiplayerInfrastructure.Scenario
     private static ScenarioController _instance;
     public static ScenarioController Instance => _instance;
 
+    // WaitMode.All/Any 병렬 노드가 분기 완료를 기다리는 동안 외부 자동 진행이
+    // 병렬 부모의 NextIdentifier로 건너뛰지 못하게 한다.
+    private int _parallelAdvanceBlockDepth;
+
     [Header("References")]
     [SerializeField] private DialoguePanelUIController _uiController;
     [SerializeField] private MainCameraController _camController;
@@ -458,6 +462,7 @@ namespace MultiplayerInfrastructure.Scenario
 
       StopAllCoroutines();
       CancelDialogueAutoAdvance();
+      _parallelAdvanceBlockDepth = 0;
       _executionMode = ExecutionMode.ClientPresentation;
       ScenarioParallelAssignmentState.ClearGraph(graph.Identifier);
       _currentGraph = graph;
@@ -674,6 +679,7 @@ namespace MultiplayerInfrastructure.Scenario
       // StopAllCoroutines 로 강제 종료된 브랜치 코루틴은 finally 가 실행되지 않아
       // 억제 카운터가 불균형 상태로 남을 수 있으므로 명시적으로 초기화한다.
       _globalAdvanceSuppressionDepth = 0;
+      _parallelAdvanceBlockDepth = 0;
       _activeRoleBranchDepthByClientId.Clear();
       ResetNodeVisitOrders(graph.Identifier);
       ScenarioInteractionSignals.ClearAllInternalSignals();
@@ -778,6 +784,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 살아남는 병렬 브랜치)을 모두 정리한다. 이를 누락하면 그래프가 해제된 뒤에도
       // 브랜치 체인이 계속 돌면서 _currentGraph 역참조에서 NullReferenceException 이 발생한다.
       StopAllCoroutines();
+      _parallelAdvanceBlockDepth = 0;
       ScenarioInteractionSignals.ClearAllInternalSignals();
       ScenarioInteractionSignals.ClearAllRaisedSignals();
       ScenarioConditionalSignalListeners.ClearAll();
@@ -1028,6 +1035,13 @@ namespace MultiplayerInfrastructure.Scenario
       // 브랜치는 NextIdentifier 로 직접 이동하므로, 브랜치 노드 실행기가 호출한
       // Advance 가 전역 _currentNode 를 끌고 가서 시나리오를 조기 종료시키는 것을 막는다.
       if (_globalAdvanceSuppressionDepth > 0)
+      {
+        return;
+      }
+
+      // 분기 코루틴은 대기 중에도 전역 Advance 억제를 해제한다. 이때 이전 대화의
+      // 자동 진행처럼 분기 밖에서 발생한 Advance가 병렬 부모를 조기 완료시키면 안 된다.
+      if (_parallelAdvanceBlockDepth > 0)
       {
         return;
       }
@@ -3964,148 +3978,172 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingParallel;
 
-      var runningCoroutines = new List<Coroutine>();
-      var runningTrackers = new List<BranchCompletionTracker>();
-      var routinesByClient = new Dictionary<int, List<IEnumerator>>();
-      int? localClientId = (int?)InstanceFinder.ClientManager?.Connection?.ClientId;
-      var players = GetActivePlayerIds();
-      bool sequenceRoleBranches = ShouldAllowMultipleRoleBranches(
-        node,
-        ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer);
-      var allocation = new Dictionary<ScenarioParallelBranch, int?>();
+      // WaitMode.None은 의도적으로 즉시 다음 노드로 진행하므로 차단하지 않는다.
+      bool blockGlobalAdvance = node.WaitMode != ScenarioWaitMode.None;
+      bool advanceBlockReleased = false;
+      if (blockGlobalAdvance)
+        _parallelAdvanceBlockDepth++;
 
-      // activeRoleTags 기반 그래프는 플레이어/태그 등록이 완료되기 전에 첫 Parallel에
-      // 도달할 수 있다. 이때 빈 roster를 "모든 역할 부재"로 해석하면 skipAbsentRoleBranches가
-      // 모든 분기를 건너뛰고 WaitMode.All이 즉시 완료되어 분기 내부 게이트를 전부 우회한다.
-      // 최소 한 역할이 확인된 뒤에만 실제 부재 역할을 계산한다.
-      yield return WaitForInitialActiveRoleRoster(node);
-      if (_currentGraph == null)
+      try
       {
-        yield break;
-      }
+        var runningCoroutines = new List<Coroutine>();
+        var runningTrackers = new List<BranchCompletionTracker>();
+        var routinesByClient = new Dictionary<int, List<IEnumerator>>();
+        int? localClientId = (int?)InstanceFinder.ClientManager?.Connection?.ClientId;
+        var players = GetActivePlayerIds();
+        bool sequenceRoleBranches = ShouldAllowMultipleRoleBranches(
+          node,
+          ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer);
+        var allocation = new Dictionary<ScenarioParallelBranch, int?>();
 
-      if (!TryAllocateParallel(node, players, allocation))
-      {
-        EndScenario();
-        yield break;
-      }
-
-      if (_executionMode == ExecutionMode.ServerAuthoritative)
-        ScenarioNetworkRelay.PublishParallelAssignments(_currentGraph?.Identifier, node.Identifier, allocation);
-
-      if (node.AllocationType == ScenarioParallelAllocationType.ByRole)
-      {
-        foreach (var assignedClientId in allocation.Values.Where(value => value.HasValue))
+        // activeRoleTags 기반 그래프는 플레이어/태그 등록이 완료되기 전에 첫 Parallel에
+        // 도달할 수 있다. 이때 빈 roster를 "모든 역할 부재"로 해석하면 skipAbsentRoleBranches가
+        // 모든 분기를 건너뛰고 WaitMode.All이 즉시 완료되어 분기 내부 게이트를 전부 우회한다.
+        // 최소 한 역할이 확인된 뒤에만 실제 부재 역할을 계산한다.
+        yield return WaitForInitialActiveRoleRoster(node);
+        if (_currentGraph == null)
         {
-          _activeRoleBranchDepthByClientId.TryGetValue(assignedClientId.Value, out var depth);
-          _activeRoleBranchDepthByClientId[assignedClientId.Value] = depth + 1;
-        }
-      }
-
-      foreach (var branch in node.Branches)
-      {
-        if (!_currentGraph.TryGetNode(branch.Identifier, out var branchNode))
-        {
-          Debug.LogWarning($"[ScenarioController] Parallel branch target '{branch.Identifier}' not found.");
-          if (node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
-          {
-            EndScenario();
-            yield break;
-          }
-          continue;
+          yield break;
         }
 
-        allocation.TryGetValue(branch, out var assignedClientId);
-
-        if (assignedClientId == null
-            && (_currentGraph?.SkipAbsentRoleBranches == true && IsDeclaredRoleAbsent(branch)
-                || node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Ignore))
-        {
-          continue; // skipped branch
-        }
-
-        if (assignedClientId == null && node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
+        if (!TryAllocateParallel(node, players, allocation))
         {
           EndScenario();
           yield break;
         }
 
-        // 멀티플레이어에서는 로컬 클라이언트에 할당된 브랜치만 실행한다.
-        // (미할당 브랜치 체인을 로컬에서 함께 돌리면 타 역할 노드가 한 번에 실행되는 문제가 발생한다.)
-        if (_executionMode != ExecutionMode.ServerAuthoritative
-            && assignedClientId.HasValue && localClientId.HasValue && assignedClientId.Value != localClientId.Value)
+        if (_executionMode == ExecutionMode.ServerAuthoritative)
+          ScenarioNetworkRelay.PublishParallelAssignments(_currentGraph?.Identifier, node.Identifier, allocation);
+
+        if (node.AllocationType == ScenarioParallelAllocationType.ByRole)
         {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-          Debug.Log($"[ScenarioController] Parallel branch '{branch.Identifier}' skipped on local client {localClientId} (assigned to {assignedClientId}).");
-#endif
-          continue;
-        }
-
-        // Unity 의 Coroutine 핸들은 완료되어도 null 이 되지 않으므로,
-        // 완료 추적 플래그로 감싸 WaitMode.Any 판정에 사용한다.
-        // 병렬 노드 자신의 NextIdentifier(합류 노드)는 브랜치 체인의 정지 라벨로도 전달한다.
-        // 브랜치 종단이 합류 노드를 가리키는 그래프에서, 합류 노드가 브랜치에서 1회 +
-        // 전역 Advance 에서 1회 총 2회 실행되는 것을 방지한다.
-        var tracker = new BranchCompletionTracker();
-        runningTrackers.Add(tracker);
-        var routine = RunTrackedBranch(branchNode, branch.CompletionConditionIdentifier, node.NextIdentifier, assignedClientId, tracker);
-        if (!sequenceRoleBranches)
-        {
-          runningCoroutines.Add(StartCoroutine(routine));
-          continue;
-        }
-
-        var clientKey = assignedClientId ?? int.MinValue;
-        if (!routinesByClient.TryGetValue(clientKey, out var routines))
-        {
-          routines = new List<IEnumerator>();
-          routinesByClient[clientKey] = routines;
-        }
-        routines.Add(routine);
-      }
-
-      // 한 플레이어에게 여러 역할 브랜치가 배정되면 UI와 입력이 겹치지 않도록
-      // 그래프에 정의된 순서대로 실행한다. 플레이어별 시퀀스끼리는 계속 병렬 실행한다.
-      foreach (var routines in routinesByClient.Values)
-      {
-        runningCoroutines.Add(StartCoroutine(RunSequentially(routines)));
-      }
-
-      // WaitMode에 따라 대기
-      switch (node.WaitMode)
-      {
-        case ScenarioWaitMode.All:
-          foreach (var coroutine in runningCoroutines)
+          foreach (var assignedClientId in allocation.Values.Where(value => value.HasValue))
           {
-            yield return coroutine;
+            _activeRoleBranchDepthByClientId.TryGetValue(assignedClientId.Value, out var depth);
+            _activeRoleBranchDepthByClientId[assignedClientId.Value] = depth + 1;
           }
-          break;
-        case ScenarioWaitMode.Any:
-          yield return WaitForAny(runningTrackers);
-          break;
-        case ScenarioWaitMode.None:
-          // 바로 진행
-          break;
-      }
-
-      // 병렬 노드 완료 후에는 NextIdentifier 로 진행한다.
-      // (기존의 무조건 EndScenario 호출은 병렬 이후 노드를 모두 건너뛰고
-      //  WaitMode.None 브랜치를 StopAllCoroutines 로 즉시 종료시키는 버그였다.)
-      // NextIdentifier 가 없으면 Advance 가 EndScenario 로 폴백한다.
-      if (node.AllocationType == ScenarioParallelAllocationType.ByRole)
-      {
-        foreach (var assignedClientId in allocation.Values.Where(value => value.HasValue))
-        {
-          if (!_activeRoleBranchDepthByClientId.TryGetValue(assignedClientId.Value, out var depth))
-            continue;
-          if (depth <= 1)
-            _activeRoleBranchDepthByClientId.Remove(assignedClientId.Value);
-          else
-            _activeRoleBranchDepthByClientId[assignedClientId.Value] = depth - 1;
         }
-      }
 
-      Advance();
+        foreach (var branch in node.Branches)
+        {
+          if (!_currentGraph.TryGetNode(branch.Identifier, out var branchNode))
+          {
+            Debug.LogWarning($"[ScenarioController] Parallel branch target '{branch.Identifier}' not found.");
+            if (node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
+            {
+              EndScenario();
+              yield break;
+            }
+            continue;
+          }
+
+          allocation.TryGetValue(branch, out var assignedClientId);
+
+          if (assignedClientId == null
+              && (_currentGraph?.SkipAbsentRoleBranches == true && IsDeclaredRoleAbsent(branch)
+                  || node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Ignore))
+          {
+            continue; // skipped branch
+          }
+
+          if (assignedClientId == null && node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
+          {
+            EndScenario();
+            yield break;
+          }
+
+          // 멀티플레이어에서는 로컬 클라이언트에 할당된 브랜치만 실행한다.
+          // (미할당 브랜치 체인을 로컬에서 함께 돌리면 타 역할 노드가 한 번에 실행되는 문제가 발생한다.)
+          if (_executionMode != ExecutionMode.ServerAuthoritative
+              && assignedClientId.HasValue && localClientId.HasValue && assignedClientId.Value != localClientId.Value)
+          {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log($"[ScenarioController] Parallel branch '{branch.Identifier}' skipped on local client {localClientId} (assigned to {assignedClientId}).");
+#endif
+            continue;
+          }
+
+          // Unity 의 Coroutine 핸들은 완료되어도 null 이 되지 않으므로,
+          // 완료 추적 플래그로 감싸 WaitMode.Any 판정에 사용한다.
+          // 병렬 노드 자신의 NextIdentifier(합류 노드)는 브랜치 체인의 정지 라벨로도 전달한다.
+          // 브랜치 종단이 합류 노드를 가리키는 그래프에서, 합류 노드가 브랜치에서 1회 +
+          // 전역 Advance 에서 1회 총 2회 실행되는 것을 방지한다.
+          var tracker = new BranchCompletionTracker();
+          runningTrackers.Add(tracker);
+          var routine = RunTrackedBranch(branchNode, branch.CompletionConditionIdentifier, node.NextIdentifier, assignedClientId, tracker);
+          if (!sequenceRoleBranches)
+          {
+            runningCoroutines.Add(StartCoroutine(routine));
+            continue;
+          }
+
+          var clientKey = assignedClientId ?? int.MinValue;
+          if (!routinesByClient.TryGetValue(clientKey, out var routines))
+          {
+            routines = new List<IEnumerator>();
+            routinesByClient[clientKey] = routines;
+          }
+          routines.Add(routine);
+        }
+
+        // 한 플레이어에게 여러 역할 브랜치가 배정되면 UI와 입력이 겹치지 않도록
+        // 그래프에 정의된 순서대로 실행한다. 플레이어별 시퀀스끼리는 계속 병렬 실행한다.
+        foreach (var routines in routinesByClient.Values)
+        {
+          runningCoroutines.Add(StartCoroutine(RunSequentially(routines)));
+        }
+
+        // WaitMode에 따라 대기
+        switch (node.WaitMode)
+        {
+          case ScenarioWaitMode.All:
+            foreach (var coroutine in runningCoroutines)
+            {
+              yield return coroutine;
+            }
+            break;
+          case ScenarioWaitMode.Any:
+            yield return WaitForAny(runningTrackers);
+            break;
+          case ScenarioWaitMode.None:
+            // 바로 진행
+            break;
+        }
+
+        // 병렬 노드 완료 후에는 NextIdentifier 로 진행한다.
+        // (기존의 무조건 EndScenario 호출은 병렬 이후 노드를 모두 건너뛰고
+        //  WaitMode.None 브랜치를 StopAllCoroutines 로 즉시 종료시키는 버그였다.)
+        // NextIdentifier 가 없으면 Advance 가 EndScenario 로 폴백한다.
+        if (node.AllocationType == ScenarioParallelAllocationType.ByRole)
+        {
+          foreach (var assignedClientId in allocation.Values.Where(value => value.HasValue))
+          {
+            if (!_activeRoleBranchDepthByClientId.TryGetValue(assignedClientId.Value, out var depth))
+              continue;
+            if (depth <= 1)
+              _activeRoleBranchDepthByClientId.Remove(assignedClientId.Value);
+            else
+              _activeRoleBranchDepthByClientId[assignedClientId.Value] = depth - 1;
+          }
+        }
+
+        if (blockGlobalAdvance)
+        {
+          ReleaseParallelAdvanceBlock();
+          advanceBlockReleased = true;
+        }
+        Advance();
+      }
+      finally
+      {
+        if (blockGlobalAdvance && !advanceBlockReleased)
+          ReleaseParallelAdvanceBlock();
+      }
+    }
+
+    private void ReleaseParallelAdvanceBlock()
+    {
+      _parallelAdvanceBlockDepth = Math.Max(0, _parallelAdvanceBlockDepth - 1);
     }
 
     /// <summary>병렬 브랜치의 완료 여부를 추적하는 플래그 홀더.</summary>
