@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using TextToSpeechService;
 using MultiplayerInfrastructure.Scenario;
@@ -40,6 +41,9 @@ namespace MultiplayerInfrastructure.TTS
 
     /// <summary>내부 TTS 엔진 초기화 완료 여부.</summary>
     public bool IsReady => _core != null && _core.IsReady;
+
+    /// <summary>내부 TTS 엔진 초기화 실패 여부. true면 IsReady를 기다려도 참이 되지 않는다.</summary>
+    public bool IsInitializationFailed => _core != null && _core.IsInitializationFailed;
 
     /// <summary>동적 세그먼트 백그라운드 캐싱 진행 중 여부.</summary>
     public bool IsDynamicCacheDirty => _core != null && _core.IsDynamicCacheDirty;
@@ -93,6 +97,19 @@ namespace MultiplayerInfrastructure.TTS
     {
       if (_core == null) return null;
       return _core.PlayText(text, audioSource ?? _audioSource, scenarioIdentifier, nodeIdentifier, voiceIdentifier);
+    }
+
+    /// <summary>재생 전 필요한 인라인 대사만 런타임 캐시에 미리 합성한다.</summary>
+    public Coroutine PrepareInlineText(
+      string text,
+      string scenarioIdentifier,
+      string nodeIdentifier,
+      string voiceIdentifier = null,
+      CancellationToken cancellationToken = default)
+    {
+      if (_core == null) return null;
+      return _core.PrepareInlineText(
+        text, scenarioIdentifier, nodeIdentifier, voiceIdentifier, cancellationToken);
     }
 
     /// <summary>지정된 identifier의 동적 세그먼트를 미리 합성해 캐시한다.</summary>

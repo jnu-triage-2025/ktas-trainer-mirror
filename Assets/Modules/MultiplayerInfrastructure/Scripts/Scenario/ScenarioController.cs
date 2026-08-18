@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using UnityEngine;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Command;
@@ -102,6 +103,7 @@ namespace MultiplayerInfrastructure.Scenario
     private ChatUIController _chatUIController;
     private ChatService _chatService;
     private Coroutine _dialogueAutoAdvanceRoutine;
+    private CancellationTokenSource _inlineTTSPrewarmCancellation;
     private ExecutionMode _executionMode = ExecutionMode.Local;
     private bool _currentPresentationNodeRoleScoped;
     private readonly List<ScenarioOwnedActingNpc> _scenarioOwnedActingNpcs = new List<ScenarioOwnedActingNpc>();
@@ -483,7 +485,7 @@ namespace MultiplayerInfrastructure.Scenario
       ResolveUIControllers();
       ResolveTTSService();
       _ttsService?.ConfigureScenarioVoiceProfiles(graph.TtsVoiceProfiles);
-      PrewarmInlineTTSCache(graph);
+      StartInlineTTSPrewarm(graph);
       if (!_uiController.IsUnityNull())
       {
         _uiController.SetInteractableHintUI(_hintUIController);
@@ -561,6 +563,7 @@ namespace MultiplayerInfrastructure.Scenario
           || !string.Equals(_currentGraph.Identifier, graphIdentifier, StringComparison.Ordinal))
         return;
 
+      CancelInlineTTSPrewarm();
       CancelDialogueAutoAdvance();
       _currentGraph = null;
       _currentNode = null;
@@ -707,6 +710,7 @@ namespace MultiplayerInfrastructure.Scenario
       ResolveUIControllers();
       ResolveTTSService();
       _ttsService?.ConfigureScenarioVoiceProfiles(graph.TtsVoiceProfiles);
+      StartInlineTTSPrewarm(graph);
 
       // 이전 실행이 비상호작용 대화 fade 도중 중단된 경우 남은 UI 상태를 정리한다.
       if (!_uiController.IsUnityNull())
@@ -762,7 +766,6 @@ namespace MultiplayerInfrastructure.Scenario
 
       // PlayTTS 노드의 동적 세그먼트를 백그라운드에서 미리 합성 (캐싱)
       PrewarmTTSCache();
-      PrewarmInlineTTSCache(graph);
 
       // 첫 노드 실행
       ExecuteNode(startNode);
@@ -773,6 +776,7 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public void EndScenario()
     {
+      CancelInlineTTSPrewarm();
       CompleteNodeVisit(_activeMainNodeVisitSequence);
       CompleteOpenNodeVisits();
       _activeMainNodeVisitSequence = 0;
@@ -3043,18 +3047,31 @@ namespace MultiplayerInfrastructure.Scenario
     /// 시작 시 확정되는 텍스트 치환 결과를 기준으로, 미래 인라인 TTS의 런타임 합성 후보를
     /// 순차 준비한다. 베이크 WAV와 이미 캐시된 텍스트는 서비스에서 즉시 건너뛴다.
     /// </summary>
-    private void PrewarmInlineTTSCache(ScenarioGraph graph)
+    private void StartInlineTTSPrewarm(ScenarioGraph graph)
     {
       if (_ttsService == null || graph == null) return;
-      StartCoroutine(PrewarmInlineTTSCacheRoutine(graph));
+      CancelInlineTTSPrewarm();
+      _inlineTTSPrewarmCancellation = new CancellationTokenSource();
+      StartCoroutine(PrewarmInlineTTSCacheRoutine(graph, _inlineTTSPrewarmCancellation.Token));
     }
 
-    private IEnumerator PrewarmInlineTTSCacheRoutine(ScenarioGraph graph)
+    private void CancelInlineTTSPrewarm()
+    {
+      _inlineTTSPrewarmCancellation?.Cancel();
+      _inlineTTSPrewarmCancellation?.Dispose();
+      _inlineTTSPrewarmCancellation = null;
+    }
+
+    private IEnumerator PrewarmInlineTTSCacheRoutine(ScenarioGraph graph, CancellationToken cancellationToken)
     {
       // 초기 장면과 입력 처리를 먼저 안정화한 뒤, 하나씩만 합성한다.
       yield return null;
+      var queuedTexts = new HashSet<string>(StringComparer.Ordinal);
       foreach (var node in graph.Nodes.Values)
       {
+        if (cancellationToken.IsCancellationRequested)
+          yield break;
+
         string text;
         string voiceIdentifier;
         switch (node)
@@ -3071,8 +3088,13 @@ namespace MultiplayerInfrastructure.Scenario
             continue;
         }
 
-        if (!string.IsNullOrWhiteSpace(text))
-          yield return _ttsService.PrepareInlineText(text, graph.Identifier, node.Identifier, voiceIdentifier);
+        // 서비스가 캐시와 베이크 WAV를 먼저 검사한다. 여기서는 향후 실행될 모든 대사를
+        // 넘겨 누락되었거나 런타임에 달라진 텍스트까지 사전 준비한다.
+        string cacheKey = (voiceIdentifier ?? string.Empty) + "\0" + text;
+        if (!string.IsNullOrWhiteSpace(text)
+            && queuedTexts.Add(cacheKey))
+          yield return _ttsService.PrepareInlineText(
+            text, graph.Identifier, node.Identifier, voiceIdentifier, cancellationToken);
 
         // 프레임과 CPU 시간을 게임에 돌려준다. 다음 합성은 다음 간격에만 시작한다.
         yield return new WaitForSecondsRealtime(0.25f);
