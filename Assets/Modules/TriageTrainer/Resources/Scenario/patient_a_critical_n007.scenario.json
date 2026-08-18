@@ -168,8 +168,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N007",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q009"
@@ -249,8 +252,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N007_1",
       "nodeType": "Dialogue",
       "nextIdentifier": "V013_1"
@@ -288,8 +294,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N007_2",
       "nodeType": "Dialogue",
       "nextIdentifier": "V013_2"
@@ -327,8 +336,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N007_3",
       "nodeType": "Dialogue",
       "nextIdentifier": "V013_3"
@@ -366,8 +378,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "N007_4",
       "nodeType": "Dialogue",
       "nextIdentifier": "V013_4"
@@ -405,8 +420,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F5"
+      },
       "identifier": "D009",
       "nodeType": "Dialogue",
       "nextIdentifier": "Q009_1"
@@ -427,8 +445,11 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "F3"
+      },
       "identifier": "D010",
       "nodeType": "Dialogue",
       "nextIdentifier": "E009"
@@ -442,12 +463,15 @@
     },
     "D011": {
       "speakerName": "의사 NPC",
-      "dialogueContent": "기도 확보를 위해 intubation을 시행하겠습니다. 삽관·산소 담당 간호사 선생님은 보조해주세요.",
+      "dialogueContent": "기도 확보를 위해 intubation을 시행하겠습니다. 간호사 B 선생님은 보조해주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D011",
       "nodeType": "Dialogue",
       "nextIdentifier": "D012"
@@ -458,20 +482,26 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D012",
       "nodeType": "Dialogue",
       "nextIdentifier": "D013"
     },
     "D013": {
       "speakerName": "의사 NPC",
-      "dialogueContent": "IV·C-line 보조 담당 간호사 선생님은 수액 투여를 위해 양팔에 IV 라인을 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션을 연결하겠습니다.",
+      "dialogueContent": "간호사 D 선생님은 수액 투여를 위해 양팔에 IV 라인을 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션을 연결하겠습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
-      "playTTS": null,
+      "playTTS": true,
       "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
       "identifier": "D013",
       "nodeType": "Dialogue",
       "nextIdentifier": "P004"

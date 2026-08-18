@@ -1516,7 +1516,7 @@ SPAWN_A
 | **Identifier** | 문자열 | D013 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 의사 NPC |
-| **DialogueContent** | 문자열 | IV·C-line 보조 담당 간호사 선생님은 수액 투여를 위해 양팔에 IV 라인을 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션을 연결하겠습니다. |
+| **DialogueContent** | 문자열 | 간호사 D 선생님은 수액 투여를 위해 양팔에 IV 라인을 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션을 연결하겠습니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | P004 |
 
@@ -2402,7 +2402,7 @@ SPAWN_A
 | **Identifier** | 문자열 | N010_1 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 멸균장갑을 마우스 우클릭으로 착용하십시오. |
+| **DialogueContent** | 문자열 | 멸균장갑을 착용하십시오. E키를 눌러 인벤토리 창을 열고, 좌측 상단의 착용 칸으로 멸균장갑 아이템을 옮기십시오. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V016_1 |
@@ -2441,7 +2441,7 @@ SPAWN_A
 | **Identifier** | 문자열 | N010_2 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 거즈를 클릭해 선택한 뒤, 환자에게 적용하십시오. |
+| **DialogueContent** | 문자열 | 거즈를 선택한 뒤, 환자에게 적용하십시오. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V016_2 |
@@ -2493,7 +2493,7 @@ SPAWN_A
 | **Identifier** | 문자열 | N010_3 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 압박을 가해 지혈하고 있습니다. 플라스터를 클릭해 선택한 뒤, 거즈를 클릭해 고정하십시오. |
+| **DialogueContent** | 문자열 | 압박을 가해 지혈하고 있습니다. 플라스터를 선택한 뒤, 거즈를 고정하십시오. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 5.0 |
 | **NextIdentifier** | 문자열 | V016_3 |
