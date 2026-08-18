@@ -73,7 +73,7 @@ MonoBehaviour:
   _connectedLineObjects: []
   _allowMultipleConnections: 0
   connectionService: {fileID: 0}
-  _identifier: ivconnectionpoint
+  _identifier: ivconnectionpoint_001
   _autoGenerateIdentifier: 1
   _displayIcon: {fileID: 0}
   _interactConfigs:
@@ -285,7 +285,7 @@ MonoBehaviour:
   _initialHasBloodTransfusionSet: 0
   _initialConnectedPatientIdentifier: 
   _bloodTransfusionSetWithoutPlasmaPolicy: 0
-  _bloodTransfusionSetCancellationBehaviour: 1
+  _bloodTransfusionSetCancellationBehaviour: 255
   _entityIdentifier: level1_rapid_infuser_a
   _displayText: "Level 1 \uAE09\uC18D \uC8FC\uC785\uAE30 \uC870\uC885"
   _displayIcon: {fileID: 0}
