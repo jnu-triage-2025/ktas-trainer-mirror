@@ -586,7 +586,10 @@ namespace MultiplayerInfrastructure.Entity
       {
         _titleUI ??= Registry.Registry.Get<TitleUIController>(
           RegistryType.UI, Registry.Registry.TypeKey<TitleUIController>());
-        _titleUI?.ShowPersistentActionbar(_exitHint);
+        // 조작 시작 순간 힌트를 즉시 띄우고 1초 유지 뒤 0.5초에 걸쳐 사라지게 한다.
+        // (20틱 = 1초)
+        _titleUI?.ShowActionbar(
+          _exitHint, fadeInTicks: 0, stayTicks: 20, fadeOutTicks: 10);
       }
     }
 
