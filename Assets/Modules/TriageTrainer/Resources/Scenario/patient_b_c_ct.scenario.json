@@ -273,13 +273,25 @@
     "BIND_B_OXY": {
       "identifier": "BIND_B_OXY",
       "nodeType": "EntityStateSignalBinding",
-      "nextIdentifier": "BIND_C_NASAL",
+      "nextIdentifier": "BIND_B_OXY_RAW",
       "bindingIdentifier": "b_oxy",
       "operation": "Register",
       "targetEntityIdentifier": "patient_b",
       "eventName": "EquipmentConnected",
       "eventKey": "Oxyflowmeter",
       "outputSignalIdentifier": "equipment_connected_oxyflowmeter_patient_b",
+      "consumeOnce": true
+    },
+    "BIND_B_OXY_RAW": {
+      "identifier": "BIND_B_OXY_RAW",
+      "nodeType": "EntityStateSignalBinding",
+      "nextIdentifier": "BIND_C_NASAL",
+      "bindingIdentifier": "b_oxy_raw",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_b",
+      "eventName": "OxyflowmeterAttachmentChanged",
+      "eventKey": "Attached",
+      "outputSignalIdentifier": "oxyflowmeter_attached_patient_b",
       "consumeOnce": true
     },
     "BIND_C_NASAL": {
@@ -321,13 +333,25 @@
     "BIND_C_OXY": {
       "identifier": "BIND_C_OXY",
       "nodeType": "EntityStateSignalBinding",
-      "nextIdentifier": "COUNT_NURSE_ARRIVAL",
+      "nextIdentifier": "BIND_C_OXY_RAW",
       "bindingIdentifier": "c_oxy",
       "operation": "Register",
       "targetEntityIdentifier": "patient_c",
       "eventName": "EquipmentConnected",
       "eventKey": "Oxyflowmeter",
       "outputSignalIdentifier": "equipment_connected_oxyflowmeter_patient_c",
+      "consumeOnce": true
+    },
+    "BIND_C_OXY_RAW": {
+      "identifier": "BIND_C_OXY_RAW",
+      "nodeType": "EntityStateSignalBinding",
+      "nextIdentifier": "COUNT_NURSE_ARRIVAL",
+      "bindingIdentifier": "c_oxy_raw",
+      "operation": "Register",
+      "targetEntityIdentifier": "patient_c",
+      "eventName": "OxyflowmeterAttachmentChanged",
+      "eventKey": "Attached",
+      "outputSignalIdentifier": "oxyflowmeter_attached_patient_c",
       "consumeOnce": true
     },
     "COUNT_NURSE_ARRIVAL": {
@@ -2524,9 +2548,68 @@
     "D_TREATMENT_ACTIVATE": {
       "identifier": "D_TREATMENT_ACTIVATE",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "D_NASAL_WAIT",
+      "nextIdentifier": "D_ORDER_GATE",
       "eventIdentifier": "activate_patient_b_nurse_d_treatment",
       "moveNextBehavior": "WaitUntilDone"
+    },
+    "D_ORDER_GATE": {
+      "identifier": "D_ORDER_GATE",
+      "nodeType": "Validator",
+      "nextIdentifier": "D_ORDER_CHECK",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "matchMode": "Any",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.apply_nasal_cannula_patient_b"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.oxyflowmeter_attached_patient_b"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "waitForCondition": true
+    },
+    "D_ORDER_CHECK": {
+      "identifier": "D_ORDER_CHECK",
+      "nodeType": "Validator",
+      "nextIdentifier": "D_NASAL_DONE",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.apply_nasal_cannula_patient_b"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Branching",
+      "failureNextIdentifier": "D_HINT_APPLY_NASAL",
+      "waitForCondition": false
+    },
+    "D_HINT_APPLY_NASAL": {
+      "identifier": "D_HINT_APPLY_NASAL",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "D_NASAL_WAIT",
+      "speakerName": "@s",
+      "dialogueContent": "(비강 캐뉼라를 적용하자.)",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": 1,
+      "playTTS": false
     },
     "D_NASAL_WAIT": {
       "identifier": "D_NASAL_WAIT",
@@ -2552,9 +2635,40 @@
     "D_NASAL_DONE": {
       "identifier": "D_NASAL_DONE",
       "nodeType": "Dialogue",
-      "nextIdentifier": "D_OXY_WAIT",
+      "nextIdentifier": "D_OXY_ORDER_CHECK",
       "speakerName": "@s",
       "dialogueContent": "(비강 캐뉼라를 환자에게 적용했다.)",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": 1,
+      "playTTS": false
+    },
+    "D_OXY_ORDER_CHECK": {
+      "identifier": "D_OXY_ORDER_CHECK",
+      "nodeType": "Validator",
+      "nextIdentifier": "D_OXY_WAIT",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.oxyflowmeter_attached_patient_b"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Branching",
+      "failureNextIdentifier": "D_HINT_INSTALL_OXY",
+      "waitForCondition": false
+    },
+    "D_HINT_INSTALL_OXY": {
+      "identifier": "D_HINT_INSTALL_OXY",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "D_OXY_WAIT",
+      "speakerName": "@s",
+      "dialogueContent": "(산소유량계를 설치하자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 1,
       "playTTS": false
@@ -3985,9 +4099,68 @@
     "C_D_TREATMENT_ACTIVATE": {
       "identifier": "C_D_TREATMENT_ACTIVATE",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "C_D_NASAL_WAIT",
+      "nextIdentifier": "C_D_ORDER_GATE",
       "eventIdentifier": "activate_patient_c_nurse_d_treatment",
       "moveNextBehavior": "WaitUntilDone"
+    },
+    "C_D_ORDER_GATE": {
+      "identifier": "C_D_ORDER_GATE",
+      "nodeType": "Validator",
+      "nextIdentifier": "C_D_ORDER_CHECK",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "matchMode": "Any",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.apply_nasal_cannula_patient_c"
+            },
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.oxyflowmeter_attached_patient_c"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "waitForCondition": true
+    },
+    "C_D_ORDER_CHECK": {
+      "identifier": "C_D_ORDER_CHECK",
+      "nodeType": "Validator",
+      "nextIdentifier": "C_D_NASAL_DONE",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.apply_nasal_cannula_patient_c"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Branching",
+      "failureNextIdentifier": "C_D_HINT_APPLY_NASAL",
+      "waitForCondition": false
+    },
+    "C_D_HINT_APPLY_NASAL": {
+      "identifier": "C_D_HINT_APPLY_NASAL",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "C_D_NASAL_WAIT",
+      "speakerName": "@s",
+      "dialogueContent": "(비강 캐뉼라를 적용하자.)",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": 1,
+      "playTTS": false
     },
     "C_D_NASAL_WAIT": {
       "identifier": "C_D_NASAL_WAIT",
@@ -4013,9 +4186,40 @@
     "C_D_NASAL_DONE": {
       "identifier": "C_D_NASAL_DONE",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_D_OXY_WAIT",
+      "nextIdentifier": "C_D_OXY_ORDER_CHECK",
       "speakerName": "@s",
       "dialogueContent": "(비강 캐뉼라를 환자에게 적용했다.)",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": 1,
+      "playTTS": false
+    },
+    "C_D_OXY_ORDER_CHECK": {
+      "identifier": "C_D_OXY_ORDER_CHECK",
+      "nodeType": "Validator",
+      "nextIdentifier": "C_D_OXY_WAIT",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.oxyflowmeter_attached_patient_c"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Branching",
+      "failureNextIdentifier": "C_D_HINT_INSTALL_OXY",
+      "waitForCondition": false
+    },
+    "C_D_HINT_INSTALL_OXY": {
+      "identifier": "C_D_HINT_INSTALL_OXY",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "C_D_OXY_WAIT",
+      "speakerName": "@s",
+      "dialogueContent": "(산소유량계를 설치하자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 1,
       "playTTS": false

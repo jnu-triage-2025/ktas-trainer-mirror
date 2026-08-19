@@ -62,10 +62,12 @@ namespace TriageTrainer.Entity
       // 스폰 페이로드로 동기화된 런타임 식별자를 모든 피어에서 반영한 뒤 등록한다.
       _runtimeIdentifier.OnChange += OnRuntimeIdentifierChanged;
       RegisterPatientEntity();
+      WallAttachedOxyflowmeter.AttachmentStateChanged += OnAnyOxyflowmeterAttachmentChanged;
 
       // 트리아지 상태값 동기화 구독 + 초기 오버헤드 태그 반영.
       InitializeTriageSync();
       InitializeRecognitionCheckSync();
+      InitializeNurseDStageSync();
       UpdateTriageOverheadLabel(AssessedTriage);
     }
 
@@ -73,8 +75,10 @@ namespace TriageTrainer.Entity
     {
       TeardownTriageSync();
       TeardownRecognitionCheckSync();
+      TeardownNurseDStageSync();
       DestroyTriageOverheadLabel();
       _runtimeIdentifier.OnChange -= OnRuntimeIdentifierChanged;
+      WallAttachedOxyflowmeter.AttachmentStateChanged -= OnAnyOxyflowmeterAttachmentChanged;
       UnregisterPatientEntity();
       base.OnStopClient();
     }
@@ -82,6 +86,8 @@ namespace TriageTrainer.Entity
     private void OnDestroy()
     {
       TeardownRecognitionCheckSync();
+      TeardownNurseDStageSync();
+      WallAttachedOxyflowmeter.AttachmentStateChanged -= OnAnyOxyflowmeterAttachmentChanged;
       UnregisterPatientEntity();
     }
 

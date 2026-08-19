@@ -34,6 +34,7 @@ namespace TriageTrainer.Entity
   /// <item><term>TriageSubmitted</term><term><see cref="OnTriageSubmitted"/></term><term>트리아지 등급명(<see cref="TriageLevel"/>)</term></item>
   /// <item><term>EquipmentConnected</term><term>(C# 이벤트 없음)</term><term>장비 유형명(<see cref="EquipmentTypeBed"/>/<see cref="EquipmentTypePatientMonitor"/> 등)</term></item>
   /// <item><term>EquipmentDisconnected</term><term>(C# 이벤트 없음)</term><term>장비 유형명</term></item>
+  /// <item><term>OxyflowmeterAttachmentChanged</term><term>(C# 이벤트 없음)</term><term>"Attached" 또는 "Detached" — 처치 단계 크레딧과 무관한 산소 유량계의 실제(raw) 설치/회수 상태</term></item>
   /// </list>
   /// </summary>
   public partial class PatientController : IScenarioEntityStateEventSource
@@ -66,6 +67,14 @@ namespace TriageTrainer.Entity
     public const string StateEventEquipmentDisconnected = "EquipmentDisconnected";
 
     /// <summary>
+    /// 이 환자의 zone에 연결된 산소 유량계의 실제 설치/회수 상태가 바뀌었을 때 발생한다.
+    /// <see cref="StateEventEquipmentConnected"/>/Disconnected 와 달리 B/C 처치 단계 크레딧
+    /// (<c>ShouldCreditPatientBCEquipmentConnection</c>) 게이팅을 거치지 않는 raw 신호다.
+    /// key는 "Attached" 또는 "Detached".
+    /// </summary>
+    public const string StateEventOxyflowmeterAttachmentChanged = "OxyflowmeterAttachmentChanged";
+
+    /// <summary>
     /// 시나리오 <c>EntityStateSignalBinding</c> 노드가 (eventName, key) 조합에 대해 등록한 핸들러.
     /// key 가 비어 있으면 해당 이벤트의 모든 발생에 대해 호출된다.
     /// </summary>
@@ -96,6 +105,7 @@ namespace TriageTrainer.Entity
       StateEventTriageSubmitted,
       StateEventEquipmentConnected,
       StateEventEquipmentDisconnected,
+      StateEventOxyflowmeterAttachmentChanged,
     };
 
     /// <inheritdoc />

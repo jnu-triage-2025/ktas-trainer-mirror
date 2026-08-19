@@ -730,6 +730,7 @@ namespace TriageTrainer.Entity
       ClearPatientBCSignals(
         $"apply_nasal_cannula_{Identifier}",
         $"equipment_connected_oxyflowmeter_{Identifier}",
+        $"oxyflowmeter_attached_{Identifier}",
         $"apply_gauze_{Identifier}",
         $"apply_plaster_on_gauze_{Identifier}");
       return _patientBCRequiresOxygenDetach;
@@ -1000,6 +1001,36 @@ namespace TriageTrainer.Entity
         return false;
       _patientBCNurseDStage.Value = next;
       return true;
+    }
+
+    private void InitializeNurseDStageSync()
+    {
+      _patientBCNurseDStage.OnChange += OnPatientBCNurseDStageChanged;
+    }
+
+    private void TeardownNurseDStageSync()
+    {
+      _patientBCNurseDStage.OnChange -= OnPatientBCNurseDStageChanged;
+    }
+
+    // 비강 캐뉼라 적용 등으로 단계가 전환된 직후, 스테일해진 인터랙션 힌트(예: "비강 캐뉼라 적용")가
+    // 재상호작용 없이도 즉시 사라지도록 SyncVar 복제 시점에 근처 상호작용 캐시를 갱신한다.
+    private void OnPatientBCNurseDStageChanged(
+      PatientBCTreatmentStage previous, PatientBCTreatmentStage next, bool asServer)
+    {
+      RefreshPatientBCInteractableHints();
+    }
+
+    private static void RefreshPatientBCInteractableHints()
+    {
+      var players = UnityEngine.Object.FindObjectsByType<PlayerController>(
+        FindObjectsInactive.Exclude,
+        FindObjectsSortMode.None);
+      foreach (var player in players)
+      {
+        if (player != null && player.IsOwner)
+          player.RefreshInteractableHintsNow();
+      }
     }
 
     [ServerRpc(RequireOwnership = false)]

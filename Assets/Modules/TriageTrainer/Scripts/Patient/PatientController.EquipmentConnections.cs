@@ -159,7 +159,24 @@ namespace TriageTrainer.Entity
           RaiseEquipmentStateEvent(equipmentType, connected: true);
           TriageWorldInteractionSignals.RaisePatientEquipmentConnected(Identifier, equipmentType, next);
         }
+
+        // 처치 단계 크레딧 게이팅과 무관하게, 연결된 유량계가 이미 설치되어 있으면 즉시 raw 신호를 올린다.
+        // 아직 설치 전이라면 OnAnyOxyflowmeterAttachmentChanged 가 실제 설치 시점에 올린다.
+        if (next is WallAttachedOxyflowmeter connectedFlowmeter && connectedFlowmeter.IsAttached)
+          DispatchScenarioStateEvent(StateEventOxyflowmeterAttachmentChanged, "Attached");
       }
+    }
+
+    /// <summary>
+    /// 씬의 어느 산소 유량계든 설치/회수 상태가 바뀌면 호출된다(정적 이벤트).
+    /// 이 환자의 zone에 연결된 유량계일 때만 raw 상태 이벤트를 올린다.
+    /// </summary>
+    private void OnAnyOxyflowmeterAttachmentChanged(WallAttachedOxyflowmeter source, bool attached)
+    {
+      if (!ReferenceEquals(source, _supportExternalRefs.Oxyflowmeter))
+        return;
+
+      DispatchScenarioStateEvent(StateEventOxyflowmeterAttachmentChanged, attached ? "Attached" : "Detached");
     }
 
     // ── Patient Monitor (환자 상태 모니터 역참조) ──
