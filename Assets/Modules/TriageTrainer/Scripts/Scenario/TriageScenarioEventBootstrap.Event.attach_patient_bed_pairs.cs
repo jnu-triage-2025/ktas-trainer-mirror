@@ -14,6 +14,8 @@ namespace TriageTrainer.Scenario
   /// </summary>
   public partial class TriageScenarioEventBootstrap : MonoBehaviour
   {
+    private const float AttachPatientBedPairsResolutionTimeoutSeconds = 5f;
+
     [Serializable]
     public struct PatientBedPair
     {
@@ -34,8 +36,6 @@ namespace TriageTrainer.Scenario
 
     private IEnumerator Event_AttachPatientBedPairs()
     {
-      ResolveRuntimeReferencesIfNeeded();
-
       var pairs = _patientBedPairs;
       if (pairs == null || pairs.Count == 0)
       {
@@ -47,15 +47,40 @@ namespace TriageTrainer.Scenario
         };
       }
 
-      int attached = 0;
-      foreach (var pair in pairs)
+      var unresolvedPairIndices = new HashSet<int>();
+      for (int i = 0; i < pairs.Count; i++)
+        unresolvedPairIndices.Add(i);
+
+      float startedAt = Time.realtimeSinceStartup;
+      while (unresolvedPairIndices.Count > 0
+             && Time.realtimeSinceStartup - startedAt < AttachPatientBedPairsResolutionTimeoutSeconds)
       {
-        if (TryAttachPatientToBedByIdentifier(pair.patientIdentifier, pair.bedIdentifier))
+        ResolveRuntimeReferencesIfNeeded();
+
+        for (int i = pairs.Count - 1; i >= 0; i--)
         {
-          attached++;
+          if (!unresolvedPairIndices.Contains(i))
+            continue;
+
+          var pair = pairs[i];
+          if (TryAttachPatientToBedByIdentifier(
+                pair.patientIdentifier, pair.bedIdentifier, logFailure: false))
+          {
+            unresolvedPairIndices.Remove(i);
+          }
         }
+
+        if (unresolvedPairIndices.Count > 0)
+          yield return null;
       }
 
+      foreach (int pairIndex in unresolvedPairIndices)
+      {
+        var pair = pairs[pairIndex];
+        TryAttachPatientToBedByIdentifier(pair.patientIdentifier, pair.bedIdentifier, logFailure: true);
+      }
+
+      int attached = pairs.Count - unresolvedPairIndices.Count;
       EmitSystemMessage($"환자-침대 결합 재설정 완료 ({attached}/{pairs.Count}).");
 
       yield break;

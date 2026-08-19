@@ -1472,6 +1472,16 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void AttachBedResolutionWaitHasFiniteTimeout()
+    {
+      var timeout = typeof(TriageScenarioEventBootstrap).GetField(
+        "AttachPatientBedPairsResolutionTimeoutSeconds", BindingFlags.Static | BindingFlags.NonPublic);
+
+      Assert.That(timeout, Is.Not.Null);
+      Assert.That((float)timeout.GetRawConstantValue(), Is.GreaterThan(0f));
+    }
+
+    [Test]
     public void MovingBedDisconnectCleanupReleasesSlotAndRemovesCachedInput()
     {
       const int disconnectedClientId = 17;

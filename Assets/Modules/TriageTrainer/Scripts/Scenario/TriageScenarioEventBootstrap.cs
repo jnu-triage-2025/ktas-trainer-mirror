@@ -723,7 +723,10 @@ namespace TriageTrainer.Scenario
     /// 레지스트리에 등록된 식별자로 환자/침대를 찾아 논리 결합(repose)을 재설정한다.
     /// 프리셋 그룹 스폰(환자+침대 분리) 직후, 위계 없는 두 독립 객체를 "결합 상태"로 만들기 위해 사용한다.
     /// </summary>
-    private bool TryAttachPatientToBedByIdentifier(string patientIdentifier, string bedIdentifier)
+    private bool TryAttachPatientToBedByIdentifier(
+      string patientIdentifier,
+      string bedIdentifier,
+      bool logFailure = true)
     {
       if (string.IsNullOrWhiteSpace(patientIdentifier) || string.IsNullOrWhiteSpace(bedIdentifier))
       {
@@ -737,9 +740,12 @@ namespace TriageTrainer.Scenario
 
       if (patientObject == null || bedObject == null)
       {
-        Debug.LogWarning(
-          $"[TriageScenarioEventBootstrap] Attach by identifier failed: " +
-          $"patient '{patientIdentifier}'={(patientObject != null)}, bed '{bedIdentifier}'={(bedObject != null)} not resolved.");
+        if (logFailure)
+        {
+          Debug.LogWarning(
+            $"[TriageScenarioEventBootstrap] Attach by identifier failed: " +
+            $"patient '{patientIdentifier}'={(patientObject != null)}, bed '{bedIdentifier}'={(bedObject != null)} not resolved.");
+        }
         return false;
       }
 
@@ -747,9 +753,12 @@ namespace TriageTrainer.Scenario
       var bed = bedObject.GetComponent<MovingPatientBedController>();
       if (patient == null || bed == null)
       {
-        Debug.LogWarning(
-          $"[TriageScenarioEventBootstrap] Attach by identifier failed: component missing " +
-          $"(patient {patient != null}, bed {bed != null}).");
+        if (logFailure)
+        {
+          Debug.LogWarning(
+            $"[TriageScenarioEventBootstrap] Attach by identifier failed: component missing " +
+            $"(patient {patient != null}, bed {bed != null}).");
+        }
         return false;
       }
 
