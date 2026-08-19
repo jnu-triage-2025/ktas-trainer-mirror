@@ -299,7 +299,7 @@
           "completionCriteriaIdentifier": "patient-b-pupil-checked",
           "targetType": "Interaction",
           "entityIdentifier": "patient_b",
-          "interactionIdentifier": "recognition_check",
+          "interactionIdentifier": "intravenous_line_cannula",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         }
@@ -338,17 +338,7 @@
           "count": 1
         }
       ],
-      "presentationBindings": [
-        {
-          "activation": "CompletionCriteria",
-          "completionCriteriaIdentifier": "insert-iv-patient-b-right",
-          "targetType": "Interaction",
-          "entityIdentifier": "patient_b",
-          "interactionIdentifier": "intravenous_line_cannula",
-          "iconIdentifier": "quest-interaction",
-          "iconMode": "ReplacePrimaryIcon"
-        }
-      ]
+      "presentationBindings": []
     },
     {
       "identifier": "Quest_B_Wait",

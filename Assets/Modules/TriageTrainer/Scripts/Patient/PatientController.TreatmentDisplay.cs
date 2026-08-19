@@ -717,7 +717,8 @@ namespace TriageTrainer.Entity
         return false;
       }
 
-      _patientBCRequiresOxygenDetach = ConnectedOxyflowmeter != null;
+      _patientBCRequiresOxygenDetach = ConnectedOxyflowmeter != null
+                                       && ConnectedOxyflowmeter.IsAttached;
       _patientBCObservedOxygenDetach = false;
       _patientBCFreshOxygenInstalled = false;
       _patientBCNurseDStage.Value = PatientBCTreatmentStage.AwaitingNasalCannula;
