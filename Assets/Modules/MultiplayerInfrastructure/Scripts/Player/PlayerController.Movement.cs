@@ -181,10 +181,10 @@ namespace MultiplayerInfrastructure.Player
       float movementDirectionY = _moveDirection.y;
       _moveDirection = (_forwardSpeed * curSpeedX) + (_rightSpeed * curSpeedY);
 
-if (Input.GetButton("Jump") && canMove && _characterController.isGrounded)
+if (IsJumpInputHeld() && canMove && _characterController.isGrounded)
        {
          _moveDirection.y = _jumpSpeed;
-         if (Input.GetButtonDown("Jump"))
+         if (IsJumpInputPressedThisFrame())
            _jumpAnimationRequestedThisFrame = true;
        }
        else if (!_characterController.isGrounded)
@@ -214,7 +214,7 @@ if (Input.GetButton("Jump") && canMove && _characterController.isGrounded)
       float curSpeedY = _spectatorMoveSpeed * Input.GetAxis("Horizontal");
 
       float vertical = 0f;
-      if (Input.GetKey(KeyCode.Space)) vertical += 1f;
+      if (IsSpectatorAscendInputHeld()) vertical += 1f;
       if (Input.GetKey(_keySpectatorFlyDown)) vertical -= 1f;
 
       Vector3 velocity = (_forwardSpeed * curSpeedX) + (_rightSpeed * curSpeedY) + (Vector3.up * (_spectatorVerticalSpeed * vertical));
