@@ -10,10 +10,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 {
   public partial class PatientMonitorController : IInteractable, PatientController.IMonitorSelectionRequester, PatientController.IMedicalStateListener
   {
-    private sealed class MonitorSelectModeInteract : IInteract, IInteractorConditional, INearestOnlyInteract
+    private sealed class MonitorSelectModeInteract : IInteract, IInteractorConditional, INearestOnlyInteract, IQuestPresentationTarget
     {
       private readonly PatientMonitorController _owner;
       public MonitorSelectModeInteract(PatientMonitorController owner) { _owner = owner; }
+      public string PresentationEntityIdentifier => _owner.PresentationEntityIdentifier;
+      public string InteractionIdentifier => InteractIdSelectPatient;
       public string DisplayText => "모니터링할 환자 선택";
       public Sprite DisplayIcon => _owner._interactIcon;
       public bool AllowDisplayIconFallback => true;
@@ -31,10 +33,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       }
     }
 
-    private sealed class MonitorDetailInteract : IInteract, IInteractorConditional, INearestOnlyInteract
+    private sealed class MonitorDetailInteract : IInteract, IInteractorConditional, INearestOnlyInteract, IQuestPresentationTarget
     {
       private readonly PatientMonitorController _owner;
       public MonitorDetailInteract(PatientMonitorController owner) { _owner = owner; }
+      public string PresentationEntityIdentifier => _owner.PresentationEntityIdentifier;
+      public string InteractionIdentifier => InteractIdDetailOverlay;
       public string DisplayText => "자세히 보기";
       public Sprite DisplayIcon => _owner._interactIcon;
       public bool AllowDisplayIconFallback => true;
@@ -76,6 +80,12 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private const string InteractIdDetailOverlay = "detail_overlay";
     private const string NearestGroupSelectPatient = "patient_monitor:select_patient_mode";
     private const string NearestGroupDetailOverlay = "patient_monitor:detail_overlay";
+
+    // 시나리오가 환자 B 모니터를 활성화하기 전에도 선택 marker를 연결할 수 있도록
+    // 현재 추적 환자 또는 모니터의 기본 환자 식별자를 presentation 대상으로 제공한다.
+    public string PresentationEntityIdentifier => _monitoringPatient?.Identifier
+      ?? patientState?.Identifier
+      ?? "patient_b";
 
     // Zone 경계처럼 여러 환자 모니터 콜라이더가 Detector 범위에 함께 들어오면 같은 이름의
     // 인터렉션을 구분할 수 없다. 각 Monitor interact가 기능별 NearestOnlyGroup을 제공하여

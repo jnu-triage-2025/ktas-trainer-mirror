@@ -52,7 +52,7 @@ namespace TriageTrainer.Entity
       }
     }
 
-    private sealed class PatientAssessInteract : IInteract, IInteractorConditional
+    private sealed class PatientAssessInteract : IInteract, IInteractorConditional, IQuestPresentationTarget
     {
       private readonly PatientController _owner;
       private readonly string _actionIdentifier;
@@ -62,6 +62,9 @@ namespace TriageTrainer.Entity
         _owner = owner;
         _actionIdentifier = actionIdentifier;
       }
+
+      public string PresentationEntityIdentifier => _owner.Identifier;
+      public string InteractionIdentifier => _actionIdentifier;
 
       private AssessActionConfig Config => _owner.GetAssessAction(_actionIdentifier);
 

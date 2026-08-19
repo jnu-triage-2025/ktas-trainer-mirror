@@ -95,10 +95,12 @@ namespace TriageTrainer.Entity
       }
     }
 
-    private sealed class PatientMonitorSelectInteract : IInteract, IInteractorConditional
+    private sealed class PatientMonitorSelectInteract : IInteract, IInteractorConditional, IQuestPresentationTarget
     {
       private readonly PatientController _owner;
       public PatientMonitorSelectInteract(PatientController owner) { _owner = owner; }
+      public string PresentationEntityIdentifier => _owner.Identifier;
+      public string InteractionIdentifier => InteractIdMonitorSelect;
       public string DisplayText => _owner._monitorSelectDisplayText;
       // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
       public Sprite DisplayIcon => null;
@@ -146,6 +148,18 @@ namespace TriageTrainer.Entity
         if (player?.PlayerEntity != null && _owner.CanApplyHeldTreatmentItem(itemIdentifier))
           _owner.OnItemUsed(player.PlayerEntity, itemIdentifier);
       }
+    }
+
+    private sealed class PatientNormalSalineConnectInteract : IInteract, IInteractorConditional
+    {
+      private readonly PatientController _owner;
+      public PatientNormalSalineConnectInteract(PatientController owner) { _owner = owner; }
+      public string DisplayText => "생리식염수 연결";
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => false;
+      public Color DisplayColor => Color.clear;
+      public bool CanInteract(Transform interactor) => _owner.CanConnectPatientBCNormalSaline();
+      public void Interact(Transform interactor) => _owner.TryConnectPatientBCNormalSaline(interactor);
     }
 
     public interface IMonitorSelectionRequester
@@ -197,6 +211,7 @@ namespace TriageTrainer.Entity
       AddAssessInteracts();
       AddRecognitionCheckInteract();
       AddIntravenousLineCannulaInteract();
+      _interacts.Add(new PatientNormalSalineConnectInteract(this));
     }
 
     private void RebuildInteractConfigMap()

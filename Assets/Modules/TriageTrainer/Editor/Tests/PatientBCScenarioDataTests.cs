@@ -259,7 +259,7 @@ namespace TriageTrainer.Tests
       var graph = ScenarioGraphLoader.LoadFromJson(scenarioJson, validateWithSchema: true);
 
        Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
-       Assert.That(graph.Nodes, Has.Count.EqualTo(311));
+       Assert.That(graph.Nodes, Has.Count.EqualTo(315));
        Assert.That(graph.ClientSignalPrefixes, Is.EqualTo(new[] { "sig.quest_arrival_triage_area_" }));
       Assert.That(graph.ActingNpcs, Has.Count.EqualTo(1));
       Assert.That(graph.ActingNpcs.Single().Identifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
@@ -400,6 +400,43 @@ namespace TriageTrainer.Tests
         ("bed_c", MovingPatientBedController.InteractionIdentifierMoveBed)
       }));
 
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Recognition", out var recognitionB), Is.True);
+      Assert.That(recognitionB.PresentationBindings.Select(binding =>
+        (binding.EntityIdentifier, binding.InteractionIdentifier, binding.IconIdentifier)), Is.EqualTo(new[]
+      {
+        ("patient_b", "recognition_check", "quest-interaction")
+      }));
+
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_C_Recognition", out var recognitionC), Is.True);
+      Assert.That(recognitionC.PresentationBindings.Select(binding =>
+        (binding.EntityIdentifier, binding.InteractionIdentifier, binding.IconIdentifier)), Is.EqualTo(new[]
+      {
+        ("patient_c", "recognition_check", "quest-interaction")
+      }));
+
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Strength", out var strengthQuest), Is.True);
+      Assert.That(strengthQuest.PresentationBindings.Single().InteractionIdentifier, Is.EqualTo("recognition_check"));
+      Assert.That(strengthQuest.Tasks.Single().SignalId, Is.EqualTo("patient_b_strength_checked"));
+
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Vital", out var vitalQuest), Is.True);
+      Assert.That(vitalQuest.IsOrdinal, Is.True);
+      Assert.That(vitalQuest.PresentationBindings.Select(binding => binding.InteractionIdentifier), Is.EqualTo(new[]
+      {
+        "select_patient_mode", "monitor_select", "detail_overlay"
+      }));
+      Assert.That(vitalQuest.Tasks.Select(task => task.SignalId), Is.EqualTo(new[]
+      {
+        "select_patient_b", "close_vital_ui_b"
+      }));
+
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Pupil_IV", out var pupilQuest), Is.True);
+      Assert.That(pupilQuest.PresentationBindings.Single().InteractionIdentifier, Is.EqualTo("recognition_check"));
+      Assert.That(pupilQuest.Tasks.Single().SignalId, Is.EqualTo("patient_b_pupil_checked"));
+
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Normal_Saline", out var ivQuest), Is.True);
+      Assert.That(ivQuest.PresentationBindings.Single().InteractionIdentifier, Is.EqualTo("intravenous_line_cannula"));
+      Assert.That(ivQuest.Tasks.Single().SignalId, Is.EqualTo("insert_iv_patient_b_right"));
+
       foreach (string nodeIdentifier in new[]
                {
                  "BIND_TRIAGE_B_CORRECT",
@@ -503,7 +540,7 @@ namespace TriageTrainer.Tests
       var questDefinitions = questDocument.RootElement.GetProperty("definitions")
         .EnumerateArray()
         .ToDictionary(definition => definition.GetProperty("identifier").GetString());
-      Assert.That(questDefinitions, Has.Count.EqualTo(19));
+      Assert.That(questDefinitions, Has.Count.EqualTo(21));
       foreach (string waitDefinition in new[] { "Quest_B_Wait", "Quest_C_Wait" })
       {
         Assert.That(questDefinitions.ContainsKey(waitDefinition), Is.True, waitDefinition);
@@ -517,6 +554,23 @@ namespace TriageTrainer.Tests
       Assert.That(patientCIvWait, Is.Not.Null);
       Assert.That(patientCIvWait.RootConditions.Single().ValidationRules.Single().RegistryIdentifier,
         Is.EqualTo("sig.insert_iv_patient_c_left"));
+
+      foreach (var expectation in new[]
+               {
+                 (Wait: "C_IV_WAIT", Update: "C_NS_QUEST_UPDATE", Notice: "C_NS_CONNECT_NOTICE", Definition: "Quest_B_Normal_Saline", Content: "남성 환자에게 생리식염수 연결하기"),
+                 (Wait: "C_C_IV_WAIT", Update: "C_C_NS_QUEST_UPDATE", Notice: "C_C_NS_CONNECT_NOTICE", Definition: "Quest_C_Normal_Saline", Content: "여성 환자에게 생리식염수 연결하기")
+               })
+      {
+        Assert.That(graph.Nodes[expectation.Wait].NextIdentifier, Is.EqualTo(expectation.Update));
+        var update = graph.Nodes[expectation.Update] as ScenarioQuestControlNode;
+        Assert.That(update?.Operation, Is.EqualTo(ScenarioQuestOperationType.Update));
+        Assert.That(update?.Quest?.DefinitionIdentifier, Is.EqualTo(expectation.Definition));
+        var notice = graph.Nodes[expectation.Notice] as ScenarioDialogueNode;
+        Assert.That(notice?.SpeakerName, Is.EqualTo("@s"));
+        Assert.That(notice?.DialogueContent, Is.EqualTo("(환자에게 생리식염수를 연결해두자.)"));
+        Assert.That(questDefinitions[expectation.Definition].GetProperty("questContent").GetString(),
+          Is.EqualTo(expectation.Content));
+      }
 
       foreach (var expectation in new[]
                {
