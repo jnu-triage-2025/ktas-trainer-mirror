@@ -37,8 +37,6 @@ namespace MultiplayerInfrastructure.FishNetSupports
 
       if (!Providers.Remove(provider))
         return;
-
-      Changed?.Invoke();
     }
 
     public static bool TryGet(string identifier, out Transform spawnTransform)
