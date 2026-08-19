@@ -164,7 +164,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584145144709380488
+  _initializedTimestamp: -8584144857028529838
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -185,7 +185,7 @@ MonoBehaviour:
   _teleportThreshold: 1
   <PrefabId>k__BackingField: 16
   <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 10444322195855801928
+  <AssetPathHash>k__BackingField: 3538530855236748889
   SceneId: 0
   SerializedTransformProperties:
     Position: {x: -8.72298, y: 0, z: -4.36403}
@@ -244,6 +244,8 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _displayColor: {r: 1, g: 1, b: 1, a: 1}
+  _presentationEntityIdentifier: 
+  _interactionIdentifier: 
   _entityIdentifier: scene-item:overworld:defibrillatorpad:50a606e3ae33
   _pickupRewards:
   - _itemIdentifier: defibrillatorpad
@@ -271,6 +273,8 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: interact_defibrillator
+  _presentationEntityIdentifier: 
+  _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1

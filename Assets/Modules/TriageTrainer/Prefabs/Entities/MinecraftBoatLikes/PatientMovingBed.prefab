@@ -1,5 +1,88 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &275628268470581987
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3388511909320211884}
+  - component: {fileID: 7530503897603605686}
+  - component: {fileID: 3842447579649307989}
+  m_Layer: 0
+  m_Name: bed:iv_point_ps
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3388511909320211884
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 275628268470581987}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.0377, y: 0, z: 0.4968}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2539040610948633051}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &7530503897603605686
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 275628268470581987}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.5
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &3842447579649307989
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 275628268470581987}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
+  _componentIndexCache: 2
+  _addedNetworkObject: {fileID: 5796848331211291605}
+  _networkObjectCache: {fileID: 5796848331211291605}
+  _lineMaterial: {fileID: 0}
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
+  connectionService: {fileID: 0}
+  _identifier: bed_iv_point_ps
+  _autoGenerateIdentifier: 1
+  _displayIcon: {fileID: 0}
+  _interactConfigs:
+  - _identifier: intravenous_line_connect_mode_start
+    _enabled: 1
+  - _identifier: intravenous_line_connect_here
+    _enabled: 1
+  - _identifier: intravenous_line_disconnect
+    _enabled: 1
 --- !u!1 &1880450324985045122
 GameObject:
   m_ObjectHideFlags: 0
@@ -120,6 +203,89 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c462e7d8162364f8489893316884570b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Entity.RidableAttachPointObject
+--- !u!1 &2801514707132521176
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7431564702786382103}
+  - component: {fileID: 4514771961876625116}
+  - component: {fileID: 4595216109222723486}
+  m_Layer: 0
+  m_Name: bed:iv_point_ns
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7431564702786382103
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2801514707132521176}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.0433, y: 0.06, z: 0.478}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5297492751155490795}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &4514771961876625116
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2801514707132521176}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.5
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &4595216109222723486
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2801514707132521176}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
+  _componentIndexCache: 1
+  _addedNetworkObject: {fileID: 5796848331211291605}
+  _networkObjectCache: {fileID: 5796848331211291605}
+  _lineMaterial: {fileID: 0}
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
+  connectionService: {fileID: 0}
+  _identifier: bed_iv_point_ns
+  _autoGenerateIdentifier: 1
+  _displayIcon: {fileID: 0}
+  _interactConfigs:
+  - _identifier: intravenous_line_connect_mode_start
+    _enabled: 1
+  - _identifier: intravenous_line_connect_here
+    _enabled: 1
+  - _identifier: intravenous_line_disconnect
+    _enabled: 1
 --- !u!1 &3939562134775454969
 GameObject:
   m_ObjectHideFlags: 0
@@ -356,6 +522,8 @@ MonoBehaviour:
   _intravenousStandReference: {fileID: 6032575468207879380}
   _intravenousHangerHangedNormalSalineReference: {fileID: 4814252600140772689}
   _intravenousHangerHangedPlasmaSolutionReference: {fileID: 2915987674690095969}
+  _normalSalineConnectionPoint: {fileID: 4595216109222723486}
+  _plasmaSolutionConnectionPoint: {fileID: 3842447579649307989}
   _normalSalineItemIdentifiers:
   - normal_saline_1000ml
   - normal_saline_20ml
@@ -426,8 +594,8 @@ MonoBehaviour:
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
   - {fileID: 8619811087951219274}
-  - {fileID: 2760192767522612315}
-  - {fileID: 2610733516066013773}
+  - {fileID: 4595216109222723486}
+  - {fileID: 3842447579649307989}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -438,7 +606,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584145144709380488
+  _initializedTimestamp: -8584144857028529838
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -459,7 +627,7 @@ MonoBehaviour:
   _teleportThreshold: 1
   <PrefabId>k__BackingField: 4
   <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 2010774629898478706
+  <AssetPathHash>k__BackingField: 6638135696877323431
   SceneId: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
@@ -588,14 +756,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a8c35f08ac0c44f8c9dafbdf9fc5adc5, type: 3}
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: a8c35f08ac0c44f8c9dafbdf9fc5adc5, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4134059114884584408}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a8c35f08ac0c44f8c9dafbdf9fc5adc5, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2610733516066013773}
+      addedObject: {fileID: 3388511909320211884}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a8c35f08ac0c44f8c9dafbdf9fc5adc5, type: 3}
 --- !u!4 &2539040610948633051 stripped
 Transform:
@@ -607,56 +772,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: a8c35f08ac0c44f8c9dafbdf9fc5adc5, type: 3}
   m_PrefabInstance: {fileID: 2645515715320165936}
   m_PrefabAsset: {fileID: 0}
---- !u!135 &4134059114884584408
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2915987674690095969}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.50031334
-  m_Center: {x: -0.00028056654, y: -0.00014003366, z: -0.00017675754}
---- !u!114 &2610733516066013773
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2915987674690095969}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
-  _componentIndexCache: 2
-  _addedNetworkObject: {fileID: 0}
-  _networkObjectCache: {fileID: 5796848331211291605}
-  _lineMaterial: {fileID: 0}
-  _connectedLineObjects: []
-  _allowMultipleConnections: 0
-  connectionService: {fileID: 0}
-  _identifier: ps1
-  _autoGenerateIdentifier: 1
-  _displayIcon: {fileID: 0}
-  _interactConfigs:
-  - _identifier: intravenous_line_connect_mode_start
-    _enabled: 1
-  - _identifier: intravenous_line_connect_here
-    _enabled: 1
-  - _identifier: intravenous_line_disconnect
-    _enabled: 1
 --- !u!1001 &5624645098008020992
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -723,70 +838,17 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 24c0ebb0fa3a841c2acca70cc66081c7, type: 3}
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 24c0ebb0fa3a841c2acca70cc66081c7, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4574798384584217578}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 24c0ebb0fa3a841c2acca70cc66081c7, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2760192767522612315}
+      addedObject: {fileID: 7431564702786382103}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 24c0ebb0fa3a841c2acca70cc66081c7, type: 3}
 --- !u!1 &4814252600140772689 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 24c0ebb0fa3a841c2acca70cc66081c7, type: 3}
   m_PrefabInstance: {fileID: 5624645098008020992}
   m_PrefabAsset: {fileID: 0}
---- !u!135 &4574798384584217578
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4814252600140772689}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.5006332
-  m_Center: {x: -0.0001991913, y: 0.000067915804, z: -0.00044241542}
---- !u!114 &2760192767522612315
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4814252600140772689}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
-  _componentIndexCache: 1
-  _addedNetworkObject: {fileID: 0}
-  _networkObjectCache: {fileID: 5796848331211291605}
-  _lineMaterial: {fileID: 0}
-  _connectedLineObjects: []
-  _allowMultipleConnections: 0
-  connectionService: {fileID: 0}
-  _identifier: connect_cannula_and_ns1
-  _autoGenerateIdentifier: 0
-  _displayIcon: {fileID: 0}
-  _interactConfigs:
-  - _identifier: intravenous_line_connect_mode_start
-    _enabled: 1
-  - _identifier: intravenous_line_connect_here
-    _enabled: 1
-  - _identifier: intravenous_line_disconnect
-    _enabled: 1
 --- !u!4 &5297492751155490795 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 24c0ebb0fa3a841c2acca70cc66081c7, type: 3}
