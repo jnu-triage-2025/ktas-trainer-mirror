@@ -63,6 +63,7 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<LaryngoscopeBlade>(LaryngoscopeBlade.Identifier);
       Registry.RegisterItemDefinition<LaryngoscopeHandle>(LaryngoscopeHandle.Identifier);
       Registry.RegisterItemDefinition<Laryngoscope>(Laryngoscope.Identifier);
+      Registry.RegisterItemDefinition<NasalCannula>(NasalCannula.Identifier);
       Registry.RegisterItemDefinition<NorepinephrineAmpule>(NorepinephrineAmpule.Identifier);
       Registry.RegisterItemDefinition<NormalSaline1000ml>(NormalSaline1000ml.Identifier);
       Registry.RegisterItemDefinition<NormalSaline20ml>(NormalSaline20ml.Identifier);
