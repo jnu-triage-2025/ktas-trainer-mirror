@@ -155,11 +155,13 @@ namespace TriageTrainer.Entity
       }
     }
 
-    private sealed class PatientBCNurseDNasalCannulaInteract : IInteract, IInteractorConditional
+    private sealed class PatientBCNurseDNasalCannulaInteract : IInteract, IInteractorConditional, IQuestPresentationTarget
     {
       private readonly PatientController _owner;
 
       public PatientBCNurseDNasalCannulaInteract(PatientController owner) => _owner = owner;
+      public string PresentationEntityIdentifier => _owner.Identifier;
+      public string InteractionIdentifier => "patient_bc_nasal_cannula";
       public string DisplayText => "비강 캐뉼라 적용";
       public Sprite DisplayIcon => null;
       public bool AllowDisplayIconFallback => false;

@@ -123,7 +123,6 @@ namespace TriageTrainer.Tests
         patientObject.SetActive(false);
         var patient = patientObject.AddComponent<PatientController>();
         patient.ApplySpawnedEntityIdentifier(completionSignal.EndsWith("_b") ? "patient_b" : "patient_c");
-        monitor.SetPresentationPatient(patient);
         SetPrivateField(zone, "_activePatient", patient);
         var configure = typeof(TriageScenarioEventBootstrap).GetMethod(
           "ConfigureVitalMonitorClose",
@@ -433,9 +432,20 @@ namespace TriageTrainer.Tests
       Assert.That(pupilQuest.PresentationBindings.Select(binding =>
         (binding.CompletionCriteriaIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
       {
-        ("patient-b-pupil-checked", "intravenous_line_cannula")
+        ("patient-b-pupil-checked", "recognition_check")
       }));
       Assert.That(pupilQuest.Tasks.Single().SignalId, Is.EqualTo("patient_b_pupil_checked"));
+
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Oxygen_Bleeding", out var oxygenQuest), Is.True);
+      Assert.That(oxygenQuest.PresentationBindings.Select(binding =>
+        (binding.EntityIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
+      {
+        ("patient_b", "patient_bc_nasal_cannula"),
+        ("zone_0:oxyflowmeter", "oxyflowmeter"),
+        ("zone_1:oxyflowmeter", "oxyflowmeter"),
+        ("zone_2:oxyflowmeter", "oxyflowmeter"),
+        ("zone_3:oxyflowmeter", "oxyflowmeter")
+      }));
 
       Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Normal_Saline", out var ivQuest), Is.True);
       Assert.That(ivQuest.PresentationBindings, Is.Empty);

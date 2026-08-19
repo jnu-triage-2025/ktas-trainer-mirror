@@ -153,6 +153,8 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: start_ambu_r2
+  _presentationEntityIdentifier: 
+  _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
@@ -228,6 +230,8 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: interact_chest
+  _presentationEntityIdentifier: 
+  _interactionIdentifier: 
   _requiredRaisedSignals:
   - click_to_start_comp
   _enabled: 1
@@ -304,6 +308,8 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: interact_patient_chest
+  _presentationEntityIdentifier: 
+  _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
@@ -464,6 +470,8 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: start_ambu_r1
+  _presentationEntityIdentifier: 
+  _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
@@ -539,6 +547,8 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: remove_tpiece
+  _presentationEntityIdentifier: 
+  _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
@@ -615,6 +625,8 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: remove_patient_clothing
+  _presentationEntityIdentifier: 
+  _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
@@ -690,6 +702,8 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: click_to_start_comp
+  _presentationEntityIdentifier: 
+  _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
@@ -906,7 +920,7 @@ MonoBehaviour:
   - defibrillatorpad_subclavicle_A
   - epinephrine_5cc_syringe
   - normal_saline_5cc_syringe
-  _weight: 4
+  _weight: 0
   _supportExternalRefs:
     _patientBed: {fileID: 0}
     _intravenousFluids: []
@@ -1028,7 +1042,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584145144709380488
+  _initializedTimestamp: -8584144944158186608
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -1170,6 +1184,8 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: interact_tpiece
+  _presentationEntityIdentifier: 
+  _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
@@ -1360,6 +1376,8 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: remove_intu_stylet
+  _presentationEntityIdentifier: 
+  _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1

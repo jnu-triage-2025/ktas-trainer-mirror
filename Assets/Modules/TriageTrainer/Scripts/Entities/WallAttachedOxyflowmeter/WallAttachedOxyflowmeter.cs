@@ -37,6 +37,8 @@ namespace TriageTrainer.Entity
   [DisallowMultipleComponent]
   public class WallAttachedOxyflowmeter : StaticObjectDisplayment, INearestOnlyInteract
   {
+    public const string QuestPresentationInteractionIdentifier = "oxyflowmeter";
+
     public static event Action<WallAttachedOxyflowmeter, bool> AttachmentStateChanged;
     /// <summary>플레이어 상호작용으로 새 설치가 확정된 경우에만 발생한다.</summary>
     public static event Action<WallAttachedOxyflowmeter> InstallationConfirmed;
@@ -74,6 +76,8 @@ namespace TriageTrainer.Entity
     /// 서버 권위 프로토콜에 의해 모든 클라이언트에서 동일하게 반영됩니다.
     /// </summary>
     public bool IsAttached { get; private set; }
+    public override string PresentationEntityIdentifier => EntityIdentifier;
+    public override string InteractionIdentifier => QuestPresentationInteractionIdentifier;
     /// <summary>산소 라인 자동 연결에 사용할 유량계 측 포트. 프리팹에 설정되지 않으면 null이다.</summary>
     public OxyLineConnectionPoint OxyLineConnectionPoint => _oxyLineConnectionPoint;
     private Sprite _heldItemIcon;

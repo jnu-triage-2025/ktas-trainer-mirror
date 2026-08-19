@@ -946,6 +946,10 @@ namespace TriageTrainer.Entity
       else if (itemIdentifier == "plaster")
         TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingPlaster,
           PatientBCTreatmentStage.Complete);
+
+      // SyncVar.OnChange 만으로는 부족한 사례가 있어(트리아지 갱신과 동일한 이유),
+      // 권위 측에서 단계를 바꾼 직후 이 자리에서도 명시적으로 힌트를 갱신한다.
+      RefreshPatientBCInteractableHints();
     }
 
     private bool ShouldCreditPatientBCEquipmentConnection(string equipmentType)
@@ -965,8 +969,11 @@ namespace TriageTrainer.Entity
         return false;
 
       _patientBCFreshOxygenInstalled = true;
-      return TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingOxygen,
+      bool advanced = TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingOxygen,
         PatientBCTreatmentStage.AwaitingGauze);
+      if (advanced)
+        RefreshPatientBCInteractableHints();
+      return advanced;
     }
 
     private void NotifyPatientBCEquipmentDisconnected(string equipmentType, MonoBehaviour equipment)
