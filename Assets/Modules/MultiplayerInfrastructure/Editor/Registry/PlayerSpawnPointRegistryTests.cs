@@ -1,7 +1,7 @@
 using MultiplayerInfrastructure.FishNetSupports;
 using NUnit.Framework;
 
-namespace MultiplayerInfrastructure.Tests.Registry
+namespace MultiplayerInfrastructure.Tests.FishNetSupports
 {
   public sealed class PlayerSpawnPointRegistryTests
   {
