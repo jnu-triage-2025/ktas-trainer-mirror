@@ -2426,7 +2426,7 @@
     "C_IV_WAIT": {
       "identifier": "C_IV_WAIT",
       "nodeType": "Validator",
-      "nextIdentifier": "C_NS_WAIT",
+      "nextIdentifier": "C_NS_QUEST_UPDATE",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -2443,6 +2443,29 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true
+    },
+    "C_NS_QUEST_UPDATE": {
+      "identifier": "C_NS_QUEST_UPDATE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "C_NS_CONNECT_NOTICE",
+      "operation": "Update",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_B_Normal_Saline",
+      "quest": {
+        "Id": "Quest_B_Pupil_IV",
+        "DefinitionIdentifier": "Quest_B_Normal_Saline"
+      }
+    },
+    "C_NS_CONNECT_NOTICE": {
+      "identifier": "C_NS_CONNECT_NOTICE",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "C_NS_WAIT",
+      "speakerName": "@s",
+      "dialogueContent": "(환자에게 생리식염수를 연결해두자.)",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": 2,
+      "playTTS": false
     },
     "C_NS_WAIT": {
       "identifier": "C_NS_WAIT",
@@ -3864,7 +3887,7 @@
     "C_C_IV_WAIT": {
       "identifier": "C_C_IV_WAIT",
       "nodeType": "Validator",
-      "nextIdentifier": "C_C_NS_WAIT",
+      "nextIdentifier": "C_C_NS_QUEST_UPDATE",
       "rootConditions": [
         {
           "condition": "RegistryContains",
@@ -3881,6 +3904,29 @@
       "onFailure": "Ignore",
       "failureNextIdentifier": null,
       "waitForCondition": true
+    },
+    "C_C_NS_QUEST_UPDATE": {
+      "identifier": "C_C_NS_QUEST_UPDATE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "C_C_NS_CONNECT_NOTICE",
+      "operation": "Update",
+      "failureStrategy": "Ignore",
+      "persistProgressOnSessionEnd": false,
+      "questDefinitionIdentifier": "Quest_C_Normal_Saline",
+      "quest": {
+        "Id": "Quest_C_Pupil_IV",
+        "DefinitionIdentifier": "Quest_C_Normal_Saline"
+      }
+    },
+    "C_C_NS_CONNECT_NOTICE": {
+      "identifier": "C_C_NS_CONNECT_NOTICE",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "C_C_NS_WAIT",
+      "speakerName": "@s",
+      "dialogueContent": "(환자에게 생리식염수를 연결해두자.)",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": 2,
+      "playTTS": false
     },
     "C_C_NS_WAIT": {
       "identifier": "C_C_NS_WAIT",

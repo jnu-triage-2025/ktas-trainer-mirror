@@ -786,18 +786,21 @@ namespace TriageTrainer.Entity.LineConnection
                 ?? endPoint.GetComponentInParent<TriageTrainer.Entity.PatientController>();
       if (patient == null)
       {
-        var bed = startPoint.GetComponentInParent<TriageTrainer.Entity.MovingPatientBedController>()
-                  ?? endPoint.GetComponentInParent<TriageTrainer.Entity.MovingPatientBedController>();
-        patient = bed?.ReposedTarget as TriageTrainer.Entity.PatientController;
+        var fallbackBed = startPoint.GetComponentInParent<TriageTrainer.Entity.MovingPatientBedController>()
+                          ?? endPoint.GetComponentInParent<TriageTrainer.Entity.MovingPatientBedController>();
+        patient = fallbackBed?.ReposedTarget as TriageTrainer.Entity.PatientController;
       }
+      var bed = startPoint.GetComponentInParent<TriageTrainer.Entity.MovingPatientBedController>()
+                 ?? endPoint.GetComponentInParent<TriageTrainer.Entity.MovingPatientBedController>();
       salinePoint = startPoint as IntravenousLineConnectionPoint;
-      if (salinePoint == null || !string.Equals(salinePoint.Identifier, "connect_cannula_and_ns1", StringComparison.Ordinal))
+      if (bed == null || !bed.IsNormalSalineConnectionPoint(salinePoint))
         salinePoint = endPoint as IntravenousLineConnectionPoint;
       return patient != null
              && (string.Equals(patient.Identifier, "patient_b", StringComparison.Ordinal)
                  || string.Equals(patient.Identifier, "patient_c", StringComparison.Ordinal))
              && salinePoint != null
-             && string.Equals(salinePoint.Identifier, "connect_cannula_and_ns1", StringComparison.Ordinal);
+             && bed != null
+             && bed.IsNormalSalineConnectionPoint(salinePoint);
     }
 
     public static bool IsExactPatientNormalSalineEndpointPair(
@@ -807,8 +810,8 @@ namespace TriageTrainer.Entity.LineConnection
       LineConnectionPoint endPoint) =>
       patient != null && salinePoint != null
       && !ReferenceEquals(startPoint, endPoint)
-      && ((ReferenceEquals(startPoint, salinePoint) && ReferenceEquals(endPoint, patient.IvAttachmentPoint))
-          || (ReferenceEquals(endPoint, salinePoint) && ReferenceEquals(startPoint, patient.IvAttachmentPoint)));
+      && ((ReferenceEquals(startPoint, salinePoint) && ReferenceEquals(endPoint, patient.PatientBCIvAttachmentPoint))
+          || (ReferenceEquals(endPoint, salinePoint) && ReferenceEquals(startPoint, patient.PatientBCIvAttachmentPoint)));
 
     private void ApplyLineMaterial(LineConnectionPoint point, LineRenderer lineRenderer)
     {

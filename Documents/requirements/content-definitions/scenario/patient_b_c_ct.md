@@ -475,11 +475,27 @@ flags: ["refactor-required"]
                 2. Dialogue
                   - Speaker: (플레이어 이름)
                   - Content: "(20게이지 캐뉼라를 찾자.)"
-              - 있다면 다음 처리
-                - 환자 Display State Descriptor에서 정맥로 확보 상태를 표시하는 오브젝트, 상태 플래그를 활성화
-                - 환자가 붙어있는 환자 침대의 Attachment에서 normal saline 부분 오브젝트의 iv line 연결 포인트 로드, iv line 연결 포인트와 정맥로 확보 상태를 표시하는 오브젝트를 iv line connection 처리
-                - 기술 노트: 이와 관련한 로직을 미리 구현하고 그래프 노드로 연결시키기
-                - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+              - 있다면 시스템이 1단계(20G 캐뉼라 삽입)를 처리한 뒤 2단계로 진행
+        7. 1단계 — 환자에게 20G 캐뉼라 삽입(시스템 처리)
+          - 플레이어 인벤토리의 `cannula_20g`를 1개 소모
+          - 환자 Display State Descriptor에서 우측 팔 정맥로 확보 상태를 표시하는 오브젝트와 상태 플래그를 활성화
+          - 환자 상태값에 20G 캐뉼라가 삽입되었다는(정맥로가 확보되었다는) 상태 플래그 활성화
+          - 이 시점에는 IV Line을 연결하지 않고, 2단계의 별도 Interaction에서 연결하는 구조로 변경
+          - 퀘스트 목표 표기를 "남성 환자에게 생리식염수 연결하기"로 변경
+          - Dialogue 재생
+            - Speaker: (플레이어 이름)
+            - Content: "(환자에게 생리식염수를 연결해두자.)"
+        8. 2단계 — 삽입한 20G 캐뉼라와 생리식염수(N/S) 연결
+          - "생리식염수 연결" Interaction을 추가(가시화). 다음 두 조건이 모두 충족되었을 때만 노출
+            - 1단계(20G 캐뉼라 삽입)가 완료되어 있을 것
+            - 환자가 누워있는 침대의 Attachment가 활성화되어 있고, 그 Attachment에 생리식염수가 적용되어 있을 것
+              - 생리식염수 적용 상태는 Display 플래그와 상태 플래그가 모두 활성화되어 있어야 하나, 활성화 여부 판정은 상태 플래그를 기준으로 함
+              - 기술 노트: 침대에 생리식염수를 거는 동작은 침대 Attachment의 기존 "N/S 수액 걸기" Interaction을 그대로 사용
+          - Interaction 수행 시 다음 처리
+            - 환자가 누워있는 침대 Attachment의 생리식염수 오브젝트 자식에 있는 Intravenous Line Connection Point 오브젝트와, 환자의 우측 팔 정맥로의 Intravenous Line Connection Point 오브젝트를 IV Line 연결 처리
+              - 환자 측 연결 포인트의 식별자는 `patient_b:iv_point_vein`으로 지정. 포인트가 여러 개 존재할 때를 대비해 Point 클래스로 자식 오브젝트들을 쿼리한 뒤 identifier가 일치하는 포인트를 찾아 사용
+          - 기술 노트: 이와 관련한 로직을 미리 구현하고 그래프 노드로 연결시키기
+          - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
 - `nurse_d`에게 퀘스트 발행
   - 제목: "남성 환자 상태 확인"
   - 목표: ""
@@ -1112,6 +1128,51 @@ flags: ["refactor-required"]
 2. Title
   - Content: 시나리오 종료
   - Subtitle: 시나리오를 완료하였습니다.
+
+## 정맥로 확보 관련하여 처리 과정
+
+_2026-08-19 Updated_
+
+배경: 정맥로 확보 관련하여 버그 발생하여, 정확한 동작을 정의하고자 함
+
+내용:
+- 정맥로 확보는 두 단계로 진행 가능함
+    1. 환자에게 20G 캐뉼라 삽입 행위
+        - 플레이어가 20G 캐뉼라를 인벤토리에 가지고 있으면 시스템에서 처리 시작
+        - 플레이어 인벤토리의 20G 캐뉼라를 1개 소모
+        - 환자 Display State Descriptor에서 좌측 팔 정맥로 확보 상태를 표시하는 오브젝트, 상태 플래그를 활성화
+        - 환자 상태값에 20G 캐뉼라가 삽입되었다는(혹은 정맥로가 확보되었다는) 상태 플래그 활성화
+    2. 환자에게 삽입한 20G 캐뉼라를 PS와 IV Line으로 연결하는 행위
+        - 환자가 누워있는 침대의 Attachment가 활성화되어있어야 함.
+        - 환자가 누워있는 침대의 Attachment에 PS가 적용되어있어야 함(Display 플래그와 상태 플래그 모두 활성화되어있어야 하나, 활성화 여부 판단은 상태플래그를 기준으로 함)
+        - "1. 환자에게 20G 캐뉼라 삽입 행위"가 완료되어있고, 환자가 누워있는 침대의 Attachment에 PS가 활성화되어있으면, "플라즈마 솔루션 연결" 인터렉션을 추가(혹은 가시화)
+        - 이 인터렉션을 수행하면, 환자가 누워있는 침대 Attachment의 PS의 자식에 있는 Intravenous Line Connection Point 오브젝트와 환자의 좌측 팔 정맥로의 Intravenous Line Connection Point 오브젝트(이 포인트의 식별자를 "patient_b:iv_point_vein"으로 지정, 포인트가 여러개 존재할 때를 대비하여 Point 클래스로 자식 오브젝트들을 쿼리한 후 identifier가 일치하는 것을 찾도록 하기)를 IV Line Connection 처리
+- "1. 환자에게 20G 캐뉼라 삽입 행위"가 완료된 후, 환자에게 삽입한 20G 캐뉼라를 PS와 연결하는 행위를 플레이어에게 지시하기 위해, 
+     - (위 시나리오 사이에 추가) 20G 캐뉼라 삽입 행위 이후에 "Plasma Solution을 연결하기" 퀘스트 서브목표를 추가 (AI 지시: 우선 위 내용에서 적절히 텍스트를 추가하여라)
+     - (위 시나리오 사이에 추가) 위의 퀘스트 서브목표 추가 동작과 함께, Dialogue로 본인의 이름이 발화자로 된 Dialogue, Content Text가 "(환자에게 Plasma Solution을 연결해두자.)"인 다이얼로그도 발생
+
+### 이후 작업 반영 목록 (2026-08-19, 구현 세션에서 읽는 항목)
+
+위 기획은 `### 환자 B 처치` 본문에 **우측 팔 + 생리식염수(N/S)** 로 확정 반영했다(2026-08-19 사용자 확정. 이 문서의 "좌측 팔"·"PS(플라즈마 솔루션)" 표기는 각각 환자 C 서술 참고/다른 시나리오 물품 참고로 판단하여 N/S로 치환). 아래 항목을 scenario.json과 C#에 반영한다. 환자 C(좌측 팔)도 동일한 2단계 구조로 미러링한다.
+
+- `Assets/Modules/TriageTrainer/Resources/Scenario/patient_b_c_ct.scenario.json`
+  - `C_IV_WAIT`(sig.insert_iv_patient_b_right 대기) 통과 직후에 아래 2개 노드를 끼워 넣고 `C_NS_WAIT`(sig.connect_cannula_and_ns1_patient_b 대기)로 재배선
+    1. QuestControl Update — 목표 표기 "남성 환자에게 생리식염수 연결하기" 변경(신규 quest 정의 추가 필요, `Assets/Modules/TriageTrainer/Resources/Quest/patient_b_c_ct.quests.quest.json`의 `Quest_B_Pupil_IV`와 같은 형식)
+    2. Dialogue — Speaker `@s`, "(환자에게 생리식염수를 연결해두자.)"
+  - 환자 C 브랜치 동일 처리: `C_C_IV_WAIT` 통과 직후 목표 표기 "여성 환자에게 생리식염수 연결하기" + 동일 Dialogue 후 `C_C_NS_WAIT`로 재배선
+- C# (TriageTrainer)
+  - 신규 "생리식염수 연결" Interaction(PatientController): 노출 조건 = ① 1단계 삽입 완료(`PatientBCTreatmentStage.AwaitingNormalSaline` 구간) ② 환자 침대 `MovingPatientBedController`의 `IsIntravenousStandInstalled && IsNormalSalineInstalled`(상태 플래그 기준 판정)
+  - 수행 시 침대 N/S 오브젝트(`_intravenousHangerHangedNormalSalineReference`) 자식의 `IntravenousLineConnectionPoint`와 환자 우측 팔 포인트(식별자 `patient_b:iv_point_vein`)를 `LineConnectionService`로 IV Line 연결
+  - 기존 하드코딩 식별자 "connect_cannula_and_ns1" 기반 물리 연결 판정(`PatientController.TreatmentDisplay.cs`의 `HasPhysicalPatientBCNormalSalineConnection`, `LineConnectionService.cs`, `IntravenousLineConnectionPoint.cs` 3곳)을 `patient_b:iv_point_vein` 자식 Point 쿼리(identifier 일치 검색) 방식으로 교체·일반화. 연결 완료 신호 `connect_cannula_and_ns1_{identifier}`는 유지
+  - 1단계 삽입 처리(`cannula_20g` 1개 소모, `Syringe20GInsertedIntoRightArm` 표시 플래그, `insert_iv_patient_b_right` 신호)는 `PatientController.IntravenousLineCannula.cs`에 이미 구현되어 있음 — 동작 확인만 수행
+- 프리팹/씬(에디터 작업)
+  - `PatientTypeBMale` 우측 팔 정맥로 표시 오브젝트 하위에 `IntravenousLineConnectionPoint`(Identifier=`patient_b:iv_point_vein`) 추가
+  - `PatientTypeBFemale`(환자 C, 좌측 팔) 하위에 상응 포인트 추가(식별자 예: `patient_c:iv_point_vein`)
+  - `MovingPatientBed` N/S 걸이 오브젝트 하위의 연결 포인트 존재 확인/추가
+- 문서
+  - `### 환자 C 처치` 정맥로 확보 블록에도 동일 2단계 구조 반영
+  - `### 데이터 연결 명세` 환자 B/C 정맥로 행에 연결 포인트 식별자·신호 정리
+
 
 ## 2026-08-07 단일 플레이어 다중 역할 처리 규칙
 

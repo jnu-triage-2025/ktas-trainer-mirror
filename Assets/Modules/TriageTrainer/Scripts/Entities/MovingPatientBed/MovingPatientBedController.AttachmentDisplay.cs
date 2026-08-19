@@ -6,6 +6,7 @@ using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.UI;
+using TriageTrainer.Entity.IntravenousLine;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -60,6 +61,10 @@ namespace TriageTrainer.Entity
     [SerializeField] private GameObject _intravenousHangerHangedNormalSalineReference;
     [SerializeField] private GameObject _intravenousHangerHangedPlasmaSolutionReference;
 
+    [Header("Intravenous line points")]
+    [SerializeField] private IntravenousLineConnectionPoint _normalSalineConnectionPoint;
+    [SerializeField] private IntravenousLineConnectionPoint _plasmaSolutionConnectionPoint;
+
     [Header("Intravenous fluid item identifiers")]
     [Tooltip("Normal Saline으로 인식해 수액걸이에 설치할 수 있는 모든 아이템 식별자입니다.")]
     [SerializeField] private List<string> _normalSalineItemIdentifiers = new()
@@ -94,6 +99,34 @@ namespace TriageTrainer.Entity
       ? _normalSalineInstalled.Value : _initialNormalSalineInstalled;
     public bool IsPlasmaSolutionInstalled => IsClientStarted || IsServerStarted
       ? _plasmaSolutionInstalled.Value : _initialPlasmaSolutionInstalled;
+
+    public bool TryGetNormalSalineConnectionPoint(out IntravenousLineConnectionPoint point)
+    {
+      point = null;
+      if (!IsIntravenousStandInstalled || !IsNormalSalineInstalled
+          || _normalSalineConnectionPoint == null)
+        return false;
+
+      point = _normalSalineConnectionPoint;
+      return true;
+    }
+
+    public bool TryGetPlasmaSolutionConnectionPoint(out IntravenousLineConnectionPoint point)
+    {
+      point = null;
+      if (!IsIntravenousStandInstalled || !IsPlasmaSolutionInstalled
+          || _plasmaSolutionConnectionPoint == null)
+        return false;
+
+      point = _plasmaSolutionConnectionPoint;
+      return true;
+    }
+
+    public bool IsNormalSalineConnectionPoint(IntravenousLineConnectionPoint point) =>
+      point != null && ReferenceEquals(point, _normalSalineConnectionPoint);
+
+    public bool IsPlasmaSolutionConnectionPoint(IntravenousLineConnectionPoint point) =>
+      point != null && ReferenceEquals(point, _plasmaSolutionConnectionPoint);
 
     private void InitializeIntravenousAttachmentDisplay() => ApplyIntravenousAttachmentDisplays();
 

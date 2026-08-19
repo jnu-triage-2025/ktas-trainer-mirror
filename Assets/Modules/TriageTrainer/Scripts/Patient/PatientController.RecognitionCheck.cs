@@ -21,10 +21,12 @@ namespace TriageTrainer.Entity
     private const float RecognitionInteractionDistance = 1.3f;
     private static readonly Vector3 RecognitionInteractionOffset = new(0f, 1f, 0f);
 
-    private sealed class PatientRecognitionCheckInteract : IInteract, IInteractorConditional
+    private sealed class PatientRecognitionCheckInteract : IInteract, IInteractorConditional, IQuestPresentationTarget
     {
       private readonly PatientController _owner;
       public PatientRecognitionCheckInteract(PatientController owner) => _owner = owner;
+      public string PresentationEntityIdentifier => _owner.Identifier;
+      public string InteractionIdentifier => RecognitionInteractionIdentifier;
       public string DisplayText => RecognitionCheckMicrophoneInput.IsUnavailable
         ? "말 걸기"
         : string.IsNullOrWhiteSpace(_owner._recognitionDisplayText.Value)
@@ -51,6 +53,8 @@ namespace TriageTrainer.Entity
           interactor?.GetComponentInParent<PlayerController>(),
           microphone: false);
     }
+
+    private const string RecognitionInteractionIdentifier = "recognition_check";
 
     private sealed class PatientRecognitionMicrophoneInteract : IInteract, IInteractorConditional
     {
