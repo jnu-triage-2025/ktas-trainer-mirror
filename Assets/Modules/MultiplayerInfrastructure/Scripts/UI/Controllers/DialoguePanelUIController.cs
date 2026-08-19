@@ -64,6 +64,11 @@ namespace MultiplayerInfrastructure.UI
     [SerializeField] private float _lastTypeTime;
     [SerializeField] private bool _currentDialogueInteractionRequired;
 
+    // 대화창이 진행/선택 입력을 소비한 마지막 프레임 번호.
+    // 선택 확정 직후 오버레이가 pop 되어도, 같은 프레임의 F/스페이스/엔터/좌클릭이
+    // 주변 Interactable 상호작용이나 아이템 사용으로 흘러가지 않도록 입력 경로에서 확인한다.
+    private int _lastInputConsumedFrame = -1;
+
     [SerializeField] private DialogueInputContext _inputContext = DialogueInputContext.None;
     private IReadOnlyList<ScenarioChoiceOption> _pendingChoiceOptions;
     private readonly Queue<TransientDialogueRequest> _transientDialogueQueue = new();
@@ -140,6 +145,13 @@ namespace MultiplayerInfrastructure.UI
     /// 입력 대기 중인지 여부
     /// </summary>
     public bool IsWaitingForInput => _isWaitingForInput;
+
+    /// <summary>
+    /// 이번 프레임에 대화 진행/선택 입력을 이미 소비했는지 여부.
+    /// 선택지를 확정하면 대화창이 곧바로 오버레이 스택에서 빠지기 때문에,
+    /// 같은 프레임의 입력이 월드 상호작용으로 이어지는 것을 이 값으로 차단한다.
+    /// </summary>
+    public bool HasConsumedInputThisFrame => _lastInputConsumedFrame == Time.frameCount;
 
     /// <summary>현재 대화창 계열 UI를 점유 중인 그래프 식별자(없으면 null).</summary>
     public string CurrentDialogueOwner => _owningGraphIdentifier;
@@ -496,6 +508,11 @@ namespace MultiplayerInfrastructure.UI
 
     private void ShowChoices(IReadOnlyList<ScenarioChoiceOption> options)
     {
+      // 선택지를 힌트 UI에 넣기 직전에 Dialogue 모드를 한 번 더 보장한다.
+      // 타이핑이 진행되는 사이 다른 흐름(즉석 안내 대화 등)이 ExitDialogueMode()를 호출했다면
+      // 힌트 UI에는 선택지 대신 주변 월드 Interactable 목록이 남고, 확정 입력이 선택지가 아니라
+      // 엉뚱한 오브젝트와의 상호작용으로 처리된다.
+      EnsureDialogueModeActive();
       ClearSelections();
 
       if (options == null || options.Count == 0)
@@ -539,6 +556,7 @@ namespace MultiplayerInfrastructure.UI
       // 타이핑 중이면 스킵
       if (_isTyping)
       {
+        MarkInputConsumed();
         SkipTyping();
         return;
       }
@@ -546,13 +564,20 @@ namespace MultiplayerInfrastructure.UI
       // Choice: 재생 완료 후 입력은 현재 선택지를 확정.
       if (_inputContext == DialogueInputContext.Choice)
       {
+        // 선택지를 실제로 확정하지 못하는 경우(아직 선택지가 만들어지지 않은 프레임 등)에도
+        // 이 입력은 대화창의 것이다. 소비 표시를 먼저 해서 같은 프레임의 F/좌클릭이
+        // 주변 Interactable 상호작용으로 새는 것을 막는다.
+        MarkInputConsumed();
+
         if (!_interactableHintUI.IsUnityNull() && _interactableHintUI.HasDialogueSelection())
         {
           _interactableHintUI.ExecuteSelectedDialogueSelection(null);
           return;
         }
 
-        if (!HasActiveSelections && _pendingChoiceOptions != null)
+        // 선택지가 아직 힌트 UI에 반영되지 않았다면(모드 전환 경쟁 등) 다시 표시하고
+        // 이번 입력은 흘린다. 여기서 그냥 반환하면 확정 수단이 없어 대화가 멈춘다.
+        if (_pendingChoiceOptions != null)
         {
           ShowChoices(_pendingChoiceOptions);
         }
@@ -562,6 +587,8 @@ namespace MultiplayerInfrastructure.UI
       // Dialogue: 재생 완료 후 입력은 다음 노드 진행.
       if (_inputContext == DialogueInputContext.Dialogue)
       {
+        MarkInputConsumed();
+
         if (_currentDialogueInteractionRequired)
         {
           DismissDialogue();
@@ -605,9 +632,20 @@ namespace MultiplayerInfrastructure.UI
 
     #region Selection Handling
 
+    /// <summary>
+    /// 이번 프레임의 진행/선택 입력을 대화창이 소비했음을 표시한다.
+    /// </summary>
+    private void MarkInputConsumed()
+    {
+      _lastInputConsumedFrame = Time.frameCount;
+    }
+
     private void OnSelectionInteracted(ScenarioChoiceOption option, int index)
     {
       Debug.Log($"[DialoguePanelUI] Option selected: {index} - {option.DisplayText}");
+
+      // 힌트 목록 행을 직접 클릭해 들어오는 경로(UI Toolkit 이벤트)도 같은 프레임 입력을 소비한다.
+      MarkInputConsumed();
 
       // 선택 이벤트 발생
       OnSelectionMade?.Invoke(index);

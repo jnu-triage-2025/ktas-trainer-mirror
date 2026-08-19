@@ -123,7 +123,6 @@ namespace TriageTrainer.Tests
         patientObject.SetActive(false);
         var patient = patientObject.AddComponent<PatientController>();
         patient.ApplySpawnedEntityIdentifier(completionSignal.EndsWith("_b") ? "patient_b" : "patient_c");
-        monitor.SetPresentationPatient(patient);
         SetPrivateField(zone, "_activePatient", patient);
         var configure = typeof(TriageScenarioEventBootstrap).GetMethod(
           "ConfigureVitalMonitorClose",
@@ -259,7 +258,7 @@ namespace TriageTrainer.Tests
       var graph = ScenarioGraphLoader.LoadFromJson(scenarioJson, validateWithSchema: true);
 
        Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
-       Assert.That(graph.Nodes, Has.Count.EqualTo(315));
+       Assert.That(graph.Nodes, Has.Count.EqualTo(327));
        Assert.That(graph.ClientSignalPrefixes, Is.EqualTo(new[] { "sig.quest_arrival_triage_area_" }));
       Assert.That(graph.ActingNpcs, Has.Count.EqualTo(1));
       Assert.That(graph.ActingNpcs.Single().Identifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
@@ -430,11 +429,26 @@ namespace TriageTrainer.Tests
       }));
 
       Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Pupil_IV", out var pupilQuest), Is.True);
-      Assert.That(pupilQuest.PresentationBindings.Single().InteractionIdentifier, Is.EqualTo("recognition_check"));
+      Assert.That(pupilQuest.PresentationBindings.Select(binding =>
+        (binding.CompletionCriteriaIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
+      {
+        ("patient-b-pupil-checked", "recognition_check")
+      }));
       Assert.That(pupilQuest.Tasks.Single().SignalId, Is.EqualTo("patient_b_pupil_checked"));
 
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Oxygen_Bleeding", out var oxygenQuest), Is.True);
+      Assert.That(oxygenQuest.PresentationBindings.Select(binding =>
+        (binding.EntityIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
+      {
+        ("patient_b", "patient_bc_nasal_cannula"),
+        ("zone_0:oxyflowmeter", "oxyflowmeter"),
+        ("zone_1:oxyflowmeter", "oxyflowmeter"),
+        ("zone_2:oxyflowmeter", "oxyflowmeter"),
+        ("zone_3:oxyflowmeter", "oxyflowmeter")
+      }));
+
       Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Normal_Saline", out var ivQuest), Is.True);
-      Assert.That(ivQuest.PresentationBindings.Single().InteractionIdentifier, Is.EqualTo("intravenous_line_cannula"));
+      Assert.That(ivQuest.PresentationBindings, Is.Empty);
       Assert.That(ivQuest.Tasks.Single().SignalId, Is.EqualTo("insert_iv_patient_b_right"));
 
       foreach (string nodeIdentifier in new[]
@@ -981,6 +995,12 @@ namespace TriageTrainer.Tests
         patient.ApplySpawnedEntityIdentifier("patient_b");
         flowmeterObject.AddComponent<BoxCollider>();
         var flowmeter = flowmeterObject.AddComponent<WallAttachedOxyflowmeter>();
+
+        patient.SetConnectedOxyflowmeter(flowmeter);
+        Assert.That(patient.ActivatePatientBCNurseDStage(), Is.False,
+          "미설치 유량계 참조만으로는 사전 설치 경고를 표시하면 안 됩니다.");
+        patient.ClearConnectedOxyflowmeter(flowmeter);
+
         flowmeter.ApplyShownFromNetwork();
         patient.SetConnectedOxyflowmeter(flowmeter);
 
@@ -1079,6 +1099,7 @@ namespace TriageTrainer.Tests
         patient.ApplySpawnedEntityIdentifier("patient_c");
         flowmeterObject.AddComponent<BoxCollider>();
         var flowmeter = flowmeterObject.AddComponent<WallAttachedOxyflowmeter>();
+        flowmeter.ApplyShownFromNetwork();
 
         Assert.That(patient.ActivatePatientBCNurseDStage(), Is.False);
         patient.SetConnectedOxyflowmeter(flowmeter);
@@ -1105,6 +1126,7 @@ namespace TriageTrainer.Tests
         patient.ApplySpawnedEntityIdentifier("patient_b");
         flowmeterObject.AddComponent<BoxCollider>();
         var flowmeter = flowmeterObject.AddComponent<WallAttachedOxyflowmeter>();
+        flowmeter.ApplyShownFromNetwork();
 
         Assert.That(patient.ActivatePatientBCNurseDStage(), Is.False);
         InvokePrivate(patient, "NotifyPatientBCItemApplied", "nasalcannula");

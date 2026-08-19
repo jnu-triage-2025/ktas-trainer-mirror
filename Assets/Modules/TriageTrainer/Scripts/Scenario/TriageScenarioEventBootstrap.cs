@@ -1004,19 +1004,26 @@ namespace TriageTrainer.Scenario
         : null;
     }
 
+    /// <summary>
+    /// 모니터/패널을 활성화하고 시나리오 초기 프로파일을 적용합니다.
+    /// <paramref name="message"/>가 비어 있으면 채팅 시스템 메시지를 남기지 않습니다.
+    /// </summary>
     private IEnumerator ApplyMonitorProfile(GameObject monitorObject,
       GameObject panelObject,
       PatientMonitorController monitorController,
       ECGParameters parameters,
       bool applyProfile,
-      string message)
+      string message = null)
     {
       SetActiveIfPresent(monitorObject, true);
       SetActiveIfPresent(panelObject, true);
 
       if (monitorController == null)
       {
-        EmitSystemMessage(message + " (모니터 컨트롤러 참조 없음)");
+        Debug.LogWarning(
+          $"[TriageScenarioEventBootstrap] 활력징후 모니터 컨트롤러 참조가 없습니다. (monitor='{(monitorObject != null ? monitorObject.name : "<null>")}')",
+          this);
+        EmitSystemMessage(string.IsNullOrWhiteSpace(message) ? null : message + " (모니터 컨트롤러 참조 없음)");
         yield break;
       }
 

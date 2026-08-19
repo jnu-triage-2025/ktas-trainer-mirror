@@ -21,12 +21,12 @@ namespace TriageTrainer.Scenario
       ConfigureVitalMonitorClose(_patientBVitalMonitorController,
         patient,
         "close_vital_ui_b");
+      // 모니터 활성화는 시나리오 연출일 뿐이므로 채팅 시스템 메시지를 남기지 않는다.
       yield return ApplyMonitorProfile(_patientBVitalMonitorObject,
         _patientBVitalPanel,
         _patientBVitalMonitorController,
         _patientBInitialMonitorParameters,
-        _applyPatientBInitialMonitorProfile,
-        "많이 다친 남성 환자 활력징후 모니터를 활성화했습니다.");
+        _applyPatientBInitialMonitorProfile);
     }
   }
 }

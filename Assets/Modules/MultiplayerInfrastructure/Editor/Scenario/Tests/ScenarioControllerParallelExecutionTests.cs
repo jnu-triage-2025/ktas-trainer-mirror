@@ -446,6 +446,52 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void ParallelBranchDialogueDoesNotAutoAdvance()
+    {
+      var gameObject = new GameObject("scenario-branch-dialogue-no-auto-advance-test");
+      var controller = gameObject.AddComponent<ScenarioController>();
+      var currentGraph = typeof(ScenarioController).GetField(
+        "_currentGraph",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+      var contextType = typeof(ScenarioController).GetNestedType(
+        "BranchChainContext",
+        BindingFlags.NonPublic);
+      var executeDialogue = typeof(ScenarioController).GetMethod(
+        "ExecuteDialogueNodeInBranch",
+        BindingFlags.Instance | BindingFlags.NonPublic);
+
+      try
+      {
+        Assert.That(currentGraph, Is.Not.Null);
+        Assert.That(contextType, Is.Not.Null);
+        Assert.That(executeDialogue, Is.Not.Null,
+          "Parallel branch dialogues must use the dedicated serialized input-wait executor.");
+
+        currentGraph.SetValue(controller, new ScenarioGraph { Identifier = "branch-dialogue-test" });
+        var context = Activator.CreateInstance(
+          contextType,
+          BindingFlags.Instance | BindingFlags.NonPublic,
+          null,
+          new object[] { null },
+          null);
+        var dialogue = new ScenarioDialogueNode
+        {
+          Identifier = "DIALOGUE",
+          AutoAdvanceSeconds = 0.01f
+        };
+        var routine = (IEnumerator)executeDialogue.Invoke(controller, new[] { dialogue, context });
+
+        Assert.That(routine.MoveNext(), Is.True);
+        Assert.That(routine.Current, Is.TypeOf<WaitUntil>(),
+          "Parallel branch dialogues must wait for player input regardless of AutoAdvanceSeconds.");
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(gameObject);
+      }
+    }
+
+    [Test]
     public void DynamicRosterCounterRequiresExactExpectedPlayerSignals()
     {
       const string output = "test.roster.complete";

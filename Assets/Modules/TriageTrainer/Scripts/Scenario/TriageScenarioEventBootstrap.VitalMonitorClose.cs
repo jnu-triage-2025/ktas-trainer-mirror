@@ -35,9 +35,9 @@ namespace TriageTrainer.Scenario
       if (monitorController == null)
         return;
 
+      // 시나리오는 모니터 오브젝트만 해석한다. 추적 대상(감시 환자) 설정은
+      // 플레이어가 모니터의 '환자 선택' 상호작용으로 직접 수행해야 하므로 여기서 바인딩하지 않는다.
       monitorObject = monitorController.gameObject;
-      if (!ReferenceEquals(monitorController.MonitoringPatient, patient))
-        monitorController.SetPresentationPatient(patient);
     }
 
     private static PatientMonitorController FindPatientVitalMonitor(PatientController patient)

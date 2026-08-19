@@ -143,6 +143,16 @@ namespace MultiplayerInfrastructure.Player
     // called from PlayerController.Input
     private void TryInteractWithSelection()
     {
+      // 대화창이 최상단인 동안에는 월드 상호작용을 절대 실행하지 않는다.
+      // 힌트 UI가 (모드 전환 경쟁 등으로) 아직 선택지를 들고 있지 않은 프레임에 입력이 들어오면
+      // 목록에 남아 있던 주변 Interactable이 실행되어, "선택지 대신 옆 오브젝트와 상호작용"하는
+      // 문제가 된다. 대화창이 열려 있으면 처리 주체는 언제나 DialoguePanelUIController다.
+      if (!_dialoguePanelUIController.IsUnityNull() && UIOverlayStack.IsTop(_dialoguePanelUIController))
+      {
+        _dialoguePanelUIController.TrySelectCurrentOption();
+        return;
+      }
+
       // 다이얼로그 모드에서는 DialoguePanelUIController를 통해 선택 처리
       if (_interactableHintUI != null && _interactableHintUI.IsDialogueMode)
       {

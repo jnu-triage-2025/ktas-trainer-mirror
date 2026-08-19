@@ -83,7 +83,10 @@ namespace MultiplayerInfrastructure.Player
     {
       // 설치체 회수는 일반 공격 입력 경로(UI/상호작용 처리에서 소비될 수 있음)에 의존하지 않는다.
       // Update_Raycast 직후 실행되므로 이번 프레임의 카메라 조준 대상을 즉시 처리한다.
-      if (Input.GetMouseButtonDown(0) && TryItemizeRaycastTarget())
+      // 단 이 경로는 Update_Input의 오버레이 가드를 거치지 않으므로, 대화창이 열려 있거나
+      // 선택지 확정으로 좌클릭이 이미 소비된 프레임에는 직접 차단해야 한다.
+      // (그렇지 않으면 선택지를 클릭했을 뿐인데 조준선에 걸린 설치체가 회수된다.)
+      if (IsWorldClickInputAvailable() && Input.GetMouseButtonDown(0) && TryItemizeRaycastTarget())
       {
         attackTriggered = false;
         return;

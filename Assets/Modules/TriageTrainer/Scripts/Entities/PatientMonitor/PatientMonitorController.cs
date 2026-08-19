@@ -44,13 +44,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
   {
     protected override void Reset()
     {
+      // 기본값은 상호작용 추적만이다. 케어존 자동 추적은 필요한 모니터에서만 켠다.
       _patientTrackingMethod = PatientTrackingMethod.Interactable;
       _onEnterAnotherPatientAlreadyPatientExists = OnEnterAnotherPatientAlreadyPatientExists.Refresh;
-    }
-
-    protected void SetDefaultPatientTrackingMethod(PatientTrackingMethod method)
-    {
-      _patientTrackingMethod = method;
     }
 
     public enum ECGDisplayMode

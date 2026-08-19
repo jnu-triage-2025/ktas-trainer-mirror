@@ -10,27 +10,27 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 61580bb80bf324ca7bd11bae58a1129e, type: 3}
       propertyPath: m_LocalScale.x
-      value: 10
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 61580bb80bf324ca7bd11bae58a1129e, type: 3}
       propertyPath: m_LocalScale.y
-      value: 10
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 61580bb80bf324ca7bd11bae58a1129e, type: 3}
       propertyPath: m_LocalScale.z
-      value: 10
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 61580bb80bf324ca7bd11bae58a1129e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -58.8522
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 61580bb80bf324ca7bd11bae58a1129e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.6119
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 61580bb80bf324ca7bd11bae58a1129e, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -10.6576
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 61580bb80bf324ca7bd11bae58a1129e, type: 3}
       propertyPath: m_LocalRotation.w
@@ -66,7 +66,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 93352c3b7661e4c6191d90d02068f991, type: 2}
     - target: {fileID: 919132149155446097, guid: 61580bb80bf324ca7bd11bae58a1129e, type: 3}
       propertyPath: m_Name
-      value: NasalCannula (1)
+      value: nasal_cannula
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

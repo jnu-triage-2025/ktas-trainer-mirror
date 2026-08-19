@@ -53,6 +53,12 @@ namespace TriageTrainer.Entity.LineConnection
     [SerializeField, Min(0.001f)] private float _suctionLineWidth = 0.04f;
     [SerializeField] private Color _lineColor = new Color(0.94f, 0.98f, 1f, 0.18f);
 
+    [Header("Line Material")]
+    [SerializeField] private Material _intravenousLineMaterial;
+    [SerializeField] private Material _aedLineMaterial;
+    [SerializeField] private Material _oxyLineMaterial;
+    [SerializeField] private Material _suctionLineMaterial;
+
     [Header("Line Shape")]
     [SerializeField, Min(2)] private int _lineSegments = 18;
     [SerializeField, Min(0f)] private float _lineSagAmount = 0.015f;
@@ -614,7 +620,7 @@ namespace TriageTrainer.Entity.LineConnection
         lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         lineRenderer.receiveShadows = false;
         lineRenderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
-        ApplyLineMaterial(startPoint, lineRenderer);
+        ApplyLineMaterial(startPoint, endPoint, lineRenderer);
       }
 
       var runtime = lineObject.AddComponent<LineConnectionRuntime>();
@@ -813,15 +819,39 @@ namespace TriageTrainer.Entity.LineConnection
       && ((ReferenceEquals(startPoint, salinePoint) && ReferenceEquals(endPoint, patient.PatientBCIvAttachmentPoint))
           || (ReferenceEquals(endPoint, salinePoint) && ReferenceEquals(startPoint, patient.PatientBCIvAttachmentPoint)));
 
-    private void ApplyLineMaterial(LineConnectionPoint point, LineRenderer lineRenderer)
+    private void ApplyLineMaterial(
+      LineConnectionPoint startPoint,
+      LineConnectionPoint endPoint,
+      LineRenderer lineRenderer)
     {
-      if (point != null && point.LineMaterial != null)
+      // A point may override the material for a special-cased line; otherwise the
+      // service owns the material per concrete point type.
+      if (startPoint != null && startPoint.LineMaterial != null)
       {
-        lineRenderer.sharedMaterial = point.LineMaterial;
+        lineRenderer.sharedMaterial = startPoint.LineMaterial;
         return;
       }
 
-      point?.ApplyLineMaterial(lineRenderer);
+      var material = GetLineMaterial(startPoint) ?? GetLineMaterial(endPoint);
+      if (material != null)
+      {
+        lineRenderer.sharedMaterial = material;
+        return;
+      }
+
+      startPoint?.ApplyLineMaterial(lineRenderer);
+    }
+
+    private Material GetLineMaterial(LineConnectionPoint point)
+    {
+      return point switch
+      {
+        IntravenousLineConnectionPoint => _intravenousLineMaterial,
+        AEDLineConnectionPoint => _aedLineMaterial,
+        OxyLineConnectionPoint => _oxyLineMaterial,
+        SuctionLineConnectionPoint => _suctionLineMaterial,
+        _ => null,
+      };
     }
 
     private float GetLineElasticity(LineConnectionPoint point)

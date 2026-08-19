@@ -20,10 +20,10 @@ namespace TriageTrainer.Editor
     private const string BakedRotateGizmoPrefabPath = "Assets/Modules/TriageTrainer/Editor/Prefabs/RotateGizmoBaked.prefab";
     private const string BakedRotateGizmoMeshDirectory = "Assets/Modules/TriageTrainer/Editor/Prefabs/RotateGizmoBakedMeshes";
     private const string PreviewSkyboxMaterialPath = "Assets/Modules/TriageTrainer/Editor/Materials/LineMaterialPreview/Skybox.mat";
-    private const string IntravenousLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineconnectionService/IntravenousLine.mat";
-    private const string AEDLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineconnectionService/AEDLine.mat";
-    private const string OxyLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineconnectionService/OxyLine.mat";
-    private const string SuctionLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineconnectionService/SuctionLine.mat";
+    private const string IntravenousLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineConnectionService/IntravenousLine.mat";
+    private const string AEDLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineConnectionService/AEDLine.mat";
+    private const string OxyLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineConnectionService/OxyLine.mat";
+    private const string SuctionLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineConnectionService/SuctionLine.mat";
     private enum LineType
     {
       Intravenous,

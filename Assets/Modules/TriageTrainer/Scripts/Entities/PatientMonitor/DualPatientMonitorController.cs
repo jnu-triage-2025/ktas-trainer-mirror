@@ -14,11 +14,6 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
   [AddComponentMenu("Triage Trainer/Patient Monitor/Dual Patient Monitor Controller")]
   public sealed class DualPatientMonitorController : PatientMonitorController
   {
-    protected override void Reset()
-    {
-      base.Reset();
-      SetDefaultPatientTrackingMethod(PatientTrackingMethod.DependsOnPatientCareZone);
-    }
     private bool _ensuringDisplayPlanes;
 
     [Header("Dual Plane Surface")]

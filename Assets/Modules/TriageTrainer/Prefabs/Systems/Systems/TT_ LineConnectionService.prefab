@@ -48,6 +48,10 @@ MonoBehaviour:
   _linesRoot: {fileID: 7631477232276920592}
   _lineWidth: 0.01
   _lineColor: {r: 0.94, g: 0.98, b: 1, a: 0.18}
+  _intravenousLineMaterial: {fileID: 2100000, guid: 7c4757780a03340c0ad8268f0792a6c0, type: 2}
+  _aedLineMaterial: {fileID: 2100000, guid: dbb119eb38bed4378a76baaf3a7f58eb, type: 2}
+  _oxyLineMaterial: {fileID: 2100000, guid: 3696c771819984952a3d391fac03e949, type: 2}
+  _suctionLineMaterial: {fileID: 2100000, guid: b3869d27afbad4985b3d0523605d92f8, type: 2}
   _lineGradient:
     serializedVersion: 2
     key0: {r: 1, g: 1, b: 1, a: 0.6}

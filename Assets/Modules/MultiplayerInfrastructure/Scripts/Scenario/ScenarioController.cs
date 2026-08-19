@@ -483,6 +483,8 @@ namespace MultiplayerInfrastructure.Scenario
       _branchDialogueAdvanceInterceptors.Clear();
       _branchPromptActive = false;
       _activeRemoteBranchPromptClients.Clear();
+      _branchDialogueActive = false;
+      _activeRemoteBranchDialogueClients.Clear();
       _remoteBranchChoiceSelections.Clear();
       ResolveUIControllers();
       ResolveTTSService();
@@ -723,6 +725,8 @@ namespace MultiplayerInfrastructure.Scenario
       //  자신의 대화 노드를 오탐(충돌)하게 만드는 것을 방지한다.)
       _branchPromptActive = false;
       _activeRemoteBranchPromptClients.Clear();
+      _branchDialogueActive = false;
+      _activeRemoteBranchDialogueClients.Clear();
       _remoteBranchChoiceSelections.Clear();
       if (!_uiController.IsUnityNull())
         _uiController.ClearDialogueOwner();
@@ -4514,7 +4518,10 @@ namespace MultiplayerInfrastructure.Scenario
         var branchVisitSequence = RecordNodeVisit(cursor);
         OnNodeChanged?.Invoke(cursor);
 
-        if (_executionMode == ExecutionMode.ServerAuthoritative && branchOwnerClientId.HasValue)
+        // Send branch dialogues only after their per-screen queue slot is acquired.
+        if (_executionMode == ExecutionMode.ServerAuthoritative
+            && branchOwnerClientId.HasValue
+            && cursor is not ScenarioDialogueNode)
           ScenarioNetworkRelay.PresentAuthoritativeNodeToClient(branchOwnerClientId.Value, _currentGraph.Identifier, cursor.Identifier);
 
         // 단일 노드를 실행하고 완료를 대기한다(전역 Advance 미사용).
@@ -4641,56 +4648,7 @@ namespace MultiplayerInfrastructure.Scenario
           ExecuteSignalCounterNode(signalCounter);
           break;
         case ScenarioDialogueNode dialogue:
-          // 브랜치 내 다이얼로그: interactionRequired면 자동 닫힘 없이 입력으로만 닫힌다.
-          // 다른 그래프/흐름이 대화창을 점유 중이면 정책을 적용한다(교차 그래프 충돌만 검사).
-          bool presentBranchDialogueLocally = ShouldPresentBranchLocally(context);
-          if (presentBranchDialogueLocally
-              && !_uiController.IsUnityNull()
-              && !TryClaimDialogueUI(considerBranchPrompt: false))
-          {
-            // Cancel: 이 다이얼로그를 표시하지 않고 브랜치 체인을 종료.
-            // Panic: EndScenario 로 _currentGraph 가 정리됨.
-            yield break;
-          }
-          if (presentBranchDialogueLocally && !_uiController.IsUnityNull())
-          {
-            string speakerName = ResolveScenarioText(dialogue.SpeakerName, context.OwnerClientId);
-            string dialogueContent = ResolveScenarioText(dialogue.DialogueContent, context.OwnerClientId);
-            _uiController.DisplayDialogue(
-              speakerName,
-              dialogueContent,
-              dialogue.PortraitSpriteIdentifier,
-              dialogue.InteractionRequired);
-            if (dialogue.PlayTTS)
-              PlayInlineTTS(dialogue.Identifier, dialogueContent, dialogue.TtsVoiceIdentifier);
-          }
-
-          var waitSeconds = (dialogue.AutoAdvanceSeconds.HasValue && dialogue.AutoAdvanceSeconds.Value > 0f)
-            ? dialogue.AutoAdvanceSeconds.Value
-            : 0f;
-
-          bool advanceRequested = false;
-          int dialogueOwnerClientId = context.OwnerClientId ?? int.MinValue;
-          Action advanceBranchDialogue = () => advanceRequested = true;
-          _branchDialogueAdvanceInterceptors[dialogueOwnerClientId] = advanceBranchDialogue;
-          try
-          {
-            if (waitSeconds > 0f)
-            {
-              float deadline = Time.time + waitSeconds;
-              yield return new WaitUntil(() => advanceRequested || Time.time >= deadline);
-            }
-            else if (dialogue.InteractionRequired)
-            {
-              yield return new WaitUntil(() => advanceRequested);
-            }
-          }
-          finally
-          {
-            if (_branchDialogueAdvanceInterceptors.TryGetValue(dialogueOwnerClientId, out var current)
-                && current == advanceBranchDialogue)
-              _branchDialogueAdvanceInterceptors.Remove(dialogueOwnerClientId);
-          }
+          yield return ExecuteDialogueNodeInBranch(dialogue, context);
           break;
         case ScenarioDisinteractableDialogueNode disinteractableDialogue:
           yield return ExecuteDisinteractableDialogueNode(disinteractableDialogue);
@@ -4826,6 +4784,10 @@ namespace MultiplayerInfrastructure.Scenario
     // Branch dialogue input must complete only its branch, never Advance the enclosing main node.
     private readonly Dictionary<int, Action> _branchDialogueAdvanceInterceptors = new();
 
+    // Branch dialogues share one per-screen queue, independent from Choice and Quiz prompts.
+    private bool _branchDialogueActive;
+    private readonly HashSet<int> _activeRemoteBranchDialogueClients = new();
+
     private readonly Dictionary<string, BranchOptionSelection> _remoteBranchChoiceSelections = new(StringComparer.Ordinal);
     private readonly HashSet<int> _activeRemoteBranchPromptClients = new();
 
@@ -4950,6 +4912,79 @@ namespace MultiplayerInfrastructure.Scenario
           _activeRemoteBranchPromptClients.Remove(branchOwnerClientId.Value);
         else
           _branchPromptActive = false;
+      }
+    }
+
+    /// <summary>Serializes branch dialogues per screen and completes them only from player input.</summary>
+    private IEnumerator ExecuteDialogueNodeInBranch(ScenarioDialogueNode node, BranchChainContext context)
+    {
+      int? localClientId = InstanceFinder.IsClientStarted
+        ? InstanceFinder.ClientManager?.Connection?.ClientId
+        : null;
+      bool remoteDialogue = context.OwnerClientId.HasValue
+        && (!localClientId.HasValue || localClientId.Value != context.OwnerClientId.Value);
+
+      while (remoteDialogue
+               ? _activeRemoteBranchDialogueClients.Contains(context.OwnerClientId.Value)
+               : _branchDialogueActive)
+      {
+        if (_currentGraph == null)
+          yield break;
+        yield return null;
+      }
+
+      if (_currentGraph == null)
+        yield break;
+
+      if (!remoteDialogue && !_uiController.IsUnityNull()
+          && !TryClaimDialogueUI(considerBranchPrompt: false))
+      {
+        yield break;
+      }
+
+      if (remoteDialogue)
+        _activeRemoteBranchDialogueClients.Add(context.OwnerClientId.Value);
+      else
+        _branchDialogueActive = true;
+
+      int dialogueOwnerClientId = context.OwnerClientId ?? int.MinValue;
+      bool advanceRequested = false;
+      Action advanceBranchDialogue = () => advanceRequested = true;
+      try
+      {
+        if (remoteDialogue)
+        {
+          ScenarioNetworkRelay.PresentAuthoritativeNodeToClient(
+            context.OwnerClientId.Value,
+            _currentGraph.Identifier,
+            node.Identifier);
+        }
+        else if (!_uiController.IsUnityNull())
+        {
+          string speakerName = ResolveScenarioText(node.SpeakerName, context.OwnerClientId);
+          string dialogueContent = ResolveScenarioText(node.DialogueContent, context.OwnerClientId);
+          _uiController.DisplayDialogue(
+            speakerName,
+            dialogueContent,
+            node.PortraitSpriteIdentifier,
+            node.InteractionRequired);
+          if (node.PlayTTS)
+            PlayInlineTTS(node.Identifier, dialogueContent, node.TtsVoiceIdentifier);
+        }
+
+        _branchDialogueAdvanceInterceptors[dialogueOwnerClientId] = advanceBranchDialogue;
+        yield return new WaitUntil(() => advanceRequested || _currentGraph == null);
+      }
+      finally
+      {
+        if (_branchDialogueAdvanceInterceptors.TryGetValue(dialogueOwnerClientId, out var current)
+            && current == advanceBranchDialogue)
+          _branchDialogueAdvanceInterceptors.Remove(dialogueOwnerClientId);
+
+        if (remoteDialogue)
+          _activeRemoteBranchDialogueClients.Remove(context.OwnerClientId.Value);
+        else
+          _branchDialogueActive = false;
       }
     }
 

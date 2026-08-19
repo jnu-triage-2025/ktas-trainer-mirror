@@ -42,15 +42,6 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       ApplyMonitoringPatient(patient);
     }
 
-    /// <summary>
-    /// Binds a monitor selected by local scenario presentation without issuing a gameplay selection RPC.
-    /// The patient's authoritative medical state is replicated independently.
-    /// </summary>
-    public void SetPresentationPatient(PatientController patient)
-    {
-      ApplyMonitoringPatient(patient);
-    }
-
     public override void OnStartServer()
     {
       base.OnStartServer();

@@ -717,7 +717,8 @@ namespace TriageTrainer.Entity
         return false;
       }
 
-      _patientBCRequiresOxygenDetach = ConnectedOxyflowmeter != null;
+      _patientBCRequiresOxygenDetach = ConnectedOxyflowmeter != null
+                                       && ConnectedOxyflowmeter.IsAttached;
       _patientBCObservedOxygenDetach = false;
       _patientBCFreshOxygenInstalled = false;
       _patientBCNurseDStage.Value = PatientBCTreatmentStage.AwaitingNasalCannula;
@@ -729,6 +730,7 @@ namespace TriageTrainer.Entity
       ClearPatientBCSignals(
         $"apply_nasal_cannula_{Identifier}",
         $"equipment_connected_oxyflowmeter_{Identifier}",
+        $"oxyflowmeter_attached_{Identifier}",
         $"apply_gauze_{Identifier}",
         $"apply_plaster_on_gauze_{Identifier}");
       return _patientBCRequiresOxygenDetach;
@@ -944,6 +946,10 @@ namespace TriageTrainer.Entity
       else if (itemIdentifier == "plaster")
         TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingPlaster,
           PatientBCTreatmentStage.Complete);
+
+      // SyncVar.OnChange 만으로는 부족한 사례가 있어(트리아지 갱신과 동일한 이유),
+      // 권위 측에서 단계를 바꾼 직후 이 자리에서도 명시적으로 힌트를 갱신한다.
+      RefreshPatientBCInteractableHints();
     }
 
     private bool ShouldCreditPatientBCEquipmentConnection(string equipmentType)
@@ -963,8 +969,11 @@ namespace TriageTrainer.Entity
         return false;
 
       _patientBCFreshOxygenInstalled = true;
-      return TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingOxygen,
+      bool advanced = TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingOxygen,
         PatientBCTreatmentStage.AwaitingGauze);
+      if (advanced)
+        RefreshPatientBCInteractableHints();
+      return advanced;
     }
 
     private void NotifyPatientBCEquipmentDisconnected(string equipmentType, MonoBehaviour equipment)
@@ -999,6 +1008,36 @@ namespace TriageTrainer.Entity
         return false;
       _patientBCNurseDStage.Value = next;
       return true;
+    }
+
+    private void InitializeNurseDStageSync()
+    {
+      _patientBCNurseDStage.OnChange += OnPatientBCNurseDStageChanged;
+    }
+
+    private void TeardownNurseDStageSync()
+    {
+      _patientBCNurseDStage.OnChange -= OnPatientBCNurseDStageChanged;
+    }
+
+    // 비강 캐뉼라 적용 등으로 단계가 전환된 직후, 스테일해진 인터랙션 힌트(예: "비강 캐뉼라 적용")가
+    // 재상호작용 없이도 즉시 사라지도록 SyncVar 복제 시점에 근처 상호작용 캐시를 갱신한다.
+    private void OnPatientBCNurseDStageChanged(
+      PatientBCTreatmentStage previous, PatientBCTreatmentStage next, bool asServer)
+    {
+      RefreshPatientBCInteractableHints();
+    }
+
+    private static void RefreshPatientBCInteractableHints()
+    {
+      var players = UnityEngine.Object.FindObjectsByType<PlayerController>(
+        FindObjectsInactive.Exclude,
+        FindObjectsSortMode.None);
+      foreach (var player in players)
+      {
+        if (player != null && player.IsOwner)
+          player.RefreshInteractableHintsNow();
+      }
     }
 
     [ServerRpc(RequireOwnership = false)]

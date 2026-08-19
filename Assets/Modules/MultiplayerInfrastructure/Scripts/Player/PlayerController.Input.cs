@@ -18,7 +18,10 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private KeyCode _keyToggleChat = DefaultsKeyConfiguration.OpenChatUI;
     [SerializeField] private KeyCode _keyToggleCommand = DefaultsKeyConfiguration.OpenChatUIWithCommand;
     [SerializeField] private KeyCode _keyInteractInteractableObject = DefaultsKeyConfiguration.InteractInteractableObject;
+    [Tooltip("대화/선택지를 다음으로 넘기거나 타이핑을 스킵하는 키.")]
     [SerializeField] private KeyCode _keyAdvanceDialogue = KeyCode.Space;
+    [Tooltip("대화/선택지 확정용 보조 키. 상호작용 키·스페이스바·마우스 좌클릭과 동일하게 동작합니다.")]
+    [SerializeField] private KeyCode _keyConfirmDialogue = KeyCode.Return;
     [SerializeField] private KeyCode _keyEscape = KeyCode.Escape;
     [SerializeField] private KeyCode _keySpectatorFlyDown = KeyCode.LeftShift;
     [SerializeField] private KeyCode _keyOpenQuestUI = DefaultsKeyConfiguration.OpenQuestUI;
@@ -37,6 +40,9 @@ namespace MultiplayerInfrastructure.Player
     {
       // if (Input.GetKeyDown(KeyCode.F)) Debug.Log($"[PlayerController] F key pressed. IsOwner: {IsOwner}, IsClient: {IsClientInitialized}, IsServer: {IsServerInitialized}");
 
+      // Update_Movement보다 먼저, 그리고 아래의 어떤 early return보다도 먼저 갱신해야 한다.
+      UpdateJumpInputSuppression();
+
       HandleChatInput();
       var escapeConsumed = HandleEscape();
       HandleDialogueInput();
@@ -49,6 +55,13 @@ namespace MultiplayerInfrastructure.Player
         return;
 
       if (!UIOverlayStack.IsEmpty())
+        return;
+
+      // 대화/선택지가 이번 프레임 입력을 이미 소비했다면 여기서 멈춘다.
+      // 선택 확정·대화 진행은 그 즉시 대화창을 오버레이 스택에서 pop 하므로, 위의
+      // IsEmpty() 검사만으로는 같은 프레임의 F/스페이스/엔터/좌클릭이 그대로 아래로 흘러
+      // 주변 Interactable 상호작용이나 아이템 사용을 한 번 더 발동시킨다.
+      if (IsDialogueInputConsumedThisFrame())
         return;
 
       if (!escapeConsumed)
@@ -261,22 +274,93 @@ namespace MultiplayerInfrastructure.Player
       _camControl.AdjustThirdPersonDistance(scroll > 0 ? 1 : -1);
     }
 
+    /// <summary>
+    /// 대화창(대화/선택지)이 최상단일 때의 진행·확정 입력을 처리합니다.
+    /// 대화(Dialogue)와 선택지(Choice) 모두 동일한 키 집합을 받습니다:
+    /// 상호작용 키(기본 F), 스페이스바, 엔터(키패드 엔터 포함), 마우스 좌클릭.
+    /// </summary>
     private void HandleDialogueInput()
     {
       if (_dialoguePanelUIController.IsUnityNull()) return;
       if (!UIOverlayStack.IsTop(_dialoguePanelUIController)) return;
 
       // Dialogue advance keys are centralized here so all paths go through PlayerController.Input.
-      if (
-        Input.GetKeyDown(_keyInteractInteractableObject) ||
-        Input.GetKeyDown(_keyAdvanceDialogue) ||
-        Input.GetMouseButtonDown(0)
-      )
+      if (IsDialogueAdvanceInputDown())
       {
         _dialoguePanelUIController.TrySelectCurrentOption();
       }
 
       HandleInteractablesSelectionInput();
+    }
+
+    /// <summary>
+    /// 대화 진행/선택지 확정으로 취급하는 입력이 이번 프레임에 눌렸는지 여부.
+    /// </summary>
+    private bool IsDialogueAdvanceInputDown()
+    {
+      return Input.GetKeyDown(_keyInteractInteractableObject)
+          || Input.GetKeyDown(_keyAdvanceDialogue)
+          || Input.GetKeyDown(_keyConfirmDialogue)
+          || Input.GetKeyDown(KeyCode.KeypadEnter)
+          || Input.GetMouseButtonDown(0);
+    }
+
+    /// <summary>
+    /// 이번 프레임의 진행/확정 입력을 대화창 UI가 이미 소비했는지 여부.
+    /// 힌트 목록 행을 직접 클릭한 경우처럼 Update_Input 밖(UI Toolkit 이벤트)에서
+    /// 소비된 입력도 포함하므로, 월드 입력을 읽는 경로는 모두 이 값을 확인해야 한다.
+    /// </summary>
+    private bool IsDialogueInputConsumedThisFrame()
+    {
+      return !_dialoguePanelUIController.IsUnityNull()
+          && _dialoguePanelUIController.HasConsumedInputThisFrame;
+    }
+
+    /// <summary>
+    /// 이번 프레임에 월드 대상 좌클릭 입력을 사용할 수 있는지 여부.
+    /// UI 오버레이가 열려 있거나 대화창이 이미 입력을 소비했다면 false.
+    /// </summary>
+    private bool IsWorldClickInputAvailable()
+    {
+      return UIOverlayStack.IsEmpty() && !IsDialogueInputConsumedThisFrame();
+    }
+
+    // 대화 진행 키(스페이스바)를 누른 채로 대화가 닫히면, 같은 프레임 또는 바로 다음 프레임에
+    // 아직 눌려 있는 그 키가 점프("Jump" 축, 기본 Space)로 해석되어 플레이어가 튀어오른다.
+    // UI가 소비한 키 입력은 한 번 뗄 때까지 월드 점프 입력에서 제외한다.
+    private bool _jumpInputSuppressedUntilRelease;
+
+    private void UpdateJumpInputSuppression()
+    {
+      // 키를 떼는 순간 억제 해제. 다시 누르면 그때부터는 정상적인 점프 입력이다.
+      if (!Input.GetButton("Jump"))
+      {
+        _jumpInputSuppressedUntilRelease = false;
+        return;
+      }
+
+      // 오버레이가 열려 있는 동안(대화창 포함), 그리고 대화창이 이번 프레임 입력을 소비한
+      // 직후(오버레이가 막 pop 된 프레임)에 눌려 있던 키는 UI의 것으로 간주한다.
+      if (!UIOverlayStack.IsEmpty() || IsDialogueInputConsumedThisFrame())
+        _jumpInputSuppressedUntilRelease = true;
+    }
+
+    /// <summary>점프 입력이 눌려 있는지 여부. UI가 소비한 입력은 제외한다.</summary>
+    private bool IsJumpInputHeld()
+    {
+      return !_jumpInputSuppressedUntilRelease && Input.GetButton("Jump");
+    }
+
+    /// <summary>이번 프레임에 점프 입력이 새로 눌렸는지 여부. UI가 소비한 입력은 제외한다.</summary>
+    private bool IsJumpInputPressedThisFrame()
+    {
+      return !_jumpInputSuppressedUntilRelease && Input.GetButtonDown("Jump");
+    }
+
+    /// <summary>관전자 상승 입력(스페이스바)이 눌려 있는지 여부. UI가 소비한 입력은 제외한다.</summary>
+    private bool IsSpectatorAscendInputHeld()
+    {
+      return !_jumpInputSuppressedUntilRelease && Input.GetKey(KeyCode.Space);
     }
 
     private void HandleItemActionInput()
