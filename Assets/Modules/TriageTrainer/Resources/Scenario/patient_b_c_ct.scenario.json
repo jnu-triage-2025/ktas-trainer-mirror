@@ -1,6 +1,9 @@
 {
   "identifier": "patient_b_c_ct",
-  "clientSignalIdentifiers": [],
+  "clientSignalIdentifiers": [
+    "sig.patient_b_pupil_checked",
+    "sig.patient_c_pupil_checked"
+  ],
   "clientSignalPrefixes": [
     "sig.quest_arrival_triage_area_"
   ],

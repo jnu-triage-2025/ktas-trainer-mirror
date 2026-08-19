@@ -97,7 +97,7 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       Assert.That(authorization.CanRaise(7, "player-a", "sig.insert_iv_patient_b_right", out _), Is.False);
       Assert.That(authorization.CanRaise(7, "player-a", "sig.connect_cannula_and_ns1_patient_c", out _), Is.False);
       Assert.That(authorization.CanRaise(7, "player-a", "sig.apply_gauze_patient_b", out _), Is.False);
-      Assert.That(authorization.CanRaise(7, "player-a", "sig.patient_c_pupil_checked", out _), Is.False);
+      Assert.That(authorization.CanRaise(7, "player-a", "sig.patient_c_pupil_checked", out _), Is.True);
       Assert.That(authorization.CanRaise(7, "player-a", "sig.carezone_patient_entered_patient_b", out _), Is.False);
       Assert.That(authorization.CanRaise(7, "player-a", "sig.ct_patient_arrived_patient_c", out _), Is.False);
       Assert.That(authorization.CanRaise(7, "player-a", "sig.close_vital_ui_b", out _), Is.False);

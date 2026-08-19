@@ -1,7 +1,9 @@
 using System;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -86,7 +88,12 @@ namespace TriageTrainer.Entity
     /// <summary>
     /// 정맥라인 캐뉼라 상호작용이 실제로 가능한지(Config가 지원하고, 현재 State도 가능한 경우).
     /// </summary>
-    public bool CanInteractIntravenousLineCannula => IntravenousLineCannulaSupported && IntravenousLineCannulaInteractable;
+    public bool CanInteractIntravenousLineCannula =>
+      IntravenousLineCannulaSupported
+      && IntravenousLineCannulaInteractable
+      && (!IsPatientBC
+          || _patientBCNurseCStage.Value == PatientBCTreatmentStage.AwaitingPupil
+          || _patientBCNurseCStage.Value == PatientBCTreatmentStage.AwaitingIv);
 
     /// <summary>시나리오 진행에 따라 정맥라인 캐뉼라 상호작용 가능 여부(State)를 켜고 끈다.</summary>
     public void SetIntravenousLineCannulaInteractable(bool interactable)
@@ -95,8 +102,8 @@ namespace TriageTrainer.Entity
     }
 
     /// <summary>
-    /// 정맥라인 캐뉼라 상호작용 항목. 플레이어가 캐뉼라(18G/20G)를 손에 들고, 이 환자가 상호작용을
-    /// 지원/가능한 상태일 때만 노출된다.
+    /// 정맥라인 캐뉼라 상호작용 항목. 대상 퀘스트가 활성화된 환자에게만 노출되며,
+    /// 캐뉼라 보유 여부는 상호작용 실행 시 안내/완료를 판정한다.
     /// </summary>
     private sealed class PatientIntravenousLineCannulaInteract : IInteract, IInteractorConditional
     {
@@ -120,8 +127,8 @@ namespace TriageTrainer.Entity
         if (player == null)
           return false;
 
-        // (2) 플레이어가 손에 든 아이템이 캐뉼라(18G/20G)인지.
-        return _owner.IsHandlingIntravenousLineCannula(player);
+        // 캐뉼라가 없어도 항목은 노출한다. Interact에서 필요한 물품 안내를 표시한다.
+        return _owner.CanInteractIntravenousLineCannula;
       }
 
       public void Interact(Transform interactor)
@@ -178,6 +185,17 @@ namespace TriageTrainer.Entity
       if (player == null)
         return;
 
+      if (!IsHandlingIntravenousLineCannula(player))
+      {
+        var dialogue = Registry.Get<DialoguePanelUIController>(
+          RegistryType.UI, Registry.TypeKey<DialoguePanelUIController>());
+        if (dialogue == null)
+          dialogue = UnityEngine.Object.FindFirstObjectByType<DialoguePanelUIController>(
+            FindObjectsInactive.Exclude);
+        dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "20G 캐뉼라가 필요하다.");
+        return;
+      }
+
       // 상호작용 시점의 조건을 서버/클라이언트 공통으로 다시 방어한다.
       if (!CanInteractIntravenousLineCannula || !IsHandlingIntravenousLineCannula(player))
         return;
@@ -217,10 +235,19 @@ namespace TriageTrainer.Entity
       if (IsPatientBC && !TryValidatePatientBCTreatmentActor(player, NurseCRoleTag))
         return;
 
+      // Advance the authoritative stage before consuming the item. A stale
+      // interaction must never destroy a cannula without completing the IV step.
+      if (IsPatientBC && !TryAdvancePatientBCIvStageAuthoritative())
+        return;
+
       // 캐뉼라는 팔 하나당 하나씩 소비한다. 첫 삽입 뒤에는 플레이어가 두 번째
       // 캐뉼라를 다시 획득해야 하므로, 두 팔 처치에 18G 2개를 사전 보유할 필요가 없다.
       if (player.RemoveItemFromInventory(heldIdentifier, 1) != 1)
+      {
+        if (IsPatientBC)
+          RevertPatientBCIvStageAuthoritative();
         return;
+      }
 
       // ── 처치 표현(게이지 + 좌/우) ──
       TreatmentDisplay display = isLeft ? leftDisplay : rightDisplay;
@@ -257,8 +284,7 @@ namespace TriageTrainer.Entity
 
       if (IsFishNetServerStarted || FishNet.InstanceFinder.IsOffline)
       {
-        if (TryAdvancePatientBCIvStageAuthoritative())
-          RaiseCannulaSignal($"insert_iv_{{id}}_{side}");
+        RaiseCannulaSignal($"insert_iv_{{id}}_{side}");
       }
       else if (IsFishNetClientInitialized)
       {
@@ -283,15 +309,18 @@ namespace TriageTrainer.Entity
           || (side != "left" && side != "right")
           || !string.Equals(itemIdentifier, TriageTrainer.ItemDefinitions.Cannula20g.Identifier,
             StringComparison.Ordinal)
-          || !TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player, out var actorIdentifier,
-            out var actorDisplayName)
-          || !CanPerformPatientBCIv()
-          || player.CountItemInInventory(itemIdentifier) < 1
-          || !TryAdvancePatientBCIvStageAuthoritative())
+           || !TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player, out var actorIdentifier,
+             out var actorDisplayName)
+           || !CanPerformPatientBCIv()
+           || player.CountItemInInventory(itemIdentifier) < 1
+           || !TryAdvancePatientBCIvStageAuthoritative())
         return;
 
       if (player.RemoveItemFromInventory(itemIdentifier, 1) != 1)
+      {
+        RevertPatientBCIvStageAuthoritative();
         return;
+      }
 
       using (ScenarioSignalPlayerContext.Push(actorIdentifier, actorDisplayName))
       {

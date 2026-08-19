@@ -692,7 +692,11 @@ namespace TriageTrainer.Entity
       _patientBCPhysicalNormalSalinePoint = null;
       _cannulaLeftArmInserted = false;
       _cannulaRightArmInserted = false;
-      _intravenousLineCannulaInteractable = true;
+      // This scenario assigns the IV quest to the male patient B only. Keep the
+      // interaction registered on every supported patient, but expose it only
+      // when that quest is activated for its intended target.
+      _intravenousLineCannulaInteractable =
+        string.Equals(Identifier, "patient_b", System.StringComparison.Ordinal);
       SetTreatmentDisplayNetworked(TreatmentDisplay.Syringe20GInsertedIntoLeftArm, false);
       SetTreatmentDisplayNetworked(TreatmentDisplay.Syringe20GInsertedIntoRightArm, false);
       ClearPatientBCSignals(
@@ -935,6 +939,12 @@ namespace TriageTrainer.Entity
         return false;
       _patientBCNurseCStage.Value = next;
       return true;
+    }
+
+    private void RevertPatientBCIvStageAuthoritative()
+    {
+      if (_patientBCNurseCStage.Value == PatientBCTreatmentStage.AwaitingNormalSaline)
+        _patientBCNurseCStage.Value = PatientBCTreatmentStage.AwaitingIv;
     }
 
     private bool TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage expected, PatientBCTreatmentStage next)

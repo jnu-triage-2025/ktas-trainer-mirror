@@ -94,6 +94,12 @@ namespace MultiplayerInfrastructure.Scenario
         return IsKnownNodeTypePredicateError(root, instanceLocation, message);
       }
 
+      if (instanceLocation.StartsWith("/nodes/", StringComparison.Ordinal)
+          && IsNonApplicableNodeAlternativeError(root, instanceLocation, message))
+      {
+        return true;
+      }
+
       if (instanceLocation.StartsWith("/actingNpcs/", StringComparison.Ordinal)
           && instanceLocation.EndsWith("/interactionType", StringComparison.Ordinal))
       {
@@ -104,6 +110,54 @@ namespace MultiplayerInfrastructure.Scenario
         return TryResolveStringAtPointer(root, instanceLocation, out var interactionType)
                && Enum.TryParse(interactionType, ignoreCase: false, out ScenarioActingNpcInteractionType _);
       }
+
+      return false;
+    }
+
+    private static bool IsNonApplicableNodeAlternativeError(
+      JsonElement root,
+      string instanceLocation,
+      string message)
+    {
+      if (!TryResolveElementAtPointer(root, instanceLocation, out var node)
+          || node.ValueKind != JsonValueKind.Object)
+      {
+        int propertySeparator = instanceLocation.LastIndexOf('/');
+        if (propertySeparator <= "/nodes/".Length
+            || !TryResolveElementAtPointer(root, instanceLocation.Substring(0, propertySeparator), out node)
+            || node.ValueKind != JsonValueKind.Object)
+          return false;
+      }
+
+      bool HasString(string name) => node.TryGetProperty(name, out var value)
+                                     && value.ValueKind == JsonValueKind.String
+                                     && !string.IsNullOrWhiteSpace(value.GetString());
+
+      if (HasString("presetIdentifier")
+          && message.Contains("actingNpcIdentifier", StringComparison.Ordinal))
+        return true;
+      if (HasString("targetEntityIdentifier")
+          && message.Contains("targetEntityStateKey", StringComparison.Ordinal))
+        return true;
+      if (HasString("questDefinitionIdentifier")
+          && message.Contains("quest", StringComparison.Ordinal))
+        return true;
+      if (HasString("actingNpcIdentifier")
+          && message.Contains("presetIdentifier", StringComparison.Ordinal))
+        return true;
+      if (node.TryGetProperty("mode", out var mode)
+          && mode.ValueKind == JsonValueKind.String
+          && mode.GetString() == "Control"
+          && (message.Contains("interactOperation", StringComparison.Ordinal)
+              || message.Contains("Expected \"Update\"", StringComparison.Ordinal)
+              || message.Contains("destinationType", StringComparison.Ordinal)
+              || message.Contains("moveMode", StringComparison.Ordinal)))
+        return true;
+      if (node.TryGetProperty("transitionMode", out var transitionMode)
+          && transitionMode.ValueKind == JsonValueKind.String
+          && transitionMode.GetString() != "Gradual"
+          && message.Contains("Gradual", StringComparison.Ordinal))
+        return true;
 
       return false;
     }
@@ -150,6 +204,33 @@ namespace MultiplayerInfrastructure.Scenario
       if (current.ValueKind != JsonValueKind.String)
         return false;
       value = current.GetString();
+      return true;
+    }
+
+    private static bool TryResolveElementAtPointer(JsonElement root, string pointer, out JsonElement value)
+    {
+      value = root;
+      foreach (var rawSegment in pointer.Split('/').Skip(1))
+      {
+        var segment = rawSegment.Replace("~1", "/").Replace("~0", "~");
+        if (value.ValueKind == JsonValueKind.Object)
+        {
+          if (!value.TryGetProperty(segment, out value))
+            return false;
+        }
+        else if (value.ValueKind == JsonValueKind.Array
+                 && int.TryParse(segment, out var index)
+                 && index >= 0
+                 && index < value.GetArrayLength())
+        {
+          value = value[index];
+        }
+        else
+        {
+          return false;
+        }
+      }
+
       return true;
     }
 
