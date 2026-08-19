@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.Quest;
 using TriageTrainer.Entity.Patient;
 using TriageTrainer.Utils;
 using UnityEngine;
@@ -481,6 +482,65 @@ namespace MultiplayerInfrastructure.Editor
       if (!hasRef)
         items.Add(new DiagnosticItem(Severity.Error, node.Identifier,
           "quest.id 또는 questDefinitionIdentifier 를 지정해야 합니다."));
+
+      if (node.Quest != null)
+        CheckQuestPresentation(node.Quest, node.Identifier, items);
+    }
+
+    private static void CheckQuestPresentation(QuestData quest, string nodeIdentifier, List<DiagnosticItem> items)
+    {
+      var criterionIds = new HashSet<string>(StringComparer.Ordinal);
+      CollectCriterionIdentifiers(quest.Tasks, criterionIds, nodeIdentifier, items);
+      CollectCriterionIdentifiers(quest.CompletionCriteria, criterionIds, nodeIdentifier, items);
+      if (quest.PresentationBindings == null)
+        return;
+
+      var bindingKeys = new HashSet<string>(StringComparer.Ordinal);
+      for (int i = 0; i < quest.PresentationBindings.Count; i++)
+      {
+        var binding = quest.PresentationBindings[i];
+        if (binding == null)
+          continue;
+
+        if (string.IsNullOrWhiteSpace(binding.EntityIdentifier) || string.IsNullOrWhiteSpace(binding.IconIdentifier))
+          items.Add(new DiagnosticItem(Severity.Error, nodeIdentifier,
+            $"presentationBindings[{i}]의 entityIdentifier 또는 iconIdentifier가 비어 있습니다."));
+        if (binding.TargetType == QuestPresentationTargetType.Interaction
+            && string.IsNullOrWhiteSpace(binding.InteractionIdentifier))
+          items.Add(new DiagnosticItem(Severity.Error, nodeIdentifier,
+            $"presentationBindings[{i}]의 interactionIdentifier가 비어 있습니다."));
+        if (binding.Activation == QuestPresentationActivation.CompletionCriteria
+            && !criterionIds.Contains(binding.CompletionCriteriaIdentifier ?? string.Empty))
+          items.Add(new DiagnosticItem(Severity.Error, nodeIdentifier,
+            $"presentationBindings[{i}]가 알 수 없는 완료 조건 '{binding.CompletionCriteriaIdentifier}'을 참조합니다."));
+
+        string key = $"{binding.TargetType}|{binding.EntityIdentifier}|{binding.InteractionIdentifier}|{binding.Priority}";
+        if (!bindingKeys.Add(key))
+          items.Add(new DiagnosticItem(Severity.Warning, nodeIdentifier,
+            $"presentationBindings[{i}]의 대상과 priority가 다른 바인딩과 중복됩니다."));
+      }
+    }
+
+    private static void CollectCriterionIdentifiers(
+      IReadOnlyList<QuestCompletionCriteria> criteria,
+      HashSet<string> identifiers,
+      string nodeIdentifier,
+      List<DiagnosticItem> items)
+    {
+      if (criteria == null)
+        return;
+
+      for (int i = 0; i < criteria.Count; i++)
+      {
+        var criterion = criteria[i];
+        if (criterion == null)
+          continue;
+
+        if (!string.IsNullOrWhiteSpace(criterion.Identifier) && !identifiers.Add(criterion.Identifier))
+          items.Add(new DiagnosticItem(Severity.Error, nodeIdentifier,
+            $"완료 조건 identifier '{criterion.Identifier}'가 중복됩니다."));
+        CollectCriterionIdentifiers(criterion.Conditions, identifiers, nodeIdentifier, items);
+      }
     }
 
     private static void CheckQuiz(ScenarioQuizNode node, HashSet<string> nodeIds, List<DiagnosticItem> items)

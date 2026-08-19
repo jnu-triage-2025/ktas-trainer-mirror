@@ -43,9 +43,16 @@ namespace MultiplayerInfrastructure.Quest
     public event Action<IReadOnlyList<QuestData>> OnTrackedQuestsChanged;
     public event Action<QuestData> OnQuestCompleted;
     public event Action<bool> OnQuestPreviewImmediateTransitionChanged;
+    public event Action<string> OnQuestPresentationExpired;
 
     public void SetQuestPreviewImmediateTransition(bool enabled) =>
       OnQuestPreviewImmediateTransitionChanged?.Invoke(enabled);
+
+    public void ExpireQuestPresentation(string questId)
+    {
+      if (!string.IsNullOrWhiteSpace(questId))
+        OnQuestPresentationExpired?.Invoke(questId);
+    }
 
     public IReadOnlyList<QuestData> Quests => Snapshot(_quests.Values);
     public IReadOnlyList<QuestData> TrackedQuests
@@ -88,6 +95,8 @@ namespace MultiplayerInfrastructure.Quest
     private void Awake()
     {
       Registry.Registry.Register(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>(), this);
+      if (GetComponent<QuestPresentationService>() == null)
+        gameObject.AddComponent<QuestPresentationService>();
       _definitionRegistry = Registry.Registry.Get<QuestDefinitionRegistry>(RegistryType.Service, Registry.Registry.TypeKey<QuestDefinitionRegistry>());
       EnsureBasicMovementControlTutorialResolver();
       SubscribeToSessionLifecycle();
@@ -262,6 +271,7 @@ namespace MultiplayerInfrastructure.Quest
         return false;
 
       bool wasCompleted = quest.Completed;
+      bool wasTracked = _trackedQuestOrder.Contains(questId);
       _resolverCompletedQuestIds.Add(questId);
       quest.Completed = true;
       quest.Progress = new QuestProgressValue(1, 1);
@@ -279,7 +289,11 @@ namespace MultiplayerInfrastructure.Quest
       NotifyTrackedChanged();
 
       if (!wasCompleted)
-        PublishCompleted(quest.Clone());
+      {
+        var completedSnapshot = quest.Clone();
+        completedSnapshot.IsTracked = wasTracked;
+        PublishCompleted(completedSnapshot);
+      }
 
       return true;
     }
@@ -714,6 +728,10 @@ namespace MultiplayerInfrastructure.Quest
 
     private static void RestoreDefinitionRuntimeState(QuestData source, QuestData destination)
     {
+      destination.SourceScenarioIdentifier = source.SourceScenarioIdentifier;
+      if (source.PresentationBindings != null && source.PresentationBindings.Count > 0)
+        destination.PresentationBindings = QuestData.ClonePresentationBindings(source.PresentationBindings);
+
       var sourceTasks = GetQuestTasks(source);
       if (sourceTasks == null || sourceTasks.Count == 0)
         return;
@@ -759,6 +777,7 @@ namespace MultiplayerInfrastructure.Quest
         IsOrdinal = definition.IsOrdinal,
         Tasks = CloneCriteria(definition.Tasks),
         CompletionCriteria = CloneCriteria(definition.CompletionCriteria),
+        PresentationBindings = QuestData.ClonePresentationBindings(definition.PresentationBindings),
         Progress = new QuestProgressValue(0, 1),
         Completed = false
       };
@@ -1266,6 +1285,7 @@ namespace MultiplayerInfrastructure.Quest
 
         var cloned = definition.Clone();
         cloned.Identifier = key;
+        WarnInvalidPresentationBindings(cloned, key);
         _definitions[key] = cloned;
       }
     }
@@ -1380,11 +1400,62 @@ namespace MultiplayerInfrastructure.Quest
 
         var cloned = each.Clone();
         cloned.Identifier = key;
+        WarnInvalidPresentationBindings(cloned, key);
         _resourceDefinitions[key] = cloned;
         loadedCount++;
       }
 
       return loadedCount > 0;
+    }
+
+    private static void WarnInvalidPresentationBindings(QuestDefinition definition, string definitionIdentifier)
+    {
+      if (definition?.PresentationBindings == null || definition.PresentationBindings.Count == 0)
+        return;
+
+      var criterionIdentifiers = new HashSet<string>(StringComparer.Ordinal);
+      CollectCriterionIdentifiers(definition.Tasks, criterionIdentifiers, definitionIdentifier);
+      CollectCriterionIdentifiers(definition.CompletionCriteria, criterionIdentifiers, definitionIdentifier);
+      var bindingKeys = new HashSet<string>(StringComparer.Ordinal);
+      for (int i = 0; i < definition.PresentationBindings.Count; i++)
+      {
+        var binding = definition.PresentationBindings[i];
+        if (binding == null
+            || string.IsNullOrWhiteSpace(binding.EntityIdentifier)
+            || string.IsNullOrWhiteSpace(binding.IconIdentifier)
+            || (binding.TargetType == QuestPresentationTargetType.Interaction
+                && string.IsNullOrWhiteSpace(binding.InteractionIdentifier))
+            || (binding.Activation == QuestPresentationActivation.CompletionCriteria
+                && !criterionIdentifiers.Contains(binding.CompletionCriteriaIdentifier ?? string.Empty)))
+        {
+          Debug.LogWarning($"[QuestDefinitionRegistry] Definition '{definitionIdentifier}' has an invalid presentation binding at index {i}.");
+          continue;
+        }
+
+        string key = $"{binding.TargetType}|{binding.EntityIdentifier}|{binding.InteractionIdentifier}|{binding.Priority}";
+        if (!bindingKeys.Add(key))
+          Debug.LogWarning($"[QuestDefinitionRegistry] Definition '{definitionIdentifier}' has duplicate presentation binding target at index {i}.");
+      }
+    }
+
+    private static void CollectCriterionIdentifiers(
+      IReadOnlyList<QuestCompletionCriteria> criteria,
+      HashSet<string> identifiers,
+      string definitionIdentifier)
+    {
+      if (criteria == null)
+        return;
+
+      for (int i = 0; i < criteria.Count; i++)
+      {
+        var criterion = criteria[i];
+        if (criterion == null)
+          continue;
+
+        if (!string.IsNullOrWhiteSpace(criterion.Identifier) && !identifiers.Add(criterion.Identifier))
+          Debug.LogWarning($"[QuestDefinitionRegistry] Definition '{definitionIdentifier}' has duplicate completion criterion identifier '{criterion.Identifier}'.");
+        CollectCriterionIdentifiers(criterion.Conditions, identifiers, definitionIdentifier);
+      }
     }
 
     private static string NormalizeIncludePath(string include)

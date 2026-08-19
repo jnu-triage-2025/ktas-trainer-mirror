@@ -46,6 +46,12 @@ namespace MultiplayerInfrastructure.InteractableEntity
     IReadOnlyList<Sprite> DisplayIcons { get; }
   }
 
+  public interface IQuestPresentationTarget
+  {
+    string PresentationEntityIdentifier { get; }
+    string InteractionIdentifier { get; }
+  }
+
   /// <summary>
   /// 기존 <see cref="IInteractable"/> 컨트롤러에 같은 GameObject의 기능 컴포넌트가
   /// 조건부 상호작용 항목을 보탤 때 사용한다.

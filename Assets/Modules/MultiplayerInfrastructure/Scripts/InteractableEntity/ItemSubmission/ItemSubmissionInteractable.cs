@@ -44,6 +44,15 @@ namespace MultiplayerInfrastructure.InteractableEntity
     private bool _initialized;
 
     public string Identifier => _identifier;
+    public override string InteractionIdentifier => _identifier;
+    public override string PresentationEntityIdentifier
+    {
+      get
+      {
+        var npc = GetComponentInParent<Entity.Npc>();
+        return npc != null ? npc.Identifier : _identifier;
+      }
+    }
     public ItemSubmissionDefinition Definition => _runtimeDefinition ?? _definition;
     public bool IsCompleted => _completed;
 

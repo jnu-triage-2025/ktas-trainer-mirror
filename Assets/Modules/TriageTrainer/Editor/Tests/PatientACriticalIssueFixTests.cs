@@ -86,7 +86,7 @@ namespace TriageTrainer.Tests
     }
 
     [TestCase("PlasmaSolution", "sig.connect_ps1_to_lv1")]
-    [TestCase("BloodTransfusionSet", "sig.connect_blood_to_lv1")]
+    [TestCase("BloodBag", "sig.connect_blood_to_lv1")]
     public void RapidInfuserCompletionRaisesScenarioSignal(string kindName, string expectedSignal)
     {
       var raised = new List<string>();
@@ -114,7 +114,7 @@ namespace TriageTrainer.Tests
     }
 
     [TestCase("PlasmaSolution", "plasma_solution_1000ml")]
-    [TestCase("BloodTransfusionSet", "blood_bag")]
+    [TestCase("BloodBag", "blood_bag")]
     public void RapidInfuserAcceptsScenarioItems(string kindName, string itemIdentifier)
     {
       var kindType = typeof(Level1RapidInfuserController).GetNestedType("FluidKind", BindingFlags.NonPublic);
@@ -129,13 +129,13 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
-    public void RapidInfuserRejectsBloodTransfusionSetItem()
+    public void RapidInfuserRejectsLegacyBloodTransfusionSetItem()
     {
-      Assert.That(IsRapidInfuserItemAccepted("BloodTransfusionSet", "blood_transfusion_set"), Is.False);
+      Assert.That(IsRapidInfuserItemAccepted("BloodBag", "blood_transfusion_set"), Is.False);
     }
 
     [Test]
-    public void RapidInfuserRequiresPlasmaBeforeBloodTransfusionSet()
+    public void RapidInfuserRequiresPlasmaBeforeBloodBag()
     {
       var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RapidInfuserPrefabPath);
       Assert.That(prefab, Is.Not.Null);
@@ -146,7 +146,7 @@ namespace TriageTrainer.Tests
         Assert.That(controller, Is.Not.Null);
         var canAdd = typeof(Level1RapidInfuserController).GetMethod(
           "CanAddFluid", BindingFlags.Instance | BindingFlags.NonPublic);
-        var kind = GetRapidInfuserKind("BloodTransfusionSet");
+        var kind = GetRapidInfuserKind("BloodBag");
 
         Assert.That((bool)canAdd.Invoke(controller, new[] { kind }), Is.False);
         typeof(Level1RapidInfuserController).GetField(
@@ -161,7 +161,7 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
-    public void RapidInfuserCanPassBloodTransfusionSetWithoutPlasmaWhenConfigured()
+    public void RapidInfuserCanPassBloodBagWithoutPlasmaWhenConfigured()
     {
       var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RapidInfuserPrefabPath);
       Assert.That(prefab, Is.Not.Null);
@@ -170,15 +170,15 @@ namespace TriageTrainer.Tests
       {
         var controller = instance.GetComponent<Level1RapidInfuserController>();
         var policyField = typeof(Level1RapidInfuserController).GetField(
-          "_bloodTransfusionSetWithoutPlasmaPolicy", BindingFlags.Instance | BindingFlags.NonPublic);
+          "_bloodBagWithoutPlasmaPolicy", BindingFlags.Instance | BindingFlags.NonPublic);
         var canAdd = typeof(Level1RapidInfuserController).GetMethod(
           "CanAddFluid", BindingFlags.Instance | BindingFlags.NonPublic);
 
         Assert.That(policyField, Is.Not.Null);
         Assert.That(canAdd, Is.Not.Null);
-        policyField.SetValue(controller, BloodTransfusionSetWithoutPlasmaPolicy.Pass);
+        policyField.SetValue(controller, BloodBagWithoutPlasmaPolicy.Pass);
 
-        Assert.That((bool)canAdd.Invoke(controller, new[] { GetRapidInfuserKind("BloodTransfusionSet") }), Is.True);
+        Assert.That((bool)canAdd.Invoke(controller, new[] { GetRapidInfuserKind("BloodBag") }), Is.True);
       }
       finally
       {
@@ -199,7 +199,7 @@ namespace TriageTrainer.Tests
           "CanAttemptFluid", BindingFlags.Instance | BindingFlags.NonPublic);
 
         Assert.That(canAttempt, Is.Not.Null);
-        Assert.That((bool)canAttempt.Invoke(controller, new[] { GetRapidInfuserKind("BloodTransfusionSet") }), Is.True);
+        Assert.That((bool)canAttempt.Invoke(controller, new[] { GetRapidInfuserKind("BloodBag") }), Is.True);
       }
       finally
       {
@@ -208,7 +208,7 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
-    public void RapidInfuserCaptureStateIncludesBloodTransfusionSet()
+    public void RapidInfuserCaptureStateIncludesBloodBag()
     {
       var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RapidInfuserPrefabPath);
       Assert.That(prefab, Is.Not.Null);
@@ -217,10 +217,10 @@ namespace TriageTrainer.Tests
       {
         var controller = instance.GetComponent<Level1RapidInfuserController>();
         typeof(Level1RapidInfuserController).GetField(
-            "_initialHasBloodTransfusionSet", BindingFlags.Instance | BindingFlags.NonPublic)
+            "_initialHasBloodBag", BindingFlags.Instance | BindingFlags.NonPublic)
           ?.SetValue(controller, true);
 
-        Assert.That(controller.CaptureState().HasBloodTransfusionSet, Is.True);
+        Assert.That(controller.CaptureState().HasBloodBag, Is.True);
       }
       finally
       {
@@ -286,7 +286,7 @@ namespace TriageTrainer.Tests
           "IV 연결 지점에 접근 가능한 SphereCollider 가 있어야 합니다.");
         Assert.That(ivPoint.GetComponent<SphereCollider>().isTrigger, Is.True);
 
-        foreach (var fieldName in new[] { "_normalSalineDisplay", "_plasmaSolutionDisplay", "_bloodTransfusionSetDisplay" })
+        foreach (var fieldName in new[] { "_normalSalineDisplay", "_plasmaSolutionDisplay", "_bloodBagDisplay" })
         {
           var display = controllerType.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
             ?.GetValue(controller) as GameObject;

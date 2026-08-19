@@ -2719,6 +2719,13 @@
             "string",
             "null"
           ]
+        },
+        "PresentationBindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QuestPresentationBinding"
+          },
+          "default": []
         }
       },
       "required": [
@@ -2747,6 +2754,12 @@
     "QuestCompletionCriteria": {
       "type": "object",
       "properties": {
+        "Identifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "Type": {
           "type": "string",
           "enum": [
@@ -2807,6 +2820,97 @@
       },
       "required": [
         "Type"
+      ],
+      "additionalProperties": false
+    },
+    "QuestPresentationBinding": {
+      "type": "object",
+      "properties": {
+        "Activation": {
+          "type": "string",
+          "enum": [
+            "WholeQuest",
+            "CompletionCriteria"
+          ],
+          "default": "WholeQuest"
+        },
+        "CompletionCriteriaIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "TargetType": {
+          "type": "string",
+          "enum": [
+            "Interaction",
+            "Npc"
+          ]
+        },
+        "EntityIdentifier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "InteractionIdentifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "IconIdentifier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "IconMode": {
+          "type": "string",
+          "enum": [
+            "ReplacePrimaryIcon"
+          ],
+          "default": "ReplacePrimaryIcon"
+        },
+        "Priority": {
+          "type": "integer",
+          "default": 0
+        },
+        "ShowWhenUntracked": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "required": [
+        "TargetType",
+        "EntityIdentifier",
+        "IconIdentifier"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "TargetType": {
+                "const": "Interaction"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "InteractionIdentifier"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "Activation": {
+                "const": "CompletionCriteria"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "CompletionCriteriaIdentifier"
+            ]
+          }
+        }
       ],
       "additionalProperties": false
     },

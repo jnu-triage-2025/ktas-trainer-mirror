@@ -683,7 +683,7 @@
       "operation": "Add",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro.role_a::collect_blood_transfusion_set",
+      "questDefinitionIdentifier": "disaster_intro.role_a::collect_blood_bag",
       "quest": null,
       "nextIdentifier": "V008"
     },
@@ -698,7 +698,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_blood_transfusion_set"
+              "registryIdentifier": "sig.click_blood_bag"
             }
           ]
         }
@@ -714,7 +714,7 @@
       "operation": "Remove",
       "failureStrategy": "Ignore",
       "persistProgressOnSessionEnd": false,
-      "questDefinitionIdentifier": "disaster_intro.role_a::collect_blood_transfusion_set",
+      "questDefinitionIdentifier": "disaster_intro.role_a::collect_blood_bag",
       "quest": null,
       "nextIdentifier": "CC_D_Ready"
     },

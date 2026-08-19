@@ -50,6 +50,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     private static ScenarioController _instance;
     public static ScenarioController Instance => _instance;
+    public static event Action<ScenarioController> InstanceAvailable;
 
     // WaitMode.All/Any 병렬 노드가 분기 완료를 기다리는 동안 외부 자동 진행이
     // 병렬 부모의 NextIdentifier로 건너뛰지 못하게 한다.
@@ -310,6 +311,7 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
       _instance = this;
+      InstanceAvailable?.Invoke(this);
     }
 
     private void Reset()
@@ -3237,7 +3239,7 @@ namespace MultiplayerInfrastructure.Scenario
       return null;
     }
 
-    private static QuestData BuildQuestPayload(ScenarioQuestControlNode node, string questId)
+    private QuestData BuildQuestPayload(ScenarioQuestControlNode node, string questId)
     {
       if (node == null)
         return null;
@@ -3251,6 +3253,8 @@ namespace MultiplayerInfrastructure.Scenario
         if (string.IsNullOrWhiteSpace(copy.DefinitionIdentifier) && !string.IsNullOrWhiteSpace(node.QuestDefinitionIdentifier))
           copy.DefinitionIdentifier = node.QuestDefinitionIdentifier;
 
+        copy.SourceScenarioIdentifier = _currentGraph?.Identifier;
+
         return copy;
       }
 
@@ -3260,7 +3264,8 @@ namespace MultiplayerInfrastructure.Scenario
       return new QuestData
       {
         Id = string.IsNullOrWhiteSpace(questId) ? node.QuestDefinitionIdentifier : questId,
-        DefinitionIdentifier = node.QuestDefinitionIdentifier
+        DefinitionIdentifier = node.QuestDefinitionIdentifier,
+        SourceScenarioIdentifier = _currentGraph?.Identifier
       };
     }
 

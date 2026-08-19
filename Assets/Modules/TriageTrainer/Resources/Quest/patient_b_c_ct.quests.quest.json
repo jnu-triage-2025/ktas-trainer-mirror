@@ -36,22 +36,54 @@
       "isOrdinal": false,
       "tasks": [
         {
+          "identifier": "triage-patient-b",
           "type": "InteractionSignalReceived",
           "signalId": "triage_submitted_patient_b",
           "displayTextContent": "많이 다친 남성 환자 중증도 분류",
           "count": 1
         },
         {
+          "identifier": "triage-patient-c",
           "type": "InteractionSignalReceived",
           "signalId": "triage_submitted_patient_c",
           "displayTextContent": "많이 다친 여성 환자 중증도 분류",
           "count": 1
         },
         {
+          "identifier": "triage-patient-dummy-d",
           "type": "InteractionSignalReceived",
           "signalId": "triage_submitted_patient_dummy_d_b",
           "displayTextContent": "조금 다친 여성 환자 중증도 분류",
           "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "triage-patient-b",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_b",
+          "interactionIdentifier": "triage_assess",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "triage-patient-c",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_c",
+          "interactionIdentifier": "triage_assess",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "triage-patient-dummy-d",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_dummy_d_b",
+          "interactionIdentifier": "triage_assess",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
         }
       ]
     },
@@ -78,19 +110,41 @@
       "persistProgressOnSessionEnd": false,
       "isTrackedByDefault": true,
       "scope": "Player",
-      "isOrdinal": false,
+      "isOrdinal": true,
       "tasks": [
         {
+          "identifier": "move-patient-b",
           "type": "InteractionSignalReceived",
           "signalId": "carezone_patient_entered_patient_b",
           "displayTextContent": "많이 다친 남성 환자 처치 구역 이동",
           "count": 1
         },
         {
+          "identifier": "move-patient-c",
           "type": "InteractionSignalReceived",
           "signalId": "carezone_patient_entered_patient_c",
           "displayTextContent": "많이 다친 여성 환자 처치 구역 이동",
           "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "move-patient-b",
+          "targetType": "Interaction",
+          "entityIdentifier": "bed_b",
+          "interactionIdentifier": "move_bed",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "move-patient-c",
+          "targetType": "Interaction",
+          "entityIdentifier": "bed_c",
+          "interactionIdentifier": "move_bed",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
         }
       ]
     },

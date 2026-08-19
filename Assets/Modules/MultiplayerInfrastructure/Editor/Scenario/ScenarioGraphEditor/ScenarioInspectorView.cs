@@ -743,9 +743,39 @@ namespace MultiplayerInfrastructure.Editor
 
         DrawQuestWaypointReachedCriteria(data.Quest.Tasks, "Tasks", true);
         DrawQuestWaypointReachedCriteria(data.Quest.CompletionCriteria, "Completion Criteria", true);
+        DrawQuestPresentationBindings(data.Quest.PresentationBindings ??= new System.Collections.Generic.List<QuestPresentationBinding>());
       }
 
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private static void DrawQuestPresentationBindings(System.Collections.Generic.List<QuestPresentationBinding> bindings)
+    {
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("Presentation Bindings", EditorStyles.boldLabel);
+      int removeIndex = -1;
+      for (int i = 0; i < bindings.Count; i++)
+      {
+        var binding = bindings[i] ??= new QuestPresentationBinding();
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        binding.Activation = (QuestPresentationActivation)EditorGUILayout.EnumPopup("Activation", binding.Activation);
+        binding.CompletionCriteriaIdentifier = EditorGUILayout.TextField("Completion Criteria", binding.CompletionCriteriaIdentifier ?? string.Empty);
+        binding.TargetType = (QuestPresentationTargetType)EditorGUILayout.EnumPopup("Target Type", binding.TargetType);
+        binding.EntityIdentifier = EditorGUILayout.TextField("Entity Identifier", binding.EntityIdentifier ?? string.Empty);
+        binding.InteractionIdentifier = EditorGUILayout.TextField("Interaction Identifier", binding.InteractionIdentifier ?? string.Empty);
+        binding.IconIdentifier = EditorGUILayout.TextField("Icon Identifier", binding.IconIdentifier ?? string.Empty);
+        binding.IconMode = (QuestPresentationIconMode)EditorGUILayout.EnumPopup("Icon Mode", binding.IconMode);
+        binding.Priority = EditorGUILayout.IntField("Priority", binding.Priority);
+        binding.ShowWhenUntracked = EditorGUILayout.Toggle("Show When Untracked", binding.ShowWhenUntracked);
+        if (GUILayout.Button("Remove Binding"))
+          removeIndex = i;
+        EditorGUILayout.EndVertical();
+      }
+
+      if (removeIndex >= 0)
+        bindings.RemoveAt(removeIndex);
+      if (GUILayout.Button("Add Presentation Binding"))
+        bindings.Add(new QuestPresentationBinding());
     }
 
     private void DrawReferencedQuestDefinition(string identifier)
@@ -862,6 +892,9 @@ namespace MultiplayerInfrastructure.Editor
             hasWaypointReached = true;
           }
 
+          criterion.Identifier = EditorGUILayout.TextField(
+            $"Criterion Identifier [{i}]",
+            criterion.Identifier ?? string.Empty);
           criterion.WaypointIdentifier = EditorGUILayout.TextField(
             $"Waypoint [{i}]",
             criterion.WaypointIdentifier ?? string.Empty);

@@ -24,6 +24,10 @@ namespace MultiplayerInfrastructure.Quest
     /// <summary>세션이 종료된 뒤에도 이 퀘스트의 진행 상태를 유지할지 여부입니다.</summary>
     public bool PersistProgressOnSessionEnd { get; set; }
     public string WaypointIdentifier { get; set; }
+    public List<QuestPresentationBinding> PresentationBindings { get; set; }
+
+    [JsonIgnore]
+    public string SourceScenarioIdentifier { get; set; }
 
     public QuestData()
     {
@@ -33,6 +37,7 @@ namespace MultiplayerInfrastructure.Quest
       CompletionCriteria = new List<QuestCompletionCriteria>();
       Scope = QuestScopeType.Player;
       WaypointIdentifier = string.Empty;
+      PresentationBindings = new List<QuestPresentationBinding>();
     }
 
     public QuestData(string id, string title, string description, string questContent, bool isTracked = false, string waypointIdentifier = null)
@@ -51,6 +56,7 @@ namespace MultiplayerInfrastructure.Quest
       IsTrackable = true;
       IsAutoComplete = false;
       WaypointIdentifier = waypointIdentifier ?? string.Empty;
+      PresentationBindings = new List<QuestPresentationBinding>();
     }
 
     public QuestData Clone()
@@ -66,8 +72,26 @@ namespace MultiplayerInfrastructure.Quest
         Scope = Scope,
         IsTrackable = IsTrackable,
         IsAutoComplete = IsAutoComplete,
-        PersistProgressOnSessionEnd = PersistProgressOnSessionEnd
+        PersistProgressOnSessionEnd = PersistProgressOnSessionEnd,
+        PresentationBindings = ClonePresentationBindings(PresentationBindings),
+        SourceScenarioIdentifier = SourceScenarioIdentifier
       };
+    }
+
+    internal static List<QuestPresentationBinding> ClonePresentationBindings(
+      IReadOnlyList<QuestPresentationBinding> bindings)
+    {
+      var list = new List<QuestPresentationBinding>();
+      if (bindings == null)
+        return list;
+
+      for (int i = 0; i < bindings.Count; i++)
+      {
+        if (bindings[i] != null)
+          list.Add(bindings[i].Clone());
+      }
+
+      return list;
     }
 
     private static List<QuestCompletionCriteria> CloneCriteria(IReadOnlyList<QuestCompletionCriteria> criteria)
@@ -124,6 +148,7 @@ namespace MultiplayerInfrastructure.Quest
   {
     public const float DefaultReachDistance = 4f;
 
+    public string Identifier { get; set; }
     public QuestCompletionCriteriaType Type { get; set; } = QuestCompletionCriteriaType.InventoryContains;
     public string ItemId { get; set; }
     public string SignalId { get; set; }
@@ -144,6 +169,7 @@ namespace MultiplayerInfrastructure.Quest
     {
       var copy = new QuestCompletionCriteria
       {
+        Identifier = Identifier,
         Type = Type,
         ItemId = ItemId,
         SignalId = SignalId,
@@ -188,6 +214,56 @@ namespace MultiplayerInfrastructure.Quest
     Global
   }
 
+  [JsonConverter(typeof(JsonStringEnumConverter))]
+  public enum QuestPresentationActivation
+  {
+    WholeQuest,
+    CompletionCriteria
+  }
+
+  [JsonConverter(typeof(JsonStringEnumConverter))]
+  public enum QuestPresentationTargetType
+  {
+    Interaction,
+    Npc
+  }
+
+  [JsonConverter(typeof(JsonStringEnumConverter))]
+  public enum QuestPresentationIconMode
+  {
+    ReplacePrimaryIcon
+  }
+
+  [Serializable]
+  public sealed class QuestPresentationBinding
+  {
+    public QuestPresentationActivation Activation { get; set; } = QuestPresentationActivation.WholeQuest;
+    public string CompletionCriteriaIdentifier { get; set; }
+    public QuestPresentationTargetType TargetType { get; set; }
+    public string EntityIdentifier { get; set; }
+    public string InteractionIdentifier { get; set; }
+    public string IconIdentifier { get; set; }
+    public QuestPresentationIconMode IconMode { get; set; } = QuestPresentationIconMode.ReplacePrimaryIcon;
+    public int Priority { get; set; }
+    public bool ShowWhenUntracked { get; set; } = true;
+
+    public QuestPresentationBinding Clone()
+    {
+      return new QuestPresentationBinding
+      {
+        Activation = Activation,
+        CompletionCriteriaIdentifier = CompletionCriteriaIdentifier,
+        TargetType = TargetType,
+        EntityIdentifier = EntityIdentifier,
+        InteractionIdentifier = InteractionIdentifier,
+        IconIdentifier = IconIdentifier,
+        IconMode = IconMode,
+        Priority = Priority,
+        ShowWhenUntracked = ShowWhenUntracked
+      };
+    }
+  }
+
   [Serializable]
   public sealed class QuestDefinition
   {
@@ -205,6 +281,7 @@ namespace MultiplayerInfrastructure.Quest
     public bool IsOrdinal { get; set; }
     public List<QuestCompletionCriteria> Tasks { get; set; } = new();
     public List<QuestCompletionCriteria> CompletionCriteria { get; set; } = new();
+    public List<QuestPresentationBinding> PresentationBindings { get; set; } = new();
 
     public QuestDefinition Clone()
     {
@@ -222,7 +299,8 @@ namespace MultiplayerInfrastructure.Quest
         Scope = Scope,
         IsOrdinal = IsOrdinal,
         Tasks = new List<QuestCompletionCriteria>(),
-        CompletionCriteria = new List<QuestCompletionCriteria>()
+        CompletionCriteria = new List<QuestCompletionCriteria>(),
+        PresentationBindings = QuestData.ClonePresentationBindings(PresentationBindings)
       };
 
       if (Tasks != null)

@@ -10,7 +10,7 @@ using UnityEngine;
 namespace MultiplayerInfrastructure.Entity
 {
   [DisallowMultipleComponent]
-  public class Npc : Interactable, ISpawnedEntityIdentifierReceiver
+  public class Npc : Interactable, ISpawnedEntityIdentifierReceiver, IOverheadPresentationAnchorProvider
   {
     [Header("Npc")]
     [SerializeField] private NPCBaseModelSO _npcBaseModel;
@@ -27,6 +27,16 @@ namespace MultiplayerInfrastructure.Entity
     [SerializeField] private List<MonoBehaviour> _customInteractSources = new();
 
     public string Identifier => _identifier;
+    public override string PresentationEntityIdentifier => _identifier;
+    public Transform OverheadPresentationAnchor
+    {
+      get
+      {
+        EnsureScenarioOverheadNameAnchor();
+        _scenarioOverheadNameAnchor.localPosition = new Vector3(0f, GetOverheadNameHeight(), 0f);
+        return _scenarioOverheadNameAnchor;
+      }
+    }
 
     private readonly List<IInteract> _resolvedInteracts = new List<IInteract>();
     private readonly List<IInteract> _runtimeActorInteracts = new List<IInteract>();
@@ -89,8 +99,12 @@ namespace MultiplayerInfrastructure.Entity
       if (string.IsNullOrWhiteSpace(_registeredIdentifier))
         return;
 
-      Registry.Registry.Unregister(RegistryType.Npc, _registeredIdentifier);
-      Registry.Registry.UnregisterEntity(_registeredIdentifier);
+      if (Registry.Registry.Get<GameObject>(RegistryType.Npc, _registeredIdentifier) == gameObject)
+        Registry.Registry.Unregister(RegistryType.Npc, _registeredIdentifier);
+
+      if (Registry.Registry.TryGetEntity(_registeredIdentifier, out var descriptor)
+          && descriptor?.GameObject == gameObject)
+        Registry.Registry.UnregisterEntity(_registeredIdentifier);
       _registeredIdentifier = null;
     }
 
@@ -220,7 +234,7 @@ namespace MultiplayerInfrastructure.Entity
             break;
           case ScenarioActingNpcInteractionType.Signal:
             if (!string.IsNullOrWhiteSpace(definition.CompletionSignalIdentifier))
-              _runtimeActorInteracts.Add(new ScenarioActingNpcSignalInteract(definition));
+              _runtimeActorInteracts.Add(new ScenarioActingNpcSignalInteract(this, definition));
             break;
         }
       }
@@ -235,14 +249,15 @@ namespace MultiplayerInfrastructure.Entity
     {
       if (string.IsNullOrWhiteSpace(displayName))
       {
-        DestroyScenarioOverheadNameLabel();
+        ResolveOverheadLabelUI()?.RemoveLabel(_scenarioOverheadNameAnchor, "npc-name");
         return;
       }
 
-      EnsureScenarioOverheadNameAnchor();
-      _scenarioOverheadNameAnchor.localPosition = new Vector3(0f, GetOverheadNameHeight(), 0f);
+      var overheadAnchor = OverheadPresentationAnchor;
       ResolveOverheadLabelUI()?.SetLabel(
-        _scenarioOverheadNameAnchor,
+        overheadAnchor,
+        "npc-name",
+        0,
         new EntityOverheadLabelUIController.LabelContent(displayName.Trim(), Color.white));
     }
 
@@ -328,7 +343,7 @@ namespace MultiplayerInfrastructure.Entity
     private void DestroyScenarioOverheadNameLabel()
     {
       // 파괴된 앵커는 컨트롤러 LateUpdate 의 stale 정리가 제거하지만, 명시적으로 먼저 해제한다.
-      EntityOverheadLabelUIController.ActiveInstance?.RemoveLabel(_scenarioOverheadNameAnchor);
+      EntityOverheadLabelUIController.ActiveInstance?.RemoveLabels(_scenarioOverheadNameAnchor);
 
       if (_scenarioOverheadNameAnchor != null)
       {
@@ -566,7 +581,7 @@ namespace MultiplayerInfrastructure.Entity
       return changed;
     }
 
-    private sealed class ScenarioNpcInteract : IInteract
+    private sealed class ScenarioNpcInteract : IInteract, IQuestPresentationTarget
     {
       private readonly Npc _npc;
       private readonly NPCScenarioInteractDefinition _definition;
@@ -591,6 +606,8 @@ namespace MultiplayerInfrastructure.Entity
       public Sprite DisplayIcon => _definition.DisplayIcon;
       public bool AllowDisplayIconFallback => _definition.AllowDisplayIconFallback;
       public Color DisplayColor => _definition.DisplayColor;
+      public string PresentationEntityIdentifier => _npc.Identifier;
+      public string InteractionIdentifier => _definition.ScenarioIdentifier;
 
       public void Interact(Transform interactor)
       {
@@ -598,7 +615,7 @@ namespace MultiplayerInfrastructure.Entity
       }
     }
 
-    private sealed class ScenarioActingNpcStartInteract : IInteract
+    private sealed class ScenarioActingNpcStartInteract : IInteract, IQuestPresentationTarget
     {
       private readonly Npc _npc;
       private readonly ScenarioActingNpcInteractionDefinition _definition;
@@ -616,6 +633,8 @@ namespace MultiplayerInfrastructure.Entity
         ?? Registry.Registry.Get<Sprite>(RegistryType.IconSprite, IconSpriteIdentifiers.ScenarioDefault);
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;
+      public string PresentationEntityIdentifier => _npc.Identifier;
+      public string InteractionIdentifier => _definition.Identifier;
 
       public void Interact(Transform interactor)
       {
@@ -644,12 +663,14 @@ namespace MultiplayerInfrastructure.Entity
       }
     }
 
-    private sealed class ScenarioActingNpcSignalInteract : IInteract
+    private sealed class ScenarioActingNpcSignalInteract : IInteract, IQuestPresentationTarget
     {
+      private readonly Npc _npc;
       private readonly ScenarioActingNpcInteractionDefinition _definition;
 
-      public ScenarioActingNpcSignalInteract(ScenarioActingNpcInteractionDefinition definition)
+      public ScenarioActingNpcSignalInteract(Npc npc, ScenarioActingNpcInteractionDefinition definition)
       {
+        _npc = npc;
         _definition = definition;
       }
 
@@ -659,6 +680,8 @@ namespace MultiplayerInfrastructure.Entity
       public Sprite DisplayIcon => ResolveActorIcon(_definition.IconIdentifier);
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;
+      public string PresentationEntityIdentifier => _npc.Identifier;
+      public string InteractionIdentifier => _definition.Identifier;
 
       public void Interact(Transform interactor)
       {

@@ -160,6 +160,18 @@ namespace MultiplayerInfrastructure.Editor
             Add("quest.description",       qc.Quest.Description);
             Add("quest.questContent",      qc.Quest.QuestContent);
             Add("quest.waypointIdentifier",qc.Quest.WaypointIdentifier);
+            if (qc.Quest.PresentationBindings != null)
+            {
+              for (int i = 0; i < qc.Quest.PresentationBindings.Count; i++)
+              {
+                var binding = qc.Quest.PresentationBindings[i];
+                if (binding == null) continue;
+                Add($"quest.presentationBindings[{i}].entityIdentifier", binding.EntityIdentifier);
+                Add($"quest.presentationBindings[{i}].interactionIdentifier", binding.InteractionIdentifier);
+                Add($"quest.presentationBindings[{i}].completionCriteriaIdentifier", binding.CompletionCriteriaIdentifier);
+                Add($"quest.presentationBindings[{i}].iconIdentifier", binding.IconIdentifier);
+              }
+            }
           }
           break;
 

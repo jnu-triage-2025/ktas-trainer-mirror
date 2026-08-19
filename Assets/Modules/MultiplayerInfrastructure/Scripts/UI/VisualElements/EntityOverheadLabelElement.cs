@@ -16,6 +16,7 @@ namespace MultiplayerInfrastructure.UI
   public sealed class EntityOverheadLabelElement : VisualElement
   {
     private readonly VisualElement _swatch;
+    private readonly VisualElement _icon;
     private readonly Label _text;
 
     public EntityOverheadLabelElement()
@@ -58,6 +59,20 @@ namespace MultiplayerInfrastructure.UI
       _swatch.pickingMode = PickingMode.Ignore;
       Add(_swatch);
 
+      _icon = new VisualElement();
+      _icon.style.width = 22;
+      _icon.style.height = 22;
+      _icon.style.minWidth = 22;
+      _icon.style.minHeight = 22;
+      _icon.style.marginRight = 4;
+      _icon.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+      _icon.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Center);
+      _icon.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Center);
+      _icon.style.backgroundRepeat = new StyleBackgroundRepeat(StyleKeyword.None);
+      _icon.style.display = DisplayStyle.None;
+      _icon.pickingMode = PickingMode.Ignore;
+      Add(_icon);
+
       _text = new Label();
       _text.style.fontSize = 11;
       _text.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -77,10 +92,19 @@ namespace MultiplayerInfrastructure.UI
     /// <param name="textColor">텍스트 색.</param>
     /// <param name="showSwatch">색상 사각형 표시 여부. false 면 텍스트만 표시한다(예: NPC 이름표).</param>
     public void SetContent(Color swatchColor, string text, Color textColor, bool showSwatch = true)
+      => SetContent(swatchColor, text, textColor, showSwatch, null);
+
+    public void SetContent(Color swatchColor, string text, Color textColor, bool showSwatch, Sprite icon)
     {
       _swatch.style.backgroundColor = swatchColor;
       _swatch.style.display = showSwatch ? DisplayStyle.Flex : DisplayStyle.None;
+      if (icon != null)
+        _icon.style.backgroundImage = new StyleBackground(icon);
+      else
+        _icon.style.backgroundImage = StyleKeyword.None;
+      _icon.style.display = icon != null ? DisplayStyle.Flex : DisplayStyle.None;
       _text.text = text ?? string.Empty;
+      _text.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
       _text.style.color = textColor;
     }
 

@@ -4,6 +4,7 @@ using MultiplayerInfrastructure.UI;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
+using MultiplayerInfrastructure.Quest;
 
 namespace MultiplayerInfrastructure.UI
 {
@@ -271,11 +272,25 @@ namespace MultiplayerInfrastructure.UI
       var icons = interact as IInteractDisplayIcons;
       var displayedSprites = new HashSet<Sprite>();
       int iconCount = 0;
+      Sprite primaryOverride = null;
+      bool hasOverride = QuestPresentationService.ActiveInstance != null
+                         && QuestPresentationService.ActiveInstance.TryGetPrimaryIconOverride(interact, out primaryOverride);
+
+      int lastListIconIndex = -1;
+      if (hasOverride && interact?.DisplayIcon == null && icons?.DisplayIcons != null)
+      {
+        for (int i = 0; i < icons.DisplayIcons.Count; i++)
+        {
+          if (icons.DisplayIcons[i] != null)
+            lastListIconIndex = i;
+        }
+      }
 
       if (icons?.DisplayIcons != null)
       {
-        foreach (var sprite in icons.DisplayIcons)
+        for (int i = 0; i < icons.DisplayIcons.Count; i++)
         {
+          var sprite = hasOverride && i == lastListIconIndex ? primaryOverride : icons.DisplayIcons[i];
           if (sprite == null || !displayedSprites.Add(sprite)) continue;
           ConfigureIconHolder(iconCount++, sprite, Color.clear);
         }
@@ -283,7 +298,9 @@ namespace MultiplayerInfrastructure.UI
 
       // 목록 아이콘에 더해, 기존 구현체의 동적/override 단일 아이콘도 표시한다.
       // 같은 Sprite가 목록에 이미 있으면 중복 표시하지 않는다.
-      var displayIcon = interact?.DisplayIcon;
+      var displayIcon = hasOverride && (interact?.DisplayIcon != null || lastListIconIndex < 0)
+        ? primaryOverride
+        : interact?.DisplayIcon;
       if (displayIcon != null && displayedSprites.Add(displayIcon))
         ConfigureIconHolder(iconCount++, displayIcon, Color.clear);
 

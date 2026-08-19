@@ -13,13 +13,17 @@ namespace TriageTrainer.Scenario
   /// </summary>
   [DisallowMultipleComponent]
   [RequireComponent(typeof(Collider))]
-  public sealed class ScenarioActionInteractable : MonoBehaviour, IInteractable, IInteract, IInteractorConditional, IInteractToggleable, IInteractDisplayIcons
+  public sealed class ScenarioActionInteractable : MonoBehaviour, IInteractable, IInteract, IInteractorConditional, IInteractToggleable, IInteractDisplayIcons, IQuestPresentationTarget
   {
     [Header("Scenario Action")]
     [SerializeField] private string _displayText = "상호작용";
     [SerializeField] private Sprite _displayIcon;
     [SerializeField] private List<Sprite> _displayIcons = new();
     [SerializeField] private string _completionSignal;
+    [Tooltip("퀘스트 표시 바인딩에 사용할 소유 엔티티 식별자입니다.")]
+    [SerializeField] private string _presentationEntityIdentifier;
+    [Tooltip("비워두면 completionSignal을 상호작용 식별자로 사용합니다.")]
+    [SerializeField] private string _interactionIdentifier;
     [Tooltip("이 상호작용을 노출하기 전에 RuntimeState에 이미 있어야 하는 시나리오 신호입니다.")]
     [SerializeField] private string[] _requiredRaisedSignals = Array.Empty<string>();
     [SerializeField] private bool _enabled = true;
@@ -36,6 +40,10 @@ namespace TriageTrainer.Scenario
     public IInteract[] Interacts => new IInteract[] { this };
     public string DisplayText => _displayText;
     public string CompletionSignal => _completionSignal;
+    public string PresentationEntityIdentifier => _presentationEntityIdentifier;
+    public string InteractionIdentifier => string.IsNullOrWhiteSpace(_interactionIdentifier)
+      ? _completionSignal
+      : _interactionIdentifier;
     public Sprite DisplayIcon => _displayIcon;
     public IReadOnlyList<Sprite> DisplayIcons => _displayIcons;
     public bool AllowDisplayIconFallback => true;

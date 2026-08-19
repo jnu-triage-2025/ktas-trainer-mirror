@@ -8,7 +8,9 @@ namespace MultiplayerInfrastructure.Registry
 
     private static readonly (string Identifier, string Path)[] IconLiterals =
     {
-      ("message-circle", $"{IconResourceRoot}/message-circle")
+      ("message-circle", $"{IconResourceRoot}/message-circle"),
+      ("quest-interaction", $"{IconResourceRoot}/exclamation-mark__yellow"),
+      ("quest-marker", $"{IconResourceRoot}/exclamation-mark__yellow")
     };
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]

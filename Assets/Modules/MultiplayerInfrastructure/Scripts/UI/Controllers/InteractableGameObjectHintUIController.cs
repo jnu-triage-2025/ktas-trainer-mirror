@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.Events;
 using Unity.VisualScripting;
+using MultiplayerInfrastructure.Quest;
 
 namespace MultiplayerInfrastructure.UI
 {
@@ -108,6 +109,7 @@ namespace MultiplayerInfrastructure.UI
 
       OnNewInteractableAdded.AddListener(RefreshUI);
       OnNewInteractableRemoved.AddListener(RefreshUI);
+      QuestPresentationService.PresentationChanged += RefreshUI;
 
       RefreshUI();
     }
@@ -116,6 +118,7 @@ namespace MultiplayerInfrastructure.UI
     {
       OnNewInteractableAdded.RemoveListener(RefreshUI);
       OnNewInteractableRemoved.RemoveListener(RefreshUI);
+      QuestPresentationService.PresentationChanged -= RefreshUI;
     }
 
     #endregion

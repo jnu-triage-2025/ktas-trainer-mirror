@@ -29,6 +29,9 @@ namespace MultiplayerInfrastructure.Registry
     private static readonly Dictionary<string, string> _playerEntityIdentifierByOwnerUserIdentifier = new(StringComparer.Ordinal);
     private static bool _builtInRegistryInitialized;
 
+    public static event Action<RegistryType, string, object> OnEntryRegistered;
+    public static event Action<RegistryType, string> OnEntryUnregistered;
+
     static partial void RegisterBuiltInLiterals();
 
     private static void EnsureBuiltInRegistryInitialized()
@@ -51,6 +54,7 @@ namespace MultiplayerInfrastructure.Registry
 
       var registry = ResolveRegistry(registryType);
       registry[identifier] = definition;
+      OnEntryRegistered?.Invoke(registryType, identifier, definition);
     }
 
     public static void Unregister(RegistryType registryType, string identifier)
@@ -71,7 +75,8 @@ namespace MultiplayerInfrastructure.Registry
         RemoveEntityIndexes(existingDescriptor);
       }
 
-      registry.Remove(identifier);
+      if (registry.Remove(identifier))
+        OnEntryUnregistered?.Invoke(registryType, identifier);
     }
 
     public static T Get<T>(RegistryType registryType, string identifier)

@@ -262,13 +262,13 @@ namespace MultiplayerInfrastructure.Tests.Scenario
         var npc = gameObject.AddComponent<MultiplayerInfrastructure.Entity.Npc>();
         npc.ApplySpawnedEntityIdentifier("npc-display-test");
         npc.SetScenarioDisplay("First", true);
-        var label = gameObject.GetComponentInChildren<TextMesh>(true);
-        Assert.That(label, Is.Not.Null);
-        float firstHeight = label.transform.localPosition.y;
+        var anchor = npc.OverheadPresentationAnchor;
+        Assert.That(anchor, Is.Not.Null);
+        float firstHeight = anchor.localPosition.y;
 
         npc.SetScenarioDisplay("Second", null);
 
-        Assert.That(label.transform.localPosition.y, Is.EqualTo(firstHeight).Within(0.001f));
+        Assert.That(anchor.localPosition.y, Is.EqualTo(firstHeight).Within(0.001f));
         Assert.That(
           MultiplayerInfrastructure.Registry.Registry.TryGetEntity(
             "npc-display-test", out var descriptor),

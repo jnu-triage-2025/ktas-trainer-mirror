@@ -74,7 +74,7 @@ namespace TriageTrainer.Entity
       }
     }
 
-    private sealed class PatientTriageInteract : IInteract, IInteractorConditional
+    private sealed class PatientTriageInteract : IInteract, IInteractorConditional, IQuestPresentationTarget
     {
       private readonly PatientController _owner;
 
@@ -94,6 +94,8 @@ namespace TriageTrainer.Entity
       public Sprite DisplayIcon => null;
       public bool AllowDisplayIconFallback => false;
       public Color DisplayColor => Color.clear;
+      public string PresentationEntityIdentifier => _owner.Identifier;
+      public string InteractionIdentifier => InteractIdTriage;
 
       public bool CanInteract(Transform interactor)
       {

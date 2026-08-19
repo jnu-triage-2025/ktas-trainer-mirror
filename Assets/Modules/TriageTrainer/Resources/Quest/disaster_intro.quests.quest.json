@@ -76,10 +76,10 @@
       ]
     },
     {
-      "identifier": "collect_blood_transfusion_set",
-      "title": "수혈 세트 획득",
-      "description": "혈액백(수혈 세트)을 획득하세요.",
-      "questContent": "수혈 세트 획득",
+      "identifier": "collect_blood_bag",
+      "title": "혈액백 획득",
+      "description": "혈액백을 획득하세요.",
+      "questContent": "혈액백 획득",
       "isTrackable": true,
       "isAutoComplete": true,
       "persistProgressOnSessionEnd": false,
@@ -88,8 +88,8 @@
       "completionCriteria": [
         {
           "type": "InventoryContains",
-          "itemId": "blood_transfusion_set",
-          "displayTextContent": "수혈 세트 획득",
+          "itemId": "blood_bag",
+          "displayTextContent": "혈액백 획득",
           "count": 1,
           "conditions": []
         }

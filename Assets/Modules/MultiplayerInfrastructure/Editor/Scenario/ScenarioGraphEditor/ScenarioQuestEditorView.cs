@@ -179,6 +179,7 @@ namespace MultiplayerInfrastructure.Editor
       foldout.Add(Toggle("Ordinal", definition.IsOrdinal, value => { definition.IsOrdinal = value; Save(source); }));
       foldout.Add(BuildCriteriaList(source, definition.Tasks ??= new List<QuestCompletionCriteria>(), "Tasks"));
       foldout.Add(BuildCriteriaList(source, definition.CompletionCriteria ??= new List<QuestCompletionCriteria>(), "Completion Criteria"));
+      foldout.Add(BuildPresentationBindings(source, definition.PresentationBindings ??= new List<QuestPresentationBinding>()));
       foldout.Add(new Button(() =>
       {
         source.Payload.Definitions.Remove(definition);
@@ -209,6 +210,7 @@ namespace MultiplayerInfrastructure.Editor
     {
       var foldout = new Foldout { text = $"{index + 1}. {criterion.Type}", value = false };
       foldout.style.marginLeft = 8;
+      foldout.Add(Text("Identifier", criterion.Identifier, value => { criterion.Identifier = Normalize(value); Save(source); }));
       foldout.Add(Enum("Type", criterion.Type, value => { criterion.Type = value; Save(source); Refresh(); }));
       foldout.Add(Text("Item ID", criterion.ItemId, value => { criterion.ItemId = Normalize(value); Save(source); }));
       foldout.Add(Text("Signal ID", criterion.SignalId, value => { criterion.SignalId = Normalize(value); Save(source); }));
@@ -224,6 +226,41 @@ namespace MultiplayerInfrastructure.Editor
       foldout.Add(BuildCriteriaList(source, criterion.Conditions ??= new List<QuestCompletionCriteria>(), "Conditions"));
       foldout.Add(new Button(() => { owner.Remove(criterion); Save(source); Refresh(); }) { text = "Remove Criterion" });
       return foldout;
+    }
+
+    private VisualElement BuildPresentationBindings(QuestSource source, List<QuestPresentationBinding> bindings)
+    {
+      var listFoldout = new Foldout { text = $"Presentation Bindings ({bindings.Count})", value = false };
+      for (int index = 0; index < bindings.Count; index++)
+      {
+        var binding = bindings[index];
+        if (binding == null)
+          continue;
+
+        var foldout = new Foldout { text = $"{index + 1}. {binding.TargetType}", value = false };
+        foldout.style.marginLeft = 8;
+        foldout.Add(Enum("Activation", binding.Activation, value => { binding.Activation = value; Save(source); Refresh(); }));
+        foldout.Add(Text("Completion Criteria", binding.CompletionCriteriaIdentifier, value => { binding.CompletionCriteriaIdentifier = Normalize(value); Save(source); }));
+        foldout.Add(Enum("Target Type", binding.TargetType, value => { binding.TargetType = value; Save(source); Refresh(); }));
+        foldout.Add(Text("Entity Identifier", binding.EntityIdentifier, value => { binding.EntityIdentifier = Normalize(value); Save(source); }));
+        foldout.Add(Text("Interaction Identifier", binding.InteractionIdentifier, value => { binding.InteractionIdentifier = Normalize(value); Save(source); }));
+        foldout.Add(Text("Icon Identifier", binding.IconIdentifier, value => { binding.IconIdentifier = Normalize(value); Save(source); }));
+        foldout.Add(Enum("Icon Mode", binding.IconMode, value => { binding.IconMode = value; Save(source); }));
+        var priority = new IntegerField("Priority") { value = binding.Priority };
+        priority.RegisterValueChangedCallback(evt => { binding.Priority = evt.newValue; Save(source); });
+        foldout.Add(priority);
+        foldout.Add(Toggle("Show When Untracked", binding.ShowWhenUntracked, value => { binding.ShowWhenUntracked = value; Save(source); }));
+        foldout.Add(new Button(() => { bindings.Remove(binding); Save(source); Refresh(); }) { text = "Remove Binding" });
+        listFoldout.Add(foldout);
+      }
+
+      listFoldout.Add(new Button(() =>
+      {
+        bindings.Add(new QuestPresentationBinding());
+        Save(source);
+        Refresh();
+      }) { text = "Add Binding" });
+      return listFoldout;
     }
 
     private static TextField Text(string label, string value, Action<string> onChanged, bool multiline = false)

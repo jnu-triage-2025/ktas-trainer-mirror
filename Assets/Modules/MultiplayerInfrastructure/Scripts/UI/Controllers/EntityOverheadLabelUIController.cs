@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using UnityEngine;
 using UnityEngine.UIElements;
+using MultiplayerInfrastructure.Quest;
 
 namespace MultiplayerInfrastructure.UI
 {
@@ -27,6 +28,7 @@ namespace MultiplayerInfrastructure.UI
       public readonly Color SwatchColor;
       public readonly string Text;
       public readonly Color TextColor;
+      public readonly Sprite Icon;
       /// <summary>색상 사각형 표시 여부. false 면 텍스트만 표시한다(예: NPC 이름표).</summary>
       public readonly bool ShowSwatch;
 
@@ -36,6 +38,7 @@ namespace MultiplayerInfrastructure.UI
         Text = text;
         TextColor = textColor;
         ShowSwatch = true;
+        Icon = null;
       }
 
       /// <summary>색상 사각형 없이 텍스트만 표시하는 라벨(예: NPC 이름표).</summary>
@@ -45,6 +48,16 @@ namespace MultiplayerInfrastructure.UI
         Text = text;
         TextColor = textColor;
         ShowSwatch = false;
+        Icon = null;
+      }
+
+      public LabelContent(Sprite icon)
+      {
+        SwatchColor = Color.clear;
+        Text = string.Empty;
+        TextColor = Color.white;
+        ShowSwatch = false;
+        Icon = icon;
       }
     }
 
@@ -56,6 +69,7 @@ namespace MultiplayerInfrastructure.UI
     [SerializeField] private float _sortingOrder = DefaultsUIDocument.EntityOverheadLabelSortOrder;
     [Tooltip("월드 앵커로부터 위로 띄울 추가 높이(월드 단위).")]
     [SerializeField] private float _worldHeightOffset = 0.4f;
+    [SerializeField] private int _maxChannelsPerAnchor = 4;
     [SerializeField] private UnityEngine.Camera _camera;
 
     private UIDocument _uiDocument;
@@ -64,15 +78,18 @@ namespace MultiplayerInfrastructure.UI
     private sealed class Entry
     {
       public Transform Target;
+      public string ChannelId;
+      public int ChannelOrder;
       public EntityOverheadLabelElement Element;
     }
 
-    private readonly Dictionary<Transform, Entry> _entries = new();
+    private readonly Dictionary<Transform, Dictionary<string, Entry>> _entries = new();
 
     protected override void Awake()
     {
       base.Awake();
       ActiveInstance = this;
+      QuestPresentationService.ActiveInstance?.RefreshPresentation();
     }
 
     private void Start()
@@ -91,10 +108,13 @@ namespace MultiplayerInfrastructure.UI
       if (ReferenceEquals(ActiveInstance, this))
         ActiveInstance = null;
 
-      foreach (var kvp in _entries)
+      foreach (var targetEntries in _entries.Values)
       {
-        if (kvp.Value?.Element != null)
-          kvp.Value.Element.RemoveFromHierarchy();
+        foreach (var entry in targetEntries.Values)
+        {
+          if (entry?.Element != null)
+            entry.Element.RemoveFromHierarchy();
+        }
       }
       _entries.Clear();
 
@@ -107,6 +127,9 @@ namespace MultiplayerInfrastructure.UI
     /// <param name="target">라벨을 띄울 월드 앵커(예: 엔티티 Transform).</param>
     /// <param name="content">표시 내용(색상 사각형 + 텍스트).</param>
     public void SetLabel(Transform target, LabelContent content)
+      => SetLabel(target, "default", 0, content);
+
+    public void SetLabel(Transform target, string channelId, int channelOrder, LabelContent content)
     {
       if (target == null)
         return;
@@ -115,33 +138,59 @@ namespace MultiplayerInfrastructure.UI
       if (_root == null)
         return;
 
-      if (!_entries.TryGetValue(target, out var entry))
+      channelId = string.IsNullOrWhiteSpace(channelId) ? "default" : channelId.Trim();
+      if (!_entries.TryGetValue(target, out var channels))
+      {
+        channels = new Dictionary<string, Entry>(System.StringComparer.Ordinal);
+        _entries[target] = channels;
+      }
+
+      if (!channels.TryGetValue(channelId, out var entry))
       {
         entry = new Entry
         {
           Target = target,
+          ChannelId = channelId,
+          ChannelOrder = channelOrder,
           Element = new EntityOverheadLabelElement(),
         };
         _root.Add(entry.Element);
         // 오버헤드 라벨은 표시 전용이다. 다른 모달 UI의 클릭을 막지 않도록 생성 직후 전체를 Ignore한다.
         SetSubtreePickingMode(entry.Element, PickingMode.Ignore);
-        _entries[target] = entry;
+        channels[channelId] = entry;
       }
 
-      entry.Element.SetContent(content.SwatchColor, content.Text, content.TextColor, content.ShowSwatch);
+      entry.ChannelOrder = channelOrder;
+      entry.Element.SetContent(content.SwatchColor, content.Text, content.TextColor, content.ShowSwatch, content.Icon);
     }
 
     /// <summary>대상 엔티티의 라벨을 제거한다.</summary>
     public void RemoveLabel(Transform target)
+      => RemoveLabel(target, "default");
+
+    public void RemoveLabel(Transform target, string channelId)
     {
       if (target == null)
         return;
 
-      if (_entries.TryGetValue(target, out var entry))
+      channelId = string.IsNullOrWhiteSpace(channelId) ? "default" : channelId.Trim();
+      if (_entries.TryGetValue(target, out var channels) && channels.TryGetValue(channelId, out var entry))
       {
         entry.Element?.RemoveFromHierarchy();
-        _entries.Remove(target);
+        channels.Remove(channelId);
+        if (channels.Count == 0)
+          _entries.Remove(target);
       }
+    }
+
+    public void RemoveLabels(Transform target)
+    {
+      if (target == null || !_entries.TryGetValue(target, out var channels))
+        return;
+
+      foreach (var entry in channels.Values)
+        entry?.Element?.RemoveFromHierarchy();
+      _entries.Remove(target);
     }
 
     private void EnsureRoot()
@@ -193,32 +242,49 @@ namespace MultiplayerInfrastructure.UI
 
       foreach (var kvp in _entries)
       {
-        var entry = kvp.Value;
-        if (entry?.Target == null || entry.Element == null)
+        var target = kvp.Key;
+        var channels = kvp.Value;
+        if (target == null || channels == null)
         {
           (stale ??= new List<Transform>()).Add(kvp.Key);
           continue;
         }
 
-        Vector3 worldPos = entry.Target.position + Vector3.up * _worldHeightOffset;
+        Vector3 worldPos = target.position + Vector3.up * _worldHeightOffset;
 
         // 카메라 뒤쪽이면 숨긴다.
         Vector3 viewport = cam.WorldToViewportPoint(worldPos);
         bool behind = viewport.z <= 0f;
-        entry.Element.style.display = behind ? DisplayStyle.None : DisplayStyle.Flex;
+        foreach (var entry in channels.Values)
+          entry.Element.style.display = behind ? DisplayStyle.None : DisplayStyle.Flex;
         if (behind)
           continue;
 
         Vector2 panelPos = RuntimePanelUtils.CameraTransformWorldToPanel(panel, worldPos, cam);
-        entry.Element.SetScreenPosition(panelPos);
+        var ordered = new List<Entry>(channels.Values);
+        ordered.Sort((left, right) =>
+        {
+          int order = left.ChannelOrder.CompareTo(right.ChannelOrder);
+          return order != 0 ? order : string.Compare(left.ChannelId, right.ChannelId, System.StringComparison.Ordinal);
+        });
+        for (int i = 0; i < ordered.Count; i++)
+        {
+          bool visible = i < Mathf.Max(1, _maxChannelsPerAnchor);
+          ordered[i].Element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+          if (visible)
+            ordered[i].Element.SetScreenPosition(panelPos + Vector2.down * (i * 26f));
+        }
       }
 
       if (stale != null)
       {
         foreach (var key in stale)
         {
-          if (_entries.TryGetValue(key, out var e))
-            e.Element?.RemoveFromHierarchy();
+          if (_entries.TryGetValue(key, out var channels))
+          {
+            foreach (var entry in channels.Values)
+              entry?.Element?.RemoveFromHierarchy();
+          }
           _entries.Remove(key);
         }
       }

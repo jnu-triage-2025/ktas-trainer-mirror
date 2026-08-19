@@ -12,6 +12,9 @@ namespace MultiplayerInfrastructure.UI
   [RequireComponent(typeof(UIDocument))]
   public class QuestPreviewHudUIController : UIControllerABC
   {
+    public static QuestPreviewHudUIController ActiveInstance { get; private set; }
+    public static bool HasActiveInstance => ActiveInstance != null && ActiveInstance.isActiveAndEnabled;
+
     [SerializeField] private string _rootName = DefaultsQuestControl.QuestPreviewRootName;
     [SerializeField] private float _sortingOrder = DefaultsUIDocument.QuestPreviewHudSortOrder;
     [SerializeField] private StyleSheet _styleSheet;
@@ -38,12 +41,23 @@ namespace MultiplayerInfrastructure.UI
 
     private void OnEnable()
     {
+      if (ActiveInstance != null && !ReferenceEquals(ActiveInstance, this))
+        ActiveInstance.DetachManager();
+      ActiveInstance = this;
       if (_uiDocument != null)
         AttachManager();
     }
 
     private void OnDisable()
     {
+      bool isActiveInstance = ReferenceEquals(ActiveInstance, this);
+      if (isActiveInstance)
+        ActiveInstance = null;
+      if (isActiveInstance)
+      {
+        foreach (string questId in _completionExpiryByQuestId.Keys)
+          _questManager?.ExpireQuestPresentation(questId);
+      }
       DetachManager();
       StopAllCoroutines();
       _completedQuests.Clear();
@@ -137,8 +151,15 @@ namespace MultiplayerInfrastructure.UI
 
     private void HandleQuestCompleted(QuestData quest)
     {
-      if (quest == null || !quest.IsTracked || _skipCompletionDisplayDelay)
+      if (!ReferenceEquals(ActiveInstance, this))
         return;
+
+      if (quest == null || !quest.IsTracked || _skipCompletionDisplayDelay)
+      {
+        if (quest != null)
+          _questManager?.ExpireQuestPresentation(quest.Id);
+        return;
+      }
 
       // 추적 목록 갱신에서 마지막 목표를 이미 완료 표시로 전환한 경우에는
       // 그 목표를 유지한다. 그래야 퀘스트 전체 완료 시에도 직전 목표가 취소선으로 보인다.
@@ -197,6 +218,8 @@ namespace MultiplayerInfrastructure.UI
 
       _completionExpiryByQuestId.Remove(questId);
       _completedQuests.RemoveAll(each => each != null && each.Id == questId);
+      if (ReferenceEquals(ActiveInstance, this))
+        _questManager?.ExpireQuestPresentation(questId);
       if (_completedQuests.Count == 0)
         _trackedQuests = _observedTrackedQuests;
       RefreshHud();
@@ -204,11 +227,16 @@ namespace MultiplayerInfrastructure.UI
 
     private void HandleImmediateTransitionChanged(bool enabled)
     {
+      if (!ReferenceEquals(ActiveInstance, this))
+        return;
+
       _skipCompletionDisplayDelay = enabled;
       if (!enabled)
         return;
 
       StopAllCoroutines();
+      foreach (string questId in _completionExpiryByQuestId.Keys)
+        _questManager?.ExpireQuestPresentation(questId);
       _completedQuests.Clear();
       _completionExpiryByQuestId.Clear();
       _trackedQuests = _observedTrackedQuests;

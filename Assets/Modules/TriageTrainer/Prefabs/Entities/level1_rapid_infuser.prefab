@@ -278,14 +278,14 @@ MonoBehaviour:
   _playerAttachPoints: []
   _normalSalineDisplay: {fileID: 0}
   _plasmaSolutionDisplay: {fileID: 0}
-  _bloodTransfusionSetDisplay: {fileID: 1447923669018403190}
+  _bloodBagDisplay: {fileID: 1447923669018403190}
   _ivConnectionPoint: {fileID: 220815000000000004}
   _initialHasNormalSaline: 0
   _initialHasPlasmaSolution: 0
-  _initialHasBloodTransfusionSet: 0
+  _initialHasBloodBag: 0
   _initialConnectedPatientIdentifier: 
-  _bloodTransfusionSetWithoutPlasmaPolicy: 0
-  _bloodTransfusionSetCancellationBehaviour: 255
+  _bloodBagWithoutPlasmaPolicy: 0
+  _bloodBagCancellationBehaviour: 255
   _entityIdentifier: level1_rapid_infuser_a
   _displayText: "Level 1 \uAE09\uC18D \uC8FC\uC785\uAE30 \uC870\uC885"
   _displayIcon: {fileID: 0}
@@ -375,7 +375,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1659700661424165225, guid: f4d97cf269786440187598cfe17089fa, type: 3}
       propertyPath: m_Name
-      value: BloodTransfusionSetDisplay
+      value: BloodBagDisplay
       objectReference: {fileID: 0}
     - target: {fileID: 1659700661424165225, guid: f4d97cf269786440187598cfe17089fa, type: 3}
       propertyPath: m_IsActive

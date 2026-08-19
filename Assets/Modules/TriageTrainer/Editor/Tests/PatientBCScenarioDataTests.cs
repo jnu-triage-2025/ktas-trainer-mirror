@@ -6,6 +6,7 @@ using FishNet.Managing.Object;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Entity;
+using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Registry;
 using NUnit.Framework;
@@ -372,6 +373,32 @@ namespace TriageTrainer.Tests
       Assert.That(nurseArrivalCounter.UseActiveRoleRosterThreshold, Is.True,
         "도착 완료는 고정 역할 수가 아니라 현재 활성 플레이어의 도착 신호를 기준으로 해야 한다.");
       Assert.That(nurseArrivalCounter.OutputSignalIdentifier, Is.EqualTo("all_nurses_arrived_triage"));
+
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_Triage_Lead", out var triageQuest), Is.True);
+      Assert.That(triageQuest.PresentationBindings, Has.Count.EqualTo(3));
+      Assert.That(triageQuest.PresentationBindings.Select(binding => binding.EntityIdentifier), Is.EqualTo(new[]
+      {
+        "patient_b",
+        "patient_c",
+        "patient_dummy_d_b"
+      }));
+      Assert.That(triageQuest.PresentationBindings.All(binding =>
+        binding.InteractionIdentifier == PatientController.InteractIdTriage
+        && binding.IconIdentifier == "quest-interaction"), Is.True);
+
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_Move_BC", out var moveQuest), Is.True);
+      Assert.That(moveQuest.IsOrdinal, Is.True);
+      Assert.That(moveQuest.Tasks.Select(task => task.Identifier), Is.EqualTo(new[]
+      {
+        "move-patient-b",
+        "move-patient-c"
+      }));
+      Assert.That(moveQuest.PresentationBindings.Select(binding =>
+        (binding.EntityIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
+      {
+        ("bed_b", MovingPatientBedController.InteractionIdentifierMoveBed),
+        ("bed_c", MovingPatientBedController.InteractionIdentifierMoveBed)
+      }));
 
       foreach (string nodeIdentifier in new[]
                {
