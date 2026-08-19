@@ -177,12 +177,13 @@ namespace TriageTrainer.Entity
         if (!_owner.CanDisplayPatientBCNurseDNasalCannula(player))
           return;
 
-        const string itemIdentifier = "nasal_cannula";
-        if (player.CountItemInInventory(itemIdentifier) < 1)
+        string itemIdentifier = _owner.GetPatientBCNasalCannulaInventoryItemIdentifier(player);
+        if (itemIdentifier == null)
         {
           var dialogue = Registry.Get<DialoguePanelUIController>(
             RegistryType.UI, Registry.TypeKey<DialoguePanelUIController>());
           dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(비강 캐뉼라를 갖고 있지 않다.)");
+          dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(비강 캐뉼라를 찾자.)");
           return;
         }
 
@@ -260,6 +261,14 @@ namespace TriageTrainer.Entity
       && (string.Equals(itemIdentifier, "nasalcannula", StringComparison.Ordinal)
           || string.Equals(itemIdentifier, "nasal_cannula", StringComparison.Ordinal)
           || string.Equals(itemIdentifier, "nasal", StringComparison.Ordinal));
+
+    private string GetPatientBCNasalCannulaInventoryItemIdentifier(PlayerController player)
+    {
+      foreach (string itemIdentifier in new[] { "nasal_cannula", "nasalcannula", "nasal" })
+        if (player.CountItemInInventory(itemIdentifier) > 0)
+          return itemIdentifier;
+      return null;
+    }
 
     private bool CanDisplayPatientBCNurseDNasalCannula(PlayerController player) =>
       IsPatientBC
