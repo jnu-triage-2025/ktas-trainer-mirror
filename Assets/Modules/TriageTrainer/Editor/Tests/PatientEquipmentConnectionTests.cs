@@ -110,7 +110,7 @@ namespace TriageTrainer.Tests
         patient.ActivatePatientBCNurseCStage();
         InvokePrivate(patient, "NotifyPatientBCPupilCompleted");
         Assert.That((bool)InvokePrivate(patient, "TryAdvancePatientBCIvStageAuthoritative"), Is.True);
-        var patientPoint = patient.IvAttachmentPoint;
+        var patientPoint = patient.PatientBCIvAttachmentPoint;
         var salinePoint = salinePointObject.AddComponent<IntravenousLineConnectionPoint>();
         salinePoint.SetIdentifier("connect_cannula_and_ns1");
         RegisterPhysicalLine(lineObject, salinePoint, patientPoint);
@@ -185,10 +185,10 @@ namespace TriageTrainer.Tests
         InvokePrivate(patient, "NotifyPatientBCPupilCompleted");
         var salinePoint = salinePointObject.AddComponent<IntravenousLineConnectionPoint>();
         salinePoint.SetIdentifier("connect_cannula_and_ns1");
-        RegisterPhysicalLine(lineObject, salinePoint, patient.IvAttachmentPoint);
+        RegisterPhysicalLine(lineObject, salinePoint, patient.PatientBCIvAttachmentPoint);
 
         using (ScenarioSignalPlayerContext.Push("nurse-c", "Nurse C"))
-          salinePoint.NotifyConnectionCompleted(patient.IvAttachmentPoint);
+          salinePoint.NotifyConnectionCompleted(patient.PatientBCIvAttachmentPoint);
 
         Assert.That(ScenarioInteractionSignals.IsRaised("connect_cannula_and_ns1_patient_b"), Is.False);
         Assert.That((bool)InvokePrivate(patient, "TryAdvancePatientBCIvStageAuthoritative"), Is.True);
@@ -278,7 +278,7 @@ namespace TriageTrainer.Tests
         var spoofIv = spoofIvObject.AddComponent<IntravenousLineConnectionPoint>();
 
         Assert.That(LineConnectionService.IsExactPatientNormalSalineEndpointPair(
-          patient, saline, saline, patient.IvAttachmentPoint), Is.True,
+          patient, saline, saline, patient.PatientBCIvAttachmentPoint), Is.True,
           "host/server topology accepts the exact authoritative endpoint pair");
         Assert.That(LineConnectionService.IsExactPatientNormalSalineEndpointPair(
           patient, saline, saline, spoofIv), Is.False,

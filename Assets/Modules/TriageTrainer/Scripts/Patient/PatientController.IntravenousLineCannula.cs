@@ -105,11 +105,14 @@ namespace TriageTrainer.Entity
     /// 정맥라인 캐뉼라 상호작용 항목. 대상 퀘스트가 활성화된 환자에게만 노출되며,
     /// 캐뉼라 보유 여부는 상호작용 실행 시 안내/완료를 판정한다.
     /// </summary>
-    private sealed class PatientIntravenousLineCannulaInteract : IInteract, IInteractorConditional
+    private sealed class PatientIntravenousLineCannulaInteract : IInteract, IInteractorConditional, IQuestPresentationTarget
     {
       private readonly PatientController _owner;
 
       public PatientIntravenousLineCannulaInteract(PatientController owner) { _owner = owner; }
+
+      public string PresentationEntityIdentifier => _owner.Identifier;
+      public string InteractionIdentifier => InteractIdIntravenousLineCannula;
 
       public string DisplayText => _owner._intravenousLineCannulaConfig.DisplayText;
       // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
@@ -136,6 +139,8 @@ namespace TriageTrainer.Entity
         _owner.PerformIntravenousLineCannulaInsertion(interactor);
       }
     }
+
+    private const string InteractIdIntravenousLineCannula = "intravenous_line_cannula";
 
     /// <summary>정맥라인 캐뉼라 상호작용 항목을 등록한다(<c>BuildInteractEntries</c> 에서 호출).</summary>
     private void AddIntravenousLineCannulaInteract()

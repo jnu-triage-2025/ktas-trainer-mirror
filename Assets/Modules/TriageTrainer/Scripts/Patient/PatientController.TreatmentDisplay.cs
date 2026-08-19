@@ -8,6 +8,7 @@ using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 using TriageTrainer.Entity.IntravenousLine;
+using TriageTrainer.Entity.LineConnection;
 using TriageTrainer.ItemDefinitions;
 using UnityEngine;
 using TriageTrainer.Patient;
@@ -742,6 +743,57 @@ namespace TriageTrainer.Entity
     private bool CanPerformPatientBCIv() =>
       !IsPatientBC || _patientBCNurseCStage.Value == PatientBCTreatmentStage.AwaitingIv;
 
+    private bool CanConnectPatientBCNormalSaline()
+    {
+      if (!IsPatientBC || _patientBCNurseCStage.Value != PatientBCTreatmentStage.AwaitingNormalSaline)
+        return false;
+      return CurrentBed != null && CurrentBed.TryGetNormalSalineConnectionPoint(out _);
+    }
+
+    private bool TryConnectPatientBCNormalSaline(Transform interactor)
+    {
+      if (IsFishNetClientInitialized && !IsFishNetServerStarted)
+      {
+        CmdConnectPatientBCNormalSaline();
+        return true;
+      }
+
+      var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+      if (IsPatientBC && player != null && !TryValidatePatientBCTreatmentActor(player, NurseCRoleTag))
+        return false;
+      return TryConnectPatientBCNormalSalineAuthoritative();
+    }
+
+    private bool TryConnectPatientBCNormalSalineAuthoritative()
+    {
+      if (!CanConnectPatientBCNormalSaline()
+          || !CurrentBed.TryGetNormalSalineConnectionPoint(out var salinePoint))
+        return false;
+
+      var patientPoint = PatientBCIvAttachmentPoint;
+      if (patientPoint == null)
+        return false;
+      if (!patientPoint.IsPhysicallyConnectedTo(salinePoint))
+      {
+        var service = FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
+        if (service == null || !service.TryCreateAutomaticConnection(salinePoint, patientPoint))
+          return false;
+      }
+      return TryCompletePatientBCNormalSalineConnection(salinePoint);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdConnectPatientBCNormalSaline(NetworkConnection sender = null)
+    {
+      if (!TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player,
+            out var actorIdentifier, out var actorDisplayName)
+          || !CanConnectPatientBCNormalSaline())
+        return;
+
+      using (MI.Scenario.ScenarioSignalPlayerContext.Push(actorIdentifier, actorDisplayName))
+        TryConnectPatientBCNormalSalineAuthoritative();
+    }
+
     public bool TryCompletePatientBCNormalSalineConnection(
       IntravenousLineConnectionPoint salinePoint = null)
     {
@@ -784,25 +836,19 @@ namespace TriageTrainer.Entity
     private bool HasPhysicalPatientBCNormalSalineConnection(
       IntravenousLineConnectionPoint salinePoint = null)
     {
-      if (IvAttachmentPoint == null)
+      var patientPoint = PatientBCIvAttachmentPoint;
+      if (patientPoint == null)
         return false;
 
       if (salinePoint != null)
-        return string.Equals(salinePoint.Identifier, "connect_cannula_and_ns1",
-                 System.StringComparison.Ordinal)
-               && IvAttachmentPoint.IsPhysicallyConnectedTo(salinePoint);
+        return (CurrentBed != null
+                 ? CurrentBed.IsNormalSalineConnectionPoint(salinePoint)
+                 : InstanceFinder.IsOffline)
+               && patientPoint.IsPhysicallyConnectedTo(salinePoint);
 
-      var points = FindObjectsByType<IntravenousLineConnectionPoint>(
-        FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-      for (int i = 0; i < points.Length; i++)
-      {
-        var point = points[i];
-        if (point != null
-            && string.Equals(point.Identifier, "connect_cannula_and_ns1", System.StringComparison.Ordinal)
-            && IvAttachmentPoint.IsPhysicallyConnectedTo(point))
-          return true;
-      }
-      return false;
+      return CurrentBed != null
+             && CurrentBed.TryGetNormalSalineConnectionPoint(out var bedPoint)
+             && patientPoint.IsPhysicallyConnectedTo(bedPoint);
     }
 
     private void RememberPatientBCNormalSalineConnection(string actorIdentifier, string actorDisplayName)
@@ -1026,8 +1072,8 @@ namespace TriageTrainer.Entity
           || !TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player, out var actorIdentifier,
             out var actorDisplayName)
           || salinePoint == null
-          || !string.Equals(salinePoint.Identifier, "connect_cannula_and_ns1",
-            System.StringComparison.Ordinal)
+          || CurrentBed == null
+          || !CurrentBed.IsNormalSalineConnectionPoint(salinePoint)
           || !HasPhysicalPatientBCNormalSalineConnection(salinePoint)
           || !IsWithinPatientBCTreatmentDistance(player, salinePoint.transform.position))
         return;

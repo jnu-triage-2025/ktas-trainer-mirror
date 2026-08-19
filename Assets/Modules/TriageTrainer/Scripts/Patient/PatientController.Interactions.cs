@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Commons;
+using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Tag;
+using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -95,10 +98,12 @@ namespace TriageTrainer.Entity
       }
     }
 
-    private sealed class PatientMonitorSelectInteract : IInteract, IInteractorConditional
+    private sealed class PatientMonitorSelectInteract : IInteract, IInteractorConditional, IQuestPresentationTarget
     {
       private readonly PatientController _owner;
       public PatientMonitorSelectInteract(PatientController owner) { _owner = owner; }
+      public string PresentationEntityIdentifier => _owner.Identifier;
+      public string InteractionIdentifier => InteractIdMonitorSelect;
       public string DisplayText => _owner._monitorSelectDisplayText;
       // 환자 상호작용 힌트는 아이콘을 표시하지 않는다(투명 처리).
       public Sprite DisplayIcon => null;
@@ -134,6 +139,8 @@ namespace TriageTrainer.Entity
       {
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
         string itemIdentifier = player?.HandlingItem?.CurrentIdentifier;
+        if (_owner.IsPatientBCNasalCannulaItem(itemIdentifier))
+          return false;
         return player != null
                && player.CountItemInInventory(itemIdentifier) > 0
                && _owner.CanApplyHeldTreatmentItem(itemIdentifier);
@@ -146,6 +153,54 @@ namespace TriageTrainer.Entity
         if (player?.PlayerEntity != null && _owner.CanApplyHeldTreatmentItem(itemIdentifier))
           _owner.OnItemUsed(player.PlayerEntity, itemIdentifier);
       }
+    }
+
+    private sealed class PatientBCNurseDNasalCannulaInteract : IInteract, IInteractorConditional
+    {
+      private readonly PatientController _owner;
+
+      public PatientBCNurseDNasalCannulaInteract(PatientController owner) => _owner = owner;
+      public string DisplayText => "비강 캐뉼라 적용";
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => false;
+      public Color DisplayColor => Color.clear;
+
+      public bool CanInteract(Transform interactor)
+      {
+        var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+        return _owner.CanDisplayPatientBCNurseDNasalCannula(player);
+      }
+
+      public void Interact(Transform interactor)
+      {
+        var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+        if (!_owner.CanDisplayPatientBCNurseDNasalCannula(player))
+          return;
+
+        string itemIdentifier = _owner.GetPatientBCNasalCannulaInventoryItemIdentifier(player);
+        if (itemIdentifier == null)
+        {
+          var dialogue = Registry.Get<DialoguePanelUIController>(
+            RegistryType.UI, Registry.TypeKey<DialoguePanelUIController>());
+          dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(비강 캐뉼라를 갖고 있지 않다.)");
+          dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(비강 캐뉼라를 찾자.)");
+          return;
+        }
+
+        _owner.OnItemUsed(player.PlayerEntity, itemIdentifier);
+      }
+    }
+
+    private sealed class PatientNormalSalineConnectInteract : IInteract, IInteractorConditional
+    {
+      private readonly PatientController _owner;
+      public PatientNormalSalineConnectInteract(PatientController owner) { _owner = owner; }
+      public string DisplayText => "생리식염수 연결";
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => false;
+      public Color DisplayColor => Color.clear;
+      public bool CanInteract(Transform interactor) => _owner.CanConnectPatientBCNormalSaline();
+      public void Interact(Transform interactor) => _owner.TryConnectPatientBCNormalSaline(interactor);
     }
 
     public interface IMonitorSelectionRequester
@@ -193,11 +248,35 @@ namespace TriageTrainer.Entity
       _interacts.Add(new PatientCarryInteract(this));
       _interacts.Add(new PatientMonitorSelectInteract(this));
       _interacts.Add(new PatientItemApplyInteract(this));
+      _interacts.Add(new PatientBCNurseDNasalCannulaInteract(this));
       AddTriageInteract();
       AddAssessInteracts();
       AddRecognitionCheckInteract();
       AddIntravenousLineCannulaInteract();
+      _interacts.Add(new PatientNormalSalineConnectInteract(this));
     }
+
+    private bool IsPatientBCNasalCannulaItem(string itemIdentifier) =>
+      IsPatientBC
+      && (string.Equals(itemIdentifier, "nasalcannula", StringComparison.Ordinal)
+          || string.Equals(itemIdentifier, "nasal_cannula", StringComparison.Ordinal)
+          || string.Equals(itemIdentifier, "nasal", StringComparison.Ordinal));
+
+    private string GetPatientBCNasalCannulaInventoryItemIdentifier(PlayerController player)
+    {
+      foreach (string itemIdentifier in new[] { "nasal_cannula", "nasalcannula", "nasal" })
+        if (player.CountItemInInventory(itemIdentifier) > 0)
+          return itemIdentifier;
+      return null;
+    }
+
+    private bool CanDisplayPatientBCNurseDNasalCannula(PlayerController player) =>
+      IsPatientBC
+      && _patientBCNurseDStage.Value == PatientBCTreatmentStage.AwaitingNasalCannula
+      && player != null
+      && !string.IsNullOrWhiteSpace(player.UserIdentifier)
+      && PlayerTagService.HasTag(player.UserIdentifier, "nurse_d")
+      && IsWithinPatientBCTreatmentDistance(player);
 
     private void RebuildInteractConfigMap()
     {

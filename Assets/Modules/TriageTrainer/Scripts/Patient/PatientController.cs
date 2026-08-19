@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using FishNet;
 using FishNet.Object;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
@@ -38,6 +39,7 @@ namespace TriageTrainer.Entity
     [Header("Runtime")]
     [SerializeField] private PatientSupportExternalRefs _supportExternalRefs;
     [SerializeField] private IntravenousLineConnectionPoint _ivAttachmentPoint;
+    [SerializeField] private IntravenousLineConnectionPoint _patientBCIvAttachmentPoint;
     [Tooltip("C-line(중심정맥관) 환자 측 IV 연결 지점입니다. EnsureClineIvAttachmentPoint()가 보장합니다.")]
     [SerializeField] private IntravenousLineConnectionPoint _clineIvAttachmentPoint;
     [Tooltip("설치된 산소 마스크에 포함된 환자 측 산소 라인 포트입니다.")]
@@ -297,6 +299,49 @@ namespace TriageTrainer.Entity
     }
 
     private const string ClineIvConnectionPointIdentifier = "cline_iv_connection_point";
+    private const string PatientBIvConnectionPointIdentifier = "patient_b:iv_point_vein";
+    private const string PatientCIvConnectionPointIdentifier = "patient_c:iv_point_vein";
+
+    public IntravenousLineConnectionPoint PatientBCIvAttachmentPoint
+    {
+      get
+      {
+        if (!IsPatientBC)
+          return IvAttachmentPoint;
+
+        if (_patientBCIvAttachmentPoint != null)
+          return _patientBCIvAttachmentPoint;
+
+        string identifier = string.Equals(Identifier, "patient_b", StringComparison.Ordinal)
+          ? PatientBIvConnectionPointIdentifier
+          : PatientCIvConnectionPointIdentifier;
+        var points = GetComponentsInChildren<IntravenousLineConnectionPoint>(true);
+        for (int i = 0; i < points.Length; i++)
+          if (points[i] != null && string.Equals(points[i].Identifier, identifier, StringComparison.Ordinal))
+          {
+            _patientBCIvAttachmentPoint = points[i];
+            return _patientBCIvAttachmentPoint;
+          }
+
+        // A dynamically added NetworkBehaviour is not a FishNet-spawned
+        // component. Require the IV point to be part of the networked patient
+        // prefab while running online; otherwise IsSpawned can dereference an
+        // uninitialized FishNet cache during automatic line creation.
+        if (!InstanceFinder.IsOffline)
+          return null;
+
+        var pointObject = new GameObject("PatientBCIVAttachmentPoint");
+        var display = GetTreatmentDisplayChildObject(string.Equals(Identifier, "patient_b", StringComparison.Ordinal)
+          ? TreatmentDisplay.Syringe20GInsertedIntoRightArm
+          : TreatmentDisplay.Syringe20GInsertedIntoLeftArm);
+        pointObject.transform.SetParent(display != null ? display.transform : transform, false);
+        pointObject.transform.localPosition = Vector3.zero;
+        var point = pointObject.AddComponent<IntravenousLineConnectionPoint>();
+        point.SetIdentifier(identifier);
+        point.SetAllowsMultipleConnections(true);
+        return point;
+      }
+    }
 
     private void EnsureIvAttachmentPoint()
     {
@@ -431,6 +476,7 @@ namespace TriageTrainer.Entity
       _supportExternalRefs = default;
       _supportExternalRefs.InitializeEmptyCollections();
       _ivAttachmentPoint = null;
+      _patientBCIvAttachmentPoint = null;
       _oxygenMaskAttachmentPoint = null;
       _suctionLineAttachmentPoint = null;
       _carryAttachPoint = null;

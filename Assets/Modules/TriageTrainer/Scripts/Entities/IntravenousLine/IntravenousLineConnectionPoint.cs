@@ -9,6 +9,7 @@ using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.LineConnection;
+using TriageTrainer.Entity;
 using TriageTrainer.ItemDefinitions;
 using UnityEngine;
 
@@ -444,9 +445,7 @@ namespace TriageTrainer.Entity.IntravenousLine
       if (IsNormalSalineConnectionPair(other))
       {
         var patient = ResolveConnectionPatient(other);
-        var salinePoint = string.Equals(_identifier, "connect_cannula_and_ns1", StringComparison.Ordinal)
-          ? this
-          : other;
+        var salinePoint = ResolveNormalSalinePoint(other);
         patient?.NotifyPatientBCNormalSalineDisconnected(salinePoint);
       }
     }
@@ -488,15 +487,14 @@ namespace TriageTrainer.Entity.IntravenousLine
     {
       string otherIdentifier = other != null ? other.Identifier : null;
       bool normalSalineHandledByPatient = TryCompletePatientScopedNormalSalineConnection(other);
+      var normalSalinePoint = ResolveNormalSalinePoint(other);
 
       if (!string.IsNullOrWhiteSpace(otherIdentifier)
-          && !(normalSalineHandledByPatient && string.Equals(otherIdentifier,
-            "connect_cannula_and_ns1", StringComparison.Ordinal)))
+          && !(normalSalineHandledByPatient && ReferenceEquals(other, normalSalinePoint)))
         MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(otherIdentifier);
 
       if (!string.IsNullOrWhiteSpace(_identifier)
-          && !(normalSalineHandledByPatient && string.Equals(_identifier,
-            "connect_cannula_and_ns1", StringComparison.Ordinal)))
+          && !(normalSalineHandledByPatient && ReferenceEquals(this, normalSalinePoint)))
         MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(_identifier);
 
       if (!string.IsNullOrWhiteSpace(_identifier) && !string.IsNullOrWhiteSpace(otherIdentifier))
@@ -514,9 +512,7 @@ namespace TriageTrainer.Entity.IntravenousLine
       if (string.Equals(patientIdentifier, "patient_b", StringComparison.Ordinal)
           || string.Equals(patientIdentifier, "patient_c", StringComparison.Ordinal))
       {
-        var salinePoint = string.Equals(_identifier, "connect_cannula_and_ns1", StringComparison.Ordinal)
-          ? this
-          : other;
+        var salinePoint = ResolveNormalSalinePoint(other);
         patient.TryCompletePatientBCNormalSalineConnection(salinePoint);
         return true;
       }
@@ -524,9 +520,26 @@ namespace TriageTrainer.Entity.IntravenousLine
       return false;
     }
 
-    private bool IsNormalSalineConnectionPair(IntravenousLineConnectionPoint other) =>
-      string.Equals(_identifier, "connect_cannula_and_ns1", StringComparison.Ordinal)
-      || string.Equals(other?.Identifier, "connect_cannula_and_ns1", StringComparison.Ordinal);
+    private bool IsNormalSalineConnectionPair(IntravenousLineConnectionPoint other)
+    {
+      var bed = GetComponentInParent<MovingPatientBedController>()
+                ?? other?.GetComponentInParent<MovingPatientBedController>();
+      return bed != null
+             && (bed.IsNormalSalineConnectionPoint(this)
+                 || bed.IsNormalSalineConnectionPoint(other));
+    }
+
+    private IntravenousLineConnectionPoint ResolveNormalSalinePoint(
+      IntravenousLineConnectionPoint other)
+    {
+      var bed = GetComponentInParent<MovingPatientBedController>()
+                ?? other?.GetComponentInParent<MovingPatientBedController>();
+      if (bed == null)
+        return null;
+      return bed.IsNormalSalineConnectionPoint(this) ? this
+        : bed.IsNormalSalineConnectionPoint(other) ? other
+        : null;
+    }
 
     private PatientController ResolveConnectionPatient(IntravenousLineConnectionPoint other)
     {
