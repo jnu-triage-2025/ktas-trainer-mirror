@@ -35,7 +35,7 @@ namespace MultiplayerInfrastructure.Player
 
     public void Update_Input()
     {
-      if (Input.GetKeyDown(KeyCode.F)) Debug.Log($"[PlayerController] F key pressed. IsOwner: {IsOwner}, IsClient: {IsClientInitialized}, IsServer: {IsServerInitialized}");
+      // if (Input.GetKeyDown(KeyCode.F)) Debug.Log($"[PlayerController] F key pressed. IsOwner: {IsOwner}, IsClient: {IsClientInitialized}, IsServer: {IsServerInitialized}");
 
       HandleChatInput();
       var escapeConsumed = HandleEscape();
