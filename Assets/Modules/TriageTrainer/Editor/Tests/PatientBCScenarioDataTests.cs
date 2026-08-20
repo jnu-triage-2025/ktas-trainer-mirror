@@ -297,8 +297,8 @@ namespace TriageTrainer.Tests
       Assert.That(doctorBComplete.SpeakerName, Is.EqualTo("의사"));
       Assert.That(doctorBComplete.DialogueContent,
         Is.EqualTo("이 남성 환자는 마무리하고 다음으로 넘어가죠."));
-      Assert.That(doctorBComplete.NextIdentifier, Is.EqualTo("C_ARRIVAL"));
-      Assert.That(graph.Nodes["C_ARRIVAL"].NextIdentifier, Is.EqualTo("C_DOC_C"));
+      Assert.That(doctorBComplete.NextIdentifier, Is.EqualTo("C_DOC_C"));
+      Assert.That(graph.Nodes.ContainsKey("C_ARRIVAL"), Is.False);
       Assert.That(graph.Nodes["C_DOC_C"].NextIdentifier, Is.EqualTo("C_DOC_D"));
       Assert.That(graph.Nodes["C_DOC_D"].NextIdentifier, Is.EqualTo("P_C_CARE"));
       Assert.That(graph.Nodes.ContainsKey("P_C_CARE"), Is.True);

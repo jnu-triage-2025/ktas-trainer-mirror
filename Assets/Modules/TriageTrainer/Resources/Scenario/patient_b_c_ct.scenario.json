@@ -2728,9 +2728,19 @@
     "D_GAUZE_DONE": {
       "identifier": "D_GAUZE_DONE",
       "nodeType": "Dialogue",
-      "nextIdentifier": "D_DELAY",
+      "nextIdentifier": "D_PLASTER_PROMPT",
       "speakerName": "@s",
       "dialogueContent": "(거즈를 출혈 부위에 대고 압박 지혈을 시행했다.)",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": 1,
+      "playTTS": false
+    },
+    "D_PLASTER_PROMPT": {
+      "identifier": "D_PLASTER_PROMPT",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "D_DELAY",
+      "speakerName": "@s",
+      "dialogueContent": "(출혈이 멎었다. 거즈 위에 플라스터를 붙이자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 1,
       "playTTS": false
@@ -2771,7 +2781,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "D_WAIT_UPDATE",
       "speakerName": "@s",
-      "dialogueContent": "(출혈이 멎어, 거즈 위에 플라스터를 붙였다.)",
+      "dialogueContent": "(거즈 위에 플라스터를 붙였다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 1,
       "playTTS": false
@@ -2802,25 +2812,13 @@
     "DOC_B_COMPLETE": {
       "identifier": "DOC_B_COMPLETE",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_ARRIVAL",
+      "nextIdentifier": "C_DOC_C",
       "speakerName": "의사",
       "dialogueContent": "이 남성 환자는 마무리하고 다음으로 넘어가죠.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M1" }
-    },
-    "C_ARRIVAL": {
-      "identifier": "C_ARRIVAL",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "C_DOC_C",
-      "speakerName": "시스템",
-      "dialogueContent": "처치 구역에 도착했습니다. 즉시 의식상태 사정 및 활력징후 사정을 시작하세요.",
-      "portraitSpriteIdentifier": null,
-      "interactionRequired": false,
-      "autoAdvanceSeconds": 3,
-      "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F3" }
     },
     "C_DOC_C": {
       "identifier": "C_DOC_C",
