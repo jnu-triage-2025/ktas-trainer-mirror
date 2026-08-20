@@ -29,7 +29,14 @@ Check the local environment and install the following tools if they are not alre
 - **적용 제외:** 커밋 메시지.
 - **도구 불가 시:** `python3` 런타임 확인 → 그래도 실패하면 작업을 중단하지 말고 사용자에게 `⚠️ humanize-korean 도구를 거치지 않았습니다.` 경고를 표시하고, 생성 텍스트 최상단에 `> ⚠️ 이 텍스트는 AI 문체 순화 처리를 거치지 않았습니다.` 를 포함한다. 단, **코드 주석**에는 경고 텍스트를 삽입하지 않는다(사용자 경고만).
 
+## Cellular
+
+- 코드 구성·규모 분석 요청에는 `Tools/cellular`(서브모듈)의 cellular runner를 사용한다.
+- 사용법과 표준 절차는 `Agents/SKILLS/cellular/SKILL.md`를 따른다.
+- 색인·조회·내보내기 명령은 저장소 루트에서 실행하고 프로젝트 설정은 `.cellular/config.json`이 담당한다.
+
 ## Index
 
 - [Unity.md](./Unity.md) : When using Unity
 - [humanize-korean/](./humanize-korean/) : AI 한글 텍스트 윤문 (AI 티 제거)
+- [cellular/](./cellular/) : 코드 구성 색인·트리맵 시각화
