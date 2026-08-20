@@ -136,6 +136,7 @@ MonoBehaviour:
       IntravenousStandAttached: {fileID: 0}
       IntravenousHangerAttached: {fileID: 0}
       IntravenousFluidAttached: {fileID: 0}
+  intravenousLineConnectionPoint: {fileID: 7373929579115856596}
 --- !u!136 &1688330197099835462
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -215,6 +216,7 @@ MonoBehaviour:
     _suctionWalls: []
     _oxyflowmeters: []
   _ivAttachmentPoint: {fileID: 0}
+  _patientBCIvAttachmentPoint: {fileID: 7373929579115856596}
   _clineIvAttachmentPoint: {fileID: 0}
   _oxygenMaskAttachmentPoint: {fileID: 4673562941832867291}
   _suctionLineAttachmentPoint: {fileID: 0}
@@ -435,6 +437,89 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2160556403026478190}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &5353959437573756897
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6209597179237558245}
+  - component: {fileID: 3068159147419335471}
+  - component: {fileID: 7373929579115856596}
+  m_Layer: 6
+  m_Name: VeinIntravenousConnectionPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6209597179237558245
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5353959437573756897}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.513, y: -0.019, z: 0.003}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7912796884105979663}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &3068159147419335471
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5353959437573756897}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.5
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7373929579115856596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5353959437573756897}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 868971026503455756}
+  _networkObjectCache: {fileID: 0}
+  _lineMaterial: {fileID: 0}
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
+  connectionService: {fileID: 0}
+  _identifier: intravenousconnectionpoint
+  _autoGenerateIdentifier: 1
+  _displayIcon: {fileID: 0}
+  _interactConfigs:
+  - _identifier: intravenous_line_connect_mode_start
+    _enabled: 1
+  - _identifier: intravenous_line_connect_here
+    _enabled: 1
+  - _identifier: intravenous_line_disconnect
+    _enabled: 1
 --- !u!1 &7100000000000000001
 GameObject:
   m_ObjectHideFlags: 0
@@ -811,7 +896,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 4281755994330954870, guid: 1d02fe97ccb9f41a6a7d9ae2dd594733, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6209597179237558245}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1d02fe97ccb9f41a6a7d9ae2dd594733, type: 3}
 --- !u!1 &3527855279036456801 stripped

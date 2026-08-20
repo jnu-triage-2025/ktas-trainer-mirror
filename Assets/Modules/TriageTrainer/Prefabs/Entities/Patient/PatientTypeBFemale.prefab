@@ -136,6 +136,7 @@ MonoBehaviour:
       IntravenousStandAttached: {fileID: 0}
       IntravenousHangerAttached: {fileID: 0}
       IntravenousFluidAttached: {fileID: 0}
+  intravenousLineConnectionPoint: {fileID: 0}
 --- !u!136 &6481162045202206273
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -215,6 +216,7 @@ MonoBehaviour:
     _suctionWalls: []
     _oxyflowmeters: []
   _ivAttachmentPoint: {fileID: 0}
+  _patientBCIvAttachmentPoint: {fileID: 0}
   _clineIvAttachmentPoint: {fileID: 0}
   _oxygenMaskAttachmentPoint: {fileID: 4673562941832867292}
   _suctionLineAttachmentPoint: {fileID: 0}
@@ -326,7 +328,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584145144709380488
+  _initializedTimestamp: -8584144084110837888
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -345,7 +347,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 17
+  <PrefabId>k__BackingField: 16
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 12329446773789765797
   SceneId: 0

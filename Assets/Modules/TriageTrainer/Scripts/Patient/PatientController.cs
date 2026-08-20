@@ -39,6 +39,8 @@ namespace TriageTrainer.Entity
     [Header("Runtime")]
     [SerializeField] private PatientSupportExternalRefs _supportExternalRefs;
     [SerializeField] private IntravenousLineConnectionPoint _ivAttachmentPoint;
+    [Tooltip("환자 B/C 정맥로(캐뉼라 삽입 부위) 측 IV 연결 지점입니다. 환자 유형별 State 컴포넌트" +
+             "(PatientTypeBMaleState 등)의 참조 필드에서 주입되며, 식별자 문자열로 검색하지 않습니다.")]
     [SerializeField] private IntravenousLineConnectionPoint _patientBCIvAttachmentPoint;
     [Tooltip("C-line(중심정맥관) 환자 측 IV 연결 지점입니다. EnsureClineIvAttachmentPoint()가 보장합니다.")]
     [SerializeField] private IntravenousLineConnectionPoint _clineIvAttachmentPoint;
@@ -299,9 +301,18 @@ namespace TriageTrainer.Entity
     }
 
     private const string ClineIvConnectionPointIdentifier = "cline_iv_connection_point";
-    private const string PatientBIvConnectionPointIdentifier = "patient_b:iv_point_vein";
-    private const string PatientCIvConnectionPointIdentifier = "patient_c:iv_point_vein";
 
+    /// <summary>
+    /// 환자 B/C 정맥로(캐뉼라 삽입 부위) 측 IV 연결 지점.
+    ///
+    /// <para>
+    /// 환자 유형마다 정맥로 위치와 모델 구성이 다르므로, 이 지점은 환자 유형별 State 컴포넌트
+    /// (<c>PatientTypeBMaleState</c> 등)가 프리팹에서 직접 참조해 주입한다. 식별자 문자열로
+    /// 자식 포인트를 검색하거나 런타임에 포인트를 생성하지 않는다. 동적으로 추가한
+    /// NetworkBehaviour 는 FishNet 스폰 대상이 아니어서 온라인에서는 자동 연결이 불가능하므로,
+    /// 네트워크 프리팹에 배치된 포인트를 참조하는 것이 유일하게 유효한 배선 방법이다.
+    /// </para>
+    /// </summary>
     public IntravenousLineConnectionPoint PatientBCIvAttachmentPoint
     {
       get
@@ -309,38 +320,22 @@ namespace TriageTrainer.Entity
         if (!IsPatientBC)
           return IvAttachmentPoint;
 
-        if (_patientBCIvAttachmentPoint != null)
-          return _patientBCIvAttachmentPoint;
-
-        string identifier = string.Equals(Identifier, "patient_b", StringComparison.Ordinal)
-          ? PatientBIvConnectionPointIdentifier
-          : PatientCIvConnectionPointIdentifier;
-        var points = GetComponentsInChildren<IntravenousLineConnectionPoint>(true);
-        for (int i = 0; i < points.Length; i++)
-          if (points[i] != null && string.Equals(points[i].Identifier, identifier, StringComparison.Ordinal))
-          {
-            _patientBCIvAttachmentPoint = points[i];
-            return _patientBCIvAttachmentPoint;
-          }
-
-        // A dynamically added NetworkBehaviour is not a FishNet-spawned
-        // component. Require the IV point to be part of the networked patient
-        // prefab while running online; otherwise IsSpawned can dereference an
-        // uninitialized FishNet cache during automatic line creation.
-        if (!InstanceFinder.IsOffline)
-          return null;
-
-        var pointObject = new GameObject("PatientBCIVAttachmentPoint");
-        var display = GetTreatmentDisplayChildObject(string.Equals(Identifier, "patient_b", StringComparison.Ordinal)
-          ? TreatmentDisplay.Syringe20GInsertedIntoRightArm
-          : TreatmentDisplay.Syringe20GInsertedIntoLeftArm);
-        pointObject.transform.SetParent(display != null ? display.transform : transform, false);
-        pointObject.transform.localPosition = Vector3.zero;
-        var point = pointObject.AddComponent<IntravenousLineConnectionPoint>();
-        point.SetIdentifier(identifier);
-        point.SetAllowsMultipleConnections(true);
-        return point;
+        // Unity 의 가짜 null(파괴된 오브젝트)을 실제 null 로 정규화한다.
+        // 연결 판정이 ReferenceEquals 로 양 끝점을 비교하기 때문이다.
+        return _patientBCIvAttachmentPoint != null ? _patientBCIvAttachmentPoint : null;
       }
+    }
+
+    /// <summary>Inspector 에 직렬화된 B/C 정맥로 IV 연결 지점 참조(주입 검증용).</summary>
+    public IntravenousLineConnectionPoint ConfiguredPatientBCIvAttachmentPoint => _patientBCIvAttachmentPoint;
+
+    /// <summary>
+    /// 환자 유형별 State 컴포넌트가 프리팹에서 참조한 B/C 정맥로 IV 연결 지점을 주입한다.
+    /// (<see cref="SetOxygenMaskAttachmentPointFromPatientComponent"/> 과 동일한 관례.)
+    /// </summary>
+    public void SetPatientBCIvAttachmentPointFromPatientComponent(IntravenousLineConnectionPoint point)
+    {
+      _patientBCIvAttachmentPoint = point;
     }
 
     private void EnsureIvAttachmentPoint()

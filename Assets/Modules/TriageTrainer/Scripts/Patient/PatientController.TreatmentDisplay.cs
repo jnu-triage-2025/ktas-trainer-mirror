@@ -667,6 +667,7 @@ namespace TriageTrainer.Entity
     private string _patientBCPendingNormalSalineActorIdentifier;
     private string _patientBCPendingNormalSalineActorDisplayName;
     private IntravenousLineConnectionPoint _patientBCPhysicalNormalSalinePoint;
+    private bool _patientBCIvAttachmentPointWarned;
     private const string NurseCRoleTag = "nurse_c";
     private const string NurseDRoleTag = "nurse_d";
     private const float PatientBCTreatmentInteractionDistance = 3f;
@@ -774,7 +775,10 @@ namespace TriageTrainer.Entity
 
       var patientPoint = PatientBCIvAttachmentPoint;
       if (patientPoint == null)
+      {
+        WarnMissingPatientBCIvAttachmentPointOnce();
         return false;
+      }
       if (!patientPoint.IsPhysicallyConnectedTo(salinePoint))
       {
         var service = FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
@@ -851,6 +855,21 @@ namespace TriageTrainer.Entity
       return CurrentBed != null
              && CurrentBed.TryGetNormalSalineConnectionPoint(out var bedPoint)
              && patientPoint.IsPhysicallyConnectedTo(bedPoint);
+    }
+
+    /// <summary>
+    /// 정맥로 IV 연결 지점이 배선되지 않아 생리식염수 연결이 성립할 수 없음을 한 번만 알린다.
+    /// 이 참조는 환자 유형별 State 컴포넌트(PatientTypeBMaleState 등)에서 사람이 직접 배선한다.
+    /// </summary>
+    private void WarnMissingPatientBCIvAttachmentPointOnce()
+    {
+      if (_patientBCIvAttachmentPointWarned)
+        return;
+      _patientBCIvAttachmentPointWarned = true;
+      Debug.LogError(
+        $"[PatientController] {Identifier}: 정맥로 IV 연결 지점이 배선되지 않아 생리식염수를 연결할 수 없습니다. " +
+        "환자 프리팹의 PatientType...State 컴포넌트에 Intravenous Line Connection Point 참조를 지정하십시오.",
+        this);
     }
 
     private void RememberPatientBCNormalSalineConnection(string actorIdentifier, string actorDisplayName)

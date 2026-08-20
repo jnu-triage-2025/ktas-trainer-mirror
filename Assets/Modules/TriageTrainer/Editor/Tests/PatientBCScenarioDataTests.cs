@@ -430,11 +430,23 @@ namespace TriageTrainer.Tests
 
       Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Pupil_IV", out var pupilQuest), Is.True);
       Assert.That(pupilQuest.PresentationBindings.Select(binding =>
-        (binding.CompletionCriteriaIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
+        (binding.EntityIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
       {
-        ("patient-b-pupil-checked", "recognition_check")
+        ("patient_b", "recognition_check"),
+        ("patient_b", PatientController.InteractIdIntravenousLineCannula)
       }));
-      Assert.That(pupilQuest.Tasks.Single().SignalId, Is.EqualTo("patient_b_pupil_checked"));
+      Assert.That(pupilQuest.PresentationBindings[0].CompletionCriteriaIdentifier,
+        Is.EqualTo("patient-b-pupil-checked"));
+      var ivMark = pupilQuest.PresentationBindings[1];
+      Assert.That(ivMark.Activation, Is.EqualTo(QuestPresentationActivation.CompletionCriteria));
+      Assert.That(ivMark.CompletionCriteriaIdentifier, Is.EqualTo("patient-b-iv-secured"));
+      Assert.That(ivMark.IconIdentifier, Is.EqualTo("quest-interaction"));
+      Assert.That(ivMark.IconMode, Is.EqualTo(QuestPresentationIconMode.ReplacePrimaryIcon));
+      Assert.That(pupilQuest.Tasks.Select(task => (task.Identifier, task.SignalId)), Is.EqualTo(new[]
+      {
+        ("patient-b-pupil-checked", "patient_b_pupil_checked"),
+        ("patient-b-iv-secured", "insert_iv_patient_b_right")
+      }), "정맥로 확보까지 목표에 남아야 퀘스트가 완료 처리되지 않고, 정맥 라인 확보 마크도 유지된다.");
 
       Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Oxygen_Bleeding", out var oxygenQuest), Is.True);
       Assert.That(oxygenQuest.PresentationBindings.Select(binding =>

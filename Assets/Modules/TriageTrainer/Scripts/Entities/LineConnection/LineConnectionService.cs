@@ -813,11 +813,20 @@ namespace TriageTrainer.Entity.LineConnection
       TriageTrainer.Entity.PatientController patient,
       IntravenousLineConnectionPoint salinePoint,
       LineConnectionPoint startPoint,
-      LineConnectionPoint endPoint) =>
-      patient != null && salinePoint != null
-      && !ReferenceEquals(startPoint, endPoint)
-      && ((ReferenceEquals(startPoint, salinePoint) && ReferenceEquals(endPoint, patient.PatientBCIvAttachmentPoint))
-          || (ReferenceEquals(endPoint, salinePoint) && ReferenceEquals(startPoint, patient.PatientBCIvAttachmentPoint)));
+      LineConnectionPoint endPoint)
+    {
+      if (patient == null || salinePoint == null || ReferenceEquals(startPoint, endPoint))
+        return false;
+
+      // 환자 측 정맥로 포인트가 배선되지 않았으면(null) 어떤 끝점도 인정하지 않는다.
+      // 이 검사가 없으면 null 끝점이 null 참조와 ReferenceEquals 로 일치해버린다.
+      var patientPoint = patient.PatientBCIvAttachmentPoint;
+      if (patientPoint == null)
+        return false;
+
+      return (ReferenceEquals(startPoint, salinePoint) && ReferenceEquals(endPoint, patientPoint))
+             || (ReferenceEquals(endPoint, salinePoint) && ReferenceEquals(startPoint, patientPoint));
+    }
 
     private void ApplyLineMaterial(
       LineConnectionPoint startPoint,

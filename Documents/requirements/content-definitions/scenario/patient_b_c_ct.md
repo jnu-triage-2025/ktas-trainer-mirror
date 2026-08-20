@@ -466,6 +466,11 @@ flags: ["refactor-required"]
         4. 퀘스트 "남성 환자의 동공반사 확인하기" 목표를 완료처리
         5. 퀘스트 목표 표기를 "남성 환자의 정맥로 확보하기"로 변경
         6. "정맥로 확보" Interaction 활성화
+          - **(2026-08-20 추가)** 이 Interaction("정맥 라인 확보", `intravenous_line_cannula`)에 퀘스트 마크를 표시한다
+            - `Quest_B_Pupil_IV`에 정맥로 확보 목표(`patient-b-iv-secured`, 신호 `insert_iv_patient_b_right`, 표기 "남성 환자 정맥로 확보")를 추가하고, 그 목표를 조건으로 하는 Presentation Binding(`patient_b`/`intravenous_line_cannula`, 아이콘 `quest-interaction`, `ReplacePrimaryIcon`)을 건다
+            - 목표를 함께 추가하는 이유: 동공반사 목표 하나만 있으면 동공반사를 확인한 순간 퀘스트가 완료 상태가 되고 `QuestPresentationService`가 완료된 퀘스트의 마크를 모두 내린다. 정작 정맥로 확보 Interaction이 열리는 시점에 마크가 사라지는 셈이다
+            - 마크는 상호작용 힌트에 붙는다. 동공반사 확인 전에는 Interaction 자체가 노출되지 않으므로 마크도 보이지 않는다. 정맥로 확보 단계에 들어가야 보인다
+            - 20G 캐뉼라를 삽입하면 정맥로 확보 목표가 완료되어 마크가 내려가며 퀘스트는 `Quest_B_Normal_Saline`으로 Update된다
           - Interaction 활성화 시 다음 재생
             - 인벤토리에 `cannula_20g` 아이템이 있는지 확인
               - 없다면 다음 재생
@@ -493,7 +498,10 @@ flags: ["refactor-required"]
               - 기술 노트: 침대에 생리식염수를 거는 동작은 침대 Attachment의 기존 "N/S 수액 걸기" Interaction을 그대로 사용
           - Interaction 수행 시 다음 처리
             - 환자가 누워있는 침대 Attachment의 생리식염수 오브젝트 자식에 있는 Intravenous Line Connection Point 오브젝트와, 환자의 우측 팔 정맥로의 Intravenous Line Connection Point 오브젝트를 IV Line 연결 처리
-              - 환자 측 연결 포인트의 식별자는 `patient_b:iv_point_vein`으로 지정. 포인트가 여러 개 존재할 때를 대비해 Point 클래스로 자식 오브젝트들을 쿼리한 뒤 identifier가 일치하는 포인트를 찾아 사용
+              - **(2026-08-20 변경)** 환자 측 연결 포인트는 **식별자 문자열로 검색하지 않는다**. 환자 유형별 컴포넌트 `PatientTypeBMaleState`(환자 C는 `PatientTypeBFemaleState`)의 `Intravenous Line Connection Point` 참조 필드에 사람이 직접 배선한 포인트를 그대로 사용한다
+                - 폐기된 기획: `patient_b:iv_point_vein` 식별자 지정 + 자식 오브젝트 쿼리 후 identifier 일치 검색(포인트 미배치 시 조용히 실패해 IV 라인이 연결되지 않는 문제로 폐기)
+                - 이 참조는 `PatientController.PatientBCIvAttachmentPoint`로 주입되며, 비어 있으면 연결이 성립하지 않고 오류 로그로 배선 누락을 알린다
+                - 온라인에서는 자동 연결이 FishNet 스폰된 컴포넌트만 허용하므로, 포인트는 반드시 환자 네트워크 프리팹의 자식 오브젝트여야 한다(런타임 생성 경로 없음)
           - 기술 노트: 이와 관련한 로직을 미리 구현하고 그래프 노드로 연결시키기
           - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
 - `nurse_d`에게 퀘스트 발행
@@ -1172,7 +1180,8 @@ _2026-08-19 Updated_
         - 환자가 누워있는 침대의 Attachment가 활성화되어있어야 함.
         - 환자가 누워있는 침대의 Attachment에 PS가 적용되어있어야 함(Display 플래그와 상태 플래그 모두 활성화되어있어야 하나, 활성화 여부 판단은 상태플래그를 기준으로 함)
         - "1. 환자에게 20G 캐뉼라 삽입 행위"가 완료되어있고, 환자가 누워있는 침대의 Attachment에 PS가 활성화되어있으면, "플라즈마 솔루션 연결" 인터렉션을 추가(혹은 가시화)
-        - 이 인터렉션을 수행하면, 환자가 누워있는 침대 Attachment의 PS의 자식에 있는 Intravenous Line Connection Point 오브젝트와 환자의 좌측 팔 정맥로의 Intravenous Line Connection Point 오브젝트(이 포인트의 식별자를 "patient_b:iv_point_vein"으로 지정, 포인트가 여러개 존재할 때를 대비하여 Point 클래스로 자식 오브젝트들을 쿼리한 후 identifier가 일치하는 것을 찾도록 하기)를 IV Line Connection 처리
+        - 이 인터렉션을 수행하면, 환자가 누워있는 침대 Attachment의 PS의 자식에 있는 Intravenous Line Connection Point 오브젝트와 환자의 좌측 팔 정맥로의 Intravenous Line Connection Point 오브젝트를 IV Line Connection 처리
+          - **(2026-08-20 변경)** 환자 측 포인트를 식별자(`patient_b:iv_point_vein`)로 쿼리하던 기획은 폐기했다. 환자 유형별 컴포넌트(`PatientTypeBMaleState` / `PatientTypeBFemaleState`)의 `Intravenous Line Connection Point` 참조 필드로 직접 가져온다
 - "1. 환자에게 20G 캐뉼라 삽입 행위"가 완료된 후, 환자에게 삽입한 20G 캐뉼라를 PS와 연결하는 행위를 플레이어에게 지시하기 위해, 
      - (위 시나리오 사이에 추가) 20G 캐뉼라 삽입 행위 이후에 "Plasma Solution을 연결하기" 퀘스트 서브목표를 추가 (AI 지시: 우선 위 내용에서 적절히 텍스트를 추가하여라)
      - (위 시나리오 사이에 추가) 위의 퀘스트 서브목표 추가 동작과 함께, Dialogue로 본인의 이름이 발화자로 된 Dialogue, Content Text가 "(환자에게 Plasma Solution을 연결해두자.)"인 다이얼로그도 발생
@@ -1188,12 +1197,14 @@ _2026-08-19 Updated_
   - 환자 C 브랜치 동일 처리: `C_C_IV_WAIT` 통과 직후 목표 표기 "여성 환자에게 생리식염수 연결하기" + 동일 Dialogue 후 `C_C_NS_WAIT`로 재배선
 - C# (TriageTrainer)
   - 신규 "생리식염수 연결" Interaction(PatientController): 노출 조건 = ① 1단계 삽입 완료(`PatientBCTreatmentStage.AwaitingNormalSaline` 구간) ② 환자 침대 `MovingPatientBedController`의 `IsIntravenousStandInstalled && IsNormalSalineInstalled`(상태 플래그 기준 판정)
-  - 수행 시 침대 N/S 오브젝트(`_intravenousHangerHangedNormalSalineReference`) 자식의 `IntravenousLineConnectionPoint`와 환자 우측 팔 포인트(식별자 `patient_b:iv_point_vein`)를 `LineConnectionService`로 IV Line 연결
-  - 기존 하드코딩 식별자 "connect_cannula_and_ns1" 기반 물리 연결 판정(`PatientController.TreatmentDisplay.cs`의 `HasPhysicalPatientBCNormalSalineConnection`, `LineConnectionService.cs`, `IntravenousLineConnectionPoint.cs` 3곳)을 `patient_b:iv_point_vein` 자식 Point 쿼리(identifier 일치 검색) 방식으로 교체·일반화. 연결 완료 신호 `connect_cannula_and_ns1_{identifier}`는 유지
+  - 수행 시 침대 N/S 오브젝트(`_intravenousHangerHangedNormalSalineReference`) 자식의 `IntravenousLineConnectionPoint`와 환자 우측 팔 포인트(`PatientTypeBMaleState`의 `Intravenous Line Connection Point` 참조 필드)를 `LineConnectionService`로 IV Line 연결
+  - 기존 하드코딩 식별자 "connect_cannula_and_ns1" 기반 물리 연결 판정(`PatientController.TreatmentDisplay.cs`의 `HasPhysicalPatientBCNormalSalineConnection`, `LineConnectionService.cs`, `IntravenousLineConnectionPoint.cs` 3곳)을 **환자 유형별 State 컴포넌트의 포인트 참조 필드** 기반 판정으로 교체·일반화. 연결 완료 신호 `connect_cannula_and_ns1_{identifier}`는 유지
+    - **(2026-08-20 변경)** 중간 단계였던 `patient_b:iv_point_vein` 자식 Point 쿼리(identifier 일치 검색) 방식은 폐기. `PatientController.PatientBCIvAttachmentPoint`는 주입된 참조만 반환하며, 식별자 검색·런타임 포인트 생성 경로는 제거했다
   - 1단계 삽입 처리(`cannula_20g` 1개 소모, `Syringe20GInsertedIntoRightArm` 표시 플래그, `insert_iv_patient_b_right` 신호)는 `PatientController.IntravenousLineCannula.cs`에 이미 구현되어 있음 — 동작 확인만 수행
 - 프리팹/씬(에디터 작업)
-  - `PatientTypeBMale` 우측 팔 정맥로 표시 오브젝트 하위에 `IntravenousLineConnectionPoint`(Identifier=`patient_b:iv_point_vein`) 추가
-  - `PatientTypeBFemale`(환자 C, 좌측 팔) 하위에 상응 포인트 추가(식별자 예: `patient_c:iv_point_vein`)
+  - `PatientTypeBMale` 우측 팔 정맥로 표시 오브젝트 하위에 `IntravenousLineConnectionPoint`를 가진 GameObject 추가 후, **`PatientTypeBMaleState` 컴포넌트의 `Intravenous Line Connection Point` 필드에 그 포인트를 배선**(식별자 지정 불필요)
+  - `PatientTypeBFemale`(환자 C, 좌측 팔) 하위에 상응 포인트 추가 후 `PatientTypeBFemaleState`의 동일 필드에 배선
+    - 두 포인트 모두 환자 네트워크 프리팹의 자식이어야 한다(온라인 자동 연결은 FishNet 스폰 컴포넌트만 허용). 필드가 비어 있으면 "생리식염수 연결"이 실패하며 오류 로그가 남는다
   - `MovingPatientBed` N/S 걸이 오브젝트 하위의 연결 포인트 존재 확인/추가
 - 문서
   - `### 환자 C 처치` 정맥로 확보 블록에도 동일 2단계 구조 반영
