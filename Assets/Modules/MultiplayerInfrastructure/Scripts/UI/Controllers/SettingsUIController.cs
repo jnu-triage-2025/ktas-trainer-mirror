@@ -7,14 +7,14 @@ using UnityEngine.UIElements;
 namespace MultiplayerInfrastructure.UI
 {
   /// <summary>
-  /// 키 설정 / 그래픽 설정을 하나의 창에서 탭으로 통합한 설정 UI 컨트롤러입니다.
+  /// 일반 / 키 설정 / 그래픽 설정 / 오디오 설정을 하나의 창에서 탭으로 통합한 설정 UI 컨트롤러입니다.
   ///
   /// 기존의 독립적인 <c>KeyConfigUIController</c> / <c>GraphicsSettingsUIController</c> 및
   /// 각각의 UIDocument를 대체합니다. Escape 메뉴의 단일 "설정" 버튼이 이 컨트롤러를 오버레이로 push합니다.
   ///
   /// 구조:
   ///   - UXML(SettingsUI.uxml)은 헤더/탭바/컨텐츠영역/푸터의 뼈대만 제공합니다.
-  ///   - 탭 버튼과 각 탭의 컨텐츠(키 설정 UI, 그래픽 설정 UI)는 이 컨트롤러가 코드로 동적 생성합니다.
+  ///   - 탭 버튼과 각 탭의 컨텐츠(키 설정 UI, 그래픽 설정 UI, 오디오 설정 UI)는 이 컨트롤러가 코드로 동적 생성합니다.
   ///     (Unity 에디터의 인스펙터/에디터 컴포넌트는 런타임에서 사용할 수 없으므로,
   ///      가변적으로 나타나는 설정 화면은 UI Toolkit + 코드 동적 생성으로 구현합니다.)
   ///
@@ -30,6 +30,7 @@ namespace MultiplayerInfrastructure.UI
       General,
       Key,
       Graphics,
+      Audio,
     }
 
     [SerializeField] private float _sortingOrder = DefaultsUIDocument.SettingsUISortOrder;
@@ -52,6 +53,7 @@ namespace MultiplayerInfrastructure.UI
     private VisualElement _keyTabContent;
     private VisualElement _graphicsTabContent;
     private VisualElement _generalTabContent;
+    private VisualElement _audioTabContent;
 
     // ──────────────────────────────────────────────────────────────────────────
     // Unity 라이프사이클
@@ -94,6 +96,7 @@ namespace MultiplayerInfrastructure.UI
       DetachKeyTab();
       DetachGraphicsTab();
       DetachGeneralTab();
+      DetachAudioTab();
       base.OnDestroy();
     }
 
@@ -137,9 +140,11 @@ namespace MultiplayerInfrastructure.UI
       DetachKeyTab();
       DetachGraphicsTab();
       DetachGeneralTab();
+      DetachAudioTab();
       _keyTabContent = null;
       _graphicsTabContent = null;
       _generalTabContent = null;
+      _audioTabContent = null;
 
       BuildTabBar();
       ShowTab(_activeTab, force: true);
@@ -174,6 +179,7 @@ namespace MultiplayerInfrastructure.UI
       AddTabButton(SettingsTab.General, "일반");
       AddTabButton(SettingsTab.Key, "키 설정");
       AddTabButton(SettingsTab.Graphics, "그래픽 설정");
+      AddTabButton(SettingsTab.Audio, "오디오 설정");
     }
 
     private void AddTabButton(SettingsTab tab, string label)
@@ -211,6 +217,10 @@ namespace MultiplayerInfrastructure.UI
         case SettingsTab.Graphics:
           _tabContent.Add(EnsureGraphicsTabContent());
           RefreshGraphicsTab();
+          break;
+        case SettingsTab.Audio:
+          _tabContent.Add(EnsureAudioTabContent());
+          RefreshAudioTab();
           break;
       }
 
@@ -251,6 +261,7 @@ namespace MultiplayerInfrastructure.UI
       NeutralizeLabelsByClass("settings__panel-title");
       NeutralizeLabelsByClass("settings__pov-value");
       NeutralizeLabelsByClass("settings__graphics-field-label");
+      NeutralizeLabelsByClass("settings__field-note");
     }
 
     private void NeutralizeLabelsByClass(string className)

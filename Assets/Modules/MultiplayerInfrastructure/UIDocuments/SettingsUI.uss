@@ -199,6 +199,21 @@
   min-height: 0;
 }
 
+.settings__audio-tab-wrapper {
+  flex-direction: column;
+  flex-grow: 1;
+  min-height: 0;
+}
+
+/* 필드 아래에 덧붙이는 보조 설명(제약 사항 안내 등) */
+.settings__field-note {
+  font-size: 11px;
+  color: #6f6f8c;
+  -unity-text-align: upper-left;
+  white-space: normal;
+  padding-left: 4px;
+}
+
 /* ── 액션(초기화 등) 버튼 행 ────────────────────────────────── */
 .settings__actions {
   display: flex;

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using MultiplayerInfrastructure.Audio;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -137,7 +138,7 @@ namespace TriageTrainer.Entity
           || _adapter.Devices == null || _adapter.Devices.Length == 0)
         return;
       Availability before = ResolveAvailability();
-      _device = _adapter.Devices[0];
+      _device = ResolvePreferredDevice(_adapter.Devices);
       try
       {
         _clip = _adapter.Start(_device, AudioSettings.outputSampleRate);
@@ -210,6 +211,46 @@ namespace TriageTrainer.Entity
           return player;
       }
       return null;
+    }
+
+    /// <summary>
+    /// 설정에서 고른 마이크를 씁니다. 고르지 않았거나 그 장치가 지금 없으면
+    /// 운영체제 기본 마이크(목록의 첫 장치)로 돌아갑니다.
+    /// </summary>
+    private static string ResolvePreferredDevice(string[] devices)
+    {
+      var preferred = AudioDevicePreferenceService.ResolveInputDeviceName();
+      if (!string.IsNullOrEmpty(preferred))
+      {
+        for (int i = 0; i < devices.Length; i++)
+        {
+          if (string.Equals(devices[i], preferred, StringComparison.Ordinal))
+            return devices[i];
+        }
+      }
+
+      return devices[0];
+    }
+
+    private void OnEnable()
+    {
+      AudioDevicePreferenceService.InputDeviceChanged += HandleInputDeviceChanged;
+    }
+
+    private void OnDisable()
+    {
+      AudioDevicePreferenceService.InputDeviceChanged -= HandleInputDeviceChanged;
+    }
+
+    /// <summary>설정에서 마이크를 바꾸면 녹음을 끊고 새 장치로 다시 연다.</summary>
+    private void HandleInputDeviceChanged()
+    {
+      if (_clip == null)
+        return;
+
+      StopRecording();
+      _recordingFailed = false;
+      EnsureRecording();
     }
 
     private void StopRecording()
