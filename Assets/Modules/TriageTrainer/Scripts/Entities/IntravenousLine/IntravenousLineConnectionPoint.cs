@@ -571,6 +571,9 @@ namespace TriageTrainer.Entity.IntravenousLine
 
     public LineConnectionService ResolveController()
     {
+      if (LineConnectionService.TopologyService != null)
+        return connectionService = LineConnectionService.TopologyService;
+
       if (connectionService != null)
         return connectionService;
 

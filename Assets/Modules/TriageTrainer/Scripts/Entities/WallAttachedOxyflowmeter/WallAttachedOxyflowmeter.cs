@@ -38,6 +38,13 @@ namespace TriageTrainer.Entity
   public class WallAttachedOxyflowmeter : StaticObjectDisplayment, INearestOnlyInteract
   {
     public const string QuestPresentationInteractionIdentifier = "oxyflowmeter";
+    public const string UnmarkedInteractionIdentifier = "oxyflowmeter_unmarked";
+
+    /// <summary>
+    /// 회수 상태의 상호작용 식별자. 설치/조작과 분리해 두면 퀘스트 표시 바인딩이
+    /// "산소 유량계 회수"에는 붙지 않는다(회수는 퀘스트가 지시하는 행동이 아니다).
+    /// </summary>
+    public const string DetachInteractionIdentifier = "oxyflowmeter_detach";
 
     public static event Action<WallAttachedOxyflowmeter, bool> AttachmentStateChanged;
     /// <summary>플레이어 상호작용으로 새 설치가 확정된 경우에만 발생한다.</summary>
@@ -77,7 +84,65 @@ namespace TriageTrainer.Entity
     /// </summary>
     public bool IsAttached { get; private set; }
     public override string PresentationEntityIdentifier => EntityIdentifier;
-    public override string InteractionIdentifier => QuestPresentationInteractionIdentifier;
+    public override string InteractionIdentifier
+    {
+      get
+      {
+        if (IsDetachInteraction)
+          return DetachInteractionIdentifier;
+        return IsQuestOxygenConnectionTarget()
+          ? QuestPresentationInteractionIdentifier
+          : UnmarkedInteractionIdentifier;
+      }
+    }
+
+    /// <summary>
+    /// 설치 상태에서 조작 신호까지 올라가, 다음 상호작용이 회수로 동작하는지 여부.
+    /// </summary>
+    public bool IsDetachInteraction => IsAttached && IsAttachedInteractCompleted;
+
+    /// <summary>
+    /// 이 유량계의 "조작" 상호작용이 이미 수행되었는지 여부.
+    /// 조작 신호를 설정하지 않은 유량계는 설치 즉시 회수 대상이므로 완료로 본다.
+    /// </summary>
+    public bool IsAttachedInteractCompleted
+    {
+      get
+      {
+        if (string.IsNullOrWhiteSpace(_attachedInteractSignal))
+          return true;
+        return MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.IsRaised(
+          ResolveAttachedInteractSignal());
+      }
+    }
+
+    /// <summary>
+    /// 이 유량계 전용 조작 신호. 설정값(<c>_attachedInteractSignal</c>)은 프리팹 공유라
+    /// 그대로 쓰면 구역 하나를 조작한 순간 다른 구역의 유량계까지 회수 상태가 된다.
+    /// 엔티티 식별자를 붙여 유량계별로 상태를 분리한다.
+    /// </summary>
+    public string ResolveAttachedInteractSignal()
+    {
+      if (string.IsNullOrWhiteSpace(_attachedInteractSignal))
+        return null;
+
+      // 힌트 갱신과 퀘스트 표시가 매 프레임 이 값을 읽는다. 엔티티 식별자는 레이아웃 적용
+      // 시점에 정해지므로, 식별자가 바뀔 때만 다시 만든다.
+      string identifier = EntityIdentifier;
+      if (_cachedAttachedInteractSignal == null
+          || !string.Equals(_cachedAttachedInteractSignalSource, identifier, StringComparison.Ordinal))
+      {
+        _cachedAttachedInteractSignalSource = identifier;
+        _cachedAttachedInteractSignal = string.IsNullOrWhiteSpace(identifier)
+          ? _attachedInteractSignal
+          : $"{_attachedInteractSignal}_{identifier}";
+      }
+
+      return _cachedAttachedInteractSignal;
+    }
+
+    private string _cachedAttachedInteractSignal;
+    private string _cachedAttachedInteractSignalSource;
     /// <summary>산소 라인 자동 연결에 사용할 유량계 측 포트. 프리팹에 설정되지 않으면 null이다.</summary>
     public OxyLineConnectionPoint OxyLineConnectionPoint => _oxyLineConnectionPoint;
     private Sprite _heldItemIcon;
@@ -103,8 +168,7 @@ namespace TriageTrainer.Entity
         {
           // 설치 상태에서 첫 상호작용이 신호 발행(회수가 아님)으로 동작하는 동안은
           // 힌트도 그에 맞게 표시한다(실제 동작과 힌트의 불일치 방지).
-          if (!string.IsNullOrWhiteSpace(_attachedInteractSignal)
-              && !MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.IsRaised(_attachedInteractSignal))
+          if (!IsDetachInteraction)
             return string.IsNullOrWhiteSpace(_attachedInteractDisplayText) ? "산소 유량계 조작" : _attachedInteractDisplayText;
 
           return string.IsNullOrWhiteSpace(_detachDisplayText) ? "산소 유량계 회수" : _detachDisplayText;
@@ -121,6 +185,13 @@ namespace TriageTrainer.Entity
     {
       SetAttached(false);
       Hide();
+    }
+
+    public override void Hide()
+    {
+      base.Hide();
+      if (!gameObject.activeSelf)
+        gameObject.SetActive(true);
     }
 
     // ── IInteractorConditional ───────────────────────────────────────────────
@@ -160,10 +231,15 @@ namespace TriageTrainer.Entity
       {
         // 설치 상태에서의 첫 상호작용은 시나리오 신호만 올린다(예: 유량계 클릭으로 산소량 결정 단계).
         // 신호가 이미 올라간 뒤의 상호작용은 기존처럼 회수로 처리한다.
-        if (!string.IsNullOrWhiteSpace(_attachedInteractSignal)
-            && !MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.IsRaised(_attachedInteractSignal))
+        if (!IsDetachInteraction)
         {
+          // 유량계별 신호와 별개로, 기존 시나리오(환자 A 계열)가 대기하는 공용 신호도 유지한다.
           MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(_attachedInteractSignal);
+          MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(ResolveAttachedInteractSignal());
+          // 산소 라인은 신호가 모든 피어에 미러링된 뒤 CareZone이 만든다. 조작한 피어에서는
+          // 힌트/라인이 한 프레임이라도 늦지 않도록 여기서도 한 번 시도한다.
+          RequestOxygenLineReconcile();
+          player.RefreshInteractableHintsNow();
           return;
         }
 
@@ -228,6 +304,34 @@ namespace TriageTrainer.Entity
     }
 
     // ── 헬퍼 ─────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// 이 유량계가 속한 CareZone에 산소 라인 연결을 다시 판정하게 한다.
+    /// 유량계는 로컬 정적 오브젝트지만 서버가 공통 토폴로지 변경을 확정하고,
+    /// 각 클라이언트는 그 결과를 로컬 렌더링으로 반영한다.
+    /// </summary>
+    private void RequestOxygenLineReconcile()
+    {
+      var zones = FindObjectsByType<PatientCareDescriptionZone>(
+        FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      for (int i = 0; i < zones.Length; i++)
+        zones[i].TryReconcileOxygenLineFor(this);
+    }
+
+    private bool IsQuestOxygenConnectionTarget()
+    {
+      var zones = FindObjectsByType<PatientCareDescriptionZone>(
+        FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      for (int i = 0; i < zones.Length; i++)
+      {
+        var patient = zones[i].GetPatientForOxyflowmeter(this);
+        if (patient == null || !string.Equals(patient.Identifier, "patient_b", StringComparison.Ordinal))
+          continue;
+        return !MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.IsRaised(
+          "equipment_connected_oxyflowmeter_patient_b");
+      }
+      return false;
+    }
 
     /// <summary>플레이어가 손에 산소 유량계를 들고 있는지 판정한다.</summary>
     private static bool IsHandlingOxyflowmeter(PlayerController player)

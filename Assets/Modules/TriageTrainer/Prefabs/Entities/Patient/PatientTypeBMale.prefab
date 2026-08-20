@@ -137,6 +137,7 @@ MonoBehaviour:
       IntravenousHangerAttached: {fileID: 0}
       IntravenousFluidAttached: {fileID: 0}
   intravenousLineConnectionPoint: {fileID: 7373929579115856596}
+  oxyLineConnectionPoint: {fileID: 4673562941832867291}
 --- !u!136 &1688330197099835462
 CapsuleCollider:
   m_ObjectHideFlags: 0

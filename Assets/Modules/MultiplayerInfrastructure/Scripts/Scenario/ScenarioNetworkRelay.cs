@@ -37,10 +37,21 @@ namespace MultiplayerInfrastructure.Scenario
   public sealed class ScenarioNetworkRelay : NetworkBehaviour
   {
     private static ScenarioNetworkRelay _instance;
+    public static event Func<string, string, bool, NetworkConnection, bool> LineTopologyRequestReceived;
+    public static event Action<long, string, string, bool> LineTopologyMirrored;
+    public static event Action<int, string, string, bool, bool> LineTopologyRequestCompleted;
+    public static event Action<long> LineTopologySnapshotBegan;
+    public static event Action<long> LineTopologySnapshotEnded;
+    public static event Func<IEnumerable<LineTopologyPair>> LineTopologySnapshotRequested;
     private const int MaxSignalUpdatesPerPlayerPerWindow = 30;
     private const float SignalUpdateWindowSeconds = 1f;
+    private const int MaxLineTopologyUpdatesPerPlayerPerWindow = 20;
+    private const int MaxLineTopologySnapshotsPerPlayerPerWindow = 2;
     private static readonly Dictionary<string, Queue<float>> SignalUpdateTimesByPlayer = new(StringComparer.Ordinal);
+    private static readonly Dictionary<int, Queue<float>> LineTopologyUpdateTimesByClient = new();
+    private static readonly Dictionary<int, Queue<float>> LineTopologySnapshotTimesByClient = new();
     private static readonly ScenarioClientSignalAuthorization ClientSignalAuthorization = new();
+    private long _lineTopologyVersion;
     private readonly List<ActingNpcConfiguration> _actingNpcConfigurations = new List<ActingNpcConfiguration>();
     private readonly List<NpcControlState> _npcControlStates = new List<NpcControlState>();
 
@@ -69,6 +80,49 @@ namespace MultiplayerInfrastructure.Scenario
 
     /// <summary>씬에 배치된 중계기 인스턴스(없으면 null).</summary>
     public static ScenarioNetworkRelay Instance => _instance;
+
+    public readonly struct LineTopologyPair
+    {
+      public LineTopologyPair(string first, string second)
+      {
+        First = first;
+        Second = second;
+      }
+
+      public string First { get; }
+      public string Second { get; }
+    }
+
+    public static bool RequestLineTopologyChange(string first, string second, bool connected, int requestId = 0)
+    {
+      if (string.IsNullOrWhiteSpace(first) || string.IsNullOrWhiteSpace(second))
+        return false;
+
+      if (InstanceFinder.IsServerStarted)
+        return false;
+      if (_instance == null || !InstanceFinder.IsClientStarted)
+        return false;
+
+      _instance.CmdRequestLineTopologyChange(first, second, connected, requestId);
+      return true;
+    }
+
+    public static void PublishLineTopologyChange(string first, string second, bool connected)
+    {
+      if (InstanceFinder.IsServerStarted && !string.IsNullOrWhiteSpace(first)
+          && !string.IsNullOrWhiteSpace(second))
+        _instance?.RpcMirrorLineTopologyChange(++_instance._lineTopologyVersion, first, second, connected);
+    }
+
+    private static bool ProcessLineTopologyChange(
+      string first, string second, bool connected, NetworkConnection sender)
+    {
+      var handler = LineTopologyRequestReceived;
+      if (handler == null || !handler.Invoke(first, second, connected, sender))
+        return false;
+      _instance?.RpcMirrorLineTopologyChange(++_instance._lineTopologyVersion, first, second, connected);
+      return true;
+    }
 
     /// <summary>서버 권위 신호 파라미터 저장소를 모든 피어에서 비운다.</summary>
     public static void FlushSignalParametersAuthoritative()
@@ -233,8 +287,26 @@ namespace MultiplayerInfrastructure.Scenario
       base.OnStartServer();
       ScenarioSignalParameterStore.FlushLocal();
       SignalUpdateTimesByPlayer.Clear();
+      LineTopologyUpdateTimesByClient.Clear();
+      LineTopologySnapshotTimesByClient.Clear();
       ClientSignalAuthorization.ClearScenario();
       InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
+    }
+
+    public override void OnStartClient()
+    {
+      base.OnStartClient();
+      if (!IsServerStarted)
+        StartCoroutine(RequestLineTopologySnapshotWithRetry());
+    }
+
+    private IEnumerator RequestLineTopologySnapshotWithRetry()
+    {
+      for (int attempt = 0; attempt < 3 && IsClientStarted && !IsServerStarted; attempt++)
+      {
+        CmdRequestLineTopologySnapshot();
+        yield return new WaitForSecondsRealtime(1f);
+      }
     }
 
     public override void OnStopServer()
@@ -884,6 +956,100 @@ namespace MultiplayerInfrastructure.Scenario
       ScenarioInteractionSignals.UnregisterLocal(normalizedSignalId);
       RpcMirrorClearScenarioSignal(normalizedSignalId);
     }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdRequestLineTopologyChange(
+      string first, string second, bool connected, int requestId, NetworkConnection sender = null)
+    {
+      if (sender == null || !sender.IsValid)
+        return;
+      if (!IsValidLineTopologyIdentifier(first) || !IsValidLineTopologyIdentifier(second)
+          || !TryConsumeLineTopologyUpdateQuota(sender.ClientId))
+      {
+        TargetLineTopologyRequestCompleted(sender, requestId, first, second, connected, accepted: false);
+        return;
+      }
+      bool accepted = ProcessLineTopologyChange(first, second, connected, sender);
+      TargetLineTopologyRequestCompleted(sender, requestId, first, second, connected, accepted);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdRequestLineTopologySnapshot(NetworkConnection sender = null)
+    {
+      if (sender == null || !sender.IsValid || !TryConsumeLineTopologySnapshotQuota(sender.ClientId))
+        return;
+      long version = _lineTopologyVersion;
+      TargetBeginLineTopologySnapshot(sender, version);
+      foreach (var callback in LineTopologySnapshotRequested?.GetInvocationList()
+               ?? Array.Empty<Delegate>())
+      {
+        if (callback is not Func<IEnumerable<LineTopologyPair>> provider)
+          continue;
+        var pairs = provider.Invoke();
+        if (pairs == null)
+          continue;
+        foreach (var pair in pairs)
+          TargetMirrorLineTopologyChange(sender, version, pair.First, pair.Second, true);
+      }
+      TargetEndLineTopologySnapshot(sender, version);
+    }
+
+    private static bool IsValidLineTopologyIdentifier(string value) =>
+      !string.IsNullOrWhiteSpace(value) && value.Length <= 256 && !value.Any(char.IsControl);
+
+    private static bool TryConsumeLineTopologyUpdateQuota(int clientId)
+    {
+      float now = Time.realtimeSinceStartup;
+      if (!LineTopologyUpdateTimesByClient.TryGetValue(clientId, out var times))
+      {
+        times = new Queue<float>();
+        LineTopologyUpdateTimesByClient.Add(clientId, times);
+      }
+      while (times.Count > 0 && now - times.Peek() >= SignalUpdateWindowSeconds)
+        times.Dequeue();
+      if (times.Count >= MaxLineTopologyUpdatesPerPlayerPerWindow)
+        return false;
+      times.Enqueue(now);
+      return true;
+    }
+
+    private static bool TryConsumeLineTopologySnapshotQuota(int clientId)
+    {
+      float now = Time.realtimeSinceStartup;
+      if (!LineTopologySnapshotTimesByClient.TryGetValue(clientId, out var times))
+      {
+        times = new Queue<float>();
+        LineTopologySnapshotTimesByClient.Add(clientId, times);
+      }
+      while (times.Count > 0 && now - times.Peek() >= SignalUpdateWindowSeconds)
+        times.Dequeue();
+      if (times.Count >= MaxLineTopologySnapshotsPerPlayerPerWindow)
+        return false;
+      times.Enqueue(now);
+      return true;
+    }
+
+    [ObserversRpc(BufferLast = false)]
+    private void RpcMirrorLineTopologyChange(long version, string first, string second, bool connected)
+      => LineTopologyMirrored?.Invoke(version, first, second, connected);
+
+    [TargetRpc]
+    private void TargetMirrorLineTopologyChange(
+      NetworkConnection target, long version, string first, string second, bool connected)
+      => LineTopologyMirrored?.Invoke(version, first, second, connected);
+
+    [TargetRpc]
+    private void TargetBeginLineTopologySnapshot(NetworkConnection target, long version)
+      => LineTopologySnapshotBegan?.Invoke(version);
+
+    [TargetRpc]
+    private void TargetEndLineTopologySnapshot(NetworkConnection target, long version)
+      => LineTopologySnapshotEnded?.Invoke(version);
+
+    [TargetRpc]
+    private void TargetLineTopologyRequestCompleted(
+      NetworkConnection target, int requestId, string first, string second, bool connected, bool accepted)
+      => LineTopologyRequestCompleted?.Invoke(requestId, first, second, connected, accepted);
 
     /// <summary>
     /// 서버의 권위 신호 기록을 모든 클라이언트 로컬 레지스트리로 미러링한다.

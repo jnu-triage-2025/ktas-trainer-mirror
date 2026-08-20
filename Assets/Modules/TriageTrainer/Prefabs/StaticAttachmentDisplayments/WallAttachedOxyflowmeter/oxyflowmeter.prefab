@@ -34,6 +34,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 598816841167222933}
+  - {fileID: 2734118904553120442}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!33 &3440564003131946935
@@ -127,15 +128,68 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.WallAttachedOxyflowmeter
   _displayText: 
   _displayIcon: {fileID: 0}
+  _displayIcons: []
   _displayColor: {r: 1, g: 1, b: 1, a: 1}
+  _presentationEntityIdentifier:
+  _interactionIdentifier:
   _entityIdentifier: wall_oxyflowmeter:oxyflowmeter:6dda586c0eeb4b5092f6ca28e3480230
   _initiallyVisible: 1
   _toggleByActiveState: 0
   _shareMode: 0
   _consumeCount: 1
   _attachDisplayText: "\uC0B0\uC18C \uC720\uB7C9\uACC4 \uC124\uCE58"
+  _detachDisplayText: "\uC0B0\uC18C \uC720\uB7C9\uACC4 \uD68C\uC218"
   _attachCompletionSignal: 
   _attachedInteractSignal: interact_oxyflow_wall
+  _attachedInteractDisplayText: "\uC0B0\uC18C \uC720\uB7C9\uACC4 \uC870\uC791"
+  _oxyLineConnectionPoint: {fileID: 2734118904553120443}
+--- !u!1 &2734118904553120441
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2734118904553120442}
+  - component: {fileID: 2734118904553120443}
+  m_Layer: 0
+  m_Name: OxyflowOxyPort
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2734118904553120442
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2734118904553120441}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.0562, y: 0.188, z: 0.069}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1734041085910710290}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2734118904553120443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2734118904553120441}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b76115154ba474fbe9ed4b018f1cb552, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.OxyLine.OxyLineConnectionPoint
+  _lineMaterial: {fileID: 0}
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
 --- !u!1 &4360475459063986942
 GameObject:
   m_ObjectHideFlags: 0
@@ -202,8 +256,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
+  _lineMaterial: {fileID: 0}
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
   connectionService: {fileID: 0}
-  _identifier: oxyflow_tpiece_port_a
+  _identifier: oxyflowtpieceport_005
   _autoGenerateIdentifier: 1
   _displayIcon: {fileID: 0}
   _interactConfigs:
@@ -213,5 +270,3 @@ MonoBehaviour:
     _enabled: 1
   - _identifier: intravenous_line_disconnect
     _enabled: 1
-  _connectedLineObjects: []
-  _allowMultipleConnections: 0

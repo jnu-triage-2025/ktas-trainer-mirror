@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using TriageTrainer.Entity.LineConnection;
+using TriageTrainer.Entity.OxyLine;
 using TriageTrainer.Scenario;
 using UnityEngine;
 
@@ -63,6 +64,13 @@ namespace TriageTrainer.Entity
     public IReadOnlyList<WallAttachedOxyflowmeter> Oxyflowmeters => _oxyflowmeters;
     public string Identifier => _identifier;
     public PatientController CurrentPatient => _activePatient;
+
+    public PatientController GetPatientForOxyflowmeter(WallAttachedOxyflowmeter flowmeter)
+    {
+      if (flowmeter == null || _activePatient == null || !IsEquipmentInZone(flowmeter))
+        return null;
+      return _activePatient;
+    }
 
     public bool ContainsWorldPosition(Vector3 worldPosition)
     {
@@ -152,6 +160,12 @@ namespace TriageTrainer.Entity
 
     private void OnOxyflowmeterAttachmentStateChanged(WallAttachedOxyflowmeter equipment, bool attached)
     {
+      // 회수해도 유량계는 구역 소속으로 남아(위치 기준 판정) 환자 연결이 그대로다.
+      // 산소 라인만 따로 끊지 않으면 회수한 자리에 선이 남는다.
+      if (!attached && _activePatient != null
+          && ReferenceEquals(_activePatient.ConnectedOxyflowmeter, equipment))
+        DisconnectAutomaticOxyLine(_activePatient, equipment);
+
       if (IsEquipmentInZone(equipment))
       {
         if (!_oxyflowmeters.Contains(equipment))
@@ -462,8 +476,8 @@ namespace TriageTrainer.Entity
         return;
 
       // 기획 참고(대화 기록): 산소 유량계와 T-piece/비강 캐뉼라 사이는
-      // "상호작용을 실행하면 ... oxy line이 연결"된다. 따라서 이 케어존은
-      // 유량계 설치 또는 환자 진입만으로 산소 라인을 자동 생성해서는 안 된다.
+      // "상호작용을 실행하면 ... oxy line이 연결"된다. 그래서 산소 라인은 유량계 설치나
+      // 환자 진입이 아니라 "산소 유량계 조작"을 마친 뒤에만 만든다(ReconcileOxygenLine).
 
       WallAttachedWallSuction suction = patient.ConnectedWallSuction;
       if (suction != null && _newlyInstalledWallSuction.Contains(suction))
@@ -474,6 +488,108 @@ namespace TriageTrainer.Entity
         if (TryCreateAutomaticLine(equipmentPoint, patientPoint, "suction"))
           _newlyInstalledWallSuction.Remove(suction);
       }
+
+      ReconcileOxygenLine(patient);
+    }
+
+    /// <summary>
+    /// Reconciles the oxygen line after a flowmeter operation when this zone contains
+    /// both the flowmeter and its current patient.
+    /// </summary>
+    public void TryReconcileOxygenLineFor(WallAttachedOxyflowmeter flowmeter)
+    {
+      PatientController patient = GetPatientForOxyflowmeter(flowmeter);
+      if (patient == null)
+        return;
+
+      bool lineConnected = ReconcileOxygenLine(patient, flowmeter);
+      if (lineConnected && !ReferenceEquals(patient.ConnectedOxyflowmeter, flowmeter))
+        patient.SetConnectedOxyflowmeter(flowmeter);
+      if (lineConnected)
+        patient.NotifyOxygenLineConnected();
+    }
+
+    /// <summary>
+    /// 산소 유량계와 비강 캐뉼라 사이의 산소 라인을 만든다.
+    ///
+    /// <para>연결 조건은 세 가지다. 유량계가 설치되어 있고, "산소 유량계 조작" 상호작용이
+    /// 수행되었고, 환자의 비강 캐뉼라 표시가 켜져 산소 포트가 활성화되어 있어야 한다.
+    /// 설치나 환자 진입만으로는 만들지 않는다.</para>
+    ///
+    /// <para>유량계는 로컬 정적 오브젝트지만, 포트 식별자는 레이아웃 엔티티 식별자로 안정화된다.
+    /// 따라서 서버가 공통 토폴로지 서비스에서 연결을 확정하고, 각 클라이언트는 전파된 상태만
+    /// 로컬 렌더링으로 반영한다.</para>
+    /// </summary>
+    private void ReconcileOxygenLine(PatientController patient)
+    {
+      ReconcileOxygenLine(patient, patient != null ? patient.ConnectedOxyflowmeter : null);
+    }
+
+    private bool ReconcileOxygenLine(PatientController patient, WallAttachedOxyflowmeter flowmeter)
+    {
+      if (flowmeter == null || !flowmeter.IsAttached || !flowmeter.IsAttachedInteractCompleted)
+        return false;
+
+      var equipmentPoint = flowmeter.OxyLineConnectionPoint;
+      if (equipmentPoint == null)
+      {
+        WarnAutomaticLineFailure("oxy", "flowmeter oxy port is not wired on the prefab");
+        return false;
+      }
+
+      // 비강 캐뉼라를 아직 적용하지 않았으면 환자 측 포트가 비활성이다. 조작을 먼저 한
+      // 순서에서도 캐뉼라 적용 뒤 이 경로가 다시 돌면서 연결되므로 경고하지 않는다.
+      var patientPoint = ResolveActiveOxyLineConnectionPoint(patient);
+      if (patientPoint == null)
+        return false;
+      if (equipmentPoint.IsPhysicallyConnectedTo(patientPoint))
+        return true;
+
+      if (!equipmentPoint.CanAcceptAdditionalConnection
+          || !patientPoint.CanAcceptAdditionalConnection
+          || !equipmentPoint.CanConnectTo(patientPoint)
+          || !patientPoint.CanConnectTo(equipmentPoint))
+      {
+        WarnAutomaticLineFailure("oxy", "endpoint is unavailable or incompatible");
+        return false;
+      }
+
+      var service = LineConnectionService.TopologyService
+                    ?? FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
+      if (service == null)
+      {
+        WarnAutomaticLineFailure("oxy", "LineConnectionService is missing");
+        return false;
+      }
+
+      if (service.TryCreateAutomaticConnection(equipmentPoint, patientPoint))
+      {
+        _warnedAutomaticLineFailures.Remove("oxy");
+        return true;
+      }
+      return equipmentPoint.IsPhysicallyConnectedTo(patientPoint);
+    }
+
+    private static OxyLineConnectionPoint ResolveActiveOxyLineConnectionPoint(PatientController patient)
+    {
+      if (patient == null)
+        return null;
+
+      OxyLineConnectionPoint configured = patient.OxygenMaskAttachmentPoint;
+      if (configured != null)
+        return configured;
+
+      OxyLineConnectionPoint resolved = null;
+      var points = patient.GetComponentsInChildren<OxyLineConnectionPoint>(true);
+      for (int i = 0; i < points.Length; i++)
+      {
+        if (points[i] == null || !points[i].isActiveAndEnabled)
+          continue;
+        if (resolved != null)
+          return null;
+        resolved = points[i];
+      }
+      return resolved;
     }
 
     private bool TryCreateAutomaticLine(LineConnectionPoint equipmentPoint, LineConnectionPoint patientPoint, string lineType)
@@ -484,7 +600,8 @@ namespace TriageTrainer.Entity
         return false;
       }
 
-      var service = FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
+      var service = LineConnectionService.TopologyService
+                    ?? FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
       if (service == null)
       {
         WarnAutomaticLineFailure(lineType, "LineConnectionService is missing");
@@ -510,7 +627,12 @@ namespace TriageTrainer.Entity
 
     private static void DisconnectAutomaticOxyLine(PatientController patient, WallAttachedOxyflowmeter equipment)
     {
-      DisconnectAutomaticLine(equipment?.OxyLineConnectionPoint, patient?.ConfiguredOxygenMaskAttachmentPoint);
+      var equipmentPoint = equipment?.OxyLineConnectionPoint;
+      var patientPoint = patient?.ConfiguredOxygenMaskAttachmentPoint;
+      if (equipmentPoint == null || patientPoint == null)
+        return;
+
+      DisconnectAutomaticLine(equipmentPoint, patientPoint);
     }
 
     private static void DisconnectAutomaticSuctionLine(PatientController patient, WallAttachedWallSuction equipment)
@@ -522,7 +644,8 @@ namespace TriageTrainer.Entity
     {
       if (equipmentPoint == null || patientPoint == null)
         return;
-      var service = FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
+      var service = LineConnectionService.TopologyService
+                    ?? FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
       service?.DisconnectAutomaticConnection(equipmentPoint, patientPoint);
     }
 

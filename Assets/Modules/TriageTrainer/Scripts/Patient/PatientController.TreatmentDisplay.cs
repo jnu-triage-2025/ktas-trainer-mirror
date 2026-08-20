@@ -781,7 +781,8 @@ namespace TriageTrainer.Entity
       }
       if (!patientPoint.IsPhysicallyConnectedTo(salinePoint))
       {
-        var service = FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
+        var service = LineConnectionService.TopologyService
+                      ?? FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
         if (service == null || !service.TryCreateAutomaticConnection(salinePoint, patientPoint))
           return false;
       }
@@ -820,7 +821,7 @@ namespace TriageTrainer.Entity
         return false;
       }
       if (IsFishNetClientInitialized)
-        CmdCompletePatientBCNormalSalineConnection(salinePoint);
+        CmdCompletePatientBCNormalSalineConnection(salinePoint.ConnectionIdentifier);
       return false;
     }
 
@@ -889,14 +890,15 @@ namespace TriageTrainer.Entity
         return;
       }
       if (IsFishNetClientInitialized)
-        CmdClearPatientBCNormalSalineConnection(salinePoint);
+        CmdClearPatientBCNormalSalineConnection(salinePoint.ConnectionIdentifier);
     }
 
     [ServerRpc(RequireOwnership = false)]
     private void CmdClearPatientBCNormalSalineConnection(
-      IntravenousLineConnectionPoint salinePoint,
+      string salinePointIdentifier,
       NetworkConnection sender = null)
     {
+      var salinePoint = FindIntravenousLineConnectionPoint(salinePointIdentifier);
       if (!TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player, out _, out _)
           || salinePoint == null
           || !IsWithinPatientBCTreatmentDistance(player, salinePoint.transform.position))
@@ -993,6 +995,21 @@ namespace TriageTrainer.Entity
       if (advanced)
         RefreshPatientBCInteractableHints();
       return advanced;
+    }
+
+    /// <summary>
+    /// 유량계 참조가 이미 환자에게 설정된 뒤 산소 라인이 완성된 경우에도
+    /// 산소 공급 처치의 연결 신호를 한 번 평가한다.
+    /// </summary>
+    public void NotifyOxygenLineConnected()
+    {
+      if (!IsPatientBC)
+        return;
+
+      if (!ShouldCreditPatientBCEquipmentConnection(EquipmentTypeOxyflowmeter))
+        return;
+
+      RaiseEquipmentStateEvent(EquipmentTypeOxyflowmeter, connected: true);
     }
 
     private void NotifyPatientBCEquipmentDisconnected(string equipmentType, MonoBehaviour equipment)
@@ -1123,9 +1140,10 @@ namespace TriageTrainer.Entity
 
     [ServerRpc(RequireOwnership = false)]
     private void CmdCompletePatientBCNormalSalineConnection(
-      IntravenousLineConnectionPoint salinePoint,
+      string salinePointIdentifier,
       NetworkConnection sender = null)
     {
+      var salinePoint = FindIntravenousLineConnectionPoint(salinePointIdentifier);
       if (!IsPatientBC
           || !TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player, out var actorIdentifier,
             out var actorDisplayName)
@@ -1142,6 +1160,21 @@ namespace TriageTrainer.Entity
         if (!TryCompletePatientBCNormalSalineConnectionAuthoritative())
           RememberPatientBCNormalSalineConnection(actorIdentifier, actorDisplayName);
       }
+    }
+
+    private static IntravenousLineConnectionPoint FindIntravenousLineConnectionPoint(string identifier)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+        return null;
+
+      var points = FindObjectsByType<IntravenousLineConnectionPoint>(
+        FindObjectsInactive.Include, FindObjectsSortMode.None);
+      for (var i = 0; i < points.Length; i++)
+      {
+        if (points[i] != null && points[i].ConnectionIdentifier == identifier)
+          return points[i];
+      }
+      return null;
     }
 
     [ServerRpc(RequireOwnership = false)]

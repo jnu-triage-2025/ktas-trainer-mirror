@@ -198,7 +198,7 @@ namespace TriageTrainer.Entity
         if (dialogue == null)
           dialogue = UnityEngine.Object.FindFirstObjectByType<DialoguePanelUIController>(
             FindObjectsInactive.Exclude);
-        dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "20G 캐뉼라가 필요하다.");
+        dialogue?.DisplayDialogue("{PLAYER_NAME}", "20G 캐뉼라가 필요하다.", null, interactionRequired: true);
         return;
       }
 

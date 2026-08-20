@@ -1,6 +1,7 @@
 using FishNet;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Entity.LineConnection;
 using UnityEngine;
 
@@ -47,13 +48,19 @@ namespace TriageTrainer.Entity.OxyLine
       // 사이에 oxy line이 연결됨". B/C에는 T-piece 대신 비강 캐뉼라를 적용한다.
       if (InstanceFinder.IsOffline)
       {
-        var service = FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
+        var service = LineConnectionService.TopologyService
+                      ?? FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
         service?.TryCreateAutomaticConnection(local, remote);
       }
       else
       {
-        // The endpoint RPC validates distance, ownership and capacity on the server.
-        remote.RequestAuthoritativeConnection(local);
+        var service = LineConnectionService.TopologyService
+                      ?? FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
+        if (player.IsServerStarted)
+          service?.TryCreateAutomaticConnection(local, remote);
+        else
+          ScenarioNetworkRelay.RequestLineTopologyChange(
+            local.ConnectionIdentifier, remote.ConnectionIdentifier, connected: true);
       }
 
       player.RefreshInteractableHintsNow();

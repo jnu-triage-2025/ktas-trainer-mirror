@@ -12,6 +12,8 @@ using MultiplayerInfrastructure.Registry;
 using NUnit.Framework;
 using System.Collections.Generic;
 using TriageTrainer.Entity;
+using TriageTrainer.Entity.LineConnection;
+using TriageTrainer.Entity.OxyLine;
 using TriageTrainer.Entity.PatientMonitor.Models;
 using TriageTrainer.Editor.Utils;
 using TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects;
@@ -453,10 +455,23 @@ namespace TriageTrainer.Tests
         (binding.EntityIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
       {
         ("patient_b", "patient_bc_nasal_cannula"),
-        ("zone_0:oxyflowmeter", "oxyflowmeter"),
-        ("zone_1:oxyflowmeter", "oxyflowmeter"),
-        ("zone_2:oxyflowmeter", "oxyflowmeter"),
-        ("zone_3:oxyflowmeter", "oxyflowmeter")
+        ("zone_0:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier),
+        ("zone_1:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier),
+        ("zone_2:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier),
+        ("zone_3:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier)
+      }));
+      Assert.That(oxygenQuest.PresentationBindings.Any(binding =>
+          binding.InteractionIdentifier == WallAttachedOxyflowmeter.DetachInteractionIdentifier), Is.False,
+        "산소 유량계 회수에는 퀘스트 마크가 붙어서는 안 된다.");
+      Assert.That(oxygenQuest.Tasks.Select(task => (task.Identifier, task.SignalId)), Is.EqualTo(new[]
+      {
+        ("patient-b-oxygen-supplied", "equipment_connected_oxyflowmeter_patient_b"),
+        ("patient-b-bleeding-controlled", "apply_plaster_on_gauze_patient_b")
+      }), "산소 공급과 지혈은 별도 목표로 표기한다.");
+      Assert.That(oxygenQuest.Tasks.Select(task => task.DisplayTextContent), Is.EqualTo(new[]
+      {
+        "남성 환자에게 산소 공급하기",
+        "남성 환자 지혈하기"
       }));
 
       Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Normal_Saline", out var ivQuest), Is.True);
@@ -663,6 +678,12 @@ namespace TriageTrainer.Tests
       Assert.That(patientState.TreatmentDisplayState.DisplaySupports.Syringe20GInsertedIntoLeftArm, Is.False);
       Assert.That(patientState.TreatmentDisplayState.DisplaySupports.GauzePatchedOnLeftArm, Is.True);
       Assert.That(patientState.TreatmentDisplayState.DisplaySupports.GauzeDressingDoneOnLeftArm, Is.True);
+      var oxyPointField = typeof(PatientTypeBMaleState).GetField(
+        "oxyLineConnectionPoint", BindingFlags.Instance | BindingFlags.NonPublic);
+      Assert.That(oxyPointField, Is.Not.Null);
+      var oxyPoints = prefab.GetComponentsInChildren<TriageTrainer.Entity.OxyLine.OxyLineConnectionPoint>(true);
+      Assert.That(oxyPoints, Has.Length.EqualTo(1));
+      Assert.That(oxyPointField.GetValue(patientState), Is.SameAs(oxyPoints[0]));
 
       var instance = Object.Instantiate(prefab);
       try
@@ -1094,6 +1115,162 @@ namespace TriageTrainer.Tests
             "OnDisable", BindingFlags.Instance | BindingFlags.NonPublic)
           ?.Invoke(zone, null);
         Object.DestroyImmediate(suctionObject);
+        Object.DestroyImmediate(flowmeterObject);
+        Object.DestroyImmediate(patientObject);
+        Object.DestroyImmediate(zoneObject);
+      }
+    }
+
+    [Test]
+    public void FlowmeterOperationConnectsOxygenLineToActiveNasalCannula()
+    {
+      var serviceObject = new GameObject("line-service");
+      var zoneObject = new GameObject("care-zone");
+      var patientObject = new GameObject("patient_b");
+      var patientPortObject = new GameObject("nasal-cannula-port");
+      var flowmeterObject = new GameObject("flowmeter");
+      var flowmeterPortObject = new GameObject("flowmeter-port");
+      try
+      {
+        serviceObject.AddComponent<LineConnectionService>();
+        var zone = zoneObject.AddComponent<PatientCareDescriptionZone>();
+        var patient = patientObject.AddComponent<PatientController>();
+        var patientPort = patientPortObject.AddComponent<OxyLineConnectionPoint>();
+        var flowmeter = flowmeterObject.AddComponent<WallAttachedOxyflowmeter>();
+        var flowmeterPort = flowmeterPortObject.AddComponent<OxyLineConnectionPoint>();
+
+        patient.ApplySpawnedEntityIdentifier("patient_b");
+        patientPortObject.transform.SetParent(patientObject.transform, false);
+        flowmeter.ApplyShownFromNetwork();
+        SetPrivateField(flowmeter, "_oxyLineConnectionPoint", flowmeterPort);
+        SetPrivateField(flowmeter, "_attachedInteractSignal", "test_flowmeter_operation_connects_oxygen_line");
+        SetPrivateField(zone, "_activePatient", patient);
+
+        zone.TryReconcileOxygenLineFor(flowmeter);
+        Assert.That(flowmeterPort.IsPhysicallyConnectedTo(patientPort), Is.False,
+          "유량계 조작 전에는 산소 라인을 만들면 안 됩니다.");
+
+        ScenarioInteractionSignals.Raise("test_flowmeter_operation_connects_oxygen_line");
+        zone.TryReconcileOxygenLineFor(flowmeter);
+
+        Assert.That(flowmeterPort.IsPhysicallyConnectedTo(patientPort), Is.True,
+          "유량계 조작 완료 후 활성 비강 캐뉼라 포트와 산소 라인이 연결되어야 합니다.");
+        Assert.That(patient.ConnectedOxyflowmeter, Is.SameAs(flowmeter),
+          "유량계 조작은 같은 CareZone의 환자에게 장비 연결 상태도 반영해야 합니다.");
+      }
+      finally
+      {
+        ScenarioInteractionSignals.Clear("test_flowmeter_operation_connects_oxygen_line");
+        Object.DestroyImmediate(flowmeterPortObject);
+        Object.DestroyImmediate(flowmeterObject);
+        Object.DestroyImmediate(patientPortObject);
+        Object.DestroyImmediate(patientObject);
+        Object.DestroyImmediate(zoneObject);
+        Object.DestroyImmediate(serviceObject);
+      }
+    }
+
+    [Test]
+    public void UnattachedFlowmeterAcceptsHeldOxyflowmeterForInstallation()
+    {
+      var playerObject = new GameObject("player");
+      var flowmeterObject = new GameObject("oxyflowmeter");
+      try
+      {
+        var player = playerObject.AddComponent<MultiplayerInfrastructure.Player.PlayerController>();
+        var flowmeter = flowmeterObject.AddComponent<WallAttachedOxyflowmeter>();
+        var item = (MultiplayerInfrastructure.ItemSystem.Item)System.Activator.CreateInstance(
+          typeof(TriageTrainer.ItemDefinitions.Oxyflowmeter));
+        item.CurrentStackCount = 1;
+        player.HandlingItem = item;
+        SetPrivateField(flowmeter, "_toggleByActiveState", true);
+        flowmeter.Hide();
+
+        Assert.That(flowmeter.IsAttached, Is.False);
+        Assert.That(flowmeter.gameObject.activeInHierarchy, Is.True,
+          "미설치 유량계는 렌더러만 숨기고 설치 상호작용용 오브젝트는 활성 상태로 남아야 합니다.");
+        Assert.That(flowmeter.CanInteract(player.transform), Is.True,
+          "산소 유량계를 손에 든 플레이어는 미설치 유량계 가까이에서 설치 상호작용을 볼 수 있어야 합니다.");
+      }
+      finally
+      {
+        Object.DestroyImmediate(flowmeterObject);
+        Object.DestroyImmediate(playerObject);
+      }
+    }
+
+    [Test]
+    public void StaticOxyflowmeterPrefabHasNoFishNetNetworkObject()
+    {
+      const string prefabPath =
+        "Assets/Modules/TriageTrainer/Prefabs/StaticAttachmentDisplayments/WallAttachedOxyflowmeter/oxyflowmeter.prefab";
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+
+      Assert.That(prefab, Is.Not.Null);
+      Assert.That(prefab.GetComponent<NetworkObject>(), Is.Null,
+        "A static flowmeter must not carry a FishNet NetworkObject.");
+    }
+
+    [Test]
+    public void LineConnectionPointsDoNotRequireFishNetNetworkBehaviour()
+    {
+      Assert.That(typeof(NetworkBehaviour).IsAssignableFrom(typeof(LineConnectionPoint)), Is.False);
+      Assert.That(typeof(NetworkBehaviour).IsAssignableFrom(typeof(OxyLineConnectionPoint)), Is.False);
+      Assert.That(typeof(NetworkBehaviour).IsAssignableFrom(
+        typeof(TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint)), Is.False);
+      Assert.That(typeof(NetworkBehaviour).IsAssignableFrom(
+        typeof(TriageTrainer.Entity.SuctionLine.SuctionLineConnectionPoint)), Is.False);
+      Assert.That(typeof(NetworkBehaviour).IsAssignableFrom(
+        typeof(TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint)), Is.False);
+    }
+
+    [Test]
+    public void FlowmeterIdentifierChangeReregistersItsStaticDisplayment()
+    {
+      var flowmeterObject = new GameObject("oxyflowmeter");
+      const string identifier = "test:flowmeter:registration";
+      try
+      {
+        var flowmeter = flowmeterObject.AddComponent<WallAttachedOxyflowmeter>();
+        flowmeter.SetEntityIdentifier(identifier);
+
+        Assert.That(flowmeter.EntityIdentifier, Is.EqualTo(identifier));
+        Assert.That(MultiplayerInfrastructure.Registry.Registry.TryGetEntity(identifier, out var descriptor), Is.True);
+        Assert.That(descriptor.GameObject, Is.SameAs(flowmeterObject));
+      }
+      finally
+      {
+        Object.DestroyImmediate(flowmeterObject);
+      }
+    }
+
+    [Test]
+    public void FlowmeterUsesQuestPresentationIdentifierOnlyForItsActivePatientZone()
+    {
+      const string oxygenConnectedSignal = "equipment_connected_oxyflowmeter_patient_b";
+      var zoneObject = new GameObject("care-zone");
+      var patientObject = new GameObject("patient_b");
+      var flowmeterObject = new GameObject("oxyflowmeter");
+      try
+      {
+        var zone = zoneObject.AddComponent<PatientCareDescriptionZone>();
+        zone.ConfigureArea(Vector3.zero, new Vector3(10f, 10f, 10f));
+        var patient = patientObject.AddComponent<PatientController>();
+        patient.ApplySpawnedEntityIdentifier("patient_b");
+        var flowmeter = flowmeterObject.AddComponent<WallAttachedOxyflowmeter>();
+        SetPrivateField(zone, "_activePatient", patient);
+
+        ScenarioInteractionSignals.Clear(oxygenConnectedSignal);
+        Assert.That(flowmeter.InteractionIdentifier,
+          Is.EqualTo(WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier));
+
+        ScenarioInteractionSignals.Raise(oxygenConnectedSignal);
+        Assert.That(flowmeter.InteractionIdentifier,
+          Is.EqualTo(WallAttachedOxyflowmeter.UnmarkedInteractionIdentifier));
+      }
+      finally
+      {
+        ScenarioInteractionSignals.Clear(oxygenConnectedSignal);
         Object.DestroyImmediate(flowmeterObject);
         Object.DestroyImmediate(patientObject);
         Object.DestroyImmediate(zoneObject);

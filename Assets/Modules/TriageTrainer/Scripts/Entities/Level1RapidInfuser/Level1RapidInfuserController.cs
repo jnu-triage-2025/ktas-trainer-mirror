@@ -1020,7 +1020,8 @@ namespace TriageTrainer.Entity
         return;
       }
 
-      var service = FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
+      var service = LineConnectionService.TopologyService
+                    ?? FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
       if (service == null)
       {
         LogFlow("TryCreateCLineConnection rejected: LineConnectionService unavailable", true);
