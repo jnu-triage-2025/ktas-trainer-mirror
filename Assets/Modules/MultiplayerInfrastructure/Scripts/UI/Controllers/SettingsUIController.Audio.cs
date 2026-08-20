@@ -18,6 +18,7 @@ namespace MultiplayerInfrastructure.UI
     private OverflowScrollView _audioScroll;
     private DropdownField _outputDeviceField;
     private DropdownField _inputDeviceField;
+    private Label _outputRoutingNote;
     private bool _audioFormInitializing;
 
     private readonly List<AudioDeviceDescriptor> _outputDevices = new();
@@ -45,6 +46,7 @@ namespace MultiplayerInfrastructure.UI
       _audioScroll = null;
       _outputDeviceField = null;
       _inputDeviceField = null;
+      _outputRoutingNote = null;
       _audioTabContent = null;
       _outputDevices.Clear();
       _inputDevices.Clear();
@@ -81,6 +83,7 @@ namespace MultiplayerInfrastructure.UI
         _audioScroll.Content.Clear();
         _outputDeviceField = null;
         _inputDeviceField = null;
+        _outputRoutingNote = null;
 
         var settings = AudioDevicePreferenceService.Instance?.CurrentSettings ?? new AudioDeviceSettingsData();
 
@@ -111,10 +114,7 @@ namespace MultiplayerInfrastructure.UI
       else if (_outputDevices.Count == 0)
         AddAudioNote(section, "쓸 수 있는 출력 장치를 찾지 못했습니다. 장치를 연결한 뒤 새로 고침을 눌러 주세요.");
 
-      // 없는 기능을 있는 것처럼 보이게 두지 않기 위한 안내.
-      AddAudioNote(section,
-        "Unity가 재생 장치를 직접 지정하는 길을 열어두지 않아, 고른 값은 저장해 두기만 하고 "
-        + "실제 소리가 나가는 장치는 운영체제 설정을 따릅니다.");
+      _outputRoutingNote = AddAudioNote(section, DescribeOutputRouting());
     }
 
     private void BuildInputSection(AudioDeviceSettingsData settings)
@@ -131,6 +131,26 @@ namespace MultiplayerInfrastructure.UI
 
       if (_inputDevices.Count == 0)
         AddAudioNote(section, "쓸 수 있는 마이크를 찾지 못했습니다. 마이크를 연결하고 권한을 허용한 뒤 새로 고침을 눌러 주세요.");
+    }
+
+    /// <summary>
+    /// 출력 경로 변경이 실제로 먹히는 상황인지 한 줄로 알려 줍니다.
+    ///
+    /// Unity에는 재생 장치를 고르는 API가 없어 운영체제 쪽 우회에 기대고 있습니다.
+    /// 그 우회가 안 되는 자리에서는 값만 저장된다는 사실을 감추지 않습니다.
+    /// </summary>
+    private static string DescribeOutputRouting()
+    {
+      var service = AudioDevicePreferenceService.Instance;
+
+      if (!AudioDevicePreferenceService.IsOutputRoutingSupported)
+        return "이 플랫폼에서는 재생 경로를 바꿀 수 없어 고른 값을 저장만 합니다. "
+             + "실제로 소리가 나가는 장치는 운영체제 설정을 따릅니다.";
+
+      if (service != null && !service.IsOutputRoutingActive && !string.IsNullOrEmpty(service.OutputRoutingFailureReason))
+        return $"출력 경로를 바꾸지 못해 시스템 설정을 따르고 있습니다. {service.OutputRoutingFailureReason}";
+
+      return "장치를 바꾸면 재생 중이던 소리가 한 번 끊긴 뒤 새 장치로 이어집니다.";
     }
 
     private DropdownField BuildDeviceField(
@@ -203,9 +223,27 @@ namespace MultiplayerInfrastructure.UI
       service.SetDevice(kind, deviceId);
 
       string kindLabel = kind == AudioDeviceKind.Output ? "출력" : "입력";
-      SetStatusText(AudioDeviceSelectionResolver.IsSystemDefault(deviceId)
-        ? $"{kindLabel} 장치를 시스템 설정에 맡기고 저장했습니다."
-        : $"{kindLabel} 장치를 '{AudioDeviceSelectionResolver.Find(deviceId, devices)?.DisplayName}'(으)로 저장했습니다.");
+      string target = AudioDeviceSelectionResolver.IsSystemDefault(deviceId)
+        ? "시스템 설정"
+        : $"'{AudioDeviceSelectionResolver.Find(deviceId, devices)?.DisplayName}'";
+
+      // 출력은 저장에 성공해도 경로 변경까지 갔는지가 따로다. 둘을 뭉뚱그리지 않는다.
+      if (kind == AudioDeviceKind.Output
+          && AudioDevicePreferenceService.IsOutputRoutingSupported
+          && !service.IsOutputRoutingActive)
+      {
+        SetStatusText($"출력 장치를 {target}(으)로 저장했지만 재생 경로는 바꾸지 못했습니다. "
+                      + service.OutputRoutingFailureReason);
+      }
+      else
+      {
+        SetStatusText($"{kindLabel} 장치를 {target}(으)로 저장했습니다.");
+      }
+
+      // 안내 문구가 경로 변경 결과에 따라 달라진다. 다만 지금은 드롭다운의 변경 콜백 안이라
+      // 폼을 통째로 다시 지으면 이벤트가 흐르는 도중에 트리를 헐게 된다. 라벨만 갈아 끼운다.
+      if (kind == AudioDeviceKind.Output && _outputRoutingNote != null)
+        _outputRoutingNote.text = DescribeOutputRouting();
     }
 
     private VisualElement AddAudioSection(string title, string description)
@@ -227,11 +265,13 @@ namespace MultiplayerInfrastructure.UI
       return section;
     }
 
-    private static void AddAudioNote(VisualElement section, string text)
+    private static Label AddAudioNote(VisualElement section, string text)
     {
       var note = new Label(text);
       note.AddToClassList("settings__field-note");
+      note.pickingMode = PickingMode.Ignore;
       section.Add(note);
+      return note;
     }
   }
 }

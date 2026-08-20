@@ -15,8 +15,9 @@ namespace MultiplayerInfrastructure.Audio
   ///   - 저장값 자체를 지우는 것은 장치 목록을 제대로 읽었을 때만입니다. 목록 읽기가 통째로
   ///     실패한 상황(권한 문제 등)에서 멀쩡한 사용자 선택을 날려버리지 않기 위해서입니다.
   ///
-  /// 출력 장치에 대한 참고: Unity 6에는 오디오 출력 경로를 고르는 API가 없습니다.
-  /// 그래서 출력 선택은 저장과 표시까지만 담당하고, 실제 재생 경로는 운영체제 설정을 따릅니다.
+  /// 출력 장치는 <see cref="AudioOutputRouting"/>이 운영체제 쪽에서 경로를 돌려 줍니다.
+  /// Unity에 출력 장치를 고르는 API가 없어서 플랫폼별 우회에 기대므로, 지원하지 않는
+  /// 플랫폼이나 실패한 경우에는 저장만 남고 재생은 시스템 설정을 따릅니다.
   /// 입력 장치는 <c>Microphone.Start</c>에 넘길 이름을 정하므로 그대로 반영됩니다.
   ///
   /// 씬에는 하나만 두세요(TexturePerformanceService와 같은 시스템 오브젝트를 권장).
@@ -26,6 +27,19 @@ namespace MultiplayerInfrastructure.Audio
     private const string PlayerPrefsKey = "MultiplayerInfrastructure.AudioDeviceSettings.v1";
 
     private AudioDeviceSettingsData _currentSettings = new AudioDeviceSettingsData();
+
+    /// <summary>
+    /// 출력 경로를 실제로 옮기는 데 성공했는지입니다.
+    /// 지원하지 않는 플랫폼이거나 비공개 API 호출이 실패하면 false로 남고,
+    /// 설정 화면은 이 값을 보고 "저장만 되었다"는 안내를 띄웁니다.
+    /// </summary>
+    public bool IsOutputRoutingActive { get; private set; }
+
+    /// <summary>출력 경로 변경이 실패했을 때의 사유입니다. 성공했거나 시도하지 않았으면 null입니다.</summary>
+    public string OutputRoutingFailureReason { get; private set; }
+
+    /// <summary>이 플랫폼에서 출력 경로를 바꿀 수 있으면 true입니다.</summary>
+    public static bool IsOutputRoutingSupported => AudioOutputRouting.IsSupported;
 
     /// <summary>설정이 바뀔 때마다 최신 사본이 전달됩니다.</summary>
     public event Action<AudioDeviceSettingsData> OnSettingsChanged;
@@ -77,6 +91,7 @@ namespace MultiplayerInfrastructure.Audio
       AudioDeviceCatalog.Refresh();
       _currentSettings = Load();
       ReconcileAgainstCatalog(notify: false);
+      ApplyOutputRouting(restartAudioEngine: false);
 
       Debug.Log("[AudioDevice] 장치 설정 불러오기: " +
                 $"출력={DescribeSelection(AudioDeviceKind.Output)}, " +
@@ -112,10 +127,15 @@ namespace MultiplayerInfrastructure.Audio
         throw new ArgumentNullException(nameof(settings));
 
       string previousInputId = _currentSettings.InputDeviceId;
+      string previousOutputId = _currentSettings.OutputDeviceId;
 
       _currentSettings = settings.Clone();
       _currentSettings.Sanitize();
       Save(_currentSettings);
+
+      bool outputChanged = !string.Equals(previousOutputId, _currentSettings.OutputDeviceId, StringComparison.Ordinal);
+      if (outputChanged)
+        ApplyOutputRouting(restartAudioEngine: true);
 
       OnSettingsChanged?.Invoke(CurrentSettings);
       if (!string.Equals(previousInputId, _currentSettings.InputDeviceId, StringComparison.Ordinal))
@@ -167,10 +187,27 @@ namespace MultiplayerInfrastructure.Audio
         return;
 
       Save(_currentSettings);
+      if (outputChanged)
+        ApplyOutputRouting(restartAudioEngine: notify);
       if (notify)
         OnSettingsChanged?.Invoke(CurrentSettings);
       if (inputChanged)
         RaiseInputDeviceChanged();
+    }
+
+    /// <summary>지금 저장된 출력 선택을 운영체제 쪽에 반영합니다.</summary>
+    private void ApplyOutputRouting(bool restartAudioEngine)
+    {
+      if (!AudioOutputRouting.IsSupported)
+      {
+        IsOutputRoutingActive = false;
+        OutputRoutingFailureReason = null;
+        return;
+      }
+
+      IsOutputRoutingActive = AudioOutputRouting.Apply(
+        _currentSettings.OutputDeviceId, restartAudioEngine, out string failureReason);
+      OutputRoutingFailureReason = IsOutputRoutingActive ? null : failureReason;
     }
 
     private static void RaiseInputDeviceChanged()

@@ -183,5 +183,45 @@ namespace MultiplayerInfrastructure.Editor.Audio.Tests
       Assert.That(AudioDeviceSelectionResolver.ChoiceIdAt(-1, devices),
         Is.EqualTo(AudioDeviceSelectionResolver.SystemDefaultId));
     }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Windows 장치 인터페이스 경로
+    // ──────────────────────────────────────────────────────────────────────────
+    [Test]
+    public void EndpointPath_WrapsRenderEndpointForPolicyConfig()
+    {
+      Assert.That(
+        AudioEndpointPath.ForWindowsEndpoint("{0.0.0.00000000}.{abc}", AudioDeviceKind.Output),
+        Is.EqualTo(@"\\?\SWD#MMDEVAPI#{0.0.0.00000000}.{abc}#{e6327cad-dcec-4949-ae8a-991e976a79d2}"));
+    }
+
+    [Test]
+    public void EndpointPath_UsesCaptureInterfaceForInput()
+    {
+      Assert.That(
+        AudioEndpointPath.ForWindowsEndpoint("{0.0.1.00000000}.{abc}", AudioDeviceKind.Input),
+        Does.EndWith("#{2eef81be-33fa-4800-9670-1cd474972c3f}"));
+    }
+
+    [Test]
+    public void EndpointPath_TreatsSystemDefaultAsNoTarget()
+    {
+      // 빈 경로는 "지정 해제" 신호다. 네이티브 쪽에서 널 HSTRING으로 넘어간다.
+      Assert.That(AudioEndpointPath.ForWindowsEndpoint(string.Empty, AudioDeviceKind.Output), Is.Empty);
+      Assert.That(AudioEndpointPath.ForWindowsEndpoint(null, AudioDeviceKind.Output), Is.Empty);
+      Assert.That(AudioEndpointPath.ForWindowsEndpoint("   ", AudioDeviceKind.Output), Is.Empty);
+    }
+
+    [Test]
+    public void EndpointPath_RoundTripsThroughUnwrap()
+    {
+      const string endpointId = "{0.0.0.00000000}.{9d0a1234-5678-90ab-cdef-1234567890ab}";
+
+      foreach (var kind in new[] { AudioDeviceKind.Output, AudioDeviceKind.Input })
+      {
+        var wrapped = AudioEndpointPath.ForWindowsEndpoint(endpointId, kind);
+        Assert.That(AudioEndpointPath.UnwrapWindowsEndpoint(wrapped), Is.EqualTo(endpointId));
+      }
+    }
   }
 }
