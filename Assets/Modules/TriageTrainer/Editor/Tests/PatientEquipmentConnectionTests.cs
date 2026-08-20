@@ -107,10 +107,10 @@ namespace TriageTrainer.Tests
       {
         var patient = patientObject.AddComponent<PatientController>();
         patient.ApplySpawnedEntityIdentifier(patientIdentifier);
+        var patientPoint = AttachPatientBCIvPoint(patient);
         patient.ActivatePatientBCNurseCStage();
         InvokePrivate(patient, "NotifyPatientBCPupilCompleted");
         Assert.That((bool)InvokePrivate(patient, "TryAdvancePatientBCIvStageAuthoritative"), Is.True);
-        var patientPoint = patient.PatientBCIvAttachmentPoint;
         var salinePoint = salinePointObject.AddComponent<IntravenousLineConnectionPoint>();
         salinePoint.SetIdentifier("connect_cannula_and_ns1");
         RegisterPhysicalLine(lineObject, salinePoint, patientPoint);
@@ -181,6 +181,7 @@ namespace TriageTrainer.Tests
       {
         var patient = patientObject.AddComponent<PatientController>();
         patient.ApplySpawnedEntityIdentifier("patient_b");
+        AttachPatientBCIvPoint(patient);
         patient.ActivatePatientBCNurseCStage();
         InvokePrivate(patient, "NotifyPatientBCPupilCompleted");
         var salinePoint = salinePointObject.AddComponent<IntravenousLineConnectionPoint>();
@@ -204,6 +205,28 @@ namespace TriageTrainer.Tests
         ScenarioInteractionSignals.Clear("connect_cannula_and_ns1_patient_b");
         Object.DestroyImmediate(lineObject);
         Object.DestroyImmediate(salinePointObject);
+        Object.DestroyImmediate(patientObject);
+      }
+    }
+
+    [Test]
+    public void UnwiredPatientBCIvAttachmentPointStaysNull()
+    {
+      var patientObject = new GameObject("patient_b");
+      try
+      {
+        var patient = patientObject.AddComponent<PatientController>();
+        patient.ApplySpawnedEntityIdentifier("patient_b");
+
+        Assert.That(patient.PatientBCIvAttachmentPoint, Is.Null,
+          "정맥로 포인트는 프리팹 참조로만 배선한다(식별자 검색/런타임 생성 없음)");
+
+        var point = AttachPatientBCIvPoint(patient);
+        Assert.That(patient.PatientBCIvAttachmentPoint, Is.SameAs(point));
+        Assert.That(patient.ConfiguredPatientBCIvAttachmentPoint, Is.SameAs(point));
+      }
+      finally
+      {
         Object.DestroyImmediate(patientObject);
       }
     }
@@ -239,6 +262,7 @@ namespace TriageTrainer.Tests
       {
         var patient = patientObject.AddComponent<PatientController>();
         patient.ApplySpawnedEntityIdentifier("patient_b");
+        AttachPatientBCIvPoint(patient);
         patient.ActivatePatientBCNurseCStage();
         InvokePrivate(patient, "NotifyPatientBCPupilCompleted");
         Assert.That((bool)InvokePrivate(patient, "TryAdvancePatientBCIvStageAuthoritative"), Is.True);
@@ -278,7 +302,12 @@ namespace TriageTrainer.Tests
         var spoofIv = spoofIvObject.AddComponent<IntravenousLineConnectionPoint>();
 
         Assert.That(LineConnectionService.IsExactPatientNormalSalineEndpointPair(
-          patient, saline, saline, patient.PatientBCIvAttachmentPoint), Is.True,
+          patient, saline, saline, null), Is.False,
+          "an unwired patient IV point must not match a null endpoint");
+
+        var patientPoint = AttachPatientBCIvPoint(patient);
+        Assert.That(LineConnectionService.IsExactPatientNormalSalineEndpointPair(
+          patient, saline, saline, patientPoint), Is.True,
           "host/server topology accepts the exact authoritative endpoint pair");
         Assert.That(LineConnectionService.IsExactPatientNormalSalineEndpointPair(
           patient, saline, saline, spoofIv), Is.False,
@@ -444,6 +473,20 @@ namespace TriageTrainer.Tests
         false, 0.001f, ~0, QueryTriggerInteraction.Ignore);
       start.RegisterConnectedLineObject(lineObject);
       end.RegisterConnectedLineObject(lineObject);
+    }
+
+    /// <summary>
+    /// 환자 B/C 정맥로 IV 연결 지점은 환자 유형별 State 컴포넌트가 프리팹 참조로 주입한다.
+    /// 테스트에서도 동일한 주입 경로로 배선한다(식별자 문자열 검색이나 런타임 생성은 없다).
+    /// </summary>
+    private static IntravenousLineConnectionPoint AttachPatientBCIvPoint(PatientController patient)
+    {
+      var pointObject = new GameObject("patient-bc-iv-point");
+      pointObject.transform.SetParent(patient.transform, false);
+      var point = pointObject.AddComponent<IntravenousLineConnectionPoint>();
+      point.SetAllowsMultipleConnections(true);
+      patient.SetPatientBCIvAttachmentPointFromPatientComponent(point);
+      return point;
     }
 
     private static object InvokePrivate(PatientController patient, string methodName)

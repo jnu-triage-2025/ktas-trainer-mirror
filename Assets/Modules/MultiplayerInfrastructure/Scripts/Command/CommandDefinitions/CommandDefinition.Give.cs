@@ -5,6 +5,7 @@ using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Session;
 
 namespace MultiplayerInfrastructure.Command
 {
@@ -119,14 +120,15 @@ namespace MultiplayerInfrastructure.Command
 
       int delivered = count - (leftover?.CurrentStackCount ?? 0);
       int dropped = leftover?.CurrentStackCount ?? 0;
+      string targetDisplayName = ResolveTargetDisplayName(targetConn);
 
       if (fullyAdded)
       {
-        message = $"Gave {delivered}x '{itemIdentifier}' to target {targetConn.ClientId}.";
+        message = $"Gave {delivered}x '{itemIdentifier}' to {targetDisplayName}.";
         return true;
       }
 
-      message = $"Gave {delivered}x '{itemIdentifier}' to target {targetConn.ClientId}. Dropped {dropped}x in front because inventory was full.";
+      message = $"Gave {delivered}x '{itemIdentifier}' to {targetDisplayName}. Dropped {dropped}x in front because inventory was full.";
       return true;
     }
 
@@ -233,6 +235,16 @@ namespace MultiplayerInfrastructure.Command
         return false;
 
       return conn.FirstObject.TryGetComponent(out controller) && controller != null;
+    }
+
+    private static string ResolveTargetDisplayName(NetworkConnection connection)
+    {
+      if (connection != null
+          && UserDescriptorService.TryGetByClientId(connection.ClientId, out var descriptor)
+          && !string.IsNullOrWhiteSpace(descriptor?.DisplayName))
+        return descriptor.DisplayName;
+
+      return $"target {connection?.ClientId.ToString() ?? "Unknown"}";
     }
   }
 }

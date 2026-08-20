@@ -48,7 +48,7 @@ namespace TriageTrainer.Entity
         set => _supported = value;
       }
 
-      public string DisplayText => string.IsNullOrWhiteSpace(_displayText) ? "정맥라인 캐뉼라 확보" : _displayText;
+      public string DisplayText => string.IsNullOrWhiteSpace(_displayText) ? "정맥 라인 확보" : _displayText;
     }
 
     [Header("Intravenous Line Cannula (정맥라인 캐뉼라)")]
@@ -87,12 +87,12 @@ namespace TriageTrainer.Entity
 
     /// <summary>
     /// 정맥라인 캐뉼라 상호작용이 실제로 가능한지(Config가 지원하고, 현재 State도 가능한 경우).
+    /// 환자 B/C는 동공반사 확인을 끝낸 정맥로 확보 단계(<see cref="PatientBCTreatmentStage.AwaitingIv"/>)에서만 노출한다.
     /// </summary>
     public bool CanInteractIntravenousLineCannula =>
       IntravenousLineCannulaSupported
       && IntravenousLineCannulaInteractable
       && (!IsPatientBC
-          || _patientBCNurseCStage.Value == PatientBCTreatmentStage.AwaitingPupil
           || _patientBCNurseCStage.Value == PatientBCTreatmentStage.AwaitingIv);
 
     /// <summary>시나리오 진행에 따라 정맥라인 캐뉼라 상호작용 가능 여부(State)를 켜고 끈다.</summary>
@@ -140,7 +140,8 @@ namespace TriageTrainer.Entity
       }
     }
 
-    private const string InteractIdIntravenousLineCannula = "intravenous_line_cannula";
+    /// <summary>정맥라인 캐뉼라 상호작용 식별자. 퀘스트 표시 바인딩(퀘스트 마크)에서 참조한다.</summary>
+    public const string InteractIdIntravenousLineCannula = "intravenous_line_cannula";
 
     /// <summary>정맥라인 캐뉼라 상호작용 항목을 등록한다(<c>BuildInteractEntries</c> 에서 호출).</summary>
     private void AddIntravenousLineCannulaInteract()
@@ -197,7 +198,7 @@ namespace TriageTrainer.Entity
         if (dialogue == null)
           dialogue = UnityEngine.Object.FindFirstObjectByType<DialoguePanelUIController>(
             FindObjectsInactive.Exclude);
-        dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "20G 캐뉼라가 필요하다.");
+        dialogue?.DisplayDialogue("{PLAYER_NAME}", "20G 캐뉼라가 필요하다.", null, interactionRequired: true);
         return;
       }
 

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using FishNet;
 using FishNet.Connection;
-using FishNet.Object;
 using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Scenario;
@@ -24,6 +23,8 @@ namespace TriageTrainer.Entity.LineConnection
     {
       public PlayerController Player;
       public LineConnectionPoint StartPoint;
+      public LineConnectionPoint EndPoint;
+      public int RequestId;
     }
 
     private readonly struct ActiveConnectionPair
@@ -36,6 +37,24 @@ namespace TriageTrainer.Entity.LineConnection
 
       public LineConnectionPoint First { get; }
       public LineConnectionPoint Second { get; }
+    }
+
+    private readonly struct PendingTopologyChange
+    {
+      public PendingTopologyChange(long version, string first, string second, bool connected)
+      {
+        Version = version;
+        First = first;
+        Second = second;
+        Connected = connected;
+        QueuedAt = Time.unscaledTime;
+      }
+
+      public long Version { get; }
+      public string First { get; }
+      public string Second { get; }
+      public bool Connected { get; }
+      public float QueuedAt { get; }
     }
 
     [Header("Hierarchy")]
@@ -81,16 +100,228 @@ namespace TriageTrainer.Entity.LineConnection
     private readonly List<ActiveConnectionPair> _activeAuthoritativePairs = new();
     private readonly List<ActiveConnectionPair> _automaticPairs = new();
     private readonly List<ActiveConnectionPair> _snapshotStalePairs = new();
+    private readonly List<PendingTopologyChange> _pendingTopologyChanges = new();
+    private readonly List<PendingTopologyChange> _deferredTopologyChanges = new();
     private bool _applyingReplicatedSnapshot;
+    private long _lastAppliedTopologyVersion = -1;
+    private long _snapshotTopologyVersion = -1;
+    private static LineConnectionService _topologyService;
+    private static readonly List<LineConnectionService> TopologyServices = new();
+    private static int _nextTopologyRequestId;
+    private bool _subscribedToTopology;
+
+    public static LineConnectionService TopologyService =>
+      _topologyService != null && _topologyService.isActiveAndEnabled ? _topologyService : null;
+
+    private void OnEnable()
+    {
+      if (!TopologyServices.Contains(this))
+        TopologyServices.Add(this);
+      TryBecomeTopologyService();
+    }
+
+    private void TryBecomeTopologyService()
+    {
+      if (_topologyService != null || !isActiveAndEnabled)
+        return;
+      _topologyService = this;
+      _subscribedToTopology = true;
+      ScenarioNetworkRelay.LineTopologyRequestReceived += HandleTopologyRequest;
+      ScenarioNetworkRelay.LineTopologyMirrored += HandleTopologyMirror;
+      ScenarioNetworkRelay.LineTopologyRequestCompleted += HandleTopologyRequestCompleted;
+      ScenarioNetworkRelay.LineTopologySnapshotBegan += BeginReplicatedTopologySnapshot;
+      ScenarioNetworkRelay.LineTopologySnapshotEnded += EndReplicatedTopologySnapshot;
+      ScenarioNetworkRelay.LineTopologySnapshotRequested += GetTopologySnapshot;
+    }
+
+    private void OnDisable()
+    {
+      if (!_subscribedToTopology)
+      {
+        TopologyServices.Remove(this);
+        return;
+      }
+      ScenarioNetworkRelay.LineTopologyRequestReceived -= HandleTopologyRequest;
+      ScenarioNetworkRelay.LineTopologyMirrored -= HandleTopologyMirror;
+      ScenarioNetworkRelay.LineTopologyRequestCompleted -= HandleTopologyRequestCompleted;
+      ScenarioNetworkRelay.LineTopologySnapshotBegan -= BeginReplicatedTopologySnapshot;
+      ScenarioNetworkRelay.LineTopologySnapshotEnded -= EndReplicatedTopologySnapshot;
+      ScenarioNetworkRelay.LineTopologySnapshotRequested -= GetTopologySnapshot;
+      _subscribedToTopology = false;
+      if (_topologyService == this)
+      {
+        _topologyService = null;
+        for (int i = 0; i < TopologyServices.Count; i++)
+          TopologyServices[i]?.TryBecomeTopologyService();
+      }
+      TopologyServices.Remove(this);
+    }
 
     private void Awake()
     {
       EnsureLinesRoot();
     }
 
+    private bool HandleTopologyRequest(
+      string firstIdentifier, string secondIdentifier, bool connected, NetworkConnection sender)
+    {
+      if (!TryFindConnectionPoint(firstIdentifier, out var first))
+        return false;
+
+      if (!connected && string.Equals(firstIdentifier, secondIdentifier, StringComparison.Ordinal))
+        return DisconnectFromPointOnServer(first, sender, broadcast: false);
+
+      if (!TryFindConnectionPoint(secondIdentifier, out var second))
+        return false;
+
+      return connected
+        ? TryCompleteConnectionOnServer(first, second, sender, broadcast: false)
+        : DisconnectPairOnServer(first, second, sender, broadcast: false);
+    }
+
+    private void HandleTopologyMirror(long version, string firstIdentifier, string secondIdentifier, bool connected)
+    {
+      if (_applyingReplicatedSnapshot)
+      {
+        if (version < _snapshotTopologyVersion)
+          return;
+        if (version > _snapshotTopologyVersion)
+        {
+          QueueDeferredTopologyChange(version, firstIdentifier, secondIdentifier, connected);
+          return;
+        }
+      }
+      else if (version < _lastAppliedTopologyVersion)
+        return;
+
+      if (!TryFindConnectionPoint(firstIdentifier, out var first))
+      {
+        QueuePendingTopologyChange(version, firstIdentifier, secondIdentifier, connected);
+        return;
+      }
+      if (!connected && string.Equals(firstIdentifier, secondIdentifier, StringComparison.Ordinal))
+      {
+        while (first.TryGetAnyConnectedLineObject(out var line) && line != null)
+          DestroyLineObject(line, notifyEndpoints: false);
+        if (!_applyingReplicatedSnapshot)
+          _lastAppliedTopologyVersion = version;
+        return;
+      }
+      if (!TryFindConnectionPoint(secondIdentifier, out var second))
+      {
+        QueuePendingTopologyChange(version, firstIdentifier, secondIdentifier, connected);
+        return;
+      }
+
+      if (connected)
+      {
+        if (_applyingReplicatedSnapshot)
+          ApplyReplicatedSnapshotPair(first, second);
+        else
+          ApplyReplicatedConnection(first, second);
+      }
+      else
+        ApplyReplicatedDisconnect(first, second);
+
+      if (!_applyingReplicatedSnapshot)
+        _lastAppliedTopologyVersion = version;
+    }
+
+    private void HandleTopologyRequestCompleted(
+      int requestId, string firstIdentifier, string secondIdentifier, bool connected, bool accepted)
+    {
+      var completedKeys = new List<int>();
+      foreach (var pair in _pendingConnections)
+      {
+        var context = pair.Value;
+        if (context?.Player == null || context.StartPoint == null
+            || !string.Equals(context.StartPoint.ConnectionIdentifier, firstIdentifier, StringComparison.Ordinal)
+            || context.EndPoint == null
+            || !string.Equals(context.EndPoint.ConnectionIdentifier, secondIdentifier, StringComparison.Ordinal)
+            || !connected || context.RequestId != requestId)
+          continue;
+        completedKeys.Add(pair.Key);
+        context.Player.SetLineConnectionMode(false, false);
+        context.Player.RefreshInteractableHintsNow();
+      }
+      for (int i = 0; i < completedKeys.Count; i++)
+        _pendingConnections.Remove(completedKeys[i]);
+    }
+
     private void Update()
     {
       CleanupInvalidPendingConnections();
+      for (int i = _pendingTopologyChanges.Count - 1; i >= 0; i--)
+      {
+        var pending = _pendingTopologyChanges[i];
+        if (Time.unscaledTime - pending.QueuedAt > 10f)
+        {
+          _pendingTopologyChanges.RemoveAt(i);
+          continue;
+        }
+        if (!TryFindConnectionPoint(pending.First, out _)
+            || (!string.Equals(pending.First, pending.Second, StringComparison.Ordinal)
+                && !TryFindConnectionPoint(pending.Second, out _)))
+          continue;
+        _pendingTopologyChanges.RemoveAt(i);
+        HandleTopologyMirror(pending.Version, pending.First, pending.Second, pending.Connected);
+      }
+    }
+
+    private void QueuePendingTopologyChange(long version, string first, string second, bool connected)
+    {
+      for (int i = 0; i < _pendingTopologyChanges.Count; i++)
+      {
+        var pending = _pendingTopologyChanges[i];
+        if (pending.Version == version && pending.First == first
+            && pending.Second == second && pending.Connected == connected)
+          return;
+      }
+      if (_pendingTopologyChanges.Count < 128)
+        _pendingTopologyChanges.Add(new PendingTopologyChange(version, first, second, connected));
+    }
+
+    private void QueueDeferredTopologyChange(long version, string first, string second, bool connected)
+    {
+      for (int i = 0; i < _deferredTopologyChanges.Count; i++)
+      {
+        var pending = _deferredTopologyChanges[i];
+        if (pending.Version == version && pending.First == first
+            && pending.Second == second && pending.Connected == connected)
+          return;
+      }
+      if (_deferredTopologyChanges.Count < 128)
+        _deferredTopologyChanges.Add(new PendingTopologyChange(version, first, second, connected));
+    }
+
+    private IEnumerable<ScenarioNetworkRelay.LineTopologyPair> GetTopologySnapshot()
+    {
+      PruneInvalidAuthoritativePairs();
+      for (int i = 0; i < _activeAuthoritativePairs.Count; i++)
+      {
+        var pair = _activeAuthoritativePairs[i];
+        if (pair.First != null && pair.Second != null)
+          yield return new ScenarioNetworkRelay.LineTopologyPair(
+            pair.First.ConnectionIdentifier, pair.Second.ConnectionIdentifier);
+      }
+    }
+
+    private static bool TryFindConnectionPoint(string identifier, out LineConnectionPoint point)
+    {
+      point = null;
+      if (string.IsNullOrWhiteSpace(identifier))
+        return false;
+      var points = FindObjectsByType<LineConnectionPoint>(
+        FindObjectsInactive.Include, FindObjectsSortMode.None);
+      for (int i = 0; i < points.Length; i++)
+      {
+        if (points[i] != null && string.Equals(points[i].ConnectionIdentifier, identifier, StringComparison.Ordinal))
+        {
+          point = points[i];
+          return true;
+        }
+      }
+      return false;
     }
 
     private void OnValidate()
@@ -190,7 +421,18 @@ namespace TriageTrainer.Entity.LineConnection
         if (IsServerFor(player))
           TryCompleteConnectionOnServer(startPoint, endPoint, player.Owner);
         else
-          endPoint.RequestAuthoritativeConnection(startPoint);
+        {
+          if (_pendingConnections.TryGetValue(player.GetInstanceID(), out var pending))
+          {
+            pending.EndPoint = endPoint;
+            pending.RequestId = NextTopologyRequestId();
+          }
+          if (!ScenarioNetworkRelay.RequestLineTopologyChange(
+                startPoint.ConnectionIdentifier, endPoint.ConnectionIdentifier, connected: true,
+                pending != null ? pending.RequestId : 0))
+            return false;
+          return true;
+        }
         ClearPendingFor(player);
         player.SetLineConnectionMode(false, false);
         player.RefreshInteractableHintsNow();
@@ -226,10 +468,17 @@ namespace TriageTrainer.Entity.LineConnection
       return true;
     }
 
+    private static int NextTopologyRequestId()
+    {
+      _nextTopologyRequestId = _nextTopologyRequestId == int.MaxValue ? 1 : _nextTopologyRequestId + 1;
+      return _nextTopologyRequestId;
+    }
+
     internal bool TryCompleteConnectionOnServer(
       LineConnectionPoint startPoint,
       LineConnectionPoint endPoint,
-      NetworkConnection sender)
+      NetworkConnection sender,
+      bool broadcast = true)
     {
       if (!TryResolveSenderPlayer(sender, out var player)
           || !ValidateAuthoritativeConnection(player, startPoint, endPoint, sender, out _)
@@ -246,7 +495,9 @@ namespace TriageTrainer.Entity.LineConnection
         endPoint.NotifyLineConnected(startPoint);
       }
 
-      endPoint.BroadcastAuthoritativeConnection(startPoint);
+      if (broadcast)
+        ScenarioNetworkRelay.PublishLineTopologyChange(
+          startPoint.ConnectionIdentifier, endPoint.ConnectionIdentifier, connected: true);
       return true;
     }
 
@@ -261,11 +512,6 @@ namespace TriageTrainer.Entity.LineConnection
       if (player == null || startPoint == null || endPoint == null || ReferenceEquals(startPoint, endPoint))
       {
         reason = "missing or identical connection endpoint";
-        return false;
-      }
-      if (!startPoint.IsSpawned || !endPoint.IsSpawned)
-      {
-        reason = "endpoint is not server-spawned";
         return false;
       }
       if (!startPoint.CanAcceptAdditionalConnection || !endPoint.CanAcceptAdditionalConnection
@@ -327,7 +573,11 @@ namespace TriageTrainer.Entity.LineConnection
 
       if (!InstanceFinder.IsOffline)
       {
-        point.RequestAuthoritativeDisconnect(player);
+        if (IsServerFor(player))
+          DisconnectFromPointOnServer(point, player.Owner);
+        else
+          ScenarioNetworkRelay.RequestLineTopologyChange(
+            point.ConnectionIdentifier, point.ConnectionIdentifier, connected: false);
         return;
       }
 
@@ -346,7 +596,8 @@ namespace TriageTrainer.Entity.LineConnection
       }
     }
 
-    internal bool DisconnectFromPointOnServer(LineConnectionPoint point, NetworkConnection sender)
+    internal bool DisconnectFromPointOnServer(
+      LineConnectionPoint point, NetworkConnection sender, bool broadcast = true)
     {
       if (point == null || !TryResolveSenderPlayer(sender, out var player)
           || !IsWithinConnectionDistance(player, point))
@@ -361,32 +612,41 @@ namespace TriageTrainer.Entity.LineConnection
         var other = ReferenceEquals(runtime.StartPoint, point) ? runtime.EndPoint : runtime.StartPoint;
         RemoveAuthoritativePair(point, other);
         DestroyLineObject(lineObject);
-        point.BroadcastAuthoritativeDisconnect(other);
+        if (broadcast)
+          ScenarioNetworkRelay.PublishLineTopologyChange(
+            point.ConnectionIdentifier, other.ConnectionIdentifier, connected: false);
         destroyedAny = true;
       }
       return destroyedAny;
     }
 
-    internal void ReplayAuthoritativeTopologySnapshot(
-      LineConnectionPoint rpcAnchor,
-      NetworkConnection target)
+    private bool DisconnectPairOnServer(
+      LineConnectionPoint first, LineConnectionPoint second, NetworkConnection sender, bool broadcast)
     {
-      if (rpcAnchor == null || target == null || !target.IsValid)
-        return;
+      if (first == null || second == null || !TryResolveSenderPlayer(sender, out var player)
+          || !IsWithinConnectionDistance(player, first) || !IsWithinConnectionDistance(player, second)
+          || !first.TryGetConnectedLineObjectTo(second, out var lineObject))
+        return false;
 
-      PruneInvalidAuthoritativePairs();
-      rpcAnchor.SendTopologySnapshotBegin(target);
-      for (int i = 0; i < _activeAuthoritativePairs.Count; i++)
-      {
-        var pair = _activeAuthoritativePairs[i];
-        rpcAnchor.SendTopologySnapshotPair(target, pair.First, pair.Second);
-      }
-      rpcAnchor.SendTopologySnapshotEnd(target);
+      RemoveAuthoritativePair(first, second);
+      DestroyLineObject(lineObject);
+      if (broadcast)
+        ScenarioNetworkRelay.PublishLineTopologyChange(
+          first.ConnectionIdentifier, second.ConnectionIdentifier, connected: false);
+      return true;
     }
 
     public void BeginReplicatedTopologySnapshot()
     {
+      BeginReplicatedTopologySnapshot(_lastAppliedTopologyVersion + 1);
+    }
+
+    public void BeginReplicatedTopologySnapshot(long version)
+    {
+      if (version <= _lastAppliedTopologyVersion)
+        return;
       _applyingReplicatedSnapshot = true;
+      _snapshotTopologyVersion = version;
       _snapshotStalePairs.Clear();
       EnsureLinesRoot();
       if (_linesRoot == null)
@@ -412,6 +672,13 @@ namespace TriageTrainer.Entity.LineConnection
 
     public void EndReplicatedTopologySnapshot()
     {
+      EndReplicatedTopologySnapshot(_snapshotTopologyVersion);
+    }
+
+    public void EndReplicatedTopologySnapshot(long version)
+    {
+      if (!_applyingReplicatedSnapshot || version != _snapshotTopologyVersion)
+        return;
       for (int i = 0; i < _snapshotStalePairs.Count; i++)
       {
         var pair = _snapshotStalePairs[i];
@@ -419,6 +686,17 @@ namespace TriageTrainer.Entity.LineConnection
       }
       _snapshotStalePairs.Clear();
       _applyingReplicatedSnapshot = false;
+      _lastAppliedTopologyVersion = Math.Max(_lastAppliedTopologyVersion, version);
+      _snapshotTopologyVersion = -1;
+
+      _deferredTopologyChanges.Sort((left, right) => left.Version.CompareTo(right.Version));
+      var deferredChanges = _deferredTopologyChanges.ToArray();
+      _deferredTopologyChanges.Clear();
+      for (int i = 0; i < deferredChanges.Length; i++)
+      {
+        var pending = deferredChanges[i];
+        HandleTopologyMirror(pending.Version, pending.First, pending.Second, pending.Connected);
+      }
     }
 
     public bool ApplyReplicatedConnection(LineConnectionPoint first, LineConnectionPoint second)
@@ -467,7 +745,7 @@ namespace TriageTrainer.Entity.LineConnection
           || !startPoint.CanAcceptAdditionalConnection || !endPoint.CanAcceptAdditionalConnection
           || !startPoint.CanConnectTo(endPoint) || !endPoint.CanConnectTo(startPoint)
           || !CanConnectBetweenDifferentOwners(startPoint, endPoint, out _)
-          || (!InstanceFinder.IsOffline && (!InstanceFinder.IsServerStarted || !startPoint.IsSpawned || !endPoint.IsSpawned)))
+          || (!InstanceFinder.IsOffline && !InstanceFinder.IsServerStarted))
         return false;
 
       if (!CreateAndRegisterConnection(startPoint, endPoint))
@@ -479,7 +757,8 @@ namespace TriageTrainer.Entity.LineConnection
       startPoint.NotifyLineConnected(endPoint);
       endPoint.NotifyLineConnected(startPoint);
       if (!InstanceFinder.IsOffline)
-        startPoint.BroadcastAuthoritativeConnection(endPoint);
+        ScenarioNetworkRelay.PublishLineTopologyChange(
+          startPoint.ConnectionIdentifier, endPoint.ConnectionIdentifier, connected: true);
       return true;
     }
 
@@ -495,7 +774,8 @@ namespace TriageTrainer.Entity.LineConnection
       RemoveAuthoritativePair(first, second);
       DestroyLineObject(lineObject);
       if (!InstanceFinder.IsOffline)
-        first.BroadcastAuthoritativeDisconnect(second);
+        ScenarioNetworkRelay.PublishLineTopologyChange(
+          first.ConnectionIdentifier, second.ConnectionIdentifier, connected: false);
       return true;
     }
 
@@ -748,18 +1028,10 @@ namespace TriageTrainer.Entity.LineConnection
         return false;
       }
 
-      var startNetworkObject = startPoint.OwningNetworkObject;
-      var endNetworkObject = endPoint.OwningNetworkObject;
-
-      if (startNetworkObject != null && endNetworkObject != null)
-      {
-        bool ok = !ReferenceEquals(startNetworkObject, endNetworkObject);
-        if (!ok)
-          reason = "same network object";
-        return ok;
-      }
-
-      return true;
+      bool ok = !ReferenceEquals(startPoint.transform.root, endPoint.transform.root);
+      if (!ok)
+        reason = "same endpoint root";
+      return ok;
     }
 
     private static bool IsServerFor(PlayerController player) =>
@@ -813,11 +1085,20 @@ namespace TriageTrainer.Entity.LineConnection
       TriageTrainer.Entity.PatientController patient,
       IntravenousLineConnectionPoint salinePoint,
       LineConnectionPoint startPoint,
-      LineConnectionPoint endPoint) =>
-      patient != null && salinePoint != null
-      && !ReferenceEquals(startPoint, endPoint)
-      && ((ReferenceEquals(startPoint, salinePoint) && ReferenceEquals(endPoint, patient.PatientBCIvAttachmentPoint))
-          || (ReferenceEquals(endPoint, salinePoint) && ReferenceEquals(startPoint, patient.PatientBCIvAttachmentPoint)));
+      LineConnectionPoint endPoint)
+    {
+      if (patient == null || salinePoint == null || ReferenceEquals(startPoint, endPoint))
+        return false;
+
+      // 환자 측 정맥로 포인트가 배선되지 않았으면(null) 어떤 끝점도 인정하지 않는다.
+      // 이 검사가 없으면 null 끝점이 null 참조와 ReferenceEquals 로 일치해버린다.
+      var patientPoint = patient.PatientBCIvAttachmentPoint;
+      if (patientPoint == null)
+        return false;
+
+      return (ReferenceEquals(startPoint, salinePoint) && ReferenceEquals(endPoint, patientPoint))
+             || (ReferenceEquals(endPoint, salinePoint) && ReferenceEquals(startPoint, patientPoint));
+    }
 
     private void ApplyLineMaterial(
       LineConnectionPoint startPoint,

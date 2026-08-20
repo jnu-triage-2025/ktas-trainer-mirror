@@ -291,6 +291,13 @@
           "signalId": "patient_b_pupil_checked",
           "displayTextContent": "남성 환자 동공반사 확인",
           "count": 1
+        },
+        {
+          "identifier": "patient-b-iv-secured",
+          "type": "InteractionSignalReceived",
+          "signalId": "insert_iv_patient_b_right",
+          "displayTextContent": "남성 환자 정맥로 확보",
+          "count": 1
         }
       ],
       "presentationBindings": [
@@ -300,6 +307,15 @@
           "targetType": "Interaction",
           "entityIdentifier": "patient_b",
           "interactionIdentifier": "recognition_check",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-b-iv-secured",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_b",
+          "interactionIdentifier": "intravenous_line_cannula",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         }
@@ -316,7 +332,22 @@
       "isTrackedByDefault": true,
       "scope": "Player",
       "isOrdinal": false,
-      "tasks": [],
+      "tasks": [
+        {
+          "identifier": "patient-b-oxygen-supplied",
+          "type": "InteractionSignalReceived",
+          "signalId": "equipment_connected_oxyflowmeter_patient_b",
+          "displayTextContent": "남성 환자에게 산소 공급하기",
+          "count": 1
+        },
+        {
+          "identifier": "patient-b-bleeding-controlled",
+          "type": "InteractionSignalReceived",
+          "signalId": "apply_plaster_on_gauze_patient_b",
+          "displayTextContent": "남성 환자 지혈하기",
+          "count": 1
+        }
+      ],
       "presentationBindings": [
         {
           "activation": "WholeQuest",

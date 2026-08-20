@@ -667,6 +667,7 @@ namespace TriageTrainer.Entity
     private string _patientBCPendingNormalSalineActorIdentifier;
     private string _patientBCPendingNormalSalineActorDisplayName;
     private IntravenousLineConnectionPoint _patientBCPhysicalNormalSalinePoint;
+    private bool _patientBCIvAttachmentPointWarned;
     private const string NurseCRoleTag = "nurse_c";
     private const string NurseDRoleTag = "nurse_d";
     private const float PatientBCTreatmentInteractionDistance = 3f;
@@ -774,10 +775,14 @@ namespace TriageTrainer.Entity
 
       var patientPoint = PatientBCIvAttachmentPoint;
       if (patientPoint == null)
+      {
+        WarnMissingPatientBCIvAttachmentPointOnce();
         return false;
+      }
       if (!patientPoint.IsPhysicallyConnectedTo(salinePoint))
       {
-        var service = FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
+        var service = LineConnectionService.TopologyService
+                      ?? FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
         if (service == null || !service.TryCreateAutomaticConnection(salinePoint, patientPoint))
           return false;
       }
@@ -816,7 +821,7 @@ namespace TriageTrainer.Entity
         return false;
       }
       if (IsFishNetClientInitialized)
-        CmdCompletePatientBCNormalSalineConnection(salinePoint);
+        CmdCompletePatientBCNormalSalineConnection(salinePoint.ConnectionIdentifier);
       return false;
     }
 
@@ -853,6 +858,21 @@ namespace TriageTrainer.Entity
              && patientPoint.IsPhysicallyConnectedTo(bedPoint);
     }
 
+    /// <summary>
+    /// 정맥로 IV 연결 지점이 배선되지 않아 생리식염수 연결이 성립할 수 없음을 한 번만 알린다.
+    /// 이 참조는 환자 유형별 State 컴포넌트(PatientTypeBMaleState 등)에서 사람이 직접 배선한다.
+    /// </summary>
+    private void WarnMissingPatientBCIvAttachmentPointOnce()
+    {
+      if (_patientBCIvAttachmentPointWarned)
+        return;
+      _patientBCIvAttachmentPointWarned = true;
+      Debug.LogError(
+        $"[PatientController] {Identifier}: 정맥로 IV 연결 지점이 배선되지 않아 생리식염수를 연결할 수 없습니다. " +
+        "환자 프리팹의 PatientType...State 컴포넌트에 Intravenous Line Connection Point 참조를 지정하십시오.",
+        this);
+    }
+
     private void RememberPatientBCNormalSalineConnection(string actorIdentifier, string actorDisplayName)
     {
       _patientBCPendingNormalSalineConnection = true;
@@ -870,14 +890,15 @@ namespace TriageTrainer.Entity
         return;
       }
       if (IsFishNetClientInitialized)
-        CmdClearPatientBCNormalSalineConnection(salinePoint);
+        CmdClearPatientBCNormalSalineConnection(salinePoint.ConnectionIdentifier);
     }
 
     [ServerRpc(RequireOwnership = false)]
     private void CmdClearPatientBCNormalSalineConnection(
-      IntravenousLineConnectionPoint salinePoint,
+      string salinePointIdentifier,
       NetworkConnection sender = null)
     {
+      var salinePoint = FindIntravenousLineConnectionPoint(salinePointIdentifier);
       if (!TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player, out _, out _)
           || salinePoint == null
           || !IsWithinPatientBCTreatmentDistance(player, salinePoint.transform.position))
@@ -974,6 +995,21 @@ namespace TriageTrainer.Entity
       if (advanced)
         RefreshPatientBCInteractableHints();
       return advanced;
+    }
+
+    /// <summary>
+    /// 유량계 참조가 이미 환자에게 설정된 뒤 산소 라인이 완성된 경우에도
+    /// 산소 공급 처치의 연결 신호를 한 번 평가한다.
+    /// </summary>
+    public void NotifyOxygenLineConnected()
+    {
+      if (!IsPatientBC)
+        return;
+
+      if (!ShouldCreditPatientBCEquipmentConnection(EquipmentTypeOxyflowmeter))
+        return;
+
+      RaiseEquipmentStateEvent(EquipmentTypeOxyflowmeter, connected: true);
     }
 
     private void NotifyPatientBCEquipmentDisconnected(string equipmentType, MonoBehaviour equipment)
@@ -1104,9 +1140,10 @@ namespace TriageTrainer.Entity
 
     [ServerRpc(RequireOwnership = false)]
     private void CmdCompletePatientBCNormalSalineConnection(
-      IntravenousLineConnectionPoint salinePoint,
+      string salinePointIdentifier,
       NetworkConnection sender = null)
     {
+      var salinePoint = FindIntravenousLineConnectionPoint(salinePointIdentifier);
       if (!IsPatientBC
           || !TryValidatePatientBCTreatmentActor(sender, NurseCRoleTag, out var player, out var actorIdentifier,
             out var actorDisplayName)
@@ -1123,6 +1160,21 @@ namespace TriageTrainer.Entity
         if (!TryCompletePatientBCNormalSalineConnectionAuthoritative())
           RememberPatientBCNormalSalineConnection(actorIdentifier, actorDisplayName);
       }
+    }
+
+    private static IntravenousLineConnectionPoint FindIntravenousLineConnectionPoint(string identifier)
+    {
+      if (string.IsNullOrWhiteSpace(identifier))
+        return null;
+
+      var points = FindObjectsByType<IntravenousLineConnectionPoint>(
+        FindObjectsInactive.Include, FindObjectsSortMode.None);
+      for (var i = 0; i < points.Length; i++)
+      {
+        if (points[i] != null && points[i].ConnectionIdentifier == identifier)
+          return points[i];
+      }
+      return null;
     }
 
     [ServerRpc(RequireOwnership = false)]

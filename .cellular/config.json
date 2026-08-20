@@ -1,0 +1,28 @@
+{
+  "index_depth": 4,
+  "index_exclude": [
+    ".git*",
+    "Assets/Modules/AutoSlidingDoors",
+    "Assets/Modules/ChonnamNatlUnivCustomizedModels",
+    "Assets/Modules/HospitalEquipmentPackages",
+    "Assets/Modules/HospitalEquipments",
+    "Assets/Modules/HospitalPack",
+    "Assets/Modules/LowPolyHospitalCharacters",
+    "Assets/Modules/Mixamo",
+    "Assets/Modules/OutPost",
+    "Assets/Modules/ParrelSync",
+    "Assets/Modules/UnityJapanOffice",
+    "Assets/TextMesh Pro"
+  ],
+  "ignoring_extensions": [
+    ".md",
+    ".markdown",
+    ".txt",
+    ".json",
+    ".csv",
+    ".yml",
+    ".yaml",
+    ".git*",
+    ".meta"
+  ]
+}

@@ -6,6 +6,6 @@
     { "name": "scen-a", "target": "/scenario execute @a patient_a_critical" },
     { "name": "scen-b", "target": "/scenario execute @a patient_b_c_ct" },
     { "name": "dbg-a", "target": "/nurseall; /scen-a" },
-    { "name": "dbg-b", "target": "/nurseall; /scen-b" }
+    { "name": "dbg-b", "target": "/nurseall; /give cannula_20g; /give normal_saline_1000ml; /give nasal_cannula; /give oxyflowmeter; /give gauze; /scen-b" }
   ]
 }

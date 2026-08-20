@@ -9,9 +9,22 @@
 
 ## 현재 도구
 
-### code-heatmap (uv project)
+### cellular (submodule) (구 code-heatmap)
 
-소스 파일의 텍스트량을 폴더 트리맵 SVG로 렌더합니다.
+Git 이력에서 커밋별 코드 구성(모듈·언어·파일·라인·문자 수)을 색인하는 Rust runner다. 색인을 .cellexport 파일로 내보내 뷰어(cellular-codemetrics.pages.dev)에서 트리맵으로 확인한다. 프로젝트 설정은 루트 .cellular/config.json에 들어 있고 색인 데이터는 프로필 디렉터리(~/.cellular/)에 쌓여 저장소에는 남지 않는다.
+
+빌드 (working directory: Tools/cellular/runner):
+
+- `cargo build --release` → `target/release/cellular`
+
+실행 예시 (working directory: 저장소 루트):
+
+- `Tools/cellular/runner/target/release/cellular main,HEAD~20` — 커밋 색인 생성
+- `Tools/cellular/runner/target/release/cellular --list --modules` — 스냅샷·모듈 조회
+- `Tools/cellular/runner/target/release/cellular --export` — ktas-trainer.cellexport 내보내기
+- `Tools/cellular/runner/target/release/cellular --terminal` — 대화형 TUI
+
+코드 히트맵을 생성하라는 지시가 주어지면, cli 툴로 `.cellexport`를 생성하는 것이 목표이다. 또한 생성된 파일을 `cellular-codemetrics.pages.dev`에서 열어보라고 안내하여라.  
 
 ### validate-documentation-links.sh
 

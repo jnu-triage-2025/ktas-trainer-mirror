@@ -1,7 +1,8 @@
 using System.Collections.Generic;
-using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.ItemSystem;
+using TriageTrainer.Patient;
 using UnityEngine;
 
 namespace TriageTrainer.Entity.LineConnection
@@ -11,7 +12,7 @@ namespace TriageTrainer.Entity.LineConnection
   /// and domain-specific behaviour; this class owns only connection state and
   /// line presentation configuration.
   /// </summary>
-  public abstract class LineConnectionPoint : NetworkBehaviour
+  public abstract class LineConnectionPoint : MonoBehaviour
   {
     [Header("Line Visual")]
     [SerializeField] private Material _lineMaterial;
@@ -22,14 +23,30 @@ namespace TriageTrainer.Entity.LineConnection
     [Header("Connection Capacity")]
     [SerializeField] private bool _allowMultipleConnections;
 
-    public NetworkObject OwningNetworkObject => GetComponentInParent<NetworkObject>();
+    protected virtual void OnValidate()
+    {
+    }
+
     public Material LineMaterial => _lineMaterial;
 
-    public override void OnStartClient()
+    public string ConnectionIdentifier
     {
-      base.OnStartClient();
-      if (!IsServerStarted)
-        CmdRequestAuthoritativeTopologySnapshot();
+      get
+      {
+        var networkObject = GetComponentInParent<NetworkObject>();
+        if (networkObject != null && networkObject.IsSpawned)
+          return "net:" + networkObject.ObjectId + "/" + GetRelativePath(networkObject.transform);
+
+        var staticEntity = GetComponentInParent<StaticObjectDisplayment>();
+        if (staticEntity != null && !string.IsNullOrWhiteSpace(staticEntity.EntityIdentifier))
+          return staticEntity.EntityIdentifier + "/" + GetRelativePath(staticEntity.transform);
+
+        var patient = GetComponentInParent<PatientController>();
+        if (patient != null && !string.IsNullOrWhiteSpace(patient.Identifier))
+          return patient.Identifier + "/" + GetRelativePath(patient.transform);
+
+        return string.Empty;
+      }
     }
 
     public bool HasAnyConnection
@@ -135,108 +152,18 @@ namespace TriageTrainer.Entity.LineConnection
       return false;
     }
 
-    public void RequestAuthoritativeConnection(LineConnectionPoint startPoint)
+    private string GetRelativePath(Transform root)
     {
-      if (startPoint == null || ReferenceEquals(startPoint, this))
-        return;
-
-      if (IsClientInitialized)
-        CmdRequestAuthoritativeConnection(startPoint);
+      return GetHierarchyPath(transform, root);
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    private void CmdRequestAuthoritativeConnection(
-      LineConnectionPoint startPoint,
-      NetworkConnection sender = null)
+    private static string GetHierarchyPath(Transform value, Transform stopBefore = null)
     {
-      ResolveConnectionService()?.TryCompleteConnectionOnServer(startPoint, this, sender);
-    }
-
-    public void RequestAuthoritativeDisconnect(PlayerController player)
-    {
-      if (IsServerStarted)
-        ResolveConnectionService()?.DisconnectFromPointOnServer(this, player?.Owner);
-      else if (IsClientInitialized)
-        CmdRequestAuthoritativeDisconnect();
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    private void CmdRequestAuthoritativeDisconnect(NetworkConnection sender = null)
-    {
-      ResolveConnectionService()?.DisconnectFromPointOnServer(this, sender);
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    private void CmdRequestAuthoritativeTopologySnapshot(NetworkConnection sender = null)
-    {
-      ResolveConnectionService()?.ReplayAuthoritativeTopologySnapshot(this, sender);
-    }
-
-    internal void SendTopologySnapshotBegin(NetworkConnection target) =>
-      TargetTopologySnapshotBegin(target);
-
-    internal void SendTopologySnapshotPair(
-      NetworkConnection target,
-      LineConnectionPoint first,
-      LineConnectionPoint second) =>
-      TargetTopologySnapshotPair(target, first, second);
-
-    internal void SendTopologySnapshotEnd(NetworkConnection target) =>
-      TargetTopologySnapshotEnd(target);
-
-    [TargetRpc]
-    private void TargetTopologySnapshotBegin(NetworkConnection target)
-    {
-      ResolveConnectionService()?.BeginReplicatedTopologySnapshot();
-    }
-
-    [TargetRpc]
-    private void TargetTopologySnapshotPair(
-      NetworkConnection target,
-      LineConnectionPoint first,
-      LineConnectionPoint second)
-    {
-      ResolveConnectionService()?.ApplyReplicatedSnapshotPair(first, second);
-    }
-
-    [TargetRpc]
-    private void TargetTopologySnapshotEnd(NetworkConnection target)
-    {
-      ResolveConnectionService()?.EndReplicatedTopologySnapshot();
-    }
-
-    internal void BroadcastAuthoritativeConnection(LineConnectionPoint other)
-    {
-      if (other != null)
-        RpcApplyAuthoritativeConnection(other);
-    }
-
-    [ObserversRpc]
-    private void RpcApplyAuthoritativeConnection(LineConnectionPoint other)
-    {
-      if (!IsServerStarted)
-        ResolveConnectionService()?.ApplyReplicatedConnection(this, other);
-    }
-
-    internal void BroadcastAuthoritativeDisconnect(LineConnectionPoint other)
-    {
-      if (other != null)
-        RpcApplyAuthoritativeDisconnect(other);
-    }
-
-    [ObserversRpc]
-    private void RpcApplyAuthoritativeDisconnect(LineConnectionPoint other)
-    {
-      if (!IsServerStarted)
-        ResolveConnectionService()?.ApplyReplicatedDisconnect(this, other);
-    }
-
-    private static LineConnectionService ResolveConnectionService()
-    {
-      var service = FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
-      return service != null
-        ? service
-        : FindAnyObjectByType<LineConnectionService>(FindObjectsInactive.Include);
+      var names = new List<string>();
+      for (var current = value; current != null && current != stopBefore; current = current.parent)
+        names.Add(current.name + "[" + current.GetSiblingIndex() + "]");
+      names.Reverse();
+      return string.Join("/", names);
     }
 
     /// <summary>Called by LineConnectionService through a concrete point type branch.</summary>

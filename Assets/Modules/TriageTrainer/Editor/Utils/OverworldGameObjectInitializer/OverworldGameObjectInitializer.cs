@@ -209,9 +209,7 @@ namespace TriageTrainer.Editor.Utils
     private static void SetStaticObjectIdentifier(GameObject instance, string identifier)
     {
       var component = instance.GetComponent<MultiplayerInfrastructure.ItemSystem.StaticObjectDisplayment>();
-      var field = component == null ? null : typeof(MultiplayerInfrastructure.ItemSystem.StaticObjectDisplayment)
-        .GetField("_entityIdentifier", BindingFlags.Instance | BindingFlags.NonPublic);
-      field?.SetValue(component, identifier.Trim());
+      component?.SetEntityIdentifier(identifier);
     }
 
     private static GameObject InstantiatePrefab(GameObject prefab)

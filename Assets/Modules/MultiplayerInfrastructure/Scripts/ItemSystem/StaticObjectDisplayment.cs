@@ -49,6 +49,18 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// <summary>이 정적 오브젝트의 전역 식별자(서버/모든 클라이언트 동일).</summary>
     public string EntityIdentifier => _entityIdentifier;
 
+    public void SetEntityIdentifier(string identifier)
+    {
+      string normalized = identifier == null ? string.Empty : identifier.Trim();
+      if (string.IsNullOrWhiteSpace(normalized)
+          || string.Equals(_entityIdentifier, normalized, System.StringComparison.Ordinal))
+        return;
+
+      UnregisterFromRegistry();
+      _entityIdentifier = normalized;
+      RegisterToRegistry();
+    }
+
     /// <summary>표시(설치/적용) 상태의 전파 방식입니다.</summary>
     public StaticObjectDisplaymentShareMode ShareMode => _shareMode;
 
