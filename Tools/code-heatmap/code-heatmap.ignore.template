@@ -1,3 +1,0 @@
-# One glob pattern per line. Patterns match a path or any directory/file name.
-# Copy this file to code-heatmap.ignore to customize local exclusions.
-.*

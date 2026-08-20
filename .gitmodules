@@ -4,3 +4,6 @@
 [submodule "Tools/unity-merge"]
 	path = Tools/unity-merge
 	url = https://github.com/ShapeLayer/unity-merge
+[submodule "Tools/cellular"]
+	path = Tools/cellular
+	url = https://github.com/ShapeLayer/cellular
