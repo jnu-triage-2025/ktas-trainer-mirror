@@ -825,6 +825,8 @@ namespace MultiplayerInfrastructure.Scenario
       _branchDialogueAdvanceInterceptors.Clear();
       _branchPromptActive = false;
       _activeRemoteBranchPromptClients.Clear();
+      _branchDialogueActive = false;
+      _activeRemoteBranchDialogueClients.Clear();
       _remoteBranchChoiceSelections.Clear();
 
       ClearOptions();
@@ -4918,11 +4920,12 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>Serializes branch dialogues per screen and completes them only from player input.</summary>
     private IEnumerator ExecuteDialogueNodeInBranch(ScenarioDialogueNode node, BranchChainContext context)
     {
-      int? localClientId = InstanceFinder.IsClientStarted
-        ? InstanceFinder.ClientManager?.Connection?.ClientId
-        : null;
-      bool remoteDialogue = context.OwnerClientId.HasValue
-        && (!localClientId.HasValue || localClientId.Value != context.OwnerClientId.Value);
+      // 원격 표시 판정은 다른 브랜치 노드와 동일한 규칙(ShouldPresentBranchLocally)을 따른다.
+      // ServerAuthoritative 가 아닌 실행 모드에서는 owner 가 배정돼 있어도 이 인스턴스가 직접
+      // 표시해야 한다. (실행 모드 검사를 빠뜨리면 Local 모드에서 대화를 표시하지 않은 채
+      // 서버 전용 릴레이만 호출되어 아무 화면에도 대사가 뜨지 않는다.)
+      bool remoteDialogue = _executionMode == ExecutionMode.ServerAuthoritative
+        && !ShouldPresentBranchLocally(context);
 
       while (remoteDialogue
                ? _activeRemoteBranchDialogueClients.Contains(context.OwnerClientId.Value)

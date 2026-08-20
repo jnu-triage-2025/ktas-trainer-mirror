@@ -825,10 +825,13 @@ namespace TriageTrainer.Entity.LineConnection
       LineRenderer lineRenderer)
     {
       // A point may override the material for a special-cased line; otherwise the
-      // service owns the material per concrete point type.
-      if (startPoint != null && startPoint.LineMaterial != null)
+      // service owns the material per concrete point type. An explicit override on
+      // either end always outranks the service default, so both ends are checked
+      // before falling back to the per-type material.
+      var overrideMaterial = GetOverrideMaterial(startPoint) ?? GetOverrideMaterial(endPoint);
+      if (overrideMaterial != null)
       {
-        lineRenderer.sharedMaterial = startPoint.LineMaterial;
+        lineRenderer.sharedMaterial = overrideMaterial;
         return;
       }
 
@@ -839,12 +842,22 @@ namespace TriageTrainer.Entity.LineConnection
         return;
       }
 
-      startPoint?.ApplyLineMaterial(lineRenderer);
+      if (startPoint != null)
+        startPoint.ApplyLineMaterial(lineRenderer);
+      else
+        endPoint?.ApplyLineMaterial(lineRenderer);
+    }
+
+    private static Material GetOverrideMaterial(LineConnectionPoint point)
+    {
+      // Unity fake-null 을 실제 null 로 정규화해 ?? 연산이 기대대로 동작하게 한다.
+      var material = point != null ? point.LineMaterial : null;
+      return material != null ? material : null;
     }
 
     private Material GetLineMaterial(LineConnectionPoint point)
     {
-      return point switch
+      var material = point switch
       {
         IntravenousLineConnectionPoint => _intravenousLineMaterial,
         AEDLineConnectionPoint => _aedLineMaterial,
@@ -852,6 +865,9 @@ namespace TriageTrainer.Entity.LineConnection
         SuctionLineConnectionPoint => _suctionLineMaterial,
         _ => null,
       };
+
+      // Unity fake-null 정규화(위와 동일한 이유).
+      return material != null ? material : null;
     }
 
     private float GetLineElasticity(LineConnectionPoint point)

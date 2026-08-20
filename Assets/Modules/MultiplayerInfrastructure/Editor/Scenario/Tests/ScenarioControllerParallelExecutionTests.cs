@@ -468,12 +468,16 @@ namespace MultiplayerInfrastructure.Tests.Scenario
           "Parallel branch dialogues must use the dedicated serialized input-wait executor.");
 
         currentGraph.SetValue(controller, new ScenarioGraph { Identifier = "branch-dialogue-test" });
-        var context = Activator.CreateInstance(
-          contextType,
-          BindingFlags.Instance | BindingFlags.NonPublic,
+        // BranchChainContext 는 private 중첩 타입이지만 생성자 자체는 public 이므로
+        // NonPublic 만으로는 바인딩되지 않는다. 시그니처로 직접 찾아 호출한다.
+        var contextConstructor = contextType.GetConstructor(
+          BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
           null,
-          new object[] { null },
+          new[] { typeof(int?) },
           null);
+        Assert.That(contextConstructor, Is.Not.Null,
+          "BranchChainContext must expose an owner-client constructor.");
+        var context = contextConstructor.Invoke(new object[] { null });
         var dialogue = new ScenarioDialogueNode
         {
           Identifier = "DIALOGUE",

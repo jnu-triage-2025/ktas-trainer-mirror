@@ -147,9 +147,12 @@ namespace TriageTrainer.Entity
         return;
 
       // 콜백이 재진입(등록/해제)할 수 있으므로 스냅샷을 뜬 뒤 순회한다.
-      for (int i = 0; i < _scenarioStateEventBindings.Count; i++)
+      // (consumeOnce 바인딩은 콜백 안에서 자신을 해제하면서 같은 이벤트의 나머지 바인딩을
+      //  재등록한다. 라이브 리스트를 인덱스로 순회하면 그 사이 항목이 밀려 건너뛰게 된다.)
+      var snapshot = _scenarioStateEventBindings.ToArray();
+      for (int i = 0; i < snapshot.Length; i++)
       {
-        var binding = _scenarioStateEventBindings[i];
+        var binding = snapshot[i];
         if (!string.Equals(binding.EventName, eventName, StringComparison.Ordinal))
           continue;
 

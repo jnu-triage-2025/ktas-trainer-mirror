@@ -333,7 +333,9 @@ namespace MultiplayerInfrastructure.Player
     private void UpdateJumpInputSuppression()
     {
       // 키를 떼는 순간 억제 해제. 다시 누르면 그때부터는 정상적인 점프 입력이다.
-      if (!Input.GetButton("Jump"))
+      // 관전자 상승 입력은 "Jump" 축이 아니라 스페이스바를 직접 읽으므로 두 입력을 모두 본다.
+      // (Jump 축이 스페이스바에서 분리되어 있으면 한쪽만 확인해서는 억제가 걸리거나 풀리지 않는다.)
+      if (!Input.GetButton("Jump") && !Input.GetKey(KeyCode.Space))
       {
         _jumpInputSuppressedUntilRelease = false;
         return;

@@ -147,6 +147,19 @@ namespace TriageTrainer.Entity
         NotifyPatientBCEquipmentDisconnected(equipmentType, previous);
         RaiseEquipmentStateEvent(equipmentType, connected: false);
         TriageWorldInteractionSignals.RaisePatientEquipmentDisconnected(Identifier, equipmentType, previous);
+
+        if (previous is WallAttachedOxyflowmeter previousFlowmeter)
+        {
+          // 벽에서 실제로 회수된 경우에만 raw "Detached" 를 올린다. CareZone 이 회수 이벤트를
+          // 먼저 받아 이 연결을 끊기 때문에, OnAnyOxyflowmeterAttachmentChanged 만으로는
+          // 대상 판정이 불가능한 순서가 존재한다.
+          if (!previousFlowmeter.IsAttached)
+            ReportOxyflowmeterAttachment(previousFlowmeter, attached: false);
+          // 유량계는 그대로 설치돼 있는데 이 환자와의 연결만 끊긴 경우는 raw 상태 변화가
+          // 아니므로(= EquipmentDisconnected 가 담당) 발신 없이 추적만 해제한다.
+          else if (ReferenceEquals(_reportedOxyflowmeter, previousFlowmeter))
+            _reportedOxyflowmeter = null;
+        }
       }
 
       // 2) 연결 알림 (새 장비가 실제로 존재하는 경우)
@@ -163,18 +176,60 @@ namespace TriageTrainer.Entity
         // 처치 단계 크레딧 게이팅과 무관하게, 연결된 유량계가 이미 설치되어 있으면 즉시 raw 신호를 올린다.
         // 아직 설치 전이라면 OnAnyOxyflowmeterAttachmentChanged 가 실제 설치 시점에 올린다.
         if (next is WallAttachedOxyflowmeter connectedFlowmeter && connectedFlowmeter.IsAttached)
-          DispatchScenarioStateEvent(StateEventOxyflowmeterAttachmentChanged, "Attached");
+          ReportOxyflowmeterAttachment(connectedFlowmeter, attached: true);
       }
     }
 
     /// <summary>
+    /// "Attached" 로 보고한 유량계. 회수 시에는 CareZone 이 먼저 연결을 끊어
+    /// <c>_supportExternalRefs.Oxyflowmeter</c> 가 이미 비워지므로, 짝이 되는 "Detached" 를
+    /// 판정하려면 보고 시점의 대상을 따로 들고 있어야 한다.
+    /// </summary>
+    private WallAttachedOxyflowmeter _reportedOxyflowmeter;
+
+    /// <summary>
     /// 씬의 어느 산소 유량계든 설치/회수 상태가 바뀌면 호출된다(정적 이벤트).
-    /// 이 환자의 zone에 연결된 유량계일 때만 raw 상태 이벤트를 올린다.
+    /// 이 환자에게 연결된(또는 이 환자가 설치로 보고했던) 유량계일 때만 raw 상태 이벤트를 올린다.
     /// </summary>
     private void OnAnyOxyflowmeterAttachmentChanged(WallAttachedOxyflowmeter source, bool attached)
     {
-      if (!ReferenceEquals(source, _supportExternalRefs.Oxyflowmeter))
+      if (attached)
+      {
+        if (!ReferenceEquals(source, _supportExternalRefs.Oxyflowmeter))
+          return;
+      }
+      else if (!ReferenceEquals(source, _reportedOxyflowmeter))
+      {
+        // 이미 연결이 끊긴 뒤라도, 설치로 보고했던 유량계의 회수는 반드시 짝을 맞춰 올린다.
         return;
+      }
+
+      ReportOxyflowmeterAttachment(source, attached);
+    }
+
+    /// <summary>
+    /// 산소 유량계의 raw 설치/회수 상태를 시나리오 상태 이벤트로 올린다.
+    /// 연결 알림 경로(<see cref="NotifyEquipmentSwap"/>)와 정적 설치 이벤트 경로는 실행 순서가
+    /// 상황에 따라 뒤바뀌고 둘 다 필요하므로(이미 설치된 유량계가 나중에 연결되는 경우와 그 반대),
+    /// 마지막 보고 대상을 기준으로 같은 전이가 두 번 발신되지 않도록 억제한다.
+    /// </summary>
+    private void ReportOxyflowmeterAttachment(WallAttachedOxyflowmeter source, bool attached)
+    {
+      if (source == null)
+        return;
+
+      if (attached)
+      {
+        if (ReferenceEquals(_reportedOxyflowmeter, source))
+          return;
+        _reportedOxyflowmeter = source;
+      }
+      else
+      {
+        if (!ReferenceEquals(_reportedOxyflowmeter, source))
+          return;
+        _reportedOxyflowmeter = null;
+      }
 
       DispatchScenarioStateEvent(StateEventOxyflowmeterAttachmentChanged, attached ? "Attached" : "Detached");
     }
