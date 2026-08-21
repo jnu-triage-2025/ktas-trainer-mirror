@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using MultiplayerInfrastructure.Audio;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -21,6 +22,12 @@ namespace TriageTrainer.Entity
     {
       bool HasPermission { get; }
       string[] Devices { get; }
+
+      /// <summary>
+      /// 설정에서 고른 마이크 이름입니다. 고르지 않았으면 null입니다.
+      /// 테스트가 운영체제를 건드리지 않고도 이 경로를 흉내낼 수 있도록 어댑터에 둡니다.
+      /// </summary>
+      string PreferredDevice { get; }
       IEnumerator RequestPermission();
       AudioClip Start(string device, int frequency);
       bool IsRecording(string device);
@@ -32,6 +39,7 @@ namespace TriageTrainer.Entity
     {
       public bool HasPermission => Application.HasUserAuthorization(UserAuthorization.Microphone);
       public string[] Devices => Microphone.devices;
+      public string PreferredDevice => AudioDevicePreferenceService.ResolveInputDeviceName();
       public IEnumerator RequestPermission()
       {
         yield return Application.RequestUserAuthorization(UserAuthorization.Microphone);
@@ -133,11 +141,17 @@ namespace TriageTrainer.Entity
       if (_clip != null || _targets.Count == 0
           || !_permissionRequestCompleted
           || _recordingFailed
-          || !_adapter.HasPermission
-          || _adapter.Devices == null || _adapter.Devices.Length == 0)
+          || !_adapter.HasPermission)
         return;
+
+      // Devices는 부를 때마다 새 배열을 만든다. 검사한 것과 고르는 것이 같은 목록이어야
+      // 그 사이에 장치가 빠져도 빈 배열을 인덱싱하지 않는다.
+      var devices = _adapter.Devices;
+      if (devices == null || devices.Length == 0)
+        return;
+
       Availability before = ResolveAvailability();
-      _device = _adapter.Devices[0];
+      _device = ResolvePreferredDevice(devices, _adapter.PreferredDevice);
       try
       {
         _clip = _adapter.Start(_device, AudioSettings.outputSampleRate);
@@ -169,10 +183,15 @@ namespace TriageTrainer.Entity
         return;
       }
 
+      // 엔진 재시작 직후에는 클립이 무효인 채로 한 프레임이 지나갈 수 있다.
+      // 읽기 전체를 같은 try로 감싸 예외 대신 재시도 가능한 실패 상태로 떨어뜨린다.
       int position;
       try
       {
         position = _adapter.GetPosition(_device);
+        if (position < SampleCount)
+          return;
+        _clip.GetData(_samples, position - SampleCount);
       }
       catch (Exception exception)
       {
@@ -180,9 +199,6 @@ namespace TriageTrainer.Entity
         MarkRecordingFailed();
         return;
       }
-      if (position < SampleCount)
-        return;
-      _clip.GetData(_samples, position - SampleCount);
       float sum = 0f;
       for (int i = 0; i < _samples.Length; i++)
         sum += _samples[i] * _samples[i];
@@ -210,6 +226,54 @@ namespace TriageTrainer.Entity
           return player;
       }
       return null;
+    }
+
+    /// <summary>
+    /// 설정에서 고른 마이크를 씁니다. 고르지 않았거나 그 장치가 지금 없으면
+    /// 운영체제 기본 마이크(목록의 첫 장치)로 돌아갑니다.
+    /// </summary>
+    private static string ResolvePreferredDevice(string[] devices, string preferred)
+    {
+      if (!string.IsNullOrEmpty(preferred))
+      {
+        for (int i = 0; i < devices.Length; i++)
+        {
+          if (string.Equals(devices[i], preferred, StringComparison.Ordinal))
+            return devices[i];
+        }
+      }
+
+      return devices[0];
+    }
+
+    private void OnEnable()
+    {
+      AudioDevicePreferenceService.InputDeviceChanged += HandleInputDeviceChanged;
+      AudioSettings.OnAudioConfigurationChanged += HandleAudioConfigurationChanged;
+    }
+
+    private void OnDisable()
+    {
+      AudioDevicePreferenceService.InputDeviceChanged -= HandleInputDeviceChanged;
+      AudioSettings.OnAudioConfigurationChanged -= HandleAudioConfigurationChanged;
+    }
+
+    /// <summary>설정에서 마이크를 바꾸면 녹음을 끊고 새 장치로 다시 연다.</summary>
+    private void HandleInputDeviceChanged() => RestartRecording();
+
+    /// <summary>
+    /// 오디오 엔진이 다시 열리면 <c>Microphone.Start</c>로 만든 클립이 무효가 된다.
+    /// 출력 장치를 바꿔 <see cref="AudioSettings.Reset"/>이 불린 경우가 대표적이다.
+    /// 잡고 있던 클립을 버리고 새 엔진 위에서 다시 열어야 의식 확인이 계속 동작한다.
+    /// </summary>
+    private void HandleAudioConfigurationChanged(bool deviceWasChanged) => RestartRecording();
+
+    /// <summary>녹음을 끊고 다시 연다. 열 수 없는 상태면 EnsureRecording이 알아서 걸러 낸다.</summary>
+    private void RestartRecording()
+    {
+      StopRecording();
+      _recordingFailed = false;
+      EnsureRecording();
     }
 
     private void StopRecording()
