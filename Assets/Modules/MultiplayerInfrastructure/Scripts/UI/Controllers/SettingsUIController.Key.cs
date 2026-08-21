@@ -24,6 +24,7 @@ namespace MultiplayerInfrastructure.UI
       new KeyBindingEntry("inventory",      "인벤토리",       KeyCode.I),
       new KeyBindingEntry("map",            "지도",           KeyCode.M),
       new KeyBindingEntry("chat",           "채팅",           KeyCode.Return),
+      new KeyBindingEntry("camera_distance_modifier", "POV 조정 수정자", KeyCode.LeftAlt),
     };
 
     private List<KeyBindingEntry> _defaultBindings;

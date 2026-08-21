@@ -28,8 +28,8 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private KeyCode _keyOpenQuestUI = DefaultsKeyConfiguration.OpenQuestUI;
     [SerializeField] private KeyCode _keyDropHeldItem = DefaultsKeyConfiguration.DropHeldItem;
 
-    [Tooltip("이 키를 누른 채 마우스 휠을 굴리면 3인칭 카메라 거리(POV)를 조정합니다.")]
-    [SerializeField] private KeyCode _keyCameraDistanceModifier = KeyCode.LeftAlt;
+    private const string CameraDistanceModifierActionId = "camera_distance_modifier";
+    private const KeyCode DefaultCameraDistanceModifier = KeyCode.LeftAlt;
 
     // 연속된 휠 입력을 하나의 POV 조정으로 묶는다. 프레임마다 즉시 저장하면
     // PlayerPrefs 디스크 쓰기가 과도하게 발생하고, 1/3인칭 전환 여부도 올바르게 판단할 수 없다.
@@ -298,11 +298,11 @@ namespace MultiplayerInfrastructure.Player
 
     private bool IsCameraDistanceModifierHeld()
     {
-      if (Input.GetKey(_keyCameraDistanceModifier))
-        return true;
-
-      // 기본 바인딩은 LeftAlt이지만, Alt/Option 조작은 좌우 어느 쪽도 허용한다.
-      return _keyCameraDistanceModifier == KeyCode.LeftAlt && Input.GetKey(KeyCode.RightAlt);
+      var modifierKey = KeyBindingRepository.GetBoundKey(
+        CameraDistanceModifierActionId,
+        DefaultCameraDistanceModifier
+      );
+      return modifierKey != KeyCode.None && Input.GetKey(modifierKey);
     }
 
     private bool HasCameraDistanceScrollInput()
