@@ -1435,7 +1435,6 @@
       "speakerName": "@s",
       "dialogueContent": "남성분..! 말씀 들리세요?",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
       "autoAdvanceSeconds": 1,
       "playTTS": false
     },
@@ -1446,7 +1445,6 @@
       "speakerName": "남성 환자",
       "dialogueContent": "으으.. 아.. 어디지..?",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
@@ -1458,7 +1456,7 @@
       "speakerName": null,
       "dialogueContent": "(환자는 잠시 눈을 뜨더니 다시 눈을 감는다.)",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
+      "interactionRequired": false,
       "autoAdvanceSeconds": 3,
       "playTTS": false
     },
@@ -1497,7 +1495,6 @@
       "speakerName": "@s",
       "dialogueContent": "환자분..!",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
       "autoAdvanceSeconds": 1,
       "playTTS": false
     },
@@ -1508,7 +1505,6 @@
       "speakerName": "남성 환자",
       "dialogueContent": "으으으..! 아..! 왜요..!!",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
@@ -1520,7 +1516,7 @@
       "speakerName": "@s",
       "dialogueContent": "(이 환자는 말에 조금 늦게 반응하고 있다.)",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
+      "interactionRequired": false,
       "autoAdvanceSeconds": 3,
       "playTTS": false
     },
@@ -1559,7 +1555,6 @@
       "speakerName": "@s",
       "dialogueContent": "여기가 어딘지 아시겠어요?",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
       "autoAdvanceSeconds": 1,
       "playTTS": false
     },
@@ -1570,7 +1565,6 @@
       "speakerName": "남성 환자",
       "dialogueContent": "으으악...! 과장님 제가 분명...!!! 기안 올린거 처리해달라고..!",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
@@ -1582,7 +1576,6 @@
       "speakerName": "@s",
       "dialogueContent": "...",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
       "autoAdvanceSeconds": 1,
       "playTTS": false
     },
@@ -1593,7 +1586,7 @@
       "speakerName": "@s",
       "dialogueContent": "(이 환자는 무슨 일이 있었는지 기억을 못하는 것 같다.)",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
+      "interactionRequired": false,
       "autoAdvanceSeconds": 3,
       "playTTS": false
     },
@@ -1632,7 +1625,6 @@
       "speakerName": "@s",
       "dialogueContent": "환자분..! 환자분!! 다리 한번 펴보실래요?",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
       "autoAdvanceSeconds": 1,
       "playTTS": false
     },
@@ -1643,7 +1635,6 @@
       "speakerName": "남성 환자",
       "dialogueContent": "으으으...! 날 가만히 둬..!!",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M2" }
@@ -1655,7 +1646,7 @@
       "speakerName": "@s",
       "dialogueContent": "(불평을 하면서도 환자는 다리를 움직인다.)",
       "portraitSpriteIdentifier": null,
-      "interactionRequired": true,
+      "interactionRequired": false,
       "autoAdvanceSeconds": 3,
       "playTTS": false
     },
@@ -2142,7 +2133,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "A_RIGHT_CORRECT",
       "speakerName": "@t=[nurse_c, ???]",
-      "dialogueContent": "오른쪽 다리는 정상 근력인것 같은데..",
+      "dialogueContent": "오른쪽 다리는 정상 근력인 것 같은데요. 우측은 5점으로 고치죠.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -2162,7 +2153,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "A_STRENGTH_WAIT_UPDATE",
       "speakerName": "@s",
-      "dialogueContent": "이 환자 GCS 13점, Motor Grade 우측 5, 좌측3 입니다.",
+      "dialogueContent": "이 환자 GCS 13점, Motor Grade 우측 5, 좌측 3 입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -4331,9 +4322,19 @@
     "C_D_GAUZE_DONE": {
       "identifier": "C_D_GAUZE_DONE",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_D_DELAY",
+      "nextIdentifier": "C_D_PLASTER_PROMPT",
       "speakerName": "@s",
       "dialogueContent": "(거즈를 출혈 부위에 대고 압박 지혈을 시행했다.)",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": 1,
+      "playTTS": false
+    },
+    "C_D_PLASTER_PROMPT": {
+      "identifier": "C_D_PLASTER_PROMPT",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "C_D_DELAY",
+      "speakerName": "@s",
+      "dialogueContent": "(출혈이 멎었다. 거즈 위에 플라스터를 붙이자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 1,
       "playTTS": false
@@ -4374,7 +4375,7 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "C_D_WAIT_UPDATE",
       "speakerName": "@s",
-      "dialogueContent": "(출혈이 멎어, 거즈 위에 플라스터를 붙였다.)",
+      "dialogueContent": "(거즈 위에 플라스터를 붙였다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 1,
       "playTTS": false
@@ -4404,23 +4405,12 @@
     },
     "C_COMPLETE": {
       "identifier": "C_COMPLETE",
-      "nodeType": "DisinteractableDialogue",
+      "nodeType": "Dialogue",
       "nextIdentifier": "CT_DELAY",
       "speakerName": "의사",
       "dialogueContent": "이 환자도 급한 처치는 끝낸 것 같습니다.",
       "portraitSpriteIdentifier": null,
-      "fadeInDuration": {
-        "value": 0.2,
-        "unit": "Seconds"
-      },
-      "displayDuration": {
-        "value": 3,
-        "unit": "Seconds"
-      },
-      "fadeOutDuration": {
-        "value": 0.2,
-        "unit": "Seconds"
-      },
+      "autoAdvanceSeconds": 3,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M1" }
     },

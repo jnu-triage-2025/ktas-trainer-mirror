@@ -310,7 +310,11 @@ namespace TriageTrainer.Tests
       Assert.That(graph.Nodes["P_B_WAIT_REMOVE"].NextIdentifier, Is.EqualTo("DOC_B_COMPLETE"));
       Assert.That(graph.Nodes["P_C_CARE"].NextIdentifier, Is.EqualTo("P_C_WAIT_REMOVE"));
       Assert.That(graph.Nodes["P_C_WAIT_REMOVE"].NextIdentifier, Is.EqualTo("C_COMPLETE"));
-      Assert.That(graph.Nodes["C_COMPLETE"].NextIdentifier, Is.EqualTo("CT_DELAY"));
+      var doctorCComplete = graph.Nodes["C_COMPLETE"] as ScenarioDialogueNode;
+      Assert.That(doctorCComplete, Is.Not.Null,
+        "환자 처치 종료 선언은 남성 환자와 여성 환자 모두 같은 대사 노드 형식을 쓴다.");
+      Assert.That(doctorCComplete.SpeakerName, Is.EqualTo("의사"));
+      Assert.That(doctorCComplete.NextIdentifier, Is.EqualTo("CT_DELAY"));
       Assert.That(graph.Nodes.ContainsKey("P_CT_TRANSPORT"), Is.True);
       Assert.That(graph.Nodes["P_CT_TRANSPORT"].NextIdentifier, Is.EqualTo("CT_DETACH_BEDS"));
       var detachBeds = graph.Nodes["CT_DETACH_BEDS"] as ScenarioInvokeEventNode;
@@ -461,7 +465,8 @@ namespace TriageTrainer.Tests
         (binding.EntityIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
       {
         ("patient_b", "recognition_check"),
-        ("patient_b", PatientController.InteractIdIntravenousLineCannula)
+        ("patient_b", PatientController.InteractIdIntravenousLineCannula),
+        ("patient_b", PatientController.InteractIdNormalSalineConnect)
       }));
       Assert.That(pupilQuest.PresentationBindings[0].CompletionCriteriaIdentifier,
         Is.EqualTo("patient-b-pupil-checked"));
@@ -495,13 +500,20 @@ namespace TriageTrainer.Tests
         + "완료된 퀘스트는 표시 바인딩을 내주지 않아 마크가 뜨지 않는다.");
 
       // 생리식염수 연결 마크는 침대 걸이에 N/S 가 걸려 인터랙션이 살아 있을 때만 보인다.
-      foreach (string salineQuest in new[] { "Quest_C_Pupil_IV", "Quest_C_Normal_Saline" })
+      foreach (var salineQuest in new[]
+               {
+                 (Definition: "Quest_B_Pupil_IV", Entity: "patient_b"),
+                 (Definition: "Quest_B_Normal_Saline", Entity: "patient_b"),
+                 (Definition: "Quest_C_Pupil_IV", Entity: "patient_c"),
+                 (Definition: "Quest_C_Normal_Saline", Entity: "patient_c")
+               })
       {
-        Assert.That(QuestDefinitionRegistry.TryGetGlobal(salineQuest, out var definition), Is.True, salineQuest);
+        Assert.That(QuestDefinitionRegistry.TryGetGlobal(salineQuest.Definition, out var definition), Is.True,
+          salineQuest.Definition);
         Assert.That(definition.PresentationBindings.Any(binding =>
-            binding.EntityIdentifier == "patient_c"
+            binding.EntityIdentifier == salineQuest.Entity
             && binding.InteractionIdentifier == PatientController.InteractIdNormalSalineConnect
-            && binding.Activation == QuestPresentationActivation.WholeQuest), Is.True, salineQuest);
+            && binding.Activation == QuestPresentationActivation.WholeQuest), Is.True, salineQuest.Definition);
       }
 
       Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_C_Strength", out var strengthQuestC), Is.True);
@@ -531,15 +543,18 @@ namespace TriageTrainer.Tests
       }));
 
       Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Oxygen_Bleeding", out var oxygenQuest), Is.True);
+      Assert.That(oxygenQuest.IsOrdinal, Is.True);
       Assert.That(oxygenQuest.PresentationBindings.Select(binding =>
-        (binding.EntityIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
+        (binding.CompletionCriteriaIdentifier, binding.EntityIdentifier, binding.InteractionIdentifier)),
+        Is.EqualTo(new[]
       {
-        ("patient_b", "patient_bc_nasal_cannula"),
-        ("zone_0:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier),
-        ("zone_1:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier),
-        ("zone_2:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier),
-        ("zone_3:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier)
-      }));
+        ("patient-b-oxygen-supplied", "patient_b", "patient_bc_nasal_cannula"),
+        ("patient-b-oxygen-supplied", "zone_0:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier),
+        ("patient-b-oxygen-supplied", "zone_1:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier),
+        ("patient-b-oxygen-supplied", "zone_2:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier),
+        ("patient-b-oxygen-supplied", "zone_3:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier),
+        ("patient-b-bleeding-controlled", "patient_b", PatientController.InteractIdItemApply)
+      }), "남성 환자도 여성 환자와 같이 목표 단위로 마크를 넘기고, 지혈 마크까지 갖춘다.");
       Assert.That(oxygenQuest.PresentationBindings.Any(binding =>
           binding.InteractionIdentifier == WallAttachedOxyflowmeter.DetachInteractionIdentifier), Is.False,
         "산소 유량계 회수에는 퀘스트 마크가 붙어서는 안 된다.");
@@ -550,13 +565,14 @@ namespace TriageTrainer.Tests
       }), "산소 공급과 지혈은 별도 목표로 표기한다.");
       Assert.That(oxygenQuest.Tasks.Select(task => task.DisplayTextContent), Is.EqualTo(new[]
       {
-        "남성 환자에게 산소 공급하기",
-        "남성 환자 지혈하기"
+        "많이 다친 남성 환자에게 산소 공급하기",
+        "많이 다친 남성 환자 지혈하기"
       }));
 
       Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Normal_Saline", out var ivQuest), Is.True);
-      Assert.That(ivQuest.PresentationBindings, Is.Empty);
-      Assert.That(ivQuest.Tasks.Single().SignalId, Is.EqualTo("insert_iv_patient_b_right"));
+      Assert.That(ivQuest.Tasks.Single().SignalId, Is.EqualTo("connect_cannula_and_ns1_patient_b"),
+        "이미 올라간 신호를 목표로 두면 이 정의가 걸리는 순간 퀘스트가 완료로 판정되고, "
+        + "완료된 퀘스트는 표시 바인딩을 내주지 않아 마크가 뜨지 않는다.");
 
       foreach (string nodeIdentifier in new[]
                {
@@ -678,8 +694,8 @@ namespace TriageTrainer.Tests
 
       foreach (var expectation in new[]
                {
-                 (Wait: "C_IV_WAIT", Update: "C_NS_QUEST_UPDATE", Notice: "C_NS_CONNECT_NOTICE", Definition: "Quest_B_Normal_Saline", Content: "남성 환자에게 생리식염수 연결하기"),
-                 (Wait: "C_C_IV_WAIT", Update: "C_C_NS_QUEST_UPDATE", Notice: "C_C_NS_CONNECT_NOTICE", Definition: "Quest_C_Normal_Saline", Content: "여성 환자에게 생리식염수 연결하기")
+                 (Wait: "C_IV_WAIT", Update: "C_NS_QUEST_UPDATE", Notice: "C_NS_CONNECT_NOTICE", Definition: "Quest_B_Normal_Saline", Content: "많이 다친 남성 환자에게 생리식염수 연결하기"),
+                 (Wait: "C_C_IV_WAIT", Update: "C_C_NS_QUEST_UPDATE", Notice: "C_C_NS_CONNECT_NOTICE", Definition: "Quest_C_Normal_Saline", Content: "많이 다친 여성 환자에게 생리식염수 연결하기")
                })
       {
         Assert.That(graph.Nodes[expectation.Wait].NextIdentifier, Is.EqualTo(expectation.Update));
