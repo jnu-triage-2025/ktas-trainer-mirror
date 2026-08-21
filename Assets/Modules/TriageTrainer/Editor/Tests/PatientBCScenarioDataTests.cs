@@ -1097,6 +1097,61 @@ namespace TriageTrainer.Tests
       }
     }
 
+    [TestCase("patient_b")]
+    [TestCase("patient_c")]
+    public void PatientBCOxygenCreditRaisesThePatientSpecificQuestSignal(string patientIdentifier)
+    {
+      var patientObject = new GameObject(patientIdentifier);
+      try
+      {
+        var patient = patientObject.AddComponent<PatientController>();
+        patient.ApplySpawnedEntityIdentifier(patientIdentifier);
+        patient.ActivatePatientBCNurseDStage();
+        InvokePrivate(patient, "NotifyPatientBCItemApplied", "nasalcannula");
+
+        Assert.That(InvokePrivate<bool>(patient, "ShouldCreditPatientBCEquipmentConnection",
+          PatientController.EquipmentTypeOxyflowmeter), Is.True);
+        InvokePrivate(patient, "RaisePatientBCOxygenSuppliedSignals");
+
+        Assert.That(ScenarioInteractionSignals.IsRaised(
+          $"equipment_connected_oxyflowmeter_{patientIdentifier}"), Is.True);
+      }
+      finally
+      {
+        ScenarioInteractionSignals.Clear($"equipment_connected_oxyflowmeter_{patientIdentifier}");
+        Object.DestroyImmediate(patientObject);
+      }
+    }
+
+    [TestCase("patient_b")]
+    [TestCase("patient_c")]
+    public void PatientBCBleedingStagesRaisePatientSpecificQuestSignals(string patientIdentifier)
+    {
+      var patientObject = new GameObject(patientIdentifier);
+      try
+      {
+        var patient = patientObject.AddComponent<PatientController>();
+        patient.ApplySpawnedEntityIdentifier(patientIdentifier);
+        patient.ActivatePatientBCNurseDStage();
+        InvokePrivate(patient, "NotifyPatientBCItemApplied", "nasalcannula");
+        Assert.That(InvokePrivate<bool>(patient, "ShouldCreditPatientBCEquipmentConnection",
+          PatientController.EquipmentTypeOxyflowmeter), Is.True);
+
+        InvokePrivate(patient, "NotifyPatientBCItemApplied", "gauze");
+        Assert.That(ScenarioInteractionSignals.IsRaised($"apply_gauze_{patientIdentifier}"), Is.True);
+
+        InvokePrivate(patient, "NotifyPatientBCItemApplied", "plaster");
+        Assert.That(ScenarioInteractionSignals.IsRaised(
+          $"apply_plaster_on_gauze_{patientIdentifier}"), Is.True);
+      }
+      finally
+      {
+        ScenarioInteractionSignals.Clear($"apply_gauze_{patientIdentifier}");
+        ScenarioInteractionSignals.Clear($"apply_plaster_on_gauze_{patientIdentifier}");
+        Object.DestroyImmediate(patientObject);
+      }
+    }
+
     [Test]
     public void PatientBCPreinstalledOxygenRequiresObservedDetachAndFreshReinstall()
     {

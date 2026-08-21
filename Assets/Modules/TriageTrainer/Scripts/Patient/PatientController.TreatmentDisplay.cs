@@ -105,9 +105,9 @@ namespace TriageTrainer.Entity
     // 추가 매핑하거나 향후 부위 조준으로 확장). 신호는 시나리오 게이트 조건명과 일치시킨다.
     //
     // 환자별 결과 신호(SIGNAL-BC-3): 다수 환자가 같은 처치를 받는 흐름(B/C)에서는 공용 sticky 신호
-    // (예: apply_gauze) 하나로는 B가 올린 신호로 C 게이트가 무행동 통과하는 문제가 있다. 거즈/플라스터의
-    // 환자별 신호는 이 컨트롤러가 직접 만들지 않고, patient_b_c_ct 그래프의 EntityStateSignalBinding 이
-    // TreatmentApplied 상태 전이를 관찰해 발신한다. 따라서 신호의 대상 환자는 Scenario 데이터에서 명시된다.
+    // (예: apply_gauze) 하나로는 B가 올린 신호로 C 게이트가 무행동 통과하는 문제가 있다. 동적
+    // EntityStateSignalBinding도 유지하지만, 처치 단계가 실제로 전환된 권위 경로에서 환자별 신호를
+    // 직접 올려 바인딩 등록 시점에 따라 퀘스트 완료가 누락되지 않게 한다.
     private static readonly Dictionary<string, ItemUseEffect> ItemUseEffects = new()
     {
       // 부착형(시각 표현 동반)
@@ -961,14 +961,16 @@ namespace TriageTrainer.Entity
         ReconcilePatientBCOxygenLine();
         if (_patientBCFreshOxygenInstalled
             && ShouldCreditPatientBCEquipmentConnection(EquipmentTypeOxyflowmeter))
-          RaiseEquipmentStateEvent(EquipmentTypeOxyflowmeter, connected: true);
+          RaisePatientBCOxygenSuppliedSignals();
       }
-      else if (itemIdentifier == "gauze")
-        TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingGauze,
-          PatientBCTreatmentStage.AwaitingPlaster);
-      else if (itemIdentifier == "plaster")
-        TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingPlaster,
-          PatientBCTreatmentStage.Complete);
+      else if (itemIdentifier == "gauze"
+               && TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingGauze,
+                 PatientBCTreatmentStage.AwaitingPlaster))
+        RaisePatientBCBleedingSignal("apply_gauze");
+      else if (itemIdentifier == "plaster"
+               && TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingPlaster,
+                 PatientBCTreatmentStage.Complete))
+        RaisePatientBCBleedingSignal("apply_plaster_on_gauze");
 
       // SyncVar.OnChange 만으로는 부족한 사례가 있어(트리아지 갱신과 동일한 이유),
       // 권위 측에서 단계를 바꾼 직후 이 자리에서도 명시적으로 힌트를 갱신한다.
@@ -1003,13 +1005,16 @@ namespace TriageTrainer.Entity
                            && patientPort != null
                            && flowmeterPort.IsPhysicallyConnectedTo(patientPort);
       bool flowmeterOperated = flowmeter != null && flowmeter.IsAttachedInteractCompleted;
+      bool completionSignalRaised = MI.Scenario.ScenarioInteractionSignals.IsRaised(
+        $"equipment_connected_oxyflowmeter_{Identifier}");
       return $"  B/C oxygen treatment: stage={_patientBCNurseDStage.Value}, "
              + $"requiresDetach={_patientBCRequiresOxygenDetach}, "
              + $"observedDetach={_patientBCObservedOxygenDetach}, "
              + $"flowmeterAttached={flowmeter != null && flowmeter.IsAttached}, "
              + $"flowmeterOperated={flowmeterOperated}, "
              + $"patientPortActive={OxygenMaskAttachmentPoint != null}, "
-             + $"physicalLineConnected={lineConnected}\n";
+             + $"physicalLineConnected={lineConnected}, "
+             + $"completionSignalRaised={completionSignalRaised}\n";
     }
 
     private bool ShouldCreditPatientBCEquipmentConnection(string equipmentType)
@@ -1048,7 +1053,26 @@ namespace TriageTrainer.Entity
       if (!ShouldCreditPatientBCEquipmentConnection(EquipmentTypeOxyflowmeter))
         return;
 
+      RaisePatientBCOxygenSuppliedSignals();
+    }
+
+    /// <summary>
+    /// 실제 산소 라인 연결로 B/C 환자 산소 처치가 완료된 뒤, 상태 이벤트와 환자별 완료
+    /// 신호를 함께 올린다. 동적 상태 이벤트 바인딩이 없는 시점에도 퀘스트 완료가 누락되지
+    /// 않도록 신호를 직접 발신한다.
+    /// </summary>
+    private void RaisePatientBCOxygenSuppliedSignals()
+    {
       RaiseEquipmentStateEvent(EquipmentTypeOxyflowmeter, connected: true);
+      MI.Scenario.ScenarioInteractionSignals.Raise($"equipment_connected_oxyflowmeter_{Identifier}");
+    }
+
+    private void RaisePatientBCBleedingSignal(string signalPrefix)
+    {
+      if (!IsPatientBC || string.IsNullOrWhiteSpace(signalPrefix))
+        return;
+
+      MI.Scenario.ScenarioInteractionSignals.Raise($"{signalPrefix}_{Identifier}");
     }
 
     private void NotifyPatientBCEquipmentDisconnected(string equipmentType, MonoBehaviour equipment)
@@ -1231,7 +1255,7 @@ namespace TriageTrainer.Entity
       using (MI.Scenario.ScenarioSignalPlayerContext.Push(actorIdentifier, actorDisplayName))
       {
         if (ShouldCreditPatientBCEquipmentConnection(EquipmentTypeOxyflowmeter))
-          RaiseEquipmentStateEvent(EquipmentTypeOxyflowmeter, connected: true);
+          RaisePatientBCOxygenSuppliedSignals();
       }
     }
 
