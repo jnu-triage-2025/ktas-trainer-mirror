@@ -198,7 +198,8 @@ namespace MultiplayerInfrastructure.Scenario
             || node is ScenarioSignalCounterNode
             || node is ScenarioEntityStateSignalBindingNode
             || node is ScenarioStateUpdateNode
-            || node is ScenarioNPCControlNode)
+            || node is ScenarioNPCControlNode
+            || node is ScenarioManualEntrypointNode)
           continue;
 
         unsupportedNode = node;
@@ -238,6 +239,99 @@ namespace MultiplayerInfrastructure.Scenario
           return;
         }
       }
+    }
+
+    /// <summary>
+    /// 지정한 시나리오가 발행한 퀘스트만 모든 피어에서 제거한다. QuestManager 는 피어마다 따로
+    /// 들고 있어서 서버에서 지우는 것만으로는 클라이언트 화면의 퀘스트가 남는다.
+    /// </summary>
+    /// <param name="scenarioIdentifier">
+    /// 대상 시나리오 식별자. 비어 있으면 출처를 가릴 수 없으므로 아무것도 지우지 않는다.
+    /// </param>
+    public static void ClearScenarioQuestsAuthoritative(string scenarioIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(scenarioIdentifier))
+      {
+        Debug.LogWarning("[ScenarioNetworkRelay] Skipped quest clear: scenario identifier is missing.");
+        return;
+      }
+
+      ClearScenarioQuestsLocal(scenarioIdentifier);
+
+      if (_instance != null && InstanceFinder.IsServerStarted)
+        _instance.ObserversClearScenarioQuests(scenarioIdentifier);
+    }
+
+    // ExcludeServer: 호스트는 바로 위에서 이미 로컬로 지웠다. RPC 는 전송 큐를 거쳐 한 틱 뒤에
+    // 도착하므로, 호스트가 이것까지 받으면 그 사이 준비 체인이 새로 발행한 퀘스트를 지워 버린다.
+    [ObserversRpc(BufferLast = false, ExcludeServer = true)]
+    private void ObserversClearScenarioQuests(string scenarioIdentifier)
+      => ClearScenarioQuestsLocal(scenarioIdentifier);
+
+    /// <summary>
+    /// 이 피어의 QuestManager 에서 해당 시나리오가 발행한 퀘스트만 제거한다.
+    /// 튜토리얼 리졸버 등 시나리오 밖 출처가 등록한 퀘스트는 건드리지 않는다.
+    /// </summary>
+    private static void ClearScenarioQuestsLocal(string scenarioIdentifier)
+    {
+      var manager = Registry.Registry.Get<Quest.QuestManager>(
+        RegistryType.Service, Registry.Registry.TypeKey<Quest.QuestManager>());
+      if (manager == null)
+        return;
+
+      // Quests 는 스냅샷이지만, RemoveQuest 가 내부 컬렉션을 바꾸므로 식별자를 먼저 모아 둔다.
+      var targets = manager.Quests
+        .Where(quest => quest != null
+                        && !string.IsNullOrWhiteSpace(quest.Id)
+                        && string.Equals(quest.SourceScenarioIdentifier, scenarioIdentifier, StringComparison.Ordinal))
+        .Select(quest => quest.Id)
+        .ToList();
+
+      foreach (var questId in targets)
+        manager.RemoveQuest(questId);
+    }
+
+    /// <summary>
+    /// 호환 실행 경로(대상 클라이언트마다 독립 상태기가 도는 구성)에서 모든 피어가 각자
+    /// 같은 지점으로 건너뛰게 한다. 서버 권위 실행 중이면 서버 커서 하나만 옮기면 되므로
+    /// 이 브로드캐스트를 쓰지 않는다.
+    /// </summary>
+    /// <returns>브로드캐스트를 실제로 보냈으면 true.</returns>
+    public static bool BroadcastManualEntry(string entrypointIdentifier, bool clearState)
+    {
+      if (_instance == null || !InstanceFinder.IsServerStarted || string.IsNullOrWhiteSpace(entrypointIdentifier))
+        return false;
+
+      _instance.ObserversEnterManualEntrypoint(entrypointIdentifier, clearState);
+      return true;
+    }
+
+    // ExcludeServer: 호스트는 자기 상태기를 호출부에서 직접 옮긴다.
+    [ObserversRpc(BufferLast = false, ExcludeServer = true)]
+    private void ObserversEnterManualEntrypoint(string entrypointIdentifier, bool clearState)
+    {
+      if (ScenarioController.Instance != null)
+        ScenarioController.Instance.EnterManualEntrypointFromRelay(entrypointIdentifier, clearState);
+    }
+
+    /// <summary>
+    /// 서버가 재생 위치를 건너뛰었을 때 표시 피어에 남은 대화 UI 를 내리게 한다.
+    /// </summary>
+    public static void DismissAuthoritativePresentation(string graphIdentifier)
+    {
+      if (_instance == null || !InstanceFinder.IsServerStarted || string.IsNullOrWhiteSpace(graphIdentifier))
+        return;
+
+      _instance.ObserversDismissPresentationUI(graphIdentifier);
+    }
+
+    // ExcludeServer: 호스트는 스킵 시점에 이미 로컬 UI 를 내렸다. 한 틱 뒤 도착하는 RPC 까지
+    // 받으면 그 사이 준비 체인이 띄운 대화창을 다시 닫아 버린다.
+    [ObserversRpc(BufferLast = false, ExcludeServer = true)]
+    private void ObserversDismissPresentationUI(string graphIdentifier)
+    {
+      if (ScenarioController.Instance != null)
+        ScenarioController.Instance.DismissPresentationUI(graphIdentifier);
     }
 
     /// <summary>서버가 권위 시나리오의 종료를 표시 참여자에게 전달한다.</summary>

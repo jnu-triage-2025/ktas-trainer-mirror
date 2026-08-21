@@ -58,6 +58,7 @@ namespace MultiplayerInfrastructure.Scenario
         "TimeControl" => Deserialize<ScenarioTimeControlNodeDTO>(root, options),
         "EntityStateSignalBinding" => Deserialize<ScenarioEntityStateSignalBindingNodeDTO>(root, options),
         "SignalCounter" => Deserialize<ScenarioSignalCounterNodeDTO>(root, options),
+        "ManualEntrypoint" => Deserialize<ScenarioManualEntrypointNodeDTO>(root, options),
         _ => throw new JsonException($"Unknown nodeType '{nodeType}'.")
       };
     }

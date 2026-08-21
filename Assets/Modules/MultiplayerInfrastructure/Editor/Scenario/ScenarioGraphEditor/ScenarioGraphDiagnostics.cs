@@ -149,6 +149,64 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioTimeControlNode timeControl:
           CheckTimeControl(timeControl, items);
           break;
+        case ScenarioManualEntrypointNode manualEntrypoint:
+          CheckManualEntrypoint(manualEntrypoint, nodeIds, graph, items);
+          break;
+      }
+    }
+
+    private static void CheckManualEntrypoint(
+        ScenarioManualEntrypointNode node,
+        HashSet<string> nodeIds,
+        ScenarioGraph graph,
+        List<DiagnosticItem> items)
+    {
+      if (!string.IsNullOrEmpty(node.ManualEnterSetupIdentifier)
+          && !nodeIds.Contains(node.ManualEnterSetupIdentifier))
+      {
+        items.Add(new DiagnosticItem(Severity.Error, node.Identifier,
+          $"manualEnterSetupIdentifier '{node.ManualEnterSetupIdentifier}' 가 존재하지 않는 노드를 참조합니다."));
+      }
+
+      // 준비 체인이 자기 자신에서 시작하면 진입할 때마다 같은 노드를 두 번 밟는다.
+      if (string.Equals(node.ManualEnterSetupIdentifier, node.Identifier, StringComparison.Ordinal))
+      {
+        items.Add(new DiagnosticItem(Severity.Error, node.Identifier,
+          "manualEnterSetupIdentifier가 자기 자신을 가리킵니다."));
+      }
+
+      // 준비 체인의 첫 노드가 Next 와 같으면 진입 직후 그 노드를 두 번 밟는다.
+      if (!string.IsNullOrEmpty(node.ManualEnterSetupIdentifier)
+          && string.Equals(node.ManualEnterSetupIdentifier, node.NextIdentifier, StringComparison.Ordinal))
+      {
+        items.Add(new DiagnosticItem(Severity.Warning, node.Identifier,
+          $"manualEnterSetupIdentifier가 nextIdentifier와 같습니다('{node.NextIdentifier}'). 수동 진입 시 이 노드를 두 번 실행합니다."));
+      }
+
+      // clear-state=true 는 상태 저장소를 통째로 비운다. 그 저장소가 엔티티 해석 표를 겸하므로,
+      // 표를 채우는 노드가 있는 그래프에서 준비 체인이 없으면 진입 후 대상 조회가 전부 실패한다.
+      if (string.IsNullOrEmpty(node.ManualEnterSetupIdentifier)
+          && graph.Nodes.Values.Any(each => each is ScenarioEntityPresetSpawnNode
+                                            or ScenarioEntityInitNode
+                                            or ScenarioItemSubmissionConfigNode))
+      {
+        items.Add(new DiagnosticItem(Severity.Info, node.Identifier,
+          "manualEnterSetupIdentifier가 없습니다. 이 그래프는 resultStateKey로 엔티티를 등록하는데, "
+          + "clear-state=true로 진입하면 그 해석 표가 비워집니다. 준비 체인에서 다시 채워 주세요."));
+      }
+
+      // 명령이 별칭 하나로 지점을 특정해야 하므로 중복은 허용하지 않는다.
+      string alias = node.ResolvedEntrypointIdentifier;
+      if (string.IsNullOrWhiteSpace(alias))
+        return;
+
+      int duplicateCount = graph.Nodes.Values
+        .OfType<ScenarioManualEntrypointNode>()
+        .Count(each => string.Equals(each.ResolvedEntrypointIdentifier, alias, StringComparison.OrdinalIgnoreCase));
+      if (duplicateCount > 1)
+      {
+        items.Add(new DiagnosticItem(Severity.Error, node.Identifier,
+          $"ManualEntrypoint 별칭 '{alias}' 가 {duplicateCount}개 노드에서 중복됩니다."));
       }
     }
 
@@ -605,6 +663,8 @@ namespace MultiplayerInfrastructure.Editor
           if (!string.IsNullOrEmpty(q.OnCorrectNextIdentifier)) referenced.Add(q.OnCorrectNextIdentifier);
           if (!string.IsNullOrEmpty(q.OnIncorrectNextIdentifier)) referenced.Add(q.OnIncorrectNextIdentifier);
         }
+        if (node is ScenarioManualEntrypointNode me && !string.IsNullOrEmpty(me.ManualEnterSetupIdentifier))
+          referenced.Add(me.ManualEnterSetupIdentifier);
       }
 
       var entryNodes = nodeIds.Except(referenced).ToList();

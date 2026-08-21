@@ -187,6 +187,7 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingNpcInteractControl,
       ExecutingTimeControl,
       ExecutingDisinteractableDialogue,
+      ExecutingManualEntrypoint,
     }
 
     [SerializeField] private State _state = State.Inactive;
@@ -1151,6 +1152,331 @@ namespace MultiplayerInfrastructure.Scenario
 
     #endregion
 
+    #region Manual entrypoint
+
+    /// <summary>
+    /// 현재 그래프가 선언한 ManualEntrypoint 별칭을 순서 없이 모아 반환한다.
+    /// 명령 자동완성과 오류 안내에 쓴다.
+    /// </summary>
+    public IReadOnlyList<string> GetManualEntrypointIdentifiers()
+      => CollectManualEntrypointIdentifiers(_currentGraph);
+
+    /// <summary>그래프에서 ManualEntrypoint 별칭만 뽑아낸다.</summary>
+    public static IReadOnlyList<string> CollectManualEntrypointIdentifiers(ScenarioGraph graph)
+    {
+      var result = new List<string>();
+      if (graph == null)
+        return result;
+
+      foreach (var node in graph.Nodes.Values)
+      {
+        if (node is ScenarioManualEntrypointNode entrypoint
+            && !string.IsNullOrWhiteSpace(entrypoint.ResolvedEntrypointIdentifier))
+        {
+          result.Add(entrypoint.ResolvedEntrypointIdentifier);
+        }
+      }
+
+      return result;
+    }
+
+    /// <summary>
+    /// 별칭(<c>entrypointIdentifier</c>) 또는 노드 식별자로 ManualEntrypoint 노드를 찾는다.
+    /// 별칭이 먼저이고, 없으면 노드 식별자로 한 번 더 찾는다.
+    /// </summary>
+    public static bool TryFindManualEntrypoint(
+      ScenarioGraph graph,
+      string entrypointIdentifier,
+      out ScenarioManualEntrypointNode entrypoint)
+    {
+      entrypoint = null;
+      if (graph == null || string.IsNullOrWhiteSpace(entrypointIdentifier))
+        return false;
+
+      string wanted = entrypointIdentifier.Trim();
+
+      foreach (var node in graph.Nodes.Values)
+      {
+        if (node is ScenarioManualEntrypointNode candidate
+            && string.Equals(candidate.ResolvedEntrypointIdentifier, wanted, StringComparison.OrdinalIgnoreCase))
+        {
+          entrypoint = candidate;
+          return true;
+        }
+      }
+
+      foreach (var node in graph.Nodes.Values)
+      {
+        if (node is ScenarioManualEntrypointNode candidate
+            && string.Equals(candidate.Identifier, wanted, StringComparison.OrdinalIgnoreCase))
+        {
+          entrypoint = candidate;
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    /// <summary>
+    /// 이 피어가 그래프를 서버 권위로 순회하고 있는지. true 면 나머지 피어는 표시 전용이라
+    /// 서버 커서만 옮기면 되고, false 면 각 피어가 자기 상태기를 직접 옮겨야 한다
+    /// (호환 실행 경로에서는 대상 클라이언트마다 독립 상태기가 돈다).
+    /// </summary>
+    public bool IsAuthoritativeExecutor
+      => _executionMode == ExecutionMode.ServerAuthoritative && _currentGraph != null;
+
+    /// <summary>
+    /// 호환 실행 경로에서 서버 브로드캐스트를 받아 이 피어의 상태기를 직접 옮긴다.
+    /// 서버 권위 실행 중인 피어와 표시 전용 피어는 서버 커서를 따라가므로 무시한다.
+    /// </summary>
+    internal void EnterManualEntrypointFromRelay(string entrypointIdentifier, bool clearState)
+    {
+      if (_executionMode != ExecutionMode.Local || _currentGraph == null)
+        return;
+
+      if (!TryEnterManualEntrypoint(entrypointIdentifier, clearState, out string error))
+        Debug.LogWarning($"[ScenarioController] Relayed manual entry was rejected: {error}");
+    }
+
+    /// <summary>
+    /// 재생 위치를 ManualEntrypoint 노드로 옮긴다. 진행 중이던 노드/브랜치 코루틴은 모두 중단된다.
+    /// </summary>
+    /// <param name="entrypointIdentifier">ManualEntrypoint 노드의 별칭 또는 식별자.</param>
+    /// <param name="clearState">
+    /// true 면 지금까지 쌓인 시나리오 상태(상태값·신호·카운터·타이머·발행된 퀘스트)를 먼저 비운다.
+    /// </param>
+    /// <param name="error">실패했을 때 사용자에게 보여줄 사유.</param>
+    public bool TryEnterManualEntrypoint(string entrypointIdentifier, bool clearState, out string error)
+    {
+      error = string.Empty;
+
+      if (string.IsNullOrWhiteSpace(entrypointIdentifier))
+      {
+        error = "Entrypoint identifier is required.";
+        return false;
+      }
+
+      if (_currentGraph == null)
+      {
+        error = "No scenario is currently playing.";
+        return false;
+      }
+
+      // 표시 전용 피어는 그래프 커서를 소유하지 않으므로 진입 지점을 옮길 수 없다.
+      if (_executionMode == ExecutionMode.ClientPresentation)
+      {
+        error = "Manual entry is only available on the scenario-executing peer.";
+        return false;
+      }
+
+      if (!TryFindManualEntrypoint(_currentGraph, entrypointIdentifier, out var entrypoint))
+      {
+        var available = GetManualEntrypointIdentifiers();
+        error = available.Count == 0
+          ? $"Scenario '{_currentGraph.Identifier}' declares no manual entrypoint."
+          : $"Manual entrypoint '{entrypointIdentifier}' not found. Available: {string.Join(", ", available)}";
+        return false;
+      }
+
+      if (!string.IsNullOrWhiteSpace(entrypoint.ManualEnterSetupIdentifier)
+          && !_currentGraph.TryGetNode(entrypoint.ManualEnterSetupIdentifier, out _))
+      {
+        error = $"Manual entrypoint '{entrypoint.ResolvedEntrypointIdentifier}' points at a missing setup node "
+                + $"'{entrypoint.ManualEnterSetupIdentifier}'.";
+        return false;
+      }
+
+      // 코루틴 정리가 새로 띄울 진입 코루틴까지 잡아먹지 않도록 중단을 먼저 끝낸다.
+      AbortActiveExecutionForManualEntry();
+
+      if (clearState)
+        ClearRuntimeStateForManualEntry();
+
+      Debug.Log($"[ScenarioController] Manual entry into '{entrypoint.ResolvedEntrypointIdentifier}' "
+                + $"(node='{entrypoint.Identifier}', clearState={clearState})");
+      try
+      {
+        GameLogService.WriteScenario(
+          $"Manual entry: entrypoint={entrypoint.ResolvedEntrypointIdentifier}, node={entrypoint.Identifier}, "
+          + $"clearState={clearState}, graph={_currentGraph.Identifier}",
+          _currentGraph.Identifier);
+      }
+      catch { /* 로그 실패는 진입 처리에 영향 없음 */ }
+
+      StartCoroutine(ManualEntryRoutine(entrypoint));
+      return true;
+    }
+
+    /// <summary>
+    /// 준비 체인을 먼저 돌린 뒤 ManualEntrypoint 노드부터 본 흐름을 이어간다.
+    /// </summary>
+    private IEnumerator ManualEntryRoutine(ScenarioManualEntrypointNode entrypoint)
+    {
+      // 준비 체인이 도는 동안에도 커서는 이미 이 노드다. 체인이 대기하는 사이 들어온 진행 요청이
+      // 스킵 이전 노드의 next 로 흘러가 본 흐름과 준비 체인이 겹쳐 도는 것을 막는다.
+      _currentNode = entrypoint;
+
+      if (!string.IsNullOrWhiteSpace(entrypoint.ManualEnterSetupIdentifier)
+          && _currentGraph != null
+          && _currentGraph.TryGetNode(entrypoint.ManualEnterSetupIdentifier, out var setupStart))
+      {
+        // RunWithGlobalAdvanceSuppressed 는 각 MoveNext 순간에만 억제하므로 체인이 yield 로
+        // 대기하는 동안에는 풀린다. 병렬 노드와 같은 방식으로 전역 진행 자체를 막아 둔다.
+        // (강제 중단으로 finally 를 못 거쳐도 EndScenario/StartScenarioInternal/
+        //  AbortActiveExecutionForManualEntry 가 카운터를 0 으로 되돌린다.)
+        _parallelAdvanceBlockDepth++;
+        try
+        {
+          // 준비 체인은 전역 커서를 건드리면 안 되므로 병렬 브랜치와 같은 자가완결 실행기로 돌린다.
+          // 체인이 이 노드나 이 노드의 다음 노드로 이어지면 거기서 멈추고 제어가 돌아온다.
+          yield return RunBranchChain(
+            setupStart,
+            entrypoint.Identifier,
+            entrypoint.NextIdentifier,
+            _scenarioOwnerClientId);
+        }
+        finally
+        {
+          ReleaseParallelAdvanceBlock();
+        }
+      }
+
+      if (_currentGraph == null)
+        yield break;
+
+      _currentNode = entrypoint;
+      ExecuteNode(entrypoint);
+    }
+
+    /// <summary>진행 중이던 노드·브랜치·대화 UI 점유를 모두 끊는다.</summary>
+    private void AbortActiveExecutionForManualEntry()
+    {
+      CancelDialogueAutoAdvance();
+      CancelInlineTTSPrewarm();
+      CompleteNodeVisit(_activeMainNodeVisitSequence);
+      CompleteOpenNodeVisits();
+      _activeMainNodeVisitSequence = 0;
+
+      StopAllCoroutines();
+
+      // 강제 중단된 코루틴은 finally 를 못 거치므로 억제 카운터를 직접 되돌린다.
+      _globalAdvanceSuppressionDepth = 0;
+      _parallelAdvanceBlockDepth = 0;
+      _activeRoleBranchDepthByClientId.Clear();
+
+      _branchOptionInterceptor = null;
+      _branchDialogueAdvanceInterceptors.Clear();
+      _branchPromptActive = false;
+      _activeRemoteBranchPromptClients.Clear();
+      _branchDialogueActive = false;
+      _activeRemoteBranchDialogueClients.Clear();
+      _remoteBranchChoiceSelections.Clear();
+
+      ClearOptions();
+      _state = State.Inactive;
+
+      // 표시 중이던 대화창을 실제로 내린다. ClearDialogueOwner 는 점유자 문자열만 지우기 때문에,
+      // 이것만으로는 패널과 입력 대기 상태가 살아남아 스킵 직후 노드에 Advance 가 꽂힌다
+      // (대기 중인 Validator 게이트가 조건 미충족으로 통과되는 경로).
+      DismissDialogueSurfaces();
+
+      // 표시 전용 피어에도 같은 정리를 시킨다. 다음 노드가 UI 를 쓰지 않는 종류면
+      // 클라이언트 화면에 스킵 이전 대화가 그대로 남는다.
+      if (_executionMode == ExecutionMode.ServerAuthoritative && _currentGraph != null)
+        ScenarioNetworkRelay.DismissAuthoritativePresentation(_currentGraph.Identifier);
+
+      // 중단으로 날아간 인라인 TTS 선합성을 다시 걸어 둔다.
+      // 베이크 WAV 와 이미 캐시된 텍스트는 서비스가 건너뛰므로 재합성 비용은 없다.
+      StartInlineTTSPrewarm(_currentGraph);
+    }
+
+    /// <summary>대화창 계열 UI 를 내리고 입력 대기 상태를 푼다.</summary>
+    private void DismissDialogueSurfaces()
+    {
+      if (_uiController.IsUnityNull())
+        return;
+
+      // 대화창이 실제로 떠 있을 때만 해제한다. 그냥 부르면 힌트 UI 가 Dialogue 모드가 아닌데도
+      // ExitDialogueMode 가 불려 경고만 남기고 빈 캐시로 힌트 목록을 덮어쓴다.
+      bool dialogueEngaged = _uiController.IsWaitingForInput
+                             || _uiController.IsTyping
+                             || _uiController.HasActiveSelections
+                             || !string.IsNullOrEmpty(_uiController.CurrentDialogueOwner);
+      if (dialogueEngaged)
+        _uiController.DismissPresentationNode();
+
+      _uiController.HideDisinteractableDialogue();
+      _uiController.ClearDialogueOwner();
+
+      if (!dialogueEngaged)
+        return;
+
+      // EndScenario 와 같은 이유로, 대화 모드에서 빠져나온 직후 월드 상호작용 힌트를
+      // 현재 상태로 다시 인식시킨다. 복원 캐시가 실제 근처 상황과 어긋날 수 있다.
+      var localPlayer = Registry.Registry.GetFirstEntityComponent<PlayerController>(
+        EntityType.Player, each => each != null && each.IsOwner);
+      localPlayer?.RefreshInteractableHintsNow();
+    }
+
+    /// <summary>
+    /// 서버가 재생 위치를 옮겼을 때 표시 피어에 남은 대화 UI 를 내린다.
+    /// <see cref="ScenarioNetworkRelay.DismissAuthoritativePresentation"/> 가 호출한다.
+    /// </summary>
+    public void DismissPresentationUI(string graphIdentifier)
+    {
+      // 그래프를 직접 순회하는 피어는 스킵 시점에 동기적으로 정리를 끝냈다. 여기서 또 손대면
+      // 그 사이 진행된 노드의 표시를 되돌린다(RPC 는 ExcludeServer 로도 막지만 이중 방어).
+      if (_executionMode != ExecutionMode.ClientPresentation)
+        return;
+
+      if (_currentGraph == null
+          || !string.Equals(_currentGraph.Identifier, graphIdentifier, StringComparison.Ordinal))
+        return;
+
+      CancelDialogueAutoAdvance();
+      ClearOptions();
+
+      // 표시 피어의 커서는 서버가 보낸 노드를 되돌려 보내는 용도뿐이다. 스킵으로 무효가 됐으므로
+      // 비워 두면 잔여 UI 에서 올라온 입력이 서버로 나가지 않는다.
+      _currentNode = null;
+      _currentPresentationNodeRoleScoped = false;
+      _state = State.Inactive;
+
+      DismissDialogueSurfaces();
+    }
+
+    /// <summary>건너뛴 구간이 남긴 시나리오 상태를 비운다.</summary>
+    private void ClearRuntimeStateForManualEntry()
+    {
+      _stateStore.Clear();
+      _reportedTagGateBypasses.Clear();
+
+      ScenarioInteractionSignals.ClearAllInternalSignals();
+      ScenarioInteractionSignals.ClearAllRaisedSignals();
+      ScenarioNetworkRelay.FlushSignalParametersAuthoritative();
+      ScenarioConditionalSignalListeners.ClearAll();
+      ScenarioEntityStateSignalBindings.ClearAll();
+      ScenarioSignalCounters.ClearAll();
+      ScenarioTimeRelay.ClearAllAuthoritative();
+      ScenarioNetworkRelay.ClearScenarioQuestsAuthoritative(_currentGraph?.Identifier);
+
+      if (_currentGraph != null)
+        ScenarioParallelAssignmentState.ClearGraph(_currentGraph.Identifier);
+    }
+
+    /// <summary>
+    /// 일반 재생에서는 표식일 뿐이라 아무것도 하지 않고 다음 노드로 넘어간다.
+    /// 준비 체인은 <see cref="TryEnterManualEntrypoint"/> 로 진입했을 때만 실행된다.
+    /// </summary>
+    private void ExecuteManualEntrypointNode(ScenarioManualEntrypointNode node)
+    {
+      _state = State.ExecutingManualEntrypoint;
+      Advance();
+    }
+
+    #endregion
+
     #region Scenario text and assessment log
 
     private string ResolveScenarioText(string value, int? explicitClientId = null)
@@ -1330,6 +1656,9 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioTimeControlNode timeControl:
           ExecuteTimeControlNode(timeControl);
+          break;
+        case ScenarioManualEntrypointNode manualEntrypoint:
+          ExecuteManualEntrypointNode(manualEntrypoint);
           break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type: {node.GetType().Name}");
@@ -4719,6 +5048,9 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioParallelNode nestedParallel:
           // 중첩 병렬: 내부 브랜치 완료까지 대기(말미의 전역 Advance 는 억제됨).
           yield return ExecuteParallelNode(nestedParallel);
+          break;
+        case ScenarioManualEntrypointNode:
+          // 표식일 뿐이라 브랜치 안에서는 통과시킨다. 준비 체인은 명령 진입 경로에서만 돈다.
           break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type in branch chain: {node.GetType().Name} (id='{node.Identifier}'). Skipping.");

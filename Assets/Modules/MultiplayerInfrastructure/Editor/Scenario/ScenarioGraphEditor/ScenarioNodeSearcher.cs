@@ -297,6 +297,12 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioCameraTargetNode cam:
           Add("targetObjectIdentifier", cam.TargetObjectIdentifier);
           break;
+
+        case ScenarioManualEntrypointNode me:
+          Add("entrypointIdentifier",       me.EntrypointIdentifier);
+          Add("manualEnterSetupIdentifier", me.ManualEnterSetupIdentifier);
+          Add("description",                me.Description);
+          break;
       }
     }
 

@@ -368,7 +368,8 @@
             "TimeControl",
             "DisinteractableDialogue",
             "EntityStateSignalBinding",
-            "SignalCounter"
+            "SignalCounter",
+            "ManualEntrypoint"
           ]
         }
       },
@@ -854,6 +855,21 @@
           },
           "then": {
             "$ref": "#/$defs/ScenarioExecuteCommandNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "ManualEntrypoint"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioManualEntrypointNode"
           }
         }
       ]
@@ -3903,6 +3919,40 @@
           "required": [
             "commandLine"
           ]
+        }
+      ]
+    },
+    "ScenarioManualEntrypointNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "ManualEntrypoint"
+            },
+            "entrypointIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            },
+            "manualEnterSetupIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
         }
       ]
     }

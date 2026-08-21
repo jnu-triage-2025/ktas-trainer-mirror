@@ -1320,6 +1320,19 @@ namespace MultiplayerInfrastructure.Editor
             quiz.OnIncorrectNextIdentifier = null;
           }
         }
+
+        // 링크가 아닌 텍스트 참조도 함께 끊는다. 남겨 두면 저장은 되지만 런타임에서
+        // 대상 노드를 찾지 못한다.
+        if (other is ScenarioManualEntrypointNode manualEntrypoint
+            && manualEntrypoint.ManualEnterSetupIdentifier == id)
+        {
+          manualEntrypoint.ManualEnterSetupIdentifier = null;
+        }
+
+        if (other is ScenarioValidatorNode validator && validator.FailureNextIdentifier == id)
+        {
+          validator.FailureNextIdentifier = null;
+        }
       }
 
       inspectorView.SetTarget(null);
@@ -1397,6 +1410,19 @@ namespace MultiplayerInfrastructure.Editor
           {
             quiz.OnIncorrectNextIdentifier = trimmed;
           }
+        }
+
+        // 링크가 아닌 텍스트 참조도 새 식별자를 따라가야 한다. 빠뜨리면 rename 만으로
+        // 조용히 끊긴다.
+        if (node is ScenarioManualEntrypointNode manualEntrypoint
+            && manualEntrypoint.ManualEnterSetupIdentifier == oldId)
+        {
+          manualEntrypoint.ManualEnterSetupIdentifier = trimmed;
+        }
+
+        if (node is ScenarioValidatorNode validator && validator.FailureNextIdentifier == oldId)
+        {
+          validator.FailureNextIdentifier = trimmed;
         }
       }
 

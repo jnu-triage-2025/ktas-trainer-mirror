@@ -1,0 +1,76 @@
+{
+  "identifier": "manual_entrypoint_debug",
+  "defaultEntrypoint": "intro_print",
+  "tags": [],
+  "nodes": {
+    "intro_print": {
+      "identifier": "intro_print",
+      "nodeType": "ChatPrint",
+      "message": "[수동 진입 디버그] /scenario enter phase_two 로 2단계까지 건너뛸 수 있습니다. 상태를 남기려면 /scenario enter phase_two clear-state=false 를 쓰세요.",
+      "targets": "UnityConsole, InGameChat",
+      "broadcast": true,
+      "nextIdentifier": "phase_one_state"
+    },
+    "phase_one_state": {
+      "identifier": "phase_one_state",
+      "nodeType": "StateUpdate",
+      "targetEntityIdentifier": null,
+      "stateKey": "debug.phase",
+      "stateValue": "one",
+      "nextIdentifier": "wait_phase_one"
+    },
+    "wait_phase_one": {
+      "identifier": "wait_phase_one",
+      "nodeType": "Validator",
+      "rootConditions": [
+        {
+          "condition": "RegistryContains",
+          "validationRules": [
+            {
+              "type": "Registry",
+              "condition": "Contains",
+              "registryType": "RuntimeState",
+              "registryIdentifier": "sig.phase_one_done"
+            }
+          ]
+        }
+      ],
+      "onFailure": "Ignore",
+      "failureNextIdentifier": null,
+      "waitForCondition": true,
+      "nextIdentifier": "phase_two"
+    },
+    "phase_two": {
+      "identifier": "phase_two",
+      "nodeType": "ManualEntrypoint",
+      "entrypointIdentifier": "phase_two",
+      "manualEnterSetupIdentifier": "catch_up_print",
+      "description": "1단계를 건너뛰고 2단계부터 보고 싶을 때 쓰는 지점.",
+      "nextIdentifier": "phase_two_print"
+    },
+    "catch_up_print": {
+      "identifier": "catch_up_print",
+      "nodeType": "ChatPrint",
+      "message": "[수동 진입 디버그] 준비 체인 실행: 건너뛴 1단계가 남겼어야 할 상태를 여기서 맞춥니다.",
+      "targets": "UnityConsole, InGameChat",
+      "broadcast": true,
+      "nextIdentifier": "catch_up_state"
+    },
+    "catch_up_state": {
+      "identifier": "catch_up_state",
+      "nodeType": "StateUpdate",
+      "targetEntityIdentifier": null,
+      "stateKey": "debug.phase",
+      "stateValue": "one_skipped",
+      "nextIdentifier": "phase_two"
+    },
+    "phase_two_print": {
+      "identifier": "phase_two_print",
+      "nodeType": "ChatPrint",
+      "message": "[수동 진입 디버그] 2단계 진입. 일반 재생으로 왔든 명령으로 건너뛰어 왔든 여기서 만납니다.",
+      "targets": "UnityConsole, InGameChat",
+      "broadcast": true,
+      "nextIdentifier": null
+    }
+  }
+}

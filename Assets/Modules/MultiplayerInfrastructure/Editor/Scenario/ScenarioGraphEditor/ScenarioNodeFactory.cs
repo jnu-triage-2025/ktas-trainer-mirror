@@ -77,6 +77,7 @@ namespace MultiplayerInfrastructure.Editor
       ScenarioNodeType.TimeControl => new ScenarioTimeControlNode(),
       ScenarioNodeType.EntityStateSignalBinding => new ScenarioEntityStateSignalBindingNode(),
       ScenarioNodeType.SignalCounter => new ScenarioSignalCounterNode(),
+      ScenarioNodeType.ManualEntrypoint => new ScenarioManualEntrypointNode(),
       _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
   }

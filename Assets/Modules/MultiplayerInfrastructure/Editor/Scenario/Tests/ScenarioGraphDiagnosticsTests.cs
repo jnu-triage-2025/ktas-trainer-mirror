@@ -8,6 +8,109 @@ namespace MultiplayerInfrastructure.Tests.Scenario
   public sealed class ScenarioGraphDiagnosticsTests
   {
     [Test]
+    public void ManualEntrypointReportsMissingSetupNode()
+    {
+      var graph = new ScenarioGraph();
+      graph.Add(new ScenarioManualEntrypointNode
+      {
+        Identifier = "checkpoint",
+        ManualEnterSetupIdentifier = "missing-setup"
+      });
+
+      Assert.That(
+        ScenarioGraphDiagnostics.Run(graph).Any(item =>
+          item.Severity == ScenarioGraphDiagnostics.Severity.Error
+          && item.NodeIdentifier == "checkpoint"
+          && item.Message.Contains("manualEnterSetupIdentifier 'missing-setup'")),
+        Is.True);
+    }
+
+    [Test]
+    public void ManualEntrypointWithoutSetupChainWarnsAboutEntityHandleWipe()
+    {
+      var graph = new ScenarioGraph();
+      graph.Add(new ScenarioManualEntrypointNode { Identifier = "checkpoint" });
+      graph.Add(new ScenarioEntityPresetSpawnNode
+      {
+        Identifier = "spawn_patient",
+        PresetIdentifier = "patient_b_preset",
+        ResultStateKey = "patient_b.entity"
+      });
+
+      Assert.That(
+        ScenarioGraphDiagnostics.Run(graph).Any(item =>
+          item.Severity == ScenarioGraphDiagnostics.Severity.Info
+          && item.NodeIdentifier == "checkpoint"
+          && item.Message.Contains("clear-state=true")),
+        Is.True);
+    }
+
+    [Test]
+    public void ManualEntrypointWithSetupChainDoesNotWarnAboutEntityHandleWipe()
+    {
+      var graph = new ScenarioGraph();
+      graph.Add(new ScenarioManualEntrypointNode
+      {
+        Identifier = "checkpoint",
+        ManualEnterSetupIdentifier = "respawn_patient"
+      });
+      graph.Add(new ScenarioEntityPresetSpawnNode
+      {
+        Identifier = "respawn_patient",
+        PresetIdentifier = "patient_b_preset",
+        ResultStateKey = "patient_b.entity",
+        NextIdentifier = "checkpoint"
+      });
+
+      Assert.That(
+        ScenarioGraphDiagnostics.Run(graph).Any(item => item.Message.Contains("clear-state=true")),
+        Is.False);
+    }
+
+    [Test]
+    public void DuplicateManualEntrypointAliasesAreReported()
+    {
+      var graph = new ScenarioGraph();
+      graph.Add(new ScenarioManualEntrypointNode { Identifier = "first", EntrypointIdentifier = "ct-arrival" });
+      graph.Add(new ScenarioManualEntrypointNode { Identifier = "second", EntrypointIdentifier = "CT-Arrival" });
+
+      Assert.That(
+        ScenarioGraphDiagnostics.Run(graph).Count(item =>
+          item.Severity == ScenarioGraphDiagnostics.Severity.Error
+          && item.Message.Contains("ManualEntrypoint 별칭")),
+        Is.EqualTo(2));
+    }
+
+    [Test]
+    public void ManualEnterSetupChainStartIsNotCountedAsAGraphEntryNode()
+    {
+      var graph = new ScenarioGraph();
+      graph.Add(new ScenarioDialogueNode
+      {
+        Identifier = "start",
+        DialogueContent = "start",
+        NextIdentifier = "checkpoint"
+      });
+      graph.Add(new ScenarioManualEntrypointNode
+      {
+        Identifier = "checkpoint",
+        ManualEnterSetupIdentifier = "catch-up"
+      });
+      graph.Add(new ScenarioStateUpdateNode
+      {
+        Identifier = "catch-up",
+        StateKey = "phase",
+        StateValue = "ct",
+        NextIdentifier = "checkpoint"
+      });
+
+      var entryInfo = ScenarioGraphDiagnostics.Run(graph)
+        .SingleOrDefault(item => item.Message.StartsWith("진입 노드가 "));
+
+      Assert.That(entryInfo, Is.Null, "준비 체인 시작 노드는 별도 진입 노드로 보고되면 안 된다.");
+    }
+
+    [Test]
     public void SessionStartActingNpcAddsEntityPresetRegistrationInfo()
     {
       var graph = new ScenarioGraph

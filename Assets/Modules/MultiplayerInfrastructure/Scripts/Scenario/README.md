@@ -180,6 +180,51 @@
 
 동작 요약: `Add`는 새 퀘스트를 추가하고, `Update`는 ID가 존재할 때 필드를 갱신합니다. `Remove`는 ID 일치 퀘스트를 제거합니다. `failureStrategy`가 `Panic`일 때 실패 시 예외로 중단되고, `Ignore`는 실패를 무시하며, `Overwrite`는 추가/업데이트 시 동일 ID가 있을 경우 덮어씁니다.
 
+#### 3.10 ManualEntrypoint (`ScenarioManualEntrypointNodeDTO`)
+
+| 필드                         | 타입           | 설명                                                                     |
+|------------------------------|----------------|--------------------------------------------------------------------------|
+| `entrypointIdentifier`       | string \| null | 명령에서 이 지점을 부를 별칭. 생략하면 `identifier`를 쓴다                |
+| `manualEnterSetupIdentifier` | string \| null | 명령으로 진입할 때만 실행할 준비 체인의 시작 노드 ID                      |
+| `description`                | string \| null | 작성자 메모. 실행에는 쓰이지 않는다                                        |
+| `nextIdentifier`             | string         | 다음 노드 ID                                                              |
+
+일반 재생에서는 아무 일도 하지 않고 `nextIdentifier`로 넘어간다. 시나리오 흐름의 특정 지점에 이름표를 붙여 두는 노드다.
+
+운영자가 `/scenario enter <entrypointIdentifier>`를 실행하면 진행 중이던 노드와 병렬 브랜치를 모두 끊고 재생 위치가 이 노드로 옮겨 온다. 기본값인 `clear-state=true`로 실행하면 그때까지 쌓인 상태값·신호·카운터·타이머와 이 시나리오가 발행한 퀘스트를 먼저 비운다. 앞 구간을 다시 밟지 않고 넘어가니 건너뛴 구간이 만들어 놨어야 할 인게임 상황은 `manualEnterSetupIdentifier` 체인에서 직접 맞춰 줘야 한다.
+
+> **주의 — `clear-state=true`는 엔티티 해석 표까지 비운다.**
+> 시나리오 상태 저장소는 StateUpdate 값만 담는 곳이 아니다. `EntityPresetSpawn`, `EntityInit`, `ItemSubmissionConfig`가 남긴 `resultStateKey → 엔티티 식별자` 표도 같은 저장소를 쓴다. 이걸 비우면 월드에 엔티티가 멀쩡히 살아 있어도 `targetEntityStateKey`로 대상을 찾는 노드가 전부 빈손으로 지나간다(경고만 남고 조용히 진행된다). 스폰 노드를 쓰는 그래프라면 준비 체인에서 필요한 키를 다시 채우거나, `clear-state=false`로 진입해야 한다.
+
+준비 체인은 병렬 브랜치와 같은 자가완결 실행기로 돈다. 다음 셋 중 하나에 닿으면 끝나고 제어가 ManualEntrypoint 노드로 돌아온다.
+
+1. `nextIdentifier`가 비어 있는 노드
+2. ManualEntrypoint 노드 자신의 `identifier`
+3. ManualEntrypoint 노드의 `nextIdentifier`
+
+```json
+"phase_two": {
+  "identifier": "phase_two",
+  "nodeType": "ManualEntrypoint",
+  "entrypointIdentifier": "phase_two",
+  "manualEnterSetupIdentifier": "catch_up_state",
+  "description": "1단계를 건너뛰고 2단계부터 볼 때 쓰는 지점",
+  "nextIdentifier": "phase_two_print"
+},
+"catch_up_state": {
+  "identifier": "catch_up_state",
+  "nodeType": "StateUpdate",
+  "targetEntityIdentifier": null,
+  "stateKey": "debug.phase",
+  "stateValue": "one_skipped",
+  "nextIdentifier": "phase_two"
+}
+```
+
+`/scenario enter`는 서버에서 실행되지만, 반영 범위는 그래프를 누가 돌리느냐에 따라 다르다. 서버 권위 실행이면 서버 커서만 옮기고 나머지 피어는 표시로 따라온다. 지원하지 않는 노드가 하나라도 있어 호환 경로로 떨어진 그래프는 대상 클라이언트마다 독립 상태기가 돌기 때문에, 모든 피어에 브로드캐스트해서 각자 같은 지점으로 건너뛰게 한다. 명령 응답의 `scope=` 값으로 어느 쪽이었는지 확인할 수 있다.
+
+동작 예시는 `Assets/Modules/TriageTrainer/Resources/Scenario/manual_entrypoint_debug.scenario.json`에 있다.
+
 ### 4. C# DTO & 도메인 모델 관계
 
 - **DTO (`Scenario*NodeDTO`)**: JSON 구조와 1:1로 대응하는 데이터 구조. `internal class`로 선언되어 있으며, 역직렬화 용도.

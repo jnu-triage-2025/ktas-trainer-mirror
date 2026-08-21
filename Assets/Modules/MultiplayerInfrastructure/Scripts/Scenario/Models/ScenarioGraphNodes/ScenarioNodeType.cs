@@ -36,5 +36,6 @@ namespace MultiplayerInfrastructure.Scenario
     DisinteractableDialogue,
     EntityStateSignalBinding,
     SignalCounter,
+    ManualEntrypoint,
   }
 }
