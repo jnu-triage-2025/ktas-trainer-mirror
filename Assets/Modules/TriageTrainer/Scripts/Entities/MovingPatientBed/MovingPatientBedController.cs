@@ -518,6 +518,18 @@ namespace TriageTrainer.Entity
     /// 서버 권위에서만 동작하며, 성공 시 기존 자동 스냅과 동일한 신호를 발행한다.
     /// </summary>
     public bool TryForceSnapToPositioningPoint(string pointIdentifier)
+      => TryForceSnapToPositioningPoint(pointIdentifier, teleportToPoint: false);
+
+    /// <summary>
+    /// 지정한 포지셔닝 포인트에 스냅한다.
+    /// </summary>
+    /// <param name="pointIdentifier">대상 포지셔닝 포인트 식별자.</param>
+    /// <param name="teleportToPoint">
+    /// true 면 현재 거리와 무관하게 침대를 포인트 위치로 옮긴 뒤 붙인다. 시나리오가 재생 위치를
+    /// 건너뛰어 침대를 밀고 온 과정 자체가 없었던 경우에 쓴다.
+    /// false 면 기존 동작대로 스냅 범위 안에 있을 때만 붙는다.
+    /// </param>
+    public bool TryForceSnapToPositioningPoint(string pointIdentifier, bool teleportToPoint)
     {
       if (!IsServerStarted || string.IsNullOrWhiteSpace(pointIdentifier))
         return false;
@@ -541,7 +553,8 @@ namespace TriageTrainer.Entity
       if (point == null)
         return false;
 
-      if (!point.IsWithinSnapDistance(transform.position))
+      // 순간이동 요청이면 거리 게이트를 건너뛴다. 허용 목록과 충돌 정책은 그대로 지킨다.
+      if (!teleportToPoint && !point.IsWithinSnapDistance(transform.position))
         return false;
 
       if (!IsPositioningPointAllowed(point))

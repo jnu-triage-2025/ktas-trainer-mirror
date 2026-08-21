@@ -78,6 +78,8 @@ namespace MultiplayerInfrastructure.Editor
       ScenarioNodeType.EntityStateSignalBinding => new ScenarioEntityStateSignalBindingNode(),
       ScenarioNodeType.SignalCounter => new ScenarioSignalCounterNode(),
       ScenarioNodeType.ManualEntrypoint => new ScenarioManualEntrypointNode(),
+      ScenarioNodeType.BedSnap => new ScenarioBedSnapNode(),
+      ScenarioNodeType.ReturnToOrigin => new ScenarioReturnToOriginNode(),
       _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
   }

@@ -283,7 +283,12 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.ExecuteCommand:
         case ScenarioNodeType.TimeControl:
         case ScenarioNodeType.ManualEntrypoint:
+        case ScenarioNodeType.BedSnap:
           DefaultOutputPort = CreateStandardOutput("Next");
+          break;
+
+        case ScenarioNodeType.ReturnToOrigin:
+          // 출력 포트를 만들지 않는다. 곁가지는 이 노드에서 끝나므로 이어 붙일 곳이 없다.
           break;
 
         case ScenarioNodeType.Quiz:
@@ -478,6 +483,15 @@ namespace MultiplayerInfrastructure.Editor
           break;
         case ScenarioNodeType.ManualEntrypoint:
           BuildManualEntrypointInlineEditor((ScenarioManualEntrypointNode)Data);
+          break;
+        case ScenarioNodeType.BedSnap:
+          BuildBedSnapInlineEditor((ScenarioBedSnapNode)Data);
+          break;
+        case ScenarioNodeType.ReturnToOrigin:
+          // Next 를 쓰지 않으므로 Next 필드를 노출하지 않는다.
+          AddTextAreaField("Description",
+            value => ((ScenarioReturnToOriginNode)Data).Description = value,
+            ((ScenarioReturnToOriginNode)Data).Description);
           break;
         case ScenarioNodeType.Parallel:
           break;
@@ -719,6 +733,16 @@ namespace MultiplayerInfrastructure.Editor
     {
       AddTextField("Preset Id", value => data.PresetIdentifier = value, data.PresetIdentifier);
       AddTextField("Spawned Entity Id", value => data.SpawnedEntityIdentifier = value, data.SpawnedEntityIdentifier);
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildBedSnapInlineEditor(ScenarioBedSnapNode data)
+    {
+      AddTextField("Bed Entity", value => data.BedEntityIdentifier = value, data.BedEntityIdentifier);
+      AddTextField("Bed State Key", value => data.BedEntityStateKey = value, data.BedEntityStateKey);
+      AddTextField("Snap Point", value => data.SnapPointIdentifier = value, data.SnapPointIdentifier);
+      AddToggleField("Teleport", value => data.Teleport = value, data.Teleport);
+      AddToggleField("Ignore Failure", value => data.IgnoreFailure = value, data.IgnoreFailure);
       AddNextIdentifierField(data);
     }
 
@@ -1127,6 +1151,17 @@ namespace MultiplayerInfrastructure.Editor
         if (node is ScenarioPlayerTagNode playerTag)
         {
           summaryParts.Add($"Tag: {playerTag.Tag ?? string.Empty}\nNext: {playerTag.NextIdentifier ?? "(미연결)"}");
+        }
+        else if (node is ScenarioReturnToOriginNode)
+        {
+          summaryParts.Add("↩ 곁가지를 여기서 끝내고 원래 흐름으로 돌아갑니다.");
+        }
+        else if (node is ScenarioBedSnapNode bedSnap)
+        {
+          summaryParts.Add($"Bed: {bedSnap.BedEntityIdentifier ?? bedSnap.BedEntityStateKey ?? "(미지정)"}"
+            + $"\nPoint: {bedSnap.SnapPointIdentifier ?? "(미지정)"}"
+            + $"\nTeleport: {bedSnap.Teleport}"
+            + $"\nNext: {bedSnap.NextIdentifier ?? "(미연결)"}");
         }
         else if (node is ScenarioManualEntrypointNode manualEntrypoint)
         {

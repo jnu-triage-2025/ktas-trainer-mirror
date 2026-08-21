@@ -318,6 +318,11 @@ namespace TriageTrainer.Entity
         zones[i].TryReconcileOxygenLineFor(this);
     }
 
+    /// <summary>
+    /// 산소 공급 처치 목표를 받는 환자들. 이 환자를 담당하는 유량계에만 퀘스트 마크를 붙인다.
+    /// </summary>
+    private static readonly string[] OxygenTreatmentPatientIdentifiers = { "patient_b", "patient_c" };
+
     private bool IsQuestOxygenConnectionTarget()
     {
       var zones = FindObjectsByType<PatientCareDescriptionZone>(
@@ -325,11 +330,26 @@ namespace TriageTrainer.Entity
       for (int i = 0; i < zones.Length; i++)
       {
         var patient = zones[i].GetPatientForOxyflowmeter(this);
-        if (patient == null || !string.Equals(patient.Identifier, "patient_b", StringComparison.Ordinal))
+        string patientIdentifier = patient != null ? patient.Identifier : null;
+        if (!IsOxygenTreatmentPatient(patientIdentifier))
           continue;
         return !MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.IsRaised(
-          "equipment_connected_oxyflowmeter_patient_b");
+          $"equipment_connected_oxyflowmeter_{patientIdentifier}");
       }
+      return false;
+    }
+
+    private static bool IsOxygenTreatmentPatient(string patientIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(patientIdentifier))
+        return false;
+
+      for (int i = 0; i < OxygenTreatmentPatientIdentifiers.Length; i++)
+      {
+        if (string.Equals(patientIdentifier, OxygenTreatmentPatientIdentifiers[i], StringComparison.Ordinal))
+          return true;
+      }
+
       return false;
     }
 

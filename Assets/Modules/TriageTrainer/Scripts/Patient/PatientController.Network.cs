@@ -133,6 +133,12 @@ namespace TriageTrainer.Entity
         GetPatientDisplayName(_registeredEntityIdentifier));
     }
 
+    /// <summary>
+    /// 화면에 보여줄 환자 이름. 프로필 이름이 없으면 빈 값이다.
+    /// 환자를 특정해야 하는 상호작용 문구에서 쓴다(예: 수액 줄 해제).
+    /// </summary>
+    public string PatientDisplayName => GetPatientDisplayName(null);
+
     private string GetPatientDisplayName(string fallback)
     {
       return _patientDescriptor != null && !string.IsNullOrWhiteSpace(_patientDescriptor.name)

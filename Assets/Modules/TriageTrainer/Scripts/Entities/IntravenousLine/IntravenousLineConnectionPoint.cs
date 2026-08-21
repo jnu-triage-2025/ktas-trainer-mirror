@@ -145,12 +145,23 @@ namespace TriageTrainer.Entity.IntravenousLine
       }
     }
 
-    private sealed class DisconnectInteract : IInteract, IInteractorConditional
+    private sealed class DisconnectInteract : IInteract, IInteractorConditional, INearestOnlyInteract
     {
       private readonly IntravenousLineConnectionPoint _owner;
       public DisconnectInteract(IntravenousLineConnectionPoint owner) { _owner = owner; }
 
-      public string DisplayText => "수액 줄 해제";
+      // 처치 구역처럼 침대가 붙어 있는 곳이면 여러 환자의 줄이 한꺼번에 잡힌다.
+      // 누구의 줄인지 이름을 앞에 붙여 구분한다.
+      public string DisplayText
+      {
+        get
+        {
+          string patientName = _owner.ResolveConnectedPatientDisplayName();
+          return string.IsNullOrWhiteSpace(patientName)
+            ? "수액 줄 해제"
+            : $"{patientName}의 수액 줄 해제";
+        }
+      }
 
       // 이미 연결된 수액 줄에 대한 해제 상호작용은 투명 아이콘으로 표시한다.
       // (아이콘 없음 + fallback 아이콘도 표시하지 않음 → 배경색 Color.clear 로 렌더)
@@ -176,6 +187,37 @@ namespace TriageTrainer.Entity.IntravenousLine
         controller.DisconnectFromPoint(_owner, player);
         player?.RefreshInteractableHintsNow();
       }
+
+      // 줄 하나는 양쪽 끝점(환자 정맥로 쪽 · 침대 걸이 쪽)에 해제 항목을 하나씩 만든다.
+      // 같은 줄끼리 묶어 플레이어에게 가까운 끝점 하나만 남긴다. 어느 쪽을 끊든 결과는 같다.
+      // 줄이 다르면 그룹도 다르므로, 환자별 줄은 각각 그대로 노출된다.
+      public string NearestOnlyGroup =>
+        _owner.TryGetAnyConnectedLineObject(out var lineObject) && lineObject != null
+          ? DisconnectNearestGroupPrefix + lineObject.GetInstanceID()
+          : null;
+
+      public Transform NearestOnlyDistanceOrigin => _owner.transform;
+      public Collider NearestOnlyCollider => _owner.GetComponent<Collider>();
+      public int NearestOnlyTieBreaker => _owner.GetInstanceID();
+    }
+
+    /// <summary>같은 수액 줄의 해제 항목끼리 묶는 그룹 이름의 앞부분. 뒤에 줄 오브젝트 식별자가 붙는다.</summary>
+    private const string DisconnectNearestGroupPrefix = "intravenous_line:disconnect:";
+
+    /// <summary>
+    /// 이 연결 지점이 어느 환자의 것인지 찾는다. 환자 몸에 붙은 지점이면 그 환자를,
+    /// 침대 걸이에 붙은 지점이면 그 침대에 누운 환자를 돌려준다. 어느 쪽도 아니면 빈 값이다.
+    /// </summary>
+    private string ResolveConnectedPatientDisplayName()
+    {
+      var patient = GetComponentInParent<PatientController>();
+      if (patient == null)
+      {
+        var bed = GetComponentInParent<MovingPatientBedController>();
+        patient = bed != null ? bed.ReposedTarget as PatientController : null;
+      }
+
+      return patient != null ? patient.PatientDisplayName : null;
     }
 
     public const string InteractIdStartConnectionMode = "intravenous_line_connect_mode_start";

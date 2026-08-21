@@ -59,6 +59,8 @@ namespace MultiplayerInfrastructure.Scenario
         "EntityStateSignalBinding" => Deserialize<ScenarioEntityStateSignalBindingNodeDTO>(root, options),
         "SignalCounter" => Deserialize<ScenarioSignalCounterNodeDTO>(root, options),
         "ManualEntrypoint" => Deserialize<ScenarioManualEntrypointNodeDTO>(root, options),
+        "BedSnap" => Deserialize<ScenarioBedSnapNodeDTO>(root, options),
+        "ReturnToOrigin" => Deserialize<ScenarioReturnToOriginNodeDTO>(root, options),
         _ => throw new JsonException($"Unknown nodeType '{nodeType}'.")
       };
     }
@@ -94,6 +96,9 @@ namespace MultiplayerInfrastructure.Scenario
         // 조용히 사라져(데이터 유실) 병렬 완료 후 시나리오가 조기 종료됐다.
         // null 이어야 하면 JSON null 로 기록된다(스키마는 ["string","null"] 허용).
         writer.WriteString("nextIdentifier", parallel.NextIdentifier);
+        // 주의: 이 수동 작성기는 리플렉션 경로를 타지 않는다. ScenarioNodeDTO 에 공통 필드를
+        // 추가하면 여기에도 반드시 함께 넣어야 저장 시 유실되지 않는다.
+
         writer.WriteEndObject();
         return;
       }

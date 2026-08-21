@@ -199,7 +199,8 @@ namespace MultiplayerInfrastructure.Scenario
             || node is ScenarioEntityStateSignalBindingNode
             || node is ScenarioStateUpdateNode
             || node is ScenarioNPCControlNode
-            || node is ScenarioManualEntrypointNode)
+            || node is ScenarioManualEntrypointNode
+            || node is ScenarioReturnToOriginNode)
           continue;
 
         unsupportedNode = node;

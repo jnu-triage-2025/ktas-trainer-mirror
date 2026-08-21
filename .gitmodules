@@ -7,3 +7,6 @@
 [submodule "Tools/cellular"]
 	path = Tools/cellular
 	url = https://github.com/ShapeLayer/cellular
+[submodule "Tools/fluent-korean"]
+	path = Tools/fluent-korean
+	url = https://github.com/snflkd/fluent-korean

@@ -298,6 +298,16 @@ namespace MultiplayerInfrastructure.Editor
           Add("targetObjectIdentifier", cam.TargetObjectIdentifier);
           break;
 
+        case ScenarioReturnToOriginNode rto:
+          Add("description", rto.Description);
+          break;
+
+        case ScenarioBedSnapNode bs:
+          Add("bedEntityIdentifier", bs.BedEntityIdentifier);
+          Add("bedEntityStateKey",   bs.BedEntityStateKey);
+          Add("snapPointIdentifier", bs.SnapPointIdentifier);
+          break;
+
         case ScenarioManualEntrypointNode me:
           Add("entrypointIdentifier",       me.EntrypointIdentifier);
           Add("manualEnterSetupIdentifier", me.ManualEnterSetupIdentifier);

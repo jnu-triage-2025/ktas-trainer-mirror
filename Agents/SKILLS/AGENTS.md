@@ -21,13 +21,13 @@ Check the local environment and install the following tools if they are not alre
 - `curl` 등 직접 HTTP 요청으로 우회하지 않는다.
 - Tool이 가용하면 Skill의 표준 절차(가용성 확인, 프로젝트·기존 항목 확인, 증빙 기반 등록)를 따른다.
 
-## Humanize Korean
+## Fluent Korean
 
-- **이슈 생성**, **문서화**, **텍스트 콘텐츠 생성**, **코드 주석** 시 `Tools/im-not-ai/`의 humanize-korean 도구를 거쳐 AI 한글 티(번역투·기계적 병렬·관용구 등 70개 패턴)를 제거한다.
-- GitLab Issue 본문, 기능 제안서, Setup Guide, Documented Reference, XML documentation comments 등 한글 텍스트가 모두 대상이다.
-- 전체 절차는 `Agents/SKILLS/humanize-korean/SKILL.md`에서 오케스트레이터 전문(`Tools/im-not-ai/skills/humanize-korean/SKILL.md`)을 로드해 따른다.
-- **적용 제외:** 커밋 메시지.
-- **도구 불가 시:** `python3` 런타임 확인 → 그래도 실패하면 작업을 중단하지 말고 사용자에게 `⚠️ humanize-korean 도구를 거치지 않았습니다.` 경고를 표시하고, 생성 텍스트 최상단에 `> ⚠️ 이 텍스트는 AI 문체 순화 처리를 거치지 않았습니다.` 를 포함한다. 단, **코드 주석**에는 경고 텍스트를 삽입하지 않는다(사용자 경고만).
+- **이슈 생성**, **문서화**, **텍스트 콘텐츠 생성**, **사용자 응답**에는 `Tools/fluent-korean/`의 `fluent-korean` 출력 스타일을 적용하여 의미가 분명하고 자연스러운 한국어로 작성한다.
+- GitLab Issue 본문, 기능 제안서, Setup Guide, Documented Reference 등 코드 밖의 한글 텍스트가 대상이다.
+- 전체 절차는 `Agents/SKILLS/fluent-korean/SKILL.md`에 따른다. 작업 전 또는 최종 검토 전에 `Tools/fluent-korean/plugins/fluent-korean/output-styles/fluent-korean.md` 전문을 읽고 적용한다.
+- **적용 제외:** 코드 주석, 변수명, 로그 문자열, 커밋 메시지, 인용문, 코드 블록. 이 텍스트에는 프로젝트의 기존 관례를 따른다.
+- 서브모듈을 읽을 수 없더라도 작업을 중단하지 않으며, 별도 경고 문구를 추가하지 않는다.
 
 ## Cellular
 
@@ -38,5 +38,5 @@ Check the local environment and install the following tools if they are not alre
 ## Index
 
 - [Unity.md](./Unity.md) : When using Unity
-- [humanize-korean/](./humanize-korean/) : AI 한글 텍스트 윤문 (AI 티 제거)
+- [fluent-korean/](./fluent-korean/) : 명확하고 자연스러운 한국어 출력 스타일
 - [cellular/](./cellular/) : 코드 구성 색인·트리맵 시각화

@@ -369,7 +369,9 @@
             "DisinteractableDialogue",
             "EntityStateSignalBinding",
             "SignalCounter",
-            "ManualEntrypoint"
+            "ManualEntrypoint",
+            "BedSnap",
+            "ReturnToOrigin"
           ]
         }
       },
@@ -870,6 +872,36 @@
           },
           "then": {
             "$ref": "#/$defs/ScenarioManualEntrypointNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "BedSnap"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioBedSnapNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "ReturnToOrigin"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioReturnToOriginNode"
           }
         }
       ]
@@ -3918,6 +3950,98 @@
           },
           "required": [
             "commandLine"
+          ]
+        }
+      ]
+    },
+    "ScenarioReturnToOriginNode": {
+      "description": "곁가지 체인(ManualEntrypoint 준비 체인, 병렬 브랜치)의 종료 표식. 여기 닿으면 체인을 닫고 원래 흐름으로 돌아간다. nextIdentifier는 쓰지 않는다.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "ReturnToOrigin"
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "ScenarioBedSnapNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "BedSnap"
+            },
+            "bedEntityIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            },
+            "bedEntityStateKey": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            },
+            "snapPointIdentifier": {
+              "type": "string",
+              "minLength": 1
+            },
+            "teleport": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": true
+            },
+            "ignoreFailure": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": true
+            }
+          },
+          "required": [
+            "snapPointIdentifier"
+          ],
+          "anyOf": [
+            {
+              "required": [
+                "bedEntityIdentifier"
+              ],
+              "properties": {
+                "bedEntityIdentifier": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "required": [
+                "bedEntityStateKey"
+              ],
+              "properties": {
+                "bedEntityStateKey": {
+                  "type": "string"
+                }
+              }
+            }
           ]
         }
       ]

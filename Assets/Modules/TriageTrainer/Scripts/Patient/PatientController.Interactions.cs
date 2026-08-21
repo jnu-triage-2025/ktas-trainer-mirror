@@ -126,10 +126,12 @@ namespace TriageTrainer.Entity
       }
     }
 
-    private sealed class PatientItemApplyInteract : IInteract, IInteractorConditional
+    private sealed class PatientItemApplyInteract : IInteract, IInteractorConditional, IQuestPresentationTarget
     {
       private readonly PatientController _owner;
       public PatientItemApplyInteract(PatientController owner) { _owner = owner; }
+      public string PresentationEntityIdentifier => _owner.Identifier;
+      public string InteractionIdentifier => InteractIdItemApply;
       public string DisplayText => "환자에게 들고 있는 처치 물품 적용";
       public Sprite DisplayIcon => null;
       public bool AllowDisplayIconFallback => false;
@@ -193,10 +195,12 @@ namespace TriageTrainer.Entity
       }
     }
 
-    private sealed class PatientNormalSalineConnectInteract : IInteract, IInteractorConditional
+    private sealed class PatientNormalSalineConnectInteract : IInteract, IInteractorConditional, IQuestPresentationTarget
     {
       private readonly PatientController _owner;
       public PatientNormalSalineConnectInteract(PatientController owner) { _owner = owner; }
+      public string PresentationEntityIdentifier => _owner.Identifier;
+      public string InteractionIdentifier => InteractIdNormalSalineConnect;
       public string DisplayText => "생리식염수 연결";
       public Sprite DisplayIcon => null;
       public bool AllowDisplayIconFallback => false;
@@ -213,6 +217,12 @@ namespace TriageTrainer.Entity
     public const string InteractIdLiftFromBed = "lift_from_bed";
     public const string InteractIdCarry = "carry_patient";
     public const string InteractIdMonitorSelect = "monitor_select";
+
+    /// <summary>손에 든 처치 물품(거즈·플라스터 등) 적용 상호작용. 퀘스트 마크 바인딩에서 참조한다.</summary>
+    public const string InteractIdItemApply = "item_apply";
+
+    /// <summary>침대 걸이의 생리식염수를 환자 정맥로에 잇는 상호작용. 퀘스트 마크 바인딩에서 참조한다.</summary>
+    public const string InteractIdNormalSalineConnect = "normal_saline_connect";
 
     [Header("Interact")]
     [SerializeField] private List<InteractConfig> _interactConfigs = new();

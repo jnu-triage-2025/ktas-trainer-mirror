@@ -62,7 +62,13 @@
       "targetEntityIdentifier": null,
       "stateKey": "debug.phase",
       "stateValue": "one_skipped",
-      "nextIdentifier": "phase_two"
+      "nextIdentifier": "catch_up_return"
+    },
+    "catch_up_return": {
+      "identifier": "catch_up_return",
+      "nodeType": "ReturnToOrigin",
+      "description": "준비 체인의 끝. phase_two 진입 지점으로 돌아간다.",
+      "nextIdentifier": null
     },
     "phase_two_print": {
       "identifier": "phase_two_print",

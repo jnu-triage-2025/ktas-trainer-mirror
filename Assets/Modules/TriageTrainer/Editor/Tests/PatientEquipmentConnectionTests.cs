@@ -1,5 +1,7 @@
 using NUnit.Framework;
+using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Scenario;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using TriageTrainer.Entity;
@@ -474,6 +476,71 @@ namespace TriageTrainer.Tests
       start.RegisterConnectedLineObject(lineObject);
       end.RegisterConnectedLineObject(lineObject);
     }
+
+    [Test]
+    public void ConnectedIntravenousLineExposesOneDisconnectHintNamedAfterItsPatient()
+    {
+      var patientObject = new GameObject("patient_c");
+      var loosePointObject = new GameObject("unowned-normal-saline-point");
+      var lineObject = new GameObject("physical-line");
+      var otherStartObject = new GameObject("other-line-start");
+      var otherEndObject = new GameObject("other-line-end");
+      var otherLineObject = new GameObject("other-physical-line");
+
+      try
+      {
+        var patient = patientObject.AddComponent<PatientController>();
+        patient.ApplySpawnedEntityIdentifier("patient_c");
+        patient.Descriptor.name = "이영희";
+        var patientPoint = AttachPatientBCIvPoint(patient);
+        var loosePoint = loosePointObject.AddComponent<IntravenousLineConnectionPoint>();
+
+        // 연결 전에는 해제 항목 자체가 노출되지 않으므로 묶을 그룹도 없다.
+        Assert.That(DisconnectGroupOf(patientPoint), Is.Null);
+
+        RegisterPhysicalLine(lineObject, loosePoint, patientPoint);
+
+        // 줄 하나의 두 끝점은 같은 그룹에 들어가므로 가까운 쪽 하나만 힌트에 남는다.
+        string group = DisconnectGroupOf(patientPoint);
+        Assert.That(group, Is.Not.Null.And.Not.Empty);
+        Assert.That(DisconnectGroupOf(loosePoint), Is.EqualTo(group),
+          "한 줄의 두 끝점(환자 정맥로 쪽·침대 걸이 쪽)은 한 항목으로 합쳐져야 한다.");
+
+        // 환자에 붙은 끝점은 누구의 줄인지 이름으로 알려준다.
+        Assert.That(DisconnectTextOf(patientPoint), Is.EqualTo("이영희의 수액 줄 해제"));
+        // 환자도 침대도 아닌 곳에 놓인 끝점은 원래 문구를 그대로 쓴다.
+        Assert.That(DisconnectTextOf(loosePoint), Is.EqualTo("수액 줄 해제"));
+
+        // 다른 줄은 다른 그룹이라 환자별 줄이 서로를 가리지 않는다.
+        var otherStart = otherStartObject.AddComponent<IntravenousLineConnectionPoint>();
+        var otherEnd = otherEndObject.AddComponent<IntravenousLineConnectionPoint>();
+        RegisterPhysicalLine(otherLineObject, otherStart, otherEnd);
+        Assert.That(DisconnectGroupOf(otherStart), Is.Not.EqualTo(group));
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(otherLineObject);
+        UnityEngine.Object.DestroyImmediate(otherEndObject);
+        UnityEngine.Object.DestroyImmediate(otherStartObject);
+        UnityEngine.Object.DestroyImmediate(lineObject);
+        UnityEngine.Object.DestroyImmediate(loosePointObject);
+        UnityEngine.Object.DestroyImmediate(patientObject);
+      }
+    }
+
+    /// <summary>해제 항목은 이 지점에서 유일하게 "가장 가까운 하나만" 규칙을 쓰는 항목이다.</summary>
+    private static INearestOnlyInteract FindDisconnectInteract(IntravenousLineConnectionPoint point)
+    {
+      var matches = point.Interacts.OfType<INearestOnlyInteract>().ToArray();
+      Assert.That(matches, Has.Length.EqualTo(1), point.name);
+      return matches[0];
+    }
+
+    private static string DisconnectGroupOf(IntravenousLineConnectionPoint point)
+      => FindDisconnectInteract(point).NearestOnlyGroup;
+
+    private static string DisconnectTextOf(IntravenousLineConnectionPoint point)
+      => ((IInteract)FindDisconnectInteract(point)).DisplayText;
 
     /// <summary>
     /// 환자 B/C 정맥로 IV 연결 지점은 환자 유형별 State 컴포넌트가 프리팹 참조로 주입한다.

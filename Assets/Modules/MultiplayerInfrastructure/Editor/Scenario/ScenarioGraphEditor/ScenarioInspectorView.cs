@@ -194,6 +194,12 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.ManualEntrypoint:
           DrawManualEntrypointFields((ScenarioManualEntrypointNode)data);
           break;
+        case ScenarioNodeType.BedSnap:
+          DrawBedSnapFields((ScenarioBedSnapNode)data);
+          break;
+        case ScenarioNodeType.ReturnToOrigin:
+          DrawReturnToOriginFields((ScenarioReturnToOriginNode)data);
+          break;
       }
     }
 
@@ -1022,6 +1028,31 @@ namespace MultiplayerInfrastructure.Editor
       data.Threshold = EditorGUILayout.IntField("Threshold", data.Threshold);
       data.OutputSignalIdentifier = EditorGUILayout.TextField("Output Signal", data.OutputSignalIdentifier);
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawReturnToOriginFields(ScenarioReturnToOriginNode data)
+    {
+      EditorGUILayout.PrefixLabel("Description");
+      data.Description = EditorGUILayout.TextArea(data.Description, GUILayout.Height(40));
+      EditorGUILayout.HelpBox(
+        "곁가지(ManualEntrypoint 준비 체인 · 병렬 브랜치)를 여기서 끝내고 원래 흐름으로 돌아갑니다. "
+        + "준비 체인이면 진입 지점으로 돌아가 그 노드의 Next로 이어지고, 병렬 브랜치면 그 브랜치만 완료됩니다. "
+        + "메인 흐름에서 만나면 아무 일도 하지 않고 지나갑니다. 이 노드는 Next를 쓰지 않습니다.",
+        MessageType.Info);
+    }
+
+    private void DrawBedSnapFields(ScenarioBedSnapNode data)
+    {
+      data.BedEntityIdentifier = EditorGUILayout.TextField("Bed Entity", data.BedEntityIdentifier);
+      data.BedEntityStateKey = EditorGUILayout.TextField("Bed State Key", data.BedEntityStateKey);
+      data.SnapPointIdentifier = EditorGUILayout.TextField("Snap Point", data.SnapPointIdentifier);
+      data.Teleport = EditorGUILayout.Toggle("Teleport", data.Teleport);
+      data.IgnoreFailure = EditorGUILayout.Toggle("Ignore Failure", data.IgnoreFailure);
+      EditorGUILayout.HelpBox(
+        "이동식 환자 침대를 포지셔닝 포인트에 붙입니다. 환자가 결합된 침대면 환자도 함께 옮겨집니다. "
+        + "Teleport가 켜져 있으면 거리와 무관하게 포인트로 옮긴 뒤 붙이고, 꺼져 있으면 스냅 범위 안에 있을 때만 붙습니다. "
+        + "Bed Entity와 Bed State Key 중 하나는 채워야 합니다.",
+        MessageType.Info);
     }
 
     private void DrawManualEntrypointFields(ScenarioManualEntrypointNode data)
