@@ -20,28 +20,23 @@ After generating these scripts, you must additionally create: 1. a Setup Guide a
 2. The Documented Reference must be written in Korean for readers with relevant domain expertise. This documentation must be saved under /Documents/api-references/ as `(TypeOfWork)/identifier.md`.  
 For item 1, the result must also be output directly in the interface (typically chat) so that the human operator can immediately continue the work.
 
-## 한글 텍스트 품질 관리 (Humanize Korean)
+## 한글 텍스트 품질 관리 (Fluent Korean)
 
-**이슈 생성**, **문서화**, **텍스트 콘텐츠 생성** 시에는 `Tools/im-not-ai/`의 **humanize-korean** 도구를 거쳐 AI 특유의 문체(번역투, 기계적 병렬, 영어 인용 과다, 피동태 남용 등)를 제거한다.
+**이슈 생성**, **문서화**, **텍스트 콘텐츠 생성** 시에는 `Tools/fluent-korean/`의 **fluent-korean** 출력 스타일을 적용해 의미가 분명하고 자연스러운 한국어로 작성한다.
 
 **적용 대상:**
 - 이슈 생성 (GitLab Issue 본문, 기능 제안서)
 - 문서화 (Setup Guide, Documented Reference, 요구사항 문서)
 - 텍스트 콘텐츠 생성 (사용자에게 전달되는 한글 텍스트 전반)
-- 코드 주석 (XML documentation comments 등 한글 주석)
 
 **적용 제외:**
 - 커밋 메시지 — Conventional Commits 형식 우선
 
-**코드 주석 실패 시 주의:** 도구 불가 시 경고는 사용자에게만 표시하고, 주석 내에 경고 텍스트를 생성하지 않는다.
+**적용 제외:** 코드 주석, 변수명, 로그 문자열, 커밋 메시지, 인용문, 코드 블록은 프로젝트의 기존 관례를 따른다.
 
-**사용법:** `Agents/SKILLS/humanize-korean/SKILL.md`의 지시에 따라 오케스트레이터를 로드하고 실행한다. well-written 초안은 light(1콜), 일반 초안은 standard(2콜), 정밀 검증이 필요하면 heavy(3콜) 경로를 따른다.
+**사용법:** `Agents/SKILLS/fluent-korean/SKILL.md`의 지시에 따라 `Tools/fluent-korean/plugins/fluent-korean/output-styles/fluent-korean.md` 전문을 읽고, 한국어를 작성하는 과정과 최종 검토에 적용한다. 이 출력 스타일은 사후 윤문 스크립트가 아니므로 light/standard/heavy 경로와 변경률 게이트를 사용하지 않는다.
 
-**도구 사용 불가 시 대응 (graceful degradation):**
-1. `python3` 런타임이 존재하는지 확인한다. 없으면 환경 설정을 점검한다.
-2. 런타임이 정상임에도 shim·게이트 실행이 실패하면, **작업을 중단하지 않고** 결과물을 그대로 전달한다.
-3. 사용자에게 다음 경고를 표시한다: `⚠️ humanize-korean 도구를 거치지 않았습니다.`
-4. 생성된 텍스트 최상단에도 다음 경고를 포함한다: `> ⚠️ 이 텍스트는 AI 문체 순화 처리를 거치지 않았습니다.`
+**도구 사용 불가 시 대응:** 서브모듈이 초기화되지 않았거나 출력 스타일 파일을 읽을 수 없더라도 작업을 중단하지 않는다. 맥락을 충분히 갖춘 완결된 한국어 문장으로 작성하며, 별도 경고 문구는 넣지 않는다.
 
 ## When System-Level Modifications Are Required
 
