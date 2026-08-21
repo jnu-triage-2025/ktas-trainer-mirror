@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Audio;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace MultiplayerInfrastructure.UI
@@ -18,6 +19,7 @@ namespace MultiplayerInfrastructure.UI
     private OverflowScrollView _audioScroll;
     private DropdownField _outputDeviceField;
     private DropdownField _inputDeviceField;
+    private SliderInt _masterVolumeField;
     private Label _outputRoutingNote;
     private bool _audioFormInitializing;
 
@@ -42,10 +44,13 @@ namespace MultiplayerInfrastructure.UI
         _outputDeviceField.UnregisterValueChangedCallback(HandleOutputDeviceChanged);
       if (_inputDeviceField != null)
         _inputDeviceField.UnregisterValueChangedCallback(HandleInputDeviceChanged);
+      if (_masterVolumeField != null)
+        _masterVolumeField.UnregisterValueChangedCallback(HandleMasterVolumeChanged);
 
       _audioScroll = null;
       _outputDeviceField = null;
       _inputDeviceField = null;
+      _masterVolumeField = null;
       _outputRoutingNote = null;
       _audioTabContent = null;
       _outputDevices.Clear();
@@ -75,14 +80,18 @@ namespace MultiplayerInfrastructure.UI
           _outputDeviceField.UnregisterValueChangedCallback(HandleOutputDeviceChanged);
         if (_inputDeviceField != null)
           _inputDeviceField.UnregisterValueChangedCallback(HandleInputDeviceChanged);
+        if (_masterVolumeField != null)
+          _masterVolumeField.UnregisterValueChangedCallback(HandleMasterVolumeChanged);
 
         _audioScroll.Content.Clear();
         _outputDeviceField = null;
         _inputDeviceField = null;
+        _masterVolumeField = null;
         _outputRoutingNote = null;
 
         var settings = AudioDevicePreferenceService.GetOrCreateInstance().CurrentSettings;
 
+        BuildVolumeSection();
         BuildOutputSection(settings);
         BuildInputSection(settings);
         BuildAudioActions();
@@ -91,6 +100,22 @@ namespace MultiplayerInfrastructure.UI
       {
         _audioFormInitializing = false;
       }
+    }
+
+    private void BuildVolumeSection()
+    {
+      var section = AddAudioSection(
+        "사운드 볼륨",
+        "게임의 모든 소리 크기를 조절합니다. 0%는 음소거이고 100%는 최대 볼륨입니다.");
+
+      var service = AudioVolumePreferenceService.GetOrCreateInstance();
+      _masterVolumeField = new SliderInt(0, 100)
+      {
+        value = Mathf.RoundToInt(service.CurrentVolume * 100f),
+        showInputField = true,
+      };
+      _masterVolumeField.RegisterValueChangedCallback(HandleMasterVolumeChanged);
+      AddRow(section, "전체 볼륨", _masterVolumeField);
     }
 
     private void BuildOutputSection(AudioDeviceSettingsData settings)
@@ -197,6 +222,17 @@ namespace MultiplayerInfrastructure.UI
 
     private void HandleInputDeviceChanged(ChangeEvent<string> _)
       => ApplyDeviceSelection(AudioDeviceKind.Input, _inputDeviceField, _inputDevices);
+
+    private void HandleMasterVolumeChanged(ChangeEvent<int> change)
+    {
+      if (_audioFormInitializing)
+        return;
+
+      var volume = change.newValue / 100f;
+
+      AudioVolumePreferenceService.GetOrCreateInstance().SetVolume(volume);
+      SetStatusText($"전체 볼륨을 {change.newValue}%로 저장했습니다.");
+    }
 
     private void ApplyDeviceSelection(AudioDeviceKind kind, DropdownField field, List<AudioDeviceDescriptor> devices)
     {
