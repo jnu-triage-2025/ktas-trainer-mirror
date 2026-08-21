@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using FishNet;
+using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Entity.LineConnection;
 using TriageTrainer.Entity.OxyLine;
 using TriageTrainer.Scenario;
@@ -559,6 +561,17 @@ namespace TriageTrainer.Entity
       if (service == null)
       {
         WarnAutomaticLineFailure("oxy", "LineConnectionService is missing");
+        return false;
+      }
+
+      // 정적 유량계 상호작용은 클라이언트에서 시작될 수 있다. 자동 연결 생성은 서버만
+      // 허용하므로, 클라이언트에서는 같은 토폴로지 요청 경로로 서버에 전달한다.
+      // 반환값은 "실제로 연결됨"만 나타내야 하므로, 요청만 보낸 이 프레임에는 false다.
+      // 서버가 선을 만들면 OxyLineConnectionPoint.NotifyLineConnected가 완료 처리를 한다.
+      if (!InstanceFinder.IsOffline && !InstanceFinder.IsServerStarted)
+      {
+        ScenarioNetworkRelay.RequestLineTopologyChange(
+          equipmentPoint.ConnectionIdentifier, patientPoint.ConnectionIdentifier, connected: true);
         return false;
       }
 

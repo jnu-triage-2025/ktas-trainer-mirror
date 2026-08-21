@@ -284,8 +284,22 @@ namespace TriageTrainer.Entity
     public override void OnHiddenConfirmed()
     {
       SetAttached(false);
+      ClearAttachedInteractSignal();
       TriageWorldInteractionSignals.RaiseOxyflowmeterRemoved(EntityIdentifier);
       TriageWorldInteractionSignals.RaiseOxyflowmeterDisabled(EntityIdentifier);
+    }
+
+    /// <summary>
+    /// 회수한 유량계의 조작 이력을 지운다. 이 신호가 남아 있으면 다시 설치했을 때
+    /// 첫 상호작용이 "조작"이 아니라 "회수"로 잡혀, 산소 공급 단계를 더 이상 진행할 수 없다.
+    /// 유량계별 신호만 지운다. 공용 신호(<c>interact_oxyflow_wall</c>)는 환자 A 계열 시나리오의
+    /// 게이트가 참조하므로 건드리지 않는다.
+    /// </summary>
+    private void ClearAttachedInteractSignal()
+    {
+      string signal = ResolveAttachedInteractSignal();
+      if (!string.IsNullOrWhiteSpace(signal))
+        MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Clear(signal);
     }
 
     public override void ApplyHiddenFromNetwork()

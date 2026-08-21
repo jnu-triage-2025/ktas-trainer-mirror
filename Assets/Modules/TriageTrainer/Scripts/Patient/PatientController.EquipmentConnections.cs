@@ -425,19 +425,41 @@ namespace TriageTrainer.Entity
     // ── Debug / Summary ──
 
     /// <summary>
-    /// 현재 모든 장비 연결 상태를 문자열로 요약한다(디버그/인스펙터 표시용).
+    /// CareZone 장비 인식과 실제 물리 라인 연결 상태를 구분해 요약한다.
     /// </summary>
     public string GetConnectionSummary()
     {
       var sb = new StringBuilder();
-      sb.AppendLine($"Patient '{Identifier}' Equipment Connections:");
+      sb.AppendLine($"Patient '{Identifier}' Equipment Status:");
+      sb.AppendLine("  CareZone-assigned equipment references:");
       sb.AppendLine($"  Bed            : {FormatRef(_supportExternalRefs.PatientBed)}");
       sb.AppendLine($"  Monitor        : {FormatRef(_monitoringPatientMonitor)}");
       sb.AppendLine($"  IV Left Arm    : {FormatRef(IVFluidLeftArm)}");
       sb.AppendLine($"  IV Right Arm   : {FormatRef(IVFluidRightArm)}");
       sb.AppendLine($"  Wall Suction   : {FormatRef(_supportExternalRefs.SuctionWall)}");
       sb.AppendLine($"  Oxyflowmeter   : {FormatRef(_supportExternalRefs.Oxyflowmeter)}");
+      sb.AppendLine("  Physical oxygen line:");
+      sb.AppendLine($"  Flowmeter port : {FormatOxygenLineEndpoint(_supportExternalRefs.Oxyflowmeter?.OxyLineConnectionPoint)}");
+      sb.AppendLine($"  Patient port   : {FormatOxygenLineEndpoint(ConfiguredOxygenMaskAttachmentPoint)}");
+      sb.AppendLine($"  Connected      : {IsOxygenLinePhysicallyConnected()}");
+      sb.Append(GetPatientBCOxygenTreatmentSummary());
       return sb.ToString();
+    }
+
+    private bool IsOxygenLinePhysicallyConnected()
+    {
+      var flowmeterPort = _supportExternalRefs.Oxyflowmeter?.OxyLineConnectionPoint;
+      var patientPort = ConfiguredOxygenMaskAttachmentPoint;
+      return flowmeterPort != null
+             && patientPort != null
+             && flowmeterPort.IsPhysicallyConnectedTo(patientPort);
+    }
+
+    private static string FormatOxygenLineEndpoint(TriageTrainer.Entity.LineConnection.LineConnectionPoint endpoint)
+    {
+      if (endpoint == null)
+        return "(not configured)";
+      return $"{endpoint.gameObject.name} (active={endpoint.isActiveAndEnabled}, id={endpoint.ConnectionIdentifier})";
     }
 
     [ContextMenu("Debug/Log All Equipment Connections")]

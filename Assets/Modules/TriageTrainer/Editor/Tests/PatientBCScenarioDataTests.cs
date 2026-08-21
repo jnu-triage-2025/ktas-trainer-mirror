@@ -1251,6 +1251,57 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void NasalCannulaActivationReconcilesAnAlreadyOperatedFlowmeter()
+    {
+      var serviceObject = new GameObject("line-service");
+      var zoneObject = new GameObject("care-zone");
+      var patientObject = new GameObject("patient_b");
+      var patientPortObject = new GameObject("nasal-cannula-port");
+      var flowmeterObject = new GameObject("flowmeter");
+      var flowmeterPortObject = new GameObject("flowmeter-port");
+      const string operationSignal = "test_operated_before_nasal_cannula";
+      try
+      {
+        serviceObject.AddComponent<LineConnectionService>();
+        var zone = zoneObject.AddComponent<PatientCareDescriptionZone>();
+        var patient = patientObject.AddComponent<PatientController>();
+        var patientPort = patientPortObject.AddComponent<OxyLineConnectionPoint>();
+        var flowmeter = flowmeterObject.AddComponent<WallAttachedOxyflowmeter>();
+        var flowmeterPort = flowmeterPortObject.AddComponent<OxyLineConnectionPoint>();
+
+        patient.ApplySpawnedEntityIdentifier("patient_b");
+        patientPortObject.transform.SetParent(patientObject.transform, false);
+        patientPortObject.SetActive(false);
+        flowmeter.ApplyShownFromNetwork();
+        SetPrivateField(flowmeter, "_oxyLineConnectionPoint", flowmeterPort);
+        SetPrivateField(flowmeter, "_attachedInteractSignal", operationSignal);
+        SetPrivateField(zone, "_activePatient", patient);
+        patient.SetConnectedOxyflowmeter(flowmeter);
+
+        ScenarioInteractionSignals.Raise(operationSignal);
+        zone.TryReconcileOxygenLineFor(flowmeter);
+        Assert.That(flowmeterPort.IsPhysicallyConnectedTo(patientPort), Is.False,
+          "비강 캐뉼라 포트가 비활성인 동안에는 산소 라인을 만들면 안 됩니다.");
+
+        patientPortObject.SetActive(true);
+        InvokePrivate(patient, "ReconcilePatientBCOxygenLine");
+
+        Assert.That(flowmeterPort.IsPhysicallyConnectedTo(patientPort), Is.True,
+          "유량계를 먼저 조작했어도 비강 캐뉼라 적용 뒤에는 산소 라인을 다시 판정해야 합니다.");
+      }
+      finally
+      {
+        ScenarioInteractionSignals.Clear(operationSignal);
+        Object.DestroyImmediate(flowmeterPortObject);
+        Object.DestroyImmediate(flowmeterObject);
+        Object.DestroyImmediate(patientPortObject);
+        Object.DestroyImmediate(patientObject);
+        Object.DestroyImmediate(zoneObject);
+        Object.DestroyImmediate(serviceObject);
+      }
+    }
+
+    [Test]
     public void UnattachedFlowmeterAcceptsHeldOxyflowmeterForInstallation()
     {
       var playerObject = new GameObject("player");
@@ -1276,6 +1327,39 @@ namespace TriageTrainer.Tests
       {
         Object.DestroyImmediate(flowmeterObject);
         Object.DestroyImmediate(playerObject);
+      }
+    }
+
+    [Test]
+    public void ReinstalledOxyflowmeterOffersTheOperateInteractionAgain()
+    {
+      var flowmeterObject = new GameObject("oxyflowmeter");
+      const string identifier = "zone_1:oxyflowmeter";
+      try
+      {
+        var flowmeter = flowmeterObject.AddComponent<WallAttachedOxyflowmeter>();
+        flowmeter.SetEntityIdentifier(identifier);
+        string operateSignal = flowmeter.ResolveAttachedInteractSignal();
+        Assert.That(operateSignal, Is.EqualTo($"interact_oxyflow_wall_{identifier}"));
+
+        flowmeter.OnShownConfirmed();
+        Assert.That(flowmeter.IsDetachInteraction, Is.False,
+          "갓 설치한 유량계의 첫 상호작용은 조작이어야 한다.");
+
+        ScenarioInteractionSignals.Raise(operateSignal);
+        Assert.That(flowmeter.IsDetachInteraction, Is.True,
+          "조작을 마치면 다음 상호작용은 회수로 넘어간다.");
+
+        flowmeter.Detach();
+        flowmeter.OnShownConfirmed();
+        Assert.That(ScenarioInteractionSignals.IsRaised(operateSignal), Is.False);
+        Assert.That(flowmeter.IsDetachInteraction, Is.False,
+          "회수한 뒤 다시 설치하면 조작 단계를 처음부터 다시 수행할 수 있어야 한다.");
+      }
+      finally
+      {
+        ScenarioInteractionSignals.Clear($"interact_oxyflow_wall_{identifier}");
+        Object.DestroyImmediate(flowmeterObject);
       }
     }
 

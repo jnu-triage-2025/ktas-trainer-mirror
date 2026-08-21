@@ -955,6 +955,10 @@ namespace TriageTrainer.Entity
           && TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingNasalCannula,
             PatientBCTreatmentStage.AwaitingOxygen))
       {
+        // 유량계를 먼저 조작한 경우에는 비강 캐뉼라 포트가 아직 비활성이라 라인 생성이
+        // 보류된다. 캐뉼라를 적용한 직후 같은 유량계를 다시 판정해야 순서와 무관하게
+        // 실제 산소 라인 연결 및 처치 완료 신호가 발생한다.
+        ReconcilePatientBCOxygenLine();
         if (_patientBCFreshOxygenInstalled
             && ShouldCreditPatientBCEquipmentConnection(EquipmentTypeOxyflowmeter))
           RaiseEquipmentStateEvent(EquipmentTypeOxyflowmeter, connected: true);
@@ -969,6 +973,43 @@ namespace TriageTrainer.Entity
       // SyncVar.OnChange 만으로는 부족한 사례가 있어(트리아지 갱신과 동일한 이유),
       // 권위 측에서 단계를 바꾼 직후 이 자리에서도 명시적으로 힌트를 갱신한다.
       RefreshPatientBCInteractableHints();
+    }
+
+    private void ReconcilePatientBCOxygenLine()
+    {
+      var flowmeter = ConnectedOxyflowmeter;
+      if (flowmeter == null)
+        return;
+
+      var zones = FindObjectsByType<PatientCareDescriptionZone>(
+        FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      for (int i = 0; i < zones.Length; i++)
+        zones[i].TryReconcileOxygenLineFor(flowmeter);
+    }
+
+    /// <summary>
+    /// B/C 환자의 산소 처치 완료 조건을 디버그 요약에 표시한다.
+    /// CareZone 장비 참조와 실제 산소 라인 연결을 혼동하지 않기 위한 진단 정보다.
+    /// </summary>
+    public string GetPatientBCOxygenTreatmentSummary()
+    {
+      if (!IsPatientBC)
+        return "  B/C oxygen treatment: (not applicable)\n";
+
+      var flowmeter = ConnectedOxyflowmeter;
+      var flowmeterPort = flowmeter != null ? flowmeter.OxyLineConnectionPoint : null;
+      var patientPort = ConfiguredOxygenMaskAttachmentPoint;
+      bool lineConnected = flowmeterPort != null
+                           && patientPort != null
+                           && flowmeterPort.IsPhysicallyConnectedTo(patientPort);
+      bool flowmeterOperated = flowmeter != null && flowmeter.IsAttachedInteractCompleted;
+      return $"  B/C oxygen treatment: stage={_patientBCNurseDStage.Value}, "
+             + $"requiresDetach={_patientBCRequiresOxygenDetach}, "
+             + $"observedDetach={_patientBCObservedOxygenDetach}, "
+             + $"flowmeterAttached={flowmeter != null && flowmeter.IsAttached}, "
+             + $"flowmeterOperated={flowmeterOperated}, "
+             + $"patientPortActive={OxygenMaskAttachmentPoint != null}, "
+             + $"physicalLineConnected={lineConnected}\n";
     }
 
     private bool ShouldCreditPatientBCEquipmentConnection(string equipmentType)
