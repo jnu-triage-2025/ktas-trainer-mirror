@@ -114,16 +114,56 @@ namespace MultiplayerInfrastructure.Scenario
 
         if (binding.ConsumeOnce)
         {
+          // 1회성: 발신 전에 소비 표시를 하고 소스에서 떼어 내 재진입/중복 발신을 막는다.
+          // 레지스트리에서 지우지는 않는다. 신호가 나중에 Clear 되면 발신자가 하나도 남지
+          // 않아 그 신호를 기다리는 게이트가 영구히 막히므로, 재무장할 수 있게 보관한다.
+          // (ReattachSourceEvent 가 같은 소스/이벤트의 남은 바인딩을 재구성한다.)
           binding.Consumed = true;
-          // 1회성: 발신 전에 바인딩을 제거하여 재진입/중복 발신을 방지한다.
-          // (Unregister 가 같은 소스/이벤트의 남은 바인딩을 재구성한다.)
-          Unregister(binding.Identifier);
+          ReattachSourceEvent(binding.Source, binding.EventName);
         }
 
         ScenarioInteractionSignals.Raise(binding.OutputSignal);
       };
 
       return binding.Source.RegisterStateEventListener(binding.EventName, binding.EventKey, callback);
+    }
+
+    /// <summary>
+    /// 지워진 신호를 출력으로 갖는 1회성 바인딩을 다시 무장한다.
+    ///
+    /// <para>
+    /// 1회성 바인딩은 첫 발신 뒤 소스에서 떨어져 있다. 게임플레이가 그 신호를 내리면
+    /// (예: 처치 단계를 다시 시작하며 이전 결과 신호를 지우는 경우) 그 신호를 올릴 주체가
+    /// 하나도 남지 않아, 신호를 기다리는 Validator 게이트가 영구히 열리지 않는다.
+    /// 신호가 내려간 시점에 다시 붙여 두어야 같은 처치를 다시 수행했을 때 게이트가 통과된다.
+    /// </para>
+    /// </summary>
+    internal static void RearmConsumedBindingsForSignal(string normalizedSignalId)
+    {
+      if (string.IsNullOrWhiteSpace(normalizedSignalId) || Bindings.Count == 0)
+        return;
+
+      List<Binding> rearmed = null;
+      foreach (var binding in Bindings.Values)
+      {
+        if (!binding.Consumed
+            || !string.Equals(binding.OutputSignal, normalizedSignalId, StringComparison.Ordinal))
+          continue;
+
+        binding.Consumed = false;
+        (rearmed ??= new List<Binding>()).Add(binding);
+      }
+
+      if (rearmed == null)
+        return;
+
+      // 소스는 이벤트명 단위 해제만 제공하므로 (소스, 이벤트) 묶음마다 한 번씩 재구성한다.
+      var reattached = new HashSet<(IScenarioEntityStateEventSource, string)>();
+      foreach (var binding in rearmed)
+      {
+        if (binding.Source != null && reattached.Add((binding.Source, binding.EventName)))
+          ReattachSourceEvent(binding.Source, binding.EventName);
+      }
     }
 
     /// <summary>
@@ -139,7 +179,8 @@ namespace MultiplayerInfrastructure.Scenario
 
       foreach (var binding in Bindings.Values)
       {
-        if (ReferenceEquals(binding.Source, source)
+        if (!binding.Consumed
+            && ReferenceEquals(binding.Source, source)
             && string.Equals(binding.EventName, eventName, StringComparison.Ordinal))
         {
           AttachToSource(binding);

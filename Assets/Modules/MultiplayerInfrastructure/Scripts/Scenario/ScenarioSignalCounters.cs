@@ -38,7 +38,11 @@ namespace MultiplayerInfrastructure.Scenario
     private static readonly Queue<string> PendingSignals = new();
     private static bool _isDispatching;
 
-    static ScenarioSignalCounters() => ScenarioInteractionSignals.OnSignalRegistered += HandleSignal;
+    static ScenarioSignalCounters()
+    {
+      ScenarioInteractionSignals.OnSignalRegistered += HandleSignal;
+      ScenarioInteractionSignals.OnSignalCleared += HandleSignalCleared;
+    }
 
     /// <summary>카운터를 등록한다. 동일 식별자 재등록은 교체한다. 등록 즉시 임계치를 충족하면 바로 발신한다.</summary>
     public static bool Register(string identifier, string sourcePrefix, int threshold, string output)
@@ -94,8 +98,24 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>Re-evaluates counters whose expected signal set can change as players disconnect.</summary>
     public static void RefreshDynamicThresholds()
     {
+      // 고정 임계치 카운터는 신호가 도착할 때만 상태가 바뀌므로 Dispatch 가 이미 처리한다.
+      // 로스터 기반 카운터만 재평가 대상이며, 그런 카운터가 없으면 스냅샷도 뜨지 않는다.
+      // (이 메서드는 접속 상태 변화 시점과 저빈도 안전망에서 호출된다.)
+      bool hasDynamicCounter = false;
+      foreach (var counter in Counters.Values)
+      {
+        if (counter.ExpectedSignals == null) continue;
+        hasDynamicCounter = true;
+        break;
+      }
+
+      if (!hasDynamicCounter) return;
+
       foreach (var counter in Counters.Values.ToArray())
-        FireIfReady(counter);
+      {
+        if (counter.ExpectedSignals != null)
+          FireIfReady(counter);
+      }
     }
 
     private static void EnqueueImmediateFire(Counter counter)
@@ -140,6 +160,19 @@ namespace MultiplayerInfrastructure.Scenario
       {
         _isDispatching = false;
       }
+    }
+
+    /// <summary>
+    /// 내려간 신호를 누적 집계에서 제거한다.
+    /// Matched 는 "현재 올라가 있는 매칭 신호"를 뜻하므로, 신호가 내려갔는데도 남겨 두면
+    /// 더 이상 참이 아닌 조건으로 임계치를 채워 출력 신호를 잘못 발신하게 된다.
+    /// </summary>
+    private static void HandleSignalCleared(string signal)
+    {
+      if (string.IsNullOrWhiteSpace(signal) || Counters.Count == 0) return;
+
+      foreach (var counter in Counters.Values)
+        counter.Matched.Remove(signal);
     }
 
     private static void Dispatch(string signal)

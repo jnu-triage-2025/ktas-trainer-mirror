@@ -43,23 +43,32 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       var key = BuildKey(targetId, signalId);
+      bool alreadyResolved;
 
       lock (Sync)
       {
-        if (TryConsumePendingSignalLocked(key))
+        alreadyResolved = TryConsumePendingSignalLocked(key);
+        if (!alreadyResolved)
         {
-          return true;
-        }
+          if (!WaitingResolvers.TryGetValue(key, out var waiters))
+          {
+            waiters = new Queue<Action>();
+            WaitingResolvers[key] = waiters;
+          }
 
-        if (!WaitingResolvers.TryGetValue(key, out var waiters))
-        {
-          waiters = new Queue<Action>();
-          WaitingResolvers[key] = waiters;
+          waiters.Enqueue(onResolved);
         }
+      }
 
-        waiters.Enqueue(onResolved);
+      if (!alreadyResolved)
+      {
         return false;
       }
+
+      // 반환값만 보고 판단하는 호출부와, 콜백만 기다리는 호출부가 모두 동작해야 한다.
+      // 콜백은 잠금 밖에서 호출해 사용자 코드가 잠금을 잡은 채 실행되지 않게 한다.
+      onResolved?.Invoke();
+      return true;
     }
 
     /// <summary>

@@ -56,11 +56,14 @@ namespace MultiplayerInfrastructure.Scenario
 
     private ScenarioGraph _cachedGraph;
     private bool _hasTriggered;
-    private float _lastTriggerTime;
+    private float _lastTriggerTime = float.NegativeInfinity;
     private string _registeredIdentifier;
 
     // 대상별 신호를 이미 발신한 엔티티 식별자(중복 발신 방지).
     private readonly HashSet<string> _perEntityRaised = new(StringComparer.Ordinal);
+
+    // 새 시나리오 실행마다 중복 방지 상태를 되돌리기 위해 활성 존을 추적한다.
+    private static readonly List<ScenarioTriggerZone> LiveZones = new();
 
     #endregion
 
@@ -88,11 +91,14 @@ namespace MultiplayerInfrastructure.Scenario
     private void OnEnable()
     {
       RegisterToRegistry();
+      if (!LiveZones.Contains(this))
+        LiveZones.Add(this);
     }
 
     private void OnDisable()
     {
       UnregisterFromRegistry();
+      LiveZones.Remove(this);
     }
 
     private void OnDestroy()
@@ -331,11 +337,49 @@ namespace MultiplayerInfrastructure.Scenario
 
     #region Public API
 
+    /// <summary>
+    /// 새 시나리오 실행을 위해 모든 활성 존의 중복 방지 상태를 되돌린다.
+    ///
+    /// <para>
+    /// 존의 발신 억제 상태는 한 번의 시나리오 실행 안에서만 의미가 있다. 시나리오가 다시
+    /// 시작되면 신호 레지스트리는 비워지지만 존의 상태는 그대로 남아, 같은 엔티티나 플레이어가
+    /// 다시 진입해도 신호를 올리지 않는다. 그 신호를 기다리는 게이트와 카운터는 영구히 막힌다.
+    /// </para>
+    /// </summary>
+    public static void ResetAllForNewScenarioRun()
+    {
+      for (int index = LiveZones.Count - 1; index >= 0; index--)
+      {
+        var zone = LiveZones[index];
+        // 파괴된 존은 목록에서 정리한다(UnityEngine.Object 의 == 오버로드를 사용한다).
+        if (zone == null)
+        {
+          LiveZones.RemoveAt(index);
+          continue;
+        }
+
+        zone.ResetForNewScenarioRun();
+      }
+    }
+
+    private void ResetForNewScenarioRun()
+    {
+      _perEntityRaised.Clear();
+
+      // 시나리오를 시작시키는 존(그래프 지정)은 방금 자신이 띄운 시나리오를 다시 시작시키면
+      // 안 되므로 1회 트리거 상태를 유지한다. 신호 전용 존은 실행마다 다시 발신해야 한다.
+      if (_cachedGraph != null)
+        return;
+
+      _hasTriggered = false;
+      _lastTriggerTime = float.NegativeInfinity;
+    }
+
     [ContextMenu("Scenario Trigger/Reset Trigger")]
     public void ResetTrigger()
     {
       _hasTriggered = false;
-      _lastTriggerTime = 0f;
+      _lastTriggerTime = float.NegativeInfinity;
       _perEntityRaised.Clear();
       gameObject.SetActive(true);
     }

@@ -408,23 +408,43 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
+    /// <summary>
+    /// 로스터 기반 시그널 카운터를 다시 평가하는 안전망 주기(초).
+    /// 정상 경로는 신호 도착(Dispatch)과 접속 상태 변화에서 즉시 평가되므로, 이 폴링은 그 두
+    /// 경로가 놓친 경우만 뒤늦게 복구하면 된다. 매 프레임 평가하면 활성 역할 로스터 조회와
+    /// 그에 딸린 LINQ 할당이 시나리오 내내 프레임마다 반복된다.
+    /// </summary>
+    private const float DynamicThresholdRefreshIntervalSeconds = 1f;
+
+    private float _nextDynamicThresholdRefreshTime;
+
     private void Update()
     {
-      if (IsActive)
-        ScenarioSignalCounters.RefreshDynamicThresholds();
+      if (!IsActive || Time.time < _nextDynamicThresholdRefreshTime)
+        return;
+
+      _nextDynamicThresholdRefreshTime = Time.time + DynamicThresholdRefreshIntervalSeconds;
+      ScenarioSignalCounters.RefreshDynamicThresholds();
     }
 
     private void HandleRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs args)
     {
-      if (args.ConnectionState != RemoteConnectionState.Stopped
-          || connection == null
-          || !_activeRoleBranchDepthByClientId.ContainsKey(connection.ClientId))
+      if (args.ConnectionState != RemoteConnectionState.Stopped || connection == null)
         return;
 
-      var message = $"[ScenarioController] Aborting scenario because client {connection.ClientId} disconnected during an assigned ByRole branch.";
-      Debug.LogError(message, this);
-      GameLogService.WriteScenario(message, _currentGraph?.Identifier);
-      EndScenario();
+      if (_activeRoleBranchDepthByClientId.ContainsKey(connection.ClientId))
+      {
+        var message = $"[ScenarioController] Aborting scenario because client {connection.ClientId} disconnected during an assigned ByRole branch.";
+        Debug.LogError(message, this);
+        GameLogService.WriteScenario(message, _currentGraph?.Identifier);
+        EndScenario();
+        return;
+      }
+
+      // 역할 브랜치를 맡지 않은 인원이 나갔다면 시나리오는 계속 진행한다. 다만 활성 역할
+      // 로스터가 줄었으므로, 남은 인원의 신호만으로 이미 충족된 로스터 기반 카운터가 있는지
+      // 폴링을 기다리지 않고 이 자리에서 즉시 재평가한다.
+      ScenarioSignalCounters.RefreshDynamicThresholds();
     }
 
     #endregion
@@ -702,6 +722,9 @@ namespace MultiplayerInfrastructure.Scenario
       ScenarioConditionalSignalListeners.ClearAll();
       ScenarioEntityStateSignalBindings.ClearAll();
       ScenarioSignalCounters.ClearAll();
+      // 트리거 존의 중복 방지 상태는 한 번의 실행 안에서만 의미가 있다. 되돌리지 않으면
+      // 두 번째 실행에서 존 진입 신호가 다시 올라가지 않아 그 신호를 기다리는 게이트가 막힌다.
+      ScenarioTriggerZone.ResetAllForNewScenarioRun();
 
       // 이전 시나리오에서 남았을 수 있는 모든 타이머/표시를 새 시나리오 시작 시 정리한다.
       ScenarioTimeRelay.ClearAllAuthoritative();
@@ -1460,6 +1483,7 @@ namespace MultiplayerInfrastructure.Scenario
       ScenarioConditionalSignalListeners.ClearAll();
       ScenarioEntityStateSignalBindings.ClearAll();
       ScenarioSignalCounters.ClearAll();
+      ScenarioTriggerZone.ResetAllForNewScenarioRun();
       ScenarioTimeRelay.ClearAllAuthoritative();
       ScenarioNetworkRelay.ClearScenarioQuestsAuthoritative(_currentGraph?.Identifier);
 

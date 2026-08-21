@@ -30,6 +30,12 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public static event Action<string> OnSignalRegistered;
 
+    /// <summary>
+    /// 신호가 로컬 레지스트리에서 내려갈 때 발생한다(정규화된 식별자 전달).
+    /// 신호의 누적 상태를 따로 들고 있는 관찰자(시그널 카운터 등)가 내려간 신호를 반영할 수 있게 한다.
+    /// </summary>
+    public static event Action<string> OnSignalCleared;
+
     /// <summary>신호 식별자를 정규화한다(접두사 보장).</summary>
     public static string Normalize(string signalId)
     {
@@ -140,6 +146,11 @@ namespace MultiplayerInfrastructure.Scenario
 
       Registry.Registry.Unregister(RegistryType.RuntimeState, normalizedSignalId);
       GameLogService.WriteSignal($"Signal cleared: {normalizedSignalId}", normalizedSignalId);
+
+      // 이 신호를 내보내던 1회성 엔티티 상태 바인딩은 이미 소비되어 등록이 해제돼 있다.
+      // 신호를 내린 뒤에도 발신자가 남아 있어야 게이트가 다시 열릴 수 있으므로 재무장한다.
+      ScenarioEntityStateSignalBindings.RearmConsumedBindingsForSignal(normalizedSignalId);
+      OnSignalCleared?.Invoke(normalizedSignalId);
     }
 
     /// <summary>

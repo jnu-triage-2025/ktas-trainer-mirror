@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "2-implementing"
 status: active
-updated: 2026-08-19
+updated: 2026-08-21
 flags: ["refactor-required"]
 ---
 
@@ -91,6 +91,7 @@ flags: ["refactor-required"]
         - "P(Pain response, 통증에 반응 있음)": 정답 노드로 진행
         - "U(Unconsciousness, 반응 없음)": 오답 노드로 진행
       - 오답 노드: "오답입니다. 다른 자극에는 반응이 없다가, 통증에 반응을 하고 있습니다."를 보여준 뒤 같은 질문으로 돌아간다.
+      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
     5. Dialogue
       - Speaker: "시스템"
       - Content: "[관찰] 추가 사정으로 GCS를 확인합니다. 먼저 Eye Opening(E) 반응을 확인합니다. 옆구리를 꼬집자 잠시 눈을 떴다가 다시 감습니다."
@@ -100,6 +101,7 @@ flags: ["refactor-required"]
       - Content: "관찰된 E(Eye Opening) 점수는 몇 점입니까?"
       - Choices: 4점/3점/1점은 오답, 2점(통증에 반응)이 정답
       - 오답 노드: "오답입니다. 통증 자극에만 반응했음을 유의하세요." 후 재시도
+      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
     7. Dialogue
       - Speaker: "시스템"
       - Content: "[관찰] 다음은 Verbal Response(V)입니다. \"여기가 어디예요?\"라고 묻자, 환자는 이해할 수 없는 신음소리만 내고 있습니다."
@@ -109,6 +111,7 @@ flags: ["refactor-required"]
       - Content: "관찰된 V(Verbal Response) 점수는 몇 점입니까?"
       - Choices: 5점/4점/3점/1점은 오답, 2점(신음소리)이 정답
       - 오답 노드: "오답입니다. 현재 환자는 알아들을 수 없는 소리만 내고 있습니다." 후 재응시
+      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
     9. Dialogue
       - Speaker: "시스템"
       - Content: "[관찰] 마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 팔을 재빨리 굽혀 자극을 피합니다."
@@ -118,6 +121,7 @@ flags: ["refactor-required"]
       - Content: "관찰된 M(Motor Response) 점수는 몇 점입니까?"
       - Choices: 6점/5점/3점/2점/1점은 오답, 4점(통증에 회피)이 정답
       - 오답 노드: "오답입니다. 현재 통증에 회피하고 있습니다." 후 재시도
+      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
     11. Dialogue
       - Speaker: "시스템"
       - Content: "GCS 측정 완료. E2 / V2 / M4 = 총 8점 (Stupor) 입니다."
@@ -186,7 +190,7 @@ flags: ["refactor-required"]
 
 이 지시를 받아 세 브랜치가 동시에 진행된다(P004).
 
-- 간호사 B(미배정 시 간호사 A)에게 퀘스트 발행 — 기관내삽관과 산소 공급
+- 간호사 B(미배정 시 간호사 A)에게 퀘스트 발행: 기관내삽관과 산소 공급
   - 제목: "기관내삽관" (`Quest_Intubation_PatientA`)
   - 목표
     - 표기: "삽관 물품을 준비하고 의사의 삽관을 보조하기"
@@ -272,6 +276,7 @@ flags: ["refactor-required"]
         - Content: "투여될 산소의 양을 조절합니다."
         - Choices: 3L/5L/15L은 오답, 10L이 정답
         - 오답 노드: "오답입니다. 처방은 10L 입니다." 후 재시도
+        - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
       9. Dialogue
         - Speaker: "간호사 A"
         - Content: "산소 투여 시작했습니다."
@@ -305,7 +310,7 @@ flags: ["refactor-required"]
       - Speaker: "간호사 C"
       - Content: "지혈 중입니다. 거즈 고정했습니다."
       - TTS: true
-- 정맥로 확보와 수액 준비 — 간호사 D(미배정 시 간호사 C)에게 퀘스트 발행
+- 정맥로 확보와 수액 준비: 간호사 D(미배정 시 간호사 C)에게 퀘스트 발행
   - 제목: "IV 라인" (`Quest_IV_Line_PatientA`)
   - 목표
     - 표기: "양팔에 정맥로를 확보하고 수액을 연결하기"
@@ -406,7 +411,7 @@ flags: ["refactor-required"]
 
 의사 지시에 따라 네 개의 브랜치가 병렬로 진행된다(P005).
 
-- 간호사 A에게 퀘스트 발행 — 앰부백 산소화
+- 간호사 A에게 퀘스트 발행: 앰부백 산소화
   - 제목: "앰부백 산소화" (`Quest_Ambu_A`)
   - 목표
     - 표기: "앰부백으로 산소를 공급하기"
@@ -436,16 +441,18 @@ flags: ["refactor-required"]
       - Content: "앰부백을 클릭해 산소 공급을 시작하세요."
       - TTS: true
       - 처리: 시작 신호(`sig.start_ambu_r1`) 후 앰부배깅 연출(`start_ambubagging`)
-    6. 이론 문항 1 — ChoiceDialogue
+    6. 이론 문항 1: ChoiceDialogue
       - Speaker: "시스템"
       - Content: "1. 성인의 정확한 산소 제공량은?"
       - Choices: "약 1500ml (다섯 손가락 모두를 이용해 백을 짠다)"는 오답, "약 600ml (엄지, 검지, 중지를 이용해 백을 짠다)"이 정답
       - 오답 노드: "오답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다." 후 재시도
-    7. 이론 문항 2 — ChoiceDialogue
+      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
+    7. 이론 문항 2: ChoiceDialogue
       - Speaker: "시스템"
       - Content: "2. 심폐소생술 시 앰부 배깅(ambu-bagging)의 적절한 속도는?"
       - Choices: "10초에 1번 (분당 약 6회)"와 "3초에 1번 (분당 약 20회)"은 오답, "6초에 1번 (분당 약 10회)"이 정답
       - 오답 노드: "오답입니다. 6초에 1번씩 눌러야 합니다." 후 재시도
+      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
 - 간호사 B에게는 가슴압박 퀘스트를 발행
   - 제목: "가슴압박" (`Quest_ChestComp_B`)
   - 목표
@@ -456,27 +463,31 @@ flags: ["refactor-required"]
       - Content: "환자의 가슴을 클릭해 가슴압박을 시작하세요."
       - TTS: true
       - 처리: 시작 신호(`sig.click_to_start_comp`)에 이어 압박 시작 연출(`start_chest_compression`)
-    2. 이론 문항 1 — ChoiceDialogue
+    2. 이론 문항 1: ChoiceDialogue
       - Speaker: "시스템"
       - Content: "1. 성인의 정확한 가슴 압박 깊이는?"
       - Choices: "약 4cm"와 "약 6cm"는 오답, "약 5cm"가 정답
       - 오답 노드: "오답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다." 후 재시도
-    3. 이론 문항 2 — ChoiceDialogue
+      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
+    3. 이론 문항 2: ChoiceDialogue
       - Speaker: "시스템"
       - Content: "2. 성인의 정확한 가슴 압박 위치는?"
       - Choices: "양측 유두선상의 중간지점"은 오답, "흉골 하부 1/2 지점"이 정답
       - 오답 노드: "오답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다." 후 재시도
-    4. 이론 문항 3 — ChoiceDialogue
+      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
+    4. 이론 문항 3: ChoiceDialogue
       - Speaker: "시스템"
       - Content: "3. 정확한 가슴 압박 횟수는?"
       - Choices: "분당 약 80~100회"와 "분당 약 120~140회"는 오답, "분당 약 100~120회"가 정답
       - 오답 노드: "오답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다." 후 재시도
-    5. 이론 문항 4 — ChoiceDialogue
+      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
+    5. 이론 문항 4: ChoiceDialogue
       - Speaker: "시스템"
       - Content: "4. 가슴압박 시 주의사항은?"
       - Choices: "지쳐도 한 사람이 계속 가슴압박을 수행한다."와 "뼈가 부러진 것 같으면 멈춘다."는 오답, "충분한 이완을 제공한다."가 정답
       - 오답 노드: "오답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 혈액 순환이 가능합니다." 후 재시도
-- 간호사 C에게 퀘스트 발행 — 제세동기 준비
+      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
+- 간호사 C에게 퀘스트 발행: 제세동기 준비
   - 제목: "제세동기 준비" (`Quest_Defib_C`)
   - 목표
     - 표기: "제세동기를 연결하고 패드를 부착하기"
@@ -495,21 +506,24 @@ flags: ["refactor-required"]
       - Speaker: "간호사 C"
       - Content: "제세동기 준비가 완료되었습니다."
       - TTS: true
-    4. 이론 문항 1 — ChoiceDialogue
+    4. 이론 문항 1: ChoiceDialogue
       - Speaker: "시스템"
       - Content: "1. 제세동기는 Sync 버튼을 눌러 Cardioversion을 제공할 수 있습니다. 다음 중 제세동을 실시해야 하는 심전도는?"
       - Choices: "Asystole(무수축)", "PEA(무맥성 전기활동)", "VT(맥박이 있는 심실빈맥)"은 오답, "VF(심실세동)"가 정답
       - 오답 노드: "오답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다." 후 재시도
-    5. 이론 문항 2 — ChoiceDialogue
+      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
+    5. 이론 문항 2: ChoiceDialogue
       - Speaker: "시스템"
       - Content: "2. 이상파형(Biphasic) 제세동기에서 필요한 에너지 양은?"
       - Choices: "360J(줄)"은 오답, "150~200J(줄)"이 정답
       - 오답 노드: "오답입니다. 150~200J(줄)이 정답입니다." 후 재시도
-    6. 이론 문항 3 — ChoiceDialogue
+      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
+    6. 이론 문항 3: ChoiceDialogue
       - Speaker: "시스템"
       - Content: "3. 제세동 등 전기충격 시 주의해야 할 사항은?"
       - Choices: "꼬인 수액 줄을 풀어준다.", "의료진이 손을 대어도 괜찮다.", "의사의 지시가 있을 때에만 실시한다."는 오답, "전기충격 전 모두 환자에게서 떨어지도록 지시한다."가 정답
       - 오답 노드: "오답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다." 후 재시도
+      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
 - 간호사 D에게는 에피네프린 투여 퀘스트를 발행
   - 제목: "에피네프린 투여" (`Quest_Epi_D`)
   - 목표
@@ -545,16 +559,18 @@ flags: ["refactor-required"]
       - Speaker: "간호사 D"
       - Content: "생리식염수 20cc 투여했습니다."
       - TTS: true
-    7. 이론 문항 1 — ChoiceDialogue
+    7. 이론 문항 1: ChoiceDialogue
       - Speaker: "시스템"
       - Content: "1. 심정지 상황에서 에피네프린의 투여 간격은 어떻게 되는가?"
       - Choices: "약 1~2분에 한 번", "약 5~10분에 한 번", "누군가 시킬 때 마다"는 오답, "약 3~5분에 한 번"이 정답
       - 오답 노드: "오답입니다. 에피네프린은 3~5분에 한 번 투여합니다." 후 재시도
-    8. 이론 문항 2 — ChoiceDialogue
+      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
+    8. 이론 문항 2: ChoiceDialogue
       - Speaker: "시스템"
       - Content: "2. 말초(팔)로 약물을 투여하는 경우, 적절한 투여 절차는?"
       - Choices: "약물만 주입"과 "약물 주입 후 생리식염수 주입"은 오답, "약물 주입 후 생리식염수 주입, 이후 팔 들어올리기"가 정답
       - 오답 노드: "오답입니다. 심장에 빠르게 도달시키기 위해 생리식염수 주입 후 팔을 들어올려야 합니다." 후 재시도
+      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
 
 네 브랜치가 모두 끝난 뒤 합류한다.
 
@@ -572,16 +588,16 @@ flags: ["refactor-required"]
 
 이 교대 지시로 네 브랜치가 나란히 진행된다(P006).
 
-- 간호사 A에게 퀘스트 발행 — 가슴압박 교대 (`Quest_ChestComp_A`)
+- 간호사 A에게 퀘스트 발행: 가슴압박 교대 (`Quest_ChestComp_A`)
   - 간호사 B의 1주기 절차와 같다. 가슴 클릭(`sig.interact_chest`)으로 압박을 시작하며 깊이·위치·횟수·이완 네 문항을 순서대로 통과한다.
-- 간호사 B에게 퀘스트 발행 — 앰부백 교대 (`Quest_Ambu_B`)
+- 간호사 B에게 퀘스트 발행: 앰부백 교대 (`Quest_Ambu_B`)
   1. Dialogue
     - Speaker: "시스템"
     - Content: "앰부백을 클릭해 산소 공급을 시작하세요."
     - TTS: true
     - 처리: 시작 신호(`sig.start_ambu_r2`), 이후 앰부배깅 연출(`start_ambubagging`)
   2. 산소 제공량(정답 약 600ml), 배깅 속도(정답 6초에 1번) 두 문항을 1주기 절차대로 진행한다.
-- 간호사 C에게 퀘스트 발행 — 에피네프린 투여 교대 (`Quest_Epi_C`)
+- 간호사 C에게 퀘스트 발행: 에피네프린 투여 교대 (`Quest_Epi_C`)
   1. 1주기와 같이 에피네프린 앰퓰과 5cc 주사기를 획득해 조합하고 20cc 생리식염수와 20cc 주사기를 획득한다.
   2. Dialogue
     - Speaker: "의사 NPC"
@@ -602,7 +618,7 @@ flags: ["refactor-required"]
     - Content: "생리식염수 20cc 투여했습니다."
     - TTS: true
   7. 투여 간격(정답 3~5분에 한 번), 말초 투여 절차(정답 약물 주입 후 생리식염수 주입, 이후 팔 들어올리기) 두 문항을 1주기와 동일한 절차로 진행한다.
-- 간호사 D에게 퀘스트 발행 — 제세동기 대기 (`Quest_Defib_D`)
+- 간호사 D에게 퀘스트 발행: 제세동기 대기 (`Quest_Defib_D`)
   1. Dialogue
     - Speaker: "시스템"
     - Content: "제세동기를 클릭해 역할을 부여받으세요."
@@ -647,13 +663,13 @@ flags: ["refactor-required"]
 
 이 지시가 내려지면 세 브랜치가 병렬로 진행된다(P007).
 
-- 간호사 A에게 퀘스트 발행 — 분류구역 복귀 (`Quest_Return_Triage`)
+- 간호사 A에게 퀘스트 발행: 분류구역 복귀 (`Quest_Return_Triage`)
   1. Dialogue
     - Speaker: "시스템"
     - Content: "중증도 분류 구역으로 이동하세요."
     - TTS: true
     - 처리: 구역 도착 신호(`sig.arrive_triagearea`) 수신 뒤 이동 연출(`player_a_move_to_triage`)
-- 간호사 B에게 퀘스트 발행 — 의복 제거 (`Quest_Cut_Clothing`)
+- 간호사 B에게 퀘스트 발행: 의복 제거 (`Quest_Cut_Clothing`)
   1. Dialogue
     - Speaker: "시스템"
     - Content: "가위를 클릭해 획득하고, 환자를 클릭해 의복을 제거하세요."
@@ -663,7 +679,7 @@ flags: ["refactor-required"]
     - Speaker: "시스템"
     - Content: "추가 외상은 확인되지 않습니다."
     - TTS: true
-- 간호사 D에게 퀘스트 부여 — 의식 상태 재사정 (`Quest_Check_GCS_ROSC`)
+- 간호사 D에게 퀘스트 부여: 의식 상태 재사정 (`Quest_Check_GCS_ROSC`)
   1. Dialogue
     - Speaker: "시스템"
     - Content: "환자를 클릭해 환자의 의식 상태를 사정하십시오."
