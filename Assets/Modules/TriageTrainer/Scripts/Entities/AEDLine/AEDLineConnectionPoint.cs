@@ -10,6 +10,12 @@ namespace TriageTrainer.Entity.AEDLine
   /// </summary>
   public sealed class AEDLineConnectionPoint : LineConnectionPoint
   {
+    public const float LineWidth = 0.03f;
+    public const float Elasticity = 0.3f;
+    public const string MaterialResourcePath = "Materials/LineConnectionService/AEDLine";
+
+    public static Material DefaultMaterial => Resources.Load<Material>(MaterialResourcePath);
+
     public override void ApplyLineMaterial(LineRenderer lineRenderer)
     {
       base.ApplyLineMaterial(lineRenderer);

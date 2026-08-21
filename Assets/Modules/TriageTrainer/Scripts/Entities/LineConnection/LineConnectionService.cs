@@ -8,11 +8,11 @@ using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 using TriageTrainer.Entity.AEDLine;
+using TriageTrainer.Entity.ElectricalLine;
 using TriageTrainer.Entity.OxyLine;
 using TriageTrainer.Entity.SuctionLine;
 using TriageTrainer.Entity.IntravenousLine;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace TriageTrainer.Entity.LineConnection
 {
@@ -61,22 +61,7 @@ namespace TriageTrainer.Entity.LineConnection
     [SerializeField] private Transform _linesRoot;
 
     [Header("Line Visual")]
-    [SerializeField, Range(0f, 1f)] private float _intravenousLineElasticity = 0.21f;
-    [SerializeField, Range(0f, 1f)] private float _aedLineElasticity = 0.3f;
-    [SerializeField, Range(0f, 1f)] private float _oxyLineElasticity = 0.2f;
-    [SerializeField, Range(0f, 1f)] private float _suctionLineElasticity = 0.13f;
-    [FormerlySerializedAs("_lineWidth")]
-    [SerializeField, Min(0.001f)] private float _intravenousLineWidth = 0.03f;
-    [SerializeField, Min(0.001f)] private float _aedLineWidth = 0.03f;
-    [SerializeField, Min(0.001f)] private float _oxyLineWidth = 0.035f;
-    [SerializeField, Min(0.001f)] private float _suctionLineWidth = 0.04f;
     [SerializeField] private Color _lineColor = new Color(0.94f, 0.98f, 1f, 0.18f);
-
-    [Header("Line Material")]
-    [SerializeField] private Material _intravenousLineMaterial;
-    [SerializeField] private Material _aedLineMaterial;
-    [SerializeField] private Material _oxyLineMaterial;
-    [SerializeField] private Material _suctionLineMaterial;
 
     [Header("Line Shape")]
     [SerializeField, Min(2)] private int _lineSegments = 18;
@@ -329,14 +314,6 @@ namespace TriageTrainer.Entity.LineConnection
       EnsureLinesRoot();
       _lineSegments = Mathf.Max(2, _lineSegments);
       _lineSagAmount = Mathf.Max(0f, _lineSagAmount);
-      _intravenousLineElasticity = Mathf.Clamp01(_intravenousLineElasticity);
-      _aedLineElasticity = Mathf.Clamp01(_aedLineElasticity);
-      _oxyLineElasticity = Mathf.Clamp01(_oxyLineElasticity);
-      _suctionLineElasticity = Mathf.Clamp01(_suctionLineElasticity);
-      _intravenousLineWidth = Mathf.Max(0.001f, _intravenousLineWidth);
-      _aedLineWidth = Mathf.Max(0.001f, _aedLineWidth);
-      _oxyLineWidth = Mathf.Max(0.001f, _oxyLineWidth);
-      _suctionLineWidth = Mathf.Max(0.001f, _suctionLineWidth);
       _simulationStepsPerFrame = Mathf.Max(1, _simulationStepsPerFrame);
       _solverIterations = Mathf.Max(1, _solverIterations);
       _gravityScale = Mathf.Clamp01(_gravityScale);
@@ -1140,10 +1117,11 @@ namespace TriageTrainer.Entity.LineConnection
     {
       var material = point switch
       {
-        IntravenousLineConnectionPoint => _intravenousLineMaterial,
-        AEDLineConnectionPoint => _aedLineMaterial,
-        OxyLineConnectionPoint => _oxyLineMaterial,
-        SuctionLineConnectionPoint => _suctionLineMaterial,
+        IntravenousLineConnectionPoint => IntravenousLineConnectionPoint.DefaultMaterial,
+        AEDLineConnectionPoint => AEDLineConnectionPoint.DefaultMaterial,
+        ElectricalLineConnectionPoint => ElectricalLineConnectionPoint.DefaultMaterial,
+        OxyLineConnectionPoint => OxyLineConnectionPoint.DefaultMaterial,
+        SuctionLineConnectionPoint => SuctionLineConnectionPoint.DefaultMaterial,
         _ => null,
       };
 
@@ -1155,10 +1133,11 @@ namespace TriageTrainer.Entity.LineConnection
     {
       return point switch
       {
-        IntravenousLineConnectionPoint => _intravenousLineElasticity,
-        AEDLineConnectionPoint => _aedLineElasticity,
-        OxyLineConnectionPoint => _oxyLineElasticity,
-        SuctionLineConnectionPoint => _suctionLineElasticity,
+        IntravenousLineConnectionPoint => IntravenousLineConnectionPoint.Elasticity,
+        AEDLineConnectionPoint => AEDLineConnectionPoint.Elasticity,
+        ElectricalLineConnectionPoint => ElectricalLineConnectionPoint.Elasticity,
+        OxyLineConnectionPoint => OxyLineConnectionPoint.Elasticity,
+        SuctionLineConnectionPoint => SuctionLineConnectionPoint.Elasticity,
         _ => 0f,
       };
     }
@@ -1167,10 +1146,11 @@ namespace TriageTrainer.Entity.LineConnection
     {
       return point switch
       {
-        IntravenousLineConnectionPoint => _intravenousLineWidth,
-        AEDLineConnectionPoint => _aedLineWidth,
-        OxyLineConnectionPoint => _oxyLineWidth,
-        SuctionLineConnectionPoint => _suctionLineWidth,
+        IntravenousLineConnectionPoint => IntravenousLineConnectionPoint.LineWidth,
+        AEDLineConnectionPoint => AEDLineConnectionPoint.LineWidth,
+        ElectricalLineConnectionPoint => ElectricalLineConnectionPoint.LineWidth,
+        OxyLineConnectionPoint => OxyLineConnectionPoint.LineWidth,
+        SuctionLineConnectionPoint => SuctionLineConnectionPoint.LineWidth,
         _ => 0.01f,
       };
     }

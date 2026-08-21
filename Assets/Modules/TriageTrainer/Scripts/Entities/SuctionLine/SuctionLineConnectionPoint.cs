@@ -10,6 +10,12 @@ namespace TriageTrainer.Entity.SuctionLine
   /// </summary>
   public sealed class SuctionLineConnectionPoint : LineConnectionPoint
   {
+    public const float LineWidth = 0.04f;
+    public const float Elasticity = 0.13f;
+    public const string MaterialResourcePath = "Materials/LineConnectionService/SuctionLine";
+
+    public static Material DefaultMaterial => Resources.Load<Material>(MaterialResourcePath);
+
     public override void ApplyLineMaterial(LineRenderer lineRenderer)
     {
       base.ApplyLineMaterial(lineRenderer);

@@ -524,6 +524,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7200000000000000002}
   - component: {fileID: 7200000000000000003}
+  - component: {fileID: 7200000000000000004}
   m_Layer: 0
   m_Name: PatientMonitorTrackingLineEndpoint
   m_TagString: Untagged
@@ -558,6 +559,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b0a3f69c7d44a5c8f5f0b3a5dbf03ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TriageTrainer.Entity.PatientMonitor.Models::PatientMonitorTrackingLineEndpoint
+--- !u!114 &7200000000000000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7200000000000000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e41aecb045574d20b68244d8f606fec4, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.ElectricalLine.ElectricalLineConnectionPoint
 --- !u!1001 &1135039510427838272
 PrefabInstance:
   m_ObjectHideFlags: 0

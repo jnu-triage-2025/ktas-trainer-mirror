@@ -1,13 +1,35 @@
 using System.Collections.Generic;
+using FishNet;
 using MultiplayerInfrastructure.Performance;
+using TriageTrainer.Entity.ElectricalLine;
+using TriageTrainer.Entity.LineConnection;
 using UnityEngine;
 
 namespace TriageTrainer.Entity.PatientMonitor.Models
 {
+  [System.Flags]
+  public enum PatientMonitorTrackingLineDisplayOption
+  {
+    None = 0,
+    Renderer = 1 << 0,
+    ElectricalLine = 1 << 1,
+  }
+
+  [System.Flags]
+  public enum PatientMonitorLineConnectionServiceUnavailableOption
+  {
+    None = 0,
+    LogWarning = 1 << 0,
+    ShowRenderer = 1 << 1,
+  }
+
   public partial class PatientMonitorController
   {
     [Header("Tracking Line")]
-    [SerializeField] private bool _showTrackingLine = false;
+    [SerializeField] private PatientMonitorTrackingLineDisplayOption _trackingLineDisplayOptions =
+      PatientMonitorTrackingLineDisplayOption.ElectricalLine;
+    [SerializeField] private PatientMonitorLineConnectionServiceUnavailableOption
+      _lineConnectionServiceUnavailableOptions = PatientMonitorLineConnectionServiceUnavailableOption.None;
     [SerializeField] private bool _showTrackingLineForDefaultPatient = false;
     [SerializeField] private Transform _trackingLineStart;
     [SerializeField, Min(0.001f)] private float _trackingLineWidth = 0.02f;
@@ -19,15 +41,31 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     [SerializeField, Min(0f)] private float _trackingSparkleSpeed = 2.2f;
 
     private const string TrackingLineObjectName = "PatientMonitorTrackingLine";
+    private const float ElectricalLineConnectionRetrySeconds = 1f;
 
     private LineRenderer _trackingLineRenderer;
     private Material _trackingLineMaterial;
     private float _trackingDashDistance;
     private readonly List<LineRenderer> _trackingDashRenderers = new();
+    private ElectricalLineConnectionPoint _trackingElectricalLineStartPoint;
+    private ElectricalLineConnectionPoint _trackingElectricalLineEndPoint;
+    private LineConnectionService _trackingElectricalLineService;
+    private bool _hasLoggedUnavailableLineConnectionService;
+    private float _nextElectricalLineConnectionAttemptAt;
+
+    private bool UsesTrackingLineRenderer =>
+      (_trackingLineDisplayOptions & PatientMonitorTrackingLineDisplayOption.Renderer) != 0;
+
+    private bool UsesElectricalTrackingLine =>
+      (_trackingLineDisplayOptions & PatientMonitorTrackingLineDisplayOption.ElectricalLine) != 0;
+
+    private bool ShouldShowRendererWhenLineConnectionServiceUnavailable =>
+      (_lineConnectionServiceUnavailableOptions
+       & PatientMonitorLineConnectionServiceUnavailableOption.ShowRenderer) != 0;
 
     private void EnsureTrackingLineRenderer()
     {
-      if (!_showTrackingLine || MppmLiteMode.IsHeadless)
+      if (MppmLiteMode.IsHeadless)
         return;
 
       if (_trackingLineRenderer == null && !TryResolveTrackingLineRenderer())
@@ -114,17 +152,22 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       if (MppmLiteMode.IsHeadless)
       {
         SetTrackingLineEnabled(false);
-        return;
-      }
-
-      if (!_showTrackingLine)
-      {
-        SetTrackingLineEnabled(false);
+        DisconnectElectricalTrackingLine();
         return;
       }
 
       var target = ResolveTrackingTarget();
       if (target == null)
+      {
+        SetTrackingLineEnabled(false);
+        DisconnectElectricalTrackingLine();
+        return;
+      }
+
+      bool lineConnectionServiceAvailable = UpdateElectricalTrackingLine(target);
+      if (!UsesTrackingLineRenderer
+          && (!UsesElectricalTrackingLine || lineConnectionServiceAvailable
+              || !ShouldShowRendererWhenLineConnectionServiceUnavailable))
       {
         SetTrackingLineEnabled(false);
         return;
@@ -138,6 +181,83 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       Vector3 end = ResolveTrackingEndPosition(target);
       UpdateDashSegments(start, end);
       UpdateSparkle();
+    }
+
+    private bool UpdateElectricalTrackingLine(PatientController target)
+    {
+      if (!UsesElectricalTrackingLine)
+      {
+        DisconnectElectricalTrackingLine();
+        return true;
+      }
+
+      var service = LineConnectionService.TopologyService
+                    ?? FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
+      if (service == null || !service.isActiveAndEnabled)
+      {
+        SetElectricalTrackingLineObjectActive(false);
+        HandleUnavailableLineConnectionService();
+        return false;
+      }
+
+      _hasLoggedUnavailableLineConnectionService = false;
+      var startPoint = ResolveElectricalTrackingLineStartPoint();
+      var endPoint = target.GetComponentInChildren<ElectricalLineConnectionPoint>(true);
+      if (startPoint == null || endPoint == null)
+      {
+        DisconnectElectricalTrackingLine();
+        return true;
+      }
+
+      if (_trackingElectricalLineService != null
+          && (!ReferenceEquals(_trackingElectricalLineService, service)
+              || !ReferenceEquals(_trackingElectricalLineStartPoint, startPoint)
+              || !ReferenceEquals(_trackingElectricalLineEndPoint, endPoint)))
+        DisconnectElectricalTrackingLine();
+
+      _trackingElectricalLineService = service;
+      _trackingElectricalLineStartPoint = startPoint;
+      _trackingElectricalLineEndPoint = endPoint;
+      SetElectricalTrackingLineObjectActive(true);
+      if (!startPoint.IsPhysicallyConnectedTo(endPoint)
+          && (InstanceFinder.IsOffline || IsServerStarted)
+          && Time.unscaledTime >= _nextElectricalLineConnectionAttemptAt)
+      {
+        if (service.TryCreateAutomaticConnection(startPoint, endPoint))
+          _nextElectricalLineConnectionAttemptAt = 0f;
+        else
+          _nextElectricalLineConnectionAttemptAt =
+            Time.unscaledTime + ElectricalLineConnectionRetrySeconds;
+      }
+
+      return true;
+    }
+
+    private ElectricalLineConnectionPoint ResolveElectricalTrackingLineStartPoint()
+    {
+      var startTransform = _trackingLineStart != null ? _trackingLineStart : transform;
+      if (_trackingElectricalLineStartPoint != null
+          && (_trackingLineStart == null
+              || _trackingElectricalLineStartPoint.transform == startTransform))
+        return _trackingElectricalLineStartPoint;
+
+      _trackingElectricalLineStartPoint = startTransform.GetComponent<ElectricalLineConnectionPoint>();
+      if (_trackingElectricalLineStartPoint == null && _trackingLineStart == null)
+        _trackingElectricalLineStartPoint = GetComponentInChildren<ElectricalLineConnectionPoint>(true);
+      if (_trackingElectricalLineStartPoint == null)
+        _trackingElectricalLineStartPoint = startTransform.gameObject.AddComponent<ElectricalLineConnectionPoint>();
+      return _trackingElectricalLineStartPoint;
+    }
+
+    private void HandleUnavailableLineConnectionService()
+    {
+      if ((_lineConnectionServiceUnavailableOptions
+           & PatientMonitorLineConnectionServiceUnavailableOption.LogWarning) == 0
+          || _hasLoggedUnavailableLineConnectionService)
+        return;
+
+      _hasLoggedUnavailableLineConnectionService = true;
+      Debug.LogWarning("[PatientMonitorController] LineConnectionService is unavailable; electrical tracking line was not updated.", this);
     }
 
     private PatientController ResolveTrackingTarget()
@@ -266,15 +386,43 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private void DisableTrackingLine()
     {
       SetTrackingLineEnabled(false);
+      DisconnectElectricalTrackingLine();
     }
 
     private void ReleaseTrackingLineResources()
     {
+      DisconnectElectricalTrackingLine();
       if (_trackingLineMaterial != null)
         Destroy(_trackingLineMaterial);
 
       _trackingLineMaterial = null;
       _trackingDashRenderers.Clear();
+    }
+
+    private void DisconnectElectricalTrackingLine()
+    {
+      SetElectricalTrackingLineObjectActive(false);
+      if (_trackingElectricalLineService != null && _trackingElectricalLineService.isActiveAndEnabled
+          && _trackingElectricalLineStartPoint != null
+          && _trackingElectricalLineEndPoint != null)
+        _trackingElectricalLineService.DisconnectAutomaticConnection(
+          _trackingElectricalLineStartPoint, _trackingElectricalLineEndPoint);
+
+      _trackingElectricalLineService = null;
+      _trackingElectricalLineStartPoint = null;
+      _trackingElectricalLineEndPoint = null;
+      _nextElectricalLineConnectionAttemptAt = 0f;
+    }
+
+    private void SetElectricalTrackingLineObjectActive(bool active)
+    {
+      if (_trackingElectricalLineStartPoint == null || _trackingElectricalLineEndPoint == null
+          || !_trackingElectricalLineStartPoint.TryGetConnectedLineObjectTo(
+            _trackingElectricalLineEndPoint, out var lineObject)
+          || lineObject == null || lineObject.activeSelf == active)
+        return;
+
+      lineObject.SetActive(active);
     }
   }
 }

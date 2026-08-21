@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.ProBuilder;
 using TriageTrainer.Entity.AEDLine;
+using TriageTrainer.Entity.ElectricalLine;
 using TriageTrainer.Entity.IntravenousLine;
 using TriageTrainer.Entity.OxyLine;
 using TriageTrainer.Entity.SuctionLine;
@@ -20,14 +21,11 @@ namespace TriageTrainer.Editor
     private const string BakedRotateGizmoPrefabPath = "Assets/Modules/TriageTrainer/Editor/Prefabs/RotateGizmoBaked.prefab";
     private const string BakedRotateGizmoMeshDirectory = "Assets/Modules/TriageTrainer/Editor/Prefabs/RotateGizmoBakedMeshes";
     private const string PreviewSkyboxMaterialPath = "Assets/Modules/TriageTrainer/Editor/Materials/LineMaterialPreview/Skybox.mat";
-    private const string IntravenousLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineConnectionService/IntravenousLine.mat";
-    private const string AEDLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineConnectionService/AEDLine.mat";
-    private const string OxyLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineConnectionService/OxyLine.mat";
-    private const string SuctionLineMaterialPath = "Assets/Modules/TriageTrainer/Materials/LineConnectionService/SuctionLine.mat";
     private enum LineType
     {
       Intravenous,
       AED,
+      Electrical,
       Oxy,
       Suction,
     }
@@ -38,6 +36,7 @@ namespace TriageTrainer.Editor
     private Material _material;
     private Material _intravenousMaterial;
     private Material _aedMaterial;
+    private Material _electricalMaterial;
     private Material _oxyMaterial;
     private Material _suctionMaterial;
     private float _lineWidth = 0.08f;
@@ -69,6 +68,7 @@ namespace TriageTrainer.Editor
       {
         { LineType.Intravenous, typeof(IntravenousLineConnectionPoint) },
         { LineType.AED, typeof(AEDLineConnectionPoint) },
+        { LineType.Electrical, typeof(ElectricalLineConnectionPoint) },
         { LineType.Oxy, typeof(OxyLineConnectionPoint) },
         { LineType.Suction, typeof(SuctionLineConnectionPoint) },
       };
@@ -160,11 +160,14 @@ namespace TriageTrainer.Editor
 
     private void LoadDefaultLineMaterials()
     {
-      _intravenousMaterial = AssetDatabase.LoadAssetAtPath<Material>(IntravenousLineMaterialPath);
-      _aedMaterial = AssetDatabase.LoadAssetAtPath<Material>(AEDLineMaterialPath);
-      _oxyMaterial = AssetDatabase.LoadAssetAtPath<Material>(OxyLineMaterialPath);
-      _suctionMaterial = AssetDatabase.LoadAssetAtPath<Material>(SuctionLineMaterialPath);
+      _intravenousMaterial = IntravenousLineConnectionPoint.DefaultMaterial;
+      _aedMaterial = AEDLineConnectionPoint.DefaultMaterial;
+      _electricalMaterial = ElectricalLineConnectionPoint.DefaultMaterial;
+      _oxyMaterial = OxyLineConnectionPoint.DefaultMaterial;
+      _suctionMaterial = SuctionLineConnectionPoint.DefaultMaterial;
       _material = GetSelectedLineMaterial();
+      _lineWidth = GetDefaultLineWidth(_lineType);
+      _elasticity = GetDefaultLineElasticity(_lineType);
     }
 
     private bool TryCreateBakedGizmo()
@@ -301,6 +304,8 @@ namespace TriageTrainer.Editor
         _lineType = selectedLineType;
         UpdateImplementationScript();
         _material = GetSelectedLineMaterial();
+        _lineWidth = GetDefaultLineWidth(_lineType);
+        _elasticity = GetDefaultLineElasticity(_lineType);
       }
       using (new EditorGUI.DisabledScope(true))
         EditorGUILayout.ObjectField("Implementation", _implementation, typeof(MonoScript), false);
@@ -320,8 +325,8 @@ namespace TriageTrainer.Editor
       if (GUILayout.Button("Reset Values", GUILayout.Width(120f)))
       {
         LoadDefaultLineMaterials();
-        _lineWidth = 0.08f;
-        _elasticity = 0.15f;
+        _lineWidth = GetDefaultLineWidth(_lineType);
+        _elasticity = GetDefaultLineElasticity(_lineType);
         _startPoint = new Vector3(-0.9f, 0.15f, 0f);
         _endPoint = new Vector3(1.8f, 0.15f, 0f);
       }
@@ -355,6 +360,7 @@ namespace TriageTrainer.Editor
       {
         case LineType.Intravenous: _intravenousMaterial = _material; break;
         case LineType.AED: _aedMaterial = _material; break;
+        case LineType.Electrical: _electricalMaterial = _material; break;
         case LineType.Oxy: _oxyMaterial = _material; break;
         case LineType.Suction: _suctionMaterial = _material; break;
       }
@@ -366,9 +372,36 @@ namespace TriageTrainer.Editor
       {
         LineType.Intravenous => _intravenousMaterial,
         LineType.AED => _aedMaterial,
+        LineType.Electrical => _electricalMaterial,
         LineType.Oxy => _oxyMaterial,
         LineType.Suction => _suctionMaterial,
         _ => null,
+      };
+    }
+
+    private static float GetDefaultLineWidth(LineType lineType)
+    {
+      return lineType switch
+      {
+        LineType.Intravenous => IntravenousLineConnectionPoint.LineWidth,
+        LineType.AED => AEDLineConnectionPoint.LineWidth,
+        LineType.Electrical => ElectricalLineConnectionPoint.LineWidth,
+        LineType.Oxy => OxyLineConnectionPoint.LineWidth,
+        LineType.Suction => SuctionLineConnectionPoint.LineWidth,
+        _ => 0.01f,
+      };
+    }
+
+    private static float GetDefaultLineElasticity(LineType lineType)
+    {
+      return lineType switch
+      {
+        LineType.Intravenous => IntravenousLineConnectionPoint.Elasticity,
+        LineType.AED => AEDLineConnectionPoint.Elasticity,
+        LineType.Electrical => ElectricalLineConnectionPoint.Elasticity,
+        LineType.Oxy => OxyLineConnectionPoint.Elasticity,
+        LineType.Suction => SuctionLineConnectionPoint.Elasticity,
+        _ => 0f,
       };
     }
 

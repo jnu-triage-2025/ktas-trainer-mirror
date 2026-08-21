@@ -224,6 +224,53 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &2584017982842962881
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8670829997870795473}
+  - component: {fileID: 2241543012767532209}
+  m_Layer: 0
+  m_Name: ElectricalLineConnectionPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8670829997870795473
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2584017982842962881}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.0928, y: 0.0123, z: -0.0038}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 978448009542354380}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2241543012767532209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2584017982842962881}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e41aecb045574d20b68244d8f606fec4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.ElectricalLine.ElectricalLineConnectionPoint
+  _lineMaterial: {fileID: 0}
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
 --- !u!1 &2871264042612581985
 GameObject:
   m_ObjectHideFlags: 0
@@ -349,6 +396,7 @@ Transform:
   - {fileID: 5022935644347156831}
   - {fileID: 6891414062281255426}
   - {fileID: 398142802690288035}
+  - {fileID: 8670829997870795473}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2124125020968579591
@@ -448,7 +496,8 @@ MonoBehaviour:
     v4: 0
     v5: 0
     v6: 0
-  _showTrackingLine: 0
+  _trackingLineDisplayOptions: 2
+  _lineConnectionServiceUnavailableOptions: 0
   _showTrackingLineForDefaultPatient: 0
   _trackingLineStart: {fileID: 0}
   _trackingLineWidth: 0.02
