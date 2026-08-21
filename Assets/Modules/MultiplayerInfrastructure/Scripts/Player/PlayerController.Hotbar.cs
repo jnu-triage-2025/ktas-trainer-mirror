@@ -29,7 +29,7 @@ namespace MultiplayerInfrastructure.Player
       {
         if (Input.GetKeyDown(KeyCode.Alpha1 + i))
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR && DEBUG
           Debug.Log($"[PlayerController] Hotbar slot {i} selected via numkey");
 #endif
           _hotbarUI.SetSelectedIndex(i);
