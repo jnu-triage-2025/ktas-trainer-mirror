@@ -1168,6 +1168,32 @@ namespace TriageTrainer.Tests
       }
     }
 
+    [TestCase("patient_b")]
+    [TestCase("patient_c")]
+    public void PatientBCNasalCannulaRaisesThePatientSpecificOrderSignal(string patientIdentifier)
+    {
+      var patientObject = new GameObject(patientIdentifier);
+      try
+      {
+        var patient = patientObject.AddComponent<PatientController>();
+        patient.ApplySpawnedEntityIdentifier(patientIdentifier);
+        patient.ActivatePatientBCNurseDStage();
+        Assert.That(ScenarioInteractionSignals.IsRaised($"apply_nasal_cannula_{patientIdentifier}"), Is.False,
+          "단계 활성화는 이전 세션의 신호를 지운다.");
+
+        InvokePrivate(patient, "NotifyPatientBCItemApplied", "nasalcannula");
+
+        Assert.That(ScenarioInteractionSignals.IsRaised($"apply_nasal_cannula_{patientIdentifier}"), Is.True,
+          "nurse D 순서 게이트(*_D_ORDER_GATE)를 여는 신호다. EntityStateSignalBinding 은 consumeOnce 라 "
+          + "세션 중 한 번 소비되면 다시 발신되지 않으므로, 권위 경로에서 직접 올려야 게이트가 막히지 않는다.");
+      }
+      finally
+      {
+        ScenarioInteractionSignals.Clear($"apply_nasal_cannula_{patientIdentifier}");
+        Object.DestroyImmediate(patientObject);
+      }
+    }
+
     [Test]
     public void PatientBCPreinstalledOxygenRequiresObservedDetachAndFreshReinstall()
     {

@@ -955,6 +955,12 @@ namespace TriageTrainer.Entity
           && TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingNasalCannula,
             PatientBCTreatmentStage.AwaitingOxygen))
       {
+        // 거즈/플라스터/산소 연결과 같은 이유(SIGNAL-BC-3)로 환자별 신호를 직접 올린다.
+        // 이 신호는 nurse D 순서 게이트를 여는 유일한 조건인데, EntityStateSignalBinding 은
+        // consumeOnce 라 세션 중 한 번 소비되면 다시 발신되지 않는다. 게다가 단계 활성화가
+        // 신호를 먼저 지우므로, 바인딩에만 의존하면 게이트가 영구히 열리지 않을 수 있다.
+        RaisePatientBCTreatmentSignal("apply_nasal_cannula");
+
         // 유량계를 먼저 조작한 경우에는 비강 캐뉼라 포트가 아직 비활성이라 라인 생성이
         // 보류된다. 캐뉼라를 적용한 직후 같은 유량계를 다시 판정해야 순서와 무관하게
         // 실제 산소 라인 연결 및 처치 완료 신호가 발생한다.
@@ -966,11 +972,11 @@ namespace TriageTrainer.Entity
       else if (itemIdentifier == "gauze"
                && TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingGauze,
                  PatientBCTreatmentStage.AwaitingPlaster))
-        RaisePatientBCBleedingSignal("apply_gauze");
+        RaisePatientBCTreatmentSignal("apply_gauze");
       else if (itemIdentifier == "plaster"
                && TryAdvancePatientBCNurseDStage(PatientBCTreatmentStage.AwaitingPlaster,
                  PatientBCTreatmentStage.Complete))
-        RaisePatientBCBleedingSignal("apply_plaster_on_gauze");
+        RaisePatientBCTreatmentSignal("apply_plaster_on_gauze");
 
       // SyncVar.OnChange 만으로는 부족한 사례가 있어(트리아지 갱신과 동일한 이유),
       // 권위 측에서 단계를 바꾼 직후 이 자리에서도 명시적으로 힌트를 갱신한다.
@@ -1067,7 +1073,7 @@ namespace TriageTrainer.Entity
       MI.Scenario.ScenarioInteractionSignals.Raise($"equipment_connected_oxyflowmeter_{Identifier}");
     }
 
-    private void RaisePatientBCBleedingSignal(string signalPrefix)
+    private void RaisePatientBCTreatmentSignal(string signalPrefix)
     {
       if (!IsPatientBC || string.IsNullOrWhiteSpace(signalPrefix))
         return;

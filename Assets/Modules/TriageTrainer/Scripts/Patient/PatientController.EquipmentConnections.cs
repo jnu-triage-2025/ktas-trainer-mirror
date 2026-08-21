@@ -232,6 +232,12 @@ namespace TriageTrainer.Entity
       }
 
       DispatchScenarioStateEvent(StateEventOxyflowmeterAttachmentChanged, attached ? "Attached" : "Detached");
+
+      // 상태 이벤트를 신호로 바꿔 주는 EntityStateSignalBinding 은 consumeOnce 라 세션 중 한 번
+      // 소비되면 다시 발신되지 않는다. nurse D 순서 게이트가 이 신호를 조건으로 쓰므로,
+      // 다른 환자별 처치 신호(SIGNAL-BC-3)와 같이 권위 경로에서도 직접 올려 둔다.
+      if (attached)
+        RaisePatientBCTreatmentSignal("oxyflowmeter_attached");
     }
 
     // ── Patient Monitor (환자 상태 모니터 역참조) ──
