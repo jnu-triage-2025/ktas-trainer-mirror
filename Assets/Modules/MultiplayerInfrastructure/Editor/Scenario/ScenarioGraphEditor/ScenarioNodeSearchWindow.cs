@@ -43,7 +43,9 @@ namespace MultiplayerInfrastructure.Editor
             new SearchTreeEntry(new GUIContent("Play TTS")) { level = 1, userData = ScenarioNodeType.PlayTTS },
             new SearchTreeEntry(new GUIContent("Item Submission Config")) { level = 1, userData = ScenarioNodeType.ItemSubmissionConfig },
             new SearchTreeEntry(new GUIContent("Time Control")) { level = 1, userData = ScenarioNodeType.TimeControl },
-            new SearchTreeEntry(new GUIContent("Manual Entrypoint")) { level = 1, userData = ScenarioNodeType.ManualEntrypoint }
+            new SearchTreeEntry(new GUIContent("Manual Entrypoint")) { level = 1, userData = ScenarioNodeType.ManualEntrypoint },
+            new SearchTreeEntry(new GUIContent("Bed Snap")) { level = 1, userData = ScenarioNodeType.BedSnap },
+            new SearchTreeEntry(new GUIContent("Return To Origin")) { level = 1, userData = ScenarioNodeType.ReturnToOrigin }
         };
     }
 

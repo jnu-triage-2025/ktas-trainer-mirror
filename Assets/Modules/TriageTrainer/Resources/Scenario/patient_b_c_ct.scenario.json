@@ -1061,7 +1061,7 @@
     "MOVE_DOCTOR_TO_CARE_AREA": {
       "identifier": "MOVE_DOCTOR_TO_CARE_AREA",
       "nodeType": "NPCControl",
-      "nextIdentifier": "DOC_C",
+      "nextIdentifier": "care_patient_b",
       "mode": "Control",
       "npcIdentifier": "npc-doctor-patient-b-c-ct",
       "destinationType": "Waypoint",
@@ -1261,6 +1261,52 @@
       "persistProgressOnSessionEnd": false,
       "questDefinitionIdentifier": "Quest_Move_BC",
       "quest": null
+    },
+    "care_patient_b": {
+      "identifier": "care_patient_b",
+      "nodeType": "ManualEntrypoint",
+      "entrypointIdentifier": "care_patient_b",
+      "manualEnterSetupIdentifier": "SETUP_CARE_SNAP_BED_B",
+      "description": "많이 다친 남성 환자 처치 시작 지점. 수동 진입 시 두 침대를 처치 구역에 배치하고 의사를 옮긴다.",
+      "nextIdentifier": "DOC_C"
+    },
+    "SETUP_CARE_SNAP_BED_B": {
+      "identifier": "SETUP_CARE_SNAP_BED_B",
+      "nodeType": "BedSnap",
+      "bedEntityIdentifier": "bed_b",
+      "snapPointIdentifier": "zone_0:bed_snap_point",
+      "teleport": true,
+      "nextIdentifier": "SETUP_CARE_SNAP_BED_C"
+    },
+    "SETUP_CARE_SNAP_BED_C": {
+      "identifier": "SETUP_CARE_SNAP_BED_C",
+      "nodeType": "BedSnap",
+      "bedEntityIdentifier": "bed_c",
+      "snapPointIdentifier": "zone_1:bed_snap_point",
+      "teleport": true,
+      "nextIdentifier": "SETUP_CARE_MOVE_DOCTOR"
+    },
+    "SETUP_CARE_MOVE_DOCTOR": {
+      "identifier": "SETUP_CARE_MOVE_DOCTOR",
+      "nodeType": "NPCControl",
+      "nextIdentifier": "SETUP_CARE_RETURN",
+      "mode": "Control",
+      "npcIdentifier": "npc-doctor-patient-b-c-ct",
+      "destinationType": "Waypoint",
+      "destinationIdentifier": "scen_b:doctor_care_area_waypoint",
+      "destinationX": 0,
+      "destinationY": 0,
+      "destinationZ": 0,
+      "ignoreGroundCheck": false,
+      "moveMode": "Instant",
+      "moveSpeed": 0,
+      "moveDuration": 0
+    },
+    "SETUP_CARE_RETURN": {
+      "identifier": "SETUP_CARE_RETURN",
+      "nodeType": "ReturnToOrigin",
+      "description": "care_patient_b / care_patient_c 준비 체인의 끝. 진입 지점으로 돌아간다.",
+      "nextIdentifier": null
     },
     "DOC_C": {
       "identifier": "DOC_C",
@@ -2812,13 +2858,21 @@
     "DOC_B_COMPLETE": {
       "identifier": "DOC_B_COMPLETE",
       "nodeType": "Dialogue",
-      "nextIdentifier": "C_DOC_C",
+      "nextIdentifier": "care_patient_c",
       "speakerName": "의사",
       "dialogueContent": "이 남성 환자는 마무리하고 다음으로 넘어가죠.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M1" }
+    },
+    "care_patient_c": {
+      "identifier": "care_patient_c",
+      "nodeType": "ManualEntrypoint",
+      "entrypointIdentifier": "care_patient_c",
+      "manualEnterSetupIdentifier": "SETUP_CARE_SNAP_BED_B",
+      "description": "많이 다친 여성 환자 처치 시작 지점. 수동 진입 시 두 침대를 처치 구역에 배치하고 의사를 옮긴다.",
+      "nextIdentifier": "C_DOC_C"
     },
     "C_DOC_C": {
       "identifier": "C_DOC_C",

@@ -37,5 +37,7 @@ namespace MultiplayerInfrastructure.Scenario
     EntityStateSignalBinding,
     SignalCounter,
     ManualEntrypoint,
+    BedSnap,
+    ReturnToOrigin,
   }
 }

@@ -14,7 +14,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     {
       private readonly PatientMonitorController _owner;
       public MonitorSelectModeInteract(PatientMonitorController owner) { _owner = owner; }
-      public string PresentationEntityIdentifier => _owner.PresentationEntityIdentifier;
+      // 추적 환자가 정해지기 전에 뜨는 인터랙션이다. 그래서 표시 주소를 추적 환자가 아니라
+      // 모니터 공통 식별자로 잡는다. 시나리오는 바인딩 한 줄로 모든 환자 모니터에 마크를 띄운다.
+      public string PresentationEntityIdentifier => MonitorPresentationEntityIdentifier;
       public string InteractionIdentifier => InteractIdSelectPatient;
       public string DisplayText => "모니터링할 환자 선택";
       public Sprite DisplayIcon => _owner._interactIcon;
@@ -81,11 +83,17 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     private const string NearestGroupSelectPatient = "patient_monitor:select_patient_mode";
     private const string NearestGroupDetailOverlay = "patient_monitor:detail_overlay";
 
-    // 시나리오가 환자 B 모니터를 활성화하기 전에도 선택 marker를 연결할 수 있도록
-    // 현재 추적 환자 또는 모니터의 기본 환자 식별자를 presentation 대상으로 제공한다.
+    /// <summary>
+    /// 특정 환자에 매이지 않는 모니터 인터랙션의 퀘스트 표시 주소.
+    /// 여기에 바인딩한 마크는 추적 환자와 상관없이 모든 환자 모니터에 함께 붙는다.
+    /// </summary>
+    public const string MonitorPresentationEntityIdentifier = "patient_monitor";
+
+    // 자세히 보기처럼 추적 환자에 매인 인터랙션이 쓰는 주소다. 추적 환자가 없으면 모니터 공통
+    // 식별자로 떨어진다. 아무도 보고 있지 않은 모니터가 특정 환자용 마크를 가져가는 일을 막는다.
     public string PresentationEntityIdentifier => _monitoringPatient?.Identifier
       ?? patientState?.Identifier
-      ?? "patient_b";
+      ?? MonitorPresentationEntityIdentifier;
 
     // Zone 경계처럼 여러 환자 모니터 콜라이더가 Detector 범위에 함께 들어오면 같은 이름의
     // 인터렉션을 구분할 수 없다. 각 Monitor interact가 기능별 NearestOnlyGroup을 제공하여

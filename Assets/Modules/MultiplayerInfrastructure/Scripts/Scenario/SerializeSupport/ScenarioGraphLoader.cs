@@ -502,6 +502,8 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioExecuteCommandNodeDTO executeCommand => ConvertExecuteCommand(executeCommand),
           ScenarioTimeControlNodeDTO timeControl => ConvertTimeControl(timeControl),
           ScenarioManualEntrypointNodeDTO manualEntrypoint => ConvertManualEntrypoint(manualEntrypoint),
+          ScenarioBedSnapNodeDTO bedSnap => ConvertBedSnap(bedSnap),
+          ScenarioReturnToOriginNodeDTO returnToOrigin => ConvertReturnToOrigin(returnToOrigin),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -745,6 +747,26 @@ namespace MultiplayerInfrastructure.Scenario
           Threshold = dto.Threshold ?? 1,
           UseActiveRoleRosterThreshold = dto.UseActiveRoleRosterThreshold ?? false,
           OutputSignalIdentifier = dto.OutputSignalIdentifier,
+        };
+
+    private static ScenarioReturnToOriginNode ConvertReturnToOrigin(ScenarioReturnToOriginNodeDTO dto) =>
+        new ScenarioReturnToOriginNode
+        {
+          Identifier = dto.Identifier,
+          Description = dto.Description,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioBedSnapNode ConvertBedSnap(ScenarioBedSnapNodeDTO dto) =>
+        new ScenarioBedSnapNode
+        {
+          Identifier = dto.Identifier,
+          BedEntityIdentifier = dto.BedEntityIdentifier,
+          BedEntityStateKey = dto.BedEntityStateKey,
+          SnapPointIdentifier = dto.SnapPointIdentifier,
+          Teleport = dto.Teleport ?? true,
+          IgnoreFailure = dto.IgnoreFailure ?? true,
+          NextIdentifier = dto.NextIdentifier
         };
 
     private static ScenarioManualEntrypointNode ConvertManualEntrypoint(ScenarioManualEntrypointNodeDTO dto) =>
@@ -1588,6 +1610,8 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioExecuteCommandNode executeCommand => ConvertToDTO(executeCommand),
           ScenarioTimeControlNode timeControl => ConvertToDTO(timeControl),
           ScenarioManualEntrypointNode manualEntrypoint => ConvertToDTO(manualEntrypoint),
+          ScenarioBedSnapNode bedSnap => ConvertToDTO(bedSnap),
+          ScenarioReturnToOriginNode returnToOrigin => ConvertToDTO(returnToOrigin),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 
@@ -1833,6 +1857,28 @@ namespace MultiplayerInfrastructure.Scenario
           Threshold = node.Threshold,
           UseActiveRoleRosterThreshold = node.UseActiveRoleRosterThreshold ? true : (bool?)null,
           OutputSignalIdentifier = node.OutputSignalIdentifier,
+        };
+
+    private static ScenarioReturnToOriginNodeDTO ConvertToDTO(ScenarioReturnToOriginNode node) =>
+        new ScenarioReturnToOriginNodeDTO
+        {
+          NodeType = "ReturnToOrigin",
+          Identifier = node.Identifier,
+          Description = string.IsNullOrWhiteSpace(node.Description) ? null : node.Description,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioBedSnapNodeDTO ConvertToDTO(ScenarioBedSnapNode node) =>
+        new ScenarioBedSnapNodeDTO
+        {
+          NodeType = "BedSnap",
+          Identifier = node.Identifier,
+          BedEntityIdentifier = string.IsNullOrWhiteSpace(node.BedEntityIdentifier) ? null : node.BedEntityIdentifier,
+          BedEntityStateKey = string.IsNullOrWhiteSpace(node.BedEntityStateKey) ? null : node.BedEntityStateKey,
+          SnapPointIdentifier = node.SnapPointIdentifier,
+          Teleport = node.Teleport ? (bool?)null : false,
+          IgnoreFailure = node.IgnoreFailure ? (bool?)null : false,
+          NextIdentifier = node.NextIdentifier
         };
 
     private static ScenarioManualEntrypointNodeDTO ConvertToDTO(ScenarioManualEntrypointNode node) =>

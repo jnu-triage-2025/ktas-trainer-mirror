@@ -188,6 +188,8 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingTimeControl,
       ExecutingDisinteractableDialogue,
       ExecutingManualEntrypoint,
+      ExecutingBedSnap,
+      ExecutingReturnToOrigin,
     }
 
     [SerializeField] private State _state = State.Inactive;
@@ -1475,6 +1477,109 @@ namespace MultiplayerInfrastructure.Scenario
       Advance();
     }
 
+    /// <summary>
+    /// 곁가지 종료 표식. 곁가지에서의 종료 처리는 <see cref="RunBranchChain"/> 이 담당하므로
+    /// 이 실행기는 메인 흐름이 이 노드에 닿았을 때만 불린다.
+    ///
+    /// <para>이 노드는 출력 포트가 없어 <see cref="IScenarioNode.NextIdentifier"/> 가 비어 있다.
+    /// 따라서 메인 흐름에서 닿으면 <see cref="Advance"/> 가 시나리오를 종료시킨다. 곁가지 전용
+    /// 표식이 메인 흐름에 연결된 것이므로 배선 실수일 가능성이 높다. 조용히 끝내지 않고 알린다.</para>
+    /// </summary>
+    private void ExecuteReturnToOriginNode(ScenarioReturnToOriginNode node)
+    {
+      _state = State.ExecutingReturnToOrigin;
+
+      Debug.LogWarning(
+        $"[ScenarioController] ReturnToOrigin '{node.Identifier}' 를 메인 흐름에서 실행했습니다. "
+        + "이 노드는 곁가지(ManualEntrypoint 준비 체인 · 병렬 브랜치) 전용 종료 표식입니다. "
+        + "다음 노드가 없으므로 시나리오가 여기서 종료됩니다. 배선을 확인하세요.");
+
+      Advance();
+    }
+
+    /// <summary>
+    /// 이동식 환자 침대를 지정한 포지셔닝 포인트에 붙인다.
+    /// 서버 권위에서만 실제로 적용되고, 결과는 침대 자신의 RPC 로 각 피어에 전파된다.
+    /// 호환 실행 경로의 클라이언트에서는 아무 일도 하지 않고 다음 노드로 넘어간다.
+    /// </summary>
+    private void ExecuteBedSnapNode(ScenarioBedSnapNode node)
+    {
+      _state = State.ExecutingBedSnap;
+
+      string bedIdentifier = ResolveBedSnapTargetIdentifier(node);
+      if (string.IsNullOrWhiteSpace(bedIdentifier) || string.IsNullOrWhiteSpace(node.SnapPointIdentifier))
+      {
+        ReportBedSnapFailure(node,
+          $"target='{bedIdentifier ?? "null"}', snapPoint='{node.SnapPointIdentifier ?? "null"}' 중 비어 있는 값이 있습니다.");
+        Advance();
+        return;
+      }
+
+      // 침대 이동과 스냅은 서버 권위 상태다. 클라이언트가 각자 상태기를 돌리는 호환 경로에서도
+      // 실제 적용은 서버만 수행하고 나머지는 RPC 로 결과를 받는다.
+      if (!InstanceFinder.IsServerStarted && !InstanceFinder.IsOffline)
+      {
+        Advance();
+        return;
+      }
+
+      if (!Registry.Registry.TryGetEntity(bedIdentifier, out var descriptor) || descriptor?.GameObject == null)
+      {
+        ReportBedSnapFailure(node, $"침대 엔티티 '{bedIdentifier}' 를 레지스트리에서 찾지 못했습니다.");
+        Advance();
+        return;
+      }
+
+      var bed = descriptor.GameObject.GetComponentInChildren<MovingPatientBedController>(true);
+      if (bed == null)
+      {
+        ReportBedSnapFailure(node, $"엔티티 '{bedIdentifier}' 에 MovingPatientBedController 가 없습니다.");
+        Advance();
+        return;
+      }
+
+      // 침대 프리팹의 허용 포인트 목록은 "플레이어가 밀어서 붙일 수 있는 곳"을 제한하는 값이다.
+      // 시나리오가 지시한 배치는 그 제한보다 우선하므로, 대상 포인트를 목록에 먼저 보정한다.
+      // (move_patientA_to_treatmentroom 이벤트가 쓰는 것과 같은 방식)
+      bed.EnsureAllowedPositioningPointIdentifier(node.SnapPointIdentifier);
+
+      if (!bed.TryForceSnapToPositioningPoint(node.SnapPointIdentifier, node.Teleport))
+      {
+        ReportBedSnapFailure(node,
+          $"침대 '{bedIdentifier}' 를 '{node.SnapPointIdentifier}' 에 붙이지 못했습니다"
+          + $"(teleport={node.Teleport}). 포인트가 씬에 없거나, 허용 목록 밖이거나, 다른 침대가 점유 중일 수 있습니다.");
+        Advance();
+        return;
+      }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+      Debug.Log($"[ScenarioController] BedSnap '{node.Identifier}': {bedIdentifier} -> {node.SnapPointIdentifier}");
+#endif
+      Advance();
+    }
+
+    /// <summary>직접 지정한 침대 식별자를 우선 쓰고, 없으면 상태 저장소에서 읽는다.</summary>
+    private string ResolveBedSnapTargetIdentifier(ScenarioBedSnapNode node)
+    {
+      if (!string.IsNullOrWhiteSpace(node.BedEntityIdentifier))
+        return node.BedEntityIdentifier.Trim();
+
+      if (!string.IsNullOrWhiteSpace(node.BedEntityStateKey)
+          && _stateStore.TryGetValue(node.BedEntityStateKey.Trim(), out var stored))
+        return stored;
+
+      return null;
+    }
+
+    private void ReportBedSnapFailure(ScenarioBedSnapNode node, string reason)
+    {
+      string message = $"[ScenarioController] BedSnap '{node.Identifier}' 실패: {reason}";
+      if (node.IgnoreFailure)
+        Debug.LogWarning(message);
+      else
+        Debug.LogError(message);
+    }
+
     #endregion
 
     #region Scenario text and assessment log
@@ -1659,6 +1764,12 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioManualEntrypointNode manualEntrypoint:
           ExecuteManualEntrypointNode(manualEntrypoint);
+          break;
+        case ScenarioBedSnapNode bedSnap:
+          ExecuteBedSnapNode(bedSnap);
+          break;
+        case ScenarioReturnToOriginNode returnToOrigin:
+          ExecuteReturnToOriginNode(returnToOrigin);
           break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type: {node.GetType().Name}");
@@ -4869,6 +4980,13 @@ namespace MultiplayerInfrastructure.Scenario
           yield break;
         }
 
+        // 명시적 종료 표식: 곁가지를 닫고 원래 흐름으로 돌아간다.
+        // 이 노드는 다음으로 잇지 않으므로 NextIdentifier / NextOverride 를 보지 않는다.
+        if (cursor is ScenarioReturnToOriginNode)
+        {
+          yield break;
+        }
+
         // Choice 등 선택 결과에 따라 다음 노드가 결정되는 노드는 NextOverride 를 사용한다.
         var nextId = chainContext.NextOverride ?? cursor.NextIdentifier;
 
@@ -5051,6 +5169,12 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioManualEntrypointNode:
           // 표식일 뿐이라 브랜치 안에서는 통과시킨다. 준비 체인은 명령 진입 경로에서만 돈다.
+          break;
+        case ScenarioReturnToOriginNode:
+          // 실행할 것은 없다. 체인 종료는 RunBranchChain 이 이 타입을 보고 처리한다.
+          break;
+        case ScenarioBedSnapNode bedSnap:
+          ExecuteBedSnapNode(bedSnap);
           break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type in branch chain: {node.GetType().Name} (id='{node.Identifier}'). Skipping.");

@@ -50,6 +50,7 @@ namespace MultiplayerInfrastructure.Editor
 
       // 그래프 수준 검사
       CheckGraphLevel(graph, nodeIds, items);
+      CheckReturnToOriginReachableFromMainFlow(graph, items);
       CheckGeneratedStaticLayouts(items);
 
       return items;
@@ -93,6 +94,15 @@ namespace MultiplayerInfrastructure.Editor
       {
         items.Add(new DiagnosticItem(Severity.Error, id,
           $"nextIdentifier '{node.NextIdentifier}' 가 존재하지 않는 노드를 참조합니다."));
+      }
+
+      // ReturnToOrigin 은 곁가지 종료 표식이라 다음 노드를 갖지 않는다. 값이 남아 있으면
+      // 흐름을 오해하게 만든다(실행은 이 값을 보지 않는다).
+      if (node is ScenarioReturnToOriginNode && !string.IsNullOrEmpty(node.NextIdentifier))
+      {
+        items.Add(new DiagnosticItem(Severity.Warning, id,
+          $"ReturnToOrigin 노드에 nextIdentifier '{node.NextIdentifier}' 가 남아 있습니다. "
+          + "곁가지는 이 노드에서 끝나므로 이 값은 실행에 쓰이지 않습니다. 비워 주세요."));
       }
 
       // 타입별 검사
@@ -152,7 +162,156 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioManualEntrypointNode manualEntrypoint:
           CheckManualEntrypoint(manualEntrypoint, nodeIds, graph, items);
           break;
+        case ScenarioBedSnapNode bedSnap:
+          CheckBedSnap(bedSnap, items);
+          break;
       }
+    }
+
+    private static void CheckBedSnap(ScenarioBedSnapNode node, List<DiagnosticItem> items)
+    {
+      if (string.IsNullOrWhiteSpace(node.SnapPointIdentifier))
+      {
+        items.Add(new DiagnosticItem(Severity.Error, node.Identifier,
+          "snapPointIdentifier가 비어 있습니다."));
+      }
+
+      if (string.IsNullOrWhiteSpace(node.BedEntityIdentifier)
+          && string.IsNullOrWhiteSpace(node.BedEntityStateKey))
+      {
+        items.Add(new DiagnosticItem(Severity.Error, node.Identifier,
+          "bedEntityIdentifier와 bedEntityStateKey가 모두 비어 있습니다. 둘 중 하나는 지정해야 합니다."));
+      }
+
+      // 씬에 없는 포인트는 런타임에 조용히 실패한다(ignoreFailure 기본값이 true).
+      if (!string.IsNullOrWhiteSpace(node.SnapPointIdentifier)
+          && !SceneHasPositioningPoint(node.SnapPointIdentifier))
+      {
+        items.Add(new DiagnosticItem(Severity.Warning, node.Identifier,
+          $"현재 열린 씬에서 '{node.SnapPointIdentifier}' 포지셔닝 포인트를 찾지 못했습니다. "
+          + "다른 씬에 있거나 이름이 다를 수 있으니 확인하세요."));
+      }
+    }
+
+    /// <summary>
+    /// ManualEntrypoint 준비 체인을 따라가며 종료 방식을 확인한다.
+    /// ReturnToOrigin 노드 / 진입 지점 회귀 / 진입 지점의 next 도달은 명시적 종료로 본다.
+    /// next 가 비어서 끝나는 암묵적 종료만 경고한다.
+    /// </summary>
+    private static void CheckManualEnterSetupChainTermination(
+        ScenarioManualEntrypointNode entrypoint,
+        ScenarioGraph graph,
+        List<DiagnosticItem> items)
+    {
+      var visited = new HashSet<string>(StringComparer.Ordinal);
+      string cursorId = entrypoint.ManualEnterSetupIdentifier;
+
+      while (!string.IsNullOrEmpty(cursorId) && visited.Add(cursorId))
+      {
+        if (!graph.Nodes.TryGetValue(cursorId, out var cursor) || cursor == null)
+          return; // 참조 무결성은 공통 검사가 이미 보고한다.
+
+        if (cursor is ScenarioReturnToOriginNode)
+          return; // 명시적 종료 표식에 닿았다.
+
+        // Choice/Quiz/Parallel 은 흐름이 NextIdentifier 로 결정되지 않는다(옵션·정오답·브랜치).
+        // 여기서부터는 정적으로 끝을 판정할 수 없으므로 경고 없이 추적을 멈춘다.
+        if (cursor is ScenarioChoiceNode or ScenarioQuizNode or ScenarioParallelNode)
+          return;
+
+        string nextId = cursor.NextIdentifier;
+
+        if (string.IsNullOrEmpty(nextId))
+        {
+          items.Add(new DiagnosticItem(Severity.Warning, cursor.Identifier,
+            $"ManualEntrypoint '{entrypoint.Identifier}' 의 준비 체인이 nextIdentifier가 비어서 끝납니다. "
+            + "체인 끝에 ReturnToOrigin 노드를 두어 종료 의도를 남기세요. 지금 상태로는 나중에 여기에 "
+            + "다음 노드를 연결하는 순간 준비 체인이 원래 흐름으로 흘러가 버립니다."));
+          return;
+        }
+
+        // 진입 지점 자신이나 그 다음 노드에 닿는 것도 명시적 회귀로 본다.
+        if (string.Equals(nextId, entrypoint.Identifier, StringComparison.Ordinal)
+            || (!string.IsNullOrEmpty(entrypoint.NextIdentifier)
+                && string.Equals(nextId, entrypoint.NextIdentifier, StringComparison.Ordinal)))
+          return;
+
+        cursorId = nextId;
+      }
+    }
+
+    /// <summary>
+    /// ReturnToOrigin 은 곁가지 전용 표식이다. 메인 흐름에서 닿으면 다음 노드가 없어
+    /// 시나리오가 그대로 끝나므로, defaultEntrypoint 에서 도달 가능한지 확인해 경고한다.
+    /// 병렬 브랜치와 ManualEntrypoint 준비 체인은 곁가지이므로 추적에서 제외한다.
+    /// </summary>
+    private static void CheckReturnToOriginReachableFromMainFlow(
+        ScenarioGraph graph,
+        List<DiagnosticItem> items)
+    {
+      if (string.IsNullOrWhiteSpace(graph.DefaultEntrypoint)
+          || !graph.Nodes.ContainsKey(graph.DefaultEntrypoint))
+        return;
+
+      var visited = new HashSet<string>(StringComparer.Ordinal);
+      var pending = new Queue<string>();
+      pending.Enqueue(graph.DefaultEntrypoint);
+
+      while (pending.Count > 0)
+      {
+        string currentId = pending.Dequeue();
+        if (!visited.Add(currentId)
+            || !graph.Nodes.TryGetValue(currentId, out var current)
+            || current == null)
+          continue;
+
+        if (current is ScenarioReturnToOriginNode)
+        {
+          items.Add(new DiagnosticItem(Severity.Warning, current.Identifier,
+            "ReturnToOrigin이 메인 흐름에서 도달 가능합니다. 이 노드는 곁가지 전용 종료 표식이라 "
+            + "다음 노드가 없고, 메인 흐름이 여기 닿으면 시나리오가 그대로 끝납니다. 배선을 확인하세요."));
+          continue;
+        }
+
+        void Follow(string id)
+        {
+          if (!string.IsNullOrEmpty(id))
+            pending.Enqueue(id);
+        }
+
+        Follow(current.NextIdentifier);
+
+        if (current is ScenarioChoiceNode choice && choice.Options != null)
+        {
+          foreach (var option in choice.Options)
+            Follow(option?.NextNodeIdentifier);
+        }
+
+        if (current is ScenarioQuizNode quiz)
+        {
+          Follow(quiz.OnCorrectNextIdentifier);
+          Follow(quiz.OnIncorrectNextIdentifier);
+        }
+
+        if (current is ScenarioValidatorNode validator)
+          Follow(validator.FailureNextIdentifier);
+
+        // Parallel 의 branches 와 ManualEntrypoint 의 준비 체인은 곁가지라 따라가지 않는다.
+      }
+    }
+
+    private static bool SceneHasPositioningPoint(string identifier)
+    {
+      var points = UnityEngine.Object.FindObjectsByType<TriageTrainer.Entity.MovingPatientBedPositioningPoint>(
+        FindObjectsInactive.Include, FindObjectsSortMode.None);
+      for (int i = 0; i < points.Length; i++)
+      {
+        if (points[i] != null
+            && string.Equals(points[i].Identifier, identifier.Trim(), StringComparison.Ordinal))
+          return true;
+      }
+
+      return false;
     }
 
     private static void CheckManualEntrypoint(
@@ -181,6 +340,14 @@ namespace MultiplayerInfrastructure.Editor
       {
         items.Add(new DiagnosticItem(Severity.Warning, node.Identifier,
           $"manualEnterSetupIdentifier가 nextIdentifier와 같습니다('{node.NextIdentifier}'). 수동 진입 시 이 노드를 두 번 실행합니다."));
+      }
+
+      // 준비 체인이 어떻게 끝나는지 확인한다. ReturnToOrigin 없이 "next 가 비어서" 끝나면
+      // 나중에 누군가 그 노드에 다음 노드를 이으면 곁가지가 원래 흐름으로 새어 나간다.
+      if (!string.IsNullOrEmpty(node.ManualEnterSetupIdentifier)
+          && nodeIds.Contains(node.ManualEnterSetupIdentifier))
+      {
+        CheckManualEnterSetupChainTermination(node, graph, items);
       }
 
       // clear-state=true 는 상태 저장소를 통째로 비운다. 그 저장소가 엔티티 해석 표를 겸하므로,

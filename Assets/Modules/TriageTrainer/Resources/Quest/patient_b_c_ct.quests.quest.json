@@ -232,14 +232,14 @@
           "identifier": "select-patient-b",
           "type": "InteractionSignalReceived",
           "signalId": "select_patient_b",
-          "displayTextContent": "환자 B를 모니터링할 환자로 선택",
+          "displayTextContent": "많이 다친 남성 환자를 모니터링할 환자로 선택",
           "count": 1
         },
         {
           "identifier": "close-vital-ui-b",
           "type": "InteractionSignalReceived",
           "signalId": "close_vital_ui_b",
-          "displayTextContent": "환자 B 모니터링 완료",
+          "displayTextContent": "많이 다친 남성 환자 활력징후 확인",
           "count": 1
         }
       ],
@@ -248,7 +248,7 @@
           "activation": "CompletionCriteria",
           "completionCriteriaIdentifier": "select-patient-b",
           "targetType": "Interaction",
-          "entityIdentifier": "patient_b",
+          "entityIdentifier": "patient_monitor",
           "interactionIdentifier": "select_patient_mode",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
@@ -473,7 +473,26 @@
       "isTrackedByDefault": true,
       "scope": "Player",
       "isOrdinal": false,
-      "tasks": []
+      "tasks": [
+        {
+          "identifier": "patient-c-strength-checked",
+          "type": "InteractionSignalReceived",
+          "signalId": "patient_c_strength_checked",
+          "displayTextContent": "많이 다친 여성 환자 근력 확인",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-c-strength-checked",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_c",
+          "interactionIdentifier": "recognition_check",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
     },
     {
       "identifier": "Quest_C_Vital",
@@ -485,8 +504,52 @@
       "persistProgressOnSessionEnd": false,
       "isTrackedByDefault": true,
       "scope": "Player",
-      "isOrdinal": false,
-      "tasks": []
+      "isOrdinal": true,
+      "tasks": [
+        {
+          "identifier": "select-patient-c",
+          "type": "InteractionSignalReceived",
+          "signalId": "select_patient_c",
+          "displayTextContent": "많이 다친 여성 환자를 모니터링할 환자로 선택",
+          "count": 1
+        },
+        {
+          "identifier": "close-vital-ui-c",
+          "type": "InteractionSignalReceived",
+          "signalId": "close_vital_ui_c",
+          "displayTextContent": "많이 다친 여성 환자 활력징후 확인",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "select-patient-c",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_monitor",
+          "interactionIdentifier": "select_patient_mode",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "select-patient-c",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_c",
+          "interactionIdentifier": "monitor_select",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "close-vital-ui-c",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_c",
+          "interactionIdentifier": "detail_overlay",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
     },
     {
       "identifier": "Quest_C_Pupil_IV",
@@ -499,7 +562,50 @@
       "isTrackedByDefault": true,
       "scope": "Player",
       "isOrdinal": false,
-      "tasks": []
+      "tasks": [
+        {
+          "identifier": "patient-c-pupil-checked",
+          "type": "InteractionSignalReceived",
+          "signalId": "patient_c_pupil_checked",
+          "displayTextContent": "많이 다친 여성 환자 동공반사 확인",
+          "count": 1
+        },
+        {
+          "identifier": "patient-c-iv-secured",
+          "type": "InteractionSignalReceived",
+          "signalId": "insert_iv_patient_c_left",
+          "displayTextContent": "많이 다친 여성 환자 정맥로 확보",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-c-pupil-checked",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_c",
+          "interactionIdentifier": "recognition_check",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-c-iv-secured",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_c",
+          "interactionIdentifier": "intravenous_line_cannula",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "WholeQuest",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_c",
+          "interactionIdentifier": "normal_saline_connect",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
     },
     {
       "identifier": "Quest_C_Oxygen_Bleeding",
@@ -512,7 +618,78 @@
       "isTrackedByDefault": true,
       "scope": "Player",
       "isOrdinal": false,
-      "tasks": []
+      "tasks": [
+        {
+          "identifier": "patient-c-oxygen-supplied",
+          "type": "InteractionSignalReceived",
+          "signalId": "equipment_connected_oxyflowmeter_patient_c",
+          "displayTextContent": "많이 다친 여성 환자에게 산소 공급하기",
+          "count": 1
+        },
+        {
+          "identifier": "patient-c-bleeding-controlled",
+          "type": "InteractionSignalReceived",
+          "signalId": "apply_plaster_on_gauze_patient_c",
+          "displayTextContent": "많이 다친 여성 환자 지혈하기",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-c-oxygen-supplied",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_c",
+          "interactionIdentifier": "patient_bc_nasal_cannula",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-c-oxygen-supplied",
+          "targetType": "Interaction",
+          "entityIdentifier": "zone_0:oxyflowmeter",
+          "interactionIdentifier": "oxyflowmeter",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-c-oxygen-supplied",
+          "targetType": "Interaction",
+          "entityIdentifier": "zone_1:oxyflowmeter",
+          "interactionIdentifier": "oxyflowmeter",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-c-oxygen-supplied",
+          "targetType": "Interaction",
+          "entityIdentifier": "zone_2:oxyflowmeter",
+          "interactionIdentifier": "oxyflowmeter",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-c-oxygen-supplied",
+          "targetType": "Interaction",
+          "entityIdentifier": "zone_3:oxyflowmeter",
+          "interactionIdentifier": "oxyflowmeter",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-c-bleeding-controlled",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_c",
+          "interactionIdentifier": "item_apply",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
     },
     {
       "identifier": "Quest_C_Normal_Saline",
@@ -525,7 +702,25 @@
       "isTrackedByDefault": true,
       "scope": "Player",
       "isOrdinal": false,
-      "tasks": []
+      "tasks": [
+        {
+          "identifier": "connect-normal-saline-patient-c",
+          "type": "InteractionSignalReceived",
+          "signalId": "connect_cannula_and_ns1_patient_c",
+          "displayTextContent": "많이 다친 여성 환자에게 생리식염수 연결하기",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "WholeQuest",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_c",
+          "interactionIdentifier": "normal_saline_connect",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
     },
     {
       "identifier": "Quest_C_Wait",

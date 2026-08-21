@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.Editor;
 using MultiplayerInfrastructure.Scenario;
@@ -7,6 +8,153 @@ namespace MultiplayerInfrastructure.Tests.Scenario
 {
   public sealed class ScenarioGraphDiagnosticsTests
   {
+    [Test]
+    public void ManualEnterSetupChainEndingWithoutReturnToOriginNodeIsReported()
+    {
+      var graph = new ScenarioGraph();
+      graph.Add(new ScenarioManualEntrypointNode
+      {
+        Identifier = "checkpoint",
+        ManualEnterSetupIdentifier = "catch-up",
+        NextIdentifier = "after"
+      });
+      graph.Add(new ScenarioStateUpdateNode
+      {
+        Identifier = "catch-up",
+        TargetEntityIdentifier = "patient_b",
+        StateKey = "phase",
+        StateValue = "ct"
+      });
+      graph.Add(new ScenarioDialogueNode { Identifier = "after", DialogueContent = "after" });
+
+      Assert.That(
+        ScenarioGraphDiagnostics.Run(graph).Any(item =>
+          item.Severity == ScenarioGraphDiagnostics.Severity.Warning
+          && item.NodeIdentifier == "catch-up"
+          && item.Message.Contains("ReturnToOrigin 노드를 두어")),
+        Is.True);
+    }
+
+    [Test]
+    public void ManualEnterSetupChainEndingWithReturnToOriginNodeIsAccepted()
+    {
+      var graph = new ScenarioGraph();
+      graph.Add(new ScenarioManualEntrypointNode
+      {
+        Identifier = "checkpoint",
+        ManualEnterSetupIdentifier = "catch-up",
+        NextIdentifier = "after"
+      });
+      graph.Add(new ScenarioStateUpdateNode
+      {
+        Identifier = "catch-up",
+        TargetEntityIdentifier = "patient_b",
+        StateKey = "phase",
+        StateValue = "ct",
+        NextIdentifier = "return-to-origin"
+      });
+      graph.Add(new ScenarioReturnToOriginNode { Identifier = "return-to-origin" });
+      graph.Add(new ScenarioDialogueNode { Identifier = "after", DialogueContent = "after" });
+
+      Assert.That(
+        ScenarioGraphDiagnostics.Run(graph).Any(item => item.Message.Contains("ReturnToOrigin 노드를 두어")),
+        Is.False);
+    }
+
+    [Test]
+    public void ReturnToOriginReachableFromMainFlowIsReported()
+    {
+      var graph = new ScenarioGraph { DefaultEntrypoint = "start" };
+      graph.Add(new ScenarioDialogueNode
+      {
+        Identifier = "start",
+        DialogueContent = "start",
+        NextIdentifier = "tail"
+      });
+      graph.Add(new ScenarioReturnToOriginNode { Identifier = "tail" });
+
+      Assert.That(
+        ScenarioGraphDiagnostics.Run(graph).Any(item =>
+          item.Severity == ScenarioGraphDiagnostics.Severity.Warning
+          && item.NodeIdentifier == "tail"
+          && item.Message.Contains("메인 흐름에서 도달 가능")),
+        Is.True);
+    }
+
+    [Test]
+    public void ReturnToOriginInsideAManualEnterSetupChainIsNotReportedAsMainFlow()
+    {
+      var graph = new ScenarioGraph { DefaultEntrypoint = "start" };
+      graph.Add(new ScenarioDialogueNode
+      {
+        Identifier = "start",
+        DialogueContent = "start",
+        NextIdentifier = "checkpoint"
+      });
+      graph.Add(new ScenarioManualEntrypointNode
+      {
+        Identifier = "checkpoint",
+        ManualEnterSetupIdentifier = "catch-up",
+        NextIdentifier = "after"
+      });
+      graph.Add(new ScenarioStateUpdateNode
+      {
+        Identifier = "catch-up",
+        TargetEntityIdentifier = "patient_b",
+        StateKey = "phase",
+        StateValue = "ct",
+        NextIdentifier = "return-to-origin"
+      });
+      graph.Add(new ScenarioReturnToOriginNode { Identifier = "return-to-origin" });
+      graph.Add(new ScenarioDialogueNode { Identifier = "after", DialogueContent = "after" });
+
+      Assert.That(
+        ScenarioGraphDiagnostics.Run(graph).Any(item => item.Message.Contains("메인 흐름에서 도달 가능")),
+        Is.False);
+    }
+
+    [Test]
+    public void ManualEnterSetupChainEndingInAChoiceIsNotReportedAsImplicitTermination()
+    {
+      var graph = new ScenarioGraph();
+      graph.Add(new ScenarioManualEntrypointNode
+      {
+        Identifier = "checkpoint",
+        ManualEnterSetupIdentifier = "ask",
+        NextIdentifier = "after"
+      });
+      graph.Add(new ScenarioChoiceNode
+      {
+        Identifier = "ask",
+        DialogueContent = "고르세요",
+        Options = new List<ScenarioChoiceOption>
+        {
+          new ScenarioChoiceOption { DisplayText = "A", NextNodeIdentifier = "after" }
+        }
+      });
+      graph.Add(new ScenarioDialogueNode { Identifier = "after", DialogueContent = "after" });
+
+      Assert.That(
+        ScenarioGraphDiagnostics.Run(graph).Any(item => item.Message.Contains("ReturnToOrigin 노드를 두어")),
+        Is.False,
+        "Choice 는 NextIdentifier 로 흐르지 않으므로 암묵적 종료로 오판하면 안 된다.");
+    }
+
+    [Test]
+    public void ReturnToOriginNodeCarryingANextLinkIsReported()
+    {
+      var graph = new ScenarioGraph();
+      graph.Add(new ScenarioReturnToOriginNode { Identifier = "tail", NextIdentifier = "after" });
+      graph.Add(new ScenarioDialogueNode { Identifier = "after", DialogueContent = "after" });
+
+      Assert.That(
+        ScenarioGraphDiagnostics.Run(graph).Any(item =>
+          item.Severity == ScenarioGraphDiagnostics.Severity.Warning
+          && item.NodeIdentifier == "tail"
+          && item.Message.Contains("실행에 쓰이지 않습니다")),
+        Is.True);
+    }
+
     [Test]
     public void ManualEntrypointReportsMissingSetupNode()
     {

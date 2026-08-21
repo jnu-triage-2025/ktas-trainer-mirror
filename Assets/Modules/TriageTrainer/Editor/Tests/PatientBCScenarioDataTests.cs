@@ -260,7 +260,7 @@ namespace TriageTrainer.Tests
       var graph = ScenarioGraphLoader.LoadFromJson(scenarioJson, validateWithSchema: true);
 
        Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
-       Assert.That(graph.Nodes, Has.Count.EqualTo(327));
+       Assert.That(graph.Nodes, Has.Count.EqualTo(333));
        Assert.That(graph.ClientSignalPrefixes, Is.EqualTo(new[] { "sig.quest_arrival_triage_area_" }));
       Assert.That(graph.ActingNpcs, Has.Count.EqualTo(1));
       Assert.That(graph.ActingNpcs.Single().Identifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
@@ -297,7 +297,10 @@ namespace TriageTrainer.Tests
       Assert.That(doctorBComplete.SpeakerName, Is.EqualTo("의사"));
       Assert.That(doctorBComplete.DialogueContent,
         Is.EqualTo("이 남성 환자는 마무리하고 다음으로 넘어가죠."));
-      Assert.That(doctorBComplete.NextIdentifier, Is.EqualTo("C_DOC_C"));
+      Assert.That(doctorBComplete.NextIdentifier, Is.EqualTo("care_patient_c"));
+      Assert.That(graph.Nodes["care_patient_c"].NextIdentifier, Is.EqualTo("C_DOC_C"));
+      Assert.That(graph.Nodes["MOVE_DOCTOR_TO_CARE_AREA"].NextIdentifier, Is.EqualTo("care_patient_b"));
+      Assert.That(graph.Nodes["care_patient_b"].NextIdentifier, Is.EqualTo("DOC_C"));
       Assert.That(graph.Nodes.ContainsKey("C_ARRIVAL"), Is.False);
       Assert.That(graph.Nodes["C_DOC_C"].NextIdentifier, Is.EqualTo("C_DOC_D"));
       Assert.That(graph.Nodes["C_DOC_D"].NextIdentifier, Is.EqualTo("P_C_CARE"));
@@ -421,13 +424,36 @@ namespace TriageTrainer.Tests
 
       Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Vital", out var vitalQuest), Is.True);
       Assert.That(vitalQuest.IsOrdinal, Is.True);
-      Assert.That(vitalQuest.PresentationBindings.Select(binding => binding.InteractionIdentifier), Is.EqualTo(new[]
+      Assert.That(vitalQuest.PresentationBindings.Select(binding =>
+        (binding.EntityIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
       {
-        "select_patient_mode", "monitor_select", "detail_overlay"
-      }));
+        (PatientMonitorController.MonitorPresentationEntityIdentifier, "select_patient_mode"),
+        ("patient_b", "monitor_select"),
+        ("patient_b", "detail_overlay")
+      }), "선택 마크는 모든 환자 모니터에, 자세히 보기 마크는 그 환자를 추적하는 모니터에만 붙는다.");
       Assert.That(vitalQuest.Tasks.Select(task => task.SignalId), Is.EqualTo(new[]
       {
         "select_patient_b", "close_vital_ui_b"
+      }));
+
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_C_Vital", out var vitalQuestC), Is.True);
+      Assert.That(vitalQuestC.IsOrdinal, Is.True);
+      Assert.That(vitalQuestC.PresentationBindings.Select(binding =>
+        (binding.EntityIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
+      {
+        (PatientMonitorController.MonitorPresentationEntityIdentifier, "select_patient_mode"),
+        ("patient_c", "monitor_select"),
+        ("patient_c", "detail_overlay")
+      }), "여성 환자 활력징후도 남성 환자와 같은 순서로 마크를 넘긴다.");
+      Assert.That(vitalQuestC.PresentationBindings.Select(binding =>
+        binding.CompletionCriteriaIdentifier), Is.EqualTo(new[]
+      {
+        "select-patient-c", "select-patient-c", "close-vital-ui-c"
+      }));
+      Assert.That(vitalQuestC.Tasks.Select(task => (task.Identifier, task.SignalId)), Is.EqualTo(new[]
+      {
+        ("select-patient-c", "select_patient_c"),
+        ("close-vital-ui-c", "close_vital_ui_c")
       }));
 
       Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Pupil_IV", out var pupilQuest), Is.True);
@@ -449,6 +475,60 @@ namespace TriageTrainer.Tests
         ("patient-b-pupil-checked", "patient_b_pupil_checked"),
         ("patient-b-iv-secured", "insert_iv_patient_b_right")
       }), "정맥로 확보까지 목표에 남아야 퀘스트가 완료 처리되지 않고, 정맥 라인 확보 마크도 유지된다.");
+
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_C_Pupil_IV", out var pupilQuestC), Is.True);
+      Assert.That(pupilQuestC.PresentationBindings.Select(binding =>
+        (binding.EntityIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
+      {
+        ("patient_c", "recognition_check"),
+        ("patient_c", PatientController.InteractIdIntravenousLineCannula)
+      }));
+      Assert.That(pupilQuestC.Tasks.Select(task => (task.Identifier, task.SignalId)), Is.EqualTo(new[]
+      {
+        ("patient-c-pupil-checked", "patient_c_pupil_checked"),
+        ("patient-c-iv-secured", "insert_iv_patient_c_left")
+      }), "여성 환자는 좌측 팔에 20G를 삽입하므로 정맥로 확보 신호도 좌측이다.");
+
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_C_Normal_Saline", out var ivQuestC), Is.True);
+      Assert.That(ivQuestC.Tasks.Single().SignalId, Is.EqualTo("connect_cannula_and_ns1_patient_c"),
+        "이미 올라간 신호를 목표로 두면 이 정의가 걸리는 순간 퀘스트가 완료로 판정되고, "
+        + "완료된 퀘스트는 표시 바인딩을 내주지 않아 마크가 뜨지 않는다.");
+
+      // 생리식염수 연결 마크는 침대 걸이에 N/S 가 걸려 인터랙션이 살아 있을 때만 보인다.
+      foreach (string salineQuest in new[] { "Quest_C_Pupil_IV", "Quest_C_Normal_Saline" })
+      {
+        Assert.That(QuestDefinitionRegistry.TryGetGlobal(salineQuest, out var definition), Is.True, salineQuest);
+        Assert.That(definition.PresentationBindings.Any(binding =>
+            binding.EntityIdentifier == "patient_c"
+            && binding.InteractionIdentifier == PatientController.InteractIdNormalSalineConnect
+            && binding.Activation == QuestPresentationActivation.WholeQuest), Is.True, salineQuest);
+      }
+
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_C_Strength", out var strengthQuestC), Is.True);
+      Assert.That(strengthQuestC.Tasks.Single().SignalId, Is.EqualTo("patient_c_strength_checked"));
+      Assert.That(strengthQuestC.PresentationBindings.Select(binding =>
+        (binding.EntityIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
+      {
+        ("patient_c", "recognition_check")
+      }), "근력 확인은 의식 확인과 같은 인터랙션을 쓴다.");
+
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_C_Oxygen_Bleeding", out var oxygenQuestC), Is.True);
+      Assert.That(oxygenQuestC.Tasks.Select(task => (task.Identifier, task.SignalId)), Is.EqualTo(new[]
+      {
+        ("patient-c-oxygen-supplied", "equipment_connected_oxyflowmeter_patient_c"),
+        ("patient-c-bleeding-controlled", "apply_plaster_on_gauze_patient_c")
+      }), "목표가 하나도 없는 퀘스트는 완료 판정을 받지 못한다. 산소 공급과 지혈을 목표로 남긴다.");
+      Assert.That(oxygenQuestC.PresentationBindings.Select(binding =>
+        (binding.CompletionCriteriaIdentifier, binding.EntityIdentifier, binding.InteractionIdentifier)),
+        Is.EqualTo(new[]
+      {
+        ("patient-c-oxygen-supplied", "patient_c", "patient_bc_nasal_cannula"),
+        ("patient-c-oxygen-supplied", "zone_0:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier),
+        ("patient-c-oxygen-supplied", "zone_1:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier),
+        ("patient-c-oxygen-supplied", "zone_2:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier),
+        ("patient-c-oxygen-supplied", "zone_3:oxyflowmeter", WallAttachedOxyflowmeter.QuestPresentationInteractionIdentifier),
+        ("patient-c-bleeding-controlled", "patient_c", PatientController.InteractIdItemApply)
+      }));
 
       Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Oxygen_Bleeding", out var oxygenQuest), Is.True);
       Assert.That(oxygenQuest.PresentationBindings.Select(binding =>
@@ -1199,6 +1279,21 @@ namespace TriageTrainer.Tests
       }
     }
 
+    [TestCase("patient_b", true)]
+    [TestCase("patient_c", true)]
+    [TestCase("patient_dummy_d_b", false)]
+    [TestCase(null, false)]
+    public void OxyflowmeterQuestMarkCoversBothTreatmentPatients(string patientIdentifier, bool expected)
+    {
+      var method = typeof(WallAttachedOxyflowmeter).GetMethod(
+        "IsOxygenTreatmentPatient",
+        BindingFlags.Static | BindingFlags.NonPublic);
+      Assert.That(method, Is.Not.Null);
+
+      Assert.That((bool)method.Invoke(null, new object[] { patientIdentifier }), Is.EqualTo(expected),
+        "산소 공급 목표를 받는 환자는 남성·여성 둘 다이며, 유량계 퀘스트 마크도 둘 다에 붙어야 한다.");
+    }
+
     [Test]
     public void StaticOxyflowmeterPrefabHasNoFishNetNetworkObject()
     {
@@ -1332,6 +1427,41 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void CareEntrypointSetupChainRestoresBedsAndDoctor()
+    {
+      string path = Path.Combine(
+        Application.dataPath,
+        "Modules/TriageTrainer/Resources/Scenario/patient_b_c_ct.scenario.json");
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
+
+      foreach (string entrypoint in new[] { "care_patient_b", "care_patient_c" })
+      {
+        var node = graph.Nodes[entrypoint] as ScenarioManualEntrypointNode;
+        Assert.That(node, Is.Not.Null, entrypoint);
+        Assert.That(node.ManualEnterSetupIdentifier, Is.EqualTo("SETUP_CARE_SNAP_BED_B"), entrypoint);
+      }
+
+      var snapB = graph.Nodes["SETUP_CARE_SNAP_BED_B"] as ScenarioBedSnapNode;
+      var snapC = graph.Nodes["SETUP_CARE_SNAP_BED_C"] as ScenarioBedSnapNode;
+      Assert.That(snapB?.BedEntityIdentifier, Is.EqualTo("bed_b"));
+      Assert.That(snapC?.BedEntityIdentifier, Is.EqualTo("bed_c"));
+      Assert.That(snapC.NextIdentifier, Is.EqualTo("SETUP_CARE_MOVE_DOCTOR"));
+
+      // 준비 체인의 의사 위치는 본 흐름의 이동 노드가 쓰는 목적지를 그대로 따른다.
+      var doctorMove = graph.Nodes["MOVE_DOCTOR_TO_CARE_AREA"] as ScenarioNPCControlNode;
+      var doctorTeleport = graph.Nodes["SETUP_CARE_MOVE_DOCTOR"] as ScenarioNPCControlNode;
+      Assert.That(doctorTeleport, Is.Not.Null);
+      Assert.That(doctorTeleport.Mode, Is.EqualTo(ScenarioNPCControlMode.Control));
+      Assert.That(doctorTeleport.MoveMode, Is.EqualTo(ScenarioMoveMode.Instant),
+        "준비 체인은 건너뛴 구간을 메우는 자리라 걸어가지 않고 즉시 배치한다.");
+      Assert.That(doctorTeleport.NPCIdentifier, Is.EqualTo(doctorMove.NPCIdentifier));
+      Assert.That(doctorTeleport.DestinationType, Is.EqualTo(doctorMove.DestinationType));
+      Assert.That(doctorTeleport.DestinationIdentifier, Is.EqualTo(doctorMove.DestinationIdentifier));
+      Assert.That(doctorTeleport.NextIdentifier, Is.EqualTo("SETUP_CARE_RETURN"));
+      Assert.That(graph.Nodes["SETUP_CARE_RETURN"], Is.TypeOf<ScenarioReturnToOriginNode>());
+    }
+
+    [Test]
     public void PatientBCPreinstalledOxygenWarningIsExactKoreanText()
     {
       Assert.That(TriageScenarioEventBootstrap.PreinstalledOxygenWarning,
@@ -1357,6 +1487,31 @@ namespace TriageTrainer.Tests
         Assert.That(InvokePrivate<bool>(patient, "TryAdvancePatientBCIvStageAuthoritative"), Is.True);
         Assert.That(patient.TryCompletePatientBCNormalSalineConnection(), Is.False,
           "completion must require a registered physical saline line");
+      }
+      finally
+      {
+        Object.DestroyImmediate(patientObject);
+      }
+    }
+
+    [TestCase("patient_b")]
+    [TestCase("patient_c")]
+    public void PatientBCIvInteractionOpensForBothTreatmentPatients(string identifier)
+    {
+      var patientObject = new GameObject(identifier);
+      try
+      {
+        var patient = patientObject.AddComponent<PatientController>();
+        patient.ApplySpawnedEntityIdentifier(identifier);
+        patient.IntravenousLineCannulaSupported = true;
+
+        patient.ActivatePatientBCNurseCStage();
+        Assert.That(patient.IntravenousLineCannulaInteractable, Is.True,
+          "여성 환자도 남성 환자와 같이 정맥로 확보 처치를 받는다.");
+        Assert.That(patient.CanInteractIntravenousLineCannula, Is.False,
+          "동공반사를 확인하기 전에는 정맥로 확보를 노출하지 않는다.");
+        InvokePrivate(patient, "NotifyPatientBCPupilCompleted");
+        Assert.That(patient.CanInteractIntravenousLineCannula, Is.True);
       }
       finally
       {

@@ -70,6 +70,18 @@
 | Parallel           | `ScenarioParallelNodeDTO`    | `ScenarioParallelNode`      |
 | QuestControl       | `ScenarioQuestControlNodeDTO`| `ScenarioQuestControlNode`  |
 
+**곁가지 종료 — `ReturnToOrigin` 노드**
+
+`nodeType`이 `ReturnToOrigin`인 표식 노드다. 곁가지 체인이 여기 닿으면 체인을 닫고 원래 흐름으로 돌아간다.
+
+- ManualEntrypoint 준비 체인이면 진입 지점으로 돌아가 그 노드의 `nextIdentifier`로 이어진다.
+- 병렬 브랜치면 그 브랜치만 완료 처리된다.
+- 메인 흐름에서 만나면 **시나리오가 거기서 끝난다.** 출력 포트가 없어 다음 노드가 없기 때문이다. 곁가지 전용 표식이 메인 흐름에 물린 배선 실수일 가능성이 높아 실행 시 경고가 뜨고, 진단도 `defaultEntrypoint`에서 도달 가능하면 경고한다.
+
+이 노드는 `nextIdentifier`를 쓰지 않는다. 그래프 에디터도 출력 포트를 만들지 않으므로 뒤에 무언가를 이어 붙일 수 없다.
+
+곁가지의 끝은 이 노드로 표시한다. "`nextIdentifier`가 비어서 끝난다"는 방식은 종료 의도가 데이터에 드러나지 않는다. 나중에 그 노드에 다음 노드를 연결하는 순간 곁가지가 원래 흐름으로 새어 나간다. 진단이 이 경우를 경고로 잡는다.
+
 ### 3. 주요 노드 필드 설명
 
 #### 3.1 Dialogue (`ScenarioDialogueNodeDTO`)
@@ -196,11 +208,12 @@
 > **주의 — `clear-state=true`는 엔티티 해석 표까지 비운다.**
 > 시나리오 상태 저장소는 StateUpdate 값만 담는 곳이 아니다. `EntityPresetSpawn`, `EntityInit`, `ItemSubmissionConfig`가 남긴 `resultStateKey → 엔티티 식별자` 표도 같은 저장소를 쓴다. 이걸 비우면 월드에 엔티티가 멀쩡히 살아 있어도 `targetEntityStateKey`로 대상을 찾는 노드가 전부 빈손으로 지나간다(경고만 남고 조용히 진행된다). 스폰 노드를 쓰는 그래프라면 준비 체인에서 필요한 키를 다시 채우거나, `clear-state=false`로 진입해야 한다.
 
-준비 체인은 병렬 브랜치와 같은 자가완결 실행기로 돈다. 다음 셋 중 하나에 닿으면 끝나고 제어가 ManualEntrypoint 노드로 돌아온다.
+준비 체인은 병렬 브랜치와 같은 자가완결 실행기로 돈다. 다음 넷 중 하나에 닿으면 끝나고 제어가 ManualEntrypoint 노드로 돌아온다.
 
-1. `nextIdentifier`가 비어 있는 노드
+1. `ReturnToOrigin` 노드 — **권장하는 종료 방식**
 2. ManualEntrypoint 노드 자신의 `identifier`
 3. ManualEntrypoint 노드의 `nextIdentifier`
+4. `nextIdentifier`가 비어 있는 노드 — 종료 의도가 드러나지 않아 진단이 경고한다
 
 ```json
 "phase_two": {
@@ -224,6 +237,40 @@
 `/scenario enter`는 서버에서 실행되지만, 반영 범위는 그래프를 누가 돌리느냐에 따라 다르다. 서버 권위 실행이면 서버 커서만 옮기고 나머지 피어는 표시로 따라온다. 지원하지 않는 노드가 하나라도 있어 호환 경로로 떨어진 그래프는 대상 클라이언트마다 독립 상태기가 돌기 때문에, 모든 피어에 브로드캐스트해서 각자 같은 지점으로 건너뛰게 한다. 명령 응답의 `scope=` 값으로 어느 쪽이었는지 확인할 수 있다.
 
 동작 예시는 `Assets/Modules/TriageTrainer/Resources/Scenario/manual_entrypoint_debug.scenario.json`에 있다.
+
+#### 3.11 BedSnap (`ScenarioBedSnapNodeDTO`)
+
+| 필드                  | 타입           | 설명                                                                        |
+|-----------------------|----------------|-----------------------------------------------------------------------------|
+| `bedEntityIdentifier` | string \| null | 대상 침대 엔티티 식별자(예: `bed_b`)                                          |
+| `bedEntityStateKey`   | string \| null | 상태 저장소에서 침대 식별자를 읽어 올 키. 스폰 노드의 `resultStateKey`를 넘길 때 쓴다 |
+| `snapPointIdentifier` | string         | 붙일 포지셔닝 포인트 식별자(예: `zone_0:bed_snap_point`)                       |
+| `teleport`            | boolean        | true(기본)면 거리와 무관하게 포인트로 옮긴 뒤 붙인다                            |
+| `ignoreFailure`       | boolean        | true(기본)면 실패를 경고로만 남긴다. 어느 쪽이든 시나리오는 계속 진행한다        |
+| `nextIdentifier`      | string         | 다음 노드 ID                                                                 |
+
+`bedEntityIdentifier`와 `bedEntityStateKey` 중 하나는 반드시 채워야 한다. 둘 다 있으면 `bedEntityIdentifier`가 이긴다.
+
+이동식 환자 침대를 포지셔닝 포인트에 붙인다. 평소 플레이에서는 플레이어가 침대를 밀어 포인트 근처까지 가져가야 스냅이 걸린다. 이 노드는 그 결과만 필요할 때 쓴다. 침대에 환자가 결합돼 있으면 환자도 함께 따라오므로(결합은 `attach_patient_bed_pairs` 같은 이벤트가 먼저 처리한다) 환자를 침대째 옮기는 수단이 된다.
+
+`teleport`가 켜져 있으면 침대가 어디에 있든 포인트 위치로 옮긴 뒤 붙인다. 꺼져 있으면 기존 자동 스냅처럼 스냅 범위 안에 있을 때만 붙는다. 멀면 실패한다.
+
+대상 포인트가 침대 프리팹의 허용 목록에 없으면 실행 시 목록에 보정해 넣는다. 허용 목록은 플레이어가 밀어서 붙일 수 있는 곳을 제한하는 값이고 시나리오 지시는 그보다 우선한다. 반면 **포인트 점유 정책은 그대로 지킨다** — 환자가 실린 다른 침대가 이미 그 자리에 있으면 배치가 거부되고 이 노드는 실패한다. 여러 침대를 연달아 배치할 때 서로 자리를 맞바꾸는 순서가 되지 않게 주의한다.
+
+적용은 서버 권위에서만 일어나고 결과는 침대 자신의 RPC로 각 피어에 전파된다. 클라이언트가 각자 상태기를 돌리는 호환 실행 경로에서도 실제 이동은 서버만 수행한다.
+
+```json
+"SETUP_CARE_SNAP_BED_B": {
+  "identifier": "SETUP_CARE_SNAP_BED_B",
+  "nodeType": "BedSnap",
+  "bedEntityIdentifier": "bed_b",
+  "snapPointIdentifier": "zone_0:bed_snap_point",
+  "teleport": true,
+  "nextIdentifier": "SETUP_CARE_SNAP_BED_C"
+}
+```
+
+`patient_b_c_ct` 시나리오의 `care_patient_b` / `care_patient_c` ManualEntrypoint가 이 노드로 만든 준비 체인 하나를 함께 가리킨다. 두 지점 중 어디로 진입하든 침대 B는 `zone_0`, 침대 C는 `zone_1`에 놓인다. 체인은 `SETUP_CARE_RETURN`(`ReturnToOrigin`)으로 끝나 종료를 명시한다.
 
 ### 4. C# DTO & 도메인 모델 관계
 

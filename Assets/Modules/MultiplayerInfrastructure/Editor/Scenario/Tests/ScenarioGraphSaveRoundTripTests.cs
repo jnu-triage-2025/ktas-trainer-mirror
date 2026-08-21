@@ -883,6 +883,69 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void BedSnapSavesAndRoundTrips()
+    {
+      var graph = new ScenarioGraph { Identifier = "bed-snap-round-trip", DefaultEntrypoint = "snap_bed_b" };
+      graph.Add(new ScenarioBedSnapNode
+      {
+        Identifier = "snap_bed_b",
+        BedEntityIdentifier = "bed_b",
+        SnapPointIdentifier = "zone_0:bed_snap_point",
+        Teleport = true,
+        IgnoreFailure = true,
+        NextIdentifier = "snap_bed_c"
+      });
+      graph.Add(new ScenarioBedSnapNode
+      {
+        Identifier = "snap_bed_c",
+        BedEntityStateKey = "bed_c.entity",
+        SnapPointIdentifier = "zone_1:bed_snap_point",
+        Teleport = false,
+        IgnoreFailure = false
+      });
+
+      var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+
+      var first = (ScenarioBedSnapNode)reloaded.Nodes["snap_bed_b"];
+      Assert.That(first.BedEntityIdentifier, Is.EqualTo("bed_b"));
+      Assert.That(first.SnapPointIdentifier, Is.EqualTo("zone_0:bed_snap_point"));
+      Assert.That(first.Teleport, Is.True);
+      Assert.That(first.IgnoreFailure, Is.True);
+
+      var second = (ScenarioBedSnapNode)reloaded.Nodes["snap_bed_c"];
+      Assert.That(second.BedEntityIdentifier, Is.Null);
+      Assert.That(second.BedEntityStateKey, Is.EqualTo("bed_c.entity"));
+      Assert.That(second.Teleport, Is.False);
+      Assert.That(second.IgnoreFailure, Is.False);
+    }
+
+    [Test]
+    public void ReturnToOriginNodeSavesAndRoundTrips()
+    {
+      var graph = new ScenarioGraph { Identifier = "return-to-origin", DefaultEntrypoint = "start" };
+      graph.Add(new ScenarioDialogueNode
+      {
+        Identifier = "start",
+        SpeakerName = "system",
+        DialogueContent = "start",
+        NextIdentifier = "tail"
+      });
+      graph.Add(new ScenarioReturnToOriginNode
+      {
+        Identifier = "tail",
+        Description = "준비 체인 종료"
+      });
+
+      var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+
+      var tail = (ScenarioReturnToOriginNode)reloaded.Nodes["tail"];
+      Assert.That(tail.Description, Is.EqualTo("준비 체인 종료"));
+      Assert.That(tail.NextIdentifier, Is.Null);
+    }
+
+    [Test]
     public void ManualEntrypointSavesAndRoundTrips()
     {
       var graph = new ScenarioGraph { Identifier = "manual-entrypoint-round-trip", DefaultEntrypoint = "start" };

@@ -694,11 +694,9 @@ namespace TriageTrainer.Entity
       _patientBCPhysicalNormalSalinePoint = null;
       _cannulaLeftArmInserted = false;
       _cannulaRightArmInserted = false;
-      // This scenario assigns the IV quest to the male patient B only. Keep the
-      // interaction registered on every supported patient, but expose it only
-      // when that quest is activated for its intended target.
-      _intravenousLineCannulaInteractable =
-        string.Equals(Identifier, "patient_b", System.StringComparison.Ordinal);
+      // 남성(B)과 여성(C) 환자 모두 정맥로 확보 목표를 받는다. 삽입할 팔은 처치 표시 프리셋이
+      // 지원하는 쪽으로 자동 배정된다(남성 우측, 여성 좌측). 여기서는 상호작용만 열어둔다.
+      _intravenousLineCannulaInteractable = true;
       SetTreatmentDisplayNetworked(TreatmentDisplay.Syringe20GInsertedIntoLeftArm, false);
       SetTreatmentDisplayNetworked(TreatmentDisplay.Syringe20GInsertedIntoRightArm, false);
       ClearPatientBCSignals(
