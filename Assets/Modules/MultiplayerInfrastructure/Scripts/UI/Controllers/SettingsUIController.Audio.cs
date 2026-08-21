@@ -58,11 +58,7 @@ namespace MultiplayerInfrastructure.UI
       if (_audioScroll == null)
         return;
 
-      var service = AudioDevicePreferenceService.Instance;
-      if (service != null)
-        service.RefreshDevices();
-      else
-        AudioDeviceCatalog.Refresh();
+      AudioDevicePreferenceService.GetOrCreateInstance().RefreshDevices();
 
       BuildAudioForm();
     }
@@ -85,7 +81,7 @@ namespace MultiplayerInfrastructure.UI
         _inputDeviceField = null;
         _outputRoutingNote = null;
 
-        var settings = AudioDevicePreferenceService.Instance?.CurrentSettings ?? new AudioDeviceSettingsData();
+        var settings = AudioDevicePreferenceService.GetOrCreateInstance().CurrentSettings;
 
         BuildOutputSection(settings);
         BuildInputSection(settings);
@@ -174,12 +170,7 @@ namespace MultiplayerInfrastructure.UI
 
       var reset = new Button(() =>
       {
-        var service = AudioDevicePreferenceService.Instance;
-        if (service == null)
-        {
-          SetStatusText("오류: 오디오 장치 서비스를 찾을 수 없습니다.");
-          return;
-        }
+        var service = AudioDevicePreferenceService.GetOrCreateInstance();
 
         service.ResetToSystemDefault();
         BuildAudioForm();
@@ -212,12 +203,7 @@ namespace MultiplayerInfrastructure.UI
       if (_audioFormInitializing || field == null)
         return;
 
-      var service = AudioDevicePreferenceService.Instance;
-      if (service == null)
-      {
-        SetStatusText("오류: 오디오 장치 서비스를 찾을 수 없습니다.");
-        return;
-      }
+      var service = AudioDevicePreferenceService.GetOrCreateInstance();
 
       string deviceId = AudioDeviceSelectionResolver.ChoiceIdAt(field.index, devices);
       service.SetDevice(kind, deviceId);

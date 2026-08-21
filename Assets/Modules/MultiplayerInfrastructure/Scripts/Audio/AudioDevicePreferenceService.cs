@@ -77,6 +77,33 @@ namespace MultiplayerInfrastructure.Audio
       => Registry.Registry.Get<AudioDevicePreferenceService>(
         RegistryType.Service, Registry.Registry.TypeKey<AudioDevicePreferenceService>());
 
+    /// <summary>
+    /// 장면에 배치된 서비스가 아직 로드되지 않았어도 설정 화면에서 바로 쓸 수 있게 합니다.
+    ///
+    /// 시작 화면에서는 SystemOverlayScene이 아직 추가 로드되지 않을 수 있습니다. 이때도
+    /// 입력 장치 설정을 저장할 수 있도록, 필요한 경우 지속되는 런타임 서비스를 만듭니다.
+    /// </summary>
+    public static AudioDevicePreferenceService GetOrCreateInstance()
+    {
+      var service = Instance;
+      if (service != null)
+        return service;
+
+      service = UnityEngine.Object.FindAnyObjectByType<AudioDevicePreferenceService>();
+      if (service != null)
+      {
+        Registry.Registry.Register(
+          RegistryType.Service,
+          Registry.Registry.TypeKey<AudioDevicePreferenceService>(),
+          service);
+        return service;
+      }
+
+      var host = new GameObject(nameof(AudioDevicePreferenceService));
+      UnityEngine.Object.DontDestroyOnLoad(host);
+      return host.AddComponent<AudioDevicePreferenceService>();
+    }
+
     // ──────────────────────────────────────────────────────────────────────────
     // Unity 라이프사이클
     // ──────────────────────────────────────────────────────────────────────────
@@ -93,9 +120,12 @@ namespace MultiplayerInfrastructure.Audio
     private void OnDestroy()
     {
       CancelPendingRestart();
-      Registry.Registry.Unregister(
-        RegistryType.Service,
-        Registry.Registry.TypeKey<AudioDevicePreferenceService>());
+      if (Instance == this)
+      {
+        Registry.Registry.Unregister(
+          RegistryType.Service,
+          Registry.Registry.TypeKey<AudioDevicePreferenceService>());
+      }
     }
 
     // ──────────────────────────────────────────────────────────────────────────
