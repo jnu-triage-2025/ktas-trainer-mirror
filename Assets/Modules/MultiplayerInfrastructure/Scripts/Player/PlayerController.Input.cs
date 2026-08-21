@@ -1,4 +1,5 @@
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 using MultiplayerInfrastructure.UI;
@@ -30,6 +31,14 @@ namespace MultiplayerInfrastructure.Player
     [Tooltip("이 키를 누른 채 마우스 휠을 굴리면 3인칭 카메라 거리(POV)를 조정합니다.")]
     [SerializeField] private KeyCode _keyCameraDistanceModifier = KeyCode.LeftAlt;
 
+    // 연속된 휠 입력을 하나의 POV 조정으로 묶는다. 프레임마다 즉시 저장하면
+    // PlayerPrefs 디스크 쓰기가 과도하게 발생하고, 1/3인칭 전환 여부도 올바르게 판단할 수 없다.
+    private const float CameraDistanceGestureEndDelay = 0.15f;
+    private bool _cameraDistanceGestureActive;
+    private bool _cameraDistanceGestureChangedViewMode;
+    private float _cameraDistanceGestureStartDistance;
+    private float _cameraDistanceGestureLastScrollTime;
+
     void Start_Input()
     {
       _chatUI = Registry.Registry.Get<ChatUIController>(RegistryType.UI, Registry.Registry.TypeKey<ChatUIController>());
@@ -42,6 +51,7 @@ namespace MultiplayerInfrastructure.Player
 
       // Update_Movement보다 먼저, 그리고 아래의 어떤 early return보다도 먼저 갱신해야 한다.
       UpdateJumpInputSuppression();
+      FinalizeCameraDistanceGestureIfNeeded(HasCameraDistanceScrollInput());
 
       HandleChatInput();
       var escapeConsumed = HandleEscape();
@@ -251,7 +261,7 @@ namespace MultiplayerInfrastructure.Player
       HandleHotbarInputNumkey();
 
       // 수정자 키를 누른 채 휠을 굴리면 핫바 선택 대신 카메라 거리(POV)를 조정한다.
-      if (Input.GetKey(_keyCameraDistanceModifier))
+      if (IsCameraDistanceModifierHeld())
       {
         HandleCameraDistanceInput();
         return;
@@ -270,8 +280,66 @@ namespace MultiplayerInfrastructure.Player
       float scroll = Input.mouseScrollDelta.y;
       if (Mathf.Abs(scroll) <= Mathf.Epsilon) return;
 
+      if (!_cameraDistanceGestureActive)
+      {
+        _cameraDistanceGestureActive = true;
+        _cameraDistanceGestureChangedViewMode = false;
+        _cameraDistanceGestureStartDistance = _camControl.DesiredThirdPersonDistance;
+      }
+
       // 휠을 위로(scroll > 0) 굴리면 카메라를 가깝게, 아래로 굴리면 멀게 한다.
+      var viewModeBeforeAdjustment = _camControl.CurrentViewMode;
       _camControl.AdjustThirdPersonDistance(scroll > 0 ? 1 : -1);
+      _cameraDistanceGestureLastScrollTime = Time.unscaledTime;
+
+      if (_camControl.CurrentViewMode != viewModeBeforeAdjustment)
+        _cameraDistanceGestureChangedViewMode = true;
+    }
+
+    private bool IsCameraDistanceModifierHeld()
+    {
+      if (Input.GetKey(_keyCameraDistanceModifier))
+        return true;
+
+      // 기본 바인딩은 LeftAlt이지만, Alt/Option 조작은 좌우 어느 쪽도 허용한다.
+      return _keyCameraDistanceModifier == KeyCode.LeftAlt && Input.GetKey(KeyCode.RightAlt);
+    }
+
+    private bool HasCameraDistanceScrollInput()
+      => IsCameraDistanceModifierHeld() && Mathf.Abs(Input.mouseScrollDelta.y) > Mathf.Epsilon;
+
+    private void FinalizeCameraDistanceGestureIfNeeded(bool hasCameraDistanceScrollInput)
+    {
+      if (!_cameraDistanceGestureActive) return;
+      // 이 프레임에도 Alt/Option+휠 입력이 있다면, 유휴 시간이 길었더라도 같은 제스처로 처리한다.
+      if (hasCameraDistanceScrollInput) return;
+      if (Time.unscaledTime - _cameraDistanceGestureLastScrollTime < CameraDistanceGestureEndDelay) return;
+
+      if (_camControl.IsUnityNull())
+      {
+        _cameraDistanceGestureActive = false;
+        return;
+      }
+
+      if (_cameraDistanceGestureChangedViewMode)
+      {
+        // 전환된 1/3인칭 시점은 유지하고, 다음 실행에 사용할 POV 거리만 조정 시작 전 값으로 저장한다.
+        PersistCameraDistance(_cameraDistanceGestureStartDistance);
+      }
+      else
+      {
+        PersistCameraDistance(_camControl.DesiredThirdPersonDistance);
+      }
+
+      _cameraDistanceGestureActive = false;
+    }
+
+    private static void PersistCameraDistance(float distance)
+    {
+      Registry.Registry.Get<CameraDistancePreferenceService>(
+          RegistryType.Service,
+          Registry.Registry.TypeKey<CameraDistancePreferenceService>())
+        ?.PersistDistance(distance);
     }
 
     /// <summary>

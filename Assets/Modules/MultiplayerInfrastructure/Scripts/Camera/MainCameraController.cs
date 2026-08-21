@@ -69,6 +69,12 @@ namespace MultiplayerInfrastructure.Camera
 
       _holder.Initialize();
 
+      // 카메라는 네트워크 스폰 이후에 초기화되므로, 먼저 생성된 POV 설정 서비스를
+      // 여기서 다시 적용해야 저장된 거리가 실제 소유자 카메라에 반영된다.
+      Registry.Registry.Get<CameraDistancePreferenceService>(
+          RegistryType.Service, Registry.Registry.TypeKey<CameraDistancePreferenceService>())
+        ?.ReapplyToCamera();
+
       // 네트워크 스폰 뒤 생성된 소유자 카메라에도 저장된 FOV/후처리 설정을 적용한다.
       Registry.Registry.Get<TexturePerformanceService>(
           RegistryType.Service, Registry.Registry.TypeKey<TexturePerformanceService>())

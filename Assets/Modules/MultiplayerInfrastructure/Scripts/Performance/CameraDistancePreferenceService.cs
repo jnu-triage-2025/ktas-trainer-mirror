@@ -70,12 +70,20 @@ namespace MultiplayerInfrastructure.Performance
     /// </summary>
     public void SetDistance(float distance)
     {
+      PersistDistance(distance);
+      ApplyToCamera(distance);
+    }
+
+    /// <summary>
+    /// POV 거리만 저장합니다. 현재 카메라에는 적용하지 않으므로, 휠 조정 중 자동으로 전환된
+    /// 1/3인칭 시점은 유지하면서 다음 실행에 사용할 거리만 별도로 보관할 수 있습니다.
+    /// </summary>
+    public void PersistDistance(float distance)
+    {
       _currentDistance = distance;
       _hasStoredValue = true;
 
-      ApplyToCamera(distance);
       Save(distance);
-
       OnDistanceChanged?.Invoke(distance);
     }
 
