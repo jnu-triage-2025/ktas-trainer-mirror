@@ -22,6 +22,15 @@ namespace MultiplayerInfrastructure.Audio
     private static IReadOnlyList<AudioDeviceDescriptor> _outputDevices = Array.Empty<AudioDeviceDescriptor>();
     private static IReadOnlyList<AudioDeviceDescriptor> _inputDevices = Array.Empty<AudioDeviceDescriptor>();
 
+    /// <summary>
+    /// 운영체제가 기본으로 쓰는 마이크 이름입니다. <see cref="Refresh"/>가 채웁니다.
+    ///
+    /// Microphone 열거기가 직접 네이티브를 훑게 두면 Refresh 한 번에 네이티브 열거가
+    /// 두 번 돌아갑니다(출력용 한 번, 기본 마이크 이름 조회용 한 번). Windows에서는
+    /// COM 객체를 두 번 세우는 셈이라, 여기서 한 번 읽어 두고 건네줍니다.
+    /// </summary>
+    private static string _systemDefaultInputName;
+
     /// <summary>장치 목록이 새로 읽힐 때마다 발생합니다.</summary>
     public static event Action Refreshed;
 
@@ -53,6 +62,11 @@ namespace MultiplayerInfrastructure.Audio
       EnsureInitialized();
 
       _outputDevices = SafeEnumerate(_nativeEnumerator, AudioDeviceKind.Output);
+
+      // 기본 마이크가 무엇인지는 네이티브 쪽만 안다. 목록을 한 번 훑어 이름만 챙겨 둔다.
+      _systemDefaultInputName = AudioDeviceSelectionResolver
+        .FindSystemDefault(SafeEnumerate(_nativeEnumerator, AudioDeviceKind.Input))?.DisplayName;
+
       _inputDevices = SafeEnumerate(_inputEnumerator, AudioDeviceKind.Input);
       _initialized = true;
 
@@ -67,12 +81,8 @@ namespace MultiplayerInfrastructure.Audio
       _nativeEnumerator = CreateNativeEnumerator();
 
       // 입력 목록은 Unity가 쥐고 있지만, "기본 마이크"가 무엇인지는 네이티브 쪽만 안다.
-      var nativeEnumerator = _nativeEnumerator;
-      _inputEnumerator = new MicrophoneAudioDeviceEnumerator(
-        nativeEnumerator == null
-          ? (Func<string>)null
-          : () => AudioDeviceSelectionResolver
-              .FindSystemDefault(nativeEnumerator.Enumerate(AudioDeviceKind.Input))?.DisplayName);
+      // Refresh가 미리 읽어 둔 이름을 건네받기만 한다.
+      _inputEnumerator = new MicrophoneAudioDeviceEnumerator(() => _systemDefaultInputName);
     }
 
     private static IAudioDeviceEnumerator CreateNativeEnumerator()
@@ -93,13 +103,37 @@ namespace MultiplayerInfrastructure.Audio
 
       try
       {
-        return enumerator.Enumerate(kind) ?? Array.Empty<AudioDeviceDescriptor>();
+        return Sanitize(enumerator.Enumerate(kind));
       }
       catch (Exception exception)
       {
         Debug.LogWarning($"[AudioDevice] {kind} 장치 목록을 읽지 못했습니다: {exception.Message}");
         return Array.Empty<AudioDeviceDescriptor>();
       }
+    }
+
+    /// <summary>
+    /// 쓸 수 없는 항목을 여기서 한 번에 걸러 냅니다.
+    ///
+    /// 설정 화면은 목록의 인덱스로 장치를 짚습니다. 뒤쪽에서 항목을 건너뛰면 그 뒤 장치가
+    /// 한 칸씩 밀려 사용자가 고른 것과 다른 장치가 적용되므로, 걸러 내는 일은 목록이
+    /// 만들어지는 이 지점에서만 합니다.
+    /// </summary>
+    private static IReadOnlyList<AudioDeviceDescriptor> Sanitize(IReadOnlyList<AudioDeviceDescriptor> devices)
+    {
+      if (devices == null || devices.Count == 0)
+        return Array.Empty<AudioDeviceDescriptor>();
+
+      var cleaned = new List<AudioDeviceDescriptor>(devices.Count);
+      for (int i = 0; i < devices.Count; i++)
+      {
+        var device = devices[i];
+        if (device == null || string.IsNullOrEmpty(device.Id))
+          continue;
+        cleaned.Add(device);
+      }
+
+      return cleaned;
     }
   }
 }

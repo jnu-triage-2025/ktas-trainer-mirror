@@ -71,11 +71,6 @@ namespace MultiplayerInfrastructure.Audio
       InputDeviceName = InputDeviceName,
     };
 
-    public bool Matches(AudioDeviceSettingsData other)
-      => other != null
-         && string.Equals(OutputDeviceId, other.OutputDeviceId, StringComparison.Ordinal)
-         && string.Equals(InputDeviceId, other.InputDeviceId, StringComparison.Ordinal);
-
     private static string Normalize(string value)
       => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
   }

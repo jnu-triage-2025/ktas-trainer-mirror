@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
@@ -26,6 +27,15 @@ namespace MultiplayerInfrastructure.Audio
   {
     private const string PlayerPrefsKey = "MultiplayerInfrastructure.AudioDeviceSettings.v1";
 
+    /// <summary>재생이 끝나기를 기다려 주는 상한입니다. 이보다 길어지면 그냥 옮깁니다.</summary>
+    private const float RestartWaitLimitSeconds = 8f;
+
+    /// <summary>재생이 끝났는지 확인하는 간격입니다.</summary>
+    private const float RestartPollSeconds = 0.25f;
+
+    private Coroutine _pendingRestart;
+    private bool _restartPending;
+
     private AudioDeviceSettingsData _currentSettings = new AudioDeviceSettingsData();
 
     /// <summary>
@@ -40,6 +50,12 @@ namespace MultiplayerInfrastructure.Audio
 
     /// <summary>이 플랫폼에서 출력 경로를 바꿀 수 있으면 true입니다.</summary>
     public static bool IsOutputRoutingSupported => AudioOutputRouting.IsSupported;
+
+    /// <summary>
+    /// 새 장치로 옮기는 일을 재생이 끝날 때까지 미뤄 둔 상태면 true입니다.
+    /// 설정 화면이 "곧 옮긴다"고 안내하는 데 씁니다.
+    /// </summary>
+    public bool IsOutputRestartPending => _restartPending;
 
     /// <summary>설정이 바뀔 때마다 최신 사본이 전달됩니다.</summary>
     public event Action<AudioDeviceSettingsData> OnSettingsChanged;
@@ -76,6 +92,7 @@ namespace MultiplayerInfrastructure.Audio
 
     private void OnDestroy()
     {
+      CancelPendingRestart();
       Registry.Registry.Unregister(
         RegistryType.Service,
         Registry.Registry.TypeKey<AudioDevicePreferenceService>());
@@ -91,6 +108,9 @@ namespace MultiplayerInfrastructure.Audio
       AudioDeviceCatalog.Refresh();
       _currentSettings = Load();
       ReconcileAgainstCatalog(notify: false);
+
+      // 저장값을 운영체제에 다시 알린다. 시작 시점에는 이미 그 장치로 열려 있으므로
+      // 엔진을 다시 열지 않는다.
       ApplyOutputRouting(restartAudioEngine: false);
 
       Debug.Log("[AudioDevice] 장치 설정 불러오기: " +
@@ -187,8 +207,11 @@ namespace MultiplayerInfrastructure.Audio
         return;
 
       Save(_currentSettings);
+
+      // 사라진 장치를 정리한 결과이지 사용자가 고른 것이 아니다. 설정 창을 여는 것만으로
+      // 재생이 끊기지 않도록, 여기서는 경로만 갱신하고 엔진은 그대로 둔다.
       if (outputChanged)
-        ApplyOutputRouting(restartAudioEngine: notify);
+        ApplyOutputRouting(restartAudioEngine: false);
       if (notify)
         OnSettingsChanged?.Invoke(CurrentSettings);
       if (inputChanged)
@@ -206,8 +229,62 @@ namespace MultiplayerInfrastructure.Audio
       }
 
       IsOutputRoutingActive = AudioOutputRouting.Apply(
-        _currentSettings.OutputDeviceId, restartAudioEngine, out string failureReason);
+        _currentSettings.OutputDeviceId, out string failureReason);
       OutputRoutingFailureReason = IsOutputRoutingActive ? null : failureReason;
+
+      if (IsOutputRoutingActive && restartAudioEngine)
+        ScheduleAudioEngineRestart();
+    }
+
+    /// <summary>
+    /// 오디오 엔진 재시작을 소리가 잦아든 뒤로 미룹니다.
+    ///
+    /// <see cref="AudioSettings.Reset"/>은 재생 중인 소리를 끊고 마이크 클립까지 무효로 만듭니다.
+    /// 환자 음성이 나가는 도중에 끊으면 교육생은 듣지 못했는데 TTS 코루틴은 클립 길이만큼
+    /// 기다렸다가 정상 종료하므로, 시나리오는 말한 것처럼 진행되어 버립니다.
+    /// 그래서 재생이 끝나기를 기다렸다가 옮깁니다.
+    ///
+    /// 하염없이 기다리지는 않습니다. <see cref="RestartWaitLimitSeconds"/>가 지나면 그냥 옮깁니다.
+    /// </summary>
+    private void ScheduleAudioEngineRestart()
+    {
+      // 비활성 상태에서는 코루틴을 돌릴 수 없으니 곧바로 옮긴다.
+      if (!isActiveAndEnabled)
+      {
+        AudioOutputRouting.RestartAudioEngine();
+        return;
+      }
+
+      CancelPendingRestart();
+      _pendingRestart = StartCoroutine(RestartAudioEngineWhenQuiet());
+    }
+
+    private IEnumerator RestartAudioEngineWhenQuiet()
+    {
+      _restartPending = true;
+
+      float deadline = Time.unscaledTime + RestartWaitLimitSeconds;
+      while (Time.unscaledTime < deadline && AudioOutputRouting.IsAnyAudioPlaying())
+        yield return new WaitForSecondsRealtime(RestartPollSeconds);
+
+      bool cutOffPlayback = AudioOutputRouting.IsAnyAudioPlaying();
+
+      _restartPending = false;
+      _pendingRestart = null;
+      AudioOutputRouting.RestartAudioEngine();
+
+      if (cutOffPlayback)
+        Debug.LogWarning($"[AudioDevice] {RestartWaitLimitSeconds:0}초를 기다려도 재생이 끝나지 않아 " +
+                         "소리를 끊고 새 장치로 옮겼습니다.");
+    }
+
+    private void CancelPendingRestart()
+    {
+      if (_pendingRestart != null)
+        StopCoroutine(_pendingRestart);
+
+      _pendingRestart = null;
+      _restartPending = false;
     }
 
     private static void RaiseInputDeviceChanged()

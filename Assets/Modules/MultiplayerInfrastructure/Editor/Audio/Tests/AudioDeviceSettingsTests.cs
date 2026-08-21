@@ -159,6 +159,28 @@ namespace MultiplayerInfrastructure.Editor.Audio.Tests
     }
 
     [Test]
+    public void ChoiceLabels_StayAlignedWithDeviceIndexes()
+    {
+      // 문구 목록이 장치 목록보다 짧아지면 그 뒤 장치가 한 칸씩 밀려, 사용자가 고른 것과
+      // 다른 장치가 적용된다. 빈 자리가 있어도 개수는 devices.Count + 1로 유지해야 한다.
+      var devices = new List<AudioDeviceDescriptor>
+      {
+        new AudioDeviceDescriptor("id-1", "장치 1"),
+        null,
+        new AudioDeviceDescriptor("id-3", "장치 3"),
+      };
+
+      var labels = AudioDeviceSelectionResolver.BuildChoiceLabels(devices);
+
+      Assert.That(labels.Count, Is.EqualTo(devices.Count + 1));
+      Assert.That(AudioDeviceSelectionResolver.IndexOfChoice("id-3", devices), Is.EqualTo(3));
+      Assert.That(AudioDeviceSelectionResolver.ChoiceIdAt(3, devices), Is.EqualTo("id-3"));
+      Assert.That(AudioDeviceSelectionResolver.ChoiceIdAt(2, devices),
+        Is.EqualTo(AudioDeviceSelectionResolver.SystemDefaultId),
+        "빈 자리를 고르면 시스템 설정으로 떨어져야 한다.");
+    }
+
+    [Test]
     public void ChoiceIndex_HandlesDevicesSharingTheSameName()
     {
       // 같은 모델을 두 개 꽂으면 표시 이름이 겹친다. 그래서 문구가 아니라 인덱스로 짚어야 한다.

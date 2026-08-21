@@ -80,6 +80,10 @@ namespace MultiplayerInfrastructure.Audio
     /// <summary>
     /// 드롭다운에 넣을 문구 목록을 만듭니다. 0번은 항상 시스템 설정 항목입니다.
     /// 목록의 순서는 <paramref name="devices"/>와 1칸씩 어긋나므로 인덱스로 짝지어 쓰세요.
+    ///
+    /// 항상 <c>devices.Count + 1</c>개를 돌려줍니다. 중간에서 항목을 건너뛰면 그 뒤 장치가
+    /// 한 칸씩 밀려 <see cref="ChoiceIdAt"/>가 엉뚱한 장치를 짚게 되므로, 비어 있는 자리도
+    /// 자리표시자 문구로 채웁니다.
     /// </summary>
     public static List<string> BuildChoiceLabels(IReadOnlyList<AudioDeviceDescriptor> devices)
     {
@@ -91,8 +95,9 @@ namespace MultiplayerInfrastructure.Audio
       {
         var device = devices[i];
         if (device == null)
-          continue;
-        labels.Add(device.IsSystemDefault ? $"{device.DisplayName} (기본)" : device.DisplayName);
+          labels.Add(UnknownDeviceLabel);
+        else
+          labels.Add(device.IsSystemDefault ? $"{device.DisplayName} (기본)" : device.DisplayName);
       }
 
       return labels;

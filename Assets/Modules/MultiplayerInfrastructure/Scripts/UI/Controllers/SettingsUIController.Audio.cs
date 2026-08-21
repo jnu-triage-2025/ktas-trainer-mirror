@@ -150,7 +150,7 @@ namespace MultiplayerInfrastructure.UI
       if (service != null && !service.IsOutputRoutingActive && !string.IsNullOrEmpty(service.OutputRoutingFailureReason))
         return $"출력 경로를 바꾸지 못해 시스템 설정을 따르고 있습니다. {service.OutputRoutingFailureReason}";
 
-      return "장치를 바꾸면 재생 중이던 소리가 한 번 끊긴 뒤 새 장치로 이어집니다.";
+      return "장치를 바꾸면 지금 나오던 소리가 끝난 뒤에 새 장치로 옮겨 갑니다.";
     }
 
     private DropdownField BuildDeviceField(
@@ -227,17 +227,23 @@ namespace MultiplayerInfrastructure.UI
         ? "시스템 설정"
         : $"'{AudioDeviceSelectionResolver.Find(deviceId, devices)?.DisplayName}'";
 
-      // 출력은 저장에 성공해도 경로 변경까지 갔는지가 따로다. 둘을 뭉뚱그리지 않는다.
-      if (kind == AudioDeviceKind.Output
-          && AudioDevicePreferenceService.IsOutputRoutingSupported
-          && !service.IsOutputRoutingActive)
+      // 출력은 저장 / 경로 변경 / 실제 전환 시점이 각각 다르다. 뭉뚱그리지 않는다.
+      if (kind != AudioDeviceKind.Output)
+      {
+        SetStatusText($"{kindLabel} 장치를 {target}(으)로 저장했습니다.");
+      }
+      else if (AudioDevicePreferenceService.IsOutputRoutingSupported && !service.IsOutputRoutingActive)
       {
         SetStatusText($"출력 장치를 {target}(으)로 저장했지만 재생 경로는 바꾸지 못했습니다. "
                       + service.OutputRoutingFailureReason);
       }
+      else if (service.IsOutputRestartPending)
+      {
+        SetStatusText($"출력 장치를 {target}(으)로 저장했습니다. 지금 나오는 소리가 끝나면 옮겨 갑니다.");
+      }
       else
       {
-        SetStatusText($"{kindLabel} 장치를 {target}(으)로 저장했습니다.");
+        SetStatusText($"출력 장치를 {target}(으)로 저장했습니다.");
       }
 
       // 안내 문구가 경로 변경 결과에 따라 달라진다. 다만 지금은 드롭다운의 변경 콜백 안이라
