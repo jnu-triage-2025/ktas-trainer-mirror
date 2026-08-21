@@ -91,12 +91,12 @@ MonoBehaviour:
     _followingPivot: {fileID: 0}
     _camera: {fileID: 0}
     _spectatorLayerName: Spectator
-    _currentDistance: 0
-    _targetDistance: 0
-    _desiredThirdPersonDistance: 0
-    _desiredDistanceInitialized: 0
-    _baseCullingMask: 0
-    _baseMaskInitialized: 0
+    _currentDistance: 0.7057053
+    _targetDistance: 5
+    _desiredThirdPersonDistance: 5
+    _desiredDistanceInitialized: 1
+    _baseCullingMask: -129
+    _baseMaskInitialized: 1
   _nearbyInteractablesDetector: {fileID: 0}
   _interactableHintUIController: {fileID: 0}
 --- !u!114 &4333088614849922663
@@ -181,7 +181,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584145144709380488
+  _initializedTimestamp: -8584143054442926748
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1

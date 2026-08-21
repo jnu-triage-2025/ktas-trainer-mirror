@@ -318,7 +318,6 @@ MonoBehaviour:
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
   - {fileID: 8589618149190384213}
-  - {fileID: 4673562941832867291}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -329,7 +328,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584145144709380488
+  _initializedTimestamp: -8584143054442926748
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -348,7 +347,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 21
+  <PrefabId>k__BackingField: 20
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 14522515611562070377
   SceneId: 0
@@ -401,9 +400,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b76115154ba474fbe9ed4b018f1cb552, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.OxyLine.OxyLineConnectionPoint
-  _componentIndexCache: 1
-  _addedNetworkObject: {fileID: 868971026503455756}
-  _networkObjectCache: {fileID: 868971026503455756}
   _lineMaterial: {fileID: 0}
   _connectedLineObjects: []
   _allowMultipleConnections: 0
@@ -504,14 +500,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
-  _componentIndexCache: 255
-  _addedNetworkObject: {fileID: 868971026503455756}
-  _networkObjectCache: {fileID: 0}
   _lineMaterial: {fileID: 0}
   _connectedLineObjects: []
   _allowMultipleConnections: 0
   connectionService: {fileID: 0}
-  _identifier: intravenousconnectionpoint
+  _identifier: veinintravenousconnectionpoint_002
   _autoGenerateIdentifier: 1
   _displayIcon: {fileID: 0}
   _interactConfigs:
@@ -576,8 +569,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e41aecb045574d20b68244d8f606fec4, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.ElectricalLine.ElectricalLineConnectionPoint
+  _lineMaterial: {fileID: 0}
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
 --- !u!1001 &872510069454778929
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -72,7 +72,7 @@ MonoBehaviour:
       useDefaultZoneCenter: 0
       zoneCenter: {x: 0, y: 1.5, z: 0}
       useDefaultZoneSize: 0
-      zoneSize: {x: 2.4, y: 3.5, z: 3}
+      zoneSize: {x: 2.2, y: 3.5, z: 3}
   - entities:
     - type: 0
       identifier: zone_1:bed_snap_point
@@ -129,7 +129,7 @@ MonoBehaviour:
       useDefaultZoneCenter: 0
       zoneCenter: {x: 0, y: 1.5, z: 0}
       useDefaultZoneSize: 0
-      zoneSize: {x: 2.4, y: 3.5, z: 3}
+      zoneSize: {x: 2.2, y: 3.5, z: 3}
   - entities:
     - type: 0
       identifier: zone_2:bed_snap_point
@@ -186,7 +186,7 @@ MonoBehaviour:
       useDefaultZoneCenter: 0
       zoneCenter: {x: 0, y: 1.5, z: 0}
       useDefaultZoneSize: 0
-      zoneSize: {x: 2.4, y: 3.5, z: 3}
+      zoneSize: {x: 2.2, y: 3.5, z: 3}
   - entities:
     - type: 0
       identifier: zone_3:bed_snap_point
@@ -243,4 +243,4 @@ MonoBehaviour:
       useDefaultZoneCenter: 0
       zoneCenter: {x: 0, y: 1.5, z: 0}
       useDefaultZoneSize: 0
-      zoneSize: {x: 2.4, y: 3.5, z: 3}
+      zoneSize: {x: 2.2, y: 3.5, z: 3}

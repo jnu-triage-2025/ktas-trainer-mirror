@@ -214,6 +214,7 @@ MonoBehaviour:
     _suctionWalls: []
     _oxyflowmeters: []
   _ivAttachmentPoint: {fileID: 0}
+  _patientBCIvAttachmentPoint: {fileID: 0}
   _clineIvAttachmentPoint: {fileID: 0}
   _oxygenMaskAttachmentPoint: {fileID: 0}
   _suctionLineAttachmentPoint: {fileID: 0}
@@ -324,7 +325,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584145144709380488
+  _initializedTimestamp: -8584143054442926748
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1

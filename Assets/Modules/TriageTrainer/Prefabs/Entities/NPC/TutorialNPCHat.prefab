@@ -75,6 +75,8 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _displayColor: {r: 1, g: 1, b: 1, a: 1}
+  _presentationEntityIdentifier: 
+  _interactionIdentifier: 
   _npcBaseModel: {fileID: 0}
   _identifier: npc-tutorial-guide-hat
   _scenarioInteracts: []
@@ -110,7 +112,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584145144709380488
+  _initializedTimestamp: -8584143054442926748
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -129,7 +131,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 20
+  <PrefabId>k__BackingField: 19
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 13998352978872276367
   SceneId: 0

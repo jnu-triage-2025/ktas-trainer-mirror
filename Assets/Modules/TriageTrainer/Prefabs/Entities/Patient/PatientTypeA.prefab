@@ -66,9 +66,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
-  _componentIndexCache: 1
-  _addedNetworkObject: {fileID: 4111524619819356577}
-  _networkObjectCache: {fileID: 4111524619819356577}
   _lineMaterial: {fileID: 0}
   _connectedLineObjects: []
   _allowMultipleConnections: 0
@@ -383,9 +380,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
-  _componentIndexCache: 2
-  _addedNetworkObject: {fileID: 0}
-  _networkObjectCache: {fileID: 4111524619819356577}
   _lineMaterial: {fileID: 0}
   _connectedLineObjects: []
   _allowMultipleConnections: 0
@@ -929,6 +923,7 @@ MonoBehaviour:
     _suctionWalls: []
     _oxyflowmeters: []
   _ivAttachmentPoint: {fileID: 0}
+  _patientBCIvAttachmentPoint: {fileID: 0}
   _clineIvAttachmentPoint: {fileID: 0}
   _oxygenMaskAttachmentPoint: {fileID: 0}
   _suctionLineAttachmentPoint: {fileID: 0}
@@ -1029,9 +1024,6 @@ MonoBehaviour:
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
   - {fileID: 7653721158556900860}
-  - {fileID: 4641271633686474913}
-  - {fileID: 1599706029501451718}
-  - {fileID: 6325382686929469769}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -1042,7 +1034,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584144944158186608
+  _initializedTimestamp: -8584143054442926748
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -1061,7 +1053,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 9
+  <PrefabId>k__BackingField: 8
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 3584526928423580773
   SceneId: 0
@@ -1125,8 +1117,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e41aecb045574d20b68244d8f606fec4, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.ElectricalLine.ElectricalLineConnectionPoint
+  _lineMaterial: {fileID: 0}
+  _connectedLineObjects: []
+  _allowMultipleConnections: 0
 --- !u!1 &7900168916465225989
 GameObject:
   m_ObjectHideFlags: 0
@@ -1271,9 +1266,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
-  _componentIndexCache: 3
-  _addedNetworkObject: {fileID: 0}
-  _networkObjectCache: {fileID: 4111524619819356577}
   _lineMaterial: {fileID: 0}
   _connectedLineObjects: []
   _allowMultipleConnections: 0

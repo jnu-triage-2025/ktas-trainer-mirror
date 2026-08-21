@@ -267,6 +267,7 @@ MonoBehaviour:
   _keyToggleCommand: 47
   _keyInteractInteractableObject: 102
   _keyAdvanceDialogue: 32
+  _keyConfirmDialogue: 13
   _keyEscape: 27
   _keySpectatorFlyDown: 304
   _keyOpenQuestUI: 106
@@ -355,7 +356,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584145144709380488
+  _initializedTimestamp: -8584143054442926748
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -374,7 +375,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 12
+  <PrefabId>k__BackingField: 11
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 6603010548494297973
   SceneId: 0

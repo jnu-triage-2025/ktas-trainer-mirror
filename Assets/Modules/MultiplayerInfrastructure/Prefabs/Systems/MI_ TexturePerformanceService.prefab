@@ -10,8 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7117630735269284081}
   - component: {fileID: 8665058814048258456}
-  - component: {fileID: 8665058814048258457}
-  - component: {fileID: 8665058814048258458}
   m_Layer: 0
   m_Name: MI_ TexturePerformanceService
   m_TagString: Untagged
@@ -46,28 +44,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18938ebfae27e46b4ae0be6ef7934603, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Performance.TexturePerformanceService
---- !u!114 &8665058814048258457
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3550375713808136284}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9e33af5cd7ccd481fa7074ebf212d32a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Performance.UIScalePreferenceService
-  _panelSettings: {fileID: 11400000, guid: 9a6e30b1a446845fc83ea6c441b81e4a, type: 2}
---- !u!114 &8665058814048258458
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3550375713808136284}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c0c29acec0e64e0ea8fd965feed670ef, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Audio.AudioDevicePreferenceService

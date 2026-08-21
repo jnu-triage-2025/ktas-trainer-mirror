@@ -66,14 +66,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
-  _componentIndexCache: 2
-  _addedNetworkObject: {fileID: 5796848331211291605}
-  _networkObjectCache: {fileID: 5796848331211291605}
   _lineMaterial: {fileID: 0}
   _connectedLineObjects: []
   _allowMultipleConnections: 0
   connectionService: {fileID: 0}
-  _identifier: bed_iv_point_ps
+  _identifier: bed_iv_point_ps_002
   _autoGenerateIdentifier: 1
   _displayIcon: {fileID: 0}
   _interactConfigs:
@@ -269,14 +266,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
-  _componentIndexCache: 1
-  _addedNetworkObject: {fileID: 5796848331211291605}
-  _networkObjectCache: {fileID: 5796848331211291605}
   _lineMaterial: {fileID: 0}
   _connectedLineObjects: []
   _allowMultipleConnections: 0
   connectionService: {fileID: 0}
-  _identifier: bed_iv_point_ns
+  _identifier: bed_iv_point_ns_001
   _autoGenerateIdentifier: 1
   _displayIcon: {fileID: 0}
   _interactConfigs:
@@ -594,8 +588,6 @@ MonoBehaviour:
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
   - {fileID: 8619811087951219274}
-  - {fileID: 4595216109222723486}
-  - {fileID: 3842447579649307989}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -606,7 +598,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584144857028529838
+  _initializedTimestamp: -8584143054442926748
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -625,7 +617,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 4
+  <PrefabId>k__BackingField: 12
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 6638135696877323431
   SceneId: 0
