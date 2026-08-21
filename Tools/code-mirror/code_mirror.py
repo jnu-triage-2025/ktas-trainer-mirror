@@ -153,7 +153,8 @@ def paths_at(commit: str) -> list[tuple[str, str, str, int]]:
             continue
         header, raw_path = entry.split(b"\t", 1)
         mode, kind, _object_id, raw_size = header.decode().split(" ", 3)
-        size = int(raw_size) if raw_size != "-" else 0
+        size_text = raw_size.strip()
+        size = int(size_text) if size_text != "-" else 0
         entries.append((raw_path.decode("utf-8", "surrogateescape"), mode, kind, size))
     return entries
 
@@ -190,6 +191,8 @@ def branch_membership(refs: dict[str, str]) -> dict[str, set[str]]:
 
 
 def matches(rule: dict[str, Any], path: str, size: int) -> bool:
+    if rule.get("preserve_meta", False) and Path(path).suffix.lower() == ".meta":
+        return False
     selector = rule.get("match", {})
     if "max_size_bytes" in selector and size >= int(selector["max_size_bytes"]):
         return True
@@ -226,7 +229,8 @@ def excluded_paths(config: dict[str, Any], commit: str, branches: set[str]) -> l
         # Explicit module inclusion and retained excluded-module metadata ignore
         # generic size and extension rules.
         force_include = policy == "include" or excluded_module_meta
-        if kind != "blob" or not allowed_by_default(config, path) or (not force_include and any(matches(rule, path, size) for rule in active)):
+        force_exclude = any(rule.get("force", False) and matches(rule, path, size) for rule in active)
+        if kind != "blob" or force_exclude or not allowed_by_default(config, path) or (not force_include and any(matches(rule, path, size) for rule in active)):
             result.append(path)
     return result
 
@@ -352,11 +356,11 @@ def main() -> int:
     if state.get("config_fingerprint") not in (None, fingerprint) and not args.rebuild:
         raise MirrorError("Filtering configuration changed. Review the result and rerun with --rebuild to rewrite the mirror.")
 
-    commits = commit_order(refs)
+    commits = commit_order(refs.values())
     removed_count = 0
     new_count = 0
     with tempfile.TemporaryDirectory(prefix="code-mirror-index-") as tempdir:
-        for source in commits:
+        for index, source in enumerate(commits, start=1):
             removed = excluded_paths(config, source, memberships.get(source, set()))
             removed_count += len(removed)
             index_file = Path(tempdir) / source
@@ -366,6 +370,8 @@ def main() -> int:
             if state["commits"].get(source) != mirrored:
                 new_count += 1
             state["commits"][source] = mirrored
+            if index % 100 == 0 or index == len(commits):
+                print(f"Processed {index}/{len(commits)} source commits.", flush=True)
     state.update({"version": 1, "config_fingerprint": fingerprint, "refs": refs})
     print(f"Source commits: {len(commits)}; excluded file instances: {removed_count}; changed mirror commits: {new_count}")
     if args.dry_run:

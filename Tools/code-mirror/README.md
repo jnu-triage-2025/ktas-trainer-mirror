@@ -26,6 +26,10 @@ python3 Tools/code-mirror/code_mirror.py --config Tools/code-mirror/code-mirror.
 
 `[[rules]]`는 허용 목록을 통과한 파일을 추가로 제외합니다. `match`에는 `max_size_bytes`, `directory_names`, `file_names`, `extensions`, `paths`를 여러 개 지정할 수 있으며, 하나라도 일치하면 제외합니다. 50 MiB 이상의 파일을 제외하는 규칙이 기본으로 포함됩니다.
 
+이전 위치에서 마이그레이션된 라이선스 콘텐츠는 `paths` 규칙으로 제외할 수 있습니다. 해당 규칙에 `preserve_meta = true`를 지정하면 Unity `.meta` 파일만 유지합니다.
+
+`always_include` 모듈에서도 반드시 제외할 항목에는 `force = true`를 지정합니다. 강제 제외 규칙은 모듈 포함 정책보다 우선하며, `preserve_meta = true`와 함께 사용하면 대상 자산의 `.meta` 파일은 유지합니다.
+
 ## 모듈 정책과 생성 설정
 
 `[module_policies]`는 `Assets/Modules/<모듈명>/` 전체에 적용하는 최우선 수동 정책입니다. `FishNet`, `MultiplayerInfrastructure`, `TriageTrainer`, `TextToSpeechService`는 PNG 등의 콘텐츠 확장자와 파일 크기를 포함하여 항상 미러링합니다. 지정된 라이선스 콘텐츠 모듈은 항상 제외하되, Unity 참조 연결에 필요한 `.meta` 파일은 포함합니다.

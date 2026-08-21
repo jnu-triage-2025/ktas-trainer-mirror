@@ -1,4 +1,7 @@
 .env
+.code-mirror-state.json
+.code-mirror-state.json.tmp
+code-mirror.gen.toml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

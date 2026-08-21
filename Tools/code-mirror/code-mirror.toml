@@ -12,7 +12,7 @@ remote = "origin"
 [destination]
 # Any Git remote URL is supported. SSH URLs need no token when the key has write access.
 # For HTTPS, configure the provider's token and username in Tools/code-mirror/.env.
-url = "https://git.example.com/GROUP/REPOSITORY.git"
+url = "https://github.com/jnu-triage-2025/ktas-trainer-mirrortest.git"
 token_env = "GIT_HTTP_TOKEN"
 http_username = "git"
 
@@ -35,7 +35,7 @@ always_include = ["FishNet", "MultiplayerInfrastructure", "TriageTrainer", "Text
 always_exclude = [
   "AutoSlidingDoors", "ChonnamNatlUnivCustomizedModels", "HospitalEquipmentPackages",
   "HospitalEqupments", "HospitalEquipments", "HospitalPack", "LowPolyHospitalCharacters", "Mixamo", "OutPost",
-  "UnityJapanOffice", "UnitySceneSupports",
+  "UnityJapanOffice", "UnitySceneSupports", "Hospital",
 ]
 always_include_meta = true
 
@@ -44,6 +44,46 @@ always_include_meta = true
 # Commit identifiers always refer to the source GitLab history.
 [[rules]]
 match = { max_size_bytes = 52428800 }
+scope = { mode = "always" }
+
+# These rules override always_include module policies. Unity .meta files remain.
+[[rules]]
+match = { extensions = [".fbx"] }
+preserve_meta = true
+force = true
+scope = { mode = "always" }
+
+[[rules]]
+match = { paths = [
+  "Assets/Modules/TriageTrainer/Resources/Sound/cutting_sound.mp3",
+  "Assets/Modules/TriageTrainer/Resources/Sound/defib_on_sound.mp3",
+  "Assets/Modules/TriageTrainer/Resources/Sound/monitor_warning_sound.mp3",
+  "Assets/Modules/TriageTrainer/Resources/Sound/oxygen_sound.mp3",
+  "Assets/Modules/TriageTrainer/Resources/Sound/tape_sound.mp3",
+] }
+preserve_meta = true
+force = true
+scope = { mode = "always" }
+
+# Minecraft-derived item assets. Related C# gameplay code remains included.
+[[rules]]
+match = { paths = [
+  "**/stone_block.*", "**/wood_block.*", "**/StoneBlock.asset", "**/WoodBlock.asset",
+] }
+preserve_meta = true
+force = true
+scope = { mode = "always" }
+
+# Migration predecessors of excluded Modules content. Keep Unity .meta links.
+[[rules]]
+match = { paths = [
+  "generted files by us/**", "Assets/generted files by us/**",
+  "Prefab/**", "Assets/Prefab/**", "Assets/Modules/Prefab/**",
+  "Assets_AutoSlidingDoors/**", "Assets/Assets_AutoSlidingDoors/**",
+  "Hospital Equipment Packages/**", "Assets/Hospital Equipment Packages/**",
+  "HospitalEquments/**", "Assets/HospitalEquments/**",
+] }
+preserve_meta = true
 scope = { mode = "always" }
 
 # Examples:
