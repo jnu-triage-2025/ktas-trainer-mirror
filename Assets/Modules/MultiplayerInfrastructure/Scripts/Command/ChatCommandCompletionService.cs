@@ -368,6 +368,8 @@ namespace MultiplayerInfrastructure.Command
         return CollectWaypointIdentifiers();
       if (key.Contains("preset"))
         return CollectEntityPresetIdentifiers();
+      if (key.Contains("entrypoint"))
+        return CollectManualEntrypointIdentifiers();
       if (key.Contains("scenario"))
         return CollectScenarioIdentifiers();
       if (key.Contains("problem"))
@@ -528,6 +530,26 @@ namespace MultiplayerInfrastructure.Command
     }
 
     /// <summary>등록된 모든 시나리오 식별자를 반환합니다.</summary>
+    /// <summary>현재 재생 중인 시나리오가 선언한 ManualEntrypoint 별칭 목록.</summary>
+    public static List<string> CollectManualEntrypointIdentifiers()
+    {
+      try
+      {
+        var controller = Scenario.ScenarioController.Instance;
+        if (controller == null)
+          return new List<string>();
+
+        return controller.GetManualEntrypointIdentifiers()
+          .Distinct(StringComparer.OrdinalIgnoreCase)
+          .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
+          .ToList();
+      }
+      catch
+      {
+        return new List<string>();
+      }
+    }
+
     public static List<string> CollectScenarioIdentifiers()
     {
       try

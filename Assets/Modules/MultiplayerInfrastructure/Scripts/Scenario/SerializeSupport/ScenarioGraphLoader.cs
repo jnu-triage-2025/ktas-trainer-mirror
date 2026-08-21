@@ -501,6 +501,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioChatPrintNodeDTO chatPrint => ConvertChatPrint(chatPrint),
           ScenarioExecuteCommandNodeDTO executeCommand => ConvertExecuteCommand(executeCommand),
           ScenarioTimeControlNodeDTO timeControl => ConvertTimeControl(timeControl),
+          ScenarioManualEntrypointNodeDTO manualEntrypoint => ConvertManualEntrypoint(manualEntrypoint),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -744,6 +745,16 @@ namespace MultiplayerInfrastructure.Scenario
           Threshold = dto.Threshold ?? 1,
           UseActiveRoleRosterThreshold = dto.UseActiveRoleRosterThreshold ?? false,
           OutputSignalIdentifier = dto.OutputSignalIdentifier,
+        };
+
+    private static ScenarioManualEntrypointNode ConvertManualEntrypoint(ScenarioManualEntrypointNodeDTO dto) =>
+        new ScenarioManualEntrypointNode
+        {
+          Identifier = dto.Identifier,
+          EntrypointIdentifier = dto.EntrypointIdentifier,
+          ManualEnterSetupIdentifier = dto.ManualEnterSetupIdentifier,
+          Description = dto.Description,
+          NextIdentifier = dto.NextIdentifier
         };
 
     private static ScenarioChatPrintNode ConvertChatPrint(ScenarioChatPrintNodeDTO dto) =>
@@ -1576,6 +1587,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioChatPrintNode chatPrint => ConvertToDTO(chatPrint),
           ScenarioExecuteCommandNode executeCommand => ConvertToDTO(executeCommand),
           ScenarioTimeControlNode timeControl => ConvertToDTO(timeControl),
+          ScenarioManualEntrypointNode manualEntrypoint => ConvertToDTO(manualEntrypoint),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 
@@ -1821,6 +1833,17 @@ namespace MultiplayerInfrastructure.Scenario
           Threshold = node.Threshold,
           UseActiveRoleRosterThreshold = node.UseActiveRoleRosterThreshold ? true : (bool?)null,
           OutputSignalIdentifier = node.OutputSignalIdentifier,
+        };
+
+    private static ScenarioManualEntrypointNodeDTO ConvertToDTO(ScenarioManualEntrypointNode node) =>
+        new ScenarioManualEntrypointNodeDTO
+        {
+          NodeType = "ManualEntrypoint",
+          Identifier = node.Identifier,
+          EntrypointIdentifier = string.IsNullOrWhiteSpace(node.EntrypointIdentifier) ? null : node.EntrypointIdentifier,
+          ManualEnterSetupIdentifier = string.IsNullOrWhiteSpace(node.ManualEnterSetupIdentifier) ? null : node.ManualEnterSetupIdentifier,
+          Description = string.IsNullOrWhiteSpace(node.Description) ? null : node.Description,
+          NextIdentifier = node.NextIdentifier
         };
 
     private static ScenarioChatPrintNodeDTO ConvertToDTO(ScenarioChatPrintNode node) =>

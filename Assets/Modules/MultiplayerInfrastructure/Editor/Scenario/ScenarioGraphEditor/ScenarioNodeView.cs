@@ -282,6 +282,7 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.ChatPrint:
         case ScenarioNodeType.ExecuteCommand:
         case ScenarioNodeType.TimeControl:
+        case ScenarioNodeType.ManualEntrypoint:
           DefaultOutputPort = CreateStandardOutput("Next");
           break;
 
@@ -474,6 +475,9 @@ namespace MultiplayerInfrastructure.Editor
           break;
         case ScenarioNodeType.TimeControl:
           BuildTimeControlInlineEditor((ScenarioTimeControlNode)Data);
+          break;
+        case ScenarioNodeType.ManualEntrypoint:
+          BuildManualEntrypointInlineEditor((ScenarioManualEntrypointNode)Data);
           break;
         case ScenarioNodeType.Parallel:
           break;
@@ -715,6 +719,14 @@ namespace MultiplayerInfrastructure.Editor
     {
       AddTextField("Preset Id", value => data.PresetIdentifier = value, data.PresetIdentifier);
       AddTextField("Spawned Entity Id", value => data.SpawnedEntityIdentifier = value, data.SpawnedEntityIdentifier);
+      AddNextIdentifierField(data);
+    }
+
+    private void BuildManualEntrypointInlineEditor(ScenarioManualEntrypointNode data)
+    {
+      AddTextField("Entrypoint Id", value => data.EntrypointIdentifier = value, data.EntrypointIdentifier);
+      AddTextField("Manual Enter Setup", value => data.ManualEnterSetupIdentifier = value, data.ManualEnterSetupIdentifier);
+      AddTextAreaField("Description", value => data.Description = value, data.Description);
       AddNextIdentifierField(data);
     }
 
@@ -1115,6 +1127,12 @@ namespace MultiplayerInfrastructure.Editor
         if (node is ScenarioPlayerTagNode playerTag)
         {
           summaryParts.Add($"Tag: {playerTag.Tag ?? string.Empty}\nNext: {playerTag.NextIdentifier ?? "(미연결)"}");
+        }
+        else if (node is ScenarioManualEntrypointNode manualEntrypoint)
+        {
+          summaryParts.Add($"Entrypoint: {manualEntrypoint.ResolvedEntrypointIdentifier ?? string.Empty}"
+            + $"\nSetup: {manualEntrypoint.ManualEnterSetupIdentifier ?? "(없음)"}"
+            + $"\nNext: {manualEntrypoint.NextIdentifier ?? "(미연결)"}");
         }
         else if (node is ScenarioServerInternalSignalNode internalSignal)
         {

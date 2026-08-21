@@ -191,6 +191,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.NpcInteractControl:
           DrawNpcInteractControlFields((ScenarioNpcInteractControlNode)data);
           break;
+        case ScenarioNodeType.ManualEntrypoint:
+          DrawManualEntrypointFields((ScenarioManualEntrypointNode)data);
+          break;
       }
     }
 
@@ -1019,6 +1022,19 @@ namespace MultiplayerInfrastructure.Editor
       data.Threshold = EditorGUILayout.IntField("Threshold", data.Threshold);
       data.OutputSignalIdentifier = EditorGUILayout.TextField("Output Signal", data.OutputSignalIdentifier);
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawManualEntrypointFields(ScenarioManualEntrypointNode data)
+    {
+      data.EntrypointIdentifier = EditorGUILayout.TextField("Entrypoint Id", data.EntrypointIdentifier);
+      EditorGUILayout.LabelField(" ", $"명령 별칭: {data.ResolvedEntrypointIdentifier}");
+      data.ManualEnterSetupIdentifier = EditorGUILayout.TextField("Manual Enter Setup", data.ManualEnterSetupIdentifier);
+      EditorGUILayout.PrefixLabel("Description");
+      data.Description = EditorGUILayout.TextArea(data.Description, GUILayout.Height(40));
+      EditorGUILayout.HelpBox(
+        "평소에는 그냥 지나가는 표식입니다. /scenario enter <entrypoint> 로 이 지점까지 건너뛸 수 있고, "
+        + "그때만 Manual Enter Setup 체인을 먼저 실행한 뒤 Next 로 이어집니다.",
+        MessageType.Info);
     }
 
     private void DrawChatPrintFields(ScenarioChatPrintNode data)

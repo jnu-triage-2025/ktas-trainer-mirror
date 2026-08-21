@@ -21,6 +21,8 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("scenario list", "List available scenarios."),
       new UsageLine("scenario execute <target> <scenario>", "Start a scenario for targets."),
       new UsageLine("scenario signal <signal> [clear]", "Raise (or clear) a signal."),
+      new UsageLine("scenario enter <entrypoint>", "Skip playback to a ManualEntrypoint node."),
+      new UsageLine("scenario enter <entrypoint> [clear-state=true|clear-state=false]", "Skip, wiping (default) or keeping prior scenario state."),
       new UsageLine("scenario conflictpolicy [warn|cancel|panic]", "Get/set concurrent-dialogue conflict policy."),
       new UsageLine("scenario validatorlog", "Show Validator block logging targets."),
       new UsageLine("scenario validatorlog <console|chat|session> <on|off>", "Enable or disable a logging target."),
@@ -110,6 +112,16 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
+      // /scenario enter <entrypoint> [clear-state=true|false]
+      // 재생 위치를 시나리오에 선언된 ManualEntrypoint 지점으로 건너뛴다.
+      if (args != null
+          && args.Length >= 1
+          && string.Equals(args[0], "enter", StringComparison.OrdinalIgnoreCase))
+      {
+        ExecuteEnterCommand(sender, args);
+        return;
+      }
+
       if (args != null
           && args.Length >= 1
           && string.Equals(args[0], "validatorlog", StringComparison.OrdinalIgnoreCase))
@@ -120,7 +132,7 @@ namespace MultiplayerInfrastructure.Command
 
       if (args == null || args.Length < 3 || !string.Equals(args[0], "execute", StringComparison.OrdinalIgnoreCase))
       {
-        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute <target> <scenario_id> | /scenario signal <signal_id> [clear] | /scenario conflictpolicy [warn|cancel|panic] | /scenario validatorlog [<console|chat|session> <on|off>]");
+        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute <target> <scenario_id> | /scenario enter <entrypoint> [clear-state=true|false] | /scenario signal <signal_id> [clear] | /scenario conflictpolicy [warn|cancel|panic] | /scenario validatorlog [<console|chat|session> <on|off>]");
         return;
       }
 
@@ -145,6 +157,131 @@ namespace MultiplayerInfrastructure.Command
       }
 
       _chat.SendSystemMessage(sender, $"Scenario '{scenarioId}' dispatched to {targets.Count} target(s).");
+    }
+
+    private void ExecuteEnterCommand(NetworkConnection sender, string[] args)
+    {
+      var controller = ScenarioController.Instance;
+      if (controller == null)
+      {
+        _chat.SendSystemMessage(sender, "ScenarioController instance is not available.");
+        return;
+      }
+
+      if (args.Length < 2)
+      {
+        SendManualEntrypointList(sender, controller);
+        return;
+      }
+
+      string entrypointId = args[1].Trim();
+      if (string.IsNullOrWhiteSpace(entrypointId))
+      {
+        _chat.SendSystemMessage(sender, "Usage: /scenario enter <entrypoint> [clear-state=true|false]");
+        return;
+      }
+
+      bool clearState = true;
+      for (int i = 2; i < args.Length; i++)
+      {
+        if (!TryParseClearStateOption(args[i], out clearState))
+        {
+          _chat.SendSystemMessage(sender,
+            $"Unknown option '{args[i]}'. Usage: /scenario enter <entrypoint> [clear-state=true|false]");
+          return;
+        }
+      }
+
+      // 서버 권위 실행이면 서버 커서 하나만 옮기면 되고 나머지 피어는 표시로 따라온다.
+      // 호환 실행 경로에서는 대상 클라이언트마다 독립 상태기가 돌기 때문에, 서버만 옮기면
+      // 원격 플레이어는 스킵 이전 위치에 그대로 남는다. 이때는 모든 피어에 함께 알린다.
+      bool authoritative = controller.IsAuthoritativeExecutor;
+      bool localEntered = controller.TryEnterManualEntrypoint(entrypointId, clearState, out string enterError);
+      bool broadcast = !authoritative && ScenarioNetworkRelay.BroadcastManualEntry(entrypointId, clearState);
+
+      if (!localEntered && !broadcast)
+      {
+        _chat.SendSystemMessage(sender, enterError);
+        return;
+      }
+
+      string scope = authoritative
+        ? "authoritative"
+        : broadcast ? "all peers" : "this peer";
+      _chat.SendSystemMessage(sender,
+        $"Entered manual entrypoint '{entrypointId}' (clear-state={(clearState ? "true" : "false")}, scope={scope}).");
+
+      // 서버가 그래프를 들고 있지 않으면(전용 서버 등) 별칭을 검증할 방법이 없다.
+      // 오타가 조용히 묻히지 않도록 로컬 실패 사유를 함께 알린다.
+      if (!localEntered)
+        _chat.SendSystemMessage(sender, $"Note: this peer could not verify the entrypoint ({enterError})");
+    }
+
+    private void SendManualEntrypointList(NetworkConnection sender, ScenarioController controller)
+    {
+      if (!controller.HasActiveScenario)
+      {
+        _chat.SendSystemMessage(sender, "No scenario is currently playing.");
+        return;
+      }
+
+      var entrypoints = controller.GetManualEntrypointIdentifiers();
+      if (entrypoints.Count == 0)
+      {
+        _chat.SendSystemMessage(sender,
+          $"Scenario '{controller.CurrentGraph?.Identifier}' declares no manual entrypoint.");
+        return;
+      }
+
+      var ordered = entrypoints
+        .OrderBy(each => each, StringComparer.OrdinalIgnoreCase)
+        .ToList();
+      _chat.SendSystemMessage(sender,
+        $"Manual entrypoints ({ordered.Count}): {string.Join(", ", ordered)}");
+    }
+
+    /// <summary>
+    /// <c>clear-state=true</c> 같은 키=값 형태와 <c>true</c> 단독 표기를 함께 받는다.
+    /// 값을 생략하면(<c>clear-state</c>) true 로 본다.
+    /// </summary>
+    private static bool TryParseClearStateOption(string raw, out bool clearState)
+    {
+      clearState = true;
+      if (string.IsNullOrWhiteSpace(raw))
+        return false;
+
+      string token = raw.Trim();
+      int separator = token.IndexOf('=');
+      string key = separator < 0 ? null : token.Substring(0, separator).Trim();
+      string value = separator < 0 ? token : token.Substring(separator + 1).Trim();
+
+      if (key != null)
+      {
+        string normalizedKey = key.Replace("_", string.Empty).Replace("-", string.Empty).ToLowerInvariant();
+        if (normalizedKey != "clearstate")
+          return false;
+
+        if (string.IsNullOrWhiteSpace(value))
+          return true;
+      }
+
+      switch (value.ToLowerInvariant())
+      {
+        case "true":
+        case "on":
+        case "yes":
+        case "1":
+          clearState = true;
+          return true;
+        case "false":
+        case "off":
+        case "no":
+        case "0":
+          clearState = false;
+          return true;
+        default:
+          return false;
+      }
     }
 
     private void ExecuteValidatorLogCommand(NetworkConnection sender, string[] args)

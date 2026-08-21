@@ -883,6 +883,60 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void ManualEntrypointSavesAndRoundTrips()
+    {
+      var graph = new ScenarioGraph { Identifier = "manual-entrypoint-round-trip", DefaultEntrypoint = "start" };
+      graph.Add(new ScenarioDialogueNode
+      {
+        Identifier = "start",
+        SpeakerName = "system",
+        DialogueContent = "start",
+        NextIdentifier = "checkpoint"
+      });
+      graph.Add(new ScenarioManualEntrypointNode
+      {
+        Identifier = "checkpoint",
+        EntrypointIdentifier = "ct-arrival",
+        ManualEnterSetupIdentifier = "catch-up",
+        Description = "CT 도착 직전 지점",
+        NextIdentifier = "end"
+      });
+      graph.Add(new ScenarioStateUpdateNode
+      {
+        Identifier = "catch-up",
+        TargetEntityIdentifier = "patient_b",
+        StateKey = "phase",
+        StateValue = "ct",
+        NextIdentifier = "checkpoint"
+      });
+      graph.Add(new ScenarioDialogueNode { Identifier = "end", SpeakerName = "system", DialogueContent = "end" });
+
+      var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+
+      var node = (ScenarioManualEntrypointNode)reloaded.Nodes["checkpoint"];
+      Assert.That(node.EntrypointIdentifier, Is.EqualTo("ct-arrival"));
+      Assert.That(node.ManualEnterSetupIdentifier, Is.EqualTo("catch-up"));
+      Assert.That(node.Description, Is.EqualTo("CT 도착 직전 지점"));
+      Assert.That(node.NextIdentifier, Is.EqualTo("end"));
+      Assert.That(node.ResolvedEntrypointIdentifier, Is.EqualTo("ct-arrival"));
+    }
+
+    [Test]
+    public void ManualEntrypointWithoutAliasFallsBackToNodeIdentifier()
+    {
+      var graph = new ScenarioGraph { Identifier = "manual-entrypoint-alias-fallback", DefaultEntrypoint = "checkpoint" };
+      graph.Add(new ScenarioManualEntrypointNode { Identifier = "checkpoint" });
+
+      var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+
+      var node = (ScenarioManualEntrypointNode)reloaded.Nodes["checkpoint"];
+      Assert.That(node.EntrypointIdentifier, Is.Null);
+      Assert.That(node.ResolvedEntrypointIdentifier, Is.EqualTo("checkpoint"));
+    }
+
+    [Test]
     public void ScenarioWaypointsSaveAndRoundTrip()
     {
       var graph = new ScenarioGraph
