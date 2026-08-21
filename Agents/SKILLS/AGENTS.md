@@ -35,6 +35,12 @@ Check the local environment and install the following tools if they are not alre
 - 사용법과 표준 절차는 `Agents/SKILLS/cellular/SKILL.md`를 따른다.
 - 색인·조회·내보내기 명령은 저장소 루트에서 실행하고 프로젝트 설정은 `.cellular/config.json`이 담당한다.
 
+## Code Mirror
+
+- 코드·라이선스 필터링 이력 미러링 작업에는 `Agents/SKILLS/code-mirror/SKILL.md`를 따른다.
+- 대상 원격 저장소에 push하거나 기존 참조를 재작성하는 작업은 사용자에게 명시적으로 요청받은 경우에만 수행한다.
+- 절대로 Tool 사용 중에 `GIT_HTTP_TOKEN` 환경 변수를 직접 액세스하려고 시도해서는 안된다.
+
 ## Index
 
 - [Unity.md](./Unity.md) : When using Unity

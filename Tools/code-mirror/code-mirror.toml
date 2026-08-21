@@ -1,0 +1,64 @@
+# Edit destination.url before using --push.
+dotenv_file = ".env"
+state_file = ".code-mirror-state.json"
+generated_config = "code-mirror.gen.toml"
+
+[source]
+# remote_tracking: origin의 로컬 원격 추적 브랜치를 읽습니다.
+# local: 현재 저장소의 로컬 브랜치를 직접 읽으므로 origin이 없어도 됩니다.
+mode = "remote_tracking"
+remote = "origin"
+
+[destination]
+# Any Git remote URL is supported. SSH URLs need no token when the key has write access.
+# For HTTPS, configure the provider's token and username in Tools/code-mirror/.env.
+url = "https://git.example.com/GROUP/REPOSITORY.git"
+token_env = "GIT_HTTP_TOKEN"
+http_username = "git"
+
+# Allow-list policy: a file is mirrored only when it matches one of these entries.
+[include]
+extensions = [
+  ".cs", ".shader", ".hlsl", ".cginc", ".compute", ".asmdef", ".asmref",
+  ".json", ".xml", ".yaml", ".yml", ".toml", ".ini", ".cfg", ".md", ".txt",
+  ".py", ".sh", ".bat", ".ps1", ".js", ".ts", ".tsx", ".jsx", ".html", ".css",
+  ".uxml", ".uss", ".csproj", ".props", ".targets", ".sln", ".gitignore", ".gitattributes",
+]
+file_names = ["LICENSE", "LICENSE.*", "NOTICE", "NOTICE.*", "README", "README.*", ".gitmodules"]
+paths = []
+
+# These manual policies have higher priority than code-mirror.gen.toml.
+# Included modules bypass the allow-list and all generic exclusion rules.
+# Excluded modules retain only their .meta files.
+[module_policies]
+always_include = ["FishNet", "MultiplayerInfrastructure", "TriageTrainer", "TextToSpeechService"]
+always_exclude = [
+  "AutoSlidingDoors", "ChonnamNatlUnivCustomizedModels", "HospitalEquipmentPackages",
+  "HospitalEqupments", "HospitalEquipments", "HospitalPack", "LowPolyHospitalCharacters", "Mixamo", "OutPost",
+  "UnityJapanOffice", "UnitySceneSupports",
+]
+always_include_meta = true
+
+# Rules are exclusions and are evaluated in addition to the allow-list.
+# scope.mode: always | branches | before | after | between
+# Commit identifiers always refer to the source GitLab history.
+[[rules]]
+match = { max_size_bytes = 52428800 }
+scope = { mode = "always" }
+
+# Examples:
+# [[rules]]
+# match = { directory_names = ["ThirdParty", "Samples"] }
+# scope = { mode = "branches", names = ["main", "release"] }
+#
+# [[rules]]
+# match = { file_names = ["*.meta"], extensions = [".fbx", ".blend", ".png"] }
+# scope = { mode = "between", from = "SOURCE_COMMIT_A", to = "SOURCE_COMMIT_B" }
+#
+# [[rules]]
+# match = { paths = ["Assets/**/Licensed/**"] }
+# scope = { mode = "before", commit = "SOURCE_COMMIT" }
+#
+# [[rules]]
+# match = { extensions = [".unity", ".prefab", ".asset"] }
+# scope = { mode = "after", commit = "SOURCE_COMMIT" }

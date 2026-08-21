@@ -9,6 +9,10 @@
 
 ## 현재 도구
 
+### code-mirror
+
+GitLab `origin`의 모든 원격 브랜치와 로컬 태그에서 도달 가능한 커밋을, 허용 목록과 범위별 제외 규칙으로 필터링하여 일반 Git 원격 저장소에 미러링한다. 원본·미러 커밋 해시 매핑을 로컬 상태 파일에 저장하므로 지속 동기화가 가능하다. 설정과 상세 실행 방법은 [`code-mirror/README.md`](./code-mirror/README.md)를 참고한다.
+
 ### cellular (submodule) (구 code-heatmap)
 
 Git 이력에서 커밋별 코드 구성(모듈·언어·파일·라인·문자 수)을 색인하는 Rust runner다. 색인을 .cellexport 파일로 내보내 뷰어(cellular-codemetrics.pages.dev)에서 트리맵으로 확인한다. 프로젝트 설정은 루트 .cellular/config.json에 들어 있고 색인 데이터는 프로필 디렉터리(~/.cellular/)에 쌓여 저장소에는 남지 않는다.

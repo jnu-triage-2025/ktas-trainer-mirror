@@ -1,0 +1,389 @@
+#!/usr/bin/env python3
+"""Create a filtered, history-preserving Git mirror.
+
+Run from the source repository root:
+    python3 Tools/code-mirror/code_mirror.py --config Tools/code-mirror/code-mirror.toml --dry-run
+    python3 Tools/code-mirror/code_mirror.py --config Tools/code-mirror/code-mirror.toml --push
+
+The command reads commits reachable from either origin's remote-tracking branches
+or local branches, plus local tags. It deliberately never uses the working tree,
+so uncommitted files are not mirrored.
+"""
+
+from __future__ import annotations
+
+import argparse
+import fnmatch
+import hashlib
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+from collections.abc import Iterable
+from pathlib import Path
+from typing import Any
+from urllib.parse import urlparse
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python 3.11+ is required.
+    sys.exit("Python 3.11 or newer is required.")
+
+
+class MirrorError(RuntimeError):
+    pass
+
+
+def run_git(args: list[str], *, input_bytes: bytes | None = None, env: dict[str, str] | None = None) -> bytes:
+    command = ["git", *args]
+    result = subprocess.run(command, input=input_bytes, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+    if result.returncode:
+        message = result.stderr.decode("utf-8", "replace").strip()
+        raise MirrorError(f"{' '.join(command[:3])}: {message}")
+    return result.stdout
+
+
+def load_dotenv(path: Path) -> None:
+    if not path.is_file():
+        return
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip("\"'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+def config_fingerprint(config: dict[str, Any]) -> str:
+    relevant = {key: value for key, value in config.items() if key not in {"destination", "state_file"}}
+    encoded = json.dumps(relevant, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def load_config(config_path: Path) -> dict[str, Any]:
+    config = tomllib.loads(config_path.read_text(encoding="utf-8"))
+    generated_path = config_path.parent / config.get("generated_config", "code-mirror.gen.toml")
+    generated: dict[str, Any] = {}
+    if generated_path.is_file():
+        generated = tomllib.loads(generated_path.read_text(encoding="utf-8"))
+    config["generated_module_policies"] = generated.get("module_policies", {})
+    return config
+
+
+def module_name(path: str) -> str | None:
+    parts = Path(path).parts
+    if len(parts) >= 3 and parts[0:2] == ("Assets", "Modules"):
+        return parts[2]
+    return None
+
+
+def module_policy(config: dict[str, Any], path: str) -> str | None:
+    name = module_name(path)
+    if not name:
+        return None
+    manual = config.get("module_policies", {})
+    generated = config.get("generated_module_policies", {})
+    # A manual declaration always wins over generated classification.
+    if name in manual.get("always_include", []):
+        return "include"
+    if name in manual.get("always_exclude", []):
+        return "exclude"
+    if name in generated.get("always_include", []):
+        return "include"
+    if name in generated.get("always_exclude", []):
+        return "exclude"
+    return None
+
+
+def source_refs(source: dict[str, Any]) -> dict[str, str]:
+    mode = source.get("mode", "remote_tracking")
+    if mode == "remote_tracking":
+        prefix = f"refs/remotes/{source.get('remote', 'origin')}/"
+    elif mode == "local":
+        prefix = "refs/heads/"
+    else:
+        raise MirrorError(f"Unknown source mode: {mode}")
+    output = run_git(["for-each-ref", "--format=%(refname) %(objectname)", prefix, "refs/tags/"])
+    refs: dict[str, str] = {}
+    for row in output.decode().splitlines():
+        ref, object_id = row.split(" ", 1)
+        if mode == "remote_tracking" and ref == f"{prefix}HEAD":
+            continue
+        destination_ref = f"refs/heads/{ref[len(prefix):]}" if mode == "remote_tracking" and ref.startswith(prefix) else ref
+        # An annotated tag points to a tag object, while rev-list and the commit
+        # map operate on commits. The destination tag is deliberately lightweight.
+        refs[destination_ref] = run_git(["rev-parse", "--verify", f"{ref}^{{commit}}"]).decode().strip()
+    if not refs:
+        raise MirrorError(f"No source branches or tags found for source mode '{mode}'.")
+    return refs
+
+
+def commit_order(refs: Iterable[str]) -> list[str]:
+    return run_git(["rev-list", "--topo-order", "--reverse", *refs]).decode().splitlines()
+
+
+def commit_parents(commit: str) -> list[str]:
+    return run_git(["show", "-s", "--format=%P", commit]).decode().strip().split()
+
+
+def commit_metadata(commit: str) -> tuple[dict[str, str], bytes]:
+    fmt = "%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI%x00"
+    fields = run_git(["show", "-s", f"--format={fmt}", commit]).split(b"\0")
+    if len(fields) < 7:
+        raise MirrorError(f"Unable to read metadata for {commit}.")
+    env = {
+        "GIT_AUTHOR_NAME": fields[0].decode(), "GIT_AUTHOR_EMAIL": fields[1].decode(),
+        "GIT_AUTHOR_DATE": fields[2].decode(), "GIT_COMMITTER_NAME": fields[3].decode(),
+        "GIT_COMMITTER_EMAIL": fields[4].decode(), "GIT_COMMITTER_DATE": fields[5].decode(),
+    }
+    message = run_git(["show", "-s", "--format=%B", commit])
+    return env, message
+
+
+def paths_at(commit: str) -> list[tuple[str, str, str, int]]:
+    raw = run_git(["ls-tree", "-r", "-l", "-z", commit])
+    entries: list[tuple[str, str, str, int]] = []
+    for entry in raw.split(b"\0"):
+        if not entry:
+            continue
+        header, raw_path = entry.split(b"\t", 1)
+        mode, kind, _object_id, raw_size = header.decode().split(" ", 3)
+        size = int(raw_size) if raw_size != "-" else 0
+        entries.append((raw_path.decode("utf-8", "surrogateescape"), mode, kind, size))
+    return entries
+
+
+def is_descendant(commit: str, ancestor: str) -> bool:
+    return subprocess.run(["git", "merge-base", "--is-ancestor", ancestor, commit]).returncode == 0
+
+
+def applies_to_commit(scope: dict[str, Any], commit: str, branches: set[str]) -> bool:
+    mode = scope.get("mode", "always")
+    if mode == "always":
+        return True
+    if mode == "branches":
+        requested = set(scope.get("names", []))
+        return bool(requested & branches)
+    if mode == "before":
+        return is_descendant(str(scope["commit"]), commit)
+    if mode == "after":
+        return is_descendant(commit, str(scope["commit"]))
+    if mode == "between":
+        return is_descendant(commit, str(scope["from"])) and is_descendant(str(scope["to"]), commit)
+    raise MirrorError(f"Unknown scope mode: {mode}")
+
+
+def branch_membership(refs: dict[str, str]) -> dict[str, set[str]]:
+    membership: dict[str, set[str]] = {}
+    for ref, tip in refs.items():
+        if not ref.startswith("refs/heads/"):
+            continue
+        branch = ref.removeprefix("refs/heads/")
+        for commit in run_git(["rev-list", tip]).decode().splitlines():
+            membership.setdefault(commit, set()).add(branch)
+    return membership
+
+
+def matches(rule: dict[str, Any], path: str, size: int) -> bool:
+    selector = rule.get("match", {})
+    if "max_size_bytes" in selector and size >= int(selector["max_size_bytes"]):
+        return True
+    filename = Path(path).name
+    extension = Path(path).suffix.lower()
+    directory_names = Path(path).parts[:-1]
+    return (
+        any(fnmatch.fnmatchcase(part, pattern) for pattern in selector.get("directory_names", []) for part in directory_names)
+        or any(fnmatch.fnmatchcase(filename, pattern) for pattern in selector.get("file_names", []))
+        or extension in {item.lower() if item.startswith(".") else f".{item.lower()}" for item in selector.get("extensions", [])}
+        or any(fnmatch.fnmatchcase(path, pattern) for pattern in selector.get("paths", []))
+    )
+
+
+def allowed_by_default(config: dict[str, Any], path: str) -> bool:
+    policy = module_policy(config, path)
+    if policy == "include":
+        return True
+    if policy == "exclude":
+        return Path(path).suffix.lower() == ".meta" and bool(config.get("module_policies", {}).get("always_include_meta", True))
+    include = config.get("include", {})
+    filename = Path(path).name
+    extension = Path(path).suffix.lower()
+    extensions = {item.lower() if item.startswith(".") else f".{item.lower()}" for item in include.get("extensions", [])}
+    return extension in extensions or any(fnmatch.fnmatchcase(filename, pattern) for pattern in include.get("file_names", [])) or any(fnmatch.fnmatchcase(path, pattern) for pattern in include.get("paths", []))
+
+
+def excluded_paths(config: dict[str, Any], commit: str, branches: set[str]) -> list[str]:
+    active = [rule for rule in config.get("rules", []) if applies_to_commit(rule.get("scope", {}), commit, branches)]
+    result: list[str] = []
+    for path, _mode, kind, size in paths_at(commit):
+        policy = module_policy(config, path)
+        excluded_module_meta = policy == "exclude" and Path(path).suffix.lower() == ".meta" and bool(config.get("module_policies", {}).get("always_include_meta", True))
+        # Explicit module inclusion and retained excluded-module metadata ignore
+        # generic size and extension rules.
+        force_include = policy == "include" or excluded_module_meta
+        if kind != "blob" or not allowed_by_default(config, path) or (not force_include and any(matches(rule, path, size) for rule in active)):
+            result.append(path)
+    return result
+
+
+def filtered_tree(commit: str, removed: list[str], index_file: Path) -> str:
+    env = os.environ.copy()
+    env["GIT_INDEX_FILE"] = str(index_file)
+    run_git(["read-tree", f"{commit}^{{tree}}"], env=env)
+    if removed:
+        run_git(["update-index", "--force-remove", "-z", "--stdin"], input_bytes=b"\0".join(p.encode("utf-8", "surrogateescape") for p in removed) + b"\0", env=env)
+    return run_git(["write-tree"], env=env).decode().strip()
+
+
+def create_commit(tree: str, parents: list[str], source_commit: str) -> str:
+    metadata, message = commit_metadata(source_commit)
+    env = os.environ.copy()
+    env.update(metadata)
+    return run_git(["commit-tree", tree, *[item for parent in parents for item in ("-p", parent)]], input_bytes=message, env=env).decode().strip()
+
+
+def load_state(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        return {"version": 1, "commits": {}, "refs": {}, "pushed_refs": {}}
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def write_state(path: Path, state: dict[str, Any]) -> None:
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    temporary.replace(path)
+
+
+def http_askpass(token_env: str, username: str) -> tuple[Path, dict[str, str]]:
+    directory = Path(tempfile.mkdtemp(prefix="code-mirror-askpass-"))
+    script = directory / "askpass.py"
+    script.write_text("#!/usr/bin/env python3\nimport os, sys\nprint(os.environ[os.environ['CODE_MIRROR_TOKEN_ENV']] if 'Password' in sys.argv[1] else os.environ['CODE_MIRROR_HTTP_USERNAME'])\n", encoding="utf-8")
+    script.chmod(0o700)
+    env = os.environ.copy()
+    env.update({"GIT_ASKPASS": str(script), "GIT_TERMINAL_PROMPT": "0", "CODE_MIRROR_TOKEN_ENV": token_env, "CODE_MIRROR_HTTP_USERNAME": username})
+    return directory, env
+
+
+def destination_refs(url: str) -> dict[str, str]:
+    output = run_git(["ls-remote", "--refs", url]).decode()
+    return {ref: object_id for object_id, ref in (line.split("\t", 1) for line in output.splitlines())}
+
+
+def push_refs(destination: dict[str, Any], refs: dict[str, str], state: dict[str, Any], rebuild: bool) -> None:
+    url = str(destination["url"])
+    env = os.environ.copy()
+    askpass_dir: Path | None = None
+    token_name = destination.get("token_env")
+    if token_name and urlparse(url).scheme == "https":
+        askpass_dir, env = http_askpass(str(token_name), str(destination.get("http_username", "git")))
+    try:
+        current = destination_refs(url)
+        pushed = state.get("pushed_refs", {})
+        leases: list[str] = []
+        for ref in refs:
+            actual = current.get(ref)
+            expected = pushed.get(ref)
+            if expected is None and actual is not None and not rebuild:
+                raise MirrorError(f"Destination already has {ref}. Use --rebuild only after reviewing the rewrite.")
+            if expected is not None and actual != expected:
+                raise MirrorError(f"Destination {ref} changed outside this tool; refusing to overwrite it.")
+            leases.append(f"--force-with-lease={ref}:{actual or ''}")
+        refspecs = [f"{state['commits'][source]}:{ref}" for ref, source in refs.items()]
+        run_git(["push", *leases, url, *refspecs], env=env)
+        state["pushed_refs"] = {ref: state["commits"][source] for ref, source in refs.items()}
+    finally:
+        if askpass_dir:
+            shutil.rmtree(askpass_dir, ignore_errors=True)
+
+
+def toml_array(values: list[str]) -> str:
+    return ", ".join(json.dumps(value, ensure_ascii=False) for value in values)
+
+
+def generate_config(config_path: Path) -> int:
+    config = tomllib.loads(config_path.read_text(encoding="utf-8"))
+    root = Path(run_git(["rev-parse", "--show-toplevel"]).decode().strip())
+    included: list[str] = []
+    for manifest_path in sorted((root / "Assets" / "Modules").glob("*/package.json")):
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise MirrorError(f"Cannot read package manifest {manifest_path}: {error}") from error
+        if "unity" in manifest and str(manifest.get("license", "")).strip().upper() == "MIT":
+            included.append(manifest_path.parent.name)
+    output_path = config_path.parent / config.get("generated_config", "code-mirror.gen.toml")
+    content = (
+        "# Generated by code_mirror.py --generate-config. Do not edit manually.\n"
+        "# Manual module_policies in code-mirror.toml take precedence.\n\n"
+        "[module_policies]\n"
+        f"always_include = [{toml_array(included)}]\n"
+        "always_exclude = []\n"
+    )
+    output_path.write_text(content, encoding="utf-8")
+    print(f"Generated {output_path} with {len(included)} MIT Unity package module(s).")
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--config", required=True, type=Path)
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--push", action="store_true")
+    parser.add_argument("--rebuild", action="store_true", help="Allow a changed filtering configuration to rewrite mirror history.")
+    parser.add_argument("--generate-config", action="store_true", help="Generate the lower-priority MIT Unity package module policy file and exit.")
+    args = parser.parse_args()
+    if args.dry_run and args.push:
+        parser.error("--dry-run and --push cannot be used together.")
+    config_path = args.config.resolve()
+    if args.generate_config:
+        return generate_config(config_path)
+    config = load_config(config_path)
+    load_dotenv((config_path.parent / config.get("dotenv_file", ".env")).resolve())
+    refs = source_refs(config.get("source", {}))
+    memberships = branch_membership(refs)
+    state_path = (config_path.parent / config.get("state_file", ".code-mirror-state.json")).resolve()
+    state = load_state(state_path)
+    fingerprint = config_fingerprint(config)
+    if state.get("config_fingerprint") not in (None, fingerprint) and not args.rebuild:
+        raise MirrorError("Filtering configuration changed. Review the result and rerun with --rebuild to rewrite the mirror.")
+
+    commits = commit_order(refs)
+    removed_count = 0
+    new_count = 0
+    with tempfile.TemporaryDirectory(prefix="code-mirror-index-") as tempdir:
+        for source in commits:
+            removed = excluded_paths(config, source, memberships.get(source, set()))
+            removed_count += len(removed)
+            index_file = Path(tempdir) / source
+            tree = filtered_tree(source, removed, index_file)
+            parents = [state["commits"][parent] for parent in commit_parents(source)]
+            mirrored = create_commit(tree, parents, source)
+            if state["commits"].get(source) != mirrored:
+                new_count += 1
+            state["commits"][source] = mirrored
+    state.update({"version": 1, "config_fingerprint": fingerprint, "refs": refs})
+    print(f"Source commits: {len(commits)}; excluded file instances: {removed_count}; changed mirror commits: {new_count}")
+    if args.dry_run:
+        print("Dry run completed. No state was saved and nothing was pushed.")
+        return 0
+    write_state(state_path, state)
+    if args.push:
+        push_refs(config["destination"], refs, state, args.rebuild)
+        write_state(state_path, state)
+        print(f"Pushed {len(refs)} refs to the configured Git destination.")
+    else:
+        print(f"State saved to {state_path}. Use --push to publish the mirror.")
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except MirrorError as error:
+        print(f"error: {error}", file=sys.stderr)
+        raise SystemExit(1)
