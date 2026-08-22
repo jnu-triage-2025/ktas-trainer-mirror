@@ -11,8 +11,21 @@ using UnityEditor;
 
 namespace TriageTrainer.Editor.Utils
 {
+  /// <summary>
+  /// 오버월드 씬에 배치할 게임 오브젝트(웨이포인트, 스폰 포인트, 시나리오 신호 존 등)를
+  /// 일괄 생성하는 이니셜라이저.
+  /// </summary>
+  /// <remarks>
+  /// 오버월드 오브젝트 초기화 처리를 이 이니셜라이저에 등록하려면 상단에 식별자 값과
+  /// 처리에 필요한 값을 함께 선언해야 한다. 현재 이니셜라이저에는 특화 구현이 없으므로,
+  /// 특화된 구현이 필요하다면 먼저 일반화한 로직을 구현한 뒤, 상단의 리터럴 선언 부분에서
+  /// 특화 값을 사전 설정한다. 이렇게 특화한 리터럴 값들은 이니셜라이저 에디터 창
+  /// (OverworldGameObjectInitializerEditor)에서 수정 가능해야 한다.
+  /// </remarks>
   public static class OverworldGameObjectInitializer
   {
+    // 오버월드 오브젝트 초기화 처리를 추가할 때는 아래 형식처럼 식별자와 처리에 필요한
+    // 값을 리터럴로 선언한다. 지침은 클래스 요약 주석 참고.
     public const string BuildingEnteranceIdentifier = "building-enterance";
     public static readonly Vector3 DefaultBuildingEnterance = new(-72.525f, 1f, 2.3f);
 
@@ -46,10 +59,29 @@ namespace TriageTrainer.Editor.Utils
     public static readonly Vector3 DefaultDoctorCareAreaWaypoint = new(-67f, 1f, -15.5f);
 
     public const string CtPatientBTargetPositionWaypointIdentifier = "ct:patient_target_pos_b";
-    public static readonly Vector3 DefaultCtPatientBTargetPositionWaypoint = new(-80f, 1f, -18.3f);
+    public static readonly Vector3 DefaultCtPatientBTargetPositionWaypoint = new(-80f, 0.5f, -18.3f);
 
     public const string CtPatientCTargetPositionWaypointIdentifier = "ct:patient_target_pos_c";
-    public static readonly Vector3 DefaultCtPatientCTargetPositionWaypoint = new(-80f, 1f, -18.3f);
+    public static readonly Vector3 DefaultCtPatientCTargetPositionWaypoint = new(-80f, 0.5f, -18.3f);
+
+    // Scenario signal zones. Each zone reuses the identifier and position of the waypoint it
+    // wraps, so only the box size and the signal strings specialize it. Arrival is judged by
+    // collider overlap, which means the effective tolerance is the box half-extent plus the
+    // half-extent of whatever enters it.
+    public static readonly Vector3 DefaultTriageArrivalZoneSize = new(8f, 3f, 8f);
+
+    // Scenario B의 역할별 도착 집계와 Patient A t14의 공통 분류구역 도착 게이트는 같은 물리
+    // 구역을 사용한다. 둘 중 하나만 올리면 다른 시나리오가 영구 대기하므로 함께 발행한다.
+    public static readonly string[] TriageArrivalEnterSignals =
+      { "quest_arrival_triage_area", "arrive_triagearea" };
+    public const string TriageArrivalPerEntitySignalTemplate = "quest_arrival_triage_area_{id}";
+
+    // B/C target anchors intentionally share a position. One arrival zone records each
+    // identified patient independently, so minor placement differences still count. The box
+    // must stay wide enough to hold the B and C beds parked side by side at that shared anchor.
+    public static readonly Vector3 DefaultCtPatientTargetZoneSize = new(4f, 3f, 4f);
+    public static readonly string[] CtPatientArrivalEnterSignals = System.Array.Empty<string>();
+    public const string CtPatientArrivalPerEntitySignalTemplate = "ct_patient_arrived_{id}";
 
     public static void Set()
     {
@@ -67,7 +99,13 @@ namespace TriageTrainer.Editor.Utils
         DoctorSpawnWaypointIdentifier, DefaultDoctorSpawnWaypoint,
         DoctorCareAreaWaypointIdentifier, DefaultDoctorCareAreaWaypoint,
         CtPatientBTargetPositionWaypointIdentifier, DefaultCtPatientBTargetPositionWaypoint,
-        CtPatientCTargetPositionWaypointIdentifier, DefaultCtPatientCTargetPositionWaypoint
+        CtPatientCTargetPositionWaypointIdentifier, DefaultCtPatientCTargetPositionWaypoint,
+        DefaultTriageArrivalZoneSize,
+        TriageArrivalEnterSignals,
+        TriageArrivalPerEntitySignalTemplate,
+        DefaultCtPatientTargetZoneSize,
+        CtPatientArrivalEnterSignals,
+        CtPatientArrivalPerEntitySignalTemplate
       );
     }
 
@@ -85,7 +123,13 @@ namespace TriageTrainer.Editor.Utils
         string doctorSpawnWaypointIdentifier, Vector3 doctorSpawnWaypoint,
         string doctorCareAreaWaypointIdentifier, Vector3 doctorCareAreaWaypoint,
         string ctPatientBWaypointIdentifier, Vector3 ctPatientBWaypoint,
-        string ctPatientCWaypointIdentifier, Vector3 ctPatientCWaypoint)
+        string ctPatientCWaypointIdentifier, Vector3 ctPatientCWaypoint,
+        Vector3 triageArrivalZoneSize,
+        string[] triageArrivalEnterSignals,
+        string triageArrivalPerEntitySignalTemplate,
+        Vector3 ctPatientTargetZoneSize,
+        string[] ctPatientArrivalEnterSignals,
+        string ctPatientArrivalPerEntitySignalTemplate)
     {
       var generatedRoot = GetOrCreateGeneratedRoot();
       DeleteGeneratedScenarioObjects(generatedRoot.transform);
@@ -101,24 +145,19 @@ namespace TriageTrainer.Editor.Utils
         generatedRoot.transform,
         triageArrivalWaypointIdentifier,
         triageArrivalWaypoint,
-        new Vector3(8f, 3f, 8f),
-        // Scenario B의 역할별 도착 집계와 Patient A t14의 공통 분류구역 도착 게이트는
-        // 같은 물리 구역을 사용한다. 둘 중 하나만 올리면 다른 시나리오가 영구 대기하므로
-        // 플레이어 진입 시 두 신호를 함께 발행한다.
-        new[] { "quest_arrival_triage_area", "arrive_triagearea" },
-        "quest_arrival_triage_area_{id}",
+        triageArrivalZoneSize,
+        triageArrivalEnterSignals,
+        triageArrivalPerEntitySignalTemplate,
         perEntityPlayersOnly: true);
       CreateWaypoint(generatedRoot.transform, ctPatientBWaypointIdentifier, ctPatientBWaypoint);
       CreateWaypoint(generatedRoot.transform, ctPatientCWaypointIdentifier, ctPatientCWaypoint);
-      // B/C target anchors intentionally share a position. One generous arrival zone records
-      // each identified patient independently, so minor placement differences still count.
       CreateScenarioSignalZone(
         generatedRoot.transform,
         ctPatientBWaypointIdentifier,
         ctPatientBWaypoint,
-        new Vector3(8f, 3f, 8f),
-        System.Array.Empty<string>(),
-        "ct_patient_arrived_{id}",
+        ctPatientTargetZoneSize,
+        ctPatientArrivalEnterSignals,
+        ctPatientArrivalPerEntitySignalTemplate,
         perEntityPlayersOnly: false);
       CreateSpawnPoint(generatedRoot.transform, commonSpawnPointIdentifier, commonSpawnPoint);
     }
@@ -322,7 +361,10 @@ namespace TriageTrainer.Editor.Utils
       var zone = zoneObject.AddComponent<MultiplayerInfrastructure.Scenario.ScenarioTriggerZone>();
       SetPrivateField(zone, "_identifier", identifier);
       SetPrivateField(zone, "_triggerOnce", false);
-      SetPrivateField(zone, "_raiseSignalsOnEnter", enterSignals ?? System.Array.Empty<string>());
+      // 호출자가 공유 기본값 배열을 넘길 수 있다. 생성된 컴포넌트가 그 인스턴스를 그대로
+      // 물지 않도록 복제해서 넣는다.
+      SetPrivateField(zone, "_raiseSignalsOnEnter",
+        (string[])(enterSignals ?? System.Array.Empty<string>()).Clone());
       SetPrivateField(zone, "_perEntitySignalTemplate", perEntitySignalTemplate);
       SetPrivateField(zone, "_perEntityPlayersOnly", perEntityPlayersOnly);
       // RuntimeState의 도착 신호는 시나리오 시작마다 초기화된다. 존 자체가 엔티티를

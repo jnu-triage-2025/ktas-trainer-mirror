@@ -179,6 +179,12 @@ namespace MultiplayerInfrastructure.Editor
           Add("waypointIdentifier", qw.WaypointIdentifier);
           break;
 
+        case ScenarioQuestMarkNode qm:
+          Add("entityIdentifier",      qm.EntityIdentifier);
+          Add("interactionIdentifier", qm.InteractionIdentifier);
+          Add("iconIdentifier",        qm.IconIdentifier);
+          break;
+
         case ScenarioStateUpdateNode su:
           Add("targetEntityIdentifier", su.TargetEntityIdentifier);
           Add("stateKey",               su.StateKey);

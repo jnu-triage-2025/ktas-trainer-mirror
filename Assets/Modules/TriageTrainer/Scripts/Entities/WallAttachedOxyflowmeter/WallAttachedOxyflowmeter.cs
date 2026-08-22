@@ -367,14 +367,10 @@ namespace TriageTrainer.Entity
       return false;
     }
 
-    /// <summary>플레이어가 손에 산소 유량계를 들고 있는지 판정한다.</summary>
+    /// <summary>플레이어 인벤토리에 산소 유량계가 있는지 판정한다.</summary>
     private static bool IsHandlingOxyflowmeter(PlayerController player)
     {
-      string heldIdentifier = player != null ? player.HandlingItem?.CurrentIdentifier : null;
-      if (string.IsNullOrWhiteSpace(heldIdentifier))
-        return false;
-
-      return string.Equals(heldIdentifier, RequiredItemIdentifier, StringComparison.Ordinal);
+      return player != null && player.CountItemInInventory(RequiredItemIdentifier) > 0;
     }
 
     private void SetAttached(bool attached)

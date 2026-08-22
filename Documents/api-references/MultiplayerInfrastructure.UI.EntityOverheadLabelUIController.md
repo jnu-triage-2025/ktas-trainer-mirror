@@ -55,6 +55,21 @@ ui?.SetLabel(
         TriageLevelInfo.GetColor(level)));
 ```
 
+### `SetLabel(Transform target, string channelId, int channelOrder, LabelContent content, float maxVisibleDistance = 0)`
+
+같은 앵커에 채널별로 라벨을 여러 개 등록한다. 채널은 `channelOrder` 오름차순으로 앵커에서 위로 26px 간격으로 쌓인다(예: NPC 이름표 `npc-name`=0, 퀘스트 마크 `quest:...`=100 이상).
+
+`maxVisibleDistance`는 카메라와 그 거리보다 멀어지면 해당 채널을 숨긴다. `0` 이하이면 거리 제한 없이 항상 표시한다. 한계 직전 `_distanceFadeBand` 구간에서는 선형으로 흐려지고, 거리로 숨겨진 채널은 스택에서 자리를 차지하지 않으므로 위 채널이 빈 칸 위에 뜨지 않는다.
+
+```csharp
+ui?.SetLabel(
+    anchor,
+    "npc-name",
+    0,
+    new EntityOverheadLabelUIController.LabelContent(displayName, Color.white),
+    maxVisibleDistance: 12f);
+```
+
 ### `RemoveLabel(Transform target)`
 
 대상 엔티티의 라벨을 제거한다.
@@ -71,6 +86,8 @@ ui?.SetLabel(
 |------|--------|------|
 | `_sortingOrder` | `2.2` | UIDocument 정렬 순서 (`DefaultsUIDocument.EntityOverheadLabelSortOrder`) |
 | `_worldHeightOffset` | `0.4` | 앵커 Transform으로부터 위로 띄울 추가 높이(월드 단위) |
+| `_maxChannelsPerAnchor` | `4` | 한 앵커에 동시에 표시할 채널 수 상한 |
+| `_distanceFadeBand` | `2` | 표시 한계 거리 직전에 라벨을 흐리게 만들 구간 길이(월드 단위). `0`이면 즉시 사라짐 |
 | `_camera` | null | 투영에 사용할 카메라. 미지정 시 `Camera.main` 자동 캐시 |
 
 ---

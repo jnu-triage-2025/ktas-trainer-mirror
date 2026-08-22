@@ -279,6 +279,29 @@ namespace MultiplayerInfrastructure.Player
       RpcApplyStaticObjectDisplaymentGlobal(entityIdentifier);
     }
 
+    /// <summary>
+    /// 시나리오 준비 단계에서 정적 장비를 서버 권위로 설치하고 모든 관찰자에게 표시한다.
+    /// 아이템 소비·소유자 검증이 필요한 플레이어 상호작용 경로와 달리, 이미 시나리오가 보장한
+    /// 상태를 복원하는 용도로만 사용한다.
+    /// </summary>
+    public bool ApplyStaticObjectDisplaymentForScenario(string entityIdentifier)
+    {
+      if (!IsServerStarted || string.IsNullOrWhiteSpace(entityIdentifier))
+        return false;
+
+      bool newlyShown = StaticObjectDisplaymentService.SetShown(entityIdentifier);
+      if (newlyShown
+          && TryGetStaticObjectDisplayment(entityIdentifier, out var displayment)
+          && displayment != null)
+      {
+        displayment.OnShownConfirmed();
+      }
+
+      // 이미 서버 상태에 있던 장비도 이 준비 진입을 계기로 현재 관찰자에게 다시 표시한다.
+      RpcApplyStaticObjectDisplaymentGlobal(entityIdentifier);
+      return true;
+    }
+
     // ── 서버 실패/중단: 예약 제거(상태 변이 없음) ─────────────────────────────
 
     private void ServerCancelStaticObjectApply(string entityIdentifier, NetworkConnection claimant)

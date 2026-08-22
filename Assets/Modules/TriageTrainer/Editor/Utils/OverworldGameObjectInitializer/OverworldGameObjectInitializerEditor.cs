@@ -36,6 +36,12 @@ namespace TriageTrainer.Editor.Utils
     private string doctorCareAreaWaypointIdentifier = OverworldGameObjectInitializer.DoctorCareAreaWaypointIdentifier;
     private string ctPatientBWaypointIdentifier = OverworldGameObjectInitializer.CtPatientBTargetPositionWaypointIdentifier;
     private string ctPatientCWaypointIdentifier = OverworldGameObjectInitializer.CtPatientCTargetPositionWaypointIdentifier;
+    private Vector3 triageArrivalZoneSize = OverworldGameObjectInitializer.DefaultTriageArrivalZoneSize;
+    private Vector3 ctPatientTargetZoneSize = OverworldGameObjectInitializer.DefaultCtPatientTargetZoneSize;
+    private string triageArrivalEnterSignals = string.Join(", ", OverworldGameObjectInitializer.TriageArrivalEnterSignals);
+    private string triageArrivalPerEntitySignalTemplate = OverworldGameObjectInitializer.TriageArrivalPerEntitySignalTemplate;
+    private string ctPatientArrivalEnterSignals = string.Join(", ", OverworldGameObjectInitializer.CtPatientArrivalEnterSignals);
+    private string ctPatientArrivalPerEntitySignalTemplate = OverworldGameObjectInitializer.CtPatientArrivalPerEntitySignalTemplate;
     private Vector2 scrollPosition;
     [SerializeField] private List<StaticEntityLayoutDefinition> staticEntityLayouts = new();
     [SerializeField] private MonoScript initializerScript;
@@ -116,6 +122,29 @@ namespace TriageTrainer.Editor.Utils
       DrawWaypointFields("CT Patient C", ref ctPatientCWaypointIdentifier, ref ctPatientCWaypoint);
 
       EditorGUILayout.Space(4f);
+      EditorGUILayout.LabelField("Scenario Signal Zones", EditorStyles.boldLabel);
+      DrawZoneFields(
+        "Scenario B Triage Arrival Zone",
+        triageArrivalWaypointIdentifier,
+        ref triageArrivalZoneSize,
+        ref triageArrivalEnterSignals,
+        ref triageArrivalPerEntitySignalTemplate);
+      DrawZoneFields(
+        "CT Patient Arrival Zone (B/C 공용)",
+        ctPatientBWaypointIdentifier,
+        ref ctPatientTargetZoneSize,
+        ref ctPatientArrivalEnterSignals,
+        ref ctPatientArrivalPerEntitySignalTemplate);
+      EditorGUILayout.HelpBox(
+        "존은 감싸는 웨이포인트의 식별자와 위치를 그대로 쓰므로, 여기서는 상자 크기만 조정합니다.\n"
+        + "도착 판정은 중심점 사이의 거리가 아니라 콜라이더 겹침으로 이루어집니다. 따라서 실효 허용 거리는 "
+        + "상자 반경(크기의 절반)에 들어오는 대상의 반쪽 크기가 더해진 값입니다. 환자 침대는 2.5 x 1.25이므로 "
+        + "약 1.25m가 더 붙습니다.\n"
+        + "CT 존은 환자 B와 C의 웨이포인트가 같은 좌표를 공유하므로, 침대 두 대가 나란히 들어갈 폭을 유지해야 합니다.",
+        MessageType.None
+      );
+
+      EditorGUILayout.Space(4f);
       EditorGUILayout.LabelField("Spawnpoints", EditorStyles.boldLabel);
       DrawWaypointFields("Spawnpoint Commons (player-only)", ref commonSpawnPointIdentifier, ref commonSpawnPoint);
       EditorGUILayout.HelpBox(
@@ -159,7 +188,13 @@ namespace TriageTrainer.Editor.Utils
             doctorSpawnWaypointIdentifier, doctorSpawnWaypoint,
             doctorCareAreaWaypointIdentifier, doctorCareAreaWaypoint,
             ctPatientBWaypointIdentifier, ctPatientBWaypoint,
-            ctPatientCWaypointIdentifier, ctPatientCWaypoint
+            ctPatientCWaypointIdentifier, ctPatientCWaypoint,
+            triageArrivalZoneSize,
+            ParseSignalList(triageArrivalEnterSignals),
+            triageArrivalPerEntitySignalTemplate,
+            ctPatientTargetZoneSize,
+            ParseSignalList(ctPatientArrivalEnterSignals),
+            ctPatientArrivalPerEntitySignalTemplate
           );
           var seenIdentifiers = new HashSet<string>();
           foreach (var layout in staticEntityLayouts.Where(value => value != null))
@@ -213,6 +248,12 @@ namespace TriageTrainer.Editor.Utils
       doctorCareAreaWaypointIdentifier = OverworldGameObjectInitializer.DoctorCareAreaWaypointIdentifier;
       ctPatientBWaypointIdentifier = OverworldGameObjectInitializer.CtPatientBTargetPositionWaypointIdentifier;
       ctPatientCWaypointIdentifier = OverworldGameObjectInitializer.CtPatientCTargetPositionWaypointIdentifier;
+      triageArrivalZoneSize = OverworldGameObjectInitializer.DefaultTriageArrivalZoneSize;
+      ctPatientTargetZoneSize = OverworldGameObjectInitializer.DefaultCtPatientTargetZoneSize;
+      triageArrivalEnterSignals = string.Join(", ", OverworldGameObjectInitializer.TriageArrivalEnterSignals);
+      triageArrivalPerEntitySignalTemplate = OverworldGameObjectInitializer.TriageArrivalPerEntitySignalTemplate;
+      ctPatientArrivalEnterSignals = string.Join(", ", OverworldGameObjectInitializer.CtPatientArrivalEnterSignals);
+      ctPatientArrivalPerEntitySignalTemplate = OverworldGameObjectInitializer.CtPatientArrivalPerEntitySignalTemplate;
       staticEntityLayouts.Clear();
       staticEntityLayouts.Add(AssetDatabase.LoadAssetAtPath<StaticEntityLayoutDefinition>(
         DefaultStaticLayoutPath));
@@ -228,14 +269,36 @@ namespace TriageTrainer.Editor.Utils
       }
     }
 
-    private static void DrawWaypointFields(string title, string identifier, ref Vector3 value)
+    /// <summary>
+    /// 시나리오 신호 존의 생성 값을 그린다. 존은 감싸는 웨이포인트에서 식별자와 위치를 가져온다.
+    /// </summary>
+    private static void DrawZoneFields(
+      string title, string identifier, ref Vector3 size,
+      ref string enterSignals, ref string perEntitySignalTemplate)
     {
       using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
       {
         EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
         EditorGUILayout.LabelField("Identifier", identifier);
-        value = EditorGUILayout.Vector3Field("Value", value);
+        size = EditorGUILayout.Vector3Field("Size (m)", size);
+        enterSignals = EditorGUILayout.TextField("Enter Signals (CSV)", enterSignals);
+        perEntitySignalTemplate = EditorGUILayout.TextField("Per-Entity Signal", perEntitySignalTemplate);
+        EditorGUILayout.LabelField(
+          "Half Extent",
+          $"x {size.x * 0.5f:0.##}m / z {size.z * 0.5f:0.##}m");
       }
+    }
+
+    private static string[] ParseSignalList(string value)
+    {
+      if (string.IsNullOrWhiteSpace(value))
+        return System.Array.Empty<string>();
+
+      return value.Split(',')
+        .Select(signal => signal.Trim())
+        .Where(signal => !string.IsNullOrWhiteSpace(signal))
+        .Distinct()
+        .ToArray();
     }
   }
 }

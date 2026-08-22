@@ -40,6 +40,7 @@
 | `Validator` | `ScenarioValidatorNode` | 조건 검사 / 게이트 대기 |
 | `QuestControl` | `ScenarioQuestControlNode` | 퀘스트 추가/변경/제거 |
 | `QuestWaypointHighlight` | `ScenarioQuestWaypointHighlightNode` | 웨이포인트 강조 |
+| `QuestMark` | `ScenarioQuestMarkNode` | 퀘스트 마크 표시/해제 |
 | `Delay` | `ScenarioDelayNode` | 시간 대기 |
 | `Interaction` | `ScenarioInteractionNode` | 인터랙션 완료 대기 |
 | `CombineItem` | `ScenarioCombineItemNode` | 아이템 합성 |
@@ -466,6 +467,35 @@ Dialogue와 Choice의 화자·본문, 병렬 브랜치 안내 문자열은 다�
 | 필드 | 타입 | 설명 |
 |---|---|---|
 | `waypointIdentifier` | `string` | 강조할 웨이포인트 식별자 |
+
+---
+
+### 3.12-1 `QuestMark` — 퀘스트 마크 표시/해제
+
+```json
+{
+  "nodeType": "QuestMark",
+  "identifier": "mark_doctor",
+  "nextIdentifier": "next",
+  "operation": "Show",
+  "targetType": "Npc",
+  "entityIdentifier": "npc-er-doctor",
+  "interactionIdentifier": null,
+  "iconIdentifier": "quest-marker",
+  "priority": 0
+}
+```
+
+| 필드 | 타입 | 기본값 | 설명 |
+|---|---|---|---|
+| `operation` | `Show`\|`Hide` | `Show` | 마크 표시 또는 해제 |
+| `targetType` | `Npc`\|`Interaction` | `Npc` | 마크 대상 종류 |
+| `entityIdentifier` | `string` | - | 대상 엔티티 식별자 (필수) |
+| `interactionIdentifier` | `string` | `null` | `Interaction` 대상일 때 상호작용 행 식별자 |
+| `iconIdentifier` | `string` | `null` | 비우면 대상 종류별 기본 마크 아이콘 |
+| `priority` | `int` | `0` | 같은 대상에 마크가 겹칠 때 우선순위 |
+
+퀘스트 정의의 `presentationBindings`와 같은 `QuestPresentationService` 경로를 사용한다. 이 노드로 켠 마크는 같은 대상에 `Hide`를 실행하거나 시나리오가 끝날 때까지 유지되며, 우선순위가 같으면 퀘스트가 만든 마크보다 앞선다.
 
 ---
 

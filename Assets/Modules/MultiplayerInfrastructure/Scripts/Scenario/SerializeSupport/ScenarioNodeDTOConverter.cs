@@ -38,6 +38,7 @@ namespace MultiplayerInfrastructure.Scenario
         "Parallel" => Deserialize<ScenarioParallelNodeDTO>(root, options),
         "QuestControl" => Deserialize<ScenarioQuestControlNodeDTO>(root, options),
         "QuestWaypointHighlight" => Deserialize<ScenarioQuestWaypointHighlightNodeDTO>(root, options),
+        "QuestMark" => Deserialize<ScenarioQuestMarkNodeDTO>(root, options),
         "Delay" => Deserialize<ScenarioDelayNodeDTO>(root, options),
         "Interaction" => Deserialize<ScenarioInteractionNodeDTO>(root, options),
         "CombineItem" => Deserialize<ScenarioCombineItemNodeDTO>(root, options),

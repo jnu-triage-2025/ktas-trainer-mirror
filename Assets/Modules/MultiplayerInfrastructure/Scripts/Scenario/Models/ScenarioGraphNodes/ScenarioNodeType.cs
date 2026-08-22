@@ -16,6 +16,7 @@ namespace MultiplayerInfrastructure.Scenario
     Validator,
     QuestControl,
     QuestWaypointHighlight,
+    QuestMark,
     Delay,
     Interaction,
     CombineItem,

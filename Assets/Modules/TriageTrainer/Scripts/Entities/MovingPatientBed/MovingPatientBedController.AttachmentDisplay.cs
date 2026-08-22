@@ -42,15 +42,15 @@ namespace TriageTrainer.Entity
       public bool CanInteract(Transform interactor)
       {
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
-        _heldItemIcon = player?.HandlingItem?.CurrentItemIconTexture;
+        _heldItemIcon = null;
         return !_owner.IsIntravenousFluidInstalled(_kind) &&
-               _owner.IsIntravenousFluidItem(player?.HandlingItem?.CurrentIdentifier, _kind);
+               _owner.FindIntravenousFluidInventoryItem(player, _kind) != null;
       }
 
       public void Interact(Transform interactor)
       {
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
-        string itemIdentifier = player?.HandlingItem?.CurrentIdentifier;
+        string itemIdentifier = _owner.FindIntravenousFluidInventoryItem(player, _kind);
         if (player != null && _owner.IsIntravenousFluidItem(itemIdentifier, _kind))
           _owner.RequestHangIntravenousFluid(_kind, itemIdentifier, player);
       }
@@ -125,6 +125,18 @@ namespace TriageTrainer.Entity
     public bool IsNormalSalineConnectionPoint(IntravenousLineConnectionPoint point) =>
       point != null && ReferenceEquals(point, _normalSalineConnectionPoint);
 
+    /// <summary>시나리오 수동 진입용으로 N/S 수액걸이를 즉시 준비한다.</summary>
+    public void EnsureNormalSalineInstalledForScenario()
+    {
+      if (IsNormalSalineInstalled)
+        return;
+
+      if (IsServerStarted)
+        SetIntravenousFluidInstalledOnServer(IntravenousFluidKind.NormalSaline);
+      else if (!IsClientStarted)
+        SetIntravenousFluidInstalledOffline(IntravenousFluidKind.NormalSaline);
+    }
+
     public bool IsPlasmaSolutionConnectionPoint(IntravenousLineConnectionPoint point) =>
       point != null && ReferenceEquals(point, _plasmaSolutionConnectionPoint);
 
@@ -178,6 +190,20 @@ namespace TriageTrainer.Entity
       return identifiers != null && identifiers.Exists(id => string.Equals(id, itemIdentifier, StringComparison.Ordinal));
     }
 
+    private string FindIntravenousFluidInventoryItem(PlayerController player, IntravenousFluidKind kind)
+    {
+      if (player == null)
+        return null;
+      var identifiers = kind == IntravenousFluidKind.NormalSaline
+        ? _normalSalineItemIdentifiers : _plasmaSolutionItemIdentifiers;
+      if (identifiers == null)
+        return null;
+      for (int i = 0; i < identifiers.Count; i++)
+        if (player.CountItemInInventory(identifiers[i]) > 0)
+          return identifiers[i];
+      return null;
+    }
+
     private void RequestHangIntravenousFluid(IntravenousFluidKind kind, string itemIdentifier, PlayerController player)
     {
       if (IsIntravenousFluidInstalled(kind) || !IsIntravenousFluidItem(itemIdentifier, kind))
@@ -217,8 +243,7 @@ namespace TriageTrainer.Entity
       var player = FindLocalIntravenousAttachmentPlayer();
       var kind = (IntravenousFluidKind)rawKind;
       if (player == null || !IsIntravenousFluidItem(itemIdentifier, kind) ||
-          !string.Equals(player.HandlingItem?.CurrentIdentifier, itemIdentifier, StringComparison.Ordinal) ||
-          player.RemoveItemFromInventory(itemIdentifier, 1) != 1)
+          player.CountItemInInventory(itemIdentifier) < 1 || player.RemoveItemFromInventory(itemIdentifier, 1) != 1)
         return;
       CmdConfirmHangIntravenousFluid(rawKind);
     }

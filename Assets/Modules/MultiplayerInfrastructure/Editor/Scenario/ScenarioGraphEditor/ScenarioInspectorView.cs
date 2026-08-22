@@ -131,6 +131,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.QuestWaypointHighlight:
           DrawQuestWaypointHighlightFields((ScenarioQuestWaypointHighlightNode)data);
           break;
+        case ScenarioNodeType.QuestMark:
+          DrawQuestMarkFields((ScenarioQuestMarkNode)data);
+          break;
         case ScenarioNodeType.Delay:
           DrawDelayFields((ScenarioDelayNode)data);
           break;
@@ -934,6 +937,19 @@ namespace MultiplayerInfrastructure.Editor
     private void DrawQuestWaypointHighlightFields(ScenarioQuestWaypointHighlightNode data)
     {
       data.WaypointIdentifier = EditorGUILayout.TextField("Waypoint Identifier", data.WaypointIdentifier);
+      EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private void DrawQuestMarkFields(ScenarioQuestMarkNode data)
+    {
+      data.Operation = (ScenarioQuestMarkOperationType)EditorGUILayout.EnumPopup("Operation", data.Operation);
+      data.TargetType = (QuestPresentationTargetType)EditorGUILayout.EnumPopup("Target Type", data.TargetType);
+      data.EntityIdentifier = EditorGUILayout.TextField("Entity Identifier", data.EntityIdentifier);
+      if (data.TargetType == QuestPresentationTargetType.Interaction)
+        data.InteractionIdentifier = EditorGUILayout.TextField("Interaction Identifier", data.InteractionIdentifier);
+      data.IconIdentifier = EditorGUILayout.TextField("Icon Identifier", data.IconIdentifier);
+      EditorGUILayout.HelpBox("Icon Identifier 를 비우면 대상 종류별 기본 퀘스트 마크 아이콘을 사용한다.", MessageType.None);
+      data.Priority = EditorGUILayout.IntField("Priority", data.Priority);
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
 

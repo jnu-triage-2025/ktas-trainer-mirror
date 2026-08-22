@@ -266,6 +266,7 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.Validator:
         case ScenarioNodeType.QuestControl:
         case ScenarioNodeType.QuestWaypointHighlight:
+        case ScenarioNodeType.QuestMark:
         case ScenarioNodeType.Delay:
         case ScenarioNodeType.Interaction:
         case ScenarioNodeType.CombineItem:

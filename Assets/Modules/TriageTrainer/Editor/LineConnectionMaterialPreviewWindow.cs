@@ -12,10 +12,16 @@ using TriageTrainer.Entity.LineConnection;
 
 namespace TriageTrainer.Editor
 {
-  /// <summary>
-  /// Interactive preview for the materials used by LineConnectionService.
-  /// </summary>
-  public sealed class LineConnectionMaterialPreviewWindow : EditorWindow
+    /// <summary>
+    /// Interactive preview for the materials used by LineConnectionService.
+    /// </summary>
+    /// <remarks>
+    /// 이 창은 미리보기 전용이며, LineConnectionMaterial과 라인 특성(LineWidth, Elasticity 등)은
+    /// 이 창에서 바꾸지 않는다. 라인 클래스는 TriageTrainer.Entity 네임스페이스 아래에 정의하고,
+    /// 특성값도 그 아래의 라인 클래스에 직접 작성한다. 실제 정의는
+    /// Assets/Modules/TriageTrainer/Scripts/Entities 아래의 *Line 폴더를 참고한다.
+    /// </remarks>
+    public sealed class LineConnectionMaterialPreviewWindow : EditorWindow
   {
     private const string RotateGizmoPrefabPath = "Assets/Modules/TriageTrainer/Editor/Prefabs/RotateGizmo.prefab";
     private const string BakedRotateGizmoPrefabPath = "Assets/Modules/TriageTrainer/Editor/Prefabs/RotateGizmoBaked.prefab";

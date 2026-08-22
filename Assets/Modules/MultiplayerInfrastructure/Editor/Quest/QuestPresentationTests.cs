@@ -135,6 +135,91 @@ namespace MultiplayerInfrastructure.Tests.Quest
     }
 
     [Test]
+    public void ScenarioQuestMarkNodeRoundTripsThroughSchema()
+    {
+      var graph = new ScenarioGraph { Identifier = "quest-mark", DefaultEntrypoint = "mark" };
+      graph.Add(new ScenarioQuestMarkNode
+      {
+        Identifier = "mark",
+        Operation = ScenarioQuestMarkOperationType.Show,
+        TargetType = QuestPresentationTargetType.Npc,
+        EntityIdentifier = "doctor",
+        IconIdentifier = "quest-marker",
+        Priority = 2,
+        NextIdentifier = "unmark"
+      });
+      graph.Add(new ScenarioQuestMarkNode
+      {
+        Identifier = "unmark",
+        Operation = ScenarioQuestMarkOperationType.Hide,
+        TargetType = QuestPresentationTargetType.Interaction,
+        EntityIdentifier = "doctor",
+        InteractionIdentifier = "report"
+      });
+
+      string json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      var restored = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+
+      var show = (ScenarioQuestMarkNode)restored.Nodes["mark"];
+      Assert.That(show.Operation, Is.EqualTo(ScenarioQuestMarkOperationType.Show));
+      Assert.That(show.TargetType, Is.EqualTo(QuestPresentationTargetType.Npc));
+      Assert.That(show.EntityIdentifier, Is.EqualTo("doctor"));
+      Assert.That(show.IconIdentifier, Is.EqualTo("quest-marker"));
+      Assert.That(show.Priority, Is.EqualTo(2));
+      Assert.That(show.NextIdentifier, Is.EqualTo("unmark"));
+
+      var hide = (ScenarioQuestMarkNode)restored.Nodes["unmark"];
+      Assert.That(hide.Operation, Is.EqualTo(ScenarioQuestMarkOperationType.Hide));
+      Assert.That(hide.TargetType, Is.EqualTo(QuestPresentationTargetType.Interaction));
+      Assert.That(hide.InteractionIdentifier, Is.EqualTo("report"));
+      Assert.That(hide.Priority, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void ScenarioMarkOverridesInteractionIconUntilCleared()
+    {
+      var managerObject = new GameObject("QuestPresentationTests.ScenarioMarkManager");
+      var texture = new Texture2D(2, 2);
+      var sprite = Sprite.Create(texture, new Rect(0, 0, 2, 2), Vector2.one * 0.5f);
+      const string iconIdentifier = "quest-presentation-scenario-mark-icon";
+      Registry.Registry.RegisterIconSprite(iconIdentifier, sprite);
+
+      try
+      {
+        managerObject.AddComponent<QuestManager>();
+        var presentation = managerObject.GetComponent<QuestPresentationService>()
+                           ?? managerObject.AddComponent<QuestPresentationService>();
+        var interact = new PresentationInteract
+        {
+          PresentationEntityIdentifier = "doctor",
+          InteractionIdentifier = "report"
+        };
+
+        Assert.That(presentation.TryGetPrimaryIconOverride(interact, out _), Is.False);
+
+        QuestPresentationService.SetScenarioMark(
+          QuestPresentationTargetType.Interaction, "doctor", "report", iconIdentifier, priority: 0);
+
+        Assert.That(presentation.TryGetPrimaryIconOverride(interact, out var resolved), Is.True,
+          "그래프가 켠 마크는 퀘스트가 없어도 상호작용 아이콘을 대체해야 한다.");
+        Assert.That(resolved, Is.SameAs(sprite));
+
+        QuestPresentationService.ClearScenarioMark(
+          QuestPresentationTargetType.Interaction, "doctor", "report");
+
+        Assert.That(presentation.TryGetPrimaryIconOverride(interact, out _), Is.False);
+      }
+      finally
+      {
+        QuestPresentationService.ClearScenarioMarks();
+        Registry.Registry.InvalidateIconSprite(iconIdentifier);
+        Object.DestroyImmediate(managerObject);
+        Object.DestroyImmediate(sprite);
+        Object.DestroyImmediate(texture);
+      }
+    }
+
+    [Test]
     public void ActiveQuestOverridesInteractionAndCompletionRestoresOriginal()
     {
       var managerObject = new GameObject("QuestPresentationTests.Manager");

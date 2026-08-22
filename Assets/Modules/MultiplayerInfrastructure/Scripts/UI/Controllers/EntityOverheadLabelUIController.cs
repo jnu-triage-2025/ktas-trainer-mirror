@@ -70,6 +70,10 @@ namespace MultiplayerInfrastructure.UI
     [Tooltip("월드 앵커로부터 위로 띄울 추가 높이(월드 단위).")]
     [SerializeField] private float _worldHeightOffset = 0.4f;
     [SerializeField] private int _maxChannelsPerAnchor = 4;
+    [Tooltip("표시 한계 거리 직전에 라벨을 서서히 흐리게 만들 구간의 길이(월드 단위). 0이면 즉시 사라진다.")]
+    [SerializeField, Min(0f)] private float _distanceFadeBand = 2f;
+    [Tooltip("같은 앵커에 쌓이는 채널 사이의 세로 간격(픽셀).")]
+    [SerializeField] private float _channelStackSpacing = 26f;
     [SerializeField] private UnityEngine.Camera _camera;
 
     private UIDocument _uiDocument;
@@ -81,6 +85,9 @@ namespace MultiplayerInfrastructure.UI
       public string ChannelId;
       public int ChannelOrder;
       public EntityOverheadLabelElement Element;
+
+      /// <summary>카메라와 이 거리(월드 단위)보다 멀어지면 숨긴다. 0 이하이면 거리 제한이 없다.</summary>
+      public float MaxVisibleDistance;
     }
 
     private readonly Dictionary<Transform, Dictionary<string, Entry>> _entries = new();
@@ -130,6 +137,17 @@ namespace MultiplayerInfrastructure.UI
       => SetLabel(target, "default", 0, content);
 
     public void SetLabel(Transform target, string channelId, int channelOrder, LabelContent content)
+      => SetLabel(target, channelId, channelOrder, content, maxVisibleDistance: 0f);
+
+    /// <param name="maxVisibleDistance">
+    /// 카메라와 이 거리보다 멀어지면 라벨을 숨긴다. 0 이하이면 거리와 무관하게 항상 표시한다.
+    /// </param>
+    public void SetLabel(
+      Transform target,
+      string channelId,
+      int channelOrder,
+      LabelContent content,
+      float maxVisibleDistance)
     {
       if (target == null)
         return;
@@ -161,6 +179,7 @@ namespace MultiplayerInfrastructure.UI
       }
 
       entry.ChannelOrder = channelOrder;
+      entry.MaxVisibleDistance = maxVisibleDistance;
       entry.Element.SetContent(content.SwatchColor, content.Text, content.TextColor, content.ShowSwatch, content.Icon);
     }
 
@@ -220,6 +239,28 @@ namespace MultiplayerInfrastructure.UI
       return _camera;
     }
 
+    /// <summary>
+    /// 표시 한계 거리에 따른 불투명도를 계산한다. 한계 안쪽이면 1, 바깥이면 0이며
+    /// 한계 직전 <see cref="_distanceFadeBand"/> 구간에서는 선형으로 흐려진다.
+    /// </summary>
+    private float ResolveDistanceOpacity(float maxVisibleDistance, float cameraDistance)
+    {
+      if (maxVisibleDistance <= 0f)
+        return 1f;
+
+      if (cameraDistance >= maxVisibleDistance)
+        return 0f;
+
+      float fadeBand = Mathf.Min(_distanceFadeBand, maxVisibleDistance);
+      if (fadeBand <= 0f)
+        return 1f;
+
+      float fadeStart = maxVisibleDistance - fadeBand;
+      return cameraDistance <= fadeStart
+        ? 1f
+        : Mathf.InverseLerp(maxVisibleDistance, fadeStart, cameraDistance);
+    }
+
     private void LateUpdate()
     {
       if (_entries.Count == 0)
@@ -267,12 +308,27 @@ namespace MultiplayerInfrastructure.UI
           int order = left.ChannelOrder.CompareTo(right.ChannelOrder);
           return order != 0 ? order : string.Compare(left.ChannelId, right.ChannelId, System.StringComparison.Ordinal);
         });
+
+        float cameraDistance = Vector3.Distance(cam.transform.position, worldPos);
+        int maxChannels = Mathf.Max(1, _maxChannelsPerAnchor);
+        // 거리로 숨겨진 채널은 스택에서 자리를 차지하지 않는다.
+        // (이름표가 사라졌다고 퀘스트 마크가 빈 칸 위에 뜨면 안 된다.)
+        int stackIndex = 0;
         for (int i = 0; i < ordered.Count; i++)
         {
-          bool visible = i < Mathf.Max(1, _maxChannelsPerAnchor);
-          ordered[i].Element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
-          if (visible)
-            ordered[i].Element.SetScreenPosition(panelPos + Vector2.down * (i * 26f));
+          var entry = ordered[i];
+          float opacity = ResolveDistanceOpacity(entry.MaxVisibleDistance, cameraDistance);
+          bool visible = opacity > 0f && stackIndex < maxChannels;
+          entry.Element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+          if (!visible)
+            continue;
+
+          entry.Element.style.opacity = opacity;
+          // 패널 좌표는 y가 아래로 증가하므로 y를 빼면 화면 위쪽으로 쌓인다.
+          // 즉 channelOrder 가 큰 채널일수록 위에 놓인다(NPC 이름표 0 < 퀘스트 마크 100).
+          entry.Element.SetScreenPosition(
+            new Vector2(panelPos.x, panelPos.y - stackIndex * _channelStackSpacing));
+          stackIndex++;
         }
       }
 

@@ -806,6 +806,7 @@ namespace MultiplayerInfrastructure.Editor
 
       AddSessionStartActingNpcInfos(graph, items, graphLevel);
       AddUndefinedWaypointWarnings(graph, items);
+      AddQuestMarkWarnings(graph, items);
 
       // 진입 노드 감지: 다른 노드로부터 참조되지 않는 노드
       var referenced = new HashSet<string>();
@@ -898,6 +899,54 @@ namespace MultiplayerInfrastructure.Editor
           node.Identifier,
           $"이 시나리오 파일에서는 {waypointId} waypoint가 정의되지 않았습니다. " +
           $"게임을 실행하기 전, 게임 시스템에 다른 방법으로 {waypointId}를 등록했는지 확인하세요."));
+      }
+    }
+
+    private static void AddQuestMarkWarnings(
+        ScenarioGraph graph,
+        List<DiagnosticItem> items)
+    {
+      var actingNpcIds = new HashSet<string>(
+        graph.ActingNpcs?
+          .Where(value => value != null && !string.IsNullOrWhiteSpace(value.Identifier))
+          .Select(value => value.Identifier)
+        ?? Enumerable.Empty<string>(),
+        StringComparer.Ordinal);
+
+      foreach (var node in graph.Nodes.Values)
+      {
+        if (node is not ScenarioQuestMarkNode questMark)
+          continue;
+
+        if (string.IsNullOrWhiteSpace(questMark.EntityIdentifier))
+        {
+          items.Add(new DiagnosticItem(
+            Severity.Error,
+            node.Identifier,
+            "QuestMark 노드에 entityIdentifier가 없습니다. 마크를 붙일 대상을 지정하세요."));
+          continue;
+        }
+
+        if (questMark.TargetType == QuestPresentationTargetType.Interaction
+            && string.IsNullOrWhiteSpace(questMark.InteractionIdentifier))
+        {
+          items.Add(new DiagnosticItem(
+            Severity.Error,
+            node.Identifier,
+            "Interaction 대상 QuestMark 노드에는 interactionIdentifier가 필요합니다."));
+          continue;
+        }
+
+        if (questMark.TargetType == QuestPresentationTargetType.Npc
+            && actingNpcIds.Count > 0
+            && !actingNpcIds.Contains(questMark.EntityIdentifier))
+        {
+          items.Add(new DiagnosticItem(
+            Severity.Warning,
+            node.Identifier,
+            $"이 시나리오 파일의 actingNpcs에 {questMark.EntityIdentifier}가 없습니다. " +
+            "씬에 배치된 NPC라면 무시해도 되지만, 식별자 오타가 아닌지 확인하세요."));
+        }
       }
     }
 

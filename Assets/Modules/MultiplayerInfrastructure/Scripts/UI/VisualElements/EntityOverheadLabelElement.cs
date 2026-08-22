@@ -25,16 +25,11 @@ namespace MultiplayerInfrastructure.UI
       style.position = Position.Absolute;
       style.flexDirection = FlexDirection.Row;
       style.alignItems = Align.Center;
-      // Npc 이름표(Npc 의 TextMesh 배경)와 같은 수준의 여백(가로 2, 세로 1)을 유지한다.
-      style.paddingLeft = 2;
-      style.paddingRight = 2;
-      style.paddingTop = 1;
-      style.paddingBottom = 1;
-      style.backgroundColor = new Color(0f, 0f, 0f, 0.35f);
       style.borderTopLeftRadius = 4;
       style.borderTopRightRadius = 4;
       style.borderBottomLeftRadius = 4;
       style.borderBottomRightRadius = 4;
+      ApplyChrome(true);
       pickingMode = PickingMode.Ignore;
 
       _swatch = new VisualElement();
@@ -103,9 +98,29 @@ namespace MultiplayerInfrastructure.UI
       else
         _icon.style.backgroundImage = StyleKeyword.None;
       _icon.style.display = icon != null ? DisplayStyle.Flex : DisplayStyle.None;
+      bool hasText = !string.IsNullOrEmpty(text);
+      // 아이콘 뒤에 텍스트가 없으면 오른쪽 여백이 라벨을 앵커 기준 왼쪽으로 밀어버린다.
+      _icon.style.marginRight = hasText ? 4 : 0;
       _text.text = text ?? string.Empty;
-      _text.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
+      _text.style.display = hasText ? DisplayStyle.Flex : DisplayStyle.None;
       _text.style.color = textColor;
+
+      // 아이콘만 표시하는 라벨(퀘스트 마크 등)은 아이콘 자체가 표시 대상이므로
+      // 반투명 배경판과 여백 없이 아이콘만 그린다.
+      ApplyChrome(!(icon != null && !showSwatch && !hasText));
+    }
+
+    /// <summary>
+    /// 텍스트 가독성을 위한 반투명 배경판과 여백을 켜고 끈다.
+    /// 여백은 Npc 이름표(Npc 의 TextMesh 배경)와 같은 수준(가로 2, 세로 1)을 유지한다.
+    /// </summary>
+    private void ApplyChrome(bool visible)
+    {
+      style.backgroundColor = visible ? new Color(0f, 0f, 0f, 0.35f) : Color.clear;
+      style.paddingLeft = visible ? 2 : 0;
+      style.paddingRight = visible ? 2 : 0;
+      style.paddingTop = visible ? 1 : 0;
+      style.paddingBottom = visible ? 1 : 0;
     }
 
     /// <summary>

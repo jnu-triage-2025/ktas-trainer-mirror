@@ -200,14 +200,10 @@ namespace TriageTrainer.Entity
 
     // ── 헬퍼 ─────────────────────────────────────────────────────────────────
 
-    /// <summary>플레이어가 손에 석션 유닛을 들고 있는지 판정한다.</summary>
+    /// <summary>플레이어 인벤토리에 석션 유닛이 있는지 판정한다.</summary>
     private static bool IsHandlingWallSuction(PlayerController player)
     {
-      string heldIdentifier = player != null ? player.HandlingItem?.CurrentIdentifier : null;
-      if (string.IsNullOrWhiteSpace(heldIdentifier))
-        return false;
-
-      return string.Equals(heldIdentifier, RequiredItemIdentifier, StringComparison.Ordinal);
+      return player != null && player.CountItemInInventory(RequiredItemIdentifier) > 0;
     }
 
     private void SetAttached(bool attached)

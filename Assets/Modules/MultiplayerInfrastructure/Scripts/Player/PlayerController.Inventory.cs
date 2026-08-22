@@ -422,6 +422,23 @@ namespace MultiplayerInfrastructure.Player
       return total;
     }
 
+    /// <summary>조건을 만족하는 보유 아이템 식별자를 하나 찾는다. 손에 들고 있는 상태는 요구하지 않는다.</summary>
+    public string FindFirstInventoryItem(Func<string, bool> predicate)
+    {
+      if (predicate == null)
+        return null;
+
+      foreach (var slot in _slots)
+      {
+        string identifier = slot?.ItemInstance?.CurrentIdentifier;
+        if (!string.IsNullOrWhiteSpace(identifier)
+            && slot.ItemInstance.CurrentStackCount > 0
+            && predicate(identifier))
+          return identifier;
+      }
+      return null;
+    }
+
     public bool TryDropItemInFront(ItemSystem.Item itemData)
     {
       if (itemData == null || itemData.CurrentStackCount <= 0)

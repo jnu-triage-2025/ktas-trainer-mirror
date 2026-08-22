@@ -58,6 +58,30 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       }
     }
 
+    private sealed class MonitorDisconnectPatientInteract : IInteract, IInteractorConditional, INearestOnlyInteract, IQuestPresentationTarget
+    {
+      private readonly PatientMonitorController _owner;
+      public MonitorDisconnectPatientInteract(PatientMonitorController owner) { _owner = owner; }
+      public string PresentationEntityIdentifier => _owner.PresentationEntityIdentifier;
+      public string InteractionIdentifier => InteractIdDisconnectPatient;
+      public string DisplayText => "이 환자 모니터를 환자와 연결 해제";
+      public Sprite DisplayIcon => _owner._interactIcon;
+      public bool AllowDisplayIconFallback => true;
+      public Color DisplayColor => Color.white;
+      public string NearestOnlyGroup => NearestGroupDisconnectPatient;
+      public Transform NearestOnlyDistanceOrigin => _owner.transform;
+      public Collider NearestOnlyCollider => _owner.GetComponent<Collider>();
+      public int NearestOnlyTieBreaker => _owner.GetInstanceID();
+      public bool CanInteract(Transform interactor)
+        => _owner.IsInteractEnabled(InteractIdDisconnectPatient) && _owner._monitoringPatient != null;
+      public void Interact(Transform interactor)
+      {
+        if (!CanInteract(interactor))
+          return;
+        _owner.SetMonitoringPatient(null);
+      }
+    }
+
     [Serializable]
     public class InteractEntry
     {
@@ -80,8 +104,10 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private const string InteractIdSelectPatient = "select_patient_mode";
     private const string InteractIdDetailOverlay = "detail_overlay";
+    private const string InteractIdDisconnectPatient = "disconnect_patient";
     private const string NearestGroupSelectPatient = "patient_monitor:select_patient_mode";
     private const string NearestGroupDetailOverlay = "patient_monitor:detail_overlay";
+    private const string NearestGroupDisconnectPatient = "patient_monitor:disconnect_patient";
 
     /// <summary>
     /// 특정 환자에 매이지 않는 모니터 인터랙션의 퀘스트 표시 주소.
@@ -143,11 +169,13 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     {
       EnsureInteractEntry(InteractIdSelectPatient, IsPatientTrackingMethodEnabled(PatientTrackingMethod.Interactable));
       EnsureInteractEntry(InteractIdDetailOverlay, EnableDetailedContentOverlay);
+      EnsureInteractEntry(InteractIdDisconnectPatient, true);
       RebuildInteractEntryMap();
 
       _interacts.Clear();
       _interacts.Add(new MonitorSelectModeInteract(this));
       _interacts.Add(new MonitorDetailInteract(this));
+      _interacts.Add(new MonitorDisconnectPatientInteract(this));
     }
 
     private void EnsureInteractEntry(string identifier, bool enabled)

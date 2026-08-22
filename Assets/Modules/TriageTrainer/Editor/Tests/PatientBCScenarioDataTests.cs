@@ -260,7 +260,7 @@ namespace TriageTrainer.Tests
       var graph = ScenarioGraphLoader.LoadFromJson(scenarioJson, validateWithSchema: true);
 
        Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
-       Assert.That(graph.Nodes, Has.Count.EqualTo(333));
+       Assert.That(graph.Nodes, Has.Count.EqualTo(340));
        Assert.That(graph.ClientSignalPrefixes, Is.EqualTo(new[] { "sig.quest_arrival_triage_area_" }));
       Assert.That(graph.ActingNpcs, Has.Count.EqualTo(1));
       Assert.That(graph.ActingNpcs.Single().Identifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
@@ -314,7 +314,38 @@ namespace TriageTrainer.Tests
       Assert.That(doctorCComplete, Is.Not.Null,
         "환자 처치 종료 선언은 남성 환자와 여성 환자 모두 같은 대사 노드 형식을 쓴다.");
       Assert.That(doctorCComplete.SpeakerName, Is.EqualTo("의사"));
-      Assert.That(doctorCComplete.NextIdentifier, Is.EqualTo("CT_DELAY"));
+      Assert.That(doctorCComplete.NextIdentifier, Is.EqualTo("move_patients"));
+      var movePatients = graph.Nodes["move_patients"] as ScenarioManualEntrypointNode;
+      Assert.That(movePatients, Is.Not.Null);
+      Assert.That(movePatients.EntrypointIdentifier, Is.EqualTo("move_patients"));
+      Assert.That(movePatients.ManualEnterSetupIdentifier, Is.EqualTo("SETUP_MOVE_PATIENTS_SNAP_BED_B"));
+      Assert.That(movePatients.NextIdentifier, Is.EqualTo("CT_DOCTOR_MARK_SHOW"));
+
+      var doctorMarkShow = graph.Nodes["CT_DOCTOR_MARK_SHOW"] as ScenarioQuestMarkNode;
+      Assert.That(doctorMarkShow, Is.Not.Null,
+        "CT 지시 단계에서는 그래프 노드가 의사 NPC 머리 위 퀘스트 마크를 명시적으로 켠다.");
+      Assert.That(doctorMarkShow.Operation, Is.EqualTo(ScenarioQuestMarkOperationType.Show));
+      Assert.That(doctorMarkShow.TargetType, Is.EqualTo(QuestPresentationTargetType.Npc));
+      Assert.That(doctorMarkShow.EntityIdentifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
+      Assert.That(doctorMarkShow.IconIdentifier, Is.EqualTo("quest-marker"));
+      Assert.That(doctorMarkShow.NextIdentifier, Is.EqualTo("CT_DELAY"));
+
+      Assert.That(graph.Nodes["CT_DOCTOR_ORDER"].NextIdentifier, Is.EqualTo("CT_DOCTOR_MARK_HIDE"));
+      var doctorMarkHide = graph.Nodes["CT_DOCTOR_MARK_HIDE"] as ScenarioQuestMarkNode;
+      Assert.That(doctorMarkHide, Is.Not.Null,
+        "CT 이송이 시작되면 의사 NPC 마크를 같은 노드 종류로 다시 끈다.");
+      Assert.That(doctorMarkHide.Operation, Is.EqualTo(ScenarioQuestMarkOperationType.Hide));
+      Assert.That(doctorMarkHide.EntityIdentifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
+      Assert.That(doctorMarkHide.NextIdentifier, Is.EqualTo("P_CT_TRANSPORT"));
+      var movePatientsSetup = graph.Nodes["SETUP_MOVE_PATIENTS"] as ScenarioInvokeEventNode;
+      Assert.That(movePatientsSetup?.EventIdentifier, Is.EqualTo("setup_move_patients"));
+      Assert.That(graph.Nodes["SETUP_MOVE_PATIENTS_RETURN"], Is.TypeOf<ScenarioReturnToOriginNode>());
+      Assert.That((graph.Nodes["SETUP_MOVE_PATIENTS_SNAP_BED_B"] as ScenarioBedSnapNode)?.NextIdentifier,
+        Is.EqualTo("SETUP_MOVE_PATIENTS_SNAP_BED_C"));
+      Assert.That((graph.Nodes["SETUP_MOVE_PATIENTS_SNAP_BED_C"] as ScenarioBedSnapNode)?.NextIdentifier,
+        Is.EqualTo("SETUP_MOVE_PATIENTS_MOVE_DOCTOR"));
+      Assert.That((graph.Nodes["SETUP_MOVE_PATIENTS_MOVE_DOCTOR"] as ScenarioNPCControlNode)?.NextIdentifier,
+        Is.EqualTo("SETUP_MOVE_PATIENTS"));
       Assert.That(graph.Nodes.ContainsKey("P_CT_TRANSPORT"), Is.True);
       Assert.That(graph.Nodes["P_CT_TRANSPORT"].NextIdentifier, Is.EqualTo("CT_DETACH_BEDS"));
       var detachBeds = graph.Nodes["CT_DETACH_BEDS"] as ScenarioInvokeEventNode;
@@ -407,6 +438,24 @@ namespace TriageTrainer.Tests
         ("bed_b", MovingPatientBedController.InteractionIdentifierMoveBed),
         ("bed_c", MovingPatientBedController.InteractionIdentifierMoveBed)
       }));
+
+      Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_Transport_BC_To_CT", out var transportQuest), Is.True);
+      Assert.That(transportQuest.Tasks.Select(task => task.Identifier), Is.EqualTo(new[]
+      {
+        "ct-patient-b",
+        "ct-patient-c"
+      }), "침대 마크를 항목별로 붙이려면 CT 이송 항목에도 식별자가 있어야 한다.");
+      Assert.That(transportQuest.PresentationBindings.Select(binding =>
+        (binding.CompletionCriteriaIdentifier, binding.EntityIdentifier, binding.InteractionIdentifier)),
+        Is.EqualTo(new[]
+      {
+        ("ct-patient-b", "bed_b", MovingPatientBedController.InteractionIdentifierMoveBed),
+        ("ct-patient-c", "bed_c", MovingPatientBedController.InteractionIdentifierMoveBed)
+      }));
+      Assert.That(transportQuest.PresentationBindings.All(binding =>
+        binding.Activation == QuestPresentationActivation.CompletionCriteria
+        && binding.IconIdentifier == "quest-interaction"), Is.True,
+        "해당 환자의 이송 항목이 끝나면 침대 마크도 함께 사라져야 한다.");
 
       Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_B_Recognition", out var recognitionB), Is.True);
       Assert.That(recognitionB.PresentationBindings.Select(binding =>
@@ -1819,14 +1868,14 @@ namespace TriageTrainer.Tests
         AssertSignalZone(
           zones,
           OverworldGameObjectInitializer.TriageArrivalWaypointIdentifier,
-          new[] { "quest_arrival_triage_area", "arrive_triagearea" },
-          "quest_arrival_triage_area_{id}",
+          OverworldGameObjectInitializer.TriageArrivalEnterSignals,
+          OverworldGameObjectInitializer.TriageArrivalPerEntitySignalTemplate,
           true);
         AssertSignalZone(
           zones,
           OverworldGameObjectInitializer.CtPatientBTargetPositionWaypointIdentifier,
-          System.Array.Empty<string>(),
-          "ct_patient_arrived_{id}",
+          OverworldGameObjectInitializer.CtPatientArrivalEnterSignals,
+          OverworldGameObjectInitializer.CtPatientArrivalPerEntitySignalTemplate,
           false);
       }
       finally

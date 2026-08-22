@@ -171,6 +171,7 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingParallel,
       ExecutingQuestControl,
       ExecutingQuestWaypointHighlight,
+      ExecutingQuestMark,
       ExecutingDelay,
       ExecutingInteraction,
       ExecutingCombineItem,
@@ -555,6 +556,9 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioQuestWaypointHighlightNode waypointHighlight:
           PresentQuestWaypointHighlightNode(waypointHighlight);
+          break;
+        case ScenarioQuestMarkNode questMark:
+          ApplyQuestMarkNode(questMark);
           break;
       }
     }
@@ -1735,6 +1739,9 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioQuestWaypointHighlightNode waypointHighlight:
           ExecuteQuestWaypointHighlightNode(waypointHighlight);
           break;
+        case ScenarioQuestMarkNode questMark:
+          ExecuteQuestMarkNode(questMark);
+          break;
         case ScenarioDelayNode delay:
           StartCoroutine(ExecuteDelayNode(delay));
           break;
@@ -2385,6 +2392,52 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       Advance();
+    }
+
+    private void ExecuteQuestMarkNode(ScenarioQuestMarkNode node)
+    {
+      _state = State.ExecutingQuestMark;
+      ApplyQuestMarkNode(node);
+      Advance();
+    }
+
+    /// <summary>
+    /// QuestMark 노드를 표시 상태에 반영한다. 서버 실행 경로와 클라이언트 표시 경로가 같은 처리를 사용한다.
+    /// </summary>
+    private static void ApplyQuestMarkNode(ScenarioQuestMarkNode node)
+    {
+      if (node == null)
+        return;
+
+      if (string.IsNullOrWhiteSpace(node.EntityIdentifier))
+      {
+        Debug.LogWarning($"[ScenarioController] Quest mark node '{node.Identifier}' has no entity identifier.");
+        return;
+      }
+
+      if (node.TargetType == QuestPresentationTargetType.Interaction
+          && string.IsNullOrWhiteSpace(node.InteractionIdentifier))
+      {
+        Debug.LogWarning(
+          $"[ScenarioController] Quest mark node '{node.Identifier}' targets an interaction but has no interaction identifier.");
+        return;
+      }
+
+      if (node.Operation == ScenarioQuestMarkOperationType.Hide)
+      {
+        QuestPresentationService.ClearScenarioMark(
+          node.TargetType,
+          node.EntityIdentifier,
+          node.InteractionIdentifier);
+        return;
+      }
+
+      QuestPresentationService.SetScenarioMark(
+        node.TargetType,
+        node.EntityIdentifier,
+        node.InteractionIdentifier,
+        node.IconIdentifier,
+        node.Priority);
     }
 
     /// <summary>표시 클라이언트에만 waypoint 강조를 적용한다. 그래프 진행은 서버가 담당한다.</summary>
@@ -5138,6 +5191,11 @@ namespace MultiplayerInfrastructure.Scenario
           break;
         case ScenarioQuestWaypointHighlightNode waypointHighlight:
           ExecuteQuestWaypointHighlightNode(waypointHighlight);
+          break;
+        case ScenarioQuestMarkNode questMark:
+          // 브랜치 노드는 자동 표시 브로드캐스트 대상이 아니므로 표시 클라이언트에 직접 전달한다.
+          ScenarioNetworkRelay.PresentAuthoritativeNode(_currentGraph?.Identifier, questMark.Identifier);
+          ApplyQuestMarkNode(questMark);
           break;
         case ScenarioStateUpdateNode stateUpdate:
           ExecuteStateUpdateNode(stateUpdate);

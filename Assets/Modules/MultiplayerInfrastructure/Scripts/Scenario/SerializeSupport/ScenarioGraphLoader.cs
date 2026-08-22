@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Encodings.Web;
 using UnityEngine;
+using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Registry;
 using TriageTrainer.Entity.Patient;
 
@@ -484,6 +485,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioParallelNodeDTO parallel => ConvertParallel(parallel),
           ScenarioQuestControlNodeDTO questControl => ConvertQuestControl(questControl),
           ScenarioQuestWaypointHighlightNodeDTO highlight => ConvertQuestWaypointHighlight(highlight),
+          ScenarioQuestMarkNodeDTO questMark => ConvertQuestMark(questMark),
           ScenarioDelayNodeDTO delay => ConvertDelay(delay),
           ScenarioInteractionNodeDTO interaction => ConvertInteraction(interaction),
           ScenarioCombineItemNodeDTO combineItem => ConvertCombineItem(combineItem),
@@ -815,6 +817,19 @@ namespace MultiplayerInfrastructure.Scenario
         {
           Identifier = dto.Identifier,
           WaypointIdentifier = dto.WaypointIdentifier,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioQuestMarkNode ConvertQuestMark(ScenarioQuestMarkNodeDTO dto) =>
+        new ScenarioQuestMarkNode
+        {
+          Identifier = dto.Identifier,
+          Operation = ParseEnum(dto.Operation, ScenarioQuestMarkOperationType.Show),
+          TargetType = ParseEnum(dto.TargetType, QuestPresentationTargetType.Npc),
+          EntityIdentifier = dto.EntityIdentifier,
+          InteractionIdentifier = dto.InteractionIdentifier,
+          IconIdentifier = dto.IconIdentifier,
+          Priority = dto.Priority ?? 0,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -1592,6 +1607,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioParallelNode parallel => ConvertToDTO(parallel),
           ScenarioQuestControlNode questControl => ConvertToDTO(questControl),
           ScenarioQuestWaypointHighlightNode waypointHighlight => ConvertToDTO(waypointHighlight),
+          ScenarioQuestMarkNode questMark => ConvertToDTO(questMark),
           ScenarioDelayNode delay => ConvertToDTO(delay),
           ScenarioInteractionNode interaction => ConvertToDTO(interaction),
           ScenarioCombineItemNode combineItem => ConvertToDTO(combineItem),
@@ -1717,6 +1733,20 @@ namespace MultiplayerInfrastructure.Scenario
           NodeType = "QuestWaypointHighlight",
           Identifier = node.Identifier,
           WaypointIdentifier = node.WaypointIdentifier,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioQuestMarkNodeDTO ConvertToDTO(ScenarioQuestMarkNode node) =>
+        new ScenarioQuestMarkNodeDTO
+        {
+          NodeType = "QuestMark",
+          Identifier = node.Identifier,
+          Operation = node.Operation.ToString(),
+          TargetType = node.TargetType.ToString(),
+          EntityIdentifier = node.EntityIdentifier,
+          InteractionIdentifier = node.InteractionIdentifier,
+          IconIdentifier = node.IconIdentifier,
+          Priority = node.Priority != 0 ? node.Priority : (int?)null,
           NextIdentifier = node.NextIdentifier
         };
 

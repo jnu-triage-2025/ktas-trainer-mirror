@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using FishNet;
 using FishNet.Connection;
+using TriageTrainer.ItemDefinitions;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Player;
@@ -9,7 +10,6 @@ using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 using TriageTrainer.Entity.IntravenousLine;
 using TriageTrainer.Entity.LineConnection;
-using TriageTrainer.ItemDefinitions;
 using UnityEngine;
 using TriageTrainer.Patient;
 
@@ -281,6 +281,12 @@ namespace TriageTrainer.Entity
       return true;
     }
 
+    /// <summary>
+    /// 처치 시각 표현이 이미 켜져 있는지 조회한다.
+    /// 시나리오 준비 경로가 같은 표현을 매 프레임 다시 켜서 불필요한 RPC 를 내보내지 않도록 공개한다.
+    /// </summary>
+    public bool IsTreatmentDisplayActive(TreatmentDisplay display) => IsDisplayActive(display);
+
     private bool IsDisplayActive(TreatmentDisplay display)
     {
       var state = GetPatientDisplayState();
@@ -307,6 +313,23 @@ namespace TriageTrainer.Entity
     {
       return TryResolveItemUse(itemIdentifier, out _, out _, out var resolvedDisplay)
              && resolvedDisplay != TreatmentDisplay.None;
+    }
+
+    internal string FindApplicableTreatmentInventoryItem(PlayerController player)
+    {
+      if (player == null)
+        return null;
+
+      string heldIdentifier = player.HandlingItem?.CurrentIdentifier;
+      if (player.CountItemInInventory(heldIdentifier) > 0 && CanApplyHeldTreatmentItem(heldIdentifier))
+        return heldIdentifier;
+
+      foreach (var pair in ItemUseEffects)
+      {
+        if (player.CountItemInInventory(pair.Key) > 0 && CanApplyHeldTreatmentItem(pair.Key))
+          return pair.Key;
+      }
+      return null;
     }
 
     private void RaiseGenericItemAppliedSignal(string itemIdentifier, string treatmentIdentifier)
@@ -753,21 +776,28 @@ namespace TriageTrainer.Entity
 
     private bool TryConnectPatientBCNormalSaline(Transform interactor)
     {
+      var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+      if (player == null || player.CountItemInInventory(IntravenousSet.Identifier) < 1)
+      {
+        ShowRequiredItemDialogue("수액세트를 갖고 있지 않다.", "수액세트를 찾자.");
+        return false;
+      }
+
       if (IsFishNetClientInitialized && !IsFishNetServerStarted)
       {
         CmdConnectPatientBCNormalSaline();
         return true;
       }
 
-      var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
       if (IsPatientBC && player != null && !TryValidatePatientBCTreatmentActor(player, NurseCRoleTag))
         return false;
-      return TryConnectPatientBCNormalSalineAuthoritative();
+      return TryConnectPatientBCNormalSalineAuthoritative(player);
     }
 
-    private bool TryConnectPatientBCNormalSalineAuthoritative()
+    private bool TryConnectPatientBCNormalSalineAuthoritative(PlayerController player = null)
     {
       if (!CanConnectPatientBCNormalSaline()
+          || (player != null && player.CountItemInInventory(IntravenousSet.Identifier) < 1)
           || !CurrentBed.TryGetNormalSalineConnectionPoint(out var salinePoint))
         return false;
 
@@ -783,6 +813,11 @@ namespace TriageTrainer.Entity
                       ?? FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
         if (service == null || !service.TryCreateAutomaticConnection(salinePoint, patientPoint))
           return false;
+        if (player != null && player.RemoveItemFromInventory(IntravenousSet.Identifier, 1) != 1)
+        {
+          service.DisconnectAutomaticConnection(salinePoint, patientPoint);
+          return false;
+        }
       }
       return TryCompletePatientBCNormalSalineConnection(salinePoint);
     }
@@ -796,7 +831,7 @@ namespace TriageTrainer.Entity
         return;
 
       using (MI.Scenario.ScenarioSignalPlayerContext.Push(actorIdentifier, actorDisplayName))
-        TryConnectPatientBCNormalSalineAuthoritative();
+        TryConnectPatientBCNormalSalineAuthoritative(player);
     }
 
     public bool TryCompletePatientBCNormalSalineConnection(

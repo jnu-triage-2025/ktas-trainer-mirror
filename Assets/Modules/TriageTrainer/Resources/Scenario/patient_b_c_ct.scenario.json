@@ -4406,13 +4406,78 @@
     "C_COMPLETE": {
       "identifier": "C_COMPLETE",
       "nodeType": "Dialogue",
-      "nextIdentifier": "CT_DELAY",
+      "nextIdentifier": "move_patients",
       "speakerName": "의사",
       "dialogueContent": "이 환자도 급한 처치는 끝낸 것 같습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M1" }
+    },
+    "move_patients": {
+      "identifier": "move_patients",
+      "nodeType": "ManualEntrypoint",
+      "entrypointIdentifier": "move_patients",
+      "manualEnterSetupIdentifier": "SETUP_MOVE_PATIENTS_SNAP_BED_B",
+      "description": "CT 이송 단계 수동 진입 지점. 환자 B/C와 처치 장비를 이송 전 상태로 즉시 준비한다.",
+      "nextIdentifier": "CT_DOCTOR_MARK_SHOW"
+    },
+    "CT_DOCTOR_MARK_SHOW": {
+      "identifier": "CT_DOCTOR_MARK_SHOW",
+      "nodeType": "QuestMark",
+      "nextIdentifier": "CT_DELAY",
+      "operation": "Show",
+      "targetType": "Npc",
+      "entityIdentifier": "npc-doctor-patient-b-c-ct",
+      "interactionIdentifier": null,
+      "iconIdentifier": "quest-marker",
+      "priority": 0
+    },
+    "SETUP_MOVE_PATIENTS_SNAP_BED_B": {
+      "identifier": "SETUP_MOVE_PATIENTS_SNAP_BED_B",
+      "nodeType": "BedSnap",
+      "bedEntityIdentifier": "bed_b",
+      "snapPointIdentifier": "zone_0:bed_snap_point",
+      "teleport": true,
+      "nextIdentifier": "SETUP_MOVE_PATIENTS_SNAP_BED_C"
+    },
+    "SETUP_MOVE_PATIENTS_SNAP_BED_C": {
+      "identifier": "SETUP_MOVE_PATIENTS_SNAP_BED_C",
+      "nodeType": "BedSnap",
+      "bedEntityIdentifier": "bed_c",
+      "snapPointIdentifier": "zone_1:bed_snap_point",
+      "teleport": true,
+      "nextIdentifier": "SETUP_MOVE_PATIENTS_MOVE_DOCTOR"
+    },
+    "SETUP_MOVE_PATIENTS_MOVE_DOCTOR": {
+      "identifier": "SETUP_MOVE_PATIENTS_MOVE_DOCTOR",
+      "nodeType": "NPCControl",
+      "nextIdentifier": "SETUP_MOVE_PATIENTS",
+      "mode": "Control",
+      "npcIdentifier": "npc-doctor-patient-b-c-ct",
+      "destinationType": "Waypoint",
+      "destinationIdentifier": "scen_b:doctor_care_area_waypoint",
+      "destinationX": 0,
+      "destinationY": 0,
+      "destinationZ": 0,
+      "ignoreGroundCheck": false,
+      "moveMode": "Instant",
+      "moveSpeed": 0,
+      "moveDuration": 0
+    },
+    "SETUP_MOVE_PATIENTS": {
+      "identifier": "SETUP_MOVE_PATIENTS",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "SETUP_MOVE_PATIENTS_RETURN",
+      "eventIdentifier": "setup_move_patients",
+      "invokeOnRoleClient": false,
+      "moveNextBehavior": "WaitUntilDone"
+    },
+    "SETUP_MOVE_PATIENTS_RETURN": {
+      "identifier": "SETUP_MOVE_PATIENTS_RETURN",
+      "nodeType": "ReturnToOrigin",
+      "description": "move_patients 수동 진입 준비 체인의 종료 표식.",
+      "nextIdentifier": null
     },
     "CT_DELAY": {
       "identifier": "CT_DELAY",
@@ -4459,13 +4524,24 @@
     "CT_DOCTOR_ORDER": {
       "identifier": "CT_DOCTOR_ORDER",
       "nodeType": "Dialogue",
-      "nextIdentifier": "P_CT_TRANSPORT",
+      "nextIdentifier": "CT_DOCTOR_MARK_HIDE",
       "speakerName": "의사",
       "dialogueContent": "두 분 다 뇌손상이 의심되니 브레인 CT 찍어봅시다. 환자들을 CT실로 옮겨주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": true,
       "ttsVoiceProfile": { "preset": "M1" }
+    },
+    "CT_DOCTOR_MARK_HIDE": {
+      "identifier": "CT_DOCTOR_MARK_HIDE",
+      "nodeType": "QuestMark",
+      "nextIdentifier": "P_CT_TRANSPORT",
+      "operation": "Hide",
+      "targetType": "Npc",
+      "entityIdentifier": "npc-doctor-patient-b-c-ct",
+      "interactionIdentifier": null,
+      "iconIdentifier": "quest-marker",
+      "priority": 0
     },
     "P_CT_TRANSPORT": {
       "identifier": "P_CT_TRANSPORT",

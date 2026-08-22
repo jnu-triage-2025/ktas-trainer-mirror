@@ -27,5 +27,11 @@ namespace MultiplayerInfrastructure.Commons
     /// 명시적으로 아이콘을 지정하지 않은 시나리오 interactable에 적용됩니다.
     /// </summary>
     public const string ScenarioDefault = "message-circle";
+
+    /// <summary>퀘스트 대상 상호작용의 기본 아이콘을 대체할 때 사용하는 퀘스트 마크 식별자입니다.</summary>
+    public const string QuestInteractionMark = "quest-interaction";
+
+    /// <summary>퀘스트 대상 NPC의 머리 위에 표시하는 퀘스트 마크 식별자입니다.</summary>
+    public const string QuestNpcMark = "quest-marker";
   }
 }

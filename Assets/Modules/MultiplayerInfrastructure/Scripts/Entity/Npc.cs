@@ -15,6 +15,8 @@ namespace MultiplayerInfrastructure.Entity
     [Header("Npc")]
     [SerializeField] private NPCBaseModelSO _npcBaseModel;
     [SerializeField] private string _identifier;
+    [Tooltip("카메라와 이 거리(m)보다 멀어지면 머리 위 이름표를 숨긴다. 0 이하이면 거리 제한 없이 항상 표시한다.")]
+    [SerializeField, Min(0f)] private float _overheadNameMaxVisibleDistance = 12f;
 
     [Header("Scenario Interacts")]
     [SerializeField] private List<NPCScenarioInteractDefinition> _scenarioInteracts = new();
@@ -254,11 +256,14 @@ namespace MultiplayerInfrastructure.Entity
       }
 
       var overheadAnchor = OverheadPresentationAnchor;
+      // 이름표는 멀리서 화면을 어지럽히지 않도록 거리 제한을 둔다.
+      // 퀘스트 마크는 길 안내 용도이므로 같은 앵커에 있어도 이 제한을 공유하지 않는다.
       ResolveOverheadLabelUI()?.SetLabel(
         overheadAnchor,
         "npc-name",
         0,
-        new EntityOverheadLabelUIController.LabelContent(displayName.Trim(), Color.white));
+        new EntityOverheadLabelUIController.LabelContent(displayName.Trim(), Color.white),
+        _overheadNameMaxVisibleDistance);
     }
 
     // 이름표를 띄울 머리 위 앵커. UI 컨트롤러가 이 위치를 화면에 투영해 라벨을 배치한다.

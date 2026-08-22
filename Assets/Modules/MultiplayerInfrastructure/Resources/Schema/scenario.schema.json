@@ -349,6 +349,7 @@
             "Parallel",
             "QuestControl",
             "QuestWaypointHighlight",
+            "QuestMark",
             "Delay",
             "Interaction",
             "CombineItem",
@@ -614,6 +615,21 @@
           },
           "then": {
             "$ref": "#/$defs/ScenarioQuestWaypointHighlightNode"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "nodeType": {
+                "const": "QuestMark"
+              }
+            },
+            "required": [
+              "nodeType"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ScenarioQuestMarkNode"
           }
         },
         {
@@ -2679,6 +2695,62 @@
           },
           "required": [
             "waypointIdentifier"
+          ]
+        }
+      ]
+    },
+    "ScenarioQuestMarkNode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/ScenarioBaseNode"
+        },
+        {
+          "properties": {
+            "nodeType": {
+              "const": "QuestMark"
+            },
+            "operation": {
+              "type": "string",
+              "enum": [
+                "Show",
+                "Hide"
+              ],
+              "default": "Show"
+            },
+            "targetType": {
+              "type": "string",
+              "enum": [
+                "Interaction",
+                "Npc"
+              ],
+              "default": "Npc"
+            },
+            "entityIdentifier": {
+              "type": "string",
+              "minLength": 1
+            },
+            "interactionIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "iconIdentifier": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "priority": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "default": 0
+            }
+          },
+          "required": [
+            "entityIdentifier"
           ]
         }
       ]

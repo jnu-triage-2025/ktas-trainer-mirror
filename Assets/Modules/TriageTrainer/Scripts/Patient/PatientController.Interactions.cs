@@ -140,18 +140,16 @@ namespace TriageTrainer.Entity
       public bool CanInteract(Transform interactor)
       {
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
-        string itemIdentifier = player?.HandlingItem?.CurrentIdentifier;
+        string itemIdentifier = _owner.FindApplicableTreatmentInventoryItem(player);
         if (_owner.IsPatientBCNasalCannulaItem(itemIdentifier))
           return false;
-        return player != null
-               && player.CountItemInInventory(itemIdentifier) > 0
-               && _owner.CanApplyHeldTreatmentItem(itemIdentifier);
+        return player != null && itemIdentifier != null;
       }
 
       public void Interact(Transform interactor)
       {
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
-        string itemIdentifier = player?.HandlingItem?.CurrentIdentifier;
+        string itemIdentifier = _owner.FindApplicableTreatmentInventoryItem(player);
         if (player?.PlayerEntity != null && _owner.CanApplyHeldTreatmentItem(itemIdentifier))
           _owner.OnItemUsed(player.PlayerEntity, itemIdentifier);
       }

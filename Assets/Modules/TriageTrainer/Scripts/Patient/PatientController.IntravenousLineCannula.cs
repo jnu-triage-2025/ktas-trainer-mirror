@@ -149,17 +149,27 @@ namespace TriageTrainer.Entity
       _interacts.Add(new PatientIntravenousLineCannulaInteract(this));
     }
 
-    /// <summary>플레이어가 손에 캐뉼라(18G/20G)를 들고 있는지 판정한다.</summary>
+    /// <summary>플레이어 인벤토리에 사용할 수 있는 캐뉼라(18G/20G)가 있는지 판정한다.</summary>
     private bool IsHandlingIntravenousLineCannula(PlayerController player)
     {
       if (player == null)
         return false;
 
-      string heldIdentifier = player.HandlingItem?.CurrentIdentifier;
-      if (string.IsNullOrWhiteSpace(heldIdentifier))
-        return false;
+      return CanPerformPatientBCIv() && FindAvailableIntravenousLineCannula(player) != null;
+    }
 
-      return CanPerformPatientBCIv() && IsCannulaGaugeAllowed(heldIdentifier);
+    private string FindAvailableIntravenousLineCannula(PlayerController player)
+    {
+      if (player == null)
+        return null;
+
+      for (int i = 0; i < IntravenousLineCannulaItemIdentifiers.Length; i++)
+      {
+        string identifier = IntravenousLineCannulaItemIdentifiers[i];
+        if (IsCannulaGaugeAllowed(identifier) && player.CountItemInInventory(identifier) > 0)
+          return identifier;
+      }
+      return null;
     }
 
     private bool IsCannulaGaugeAllowed(string itemIdentifier)
@@ -207,7 +217,9 @@ namespace TriageTrainer.Entity
         return;
 
       // ── 게이지 판정(18G / 20G) ── 손에 든 아이템 식별자로 구분한다.
-      string heldIdentifier = player.HandlingItem?.CurrentIdentifier;
+      string heldIdentifier = FindAvailableIntravenousLineCannula(player);
+      if (string.IsNullOrWhiteSpace(heldIdentifier))
+        return;
       bool is18G = string.Equals(heldIdentifier, TriageTrainer.ItemDefinitions.Cannula18g.Identifier, StringComparison.Ordinal);
       var leftDisplay = is18G
         ? TreatmentDisplay.Syringe18GInsertedIntoLeftArm

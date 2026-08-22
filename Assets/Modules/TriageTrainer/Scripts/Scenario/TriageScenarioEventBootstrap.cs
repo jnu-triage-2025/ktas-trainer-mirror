@@ -198,6 +198,10 @@ namespace TriageTrainer.Scenario
     [SerializeField] private string[] _patientBTreatmentBedAliases = { "patientBTreatmentBed", "patient_b_treatment_bed", "treatmentBedB" };
     [SerializeField] private string _patientCTreatmentBedEntityIdentifier = "patientCTreatmentBed";
     [SerializeField] private string[] _patientCTreatmentBedAliases = { "patientCTreatmentBed", "patient_c_treatment_bed", "treatmentBedC" };
+    [Tooltip("시나리오 프리셋 스폰이 만드는 환자 B 침대의 엔티티 식별자. 씬에 사전 배치된 침대가 아니므로 별도로 해석한다.")]
+    [SerializeField] private string _patientBSpawnedBedEntityIdentifier = "bed_b";
+    [Tooltip("시나리오 프리셋 스폰이 만드는 환자 C 침대의 엔티티 식별자. 씬에 사전 배치된 침대가 아니므로 별도로 해석한다.")]
+    [SerializeField] private string _patientCSpawnedBedEntityIdentifier = "bed_c";
     [SerializeField] private GameObject _patientBTreatmentBedObject;
     [SerializeField] private GameObject _patientCTreatmentBedObject;
     [SerializeField] private Transform _patientBTreatmentRoomPoint;
@@ -488,8 +492,14 @@ namespace TriageTrainer.Scenario
 
       _patientBTreatmentBedObject = ResolveEntityObject(_patientBTreatmentBedObject, _patientBTreatmentBedEntityIdentifier);
       _patientBTreatmentBedObject ??= ResolveByAliases(_patientBTreatmentBedAliases);
+      // 환자 B/C의 처치 침대는 씬에 배치되어 있지 않고 시나리오 프리셋 스폰(bed_b / bed_c)으로 생성된다.
+      // 씬 별칭만으로는 영원히 해석되지 않으므로, 스폰 식별자와 환자가 실제로 누워 있는 침대를 차례로 본다.
+      _patientBTreatmentBedObject ??= ResolveEntityObject(null, _patientBSpawnedBedEntityIdentifier);
+      _patientBTreatmentBedObject ??= ResolveAttachedBedObject(_patientBObject);
       _patientCTreatmentBedObject = ResolveEntityObject(_patientCTreatmentBedObject, _patientCTreatmentBedEntityIdentifier);
       _patientCTreatmentBedObject ??= ResolveByAliases(_patientCTreatmentBedAliases);
+      _patientCTreatmentBedObject ??= ResolveEntityObject(null, _patientCSpawnedBedEntityIdentifier);
+      _patientCTreatmentBedObject ??= ResolveAttachedBedObject(_patientCObject);
 
       _patientBVitalMonitorObject = ResolveEntityObject(_patientBVitalMonitorObject, _patientBVitalMonitorEntityIdentifier);
       _patientBVitalMonitorObject ??= ResolveByAliases(_patientBVitalMonitorAliases);
@@ -513,6 +523,14 @@ namespace TriageTrainer.Scenario
       _nurseDTransform ??= ResolveByAliases(_nurseDAliases)?.transform;
 
       LogUnresolvedTargetsIfAny();
+    }
+
+    /// <summary>환자가 이미 결합(repose)된 침대를 반환한다. 프리셋 스폰 침대는 씬 참조가 없으므로 이 경로가 최후 수단이다.</summary>
+    private static GameObject ResolveAttachedBedObject(GameObject patientObject)
+    {
+      var patient = patientObject != null ? patientObject.GetComponentInChildren<PatientController>(true) : null;
+      var bed = patient != null ? patient.CurrentBed : null;
+      return bed != null ? bed.gameObject : null;
     }
 
     private GameObject ResolveEntityObject(GameObject current, string entityIdentifier)
@@ -664,6 +682,7 @@ namespace TriageTrainer.Scenario
                         || _nurseDTransform == null;
       if (!unresolved)
       {
+        _lastUnresolvedTargetsLog = null;
         return;
       }
 
@@ -686,8 +705,19 @@ namespace TriageTrainer.Scenario
       if (_nurseBTransform == null) sb.AppendLine("- nurseB (set _nurseBEntityIdentifier or aliases)");
       if (_nurseCTransform == null) sb.AppendLine("- nurseC (set _nurseCEntityIdentifier or aliases)");
       if (_nurseDTransform == null) sb.AppendLine("- nurseD (set _nurseDEntityIdentifier or aliases)");
-      Debug.LogWarning(sb.ToString());
+
+      // 준비 대기 루프가 매 프레임 해석을 재시도하므로, 같은 내용이 반복 출력되지 않도록 변화가 있을 때만 남긴다.
+      string message = sb.ToString();
+      if (string.Equals(_lastUnresolvedTargetsLog, message, StringComparison.Ordinal))
+      {
+        return;
+      }
+
+      _lastUnresolvedTargetsLog = message;
+      Debug.LogWarning(message);
     }
+
+    private string _lastUnresolvedTargetsLog;
 
     private static Transform GetPreferredDestination(Transform preferred, Transform fallback)
     {

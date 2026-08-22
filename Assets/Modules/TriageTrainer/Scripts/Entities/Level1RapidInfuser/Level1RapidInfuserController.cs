@@ -127,15 +127,15 @@ namespace TriageTrainer.Entity
       public bool CanInteract(Transform interactor)
       {
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
-        string id = player?.HandlingItem?.CurrentIdentifier;
-        _heldItemIcon = player?.HandlingItem?.CurrentItemIconTexture;
+        string id = _owner.FindFluidInventoryItem(player, _kind);
+        _heldItemIcon = null;
         return _owner.CanAttemptFluid(_kind) && IsFluidFamily(id, _kind);
       }
 
       public void Interact(Transform interactor)
       {
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
-        string id = player?.HandlingItem?.CurrentIdentifier;
+        string id = _owner.FindFluidInventoryItem(player, _kind);
         if (player != null && _owner.CanAttemptFluid(_kind) && IsFluidFamily(id, _kind))
           _owner.RequestAddFluid(_kind, id, player);
       }
@@ -625,6 +625,11 @@ namespace TriageTrainer.Entity
       };
     }
 
+    private string FindFluidInventoryItem(PlayerController player, FluidKind kind)
+    {
+      return player?.FindFirstInventoryItem(identifier => IsFluidFamily(identifier, kind));
+    }
+
     private void RequestAddFluid(FluidKind kind, string itemIdentifier, PlayerController player)
     {
       if (!IsClientStarted && !IsServerStarted)
@@ -678,7 +683,6 @@ namespace TriageTrainer.Entity
       }
       if (player == null ||
           !IsFluidFamily(itemIdentifier, kind) ||
-          !string.Equals(player.HandlingItem?.CurrentIdentifier, itemIdentifier, StringComparison.Ordinal) ||
           player.CountItemInInventory(itemIdentifier) < 1 ||
           player.RemoveItemFromInventory(itemIdentifier, 1) != 1)
       {

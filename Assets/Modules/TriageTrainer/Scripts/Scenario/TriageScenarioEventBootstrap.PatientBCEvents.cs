@@ -20,6 +20,7 @@ namespace TriageTrainer.Scenario
       RegisterEvent_ShowPatientCUi();
       RegisterEvent_MovePatientB();
       RegisterEvent_MovePatientC();
+      RegisterEvent_SetupMovePatients();
       RegisterEvent_ActivateVitalMonitorUiPatientB();
       RegisterEvent_ActivateVitalMonitorUiPatientC();
       RegisterEvent_PupilReflexPatientB();

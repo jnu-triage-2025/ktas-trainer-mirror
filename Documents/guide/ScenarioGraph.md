@@ -265,6 +265,22 @@ NPC의 런타임 설정과 이동을 한 노드에서 제어합니다. `mode: Up
 | `waypointIdentifier` | `string` | 강조할 웨이포인트 식별자 | `wp_entrance` |
 | `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
 
+### QuestMark
+
+퀘스트 목표와 관계있는 대상에 퀘스트 마크(느낌표 아이콘)를 붙이거나 떼는 노드입니다. 상호작용 대상에 붙이면 상호작용 힌트의 기본 아이콘이 퀘스트 마크로 바뀌고, NPC에 붙이면 NPC 이름표 위에 마크가 뜹니다.
+
+퀘스트 정의(`.quest.json`)의 `presentationBindings`와 같은 표시 경로를 쓰지만, 표시 시점을 퀘스트 수명이 아니라 그래프 진행 순서로 직접 정해야 할 때 사용합니다. 대표적으로 "지금부터 저 NPC에게 가야 한다"처럼 퀘스트 목표 하나에 대응하지 않는 안내가 필요한 경우입니다. `Show`로 켠 마크는 같은 대상에 `Hide`를 실행하거나 시나리오가 끝날 때까지 유지되므로, 분기마다 `Hide`가 누락되지 않도록 짝을 맞춰 배치하세요.
+
+| 필드 이름 | 값 타입 | 값 | 예시 |
+|---|---|---|---|
+| `operation` | `string` (`Show`\|`Hide`) | 마크 표시/해제(기본값 `Show`) | `Show` |
+| `targetType` | `string` (`Npc`\|`Interaction`) | 마크를 붙일 대상 종류(기본값 `Npc`) | `Npc` |
+| `entityIdentifier` | `string` | 대상 엔티티 식별자. NPC는 Npc 레지스트리 식별자 | `npc-er-doctor` |
+| `interactionIdentifier` | `string` | `targetType`이 `Interaction`일 때 엔티티 안의 상호작용 행 식별자 | `report` |
+| `iconIdentifier` | `string` | 사용할 아이콘 식별자. 비우면 대상 종류별 기본 마크 아이콘 | `quest-marker` |
+| `priority` | `int` | 같은 대상에 마크가 겹칠 때의 우선순위(기본값 `0`, 클수록 우선) | `0` |
+| `nextIdentifier` | `string` | 다음 진행 노드의 식별자 | `next-node-identifier` |
+
 ### Delay
 
 그냥 정해진 시간만큼 잠깐 멈춰 있는 노드입니다. 대사와 대사 사이에 약간의 여백을 주거나, 효과음이 끝날 시간을 벌어주거나, 연출상 "숨 고르는" 타이밍을 만들 때 사용합니다. 뒤에 바로 다음 동작이 이어져야 한다면 `waitUntilFinished`를 켜두고, 대기와 동시에 다른 작업이 진행돼야 한다면 `Immediately`로 두고 다음 노드를 바로 실행하게 만들 수 있습니다.

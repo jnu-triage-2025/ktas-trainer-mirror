@@ -779,16 +779,38 @@
       "isOrdinal": false,
       "tasks": [
         {
+          "identifier": "ct-patient-b",
           "type": "InteractionSignalReceived",
           "signalId": "ct_patient_arrived_patient_b",
           "displayTextContent": "많이 다친 남성 환자를 CT실로 이동시키기",
           "count": 1
         },
         {
+          "identifier": "ct-patient-c",
           "type": "InteractionSignalReceived",
           "signalId": "ct_patient_arrived_patient_c",
           "displayTextContent": "많이 다친 여성 환자를 CT실로 이동시키기",
           "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "ct-patient-b",
+          "targetType": "Interaction",
+          "entityIdentifier": "bed_b",
+          "interactionIdentifier": "move_bed",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "ct-patient-c",
+          "targetType": "Interaction",
+          "entityIdentifier": "bed_c",
+          "interactionIdentifier": "move_bed",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
         }
       ]
     }

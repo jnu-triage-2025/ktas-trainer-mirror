@@ -44,6 +44,7 @@ namespace MultiplayerInfrastructure.Editor
       },
       ScenarioNodeType.QuestControl => new ScenarioQuestControlNode(),
       ScenarioNodeType.QuestWaypointHighlight => new ScenarioQuestWaypointHighlightNode(),
+      ScenarioNodeType.QuestMark => new ScenarioQuestMarkNode(),
       ScenarioNodeType.Delay => new ScenarioDelayNode(),
       ScenarioNodeType.Interaction => new ScenarioInteractionNode(),
       ScenarioNodeType.CombineItem => new ScenarioCombineItemNode

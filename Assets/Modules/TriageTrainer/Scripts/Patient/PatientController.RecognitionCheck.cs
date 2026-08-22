@@ -10,6 +10,7 @@ using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 using MultiplayerInfrastructure.UI;
+using TriageTrainer.ItemDefinitions;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -49,9 +50,16 @@ namespace TriageTrainer.Entity
       }
 
       public void Interact(Transform interactor)
-        => _owner.RequestRecognitionCheckCompletion(
-          interactor?.GetComponentInParent<PlayerController>(),
-          microphone: false);
+      {
+        var player = interactor?.GetComponentInParent<PlayerController>();
+        if (_owner.RequiresPenlightForRecognition() && !HasPenlight(player))
+        {
+          _owner.ShowRequiredItemDialogue("펜라이트를 갖고 있지 않다.", "펜라이트를 찾자.");
+          return;
+        }
+
+        _owner.RequestRecognitionCheckCompletion(player, microphone: false);
+      }
     }
 
     private const string RecognitionInteractionIdentifier = "recognition_check";
@@ -310,9 +318,29 @@ namespace TriageTrainer.Entity
               && !_recognitionMicrophoneEnabled.Value))
         return false;
 
+      if (!microphone && RequiresPenlightForRecognition() && !HasPenlight(requester))
+        return false;
+
       return InstanceFinder.IsOffline
         ? requester == null || IsWithinRecognitionInteractionDistance(requester)
         : requester != null && IsWithinRecognitionInteractionDistance(requester);
+    }
+
+    private bool RequiresPenlightForRecognition() =>
+      string.Equals(_recognitionCompletionSignal.Value, $"{Identifier}_pupil_checked", StringComparison.Ordinal);
+
+    private static bool HasPenlight(PlayerController player) =>
+      player != null && player.CountItemInInventory(Penlight.Identifier) > 0;
+
+    private void ShowRequiredItemDialogue(string firstLine, string secondLine)
+    {
+      if (_chatUI == null)
+        _chatUI = Registry.Get<ChatUIController>(RegistryType.UI, Registry.TypeKey<ChatUIController>());
+
+      var dialogue = Registry.Get<DialoguePanelUIController>(
+        RegistryType.UI, Registry.TypeKey<DialoguePanelUIController>());
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", $"({firstLine})");
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", $"({secondLine})");
     }
 
     private bool IsWithinRecognitionInteractionDistance(PlayerController requester)

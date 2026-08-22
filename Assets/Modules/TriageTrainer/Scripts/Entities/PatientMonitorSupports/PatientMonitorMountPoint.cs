@@ -102,10 +102,8 @@ namespace TriageTrainer.Entity.PatientMonitor
     private bool CanInstall(Transform interactor)
     {
       var player = ResolvePlayer(interactor);
-      _installItemIcon = player?.HandlingItem?.CurrentItemIconTexture;
-      return !IsVisible && player != null &&
-             string.Equals(player.HandlingItem?.CurrentIdentifier, PatientMonitorItem.Identifier, StringComparison.Ordinal) &&
-             player.CountItemInInventory(PatientMonitorItem.Identifier) > 0;
+      _installItemIcon = null;
+      return !IsVisible && player != null && player.CountItemInInventory(PatientMonitorItem.Identifier) > 0;
     }
 
     private bool CanRetrieve(Transform interactor) => IsVisible && ResolvePlayer(interactor) != null;

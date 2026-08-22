@@ -40,6 +40,7 @@ public enum State
     ExecutingParallel,            // 병렬 브랜치 실행 중
     ExecutingQuestControl,        // 퀘스트 추가/변경/제거
     ExecutingQuestWaypointHighlight, // 웨이포인트 강조
+    ExecutingQuestMark,           // 퀘스트 마크 표시/해제
     ExecutingNotification,        // 알림 표시
     ExecutingDelay,               // 대기 중
     ExecutingInteraction,         // 인터랙션 대기 중 (구현 예정)
@@ -149,6 +150,7 @@ public void SelectOption(int index)
 | `InvokeEvent` | `ExecutingInvokeEvent` | `ScenarioEventIdentifierRegistry`에서 핸들러 조회·실행 |
 | `QuestControl` | `ExecutingQuestControl` | QuestManager 통해 퀘스트 추가/갱신/제거 |
 | `QuestWaypointHighlight` | `ExecutingQuestWaypointHighlight` | WaypointAnchor 강조 |
+| `QuestMark` | `ExecutingQuestMark` | QuestPresentationService에 마크 등록/해제 |
 | `Notification` | `ExecutingNotification` | 알림 UI 메시지 표시 |
 | `Delay` | `ExecutingDelay` | 지정 시간(초) 대기 후 자동 진행 |
 | `Parallel` | `ExecutingParallel` | 복수 브랜치 동시 또는 순차 실행 |

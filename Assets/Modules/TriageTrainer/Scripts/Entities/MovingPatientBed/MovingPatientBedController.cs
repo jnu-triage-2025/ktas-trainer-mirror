@@ -18,11 +18,13 @@ using MI = MultiplayerInfrastructure;
 
 namespace TriageTrainer.Entity
 {
-  public partial class MovingPatientBedController : MinecraftBoatLikeControl, IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver, IEntityPresetParentLinkReceiver, IQuestPresentationTarget
+  public partial class MovingPatientBedController : MinecraftBoatLikeControl, IInteractable, IInteract, IInteractorConditional, ISpawnedEntityIdentifierReceiver, IEntityPresetParentLinkReceiver, IQuestPresentationTarget, IScenarioArrivalSignalEntityResolver
   {
     private const string DefaultPlayerAttachPointName = "PlayerAttachPoint";
     private const string DefaultPatientAttachPointName = "PatientAttachPoint";
     public const string InteractionIdentifierMoveBed = "move_bed";
+
+    public IScenarioIdentifiedEntity ResolveArrivalSignalEntity() => ReposedTarget as IScenarioIdentifiedEntity;
 
     [Serializable]
     public class AttachableItemVisualPair

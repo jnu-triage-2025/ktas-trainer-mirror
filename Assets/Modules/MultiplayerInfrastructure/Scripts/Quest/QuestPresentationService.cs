@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MultiplayerInfrastructure.Commons;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
@@ -21,6 +22,17 @@ namespace MultiplayerInfrastructure.Quest
         EntityIdentifier = entityIdentifier ?? string.Empty;
         InteractionIdentifier = interactionIdentifier ?? string.Empty;
       }
+
+      /// <summary>대상 종류까지 포함해 NPC 마크와 상호작용 마크를 같은 사전에서 구분한다.</summary>
+      public static InteractionKey ForTarget(
+        QuestPresentationTargetType targetType,
+        string entityIdentifier,
+        string interactionIdentifier)
+        => new InteractionKey(
+          $"{targetType}|{entityIdentifier?.Trim() ?? string.Empty}",
+          targetType == QuestPresentationTargetType.Interaction
+            ? interactionIdentifier?.Trim() ?? string.Empty
+            : string.Empty);
 
       public bool Equals(InteractionKey other) =>
         string.Equals(EntityIdentifier, other.EntityIdentifier, StringComparison.Ordinal)
@@ -47,7 +59,26 @@ namespace MultiplayerInfrastructure.Quest
       public Sprite Icon;
     }
 
+    /// <summary>시나리오 그래프의 QuestMark 노드가 선언한 마크 하나.</summary>
+    private sealed class ScenarioMark
+    {
+      public QuestPresentationTargetType TargetType;
+      public string EntityIdentifier;
+      public string InteractionIdentifier;
+      public string IconIdentifier;
+      public int Priority;
+    }
+
+    /// <summary>시나리오 그래프가 명시적으로 켠 마크. 퀘스트 수명주기와 독립적이므로 서비스 인스턴스 밖에 보관한다.</summary>
+    private static readonly Dictionary<InteractionKey, ScenarioMark> _scenarioMarks = new();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetScenarioMarks() => _scenarioMarks.Clear();
+
     public static QuestPresentationService ActiveInstance { get; private set; }
+
+    /// <summary>NPC 이름표(0)보다 위에 마크를 쌓기 위한 기준 채널 순서.</summary>
+    private const int NpcQuestMarkChannelOrder = 100;
 
     public event Action OnPresentationChanged;
     public static event Action PresentationChanged;
@@ -157,6 +188,65 @@ namespace MultiplayerInfrastructure.Quest
       return true;
     }
 
+    /// <summary>
+    /// 시나리오 그래프의 QuestMark 노드가 켠 마크를 등록한다. 같은 대상에 이미 마크가 있으면 덮어쓴다.
+    /// 아이콘 식별자를 비우면 대상 종류별 기본 퀘스트 마크 아이콘을 사용한다.
+    /// </summary>
+    public static void SetScenarioMark(
+      QuestPresentationTargetType targetType,
+      string entityIdentifier,
+      string interactionIdentifier,
+      string iconIdentifier,
+      int priority)
+    {
+      if (string.IsNullOrWhiteSpace(entityIdentifier))
+        return;
+
+      if (targetType == QuestPresentationTargetType.Interaction
+          && string.IsNullOrWhiteSpace(interactionIdentifier))
+        return;
+
+      _scenarioMarks[InteractionKey.ForTarget(targetType, entityIdentifier, interactionIdentifier)] = new ScenarioMark
+      {
+        TargetType = targetType,
+        EntityIdentifier = entityIdentifier.Trim(),
+        InteractionIdentifier = interactionIdentifier?.Trim(),
+        IconIdentifier = string.IsNullOrWhiteSpace(iconIdentifier)
+          ? DefaultMarkIconIdentifier(targetType)
+          : iconIdentifier.Trim(),
+        Priority = priority
+      };
+      ActiveInstance?.RefreshPresentation();
+    }
+
+    /// <summary>시나리오 그래프의 QuestMark 노드가 끈 마크를 해제한다.</summary>
+    public static void ClearScenarioMark(
+      QuestPresentationTargetType targetType,
+      string entityIdentifier,
+      string interactionIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(entityIdentifier))
+        return;
+
+      if (_scenarioMarks.Remove(InteractionKey.ForTarget(targetType, entityIdentifier, interactionIdentifier)))
+        ActiveInstance?.RefreshPresentation();
+    }
+
+    /// <summary>시나리오가 끝날 때 그래프가 켠 마크를 모두 해제한다.</summary>
+    public static void ClearScenarioMarks()
+    {
+      if (_scenarioMarks.Count == 0)
+        return;
+
+      _scenarioMarks.Clear();
+      ActiveInstance?.RefreshPresentation();
+    }
+
+    private static string DefaultMarkIconIdentifier(QuestPresentationTargetType targetType)
+      => targetType == QuestPresentationTargetType.Npc
+        ? IconSpriteIdentifiers.QuestNpcMark
+        : IconSpriteIdentifiers.QuestInteractionMark;
+
     public void RefreshPresentation()
     {
       if (_questManager == null)
@@ -190,6 +280,7 @@ namespace MultiplayerInfrastructure.Quest
 
     private void HandleScenarioEnded()
     {
+      _scenarioMarks.Clear();
       _interactionBindings.Clear();
       _npcBindings.Clear();
       ClearNpcMarkers();
@@ -293,6 +384,8 @@ namespace MultiplayerInfrastructure.Quest
           }
         }
       }
+      MergeScenarioMarks();
+
       foreach (var active in _npcBindings.Values)
         RegisterNpcMarker(active);
 
@@ -307,6 +400,59 @@ namespace MultiplayerInfrastructure.Quest
       PresentationChanged?.Invoke();
     }
 
+    /// <summary>
+    /// 시나리오 그래프가 명시적으로 켠 마크를 퀘스트가 만든 마크와 같은 대상 사전에 합친다.
+    /// 그래프 선언은 작성자가 시점을 직접 지정한 것이므로 우선순위가 같으면 퀘스트 마크보다 앞선다.
+    /// </summary>
+    private void MergeScenarioMarks()
+    {
+      foreach (var mark in _scenarioMarks.Values)
+      {
+        if (mark == null || string.IsNullOrWhiteSpace(mark.EntityIdentifier))
+          continue;
+
+        if (!Registry.Registry.TryGet<Sprite>(RegistryType.IconSprite, mark.IconIdentifier, out var sprite)
+            || sprite == null)
+        {
+          WarnMissingIcon(mark.IconIdentifier, "(scenario)");
+          continue;
+        }
+
+        var candidate = new ActiveBinding
+        {
+          QuestIdentifier = string.Empty,
+          // 퀘스트 목록 인덱스보다 앞선 값이라 우선순위가 같을 때 그래프 선언이 이긴다.
+          QuestOrder = -1,
+          BindingIndex = 0,
+          Binding = new QuestPresentationBinding
+          {
+            Activation = QuestPresentationActivation.WholeQuest,
+            TargetType = mark.TargetType,
+            EntityIdentifier = mark.EntityIdentifier,
+            InteractionIdentifier = mark.InteractionIdentifier,
+            IconIdentifier = mark.IconIdentifier,
+            Priority = mark.Priority
+          },
+          Icon = sprite
+        };
+
+        if (mark.TargetType == QuestPresentationTargetType.Interaction)
+        {
+          if (string.IsNullOrWhiteSpace(mark.InteractionIdentifier))
+            continue;
+
+          var key = new InteractionKey(mark.EntityIdentifier, mark.InteractionIdentifier);
+          if (!_interactionBindings.TryGetValue(key, out var current) || IsPreferred(candidate, current))
+            _interactionBindings[key] = candidate;
+        }
+        else
+        {
+          if (!_npcBindings.TryGetValue(mark.EntityIdentifier, out var current) || IsPreferred(candidate, current))
+            _npcBindings[mark.EntityIdentifier] = candidate;
+        }
+      }
+    }
+
     private void RegisterNpcMarker(ActiveBinding active)
     {
       var binding = active.Binding;
@@ -318,7 +464,12 @@ namespace MultiplayerInfrastructure.Quest
         return;
 
       string channel = $"quest:{active.QuestIdentifier}:{active.BindingIndex}";
-      controller.SetLabel(anchor, channel, 100 + binding.Priority, new EntityOverheadLabelUIController.LabelContent(active.Icon));
+      // 채널 스택은 앵커에서 위로 쌓이므로, 이름표(order 0)보다 큰 순서를 써야 이름 위에 마크가 놓인다.
+      controller.SetLabel(
+        anchor,
+        channel,
+        NpcQuestMarkChannelOrder + binding.Priority,
+        new EntityOverheadLabelUIController.LabelContent(active.Icon));
       _npcMarkers.Add((controller, anchor, channel));
     }
 
