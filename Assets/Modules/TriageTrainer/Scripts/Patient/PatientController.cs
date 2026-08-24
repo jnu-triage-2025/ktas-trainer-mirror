@@ -215,11 +215,11 @@ namespace TriageTrainer.Entity
         return true;
       }
 
-      if (!CanApplyItemUse(itemIdentifier))
+      if (HasPendingApprovedItemUse(itemIdentifier) || !CanApplyItemUse(itemIdentifier))
         return false;
 
       // 실제 플레이어 경로는 소비를 먼저 확정한 뒤에만 상태·Display·신호를 변경한다.
-      if (sourcePlayer != null && sourcePlayer.RemoveItemFromInventory(itemIdentifier, 1) != 1)
+      if (sourcePlayer != null && !sourcePlayer.TryConsumeItemUse(itemIdentifier))
         return false;
 
       return ApplyItemUse(itemIdentifier);

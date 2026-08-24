@@ -244,6 +244,8 @@ namespace MultiplayerInfrastructure.UI
       countLabel.AddToClassList("slot__count");
       slot.Add(countLabel);
 
+      ItemDurabilityBar.Ensure(slot, "slot__durability", "slot__durability-fill");
+
       return slot;
     }
 
@@ -931,12 +933,15 @@ namespace MultiplayerInfrastructure.UI
       var slot = _slotElements[slotIndex];
       var icon = slot.Q<Image>("ItemIcon");
       var label = slot.Q<Label>("ItemCount");
+      var durability = ItemDurabilityBar.Ensure(
+        slot, "slot__durability", "slot__durability-fill");
       var slotData = GetSlotModel(slotIndex);
 
       if (slotData == null || slotData.IsEmpty)
       {
         if (icon != null) icon.image = _defaultIcon;
         if (label != null) label.text = string.Empty;
+        ItemDurabilityBar.Update(durability, null);
         return;
       }
 
@@ -950,6 +955,7 @@ namespace MultiplayerInfrastructure.UI
         label.text = slotData.ItemInstance != null && slotData.ItemInstance.CurrentStackCount > 1
           ? slotData.ItemInstance.CurrentStackCount.ToString()
           : string.Empty;
+      ItemDurabilityBar.Update(durability, slotData.ItemInstance);
     }
 
     private void UpdateHeldItemGhostVisual(InventorySlotModelDTO heldData)

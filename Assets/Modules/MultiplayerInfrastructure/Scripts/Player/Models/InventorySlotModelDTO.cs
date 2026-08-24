@@ -50,17 +50,10 @@ public class InventorySlotModelDTO
       return null;
     }
 
-    if (_itemInstance!.CurrentIdentifier != other._itemInstance!.CurrentIdentifier)
-      return other._itemInstance;
-
-    int spaceLeft = _itemInstance.CurrentMaxStackCount - _itemInstance.CurrentStackCount;
-    if (spaceLeft <= 0) return other._itemInstance;
-
-    int toMove = Math.Min(spaceLeft, other._itemInstance.CurrentStackCount);
-    _itemInstance.CurrentStackCount += toMove;
-    other._itemInstance.CurrentStackCount -= toMove;
-
-    return other._itemInstance.CurrentStackCount > 0 ? other._itemInstance : null;
+    var leftover = _itemInstance!.Merge(other._itemInstance!);
+    if (leftover.CurrentStackCount <= 0)
+      other._itemInstance = null;
+    return leftover.CurrentStackCount > 0 ? leftover : null;
   }
 
   public Item? TakeAll()
@@ -81,6 +74,8 @@ public class InventorySlotModelDTO
     _itemInstance.CurrentStackCount -= toPop;
     if (_itemInstance.CurrentStackCount <= 0)
       Clear();
+    else if (_itemInstance.HasCurrentDurability)
+      _itemInstance.CurrentDurability = _itemInstance.CurrentMaxDurability;
     return popped;
   }
 
@@ -91,4 +86,3 @@ public class InventorySlotModelDTO
     return previous;
   }
 }
-

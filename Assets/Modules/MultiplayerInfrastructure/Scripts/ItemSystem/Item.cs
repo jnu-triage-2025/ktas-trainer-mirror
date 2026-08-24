@@ -282,9 +282,14 @@ namespace MultiplayerInfrastructure.ItemSystem
     {
       if (other == null || !IsCurrentlyStackable || !other.IsCurrentlyStackable)
         return false;
-      return string.Equals(CurrentIdentifier, other.CurrentIdentifier, StringComparison.Ordinal)
-             && !IsModifiedCurrentSerializedDerivedAttributes
-             && !other.IsModifiedCurrentSerializedDerivedAttributes;
+      if (!string.Equals(CurrentIdentifier, other.CurrentIdentifier, StringComparison.Ordinal)
+          || IsModifiedCurrentSerializedDerivedAttributes
+          || other.IsModifiedCurrentSerializedDerivedAttributes)
+        return false;
+
+      // 한 스택은 사용 중인 아이템 한 개의 내구도만 표현할 수 있다. 손상된 스택끼리 합치면
+      // 둘 중 하나의 손상 상태를 보존할 수 없으므로 병합하지 않는다.
+      return !IsDurabilityDamaged() || !other.IsDurabilityDamaged();
     }
 
     /// <summary>
@@ -295,16 +300,67 @@ namespace MultiplayerInfrastructure.ItemSystem
       if (!CanStackWith(other)) return other;
       int space = CurrentMaxStackCount - CurrentStackCount;
       int moved = Mathf.Min(space, other.CurrentStackCount);
+      if (moved <= 0) return other;
+
+      bool receiveDamagedItem = !IsDurabilityDamaged() && other.IsDurabilityDamaged();
       CurrentStackCount += moved;
       other.CurrentStackCount -= moved;
+
+      // 대상 스택이 온전하고 들어오는 스택만 손상되었다면, 손상된 현재 아이템을 먼저 옮긴다.
+      if (receiveDamagedItem)
+      {
+        CurrentDurability = other.CurrentDurability;
+        if (other.CurrentStackCount > 0)
+          other.CurrentDurability = other.CurrentMaxDurability;
+      }
       return other;
     }
+
+    private bool IsDurabilityDamaged()
+      => HasCurrentDurability
+         && CurrentMaxDurability > 0
+         && CurrentDurability < CurrentMaxDurability;
 
     /// <summary>
     /// 이 아이템의 얕은 카피를 반환합니다. 런타임 상태별로 복사됩니다.
     /// 깊은 복사가 필요한 파생 클래스는 override 해 주세요.
     /// </summary>
     public virtual Item Clone() => (Item)MemberwiseClone();
+
+    /// <summary>사용 시 정의된 내구도 변화량을 적용하고, 소진 여부를 반환합니다.</summary>
+    public bool TryApplyDurabilityOnUse(out bool depleted)
+    {
+      depleted = false;
+      if (!HasCurrentDurability || !CurrentEnabledDeltaDurability)
+        return false;
+
+      CurrentDurability = Mathf.Clamp(
+        CurrentDurability + CurrentDurabilityDeltaOnUse,
+        0,
+        CurrentMaxDurability);
+      depleted = CurrentDurability <= 0;
+      return true;
+    }
+
+    /// <summary>
+    /// 사용 내구도를 적용하고 내구도가 소진되면 현재 스택에서 아이템 하나를 제거합니다.
+    /// 스택이 남아 있으면 다음 아이템의 내구도를 최대치로 초기화합니다.
+    /// </summary>
+    public bool TryConsumeDurabilityOnUse(out bool stackDepleted)
+    {
+      stackDepleted = false;
+      if (!TryApplyDurabilityOnUse(out bool durabilityDepleted))
+        return false;
+
+      if (!durabilityDepleted)
+        return true;
+
+      CurrentStackCount = Mathf.Max(0, CurrentStackCount - 1);
+      stackDepleted = CurrentStackCount <= 0;
+      if (!stackDepleted)
+        CurrentDurability = CurrentMaxDurability;
+      return true;
+    }
 
     public override string ToString()
       => $"[{GetType().Name}] id={CurrentIdentifier} count={CurrentStackCount}";

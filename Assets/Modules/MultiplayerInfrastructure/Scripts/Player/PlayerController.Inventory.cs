@@ -104,13 +104,9 @@ namespace MultiplayerInfrastructure.Player
         if (slot.IsEmpty || slot.ItemInstance == null) continue;
         if (!slot.ItemInstance.CanStackWith(remaining)) continue;
 
-        int room = slot.ItemInstance.CurrentMaxStackCount - slot.ItemInstance.CurrentStackCount;
-        if (room <= 0) continue;
-
-        int moved = Mathf.Min(room, remaining.CurrentStackCount);
-        slot.ItemInstance.CurrentStackCount += moved;
-        remaining.CurrentStackCount -= moved;
-        changed = true;
+        int countBeforeMerge = remaining.CurrentStackCount;
+        slot.ItemInstance.Merge(remaining);
+        changed |= remaining.CurrentStackCount < countBeforeMerge;
       }
 
       foreach (var slot in _slots)
@@ -376,6 +372,59 @@ namespace MultiplayerInfrastructure.Player
         OnInventoryChangedAndReturn(true);
 
       return removed;
+    }
+
+    /// <summary>
+    /// 아이템 사용 1회를 소비합니다. 내구도 변화가 활성화된 아이템은 수량 대신 내구도를
+    /// 변경하며, 내구도가 0에 도달한 경우에만 슬롯에서 제거합니다.
+    /// </summary>
+    public bool TryConsumeItemUse(string itemIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(itemIdentifier))
+        return false;
+
+      InventorySlotModelDTO targetSlot = null;
+
+      // 같은 아이템이 여러 슬롯에 있으면 실제로 손에 든 인스턴스를 우선 소비합니다.
+      if (HandlingItem != null
+          && string.Equals(HandlingItem.CurrentIdentifier, itemIdentifier, System.StringComparison.Ordinal))
+      {
+        foreach (var slot in _slots)
+        {
+          if (slot != null && ReferenceEquals(slot.ItemInstance, HandlingItem))
+          {
+            targetSlot = slot;
+            break;
+          }
+        }
+      }
+
+      if (targetSlot == null)
+      {
+        foreach (var slot in _slots)
+        {
+          if (slot?.ItemInstance == null || slot.IsEmpty)
+            continue;
+          if (!string.Equals(slot.ItemInstance.CurrentIdentifier, itemIdentifier,
+                System.StringComparison.Ordinal))
+            continue;
+          targetSlot = slot;
+          break;
+        }
+      }
+
+      if (targetSlot?.ItemInstance == null)
+        return false;
+
+      var item = targetSlot.ItemInstance;
+      if (!item.TryConsumeDurabilityOnUse(out bool depleted))
+        return RemoveItemFromInventory(itemIdentifier, 1) == 1;
+
+      if (depleted)
+        targetSlot.Clear();
+
+      OnInventoryChangedAndReturn(true);
+      return true;
     }
 
     public int RemoveAllOfItemFromInventory(string itemIdentifier)

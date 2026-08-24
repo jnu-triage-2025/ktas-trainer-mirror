@@ -125,6 +125,8 @@ namespace MultiplayerInfrastructure.UI
       countLabel.AddToClassList("hotbar__slot-count");
       slot.Add(countLabel);
 
+      ItemDurabilityBar.Ensure(slot, "hotbar__durability", "hotbar__durability-fill");
+
       slot.RegisterCallback<PointerDownEvent>(evt =>
       {
         if (evt.button == (int)MouseButton.LeftMouse)
@@ -177,6 +179,8 @@ namespace MultiplayerInfrastructure.UI
         var slot = _slots[i];
         var icon = slot.Q<VisualElement>("icon");
         var countLabel = slot.Q<Label>("count");
+        var durability = ItemDurabilityBar.Ensure(
+          slot, "hotbar__durability", "hotbar__durability-fill");
 
         if (_inventory != null && i < _inventory.Count && _inventory[i] != null)
         {
@@ -187,12 +191,14 @@ namespace MultiplayerInfrastructure.UI
             icon.RemoveFromClassList("hotbar__slot-empty");
             var count = itemInstance.CurrentStackCount;
             countLabel.text = count > 1 ? count.ToString() : string.Empty;
+            ItemDurabilityBar.Update(durability, itemInstance);
           }
           else
           {
             icon.style.backgroundImage = null;
             icon.AddToClassList("hotbar__slot-empty");
             countLabel.text = string.Empty;
+            ItemDurabilityBar.Update(durability, null);
           }
         }
         else
@@ -200,6 +206,7 @@ namespace MultiplayerInfrastructure.UI
           icon.style.backgroundImage = null;
           icon.AddToClassList("hotbar__slot-empty");
           countLabel.text = string.Empty;
+          ItemDurabilityBar.Update(durability, null);
         }
       }
 

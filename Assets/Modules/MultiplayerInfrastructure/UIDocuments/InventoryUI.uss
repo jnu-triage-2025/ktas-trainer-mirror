@@ -114,6 +114,22 @@
   -unity-text-align: middle-right;
 }
 
+.slot__durability {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  bottom: 3px;
+  height: 5px;
+  background-color: rgba(0, 0, 0, 0.9);
+  border-width: 1px;
+  border-color: rgba(255, 255, 255, 0.45);
+  overflow: hidden;
+}
+
+.slot__durability-fill {
+  height: 100%;
+}
+
 /* ── 장비 슬롯 패널 (좌측 세로 1열) ─────────────────────────────
  * 인벤토리 그리드 좌측에 세로로 장비 슬롯을 배치한다.
  * 인벤토리 그리드와는 margin-right 로 간격을 확보한다.

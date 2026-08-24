@@ -1192,13 +1192,11 @@ namespace TriageTrainer.Entity
       if (!TryResolvePlayerForTreatmentSender(sender, out var player,
             out var actorIdentifier, out var actorDisplayName)
           || !IsWithinPatientBCTreatmentDistance(player)
-          || !CanApplyItemUse(itemIdentifier)
-          || player.CountItemInInventory(itemIdentifier) < 1
-          || player.RemoveItemFromInventory(itemIdentifier, 1) != 1)
+          || !CanApplyItemUse(itemIdentifier))
         return;
 
-      using (MI.Scenario.ScenarioSignalPlayerContext.Push(actorIdentifier, actorDisplayName))
-        ApplyItemUse(itemIdentifier);
+      RequestApprovedRemoteItemConsumption(
+        player, itemIdentifier, actorIdentifier, actorDisplayName);
     }
 
     private bool TryResolvePlayerForTreatmentSender(
@@ -1233,13 +1231,11 @@ namespace TriageTrainer.Entity
       if (!IsPatientBC
           || !CanApplyItemUse(itemIdentifier)
           || !TryValidatePatientBCTreatmentActor(sender, NurseDRoleTag, out var player,
-            out var actorIdentifier, out var actorDisplayName)
-          || player.CountItemInInventory(itemIdentifier) < 1
-          || player.RemoveItemFromInventory(itemIdentifier, 1) != 1)
+            out var actorIdentifier, out var actorDisplayName))
         return;
 
-      using (MI.Scenario.ScenarioSignalPlayerContext.Push(actorIdentifier, actorDisplayName))
-        ApplyItemUse(itemIdentifier);
+      RequestApprovedRemoteItemConsumption(
+        player, itemIdentifier, actorIdentifier, actorDisplayName);
     }
 
     [ServerRpc(RequireOwnership = false)]

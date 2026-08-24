@@ -15,6 +15,6 @@ MonoBehaviour:
   identifier: plaster
   displayName: "\uD50C\uB77C\uC2A4\uD130"
   description: "\uACE0\uC815\uC6A9 \uD50C\uB77C\uC2A4\uD130"
-  hasDurability: 0
-  maxDurability: 1
+  hasDurability: 1
+  maxDurability: 30
   maxStackCount: 64
