@@ -3191,7 +3191,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Identifier** | 문자열 | N059 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 멸균장갑을 [우클릭]해 착용하십시오. |
+| **DialogueContent** | 문자열 | 멸균장갑을 착용하십시오. 인벤토리 창을 (E)키로 열어 착용 칸으로 아이템을 이동시키세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **AutoAdvanceSeconds** | 실수(float) | 4.0 |
 | **PlayTTS** | bool | true |
@@ -4643,7 +4643,7 @@ interaction-signal-integration-spec §5.3 기준으로 게이트별 상태를 �
 | **Identifier** | 문자열 | N088 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 멸균장갑을 [우클릭]해 착용하십시오. |
+| **DialogueContent** | 문자열 | 멸균장갑을 착용하십시오. 인벤토리 창을 (E)키로 열어 착용 칸으로 아이템을 이동시키세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **AutoAdvanceSeconds** | 실수(float) | 4.0 |
 | **PlayTTS** | bool | true |
