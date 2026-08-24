@@ -1,4 +1,5 @@
 stages:
+  - lint
   - test
   - build
 
@@ -11,6 +12,21 @@ variables:
   GIT_CONFIG_COUNT: "1"
   GIT_CONFIG_KEY_0: "core.longpaths"
   GIT_CONFIG_VALUE_0: "true"
+
+lint-csharp:
+  stage: lint
+  tags:
+    - macos-unity
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: on_success
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: on_success
+    - when: never
+  before_script:
+    - chmod +x Tools/CI/lint-csharp.sh
+  script:
+    - Tools/CI/lint-csharp.sh --verify-no-changes
 
 test-editmode:
   stage: test
