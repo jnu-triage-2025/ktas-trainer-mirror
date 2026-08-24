@@ -139,7 +139,7 @@ flags: ["refactor-required"]
       - Speaker: "시스템"
       - Content: "기도 확보를 위해 환자의 경추를 고정하고 구강 석션을 진행합니다. 경추고정기, 흡인기, 석션 라인, 앙카우어 팁을 클릭해 획득하세요."
       - TTS: true
-    2. 흡인 체크리스트 UI를 띄우고(`show_suction_checklist_ui`) 경추고정기 적용과 세 물품(흡인기, 석션 라인, 앙카우어 팁) 획득을 기다린다(`sig.apply_stabilizer_patient_a`, `sig.click_wall_suction`, `sig.click_suction_line`, `sig.click_yankauer`). 이후 UI를 내린다(`hide_suction_checklist_ui`).
+    2. 흡인 체크리스트 UI를 띄우고(`show_suction_checklist_ui`) 네 물품(경추고정기, 흡인기, 석션 라인, 앙카우어 팁) 획득을 기다린다(`sig.cervical_collar`, `sig.click_wall_suction`, `sig.click_suction_line`, `sig.click_yankauer`). 이후 UI를 내린다(`hide_suction_checklist_ui`).
     3. Dialogue
       - Speaker: "시스템"
       - Content: "경추 고정기를 환자에게 적용하십시오."
@@ -1009,7 +1009,7 @@ SPAWN_A
 | `V010_D` | `sig.grab_stretcher_patient_a_handle_3` | 정합 | grab 지점 Identifier 정합 | 1회 잡기로 통과 |
 | `V011` | `sig.click_vital_set` | 정합 | `MedicalItem.OnGet` 자동 발행 식별자 정합 | 1회 획득으로 통과 |
 | `V012` | `sig.check_avpu_gcs_patient_a` | 정합 | Assess callback 식별자 정합 | 1회 사정으로 통과 |
-| `V013` | `sig.click_wall_suction`, `sig.click_suction_line`, `sig.click_yankauer` | 정합 | 아이템 획득 자동 발행 식별자 정합 | 3개 획득 후 통과 |
+| `V013` | `sig.cervical_collar`, `sig.click_wall_suction`, `sig.click_suction_line`, `sig.click_yankauer` | 정합 | 아이템 획득 자동 발행 식별자 정합 | 4개 획득 후 통과 |
 | `V013_1` | `sig.apply_stabilizer_patient_a` | 정합 | Item Apply signal 식별자 정합 | 적용 후 통과 |
 | `V013_2` | `sig.connect_wall_component_1` | 정합 | 연결지점 signal 식별자 정합 | 연결 후 통과 |
 | `V013_3` | `sig.connect_wall_component_and_yankauer` | 정합 | 연결지점 signal 식별자 정합 | 연결 후 통과 |
@@ -1930,7 +1930,7 @@ SPAWN_A
 
 | type | condition | registryType | registryIdentifier |
 | --- | --- | --- | --- |
-| Registry | Contains | RuntimeState | sig.apply_stabilizer_patient_a |
+| Registry | Contains | RuntimeState | sig.cervical_collar |
 | Registry | Contains | RuntimeState | sig.click_wall_suction |
 | Registry | Contains | RuntimeState | sig.click_suction_line |
 | Registry | Contains | RuntimeState | sig.click_yankauer |
@@ -1943,7 +1943,7 @@ SPAWN_A
 
 - [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.click_wall_suction, sig.click_suction_line, sig.click_yankauer [아이템 픽업(MedicalItem.OnGet 자동), spec §5.1~5.3]. **2027-07-28 완료
 
-- [x] 목 고정대는 클릭 대상이 아니라 환자에게 사용하는 아이템이다. `cervical_collar` 사용이 기존 환자 표시 상태를 켜고 `sig.apply_stabilizer_patient_a`를 올린다.
+- [x] V013은 `cervical_collar` **획득** 신호(`sig.cervical_collar`, `MedicalItem.OnGet` 자동 발행)를 기다린다. 환자에게 **적용**하는 단계는 V013_1이 담당하며, `cervical_collar` 사용이 기존 환자 표시 상태를 켜고 `sig.apply_stabilizer_patient_a`를 올린다(2026-08-24 변경).
 
 
 ---
@@ -1995,8 +1995,7 @@ SPAWN_A
 | Registry | Contains | RuntimeState | sig.apply_stabilizer_patient_a |
 
 
-- [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.apply_stabilizer_patient_a [부착형 적용/착용(Item Apply Signal), spec §5.1~5.3].
-**검토 필요. 현재 neckstabilizer 혹은 cervical_collar 혹은 stabilizer 아이템이 확인되지 않습니다 
+- [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.apply_stabilizer_patient_a [부착형 적용/착용(Item Apply Signal), spec §5.1~5.3]. **2026-08-24 수정 완료
 
 ---
 

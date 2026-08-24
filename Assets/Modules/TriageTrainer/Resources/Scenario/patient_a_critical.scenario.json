@@ -5295,7 +5295,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.apply_stabilizer_patient_a"
+              "registryIdentifier": "sig.cervical_collar"
             },
             {
               "type": "Registry",
