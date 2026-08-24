@@ -461,7 +461,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
     }
 
     private static bool IsValidPatientBCMonitorClose(string patientIdentifier, string signal)
-      => string.Equals(patientIdentifier, "patient_b", StringComparison.Ordinal)
+      => string.Equals(patientIdentifier, "patient_a", StringComparison.Ordinal)
+         && string.Equals(signal, "sig.close_vital_ui_a", StringComparison.Ordinal)
+         || string.Equals(patientIdentifier, "patient_b", StringComparison.Ordinal)
          && string.Equals(signal, "sig.close_vital_ui_b", StringComparison.Ordinal)
          || string.Equals(patientIdentifier, "patient_c", StringComparison.Ordinal)
          && string.Equals(signal, "sig.close_vital_ui_c", StringComparison.Ordinal);

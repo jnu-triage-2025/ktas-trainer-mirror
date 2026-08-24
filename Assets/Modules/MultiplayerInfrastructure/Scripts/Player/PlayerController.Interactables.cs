@@ -131,7 +131,10 @@ namespace MultiplayerInfrastructure.Player
 
     public void RefreshInteractableHintsNow()
     {
-      if (!IsOwner)
+      // EditMode/offline utility objects may not be attached to a spawned NetworkObject.
+      // Ownership is meaningful only once one exists; dereferencing IsOwner before that
+      // throws inside FishNet and can break otherwise-local inventory interactions.
+      if (NetworkObject != null && !IsOwner)
         return;
 
       if (_detector == null)

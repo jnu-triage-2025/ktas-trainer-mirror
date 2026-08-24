@@ -6,6 +6,7 @@ using TriageTrainer.ItemDefinitions;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 using TriageTrainer.Entity.IntravenousLine;
@@ -267,6 +268,10 @@ namespace TriageTrainer.Entity
 
       if (!TreatmentState.SetApplied(treatmentIdentifier, applied))
         return false;
+
+      GameLogService.WriteInteraction(
+        $"Patient treatment state changed: patient={Identifier}, treatment={treatmentIdentifier}, applied={applied}",
+        Identifier);
 
       if (IsFishNetServerStarted)
         RpcSyncTreatmentState(TreatmentState.CreateSnapshot());

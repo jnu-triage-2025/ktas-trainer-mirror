@@ -28,6 +28,11 @@ namespace TriageTrainer.Scenario
     [SerializeField] private string[] _requiredRaisedSignals = Array.Empty<string>();
     [SerializeField] private bool _enabled = true;
     [SerializeField] private bool _consumeOnce = true;
+    [Tooltip("상호작용에 필요한 인벤토리 아이템 식별자입니다. 비우면 아이템을 요구하지 않습니다.")]
+    [SerializeField] private string _requiredItemIdentifier;
+    [SerializeField, Min(0)] private int _consumeRequiredItemCount;
+    [SerializeField] private string _missingItemDialogue;
+    [SerializeField] private string _findItemDialogue;
 
     [Header("Visual State (optional)")]
     [Tooltip("상호작용 성공 시 표시할 오브젝트입니다.")]
@@ -54,12 +59,27 @@ namespace TriageTrainer.Scenario
       if (!_enabled || (_consumeOnce && _completed) || !AreRequiredSignalsRaised())
         return false;
 
-      return interactor != null && interactor.GetComponentInParent<PlayerController>() != null;
+      var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+      return player != null;
     }
 
     public void Interact(Transform interactor)
     {
       if (!CanInteract(interactor))
+        return;
+
+      var player = interactor.GetComponentInParent<PlayerController>();
+      if (!string.IsNullOrWhiteSpace(_requiredItemIdentifier)
+          && player.CountItemInInventory(_requiredItemIdentifier)
+          < Mathf.Max(1, _consumeRequiredItemCount))
+      {
+        ShowMissingItemDialogue();
+        return;
+      }
+      if (!string.IsNullOrWhiteSpace(_requiredItemIdentifier)
+          && _consumeRequiredItemCount > 0
+          && player.RemoveItemFromInventory(
+               _requiredItemIdentifier, _consumeRequiredItemCount) != _consumeRequiredItemCount)
         return;
 
       SetObjectsActive(_activateOnInteract, true);
@@ -69,6 +89,17 @@ namespace TriageTrainer.Scenario
         ScenarioInteractionSignals.Raise(_completionSignal);
 
       _completed = true;
+    }
+
+    private void ShowMissingItemDialogue()
+    {
+      var dialogue = MultiplayerInfrastructure.Registry.Registry.Get<MultiplayerInfrastructure.UI.DialoguePanelUIController>(
+        MultiplayerInfrastructure.Registry.RegistryType.UI,
+        MultiplayerInfrastructure.Registry.Registry.TypeKey<MultiplayerInfrastructure.UI.DialoguePanelUIController>());
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}",
+        string.IsNullOrWhiteSpace(_missingItemDialogue) ? "(필요한 물품을 갖고 있지 않다.)" : $"({_missingItemDialogue})");
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}",
+        string.IsNullOrWhiteSpace(_findItemDialogue) ? "(필요한 물품을 찾자.)" : $"({_findItemDialogue})");
     }
 
     public void SetEnabled(bool enabled)

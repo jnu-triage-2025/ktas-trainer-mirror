@@ -102,7 +102,8 @@ namespace TriageTrainer.Entity
 
     private const string BloodPlasmaRequiredSignal = "blood_to_lv1_requires_plasma";
 
-    private sealed class AddFluidInteract : IInteract, IInteractorConditional, IInteractDisplayIcons
+    private sealed class AddFluidInteract : IInteract, IInteractorConditional, IInteractDisplayIcons,
+      IQuestPresentationTarget
     {
       private readonly Level1RapidInfuserController _owner;
       private readonly FluidKind _kind;
@@ -119,6 +120,13 @@ namespace TriageTrainer.Entity
         : _kind == FluidKind.PlasmaSolution
           ? "Plasma Solution 연결"
           : "혈액백 연결";
+      public string PresentationEntityIdentifier => _owner.Identifier;
+      public string InteractionIdentifier => _kind switch
+      {
+        FluidKind.NormalSaline => InteractIdAddNormalSaline,
+        FluidKind.PlasmaSolution => InteractIdAddPlasmaSolution,
+        _ => InteractIdAddBloodBag
+      };
       public Sprite DisplayIcon => null;
       public IReadOnlyList<Sprite> DisplayIcons => new[] { Icon.ClearRightBottom, _heldItemIcon };
       public bool AllowDisplayIconFallback => true;
@@ -141,13 +149,16 @@ namespace TriageTrainer.Entity
       }
     }
 
-    private sealed class ConnectCLineInteract : IInteract, IInteractorConditional
+    private sealed class ConnectCLineInteract : IInteract, IInteractorConditional,
+      IQuestPresentationTarget
     {
       private readonly Level1RapidInfuserController _owner;
 
       public ConnectCLineInteract(Level1RapidInfuserController owner) { _owner = owner; }
 
       public string DisplayText => "환자에게 C라인 연결";
+      public string PresentationEntityIdentifier => _owner.Identifier;
+      public string InteractionIdentifier => InteractIdConnectCLine;
       public Sprite DisplayIcon => null;
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;
@@ -211,6 +222,11 @@ namespace TriageTrainer.Entity
     private const float InteractionDistance = 3f;
     private const float FluidConfirmationRetrySeconds = 1f;
 
+    public const string InteractIdAddNormalSaline = "level1_add_normal_saline";
+    public const string InteractIdAddPlasmaSolution = "level1_add_plasma_solution";
+    public const string InteractIdAddBloodBag = "level1_add_blood_bag";
+    public const string InteractIdConnectCLine = "level1_connect_cline";
+
     public event Action<RapidInfuserFluidLifecycleEvent> OnPlasmaTry;
     public event Action<RapidInfuserFluidLifecycleEvent> OnBloodTry;
     public event Action<RapidInfuserFluidLifecycleEvent> OnPlasmaCancelled;
@@ -266,6 +282,7 @@ namespace TriageTrainer.Entity
     {
       Awake_MinecraftBoatLikeControl();
       Configure(1); // Level 1 Rapid Infuser는 한 명만 조종한다.
+      EnsureDisplayReferences();
       if (_ivConnectionPoint != null)
       {
         _ivConnectionPoint.OnConnected += OnIntravenousLineConnected;
@@ -1219,9 +1236,45 @@ namespace TriageTrainer.Entity
 
     private void ApplyDisplays()
     {
+      EnsureDisplayReferences();
       if (_normalSalineDisplay != null) _normalSalineDisplay.SetActive(HasNormalSaline);
       if (_plasmaSolutionDisplay != null) _plasmaSolutionDisplay.SetActive(HasPlasmaSolution);
       if (_bloodBagDisplay != null) _bloodBagDisplay.SetActive(HasBloodBag);
+    }
+
+    private void EnsureDisplayReferences()
+    {
+      _normalSalineDisplay ??= FindChildGameObject("NormalSalineDisplay")
+                               ?? FindClosestDirectChild(new Vector3(-0.15f, 1.3f, 0f));
+      _plasmaSolutionDisplay ??= FindChildGameObject("PlasmaSolutionDisplay")
+                                 ?? FindClosestDirectChild(new Vector3(0.15f, 1.3f, 0f));
+      _bloodBagDisplay ??= FindChildGameObject("BloodBagDisplay")
+                           ?? FindClosestDirectChild(new Vector3(0f, 1.3f, 0.15f));
+    }
+
+    private GameObject FindChildGameObject(string childName)
+    {
+      var children = GetComponentsInChildren<Transform>(true);
+      for (int i = 0; i < children.Length; i++)
+        if (children[i] != null && string.Equals(children[i].name, childName, StringComparison.Ordinal))
+          return children[i].gameObject;
+      return null;
+    }
+
+    private GameObject FindClosestDirectChild(Vector3 expectedLocalPosition)
+    {
+      Transform closest = null;
+      float closestDistance = 0.01f * 0.01f;
+      for (int i = 0; i < transform.childCount; i++)
+      {
+        var child = transform.GetChild(i);
+        float distance = (child.localPosition - expectedLocalPosition).sqrMagnitude;
+        if (distance > closestDistance)
+          continue;
+        closest = child;
+        closestDistance = distance;
+      }
+      return closest != null ? closest.gameObject : null;
     }
 
     private static PlayerController FindPlayer(int clientId)

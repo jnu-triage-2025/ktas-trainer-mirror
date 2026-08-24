@@ -18,7 +18,9 @@ namespace TriageTrainer.Tests
     private const string PatientAPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeA.prefab";
     private const string RapidInfuserPrefabPath =
-      "Assets/Modules/TriageTrainer/Prefabs/Entities/level1_rapid_infuser.prefab";
+      "Assets/Modules/TriageTrainer/Prefabs/Entities/MinecraftBoatLikes/level1_rapid_infuser.prefab";
+    private const string PatientAScenarioPath =
+      "Assets/Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json";
     private const string PatientAScenarioGlob = "patient_a_critical*.scenario.json";
     private const string PatientAScenarioSourcePath =
       "Documents/requirements/content-definitions/scenario/patient_a_critical.md";
@@ -83,6 +85,33 @@ namespace TriageTrainer.Tests
       {
         UnityEngine.Object.DestroyImmediate(instance);
       }
+    }
+
+    [Test]
+    public void PatientAPrefabProvidesDedicatedRightArmIvConnectionPoint()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+
+      var points = prefab.GetComponentsInChildren<
+        TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint>(true);
+      Assert.That(Array.Exists(points,
+        point => point != null && point.Identifier == "patient_a_cannula_right_port"), Is.True);
+    }
+
+    [Test]
+    public void PatientAScenarioWaitsForRightArmPlasmaAndCLineConnections()
+    {
+      string json = File.ReadAllText(PatientAScenarioPath);
+      StringAssert.Contains("\"registryIdentifier\": \"sig.connect_ps1_right\"", json);
+      StringAssert.Contains("\"registryIdentifier\": \"sig.connect_cline_to_lv1\"", json);
+      StringAssert.IsMatch("(?s)\"E021\".*?\"nextIdentifier\": \"V017_4\"", json);
+      StringAssert.IsMatch("(?s)\"V017_4\".*?\"nextIdentifier\": \"E022\"", json);
+      StringAssert.IsMatch("(?s)\"V020\".*?\"nextIdentifier\": \"N014_1\"", json);
+      StringAssert.IsMatch("(?s)\"V020_1\".*?\"nextIdentifier\": \"E024\"", json);
+      StringAssert.IsMatch("(?s)\"D019\".*?@t=\\[nurse_d, @s\\]", json);
+      StringAssert.IsMatch("(?s)\"D020\".*?@t=\\[nurse_d, @s\\]", json);
+      StringAssert.IsMatch("(?s)\"D021\".*?\"speakerName\": \"@s\"", json);
     }
 
     [TestCase("PlasmaSolution", "sig.connect_ps1_to_lv1")]
@@ -355,6 +384,194 @@ namespace TriageTrainer.Tests
         UnityEngine.Object.DestroyImmediate(hotbarObject);
         UnityEngine.Object.DestroyImmediate(playerObject);
       }
+    }
+
+    [Test]
+    public void PatientATPieceUsesOxygenLineAndRequiredItems()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+
+      var tPiecePort = Array.Find(
+        prefab.GetComponentsInChildren<Transform>(true),
+        each => each != null && each.name == "TPieceLinePort");
+      Assert.That(tPiecePort, Is.Not.Null);
+      Assert.That(
+        tPiecePort.GetComponent<TriageTrainer.Entity.OxyLine.OxyLineConnectionPoint>(),
+        Is.Not.Null,
+        "T-piece는 수액 연결점이 아니라 산소줄 연결점을 사용해야 합니다.");
+      Assert.That(
+        tPiecePort.GetComponent<TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint>(),
+        Is.Null);
+      Assert.That(
+        tPiecePort.GetComponent<TriageTrainer.Entity.OxyLine.OxyLinePairInteractable>(),
+        Is.Not.Null);
+
+      var scenarioActions = prefab.GetComponentsInChildren<ScenarioActionInteractable>(true);
+      var tPieceAction = Array.Find(
+        scenarioActions,
+        each => each != null && each.CompletionSignal == "interact_tpiece");
+      Assert.That(tPieceAction, Is.Not.Null);
+      Assert.That(typeof(ScenarioActionInteractable).GetField(
+          "_requiredItemIdentifier", BindingFlags.Instance | BindingFlags.NonPublic)
+        ?.GetValue(tPieceAction), Is.EqualTo("tpiece_set"));
+      Assert.That(typeof(ScenarioActionInteractable).GetField(
+          "_consumeRequiredItemCount", BindingFlags.Instance | BindingFlags.NonPublic)
+        ?.GetValue(tPieceAction), Is.EqualTo(1));
+    }
+
+    [Test]
+    public void PatientAP004SeparatesIntubationAndOxygenBranches()
+    {
+      string path = Path.Combine(Directory.GetParent(Application.dataPath).FullName,
+        "Assets/Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json");
+      string json = File.ReadAllText(path);
+      int p004Start = json.IndexOf("\"P004\":", StringComparison.Ordinal);
+      int p005Start = json.IndexOf("\"P005\":", p004Start, StringComparison.Ordinal);
+      Assert.That(p004Start, Is.GreaterThanOrEqualTo(0));
+      Assert.That(p005Start, Is.GreaterThan(p004Start));
+      string p004 = json.Substring(p004Start, p005Start - p004Start);
+
+      StringAssert.Contains("CC_B_intubation_patient_a", p004);
+      StringAssert.Contains("CC_A_oxygen_patient_a", p004);
+      StringAssert.Contains("CC_C_stopbleeding_patient_a", p004);
+      StringAssert.Contains("CC_D_iv_patient_a", p004);
+      StringAssert.Contains("\"identifier\": \"Q011\"", p004);
+      StringAssert.Contains("patient_a_intubation_complete", json);
+      StringAssert.Contains("\"operation\": \"Resolve\"", json);
+      StringAssert.Contains("\"operation\": \"Register\"", json);
+      StringAssert.DoesNotContain("\"eventIdentifier\": \"insert_et_tube\"", json);
+      StringAssert.DoesNotContain("\"eventIdentifier\": \"remove_stylet\"", json);
+
+      string treatmentSignalSource = File.ReadAllText(Path.Combine(
+        Directory.GetParent(Application.dataPath).FullName,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.PatientATreatmentSignals.cs"));
+      StringAssert.Contains("sig.pass_et_tube_ready", treatmentSignalSource);
+      StringAssert.Contains("sig.remove_intu_stylet", treatmentSignalSource);
+      StringAssert.Contains("endotracheal_tube_stylet_inserted", treatmentSignalSource);
+      StringAssert.Contains("endotracheal_tube_insert_done", treatmentSignalSource);
+    }
+
+    [Test]
+    public void PatientAStartWaitsForEveryActiveNurseArrival()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string scenario = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json"));
+      string quests = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Resources/Quest/patient_a_critical.quests.quest.json"));
+
+      StringAssert.Contains("\"sourceSignalPrefix\": \"quest_arrival_patient_a_\"", scenario);
+      StringAssert.Contains("\"useActiveRoleRosterThreshold\": true", scenario);
+      StringAssert.Contains("\"outputSignalIdentifier\": \"all_nurses_arrived_patient_a\"", scenario);
+      StringAssert.Contains("\"identifier\": \"P_START_A\"", scenario);
+      StringAssert.Contains("\"identifier\": \"P_ARRIVAL_A\"", scenario);
+      foreach (string role in new[] { "nurse_a", "nurse_b", "nurse_c", "nurse_d" })
+        StringAssert.Contains($"\"requiredPlayerTags\": [\"{role}\"]", scenario);
+
+      StringAssert.Contains("\"identifier\": \"Quest_Arrive_PatientA\"", quests);
+      StringAssert.Contains("\"waypointIdentifier\": \"scen_a:quest_arrival_patient_a\"", quests);
+      StringAssert.Contains("\"type\": \"WaypointReached\"", quests);
+    }
+
+    [Test]
+    public void PatientA636GraphLoadsWithSchemaValidation()
+    {
+      string path = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json");
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
+
+      Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_A"));
+      Assert.That(graph.ClientSignalPrefixes,
+        Does.Contain("sig.quest_arrival_patient_a_"));
+      Assert.That(graph.Nodes, Contains.Key("COUNT_ARRIVAL_A"));
+      Assert.That(graph.Nodes, Contains.Key("P_START_A"));
+      Assert.That(graph.Nodes, Contains.Key("P_ARRIVAL_A"));
+    }
+
+    [Test]
+    public void PatientA636RequiredItemsAreCheckedAtTheirInteractions()
+    {
+      var patientPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
+      var patient = patientPrefab.GetComponent<PatientController>();
+      var assessActions = typeof(PatientController).GetField(
+          "_assessActions", BindingFlags.Instance | BindingFlags.NonPublic)
+        ?.GetValue(patient) as System.Collections.IEnumerable;
+      object vitalAssess = null;
+      foreach (object action in assessActions ?? Array.Empty<object>())
+      {
+        string identifier = action?.GetType().GetProperty("Identifier")?.GetValue(action) as string;
+        if (identifier == "assess_vital") vitalAssess = action;
+      }
+      Assert.That(vitalAssess, Is.Not.Null);
+      Assert.That(vitalAssess.GetType().GetProperty("RequiredItemIdentifier")?.GetValue(vitalAssess),
+        Is.EqualTo("vital_set"));
+
+      string suctionSource = File.ReadAllText(Path.Combine(
+        Directory.GetParent(Application.dataPath).FullName,
+        "Assets/Modules/TriageTrainer/Scripts/Entities/WallAttachedWallSuction/WallAttachedWallSuction.cs"));
+      StringAssert.Contains("yankauer_suction_ready", suctionSource);
+      StringAssert.Contains("connect_wall_component_and_yankauer", suctionSource);
+      StringAssert.Contains("LineRenderer", suctionSource);
+      StringAssert.Contains("DisconnectYankauer", suctionSource);
+    }
+
+    [Test]
+    public void PatientA636NarrativeMilestonesArePresentWithoutLegacyPlaybackEvents()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string scenario = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json"));
+      string quests = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Resources/Quest/patient_a_critical.quests.quest.json"));
+
+      foreach (string expected in new[]
+               {
+                 "scen_a:patient_spawnpoint_a",
+                 "scen_a:doctor_treatment_room_waypoint",
+                 "흉부 관통상 환자 한 명 이송. 처치실 담당자는 지금 바로 와주세요.",
+                 "상태 확인부터 하겠습니다. @t=[nurse_b, ???]선생님은 활력징후 측정해 주시고, @t=[nurse_c, ???]선생님은 의식 상태 사정해 주세요.",
+                 "AVPU 중 P이며, GCS는 E2 / V2 / M4로 총 8점입니다.",
+                 "경추 고정, 구강 흡인 완료했습니다.",
+                 "기도 확보를 위해 intubation을 시행하겠습니다. @t=[nurse_b, ???]선생님은 보조해주세요.",
+                 "들어갔습니다. 스타일렛 빼주세요.",
+                 "삽입된 깊이 23cm, 기관내관 고정되었습니다.",
+                 "산소 투여 시작했습니다.",
+                 "지혈 중입니다. 거즈 고정했습니다."
+               })
+        StringAssert.Contains(expected, scenario);
+
+      foreach (string forbiddenEvent in new[]
+               {
+                 "\"eventIdentifier\": \"activate_vital_monitor_ui_patient_a\"",
+                 "\"eventIdentifier\": \"vitalinfo_1_patient_a\"",
+                 "\"eventIdentifier\": \"insert_et_tube\"",
+                 "\"eventIdentifier\": \"remove_stylet\"",
+                 "\"eventIdentifier\": \"connect_tpiece_ready\""
+               })
+        StringAssert.DoesNotContain(forbiddenEvent, scenario);
+
+      foreach (string assessment in new[]
+               {
+                 "patient_a_initial_avpu",
+                 "patient_a_initial_gcs_eye",
+                 "patient_a_initial_gcs_verbal",
+                 "patient_a_initial_gcs_motor",
+                 "patient_a_oxygen_flow_lpm"
+               })
+        StringAssert.Contains(assessment, scenario);
+
+      foreach (string taskSignal in new[]
+               {
+                 "show_vital_patient_a", "close_vital_ui_a", "check_avpu_gcs_patient_a",
+                 "apply_stabilizer_patient_a", "connect_wall_component_1",
+                 "connect_wall_component_and_yankauer", "suction_patient_a",
+                 "pass_laryngoscope", "pass_et_tube_ready", "remove_intu_stylet",
+                 "pass_syringe", "apply_plaster_on_intu", "connect_wall_component_2",
+                 "interact_tpiece", "connect_tpiece_and_oxyflow", "interact_oxyflow_wall",
+                 "wear_glove", "apply_gauze", "apply_plaster_on_gauze"
+               })
+        StringAssert.Contains($"\"signalId\": \"{taskSignal}\"", quests);
     }
 
     [Test]

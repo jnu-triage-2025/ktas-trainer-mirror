@@ -307,11 +307,13 @@ namespace TriageTrainer.Scenario
 
     private void Awake()
     {
+      EnsurePatientAWorldAnchors();
       RegisterScenarioGraphs();
     }
 
     private void OnEnable()
     {
+      EnablePatientATreatmentSignalHandlers();
       RegisterIntroAndPatientAEvents();
       RegisterPatientBCEvents();
 
@@ -323,6 +325,7 @@ namespace TriageTrainer.Scenario
 
     private void OnDisable()
     {
+      DisablePatientATreatmentSignalHandlers();
       DisposePatientBCFinalFadeOverlay();
       for (int i = 0; i < _registeredEventIds.Count; i++)
       {

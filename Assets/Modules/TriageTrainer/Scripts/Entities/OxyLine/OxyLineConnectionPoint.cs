@@ -34,6 +34,12 @@ namespace TriageTrainer.Entity.OxyLine
         return;
 
       patient.NotifyOxygenLineConnected();
+      if (string.Equals(patient.Identifier, "patient_a", System.StringComparison.Ordinal))
+      {
+        patient.SetTreatmentApplied("oxygen_line_connected", true);
+        MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(
+          "connect_tpiece_and_oxyflow");
+      }
     }
   }
 }

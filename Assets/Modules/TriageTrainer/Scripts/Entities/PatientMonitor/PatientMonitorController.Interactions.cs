@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Entity;
 using UnityEngine;
 
@@ -54,6 +55,11 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       {
         if (!CanInteract(interactor))
           return;
+        var patient = _owner.MonitoringPatient;
+        if (patient != null
+            && string.Equals(patient.Identifier, "patient_a", System.StringComparison.Ordinal)
+            && ScenarioController.Instance?.CurrentGraph?.Identifier == "patient_a_critical")
+          _owner.ArmScenarioClose(patient, "close_vital_ui_a");
         _owner.OpenDetailedContentOverlay();
       }
     }

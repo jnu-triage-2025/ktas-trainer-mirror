@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.OxyLine;
@@ -82,7 +83,8 @@ namespace TriageTrainer.Entity
     /// 상호작용으로 표시된 상태를 "설치했다 / 적용했다" 로 이해하며, 이후 데이터로 사용할 수 있도록 공개합니다.
     /// 서버 권위 프로토콜에 의해 모든 클라이언트에서 동일하게 반영됩니다.
     /// </summary>
-    public bool IsAttached { get; private set; }
+    [SerializeField] private bool _isAttached;
+    public bool IsAttached => _isAttached;
     public override string PresentationEntityIdentifier => EntityIdentifier;
     public override string InteractionIdentifier
     {
@@ -212,7 +214,7 @@ namespace TriageTrainer.Entity
       }
 
       _heldItemIcon = player.HandlingItem?.CurrentItemIconTexture;
-      return IsHandlingOxyflowmeter(player);
+      return true;
     }
 
     // ── IInteract ─────────────────────────────────────────────────────────────
@@ -247,10 +249,25 @@ namespace TriageTrainer.Entity
         return;
       }
 
+      if (!IsHandlingOxyflowmeter(player))
+      {
+        ShowMissingOxyflowmeterDialogue();
+        return;
+      }
+
       // 표시(설치) 요청을 베이스에 위임한다. ShareMode 에 따라 서버 전파(ServerShared) 또는 로컬 전용(LocalOnly)으로 처리된다.
       // - ServerShared: 서버 승인 → 요청자 인벤토리에서 산소 유량계 소비 → 확정 시 전체 브로드캐스트.
       // - LocalOnly: 이 클라이언트에서만 소비하고 즉시 표시.
       RequestApplyShown(player, RequiredItemIdentifier, Mathf.Max(1, _consumeCount));
+    }
+
+    private static void ShowMissingOxyflowmeterDialogue()
+    {
+      var dialogue = MultiplayerInfrastructure.Registry.Registry.Get<DialoguePanelUIController>(
+        MultiplayerInfrastructure.Registry.RegistryType.UI,
+        MultiplayerInfrastructure.Registry.Registry.TypeKey<DialoguePanelUIController>());
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(완성된 산소 유량계를 갖고 있지 않다.)");
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(습윤병, 1L 멸균증류수, 유량계를 찾아 조립하자.)");
     }
 
     // ── 표시 적용 (서버 권위 RPC 에서 호출) ────────────────────────────────────
@@ -377,7 +394,10 @@ namespace TriageTrainer.Entity
     {
       if (IsAttached == attached)
         return;
-      IsAttached = attached;
+      _isAttached = attached;
+      GameLogService.WriteInteraction(
+        $"Oxygen flowmeter attachment state: entity={EntityIdentifier}, attached={attached}",
+        EntityIdentifier);
       AttachmentStateChanged?.Invoke(this, attached);
     }
 

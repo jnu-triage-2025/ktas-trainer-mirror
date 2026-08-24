@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.SuctionLine;
@@ -37,6 +38,37 @@ namespace TriageTrainer.Entity
   [DisallowMultipleComponent]
   public class WallAttachedWallSuction : StaticObjectDisplayment, INearestOnlyInteract
   {
+    private sealed class YankauerConnectionInteract : IInteract, IInteractorConditional, IQuestPresentationTarget
+    {
+      private readonly WallAttachedWallSuction _owner;
+      public YankauerConnectionInteract(WallAttachedWallSuction owner) => _owner = owner;
+      public string DisplayText => _owner._yankauerConnected ? "양카우어를 흡인기에서 분리" : "앙카우어 팁 연결";
+      public string PresentationEntityIdentifier => "patient_a_wall_suction";
+      public string InteractionIdentifier => "connect_yankauer";
+      public Sprite DisplayIcon => null;
+      public bool AllowDisplayIconFallback => true;
+      public Color DisplayColor => Color.white;
+      public bool CanInteract(Transform interactor) =>
+        _owner.IsPatientAInstallationTarget && _owner.IsAttached
+        && interactor?.GetComponentInParent<PlayerController>() != null;
+      public void Interact(Transform interactor)
+      {
+        if (!CanInteract(interactor)) return;
+        var player = interactor.GetComponentInParent<PlayerController>();
+        if (_owner._yankauerConnected)
+        {
+          _owner.DisconnectYankauer();
+          return;
+        }
+        if (player.CountItemInInventory("yankauer_suction_ready") < 1)
+        {
+          _owner.ShowMissingYankauerDialogue();
+          return;
+        }
+        _owner.ConnectYankauer(player);
+      }
+    }
+
     public static event Action<WallAttachedWallSuction, bool> AttachmentStateChanged;
     /// <summary>플레이어 상호작용으로 새 설치가 확정된 경우에만 발생한다.</summary>
     public static event Action<WallAttachedWallSuction> InstallationConfirmed;
@@ -59,15 +91,32 @@ namespace TriageTrainer.Entity
 
     [Tooltip("자동 석션 라인 연결에 사용할 장비 측 포트입니다.")]
     [SerializeField] private SuctionLineConnectionPoint _suctionLineConnectionPoint;
+    [SerializeField] private bool _yankauerConnected;
+    private PlayerController _yankauerHolder;
+    private LineRenderer _yankauerLine;
+    private YankauerConnectionInteract _yankauerInteract;
+
+    public override IInteract[] Interacts => new IInteract[]
+    {
+      this,
+      _yankauerInteract ??= new YankauerConnectionInteract(this)
+    };
 
     /// <summary>
     /// 이 석션 유닛이 벽면에 설치(적용)되었는지 여부입니다.
     /// 상호작용으로 표시된 상태를 "설치했다 / 적용했다" 로 이해하며, 이후 데이터로 사용할 수 있도록 공개합니다.
     /// 서버 권위 프로토콜(ServerShared)에서는 모든 클라이언트에서 동일하게 반영됩니다.
     /// </summary>
-    public bool IsAttached { get; private set; }
+    [SerializeField] private bool _isAttached;
+    public bool IsAttached => _isAttached;
     /// <summary>석션 라인 자동 연결에 사용할 장비 측 포트. 프리팹에 설정되지 않으면 null이다.</summary>
     public SuctionLineConnectionPoint SuctionLineConnectionPoint => _suctionLineConnectionPoint;
+    private bool IsPatientAInstallationTarget =>
+      string.Equals(_attachCompletionSignal, "connect_wall_component_1", StringComparison.Ordinal);
+    public override string PresentationEntityIdentifier =>
+      IsPatientAInstallationTarget ? "patient_a_wall_suction" : base.PresentationEntityIdentifier;
+    public override string InteractionIdentifier =>
+      IsPatientAInstallationTarget ? "wall_suction_install" : base.InteractionIdentifier;
     private Sprite _heldItemIcon;
 
     protected override string EntityIdPrefix => "wall_suction";
@@ -121,7 +170,7 @@ namespace TriageTrainer.Entity
       }
 
       _heldItemIcon = player.HandlingItem?.CurrentItemIconTexture;
-      return IsHandlingWallSuction(player);
+      return true;
     }
 
     // ── IInteract ─────────────────────────────────────────────────────────────
@@ -142,10 +191,88 @@ namespace TriageTrainer.Entity
         return;
       }
 
+      if (!IsHandlingWallSuction(player))
+      {
+        ShowMissingWallSuctionDialogue();
+        return;
+      }
+
       // 표시(설치) 요청을 베이스에 위임한다. ShareMode 에 따라 서버 전파(ServerShared) 또는 로컬 전용(LocalOnly)으로 처리된다.
       // - ServerShared: 서버 승인 → 요청자 인벤토리에서 석션 유닛 소비 → 확정 시 전체 브로드캐스트.
       // - LocalOnly: 이 클라이언트에서만 소비하고 즉시 표시.
       RequestApplyShown(player, RequiredItemIdentifier, Mathf.Max(1, _consumeCount));
+    }
+
+    private static void ShowMissingWallSuctionDialogue()
+    {
+      var dialogue = MultiplayerInfrastructure.Registry.Registry.Get<DialoguePanelUIController>(
+        MultiplayerInfrastructure.Registry.RegistryType.UI,
+        MultiplayerInfrastructure.Registry.Registry.TypeKey<DialoguePanelUIController>());
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(흡인기를 갖고 있지 않다.)");
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(흡인기를 찾자.)");
+    }
+
+    private void ShowMissingYankauerDialogue()
+    {
+      var dialogue = MultiplayerInfrastructure.Registry.Registry.Get<DialoguePanelUIController>(
+        MultiplayerInfrastructure.Registry.RegistryType.UI,
+        MultiplayerInfrastructure.Registry.Registry.TypeKey<DialoguePanelUIController>());
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(석션 라인과 앙카우어 팁을 조립해두지 않았다.)");
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(석션 라인과 앙카우어 팁을 찾아 조립하자.)");
+    }
+
+    private void ConnectYankauer(PlayerController player)
+    {
+      _yankauerConnected = true;
+      _yankauerHolder = player;
+      var lineObject = new GameObject("PatientA_YankauerSuctionLine");
+      lineObject.transform.SetParent(transform, false);
+      _yankauerLine = lineObject.AddComponent<LineRenderer>();
+      _yankauerLine.positionCount = 2;
+      _yankauerLine.useWorldSpace = true;
+      _yankauerLine.startWidth = SuctionLineConnectionPoint.LineWidth;
+      _yankauerLine.endWidth = SuctionLineConnectionPoint.LineWidth;
+      _yankauerLine.material = SuctionLineConnectionPoint.DefaultMaterial;
+      UpdateYankauerLine();
+      GameLogService.WriteInteraction(
+        $"Yankauer suction line connected: entity={EntityIdentifier}, player={player.ScenarioEntityIdentifier}",
+        EntityIdentifier);
+      MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(
+        "connect_wall_component_and_yankauer");
+      player.RefreshInteractableHintsNow();
+    }
+
+    private void LateUpdate()
+    {
+      if (!_yankauerConnected) return;
+      if (_yankauerHolder == null
+          || _yankauerHolder.CountItemInInventory("yankauer_suction_ready") < 1)
+      {
+        DisconnectYankauer();
+        return;
+      }
+      UpdateYankauerLine();
+    }
+
+    private void UpdateYankauerLine()
+    {
+      if (_yankauerLine == null || _yankauerHolder == null) return;
+      _yankauerLine.SetPosition(0,
+        _suctionLineConnectionPoint != null ? _suctionLineConnectionPoint.transform.position : transform.position);
+      _yankauerLine.SetPosition(1, _yankauerHolder.transform.position + Vector3.up * 0.9f);
+    }
+
+    private void DisconnectYankauer()
+    {
+      if (!_yankauerConnected) return;
+      _yankauerConnected = false;
+      _yankauerHolder = null;
+      if (_yankauerLine != null) Destroy(_yankauerLine.gameObject);
+      _yankauerLine = null;
+      GameLogService.WriteInteraction(
+        $"Yankauer suction line disconnected: entity={EntityIdentifier}", EntityIdentifier);
+      MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Clear(
+        "connect_wall_component_and_yankauer");
     }
 
     // ── 표시 적용 ──────────────────────────────────────────────────────────────
@@ -210,7 +337,10 @@ namespace TriageTrainer.Entity
     {
       if (IsAttached == attached)
         return;
-      IsAttached = attached;
+      _isAttached = attached;
+      GameLogService.WriteInteraction(
+        $"Wall suction attachment state: entity={EntityIdentifier}, attached={attached}",
+        EntityIdentifier);
       AttachmentStateChanged?.Invoke(this, attached);
     }
 

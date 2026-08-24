@@ -13,6 +13,16 @@ namespace TriageTrainer.Scenario
     {
       ResolveRuntimeReferencesIfNeeded();
 
+      ResolvePatientVitalMonitor(_patientAObject,
+        ref _patientAVitalMonitorObject,
+        ref _patientAVitalMonitorController);
+      var patient = _patientAObject != null
+        ? _patientAObject.GetComponentInChildren<TriageTrainer.Entity.PatientController>(true)
+        : null;
+      ConfigureVitalMonitorClose(_patientAVitalMonitorController,
+        patient,
+        "close_vital_ui_a");
+
       SetActiveIfPresent(_patientAVitalMonitorObject, true);
       SetActiveIfPresent(_patientAVitalPanel, true);
 

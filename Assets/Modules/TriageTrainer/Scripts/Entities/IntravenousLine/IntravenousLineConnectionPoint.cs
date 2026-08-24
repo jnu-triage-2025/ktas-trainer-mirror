@@ -44,12 +44,15 @@ namespace TriageTrainer.Entity.IntravenousLine
       }
     }
 
-    private sealed class StartConnectionInteract : IInteract, IInteractorConditional, IInteractDisplayIcons
+    private sealed class StartConnectionInteract : IInteract, IInteractorConditional,
+      IInteractDisplayIcons, IQuestPresentationTarget
     {
       private readonly IntravenousLineConnectionPoint _owner;
       public StartConnectionInteract(IntravenousLineConnectionPoint owner) { _owner = owner; }
 
       public string DisplayText => "수액 줄 연결 시작";
+      public string PresentationEntityIdentifier => _owner.Identifier;
+      public string InteractionIdentifier => InteractIdStartConnectionMode;
       public Sprite DisplayIcon => _owner._displayIcon;
       public IReadOnlyList<Sprite> DisplayIcons => new[] { Icon.ClearRightBottom, IntravenousSetIcon };
       public bool AllowDisplayIconFallback => true;
@@ -534,6 +537,7 @@ namespace TriageTrainer.Entity.IntravenousLine
     private void RaiseConnectionSignals(IntravenousLineConnectionPoint other)
     {
       string otherIdentifier = other != null ? other.Identifier : null;
+      TryCompletePatientAFluidConnection(other);
       bool normalSalineHandledByPatient = TryCompletePatientScopedNormalSalineConnection(other);
       var normalSalinePoint = ResolveNormalSalinePoint(other);
 
@@ -547,6 +551,40 @@ namespace TriageTrainer.Entity.IntravenousLine
 
       if (!string.IsNullOrWhiteSpace(_identifier) && !string.IsNullOrWhiteSpace(otherIdentifier))
         MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise($"{_identifier}__{otherIdentifier}");
+    }
+
+    /// <summary>
+    /// 환자 A의 양측 정맥로는 침대 수액 종류와 팔별 연결점을 함께 확인해 의미 기반 완료 신호를 올린다.
+    /// 연결점의 임의 식별자 조합에 시나리오 진행이 종속되지 않게 한다.
+    /// </summary>
+    private void TryCompletePatientAFluidConnection(IntravenousLineConnectionPoint other)
+    {
+      if (other == null)
+        return;
+
+      // 연결 완료 알림은 양 끝점에서 각각 호출된다. 환자 측 끝점에서만 처리해
+      // 상태 기록과 완료 신호가 중복 발생하지 않게 한다.
+      var patient = GetComponentInParent<PatientController>();
+      var bed = GetComponentInParent<MovingPatientBedController>()
+                ?? other.GetComponentInParent<MovingPatientBedController>();
+      if (patient == null || bed == null
+          || !string.Equals(patient.Identifier, "patient_a", StringComparison.Ordinal))
+        return;
+
+      var patientPoint = this;
+      var fluidPoint = other;
+      if (bed.IsNormalSalineConnectionPoint(fluidPoint)
+          && string.Equals(patientPoint.Identifier, "patient_a_cannula_left_port", StringComparison.Ordinal))
+      {
+        patient.SetIVFluidConnection(true, fluidPoint);
+        MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise("connect_cannula_and_ns1");
+      }
+      else if (bed.IsPlasmaSolutionConnectionPoint(fluidPoint)
+               && string.Equals(patientPoint.Identifier, "patient_a_cannula_right_port", StringComparison.Ordinal))
+      {
+        patient.SetIVFluidConnection(false, fluidPoint);
+        MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise("connect_ps1_right");
+      }
     }
 
     private bool TryCompletePatientScopedNormalSalineConnection(IntravenousLineConnectionPoint other)

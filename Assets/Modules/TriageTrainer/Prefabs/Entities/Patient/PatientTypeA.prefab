@@ -325,6 +325,7 @@ GameObject:
   - component: {fileID: 7820200844335860656}
   - component: {fileID: 4099956238603553349}
   - component: {fileID: 1599706029501451718}
+  - component: {fileID: 900000000000000001}
   m_Layer: 0
   m_Name: TPieceLinePort
   m_TagString: Untagged
@@ -377,23 +378,29 @@ MonoBehaviour:
   m_GameObject: {fileID: 1582032648431365702}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
+  m_Script: {fileID: 11500000, guid: b76115154ba474fbe9ed4b018f1cb552, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.OxyLine.OxyLineConnectionPoint
   _lineMaterial: {fileID: 0}
   _connectedLineObjects: []
   _allowMultipleConnections: 0
-  connectionService: {fileID: 0}
-  _identifier: connect_tpiece_and_oxyflow
-  _autoGenerateIdentifier: 0
-  _displayIcon: {fileID: 0}
-  _interactConfigs:
-  - _identifier: intravenous_line_connect_mode_start
-    _enabled: 1
-  - _identifier: intravenous_line_connect_here
-    _enabled: 1
-  - _identifier: intravenous_line_disconnect
-    _enabled: 1
+--- !u!114 &900000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1582032648431365702}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4df3cc4b0f7d4141bd6e9f57d6657ea2, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.OxyLine.OxyLinePairInteractable
+  _localEndpoint: {fileID: 1599706029501451718}
+  _counterpart: {fileID: 0}
+  _oxyflowmeter: {fileID: 0}
+  _requiredActiveDisplay: {fileID: 8803091818943228428}
+  _displayText: "T-piece\uC5D0 \uC0B0\uC18C \uC5F0\uACB0"
 --- !u!1 &2224266580779621743
 GameObject:
   m_ObjectHideFlags: 0
@@ -883,6 +890,9 @@ MonoBehaviour:
   - _identifier: assess_vital
     _displayText: "\uD65C\uB825\uC9D5\uD6C4 \uC0AC\uC815"
     _assessSignal: show_vital_patient_a
+    _requiredItemIdentifier: vital_set
+    _missingItemDialogue: "\uD65C\uB825\uC9D5\uD6C4 \uCE21\uC815\uB3C4\uAD6C\uB97C \uAC16\uACE0 \uC788\uC9C0 \uC54A\uB2E4."
+    _findItemDialogue: "\uD65C\uB825\uC9D5\uD6C4 \uCE21\uC815\uB3C4\uAD6C\uB97C \uCC3E\uC790."
     _enabled: 1
   - _identifier: assess_pulse_r1
     _displayText: "\uB9E5\uBC15 \uD655\uC778"
@@ -1192,11 +1202,15 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: interact_tpiece
-  _presentationEntityIdentifier: 
-  _interactionIdentifier: 
+  _presentationEntityIdentifier: patient_a
+  _interactionIdentifier: interact_tpiece
   _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1
+  _requiredItemIdentifier: tpiece_set
+  _consumeRequiredItemCount: 1
+  _missingItemDialogue: "T-piece\uB97C \uAC16\uACE0 \uC788\uC9C0 \uC54A\uB2E4."
+  _findItemDialogue: "T-piece\uB97C \uCC3E\uC790."
   _activateOnInteract:
   - {fileID: 8803091818943228428}
   _deactivateOnInteract: []
@@ -1381,8 +1395,8 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: remove_intu_stylet
-  _presentationEntityIdentifier: 
-  _interactionIdentifier: 
+  _presentationEntityIdentifier: patient_a
+  _interactionIdentifier: remove_intu_stylet
   _requiredRaisedSignals: []
   _enabled: 1
   _consumeOnce: 1

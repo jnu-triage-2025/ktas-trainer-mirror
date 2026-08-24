@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "2-implementing"
 status: active
-updated: 2026-08-22
+updated: 2026-08-24
 flags: ["refactor-required"]
 ---
 
@@ -21,6 +21,8 @@ flags: ["refactor-required"]
 - `Speaker: null`은 화자 표시 없이 상황만 서술하는 지문이다.
 - 콘텐츠에 노출되는 인물은 역할 식별자가 아니라 `남성 환자`, `의사`처럼 플레이어가 화면에서 보는 호칭으로 적는다. `환자 A`, `간호사 B` 같은 내부 식별자는 콘텐츠 문구에 쓰지 않는다.
 - `퀘스트 마크`는 퀘스트 정의의 `presentationBindings`로 대상 상호작용에 표시하는 안내 아이콘을 뜻한다. 마크는 그 마크를 조건으로 삼는 퀘스트 목표가 살아 있는 동안에만 표시되므로, 마크를 붙일 단계마다 대응하는 목표를 함께 둔다.
+
+- 기술 노트: 아래의 내용 중에 "상태값 필드를 업데이트"나 그와 유사한 표현이 나온다면 환자 A 상태를 기술하는 구현 어딘가에 관련한 상태값이 존재하여야 한다. 이것은 환자의 Display Object 활성화 여부와는 별개로 관리되어야 하며(물론 시나리오 상 두 개가 함께 업데이트된다. 값 자체만 나누어 보겠다는 것임), 상태가 업데이트되면 세션 로그에 기록하여야 한다. 만약 이러한 요구사항이 있을 때 필드가 없다면 시리얼라이즈 가능한 필드를 생성하여라. Display Object 구현과 PatientTypeBFemale, PatientTypeBMale 프리팹/컴포넌트/구현의 상황을 참고하여라.
 
 ### 시작
 
@@ -68,6 +70,8 @@ flags: ["refactor-required"]
 위 퀘스트 완료 시 (*1) 내용 시작
 
 ### 초기 평가: 활력징후, 의식 상태, 경추 고정과 구강 흡인
+
+- ManualEntryNode: scen-entry
 
 (*1)
 
@@ -394,6 +398,8 @@ flags: ["refactor-required"]
 
 ### 의사 지시와 역할별 처치
 
+- ManualEntryNode: doc-inst
+
 의사가 역할별로 지시를 내린다.
 
 1. Dialogue
@@ -469,7 +475,7 @@ flags: ["refactor-required"]
     10. 퀘스트 목표 표기를 "기관내관을 플라스터로 고정하기"로 변경
     11. "기관내관 고정" Interaction 활성화
       - 퀘스트 마크: `patient_a` / `item_apply`
-      - 인벤토리에 `plaster` 아이템이 있는지 확인
+      - 인터렉션 시: 인벤토리에 `plaster` 아이템이 있는지 확인
         - 없다면 다음 재생
           1. Dialogue
             - Speaker: `@s`
@@ -477,7 +483,7 @@ flags: ["refactor-required"]
           2. Dialogue
             - Speaker: `@s`
             - Content: "(플라스터를 찾자.)"
-        - 있다면 고정 신호(`sig.apply_plaster_on_intu`)를 수신하고 테이프 소리(`tape_sound`) 재생
+        - 있다면 상태값을 업데이트하고 플라스터 내구도 1 감소시키며 완료 처리
     12. Dialogue
       - Speaker: `@s`
       - Content: "삽입된 깊이 23cm, 기관내관 고정되었습니다."
@@ -486,7 +492,7 @@ flags: ["refactor-required"]
       - Speaker: "의사"
       - Content: "삽관이 끝났고, 자발호흡이 있으니 @t=[nurse_a, ???]선생님이 T-piece를 연결하고 산소 10L를 공급하며 산소포화도를 모니터링해주세요."
       - TTS: true
-      - 기술 노트: 이 대사가 끝나면 삽관 완료 신호를 발신하여 `nurse_a` 브랜치의 산소 공급 흐름을 시작시킨다.
+      - 기술 노트: 이 대사가 끝나면 삽관 완료 신호를 발신하여 `nurse_a`에게 퀘스트를 부여(*refa)
   - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
 - `nurse_a`에게 퀘스트 발행 (`Quest_Oxygen_PatientA`)
   - 제목: "산소 공급"
@@ -494,7 +500,7 @@ flags: ["refactor-required"]
     - 표기: "삽관이 끝날 때까지 기다리기"
     - 처리: 삽관 완료 신호를 수신하면 아래 흐름을 시작한다.
   - 기술 노트: 기존에는 산소 공급 흐름이 삽관 브랜치 안에 이어져 있었으나, 의사의 지시대로 `nurse_a`가 수행하도록 별도 브랜치로 분리한다.
-  - 삽관 완료 신호 수신 후 다음 처리 수행:
+  - (*refa) => 삽관 완료 신호 수신 후 다음 처리 수행:
     1. 퀘스트 목표 표기를 "산소 유량계를 벽에 설치하기"로 변경
     2. Dialogue
       - Speaker: `@s`
@@ -511,8 +517,7 @@ flags: ["refactor-required"]
             2. Dialogue
               - Speaker: `@s`
               - Content: "(습윤병, 1L 멸균증류수, 유량계를 찾아 조립하자.)"
-          - 있다면 설치 신호(`sig.connect_wall_component_2`)를 수신하고 이 목표를 완료 처리
-      - 기술 노트: `oxyflowmeter`는 `humidifier_sterile_distilled_water_bottle`(= `humidifier_bottle` + `sterile_distilled_water`) + `flowmeter` 조합 산출물이다.
+          - 있다면 설치 신호 발생, 목표 완료 처리, 아이템 소모, 상태값과 시각화 오브젝트 상태 업데이트
     4. 퀘스트 목표 표기를 "기관내관에 T-piece를 장착하기"로 변경
     5. "T-piece 장착" Interaction 활성화
       - 퀘스트 마크: 환자 구강에 삽입된 기관내관 / T-piece 장착 상호작용
@@ -525,7 +530,7 @@ flags: ["refactor-required"]
             2. Dialogue
               - Speaker: `@s`
               - Content: "(T-piece를 찾자.)"
-          - 있다면 장착 신호(`sig.interact_tpiece`)를 수신하고 T-piece 시각 오브젝트를 활성화한 뒤 이 목표를 완료 처리
+          - 있다면 장착 신호(`sig.interact_tpiece`)를 수신하고 상태값 필드를 업데이트, T-piece 시각 오브젝트를 활성화한 뒤 이 목표를 완료 처리
     6. 퀘스트 목표 표기를 "T-piece와 벽면 유량계를 산소줄로 연결하기"로 변경
     7. "산소 연결" Interaction 활성화
       - 퀘스트 마크: 장착된 T-piece / 산소 연결 상호작용
@@ -538,7 +543,7 @@ flags: ["refactor-required"]
             2. Dialogue
               - Speaker: `@s`
               - Content: "(산소줄을 찾자.)"
-          - 있다면 연결 신호(`sig.connect_tpiece_and_oxyflow`)를 수신하고 연결 연출(`connect_tpiece_ready`)을 재생한 뒤 이 목표를 완료 처리
+          - 있다면 아이템 소모, 연결 신호 발생, 상태값 및 시각 오브젝트 활성화, 목표 완료 처리, Oxyline을 T-piece와 벽면 유량계에 연결(patient_b_c_ct의 oxyflowmeter 처리를 참고)
       - 기술 노트: T-piece 표시와 설치된 유량계의 어느 쪽을 기준으로 감지해도 이 상호작용이 노출되어야 하며, 실행 시 두 산소 포트를 연결한다. 양측 `OxyLineConnectionPoint` 프리팹 배치가 선행되어야 한다.
     8. 퀘스트 목표 표기를 "투여 산소량을 10L로 맞추기"로 변경
     9. "유량계 조절" Interaction 활성화
@@ -585,8 +590,8 @@ flags: ["refactor-required"]
         2. Dialogue
           - Speaker: `@s`
           - Content: "(멸균장갑을 찾자.)"
-      - 있다면 착용 신호(`sig.wear_glove`)를 수신하고 이 목표를 완료 처리
-      - 기술 노트: 착용은 인벤토리 창의 착용 칸에 아이템을 옮기는 기존 오버월드 동작을 그대로 사용한다.
+    3.1. 채팅으로 텍스트 띄우기: "장갑 아이템을 손에 들고 우클릭하거나 인벤토리의 장갑 슬롯에 장착하여 장갑을 착용할 수 있습니다."
+    3.2. 슬롯에 `sterile_gloves`가 위치한 것이 감지되면 퀘스트 목표 완료 처리
     4. 퀘스트 목표 표기를 "출혈 부위에 거즈를 대고 압박하기"로 변경
     5. "거즈 적용" Interaction 활성화
       - 퀘스트 마크: `patient_a` / `item_apply`
@@ -604,7 +609,7 @@ flags: ["refactor-required"]
               - Speaker: `@s`
               - Content: "(거즈를 출혈 부위에 대고 압박 지혈을 시행했다.)"
               - TTS: false
-            2. 적용 신호(`sig.apply_gauze`)를 수신하고 거즈 적용 연출(`apply_gauze_patient_a`)을 재생한 뒤 이 목표를 완료 처리
+            2. 상태값 필드를 업데이트하고, 시각화 오브젝트를 활성화하며, 플레이어 인벤토리의 `gauze`를 1개 소모, 서버에 처리 완료 신호 브로드캐스트
             3. 퀘스트 목표 표기를 "거즈를 플라스터로 고정하기"로 변경
     6. "거즈 고정" Interaction 활성화
       - 퀘스트 마크: `patient_a` / `item_apply`
@@ -623,19 +628,25 @@ flags: ["refactor-required"]
               - Speaker: `@s`
               - Content: "(거즈 위에 플라스터를 붙여 고정했다.)"
               - TTS: false
-            3. 고정 신호(`sig.apply_plaster_on_gauze`)를 수신하고 고정 연출(`apply_gauze_with_plaster_patient_a`)과 테이프 소리(`tape_sound`)를 재생한 뒤 이 목표를 완료 처리
+            3. 상태값 필드를 업데이트하고, 시각화 오브젝트를 활성화하며, 플레이어 인벤토리의 `plaster`를 내구도 1 소모, 서버에 처리 완료 신호 브로드캐스트
     7. Dialogue
       - Speaker: `@s`
       - Content: "지혈 중입니다. 거즈 고정했습니다."
       - TTS: true
   - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+
+
+
+
+
+
 - `nurse_d`에게 퀘스트 발행 (`Quest_IV_Line_PatientA`)
   - 기술 노트: `nurse_d`가 배정되지 않았다면 `nurse_c`가 이 브랜치를 대신 수행한다(`requiredPlayerTagsMatchMode=Any`).
   - 제목: "말초 정맥로 확보"
   - 목표: ""
   - 퀘스트 발행과 함께 다음 처리 수행:
     1. 퀘스트 목표 표기를 "남성 환자의 좌측 팔에 정맥로 확보하기"로 변경
-    2. "좌측 팔 정맥로 확보" Interaction 활성화
+    2. 1단계 — "좌측 팔 정맥로 확보" Interaction 활성화
       - 퀘스트 마크: `patient_a` / `intravenous_line_cannula`
       - Interaction 활성화 시 다음 재생
         - 인벤토리에 `cannula_18g` 아이템이 있는지 확인
@@ -648,62 +659,79 @@ flags: ["refactor-required"]
               - Content: "(18게이지 캐뉼라를 찾자.)"
           - 있다면 시스템이 좌측 삽입을 처리한 뒤 다음으로 진행
             - 플레이어 인벤토리의 `cannula_18g`를 1개 소모
+            - 환자 Display State Descriptor에서 좌측 팔 정맥로 확보 상태를 표시하는 오브젝트와 상태 플래그를 활성화
+            - 환자 상태값에 18G 캐뉼라가 삽입되었다는(정맥로가 확보되었다는) 상태 플래그 활성화
+            - 이 시점에는 IV Line을 연결하지 않고, 3단계의 별도 Interaction에서 연결한다
             - 삽입 신호(`sig.insert_iv_patient_a_left`)를 수신하고 삽입 연출(`insert_18g_left`)을 재생
             - 퀘스트 목표 표기를 "좌측 팔에 생리식염수 연결하기"로 변경
             - Dialogue
               - Speaker: `@s`
               - Content: "(환자에게 생리식염수를 연결해두자.)"
               - TTS: false
-    3. "생리식염수 연결" Interaction 활성화
+    3. 2단계 — 생리식염수 활성화(환자가 누워있는 침대의 Attachment에 생리식염수 걸기)
+      - 침대에 생리식염수를 거는 동작은 침대 Attachment의 기존 "N/S 수액 걸기" Interaction을 그대로 사용한다.
+        - 이 Interaction은 플레이어 인벤토리에 `normal_saline_1000ml` 아이템이 있을 때만 노출되며, 수행 시 그 아이템을 소모하고 침대 Attachment에 생리식염수를 설치(활성화)한다.
+      - 1단계가 끝난 시점에 플레이어가 생리식염수를 보유하고 있지 않다면 다음을 재생해 안내한다.
+        1. Dialogue
+          - Speaker: `@s`
+          - Content: "(생리식염수 1L 수액백을 갖고 있지 않다.)"
+        2. Dialogue
+          - Speaker: `@s`
+          - Content: "(생리식염수 1L 수액백을 찾아 수액 걸대에 걸자.)"
+    4. 3단계 — "생리식염수 연결" Interaction 활성화(걸어둔 생리식염수와 좌측 팔 정맥로를 IV Line으로 연결)
       - 다음 두 조건이 모두 충족되었을 때만 노출한다.
-        - 좌측 18G 캐뉼라 삽입이 완료되어 있을 것
-        - 환자가 누워있는 침대의 Attachment가 활성화되어 있고, 그 Attachment에 생리식염수가 걸려 있을 것
+        - 1단계(좌측 18G 캐뉼라 삽입)가 완료되어 있을 것
+        - 2단계에서 환자가 누워있는 침대의 Attachment가 활성화되어 있고, 그 Attachment에 생리식염수가 적용되어 있을 것
+          - 생리식염수 적용 상태는 Display 플래그와 상태 플래그가 모두 활성화되어 있어야 하나, 활성화 여부 판정은 상태 플래그를 기준으로 한다.
       - 퀘스트 마크: `patient_a` / `normal_saline_connect`
-      - Interaction 활성화 시 다음 재생
-        - 인벤토리에 `normal_saline_1000ml` 아이템이 있는지 확인
-          - 없다면 다음 재생
-            1. Dialogue
-              - Speaker: `@s`
-              - Content: "(생리식염수 1L 수액백을 갖고 있지 않다.)"
-            2. Dialogue
-              - Speaker: `@s`
-              - Content: "(생리식염수 1L 수액백을 찾아 수액 걸대에 걸자.)"
-          - 있다면 연결 신호(`sig.connect_cannula_and_ns1`)를 수신하고 연결 연출(`connect_ns1_left`)을 재생한 뒤 이 목표를 완료 처리
-      - 기술 노트: 침대에 수액을 거는 동작은 침대 Attachment의 기존 수액 걸기 Interaction을 그대로 사용한다.
-    4. 퀘스트 목표 표기를 "남성 환자의 우측 팔에 정맥로 확보하기"로 변경
-    5. "우측 팔 정맥로 확보" Interaction 활성화
+      - Interaction 수행 시 다음 처리
+        - 환자가 누워있는 침대 Attachment의 생리식염수 오브젝트 자식에 있는 Intravenous Line Connection Point 오브젝트와, 환자의 좌측 팔 정맥로의 Intravenous Line Connection Point 오브젝트를 IV Line 연결 처리
+    5. 퀘스트 목표 표기를 "남성 환자의 우측 팔에 정맥로 확보하기"로 변경
+    6. 1단계 — "우측 팔 정맥로 확보" Interaction 활성화
       - 퀘스트 마크: `patient_a` / `intravenous_line_cannula`
+      - 기술 노트: 18G 캐뉼라는 좌측과 우측에서 각각 1개씩 소모한다. 사전에 두 개를 동시에 확인하지 않고, 각 삽입 시점에 보유 여부를 판정한다.
       - Interaction 활성화 시 다음 재생
         - 인벤토리에 `cannula_18g` 아이템이 있는지 확인
           - 없다면 다음 재생
             1. Dialogue
               - Speaker: `@s`
-              - Content: "(18게이지 캐뉼라를 하나 더 갖고 있지 않다.)"
+              - Content: "(정맥로 확보에 사용할 18게이지 캐뉼라를 하나 더 갖고 있지 않다.)"
             2. Dialogue
               - Speaker: `@s`
               - Content: "(18게이지 캐뉼라를 하나 더 찾자.)"
           - 있다면 시스템이 우측 삽입을 처리한 뒤 다음으로 진행
             - 플레이어 인벤토리의 `cannula_18g`를 1개 소모
+            - 환자 Display State Descriptor에서 우측 팔 정맥로 확보 상태를 표시하는 오브젝트와 상태 플래그를 활성화
+            - 환자 상태값에 18G 캐뉼라가 삽입되었다는(정맥로가 확보되었다는) 상태 플래그 활성화
+            - 이 시점에는 IV Line을 연결하지 않고, 3단계의 별도 Interaction에서 연결한다
             - 삽입 신호(`sig.insert_iv_patient_a_right`)를 수신하고 삽입 연출(`insert_18g_right`)을 재생
             - 퀘스트 목표 표기를 "우측 팔에 플라즈마 솔루션 연결하기"로 변경
-      - 기술 노트: 18G 캐뉼라는 좌측과 우측에서 각각 1개씩 소모한다. 사전에 두 개를 동시에 확인하지 않고, 각 삽입 시점에 보유 여부를 판정한다.
-    6. "플라즈마 솔루션 연결" Interaction 활성화
-      - 퀘스트 마크: `patient_a` / `normal_saline_connect`
-      - Interaction 활성화 시 다음 재생
-        - 인벤토리에 `plasma_solution_1000ml` 아이템이 있는지 확인
-          - 없다면 다음 재생
-            1. Dialogue
-              - Speaker: `@s`
-              - Content: "(플라즈마 솔루션 1L 수액백을 갖고 있지 않다.)"
-            2. Dialogue
-              - Speaker: `@s`
-              - Content: "(플라즈마 솔루션 1L 수액백을 찾아 수액 걸대에 걸자.)"
-          - 있다면 연결 연출(`connect_ps1_right`)을 재생한 뒤 이 목표를 완료 처리
-    7. Dialogue
+    7. 2단계 — 플라즈마 솔루션 활성화(환자가 누워있는 침대의 Attachment에 플라즈마 솔루션 걸기)
+      - 침대에 플라즈마 솔루션을 거는 동작은 침대 Attachment의 기존 "P/S 수액 걸기" Interaction을 그대로 사용한다.
+        - 이 Interaction은 플레이어 인벤토리에 `plasma_solution_1000ml` 아이템이 있을 때만 노출되며, 수행 시 그 아이템을 소모하고 침대 Attachment에 플라즈마 솔루션을 설치(활성화)한다.
+      - 1단계가 끝난 시점에 플레이어가 플라즈마 솔루션을 보유하고 있지 않다면 다음을 재생해 안내한다.
+        1. Dialogue
+          - Speaker: `@s`
+          - Content: "(플라즈마 솔루션 1L 수액백을 갖고 있지 않다.)"
+        2. Dialogue
+          - Speaker: `@s`
+          - Content: "(플라즈마 솔루션 1L 수액백을 찾아 수액 걸대에 걸자.)"
+    8. 3단계 — "플라즈마 솔루션 연결" Interaction 활성화(걸어둔 플라즈마 솔루션과 우측 팔 정맥로를 IV Line으로 연결)
+      - 다음 두 조건이 모두 충족되었을 때만 노출한다.
+        - 1단계(우측 18G 캐뉼라 삽입)가 완료되어 있을 것
+        - 2단계에서 환자가 누워있는 침대의 Attachment가 활성화되어 있고, 그 Attachment에 플라즈마 솔루션이 적용되어 있을 것
+          - 플라즈마 솔루션 적용 상태는 Display 플래그와 상태 플래그가 모두 활성화되어 있어야 하나, 활성화 여부 판정은 상태 플래그를 기준으로 한다.
+      - 퀘스트 마크: 환자 우측 팔의 정맥로 연결 지점 / `intravenous_line_connect_mode_start`
+      - Interaction 수행 시 다음 처리
+        - 환자가 누워있는 침대 Attachment의 플라즈마 솔루션 오브젝트 자식에 있는 Intravenous Line Connection Point 오브젝트와, 환자의 우측 팔 정맥로의 Intravenous Line Connection Point 오브젝트를 IV Line 연결 처리
+          - 환자 측 연결 지점은 `patient_b_c_ct`와 동일하게 식별자 문자열로 검색하지 않고, 환자 유형별 상태 컴포넌트에 사람이 직접 배선한 우측 팔 Intravenous Line Connection Point 참조를 사용한다.
+    9. Dialogue
       - Speaker: `@s`
-      - Content: "양측 정맥로가 모두 확보되었습니다."
+      - Content: "양측 정맥로 모두 확보했습니다."
       - TTS: true
-    - 같은 브랜치 안에서 C-line 보조와 Level 1 연결 흐름이 이어진다.
+    10. 퀘스트 완료처리
+
+- 위 퀘스트가 모두 완료되었을 때 계속
       1. Dialogue
         - Speaker: "의사"
         - Content: "그래도 혈압이 잡히지 않네요. C-line 잡아서 수액을 빠르게 투여하겠습니다. @t=[nurse_d, @s]선생님, C-line set 건네주세요."
@@ -721,14 +749,16 @@ flags: ["refactor-required"]
             제거:     - Speaker: `@s`
             제거:     - Content: "(C-line set을 찾자.)"
             제거: - 있다면 1개를 제출하여 완료(`sig.pass_central_line_set`)하고, 삽입 연출(`insert_central_line_set`)을 재생
+          - 제출이 완료되면 환자 상태 필드에 cline 삽입 완료 상태 플래그를 활성화하고, Display State Descriptor에서 C-line 시각화 오브젝트를 활성화한다.
       3. Dialogue
         - Speaker: "의사"
         - Content: "@t=[nurse_d, @s]선생님, Level 1 rapid infuser에 플라즈마 솔루션과 혈액백 연결시켜주세요."
         - TTS: true
       4. 퀘스트 "대량 수액 공급"(`Quest_Lv1_Fluids`) 발행
+        - 기술노트: Level 1 rapid infuser 가져오기 퀘스트가 필요할 수도 있으나, 이것은 인게임에서 퀘스트가 벌어지는 장소에 따라 다르므로, 우선은 코멘트만 해두기
         - 목표 표기: "Level 1 rapid infuser에 플라즈마 솔루션 연결하기"
         - "플라즈마 솔루션 연결" Interaction 활성화
-          - 퀘스트 마크: `level1_rapid_infuser` / 수액 연결 상호작용
+          - 퀘스트 마크: `level1_rapid_infuser_a` / `level1_add_plasma_solution`
           - 인벤토리에 `plasma_solution_1000ml` 아이템이 있는지 확인
             - 없다면 다음 재생
               1. Dialogue
@@ -737,10 +767,13 @@ flags: ["refactor-required"]
               2. Dialogue
                 - Speaker: `@s`
                 - Content: "(플라즈마 솔루션 1L 수액백을 찾자.)"
-            - 있다면 연결 신호(`sig.connect_ps1_to_lv1`)를 수신하고 이 목표를 완료 처리
+            - 있다면 다음 처리
+              - 플레이어 인벤토리의 `plasma_solution_1000ml`를 1개 소모
+              - Level 1 rapid infuser의 플라즈마 솔루션 상태값과 Display State를 활성화하고 시각화 오브젝트를 표시
+              - 연결 신호(`sig.connect_ps1_to_lv1`)를 발생시키고 이 목표를 완료 처리
         - 퀘스트 목표 표기를 "Level 1 rapid infuser에 혈액백 연결하기"로 변경
         - "혈액백 연결" Interaction 활성화
-          - 퀘스트 마크: `level1_rapid_infuser` / 혈액백 연결 상호작용
+          - 퀘스트 마크: `level1_rapid_infuser_a` / `level1_add_blood_bag`
           - 인벤토리에 `blood_bag` 아이템이 있는지 확인
             - 없다면 다음 재생
               1. Dialogue
@@ -749,15 +782,32 @@ flags: ["refactor-required"]
               2. Dialogue
                 - Speaker: `@s`
                 - Content: "(혈액백을 찾자.)"
-            - 있다면 연결 신호(`sig.connect_blood_to_lv1`)를 수신하고 준비 연출(`lv1_ready`)을 재생한 뒤 이 목표를 완료 처리
-        - 기술 노트: Level 1 rapid infuser는 이 시나리오에서만 사용하는 장비다. 오버월드 공용 장비로 대체하지 않고 전용 상호작용을 유지한다.
+            - 있다면 다음 처리
+              - 플레이어 인벤토리의 `blood_bag`을 1개 소모
+              - Level 1 rapid infuser의 혈액백 상태값과 Display State를 활성화하고 시각화 오브젝트를 표시
+              - 연결 신호(`sig.connect_blood_to_lv1`)를 발생시키고 이 목표를 완료 처리
+        - 퀘스트 목표 표기를 "Level 1 rapid infuser를 환자의 C-line에 연결하기"로 변경
+        - "환자에게 C-line 연결" Interaction 활성화
+          - 퀘스트 마크: `level1_rapid_infuser_a` / `level1_connect_cline`
+          - 다음 조건을 모두 충족했을 때만 노출한다.
+            - 중심정맥관 삽입이 완료되어 환자의 C-line 상태 플래그와 시각화 오브젝트가 활성화되어 있을 것
+            - Level 1 rapid infuser에 플라즈마 솔루션과 혈액백이 모두 연결되어 있을 것
+            - Level 1 rapid infuser가 환자의 상호작용 반경 안에 있을 것
+          - Interaction 수행 시 다음 처리
+            - Level 1 rapid infuser의 Intravenous Line Connection Point와 환자 C-line의 Intravenous Line Connection Point를 `LineConnectionService`로 IV Line 연결 처리
+              - 환자 측 C-line 연결 지점은 식별자 문자열로 검색하지 않고 `PatientController.ClineIvAttachmentPoint`에 배선된 참조를 사용한다.
+            - 환자 상태값과 Level 1 rapid infuser 상태값에 C-line 연결 완료 상태를 각각 기록하고 세션 로그에 남긴다.
+            - 연결 신호(`sig.connect_cline_to_lv1`)를 발생시키고 이 목표를 완료 처리
       5. Dialogue
         - Speaker: `@s`
-        - Content: "Level 1에 플라즈마 솔루션과 혈액백 연결 완료되었습니다."
+        - Content: "Level 1에 플라즈마 솔루션과 혈액백을 연결하고, 환자의 C-line에도 연결했습니다."
         - TTS: true
   - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
 
 - 전체 인원의 퀘스트가 "다른 사람들의 처리가 끝날 때까지 기다리기" 상태(*a)라면 퀘스트 완료 처리
+
+
+
 
 ### 심정지 발생과 맥박 확인
 
@@ -1406,6 +1456,25 @@ flags: ["refactor-required"]
    도구로 취급한다.
 4. **`## 시나리오 본문`의 노드 명세와 `patient_a_critical.scenario.json`은 아직 갱신하지 않았다.** 이번 개정으로
    노드 수와 Validator 신호 구성이 달라지므로, 변환 작업을 언제 수행할지 결정해야 한다.
+
+## 2026-08-24 수액 연결 흐름 수정 (정맥로 확보 퀘스트)
+
+`Quest_IV_Line_PatientA`의 수액 연결 처리를 `patient_b_c_ct.md`와 같은 방식, 즉 정맥로 확보 → 수액 활성화 →
+수액과 정맥로 연결 순서로 수정했다. 양팔 모두 같은 3단계 구조를 따른다.
+
+1. **정맥로 확보**: 18G 캐뉼라를 삽입한다. 이 시점에는 IV Line을 연결하지 않는다.
+2. **수액 활성화**: 침대 Attachment의 기존 수액 걸기 Interaction("N/S 수액 걸기" / "P/S 수액 걸기")으로
+   수액백을 침대에 건다. 수액백 인벤토리 보유 판정과 `(...을 갖고 있지 않다.)` 안내 재생은 이 단계에 속한다.
+3. **수액과 정맥로 연결**: "생리식염수 연결" / "플라즈마 솔루션 연결" Interaction으로 걸어둔 수액백과 환자 팔의
+   정맥로를 IV Line으로 연결한다. 이 단계에서는 수액백 인벤토리를 확인하지 않는다.
+
+개정 전에는 "생리식염수 연결" Interaction이 "침대의 Attachment가 활성화되어 있고 그 Attachment에 생리식염수가
+걸려 있을 것"을 노출 조건으로 요구하면서, 정작 수행 시점에 인벤토리의 `normal_saline_1000ml` 보유를 다시
+확인했다. 수액백은 침대에 걸리는 순간 인벤토리에서 소모되므로, 걸려 있으면 인벤토리에 없고 인벤토리에 있으면
+걸려 있지 않아 어느 쪽 조건도 만족할 수 없는 순환이 있었다. 이에 따라 수액백 보유 판정을 수액 활성화 단계로
+옮기고, 연결 단계는 "삽입 완료"와 "침대 Attachment에 수액이 적용되어 있음"(상태 플래그 기준 판정)만을 노출
+조건으로 삼는다. 우측 팔의 플라즈마 솔루션 연결도 같은 구조로 맞췄다. 안내 대사 `N011_3`의 "플라즈마 솔루션
+수액백을 먼저 건 뒤 연결하십시오" 지시와도 일치한다.
 
 ## 기본 정보
 
@@ -2824,7 +2893,7 @@ SPAWN_A
 | --- | --- | --- |
 | **Identifier** | 문자열 | D009 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
-| **SpeakerName** | 문자열 | 간호사 D |
+| **SpeakerName** | 문자열 | @s |
 | **DialogueContent** | 문자열 | 경추 고정 및 구강 흡인 완료했습니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | Q009_1 |
@@ -4215,7 +4284,30 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.InvokeEvent |
 | **EventIdentifier** | 문자열 | insert_18g_right |
 | **MoveNextBehavior** | ScenarioInvokeEventMoveNextBehavior | Immediately |
+| **NextIdentifier** | 문자열 | V017_4 |
+
+
+---
+
+### [V017_4] ValidatorNode
+
+| 속성 | 타입 | 설명 |
+| --- | --- | --- |
+| **Identifier** | 문자열 | V017_4 |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
+| **Condition** | ScenarioValidatorCondition | RegistryContains |
+| **WaitForCondition** | bool | true |
+| **OnFailure** | ScenarioValidatorOnFailure | Ignore |
+| **FailureNextIdentifier** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | E022 |
+
+#### [V017_4_Rules] 검증 규칙 (RuntimeState 시그널)
+
+| type | condition | registryType | registryIdentifier |
+| --- | --- | --- | --- |
+| Registry | Contains | RuntimeState | sig.connect_ps1_right |
+
+- [x] 침대의 플라즈마 솔루션 연결 지점과 환자 A의 `patient_a_cannula_right_port`를 실제로 연결한 뒤에만 `E022` 연출로 진행한다.
 
 
 ---
@@ -4268,7 +4360,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | **Identifier** | 문자열 | D019 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 의사 NPC |
-| **DialogueContent** | 문자열 | 그래도 혈압이 잡히지 않네요. C-line 잡아서 수액을 빠르게 투여하겠습니다. 간호사 C 선생님, C-line set 건네주세요. |
+| **DialogueContent** | 문자열 | 그래도 혈압이 잡히지 않네요. C-line 잡아서 수액을 빠르게 투여하겠습니다. @t=[nurse_d, @s]선생님, C-line set 건네주세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | N012 |
 
@@ -4375,7 +4467,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | **Identifier** | 문자열 | D020 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 의사 NPC |
-| **DialogueContent** | 문자열 | 간호사 C 선생님, Level 1 rapid infuser에 플라즈마 솔루션과 혈액백 연결시켜주세요. |
+| **DialogueContent** | 문자열 | @t=[nurse_d, @s]선생님, Level 1 rapid infuser에 플라즈마 솔루션과 혈액백 연결시켜주세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | N013 |
 
@@ -4502,7 +4594,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | **WaitForCondition** | bool | true |
 | **OnFailure** | ScenarioValidatorOnFailure | Ignore |
 | **FailureNextIdentifier** | 문자열/null | null |
-| **NextIdentifier** | 문자열 | E024 |
+| **NextIdentifier** | 문자열 | N014_1 |
 
 #### [V020_Rules] 검증 규칙 (RuntimeState 시그널)
 
@@ -4512,6 +4604,45 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 
 
 - [ ] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.connect_blood_to_lv1 [연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3].
+
+
+---
+
+### [N014_1] DialogueNode
+
+| 속성 | 타입 | 설명 |
+| --- | --- | --- |
+| **Identifier** | 문자열 | N014_1 |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
+| **SpeakerName** | 문자열 | 시스템 |
+| **DialogueContent** | 문자열 | Level 1 rapid infuser를 환자의 C-line에 연결하세요. |
+| **PortraitSpriteIdentifier** | 문자열/null | null |
+| **Duration** | 실수(float) | 4.0 |
+| **NextIdentifier** | 문자열 | V020_1 |
+
+
+---
+
+### [V020_1] ValidatorNode
+
+| 속성 | 타입 | 설명 |
+| --- | --- | --- |
+| **Identifier** | 문자열 | V020_1 |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.Validator |
+| **Condition** | ScenarioValidatorCondition | RegistryContains |
+| **WaitForCondition** | bool | true |
+| **OnFailure** | ScenarioValidatorOnFailure | Ignore |
+| **FailureNextIdentifier** | 문자열/null | null |
+| **NextIdentifier** | 문자열 | E024 |
+
+#### [V020_1_Rules] 검증 규칙 (RuntimeState 시그널)
+
+| type | condition | registryType | registryIdentifier |
+| --- | --- | --- | --- |
+| Registry | Contains | RuntimeState | sig.connect_cline_to_lv1 |
+
+
+- [x] Level 1 rapid infuser의 IV 연결 지점과 `PatientController.ClineIvAttachmentPoint`를 연결하면 `sig.connect_cline_to_lv1`이 발생하며, 이 검증을 통과한 뒤에만 완료 연출로 진행한다.
 
 
 ---
@@ -4535,8 +4666,8 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | --- | --- | --- |
 | **Identifier** | 문자열 | D021 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
-| **SpeakerName** | 문자열 | 간호사 C |
-| **DialogueContent** | 문자열 | Level 1에 플라즈마 솔루션과 혈액백 연결 완료되었습니다. |
+| **SpeakerName** | 문자열 | @s |
+| **DialogueContent** | 문자열 | Level 1에 플라즈마 솔루션과 혈액백을 연결하고, 환자의 C-line에도 연결했습니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **NextIdentifier** | 문자열 | Q015_1 |
 

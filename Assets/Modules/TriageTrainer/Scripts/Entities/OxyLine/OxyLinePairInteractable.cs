@@ -14,7 +14,8 @@ namespace TriageTrainer.Entity.OxyLine
   /// </summary>
   [DisallowMultipleComponent]
   [RequireComponent(typeof(Collider))]
-  public sealed class OxyLinePairInteractable : MonoBehaviour, IInteractable, IInteract, IInteractorConditional
+  public sealed class OxyLinePairInteractable : MonoBehaviour, IInteractable, IInteract,
+    IInteractorConditional, IQuestPresentationTarget
   {
     [Header("Oxygen line pair")]
     [SerializeField] private OxyLineConnectionPoint _localEndpoint;
@@ -25,6 +26,11 @@ namespace TriageTrainer.Entity.OxyLine
 
     public IInteract[] Interacts => new IInteract[] { this };
     public string DisplayText => _displayText;
+    public string PresentationEntityIdentifier =>
+      GetComponentInParent<PatientController>()?.Identifier
+      ?? _oxyflowmeter?.EntityIdentifier
+      ?? string.Empty;
+    public string InteractionIdentifier => "connect_oxygen_line";
     public Sprite DisplayIcon => null;
     public bool AllowDisplayIconFallback => true;
     public Color DisplayColor => Color.white;
@@ -32,7 +38,7 @@ namespace TriageTrainer.Entity.OxyLine
     public bool CanInteract(Transform interactor)
     {
       return interactor != null
-             && interactor.GetComponentInParent<PlayerController>() != null
+             && interactor.GetComponentInParent<PlayerController>() is { } player
              && TryResolveEndpoints(out _, out _);
     }
 
@@ -40,6 +46,15 @@ namespace TriageTrainer.Entity.OxyLine
     {
       var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
       if (player == null || !TryResolveEndpoints(out var local, out var remote))
+        return;
+
+      if (player.CountItemInInventory(TriageTrainer.ItemDefinitions.O2Line.Identifier) < 1)
+      {
+        ShowMissingOxygenLineDialogue();
+        return;
+      }
+
+      if (player.RemoveItemFromInventory(TriageTrainer.ItemDefinitions.O2Line.Identifier, 1) != 1)
         return;
 
       // 기획 참고(대화 기록): "T-piece가 활성화되어있고, oxyflowmeter가 is attached되어있다면
@@ -66,6 +81,15 @@ namespace TriageTrainer.Entity.OxyLine
       player.RefreshInteractableHintsNow();
     }
 
+    private static void ShowMissingOxygenLineDialogue()
+    {
+      var dialogue = MultiplayerInfrastructure.Registry.Registry.Get<MultiplayerInfrastructure.UI.DialoguePanelUIController>(
+        MultiplayerInfrastructure.Registry.RegistryType.UI,
+        MultiplayerInfrastructure.Registry.Registry.TypeKey<MultiplayerInfrastructure.UI.DialoguePanelUIController>());
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(산소줄을 갖고 있지 않다.)");
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(산소줄을 찾자.)");
+    }
+
     private bool TryResolveEndpoints(out OxyLineConnectionPoint local, out OxyLineConnectionPoint remote)
     {
       local = _localEndpoint != null ? _localEndpoint : GetComponent<OxyLineConnectionPoint>();
@@ -75,16 +99,24 @@ namespace TriageTrainer.Entity.OxyLine
           : _counterpart.GetComponent<OxyLineConnectionPoint>())
         : null;
 
+      var patient = GetComponentInParent<PatientController>();
+      var resolvedFlowmeter = _oxyflowmeter != null
+        ? _oxyflowmeter
+        : patient?.ConnectedOxyflowmeter;
+      if (remote == null)
+        remote = resolvedFlowmeter?.OxyLineConnectionPoint;
+
       return local != null
              && remote != null
              && local.isActiveAndEnabled
              && remote.isActiveAndEnabled
-             && _counterpart != null
-             && _counterpart.isActiveAndEnabled
+             && (_counterpart == null || _counterpart.isActiveAndEnabled)
              && (_requiredActiveDisplay == null || _requiredActiveDisplay.activeInHierarchy)
-             && (_counterpart._requiredActiveDisplay == null || _counterpart._requiredActiveDisplay.activeInHierarchy)
-             && IsAttachedFlowmeter(_oxyflowmeter)
-             && IsAttachedFlowmeter(_counterpart._oxyflowmeter)
+             && (_counterpart == null
+                 || _counterpart._requiredActiveDisplay == null
+                 || _counterpart._requiredActiveDisplay.activeInHierarchy)
+             && IsAttachedFlowmeter(resolvedFlowmeter)
+             && (_counterpart == null || IsAttachedFlowmeter(_counterpart._oxyflowmeter))
              && !local.IsPhysicallyConnectedTo(remote);
     }
 

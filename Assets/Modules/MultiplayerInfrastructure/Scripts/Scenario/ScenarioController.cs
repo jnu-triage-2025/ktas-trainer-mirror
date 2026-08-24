@@ -244,7 +244,8 @@ namespace MultiplayerInfrastructure.Scenario
     public bool CanAcceptPatientBCMonitorClose(int senderClientId, string normalizedSignal)
     {
       if (_currentGraph == null
-          || !string.Equals(_currentGraph.Identifier, "patient_b_c_ct", StringComparison.Ordinal)
+          || (!string.Equals(_currentGraph.Identifier, "patient_a_critical", StringComparison.Ordinal)
+              && !string.Equals(_currentGraph.Identifier, "patient_b_c_ct", StringComparison.Ordinal))
           || !_activeRoleBranchDepthByClientId.ContainsKey(senderClientId)
           || ScenarioInteractionSignals.IsRaised(normalizedSignal))
         return false;

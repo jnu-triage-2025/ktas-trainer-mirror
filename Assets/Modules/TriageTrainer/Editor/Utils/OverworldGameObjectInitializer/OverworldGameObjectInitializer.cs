@@ -35,6 +35,20 @@ namespace TriageTrainer.Editor.Utils
     public const string CommonSpawnPointIdentifier = "spawnpoint-commons";
     public static readonly Vector3 DefaultCommonSpawnPoint = new(-73f, 1f, -7.5f);
 
+    // Scenario A anchors deliberately start unresolved. A scene author must set their real
+    // positions in the initializer window before applying the generated wiring.
+    public const string PatientASpawnWaypointIdentifier = "scen_a:patient_spawnpoint_a";
+    public static readonly Vector3 DefaultPatientASpawnWaypoint = new(-1f, -1f, -1f);
+
+    public const string PatientAArrivalWaypointIdentifier = "scen_a:quest_arrival_patient_a";
+    public static readonly Vector3 DefaultPatientAArrivalWaypoint = new(-1f, -1f, -1f);
+
+    public const string PatientADoctorWaypointIdentifier = "scen_a:doctor_treatment_room_waypoint";
+    public static readonly Vector3 DefaultPatientADoctorWaypoint = new(-1f, -1f, -1f);
+    public static readonly Vector3 DefaultPatientAArrivalZoneSize = new(8f, 3f, 8f);
+    public static readonly string[] PatientAArrivalEnterSignals = System.Array.Empty<string>();
+    public const string PatientAArrivalPerEntitySignalTemplate = "quest_arrival_patient_a_{id}";
+
     // patient_b_c_ct spatial anchors. These are intentionally plain WaypointAnchor
     // objects: runtime patient/preset spawns resolve their destinations by ID.
     public const string PatientBSpawnWaypointIdentifier = "scen_b:patient_spawnpoint_b";
@@ -92,6 +106,9 @@ namespace TriageTrainer.Editor.Utils
         DefaultTreatmentRoomEnterance,
         CommonSpawnPointIdentifier,
         DefaultCommonSpawnPoint,
+        PatientASpawnWaypointIdentifier, DefaultPatientASpawnWaypoint,
+        PatientAArrivalWaypointIdentifier, DefaultPatientAArrivalWaypoint,
+        PatientADoctorWaypointIdentifier, DefaultPatientADoctorWaypoint,
         PatientBSpawnWaypointIdentifier, DefaultPatientBSpawnWaypoint,
         PatientCSpawnWaypointIdentifier, DefaultPatientCSpawnWaypoint,
         PatientDummyDBSpawnWaypointIdentifier, DefaultPatientDummyDBSpawnWaypoint,
@@ -100,6 +117,9 @@ namespace TriageTrainer.Editor.Utils
         DoctorCareAreaWaypointIdentifier, DefaultDoctorCareAreaWaypoint,
         CtPatientBTargetPositionWaypointIdentifier, DefaultCtPatientBTargetPositionWaypoint,
         CtPatientCTargetPositionWaypointIdentifier, DefaultCtPatientCTargetPositionWaypoint,
+        DefaultPatientAArrivalZoneSize,
+        PatientAArrivalEnterSignals,
+        PatientAArrivalPerEntitySignalTemplate,
         DefaultTriageArrivalZoneSize,
         TriageArrivalEnterSignals,
         TriageArrivalPerEntitySignalTemplate,
@@ -116,6 +136,9 @@ namespace TriageTrainer.Editor.Utils
         Vector3 treatmentRoomEnterance,
         string commonSpawnPointIdentifier,
         Vector3 commonSpawnPoint,
+        string patientASpawnWaypointIdentifier, Vector3 patientASpawnWaypoint,
+        string patientAArrivalWaypointIdentifier, Vector3 patientAArrivalWaypoint,
+        string patientADoctorWaypointIdentifier, Vector3 patientADoctorWaypoint,
         string patientBSpawnWaypointIdentifier, Vector3 patientBSpawnWaypoint,
         string patientCSpawnWaypointIdentifier, Vector3 patientCSpawnWaypoint,
         string patientDummyDBSpawnWaypointIdentifier, Vector3 patientDummyDBSpawnWaypoint,
@@ -124,6 +147,9 @@ namespace TriageTrainer.Editor.Utils
         string doctorCareAreaWaypointIdentifier, Vector3 doctorCareAreaWaypoint,
         string ctPatientBWaypointIdentifier, Vector3 ctPatientBWaypoint,
         string ctPatientCWaypointIdentifier, Vector3 ctPatientCWaypoint,
+        Vector3 patientAArrivalZoneSize,
+        string[] patientAArrivalEnterSignals,
+        string patientAArrivalPerEntitySignalTemplate,
         Vector3 triageArrivalZoneSize,
         string[] triageArrivalEnterSignals,
         string triageArrivalPerEntitySignalTemplate,
@@ -135,6 +161,17 @@ namespace TriageTrainer.Editor.Utils
       DeleteGeneratedScenarioObjects(generatedRoot.transform);
       CreateWaypoint(generatedRoot.transform, buildingIdentifier, buildingEnterance);
       CreateWaypoint(generatedRoot.transform, treatmentIdentifier, treatmentRoomEnterance);
+      CreateWaypoint(generatedRoot.transform, patientASpawnWaypointIdentifier, patientASpawnWaypoint);
+      CreateWaypoint(generatedRoot.transform, patientAArrivalWaypointIdentifier, patientAArrivalWaypoint);
+      CreateWaypoint(generatedRoot.transform, patientADoctorWaypointIdentifier, patientADoctorWaypoint);
+      CreateScenarioSignalZone(
+        generatedRoot.transform,
+        patientAArrivalWaypointIdentifier,
+        patientAArrivalWaypoint,
+        patientAArrivalZoneSize,
+        patientAArrivalEnterSignals,
+        patientAArrivalPerEntitySignalTemplate,
+        perEntityPlayersOnly: true);
       CreateWaypoint(generatedRoot.transform, patientBSpawnWaypointIdentifier, patientBSpawnWaypoint);
       CreateWaypoint(generatedRoot.transform, patientCSpawnWaypointIdentifier, patientCSpawnWaypoint);
       CreateWaypoint(generatedRoot.transform, patientDummyDBSpawnWaypointIdentifier, patientDummyDBSpawnWaypoint);

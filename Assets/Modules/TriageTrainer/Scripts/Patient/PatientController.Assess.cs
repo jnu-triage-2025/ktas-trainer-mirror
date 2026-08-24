@@ -32,11 +32,19 @@ namespace TriageTrainer.Entity
       [Tooltip("이 사정을 수행했을 때 올릴 시나리오 신호 조건명(sig.* 게이팅용). 예: check_avpu_gcs_patient_a, check_pulse_patient_a.")]
       [SerializeField] private string _assessSignal;
 
+      [Tooltip("사정에 필요하지만 소모하지 않는 인벤토리 아이템 식별자입니다.")]
+      [SerializeField] private string _requiredItemIdentifier;
+      [SerializeField] private string _missingItemDialogue;
+      [SerializeField] private string _findItemDialogue;
+
       [SerializeField] private bool _enabled = true;
 
       public string Identifier => _identifier;
       public string DisplayText => _displayText;
       public string AssessSignal => _assessSignal;
+      public string RequiredItemIdentifier => _requiredItemIdentifier;
+      public string MissingItemDialogue => _missingItemDialogue;
+      public string FindItemDialogue => _findItemDialogue;
       public bool Enabled { get => _enabled; set => _enabled = value; }
 
       /// <summary>
@@ -86,6 +94,20 @@ namespace TriageTrainer.Entity
 
       public void Interact(Transform interactor)
       {
+        var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
+        var config = Config;
+        if (config != null && !string.IsNullOrWhiteSpace(config.RequiredItemIdentifier)
+            && (player == null || player.CountItemInInventory(config.RequiredItemIdentifier) < 1))
+        {
+          _owner.ShowRequiredItemDialogue(
+            string.IsNullOrWhiteSpace(config.MissingItemDialogue)
+              ? "필요한 사정 도구를 갖고 있지 않다."
+              : config.MissingItemDialogue,
+            string.IsNullOrWhiteSpace(config.FindItemDialogue)
+              ? "필요한 사정 도구를 찾자."
+              : config.FindItemDialogue);
+          return;
+        }
         _owner.PerformAssess(_actionIdentifier);
       }
     }
