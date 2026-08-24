@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "2-implementing"
 status: active
-updated: 2026-08-21
+updated: 2026-08-22
 flags: ["refactor-required"]
 ---
 
@@ -14,697 +14,1398 @@ flags: ["refactor-required"]
 
 ## 줄글 시나리오
 
-재난 현장에서 흉부 관통상을 입은 환자 A가 이송되어 온다. 환자는 심각한 출혈로 의식이 흐려진 상태다. 간호사 네 명과 의사 NPC 한 명이 대응에 투입된다. 시나리오 시작 시 다음과 같이 처리한다.
+### 표기 규약
+
+- `Speaker: @s`는 그 브랜치를 수행하고 있는 플레이어 본인의 이름을 표시한다.
+- `Speaker: @t=[nurse_x, ???]`는 해당 역할 태그를 가진 플레이어의 이름을 표시하고, 대상이 없으면 `???`로 대체한다.
+- `Speaker: null`은 화자 표시 없이 상황만 서술하는 지문이다.
+- 콘텐츠에 노출되는 인물은 역할 식별자가 아니라 `남성 환자`, `의사`처럼 플레이어가 화면에서 보는 호칭으로 적는다. `환자 A`, `간호사 B` 같은 내부 식별자는 콘텐츠 문구에 쓰지 않는다.
+- `퀘스트 마크`는 퀘스트 정의의 `presentationBindings`로 대상 상호작용에 표시하는 안내 아이콘을 뜻한다. 마크는 그 마크를 조건으로 삼는 퀘스트 목표가 살아 있는 동안에만 표시되므로, 마크를 붙일 단계마다 대응하는 목표를 함께 둔다.
+
+### 시작
+
+재난 현장에서 흉부에 관통상을 입은 남성 환자 한 명이 이송되어 온다. 출혈이 심해 의식이 흐려진 상태이고, 간호사 네 명과 의사 한 명이 대응에 투입된다.
+
 - 기술 노트
-  1. 환자 A를 스폰한다.
+  1. 환자 도착 지점에 남성 환자를 스폰한다.
     - 노드 식별자: `SPAWN_A`, 프리셋 `patient_a`, 스폰된 엔티티 식별자 `patient_a`
-  2. 의사 NPC도 스폰한다.
-    - 노드 식별자: `SPAWN_DOCTOR`, NPC 식별자 `npc-doctor-patient-a-critical`, `npc_doctor_preset` 사용
-    - 의사 NPC는 이후 물품 제출 상호작용 네 종류(후두경, 기관내관, 5cc 주사기, C-line set)를 자신의 위치에서 제공한다.
-  3. 환자 A의 의료 상태를 사전설정한다. (`PRESET_A`)
+    - 스폰 지점 식별자: `scen_a:patient_spawnpoint_a`
+  2. 의사 NPC를 처치실의 의사 위치에 스폰한다.
+    - NPC 식별자: `npc-doctor-patient-a-critical`
+    - 스폰 지점 식별자: `scen_a:doctor_treatment_room_waypoint`
+    - 노드 식별자: `SPAWN_DOCTOR`, `npc_doctor_preset`을 위 식별자 지점의 위치에 스폰한다.
+    - 이 의사 NPC의 위치에는 이후 후두경, 기관내관, 5cc 주사기, C-line set을 의사에게 제출하기 위한 상호작용 네 종류를 제공한다.
+  3. 남성 환자의 의료 상태를 사전설정한다(`PRESET_A`).
     - 남성 35세, GCS 8점(Stupor), 동공 반응 정상, 호흡 8회/분 불규칙, 맥박 140회/분 약함, 혈압 70/40mmHg, 피부 창백하고 차가움, 체온 35.9도, SpO2 82%, 심정지 아님
-  4. 안내 재생
-    - Dialogue
-      - Speaker: "시스템"
-      - Content: "환자 A를 처치실로 이동해야 합니다. 플레이어 A, B, C, D는 각각 환자 침대의 손잡이를 클릭하여 이동을 준비하십시오."
+  4. (스폰이 완료되면 시작):
+    - DisinteractableDialogue
+      - Speaker: "구내방송"
+      - Content: "흉부 관통상 환자 한 명 이송. 처치실 담당자는 지금 바로 와주세요."
       - TTS: true
+  5. (4 항목과 동시에 시작) 기술 노트: 간호사들이 환자 도착 지점으로 이동하도록 퀘스트를 발행한다.
+    - 제목: "환자 도착"
+    - 목표
+      - 표기: "이송된 환자 확인"
+      - 처리: waypoint 도달을 만족하면 완료 처리되는 퀘스트 발행
+        - `scen_a:quest_arrival_patient_a`
+  - 기술 노트: `scen_a:*` 앵커는 `scen_b:*`와 같은 방식으로 Overworld Initializer에 추가한다. 기본값은 안전한 미확정값 `(-1, -1, -1)`로 두고, 씬 담당자가 실제 위치를 지정한 뒤 **Set**을 실행한다.
 
 환자 이동시키기
+
 - 전체 인물을 상대로 퀘스트 발행
-  - 제목: "들것 이동" (`Quest_Grab_Stretcher`)
+  - 제목: "환자 이동"
   - 목표
-    - 표기: "환자 침대의 손잡이 네 개를 모두 잡기"
-    - 처리: 네 인물이 각자 침대 손잡이를 잡으면 완료로 처리한다
-      - 기술 노트: 역할별 병렬(P002)로 네 개의 잡기 신호 `sig.grab_stretcher_patient_a_handle_0`~`sig.grab_stretcher_patient_a_handle_3`를 각각 대기한다.
-- 퀘스트 완료 시 처치실 이동 연출 이벤트(`move_patient_a_to_treatmentroom`)를 재생하고 초기 평가 단계로 넘어간다.
+    - 표기: "남성 환자를 처치실로 이동시키기"
+    - 처리: 남성 환자를 처치실로 이동시키면 완료 처리
+      - 기술 노트: 처치실 CareZone 구현이 있는지, waypoint로 처리해야 하는지는 확인해 보아야 한다.
+      - CareZone 구현이 있다면 이를 따르되, 관련하여 대비된 것이 없으므로 OverworldInitializer에 내용을 추가해 두어야 한다.
+- 위 퀘스트를 발행하면서 함께 재생
+  - DisinteractableDialogue
+    - Speaker: `@s`
+    - Content: "(출혈이 심하다. 빨리 처치실로 옮기자.)"
+    - TTS: false
 
-### 초기 평가: 활력징후, 의식 상태, 경추 고정·흡인
+위 퀘스트 완료 시 (*1) 내용 시작
 
-안내 대사 "활력징후 측정, AVPU 및 GCS 측정, 경추 고정 및 흡인을 시작합니다."와 함께 세 가지 평가가 동시에 진행된다(P003).
+### 초기 평가: 활력징후, 의식 상태, 경추 고정과 구강 흡인
 
-- 간호사 B에게 퀘스트 발행
-  - 제목: "활력징후 측정" (`Quest_Check_Vital_PatientA`)
-  - 목표
-    - 표기: "활력징후 측정도구를 획득해 환자의 활력징후를 측정하기"
-    - 처리: 측정 완료 신호(`sig.show_vital_patient_a`)가 올라오면 완료 처리
-    1. Dialogue
-      - Speaker: "시스템"
-      - Content: "환자의 활력징후를 측정합니다. 활력징후 측정도구를 클릭해 획득하세요."
-      - TTS: true
-    2. 측정도구 획득을 기다린다(`sig.click_vital_set`).
-    3. Dialogue
-      - Speaker: "시스템"
-      - Content: "활력징후 측정도구를 선택한 뒤, 환자를 클릭하면 활력징후가 측정됩니다. 활력징후가 모니터에도 출력됩니다."
-      - TTS: true
-    4. 측정이 끝나면 모니터 UI를 활성화한다(`activate_vital_monitor_ui_patient_a`).
-    5. Dialogue
-      - Speaker: "간호사 B"
-      - Content: "환자 활력징후 출력됩니다."
-      - TTS: true
-    6. Dialogue
-      - Speaker: "시스템"
-      - Content: "혈압 70/40mmHg, 맥박 140회/분 - 약하고 빠름, 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다."
-      - TTS: true
-- 간호사 C에게도 퀘스트 발행
-  - 제목: "의식 상태 사정" (`Quest_Check_GCS_PatientA`)
-  - 목표
-    - 표기: "환자의 의식 상태를 사정하고 AVPU와 GCS를 평가하기"
-    - 처리: 사정 신호(`sig.check_avpu_gcs_patient_a`) 이후 아래 문항 흐름을 전부 통과하면 완료 처리
-    1. Dialogue
-      - Speaker: "시스템"
-      - Content: "환자를 클릭해 환자의 의식 상태를 사정하십시오."
-      - TTS: true
-    2. Dialogue
-      - Speaker: "시스템"
-      - Content: "환자의 의식 상태(AVPU)를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다."
-      - TTS: true
-    3. Dialogue
-      - Speaker: "시스템"
-      - Content: "[관찰] 환자를 불렀을 때 응답이 없고, 환자의 옆구리를 꼬집었을 때 불편해하며 피하려 합니다."
-      - TTS: true
-    4. ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "의식 수준을 AVPU에 따라 분류할 때, 현재 환자의 의식 수준은 무엇입니까?"
-      - Choices
-        - "A(Alert, 완전히 깨어 있음)": 오답 노드로 진행
-        - "V(Verbal response, 음성에 반응 있음)": 오답 노드로 진행
-        - "P(Pain response, 통증에 반응 있음)": 정답 노드로 진행
-        - "U(Unconsciousness, 반응 없음)": 오답 노드로 진행
-      - 오답 노드: "오답입니다. 다른 자극에는 반응이 없다가, 통증에 반응을 하고 있습니다."를 보여준 뒤 같은 질문으로 돌아간다.
-      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
-    5. Dialogue
-      - Speaker: "시스템"
-      - Content: "[관찰] 추가 사정으로 GCS를 확인합니다. 먼저 Eye Opening(E) 반응을 확인합니다. 옆구리를 꼬집자 잠시 눈을 떴다가 다시 감습니다."
-      - TTS: true
-    6. ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "관찰된 E(Eye Opening) 점수는 몇 점입니까?"
-      - Choices: 4점/3점/1점은 오답, 2점(통증에 반응)이 정답
-      - 오답 노드: "오답입니다. 통증 자극에만 반응했음을 유의하세요." 후 재시도
-      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
-    7. Dialogue
-      - Speaker: "시스템"
-      - Content: "[관찰] 다음은 Verbal Response(V)입니다. \"여기가 어디예요?\"라고 묻자, 환자는 이해할 수 없는 신음소리만 내고 있습니다."
-      - TTS: true
-    8. ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "관찰된 V(Verbal Response) 점수는 몇 점입니까?"
-      - Choices: 5점/4점/3점/1점은 오답, 2점(신음소리)이 정답
-      - 오답 노드: "오답입니다. 현재 환자는 알아들을 수 없는 소리만 내고 있습니다." 후 재응시
-      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
-    9. Dialogue
-      - Speaker: "시스템"
-      - Content: "[관찰] 마지막으로 Motor Response(M)입니다. 손톱 뿌리쪽 피부에 압력을 가하자 팔을 재빨리 굽혀 자극을 피합니다."
-      - TTS: true
-    10. ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "관찰된 M(Motor Response) 점수는 몇 점입니까?"
-      - Choices: 6점/5점/3점/2점/1점은 오답, 4점(통증에 회피)이 정답
-      - 오답 노드: "오답입니다. 현재 통증에 회피하고 있습니다." 후 재시도
-      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
-    11. Dialogue
-      - Speaker: "시스템"
-      - Content: "GCS 측정 완료. E2 / V2 / M4 = 총 8점 (Stupor) 입니다."
-      - TTS: true
-    12. Dialogue
-      - Speaker: "간호사 C"
-      - Content: "AVPU 중 P이며, 추가 사정한 GCS 결과 8점 확인했습니다."
-      - TTS: true
-- 간호사 D에게는 퀘스트 발행
-  - 제목: "경추 고정 및 구강 흡인" (`Quest_Stabilizer_And_Suction_PatientA`)
-  - 목표
-    - 표기: "경추를 고정하고 구강 흡인을 완료하기"
-    - 처리: 아래 단계를 순서대로 마치면 완료 처리
-    1. Dialogue
-      - Speaker: "시스템"
-      - Content: "기도 확보를 위해 환자의 경추를 고정하고 구강 석션을 진행합니다. 경추고정기, 흡인기, 석션 라인, 앙카우어 팁을 클릭해 획득하세요."
-      - TTS: true
-    2. 흡인 체크리스트 UI를 띄우고(`show_suction_checklist_ui`) 경추고정기 적용과 세 물품(흡인기, 석션 라인, 앙카우어 팁) 획득을 기다린다(`sig.apply_stabilizer_patient_a`, `sig.click_wall_suction`, `sig.click_suction_line`, `sig.click_yankauer`). 이후 UI를 내린다(`hide_suction_checklist_ui`).
-    3. Dialogue
-      - Speaker: "시스템"
-      - Content: "경추 고정기를 환자에게 적용하십시오."
-      - TTS: true
-      - 처리: 적용 신호(`sig.apply_stabilizer_patient_a`) 대기
-    4. Dialogue
-      - Speaker: "시스템"
-      - Content: "흡인기를 벽에 설치하십시오."
-      - TTS: true
-      - 처리: 설치 신호(`sig.connect_wall_component_1`) 대기
-    5. Dialogue
-      - Speaker: "시스템"
-      - Content: "준비된 앙카우어 팁을 흡인기에 연결하십시오."
-      - TTS: true
-      - 처리: 연결 신호(`sig.connect_wall_component_and_yankauer`) 대기
-    6. Dialogue
-      - Speaker: "시스템"
-      - Content: "흡인기를 클릭한 뒤 환자를 클릭해 구강 흡인을 진행하십시오."
-      - TTS: true
-      - 처리: 흡인 신호(`sig.suction_patient_a`) 대기
-    7. Dialogue
-      - Speaker: "간호사 D"
-      - Content: "경추 고정 및 구강 흡인 완료했습니다."
-      - TTS: true
+(*1)
 
-세 브랜치가 모두 마무리되면 평가 결과를 종합해 보고한다.
-- Dialogue
-  - Speaker: "시스템"
-  - Content: "환자의 의식상태는 GCS 8점, 활력징후는 혈압 70/40mmHg, 맥박수 140회/분 (빠르고 약함), 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다."
+1. Dialogue
+  - Speaker: "의사"
+  - Content: "상태 확인부터 하겠습니다. @t=[nurse_b, ???]선생님은 활력징후 측정해 주시고, @t=[nurse_c, ???]선생님은 의식 상태 사정해 주세요."
   - TTS: true
-- 그 뒤 활력 정보 연출 이벤트(`vitalinfo_1_patient_a`)를 재생한다.
+2. Dialogue
+  - Speaker: "의사"
+  - Content: "@t=[nurse_d, ???]선생님은 경추 고정하고 구강 흡인 진행해 주세요. @t=[nurse_a, ???]선생님은 곧 삽관 보조가 필요하니 잠시 대기해 주세요."
+  - TTS: true
+
+이 지시를 받아 네 브랜치가 동시에 진행된다(P003).
+
+- `nurse_b`에게 퀘스트 발행 (`Quest_Check_Vital_PatientA`)
+  - 제목: "환자 활력징후 확인"
+  - 목표
+    1. 서브목표 1
+      - 표기: "남성 환자의 활력징후를 측정하기"
+      - 처리: 환자의 활력징후 사정 상호작용(`assess_vital`)을 완료하면 완료 처리
+        - 완료 신호: `sig.show_vital_patient_a`
+      - 퀘스트 마크: `patient_a` / `assess_vital` (아이콘 `quest-interaction`, `ReplacePrimaryIcon`)
+      - Interaction 수행 시 다음 처리
+        - 인벤토리에 `vital_set` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(활력징후 측정도구를 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(활력징후 측정도구를 찾자.)"
+          - 있다면 측정을 처리하고 이 목표를 완료 처리
+      - 기술 노트: 측정도구 획득 신호(`sig.click_vital_set`)를 별도로 기다리던 단계는 제거한다. 물품 보유 여부는 상호작용 시점에 판정한다.
+    2. 서브목표 2
+      - 표기: "남성 환자의 활력징후를 환자 모니터를 통해 확인하기"
+      - 처리: 환자가 위치한 CareZone의 환자 모니터에서 자세히 보기 상호작용(`monitor_select`)을 수행하면 완료 처리
+      - 퀘스트 마크: 처치실 환자 모니터 / `monitor_select`
+      - 기술 노트: 모니터 UI를 시나리오가 직접 여는 `activate_vital_monitor_ui_patient_a`와 활력 정보 연출 `vitalinfo_1_patient_a`는 사용하지 않는다. 환자 B/C와 마찬가지로 플레이어가 모니터를 열고, 닫을 때 발생하는 신호로 다음 단계를 진행한다.
+    3. 서브목표 3
+      - 표기: "남성 환자의 활력징후를 보고하기"
+      - 처리: 아래의 선택형 다이얼로그를 모두 끝내면 완료 처리
+      1. ChoiceDialogue 발생: 서브목표 2에서 열었던 환자 모니터 자세히 보기를 닫으면 발생(`nurse_b`에 대해서, 시그널 송수신 관계로 처리하면 될 것)
+        - Speaker: `@s`
+        - Content: "이 환자는..."
+        - Choices:
+          - "호흡수 분당 6회, 맥박 분당 120회": 오답 노드로 진행
+          - "호흡수 분당 6회, 맥박 분당 140회": 오답 노드로 진행
+          - "호흡수 분당 8회, 맥박 분당 140회로 빠르고 약함": 정답 노드로 진행
+          - "호흡수 분당 8회, 맥박 분당 120회": 오답 노드로 진행
+          - "호흡수 분당 10회, 맥박 분당 140회": 오답 노드로 진행
+        - 다음 노드:
+          - 오답 노드:
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(아니야. 호흡수 분당 8회, 맥박 분당 140회로 빠르고 약했어.)"
+              - 이후 정답 노드로 이동
+          - 정답 노드:
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "호흡수 분당 8회, 맥박 분당 140회로 빠르고 약합니다."
+              - 이후 다음 노드로 이동
+      2. ChoiceDialogue
+        - Speaker: `@s`
+        - Content: "혈압은..."
+        - Choices:
+          - "혈압 60/30mmHg": 오답 노드로 진행
+          - "혈압 70/40mmHg": 정답 노드로 진행
+          - "혈압 80/50mmHg": 오답 노드로 진행
+          - "혈압 90/60mmHg": 오답 노드로 진행
+          - "혈압 100/70mmHg": 오답 노드로 진행
+        - 다음 노드:
+          - 오답 노드:
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(아니야. 혈압은 70/40mmHg였어.)"
+              - 이후 정답 노드로 이동
+          - 정답 노드:
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "혈압은 70/40mmHg입니다."
+              - 이후 다음 노드로 이동
+      3. ChoiceDialogue
+        - Speaker: `@s`
+        - Content: "체온과 산소포화도는..."
+        - Choices:
+          - "체온 35.5도, 산소포화도 78%": 오답 노드로 진행
+          - "체온 35.5도, 산소포화도 82%": 오답 노드로 진행
+          - "체온 35.9도, 산소포화도 82%": 정답 노드로 진행
+          - "체온 36.5도, 산소포화도 88%": 오답 노드로 진행
+          - "체온 37.0도, 산소포화도 92%": 오답 노드로 진행
+        - 다음 노드:
+          - 오답 노드:
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(아니야. 체온은 35.9도, 산소포화도는 82%였어.)"
+              - 이후 정답 노드로 이동
+          - 정답 노드:
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "체온 35.9도, 산소포화도 82%입니다."
+              - 이후 다음 노드로 이동
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_c`에게 퀘스트 발행 (`Quest_Check_GCS_PatientA`)
+  - 제목: "환자 의식 상태 확인"
+  - 목표
+    - 표기: "남성 환자의 의식 상태를 사정하기"
+    - 처리: 의식 사정 상호작용(`assess_avpu_gcs`)을 수행한 뒤 아래 문항 흐름을 모두 통과하면 완료 처리
+      - 완료 신호: `sig.check_avpu_gcs_patient_a`
+    - 퀘스트 마크: `patient_a` / `assess_avpu_gcs`
+    - Interaction 수행 시 다음 재생
+      1. Dialogue
+        - Speaker: `@s`
+        - Content: "환자분..! 제 목소리 들리세요?"
+        - TTS: false
+      2. Dialogue
+        - Speaker: null
+        - Content: "(환자는 아무 반응도 하지 않는다.)"
+        - TTS: false
+      3. Dialogue
+        - Speaker: `@s`
+        - Content: "(옆구리를 꼬집어 통증 자극을 준다.)"
+        - TTS: false
+      4. Dialogue
+        - Speaker: null
+        - Content: "(환자가 불편해하며 자극을 피하려 한다. 눈을 잠시 떴다가 다시 감는다.)"
+        - TTS: false
+      5. Dialogue
+        - Speaker: `@s`
+        - Content: "여기가 어디인지 아시겠어요?"
+        - TTS: false
+      6. Dialogue
+        - Speaker: "남성 환자"
+        - Content: "으으.. 으으으..."
+        - TTS: true
+      7. Dialogue
+        - Speaker: `@s`
+        - Content: "(손톱 뿌리쪽 피부에 압력을 가한다.)"
+        - TTS: false
+      8. Dialogue
+        - Speaker: null
+        - Content: "(환자가 팔을 재빨리 굽혀 자극을 피한다.)"
+        - TTS: false
+      9. Dialogue
+        - Speaker: `@s`
+        - Content: "이 환자의 상태를 정리해보자."
+        - TTS: false
+    - 이후 아래 문항 흐름으로 진행
+    1. ChoiceDialogue
+      - Speaker: `@s`
+      - Content: "환자의 AVPU는..."
+      - Choices
+        - "AVPU A": 오답
+        - "AVPU V": 오답
+        - "AVPU P": 정답
+          - "(다른 자극에는 반응이 없다가 통증에만 반응했으니 P로 분류하자.)"
+        - "AVPU U": 오답
+      - 오답 노드
+        - Dialogue
+          - Speaker: `@s`
+          - Content: "(아니야. 다시 생각해보자.)"
+          - TTS: false
+        - 이후 같은 문항으로 되돌아가 재응시한다.
+      - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 정답 선택 시 다음(2.)으로 이동
+    2. ChoiceDialogue
+      - Speaker: `@s`
+      - Content: "환자의 GCS E는..."
+      - Choices
+        - "GCS E 4": 오답
+        - "GCS E 3": 오답
+        - "GCS E 2": 정답
+          - "(통증 자극에만 눈을 떴으니 E 2로 분류하자.)"
+        - "GCS E 1": 오답
+      - 오답 노드
+        - Dialogue
+          - Speaker: `@s`
+          - Content: "(아니야. 다시 생각해보자.)"
+          - TTS: false
+        - 이후 같은 문항으로 되돌아가 재응시한다.
+      - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 정답 선택 시 다음(3.)으로 이동
+    3. ChoiceDialogue
+      - Speaker: `@s`
+      - Content: "환자의 GCS V는..."
+      - Choices
+        - "GCS V 5": 오답
+        - "GCS V 4": 오답
+        - "GCS V 3": 오답
+        - "GCS V 2": 정답
+          - "(이해할 수 없는 신음소리만 내고 있으니 GCS V 2로 분류하자.)"
+        - "GCS V 1": 오답
+      - 오답 노드
+        - Dialogue
+          - Speaker: `@s`
+          - Content: "(아니야. 다시 생각해보자.)"
+          - TTS: false
+        - 이후 같은 문항으로 되돌아가 재응시한다.
+      - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 정답 선택 시 다음(4.)으로 이동
+    4. ChoiceDialogue
+      - Speaker: `@s`
+      - Content: "환자의 GCS M은..."
+      - Choices
+        - "GCS M 6": 오답
+        - "GCS M 5": 오답
+        - "GCS M 4": 정답
+          - "(통증 자극에서 팔을 굽혀 피했으니 GCS M 4로 분류하자.)"
+        - "GCS M 3": 오답
+        - "GCS M 2": 오답
+        - "GCS M 1": 오답
+      - 오답 노드
+        - Dialogue
+          - Speaker: `@s`
+          - Content: "(아니야. 다시 생각해보자.)"
+          - TTS: false
+        - 이후 같은 문항으로 되돌아가 재응시한다.
+      - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 정답 선택 시 다음(5.)으로 이동
+    5. Dialogue
+      - Speaker: `@s`
+      - Content: "GCS는 E 2, V 2, M 4니까.."
+      - TTS: false
+    6. Dialogue
+      - Speaker: `@s`
+      - Content: "AVPU 중 P이며, GCS는 E2 / V2 / M4로 총 8점입니다."
+      - TTS: true
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_d`에게 퀘스트 발행 (`Quest_Stabilizer_And_Suction_PatientA`)
+  - 제목: "경추 고정 및 흡인"
+  - 목표: ""
+  - 퀘스트 발행과 함께 다음 처리 수행:
+    1. 퀘스트 목표 표기를 "남성 환자의 경추를 고정하기"로 변경
+    2. "경추 고정기 적용" Interaction 활성화
+      - 퀘스트 마크: `patient_a` / `item_apply`
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `cervical_collar` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(경추 고정기를 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(경추 고정기를 찾자.)"
+          - 있다면 다음 처리
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(환자의 목을 지지하며 경추 고정기를 적용했다.)"
+              - 실제로 환자 측에 경추 고정기 적용 여부 플래그를 활성화하고, 시각화 상태도 시각화되었다고 해야함
+            2. 적용 신호(`sig.apply_stabilizer_patient_a`) 수신 시 이 목표를 완료 처리
+            3. 퀘스트 목표 표기를 "흡인기를 벽에 설치하기"로 변경
+    3. "흡인기 설치" Interaction 활성화
+      - 퀘스트 마크: 처치실 벽면 설치 지점 / 흡인기 설치 상호작용
+      - wall_suction 상호작용도 patinet_b_c_ct 시나리오에서 oxyflowmeter의 처리와 동일해야함
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `wall_suction` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(흡인기를 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(흡인기를 찾자.)"
+          - 있다면 다음 처리
+            1. 설치 신호(`sig.connect_wall_component_1`) 수신 시 이 목표를 완료 처리
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(흡인기를 벽에 설치했다. 앙카우어 팁을 연결하자.)"
+            3. 퀘스트 목표 표기를 "앙카우어 팁을 흡인기에 연결하기"로 변경
+    4. "앙카우어 팁 연결" Interaction 활성화
+      - 퀘스트 마크: 설치된 흡인기 / 앙카우어 팁 연결 상호작용
+      - 기술 노트: `yankauer_suction_ready`는 `suction_line` + `yankauer` 조합 산출물이다. 조합은 노드가 아니라 crafting 시스템으로 처리한다.
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `yankauer_suction_ready` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(석션 라인과 앙카우어 팁을 조립해두지 않았다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(석션 라인과 앙카우어 팁을 찾아 조립하자.)"
+          - 있다면 다음 처리
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(조립한 양카우어 팁을 흡인기에 연결하자)"
+              - 흡인기에 연결하면 플레이어와 wall_suction 사이를 Suction Line으로 LineConnection 수행
+              - 기술노트: `yankauer_suction_ready`가 연결된 플레이어 인벤토리에서 사라지거나, 벽 석션의 "양카우어를 흡인기에서 분리" 상호작용을 수행하면 LineConnection이 끊어지도록 구현한다.
+          - 연결되면 다음 처리
+            1. 퀘스트 목표 표기를 "남성 환자의 구강을 흡인하기"로 변경
+    5. "구강 흡인" Interaction 활성화
+      - 퀘스트 마크: `patient_a` / "구강의 분비물 흡인하기" 구강 흡인 상호작용
+      - Interaction 활성화 시 다음 재생
+        1. Dialogue
+          - Speaker: `@s`
+          - Content: "(환자의 구강에 고인 분비물을 흡인한다.)"
+          - TTS: false
+        2. 흡인 신호(`sig.suction_patient_a`) 수신 시 이 목표를 완료 처리
+        3. Dialogue
+          - Speaker: `@s`
+          - Content: "경추 고정, 구강 흡인 완료했습니다."
+          - TTS: true
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_a`에게 퀘스트 발행
+  - 제목: "삽관 준비 대기"
+  - 목표
+    - 표기: "다른 담당자의 초기 평가가 끝날 때까지 기다리기"
+    - 목표: 없음. 나머지 세 태그의 플레이어가 모두 퀘스트 목표를 완료 처리하면 이 목표를 완료 처리한다.
+
+- 전체 인원의 퀘스트가 "다른 사람들의 처리가 끝날 때까지 기다리기" 상태(*a)라면 퀘스트 완료 처리
+
+네 브랜치가 모두 마무리되면 의사가 평가 결과를 정리한다.
+
+- Dialogue
+  - Speaker: "의사"
+  - Content: "정리하면 GCS 8점, 혈압 70/40mmHg, 맥박 분당 140회로 빠르고 약하며, 호흡수 분당 8회, 체온 35.9도, 산소포화도 82%이고, 경추 고정, 구강 흡인 끝났고, 삽관 준비 된거네요."
+  - TTS: true
 
 ### 의사 지시와 역할별 처치
 
-의사 NPC가 역할별로 지시를 내린다.
+의사가 역할별로 지시를 내린다.
+
 1. Dialogue
-  - Speaker: "의사 NPC"
-  - Content: "기도 확보를 위해 intubation을 시행하겠습니다. 간호사 B 선생님은 보조해주세요."
+  - Speaker: "의사"
+  - Content: "기도 확보를 위해 intubation을 시행하겠습니다. @t=[nurse_b, ???]선생님은 보조해주세요."
   - TTS: true
 2. Dialogue
-  - Speaker: "의사 NPC"
-  - Content: "그동안 간호사 C 선생님은 멸균장갑을 착용하고 거즈로 출혈부위를 지혈해주세요."
+  - Speaker: "의사"
+  - Content: "그동안 @t=[nurse_c, ???]선생님은 멸균장갑을 착용하고 거즈로 출혈부위를 지혈해주세요."
   - TTS: true
 3. Dialogue
-  - Speaker: "의사 NPC"
-  - Content: "간호사 D 선생님은 수액 투여를 위해 양팔에 IV 라인을 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션을 연결하겠습니다."
+  - Speaker: "의사"
+  - Content: "@t=[nurse_d, ???]선생님은 수액 투여를 위해 양팔에 IV 라인을 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션을 연결하겠습니다."
   - TTS: true
 
-이 지시를 받아 세 브랜치가 동시에 진행된다(P004).
+이 지시를 받아 네 브랜치가 동시에 진행된다(P004).
 
-- 간호사 B(미배정 시 간호사 A)에게 퀘스트 발행: 기관내삽관과 산소 공급
-  - 제목: "기관내삽관" (`Quest_Intubation_PatientA`)
-  - 목표
-    - 표기: "삽관 물품을 준비하고 의사의 삽관을 보조하기"
-    - 처리: 아래 단계를 순서대로 마치면 완료 처리
-    1. Dialogue
-      - Speaker: "시스템"
-      - Content: "기관내삽관에 필요한 물품을 준비합니다. 좌측 체크리스트 창을 참고하여 필요한 물품을 클릭해 획득하세요."
-      - TTS: true
-    2. 삽관 체크리스트 UI를 띄운 뒤(`show_checklist_intu`) 여섯 물품 획득을 기다린다. 후두경 블레이드, 후두경 핸들, 기관내관, 스타일렛, 플라스터, 5cc 주사기(`sig.click_laryngoscope_blade`, `sig.click_laryngoscope_handle`, `sig.click_endotracheal_tube`, `sig.click_stylet`, `sig.click_plaster`, `sig.click_syringe_5cc`). 이후 UI를 내린다(`hide_checklist_intu`).
-      - 기술 노트: 후두경과 기관내관(스타일렛 삽입 완료 상태)은 조합 산출물(`laryngoscope`, `endotracheal_tube_ready`)이다. 조합은 노드가 아니라 crafting 시스템으로 처리한다.
-    3. Dialogue
-      - Speaker: "시스템"
-      - Content: "완성된 후두경을 의사에게 전달하세요."
-      - TTS: true
-      - 처리: 의사 NPC의 제출 상호작용(`patient-a-doctor-submit-laryngoscope`)에 후두경 1개를 제출하면 완료(`sig.pass_laryngoscope`)
-    4. Dialogue
-      - Speaker: "시스템"
-      - Content: "완성된 기관내관을 의사에게 전달하세요."
-      - TTS: true
-      - 처리: 제출 상호작용(`patient-a-doctor-submit-et-tube`)에 기관내관 1개를 제출하면 완료(`sig.pass_et_tube_ready`)
-    5. 삽관 연출(`insert_et_tube`) 후 Dialogue
-      - Speaker: "시스템"
-      - Content: "환자 구강에 삽입된 기관내관을 클릭해 스타일렛을 제거하세요."
-      - TTS: true
-      - 처리: 스타일렛 제거(`sig.remove_intu_stylet`)에 이어 제거 연출(`remove_stylet`)
-    6. Dialogue
-      - Speaker: "시스템"
-      - Content: "5cc 주사기를 의사에게 전달하세요."
-      - TTS: true
-      - 처리: 제출 상호작용(`patient-a-doctor-submit-5cc-syringe`)에 5cc 주사기 1개를 제출하면 완료(`sig.pass_syringe`)
-    7. Dialogue
-      - Speaker: "시스템"
-      - Content: "플라스터를 클릭해 선택한 뒤, 삽입된 기관내관을 고정하십시오."
-      - TTS: true
-      - 처리: 고정 신호(`sig.apply_plaster_on_intu`), 이후 테이프 소리(`tape_sound`) 재생
-    8. Dialogue
-      - Speaker: "간호사 B"
+- `nurse_b`에게 퀘스트 발행 (`Quest_Intubation_PatientA`)
+  - 기술 노트: `nurse_b`가 배정되지 않았다면 `nurse_a`가 이 브랜치를 대신 수행한다(`requiredPlayerTagsMatchMode=Any`).
+  - 제목: "기관내삽관 수행"
+  - 퀘스트 발행과 함께 다음 처리 수행:
+    1. 퀘스트 목표 표기를 "후두경을 조립해 의사에게 전달하기"로 변경
+    2. Dialogue
+      - Speaker: `@s`
+      - Content: "(후두경 블레이드와 핸들을 조립해서 전달하자.)"
+      - TTS: false
+    3. 후두경 제출 상호작용(`patient-a-doctor-submit-laryngoscope`) 활성화
+      - 퀘스트 마크: `npc-doctor-patient-a-critical` / `patient-a-doctor-submit-laryngoscope`
+      - 인벤토리에 `laryngoscope` 아이템이 있는지 확인하거나 다이얼로그를 발생시키는 모든 로직 제거. 제출 퀘스트로 충분하다.
+        제거: - 없다면 다음 재생
+        제거:  1. Dialogue
+        제거:    - Speaker: `@s`
+        제거:    - Content: "(조립한 후두경을 갖고 있지 않다.)"
+        제거:  2. Dialogue
+        제거:    - Speaker: `@s`
+        제거:    - Content: "(후두경 블레이드와 핸들을 찾아 조립하자.)"
+        제거: - 있다면 1개를 제출하여 완료(`sig.pass_laryngoscope`)하고 다음으로 진행 (제출 로직이 있으므로 직접 제출하도록 하면 됨. 관련해서 로직 필요없음)
+    4. 퀘스트 목표 표기를 "준비한 기관내관을 의사에게 전달하기"로 변경
+    5. 기관내관 제출 상호작용(`patient-a-doctor-submit-et-tube`) 활성화
+      - 퀘스트 마크: `npc-doctor-patient-a-critical` / `patient-a-doctor-submit-et-tube`
+      - 인벤토리에 `endotracheal_tube_ready` 아이템이 있는지 확인하거나 다이얼로그를 발생시키는 모든 로직 제거. 제출 퀘스트로 충분하다.
+        제거: - 없다면 다음 재생
+        제거:   1. Dialogue
+        제거:     - Speaker: `@s`
+        제거:     - Content: "(스타일렛을 넣어둔 기관내관을 갖고 있지 않다.)"
+        제거:   2. Dialogue
+        제거:     - Speaker: `@s`
+        제거:     - Content: "(기관내관과 스타일렛을 찾아 조립하자.)"
+        제거: - 있다면 1개를 제출하여 완료(`sig.pass_et_tube_ready`)하고 다음으로 진행
+    6. 삽관 연출(`insert_et_tube`) 재생 : 비활성화. 시나리오 그래프 데이터에서는 제거
+      - 환자 A의 디스플레이 상태값과 관련한 상태 플래그를 삽관 완료 상태로 변경 (없다면 PatientTypeBMale의 사례와 같이 세부 구현에 필드 생성)
+    7. 퀘스트 목표 표기를 "삽입된 기관내관에서 스타일렛 제거하기"로 변경
+      - Dialogue
+        - Speaker: "의사"
+        - Content: "들어갔습니다. 스타일렛 빼주세요."
+        - TTS: true
+      - "스타일렛 제거" Interaction 활성화
+        - 퀘스트 마크: 환자 구강에 삽입된 기관내관 / 스타일렛 제거 상호작용
+        - 제거 신호(`sig.remove_intu_stylet`) 수신 후 제거 연출(`remove_stylet`) 재생: 이 로직 비활성화. 시나리오 그래프 데이터에서 제거
+        - 인터렉션 시: 환자 A의 디스플레이 상태값과 관련한 상태 플래그를 삽관 완료 상태로 변경 (없다면 PatientTypeBMale의 사례와 같이 세부 구현에 필드 생성)
+    8. 퀘스트 목표 표기를 "5cc 주사기를 의사에게 전달하기"로 변경
+    9. 5cc 주사기 제출 퀘스트 상호작용(`patient-a-doctor-submit-5cc-syringe`) 활성화
+      - 퀘스트 마크: `npc-doctor-patient-a-critical` / `patient-a-doctor-submit-5cc-syringe`
+      제거: - 인벤토리에 `syringe_5cc` 아이템이 있는지 확인
+      제거:   - 없다면 다음 재생
+      제거:     1. Dialogue
+      제거:       - Speaker: `@s`
+      제거:       - Content: "(5cc 주사기를 갖고 있지 않다.)"
+      제거:     2. Dialogue
+      제거:       - Speaker: `@s`
+      제거:       - Content: "(5cc 주사기를 찾자.)"
+      제거:   - 있다면 1개를 제출하여 완료(`sig.pass_syringe`)하고 다음으로 진행
+    10. 퀘스트 목표 표기를 "기관내관을 플라스터로 고정하기"로 변경
+    11. "기관내관 고정" Interaction 활성화
+      - 퀘스트 마크: `patient_a` / `item_apply`
+      - 인벤토리에 `plaster` 아이템이 있는지 확인
+        - 없다면 다음 재생
+          1. Dialogue
+            - Speaker: `@s`
+            - Content: "(플라스터를 갖고 있지 않다.)"
+          2. Dialogue
+            - Speaker: `@s`
+            - Content: "(플라스터를 찾자.)"
+        - 있다면 고정 신호(`sig.apply_plaster_on_intu`)를 수신하고 테이프 소리(`tape_sound`) 재생
+    12. Dialogue
+      - Speaker: `@s`
       - Content: "삽입된 깊이 23cm, 기관내관 고정되었습니다."
       - TTS: true
-    9. Dialogue
-      - Speaker: "의사 NPC"
-      - Content: "삽관이 끝났고, 자발호흡이 있으니 간호사 A 선생님이 T-piece를 연결하고 산소 10L를 공급하며 산소포화도를 모니터링해주세요."
+    13. Dialogue
+      - Speaker: "의사"
+      - Content: "삽관이 끝났고, 자발호흡이 있으니 @t=[nurse_a, ???]선생님이 T-piece를 연결하고 산소 10L를 공급하며 산소포화도를 모니터링해주세요."
       - TTS: true
-    - 이어서 산소 공급 서브 흐름, 퀘스트 "산소 공급" (`Quest_Oxygen_PatientA`) 발행
-      1. Dialogue
-        - Speaker: "시스템"
-        - Content: "산소 유량계 습윤병과 1L 멸균증류수를 클릭해 획득하십시오."
-        - TTS: true
-        - 처리: 획득 신호(`sig.click_humidifier_bottle`, `sig.click_sterile_distilled_water`)
-      2. Dialogue
-        - Speaker: "시스템"
-        - Content: "유량계를 습득하여 산소 유량계를 완성합니다."
-        - TTS: true
-        - 처리: 획득 신호(`sig.click_flowmeter`)
-        - 기술 노트: 습윤병+멸균증류수, 그리고 유량계 조합(`oxyflowmeter`)도 crafting 시스템으로 처리한다.
-      3. Dialogue
-        - Speaker: "시스템"
-        - Content: "완성된 유량계를 클릭한 뒤, 흡인기 옆 벽면을 클릭해 설치하십시오."
-        - TTS: true
-        - 처리: 설치 신호(`sig.connect_wall_component_2`)
-      4. Dialogue
-        - Speaker: "시스템"
-        - Content: "산소줄과 T-Piece를 획득하세요."
-        - TTS: true
-        - 처리: 획득 신호(`sig.click_o2_line`)
-      5. Dialogue
-        - Speaker: "시스템"
-        - Content: "환자에게 삽입된 기관내관을 클릭해 T-piece를 장착하세요."
-        - TTS: true
-        - 처리: 장착 신호(`sig.interact_tpiece`), 완료 시 T-piece 시각 오브젝트 활성화
-      6. Dialogue
-        - Speaker: "시스템"
-        - Content: "장착된 T-piece와 벽면 유량계를 각각 클릭해 라인을 연결하세요."
-        - TTS: true
-        - 처리: 연결 신호(`sig.connect_tpiece_and_oxyflow`), 뒤이어 연결 연출(`connect_tpiece_ready`)
-      7. Dialogue
-        - Speaker: "시스템"
-        - Content: "산소 연결이 완료되었습니다. 유량계를 클릭해 투여 산소량을 결정합니다."
-        - TTS: true
-        - 처리: 설치된 유량계 클릭 신호(`sig.interact_oxyflow_wall`) 대기
-      8. ChoiceDialogue
-        - Speaker: "시스템"
-        - Content: "투여될 산소의 양을 조절합니다."
-        - Choices: 3L/5L/15L은 오답, 10L이 정답
-        - 오답 노드: "오답입니다. 처방은 10L 입니다." 후 재시도
-        - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
-      9. Dialogue
-        - Speaker: "간호사 A"
-        - Content: "산소 투여 시작했습니다."
-        - TTS: true
-- 간호사 C에게 지혈 퀘스트를 발행
-  - 제목: "지혈" (`Quest_BleedingControl_PatientA`)
+      - 기술 노트: 이 대사가 끝나면 삽관 완료 신호를 발신하여 `nurse_a` 브랜치의 산소 공급 흐름을 시작시킨다.
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_a`에게 퀘스트 발행 (`Quest_Oxygen_PatientA`)
+  - 제목: "산소 공급"
   - 목표
-    - 표기: "출혈 부위를 지혈하기"
-    - 처리: 아래 단계를 차례로 수행하면 완료 처리
-    1. Dialogue
-      - Speaker: "시스템"
-      - Content: "지혈을 실시합니다. 멸균장갑과 거즈, 플라스터를 클릭해 획득하십시오."
-      - TTS: true
-      - 처리: 획득 신호(`sig.click_sterile_gloves`, `sig.click_gauze`, `sig.click_plaster`)
+    - 표기: "삽관이 끝날 때까지 기다리기"
+    - 처리: 삽관 완료 신호를 수신하면 아래 흐름을 시작한다.
+  - 기술 노트: 기존에는 산소 공급 흐름이 삽관 브랜치 안에 이어져 있었으나, 의사의 지시대로 `nurse_a`가 수행하도록 별도 브랜치로 분리한다.
+  - 삽관 완료 신호 수신 후 다음 처리 수행:
+    1. 퀘스트 목표 표기를 "산소 유량계를 벽에 설치하기"로 변경
     2. Dialogue
-      - Speaker: "시스템"
-      - Content: "멸균장갑을 착용하십시오. E키를 눌러 인벤토리 창을 열고, 좌측 상단의 착용 칸으로 멸균장갑 아이템을 옮기십시오."
+      - Speaker: `@s`
+      - Content: "(습윤병과 멸균증류수, 유량계를 조립해서 산소 유량계를 만들자.)"
+      - TTS: false
+    3. "산소 유량계 설치" Interaction 활성화
+      - 퀘스트 마크: 흡인기 옆 벽면 설치 지점 / 유량계 설치 상호작용
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `oxyflowmeter` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(완성된 산소 유량계를 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(습윤병, 1L 멸균증류수, 유량계를 찾아 조립하자.)"
+          - 있다면 설치 신호(`sig.connect_wall_component_2`)를 수신하고 이 목표를 완료 처리
+      - 기술 노트: `oxyflowmeter`는 `humidifier_sterile_distilled_water_bottle`(= `humidifier_bottle` + `sterile_distilled_water`) + `flowmeter` 조합 산출물이다.
+    4. 퀘스트 목표 표기를 "기관내관에 T-piece를 장착하기"로 변경
+    5. "T-piece 장착" Interaction 활성화
+      - 퀘스트 마크: 환자 구강에 삽입된 기관내관 / T-piece 장착 상호작용
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `tpiece_set` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(T-piece를 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(T-piece를 찾자.)"
+          - 있다면 장착 신호(`sig.interact_tpiece`)를 수신하고 T-piece 시각 오브젝트를 활성화한 뒤 이 목표를 완료 처리
+    6. 퀘스트 목표 표기를 "T-piece와 벽면 유량계를 산소줄로 연결하기"로 변경
+    7. "산소 연결" Interaction 활성화
+      - 퀘스트 마크: 장착된 T-piece / 산소 연결 상호작용
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `o2_line` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(산소줄을 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(산소줄을 찾자.)"
+          - 있다면 연결 신호(`sig.connect_tpiece_and_oxyflow`)를 수신하고 연결 연출(`connect_tpiece_ready`)을 재생한 뒤 이 목표를 완료 처리
+      - 기술 노트: T-piece 표시와 설치된 유량계의 어느 쪽을 기준으로 감지해도 이 상호작용이 노출되어야 하며, 실행 시 두 산소 포트를 연결한다. 양측 `OxyLineConnectionPoint` 프리팹 배치가 선행되어야 한다.
+    8. 퀘스트 목표 표기를 "투여 산소량을 10L로 맞추기"로 변경
+    9. "유량계 조절" Interaction 활성화
+      - 퀘스트 마크: 벽에 설치된 산소 유량계 / 유량 조절 상호작용
+      - Interaction 활성화 시 클릭 신호(`sig.interact_oxyflow_wall`)를 수신하고 다음 재생
+      - ChoiceDialogue
+        - Speaker: `@s`
+        - Content: "(투여할 산소량은..)"
+        - Choices
+          - "3L": 오답
+          - "5L": 오답
+          - "10L": 정답
+            - "(처방대로 10L로 맞추자.)"
+          - "15L": 오답
+        - 오답 노드
+          - Dialogue
+            - Speaker: `@s`
+            - Content: "(아니야. 다시 생각해보자.)"
+            - TTS: false
+          - 이후 같은 문항으로 되돌아가 재응시한다.
+        - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+          - 정답 여부
+          - 플레이어가 선택한 답, 의도된 답
+        - 정답 선택 시 다음으로 이동
+    10. Dialogue
+      - Speaker: `@s`
+      - Content: "산소 투여 시작했습니다."
       - TTS: true
-      - 처리: 착용 신호(`sig.wear_glove`)
-    3. Dialogue
-      - Speaker: "시스템"
-      - Content: "거즈를 선택한 뒤, 환자에게 적용하십시오."
-      - TTS: true
-      - 처리: 적용 신호(`sig.apply_gauze`) 후 거즈 적용 연출(`apply_gauze_patient_a`)
-    4. Dialogue
-      - Speaker: "시스템"
-      - Content: "압박을 가해 지혈하고 있습니다. 플라스터를 선택한 뒤, 거즈를 고정하십시오."
-      - TTS: true
-      - 처리: 고정 신호(`sig.apply_plaster_on_gauze`), 이후 고정 연출(`apply_gauze_with_plaster_patient_a`)과 테이프 소리(`tape_sound`)
-    5. Dialogue
-      - Speaker: "간호사 C"
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_c`에게 퀘스트 발행 (`Quest_BleedingControl_PatientA`)
+  - 제목: "출혈 부위 지혈"
+  - 목표: ""
+  - 퀘스트 발행과 함께 다음 처리 수행:
+    1. 퀘스트 목표 표기를 "멸균장갑 착용하기"로 변경
+    2. Dialogue
+      - Speaker: `@s`
+      - Content: "(멸균장갑부터 착용하자.)"
+      - TTS: false
+    3. 인벤토리에 `sterile_gloves` 아이템이 있는지 확인
+      - 없다면 다음 재생
+        1. Dialogue
+          - Speaker: `@s`
+          - Content: "(멸균장갑을 갖고 있지 않다.)"
+        2. Dialogue
+          - Speaker: `@s`
+          - Content: "(멸균장갑을 찾자.)"
+      - 있다면 착용 신호(`sig.wear_glove`)를 수신하고 이 목표를 완료 처리
+      - 기술 노트: 착용은 인벤토리 창의 착용 칸에 아이템을 옮기는 기존 오버월드 동작을 그대로 사용한다.
+    4. 퀘스트 목표 표기를 "출혈 부위에 거즈를 대고 압박하기"로 변경
+    5. "거즈 적용" Interaction 활성화
+      - 퀘스트 마크: `patient_a` / `item_apply`
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `gauze` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(거즈를 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(거즈를 찾자.)"
+          - 있다면 다음 처리
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(거즈를 출혈 부위에 대고 압박 지혈을 시행했다.)"
+              - TTS: false
+            2. 적용 신호(`sig.apply_gauze`)를 수신하고 거즈 적용 연출(`apply_gauze_patient_a`)을 재생한 뒤 이 목표를 완료 처리
+            3. 퀘스트 목표 표기를 "거즈를 플라스터로 고정하기"로 변경
+    6. "거즈 고정" Interaction 활성화
+      - 퀘스트 마크: `patient_a` / `item_apply`
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `plaster` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(플라스터를 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(플라스터를 찾자.)"
+          - 있다면 다음 처리
+            1. 1초 지연
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(거즈 위에 플라스터를 붙여 고정했다.)"
+              - TTS: false
+            3. 고정 신호(`sig.apply_plaster_on_gauze`)를 수신하고 고정 연출(`apply_gauze_with_plaster_patient_a`)과 테이프 소리(`tape_sound`)를 재생한 뒤 이 목표를 완료 처리
+    7. Dialogue
+      - Speaker: `@s`
       - Content: "지혈 중입니다. 거즈 고정했습니다."
       - TTS: true
-- 정맥로 확보와 수액 준비: 간호사 D(미배정 시 간호사 C)에게 퀘스트 발행
-  - 제목: "IV 라인" (`Quest_IV_Line_PatientA`)
-  - 목표
-    - 표기: "양팔에 정맥로를 확보하고 수액을 연결하기"
-    - 처리: 아래 단계를 순서대로 진행하면 완료 처리
-    1. Dialogue
-      - Speaker: "시스템"
-      - Content: "환자의 양쪽 팔에 IV 라인을 순서대로 확보합니다. 먼저 18G 캐뉼라 1개와 준비된 생리식염수 1L, 플라즈마 솔루션 1L 수액백을 획득하십시오."
-      - TTS: true
-    2. IV 체크리스트 UI를 띄우고(`show_iv_checklist`) 획득 신호를 기다린다(`sig.click_cannula_18g`, `sig.click_normal_saline_1000ml`, `sig.click_plasma_solution_1000ml`). 그다음 UI를 내린다(`hide_iv_checklist`).
-      - 기술 노트: 18G 캐뉼라는 준비 단계에서 1개만 확인한다. 첫 번째는 좌측 삽입 시 소비하고 두 번째는 좌측 완료 후 다시 획득해 우측에 사용한다.
-    3. Dialogue
-      - Speaker: "시스템"
-      - Content: "18게이지 캐뉼라를 클릭해 선택한 뒤, 환자의 좌측 팔을 클릭해 정맥 라인을 확보하세요."
-      - TTS: true
-      - 처리: 좌측 삽입 신호(`sig.insert_iv_patient_a_left`), 이후 삽입 연출(`insert_18g_left`)
-    4. Dialogue
-      - Speaker: "시스템"
-      - Content: "준비된 생리식염수 1L 수액백을 먼저 수액 걸대에 건 뒤, 수액줄을 좌측 팔의 18G 캐뉼라에 연결하세요."
-      - TTS: true
-      - 처리: 연결 신호(`sig.connect_cannula_and_ns1`)에 이어 연결 연출(`connect_ns1_left`)
-    5. Dialogue
-      - Speaker: "시스템"
-      - Content: "좌측 팔의 정맥로가 확보되었습니다. 두 번째 18G 캐뉼라를 획득해 반대쪽 팔에 삽입하고, 플라즈마 솔루션 수액백을 먼저 건 뒤 연결하십시오."
-      - TTS: true
-      - 처리: 우측 삽입 신호(`sig.insert_iv_patient_a_right`), 그 뒤 삽입·연결 연출(`insert_18g_right`, `connect_ps1_right`)
-    6. Dialogue
-      - Speaker: "간호사 D"
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_d`에게 퀘스트 발행 (`Quest_IV_Line_PatientA`)
+  - 기술 노트: `nurse_d`가 배정되지 않았다면 `nurse_c`가 이 브랜치를 대신 수행한다(`requiredPlayerTagsMatchMode=Any`).
+  - 제목: "말초 정맥로 확보"
+  - 목표: ""
+  - 퀘스트 발행과 함께 다음 처리 수행:
+    1. 퀘스트 목표 표기를 "남성 환자의 좌측 팔에 정맥로 확보하기"로 변경
+    2. "좌측 팔 정맥로 확보" Interaction 활성화
+      - 퀘스트 마크: `patient_a` / `intravenous_line_cannula`
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `cannula_18g` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(정맥로 확보에 사용할 18게이지 캐뉼라를 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(18게이지 캐뉼라를 찾자.)"
+          - 있다면 시스템이 좌측 삽입을 처리한 뒤 다음으로 진행
+            - 플레이어 인벤토리의 `cannula_18g`를 1개 소모
+            - 삽입 신호(`sig.insert_iv_patient_a_left`)를 수신하고 삽입 연출(`insert_18g_left`)을 재생
+            - 퀘스트 목표 표기를 "좌측 팔에 생리식염수 연결하기"로 변경
+            - Dialogue
+              - Speaker: `@s`
+              - Content: "(환자에게 생리식염수를 연결해두자.)"
+              - TTS: false
+    3. "생리식염수 연결" Interaction 활성화
+      - 다음 두 조건이 모두 충족되었을 때만 노출한다.
+        - 좌측 18G 캐뉼라 삽입이 완료되어 있을 것
+        - 환자가 누워있는 침대의 Attachment가 활성화되어 있고, 그 Attachment에 생리식염수가 걸려 있을 것
+      - 퀘스트 마크: `patient_a` / `normal_saline_connect`
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `normal_saline_1000ml` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(생리식염수 1L 수액백을 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(생리식염수 1L 수액백을 찾아 수액 걸대에 걸자.)"
+          - 있다면 연결 신호(`sig.connect_cannula_and_ns1`)를 수신하고 연결 연출(`connect_ns1_left`)을 재생한 뒤 이 목표를 완료 처리
+      - 기술 노트: 침대에 수액을 거는 동작은 침대 Attachment의 기존 수액 걸기 Interaction을 그대로 사용한다.
+    4. 퀘스트 목표 표기를 "남성 환자의 우측 팔에 정맥로 확보하기"로 변경
+    5. "우측 팔 정맥로 확보" Interaction 활성화
+      - 퀘스트 마크: `patient_a` / `intravenous_line_cannula`
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `cannula_18g` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(18게이지 캐뉼라를 하나 더 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(18게이지 캐뉼라를 하나 더 찾자.)"
+          - 있다면 시스템이 우측 삽입을 처리한 뒤 다음으로 진행
+            - 플레이어 인벤토리의 `cannula_18g`를 1개 소모
+            - 삽입 신호(`sig.insert_iv_patient_a_right`)를 수신하고 삽입 연출(`insert_18g_right`)을 재생
+            - 퀘스트 목표 표기를 "우측 팔에 플라즈마 솔루션 연결하기"로 변경
+      - 기술 노트: 18G 캐뉼라는 좌측과 우측에서 각각 1개씩 소모한다. 사전에 두 개를 동시에 확인하지 않고, 각 삽입 시점에 보유 여부를 판정한다.
+    6. "플라즈마 솔루션 연결" Interaction 활성화
+      - 퀘스트 마크: `patient_a` / `normal_saline_connect`
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `plasma_solution_1000ml` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(플라즈마 솔루션 1L 수액백을 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(플라즈마 솔루션 1L 수액백을 찾아 수액 걸대에 걸자.)"
+          - 있다면 연결 연출(`connect_ps1_right`)을 재생한 뒤 이 목표를 완료 처리
+    7. Dialogue
+      - Speaker: `@s`
       - Content: "양측 정맥로가 모두 확보되었습니다."
       - TTS: true
-    - 같은 브랜치 안에서 C-line 보조와 Level 1 연결 서브 흐름이 이어진다.
+    - 같은 브랜치 안에서 C-line 보조와 Level 1 연결 흐름이 이어진다.
       1. Dialogue
-        - Speaker: "의사 NPC"
-        - Content: "그래도 혈압이 잡히지 않네요. C-line 잡아서 수액을 빠르게 투여하겠습니다. 간호사 C 선생님, C-line set 건네주세요."
+        - Speaker: "의사"
+        - Content: "그래도 혈압이 잡히지 않네요. C-line 잡아서 수액을 빠르게 투여하겠습니다. @t=[nurse_d, @s]선생님, C-line set 건네주세요."
         - TTS: true
-      2. Dialogue
-        - Speaker: "시스템"
-        - Content: "C-line set을 클릭해 획득하고, 해당 아이템을 의사에게 전달하세요."
-        - TTS: true
-        - 퀘스트 "C-line 보조" (`Quest_Cline_Assist`) 발행
-        - 처리: 제출 상호작용(`patient-a-doctor-submit-central-line-set`)에 C-line set 1개를 제출하면 완료(`sig.pass_central_line_set`), 뒤이어 삽입 연출(`insert_central_line_set`)
+      2. 퀘스트 "중심정맥관 삽입 보조"(`Quest_Cline_Assist`) 발행
+        - 목표 표기: "C-line set을 의사에게 전달하기"
+        - C-line set 제출 상호작용(`patient-a-doctor-submit-central-line-set`) 활성화
+          - 퀘스트 마크: `npc-doctor-patient-a-critical` / `patient-a-doctor-submit-central-line-set`
+          - 인벤토리에 `central_line_set` 아이템이 있는지 확인하거나 다이얼로그를 발생시키는 모든 로직 제거. 제출 퀘스트로 충분하다.
+            제거: - 없다면 다음 재생
+            제거:   1. Dialogue
+            제거:     - Speaker: `@s`
+            제거:     - Content: "(C-line set을 갖고 있지 않다.)"
+            제거:   2. Dialogue
+            제거:     - Speaker: `@s`
+            제거:     - Content: "(C-line set을 찾자.)"
+            제거: - 있다면 1개를 제출하여 완료(`sig.pass_central_line_set`)하고, 삽입 연출(`insert_central_line_set`)을 재생
       3. Dialogue
-        - Speaker: "의사 NPC"
-        - Content: "간호사 C 선생님, Level 1 rapid infuser에 플라즈마 솔루션과 혈액백 연결시켜주세요."
+        - Speaker: "의사"
+        - Content: "@t=[nurse_d, @s]선생님, Level 1 rapid infuser에 플라즈마 솔루션과 혈액백 연결시켜주세요."
         - TTS: true
-      4. Dialogue
-        - Speaker: "시스템"
-        - Content: "플라즈마 솔루션 1L 수액백과 혈액백을 클릭해 획득하세요."
-        - TTS: true
-        - 퀘스트 "Level 1 수액" (`Quest_Lv1_Fluids`) 발행
-        - 처리: 획득 신호(`sig.click_plasma_solution_1000ml`, `sig.click_blood_transfusion_set`)
+      4. 퀘스트 "대량 수액 공급"(`Quest_Lv1_Fluids`) 발행
+        - 목표 표기: "Level 1 rapid infuser에 플라즈마 솔루션 연결하기"
+        - "플라즈마 솔루션 연결" Interaction 활성화
+          - 퀘스트 마크: `level1_rapid_infuser` / 수액 연결 상호작용
+          - 인벤토리에 `plasma_solution_1000ml` 아이템이 있는지 확인
+            - 없다면 다음 재생
+              1. Dialogue
+                - Speaker: `@s`
+                - Content: "(연결할 플라즈마 솔루션 1L 수액백을 갖고 있지 않다.)"
+              2. Dialogue
+                - Speaker: `@s`
+                - Content: "(플라즈마 솔루션 1L 수액백을 찾자.)"
+            - 있다면 연결 신호(`sig.connect_ps1_to_lv1`)를 수신하고 이 목표를 완료 처리
+        - 퀘스트 목표 표기를 "Level 1 rapid infuser에 혈액백 연결하기"로 변경
+        - "혈액백 연결" Interaction 활성화
+          - 퀘스트 마크: `level1_rapid_infuser` / 혈액백 연결 상호작용
+          - 인벤토리에 `blood_bag` 아이템이 있는지 확인
+            - 없다면 다음 재생
+              1. Dialogue
+                - Speaker: `@s`
+                - Content: "(혈액백을 갖고 있지 않다.)"
+              2. Dialogue
+                - Speaker: `@s`
+                - Content: "(혈액백을 찾자.)"
+            - 있다면 연결 신호(`sig.connect_blood_to_lv1`)를 수신하고 준비 연출(`lv1_ready`)을 재생한 뒤 이 목표를 완료 처리
+        - 기술 노트: Level 1 rapid infuser는 이 시나리오에서만 사용하는 장비다. 오버월드 공용 장비로 대체하지 않고 전용 상호작용을 유지한다.
       5. Dialogue
-        - Speaker: "시스템"
-        - Content: "플라즈마 솔루션 1L 수액백을 클릭해 선택한 뒤, Level 1 rapid infuser와 연결하세요."
-        - TTS: true
-        - 처리: 연결 신호(`sig.connect_ps1_to_lv1`)
-      6. Dialogue
-        - Speaker: "시스템"
-        - Content: "혈액백을 클릭해 선택한 뒤, Level 1 rapid infuser와 연결하세요."
-        - TTS: true
-        - 처리: 연결 신호(`sig.connect_blood_to_lv1`) 수신, 준비 연출(`lv1_ready`) 재생
-      7. Dialogue
-        - Speaker: "간호사 C"
+        - Speaker: `@s`
         - Content: "Level 1에 플라즈마 솔루션과 혈액백 연결 완료되었습니다."
         - TTS: true
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
 
-세 브랜치 완료 후 합류한다.
+- 전체 인원의 퀘스트가 "다른 사람들의 처리가 끝날 때까지 기다리기" 상태(*a)라면 퀘스트 완료 처리
 
 ### 심정지 발생과 맥박 확인
 
 1. Dialogue
-  - Speaker: "의사 NPC"
+  - Speaker: "의사"
   - Content: "그래도 혈압이 잘 안잡히네요..."
   - TTS: true
 2. 환자 악화 연출(`patient_crash_ui`)을 재생한다.
+  - 기술 노트: 환자의 급격한 상태 악화는 이 시나리오에서만 발생하는 사건이므로 전용 연출 이벤트를 유지한다.
 3. Dialogue
-  - Speaker: "의사 NPC"
-  - Content: "심전도만 출력되고, 다른 활력징후가 출력되지 않습니다. 간호사 B 선생님, 환자 맥박 확인해주세요."
+  - Speaker: "의사"
+  - Content: "심전도만 출력되고, 다른 활력징후가 출력되지 않습니다. @t=[nurse_b, ???]선생님, 환자 맥박 확인해주세요."
   - TTS: true
-4. 간호사 B에게 퀘스트 발행
-  - 제목: "맥박 확인" (`Quest_Check_Pulse`)
+4. `nurse_b`에게 퀘스트 발행 (`Quest_Check_Pulse`)
+  - 제목: "맥박 확인"
   - 목표
-    - 표기: "환자의 경동맥을 촉지해 맥박 확인하기"
-    - 처리: 촉지 신호(`sig.check_pulse_patient_a_r1`) 대기
-    - Dialogue
-      - Speaker: "시스템"
-      - Content: "환자의 경동맥을 촉지해 맥박을 확인합니다. 목 부위를 클릭하세요."
-      - TTS: true
+    - 표기: "남성 환자의 경동맥을 촉지해 맥박 확인하기"
+    - 처리: 맥박 확인 상호작용(`assess_pulse`)을 수행하면 완료 처리
+      - 완료 신호: `sig.check_pulse_patient_a_r1`
+    - 퀘스트 마크: `patient_a` / `assess_pulse`
+    - Interaction 수행 시 다음 재생
+      1. Dialogue
+        - Speaker: `@s`
+        - Content: "(환자의 목에 손을 대고 경동맥을 촉지한다.)"
+        - TTS: false
+      2. Dialogue
+        - Speaker: null
+        - Content: "(아무것도 느껴지지 않는다.)"
+        - TTS: false
 5. Dialogue
-  - Speaker: "간호사 B"
+  - Speaker: `@s`
   - Content: "맥박 없습니다."
   - TTS: true
 6. Dialogue
-  - Speaker: "의사 NPC"
-  - Content: "PEA입니다. CPR 하겠습니다. 제가 팀 리더를 맡겠습니다. 간호사 A 선생님은 앰부백 짜주시고, 간호사 B 선생님은 가슴압박 해주세요. 간호사 C 선생님은 제세동기 연결해주시고, 간호사 D 선생님은 C-line으로 에피네프린 1mg 투여해주세요."
+  - Speaker: "의사"
+  - Content: "PEA입니다. CPR 하겠습니다. 제가 팀 리더를 맡겠습니다. @t=[nurse_a, ???]선생님은 앰부백 짜주시고, @t=[nurse_b, ???]선생님은 가슴압박 해주세요. @t=[nurse_c, ???]선생님은 제세동기 연결해주시고, @t=[nurse_d, ???]선생님은 C-line으로 에피네프린 1mg 투여해주세요."
   - TTS: true
 
 ### CPR 1주기
 
 의사 지시에 따라 네 개의 브랜치가 병렬로 진행된다(P005).
 
-- 간호사 A에게 퀘스트 발행: 앰부백 산소화
-  - 제목: "앰부백 산소화" (`Quest_Ambu_A`)
+- `nurse_a`에게 퀘스트 발행 (`Quest_Ambu_A`)
+  - 제목: "앰부배깅 수행"
+  - 목표: ""
+  - 퀘스트 발행과 함께 다음 처리 수행:
+    1. 퀘스트 목표 표기를 "기관내관에서 T-piece 분리하기"로 변경
+    2. "T-piece 분리" Interaction 활성화
+      - 퀘스트 마크: 환자에게 연결된 T-piece / 분리 상호작용
+      - 분리 신호(`sig.remove_tpiece`)를 수신하면 이 목표를 완료 처리
+    3. 퀘스트 목표 표기를 "기관내관에 앰부백 연결하기"로 변경
+    4. "앰부백 연결" Interaction 활성화
+      - 퀘스트 마크: 환자 구강에 삽입된 기관내관 / 앰부백 연결 상호작용
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `ambubag` 아이템과 `reservoir_bag` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(앰부백과 산소 저장낭을 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(앰부백과 산소 저장낭을 찾자.)"
+          - 있다면 다음 처리
+            1. 연결 신호(`sig.connect_ambubag`, `sig.connect_o2_to_ambu`)를 수신하고 앰부백 적용 연출(`apply_ambu_patient_a`)을 재생
+            2. ChoiceDialogue
+              - Speaker: `@s`
+              - Content: "(산소량은..)"
+              - Choices(1개)
+                - Content: "(유량계를 Full로 올린다.)"
+            3. 산소 소리(`oxygen_sound`) 재생
+            4. 이 목표를 완료 처리
+    5. 퀘스트 목표 표기를 "앰부백으로 산소 공급하기"로 변경
+    6. "앰부배깅" Interaction 활성화
+      - 퀘스트 마크: 연결된 앰부백 / 앰부배깅 상호작용
+      - 시작 신호(`sig.start_ambu_r1`)를 수신하고 앰부배깅 연출(`start_ambubagging`)을 재생
+    7. ChoiceDialogue
+      - Speaker: `@s`
+      - Content: "(성인에게 제공할 산소량은..)"
+      - Choices
+        - "약 1500ml (다섯 손가락 모두를 이용해 백을 짠다)": 오답
+        - "약 600ml (엄지, 검지, 중지를 이용해 백을 짠다)": 정답
+          - "(Tidal Volume을 고려해 약 600ml로 짜자.)"
+      - 오답 노드
+        - Dialogue
+          - Speaker: `@s`
+          - Content: "(아니야. 다시 생각해보자.)"
+          - TTS: false
+        - 이후 같은 문항으로 되돌아가 재응시한다.
+      - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 정답 선택 시 다음으로 이동
+    8. ChoiceDialogue
+      - Speaker: `@s`
+      - Content: "(짜는 속도는..)"
+      - Choices
+        - "10초에 1번 (분당 약 6회)": 오답
+        - "6초에 1번 (분당 약 10회)": 정답
+          - "(6초에 1번씩 맞춰서 짜자.)"
+        - "3초에 1번 (분당 약 20회)": 오답
+      - 오답 노드
+        - Dialogue
+          - Speaker: `@s`
+          - Content: "(아니야. 다시 생각해보자.)"
+          - TTS: false
+        - 이후 같은 문항으로 되돌아가 재응시한다.
+      - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 정답 선택 시 다음으로 이동
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_b`에게 퀘스트 발행 (`Quest_ChestComp_B`)
+  - 제목: "가슴압박 수행"
   - 목표
-    - 표기: "앰부백으로 산소를 공급하기"
-    - 처리: 아래 단계를 순서대로 완료하면 완료 처리
-    1. Dialogue
-      - Speaker: "시스템"
-      - Content: "앰부백과 산소 저장낭을 클릭해 획득하세요."
-      - TTS: true
-      - 처리: 획득 신호(`sig.click_ambubag`, `sig.click_reservoir_bag`)
-    2. Dialogue
-      - Speaker: "시스템"
-      - Content: "환자에게 연결된 T-piece를 클릭해 연결을 해제하세요."
-      - TTS: true
-      - 처리: 해제 신호(`sig.remove_tpiece`)
-    3. Dialogue
-      - Speaker: "시스템"
-      - Content: "앰부백을 클릭해 선택한 뒤, 환자에게 삽입된 기관내관을 클릭해 연결하세요. 이후, 산소줄과 앰부백을 클릭해 연결합니다."
-      - TTS: true
-      - 처리: 연결 신호(`sig.connect_ambubag`, `sig.connect_o2_to_ambu`), 이후 앰부백 적용 연출(`apply_ambu_patient_a`)
+    - 표기: "남성 환자에게 가슴압박을 수행하기"
+    - 처리: 가슴압박 시작 상호작용을 수행한 뒤 아래 문항 흐름을 모두 통과하면 완료 처리
+    - 퀘스트 마크: `patient_a` 흉부 / 가슴압박 시작 상호작용
+    - Interaction 수행 시 시작 신호(`sig.click_to_start_comp`)를 수신하고 압박 시작 연출(`start_chest_compression`)을 재생
+    1. ChoiceDialogue
+      - Speaker: `@s`
+      - Content: "(성인의 가슴 압박 깊이는..)"
+      - Choices
+        - "약 4cm": 오답
+        - "약 5cm": 정답
+          - "(약 5cm 깊이로 누르자.)"
+        - "약 6cm": 오답
+      - 오답 노드
+        - Dialogue
+          - Speaker: `@s`
+          - Content: "(아니야. 다시 생각해보자.)"
+          - TTS: false
+        - 이후 같은 문항으로 되돌아가 재응시한다.
+      - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 정답 선택 시 다음으로 이동
+    2. ChoiceDialogue
+      - Speaker: `@s`
+      - Content: "(압박 위치는..)"
+      - Choices
+        - "양측 유두선상의 중간지점": 오답
+        - "흉골 하부 1/2 지점": 정답
+          - "(흉골 하부 1/2 지점에 손을 올리자.)"
+      - 오답 노드
+        - Dialogue
+          - Speaker: `@s`
+          - Content: "(아니야. 다시 생각해보자.)"
+          - TTS: false
+        - 이후 같은 문항으로 되돌아가 재응시한다.
+      - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 정답 선택 시 다음으로 이동
+    3. ChoiceDialogue
+      - Speaker: `@s`
+      - Content: "(압박 횟수는..)"
+      - Choices
+        - "분당 약 80~100회": 오답
+        - "분당 약 100~120회": 정답
+          - "(분당 100~120회에 맞춰 누르자.)"
+        - "분당 약 120~140회": 오답
+      - 오답 노드
+        - Dialogue
+          - Speaker: `@s`
+          - Content: "(아니야. 다시 생각해보자.)"
+          - TTS: false
+        - 이후 같은 문항으로 되돌아가 재응시한다.
+      - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 정답 선택 시 다음으로 이동
     4. ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "투여될 산소의 양을 조절합니다."
-      - Choices(1개): "Full"
-      - 이어서 산소 소리(`oxygen_sound`) 재생
+      - Speaker: `@s`
+      - Content: "(가슴압박에서 놓치기 쉬운 것은..)"
+      - Choices
+        - "지쳐도 한 사람이 계속 가슴압박을 수행한다.": 오답
+        - "뼈가 부러진 것 같으면 멈춘다.": 오답
+        - "충분한 이완을 제공한다.": 정답
+          - "(누르는 만큼 충분히 이완시켜야 혈액이 돌아온다.)"
+      - 오답 노드
+        - Dialogue
+          - Speaker: `@s`
+          - Content: "(아니야. 다시 생각해보자.)"
+          - TTS: false
+        - 이후 같은 문항으로 되돌아가 재응시한다.
+      - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_c`에게 퀘스트 발행 (`Quest_Defibrillator_C`)
+  - 제목: "제세동기 연결"
+  - 목표: ""
+  - 퀘스트 발행과 함께 다음 처리 수행:
+    1. 퀘스트 목표 표기를 "제세동 카트를 환자 옆으로 가져오기"로 변경
+    2. 카트 이동 완료 신호(`sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient`)를 수신하면 이 목표를 완료 처리
+      - 퀘스트 마크: 제세동 카트(`defib_cart_a`)의 손잡이
+      - 기술 노트: 카트 이동과 위치 도달 판정은 `MovingPatientBedController`와 `MovingPatientBedPositioningPoint`의 기존 오버월드 동작을 그대로 사용한다.
+    3. 퀘스트 목표 표기를 "남성 환자의 흉부에 제세동 패드 부착하기"로 변경
+    4. "제세동 패드 부착" Interaction 활성화
+      - 퀘스트 마크: `patient_a` 흉부 / 제세동 패드 부착 상호작용
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `defibrillatorpad` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(제세동 패드를 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(제세동 패드를 찾자.)"
+          - 있다면 부착 신호(`sig.interact_patient_chest`)를 수신하고 부착 연출(`attach_defibpad`)과 불규칙 파형 UI(`defib_ui_irregular`)를 재생한 뒤 이 목표를 완료 처리
     5. Dialogue
-      - Speaker: "시스템"
-      - Content: "앰부백을 클릭해 산소 공급을 시작하세요."
-      - TTS: true
-      - 처리: 시작 신호(`sig.start_ambu_r1`) 후 앰부배깅 연출(`start_ambubagging`)
-    6. 이론 문항 1: ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "1. 성인의 정확한 산소 제공량은?"
-      - Choices: "약 1500ml (다섯 손가락 모두를 이용해 백을 짠다)"는 오답, "약 600ml (엄지, 검지, 중지를 이용해 백을 짠다)"이 정답
-      - 오답 노드: "오답입니다. Tidal Volume을 고려해 약 600ml를 제공해야 합니다." 후 재시도
-      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
-    7. 이론 문항 2: ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "2. 심폐소생술 시 앰부 배깅(ambu-bagging)의 적절한 속도는?"
-      - Choices: "10초에 1번 (분당 약 6회)"와 "3초에 1번 (분당 약 20회)"은 오답, "6초에 1번 (분당 약 10회)"이 정답
-      - 오답 노드: "오답입니다. 6초에 1번씩 눌러야 합니다." 후 재시도
-      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
-- 간호사 B에게는 가슴압박 퀘스트를 발행
-  - 제목: "가슴압박" (`Quest_ChestComp_B`)
-  - 목표
-    - 표기: "가슴압박을 수행하기"
-    - 처리: 아래 단계를 순서대로 마치면 완료 처리
-    1. Dialogue
-      - Speaker: "시스템"
-      - Content: "환자의 가슴을 클릭해 가슴압박을 시작하세요."
-      - TTS: true
-      - 처리: 시작 신호(`sig.click_to_start_comp`)에 이어 압박 시작 연출(`start_chest_compression`)
-    2. 이론 문항 1: ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "1. 성인의 정확한 가슴 압박 깊이는?"
-      - Choices: "약 4cm"와 "약 6cm"는 오답, "약 5cm"가 정답
-      - 오답 노드: "오답입니다. 성인의 정확한 가슴 압박 깊이는 약 5cm 입니다." 후 재시도
-      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
-    3. 이론 문항 2: ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "2. 성인의 정확한 가슴 압박 위치는?"
-      - Choices: "양측 유두선상의 중간지점"은 오답, "흉골 하부 1/2 지점"이 정답
-      - 오답 노드: "오답입니다. 성인의 정확한 가슴 압박 위치는 흉골 하부 1/2 지점입니다." 후 재시도
-      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
-    4. 이론 문항 3: ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "3. 정확한 가슴 압박 횟수는?"
-      - Choices: "분당 약 80~100회"와 "분당 약 120~140회"는 오답, "분당 약 100~120회"가 정답
-      - 오답 노드: "오답입니다. 정확한 가슴 압박 횟수는 분당 약 100~120회 입니다." 후 재시도
-      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
-    5. 이론 문항 4: ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "4. 가슴압박 시 주의사항은?"
-      - Choices: "지쳐도 한 사람이 계속 가슴압박을 수행한다."와 "뼈가 부러진 것 같으면 멈춘다."는 오답, "충분한 이완을 제공한다."가 정답
-      - 오답 노드: "오답입니다. 가슴압박 시 누르는 만큼 충분한 이완을 제공해야 혈액 순환이 가능합니다." 후 재시도
-      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
-- 간호사 C에게 퀘스트 발행: 제세동기 준비
-  - 제목: "제세동기 준비" (`Quest_Defib_C`)
-  - 목표
-    - 표기: "제세동기를 연결하고 패드를 부착하기"
-    - 처리: 아래 단계를 순서대로 수행하면 완료 처리
-    1. Dialogue
-      - Speaker: "시스템"
-      - Content: "제세동 카트를 환자 옆으로 가져오세요."
-      - TTS: true
-      - 처리: 카트 이동 완료 신호(`sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient`) 대기
-    2. Dialogue
-      - Speaker: "시스템"
-      - Content: "제세동 패드를 획득하고, 환자 흉부를 클릭해 부착하세요."
-      - TTS: true
-      - 처리: 패드 획득과 부착 신호(`sig.click_defibpad`, `sig.interact_patient_chest`), 이어서 부착 연출(`attach_defibpad`)과 불규칙 파형 UI(`defib_ui_irregular`)
-    3. Dialogue
-      - Speaker: "간호사 C"
+      - Speaker: `@s`
       - Content: "제세동기 준비가 완료되었습니다."
       - TTS: true
-    4. 이론 문항 1: ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "1. 제세동기는 Sync 버튼을 눌러 Cardioversion을 제공할 수 있습니다. 다음 중 제세동을 실시해야 하는 심전도는?"
-      - Choices: "Asystole(무수축)", "PEA(무맥성 전기활동)", "VT(맥박이 있는 심실빈맥)"은 오답, "VF(심실세동)"가 정답
-      - 오답 노드: "오답입니다. 제시된 심전도 중 제세동이 필요한 심전도는 VF(심실세동) 입니다." 후 재시도
-      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
-    5. 이론 문항 2: ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "2. 이상파형(Biphasic) 제세동기에서 필요한 에너지 양은?"
-      - Choices: "360J(줄)"은 오답, "150~200J(줄)"이 정답
-      - 오답 노드: "오답입니다. 150~200J(줄)이 정답입니다." 후 재시도
-      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
-    6. 이론 문항 3: ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "3. 제세동 등 전기충격 시 주의해야 할 사항은?"
-      - Choices: "꼬인 수액 줄을 풀어준다.", "의료진이 손을 대어도 괜찮다.", "의사의 지시가 있을 때에만 실시한다."는 오답, "전기충격 전 모두 환자에게서 떨어지도록 지시한다."가 정답
-      - 오답 노드: "오답입니다. 감전되지 않도록 모두가 떨어지도록 지시해야 합니다." 후 재시도
-      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
-- 간호사 D에게는 에피네프린 투여 퀘스트를 발행
-  - 제목: "에피네프린 투여" (`Quest_Epi_D`)
-  - 목표
-    - 표기: "에피네프린 1mg과 생리식염수 20cc를 투여하기"
-    - 처리: 아래 단계를 순서대로 끝내면 완료 처리
-    1. Dialogue
-      - Speaker: "시스템"
-      - Content: "에피네프린 투여를 위한 준비를 합니다. 에피네프린 앰퓰과 5cc 주사기를 획득해 약물이 든 주사기를 완성하세요."
-      - TTS: true
-      - 처리: 획득 신호(`sig.click_epinephrine_ampule`, `sig.click_syringe_5cc`)
-      - 기술 노트: 약물 주사기(`epinephrine_5cc_syringe`)는 crafting 시스템으로 조합한다.
+    6. ChoiceDialogue
+      - Speaker: `@s`
+      - Content: "(제세동을 실시해야 하는 심전도는..)"
+      - Choices
+        - "Asystole(무수축)": 오답
+        - "PEA(무맥성 전기활동)": 오답
+        - "VT(맥박이 있는 심실빈맥)": 오답
+        - "VF(심실세동)": 정답
+          - "(제세동이 필요한 심전도는 VF야.)"
+      - 오답 노드
+        - Dialogue
+          - Speaker: `@s`
+          - Content: "(아니야. 다시 생각해보자.)"
+          - TTS: false
+        - 이후 같은 문항으로 되돌아가 재응시한다.
+      - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 정답 선택 시 다음으로 이동
+    7. ChoiceDialogue
+      - Speaker: `@s`
+      - Content: "(이상파형 제세동기의 에너지 양은..)"
+      - Choices
+        - "150~200J(줄)": 정답
+          - "(이상파형이면 150~200J야.)"
+        - "360J(줄)": 오답
+      - 오답 노드
+        - Dialogue
+          - Speaker: `@s`
+          - Content: "(아니야. 다시 생각해보자.)"
+          - TTS: false
+        - 이후 같은 문항으로 되돌아가 재응시한다.
+      - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 정답 선택 시 다음으로 이동
+    8. ChoiceDialogue
+      - Speaker: `@s`
+      - Content: "(전기충격 전에 반드시 해야 할 것은..)"
+      - Choices
+        - "꼬인 수액 줄을 풀어준다.": 오답
+        - "의료진이 손을 대어도 괜찮다.": 오답
+        - "의사의 지시가 있을 때에만 실시한다.": 오답
+        - "전기충격 전 모두 환자에게서 떨어지도록 지시한다.": 정답
+          - "(감전되지 않도록 모두 떨어지라고 크게 알리자.)"
+      - 오답 노드
+        - Dialogue
+          - Speaker: `@s`
+          - Content: "(아니야. 다시 생각해보자.)"
+          - TTS: false
+        - 이후 같은 문항으로 되돌아가 재응시한다.
+      - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_d`에게 퀘스트 발행 (`Quest_Epi_D`)
+  - 제목: "에피네프린 투여"
+  - 목표: ""
+  - 퀘스트 발행과 함께 다음 처리 수행:
+    1. 퀘스트 목표 표기를 "중심정맥관으로 에피네프린 1mg 투여하기"로 변경
     2. Dialogue
-      - Speaker: "시스템"
-      - Content: "Push용 생리식염수를 준비합니다. 20cc 생리식염수와 20cc 주사기를 클릭해 획득하세요."
-      - TTS: true
-      - 처리: 획득 신호(`sig.click_normal_saline_20ml`, `sig.click_syringe_20cc`)
-      - 기술 노트: Push용 주사기(`normal_saline_20cc_syringe`)도 crafting 시스템으로 조합한다.
-    3. Dialogue
-      - Speaker: "시스템"
-      - Content: "인벤토리에서 조합하여 준비된 에피네프린 1mg을 클릭해 선택한 뒤, 중심정맥관을 클릭해 투여하세요."
-      - TTS: true
-      - 처리: 투여 신호(`sig.push_epi_r1`)
+      - Speaker: `@s`
+      - Content: "(에피네프린 앰퓰과 5cc 주사기를 조합해서 약물을 준비하자.)"
+      - TTS: false
+    3. "에피네프린 투여" Interaction 활성화
+      - 퀘스트 마크: `patient_a`의 중심정맥관 / 약물 투여 상호작용
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `epinephrine_5cc_syringe` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(준비된 에피네프린 1mg 주사기를 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(에피네프린 앰퓰과 5cc 주사기를 찾아 조합하자.)"
+          - 있다면 투여 신호(`sig.push_epi_r1`)를 수신하고 이 목표를 완료 처리
+      - 기술 노트: 약물 주사기(`epinephrine_5cc_syringe`)는 crafting 시스템으로 조합한다.
     4. Dialogue
-      - Speaker: "간호사 D"
+      - Speaker: `@s`
       - Content: "에피네프린 1mg 투여했습니다."
       - TTS: true
-    5. Dialogue
-      - Speaker: "시스템"
-      - Content: "동일한 방법으로 준비된 생리식염수 20cc를 투여해 루멘 내 잔여 약물을 주입합니다."
-      - TTS: true
-      - 처리: 투여 신호(`sig.push_ns_r1`)
-    6. Dialogue
-      - Speaker: "간호사 D"
+    5. 퀘스트 목표 표기를 "생리식염수 20cc로 루멘 내 잔여 약물 밀어넣기"로 변경
+    6. "생리식염수 투여" Interaction 활성화
+      - 퀘스트 마크: `patient_a`의 중심정맥관 / 약물 투여 상호작용
+      - Interaction 활성화 시 다음 재생
+        - 인벤토리에 `normal_saline_20cc_syringe` 아이템이 있는지 확인
+          - 없다면 다음 재생
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(Push용 생리식염수 20cc 주사기를 갖고 있지 않다.)"
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(20cc 생리식염수와 20cc 주사기를 찾아 조합하자.)"
+          - 있다면 투여 신호(`sig.push_ns_r1`)를 수신하고 이 목표를 완료 처리
+      - 기술 노트: Push용 주사기(`normal_saline_20cc_syringe`)도 crafting 시스템으로 조합한다.
+    7. Dialogue
+      - Speaker: `@s`
       - Content: "생리식염수 20cc 투여했습니다."
       - TTS: true
-    7. 이론 문항 1: ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "1. 심정지 상황에서 에피네프린의 투여 간격은 어떻게 되는가?"
-      - Choices: "약 1~2분에 한 번", "약 5~10분에 한 번", "누군가 시킬 때 마다"는 오답, "약 3~5분에 한 번"이 정답
-      - 오답 노드: "오답입니다. 에피네프린은 3~5분에 한 번 투여합니다." 후 재시도
-      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
-    8. 이론 문항 2: ChoiceDialogue
-      - Speaker: "시스템"
-      - Content: "2. 말초(팔)로 약물을 투여하는 경우, 적절한 투여 절차는?"
-      - Choices: "약물만 주입"과 "약물 주입 후 생리식염수 주입"은 오답, "약물 주입 후 생리식염수 주입, 이후 팔 들어올리기"가 정답
-      - 오답 노드: "오답입니다. 심장에 빠르게 도달시키기 위해 생리식염수 주입 후 팔을 들어올려야 합니다." 후 재시도
-      - 기술 노트: 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
+    8. ChoiceDialogue
+      - Speaker: `@s`
+      - Content: "(다음 에피네프린은 언제 투여하지..)"
+      - Choices
+        - "약 1~2분에 한 번": 오답
+        - "약 3~5분에 한 번": 정답
+          - "(3~5분 간격을 지켜서 투여하자.)"
+        - "약 5~10분에 한 번": 오답
+        - "누군가 시킬 때 마다": 오답
+      - 오답 노드
+        - Dialogue
+          - Speaker: `@s`
+          - Content: "(아니야. 다시 생각해보자.)"
+          - TTS: false
+        - 이후 같은 문항으로 되돌아가 재응시한다.
+      - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+      - 정답 선택 시 다음으로 이동
+    9. ChoiceDialogue
+      - Speaker: `@s`
+      - Content: "(팔로 약물을 투여할 때의 절차는..)"
+      - Choices
+        - "약물만 주입": 오답
+        - "약물 주입 후 생리식염수 주입": 정답
+          - "(거기에 더해 팔을 들어올려야 심장에 빨리 도달해.)"
+        - "약물 주입 후 생리식염수 주입, 이후 팔 들어올리기": 정답
+          - "(약물, 생리식염수, 그리고 팔 들어올리기까지 해야 해.)"
+      - 오답 노드
+        - Dialogue
+          - Speaker: `@s`
+          - Content: "(아니야. 다시 생각해보자.)"
+          - TTS: false
+        - 이후 같은 문항으로 되돌아가 재응시한다.
+      - 기술 노트: 세션 로그에 다음의 내용을 저장한다.
+        - 정답 여부
+        - 플레이어가 선택한 답, 의도된 답
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
 
-네 브랜치가 모두 끝난 뒤 합류한다.
+- 전체 인원의 퀘스트가 "다른 사람들의 처리가 끝날 때까지 기다리기" 상태(*a)라면 퀘스트 완료 처리
 
 ### 리듬 확인과 CPR 2주기 (역할 교대)
 
 1. Dialogue
-  - Speaker: "의사 NPC"
+  - Speaker: "의사"
   - Content: "2분 지났습니다. 리듬 확인하겠습니다. 모두 떨어져 주세요."
   - TTS: true
 2. 압박·배깅 정지 연출(`stop_ambu_and_comp`) 후 무수축 모니터 연출(`asystole_monitor_ui`)을 재생한다.
 3. Dialogue
-  - Speaker: "의사 NPC"
-  - Content: "Asystole입니다. 가슴압박과 앰부배깅 하시던 간호사 A, B 선생님끼리 교대 후 계속 가슴압박 해주세요. 간호사 C, D 선생님께서도 교대해서 역할을 수행해 주세요."
+  - Speaker: "의사"
+  - Content: "Asystole입니다. 가슴압박과 앰부배깅 하시던 @t=[nurse_a, ???]선생님, @t=[nurse_b, ???]선생님끼리 교대 후 계속 가슴압박 해주세요. @t=[nurse_c, ???]선생님, @t=[nurse_d, ???]선생님께서도 교대해서 역할을 수행해 주세요."
   - TTS: true
 
 이 교대 지시로 네 브랜치가 나란히 진행된다(P006).
 
-- 간호사 A에게 퀘스트 발행: 가슴압박 교대 (`Quest_ChestComp_A`)
-  - 간호사 B의 1주기 절차와 같다. 가슴 클릭(`sig.interact_chest`)으로 압박을 시작하며 깊이·위치·횟수·이완 네 문항을 순서대로 통과한다.
-- 간호사 B에게 퀘스트 발행: 앰부백 교대 (`Quest_Ambu_B`)
-  1. Dialogue
-    - Speaker: "시스템"
-    - Content: "앰부백을 클릭해 산소 공급을 시작하세요."
-    - TTS: true
-    - 처리: 시작 신호(`sig.start_ambu_r2`), 이후 앰부배깅 연출(`start_ambubagging`)
-  2. 산소 제공량(정답 약 600ml), 배깅 속도(정답 6초에 1번) 두 문항을 1주기 절차대로 진행한다.
-- 간호사 C에게 퀘스트 발행: 에피네프린 투여 교대 (`Quest_Epi_C`)
-  1. 1주기와 같이 에피네프린 앰퓰과 5cc 주사기를 획득해 조합하고 20cc 생리식염수와 20cc 주사기를 획득한다.
-  2. Dialogue
-    - Speaker: "의사 NPC"
-    - Content: "에피네프린 첫 투여 시점부터 4분 지났습니다. 간호사 C 선생님, 바로 에피네프린과 생리식염수 20cc 투여해주세요."
-    - TTS: true
-  3. Dialogue
-    - Speaker: "시스템"
-    - Content: "준비된 에피네프린 1mg을 클릭해 선택한 뒤, 중심정맥관을 클릭해 투여하세요."
-    - TTS: true
-    - 처리: 투여 신호(`sig.push_epi_r2`)
-  4. Dialogue
-    - Speaker: "간호사 C"
-    - Content: "에피네프린 1mg 투여했습니다."
-    - TTS: true
-  5. 이어서 생리식염수 20cc를 같은 방법으로 투여한다(`sig.push_ns_r2`).
-  6. Dialogue
-    - Speaker: "간호사 C"
-    - Content: "생리식염수 20cc 투여했습니다."
-    - TTS: true
-  7. 투여 간격(정답 3~5분에 한 번), 말초 투여 절차(정답 약물 주입 후 생리식염수 주입, 이후 팔 들어올리기) 두 문항을 1주기와 동일한 절차로 진행한다.
-- 간호사 D에게 퀘스트 발행: 제세동기 대기 (`Quest_Defib_D`)
-  1. Dialogue
-    - Speaker: "시스템"
-    - Content: "제세동기를 클릭해 역할을 부여받으세요."
-    - TTS: true
-    - 처리: 클릭 신호(`sig.interact_defib`), 이후 제세동기 전원 소리(`defib_on_sound`) 재생
-  2. Dialogue
-    - Speaker: "간호사 D"
-    - Content: "제세동기 준비가 완료되었습니다."
-    - TTS: true
-  3. 심전도(정답 VF), 에너지 양(정답 150~200J), 감전 주의(정답 전기충격 전 모두 떨어지도록 지시) 세 문항을 1주기와 같은 절차로 진행한다.
+- `nurse_a`에게 퀘스트 발행 (`Quest_ChestComp_A`)
+  - 제목: "가슴압박 교대"
+  - 목표
+    - 표기: "남성 환자에게 가슴압박을 수행하기"
+    - 처리: 1주기의 가슴압박 절차와 같다. 흉부 상호작용(`sig.interact_chest`)으로 압박을 시작하며, 깊이·위치·횟수·이완 네 문항을 같은 형식으로 진행한다.
+    - 퀘스트 마크: `patient_a` 흉부 / 가슴압박 상호작용
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_b`에게 퀘스트 발행 (`Quest_Ambu_B`)
+  - 제목: "앰부배깅 교대"
+  - 목표
+    - 표기: "앰부백으로 산소를 공급하기"
+    - 처리: 시작 신호(`sig.start_ambu_r2`)를 수신하고 앰부배깅 연출(`start_ambubagging`)을 재생한 뒤, 산소 제공량과 배깅 속도 두 문항을 1주기와 같은 형식으로 진행한다.
+    - 퀘스트 마크: 연결된 앰부백 / 앰부배깅 상호작용
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_c`에게 퀘스트 발행 (`Quest_Epi_C`)
+  - 제목: "에피네프린 재투여"
+  - 목표: ""
+  - 퀘스트 발행과 함께 다음 처리 수행:
+    1. Dialogue
+      - Speaker: "의사"
+      - Content: "에피네프린 첫 투여 시점부터 4분 지났습니다. @t=[nurse_c, @s]선생님, 바로 에피네프린과 생리식염수 20cc 투여해주세요."
+      - TTS: true
+    2. 퀘스트 목표 표기를 "중심정맥관으로 에피네프린 1mg 투여하기"로 변경
+    3. "에피네프린 투여" Interaction 활성화
+      - 1주기와 같은 방식으로 인벤토리의 `epinephrine_5cc_syringe` 보유를 확인하고, 투여 신호(`sig.push_epi_r2`)를 수신하면 이 목표를 완료 처리
+      - 퀘스트 마크: `patient_a`의 중심정맥관 / 약물 투여 상호작용
+    4. Dialogue
+      - Speaker: `@s`
+      - Content: "에피네프린 1mg 투여했습니다."
+      - TTS: true
+    5. 퀘스트 목표 표기를 "생리식염수 20cc로 루멘 내 잔여 약물 밀어넣기"로 변경
+    6. "생리식염수 투여" Interaction 활성화
+      - 1주기와 같은 방식으로 인벤토리의 `normal_saline_20cc_syringe` 보유를 확인하고, 투여 신호(`sig.push_ns_r2`)를 수신하면 이 목표를 완료 처리
+    7. Dialogue
+      - Speaker: `@s`
+      - Content: "생리식염수 20cc 투여했습니다."
+      - TTS: true
+    8. 투여 간격과 말초 투여 절차 두 문항을 1주기와 같은 형식으로 진행한다.
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_d`에게 퀘스트 발행 (`Quest_Defibrillator_D`)
+  - 제목: "제세동기 조작"
+  - 목표
+    - 표기: "제세동기를 조작해 역할 부여받기"
+    - 처리: 제세동기 상호작용(`sig.interact_defib`)을 수행하면 제세동기 전원 소리(`defib_on_sound`)를 재생하고, 심전도·에너지 양·감전 주의 세 문항을 1주기와 같은 형식으로 진행한다.
+    - 퀘스트 마크: 제세동기 / 조작 상호작용
+    1. Dialogue
+      - Speaker: `@s`
+      - Content: "제세동기 준비가 완료되었습니다."
+      - TTS: true
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
 
-네 브랜치가 종료되면 합류한다.
+- 전체 인원의 퀘스트가 "다른 사람들의 처리가 끝날 때까지 기다리기" 상태(*a)라면 퀘스트 완료 처리
 
 ### ROSC 확인과 후속 조치
 
 1. Dialogue
-  - Speaker: "의사 NPC"
+  - Speaker: "의사"
   - Content: "2분 지났습니다. 리듬 확인하겠습니다. 모두 떨어져 주세요."
   - TTS: true
-2. 압박·배깅 정지 연출(`stop_ambu_and_comp`) 후 ROSC 모니터 연출(`rosc_monitor_ui`)을 실행한다.
+2. 압박·배깅 정지 연출(`stop_ambu_and_comp`) 후 ROSC 모니터 연출(`rosc_monitor_ui`)을 재생한다.
 3. Dialogue
-  - Speaker: "의사 NPC"
-  - Content: "QRS 보입니다. 간호사 A 선생님, 환자 맥박 있는지 확인해주세요."
+  - Speaker: "의사"
+  - Content: "QRS 보입니다. @t=[nurse_a, ???]선생님, 환자 맥박 있는지 확인해주세요."
   - TTS: true
-4. 간호사 A에게 퀘스트 발행
-  - 제목: "ROSC 맥박 확인" (`Quest_Check_Pulse_ROSC`)
+4. `nurse_a`에게 퀘스트 발행 (`Quest_Check_Pulse_ROSC`)
+  - 제목: "ROSC 맥박 확인"
   - 목표
-    - 표기: "환자의 경동맥을 촉지해 맥박 확인하기"
-    - 처리: 촉지 신호(`sig.check_pulse_patient_a_r2`) 대기
-    - Dialogue
-      - Speaker: "시스템"
-      - Content: "환자의 목을 클릭해서 경동맥을 촉지합니다."
-      - TTS: true
+    - 표기: "남성 환자의 경동맥을 촉지해 맥박 확인하기"
+    - 처리: 맥박 확인 상호작용(`assess_pulse`)을 수행하면 완료 처리
+      - 완료 신호: `sig.check_pulse_patient_a_r2`
+    - 퀘스트 마크: `patient_a` / `assess_pulse`
+    - Interaction 수행 시 다음 재생
+      1. Dialogue
+        - Speaker: `@s`
+        - Content: "(환자의 목에 손을 대고 경동맥을 촉지한다.)"
+        - TTS: false
+      2. Dialogue
+        - Speaker: null
+        - Content: "(손끝에 규칙적인 박동이 잡힌다.)"
+        - TTS: false
 5. Dialogue
-  - Speaker: "간호사 A"
+  - Speaker: `@s`
   - Content: "환자 맥박 느껴집니다."
   - TTS: true
 6. Dialogue
-  - Speaker: "의사 NPC"
-  - Content: "환자 ROSC 되었습니다. 제가 검사랑 협진 의뢰 할테니 간호사 D 선생님이 의식상태 확인해주세요. 간호사 B 선생님, 의복 제거해서 추가 손상 있는지 사정해주세요. 간호사 A 선생님께서는 다시 분류구역으로 이동해서 환자 분류해주세요."
+  - Speaker: "의사"
+  - Content: "환자 ROSC 되었습니다. 제가 검사랑 협진 의뢰 할테니 @t=[nurse_d, ???]선생님이 의식상태 확인해주세요. @t=[nurse_b, ???]선생님, 의복 제거해서 추가 손상 있는지 사정해주세요. @t=[nurse_a, ???]선생님께서는 다시 분류구역으로 이동해서 환자 분류해주세요."
   - TTS: true
 
-이 지시가 내려지면 세 브랜치가 병렬로 진행된다(P007).
+이 지시가 내려지면 네 브랜치가 병렬로 진행된다(P007).
 
-- 간호사 A에게 퀘스트 발행: 분류구역 복귀 (`Quest_Return_Triage`)
-  1. Dialogue
-    - Speaker: "시스템"
-    - Content: "중증도 분류 구역으로 이동하세요."
-    - TTS: true
-    - 처리: 구역 도착 신호(`sig.arrive_triagearea`) 수신 뒤 이동 연출(`player_a_move_to_triage`)
-- 간호사 B에게 퀘스트 발행: 의복 제거 (`Quest_Cut_Clothing`)
-  1. Dialogue
-    - Speaker: "시스템"
-    - Content: "가위를 클릭해 획득하고, 환자를 클릭해 의복을 제거하세요."
-    - TTS: true
-    - 처리: 가위 획득과 의복 제거 신호(`sig.click_scissors`, `sig.remove_patient_clothing`), 이후 가위질 소리(`cutting_sound`) 재생
-  2. Dialogue
-    - Speaker: "시스템"
-    - Content: "추가 외상은 확인되지 않습니다."
-    - TTS: true
-- 간호사 D에게 퀘스트 부여: 의식 상태 재사정 (`Quest_Check_GCS_ROSC`)
-  1. Dialogue
-    - Speaker: "시스템"
-    - Content: "환자를 클릭해 환자의 의식 상태를 사정하십시오."
-    - TTS: true
-    - 처리: 사정 신호(`sig.check_gcs_a_rosc`) 대기
-  2. 초기 평가와 같은 방법으로 AVPU/GCS를 다시 평가한다.
-    - AVPU 관찰: 부를 때 응답이 없고 옆구리를 꼬집자 불편해하며 피함 → 정답 P
-    - E 관찰: 옆구리를 꼬집자 잠시 눈을 떴다가 다시 감음 → 정답 2점(통증에 반응)
-    - V 관찰: 현재 기관내삽관이 시행 중인 상태 → 정답 E(기관삽관)
-      - 오답 노드: "오답입니다. 기관삽관을 하는 경우 E로 처리(표기)합니다." 후 재시도
-    - M 관찰: 손톱 뿌리쪽 피부에 압력을 가하자 움찔거리며 움직이려 함 → 정답 4점(통증에 회피)
-  3. Dialogue
-    - Speaker: "시스템"
-    - Content: "GCS 측정 완료. E2 / V(E) / M4 = 총 6E점 입니다."
-    - TTS: true
+- `nurse_a`에게 퀘스트 발행 (`Quest_Return_Triage`)
+  - 제목: "분류 구역 복귀"
+  - 목표
+    - 표기: "중증도 분류 구역으로 이동하기"
+    - 처리: 구역 도착 신호(`sig.arrive_triagearea`)를 수신하면 완료 처리
+    - 기술 노트: 도착 판정은 기존 `ScenarioTriggerZone` 진입 신호를 그대로 사용한다.
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_b`에게 퀘스트 발행 (`Quest_Cut_Clothing`)
+  - 제목: "환자 의복 제거"
+  - 목표
+    - 표기: "남성 환자의 의복을 제거하고 추가 손상 확인하기"
+    - 처리: 의복 제거 상호작용을 수행하면 완료 처리
+    - 퀘스트 마크: `patient_a` / 의복 제거 상호작용
+    - Interaction 활성화 시 다음 재생
+      - 인벤토리에 `scissors` 아이템이 있는지 확인
+        - 없다면 다음 재생
+          1. Dialogue
+            - Speaker: `@s`
+            - Content: "(가위를 갖고 있지 않다.)"
+          2. Dialogue
+            - Speaker: `@s`
+            - Content: "(가위를 찾자.)"
+        - 있다면 다음 처리
+          1. 제거 신호(`sig.remove_patient_clothing`)를 수신하고 가위질 소리(`cutting_sound`)를 재생
+          2. Dialogue
+            - Speaker: `@s`
+            - Content: "(의복을 모두 잘라내고 전신을 살펴본다.)"
+            - TTS: false
+          3. Dialogue
+            - Speaker: `@s`
+            - Content: "추가 외상은 확인되지 않습니다."
+            - TTS: true
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_d`에게 퀘스트 발행 (`Quest_Check_GCS_ROSC`)
+  - 제목: "ROSC 후 신경학적 사정"
+  - 목표
+    - 표기: "남성 환자의 의식 상태를 다시 사정하기"
+    - 처리: GCS 재사정 상호작용(`assess_gcs`)을 수행한 뒤 아래 문항 흐름을 모두 통과하면 완료 처리
+      - 완료 신호: `sig.check_gcs_a_rosc`
+    - 퀘스트 마크: `patient_a` / `assess_gcs`
+    - Interaction 수행 시 다음 재생
+      1. Dialogue
+        - Speaker: `@s`
+        - Content: "환자분..! 제 목소리 들리세요?"
+        - TTS: false
+      2. Dialogue
+        - Speaker: null
+        - Content: "(환자는 아무 반응도 하지 않는다.)"
+        - TTS: false
+      3. Dialogue
+        - Speaker: `@s`
+        - Content: "(옆구리를 꼬집어 통증 자극을 준다.)"
+        - TTS: false
+      4. Dialogue
+        - Speaker: null
+        - Content: "(환자가 불편해하며 자극을 피한다. 눈을 잠시 떴다가 다시 감는다.)"
+        - TTS: false
+      5. Dialogue
+        - Speaker: `@s`
+        - Content: "(기관내관이 들어가 있어서 발성은 확인할 수 없다.)"
+        - TTS: false
+      6. Dialogue
+        - Speaker: `@s`
+        - Content: "(손톱 뿌리쪽 피부에 압력을 가한다.)"
+        - TTS: false
+      7. Dialogue
+        - Speaker: null
+        - Content: "(환자가 움찔거리며 자극에서 벗어나려 한다.)"
+        - TTS: false
+    - 이후 초기 평가와 같은 형식으로 AVPU와 GCS 문항을 진행한다. 정답은 아래와 같다.
+      - AVPU: 정답 P
+      - GCS E: 정답 2점
+      - GCS V: 정답 E(기관삽관)
+      - GCS M: 정답 4점
+    - 네 문항 모두, 오답을 선택하면 아래의 오답 노드로 진행한다.
+      - Dialogue
+        - Speaker: `@s`
+        - Content: "(아니야. 다시 생각해보자.)"
+        - TTS: false
+      - 이후 같은 문항으로 되돌아가 재응시한다.
+    - 기술 노트: 각 문항의 세션 로그에 정답 여부와 플레이어가 선택한 답, 의도된 답을 함께 기록한다.
+    - 문항을 모두 마치면 다음 재생
+      1. Dialogue
+        - Speaker: `@s`
+        - Content: "E는 2, V는 삽관 중이라 E, M은 4니까.."
+        - TTS: false
+      2. Dialogue
+        - Speaker: `@s`
+        - Content: "GCS는 E2 / V(E) / M4로 총 6E점입니다."
+        - TTS: true
+  - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
+- `nurse_c`에게 퀘스트 발행
+  - 제목: "처치 정리"
+  - 목표
+    - 표기: "다른 담당자의 처리가 끝날 때까지 기다리기"
+    - 목표: 없음. 나머지 세 브랜치가 모두 완료되면 완료 처리
+  - 기술 노트: ROSC 후속 조치에 배정된 역할이 없어 `nurse_c`가 아무 안내도 받지 못하던 문제를 없애기 위한 대기 브랜치다.
 
-세 브랜치 전부가 끝나는 대로 한 지점에 합류한다.
+- 전체 인원의 퀘스트가 "다른 사람들의 처리가 끝날 때까지 기다리기" 상태(*a)라면 퀘스트 완료 처리
 
 ### 시나리오 종료
 
-- Dialogue
-  - Speaker: "시스템"
-  - Content: "시나리오 A 환자 대응 종료. 흉부외과로 환자를 이관하였습니다."
+1. Delay 1초
+2. Dialogue
+  - Speaker: "의사"
+  - Content: "환자 인계 마쳤습니다. 흉부외과로 올라갑니다. 모두 수고하셨습니다."
   - TTS: true
-- 이 대사(D037)가 마지막 노드이며 다음 연결은 없다(`null`). 환자 A 시나리오는 이 지점에서 독립 종료된다. 다음 시나리오로 자동 전환은 없다.
+3. Title
+  - Content: 시나리오 종료
+  - Subtitle: 시나리오를 완료하였습니다.
+
+- 이 지점이 마지막이며 다음 연결은 없다(`null`). 환자 A 시나리오는 여기에서 독립 종료하고, 다음 시나리오로 자동 전환하지 않는다.
+
+## 2026-08-22 줄글 시나리오 개정 확정 사항
+
+`## 줄글 시나리오`를 `patient_b_c_ct.md`와 같은 서술 방식으로 다시 썼다. 아래 항목은 이번 개정에서 확정한
+내용이며, `## 시나리오 본문`의 노드 명세와 `patient_a_critical.scenario.json`은 아직 개정 전 흐름을 담고
+있으므로 다음 변환 작업에서 이 절을 기준으로 갱신해야 한다.
+
+### 서술 방식 변경
+
+- 행동을 지시하던 `시스템` 화자의 다이얼로그를 모두 제거했다. 안내는 구내방송, 의사 NPC의 지시, 플레이어
+  독백, 퀘스트 목표 표기, 퀘스트 마크가 붙은 상호작용으로 대신한다.
+- 문제 풀이 다이얼로그의 `[관찰]` 안내는 상호작용 중에 재생되는 지문과 플레이어 독백으로 바꿨다. 선택지의
+  정답 응답도 플레이어 독백으로 바꿨다.
+- 오답 처리는 개정 전과 같이 재응시 방식을 유지한다. 오답을 고르면 `@s` 화자의 `"(아니야. 다시 생각해보자.)"`
+  한 줄을 재생한 뒤 같은 문항으로 되돌아간다. 정답을 알려주는 교정 문구는 사용하지 않는다.
+- 콘텐츠에 노출되는 호칭에서 `환자 A`, `간호사 A`~`간호사 D` 같은 내부 식별자를 제거했다. 환자는 `남성 환자`로
+  적고, 인물 지시는 `@s`와 `@t=[nurse_x, ???]` 지정자로 표현한다.
+- 물품 준비는 획득 신호를 기다리는 대신, 해당 상호작용을 수행하는 시점에 인벤토리 보유 여부를 판정하는
+  방식으로 통일했다. 물품이 없으면 `(...을 갖고 있지 않다.)`, `(...을 찾자.)` 두 줄을 재생한다.
+
+### 오버월드 구현으로 대체한 항목
+
+| 개정 전 | 개정 후 |
+|---|---|
+| `move_patient_a_to_treatmentroom` 연출 이벤트로 환자를 처치실에 배치 | 플레이어가 침대를 밀어 옮기고, 처치실 CareZone 도착 신호 `carezone_patient_entered_patient_a`로 완료 판정 |
+| `activate_vital_monitor_ui_patient_a`, `vitalinfo_1_patient_a`로 모니터 UI를 시나리오가 직접 활성화 | 환자 모니터의 자세히 보기 상호작용(`monitor_select`)을 플레이어가 수행하고, 닫을 때 발생하는 신호로 진행 |
+| `show_checklist_intu` / `hide_checklist_intu`, `show_iv_checklist` / `hide_iv_checklist`, `show_suction_checklist_ui` / `hide_suction_checklist_ui` 체크리스트 UI | 퀘스트 목표 표기와 퀘스트 마크로 대체. 필요 물품은 상호작용 시점의 인벤토리 판정으로 안내 |
+| `sig.click_*` 물품 획득 신호 대기 단계 | 사용·적용·연결·제출 상호작용 시점의 인벤토리 보유 판정 |
+| 환자·의사 위치를 이벤트 안에서 해석 | `scen_a:patient_spawnpoint_a`, `scen_a:doctor_treatment_room_waypoint`, `scen_a:quest_arrival_patient_a` 앵커를 `scen_b:*`와 같은 방식으로 Overworld Initializer에 추가 |
+
+### 아이템 식별자 확정 (2026-08-22 사용자 확정)
+
+- 혈액백은 `blood_bag`이고, 수혈세트는 `blood_transfusion_set`이다. 서로 다른 물품이다.
+- Level 1 rapid infuser에 연결하는 대상은 혈액백, 즉 `blood_bag`이다. 줄글 시나리오의 "혈액백 연결"
+  상호작용은 인벤토리의 `blood_bag` 보유 여부를 판정한다.
+- 개정 전 노드 명세가 획득 신호로 사용하던 `sig.click_blood_transfusion_set`은 수혈세트를 가리키므로
+  혈액백 판정에 사용하면 안 된다. 이 신호로 이어지던 `V019`의 획득 대기 단계는 이번 개정에서 제거했고,
+  변환 작업에서도 되살리지 않는다.
+- Level 1 rapid infuser에는 혈액백만 사용하는 것으로 확정한다. 수혈세트(`blood_transfusion_set`)는 이
+  시나리오의 준비물이 아니며, 준비물 목록이나 상호작용 판정 조건에 추가하지 않는다.
+
+### 이 시나리오 전용으로 유지하는 항목
+
+- Level 1 rapid infuser의 플라즈마 솔루션·혈액백 연결 흐름과 준비 연출(`lv1_ready`)
+- 환자 악화 연출(`patient_crash_ui`)과 리듬 모니터 연출(`defib_ui_irregular`, `asystole_monitor_ui`, `rosc_monitor_ui`)
+- 삽관·중심정맥관 연출(`insert_et_tube`, `remove_stylet`, `insert_central_line_set`)과 처치 연출
+  (`insert_18g_left`, `insert_18g_right`, `connect_ns1_left`, `connect_ps1_right`, `apply_gauze_patient_a`,
+  `apply_gauze_with_plaster_patient_a`, `connect_tpiece_ready`, `apply_ambu_patient_a`,
+  `start_ambubagging`, `start_chest_compression`, `stop_ambu_and_comp`, `attach_defibpad`)
+- 의사 NPC 제출 상호작용 네 종류와 `sig.pass_*` 완료 신호
+- 사운드 리소스(`tape_sound`, `oxygen_sound`, `defib_on_sound`, `cutting_sound`)
+
+### 흐름 구조 변경
+
+- P003(초기 평가)에 `nurse_a` 대기 브랜치를 추가해 네 브랜치로 바꿨다. 개정 전에는 `nurse_a`에게 아무 퀘스트도
+  주어지지 않았다.
+- P004(역할별 처치)의 산소 공급 흐름을 삽관 브랜치에서 떼어내 `nurse_a` 브랜치로 분리했다. 의사가 산소 공급을
+  `nurse_a`에게 지시하는 대사와 실제 수행자가 어긋나 있던 문제를 해소한다. 삽관 브랜치는 마지막 대사 뒤에 삽관
+  완료 신호를 발신하고, `nurse_a` 브랜치는 그 신호를 기다린다.
+- P007(ROSC 후속 조치)에 `nurse_c` 대기 브랜치를 추가해 네 브랜치로 바꿨다.
+- C-line 보조와 Level 1 연결에서 의사가 `간호사 C`를 부르던 대사를 실제 수행 브랜치인 `nurse_d`(`@t=[nurse_d, @s]`)로
+  맞췄다. 보고 대사의 화자도 수행자 본인(`@s`)으로 바꿨다.
+- 각 브랜치는 처리를 마치면 목표 표기를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 바꾸고, 전원이 그 상태가
+  되면 병렬 구간을 완료 처리한다. 환자 B/C와 같은 합류 방식이다.
+- 종료 처리에 의사의 마무리 대사와 Title 연출을 추가했다. 개정 전에는 `시스템` 화자의 종료 안내 한 줄이었다.
+
+### 인간 작업자 확인이 필요한 항목
+
+1. **`scen_a:*` 앵커 신설과 처치실 CareZone 배치가 필요하다.** 환자를 실제로 밀어 옮기는 흐름은 처치실에
+   `PatientCareDescriptionZone`과 침대 스냅 포인트가 배치되어 있어야 성립한다. 씬 작업이 어렵다면 기존
+   `move_patient_a_to_treatmentroom`의 `_waitForManualPatientATransfer` 경로를 그대로 쓰는 선택지도 있다.
+2. **체크리스트 UI 자산의 처분 여부를 정해야 한다.** 줄글 시나리오에서는 사용하지 않게 되었으나, 이벤트 핸들러와
+   UI 패널 자산은 남아 있다. 다른 시나리오에서 쓸 계획이 없다면 제거 대상이다.
+3. **`vital_set`을 소모품으로 볼지 도구로 볼지 확정이 필요하다.** 현재 서술은 보유만 확인하고 소모하지 않는
+   도구로 취급한다.
+4. **`## 시나리오 본문`의 노드 명세와 `patient_a_critical.scenario.json`은 아직 갱신하지 않았다.** 이번 개정으로
+   노드 수와 Validator 신호 구성이 달라지므로, 변환 작업을 언제 수행할지 결정해야 한다.
 
 ## 기본 정보
 
