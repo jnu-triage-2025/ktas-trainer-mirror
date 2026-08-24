@@ -23,7 +23,15 @@ namespace TriageTrainer.Entity
       public float CreatedAt;
     }
 
+    private sealed class LocalPendingItemUse
+    {
+      public PlayerController Player;
+      public PlayerController.ItemUseConsumptionReceipt Receipt;
+    }
+
     private readonly Dictionary<string, PendingItemUse> _pendingItemUses = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, LocalPendingItemUse>
+      _localPendingItemUseReceipts = new(StringComparer.Ordinal);
 
     private void RequestApprovedRemoteItemConsumption(
       PlayerController player,
@@ -75,7 +83,17 @@ namespace TriageTrainer.Entity
         }
       }
 
-      bool consumed = ownerPlayer != null && ownerPlayer.TryConsumeItemUse(itemIdentifier);
+      PlayerController.ItemUseConsumptionReceipt receipt = null;
+      bool consumed = ownerPlayer != null
+                      && ownerPlayer.TryConsumeItemUse(itemIdentifier, out receipt);
+      if (consumed && receipt != null)
+      {
+        _localPendingItemUseReceipts[token] = new LocalPendingItemUse
+        {
+          Player = ownerPlayer,
+          Receipt = receipt
+        };
+      }
       CmdConfirmApprovedPatientItemConsumption(token, consumed);
     }
 
@@ -88,20 +106,69 @@ namespace TriageTrainer.Entity
       if (string.IsNullOrWhiteSpace(token)
           || sender == null
           || !sender.IsValid
-          || !_pendingItemUses.Remove(token, out var pending)
+          || !_pendingItemUses.TryGetValue(token, out var pending)
           || pending == null
-          || pending.ClientId != sender.ClientId
-          || !consumed)
+          || pending.ClientId != sender.ClientId)
         return;
+
+      _pendingItemUses.Remove(token);
+      bool accepted = false;
 
       // 거리와 역할은 승인 토큰을 발급할 때 서버에서 검증한다. 확인 응답 사이의 짧은 시간에
       // 플레이어가 움직였다는 이유로 이미 소비한 아이템을 유실하지 않도록 여기서는 처치 상태만 재검증한다.
-      if (!CanApplyItemUse(pending.ItemIdentifier))
+      if (consumed && CanApplyItemUse(pending.ItemIdentifier))
+      {
+        using (MI.Scenario.ScenarioSignalPlayerContext.Push(
+                 pending.ActorIdentifier, pending.ActorDisplayName))
+          accepted = ApplyItemUse(pending.ItemIdentifier);
+      }
+
+      TargetCompleteApprovedPatientItemConsumption(sender, token, accepted);
+    }
+
+    [TargetRpc]
+    private void TargetCompleteApprovedPatientItemConsumption(
+      NetworkConnection connection,
+      string token,
+      bool accepted)
+    {
+      if (string.IsNullOrWhiteSpace(token)
+          || !_localPendingItemUseReceipts.Remove(token, out var pending)
+          || pending?.Receipt == null)
         return;
 
-      using (MI.Scenario.ScenarioSignalPlayerContext.Push(
-               pending.ActorIdentifier, pending.ActorDisplayName))
-        ApplyItemUse(pending.ItemIdentifier);
+      var ownerPlayer = pending.Player != null
+        ? pending.Player
+        : FindLocalPatientItemUseOwner();
+      ownerPlayer?.CompleteConsumedItemUse(pending.Receipt, accepted);
+    }
+
+    private static PlayerController FindLocalPatientItemUseOwner()
+    {
+      var players = FindObjectsByType<PlayerController>(
+        FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+      for (int i = 0; i < players.Length; i++)
+      {
+        if (players[i] != null && players[i].IsOwner)
+          return players[i];
+      }
+      return null;
+    }
+
+    private void RestoreLocalPendingPatientItemUses()
+    {
+      if (_localPendingItemUseReceipts.Count == 0)
+        return;
+      var ownerPlayer = FindLocalPatientItemUseOwner();
+      if (ownerPlayer != null)
+      {
+        foreach (var pending in _localPendingItemUseReceipts.Values)
+        {
+          var player = pending?.Player != null ? pending.Player : ownerPlayer;
+          player?.CompleteConsumedItemUse(pending?.Receipt, accepted: false);
+        }
+      }
+      _localPendingItemUseReceipts.Clear();
     }
 
     private void PruneExpiredPendingItemUses()

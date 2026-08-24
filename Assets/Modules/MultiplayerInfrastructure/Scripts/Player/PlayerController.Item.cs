@@ -404,7 +404,8 @@ namespace MultiplayerInfrastructure.Player
       var item = slot.TakeAll();
       if (item == null) return;
 
-      TryDropItemInFront(item);
+      if (!TryDropItemInFront(item))
+        slot.SetItem(item);
       OnInventoryChangedAndReturn(true);
     }
 

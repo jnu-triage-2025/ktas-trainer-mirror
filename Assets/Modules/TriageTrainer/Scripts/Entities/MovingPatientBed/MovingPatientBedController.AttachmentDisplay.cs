@@ -13,10 +13,20 @@ namespace TriageTrainer.Entity
 {
   public partial class MovingPatientBedController
   {
+    private const float IntravenousFluidInteractionDistance = 3f;
+    private const float PendingIntravenousFluidLifetimeSeconds = 10f;
+
     private enum IntravenousFluidKind : byte
     {
       NormalSaline,
       PlasmaSolution
+    }
+
+    private sealed class PendingIntravenousFluid
+    {
+      public int ClientId;
+      public string ItemIdentifier;
+      public float CreatedAt;
     }
 
     private sealed class HangIntravenousFluidInteract : IInteract, IInteractorConditional, IInteractDisplayIcons
@@ -91,6 +101,7 @@ namespace TriageTrainer.Entity
     private readonly SyncVar<bool> _intravenousStandInstalled = new(false);
     private readonly SyncVar<bool> _normalSalineInstalled = new(false);
     private readonly SyncVar<bool> _plasmaSolutionInstalled = new(false);
+    private readonly Dictionary<IntravenousFluidKind, PendingIntravenousFluid> _pendingIntravenousFluids = new();
     private IInteract[] _intravenousFluidInteracts;
 
     public bool IsIntravenousStandInstalled => IsClientStarted || IsServerStarted
@@ -157,6 +168,7 @@ namespace TriageTrainer.Entity
 
     private void OnIntravenousAttachmentStartServer()
     {
+      _pendingIntravenousFluids.Clear();
       _intravenousStandInstalled.Value = _initialIntravenousStandInstalled;
       _normalSalineInstalled.Value = _initialNormalSalineInstalled;
       _plasmaSolutionInstalled.Value = _initialPlasmaSolutionInstalled;
@@ -230,8 +242,19 @@ namespace TriageTrainer.Entity
         return;
       var player = FindIntravenousAttachmentPlayer(sender.ClientId);
       var kind = (IntravenousFluidKind)rawKind;
-      if (player == null || IsIntravenousFluidInstalled(kind) || !IsIntravenousFluidItem(itemIdentifier, kind))
+      PruneExpiredPendingIntravenousFluid(kind);
+      if (player == null
+          || !IsWithinIntravenousFluidInteractionDistance(player)
+          || IsIntravenousFluidInstalled(kind)
+          || !IsIntravenousFluidItem(itemIdentifier, kind)
+          || _pendingIntravenousFluids.ContainsKey(kind))
         return;
+      _pendingIntravenousFluids[kind] = new PendingIntravenousFluid
+      {
+        ClientId = sender.ClientId,
+        ItemIdentifier = itemIdentifier,
+        CreatedAt = Time.unscaledTime
+      };
       TargetConfirmHangIntravenousFluid(sender, rawKind, itemIdentifier);
     }
 
@@ -244,19 +267,62 @@ namespace TriageTrainer.Entity
       var kind = (IntravenousFluidKind)rawKind;
       if (player == null || !IsIntravenousFluidItem(itemIdentifier, kind) ||
           player.CountItemInInventory(itemIdentifier) < 1 || player.RemoveItemFromInventory(itemIdentifier, 1) != 1)
+      {
+        CmdReportHangIntravenousFluidFailure(rawKind, itemIdentifier);
         return;
-      CmdConfirmHangIntravenousFluid(rawKind);
+      }
+      CmdConfirmHangIntravenousFluid(rawKind, itemIdentifier);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void CmdConfirmHangIntravenousFluid(byte rawKind, NetworkConnection sender = null)
+    private void CmdConfirmHangIntravenousFluid(
+      byte rawKind,
+      string itemIdentifier,
+      NetworkConnection sender = null)
     {
       if (rawKind > (byte)IntravenousFluidKind.PlasmaSolution || sender == null || !sender.IsValid)
         return;
       var kind = (IntravenousFluidKind)rawKind;
-      if (!IsIntravenousFluidInstalled(kind))
+      PruneExpiredPendingIntravenousFluid(kind);
+      if (!_pendingIntravenousFluids.TryGetValue(kind, out var pending)
+          || pending == null
+          || pending.ClientId != sender.ClientId
+          || !string.Equals(pending.ItemIdentifier, itemIdentifier, StringComparison.Ordinal))
+        return;
+      _pendingIntravenousFluids.Remove(kind);
+      if (!IsIntravenousFluidInstalled(kind)
+          && IsIntravenousFluidItem(itemIdentifier, kind))
         SetIntravenousFluidInstalledOnServer(kind);
     }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void CmdReportHangIntravenousFluidFailure(
+      byte rawKind,
+      string itemIdentifier,
+      NetworkConnection sender = null)
+    {
+      if (rawKind > (byte)IntravenousFluidKind.PlasmaSolution || sender == null || !sender.IsValid)
+        return;
+      var kind = (IntravenousFluidKind)rawKind;
+      if (_pendingIntravenousFluids.TryGetValue(kind, out var pending)
+          && pending != null
+          && pending.ClientId == sender.ClientId
+          && string.Equals(pending.ItemIdentifier, itemIdentifier, StringComparison.Ordinal))
+        _pendingIntravenousFluids.Remove(kind);
+    }
+
+    private void PruneExpiredPendingIntravenousFluid(IntravenousFluidKind kind)
+    {
+      if (_pendingIntravenousFluids.TryGetValue(kind, out var pending)
+          && (pending == null
+              || pending.CreatedAt < Time.unscaledTime - PendingIntravenousFluidLifetimeSeconds))
+        _pendingIntravenousFluids.Remove(kind);
+    }
+
+    private bool IsWithinIntravenousFluidInteractionDistance(PlayerController player) =>
+      player != null
+      && (player.transform.position - transform.position).sqrMagnitude
+      <= IntravenousFluidInteractionDistance * IntravenousFluidInteractionDistance;
 
     private void SetIntravenousFluidInstalledOffline(IntravenousFluidKind kind)
     {

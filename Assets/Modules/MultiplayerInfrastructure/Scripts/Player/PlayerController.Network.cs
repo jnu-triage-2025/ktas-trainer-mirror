@@ -28,12 +28,25 @@ namespace MultiplayerInfrastructure.Player
       public Quaternion Rotation { get; set; }
     }
 
+    private sealed class PendingWorldItemDrop
+    {
+      public Item Item { get; set; }
+    }
+
     private static readonly System.Collections.Generic.Dictionary<string, PendingWorldItemPickup> _pendingWorldItemPickups = new(StringComparer.Ordinal);
     private const float MaxWorldItemPickupDistance = 4f;
     private const float MaxWorldItemPickupDistanceSqr = MaxWorldItemPickupDistance * MaxWorldItemPickupDistance;
     private const float WorldItemTransformSyncInterval = 0.1f;
+    private const float MaxWorldItemDropDistance = 4f;
+    private const float MaxWorldItemThrowForce = 20f;
+    private const float WorldItemDropQuotaWindowSeconds = 1f;
+    private const int MaxWorldItemDropsPerQuotaWindow = 8;
+    private const int MaxSerializedDerivedAttributesLength = 16384;
     private static PlayerController _worldItemTransformSyncAuthority;
     private float _nextWorldItemTransformSyncTime;
+    private readonly Dictionary<int, PendingWorldItemDrop> _pendingWorldItemDrops = new();
+    private readonly Queue<float> _serverWorldItemDropTimes = new();
+    private int _nextWorldItemDropRequestId;
 
     // ── SyncVars ─────────────────────────────────────────────────────────────
     // 서버가 설정하고 모든 클라이언트로 자동 전파됩니다.
@@ -117,6 +130,7 @@ namespace MultiplayerInfrastructure.Player
       // 이 플레이어가 점유(claim)했지만 확정(ack/failure)하지 못한 픽업이 있으면
       // 아이템이 영구 유실되지 않도록 월드에 되돌린다.
       RestorePendingPickupsForClaimant();
+      _serverWorldItemDropTimes.Clear();
 
       base.OnStopServer();
     }
@@ -224,6 +238,8 @@ namespace MultiplayerInfrastructure.Player
       Registry.Registry.UnregisterEntity(_entityIdentifier.Value);
       PlayerTagService.ClearTags(_userIdentifier.Value);
       UserDescriptorService.Unregister(_userIdentifier.Value);
+
+      RestoreAllPendingWorldItemDrops();
     }
 
     private void OnDisplayNameChanged(string prev, string next, bool asServer)
@@ -390,7 +406,7 @@ namespace MultiplayerInfrastructure.Player
       if (!IsSpawned)
       {
         string fallbackEntityId = BuildDroppedItemEntityIdentifier();
-        SpawnWorldItemLocal(
+        return SpawnWorldItemLocal(
           fallbackEntityId,
           itemData.CurrentIdentifier,
           itemData.CurrentStackCount,
@@ -400,12 +416,11 @@ namespace MultiplayerInfrastructure.Player
           position,
           Quaternion.identity,
           throwForce);
-        return true;
       }
 
       if (IsServerStarted)
       {
-        ServerSpawnDroppedWorldItem(
+        return ServerSpawnDroppedWorldItem(
           itemData.CurrentIdentifier,
           itemData.CurrentStackCount,
           itemData.CurrentDurability,
@@ -414,10 +429,15 @@ namespace MultiplayerInfrastructure.Player
           position,
           Quaternion.identity,
           throwForce);
-        return true;
       }
 
+      int requestId = NextWorldItemDropRequestId();
+      _pendingWorldItemDrops[requestId] = new PendingWorldItemDrop
+      {
+        Item = itemData.Clone()
+      };
       CmdSpawnDroppedWorldItem(
+        requestId,
         itemData.CurrentIdentifier,
         itemData.CurrentStackCount,
         itemData.CurrentDurability,
@@ -477,6 +497,7 @@ namespace MultiplayerInfrastructure.Player
 
     [ServerRpc]
     private void CmdSpawnDroppedWorldItem(
+      int requestId,
       string itemIdentifier,
       int stackCount,
       int durability,
@@ -486,7 +507,7 @@ namespace MultiplayerInfrastructure.Player
       Quaternion rotation,
       Vector3 throwForce)
     {
-      ServerSpawnDroppedWorldItem(
+      bool accepted = ServerSpawnDroppedWorldItem(
         itemIdentifier,
         stackCount,
         durability,
@@ -495,9 +516,11 @@ namespace MultiplayerInfrastructure.Player
         position,
         rotation,
         throwForce);
+      if (Owner != null && Owner.IsValid)
+        TargetCompleteDroppedWorldItemRequest(Owner, requestId, accepted);
     }
 
-    private void ServerSpawnDroppedWorldItem(
+    private bool ServerSpawnDroppedWorldItem(
       string itemIdentifier,
       int stackCount,
       int durability,
@@ -507,10 +530,22 @@ namespace MultiplayerInfrastructure.Player
       Quaternion rotation,
       Vector3 throwForce)
     {
+      if (!TryValidateDroppedWorldItemRequest(
+            itemIdentifier,
+            stackCount,
+            durability,
+            cooldownRemainingMilliseconds,
+            serializedDerivedAttributes,
+            position,
+            rotation,
+            throwForce,
+            out string normalizedIdentifier))
+        return false;
+
       string entityIdentifier = BuildDroppedItemEntityIdentifier();
       RpcSpawnDroppedWorldItem(
         entityIdentifier,
-        itemIdentifier,
+        normalizedIdentifier,
         stackCount,
         durability,
         cooldownRemainingMilliseconds,
@@ -518,7 +553,129 @@ namespace MultiplayerInfrastructure.Player
         position,
         rotation,
         throwForce);
+      return true;
     }
+
+    [TargetRpc]
+    private void TargetCompleteDroppedWorldItemRequest(
+      NetworkConnection connection,
+      int requestId,
+      bool accepted)
+    {
+      if (!_pendingWorldItemDrops.Remove(requestId, out var pending) || pending?.Item == null)
+        return;
+
+      if (accepted)
+        return;
+
+      RestorePendingWorldItemDrop(pending.Item);
+    }
+
+    private bool TryValidateDroppedWorldItemRequest(
+      string itemIdentifier,
+      int stackCount,
+      int durability,
+      float cooldownRemainingMilliseconds,
+      string serializedDerivedAttributes,
+      Vector3 position,
+      Quaternion rotation,
+      Vector3 throwForce,
+      out string normalizedIdentifier)
+    {
+      normalizedIdentifier = string.IsNullOrWhiteSpace(itemIdentifier)
+        ? string.Empty
+        : itemIdentifier.Trim();
+      if (string.IsNullOrEmpty(normalizedIdentifier)
+          || !IsFinite(position)
+          || !IsFinite(rotation)
+          || !IsFinite(throwForce)
+          || !IsFinite(cooldownRemainingMilliseconds)
+          || cooldownRemainingMilliseconds < 0f
+          || throwForce.sqrMagnitude > MaxWorldItemThrowForce * MaxWorldItemThrowForce
+          || (position - transform.position).sqrMagnitude > MaxWorldItemDropDistance * MaxWorldItemDropDistance
+          || (serializedDerivedAttributes?.Length ?? 0) > MaxSerializedDerivedAttributesLength
+          || !TryConsumeWorldItemDropQuota())
+        return false;
+
+      var definition = Registry.Registry.CreateItemInstance(normalizedIdentifier);
+      if (definition == null
+          || stackCount < 1
+          || stackCount > definition.CurrentMaxStackCount
+          || durability < 0
+          || (definition.HasCurrentDurability && durability > definition.CurrentMaxDurability)
+          || (!definition.HasCurrentDurability && durability != 0)
+          || cooldownRemainingMilliseconds > Mathf.Max(0f, definition.CurrentCooldownMilliseconds))
+        return false;
+
+      if (!string.IsNullOrWhiteSpace(serializedDerivedAttributes))
+      {
+        try
+        {
+          definition.SetCurrentSerializedDerivedAttributes(serializedDerivedAttributes);
+        }
+        catch (Exception ex)
+        {
+          Debug.LogWarning($"[PlayerController] Rejected invalid dropped item attributes: {ex.Message}");
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    private bool TryConsumeWorldItemDropQuota()
+    {
+      float cutoff = Time.unscaledTime - WorldItemDropQuotaWindowSeconds;
+      while (_serverWorldItemDropTimes.Count > 0 && _serverWorldItemDropTimes.Peek() < cutoff)
+        _serverWorldItemDropTimes.Dequeue();
+      if (_serverWorldItemDropTimes.Count >= MaxWorldItemDropsPerQuotaWindow)
+        return false;
+      _serverWorldItemDropTimes.Enqueue(Time.unscaledTime);
+      return true;
+    }
+
+    private int NextWorldItemDropRequestId()
+    {
+      _nextWorldItemDropRequestId++;
+      if (_nextWorldItemDropRequestId <= 0)
+        _nextWorldItemDropRequestId = 1;
+      return _nextWorldItemDropRequestId;
+    }
+
+    private void RestoreAllPendingWorldItemDrops()
+    {
+      if (_pendingWorldItemDrops.Count == 0)
+        return;
+
+      var pending = new List<Item>();
+      foreach (var each in _pendingWorldItemDrops.Values)
+      {
+        if (each?.Item != null)
+          pending.Add(each.Item);
+      }
+      _pendingWorldItemDrops.Clear();
+      for (int i = 0; i < pending.Count; i++)
+        RestorePendingWorldItemDrop(pending[i]);
+    }
+
+    private void RestorePendingWorldItemDrop(Item item)
+    {
+      if (item == null || TryAddItemToInventory(item))
+        return;
+      Debug.LogError($"[PlayerController] Failed to restore rejected world item drop '{item.CurrentIdentifier}'.", this);
+    }
+
+    private static bool IsFinite(Vector3 value) =>
+      IsFinite(value.x) && IsFinite(value.y) && IsFinite(value.z);
+
+    private static bool IsFinite(Quaternion value) =>
+      IsFinite(value.x) && IsFinite(value.y)
+      && IsFinite(value.z) && IsFinite(value.w)
+      && value.x * value.x + value.y * value.y + value.z * value.z + value.w * value.w
+      > 0.000001f;
+
+    private static bool IsFinite(float value) =>
+      !float.IsNaN(value) && !float.IsInfinity(value);
 
     [ObserversRpc]
     private void RpcSpawnDroppedWorldItem(
@@ -767,7 +924,7 @@ namespace MultiplayerInfrastructure.Player
     private static string BuildDroppedItemEntityIdentifier()
       => $"item:{Guid.NewGuid():N}";
 
-    private void SpawnWorldItemLocal(
+    private bool SpawnWorldItemLocal(
       string entityIdentifier,
       string itemIdentifier,
       int stackCount,
@@ -779,16 +936,16 @@ namespace MultiplayerInfrastructure.Player
       Vector3 throwForce)
     {
       if (string.IsNullOrWhiteSpace(entityIdentifier) || string.IsNullOrWhiteSpace(itemIdentifier))
-        return;
+        return false;
 
       if (Registry.Registry.Get<ItemObject>(RegistryType.Entity, entityIdentifier) != null)
-        return;
+        return false;
 
       var item = Registry.Registry.CreateItemInstance(itemIdentifier);
       if (item == null)
       {
         Debug.LogWarning($"[PlayerController] Failed to create dropped item '{itemIdentifier}'.");
-        return;
+        return false;
       }
 
       item.CurrentStackCount = Mathf.Max(1, stackCount);
@@ -801,7 +958,11 @@ namespace MultiplayerInfrastructure.Player
 
       var itemObject = ItemObject.Spawn(item, position, throwForce, entityIdentifier);
       if (itemObject != null)
+      {
         itemObject.transform.rotation = rotation;
+        return true;
+      }
+      return false;
     }
 
     private void DestroyWorldItemLocal(string entityIdentifier)

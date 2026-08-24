@@ -11,6 +11,13 @@ namespace MultiplayerInfrastructure.Player
 {
   public partial class PlayerController
   {
+    public sealed class ItemUseConsumptionReceipt
+    {
+      internal InventorySlotModelDTO Slot;
+      internal ItemSystem.Item ConsumedReference;
+      internal ItemSystem.Item BeforeConsumption;
+      internal bool Active;
+    }
     [Header("PlayerController.Inventory:")]
     private InventoryUIController _inventoryUI;
 
@@ -379,7 +386,13 @@ namespace MultiplayerInfrastructure.Player
     /// 변경하며, 내구도가 0에 도달한 경우에만 슬롯에서 제거합니다.
     /// </summary>
     public bool TryConsumeItemUse(string itemIdentifier)
+      => TryConsumeItemUse(itemIdentifier, out _);
+
+    public bool TryConsumeItemUse(
+      string itemIdentifier,
+      out ItemUseConsumptionReceipt receipt)
     {
+      receipt = null;
       if (string.IsNullOrWhiteSpace(itemIdentifier))
         return false;
 
@@ -417,14 +430,66 @@ namespace MultiplayerInfrastructure.Player
         return false;
 
       var item = targetSlot.ItemInstance;
+      receipt = new ItemUseConsumptionReceipt
+      {
+        Slot = targetSlot,
+        ConsumedReference = item,
+        BeforeConsumption = item.Clone(),
+        Active = true
+      };
+
       if (!item.TryConsumeDurabilityOnUse(out bool depleted))
-        return RemoveItemFromInventory(itemIdentifier, 1) == 1;
+      {
+        item.CurrentStackCount--;
+        if (item.CurrentStackCount <= 0)
+          targetSlot.Clear();
+        OnInventoryChangedAndReturn(true);
+        return true;
+      }
 
       if (depleted)
         targetSlot.Clear();
 
       OnInventoryChangedAndReturn(true);
       return true;
+    }
+
+    public void CompleteConsumedItemUse(ItemUseConsumptionReceipt receipt, bool accepted)
+    {
+      if (receipt == null || !receipt.Active)
+        return;
+      receipt.Active = false;
+      if (accepted || receipt.BeforeConsumption == null)
+        return;
+
+      InventorySlotModelDTO resolvedSlot = null;
+      if (receipt.Slot != null
+          && (receipt.Slot.IsEmpty
+              || ReferenceEquals(receipt.Slot.ItemInstance, receipt.ConsumedReference)))
+      {
+        resolvedSlot = receipt.Slot;
+      }
+      else
+      {
+        foreach (var slot in _slots)
+        {
+          if (slot != null && ReferenceEquals(slot.ItemInstance, receipt.ConsumedReference))
+          {
+            resolvedSlot = slot;
+            break;
+          }
+        }
+      }
+
+      if (resolvedSlot != null)
+      {
+        resolvedSlot.SetItem(receipt.BeforeConsumption.Clone());
+        OnInventoryChangedAndReturn(true);
+        return;
+      }
+
+      if (!TryAddItemToInventory(receipt.BeforeConsumption))
+        Debug.LogError($"[PlayerController] Failed to restore consumed item '{receipt.BeforeConsumption.CurrentIdentifier}'.", this);
     }
 
     public int RemoveAllOfItemFromInventory(string itemIdentifier)

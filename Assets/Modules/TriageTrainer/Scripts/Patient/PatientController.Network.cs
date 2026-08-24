@@ -73,6 +73,7 @@ namespace TriageTrainer.Entity
 
     public override void OnStopClient()
     {
+      RestoreLocalPendingPatientItemUses();
       TeardownTriageSync();
       TeardownRecognitionCheckSync();
       TeardownNurseDStageSync();
@@ -85,6 +86,7 @@ namespace TriageTrainer.Entity
 
     private void OnDestroy()
     {
+      RestoreLocalPendingPatientItemUses();
       TeardownRecognitionCheckSync();
       TeardownNurseDStageSync();
       WallAttachedOxyflowmeter.AttachmentStateChanged -= OnAnyOxyflowmeterAttachmentChanged;

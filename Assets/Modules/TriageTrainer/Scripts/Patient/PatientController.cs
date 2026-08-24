@@ -219,10 +219,13 @@ namespace TriageTrainer.Entity
         return false;
 
       // 실제 플레이어 경로는 소비를 먼저 확정한 뒤에만 상태·Display·신호를 변경한다.
-      if (sourcePlayer != null && !sourcePlayer.TryConsumeItemUse(itemIdentifier))
+      PlayerController.ItemUseConsumptionReceipt receipt = null;
+      if (sourcePlayer != null && !sourcePlayer.TryConsumeItemUse(itemIdentifier, out receipt))
         return false;
 
-      return ApplyItemUse(itemIdentifier);
+      bool applied = ApplyItemUse(itemIdentifier);
+      sourcePlayer?.CompleteConsumedItemUse(receipt, applied);
+      return applied;
     }
 
     public void SetCurrentBed(MovingPatientBedController bed)

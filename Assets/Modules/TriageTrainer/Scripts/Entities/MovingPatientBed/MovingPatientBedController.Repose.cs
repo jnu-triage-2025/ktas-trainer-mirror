@@ -1,3 +1,4 @@
+using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Entity;
@@ -21,6 +22,7 @@ namespace TriageTrainer.Entity
   /// </summary>
   public partial class MovingPatientBedController
   {
+    private const float ReposeInteractionDistance = 3f;
     [Header("Repose (Network)")]
     [Tooltip("이 침대에 사전 결합(누워있게)할 환자의 엔티티 식별자. 비우면 결합 없이 스폰된다. " +
              "예) patient_a. 스폰 시 서버가 이 값을 적용하고 모든 피어로 복제한다.")]
@@ -268,11 +270,55 @@ namespace TriageTrainer.Entity
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void CmdSetReposedTarget(string patientIdentifier)
+    private void CmdSetReposedTarget(
+      string patientIdentifier,
+      NetworkConnection sender = null)
     {
-      _reposedTargetIdentifier.Value = string.IsNullOrWhiteSpace(patientIdentifier)
+      if (!TryValidateReposeRequest(sender, patientIdentifier, out string normalizedIdentifier))
+        return;
+      _reposedTargetIdentifier.Value = normalizedIdentifier;
+    }
+
+    private bool TryValidateReposeRequest(
+      NetworkConnection sender,
+      string patientIdentifier,
+      out string normalizedIdentifier)
+    {
+      normalizedIdentifier = string.IsNullOrWhiteSpace(patientIdentifier)
         ? string.Empty
         : patientIdentifier.Trim();
+      if (sender == null || !sender.IsValid
+          || !Registry.TryGetEntityByClientId(sender.ClientId, out var playerDescriptor)
+          || playerDescriptor?.GameObject == null)
+        return false;
+
+      var player = playerDescriptor.GameObject.GetComponent<MultiplayerInfrastructure.Player.PlayerController>()
+                   ?? playerDescriptor.GameObject.GetComponentInChildren<MultiplayerInfrastructure.Player.PlayerController>(true);
+      if (player == null
+          || player.Owner == null
+          || !player.Owner.IsValid
+          || player.Owner.ClientId != sender.ClientId
+          || (player.transform.position - transform.position).sqrMagnitude
+          > ReposeInteractionDistance * ReposeInteractionDistance)
+        return false;
+
+      if (string.IsNullOrEmpty(normalizedIdentifier))
+        return !string.IsNullOrWhiteSpace(_reposedTargetIdentifier.Value);
+
+      if (!_enablePatientRepose
+          || (!string.IsNullOrWhiteSpace(_reposedTargetIdentifier.Value)
+              && !string.Equals(_reposedTargetIdentifier.Value, normalizedIdentifier,
+                System.StringComparison.Ordinal))
+          || !Registry.TryGetEntity(normalizedIdentifier, out var patientDescriptor)
+          || patientDescriptor?.GameObject == null)
+        return false;
+
+      var patient = patientDescriptor.GameObject.GetComponent<PatientController>()
+                    ?? patientDescriptor.GameObject.GetComponentInChildren<PatientController>(true);
+      return patient != null
+             && (patient.CurrentBed == null || ReferenceEquals(patient.CurrentBed, this))
+             && (player.transform.position - patient.transform.position).sqrMagnitude
+             <= ReposeInteractionDistance * ReposeInteractionDistance;
     }
 
     /// <summary>

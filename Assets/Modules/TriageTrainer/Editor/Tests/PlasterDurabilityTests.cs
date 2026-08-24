@@ -1,6 +1,10 @@
+using System.Collections.Generic;
+using System.Reflection;
+using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.UI;
 using NUnit.Framework;
 using TriageTrainer.ItemDefinitions;
+using FishNet.Object;
 using UnityEngine;
 
 namespace TriageTrainer.Tests
@@ -92,6 +96,64 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void RejectedPatientItemUseRestoresDurabilityAndStack()
+    {
+      var playerObject = new GameObject("patient-item-refund-player");
+      try
+      {
+        var player = playerObject.AddComponent<PlayerController>();
+        AttachNetworkObjectCache(player);
+        var plaster = new Plaster
+        {
+          CurrentStackCount = 2,
+          CurrentDurability = 10
+        };
+        var slot = new InventorySlotModelDTO(plaster);
+        typeof(PlayerController).GetField("_slots", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.SetValue(player, new List<InventorySlotModelDTO> { slot });
+
+        Assert.That(player.TryConsumeItemUse(
+          Plaster.Identifier, out var receipt), Is.True);
+        Assert.That(slot.ItemInstance.CurrentDurability, Is.EqualTo(9));
+
+        player.CompleteConsumedItemUse(receipt, accepted: false);
+
+        Assert.That(slot.ItemInstance, Is.Not.Null);
+        Assert.That(slot.ItemInstance.CurrentStackCount, Is.EqualTo(2));
+        Assert.That(slot.ItemInstance.CurrentDurability, Is.EqualTo(10));
+      }
+      finally
+      {
+        Object.DestroyImmediate(playerObject);
+      }
+    }
+
+    [Test]
+    public void AcceptedPatientItemUseKeepsConsumedDurability()
+    {
+      var playerObject = new GameObject("patient-item-accepted-player");
+      try
+      {
+        var player = playerObject.AddComponent<PlayerController>();
+        AttachNetworkObjectCache(player);
+        var plaster = new Plaster { CurrentDurability = 10 };
+        var slot = new InventorySlotModelDTO(plaster);
+        typeof(PlayerController).GetField("_slots", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.SetValue(player, new List<InventorySlotModelDTO> { slot });
+
+        Assert.That(player.TryConsumeItemUse(
+          Plaster.Identifier, out var receipt), Is.True);
+        player.CompleteConsumedItemUse(receipt, accepted: true);
+
+        Assert.That(slot.ItemInstance.CurrentDurability, Is.EqualTo(9));
+      }
+      finally
+      {
+        Object.DestroyImmediate(playerObject);
+      }
+    }
+
+    [Test]
     public void SplittingStackMovesDamagedActiveItemWithoutDuplicatingIt()
     {
       var source = new InventorySlotModelDTO(
@@ -104,6 +166,13 @@ namespace TriageTrainer.Tests
       Assert.That(split.CurrentDurability, Is.EqualTo(10));
       Assert.That(source.ItemInstance.CurrentStackCount, Is.EqualTo(2));
       Assert.That(source.ItemInstance.CurrentDurability, Is.EqualTo(30));
+    }
+
+    private static void AttachNetworkObjectCache(PlayerController player)
+    {
+      typeof(NetworkBehaviour).GetField("_networkObjectCache",
+          BindingFlags.Instance | BindingFlags.NonPublic)
+        ?.SetValue(player, player.GetComponent<NetworkObject>());
     }
 
     [TestCase(1.00f, 72, 199, 71)]

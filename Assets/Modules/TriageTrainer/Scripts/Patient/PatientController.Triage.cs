@@ -1,4 +1,5 @@
 using System;
+using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.InteractableEntity;
@@ -27,6 +28,7 @@ namespace TriageTrainer.Entity
   /// </summary>
   public partial class PatientController
   {
+    private const float TriageInteractionDistance = 3f;
     /// <summary>
     /// 트리아지 평가 완료 후 인터랙션 재노출 정책.
     /// </summary>
@@ -299,9 +301,32 @@ namespace TriageTrainer.Entity
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void CmdSetAssessedTriage(TriageLevel level)
+    private void CmdSetAssessedTriage(TriageLevel level, NetworkConnection sender = null)
     {
+      if (!TryResolveTriageRequester(sender, out var requester)
+          || (requester.transform.position - transform.position).sqrMagnitude
+          > TriageInteractionDistance * TriageInteractionDistance)
+        return;
       ApplyAssessedTriage(level);
+    }
+
+    private static bool TryResolveTriageRequester(
+      NetworkConnection sender,
+      out PlayerController requester)
+    {
+      requester = null;
+      if (sender == null || !sender.IsValid
+          || !MultiplayerInfrastructure.Registry.Registry.TryGetEntityByClientId(
+            sender.ClientId, out var descriptor)
+          || descriptor?.GameObject == null)
+        return false;
+
+      requester = descriptor.GameObject.GetComponent<PlayerController>()
+                  ?? descriptor.GameObject.GetComponentInChildren<PlayerController>(true);
+      return requester != null
+             && requester.Owner != null
+             && requester.Owner.IsValid
+             && requester.Owner.ClientId == sender.ClientId;
     }
 
     // 서버 컨텍스트: 상태값을 갱신(SyncVar 로 전 피어 복제)하고, 완료 후 재노출 정책을 적용한다.
