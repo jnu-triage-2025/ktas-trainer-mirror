@@ -3,9 +3,11 @@ param()
 
 $ErrorActionPreference = 'Stop'
 
-$solutionPath = Join-Path (Get-Location) 'ktas-trainer.sln'
-if (-not (Test-Path -LiteralPath $solutionPath -PathType Leaf)) {
-    $projectPath = (Get-Location).Path
+$projectRoot = (Get-Location).Path
+$solutionPath = Join-Path $projectRoot 'ktas-trainer.sln'
+$formatTarget = $solutionPath
+if (-not (Test-Path -LiteralPath $formatTarget -PathType Leaf)) {
+    $projectPath = $projectRoot
     $versionFile = Join-Path $projectPath 'ProjectSettings/ProjectVersion.txt'
     $versionMatch = Select-String -Path $versionFile -Pattern '^m_EditorVersion: (.+)$'
     if (-not $versionMatch) {
@@ -55,11 +57,18 @@ if (-not (Test-Path -LiteralPath $solutionPath -PathType Leaf)) {
     }
 }
 
-if (-not (Test-Path -LiteralPath $solutionPath -PathType Leaf)) {
-    throw "C# solution was not generated: $solutionPath"
+if (-not (Test-Path -LiteralPath $formatTarget -PathType Leaf)) {
+    $formatTarget = @(
+        (Join-Path $projectRoot 'Assembly-CSharp.csproj'),
+        (Join-Path $projectRoot 'Assembly-CSharp-Editor.csproj')
+    ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
 }
 
-& dotnet format $solutionPath `
+if ([string]::IsNullOrWhiteSpace($formatTarget)) {
+    throw "No generated C# solution or project was found under $projectRoot."
+}
+
+& dotnet format $formatTarget `
     --include 'Assets/Modules/MultiplayerInfrastructure' `
     --include 'Assets/Modules/TriageTrainer' `
     --exclude 'Assets/Modules/FishNet' `
