@@ -30,7 +30,7 @@ parameters:
 variables:
   buildName: 'ktas-trainer'
   buildPath: 'build'
-  windowsAgentPool: 'windowsAgentsPool'
+  windowsAgentPool: 'windowsAgentPool'
 
 stages:
   - stage: Lint
