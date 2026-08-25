@@ -287,6 +287,21 @@ namespace TriageTrainer.Entity
     }
 
     /// <summary>
+    /// 시나리오 수동 진입처럼 여러 처치 상태를 한 번에 복원해야 할 때 사용한다.
+    /// 개별 상태 전환을 흉내 내지 않고 권위 상태와 클라이언트 복제본을 같은 스냅샷으로 맞춘다.
+    /// </summary>
+    public bool SetTreatmentStateSnapshot(IEnumerable<string> treatmentIdentifiers)
+    {
+      if (IsFishNetClientInitialized && !IsFishNetServerStarted)
+        return false;
+
+      TreatmentState.ApplySnapshot(treatmentIdentifiers);
+      if (IsFishNetServerStarted)
+        RpcSyncTreatmentState(TreatmentState.CreateSnapshot());
+      return true;
+    }
+
+    /// <summary>
     /// 처치 시각 표현이 이미 켜져 있는지 조회한다.
     /// 시나리오 준비 경로가 같은 표현을 매 프레임 다시 켜서 불필요한 RPC 를 내보내지 않도록 공개한다.
     /// </summary>
