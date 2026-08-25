@@ -811,12 +811,32 @@ flags: ["refactor-required"]
 
 ### 심정지 발생과 맥박 확인
 
+- ManualEntryNode: arrest
+  - 실제 그래프 식별자와 진입 별칭은 모두 `arrest`다.
+  - 정상 진행에서는 P004 종료 후 `arrest`를 거쳐 D022로 이동한다.
+  - 운영자가 수동 진입하면 별도 준비 체인 없이 D022부터 재생하며, 이어지는 `patient_crash_ui`가 환자 A를 PEA 모니터 상태로 맞춘다.
+
 1. Dialogue
   - Speaker: "의사"
   - Content: "그래도 혈압이 잘 안잡히네요..."
   - TTS: true
 2. 환자 악화 연출(`patient_crash_ui`)을 재생한다.
-  - 기술 노트: 환자의 급격한 상태 악화는 이 시나리오에서만 발생하는 사건이므로 전용 연출 이벤트를 유지한다.
+  - 이어지는 "심전도만 출력되고, 다른 활력징후가 출력되지 않습니다."에 맞게 관련 값들을 조정한다.
+    - 구현 반영:
+      환자 악화 연출(patient_crash_ui) 재생 시 환자 A의 모니터 출력을 의사 대사 "심전도만 출력되고, 다른 활력징후가 출력되지 않습니다."와 일치시킨다. 이 시점은 PEA(맥박 없는 전기활동) 상태이므로, 심전도 파형과 그 유래 HR 수치만 출력하고 나머지 측정 채널은 모두 측정 불가로 바꾼다.
+      환자 A의 `MedicalStateIsCardiacArrest`도 true로 바꾸어 모니터 표시뿐 아니라 환자 상태 자체가 심정지임을 기록한다.
+      설정 기준은 환자 A의 MedicalState이며, 채널별 값은 다음과 같다.
+      ECG: 기존 악화 프로필(_patientACrashMonitorParameters, 분당 80회의 조직화된 리듬)을 그대로 사용한다. 파형과 ECG 유래 HR 수치는 계속 출력한다.
+      Pleth(맥파): bpm, spo2를 모두 측정 불가(-1)로 설정한다. 맥박이 없으므로 맥파 파형을 그리지 않고, SpO2 수치는 -?-로 표시한다.
+      Numerics: pulseRate, spo2, perfusionIndex, pvcs를 측정 불가(-1)로 설정한다. bpm은 ECG 프로필과 같은 분당 80회를 유지하여 HR 숫자가 사라지지 않게 한다. 맥파 유래 PR과 ECG 유래 HR을 구분하는 근거이기도 하다.
+      NIBP: systolic, diastolic을 측정 불가(-1)로 설정하여 -120/80 (95) mmHg 형식의 출력 대신 -?-로 표시한다.
+      체온(T1/T2): 측정 불가(-1)로 설정한다. 대사에서 "다른 활력징후가 출력되지 않는다"고 하므로 체온도 함께 끈다.
+      ART/CVP, ST 유도(ST leads): 환자 A는 해당 침습 라인을 연결한 적이 없으므로 측정 불가(-1)로 둔다.
+      수치 필드에 -1(PatientMedicalState.MonitorValueUnavailable)을 지정하면 모니터가 그 채널을 -?-로 표시하는 규격을 그대로 사용한다. 채널별 새 전용 플래그를 만들지 않는다.
+      반영 위치는 patient_crash_ui 이벤트 핸들러다. 기존에 ECG 프로필만 교체하던 처리를 확장하여, 위 값을 환자 A의 MedicalState에 기록한다. 모니터는 매 프레임 환자 MedicalState에서 값을 가져오므로(PullParametersFromPatientState), 모니터 컨트롤러에만 값을 설정하면 다음 프레임에 환자 상태 값으로 되돌아간다. 값 기록은 PatientController.SetMonitorMedicalState(서버 전파 포함) 경로를 사용한다.
+      이 설정은 심정지 구간(CPR 1주기, 2주기, 에피네프린 투여) 내내 유지한다. 무수축 전환 연출(asystole_monitor_ui)에서는 ECG 채널만 평선(분당 0회, 진폭 0)으로 바꾸고 나머지 채널의 측정 불가 상태는 그대로 둔다. ROSC 이후의 회복 값은 ROSC 구간의 별도 요구사항을 따른다.
+      HR 분당 80회는 심전도상 전기 활동이지 촉지 맥박이 아니므로, 직후 nurse_b가 경동맥을 촉지해 "맥박 없습니다."라고 보고하는 흐름과 모순되지 않는다.
+      상태값 변경 시 세션 로그에 기록한다(표기 규약의 상태값 기술 노트 준수).
 3. Dialogue
   - Speaker: "의사"
   - Content: "심전도만 출력되고, 다른 활력징후가 출력되지 않습니다. @t=[nurse_b, ???]선생님, 환자 맥박 확인해주세요."
@@ -825,9 +845,10 @@ flags: ["refactor-required"]
   - 제목: "맥박 확인"
   - 목표
     - 표기: "남성 환자의 경동맥을 촉지해 맥박 확인하기"
-    - 처리: 맥박 확인 상호작용(`assess_pulse`)을 수행하면 완료 처리
+    - 처리: 첫 심정지 맥박 확인 상호작용(`assess_pulse_r1`)을 수행하면 완료 처리
       - 완료 신호: `sig.check_pulse_patient_a_r1`
-    - 퀘스트 마크: `patient_a` / `assess_pulse`
+      - `Quest_Check_Pulse`의 `InteractionSignalReceived` 작업과 V022가 같은 신호를 사용한다.
+    - 퀘스트 마크: `patient_a` / `assess_pulse_r1`
     - Interaction 수행 시 다음 재생
       1. Dialogue
         - Speaker: `@s`
@@ -846,9 +867,10 @@ flags: ["refactor-required"]
   - Content: "PEA입니다. CPR 하겠습니다. 제가 팀 리더를 맡겠습니다. @t=[nurse_a, ???]선생님은 앰부백 짜주시고, @t=[nurse_b, ???]선생님은 가슴압박 해주세요. @t=[nurse_c, ???]선생님은 제세동기 연결해주시고, @t=[nurse_d, ???]선생님은 C-line으로 에피네프린 1mg 투여해주세요."
   - TTS: true
 
+
 ### CPR 1주기
 
-의사 지시에 따라 네 개의 브랜치가 병렬로 진행된다(P005).
+- ManualEntryNode: cpr_1st_cycle
 
 - `nurse_a`에게 퀘스트 발행 (`Quest_Ambu_A`)
   - 제목: "앰부배깅 수행"
@@ -857,7 +879,7 @@ flags: ["refactor-required"]
     1. 퀘스트 목표 표기를 "기관내관에서 T-piece 분리하기"로 변경
     2. "T-piece 분리" Interaction 활성화
       - 퀘스트 마크: 환자에게 연결된 T-piece / 분리 상호작용
-      - 분리 신호(`sig.remove_tpiece`)를 수신하면 이 목표를 완료 처리
+      - 상태값 필드, 시각화 오브젝트 등을 T-piece 분리 처리
     3. 퀘스트 목표 표기를 "기관내관에 앰부백 연결하기"로 변경
     4. "앰부백 연결" Interaction 활성화
       - 퀘스트 마크: 환자 구강에 삽입된 기관내관 / 앰부백 연결 상호작용
@@ -871,8 +893,12 @@ flags: ["refactor-required"]
               - Speaker: `@s`
               - Content: "(앰부백과 산소 저장낭을 찾자.)"
           - 있다면 다음 처리
-            1. 연결 신호(`sig.connect_ambubag`, `sig.connect_o2_to_ambu`)를 수신하고 앰부백 적용 연출(`apply_ambu_patient_a`)을 재생
-            2. ChoiceDialogue
+            1. 환자의 ambubag, reservoir_bag 상태값과 Display State를 활성화하고 시각화 오브젝트를 표시
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(앰부백과 산소 저장낭을 기관내관에 연결했다.)"
+              - TTS: false
+            3. ChoiceDialogue
               - Speaker: `@s`
               - Content: "(산소량은..)"
               - Choices(1개)
@@ -1003,8 +1029,8 @@ flags: ["refactor-required"]
   - 퀘스트 발행과 함께 다음 처리 수행:
     1. 퀘스트 목표 표기를 "제세동 카트를 환자 옆으로 가져오기"로 변경
     2. 카트 이동 완료 신호(`sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient`)를 수신하면 이 목표를 완료 처리
-      - 퀘스트 마크: 제세동 카트(`defib_cart_a`)의 손잡이
-      - 기술 노트: 카트 이동과 위치 도달 판정은 `MovingPatientBedController`와 `MovingPatientBedPositioningPoint`의 기존 오버월드 동작을 그대로 사용한다.
+      - 퀘스트 마크: 제세동 카트의 손잡이
+      - (수정) 기술 노트: 카트 이동과 위치 도달 판정은 `MovingPatientBedController`와 `MovingPatientBedPositioningPoint`의 기존 오버월드 동작을 그대로 사용해서는 안된다. 만약 그러한 구현이 존재하거나 시도되었다면 제거하여야 한다. 제세동 카트는 제세동 카트 전용 이동 컨트롤러(`DefibrillatorCartController`)를 사용하여, 플레이어가 카트를 잡고 이동시키면 카트가 환자 침대에 가까워질 때까지 이동하고, 가까워지면 자동으로 위치를 잡도록 구현한다. 위치 도달 판정은 `MovingPatientBedPositioningPoint`의 기존 오버월드 동작을 그대로 사용하지 않고, 제세동 카트 전용 위치 지정점(`DefibrillatorCartPositioningPoint`)을 사용한다.
     3. 퀘스트 목표 표기를 "남성 환자의 흉부에 제세동 패드 부착하기"로 변경
     4. "제세동 패드 부착" Interaction 활성화
       - 퀘스트 마크: `patient_a` 흉부 / 제세동 패드 부착 상호작용
@@ -1017,7 +1043,14 @@ flags: ["refactor-required"]
             2. Dialogue
               - Speaker: `@s`
               - Content: "(제세동 패드를 찾자.)"
-          - 있다면 부착 신호(`sig.interact_patient_chest`)를 수신하고 부착 연출(`attach_defibpad`)과 불규칙 파형 UI(`defib_ui_irregular`)를 재생한 뒤 이 목표를 완료 처리
+          - 있다면 다음 처리
+            1. 환자의 defibrillatorpad 상태값과 Display State를 활성화하고 시각화 오브젝트를 표시
+            2. Dialogue
+              - Speaker: `@s`
+              - Content: "(제세동 패드를 흉부에 부착했다.)"
+              - TTS: false
+            3. 환자의 defibrillatorpad와 제세동 카트에 각각 존재하는 AEDConnectionPoint 오브젝트를 `LineConnectionService`로 연결 처리
+              - 기술 노트: 이들 각각의 컨트롤러에 AEDConnectionPoint를 ref하는 필드가 있어야 하고, ref가 null일 때 자식 오브젝트에서 class로 find하는 fallback 로직도 추가하여라. 각각 두 개씩 존재한다.
     5. Dialogue
       - Speaker: `@s`
       - Content: "제세동기 준비가 완료되었습니다."
@@ -1097,7 +1130,9 @@ flags: ["refactor-required"]
             2. Dialogue
               - Speaker: `@s`
               - Content: "(에피네프린 앰퓰과 5cc 주사기를 찾아 조합하자.)"
-          - 있다면 투여 신호(`sig.push_epi_r1`)를 수신하고 이 목표를 완료 처리
+          - 있다면
+            - 플레이어 인벤토리의 `epinephrine_5cc_syringe`를 1개 소모
+            - 상태를 업데이트하고 퀘스트 완료처리. 네트워크 전역에 전파되어야 함
       - 기술 노트: 약물 주사기(`epinephrine_5cc_syringe`)는 crafting 시스템으로 조합한다.
     4. Dialogue
       - Speaker: `@s`
@@ -1111,12 +1146,11 @@ flags: ["refactor-required"]
           - 없다면 다음 재생
             1. Dialogue
               - Speaker: `@s`
-              - Content: "(Push용 생리식염수 20cc 주사기를 갖고 있지 않다.)"
+              - Content: "(생리식염수 20cc 주사기를 갖고 있지 않다.)"
             2. Dialogue
               - Speaker: `@s`
               - Content: "(20cc 생리식염수와 20cc 주사기를 찾아 조합하자.)"
-          - 있다면 투여 신호(`sig.push_ns_r1`)를 수신하고 이 목표를 완료 처리
-      - 기술 노트: Push용 주사기(`normal_saline_20cc_syringe`)도 crafting 시스템으로 조합한다.
+          - 있다면 주사기를 소모하고 이 목표를 완료 처리
     7. Dialogue
       - Speaker: `@s`
       - Content: "생리식염수 20cc 투여했습니다."
@@ -1160,9 +1194,11 @@ flags: ["refactor-required"]
         - 플레이어가 선택한 답, 의도된 답
   - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
 
-- 전체 인원의 퀘스트가 "다른 사람들의 처리가 끝날 때까지 기다리기" 상태(*a)라면 퀘스트 완료 처리
+- 전체 인원의 퀘스트가 "다른 사람들의 처리가 끝날 때까지 기다리기" 상태라면 퀘스트 완료 처리
 
 ### 리듬 확인과 CPR 2주기 (역할 교대)
+
+- ManualEntryNode: cpr_2nd_cycle
 
 1. Dialogue
   - Speaker: "의사"
@@ -1174,7 +1210,7 @@ flags: ["refactor-required"]
   - Content: "Asystole입니다. 가슴압박과 앰부배깅 하시던 @t=[nurse_a, ???]선생님, @t=[nurse_b, ???]선생님끼리 교대 후 계속 가슴압박 해주세요. @t=[nurse_c, ???]선생님, @t=[nurse_d, ???]선생님께서도 교대해서 역할을 수행해 주세요."
   - TTS: true
 
-이 교대 지시로 네 브랜치가 나란히 진행된다(P006).
+이 교대 지시가 끝나면 `nurse_a`, `nurse_b`, `nurse_c`, `nurse_d` 역할별로 동시에 시나리오 흐름을 계속한다.
 
 - `nurse_a`에게 퀘스트 발행 (`Quest_ChestComp_A`)
   - 제목: "가슴압박 교대"
@@ -1229,7 +1265,16 @@ flags: ["refactor-required"]
 
 - 전체 인원의 퀘스트가 "다른 사람들의 처리가 끝날 때까지 기다리기" 상태(*a)라면 퀘스트 완료 처리
 
+
+- 시나리오 완료
+
+
 ### ROSC 확인과 후속 조치
+
+- ManualEntryNode: rosc_followup
+  - 실제 그래프 식별자와 진입 별칭은 모두 `rosc_followup`이다.
+  - 정상 진행에서는 P006 종료 후 이 지점을 거쳐 ROSC 모니터 연출과 맥박 확인을 시작한다.
+  - 운영자가 수동 진입하면 별도 CPR 준비 체인 없이 ROSC 확인 대사부터 재생하고, 이어지는 `rosc_monitor_ui`가 환자 A의 회복 모니터 상태를 표시한다.
 
 1. Dialogue
   - Speaker: "의사"
@@ -1265,7 +1310,7 @@ flags: ["refactor-required"]
   - Content: "환자 ROSC 되었습니다. 제가 검사랑 협진 의뢰 할테니 @t=[nurse_d, ???]선생님이 의식상태 확인해주세요. @t=[nurse_b, ???]선생님, 의복 제거해서 추가 손상 있는지 사정해주세요. @t=[nurse_a, ???]선생님께서는 다시 분류구역으로 이동해서 환자 분류해주세요."
   - TTS: true
 
-이 지시가 내려지면 네 브랜치가 병렬로 진행된다(P007).
+이 지시가 끝나면 P007에서 `nurse_a`, `nurse_b`, `nurse_c`, `nurse_d` 브랜치를 역할별로 동시에 시작한다.
 
 - `nurse_a`에게 퀘스트 발행 (`Quest_Return_Triage`)
   - 제목: "분류 구역 복귀"
@@ -2997,7 +3042,7 @@ SPAWN_A
 | **WaitMode** | ScenarioParallelWaitMode | All |
 | **AllocationType** | ScenarioParallelAllocationType | ByRole |
 | **WhenBranchingPlayerNotMatched** | ScenarioParallelWhenBranchingPlayerNotMatched | Reallocation |
-| **NextIdentifier** | 문자열 | D022 |
+| **NextIdentifier** | 문자열 | arrest |
 
 #### [P004_Branches] 브랜치 목록 (ScenarioParallelBranch)
 
@@ -4690,6 +4735,20 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 
 
 <!-- ================= [P004 병렬 종료 및 환자 악화 시점] ================= -->
+
+### [arrest] ManualEntrypointNode
+
+| 속성 | 타입 | 설명 |
+| --- | --- | --- |
+| **Identifier** | 문자열 | arrest |
+| **NodeType** | ScenarioNodeType | ScenarioNodeType.ManualEntrypoint |
+| **EntrypointIdentifier** | 문자열 | arrest |
+| **ManualEnterSetupIdentifier** | 문자열/null | null |
+| **Description** | 문자열 | 환자 A의 심정지 발생과 첫 맥박 확인 단계 진입 지점. |
+| **NextIdentifier** | 문자열 | D022 |
+
+
+---
 
 ### [D022] DialogueNode
 
