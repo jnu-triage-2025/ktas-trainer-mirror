@@ -3573,7 +3573,7 @@ SPAWN_A
 | **Identifier** | 문자열 | N009_1 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 유량계를 습득하여 산소 유량계를 완성합니다. |
+| **DialogueContent** | 문자열 | 유량계를 습득한 뒤, 아이템을 조합하여 산소 유량계를 완성합니다. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | V015_1 |
@@ -4841,7 +4841,7 @@ PatientA 프리팹 아래 18g_left의 자식 오브젝트 내에 18g_left_port �
 | **Identifier** | 문자열 | N016 |
 | **NodeType** | ScenarioNodeType | ScenarioNodeType.Dialogue |
 | **SpeakerName** | 문자열 | 시스템 |
-| **DialogueContent** | 문자열 | 환자의 경동맥을 촉지해 맥박을 확인합니다. 목 부위를 클릭하세요. |
+| **DialogueContent** | 문자열 | 환자의 경동맥을 촉지해 맥박을 확인합니다. 환자에게 접근해 '맥박 확인' 옵션을 선택하세요. |
 | **PortraitSpriteIdentifier** | 문자열/null | null |
 | **Duration** | 실수(float) | 4.0 |
 | **NextIdentifier** | 문자열 | Q018 |
