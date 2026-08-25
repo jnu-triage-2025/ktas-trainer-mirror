@@ -2,6 +2,7 @@ using System.Collections;
 using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Registry;
 using TriageTrainer.Entity;
+using TriageTrainer.Entity.Patient;
 using UnityEngine;
 
 namespace TriageTrainer.Scenario
@@ -218,13 +219,13 @@ namespace TriageTrainer.Scenario
       patient.MedicalStateIsCardiacArrest = true;
       patient.SetMonitorMedicalState(
         _patientACrashMonitorParameters,
-        new TriageTrainer.Entity.PatientMonitor.Models.ARTParameters { bpm = unavailable, systolic = unavailable, diastolic = unavailable, noise = 0f },
-        new TriageTrainer.Entity.PatientMonitor.Models.CVPParameters { bpm = unavailable, mean = unavailable, noise = 0f },
-        new TriageTrainer.Entity.PatientMonitor.Models.PlethParameters { bpm = unavailable, spo2 = unavailable, noise = 0f },
-        new TriageTrainer.Entity.PatientMonitor.Models.NumericsParameters { bpm = _patientACrashMonitorParameters.bpm, pvcs = unavailable, pulseRate = unavailable, perfusionIndex = unavailable, spo2 = unavailable },
-        new TriageTrainer.Entity.PatientMonitor.Models.NIBPParameters { systolic = unavailable, diastolic = unavailable },
-        new TriageTrainer.Entity.PatientMonitor.Models.TemperatureParameters { t1 = unavailable, t2 = unavailable },
-        new TriageTrainer.Entity.PatientMonitor.Models.STLeadValues { i = unavailable, ii = unavailable, iii = unavailable, avr = unavailable, avl = unavailable, avf = unavailable, v1 = unavailable, v2 = unavailable, v3 = unavailable, v4 = unavailable, v5 = unavailable, v6 = unavailable });
+        new ARTParameters { bpm = unavailable, systolic = unavailable, diastolic = unavailable, noise = 0f },
+        new CVPParameters { bpm = unavailable, mean = unavailable, noise = 0f },
+        new PlethParameters { bpm = unavailable, spo2 = unavailable, noise = 0f },
+        new NumericsParameters { bpm = _patientACrashMonitorParameters.bpm, pvcs = unavailable, pulseRate = unavailable, perfusionIndex = unavailable, spo2 = unavailable },
+        new NIBPParameters { systolic = unavailable, diastolic = unavailable },
+        new TemperatureParameters { t1 = unavailable, t2 = unavailable },
+        new STLeadValues { i = unavailable, ii = unavailable, iii = unavailable, avr = unavailable, avl = unavailable, avf = unavailable, v1 = unavailable, v2 = unavailable, v3 = unavailable, v4 = unavailable, v5 = unavailable, v6 = unavailable });
       GameLogService.WriteScenario(
         "Patient A medical state restored for manual entry: cardiac arrest (PEA).",
         "patient_a_critical");

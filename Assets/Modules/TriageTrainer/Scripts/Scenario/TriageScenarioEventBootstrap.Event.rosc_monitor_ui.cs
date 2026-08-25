@@ -1,5 +1,6 @@
 using System.Collections;
 using MultiplayerInfrastructure.Logging;
+using TriageTrainer.Entity.Patient;
 using TriageTrainer.Entity.PatientMonitor.Models;
 
 namespace TriageTrainer.Scenario
