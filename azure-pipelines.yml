@@ -30,8 +30,7 @@ parameters:
 variables:
   buildName: 'ktas-trainer'
   buildPath: 'build'
-  macAgentPool: 'macos-unity'
-  windowsAgentPool: 'build-on-commit'
+  windowsAgentPool: 'windowsAgentsPool'
 
 stages:
   - stage: Lint
@@ -136,12 +135,9 @@ stages:
 
       - job: BuildMacos
         displayName: 'Build macOS player'
-        condition: and(succeeded(), ${{ eq(parameters.buildMacos, true) }})
+        condition: and(succeeded(), ${{ eq(parameters.agentMode, 'hosted') }}, ${{ eq(parameters.buildMacos, true) }})
         pool:
-          ${{ if eq(parameters.agentMode, 'hosted') }}:
-            vmImage: 'macos-latest'
-          ${{ else }}:
-            name: $(macAgentPool)
+          vmImage: 'macos-latest'
         variables:
           CI_PROJECT_DIR: '$(Build.SourcesDirectory)'
           BUILD_NAME: '$(buildName)'
