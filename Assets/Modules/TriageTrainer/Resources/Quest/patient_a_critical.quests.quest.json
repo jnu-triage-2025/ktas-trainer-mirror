@@ -23,7 +23,7 @@
         }
       ]
     },
-    { "identifier": "Quest_Wait_Initial_PatientA", "title": "삽관 보조 대기", "description": "초기 평가가 끝날 때까지 삽관 보조를 준비하며 기다립니다.", "questContent": "다른 사람들의 처리가 끝날 때까지 기다리기", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
+    { "identifier": "Quest_Wait_Initial_PatientA", "title": "삽관 준비 대기", "description": "초기 평가가 끝날 때까지 삽관 보조를 준비하며 기다립니다.", "questContent": "다른 사람들의 처리가 끝날 때까지 기다리기", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
     { "identifier": "Quest_Wait_Others_Initial_PatientA", "title": "초기 평가 대기", "description": "다른 담당자들의 초기 평가가 끝날 때까지 기다립니다.", "questContent": "다른 사람들의 처리가 끝날 때까지 기다리기", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
     { "identifier": "Quest_Grab_Stretcher", "title": "환자 이동", "description": "남성 환자를 처치실로 이동합니다.", "questContent": "남성 환자를 처치실로 이동시키기", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
     {
@@ -235,6 +235,19 @@
     { "identifier": "Quest_Check_Pulse_ROSC", "title": "ROSC 맥박 확인", "description": "소생술 후 환자 A의 맥박을 확인합니다.", "questContent": "ROSC 여부를 확인하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
     { "identifier": "Quest_Return_Triage", "title": "분류 구역 복귀", "description": "간호사 A가 분류 구역으로 복귀합니다.", "questContent": "분류 구역으로 이동하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
     { "identifier": "Quest_Cut_Clothing", "title": "환자 의복 제거", "description": "가위로 환자 A의 의복을 제거해 전신을 노출합니다.", "questContent": "환자의 의복을 제거하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
-    { "identifier": "Quest_Check_GCS_ROSC", "title": "ROSC 후 신경학적 사정", "description": "ROSC 후 환자 A의 GCS를 다시 평가합니다.", "questContent": "환자 A의 GCS를 재평가하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] }
+    { "identifier": "Quest_Check_GCS_ROSC", "title": "ROSC 후 신경학적 사정", "description": "ROSC 후 환자 A의 GCS를 다시 평가합니다.", "questContent": "환자 A의 GCS를 재평가하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
+    {
+      "identifier": "Quest_Wait_Others_Rosc_PatientA",
+      "title": "처치 정리",
+      "description": "ROSC 후속 조치에서 다른 담당자들의 처리가 끝날 때까지 기다립니다.",
+      "questContent": "다른 사람들의 처리가 끝날 때까지 기다리기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": []
+    }
   ]
 }

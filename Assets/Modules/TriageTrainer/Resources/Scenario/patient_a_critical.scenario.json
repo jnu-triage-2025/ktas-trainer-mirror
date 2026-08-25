@@ -1,7 +1,8 @@
 {
   "identifier": "patient_a_critical",
   "clientSignalPrefixes": [
-    "sig.quest_arrival_patient_a_"
+    "sig.quest_arrival_patient_a_",
+    "sig.quest_arrival_triage_area_"
   ],
   "tags": [
     "access_support",
@@ -1928,21 +1929,6 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "P003"
     },
-    "D007": {
-      "speakerName": "@s",
-      "dialogueContent": "환자 활력징후 출력됩니다.",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F4"
-      },
-      "identifier": "D007",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "N005_4"
-    },
     "D008": {
       "speakerName": "@s",
       "dialogueContent": "AVPU 중 P이며, GCS는 E2 / V2 / M4로 총 8점입니다.",
@@ -2095,7 +2081,7 @@
     },
     "D018": {
       "speakerName": "@s",
-      "dialogueContent": "양측 정맥로가 모두 확보되었습니다.",
+      "dialogueContent": "양측 정맥로 모두 확보했습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2301,7 +2287,7 @@
       },
       "identifier": "D030",
       "nodeType": "Dialogue",
-      "nextIdentifier": "N023_2"
+      "nextIdentifier": "V029"
     },
     "D031": {
       "speakerName": "@s",
@@ -2436,48 +2422,6 @@
       "identifier": "E005",
       "nodeType": "InvokeEvent",
       "nextIdentifier": "D006"
-    },
-    "E007": {
-      "eventIdentifier": "show_suction_checklist_ui",
-      "moveNextBehavior": "Immediately",
-      "identifier": "E007",
-      "nodeType": "InvokeEvent",
-      "nextIdentifier": "V013"
-    },
-    "E008": {
-      "eventIdentifier": "hide_suction_checklist_ui",
-      "moveNextBehavior": "Immediately",
-      "identifier": "E008",
-      "nodeType": "InvokeEvent",
-      "nextIdentifier": "N007_1"
-    },
-    "E010": {
-      "eventIdentifier": "show_checklist_intu",
-      "moveNextBehavior": "Immediately",
-      "identifier": "E010",
-      "nodeType": "InvokeEvent",
-      "nextIdentifier": "V014"
-    },
-    "E011": {
-      "eventIdentifier": "hide_checklist_intu",
-      "moveNextBehavior": "Immediately",
-      "identifier": "E011",
-      "nodeType": "InvokeEvent",
-      "nextIdentifier": "N008_1"
-    },
-    "E015": {
-      "eventIdentifier": "apply_gauze_patient_a",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "E015",
-      "nodeType": "InvokeEvent",
-      "nextIdentifier": "N010_3"
-    },
-    "E016": {
-      "eventIdentifier": "apply_gauze_with_plaster_patient_a",
-      "moveNextBehavior": "WaitUntilDone",
-      "identifier": "E016",
-      "nodeType": "InvokeEvent",
-      "nextIdentifier": "S002"
     },
     "E017": {
       "eventIdentifier": "show_iv_checklist",
@@ -2934,96 +2878,6 @@
       "nodeType": "Delay",
       "nextIdentifier": "C031"
     },
-    "N005": {
-      "speakerName": "@s",
-      "dialogueContent": "(남성 환자의 활력징후를 측정하고 모니터에서 확인하자.)",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": false,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N005",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "Q007"
-    },
-    "N005_1": {
-      "speakerName": "@s",
-      "dialogueContent": "(활력징후 측정도구를 갖고 환자의 활력징후를 사정하자.)",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": false,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N005_1",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "V011_1"
-    },
-    "N005_4": {
-      "speakerName": "시스템",
-      "dialogueContent": "혈압 70/40mmHg, 맥박 140회/분 - 약하고 빠름, 호흡수 8회/분, 체온 35.9도, SpO2 82% 입니다.",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N005_4",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "Q007_1"
-    },
-    "N006": {
-      "speakerName": "시스템",
-      "dialogueContent": "환자를 클릭해 환자의 의식 상태를 사정하십시오.",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N006",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "Q008"
-    },
-    "N006_1": {
-      "speakerName": "시스템",
-      "dialogueContent": "환자의 의식 상태(AVPU)를 확인합니다. 마우스로 정답을 선택해 주시면 됩니다. 정답인 경우 계속 진행되고, 오답인 경우 재응시 합니다.",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N006_1",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "N006_2"
-    },
-    "N006_2": {
-      "speakerName": "시스템",
-      "dialogueContent": "[관찰] 환자를 불렀을 때 응답이 없고, 환자의 옆구리를 꼬집었을 때 불편해하며 피하려 합니다.",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N006_2",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "C004"
-    },
     "N006_3": {
       "speakerName": "@s",
       "dialogueContent": "(다른 자극에는 반응이 없다가 통증에만 반응했으니 P로 분류하자.)",
@@ -3145,51 +2999,6 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "C007"
     },
-    "N007": {
-      "speakerName": "@s",
-      "dialogueContent": "(먼저 남성 환자의 경추를 고정하고 구강 흡인을 준비하자.)",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": false,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N007",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "Q009"
-    },
-    "N007_1": {
-      "speakerName": "@s",
-      "dialogueContent": "(환자의 목을 지지하며 경추 고정기를 적용하자.)",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": false,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N007_1",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "V013_1"
-    },
-    "N007_2": {
-      "speakerName": "시스템",
-      "dialogueContent": "흡인기를 벽에 설치하십시오.",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N007_2",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "V013_2"
-    },
     "N007_3": {
       "speakerName": "@s",
       "dialogueContent": "(조립한 양카우어 팁을 흡인기에 연결하자)",
@@ -3244,18 +3053,6 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "N007_3"
     },
-    "D_YANKAUER_CONNECT_A": {
-      "speakerName": "@s",
-      "dialogueContent": "(조립한 양카우어 팁을 흡인기에 연결하자)",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": false,
-      "ttsVoiceIdentifier": null,
-      "identifier": "D_YANKAUER_CONNECT_A",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "N007_4"
-    },
     "N008": {
       "speakerName": "@s",
       "dialogueContent": "(후두경 블레이드와 핸들을 조립해서 전달하자.)",
@@ -3270,36 +3067,6 @@
       "identifier": "N008",
       "nodeType": "Dialogue",
       "nextIdentifier": "ISC_PASS_LARYNGOSCOPE"
-    },
-    "N008_1": {
-      "speakerName": "@s",
-      "dialogueContent": "(조립한 후두경을 의사에게 전달하자.)",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": false,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N008_1",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "ISC_PASS_LARYNGOSCOPE"
-    },
-    "N008_2": {
-      "speakerName": "@s",
-      "dialogueContent": "(스타일렛을 넣어 준비한 기관내관을 의사에게 전달하자.)",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": false,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N008_2",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "ISC_PASS_ET_TUBE"
     },
     "N008_3": {
       "speakerName": "의사",
@@ -3316,36 +3083,6 @@
       "nodeType": "Dialogue",
       "nextIdentifier": "V014_3"
     },
-    "N008_4": {
-      "speakerName": "시스템",
-      "dialogueContent": "5cc 주사기를 의사에게 전달하세요.",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N008_4",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "ISC_PASS_SYRINGE"
-    },
-    "N008_5": {
-      "speakerName": "시스템",
-      "dialogueContent": "플라스터를 클릭해 선택한 뒤, 삽입된 기관내관을 고정하십시오.",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N008_5",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "V014_5"
-    },
     "N009": {
       "speakerName": "@s",
       "dialogueContent": "(습윤병과 멸균증류수, 유량계를 조립해서 산소 유량계를 만들자.)",
@@ -3360,96 +3097,6 @@
       "identifier": "N009",
       "nodeType": "Dialogue",
       "nextIdentifier": "V015_2"
-    },
-    "N009_1": {
-      "speakerName": "시스템",
-      "dialogueContent": "유량계를 습득한 뒤, 아이템을 조합하여 산소 유량계를 완성합니다.",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N009_1",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "V015_1"
-    },
-    "N009_2": {
-      "speakerName": "시스템",
-      "dialogueContent": "완성된 산소 유량계를 흡인기 옆 벽면 설치 지점에 설치하십시오.",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N009_2",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "V015_2"
-    },
-    "N009_3": {
-      "speakerName": "시스템",
-      "dialogueContent": "산소줄과 T-Piece를 획득하세요.",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N009_3",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "V015_3"
-    },
-    "N009_3_1": {
-      "speakerName": "시스템",
-      "dialogueContent": "기관내관에 T-piece를 장착하십시오.",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N009_3_1",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "V015_3_1"
-    },
-    "N009_3_2": {
-      "speakerName": "시스템",
-      "dialogueContent": "T-piece와 벽면 유량계를 산소줄로 연결하십시오.",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N009_3_2",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "V015_3_2"
-    },
-    "N009_4": {
-      "speakerName": "시스템",
-      "dialogueContent": "산소 연결이 완료되었습니다. 유량계를 클릭해 투여 산소량을 결정합니다.",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": true,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N009_4",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "V015_4"
     },
     "N009_retry": {
       "speakerName": "@s",
@@ -3500,36 +3147,6 @@
       "targets": "InGameChat",
       "broadcast": false,
       "nextIdentifier": "V016_1"
-    },
-    "N010_2": {
-      "speakerName": "@s",
-      "dialogueContent": "(거즈를 출혈 부위에 대고 압박 지혈을 시행하자.)",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": false,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N010_2",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "V016_2"
-    },
-    "N010_3": {
-      "speakerName": "@s",
-      "dialogueContent": "(거즈 위에 플라스터를 붙여 고정하자.)",
-      "portraitSpriteIdentifier": null,
-      "autoAdvanceSeconds": null,
-      "interactionRequired": null,
-      "playTTS": false,
-      "ttsVoiceIdentifier": null,
-      "ttsVoiceProfile": {
-        "preset": "F3"
-      },
-      "identifier": "N010_3",
-      "nodeType": "Dialogue",
-      "nextIdentifier": "V016_3"
     },
     "N011": {
       "speakerName": "시스템",
@@ -4637,10 +4254,11 @@
           "identifier": "N011",
           "completionConditionIdentifier": "CC_D_iv_patient_a",
           "requiredPlayerTags": [
-            "nurse_d"
+            "nurse_d",
+            "nurse_c"
           ],
           "forbiddenPlayerTags": [],
-          "requiredPlayerTagsMatchMode": "All"
+          "requiredPlayerTagsMatchMode": "Any"
         }
       ],
       "nextIdentifier": "arrest"
@@ -4756,7 +4374,7 @@
           "identifier": "N026",
           "completionConditionIdentifier": "CC_A_triagearea",
           "requiredPlayerTags": [
-            "triage_lead"
+            "nurse_a"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -4765,7 +4383,7 @@
           "identifier": "N027",
           "completionConditionIdentifier": "CC_B_cut_patient_a",
           "requiredPlayerTags": [
-            "procedure_team"
+            "nurse_b"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
@@ -4774,13 +4392,22 @@
           "identifier": "N028",
           "completionConditionIdentifier": "CC_D_gcs_patient_a_rosc",
           "requiredPlayerTags": [
-            "neuro_assessment"
+            "nurse_d"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        },
+        {
+          "identifier": "Q_WAIT_ROSC_C",
+          "completionConditionIdentifier": "CC_C_wait_rosc",
+          "requiredPlayerTags": [
+            "nurse_c"
           ],
           "forbiddenPlayerTags": [],
           "requiredPlayerTagsMatchMode": "All"
         }
       ],
-      "nextIdentifier": "D037"
+      "nextIdentifier": "P_REMOVE_ROSC_WAIT"
     },
     "PRESET_A": {
       "targetEntityIdentifier": "patient_a",
@@ -5286,7 +4913,7 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q025",
       "nodeType": "QuestControl",
-      "nextIdentifier": "V029"
+      "nextIdentifier": "D030"
     },
     "Q025_1": {
       "operation": "Remove",
@@ -5346,7 +4973,7 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q028",
       "nodeType": "QuestControl",
-      "nextIdentifier": "V032"
+      "nextIdentifier": "PREPARE_TRIAGE_RETURN_A"
     },
     "Q028_1": {
       "operation": "Remove",
@@ -5570,33 +5197,6 @@
       "nodeType": "Validator",
       "nextIdentifier": "CC_D_grab"
     },
-    "V011": {
-      "rootConditions": [
-        {
-          "condition": "RegistryContains",
-          "targetCount": 0,
-          "playerTag": null,
-          "playerScope": "Any",
-          "validationRules": [
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_vital_set"
-            }
-          ]
-        }
-      ],
-      "onFailure": "Ignore",
-      "failureReportTargets": "UnityConsole",
-      "failureNextIdentifier": null,
-      "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
-      "identifier": "V011",
-      "nodeType": "Validator",
-      "nextIdentifier": "N005_1"
-    },
     "V011_1": {
       "rootConditions": [
         {
@@ -5754,51 +5354,6 @@
     "D_GCS_A_07": { "speakerName": "@s", "dialogueContent": "(손톱 뿌리쪽 피부에 압력을 가한다.)", "portraitSpriteIdentifier": null, "autoAdvanceSeconds": null, "interactionRequired": null, "playTTS": false, "ttsVoiceIdentifier": null, "identifier": "D_GCS_A_07", "nodeType": "Dialogue", "nextIdentifier": "D_GCS_A_08" },
     "D_GCS_A_08": { "speakerName": null, "dialogueContent": "(환자가 팔을 재빨리 굽혀 자극을 피한다.)", "portraitSpriteIdentifier": null, "autoAdvanceSeconds": null, "interactionRequired": null, "playTTS": false, "ttsVoiceIdentifier": null, "identifier": "D_GCS_A_08", "nodeType": "Dialogue", "nextIdentifier": "D_GCS_A_09" },
     "D_GCS_A_09": { "speakerName": "@s", "dialogueContent": "이 환자의 상태를 정리해보자.", "portraitSpriteIdentifier": null, "autoAdvanceSeconds": null, "interactionRequired": null, "playTTS": false, "ttsVoiceIdentifier": null, "identifier": "D_GCS_A_09", "nodeType": "Dialogue", "nextIdentifier": "C004" },
-    "V013": {
-      "rootConditions": [
-        {
-          "condition": "RegistryContains",
-          "targetCount": 0,
-          "playerTag": null,
-          "playerScope": "Any",
-          "validationRules": [
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.apply_stabilizer_patient_a"
-            },
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_wall_suction"
-            },
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_suction_line"
-            },
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_yankauer"
-            }
-          ]
-        }
-      ],
-      "onFailure": "Ignore",
-      "failureReportTargets": "UnityConsole",
-      "failureNextIdentifier": null,
-      "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
-      "identifier": "V013",
-      "nodeType": "Validator",
-      "nextIdentifier": "E008"
-    },
     "V013_1": {
       "rootConditions": [
         {
@@ -5906,63 +5461,6 @@
       "identifier": "V013_4",
       "nodeType": "Validator",
       "nextIdentifier": "D009"
-    },
-    "V014": {
-      "rootConditions": [
-        {
-          "condition": "RegistryContains",
-          "targetCount": 0,
-          "playerTag": null,
-          "playerScope": "Any",
-          "validationRules": [
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_laryngoscope_blade"
-            },
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_laryngoscope_handle"
-            },
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_endotracheal_tube"
-            },
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_stylet"
-            },
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_plaster"
-            },
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_syringe_5cc"
-            }
-          ]
-        }
-      ],
-      "onFailure": "Ignore",
-      "failureReportTargets": "UnityConsole",
-      "failureNextIdentifier": null,
-      "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
-      "identifier": "V014",
-      "nodeType": "Validator",
-      "nextIdentifier": "E011"
     },
     "V014_1": {
       "rootConditions": [
@@ -6099,66 +5597,6 @@
       "nodeType": "Validator",
       "nextIdentifier": "S001"
     },
-    "V015": {
-      "rootConditions": [
-        {
-          "condition": "RegistryContains",
-          "targetCount": 0,
-          "playerTag": null,
-          "playerScope": "Any",
-          "validationRules": [
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_humidifier_bottle"
-            },
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_sterile_distilled_water"
-            }
-          ]
-        }
-      ],
-      "onFailure": "Ignore",
-      "failureReportTargets": "UnityConsole",
-      "failureNextIdentifier": null,
-      "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
-      "identifier": "V015",
-      "nodeType": "Validator",
-      "nextIdentifier": "N009_1"
-    },
-    "V015_1": {
-      "rootConditions": [
-        {
-          "condition": "RegistryContains",
-          "targetCount": 0,
-          "playerTag": null,
-          "playerScope": "Any",
-          "validationRules": [
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_flowmeter"
-            }
-          ]
-        }
-      ],
-      "onFailure": "Ignore",
-      "failureReportTargets": "UnityConsole",
-      "failureNextIdentifier": null,
-      "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
-      "identifier": "V015_1",
-      "nodeType": "Validator",
-      "nextIdentifier": "N009_2"
-    },
     "V015_2": {
       "rootConditions": [
         {
@@ -6185,33 +5623,6 @@
       "identifier": "V015_2",
       "nodeType": "Validator",
       "nextIdentifier": "V015_3_1"
-    },
-    "V015_3": {
-      "rootConditions": [
-        {
-          "condition": "RegistryContains",
-          "targetCount": 0,
-          "playerTag": null,
-          "playerScope": "Any",
-          "validationRules": [
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_o2_line"
-            }
-          ]
-        }
-      ],
-      "onFailure": "Ignore",
-      "failureReportTargets": "UnityConsole",
-      "failureNextIdentifier": null,
-      "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
-      "identifier": "V015_3",
-      "nodeType": "Validator",
-      "nextIdentifier": "N009_3_1"
     },
     "V015_3_1": {
       "rootConditions": [
@@ -6293,45 +5704,6 @@
       "identifier": "V015_4",
       "nodeType": "Validator",
       "nextIdentifier": "C008"
-    },
-    "V016": {
-      "rootConditions": [
-        {
-          "condition": "RegistryContains",
-          "targetCount": 0,
-          "playerTag": null,
-          "playerScope": "Any",
-          "validationRules": [
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_sterile_gloves"
-            },
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_gauze"
-            },
-            {
-              "type": "Registry",
-              "condition": "Contains",
-              "registryType": "RuntimeState",
-              "registryIdentifier": "sig.click_plaster"
-            }
-          ]
-        }
-      ],
-      "onFailure": "Ignore",
-      "failureReportTargets": "UnityConsole",
-      "failureNextIdentifier": null,
-      "waitForCondition": true,
-      "waitTimeoutSeconds": null,
-      "onWaitTimeout": null,
-      "identifier": "V016",
-      "nodeType": "Validator",
-      "nextIdentifier": "N010_1"
     },
     "V016_1": {
       "rootConditions": [
@@ -7177,7 +6549,7 @@
       "onWaitTimeout": null,
       "identifier": "V029_1",
       "nodeType": "Validator",
-      "nextIdentifier": "D030"
+      "nextIdentifier": "N023_2"
     },
     "V029_2": {
       "rootConditions": [
@@ -7299,7 +6671,7 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.arrive_triagearea"
+              "registryIdentifier": "sig.arrive_triagearea_patient_a"
             }
           ]
         }
@@ -7373,6 +6745,52 @@
       "identifier": "V034",
       "nodeType": "Validator",
       "nextIdentifier": "N028_1"
+    },
+    "Q_WAIT_ROSC_C": {
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "Quest_Wait_Others_Rosc_PatientA",
+      "quest": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q_WAIT_ROSC_C",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_C_wait_rosc"
+    },
+    "P_REMOVE_ROSC_WAIT": {
+      "identifier": "P_REMOVE_ROSC_WAIT",
+      "nodeType": "Parallel",
+      "waitMode": "All",
+      "allocationType": "ByRole",
+      "whenBranchingPlayerNotMatched": "Reallocation",
+      "branches": [
+        {
+          "identifier": "QC_ROSC_WAIT_C_REMOVE",
+          "completionConditionIdentifier": "CC_REMOVE_ROSC_WAIT_C",
+          "requiredPlayerTags": [
+            "nurse_c"
+          ],
+          "forbiddenPlayerTags": [],
+          "requiredPlayerTagsMatchMode": "All"
+        }
+      ],
+      "nextIdentifier": "D037"
+    },
+    "QC_ROSC_WAIT_C_REMOVE": {
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "Quest_Wait_Others_Rosc_PatientA",
+      "quest": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "QC_ROSC_WAIT_C_REMOVE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "CC_REMOVE_ROSC_WAIT_C"
+    },
+    "PREPARE_TRIAGE_RETURN_A": {
+      "eventIdentifier": "arm_patient_a_triage_return",
+      "moveNextBehavior": "WaitUntilDone",
+      "identifier": "PREPARE_TRIAGE_RETURN_A",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "V032"
     }
   }
 }

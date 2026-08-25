@@ -6145,26 +6145,57 @@ namespace MultiplayerInfrastructure.Scenario
           .Where(tag => activeRoleTags.Contains(tag))
           .Distinct(StringComparer.Ordinal)
           .ToArray() ?? Array.Empty<string>();
-        if (branchRoles.Length != 1)
+        if (branchRoles.Length == 0)
         {
           error = $"ByRole branch '{branch.Identifier}' must require exactly one activeRoleTag.";
           return false;
         }
 
-        if (holderClientIdByRole.TryGetValue(branchRoles[0], out var holderClientId))
+        // 단일 역할 브랜치: 해당 역할의 홀더에게 배정한다.
+        if (branchRoles.Length == 1)
         {
-          if (!isHolderEligible(branch, holderClientId))
-          {
-            error = $"ByRole holder for '{branchRoles[0]}' does not strictly satisfy branch '{branch.Identifier}'.";
+          if (!TryAssignSingleRoleBranch(branch, branchRoles[0], holderClientIdByRole, skipAbsentRoleBranches, isHolderEligible, allocation, ref error))
             return false;
-          }
-          allocation[branch] = holderClientId;
           continue;
+        }
+
+        // 복수 역할 브랜치(requiredPlayerTagsMatchMode=Any): 선언된 순서대로 홀더가 연결된
+        // 첫 번째 역할의 홀더에게 배정한다. 어느 역할도 연결되어 있지 않으면 단일 역할과
+        // 같은 부재 정책(skipAbsentRoleBranches)을 따른다.
+        if (branch.RequiredPlayerTagsMatchMode != ScenarioPlayerTagMatchMode.Any)
+        {
+          error = $"ByRole branch '{branch.Identifier}' must require exactly one activeRoleTag.";
+          return false;
+        }
+
+        int? fallbackHolderClientId = null;
+        bool anyRoleHolderConnected = false;
+        foreach (var role in branchRoles)
+        {
+          if (!holderClientIdByRole.TryGetValue(role, out var roleHolderClientId))
+            continue;
+          anyRoleHolderConnected = true;
+          if (!isHolderEligible(branch, roleHolderClientId))
+            continue;
+          fallbackHolderClientId = roleHolderClientId;
+          break;
+        }
+
+        if (fallbackHolderClientId.HasValue)
+        {
+          allocation[branch] = fallbackHolderClientId;
+          continue;
+        }
+
+        if (anyRoleHolderConnected)
+        {
+          error = $"ByRole holders for [{string.Join(", ", branchRoles)}] do not strictly satisfy branch '{branch.Identifier}'.";
+          return false;
         }
 
         if (!skipAbsentRoleBranches)
         {
-          error = $"ByRole branch '{branch.Identifier}' has no connected holder for role '{branchRoles[0]}'.";
+          error = $"ByRole branch '{branch.Identifier}' has no connected holder for roles [{string.Join(", ", branchRoles)}].";
           return false;
         }
 
@@ -6174,14 +6205,51 @@ namespace MultiplayerInfrastructure.Scenario
       return true;
     }
 
+    private static bool TryAssignSingleRoleBranch(
+      ScenarioParallelBranch branch,
+      string role,
+      IReadOnlyDictionary<string, int> holderClientIdByRole,
+      bool skipAbsentRoleBranches,
+      Func<ScenarioParallelBranch, int, bool> isHolderEligible,
+      IDictionary<ScenarioParallelBranch, int?> allocation,
+      ref string error)
+    {
+      if (holderClientIdByRole.TryGetValue(role, out var holderClientId))
+      {
+        if (!isHolderEligible(branch, holderClientId))
+        {
+          error = $"ByRole holder for '{role}' does not strictly satisfy branch '{branch.Identifier}'.";
+          return false;
+        }
+        allocation[branch] = holderClientId;
+        return true;
+      }
+
+      if (!skipAbsentRoleBranches)
+      {
+        error = $"ByRole branch '{branch.Identifier}' has no connected holder for role '{role}'.";
+        return false;
+      }
+
+      allocation[branch] = null;
+      return true;
+    }
+
     private bool IsDeclaredRoleAbsent(ScenarioParallelBranch branch)
     {
       if (!TryGetActiveRoleRoster(out var roster, out _))
         return false;
       var activeRoles = new HashSet<string>(roster.Select(entry => entry.Role), StringComparer.Ordinal);
       var declaredRoles = new HashSet<string>(_currentGraph.ActiveRoleTags, StringComparer.Ordinal);
-      var branchRoles = branch?.RequiredPlayerTags?.Where(declaredRoles.Contains).ToArray() ?? Array.Empty<string>();
-      return branchRoles.Length == 1 && !activeRoles.Contains(branchRoles[0]);
+      var branchRoles = branch?.RequiredPlayerTags?.Where(declaredRoles.Contains).Distinct(StringComparer.Ordinal).ToArray() ?? Array.Empty<string>();
+      if (branchRoles.Length == 1)
+        return !activeRoles.Contains(branchRoles[0]);
+
+      // 복수 역할 브랜치(Any): 어느 선언 역할의 홀더도 연결되어 있지 않으면 부재 브랜치로 본다.
+      if (branchRoles.Length > 1 && branch.RequiredPlayerTagsMatchMode == ScenarioPlayerTagMatchMode.Any)
+        return branchRoles.All(role => !activeRoles.Contains(role));
+
+      return false;
     }
 
     private static void Shuffle(IList<int> list, System.Random random)

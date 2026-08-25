@@ -42,6 +42,7 @@ namespace TriageTrainer.Scenario
       RegisterEvent_RoscMonitorUi();
       RegisterEvent_ShowPatientACompletionTitle();
       RegisterEvent_PreparePatientAManualEntry();
+      RegisterEvent_ArmPatientATriageReturn();
     }
   }
 }

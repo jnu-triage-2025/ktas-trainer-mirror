@@ -43,6 +43,25 @@ namespace TriageTrainer.Entity
 
     public PatientTreatmentState TreatmentState => _treatmentState ??= new PatientTreatmentState();
 
+    [Header("AED Connection")]
+    [Tooltip("제세동 패드 쪽 AED 라인 연결 지점들입니다. 비워 두면 자식 오브젝트에서 AEDLineConnectionPoint 를 찾는 fallback 을 사용합니다.")]
+    [SerializeField] private TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint[] _aedConnectionPoints =
+      System.Array.Empty<TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint>();
+
+    /// <summary>
+    /// 제세동 패드와 카트를 잇는 AED 라인의 패드 측 연결 지점 목록.
+    /// 참조가 비어 있으면(배선 누락) 자식 오브젝트에서 클래스 기준으로 찾는 fallback 을 수행한다.
+    /// </summary>
+    public IReadOnlyList<TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint> AedConnectionPoints
+    {
+      get
+      {
+        if (_aedConnectionPoints == null || _aedConnectionPoints.Length == 0)
+          _aedConnectionPoints = GetComponentsInChildren<TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint>(true);
+        return _aedConnectionPoints;
+      }
+    }
+
     /// <summary>
     /// 처치 시각 표현 항목. <see cref="PatientTreatmentDisplayModel"/> / <see cref="PatientTreatmentDisplayingChildGameObjects"/>
     /// 의 필드와 1:1 대응한다.

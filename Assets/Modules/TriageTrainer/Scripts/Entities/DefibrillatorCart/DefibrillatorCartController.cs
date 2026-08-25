@@ -52,6 +52,25 @@ namespace TriageTrainer.Entity
     [Tooltip("제세동기 담당 역할 부여받기 상호작용입니다. 카트 조종 중에는 자동으로 숨겨집니다.")]
     [SerializeField] private ScenarioActionInteractable _scenarioActionInteractable;
 
+    [Header("AED Connection")]
+    [Tooltip("환자에게 부착한 제세동 패드와 연결할 AED 라인 연결 지점들입니다. 비워 두면 자식 오브젝트에서 AEDLineConnectionPoint 를 찾는 fallback 을 사용합니다.")]
+    [SerializeField] private TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint[] _aedConnectionPoints =
+      Array.Empty<TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint>();
+
+    /// <summary>
+    /// 카트 측 AED 라인 연결 지점 목록. 참조가 비어 있으면(배선 누락)
+    /// 자식 오브젝트에서 클래스 기준으로 찾는 fallback 을 수행한다.
+    /// </summary>
+    public IReadOnlyList<TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint> AedConnectionPoints
+    {
+      get
+      {
+        if (_aedConnectionPoints == null || _aedConnectionPoints.Length == 0)
+          _aedConnectionPoints = GetComponentsInChildren<TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint>(true);
+        return _aedConnectionPoints;
+      }
+    }
+
     /// <summary>런타임 엔티티 식별자(서버 권위 + 전 피어 복제). 비어 있으면 _entityTypeIdentifier를 사용한다.</summary>
     private readonly SyncVar<string> _runtimeIdentifierSync = new(string.Empty);
     private readonly SyncVar<string> _snapPointIdentifierSync = new(string.Empty);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using MultiplayerInfrastructure.Scenario;
@@ -650,38 +651,188 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
-    public void PatientAMedicationDialoguesStayAlignedAcrossScenarioVariants()
+    public void PatientAMedicationDialoguesStayAlignedWithSourceDocument()
     {
-      string scenarioDirectory = Path.Combine(Application.dataPath,
-        "Modules/TriageTrainer/Resources/Scenario");
-      string[] scenarioFiles = Directory.GetFiles(scenarioDirectory, PatientAScenarioGlob);
-      Assert.That(scenarioFiles, Has.Length.GreaterThanOrEqualTo(21),
-        "Patient A의 기본 시나리오와 현재 배포된 변형을 모두 검증해야 합니다.");
-      Assert.That(File.Exists(Path.Combine(Directory.GetParent(Application.dataPath).FullName,
-        "Assets/Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json")),
-        Is.True, "Patient A 기본 런타임 시나리오가 누락되었습니다.");
+      string scenarioPath = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json");
+      string json = File.ReadAllText(scenarioPath);
 
-      foreach (string file in scenarioFiles)
-      {
-        string json = File.ReadAllText(file);
-        string d031 = ExtractNode(json, "D031");
-        string d0311 = ExtractNode(json, "D031_1");
+      // CPR 2주기 에피네프린 재투여 브랜치의 투여 보고 대사와 자동 진행 시간은
+      // 줄글 시나리오 원본(투여 보고, 4초 대기)과 계속 일치해야 한다.
+      string d031 = ExtractNode(json, "D031");
+      string d0311 = ExtractNode(json, "D031_1");
 
-        Assert.That(ExtractValue(d031, "speakerName"), Is.EqualTo("간호사 C"), file);
-        Assert.That(ExtractValue(d0311, "speakerName"), Is.EqualTo("간호사 C"), file);
-        Assert.That(ExtractValue(d0311, "autoAdvanceSeconds"), Is.EqualTo("4.0"), file);
-      }
+      Assert.That(ExtractValue(d031, "speakerName"), Is.EqualTo("@s"));
+      Assert.That(ExtractValue(d031, "dialogueContent"), Is.EqualTo("에피네프린 1mg 투여했습니다."));
+      Assert.That(ExtractValue(d0311, "speakerName"), Is.EqualTo("@s"));
+      Assert.That(ExtractValue(d0311, "dialogueContent"), Is.EqualTo("생리식염수 20cc 투여했습니다."));
+      Assert.That(ExtractValue(d0311, "autoAdvanceSeconds"), Is.EqualTo("4.0"));
 
       string sourcePath = Path.Combine(Directory.GetParent(Application.dataPath).FullName,
         PatientAScenarioSourcePath);
       Assert.That(File.Exists(sourcePath), Is.True, "Patient A 시나리오 원본 문서가 누락되었습니다.");
       string source = File.ReadAllText(sourcePath);
-      string d031Source = ExtractSourceNode(source, "D031");
-      string d0311Source = ExtractSourceNode(source, "D031_1");
-      StringAssert.Contains("간호사 C", d031Source);
-      StringAssert.Contains("간호사 C", d0311Source);
-      StringAssert.Contains("Duration", d0311Source);
-      StringAssert.Contains("4.0", d0311Source);
+      StringAssert.Contains("에피네프린 1mg 투여했습니다.", source);
+      StringAssert.Contains("생리식염수 20cc 투여했습니다.", source);
+    }
+
+    [Test]
+    public void PatientARoscFollowupAssignsNurseRolesAndWaitQuestForNurseC()
+    {
+      string path = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json");
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
+
+      var p007 = (ScenarioParallelNode)graph.Nodes["P007"];
+      var expectedRoles = new[]
+      {
+        ("N026", "nurse_a"),
+        ("N027", "nurse_b"),
+        ("Q_WAIT_ROSC_C", "nurse_c"),
+        ("N028", "nurse_d")
+      };
+      Assert.That(p007.Branches, Has.Count.EqualTo(expectedRoles.Length),
+        "ROSC 후속 조치는 nurse_a/b/c/d 네 역할 분기를 모두 정의해야 합니다.");
+      foreach (var (branchIdentifier, role) in expectedRoles)
+      {
+        var branch = System.Array.Find(p007.Branches.ToArray(), each => each.Identifier == branchIdentifier);
+        Assert.That(branch, Is.Not.Null, $"P007에는 {branchIdentifier} 분기가 있어야 합니다.");
+        Assert.That(branch.RequiredPlayerTags, Does.Contain(role));
+        Assert.That(branch.RequiredPlayerTagsMatchMode, Is.EqualTo(ScenarioPlayerTagMatchMode.All));
+      }
+
+      Assert.That(p007.NextIdentifier, Is.EqualTo("P_REMOVE_ROSC_WAIT"));
+
+      // nurse_c 대기 퀘스트는 병렬 합류 뒤 nurse_c 클라이언트에서 제거된다.
+      var removeWait = (ScenarioParallelNode)graph.Nodes["P_REMOVE_ROSC_WAIT"];
+      Assert.That(removeWait.Branches, Has.Count.EqualTo(1));
+      Assert.That(removeWait.Branches[0].RequiredPlayerTags, Does.Contain("nurse_c"));
+      Assert.That(graph.Nodes["QC_ROSC_WAIT_C_REMOVE"], Is.InstanceOf<ScenarioQuestControlNode>());
+      Assert.That(((ScenarioQuestControlNode)graph.Nodes["QC_ROSC_WAIT_C_REMOVE"]).QuestDefinitionIdentifier,
+        Is.EqualTo("Quest_Wait_Others_Rosc_PatientA"));
+      Assert.That(removeWait.NextIdentifier, Is.EqualTo("D037"));
+
+      string questsPath = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Quest/patient_a_critical.quests.quest.json");
+      StringAssert.Contains("\"identifier\": \"Quest_Wait_Others_Rosc_PatientA\"", File.ReadAllText(questsPath));
+      StringAssert.Contains("\"title\": \"처치 정리\"", File.ReadAllText(questsPath));
+    }
+
+    [Test]
+    public void PatientAP004IntubationAndIvBranchesDeclareAnyModeFallbackRoles()
+    {
+      string path = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json");
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
+
+      var p004 = (ScenarioParallelNode)graph.Nodes["P004"];
+      var intubation = System.Array.Find(p004.Branches.ToArray(), each => each.Identifier == "Q010");
+      Assert.That(intubation.RequiredPlayerTags, Is.EqualTo(new[] { "nurse_b", "nurse_a" }),
+        "nurse_b 부재 시 nurse_a가 삽관 브랜치를 대신 수행해야 합니다.");
+      Assert.That(intubation.RequiredPlayerTagsMatchMode, Is.EqualTo(ScenarioPlayerTagMatchMode.Any));
+
+      var ivLine = System.Array.Find(p004.Branches.ToArray(), each => each.Identifier == "N011");
+      Assert.That(ivLine.RequiredPlayerTags, Is.EqualTo(new[] { "nurse_d", "nurse_c" }),
+        "nurse_d 부재 시 nurse_c가 IV 라인 브랜치를 대신 수행해야 합니다.");
+      Assert.That(ivLine.RequiredPlayerTagsMatchMode, Is.EqualTo(ScenarioPlayerTagMatchMode.Any));
+    }
+
+    [Test]
+    public void PatientATriageReturnGateIsScopedToTheNurseAHolder()
+    {
+      string scenarioPath = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json");
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(scenarioPath), validateWithSchema: true);
+
+      // 퀘스트 수령자(nurse_a)가 아닌 다른 플레이어의 구역 진입으로 완료되지 않아야 하므로,
+      // 게이트 앞에서 nurse_a 홀더 전용 도착 신호로 한정하는 이벤트를 실행한다.
+      Assert.That(((ScenarioQuestControlNode)graph.Nodes["Q028"]).NextIdentifier,
+        Is.EqualTo("PREPARE_TRIAGE_RETURN_A"));
+      var armGate = (ScenarioInvokeEventNode)graph.Nodes["PREPARE_TRIAGE_RETURN_A"];
+      Assert.That(armGate.EventIdentifier, Is.EqualTo("arm_patient_a_triage_return"));
+      Assert.That(armGate.NextIdentifier, Is.EqualTo("V032"));
+
+      var gate = (ScenarioValidatorNode)graph.Nodes["V032"];
+      string json = File.ReadAllText(scenarioPath);
+      StringAssert.Contains("\"registryIdentifier\": \"sig.arrive_triagearea_patient_a\"", json);
+      StringAssert.DoesNotContain(
+        "\"registryIdentifier\": \"sig.arrive_triagearea\"",
+        json.Replace("\"registryIdentifier\": \"sig.arrive_triagearea_patient_a\"", string.Empty),
+        "누구든 진입하면 통과되는 공용 신호 게이트가 남아 있으면 안 됩니다.");
+
+      // 전용 서버에서 클라이언트가 올리는 플레이어별 도착 신호도 인가받아야 한다
+      // (patient_b_c_ct 와 동일한 접두사 인가 규약).
+      Assert.That(graph.ClientSignalPrefixes, Does.Contain("sig.quest_arrival_triage_area_"));
+
+      Assert.That(typeof(TriageScenarioEventBootstrap).GetMethod(
+        "Event_ArmPatientATriageReturn",
+        BindingFlags.Instance | BindingFlags.NonPublic), Is.Not.Null,
+        "arm_patient_a_triage_return 이벤트 핸들러가 구현되어 있어야 합니다.");
+    }
+
+    [Test]
+    public void PatientAEpiCDoctorDialoguePlaysBeforeIngredientGates()
+    {
+      string path = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json");
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
+
+      // 의사의 4분 경과 지시는 퀘스트 발행과 함께 먼저 재생되어야 한다(줄글 시나리오 1233~1236행).
+      Assert.That(((ScenarioQuestControlNode)graph.Nodes["Q025"]).NextIdentifier, Is.EqualTo("D030"));
+      Assert.That(((ScenarioDialogueNode)graph.Nodes["D030"]).NextIdentifier, Is.EqualTo("V029"));
+      Assert.That(((ScenarioValidatorNode)graph.Nodes["V029_1"]).NextIdentifier, Is.EqualTo("N023_2"));
+    }
+
+    [Test]
+    public void PatientALegacyInventoryCheckStagesStayRemovedFromGraphData()
+    {
+      string path = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json");
+      string json = File.ReadAllText(path);
+
+      // 줄글 시나리오 기술 노트로 제거된 단계들(측정도구 획득 대기 등)은 그래프 데이터에도 남지 않는다.
+      foreach (string legacyIdentifier in new[]
+               {
+                 "V011", "V013", "V014", "V015", "V016",
+                 "N005", "N005_4", "N006", "N007", "E007"
+               })
+        StringAssert.DoesNotContain($"\"identifier\": \"{legacyIdentifier}\"", json);
+      StringAssert.DoesNotContain("\"registryIdentifier\": \"sig.click_vital_set\"", json);
+      StringAssert.DoesNotContain("\"eventIdentifier\": \"show_suction_checklist_ui\"", json);
+    }
+
+    [Test]
+    public void PatientADefibPadPrefabsProvideAedConnectionPointsForCartLine()
+    {
+      // 패드 부착 처리는 환자 쪽 패드 두 개와 카트 쪽 지점 두 개를 LineConnectionService 로 연결한다.
+      const string aedScriptGuid = "c82bda2cb54644c889440723d1d8bedf";
+      string padsFolder = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeA");
+
+      foreach (string padPrefab in new[]
+               {
+                 "defibrillatorpad_midaxillary_A 1.prefab",
+                 "defibrillatorpad_subclavicle_A.prefab"
+               })
+      {
+        string prefabText = File.ReadAllText(Path.Combine(padsFolder, padPrefab));
+        Assert.That(Regex.Matches(prefabText, aedScriptGuid).Count, Is.EqualTo(1),
+          $"{padPrefab} 에 AEDLineConnectionPoint 가 정확히 한 개 배선되어야 합니다.");
+      }
+
+      string cartPrefabText = File.ReadAllText(Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Prefabs/Entities/MinecraftBoatLikes/Defibrillator.prefab"));
+      Assert.That(Regex.Matches(cartPrefabText, aedScriptGuid).Count, Is.EqualTo(2),
+        "제세동 카트 프리팹에는 AEDLineConnectionPoint 두 개가 배선되어야 합니다.");
+
+      Assert.That(typeof(PatientController).GetProperty("AedConnectionPoints"), Is.Not.Null,
+        "환자 컨트롤러에 AED 연결 지점 접근자(ref + fallback)가 있어야 합니다.");
+      Assert.That(typeof(DefibrillatorCartController).GetProperty("AedConnectionPoints"), Is.Not.Null,
+        "카트 컨트롤러에 AED 연결 지점 접근자(ref + fallback)가 있어야 합니다.");
+      Assert.That(typeof(TriageScenarioEventBootstrap).GetMethod(
+        "ConnectPatientADefibrillatorPads",
+        BindingFlags.Instance | BindingFlags.NonPublic), Is.Not.Null,
+        "패드 부착 이벤트가 AED 라인 연결 처리를 수행해야 합니다.");
     }
 
     private static string ExtractNode(string json, string identifier)
