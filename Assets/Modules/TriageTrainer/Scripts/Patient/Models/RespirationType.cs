@@ -1,4 +1,4 @@
-namespace TriageTrainer.Entity.Patient
+﻿namespace TriageTrainer.Entity.Patient
 {
   /// <summary>
   /// 환자의 호흡 상태를 정의합니다.

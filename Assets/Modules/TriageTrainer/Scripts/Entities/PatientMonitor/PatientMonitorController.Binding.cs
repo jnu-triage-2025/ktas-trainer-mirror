@@ -1,11 +1,11 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace TriageTrainer.Entity.PatientMonitor.Models

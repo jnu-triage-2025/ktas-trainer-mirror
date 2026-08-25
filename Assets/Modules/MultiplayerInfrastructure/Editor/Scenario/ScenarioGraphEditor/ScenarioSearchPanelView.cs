@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -22,30 +22,30 @@ namespace MultiplayerInfrastructure.Editor
   {
     // ── 색상 / 크기 상수 ──────────────────────────────────────────────────────
 
-    private static readonly Color ColorBg          = new Color(0.15f, 0.15f, 0.15f, 0.97f);
-    private static readonly Color ColorBorder       = new Color(0.08f, 0.08f, 0.08f, 1f);
-    private static readonly Color ColorHeader       = new Color(0.20f, 0.20f, 0.20f, 1f);
-    private static readonly Color ColorRow          = new Color(0.18f, 0.18f, 0.18f, 1f);
-    private static readonly Color ColorRowHover     = new Color(0.26f, 0.26f, 0.26f, 1f);
-    private static readonly Color ColorRowSelected  = new Color(0.20f, 0.38f, 0.62f, 1f);
-    private static readonly Color ColorNodeId       = new Color(0.85f, 0.85f, 0.85f, 1f);
-    private static readonly Color ColorNodeType     = new Color(0.55f, 0.85f, 0.97f, 1f);
-    private static readonly Color ColorField        = new Color(0.60f, 0.60f, 0.60f, 1f);
-    private static readonly Color ColorMatch        = new Color(0.97f, 0.85f, 0.35f, 1f);
-    private static readonly Color ColorDim          = new Color(0.50f, 0.50f, 0.50f, 1f);
-    private static readonly Color ColorCloseBtn     = new Color(0.55f, 0.55f, 0.55f, 1f);
+    private static readonly Color ColorBg = new Color(0.15f, 0.15f, 0.15f, 0.97f);
+    private static readonly Color ColorBorder = new Color(0.08f, 0.08f, 0.08f, 1f);
+    private static readonly Color ColorHeader = new Color(0.20f, 0.20f, 0.20f, 1f);
+    private static readonly Color ColorRow = new Color(0.18f, 0.18f, 0.18f, 1f);
+    private static readonly Color ColorRowHover = new Color(0.26f, 0.26f, 0.26f, 1f);
+    private static readonly Color ColorRowSelected = new Color(0.20f, 0.38f, 0.62f, 1f);
+    private static readonly Color ColorNodeId = new Color(0.85f, 0.85f, 0.85f, 1f);
+    private static readonly Color ColorNodeType = new Color(0.55f, 0.85f, 0.97f, 1f);
+    private static readonly Color ColorField = new Color(0.60f, 0.60f, 0.60f, 1f);
+    private static readonly Color ColorMatch = new Color(0.97f, 0.85f, 0.35f, 1f);
+    private static readonly Color ColorDim = new Color(0.50f, 0.50f, 0.50f, 1f);
+    private static readonly Color ColorCloseBtn = new Color(0.55f, 0.55f, 0.55f, 1f);
 
-    private const float PanelWidth       = 480f;
-    private const float PanelMaxHeight   = 420f;
-    private const float InputHeight      = 20f;
-    private const float RowHeight        = 40f;
+    private const float PanelWidth = 480f;
+    private const float PanelMaxHeight = 420f;
+    private const float InputHeight = 20f;
+    private const float RowHeight = 40f;
     private const float PanelOffsetRight = 16f;
-    private const float PanelOffsetTop   = 8f;   // toolbar 아래 여백
+    private const float PanelOffsetTop = 8f;   // toolbar 아래 여백
 
     // ── 상태 ──────────────────────────────────────────────────────────────────
 
-    private readonly TextField  _searchField;
-    private readonly Label      _countLabel;
+    private readonly TextField _searchField;
+    private readonly Label _countLabel;
     private readonly ScrollView _resultScroll;
     private readonly VisualElement _resultList;
 
@@ -69,41 +69,41 @@ namespace MultiplayerInfrastructure.Editor
       name = "ScenarioSearchPanel";
 
       // ── 패널 크기/위치 (절대 오버레이) ──
-      style.position        = Position.Absolute;
-      style.width           = PanelWidth;
-      style.right           = PanelOffsetRight;
-      style.top             = PanelOffsetTop;
-      style.flexDirection   = FlexDirection.Column;
+      style.position = Position.Absolute;
+      style.width = PanelWidth;
+      style.right = PanelOffsetRight;
+      style.top = PanelOffsetTop;
+      style.flexDirection = FlexDirection.Column;
       style.backgroundColor = ColorBg;
       style.borderTopWidth = style.borderBottomWidth =
         style.borderLeftWidth = style.borderRightWidth = 1f;
       style.borderTopColor = style.borderBottomColor =
         style.borderLeftColor = style.borderRightColor = ColorBorder;
-      style.borderTopLeftRadius     = 5f;
-      style.borderTopRightRadius    = 5f;
-      style.borderBottomLeftRadius  = 5f;
+      style.borderTopLeftRadius = 5f;
+      style.borderTopRightRadius = 5f;
+      style.borderBottomLeftRadius = 5f;
       style.borderBottomRightRadius = 5f;
       // 깊이: 그래프 캔버스보다 앞에 오도록
       style.display = DisplayStyle.None;
 
       // ── 헤더 (검색 입력 + 닫기 버튼) ──
       var header = new VisualElement();
-      header.style.flexDirection   = FlexDirection.Row;
-      header.style.alignItems      = Align.Center;
-      header.style.height          = InputHeight + 8f;
-      header.style.paddingLeft     = 10f;
-      header.style.paddingRight    = 6f;
-      header.style.paddingTop      = 4f;
-      header.style.paddingBottom   = 4f;
+      header.style.flexDirection = FlexDirection.Row;
+      header.style.alignItems = Align.Center;
+      header.style.height = InputHeight + 8f;
+      header.style.paddingLeft = 10f;
+      header.style.paddingRight = 6f;
+      header.style.paddingTop = 4f;
+      header.style.paddingBottom = 4f;
       header.style.backgroundColor = ColorHeader;
       header.style.borderBottomWidth = 1f;
       header.style.borderBottomColor = ColorBorder;
 
       // 검색 TextField
       _searchField = new TextField();
-      _searchField.style.flexGrow  = 1f;
-      _searchField.style.height    = InputHeight;
-      _searchField.style.fontSize  = 12f;
+      _searchField.style.flexGrow = 1f;
+      _searchField.style.height = InputHeight;
+      _searchField.style.fontSize = 12f;
       // 내부 input 요소 스타일
       _searchField.Q<VisualElement>("unity-text-input").style.backgroundColor
           = new Color(0.10f, 0.10f, 0.10f, 1f);
@@ -113,18 +113,18 @@ namespace MultiplayerInfrastructure.Editor
 
       // 결과 수 레이블
       _countLabel = new Label();
-      _countLabel.style.fontSize   = 10f;
-      _countLabel.style.color      = ColorDim;
+      _countLabel.style.fontSize = 10f;
+      _countLabel.style.color = ColorDim;
       _countLabel.style.marginLeft = 8f;
-      _countLabel.style.minWidth   = 48f;
+      _countLabel.style.minWidth = 48f;
       _countLabel.style.unityTextAlign = TextAnchor.MiddleRight;
       header.Add(_countLabel);
 
       // 닫기 버튼
       var closeBtn = new Label("✕");
-      closeBtn.style.fontSize    = 12f;
-      closeBtn.style.color       = ColorCloseBtn;
-      closeBtn.style.marginLeft  = 8f;
+      closeBtn.style.fontSize = 12f;
+      closeBtn.style.color = ColorCloseBtn;
+      closeBtn.style.marginLeft = 8f;
       closeBtn.style.paddingLeft = closeBtn.style.paddingRight = 4f;
       closeBtn.RegisterCallback<ClickEvent>(_ => Close());
       closeBtn.RegisterCallback<MouseEnterEvent>(_ => closeBtn.style.color = Color.white);
@@ -135,7 +135,7 @@ namespace MultiplayerInfrastructure.Editor
       // ── 결과 목록 ──
       _resultScroll = new ScrollView(ScrollViewMode.Vertical);
       _resultScroll.style.maxHeight = PanelMaxHeight - (InputHeight + 8f);
-      _resultScroll.style.flexGrow  = 1f;
+      _resultScroll.style.flexGrow = 1f;
 
       _resultList = new VisualElement();
       _resultList.style.flexDirection = FlexDirection.Column;
@@ -174,7 +174,7 @@ namespace MultiplayerInfrastructure.Editor
     /// </summary>
     public void SetResults(IReadOnlyList<ScenarioNodeSearcher.SearchResult> results, string query)
     {
-      _results       = results ?? Array.Empty<ScenarioNodeSearcher.SearchResult>();
+      _results = results ?? Array.Empty<ScenarioNodeSearcher.SearchResult>();
       _selectedIndex = -1;
       RebuildResultList(query);
       UpdateCountLabel();
@@ -219,7 +219,8 @@ namespace MultiplayerInfrastructure.Editor
 
     private void MoveSelection(int dir)
     {
-      if (_results.Count == 0) return;
+      if (_results.Count == 0)
+        return;
       _selectedIndex = Mathf.Clamp(_selectedIndex + dir, 0, _results.Count - 1);
       RefreshSelectionHighlight();
       ScrollToSelected();
@@ -227,7 +228,8 @@ namespace MultiplayerInfrastructure.Editor
 
     private void SelectCurrent()
     {
-      if (_selectedIndex < 0 || _selectedIndex >= _results.Count) return;
+      if (_selectedIndex < 0 || _selectedIndex >= _results.Count)
+        return;
       OnResultSelected?.Invoke(_results[_selectedIndex].NodeIdentifier);
     }
 
@@ -244,7 +246,8 @@ namespace MultiplayerInfrastructure.Editor
 
     private void ScrollToSelected()
     {
-      if (_selectedIndex < 0) return;
+      if (_selectedIndex < 0)
+        return;
       var rows = _resultList.Children();
       int i = 0;
       foreach (var row in rows)
@@ -261,7 +264,7 @@ namespace MultiplayerInfrastructure.Editor
 
     private void ClearResults()
     {
-      _results       = Array.Empty<ScenarioNodeSearcher.SearchResult>();
+      _results = Array.Empty<ScenarioNodeSearcher.SearchResult>();
       _selectedIndex = -1;
       _resultList.Clear();
     }
@@ -285,7 +288,7 @@ namespace MultiplayerInfrastructure.Editor
         if (!string.IsNullOrWhiteSpace(query))
         {
           var empty = new Label("  결과 없음");
-          empty.style.color    = ColorDim;
+          empty.style.color = ColorDim;
           empty.style.fontSize = 11f;
           empty.style.paddingTop = empty.style.paddingBottom = 8f;
           empty.style.paddingLeft = 12f;
@@ -298,16 +301,16 @@ namespace MultiplayerInfrastructure.Editor
       {
         var result = _results[i];
         var capturedIndex = i;
-        var capturedId    = result.NodeIdentifier;
+        var capturedId = result.NodeIdentifier;
 
         var row = new VisualElement();
-        row.style.flexDirection  = FlexDirection.Row;
-        row.style.alignItems     = Align.Center;
-        row.style.minHeight      = RowHeight;
-        row.style.paddingLeft    = 10f;
-        row.style.paddingRight   = 10f;
-        row.style.paddingTop     = 4f;
-        row.style.paddingBottom  = 4f;
+        row.style.flexDirection = FlexDirection.Row;
+        row.style.alignItems = Align.Center;
+        row.style.minHeight = RowHeight;
+        row.style.paddingLeft = 10f;
+        row.style.paddingRight = 10f;
+        row.style.paddingTop = 4f;
+        row.style.paddingBottom = 4f;
         row.style.backgroundColor = ColorRow;
         row.style.borderBottomWidth = 1f;
         row.style.borderBottomColor = ColorBorder;
@@ -334,18 +337,18 @@ namespace MultiplayerInfrastructure.Editor
         // 왼쪽: 노드 ID + 타입
         var left = new VisualElement();
         left.style.flexDirection = FlexDirection.Column;
-        left.style.flexGrow      = 1f;
-        left.style.overflow      = Overflow.Hidden;
+        left.style.flexGrow = 1f;
+        left.style.overflow = Overflow.Hidden;
 
         var nodeIdLabel = new Label(result.NodeIdentifier);
-        nodeIdLabel.style.fontSize   = 11f;
-        nodeIdLabel.style.color      = ColorNodeId;
+        nodeIdLabel.style.fontSize = 11f;
+        nodeIdLabel.style.color = ColorNodeId;
         nodeIdLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-        nodeIdLabel.style.overflow   = Overflow.Hidden;
+        nodeIdLabel.style.overflow = Overflow.Hidden;
 
         var typeLabel = new Label(result.NodeTypeName);
         typeLabel.style.fontSize = 9f;
-        typeLabel.style.color    = ColorNodeType;
+        typeLabel.style.color = ColorNodeType;
 
         left.Add(nodeIdLabel);
         left.Add(typeLabel);
@@ -353,20 +356,20 @@ namespace MultiplayerInfrastructure.Editor
 
         // 오른쪽: 필드명 + 값(일치 강조)
         var right = new VisualElement();
-        right.style.flexDirection  = FlexDirection.Column;
-        right.style.alignItems     = Align.FlexEnd;
-        right.style.maxWidth       = 200f;
-        right.style.overflow       = Overflow.Hidden;
+        right.style.flexDirection = FlexDirection.Column;
+        right.style.alignItems = Align.FlexEnd;
+        right.style.maxWidth = 200f;
+        right.style.overflow = Overflow.Hidden;
 
         var fieldLabel = new Label(result.FieldName);
-        fieldLabel.style.fontSize  = 9f;
-        fieldLabel.style.color     = ColorField;
-        fieldLabel.style.overflow  = Overflow.Hidden;
+        fieldLabel.style.fontSize = 9f;
+        fieldLabel.style.color = ColorField;
+        fieldLabel.style.overflow = Overflow.Hidden;
 
         var valueLabel = new Label(TruncateMiddle(result.FieldValue, 36));
-        valueLabel.style.fontSize  = 10f;
-        valueLabel.style.color     = ColorMatch;
-        valueLabel.style.overflow  = Overflow.Hidden;
+        valueLabel.style.fontSize = 10f;
+        valueLabel.style.color = ColorMatch;
+        valueLabel.style.overflow = Overflow.Hidden;
         valueLabel.style.unityTextAlign = TextAnchor.MiddleRight;
 
         right.Add(fieldLabel);
@@ -383,7 +386,8 @@ namespace MultiplayerInfrastructure.Editor
     /// </summary>
     private static string TruncateMiddle(string s, int max)
     {
-      if (string.IsNullOrEmpty(s) || s.Length <= max) return s;
+      if (string.IsNullOrEmpty(s) || s.Length <= max)
+        return s;
       int half = max / 2;
       return s.Substring(0, half) + "…" + s.Substring(s.Length - half);
     }

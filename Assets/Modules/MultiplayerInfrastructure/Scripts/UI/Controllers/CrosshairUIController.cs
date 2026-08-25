@@ -1,4 +1,4 @@
-using Unity.VisualScripting;
+﻿using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -36,7 +36,8 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>크로스헤어 UI의 시각성을 제어합니다.</summary>
     public void SetCrosshairVisible(bool visible)
     {
-      if (_crosshairElement == null) return;
+      if (_crosshairElement == null)
+        return;
       _crosshairElement.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
     }
 

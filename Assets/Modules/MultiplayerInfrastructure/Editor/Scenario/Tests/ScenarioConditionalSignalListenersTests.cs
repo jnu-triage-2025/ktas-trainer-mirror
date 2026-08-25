@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using NUnit.Framework;

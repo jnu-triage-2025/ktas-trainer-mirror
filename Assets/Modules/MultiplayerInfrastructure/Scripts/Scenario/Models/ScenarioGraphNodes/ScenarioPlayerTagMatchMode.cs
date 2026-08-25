@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Scenario
+﻿namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
   /// ParallelBranch의 RequiredPlayerTags 매칭 방식.

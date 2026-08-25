@@ -1,4 +1,4 @@
-namespace TriageTrainer.ItemDefinitions
+﻿namespace TriageTrainer.ItemDefinitions
 {
   /// <summary>
   /// 생리식염수가 든 50cc 주사기(카테터 없음) 조합 완제품입니다.
@@ -6,8 +6,8 @@ namespace TriageTrainer.ItemDefinitions
   /// </summary>
   public class NormalSaline50ccSyringe : MedicalItem
   {
-    public new const string Identifier   = "normal_saline_50cc_syringe";
-    public new const string DisplayName  = "생리식염수가 든 50cc 주사기";
-    public new const string Description  = "50cc 주사기에 생리식염수가 준비되어 있습니다.";
+    public new const string Identifier = "normal_saline_50cc_syringe";
+    public new const string DisplayName = "생리식염수가 든 50cc 주사기";
+    public new const string Description = "50cc 주사기에 생리식염수가 준비되어 있습니다.";
   }
 }

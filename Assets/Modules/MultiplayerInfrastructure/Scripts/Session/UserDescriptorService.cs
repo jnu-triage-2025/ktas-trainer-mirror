@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MultiplayerInfrastructure.Logging;
 using UnityEngine;
 
@@ -36,7 +36,8 @@ namespace MultiplayerInfrastructure.Session
     /// <summary>PlayerController 스폰 시 호출됩니다.</summary>
     public static void Register(int clientId, UserDescriptor descriptor)
     {
-      if (descriptor == null) return;
+      if (descriptor == null)
+        return;
 
       _byIdentifier[descriptor.Identifier] = descriptor;
       _identifierByClientId[clientId] = descriptor.Identifier;
@@ -95,7 +96,8 @@ namespace MultiplayerInfrastructure.Session
     public static bool TryGetByDisplayName(string displayName, out UserDescriptor descriptor)
     {
       descriptor = null;
-      if (string.IsNullOrWhiteSpace(displayName)) return false;
+      if (string.IsNullOrWhiteSpace(displayName))
+        return false;
 
       foreach (var d in _byIdentifier.Values)
       {

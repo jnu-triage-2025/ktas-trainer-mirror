@@ -1,4 +1,4 @@
-using MultiplayerInfrastructure.ItemSystem;
+﻿using MultiplayerInfrastructure.ItemSystem;
 namespace TriageTrainer.ItemDefinitions
 {
   [IntendedMissing3DModelAttribute]

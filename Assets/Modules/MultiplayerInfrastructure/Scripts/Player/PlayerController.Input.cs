@@ -1,9 +1,9 @@
-using MultiplayerInfrastructure.Definitions;
+﻿using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.Registry;
-using UnityEngine;
 using MultiplayerInfrastructure.UI;
 using Unity.VisualScripting;
+using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
 {
@@ -39,7 +39,7 @@ namespace MultiplayerInfrastructure.Player
     private float _cameraDistanceGestureStartDistance;
     private float _cameraDistanceGestureLastScrollTime;
 
-    void Start_Input()
+    private void Start_Input()
     {
       _chatUI = Registry.Registry.Get<ChatUIController>(RegistryType.UI, Registry.Registry.TypeKey<ChatUIController>());
       EnsureEscapeMenuController();
@@ -91,8 +91,10 @@ namespace MultiplayerInfrastructure.Player
 
     private bool HandleEscape()
     {
-      if (!Input.GetKeyDown(_keyEscape)) return false;
-      if (UIOverlayStack.IsEmpty()) return false;
+      if (!Input.GetKeyDown(_keyEscape))
+        return false;
+      if (UIOverlayStack.IsEmpty())
+        return false;
 
       UIOverlayStack.Pop();
       return true;
@@ -110,7 +112,8 @@ namespace MultiplayerInfrastructure.Player
     /// <returns>bool 인벤토리 UI 표시에 변화가 있는가?</returns>
     private bool HandleToggleInventory()
     {
-      if (_inventoryUI == null) return false;
+      if (_inventoryUI == null)
+        return false;
 
       if (Input.GetKeyDown(_keyToggleInventory))
       {
@@ -132,7 +135,8 @@ namespace MultiplayerInfrastructure.Player
 
     private void HandleSwitchCameraViewMode()
     {
-      if (Input.GetKeyDown(_keySwitchCameraViewMode)) SwitchCameraViewMode();
+      if (Input.GetKeyDown(_keySwitchCameraViewMode))
+        SwitchCameraViewMode();
     }
 
     private void HandleInteractInteractableObject()
@@ -145,7 +149,8 @@ namespace MultiplayerInfrastructure.Player
         return;
       }
 
-      if (Input.GetKeyDown(_keyInteractInteractableObject)) TryInteractWithSelection();
+      if (Input.GetKeyDown(_keyInteractInteractableObject))
+        TryInteractWithSelection();
       HandleInteractablesSelectionInput();
     }
 
@@ -167,21 +172,26 @@ namespace MultiplayerInfrastructure.Player
     private void TryStartSpectateFollowUnderCursor()
     {
       var cam = UnityEngine.Camera.main;
-      if (cam == null) return;
+      if (cam == null)
+        return;
 
       Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-      if (!Physics.Raycast(ray, out RaycastHit hit, 150f)) return;
-      if (hit.collider == null) return;
+      if (!Physics.Raycast(ray, out RaycastHit hit, 150f))
+        return;
+      if (hit.collider == null)
+        return;
 
       var target = hit.collider.GetComponentInParent<PlayerController>();
-      if (target == null || target == this) return;
+      if (target == null || target == this)
+        return;
 
       BeginSpectateFollow(target);
     }
 
     private void HandleChatInput()
     {
-      if (_chatUI.IsUnityNull()) return;
+      if (_chatUI.IsUnityNull())
+        return;
 
       bool hasOtherOverlay = !UIOverlayStack.IsEmpty() && !UIOverlayStack.IsTop(_chatUI);
       bool hasDialogueOverlayTop = !_dialoguePanelUIController.IsUnityNull() && UIOverlayStack.IsTop(_dialoguePanelUIController);
@@ -251,7 +261,7 @@ namespace MultiplayerInfrastructure.Player
           UIOverlayStack.Pop();
         else
           if (UIOverlayStack.IsEmpty())
-            UIOverlayStack.Push(_escapeMenuUIController);
+          UIOverlayStack.Push(_escapeMenuUIController);
       }
     }
 
@@ -267,18 +277,22 @@ namespace MultiplayerInfrastructure.Player
         return;
       }
 
-      if (_detector.IsUnityNull()) return;
+      if (_detector.IsUnityNull())
+        return;
       // Selection using mouse wheel
-      if (_detector.InteractableNearbyExists) return;
+      if (_detector.InteractableNearbyExists)
+        return;
       HandleHotbarInputMouseWheel();
     }
 
     private void HandleCameraDistanceInput()
     {
-      if (_camControl.IsUnityNull()) return;
+      if (_camControl.IsUnityNull())
+        return;
 
       float scroll = Input.mouseScrollDelta.y;
-      if (Mathf.Abs(scroll) <= Mathf.Epsilon) return;
+      if (Mathf.Abs(scroll) <= Mathf.Epsilon)
+        return;
 
       if (!_cameraDistanceGestureActive)
       {
@@ -310,10 +324,13 @@ namespace MultiplayerInfrastructure.Player
 
     private void FinalizeCameraDistanceGestureIfNeeded(bool hasCameraDistanceScrollInput)
     {
-      if (!_cameraDistanceGestureActive) return;
+      if (!_cameraDistanceGestureActive)
+        return;
       // 이 프레임에도 Alt/Option+휠 입력이 있다면, 유휴 시간이 길었더라도 같은 제스처로 처리한다.
-      if (hasCameraDistanceScrollInput) return;
-      if (Time.unscaledTime - _cameraDistanceGestureLastScrollTime < CameraDistanceGestureEndDelay) return;
+      if (hasCameraDistanceScrollInput)
+        return;
+      if (Time.unscaledTime - _cameraDistanceGestureLastScrollTime < CameraDistanceGestureEndDelay)
+        return;
 
       if (_camControl.IsUnityNull())
       {
@@ -349,8 +366,10 @@ namespace MultiplayerInfrastructure.Player
     /// </summary>
     private void HandleDialogueInput()
     {
-      if (_dialoguePanelUIController.IsUnityNull()) return;
-      if (!UIOverlayStack.IsTop(_dialoguePanelUIController)) return;
+      if (_dialoguePanelUIController.IsUnityNull())
+        return;
+      if (!UIOverlayStack.IsTop(_dialoguePanelUIController))
+        return;
 
       // Dialogue advance keys are centralized here so all paths go through PlayerController.Input.
       if (IsDialogueAdvanceInputDown())
@@ -435,8 +454,10 @@ namespace MultiplayerInfrastructure.Player
 
     private void HandleItemActionInput()
     {
-      if (Input.GetMouseButtonDown(0)) TriggerAttack();
-      if (Input.GetMouseButtonDown(1)) TriggerUseItem();
+      if (Input.GetMouseButtonDown(0))
+        TriggerAttack();
+      if (Input.GetMouseButtonDown(1))
+        TriggerUseItem();
 
       if (!IsRidableControlActive && Input.GetKeyDown(KeyCode.LeftShift))
       {
@@ -444,7 +465,8 @@ namespace MultiplayerInfrastructure.Player
           RefreshInteractableHintsNow();
       }
 
-      if (Input.GetKeyDown(_keyDropHeldItem)) DropHeldItem();
+      if (Input.GetKeyDown(_keyDropHeldItem))
+        DropHeldItem();
     }
 
     private bool HandleOpenQuestUIInput()

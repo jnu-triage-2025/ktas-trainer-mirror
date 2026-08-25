@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 
 namespace TriageTrainer.Entity.Patient
@@ -49,10 +49,14 @@ namespace TriageTrainer.Entity.Patient
     {
       get
       {
-        if (gcs < 3) return GCSLabel.NA; // GCS 최저점은 3점(E1/V1/M1)
-        if (gcs <= 8) return GCSLabel.Severe;
-        if (gcs <= 12) return GCSLabel.Moderate;
-        if (gcs <= 15) return GCSLabel.Mild;
+        if (gcs < 3)
+          return GCSLabel.NA; // GCS 최저점은 3점(E1/V1/M1)
+        if (gcs <= 8)
+          return GCSLabel.Severe;
+        if (gcs <= 12)
+          return GCSLabel.Moderate;
+        if (gcs <= 15)
+          return GCSLabel.Mild;
         return GCSLabel.NA;
       }
     }
@@ -104,13 +108,19 @@ namespace TriageTrainer.Entity.Patient
 
     public bool Equals(Consciousness? other)
     {
-      if (other is null) return false;
+      if (other is null)
+        return false;
       return gcs == other.gcs
         && eyeOpening == other.eyeOpening
         && verbal == other.verbal
         && motor == other.motor
         && pupillaryResponse == other.pupillaryResponse
         && locLabel == other.locLabel;
+    }
+
+    public override bool Equals(object obj)
+    {
+      return Equals(obj as Consciousness);
     }
   }
 }

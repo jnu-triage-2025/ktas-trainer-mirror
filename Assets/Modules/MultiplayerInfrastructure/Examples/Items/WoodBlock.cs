@@ -1,6 +1,4 @@
-using MultiplayerInfrastructure.Entity;
-using MultiplayerInfrastructure.ItemSystem;
-using MultiplayerInfrastructure.Player;
+﻿using MultiplayerInfrastructure.Player;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.ItemSystem.Examples
@@ -22,25 +20,25 @@ namespace MultiplayerInfrastructure.ItemSystem.Examples
   public class WoodBlock : Item
   {
     // ── Definitions ────────────────────────────────────────────────────────
-    public new const string Identifier    = "wood_block";
-    public new const string DisplayName   = "나무 블록";
-    public new const string Description   = "가공된 목재 블록입니다. 설치하면 블록이 됩니다.";
+    public new const string Identifier = "wood_block";
+    public new const string DisplayName = "나무 블록";
+    public new const string Description = "가공된 목재 블록입니다. 설치하면 블록이 됩니다.";
     public new const string DetailComment = "";
-    public new const string Color         = "#8B5E3C";
+    public new const string Color = "#8B5E3C";
 
-    public new const bool IsStackable   = true;
-    public new const int  MaxStackCount = 64;
+    public new const bool IsStackable = true;
+    public new const int MaxStackCount = 64;
 
-    public new const bool HasDurability           = true;
-    public new const bool EnabledDeltaDurability  = true;
-    public new const int  MaxDurability           = 30;
-    public new const int  DeltaDurabilityOnAttack = -2;
-    public new const int  DeltaDurabilityOnUse    = 0;
+    public new const bool HasDurability = true;
+    public new const bool EnabledDeltaDurability = true;
+    public new const int MaxDurability = 30;
+    public new const int DeltaDurabilityOnAttack = -2;
+    public new const int DeltaDurabilityOnUse = 0;
 
-    public new const float MinReach             = 0.5f;
-    public new const float MaxReach             = 3.0f;
-    public new const int   ItemDamage           = 2;
-    public new const bool  EnabledCooldown      = false;
+    public new const float MinReach = 0.5f;
+    public new const float MaxReach = 3.0f;
+    public new const int ItemDamage = 2;
+    public new const bool EnabledCooldown = false;
     public new const float CooldownMilliseconds = 0f;
 
     // ── 생성자 ────────────────────────────────────────────────────────────

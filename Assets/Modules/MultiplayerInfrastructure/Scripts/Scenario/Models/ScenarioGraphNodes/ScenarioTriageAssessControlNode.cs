@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Scenario
+﻿namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
   /// 특정 환자(엔티티)에 대해 트리아지(Triage) 평가 인터랙션을 활성화/비활성화하는 시나리오 노드.

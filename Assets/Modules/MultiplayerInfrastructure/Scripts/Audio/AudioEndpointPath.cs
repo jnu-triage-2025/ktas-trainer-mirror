@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Audio
+﻿namespace MultiplayerInfrastructure.Audio
 {
   /// <summary>
   /// Windows 오디오 엔드포인트 ID를 장치 인터페이스 경로로 바꿉니다.

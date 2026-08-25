@@ -1,4 +1,4 @@
-namespace TriageTrainer.Entity.Patient
+﻿namespace TriageTrainer.Entity.Patient
 {
   /// <summary>
   /// 환자 상태 기술자

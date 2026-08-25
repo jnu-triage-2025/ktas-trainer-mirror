@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using MultiplayerInfrastructure.Logging;
-using TriageTrainer.Scenario;
 using TriageTrainer.Entity.PatientMonitor.Models;
+using TriageTrainer.Scenario;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -47,7 +47,8 @@ namespace TriageTrainer.Entity
       _suctionWalls.Clear();
       if (sources != null)
         for (int i = 0; i < sources.Count; i++)
-          if (sources[i] != null && !_suctionWalls.Contains(sources[i])) _suctionWalls.Add(sources[i]);
+          if (sources[i] != null && !_suctionWalls.Contains(sources[i]))
+            _suctionWalls.Add(sources[i]);
       SuctionWall = _suctionWalls.Count > 0 ? _suctionWalls[0] : null;
     }
 
@@ -57,7 +58,8 @@ namespace TriageTrainer.Entity
       _oxyflowmeters.Clear();
       if (sources != null)
         for (int i = 0; i < sources.Count; i++)
-          if (sources[i] != null && !_oxyflowmeters.Contains(sources[i])) _oxyflowmeters.Add(sources[i]);
+          if (sources[i] != null && !_oxyflowmeters.Contains(sources[i]))
+            _oxyflowmeters.Add(sources[i]);
       Oxyflowmeter = _oxyflowmeters.Count > 0 ? _oxyflowmeters[0] : null;
     }
 
@@ -292,14 +294,16 @@ namespace TriageTrainer.Entity
       if (isLeftArm)
       {
         var previous = _supportExternalRefs.GetIntravenousFluid(0);
-        if (ReferenceEquals(previous, fluidSource)) return;
+        if (ReferenceEquals(previous, fluidSource))
+          return;
         _supportExternalRefs.SetIntravenousFluid(0, fluidSource);
         NotifyEquipmentSwap(EquipmentTypeIVFluidLeftArm, previous, fluidSource);
       }
       else
       {
         var previous = _supportExternalRefs.GetIntravenousFluid(1);
-        if (ReferenceEquals(previous, fluidSource)) return;
+        if (ReferenceEquals(previous, fluidSource))
+          return;
         _supportExternalRefs.SetIntravenousFluid(1, fluidSource);
         NotifyEquipmentSwap(EquipmentTypeIVFluidRightArm, previous, fluidSource);
       }
@@ -480,7 +484,8 @@ namespace TriageTrainer.Entity
     {
       if (obj is MonoBehaviour mb)
         return mb == null ? "(destroyed)" : mb.gameObject.name;
-      if (obj == null) return "(not connected)";
+      if (obj == null)
+        return "(not connected)";
       return obj.ToString();
     }
   }

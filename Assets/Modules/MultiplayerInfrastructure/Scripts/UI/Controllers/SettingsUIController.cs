@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using UnityEngine;
@@ -120,10 +120,10 @@ namespace MultiplayerInfrastructure.UI
 
       DetachChrome();
 
-      _root        = newRoot;
+      _root = newRoot;
       _closeButton = docRoot.Q<Button>("close-button");
-      _tabBar      = docRoot.Q<VisualElement>("tab-bar");
-      _tabContent  = docRoot.Q<VisualElement>("tab-content");
+      _tabBar = docRoot.Q<VisualElement>("tab-bar");
+      _tabContent = docRoot.Q<VisualElement>("tab-content");
       _statusLabel = docRoot.Q<Label>("status-label");
 
       if (_root == null)
@@ -152,7 +152,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void DetachChrome()
     {
-      if (_closeButton != null) _closeButton.clicked -= HandleCloseClicked;
+      if (_closeButton != null)
+        _closeButton.clicked -= HandleCloseClicked;
       _root?.UnregisterCallback<GeometryChangedEvent>(HandleRootGeometryChanged);
     }
 

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -204,8 +204,10 @@ namespace TriageTrainer.Entity.PatientMonitor
         for (int i = start + 1; i < end; i++)
         {
           float value = GetDataPoint(i);
-          if (value < minValue) { minValue = value; minIndex = i; }
-          if (value > maxValue) { maxValue = value; maxIndex = i; }
+          if (value < minValue)
+          { minValue = value; minIndex = i; }
+          if (value > maxValue)
+          { maxValue = value; maxIndex = i; }
         }
 
         int firstIndex = Mathf.Min(minIndex, maxIndex);

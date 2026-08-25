@@ -1,17 +1,16 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using FishNet.Object;
 using MultiplayerInfrastructure.Definitions;
-using MultiplayerInfrastructure.ItemSystem;
-using Item = MultiplayerInfrastructure.ItemSystem.Item;
 using UnityEngine;
+using Item = MultiplayerInfrastructure.ItemSystem.Item;
 
-class PlayerInventory : NetworkBehaviour
+internal class PlayerInventory : NetworkBehaviour
 {
   [Header("Inventory")]
   public int inventorySize = DefaultsPlayerInventory.DefaultInventorySize;
   public List<InventorySlotModelDTO> inventorySlots = new List<InventorySlotModelDTO>();
 
-  void Awake()
+  private void Awake()
   {
     inventorySlots.Clear();
     for (int i = 0; i < inventorySize; i++)

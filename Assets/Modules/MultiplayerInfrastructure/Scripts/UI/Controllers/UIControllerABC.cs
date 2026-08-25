@@ -1,5 +1,4 @@
-using MultiplayerInfrastructure.Registry;
-using UnityEngine;
+﻿using MultiplayerInfrastructure.Registry;
 
 namespace MultiplayerInfrastructure.UI
 {

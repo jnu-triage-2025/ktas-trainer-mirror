@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Quest;
@@ -51,14 +51,16 @@ namespace MultiplayerInfrastructure.UI
         RemoveFromClassList("collapsed");
         AddToClassList("expanded");
         style.display = DisplayStyle.Flex;
-        if (_panel != null) _panel.style.display = DisplayStyle.Flex;
+        if (_panel != null)
+          _panel.style.display = DisplayStyle.Flex;
       }
       else
       {
         RemoveFromClassList("expanded");
         AddToClassList("collapsed");
         style.display = DisplayStyle.None;
-        if (_panel != null) _panel.style.display = DisplayStyle.None;
+        if (_panel != null)
+          _panel.style.display = DisplayStyle.None;
       }
     }
 
@@ -224,7 +226,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void UpdateCountLabel(int trackedCount = -1)
     {
-      if (_headerCount == null) return;
+      if (_headerCount == null)
+        return;
 
       int count = trackedCount >= 0 ? trackedCount : CalculateTrackedCount();
       _headerCount.text = $"{count}/{DefaultsQuestControl.MaxTrackedQuests} preview";

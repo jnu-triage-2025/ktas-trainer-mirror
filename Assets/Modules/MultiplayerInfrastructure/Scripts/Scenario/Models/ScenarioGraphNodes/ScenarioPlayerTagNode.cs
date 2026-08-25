@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Scenario
+﻿namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
   /// 플레이어 태그를 추가·제거·변경하는 노드.

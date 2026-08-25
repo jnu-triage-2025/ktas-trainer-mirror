@@ -1,4 +1,4 @@
-namespace TriageTrainer.Entity.Patient
+﻿namespace TriageTrainer.Entity.Patient
 {
   public enum HealthProblemType
   {

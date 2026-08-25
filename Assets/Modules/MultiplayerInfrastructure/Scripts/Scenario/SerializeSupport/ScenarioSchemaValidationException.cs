@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace MultiplayerInfrastructure.Scenario
 {
@@ -7,10 +7,10 @@ namespace MultiplayerInfrastructure.Scenario
   /// </summary>
   public sealed class ScenarioSchemaValidationException : Exception
   {
-      public ScenarioSchemaValidationException(string message)
-          : base(message) { }
+    public ScenarioSchemaValidationException(string message)
+        : base(message) { }
 
-      public ScenarioSchemaValidationException(string message, Exception innerException)
-          : base(message, innerException) { }
+    public ScenarioSchemaValidationException(string message, Exception innerException)
+        : base(message, innerException) { }
   }
 }

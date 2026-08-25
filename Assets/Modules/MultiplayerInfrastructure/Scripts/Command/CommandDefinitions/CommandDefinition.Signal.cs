@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
@@ -34,12 +34,24 @@ namespace MultiplayerInfrastructure.Command
       string subcommand = args != null && args.Length > 0 ? args[0].Trim().ToLowerInvariant() : string.Empty;
       switch (subcommand)
       {
-        case "raise": Raise(sender, args); break;
-        case "get": Get(sender, args); break;
-        case "player": GetPlayer(sender, args); break;
-        case "list": List(sender, args); break;
-        case "flush": Flush(sender); break;
-        default: Send(sender, "Usage: /signal raise <identifier> [json] | /signal get <identifier> | /signal player <player> <identifier> | /signal list [identifier] | /signal flush"); break;
+        case "raise":
+          Raise(sender, args);
+          break;
+        case "get":
+          Get(sender, args);
+          break;
+        case "player":
+          GetPlayer(sender, args);
+          break;
+        case "list":
+          List(sender, args);
+          break;
+        case "flush":
+          Flush(sender);
+          break;
+        default:
+          Send(sender, "Usage: /signal raise <identifier> [json] | /signal get <identifier> | /signal player <player> <identifier> | /signal list [identifier] | /signal flush");
+          break;
       }
     }
 

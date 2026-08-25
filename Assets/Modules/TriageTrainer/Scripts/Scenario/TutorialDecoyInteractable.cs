@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;

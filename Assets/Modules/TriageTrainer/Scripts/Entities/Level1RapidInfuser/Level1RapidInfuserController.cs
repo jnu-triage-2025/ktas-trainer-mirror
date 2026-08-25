@@ -1,11 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using FishNet.Connection;
 using FishNet;
+using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
@@ -13,7 +14,6 @@ using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.IntravenousLine;
 using TriageTrainer.Entity.LineConnection;
 using TriageTrainer.ItemDefinitions;
-using MultiplayerInfrastructure.Logging;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -33,7 +33,7 @@ namespace TriageTrainer.Entity
   /// </summary>
   public interface ILevel1RapidInfuserStateSource
   {
-    bool TryGetLevel1RapidInfuserState(out Level1RapidInfuserState state);
+    public bool TryGetLevel1RapidInfuserState(out Level1RapidInfuserState state);
   }
 
   public enum BloodBagWithoutPlasmaPolicy : byte
@@ -91,7 +91,10 @@ namespace TriageTrainer.Entity
       string id = string.IsNullOrWhiteSpace(_registeredIdentifier) ? "<unregistered>" : _registeredIdentifier;
       string full = $"[LV1RapidInfuser] role={role} object='{name}' id='{id}' {message}";
       GameLogService.Write(warning ? GameLogCategory.Misc : GameLogCategory.Interaction, full, FlowTag);
-      if (warning) Debug.LogWarning(full, this); else Debug.Log(full, this);
+      if (warning)
+        Debug.LogWarning(full, this);
+      else
+        Debug.Log(full, this);
     }
     private enum FluidKind : byte
     {
@@ -188,9 +191,11 @@ namespace TriageTrainer.Entity
     [SerializeField] private string _initialConnectedPatientIdentifier;
 
     [Header("Blood bag policy")]
-    [SerializeField] private BloodBagWithoutPlasmaPolicy _bloodBagWithoutPlasmaPolicy =
+    [SerializeField]
+    private BloodBagWithoutPlasmaPolicy _bloodBagWithoutPlasmaPolicy =
       BloodBagWithoutPlasmaPolicy.CancelTry;
-    [SerializeField] private BloodBagCancellationBehaviour _bloodBagCancellationBehaviour =
+    [SerializeField]
+    private BloodBagCancellationBehaviour _bloodBagCancellationBehaviour =
       BloodBagCancellationBehaviour.ShowPlasmaRequiredDialogue;
 
     [Header("Identity / interaction")]
@@ -850,9 +855,12 @@ namespace TriageTrainer.Entity
 
     private void SetFluidOffline(FluidKind kind, string itemIdentifier, PlayerController player)
     {
-      if (kind == FluidKind.NormalSaline) _initialHasNormalSaline = true;
-      else if (kind == FluidKind.PlasmaSolution) _initialHasPlasmaSolution = true;
-      else _initialHasBloodBag = true;
+      if (kind == FluidKind.NormalSaline)
+        _initialHasNormalSaline = true;
+      else if (kind == FluidKind.PlasmaSolution)
+        _initialHasPlasmaSolution = true;
+      else
+        _initialHasBloodBag = true;
       ApplyDisplays();
       RaiseFluidApplied(kind, itemIdentifier, player);
       RaiseScenarioConnectionSignal(kind);
@@ -860,9 +868,12 @@ namespace TriageTrainer.Entity
 
     private void SetFluidOnServer(FluidKind kind, string itemIdentifier, PlayerController player)
     {
-      if (kind == FluidKind.NormalSaline) _hasNormalSaline.Value = true;
-      else if (kind == FluidKind.PlasmaSolution) _hasPlasmaSolution.Value = true;
-      else _hasBloodBag.Value = true;
+      if (kind == FluidKind.NormalSaline)
+        _hasNormalSaline.Value = true;
+      else if (kind == FluidKind.PlasmaSolution)
+        _hasPlasmaSolution.Value = true;
+      else
+        _hasBloodBag.Value = true;
       ApplyDisplays();
       RaiseFluidApplied(kind, itemIdentifier, player);
       RaiseScenarioConnectionSignal(kind);
@@ -895,16 +906,16 @@ namespace TriageTrainer.Entity
 
     private RapidInfuserFluidLifecycleEvent CreateFluidEvent(FluidKind kind, string itemIdentifier,
       PlayerController player, RapidInfuserFluidCancellationReason cancellationReason) => new()
-    {
-      FluidKind = kind.ToString(),
-      ItemIdentifier = itemIdentifier ?? string.Empty,
-      PlayerIdentifier = player != null ? player.name : string.Empty,
-      PlayerClientId = player?.Owner != null ? player.Owner.ClientId : -1,
-      RapidInfuserIdentifier = _registeredIdentifier ?? string.Empty,
-      CancellationReason = cancellationReason,
-      BloodWithoutPlasmaPolicy = _bloodBagWithoutPlasmaPolicy,
-      IsServer = IsServerStarted
-    };
+      {
+        FluidKind = kind.ToString(),
+        ItemIdentifier = itemIdentifier ?? string.Empty,
+        PlayerIdentifier = player != null ? player.name : string.Empty,
+        PlayerClientId = player?.Owner != null ? player.Owner.ClientId : -1,
+        RapidInfuserIdentifier = _registeredIdentifier ?? string.Empty,
+        CancellationReason = cancellationReason,
+        BloodWithoutPlasmaPolicy = _bloodBagWithoutPlasmaPolicy,
+        IsServer = IsServerStarted
+      };
 
     private void RaiseBloodPlasmaRequiredSignal(RapidInfuserFluidLifecycleEvent lifecycleEvent)
     {
@@ -1237,9 +1248,12 @@ namespace TriageTrainer.Entity
     private void ApplyDisplays()
     {
       EnsureDisplayReferences();
-      if (_normalSalineDisplay != null) _normalSalineDisplay.SetActive(HasNormalSaline);
-      if (_plasmaSolutionDisplay != null) _plasmaSolutionDisplay.SetActive(HasPlasmaSolution);
-      if (_bloodBagDisplay != null) _bloodBagDisplay.SetActive(HasBloodBag);
+      if (_normalSalineDisplay != null)
+        _normalSalineDisplay.SetActive(HasNormalSaline);
+      if (_plasmaSolutionDisplay != null)
+        _plasmaSolutionDisplay.SetActive(HasPlasmaSolution);
+      if (_bloodBagDisplay != null)
+        _bloodBagDisplay.SetActive(HasBloodBag);
     }
 
     private void EnsureDisplayReferences()

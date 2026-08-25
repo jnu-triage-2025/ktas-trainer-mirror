@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Entity
+﻿namespace MultiplayerInfrastructure.Entity
 {
   /// <summary>
   /// 시나리오 그래프의 EntityInit 노드가 초기 표시/부착 상태를 설정할 수 있는 엔티티가 구현하는 인터페이스.
@@ -21,7 +21,7 @@ namespace MultiplayerInfrastructure.Entity
     /// <param name="displayStateName">표시/부착 상태 이름(구현체가 해석).</param>
     /// <param name="active">표시(true)/비표시(false).</param>
     /// <returns>구현체가 이름을 인식하여 적용했으면 true.</returns>
-    bool ApplyScenarioDisplayState(string displayStateName, bool active);
+    public bool ApplyScenarioDisplayState(string displayStateName, bool active);
 
     /// <summary>
     /// 현재 설정된 모든 표시/부착 상태를 네트워크 전체에 일괄 동기화한다.
@@ -29,6 +29,6 @@ namespace MultiplayerInfrastructure.Entity
     /// 늦은 입장 클라이언트에 전체 상태가 정확히 전달된다.
     /// 네트워크 미사용(오프라인) 환경에서는 no-op 이어도 된다.
     /// </summary>
-    void SyncAllDisplayStatesNetworked();
+    public void SyncAllDisplayStatesNetworked();
   }
 }

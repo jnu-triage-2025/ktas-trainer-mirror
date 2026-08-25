@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Scenario;
 using NUnit.Framework;
 using UnityEngine;
 

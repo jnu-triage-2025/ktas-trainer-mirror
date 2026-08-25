@@ -1,11 +1,11 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using TextToSpeechService;
 using UnityEditor;
 using UnityEngine;
-using TextToSpeechService;
 
 namespace MultiplayerInfrastructure.Scenario
 {
@@ -101,7 +101,8 @@ namespace MultiplayerInfrastructure.Scenario
       foreach (var guid in guids)
       {
         string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-        if (!assetPath.EndsWith(".scenario.json")) continue;
+        if (!assetPath.EndsWith(".scenario.json"))
+          continue;
 
         string json;
         try
@@ -140,7 +141,8 @@ namespace MultiplayerInfrastructure.Scenario
     private static void CollectOrphans(string streamingAssetsPath, ScanResult result)
     {
       string inlineRoot = Path.Combine(streamingAssetsPath, TTSCore.BakedInlineAudioSubdir);
-      if (!Directory.Exists(inlineRoot)) return;
+      if (!Directory.Exists(inlineRoot))
+        return;
 
       // 현재 유효한(사용 중인) baked 경로 집합
       var validPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -175,10 +177,12 @@ namespace MultiplayerInfrastructure.Scenario
           }
 
           string meta = path + ".meta";
-          if (File.Exists(meta)) File.Delete(meta);
+          if (File.Exists(meta))
+            File.Delete(meta);
 
           string dir = Path.GetDirectoryName(path);
-          if (!string.IsNullOrEmpty(dir)) touchedDirs.Add(dir);
+          if (!string.IsNullOrEmpty(dir))
+            touchedDirs.Add(dir);
         }
         catch (Exception e)
         {
@@ -196,7 +200,8 @@ namespace MultiplayerInfrastructure.Scenario
           {
             Directory.Delete(dir);
             string dirMeta = dir + ".meta";
-            if (File.Exists(dirMeta)) File.Delete(dirMeta);
+            if (File.Exists(dirMeta))
+              File.Delete(dirMeta);
           }
         }
         catch { /* ignore */ }
@@ -243,23 +248,25 @@ namespace MultiplayerInfrastructure.Scenario
       string scenarioId, string nodeId, string text, string streamingAssetsPath, ScanResult result,
       string voiceIdentifier = null)
     {
-      if (string.IsNullOrWhiteSpace(text)) return;
+      if (string.IsNullOrWhiteSpace(text))
+        return;
 
       // 변수를 포함하면 bake 대상에서 제외 (런타임 즉석 합성).
-      if (ContainsVariable(text)) return;
+      if (ContainsVariable(text))
+        return;
 
-      string hash         = TTSCore.ComputeTextHash(text);
+      string hash = TTSCore.ComputeTextHash(text);
       string expectedPath = TTSCore.GetBakedInlineClipPath(streamingAssetsPath, scenarioId, nodeId, text, voiceIdentifier);
-      bool   isBaked      = File.Exists(expectedPath);
+      bool isBaked = File.Exists(expectedPath);
 
       var job = new InlineTTSJob
       {
         ScenarioIdentifier = scenarioId,
-        NodeIdentifier     = nodeId,
-        Text               = text,
-        VoiceIdentifier    = string.IsNullOrEmpty(voiceIdentifier) ? null : voiceIdentifier,
-        ExpectedBakedPath  = expectedPath,
-        IsBaked            = isBaked,
+        NodeIdentifier = nodeId,
+        Text = text,
+        VoiceIdentifier = string.IsNullOrEmpty(voiceIdentifier) ? null : voiceIdentifier,
+        ExpectedBakedPath = expectedPath,
+        IsBaked = isBaked,
       };
 
       // 같은 노드에 대한 stale 파일(구버전 해시) 탐색 → dirty 판정.
@@ -267,7 +274,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 주의: 노드 식별자가 서로 접두어 관계일 수 있다(예: "N001" 과 "N001_1", "N001_retry_a").
       // 단순 "{nodeId}_*" 글롭은 다른 노드의 파일까지 오탐하므로,
       // "{sanitizedNodeId}_{16자리 hex}.wav" 형태로 정확히 일치하는 파일만 stale 후보로 본다.
-      string nodeDir  = Path.GetDirectoryName(expectedPath);
+      string nodeDir = Path.GetDirectoryName(expectedPath);
       string fileStem = Path.GetFileNameWithoutExtension(expectedPath); // "{sanitizedNodeId}_{hash}"
       // fileStem 끝의 "_{hash}"(= '_' + 16 hex)를 제거하면 정확한 sanitizedNodeId 를 얻는다.
       string sanitizedNodeId = fileStem.Length > hash.Length + 1
@@ -283,7 +290,8 @@ namespace MultiplayerInfrastructure.Scenario
         string expectedFull = Path.GetFullPath(expectedPath);
         foreach (var wav in Directory.GetFiles(nodeDir, "*.wav"))
         {
-          if (!exactPattern.IsMatch(Path.GetFileName(wav))) continue;
+          if (!exactPattern.IsMatch(Path.GetFileName(wav)))
+            continue;
           if (Path.GetFullPath(wav) != expectedFull)
             job.StaleBakedPaths.Add(wav);
         }
@@ -291,8 +299,10 @@ namespace MultiplayerInfrastructure.Scenario
 
       job.IsDirty = job.StaleBakedPaths.Count > 0;
 
-      if (!isBaked) result.MissingCount++;
-      if (job.IsDirty) result.DirtyCount++;
+      if (!isBaked)
+        result.MissingCount++;
+      if (job.IsDirty)
+        result.DirtyCount++;
 
       result.Jobs.Add(job);
     }
@@ -318,7 +328,7 @@ namespace MultiplayerInfrastructure.Scenario
       string language = "ko", int totalStep = 5, float speed = 1.05f, string voiceStyleName = "F1",
       TextToSpeechService.TTSVoiceProfile[] voiceProfiles = null)
     {
-      string sa      = Application.streamingAssetsPath;
+      string sa = Application.streamingAssetsPath;
       string onnxDir = TTSCore.GetOnnxDir(sa);
 
       if (!TTSCore.AreModelsPresent(onnxDir))
@@ -328,7 +338,8 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       var scan = ScanAllScenarios(sa);
-      if (!scan.NeedsBake) return;
+      if (!scan.NeedsBake)
+        return;
 
       string defaultStylePath = TTSCore.GetVoiceStylePath(sa, voiceStyleName);
 
@@ -339,12 +350,14 @@ namespace MultiplayerInfrastructure.Scenario
       {
         foreach (var p in voiceProfiles)
         {
-          if (p == null || string.IsNullOrEmpty(p.VoiceIdentifier)) continue;
-          if (voiceStyleMap.ContainsKey(p.VoiceIdentifier)) continue;
+          if (p == null || string.IsNullOrEmpty(p.VoiceIdentifier))
+            continue;
+          if (voiceStyleMap.ContainsKey(p.VoiceIdentifier))
+            continue;
           string sp = TTSCore.GetVoiceStylePath(sa, string.IsNullOrEmpty(p.VoiceStyleName) ? voiceStyleName : p.VoiceStyleName);
           string lg = string.IsNullOrEmpty(p.Language) ? language : p.Language;
-          int    st = p.TotalStep > 0 ? p.TotalStep : totalStep;
-          float  sd = p.Speed > 0f ? p.Speed : speed;
+          int st = p.TotalStep > 0 ? p.TotalStep : totalStep;
+          float sd = p.Speed > 0f ? p.Speed : speed;
           voiceStyleMap[p.VoiceIdentifier] = (sp, lg, st, sd);
         }
       }
@@ -363,7 +376,8 @@ namespace MultiplayerInfrastructure.Scenario
         int done = 0;
         foreach (var job in jobs)
         {
-          if (job.IsBaked && !job.IsDirty) { done++; continue; }
+          if (job.IsBaked && !job.IsDirty)
+          { done++; continue; }
 
           EditorUtility.DisplayProgressBar(
             "Scenario Inline TTS Bake",
@@ -373,22 +387,24 @@ namespace MultiplayerInfrastructure.Scenario
           if (job.StaleBakedPaths != null)
           {
             foreach (var stale in job.StaleBakedPaths)
-              try { if (File.Exists(stale)) File.Delete(stale); } catch { /* ignore */ }
+              try
+              { if (File.Exists(stale)) File.Delete(stale); }
+              catch { /* ignore */ }
           }
 
           // job의 voice identifier에 맞는 core 선택
           string jobStylePath = defaultStylePath;
-          string jobLang      = language;
-          int    jobStep      = totalStep;
-          float  jobSpeed     = speed;
+          string jobLang = language;
+          int jobStep = totalStep;
+          float jobSpeed = speed;
 
           if (!string.IsNullOrEmpty(job.VoiceIdentifier)
               && voiceStyleMap.TryGetValue(job.VoiceIdentifier, out var voiceParams))
           {
             jobStylePath = voiceParams.stylePath;
-            jobLang      = voiceParams.lang;
-            jobStep      = voiceParams.step;
-            jobSpeed     = voiceParams.spd;
+            jobLang = voiceParams.lang;
+            jobStep = voiceParams.step;
+            jobSpeed = voiceParams.spd;
           }
 
           if (!coreCache.TryGetValue(jobStylePath, out var core))
@@ -410,7 +426,9 @@ namespace MultiplayerInfrastructure.Scenario
       finally
       {
         foreach (var c in coreCache.Values)
-          try { c?.Dispose(); } catch { /* ignore */ }
+          try
+          { c?.Dispose(); }
+          catch { /* ignore */ }
         EditorUtility.ClearProgressBar();
         AssetDatabase.Refresh();
       }

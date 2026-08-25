@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.ItemSystem;
 using UnityEngine;
@@ -70,7 +70,8 @@ namespace MultiplayerInfrastructure.Registry
     /// <summary>스프라이트를 IconSprite 레지스트리에 직접 등록합니다.</summary>
     public static void RegisterIconSprite(string identifier, Sprite sprite)
     {
-      if (string.IsNullOrWhiteSpace(identifier) || sprite == null) return;
+      if (string.IsNullOrWhiteSpace(identifier) || sprite == null)
+        return;
       Register(RegistryType.IconSprite, identifier, sprite);
     }
 

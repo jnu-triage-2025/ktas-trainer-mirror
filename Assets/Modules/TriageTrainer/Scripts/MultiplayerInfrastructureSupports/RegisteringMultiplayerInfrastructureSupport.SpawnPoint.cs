@@ -1,4 +1,4 @@
-using MultiplayerInfrastructure.Registry;
+﻿using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
 namespace TriageTrainer.MultiplayerInfrastructureSupports

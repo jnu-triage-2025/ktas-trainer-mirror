@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Entity
+﻿namespace MultiplayerInfrastructure.Entity
 {
   public class Entity
   {

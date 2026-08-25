@@ -1,27 +1,26 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using UnityEditor;
-using UnityEngine;
-using UnityEngine.ProBuilder;
 using TriageTrainer.Entity.AEDLine;
 using TriageTrainer.Entity.ElectricalLine;
 using TriageTrainer.Entity.IntravenousLine;
+using TriageTrainer.Entity.LineConnection;
 using TriageTrainer.Entity.OxyLine;
 using TriageTrainer.Entity.SuctionLine;
-using TriageTrainer.Entity.LineConnection;
+using UnityEditor;
+using UnityEngine;
 
 namespace TriageTrainer.Editor
 {
-    /// <summary>
-    /// Interactive preview for the materials used by LineConnectionService.
-    /// </summary>
-    /// <remarks>
-    /// 이 창은 미리보기 전용이며, LineConnectionMaterial과 라인 특성(LineWidth, Elasticity 등)은
-    /// 이 창에서 바꾸지 않는다. 라인 클래스는 TriageTrainer.Entity 네임스페이스 아래에 정의하고,
-    /// 특성값도 그 아래의 라인 클래스에 직접 작성한다. 실제 정의는
-    /// Assets/Modules/TriageTrainer/Scripts/Entities 아래의 *Line 폴더를 참고한다.
-    /// </remarks>
-    public sealed class LineConnectionMaterialPreviewWindow : EditorWindow
+  /// <summary>
+  /// Interactive preview for the materials used by LineConnectionService.
+  /// </summary>
+  /// <remarks>
+  /// 이 창은 미리보기 전용이며, LineConnectionMaterial과 라인 특성(LineWidth, Elasticity 등)은
+  /// 이 창에서 바꾸지 않는다. 라인 클래스는 TriageTrainer.Entity 네임스페이스 아래에 정의하고,
+  /// 특성값도 그 아래의 라인 클래스에 직접 작성한다. 실제 정의는
+  /// Assets/Modules/TriageTrainer/Scripts/Entities 아래의 *Line 폴더를 참고한다.
+  /// </remarks>
+  public sealed class LineConnectionMaterialPreviewWindow : EditorWindow
   {
     private const string RotateGizmoPrefabPath = "Assets/Modules/TriageTrainer/Editor/Prefabs/RotateGizmo.prefab";
     private const string BakedRotateGizmoPrefabPath = "Assets/Modules/TriageTrainer/Editor/Prefabs/RotateGizmoBaked.prefab";
@@ -336,7 +335,7 @@ namespace TriageTrainer.Editor
         _startPoint = new Vector3(-0.9f, 0.15f, 0f);
         _endPoint = new Vector3(1.8f, 0.15f, 0f);
       }
-      
+
       // Camera reset button
       if (GUILayout.Button("Reset Camera", GUILayout.Width(120f)))
       {
@@ -364,11 +363,21 @@ namespace TriageTrainer.Editor
     {
       switch (_lineType)
       {
-        case LineType.Intravenous: _intravenousMaterial = _material; break;
-        case LineType.AED: _aedMaterial = _material; break;
-        case LineType.Electrical: _electricalMaterial = _material; break;
-        case LineType.Oxy: _oxyMaterial = _material; break;
-        case LineType.Suction: _suctionMaterial = _material; break;
+        case LineType.Intravenous:
+          _intravenousMaterial = _material;
+          break;
+        case LineType.AED:
+          _aedMaterial = _material;
+          break;
+        case LineType.Electrical:
+          _electricalMaterial = _material;
+          break;
+        case LineType.Oxy:
+          _oxyMaterial = _material;
+          break;
+        case LineType.Suction:
+          _suctionMaterial = _material;
+          break;
       }
     }
 

@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Entity
+﻿namespace MultiplayerInfrastructure.Entity
 {
   /// <summary>
   /// 플레이어가 들고 있는 아이템의 "사용(Use)" 대상이 될 수 있는 월드 오브젝트가 구현하는 인터페이스.
@@ -20,6 +20,6 @@ namespace MultiplayerInfrastructure.Entity
     /// <param name="user">사용자 플레이어의 Entity (null 가능).</param>
     /// <param name="itemIdentifier">사용된 아이템의 현재 식별자.</param>
     /// <returns>사용이 의미 있게 처리되었으면 true(대상이 이 아이템을 수용).</returns>
-    bool OnItemUsed(Entity user, string itemIdentifier);
+    public bool OnItemUsed(Entity user, string itemIdentifier);
   }
 }

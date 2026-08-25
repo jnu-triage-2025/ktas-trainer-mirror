@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.ItemSystem;
 using UnityEngine.UIElements;
@@ -152,10 +152,12 @@ namespace MultiplayerInfrastructure.UI
     private void SyncCraftingPanelHeightToInventory()
     {
       // _inventoryPanel 이 루트(this) 로 폴백된 경우(UXML 없이 코드로 생성) 순환 참조가 되므로 건너뛴다.
-      if (_craftingPanel == null || _inventoryPanel == null || _inventoryPanel == this) return;
+      if (_craftingPanel == null || _inventoryPanel == null || _inventoryPanel == this)
+        return;
 
       float h = _inventoryPanel.resolvedStyle.height;
-      if (h <= 0f || float.IsNaN(h)) return;
+      if (h <= 0f || float.IsNaN(h))
+        return;
 
       _craftingPanel.style.height = h;
     }
@@ -184,7 +186,8 @@ namespace MultiplayerInfrastructure.UI
 
     private CraftableRecipeDisplay FindRecipe(string outputId)
     {
-      if (string.IsNullOrEmpty(outputId)) return null;
+      if (string.IsNullOrEmpty(outputId))
+        return null;
       for (int i = 0; i < _craftableRecipes.Count; i++)
         if (string.Equals(_craftableRecipes[i].OutputIdentifier, outputId, StringComparison.Ordinal))
           return _craftableRecipes[i];
@@ -193,7 +196,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void RenderRecipeList()
     {
-      if (_craftingRecipeList == null) return;
+      if (_craftingRecipeList == null)
+        return;
 
       _craftingRecipeList.Clear();
 
@@ -226,7 +230,8 @@ namespace MultiplayerInfrastructure.UI
         var icon = new Image { name = "RecipeIcon", pickingMode = PickingMode.Ignore };
         icon.AddToClassList("crafting-recipe-slot__icon");
         var sprite = Registry.Registry.GetOrLoadIconSprite(outputId);
-        if (sprite != null) icon.image = sprite.texture;
+        if (sprite != null)
+          icon.image = sprite.texture;
         slot.Add(icon);
 
         bool selected = string.Equals(outputId, _selectedRecipeOutputId, StringComparison.Ordinal);
@@ -292,7 +297,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void CraftSelectedRecipe(CraftableRecipeDisplay recipe, UnityEngine.Vector2 pointerPosition)
     {
-      if (_craftRequestHandler == null) return;
+      if (_craftRequestHandler == null)
+        return;
 
       // 커서에 이미 다른 아이템이 있으면 조합 불가(스택이 섞이는 것을 방지).
       if (_heldItem != null && _heldItem.ItemInstance != null &&
@@ -345,11 +351,13 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>대상 요소가 조합 패널(또는 그 자식) 내부인지 검사한다.</summary>
     private bool IsWithinCraftingPanel(VisualElement target)
     {
-      if (target == null || _craftingPanel == null) return false;
+      if (target == null || _craftingPanel == null)
+        return false;
       var cur = target;
       while (cur != null)
       {
-        if (cur == _craftingPanel) return true;
+        if (cur == _craftingPanel)
+          return true;
         cur = cur.parent;
       }
       return false;
@@ -358,7 +366,8 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>패널이 닫힐 때 선택 상태를 초기화한다.</summary>
     private void ResetCraftingSelection()
     {
-      if (_selectedRecipeOutputId == null) return;
+      if (_selectedRecipeOutputId == null)
+        return;
       _selectedRecipeOutputId = null;
       RenderRecipeList();
       RenderRequirements();
@@ -366,7 +375,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void RenderRequirements()
     {
-      if (_craftingRequirements == null) return;
+      if (_craftingRequirements == null)
+        return;
 
       _craftingRequirements.Clear();
 
@@ -387,7 +397,8 @@ namespace MultiplayerInfrastructure.UI
         var icon = new Image { name = "ReqIcon", pickingMode = PickingMode.Ignore };
         icon.AddToClassList("crafting-req-slot__icon");
         var sprite = Registry.Registry.GetOrLoadIconSprite(ing.Identifier);
-        if (sprite != null) icon.image = sprite.texture;
+        if (sprite != null)
+          icon.image = sprite.texture;
         slot.Add(icon);
 
         int held = _heldCountResolver != null ? _heldCountResolver(ing.Identifier) : 0;

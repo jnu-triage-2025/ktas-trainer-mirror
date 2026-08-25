@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.UI.Models
+﻿namespace MultiplayerInfrastructure.UI.Models
 {
   /// <summary>
   /// UI 배율(스케일) 단계를 나타내는 열거형입니다.

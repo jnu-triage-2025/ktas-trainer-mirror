@@ -1,4 +1,4 @@
-using MultiplayerInfrastructure.ItemSystem;
+﻿using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
 
 namespace TriageTrainer.ItemDefinitions

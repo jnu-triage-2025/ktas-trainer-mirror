@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
 {
@@ -26,12 +26,12 @@ namespace MultiplayerInfrastructure.Player
     /// <summary>레이캐스트에 맞은 GameObject, 맞지 않았으면 null</summary>
     public GameObject RaycastHitObject => RaycastHasHit ? RaycastHit.collider.gameObject : null;
 
-    void Awake_Raycast()
+    private void Awake_Raycast()
     {
       // 초기화 로직 필요시 추가
     }
 
-    void Update_Raycast()
+    private void Update_Raycast()
     {
       PerformCrosshairRaycast();
     }
@@ -42,11 +42,14 @@ namespace MultiplayerInfrastructure.Player
     /// </summary>
     private void PerformCrosshairRaycast()
     {
-      if (!IsOwner) return;
-      if (_camControl == null) return;
+      if (!IsOwner)
+        return;
+      if (_camControl == null)
+        return;
 
       var camera = _camControl.Camera;
-      if (camera == null) return;
+      if (camera == null)
+        return;
 
       // 뷰포트 중앙(0.5, 0.5)에서 레이 생성
       var ray = camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));

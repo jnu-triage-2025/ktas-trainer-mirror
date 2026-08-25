@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -154,7 +154,9 @@ namespace MultiplayerInfrastructure.Session
       //  루프가 살아 있고 포트가 해제되지 않는 버그가 발생한다.)
       using var registration = token.Register(() =>
       {
-        try { client.Close(); } catch { /* ignore */ }
+        try
+        { client.Close(); }
+        catch { /* ignore */ }
       });
 
       while (!token.IsCancellationRequested)

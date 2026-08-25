@@ -1,4 +1,4 @@
-namespace TriageTrainer.ItemDefinitions
+﻿namespace TriageTrainer.ItemDefinitions
 {
   /// <summary>
   /// 멸균증류수가 담긴 습윤병이 연결된 산소 유량계(조합 완료).
@@ -7,8 +7,8 @@ namespace TriageTrainer.ItemDefinitions
   /// </summary>
   public class Oxyflowmeter : MedicalItem
   {
-    public new const string Identifier   = "oxyflowmeter";
-    public new const string DisplayName  = "멸균증류수가 담긴 습윤병이 연결된 산소 유량계";
-    public new const string Description  = "멸균증류수가 담긴 습윤병이 연결되어 벽면에 장착할 준비가 완료된 산소 유량계입니다.";
+    public new const string Identifier = "oxyflowmeter";
+    public new const string DisplayName = "멸균증류수가 담긴 습윤병이 연결된 산소 유량계";
+    public new const string Description = "멸균증류수가 담긴 습윤병이 연결되어 벽면에 장착할 준비가 완료된 산소 유량계입니다.";
   }
 }

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using FishNet.Object;
 using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Entity.Patient;
@@ -176,7 +176,7 @@ namespace TriageTrainer.Entity
 
     public interface IMedicalStateListener
     {
-      void HandleMedicalStateChanged(PatientMedicalState state);
+      public void HandleMedicalStateChanged(PatientMedicalState state);
     }
 
     public void RegisterMedicalStateListener(IMedicalStateListener listener)
@@ -468,10 +468,14 @@ namespace TriageTrainer.Entity
         RefreshPatientDisplayName();
         CurrentBed?.RefreshDisplayName();
       }
-      if (sex != PresetSentinelNone) _patientDescriptor.sex = (Sex)sex;
-      if (age != PresetSentinelNone) _patientDescriptor.age = age;
-      if (bloodType != PresetSentinelNone) _patientDescriptor.bloodType = (BloodType)bloodType;
-      if (intendedTriage != PresetSentinelNone) _patientDescriptor.intendedTriage = (TriageLevel)intendedTriage;
+      if (sex != PresetSentinelNone)
+        _patientDescriptor.sex = (Sex)sex;
+      if (age != PresetSentinelNone)
+        _patientDescriptor.age = age;
+      if (bloodType != PresetSentinelNone)
+        _patientDescriptor.bloodType = (BloodType)bloodType;
+      if (intendedTriage != PresetSentinelNone)
+        _patientDescriptor.intendedTriage = (TriageLevel)intendedTriage;
 
       // 의식
       if (consciousnessGcs != PresetSentinelNone

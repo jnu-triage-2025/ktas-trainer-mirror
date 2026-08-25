@@ -1,4 +1,4 @@
-using TriageTrainer.Entity.Patient;
+﻿using TriageTrainer.Entity.Patient;
 using UnityEngine;
 
 namespace TriageTrainer.Entity.PatientMonitor.Models
@@ -101,26 +101,47 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       const float unavailable = PatientMedicalState.MonitorValueUnavailable;
       monitorECG = new ECGParameters
       {
-        bpm = unavailable, irregularity = unavailable,
-        pAmp = unavailable, pWidth = unavailable, qAmp = unavailable, rAmp = unavailable,
-        sAmp = unavailable, tAmp = unavailable, tWidth = unavailable, uAmp = unavailable,
-        stElevation = unavailable, noise = unavailable, qrsWidthScale = unavailable
+        bpm = unavailable,
+        irregularity = unavailable,
+        pAmp = unavailable,
+        pWidth = unavailable,
+        qAmp = unavailable,
+        rAmp = unavailable,
+        sAmp = unavailable,
+        tAmp = unavailable,
+        tWidth = unavailable,
+        uAmp = unavailable,
+        stElevation = unavailable,
+        noise = unavailable,
+        qrsWidthScale = unavailable
       };
       monitorART = new ARTParameters { bpm = unavailable, systolic = unavailable, diastolic = unavailable, noise = unavailable };
       monitorCVP = new CVPParameters { bpm = unavailable, mean = unavailable, noise = unavailable };
       monitorPleth = new PlethParameters { bpm = unavailable, spo2 = unavailable, noise = unavailable };
       monitorNumerics = new NumericsParameters
       {
-        bpm = unavailable, pvcs = unavailable, pulseRate = unavailable,
-        perfusionIndex = unavailable, spo2 = unavailable
+        bpm = unavailable,
+        pvcs = unavailable,
+        pulseRate = unavailable,
+        perfusionIndex = unavailable,
+        spo2 = unavailable
       };
       monitorNIBP = new NIBPParameters { systolic = unavailable, diastolic = unavailable };
       monitorTemperature = new TemperatureParameters { t1 = unavailable, t2 = unavailable };
       monitorSTLeads = new STLeadValues
       {
-        i = unavailable, ii = unavailable, iii = unavailable, avr = unavailable, avl = unavailable,
-        avf = unavailable, v1 = unavailable, v2 = unavailable, v3 = unavailable, v4 = unavailable,
-        v5 = unavailable, v6 = unavailable
+        i = unavailable,
+        ii = unavailable,
+        iii = unavailable,
+        avr = unavailable,
+        avl = unavailable,
+        avf = unavailable,
+        v1 = unavailable,
+        v2 = unavailable,
+        v3 = unavailable,
+        v4 = unavailable,
+        v5 = unavailable,
+        v6 = unavailable
       };
     }
 

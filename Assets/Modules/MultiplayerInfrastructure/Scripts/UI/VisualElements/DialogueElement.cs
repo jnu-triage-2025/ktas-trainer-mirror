@@ -1,7 +1,6 @@
-using UnityEngine;
-using UnityEngine.UIElements;
-using System;
+﻿using System;
 using System.Text.RegularExpressions;
+using UnityEngine.UIElements;
 
 namespace MultiplayerInfrastructure.UI
 {

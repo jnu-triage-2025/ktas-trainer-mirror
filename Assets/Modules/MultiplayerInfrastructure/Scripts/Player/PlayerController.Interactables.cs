@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.UI;
@@ -20,9 +20,10 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private DialoguePanelUIController _dialoguePanelUIController;
     private ILocalInteractionFocus _focusedInteraction;
 
-    void OnStartClient_Interactables()
+    private void OnStartClient_Interactables()
     {
-      if (!IsOwner) return;
+      if (!IsOwner)
+        return;
 
       if (_camControl == null)
       {
@@ -57,7 +58,7 @@ namespace MultiplayerInfrastructure.Player
         _interactableHintUI.InteractionClicked += HandleInteractionMenuClicked;
     }
 
-    void OnDestroy()
+    private void OnDestroy()
     {
       OnStopClient_UIOverlaySync();
 
@@ -78,7 +79,8 @@ namespace MultiplayerInfrastructure.Player
 #if UNITY_EDITOR && (DEBUG == true) && false
       Debug.Log($"[PlayerController] Nearby interactables updated: {nearby.Count} items found.");
 #endif
-      if (_interactableHintUI == null) return;
+      if (_interactableHintUI == null)
+        return;
 
       var interacts = CollectAvailableInteracts(nearby);
       KeepNearestExclusiveInteracts(interacts, _detector != null ? _detector.DetectionPosition : transform.position);
@@ -168,7 +170,8 @@ namespace MultiplayerInfrastructure.Player
 
       // 일반 모드에서는 기존 로직
       var interact = _interactableHintUI?.GetSelected();
-      if (interact == null) return;
+      if (interact == null)
+        return;
 
       // UI가 갱신되는 두 query 사이에 경계를 넘으면 이전 최단 후보가 잠시 선택 상태로 남을 수 있다.
       // 실행 직전에 현재 감지 목록과 조건을 다시 평가하여 더 먼 static entity가 활성화되지 않게 한다.
@@ -238,7 +241,8 @@ namespace MultiplayerInfrastructure.Player
     // called from PlayerController.Input
     private void HandleInteractablesSelectionInput()
     {
-      if (_interactableHintUI == null) return;
+      if (_interactableHintUI == null)
+        return;
 
       float scroll = Input.GetAxis("Mouse ScrollWheel");
       if (scroll > 0.01f)

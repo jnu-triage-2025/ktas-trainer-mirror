@@ -1,4 +1,4 @@
-using FishNet.Object.Synchronizing;
+﻿using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Registry;
 
 namespace TriageTrainer.Entity

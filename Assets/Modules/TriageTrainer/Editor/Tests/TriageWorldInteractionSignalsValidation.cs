@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Scenario;
@@ -54,7 +54,8 @@ namespace TriageTrainer.Editor.Tests
       finally
       {
         ScenarioInteractionSignals.OnSignalRegistered -= Capture;
-        foreach (string signal in raised) ScenarioInteractionSignals.Clear(signal);
+        foreach (string signal in raised)
+          ScenarioInteractionSignals.Clear(signal);
         UnityEngine.Object.DestroyImmediate(oxyflowmeterObject);
         UnityEngine.Object.DestroyImmediate(suctionObject);
         UnityEngine.Object.DestroyImmediate(patientObject);
@@ -63,7 +64,8 @@ namespace TriageTrainer.Editor.Tests
 
     private static void Require(bool condition, string message)
     {
-      if (!condition) throw new InvalidOperationException(message);
+      if (!condition)
+        throw new InvalidOperationException(message);
     }
   }
 }

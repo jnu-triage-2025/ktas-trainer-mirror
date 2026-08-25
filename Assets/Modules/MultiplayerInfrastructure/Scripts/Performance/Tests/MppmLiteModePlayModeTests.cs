@@ -1,4 +1,4 @@
-#if UNITY_INCLUDE_TESTS
+﻿#if UNITY_INCLUDE_TESTS
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Rendering;

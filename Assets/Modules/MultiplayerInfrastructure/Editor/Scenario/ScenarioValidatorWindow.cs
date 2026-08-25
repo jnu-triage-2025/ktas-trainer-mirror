@@ -1,8 +1,8 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
+using MultiplayerInfrastructure.Scenario;
 using UnityEditor;
 using UnityEngine;
-using MultiplayerInfrastructure.Scenario;
 
 public class ScenarioValidatorWindow : EditorWindow
 {

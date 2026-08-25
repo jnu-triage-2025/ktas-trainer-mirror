@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Registry
+﻿namespace MultiplayerInfrastructure.Registry
 {
   public enum RegistryType
   {

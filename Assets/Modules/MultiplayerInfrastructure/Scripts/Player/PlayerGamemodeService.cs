@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using FishNet.Connection;
 
 namespace MultiplayerInfrastructure.Player
@@ -17,7 +17,8 @@ namespace MultiplayerInfrastructure.Player
 
     public static void RegisterPlayer(PlayerController controller)
     {
-      if (controller == null || controller.Owner == null) return;
+      if (controller == null || controller.Owner == null)
+        return;
 
       int clientId = controller.Owner.ClientId;
       _gamemodeByClient[clientId] = PlayerGamemode.Player;
@@ -26,7 +27,8 @@ namespace MultiplayerInfrastructure.Player
 
     public static void UnregisterPlayer(PlayerController controller)
     {
-      if (controller == null || controller.Owner == null) return;
+      if (controller == null || controller.Owner == null)
+        return;
 
       _gamemodeByClient.Remove(controller.Owner.ClientId);
     }

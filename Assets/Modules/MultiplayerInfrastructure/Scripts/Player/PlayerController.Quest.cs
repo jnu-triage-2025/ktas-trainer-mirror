@@ -1,7 +1,7 @@
-using MultiplayerInfrastructure.Registry;
+﻿using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
-using UnityEngine;
 using Unity.VisualScripting;
+using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
 {
@@ -9,10 +9,11 @@ namespace MultiplayerInfrastructure.Player
   {
     [SerializeField] private QuestUIController _questUIController;
     [SerializeField] private QuestPreviewHudUIController _questPreviewHudUIController;
-    
-    void OnStartClient_Quest()
+
+    private void OnStartClient_Quest()
     {
-      if (!IsOwner) return;
+      if (!IsOwner)
+        return;
 
       // QuestUIController 찾기 (Inspector에서 할당되지 않은 경우)
       if (_questUIController.IsUnityNull())

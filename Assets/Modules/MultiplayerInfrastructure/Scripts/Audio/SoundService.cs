@@ -1,8 +1,8 @@
+﻿using System;
+using System.Collections.Generic;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Audio
@@ -91,7 +91,7 @@ namespace MultiplayerInfrastructure.Audio
     public static bool IsValidSoundResourceIdentifier(string soundResourceIdentifier)
     {
       return !string.IsNullOrWhiteSpace(soundResourceIdentifier)
-             && !soundResourceIdentifier.StartsWith("/", StringComparison.Ordinal)
+             && !soundResourceIdentifier.StartsWith('/')
              && !soundResourceIdentifier.Contains("..", StringComparison.Ordinal)
              && !soundResourceIdentifier.Contains("\\", StringComparison.Ordinal);
     }

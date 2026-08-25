@@ -1,10 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace MultiplayerInfrastructure.Scenario
 {
   public sealed class ScenarioParallelNode : IScenarioNode
   {
-    public string Identifier { get; set;}
+    public string Identifier { get; set; }
     public ScenarioNodeType NodeType => ScenarioNodeType.Parallel;
     /// <summary>
     /// Parallel 브랜치가 모두 종료되었을 때의 대기 정책입니다.

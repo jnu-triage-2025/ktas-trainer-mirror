@@ -1,4 +1,4 @@
-namespace TriageTrainer.Entity.Patient
+﻿namespace TriageTrainer.Entity.Patient
 {
   /// <summary>
   /// 생물학적 성별을 표현합니다.

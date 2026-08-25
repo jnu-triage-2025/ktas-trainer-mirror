@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using FishNet;
 using FishNet.Object;
@@ -54,7 +54,8 @@ namespace TriageTrainer.Entity
 
     [Header("AED Connection")]
     [Tooltip("환자에게 부착한 제세동 패드와 연결할 AED 라인 연결 지점들입니다. 비워 두면 자식 오브젝트에서 AEDLineConnectionPoint 를 찾는 fallback 을 사용합니다.")]
-    [SerializeField] private TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint[] _aedConnectionPoints =
+    [SerializeField]
+    private TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint[] _aedConnectionPoints =
       Array.Empty<TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint>();
 
     /// <summary>

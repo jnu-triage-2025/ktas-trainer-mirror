@@ -1,4 +1,4 @@
-
+﻿
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Scenario;
 using UnityEditor.Experimental.GraphView;
@@ -52,7 +52,8 @@ namespace MultiplayerInfrastructure.Editor
 
     public bool OnSelectEntry(SearchTreeEntry entry, SearchWindowContext context)
     {
-      if (!(entry.userData is ScenarioNodeType type)) return false;
+      if (!(entry.userData is ScenarioNodeType type))
+        return false;
       window.CreateNode(type, context.screenMousePosition);
       return true;
     }

@@ -1,13 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
-using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 using UnityEngine.UIElements;
-
-using MI = MultiplayerInfrastructure;
 
 namespace MultiplayerInfrastructure.UI
 {
@@ -147,9 +144,11 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     private ItemSystem.Item HandleCraftRequest(InventoryUIView.CraftableRecipeDisplay recipe)
     {
-      if (recipe == null) return null;
+      if (recipe == null)
+        return null;
       var player = ResolveOwningPlayer();
-      if (player == null) return null;
+      if (player == null)
+        return null;
       var crafted = player.TryCraftRecipe(recipe.OutputIdentifier);
       if (crafted != null && crafted.DeferredOnGet)
         _pendingAcquisition = crafted;
@@ -159,7 +158,8 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>커서 스택 한도를 초과한 조합 결과 잔량을 인벤토리로 돌려보낸다.</summary>
     private void HandleCraftLeftoverReturned(ItemSystem.Item leftover)
     {
-      if (leftover == null || leftover.CurrentStackCount <= 0) return;
+      if (leftover == null || leftover.CurrentStackCount <= 0)
+        return;
       var player = ResolveOwningPlayer();
       player?.TryAddItemToInventory(leftover);
     }
@@ -201,7 +201,8 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>조합 패널의 "조합 가능" 목록과 "필요 아이템" 표시를 현재 보유량 기준으로 갱신한다.</summary>
     private void RefreshCraftableRecipes()
     {
-      if (_view == null) return;
+      if (_view == null)
+        return;
       var player = ResolveOwningPlayer();
       _view.UpdateCraftableRecipes(player != null ? player.GetCraftableRecipes() : null);
     }

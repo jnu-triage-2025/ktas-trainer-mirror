@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
@@ -195,8 +195,10 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// </summary>
     private void LoadModel()
     {
-      if (Item == null) return;
-      if (MppmLiteMode.IsHeadless) return;
+      if (Item == null)
+        return;
+      if (MppmLiteMode.IsHeadless)
+        return;
 
       string path = $"{ModelRootPath}/{Item.CurrentIdentifier}";
       var prefab = Resources.Load<GameObject>(path);
@@ -221,12 +223,13 @@ namespace MultiplayerInfrastructure.ItemSystem
             $"[IntendedMissing3DModel] 특성을 적용하세요.");
         }
         GroundedModel = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        GroundedModel.name  = "ItemGroundedModel";
+        GroundedModel.name = "ItemGroundedModel";
         GroundedModel.transform.SetParent(transform, false);
         GroundedModel.transform.localScale = Vector3.one * 0.25f;
         // 기본 BoxCollider는 이미 추가했으므로 큐브의 콜라이더는 제거
         var primCollider = GroundedModel.GetComponent<Collider>();
-        if (primCollider != null) Destroy(primCollider);
+        if (primCollider != null)
+          Destroy(primCollider);
       }
     }
 
@@ -268,20 +271,23 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// <summary>공격 시 아이템을 앞으로 짧게 밀었다가 되돌리는 애니메이션입니다.</summary>
     public void TriggerAttackAnimation()
     {
-      if (_animCoroutine != null) StopCoroutine(_animCoroutine);
+      if (_animCoroutine != null)
+        StopCoroutine(_animCoroutine);
       _animCoroutine = StartCoroutine(AnimAttack());
     }
 
     /// <summary>사용 시 아이템을 위-아래로 짧게 튀기는 애니메이션입니다.</summary>
     public void TriggerUseAnimation()
     {
-      if (_animCoroutine != null) StopCoroutine(_animCoroutine);
+      if (_animCoroutine != null)
+        StopCoroutine(_animCoroutine);
       _animCoroutine = StartCoroutine(AnimBob());
     }
 
     private IEnumerator AnimAttack()
     {
-      if (GroundedModel == null) yield break;
+      if (GroundedModel == null)
+        yield break;
 
       const float duration = 0.12f;
       const float distance = 0.15f;
@@ -308,9 +314,10 @@ namespace MultiplayerInfrastructure.ItemSystem
 
     private IEnumerator AnimBob()
     {
-      if (GroundedModel == null) yield break;
+      if (GroundedModel == null)
+        yield break;
 
-      const float duration  = 0.18f;
+      const float duration = 0.18f;
       const float amplitude = 0.10f;
       Vector3 origin = GroundedModel.transform.localPosition;
 

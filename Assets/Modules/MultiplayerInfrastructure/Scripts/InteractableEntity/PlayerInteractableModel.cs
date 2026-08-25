@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.InteractableEntity
@@ -9,11 +9,11 @@ namespace MultiplayerInfrastructure.InteractableEntity
     [SerializeField] private string displayText;
     [SerializeField] private Sprite icon;
     [SerializeField] private Color color;
-    
+
     public string DisplayText => displayText;
     public Sprite Icon => icon;
     public Color Color => color;
-    
+
     public PlayerInteractableModel(string displayText, Sprite icon, Color? color = null)
     {
       this.displayText = displayText;

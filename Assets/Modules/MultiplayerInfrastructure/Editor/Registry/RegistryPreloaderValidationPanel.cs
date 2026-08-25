@@ -1,6 +1,5 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
-using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using UnityEditor;
 using UnityEngine;

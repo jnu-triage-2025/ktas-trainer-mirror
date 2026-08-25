@@ -1,4 +1,4 @@
-using TriageTrainer.Entity;
+﻿using TriageTrainer.Entity;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,8 +13,10 @@ namespace TriageTrainer.Editor
     {
       int rows = 4; // type, identifier, position, rotation
       StaticEntityLayoutType type = ReadType(property);
-      if (type == StaticEntityLayoutType.MovingPatientBedPositioningPoint || type == StaticEntityLayoutType.DefibrillatorCartSnapPoint) rows += 2;
-      if (type == StaticEntityLayoutType.PatientCareDescriptionZone) rows += 2;
+      if (type == StaticEntityLayoutType.MovingPatientBedPositioningPoint || type == StaticEntityLayoutType.DefibrillatorCartSnapPoint)
+        rows += 2;
+      if (type == StaticEntityLayoutType.PatientCareDescriptionZone)
+        rows += 2;
       return rows * EditorGUIUtility.singleLineHeight + (rows - 1) * Gap;
     }
 

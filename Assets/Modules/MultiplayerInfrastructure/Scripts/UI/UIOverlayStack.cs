@@ -1,10 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 namespace MultiplayerInfrastructure.UI
 {
   public static class UIOverlayStack
   {
-    private static Stack<IUIOverlay> Stack { get; } = new ();
+    private static Stack<IUIOverlay> Stack { get; } = new();
     public static event System.Action StackChanged;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -33,7 +33,8 @@ namespace MultiplayerInfrastructure.UI
       IUIOverlay previousTop = Stack.Count > 0 ? Stack.Peek() : null;
 
       PruneDeadOverlays();
-      if (overlay == null) return;
+      if (overlay == null)
+        return;
 
       if (Stack.Count > 0)
       {
@@ -56,7 +57,8 @@ namespace MultiplayerInfrastructure.UI
       IUIOverlay previousTop = Stack.Count > 0 ? Stack.Peek() : null;
 
       PruneDeadOverlays();
-      if (Stack.Count == 0) return null;
+      if (Stack.Count == 0)
+        return null;
 
       var overlay = Stack.Pop();
       SafeOnOverlayPopped(overlay);
@@ -95,7 +97,8 @@ namespace MultiplayerInfrastructure.UI
 
     private static void PruneDeadOverlays()
     {
-      if (Stack.Count == 0) return;
+      if (Stack.Count == 0)
+        return;
 
       int previousCount = Stack.Count;
       IUIOverlay previousTop = Stack.Peek();
@@ -116,7 +119,8 @@ namespace MultiplayerInfrastructure.UI
 
     private static bool IsAlive(IUIOverlay overlay)
     {
-      if (overlay == null) return false;
+      if (overlay == null)
+        return false;
 
       if (overlay is Object unityObject)
         return unityObject != null;
@@ -126,13 +130,15 @@ namespace MultiplayerInfrastructure.UI
 
     private static void SafeOnOverlayPushed(IUIOverlay overlay)
     {
-      if (!IsAlive(overlay)) return;
+      if (!IsAlive(overlay))
+        return;
       overlay.OnOverlayPushed();
     }
 
     private static void SafeOnOverlayPopped(IUIOverlay overlay)
     {
-      if (!IsAlive(overlay)) return;
+      if (!IsAlive(overlay))
+        return;
       overlay.OnOverlayPopped();
     }
 

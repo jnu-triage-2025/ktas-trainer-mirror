@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Definitions
+﻿namespace MultiplayerInfrastructure.Definitions
 {
   public static class DefaultsItemRegistry
   {

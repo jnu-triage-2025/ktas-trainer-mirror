@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection;
 
 namespace MultiplayerInfrastructure.ItemSystem
@@ -42,7 +42,8 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// </summary>
     public static bool IsEquippableGlove(Item item)
     {
-      if (item == null) return false;
+      if (item == null)
+        return false;
       return IsEquippableGlove(item.GetType());
     }
 
@@ -52,8 +53,10 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// </summary>
     public static bool IsEquippableGlove(Type itemType)
     {
-      if (itemType == null) return false;
-      if (_gloveCacheByType.TryGetValue(itemType, out var cached)) return cached;
+      if (itemType == null)
+        return false;
+      if (_gloveCacheByType.TryGetValue(itemType, out var cached))
+        return cached;
       bool has = itemType.GetCustomAttribute<EquippableGloveAttribute>() != null;
       _gloveCacheByType[itemType] = has;
       return has;

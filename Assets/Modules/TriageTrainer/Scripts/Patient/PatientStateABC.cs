@@ -1,7 +1,7 @@
-using UnityEngine;
-using TriageTrainer.Entity.Patient;
-using TriageTrainer.Entity;
+﻿using TriageTrainer.Entity;
 using TriageTrainer.Entity.OxyLine;
+using TriageTrainer.Entity.Patient;
+using UnityEngine;
 
 namespace TriageTrainer.Patient
 {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.Registry;
@@ -236,7 +236,8 @@ namespace MultiplayerInfrastructure.UI
         CopyDisplaySettings(display, _pendingGraphics);
         BuildGraphicsForm();
         SetStatusText("보통 기본값을 불러왔습니다. 적용 버튼을 눌러 저장하세요.");
-      }) { text = "보통 기본값" };
+      })
+      { text = "보통 기본값" };
       reset.AddToClassList("settings__secondary-btn");
 
       var apply = new Button(() =>
@@ -252,7 +253,8 @@ namespace MultiplayerInfrastructure.UI
         _pendingGraphics = service.CurrentSettings;
         BuildGraphicsForm();
         SetStatusText("그래픽 설정을 적용하고 저장했습니다.");
-      }) { text = "적용 및 저장" };
+      })
+      { text = "적용 및 저장" };
       apply.AddToClassList("settings__primary-btn");
 
       actions.Add(reset);

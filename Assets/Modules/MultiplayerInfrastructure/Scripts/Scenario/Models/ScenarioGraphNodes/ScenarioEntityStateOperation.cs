@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Scenario
+﻿namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
   /// <see cref="ScenarioEntityInitNode"/> 가 대상 엔티티에 적용하는 단일 초기 상태 항목.

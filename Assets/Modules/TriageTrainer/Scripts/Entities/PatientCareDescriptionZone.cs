@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using FishNet;
 using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Entity.LineConnection;
@@ -220,7 +220,8 @@ namespace TriageTrainer.Entity
 
     private void ApplyCollider()
     {
-      if (_collider == null) return;
+      if (_collider == null)
+        return;
       _collider.isTrigger = true;
       _collider.center = _center;
       _collider.size = _size;
@@ -241,7 +242,8 @@ namespace TriageTrainer.Entity
       }
 
       MovingPatientBedController bed = other.GetComponentInParent<MovingPatientBedController>();
-      if (bed == null) return;
+      if (bed == null)
+        return;
       _bedColliderCounts.TryGetValue(bed, out int bedCount);
       _bedColliderCounts[bed] = bedCount + 1;
       if (bedCount == 0)
@@ -265,7 +267,8 @@ namespace TriageTrainer.Entity
       PatientController patient = other.GetComponentInParent<PatientController>();
       if (patient != null)
       {
-        if (!_patientColliderCounts.TryGetValue(patient, out int count)) return;
+        if (!_patientColliderCounts.TryGetValue(patient, out int count))
+          return;
         if (count > 1)
         {
           _patientColliderCounts[patient] = count - 1;
@@ -278,7 +281,8 @@ namespace TriageTrainer.Entity
       }
 
       MovingPatientBedController bed = other.GetComponentInParent<MovingPatientBedController>();
-      if (bed == null || !_bedColliderCounts.TryGetValue(bed, out int bedCount)) return;
+      if (bed == null || !_bedColliderCounts.TryGetValue(bed, out int bedCount))
+        return;
       if (bedCount > 1)
       {
         _bedColliderCounts[bed] = bedCount - 1;
@@ -716,7 +720,8 @@ namespace TriageTrainer.Entity
         if (suction != null && IsEquipmentInZone(suction))
         {
           _wallSuctionInZoneCount++;
-          if (suction.IsAttached) suctionAttachedCount++;
+          if (suction.IsAttached)
+            suctionAttachedCount++;
           // IsAttached는 플레이 중 표시/설치 상태일 뿐 zone 소속 판정 조건이 아니다.
           _wallSuction.Add(suction);
         }
@@ -729,7 +734,8 @@ namespace TriageTrainer.Entity
         if (flowmeter != null && IsEquipmentInZone(flowmeter))
         {
           _oxyflowmeterInZoneCount++;
-          if (flowmeter.IsAttached) flowmeterAttachedCount++;
+          if (flowmeter.IsAttached)
+            flowmeterAttachedCount++;
           // IsAttached는 플레이 중 표시/설치 상태일 뿐 zone 소속 판정 조건이 아니다.
           _oxyflowmeters.Add(flowmeter);
         }
@@ -797,18 +803,21 @@ namespace TriageTrainer.Entity
           _warnedMissingEquipment = true;
         }
       }
-      else _warnedMissingEquipment = false;
+      else
+        _warnedMissingEquipment = false;
 
       MovingPatientBedPositioningPoint[] points = FindObjectsByType<MovingPatientBedPositioningPoint>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
       bool hasPoint = false;
       for (int i = 0; i < points.Length; i++)
-        if (IsPointInside(points[i].transform.position)) { hasPoint = true; break; }
+        if (IsPointInside(points[i].transform.position))
+        { hasPoint = true; break; }
       if (!hasPoint && !_warnedMissingPositioningPoint)
       {
         Debug.LogWarning($"[PatientCareDescriptionZone] '{Identifier}' has no positioning point inside its bounds.", this);
         _warnedMissingPositioningPoint = true;
       }
-      else if (hasPoint) _warnedMissingPositioningPoint = false;
+      else if (hasPoint)
+        _warnedMissingPositioningPoint = false;
     }
 
     private void OnDrawGizmos()

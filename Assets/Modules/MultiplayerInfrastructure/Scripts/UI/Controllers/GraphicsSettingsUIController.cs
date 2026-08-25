@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Performance;
@@ -66,11 +66,11 @@ namespace MultiplayerInfrastructure.UI
       _document.sortingOrder = _sortingOrder;
 
       var docRoot = _document.rootVisualElement;
-      _root             = docRoot?.Q<VisualElement>("graphics-settings-root");
+      _root = docRoot?.Q<VisualElement>("graphics-settings-root");
       _optionsContainer = docRoot?.Q<VisualElement>("options-container");
-      _closeButton      = docRoot?.Q<Button>("close-button");
-      _applyButton      = docRoot?.Q<Button>("apply-button");
-      _statusLabel      = docRoot?.Q<Label>("status-label");
+      _closeButton = docRoot?.Q<Button>("close-button");
+      _applyButton = docRoot?.Q<Button>("apply-button");
+      _statusLabel = docRoot?.Q<Label>("status-label");
 
       if (_closeButton != null)
         _closeButton.clicked += HandleCloseClicked;
@@ -96,8 +96,10 @@ namespace MultiplayerInfrastructure.UI
     {
       base.OnDestroy();
 
-      if (_closeButton != null) _closeButton.clicked -= HandleCloseClicked;
-      if (_applyButton != null) _applyButton.clicked -= HandleApplyClicked;
+      if (_closeButton != null)
+        _closeButton.clicked -= HandleCloseClicked;
+      if (_applyButton != null)
+        _applyButton.clicked -= HandleApplyClicked;
 
       foreach (var el in _optionElements)
         el.OnOptionSelected -= HandleOptionSelected;
@@ -168,7 +170,7 @@ namespace MultiplayerInfrastructure.UI
     // ──────────────────────────────────────────────────────────────────────────
     private void HandleOptionSelected(TextureQuality quality)
     {
-      _pendingQuality   = quality;
+      _pendingQuality = quality;
       _hasPendingChange = true;
 
       // 선택 상태 갱신
@@ -221,7 +223,7 @@ namespace MultiplayerInfrastructure.UI
       var service = GetService();
       var current = service != null ? service.CurrentQuality : TextureQuality.High;
 
-      _pendingQuality   = current;
+      _pendingQuality = current;
       _hasPendingChange = false;
 
       foreach (var el in _optionElements)
@@ -244,7 +246,8 @@ namespace MultiplayerInfrastructure.UI
       //  숨김 상태의 패널 root가 화면 전체에서 포인터 이벤트를 계속 가로챈다.)
       SetDocumentRootInteractable(_document, visible);
 
-      if (_root == null) return;
+      if (_root == null)
+        return;
 
       _root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
       // USS 기본값 opacity: 0 을 런타임에서 override
@@ -257,23 +260,28 @@ namespace MultiplayerInfrastructure.UI
     private void RebindToCurrentDocumentRoot()
     {
       var docRoot = _document != null ? _document.rootVisualElement : null;
-      if (docRoot == null) return;
+      if (docRoot == null)
+        return;
 
       var newRoot = docRoot.Q<VisualElement>("graphics-settings-root");
       if (_root == newRoot && _root != null && _root.panel != null)
         return;
 
-      if (_closeButton != null) _closeButton.clicked -= HandleCloseClicked;
-      if (_applyButton != null) _applyButton.clicked -= HandleApplyClicked;
+      if (_closeButton != null)
+        _closeButton.clicked -= HandleCloseClicked;
+      if (_applyButton != null)
+        _applyButton.clicked -= HandleApplyClicked;
 
-      _root             = newRoot;
+      _root = newRoot;
       _optionsContainer = docRoot.Q<VisualElement>("options-container");
-      _closeButton      = docRoot.Q<Button>("close-button");
-      _applyButton      = docRoot.Q<Button>("apply-button");
-      _statusLabel      = docRoot.Q<Label>("status-label");
+      _closeButton = docRoot.Q<Button>("close-button");
+      _applyButton = docRoot.Q<Button>("apply-button");
+      _statusLabel = docRoot.Q<Label>("status-label");
 
-      if (_closeButton != null) _closeButton.clicked += HandleCloseClicked;
-      if (_applyButton != null) _applyButton.clicked += HandleApplyClicked;
+      if (_closeButton != null)
+        _closeButton.clicked += HandleCloseClicked;
+      if (_applyButton != null)
+        _applyButton.clicked += HandleApplyClicked;
 
       PopulateOptions();
     }

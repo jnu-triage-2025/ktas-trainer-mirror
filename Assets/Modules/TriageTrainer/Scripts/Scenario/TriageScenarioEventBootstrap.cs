@@ -1,16 +1,15 @@
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using System;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
-using UnityEngine;
 using TriageTrainer.Entity;
 using TriageTrainer.Entity.Patient;
-using TriageTrainer.Entity.PatientMonitor;
 using TriageTrainer.Entity.PatientMonitor.Models;
+using UnityEngine;
 
 namespace TriageTrainer.Scenario
 {
@@ -71,7 +70,8 @@ namespace TriageTrainer.Scenario
     [SerializeField] private PatientMonitorController _patientAVitalMonitorController;
     [SerializeField] private GameObject _patientAVitalPanel;
     [SerializeField] private bool _applyPatientAInitialMonitorProfile = true;
-    [SerializeField] private ECGParameters _patientAInitialMonitorParameters = new ECGParameters
+    [SerializeField]
+    private ECGParameters _patientAInitialMonitorParameters = new ECGParameters
     {
       bpm = 140f,
       pAmp = 0.15f,
@@ -87,7 +87,8 @@ namespace TriageTrainer.Scenario
       irregularity = 0.03f,
       qrsWidthScale = 1.0f
     };
-    [SerializeField] private ECGParameters _patientACrashMonitorParameters = new ECGParameters
+    [SerializeField]
+    private ECGParameters _patientACrashMonitorParameters = new ECGParameters
     {
       bpm = 80f,
       pAmp = 0.08f,
@@ -103,7 +104,8 @@ namespace TriageTrainer.Scenario
       irregularity = 0.12f,
       qrsWidthScale = 1.1f
     };
-    [SerializeField] private ECGParameters _patientAAsystoleMonitorParameters = new ECGParameters
+    [SerializeField]
+    private ECGParameters _patientAAsystoleMonitorParameters = new ECGParameters
     {
       bpm = 0f,
       pAmp = 0f,
@@ -119,7 +121,8 @@ namespace TriageTrainer.Scenario
       irregularity = 0f,
       qrsWidthScale = 1.0f
     };
-    [SerializeField] private ECGParameters _patientARoscMonitorParameters = new ECGParameters
+    [SerializeField]
+    private ECGParameters _patientARoscMonitorParameters = new ECGParameters
     {
       bpm = 110f,
       pAmp = 0.14f,
@@ -156,7 +159,8 @@ namespace TriageTrainer.Scenario
     [SerializeField] private GameObject _patientAAmbuConnectedVisual;
     [SerializeField] private GameObject _patientADefibrillatorPadVisual;
     [SerializeField] private GameObject _defibrillatorIrregularUiPanel;
-    [SerializeField] private ECGParameters _patientADefibrillatorIrregularMonitorParameters = new ECGParameters
+    [SerializeField]
+    private ECGParameters _patientADefibrillatorIrregularMonitorParameters = new ECGParameters
     {
       bpm = 150f,
       pAmp = 0.05f,
@@ -223,7 +227,8 @@ namespace TriageTrainer.Scenario
     [SerializeField] private GameObject _patientCVitalPanel;
     [SerializeField] private bool _applyPatientBInitialMonitorProfile = true;
     [SerializeField] private bool _applyPatientCInitialMonitorProfile = true;
-    [SerializeField] private ECGParameters _patientBInitialMonitorParameters = new ECGParameters
+    [SerializeField]
+    private ECGParameters _patientBInitialMonitorParameters = new ECGParameters
     {
       bpm = 120f,
       pAmp = 0.16f,
@@ -260,7 +265,8 @@ namespace TriageTrainer.Scenario
     [SerializeField] private GameObject _patientBNs1RightConnectedVisual;
     [SerializeField] private GameObject _patientC20gLeftVisual;
     [SerializeField] private GameObject _patientCNs1LeftConnectedVisual;
-    [SerializeField] private ECGParameters _patientCInitialMonitorParameters = new ECGParameters
+    [SerializeField]
+    private ECGParameters _patientCInitialMonitorParameters = new ECGParameters
     {
       bpm = 120f,
       pAmp = 0.16f,
@@ -450,7 +456,7 @@ namespace TriageTrainer.Scenario
       _registeredEventIds.Add(eventId);
     }
 
-    
+
 
     private void ResolveRuntimeReferencesIfNeeded()
     {
@@ -691,23 +697,40 @@ namespace TriageTrainer.Scenario
 
       var sb = new StringBuilder(256);
       sb.AppendLine("[TriageScenarioEventBootstrap] Unresolved targets after auto-resolve:");
-      if (_patientAObject == null) sb.AppendLine("- patientA (set _patientAEntityIdentifier or aliases)");
-      if (_patientDummyDAObject == null) sb.AppendLine("- patientDummyDA (set _patientDummyDAEntityIdentifier or aliases)");
-      if (_patientABedObject == null) sb.AppendLine("- patientABed (set _patientABedEntityIdentifier or aliases)");
-      if (_patientDummyDABedObject == null) sb.AppendLine("- patientDummyDABed (set _patientDummyDABedEntityIdentifier or aliases)");
-      if (_patientATreatmentBedObject == null) sb.AppendLine("- patientATreatmentBed (set _patientATreatmentBedEntityIdentifier or aliases)");
-      if (_patientAVitalMonitorObject == null) sb.AppendLine("- patientAMonitor (set _patientAVitalMonitorEntityIdentifier or aliases)");
-      if (_patientBObject == null) sb.AppendLine("- patientB (set _patientBEntityIdentifier or aliases)");
-      if (_patientCObject == null) sb.AppendLine("- patientC (set _patientCEntityIdentifier or aliases)");
-      if (_patientDummyDBObject == null) sb.AppendLine("- patientDummyDB (set _patientDummyDBEntityIdentifier or aliases)");
-      if (_patientBTreatmentBedObject == null) sb.AppendLine("- patientBTreatmentBed (set _patientBTreatmentBedEntityIdentifier or aliases)");
-      if (_patientCTreatmentBedObject == null) sb.AppendLine("- patientCTreatmentBed (set _patientCTreatmentBedEntityIdentifier or aliases)");
-      if (_patientBVitalMonitorObject == null) sb.AppendLine("- patientBMonitor (set _patientBVitalMonitorEntityIdentifier or aliases)");
-      if (_patientCVitalMonitorObject == null) sb.AppendLine("- patientCMonitor (set _patientCVitalMonitorEntityIdentifier or aliases)");
-      if (_nurseATransform == null) sb.AppendLine("- nurseA (set _nurseAEntityIdentifier or aliases)");
-      if (_nurseBTransform == null) sb.AppendLine("- nurseB (set _nurseBEntityIdentifier or aliases)");
-      if (_nurseCTransform == null) sb.AppendLine("- nurseC (set _nurseCEntityIdentifier or aliases)");
-      if (_nurseDTransform == null) sb.AppendLine("- nurseD (set _nurseDEntityIdentifier or aliases)");
+      if (_patientAObject == null)
+        sb.AppendLine("- patientA (set _patientAEntityIdentifier or aliases)");
+      if (_patientDummyDAObject == null)
+        sb.AppendLine("- patientDummyDA (set _patientDummyDAEntityIdentifier or aliases)");
+      if (_patientABedObject == null)
+        sb.AppendLine("- patientABed (set _patientABedEntityIdentifier or aliases)");
+      if (_patientDummyDABedObject == null)
+        sb.AppendLine("- patientDummyDABed (set _patientDummyDABedEntityIdentifier or aliases)");
+      if (_patientATreatmentBedObject == null)
+        sb.AppendLine("- patientATreatmentBed (set _patientATreatmentBedEntityIdentifier or aliases)");
+      if (_patientAVitalMonitorObject == null)
+        sb.AppendLine("- patientAMonitor (set _patientAVitalMonitorEntityIdentifier or aliases)");
+      if (_patientBObject == null)
+        sb.AppendLine("- patientB (set _patientBEntityIdentifier or aliases)");
+      if (_patientCObject == null)
+        sb.AppendLine("- patientC (set _patientCEntityIdentifier or aliases)");
+      if (_patientDummyDBObject == null)
+        sb.AppendLine("- patientDummyDB (set _patientDummyDBEntityIdentifier or aliases)");
+      if (_patientBTreatmentBedObject == null)
+        sb.AppendLine("- patientBTreatmentBed (set _patientBTreatmentBedEntityIdentifier or aliases)");
+      if (_patientCTreatmentBedObject == null)
+        sb.AppendLine("- patientCTreatmentBed (set _patientCTreatmentBedEntityIdentifier or aliases)");
+      if (_patientBVitalMonitorObject == null)
+        sb.AppendLine("- patientBMonitor (set _patientBVitalMonitorEntityIdentifier or aliases)");
+      if (_patientCVitalMonitorObject == null)
+        sb.AppendLine("- patientCMonitor (set _patientCVitalMonitorEntityIdentifier or aliases)");
+      if (_nurseATransform == null)
+        sb.AppendLine("- nurseA (set _nurseAEntityIdentifier or aliases)");
+      if (_nurseBTransform == null)
+        sb.AppendLine("- nurseB (set _nurseBEntityIdentifier or aliases)");
+      if (_nurseCTransform == null)
+        sb.AppendLine("- nurseC (set _nurseCEntityIdentifier or aliases)");
+      if (_nurseDTransform == null)
+        sb.AppendLine("- nurseD (set _nurseDEntityIdentifier or aliases)");
 
       // 준비 대기 루프가 매 프레임 해석을 재시도하므로, 같은 내용이 반복 출력되지 않도록 변화가 있을 때만 남긴다.
       string message = sb.ToString();

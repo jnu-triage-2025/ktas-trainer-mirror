@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Scenario
+﻿namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
   /// 시간 표시(스톱워치/카운트다운)에 가할 연산.

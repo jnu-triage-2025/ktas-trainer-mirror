@@ -1,4 +1,4 @@
-using MultiplayerInfrastructure.Scenario;
+﻿using MultiplayerInfrastructure.Scenario;
 
 namespace TriageTrainer.Scenario
 {
@@ -32,7 +32,8 @@ namespace TriageTrainer.Scenario
         return;
       }
 
-      if (signalIdentifier != "sig.remove_intu_stylet") return;
+      if (signalIdentifier != "sig.remove_intu_stylet")
+        return;
       SetActiveIfPresent(_patientAEtTubeInsertedVisual, false);
       SetActiveIfPresent(_patientAEtTubeWithoutStyletVisual, true);
       var patient = ResolvePatientAController();

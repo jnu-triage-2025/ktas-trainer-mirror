@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Definitions
+﻿namespace MultiplayerInfrastructure.Definitions
 {
   /// <summary>로딩 화면에 표시할 기본 안내 문구를 관리합니다.</summary>
   public static class DefaultsLoadingScreen

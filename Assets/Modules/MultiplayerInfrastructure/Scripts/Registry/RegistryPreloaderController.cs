@@ -1,5 +1,5 @@
+﻿using MultiplayerInfrastructure.Player;
 using UnityEngine;
-using MultiplayerInfrastructure.Player;
 
 namespace MultiplayerInfrastructure.Registry
 {

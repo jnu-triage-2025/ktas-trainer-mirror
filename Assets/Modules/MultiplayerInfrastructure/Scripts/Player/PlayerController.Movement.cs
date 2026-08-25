@@ -1,4 +1,4 @@
-using FishNet.Object;
+﻿using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.UI;
@@ -25,12 +25,12 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private float _minLookXAngle = -45.0f;
     [SerializeField] private float _maxLookXAngle = 45.0f;
 
-    
+
     [Header("State Descriptions")]
     [SerializeField] private Vector3 _moveDirection = Vector3.zero;
 
     [SerializeField] private float _rotationX = 0;
-    
+
     public bool canMove = true;
 
     // Awake 시점에 직렬화된 _walkingSpeed 값을 보관하여 /speed default 로 복원할 때 사용한다.
@@ -72,7 +72,7 @@ namespace MultiplayerInfrastructure.Player
     public Vector3 CurrentMoveInputVector
       => new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
 
-    void Awake_Movement()
+    private void Awake_Movement()
     {
       _characterController = GetComponent<CharacterController>();
       _defaultWalkingSpeed = _walkingSpeed;
@@ -85,7 +85,8 @@ namespace MultiplayerInfrastructure.Player
     /// </summary>
     internal void ApplyWalkingSpeedServer(float value)
     {
-      if (!IsServerInitialized) return;
+      if (!IsServerInitialized)
+        return;
 
       _walkingSpeed = value;
       RpcApplyWalkingSpeed(value);
@@ -125,7 +126,7 @@ namespace MultiplayerInfrastructure.Player
       _walkingSpeed = value;
     }
 
-    void Update_Movement()
+    private void Update_Movement()
     {
       _jumpAnimationRequestedThisFrame = false;
       ComputeMovement();
@@ -133,17 +134,17 @@ namespace MultiplayerInfrastructure.Player
       UpdateSpectateFollowTarget();
     }
 
-    Vector3 _forwardSpeed;
-    Vector3 _rightSpeed;
+    private Vector3 _forwardSpeed;
+    private Vector3 _rightSpeed;
 
-    void InitializeCameraAttachPoint()
+    private void InitializeCameraAttachPoint()
     {
       // 발밑(y=0)이 아니라 눈높이 정도로 올려, 카메라 충돌 검사가 플레이어 콜라이더 내부에서
       // 시작되어 카메라가 강제로 1인칭으로 당겨지는 현상을 방지한다.
       _cameraAttachPoint = CameraAttachPoint.Create(transform, _cameraHolderPositionYOffset);
     }
 
-    void ComputeMovement()
+    private void ComputeMovement()
     {
       if (IsSpectator)
         ComputeSpectatorMovement();
@@ -152,8 +153,8 @@ namespace MultiplayerInfrastructure.Player
 
       ComputeMovementCameraHolder();
     }
-    
-    void ComputeMovementPlayerObject()
+
+    private void ComputeMovementPlayerObject()
     {
       if (_forcedFollowAnchor != null)
       {
@@ -174,38 +175,40 @@ namespace MultiplayerInfrastructure.Player
 
       _forwardSpeed = transform.TransformDirection(Vector3.forward);
       _rightSpeed = transform.TransformDirection(Vector3.right);
-      
+
       float movementSpeed = _isRunning ? _walkingSpeed * _runningSpeedMultiplier.Value : _walkingSpeed;
       float curSpeedX = canMove ? movementSpeed * Input.GetAxis("Vertical") : 0;
       float curSpeedY = canMove ? movementSpeed * Input.GetAxis("Horizontal") : 0;
       float movementDirectionY = _moveDirection.y;
       _moveDirection = (_forwardSpeed * curSpeedX) + (_rightSpeed * curSpeedY);
 
-if (IsJumpInputHeld() && canMove && _characterController.isGrounded)
-       {
-         _moveDirection.y = _jumpSpeed;
-         if (IsJumpInputPressedThisFrame())
-           _jumpAnimationRequestedThisFrame = true;
-       }
-       else if (!_characterController.isGrounded)
-       {
-         // Apply gravity and retain vertical velocity from jump/fall
-         _moveDirection.y = movementDirectionY - _gravity * Time.deltaTime;
-       }
-       else
-       {
-         // Grounded but not jumping: clamp vertical velocity to zero to prevent
-         // tiny negative values that can cause isGrounded to flicker.
-         _moveDirection.y = 0f;
-       }
-      
+      if (IsJumpInputHeld() && canMove && _characterController.isGrounded)
+      {
+        _moveDirection.y = _jumpSpeed;
+        if (IsJumpInputPressedThisFrame())
+          _jumpAnimationRequestedThisFrame = true;
+      }
+      else if (!_characterController.isGrounded)
+      {
+        // Apply gravity and retain vertical velocity from jump/fall
+        _moveDirection.y = movementDirectionY - _gravity * Time.deltaTime;
+      }
+      else
+      {
+        // Grounded but not jumping: clamp vertical velocity to zero to prevent
+        // tiny negative values that can cause isGrounded to flicker.
+        _moveDirection.y = 0f;
+      }
+
       _characterController.Move(_moveDirection * Time.deltaTime);
     }
 
-    void ComputeSpectatorMovement()
+    private void ComputeSpectatorMovement()
     {
-      if (!canMove) return;
-      if (_isSpectateFollowing) return;
+      if (!canMove)
+        return;
+      if (_isSpectateFollowing)
+        return;
 
       _forwardSpeed = transform.TransformDirection(Vector3.forward);
       _rightSpeed = transform.TransformDirection(Vector3.right);
@@ -214,19 +217,24 @@ if (IsJumpInputHeld() && canMove && _characterController.isGrounded)
       float curSpeedY = _spectatorMoveSpeed * Input.GetAxis("Horizontal");
 
       float vertical = 0f;
-      if (IsSpectatorAscendInputHeld()) vertical += 1f;
-      if (Input.GetKey(_keySpectatorFlyDown)) vertical -= 1f;
+      if (IsSpectatorAscendInputHeld())
+        vertical += 1f;
+      if (Input.GetKey(_keySpectatorFlyDown))
+        vertical -= 1f;
 
       Vector3 velocity = (_forwardSpeed * curSpeedX) + (_rightSpeed * curSpeedY) + (Vector3.up * (_spectatorVerticalSpeed * vertical));
       _characterController.Move(velocity * Time.deltaTime);
     }
 
-    void ComputeMovementCameraHolder()
+    private void ComputeMovementCameraHolder()
     {
-      if (_cameraAttachPoint.IsUnityNull()) return;
-      if (!canMove) return;
-      if (_isSpectateFollowing) return;
-      
+      if (_cameraAttachPoint.IsUnityNull())
+        return;
+      if (!canMove)
+        return;
+      if (_isSpectateFollowing)
+        return;
+
       _rotationX += -Input.GetAxis("Mouse Y") * _rotatingSpeed;
       _rotationX = Mathf.Clamp(_rotationX, _minLookXAngle, _maxLookXAngle);
       _cameraAttachPoint.SetPitch(_rotationX);
@@ -332,9 +340,10 @@ if (IsJumpInputHeld() && canMove && _characterController.isGrounded)
       _characterController.Move(motion);
     }
 
-    void UpdateSpectateFollowTarget()
+    private void UpdateSpectateFollowTarget()
     {
-      if (!_isSpectateFollowing) return;
+      if (!_isSpectateFollowing)
+        return;
 
       if (_spectateFollowTarget == null)
         StopSpectateFollow();
@@ -351,11 +360,11 @@ if (IsJumpInputHeld() && canMove && _characterController.isGrounded)
       LockCursor();
       canMove = true;
     }
-    
+
     public void LockCursor() { ChangeCursorLock(true); }
     public void UnlockCursor() { ChangeCursorLock(false); }
 
-    void ChangeCursorLock(bool locking)
+    private void ChangeCursorLock(bool locking)
     {
       Cursor.lockState = locking ? CursorLockMode.Locked : CursorLockMode.None;
       Cursor.visible = !locking;

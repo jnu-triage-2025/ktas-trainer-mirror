@@ -1,4 +1,4 @@
-namespace TriageTrainer.Entity.Patient
+﻿namespace TriageTrainer.Entity.Patient
 {
   /// <summary>
   /// 신체 온도의 유형을 표현합니다.

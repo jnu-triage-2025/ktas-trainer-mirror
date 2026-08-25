@@ -1,6 +1,6 @@
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System;
 using MultiplayerInfrastructure.Audio;
 using UnityEngine;
 
@@ -20,19 +20,19 @@ namespace TriageTrainer.Entity
 
     internal interface IAdapter
     {
-      bool HasPermission { get; }
-      string[] Devices { get; }
+      public bool HasPermission { get; }
+      public string[] Devices { get; }
 
       /// <summary>
       /// 설정에서 고른 마이크 이름입니다. 고르지 않았으면 null입니다.
       /// 테스트가 운영체제를 건드리지 않고도 이 경로를 흉내낼 수 있도록 어댑터에 둡니다.
       /// </summary>
-      string PreferredDevice { get; }
-      IEnumerator RequestPermission();
-      AudioClip Start(string device, int frequency);
-      bool IsRecording(string device);
-      int GetPosition(string device);
-      void End(string device);
+      public string PreferredDevice { get; }
+      public IEnumerator RequestPermission();
+      public AudioClip Start(string device, int frequency);
+      public bool IsRecording(string device);
+      public int GetPosition(string device);
+      public void End(string device);
     }
 
     private sealed class UnityAdapter : IAdapter

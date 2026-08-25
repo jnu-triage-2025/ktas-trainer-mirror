@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Entity;
 using TriageTrainer.Entity.Patient;

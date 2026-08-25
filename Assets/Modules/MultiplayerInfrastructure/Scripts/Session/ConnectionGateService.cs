@@ -1,4 +1,4 @@
-using MultiplayerInfrastructure.Chat;
+﻿using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Logging;
 using UnityEngine;
 

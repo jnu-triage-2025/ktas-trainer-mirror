@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -50,7 +50,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     public void Add(IScenarioNode node)
     {
-      if (node == null) throw new ArgumentNullException(nameof(node));
+      if (node == null)
+        throw new ArgumentNullException(nameof(node));
       Nodes[node.Identifier] = node;
     }
 

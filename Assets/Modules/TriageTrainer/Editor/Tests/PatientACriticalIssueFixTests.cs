@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -502,7 +502,8 @@ namespace TriageTrainer.Tests
       foreach (object action in assessActions ?? Array.Empty<object>())
       {
         string identifier = action?.GetType().GetProperty("Identifier")?.GetValue(action) as string;
-        if (identifier == "assess_vital") vitalAssess = action;
+        if (identifier == "assess_vital")
+          vitalAssess = action;
       }
       Assert.That(vitalAssess, Is.Not.Null);
       Assert.That(vitalAssess.GetType().GetProperty("RequiredItemIdentifier")?.GetValue(vitalAssess),

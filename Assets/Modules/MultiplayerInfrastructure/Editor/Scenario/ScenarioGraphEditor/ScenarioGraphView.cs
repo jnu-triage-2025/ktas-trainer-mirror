@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.Scenario;
@@ -164,7 +164,8 @@ namespace MultiplayerInfrastructure.Editor
     public void SetEdgeRoutes(Dictionary<string, List<SerializableVector2>> routes)
     {
       edgeRoutes.Clear();
-      if (routes == null) return;
+      if (routes == null)
+        return;
       foreach (var pair in routes)
         edgeRoutes[pair.Key] = pair.Value?.ToList() ?? new List<SerializableVector2>();
     }
@@ -188,7 +189,8 @@ namespace MultiplayerInfrastructure.Editor
 
     public void RemoveEdgeRoutesForNode(string nodeIdentifier)
     {
-      if (string.IsNullOrEmpty(nodeIdentifier)) return;
+      if (string.IsNullOrEmpty(nodeIdentifier))
+        return;
       var prefix = nodeIdentifier + ":";
       foreach (var key in edgeRoutes.Keys.Where(each => each.StartsWith(prefix, StringComparison.Ordinal)).ToList())
         edgeRoutes.Remove(key);
@@ -196,7 +198,8 @@ namespace MultiplayerInfrastructure.Editor
 
     public void RenameEdgeRoutes(string oldIdentifier, string newIdentifier)
     {
-      if (string.IsNullOrEmpty(oldIdentifier) || string.IsNullOrEmpty(newIdentifier)) return;
+      if (string.IsNullOrEmpty(oldIdentifier) || string.IsNullOrEmpty(newIdentifier))
+        return;
       var prefix = oldIdentifier + ":";
       foreach (var key in edgeRoutes.Keys.Where(each => each.StartsWith(prefix, StringComparison.Ordinal)).ToList())
       {
@@ -233,8 +236,10 @@ namespace MultiplayerInfrastructure.Editor
         {
           foreach (var option in choice.Options)
           {
-            if (string.IsNullOrEmpty(option.NextNodeIdentifier)) continue;
-            if (!nodeViews.TryGetValue(option.NextNodeIdentifier, out var targetView)) continue;
+            if (string.IsNullOrEmpty(option.NextNodeIdentifier))
+              continue;
+            if (!nodeViews.TryGetValue(option.NextNodeIdentifier, out var targetView))
+              continue;
             var port = node.GetPortForOption(option);
             if (port != null)
             {
@@ -247,8 +252,10 @@ namespace MultiplayerInfrastructure.Editor
         {
           foreach (var branch in parallel.Branches)
           {
-            if (string.IsNullOrEmpty(branch.Identifier)) continue;
-            if (!nodeViews.TryGetValue(branch.Identifier, out var targetView)) continue;
+            if (string.IsNullOrEmpty(branch.Identifier))
+              continue;
+            if (!nodeViews.TryGetValue(branch.Identifier, out var targetView))
+              continue;
             var port = node.GetPortForBranch(branch);
             if (port != null)
             {
@@ -358,10 +365,13 @@ namespace MultiplayerInfrastructure.Editor
 
         foreach (var pair in removedRoutePoints)
         {
-          if (!edgeRoutes.TryGetValue(pair.Key, out var points)) continue;
+          if (!edgeRoutes.TryGetValue(pair.Key, out var points))
+            continue;
           foreach (var index in pair.Value)
-            if (index >= 0 && index < points.Count) points.RemoveAt(index);
-          if (points.Count == 0) edgeRoutes.Remove(pair.Key);
+            if (index >= 0 && index < points.Count)
+              points.RemoveAt(index);
+          if (points.Count == 0)
+            edgeRoutes.Remove(pair.Key);
         }
 
         var rebuildAfterRemoval = removedRoutePoints.Count > 0;
@@ -405,7 +415,8 @@ namespace MultiplayerInfrastructure.Editor
 
     public void CreateEdge(Port output, Port input)
     {
-      if (output == null || input == null) return;
+      if (output == null || input == null)
+        return;
 
       var routeKey = GetRouteKey(output);
       if (!edgeRoutes.TryGetValue(routeKey, out var routePoints) || routePoints.Count == 0)
@@ -438,7 +449,8 @@ namespace MultiplayerInfrastructure.Editor
       edge.tooltip = "연결선을 더블클릭하면 중계점을 추가합니다.";
       edge.RegisterCallback<MouseDownEvent>(evt =>
       {
-        if (evt.button != 0 || evt.clickCount != 2) return;
+        if (evt.button != 0 || evt.clickCount != 2)
+          return;
         var graphPosition = contentViewContainer.WorldToLocal(edge.LocalToWorld(evt.localMousePosition));
         AddReroutePoint(routeKey, edge.SegmentIndex, graphPosition);
         evt.StopPropagation();
@@ -465,8 +477,10 @@ namespace MultiplayerInfrastructure.Editor
     {
       foreach (var reroute in graphElements.OfType<ScenarioRerouteHandle>())
       {
-        if (!edgeRoutes.TryGetValue(reroute.RouteKey, out var points)) continue;
-        if (reroute.RouteIndex < 0 || reroute.RouteIndex >= points.Count) continue;
+        if (!edgeRoutes.TryGetValue(reroute.RouteKey, out var points))
+          continue;
+        if (reroute.RouteIndex < 0 || reroute.RouteIndex >= points.Count)
+          continue;
         points[reroute.RouteIndex] = new SerializableVector2(reroute.GetPosition().center);
       }
     }

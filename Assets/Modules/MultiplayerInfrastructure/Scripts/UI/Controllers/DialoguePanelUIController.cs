@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Registry;
@@ -238,10 +238,12 @@ namespace MultiplayerInfrastructure.UI
 
     private void CacheVisualElements()
     {
-      if (_uiDocument == null) return;
+      if (_uiDocument == null)
+        return;
 
       _root = _uiDocument.rootVisualElement;
-      if (_root == null) return;
+      if (_root == null)
+        return;
 
       _dialogueElement = _root.Q<DialogueElement>("dialogue-element");
       _dialoguePanel = _dialogueElement;
@@ -702,7 +704,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void UpdateTyping()
     {
-      if (!_isTyping) return;
+      if (!_isTyping)
+        return;
 
       if (Time.time - _lastTypeTime >= _typingSpeed)
       {
@@ -807,7 +810,8 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void SkipTyping()
     {
-      if (!_isTyping) return;
+      if (!_isTyping)
+        return;
       FinishTyping();
     }
 
@@ -967,7 +971,8 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void TogglePanel()
     {
-      if (_dialoguePanel == null) return;
+      if (_dialoguePanel == null)
+        return;
 
       if (_dialoguePanel.style.display == DisplayStyle.None)
         Show();

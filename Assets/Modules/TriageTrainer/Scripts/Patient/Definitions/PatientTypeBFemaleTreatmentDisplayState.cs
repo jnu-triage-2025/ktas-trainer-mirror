@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace TriageTrainer.Patient
@@ -25,7 +25,7 @@ namespace TriageTrainer.Patient
 
     [field: SerializeField]
     public override GameObject PatientModelGameObject { get; set; }
-    
+
     [field: SerializeField]
     public override PatientTreatmentDisplayingChildGameObjects ChildGameObjects { get; set; } = new PatientTreatmentDisplayingChildGameObjects();
   }

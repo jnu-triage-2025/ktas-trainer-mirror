@@ -1,19 +1,18 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text.Json;
 using FishNet;
 using FishNet.Connection;
-using TriageTrainer.ItemDefinitions;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Logging;
+using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 using TriageTrainer.Entity.IntravenousLine;
 using TriageTrainer.Entity.LineConnection;
-using UnityEngine;
+using TriageTrainer.ItemDefinitions;
 using TriageTrainer.Patient;
-
+using UnityEngine;
 using MI = MultiplayerInfrastructure;
 
 namespace TriageTrainer.Entity
@@ -45,7 +44,8 @@ namespace TriageTrainer.Entity
 
     [Header("AED Connection")]
     [Tooltip("제세동 패드 쪽 AED 라인 연결 지점들입니다. 비워 두면 자식 오브젝트에서 AEDLineConnectionPoint 를 찾는 fallback 을 사용합니다.")]
-    [SerializeField] private TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint[] _aedConnectionPoints =
+    [SerializeField]
+    private TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint[] _aedConnectionPoints =
       System.Array.Empty<TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint>();
 
     /// <summary>
@@ -585,32 +585,58 @@ namespace TriageTrainer.Entity
 
       switch (d)
       {
-        case TreatmentDisplay.Syringe18GInsertedIntoLeftArm: return c.Syringe18GInsertedIntoLeftArm;
-        case TreatmentDisplay.Syringe18GInsertedIntoRightArm: return c.Syringe18GInsertedIntoRightArm;
-        case TreatmentDisplay.Syringe20GInsertedIntoLeftArm: return c.Syringe20GInsertedIntoLeftArm;
-        case TreatmentDisplay.Syringe20GInsertedIntoRightArm: return c.Syringe20GInsertedIntoRightArm;
-        case TreatmentDisplay.CentralVenousCatheterInsertedIntoSubclavian: return c.CentralVenousCatheterInsertedIntoSubclavian;
-        case TreatmentDisplay.LaryngoscopeInserted: return c.LaryngoscopeInserted;
-        case TreatmentDisplay.EndotrachealTubeStyletInserted: return c.EndotrachealTubeStyletInserted;
-        case TreatmentDisplay.EndotrachealTubeInsertDone: return c.EndotrachealTubeInsertDone;
-        case TreatmentDisplay.TPieceAttachedToNasalCannula: return c.TPieceAttachedToNasalCannula;
-        case TreatmentDisplay.AmbuBagAttachedToEndotrachealTube: return c.AmbuBagAttachedToEndotrachealTube;
-        case TreatmentDisplay.GauzePatchedOnThorax: return c.GauzePatchedOnThorax;
-        case TreatmentDisplay.GauzeDressingDoneOnThorax: return c.GauzeDressingDoneOnThorax;
-        case TreatmentDisplay.GauzePatchedOnRightArm: return c.GauzePatchedOnRightArm;
-        case TreatmentDisplay.GauzeDressingDoneOnRightArm: return c.GauzeDressingDoneOnRightArm;
-        case TreatmentDisplay.GauzePatchedOnLeftArm: return c.GauzePatchedOnLeftArm;
-        case TreatmentDisplay.GauzeDressingDoneOnLeftArm: return c.GauzeDressingDoneOnLeftArm;
-        case TreatmentDisplay.GauzePatchedOnRightEyebrow: return c.GauzePatchedOnRightEyebrow;
-        case TreatmentDisplay.GauzeDressingDoneOnRightEyebrow: return c.GauzeDressingDoneOnRightEyebrow;
-        case TreatmentDisplay.GauzePatchedOnLeftEyebrow: return c.GauzePatchedOnLeftEyebrow;
-        case TreatmentDisplay.GauzeDressingDoneOnLeftEyebrow: return c.GauzeDressingDoneOnLeftEyebrow;
-        case TreatmentDisplay.NasalCannulaApplied: return c.NasalCannulaApplied;
-        case TreatmentDisplay.CervicalCollarOnNeck: return c.CervicalCollarOnNeck;
-        case TreatmentDisplay.IntravenousStandAttached: return c.IntravenousStandAttached;
-        case TreatmentDisplay.IntravenousHangerAttached: return c.IntravenousHangerAttached;
-        case TreatmentDisplay.IntravenousFluidAttached: return c.IntravenousFluidAttached;
-        default: return null;
+        case TreatmentDisplay.Syringe18GInsertedIntoLeftArm:
+          return c.Syringe18GInsertedIntoLeftArm;
+        case TreatmentDisplay.Syringe18GInsertedIntoRightArm:
+          return c.Syringe18GInsertedIntoRightArm;
+        case TreatmentDisplay.Syringe20GInsertedIntoLeftArm:
+          return c.Syringe20GInsertedIntoLeftArm;
+        case TreatmentDisplay.Syringe20GInsertedIntoRightArm:
+          return c.Syringe20GInsertedIntoRightArm;
+        case TreatmentDisplay.CentralVenousCatheterInsertedIntoSubclavian:
+          return c.CentralVenousCatheterInsertedIntoSubclavian;
+        case TreatmentDisplay.LaryngoscopeInserted:
+          return c.LaryngoscopeInserted;
+        case TreatmentDisplay.EndotrachealTubeStyletInserted:
+          return c.EndotrachealTubeStyletInserted;
+        case TreatmentDisplay.EndotrachealTubeInsertDone:
+          return c.EndotrachealTubeInsertDone;
+        case TreatmentDisplay.TPieceAttachedToNasalCannula:
+          return c.TPieceAttachedToNasalCannula;
+        case TreatmentDisplay.AmbuBagAttachedToEndotrachealTube:
+          return c.AmbuBagAttachedToEndotrachealTube;
+        case TreatmentDisplay.GauzePatchedOnThorax:
+          return c.GauzePatchedOnThorax;
+        case TreatmentDisplay.GauzeDressingDoneOnThorax:
+          return c.GauzeDressingDoneOnThorax;
+        case TreatmentDisplay.GauzePatchedOnRightArm:
+          return c.GauzePatchedOnRightArm;
+        case TreatmentDisplay.GauzeDressingDoneOnRightArm:
+          return c.GauzeDressingDoneOnRightArm;
+        case TreatmentDisplay.GauzePatchedOnLeftArm:
+          return c.GauzePatchedOnLeftArm;
+        case TreatmentDisplay.GauzeDressingDoneOnLeftArm:
+          return c.GauzeDressingDoneOnLeftArm;
+        case TreatmentDisplay.GauzePatchedOnRightEyebrow:
+          return c.GauzePatchedOnRightEyebrow;
+        case TreatmentDisplay.GauzeDressingDoneOnRightEyebrow:
+          return c.GauzeDressingDoneOnRightEyebrow;
+        case TreatmentDisplay.GauzePatchedOnLeftEyebrow:
+          return c.GauzePatchedOnLeftEyebrow;
+        case TreatmentDisplay.GauzeDressingDoneOnLeftEyebrow:
+          return c.GauzeDressingDoneOnLeftEyebrow;
+        case TreatmentDisplay.NasalCannulaApplied:
+          return c.NasalCannulaApplied;
+        case TreatmentDisplay.CervicalCollarOnNeck:
+          return c.CervicalCollarOnNeck;
+        case TreatmentDisplay.IntravenousStandAttached:
+          return c.IntravenousStandAttached;
+        case TreatmentDisplay.IntravenousHangerAttached:
+          return c.IntravenousHangerAttached;
+        case TreatmentDisplay.IntravenousFluidAttached:
+          return c.IntravenousFluidAttached;
+        default:
+          return null;
       }
     }
 
@@ -631,31 +657,81 @@ namespace TriageTrainer.Entity
     {
       switch (d)
       {
-        case TreatmentDisplay.Syringe18GInsertedIntoLeftArm: m.Syringe18GInsertedIntoLeftArm = v; break;
-        case TreatmentDisplay.Syringe18GInsertedIntoRightArm: m.Syringe18GInsertedIntoRightArm = v; break;
-        case TreatmentDisplay.Syringe20GInsertedIntoLeftArm: m.Syringe20GInsertedIntoLeftArm = v; break;
-        case TreatmentDisplay.Syringe20GInsertedIntoRightArm: m.Syringe20GInsertedIntoRightArm = v; break;
-        case TreatmentDisplay.CentralVenousCatheterInsertedIntoSubclavian: m.CentralVenousCatheterInsertedIntoSubclavian = v; break;
-        case TreatmentDisplay.LaryngoscopeInserted: m.LaryngoscopeInserted = v; break;
-        case TreatmentDisplay.EndotrachealTubeStyletInserted: m.EndotrachealTubeStyletInserted = v; break;
-        case TreatmentDisplay.EndotrachealTubeInsertDone: m.EndotrachealTubeInsertDone = v; break;
-        case TreatmentDisplay.TPieceAttachedToNasalCannula: m.TPieceAttachedToNasalCannula = v; break;
-        case TreatmentDisplay.AmbuBagAttachedToEndotrachealTube: m.AmbuBagAttachedToEndotrachealTube = v; break;
-        case TreatmentDisplay.GauzePatchedOnThorax: m.GauzePatchedOnThorax = v; break;
-        case TreatmentDisplay.GauzeDressingDoneOnThorax: m.GauzeDressingDoneOnThorax = v; break;
-        case TreatmentDisplay.GauzePatchedOnRightArm: m.GauzePatchedOnRightArm = v; break;
-        case TreatmentDisplay.GauzeDressingDoneOnRightArm: m.GauzeDressingDoneOnRightArm = v; break;
-        case TreatmentDisplay.GauzePatchedOnLeftArm: m.GauzePatchedOnLeftArm = v; break;
-        case TreatmentDisplay.GauzeDressingDoneOnLeftArm: m.GauzeDressingDoneOnLeftArm = v; break;
-        case TreatmentDisplay.GauzePatchedOnRightEyebrow: m.GauzePatchedOnRightEyebrow = v; break;
-        case TreatmentDisplay.GauzeDressingDoneOnRightEyebrow: m.GauzeDressingDoneOnRightEyebrow = v; break;
-        case TreatmentDisplay.GauzePatchedOnLeftEyebrow: m.GauzePatchedOnLeftEyebrow = v; break;
-        case TreatmentDisplay.GauzeDressingDoneOnLeftEyebrow: m.GauzeDressingDoneOnLeftEyebrow = v; break;
-        case TreatmentDisplay.NasalCannulaApplied: m.NasalCannulaApplied = v; break;
-        case TreatmentDisplay.CervicalCollarOnNeck: m.CervicalCollarOnNeck = v; break;
-        case TreatmentDisplay.IntravenousStandAttached: m.IntravenousStandAttached = v; break;
-        case TreatmentDisplay.IntravenousHangerAttached: m.IntravenousHangerAttached = v; break;
-        case TreatmentDisplay.IntravenousFluidAttached: m.IntravenousFluidAttached = v; break;
+        case TreatmentDisplay.Syringe18GInsertedIntoLeftArm:
+          m.Syringe18GInsertedIntoLeftArm = v;
+          break;
+        case TreatmentDisplay.Syringe18GInsertedIntoRightArm:
+          m.Syringe18GInsertedIntoRightArm = v;
+          break;
+        case TreatmentDisplay.Syringe20GInsertedIntoLeftArm:
+          m.Syringe20GInsertedIntoLeftArm = v;
+          break;
+        case TreatmentDisplay.Syringe20GInsertedIntoRightArm:
+          m.Syringe20GInsertedIntoRightArm = v;
+          break;
+        case TreatmentDisplay.CentralVenousCatheterInsertedIntoSubclavian:
+          m.CentralVenousCatheterInsertedIntoSubclavian = v;
+          break;
+        case TreatmentDisplay.LaryngoscopeInserted:
+          m.LaryngoscopeInserted = v;
+          break;
+        case TreatmentDisplay.EndotrachealTubeStyletInserted:
+          m.EndotrachealTubeStyletInserted = v;
+          break;
+        case TreatmentDisplay.EndotrachealTubeInsertDone:
+          m.EndotrachealTubeInsertDone = v;
+          break;
+        case TreatmentDisplay.TPieceAttachedToNasalCannula:
+          m.TPieceAttachedToNasalCannula = v;
+          break;
+        case TreatmentDisplay.AmbuBagAttachedToEndotrachealTube:
+          m.AmbuBagAttachedToEndotrachealTube = v;
+          break;
+        case TreatmentDisplay.GauzePatchedOnThorax:
+          m.GauzePatchedOnThorax = v;
+          break;
+        case TreatmentDisplay.GauzeDressingDoneOnThorax:
+          m.GauzeDressingDoneOnThorax = v;
+          break;
+        case TreatmentDisplay.GauzePatchedOnRightArm:
+          m.GauzePatchedOnRightArm = v;
+          break;
+        case TreatmentDisplay.GauzeDressingDoneOnRightArm:
+          m.GauzeDressingDoneOnRightArm = v;
+          break;
+        case TreatmentDisplay.GauzePatchedOnLeftArm:
+          m.GauzePatchedOnLeftArm = v;
+          break;
+        case TreatmentDisplay.GauzeDressingDoneOnLeftArm:
+          m.GauzeDressingDoneOnLeftArm = v;
+          break;
+        case TreatmentDisplay.GauzePatchedOnRightEyebrow:
+          m.GauzePatchedOnRightEyebrow = v;
+          break;
+        case TreatmentDisplay.GauzeDressingDoneOnRightEyebrow:
+          m.GauzeDressingDoneOnRightEyebrow = v;
+          break;
+        case TreatmentDisplay.GauzePatchedOnLeftEyebrow:
+          m.GauzePatchedOnLeftEyebrow = v;
+          break;
+        case TreatmentDisplay.GauzeDressingDoneOnLeftEyebrow:
+          m.GauzeDressingDoneOnLeftEyebrow = v;
+          break;
+        case TreatmentDisplay.NasalCannulaApplied:
+          m.NasalCannulaApplied = v;
+          break;
+        case TreatmentDisplay.CervicalCollarOnNeck:
+          m.CervicalCollarOnNeck = v;
+          break;
+        case TreatmentDisplay.IntravenousStandAttached:
+          m.IntravenousStandAttached = v;
+          break;
+        case TreatmentDisplay.IntravenousHangerAttached:
+          m.IntravenousHangerAttached = v;
+          break;
+        case TreatmentDisplay.IntravenousFluidAttached:
+          m.IntravenousFluidAttached = v;
+          break;
       }
     }
 
@@ -676,32 +752,58 @@ namespace TriageTrainer.Entity
     {
       switch (d)
       {
-        case TreatmentDisplay.Syringe18GInsertedIntoLeftArm: return m.Syringe18GInsertedIntoLeftArm;
-        case TreatmentDisplay.Syringe18GInsertedIntoRightArm: return m.Syringe18GInsertedIntoRightArm;
-        case TreatmentDisplay.Syringe20GInsertedIntoLeftArm: return m.Syringe20GInsertedIntoLeftArm;
-        case TreatmentDisplay.Syringe20GInsertedIntoRightArm: return m.Syringe20GInsertedIntoRightArm;
-        case TreatmentDisplay.CentralVenousCatheterInsertedIntoSubclavian: return m.CentralVenousCatheterInsertedIntoSubclavian;
-        case TreatmentDisplay.LaryngoscopeInserted: return m.LaryngoscopeInserted;
-        case TreatmentDisplay.EndotrachealTubeStyletInserted: return m.EndotrachealTubeStyletInserted;
-        case TreatmentDisplay.EndotrachealTubeInsertDone: return m.EndotrachealTubeInsertDone;
-        case TreatmentDisplay.TPieceAttachedToNasalCannula: return m.TPieceAttachedToNasalCannula;
-        case TreatmentDisplay.AmbuBagAttachedToEndotrachealTube: return m.AmbuBagAttachedToEndotrachealTube;
-        case TreatmentDisplay.GauzePatchedOnThorax: return m.GauzePatchedOnThorax;
-        case TreatmentDisplay.GauzeDressingDoneOnThorax: return m.GauzeDressingDoneOnThorax;
-        case TreatmentDisplay.GauzePatchedOnRightArm: return m.GauzePatchedOnRightArm;
-        case TreatmentDisplay.GauzeDressingDoneOnRightArm: return m.GauzeDressingDoneOnRightArm;
-        case TreatmentDisplay.GauzePatchedOnLeftArm: return m.GauzePatchedOnLeftArm;
-        case TreatmentDisplay.GauzeDressingDoneOnLeftArm: return m.GauzeDressingDoneOnLeftArm;
-        case TreatmentDisplay.GauzePatchedOnRightEyebrow: return m.GauzePatchedOnRightEyebrow;
-        case TreatmentDisplay.GauzeDressingDoneOnRightEyebrow: return m.GauzeDressingDoneOnRightEyebrow;
-        case TreatmentDisplay.GauzePatchedOnLeftEyebrow: return m.GauzePatchedOnLeftEyebrow;
-        case TreatmentDisplay.GauzeDressingDoneOnLeftEyebrow: return m.GauzeDressingDoneOnLeftEyebrow;
-        case TreatmentDisplay.NasalCannulaApplied: return m.NasalCannulaApplied;
-        case TreatmentDisplay.CervicalCollarOnNeck: return m.CervicalCollarOnNeck;
-        case TreatmentDisplay.IntravenousStandAttached: return m.IntravenousStandAttached;
-        case TreatmentDisplay.IntravenousHangerAttached: return m.IntravenousHangerAttached;
-        case TreatmentDisplay.IntravenousFluidAttached: return m.IntravenousFluidAttached;
-        default: return false;
+        case TreatmentDisplay.Syringe18GInsertedIntoLeftArm:
+          return m.Syringe18GInsertedIntoLeftArm;
+        case TreatmentDisplay.Syringe18GInsertedIntoRightArm:
+          return m.Syringe18GInsertedIntoRightArm;
+        case TreatmentDisplay.Syringe20GInsertedIntoLeftArm:
+          return m.Syringe20GInsertedIntoLeftArm;
+        case TreatmentDisplay.Syringe20GInsertedIntoRightArm:
+          return m.Syringe20GInsertedIntoRightArm;
+        case TreatmentDisplay.CentralVenousCatheterInsertedIntoSubclavian:
+          return m.CentralVenousCatheterInsertedIntoSubclavian;
+        case TreatmentDisplay.LaryngoscopeInserted:
+          return m.LaryngoscopeInserted;
+        case TreatmentDisplay.EndotrachealTubeStyletInserted:
+          return m.EndotrachealTubeStyletInserted;
+        case TreatmentDisplay.EndotrachealTubeInsertDone:
+          return m.EndotrachealTubeInsertDone;
+        case TreatmentDisplay.TPieceAttachedToNasalCannula:
+          return m.TPieceAttachedToNasalCannula;
+        case TreatmentDisplay.AmbuBagAttachedToEndotrachealTube:
+          return m.AmbuBagAttachedToEndotrachealTube;
+        case TreatmentDisplay.GauzePatchedOnThorax:
+          return m.GauzePatchedOnThorax;
+        case TreatmentDisplay.GauzeDressingDoneOnThorax:
+          return m.GauzeDressingDoneOnThorax;
+        case TreatmentDisplay.GauzePatchedOnRightArm:
+          return m.GauzePatchedOnRightArm;
+        case TreatmentDisplay.GauzeDressingDoneOnRightArm:
+          return m.GauzeDressingDoneOnRightArm;
+        case TreatmentDisplay.GauzePatchedOnLeftArm:
+          return m.GauzePatchedOnLeftArm;
+        case TreatmentDisplay.GauzeDressingDoneOnLeftArm:
+          return m.GauzeDressingDoneOnLeftArm;
+        case TreatmentDisplay.GauzePatchedOnRightEyebrow:
+          return m.GauzePatchedOnRightEyebrow;
+        case TreatmentDisplay.GauzeDressingDoneOnRightEyebrow:
+          return m.GauzeDressingDoneOnRightEyebrow;
+        case TreatmentDisplay.GauzePatchedOnLeftEyebrow:
+          return m.GauzePatchedOnLeftEyebrow;
+        case TreatmentDisplay.GauzeDressingDoneOnLeftEyebrow:
+          return m.GauzeDressingDoneOnLeftEyebrow;
+        case TreatmentDisplay.NasalCannulaApplied:
+          return m.NasalCannulaApplied;
+        case TreatmentDisplay.CervicalCollarOnNeck:
+          return m.CervicalCollarOnNeck;
+        case TreatmentDisplay.IntravenousStandAttached:
+          return m.IntravenousStandAttached;
+        case TreatmentDisplay.IntravenousHangerAttached:
+          return m.IntravenousHangerAttached;
+        case TreatmentDisplay.IntravenousFluidAttached:
+          return m.IntravenousFluidAttached;
+        default:
+          return false;
       }
     }
 

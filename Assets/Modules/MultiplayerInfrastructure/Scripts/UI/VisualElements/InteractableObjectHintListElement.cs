@@ -1,10 +1,9 @@
+﻿using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.InteractableEntity;
-using MultiplayerInfrastructure.UI;
-using System.Collections.Generic;
+using MultiplayerInfrastructure.Quest;
 using UnityEngine;
 using UnityEngine.UIElements;
-using MultiplayerInfrastructure.Quest;
 
 namespace MultiplayerInfrastructure.UI
 {
@@ -291,7 +290,8 @@ namespace MultiplayerInfrastructure.UI
         for (int i = 0; i < icons.DisplayIcons.Count; i++)
         {
           var sprite = hasOverride && i == lastListIconIndex ? primaryOverride : icons.DisplayIcons[i];
-          if (sprite == null || !displayedSprites.Add(sprite)) continue;
+          if (sprite == null || !displayedSprites.Add(sprite))
+            continue;
           ConfigureIconHolder(iconCount++, sprite, Color.clear);
         }
       }

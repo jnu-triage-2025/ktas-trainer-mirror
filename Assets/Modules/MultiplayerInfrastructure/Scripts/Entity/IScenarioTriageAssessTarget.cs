@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Entity
+﻿namespace MultiplayerInfrastructure.Entity
 {
   /// <summary>
   /// 시나리오 그래프의 TriageAssessControl 노드가 트리아지 평가 인터랙션을 활성화/비활성화할 수 있는
@@ -18,6 +18,6 @@ namespace MultiplayerInfrastructure.Entity
     /// 트리아지 평가 인터랙션의 활성화 여부를 설정한다.
     /// </summary>
     /// <param name="assessable">활성화(true)/비활성화(false).</param>
-    void SetTriageAssessable(bool assessable);
+    public void SetTriageAssessable(bool assessable);
   }
 }

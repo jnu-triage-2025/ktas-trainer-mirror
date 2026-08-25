@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace MultiplayerInfrastructure.Command
 {
@@ -27,6 +27,6 @@ namespace MultiplayerInfrastructure.Command
     /// 현재 입력 중인 부분 텍스트. 빈 문자열일 수 있습니다.
     /// </param>
     /// <returns>자동완성 후보 문자열 목록. 없으면 빈 목록.</returns>
-    IReadOnlyList<string> GetCompletions(int argIndex, string[] previousArgs, string partial);
+    public IReadOnlyList<string> GetCompletions(int argIndex, string[] previousArgs, string partial);
   }
 }

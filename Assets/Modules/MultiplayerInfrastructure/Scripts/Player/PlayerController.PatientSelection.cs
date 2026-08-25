@@ -1,7 +1,7 @@
-using UnityEngine;
-using MultiplayerInfrastructure.Definitions;
+﻿using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
+using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
 {

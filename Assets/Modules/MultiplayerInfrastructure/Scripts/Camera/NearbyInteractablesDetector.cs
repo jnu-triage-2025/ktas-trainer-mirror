@@ -1,8 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using FishNet.Object;
 using MultiplayerInfrastructure.InteractableEntity;
-using MultiplayerInfrastructure.Registry;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -20,7 +19,8 @@ namespace MultiplayerInfrastructure.Camera
   /// </summary>
   public class NearbyInteractablesDetector : NetworkBehaviour
   {
-    [Header("Detection Settings")] [SerializeField, Min(.5f)]
+    [Header("Detection Settings")]
+    [SerializeField, Min(.5f)]
     private float detectionRedius = 1.3f;
 
     [SerializeField] private Vector3 detectionOffset = new Vector3(0f, 1f, 0f);
@@ -39,13 +39,13 @@ namespace MultiplayerInfrastructure.Camera
     public event Action<IReadOnlyList<IInteractable>> NearbyUpdated;
 
     // must be allocated from outside to set position
-    [SerializeField] Transform detectBased;
-    
+    [SerializeField] private Transform detectBased;
+
     public IReadOnlyList<IInteractable> Nearby => _nearby;
     public bool InteractableNearbyExists => _nearby.Count > 0;
     public Vector3 DetectionPosition => detectBased != null ? detectBased.position + detectionOffset : transform.position;
 
-    void Update()
+    private void Update()
     {
       QueryNearbyAndUpdate();
     }
@@ -58,8 +58,10 @@ namespace MultiplayerInfrastructure.Camera
 
     private void QueryNearbyAndUpdate()
     {
-      if (detectBased.IsUnityNull()) return;
-      if (Time.time < nextQueryTime) return;
+      if (detectBased.IsUnityNull())
+        return;
+      if (Time.time < nextQueryTime)
+        return;
       nextQueryTime = Time.time + queryInterval;
 
       QueryCurrentInteractables(_scratch);
@@ -172,10 +174,12 @@ namespace MultiplayerInfrastructure.Camera
 
     private static bool HasListChanged(List<IInteractable> previous, List<IInteractable> next)
     {
-      if (previous.Count != next.Count) return true;
+      if (previous.Count != next.Count)
+        return true;
       for (int i = 0; i < next.Count; i++)
       {
-        if (!previous.Contains(next[i])) return true;
+        if (!previous.Contains(next[i]))
+          return true;
       }
 
       return false;
@@ -183,7 +187,8 @@ namespace MultiplayerInfrastructure.Camera
 #if UNITY_EDITOR
     private void OnDrawGizmosSelected()
     {
-      if (detectBased.IsUnityNull()) return;
+      if (detectBased.IsUnityNull())
+        return;
       Gizmos.color = Color.cyan;
       Gizmos.DrawWireSphere(detectBased.position + detectionOffset, detectionRedius);
     }

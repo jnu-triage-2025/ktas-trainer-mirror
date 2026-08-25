@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
@@ -44,7 +44,8 @@ namespace TriageTrainer.Scenario
 
     private static void EnsureWaypoint(string identifier, Vector3 position)
     {
-      if (HasWaypoint(identifier)) return;
+      if (HasWaypoint(identifier))
+        return;
       var gameObject = new GameObject($"RuntimeWaypoint_{identifier}");
       gameObject.transform.position = position;
       gameObject.AddComponent<WaypointAnchor>().ConfigureIdentifier(identifier);
@@ -96,9 +97,11 @@ namespace TriageTrainer.Scenario
         var configs = typeof(IntravenousLineConnectionPoint).GetField(
             "_interactConfigs", BindingFlags.Instance | BindingFlags.NonPublic)
           ?.GetValue(point) as System.Collections.Generic.IEnumerable<IntravenousLineConnectionPoint.InteractConfig>;
-        if (configs == null) continue;
+        if (configs == null)
+          continue;
         foreach (var config in configs)
-          if (config != null) config.Enabled = false;
+          if (config != null)
+            config.Enabled = false;
       }
     }
   }

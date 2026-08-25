@@ -1,18 +1,19 @@
-using MultiplayerInfrastructure.Registry;
+﻿using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
-using UnityEngine;
 using Unity.VisualScripting;
+using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
 {
   public partial class PlayerController
   {
     private ScenarioController _scenarioController;
-    
+
     private void OnStartClient_Dialogue()
     {
-      if (!IsOwner) return;
+      if (!IsOwner)
+        return;
 
       if (_dialoguePanelUIController.IsUnityNull())
         _dialoguePanelUIController = FindDialoguePanelUIController();

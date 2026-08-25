@@ -1,9 +1,6 @@
-using System;
+﻿using System;
 using System.Reflection;
-using MultiplayerInfrastructure.Entity;
-using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
-using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.ItemSystem
@@ -54,34 +51,34 @@ namespace MultiplayerInfrastructure.ItemSystem
     }
 
     #region Definitions/Commons
-    public virtual string Identifier        => ReadConstString(nameof(Identifier));
-    public virtual string DisplayName       => ReadConstString(nameof(DisplayName));
-    public virtual string Description       => ReadConstString(nameof(Description));
-    public virtual string DetailComment     => ReadConstString(nameof(DetailComment));
+    public virtual string Identifier => ReadConstString(nameof(Identifier));
+    public virtual string DisplayName => ReadConstString(nameof(DisplayName));
+    public virtual string Description => ReadConstString(nameof(Description));
+    public virtual string DetailComment => ReadConstString(nameof(DetailComment));
     /// <summary>HTML hex color 문자열. 예: "#FF8800" 또는 "white"</summary>
-    public virtual string Color             => ReadConstString(nameof(Color));
+    public virtual string Color => ReadConstString(nameof(Color));
     #endregion
 
     #region Definitions/Stack
-    public virtual bool IsStackable         => ReadConst<bool>(nameof(IsStackable));
-    public virtual int  MaxStackCount       => ReadConst<int>(nameof(MaxStackCount));
+    public virtual bool IsStackable => ReadConst<bool>(nameof(IsStackable));
+    public virtual int MaxStackCount => ReadConst<int>(nameof(MaxStackCount));
     #endregion
 
     #region Definitions/Durability
-    public virtual bool HasDurability            => ReadConst<bool>(nameof(HasDurability));
-    public virtual bool EnabledDeltaDurability   => ReadConst<bool>(nameof(EnabledDeltaDurability));
-    public virtual int  MaxDurability            => ReadConst<int>(nameof(MaxDurability));
-    public virtual int  DeltaDurabilityOnAttack  => ReadConst<int>(nameof(DeltaDurabilityOnAttack));
-    public virtual int  DeltaDurabilityOnUse     => ReadConst<int>(nameof(DeltaDurabilityOnUse));
+    public virtual bool HasDurability => ReadConst<bool>(nameof(HasDurability));
+    public virtual bool EnabledDeltaDurability => ReadConst<bool>(nameof(EnabledDeltaDurability));
+    public virtual int MaxDurability => ReadConst<int>(nameof(MaxDurability));
+    public virtual int DeltaDurabilityOnAttack => ReadConst<int>(nameof(DeltaDurabilityOnAttack));
+    public virtual int DeltaDurabilityOnUse => ReadConst<int>(nameof(DeltaDurabilityOnUse));
     #endregion
 
     #region Definitions/ItemUsing
-    public virtual float MinReach              => ReadConst<float>(nameof(MinReach));
-    public virtual float MaxReach              => ReadConst<float>(nameof(MaxReach));
-    public virtual int   ItemDamage            => ReadConst<int>(nameof(ItemDamage));
-    public virtual bool  EnabledCooldown       => ReadConst<bool>(nameof(EnabledCooldown));
+    public virtual float MinReach => ReadConst<float>(nameof(MinReach));
+    public virtual float MaxReach => ReadConst<float>(nameof(MaxReach));
+    public virtual int ItemDamage => ReadConst<int>(nameof(ItemDamage));
+    public virtual bool EnabledCooldown => ReadConst<bool>(nameof(EnabledCooldown));
     /// <summary>쿨다운 시간 (밀리초)</summary>
-    public virtual float CooldownMilliseconds  => ReadConst<float>(nameof(CooldownMilliseconds));
+    public virtual float CooldownMilliseconds => ReadConst<float>(nameof(CooldownMilliseconds));
     #endregion
 
     #region Definitions/Instantiate
@@ -98,38 +95,38 @@ namespace MultiplayerInfrastructure.ItemSystem
     // =========================================================================
 
     #region Instance/Commons
-    public string          CurrentIdentifier       { get; protected set; }
-    public string          CurrentDisplayName      { get; protected set; }
-    public string          CurrentDescription      { get; protected set; }
-    public string          CurrentDetailComment    { get; protected set; }
-    public UnityEngine.Color CurrentColor          { get; protected set; }
+    public string CurrentIdentifier { get; protected set; }
+    public string CurrentDisplayName { get; protected set; }
+    public string CurrentDescription { get; protected set; }
+    public string CurrentDetailComment { get; protected set; }
+    public UnityEngine.Color CurrentColor { get; protected set; }
     /// <summary>
     /// 아이템 아이콘 스프라이트. 기본값은 Identifier로 Registry.GetOrLoadIconSprite 를 통해 조회합니다.
     /// </summary>
-    public Sprite          CurrentItemIconTexture  { get; protected set; }
+    public Sprite CurrentItemIconTexture { get; protected set; }
     #endregion
 
     #region Instance/Stack
-    public bool IsCurrentlyStackable     { get; protected set;  }
-    public int  CurrentMaxStackCount     { get; protected set;  }
-    public int  CurrentStackCount        { get; set; }
+    public bool IsCurrentlyStackable { get; protected set; }
+    public int CurrentMaxStackCount { get; protected set; }
+    public int CurrentStackCount { get; set; }
     #endregion
 
     #region Instance/Durability
-    public bool HasCurrentDurability              { get; protected set; }
-    public bool CurrentEnabledDeltaDurability     { get; protected set; }
-    public int  CurrentMaxDurability              { get; protected set; }
-    public int  CurrentDurability                 { get; set; }
-    public int  CurrentDurabilityDeltaOnAttack    { get; protected set; }
-    public int  CurrentDurabilityDeltaOnUse       { get; protected set; }
+    public bool HasCurrentDurability { get; protected set; }
+    public bool CurrentEnabledDeltaDurability { get; protected set; }
+    public int CurrentMaxDurability { get; protected set; }
+    public int CurrentDurability { get; set; }
+    public int CurrentDurabilityDeltaOnAttack { get; protected set; }
+    public int CurrentDurabilityDeltaOnUse { get; protected set; }
     #endregion
 
     #region Instance/ItemUsing
-    public float CurrentMinReach                      { get; protected set; }
-    public float CurrentMaxReach                      { get; protected set; }
-    public int   CurrentItemDamage                    { get; protected set; }
-    public bool  CurrentEnabledCooldown               { get; protected set; }
-    public float CurrentCooldownMilliseconds          { get; protected set; }
+    public float CurrentMinReach { get; protected set; }
+    public float CurrentMaxReach { get; protected set; }
+    public int CurrentItemDamage { get; protected set; }
+    public bool CurrentEnabledCooldown { get; protected set; }
+    public float CurrentCooldownMilliseconds { get; protected set; }
     public float CurrentCooldownRemainingMilliseconds { get; set; }
     #endregion
 
@@ -171,9 +168,9 @@ namespace MultiplayerInfrastructure.ItemSystem
     protected void InitializeFromDefinitions()
     {
       // Commons
-      CurrentIdentifier    = Identifier;
-      CurrentDisplayName   = DisplayName;
-      CurrentDescription   = Description;
+      CurrentIdentifier = Identifier;
+      CurrentDisplayName = DisplayName;
+      CurrentDescription = Description;
       CurrentDetailComment = DetailComment;
       CurrentColor = UnityEngine.ColorUtility.TryParseHtmlString(Color, out var parsed)
         ? parsed
@@ -183,21 +180,21 @@ namespace MultiplayerInfrastructure.ItemSystem
       // Stack
       IsCurrentlyStackable = IsStackable;
       CurrentMaxStackCount = IsStackable ? Mathf.Max(1, MaxStackCount) : 1;
-      CurrentStackCount    = 1;
+      CurrentStackCount = 1;
 
       // Durability
-      HasCurrentDurability           = HasDurability;
-      CurrentEnabledDeltaDurability  = EnabledDeltaDurability;
-      CurrentMaxDurability           = HasDurability ? Mathf.Max(0, MaxDurability) : 0;
-      CurrentDurability              = CurrentMaxDurability;
+      HasCurrentDurability = HasDurability;
+      CurrentEnabledDeltaDurability = EnabledDeltaDurability;
+      CurrentMaxDurability = HasDurability ? Mathf.Max(0, MaxDurability) : 0;
+      CurrentDurability = CurrentMaxDurability;
       CurrentDurabilityDeltaOnAttack = DeltaDurabilityOnAttack;
-      CurrentDurabilityDeltaOnUse    = DeltaDurabilityOnUse;
+      CurrentDurabilityDeltaOnUse = DeltaDurabilityOnUse;
 
       // ItemUsing
-      CurrentMinReach             = MinReach;
-      CurrentMaxReach             = MaxReach;
-      CurrentItemDamage           = ItemDamage;
-      CurrentEnabledCooldown      = EnabledCooldown;
+      CurrentMinReach = MinReach;
+      CurrentMaxReach = MaxReach;
+      CurrentItemDamage = ItemDamage;
+      CurrentEnabledCooldown = EnabledCooldown;
       CurrentCooldownMilliseconds = CooldownMilliseconds;
       CurrentCooldownRemainingMilliseconds = 0f;
 
@@ -297,10 +294,12 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// </summary>
     public Item Merge(Item other)
     {
-      if (!CanStackWith(other)) return other;
+      if (!CanStackWith(other))
+        return other;
       int space = CurrentMaxStackCount - CurrentStackCount;
       int moved = Mathf.Min(space, other.CurrentStackCount);
-      if (moved <= 0) return other;
+      if (moved <= 0)
+        return other;
 
       bool receiveDamagedItem = !IsDurabilityDamaged() && other.IsDurabilityDamaged();
       CurrentStackCount += moved;

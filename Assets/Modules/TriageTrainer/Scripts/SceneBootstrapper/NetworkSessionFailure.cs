@@ -1,4 +1,4 @@
-namespace TriageTrainer.SceneBootstrapper
+﻿namespace TriageTrainer.SceneBootstrapper
 {
   /// <summary>
   /// 네트워크 세션 실패의 상태 코드와 상세 정보를 나타냅니다.

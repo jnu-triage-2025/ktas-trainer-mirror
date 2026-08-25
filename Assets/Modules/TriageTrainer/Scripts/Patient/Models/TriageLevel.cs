@@ -1,4 +1,4 @@
-namespace TriageTrainer.Entity.Patient
+﻿namespace TriageTrainer.Entity.Patient
 {
   /// <summary>
   /// KTAS(Korean Triage and Acuity Scale, 한국형 응급환자 분류도구) 5단계 트리아지 등급을 표현합니다.

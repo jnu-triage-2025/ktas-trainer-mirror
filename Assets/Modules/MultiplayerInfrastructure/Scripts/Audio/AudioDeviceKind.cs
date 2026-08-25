@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Audio
+﻿namespace MultiplayerInfrastructure.Audio
 {
   /// <summary>오디오 장치의 방향 구분입니다.</summary>
   public enum AudioDeviceKind

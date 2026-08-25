@@ -1,4 +1,4 @@
-using MultiplayerInfrastructure.InteractableEntity;
+﻿using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;

@@ -1,13 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
-using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.InteractableEntity;
-using UnityEngine;
-using UnityEngine.UIElements;
-using UnityEngine.Events;
-using Unity.VisualScripting;
 using MultiplayerInfrastructure.Quest;
+using Unity.VisualScripting;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.UIElements;
 
 namespace MultiplayerInfrastructure.UI
 {
@@ -145,7 +144,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void RefreshUI()
     {
-      if (_hintList == null) return;
+      if (_hintList == null)
+        return;
 
       _hintList.Rebuild(
         _interacts,
@@ -172,7 +172,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void ScrollToSelected()
     {
-      if (_hintList == null || _nowSelected < 0) return;
+      if (_hintList == null || _nowSelected < 0)
+        return;
 
       _hintList.ScrollToSelected(_nowSelected);
     }
@@ -336,7 +337,8 @@ namespace MultiplayerInfrastructure.UI
         return;
       }
 
-      if (_interacts == null) _interacts = new List<IInteract>();
+      if (_interacts == null)
+        _interacts = new List<IInteract>();
       _interacts.Clear();
       _nowSelected = -1;
       OnNewInteractableRemoved?.Invoke();
@@ -348,23 +350,28 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void Add(IInteract interact)
     {
-      if (interact == null) return;
+      if (interact == null)
+        return;
 
       if (_currentMode == InteractableHintUIMode.Dialogue)
       {
         // 다이얼로그 모드에서는 캐시에 추가
-        if (_cachedInteracts == null) _cachedInteracts = new List<IInteract>();
+        if (_cachedInteracts == null)
+          _cachedInteracts = new List<IInteract>();
         if (!_cachedInteracts.Contains(interact))
         {
           _cachedInteracts.Add(interact);
-          if (_cachedSelectedIndex < 0) _cachedSelectedIndex = 0;
+          if (_cachedSelectedIndex < 0)
+            _cachedSelectedIndex = 0;
         }
         return;
       }
 
-      if (_interacts == null) _interacts = new List<IInteract>();
+      if (_interacts == null)
+        _interacts = new List<IInteract>();
       _interacts.Add(interact);
-      if (_nowSelected < 0) _nowSelected = 0;
+      if (_nowSelected < 0)
+        _nowSelected = 0;
       OnNewInteractableAdded?.Invoke();
     }
 
@@ -374,7 +381,8 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void Remove(IInteract interact)
     {
-      if (interact == null) return;
+      if (interact == null)
+        return;
 
       if (_currentMode == InteractableHintUIMode.Dialogue)
       {
@@ -383,8 +391,10 @@ namespace MultiplayerInfrastructure.UI
         if (cachedIdx >= 0)
         {
           _cachedInteracts.RemoveAt(cachedIdx);
-          if (_cachedInteracts.Count == 0) _cachedSelectedIndex = -1;
-          else _cachedSelectedIndex = Mathf.Clamp(_cachedSelectedIndex, 0, _cachedInteracts.Count - 1);
+          if (_cachedInteracts.Count == 0)
+            _cachedSelectedIndex = -1;
+          else
+            _cachedSelectedIndex = Mathf.Clamp(_cachedSelectedIndex, 0, _cachedInteracts.Count - 1);
         }
         return;
       }
@@ -402,13 +412,18 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void Remove()
     {
-      if (_currentMode == InteractableHintUIMode.Dialogue) return;
+      if (_currentMode == InteractableHintUIMode.Dialogue)
+        return;
 
-      if (_interacts == null || _interacts.Count == 0) return;
-      if (_nowSelected < 0 || _nowSelected >= _interacts.Count) return;
+      if (_interacts == null || _interacts.Count == 0)
+        return;
+      if (_nowSelected < 0 || _nowSelected >= _interacts.Count)
+        return;
       _interacts.RemoveAt(_nowSelected);
-      if (_interacts.Count == 0) _nowSelected = -1;
-      else _nowSelected = Mathf.Clamp(_nowSelected, 0, _interacts.Count - 1);
+      if (_interacts.Count == 0)
+        _nowSelected = -1;
+      else
+        _nowSelected = Mathf.Clamp(_nowSelected, 0, _interacts.Count - 1);
       OnNewInteractableRemoved?.Invoke();
     }
 
@@ -418,13 +433,18 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void Remove(int idx)
     {
-      if (_currentMode == InteractableHintUIMode.Dialogue) return;
+      if (_currentMode == InteractableHintUIMode.Dialogue)
+        return;
 
-      if (_interacts == null) return;
-      if (idx < 0 || idx >= _interacts.Count) return;
+      if (_interacts == null)
+        return;
+      if (idx < 0 || idx >= _interacts.Count)
+        return;
       _interacts.RemoveAt(idx);
-      if (_interacts.Count == 0) _nowSelected = -1;
-      else _nowSelected = Mathf.Clamp(_nowSelected, 0, _interacts.Count - 1);
+      if (_interacts.Count == 0)
+        _nowSelected = -1;
+      else
+        _nowSelected = Mathf.Clamp(_nowSelected, 0, _interacts.Count - 1);
       OnNewInteractableRemoved?.Invoke();
     }
 
@@ -434,14 +454,19 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public IInteract Pop()
     {
-      if (_currentMode == InteractableHintUIMode.Dialogue) return null;
+      if (_currentMode == InteractableHintUIMode.Dialogue)
+        return null;
 
-      if (_interacts == null || _interacts.Count == 0) return null;
-      if (_nowSelected < 0 || _nowSelected >= _interacts.Count) return null;
+      if (_interacts == null || _interacts.Count == 0)
+        return null;
+      if (_nowSelected < 0 || _nowSelected >= _interacts.Count)
+        return null;
       var item = _interacts[_nowSelected];
       _interacts.RemoveAt(_nowSelected);
-      if (_interacts.Count == 0) _nowSelected = -1;
-      else _nowSelected = Mathf.Clamp(_nowSelected, 0, _interacts.Count - 1);
+      if (_interacts.Count == 0)
+        _nowSelected = -1;
+      else
+        _nowSelected = Mathf.Clamp(_nowSelected, 0, _interacts.Count - 1);
       OnNewInteractableRemoved?.Invoke();
       return item;
     }
@@ -452,14 +477,19 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public IInteract Pop(int idx)
     {
-      if (_currentMode == InteractableHintUIMode.Dialogue) return null;
+      if (_currentMode == InteractableHintUIMode.Dialogue)
+        return null;
 
-      if (_interacts == null) return null;
-      if (idx < 0 || idx >= _interacts.Count) return null;
+      if (_interacts == null)
+        return null;
+      if (idx < 0 || idx >= _interacts.Count)
+        return null;
       var item = _interacts[idx];
       _interacts.RemoveAt(idx);
-      if (_interacts.Count == 0) _nowSelected = -1;
-      else _nowSelected = Mathf.Clamp(_nowSelected, 0, _interacts.Count - 1);
+      if (_interacts.Count == 0)
+        _nowSelected = -1;
+      else
+        _nowSelected = Mathf.Clamp(_nowSelected, 0, _interacts.Count - 1);
       OnNewInteractableRemoved?.Invoke();
       return item;
     }
@@ -479,9 +509,12 @@ namespace MultiplayerInfrastructure.UI
           for (int i = 0; i < newInteracts.Count; i++)
             _cachedInteracts.Add(newInteracts[i]);
         }
-        if (_cachedInteracts.Count == 0) _cachedSelectedIndex = -1;
-        else if (_cachedSelectedIndex < 0) _cachedSelectedIndex = 0;
-        else _cachedSelectedIndex = Mathf.Clamp(_cachedSelectedIndex, 0, _cachedInteracts.Count - 1);
+        if (_cachedInteracts.Count == 0)
+          _cachedSelectedIndex = -1;
+        else if (_cachedSelectedIndex < 0)
+          _cachedSelectedIndex = 0;
+        else
+          _cachedSelectedIndex = Mathf.Clamp(_cachedSelectedIndex, 0, _cachedInteracts.Count - 1);
         return;
       }
 
@@ -492,9 +525,12 @@ namespace MultiplayerInfrastructure.UI
           _interacts.Add(newInteracts[i]);
       }
 
-      if (_interacts.Count == 0) _nowSelected = -1;
-      else if (_nowSelected < 0) _nowSelected = 0;
-      else _nowSelected = Mathf.Clamp(_nowSelected, 0, _interacts.Count - 1);
+      if (_interacts.Count == 0)
+        _nowSelected = -1;
+      else if (_nowSelected < 0)
+        _nowSelected = 0;
+      else
+        _nowSelected = Mathf.Clamp(_nowSelected, 0, _interacts.Count - 1);
 
       RefreshUI();
     }
@@ -508,8 +544,10 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public IInteract Get(int idx)
     {
-      if (_interacts == null || _interacts.Count == 0) return null;
-      if (idx < 0 || idx >= _interacts.Count) return null;
+      if (_interacts == null || _interacts.Count == 0)
+        return null;
+      if (idx < 0 || idx >= _interacts.Count)
+        return null;
       return _interacts[idx];
     }
 
@@ -541,8 +579,10 @@ namespace MultiplayerInfrastructure.UI
       }
 
       // wrap-around selection
-      if (idx < 0) idx = (_interacts.Count + (idx % _interacts.Count)) % _interacts.Count;
-      else idx = idx % _interacts.Count;
+      if (idx < 0)
+        idx = (_interacts.Count + (idx % _interacts.Count)) % _interacts.Count;
+      else
+        idx = idx % _interacts.Count;
       _nowSelected = Mathf.Clamp(idx, 0, _interacts.Count - 1);
 
       RefreshUI();

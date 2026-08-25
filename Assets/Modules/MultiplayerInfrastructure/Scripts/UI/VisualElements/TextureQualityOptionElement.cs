@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MultiplayerInfrastructure.UI.Models;
 using UnityEngine.UIElements;
 
@@ -17,10 +17,10 @@ namespace MultiplayerInfrastructure.UI
     // ──────────────────────────────────────────────────────────────────────────
     // USS 클래스 이름
     // ──────────────────────────────────────────────────────────────────────────
-    private const string BaseClass      = "texture-quality-option";
-    private const string ActiveClass    = "texture-quality-option--active";
-    private const string LabelClass     = "texture-quality-option__label";
-    private const string SubtitleClass  = "texture-quality-option__subtitle";
+    private const string BaseClass = "texture-quality-option";
+    private const string ActiveClass = "texture-quality-option--active";
+    private const string LabelClass = "texture-quality-option__label";
+    private const string SubtitleClass = "texture-quality-option__subtitle";
 
     // ──────────────────────────────────────────────────────────────────────────
     // 이벤트
@@ -58,8 +58,8 @@ namespace MultiplayerInfrastructure.UI
     /// <param name="quality">이 옵션이 나타내는 품질 단계</param>
     public void Bind(TextureQuality quality)
     {
-      _quality  = quality;
-      _label.text    = QualityToLabel(quality);
+      _quality = quality;
+      _label.text = QualityToLabel(quality);
       _subtitle.text = QualityToSubtitle(quality);
     }
 
@@ -100,20 +100,20 @@ namespace MultiplayerInfrastructure.UI
     // ──────────────────────────────────────────────────────────────────────────
     private static string QualityToLabel(TextureQuality quality) => quality switch
     {
-      TextureQuality.Ultra  => "매우 높음",
-      TextureQuality.High   => "높음",
+      TextureQuality.Ultra => "매우 높음",
+      TextureQuality.High => "높음",
       TextureQuality.Medium => "보통",
-      TextureQuality.Low    => "낮음",
-      _                     => quality.ToString(),
+      TextureQuality.Low => "낮음",
+      _ => quality.ToString(),
     };
 
     private static string QualityToSubtitle(TextureQuality quality) => quality switch
     {
-      TextureQuality.Ultra  => "원본 해상도",
-      TextureQuality.High   => "1/2 해상도",
+      TextureQuality.Ultra => "원본 해상도",
+      TextureQuality.High => "1/2 해상도",
       TextureQuality.Medium => "1/4 해상도",
-      TextureQuality.Low    => "1/8 해상도",
-      _                     => string.Empty,
+      TextureQuality.Low => "1/8 해상도",
+      _ => string.Empty,
     };
   }
 }

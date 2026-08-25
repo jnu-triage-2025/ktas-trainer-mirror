@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.ItemSystem;
-using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.UI;
-using TriageTrainer.ItemDefinitions;
 using UnityEngine;
 using UnityEngine.Rendering;
 using PatientMonitorItem = TriageTrainer.ItemDefinitions.PatientMonitor;
@@ -95,8 +92,10 @@ namespace TriageTrainer.Entity.PatientMonitor
 
     public override void Interact(Transform interactor)
     {
-      if (CanInstall(interactor)) Install(interactor);
-      else if (CanRetrieve(interactor)) Retrieve(interactor);
+      if (CanInstall(interactor))
+        Install(interactor);
+      else if (CanRetrieve(interactor))
+        Retrieve(interactor);
     }
 
     private bool CanInstall(Transform interactor)
@@ -132,10 +131,12 @@ namespace TriageTrainer.Entity.PatientMonitor
     {
       if (!visible || IsVisible)
       {
-        if (_preview != null) _preview.SetActive(false);
+        if (_preview != null)
+          _preview.SetActive(false);
         return;
       }
-      if (_preview == null && !CreatePreview()) return;
+      if (_preview == null && !CreatePreview())
+        return;
       _preview.transform.SetPositionAndRotation(transform.position, transform.rotation);
       _preview.SetActive(true);
     }
@@ -143,31 +144,41 @@ namespace TriageTrainer.Entity.PatientMonitor
     private bool CreatePreview()
     {
       var source = _previewPrefab != null ? _previewPrefab : _monitorVisualRoot;
-      if (source == null) return false;
+      if (source == null)
+        return false;
       _preview = Instantiate(source, transform.position, transform.rotation);
       _preview.name = "PatientMonitorMountPreview";
-      foreach (var behaviour in _preview.GetComponentsInChildren<Behaviour>(true)) behaviour.enabled = false;
-      foreach (var collider in _preview.GetComponentsInChildren<Collider>(true)) collider.enabled = false;
-      foreach (var body in _preview.GetComponentsInChildren<Rigidbody>(true)) body.isKinematic = true;
+      foreach (var behaviour in _preview.GetComponentsInChildren<Behaviour>(true))
+        behaviour.enabled = false;
+      foreach (var collider in _preview.GetComponentsInChildren<Collider>(true))
+        collider.enabled = false;
+      foreach (var body in _preview.GetComponentsInChildren<Rigidbody>(true))
+        body.isKinematic = true;
       var shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Transparent");
-      if (shader == null) { Destroy(_preview); _preview = null; return false; }
+      if (shader == null)
+      { Destroy(_preview); _preview = null; return false; }
       _previewMaterial = new Material(shader) { name = "PatientMonitorMountPreviewMaterial" };
       var tint = new Color(0.25f, 0.9f, 1f, 0.38f);
-      if (_previewMaterial.HasProperty("_BaseColor")) _previewMaterial.SetColor("_BaseColor", tint);
-      if (_previewMaterial.HasProperty("_Color")) _previewMaterial.SetColor("_Color", tint);
+      if (_previewMaterial.HasProperty("_BaseColor"))
+        _previewMaterial.SetColor("_BaseColor", tint);
+      if (_previewMaterial.HasProperty("_Color"))
+        _previewMaterial.SetColor("_Color", tint);
       _previewMaterial.SetOverrideTag("RenderType", "Transparent");
       _previewMaterial.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
       _previewMaterial.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
       _previewMaterial.SetInt("_ZWrite", 0);
       _previewMaterial.renderQueue = (int)RenderQueue.Transparent;
-      foreach (var renderer in _preview.GetComponentsInChildren<Renderer>(true)) renderer.sharedMaterial = _previewMaterial;
+      foreach (var renderer in _preview.GetComponentsInChildren<Renderer>(true))
+        renderer.sharedMaterial = _previewMaterial;
       return true;
     }
 
     protected override void OnDestroy()
     {
-      if (_preview != null) Destroy(_preview);
-      if (_previewMaterial != null) Destroy(_previewMaterial);
+      if (_preview != null)
+        Destroy(_preview);
+      if (_previewMaterial != null)
+        Destroy(_previewMaterial);
       base.OnDestroy();
     }
 

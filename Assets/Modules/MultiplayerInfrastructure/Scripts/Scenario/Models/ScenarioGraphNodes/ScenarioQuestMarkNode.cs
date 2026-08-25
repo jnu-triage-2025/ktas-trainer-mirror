@@ -1,4 +1,4 @@
-using MultiplayerInfrastructure.Quest;
+﻿using MultiplayerInfrastructure.Quest;
 
 namespace MultiplayerInfrastructure.Scenario
 {

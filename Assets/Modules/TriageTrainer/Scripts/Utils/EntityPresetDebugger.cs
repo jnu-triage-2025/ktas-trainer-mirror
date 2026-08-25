@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using FishNet;
 using MultiplayerInfrastructure.Registry;
@@ -234,11 +234,16 @@ namespace TriageTrainer.Utils
       GUILayout.Label($"Presets: {presetCount} | Entities: {entityCount} | DebugSpawned: {_debugSpawnedIdentifiers.Count}");
       GUILayout.Label($"Last: {_lastResultSummary}");
 
-      if (GUILayout.Button("Register Presets From SO")) RegisterPresetsFromSO();
-      if (GUILayout.Button("Spawn All Presets")) SpawnAllPresets();
-      if (GUILayout.Button($"Spawn Selected ('{_selectedPresetIdentifier}')")) SpawnSelectedPreset();
-      if (GUILayout.Button("Report Registered Entities")) ReportRegisteredEntities();
-      if (GUILayout.Button("Despawn Debug Spawns")) DespawnDebugSpawns();
+      if (GUILayout.Button("Register Presets From SO"))
+        RegisterPresetsFromSO();
+      if (GUILayout.Button("Spawn All Presets"))
+        SpawnAllPresets();
+      if (GUILayout.Button($"Spawn Selected ('{_selectedPresetIdentifier}')"))
+        SpawnSelectedPreset();
+      if (GUILayout.Button("Report Registered Entities"))
+        ReportRegisteredEntities();
+      if (GUILayout.Button("Despawn Debug Spawns"))
+        DespawnDebugSpawns();
       GUILayout.EndArea();
     }
   }

@@ -1,4 +1,4 @@
-namespace TriageTrainer.Entity.Patient
+﻿namespace TriageTrainer.Entity.Patient
 {
   /// <summary>
   /// 맥박을 표현합니다.
@@ -23,8 +23,10 @@ namespace TriageTrainer.Entity.Patient
     {
       get
       {
-        if (rate < 60) return BloodPulseSpeedType.Bradycardia;
-        if (rate <= 100) return BloodPulseSpeedType.Normal;
+        if (rate < 60)
+          return BloodPulseSpeedType.Bradycardia;
+        if (rate <= 100)
+          return BloodPulseSpeedType.Normal;
         return BloodPulseSpeedType.Tachycardia;
       }
     }

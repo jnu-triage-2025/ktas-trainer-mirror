@@ -1,6 +1,4 @@
-using MultiplayerInfrastructure.Entity;
-using MultiplayerInfrastructure.ItemSystem;
-using MultiplayerInfrastructure.Player;
+﻿using MultiplayerInfrastructure.Player;
 using UnityEngine;
 
 // ============================================================================
@@ -33,28 +31,28 @@ namespace MultiplayerInfrastructure.ItemSystem.Examples
   public class TemplateItem : Item
   {
     // ── Definitions/Commons ──────────────────────────────────────────────
-    public new const string Identifier    = "template_item";   // 레지스트리 등록 키와 일치시킬 것
-    public new const string DisplayName   = "템플릿 아이템";
-    public new const string Description   = "아이템 설명.";
+    public new const string Identifier = "template_item";   // 레지스트리 등록 키와 일치시킬 것
+    public new const string DisplayName = "템플릿 아이템";
+    public new const string Description = "아이템 설명.";
     public new const string DetailComment = "";                 // 상세 설명 (비워도 됨)
-    public new const string Color         = "white";            // HTML hex (#RRGGBB) 또는 색상 이름
+    public new const string Color = "white";            // HTML hex (#RRGGBB) 또는 색상 이름
 
     // ── Definitions/Stack ────────────────────────────────────────────────
-    public new const bool IsStackable   = false;
-    public new const int  MaxStackCount = 1;                    // IsStackable = false 면 사용되지 않음
+    public new const bool IsStackable = false;
+    public new const int MaxStackCount = 1;                    // IsStackable = false 면 사용되지 않음
 
     // ── Definitions/Durability ───────────────────────────────────────────
-    public new const bool HasDurability           = false;
-    public new const bool EnabledDeltaDurability  = false;
-    public new const int  MaxDurability           = 0;
-    public new const int  DeltaDurabilityOnAttack = 0;
-    public new const int  DeltaDurabilityOnUse    = 0;
+    public new const bool HasDurability = false;
+    public new const bool EnabledDeltaDurability = false;
+    public new const int MaxDurability = 0;
+    public new const int DeltaDurabilityOnAttack = 0;
+    public new const int DeltaDurabilityOnUse = 0;
 
     // ── Definitions/ItemUsing ────────────────────────────────────────────
-    public new const float MinReach             = 0f;
-    public new const float MaxReach             = 2.5f;
-    public new const int   ItemDamage           = 0;
-    public new const bool  EnabledCooldown      = false;
+    public new const float MinReach = 0f;
+    public new const float MaxReach = 2.5f;
+    public new const int ItemDamage = 0;
+    public new const bool EnabledCooldown = false;
     public new const float CooldownMilliseconds = 0f;
 
     // ── 파생 속성 (인스턴스별 가변 상태) ─────────────────────────────────
@@ -107,7 +105,8 @@ namespace MultiplayerInfrastructure.ItemSystem.Examples
 
     public override void SetCurrentSerializedDerivedAttributes(string serialized)
     {
-      if (string.IsNullOrWhiteSpace(serialized)) return;
+      if (string.IsNullOrWhiteSpace(serialized))
+        return;
       // try
       // {
       //   var data = JsonUtility.FromJson<SerializedData>(serialized);

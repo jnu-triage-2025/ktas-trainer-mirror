@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,7 +10,7 @@ namespace MultiplayerInfrastructure.Entity
   {
     [SerializeField] public string identifier;
     [SerializeField] public string displayName;
-    [TextArea] [SerializeField] public string description;
+    [TextArea][SerializeField] public string description;
 
     [Header("Scenario Interacts")]
     [SerializeField] public List<NPCScenarioInteractDefinition> scenarioInteracts = new();

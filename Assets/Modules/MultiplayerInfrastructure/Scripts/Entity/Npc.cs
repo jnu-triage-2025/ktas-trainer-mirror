@@ -1,9 +1,9 @@
+﻿using System.Collections.Generic;
 using FishNet.Object;
-using System.Collections.Generic;
+using MultiplayerInfrastructure.Commons;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
-using MultiplayerInfrastructure.Commons;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
@@ -560,7 +560,8 @@ namespace MultiplayerInfrastructure.Entity
         for (int i = 0; i < _npcBaseModel.scenarioInteracts.Count; i++)
         {
           var each = _npcBaseModel.scenarioInteracts[i];
-          if (each == null) continue;
+          if (each == null)
+            continue;
           _scenarioInteracts.Add(each.Clone());
         }
         changed = true;
@@ -572,7 +573,8 @@ namespace MultiplayerInfrastructure.Entity
         for (int i = 0; i < _npcBaseModel.submissionInteracts.Count; i++)
         {
           var each = _npcBaseModel.submissionInteracts[i];
-          if (each == null) continue;
+          if (each == null)
+            continue;
           _submissionInteracts.Add(each.Clone());
         }
         // 정의가 교체되었으므로 이미 생성된 submission Interactable 이 있으면 재생성 대상으로 표시한다.

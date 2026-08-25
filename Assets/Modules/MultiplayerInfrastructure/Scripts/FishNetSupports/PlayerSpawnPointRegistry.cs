@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
@@ -7,9 +7,9 @@ namespace MultiplayerInfrastructure.FishNetSupports
 {
   public interface IPlayerSpawnPointProvider
   {
-    string Identifier { get; }
-    Transform SpawnTransform { get; }
-    bool IsAvailable { get; }
+    public string Identifier { get; }
+    public Transform SpawnTransform { get; }
+    public bool IsAvailable { get; }
   }
 
   public static class PlayerSpawnPointRegistry

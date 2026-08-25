@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Definitions
+﻿namespace MultiplayerInfrastructure.Definitions
 {
   public class DefaultsInteractInteractiveGameObject
   {
@@ -8,7 +8,7 @@ namespace MultiplayerInfrastructure.Definitions
      * Visual Element Identifiers and Class Names
      * These definitions have to equal the ones used in the UXML and USS files.
      */
-    
+
     // Identifier of Row
     public const string VisualElementIdentifierInteractive = "interactive-item";
     // Identifier of Interactives' container
@@ -19,7 +19,7 @@ namespace MultiplayerInfrastructure.Definitions
     public const string VisualElementIdentifierInteractableIcon = "interactable-icon";
     // Identifier or Row's text
     public const string VisualElementIdentifierInteractableLabel = "interactable-label";
-    
+
     // Classname of Selected Row
     public const string VisualElementClassNameSelectedInteractable = "selected";
   }

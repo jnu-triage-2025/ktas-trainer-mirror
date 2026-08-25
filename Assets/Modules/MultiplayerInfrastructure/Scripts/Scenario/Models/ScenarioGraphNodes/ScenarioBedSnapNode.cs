@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Scenario
+﻿namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
   /// 이동식 환자 침대를 지정한 포지셔닝 포인트에 붙이는 노드.

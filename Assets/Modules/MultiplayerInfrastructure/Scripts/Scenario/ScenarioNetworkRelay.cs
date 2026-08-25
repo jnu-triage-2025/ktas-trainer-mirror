@@ -1,3 +1,7 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
@@ -6,10 +10,6 @@ using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Session;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Scenario
@@ -1285,8 +1285,8 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       foreach (var actingNpc in graph.ActingNpcs ?? Array.Empty<ScenarioActingNpcDefinition>())
-      foreach (var interaction in actingNpc?.Interactions ?? Array.Empty<ScenarioActingNpcInteractionDefinition>())
-        AddServerOnly(interaction?.CompletionSignalIdentifier);
+        foreach (var interaction in actingNpc?.Interactions ?? Array.Empty<ScenarioActingNpcInteractionDefinition>())
+          AddServerOnly(interaction?.CompletionSignalIdentifier);
 
       foreach (var signal in graph.ClientSignalIdentifiers ?? Array.Empty<string>())
         AddExpected(signal);

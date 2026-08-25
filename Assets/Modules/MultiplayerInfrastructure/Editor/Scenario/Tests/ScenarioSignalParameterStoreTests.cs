@@ -1,5 +1,5 @@
+﻿using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
-using MultiplayerInfrastructure.Registry;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;

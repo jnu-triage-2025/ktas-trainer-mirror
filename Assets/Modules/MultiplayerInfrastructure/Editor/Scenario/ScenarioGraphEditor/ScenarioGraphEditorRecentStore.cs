@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -100,7 +100,10 @@ namespace MultiplayerInfrastructure.Editor
       var data = LoadData();
       data.MiniMaps[normalized] = new MiniMapLayout
       {
-        X = rect.x, Y = rect.y, Width = rect.width, Height = rect.height
+        X = rect.x,
+        Y = rect.y,
+        Width = rect.width,
+        Height = rect.height
       };
       WriteData(data.Paths, data.MiniMaps);
     }
@@ -186,7 +189,8 @@ namespace MultiplayerInfrastructure.Editor
     {
       if (string.IsNullOrWhiteSpace(path))
         return null;
-      try { return Path.GetFullPath(path); }
+      try
+      { return Path.GetFullPath(path); }
       catch { return null; }
     }
 

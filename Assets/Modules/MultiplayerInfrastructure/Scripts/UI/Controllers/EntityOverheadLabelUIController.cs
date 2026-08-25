@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.Quest;
 using UnityEngine;
 using UnityEngine.UIElements;
-using MultiplayerInfrastructure.Quest;
 
 namespace MultiplayerInfrastructure.UI
 {

@@ -1,5 +1,5 @@
+﻿using TriageTrainer.Patient;
 using UnityEngine;
-using TriageTrainer.Patient;
 
 namespace TriageTrainer.Entity
 {

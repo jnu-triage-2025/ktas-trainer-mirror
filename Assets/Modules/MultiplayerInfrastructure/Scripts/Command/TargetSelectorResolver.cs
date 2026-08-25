@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using FishNet.Connection;
@@ -103,7 +103,7 @@ namespace MultiplayerInfrastructure.Command
         return false;
       }
 
-      if (!raw.StartsWith("@", StringComparison.Ordinal))
+      if (!raw.StartsWith('@'))
       {
         error = "Target selector must start with '@'.";
         return false;
@@ -126,7 +126,7 @@ namespace MultiplayerInfrastructure.Command
 
       if (bracketIndex >= 0)
       {
-        if (!raw.EndsWith("]", StringComparison.Ordinal))
+        if (!raw.EndsWith(']'))
         {
           error = "Invalid selector arguments.";
           return false;
@@ -558,7 +558,7 @@ namespace MultiplayerInfrastructure.Command
       if (string.IsNullOrEmpty(raw))
         return new FilterString(string.Empty, false);
 
-      if (raw.StartsWith("!", StringComparison.Ordinal))
+      if (raw.StartsWith('!'))
         return new FilterString(raw.Substring(1), true);
 
       return new FilterString(raw, false);

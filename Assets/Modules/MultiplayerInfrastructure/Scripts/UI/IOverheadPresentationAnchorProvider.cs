@@ -1,9 +1,9 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MultiplayerInfrastructure.UI
 {
   public interface IOverheadPresentationAnchorProvider
   {
-    Transform OverheadPresentationAnchor { get; }
+    public Transform OverheadPresentationAnchor { get; }
   }
 }

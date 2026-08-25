@@ -1,4 +1,4 @@
-using TriageTrainer.Entity.Patient;
+﻿using TriageTrainer.Entity.Patient;
 
 namespace MultiplayerInfrastructure.Scenario
 {

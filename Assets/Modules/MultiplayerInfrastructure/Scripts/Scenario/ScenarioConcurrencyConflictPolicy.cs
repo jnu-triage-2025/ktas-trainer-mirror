@@ -1,6 +1,4 @@
-using System;
-
-namespace MultiplayerInfrastructure.Scenario
+﻿namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
   /// 두 개 이상의 시나리오 흐름이 동시에 대화창 계열 UI(Dialogue/Choice/Quiz)를

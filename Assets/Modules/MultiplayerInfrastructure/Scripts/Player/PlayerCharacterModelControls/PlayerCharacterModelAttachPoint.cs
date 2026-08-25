@@ -1,4 +1,4 @@
-using FishNet.Object;
+﻿using FishNet.Object;
 using UnityEngine;
 namespace MultiplayerInfrastructure.Player
 {

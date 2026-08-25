@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
-using UnityEngine;
-using TextToSpeechService;
 using MultiplayerInfrastructure.Scenario;
+using TextToSpeechService;
+using UnityEngine;
 
 namespace MultiplayerInfrastructure.TTS
 {
@@ -51,10 +51,12 @@ namespace MultiplayerInfrastructure.TTS
     /// <summary>현재 시나리오 범위의 JSON 프로필을 TTS 엔진에 등록한다.</summary>
     public void ConfigureScenarioVoiceProfiles(IReadOnlyList<ScenarioTTSVoiceProfile> profiles)
     {
-      if (_core == null || profiles == null) return;
+      if (_core == null || profiles == null)
+        return;
       var converted = new List<TTSVoiceProfile>();
       foreach (var profile in profiles)
-        if (profile != null) converted.Add(profile.ToServiceProfile());
+        if (profile != null)
+          converted.Add(profile.ToServiceProfile());
       _core.ConfigureScenarioVoiceProfiles(converted);
     }
 
@@ -77,7 +79,8 @@ namespace MultiplayerInfrastructure.TTS
       Dictionary<string, string> overrideVariables = null,
       string voiceIdentifier = null)
     {
-      if (_core == null) return null;
+      if (_core == null)
+        return null;
       return _core.PlayTranscript(identifier, audioSource ?? _audioSource, overrideVariables, voiceIdentifier);
     }
 
@@ -95,7 +98,8 @@ namespace MultiplayerInfrastructure.TTS
       string nodeIdentifier = null,
       string voiceIdentifier = null)
     {
-      if (_core == null) return null;
+      if (_core == null)
+        return null;
       return _core.PlayText(text, audioSource ?? _audioSource, scenarioIdentifier, nodeIdentifier, voiceIdentifier);
     }
 
@@ -107,7 +111,8 @@ namespace MultiplayerInfrastructure.TTS
       string voiceIdentifier = null,
       CancellationToken cancellationToken = default)
     {
-      if (_core == null) return null;
+      if (_core == null)
+        return null;
       return _core.PrepareInlineText(
         text, scenarioIdentifier, nodeIdentifier, voiceIdentifier, cancellationToken);
     }
@@ -122,7 +127,8 @@ namespace MultiplayerInfrastructure.TTS
       System.Action onDone = null,
       string voiceIdentifier = null)
     {
-      if (_core == null) return null;
+      if (_core == null)
+        return null;
       return _core.PrepareTranscriptVariables(identifier, variables, onDone, voiceIdentifier);
     }
 

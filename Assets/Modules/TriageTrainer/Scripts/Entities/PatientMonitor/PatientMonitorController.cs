@@ -1,15 +1,15 @@
-using System;
-using FishNet.Object;
+﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UIElements;
-using TriageTrainer.Entity.Patient;
 using FishNet;
 using FishNet.Connection;
+using FishNet.Object;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
+using TriageTrainer.Entity.Patient;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UIElements;
 
 namespace TriageTrainer.Entity.PatientMonitor.Models
 {
@@ -175,7 +175,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
         _displayViews[i].ResetGraphHistoryToValue(0f);
     }
 
-    void CreateGraphUI()
+    private void CreateGraphUI()
     {
       var root = uiDocument.rootVisualElement;
       root.Clear();
@@ -654,7 +654,8 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       TryResolvePendingMonitoringPatient();
       UpdatePatientTrackingLocation();
       UpdateTrackingLine();
-      if (ecgGraphElement == null && _displayViews.Count == 0) return;
+      if (ecgGraphElement == null && _displayViews.Count == 0)
+        return;
 
       PullParametersFromPatientState();
       currentTime += Time.deltaTime;
@@ -1062,22 +1063,38 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     private void SetUnavailableLabels()
     {
-      if (ecgValueLabel != null) ecgValueLabel.text = $"HR {UnavailableDisplay}";
-      if (plethValueLabel != null) plethValueLabel.text = $"SpO2 {UnavailableDisplay}";
-      if (artValueLabel != null) artValueLabel.text = UnavailableDisplay;
-      if (cvpValueLabel != null) cvpValueLabel.text = UnavailableDisplay;
-      if (bpmNumericLabel != null) bpmNumericLabel.text = UnavailableDisplay;
-      if (pvcsNumericLabel != null) pvcsNumericLabel.text = UnavailableDisplay;
-      if (stNumericLabel != null) stNumericLabel.text = UnavailableDisplay;
-      if (prNumericLabel != null) prNumericLabel.text = UnavailableDisplay;
-      if (piNumericLabel != null) piNumericLabel.text = UnavailableDisplay;
-      if (spo2NumericLabel != null) spo2NumericLabel.text = UnavailableDisplay;
-      if (artNumericLabel != null) artNumericLabel.text = UnavailableDisplay;
-      if (cvpNumericLabel != null) cvpNumericLabel.text = UnavailableDisplay;
-      if (nibpNumericLabel != null) nibpNumericLabel.text = UnavailableDisplay;
-      if (t1NumericLabel != null) t1NumericLabel.text = UnavailableDisplay;
-      if (t2NumericLabel != null) t2NumericLabel.text = UnavailableDisplay;
-      if (deltaTNumericLabel != null) deltaTNumericLabel.text = UnavailableDisplay;
+      if (ecgValueLabel != null)
+        ecgValueLabel.text = $"HR {UnavailableDisplay}";
+      if (plethValueLabel != null)
+        plethValueLabel.text = $"SpO2 {UnavailableDisplay}";
+      if (artValueLabel != null)
+        artValueLabel.text = UnavailableDisplay;
+      if (cvpValueLabel != null)
+        cvpValueLabel.text = UnavailableDisplay;
+      if (bpmNumericLabel != null)
+        bpmNumericLabel.text = UnavailableDisplay;
+      if (pvcsNumericLabel != null)
+        pvcsNumericLabel.text = UnavailableDisplay;
+      if (stNumericLabel != null)
+        stNumericLabel.text = UnavailableDisplay;
+      if (prNumericLabel != null)
+        prNumericLabel.text = UnavailableDisplay;
+      if (piNumericLabel != null)
+        piNumericLabel.text = UnavailableDisplay;
+      if (spo2NumericLabel != null)
+        spo2NumericLabel.text = UnavailableDisplay;
+      if (artNumericLabel != null)
+        artNumericLabel.text = UnavailableDisplay;
+      if (cvpNumericLabel != null)
+        cvpNumericLabel.text = UnavailableDisplay;
+      if (nibpNumericLabel != null)
+        nibpNumericLabel.text = UnavailableDisplay;
+      if (t1NumericLabel != null)
+        t1NumericLabel.text = UnavailableDisplay;
+      if (t2NumericLabel != null)
+        t2NumericLabel.text = UnavailableDisplay;
+      if (deltaTNumericLabel != null)
+        deltaTNumericLabel.text = UnavailableDisplay;
 
       for (int i = 0; i < _displayViews.Count; i++)
       {

@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Scenario
+﻿namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
   /// 시나리오 흐름의 특정 지점에 별칭을 붙이는 표식 노드.

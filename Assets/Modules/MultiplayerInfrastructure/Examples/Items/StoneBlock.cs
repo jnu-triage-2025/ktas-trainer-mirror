@@ -1,6 +1,4 @@
-using MultiplayerInfrastructure.Entity;
-using MultiplayerInfrastructure.ItemSystem;
-using MultiplayerInfrastructure.Player;
+﻿using MultiplayerInfrastructure.Player;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.ItemSystem.Examples
@@ -22,25 +20,25 @@ namespace MultiplayerInfrastructure.ItemSystem.Examples
   public class StoneBlock : Item
   {
     // ── Definitions ────────────────────────────────────────────────────────
-    public new const string Identifier    = "stone_block";
-    public new const string DisplayName   = "돌 블록";
-    public new const string Description   = "단단한 돌덩이입니다. 설치하면 블록이 됩니다.";
+    public new const string Identifier = "stone_block";
+    public new const string DisplayName = "돌 블록";
+    public new const string Description = "단단한 돌덩이입니다. 설치하면 블록이 됩니다.";
     public new const string DetailComment = "";
-    public new const string Color         = "#9E9E9E";
+    public new const string Color = "#9E9E9E";
 
-    public new const bool IsStackable   = true;
-    public new const int  MaxStackCount = 64;
+    public new const bool IsStackable = true;
+    public new const int MaxStackCount = 64;
 
-    public new const bool HasDurability           = false;
-    public new const bool EnabledDeltaDurability  = false;
-    public new const int  MaxDurability           = 0;
-    public new const int  DeltaDurabilityOnAttack = 0;
-    public new const int  DeltaDurabilityOnUse    = 0;
+    public new const bool HasDurability = false;
+    public new const bool EnabledDeltaDurability = false;
+    public new const int MaxDurability = 0;
+    public new const int DeltaDurabilityOnAttack = 0;
+    public new const int DeltaDurabilityOnUse = 0;
 
-    public new const float MinReach             = 0.5f;
-    public new const float MaxReach             = 3.0f;
-    public new const int   ItemDamage           = 5;
-    public new const bool  EnabledCooldown      = false;
+    public new const float MinReach = 0.5f;
+    public new const float MaxReach = 3.0f;
+    public new const int ItemDamage = 5;
+    public new const bool EnabledCooldown = false;
     public new const float CooldownMilliseconds = 0f;
 
     // ── 고유 파생 속성 ────────────────────────────────────────────────────
@@ -78,7 +76,8 @@ namespace MultiplayerInfrastructure.ItemSystem.Examples
 
     public override void SetCurrentSerializedDerivedAttributes(string serialized)
     {
-      if (string.IsNullOrWhiteSpace(serialized)) return;
+      if (string.IsNullOrWhiteSpace(serialized))
+        return;
       // 간단한 수동 파싱 (JsonUtility 사용도 가능)
       try
       {

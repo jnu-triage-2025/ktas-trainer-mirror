@@ -1,5 +1,5 @@
+﻿using TriageTrainer.Entity.Patient;
 using UnityEngine;
-using TriageTrainer.Entity.Patient;
 
 namespace TriageTrainer.Entity.PatientMonitor.Models
 {

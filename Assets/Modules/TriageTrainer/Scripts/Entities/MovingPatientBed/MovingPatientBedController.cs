@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using FishNet;
 using FishNet.Object;
@@ -6,14 +6,13 @@ using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
-using MultiplayerInfrastructure.UI;
-using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.UI;
 using TriageTrainer.Scenario;
 using UnityEngine;
-
 using MI = MultiplayerInfrastructure;
 
 namespace TriageTrainer.Entity

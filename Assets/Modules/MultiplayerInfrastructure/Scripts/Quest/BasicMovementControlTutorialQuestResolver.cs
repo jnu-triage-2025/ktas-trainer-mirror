@@ -1,4 +1,4 @@
-using MultiplayerInfrastructure.Scenario;
+﻿using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
 

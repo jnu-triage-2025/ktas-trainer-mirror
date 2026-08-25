@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.UI;

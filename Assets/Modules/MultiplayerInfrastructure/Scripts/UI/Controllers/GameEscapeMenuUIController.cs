@@ -1,10 +1,9 @@
-using MultiplayerInfrastructure.Registry;
-using MultiplayerInfrastructure.FishNetSupports;
-using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
-using System;
+﻿using System;
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.FishNetSupports;
+using MultiplayerInfrastructure.Registry;
+using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace MultiplayerInfrastructure.UI
 {
@@ -82,10 +81,10 @@ namespace MultiplayerInfrastructure.UI
       // 이전(죽은) 트리의 버튼 구독 해제 후 재바인딩.
       DetachButtonHandlers();
 
-      _root           = newRoot;
-      _resumeButton   = docRoot.Q<Button>("resume-button");
+      _root = newRoot;
+      _resumeButton = docRoot.Q<Button>("resume-button");
       _settingsButton = docRoot.Q<Button>("settings-button");
-      _titleButton    = docRoot.Q<Button>("title-button");
+      _titleButton = docRoot.Q<Button>("title-button");
 
       if (_root == null)
         Debug.LogError("[GameMenuUI] 'game-menu-root'를 UXML에서 찾을 수 없습니다.");
@@ -108,9 +107,12 @@ namespace MultiplayerInfrastructure.UI
 
     private void DetachButtonHandlers()
     {
-      if (_resumeButton != null)   _resumeButton.clicked   -= HandleResumeClicked;
-      if (_settingsButton != null) _settingsButton.clicked -= HandleSettingsClicked;
-      if (_titleButton != null)    _titleButton.clicked    -= HandleTitleClicked;
+      if (_resumeButton != null)
+        _resumeButton.clicked -= HandleResumeClicked;
+      if (_settingsButton != null)
+        _settingsButton.clicked -= HandleSettingsClicked;
+      if (_titleButton != null)
+        _titleButton.clicked -= HandleTitleClicked;
     }
 
     public void ShowMenu() => SetVisible(true);

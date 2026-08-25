@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Rendering;
 using TriageTrainer.Scenario;
 
@@ -186,8 +186,10 @@ namespace TriageTrainer.Entity
     private static Material CreateHintMaterial(Shader shader, Color color, string suffix)
     {
       var material = new Material(shader) { name = "PositioningPointHintMaterial_" + suffix };
-      if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
-      if (material.HasProperty("_Color")) material.SetColor("_Color", color);
+      if (material.HasProperty("_BaseColor"))
+        material.SetColor("_BaseColor", color);
+      if (material.HasProperty("_Color"))
+        material.SetColor("_Color", color);
       material.SetOverrideTag("RenderType", "Transparent");
       material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
       material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);

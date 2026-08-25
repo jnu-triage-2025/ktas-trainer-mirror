@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using FishNet;
@@ -408,7 +408,7 @@ namespace MultiplayerInfrastructure.Command
         return false;
       }
 
-      if (raw.StartsWith("@", StringComparison.Ordinal))
+      if (raw.StartsWith('@'))
       {
         return TargetSelectorResolver.TryResolveTargets(sender, raw, out targets, out error);
       }

@@ -1,10 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Scenario;
-using TriageTrainer.Entity;
 using UnityEngine;
 
 namespace TriageTrainer.Entity.PatientMonitor.Models

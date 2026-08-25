@@ -1,4 +1,4 @@
-using FishNet.Object;
+﻿using FishNet.Object;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
@@ -19,7 +19,8 @@ namespace MultiplayerInfrastructure.Player
 
     internal void ApplyGamemodeServer(PlayerGamemode mode)
     {
-      if (!IsServerInitialized) return;
+      if (!IsServerInitialized)
+        return;
 
       _gamemode = mode;
       RpcApplyGamemode(mode);
@@ -106,9 +107,12 @@ namespace MultiplayerInfrastructure.Player
 
     private void BeginSpectateFollow(PlayerController target)
     {
-      if (!IsSpectator) return;
-      if (target == null || target == this) return;
-      if (_camControl == null) return;
+      if (!IsSpectator)
+        return;
+      if (target == null || target == this)
+        return;
+      if (_camControl == null)
+        return;
 
       _spectateFollowTarget = target.CameraAttachPoint?.PivotTransform;
       _isSpectateFollowing = _spectateFollowTarget != null;

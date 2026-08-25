@@ -1,4 +1,4 @@
-namespace TriageTrainer.Entity.Patient
+﻿namespace TriageTrainer.Entity.Patient
 {
   /// <summary>
   /// GCS(Glasgow Coma Scale)의 E(Eye Opening, 눈뜨기 반응) 세부 항목을 표현합니다.

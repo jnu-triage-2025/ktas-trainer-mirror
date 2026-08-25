@@ -1,4 +1,4 @@
-using MultiplayerInfrastructure.ItemSystem;
+﻿using MultiplayerInfrastructure.ItemSystem;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -55,9 +55,12 @@ namespace MultiplayerInfrastructure.UI
     public static Color GetColor(float ratio)
     {
       ratio = Mathf.Clamp01(ratio);
-      if (ratio >= 0.75f) return HighColor;
-      if (ratio >= 0.50f) return MediumColor;
-      if (ratio >= 0.25f) return LowColor;
+      if (ratio >= 0.75f)
+        return HighColor;
+      if (ratio >= 0.50f)
+        return MediumColor;
+      if (ratio >= 0.25f)
+        return LowColor;
       return CriticalColor;
     }
   }

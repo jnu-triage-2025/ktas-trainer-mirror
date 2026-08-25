@@ -1,9 +1,8 @@
-using FishNet.Object;
+﻿using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace MultiplayerInfrastructure.Player
 {

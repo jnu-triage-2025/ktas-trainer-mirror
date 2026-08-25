@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using FishNet;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;

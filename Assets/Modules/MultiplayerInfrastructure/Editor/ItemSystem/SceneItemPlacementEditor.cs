@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using MultiplayerInfrastructure.ItemSystem;
@@ -91,7 +91,8 @@ namespace MultiplayerInfrastructure.Editor.ItemSystem
 
     private static void EnsureCache()
     {
-      if (_itemCache != null) return;
+      if (_itemCache != null)
+        return;
 
       _itemCache = new List<(string, string, Type)>();
 
@@ -102,26 +103,32 @@ namespace MultiplayerInfrastructure.Editor.ItemSystem
       foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
       {
         Type[] types;
-        try { types = asm.GetTypes(); }
+        try
+        { types = asm.GetTypes(); }
         catch { continue; }
 
         foreach (var t in types)
         {
-          if (t.IsAbstract || t.IsInterface) continue;
-          if (!baseType.IsAssignableFrom(t)) continue;
+          if (t.IsAbstract || t.IsInterface)
+            continue;
+          if (!baseType.IsAssignableFrom(t))
+            continue;
 
           var idField = t.GetField("Identifier", flags);
-          if (idField == null || idField.FieldType != typeof(string)) continue;
+          if (idField == null || idField.FieldType != typeof(string))
+            continue;
 
           string id = (string)idField.GetValue(null);
-          if (string.IsNullOrEmpty(id)) continue;
+          if (string.IsNullOrEmpty(id))
+            continue;
 
           string dn = id;
           var dnField = t.GetField("DisplayName", flags);
           if (dnField != null && dnField.FieldType == typeof(string))
           {
             string v = (string)dnField.GetValue(null);
-            if (!string.IsNullOrEmpty(v)) dn = v;
+            if (!string.IsNullOrEmpty(v))
+              dn = v;
           }
 
           _itemCache.Add((id, dn, t));
@@ -131,12 +138,12 @@ namespace MultiplayerInfrastructure.Editor.ItemSystem
       // identifier 기준 정렬
       _itemCache.Sort((a, b) => string.Compare(a.identifier, b.identifier, StringComparison.OrdinalIgnoreCase));
 
-      _identifiers      = new string[_itemCache.Count];
-      _dropdownLabels   = new string[_itemCache.Count];
+      _identifiers = new string[_itemCache.Count];
+      _dropdownLabels = new string[_itemCache.Count];
 
       for (int i = 0; i < _itemCache.Count; i++)
       {
-        _identifiers[i]    = _itemCache[i].identifier;
+        _identifiers[i] = _itemCache[i].identifier;
         _dropdownLabels[i] = $"{_itemCache[i].identifier}  ({_itemCache[i].displayName})";
       }
     }

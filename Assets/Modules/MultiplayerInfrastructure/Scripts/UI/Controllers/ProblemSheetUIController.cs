@@ -1,8 +1,8 @@
-using System;
+﻿using System;
+using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Problem;
 using MultiplayerInfrastructure.Registry;
-using MultiplayerInfrastructure.Chat;
 using UnityEngine;
 using UnityEngine.UIElements;
 

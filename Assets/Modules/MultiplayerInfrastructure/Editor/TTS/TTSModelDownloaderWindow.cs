@@ -1,10 +1,10 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TextToSpeechService;
 using UnityEditor;
 using UnityEngine;
-using TextToSpeechService;
 
 namespace MultiplayerInfrastructure.Editor.TTS
 {
@@ -18,10 +18,10 @@ namespace MultiplayerInfrastructure.Editor.TTS
   /// </summary>
   public class TTSModelDownloaderWindow : EditorWindow
   {
-    private bool   _isDownloading;
+    private bool _isDownloading;
     private string _currentFile = "";
-    private float  _totalProgress;
-    private int    _doneCount;
+    private float _totalProgress;
+    private int _doneCount;
     private string _lastError = "";
     private CancellationTokenSource _cts;
 
@@ -46,14 +46,14 @@ namespace MultiplayerInfrastructure.Editor.TTS
       EditorGUILayout.Space(4);
       using (new EditorGUI.DisabledGroupScope(true))
       {
-        EditorGUILayout.TextField("ONNX 저장 경로",  System.IO.Path.Combine(sa, TTSCore.DefaultOnnxSubdir));
+        EditorGUILayout.TextField("ONNX 저장 경로", System.IO.Path.Combine(sa, TTSCore.DefaultOnnxSubdir));
         EditorGUILayout.TextField("스타일 저장 경로", System.IO.Path.Combine(sa, TTSCore.DefaultStyleSubdir));
       }
 
       EditorGUILayout.Space(8);
 
       int presentCount = TTSModelDownloader.CountPresentFiles(sa);
-      int totalFiles   = TTSModelDownloader.DownloadManifest.Length;
+      int totalFiles = TTSModelDownloader.DownloadManifest.Length;
       EditorGUILayout.LabelField("파일 상태",
         $"{presentCount} / {totalFiles}개 존재", EditorStyles.miniLabel);
 
@@ -89,11 +89,11 @@ namespace MultiplayerInfrastructure.Editor.TTS
     private void StartDownload(string streamingAssets, bool onlyMissing)
     {
       _isDownloading = true;
-      _lastError     = "";
-      _doneCount     = 0;
+      _lastError = "";
+      _doneCount = 0;
       _totalProgress = 0f;
-      _cts           = new CancellationTokenSource();
-      var token      = _cts.Token;
+      _cts = new CancellationTokenSource();
+      var token = _cts.Token;
 
       _ = Task.Run(async () =>
       {
@@ -103,8 +103,8 @@ namespace MultiplayerInfrastructure.Editor.TTS
             streamingAssets, onlyMissing,
             onProgress: p => EditorApplication.delayCall += () =>
             {
-              _currentFile   = p.FileName;
-              _doneCount     = p.DoneCount;
+              _currentFile = p.FileName;
+              _doneCount = p.DoneCount;
               _totalProgress = p.Ratio;
               Repaint();
             },

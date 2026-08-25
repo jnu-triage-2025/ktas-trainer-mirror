@@ -1,4 +1,4 @@
-// This file is auto-generated.
+﻿// This file is auto-generated.
 // Refer to PatientTreatmentDisplayModel.cs.
 using System;
 using UnityEngine;

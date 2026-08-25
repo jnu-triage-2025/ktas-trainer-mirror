@@ -1,9 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using MultiplayerInfrastructure.ItemSystem;
-using ISItem = MultiplayerInfrastructure.ItemSystem.Item;
 using MultiplayerInfrastructure.Scenario;
 using UnityEngine;
+using ISItem = MultiplayerInfrastructure.ItemSystem.Item;
 
 namespace MultiplayerInfrastructure.Registry
 {

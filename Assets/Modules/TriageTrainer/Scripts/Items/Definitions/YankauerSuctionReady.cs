@@ -1,4 +1,4 @@
-namespace TriageTrainer.ItemDefinitions
+﻿namespace TriageTrainer.ItemDefinitions
 {
   /// <summary>
   /// 준비된 양커 석션(조합 완료). 시나리오 구식 산출물명 `yankauer_ready` 에 대응한다.
@@ -7,8 +7,8 @@ namespace TriageTrainer.ItemDefinitions
   /// </summary>
   public class YankauerSuctionReady : MedicalItem
   {
-    public new const string Identifier   = "yankauer_suction_ready";
-    public new const string DisplayName  = "준비된 양커 석션";
-    public new const string Description  = "석션 라인에 양커 팁이 연결되어 흡인 준비가 완료된 상태입니다.";
+    public new const string Identifier = "yankauer_suction_ready";
+    public new const string DisplayName = "준비된 양커 석션";
+    public new const string Description = "석션 라인에 양커 팁이 연결되어 흡인 준비가 완료된 상태입니다.";
   }
 }

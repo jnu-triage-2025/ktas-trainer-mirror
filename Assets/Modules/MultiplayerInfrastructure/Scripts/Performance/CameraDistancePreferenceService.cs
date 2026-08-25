@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;

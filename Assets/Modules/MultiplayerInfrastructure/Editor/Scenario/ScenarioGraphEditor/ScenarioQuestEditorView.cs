@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -61,7 +61,8 @@ namespace MultiplayerInfrastructure.Editor
       Preload();
       for (var index = 0; index < loadErrors.Count; index++)
         scroll.Add(new HelpBox(loadErrors[index], HelpBoxMessageType.Warning));
-      if (sources.Count == 0) return;
+      if (sources.Count == 0)
+        return;
       for (var index = 0; index < sources.Count; index++)
         scroll.Add(BuildSource(sources[index]));
     }
@@ -71,12 +72,14 @@ namespace MultiplayerInfrastructure.Editor
     {
       var includes = getGraph?.Invoke()?.QuestDefinitionIncludes;
       var includesKey = includes == null ? string.Empty : string.Join("\n", includes);
-      if (string.Equals(loadedIncludesKey, includesKey, StringComparison.Ordinal)) return;
+      if (string.Equals(loadedIncludesKey, includesKey, StringComparison.Ordinal))
+        return;
 
       sources.Clear();
       loadErrors.Clear();
       loadedIncludesKey = includesKey;
-      if (includes == null || includes.Count == 0) return;
+      if (includes == null || includes.Count == 0)
+        return;
       reportProgress?.Invoke(0, includes.Count + 1, "퀘스트 정의 파일을 찾는 중...");
       var paths = AssetDatabase.FindAssets("t:TextAsset")
         .Select(AssetDatabase.GUIDToAssetPath)
@@ -107,11 +110,13 @@ namespace MultiplayerInfrastructure.Editor
 
     public void SelectDefinition(string identifier)
     {
-      if (string.IsNullOrWhiteSpace(identifier)) return;
+      if (string.IsNullOrWhiteSpace(identifier))
+        return;
       if (!isViewBuilt || !definitionFoldouts.TryGetValue(identifier.Trim(), out var foldout))
       {
         Refresh();
-        if (!definitionFoldouts.TryGetValue(identifier.Trim(), out foldout)) return;
+        if (!definitionFoldouts.TryGetValue(identifier.Trim(), out foldout))
+          return;
       }
       foldout.value = true;
       foldout.schedule.Execute(() => scroll.ScrollTo(foldout));
@@ -137,7 +142,8 @@ namespace MultiplayerInfrastructure.Editor
         definitions.Add(new QuestDefinition { Identifier = "quest" });
         Save(source);
         Refresh();
-      }) { text = "Add Quest" });
+      })
+      { text = "Add Quest" });
       return sourceFoldout;
     }
 
@@ -185,7 +191,8 @@ namespace MultiplayerInfrastructure.Editor
         source.Payload.Definitions.Remove(definition);
         Save(source);
         Refresh();
-      }) { text = "Remove Quest" });
+      })
+      { text = "Remove Quest" });
       return foldout;
     }
 
@@ -202,7 +209,8 @@ namespace MultiplayerInfrastructure.Editor
         criteria.Add(new QuestCompletionCriteria());
         Save(source);
         Refresh();
-      }) { text = "Add Criterion" });
+      })
+      { text = "Add Criterion" });
       return listFoldout;
     }
 
@@ -259,14 +267,16 @@ namespace MultiplayerInfrastructure.Editor
         bindings.Add(new QuestPresentationBinding());
         Save(source);
         Refresh();
-      }) { text = "Add Binding" });
+      })
+      { text = "Add Binding" });
       return listFoldout;
     }
 
     private static TextField Text(string label, string value, Action<string> onChanged, bool multiline = false)
     {
       var field = new TextField(label) { value = value ?? string.Empty, multiline = multiline };
-      if (multiline) field.style.minHeight = 45;
+      if (multiline)
+        field.style.minHeight = 45;
       field.RegisterValueChangedCallback(evt => onChanged(evt.newValue));
       return field;
     }
@@ -309,7 +319,8 @@ namespace MultiplayerInfrastructure.Editor
       {
         var asset = AssetDatabase.LoadAssetAtPath<UnityEngine.TextAsset>(assetPath);
         payload = JsonSerializer.Deserialize<QuestDefinitionRegistryPayload>(asset?.text, JsonOptions);
-        if (payload == null) throw new InvalidDataException("빈 퀘스트 정의 문서입니다.");
+        if (payload == null)
+          throw new InvalidDataException("빈 퀘스트 정의 문서입니다.");
         payload.Definitions ??= new List<QuestDefinition>();
         return true;
       }
@@ -322,11 +333,15 @@ namespace MultiplayerInfrastructure.Editor
 
     private static string FindAssetPath(IEnumerable<string> paths, string include)
     {
-      if (string.IsNullOrWhiteSpace(include)) return null;
+      if (string.IsNullOrWhiteSpace(include))
+        return null;
       var normalized = include.Trim().Replace("\\", "/");
-      if (normalized.StartsWith("Resources/", StringComparison.OrdinalIgnoreCase)) normalized = normalized.Substring("Resources/".Length);
-      if (!normalized.StartsWith("Quest/", StringComparison.OrdinalIgnoreCase)) normalized = "Quest/" + normalized;
-      if (normalized.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) normalized = normalized.Substring(0, normalized.Length - 5);
+      if (normalized.StartsWith("Resources/", StringComparison.OrdinalIgnoreCase))
+        normalized = normalized.Substring("Resources/".Length);
+      if (!normalized.StartsWith("Quest/", StringComparison.OrdinalIgnoreCase))
+        normalized = "Quest/" + normalized;
+      if (normalized.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+        normalized = normalized.Substring(0, normalized.Length - 5);
       var expected = "/Resources/" + normalized + ".json";
       return paths.FirstOrDefault(path => path.EndsWith(expected, StringComparison.OrdinalIgnoreCase));
     }
@@ -379,7 +394,8 @@ namespace MultiplayerInfrastructure.Editor
         };
         reference.RegisterCallback<MouseDownEvent>(evt =>
         {
-          if (evt.button != 0 || evt.clickCount != 2) return;
+          if (evt.button != 0 || evt.clickCount != 2)
+            return;
           onReferenceNodeOpenRequested?.Invoke(nodeIdentifier);
           evt.StopPropagation();
         });

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -9,8 +9,8 @@ using FishNet.Transporting;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Registry;
-using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.Session;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Datapack
@@ -304,11 +304,14 @@ namespace MultiplayerInfrastructure.Datapack
       {
         string json = string.Empty;
         string error = string.Empty;
-        try { json = File.ReadAllText(path); } catch (Exception ex) { error = ex.Message; }
+        try
+        { json = File.ReadAllText(path); }
+        catch (Exception ex) { error = ex.Message; }
         DatapackDefinition definition = null;
         if (string.IsNullOrWhiteSpace(error))
         {
-          try { definition = JsonUtility.FromJson<DatapackDefinition>(json); }
+          try
+          { definition = JsonUtility.FromJson<DatapackDefinition>(json); }
           catch (Exception ex) { error = ex.Message; }
           if (definition == null || string.IsNullOrWhiteSpace(definition.packId))
             error = "packId is required.";
@@ -324,7 +327,8 @@ namespace MultiplayerInfrastructure.Datapack
     public static void EnsureRuntimeDatapackFolder()
     {
       string root = GameLogService.DatapackRootPath;
-      try { Directory.CreateDirectory(root); }
+      try
+      { Directory.CreateDirectory(root); }
       catch (Exception ex)
       {
         Debug.LogWarning($"[DatapackRuntimeService] Failed to create datapack folder '{root}': {ex.Message}");
@@ -334,7 +338,8 @@ namespace MultiplayerInfrastructure.Datapack
       if (!Directory.Exists(source))
         return;
       string[] sourcePaths;
-      try { sourcePaths = Directory.GetFiles(source, "*.datapack.json", SearchOption.AllDirectories); }
+      try
+      { sourcePaths = Directory.GetFiles(source, "*.datapack.json", SearchOption.AllDirectories); }
       catch (Exception ex)
       {
         Debug.LogWarning($"[DatapackRuntimeService] Failed to read built-in datapacks from '{source}': {ex.Message}");

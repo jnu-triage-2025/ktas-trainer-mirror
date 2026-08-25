@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using MultiplayerInfrastructure.Scenario;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using MultiplayerInfrastructure.Scenario;
 
 namespace MultiplayerInfrastructure.Editor
 {
@@ -100,7 +100,7 @@ namespace MultiplayerInfrastructure.Editor
           fontSize = 11
         }
       };
-      
+
       headerButton.Add(headerLabel);
       Add(headerButton);
 
@@ -215,7 +215,9 @@ namespace MultiplayerInfrastructure.Editor
       if (isExpanded)
       {
         style.marginBottom = 10f;
-      } else {
+      }
+      else
+      {
         style.marginBottom = 0f;
       }
     }
@@ -226,7 +228,9 @@ namespace MultiplayerInfrastructure.Editor
       if (isExpanded)
       {
         style.marginBottom = 10f;
-      } else {
+      }
+      else
+      {
         style.marginBottom = 0f;
       }
       scrollView.style.height = historyHeight;

@@ -1,10 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
+using FishNet.Object;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.UI;
 using NUnit.Framework;
 using TriageTrainer.ItemDefinitions;
-using FishNet.Object;
 using UnityEngine;
 
 namespace TriageTrainer.Tests

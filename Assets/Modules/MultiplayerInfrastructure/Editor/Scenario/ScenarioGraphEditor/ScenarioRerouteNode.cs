@@ -1,4 +1,4 @@
-using UnityEditor.Experimental.GraphView;
+﻿using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -104,7 +104,8 @@ namespace MultiplayerInfrastructure.Editor
     {
       base.ComputeControlPoints();
       var points = controlPoints;
-      if (points == null || points.Length < 4) return;
+      if (points == null || points.Length < 4)
+        return;
 
       var delta = to - from;
       // 가로 여유가 충분한 정방향 연결은 기본 GraphView 곡선을 변경하지 않는다.

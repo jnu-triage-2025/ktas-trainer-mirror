@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.UI;
@@ -53,7 +53,8 @@ namespace TriageTrainer.Entity
         && interactor?.GetComponentInParent<PlayerController>() != null;
       public void Interact(Transform interactor)
       {
-        if (!CanInteract(interactor)) return;
+        if (!CanInteract(interactor))
+          return;
         var player = interactor.GetComponentInParent<PlayerController>();
         if (_owner._yankauerConnected)
         {
@@ -244,7 +245,8 @@ namespace TriageTrainer.Entity
 
     private void LateUpdate()
     {
-      if (!_yankauerConnected) return;
+      if (!_yankauerConnected)
+        return;
       if (_yankauerHolder == null
           || _yankauerHolder.CountItemInInventory("yankauer_suction_ready") < 1)
       {
@@ -256,7 +258,8 @@ namespace TriageTrainer.Entity
 
     private void UpdateYankauerLine()
     {
-      if (_yankauerLine == null || _yankauerHolder == null) return;
+      if (_yankauerLine == null || _yankauerHolder == null)
+        return;
       _yankauerLine.SetPosition(0,
         _suctionLineConnectionPoint != null ? _suctionLineConnectionPoint.transform.position : transform.position);
       _yankauerLine.SetPosition(1, _yankauerHolder.transform.position + Vector3.up * 0.9f);
@@ -264,10 +267,12 @@ namespace TriageTrainer.Entity
 
     private void DisconnectYankauer()
     {
-      if (!_yankauerConnected) return;
+      if (!_yankauerConnected)
+        return;
       _yankauerConnected = false;
       _yankauerHolder = null;
-      if (_yankauerLine != null) Destroy(_yankauerLine.gameObject);
+      if (_yankauerLine != null)
+        Destroy(_yankauerLine.gameObject);
       _yankauerLine = null;
       GameLogService.WriteInteraction(
         $"Yankauer suction line disconnected: entity={EntityIdentifier}", EntityIdentifier);

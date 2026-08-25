@@ -1,6 +1,5 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Scenario;
@@ -103,7 +102,8 @@ namespace MultiplayerInfrastructure.UI
 
     public void UpdateInventory(IReadOnlyList<InventorySlotModelDTO> slots)
     {
-      if (_slotElements.Count == 0 || slots == null) return;
+      if (_slotElements.Count == 0 || slots == null)
+        return;
 
       _boundSlots = slots;
 
@@ -118,7 +118,8 @@ namespace MultiplayerInfrastructure.UI
           EnsureSlotDataCapacity(i + 1);
 
         var slotModel = i < incomingCount && slots[i] != null ? slots[i] : _slotDataBuffer[i];
-        if (slotModel == null) slotModel = new InventorySlotModelDTO();
+        if (slotModel == null)
+          slotModel = new InventorySlotModelDTO();
         _slotDataBuffer[i] = slotModel;
         RefreshSlotVisual(i);
       }
@@ -142,7 +143,8 @@ namespace MultiplayerInfrastructure.UI
       for (int i = 0; i < _slotElements.Count; i++)
       {
         var slot = GetSlotModel(i);
-        if (slot == null) continue;
+        if (slot == null)
+          continue;
 
         if (slot.IsEmpty)
         {
@@ -213,11 +215,14 @@ namespace MultiplayerInfrastructure.UI
           slotIndex++;
         }
 
-        if (row == 0) hotbarSlotRow = slotRow;
-        else _inventoryGrid.Add(slotRow);
+        if (row == 0)
+          hotbarSlotRow = slotRow;
+        else
+          _inventoryGrid.Add(slotRow);
       }
 
-      if (hotbarSlotRow != null) _inventoryGrid.Add(hotbarSlotRow);
+      if (hotbarSlotRow != null)
+        _inventoryGrid.Add(hotbarSlotRow);
 
       EnsureSlotDataCapacity(_slotElements.Count);
       RefreshAllSlots();
@@ -305,7 +310,8 @@ namespace MultiplayerInfrastructure.UI
     {
       _equipmentPanel = this.Q<VisualElement>("EquipmentPanel");
       var equipmentSlotsContainer = this.Q<VisualElement>("EquipmentSlots");
-      if (equipmentSlotsContainer == null) return;
+      if (equipmentSlotsContainer == null)
+        return;
 
       // UI 요소만 생성. 실제 데이터는 BindEquipment() 에서 PlayerController 로부터 바인딩.
       CreateEquipmentSlotUI(equipmentSlotsContainer, EquipmentSlotType.Glove, "Glove", slotIndex: 0);
@@ -317,7 +323,8 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void BindEquipment(IReadOnlyList<EquipmentSlotModelDTO> equipmentSlots)
     {
-      if (equipmentSlots == null) return;
+      if (equipmentSlots == null)
+        return;
       _boundEquipmentSlots = equipmentSlots;
       RefreshAllEquipmentSlotVisuals();
     }
@@ -385,10 +392,12 @@ namespace MultiplayerInfrastructure.UI
 
     private void HandleEquipmentSlotClicked(int equipSlotIndex, PointerDownEvent evt)
     {
-      if (_boundEquipmentSlots == null || equipSlotIndex < 0 || equipSlotIndex >= _boundEquipmentSlots.Count) return;
+      if (_boundEquipmentSlots == null || equipSlotIndex < 0 || equipSlotIndex >= _boundEquipmentSlots.Count)
+        return;
 
       // 우클릭은 장비 슬롯 자체 클릭 동작을 수행하지 않음 (버블링 허용)
-      if (evt.button == 1) return;
+      if (evt.button == 1)
+        return;
 
       var equipSlot = _boundEquipmentSlots[equipSlotIndex];
 
@@ -491,7 +500,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void RefreshEquipmentSlotVisual(int equipSlotIndex)
     {
-      if (_boundEquipmentSlots == null || equipSlotIndex < 0 || equipSlotIndex >= _boundEquipmentSlots.Count) return;
+      if (_boundEquipmentSlots == null || equipSlotIndex < 0 || equipSlotIndex >= _boundEquipmentSlots.Count)
+        return;
 
       var equipSlot = _boundEquipmentSlots[equipSlotIndex];
       var shadowImage = _equipmentShadowImages[equipSlotIndex];
@@ -540,7 +550,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void RefreshAllEquipmentSlotVisuals()
     {
-      if (_boundEquipmentSlots == null) return;
+      if (_boundEquipmentSlots == null)
+        return;
       for (int i = 0; i < _boundEquipmentSlots.Count; i++)
         RefreshEquipmentSlotVisual(i);
     }
@@ -555,10 +566,12 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     private int FindEquipmentSlot(EquipmentSlotType slotType)
     {
-      if (_boundEquipmentSlots == null) return -1;
+      if (_boundEquipmentSlots == null)
+        return -1;
       for (int i = 0; i < _boundEquipmentSlots.Count; i++)
       {
-        if (_boundEquipmentSlots[i].SlotType == slotType) return i;
+        if (_boundEquipmentSlots[i].SlotType == slotType)
+          return i;
       }
       return -1;
     }
@@ -571,10 +584,12 @@ namespace MultiplayerInfrastructure.UI
     private bool TryEquipFromInventorySlot(int slotIndex)
     {
       var slotData = GetSlotModel(slotIndex);
-      if (slotData == null || slotData.IsEmpty) return false;
+      if (slotData == null || slotData.IsEmpty)
+        return false;
 
       var item = slotData.ItemInstance;
-      if (item == null) return false;
+      if (item == null)
+        return false;
 
       // 장착 가능 여부 확인 (현재는 Glove 만 지원)
       EquipmentSlotType targetSlotType;
@@ -584,16 +599,19 @@ namespace MultiplayerInfrastructure.UI
         return false;
 
       int equipIdx = FindEquipmentSlot(targetSlotType);
-      if (equipIdx < 0) return false;
+      if (equipIdx < 0)
+        return false;
 
       var equipSlot = _boundEquipmentSlots[equipIdx];
 
       // 슬롯에 이미 아이템이 있으면 동작하지 않음 (Shift+클릭 규칙)
-      if (!equipSlot.IsEmpty) return false;
+      if (!equipSlot.IsEmpty)
+        return false;
 
       // 인벤토리 슬롯에서 아이템을 꺼내 장비 슬롯에 장착
       var taken = slotData.TakeAll();
-      if (taken == null) return false;
+      if (taken == null)
+        return false;
 
       equipSlot.Equip(taken);
       if (targetSlotType == EquipmentSlotType.Glove)
@@ -611,15 +629,18 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     private void TryEquipHeldItemToSlot(EquipmentSlotType targetSlotType)
     {
-      if (_heldItem == null || _heldItem.IsEmpty) return;
+      if (_heldItem == null || _heldItem.IsEmpty)
+        return;
 
       int equipIdx = FindEquipmentSlot(targetSlotType);
-      if (equipIdx < 0) return;
+      if (equipIdx < 0)
+        return;
 
       var equipSlot = _boundEquipmentSlots[equipIdx];
       var heldItemInstance = _heldItem.ItemInstance;
 
-      if (!equipSlot.CanAccept(heldItemInstance)) return;
+      if (!equipSlot.CanAccept(heldItemInstance))
+        return;
 
       if (equipSlot.IsEmpty)
       {
@@ -648,11 +669,14 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     private void OnRightClickEquipToSlot(PointerDownEvent evt)
     {
-      if (evt.button != 1) return;
-      if (_heldItem == null || _heldItem.IsEmpty) return;
+      if (evt.button != 1)
+        return;
+      if (_heldItem == null || _heldItem.IsEmpty)
+        return;
 
       var item = _heldItem.ItemInstance;
-      if (item == null) return;
+      if (item == null)
+        return;
 
       // 장착 가능 여부 확인 (현재는 Glove 만 지원)
       if (EquipmentAttributeHelper.IsEquippableGlove(item))
@@ -778,10 +802,12 @@ namespace MultiplayerInfrastructure.UI
 
     private void HandleSlotClicked(int slotIndex, PointerDownEvent evt)
     {
-      if (slotIndex < 0 || slotIndex >= _slotElements.Count) return;
+      if (slotIndex < 0 || slotIndex >= _slotElements.Count)
+        return;
 
       // 우클릭: 전역 우클릭 핸들러(장비 장착)로 버블링 허용
-      if (evt.button == 1) return;
+      if (evt.button == 1)
+        return;
 
       // Shift + 좌클릭: [Equippable*] 아이템을 장비 슬롯에 바로 장착
       if (evt.shiftKey && _heldItem == null)
@@ -812,10 +838,12 @@ namespace MultiplayerInfrastructure.UI
     private void TryPickUpFromSlot(int slotIndex)
     {
       var slotModel = GetSlotModel(slotIndex);
-      if (slotModel == null || slotModel.IsEmpty) return;
+      if (slotModel == null || slotModel.IsEmpty)
+        return;
 
       var taken = slotModel.TakeAll();
-      if (taken == null) return;
+      if (taken == null)
+        return;
 
       _heldItem = new InventorySlotModelDTO(taken);
 
@@ -874,13 +902,15 @@ namespace MultiplayerInfrastructure.UI
 
     private void OnPointerMoveWhileHolding(PointerMoveEvent evt)
     {
-      if (_heldItem == null) return;
+      if (_heldItem == null)
+        return;
       UpdateHeldItemGhostPosition(evt.position);
     }
 
     private void OnPointerUpOutsideSlot(PointerUpEvent evt)
     {
-      if (_heldItem == null) return;
+      if (_heldItem == null)
+        return;
 
       var target = evt.target as VisualElement;
 
@@ -904,13 +934,15 @@ namespace MultiplayerInfrastructure.UI
     private bool TryGetSlotIndexFromEvent(VisualElement target, out int slotIndex)
     {
       slotIndex = -1;
-      if (target == null) return false;
+      if (target == null)
+        return false;
 
       VisualElement candidate = target;
       while (candidate != null && !_slotElements.Contains(candidate))
         candidate = candidate.parent;
 
-      if (candidate == null) return false;
+      if (candidate == null)
+        return false;
 
       if (candidate.userData is int idx)
         slotIndex = idx;
@@ -928,7 +960,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void RefreshSlotVisual(int slotIndex)
     {
-      if (slotIndex < 0 || slotIndex >= _slotElements.Count) return;
+      if (slotIndex < 0 || slotIndex >= _slotElements.Count)
+        return;
 
       var slot = _slotElements[slotIndex];
       var icon = slot.Q<Image>("ItemIcon");
@@ -939,8 +972,10 @@ namespace MultiplayerInfrastructure.UI
 
       if (slotData == null || slotData.IsEmpty)
       {
-        if (icon != null) icon.image = _defaultIcon;
-        if (label != null) label.text = string.Empty;
+        if (icon != null)
+          icon.image = _defaultIcon;
+        if (label != null)
+          label.text = string.Empty;
         ItemDurabilityBar.Update(durability, null);
         return;
       }
@@ -960,7 +995,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void UpdateHeldItemGhostVisual(InventorySlotModelDTO heldData)
     {
-      if (_heldItemGhost == null) return;
+      if (_heldItemGhost == null)
+        return;
 
       if (heldData == null || heldData.IsEmpty)
       {
@@ -982,7 +1018,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void UpdateHeldItemGhostPosition(Vector2 panelPosition)
     {
-      if (_heldItemGhost == null) return;
+      if (_heldItemGhost == null)
+        return;
 
       Rect rootBounds = worldBound;
       float ghostWidth = Mathf.Max(1f, _heldItemGhost.resolvedStyle.width);
@@ -1000,7 +1037,8 @@ namespace MultiplayerInfrastructure.UI
 
     private InventorySlotModelDTO GetSlotModel(int slotIndex)
     {
-      if (slotIndex < 0) return null;
+      if (slotIndex < 0)
+        return null;
 
       EnsureSlotDataCapacity(slotIndex + 1);
 
@@ -1027,11 +1065,13 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>대상 요소가 장비 패널(또는 그 자식) 내부인지 검사한다.</summary>
     private bool IsWithinEquipmentPanel(VisualElement target)
     {
-      if (target == null || _equipmentPanel == null) return false;
+      if (target == null || _equipmentPanel == null)
+        return false;
       var cur = target;
       while (cur != null)
       {
-        if (cur == _equipmentPanel) return true;
+        if (cur == _equipmentPanel)
+          return true;
         cur = cur.parent;
       }
       return false;

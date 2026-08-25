@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -52,12 +52,12 @@ namespace MultiplayerInfrastructure.UI
     private static Color StyleColorBackground = new Color(0f, 0f, 0f, 0.82f);
     private static Color StyleColorText = Color.white;
 
-    const float styleLeft = 0f;
-    const float styleRight = 0f;
-    const float styleBottom = 0f;
-    const float stylePaddingLeft = 12f;
-    const float stylePaddingBottom = 12f;
-    const float stylePaddingRight = 12f;
+    private const float styleLeft = 0f;
+    private const float styleRight = 0f;
+    private const float styleBottom = 0f;
+    private const float stylePaddingLeft = 12f;
+    private const float stylePaddingBottom = 12f;
+    private const float stylePaddingRight = 12f;
 
     private class ToastEntry
     {
@@ -256,7 +256,7 @@ namespace MultiplayerInfrastructure.UI
       };
       _inputField.AddToClassList("chat-input");
       _inputField.style.color = StyleColorText;
-      
+
       _textInputElement = _inputField.Q("unity-text-input");
       _textInputElement.style.backgroundColor = Color.clear;
       _textInputElement.style.borderTopWidth = 0;
@@ -488,7 +488,8 @@ namespace MultiplayerInfrastructure.UI
       {
         RemoveFromClassList("collapsed");
         AddToClassList("expanded");
-        if (_panel != null) _panel.style.display = DisplayStyle.Flex;
+        if (_panel != null)
+          _panel.style.display = DisplayStyle.Flex;
         ClearToasts();
         // When the panel is (re)opened, show the most recent messages.
         ScrollToBottom();
@@ -497,7 +498,8 @@ namespace MultiplayerInfrastructure.UI
       {
         RemoveFromClassList("expanded");
         AddToClassList("collapsed");
-        if (_panel != null) _panel.style.display = DisplayStyle.None;
+        if (_panel != null)
+          _panel.style.display = DisplayStyle.None;
         // Keep toasts hidden when the panel is closed until new ones arrive.
         if (_toastContainer != null)
         {
@@ -509,7 +511,8 @@ namespace MultiplayerInfrastructure.UI
 
     public void FocusInput()
     {
-      if (_inputField == null) return;
+      if (_inputField == null)
+        return;
 
       _inputField.Focus();
       _inputField.cursorIndex = _inputField.text.Length;

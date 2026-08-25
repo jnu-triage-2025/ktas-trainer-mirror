@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 using FishNet;
 using FishNet.Object;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.Registry;
+using UnityEngine;
 
 namespace MultiplayerInfrastructure.Scenario
 {

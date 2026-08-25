@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using FishNet.Managing;
 using FishNet.Transporting;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Quest
@@ -152,7 +152,8 @@ namespace MultiplayerInfrastructure.Quest
 
     public void SetQuests(IEnumerable<QuestData> quests, bool clearExisting = true)
     {
-      if (quests == null) return;
+      if (quests == null)
+        return;
 
       if (clearExisting)
       {
@@ -354,7 +355,8 @@ namespace MultiplayerInfrastructure.Quest
 
     public void RemoveQuest(string questId)
     {
-      if (string.IsNullOrWhiteSpace(questId)) return;
+      if (string.IsNullOrWhiteSpace(questId))
+        return;
 
       _quests.Remove(questId);
       _trackedQuestOrder.Remove(questId);
@@ -1004,28 +1006,28 @@ namespace MultiplayerInfrastructure.Quest
       switch (criteria.Type)
       {
         case QuestCompletionCriteriaType.InventoryContains:
-        {
-          int inventoryCount = playerController != null
-              ? playerController.CountItemInInventory(criteria.ItemId)
-              : 0;
-          bool satisfied = inventoryCount >= count;
-          return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(satisfied, Math.Min(inventoryCount, count), count));
-        }
+          {
+            int inventoryCount = playerController != null
+                ? playerController.CountItemInInventory(criteria.ItemId)
+                : 0;
+            bool satisfied = inventoryCount >= count;
+            return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(satisfied, Math.Min(inventoryCount, count), count));
+          }
 
         case QuestCompletionCriteriaType.InteractionSignalReceived:
-        {
-          var normalized = ScenarioInteractionSignals.Normalize(criteria.SignalId);
-          bool raised = !string.IsNullOrWhiteSpace(normalized)
-              && Registry.Registry.Contains(RegistryType.RuntimeState, normalized);
-          int current = raised ? count : 0;
-          return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(raised, current, count));
-        }
+          {
+            var normalized = ScenarioInteractionSignals.Normalize(criteria.SignalId);
+            bool raised = !string.IsNullOrWhiteSpace(normalized)
+                && Registry.Registry.Contains(RegistryType.RuntimeState, normalized);
+            int current = raised ? count : 0;
+            return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(raised, current, count));
+          }
 
         case QuestCompletionCriteriaType.WaypointReached:
-        {
-          bool reached = IsWaypointReached(criteria, playerController);
-          return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(reached, reached ? 1 : 0, 1));
-        }
+          {
+            bool reached = IsWaypointReached(criteria, playerController);
+            return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(reached, reached ? 1 : 0, 1));
+          }
 
         case QuestCompletionCriteriaType.AllOf:
           return EvaluateComposite(criteria.Conditions, true, playerController);
@@ -1048,24 +1050,24 @@ namespace MultiplayerInfrastructure.Quest
       switch (criteria.Type)
       {
         case QuestCompletionCriteriaType.InventoryContains:
-        {
-          int totalCount = CountItemAcrossAllPlayers(criteria.ItemId);
-          bool satisfied = totalCount >= count;
-          return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(satisfied, Math.Min(totalCount, count), count));
-        }
+          {
+            int totalCount = CountItemAcrossAllPlayers(criteria.ItemId);
+            bool satisfied = totalCount >= count;
+            return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(satisfied, Math.Min(totalCount, count), count));
+          }
         case QuestCompletionCriteriaType.InteractionSignalReceived:
-        {
-          var normalized = ScenarioInteractionSignals.Normalize(criteria.SignalId);
-          bool raised = !string.IsNullOrWhiteSpace(normalized)
-              && Registry.Registry.Contains(RegistryType.RuntimeState, normalized);
-          int current = raised ? count : 0;
-          return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(raised, current, count));
-        }
+          {
+            var normalized = ScenarioInteractionSignals.Normalize(criteria.SignalId);
+            bool raised = !string.IsNullOrWhiteSpace(normalized)
+                && Registry.Registry.Contains(RegistryType.RuntimeState, normalized);
+            int current = raised ? count : 0;
+            return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(raised, current, count));
+          }
         case QuestCompletionCriteriaType.WaypointReached:
-        {
-          bool reached = IsWaypointReachedGlobal(criteria);
-          return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(reached, reached ? 1 : 0, 1));
-        }
+          {
+            bool reached = IsWaypointReachedGlobal(criteria);
+            return new QuestCriteriaEvaluationNode(new QuestCriteriaEvaluationResult(reached, reached ? 1 : 0, 1));
+          }
         case QuestCompletionCriteriaType.AllOf:
           return EvaluateCompositeGlobal(criteria.Conditions, true);
         case QuestCompletionCriteriaType.AnyOf:

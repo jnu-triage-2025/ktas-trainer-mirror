@@ -1,7 +1,7 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Quest;
+using MultiplayerInfrastructure.Scenario;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -233,7 +233,8 @@ namespace MultiplayerInfrastructure.Editor
 
     private static void RefreshPort(Port port)
     {
-      if (port == null) return;
+      if (port == null)
+        return;
       port.portColor = Color.white;
     }
 
@@ -1254,20 +1255,20 @@ namespace MultiplayerInfrastructure.Editor
       switch (rootCondition.Condition)
       {
         case ScenarioValidatorCondition.RegistryContains:
-        {
-          var rules = rootCondition.ValidationRules?
-              .Where(each => each != null)
-              .ToList();
-
-          if (rules == null || rules.Count == 0)
           {
-            return $"{index + 1}. RegistryContains (rules: empty)";
-          }
+            var rules = rootCondition.ValidationRules?
+                .Where(each => each != null)
+                .ToList();
 
-          var compactRules = string.Join(", ", rules.Select(each =>
-              $"{each.Type}/{each.Condition}/{each.RegistryType}:{each.RegistryIdentifier}"));
-          return $"{index + 1}. RegistryContains [{rootCondition.MatchMode}: {compactRules}]";
-        }
+            if (rules == null || rules.Count == 0)
+            {
+              return $"{index + 1}. RegistryContains (rules: empty)";
+            }
+
+            var compactRules = string.Join(", ", rules.Select(each =>
+                $"{each.Type}/{each.Condition}/{each.RegistryType}:{each.RegistryIdentifier}"));
+            return $"{index + 1}. RegistryContains [{rootCondition.MatchMode}: {compactRules}]";
+          }
         case ScenarioValidatorCondition.PlayerAssignedTag:
           return $"{index + 1}. PlayerAssignedTag {rootCondition.PlayerScope}/{rootCondition.PlayerTag}";
         case ScenarioValidatorCondition.PlayerCountEqual:
@@ -1382,9 +1383,12 @@ namespace MultiplayerInfrastructure.Editor
     {
       switch (port?.userData)
       {
-        case "next": return "next";
-        case "quiz.correct": return "quiz.correct";
-        case "quiz.incorrect": return "quiz.incorrect";
+        case "next":
+          return "next";
+        case "quiz.correct":
+          return "quiz.correct";
+        case "quiz.incorrect":
+          return "quiz.incorrect";
         case ScenarioChoiceOption option:
           return $"choice.{((ScenarioChoiceNode)Data).Options.ToList().IndexOf(option)}";
         case ScenarioParallelBranch branch:

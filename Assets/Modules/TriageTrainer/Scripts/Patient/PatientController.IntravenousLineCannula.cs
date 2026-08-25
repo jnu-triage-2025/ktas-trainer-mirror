@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
@@ -272,8 +272,10 @@ namespace TriageTrainer.Entity
       ShowTreatmentDisplay(display);
 
       // 배정 상태 기록(다음 삽입은 반대 팔로).
-      if (isLeft) _cannulaLeftArmInserted = true;
-      else _cannulaRightArmInserted = true;
+      if (isLeft)
+        _cannulaLeftArmInserted = true;
+      else
+        _cannulaRightArmInserted = true;
 
       CompletePatientBCIvOrRaiseExistingSignal(side, heldIdentifier);
 

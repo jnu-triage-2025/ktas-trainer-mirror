@@ -1,4 +1,4 @@
-namespace TriageTrainer.Entity
+﻿namespace TriageTrainer.Entity
 {
   /// <summary>
   /// 이동 조종 네트워크 구현은 MinecraftBoatLikeControl로 공통화되었다.

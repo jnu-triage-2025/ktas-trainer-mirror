@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.ItemSystem;
 using UnityEngine;
@@ -31,7 +31,8 @@ namespace MultiplayerInfrastructure.UI
       set
       {
         var clamped = Mathf.Clamp(value, MinSlotSize, MaxSlotSize);
-        if (_hotbarSlotCount == clamped) return;
+        if (_hotbarSlotCount == clamped)
+          return;
 
         _hotbarSlotCount = clamped;
         if (panel != null) // only rebuild once we’re actually on-screen
@@ -147,10 +148,12 @@ namespace MultiplayerInfrastructure.UI
 
     public void SetSelectedIndex(int index)
     {
-      if (SlotCount == 0) return;
+      if (SlotCount == 0)
+        return;
 
       index = Mathf.Clamp(index, 0, SlotCount - 1);
-      if (_selectedIndex == index) return;
+      if (_selectedIndex == index)
+        return;
 
       _selectedIndex = index;
       ApplySelectionVisuals();
@@ -162,10 +165,12 @@ namespace MultiplayerInfrastructure.UI
 
     public void CycleSelection(int direction)
     {
-      if (SlotCount == 0) return;
+      if (SlotCount == 0)
+        return;
 
       _selectedIndex = (_selectedIndex + direction) % SlotCount;
-      if (_selectedIndex < 0) _selectedIndex += SlotCount;
+      if (_selectedIndex < 0)
+        _selectedIndex += SlotCount;
 
       ApplySelectionVisuals();
       UpdateHeldItemName();
@@ -236,7 +241,8 @@ namespace MultiplayerInfrastructure.UI
         || !ReferenceEquals(_heldItemSnapshot, current)
         || _heldItemNameSnapshot != currentName;
 
-      if (!changed) return;
+      if (!changed)
+        return;
 
       _heldItemSnapshot = current;
       _heldItemNameSnapshot = currentName;

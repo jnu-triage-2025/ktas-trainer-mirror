@@ -1,13 +1,13 @@
+﻿using FishNet.Connection;
 using FishNet.Object;
-using FishNet.Connection;
+using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.ItemSystem;
+using MultiplayerInfrastructure.Logging;
+using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
-using MultiplayerInfrastructure.Entity;
 using UnityEngine;
-using MultiplayerInfrastructure.Logging;
-using MultiplayerInfrastructure.Performance;
 
 namespace MultiplayerInfrastructure.Player
 {
@@ -39,7 +39,7 @@ namespace MultiplayerInfrastructure.Player
     private ItemSystem.Item _viewmodelItem;
     private Coroutine _viewmodelAnim;
 
-    void Start_Item()
+    private void Start_Item()
     {
       if (_hotbarUI == null)
         _hotbarUI = Registry.Registry.Get<HotbarUIController>(RegistryType.UI, Registry.Registry.TypeKey<HotbarUIController>());
@@ -63,7 +63,7 @@ namespace MultiplayerInfrastructure.Player
     /// 구독 해제를 누락하면 파괴된 플레이어 오브젝트로의 dangling 핸들러가 남아
     /// 이후 슬롯 변경 이벤트에서 예외가 발생한다.
     /// </summary>
-    void OnDestroy_Item()
+    private void OnDestroy_Item()
     {
       if (_hotbarUI != null)
         _hotbarUI.OnSelectedSlotChanged -= ResolveHandledItem;
@@ -79,7 +79,7 @@ namespace MultiplayerInfrastructure.Player
     /// -> trigger resolved when Update_Item called in Update loop
     /// </summary>
 
-    void Update_Item()
+    private void Update_Item()
     {
       // 설치체 회수는 일반 공격 입력 경로(UI/상호작용 처리에서 소비될 수 있음)에 의존하지 않는다.
       // Update_Raycast 직후 실행되므로 이번 프레임의 카메라 조준 대상을 즉시 처리한다.
@@ -184,7 +184,8 @@ namespace MultiplayerInfrastructure.Player
       var itemizable = hit?.GetComponentInParent<IItemizableWorldEntity>();
       LogRapidInfuser($"raycast hit={(hit == null ? "<null>" : hit.name)} itemizable={(itemizable == null ? "<null>" : itemizable.ItemizationEntityIdentifier)}");
       bool result = itemizable != null && itemizable.RequestItemization(this);
-      if (itemizable != null) LogRapidInfuser($"raycast itemization result={result}");
+      if (itemizable != null)
+        LogRapidInfuser($"raycast itemization result={result}");
       return result;
     }
 
@@ -305,7 +306,8 @@ namespace MultiplayerInfrastructure.Player
     /// </summary>
     private bool TryEquipHandlingItem(EquipmentSlotType slotType)
     {
-      if (HandlingItem == null) return false;
+      if (HandlingItem == null)
+        return false;
 
       EquipmentSlotModelDTO targetSlot = null;
       for (int i = 0; i < _equipmentSlots.Count; i++)
@@ -317,16 +319,22 @@ namespace MultiplayerInfrastructure.Player
         }
       }
 
-      if (targetSlot == null) return false;
-      if (!targetSlot.CanAccept(HandlingItem)) return false;
-      if (!targetSlot.IsEmpty) return false;
+      if (targetSlot == null)
+        return false;
+      if (!targetSlot.CanAccept(HandlingItem))
+        return false;
+      if (!targetSlot.IsEmpty)
+        return false;
 
-      if (_hotbarUI == null) return false;
+      if (_hotbarUI == null)
+        return false;
       int selectedIndex = _hotbarUI.SelectedSlot;
-      if (selectedIndex < 0 || selectedIndex >= _slots.Count) return false;
+      if (selectedIndex < 0 || selectedIndex >= _slots.Count)
+        return false;
 
       var hotbarSlot = _slots[selectedIndex];
-      if (hotbarSlot == null || hotbarSlot.IsEmpty) return false;
+      if (hotbarSlot == null || hotbarSlot.IsEmpty)
+        return false;
 
       // 스택 중 1개만 장착. 1개 초과 시 Pop, 1개 이하 시 TakeAll.
       Item toEquip;
@@ -335,7 +343,8 @@ namespace MultiplayerInfrastructure.Player
       else
         toEquip = hotbarSlot.TakeAll();
 
-      if (toEquip == null) return false;
+      if (toEquip == null)
+        return false;
 
       targetSlot.Equip(toEquip);
       if (slotType == EquipmentSlotType.Glove)
@@ -394,15 +403,19 @@ namespace MultiplayerInfrastructure.Player
 
     public void DropHeldItem()
     {
-      if (_hotbarUI == null) return;
+      if (_hotbarUI == null)
+        return;
       int selectedIndex = _hotbarUI.SelectedSlot;
-      if (selectedIndex < 0 || selectedIndex >= _slots.Count) return;
+      if (selectedIndex < 0 || selectedIndex >= _slots.Count)
+        return;
 
       var slot = _slots[selectedIndex];
-      if (slot == null || slot.IsEmpty) return;
+      if (slot == null || slot.IsEmpty)
+        return;
 
       var item = slot.TakeAll();
-      if (item == null) return;
+      if (item == null)
+        return;
 
       if (!TryDropItemInFront(item))
         slot.SetItem(item);

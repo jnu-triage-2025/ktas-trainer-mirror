@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -92,7 +92,8 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>바인딩 데이터가 외부에서 변경된 후 키 레이블만 새로 고칩니다.</summary>
     public void RefreshKeyLabel()
     {
-      if (_entry == null) return;
+      if (_entry == null)
+        return;
       _keyLabel.text = _entry.boundKey == KeyCode.None ? "—" : KeyCodeToLabel(_entry.boundKey);
     }
 
@@ -115,7 +116,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void OnKeyLabelClick(ClickEvent evt)
     {
-      if (_entry == null) return;
+      if (_entry == null)
+        return;
       evt.StopPropagation(); // 전체 행 클릭 이벤트와 중복 방지
       OnRebindRequested?.Invoke(_entry.actionId);
     }
@@ -133,34 +135,63 @@ namespace MultiplayerInfrastructure.UI
     {
       return key switch
       {
-        KeyCode.Alpha0 => "0", KeyCode.Alpha1 => "1", KeyCode.Alpha2 => "2",
-        KeyCode.Alpha3 => "3", KeyCode.Alpha4 => "4", KeyCode.Alpha5 => "5",
-        KeyCode.Alpha6 => "6", KeyCode.Alpha7 => "7", KeyCode.Alpha8 => "8",
+        KeyCode.Alpha0 => "0",
+        KeyCode.Alpha1 => "1",
+        KeyCode.Alpha2 => "2",
+        KeyCode.Alpha3 => "3",
+        KeyCode.Alpha4 => "4",
+        KeyCode.Alpha5 => "5",
+        KeyCode.Alpha6 => "6",
+        KeyCode.Alpha7 => "7",
+        KeyCode.Alpha8 => "8",
         KeyCode.Alpha9 => "9",
         KeyCode.BackQuote => "~",
-        KeyCode.Minus => "-", KeyCode.Equals => "=",
-        KeyCode.LeftBracket => "[", KeyCode.RightBracket => "]",
-        KeyCode.Backslash => "\\", KeyCode.Semicolon => ";", KeyCode.Quote => "'",
-        KeyCode.Comma => ",", KeyCode.Period => ".", KeyCode.Slash => "/",
-        KeyCode.Keypad0 => "Num 0", KeyCode.Keypad1 => "Num 1",
-        KeyCode.Keypad2 => "Num 2", KeyCode.Keypad3 => "Num 3",
-        KeyCode.Keypad4 => "Num 4", KeyCode.Keypad5 => "Num 5",
-        KeyCode.Keypad6 => "Num 6", KeyCode.Keypad7 => "Num 7",
-        KeyCode.Keypad8 => "Num 8", KeyCode.Keypad9 => "Num 9",
-        KeyCode.KeypadDivide => "Num /", KeyCode.KeypadMultiply => "Num *",
-        KeyCode.KeypadMinus => "Num -", KeyCode.KeypadPlus => "Num +",
-        KeyCode.KeypadPeriod => "Num .", KeyCode.KeypadEnter => "Num Enter",
-        KeyCode.UpArrow => "↑", KeyCode.DownArrow => "↓",
-        KeyCode.LeftArrow => "←", KeyCode.RightArrow => "→",
-        KeyCode.LeftShift => "L.Shift", KeyCode.RightShift => "R.Shift",
-        KeyCode.LeftControl => "L.Ctrl", KeyCode.RightControl => "R.Ctrl",
-        KeyCode.LeftAlt => "L.Alt", KeyCode.RightAlt => "R.Alt",
-        KeyCode.LeftWindows => "L.Win", KeyCode.RightWindows => "R.Win",
+        KeyCode.Minus => "-",
+        KeyCode.Equals => "=",
+        KeyCode.LeftBracket => "[",
+        KeyCode.RightBracket => "]",
+        KeyCode.Backslash => "\\",
+        KeyCode.Semicolon => ";",
+        KeyCode.Quote => "'",
+        KeyCode.Comma => ",",
+        KeyCode.Period => ".",
+        KeyCode.Slash => "/",
+        KeyCode.Keypad0 => "Num 0",
+        KeyCode.Keypad1 => "Num 1",
+        KeyCode.Keypad2 => "Num 2",
+        KeyCode.Keypad3 => "Num 3",
+        KeyCode.Keypad4 => "Num 4",
+        KeyCode.Keypad5 => "Num 5",
+        KeyCode.Keypad6 => "Num 6",
+        KeyCode.Keypad7 => "Num 7",
+        KeyCode.Keypad8 => "Num 8",
+        KeyCode.Keypad9 => "Num 9",
+        KeyCode.KeypadDivide => "Num /",
+        KeyCode.KeypadMultiply => "Num *",
+        KeyCode.KeypadMinus => "Num -",
+        KeyCode.KeypadPlus => "Num +",
+        KeyCode.KeypadPeriod => "Num .",
+        KeyCode.KeypadEnter => "Num Enter",
+        KeyCode.UpArrow => "↑",
+        KeyCode.DownArrow => "↓",
+        KeyCode.LeftArrow => "←",
+        KeyCode.RightArrow => "→",
+        KeyCode.LeftShift => "L.Shift",
+        KeyCode.RightShift => "R.Shift",
+        KeyCode.LeftControl => "L.Ctrl",
+        KeyCode.RightControl => "R.Ctrl",
+        KeyCode.LeftAlt => "L.Alt",
+        KeyCode.RightAlt => "R.Alt",
+        KeyCode.LeftWindows => "L.Win",
+        KeyCode.RightWindows => "R.Win",
         KeyCode.Return => "Enter",
         KeyCode.Backspace => "Backspace",
-        KeyCode.Delete => "Delete", KeyCode.Insert => "Insert",
-        KeyCode.Home => "Home", KeyCode.End => "End",
-        KeyCode.PageUp => "Page Up", KeyCode.PageDown => "Page Down",
+        KeyCode.Delete => "Delete",
+        KeyCode.Insert => "Insert",
+        KeyCode.Home => "Home",
+        KeyCode.End => "End",
+        KeyCode.PageUp => "Page Up",
+        KeyCode.PageDown => "Page Down",
         KeyCode.Escape => "Esc",
         KeyCode.Tab => "Tab",
         KeyCode.CapsLock => "Caps Lock",

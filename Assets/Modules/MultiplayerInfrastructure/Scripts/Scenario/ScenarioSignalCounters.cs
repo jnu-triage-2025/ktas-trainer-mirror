@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -104,12 +104,14 @@ namespace MultiplayerInfrastructure.Scenario
       bool hasDynamicCounter = false;
       foreach (var counter in Counters.Values)
       {
-        if (counter.ExpectedSignals == null) continue;
+        if (counter.ExpectedSignals == null)
+          continue;
         hasDynamicCounter = true;
         break;
       }
 
-      if (!hasDynamicCounter) return;
+      if (!hasDynamicCounter)
+        return;
 
       foreach (var counter in Counters.Values.ToArray())
       {
@@ -144,11 +146,14 @@ namespace MultiplayerInfrastructure.Scenario
 
     private static void HandleSignal(string signal)
     {
-      if (string.IsNullOrWhiteSpace(signal)) return;
+      if (string.IsNullOrWhiteSpace(signal))
+        return;
 
-      if (PendingSignals.Contains(signal)) return;
+      if (PendingSignals.Contains(signal))
+        return;
       PendingSignals.Enqueue(signal);
-      if (_isDispatching) return;
+      if (_isDispatching)
+        return;
 
       _isDispatching = true;
       try
@@ -169,7 +174,8 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     private static void HandleSignalCleared(string signal)
     {
-      if (string.IsNullOrWhiteSpace(signal) || Counters.Count == 0) return;
+      if (string.IsNullOrWhiteSpace(signal) || Counters.Count == 0)
+        return;
 
       foreach (var counter in Counters.Values)
         counter.Matched.Remove(signal);
@@ -182,8 +188,10 @@ namespace MultiplayerInfrastructure.Scenario
       var keys = new List<string>(Counters.Keys);
       foreach (var key in keys)
       {
-        if (!Counters.TryGetValue(key, out var counter)) continue;
-        if (!signal.StartsWith(counter.Prefix, StringComparison.Ordinal)) continue;
+        if (!Counters.TryGetValue(key, out var counter))
+          continue;
+        if (!signal.StartsWith(counter.Prefix, StringComparison.Ordinal))
+          continue;
 
         counter.Matched.Add(signal);
         FireIfReady(counter);
@@ -195,9 +203,11 @@ namespace MultiplayerInfrastructure.Scenario
       if (counter.ExpectedSignals != null)
       {
         var expected = counter.ExpectedSignals() ?? Array.Empty<string>();
-        if (expected.Count == 0 || expected.Any(signal => !counter.Matched.Contains(signal))) return;
+        if (expected.Count == 0 || expected.Any(signal => !counter.Matched.Contains(signal)))
+          return;
       }
-      else if (counter.Matched.Count < counter.Threshold) return;
+      else if (counter.Matched.Count < counter.Threshold)
+        return;
 
       // 1회성: 발신 전에 제거하여 재진입/중복 발신을 방지한다.
       Counters.Remove(counter.Identifier);

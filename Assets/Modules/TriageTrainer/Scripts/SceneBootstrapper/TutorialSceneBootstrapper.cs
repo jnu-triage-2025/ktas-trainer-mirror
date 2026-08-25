@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using FishNet;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.FishNetSupports;

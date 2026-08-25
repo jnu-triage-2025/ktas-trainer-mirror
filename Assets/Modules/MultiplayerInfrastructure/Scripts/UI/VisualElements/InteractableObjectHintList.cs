@@ -1,7 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
-using MultiplayerInfrastructure.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -198,9 +197,9 @@ namespace MultiplayerInfrastructure.UI
       return 30f;
     }
 
-    const string UssSelectorContentViewport = "unity-content-viewport";
-    VisualElement _visualElementContentViewport;
-    VisualElement VisualElementContentViewport
+    private const string UssSelectorContentViewport = "unity-content-viewport";
+    private VisualElement _visualElementContentViewport;
+    private VisualElement VisualElementContentViewport
     {
       get
       {

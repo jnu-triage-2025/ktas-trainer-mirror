@@ -1,9 +1,8 @@
-using FishNet.Object;
+﻿using FishNet.Object;
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Performance;
-using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
@@ -15,12 +14,12 @@ namespace MultiplayerInfrastructure.Player
     public Entity.Entity PlayerEntity => _playerEntity;
     public string ScenarioEntityIdentifier => UserIdentifier;
 
-    NearbyInteractablesDetector _interactiveDetector;
+    private NearbyInteractablesDetector _interactiveDetector;
     public NearbyInteractablesDetector InteractiveDetector => _interactiveDetector;
-    InteractableEntityResolver _interactionResolver;
+    private InteractableEntityResolver _interactionResolver;
     public InteractableEntityResolver InteractionResolver => _interactionResolver;
-    
-    void Awake()
+
+    private void Awake()
     {
       Awake_GameObject();
       Awake_PlayerModel();
@@ -33,11 +32,11 @@ namespace MultiplayerInfrastructure.Player
 
       if (_playerEntity == null)
         _playerEntity = new Entity.Entity();
-      
+
       _interactionResolver = GetComponent<InteractableEntityResolver>();
     }
 
-    void Start()
+    private void Start()
     {
       // 인벤토리 슬롯 초기화는 소유 여부와 무관하게 필요하다(서버/원격에서도 슬롯 데이터 유지).
       Start_Inventory();
@@ -45,12 +44,13 @@ namespace MultiplayerInfrastructure.Player
 
 
 
-    void Update()
+    private void Update()
     {
       if (IsServerStarted)
         UpdateServerWorldItemTransforms();
 
-      if (!IsOwner) return;
+      if (!IsOwner)
+        return;
       Update_Input();
       Update_Movement();
       Update_ReposableCarry();
@@ -61,9 +61,9 @@ namespace MultiplayerInfrastructure.Player
       Update_PlaceableItemPreview();
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
-      LateUpdate_Camera();  
+      LateUpdate_Camera();
     }
 
     public override void OnStartClient()
@@ -71,10 +71,11 @@ namespace MultiplayerInfrastructure.Player
       base.OnStartClient();
       OnStartClient_AnyPeer();   // 모든 클라이언트 — owner 여부 무관
       MppmLiteMode.StripVisuals(gameObject);
-      if (!IsOwner) return;
+      if (!IsOwner)
+        return;
 
       OnStartClient_UIOverlaySync();
-      
+
       OnStartClient_Network();
       OnStartClient_Camera();
       OnStartClient_Crosshair();

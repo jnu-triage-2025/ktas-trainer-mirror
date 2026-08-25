@@ -1,9 +1,9 @@
-using System;
-using UnityEngine;
+﻿using System;
+using FishNet.Object;
 using MultiplayerInfrastructure.Commons;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Registry;
-using FishNet.Object;
+using UnityEngine;
 
 namespace MultiplayerInfrastructure.Scenario
 {

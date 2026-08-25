@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Registry;
 using TriageTrainer.Entity;
@@ -24,42 +24,48 @@ namespace TriageTrainer.Scenario
     private IEnumerator Event_PreparePatientAManualScenEntry()
     {
       yield return EnsurePatientAForManualEntry();
-      if (!_manualPatientASetupSucceeded) yield break;
+      if (!_manualPatientASetupSucceeded)
+        yield break;
       ApplyManualStage(ManualPatientAStage.ScenEntry);
     }
 
     private IEnumerator Event_PreparePatientAManualDocInst()
     {
       yield return EnsurePatientAForManualEntry();
-      if (!_manualPatientASetupSucceeded) yield break;
+      if (!_manualPatientASetupSucceeded)
+        yield break;
       ApplyManualStage(ManualPatientAStage.DocInstruction);
     }
 
     private IEnumerator Event_PreparePatientAManualArrest()
     {
       yield return EnsurePatientAForManualEntry();
-      if (!_manualPatientASetupSucceeded) yield break;
+      if (!_manualPatientASetupSucceeded)
+        yield break;
       ApplyManualStage(ManualPatientAStage.PreArrest);
     }
 
     private IEnumerator Event_PreparePatientAManualCpr1()
     {
       yield return EnsurePatientAForManualEntry();
-      if (!_manualPatientASetupSucceeded) yield break;
+      if (!_manualPatientASetupSucceeded)
+        yield break;
       ApplyManualStage(ManualPatientAStage.Cpr1);
     }
 
     private IEnumerator Event_PreparePatientAManualCpr2()
     {
       yield return EnsurePatientAForManualEntry();
-      if (!_manualPatientASetupSucceeded) yield break;
+      if (!_manualPatientASetupSucceeded)
+        yield break;
       ApplyManualStage(ManualPatientAStage.Cpr2);
     }
 
     private IEnumerator Event_PreparePatientAManualRosc()
     {
       yield return EnsurePatientAForManualEntry();
-      if (!_manualPatientASetupSucceeded) yield break;
+      if (!_manualPatientASetupSucceeded)
+        yield break;
       ApplyManualStage(ManualPatientAStage.RoscFollowup);
     }
 

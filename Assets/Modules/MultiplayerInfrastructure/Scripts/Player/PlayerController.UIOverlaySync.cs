@@ -1,4 +1,4 @@
-using MultiplayerInfrastructure.UI;
+﻿using MultiplayerInfrastructure.UI;
 
 namespace MultiplayerInfrastructure.Player
 {

@@ -1,10 +1,10 @@
-using MultiplayerInfrastructure.Scenario;
+﻿using System.Linq;
 using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Scenario;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using System.Linq;
 
 namespace MultiplayerInfrastructure.Editor
 {
@@ -29,13 +29,13 @@ namespace MultiplayerInfrastructure.Editor
 
     public void RefreshInspector()
     {
-        container.MarkDirtyRepaint();
+      container.MarkDirtyRepaint();
     }
 
     public void SetTarget(ScenarioNodeView nodeView)
     {
-        targetNode = nodeView;
-        RefreshInspector();
+      targetNode = nodeView;
+      RefreshInspector();
     }
 
     private void DrawInspector()
@@ -270,7 +270,8 @@ namespace MultiplayerInfrastructure.Editor
     /// </summary>
     private static void DrawTTSBakeHint(bool playTTS, string text)
     {
-      if (!playTTS) return;
+      if (!playTTS)
+        return;
 
       if (ScenarioTTSBakeScanner.ContainsVariable(text))
       {
@@ -833,7 +834,8 @@ namespace MultiplayerInfrastructure.Editor
       var content = string.IsNullOrWhiteSpace(definition.QuestContent) ? "(없음)" : definition.QuestContent;
       var rect = EditorGUILayout.GetControlRect();
       EditorGUI.LabelField(rect, "Quest Content", content);
-      if (string.IsNullOrWhiteSpace(definition.QuestContent)) return;
+      if (string.IsNullOrWhiteSpace(definition.QuestContent))
+        return;
 
       var currentEvent = Event.current;
       if (currentEvent.type == EventType.MouseDown && currentEvent.button == 0 && currentEvent.clickCount == 2 && rect.Contains(currentEvent.mousePosition))
@@ -1386,7 +1388,8 @@ namespace MultiplayerInfrastructure.Editor
       for (int i = 0; i < data.StateOperations.Count; i++)
       {
         var op = data.StateOperations[i];
-        if (op == null) continue;
+        if (op == null)
+          continue;
 
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         EditorGUILayout.BeginHorizontal();
@@ -1499,7 +1502,8 @@ namespace MultiplayerInfrastructure.Editor
     private static int? NullableIntField(string label, int? current)
     {
       var text = EditorGUILayout.TextField(label, current.HasValue ? current.Value.ToString() : string.Empty);
-      if (string.IsNullOrWhiteSpace(text)) return null;
+      if (string.IsNullOrWhiteSpace(text))
+        return null;
       return int.TryParse(text, out var parsed) ? parsed : current;
     }
 
@@ -1526,7 +1530,8 @@ namespace MultiplayerInfrastructure.Editor
 
       int selected = current.HasValue ? System.Array.IndexOf(names, current.Value.ToString()) + 1 : 0;
       int newSelected = EditorGUILayout.Popup(label, selected, display);
-      if (newSelected == 0) return null;
+      if (newSelected == 0)
+        return null;
       return (TEnum)System.Enum.Parse(typeof(TEnum), names[newSelected - 1]);
     }
   }

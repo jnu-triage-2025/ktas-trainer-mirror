@@ -1,7 +1,6 @@
-using System;
+﻿using System;
 using FishNet;
 using FishNet.Object;
-using UnityEngine;
 
 namespace MultiplayerInfrastructure.Scenario
 {
@@ -232,13 +231,13 @@ namespace MultiplayerInfrastructure.Scenario
       switch (operation)
       {
         case ScenarioTimeOperationType.Create:
-        {
-          ScenarioTimeDirection dir = Enum.IsDefined(typeof(ScenarioTimeDirection), direction)
-              ? (ScenarioTimeDirection)direction
-              : ScenarioTimeDirection.Stopwatch;
-          ScenarioTimeState.Create(timerId, dir, startSeconds, targetSeconds);
-          break;
-        }
+          {
+            ScenarioTimeDirection dir = Enum.IsDefined(typeof(ScenarioTimeDirection), direction)
+                ? (ScenarioTimeDirection)direction
+                : ScenarioTimeDirection.Stopwatch;
+            ScenarioTimeState.Create(timerId, dir, startSeconds, targetSeconds);
+            break;
+          }
         case ScenarioTimeOperationType.Start:
           ScenarioTimeState.Start(timerId, ElapsedSinceIssued(issuedTick));
           break;

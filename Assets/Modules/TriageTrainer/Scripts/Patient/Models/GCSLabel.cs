@@ -1,4 +1,4 @@
-namespace TriageTrainer.Entity.Patient
+﻿namespace TriageTrainer.Entity.Patient
 {
   /// <summary>
   /// Glasgow Coma Scale (GCS) 점수 분포 별 유형을 표현합니다.

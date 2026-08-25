@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Scenario
+﻿namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>시나리오 실행에 적용되는 서버 게임 규칙.</summary>
   public static class ScenarioGameRules

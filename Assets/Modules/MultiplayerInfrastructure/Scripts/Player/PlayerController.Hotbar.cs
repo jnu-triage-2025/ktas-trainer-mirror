@@ -1,4 +1,4 @@
-using MultiplayerInfrastructure.Registry;
+﻿using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
@@ -8,7 +8,7 @@ namespace MultiplayerInfrastructure.Player
   {
     [SerializeField] private HotbarUIController _hotbarUI;
 
-    void Start_Hotbar()
+    private void Start_Hotbar()
     {
       if (_hotbarUI == null)
         _hotbarUI = Registry.Registry.Get<HotbarUIController>(RegistryType.UI, Registry.Registry.TypeKey<HotbarUIController>());
@@ -23,7 +23,7 @@ namespace MultiplayerInfrastructure.Player
       _hotbarUI.BindInventory(_slots);
     }
 
-    void HandleHotbarInputNumkey()
+    private void HandleHotbarInputNumkey()
     {
       for (int i = 0; i < 9; i++)
       {
@@ -38,7 +38,7 @@ namespace MultiplayerInfrastructure.Player
       }
     }
 
-    void HandleHotbarInputMouseWheel()
+    private void HandleHotbarInputMouseWheel()
     {
       float scroll = Input.mouseScrollDelta.y;
       if (Mathf.Abs(scroll) > Mathf.Epsilon)

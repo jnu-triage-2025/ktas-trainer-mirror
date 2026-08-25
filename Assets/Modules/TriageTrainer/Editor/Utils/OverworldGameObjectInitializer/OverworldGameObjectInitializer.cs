@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
@@ -31,7 +31,7 @@ namespace TriageTrainer.Editor.Utils
 
     public const string TreatmentRoomEnteranceIdentifier = "treatment-room-enterance";
     public static readonly Vector3 DefaultTreatmentRoomEnterance = new(-66.5f, 1f, -10.2f);
-    
+
     public const string CommonSpawnPointIdentifier = "spawnpoint-commons";
     public static readonly Vector3 DefaultCommonSpawnPoint = new(-73f, 1f, -7.5f);
 
@@ -218,26 +218,31 @@ namespace TriageTrainer.Editor.Utils
       var root = GetOrCreateGeneratedRoot().transform;
       var childName = "static_entities:" + definition.identifier.Trim();
       var existing = root.Find(childName);
-      if (existing != null) DestroyObject(existing.gameObject);
+      if (existing != null)
+        DestroyObject(existing.gameObject);
       var layoutRoot = new GameObject(childName).transform;
       layoutRoot.SetParent(root, false);
 #if UNITY_EDITOR
-      if (!Application.isPlaying) Undo.RegisterCreatedObjectUndo(layoutRoot.gameObject, "Create Static Entity Layout");
+      if (!Application.isPlaying)
+        Undo.RegisterCreatedObjectUndo(layoutRoot.gameObject, "Create Static Entity Layout");
 #endif
 
       foreach (var group in definition.groups ?? new System.Collections.Generic.List<StaticEntityLayoutGroup>())
       {
-        if (group.entities == null) continue;
+        if (group.entities == null)
+          continue;
         foreach (var entity in group.entities)
         {
-          if (string.IsNullOrWhiteSpace(entity.identifier)) continue;
+          if (string.IsNullOrWhiteSpace(entity.identifier))
+            continue;
           GameObject instance;
           instance = entity.type == StaticEntityLayoutType.WallSuction
             ? InstantiatePrefab(definition.wallSuctionPrefab)
             : entity.type == StaticEntityLayoutType.Oxyflowmeter
               ? InstantiatePrefab(definition.oxyflowmeterPrefab)
               : new GameObject(entity.identifier);
-          if (instance == null) continue;
+          if (instance == null)
+            continue;
           instance.name = entity.identifier;
           instance.transform.SetParent(layoutRoot, false);
           if (!entity.useDefaultPosition)
@@ -276,7 +281,8 @@ namespace TriageTrainer.Editor.Utils
           else if (entity.type == StaticEntityLayoutType.WallSuction || entity.type == StaticEntityLayoutType.Oxyflowmeter)
             SetStaticObjectIdentifier(instance, entity.identifier);
 #if UNITY_EDITOR
-          if (!Application.isPlaying) Undo.RegisterCreatedObjectUndo(instance, "Create Static Entity");
+          if (!Application.isPlaying)
+            Undo.RegisterCreatedObjectUndo(instance, "Create Static Entity");
 #endif
         }
       }
@@ -290,9 +296,11 @@ namespace TriageTrainer.Editor.Utils
 
     private static GameObject InstantiatePrefab(GameObject prefab)
     {
-      if (prefab == null) return null;
+      if (prefab == null)
+        return null;
 #if UNITY_EDITOR
-      if (!Application.isPlaying) return (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+      if (!Application.isPlaying)
+        return (GameObject)PrefabUtility.InstantiatePrefab(prefab);
 #endif
       return Object.Instantiate(prefab);
     }

@@ -1,8 +1,7 @@
-using System;
+﻿using System;
 using FishNet;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
-using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Session;
@@ -149,7 +148,7 @@ namespace MultiplayerInfrastructure.Command
         return true;
       }
 
-      if (rawTarget.StartsWith("@", StringComparison.Ordinal))
+      if (rawTarget.StartsWith('@'))
       {
         if (!TargetSelectorResolver.TryResolveTargets(sender, rawTarget, out var targets, out error))
           return false;

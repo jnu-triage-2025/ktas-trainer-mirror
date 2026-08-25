@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MultiplayerInfrastructure.ItemSystem;
 
 #nullable enable
@@ -46,7 +46,8 @@ namespace MultiplayerInfrastructure.Player
     /// </summary>
     public bool CanAccept(Item? item)
     {
-      if (item == null) return false;
+      if (item == null)
+        return false;
 
       return SlotType switch
       {

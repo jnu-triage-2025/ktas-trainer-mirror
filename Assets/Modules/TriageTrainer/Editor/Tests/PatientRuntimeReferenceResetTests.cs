@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using TriageTrainer.Entity;

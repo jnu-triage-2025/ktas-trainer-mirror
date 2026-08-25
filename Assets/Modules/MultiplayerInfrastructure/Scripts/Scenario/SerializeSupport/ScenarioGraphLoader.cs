@@ -1,13 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Text.Encodings.Web;
-using UnityEngine;
+using System.Text.Json;
 using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Registry;
 using TriageTrainer.Entity.Patient;
+using UnityEngine;
 
 namespace MultiplayerInfrastructure.Scenario
 {
@@ -542,8 +541,12 @@ namespace MultiplayerInfrastructure.Scenario
 
     private static ScenarioTTSVoiceProfile ConvertVoiceProfile(ScenarioTTSVoiceProfileDTO dto) => dto == null ? null : new ScenarioTTSVoiceProfile
     {
-      Preset = dto.Preset, VoiceIdentifier = dto.VoiceIdentifier, VoiceStyleName = dto.VoiceStyleName,
-      Language = dto.Language, Speed = dto.Speed ?? 0f, TotalStep = dto.TotalStep ?? 0
+      Preset = dto.Preset,
+      VoiceIdentifier = dto.VoiceIdentifier,
+      VoiceStyleName = dto.VoiceStyleName,
+      Language = dto.Language,
+      Speed = dto.Speed ?? 0f,
+      TotalStep = dto.TotalStep ?? 0
     };
 
     private static IReadOnlyList<ScenarioTTSVoiceProfile> ConvertVoiceProfiles(List<ScenarioTTSVoiceProfileDTO> profiles) =>
@@ -712,10 +715,13 @@ namespace MultiplayerInfrastructure.Scenario
     private static ScenarioSignalListenerNode ConvertSignalListener(ScenarioSignalListenerNodeDTO dto) =>
         new ScenarioSignalListenerNode
         {
-          Identifier = dto.Identifier, ListenerIdentifier = dto.ListenerIdentifier,
+          Identifier = dto.Identifier,
+          ListenerIdentifier = dto.ListenerIdentifier,
           Operation = Enum.TryParse(dto.Operation, true, out ScenarioSignalListenerOperation operation) ? operation : ScenarioSignalListenerOperation.Register,
-          SourceSignalIdentifier = dto.SourceSignalIdentifier, OutputSignalIdentifier = dto.OutputSignalIdentifier,
-          RequiredSignalIdentifiers = dto.RequiredSignalIdentifiers ?? new List<string>(), ConsumeOnce = dto.ConsumeOnce ?? true,
+          SourceSignalIdentifier = dto.SourceSignalIdentifier,
+          OutputSignalIdentifier = dto.OutputSignalIdentifier,
+          RequiredSignalIdentifiers = dto.RequiredSignalIdentifiers ?? new List<string>(),
+          ConsumeOnce = dto.ConsumeOnce ?? true,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -1149,29 +1155,29 @@ namespace MultiplayerInfrastructure.Scenario
     {
       var operation = ParseNpcInteractControlOperation(dto.Operation);
       return new ScenarioNPCControlNode
+      {
+        Identifier = dto.Identifier,
+        Mode = ScenarioNPCControlMode.Update,
+        NPCIdentifier = dto.NpcIdentifier,
+        InteractableIdentifier = dto.InteractableIdentifier,
+        InteractOperation = operation switch
         {
-          Identifier = dto.Identifier,
-          Mode = ScenarioNPCControlMode.Update,
-          NPCIdentifier = dto.NpcIdentifier,
-          InteractableIdentifier = dto.InteractableIdentifier,
-          InteractOperation = operation switch
-          {
-            ScenarioNpcInteractControlOperation.Add => ScenarioNPCInteractCrudOperation.Create,
-            ScenarioNpcInteractControlOperation.Remove => ScenarioNPCInteractCrudOperation.Delete,
-            ScenarioNpcInteractControlOperation.Enable => ScenarioNPCInteractCrudOperation.Update,
-            ScenarioNpcInteractControlOperation.Disable => ScenarioNPCInteractCrudOperation.Update,
-            _ => ScenarioNPCInteractCrudOperation.None,
-          },
-          InteractEnabled = operation switch
-          {
-            ScenarioNpcInteractControlOperation.Enable => true,
-            ScenarioNpcInteractControlOperation.Disable => false,
-            _ => null,
-          },
-          DisplayName = dto.DisplayName,
-          ShowOverheadName = dto.ShowOverheadName,
-          NextIdentifier = dto.NextIdentifier
-        };
+          ScenarioNpcInteractControlOperation.Add => ScenarioNPCInteractCrudOperation.Create,
+          ScenarioNpcInteractControlOperation.Remove => ScenarioNPCInteractCrudOperation.Delete,
+          ScenarioNpcInteractControlOperation.Enable => ScenarioNPCInteractCrudOperation.Update,
+          ScenarioNpcInteractControlOperation.Disable => ScenarioNPCInteractCrudOperation.Update,
+          _ => ScenarioNPCInteractCrudOperation.None,
+        },
+        InteractEnabled = operation switch
+        {
+          ScenarioNpcInteractControlOperation.Enable => true,
+          ScenarioNpcInteractControlOperation.Disable => false,
+          _ => null,
+        },
+        DisplayName = dto.DisplayName,
+        ShowOverheadName = dto.ShowOverheadName,
+        NextIdentifier = dto.NextIdentifier
+      };
     }
 
     private static ScenarioNpcInteractControlNodeDTO ConvertToDTO(ScenarioNpcInteractControlNode node) =>
@@ -1650,8 +1656,11 @@ namespace MultiplayerInfrastructure.Scenario
 
     private static ScenarioTTSVoiceProfileDTO ConvertVoiceProfileToDTO(ScenarioTTSVoiceProfile profile) => profile == null ? null : new ScenarioTTSVoiceProfileDTO
     {
-      Preset = profile.Preset, VoiceIdentifier = profile.VoiceIdentifier, VoiceStyleName = profile.VoiceStyleName,
-      Language = profile.Language, Speed = profile.Speed > 0f ? profile.Speed : (float?)null,
+      Preset = profile.Preset,
+      VoiceIdentifier = profile.VoiceIdentifier,
+      VoiceStyleName = profile.VoiceStyleName,
+      Language = profile.Language,
+      Speed = profile.Speed > 0f ? profile.Speed : (float?)null,
       TotalStep = profile.TotalStep > 0 ? profile.TotalStep : (int?)null
     };
 
@@ -1849,13 +1858,17 @@ namespace MultiplayerInfrastructure.Scenario
     private static ScenarioSignalListenerNodeDTO ConvertToDTO(ScenarioSignalListenerNode node) =>
         new ScenarioSignalListenerNodeDTO
         {
-          NodeType = "SignalListener", Identifier = node.Identifier, ListenerIdentifier = node.ListenerIdentifier,
-          Operation = node.Operation.ToString(), SourceSignalIdentifier = node.SourceSignalIdentifier,
+          NodeType = "SignalListener",
+          Identifier = node.Identifier,
+          ListenerIdentifier = node.ListenerIdentifier,
+          Operation = node.Operation.ToString(),
+          SourceSignalIdentifier = node.SourceSignalIdentifier,
           OutputSignalIdentifier = node.OutputSignalIdentifier,
           RequiredSignalIdentifiers = node.RequiredSignalIdentifiers?.ToList() ?? new List<string>(),
           // 기본값(true)일 때만 필드를 생략하고, false 는 명시적으로 기록한다.
           // (읽기 측 `dto.ConsumeOnce ?? true` 와 짝을 이뤄 false 가 라운드트립되도록 한다.)
-          ConsumeOnce = node.ConsumeOnce ? (bool?)null : false, NextIdentifier = node.NextIdentifier
+          ConsumeOnce = node.ConsumeOnce ? (bool?)null : false,
+          NextIdentifier = node.NextIdentifier
         };
 
     private static ScenarioEntityStateSignalBindingNodeDTO ConvertToDTO(ScenarioEntityStateSignalBindingNode node) =>

@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Player
+﻿namespace MultiplayerInfrastructure.Player
 {
   public partial class PlayerController
   {

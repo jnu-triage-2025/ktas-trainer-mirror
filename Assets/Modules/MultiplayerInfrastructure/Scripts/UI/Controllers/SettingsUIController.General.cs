@@ -1,4 +1,4 @@
-using MultiplayerInfrastructure.Logging;
+﻿using MultiplayerInfrastructure.Logging;
 using UnityEngine.UIElements;
 
 namespace MultiplayerInfrastructure.UI

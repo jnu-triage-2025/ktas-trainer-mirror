@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
 {
@@ -11,11 +11,11 @@ namespace MultiplayerInfrastructure.Player
     /// Body: 플레이어가 일반 상태일 때 활성화되는 GameObject입니다.
     /// SpectatorMarker: 플레이어가 관전자 모드일 때 활성화되는 GameObject입니다.
     /// </summary>
-    
-    GameObject _bodyObject;
-    GameObject _spectatorMarkerObject;
 
-    void Awake_GameObject()
+    private GameObject _bodyObject;
+    private GameObject _spectatorMarkerObject;
+
+    private void Awake_GameObject()
     {
       var bodyTransform = transform.Find("Body");
       var spectatorMarkerTransform = transform.Find("SpectatorMarker");

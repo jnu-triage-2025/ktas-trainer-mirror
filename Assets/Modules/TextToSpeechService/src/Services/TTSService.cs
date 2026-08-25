@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -91,26 +91,32 @@ namespace TextToSpeechService
     /// <summary>시나리오가 로드한 프로필을 기존 인스펙터 프로필에 병합한다.</summary>
     public void ConfigureScenarioVoiceProfiles(IEnumerable<TTSVoiceProfile> profiles)
     {
-      if (profiles == null) return;
+      if (profiles == null)
+        return;
       var merged = new List<TTSVoiceProfile>(voiceProfiles ?? Array.Empty<TTSVoiceProfile>());
       foreach (var profile in profiles)
       {
-        if (profile == null || string.IsNullOrWhiteSpace(profile.VoiceIdentifier)) continue;
+        if (profile == null || string.IsNullOrWhiteSpace(profile.VoiceIdentifier))
+          continue;
         var index = merged.FindIndex(value => value != null && value.VoiceIdentifier == profile.VoiceIdentifier);
-        if (index >= 0) merged[index] = profile;
-        else merged.Add(profile);
+        if (index >= 0)
+          merged[index] = profile;
+        else
+          merged.Add(profile);
       }
       voiceProfiles = merged.ToArray();
 
       // 시나리오 전환 후 등록되는 프로필도 즉시 사용할 수 있게 코어를 추가한다.
       // 초기화 중이면 InitializeCoroutine이 voiceProfiles를 읽어 동일하게 처리한다.
-      if (!IsReady) return;
+      if (!IsReady)
+        return;
       string streamingAssets = Application.streamingAssetsPath;
       string onnxDir = TTSCore.GetOnnxDir(streamingAssets);
       foreach (var profile in voiceProfiles)
       {
         if (profile == null || string.IsNullOrWhiteSpace(profile.VoiceIdentifier)
-            || _voiceCores.ContainsKey(profile.VoiceIdentifier)) continue;
+            || _voiceCores.ContainsKey(profile.VoiceIdentifier))
+          continue;
         _voiceCores[profile.VoiceIdentifier] = new TTSCore(
           onnxDir, TTSCore.GetVoiceStylePath(streamingAssets, profile.VoiceStyleName ?? voiceStyleName));
       }
@@ -148,7 +154,7 @@ namespace TextToSpeechService
 
     private void Awake()
     {
-      string sa      = Application.streamingAssetsPath;
+      string sa = Application.streamingAssetsPath;
       string onnxDir = TTSCore.GetOnnxDir(sa);
 
       if (!TTSCore.AreModelsPresent(onnxDir))
@@ -194,10 +200,10 @@ namespace TextToSpeechService
     {
       Debug.Log("[TTSService] 초기화 시작...");
 
-      string sa               = Application.streamingAssetsPath;
-      string onnxDir          = TTSCore.GetOnnxDir(sa);
-      string styleAbsPath     = TTSCore.GetVoiceStylePath(sa, voiceStyleName);
-      string transcriptPath   = Path.Combine(sa, transcriptJsonRelPath);
+      string sa = Application.streamingAssetsPath;
+      string onnxDir = TTSCore.GetOnnxDir(sa);
+      string styleAbsPath = TTSCore.GetVoiceStylePath(sa, voiceStyleName);
+      string transcriptPath = Path.Combine(sa, transcriptJsonRelPath);
 
       // ── 1. JSON 파싱 (메인 스레드) ─────────────────────────────────────────
       if (!File.Exists(transcriptPath))
@@ -222,20 +228,22 @@ namespace TextToSpeechService
         var segments = _segmentMap[transcript.Identifier];
         for (int i = 0; i < segments.Count; i++)
         {
-          if (segments[i].Type != SegmentType.Static) continue;
+          if (segments[i].Type != SegmentType.Static)
+            continue;
 
           string bakedPath = TTSCore.GetBakedClipPath(
             Application.streamingAssetsPath, transcript.Identifier, i);
 
-          if (!File.Exists(bakedPath)) continue;
+          if (!File.Exists(bakedPath))
+            continue;
 
-          string url    = "file://" + bakedPath;
+          string url = "file://" + bakedPath;
           using var req = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.WAV);
           yield return req.SendWebRequest();
 
           if (req.result == UnityWebRequest.Result.Success)
           {
-            var clip  = DownloadHandlerAudioClip.GetContent(req);
+            var clip = DownloadHandlerAudioClip.GetContent(req);
             clip.name = segments[i].Text;
             // baked Static 세그먼트는 기본(null) voiceIdentifier로 캐시한다.
             _clipCache[MakeCacheKey(null, segments[i].Text)] = clip;
@@ -261,8 +269,10 @@ namespace TextToSpeechService
           {
             foreach (var profile in voiceProfiles)
             {
-              if (profile == null || string.IsNullOrEmpty(profile.VoiceIdentifier)) continue;
-              if (_voiceCores.ContainsKey(profile.VoiceIdentifier)) continue;
+              if (profile == null || string.IsNullOrEmpty(profile.VoiceIdentifier))
+                continue;
+              if (_voiceCores.ContainsKey(profile.VoiceIdentifier))
+                continue;
 
               string profileStylePath = TTSCore.GetVoiceStylePath(sa, profile.VoiceStyleName ?? voiceStyleName);
               _voiceCores[profile.VoiceIdentifier] = new TTSCore(onnxDir, profileStylePath);
@@ -274,10 +284,11 @@ namespace TextToSpeechService
             var segments = _segmentMap[transcript.Identifier];
             for (int i = 0; i < segments.Count; i++)
             {
-              var seg    = segments[i];
+              var seg = segments[i];
               bool baked = seg.Type == SegmentType.Static
                 && _clipCache.ContainsKey(MakeCacheKey(null, seg.Text));
-              if (baked) continue;
+              if (baked)
+                continue;
 
               string text = seg.Type == SegmentType.Static
                 ? seg.Text
@@ -305,7 +316,8 @@ namespace TextToSpeechService
       int defaultSampleRate = _core.SampleRate;
       foreach (var kv in wavBuffer)
       {
-        if (_clipCache.ContainsKey(kv.Key)) continue;
+        if (_clipCache.ContainsKey(kv.Key))
+          continue;
         // 캐시 키에서 텍스트 이름 부분만 추출해 AudioClip 이름으로 사용
         _clipCache[kv.Key] = WavToClip(ExtractTextFromCacheKey(kv.Key), kv.Value, defaultSampleRate);
       }
@@ -343,7 +355,7 @@ namespace TextToSpeechService
         throw new ArgumentException($"[TTSService] 알 수 없는 identifier: {identifier}");
 
       var transcript = FindTranscript(identifier);
-      var clips      = new List<AudioClip>();
+      var clips = new List<AudioClip>();
 
       foreach (var seg in segments)
       {
@@ -429,23 +441,27 @@ namespace TextToSpeechService
       string voiceIdentifier,
       CancellationToken cancellationToken)
     {
-      if (string.IsNullOrWhiteSpace(text)) yield break;
+      if (string.IsNullOrWhiteSpace(text))
+        yield break;
 
       string cacheKey = MakeCacheKey(voiceIdentifier, text);
-      if (_clipCache.ContainsKey(cacheKey)) yield break;
+      if (_clipCache.ContainsKey(cacheKey))
+        yield break;
 
       if (!string.IsNullOrEmpty(scenarioIdentifier) && !string.IsNullOrEmpty(nodeIdentifier))
       {
         string bakedPath = TTSCore.GetBakedInlineClipPath(
           Application.streamingAssetsPath, scenarioIdentifier, nodeIdentifier, text, voiceIdentifier);
-        if (File.Exists(bakedPath)) yield break;
+        if (File.Exists(bakedPath))
+          yield break;
       }
 
       if (!IsReady && !IsInitializationFailed)
         yield return new WaitUntil(() => IsReady || IsInitializationFailed);
 
       var core = ResolveCore(voiceIdentifier);
-      if (core == null) yield break;
+      if (core == null)
+        yield break;
 
       var task = RequestInlineSynthesis(text, voiceIdentifier, core, highPriority: false, cancellationToken);
       yield return new WaitUntil(() => task.IsCompleted);
@@ -469,7 +485,8 @@ namespace TextToSpeechService
       string text, AudioSource audioSource, string scenarioIdentifier, string nodeIdentifier,
       string voiceIdentifier)
     {
-      if (string.IsNullOrWhiteSpace(text)) yield break;
+      if (string.IsNullOrWhiteSpace(text))
+        yield break;
 
       string cacheKey = MakeCacheKey(voiceIdentifier, text);
 
@@ -488,13 +505,13 @@ namespace TextToSpeechService
 
         if (File.Exists(bakedPath))
         {
-          string url    = "file://" + bakedPath;
+          string url = "file://" + bakedPath;
           using var req = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.WAV);
           yield return req.SendWebRequest();
 
           if (req.result == UnityWebRequest.Result.Success)
           {
-            var clip  = DownloadHandlerAudioClip.GetContent(req);
+            var clip = DownloadHandlerAudioClip.GetContent(req);
             clip.name = text;
             _clipCache[cacheKey] = clip;
             yield return PlaySequentially(new List<AudioClip> { clip }, audioSource);
@@ -566,14 +583,16 @@ namespace TextToSpeechService
     private IEnumerator PrepareVariableCoroutine(string text, Action onDone, string voiceIdentifier)
     {
       string cacheKey = MakeCacheKey(voiceIdentifier, text);
-      if (_clipCache.ContainsKey(cacheKey)) { onDone?.Invoke(); yield break; }
+      if (_clipCache.ContainsKey(cacheKey))
+      { onDone?.Invoke(); yield break; }
 
       var core = ResolveCore(voiceIdentifier);
-      if (core == null) { onDone?.Invoke(); yield break; }
+      if (core == null)
+      { onDone?.Invoke(); yield break; }
 
       var (synthLang, synthStep, synthSpeed) = ResolveParams(voiceIdentifier);
-      float[] wav  = null;
-      var     task = Task.Run(() =>
+      float[] wav = null;
+      var task = Task.Run(() =>
       {
         lock (_synthesisLock)
           wav = core.Synthesize(text, synthLang, synthStep, synthSpeed);
@@ -604,12 +623,13 @@ namespace TextToSpeechService
         yield break;
       }
 
-      var transcript   = FindTranscript(identifier);
+      var transcript = FindTranscript(identifier);
       var textsToCache = new List<string>();
 
       foreach (var seg in segments)
       {
-        if (seg.Type == SegmentType.Static) continue;
+        if (seg.Type == SegmentType.Static)
+          continue;
 
         string text = variables != null && variables.TryGetValue(seg.Text, out var v)
           ? v
@@ -646,7 +666,7 @@ namespace TextToSpeechService
 
       var (synthLang, synthStep, synthSpeed) = ResolveParams(voiceIdentifier);
       var wavBuffer = new Dictionary<string, float[]>();
-      var task      = Task.Run(() =>
+      var task = Task.Run(() =>
       {
         lock (_synthesisLock)
         {
@@ -686,12 +706,12 @@ namespace TextToSpeechService
     /// <summary>동기 즉석 합성 — 메인 스레드에서만 호출하세요.</summary>
     private AudioClip SynthesizeClip(string text, string voiceIdentifier = null)
     {
-      var   core = ResolveCore(voiceIdentifier);
-      var   (synthLang, synthStep, synthSpeed) = ResolveParams(voiceIdentifier);
+      var core = ResolveCore(voiceIdentifier);
+      var (synthLang, synthStep, synthSpeed) = ResolveParams(voiceIdentifier);
       float[] wav;
       lock (_synthesisLock)
         wav = core.Synthesize(text, synthLang, synthStep, synthSpeed);
-      var     clip = WavToClip(text, wav, core.SampleRate);
+      var clip = WavToClip(text, wav, core.SampleRate);
       string cacheKey = MakeCacheKey(voiceIdentifier, text);
       _clipCache[cacheKey] = clip;
       return clip;
@@ -757,13 +777,15 @@ namespace TextToSpeechService
           Completion = new TaskCompletionSource<float[]>()
         };
         _inlineSynthesisTasks[cacheKey] = request.Completion.Task;
-        if (highPriority) _inlinePlaybackQueue.Add(request);
-        else _inlinePrewarmQueue.Add(request);
+        if (highPriority)
+          _inlinePlaybackQueue.Add(request);
+        else
+          _inlinePrewarmQueue.Add(request);
 
         if (!_inlineSynthesisWorkerRunning)
         {
           _inlineSynthesisWorkerRunning = true;
-          _ = Task.Run(ProcessInlineSynthesisQueue);
+          _ = Task.Run(ProcessInlineSynthesisQueue, cancellationToken);
         }
         return request.Completion.Task;
       }
@@ -869,10 +891,11 @@ namespace TextToSpeechService
       {
         foreach (var p in voiceProfiles)
         {
-          if (p == null || p.VoiceIdentifier != voiceIdentifier) continue;
+          if (p == null || p.VoiceIdentifier != voiceIdentifier)
+            continue;
           string lang = string.IsNullOrEmpty(p.Language) ? language : p.Language;
-          int    step = p.TotalStep > 0 ? p.TotalStep : totalStep;
-          float  spd  = p.Speed > 0f    ? p.Speed     : speed;
+          int step = p.TotalStep > 0 ? p.TotalStep : totalStep;
+          float spd = p.Speed > 0f ? p.Speed : speed;
           return (lang, step, spd);
         }
       }
@@ -903,7 +926,8 @@ namespace TextToSpeechService
       SpeechTranscript transcript,
       Dictionary<string, string> overrideVariables)
     {
-      if (seg.Type == SegmentType.Static) return seg.Text;
+      if (seg.Type == SegmentType.Static)
+        return seg.Text;
 
       if (overrideVariables != null && overrideVariables.TryGetValue(seg.Text, out var ov))
         return ov;
@@ -921,7 +945,8 @@ namespace TextToSpeechService
     private SpeechTranscript FindTranscript(string identifier)
     {
       foreach (var t in _transcripts)
-        if (t.Identifier == identifier) return t;
+        if (t.Identifier == identifier)
+          return t;
       throw new ArgumentException($"[TTSService] 알 수 없는 identifier: {identifier}");
     }
 
@@ -929,7 +954,8 @@ namespace TextToSpeechService
     {
       foreach (var clip in clips)
       {
-        if (clip == null) continue;
+        if (clip == null)
+          continue;
         src.clip = clip;
         src.Play();
         yield return new WaitForSeconds(clip.length);

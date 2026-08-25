@@ -1,4 +1,4 @@
-using TriageTrainer.Entity;
+﻿using TriageTrainer.Entity;
 using TriageTrainer.Entity.PatientMonitor.Models;
 using UnityEngine;
 

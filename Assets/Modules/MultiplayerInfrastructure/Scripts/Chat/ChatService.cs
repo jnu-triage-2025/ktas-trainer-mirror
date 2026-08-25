@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,7 +19,8 @@ namespace MultiplayerInfrastructure.Chat
 {
   public class ChatService : NetworkBehaviour
   {
-    [Header("ChatSettings")] [SerializeField, Min(0f)]
+    [Header("ChatSettings")]
+    [SerializeField, Min(0f)]
     private float _messageCooldownSeconds = DefaultsChatControl.MessageCooldownSeconds;
 
     [Header("References")]
@@ -27,7 +28,7 @@ namespace MultiplayerInfrastructure.Chat
     [SerializeField] private ChatCommandService _commandService;
     [SerializeField] private DatapackRuntimeService _datapackRuntime;
     public ChatCommandService CommandService => _commandService;
-    
+
     private readonly Dictionary<int, float> _lastMessageTimes = new();
     private readonly Dictionary<int, int> _lastProblemSheetGradeByClientId = new();
 
@@ -39,7 +40,7 @@ namespace MultiplayerInfrastructure.Chat
     /// </summary>
     private int _systemExecutionContextDepth;
 
-    void Awake()
+    private void Awake()
     {
       // ChatService / ChatCommandService / ChatUIController 는 서로 다른 GameObject에
       // 배치될 수 있다. 직렬화된 참조 → 같은 GameObject → 씬 전역 순으로 해결한다.
@@ -89,7 +90,7 @@ namespace MultiplayerInfrastructure.Chat
         Registry.Registry.Unregister(RegistryType.Service, Registry.Registry.TypeKey<ChatService>());
       }
     }
-    
+
     private void HandleLocalSubmission(string raw)
     {
       if (string.IsNullOrWhiteSpace(raw))
@@ -104,7 +105,7 @@ namespace MultiplayerInfrastructure.Chat
       SendChatServerRpc(raw);
     }
 
-#region Networking
+    #region Networking
 
     [ServerRpc(RequireOwnership = false)]
     private void SendChatServerRpc(string rawMessage, NetworkConnection sender = null)
@@ -157,7 +158,7 @@ namespace MultiplayerInfrastructure.Chat
 
       TryExecuteCommandInternal(commandLine, sender, out _);
     }
-    
+
     [TargetRpc]
     private void TargetReceiveSystemMessage(NetworkConnection conn, string message)
     {
@@ -257,7 +258,7 @@ namespace MultiplayerInfrastructure.Chat
 
       ui.SetTimes(fadeInTicks, stayTicks, fadeOutTicks);
     }
-    
+
     [TargetRpc]
     private void TargetRunProblemSheet(NetworkConnection conn, string problemSetIdentifier, int startIndex, bool singleProblemMode)
     {
@@ -296,9 +297,9 @@ namespace MultiplayerInfrastructure.Chat
         ProblemRewardService.ApplyOnCorrect(set.Problems[problemIndex], sender.ClientId);
     }
 
-#endregion
+    #endregion
 
-#region Helpers
+    #region Helpers
 
     private bool CanSendMessage(NetworkConnection sender, out string message)
     {
@@ -902,6 +903,6 @@ namespace MultiplayerInfrastructure.Chat
 
       return true;
     }
-#endregion
+    #endregion
   }
 }

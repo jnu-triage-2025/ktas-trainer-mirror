@@ -1,9 +1,9 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MultiplayerInfrastructure.InteractableEntity
 {
   public interface IInteractorConditional
   {
-    bool CanInteract(Transform interactor);
+    public bool CanInteract(Transform interactor);
   }
 }

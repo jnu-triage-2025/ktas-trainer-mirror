@@ -1,5 +1,4 @@
-using System;
-using FishNet;
+﻿using System;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Scenario

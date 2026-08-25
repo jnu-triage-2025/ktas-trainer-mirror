@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MultiplayerInfrastructure.Performance;
 using MultiplayerInfrastructure.UI.Models;
 using UnityEngine.UIElements;
@@ -18,9 +18,9 @@ namespace MultiplayerInfrastructure.UI
     // ──────────────────────────────────────────────────────────────────────────
     // USS 클래스 이름
     // ──────────────────────────────────────────────────────────────────────────
-    private const string BaseClass     = "ui-scale-option";
-    private const string ActiveClass   = "ui-scale-option--active";
-    private const string LabelClass    = "ui-scale-option__label";
+    private const string BaseClass = "ui-scale-option";
+    private const string ActiveClass = "ui-scale-option--active";
+    private const string LabelClass = "ui-scale-option__label";
     private const string SubtitleClass = "ui-scale-option__subtitle";
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -59,8 +59,8 @@ namespace MultiplayerInfrastructure.UI
     /// <param name="scale">이 옵션이 나타내는 배율 단계</param>
     public void Bind(UIScale scale)
     {
-      _scale         = scale;
-      _label.text    = ScaleToLabel(scale);
+      _scale = scale;
+      _label.text = ScaleToLabel(scale);
       _subtitle.text = ScaleToSubtitle(scale);
     }
 
@@ -105,7 +105,7 @@ namespace MultiplayerInfrastructure.UI
       UIScale.Level2 => "2단계",
       UIScale.Level3 => "3단계",
       UIScale.Level4 => "4단계",
-      _              => scale.ToString(),
+      _ => scale.ToString(),
     };
 
     private static string ScaleToSubtitle(UIScale scale)

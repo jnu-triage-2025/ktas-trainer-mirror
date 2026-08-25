@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
 {
@@ -102,23 +102,23 @@ namespace MultiplayerInfrastructure.Player
       return false;
     }
 
-private bool IsWalkingAnimationState()
+    private bool IsWalkingAnimationState()
     {
-        if (_characterController == null)
-            return false;
+      if (_characterController == null)
+        return false;
 
-        Vector3 planarMove = _characterController.velocity;
-        planarMove.y = 0f;
-        float speedSqr = planarMove.sqrMagnitude;
-        if (!_wasWalking && speedSqr > WalkEnterThreshold * WalkEnterThreshold)
-        {
-            _wasWalking = true;
-        }
-        else if (_wasWalking && speedSqr < WalkExitThreshold * WalkExitThreshold)
-        {
-            _wasWalking = false;
-        }
-        return _wasWalking;
+      Vector3 planarMove = _characterController.velocity;
+      planarMove.y = 0f;
+      float speedSqr = planarMove.sqrMagnitude;
+      if (!_wasWalking && speedSqr > WalkEnterThreshold * WalkEnterThreshold)
+      {
+        _wasWalking = true;
+      }
+      else if (_wasWalking && speedSqr < WalkExitThreshold * WalkExitThreshold)
+      {
+        _wasWalking = false;
+      }
+      return _wasWalking;
     }
 
     private void SetCharacterModelAnimator(Animator animator)
@@ -148,38 +148,38 @@ private bool IsWalkingAnimationState()
 
     private void ApplyAnimationParameters(bool isWalk, bool isJump)
     {
-        if (_characterModelAnimator == null)
-            return;
+      if (_characterModelAnimator == null)
+        return;
 
-        bool changed = !_hasAnimationParameterState
-            || _currentWalkAnimationParameter != isWalk
-            || _currentJumpAnimationParameter != isJump;
+      bool changed = !_hasAnimationParameterState
+          || _currentWalkAnimationParameter != isWalk
+          || _currentJumpAnimationParameter != isJump;
 
-        if (!changed)
-            return;
+      if (!changed)
+        return;
 
-        // 파라미터를 먼저 설정해 Animator 상태 머신이 조건 기반 트랜지션을 올바르게 평가하도록 한다.
-        _characterModelAnimator.SetBool(WalkAnimationParameterName, isWalk);
-        _characterModelAnimator.SetBool(JumpAnimationParameterName, isJump);
+      // 파라미터를 먼저 설정해 Animator 상태 머신이 조건 기반 트랜지션을 올바르게 평가하도록 한다.
+      _characterModelAnimator.SetBool(WalkAnimationParameterName, isWalk);
+      _characterModelAnimator.SetBool(JumpAnimationParameterName, isJump);
 
-        // jump 전환에만 CrossFade로 즉시 인터럽트한다.
-        // idle ↔ walk 전환은 Animator 상태 머신의 조건 트랜지션에 맡겨
-        // 불필요한 CrossFade 호출로 인한 재생 끊김을 방지한다.
-        if (_currentJumpAnimationParameter && !isJump)
-        {
-            // 점프 종료 후 walk 또는 idle로 즉시 전환
-            string targetState = isWalk ? "walk" : "idle";
-            _characterModelAnimator.CrossFade(targetState, 0.15f, 0);
-        }
-        else if (!_currentJumpAnimationParameter && isJump)
-        {
-            // jump 진입: 이전에 점프 상태가 아니었던 모든 경우에 즉시 CrossFade
-            _characterModelAnimator.CrossFade("jump", 0f, 0);
-        }
+      // jump 전환에만 CrossFade로 즉시 인터럽트한다.
+      // idle ↔ walk 전환은 Animator 상태 머신의 조건 트랜지션에 맡겨
+      // 불필요한 CrossFade 호출로 인한 재생 끊김을 방지한다.
+      if (_currentJumpAnimationParameter && !isJump)
+      {
+        // 점프 종료 후 walk 또는 idle로 즉시 전환
+        string targetState = isWalk ? "walk" : "idle";
+        _characterModelAnimator.CrossFade(targetState, 0.15f, 0);
+      }
+      else if (!_currentJumpAnimationParameter && isJump)
+      {
+        // jump 진입: 이전에 점프 상태가 아니었던 모든 경우에 즉시 CrossFade
+        _characterModelAnimator.CrossFade("jump", 0f, 0);
+      }
 
-        _currentWalkAnimationParameter = isWalk;
-        _currentJumpAnimationParameter = isJump;
-        _hasAnimationParameterState = true;
+      _currentWalkAnimationParameter = isWalk;
+      _currentJumpAnimationParameter = isJump;
+      _hasAnimationParameterState = true;
     }
 
     private void ApplyRuntimeAnimatorController(Animator animator)

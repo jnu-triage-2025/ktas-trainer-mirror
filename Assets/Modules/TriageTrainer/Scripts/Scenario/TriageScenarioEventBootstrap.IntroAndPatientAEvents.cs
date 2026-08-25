@@ -1,6 +1,4 @@
-using System.Collections;
-
-namespace TriageTrainer.Scenario
+﻿namespace TriageTrainer.Scenario
 {
   public partial class TriageScenarioEventBootstrap
   {

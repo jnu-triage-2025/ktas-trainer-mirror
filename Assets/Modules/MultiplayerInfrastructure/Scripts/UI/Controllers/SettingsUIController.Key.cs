@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -185,9 +185,12 @@ namespace MultiplayerInfrastructure.UI
 
       foreach (KeyCode candidate in System.Enum.GetValues(typeof(KeyCode)))
       {
-        if (candidate >= KeyCode.Mouse0 && candidate <= KeyCode.Mouse6) continue;
-        if (candidate >= KeyCode.JoystickButton0) continue;
-        if (!Input.GetKeyDown(candidate)) continue;
+        if (candidate >= KeyCode.Mouse0 && candidate <= KeyCode.Mouse6)
+          continue;
+        if (candidate >= KeyCode.JoystickButton0)
+          continue;
+        if (!Input.GetKeyDown(candidate))
+          continue;
 
         ApplyRebinding(_rebindingActionId, candidate);
         return;
@@ -259,7 +262,8 @@ namespace MultiplayerInfrastructure.UI
       for (int i = 0; i < _bindings.Count; i++)
       {
         var def = _defaultBindings.Find(d => d.actionId == _bindings[i].actionId);
-        if (def != null) _bindings[i].boundKey = def.boundKey;
+        if (def != null)
+          _bindings[i].boundKey = def.boundKey;
       }
       KeyBindingRepository.DeleteAll(_bindings);
       PopulateKeyList(_bindings);

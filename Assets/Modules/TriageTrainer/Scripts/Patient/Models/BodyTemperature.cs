@@ -1,4 +1,4 @@
-namespace TriageTrainer.Entity.Patient
+﻿namespace TriageTrainer.Entity.Patient
 {
   /// <summary>
   /// 신체의 체온을 표현합니다.
@@ -21,9 +21,12 @@ namespace TriageTrainer.Entity.Patient
     {
       get
       {
-        if (celsius < 36.0f) return BodyTemperatureType.Hypothermia;
-        if (celsius <= 37.5f) return BodyTemperatureType.Normal;
-        if (celsius <= 38.0f) return BodyTemperatureType.Fever;
+        if (celsius < 36.0f)
+          return BodyTemperatureType.Hypothermia;
+        if (celsius <= 37.5f)
+          return BodyTemperatureType.Normal;
+        if (celsius <= 38.0f)
+          return BodyTemperatureType.Fever;
         return BodyTemperatureType.HighFever;
       }
     }

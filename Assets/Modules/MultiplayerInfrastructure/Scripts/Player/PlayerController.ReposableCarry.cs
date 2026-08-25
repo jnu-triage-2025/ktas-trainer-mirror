@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MultiplayerInfrastructure.Entity;
 using TriageTrainer.Entity;
 using UnityEngine;

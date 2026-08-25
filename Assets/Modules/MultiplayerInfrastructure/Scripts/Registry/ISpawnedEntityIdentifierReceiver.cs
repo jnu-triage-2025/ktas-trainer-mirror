@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Registry
+﻿namespace MultiplayerInfrastructure.Registry
 {
   /// <summary>
   /// 엔티티 프리셋 스폰 시 인스턴스에 식별자를 주입받기 위한 인터페이스.
@@ -11,6 +11,6 @@ namespace MultiplayerInfrastructure.Registry
   public interface ISpawnedEntityIdentifierReceiver
   {
     /// <summary>스폰된 인스턴스에 부여할 엔티티 식별자를 적용한다.</summary>
-    void ApplySpawnedEntityIdentifier(string identifier);
+    public void ApplySpawnedEntityIdentifier(string identifier);
   }
 }

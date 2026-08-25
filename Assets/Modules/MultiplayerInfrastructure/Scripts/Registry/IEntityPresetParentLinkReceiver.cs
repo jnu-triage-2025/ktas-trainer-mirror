@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Registry
+﻿namespace MultiplayerInfrastructure.Registry
 {
   /// <summary>
   /// 엔티티 프리셋 스폰 시, 하위 프리셋 인스턴스가 <b>부모(루트) 프리셋의 런타임 식별자</b>를 전달받기 위한 인터페이스.
@@ -14,6 +14,6 @@ namespace MultiplayerInfrastructure.Registry
   public interface IEntityPresetParentLinkReceiver
   {
     /// <summary>스폰된 부모(루트) 프리셋 인스턴스의 런타임 엔티티 식별자를 전달받는다.</summary>
-    void ApplyParentEntityIdentifier(string parentEntityIdentifier);
+    public void ApplyParentEntityIdentifier(string parentEntityIdentifier);
   }
 }

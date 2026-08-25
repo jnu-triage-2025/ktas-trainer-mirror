@@ -1,8 +1,7 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using FishNet.Object;
-using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.ItemSystem;
-using TriageTrainer.Patient;
+using MultiplayerInfrastructure.Player;
 using UnityEngine;
 
 namespace TriageTrainer.Entity.LineConnection

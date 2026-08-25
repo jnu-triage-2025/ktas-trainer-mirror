@@ -1,11 +1,11 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using FishNet.Connection;
 
 namespace MultiplayerInfrastructure.Command
 {
   public interface IChatCommandPipelineCommand
   {
-    bool TryExecute(
+    public bool TryExecute(
       NetworkConnection sender,
       string[] args,
       bool suppressSystemMessages,

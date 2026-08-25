@@ -1,27 +1,27 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using UnityEngine;
+using FishNet;
+using FishNet.Connection;
+using FishNet.Object;
+using FishNet.Transporting;
+using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Command;
 using MultiplayerInfrastructure.InteractableEntity;
-using MultiplayerInfrastructure.UI;
-using MultiplayerInfrastructure.Camera;
-using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Logging;
+using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Quest;
+using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 using MultiplayerInfrastructure.TTS;
-using MultiplayerInfrastructure.Player;
-using MultiplayerInfrastructure.Logging;
-using FishNet.Object;
-using FishNet;
-using FishNet.Connection;
-using FishNet.Transporting;
-using Unity.VisualScripting;
+using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity;
+using Unity.VisualScripting;
+using UnityEngine;
 
 namespace MultiplayerInfrastructure.Scenario
 {
@@ -2479,23 +2479,23 @@ namespace MultiplayerInfrastructure.Scenario
       switch (node.Operation)
       {
         case ScenarioTimeOperationType.Create:
-        {
-          double duration = Mathf.Max(0f, node.DurationSeconds);
-          if (node.Direction == ScenarioTimeDirection.Countdown)
           {
-            // 카운트다운: StartSeconds 는 시작 표시할 "남은 값". 미지정(0)이면 목표 시간에서 시작.
-            double displayStart = node.StartSeconds > 0f ? node.StartSeconds : duration;
-            // 목표(총) 시간은 최소한 시작 표시값 이상이어야 한다(Duration 미지정 시 StartSeconds 로 대체).
-            double target = Mathf.Max((float)duration, (float)displayStart);
-            ScenarioTimeRelay.CreateAuthoritative(node.TimerId, node.Direction, displayStart, target);
+            double duration = Mathf.Max(0f, node.DurationSeconds);
+            if (node.Direction == ScenarioTimeDirection.Countdown)
+            {
+              // 카운트다운: StartSeconds 는 시작 표시할 "남은 값". 미지정(0)이면 목표 시간에서 시작.
+              double displayStart = node.StartSeconds > 0f ? node.StartSeconds : duration;
+              // 목표(총) 시간은 최소한 시작 표시값 이상이어야 한다(Duration 미지정 시 StartSeconds 로 대체).
+              double target = Mathf.Max((float)duration, (float)displayStart);
+              ScenarioTimeRelay.CreateAuthoritative(node.TimerId, node.Direction, displayStart, target);
+            }
+            else
+            {
+              double start = Mathf.Max(0f, node.StartSeconds);
+              ScenarioTimeRelay.CreateAuthoritative(node.TimerId, node.Direction, start, duration);
+            }
+            break;
           }
-          else
-          {
-            double start = Mathf.Max(0f, node.StartSeconds);
-            ScenarioTimeRelay.CreateAuthoritative(node.TimerId, node.Direction, start, duration);
-          }
-          break;
-        }
         case ScenarioTimeOperationType.Start:
           ScenarioTimeRelay.StartAuthoritative(node.TimerId);
           break;
@@ -2509,13 +2509,13 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioTimeRelay.StopAuthoritative(node.TimerId);
           break;
         case ScenarioTimeOperationType.Set:
-        {
-          double displaySeconds = Mathf.Max(0f, node.StartSeconds);
-          // DurationSeconds 가 양수이면 카운트다운 목표(총) 시간도 재설정한다.
-          bool hasNewTarget = node.DurationSeconds > 0f;
-          ScenarioTimeRelay.SetAuthoritative(node.TimerId, displaySeconds, hasNewTarget, Mathf.Max(0f, node.DurationSeconds));
-          break;
-        }
+          {
+            double displaySeconds = Mathf.Max(0f, node.StartSeconds);
+            // DurationSeconds 가 양수이면 카운트다운 목표(총) 시간도 재설정한다.
+            bool hasNewTarget = node.DurationSeconds > 0f;
+            ScenarioTimeRelay.SetAuthoritative(node.TimerId, displaySeconds, hasNewTarget, Mathf.Max(0f, node.DurationSeconds));
+            break;
+          }
         case ScenarioTimeOperationType.Show:
           ScenarioTimeRelay.ShowAuthoritative(node.TimerId);
           break;
@@ -2791,8 +2791,10 @@ namespace MultiplayerInfrastructure.Scenario
           continue;
         }
 
-        if (PlayerTagService.HasTag(session.Identifier, tagA)) holdersA.Add(session);
-        if (PlayerTagService.HasTag(session.Identifier, tagB)) holdersB.Add(session);
+        if (PlayerTagService.HasTag(session.Identifier, tagA))
+          holdersA.Add(session);
+        if (PlayerTagService.HasTag(session.Identifier, tagB))
+          holdersB.Add(session);
       }
 
       if (holdersA.Count != 1 || holdersB.Count != 1)
@@ -3534,7 +3536,8 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     private void PrewarmTTSCache()
     {
-      if (_ttsService == null || _currentGraph == null) return;
+      if (_ttsService == null || _currentGraph == null)
+        return;
 
       foreach (var node in _currentGraph.Nodes.Values)
       {
@@ -3560,8 +3563,10 @@ namespace MultiplayerInfrastructure.Scenario
     /// </param>
     private void PlayInlineTTS(string nodeIdentifier, string text, string voiceIdentifier = null)
     {
-      if (_ttsService == null || _ttsAudioSource == null) return;
-      if (string.IsNullOrWhiteSpace(text)) return;
+      if (_ttsService == null || _ttsAudioSource == null)
+        return;
+      if (string.IsNullOrWhiteSpace(text))
+        return;
 
       // IsReady를 기다리지 않는다: baked WAV는 ONNX 초기화 없이 즉시 재생 가능하고,
       // baked가 없을 때만 내부에서 초기화 완료를 기다린 뒤 즉석 합성으로 폴백한다.
@@ -3575,7 +3580,8 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     private void StartInlineTTSPrewarm(ScenarioGraph graph)
     {
-      if (_ttsService == null || graph == null) return;
+      if (_ttsService == null || graph == null)
+        return;
       CancelInlineTTSPrewarm();
       _inlineTTSPrewarmCancellation = new CancellationTokenSource();
       StartCoroutine(PrewarmInlineTTSCacheRoutine(graph, _inlineTTSPrewarmCancellation.Token));
@@ -4790,25 +4796,25 @@ namespace MultiplayerInfrastructure.Scenario
       switch (node.Operation)
       {
         case ScenarioServerInternalSignalOperationType.Register:
-        {
-          bool resolved = false;
-          resolved = ScenarioInteractionSignals.RegisterInternal(targetId, signalId, () => resolved = true);
-
-          if (node.WaitForResolution)
           {
-            while (!resolved)
+            bool resolved = false;
+            resolved = ScenarioInteractionSignals.RegisterInternal(targetId, signalId, () => resolved = true);
+
+            if (node.WaitForResolution)
             {
-              if (_currentGraph == null)
+              while (!resolved)
               {
-                yield break;
+                if (_currentGraph == null)
+                {
+                  yield break;
+                }
+
+                yield return null;
               }
-
-              yield return null;
             }
-          }
 
-          break;
-        }
+            break;
+          }
         case ScenarioServerInternalSignalOperationType.Resolve:
           ScenarioInteractionSignals.ResolveInternal(targetId, signalId);
           break;
@@ -4822,7 +4828,8 @@ namespace MultiplayerInfrastructure.Scenario
 
     private void ExecuteSignalListenerNode(ScenarioSignalListenerNode node)
     {
-      if (node == null || string.IsNullOrWhiteSpace(node.ListenerIdentifier)) { Advance(); return; }
+      if (node == null || string.IsNullOrWhiteSpace(node.ListenerIdentifier))
+      { Advance(); return; }
       if (node.Operation == ScenarioSignalListenerOperation.Unregister)
         ScenarioConditionalSignalListeners.Unregister(node.ListenerIdentifier);
       else
@@ -5796,153 +5803,153 @@ namespace MultiplayerInfrastructure.Scenario
       switch (node.AllocationType)
       {
         case ScenarioParallelAllocationType.SelfAll:
-        {
-          int? target = _scenarioOwnerClientId;
-          if (target != null && !branches.All(branch => IsPlayerEligibleForBranch(branch, target.Value)))
           {
-            target = null;
-          }
+            int? target = _scenarioOwnerClientId;
+            if (target != null && !branches.All(branch => IsPlayerEligibleForBranch(branch, target.Value)))
+            {
+              target = null;
+            }
 
-          if (target == null && playerPool.Count > 0)
-          {
-            target = playerPool
-                .Where(clientId => branches.All(branch => IsPlayerEligibleForBranch(branch, clientId)))
-                .Select(clientId => (int?)clientId)
-                .FirstOrDefault();
-          }
+            if (target == null && playerPool.Count > 0)
+            {
+              target = playerPool
+                  .Where(clientId => branches.All(branch => IsPlayerEligibleForBranch(branch, clientId)))
+                  .Select(clientId => (int?)clientId)
+                  .FirstOrDefault();
+            }
 
-          if (target == null)
-          {
-            return HandleParallelMismatch(node, branches.Count, playerPool.Count, playerPool, allocation, assignNull: true);
-          }
+            if (target == null)
+            {
+              return HandleParallelMismatch(node, branches.Count, playerPool.Count, playerPool, allocation, assignNull: true);
+            }
 
-          foreach (var branch in branches)
-          {
-            allocation[branch] = target;
+            foreach (var branch in branches)
+            {
+              allocation[branch] = target;
+            }
+            return true;
           }
-          return true;
-        }
         case ScenarioParallelAllocationType.RandomOneAll:
-        {
-          var eligiblePlayers = playerPool.Where(clientId => branches.All(branch => IsPlayerEligibleForBranch(branch, clientId))).ToList();
-          if (eligiblePlayers.Count == 0)
           {
-            return HandleParallelMismatch(node, branches.Count, 0, playerPool, allocation, assignNull: true);
-          }
-
-          // 피어 간 동일한 배정을 위해 결정적 난수를 사용한다.
-          var allocationRandom = CreateDeterministicAllocationRandom(node);
-          var pick = eligiblePlayers[allocationRandom.Next(0, eligiblePlayers.Count)];
-          foreach (var branch in branches)
-          {
-            allocation[branch] = pick;
-          }
-          return true;
-        }
-        case ScenarioParallelAllocationType.ByRole:
-        {
-          if (_currentGraph?.ActiveRoleTags?.Count > 0)
-            return TryAllocateActiveRoleParallel(node, branches, allocation);
-
-          // 각 브랜치를 자격에 맞는 서로 다른 플레이어에게 1:1로 배정한다.
-          // 후보 산출은 현재 실행 권위(서버)의 세션/태그 상태에서 수행하고, 순수 배정 규칙은
-          // ScenarioParallelRoleAllocator로 위임한다. P2 서버 상태기와 같은 규칙을 공유한다.
-          var candidatesByBranch = new Dictionary<ScenarioParallelBranch, IReadOnlyList<int>>();
-          foreach (var branch in branches)
-          {
-            candidatesByBranch[branch] = playerPool
-                .Where(clientId => IsPlayerEligibleForBranch(branch, clientId))
-                .ToList();
-          }
-
-          if (!ScenarioParallelRoleAllocator.TryAllocateDistinct(branches, candidatesByBranch, allocation))
-          {
-            if (ShouldAllowMultipleRoleBranches(
-                  node,
-                  ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer)
-                && ScenarioParallelRoleAllocator.TryAllocateAllowingDuplicates(
-                  branches, candidatesByBranch, allocation))
-            {
-              Debug.Log("[ScenarioController] ByRole branches with duplicate player assignments will run sequentially per player.");
-              return true;
-            }
-
-            // 미배정 브랜치가 존재하면 미스매치 정책에 위임한다.
-            // (Ignore: null 배정 그대로 스킵 / Panic: 중단 / Reallocation: 라운드로빈 재배정)
-            int unmatchedCount = allocation.Count(kvp => kvp.Value == null);
-            if (node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
-            {
-              Debug.LogWarning($"[ScenarioController] ByRole allocation panic: {unmatchedCount} branch(es) have no eligible/free player.");
-              return false;
-            }
-
-            if (node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Reallocation)
-            {
-              // ByRole의 distinct matching이 실패했다면 같은 후보 집합으로 중복 없는 재배정은 불가능하다.
-              // 공통 round-robin은 역할 자격을 무시하고 한 플레이어에게 UI 브랜치를 겹쳐 배정하므로 금지한다.
-              Debug.LogWarning("[ScenarioController] ByRole reallocation cannot complete without duplicate player assignments.");
-              return false;
-            }
-
-            // Ignore: null 배정 유지(해당 브랜치 스킵).
-            Debug.LogWarning($"[ScenarioController] ByRole allocation ignored {unmatchedCount} unmatched branch(es).");
-          }
-
-          return true;
-        }
-        case ScenarioParallelAllocationType.SpreadRandom:
-        {
-          // 피어 간 동일한 배정을 위해 결정적 난수로 셔플한다.
-          Shuffle(playerPool, CreateDeterministicAllocationRandom(node));
-          goto case ScenarioParallelAllocationType.SpreadOrdinary;
-        }
-        case ScenarioParallelAllocationType.SpreadOrdinary:
-        {
-          if (playerPool.Count == 0)
-          {
-            return HandleParallelMismatch(node, branches.Count, 0, playerPool, allocation, assignNull: true);
-          }
-
-          int playerCount = playerPool.Count;
-          bool playersFewer = playerCount < branches.Count;
-
-          if (playersFewer && node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
-          {
-            Debug.LogWarning($"[ScenarioController] Parallel allocation panic: branches {branches.Count}, players {playerCount}.");
-            return false;
-          }
-
-          for (int i = 0; i < branches.Count; i++)
-          {
-            var branch = branches[i];
-            var eligiblePlayers = playerPool.Where(clientId => IsPlayerEligibleForBranch(branch, clientId)).ToList();
-
-            int? assigned;
-
+            var eligiblePlayers = playerPool.Where(clientId => branches.All(branch => IsPlayerEligibleForBranch(branch, clientId))).ToList();
             if (eligiblePlayers.Count == 0)
             {
+              return HandleParallelMismatch(node, branches.Count, 0, playerPool, allocation, assignNull: true);
+            }
+
+            // 피어 간 동일한 배정을 위해 결정적 난수를 사용한다.
+            var allocationRandom = CreateDeterministicAllocationRandom(node);
+            var pick = eligiblePlayers[allocationRandom.Next(0, eligiblePlayers.Count)];
+            foreach (var branch in branches)
+            {
+              allocation[branch] = pick;
+            }
+            return true;
+          }
+        case ScenarioParallelAllocationType.ByRole:
+          {
+            if (_currentGraph?.ActiveRoleTags?.Count > 0)
+              return TryAllocateActiveRoleParallel(node, branches, allocation);
+
+            // 각 브랜치를 자격에 맞는 서로 다른 플레이어에게 1:1로 배정한다.
+            // 후보 산출은 현재 실행 권위(서버)의 세션/태그 상태에서 수행하고, 순수 배정 규칙은
+            // ScenarioParallelRoleAllocator로 위임한다. P2 서버 상태기와 같은 규칙을 공유한다.
+            var candidatesByBranch = new Dictionary<ScenarioParallelBranch, IReadOnlyList<int>>();
+            foreach (var branch in branches)
+            {
+              candidatesByBranch[branch] = playerPool
+                  .Where(clientId => IsPlayerEligibleForBranch(branch, clientId))
+                  .ToList();
+            }
+
+            if (!ScenarioParallelRoleAllocator.TryAllocateDistinct(branches, candidatesByBranch, allocation))
+            {
+              if (ShouldAllowMultipleRoleBranches(
+                    node,
+                    ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer)
+                  && ScenarioParallelRoleAllocator.TryAllocateAllowingDuplicates(
+                    branches, candidatesByBranch, allocation))
+              {
+                Debug.Log("[ScenarioController] ByRole branches with duplicate player assignments will run sequentially per player.");
+                return true;
+              }
+
+              // 미배정 브랜치가 존재하면 미스매치 정책에 위임한다.
+              // (Ignore: null 배정 그대로 스킵 / Panic: 중단 / Reallocation: 라운드로빈 재배정)
+              int unmatchedCount = allocation.Count(kvp => kvp.Value == null);
               if (node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
               {
-                Debug.LogWarning($"[ScenarioController] Parallel allocation panic: branch '{branch.Identifier}' has no eligible player.");
+                Debug.LogWarning($"[ScenarioController] ByRole allocation panic: {unmatchedCount} branch(es) have no eligible/free player.");
                 return false;
               }
 
-              assigned = null;
-            }
-            else if (playersFewer && node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Ignore && i >= playerCount)
-            {
-              assigned = null;
-            }
-            else
-            {
-              assigned = eligiblePlayers[i % eligiblePlayers.Count];
+              if (node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Reallocation)
+              {
+                // ByRole의 distinct matching이 실패했다면 같은 후보 집합으로 중복 없는 재배정은 불가능하다.
+                // 공통 round-robin은 역할 자격을 무시하고 한 플레이어에게 UI 브랜치를 겹쳐 배정하므로 금지한다.
+                Debug.LogWarning("[ScenarioController] ByRole reallocation cannot complete without duplicate player assignments.");
+                return false;
+              }
+
+              // Ignore: null 배정 유지(해당 브랜치 스킵).
+              Debug.LogWarning($"[ScenarioController] ByRole allocation ignored {unmatchedCount} unmatched branch(es).");
             }
 
-            allocation[branch] = assigned;
+            return true;
           }
+        case ScenarioParallelAllocationType.SpreadRandom:
+          {
+            // 피어 간 동일한 배정을 위해 결정적 난수로 셔플한다.
+            Shuffle(playerPool, CreateDeterministicAllocationRandom(node));
+            goto case ScenarioParallelAllocationType.SpreadOrdinary;
+          }
+        case ScenarioParallelAllocationType.SpreadOrdinary:
+          {
+            if (playerPool.Count == 0)
+            {
+              return HandleParallelMismatch(node, branches.Count, 0, playerPool, allocation, assignNull: true);
+            }
 
-          return true;
-        }
+            int playerCount = playerPool.Count;
+            bool playersFewer = playerCount < branches.Count;
+
+            if (playersFewer && node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
+            {
+              Debug.LogWarning($"[ScenarioController] Parallel allocation panic: branches {branches.Count}, players {playerCount}.");
+              return false;
+            }
+
+            for (int i = 0; i < branches.Count; i++)
+            {
+              var branch = branches[i];
+              var eligiblePlayers = playerPool.Where(clientId => IsPlayerEligibleForBranch(branch, clientId)).ToList();
+
+              int? assigned;
+
+              if (eligiblePlayers.Count == 0)
+              {
+                if (node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Panic)
+                {
+                  Debug.LogWarning($"[ScenarioController] Parallel allocation panic: branch '{branch.Identifier}' has no eligible player.");
+                  return false;
+                }
+
+                assigned = null;
+              }
+              else if (playersFewer && node.WhenBranchingPlayerNotMatched == ScenarioParallelMismatchHandling.Ignore && i >= playerCount)
+              {
+                assigned = null;
+              }
+              else
+              {
+                assigned = eligiblePlayers[i % eligiblePlayers.Count];
+              }
+
+              allocation[branch] = assigned;
+            }
+
+            return true;
+          }
         default:
           return false;
       }
@@ -6355,159 +6362,159 @@ namespace MultiplayerInfrastructure.Scenario
           failureReason = $"player count {clientCount} is less than target {rootCondition.TargetCount}.";
           return false;
         case ScenarioValidatorCondition.RegistryContains:
-        {
-          var rules = rootCondition.ValidationRules;
-          if (rules == null || rules.Count == 0)
           {
-            failureReason = "validationRules is empty for RegistryContains condition.";
-            return false;
-          }
-
-          bool anyMode = rootCondition.MatchMode == ScenarioValidatorMatchMode.Any;
-          bool anyMatched = false;
-          var anyModeFailures = anyMode ? new List<string>() : null;
-
-          for (int i = 0; i < rules.Count; i++)
-          {
-            var rule = rules[i];
-            if (rule == null)
+            var rules = rootCondition.ValidationRules;
+            if (rules == null || rules.Count == 0)
             {
-              if (anyMode)
+              failureReason = "validationRules is empty for RegistryContains condition.";
+              return false;
+            }
+
+            bool anyMode = rootCondition.MatchMode == ScenarioValidatorMatchMode.Any;
+            bool anyMatched = false;
+            var anyModeFailures = anyMode ? new List<string>() : null;
+
+            for (int i = 0; i < rules.Count; i++)
+            {
+              var rule = rules[i];
+              if (rule == null)
               {
-                anyModeFailures.Add($"rule[{i}] is null.");
-              }
-              continue;
-            }
-
-            string misconfiguration = null;
-            if (rule.Type != ScenarioValidatorRuleType.Registry)
-            {
-              misconfiguration = $"rule[{i}] has unsupported type '{rule.Type}'.";
-            }
-            else if (rule.Condition != ScenarioValidatorRuleCondition.Contains)
-            {
-              misconfiguration = $"rule[{i}] has unsupported condition '{rule.Condition}'.";
-            }
-
-            var ruleIdentifier = rule.RegistryIdentifier?.Trim();
-            if (misconfiguration == null && string.IsNullOrWhiteSpace(ruleIdentifier))
-            {
-              misconfiguration = $"rule[{i}] registryIdentifier is null or empty.";
-            }
-
-            if (misconfiguration != null)
-            {
-              if (anyMode)
-              {
-                anyModeFailures.Add(misconfiguration);
+                if (anyMode)
+                {
+                  anyModeFailures.Add($"rule[{i}] is null.");
+                }
                 continue;
               }
 
-              failureReason = misconfiguration;
-              return false;
-            }
-
-            bool matched = Registry.Registry.Contains(rule.RegistryType, ruleIdentifier);
-            if (anyMode)
-            {
-              if (matched)
+              string misconfiguration = null;
+              if (rule.Type != ScenarioValidatorRuleType.Registry)
               {
-                anyMatched = true;
-                break;
+                misconfiguration = $"rule[{i}] has unsupported type '{rule.Type}'.";
+              }
+              else if (rule.Condition != ScenarioValidatorRuleCondition.Contains)
+              {
+                misconfiguration = $"rule[{i}] has unsupported condition '{rule.Condition}'.";
               }
 
-              anyModeFailures.Add($"rule[{i}] identifier '{ruleIdentifier}' is not registered in {rule.RegistryType}.");
+              var ruleIdentifier = rule.RegistryIdentifier?.Trim();
+              if (misconfiguration == null && string.IsNullOrWhiteSpace(ruleIdentifier))
+              {
+                misconfiguration = $"rule[{i}] registryIdentifier is null or empty.";
+              }
+
+              if (misconfiguration != null)
+              {
+                if (anyMode)
+                {
+                  anyModeFailures.Add(misconfiguration);
+                  continue;
+                }
+
+                failureReason = misconfiguration;
+                return false;
+              }
+
+              bool matched = Registry.Registry.Contains(rule.RegistryType, ruleIdentifier);
+              if (anyMode)
+              {
+                if (matched)
+                {
+                  anyMatched = true;
+                  break;
+                }
+
+                anyModeFailures.Add($"rule[{i}] identifier '{ruleIdentifier}' is not registered in {rule.RegistryType}.");
+              }
+              else if (!matched)
+              {
+                failureReason = $"rule[{i}] identifier '{ruleIdentifier}' is not registered in {rule.RegistryType}.";
+                return false;
+              }
             }
-            else if (!matched)
+
+            if (anyMode && !anyMatched)
             {
-              failureReason = $"rule[{i}] identifier '{ruleIdentifier}' is not registered in {rule.RegistryType}.";
+              failureReason = $"no rule matched (Any mode). details: {string.Join(" | ", anyModeFailures)}";
               return false;
             }
-          }
 
-          if (anyMode && !anyMatched)
-          {
-            failureReason = $"no rule matched (Any mode). details: {string.Join(" | ", anyModeFailures)}";
-            return false;
+            return true;
           }
-
-          return true;
-        }
         case ScenarioValidatorCondition.PlayerAssignedTag:
-        {
-          var tag = rootCondition.PlayerTag?.Trim();
-          if (string.IsNullOrWhiteSpace(tag))
           {
-            failureReason = "playerTag is null or empty.";
-            return false;
-          }
-
-          var users = UserDescriptorService.GetAll();
-          if (users == null || users.Count == 0)
-          {
-            failureReason = "no registered users found for player tag validation.";
-            return TryIgnoreMissingTagGate(node.Identifier, failureReason);
-          }
-
-          switch (rootCondition.PlayerScope)
-          {
-            case ScenarioValidatorPlayerScope.Any:
-              if (users.Values.Any(each => each != null
-                                           && !string.IsNullOrWhiteSpace(each.Identifier)
-                                           && PlayerTagService.HasTag(each.Identifier, tag)))
-              {
-                return true;
-              }
-              failureReason = $"no registered player has tag '{tag}'.";
-              return TryIgnoreMissingTagGate(node.Identifier, failureReason);
-            case ScenarioValidatorPlayerScope.All:
+            var tag = rootCondition.PlayerTag?.Trim();
+            if (string.IsNullOrWhiteSpace(tag))
             {
-              var missingPlayer = users.Values.FirstOrDefault(each => each == null
-                                                                      || string.IsNullOrWhiteSpace(each.Identifier)
-                                                                      || !PlayerTagService.HasTag(each.Identifier, tag));
-              if (missingPlayer == null)
-              {
-                return true;
-              }
-
-              var missingLabel = !string.IsNullOrWhiteSpace(missingPlayer.DisplayName)
-                  ? missingPlayer.DisplayName
-                  : missingPlayer.Identifier ?? "<unknown>";
-              failureReason = $"player '{missingLabel}' does not have required tag '{tag}'.";
-              return TryIgnoreMissingTagGate(node.Identifier, failureReason);
-            }
-            case ScenarioValidatorPlayerScope.Owner:
-            {
-              if (_scenarioOwnerClientId == null)
-              {
-                failureReason = "owner client id is not assigned for owner-scope tag validation.";
-                return TryIgnoreMissingTagGate(node.Identifier, failureReason);
-              }
-
-              if (!UserDescriptorService.TryGetByClientId(_scenarioOwnerClientId.Value, out var owner)
-                  || owner == null
-                  || string.IsNullOrWhiteSpace(owner.Identifier))
-              {
-                failureReason = $"owner descriptor not found for clientId {_scenarioOwnerClientId.Value}.";
-                return TryIgnoreMissingTagGate(node.Identifier, failureReason);
-              }
-
-              if (PlayerTagService.HasTag(owner.Identifier, tag))
-              {
-                return true;
-              }
-
-              var ownerLabel = !string.IsNullOrWhiteSpace(owner.DisplayName)
-                  ? owner.DisplayName
-                  : owner.Identifier;
-              failureReason = $"owner player '{ownerLabel}' does not have tag '{tag}'.";
-              return TryIgnoreMissingTagGate(node.Identifier, failureReason);
-            }
-            default:
-              failureReason = $"unknown player scope '{rootCondition.PlayerScope}'.";
+              failureReason = "playerTag is null or empty.";
               return false;
+            }
+
+            var users = UserDescriptorService.GetAll();
+            if (users == null || users.Count == 0)
+            {
+              failureReason = "no registered users found for player tag validation.";
+              return TryIgnoreMissingTagGate(node.Identifier, failureReason);
+            }
+
+            switch (rootCondition.PlayerScope)
+            {
+              case ScenarioValidatorPlayerScope.Any:
+                if (users.Values.Any(each => each != null
+                                             && !string.IsNullOrWhiteSpace(each.Identifier)
+                                             && PlayerTagService.HasTag(each.Identifier, tag)))
+                {
+                  return true;
+                }
+                failureReason = $"no registered player has tag '{tag}'.";
+                return TryIgnoreMissingTagGate(node.Identifier, failureReason);
+              case ScenarioValidatorPlayerScope.All:
+                {
+                  var missingPlayer = users.Values.FirstOrDefault(each => each == null
+                                                                          || string.IsNullOrWhiteSpace(each.Identifier)
+                                                                          || !PlayerTagService.HasTag(each.Identifier, tag));
+                  if (missingPlayer == null)
+                  {
+                    return true;
+                  }
+
+                  var missingLabel = !string.IsNullOrWhiteSpace(missingPlayer.DisplayName)
+                      ? missingPlayer.DisplayName
+                      : missingPlayer.Identifier ?? "<unknown>";
+                  failureReason = $"player '{missingLabel}' does not have required tag '{tag}'.";
+                  return TryIgnoreMissingTagGate(node.Identifier, failureReason);
+                }
+              case ScenarioValidatorPlayerScope.Owner:
+                {
+                  if (_scenarioOwnerClientId == null)
+                  {
+                    failureReason = "owner client id is not assigned for owner-scope tag validation.";
+                    return TryIgnoreMissingTagGate(node.Identifier, failureReason);
+                  }
+
+                  if (!UserDescriptorService.TryGetByClientId(_scenarioOwnerClientId.Value, out var owner)
+                      || owner == null
+                      || string.IsNullOrWhiteSpace(owner.Identifier))
+                  {
+                    failureReason = $"owner descriptor not found for clientId {_scenarioOwnerClientId.Value}.";
+                    return TryIgnoreMissingTagGate(node.Identifier, failureReason);
+                  }
+
+                  if (PlayerTagService.HasTag(owner.Identifier, tag))
+                  {
+                    return true;
+                  }
+
+                  var ownerLabel = !string.IsNullOrWhiteSpace(owner.DisplayName)
+                      ? owner.DisplayName
+                      : owner.Identifier;
+                  failureReason = $"owner player '{ownerLabel}' does not have tag '{tag}'.";
+                  return TryIgnoreMissingTagGate(node.Identifier, failureReason);
+                }
+              default:
+                failureReason = $"unknown player scope '{rootCondition.PlayerScope}'.";
+                return false;
+            }
           }
-        }
         default:
           failureReason = $"unsupported validator condition '{rootCondition.Condition}'.";
           return false;

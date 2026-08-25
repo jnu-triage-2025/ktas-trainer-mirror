@@ -1,6 +1,6 @@
-using FishNet.Object;
-using MultiplayerInfrastructure.Player;
+﻿using FishNet.Object;
 using MultiplayerInfrastructure.Performance;
+using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using Unity.VisualScripting;
@@ -35,7 +35,7 @@ namespace MultiplayerInfrastructure.Camera
 
     public UnityEngine.Camera Camera => _holder.Camera;
 
-    void Awake()
+    private void Awake()
     {
       if (_instance != null && _instance != this)
       {
@@ -55,7 +55,7 @@ namespace MultiplayerInfrastructure.Camera
       Registry.Registry.Unregister(RegistryType.Service, Registry.Registry.TypeKey<MainCameraController>());
     }
 
-    void Start()
+    private void Start()
     {
       _nearbyInteractablesDetector = GetComponent<NearbyInteractablesDetector>();
       _interactableHintUIController = GetComponent<InteractableObjectHintUIController>();
@@ -65,7 +65,8 @@ namespace MultiplayerInfrastructure.Camera
     {
       base.OnStartClient();
 
-      if (!IsOwner) return;
+      if (!IsOwner)
+        return;
 
       _holder.Initialize();
 
@@ -105,14 +106,15 @@ namespace MultiplayerInfrastructure.Camera
     /// <summary>3인칭 POV 거리 조정의 허용 최대값입니다.</summary>
     public float MaxThirdPersonDistance => _holder.MaxThirdPersonDistance;
 
-    void LateUpdate()
+    private void LateUpdate()
     {
       _holder.Follow();
     }
 
-    new void OnValidate()
+    private new void OnValidate()
     {
-      if (!Application.isPlaying) return;
+      if (!Application.isPlaying)
+        return;
       _holder.RefreshFromInspector();
     }
 
@@ -127,8 +129,10 @@ namespace MultiplayerInfrastructure.Camera
     /// </summary>
     public void SetTarget(PlayerController playerController)
     {
-      if (playerController.IsUnityNull()) return;
-      if (!playerController.IsOwner) return; // Only bind to the local owner's player
+      if (playerController.IsUnityNull())
+        return;
+      if (!playerController.IsOwner)
+        return; // Only bind to the local owner's player
       _holder.AttachTo(playerController.CameraAttachPoint);
     }
   }

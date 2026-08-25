@@ -1,11 +1,11 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using TextToSpeechService;
 using UnityEditor;
 using UnityEngine;
-using TextToSpeechService;
 
 namespace MultiplayerInfrastructure.Editor.TTS
 {
@@ -21,26 +21,26 @@ namespace MultiplayerInfrastructure.Editor.TTS
   public class TTSStaticAudioBakerWindow : EditorWindow
   {
     private string _transcriptJsonPath = "";
-    private string _onnxDirPath        = "";
-    private string _voiceStylePath     = "";
-    private string _language   = "ko";
-    private int    _totalStep  = 5;
-    private float  _speed      = 1.05f;
-    private bool   _overwrite  = false;
+    private string _onnxDirPath = "";
+    private string _voiceStylePath = "";
+    private string _language = "ko";
+    private int _totalStep = 5;
+    private float _speed = 1.05f;
+    private bool _overwrite = false;
 
-    private bool    _isBaking;
-    private float   _progress;
-    private string  _statusText = "";
-    private string  _lastError  = "";
+    private bool _isBaking;
+    private float _progress;
+    private string _statusText = "";
+    private string _lastError = "";
     private Vector2 _scroll;
     private readonly List<string> _log = new();
 
     private void OnEnable()
     {
-      string sa           = Application.streamingAssetsPath;
+      string sa = Application.streamingAssetsPath;
       _transcriptJsonPath = Path.Combine(sa, "transcripts.json");
-      _onnxDirPath        = TTSCore.GetOnnxDir(sa);
-      _voiceStylePath     = TTSCore.GetVoiceStylePath(sa, "F1");
+      _onnxDirPath = TTSCore.GetOnnxDir(sa);
+      _voiceStylePath = TTSCore.GetVoiceStylePath(sa, "F1");
     }
 
     [MenuItem("Tools/Text to Speech Service/Bake Static Audio")]
@@ -64,13 +64,13 @@ namespace MultiplayerInfrastructure.Editor.TTS
       using (new EditorGUI.DisabledScope(_isBaking))
       {
         _transcriptJsonPath = EditorGUILayout.TextField("Transcript JSON", _transcriptJsonPath);
-        _onnxDirPath        = EditorGUILayout.TextField("ONNX 디렉터리",   _onnxDirPath);
-        _voiceStylePath     = EditorGUILayout.TextField("음성 스타일",      _voiceStylePath);
+        _onnxDirPath = EditorGUILayout.TextField("ONNX 디렉터리", _onnxDirPath);
+        _voiceStylePath = EditorGUILayout.TextField("음성 스타일", _voiceStylePath);
 
         EditorGUILayout.Space(4);
-        _language  = EditorGUILayout.TextField("언어 코드", _language);
+        _language = EditorGUILayout.TextField("언어 코드", _language);
         _totalStep = EditorGUILayout.IntField("Diffusion 스텝", _totalStep);
-        _speed     = EditorGUILayout.FloatField("속도 배율",  _speed);
+        _speed = EditorGUILayout.FloatField("속도 배율", _speed);
         _overwrite = EditorGUILayout.Toggle("기존 파일 덮어쓰기", _overwrite);
       }
 
@@ -99,35 +99,35 @@ namespace MultiplayerInfrastructure.Editor.TTS
 
     private void StartBaking()
     {
-      _lastError  = "";
-      _isBaking   = true;
-      _progress   = 0f;
+      _lastError = "";
+      _isBaking = true;
+      _progress = 0f;
       _statusText = "준비 중...";
       _log.Clear();
 
       if (!File.Exists(_transcriptJsonPath))
       {
         _lastError = $"Transcript JSON을 찾을 수 없습니다: {_transcriptJsonPath}";
-        _isBaking  = false;
+        _isBaking = false;
         return;
       }
 
       if (!TTSCore.AreModelsPresent(_onnxDirPath))
       {
         _lastError = "ONNX 모델이 없습니다. 먼저 Tools > Text to Speech Service > Download Models 를 실행하세요.";
-        _isBaking  = false;
+        _isBaking = false;
         return;
       }
 
       string transcriptJson = _transcriptJsonPath;
-      string onnxDir        = _onnxDirPath;
-      string stylePath      = _voiceStylePath;
-      string lang           = _language;
-      int    steps          = _totalStep;
-      float  spd            = _speed;
-      bool   overwrite      = _overwrite;
-      string streamingRoot  = Application.streamingAssetsPath;
-      var    log            = _log;
+      string onnxDir = _onnxDirPath;
+      string stylePath = _voiceStylePath;
+      string lang = _language;
+      int steps = _totalStep;
+      float spd = _speed;
+      bool overwrite = _overwrite;
+      string streamingRoot = Application.streamingAssetsPath;
+      var log = _log;
 
       _ = Task.Run(() =>
       {
@@ -140,7 +140,7 @@ namespace MultiplayerInfrastructure.Editor.TTS
             {
               EditorApplication.delayCall += () =>
               {
-                _progress   = p.Ratio;
+                _progress = p.Ratio;
                 _statusText = p.Skipped
                   ? $"건너뜀 {p.Identifier}/{p.Index}.wav"
                   : $"합성 중 {p.Identifier}/{p.Index}.wav";
@@ -167,8 +167,8 @@ namespace MultiplayerInfrastructure.Editor.TTS
         {
           EditorApplication.delayCall += () =>
           {
-            _isBaking   = false;
-            _progress   = 1f;
+            _isBaking = false;
+            _progress = 1f;
             _statusText = "완료";
             Repaint();
           };

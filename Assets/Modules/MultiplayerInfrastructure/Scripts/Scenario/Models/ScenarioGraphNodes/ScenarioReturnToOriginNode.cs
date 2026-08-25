@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Scenario
+﻿namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
   /// 곁가지 체인의 종료 표식. 여기 닿으면 체인을 닫고 원래 흐름으로 돌아간다.

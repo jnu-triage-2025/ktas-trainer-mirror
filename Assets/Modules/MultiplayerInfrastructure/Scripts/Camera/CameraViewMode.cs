@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Camera
+﻿namespace MultiplayerInfrastructure.Camera
 {
   public enum CameraViewMode
   {

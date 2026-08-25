@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.Scenario;
@@ -61,11 +61,15 @@ namespace MultiplayerInfrastructure.Editor
       }));
       foldout.Add(Vector3Field("Position", new Vector3(value.PositionX, value.PositionY, value.PositionZ), next =>
       {
-        value.PositionX = next.x; value.PositionY = next.y; value.PositionZ = next.z;
+        value.PositionX = next.x;
+        value.PositionY = next.y;
+        value.PositionZ = next.z;
       }));
       foldout.Add(Vector3Field("Rotation", new Vector3(value.RotationX, value.RotationY, value.RotationZ), next =>
       {
-        value.RotationX = next.x; value.RotationY = next.y; value.RotationZ = next.z;
+        value.RotationX = next.x;
+        value.RotationY = next.y;
+        value.RotationZ = next.z;
       }));
       var despawn = new Toggle("Despawn On End") { value = value.DespawnOnScenarioEnd };
       despawn.RegisterValueChangedCallback(evt => { value.DespawnOnScenarioEnd = evt.newValue; Changed(); });
@@ -77,7 +81,8 @@ namespace MultiplayerInfrastructure.Editor
     private void AddWaypoint()
     {
       var graph = getGraph?.Invoke();
-      if (graph == null) return;
+      if (graph == null)
+        return;
       var updated = graph.Waypoints?.Where(value => value != null).ToList() ?? new List<ScenarioWaypointDefinition>();
       updated.Add(new ScenarioWaypointDefinition { Identifier = "waypoint", DespawnOnScenarioEnd = true });
       graph.Waypoints = updated;
@@ -87,7 +92,8 @@ namespace MultiplayerInfrastructure.Editor
     private void RemoveWaypoint(ScenarioWaypointDefinition value)
     {
       var graph = getGraph?.Invoke();
-      if (graph == null) return;
+      if (graph == null)
+        return;
       graph.Waypoints = graph.Waypoints.Where(each => !ReferenceEquals(each, value)).ToList();
       Changed(true);
     }
@@ -109,7 +115,8 @@ namespace MultiplayerInfrastructure.Editor
     private void Changed(bool refresh = false)
     {
       onChanged?.Invoke();
-      if (refresh) Refresh();
+      if (refresh)
+        Refresh();
     }
 
     private static string Normalize(string value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

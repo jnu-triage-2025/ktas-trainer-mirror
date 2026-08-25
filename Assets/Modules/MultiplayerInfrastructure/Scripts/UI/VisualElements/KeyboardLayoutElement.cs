@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -20,8 +20,8 @@ namespace MultiplayerInfrastructure.UI
     // 키 배치 기준 치수 — 키 위치 퍼센트 계산에 사용하는 내부 레이아웃 단위
     // 키 좌표 원본 기준: 1245 × 381 (가로/세로 전체 레이아웃 크기)
     // ──────────────────────────────────────────────────────────────────────────
-    private const float LayoutW       = 1245f;
-    private const float LayoutH       = 381f;
+    private const float LayoutW = 1245f;
+    private const float LayoutH = 381f;
     private const float LayoutOffsetX = 15f;
     private const float LayoutOffsetY = 15f;
 
@@ -74,7 +74,8 @@ namespace MultiplayerInfrastructure.UI
       {
         foreach (var entry in entries)
         {
-          if (entry.boundKey == KeyCode.None) continue;
+          if (entry.boundKey == KeyCode.None)
+            continue;
           _keyToActionId[entry.boundKey] = entry.actionId;
           _keyToActionDisplay[entry.boundKey] = entry.actionDisplayName;
         }
@@ -131,9 +132,9 @@ namespace MultiplayerInfrastructure.UI
     {
       // 백분율 좌표 계산
       float left = (info.X + LayoutOffsetX) / LayoutW * 100f;
-      float top  = (info.Y + LayoutOffsetY) / LayoutH * 100f;
-      float w    = info.W / LayoutW * 100f;
-      float h    = info.H / LayoutH * 100f;
+      float top = (info.Y + LayoutOffsetY) / LayoutH * 100f;
+      float w = info.W / LayoutW * 100f;
+      float h = info.H / LayoutH * 100f;
 
       var keyEl = new VisualElement();
       keyEl.AddToClassList("keyboard-layout__key");
@@ -177,7 +178,8 @@ namespace MultiplayerInfrastructure.UI
       foreach (var (keyCode, overlay) in _keyOverlays)
       {
         var actionLabel = overlay.Q<Label>(className: "keyboard-layout__key-action");
-        if (actionLabel == null) continue;
+        if (actionLabel == null)
+          continue;
 
         if (_keyToActionDisplay.TryGetValue(keyCode, out var displayName))
         {
@@ -212,7 +214,10 @@ namespace MultiplayerInfrastructure.UI
       {
         KeyCode = keyCode;
         Label = label;
-        X = x; Y = y; W = w; H = h;
+        X = x;
+        Y = y;
+        W = w;
+        H = h;
       }
     }
 

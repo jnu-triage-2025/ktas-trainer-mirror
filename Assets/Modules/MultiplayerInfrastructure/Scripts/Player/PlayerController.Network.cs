@@ -1,16 +1,16 @@
+﻿using System;
+using System.Collections.Generic;
+using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using System;
-using System.Collections.Generic;
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Registry;
-using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Server;
+using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 using UnityEngine;
-using FishNet.Connection;
 
 namespace MultiplayerInfrastructure.Player
 {
@@ -52,14 +52,14 @@ namespace MultiplayerInfrastructure.Player
     // 서버가 설정하고 모든 클라이언트로 자동 전파됩니다.
 
     private readonly SyncVar<string> _entityIdentifier = new SyncVar<string>();
-    private readonly SyncVar<string> _userIdentifier  = new SyncVar<string>();
+    private readonly SyncVar<string> _userIdentifier = new SyncVar<string>();
     private readonly SyncVar<string> _userDisplayName = new SyncVar<string>();
 
     /// <summary>이 PlayerController가 나타내는 엔티티의 전역 식별자.</summary>
     public string EntityIdentifier => _entityIdentifier.Value;
 
     /// <summary>이 PlayerController가 나타내는 플레이어의 Identifier(UUID).</summary>
-    public string UserIdentifier  => _userIdentifier.Value;
+    public string UserIdentifier => _userIdentifier.Value;
 
     /// <summary>이 PlayerController가 나타내는 플레이어의 DisplayName.</summary>
     public string UserDisplayName => _userDisplayName.Value;
@@ -75,7 +75,7 @@ namespace MultiplayerInfrastructure.Player
       // 서버가 UserDescriptor를 발급하고 SyncVar에 설정
       var descriptor = UserDescriptor.CreateDefault();
       _entityIdentifier.Value = BuildPlayerEntityIdentifier(descriptor.Identifier);
-      _userIdentifier.Value  = descriptor.Identifier;
+      _userIdentifier.Value = descriptor.Identifier;
       _userDisplayName.Value = descriptor.DisplayName;
 
       if (ServerBanService.IsBanned(descriptor.DisplayName))
@@ -297,7 +297,8 @@ namespace MultiplayerInfrastructure.Player
     [ServerRpc]
     private void CmdSetDisplayName(string displayName)
     {
-      if (string.IsNullOrWhiteSpace(displayName)) return;
+      if (string.IsNullOrWhiteSpace(displayName))
+        return;
       _userDisplayName.Value = displayName;
       // 서버 측 서비스도 즉시 갱신
       UserDescriptorService.UpdateDisplayName(_userIdentifier.Value, displayName);

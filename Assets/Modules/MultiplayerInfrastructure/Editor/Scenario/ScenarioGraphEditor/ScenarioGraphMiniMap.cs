@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
@@ -170,10 +170,14 @@ namespace MultiplayerInfrastructure.Editor
       var bottom = localPosition.y >= currentRect.height - ResizeHitSize;
 
       var result = Interaction.None;
-      if (left) result |= Interaction.Left;
-      if (right) result |= Interaction.Right;
-      if (top) result |= Interaction.Top;
-      if (bottom) result |= Interaction.Bottom;
+      if (left)
+        result |= Interaction.Left;
+      if (right)
+        result |= Interaction.Right;
+      if (top)
+        result |= Interaction.Top;
+      if (bottom)
+        result |= Interaction.Bottom;
       if (result != Interaction.None)
         return result;
 

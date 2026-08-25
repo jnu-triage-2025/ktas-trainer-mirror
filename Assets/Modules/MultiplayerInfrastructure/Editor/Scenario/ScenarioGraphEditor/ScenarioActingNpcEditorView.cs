@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.Scenario;
@@ -109,7 +109,8 @@ namespace MultiplayerInfrastructure.Editor
         });
         value.Interactions = updated;
         Changed(true);
-      }) { text = "Add Interaction" });
+      })
+      { text = "Add Interaction" });
       foldout.Add(interactions);
 
       foldout.Add(new Button(() => RemoveActingNpc(value)) { text = "Remove Acting NPC" });
@@ -176,7 +177,8 @@ namespace MultiplayerInfrastructure.Editor
           {
             value.RequiredItems = value.RequiredItems.Where(each => !ReferenceEquals(each, item)).ToList();
             Changed(true);
-          }) { text = "−" });
+          })
+          { text = "−" });
           requiredItems.Add(row);
         }
         requiredItems.Add(new Button(() =>
@@ -186,7 +188,8 @@ namespace MultiplayerInfrastructure.Editor
           updated.Add(new ScenarioActingNpcItemRequirement { Count = 1 });
           value.RequiredItems = updated;
           Changed(true);
-        }) { text = "Add Required Item" });
+        })
+        { text = "Add Required Item" });
         foldout.Add(requiredItems);
       }
 
@@ -195,7 +198,8 @@ namespace MultiplayerInfrastructure.Editor
       {
         owner.Interactions = owner.Interactions.Where(each => !ReferenceEquals(each, value)).ToList();
         Changed(true);
-      }) { text = "Remove Interaction" });
+      })
+      { text = "Remove Interaction" });
       return foldout;
     }
 

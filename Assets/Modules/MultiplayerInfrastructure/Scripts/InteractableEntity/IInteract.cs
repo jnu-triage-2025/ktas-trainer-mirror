@@ -1,5 +1,5 @@
+﻿using System.Collections.Generic;
 using UnityEngine;
-using System.Collections.Generic;
 
 namespace MultiplayerInfrastructure.InteractableEntity
 {
@@ -12,7 +12,7 @@ namespace MultiplayerInfrastructure.InteractableEntity
     /// 플레이어의 화면에 상호 작용 가능한 물체로서 표시될 때, 표시되는 짧은 텍스트의 내용입니다.
     /// </summary>
     public string DisplayText { get; }
-    
+
     /// <summary>
     /// 플레이어의 화면에 상호 작용 가능한 물체로서 표시될 때, 표시되는 아이콘에 해당합니다.
     /// </summary>
@@ -22,19 +22,19 @@ namespace MultiplayerInfrastructure.InteractableEntity
     /// DisplayIcon이 null일 때 기본 fallback 아이콘을 표시할지 여부입니다.
     /// </summary>
     public bool AllowDisplayIconFallback { get; }
-    
+
     /// <summary>
     /// 플레이어의 화면에 상호 작용 가능한 물체로서 표시될 때, 강조하고자 싶다면 이 색을 설정합니다.
     /// 기본적으로는 하얀색으로 설정하세요.
     /// </summary>
     public Color DisplayColor { get; }
-    
+
     /// <summary>
     /// 플레이어가 상호작용할 때, 그 처리를 정의합니다. 
     /// </summary>
     /// <param name="model"></param>
     /// <param name="interactor"></param>
-    void Interact(Transform interactor);
+    public void Interact(Transform interactor);
   }
 
   /// <summary>
@@ -43,13 +43,13 @@ namespace MultiplayerInfrastructure.InteractableEntity
   /// </summary>
   public interface IInteractDisplayIcons
   {
-    IReadOnlyList<Sprite> DisplayIcons { get; }
+    public IReadOnlyList<Sprite> DisplayIcons { get; }
   }
 
   public interface IQuestPresentationTarget
   {
-    string PresentationEntityIdentifier { get; }
-    string InteractionIdentifier { get; }
+    public string PresentationEntityIdentifier { get; }
+    public string InteractionIdentifier { get; }
   }
 
   /// <summary>
@@ -58,13 +58,13 @@ namespace MultiplayerInfrastructure.InteractableEntity
   /// </summary>
   public interface IAdditionalInteractProvider
   {
-    IEnumerable<IInteract> AdditionalInteracts { get; }
+    public IEnumerable<IInteract> AdditionalInteracts { get; }
   }
 
   /// <summary>로컬 선택 상태에 따른 표시 효과를 위한 선택적 규약입니다.</summary>
   public interface ILocalInteractionFocus
   {
-    void SetLocalInteractionFocused(bool focused);
+    public void SetLocalInteractionFocused(bool focused);
   }
 
   /// <summary>
@@ -73,10 +73,10 @@ namespace MultiplayerInfrastructure.InteractableEntity
   /// </summary>
   public interface INearestOnlyInteract
   {
-    string NearestOnlyGroup { get; }
-    Transform NearestOnlyDistanceOrigin { get; }
-    Collider NearestOnlyCollider { get; }
-    int NearestOnlyTieBreaker { get; }
+    public string NearestOnlyGroup { get; }
+    public Transform NearestOnlyDistanceOrigin { get; }
+    public Collider NearestOnlyCollider { get; }
+    public int NearestOnlyTieBreaker { get; }
   }
 
   public static class NearestOnlyInteractUtility

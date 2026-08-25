@@ -1,5 +1,4 @@
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.ItemSystem;
@@ -21,7 +20,8 @@ namespace MultiplayerInfrastructure.Player
     [Header("PlayerController.Inventory:")]
     private InventoryUIController _inventoryUI;
 
-    [SerializeField] private PlayerControllerInventoryConfiguration _inventoryConf = new PlayerControllerInventoryConfiguration
+    [SerializeField]
+    private PlayerControllerInventoryConfiguration _inventoryConf = new PlayerControllerInventoryConfiguration
     {
       sizeWidth = 9,
       sizeHeight = 4
@@ -38,12 +38,12 @@ namespace MultiplayerInfrastructure.Player
     public IReadOnlyList<EquipmentSlotModelDTO> EquipmentSlots => _equipmentSlots;
 
     public ItemSystem.Item HandlingItem = null;
-    
+
     private bool _inventoryVisible;
     private bool _inventoryRenderRequired = true;  // like a dirty bit
     private bool _isCombining = false;             // 자동 조합 재진입 방지 플래그
 
-    void Start_Inventory()
+    private void Start_Inventory()
     {
       if (_inventoryUI == null)
         _inventoryUI = Registry.Registry.Get<InventoryUIController>(RegistryType.UI, Registry.Registry.TypeKey<InventoryUIController>());
@@ -59,7 +59,7 @@ namespace MultiplayerInfrastructure.Player
         _equipmentSlots.Add(new EquipmentSlotModelDTO(EquipmentSlotType.Glove));
     }
 
-    void Update_Inventory()
+    private void Update_Inventory()
     {
       if (_inventoryUI == null)
         _inventoryUI = Registry.Registry.Get<InventoryUIController>(RegistryType.UI, Registry.Registry.TypeKey<InventoryUIController>());
@@ -107,9 +107,12 @@ namespace MultiplayerInfrastructure.Player
 
       foreach (var slot in _slots)
       {
-        if (remaining.CurrentStackCount <= 0) break;
-        if (slot.IsEmpty || slot.ItemInstance == null) continue;
-        if (!slot.ItemInstance.CanStackWith(remaining)) continue;
+        if (remaining.CurrentStackCount <= 0)
+          break;
+        if (slot.IsEmpty || slot.ItemInstance == null)
+          continue;
+        if (!slot.ItemInstance.CanStackWith(remaining))
+          continue;
 
         int countBeforeMerge = remaining.CurrentStackCount;
         slot.ItemInstance.Merge(remaining);
@@ -161,7 +164,8 @@ namespace MultiplayerInfrastructure.Player
     /// </summary>
     private void TryAutoCombineItems()
     {
-      if (_isCombining) return;
+      if (_isCombining)
+        return;
       _isCombining = true;
 
       try
@@ -175,9 +179,11 @@ namespace MultiplayerInfrastructure.Player
           var counts = new Dictionary<string, int>(StringComparer.Ordinal);
           foreach (var slot in _slots)
           {
-            if (slot == null || slot.IsEmpty || slot.ItemInstance == null) continue;
+            if (slot == null || slot.IsEmpty || slot.ItemInstance == null)
+              continue;
             string id = slot.ItemInstance.CurrentIdentifier;
-            if (string.IsNullOrWhiteSpace(id)) continue;
+            if (string.IsNullOrWhiteSpace(id))
+              continue;
             counts.TryGetValue(id, out int existing);
             counts[id] = existing + slot.ItemInstance.CurrentStackCount;
           }
@@ -276,9 +282,12 @@ namespace MultiplayerInfrastructure.Player
       for (int i = 0; i < recipes.Count; i++)
       {
         var recipe = recipes[i];
-        if (recipe == null) continue;
-        if (!string.Equals(recipe.OutputItemIdentifier, outputItemIdentifier, StringComparison.Ordinal)) continue;
-        if (!ItemCombineRecipeRegistry.RecipeCanCombine(recipe, counts)) continue;
+        if (recipe == null)
+          continue;
+        if (!string.Equals(recipe.OutputItemIdentifier, outputItemIdentifier, StringComparison.Ordinal))
+          continue;
+        if (!ItemCombineRecipeRegistry.RecipeCanCombine(recipe, counts))
+          continue;
         matched = recipe;
         break;
       }
@@ -319,9 +328,11 @@ namespace MultiplayerInfrastructure.Player
       var counts = new Dictionary<string, int>(StringComparer.Ordinal);
       foreach (var slot in _slots)
       {
-        if (slot == null || slot.IsEmpty || slot.ItemInstance == null) continue;
+        if (slot == null || slot.IsEmpty || slot.ItemInstance == null)
+          continue;
         string id = slot.ItemInstance.CurrentIdentifier;
-        if (string.IsNullOrWhiteSpace(id)) continue;
+        if (string.IsNullOrWhiteSpace(id))
+          continue;
         counts.TryGetValue(id, out int existing);
         counts[id] = existing + slot.ItemInstance.CurrentStackCount;
       }
@@ -633,12 +644,16 @@ namespace MultiplayerInfrastructure.Player
 
       foreach (var slot in _slots)
       {
-        if (remainingCount <= 0) break;
-        if (slot == null || slot.IsEmpty || slot.ItemInstance == null) continue;
-        if (!slot.ItemInstance.CanStackWith(item)) continue;
+        if (remainingCount <= 0)
+          break;
+        if (slot == null || slot.IsEmpty || slot.ItemInstance == null)
+          continue;
+        if (!slot.ItemInstance.CanStackWith(item))
+          continue;
 
         int room = slot.ItemInstance.CurrentMaxStackCount - slot.ItemInstance.CurrentStackCount;
-        if (room <= 0) continue;
+        if (room <= 0)
+          continue;
 
         remainingCount -= Mathf.Min(room, remainingCount);
       }

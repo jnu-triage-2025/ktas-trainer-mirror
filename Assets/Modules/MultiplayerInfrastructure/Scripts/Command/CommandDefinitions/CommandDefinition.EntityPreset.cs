@@ -1,11 +1,10 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq;
 using FishNet;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.Player;
-using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Command
@@ -210,7 +209,7 @@ namespace MultiplayerInfrastructure.Command
         return false;
       }
 
-      if (target.StartsWith("@", StringComparison.Ordinal))
+      if (target.StartsWith('@'))
       {
         if (!TargetSelectorResolver.TryResolveTargets(sender, target, out var targets, out error))
           return false;

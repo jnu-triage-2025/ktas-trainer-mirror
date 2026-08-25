@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.UI.Models
+﻿namespace MultiplayerInfrastructure.UI.Models
 {
   /// <summary>
   /// 텍스처 성능 품질 단계를 나타내는 열거형입니다.

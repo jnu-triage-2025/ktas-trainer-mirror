@@ -1,4 +1,4 @@
-using TriageTrainer.Entity.LineConnection;
+﻿using TriageTrainer.Entity.LineConnection;
 using UnityEngine;
 
 namespace TriageTrainer.Entity.ElectricalLine

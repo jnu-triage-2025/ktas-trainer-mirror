@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 namespace TriageTrainer.Patient
 {
   [Serializable]
@@ -8,7 +8,7 @@ namespace TriageTrainer.Patient
     /**
      * 환자에게 주사바늘을 삽입한 상태를 표시
      * 환자에 표시할 상태는 좌/우측 팔에 주사바늘이 삽입되어있는 상태 여부만임
-     */ 
+     */
 
     /// <summary>
     /// 좌측 팔에 18G 주사기가 삽입된 상태를 표시할지 여부
@@ -80,7 +80,7 @@ namespace TriageTrainer.Patient
      * 환자에게 거즈 드레싱을 적용한 상태를 표시할 때 필요한 정보들을 정리
      * 환자의 팔과 얼굴(눈썹)에 거즈 드레싱을 적용한 상태를 표시할 수 있도록 구성
      */
-    
+
     /// <summary>
     /// 환자의 흉부에 거즈를 덧댄 경우
     /// </summary>
@@ -130,7 +130,7 @@ namespace TriageTrainer.Patient
     /// 환자의 좌측 눈썹에 거즈 드레싱을 완료한 경우
     /// </summary>
     public bool GauzeDressingDoneOnLeftEyebrow;
-    
+
     #endregion  // ApplyGauzeDressing
     #region NasalCannulaTreatments
     /**

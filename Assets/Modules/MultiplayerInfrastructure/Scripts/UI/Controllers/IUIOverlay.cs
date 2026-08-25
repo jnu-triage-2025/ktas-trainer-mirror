@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 
 namespace MultiplayerInfrastructure.UI
 {
   public interface IUIOverlay
   {
-    event Action OverlayPushed;
-    event Action OverlayPopped;
+    public event Action OverlayPushed;
+    public event Action OverlayPopped;
 
-    void OnOverlayPushed();
-    void OnOverlayPopped();
+    public void OnOverlayPushed();
+    public void OnOverlayPopped();
   }
 }

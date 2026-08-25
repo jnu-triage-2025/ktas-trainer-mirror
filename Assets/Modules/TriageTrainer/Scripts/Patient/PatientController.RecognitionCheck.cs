@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Object;

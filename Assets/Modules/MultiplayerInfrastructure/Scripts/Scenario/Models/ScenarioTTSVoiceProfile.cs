@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using TextToSpeechService;
@@ -38,8 +38,11 @@ namespace MultiplayerInfrastructure.Scenario
       var value = Definitions[style];
       return new TTSVoiceProfile
       {
-        VoiceIdentifier = value.VoiceIdentifier, VoiceStyleName = value.VoiceStyleName,
-        Language = value.Language, Speed = value.Speed, TotalStep = value.TotalStep
+        VoiceIdentifier = value.VoiceIdentifier,
+        VoiceStyleName = value.VoiceStyleName,
+        Language = value.Language,
+        Speed = value.Speed,
+        TotalStep = value.TotalStep
       };
     }
 
@@ -51,7 +54,8 @@ namespace MultiplayerInfrastructure.Scenario
         foreach (var style in Enum.GetValues(typeof(TTSVoiceStyle)))
         {
           var key = (TTSVoiceStyle)style;
-          if (key == TTSVoiceStyle.None) continue;
+          if (key == TTSVoiceStyle.None)
+            continue;
           var profile = Definitions[key];
           result.Add(new TTSVoiceProfileDefinition(key, profile.VoiceIdentifier, profile.VoiceStyleName,
             profile.Language, profile.Speed, profile.TotalStep));
@@ -74,8 +78,12 @@ namespace MultiplayerInfrastructure.Scenario
     public TTSVoiceProfileDefinition(TTSVoiceStyle style, string voiceIdentifier, string voiceStyleName,
       string language, float speed, int totalStep)
     {
-      Style = style; VoiceIdentifier = voiceIdentifier; VoiceStyleName = voiceStyleName;
-      Language = language; Speed = speed; TotalStep = totalStep;
+      Style = style;
+      VoiceIdentifier = voiceIdentifier;
+      VoiceStyleName = voiceStyleName;
+      Language = language;
+      Speed = speed;
+      TotalStep = totalStep;
     }
   }
 

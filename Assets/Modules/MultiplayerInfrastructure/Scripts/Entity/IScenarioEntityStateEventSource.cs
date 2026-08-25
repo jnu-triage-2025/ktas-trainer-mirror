@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace MultiplayerInfrastructure.Entity
@@ -23,7 +23,7 @@ namespace MultiplayerInfrastructure.Entity
   public interface IScenarioEntityStateEventSource
   {
     /// <summary>이 엔티티가 지원하는 상태 이벤트 이름 목록(검토/검증용).</summary>
-    IReadOnlyList<string> GetStateEventNames();
+    public IReadOnlyList<string> GetStateEventNames();
 
     /// <summary>
     /// 명명된 상태 이벤트에 대한 리스너를 등록한다.
@@ -35,12 +35,12 @@ namespace MultiplayerInfrastructure.Entity
     /// </param>
     /// <param name="onFired">이벤트 발생 시 호출되는 콜백. 인자는 실제 발생 key(없으면 null).</param>
     /// <returns>이벤트 이름을 인식하여 등록했으면 true.</returns>
-    bool RegisterStateEventListener(string eventName, string key, Action<string> onFired);
+    public bool RegisterStateEventListener(string eventName, string key, Action<string> onFired);
 
     /// <summary>
     /// 등록된 상태 이벤트 리스너를 해제한다.
     /// <paramref name="eventName"/> 가 비어 있으면 이 엔티티의 모든 리스너를 해제한다.
     /// </summary>
-    void UnregisterStateEventListeners(string eventName);
+    public void UnregisterStateEventListeners(string eventName);
   }
 }

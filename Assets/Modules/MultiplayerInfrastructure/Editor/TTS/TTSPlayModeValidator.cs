@@ -1,7 +1,7 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
+using TextToSpeechService;
 using UnityEditor;
 using UnityEngine;
-using TextToSpeechService;
 
 namespace MultiplayerInfrastructure.Editor.TTS
 {
@@ -59,7 +59,8 @@ namespace MultiplayerInfrastructure.Editor.TTS
 
     private static void OnPlayModeStateChanged(PlayModeStateChange state)
     {
-      if (state != PlayModeStateChange.ExitingEditMode) return;
+      if (state != PlayModeStateChange.ExitingEditMode)
+        return;
 
       // Command-line tests and CI cannot answer modal dialogs. Keep validation visible
       // in the log, but never cancel or recursively restart PlayMode in batch mode.
@@ -131,7 +132,8 @@ namespace MultiplayerInfrastructure.Editor.TTS
       }
 
       // bake가 필요하거나(미bake/dirty) 사용하지 않는 baked 파일(orphan)이 있으면 안내한다.
-      if (!scan.NeedsBake && !scan.HasOrphans) return;
+      if (!scan.NeedsBake && !scan.HasOrphans)
+        return;
 
       if (Application.isBatchMode)
       {
@@ -154,7 +156,8 @@ namespace MultiplayerInfrastructure.Editor.TTS
       }
       if (scan.HasOrphans)
       {
-        if (scan.NeedsBake) lines.AppendLine();
+        if (scan.NeedsBake)
+          lines.AppendLine();
         lines.AppendLine($"더 이상 사용하지 않는 baked 파일: {scan.OrphanCount}개");
       }
       lines.AppendLine();
@@ -202,14 +205,15 @@ namespace MultiplayerInfrastructure.Editor.TTS
                 for (int pIdx = 0; pIdx < profilesProp.arraySize; pIdx++)
                 {
                   var elem = profilesProp.GetArrayElementAtIndex(pIdx);
-                  if (elem == null) continue;
+                  if (elem == null)
+                    continue;
                   list.Add(new TTSVoiceProfile
                   {
                     VoiceIdentifier = elem.FindPropertyRelative("VoiceIdentifier")?.stringValue,
-                    VoiceStyleName  = elem.FindPropertyRelative("VoiceStyleName")?.stringValue,
-                    Language        = elem.FindPropertyRelative("Language")?.stringValue,
-                    TotalStep       = elem.FindPropertyRelative("TotalStep")?.intValue ?? 0,
-                    Speed           = elem.FindPropertyRelative("Speed")?.floatValue ?? 0f
+                    VoiceStyleName = elem.FindPropertyRelative("VoiceStyleName")?.stringValue,
+                    Language = elem.FindPropertyRelative("Language")?.stringValue,
+                    TotalStep = elem.FindPropertyRelative("TotalStep")?.intValue ?? 0,
+                    Speed = elem.FindPropertyRelative("Speed")?.floatValue ?? 0f
                   });
                 }
                 voiceProfiles = list.ToArray();
@@ -246,7 +250,8 @@ namespace MultiplayerInfrastructure.Editor.TTS
 
     public static void CheckModelsAndWarn()
     {
-      if (TTSCore.AreModelsPresent(OnnxDirPath)) return;
+      if (TTSCore.AreModelsPresent(OnnxDirPath))
+        return;
 
       var missing = TTSCore.GetMissingModelFiles(OnnxDirPath);
 

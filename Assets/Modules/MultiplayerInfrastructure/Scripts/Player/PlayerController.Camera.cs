@@ -1,8 +1,7 @@
-using FishNet.Object;
-using MultiplayerInfrastructure.Camera;
+﻿using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.Registry;
-using UnityEngine;
 using Unity.VisualScripting;
+using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
 {
@@ -18,26 +17,30 @@ namespace MultiplayerInfrastructure.Player
   public partial class PlayerController
   {
     [SerializeField] private MainCameraController _camControl;
-    void Awake_Camera()
+    private void Awake_Camera()
     {
       // Camera attachment is deferred to owner check in OnStartClient to avoid other players overwriting
       // the global main camera target.
     }
 
-    void OnStartClient_Camera()
+    private void OnStartClient_Camera()
     {
-      if (!IsOwner) return;
+      if (!IsOwner)
+        return;
       _camControl = MainCameraController.Instance ?? Registry.Registry.Get<MainCameraController>(RegistryType.Service, Registry.Registry.TypeKey<MainCameraController>());
 
-      if (_camControl.IsUnityNull()) return;
-      
+      if (_camControl.IsUnityNull())
+        return;
+
       _camControl.SetTarget(this);
     }
 
-    void LateUpdate_Camera()
+    private void LateUpdate_Camera()
     {
-      if (!IsOwner) return;
-      if (_camControl == null) return;
+      if (!IsOwner)
+        return;
+      if (_camControl == null)
+        return;
 
       // 관전 추종(spectate follow) 중에는 다른 플레이어의 카메라 홀더를 따라가야 하므로
       // 로컬 홀더로 되돌리지 않는다. (되돌리면 관전 추종이 매 프레임 풀리는 버그 발생)
@@ -54,7 +57,7 @@ namespace MultiplayerInfrastructure.Player
         _camControl.SetTarget(this);
     }
 
-    void SwitchCameraViewMode()
+    private void SwitchCameraViewMode()
     {
       switch (_camControl.CurrentViewMode)
       {

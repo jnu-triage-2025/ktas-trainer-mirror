@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using FishNet.Object;
 using MultiplayerInfrastructure.Player;
 using UnityEngine;
@@ -7,10 +7,10 @@ namespace MultiplayerInfrastructure.Entity
 {
   public abstract class Ridable : NetworkBehaviour
   {
-    [SerializeField] List<RidableAttachPointObject> attachPoints = new List<RidableAttachPointObject>();
+    [SerializeField] private List<RidableAttachPointObject> attachPoints = new List<RidableAttachPointObject>();
 
     // length must be same as attachPoints
-    [SerializeField] List<PlayerController> nowRidingPlayers = new List<PlayerController>();
+    [SerializeField] private List<PlayerController> nowRidingPlayers = new List<PlayerController>();
 
     protected void Awake_Ridable()
     {

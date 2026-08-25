@@ -1,4 +1,4 @@
-using MultiplayerInfrastructure.Registry;
+﻿using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -15,9 +15,10 @@ namespace MultiplayerInfrastructure.Player
   {
     [SerializeField] private CrosshairUIController _crosshairUI;
 
-    void OnStartClient_Crosshair()
+    private void OnStartClient_Crosshair()
     {
-      if (!IsOwner) return;
+      if (!IsOwner)
+        return;
 
       // Inspector 미할당 시 레지스트리에서 탐색
       if (_crosshairUI.IsUnityNull())

@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Quest;
+using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Entity.Patient;
 using TriageTrainer.Utils;
 using UnityEngine;
@@ -44,7 +44,8 @@ namespace MultiplayerInfrastructure.Editor
 
       foreach (var node in graph.Nodes.Values)
       {
-        if (node == null) continue;
+        if (node == null)
+          continue;
         CheckNode(node, nodeIds, graph, items);
       }
 
@@ -452,7 +453,8 @@ namespace MultiplayerInfrastructure.Editor
       }
       foreach (var rc in node.RootConditions)
       {
-        if (rc == null) continue;
+        if (rc == null)
+          continue;
         if (rc.Condition == ScenarioValidatorCondition.RegistryContains
             && (rc.ValidationRules == null || rc.ValidationRules.Count == 0))
         {
@@ -480,7 +482,8 @@ namespace MultiplayerInfrastructure.Editor
       var seen = new HashSet<string>();
       foreach (var branch in node.Branches)
       {
-        if (branch == null) continue;
+        if (branch == null)
+          continue;
         if (string.IsNullOrEmpty(branch.Identifier))
         {
           items.Add(new DiagnosticItem(Severity.Error, node.Identifier, "브랜치 identifier가 비어 있습니다."));
@@ -582,17 +585,17 @@ namespace MultiplayerInfrastructure.Editor
       // null(not set) → Warning, 정의되지 않은 값 → Error.
       // 새 열거형 필드 추가 시 아래에 동일 패턴으로 추가한다.
 
-      CheckEnumField<Sex>(node.Sex,                                        "sex",                          id, items);
-      CheckEnumField<BloodType>(node.BloodType,                            "bloodType",                    id, items);
-      CheckEnumField<EyeOpeningResponse>(node.ConsciousnessEyeOpening,     "consciousnessEyeOpening",       id, items);
-      CheckEnumField<VerbalResponse>(node.ConsciousnessVerbal,             "consciousnessVerbal",           id, items);
-      CheckEnumField<MotorResponse>(node.ConsciousnessMotor,               "consciousnessMotor",            id, items);
-      CheckEnumField<LOCLabel>(node.ConsciousnessLocLabel,                 "consciousnessLocLabel",         id, items);
+      CheckEnumField<Sex>(node.Sex, "sex", id, items);
+      CheckEnumField<BloodType>(node.BloodType, "bloodType", id, items);
+      CheckEnumField<EyeOpeningResponse>(node.ConsciousnessEyeOpening, "consciousnessEyeOpening", id, items);
+      CheckEnumField<VerbalResponse>(node.ConsciousnessVerbal, "consciousnessVerbal", id, items);
+      CheckEnumField<MotorResponse>(node.ConsciousnessMotor, "consciousnessMotor", id, items);
+      CheckEnumField<LOCLabel>(node.ConsciousnessLocLabel, "consciousnessLocLabel", id, items);
       CheckEnumField<PupillaryResponse>(node.ConsciousnessPupillaryResponse, "consciousnessPupillaryResponse", id, items);
-      CheckEnumField<RespirationType>(node.RespirationTypeValue,           "respirationType",              id, items);
-      CheckEnumField<BloodPulseForceType>(node.PulseForceType,             "pulseForceType",               id, items);
-      CheckEnumField<SkinColorHue>(node.SkinColorHue,                      "skinColorHue",                 id, items);
-      CheckEnumField<SkinTemperatureType>(node.SkinTemperatureType,        "skinTemperatureType",          id, items);
+      CheckEnumField<RespirationType>(node.RespirationTypeValue, "respirationType", id, items);
+      CheckEnumField<BloodPulseForceType>(node.PulseForceType, "pulseForceType", id, items);
+      CheckEnumField<SkinColorHue>(node.SkinColorHue, "skinColorHue", id, items);
+      CheckEnumField<SkinTemperatureType>(node.SkinTemperatureType, "skinTemperatureType", id, items);
 
       // TriageLevel: not set / Unassessed(="미평가" sentinel) / 미정의 값을 각각 구분
       if (!node.IntendedTriage.HasValue)
@@ -621,8 +624,8 @@ namespace MultiplayerInfrastructure.Editor
       //                        GCS ≤15 → Mild(Alert/Drowsy)
       if (node.ConsciousnessGcs.HasValue && node.ConsciousnessLocLabel.HasValue)
       {
-        int gcs       = node.ConsciousnessGcs.Value;
-        var locLabel  = node.ConsciousnessLocLabel.Value;
+        int gcs = node.ConsciousnessGcs.Value;
+        var locLabel = node.ConsciousnessLocLabel.Value;
         bool mismatch = false;
         string expected = string.Empty;
 
@@ -812,8 +815,10 @@ namespace MultiplayerInfrastructure.Editor
       var referenced = new HashSet<string>();
       foreach (var node in graph.Nodes.Values)
       {
-        if (node == null) continue;
-        if (!string.IsNullOrEmpty(node.NextIdentifier)) referenced.Add(node.NextIdentifier);
+        if (node == null)
+          continue;
+        if (!string.IsNullOrEmpty(node.NextIdentifier))
+          referenced.Add(node.NextIdentifier);
         if (node is ScenarioValidatorNode v
             && (v.OnFailure == ScenarioValidatorOnFailure.Branching
                 || (v.WaitForCondition
@@ -823,13 +828,19 @@ namespace MultiplayerInfrastructure.Editor
           referenced.Add(v.FailureNextIdentifier);
         }
         if (node is ScenarioChoiceNode c)
-          foreach (var o in c.Options) if (!string.IsNullOrEmpty(o?.NextNodeIdentifier)) referenced.Add(o.NextNodeIdentifier);
+          foreach (var o in c.Options)
+            if (!string.IsNullOrEmpty(o?.NextNodeIdentifier))
+              referenced.Add(o.NextNodeIdentifier);
         if (node is ScenarioParallelNode p)
-          foreach (var b in p.Branches) if (!string.IsNullOrEmpty(b?.Identifier)) referenced.Add(b.Identifier);
+          foreach (var b in p.Branches)
+            if (!string.IsNullOrEmpty(b?.Identifier))
+              referenced.Add(b.Identifier);
         if (node is ScenarioQuizNode q)
         {
-          if (!string.IsNullOrEmpty(q.OnCorrectNextIdentifier)) referenced.Add(q.OnCorrectNextIdentifier);
-          if (!string.IsNullOrEmpty(q.OnIncorrectNextIdentifier)) referenced.Add(q.OnIncorrectNextIdentifier);
+          if (!string.IsNullOrEmpty(q.OnCorrectNextIdentifier))
+            referenced.Add(q.OnCorrectNextIdentifier);
+          if (!string.IsNullOrEmpty(q.OnIncorrectNextIdentifier))
+            referenced.Add(q.OnIncorrectNextIdentifier);
         }
         if (node is ScenarioManualEntrypointNode me && !string.IsNullOrEmpty(me.ManualEnterSetupIdentifier))
           referenced.Add(me.ManualEnterSetupIdentifier);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -48,7 +48,8 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// </summary>
     public static void EnsureScanned()
     {
-      if (_scanned) return;
+      if (_scanned)
+        return;
       _scanned = true;
       ScanItemSubclasses();
     }
@@ -59,30 +60,37 @@ namespace MultiplayerInfrastructure.ItemSystem
       foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
       {
         Type[] types;
-        try { types = asm.GetTypes(); }
+        try
+        { types = asm.GetTypes(); }
         catch (ReflectionTypeLoadException ex) { types = ex.Types; }
         catch { continue; }
 
-        if (types == null) continue;
+        if (types == null)
+          continue;
 
         foreach (var t in types)
         {
           try
           {
-            if (t == null || t.IsAbstract || !itemType.IsAssignableFrom(t)) continue;
+            if (t == null || t.IsAbstract || !itemType.IsAssignableFrom(t))
+              continue;
 
             bool hasModel = t.GetCustomAttribute<IntendedMissing3DModelAttribute>() != null;
             bool hasSprite = t.GetCustomAttribute<IntendedMissingItemSpriteAttribute>() != null;
 
-            if (!hasModel && !hasSprite) continue;
+            if (!hasModel && !hasSprite)
+              continue;
 
             // Identifier const 값을 리플렉션으로 읽기
             var idField = t.GetField("Identifier", ConstFlags);
             string identifier = idField?.GetValue(null) as string;
-            if (string.IsNullOrWhiteSpace(identifier)) continue;
+            if (string.IsNullOrWhiteSpace(identifier))
+              continue;
 
-            if (hasModel)  _suppressedModelIdentifiers.Add(identifier);
-            if (hasSprite) _suppressedSpriteIdentifiers.Add(identifier);
+            if (hasModel)
+              _suppressedModelIdentifiers.Add(identifier);
+            if (hasSprite)
+              _suppressedSpriteIdentifiers.Add(identifier);
           }
           catch
           {
@@ -100,7 +108,8 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// </summary>
     public static bool ShouldSuppressModelMissingWarning(Item item)
     {
-      if (item == null) return false;
+      if (item == null)
+        return false;
       return ShouldSuppressModelMissingWarning(item.GetType());
     }
 
@@ -110,8 +119,10 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// </summary>
     public static bool ShouldSuppressModelMissingWarning(Type itemType)
     {
-      if (itemType == null) return false;
-      if (_modelCacheByType.TryGetValue(itemType, out var cached)) return cached;
+      if (itemType == null)
+        return false;
+      if (_modelCacheByType.TryGetValue(itemType, out var cached))
+        return cached;
       bool has = itemType.GetCustomAttribute<IntendedMissing3DModelAttribute>() != null;
       _modelCacheByType[itemType] = has;
       return has;
@@ -123,7 +134,8 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// </summary>
     public static bool ShouldSuppressSpriteMissingWarning(Item item)
     {
-      if (item == null) return false;
+      if (item == null)
+        return false;
       return ShouldSuppressSpriteMissingWarning(item.GetType());
     }
 
@@ -133,8 +145,10 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// </summary>
     public static bool ShouldSuppressSpriteMissingWarning(Type itemType)
     {
-      if (itemType == null) return false;
-      if (_spriteCacheByType.TryGetValue(itemType, out var cached)) return cached;
+      if (itemType == null)
+        return false;
+      if (_spriteCacheByType.TryGetValue(itemType, out var cached))
+        return cached;
       bool has = itemType.GetCustomAttribute<IntendedMissingItemSpriteAttribute>() != null;
       _spriteCacheByType[itemType] = has;
       return has;

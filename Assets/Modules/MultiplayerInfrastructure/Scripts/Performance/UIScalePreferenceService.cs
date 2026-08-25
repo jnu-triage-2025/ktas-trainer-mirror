@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI.Models;
 using UnityEngine;
@@ -84,7 +84,8 @@ namespace MultiplayerInfrastructure.Performance
     /// <param name="scale">적용할 배율 단계</param>
     public void SetScale(UIScale scale)
     {
-      if (_currentScale == scale) return;
+      if (_currentScale == scale)
+        return;
 
       _currentScale = scale;
       ApplyToPanel(scale);
@@ -115,7 +116,7 @@ namespace MultiplayerInfrastructure.Performance
       UIScale.Level2 => 1.0f,
       UIScale.Level3 => 1.25f,
       UIScale.Level4 => 1.5f,
-      _              => 1.0f,
+      _ => 1.0f,
     };
 
     // ──────────────────────────────────────────────────────────────────────────

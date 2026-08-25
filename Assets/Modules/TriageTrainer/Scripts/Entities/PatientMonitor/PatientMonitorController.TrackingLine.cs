@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using FishNet;
 using MultiplayerInfrastructure.Performance;
 using TriageTrainer.Entity.ElectricalLine;
@@ -26,9 +26,11 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
   public partial class PatientMonitorController
   {
     [Header("Tracking Line")]
-    [SerializeField] private PatientMonitorTrackingLineDisplayOption _trackingLineDisplayOptions =
+    [SerializeField]
+    private PatientMonitorTrackingLineDisplayOption _trackingLineDisplayOptions =
       PatientMonitorTrackingLineDisplayOption.ElectricalLine;
-    [SerializeField] private PatientMonitorLineConnectionServiceUnavailableOption
+    [SerializeField]
+    private PatientMonitorLineConnectionServiceUnavailableOption
       _lineConnectionServiceUnavailableOptions = PatientMonitorLineConnectionServiceUnavailableOption.None;
     [SerializeField] private bool _showTrackingLineForDefaultPatient = false;
     [SerializeField] private Transform _trackingLineStart;

@@ -1,11 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
+using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Session;
-using MultiplayerInfrastructure.Definitions;
+using UnityEngine;
+using UnityEngine.UIElements;
 
 /// <summary>
 /// IntroScene UI 컨트롤러.
@@ -223,7 +222,8 @@ namespace MultiplayerInfrastructure.UI
 
       _listView.bindItem = (e, i) =>
       {
-        if (i < 0 || i >= _items.Count) return;
+        if (i < 0 || i >= _items.Count)
+          return;
         var si = _items[i];
         e.Q<Label>("name").text = si.Name;
         e.Q<Label>("endpoint").text = $"{si.Address}:{si.Port}";
@@ -299,7 +299,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void OnDatapacks()
     {
-      if (_datapackController != null) return;
+      if (_datapackController != null)
+        return;
       var go = new GameObject("DatapackSelectionUI");
       var mainDoc = GetComponent<UIDocument>();
       if (datapackSelectionUxml == null)
@@ -422,7 +423,8 @@ namespace MultiplayerInfrastructure.UI
         Registry.Registry.TypeKey(typeof(SettingsUIController))
       ) ?? FindFirstObjectByType<SettingsUIController>();
 
-      if (_settingsController != null) return;
+      if (_settingsController != null)
+        return;
 
       // 2. UXML 에셋 로드
       if (settingsUxml == null)

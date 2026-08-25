@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using TriageTrainer.Utils;
 using UnityEditor;
 using UnityEngine;

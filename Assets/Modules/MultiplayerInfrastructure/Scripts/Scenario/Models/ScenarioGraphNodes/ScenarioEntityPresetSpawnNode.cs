@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Scenario
+﻿namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
   /// 등록된 엔티티 프리셋을 식별자로 스폰하는 시나리오 노드.

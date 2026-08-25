@@ -1,4 +1,4 @@
-/// TTRegistryMonoBehaviourSupport는 TriageTrainer 범위의 구현물에 대해서,
+﻿/// TTRegistryMonoBehaviourSupport는 TriageTrainer 범위의 구현물에 대해서,
 /// MultiplayerInfrastructure에 구현물 정의를 등록하기 위해 개별 구현되었습니다.
 
 using System;

@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 
 namespace TriageTrainer.Entity.Patient
@@ -52,8 +52,14 @@ namespace TriageTrainer.Entity.Patient
 
     public bool Equals(Skin? other)
     {
-      if (other is null) return false;
+      if (other is null)
+        return false;
       return colorHue == other.colorHue && temperatureType == other.temperatureType;
+    }
+
+    public override bool Equals(object obj)
+    {
+      return Equals(obj as Skin);
     }
   }
 }

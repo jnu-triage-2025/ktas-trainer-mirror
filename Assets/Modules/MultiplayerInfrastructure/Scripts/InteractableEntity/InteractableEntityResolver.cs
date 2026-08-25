@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.InteractableEntity
@@ -11,7 +11,7 @@ namespace MultiplayerInfrastructure.InteractableEntity
     [SerializeField] private List<MonoBehaviour> handlerSources = new List<MonoBehaviour>();
     private readonly List<IInteractable> handlers = new List<IInteractable>();
 
-    void Awake()
+    private void Awake()
     {
       handlers.Clear();
       foreach (var eachSource in handlerSources)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -21,10 +21,15 @@ namespace MultiplayerInfrastructure.Scenario
 
     public static void Register(string identifier, string source, string output, IEnumerable<string> required, bool consumeOnce)
     {
-      if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(source) || string.IsNullOrWhiteSpace(output)) return;
-      Listeners[identifier.Trim()] = new Listener {
-        Source = ScenarioInteractionSignals.Normalize(source), Output = ScenarioInteractionSignals.Normalize(output),
-        Required = (required ?? Array.Empty<string>()).Where(value => !string.IsNullOrWhiteSpace(value)).Select(ScenarioInteractionSignals.Normalize).Distinct(StringComparer.Ordinal).ToArray(), ConsumeOnce = consumeOnce };
+      if (string.IsNullOrWhiteSpace(identifier) || string.IsNullOrWhiteSpace(source) || string.IsNullOrWhiteSpace(output))
+        return;
+      Listeners[identifier.Trim()] = new Listener
+      {
+        Source = ScenarioInteractionSignals.Normalize(source),
+        Output = ScenarioInteractionSignals.Normalize(output),
+        Required = (required ?? Array.Empty<string>()).Where(value => !string.IsNullOrWhiteSpace(value)).Select(ScenarioInteractionSignals.Normalize).Distinct(StringComparer.Ordinal).ToArray(),
+        ConsumeOnce = consumeOnce
+      };
     }
     public static bool Unregister(string identifier) => !string.IsNullOrWhiteSpace(identifier) && Listeners.Remove(identifier.Trim());
 
@@ -37,16 +42,19 @@ namespace MultiplayerInfrastructure.Scenario
 
     private static void HandleSignal(string signal)
     {
-      if (string.IsNullOrWhiteSpace(signal)) return;
+      if (string.IsNullOrWhiteSpace(signal))
+        return;
 
       // 호스트(서버=클라)에서는 서버 권위 기록 + 미러 ObserversRpc 로 동일 신호가 연달아
       // 두 번 도착한다. 한 디스패치 사이클 내에서 같은 신호가 이미 큐에 있으면 중복을 제거해,
       // ConsumeOnce=false 리스너의 중복 Raise 를 막는다. 서로 다른 output 체이닝은 그대로 유지된다.
-      if (PendingSignals.Contains(signal)) return;
+      if (PendingSignals.Contains(signal))
+        return;
 
       // 재진입 시 즉시 처리하지 않고 큐에 넣어, 최상위 디스패치 루프가 순차 처리한다.
       PendingSignals.Enqueue(signal);
-      if (_isDispatching) return;
+      if (_isDispatching)
+        return;
 
       _isDispatching = true;
       try
@@ -73,8 +81,10 @@ namespace MultiplayerInfrastructure.Scenario
       foreach (var key in matched)
       {
         // 재진입/중복 디스패치로 이미 제거되었을 수 있으므로 TryGetValue 로 방어한다.
-        if (!Listeners.TryGetValue(key, out var listener)) continue;
-        if (listener.ConsumeOnce) Listeners.Remove(key);
+        if (!Listeners.TryGetValue(key, out var listener))
+          continue;
+        if (listener.ConsumeOnce)
+          Listeners.Remove(key);
         // Raise 는 OnSignalRegistered 를 동기 발생시키지만, _isDispatching 가드로 재진입이
         // 큐잉되므로 여기서는 스택이 깊어지지 않고 output 체이닝이 순차 처리된다.
         ScenarioInteractionSignals.Raise(listener.Output);

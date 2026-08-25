@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Scenario
+﻿namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
   /// 시나리오 그래프에서 요구 아이템을 (식별자 + 수량)으로 표현하는 도메인 모델.

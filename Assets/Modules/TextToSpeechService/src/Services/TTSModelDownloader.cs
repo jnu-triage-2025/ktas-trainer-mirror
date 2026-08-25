@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
@@ -46,7 +46,8 @@ namespace TextToSpeechService
       foreach (var (hfPath, subDir) in DownloadManifest)
       {
         string destPath = Path.Combine(streamingAssetsPath, subDir, Path.GetFileName(hfPath));
-        if (File.Exists(destPath)) count++;
+        if (File.Exists(destPath))
+          count++;
       }
       return count;
     }
@@ -56,15 +57,15 @@ namespace TextToSpeechService
     {
       public Progress(string fileName, int doneCount, int totalCount)
       {
-        FileName   = fileName;
-        DoneCount  = doneCount;
+        FileName = fileName;
+        DoneCount = doneCount;
         TotalCount = totalCount;
       }
 
-      public string FileName  { get; }
-      public int    DoneCount { get; }
-      public int    TotalCount { get; }
-      public float  Ratio => TotalCount == 0 ? 1f : (float)DoneCount / TotalCount;
+      public string FileName { get; }
+      public int DoneCount { get; }
+      public int TotalCount { get; }
+      public float Ratio => TotalCount == 0 ? 1f : (float)DoneCount / TotalCount;
     }
 
     /// <summary>
@@ -89,7 +90,7 @@ namespace TextToSpeechService
         token.ThrowIfCancellationRequested();
 
         var (hfPath, subDir) = DownloadManifest[i];
-        string destDir  = Path.Combine(streamingAssetsPath, subDir);
+        string destDir = Path.Combine(streamingAssetsPath, subDir);
         string filename = Path.GetFileName(hfPath);
         string destPath = Path.Combine(destDir, filename);
 
@@ -124,9 +125,10 @@ namespace TextToSpeechService
         foreach (var filename in missingFileNames)
         {
           string hfRelPath = GetHFPath(filename);
-          if (hfRelPath == null) continue;
+          if (hfRelPath == null)
+            continue;
 
-          string destDir  = Path.Combine(streamingAssetsPath, TTSCore.DefaultOnnxSubdir);
+          string destDir = Path.Combine(streamingAssetsPath, TTSCore.DefaultOnnxSubdir);
           string destPath = Path.Combine(destDir, filename);
           Directory.CreateDirectory(destDir);
 
@@ -140,10 +142,12 @@ namespace TextToSpeechService
     public static string GetHFPath(string filename)
     {
       foreach (var hfPath in TTSCore.RequiredOnnxFiles)
-        if (Path.GetFileName(hfPath) == filename) return hfPath;
+        if (Path.GetFileName(hfPath) == filename)
+          return hfPath;
 
       foreach (var hfPath in TTSCore.VoiceStyleFiles)
-        if (Path.GetFileName(hfPath) == filename) return hfPath;
+        if (Path.GetFileName(hfPath) == filename)
+          return hfPath;
 
       return null;
     }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using FishNet.Connection;
 using FishNet.Object;
@@ -77,7 +77,8 @@ namespace TriageTrainer.Entity
 
     [Header("Intravenous fluid item identifiers")]
     [Tooltip("Normal Saline으로 인식해 수액걸이에 설치할 수 있는 모든 아이템 식별자입니다.")]
-    [SerializeField] private List<string> _normalSalineItemIdentifiers = new()
+    [SerializeField]
+    private List<string> _normalSalineItemIdentifiers = new()
     {
       "normal_saline_1000ml", "normal_saline_20ml", "normal_saline_intravenous_ready",
       "normal_saline_5cc_syringe", "normal_saline_20cc_syringe", "normal_saline_50cc_syringe",
@@ -88,7 +89,8 @@ namespace TriageTrainer.Entity
       "normal_saline_24g_5cc_syringe", "normal_saline_24g_20cc_syringe", "normal_saline_24g_50cc_syringe",
     };
     [Tooltip("Plasma Solution으로 인식해 수액걸이에 설치할 수 있는 모든 아이템 식별자입니다.")]
-    [SerializeField] private List<string> _plasmaSolutionItemIdentifiers = new()
+    [SerializeField]
+    private List<string> _plasmaSolutionItemIdentifiers = new()
     {
       "plasma_solution_1000ml", "plasma_solution_intravenous_ready",
     };
@@ -327,16 +329,20 @@ namespace TriageTrainer.Entity
     private void SetIntravenousFluidInstalledOffline(IntravenousFluidKind kind)
     {
       _initialIntravenousStandInstalled = true;
-      if (kind == IntravenousFluidKind.NormalSaline) _initialNormalSalineInstalled = true;
-      else _initialPlasmaSolutionInstalled = true;
+      if (kind == IntravenousFluidKind.NormalSaline)
+        _initialNormalSalineInstalled = true;
+      else
+        _initialPlasmaSolutionInstalled = true;
       ApplyIntravenousAttachmentDisplays();
     }
 
     private void SetIntravenousFluidInstalledOnServer(IntravenousFluidKind kind)
     {
       _intravenousStandInstalled.Value = true;
-      if (kind == IntravenousFluidKind.NormalSaline) _normalSalineInstalled.Value = true;
-      else _plasmaSolutionInstalled.Value = true;
+      if (kind == IntravenousFluidKind.NormalSaline)
+        _normalSalineInstalled.Value = true;
+      else
+        _plasmaSolutionInstalled.Value = true;
       ApplyIntravenousAttachmentDisplays();
     }
 
@@ -348,9 +354,12 @@ namespace TriageTrainer.Entity
 
     private void ApplyIntravenousAttachmentDisplays()
     {
-      if (_intravenousStandReference != null) _intravenousStandReference.SetActive(IsIntravenousStandInstalled);
-      if (_intravenousHangerHangedNormalSalineReference != null) _intravenousHangerHangedNormalSalineReference.SetActive(IsNormalSalineInstalled);
-      if (_intravenousHangerHangedPlasmaSolutionReference != null) _intravenousHangerHangedPlasmaSolutionReference.SetActive(IsPlasmaSolutionInstalled);
+      if (_intravenousStandReference != null)
+        _intravenousStandReference.SetActive(IsIntravenousStandInstalled);
+      if (_intravenousHangerHangedNormalSalineReference != null)
+        _intravenousHangerHangedNormalSalineReference.SetActive(IsNormalSalineInstalled);
+      if (_intravenousHangerHangedPlasmaSolutionReference != null)
+        _intravenousHangerHangedPlasmaSolutionReference.SetActive(IsPlasmaSolutionInstalled);
     }
 
     private static PlayerController FindIntravenousAttachmentPlayer(int clientId)

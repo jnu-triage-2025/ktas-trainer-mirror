@@ -1,15 +1,13 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 #endif
 
 using System;
 using System.Collections.Generic;
-using FishNet.Object;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.LineConnection;
-using TriageTrainer.Entity;
 using TriageTrainer.ItemDefinitions;
 using UnityEngine;
 

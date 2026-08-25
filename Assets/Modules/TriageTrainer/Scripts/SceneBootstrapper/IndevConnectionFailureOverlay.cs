@@ -1,21 +1,19 @@
+﻿using System;
 using System.Collections;
-using System;
 using System.Collections.Generic;
 using FishNet;
-using FishNet.Managing.Client;
 using FishNet.Transporting;
-using MultiplayerInfrastructure.Logging;
-using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.FishNetSupports;
+using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
-using RegistryStore = MultiplayerInfrastructure.Registry.Registry;
 using UnityEngine;
-using UnityEngine.UIElements;
-using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
+using RegistryStore = MultiplayerInfrastructure.Registry.Registry;
 
 namespace TriageTrainer.SceneBootstrapper
 {

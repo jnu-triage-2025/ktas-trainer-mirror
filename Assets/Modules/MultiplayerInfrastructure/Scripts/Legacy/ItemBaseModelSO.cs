@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using MultiplayerInfrastructure.ItemSystem;
-using IS = MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
 using UnityEngine;
+using IS = MultiplayerInfrastructure.ItemSystem;
 
 [Serializable]
 [CreateAssetMenu(fileName = "New Item Base Model", menuName = "Multiplayer Infrastructure/Item Base Model")]
@@ -26,7 +26,7 @@ public class ItemBaseModelSO : ScriptableObject
   /// <summary>
   /// 아이템의 설명입니다.
   /// </summary>
-  [TextArea] [SerializeField] public string description;
+  [TextArea][SerializeField] public string description;
 
   /// <summary>
   /// 아이템의 내구도 여부를 나타냅니다. 이 값이 참이라면, 게임 시스템은 내구도를 고려하여 아이템 사용을 처리합니다.

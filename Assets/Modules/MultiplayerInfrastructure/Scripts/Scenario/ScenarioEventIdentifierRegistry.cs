@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -16,8 +16,10 @@ namespace MultiplayerInfrastructure.Scenario
 
     public static void Register(string identifier, ScenarioEventHandler handler)
     {
-      if (string.IsNullOrWhiteSpace(identifier)) throw new ArgumentException("Identifier cannot be null or whitespace.", nameof(identifier));
-      if (handler == null) throw new ArgumentNullException(nameof(handler));
+      if (string.IsNullOrWhiteSpace(identifier))
+        throw new ArgumentException("Identifier cannot be null or whitespace.", nameof(identifier));
+      if (handler == null)
+        throw new ArgumentNullException(nameof(handler));
 
       Handlers[identifier] = handler;
     }

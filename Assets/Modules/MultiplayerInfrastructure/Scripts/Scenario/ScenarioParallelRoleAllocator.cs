@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace MultiplayerInfrastructure.Scenario
@@ -20,9 +20,12 @@ namespace MultiplayerInfrastructure.Scenario
       IReadOnlyDictionary<ScenarioParallelBranch, IReadOnlyList<int>> candidatesByBranch,
       IDictionary<ScenarioParallelBranch, int?> allocation)
     {
-      if (branches == null) throw new ArgumentNullException(nameof(branches));
-      if (candidatesByBranch == null) throw new ArgumentNullException(nameof(candidatesByBranch));
-      if (allocation == null) throw new ArgumentNullException(nameof(allocation));
+      if (branches == null)
+        throw new ArgumentNullException(nameof(branches));
+      if (candidatesByBranch == null)
+        throw new ArgumentNullException(nameof(candidatesByBranch));
+      if (allocation == null)
+        throw new ArgumentNullException(nameof(allocation));
 
       allocation.Clear();
 
@@ -78,9 +81,12 @@ namespace MultiplayerInfrastructure.Scenario
       int clientId,
       IDictionary<ScenarioParallelBranch, int?> allocation)
     {
-      if (branches == null) throw new ArgumentNullException(nameof(branches));
-      if (candidatesByBranch == null) throw new ArgumentNullException(nameof(candidatesByBranch));
-      if (allocation == null) throw new ArgumentNullException(nameof(allocation));
+      if (branches == null)
+        throw new ArgumentNullException(nameof(branches));
+      if (candidatesByBranch == null)
+        throw new ArgumentNullException(nameof(candidatesByBranch));
+      if (allocation == null)
+        throw new ArgumentNullException(nameof(allocation));
 
       for (var index = 0; index < branches.Count; index++)
       {
@@ -104,9 +110,12 @@ namespace MultiplayerInfrastructure.Scenario
       IReadOnlyDictionary<ScenarioParallelBranch, IReadOnlyList<int>> candidatesByBranch,
       IDictionary<ScenarioParallelBranch, int?> allocation)
     {
-      if (branches == null) throw new ArgumentNullException(nameof(branches));
-      if (candidatesByBranch == null) throw new ArgumentNullException(nameof(candidatesByBranch));
-      if (allocation == null) throw new ArgumentNullException(nameof(allocation));
+      if (branches == null)
+        throw new ArgumentNullException(nameof(branches));
+      if (candidatesByBranch == null)
+        throw new ArgumentNullException(nameof(candidatesByBranch));
+      if (allocation == null)
+        throw new ArgumentNullException(nameof(allocation));
 
       TryAllocateDistinct(branches, candidatesByBranch, allocation);
 

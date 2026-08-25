@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using MultiplayerInfrastructure.Commons;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
-using MultiplayerInfrastructure.Commons;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Tag;
 using MultiplayerInfrastructure.UI;
@@ -209,7 +209,7 @@ namespace TriageTrainer.Entity
 
     public interface IMonitorSelectionRequester
     {
-      void HandlePatientSelected(PatientController patient, Transform interactor);
+      public void HandlePatientSelected(PatientController patient, Transform interactor);
     }
 
     public const string InteractIdLiftFromBed = "lift_from_bed";

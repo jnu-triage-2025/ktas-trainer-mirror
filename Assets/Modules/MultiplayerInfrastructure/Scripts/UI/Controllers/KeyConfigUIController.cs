@@ -1,7 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
-using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -28,7 +27,8 @@ namespace MultiplayerInfrastructure.UI
     /// Inspector에서 직접 편집하거나 런타임에 <see cref="SetBindings"/>로 교체할 수 있는 바인딩 목록입니다.
     /// PlayerPrefs에 저장된 값이 있으면 Awake 시점에 덮어씁니다.
     /// </summary>
-    [SerializeField] private List<KeyBindingEntry> _bindings = new()
+    [SerializeField]
+    private List<KeyBindingEntry> _bindings = new()
     {
       new KeyBindingEntry("move_forward",   "앞으로 이동",    KeyCode.W),
       new KeyBindingEntry("move_backward",  "뒤로 이동",      KeyCode.S),
@@ -124,7 +124,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void Update()
     {
-      if (_rebindingActionId == null || !_isVisible) return;
+      if (_rebindingActionId == null || !_isVisible)
+        return;
 
       // ESC → 리바인딩 취소
       if (Input.GetKeyDown(KeyCode.Escape))
@@ -134,16 +135,20 @@ namespace MultiplayerInfrastructure.UI
       }
 
       // 어떤 키든 눌리면 캡처
-      if (!Input.anyKeyDown) return;
+      if (!Input.anyKeyDown)
+        return;
 
       // 입력된 키 탐색
       foreach (KeyCode candidate in System.Enum.GetValues(typeof(KeyCode)))
       {
         // 마우스 버튼 제외
-        if (candidate >= KeyCode.Mouse0 && candidate <= KeyCode.Mouse6) continue;
+        if (candidate >= KeyCode.Mouse0 && candidate <= KeyCode.Mouse6)
+          continue;
         // 조이스틱 제외
-        if (candidate >= KeyCode.JoystickButton0) continue;
-        if (!Input.GetKeyDown(candidate)) continue;
+        if (candidate >= KeyCode.JoystickButton0)
+          continue;
+        if (!Input.GetKeyDown(candidate))
+          continue;
 
         ApplyRebinding(_rebindingActionId, candidate);
         return;
@@ -152,9 +157,12 @@ namespace MultiplayerInfrastructure.UI
 
     protected override void OnDestroy()
     {
-      if (_closeButton != null) _closeButton.clicked -= HandleCloseClicked;
-      if (_resetButton != null)  _resetButton.clicked -= HandleResetClicked;
-      if (_keyboard != null)     _keyboard.OnAssignedKeyClicked -= HandleKeyboardKeyClicked;
+      if (_closeButton != null)
+        _closeButton.clicked -= HandleCloseClicked;
+      if (_resetButton != null)
+        _resetButton.clicked -= HandleResetClicked;
+      if (_keyboard != null)
+        _keyboard.OnAssignedKeyClicked -= HandleKeyboardKeyClicked;
       base.OnDestroy();
     }
 
@@ -179,7 +187,8 @@ namespace MultiplayerInfrastructure.UI
     {
       CancelRebinding();
       _bindings.Clear();
-      if (bindings != null) _bindings.AddRange(bindings);
+      if (bindings != null)
+        _bindings.AddRange(bindings);
       Populate(_bindings);
     }
 
@@ -188,12 +197,14 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public void ResetToDefaults()
     {
-      if (_defaultBindings == null) return;
+      if (_defaultBindings == null)
+        return;
       CancelRebinding();
       for (int i = 0; i < _bindings.Count; i++)
       {
         var def = _defaultBindings.Find(d => d.actionId == _bindings[i].actionId);
-        if (def != null) _bindings[i].boundKey = def.boundKey;
+        if (def != null)
+          _bindings[i].boundKey = def.boundKey;
       }
       KeyBindingRepository.DeleteAll(_bindings);
       Populate(_bindings);
@@ -204,7 +215,8 @@ namespace MultiplayerInfrastructure.UI
     // ──────────────────────────────────────────────────────────────────────────
     private void Populate(IReadOnlyList<KeyBindingEntry> bindings)
     {
-      if (_scroll == null) return;
+      if (_scroll == null)
+        return;
 
       // 기존 항목 정리
       foreach (var el in _entryElements)
@@ -260,7 +272,8 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>리바인딩 취소</summary>
     private void CancelRebinding()
     {
-      if (_rebindingActionId == null) return;
+      if (_rebindingActionId == null)
+        return;
 
       if (_actionIdToEntry.TryGetValue(_rebindingActionId, out var el))
         el.SetRebinding(false);
@@ -325,7 +338,8 @@ namespace MultiplayerInfrastructure.UI
       foreach (var el in _entryElements)
         el.SetFocused(false);
 
-      if (!_actionIdToEntry.TryGetValue(actionId, out var target)) return;
+      if (!_actionIdToEntry.TryGetValue(actionId, out var target))
+        return;
 
       // 포커스 설정
       target.SetFocused(true);
@@ -333,13 +347,15 @@ namespace MultiplayerInfrastructure.UI
       // 목록 내 스크롤 이동 (UI Toolkit 지연 레이아웃 처리)
       target.schedule.Execute(() =>
       {
-        if (_scroll == null) return;
+        if (_scroll == null)
+          return;
 
         // 항목의 로컬 좌표를 ScrollView 좌표로 변환
         var itemPos = target.worldBound;
         var scrollPos = _scroll.worldBound;
 
-        if (itemPos == Rect.zero || scrollPos == Rect.zero) return;
+        if (itemPos == Rect.zero || scrollPos == Rect.zero)
+          return;
 
         float itemTop = itemPos.y - scrollPos.y + _scroll.scrollOffset.y;
         float itemBot = itemTop + itemPos.height;
@@ -371,7 +387,8 @@ namespace MultiplayerInfrastructure.UI
     private void SetVisible(bool visible)
     {
       _isVisible = visible;
-      if (!visible) CancelRebinding();
+      if (!visible)
+        CancelRebinding();
 
       // 표시할 때 캐시된 _root가 detached되었을 수 있으므로 재바인딩을 시도한다.
       // (network-spawned 프리팹의 UIDocument rootVisualElement 재생성 대응.
@@ -382,7 +399,8 @@ namespace MultiplayerInfrastructure.UI
       // rootVisualElement 중립화는 _root(자식) 유무와 무관하게 항상 수행한다.
       SetDocumentRootInteractable(_document, visible);
 
-      if (_root == null) return;
+      if (_root == null)
+        return;
 
       _root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
       // USS 기본값 opacity: 0 을 런타임에서 override
@@ -395,16 +413,20 @@ namespace MultiplayerInfrastructure.UI
     private void RebindToCurrentDocumentRoot()
     {
       var root = _document != null ? _document.rootVisualElement : null;
-      if (root == null) return;
+      if (root == null)
+        return;
 
       var newRoot = root.Q<VisualElement>("key-config-root");
       if (_root == newRoot && _root != null && _root.panel != null)
         return;
 
       // 이전 구독 해제
-      if (_closeButton != null) _closeButton.clicked -= HandleCloseClicked;
-      if (_resetButton != null) _resetButton.clicked -= HandleResetClicked;
-      if (_keyboard != null)    _keyboard.OnAssignedKeyClicked -= HandleKeyboardKeyClicked;
+      if (_closeButton != null)
+        _closeButton.clicked -= HandleCloseClicked;
+      if (_resetButton != null)
+        _resetButton.clicked -= HandleResetClicked;
+      if (_keyboard != null)
+        _keyboard.OnAssignedKeyClicked -= HandleKeyboardKeyClicked;
 
       _root = newRoot;
       _closeButton = root.Q<Button>("close-button");
@@ -412,9 +434,12 @@ namespace MultiplayerInfrastructure.UI
       _scroll = root.Q<ScrollView>("binding-scroll");
       _keyboard = root.Q<KeyboardLayoutElement>("keyboard-layout");
 
-      if (_closeButton != null) _closeButton.clicked += HandleCloseClicked;
-      if (_resetButton != null) _resetButton.clicked += HandleResetClicked;
-      if (_keyboard != null)    _keyboard.OnAssignedKeyClicked += HandleKeyboardKeyClicked;
+      if (_closeButton != null)
+        _closeButton.clicked += HandleCloseClicked;
+      if (_resetButton != null)
+        _resetButton.clicked += HandleResetClicked;
+      if (_keyboard != null)
+        _keyboard.OnAssignedKeyClicked += HandleKeyboardKeyClicked;
 
       Populate(_bindings);
     }

@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Entity
+﻿namespace MultiplayerInfrastructure.Entity
 {
   /// <summary>
   /// 시나리오 식별자를 노출하는 엔티티가 구현하는 범용 인터페이스.
@@ -14,6 +14,6 @@ namespace MultiplayerInfrastructure.Entity
   public interface IScenarioIdentifiedEntity
   {
     /// <summary>이 엔티티의 시나리오 식별자(레지스트리 등록 식별자와 동일). 비어 있을 수 있다.</summary>
-    string ScenarioEntityIdentifier { get; }
+    public string ScenarioEntityIdentifier { get; }
   }
 }

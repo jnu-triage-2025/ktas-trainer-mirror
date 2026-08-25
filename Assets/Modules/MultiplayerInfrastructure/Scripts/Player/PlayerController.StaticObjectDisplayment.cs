@@ -1,9 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.ItemSystem;
-using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using UnityEngine;
 
@@ -90,8 +89,10 @@ namespace MultiplayerInfrastructure.Player
     private void TargetGrantStaticObjectDisplaymentItem(NetworkConnection connection, string itemIdentifier)
     {
       var item = Registry.Registry.CreateItemInstance(itemIdentifier);
-      if (item == null) return;
-      if (!TryAddItemToInventory(item)) TryDropItemInFront(item);
+      if (item == null)
+        return;
+      if (!TryAddItemToInventory(item))
+        TryDropItemInFront(item);
     }
 
     // ── 진입점 (Owner) ─────────────────────────────────────────────────────

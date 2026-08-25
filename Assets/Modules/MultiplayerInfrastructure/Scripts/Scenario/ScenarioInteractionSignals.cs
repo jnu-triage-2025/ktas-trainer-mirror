@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MultiplayerInfrastructure.Logging;
 using MultiplayerInfrastructure.Registry;
 
@@ -160,7 +160,8 @@ namespace MultiplayerInfrastructure.Scenario
     public static void ClearAllRaisedSignals()
     {
       var all = Registry.Registry.GetAll<bool>(RegistryType.RuntimeState);
-      if (all == null) return;
+      if (all == null)
+        return;
       foreach (var pair in all)
       {
         if (pair.Value && pair.Key != null && pair.Key.StartsWith(Prefix, StringComparison.Ordinal))

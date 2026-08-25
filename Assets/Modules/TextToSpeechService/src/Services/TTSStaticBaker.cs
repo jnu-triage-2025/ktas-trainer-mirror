@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -19,13 +19,13 @@ namespace TextToSpeechService
       public StaticSegmentJob(string identifier, int index, string text)
       {
         Identifier = identifier;
-        Index      = index;
-        Text       = text;
+        Index = index;
+        Text = text;
       }
 
       public string Identifier { get; }
-      public int    Index      { get; }
-      public string Text       { get; }
+      public int Index { get; }
+      public string Text { get; }
     }
 
     /// <summary>진행 콜백 인자.</summary>
@@ -33,19 +33,19 @@ namespace TextToSpeechService
     {
       public Progress(int doneCount, int totalCount, string identifier, int index, bool skipped)
       {
-        DoneCount  = doneCount;
+        DoneCount = doneCount;
         TotalCount = totalCount;
         Identifier = identifier;
-        Index      = index;
-        Skipped    = skipped;
+        Index = index;
+        Skipped = skipped;
       }
 
-      public int    DoneCount  { get; }
-      public int    TotalCount { get; }
+      public int DoneCount { get; }
+      public int TotalCount { get; }
       public string Identifier { get; }
-      public int    Index      { get; }
-      public bool   Skipped    { get; }
-      public float  Ratio => TotalCount == 0 ? 1f : (float)DoneCount / TotalCount;
+      public int Index { get; }
+      public bool Skipped { get; }
+      public float Ratio => TotalCount == 0 ? 1f : (float)DoneCount / TotalCount;
     }
 
     /// <summary>transcripts.json을 파싱하여 Static 세그먼트 작업 목록을 수집한다.</summary>

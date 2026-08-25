@@ -1,4 +1,4 @@
-using MultiplayerInfrastructure.Performance;
+﻿using MultiplayerInfrastructure.Performance;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;

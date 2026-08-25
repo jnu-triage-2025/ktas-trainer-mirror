@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using MultiplayerInfrastructure.Scenario;
 using UnityEngine;
@@ -35,7 +34,8 @@ namespace MultiplayerInfrastructure.Editor
       var profiles = getGraph?.Invoke()?.TtsVoiceProfiles;
       if (profiles != null)
         for (var i = 0; i < profiles.Count; i++)
-          if (profiles[i] != null) list.Add(BuildProfile(i, profiles[i]));
+          if (profiles[i] != null)
+            list.Add(BuildProfile(i, profiles[i]));
 
       var presets = new Foldout { text = "Built-in Presets (read-only)", value = true };
       foreach (var preset in TTSVoiceProfileDefinitions.All)
@@ -47,7 +47,9 @@ namespace MultiplayerInfrastructure.Editor
     {
       var foldout = new Foldout { text = $"Voice Profile {index + 1}", value = true };
       foldout.style.marginTop = 8;
-      foldout.style.paddingLeft = 6; foldout.style.paddingRight = 6; foldout.style.paddingBottom = 6;
+      foldout.style.paddingLeft = 6;
+      foldout.style.paddingRight = 6;
+      foldout.style.paddingBottom = 6;
       foldout.Add(new EnumField("Preset") { value = value.Preset ?? TTSVoiceStyle.F1 });
       var preset = (EnumField)foldout.ElementAt(foldout.childCount - 1);
       preset.RegisterValueChangedCallback(evt => { value.Preset = (TTSVoiceStyle)evt.newValue; Changed(); });
@@ -77,7 +79,9 @@ namespace MultiplayerInfrastructure.Editor
 
     private void AddProfile()
     {
-      var graph = getGraph?.Invoke(); if (graph == null) return;
+      var graph = getGraph?.Invoke();
+      if (graph == null)
+        return;
       graph.TtsVoiceProfiles = (graph.TtsVoiceProfiles ?? Array.Empty<ScenarioTTSVoiceProfile>()).Concat(
         new[] { new ScenarioTTSVoiceProfile { Preset = TTSVoiceStyle.F1 } }).ToArray();
       Changed(true);
@@ -85,7 +89,9 @@ namespace MultiplayerInfrastructure.Editor
 
     private void RemoveProfile(ScenarioTTSVoiceProfile value)
     {
-      var graph = getGraph?.Invoke(); if (graph == null) return;
+      var graph = getGraph?.Invoke();
+      if (graph == null)
+        return;
       graph.TtsVoiceProfiles = graph.TtsVoiceProfiles.Where(each => !ReferenceEquals(each, value)).ToArray();
       Changed(true);
     }
@@ -93,12 +99,15 @@ namespace MultiplayerInfrastructure.Editor
     private TextField Text(string label, string value, Action<string> setter)
     {
       var field = new TextField(label) { value = value ?? string.Empty };
-      field.RegisterValueChangedCallback(evt => { setter(evt.newValue); Changed(); }); return field;
+      field.RegisterValueChangedCallback(evt => { setter(evt.newValue); Changed(); });
+      return field;
     }
 
     private static TextField ReadOnly(string label, string value)
     {
-      var field = new TextField(label) { value = value ?? string.Empty }; field.SetEnabled(false); return field;
+      var field = new TextField(label) { value = value ?? string.Empty };
+      field.SetEnabled(false);
+      return field;
     }
 
     private void Changed(bool refresh = false) { onChanged?.Invoke(); if (refresh) Refresh(); }

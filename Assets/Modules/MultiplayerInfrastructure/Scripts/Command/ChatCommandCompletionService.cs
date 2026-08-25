@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using MultiplayerInfrastructure.Registry;
@@ -162,7 +162,7 @@ namespace MultiplayerInfrastructure.Command
       string partial = text.Substring(tokenStart, tokenEnd - tokenStart);
 
       // 2) 명령어 모드 vs 일반 채팅 모드 분기
-      if (!text.StartsWith("/", StringComparison.Ordinal))
+      if (!text.StartsWith('/'))
       {
         // 일반 채팅: 플레이어 이름 자동완성
         return FilterCandidates(CollectPlayerNames(), partial);
@@ -229,7 +229,7 @@ namespace MultiplayerInfrastructure.Command
       }
 
       // Fallback: @ 셀렉터 자동완성
-      if (partial.StartsWith("@", StringComparison.Ordinal))
+      if (partial.StartsWith('@'))
         return FilterCandidates(CollectTargetSelectors(), partial);
 
       return null;
@@ -389,7 +389,8 @@ namespace MultiplayerInfrastructure.Command
     private List<string> CollectCommandNames()
     {
       var result = new List<string>();
-      if (_commandService == null) return result;
+      if (_commandService == null)
+        return result;
 
       foreach (var cmd in _commandService.GetCommands())
       {

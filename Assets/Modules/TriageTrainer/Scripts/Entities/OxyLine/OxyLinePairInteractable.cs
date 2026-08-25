@@ -1,4 +1,4 @@
-using FishNet;
+﻿using FishNet;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Scenario;

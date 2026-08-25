@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.UI
@@ -21,7 +21,8 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public static void SaveAll(IReadOnlyList<KeyBindingEntry> bindings)
     {
-      if (bindings == null) return;
+      if (bindings == null)
+        return;
       foreach (var entry in bindings)
         SaveEntry(entry);
       PlayerPrefs.Save();
@@ -33,7 +34,8 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public static void SaveEntry(KeyBindingEntry entry)
     {
-      if (entry == null || string.IsNullOrEmpty(entry.actionId)) return;
+      if (entry == null || string.IsNullOrEmpty(entry.actionId))
+        return;
       PlayerPrefs.SetInt(PrefsKeyPrefix + entry.actionId, (int)entry.boundKey);
     }
 
@@ -51,13 +53,16 @@ namespace MultiplayerInfrastructure.UI
     /// <returns>하나라도 덮어쓴 항목이 있으면 true.</returns>
     public static bool LoadInto(IList<KeyBindingEntry> bindings)
     {
-      if (bindings == null) return false;
+      if (bindings == null)
+        return false;
       bool anyLoaded = false;
       foreach (var entry in bindings)
       {
-        if (string.IsNullOrEmpty(entry.actionId)) continue;
+        if (string.IsNullOrEmpty(entry.actionId))
+          continue;
         string prefsKey = PrefsKeyPrefix + entry.actionId;
-        if (!PlayerPrefs.HasKey(prefsKey)) continue;
+        if (!PlayerPrefs.HasKey(prefsKey))
+          continue;
         entry.boundKey = (KeyCode)PlayerPrefs.GetInt(prefsKey);
         anyLoaded = true;
       }
@@ -88,7 +93,8 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     public static void DeleteAll(IReadOnlyList<KeyBindingEntry> bindings)
     {
-      if (bindings == null) return;
+      if (bindings == null)
+        return;
       foreach (var entry in bindings)
       {
         if (!string.IsNullOrEmpty(entry.actionId))

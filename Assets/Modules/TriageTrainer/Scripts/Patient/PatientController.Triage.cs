@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using MultiplayerInfrastructure.Commons;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
 using TriageTrainer.Entity.Patient;
-using MultiplayerInfrastructure.Commons;
 using UnityEngine;
 
 namespace TriageTrainer.Entity

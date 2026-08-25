@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MultiplayerInfrastructure.ItemSystem;
 using UnityEngine;
 
@@ -41,7 +41,8 @@ public class InventorySlotModelDTO
 
   public Item? Push(InventorySlotModelDTO other)
   {
-    if (other.IsEmpty) return null;
+    if (other.IsEmpty)
+      return null;
 
     if (IsEmpty)
     {
@@ -58,7 +59,8 @@ public class InventorySlotModelDTO
 
   public Item? TakeAll()
   {
-    if (IsEmpty) return null;
+    if (IsEmpty)
+      return null;
     var taken = _itemInstance;
     _itemInstance = null;
     return taken;
@@ -66,7 +68,8 @@ public class InventorySlotModelDTO
 
   public Item? Pop(int count)
   {
-    if (IsEmpty || count <= 0) return null;
+    if (IsEmpty || count <= 0)
+      return null;
 
     int toPop = Math.Min(count, _itemInstance!.CurrentStackCount);
     var popped = _itemInstance.Clone();

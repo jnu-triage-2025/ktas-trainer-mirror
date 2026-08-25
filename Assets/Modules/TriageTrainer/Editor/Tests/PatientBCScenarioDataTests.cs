@@ -1,21 +1,21 @@
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Reflection;
+using System.Text.Json;
 using FishNet.Managing.Object;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.Quest;
-using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Scenario;
 using NUnit.Framework;
-using System.Collections.Generic;
+using TriageTrainer.Editor.Utils;
 using TriageTrainer.Entity;
 using TriageTrainer.Entity.LineConnection;
 using TriageTrainer.Entity.OxyLine;
 using TriageTrainer.Entity.PatientMonitor.Models;
-using TriageTrainer.Editor.Utils;
 using TriageTrainer.MultiplayerInfrastructureSupports.ScriptableObjects;
 using TriageTrainer.Patient;
 using TriageTrainer.Scenario;
@@ -259,9 +259,9 @@ namespace TriageTrainer.Tests
       StringAssert.DoesNotContain("환자 C", scenarioJson);
       var graph = ScenarioGraphLoader.LoadFromJson(scenarioJson, validateWithSchema: true);
 
-       Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
-       Assert.That(graph.Nodes, Has.Count.EqualTo(340));
-       Assert.That(graph.ClientSignalPrefixes, Is.EqualTo(new[] { "sig.quest_arrival_triage_area_" }));
+      Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
+      Assert.That(graph.Nodes, Has.Count.EqualTo(340));
+      Assert.That(graph.ClientSignalPrefixes, Is.EqualTo(new[] { "sig.quest_arrival_triage_area_" }));
       Assert.That(graph.ActingNpcs, Has.Count.EqualTo(1));
       Assert.That(graph.ActingNpcs.Single().Identifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
       Assert.That(graph.ActingNpcs.Single().PresetIdentifier, Is.EqualTo("npc_doctor_preset"));
@@ -271,14 +271,14 @@ namespace TriageTrainer.Tests
       Assert.That(patientBSpawn, Is.Not.Null);
       Assert.That(patientCSpawn, Is.Not.Null);
       Assert.That(patientBSpawn.RotationY, Is.EqualTo(-90f));
-       Assert.That(patientCSpawn.RotationY, Is.EqualTo(-90f));
-       var attachSpawnedBeds = graph.Nodes["ATTACH_SPAWNED_PATIENT_BEDS"] as ScenarioInvokeEventNode;
-       Assert.That(attachSpawnedBeds, Is.Not.Null);
-       Assert.That(attachSpawnedBeds.EventIdentifier, Is.EqualTo("attach_patient_bed_pairs"));
-       Assert.That(attachSpawnedBeds.NextIdentifier, Is.EqualTo("SPAWN_DOCTOR"));
-       Assert.That(patientCSpawn.NextIdentifier, Is.EqualTo("SPAWN_DUMMY"));
-       Assert.That((graph.Nodes["SPAWN_DUMMY"] as ScenarioEntityPresetSpawnNode)?.NextIdentifier,
-         Is.EqualTo("ATTACH_SPAWNED_PATIENT_BEDS"));
+      Assert.That(patientCSpawn.RotationY, Is.EqualTo(-90f));
+      var attachSpawnedBeds = graph.Nodes["ATTACH_SPAWNED_PATIENT_BEDS"] as ScenarioInvokeEventNode;
+      Assert.That(attachSpawnedBeds, Is.Not.Null);
+      Assert.That(attachSpawnedBeds.EventIdentifier, Is.EqualTo("attach_patient_bed_pairs"));
+      Assert.That(attachSpawnedBeds.NextIdentifier, Is.EqualTo("SPAWN_DOCTOR"));
+      Assert.That(patientCSpawn.NextIdentifier, Is.EqualTo("SPAWN_DUMMY"));
+      Assert.That((graph.Nodes["SPAWN_DUMMY"] as ScenarioEntityPresetSpawnNode)?.NextIdentifier,
+        Is.EqualTo("ATTACH_SPAWNED_PATIENT_BEDS"));
 
       var doctorSpawn = graph.Nodes["SPAWN_DOCTOR"] as ScenarioEntityPresetSpawnNode;
       Assert.That(doctorSpawn, Is.Not.Null);
@@ -366,14 +366,14 @@ namespace TriageTrainer.Tests
       Assert.That(announcementAndArrival.WaitMode, Is.EqualTo(ScenarioWaitMode.All));
       Assert.That(announcementAndArrival.Branches.Select(branch => branch.Identifier),
         Is.EqualTo(new[] { "ANNOUNCE", "P_ARRIVAL" }));
-       Assert.That(graph.Nodes["COUNT_NURSE_ARRIVAL"].NextIdentifier, Is.EqualTo("P_ANNOUNCE_ARRIVAL"));
+      Assert.That(graph.Nodes["COUNT_NURSE_ARRIVAL"].NextIdentifier, Is.EqualTo("P_ANNOUNCE_ARRIVAL"));
       Assert.That(graph.Nodes["P_ANNOUNCE_ARRIVAL"].NextIdentifier, Is.EqualTo("ARRIVAL_QUEST_COMPLETION_DELAY"));
       Assert.That(graph.Nodes["ANNOUNCE"].NextIdentifier, Is.EqualTo("CC_ANNOUNCE"));
       Assert.That(graph.Nodes["P_ARRIVAL"].NextIdentifier, Is.EqualTo("CC_ARRIVAL"));
-       var arrivalQuestCompletionDelay = graph.Nodes["ARRIVAL_QUEST_COMPLETION_DELAY"] as ScenarioDelayNode;
-       Assert.That(arrivalQuestCompletionDelay, Is.Not.Null);
-       Assert.That(arrivalQuestCompletionDelay.Duration.ToSeconds(), Is.EqualTo(0.25d));
-       Assert.That(arrivalQuestCompletionDelay.NextIdentifier, Is.EqualTo("P_TRIAGE"));
+      var arrivalQuestCompletionDelay = graph.Nodes["ARRIVAL_QUEST_COMPLETION_DELAY"] as ScenarioDelayNode;
+      Assert.That(arrivalQuestCompletionDelay, Is.Not.Null);
+      Assert.That(arrivalQuestCompletionDelay.Duration.ToSeconds(), Is.EqualTo(0.25d));
+      Assert.That(arrivalQuestCompletionDelay.NextIdentifier, Is.EqualTo("P_TRIAGE"));
 
       foreach (string role in new[] { "A", "B", "C", "D" })
       {
@@ -878,13 +878,13 @@ namespace TriageTrainer.Tests
 
       var requirement = presetRegistry.entityPresetRegistryRequirements.Single(
         value => value.identifier == "patient_dummy_d_b");
-       Assert.That(requirement.prefab, Is.SameAs(prefab));
-       Assert.That(requirement.isNetworked, Is.True);
-       Assert.That(requirement.childReferences.Single().childPresetIdentifier, Is.EqualTo("bed_d_b"));
+      Assert.That(requirement.prefab, Is.SameAs(prefab));
+      Assert.That(requirement.isNetworked, Is.True);
+      Assert.That(requirement.childReferences.Single().childPresetIdentifier, Is.EqualTo("bed_d_b"));
 
-       var dummyBedRequirement = presetRegistry.entityPresetRegistryRequirements.Single(
-         value => value.identifier == "bed_d_b");
-       Assert.That(dummyBedRequirement.prefab, Is.Not.Null);
+      var dummyBedRequirement = presetRegistry.entityPresetRegistryRequirements.Single(
+        value => value.identifier == "bed_d_b");
+      Assert.That(dummyBedRequirement.prefab, Is.Not.Null);
     }
 
     [TestCase(PatientDummyDAPrefabPath, "patient_dummy_d_a")]

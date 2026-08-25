@@ -1,7 +1,5 @@
-using FishNet;
-using FishNet.Managing;
+﻿using FishNet.Managing;
 using FishNet.Transporting;
-using MultiplayerInfrastructure.Session;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Logging

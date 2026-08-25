@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using FishNet;
@@ -37,12 +37,24 @@ namespace MultiplayerInfrastructure.Command
 
       switch (args[0].ToLowerInvariant())
       {
-        case "stop": Stop(sender); break;
-        case "kick": Kick(sender, args, ban: false); break;
-        case "ban": Kick(sender, args, ban: true); break;
-        case "unban": Unban(sender, args); break;
-        case "banlist": BanList(sender); break;
-        default: _chat.SendSystemMessage(sender, $"Unknown server subcommand '{args[0]}'."); break;
+        case "stop":
+          Stop(sender);
+          break;
+        case "kick":
+          Kick(sender, args, ban: false);
+          break;
+        case "ban":
+          Kick(sender, args, ban: true);
+          break;
+        case "unban":
+          Unban(sender, args);
+          break;
+        case "banlist":
+          BanList(sender);
+          break;
+        default:
+          _chat.SendSystemMessage(sender, $"Unknown server subcommand '{args[0]}'.");
+          break;
       }
     }
 

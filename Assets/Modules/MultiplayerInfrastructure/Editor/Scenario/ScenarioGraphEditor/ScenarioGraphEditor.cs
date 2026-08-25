@@ -1,9 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -11,8 +10,6 @@ using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-
-using MI = MultiplayerInfrastructure;
 
 namespace MultiplayerInfrastructure.Editor
 {
@@ -328,8 +325,8 @@ namespace MultiplayerInfrastructure.Editor
     private void CreateGraphView()
     {
       mainContainer = new VisualElement { name = "ScenarioMainContainer" };
-      mainContainer.style.flexGrow    = 1f;
-      mainContainer.style.flexShrink  = 1f;  // 디버그 패널이 공간을 차지하면 축소될 수 있어야 함
+      mainContainer.style.flexGrow = 1f;
+      mainContainer.style.flexShrink = 1f;  // 디버그 패널이 공간을 차지하면 축소될 수 있어야 함
       mainContainer.style.flexDirection = FlexDirection.Row;
 
       graphHost = new VisualElement { name = "ScenarioGraphHost" };
@@ -458,12 +455,18 @@ namespace MultiplayerInfrastructure.Editor
       bool showWaypoints = tab == ScenarioEditorTab.Waypoints;
       bool showVoiceProfiles = tab == ScenarioEditorTab.VoiceProfiles;
       bool showQuests = tab == ScenarioEditorTab.Quests;
-      if (mainContainer != null) mainContainer.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
-      if (debugPanelView != null) debugPanelView.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
-      if (actingNpcContainer != null) actingNpcContainer.style.display = showActingNpc ? DisplayStyle.Flex : DisplayStyle.None;
-      if (waypointContainer != null) waypointContainer.style.display = showWaypoints ? DisplayStyle.Flex : DisplayStyle.None;
-      if (voiceProfilesContainer != null) voiceProfilesContainer.style.display = showVoiceProfiles ? DisplayStyle.Flex : DisplayStyle.None;
-      if (questsContainer != null) questsContainer.style.display = showQuests ? DisplayStyle.Flex : DisplayStyle.None;
+      if (mainContainer != null)
+        mainContainer.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
+      if (debugPanelView != null)
+        debugPanelView.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
+      if (actingNpcContainer != null)
+        actingNpcContainer.style.display = showActingNpc ? DisplayStyle.Flex : DisplayStyle.None;
+      if (waypointContainer != null)
+        waypointContainer.style.display = showWaypoints ? DisplayStyle.Flex : DisplayStyle.None;
+      if (voiceProfilesContainer != null)
+        voiceProfilesContainer.style.display = showVoiceProfiles ? DisplayStyle.Flex : DisplayStyle.None;
+      if (questsContainer != null)
+        questsContainer.style.display = showQuests ? DisplayStyle.Flex : DisplayStyle.None;
       graphTabButton?.SetEnabled(!showGraph);
       actingNpcTabButton?.SetEnabled(!showActingNpc);
       waypointTabButton?.SetEnabled(!showWaypoints);
@@ -485,9 +488,11 @@ namespace MultiplayerInfrastructure.Editor
 
     private TextAsset GetCurrentScenarioTextAsset()
     {
-      if (string.IsNullOrEmpty(currentFilePath)) return null;
+      if (string.IsNullOrEmpty(currentFilePath))
+        return null;
       var projectRoot = Directory.GetParent(Application.dataPath)?.FullName;
-      if (string.IsNullOrEmpty(projectRoot)) return null;
+      if (string.IsNullOrEmpty(projectRoot))
+        return null;
       var relativePath = currentFilePath.Replace(projectRoot + Path.DirectorySeparatorChar, string.Empty)
         .Replace(Path.DirectorySeparatorChar, '/');
       return AssetDatabase.LoadAssetAtPath<TextAsset>(relativePath);
@@ -518,8 +523,8 @@ namespace MultiplayerInfrastructure.Editor
     {
       searchPanelView = new ScenarioSearchPanelView();
       searchPanelView.OnResultSelected = FocusNodeByIdentifier;
-      searchPanelView.OnQueryChanged   = HandleSearchQuery;
-      searchPanelView.OnClosed         = () => { /* 포커스를 graphView 로 돌려줌 */ graphView?.Focus(); };
+      searchPanelView.OnQueryChanged = HandleSearchQuery;
+      searchPanelView.OnClosed = () => { /* 포커스를 graphView 로 돌려줌 */ graphView?.Focus(); };
 
       // graphHost 위에 절대 위치 오버레이로 추가
       // graphHost 가 아직 null 이면 rootVisualElement 에 임시 추가 후 CreateGraphView 이후 재배치
@@ -535,7 +540,8 @@ namespace MultiplayerInfrastructure.Editor
 
     private void HandleSearchQuery(string query)
     {
-      if (searchPanelView == null || graphData == null) return;
+      if (searchPanelView == null || graphData == null)
+        return;
       var results = ScenarioNodeSearcher.Search(graphData, query);
       searchPanelView.SetResults(results, query);
     }
@@ -543,7 +549,7 @@ namespace MultiplayerInfrastructure.Editor
     /// <summary>에디터 윈도우 전역 키 핸들러.</summary>
     private void OnGlobalKeyDown(KeyDownEvent evt)
     {
-      bool isMac    = Application.platform == RuntimePlatform.OSXEditor;
+      bool isMac = Application.platform == RuntimePlatform.OSXEditor;
       bool modifier = isMac ? evt.commandKey : evt.ctrlKey;
 
       // 진단 항목을 마지막으로 클릭한 경우 GraphView 포커스와 무관하게 Ctrl+C로 복사한다.
@@ -555,7 +561,8 @@ namespace MultiplayerInfrastructure.Editor
 
       if (modifier && evt.keyCode == KeyCode.F)
       {
-        if (searchPanelView == null) return;
+        if (searchPanelView == null)
+          return;
 
         if (searchPanelView.IsOpen)
           searchPanelView.Close();
@@ -770,7 +777,8 @@ namespace MultiplayerInfrastructure.Editor
 
     private void RefreshDebugPanel()
     {
-      if (debugPanelView == null) return;
+      if (debugPanelView == null)
+        return;
       var items = ScenarioGraphDiagnostics.Run(graphData);
       debugPanelView.Refresh(items);
     }
@@ -803,8 +811,10 @@ namespace MultiplayerInfrastructure.Editor
 
     public ScenarioNodeView ChangeNodeType(ScenarioNodeView nodeView, ScenarioNodeType newType)
     {
-      if (nodeView == null || nodeView.Data == null) return null;
-      if (nodeView.Data.NodeType == newType) return nodeView;
+      if (nodeView == null || nodeView.Data == null)
+        return null;
+      if (nodeView.Data.NodeType == newType)
+        return nodeView;
 
       var oldData = nodeView.Data;
       var oldPos = nodeView.GetPosition();
@@ -1256,8 +1266,10 @@ namespace MultiplayerInfrastructure.Editor
 
     public void RemoveNode(ScenarioNodeView nodeView)
     {
-      if (nodeView == null || nodeView.Data == null) return;
-      if (graphData == null || graphData.Nodes == null) return;
+      if (nodeView == null || nodeView.Data == null)
+        return;
+      if (graphData == null || graphData.Nodes == null)
+        return;
 
       var id = nodeView.Data.Identifier;
       if (graphData.Nodes.ContainsKey(id))
@@ -1344,7 +1356,8 @@ namespace MultiplayerInfrastructure.Editor
 
     public bool TryRenameNode(ScenarioNodeView nodeView, string newId)
     {
-      if (nodeView == null || nodeView.Data == null) return false;
+      if (nodeView == null || nodeView.Data == null)
+        return false;
       if (string.IsNullOrWhiteSpace(newId))
       {
         EditorUtility.DisplayDialog("Rename Failed", "식별자는 비어 있을 수 없습니다.", "확인");
@@ -1567,14 +1580,16 @@ namespace MultiplayerInfrastructure.Editor
     private void OpenGraphFromJson()
     {
       var path = EditorUtility.OpenFilePanel("Open Scenario JSON", Application.dataPath, "json");
-      if (string.IsNullOrEmpty(path)) return;
+      if (string.IsNullOrEmpty(path))
+        return;
 
       OpenGraphFromPath(path);
     }
 
     private void OpenGraphFromPath(string path)
     {
-      if (string.IsNullOrEmpty(path)) return;
+      if (string.IsNullOrEmpty(path))
+        return;
 
       try
       {
@@ -1735,14 +1750,16 @@ namespace MultiplayerInfrastructure.Editor
       }
 
       var path = EditorUtility.SaveFilePanel("Save Scenario JSON", Application.dataPath, "scenario_graph.scenario.json", "json");
-      if (string.IsNullOrEmpty(path)) return;
+      if (string.IsNullOrEmpty(path))
+        return;
 
       SaveGraphToPath(NormalizeScenarioPath(path));
     }
 
     private void SaveGraphToPath(string path)
     {
-      if (string.IsNullOrEmpty(path)) return;
+      if (string.IsNullOrEmpty(path))
+        return;
 
       EnsureGraphData();
       if (string.IsNullOrWhiteSpace(graphData.Identifier))
@@ -1857,13 +1874,15 @@ namespace MultiplayerInfrastructure.Editor
 
     public void RegisterNodeView(ScenarioNodeView nodeView)
     {
-      if (nodeView?.Data == null) return;
+      if (nodeView?.Data == null)
+        return;
       nodeViews[nodeView.Data.Identifier] = nodeView;
     }
 
     private void AutoLayoutNodes(bool showProgress = false)
     {
-      if (nodeViews.Count == 0) return;
+      if (nodeViews.Count == 0)
+        return;
 
       try
       {
@@ -1885,7 +1904,8 @@ namespace MultiplayerInfrastructure.Editor
       var branchesByParallel = new Dictionary<string, List<string>>();
       foreach (var node in graphData.Nodes.Values)
       {
-        if (node == null || !visibleOutgoing.TryGetValue(node.Identifier, out var targets)) continue;
+        if (node == null || !visibleOutgoing.TryGetValue(node.Identifier, out var targets))
+          continue;
 
         // Keep one entry per rendered output port. Several Choice options may point to
         // the same retry node, but they still leave the node at different vertical ports
@@ -1977,7 +1997,8 @@ namespace MultiplayerInfrastructure.Editor
 
       foreach (var pair in realNodeLayer)
       {
-        if (!nodeViews.TryGetValue(pair.Key, out var view)) continue;
+        if (!nodeViews.TryGetValue(pair.Key, out var view))
+          continue;
         var position = packedPositions[pair.Key];
         view.SetPosition(new Rect(
           position,
@@ -1988,7 +2009,8 @@ namespace MultiplayerInfrastructure.Editor
 
     private static void ReportAutoLayoutProgress(bool showProgress, float progress, string message)
     {
-      if (!showProgress) return;
+      if (!showProgress)
+        return;
       EditorUtility.DisplayProgressBar(
         "Scenario Graph Auto Layout",
         message,
@@ -2050,15 +2072,18 @@ namespace MultiplayerInfrastructure.Editor
         foreach (var target in outgoing[source])
         {
           // 현재 DFS 경로로 되돌아가는 간선은 feedback edge로 취급한다.
-          if (state[target] == 1) continue;
+          if (state[target] == 1)
+            continue;
           forward[source].Add(target);
-          if (state[target] == 0) Visit(target);
+          if (state[target] == 0)
+            Visit(target);
         }
         state[source] = 2;
       }
 
       foreach (var id in identifiers)
-        if (state[id] == 0) Visit(id);
+        if (state[id] == 0)
+          Visit(id);
       return forward;
     }
 
@@ -2078,7 +2103,8 @@ namespace MultiplayerInfrastructure.Editor
         foreach (var target in forward[source])
         {
           layer[target] = Math.Max(layer[target], layer[source] + 1);
-          if (--indegree[target] == 0) ready.Add(target);
+          if (--indegree[target] == 0)
+            ready.Add(target);
         }
       }
       return layer;
@@ -2296,7 +2322,8 @@ namespace MultiplayerInfrastructure.Editor
           var leftMedian = MedianNeighborOrder(left, neighbors, layer, positions);
           var rightMedian = MedianNeighborOrder(right, neighbors, layer, positions);
           var comparison = leftMedian.CompareTo(rightMedian);
-          if (comparison != 0) return comparison;
+          if (comparison != 0)
+            return comparison;
 
           // 같은 부모에서 갈라지는 대상은 부모 노드 위치가 같아 median도 같다.
           // 이때 실제 출력 포트의 위→아래 순서로 정렬해야 연결선이 교차하지 않는다.
@@ -2305,7 +2332,8 @@ namespace MultiplayerInfrastructure.Editor
             var leftPortOrder = MedianIncomingPortOrder(left, neighbors, forward);
             var rightPortOrder = MedianIncomingPortOrder(right, neighbors, forward);
             comparison = leftPortOrder.CompareTo(rightPortOrder);
-            if (comparison != 0) return comparison;
+            if (comparison != 0)
+              return comparison;
           }
 
           return StringComparer.Ordinal.Compare(left, right);
@@ -2334,7 +2362,8 @@ namespace MultiplayerInfrastructure.Editor
         .Where(index => index >= 0)
         .OrderBy(index => index)
         .ToList();
-      if (orders.Count == 0) return float.MaxValue;
+      if (orders.Count == 0)
+        return float.MaxValue;
 
       var middle = orders.Count / 2;
       return orders.Count % 2 == 1
@@ -2649,7 +2678,8 @@ namespace MultiplayerInfrastructure.Editor
 
     private static IEnumerable<string> GetVisibleOutgoingTargets(IScenarioNode node)
     {
-      if (node == null) yield break;
+      if (node == null)
+        yield break;
 
       if (node is not ScenarioParallelNode && !string.IsNullOrEmpty(node.NextIdentifier))
       {
@@ -2660,7 +2690,8 @@ namespace MultiplayerInfrastructure.Editor
       {
         foreach (var opt in choice.Options)
         {
-          if (!string.IsNullOrEmpty(opt.NextNodeIdentifier)) yield return opt.NextNodeIdentifier;
+          if (!string.IsNullOrEmpty(opt.NextNodeIdentifier))
+            yield return opt.NextNodeIdentifier;
         }
       }
 
@@ -2668,14 +2699,17 @@ namespace MultiplayerInfrastructure.Editor
       {
         foreach (var branch in parallel.Branches)
         {
-          if (!string.IsNullOrEmpty(branch.Identifier)) yield return branch.Identifier;
+          if (!string.IsNullOrEmpty(branch.Identifier))
+            yield return branch.Identifier;
         }
       }
 
       if (node is ScenarioQuizNode quiz)
       {
-        if (!string.IsNullOrEmpty(quiz.OnCorrectNextIdentifier)) yield return quiz.OnCorrectNextIdentifier;
-        if (!string.IsNullOrEmpty(quiz.OnIncorrectNextIdentifier)) yield return quiz.OnIncorrectNextIdentifier;
+        if (!string.IsNullOrEmpty(quiz.OnCorrectNextIdentifier))
+          yield return quiz.OnCorrectNextIdentifier;
+        if (!string.IsNullOrEmpty(quiz.OnIncorrectNextIdentifier))
+          yield return quiz.OnIncorrectNextIdentifier;
       }
     }
 

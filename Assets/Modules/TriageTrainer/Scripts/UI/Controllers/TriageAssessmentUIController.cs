@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.Patient;

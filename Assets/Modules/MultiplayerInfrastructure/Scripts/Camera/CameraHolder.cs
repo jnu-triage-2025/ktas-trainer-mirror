@@ -1,5 +1,5 @@
+﻿using Unity.VisualScripting;
 using UnityEngine;
-using Unity.VisualScripting;
 
 namespace MultiplayerInfrastructure.Camera
 {
@@ -109,7 +109,8 @@ namespace MultiplayerInfrastructure.Camera
     /// </summary>
     public void AttachTo(CameraAttachPoint attachPoint)
     {
-      if (attachPoint.IsUnityNull()) return;
+      if (attachPoint.IsUnityNull())
+        return;
       _followingPivot = attachPoint.PivotTransform;
 
       _ignoredColliders.Clear();
@@ -146,10 +147,12 @@ namespace MultiplayerInfrastructure.Camera
     /// </summary>
     public void Follow()
     {
-      if (_followingPivot.IsUnityNull()) return;
+      if (_followingPivot.IsUnityNull())
+        return;
 
       EnsureCamera();
-      if (_camera.IsUnityNull()) return;
+      if (_camera.IsUnityNull())
+        return;
 
       _camera.transform.position = _followingPivot.position;
       _camera.transform.rotation = _followingPivot.rotation;
@@ -168,7 +171,8 @@ namespace MultiplayerInfrastructure.Camera
     public void RefreshFromInspector()
     {
       EnsureCamera();
-      if (_camera.IsUnityNull()) return;
+      if (_camera.IsUnityNull())
+        return;
       UpdateCameraDistance();
       SmoothDistanceTransition();
       ApplyDistanceOffset();
@@ -185,7 +189,8 @@ namespace MultiplayerInfrastructure.Camera
 
     private void EnsureDesiredDistanceInitialized()
     {
-      if (_desiredDistanceInitialized) return;
+      if (_desiredDistanceInitialized)
+        return;
 
       _desiredThirdPersonDistance = Mathf.Clamp(
         _thirdPersonDistance,
@@ -272,11 +277,14 @@ namespace MultiplayerInfrastructure.Camera
 
     private void ApplyDistanceOffset()
     {
-      if (_camera.IsUnityNull()) return;
-      if (_currentDistance <= 0.01f) return;
+      if (_camera.IsUnityNull())
+        return;
+      if (_currentDistance <= 0.01f)
+        return;
 
       float distance = ResolveCollisionAdjustedDistance(_currentDistance);
-      if (distance <= 0.01f) return;
+      if (distance <= 0.01f)
+        return;
 
       _camera.transform.position -= _camera.transform.forward * distance;
     }
@@ -287,8 +295,10 @@ namespace MultiplayerInfrastructure.Camera
     /// </summary>
     private float ResolveCollisionAdjustedDistance(float desiredDistance)
     {
-      if (!_enableCollision) return desiredDistance;
-      if (_followingPivot.IsUnityNull()) return desiredDistance;
+      if (!_enableCollision)
+        return desiredDistance;
+      if (_followingPivot.IsUnityNull())
+        return desiredDistance;
 
       Vector3 pivot = _followingPivot.position;
       Vector3 dir = -_camera.transform.forward;
@@ -312,8 +322,10 @@ namespace MultiplayerInfrastructure.Camera
         RaycastHit hit = _collisionHits[i];
 
         // 시작점이 콜라이더와 겹쳐 hit.distance가 0인 경우는 무시한다.
-        if (hit.distance <= 0f) continue;
-        if (_ignoredColliders.Contains(hit.collider)) continue;
+        if (hit.distance <= 0f)
+          continue;
+        if (_ignoredColliders.Contains(hit.collider))
+          continue;
 
         float allowed = hit.distance - _collisionBuffer;
         if (allowed < nearest)
@@ -330,10 +342,12 @@ namespace MultiplayerInfrastructure.Camera
     public void SetSpectatorLayerCulling(bool enableSpectator)
     {
       EnsureCamera();
-      if (_camera == null) return;
+      if (_camera == null)
+        return;
 
       int spectatorLayer = LayerMask.NameToLayer(_spectatorLayerName);
-      if (spectatorLayer < 0) return;
+      if (spectatorLayer < 0)
+        return;
 
       int mask = _baseCullingMask;
       if (enableSpectator)

@@ -1,4 +1,4 @@
-namespace MultiplayerInfrastructure.Scenario
+﻿namespace MultiplayerInfrastructure.Scenario
 {
   /// <summary>
   /// 시나리오 진행 중 인게임 채팅 명령어를 서버 권한으로 실행하는 노드.

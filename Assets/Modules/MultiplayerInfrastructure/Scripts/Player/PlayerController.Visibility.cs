@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace MultiplayerInfrastructure.Player
@@ -40,7 +40,7 @@ namespace MultiplayerInfrastructure.Player
       return shader != null && shader.FindPropertyIndex("_Color") >= 0;
     }
 
-    void Awake_Visibility()
+    private void Awake_Visibility()
     {
       _mpb = new MaterialPropertyBlock();
       _originalLayer = gameObject.layer;
@@ -62,7 +62,8 @@ namespace MultiplayerInfrastructure.Player
 
     private void EnsureVisibilityInit()
     {
-      if (_visibilityInitialized) return;
+      if (_visibilityInitialized)
+        return;
       _spectatorLayer = LayerMask.NameToLayer(_spectatorLayerName);
       CacheRenderers();
     }
@@ -87,19 +88,22 @@ namespace MultiplayerInfrastructure.Player
       for (int i = 0; i < _renderers.Count; i++)
       {
         var r = _renderers[i];
-        if (r == null) continue;
+        if (r == null)
+          continue;
         r.gameObject.layer = _originalLayer;
       }
     }
 
     private void SetSpectatorLayer()
     {
-      if (_spectatorLayer < 0) return;
+      if (_spectatorLayer < 0)
+        return;
       gameObject.layer = _spectatorLayer;
       for (int i = 0; i < _renderers.Count; i++)
       {
         var r = _renderers[i];
-        if (r == null) continue;
+        if (r == null)
+          continue;
         r.gameObject.layer = _spectatorLayer;
       }
     }
@@ -111,7 +115,8 @@ namespace MultiplayerInfrastructure.Player
       for (int i = 0; i < _renderers.Count; i++)
       {
         var r = _renderers[i];
-        if (r == null) continue;
+        if (r == null)
+          continue;
 
         r.GetPropertyBlock(_mpb);
         _mpb.Clear();
@@ -126,8 +131,10 @@ namespace MultiplayerInfrastructure.Player
       for (int i = 0; i < _renderers.Count; i++)
       {
         var r = _renderers[i];
-        if (r == null) continue;
-        if (!HasColorProperty(r.sharedMaterial)) continue;
+        if (r == null)
+          continue;
+        if (!HasColorProperty(r.sharedMaterial))
+          continue;
 
         r.GetPropertyBlock(_mpb);
         _mpb.SetColor(ColorPropertyId, new Color(1f, 1f, 1f, _spectatorAlpha));

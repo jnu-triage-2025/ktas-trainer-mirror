@@ -1,5 +1,4 @@
-using TriageTrainer.Entity.LineConnection;
-using TriageTrainer.Entity;
+﻿using TriageTrainer.Entity.LineConnection;
 using UnityEngine;
 
 namespace TriageTrainer.Entity.OxyLine

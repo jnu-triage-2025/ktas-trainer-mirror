@@ -1,7 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace MultiplayerInfrastructure.UI

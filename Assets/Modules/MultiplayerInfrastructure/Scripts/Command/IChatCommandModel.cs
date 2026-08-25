@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using FishNet.Connection;
 
@@ -6,13 +6,13 @@ namespace MultiplayerInfrastructure.Command
 {
   public interface IChatCommandModel
   {
-    string CommandEntry { get; }
+    public string CommandEntry { get; }
 
     /// <summary>
     /// One-line human readable description used by /help listings.
     /// Keep this short: a single sentence, no line breaks.
     /// </summary>
-    string Description { get; }
+    public string Description { get; }
 
     /// <summary>
     /// 이 커맨드 최상위에 필요한 permission identifier.
@@ -20,9 +20,9 @@ namespace MultiplayerInfrastructure.Command
     /// PermissionService 에서 하위 경로 확장을 통해 "scenario.execute" 등도 처리된다.
     /// null 또는 empty 이면 모든 유저가 실행 가능.
     /// </summary>
-    string PermissionIdentifier { get; }
+    public string PermissionIdentifier { get; }
 
-    void Execute(NetworkConnection sender, string[] args);
+    public void Execute(NetworkConnection sender, string[] args);
   }
 
   /// <summary>
@@ -60,7 +60,7 @@ namespace MultiplayerInfrastructure.Command
     /// <summary>
     /// The rows describing each subcommand/argument form of the command.
     /// </summary>
-    IReadOnlyList<UsageLine> UsageLines { get; }
+    public IReadOnlyList<UsageLine> UsageLines { get; }
   }
 
   public static class ChatCommandHelp

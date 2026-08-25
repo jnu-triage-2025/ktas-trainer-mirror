@@ -1,6 +1,6 @@
-using System.Linq;
-using UnityEngine;
+﻿using System.Linq;
 using MultiplayerInfrastructure.Scenario;
+using UnityEngine;
 
 namespace TriageTrainer.Scenario
 {
@@ -55,13 +55,15 @@ namespace TriageTrainer.Scenario
 
     private static void Raise(string name, params string[] identifiers)
     {
-      if (identifiers.Any(string.IsNullOrWhiteSpace)) return;
+      if (identifiers.Any(string.IsNullOrWhiteSpace))
+        return;
       ScenarioInteractionSignals.Raise(string.Join("_", new[] { name }.Concat(identifiers)));
     }
 
     private static string GetIdentifier(MonoBehaviour equipment)
     {
-      if (equipment == null) return string.Empty;
+      if (equipment == null)
+        return string.Empty;
       if (equipment is MultiplayerInfrastructure.ItemSystem.StaticObjectDisplayment displayment)
         return displayment.EntityIdentifier;
       if (equipment is TriageTrainer.Entity.MovingPatientBedController bed)

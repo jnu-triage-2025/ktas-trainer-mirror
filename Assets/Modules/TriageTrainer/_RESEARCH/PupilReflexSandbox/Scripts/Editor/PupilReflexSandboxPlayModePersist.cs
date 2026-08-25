@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 
@@ -204,15 +204,15 @@ namespace TriageTrainer.Tests.PupilReflexSandbox
           value = new SerializedValue { Type = property.propertyType, Value = property.boundsValue };
           return true;
         case SerializedPropertyType.AnimationCurve:
-        {
-          AnimationCurve curve = property.animationCurveValue;
-          value = new SerializedValue
           {
-            Type = property.propertyType,
-            Value = curve != null ? new AnimationCurve(curve.keys) : new AnimationCurve()
-          };
-          return true;
-        }
+            AnimationCurve curve = property.animationCurveValue;
+            value = new SerializedValue
+            {
+              Type = property.propertyType,
+              Value = curve != null ? new AnimationCurve(curve.keys) : new AnimationCurve()
+            };
+            return true;
+          }
         case SerializedPropertyType.Enum:
           value = new SerializedValue { Type = property.propertyType, Value = property.enumValueIndex };
           return true;

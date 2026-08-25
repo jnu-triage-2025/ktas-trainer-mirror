@@ -1,9 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 
 namespace TextToSpeechService
 {
@@ -22,13 +21,13 @@ namespace TextToSpeechService
     // 빌드:    Unity가 자동으로 플랫폼별 StreamingAssets 경로로 복사
 
     /// <summary>ONNX 모델 폴더 (StreamingAssets 기준 상대 경로)</summary>
-    public const string DefaultOnnxSubdir    = "TTS/Models/onnx";
+    public const string DefaultOnnxSubdir = "TTS/Models/onnx";
 
     /// <summary>음성 스타일 폴더 (StreamingAssets 기준 상대 경로)</summary>
-    public const string DefaultStyleSubdir   = "TTS/Models/voice_styles";
+    public const string DefaultStyleSubdir = "TTS/Models/voice_styles";
 
     /// <summary>사전 합성(baked) WAV 폴더 (StreamingAssets 기준 상대 경로)</summary>
-    public const string BakedAudioSubdir     = "TTS/Baked";
+    public const string BakedAudioSubdir = "TTS/Baked";
 
     /// <summary>
     /// 시나리오 그래프의 인라인 텍스트(Dialogue/Choice/Quiz 등)를 사전 합성한
@@ -110,7 +109,7 @@ namespace TextToSpeechService
     /// <param name="voiceStylePath">음성 스타일 JSON 파일 절대 경로</param>
     public TTSCore(string onnxDir, string voiceStylePath)
     {
-      _tts   = Supertonic.Helper.LoadTextToSpeech(onnxDir, useGpu: false);
+      _tts = Supertonic.Helper.LoadTextToSpeech(onnxDir, useGpu: false);
       _style = Supertonic.Helper.LoadVoiceStyle(new List<string> { voiceStylePath });
     }
 
@@ -147,7 +146,7 @@ namespace TextToSpeechService
       foreach (var hfRelPath in RequiredOnnxFiles)
       {
         // HF 상대 경로의 파일명 부분만 추출 (onnx/foo.onnx → foo.onnx)
-        string filename  = Path.GetFileName(hfRelPath);
+        string filename = Path.GetFileName(hfRelPath);
         string localPath = Path.Combine(onnxDir, filename);
         if (!File.Exists(localPath))
           missing.Add(filename);
@@ -181,51 +180,51 @@ namespace TextToSpeechService
     // 인라인 텍스트 Baked 경로 / 해시 헬퍼
     // =========================================================================
 
-  /// <summary>
-  /// 시나리오 그래프의 인라인 텍스트에 대한 사전 합성(baked) WAV 파일의 절대 경로를 반환합니다.
-  ///
-  /// 파일명 규칙:
-  ///   {BakedInlineAudioSubdir}/{scenarioIdentifier}/{nodeIdentifier}_{hash}.wav
-  ///
-  /// scenarioIdentifier·nodeIdentifier 는 사람이 식별할 수 있도록 접두어로 붙이고,
-  /// hash 는 텍스트 내용 변경(=dirty) 감지를 위한 결정적 해시이다.
-  ///
-  /// voiceIdentifier 가 null/빈 문자열이면 기존 경로 구조(voice 폴더 없음)를 유지한다.
-  /// </summary>
-  /// <param name="streamingAssetsPath">Application.streamingAssetsPath</param>
-  /// <param name="scenarioIdentifier">시나리오 그래프 식별자</param>
-  /// <param name="nodeIdentifier">노드 식별자</param>
-  /// <param name="text">합성 대상 텍스트</param>
-  /// <param name="voiceIdentifier">
-  /// 목소리 프로파일 식별자. null 또는 빈 문자열이면 기본 목소리 경로를 사용한다.
-  /// </param>
-  public static string GetBakedInlineClipPath(
-    string streamingAssetsPath, string scenarioIdentifier, string nodeIdentifier, string text,
-    string voiceIdentifier = null)
-  {
-    string safeScenario = SanitizeForFileName(scenarioIdentifier);
-    string safeNode      = SanitizeForFileName(nodeIdentifier);
-    string hash          = ComputeTextHash(text);
-
-    if (string.IsNullOrEmpty(voiceIdentifier))
+    /// <summary>
+    /// 시나리오 그래프의 인라인 텍스트에 대한 사전 합성(baked) WAV 파일의 절대 경로를 반환합니다.
+    ///
+    /// 파일명 규칙:
+    ///   {BakedInlineAudioSubdir}/{scenarioIdentifier}/{nodeIdentifier}_{hash}.wav
+    ///
+    /// scenarioIdentifier·nodeIdentifier 는 사람이 식별할 수 있도록 접두어로 붙이고,
+    /// hash 는 텍스트 내용 변경(=dirty) 감지를 위한 결정적 해시이다.
+    ///
+    /// voiceIdentifier 가 null/빈 문자열이면 기존 경로 구조(voice 폴더 없음)를 유지한다.
+    /// </summary>
+    /// <param name="streamingAssetsPath">Application.streamingAssetsPath</param>
+    /// <param name="scenarioIdentifier">시나리오 그래프 식별자</param>
+    /// <param name="nodeIdentifier">노드 식별자</param>
+    /// <param name="text">합성 대상 텍스트</param>
+    /// <param name="voiceIdentifier">
+    /// 목소리 프로파일 식별자. null 또는 빈 문자열이면 기본 목소리 경로를 사용한다.
+    /// </param>
+    public static string GetBakedInlineClipPath(
+      string streamingAssetsPath, string scenarioIdentifier, string nodeIdentifier, string text,
+      string voiceIdentifier = null)
     {
+      string safeScenario = SanitizeForFileName(scenarioIdentifier);
+      string safeNode = SanitizeForFileName(nodeIdentifier);
+      string hash = ComputeTextHash(text);
+
+      if (string.IsNullOrEmpty(voiceIdentifier))
+      {
+        return Path.Combine(
+          streamingAssetsPath, BakedInlineAudioSubdir,
+          safeScenario, $"{safeNode}_{hash}.wav");
+      }
+
+      string safeVoice = SanitizeForFileName(voiceIdentifier);
       return Path.Combine(
         streamingAssetsPath, BakedInlineAudioSubdir,
-        safeScenario, $"{safeNode}_{hash}.wav");
+        safeScenario, safeVoice, $"{safeNode}_{hash}.wav");
     }
-
-    string safeVoice = SanitizeForFileName(voiceIdentifier);
-    return Path.Combine(
-      streamingAssetsPath, BakedInlineAudioSubdir,
-      safeScenario, safeVoice, $"{safeNode}_{hash}.wav");
-  }
 
     /// <summary>인라인 텍스트에 대한 결정적 콘텐츠 해시(짧은 hex)를 계산합니다.</summary>
     public static string ComputeTextHash(string text)
     {
       using var sha = SHA256.Create();
-      byte[] bytes  = sha.ComputeHash(Encoding.UTF8.GetBytes(text ?? string.Empty));
-      var    sb     = new StringBuilder(16);
+      byte[] bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(text ?? string.Empty));
+      var sb = new StringBuilder(16);
       for (int i = 0; i < 8; i++) // 앞 8바이트(16 hex)면 충돌 방지에 충분
         sb.Append(bytes[i].ToString("x2"));
       return sb.ToString();
@@ -234,9 +233,10 @@ namespace TextToSpeechService
     /// <summary>파일/폴더명에 사용할 수 없는 문자를 '_' 로 치환합니다.</summary>
     private static string SanitizeForFileName(string value)
     {
-      if (string.IsNullOrEmpty(value)) return "_";
+      if (string.IsNullOrEmpty(value))
+        return "_";
       var invalid = Path.GetInvalidFileNameChars();
-      var sb      = new StringBuilder(value.Length);
+      var sb = new StringBuilder(value.Length);
       foreach (char c in value)
         sb.Append(Array.IndexOf(invalid, c) >= 0 ? '_' : c);
       return sb.ToString();

@@ -1,10 +1,10 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
+using TextToSpeechService;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
-using TextToSpeechService;
 
 namespace MultiplayerInfrastructure.Editor.TTS
 {
@@ -23,9 +23,9 @@ namespace MultiplayerInfrastructure.Editor.TTS
 
     public void OnPreprocessBuild(BuildReport report)
     {
-      string sa      = Application.streamingAssetsPath;
+      string sa = Application.streamingAssetsPath;
       string onnxDir = TTSCore.GetOnnxDir(sa);
-      var    missing = TTSCore.GetMissingModelFiles(onnxDir);
+      var missing = TTSCore.GetMissingModelFiles(onnxDir);
 
       if (missing.Count == 0)
       {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Problem;
 using UnityEngine;
@@ -255,7 +255,7 @@ namespace MultiplayerInfrastructure.Registry
         return string.Empty;
 
       string raw = figureReference.Substring(prefix.Length).Trim();
-      if (raw.StartsWith("(", StringComparison.Ordinal) && raw.EndsWith(")", StringComparison.Ordinal) && raw.Length > 2)
+      if (raw.StartsWith('(') && raw.EndsWith(')') && raw.Length > 2)
         raw = raw.Substring(1, raw.Length - 2).Trim();
 
       return raw;

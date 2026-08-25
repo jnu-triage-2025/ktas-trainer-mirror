@@ -1,8 +1,8 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Net;
 using System.Net.Sockets;
-using MultiplayerInfrastructure.FishNetSupports;
 using MultiplayerInfrastructure.Definitions;
+using MultiplayerInfrastructure.FishNetSupports;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.UI;
 using TriageTrainer.MultiplayerInfrastructureSupports;

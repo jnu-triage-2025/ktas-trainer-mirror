@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using FishNet.Connection;
 using MultiplayerInfrastructure.Chat;
@@ -159,7 +159,7 @@ namespace MultiplayerInfrastructure.Command
         return false;
       }
 
-      if (playerIdentifier.StartsWith("@", StringComparison.Ordinal))
+      if (playerIdentifier.StartsWith('@'))
       {
         if (!TargetSelectorResolver.TryResolveTargets(sender, playerIdentifier, out var targets, out error))
           return false;

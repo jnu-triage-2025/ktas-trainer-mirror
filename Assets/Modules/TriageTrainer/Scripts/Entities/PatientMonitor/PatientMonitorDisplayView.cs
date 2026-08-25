@@ -1,6 +1,6 @@
+﻿using MultiplayerInfrastructure.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
-using MultiplayerInfrastructure.UI;
 
 namespace TriageTrainer.Entity.PatientMonitor
 {
@@ -202,7 +202,8 @@ namespace TriageTrainer.Entity.PatientMonitor
 
     public void SetGraphValues(string ecg, string pleth, string art, string cvp)
     {
-      if (_graphValues == null) return;
+      if (_graphValues == null)
+        return;
       SetLabelText(_graphValues[0], ecg);
       SetLabelText(_graphValues[1], pleth);
       SetLabelText(_graphValues[2], art);
@@ -211,7 +212,8 @@ namespace TriageTrainer.Entity.PatientMonitor
 
     public void SetMetricValues(params string[] values)
     {
-      if (_metricValues == null) return;
+      if (_metricValues == null)
+        return;
       for (int i = 0; i < _metricValues.Length && i < values.Length; i++)
         if (_metricValues[i] != null && _metricValues[i].text != values[i])
           _metricValues[i].text = values[i];

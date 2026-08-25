@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Unity.VisualScripting;
-using System.Collections.Generic;
 
 namespace MultiplayerInfrastructure.UI
 {
@@ -42,7 +42,7 @@ namespace MultiplayerInfrastructure.UI
         Debug.LogError("[HotbarUIController] UIDocument is null");
         return;
       }
-      
+
       var root = _uiDocument.rootVisualElement;
       if (root == null)
       {
@@ -80,7 +80,8 @@ namespace MultiplayerInfrastructure.UI
     /// </summary>
     private void OnHeldItemNameChanged(string itemName)
     {
-      if (_itemNameLabel == null) return;
+      if (_itemNameLabel == null)
+        return;
 
       if (_itemNameHideRoutine != null)
       {
@@ -110,7 +111,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void HideItemNameLabel()
     {
-      if (_itemNameLabel == null) return;
+      if (_itemNameLabel == null)
+        return;
       _itemNameLabel.AddToClassList("hotbar__item-name--hidden");
       _itemNameLabel.text = string.Empty;
     }
@@ -126,7 +128,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void SyncHotbar()
     {
-      if (_hotbar.IsUnityNull()) return;
+      if (_hotbar.IsUnityNull())
+        return;
       // _hotbar.BindInventory(Inventory);
       _hotbar.ForceRefresh();
     }

@@ -1,4 +1,4 @@
-using FishNet.Connection;
+﻿using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.InteractableEntity;
@@ -62,7 +62,8 @@ namespace TriageTrainer.Entity
     private void Awake()
     {
       CreateHandles();
-      if (_visualRoot == null) _visualRoot = transform;
+      if (_visualRoot == null)
+        _visualRoot = transform;
       _visualBaseLocalPosition = _visualRoot.localPosition;
     }
 
@@ -114,7 +115,8 @@ namespace TriageTrainer.Entity
     public void Interact(Transform interactor)
     {
       var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
-      if (player == null) return;
+      if (player == null)
+        return;
 
       // 오프라인 폴백
       if (!IsClientStarted && !IsServerStarted)
@@ -178,11 +180,16 @@ namespace TriageTrainer.Entity
     [ServerRpc(RequireOwnership = false)]
     private void CmdMoveHandle(int fromHandle, int toHandle, NetworkConnection sender = null)
     {
-      if (sender == null || !sender.IsValid) return;
-      if (fromHandle < 0 || fromHandle >= HandleCount) return;
-      if (toHandle < 0 || toHandle >= HandleCount) return;
-      if (GetHandle(fromHandle) != sender.ClientId) return;
-      if (GetHandle(toHandle) != InvalidClientId) return;
+      if (sender == null || !sender.IsValid)
+        return;
+      if (fromHandle < 0 || fromHandle >= HandleCount)
+        return;
+      if (toHandle < 0 || toHandle >= HandleCount)
+        return;
+      if (GetHandle(fromHandle) != sender.ClientId)
+        return;
+      if (GetHandle(toHandle) != InvalidClientId)
+        return;
 
       SetHandle(fromHandle, InvalidClientId);
       SetHandle(toHandle, sender.ClientId);
@@ -245,7 +252,8 @@ namespace TriageTrainer.Entity
       for (int i = 0; i < HandleCount; i++)
       {
         int clientId = GetHandle(i);
-        if (clientId == InvalidClientId) continue;
+        if (clientId == InvalidClientId)
+          continue;
         count++;
 
         // 호스트의 로컬 플레이어는 직접 입력 읽기
@@ -273,7 +281,8 @@ namespace TriageTrainer.Entity
       for (int i = 0; i < HandleCount; i++)
       {
         var player = ResolveLocalPlayer(GetHandle(i));
-        if (player == null) continue;
+        if (player == null)
+          continue;
         count++;
         forward += player.CurrentMoveInputVector.z;
         turn += player.CurrentMoveInputVector.x;
@@ -308,12 +317,14 @@ namespace TriageTrainer.Entity
 
     private void HandlePositionSelection()
     {
-      if (!Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl)) return;
+      if (!Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.RightControl))
+        return;
 
       KeyCode[] keys = { KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3, KeyCode.Alpha4, KeyCode.Alpha5, KeyCode.Alpha6 };
       for (int desired = 0; desired < keys.Length; desired++)
       {
-        if (!Input.GetKeyDown(keys[desired])) continue;
+        if (!Input.GetKeyDown(keys[desired]))
+          continue;
 
         // 오프라인
         if (!IsClientStarted && !IsServerStarted)
@@ -352,12 +363,15 @@ namespace TriageTrainer.Entity
       foreach (var player in FindObjectsByType<PlayerController>(
                  FindObjectsInactive.Exclude, FindObjectsSortMode.None))
       {
-        if (player == null || !player.IsOwner) continue;
+        if (player == null || !player.IsOwner)
+          continue;
         int key = player.GetInstanceID();
         for (int from = 0; from < HandleCount; from++)
         {
-          if (GetHandleLocal(from) != key) continue;
-          if (from == desired || GetHandleLocal(desired) != InvalidClientId) return;
+          if (GetHandleLocal(from) != key)
+            continue;
+          if (from == desired || GetHandleLocal(desired) != InvalidClientId)
+            return;
           MoveParticipantLocal(player, from, desired);
           return;
         }
@@ -381,12 +395,24 @@ namespace TriageTrainer.Entity
     {
       switch (index)
       {
-        case 0: _handle0.Value = clientId; break;
-        case 1: _handle1.Value = clientId; break;
-        case 2: _handle2.Value = clientId; break;
-        case 3: _handle3.Value = clientId; break;
-        case 4: _handle4.Value = clientId; break;
-        case 5: _handle5.Value = clientId; break;
+        case 0:
+          _handle0.Value = clientId;
+          break;
+        case 1:
+          _handle1.Value = clientId;
+          break;
+        case 2:
+          _handle2.Value = clientId;
+          break;
+        case 3:
+          _handle3.Value = clientId;
+          break;
+        case 4:
+          _handle4.Value = clientId;
+          break;
+        case 5:
+          _handle5.Value = clientId;
+          break;
       }
     }
 
@@ -396,14 +422,16 @@ namespace TriageTrainer.Entity
     private int FindHandle(int clientId)
     {
       for (int i = 0; i < HandleCount; i++)
-        if (GetHandle(i) == clientId) return i;
+        if (GetHandle(i) == clientId)
+          return i;
       return -1;
     }
 
     private int FindFreeHandle()
     {
       for (int i = 0; i < HandleCount; i++)
-        if (GetHandle(i) == InvalidClientId) return i;
+        if (GetHandle(i) == InvalidClientId)
+          return i;
       return -1;
     }
 
@@ -447,7 +475,8 @@ namespace TriageTrainer.Entity
 
     private void ClearLocalFollowAnchor()
     {
-      if (_localFollowAnchor == null) return;
+      if (_localFollowAnchor == null)
+        return;
       if (TryGetLocalOwnerPlayer(out var player))
         player.ClearForcedFollowAnchor(_localFollowAnchor);
       _localFollowAnchor = null;
@@ -457,7 +486,8 @@ namespace TriageTrainer.Entity
     private int FindHandleLocal(int instanceId)
     {
       for (int i = 0; i < HandleCount; i++)
-        if (GetHandle(i) == instanceId) return i;
+        if (GetHandle(i) == instanceId)
+          return i;
       return -1;
     }
 
@@ -490,7 +520,8 @@ namespace TriageTrainer.Entity
       }
 
       int freeHandle = FindFreeHandle();
-      if (freeHandle < 0) return;
+      if (freeHandle < 0)
+        return;
 
       SetHandle(freeHandle, key);
       player.SetForcedFollowAnchor(_handles[freeHandle]);
@@ -499,7 +530,8 @@ namespace TriageTrainer.Entity
 
     private void MoveParticipantLocal(PlayerController player, int from, int to)
     {
-      if (from == to || GetHandleLocal(to) != InvalidClientId) return;
+      if (from == to || GetHandleLocal(to) != InvalidClientId)
+        return;
       SetHandle(from, InvalidClientId);
       SetHandle(to, player.GetInstanceID());
       player.SetForcedFollowAnchor(_handles[to]);
@@ -526,7 +558,8 @@ namespace TriageTrainer.Entity
 
     private bool IsWithinToggleDistance(PlayerController player)
     {
-      if (player == null) return false;
+      if (player == null)
+        return false;
       float maxSqr = _maximumToggleDistance * _maximumToggleDistance;
       if ((player.transform.position - transform.position).sqrMagnitude <= maxSqr)
         return true;
@@ -575,7 +608,8 @@ namespace TriageTrainer.Entity
     /// <summary>ClientId → 로컬 PlayerController 해석(오프라인에서는 InstanceID 기반).</summary>
     private static PlayerController ResolveLocalPlayer(int clientIdOrInstanceId)
     {
-      if (clientIdOrInstanceId == InvalidClientId) return null;
+      if (clientIdOrInstanceId == InvalidClientId)
+        return null;
 
       // 네트워크 모드: 레지스트리에서 ClientId 로 검색
       if (MultiplayerInfrastructure.Registry.Registry.TryGetEntityByClientId(clientIdOrInstanceId, out var descriptor) &&
@@ -583,7 +617,8 @@ namespace TriageTrainer.Entity
       {
         var player = descriptor.GameObject.GetComponent<PlayerController>() ??
                      descriptor.GameObject.GetComponentInChildren<PlayerController>(true);
-        if (player != null) return player;
+        if (player != null)
+          return player;
       }
 
       // 오프라인 폴백: InstanceID 로 직접 검색

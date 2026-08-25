@@ -1,8 +1,8 @@
-using System.Collections;
-using UnityEngine;
-using UnityEngine.SceneManagement;
+﻿using System.Collections;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Session;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace MultiplayerInfrastructure.FishNetSupports
 {

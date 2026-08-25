@@ -1,10 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using TriageTrainer.Utils;
+using TriageTrainer.Entity;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using TriageTrainer.Entity;
 
 namespace TriageTrainer.Editor.Utils
 {

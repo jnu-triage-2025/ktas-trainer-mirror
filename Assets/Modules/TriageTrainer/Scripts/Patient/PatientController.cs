@@ -1,6 +1,5 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using FishNet;
 using FishNet.Object;
 using MultiplayerInfrastructure.Entity;
 using MultiplayerInfrastructure.InteractableEntity;
@@ -9,11 +8,10 @@ using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.IntravenousLine;
 using TriageTrainer.Entity.OxyLine;
-using TriageTrainer.Entity.SuctionLine;
 using TriageTrainer.Entity.Patient;
+using TriageTrainer.Entity.SuctionLine;
 using TriageTrainer.Patient;
 using UnityEngine;
-
 using MI = MultiplayerInfrastructure;
 
 namespace TriageTrainer.Entity

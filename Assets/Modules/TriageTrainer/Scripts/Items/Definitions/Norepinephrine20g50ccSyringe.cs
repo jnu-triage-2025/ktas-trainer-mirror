@@ -1,4 +1,4 @@
-namespace TriageTrainer.ItemDefinitions
+﻿namespace TriageTrainer.ItemDefinitions
 {
   /// <summary>
   /// 노르에피네프린이 든 20g 카테터 + 50cc 주사기 조합 완제품입니다.
@@ -6,8 +6,8 @@ namespace TriageTrainer.ItemDefinitions
   /// </summary>
   public class Norepinephrine20g50ccSyringe : MedicalItem
   {
-    public new const string Identifier   = "norepinephrine_20g_50cc_syringe";
-    public new const string DisplayName  = "노르에피네프린이 든 20g 50cc 주사기";
-    public new const string Description  = "20게이지 카테터가 연결된 50cc 주사기에 노르에피네프린이 준비되어 있습니다.";
+    public new const string Identifier = "norepinephrine_20g_50cc_syringe";
+    public new const string DisplayName = "노르에피네프린이 든 20g 50cc 주사기";
+    public new const string Description = "20게이지 카테터가 연결된 50cc 주사기에 노르에피네프린이 준비되어 있습니다.";
   }
 }

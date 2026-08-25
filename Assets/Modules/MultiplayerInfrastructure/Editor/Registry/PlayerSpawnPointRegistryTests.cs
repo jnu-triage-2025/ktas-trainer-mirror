@@ -1,4 +1,4 @@
-using MultiplayerInfrastructure.FishNetSupports;
+﻿using MultiplayerInfrastructure.FishNetSupports;
 using NUnit.Framework;
 
 namespace MultiplayerInfrastructure.Tests.FishNetSupports
