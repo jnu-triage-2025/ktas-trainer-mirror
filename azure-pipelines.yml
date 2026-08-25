@@ -1,0 +1,137 @@
+name: ktas-trainer-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - '*'
+
+pr:
+  branches:
+    include:
+      - '*'
+
+parameters:
+  - name: buildWindows
+    displayName: 'Build Windows player'
+    type: boolean
+    default: false
+  - name: buildMacos
+    displayName: 'Build macOS player'
+    type: boolean
+    default: false
+
+variables:
+  buildName: 'ktas-trainer'
+  buildPath: 'build'
+  macAgentPool: 'macos-unity'
+  windowsAgentPool: 'build-on-commit'
+
+stages:
+  - stage: Lint
+    displayName: 'C# lint'
+    jobs:
+      - job: LintCSharp
+        displayName: 'Roslyn analyzer and format validation'
+        pool:
+          name: $(macAgentPool)
+        steps:
+          - checkout: self
+            fetchDepth: 1
+          - bash: |
+              set -euo pipefail
+              chmod +x Tools/CI/lint-csharp.sh
+              Tools/CI/lint-csharp.sh --verify-no-changes
+            displayName: 'Run dotnet format'
+
+  - stage: Test
+    displayName: 'Unity tests'
+    dependsOn: Lint
+    condition: succeeded()
+    jobs:
+      - job: TestEditMode
+        displayName: 'Unity EditMode tests'
+        pool:
+          name: $(windowsAgentPool)
+        variables:
+          CI_PROJECT_DIR: '$(Build.SourcesDirectory)'
+          TEST_PLATFORM: 'editmode'
+          UNITY_TEST_RESULTS_PATH: 'artifacts/unity-editmode-results.xml'
+          UNITY_TEST_LOG_PATH: 'artifacts/unity-editmode.log'
+        steps:
+          - checkout: self
+            fetchDepth: 1
+          - powershell: |
+              if (-not (Test-Path -LiteralPath 'Tools/CI/test-unity.ps1' -PathType Leaf)) {
+                throw 'Tools/CI/test-unity.ps1 was not found.'
+              }
+              & .\Tools\CI\test-unity.ps1
+            displayName: 'Run Unity EditMode tests'
+          - task: PublishTestResults@2
+            displayName: 'Publish Unity test results'
+            condition: always()
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'artifacts/unity-editmode-results.xml'
+              searchFolder: '$(Build.SourcesDirectory)'
+              testRunTitle: 'Unity EditMode tests'
+              failTaskOnFailedTests: true
+              publishRunAttachments: true
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Unity test log'
+            condition: always()
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts'
+              ArtifactName: 'unity-editmode-artifacts'
+              publishLocation: 'Container'
+
+  - stage: Build
+    displayName: 'Unity builds'
+    dependsOn: Test
+    condition: succeeded()
+    jobs:
+      - job: BuildWindows
+        displayName: 'Build Windows player'
+        condition: and(succeeded(), ${{ eq(parameters.buildWindows, true) }})
+        pool:
+          name: $(windowsAgentPool)
+        variables:
+          CI_PROJECT_DIR: '$(Build.SourcesDirectory)'
+          BUILD_NAME: '$(buildName)'
+          BUILD_PATH: '$(buildPath)'
+          BUILD_TARGET: 'StandaloneWindows64'
+          UNITY_LOG_ARTIFACT_PATH: 'artifacts/unity-StandaloneWindows64.log'
+        steps:
+          - checkout: self
+            fetchDepth: 1
+          - powershell: |
+              if (-not (Test-Path -LiteralPath 'Tools/CI/build-unity.ps1' -PathType Leaf)) {
+                throw 'Tools/CI/build-unity.ps1 was not found.'
+              }
+              & .\Tools\CI\build-unity.ps1
+            displayName: 'Build Windows player'
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Windows build log'
+            condition: always()
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts'
+              ArtifactName: 'unity-StandaloneWindows64-artifacts'
+              publishLocation: 'Container'
+
+      - job: BuildMacos
+        displayName: 'Build macOS player'
+        condition: and(succeeded(), ${{ eq(parameters.buildMacos, true) }})
+        pool:
+          name: $(macAgentPool)
+        variables:
+          CI_PROJECT_DIR: '$(Build.SourcesDirectory)'
+          BUILD_NAME: '$(buildName)'
+          BUILD_PATH: '$(buildPath)'
+          BUILD_TARGET: 'StandaloneOSX'
+        steps:
+          - checkout: self
+            fetchDepth: 1
+          - bash: |
+              set -euo pipefail
+              chmod +x Tools/CI/build-unity.sh
+              Tools/CI/build-unity.sh
+            displayName: 'Build macOS player'
