@@ -47,10 +47,10 @@ stages:
           - checkout: self
             fetchDepth: 1
           - powershell: |
-              if (-not (Get-Command bash -ErrorAction SilentlyContinue)) {
-                throw 'Git Bash is required to run Tools/CI/lint-csharp.sh on the Windows agent.'
+              if (-not (Test-Path -LiteralPath 'Tools/CI/lint-csharp.ps1' -PathType Leaf)) {
+                throw 'Tools/CI/lint-csharp.ps1 was not found.'
               }
-              bash Tools/CI/lint-csharp.sh --verify-no-changes
+              & .\Tools\CI\lint-csharp.ps1
             displayName: 'Run dotnet format'
 
   - stage: Test
