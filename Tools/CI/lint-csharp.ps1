@@ -28,9 +28,30 @@ if (-not (Test-Path -LiteralPath $solutionPath -PathType Leaf)) {
         throw "Unity was not found. Set UNITY_EXECUTABLE or install the Unity Editor specified in $versionFile."
     }
 
-    & $unityExecutable -batchmode -quit -projectPath $projectPath
-    if ($LASTEXITCODE -ne 0) {
-        throw "Unity project generation failed with exit code $LASTEXITCODE."
+    $unityRuntimePath = Join-Path $projectPath 'Temp/azure-unity-runtime'
+    $unityLocalAppData = Join-Path $unityRuntimePath 'LocalAppData'
+    $unityTempPath = Join-Path $unityRuntimePath 'Temp'
+    $unityLogPath = Join-Path $projectPath 'artifacts/unity-project-generation.log'
+    New-Item -ItemType Directory -Path $unityLocalAppData, $unityTempPath, (Split-Path -Parent $unityLogPath) -Force | Out-Null
+    $env:LOCALAPPDATA = $unityLocalAppData
+    $env:TEMP = $unityTempPath
+    $env:TMP = $unityTempPath
+
+    $unityArguments = @(
+        '-batchmode',
+        '-quit',
+        '-projectPath',
+        $projectPath,
+        '-logFile',
+        $unityLogPath
+    )
+    $unityProcess = Start-Process -FilePath $unityExecutable `
+        -ArgumentList $unityArguments `
+        -WorkingDirectory $projectPath `
+        -Wait `
+        -PassThru
+    if ($unityProcess.ExitCode -ne 0) {
+        throw "Unity project generation failed with exit code $($unityProcess.ExitCode). See $unityLogPath."
     }
 }
 
