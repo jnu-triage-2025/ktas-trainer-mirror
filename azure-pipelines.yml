@@ -11,6 +11,13 @@ pr:
       - '*'
 
 parameters:
+  - name: agentMode
+    displayName: 'Agent mode'
+    type: string
+    default: selfHosted
+    values:
+      - selfHosted
+      - hosted
   - name: buildWindows
     displayName: 'Build Windows player'
     type: boolean
@@ -33,14 +40,18 @@ stages:
       - job: LintCSharp
         displayName: 'Roslyn analyzer and format validation'
         pool:
-          name: $(macAgentPool)
+          ${{ if eq(parameters.agentMode, 'hosted') }}:
+            vmImage: 'windows-2022'
+          ${{ else }}:
+            name: $(windowsAgentPool)
         steps:
           - checkout: self
             fetchDepth: 1
-          - bash: |
-              set -euo pipefail
-              chmod +x Tools/CI/lint-csharp.sh
-              Tools/CI/lint-csharp.sh --verify-no-changes
+          - powershell: |
+              if (-not (Get-Command bash -ErrorAction SilentlyContinue)) {
+                throw 'Git Bash is required to run Tools/CI/lint-csharp.sh on the Windows agent.'
+              }
+              bash Tools/CI/lint-csharp.sh --verify-no-changes
             displayName: 'Run dotnet format'
 
   - stage: Test
@@ -51,7 +62,10 @@ stages:
       - job: TestEditMode
         displayName: 'Unity EditMode tests'
         pool:
-          name: $(windowsAgentPool)
+          ${{ if eq(parameters.agentMode, 'hosted') }}:
+            vmImage: 'windows-2022'
+          ${{ else }}:
+            name: $(windowsAgentPool)
         variables:
           CI_PROJECT_DIR: '$(Build.SourcesDirectory)'
           TEST_PLATFORM: 'editmode'
@@ -93,7 +107,10 @@ stages:
         displayName: 'Build Windows player'
         condition: and(succeeded(), ${{ eq(parameters.buildWindows, true) }})
         pool:
-          name: $(windowsAgentPool)
+          ${{ if eq(parameters.agentMode, 'hosted') }}:
+            vmImage: 'windows-2022'
+          ${{ else }}:
+            name: $(windowsAgentPool)
         variables:
           CI_PROJECT_DIR: '$(Build.SourcesDirectory)'
           BUILD_NAME: '$(buildName)'
@@ -121,7 +138,10 @@ stages:
         displayName: 'Build macOS player'
         condition: and(succeeded(), ${{ eq(parameters.buildMacos, true) }})
         pool:
-          name: $(macAgentPool)
+          ${{ if eq(parameters.agentMode, 'hosted') }}:
+            vmImage: 'macos-latest'
+          ${{ else }}:
+            name: $(macAgentPool)
         variables:
           CI_PROJECT_DIR: '$(Build.SourcesDirectory)'
           BUILD_NAME: '$(buildName)'
