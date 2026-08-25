@@ -88,33 +88,7 @@ stages:
               searchFolder: '$(Build.SourcesDirectory)'
               testRunTitle: 'Unity EditMode tests'
               failTaskOnFailedTests: true
-              publishRunAttachments: true
-          - powershell: |
-              $logPath = Join-Path $env:BUILD_SOURCESDIRECTORY 'artifacts/unity-editmode.log'
-              if (Test-Path -LiteralPath $logPath -PathType Leaf) {
-                for ($attempt = 1; $attempt -le 12; $attempt++) {
-                  try {
-                    $stream = [System.IO.File]::Open($logPath, 'Open', 'Read', 'None')
-                    $stream.Dispose()
-                    break
-                  }
-                  catch [System.IO.IOException] {
-                    if ($attempt -eq 12) {
-                      throw "Unity log is still locked after waiting: $logPath"
-                    }
-                    Start-Sleep -Seconds 5
-                  }
-                }
-              }
-            displayName: 'Wait for Unity log file release'
-            condition: always()
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish Unity test log'
-            condition: always()
-            inputs:
-              PathtoPublish: '$(Build.SourcesDirectory)/artifacts'
-              ArtifactName: 'unity-editmode-artifacts'
-              publishLocation: 'Container'
+              publishRunAttachments: false
 
   - stage: Build
     displayName: 'Unity builds'
