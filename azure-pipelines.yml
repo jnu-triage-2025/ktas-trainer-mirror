@@ -88,14 +88,7 @@ stages:
               searchFolder: '$(Build.SourcesDirectory)'
               testRunTitle: 'Unity EditMode tests'
               failTaskOnFailedTests: true
-              publishRunAttachments: true
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish Unity test log'
-            condition: always()
-            inputs:
-              PathtoPublish: '$(Build.SourcesDirectory)/artifacts'
-              ArtifactName: 'unity-editmode-artifacts'
-              publishLocation: 'Container'
+              publishRunAttachments: false
 
   - stage: Build
     displayName: 'Unity builds'

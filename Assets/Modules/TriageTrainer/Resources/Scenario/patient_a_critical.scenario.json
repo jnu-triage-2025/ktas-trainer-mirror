@@ -444,12 +444,12 @@
       "correctOptionIndex": 2
     },
     "C009": {
-      "speakerName": "시스템",
-      "dialogueContent": "투여될 산소의 양을 조절합니다.",
+      "speakerName": "@s",
+      "dialogueContent": "(산소량은..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "Full",
+          "displayText": "(유량계를 Full로 올린다.)",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -467,8 +467,8 @@
       "nodeType": "Choice"
     },
     "C010": {
-      "speakerName": "시스템",
-      "dialogueContent": "1. 성인의 정확한 산소 제공량은?",
+      "speakerName": "@s",
+      "dialogueContent": "(성인에게 제공할 산소량은..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -498,11 +498,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C010",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr1_ambu_volume",
+      "correctOptionIndex": 1
     },
     "C011": {
-      "speakerName": "시스템",
-      "dialogueContent": "2. 심폐소생술 시 앰부 배깅(ambu-bagging)의 적절한 속도는?",
+      "speakerName": "@s",
+      "dialogueContent": "(짜는 속도는..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -543,11 +545,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C011",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr1_ambu_rate",
+      "correctOptionIndex": 1
     },
     "C012": {
-      "speakerName": "시스템",
-      "dialogueContent": "1. 성인의 정확한 가슴 압박 깊이는?",
+      "speakerName": "@s",
+      "dialogueContent": "(성인의 가슴 압박 깊이는..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -588,11 +592,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C012",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr1_compression_depth",
+      "correctOptionIndex": 1
     },
     "C013": {
-      "speakerName": "시스템",
-      "dialogueContent": "2. 성인의 정확한 가슴 압박 위치는?",
+      "speakerName": "@s",
+      "dialogueContent": "(압박 위치는..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -622,11 +628,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C013",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr1_compression_location",
+      "correctOptionIndex": 1
     },
     "C014": {
-      "speakerName": "시스템",
-      "dialogueContent": "3. 정확한 가슴 압박 횟수는?",
+      "speakerName": "@s",
+      "dialogueContent": "(압박 횟수는..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -667,11 +675,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C014",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr1_compression_rate",
+      "correctOptionIndex": 1
     },
     "C015": {
-      "speakerName": "시스템",
-      "dialogueContent": "4. 가슴압박 시 주의사항은?",
+      "speakerName": "@s",
+      "dialogueContent": "(가슴압박에서 놓치기 쉬운 것은..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -712,11 +722,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C015",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr1_compression_recoil",
+      "correctOptionIndex": 2
     },
     "C016": {
-      "speakerName": "시스템",
-      "dialogueContent": "1. 제세동기는 Sync 버튼을 눌러 Cardioversion을 제공할 수 있습니다. 다음 중 제세동을 실시해야 하는 심전도는?",
+      "speakerName": "@s",
+      "dialogueContent": "(제세동을 실시해야 하는 심전도는..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -768,11 +780,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C016",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr1_defibrillation_rhythm",
+      "correctOptionIndex": 3
     },
     "C017": {
-      "speakerName": "시스템",
-      "dialogueContent": "2. 이상파형(Biphasic) 제세동기에서 필요한 에너지 양은?",
+      "speakerName": "@s",
+      "dialogueContent": "(이상파형 제세동기의 에너지 양은..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -802,11 +816,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C017",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr1_defibrillation_energy",
+      "correctOptionIndex": 0
     },
     "C018": {
-      "speakerName": "시스템",
-      "dialogueContent": "3. 제세동 등 전기충격 시 주의해야 할 사항은?",
+      "speakerName": "@s",
+      "dialogueContent": "(전기충격 전에 반드시 해야 할 것은..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -858,11 +874,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C018",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr1_defibrillation_safety",
+      "correctOptionIndex": 3
     },
     "C019": {
-      "speakerName": "시스템",
-      "dialogueContent": "1. 심정지 상황에서 에피네프린의 투여 간격은 어떻게 되는가?",
+      "speakerName": "@s",
+      "dialogueContent": "(다음 에피네프린은 언제 투여하지..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -914,11 +932,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C019",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr1_epinephrine_interval",
+      "correctOptionIndex": 1
     },
     "C020": {
-      "speakerName": "시스템",
-      "dialogueContent": "2. 말초(팔)로 약물을 투여하는 경우, 적절한 투여 절차는?",
+      "speakerName": "@s",
+      "dialogueContent": "(팔로 약물을 투여할 때의 절차는..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -959,11 +979,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C020",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr1_peripheral_medication",
+      "correctOptionIndex": 2
     },
     "C021": {
-      "speakerName": "시스템",
-      "dialogueContent": "1. 성인의 정확한 가슴 압박 깊이는?",
+      "speakerName": "@s",
+      "dialogueContent": "(성인의 가슴 압박 깊이는..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1004,11 +1026,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C021",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr2_compression_depth",
+      "correctOptionIndex": 1
     },
     "C022": {
-      "speakerName": "시스템",
-      "dialogueContent": "2. 성인의 정확한 가슴 압박 위치는?",
+      "speakerName": "@s",
+      "dialogueContent": "(압박 위치는..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1038,11 +1062,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C022",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr2_compression_location",
+      "correctOptionIndex": 1
     },
     "C023": {
-      "speakerName": "시스템",
-      "dialogueContent": "3. 정확한 가슴 압박 횟수는?",
+      "speakerName": "@s",
+      "dialogueContent": "(압박 횟수는..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1083,11 +1109,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C023",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr2_compression_rate",
+      "correctOptionIndex": 1
     },
     "C024": {
-      "speakerName": "시스템",
-      "dialogueContent": "4. 가슴압박 시 주의사항은?",
+      "speakerName": "@s",
+      "dialogueContent": "(가슴압박에서 놓치기 쉬운 것은..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1128,11 +1156,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C024",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr2_compression_recoil",
+      "correctOptionIndex": 2
     },
     "C025": {
-      "speakerName": "시스템",
-      "dialogueContent": "1. 성인의 정확한 산소 제공량은?",
+      "speakerName": "@s",
+      "dialogueContent": "(성인에게 제공할 산소량은..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1162,11 +1192,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C025",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr2_ambu_volume",
+      "correctOptionIndex": 0
     },
     "C026": {
-      "speakerName": "시스템",
-      "dialogueContent": "2. 심폐소생술 중 적절한 속도는?",
+      "speakerName": "@s",
+      "dialogueContent": "(짜는 속도는..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1207,11 +1239,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C026",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr2_ambu_rate",
+      "correctOptionIndex": 1
     },
     "C027": {
-      "speakerName": "시스템",
-      "dialogueContent": "1. 심정지 상황에서 에피네프린의 투여 간격은 어떻게 되는가?",
+      "speakerName": "@s",
+      "dialogueContent": "(다음 에피네프린은 언제 투여하지..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1263,11 +1297,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C027",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr2_epinephrine_interval",
+      "correctOptionIndex": 1
     },
     "C028": {
-      "speakerName": "시스템",
-      "dialogueContent": "2. 말초(팔)로 약물을 투여하는 경우, 적절한 투여 절차는?",
+      "speakerName": "@s",
+      "dialogueContent": "(팔로 약물을 투여할 때의 절차는..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1308,11 +1344,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C028",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr2_peripheral_medication",
+      "correctOptionIndex": 2
     },
     "C029": {
-      "speakerName": "시스템",
-      "dialogueContent": "1. 제세동기는 Sync 버튼을 눌러 Cardioversion을 제공할 수 있습니다. 다음 중 제세동을 실시해야 하는 심전도는?",
+      "speakerName": "@s",
+      "dialogueContent": "(제세동을 실시해야 하는 심전도는..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1364,11 +1402,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C029",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr2_defibrillation_rhythm",
+      "correctOptionIndex": 3
     },
     "C030": {
-      "speakerName": "시스템",
-      "dialogueContent": "2. 이상파형(Biphasic) 제세동기에서 필요한 에너지 양은?",
+      "speakerName": "@s",
+      "dialogueContent": "(이상파형 제세동기의 에너지 양은..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1398,11 +1438,13 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C030",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr2_defibrillation_energy",
+      "correctOptionIndex": 0
     },
     "C031": {
-      "speakerName": "시스템",
-      "dialogueContent": "3. 제세동 등 전기충격 시 주의해야 할 사항은?",
+      "speakerName": "@s",
+      "dialogueContent": "(전기충격 전에 반드시 해야 할 것은..)",
       "portraitSpriteIdentifier": null,
       "options": [
         {
@@ -1454,15 +1496,17 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C031",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_cpr2_defibrillation_safety",
+      "correctOptionIndex": 3
     },
     "C032": {
-      "speakerName": "시스템",
-      "dialogueContent": "의식 수준을 AVPU에 따라 분류할 때, 현재 환자의 의식 수준은 무엇입니까?",
+      "speakerName": "@s",
+      "dialogueContent": "환자의 AVPU는...",
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "A(Alert, 완전히 깨어 있음)",
+          "displayText": "AVPU A",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1473,7 +1517,7 @@
           "nextNodeIdentifier": "N028_retry_a"
         },
         {
-          "displayText": "V(Verbal response, 음성에 반응 있음)",
+          "displayText": "AVPU V",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1484,7 +1528,7 @@
           "nextNodeIdentifier": "N028_retry_a"
         },
         {
-          "displayText": "P(Pain response, 통증에 반응 있음)",
+          "displayText": "AVPU P",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1495,7 +1539,7 @@
           "nextNodeIdentifier": "N028_3"
         },
         {
-          "displayText": "U(Unconsciousness, 반응 없음)",
+          "displayText": "AVPU U",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1510,15 +1554,17 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C032",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_rosc_avpu",
+      "correctOptionIndex": 2
     },
     "C033": {
-      "speakerName": "시스템",
-      "dialogueContent": "관찰된 E(Eye Opening) 점수는 몇 점입니까?",
+      "speakerName": "@s",
+      "dialogueContent": "환자의 GCS E는...",
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "4점(자발적)",
+          "displayText": "GCS E 4",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1529,7 +1575,7 @@
           "nextNodeIdentifier": "N028_retry_b"
         },
         {
-          "displayText": "3점(명령)",
+          "displayText": "GCS E 3",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1540,7 +1586,7 @@
           "nextNodeIdentifier": "N028_retry_b"
         },
         {
-          "displayText": "2점(통증)",
+          "displayText": "GCS E 2",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1551,7 +1597,7 @@
           "nextNodeIdentifier": "N028_4"
         },
         {
-          "displayText": "1점(반응 없음)",
+          "displayText": "GCS E 1",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1566,15 +1612,17 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C033",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_rosc_gcs_eye",
+      "correctOptionIndex": 2
     },
     "C034": {
-      "speakerName": "시스템",
-      "dialogueContent": "관찰된 V(Verbal Response) 점수는 몇 점입니까?",
+      "speakerName": "@s",
+      "dialogueContent": "환자의 GCS V는...",
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "5점(적절한 답변)",
+          "displayText": "GCS V 5",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1585,7 +1633,7 @@
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
-          "displayText": "4점(혼란)",
+          "displayText": "GCS V 4",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1596,7 +1644,7 @@
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
-          "displayText": "3점(부적절한 답변)",
+          "displayText": "GCS V 3",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1607,7 +1655,7 @@
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
-          "displayText": "2점(신음소리)",
+          "displayText": "GCS V 2",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1618,7 +1666,7 @@
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
-          "displayText": "1점(반응 없음)",
+          "displayText": "GCS V 1",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1629,7 +1677,7 @@
           "nextNodeIdentifier": "N028_retry_c"
         },
         {
-          "displayText": "E(기관삽관)",
+          "displayText": "GCS V NT",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1644,15 +1692,17 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C034",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_rosc_gcs_verbal",
+      "correctOptionIndex": 5
     },
     "C035": {
-      "speakerName": "시스템",
-      "dialogueContent": "관찰된 M(Motor Response) 점수는 몇 점입니까?",
+      "speakerName": "@s",
+      "dialogueContent": "환자의 GCS M은...",
       "portraitSpriteIdentifier": null,
       "options": [
         {
-          "displayText": "6점(명령 수행)",
+          "displayText": "GCS M 6",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1663,7 +1713,7 @@
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
-          "displayText": "5점(통증 원인을 치우려고 손을 뻗음)",
+          "displayText": "GCS M 5",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1674,7 +1724,7 @@
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
-          "displayText": "4점(통증에 회피)",
+          "displayText": "GCS M 4",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1685,7 +1735,7 @@
           "nextNodeIdentifier": "N028_6"
         },
         {
-          "displayText": "3점(이상 굴곡)",
+          "displayText": "GCS M 3",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1696,7 +1746,7 @@
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
-          "displayText": "2점(이상 신전)",
+          "displayText": "GCS M 2",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1707,7 +1757,7 @@
           "nextNodeIdentifier": "N028_retry_d"
         },
         {
-          "displayText": "1점(반응 없음)",
+          "displayText": "GCS M 1",
           "displayIconIdentifier": null,
           "displayColor": {
             "r": 1,
@@ -1722,7 +1772,9 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C035",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_rosc_gcs_motor",
+      "correctOptionIndex": 2
     },
     "D005": {
       "speakerName": "@s",
@@ -1738,6 +1790,116 @@
       "identifier": "D005",
       "nodeType": "Dialogue",
       "nextIdentifier": "P002"
+    },
+    "scen-entry": {
+      "identifier": "scen-entry",
+      "nodeType": "ManualEntrypoint",
+      "entrypointIdentifier": "scen-entry",
+      "manualEnterSetupIdentifier": "SETUP_SCEN_ENTRY_PREPARE",
+      "description": "초기 평가 단계 수동 진입. 환자 A를 처치실에 준비하고 초기 의료 상태를 복원한다.",
+      "nextIdentifier": "D006"
+    },
+    "doc-inst": {
+      "identifier": "doc-inst",
+      "nodeType": "ManualEntrypoint",
+      "entrypointIdentifier": "doc-inst",
+      "manualEnterSetupIdentifier": "SETUP_DOC_INST_PREPARE",
+      "description": "초기 평가 완료 뒤 의사 지시 단계 수동 진입.",
+      "nextIdentifier": "D011"
+    },
+    "cpr_1st_cycle": {
+      "identifier": "cpr_1st_cycle",
+      "nodeType": "ManualEntrypoint",
+      "entrypointIdentifier": "cpr_1st_cycle",
+      "manualEnterSetupIdentifier": "SETUP_CPR1_PREPARE",
+      "description": "PEA 확인 뒤 CPR 1주기 수동 진입.",
+      "nextIdentifier": "P005"
+    },
+    "cpr_2nd_cycle": {
+      "identifier": "cpr_2nd_cycle",
+      "nodeType": "ManualEntrypoint",
+      "entrypointIdentifier": "cpr_2nd_cycle",
+      "manualEnterSetupIdentifier": "SETUP_CPR2_PREPARE",
+      "description": "CPR 1주기 완료 뒤 역할 교대 단계 수동 진입.",
+      "nextIdentifier": "D028"
+    },
+    "rosc_followup": {
+      "identifier": "rosc_followup",
+      "nodeType": "ManualEntrypoint",
+      "entrypointIdentifier": "rosc_followup",
+      "manualEnterSetupIdentifier": "SETUP_ROSC_PREPARE",
+      "description": "CPR 2주기 완료 뒤 ROSC 확인 단계 수동 진입.",
+      "nextIdentifier": "D033"
+    },
+    "SETUP_SCEN_ENTRY_PREPARE": {
+      "eventIdentifier": "prepare_patient_a_manual_scen_entry",
+      "moveNextBehavior": "WaitUntilDone",
+      "identifier": "SETUP_SCEN_ENTRY_PREPARE",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "SETUP_SCEN_ENTRY_PRESET"
+    },
+    "SETUP_SCEN_ENTRY_PRESET": {
+      "targetEntityIdentifier": "patient_a",
+      "sex": "Male",
+      "age": 35,
+      "consciousnessGcs": 8,
+      "consciousnessLocLabel": "Stupor",
+      "consciousnessPupillaryResponse": "Normal",
+      "respirationAwRR": 8,
+      "respirationType": "Irregular",
+      "pulseRate": 140,
+      "pulseForceType": "Weak",
+      "bloodPressureSystolic": 70,
+      "bloodPressureDiastolic": 40,
+      "skinColorHue": "Pale",
+      "skinTemperatureType": "Cold",
+      "bodyTemperatureCelsius": 35.9,
+      "spo2": 82,
+      "isCardiacArrest": false,
+      "identifier": "SETUP_SCEN_ENTRY_PRESET",
+      "nodeType": "PatientMedicalStatePreset",
+      "nextIdentifier": "SETUP_MANUAL_RETURN"
+    },
+    "SETUP_DOC_INST_PREPARE": {
+      "eventIdentifier": "prepare_patient_a_manual_doc_inst",
+      "moveNextBehavior": "WaitUntilDone",
+      "identifier": "SETUP_DOC_INST_PREPARE",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "SETUP_MANUAL_RETURN"
+    },
+    "SETUP_ARREST_PREPARE": {
+      "eventIdentifier": "prepare_patient_a_manual_arrest",
+      "moveNextBehavior": "WaitUntilDone",
+      "identifier": "SETUP_ARREST_PREPARE",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "SETUP_MANUAL_RETURN"
+    },
+    "SETUP_CPR1_PREPARE": {
+      "eventIdentifier": "prepare_patient_a_manual_cpr_1st_cycle",
+      "moveNextBehavior": "WaitUntilDone",
+      "identifier": "SETUP_CPR1_PREPARE",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "SETUP_MANUAL_RETURN"
+    },
+    "SETUP_CPR2_PREPARE": {
+      "eventIdentifier": "prepare_patient_a_manual_cpr_2nd_cycle",
+      "moveNextBehavior": "WaitUntilDone",
+      "identifier": "SETUP_CPR2_PREPARE",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "SETUP_MANUAL_RETURN"
+    },
+    "SETUP_ROSC_PREPARE": {
+      "eventIdentifier": "prepare_patient_a_manual_rosc_followup",
+      "moveNextBehavior": "WaitUntilDone",
+      "identifier": "SETUP_ROSC_PREPARE",
+      "nodeType": "InvokeEvent",
+      "nextIdentifier": "SETUP_MANUAL_RETURN"
+    },
+    "SETUP_MANUAL_RETURN": {
+      "identifier": "SETUP_MANUAL_RETURN",
+      "nodeType": "ReturnToOrigin",
+      "description": "환자 A 수동 진입 준비 체인의 종료 표식.",
+      "nextIdentifier": null
     },
     "D006": {
       "speakerName": "의사",
@@ -1767,7 +1929,7 @@
       "nextIdentifier": "P003"
     },
     "D007": {
-      "speakerName": "간호사 B",
+      "speakerName": "@s",
       "dialogueContent": "환자 활력징후 출력됩니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -1797,7 +1959,7 @@
       "nextIdentifier": "Q008_1"
     },
     "D009": {
-      "speakerName": "간호사 D",
+      "speakerName": "@s",
       "dialogueContent": "경추 고정, 구강 흡인 완료했습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -1947,7 +2109,7 @@
       "nextIdentifier": "Q013_1"
     },
     "D019": {
-      "speakerName": "의사 NPC",
+      "speakerName": "의사",
       "dialogueContent": "그래도 혈압이 잡히지 않네요. C-line 잡아서 수액을 빠르게 투여하겠습니다. @t=[nurse_d, @s]선생님, C-line set 건네주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -1962,7 +2124,7 @@
       "nextIdentifier": "N012"
     },
     "D020": {
-      "speakerName": "의사 NPC",
+      "speakerName": "의사",
       "dialogueContent": "@t=[nurse_d, @s]선생님, Level 1 rapid infuser에 플라즈마 솔루션과 혈액백 연결시켜주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -1992,7 +2154,7 @@
       "nextIdentifier": "Q015_1"
     },
     "D022": {
-      "speakerName": "의사 NPC",
+      "speakerName": "의사",
       "dialogueContent": "그래도 혈압이 잘 안잡히네요...",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -2007,8 +2169,8 @@
       "nextIdentifier": "E025"
     },
     "D023": {
-      "speakerName": "의사 NPC",
-      "dialogueContent": "심전도만 출력되고, 다른 활력징후가 출력되지 않습니다. 간호사 B 선생님, 환자 맥박 확인해주세요.",
+      "speakerName": "의사",
+      "dialogueContent": "심전도만 출력되고, 다른 활력징후가 출력되지 않습니다. @t=[nurse_b, ???]선생님, 환자 맥박 확인해주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2022,7 +2184,7 @@
       "nextIdentifier": "N016"
     },
     "D024": {
-      "speakerName": "간호사 B",
+      "speakerName": "@s",
       "dialogueContent": "맥박 없습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -2037,8 +2199,8 @@
       "nextIdentifier": "D025"
     },
     "D025": {
-      "speakerName": "의사 NPC",
-      "dialogueContent": "PEA입니다. CPR 하겠습니다. 제가 팀 리더를 맡겠습니다. 간호사 A 선생님은 앰부백 짜주시고, 간호사 B 선생님은 가슴압박 해주세요. 간호사 C 선생님은 제세동기 연결해주시고, 간호사 D 선생님은 C-line으로 에피네프린 1mg 투여해주세요.",
+      "speakerName": "의사",
+      "dialogueContent": "PEA입니다. CPR 하겠습니다. 제가 팀 리더를 맡겠습니다. @t=[nurse_a, ???]선생님은 앰부백 짜주시고, @t=[nurse_b, ???]선생님은 가슴압박 해주세요. @t=[nurse_c, ???]선생님은 제세동기 연결해주시고, @t=[nurse_d, ???]선생님은 C-line으로 에피네프린 1mg 투여해주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2052,7 +2214,7 @@
       "nextIdentifier": "P005"
     },
     "D026": {
-      "speakerName": "간호사 C",
+      "speakerName": "@s",
       "dialogueContent": "제세동기 준비가 완료되었습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -2067,7 +2229,7 @@
       "nextIdentifier": "L007"
     },
     "D027": {
-      "speakerName": "간호사 D",
+      "speakerName": "@s",
       "dialogueContent": "에피네프린 1mg 투여했습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -2082,7 +2244,7 @@
       "nextIdentifier": "N020_3"
     },
     "D027_1": {
-      "speakerName": "간호사 D",
+      "speakerName": "@s",
       "dialogueContent": "생리식염수 20cc 투여했습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -2097,7 +2259,7 @@
       "nextIdentifier": "L010"
     },
     "D028": {
-      "speakerName": "의사 NPC",
+      "speakerName": "의사",
       "dialogueContent": "2분 지났습니다. 리듬 확인하겠습니다. 모두 떨어져 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -2112,8 +2274,8 @@
       "nextIdentifier": "E031"
     },
     "D029": {
-      "speakerName": "의사 NPC",
-      "dialogueContent": "Asystole입니다. 가슴압박과 앰부배깅 하시던 간호사 A, B 선생님끼리 교대 후 계속 가슴압박 해주세요. 간호사 C, D 선생님께서도 교대해서 역할을 수행해 주세요.",
+      "speakerName": "의사",
+      "dialogueContent": "Asystole입니다. 가슴압박과 앰부배깅 하시던 @t=[nurse_a, ???]선생님, @t=[nurse_b, ???]선생님끼리 교대 후 계속 가슴압박 해주세요. @t=[nurse_c, ???]선생님, @t=[nurse_d, ???]선생님께서도 교대해서 역할을 수행해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2127,8 +2289,8 @@
       "nextIdentifier": "P006"
     },
     "D030": {
-      "speakerName": "의사 NPC",
-      "dialogueContent": "에피네프린 첫 투여 시점부터 4분 지났습니다. 간호사 C 선생님, 바로 에피네프린과 생리식염수 20cc 투여해주세요.",
+      "speakerName": "의사",
+      "dialogueContent": "에피네프린 첫 투여 시점부터 4분 지났습니다. @t=[nurse_c, @s]선생님, 바로 에피네프린과 생리식염수 20cc 투여해주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2142,7 +2304,7 @@
       "nextIdentifier": "N023_2"
     },
     "D031": {
-      "speakerName": "간호사 C",
+      "speakerName": "@s",
       "dialogueContent": "에피네프린 1mg 투여했습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -2157,7 +2319,7 @@
       "nextIdentifier": "N023_3"
     },
     "D031_1": {
-      "speakerName": "간호사 C",
+      "speakerName": "@s",
       "dialogueContent": "생리식염수 20cc 투여했습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4.0,
@@ -2172,7 +2334,7 @@
       "nextIdentifier": "L018"
     },
     "D032": {
-      "speakerName": "간호사 D",
+      "speakerName": "@s",
       "dialogueContent": "제세동기 준비가 완료되었습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -2187,7 +2349,7 @@
       "nextIdentifier": "L020"
     },
     "D033": {
-      "speakerName": "의사 NPC",
+      "speakerName": "의사",
       "dialogueContent": "2분 지났습니다. 리듬 확인하겠습니다. 모두 떨어져 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -2202,8 +2364,8 @@
       "nextIdentifier": "E035"
     },
     "D034": {
-      "speakerName": "의사 NPC",
-      "dialogueContent": "QRS 보입니다. 간호사 A 선생님, 환자 맥박 있는지 확인해주세요.",
+      "speakerName": "의사",
+      "dialogueContent": "QRS 보입니다. @t=[nurse_a, ???]선생님, 환자 맥박 있는지 확인해주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2217,7 +2379,7 @@
       "nextIdentifier": "N025"
     },
     "D035": {
-      "speakerName": "간호사 A",
+      "speakerName": "@s",
       "dialogueContent": "환자 맥박 느껴집니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -2232,8 +2394,8 @@
       "nextIdentifier": "D036"
     },
     "D036": {
-      "speakerName": "의사 NPC",
-      "dialogueContent": "환자 ROSC 되었습니다. 제가 검사랑 협진 의뢰 할테니 간호사 D 선생님이 의식상태 확인해주세요. 간호사 B 선생님, 의복 제거해서 추가 손상 있는지 사정해주세요. 간호사 A 선생님께서는 다시 분류구역으로 이동해서 환자 분류해주세요.",
+      "speakerName": "의사",
+      "dialogueContent": "환자 ROSC 되었습니다. 제가 검사랑 협진 의뢰 할테니 @t=[nurse_d, ???]선생님이 의식상태 확인해주세요. @t=[nurse_b, ???]선생님, 의복 제거해서 추가 손상 있는지 사정해주세요. @t=[nurse_a, ???]선생님께서는 다시 분류구역으로 이동해서 환자 분류해주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2247,8 +2409,8 @@
       "nextIdentifier": "P007"
     },
     "D037": {
-      "speakerName": "시스템",
-      "dialogueContent": "시나리오 A 환자 대응 종료. 흉부외과로 환자를 이관하였습니다.",
+      "speakerName": "의사",
+      "dialogueContent": "환자 인계 마쳤습니다. 흉부외과로 올라갑니다. 모두 수고하셨습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2259,6 +2421,13 @@
       },
       "identifier": "D037",
       "nodeType": "Dialogue",
+      "nextIdentifier": "E038"
+    },
+    "E038": {
+      "eventIdentifier": "show_patient_a_completion_title",
+      "moveNextBehavior": "WaitUntilDone",
+      "identifier": "E038",
+      "nodeType": "InvokeEvent",
       "nextIdentifier": null
     },
     "E005": {
@@ -4480,7 +4649,7 @@
       "identifier": "arrest",
       "nodeType": "ManualEntrypoint",
       "entrypointIdentifier": "arrest",
-      "manualEnterSetupIdentifier": null,
+      "manualEnterSetupIdentifier": "SETUP_ARREST_PREPARE",
       "description": "환자 A의 심정지 발생과 첫 맥박 확인 단계 진입 지점.",
       "nextIdentifier": "D022"
     },
@@ -5497,7 +5666,9 @@
       "ttsVoiceIdentifier": null,
       "nextIdentifier": null,
       "identifier": "C_VITAL_RR_HR_A",
-      "nodeType": "Choice"
+      "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_initial_respiration_pulse",
+      "correctOptionIndex": 2
     },
     "N_VITAL_RR_HR_RETRY_A": {
       "speakerName": "@s", "dialogueContent": "(아니야. 호흡수 분당 8회, 맥박 분당 140회로 빠르고 약했어.)", "portraitSpriteIdentifier": null, "autoAdvanceSeconds": null, "interactionRequired": null, "playTTS": false, "ttsVoiceIdentifier": null,
@@ -5516,7 +5687,8 @@
         { "displayText": "혈압 90/60mmHg", "displayIconIdentifier": null, "displayColor": { "r": 1, "g": 1, "b": 1, "a": 1 }, "nextNodeIdentifier": "N_VITAL_BP_RETRY_A" },
         { "displayText": "혈압 100/70mmHg", "displayIconIdentifier": null, "displayColor": { "r": 1, "g": 1, "b": 1, "a": 1 }, "nextNodeIdentifier": "N_VITAL_BP_RETRY_A" }
       ],
-      "playTTS": false, "ttsVoiceIdentifier": null, "nextIdentifier": null, "identifier": "C_VITAL_BP_A", "nodeType": "Choice"
+      "playTTS": false, "ttsVoiceIdentifier": null, "nextIdentifier": null, "identifier": "C_VITAL_BP_A", "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_initial_blood_pressure", "correctOptionIndex": 1
     },
     "N_VITAL_BP_RETRY_A": {
       "speakerName": "@s", "dialogueContent": "(아니야. 혈압은 70/40mmHg였어.)", "portraitSpriteIdentifier": null, "autoAdvanceSeconds": null, "interactionRequired": null, "playTTS": false, "ttsVoiceIdentifier": null,
@@ -5535,7 +5707,8 @@
         { "displayText": "체온 36.5도, 산소포화도 88%", "displayIconIdentifier": null, "displayColor": { "r": 1, "g": 1, "b": 1, "a": 1 }, "nextNodeIdentifier": "N_VITAL_BT_SPO2_RETRY_A" },
         { "displayText": "체온 37.0도, 산소포화도 92%", "displayIconIdentifier": null, "displayColor": { "r": 1, "g": 1, "b": 1, "a": 1 }, "nextNodeIdentifier": "N_VITAL_BT_SPO2_RETRY_A" }
       ],
-      "playTTS": false, "ttsVoiceIdentifier": null, "nextIdentifier": null, "identifier": "C_VITAL_BT_SPO2_A", "nodeType": "Choice"
+      "playTTS": false, "ttsVoiceIdentifier": null, "nextIdentifier": null, "identifier": "C_VITAL_BT_SPO2_A", "nodeType": "Choice",
+      "assessmentIdentifier": "patient_a_initial_temperature_spo2", "correctOptionIndex": 2
     },
     "N_VITAL_BT_SPO2_RETRY_A": {
       "speakerName": "@s", "dialogueContent": "(아니야. 체온은 35.9도, 산소포화도는 82%였어.)", "portraitSpriteIdentifier": null, "autoAdvanceSeconds": null, "interactionRequired": null, "playTTS": false, "ttsVoiceIdentifier": null,
