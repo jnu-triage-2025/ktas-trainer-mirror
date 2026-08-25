@@ -206,7 +206,24 @@
         { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "level1-connect-cline", "targetType": "Interaction", "entityIdentifier": "level1_rapid_infuser_a", "interactionIdentifier": "level1_connect_cline", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" }
       ]
     },
-    { "identifier": "Quest_Check_Pulse", "title": "맥박 확인", "description": "환자 A의 맥박을 확인합니다.", "questContent": "환자 A의 맥박을 사정하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
+    {
+      "identifier": "Quest_Check_Pulse",
+      "title": "맥박 확인",
+      "description": "환자 A의 경동맥을 촉지해 맥박을 확인합니다.",
+      "questContent": "남성 환자의 경동맥을 촉지해 맥박 확인하기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        { "identifier": "assess-pulse-patient-a-r1", "type": "InteractionSignalReceived", "signalId": "check_pulse_patient_a_r1", "displayTextContent": "남성 환자의 경동맥을 촉지해 맥박 확인하기", "count": 1 }
+      ],
+      "presentationBindings": [
+        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "assess-pulse-patient-a-r1", "targetType": "Interaction", "entityIdentifier": "patient_a", "interactionIdentifier": "assess_pulse_r1", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" }
+      ]
+    },
     { "identifier": "Quest_Ambu_A", "title": "앰부배깅 수행", "description": "간호사 A가 앰부백을 연결하고 환기합니다.", "questContent": "앰부배깅을 시작하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
     { "identifier": "Quest_ChestComp_B", "title": "가슴압박 수행", "description": "간호사 B가 가슴압박을 시행합니다.", "questContent": "가슴압박을 시작하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
     { "identifier": "Quest_Defibrillator_C", "title": "제세동기 연결", "description": "간호사 C가 제세동 패드를 부착합니다.", "questContent": "제세동기를 환자에게 연결하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },

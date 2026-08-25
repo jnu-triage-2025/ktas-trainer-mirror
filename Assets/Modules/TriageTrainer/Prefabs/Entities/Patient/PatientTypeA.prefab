@@ -897,6 +897,8 @@ MonoBehaviour:
   - _identifier: assess_pulse_r1
     _displayText: "\uB9E5\uBC15 \uD655\uC778"
     _assessSignal: check_pulse_patient_a_r1
+    _actionDialogue: "(\uD658\uC790\uC758 \uBAA9\uC5D0 \uC190\uC744 \uB300\uACE0 \uACBD\uB3D9\uB9E5\uC744 \uCD09\uC9C0\uD55C\uB2E4.)"
+    _resultDialogue: "(\uC544\uBB34\uAC83\uB3C4 \uB290\uAEF4\uC9C0\uC9C0 \uC54A\uB294\uB2E4.)"
     _enabled: 1
   - _identifier: assess_pulse_r2
     _displayText: "\uB9E5\uBC15 \uD655\uC778"

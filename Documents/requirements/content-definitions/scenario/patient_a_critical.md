@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "2-implementing"
 status: active
-updated: 2026-08-24
+updated: 2026-08-25
 flags: ["refactor-required"]
 ---
 
@@ -1266,7 +1266,43 @@ flags: ["refactor-required"]
 - 전체 인원의 퀘스트가 "다른 사람들의 처리가 끝날 때까지 기다리기" 상태(*a)라면 퀘스트 완료 처리
 
 
-- 시나리오 완료
+### 1269행까지의 구현 검토와 수동 진입 초기화 명세
+
+이 절까지의 본문은 정상 순서로 재생할 때의 처치 흐름은 정의하지만, 수동 진입으로 앞 단계들을 건너뛰었을 때 필요한 월드 상태를 충분히 정의하지 않았다. `ManualEntrypoint`는 기본적으로 `clear-state=true`로 진입하며, 이때 이전 퀘스트와 RuntimeState 신호·카운터·타이머뿐 아니라 `resultStateKey`로 관리하던 엔티티 해석 상태도 함께 비운다. 따라서 월드에 남아 있는 환자나 장비만 믿고 다음 노드를 실행하면, `targetEntityStateKey`를 쓰는 상호작용과 제출·연결 처리가 조용히 실패할 수 있다.
+
+`patient_b_c_ct`의 수동 진입 준비 체인처럼, 아래 각 진입점은 `manualEnterSetupIdentifier`를 지정한다. 준비 체인은 기존 오브젝트가 있으면 재사용하고, 없으면 해당 식별자로 한 번만 생성하거나 배치하여 중복 스폰을 막아야 한다. 모든 준비 체인은 마지막에 `ReturnToOrigin`으로 종료하여 해당 `ManualEntryNode`의 본 흐름으로 되돌아간다. `clear-state=false`는 디버그용 선택지일 뿐, 이 시나리오의 필수 준비를 생략하는 수단으로 사용하지 않는다.
+
+- 공통 초기화
+  - 기존에 발행된 환자 A 시나리오 퀘스트와 퀘스트 마크, 진행 중인 병렬 브랜치, 단계 밖 상호작용을 제거한다. 기본 `clear-state=true`가 퀘스트와 실행 상태를 비우지만, 월드에 남은 표시와 이벤트 구독도 준비 체인에서 단계 기준으로 다시 정리해야 한다.
+  - `patient_a`, `npc-doctor-patient-a-critical` 및 이 절에서 참조하는 제세동기·Level 1 rapid infuser·산소 공급 장비의 식별자 해석 상태를 다시 등록한다. 재등록 방법은 준비 체인에서 `resultStateKey`를 다시 채우거나, 동일한 효과를 내는 전용 초기화 이벤트를 호출하는 방식으로 구현한다.
+  - 환자 A를 처치실 침대의 확정 위치에 두고, 의사 NPC를 처치실 의사 위치에 즉시 배치한다. 환자·의사·장비의 위치 지정은 일반 진행에서 발생한 이동 신호에 의존하지 않는다.
+  - 환자의 MedicalState, Display State, 장비 연결 상태는 각 진입점의 목표 단계에 맞춰 서버에서 함께 갱신하고 세션 로그에 기록한다. 이전 단계의 신호를 인위적으로 다시 발생시켜 다음 단계를 통과시키는 방식은 사용하지 않는다.
+
+- `scen-entry`
+  - 환자 A와 의사 NPC를 준비하고, 환자를 처치실 침대에 배치한다. 환자 상태는 본문의 사전설정 값으로 복원한다.
+  - 활력징후 모니터, 경추 고정, 구강 흡인에 필요한 기본 상호작용만 노출한다. 기관내관, C-line, 정맥로, 산소 공급 장치, 제세동기와 CPR 관련 상태는 미완료 상태여야 한다.
+
+- `doc-inst`
+  - `scen-entry`의 준비 상태를 포함하고, 초기 평가가 끝난 상태를 복원한다. 즉 활력징후 확인과 보고, 의식 상태 사정, 경추 고정, 구강 흡인이 완료된 것으로 기록한다.
+  - 활력징후 모니터는 닫힌 상태로 두며, 초기 평가용 퀘스트 마크와 상호작용은 제거한다. 이후 처치에 필요한 장비는 아직 설치하지 않는다.
+
+- `arrest`
+  - `doc-inst`의 준비 상태를 포함하고, 의사 지시와 역할별 처치(P004)가 모두 끝난 상태를 복원한다. 기관내관·T-piece 산소 공급, 양측 정맥로, C-line, Level 1 rapid infuser와 본문에서 완료로 규정한 연결·표시 상태를 일관되게 맞춘다.
+  - 이어지는 `patient_crash_ui`가 PEA 상태를 설정하므로, 준비 체인 자체는 심정지 전의 불안정 상태로 끝낸다. 다만 `patient_crash_ui`가 실행된 뒤에는 심정지 플래그와 모니터의 측정 불가 채널이 즉시 서버 상태에 기록되어야 한다.
+
+- `cpr_1st_cycle`
+  - `arrest` 이후의 PEA 상태와 기도·C-line·정맥로·Level 1 연결 상태를 복원한다. 맥박 확인은 완료 상태로 기록하되, 이전 단계의 퀘스트나 퀘스트 마크는 남기지 않는다.
+  - CPR 1주기 시작 전 상태이므로 T-piece는 기관내관에 연결되어 있고, 앰부백·산소 저장낭·제세동 패드·에피네프린 투여·제세동기 충전 및 충격 상태는 아직 완료되지 않은 상태로 둔다. 제세동기 카트는 환자 침대에서 상호작용 가능한 초기 위치에 배치한다.
+
+- `cpr_2nd_cycle`
+  - CPR 1주기의 완료 상태를 복원한다. T-piece는 분리되어 있고 앰부백과 산소 저장낭은 기관내관에 연결되어 앰부배깅 연출이 정지된 상태여야 한다. 제세동 패드는 부착되어 있고, 첫 에피네프린 및 생리식염수 투여와 1주기의 제세동 절차도 완료 상태로 기록한다.
+  - 이 진입점의 첫 연출이 무수축으로 전환하므로, 준비 체인은 PEA 의료 상태를 복원한 뒤 `asystole_monitor_ui`가 ECG만 무수축으로 바꾸도록 한다. 이때 이미 측정 불가로 바뀐 나머지 모니터 채널을 되살리면 안 된다.
+
+- `rosc_followup`
+  - `cpr_2nd_cycle`의 완료 상태를 포함한 수동 진입 준비 체인을 둔다. 특히 T-piece가 분리된 기관내관, 앰부백·산소 저장낭, 제세동 패드, C-line과 정맥로, 두 CPR 주기의 완료 상태 및 엔티티 해석 상태를 복원한다.
+  - 준비 체인은 심정지 상태로 끝내고, 본 흐름의 ROSC 상태 갱신이 이를 회복 상태로 전환하게 한다. 수동 진입만으로 ROSC 맥박 확인이나 GCS 재사정 상호작용이 먼저 노출되어서는 안 된다.
+
+위 초기화 체인이 추가되기 전에는 `scen-entry`, `doc-inst`, `cpr_1st_cycle`, `cpr_2nd_cycle`, `rosc_followup`을 독립적인 디버그 진입점으로 구현하거나 검증해서는 안 된다.
 
 
 ### ROSC 확인과 후속 조치
@@ -1274,13 +1310,15 @@ flags: ["refactor-required"]
 - ManualEntryNode: rosc_followup
   - 실제 그래프 식별자와 진입 별칭은 모두 `rosc_followup`이다.
   - 정상 진행에서는 P006 종료 후 이 지점을 거쳐 ROSC 모니터 연출과 맥박 확인을 시작한다.
-  - 운영자가 수동 진입하면 별도 CPR 준비 체인 없이 ROSC 확인 대사부터 재생하고, 이어지는 `rosc_monitor_ui`가 환자 A의 회복 모니터 상태를 표시한다.
+  - 운영자가 수동 진입하면 위 `rosc_followup` 준비 체인을 실행한 뒤 ROSC 확인 대사부터 재생한다.
 
 1. Dialogue
   - Speaker: "의사"
   - Content: "2분 지났습니다. 리듬 확인하겠습니다. 모두 떨어져 주세요."
   - TTS: true
-2. 압박·배깅 정지 연출(`stop_ambu_and_comp`) 후 ROSC 모니터 연출(`rosc_monitor_ui`)을 재생한다.
+2. 압박·배깅 정지 연출(`stop_ambu_and_comp`) 후 ROSC 상황을 환자 모니터와 환자의 MedicalState에 함께 업데이트한다.
+  - `MedicalStateIsCardiacArrest`를 false로 바꾸고, 촉지 가능한 맥박과 회복된 모니터 수치를 MedicalState에 기록한다. 모니터 컨트롤러에만 값을 넣어서는 안 된다.
+  - ROSC 활력징후의 각 수치와 ECG 프로필은 구현 전에 하나의 회복 프로필로 확정하고, 상태 변경과 함께 세션 로그에 남긴다.
 3. Dialogue
   - Speaker: "의사"
   - Content: "QRS 보입니다. @t=[nurse_a, ???]선생님, 환자 맥박 있는지 확인해주세요."
@@ -1289,9 +1327,9 @@ flags: ["refactor-required"]
   - 제목: "ROSC 맥박 확인"
   - 목표
     - 표기: "남성 환자의 경동맥을 촉지해 맥박 확인하기"
-    - 처리: 맥박 확인 상호작용(`assess_pulse`)을 수행하면 완료 처리
+    - 처리: ROSC 전용 맥박 확인 상호작용(`assess_pulse_r2`)을 수행하면 완료 처리
       - 완료 신호: `sig.check_pulse_patient_a_r2`
-    - 퀘스트 마크: `patient_a` / `assess_pulse`
+    - 퀘스트 마크: `patient_a` / `assess_pulse_r2`
     - Interaction 수행 시 다음 재생
       1. Dialogue
         - Speaker: `@s`
@@ -1316,8 +1354,8 @@ flags: ["refactor-required"]
   - 제목: "분류 구역 복귀"
   - 목표
     - 표기: "중증도 분류 구역으로 이동하기"
-    - 처리: 구역 도착 신호(`sig.arrive_triagearea`)를 수신하면 완료 처리
-    - 기술 노트: 도착 판정은 기존 `ScenarioTriggerZone` 진입 신호를 그대로 사용한다.
+    - 처리: `nurse_a` 본인이 분류 구역에 도착해 발생시킨 전용 도착 신호를 수신하면 완료 처리
+    - 기술 노트: 기존 `ScenarioTriggerZone`을 사용하되, 신호 식별자에 플레이어 식별자를 포함하거나 송신자 범위를 검증한다. 다른 플레이어의 구역 진입으로 `nurse_a`의 퀘스트가 완료되어서는 안 된다.
   - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
 - `nurse_b`에게 퀘스트 발행 (`Quest_Cut_Clothing`)
   - 제목: "환자 의복 제거"
@@ -1335,7 +1373,7 @@ flags: ["refactor-required"]
             - Speaker: `@s`
             - Content: "(가위를 찾자.)"
         - 있다면 다음 처리
-          1. 제거 신호(`sig.remove_patient_clothing`)를 수신하고 가위질 소리(`cutting_sound`)를 재생
+          1. 의복 제거 상호작용이 제거 신호(`sig.remove_patient_clothing`)를 발생시키고 가위질 소리(`cutting_sound`)를 재생
           2. Dialogue
             - Speaker: `@s`
             - Content: "(의복을 모두 잘라내고 전신을 살펴본다.)"
@@ -1349,9 +1387,9 @@ flags: ["refactor-required"]
   - 제목: "ROSC 후 신경학적 사정"
   - 목표
     - 표기: "남성 환자의 의식 상태를 다시 사정하기"
-    - 처리: GCS 재사정 상호작용(`assess_gcs`)을 수행한 뒤 아래 문항 흐름을 모두 통과하면 완료 처리
+    - 처리: ROSC 전용 GCS 재사정 상호작용(`assess_gcs_rosc`)을 수행한 뒤 아래 문항 흐름을 모두 통과하면 완료 처리
       - 완료 신호: `sig.check_gcs_a_rosc`
-    - 퀘스트 마크: `patient_a` / `assess_gcs`
+    - 퀘스트 마크: `patient_a` / `assess_gcs_rosc`
     - Interaction 수행 시 다음 재생
       1. Dialogue
         - Speaker: `@s`
@@ -1384,7 +1422,7 @@ flags: ["refactor-required"]
     - 이후 초기 평가와 같은 형식으로 AVPU와 GCS 문항을 진행한다. 정답은 아래와 같다.
       - AVPU: 정답 P
       - GCS E: 정답 2점
-      - GCS V: 정답 E(기관삽관)
+      - GCS V: 기관내관으로 평가 불가(NT)
       - GCS M: 정답 4점
     - 네 문항 모두, 오답을 선택하면 아래의 오답 노드로 진행한다.
       - Dialogue
@@ -1396,11 +1434,11 @@ flags: ["refactor-required"]
     - 문항을 모두 마치면 다음 재생
       1. Dialogue
         - Speaker: `@s`
-        - Content: "E는 2, V는 삽관 중이라 E, M은 4니까.."
+        - Content: "E는 2, V는 삽관 중이라 평가할 수 없고, M은 4다."
         - TTS: false
       2. Dialogue
         - Speaker: `@s`
-        - Content: "GCS는 E2 / V(E) / M4로 총 6E점입니다."
+        - Content: "GCS는 E2 / V-NT / M4입니다."
         - TTS: true
   - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
 - `nurse_c`에게 퀘스트 발행
@@ -1422,8 +1460,13 @@ flags: ["refactor-required"]
 3. Title
   - Content: 시나리오 종료
   - Subtitle: 시나리오를 완료하였습니다.
+4. Title 표시가 끝나면 시나리오를 정상 종료하고, 이 시나리오가 발행한 퀘스트와 퀘스트 마크, 단계별 상호작용 등록, 진행 중인 이벤트 구독과 임시 연출을 정리한다.
+  - 환자 A·의사 NPC·처치 장비의 월드 오브젝트는 시나리오 종료 공통 정책에 따라 처리한다. 이 시나리오가 생성한 임시 오브젝트만 해제하며, 공용 오버월드 오브젝트와 플레이어 인벤토리 물품을 일괄 삭제하지 않는다.
 
 - 이 지점이 마지막이며 다음 연결은 없다(`null`). 환자 A 시나리오는 여기에서 독립 종료하고, 다음 시나리오로 자동 전환하지 않는다.
+
+
+
 
 ## 2026-08-22 줄글 시나리오 개정 확정 사항
 

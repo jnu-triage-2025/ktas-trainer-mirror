@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.UI;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -37,6 +39,12 @@ namespace TriageTrainer.Entity
       [SerializeField] private string _missingItemDialogue;
       [SerializeField] private string _findItemDialogue;
 
+      [Tooltip("사정 완료 직후 수행자 이름으로 표시할 행동 묘사입니다.")]
+      [SerializeField] private string _actionDialogue;
+
+      [Tooltip("행동 묘사 뒤 화자 없이 표시할 사정 결과입니다.")]
+      [SerializeField] private string _resultDialogue;
+
       [SerializeField] private bool _enabled = true;
 
       public string Identifier => _identifier;
@@ -45,6 +53,8 @@ namespace TriageTrainer.Entity
       public string RequiredItemIdentifier => _requiredItemIdentifier;
       public string MissingItemDialogue => _missingItemDialogue;
       public string FindItemDialogue => _findItemDialogue;
+      public string ActionDialogue => _actionDialogue;
+      public string ResultDialogue => _resultDialogue;
       public bool Enabled { get => _enabled; set => _enabled = value; }
 
       /// <summary>
@@ -219,6 +229,22 @@ namespace TriageTrainer.Entity
 
       if (!string.IsNullOrWhiteSpace(signal))
         MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(signal);
+
+      PresentAssessDialogue(cfg);
+    }
+
+    private static void PresentAssessDialogue(AssessActionConfig config)
+    {
+      if (config == null || (string.IsNullOrWhiteSpace(config.ActionDialogue)
+                            && string.IsNullOrWhiteSpace(config.ResultDialogue)))
+        return;
+
+      var dialogue = Registry.Get<DialoguePanelUIController>(
+        RegistryType.UI, Registry.TypeKey<DialoguePanelUIController>());
+      if (!string.IsNullOrWhiteSpace(config.ActionDialogue))
+        dialogue?.TryPresentTransientDialogue(DialoguePanelUIController.PlayerNamePlaceholder, config.ActionDialogue);
+      if (!string.IsNullOrWhiteSpace(config.ResultDialogue))
+        dialogue?.TryPresentTransientDialogue(string.Empty, config.ResultDialogue);
     }
 
     /// <summary>시나리오 진행에 따라 특정 사정 동작의 노출을 켜고 끈다.</summary>

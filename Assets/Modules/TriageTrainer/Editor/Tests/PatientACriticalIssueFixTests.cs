@@ -575,6 +575,81 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void PatientA862PulseQuestTargetsFirstArrestPulseAssessment()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string quests = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Resources/Quest/patient_a_critical.quests.quest.json"));
+
+      StringAssert.Contains("\"identifier\": \"Quest_Check_Pulse\"", quests);
+      StringAssert.Contains("\"signalId\": \"check_pulse_patient_a_r1\"", quests);
+      StringAssert.Contains("\"entityIdentifier\": \"patient_a\"", quests);
+      StringAssert.Contains("\"interactionIdentifier\": \"assess_pulse_r1\"", quests);
+
+      string scenario = File.ReadAllText(Path.Combine(projectRoot, PatientAScenarioPath));
+      StringAssert.Contains("\"identifier\": \"arrest\"", scenario);
+      StringAssert.Contains("\"nodeType\": \"ManualEntrypoint\"", scenario);
+      StringAssert.IsMatch("(?s)\"P004\".*?\"nextIdentifier\": \"arrest\"", scenario);
+
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
+      var patient = prefab.GetComponent<PatientController>();
+      var actions = typeof(PatientController).GetField(
+          "_assessActions", BindingFlags.Instance | BindingFlags.NonPublic)
+        ?.GetValue(patient) as System.Collections.IEnumerable;
+      PatientController.AssessActionConfig pulseAction = null;
+      foreach (object action in actions ?? Array.Empty<object>())
+      {
+        if (action is PatientController.AssessActionConfig config && config.Identifier == "assess_pulse_r1")
+          pulseAction = config;
+      }
+
+      Assert.That(pulseAction, Is.Not.Null);
+      Assert.That(pulseAction.ActionDialogue, Is.EqualTo("(환자의 목에 손을 대고 경동맥을 촉지한다.)"));
+      Assert.That(pulseAction.ResultDialogue, Is.EqualTo("(아무것도 느껴지지 않는다.)"));
+    }
+
+    [Test]
+    public void PatientA862CrashEventPersistsPeaMonitorStateOnPatient()
+    {
+      var patientPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
+      var patientObject = UnityEngine.Object.Instantiate(patientPrefab);
+      var bootstrapObject = new GameObject("patient-a-crash-event-test");
+      try
+      {
+        var patient = patientObject.GetComponent<PatientController>();
+        var bootstrap = bootstrapObject.AddComponent<TriageScenarioEventBootstrap>();
+        typeof(TriageScenarioEventBootstrap).GetField(
+            "_patientAObject", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.SetValue(bootstrap, patientObject);
+        var routine = typeof(TriageScenarioEventBootstrap).GetMethod(
+            "Event_PatientCrashUi", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.Invoke(bootstrap, null) as System.Collections.IEnumerator;
+
+        Assert.That(routine, Is.Not.Null);
+        Assert.That(routine.MoveNext(), Is.True);
+        var state = patient.MedicalState;
+        float unavailable = TriageTrainer.Entity.Patient.PatientMedicalState.MonitorValueUnavailable;
+        Assert.That(patient.MedicalStateIsCardiacArrest, Is.True);
+        Assert.That(state.ecg.bpm, Is.EqualTo(80f));
+        Assert.That(state.numerics.bpm, Is.EqualTo(80f));
+        Assert.That(state.pleth.bpm, Is.EqualTo(unavailable));
+        Assert.That(state.pleth.spo2, Is.EqualTo(unavailable));
+        Assert.That(state.numerics.pulseRate, Is.EqualTo(unavailable));
+        Assert.That(state.numerics.spo2, Is.EqualTo(unavailable));
+        Assert.That(state.nibp.systolic, Is.EqualTo(unavailable));
+        Assert.That(state.temperature.t1, Is.EqualTo(unavailable));
+        Assert.That(state.art.bpm, Is.EqualTo(unavailable));
+        Assert.That(state.cvp.mean, Is.EqualTo(unavailable));
+        Assert.That(state.stLeads.ii, Is.EqualTo(unavailable));
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(bootstrapObject);
+        UnityEngine.Object.DestroyImmediate(patientObject);
+      }
+    }
+
+    [Test]
     public void PatientAMedicationDialoguesStayAlignedAcrossScenarioVariants()
     {
       string scenarioDirectory = Path.Combine(Application.dataPath,
