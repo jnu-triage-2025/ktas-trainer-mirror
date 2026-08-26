@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using MultiplayerInfrastructure.Commons;
 using UnityEngine;
 using UnityEngine.Rendering;
 #if UNITY_EDITOR
@@ -23,9 +24,10 @@ namespace MultiplayerInfrastructure.Registry
 
     [Header("Quest Marker")]
     [SerializeField] private Vector3 _questMarkerOffset = new(0f, 0.8f, 0f);
-    [SerializeField] private int _questMarkerFontSize = 64;
-    [SerializeField] private float _questMarkerCharacterSize = 0.045f;
-    [SerializeField] private float _questMarkerOutlineOffset = 0.012f;
+    [Tooltip("비워 두면 레지스트리에 등록된 quest-marker 아이콘을 사용한다. NPC 머리 위 마크와 같은 스프라이트다.")]
+    [SerializeField] private Sprite _questMarkerSprite;
+    [Tooltip("기준 거리에서 보이는 마커의 월드 크기.")]
+    [SerializeField, Min(0.01f)] private float _questMarkerScale = 0.45f;
     [SerializeField] private float _questMarkerInitialScale = 1.25f;
     [SerializeField] private float _questMarkerSettleDuration = 0.35f;
     [SerializeField] private int _questMarkerSortingOrder = 510;
@@ -45,6 +47,7 @@ namespace MultiplayerInfrastructure.Registry
     private Material _highlightMaterial;
     private Coroutine _highlightRoutine;
     private GameObject _questMarkerObject;
+    private Material _questMarkerMaterial;
     private Coroutine _questMarkerSettleRoutine;
     private UnityEngine.Camera _questMarkerCamera;
     private bool _questMarkerVisible;
@@ -172,7 +175,7 @@ namespace MultiplayerInfrastructure.Registry
     }
 
     /// <summary>
-    /// 이 waypoint가 현재 퀘스트의 이동 목표일 때 흰색 ❖ 마커를 표시한다.
+    /// 이 waypoint가 현재 퀘스트의 이동 목표일 때 quest-marker 아이콘을 표시한다.
     /// 처음 표시될 때만 살짝 큰 크기에서 평소 크기로 자연스럽게 안착한다.
     /// </summary>
     public void SetQuestMarkerVisible(bool visible)
@@ -193,7 +196,12 @@ namespace MultiplayerInfrastructure.Registry
 
       EnsureQuestMarkerVisual();
       if (_questMarkerObject == null)
+      {
+        // 아이콘 스프라이트가 아직 레지스트리에 없을 수 있다. 호출자가 매 프레임 갱신하므로
+        // 표시 상태를 되돌려 다음 호출에서 다시 시도하게 한다.
+        _questMarkerVisible = false;
         return;
+      }
 
       _questMarkerObject.SetActive(true);
       if (_questMarkerSettleRoutine != null)
@@ -206,46 +214,43 @@ namespace MultiplayerInfrastructure.Registry
       if (_questMarkerObject != null)
         return;
 
+      var sprite = ResolveQuestMarkerSprite();
+      if (sprite == null)
+        return;
+
       _questMarkerObject = new GameObject("Quest Waypoint Marker");
       _questMarkerObject.hideFlags = HideFlags.HideInHierarchy;
       _questMarkerObject.transform.SetParent(transform, false);
       _questMarkerObject.transform.localPosition = _questMarkerOffset;
 
-      // Legacy TextMesh에는 outline 속성이 없으므로 검은색 복제 텍스트를 둘러 배치해
-      // 카메라 방향과 무관하게 읽히는 얇은 테두리를 만든다.
-      var outlineDirections = new[]
-      {
-        new Vector2(-1f, -1f), new Vector2(0f, -1f), new Vector2(1f, -1f),
-        new Vector2(-1f, 0f),                         new Vector2(1f, 0f),
-        new Vector2(-1f, 1f),  new Vector2(0f, 1f),  new Vector2(1f, 1f)
-      };
-      for (int i = 0; i < outlineDirections.Length; i++)
-      {
-        var outline = CreateQuestMarkerText($"Outline {i}", Color.black, _questMarkerSortingOrder);
-        var direction = outlineDirections[i];
-        outline.transform.localPosition =
-          new Vector3(direction.x, direction.y, 0.01f) * Mathf.Max(0f, _questMarkerOutlineOffset);
-      }
+      var renderer = _questMarkerObject.AddComponent<SpriteRenderer>();
+      renderer.sprite = sprite;
+      renderer.shadowCastingMode = ShadowCastingMode.Off;
+      renderer.receiveShadows = false;
+      renderer.sortingOrder = _questMarkerSortingOrder;
 
-      CreateQuestMarkerText("Symbol", Color.white, _questMarkerSortingOrder + 1);
+      // 목표 지점 안내이므로 벽이나 지형에 가려지지 않게 깊이 판정을 끈다(하이라이트 시각 효과와 동일).
+      _questMarkerMaterial = new Material(Shader.Find("Sprites/Default"));
+      _questMarkerMaterial.SetInt("_ZTest", (int)CompareFunction.Always);
+      _questMarkerMaterial.SetInt("_ZWrite", 0);
+      renderer.material = _questMarkerMaterial;
+
       _questMarkerObject.SetActive(false);
     }
 
-    private TextMesh CreateQuestMarkerText(string objectName, Color color, int sortingOrder)
+    /// <summary>
+    /// 인스펙터에 지정한 스프라이트를 우선 쓰고, 비어 있으면 NPC 머리 위 마크와 같은
+    /// quest-marker 아이콘을 레지스트리에서 가져온다.
+    /// </summary>
+    private Sprite ResolveQuestMarkerSprite()
     {
-      var textObject = new GameObject(objectName);
-      textObject.transform.SetParent(_questMarkerObject.transform, false);
-      var text = textObject.AddComponent<TextMesh>();
-      text.text = "❖";
-      text.anchor = TextAnchor.MiddleCenter;
-      text.alignment = TextAlignment.Center;
-      text.fontSize = Mathf.Max(1, _questMarkerFontSize);
-      text.characterSize = Mathf.Max(0.001f, _questMarkerCharacterSize);
-      text.color = color;
-      var renderer = text.GetComponent<MeshRenderer>();
-      if (renderer != null)
-        renderer.sortingOrder = sortingOrder;
-      return text;
+      if (_questMarkerSprite != null)
+        return _questMarkerSprite;
+
+      return Registry.TryGet<Sprite>(
+        RegistryType.IconSprite, IconSpriteIdentifiers.QuestNpcMark, out var sprite)
+        ? sprite
+        : null;
     }
 
     private IEnumerator SettleQuestMarker()
@@ -312,7 +317,8 @@ namespace MultiplayerInfrastructure.Registry
 
       // 부모 waypoint에 스케일이 적용되어 있어도 최종 월드 크기는 동일하게 유지한다.
       Vector3 parentScale = transform.lossyScale;
-      float animatedScale = Mathf.Max(0.001f, scale * _questMarkerAnimationScale);
+      float animatedScale = Mathf.Max(
+        0.001f, scale * _questMarkerAnimationScale * Mathf.Max(0.01f, _questMarkerScale));
       _questMarkerObject.transform.localScale = new Vector3(
         animatedScale / Mathf.Max(0.001f, Mathf.Abs(parentScale.x)),
         animatedScale / Mathf.Max(0.001f, Mathf.Abs(parentScale.y)),
@@ -341,6 +347,12 @@ namespace MultiplayerInfrastructure.Registry
       {
         Destroy(_questMarkerObject);
         _questMarkerObject = null;
+      }
+
+      if (_questMarkerMaterial != null)
+      {
+        Destroy(_questMarkerMaterial);
+        _questMarkerMaterial = null;
       }
     }
 

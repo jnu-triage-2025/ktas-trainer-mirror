@@ -209,6 +209,76 @@ namespace MultiplayerInfrastructure.Tests.Quest
     }
 
     [Test]
+    public void WaypointQuestMarkerUsesTheQuestMarkerSpriteInsteadOfTextGlyph()
+    {
+      var waypointObject = new GameObject("QuestPresentationTests.MarkerWaypoint");
+      var texture = new Texture2D(2, 2);
+      var sprite = Sprite.Create(texture, new Rect(0, 0, 2, 2), Vector2.one * 0.5f);
+
+      try
+      {
+        var anchor = waypointObject.AddComponent<WaypointAnchor>();
+        typeof(WaypointAnchor)
+          .GetField("_questMarkerSprite", System.Reflection.BindingFlags.Instance
+                                          | System.Reflection.BindingFlags.NonPublic)
+          ?.SetValue(anchor, sprite);
+
+        // 코루틴 없이 시각 오브젝트만 만들어 표현 방식을 확인한다.
+        var ensure = typeof(WaypointAnchor).GetMethod(
+          "EnsureQuestMarkerVisual", System.Reflection.BindingFlags.Instance
+                                     | System.Reflection.BindingFlags.NonPublic);
+        Assert.That(ensure, Is.Not.Null);
+        ensure.Invoke(anchor, null);
+
+        var markerObject = typeof(WaypointAnchor)
+          .GetField("_questMarkerObject", System.Reflection.BindingFlags.Instance
+                                          | System.Reflection.BindingFlags.NonPublic)
+          ?.GetValue(anchor) as GameObject;
+        Assert.That(markerObject, Is.Not.Null);
+
+        var renderer = markerObject.GetComponent<SpriteRenderer>();
+        Assert.That(renderer, Is.Not.Null, "waypoint 마커는 스프라이트로 그려야 합니다.");
+        Assert.That(renderer.sprite, Is.SameAs(sprite));
+        Assert.That(markerObject.GetComponentInChildren<TextMesh>(true), Is.Null,
+          "\u2756 텍스트 마커는 quest-marker 스프라이트로 전환되었으므로 남아 있으면 안 됩니다.");
+
+        var material = typeof(WaypointAnchor)
+          .GetField("_questMarkerMaterial", System.Reflection.BindingFlags.Instance
+                                            | System.Reflection.BindingFlags.NonPublic)
+          ?.GetValue(anchor) as Material;
+        Assert.That(material, Is.Not.Null);
+        Assert.That(material.GetInt("_ZTest"),
+          Is.EqualTo((int)UnityEngine.Rendering.CompareFunction.Always),
+          "목표 지점 마커는 벽이나 지형에 가려지지 않아야 합니다.");
+
+        // 컴포넌트의 OnDestroy 는 Destroy 를 호출하는데 에디트 모드에서는 예외가 되므로,
+        // 컴포넌트가 만든 임시 오브젝트를 먼저 직접 정리하고 참조를 비운다.
+        DestroyQuestMarkerVisualForTest(anchor, markerObject, material);
+      }
+      finally
+      {
+        Object.DestroyImmediate(waypointObject);
+        Object.DestroyImmediate(sprite);
+        Object.DestroyImmediate(texture);
+      }
+    }
+
+    private static void DestroyQuestMarkerVisualForTest(
+      WaypointAnchor anchor, GameObject markerObject, Material material)
+    {
+      const System.Reflection.BindingFlags flags =
+        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+
+      if (markerObject != null)
+        Object.DestroyImmediate(markerObject);
+      typeof(WaypointAnchor).GetField("_questMarkerObject", flags)?.SetValue(anchor, null);
+
+      if (material != null)
+        Object.DestroyImmediate(material);
+      typeof(WaypointAnchor).GetField("_questMarkerMaterial", flags)?.SetValue(anchor, null);
+    }
+
+    [Test]
     public void OverheadAnchorResolutionCoversNpcAndWaypointTargets()
     {
       var waypointObject = new GameObject("QuestPresentationTests.Waypoint");
