@@ -41,6 +41,7 @@
       RegisterEvent_ShowPatientACompletionTitle();
       RegisterEvent_PreparePatientAManualEntry();
       RegisterEvent_ArmPatientATriageReturn();
+      RegisterEvent_ActivatePatientAStageInteractions();
     }
   }
 }

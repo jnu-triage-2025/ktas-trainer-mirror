@@ -925,14 +925,60 @@ namespace TriageTrainer.Tests
         Assert.That(secondRoundAction, Is.Not.Null);
 
         ScenarioInteractionSignals.Clear("click_to_start_comp");
-        Assert.That(secondRoundAction.CanInteract(interactor.transform), Is.False);
+        Assert.That(secondRoundAction.CanInteract(interactor.transform), Is.False,
+          "2차 가슴압박은 시나리오 활성화 전에는 노출되지 않아야 합니다.");
 
+        secondRoundAction.SetEnabled(true);
         ScenarioInteractionSignals.Raise("click_to_start_comp");
         Assert.That(secondRoundAction.CanInteract(interactor.transform), Is.True);
       }
       finally
       {
         ScenarioInteractionSignals.Clear("click_to_start_comp");
+        UnityEngine.Object.DestroyImmediate(interactor);
+        UnityEngine.Object.DestroyImmediate(instance);
+      }
+    }
+
+    [Test]
+    public void PatientAStageGatedActionsStartDisabled()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+      var instance = UnityEngine.Object.Instantiate(prefab);
+      var interactor = new GameObject("stage-gate-interactor");
+      try
+      {
+        interactor.AddComponent<MultiplayerInfrastructure.Player.PlayerController>();
+        string[] stageSignals =
+        {
+          "click_to_start_comp", "interact_chest", "start_ambu_r1", "start_ambu_r2",
+          "interact_patient_chest", "remove_tpiece", "remove_patient_clothing",
+          "interact_tpiece", "remove_intu_stylet"
+        };
+        foreach (string signal in stageSignals)
+        {
+          var action = System.Array.Find(
+            instance.GetComponentsInChildren<ScenarioActionInteractable>(true),
+            each => each != null && each.CompletionSignal == signal);
+          Assert.That(action, Is.Not.Null, $"신호 '{signal}' 상호작용을 프리팹에서 찾지 못했습니다.");
+          Assert.That(action.CanInteract(interactor.transform), Is.False,
+            $"상호작용 '{signal}'은 시나리오 활성화 전에는 노출되면 안 됩니다.");
+        }
+
+        var controller = instance.GetComponent<PatientController>();
+        Assert.That(controller, Is.Not.Null);
+        var getAssessAction = typeof(PatientController).GetMethod(
+          "GetAssessAction", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(getAssessAction, Is.Not.Null);
+        var pulseAction = getAssessAction.Invoke(controller, new object[] { "assess_pulse_r1" })
+          as PatientController.AssessActionConfig;
+        Assert.That(pulseAction, Is.Not.Null);
+        Assert.That(pulseAction.Enabled, Is.False,
+          "맥박 확인(r1)은 심정지 구간 활성화 전에는 노출되면 안 됩니다.");
+      }
+      finally
+      {
         UnityEngine.Object.DestroyImmediate(interactor);
         UnityEngine.Object.DestroyImmediate(instance);
       }

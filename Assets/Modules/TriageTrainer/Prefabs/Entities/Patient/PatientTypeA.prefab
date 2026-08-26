@@ -153,7 +153,7 @@ MonoBehaviour:
   _presentationEntityIdentifier: 
   _interactionIdentifier: 
   _requiredRaisedSignals: []
-  _enabled: 1
+  _enabled: 0
   _consumeOnce: 1
   _activateOnInteract: []
   _deactivateOnInteract: []
@@ -231,7 +231,7 @@ MonoBehaviour:
   _interactionIdentifier: 
   _requiredRaisedSignals:
   - click_to_start_comp
-  _enabled: 1
+  _enabled: 0
   _consumeOnce: 1
   _activateOnInteract: []
   _deactivateOnInteract: []
@@ -308,7 +308,7 @@ MonoBehaviour:
   _presentationEntityIdentifier: 
   _interactionIdentifier: 
   _requiredRaisedSignals: []
-  _enabled: 1
+  _enabled: 0
   _consumeOnce: 1
   _activateOnInteract:
   - {fileID: 8316904770520101598}
@@ -474,7 +474,7 @@ MonoBehaviour:
   _presentationEntityIdentifier: 
   _interactionIdentifier: 
   _requiredRaisedSignals: []
-  _enabled: 1
+  _enabled: 0
   _consumeOnce: 1
   _activateOnInteract: []
   _deactivateOnInteract: []
@@ -551,7 +551,7 @@ MonoBehaviour:
   _presentationEntityIdentifier: 
   _interactionIdentifier: 
   _requiredRaisedSignals: []
-  _enabled: 1
+  _enabled: 0
   _consumeOnce: 1
   _activateOnInteract: []
   _deactivateOnInteract:
@@ -629,7 +629,7 @@ MonoBehaviour:
   _presentationEntityIdentifier: 
   _interactionIdentifier: 
   _requiredRaisedSignals: []
-  _enabled: 1
+  _enabled: 0
   _consumeOnce: 1
   _activateOnInteract: []
   _deactivateOnInteract: []
@@ -706,7 +706,7 @@ MonoBehaviour:
   _presentationEntityIdentifier: 
   _interactionIdentifier: 
   _requiredRaisedSignals: []
-  _enabled: 1
+  _enabled: 0
   _consumeOnce: 1
   _activateOnInteract: []
   _deactivateOnInteract: []
@@ -899,7 +899,7 @@ MonoBehaviour:
     _assessSignal: check_pulse_patient_a_r1
     _actionDialogue: "(\uD658\uC790\uC758 \uBAA9\uC5D0 \uC190\uC744 \uB300\uACE0 \uACBD\uB3D9\uB9E5\uC744 \uCD09\uC9C0\uD55C\uB2E4.)"
     _resultDialogue: "(\uC544\uBB34\uAC83\uB3C4 \uB290\uAEF4\uC9C0\uC9C0 \uC54A\uB294\uB2E4.)"
-    _enabled: 1
+    _enabled: 0
   - _identifier: assess_pulse_r2
     _displayText: "\uB9E5\uBC15 \uD655\uC778"
     _assessSignal: check_pulse_patient_a_r2
@@ -1207,7 +1207,7 @@ MonoBehaviour:
   _presentationEntityIdentifier: patient_a
   _interactionIdentifier: interact_tpiece
   _requiredRaisedSignals: []
-  _enabled: 1
+  _enabled: 0
   _consumeOnce: 1
   _requiredItemIdentifier: tpiece_set
   _consumeRequiredItemCount: 1
@@ -1400,7 +1400,7 @@ MonoBehaviour:
   _presentationEntityIdentifier: patient_a
   _interactionIdentifier: remove_intu_stylet
   _requiredRaisedSignals: []
-  _enabled: 1
+  _enabled: 0
   _consumeOnce: 1
   _activateOnInteract:
   - {fileID: 8549509279935089400}
