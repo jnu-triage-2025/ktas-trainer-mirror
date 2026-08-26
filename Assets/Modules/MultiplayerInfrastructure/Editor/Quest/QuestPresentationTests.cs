@@ -209,7 +209,7 @@ namespace MultiplayerInfrastructure.Tests.Quest
     }
 
     [Test]
-    public void WaypointQuestMarkerUsesTheQuestMarkerSpriteInsteadOfTextGlyph()
+    public void WaypointQuestMarkerSharesTheOverheadLabelPathInsteadOfAWorldSprite()
     {
       var waypointObject = new GameObject("QuestPresentationTests.MarkerWaypoint");
       var texture = new Texture2D(2, 2);
@@ -218,42 +218,25 @@ namespace MultiplayerInfrastructure.Tests.Quest
       try
       {
         var anchor = waypointObject.AddComponent<WaypointAnchor>();
-        typeof(WaypointAnchor)
-          .GetField("_questMarkerSprite", System.Reflection.BindingFlags.Instance
-                                          | System.Reflection.BindingFlags.NonPublic)
-          ?.SetValue(anchor, sprite);
+        const System.Reflection.BindingFlags flags =
+          System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+        typeof(WaypointAnchor).GetField("_questMarkerSprite", flags)?.SetValue(anchor, sprite);
 
-        // 코루틴 없이 시각 오브젝트만 만들어 표현 방식을 확인한다.
-        var ensure = typeof(WaypointAnchor).GetMethod(
-          "EnsureQuestMarkerVisual", System.Reflection.BindingFlags.Instance
-                                     | System.Reflection.BindingFlags.NonPublic);
-        Assert.That(ensure, Is.Not.Null);
-        ensure.Invoke(anchor, null);
+        var resolve = typeof(WaypointAnchor).GetMethod("ResolveQuestMarkerSprite", flags);
+        Assert.That(resolve, Is.Not.Null);
+        Assert.That(resolve.Invoke(anchor, null), Is.SameAs(sprite),
+          "인스펙터에 지정한 스프라이트를 우선 사용해야 합니다.");
 
-        var markerObject = typeof(WaypointAnchor)
-          .GetField("_questMarkerObject", System.Reflection.BindingFlags.Instance
-                                          | System.Reflection.BindingFlags.NonPublic)
-          ?.GetValue(anchor) as GameObject;
-        Assert.That(markerObject, Is.Not.Null);
-
-        var renderer = markerObject.GetComponent<SpriteRenderer>();
-        Assert.That(renderer, Is.Not.Null, "waypoint 마커는 스프라이트로 그려야 합니다.");
-        Assert.That(renderer.sprite, Is.SameAs(sprite));
-        Assert.That(markerObject.GetComponentInChildren<TextMesh>(true), Is.Null,
+        // 라벨 컨트롤러가 없는 상태에서 표시를 요청해도 월드 오브젝트를 만들지 않아야 한다.
+        // (월드 스프라이트 방식이 남아 있으면 크기 기준이 달라지고 지형에 가려진다.)
+        anchor.SetQuestMarkerVisible(true);
+        Assert.That(waypointObject.transform.childCount, Is.Zero,
+          "waypoint 마커는 월드 오브젝트를 만들지 않고 오버헤드 라벨로 표시해야 합니다.");
+        Assert.That(anchor.GetComponentsInChildren<SpriteRenderer>(true), Is.Empty);
+        Assert.That(anchor.GetComponentsInChildren<TextMesh>(true), Is.Empty,
           "\u2756 텍스트 마커는 quest-marker 스프라이트로 전환되었으므로 남아 있으면 안 됩니다.");
-
-        var material = typeof(WaypointAnchor)
-          .GetField("_questMarkerMaterial", System.Reflection.BindingFlags.Instance
-                                            | System.Reflection.BindingFlags.NonPublic)
-          ?.GetValue(anchor) as Material;
-        Assert.That(material, Is.Not.Null);
-        Assert.That(material.GetInt("_ZTest"),
-          Is.EqualTo((int)UnityEngine.Rendering.CompareFunction.Always),
-          "목표 지점 마커는 벽이나 지형에 가려지지 않아야 합니다.");
-
-        // 컴포넌트의 OnDestroy 는 Destroy 를 호출하는데 에디트 모드에서는 예외가 되므로,
-        // 컴포넌트가 만든 임시 오브젝트를 먼저 직접 정리하고 참조를 비운다.
-        DestroyQuestMarkerVisualForTest(anchor, markerObject, material);
+        Assert.That(anchor.IsQuestMarkerVisible, Is.False,
+          "라벨 컨트롤러가 준비되기 전에는 표시 상태를 올리지 않고 다음 호출에서 다시 시도해야 합니다.");
       }
       finally
       {
@@ -263,19 +246,25 @@ namespace MultiplayerInfrastructure.Tests.Quest
       }
     }
 
-    private static void DestroyQuestMarkerVisualForTest(
-      WaypointAnchor anchor, GameObject markerObject, Material material)
+    [Test]
+    public void WaypointAndNpcQuestMarksUseTheSameDisplayController()
     {
-      const System.Reflection.BindingFlags flags =
-        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+      string projectRoot = System.IO.Directory.GetParent(Application.dataPath).FullName;
+      string anchorSource = System.IO.File.ReadAllText(System.IO.Path.Combine(projectRoot,
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Registry/WaypointAnchor.cs"));
 
-      if (markerObject != null)
-        Object.DestroyImmediate(markerObject);
-      typeof(WaypointAnchor).GetField("_questMarkerObject", flags)?.SetValue(anchor, null);
+      // 두 마커의 크기 기준이 갈리지 않도록 같은 표시 컨트롤러를 쓰는지 고정한다.
+      // (하이라이트 시각 효과는 여전히 월드 스프라이트라서 파일 전체를 검사하면 안 된다.)
+      StringAssert.Contains("EntityOverheadLabelUIController.ActiveInstance", anchorSource);
 
-      if (material != null)
-        Object.DestroyImmediate(material);
-      typeof(WaypointAnchor).GetField("_questMarkerMaterial", flags)?.SetValue(anchor, null);
+      int markerStart = anchorSource.IndexOf(
+        "public void SetQuestMarkerVisible", System.StringComparison.Ordinal);
+      int markerEnd = anchorSource.IndexOf(
+        "private void EnsureHighlightVisual", System.StringComparison.Ordinal);
+      Assert.That(markerStart, Is.GreaterThanOrEqualTo(0));
+      Assert.That(markerEnd, Is.GreaterThan(markerStart));
+      StringAssert.DoesNotContain("AddComponent<SpriteRenderer>()",
+        anchorSource.Substring(markerStart, markerEnd - markerStart));
     }
 
     [Test]

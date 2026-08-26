@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Commons;
+using MultiplayerInfrastructure.UI;
 using UnityEngine;
 using UnityEngine.Rendering;
 #if UNITY_EDITOR
@@ -23,18 +24,8 @@ namespace MultiplayerInfrastructure.Registry
     [SerializeField] private int _highlightSortingOrder = 500;
 
     [Header("Quest Marker")]
-    [SerializeField] private Vector3 _questMarkerOffset = new(0f, 0.8f, 0f);
     [Tooltip("비워 두면 레지스트리에 등록된 quest-marker 아이콘을 사용한다. NPC 머리 위 마크와 같은 스프라이트다.")]
     [SerializeField] private Sprite _questMarkerSprite;
-    [Tooltip("기준 거리에서 보이는 마커의 월드 크기.")]
-    [SerializeField, Min(0.01f)] private float _questMarkerScale = 0.45f;
-    [SerializeField] private float _questMarkerInitialScale = 1.25f;
-    [SerializeField] private float _questMarkerSettleDuration = 0.35f;
-    [SerializeField] private int _questMarkerSortingOrder = 510;
-    [Tooltip("이 거리에서 scale 1로 보이는 기준 거리. 카메라와의 거리에 따라 화면 크기를 일정하게 보정한다.")]
-    [SerializeField] private float _questMarkerReferenceDistance = 10f;
-    [SerializeField] private float _questMarkerReferenceFieldOfView = 60f;
-    [SerializeField] private float _questMarkerReferenceOrthographicSize = 5f;
 
     private string _registeredIdentifier;
     private static readonly Dictionary<string, WaypointAnchor> _anchorsByIdentifier = new(StringComparer.Ordinal);
@@ -46,12 +37,13 @@ namespace MultiplayerInfrastructure.Registry
     private SpriteRenderer _highlightRenderer;
     private Material _highlightMaterial;
     private Coroutine _highlightRoutine;
-    private GameObject _questMarkerObject;
-    private Material _questMarkerMaterial;
-    private Coroutine _questMarkerSettleRoutine;
-    private UnityEngine.Camera _questMarkerCamera;
     private bool _questMarkerVisible;
-    private float _questMarkerAnimationScale = 1f;
+
+    /// <summary>오버헤드 라벨에서 이 마커가 차지하는 채널. NPC 마크와 겹치지 않게 별도 채널을 쓴다.</summary>
+    private const string QuestMarkerChannel = "quest-waypoint";
+
+    /// <summary>이름표(0)보다 위에 마커를 쌓기 위한 채널 순서. NPC 퀘스트 마크와 같은 기준을 쓴다.</summary>
+    private const int QuestMarkerChannelOrder = 100;
 
     public string Identifier => identifier;
     public bool SupportsHighlight => _highlightSprite != null;
@@ -81,14 +73,14 @@ namespace MultiplayerInfrastructure.Registry
     {
       UnregisterFromRegistry();
       DisableHighlightVisual();
-      DisableQuestMarkerVisual();
+      RemoveQuestMarkerLabel();
     }
 
     private void OnDestroy()
     {
       UnregisterFromRegistry();
       CleanupHighlightVisual();
-      CleanupQuestMarkerVisual();
+      RemoveQuestMarkerLabel();
     }
 
     private void OnValidate()
@@ -176,66 +168,40 @@ namespace MultiplayerInfrastructure.Registry
 
     /// <summary>
     /// 이 waypoint가 현재 퀘스트의 이동 목표일 때 quest-marker 아이콘을 표시한다.
-    /// 처음 표시될 때만 살짝 큰 크기에서 평소 크기로 자연스럽게 안착한다.
+    /// NPC 머리 위 마크와 같은 오버헤드 라벨 경로를 쓰므로 크기가 동일하고 지형에 가려지지 않는다.
     /// </summary>
     public void SetQuestMarkerVisible(bool visible)
     {
-      if (_questMarkerVisible == visible
-          && (!visible || (_questMarkerObject != null && _questMarkerObject.activeSelf)))
+      if (_questMarkerVisible == visible)
         return;
 
-      _questMarkerVisible = visible;
       if (!visible)
       {
-        DisableQuestMarkerVisual();
-        return;
-      }
-
-      if (!gameObject.activeInHierarchy)
-        return;
-
-      EnsureQuestMarkerVisual();
-      if (_questMarkerObject == null)
-      {
-        // 아이콘 스프라이트가 아직 레지스트리에 없을 수 있다. 호출자가 매 프레임 갱신하므로
-        // 표시 상태를 되돌려 다음 호출에서 다시 시도하게 한다.
         _questMarkerVisible = false;
+        RemoveQuestMarkerLabel();
         return;
       }
 
-      _questMarkerObject.SetActive(true);
-      if (_questMarkerSettleRoutine != null)
-        StopCoroutine(_questMarkerSettleRoutine);
-      _questMarkerSettleRoutine = StartCoroutine(SettleQuestMarker());
+      var controller = EntityOverheadLabelUIController.ActiveInstance;
+      var sprite = ResolveQuestMarkerSprite();
+      if (controller == null || sprite == null)
+      {
+        // 라벨 컨트롤러나 아이콘이 아직 준비되지 않았을 수 있다. 호출자가 매 프레임 갱신하므로
+        // 표시 상태를 올리지 않고 다음 호출에서 다시 시도하게 한다.
+        return;
+      }
+
+      controller.SetLabel(
+        transform,
+        QuestMarkerChannel,
+        QuestMarkerChannelOrder,
+        new EntityOverheadLabelUIController.LabelContent(sprite));
+      _questMarkerVisible = true;
     }
 
-    private void EnsureQuestMarkerVisual()
+    private void RemoveQuestMarkerLabel()
     {
-      if (_questMarkerObject != null)
-        return;
-
-      var sprite = ResolveQuestMarkerSprite();
-      if (sprite == null)
-        return;
-
-      _questMarkerObject = new GameObject("Quest Waypoint Marker");
-      _questMarkerObject.hideFlags = HideFlags.HideInHierarchy;
-      _questMarkerObject.transform.SetParent(transform, false);
-      _questMarkerObject.transform.localPosition = _questMarkerOffset;
-
-      var renderer = _questMarkerObject.AddComponent<SpriteRenderer>();
-      renderer.sprite = sprite;
-      renderer.shadowCastingMode = ShadowCastingMode.Off;
-      renderer.receiveShadows = false;
-      renderer.sortingOrder = _questMarkerSortingOrder;
-
-      // 목표 지점 안내이므로 벽이나 지형에 가려지지 않게 깊이 판정을 끈다(하이라이트 시각 효과와 동일).
-      _questMarkerMaterial = new Material(Shader.Find("Sprites/Default"));
-      _questMarkerMaterial.SetInt("_ZTest", (int)CompareFunction.Always);
-      _questMarkerMaterial.SetInt("_ZWrite", 0);
-      renderer.material = _questMarkerMaterial;
-
-      _questMarkerObject.SetActive(false);
+      EntityOverheadLabelUIController.ActiveInstance?.RemoveLabel(transform, QuestMarkerChannel);
     }
 
     /// <summary>
@@ -251,109 +217,6 @@ namespace MultiplayerInfrastructure.Registry
         RegistryType.IconSprite, IconSpriteIdentifiers.QuestNpcMark, out var sprite)
         ? sprite
         : null;
-    }
-
-    private IEnumerator SettleQuestMarker()
-    {
-      if (_questMarkerObject == null)
-        yield break;
-
-      float duration = Mathf.Max(0f, _questMarkerSettleDuration);
-      float initialScale = Mathf.Max(1f, _questMarkerInitialScale);
-      if (duration <= 0f)
-      {
-        _questMarkerAnimationScale = 1f;
-        _questMarkerSettleRoutine = null;
-        yield break;
-      }
-
-      float elapsed = 0f;
-      while (elapsed < duration)
-      {
-        elapsed += Time.unscaledDeltaTime;
-        float normalized = Mathf.Clamp01(elapsed / duration);
-        float eased = normalized * normalized * (3f - 2f * normalized);
-        _questMarkerAnimationScale = Mathf.Lerp(initialScale, 1f, eased);
-        yield return null;
-      }
-
-      _questMarkerAnimationScale = 1f;
-      _questMarkerSettleRoutine = null;
-    }
-
-    private void LateUpdate()
-    {
-      if (_questMarkerObject == null || !_questMarkerObject.activeSelf)
-        return;
-
-      if (_questMarkerCamera == null)
-        _questMarkerCamera = UnityEngine.Camera.main;
-      if (_questMarkerCamera == null)
-        return;
-
-      var cameraTransform = _questMarkerCamera.transform;
-      _questMarkerObject.transform.rotation =
-        Quaternion.LookRotation(cameraTransform.forward, cameraTransform.up);
-      ApplyConstantScreenScale(_questMarkerCamera);
-    }
-
-    private void ApplyConstantScreenScale(UnityEngine.Camera camera)
-    {
-      float scale;
-      if (camera.orthographic)
-      {
-        scale = camera.orthographicSize
-            / Mathf.Max(0.01f, _questMarkerReferenceOrthographicSize);
-      }
-      else
-      {
-        float distance = Vector3.Distance(camera.transform.position, _questMarkerObject.transform.position);
-        float distanceScale = distance / Mathf.Max(0.01f, _questMarkerReferenceDistance);
-        float currentFov = Mathf.Tan(camera.fieldOfView * 0.5f * Mathf.Deg2Rad);
-        float referenceFov = Mathf.Tan(
-          Mathf.Clamp(_questMarkerReferenceFieldOfView, 1f, 179f) * 0.5f * Mathf.Deg2Rad);
-        scale = distanceScale * currentFov / Mathf.Max(0.001f, referenceFov);
-      }
-
-      // 부모 waypoint에 스케일이 적용되어 있어도 최종 월드 크기는 동일하게 유지한다.
-      Vector3 parentScale = transform.lossyScale;
-      float animatedScale = Mathf.Max(
-        0.001f, scale * _questMarkerAnimationScale * Mathf.Max(0.01f, _questMarkerScale));
-      _questMarkerObject.transform.localScale = new Vector3(
-        animatedScale / Mathf.Max(0.001f, Mathf.Abs(parentScale.x)),
-        animatedScale / Mathf.Max(0.001f, Mathf.Abs(parentScale.y)),
-        animatedScale / Mathf.Max(0.001f, Mathf.Abs(parentScale.z)));
-    }
-
-    private void DisableQuestMarkerVisual()
-    {
-      if (_questMarkerSettleRoutine != null)
-      {
-        StopCoroutine(_questMarkerSettleRoutine);
-        _questMarkerSettleRoutine = null;
-      }
-
-      if (_questMarkerObject != null)
-      {
-        _questMarkerAnimationScale = 1f;
-        _questMarkerObject.SetActive(false);
-      }
-    }
-
-    private void CleanupQuestMarkerVisual()
-    {
-      DisableQuestMarkerVisual();
-      if (_questMarkerObject != null)
-      {
-        Destroy(_questMarkerObject);
-        _questMarkerObject = null;
-      }
-
-      if (_questMarkerMaterial != null)
-      {
-        Destroy(_questMarkerMaterial);
-        _questMarkerMaterial = null;
-      }
     }
 
     private void EnsureHighlightVisual()
