@@ -506,6 +506,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioManualEntrypointNodeDTO manualEntrypoint => ConvertManualEntrypoint(manualEntrypoint),
           ScenarioBedSnapNodeDTO bedSnap => ConvertBedSnap(bedSnap),
           ScenarioReturnToOriginNodeDTO returnToOrigin => ConvertReturnToOrigin(returnToOrigin),
+          ScenarioLifecycleNodeDTO lifecycle => ConvertLifecycle(lifecycle),
           _ => throw new JsonException($"Unsupported scenario node dto type '{dto.GetType().Name}'.")
         };
 
@@ -763,6 +764,17 @@ namespace MultiplayerInfrastructure.Scenario
         {
           Identifier = dto.Identifier,
           Description = dto.Description,
+          NextIdentifier = dto.NextIdentifier
+        };
+
+    private static ScenarioLifecycleNode ConvertLifecycle(ScenarioLifecycleNodeDTO dto) =>
+        new ScenarioLifecycleNode
+        {
+          Identifier = dto.Identifier,
+          Operation = ParseEnum(dto.Operation, ScenarioLifecycleOperation.Cleanup),
+          RevertTrackedChanges = dto.RevertTrackedChanges ?? true,
+          ClearRuntimeState = dto.ClearRuntimeState ?? true,
+          RestartEntrypointIdentifier = dto.RestartEntrypointIdentifier,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -1699,6 +1711,7 @@ namespace MultiplayerInfrastructure.Scenario
           ScenarioManualEntrypointNode manualEntrypoint => ConvertToDTO(manualEntrypoint),
           ScenarioBedSnapNode bedSnap => ConvertToDTO(bedSnap),
           ScenarioReturnToOriginNode returnToOrigin => ConvertToDTO(returnToOrigin),
+          ScenarioLifecycleNode lifecycle => ConvertToDTO(lifecycle),
           _ => throw new JsonException($"Unsupported scenario node type '{node.GetType().Name}'.")
         };
 
@@ -1973,6 +1986,19 @@ namespace MultiplayerInfrastructure.Scenario
           NodeType = "ReturnToOrigin",
           Identifier = node.Identifier,
           Description = string.IsNullOrWhiteSpace(node.Description) ? null : node.Description,
+          NextIdentifier = node.NextIdentifier
+        };
+
+    private static ScenarioLifecycleNodeDTO ConvertToDTO(ScenarioLifecycleNode node) =>
+        new ScenarioLifecycleNodeDTO
+        {
+          NodeType = "Lifecycle",
+          Identifier = node.Identifier,
+          Operation = node.Operation.ToString(),
+          RevertTrackedChanges = node.RevertTrackedChanges ? (bool?)null : false,
+          ClearRuntimeState = node.ClearRuntimeState ? (bool?)null : false,
+          RestartEntrypointIdentifier = string.IsNullOrWhiteSpace(node.RestartEntrypointIdentifier)
+            ? null : node.RestartEntrypointIdentifier,
           NextIdentifier = node.NextIdentifier
         };
 

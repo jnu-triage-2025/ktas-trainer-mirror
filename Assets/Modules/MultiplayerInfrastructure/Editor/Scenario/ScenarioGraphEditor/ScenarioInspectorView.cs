@@ -203,6 +203,9 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.ReturnToOrigin:
           DrawReturnToOriginFields((ScenarioReturnToOriginNode)data);
           break;
+        case ScenarioNodeType.Lifecycle:
+          DrawLifecycleFields((ScenarioLifecycleNode)data);
+          break;
       }
     }
 
@@ -1046,6 +1049,19 @@ namespace MultiplayerInfrastructure.Editor
       data.Threshold = EditorGUILayout.IntField("Threshold", data.Threshold);
       data.OutputSignalIdentifier = EditorGUILayout.TextField("Output Signal", data.OutputSignalIdentifier);
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+    }
+
+    private static void DrawLifecycleFields(ScenarioLifecycleNode data)
+    {
+      data.Operation = (ScenarioLifecycleOperation)EditorGUILayout.EnumPopup("Operation", data.Operation);
+      data.RevertTrackedChanges = EditorGUILayout.Toggle("Revert Tracked Changes", data.RevertTrackedChanges);
+      data.ClearRuntimeState = EditorGUILayout.Toggle("Clear Runtime State", data.ClearRuntimeState);
+      if (data.Operation == ScenarioLifecycleOperation.Restart)
+        data.RestartEntrypointIdentifier = EditorGUILayout.TextField("Restart Entrypoint", data.RestartEntrypointIdentifier);
+      if (data.Operation == ScenarioLifecycleOperation.Cleanup)
+        EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
+      else
+        EditorGUILayout.HelpBox("End와 Restart는 다음 링크를 사용하지 않습니다.", MessageType.Info);
     }
 
     private void DrawReturnToOriginFields(ScenarioReturnToOriginNode data)

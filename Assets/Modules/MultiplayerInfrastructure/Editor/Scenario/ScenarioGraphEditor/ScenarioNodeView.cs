@@ -286,6 +286,7 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioNodeType.TimeControl:
         case ScenarioNodeType.ManualEntrypoint:
         case ScenarioNodeType.BedSnap:
+        case ScenarioNodeType.Lifecycle:
           DefaultOutputPort = CreateStandardOutput("Next");
           break;
 

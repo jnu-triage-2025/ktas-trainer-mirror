@@ -110,6 +110,8 @@ namespace MultiplayerInfrastructure.Scenario
     private readonly List<ScenarioOwnedActingNpc> _scenarioOwnedActingNpcs = new List<ScenarioOwnedActingNpc>();
     private readonly List<ScenarioOwnedWaypoint> _scenarioOwnedWaypoints = new List<ScenarioOwnedWaypoint>();
     private readonly Dictionary<int, int> _activeRoleBranchDepthByClientId = new Dictionary<int, int>();
+    private readonly Stack<Action> _cleanupJournal = new Stack<Action>();
+    private bool _isRevertingCleanupJournal;
 
     private sealed class ScenarioOwnedActingNpc
     {
@@ -191,6 +193,7 @@ namespace MultiplayerInfrastructure.Scenario
       ExecutingManualEntrypoint,
       ExecutingBedSnap,
       ExecutingReturnToOrigin,
+      ExecutingLifecycle,
     }
 
     [SerializeField] private State _state = State.Inactive;
@@ -467,6 +470,37 @@ namespace MultiplayerInfrastructure.Scenario
       StartScenarioInternal(graph, startNodeIdentifier, ownerClientId);
     }
 
+    /// <summary>현재 시나리오를 정리한 뒤 같은 그래프의 지정 진입점부터 다시 시작한다.</summary>
+    public bool RestartScenario(string startNodeIdentifier = null)
+    {
+      if (_currentGraph == null || _executionMode == ExecutionMode.ClientPresentation)
+        return false;
+
+      var graph = _currentGraph;
+      var ownerClientId = _scenarioOwnerClientId;
+      var mode = _executionMode;
+      if (!string.IsNullOrWhiteSpace(startNodeIdentifier)
+          && TryFindManualEntrypoint(graph, startNodeIdentifier, out var manualEntrypoint))
+      {
+        startNodeIdentifier = manualEntrypoint.Identifier;
+      }
+      if (!string.IsNullOrWhiteSpace(startNodeIdentifier)
+          && !graph.TryGetNode(startNodeIdentifier, out _))
+      {
+        Debug.LogWarning($"[ScenarioController] Restart node '{startNodeIdentifier}' was not found.");
+        return false;
+      }
+      // 표시 전용 피어의 세션은 유지해야 새 시작 노드가 RPC로 즉시 갱신된다.
+      // EndPresentationScenario를 먼저 보내면 재시작 뒤 BeginPresentationScenario를 다시
+      // 보낼 대상 목록이 없어 원격 UI가 영구적으로 비활성 상태에 남는다.
+      EndScenarioInternal(endAuthoritativePresentation: false);
+      _executionMode = mode;
+      if (mode == ExecutionMode.ServerAuthoritative)
+        ScenarioNetworkRelay.DismissAuthoritativePresentation(graph.Identifier);
+      StartScenarioInternal(graph, startNodeIdentifier, ownerClientId);
+      return true;
+    }
+
     /// <summary>서버 권위 시나리오를 시작한다. 그래프 순회는 이 서버 인스턴스에서만 수행한다.</summary>
     public void StartAuthoritativeScenario(ScenarioGraph graph, string startNodeIdentifier, int? ownerClientId)
     {
@@ -709,12 +743,12 @@ namespace MultiplayerInfrastructure.Scenario
         return;
       }
 
-      if (!PrepareScenarioOwnedObjects(graph))
-        return;
-
       // 이전 시나리오 실행에서 남은 코루틴(병렬 브랜치 등)이 있으면 새 시나리오 시작 전에 정리한다.
       StopAllCoroutines();
       CancelDialogueAutoAdvance();
+      RevertTrackedChanges();
+      if (!PrepareScenarioOwnedObjects(graph))
+        return;
       // StopAllCoroutines 로 강제 종료된 브랜치 코루틴은 finally 가 실행되지 않아
       // 억제 카운터가 불균형 상태로 남을 수 있으므로 명시적으로 초기화한다.
       _globalAdvanceSuppressionDepth = 0;
@@ -813,6 +847,11 @@ namespace MultiplayerInfrastructure.Scenario
     /// </summary>
     public void EndScenario()
     {
+      EndScenarioInternal(endAuthoritativePresentation: true);
+    }
+
+    private void EndScenarioInternal(bool endAuthoritativePresentation)
+    {
       CancelInlineTTSPrewarm();
       CompleteNodeVisit(_activeMainNodeVisitSequence);
       CompleteOpenNodeVisits();
@@ -821,7 +860,8 @@ namespace MultiplayerInfrastructure.Scenario
       string endingGraphId = _currentGraph?.Identifier;
       if (_executionMode == ExecutionMode.ServerAuthoritative && !string.IsNullOrEmpty(endingGraphId))
       {
-        ScenarioNetworkRelay.EndAuthoritativePresentation(endingGraphId);
+        if (endAuthoritativePresentation)
+          ScenarioNetworkRelay.EndAuthoritativePresentation(endingGraphId);
         ScenarioParallelAssignmentState.ClearGraph(endingGraphId);
       }
       CancelDialogueAutoAdvance();
@@ -830,6 +870,7 @@ namespace MultiplayerInfrastructure.Scenario
       // 살아남는 병렬 브랜치)을 모두 정리한다. 이를 누락하면 그래프가 해제된 뒤에도
       // 브랜치 체인이 계속 돌면서 _currentGraph 역참조에서 NullReferenceException 이 발생한다.
       StopAllCoroutines();
+      RevertTrackedChanges();
       _parallelAdvanceBlockDepth = 0;
       ScenarioInteractionSignals.ClearAllInternalSignals();
       ScenarioInteractionSignals.ClearAllRaisedSignals();
@@ -1026,6 +1067,37 @@ namespace MultiplayerInfrastructure.Scenario
         DestroyScenarioActingNpc(spawned);
         return false;
       }
+    }
+
+    private void TrackCleanup(Action undo)
+    {
+      if (!_isRevertingCleanupJournal && undo != null)
+        _cleanupJournal.Push(undo);
+    }
+
+    private void RevertTrackedChanges()
+    {
+      _isRevertingCleanupJournal = true;
+      try
+      {
+        while (_cleanupJournal.Count > 0)
+        {
+          try { _cleanupJournal.Pop()?.Invoke(); }
+          catch (Exception ex) { Debug.LogException(ex, this); }
+        }
+      }
+      finally { _isRevertingCleanupJournal = false; }
+    }
+
+    private void SetTrackedState(string key, string value)
+    {
+      bool existed = _stateStore.TryGetValue(key, out var previous);
+      TrackCleanup(() =>
+      {
+        if (existed) _stateStore[key] = previous;
+        else _stateStore.Remove(key);
+      });
+      _stateStore[key] = value;
     }
 
     private void CleanupScenarioActingNpcs(bool forceDespawn = false)
@@ -1803,9 +1875,38 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioReturnToOriginNode returnToOrigin:
           ExecuteReturnToOriginNode(returnToOrigin);
           break;
+        case ScenarioLifecycleNode lifecycle:
+          ExecuteLifecycleNode(lifecycle);
+          break;
         default:
           Debug.LogWarning($"[ScenarioController] Unsupported node type: {node.GetType().Name}");
           Advance();
+          break;
+      }
+    }
+
+    private void ExecuteLifecycleNode(ScenarioLifecycleNode node)
+    {
+      _state = State.ExecutingLifecycle;
+      if (node.RevertTrackedChanges)
+        RevertTrackedChanges();
+      if (node.ClearRuntimeState)
+      {
+        ClearRuntimeStateForManualEntry();
+        CleanupScenarioActingNpcs();
+        CleanupScenarioWaypoints();
+      }
+
+      switch (node.Operation)
+      {
+        case ScenarioLifecycleOperation.Cleanup:
+          Advance();
+          break;
+        case ScenarioLifecycleOperation.End:
+          EndScenario();
+          break;
+        case ScenarioLifecycleOperation.Restart:
+          RestartScenario(node.RestartEntrypointIdentifier);
           break;
       }
     }
@@ -2661,7 +2762,7 @@ namespace MultiplayerInfrastructure.Scenario
       var key = string.IsNullOrWhiteSpace(node.TargetEntityIdentifier)
         ? node.StateKey
         : $"{node.TargetEntityIdentifier}.{node.StateKey}";
-      _stateStore[key] = node.StateValue;
+      SetTrackedState(key, node.StateValue);
 #if UNITY_EDITOR
       Debug.Log($"[ScenarioController] State updated: {key}={node.StateValue}");
 #endif
@@ -2732,14 +2833,20 @@ namespace MultiplayerInfrastructure.Scenario
         switch (node.Operation)
         {
           case ScenarioPlayerTagOperationType.Add:
+            bool hadTag = PlayerTagService.HasTag(session.Identifier, node.Tag);
             PlayerTagService.AddTag(session.Identifier, node.Tag);
+            if (!hadTag)
+              TrackCleanup(() => PlayerTagService.RemoveTag(session.Identifier, node.Tag));
 #if UNITY_EDITOR
             Debug.Log($"[ScenarioController] Tag Add: player={session.DisplayName} tag={node.Tag}");
 #endif
             break;
 
           case ScenarioPlayerTagOperationType.Remove:
+            bool hadRemovedTag = PlayerTagService.HasTag(session.Identifier, node.Tag);
             PlayerTagService.RemoveTag(session.Identifier, node.Tag);
+            if (hadRemovedTag)
+              TrackCleanup(() => PlayerTagService.AddTag(session.Identifier, node.Tag));
 #if UNITY_EDITOR
             Debug.Log($"[ScenarioController] Tag Remove: player={session.DisplayName} tag={node.Tag}");
 #endif
@@ -2865,7 +2972,7 @@ namespace MultiplayerInfrastructure.Scenario
         string actorStateKey = string.IsNullOrWhiteSpace(node.ResultStateKey)
           ? $"{node.Identifier}.spawnedEntityIdentifier"
           : node.ResultStateKey;
-        _stateStore[actorStateKey] = actingNpc.Identifier;
+        SetTrackedState(actorStateKey, actingNpc.Identifier);
         Advance();
         return;
       }
@@ -2886,7 +2993,7 @@ namespace MultiplayerInfrastructure.Scenario
             spawnPosition,
             Quaternion.Euler(node.RotationX, node.RotationY, node.RotationZ),
             node.SpawnedEntityIdentifier,
-            out _,
+            out var spawnedGameObject,
             out var spawnedDescriptor,
             out var error))
       {
@@ -2894,6 +3001,7 @@ namespace MultiplayerInfrastructure.Scenario
         Advance();
         return;
       }
+      TrackCleanup(() => DestroyScenarioActingNpc(spawnedGameObject));
 
       string stateKey = string.IsNullOrWhiteSpace(node.ResultStateKey)
         ? $"{node.Identifier}.spawnedEntityIdentifier"
@@ -2904,7 +3012,7 @@ namespace MultiplayerInfrastructure.Scenario
       string spawnedIdentifier = spawnedDescriptor?.Identifier;
       if (string.IsNullOrWhiteSpace(spawnedIdentifier))
         spawnedIdentifier = node.SpawnedEntityIdentifier;
-      _stateStore[stateKey] = spawnedIdentifier;
+      SetTrackedState(stateKey, spawnedIdentifier);
 
       Advance();
     }
@@ -2975,7 +3083,7 @@ namespace MultiplayerInfrastructure.Scenario
               spawnPosition,
               Quaternion.identity,
               node.SpawnedEntityIdentifier,
-              out _,
+              out var spawnedGameObject,
               out var spawnedDescriptor,
               out var error))
         {
@@ -2983,6 +3091,7 @@ namespace MultiplayerInfrastructure.Scenario
           Advance();
           return;
         }
+        TrackCleanup(() => DestroyScenarioActingNpc(spawnedGameObject));
 
         resolvedIdentifier = spawnedDescriptor?.Identifier;
         if (string.IsNullOrWhiteSpace(resolvedIdentifier))
@@ -3035,7 +3144,7 @@ namespace MultiplayerInfrastructure.Scenario
       string stateKey = string.IsNullOrWhiteSpace(node.ResultStateKey)
         ? $"{node.Identifier}.submissionEntityIdentifier"
         : node.ResultStateKey;
-      _stateStore[stateKey] = resolvedIdentifier;
+      SetTrackedState(stateKey, resolvedIdentifier);
 
       Advance();
     }
@@ -3160,13 +3269,25 @@ namespace MultiplayerInfrastructure.Scenario
       switch (node.Operation)
       {
         case ScenarioPlayerTagOperationType.Add:
+          bool hadTag = PlayerTagService.HasTag(targetIdentifier, node.Tag);
           PlayerTagService.AddTagToIdentifier(targetIdentifier, node.Tag);
+          if (!hadTag)
+            TrackCleanup(() => PlayerTagService.RemoveTagFromIdentifier(targetIdentifier, node.Tag));
           break;
         case ScenarioPlayerTagOperationType.Remove:
+          bool hadRemovedTag = PlayerTagService.HasTag(targetIdentifier, node.Tag);
           PlayerTagService.RemoveTagFromIdentifier(targetIdentifier, node.Tag);
+          if (hadRemovedTag)
+            TrackCleanup(() => PlayerTagService.AddTagToIdentifier(targetIdentifier, node.Tag));
           break;
         case ScenarioPlayerTagOperationType.Change:
-          PlayerTagService.ChangeTagForIdentifier(targetIdentifier, node.FromTag, node.ToTag);
+          if (PlayerTagService.ChangeTagForIdentifier(targetIdentifier, node.FromTag, node.ToTag))
+          {
+            string identifier = targetIdentifier;
+            string fromTag = node.FromTag;
+            string toTag = node.ToTag;
+            TrackCleanup(() => PlayerTagService.ChangeTagForIdentifier(identifier, toTag, fromTag));
+          }
           break;
       }
 
@@ -3242,6 +3363,7 @@ namespace MultiplayerInfrastructure.Scenario
           Advance();
           return;
         }
+        TrackCleanup(() => DestroyScenarioActingNpc(spawned));
 
         // 네트워크 루트는 OnStartClient 에서 비동기 자가 등록하므로 디스크립터가 아직 없을 수 있다.
         // 표시 상태 적용은 스폰된 GameObject 에서 직접 컴포넌트를 찾아 수행한다(레지스트리 등록과 무관).
@@ -3280,7 +3402,7 @@ namespace MultiplayerInfrastructure.Scenario
         string storeKey = string.IsNullOrWhiteSpace(node.ResultStateKey)
           ? $"{node.Identifier}.entityIdentifier"
           : node.ResultStateKey;
-        _stateStore[storeKey] = resolvedIdentifier;
+        SetTrackedState(storeKey, resolvedIdentifier);
       }
 
       ApplyEntityInitStateOperations(node, resolvedIdentifier, targetGameObject);
@@ -3330,7 +3452,7 @@ namespace MultiplayerInfrastructure.Scenario
             string stateKey = string.IsNullOrWhiteSpace(entityIdentifier)
               ? op.Key
               : $"{entityIdentifier}.{op.Key}";
-            _stateStore[stateKey] = op.Value;
+            SetTrackedState(stateKey, op.Value);
             break;
 
           case ScenarioEntityStateOperationKind.DisplayState:

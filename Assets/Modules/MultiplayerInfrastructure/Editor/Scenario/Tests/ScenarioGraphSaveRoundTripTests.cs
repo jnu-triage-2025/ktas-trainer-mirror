@@ -20,6 +20,29 @@ namespace MultiplayerInfrastructure.Tests.Scenario
   public sealed class ScenarioGraphSaveRoundTripTests
   {
     [Test]
+    public void LifecycleNodeSavesAndRoundTripsWithSchemaValidation()
+    {
+      var graph = new ScenarioGraph { Identifier = "lifecycle-round-trip", DefaultEntrypoint = "cleanup" };
+      graph.Add(new ScenarioLifecycleNode
+      {
+        Identifier = "cleanup",
+        Operation = ScenarioLifecycleOperation.Restart,
+        RevertTrackedChanges = true,
+        ClearRuntimeState = true,
+        RestartEntrypointIdentifier = "start"
+      });
+
+      string json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+      var lifecycle = (ScenarioLifecycleNode)reloaded.Nodes["cleanup"];
+
+      Assert.That(lifecycle.Operation, Is.EqualTo(ScenarioLifecycleOperation.Restart));
+      Assert.That(lifecycle.RestartEntrypointIdentifier, Is.EqualTo("start"));
+      Assert.That(lifecycle.RevertTrackedChanges, Is.True);
+      Assert.That(lifecycle.ClearRuntimeState, Is.True);
+    }
+
+    [Test]
     public void SchemaReloadCanValidateMoreThanOnce()
     {
       const string json = @"{

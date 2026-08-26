@@ -23,6 +23,8 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("scenario signal <signal> [clear]", "Raise (or clear) a signal."),
       new UsageLine("scenario enter <entrypoint>", "Skip playback to a ManualEntrypoint node."),
       new UsageLine("scenario enter <entrypoint> [clear-state=true|clear-state=false]", "Skip, wiping (default) or keeping prior scenario state."),
+      new UsageLine("scenario end", "End the active scenario and clean up its tracked changes."),
+      new UsageLine("scenario restart [entrypoint]", "Clean up and restart the active scenario."),
       new UsageLine("scenario conflictpolicy [warn|cancel|panic]", "Get/set concurrent-dialogue conflict policy."),
       new UsageLine("scenario validatorlog", "Show Validator block logging targets."),
       new UsageLine("scenario validatorlog <console|chat|session> <on|off>", "Enable or disable a logging target."),
@@ -122,6 +124,40 @@ namespace MultiplayerInfrastructure.Command
         return;
       }
 
+      if (args != null && args.Length >= 1
+          && (string.Equals(args[0], "end", StringComparison.OrdinalIgnoreCase)
+              || string.Equals(args[0], "restart", StringComparison.OrdinalIgnoreCase)))
+      {
+        var controller = ScenarioController.Instance;
+        if (controller == null || !controller.HasActiveScenario)
+        {
+          _chat.SendSystemMessage(sender, "No scenario is currently playing.");
+          return;
+        }
+
+        if (string.Equals(args[0], "end", StringComparison.OrdinalIgnoreCase))
+        {
+          bool authoritative = controller.IsAuthoritativeExecutor;
+          controller.EndScenario();
+          if (!authoritative)
+            ScenarioNetworkRelay.BroadcastScenarioEnd();
+          _chat.SendSystemMessage(sender, "Scenario ended and cleanup completed.");
+          return;
+        }
+
+        string entrypoint = args.Length >= 2 ? args[1].Trim() : null;
+        bool restartAuthoritative = controller.IsAuthoritativeExecutor;
+        if (!controller.RestartScenario(entrypoint))
+        {
+          _chat.SendSystemMessage(sender, "Scenario restart is unavailable on this peer.");
+          return;
+        }
+        if (!restartAuthoritative)
+          ScenarioNetworkRelay.BroadcastScenarioRestart(entrypoint);
+        _chat.SendSystemMessage(sender, "Scenario restarted after cleanup.");
+        return;
+      }
+
       if (args != null
           && args.Length >= 1
           && string.Equals(args[0], "validatorlog", StringComparison.OrdinalIgnoreCase))
@@ -132,7 +168,7 @@ namespace MultiplayerInfrastructure.Command
 
       if (args == null || args.Length < 3 || !string.Equals(args[0], "execute", StringComparison.OrdinalIgnoreCase))
       {
-        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute <target> <scenario_id> | /scenario enter <entrypoint> [clear-state=true|false] | /scenario signal <signal_id> [clear] | /scenario conflictpolicy [warn|cancel|panic] | /scenario validatorlog [<console|chat|session> <on|off>]");
+        _chat.SendSystemMessage(sender, "Usage: /scenario list | /scenario execute <target> <scenario_id> | /scenario enter <entrypoint> [clear-state=true|false] | /scenario end | /scenario restart [entrypoint] | /scenario signal <signal_id> [clear] | /scenario conflictpolicy [warn|cancel|panic] | /scenario validatorlog [<console|chat|session> <on|off>]");
         return;
       }
 

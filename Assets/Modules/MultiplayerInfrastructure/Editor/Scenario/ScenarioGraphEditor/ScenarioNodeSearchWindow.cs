@@ -46,7 +46,8 @@ namespace MultiplayerInfrastructure.Editor
             new SearchTreeEntry(new GUIContent("Time Control")) { level = 1, userData = ScenarioNodeType.TimeControl },
             new SearchTreeEntry(new GUIContent("Manual Entrypoint")) { level = 1, userData = ScenarioNodeType.ManualEntrypoint },
             new SearchTreeEntry(new GUIContent("Bed Snap")) { level = 1, userData = ScenarioNodeType.BedSnap },
-            new SearchTreeEntry(new GUIContent("Return To Origin")) { level = 1, userData = ScenarioNodeType.ReturnToOrigin }
+            new SearchTreeEntry(new GUIContent("Return To Origin")) { level = 1, userData = ScenarioNodeType.ReturnToOrigin },
+            new SearchTreeEntry(new GUIContent("Lifecycle")) { level = 1, userData = ScenarioNodeType.Lifecycle }
         };
     }
 

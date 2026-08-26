@@ -81,6 +81,7 @@ namespace MultiplayerInfrastructure.Editor
       ScenarioNodeType.ManualEntrypoint => new ScenarioManualEntrypointNode(),
       ScenarioNodeType.BedSnap => new ScenarioBedSnapNode(),
       ScenarioNodeType.ReturnToOrigin => new ScenarioReturnToOriginNode(),
+      ScenarioNodeType.Lifecycle => new ScenarioLifecycleNode(),
       _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
     };
   }

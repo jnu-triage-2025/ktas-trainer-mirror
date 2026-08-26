@@ -200,7 +200,8 @@ namespace MultiplayerInfrastructure.Scenario
             || node is ScenarioStateUpdateNode
             || node is ScenarioNPCControlNode
             || node is ScenarioManualEntrypointNode
-            || node is ScenarioReturnToOriginNode)
+            || node is ScenarioReturnToOriginNode
+            || node is ScenarioLifecycleNode)
           continue;
 
         unsupportedNode = node;
@@ -307,12 +308,44 @@ namespace MultiplayerInfrastructure.Scenario
       return true;
     }
 
+    /// <summary>호환 실행 경로의 모든 피어에서 실행 중인 시나리오를 종료한다.</summary>
+    public static bool BroadcastScenarioEnd()
+    {
+      if (_instance == null || !InstanceFinder.IsServerStarted)
+        return false;
+
+      _instance.ObserversEndCompatibilityScenario();
+      return true;
+    }
+
+    /// <summary>호환 실행 경로의 모든 피어에서 실행 중인 시나리오를 다시 시작한다.</summary>
+    public static bool BroadcastScenarioRestart(string entrypointIdentifier)
+    {
+      if (_instance == null || !InstanceFinder.IsServerStarted)
+        return false;
+
+      _instance.ObserversRestartCompatibilityScenario(entrypointIdentifier);
+      return true;
+    }
+
     // ExcludeServer: 호스트는 자기 상태기를 호출부에서 직접 옮긴다.
     [ObserversRpc(BufferLast = false, ExcludeServer = true)]
     private void ObserversEnterManualEntrypoint(string entrypointIdentifier, bool clearState)
     {
       if (ScenarioController.Instance != null)
         ScenarioController.Instance.EnterManualEntrypointFromRelay(entrypointIdentifier, clearState);
+    }
+
+    [ObserversRpc(BufferLast = false, ExcludeServer = true)]
+    private void ObserversEndCompatibilityScenario()
+    {
+      ScenarioController.Instance?.EndScenario();
+    }
+
+    [ObserversRpc(BufferLast = false, ExcludeServer = true)]
+    private void ObserversRestartCompatibilityScenario(string entrypointIdentifier)
+    {
+      ScenarioController.Instance?.RestartScenario(entrypointIdentifier);
     }
 
     /// <summary>

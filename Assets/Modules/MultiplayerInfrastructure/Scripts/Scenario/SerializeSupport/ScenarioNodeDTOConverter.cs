@@ -62,6 +62,7 @@ namespace MultiplayerInfrastructure.Scenario
         "ManualEntrypoint" => Deserialize<ScenarioManualEntrypointNodeDTO>(root, options),
         "BedSnap" => Deserialize<ScenarioBedSnapNodeDTO>(root, options),
         "ReturnToOrigin" => Deserialize<ScenarioReturnToOriginNodeDTO>(root, options),
+        "Lifecycle" => Deserialize<ScenarioLifecycleNodeDTO>(root, options),
         _ => throw new JsonException($"Unknown nodeType '{nodeType}'.")
       };
     }

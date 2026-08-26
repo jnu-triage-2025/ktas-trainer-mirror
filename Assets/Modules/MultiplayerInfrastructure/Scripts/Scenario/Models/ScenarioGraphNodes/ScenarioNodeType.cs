@@ -40,5 +40,6 @@
     ManualEntrypoint,
     BedSnap,
     ReturnToOrigin,
+    Lifecycle,
   }
 }

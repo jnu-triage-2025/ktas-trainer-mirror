@@ -388,7 +388,8 @@
             "SignalCounter",
             "ManualEntrypoint",
             "BedSnap",
-            "ReturnToOrigin"
+            "ReturnToOrigin",
+            "Lifecycle"
           ]
         }
       },
@@ -935,6 +936,13 @@
           "then": {
             "$ref": "#/$defs/ScenarioReturnToOriginNode"
           }
+        },
+        {
+          "if": {
+            "properties": { "nodeType": { "const": "Lifecycle" } },
+            "required": ["nodeType"]
+          },
+          "then": { "$ref": "#/$defs/ScenarioLifecycleNode" }
         }
       ]
     },
@@ -4061,6 +4069,20 @@
                 "null"
               ]
             }
+          }
+        }
+      ]
+    },
+    "ScenarioLifecycleNode": {
+      "allOf": [
+        { "$ref": "#/$defs/ScenarioBaseNode" },
+        {
+          "properties": {
+            "nodeType": { "const": "Lifecycle" },
+            "operation": { "type": "string", "enum": ["Cleanup", "End", "Restart"], "default": "Cleanup" },
+            "revertTrackedChanges": { "type": "boolean", "default": true },
+            "clearRuntimeState": { "type": "boolean", "default": true },
+            "restartEntrypointIdentifier": { "type": ["string", "null"], "minLength": 1 }
           }
         }
       ]
