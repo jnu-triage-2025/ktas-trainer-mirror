@@ -244,3 +244,60 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 1.5, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 2.2, y: 3.5, z: 3}
+  - entities:
+    - type: 0
+      identifier: zone_a:bed_snap_point
+      useDefaultPosition: 0
+      position: {x: -60.759, y: 0, z: -8.354}
+      useDefaultRotation: 0
+      rotationEuler: {x: 0, y: 0, z: 0}
+      useDefaultOccupiedSize: 1
+      occupiedSize: {x: 2.2, y: 1}
+      useDefaultDisplayHeight: 1
+      displayHeight: 0.03
+      useDefaultZoneCenter: 0
+      zoneCenter: {x: 0, y: 0, z: 0}
+      useDefaultZoneSize: 0
+      zoneSize: {x: 0, y: 0, z: 0}
+    - type: 2
+      identifier: zone_a:oxyflowmeter
+      useDefaultPosition: 0
+      position: {x: -58.792, y: 1.3513, z: -8.733}
+      useDefaultRotation: 0
+      rotationEuler: {x: 90, y: 0, z: 0}
+      useDefaultOccupiedSize: 0
+      occupiedSize: {x: 2.2, y: 1}
+      useDefaultDisplayHeight: 0
+      displayHeight: 0.03
+      useDefaultZoneCenter: 0
+      zoneCenter: {x: 0, y: 0, z: 0}
+      useDefaultZoneSize: 0
+      zoneSize: {x: 0, y: 0, z: 0}
+    - type: 1
+      identifier: zone_a:wall_suction
+      useDefaultPosition: 0
+      position: {x: -58.8372, y: 1.2775, z: -8.9028}
+      useDefaultRotation: 0
+      rotationEuler: {x: 90, y: 0, z: 0}
+      useDefaultOccupiedSize: 0
+      occupiedSize: {x: 2.2, y: 1}
+      useDefaultDisplayHeight: 0
+      displayHeight: 0.03
+      useDefaultZoneCenter: 0
+      zoneCenter: {x: 0, y: 0, z: 0}
+      useDefaultZoneSize: 0
+      zoneSize: {x: 0, y: 0, z: 0}
+    - type: 3
+      identifier: zone_a:zone
+      useDefaultPosition: 0
+      position: {x: -60.24, y: 0, z: -8.354}
+      useDefaultRotation: 0
+      rotationEuler: {x: 0, y: -90, z: 0}
+      useDefaultOccupiedSize: 0
+      occupiedSize: {x: 2.2, y: 1}
+      useDefaultDisplayHeight: 0
+      displayHeight: 0.03
+      useDefaultZoneCenter: 0
+      zoneCenter: {x: 0, y: 1.5, z: 0}
+      useDefaultZoneSize: 0
+      zoneSize: {x: 2.2, y: 3.5, z: 3.6}
