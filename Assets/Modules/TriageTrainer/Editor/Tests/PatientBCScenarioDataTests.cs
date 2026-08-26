@@ -259,8 +259,12 @@ namespace TriageTrainer.Tests
       StringAssert.DoesNotContain("환자 C", scenarioJson);
       var graph = ScenarioGraphLoader.LoadFromJson(scenarioJson, validateWithSchema: true);
 
-      Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_B"));
-      Assert.That(graph.Nodes, Has.Count.EqualTo(340));
+      Assert.That(graph.DefaultEntrypoint, Is.EqualTo("GIVE_CHECKLIST_PAPER_IF_MISSING"));
+      Assert.That(graph.Nodes, Has.Count.EqualTo(341));
+      var checklistPaperGrant = graph.Nodes["GIVE_CHECKLIST_PAPER_IF_MISSING"] as ScenarioExecuteCommandNode;
+      Assert.That(checklistPaperGrant, Is.Not.Null);
+      Assert.That(checklistPaperGrant.CommandLine, Is.EqualTo("give-if-missing checklist_paper @a"));
+      Assert.That(checklistPaperGrant.NextIdentifier, Is.EqualTo("SPAWN_B"));
       Assert.That(graph.ClientSignalPrefixes, Is.EqualTo(new[] { "sig.quest_arrival_triage_area_" }));
       Assert.That(graph.ActingNpcs, Has.Count.EqualTo(1));
       Assert.That(graph.ActingNpcs.Single().Identifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));

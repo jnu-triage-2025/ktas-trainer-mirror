@@ -28,6 +28,9 @@ namespace MultiplayerInfrastructure.Player
     };
     [SerializeField] private List<InventorySlotModelDTO> _slots = new();
 
+    /// <summary>현재 인벤토리 슬롯을 읽기 전용으로 제공합니다.</summary>
+    public IReadOnlyList<InventorySlotModelDTO> InventorySlots => _slots;
+
     /// <summary>
     /// 장비 슬롯 데이터. <see cref="_slots"/> 와 동일한 수명/소유권을 가지며,
     /// 네트워크 동기화 및 직렬화의 대상이 됩니다.

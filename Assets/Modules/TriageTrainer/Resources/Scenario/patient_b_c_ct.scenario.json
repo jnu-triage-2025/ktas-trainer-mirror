@@ -7,7 +7,7 @@
   "clientSignalPrefixes": [
     "sig.quest_arrival_triage_area_"
   ],
-  "defaultEntrypoint": "SPAWN_B",
+  "defaultEntrypoint": "GIVE_CHECKLIST_PAPER_IF_MISSING",
   "tags": [
     "nurse_a",
     "nurse_b",
@@ -16,6 +16,27 @@
   ],
   "activeRoleTags": ["nurse_a", "nurse_b", "nurse_c", "nurse_d"],
   "skipAbsentRoleBranches": true,
+  "checklistItemSetsByPlayerTag": {
+    "nurse_a": [],
+    "nurse_b": [
+      { "identifier": "vital_set", "count": 1 }
+    ],
+    "nurse_c": [
+      { "identifier": "penlight", "count": 1 },
+      { "identifier": "cannula_20g", "count": 2 },
+      { "identifier": "intravenous_set", "count": 2 },
+      { "identifier": "normal_saline_1000ml", "count": 2 }
+    ],
+    "nurse_d": [
+      { "identifier": "humidifier_bottle", "count": 2 },
+      { "identifier": "sterile_distilled_water", "count": 2 },
+      { "identifier": "flowmeter", "count": 2 },
+      { "identifier": "nasal_cannula", "count": 2 },
+      { "identifier": "sterile_gloves", "count": 2 },
+      { "identifier": "gauze", "count": 2 },
+      { "identifier": "plaster", "count": 2 }
+    ]
+  },
   "questDefinitionIncludes": [
     "patient_b_c_ct.quests.quest"
   ],
@@ -38,6 +59,12 @@
     }
   ],
   "nodes": {
+    "GIVE_CHECKLIST_PAPER_IF_MISSING": {
+      "identifier": "GIVE_CHECKLIST_PAPER_IF_MISSING",
+      "nodeType": "ExecuteCommand",
+      "commandLine": "give-if-missing checklist_paper @a",
+      "nextIdentifier": "SPAWN_B"
+    },
     "SPAWN_B": {
       "identifier": "SPAWN_B",
       "nodeType": "EntityPresetSpawn",

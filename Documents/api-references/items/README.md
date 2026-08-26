@@ -6,4 +6,6 @@ TriageTrainer 아이템 정의(`MedicalItem` 파생)에 대한 개별 레퍼런�
 
 ## 문서
 
+- [checklist-paper.md](./checklist-paper.md): ChecklistPaper (시나리오 역할별 준비물 체크리스트)
+- [paper.md](./paper.md): Paper (종이)
 - [plasma_solution_1000ml.md](./plasma_solution_1000ml.md): PlasmaSolution1000ml (플라즈마 솔루션 1L)

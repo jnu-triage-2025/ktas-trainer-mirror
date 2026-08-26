@@ -486,7 +486,11 @@ namespace TriageTrainer.Tests
         "Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json");
       var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
 
-      Assert.That(graph.DefaultEntrypoint, Is.EqualTo("SPAWN_A"));
+      Assert.That(graph.DefaultEntrypoint, Is.EqualTo("GIVE_CHECKLIST_PAPER_IF_MISSING"));
+      var checklistPaperGrant = graph.Nodes["GIVE_CHECKLIST_PAPER_IF_MISSING"] as ScenarioExecuteCommandNode;
+      Assert.That(checklistPaperGrant, Is.Not.Null);
+      Assert.That(checklistPaperGrant.CommandLine, Is.EqualTo("give-if-missing checklist_paper @a"));
+      Assert.That(checklistPaperGrant.NextIdentifier, Is.EqualTo("SPAWN_A"));
       Assert.That(graph.ClientSignalPrefixes,
         Does.Contain("sig.quest_arrival_patient_a_"));
       Assert.That(graph.Nodes, Contains.Key("COUNT_ARRIVAL_A"));

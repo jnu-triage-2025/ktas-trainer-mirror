@@ -6625,11 +6625,130 @@ namespace MultiplayerInfrastructure.Scenario
         return false;
 
       string[] tokens = normalized.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
-      if (tokens.Length == 0 || !string.Equals(tokens[0], "give", StringComparison.OrdinalIgnoreCase))
+      if (tokens.Length == 0)
         return false;
 
       string[] giveArguments = tokens.Skip(1).ToArray();
-      succeeded = CommandDefinition_Give.TryExecuteGive(ownerConnection, giveArguments, out result);
+      if (string.Equals(tokens[0], "give", StringComparison.OrdinalIgnoreCase))
+      {
+        succeeded = CommandDefinition_Give.TryExecuteGive(ownerConnection, giveArguments, out result);
+        return true;
+      }
+
+      if (string.Equals(tokens[0], "give-if-missing", StringComparison.OrdinalIgnoreCase))
+      {
+        succeeded = TryExecuteScenarioGiveIfMissing(ownerConnection, giveArguments, out result);
+        return true;
+      }
+
+      return false;
+    }
+
+    /// <summary>
+    /// 시나리오 시작 시처럼 재실행될 수 있는 흐름에서, 이미 지급한 안내 아이템을 중복 지급하지 않는다.
+    /// 일반 채팅 <c>/give</c>의 의미는 변경하지 않고 시나리오 실행 명령에만 적용한다.
+    /// </summary>
+    private static bool TryExecuteScenarioGiveIfMissing(NetworkConnection ownerConnection, string[] args, out string result)
+    {
+      result = string.Empty;
+      if (args == null || args.Length == 0)
+      {
+        result = "Usage: give-if-missing <item_identifier> [count=1] [target_selector]";
+        return false;
+      }
+
+      string itemIdentifier = args[0];
+      if (!Registry.Registry.Contains(RegistryType.Item, itemIdentifier))
+      {
+        result = $"Item '{itemIdentifier}' is not registered.";
+        return false;
+      }
+
+      int count = 1;
+      string targetSelector = null;
+      if (args.Length >= 2)
+      {
+        if (int.TryParse(args[1], out int parsedCount))
+        {
+          if (parsedCount <= 0)
+          {
+            result = "Count must be greater than 0.";
+            return false;
+          }
+
+          count = parsedCount;
+          if (args.Length >= 3)
+            targetSelector = args[2];
+        }
+        else
+        {
+          targetSelector = args[1];
+        }
+      }
+
+      if (args.Length > 3)
+      {
+        result = "Usage: give-if-missing <item_identifier> [count=1] [target_selector]";
+        return false;
+      }
+
+      List<NetworkConnection> targets;
+      if (string.IsNullOrWhiteSpace(targetSelector))
+      {
+        if (ownerConnection == null || !ownerConnection.IsValid)
+        {
+          result = "System execution requires a target selector.";
+          return false;
+        }
+
+        targets = new List<NetworkConnection> { ownerConnection };
+      }
+      else if (!TargetSelectorResolver.TryResolveTargets(ownerConnection, targetSelector, out targets, out var targetError))
+      {
+        result = targetError;
+        return false;
+      }
+
+      int grantedPlayers = 0;
+      int alreadyOwnedPlayers = 0;
+      int unavailablePlayers = 0;
+      int droppedCount = 0;
+      foreach (var target in targets)
+      {
+        if (target?.FirstObject == null || !target.FirstObject.TryGetComponent<PlayerController>(out var player) || player == null)
+        {
+          unavailablePlayers++;
+          continue;
+        }
+
+        if (player.CountItemInInventory(itemIdentifier) > 0)
+        {
+          alreadyOwnedPlayers++;
+          continue;
+        }
+
+        var item = Registry.Registry.CreateItemInstance(itemIdentifier);
+        if (item == null)
+        {
+          result = $"Item '{itemIdentifier}' data is unavailable.";
+          return false;
+        }
+
+        item.CurrentStackCount = count;
+        player.TryAddItemToInventory(item, out var leftover);
+        if (leftover != null && leftover.CurrentStackCount > 0)
+        {
+          droppedCount += leftover.CurrentStackCount;
+          player.TryDropItemInFront(leftover);
+        }
+
+        grantedPlayers++;
+      }
+
+      result = $"Granted '{itemIdentifier}' to {grantedPlayers} player(s); {alreadyOwnedPlayers} already had it"
+        + (droppedCount > 0 ? $"; dropped {droppedCount} due to full inventories" : string.Empty)
+        + (unavailablePlayers > 0 ? $"; {unavailablePlayers} target(s) were unavailable" : string.Empty)
+        + ".";
       return true;
     }
 

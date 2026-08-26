@@ -62,6 +62,7 @@ namespace TriageTrainer.ItemDefinitions
 
       MI.Scenario.ScenarioInteractionSignals.Raise(id);
       MI.Scenario.ScenarioInteractionSignals.Raise("click_" + id);
+      ChecklistPaper.NotifyItemAcquired(player, id);
     }
 
     public override ActionResult OnUse(PlayerController player, MI.Entity.Entity target)

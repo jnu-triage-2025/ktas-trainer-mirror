@@ -1098,6 +1098,9 @@ namespace MultiplayerInfrastructure.Editor
     private void DrawExecuteCommandFields(ScenarioExecuteCommandNode data)
     {
       data.CommandLine = EditorGUILayout.TextField("Command Line", data.CommandLine);
+      EditorGUILayout.HelpBox(
+        "시나리오 전용 지급: give-if-missing <item> [count] [target]. 대상별 인벤토리에 아이템이 없을 때만 지급합니다. 예: give-if-missing checklist_paper @a",
+        MessageType.Info);
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
 

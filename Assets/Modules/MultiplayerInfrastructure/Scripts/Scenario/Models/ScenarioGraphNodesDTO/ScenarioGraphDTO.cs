@@ -17,6 +17,9 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("skipAbsentRoleBranches")]
     public bool? SkipAbsentRoleBranches { get; set; }
 
+    [JsonPropertyName("checklistItemSetsByPlayerTag")]
+    public Dictionary<string, List<ScenarioChecklistItemRequirementDTO>> ChecklistItemSetsByPlayerTag { get; set; }
+
     [JsonPropertyName("clientSignalIdentifiers")]
     public List<string> ClientSignalIdentifiers { get; set; }
 
@@ -40,5 +43,14 @@ namespace MultiplayerInfrastructure.Scenario
 
     [JsonPropertyName("nodes")]
     public Dictionary<string, ScenarioNodeDTO> Nodes { get; set; }
+  }
+
+  internal sealed class ScenarioChecklistItemRequirementDTO
+  {
+    [JsonPropertyName("identifier")]
+    public string Identifier { get; set; }
+
+    [JsonPropertyName("count")]
+    public int? Count { get; set; }
   }
 }

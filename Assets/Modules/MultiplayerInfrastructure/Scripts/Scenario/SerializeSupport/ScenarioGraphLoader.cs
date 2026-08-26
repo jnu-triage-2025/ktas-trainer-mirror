@@ -81,6 +81,7 @@ namespace MultiplayerInfrastructure.Scenario
       graph.Tags = NormalizeTags(dto.Tags);
       graph.ActiveRoleTags = NormalizeTags(dto.ActiveRoleTags);
       graph.SkipAbsentRoleBranches = dto.SkipAbsentRoleBranches ?? false;
+      graph.ChecklistItemSetsByPlayerTag = ConvertChecklistItemSetsByPlayerTag(dto.ChecklistItemSetsByPlayerTag);
       graph.ClientSignalIdentifiers = ResolveClientSignalIdentifiers(dto, graph.Identifier);
       graph.ClientSignalPrefixes = NormalizeSignalSpecification(dto.ClientSignalPrefixes);
       graph.QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(dto.QuestDefinitionIncludes);
@@ -1507,6 +1508,7 @@ namespace MultiplayerInfrastructure.Scenario
         Tags = NormalizeTags(graph.Tags).ToList(),
         ActiveRoleTags = NormalizeTags(graph.ActiveRoleTags).ToList(),
         SkipAbsentRoleBranches = graph.SkipAbsentRoleBranches ? true : (bool?)null,
+        ChecklistItemSetsByPlayerTag = ConvertChecklistItemSetsByPlayerTagToDTO(graph.ChecklistItemSetsByPlayerTag),
         ClientSignalIdentifiers = NormalizeSignalSpecification(graph.ClientSignalIdentifiers).ToList(),
         ClientSignalPrefixes = NormalizeSignalSpecification(graph.ClientSignalPrefixes).ToList(),
         QuestDefinitionIncludes = NormalizeQuestDefinitionIncludes(graph.QuestDefinitionIncludes).ToList(),
@@ -1523,6 +1525,69 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
       return dto;
+    }
+
+    private static IReadOnlyDictionary<string, IReadOnlyList<ScenarioChecklistItemRequirement>> ConvertChecklistItemSetsByPlayerTag(
+      Dictionary<string, List<ScenarioChecklistItemRequirementDTO>> source)
+    {
+      var result = new Dictionary<string, IReadOnlyList<ScenarioChecklistItemRequirement>>(StringComparer.Ordinal);
+      if (source == null)
+        return result;
+
+      foreach (var pair in source)
+      {
+        string tag = pair.Key?.Trim();
+        if (string.IsNullOrWhiteSpace(tag))
+          continue;
+
+        var requirements = new List<ScenarioChecklistItemRequirement>();
+        if (pair.Value != null)
+        {
+          foreach (var value in pair.Value)
+          {
+            string identifier = value?.Identifier?.Trim();
+            if (string.IsNullOrWhiteSpace(identifier))
+              continue;
+
+            requirements.Add(new ScenarioChecklistItemRequirement
+            {
+              Identifier = identifier,
+              Count = value.Count.GetValueOrDefault() > 0 ? value.Count.Value : 1
+            });
+          }
+        }
+
+        result[tag] = requirements;
+      }
+
+      return result;
+    }
+
+    private static Dictionary<string, List<ScenarioChecklistItemRequirementDTO>> ConvertChecklistItemSetsByPlayerTagToDTO(
+      IReadOnlyDictionary<string, IReadOnlyList<ScenarioChecklistItemRequirement>> source)
+    {
+      if (source == null || source.Count == 0)
+        return null;
+
+      var result = new Dictionary<string, List<ScenarioChecklistItemRequirementDTO>>(StringComparer.Ordinal);
+      foreach (var pair in source.OrderBy(value => value.Key, StringComparer.Ordinal))
+      {
+        string tag = pair.Key?.Trim();
+        if (string.IsNullOrWhiteSpace(tag))
+          continue;
+
+        var requirements = pair.Value?
+          .Where(value => value != null && !string.IsNullOrWhiteSpace(value.Identifier))
+          .Select(value => new ScenarioChecklistItemRequirementDTO
+          {
+            Identifier = value.Identifier.Trim(),
+            Count = value.Count > 0 ? value.Count : 1
+          })
+          .ToList();
+        result[tag] = requirements ?? new List<ScenarioChecklistItemRequirementDTO>();
+      }
+
+      return result.Count == 0 ? null : result;
     }
 
     private static List<ScenarioActingNpcDefinitionDTO> ConvertActingNpcsToDTO(

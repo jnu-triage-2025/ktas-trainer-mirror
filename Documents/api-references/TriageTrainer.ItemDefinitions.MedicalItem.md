@@ -219,6 +219,8 @@ TriageTrainer에 정의된 모든 의료 아이템 목록입니다.
 | `Scissors` | `scissors` | 가위 |
 | `Swab` | `swab` | 소독솜 |
 | `Gloves` | `gloves` | 면균 장갑 |
+| `Paper` | `paper` | 종이 |
+| `ChecklistPaper` | `checklist_paper` | 종이 |
 
 ---
 

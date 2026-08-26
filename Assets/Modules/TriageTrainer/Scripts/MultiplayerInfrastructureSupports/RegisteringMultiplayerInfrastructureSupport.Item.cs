@@ -81,6 +81,8 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
       Registry.RegisterItemDefinition<Flowmeter>(Flowmeter.Identifier);
       Registry.RegisterItemDefinition<Humidifier>(Humidifier.Identifier);
       Registry.RegisterItemDefinition<Penlight>(Penlight.Identifier);
+      Registry.RegisterItemDefinition<Paper>(Paper.Identifier);
+      Registry.RegisterItemDefinition<ChecklistPaper>(ChecklistPaper.Identifier);
       Registry.RegisterItemDefinition<Plaster>(Plaster.Identifier);
       Registry.RegisterItemDefinition<ReservoirBag>(ReservoirBag.Identifier);
       Registry.RegisterItemDefinition<Scissors>(Scissors.Identifier);

@@ -21,6 +21,19 @@
     "triage_lead",
     "vital_team"
   ],
+  "checklistItemSetsByPlayerTag": {
+    "nurse_a": [
+      { "identifier": "vital_set", "count": 1 }
+    ],
+    "nurse_b": [],
+    "nurse_c": [],
+    "nurse_d": [
+      { "identifier": "normal_saline_1000ml", "count": 1 },
+      { "identifier": "plasma_solution_1000ml", "count": 1 },
+      { "identifier": "intravenous_set", "count": 2 },
+      { "identifier": "blood_bag", "count": 1 }
+    ]
+  },
   "questDefinitionIncludes": [
     "disaster_intro.quests.quest"
   ],

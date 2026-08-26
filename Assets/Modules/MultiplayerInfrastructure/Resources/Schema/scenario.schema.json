@@ -29,6 +29,22 @@
       "default": false,
       "description": "Allows ByRole branches for declared roles absent from the active roster to be skipped."
     },
+    "checklistItemSetsByPlayerTag": {
+      "type": ["object", "null"],
+      "description": "Checklist item sets keyed by player tag.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "identifier": { "type": "string", "minLength": 1 },
+            "count": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["identifier", "count"]
+        }
+      }
+    },
     "clientSignalIdentifiers": {
       "type": ["array", "null"],
       "items": { "type": "string", "minLength": 1, "pattern": "^sig\\.\\S+$" },

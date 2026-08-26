@@ -20,6 +20,13 @@ namespace MultiplayerInfrastructure.Scenario
     /// <summary>Allows ByRole branches for declared roles absent from the active roster to be skipped.</summary>
     public bool SkipAbsentRoleBranches { get; set; }
 
+    /// <summary>
+    /// 플레이어 태그별 체크리스트 아이템 묶음입니다. 한 플레이어가 여러 태그를 보유하면
+    /// 해당 태그의 묶음을 모두 합쳐 표시합니다.
+    /// </summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<ScenarioChecklistItemRequirement>> ChecklistItemSetsByPlayerTag { get; set; }
+      = new Dictionary<string, IReadOnlyList<ScenarioChecklistItemRequirement>>(StringComparer.Ordinal);
+
     /// <summary>Exact generic signals that clients may report for this graph.</summary>
     public IReadOnlyList<string> ClientSignalIdentifiers { get; set; } = Array.Empty<string>();
 

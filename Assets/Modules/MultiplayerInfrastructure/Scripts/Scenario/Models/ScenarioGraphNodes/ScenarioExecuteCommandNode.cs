@@ -4,7 +4,8 @@
   /// 시나리오 진행 중 인게임 채팅 명령어를 서버 권한으로 실행하는 노드.
   /// 명령 문자열 자체에 대상 선택자(<c>@s</c>/<c>@a</c>/<c>@n</c>/<c>fish:&lt;id&gt;</c>)와
   /// 파이프라인(<c>|</c>)을 포함할 수 있으므로, "특정 플레이어/서버 기준 실행"을
-  /// 명령 문자열로 표현한다. (예: <c>give @a item:gauze</c>)
+  /// 명령 문자열로 표현한다. 시나리오 전용 <c>give-if-missing &lt;item&gt; [count] [target]</c>
+  /// 명령은 대상별 인벤토리를 확인해 해당 아이템을 보유하지 않은 대상에게만 지급한다.
   /// </summary>
   public sealed class ScenarioExecuteCommandNode : IScenarioNode
   {

@@ -81,6 +81,34 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void ChecklistItemSetsByPlayerTagSaveAndRoundTripWithSchemaValidation()
+    {
+      var graph = new ScenarioGraph
+      {
+        Identifier = "checklist-items",
+        DefaultEntrypoint = "start",
+        ChecklistItemSetsByPlayerTag = new Dictionary<string, IReadOnlyList<ScenarioChecklistItemRequirement>>
+        {
+          ["nurse_a"] = new[]
+          {
+            new ScenarioChecklistItemRequirement { Identifier = "plaster", Count = 2 },
+            new ScenarioChecklistItemRequirement { Identifier = "gauze", Count = 1 }
+          }
+        }
+      };
+      graph.Add(new ScenarioDialogueNode { Identifier = "start", SpeakerName = "system", DialogueContent = "start" });
+
+      string json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+
+      Assert.That(reloaded.ChecklistItemSetsByPlayerTag, Contains.Key("nurse_a"));
+      Assert.That(reloaded.ChecklistItemSetsByPlayerTag["nurse_a"].Select(value => value.Identifier),
+        Is.EqualTo(new[] { "plaster", "gauze" }));
+      Assert.That(reloaded.ChecklistItemSetsByPlayerTag["nurse_a"].Select(value => value.Count),
+        Is.EqualTo(new[] { 2, 1 }));
+    }
+
+    [Test]
     public void TutorialScenarioPassesSchemaValidation()
     {
       var json = System.IO.File.ReadAllText(

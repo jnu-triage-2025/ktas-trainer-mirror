@@ -26,14 +26,17 @@ namespace MultiplayerInfrastructure.Editor
     private VisualElement actingNpcContainer;
     private VisualElement waypointContainer;
     private VisualElement voiceProfilesContainer;
+    private VisualElement checklistItemsContainer;
     private VisualElement questsContainer;
     private ToolbarButton graphTabButton;
     private ToolbarButton actingNpcTabButton;
     private ToolbarButton waypointTabButton;
     private ToolbarButton voiceProfilesTabButton;
+    private ToolbarButton checklistItemsTabButton;
     private ToolbarButton questsTabButton;
     private ScenarioActingNpcEditorView actingNpcEditorView;
     private ScenarioWaypointEditorView waypointEditorView;
+    private ScenarioChecklistItemSetsEditorView checklistItemsEditorView;
     private ScenarioQuestEditorView questEditorView;
 
     private ScenarioGraph graphData = new ScenarioGraph();
@@ -308,11 +311,13 @@ namespace MultiplayerInfrastructure.Editor
       actingNpcTabButton = new ToolbarButton(() => SetActiveTab(ScenarioEditorTab.ActingNpc)) { text = "Acting NPC" };
       waypointTabButton = new ToolbarButton(() => SetActiveTab(ScenarioEditorTab.Waypoints)) { text = "Waypoints" };
       voiceProfilesTabButton = new ToolbarButton(() => SetActiveTab(ScenarioEditorTab.VoiceProfiles)) { text = "TTS Voice Profiles" };
+      checklistItemsTabButton = new ToolbarButton(() => SetActiveTab(ScenarioEditorTab.ChecklistItems)) { text = "Checklist Items" };
       questsTabButton = new ToolbarButton(() => SetActiveTab(ScenarioEditorTab.Quests)) { text = "Quests" };
       tabs.Add(graphTabButton);
       tabs.Add(actingNpcTabButton);
       tabs.Add(waypointTabButton);
       tabs.Add(voiceProfilesTabButton);
+      tabs.Add(checklistItemsTabButton);
       tabs.Add(questsTabButton);
       rootVisualElement.Add(tabs);
 
@@ -414,6 +419,13 @@ namespace MultiplayerInfrastructure.Editor
         () => graphData,
         () => RefreshDebugPanel()));
       rootVisualElement.Add(voiceProfilesContainer);
+
+      checklistItemsContainer = CreateDefinitionContainer("ScenarioChecklistItemsContainer");
+      checklistItemsEditorView = new ScenarioChecklistItemSetsEditorView(
+        () => graphData,
+        () => RefreshDebugPanel());
+      checklistItemsContainer.Add(checklistItemsEditorView);
+      rootVisualElement.Add(checklistItemsContainer);
     }
 
     private static VisualElement CreateDefinitionContainer(string name)
@@ -445,6 +457,7 @@ namespace MultiplayerInfrastructure.Editor
       ActingNpc,
       Waypoints,
       VoiceProfiles,
+      ChecklistItems,
       Quests
     }
 
@@ -454,6 +467,7 @@ namespace MultiplayerInfrastructure.Editor
       bool showActingNpc = tab == ScenarioEditorTab.ActingNpc;
       bool showWaypoints = tab == ScenarioEditorTab.Waypoints;
       bool showVoiceProfiles = tab == ScenarioEditorTab.VoiceProfiles;
+      bool showChecklistItems = tab == ScenarioEditorTab.ChecklistItems;
       bool showQuests = tab == ScenarioEditorTab.Quests;
       if (mainContainer != null)
         mainContainer.style.display = showGraph ? DisplayStyle.Flex : DisplayStyle.None;
@@ -465,12 +479,17 @@ namespace MultiplayerInfrastructure.Editor
         waypointContainer.style.display = showWaypoints ? DisplayStyle.Flex : DisplayStyle.None;
       if (voiceProfilesContainer != null)
         voiceProfilesContainer.style.display = showVoiceProfiles ? DisplayStyle.Flex : DisplayStyle.None;
+      if (checklistItemsContainer != null)
+        checklistItemsContainer.style.display = showChecklistItems ? DisplayStyle.Flex : DisplayStyle.None;
+      if (showChecklistItems)
+        checklistItemsEditorView?.Refresh();
       if (questsContainer != null)
         questsContainer.style.display = showQuests ? DisplayStyle.Flex : DisplayStyle.None;
       graphTabButton?.SetEnabled(!showGraph);
       actingNpcTabButton?.SetEnabled(!showActingNpc);
       waypointTabButton?.SetEnabled(!showWaypoints);
       voiceProfilesTabButton?.SetEnabled(!showVoiceProfiles);
+      checklistItemsTabButton?.SetEnabled(!showChecklistItems);
       questsTabButton?.SetEnabled(!showQuests);
     }
 

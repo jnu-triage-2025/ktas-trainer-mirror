@@ -290,6 +290,7 @@ namespace MultiplayerInfrastructure.UI
       _tooltip.Add(_tooltipType);
 
       _tooltipDescription = new Label { name = "ItemTooltipDescription", pickingMode = PickingMode.Ignore };
+      _tooltipDescription.enableRichText = true;
       _tooltipDescription.AddToClassList("item-tooltip__description");
       _tooltip.Add(_tooltipDescription);
 

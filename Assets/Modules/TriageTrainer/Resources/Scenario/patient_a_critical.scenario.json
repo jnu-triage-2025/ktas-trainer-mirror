@@ -20,10 +20,51 @@
   ],
   "activeRoleTags": ["nurse_a", "nurse_b", "nurse_c", "nurse_d"],
   "skipAbsentRoleBranches": true,
+  "checklistItemSetsByPlayerTag": {
+    "nurse_a": [
+      { "identifier": "humidifier_bottle", "count": 1 },
+      { "identifier": "sterile_distilled_water", "count": 1 },
+      { "identifier": "flowmeter", "count": 1 },
+      { "identifier": "tpiece_set", "count": 1 },
+      { "identifier": "ambubag", "count": 1 },
+      { "identifier": "reservoir_bag", "count": 1 }
+    ],
+    "nurse_b": [
+      { "identifier": "vital_set", "count": 1 },
+      { "identifier": "laryngoscope_blade", "count": 1 },
+      { "identifier": "laryngoscope_handle", "count": 1 },
+      { "identifier": "endotracheal_tube", "count": 1 },
+      { "identifier": "stylet", "count": 1 },
+      { "identifier": "scissors", "count": 1 }
+    ],
+    "nurse_c": [
+      { "identifier": "sterile_gloves", "count": 1 },
+      { "identifier": "gauze", "count": 1 },
+      { "identifier": "plaster", "count": 1 },
+      { "identifier": "defibrillatorpad", "count": 1 },
+      { "identifier": "epinephrine_ampule", "count": 1 },
+      { "identifier": "syringe_5cc", "count": 1 },
+      { "identifier": "normal_saline_20ml", "count": 1 },
+      { "identifier": "syringe_20cc", "count": 1 }
+    ],
+    "nurse_d": [
+      { "identifier": "cervical_collar", "count": 1 },
+      { "identifier": "wall_suction", "count": 1 },
+      { "identifier": "suction_line", "count": 1 },
+      { "identifier": "yankauer", "count": 1 },
+      { "identifier": "cannula_18g", "count": 2 },
+      { "identifier": "intravenous_set", "count": 2 },
+      { "identifier": "normal_saline_1000ml", "count": 1 },
+      { "identifier": "plasma_solution_1000ml", "count": 2 },
+      { "identifier": "central_line_set", "count": 1 },
+      { "identifier": "blood_bag", "count": 1 },
+      { "identifier": "level1_rapid_infuser", "count": 1 }
+    ]
+  },
   "questDefinitionIncludes": [
     "patient_a_critical.quests.quest"
   ],
-  "defaultEntrypoint": "SPAWN_A",
+  "defaultEntrypoint": "GIVE_CHECKLIST_PAPER_IF_MISSING",
   "actingNpcs": [
     {
       "identifier": "npc-doctor-patient-a-critical",
@@ -121,6 +162,12 @@
   ],
   "waypoints": null,
   "nodes": {
+    "GIVE_CHECKLIST_PAPER_IF_MISSING": {
+      "identifier": "GIVE_CHECKLIST_PAPER_IF_MISSING",
+      "nodeType": "ExecuteCommand",
+      "commandLine": "give-if-missing checklist_paper @a",
+      "nextIdentifier": "SPAWN_A"
+    },
     "C004": {
       "speakerName": "@s",
       "dialogueContent": "환자의 AVPU는...",
