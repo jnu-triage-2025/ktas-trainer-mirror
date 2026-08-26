@@ -893,7 +893,7 @@ MonoBehaviour:
     _requiredItemIdentifier: vital_set
     _missingItemDialogue: "\uD65C\uB825\uC9D5\uD6C4 \uCE21\uC815\uB3C4\uAD6C\uB97C \uAC16\uACE0 \uC788\uC9C0 \uC54A\uB2E4."
     _findItemDialogue: "\uD65C\uB825\uC9D5\uD6C4 \uCE21\uC815\uB3C4\uAD6C\uB97C \uCC3E\uC790."
-    _enabled: 1
+    _enabled: 0
   - _identifier: assess_pulse_r1
     _displayText: "\uB9E5\uBC15 \uD655\uC778"
     _assessSignal: check_pulse_patient_a_r1
@@ -907,6 +907,18 @@ MonoBehaviour:
   - _identifier: assess_gcs_rosc
     _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC7AC\uC0AC\uC815"
     _assessSignal: check_gcs_a_rosc
+    _enabled: 0
+  - _identifier: assess_avpu_gcs
+    _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC0AC\uC815(AVPU/GCS)"
+    _assessSignal: check_avpu_gcs_patient_a
+    _enabled: 0
+  - _identifier: assess_pulse
+    _displayText: "\uB9E5\uBC15 \uD655\uC778"
+    _assessSignal: check_pulse_patient_a
+    _enabled: 0
+  - _identifier: assess_gcs
+    _displayText: "GCS \uC7AC\uC0AC\uC815"
+    _assessSignal: check_gcs_patient_a
     _enabled: 0
   _capsuleCollider: {fileID: 3415111579364395856}
   _standingCapsuleCenter: {x: 0, y: 0.9, z: 0}
@@ -946,7 +958,7 @@ MonoBehaviour:
   _debugItemIdentifier: gauze
   _interactConfigs:
   - _identifier: lift_from_bed
-    _enabled: 1
+    _enabled: 0
   - _identifier: carry_patient
     _enabled: 1
   - _identifier: monitor_select

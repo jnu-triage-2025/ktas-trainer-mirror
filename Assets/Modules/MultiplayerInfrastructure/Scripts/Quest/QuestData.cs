@@ -225,7 +225,10 @@ namespace MultiplayerInfrastructure.Quest
   public enum QuestPresentationTargetType
   {
     Interaction,
-    Npc
+    Npc,
+
+    /// <summary>월드에 배치된 waypoint 앵커 위에 마크를 띄운다. NPC 머리 위 마크와 같은 표시 경로를 쓴다.</summary>
+    Waypoint
   }
 
   [JsonConverter(typeof(JsonStringEnumConverter))]

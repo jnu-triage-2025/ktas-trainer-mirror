@@ -176,6 +176,74 @@ namespace MultiplayerInfrastructure.Tests.Quest
     }
 
     [Test]
+    public void ScenarioQuestMarkNodeSupportsWaypointTarget()
+    {
+      var graph = new ScenarioGraph { Identifier = "quest-mark-waypoint", DefaultEntrypoint = "mark" };
+      graph.Add(new ScenarioQuestMarkNode
+      {
+        Identifier = "mark",
+        Operation = ScenarioQuestMarkOperationType.Show,
+        TargetType = QuestPresentationTargetType.Waypoint,
+        EntityIdentifier = "zone_a:marker",
+        NextIdentifier = "unmark"
+      });
+      graph.Add(new ScenarioQuestMarkNode
+      {
+        Identifier = "unmark",
+        Operation = ScenarioQuestMarkOperationType.Hide,
+        TargetType = QuestPresentationTargetType.Waypoint,
+        EntityIdentifier = "zone_a:marker"
+      });
+
+      string json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      var restored = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+
+      var show = (ScenarioQuestMarkNode)restored.Nodes["mark"];
+      Assert.That(show.TargetType, Is.EqualTo(QuestPresentationTargetType.Waypoint));
+      Assert.That(show.EntityIdentifier, Is.EqualTo("zone_a:marker"));
+      Assert.That(show.Operation, Is.EqualTo(ScenarioQuestMarkOperationType.Show));
+
+      var hide = (ScenarioQuestMarkNode)restored.Nodes["unmark"];
+      Assert.That(hide.TargetType, Is.EqualTo(QuestPresentationTargetType.Waypoint));
+      Assert.That(hide.Operation, Is.EqualTo(ScenarioQuestMarkOperationType.Hide));
+    }
+
+    [Test]
+    public void OverheadAnchorResolutionCoversNpcAndWaypointTargets()
+    {
+      var waypointObject = new GameObject("QuestPresentationTests.Waypoint");
+      const string waypointIdentifier = "quest-presentation-waypoint-mark";
+
+      try
+      {
+        waypointObject.AddComponent<WaypointAnchor>().ConfigureIdentifier(waypointIdentifier);
+
+        // NPC 머리 위 마크와 waypoint 마크는 같은 표시 경로를 쓰고, 앵커를 찾는 방법만 다르다.
+        var resolve = typeof(QuestPresentationService).GetMethod(
+          "TryResolveOverheadAnchor",
+          System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+        Assert.That(resolve, Is.Not.Null,
+          "일반화된 앵커 해석 진입점이 있어야 표시 경로를 공유할 수 있습니다.");
+
+        var found = new object[] { QuestPresentationTargetType.Waypoint, waypointIdentifier, null };
+        Assert.That(resolve.Invoke(null, found), Is.True);
+        Assert.That(found[2], Is.SameAs(waypointObject.transform));
+
+        var missing = new object[] { QuestPresentationTargetType.Waypoint, "no-such-waypoint", null };
+        Assert.That(resolve.Invoke(null, missing), Is.False);
+        Assert.That(missing[2], Is.Null);
+
+        // NPC 대상은 레지스트리에 등록된 대상이 없으면 앵커를 찾지 못한 채 조용히 실패해야 한다.
+        var npc = new object[] { QuestPresentationTargetType.Npc, "no-such-npc", null };
+        Assert.That(resolve.Invoke(null, npc), Is.False);
+      }
+      finally
+      {
+        Object.DestroyImmediate(waypointObject);
+      }
+    }
+
+    [Test]
     public void ScenarioMarkOverridesInteractionIconUntilCleared()
     {
       var managerObject = new GameObject("QuestPresentationTests.ScenarioMarkManager");

@@ -2721,7 +2721,8 @@
               "type": "string",
               "enum": [
                 "Interaction",
-                "Npc"
+                "Npc",
+                "Waypoint"
               ],
               "default": "Npc"
             },
@@ -2964,7 +2965,8 @@
           "type": "string",
           "enum": [
             "Interaction",
-            "Npc"
+            "Npc",
+            "Waypoint"
           ]
         },
         "EntityIdentifier": {

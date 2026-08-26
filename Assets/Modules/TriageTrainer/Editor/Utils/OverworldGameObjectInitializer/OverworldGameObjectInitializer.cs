@@ -35,16 +35,18 @@ namespace TriageTrainer.Editor.Utils
     public const string CommonSpawnPointIdentifier = "spawnpoint-commons";
     public static readonly Vector3 DefaultCommonSpawnPoint = new(-73f, 1f, -7.5f);
 
-    // Scenario A anchors deliberately start unresolved. A scene author must set their real
-    // positions in the initializer window before applying the generated wiring.
+    // Scenario A anchors mirror the runtime fallback in
+    // TriageScenarioEventBootstrap.PatientAWorldAnchors.EnsurePatientAWorldAnchors. Keep both in sync:
+    // a scene-authored anchor wins over the runtime fallback, so a placeholder baked here silently
+    // relocates the patient_a spawn instead of leaving it unresolved.
     public const string PatientASpawnWaypointIdentifier = "scen_a:patient_spawnpoint_a";
-    public static readonly Vector3 DefaultPatientASpawnWaypoint = new(-1f, -1f, -1f);
+    public static readonly Vector3 DefaultPatientASpawnWaypoint = new(-71.73906f, 0.01f, 0.07443f);
 
     public const string PatientAArrivalWaypointIdentifier = "scen_a:quest_arrival_patient_a";
-    public static readonly Vector3 DefaultPatientAArrivalWaypoint = new(-1f, -1f, -1f);
+    public static readonly Vector3 DefaultPatientAArrivalWaypoint = new(-72.525f, 0f, 0.7f);
 
     public const string PatientADoctorWaypointIdentifier = "scen_a:doctor_treatment_room_waypoint";
-    public static readonly Vector3 DefaultPatientADoctorWaypoint = new(-1f, -1f, -1f);
+    public static readonly Vector3 DefaultPatientADoctorWaypoint = new(-67f, 1f, -15.5f);
     public static readonly Vector3 DefaultPatientAArrivalZoneSize = new(8f, 3f, 8f);
     public static readonly string[] PatientAArrivalEnterSignals = System.Array.Empty<string>();
     public const string PatientAArrivalPerEntitySignalTemplate = "quest_arrival_patient_a_{id}";

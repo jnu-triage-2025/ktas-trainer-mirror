@@ -2421,7 +2421,7 @@
       "moveNextBehavior": "WaitUntilDone",
       "identifier": "E005",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "D006"
+      "nextIdentifier": "QM_MOVE_A_HIDE"
     },
     "E017": {
       "eventIdentifier": "show_iv_checklist",
@@ -4188,7 +4188,16 @@
           "requiredPlayerTagsMatchMode": "All"
         }
       ],
-      "nextIdentifier": "Q006_1"
+      "nextIdentifier": "E005"
+    },
+    "QM_MOVE_A_HIDE": {
+      "identifier": "QM_MOVE_A_HIDE",
+      "nodeType": "QuestMark",
+      "nextIdentifier": "Q006_1",
+      "operation": "Hide",
+      "targetType": "Waypoint",
+      "entityIdentifier": "scen_a:patient_a_treatment_bed_marker",
+      "interactionIdentifier": null
     },
     "P003": {
       "identifier": "P003",
@@ -4536,7 +4545,16 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q006",
       "nodeType": "QuestControl",
-      "nextIdentifier": "D005"
+      "nextIdentifier": "QM_MOVE_A_SHOW"
+    },
+    "QM_MOVE_A_SHOW": {
+      "identifier": "QM_MOVE_A_SHOW",
+      "nodeType": "QuestMark",
+      "nextIdentifier": "D005",
+      "operation": "Show",
+      "targetType": "Waypoint",
+      "entityIdentifier": "scen_a:patient_a_treatment_bed_marker",
+      "interactionIdentifier": null
     },
     "Q006_1": {
       "operation": "Remove",
@@ -4546,7 +4564,7 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q006_1",
       "nodeType": "QuestControl",
-      "nextIdentifier": "E005"
+      "nextIdentifier": "D006"
     },
     "Q007": {
       "operation": "Add",
@@ -4556,6 +4574,13 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q007",
       "nodeType": "QuestControl",
+      "nextIdentifier": "ACT_VITAL_ASSESS_A"
+    },
+    "ACT_VITAL_ASSESS_A": {
+      "eventIdentifier": "activate_patient_a_vital_assess",
+      "moveNextBehavior": "WaitUntilDone",
+      "identifier": "ACT_VITAL_ASSESS_A",
+      "nodeType": "InvokeEvent",
       "nextIdentifier": "V011_1"
     },
     "Q_WAIT_INITIAL_A": {
@@ -4616,6 +4641,13 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q008",
       "nodeType": "QuestControl",
+      "nextIdentifier": "ACT_AVPU_GCS_ASSESS_A"
+    },
+    "ACT_AVPU_GCS_ASSESS_A": {
+      "eventIdentifier": "activate_patient_a_avpu_gcs_assess",
+      "moveNextBehavior": "WaitUntilDone",
+      "identifier": "ACT_AVPU_GCS_ASSESS_A",
+      "nodeType": "InvokeEvent",
       "nextIdentifier": "V012"
     },
     "Q008_1": {

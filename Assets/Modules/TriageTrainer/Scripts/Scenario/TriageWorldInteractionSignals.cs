@@ -36,8 +36,13 @@ namespace TriageTrainer.Scenario
       Raise("patient_equipment_connected", patientIdentifier, equipmentType, GetIdentifier(equipment));
     public static void RaisePatientEquipmentDisconnected(string patientIdentifier, string equipmentType, MonoBehaviour equipment) =>
       Raise("patient_equipment_disconnected", patientIdentifier, equipmentType, GetIdentifier(equipment));
-    public static void RaisePatientBedPositioningPointLatched(string bedIdentifier, string pointIdentifier) =>
+    public static void RaisePatientBedPositioningPointLatched(string bedIdentifier, string pointIdentifier)
+    {
       Raise("patient_bed_positioning_point_latched", bedIdentifier, pointIdentifier);
+      // 시나리오가 특정 포인트 식별자에 결합되지 않고 "이 침대가 어딘가에 정박했는가"만 기다릴 수 있는
+      // 침대 범위 신호도 함께 제공한다.
+      Raise("patient_bed_positioning_point_latched", bedIdentifier);
+    }
     public static void RaisePatientBedPositioningPointUnlatched(string bedIdentifier, string pointIdentifier) =>
       Raise("patient_bed_positioning_point_unlatched", bedIdentifier, pointIdentifier);
     public static void RaisePatientBedPositioningPointEnabled(string pointIdentifier) =>

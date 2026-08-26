@@ -77,15 +77,16 @@ namespace MultiplayerInfrastructure.Quest
 
     public static QuestPresentationService ActiveInstance { get; private set; }
 
-    /// <summary>NPC 이름표(0)보다 위에 마크를 쌓기 위한 기준 채널 순서.</summary>
-    private const int NpcQuestMarkChannelOrder = 100;
+    /// <summary>이름표(0)보다 위에 마크를 쌓기 위한 기준 채널 순서.</summary>
+    private const int OverheadQuestMarkChannelOrder = 100;
 
     public event Action OnPresentationChanged;
     public static event Action PresentationChanged;
 
     private readonly Dictionary<InteractionKey, ActiveBinding> _interactionBindings = new();
-    private readonly Dictionary<string, ActiveBinding> _npcBindings = new(StringComparer.Ordinal);
-    private readonly List<(EntityOverheadLabelUIController Controller, Transform Anchor, string Channel)> _npcMarkers = new();
+    /// <summary>월드 앵커 위에 아이콘을 띄우는 대상(NPC 머리 위, waypoint)의 마크. 키에 대상 종류를 포함한다.</summary>
+    private readonly Dictionary<InteractionKey, ActiveBinding> _anchoredBindings = new();
+    private readonly List<(EntityOverheadLabelUIController Controller, Transform Anchor, string Channel)> _overheadMarkers = new();
     private readonly HashSet<string> _previousIncompleteQuestIds = new(StringComparer.Ordinal);
     private readonly HashSet<string> _previousTrackedQuestIds = new(StringComparer.Ordinal);
     private readonly HashSet<string> _completionGraceQuestIds = new(StringComparer.Ordinal);
@@ -134,8 +135,8 @@ namespace MultiplayerInfrastructure.Quest
       Registry.Registry.OnEntryRegistered -= HandleRegistryEntryChanged;
       Registry.Registry.OnEntryUnregistered -= HandleRegistryEntryRemoved;
       _interactionBindings.Clear();
-      _npcBindings.Clear();
-      ClearNpcMarkers();
+      _anchoredBindings.Clear();
+      ClearOverheadMarkers();
       _previousIncompleteQuestIds.Clear();
       _previousTrackedQuestIds.Clear();
       _completionGraceQuestIds.Clear();
@@ -243,9 +244,9 @@ namespace MultiplayerInfrastructure.Quest
     }
 
     private static string DefaultMarkIconIdentifier(QuestPresentationTargetType targetType)
-      => targetType == QuestPresentationTargetType.Npc
-        ? IconSpriteIdentifiers.QuestNpcMark
-        : IconSpriteIdentifiers.QuestInteractionMark;
+      => targetType == QuestPresentationTargetType.Interaction
+        ? IconSpriteIdentifiers.QuestInteractionMark
+        : IconSpriteIdentifiers.QuestNpcMark;
 
     public void RefreshPresentation()
     {
@@ -282,8 +283,8 @@ namespace MultiplayerInfrastructure.Quest
     {
       _scenarioMarks.Clear();
       _interactionBindings.Clear();
-      _npcBindings.Clear();
-      ClearNpcMarkers();
+      _anchoredBindings.Clear();
+      ClearOverheadMarkers();
       OnPresentationChanged?.Invoke();
       PresentationChanged?.Invoke();
       Reconcile(_questManager?.Quests);
@@ -297,21 +298,28 @@ namespace MultiplayerInfrastructure.Quest
 
     private void HandleRegistryEntryChanged(RegistryType type, string identifier, object value)
     {
-      if (type == RegistryType.IconSprite || type == RegistryType.Npc || type == RegistryType.Entity)
+      if (IsPresentationAffectingRegistry(type))
         Reconcile(_questManager?.Quests);
     }
 
     private void HandleRegistryEntryRemoved(RegistryType type, string identifier)
     {
-      if (type == RegistryType.IconSprite || type == RegistryType.Npc || type == RegistryType.Entity)
+      if (IsPresentationAffectingRegistry(type))
         Reconcile(_questManager?.Quests);
     }
+
+    /// <summary>표시 대상이나 아이콘이 바뀔 수 있는 레지스트리 변경인지 판정한다.</summary>
+    private static bool IsPresentationAffectingRegistry(RegistryType type)
+      => type == RegistryType.IconSprite
+         || type == RegistryType.Npc
+         || type == RegistryType.Entity
+         || type == RegistryType.Waypoint;
 
     private void Reconcile(IReadOnlyList<QuestData> quests)
     {
       _interactionBindings.Clear();
-      _npcBindings.Clear();
-      ClearNpcMarkers();
+      _anchoredBindings.Clear();
+      ClearOverheadMarkers();
       var nextIncompleteQuestIds = new HashSet<string>(StringComparer.Ordinal);
       var nextTrackedQuestIds = new HashSet<string>(StringComparer.Ordinal);
       if (quests != null)
@@ -375,19 +383,19 @@ namespace MultiplayerInfrastructure.Quest
               if (!_interactionBindings.TryGetValue(key, out var current) || IsPreferred(candidate, current))
                 _interactionBindings[key] = candidate;
             }
-            else if (binding.TargetType == QuestPresentationTargetType.Npc)
+            else if (IsAnchoredTarget(binding.TargetType))
             {
-              string npcKey = binding.EntityIdentifier.Trim();
-              if (!_npcBindings.TryGetValue(npcKey, out var current) || IsPreferred(candidate, current))
-                _npcBindings[npcKey] = candidate;
+              var key = InteractionKey.ForTarget(binding.TargetType, binding.EntityIdentifier, null);
+              if (!_anchoredBindings.TryGetValue(key, out var current) || IsPreferred(candidate, current))
+                _anchoredBindings[key] = candidate;
             }
           }
         }
       }
       MergeScenarioMarks();
 
-      foreach (var active in _npcBindings.Values)
-        RegisterNpcMarker(active);
+      foreach (var active in _anchoredBindings.Values)
+        RegisterAnchoredMarker(active);
 
       _previousIncompleteQuestIds.Clear();
       foreach (string questIdentifier in nextIncompleteQuestIds)
@@ -447,43 +455,92 @@ namespace MultiplayerInfrastructure.Quest
         }
         else
         {
-          if (!_npcBindings.TryGetValue(mark.EntityIdentifier, out var current) || IsPreferred(candidate, current))
-            _npcBindings[mark.EntityIdentifier] = candidate;
+          var key = InteractionKey.ForTarget(mark.TargetType, mark.EntityIdentifier, null);
+          if (!_anchoredBindings.TryGetValue(key, out var current) || IsPreferred(candidate, current))
+            _anchoredBindings[key] = candidate;
         }
       }
     }
 
-    private void RegisterNpcMarker(ActiveBinding active)
+    /// <summary>
+    /// 월드 앵커 위에 마크를 올리는 대상의 앵커를 찾아 표시를 요청한다. 대상 종류별로 다른 것은
+    /// 앵커를 찾는 방법뿐이고, 실제 표시는 <see cref="RegisterOverheadMarker"/> 하나로 모여 있다.
+    /// </summary>
+    private void RegisterAnchoredMarker(ActiveBinding active)
     {
       var binding = active.Binding;
-      var npcObject = Registry.Registry.Get<GameObject>(RegistryType.Npc, binding.EntityIdentifier);
-      var anchorProvider = FindAnchorProvider(npcObject);
-      var anchor = anchorProvider?.OverheadPresentationAnchor;
-      var controller = EntityOverheadLabelUIController.ActiveInstance;
-      if (anchor == null || controller == null)
+      if (!TryResolveOverheadAnchor(binding.TargetType, binding.EntityIdentifier, out var anchor))
         return;
 
-      string channel = $"quest:{active.QuestIdentifier}:{active.BindingIndex}";
+      RegisterOverheadMarker(
+        anchor,
+        $"quest:{active.QuestIdentifier}:{active.BindingIndex}",
+        OverheadQuestMarkChannelOrder + binding.Priority,
+        active.Icon);
+    }
+
+    /// <summary>대상 종류별로 마크를 붙일 앵커 Transform 을 찾는다. 표시 자체는 담당하지 않는다.</summary>
+    private static bool TryResolveOverheadAnchor(
+      QuestPresentationTargetType targetType,
+      string entityIdentifier,
+      out Transform anchor)
+    {
+      anchor = null;
+      if (string.IsNullOrWhiteSpace(entityIdentifier))
+        return false;
+
+      string trimmedIdentifier = entityIdentifier.Trim();
+      switch (targetType)
+      {
+        case QuestPresentationTargetType.Npc:
+          var npcObject = Registry.Registry.Get<GameObject>(RegistryType.Npc, trimmedIdentifier);
+          anchor = FindAnchorProvider(npcObject)?.OverheadPresentationAnchor;
+          break;
+
+        case QuestPresentationTargetType.Waypoint:
+          if (WaypointAnchor.TryGet(trimmedIdentifier, out var waypoint) && waypoint != null)
+            anchor = waypoint.transform;
+          break;
+      }
+
+      return anchor != null;
+    }
+
+    /// <summary>
+    /// 앵커 Transform 하나에 마크 아이콘을 올리는 공통 표시 경로. 대상이 NPC 인지 waypoint 인지 알지 못하며,
+    /// 표시를 켜는 일만 한다. 퀘스트 진행 판정은 이 경로와 무관하다.
+    /// </summary>
+    private void RegisterOverheadMarker(Transform anchor, string channel, int channelOrder, Sprite icon)
+    {
+      var controller = EntityOverheadLabelUIController.ActiveInstance;
+      if (anchor == null || controller == null || icon == null)
+        return;
+
       // 채널 스택은 앵커에서 위로 쌓이므로, 이름표(order 0)보다 큰 순서를 써야 이름 위에 마크가 놓인다.
       controller.SetLabel(
         anchor,
         channel,
-        NpcQuestMarkChannelOrder + binding.Priority,
-        new EntityOverheadLabelUIController.LabelContent(active.Icon));
-      _npcMarkers.Add((controller, anchor, channel));
+        channelOrder,
+        new EntityOverheadLabelUIController.LabelContent(icon));
+      _overheadMarkers.Add((controller, anchor, channel));
     }
 
-    private void ClearNpcMarkers()
+    private void ClearOverheadMarkers()
     {
-      for (int i = 0; i < _npcMarkers.Count; i++)
+      for (int i = 0; i < _overheadMarkers.Count; i++)
       {
-        var marker = _npcMarkers[i];
+        var marker = _overheadMarkers[i];
         if (marker.Controller != null && marker.Anchor != null)
           marker.Controller.RemoveLabel(marker.Anchor, marker.Channel);
       }
 
-      _npcMarkers.Clear();
+      _overheadMarkers.Clear();
     }
+
+    /// <summary>월드 앵커 위에 아이콘을 띄우는 대상 종류인지 판정한다.</summary>
+    private static bool IsAnchoredTarget(QuestPresentationTargetType targetType)
+      => targetType == QuestPresentationTargetType.Npc
+         || targetType == QuestPresentationTargetType.Waypoint;
 
     private static bool ShouldActivate(QuestData quest, QuestPresentationBinding binding)
     {

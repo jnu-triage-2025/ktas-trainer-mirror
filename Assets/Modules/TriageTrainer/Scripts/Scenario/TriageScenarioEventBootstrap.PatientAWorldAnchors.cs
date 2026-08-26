@@ -14,6 +14,12 @@ namespace TriageTrainer.Scenario
     private const string PatientADoctorAnchorId = "scen_a:doctor_treatment_room_waypoint";
 
     /// <summary>
+    /// 환자 이동 퀘스트가 목표 지점을 가리킬 때 쓰는 앵커. 표시 전용이며 퀘스트 통과 판정과는 무관하다.
+    /// 판정은 침대가 어느 스냅 포인트에든 정박하면 성립한다.
+    /// </summary>
+    private const string PatientATreatmentBedMarkerAnchorId = "scen_a:patient_a_treatment_bed_marker";
+
+    /// <summary>
     /// 구버전 OverworldScene에서도 patient_a 시작 흐름이 원점 스폰 또는 영구 대기에 빠지지 않게 한다.
     /// 씬 담당자가 같은 식별자의 앵커를 배치한 경우에는 그 값을 우선하며 아무것도 생성하지 않는다.
     /// </summary>
@@ -23,6 +29,7 @@ namespace TriageTrainer.Scenario
       EnsureWaypoint(PatientADoctorAnchorId, new Vector3(-67f, 1f, -15.5f));
 
       EnsureWaypoint(PatientAArrivalAnchorId, new Vector3(-72.525f, 0f, 0.7f));
+      EnsureWaypoint(PatientATreatmentBedMarkerAnchorId, new Vector3(-60.759f, 1f, -8.354f));
       if (FindArrivalZone() == null)
         CreateArrivalZone(FindWaypoint(PatientAArrivalAnchorId)?.transform.position
           ?? new Vector3(-72.525f, 0f, 0.7f));

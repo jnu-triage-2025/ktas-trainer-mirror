@@ -565,6 +565,7 @@ MonoBehaviour:
   - zone_1:bed_snap_point
   - zone_2:bed_snap_point
   - zone_3:bed_snap_point
+  - zone_a:bed_snap_point
   _attachableItemVisualPairs: []
   _reposedTargetComponent: {fileID: 0}
   _initialReposedTargetIdentifier: 

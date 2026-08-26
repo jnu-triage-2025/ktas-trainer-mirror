@@ -8,11 +8,29 @@ namespace TriageTrainer.Scenario
   {
     private void RegisterEvent_ActivatePatientAStageInteractions()
     {
+      Register("activate_patient_a_vital_assess", Event_ActivatePatientAVitalAssess);
+      Register("activate_patient_a_avpu_gcs_assess", Event_ActivatePatientAAvpuGcsAssess);
       Register("activate_patient_a_arrest_actions", Event_ActivatePatientAArrestActions);
       Register("activate_patient_a_stylet_removal", Event_ActivatePatientAStyletRemoval);
       Register("activate_patient_a_tpiece_attach", Event_ActivatePatientATpieceAttach);
       Register("activate_patient_a_cpr2_actions", Event_ActivatePatientACpr2Actions);
       Register("activate_patient_a_clothing_removal", Event_ActivatePatientAClothingRemoval);
+    }
+
+    private IEnumerator Event_ActivatePatientAVitalAssess()
+    {
+      var patient = ResolvePatientAController();
+      if (patient != null)
+        patient.SetAssessActionEnabled("assess_vital", true);
+      yield break;
+    }
+
+    private IEnumerator Event_ActivatePatientAAvpuGcsAssess()
+    {
+      var patient = ResolvePatientAController();
+      if (patient != null)
+        patient.SetAssessActionEnabled("assess_avpu_gcs", true);
+      yield break;
     }
 
     private IEnumerator Event_ActivatePatientAArrestActions()

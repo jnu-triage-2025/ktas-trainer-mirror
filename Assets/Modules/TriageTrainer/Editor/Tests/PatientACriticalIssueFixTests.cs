@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Scenario;
 using NUnit.Framework;
 using TriageTrainer.Entity;
@@ -25,6 +26,9 @@ namespace TriageTrainer.Tests
     private const string PatientAScenarioGlob = "patient_a_critical*.scenario.json";
     private const string PatientAScenarioSourcePath =
       "Documents/requirements/content-definitions/scenario/patient_a_critical.md";
+    private const string PatientMovingBedPrefabPath =
+      "Assets/Modules/TriageTrainer/Prefabs/Entities/MinecraftBoatLikes/PatientMovingBed.prefab";
+    private const string PatientATreatmentBedMarkerIdentifier = "scen_a:patient_a_treatment_bed_marker";
 
     [Test]
     public void PatientAInstantiationAppliesInitialTreatmentDisplayState()
@@ -1006,6 +1010,154 @@ namespace TriageTrainer.Tests
       {
         UnityEngine.Object.DestroyImmediate(instance);
       }
+    }
+
+    [Test]
+    public void PatientAUnusedAssessAndLiftInteractionsStartDisabled()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+      var patient = prefab.GetComponent<PatientController>();
+      Assert.That(patient, Is.Not.Null);
+
+      var enabledByAssessIdentifier = ReadAssessActionEnabledStates(patient);
+
+      // AddAssessInteracts는 프리팹에 없는 표준 사정 동작을 코드 기본값(활성)으로 보충한다.
+      // 따라서 노출을 막으려면 프리팹에 항목을 명시하고 비활성으로 저장해야 한다.
+      foreach (string identifier in new[] { "assess_vital", "assess_avpu_gcs", "assess_pulse", "assess_gcs" })
+      {
+        Assert.That(enabledByAssessIdentifier, Contains.Key(identifier),
+          $"사정 동작 '{identifier}'을 프리팹에 명시해야 코드 기본값 보충이 활성 상태로 되살리지 않습니다.");
+        Assert.That(enabledByAssessIdentifier[identifier], Is.False,
+          $"사정 동작 '{identifier}'은 시나리오가 활성화하기 전에는 노출되면 안 됩니다.");
+      }
+
+      var interactConfigs = typeof(PatientController).GetField(
+          "_interactConfigs", BindingFlags.Instance | BindingFlags.NonPublic)
+        ?.GetValue(patient) as System.Collections.IEnumerable;
+      Assert.That(interactConfigs, Is.Not.Null);
+
+      object liftConfig = null;
+      foreach (object each in interactConfigs)
+      {
+        string identifier = each?.GetType().GetProperty("Identifier")?.GetValue(each) as string;
+        if (identifier == "lift_from_bed")
+          liftConfig = each;
+      }
+      Assert.That(liftConfig, Is.Not.Null);
+      Assert.That(liftConfig.GetType().GetProperty("Enabled")?.GetValue(liftConfig), Is.False,
+        "'환자를 들어올리기'는 patient_a_critical에서 사용하지 않으므로 비활성이어야 합니다.");
+    }
+
+    [Test]
+    public void PatientAScenarioActivatesGatedAssessmentsBeforeTheirValidators()
+    {
+      var graph = ScenarioGraphLoader.LoadFromJson(
+        File.ReadAllText(Path.Combine(Application.dataPath,
+          "Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json")),
+        validateWithSchema: true);
+
+      AssertAssessActivationPrecedesValidator(graph, "Q007",
+        "ACT_VITAL_ASSESS_A", "activate_patient_a_vital_assess", "V011_1");
+      AssertAssessActivationPrecedesValidator(graph, "Q008",
+        "ACT_AVPU_GCS_ASSESS_A", "activate_patient_a_avpu_gcs_assess", "V012");
+    }
+
+    private static Dictionary<string, bool> ReadAssessActionEnabledStates(PatientController patient)
+    {
+      var assessActions = typeof(PatientController).GetField(
+          "_assessActions", BindingFlags.Instance | BindingFlags.NonPublic)
+        ?.GetValue(patient) as System.Collections.IEnumerable;
+      Assert.That(assessActions, Is.Not.Null);
+
+      var states = new Dictionary<string, bool>(StringComparer.Ordinal);
+      foreach (object action in assessActions)
+      {
+        string identifier = action?.GetType().GetProperty("Identifier")?.GetValue(action) as string;
+        if (string.IsNullOrWhiteSpace(identifier))
+          continue;
+
+        states[identifier] = (bool)action.GetType().GetProperty("Enabled").GetValue(action);
+      }
+      return states;
+    }
+
+    private static void AssertAssessActivationPrecedesValidator(
+      ScenarioGraph graph, string predecessorIdentifier, string activationIdentifier,
+      string expectedEventIdentifier, string validatorIdentifier)
+    {
+      Assert.That(graph.Nodes, Contains.Key(predecessorIdentifier));
+      Assert.That(graph.Nodes, Contains.Key(activationIdentifier));
+      Assert.That(graph.Nodes, Contains.Key(validatorIdentifier));
+
+      Assert.That(graph.Nodes[predecessorIdentifier].NextIdentifier, Is.EqualTo(activationIdentifier),
+        $"'{predecessorIdentifier}'은 검증 노드보다 먼저 '{activationIdentifier}'으로 이어져야 합니다.");
+
+      var activation = graph.Nodes[activationIdentifier] as ScenarioInvokeEventNode;
+      Assert.That(activation, Is.Not.Null);
+      Assert.That(activation.EventIdentifier, Is.EqualTo(expectedEventIdentifier));
+      Assert.That(activation.NextIdentifier, Is.EqualTo(validatorIdentifier),
+        $"'{activationIdentifier}' 다음에는 대기 검증 노드 '{validatorIdentifier}'가 와야 합니다.");
+    }
+
+    [Test]
+    public void PatientAMoveQuestMarksTreatmentBedWaypointAndPassesOnAnyBedSnap()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string scenarioJson = File.ReadAllText(Path.Combine(projectRoot, PatientAScenarioPath));
+      var graph = ScenarioGraphLoader.LoadFromJson(scenarioJson, validateWithSchema: true);
+
+      // 퀘스트 발행 직후 목표 지점 마크를 켠다.
+      Assert.That(graph.Nodes["Q006"].NextIdentifier, Is.EqualTo("QM_MOVE_A_SHOW"));
+      var show = graph.Nodes["QM_MOVE_A_SHOW"] as ScenarioQuestMarkNode;
+      Assert.That(show, Is.Not.Null);
+      Assert.That(show.Operation, Is.EqualTo(ScenarioQuestMarkOperationType.Show));
+      Assert.That(show.TargetType, Is.EqualTo(QuestPresentationTargetType.Waypoint));
+      Assert.That(show.EntityIdentifier, Is.EqualTo(PatientATreatmentBedMarkerIdentifier));
+      Assert.That(show.NextIdentifier, Is.EqualTo("D005"));
+
+      // 이송이 끝난 뒤에 마크를 끄고 퀘스트를 회수해야, 미는 동안 안내가 계속 남는다.
+      Assert.That(graph.Nodes["P002"].NextIdentifier, Is.EqualTo("E005"));
+      Assert.That(graph.Nodes["E005"].NextIdentifier, Is.EqualTo("QM_MOVE_A_HIDE"));
+      Assert.That(graph.Nodes["Q006_1"].NextIdentifier, Is.EqualTo("D006"));
+
+      var hide = graph.Nodes["QM_MOVE_A_HIDE"] as ScenarioQuestMarkNode;
+      Assert.That(hide, Is.Not.Null);
+      Assert.That(hide.Operation, Is.EqualTo(ScenarioQuestMarkOperationType.Hide));
+      Assert.That(hide.TargetType, Is.EqualTo(QuestPresentationTargetType.Waypoint));
+      Assert.That(hide.EntityIdentifier, Is.EqualTo(PatientATreatmentBedMarkerIdentifier));
+      Assert.That(hide.NextIdentifier, Is.EqualTo("Q006_1"));
+
+      // 포인트 범위 신호와 별개로, 침대 범위 신호가 함께 올라와야 "아무 스냅 포인트나" 판정이 가능하다.
+      string signalSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageWorldInteractionSignals.cs"));
+      StringAssert.Contains(
+        "Raise(\"patient_bed_positioning_point_latched\", bedIdentifier);", signalSource);
+
+      // 지정한 정박 포인트가 씬에 없으면 특정 포인트를 기다리지 않고 침대 범위 신호로 통과한다.
+      string transferSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/"
+        + "TriageScenarioEventBootstrap.Event.move_patientA_to_treatmentroom.cs"));
+      StringAssert.Contains("FindPositioningPoint(pointIdentifier) != null", transferSource);
+      StringAssert.Contains("patient_bed_positioning_point_latched_{bed.Identifier}", transferSource);
+
+      // 마크가 가리키는 지점에 실제로 정박할 수 있어야 안내와 판정이 어긋나지 않는다.
+      var bedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientMovingBedPrefabPath);
+      Assert.That(bedPrefab, Is.Not.Null);
+      var bed = bedPrefab.GetComponent<MovingPatientBedController>();
+      Assert.That(bed, Is.Not.Null);
+      var allowedPoints = typeof(MovingPatientBedController).GetField(
+          "_allowedPositioningPointIdentifiers", BindingFlags.Instance | BindingFlags.NonPublic)
+        ?.GetValue(bed) as List<string>;
+      Assert.That(allowedPoints, Is.Not.Null);
+      Assert.That(allowedPoints, Contains.Item("zone_a:bed_snap_point"),
+        "마크가 가리키는 처치 구역 스냅 포인트가 침대 허용 목록에 없으면 그 자리에 정박할 수 없습니다.");
+
+      // 앵커는 표시 전용이며 런타임 보정이 요청된 좌표에 만든다.
+      string anchorSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.PatientAWorldAnchors.cs"));
+      StringAssert.Contains(PatientATreatmentBedMarkerIdentifier, anchorSource);
+      StringAssert.Contains("new Vector3(-60.759f, 1f, -8.354f)", anchorSource);
     }
 
     private static bool IsRapidInfuserItemAccepted(string kindName, string itemIdentifier)
