@@ -293,8 +293,9 @@ namespace TriageTrainer.Tests
       Assert.That(doctorMove, Is.Not.Null);
       Assert.That(doctorMove.Mode, Is.EqualTo(ScenarioNPCControlMode.Control));
       Assert.That(doctorMove.NPCIdentifier, Is.EqualTo("npc-doctor-patient-b-c-ct"));
-      Assert.That(doctorMove.DestinationType, Is.EqualTo(ScenarioMoveDestinationType.Waypoint));
-      Assert.That(doctorMove.DestinationIdentifier, Is.EqualTo("scen_b:doctor_care_area_waypoint"));
+      Assert.That(doctorMove.DestinationType, Is.EqualTo(ScenarioMoveDestinationType.WaypointSet));
+      Assert.That(doctorMove.DestinationIdentifier,
+        Is.EqualTo(OverworldGameObjectInitializer.DoctorRouteWaypointSetIdentifier));
       Assert.That(graph.Nodes["P_MOVE"].NextIdentifier, Is.EqualTo("MOVE_DOCTOR_TO_CARE_AREA"));
       var doctorBComplete = graph.Nodes["DOC_B_COMPLETE"] as ScenarioDialogueNode;
       Assert.That(doctorBComplete, Is.Not.Null);
@@ -1905,6 +1906,22 @@ namespace TriageTrainer.Tests
         else
           EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
       }
+    }
+
+    [Test]
+    public void DefaultDoctorRouteUsesOrderedGroundedWaypoints()
+    {
+      var route = OverworldGameObjectInitializer.DefaultDoctorRouteWaypointSet;
+      Assert.That(route.identifier, Is.EqualTo(OverworldGameObjectInitializer.DoctorRouteWaypointSetIdentifier));
+      Assert.That(route.waypoints.Select(waypoint => waypoint.position), Is.EqualTo(new[]
+      {
+        new Vector3(-83f, 1f, -32f),
+        new Vector3(-77f, 1f, -32f),
+        new Vector3(-68f, 1f, -32f),
+        new Vector3(-68f, 1f, -17.5f),
+      }));
+      Assert.That(route.waypoints.All(
+        waypoint => waypoint.position.y >= 0f && waypoint.position.y <= 2.7f), Is.True);
     }
 
     [Test]

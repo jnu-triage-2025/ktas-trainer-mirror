@@ -242,6 +242,7 @@ namespace TriageTrainer.Entity
     {
       _yankauerConnected = true;
       _yankauerHolder = player;
+      _yankauerHolder.SetWallSuctionAvailable(true);
       _yankauerHolderPoint = ResolveYankauerHolderPoint(player);
       var lineObject = new GameObject("PatientA_YankauerSuctionLine");
       lineObject.transform.SetParent(transform, false);
@@ -308,6 +309,7 @@ namespace TriageTrainer.Entity
       if (!_yankauerConnected)
         return;
       _yankauerConnected = false;
+      _yankauerHolder?.SetWallSuctionAvailable(false);
       _yankauerHolder = null;
       if (_yankauerHolderPoint != null)
         Destroy(_yankauerHolderPoint.gameObject);

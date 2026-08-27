@@ -82,7 +82,21 @@ namespace TriageTrainer.Editor.Utils
     public static readonly Vector3 DefaultTriageArrivalWaypoint = new(-72.525f, 0f, 0.7f);
 
     public const string DoctorSpawnWaypointIdentifier = "scen_b:doctor_spawnpoint";
-    public static readonly Vector3 DefaultDoctorSpawnWaypoint = new(-82f, 1f, -35f);
+    public static readonly Vector3 DefaultDoctorSpawnWaypoint = new(-83f, 1f, -32f);
+
+    public const string DoctorRouteWaypointSetIdentifier = "overworld:doctor-route";
+    public static readonly WaypointSetDefinition DefaultDoctorRouteWaypointSet = new()
+    {
+      identifier = DoctorRouteWaypointSetIdentifier,
+      displayName = "Doctor Route",
+      waypoints = new List<WaypointDefinition>
+      {
+        new() { identifier = "overworld:doctor-route:01", position = new Vector3(-83f, 1f, -32f) },
+        new() { identifier = "overworld:doctor-route:02", position = new Vector3(-77f, 1f, -32f) },
+        new() { identifier = "overworld:doctor-route:03", position = new Vector3(-68f, 1f, -32f) },
+        new() { identifier = "overworld:doctor-route:04", position = new Vector3(-68f, 1f, -17.5f) },
+      }
+    };
 
     public const string CareAreaWaypointIdentifier = "scen_b:care_area_waypoint";
     public static readonly Vector3 DefaultCareAreaWaypoint = new(-67f, 1f, -15.5f);
@@ -174,7 +188,7 @@ namespace TriageTrainer.Editor.Utils
         Vector3 ctPatientTargetZoneSize,
         string[] ctPatientArrivalEnterSignals,
         string ctPatientArrivalPerEntitySignalTemplate,
-        IReadOnlyList<WaypointSetDefinition> waypointSets = null)
+        WaypointSetDefinition doctorRouteWaypointSet = null)
     {
       var generatedRoot = GetOrCreateGeneratedRoot();
       DeleteGeneratedScenarioObjects(generatedRoot.transform);
@@ -216,7 +230,10 @@ namespace TriageTrainer.Editor.Utils
         ctPatientArrivalPerEntitySignalTemplate,
         perEntityPlayersOnly: false);
       CreateSpawnPoint(generatedRoot.transform, commonSpawnPointIdentifier, commonSpawnPoint);
-      CreateWaypointSets(generatedRoot.transform, waypointSets);
+      CreateWaypointSets(generatedRoot.transform, new[]
+      {
+        doctorRouteWaypointSet ?? DefaultDoctorRouteWaypointSet
+      });
     }
 
     public static void Delete()
@@ -372,7 +389,7 @@ namespace TriageTrainer.Editor.Utils
       }
     }
 
-    private static void CreateWaypoint(Transform parent, string identifier, Vector3 position)
+    private static WaypointAnchor CreateWaypoint(Transform parent, string identifier, Vector3 position)
     {
       var waypointObject = new GameObject($"Waypoint_{identifier}");
       waypointObject.transform.SetParent(parent, false);
@@ -387,6 +404,7 @@ namespace TriageTrainer.Editor.Utils
         Undo.RegisterCreatedObjectUndo(waypointObject, "Create Waypoint");
       }
 #endif
+      return waypointAnchor;
     }
 
     private static void CreateWaypointSets(
@@ -406,7 +424,8 @@ namespace TriageTrainer.Editor.Utils
           : definition.displayName.Trim());
         setObject.transform.SetParent(parent, false);
         setObject.transform.localPosition = Vector3.zero;
-        setObject.AddComponent<WaypointSet>().ConfigureIdentifier(identifier);
+        var waypointSet = setObject.AddComponent<WaypointSet>();
+        waypointSet.ConfigureIdentifier(identifier);
 
 #if UNITY_EDITOR
         if (!Application.isPlaying)
@@ -416,12 +435,15 @@ namespace TriageTrainer.Editor.Utils
         if (definition.waypoints == null)
           continue;
 
+        var orderedWaypoints = new List<WaypointAnchor>();
         foreach (var waypoint in definition.waypoints)
         {
           if (waypoint == null || string.IsNullOrWhiteSpace(waypoint.identifier))
             continue;
-          CreateWaypoint(setObject.transform, waypoint.identifier.Trim(), waypoint.position);
+          orderedWaypoints.Add(CreateWaypoint(
+            setObject.transform, waypoint.identifier.Trim(), waypoint.position));
         }
+        waypointSet.ConfigureWaypoints(orderedWaypoints);
       }
     }
 

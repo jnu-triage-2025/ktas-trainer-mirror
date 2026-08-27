@@ -93,7 +93,7 @@ namespace TriageTrainer.Scenario
         if (!string.IsNullOrWhiteSpace(anySnapSignal))
           ScenarioInteractionSignals.Clear(anySnapSignal);
 
-        EmitSystemMessage("환자 A 베드를 처치실 위치까지 직접 이동시키세요.");
+        EmitSystemMessage("환자 베드를 처치실 위치까지 이동시키세요.");
 
         float startedAt = Time.time;
         while (true)
@@ -141,7 +141,6 @@ namespace TriageTrainer.Scenario
           }
         }
 
-        EmitSystemMessage("환자 A 베드 이동 완료가 확인되었습니다.");
         yield break;
       }
 

@@ -39,6 +39,8 @@ namespace TriageTrainer.Editor.Utils
     private string triageArrivalWaypointIdentifier = OverworldGameObjectInitializer.TriageArrivalWaypointIdentifier;
     private string doctorSpawnWaypointIdentifier = OverworldGameObjectInitializer.DoctorSpawnWaypointIdentifier;
     private string doctorCareAreaWaypointIdentifier = OverworldGameObjectInitializer.DoctorCareAreaWaypointIdentifier;
+    private string doctorRouteWaypointSetIdentifier =
+      OverworldGameObjectInitializer.DoctorRouteWaypointSetIdentifier;
     private string ctPatientBWaypointIdentifier = OverworldGameObjectInitializer.CtPatientBTargetPositionWaypointIdentifier;
     private string ctPatientCWaypointIdentifier = OverworldGameObjectInitializer.CtPatientCTargetPositionWaypointIdentifier;
     private Vector3 triageArrivalZoneSize = OverworldGameObjectInitializer.DefaultTriageArrivalZoneSize;
@@ -52,7 +54,8 @@ namespace TriageTrainer.Editor.Utils
     private string ctPatientArrivalPerEntitySignalTemplate = OverworldGameObjectInitializer.CtPatientArrivalPerEntitySignalTemplate;
     private Vector2 scrollPosition;
     [SerializeField] private List<StaticEntityLayoutDefinition> staticEntityLayouts = new();
-    [SerializeField] private List<OverworldGameObjectInitializer.WaypointSetDefinition> waypointSets = new();
+    [SerializeField] private List<OverworldGameObjectInitializer.WaypointDefinition> doctorRouteWaypoints =
+      CloneWaypoints(OverworldGameObjectInitializer.DefaultDoctorRouteWaypointSet.waypoints);
     [SerializeField] private MonoScript initializerScript;
     private SerializedObject serializedWindow;
 
@@ -133,13 +136,11 @@ namespace TriageTrainer.Editor.Utils
       DrawWaypointFields("CT Patient B", ref ctPatientBWaypointIdentifier, ref ctPatientBWaypoint);
       DrawWaypointFields("CT Patient C", ref ctPatientCWaypointIdentifier, ref ctPatientCWaypoint);
       EditorGUILayout.Space(4f);
-      EditorGUILayout.PropertyField(
-        serializedWindow.FindProperty(nameof(waypointSets)),
-        new GUIContent("Waypoint Sets"), true);
-      EditorGUILayout.HelpBox(
-        "Waypoint Set은 원점의 빈 부모 오브젝트 아래에 목록 순서대로 waypoint를 만듭니다. "
-        + "각 자식은 독립 waypoint로도 사용할 수 있으며, 시나리오 이동 목적지에서 WaypointSet을 선택하면 순서대로 이동합니다.",
-        MessageType.None);
+      EditorGUILayout.LabelField("Waypoint Sets", EditorStyles.boldLabel);
+      DrawFixedWaypointSet(
+        "Doctor Route",
+        ref doctorRouteWaypointSetIdentifier,
+        serializedWindow.FindProperty(nameof(doctorRouteWaypoints)));
 
       EditorGUILayout.Space(4f);
       EditorGUILayout.LabelField("Scenario Signal Zones", EditorStyles.boldLabel);
@@ -227,7 +228,12 @@ namespace TriageTrainer.Editor.Utils
             ctPatientTargetZoneSize,
             ParseSignalList(ctPatientArrivalEnterSignals),
             ctPatientArrivalPerEntitySignalTemplate,
-            waypointSets
+            new OverworldGameObjectInitializer.WaypointSetDefinition
+            {
+              identifier = doctorRouteWaypointSetIdentifier,
+              displayName = OverworldGameObjectInitializer.DefaultDoctorRouteWaypointSet.displayName,
+              waypoints = doctorRouteWaypoints
+            }
           );
           var seenIdentifiers = new HashSet<string>();
           foreach (var layout in staticEntityLayouts.Where(value => value != null))
@@ -285,6 +291,8 @@ namespace TriageTrainer.Editor.Utils
       triageArrivalWaypointIdentifier = OverworldGameObjectInitializer.TriageArrivalWaypointIdentifier;
       doctorSpawnWaypointIdentifier = OverworldGameObjectInitializer.DoctorSpawnWaypointIdentifier;
       doctorCareAreaWaypointIdentifier = OverworldGameObjectInitializer.DoctorCareAreaWaypointIdentifier;
+      doctorRouteWaypointSetIdentifier =
+        OverworldGameObjectInitializer.DoctorRouteWaypointSetIdentifier;
       ctPatientBWaypointIdentifier = OverworldGameObjectInitializer.CtPatientBTargetPositionWaypointIdentifier;
       ctPatientCWaypointIdentifier = OverworldGameObjectInitializer.CtPatientCTargetPositionWaypointIdentifier;
       triageArrivalZoneSize = OverworldGameObjectInitializer.DefaultTriageArrivalZoneSize;
@@ -296,7 +304,8 @@ namespace TriageTrainer.Editor.Utils
       triageArrivalPerEntitySignalTemplate = OverworldGameObjectInitializer.TriageArrivalPerEntitySignalTemplate;
       ctPatientArrivalEnterSignals = string.Join(", ", OverworldGameObjectInitializer.CtPatientArrivalEnterSignals);
       ctPatientArrivalPerEntitySignalTemplate = OverworldGameObjectInitializer.CtPatientArrivalPerEntitySignalTemplate;
-      waypointSets.Clear();
+      doctorRouteWaypoints = CloneWaypoints(
+        OverworldGameObjectInitializer.DefaultDoctorRouteWaypointSet.waypoints);
       staticEntityLayouts.Clear();
       staticEntityLayouts.Add(AssetDatabase.LoadAssetAtPath<StaticEntityLayoutDefinition>(
         DefaultStaticLayoutPath));
@@ -310,6 +319,33 @@ namespace TriageTrainer.Editor.Utils
         identifier = EditorGUILayout.TextField("Identifier", identifier);
         value = EditorGUILayout.Vector3Field("Value", value);
       }
+    }
+
+    private static void DrawFixedWaypointSet(
+      string title, ref string identifier, SerializedProperty waypoints)
+    {
+      using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+      {
+        EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
+        identifier = EditorGUILayout.TextField("Identifier", identifier);
+        EditorGUILayout.PropertyField(waypoints, new GUIContent("Waypoints"), true);
+        EditorGUILayout.HelpBox(
+          "이 waypoint set 항목은 코드에 고정되어 있습니다. Waypoints 목록의 항목 순서가 NPC 이동 순서가 됩니다.",
+          MessageType.None);
+      }
+    }
+
+    private static List<OverworldGameObjectInitializer.WaypointDefinition> CloneWaypoints(
+      IEnumerable<OverworldGameObjectInitializer.WaypointDefinition> source)
+    {
+      return source == null
+        ? new List<OverworldGameObjectInitializer.WaypointDefinition>()
+        : source.Where(waypoint => waypoint != null)
+          .Select(waypoint => new OverworldGameObjectInitializer.WaypointDefinition
+          {
+            identifier = waypoint.identifier,
+            position = waypoint.position
+          }).ToList();
     }
 
     /// <summary>

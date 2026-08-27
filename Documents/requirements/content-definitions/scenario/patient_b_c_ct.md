@@ -72,9 +72,9 @@ flags: ["refactor-required"]
 
 위 퀘스트 완료 시 (*2) 내용 시작
 
-- 의사 NPC `npc-doctor-patient-b-c-ct`를 환자 처치 구역의 의사 위치로 이동시킨다.
-  - 목적지 waypoint 식별자: `scen_b:doctor_care_area_waypoint`
-  - 의사 NPC가 해당 식별자 지점에 도착한 뒤 환자 B 처치 지시와 역할별 처치를 시작한다.
+- 의사 NPC `npc-doctor-patient-b-c-ct`를 환자 처치 구역으로 순서대로 이동시킨다.
+  - 목적지 waypoint set 식별자: `overworld:doctor-route`
+  - 의사 NPC가 마지막 지점에 도착한 뒤 환자 B 처치 지시와 역할별 처치를 시작한다.
 
 ### 환자 B 처치
 
@@ -616,7 +616,7 @@ flags: ["refactor-required"]
 - `usability` 데이터팩은 `(UseMicInRecognitionCheck, DisableInteractionInRecognitionCheck)=(true, false)`를 적용한다.
 - PlayerController가 시나리오 식별자를 노출하고, Overworld Initializer가 `scen_b:*` 스폰/도착 앵커와 `quest_arrival_triage_area_{id}` 도착 신호 존을 생성한다.
 - EntityPresetSpawn은 일반 엔티티와 acting NPC 모두 `positionSourceEntityIdentifier`로 지정한 waypoint 위치를 해석한다. 이에 따라 의사 NPC를 전용 spawnpoint에 생성할 수 있다.
-- 의사 NPC는 시나리오 시작 시 `scen_b:doctor_spawnpoint`에서 생성되고, 환자 B/C가 처치 구역에 배치되면 `NPCControl(mode=Control)`로 `scen_b:doctor_care_area_waypoint`까지 이동한다.
+- 의사 NPC는 시나리오 시작 시 `scen_b:doctor_spawnpoint`에서 생성되고, 환자 B/C가 처치 구역에 배치되면 `NPCControl(mode=Control)`로 `overworld:doctor-route`의 네 지점을 순서대로 이동한다.
 - 환자 C 처치 시작 시에도 환자 B와 동일하게 의사가 `nurse_c`에게 동공반사·정맥로 확보를, `nurse_d`에게 산소 공급·지혈을 지시한 뒤 역할별 처치를 시작한다.
 - 처치 구역 도착 신호는 실제 zone 이름과 무관한 `carezone_patient_entered_patient_b/c`도 함께 발신한다. 그래프는 이 환자 범위 신호로 B/C 이동 완료를 판정한다.
 - 환자 C 의식·근력·동공 확인 이벤트는 환자 B와 동일한 `nurse_a` 역할 검증과 마이크/상호작용 입력 경로를 사용하되, 완료 신호를 `patient_c_*`로 분리한다.
@@ -631,7 +631,7 @@ flags: ["refactor-required"]
 | 간호사 도착 계측 | `quest_arrival_triage_area_{player-id}` 4개 distinct |
 | 의사 NPC | `npc-doctor-patient-b-c-ct` (`npc_doctor_preset`) |
 | 의사 초기 스폰 위치 | `scen_b:doctor_spawnpoint` |
-| 의사 환자 처치 위치 | `scen_b:doctor_care_area_waypoint` |
+| 의사 이동 경로 | `overworld:doctor-route` |
 | 환자 처치구역 도착 | `carezone_patient_entered_patient_b`, `carezone_patient_entered_patient_c` |
 | 환자 B 정맥로 | `insert_iv_patient_b_right`, `connect_cannula_and_ns1_patient_b` |
 | 환자 B 산소/지혈 | `apply_nasal_cannula_patient_b`, `equipment_connected_oxyflowmeter_patient_b`, `apply_gauze_patient_b`, `apply_plaster_on_gauze_patient_b` |
@@ -640,7 +640,7 @@ flags: ["refactor-required"]
 
 ### 에디터 설정 필요 사항
 
-- Overworld Initializer의 기본 `scen_b:*` 위치는 안전한 미확정값 `(-1, -1, -1)`이다. 씬 담당자가 환자 위치와 함께 `scen_b:doctor_spawnpoint`, `scen_b:doctor_care_area_waypoint`의 실제 위치를 지정하고 **Set**을 실행해야 한다.
+- Overworld Initializer는 `scen_b:doctor_spawnpoint`과 `overworld:doctor-route`를 코드 리터럴로 생성한다. 경로의 네 지점은 모두 지면 높이 범위에서 생성해야 한다.
 - 처치 구역의 기존 `PatientCareDescriptionZone`, 베드 스냅 포인트, oxyflowmeter가 실제 씬에 배치되어야 한다.
 - 네 역할 태그 `nurse_a`~`nurse_d`가 모두 공급되지 않으면 `Panic` 정책에 따라 역할 병렬 처리를 시작하지 않는다.
 

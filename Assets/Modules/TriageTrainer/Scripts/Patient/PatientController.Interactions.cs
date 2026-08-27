@@ -270,6 +270,7 @@ namespace TriageTrainer.Entity
       _interacts.Add(new PatientMonitorSelectInteract(this));
       _interacts.Add(new PatientItemApplyInteract(this));
       _interacts.Add(new PatientBCNurseDNasalCannulaInteract(this));
+      AddWallSuctionUseInteract();
       AddTriageInteract();
       AddAssessInteracts();
       AddRecognitionCheckInteract();

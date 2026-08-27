@@ -6,8 +6,8 @@ using UnityEngine;
 namespace MultiplayerInfrastructure.Registry
 {
   /// <summary>
-  /// 순서가 있는 waypoint 묶음이다. 자식 <see cref="WaypointAnchor"/>의 형제 순서가
-  /// 이동 순서이며, 각 자식은 독립된 waypoint로도 계속 레지스트리에 등록된다.
+  /// 순서가 있는 waypoint 묶음이다. <see cref="_waypoints"/> 목록의 인덱스가 이동
+  /// 순서이며, 각 waypoint는 독립된 waypoint로도 계속 레지스트리에 등록된다.
   /// </summary>
   [DisallowMultipleComponent]
   public sealed class WaypointSet : MonoBehaviour
@@ -16,18 +16,11 @@ namespace MultiplayerInfrastructure.Registry
 
     private static readonly Dictionary<string, WaypointSet> _setsByIdentifier =
       new(StringComparer.Ordinal);
-    private readonly List<WaypointAnchor> _waypoints = new();
+    [SerializeField] private List<WaypointAnchor> _waypoints = new();
     private string _registeredIdentifier;
 
     public string Identifier => _identifier;
-    public IReadOnlyList<WaypointAnchor> Waypoints
-    {
-      get
-      {
-        RebuildWaypointList();
-        return _waypoints;
-      }
-    }
+    public IReadOnlyList<WaypointAnchor> Waypoints => _waypoints;
 
     public void ConfigureIdentifier(string identifier)
     {
@@ -38,6 +31,20 @@ namespace MultiplayerInfrastructure.Registry
       Unregister();
       _identifier = trimmed;
       Register();
+    }
+
+    /// <summary>이동 순서대로 waypoint 참조를 구성한다.</summary>
+    public void ConfigureWaypoints(IEnumerable<WaypointAnchor> waypoints)
+    {
+      _waypoints.Clear();
+      if (waypoints == null)
+        return;
+
+      foreach (var waypoint in waypoints)
+      {
+        if (waypoint != null)
+          _waypoints.Add(waypoint);
+      }
     }
 
     public static bool TryGet(string identifier, out WaypointSet waypointSet)
@@ -57,7 +64,7 @@ namespace MultiplayerInfrastructure.Registry
     {
       if (string.IsNullOrWhiteSpace(_identifier))
         _identifier = EntityId.Ensure(_identifier, gameObject, "waypoint-set");
-      RebuildWaypointList();
+      _waypoints.RemoveAll(waypoint => waypoint == null);
     }
 
     private void Register()
@@ -76,17 +83,6 @@ namespace MultiplayerInfrastructure.Registry
           && ReferenceEquals(current, this))
         _setsByIdentifier.Remove(_registeredIdentifier);
       _registeredIdentifier = null;
-    }
-
-    private void RebuildWaypointList()
-    {
-      _waypoints.Clear();
-      for (int i = 0; i < transform.childCount; i++)
-      {
-        var waypoint = transform.GetChild(i).GetComponent<WaypointAnchor>();
-        if (waypoint != null)
-          _waypoints.Add(waypoint);
-      }
     }
   }
 }

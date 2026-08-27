@@ -1,9 +1,11 @@
 ﻿using System;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
+using TriageTrainer.Scenario;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -102,6 +104,25 @@ namespace TriageTrainer.Entity
     }
 
     /// <summary>
+    /// patient_a_critical에서는 현재 플레이어에게 활성화된 정맥로 확보 퀘스트 단계에서만
+    /// 캐뉼라 상호작용을 노출한다. 다른 시나리오는 기존의 환자별 진행 상태를 그대로 사용한다.
+    /// </summary>
+    private bool CanDisplayIntravenousLineCannula(PlayerController player)
+    {
+      if (!CanInteractIntravenousLineCannula || player == null)
+        return false;
+
+      var presentation = QuestPresentationService.ActiveInstance;
+      if (PatientACriticalQuestStateFlags.IsArmed
+          && string.Equals(Identifier, "patient_a", StringComparison.Ordinal)
+          && presentation != null
+          && !presentation.HasActiveInteractionBinding(Identifier, InteractIdIntravenousLineCannula))
+        return false;
+
+      return true;
+    }
+
+    /// <summary>
     /// 정맥라인 캐뉼라 상호작용 항목. 대상 퀘스트가 활성화된 환자에게만 노출되며,
     /// 캐뉼라 보유 여부는 상호작용 실행 시 안내/완료를 판정한다.
     /// </summary>
@@ -122,16 +143,9 @@ namespace TriageTrainer.Entity
 
       public bool CanInteract(Transform interactor)
       {
-        // (1) 환자가 이 기능을 지원(Config)하고 현재 가능(State)한지.
-        if (!_owner.CanInteractIntravenousLineCannula)
-          return false;
-
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
-        if (player == null)
-          return false;
-
         // 캐뉼라가 없어도 항목은 노출한다. Interact에서 필요한 물품 안내를 표시한다.
-        return _owner.CanInteractIntravenousLineCannula;
+        return _owner.CanDisplayIntravenousLineCannula(player);
       }
 
       public void Interact(Transform interactor)
@@ -201,6 +215,9 @@ namespace TriageTrainer.Entity
       if (player == null)
         return;
 
+      if (!CanDisplayIntravenousLineCannula(player))
+        return;
+
       if (!IsHandlingIntravenousLineCannula(player))
       {
         var dialogue = Registry.Get<DialoguePanelUIController>(
@@ -208,12 +225,15 @@ namespace TriageTrainer.Entity
         if (dialogue == null)
           dialogue = UnityEngine.Object.FindFirstObjectByType<DialoguePanelUIController>(
             FindObjectsInactive.Exclude);
-        dialogue?.DisplayDialogue("{PLAYER_NAME}", "20G 캐뉼라가 필요하다.", null, interactionRequired: true);
+        string requiredCannulaMessage = IsPatientBC
+          ? "20G 캐뉼라가 필요하다."
+          : "캐뉼라가 필요하다.";
+        dialogue?.DisplayDialogue("{PLAYER_NAME}", requiredCannulaMessage, null, interactionRequired: true);
         return;
       }
 
       // 상호작용 시점의 조건을 서버/클라이언트 공통으로 다시 방어한다.
-      if (!CanInteractIntravenousLineCannula || !IsHandlingIntravenousLineCannula(player))
+      if (!CanDisplayIntravenousLineCannula(player) || !IsHandlingIntravenousLineCannula(player))
         return;
 
       // ── 게이지 판정(18G / 20G) ── 손에 든 아이템 식별자로 구분한다.

@@ -32,11 +32,12 @@ flags: ["refactor-required"]
   1. 환자 도착 지점에 남성 환자를 스폰한다.
     - 노드 식별자: `SPAWN_A`, 프리셋 `patient_a`, 스폰된 엔티티 식별자 `patient_a`
     - 스폰 지점 식별자: `scen_a:patient_spawnpoint_a`
-  2. 의사 NPC를 처치실의 의사 위치에 스폰한다.
+  2. 의사 NPC를 의사 전용 스폰 지점에 스폰한 뒤 처치실의 의사 위치로 이동시킨다.
     - NPC 식별자: `npc-doctor-patient-a-critical`
-    - 스폰 지점 식별자: `scen_a:doctor_treatment_room_waypoint`
+    - 스폰 지점 식별자: `scen_b:doctor_spawnpoint`
     - 노드 식별자: `SPAWN_DOCTOR`, `npc_doctor_preset`을 위 식별자 지점의 위치에 스폰한다.
-    - 이 의사 NPC의 위치에는 이후 후두경, 기관내관, 5cc 주사기, C-line set을 의사에게 제출하기 위한 상호작용 네 종류를 제공한다.
+    - 환자가 처치실로 이동한 뒤 `overworld:doctor-route` waypoint set을 속도 2.5로 순서대로 이동시킨다.
+    - 의사 NPC의 위치에는 이후 후두경, 기관내관, 5cc 주사기, C-line set을 의사에게 제출하기 위한 상호작용 네 종류를 제공한다.
   3. 남성 환자의 의료 상태를 사전설정한다(`PRESET_A`).
     - 남성 35세, GCS 8점(Stupor), 동공 반응 정상, 호흡 8회/분 불규칙, 맥박 140회/분 약함, 혈압 70/40mmHg, 피부 창백하고 차가움, 체온 35.9도, SpO2 82%, 심정지 아님
   4. (스폰이 완료되면 시작):
@@ -1502,7 +1503,7 @@ flags: ["refactor-required"]
 | `activate_vital_monitor_ui_patient_a`, `vitalinfo_1_patient_a`로 모니터 UI를 시나리오가 직접 활성화 | 환자 모니터의 자세히 보기 상호작용(`detail_overlay`)을 플레이어가 수행하고, 닫을 때 발생하는 신호(`sig.close_vital_ui_a`)로 진행 |
 | `show_checklist_intu` / `hide_checklist_intu`, `show_iv_checklist` / `hide_iv_checklist`, `show_suction_checklist_ui` / `hide_suction_checklist_ui` 체크리스트 UI | 퀘스트 목표 표기와 퀘스트 마크로 대체. 필요 물품은 상호작용 시점의 인벤토리 판정으로 안내 |
 | `sig.click_*` 물품 획득 신호 대기 단계 | 사용·적용·연결·제출 상호작용 시점의 인벤토리 보유 판정 |
-| 환자·의사 위치를 이벤트 안에서 해석 | `scen_a:patient_spawnpoint_a`, `scen_a:doctor_treatment_room_waypoint`, `scen_a:quest_arrival_patient_a` 앵커를 `scen_b:*`와 같은 방식으로 Overworld Initializer에 추가 |
+| 환자·의사 위치를 이벤트 안에서 해석 | `scen_a:patient_spawnpoint_a`, `scen_b:doctor_spawnpoint`, `overworld:doctor-route`, `scen_a:quest_arrival_patient_a` 앵커와 waypoint set을 Overworld Initializer에서 해석 |
 
 ### 아이템 식별자 확정 (2026-08-22 사용자 확정)
 

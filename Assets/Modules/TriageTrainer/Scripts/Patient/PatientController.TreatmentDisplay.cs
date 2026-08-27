@@ -158,8 +158,10 @@ namespace TriageTrainer.Entity
     // 환자에게 적용하는 처치가 아니므로 환자 대상 item_apply 후보에서 제외하는 아이템이다.
     // 장갑은 장비 슬롯 착용 경로가 wear_glove 신호를 담당한다. 앰플과 생리식염수 20ml, 조립 전
     // 양커 팁은 조합 재료여서, 환자에게 그대로 사용하면 조합 재료가 사라지거나 조립·연결 절차를
-    // 건너뛰고 처치 신호가 발신된다. 우클릭 아이템 사용 경로(CanApplyItemUse)의 기존 동작은 그대로
-    // 두고, 상호작용 후보에서만 제외한다.
+    // 건너뛰고 처치 신호가 발신된다. 조립된 양커 팁(yankauer_suction_ready)은 더 이상 손에 들고
+    // 환자에게 적용하는 방식이 아니라, 흡인기와 라인 연결된 상태에서 전용 상호작용
+    // (<see cref="InteractIdWallSuctionUse"/>)으로만 사용하므로 여기서도 제외한다. 우클릭 아이템
+    // 사용 경로(CanApplyItemUse)의 기존 동작은 그대로 두고, 상호작용 후보에서만 제외한다.
     private static readonly HashSet<string> NonPatientApplicationItems = new(System.StringComparer.Ordinal)
     {
       "sterile_gloves",
@@ -168,6 +170,7 @@ namespace TriageTrainer.Entity
       "normal_saline_20ml",
       "yankauer",
       "yankauer_ready",
+      "yankauer_suction_ready",
     };
 
     // 조합 완제품 주사기는 ItemUseEffects 가 아니라 ApplyItemUse 의 회차별 분기가 처리하므로,

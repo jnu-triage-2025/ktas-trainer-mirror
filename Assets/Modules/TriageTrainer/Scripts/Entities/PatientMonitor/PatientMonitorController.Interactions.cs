@@ -41,7 +41,7 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       public MonitorDetailInteract(PatientMonitorController owner) { _owner = owner; }
       public string PresentationEntityIdentifier => _owner.PresentationEntityIdentifier;
       public string InteractionIdentifier => InteractIdDetailOverlay;
-      public string DisplayText => "자세히 보기";
+      public string DisplayText => "환자 모니터 자세히 보기";
       public Sprite DisplayIcon => _owner._interactIcon;
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;

@@ -412,7 +412,7 @@ MonoBehaviour:
   _counterpart: {fileID: 0}
   _oxyflowmeter: {fileID: 0}
   _requiredActiveDisplay: {fileID: 8803091818943228428}
-  _displayText: "T-piece\uC5D0 \uC0B0\uC18C \uC5F0\uACB0"
+  _displayText: "\uC0B0\uC18C \uC720\uB7C9\uACC4\uB97C T-Piece\uC5D0 \uC5F0\uACB0"
 --- !u!1 &2224266580779621743
 GameObject:
   m_ObjectHideFlags: 0
@@ -1027,7 +1027,7 @@ MonoBehaviour:
   - _identifier: monitor_select
     _enabled: 1
   _intravenousLineCannulaConfig:
-    _supported: 0
+    _supported: 1
     _displayText: 
   _intravenousLineCannulaInteractable: 1
   _medicalState:

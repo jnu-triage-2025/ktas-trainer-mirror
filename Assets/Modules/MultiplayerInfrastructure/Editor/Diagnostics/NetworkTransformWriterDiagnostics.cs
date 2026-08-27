@@ -27,7 +27,7 @@ namespace MultiplayerInfrastructure.Editor.Diagnostics
     private const string WriterFieldName = "_toClientChangedWriter";
     private const string SubscribedFieldName = "_subscribedToTicks";
 
-    [MenuItem("Tools/Diagnostics/NetworkTransform 송신 버퍼 상태 점검")]
+    /*[MenuItem("Tools/Diagnostics/NetworkTransform 송신 버퍼 상태 점검")]*/
     public static void Scan()
     {
       var writerField = typeof(NetworkTransform).GetField(

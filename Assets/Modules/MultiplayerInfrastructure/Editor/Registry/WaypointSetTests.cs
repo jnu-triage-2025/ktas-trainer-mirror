@@ -7,7 +7,7 @@ namespace MultiplayerInfrastructure.Tests.Waypoints
   public sealed class WaypointSetTests
   {
     [Test]
-    public void WaypointSetReturnsChildWaypointsInHierarchyOrder()
+    public void WaypointSetReturnsConfiguredWaypointsInListOrder()
     {
       var setObject = new GameObject("Waypoint Set");
       var first = new GameObject("First");
@@ -16,10 +16,15 @@ namespace MultiplayerInfrastructure.Tests.Waypoints
       {
         first.transform.SetParent(setObject.transform, false);
         second.transform.SetParent(setObject.transform, false);
-        first.AddComponent<WaypointAnchor>().ConfigureIdentifier("route:0");
-        second.AddComponent<WaypointAnchor>().ConfigureIdentifier("route:1");
+        var firstAnchor = first.AddComponent<WaypointAnchor>();
+        firstAnchor.ConfigureIdentifier("route:0");
+        var secondAnchor = second.AddComponent<WaypointAnchor>();
+        secondAnchor.ConfigureIdentifier("route:1");
         var waypointSet = setObject.AddComponent<WaypointSet>();
         waypointSet.ConfigureIdentifier("route");
+        waypointSet.ConfigureWaypoints(new[] { firstAnchor, secondAnchor });
+
+        second.transform.SetSiblingIndex(0);
 
         Assert.That(WaypointSet.TryGet("route", out var resolved), Is.SameAs(waypointSet));
         Assert.That(resolved.Waypoints, Has.Count.EqualTo(2));

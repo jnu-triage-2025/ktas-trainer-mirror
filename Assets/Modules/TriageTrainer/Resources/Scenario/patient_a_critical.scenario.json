@@ -2569,7 +2569,7 @@
       "moveNextBehavior": "WaitUntilDone",
       "identifier": "E005",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "QM_MOVE_A_HIDE"
+      "nextIdentifier": "MOVE_DOCTOR_TO_CARE_AREA_A"
     },
     "E019": {
       "eventIdentifier": "insert_18g_left",
@@ -3778,6 +3778,22 @@
       "identifier": "N028_retry_d",
       "nodeType": "Dialogue",
       "nextIdentifier": "C035"
+    },
+    "MOVE_DOCTOR_TO_CARE_AREA_A": {
+      "identifier": "MOVE_DOCTOR_TO_CARE_AREA_A",
+      "nodeType": "NPCControl",
+      "nextIdentifier": "QM_MOVE_A_HIDE",
+      "mode": "Control",
+      "npcIdentifier": "npc-doctor-patient-a-critical",
+      "destinationType": "WaypointSet",
+      "destinationIdentifier": "overworld:doctor-route",
+      "destinationX": 0,
+      "destinationY": 0,
+      "destinationZ": 0,
+      "ignoreGroundCheck": false,
+      "moveMode": "BySpeed",
+      "moveSpeed": 2.5,
+      "moveDuration": 0
     },
     "QM_MOVE_A_HIDE": {
       "identifier": "QM_MOVE_A_HIDE",
@@ -4995,7 +5011,7 @@
       "presetIdentifier": null,
       "actingNpcIdentifier": "npc-doctor-patient-a-critical",
       "spawnedEntityIdentifier": null,
-      "positionSourceEntityIdentifier": "scen_a:doctor_treatment_room_waypoint",
+      "positionSourceEntityIdentifier": "scen_b:doctor_spawnpoint",
       "positionX": 0,
       "positionY": 0,
       "positionZ": 0,

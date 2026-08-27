@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Scenario;
 using NUnit.Framework;
+using TriageTrainer.Editor.Utils;
 using TriageTrainer.Entity;
 using TriageTrainer.Patient;
 using TriageTrainer.Scenario;
@@ -546,8 +547,11 @@ namespace TriageTrainer.Tests
     }
 
     /// <summary>
-    /// 시각 표현이 없는 처치(구강 흡인, 소생술 약물 투여)도 환자 대상 item_apply 상호작용의 후보여야 한다.
+    /// 시각 표현이 없는 처치(소생술 약물 투여 등)도 환자 대상 item_apply 상호작용의 후보여야 한다.
     /// 노출 기준이 실제 적용 기준보다 좁으면 퀘스트 마크만 남고 신호를 올릴 수 없다.
+    /// 단, 구강 흡인(조립된 양커 팁)은 더 이상 손에 든 물품을 적용하는 방식이 아니라 흡인기 라인
+    /// 연결 상태로 판정하는 전용 상호작용(<see cref="PatientController.InteractIdWallSuctionUse"/>)을
+    /// 사용하므로 item_apply 후보에서 제외되어야 한다.
     /// </summary>
     [Test]
     public void PatientAItemApplyExposesTreatmentsWithoutVisualDisplay()
@@ -571,7 +575,6 @@ namespace TriageTrainer.Tests
         foreach (string applicable in new[]
                  {
                    "cervical_collar",
-                   "yankauer_suction_ready",
                    "epinephrine_5cc_syringe",
                    "normal_saline_20cc_syringe"
                  })
@@ -579,14 +582,16 @@ namespace TriageTrainer.Tests
             $"'{applicable}' 은 환자 A의 처치 물품 적용 후보여야 한다.");
 
         // 장갑은 장비 슬롯 착용 경로가 담당하고, 앰플과 생리식염수 20ml, 조립 전 양커 팁은
-        // 조합 재료이므로 환자에게 직접 적용하는 후보에서 제외한다.
+        // 조합 재료이므로 환자에게 직접 적용하는 후보에서 제외한다. 조립된 양커 팁
+        // (yankauer_suction_ready)은 흡인기 사용 전용 상호작용으로만 처리하므로 함께 제외한다.
         foreach (string excluded in new[]
                  {
                    "sterile_gloves",
                    "contaminated_gloves",
                    "epinephrine_ampule",
                    "normal_saline_20ml",
-                   "yankauer"
+                   "yankauer",
+                   "yankauer_suction_ready"
                  })
           Assert.That((bool)canApply.Invoke(controller, new object[] { excluded }), Is.False,
             $"'{excluded}' 은 환자에게 적용하는 물품이 아니므로 후보에서 제외되어야 한다.");
@@ -595,6 +600,40 @@ namespace TriageTrainer.Tests
       {
         UnityEngine.Object.DestroyImmediate(instance);
       }
+    }
+
+    /// <summary>
+    /// 흡인기 사용 상호작용은 손에 든 물품이 아니라 플레이어의 흡인기 라인 연결 상태
+    /// (<see cref="MultiplayerInfrastructure.Player.PlayerController.IsWallSuctionAvailable"/>)로만
+    /// 판정해야 한다. 연결 시 플래그를 켜고 해제 시 끄는 로직이 흡인기 쪽에 있어야 한다.
+    /// </summary>
+    [Test]
+    public void PatientAWallSuctionUseInteractionIsGatedByLineConnectionFlag()
+    {
+      string suctionSource = File.ReadAllText(Path.Combine(
+        Directory.GetParent(Application.dataPath).FullName,
+        "Assets/Modules/TriageTrainer/Scripts/Entities/WallAttachedWallSuction/WallAttachedWallSuction.cs"));
+      StringAssert.Contains("SetWallSuctionAvailable(true)", suctionSource);
+      StringAssert.Contains("SetWallSuctionAvailable(false)", suctionSource);
+
+      string playerFlagSource = File.ReadAllText(Path.Combine(
+        Directory.GetParent(Application.dataPath).FullName,
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerController.WallSuction.cs"));
+      StringAssert.Contains("IsWallSuctionAvailable", playerFlagSource);
+
+      string wallSuctionUseSource = File.ReadAllText(Path.Combine(
+        Directory.GetParent(Application.dataPath).FullName,
+        "Assets/Modules/TriageTrainer/Scripts/Patient/PatientController.WallSuctionUse.cs"));
+      StringAssert.Contains("\"wall_suction_use\"", wallSuctionUseSource);
+      StringAssert.Contains("player.IsWallSuctionAvailable", wallSuctionUseSource);
+      StringAssert.DoesNotContain("CountItemInInventory", wallSuctionUseSource);
+
+      string quests = File.ReadAllText(Path.Combine(
+        Directory.GetParent(Application.dataPath).FullName, PatientAQuestPath));
+      StringAssert.IsMatch(
+        "(?s)\"completionCriteriaIdentifier\": \"suction-mouth-patient-a\".*?" +
+        "\"interactionIdentifier\": \"wall_suction_use\"",
+        quests);
     }
 
     /// <summary>
@@ -656,6 +695,23 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void PatientADoctorFollowsTheSharedOrderedRoute()
+    {
+      var graph = ScenarioGraphLoader.LoadFromJson(
+        File.ReadAllText(PatientAScenarioPath), validateWithSchema: true);
+      var move = graph.Nodes["MOVE_DOCTOR_TO_CARE_AREA_A"] as ScenarioNPCControlNode;
+
+      Assert.That(move, Is.Not.Null);
+      Assert.That(move.Mode, Is.EqualTo(ScenarioNPCControlMode.Control));
+      Assert.That(move.DestinationType, Is.EqualTo(ScenarioMoveDestinationType.WaypointSet));
+      Assert.That(move.DestinationIdentifier,
+        Is.EqualTo(OverworldGameObjectInitializer.DoctorRouteWaypointSetIdentifier));
+      Assert.That(move.IgnoreGroundCheck, Is.False);
+      Assert.That(move.MoveMode, Is.EqualTo(ScenarioMoveMode.BySpeed));
+      Assert.That(move.MoveSpeed, Is.EqualTo(2.5f));
+    }
+
+    [Test]
     public void PatientA636NarrativeMilestonesArePresentWithoutLegacyPlaybackEvents()
     {
       string projectRoot = Directory.GetParent(Application.dataPath).FullName;
@@ -667,7 +723,8 @@ namespace TriageTrainer.Tests
       foreach (string expected in new[]
                {
                  "scen_a:patient_spawnpoint_a",
-                 "scen_a:doctor_treatment_room_waypoint",
+                 "scen_b:doctor_spawnpoint",
+                 "overworld:doctor-route",
                  "흉부 관통상 환자 한 명 이송. 처치실 담당자는 지금 바로 와주세요.",
                  "상태 확인부터 하겠습니다. @t=[nurse_b, ???]선생님은 활력징후 측정해 주시고, @t=[nurse_c, ???]선생님은 의식 상태 사정해 주세요.",
                  "AVPU 중 P이며, GCS는 E2 / V2 / M4로 총 8점입니다.",

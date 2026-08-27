@@ -244,7 +244,7 @@
           "completionCriteriaIdentifier": "suction-mouth-patient-a",
           "targetType": "Interaction",
           "entityIdentifier": "patient_a",
-          "interactionIdentifier": "item_apply",
+          "interactionIdentifier": "wall_suction_use",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         }
