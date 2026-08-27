@@ -12,13 +12,13 @@ using UnityEngine;
 namespace TriageTrainer.Entity
 {
   /// <summary>
-  /// 벽면에 장착하는 석션 유닛(WallSuction) 표현입니다.
+  /// 벽면에 장착하는 흡인기(WallSuction) 표현입니다.
   ///
   /// <para>
-  /// 처음에는 <b>보이지 않는 상태</b>로 시작합니다. 플레이어가 인벤토리의 석션 유닛
+  /// 처음에는 <b>보이지 않는 상태</b>로 시작합니다. 플레이어가 인벤토리의 흡인기
   /// (<see cref="TriageTrainer.ItemDefinitions.WallSuction"/>)을 <b>손에 든 채</b> 이 오브젝트 근처
   /// (부착된 트리거 Collider 범위 안)에 있으면 "설치(장착)" 상호작용이 힌트로 노출됩니다. 상호작용하면
-  /// 이 오브젝트가 표시(Show)되고 인벤토리의 석션 유닛 1개가 소비됩니다.
+  /// 이 오브젝트가 표시(Show)되고 인벤토리의 흡인기 1개가 소비됩니다.
   /// </para>
   ///
   /// <para>
@@ -30,7 +30,7 @@ namespace TriageTrainer.Entity
   /// 설치 상태의 전파 방식은 베이스의 <see cref="StaticObjectDisplayment.ShareMode"/> 로 설정합니다
   /// (기본값 <see cref="StaticObjectDisplaymentShareMode.ServerShared"/>). ServerShared 이면 상호작용이
   /// <see cref="PlayerController"/> 의 서버 권위 프로토콜로 위임되어, 확정 시 서버가 모든 클라이언트에
-  /// 표시(설치)를 브로드캐스트하고(신규 접속자 포함) 요청자 클라이언트에서 석션 유닛이 소비됩니다
+  /// 표시(설치)를 브로드캐스트하고(신규 접속자 포함) 요청자 클라이언트에서 흡인기가 소비됩니다
   /// (진실 원천: <see cref="StaticObjectDisplaymentService"/>). LocalOnly 이면 상호작용한 클라이언트에서만
   /// 소비/표시되고 전파되지 않습니다.
   /// </para>
@@ -78,14 +78,14 @@ namespace TriageTrainer.Entity
     private const string RequiredItemIdentifier = TriageTrainer.ItemDefinitions.WallSuction.Identifier;
 
     [Header("WallAttachedWallSuction")]
-    [Tooltip("설치 시 인벤토리에서 소비할 석션 유닛 수량입니다.")]
+    [Tooltip("설치 시 인벤토리에서 소비할 흡인기 수량입니다.")]
     [SerializeField] private int _consumeCount = 1;
 
     [Tooltip("상호작용 힌트에 표시할 문구입니다.")]
-    [SerializeField] private string _attachDisplayText = "석션 유닛 설치";
+    [SerializeField] private string _attachDisplayText = "흡인기 설치";
 
-    [Tooltip("설치된 석션 유닛을 회수할 때 표시할 문구입니다.")]
-    [SerializeField] private string _detachDisplayText = "석션 유닛 회수";
+    [Tooltip("설치된 흡인기를 회수할 때 표시할 문구입니다.")]
+    [SerializeField] private string _detachDisplayText = "흡인기 회수";
 
     [Tooltip("설치(적용) 완료 시 인게임 서버로 올릴 시나리오 신호입니다. 비우면 신호를 올리지 않습니다.")]
     [SerializeField] private string _attachCompletionSignal;
@@ -104,7 +104,7 @@ namespace TriageTrainer.Entity
     };
 
     /// <summary>
-    /// 이 석션 유닛이 벽면에 설치(적용)되었는지 여부입니다.
+    /// 이 흡인기가 벽면에 설치(적용)되었는지 여부입니다.
     /// 상호작용으로 표시된 상태를 "설치했다 / 적용했다" 로 이해하며, 이후 데이터로 사용할 수 있도록 공개합니다.
     /// 서버 권위 프로토콜(ServerShared)에서는 모든 클라이언트에서 동일하게 반영됩니다.
     /// </summary>
@@ -138,9 +138,9 @@ namespace TriageTrainer.Entity
           return baseText;
 
         if (IsAttached)
-          return string.IsNullOrWhiteSpace(_detachDisplayText) ? "석션 유닛 회수" : _detachDisplayText;
+          return string.IsNullOrWhiteSpace(_detachDisplayText) ? "흡인기 회수" : _detachDisplayText;
 
-        return string.IsNullOrWhiteSpace(_attachDisplayText) ? "석션 유닛 설치" : _attachDisplayText;
+        return string.IsNullOrWhiteSpace(_attachDisplayText) ? "흡인기 설치" : _attachDisplayText;
       }
     }
 
@@ -156,7 +156,7 @@ namespace TriageTrainer.Entity
     // ── IInteractorConditional ───────────────────────────────────────────────
 
     /// <summary>
-    /// 아직 설치되지 않았고, 플레이어가 석션 유닛을 손에 든 채 근처(콜라이더 범위)에 있을 때만 상호작용 가능합니다.
+    /// 아직 설치되지 않았고, 플레이어가 흡인기를 손에 든 채 근처(콜라이더 범위)에 있을 때만 상호작용 가능합니다.
     /// </summary>
     public override bool CanInteract(Transform interactor)
     {
@@ -199,7 +199,7 @@ namespace TriageTrainer.Entity
       }
 
       // 표시(설치) 요청을 베이스에 위임한다. ShareMode 에 따라 서버 전파(ServerShared) 또는 로컬 전용(LocalOnly)으로 처리된다.
-      // - ServerShared: 서버 승인 → 요청자 인벤토리에서 석션 유닛 소비 → 확정 시 전체 브로드캐스트.
+      // - ServerShared: 서버 승인 → 요청자 인벤토리에서 흡인기 소비 → 확정 시 전체 브로드캐스트.
       // - LocalOnly: 이 클라이언트에서만 소비하고 즉시 표시.
       RequestApplyShown(player, RequiredItemIdentifier, Mathf.Max(1, _consumeCount));
     }
@@ -332,7 +332,7 @@ namespace TriageTrainer.Entity
 
     // ── 헬퍼 ─────────────────────────────────────────────────────────────────
 
-    /// <summary>플레이어 인벤토리에 석션 유닛이 있는지 판정한다.</summary>
+    /// <summary>플레이어 인벤토리에 흡인기가 있는지 판정한다.</summary>
     private static bool IsHandlingWallSuction(PlayerController player)
     {
       return player != null && player.CountItemInInventory(RequiredItemIdentifier) > 0;

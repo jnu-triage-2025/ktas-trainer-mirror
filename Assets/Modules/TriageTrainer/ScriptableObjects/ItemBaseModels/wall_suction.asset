@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: wall_suction
   m_EditorClassIdentifier: Assembly-CSharp::ItemBaseModelSO
   identifier: wall_suction
-  displayName: "\uC11D\uC158 \uC720\uB2DB"
+  displayName: "\uD761\uC778\uAE30"
   description: "\uD761\uC778 \uC2DC \uBCBD\uC5D0 \uAF42\uC544 \uC555\uB825 \uBC0F
     \uC804\uC6D0 \uC870\uC808 \uC2DC \uC0AC\uC6A9"
   hasDurability: 0

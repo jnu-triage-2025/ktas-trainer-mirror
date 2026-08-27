@@ -33,6 +33,9 @@ namespace TriageTrainer.Tests
     private const string PatientMovingBedPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/MinecraftBoatLikes/PatientMovingBed.prefab";
     private const string PatientATreatmentBedMarkerIdentifier = "scen_a:patient_a_treatment_bed_marker";
+    private const string WallSuctionItemPath =
+      "Assets/Modules/TriageTrainer/ScriptableObjects/ItemBaseModels/wall_suction.asset";
+    private const string OverworldScenePath = "Assets/Scenes/OverworldScene.unity";
 
     [Test]
     public void PatientAInstantiationAppliesInitialTreatmentDisplayState()
@@ -1279,6 +1282,22 @@ namespace TriageTrainer.Tests
       Assert.That(activation.EventIdentifier, Is.EqualTo(expectedEventIdentifier));
       Assert.That(activation.NextIdentifier, Is.EqualTo(validatorIdentifier),
         $"'{activationIdentifier}' 다음에는 대기 검증 노드 '{validatorIdentifier}'가 와야 합니다.");
+    }
+
+    [Test]
+    public void PatientAWallSuctionUsesSuctionNameAndEmitsQuestCompletionSignal()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string item = File.ReadAllText(Path.Combine(projectRoot, WallSuctionItemPath));
+      StringAssert.Contains("identifier: wall_suction", item);
+      StringAssert.Contains("displayName: \"\\uD761\\uC778\\uAE30\"", item);
+
+      string scene = File.ReadAllText(Path.Combine(projectRoot, OverworldScenePath));
+      StringAssert.IsMatch(
+        "(?s)propertyPath: _entityIdentifier\\s+value: zone_a:wall_suction\\s+objectReference: \\{fileID: 0\\}\\s+" +
+        "- target: \\{fileID: 1599417147604718707, guid: 207c22358b94b49dc9fbd62684abe676, type: 3\\}\\s+" +
+        "propertyPath: _attachCompletionSignal\\s+value: connect_wall_component_1",
+        scene);
     }
 
     [Test]
