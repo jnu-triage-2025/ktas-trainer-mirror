@@ -699,6 +699,22 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void PatientAPrefabUsesClineVisualsExistingConnectionPoint()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+
+      var controller = prefab.GetComponent<PatientController>();
+      var point = controller.ClineIvAttachmentPoint;
+
+      Assert.That(point, Is.Not.Null);
+      Assert.That(point.Identifier, Is.EqualTo("cline_iv_connection_point"));
+      Assert.That(point.transform.parent, Is.Not.Null);
+      Assert.That(point.transform.parent.name, Is.EqualTo("Cline_A"));
+      Assert.That(prefab.transform.Find("ClineIVAttachmentPoint"), Is.Null);
+    }
+
+    [Test]
     public void PatientADoctorFollowsTheSharedOrderedRoute()
     {
       var graph = ScenarioGraphLoader.LoadFromJson(

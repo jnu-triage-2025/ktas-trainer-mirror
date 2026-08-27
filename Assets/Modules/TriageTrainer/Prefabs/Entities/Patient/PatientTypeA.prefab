@@ -70,16 +70,16 @@ MonoBehaviour:
   _connectedLineObjects: []
   _allowMultipleConnections: 0
   connectionService: {fileID: 0}
-  _identifier: ivlineconnectionpoint_001
-  _autoGenerateIdentifier: 1
+  _identifier: cline_iv_connection_point
+  _autoGenerateIdentifier: 0
   _displayIcon: {fileID: 0}
   _interactConfigs:
   - _identifier: intravenous_line_connect_mode_start
-    _enabled: 1
+    _enabled: 0
   - _identifier: intravenous_line_connect_here
-    _enabled: 1
+    _enabled: 0
   - _identifier: intravenous_line_disconnect
-    _enabled: 1
+    _enabled: 0
 --- !u!1 &395488033911256930
 GameObject:
   m_ObjectHideFlags: 0
@@ -1011,7 +1011,7 @@ MonoBehaviour:
     _oxyflowmeters: []
   _ivAttachmentPoint: {fileID: 0}
   _patientBCIvAttachmentPoint: {fileID: 0}
-  _clineIvAttachmentPoint: {fileID: 0}
+  _clineIvAttachmentPoint: {fileID: 4641271633686474913}
   _oxygenMaskAttachmentPoint: {fileID: 0}
   _suctionLineAttachmentPoint: {fileID: 0}
   _carryAttachPoint: {fileID: 7385633622512896465}

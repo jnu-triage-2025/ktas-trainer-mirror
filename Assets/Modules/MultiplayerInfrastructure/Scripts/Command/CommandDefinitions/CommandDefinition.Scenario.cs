@@ -642,7 +642,7 @@ namespace MultiplayerInfrastructure.Command
     }
   }
 
-  public sealed class CommandDefinition_ScenarioAlias : IChatCommandModel
+  public sealed class CommandDefinition_ScenarioAlias : IChatCommandModel, IChatCommandUsage
   {
     private readonly CommandDefinition_Scenario _scenario;
 
@@ -654,6 +654,11 @@ namespace MultiplayerInfrastructure.Command
     public string CommandEntry => "scen";
     public string Description => "Alias for /scenario.";
     public string PermissionIdentifier => "scenario";
+    public IReadOnlyList<UsageLine> UsageLines => _scenario.UsageLines
+      .Select(line => line.Syntax.StartsWith("scenario", StringComparison.OrdinalIgnoreCase)
+        ? new UsageLine("scen" + line.Syntax.Substring("scenario".Length), line.Description)
+        : line)
+      .ToArray();
 
     public void Execute(NetworkConnection sender, string[] args)
     {
