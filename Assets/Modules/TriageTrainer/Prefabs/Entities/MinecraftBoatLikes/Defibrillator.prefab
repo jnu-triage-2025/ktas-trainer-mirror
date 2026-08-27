@@ -368,7 +368,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: interact_defibrillator
-  _presentationEntityIdentifier: 
+  _presentationEntityIdentifier: defibrillator_cart_a
   _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 1

@@ -519,6 +519,30 @@
   margin-top: 2px;
 }
 
+.item-tooltip--checklist {
+  min-width: 340px;
+  max-width: 500px;
+}
+
+.item-tooltip__checklist-grid {
+  flex-direction: row;
+  align-items: flex-start;
+  margin-top: 2px;
+  gap: 14px;
+}
+
+.item-tooltip__checklist-column {
+  min-width: 180px;
+  max-width: 230px;
+  gap: 2px;
+}
+
+.item-tooltip__checklist-row {
+  font-size: 12px;
+  color: #cdd6e6;
+  white-space: normal;
+}
+
 .item-tooltip__detail {
   font-size: 11px;
   color: #a9b4c8;

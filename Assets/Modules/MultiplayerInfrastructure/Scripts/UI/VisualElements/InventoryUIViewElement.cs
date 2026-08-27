@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using MultiplayerInfrastructure.ItemSystem;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Scenario;
@@ -15,6 +16,10 @@ namespace MultiplayerInfrastructure.UI
   [UxmlElement]
   public partial class InventoryUIView : VisualElement
   {
+    private const string ChecklistPaperIdentifier = "checklist_paper";
+    private const int ChecklistTooltipPreferredRows = 6;
+    private const int ChecklistTooltipMaximumColumns = 2;
+
     private int _columns = 9;
     private int _rows = 4;
     private VisualTreeAsset _slotTemplate;
@@ -42,6 +47,7 @@ namespace MultiplayerInfrastructure.UI
     private Label _tooltipName;
     private Label _tooltipType;
     private Label _tooltipDescription;
+    private VisualElement _tooltipChecklistGrid;
     private Label _tooltipDetail;
     private Label _tooltipStack;
     private int _hoveredSlotIndex = -1;
@@ -293,6 +299,11 @@ namespace MultiplayerInfrastructure.UI
       _tooltipDescription.enableRichText = true;
       _tooltipDescription.AddToClassList("item-tooltip__description");
       _tooltip.Add(_tooltipDescription);
+
+      _tooltipChecklistGrid = new VisualElement { name = "ItemTooltipChecklistGrid", pickingMode = PickingMode.Ignore };
+      _tooltipChecklistGrid.AddToClassList("item-tooltip__checklist-grid");
+      _tooltipChecklistGrid.style.display = DisplayStyle.None;
+      _tooltip.Add(_tooltipChecklistGrid);
 
       _tooltipDetail = new Label { name = "ItemTooltipDetail", pickingMode = PickingMode.Ignore };
       _tooltipDetail.AddToClassList("item-tooltip__detail");
@@ -739,7 +750,7 @@ namespace MultiplayerInfrastructure.UI
       _tooltipName.style.color = item.CurrentColor;
 
       SetLabel(_tooltipType, item.CurrentIdentifier);
-      SetLabel(_tooltipDescription, item.CurrentDescription);
+      SetTooltipDescription(item);
       SetLabel(_tooltipDetail, item.CurrentDetailComment);
 
       string stackText = showStack && item.IsCurrentlyStackable
@@ -750,6 +761,56 @@ namespace MultiplayerInfrastructure.UI
       _tooltip.style.display = DisplayStyle.Flex;
       _tooltip.BringToFront();
       UpdateTooltipPosition(panelPosition);
+      _tooltip.schedule.Execute(() => UpdateTooltipPosition(panelPosition)).StartingIn(0);
+    }
+
+    private void SetTooltipDescription(Item item)
+    {
+      bool isChecklistPaper = string.Equals(item.CurrentIdentifier, ChecklistPaperIdentifier, StringComparison.Ordinal);
+      _tooltip.EnableInClassList("item-tooltip--checklist", isChecklistPaper);
+      if (!isChecklistPaper)
+      {
+        _tooltipChecklistGrid.style.display = DisplayStyle.None;
+        _tooltipChecklistGrid.Clear();
+        SetLabel(_tooltipDescription, item.CurrentDescription);
+        return;
+      }
+
+      SetLabel(_tooltipDescription, null);
+      var rows = (item.CurrentDescription ?? string.Empty)
+        .Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries)
+        .Select(row => row.Trim())
+        .Where(row => !string.IsNullOrWhiteSpace(row))
+        .ToArray();
+
+      _tooltipChecklistGrid.Clear();
+      if (rows.Length == 0)
+      {
+        _tooltipChecklistGrid.style.display = DisplayStyle.None;
+        return;
+      }
+
+      int columnCount = Mathf.Min(ChecklistTooltipMaximumColumns,
+        Mathf.Max(1, Mathf.CeilToInt(rows.Length / (float)ChecklistTooltipPreferredRows)));
+      int rowsPerColumn = Mathf.CeilToInt(rows.Length / (float)columnCount);
+      for (int columnIndex = 0; columnIndex < columnCount; columnIndex++)
+      {
+        var column = new VisualElement { name = $"ItemTooltipChecklistColumn_{columnIndex}", pickingMode = PickingMode.Ignore };
+        column.AddToClassList("item-tooltip__checklist-column");
+        _tooltipChecklistGrid.Add(column);
+
+        int start = columnIndex * rowsPerColumn;
+        int end = Mathf.Min(start + rowsPerColumn, rows.Length);
+        for (int rowIndex = start; rowIndex < end; rowIndex++)
+        {
+          var row = new Label(rows[rowIndex]) { pickingMode = PickingMode.Ignore };
+          row.enableRichText = true;
+          row.AddToClassList("item-tooltip__checklist-row");
+          column.Add(row);
+        }
+      }
+
+      _tooltipChecklistGrid.style.display = DisplayStyle.Flex;
     }
 
     private static void SetLabel(Label label, string text)

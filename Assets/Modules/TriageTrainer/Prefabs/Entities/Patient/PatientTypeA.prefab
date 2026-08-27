@@ -70,7 +70,7 @@ MonoBehaviour:
   _connectedLineObjects: []
   _allowMultipleConnections: 0
   connectionService: {fileID: 0}
-  _identifier: ivlineconnectionpoint_002
+  _identifier: ivlineconnectionpoint_001
   _autoGenerateIdentifier: 1
   _displayIcon: {fileID: 0}
   _interactConfigs:
@@ -150,7 +150,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: start_ambu_r2
-  _presentationEntityIdentifier: 
+  _presentationEntityIdentifier: patient_a
   _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 0
@@ -231,7 +231,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: interact_chest
-  _presentationEntityIdentifier: 
+  _presentationEntityIdentifier: patient_a
   _interactionIdentifier: 
   _requiredRaisedSignals:
   - click_to_start_comp
@@ -313,7 +313,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: interact_patient_chest
-  _presentationEntityIdentifier: 
+  _presentationEntityIdentifier: patient_a
   _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 0
@@ -483,7 +483,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: start_ambu_r1
-  _presentationEntityIdentifier: 
+  _presentationEntityIdentifier: patient_a
   _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 0
@@ -564,7 +564,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: remove_tpiece
-  _presentationEntityIdentifier: 
+  _presentationEntityIdentifier: patient_a
   _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 0
@@ -646,7 +646,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: remove_patient_clothing
-  _presentationEntityIdentifier: 
+  _presentationEntityIdentifier: patient_a
   _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 0
@@ -727,7 +727,7 @@ MonoBehaviour:
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: click_to_start_comp
-  _presentationEntityIdentifier: 
+  _presentationEntityIdentifier: patient_a
   _interactionIdentifier: 
   _requiredRaisedSignals: []
   _enabled: 0
@@ -941,8 +941,10 @@ MonoBehaviour:
     _requiredItemIdentifier: 
     _missingItemDialogue: 
     _findItemDialogue: 
-    _actionDialogue: 
-    _resultDialogue: 
+    _actionDialogue: "(\uD658\uC790\uC758 \uBAA9\uC5D0 \uC190\uC744 \uB300\uACE0
+      \uACBD\uB3D9\uB9E5\uC744 \uCD09\uC9C0\uD55C\uB2E4.)"
+    _resultDialogue: "(\uC190\uB05D\uC5D0 \uADDC\uCE59\uC801\uC778 \uBC15\uB3D9\uC774
+      \uC7A1\uD78C\uB2E4.)"
     _enabled: 0
   - _identifier: assess_gcs_rosc
     _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC7AC\uC0AC\uC815"

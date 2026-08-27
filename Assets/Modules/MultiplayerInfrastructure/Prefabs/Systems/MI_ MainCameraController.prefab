@@ -91,7 +91,7 @@ MonoBehaviour:
     _followingPivot: {fileID: 0}
     _camera: {fileID: 0}
     _spectatorLayerName: Spectator
-    _currentDistance: 0.7057053
+    _currentDistance: 1.1299834
     _targetDistance: 5
     _desiredThirdPersonDistance: 5
     _desiredDistanceInitialized: 1
@@ -181,7 +181,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584138123500149648
+  _initializedTimestamp: -8584138114582397858
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1

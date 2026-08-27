@@ -112,7 +112,7 @@ namespace TriageTrainer.Tests
       StringAssert.Contains("\"registryIdentifier\": \"sig.connect_cline_to_lv1\"", json);
       StringAssert.IsMatch("(?s)\"E021\".*?\"nextIdentifier\": \"V017_4\"", json);
       StringAssert.IsMatch("(?s)\"V017_4\".*?\"nextIdentifier\": \"E022\"", json);
-      StringAssert.IsMatch("(?s)\"V020\".*?\"nextIdentifier\": \"N014_1\"", json);
+      StringAssert.IsMatch("(?s)\"V020\".*?\"nextIdentifier\": \"V020_1\"", json);
       StringAssert.IsMatch("(?s)\"V020_1\".*?\"nextIdentifier\": \"E024\"", json);
       StringAssert.IsMatch("(?s)\"D019\".*?@t=\\[nurse_d, @s\\]", json);
       StringAssert.IsMatch("(?s)\"D020\".*?@t=\\[nurse_d, @s\\]", json);
@@ -695,10 +695,10 @@ namespace TriageTrainer.Tests
       var p007 = (ScenarioParallelNode)graph.Nodes["P007"];
       var expectedRoles = new[]
       {
-        ("N026", "nurse_a"),
-        ("N027", "nurse_b"),
+        ("Q028", "nurse_a"),
+        ("Q029", "nurse_b"),
         ("Q_WAIT_ROSC_C", "nurse_c"),
-        ("N028", "nurse_d")
+        ("Q030", "nurse_d")
       };
       Assert.That(p007.Branches, Has.Count.EqualTo(expectedRoles.Length),
         "ROSC 후속 조치는 nurse_a/b/c/d 네 역할 분기를 모두 정의해야 합니다.");
@@ -719,7 +719,8 @@ namespace TriageTrainer.Tests
       Assert.That(graph.Nodes["QC_ROSC_WAIT_C_REMOVE"], Is.InstanceOf<ScenarioQuestControlNode>());
       Assert.That(((ScenarioQuestControlNode)graph.Nodes["QC_ROSC_WAIT_C_REMOVE"]).QuestDefinitionIdentifier,
         Is.EqualTo("Quest_Wait_Others_Rosc_PatientA"));
-      Assert.That(removeWait.NextIdentifier, Is.EqualTo("D037"));
+      Assert.That(removeWait.NextIdentifier, Is.EqualTo("L_END_A"));
+      Assert.That(graph.Nodes["L_END_A"].NextIdentifier, Is.EqualTo("D037"));
 
       string questsPath = Path.Combine(Application.dataPath,
         "Modules/TriageTrainer/Resources/Quest/patient_a_critical.quests.quest.json");
@@ -740,7 +741,7 @@ namespace TriageTrainer.Tests
         "nurse_b 부재 시 nurse_a가 삽관 브랜치를 대신 수행해야 합니다.");
       Assert.That(intubation.RequiredPlayerTagsMatchMode, Is.EqualTo(ScenarioPlayerTagMatchMode.Any));
 
-      var ivLine = System.Array.Find(p004.Branches.ToArray(), each => each.Identifier == "N011");
+      var ivLine = System.Array.Find(p004.Branches.ToArray(), each => each.Identifier == "Q013");
       Assert.That(ivLine.RequiredPlayerTags, Is.EqualTo(new[] { "nurse_d", "nurse_c" }),
         "nurse_d 부재 시 nurse_c가 IV 라인 브랜치를 대신 수행해야 합니다.");
       Assert.That(ivLine.RequiredPlayerTagsMatchMode, Is.EqualTo(ScenarioPlayerTagMatchMode.Any));
@@ -788,8 +789,8 @@ namespace TriageTrainer.Tests
 
       // 의사의 4분 경과 지시는 퀘스트 발행과 함께 먼저 재생되어야 한다(줄글 시나리오 1233~1236행).
       Assert.That(((ScenarioQuestControlNode)graph.Nodes["Q025"]).NextIdentifier, Is.EqualTo("D030"));
-      Assert.That(((ScenarioDialogueNode)graph.Nodes["D030"]).NextIdentifier, Is.EqualTo("V029"));
-      Assert.That(((ScenarioValidatorNode)graph.Nodes["V029_1"]).NextIdentifier, Is.EqualTo("N023_2"));
+      Assert.That(((ScenarioDialogueNode)graph.Nodes["D030"]).NextIdentifier, Is.EqualTo("D_EPI_PREP_R2"));
+      Assert.That(((ScenarioDialogueNode)graph.Nodes["D_EPI_PREP_R2"]).NextIdentifier, Is.EqualTo("V029_2"));
     }
 
     [Test]
@@ -803,11 +804,18 @@ namespace TriageTrainer.Tests
       foreach (string legacyIdentifier in new[]
                {
                  "V011", "V013", "V014", "V015", "V016",
-                 "N005", "N005_4", "N006", "N007", "E007"
+                 "N005", "N005_4", "N006", "N007", "E007",
+                 // 2차 변환에서 제거한 `시스템` 안내 노드와 물품 획득 대기 게이트.
+                 "N011", "N012", "N013", "N014", "N016", "N017", "N018", "N019",
+                 "N020", "N021", "N022", "N023", "N024", "N025", "N026", "N027", "N028",
+                 "V017", "V019", "V023", "V026", "V029", "E017", "E018"
                })
         StringAssert.DoesNotContain($"\"identifier\": \"{legacyIdentifier}\"", json);
       StringAssert.DoesNotContain("\"registryIdentifier\": \"sig.click_vital_set\"", json);
       StringAssert.DoesNotContain("\"eventIdentifier\": \"show_suction_checklist_ui\"", json);
+      StringAssert.DoesNotContain("\"eventIdentifier\": \"show_iv_checklist\"", json);
+      StringAssert.DoesNotContain("\"speakerName\": \"시스템\"", json);
+      StringAssert.DoesNotContain("오답입니다.", json);
     }
 
     [Test]
@@ -1120,8 +1128,8 @@ namespace TriageTrainer.Tests
       Assert.That(show.EntityIdentifier, Is.EqualTo(PatientATreatmentBedMarkerIdentifier));
       Assert.That(show.NextIdentifier, Is.EqualTo("D005"));
 
-      // 이송이 끝난 뒤에 마크를 끄고 퀘스트를 회수해야, 미는 동안 안내가 계속 남는다.
-      Assert.That(graph.Nodes["P002"].NextIdentifier, Is.EqualTo("E005"));
+      // 이송 이벤트를 실행한 뒤 마크를 끄고 퀘스트를 회수해야, 미는 동안 안내가 계속 남는다.
+      Assert.That(graph.Nodes["D005"].NextIdentifier, Is.EqualTo("E005"));
       Assert.That(graph.Nodes["E005"].NextIdentifier, Is.EqualTo("QM_MOVE_A_HIDE"));
       Assert.That(graph.Nodes["Q006_1"].NextIdentifier, Is.EqualTo("D006"));
 
