@@ -56,9 +56,14 @@ stages:
           - checkout: self
             fetchDepth: 0
           - powershell: |
-              & .\Tools\CI\mirror-code.ps1
+              $mirrorScript = Join-Path '$(Build.SourcesDirectory)' 'Tools\CI\mirror-code.ps1'
+              if (-not (Test-Path -LiteralPath $mirrorScript -PathType Leaf)) {
+                throw "Code mirror script was not found: $mirrorScript"
+              }
+              & $mirrorScript
             displayName: 'Create and push code mirror (Windows)'
             condition: eq(variables['Agent.OS'], 'Windows_NT')
+            workingDirectory: '$(Build.SourcesDirectory)'
             env:
               GIT_HTTP_TOKEN: $(GIT_HTTP_TOKEN)
           - powershell: |
