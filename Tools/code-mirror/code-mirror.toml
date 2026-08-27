@@ -48,7 +48,7 @@ scope = { mode = "always" }
 
 # These rules override always_include module policies. Unity .meta files remain.
 [[rules]]
-match = { extensions = [".fbx"] }
+match = { extensions = [".fbx", ".pdf"] }
 preserve_meta = true
 force = true
 scope = { mode = "always" }
