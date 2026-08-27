@@ -278,7 +278,23 @@ def destination_refs(url: str) -> dict[str, str]:
     return {ref: object_id for object_id, ref in (line.split("\t", 1) for line in output.splitlines())}
 
 
-def push_refs(destination: dict[str, Any], refs: dict[str, str], state: dict[str, Any], rebuild: bool) -> None:
+def validate_destination_state(state: dict[str, Any], destination_url: str, reset_destination: bool) -> None:
+    if reset_destination or not state.get("pushed_refs"):
+        return
+    previous_url = state.get("pushed_destination_url")
+    if previous_url is None:
+        raise MirrorError(
+            "The state file has push records without a destination URL. "
+            "Review the rewrite and rerun with --rebuild --reset-destination --push."
+        )
+    if previous_url != destination_url:
+        raise MirrorError(
+            "The configured destination URL differs from the destination recorded in the state file. "
+            "Review the rewrite and rerun with --rebuild --reset-destination --push."
+        )
+
+
+def push_refs(destination: dict[str, Any], refs: dict[str, str], state: dict[str, Any], rebuild: bool, reset_destination: bool) -> None:
     url = str(destination["url"])
     env = os.environ.copy()
     askpass_dir: Path | None = None
@@ -287,7 +303,7 @@ def push_refs(destination: dict[str, Any], refs: dict[str, str], state: dict[str
         askpass_dir, env = http_askpass(str(token_name), str(destination.get("http_username", "git")))
     try:
         current = destination_refs(url)
-        pushed = state.get("pushed_refs", {})
+        pushed = {} if reset_destination else state.get("pushed_refs", {})
         leases: list[str] = []
         for ref in refs:
             actual = current.get(ref)
@@ -300,6 +316,7 @@ def push_refs(destination: dict[str, Any], refs: dict[str, str], state: dict[str
         refspecs = [f"{state['commits'][source]}:{ref}" for ref, source in refs.items()]
         run_git(["push", *leases, url, *refspecs], env=env)
         state["pushed_refs"] = {ref: state["commits"][source] for ref, source in refs.items()}
+        state["pushed_destination_url"] = url
     finally:
         if askpass_dir:
             shutil.rmtree(askpass_dir, ignore_errors=True)
@@ -339,10 +356,13 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--push", action="store_true")
     parser.add_argument("--rebuild", action="store_true", help="Allow a changed filtering configuration to rewrite mirror history.")
+    parser.add_argument("--reset-destination", action="store_true", help="Reset the recorded destination before a reviewed rebuild push.")
     parser.add_argument("--generate-config", action="store_true", help="Generate the lower-priority MIT Unity package module policy file and exit.")
     args = parser.parse_args()
     if args.dry_run and args.push:
         parser.error("--dry-run and --push cannot be used together.")
+    if args.reset_destination and not (args.rebuild and args.push):
+        parser.error("--reset-destination requires --rebuild and --push.")
     config_path = args.config.resolve()
     if args.generate_config:
         return generate_config(config_path)
@@ -355,6 +375,8 @@ def main() -> int:
     fingerprint = config_fingerprint(config)
     if state.get("config_fingerprint") not in (None, fingerprint) and not args.rebuild:
         raise MirrorError("Filtering configuration changed. Review the result and rerun with --rebuild to rewrite the mirror.")
+    if args.push:
+        validate_destination_state(state, str(config["destination"]["url"]), args.reset_destination)
 
     commits = commit_order(refs.values())
     removed_count = 0
@@ -379,7 +401,7 @@ def main() -> int:
         return 0
     write_state(state_path, state)
     if args.push:
-        push_refs(config["destination"], refs, state, args.rebuild)
+        push_refs(config["destination"], refs, state, args.rebuild, args.reset_destination)
         write_state(state_path, state)
         print(f"Pushed {len(refs)} refs to the configured Git destination.")
     else:

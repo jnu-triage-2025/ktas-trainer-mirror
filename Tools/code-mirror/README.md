@@ -16,6 +16,7 @@ python3 Tools/code-mirror/code_mirror.py --config Tools/code-mirror/code-mirror.
 python3 Tools/code-mirror/code_mirror.py --config Tools/code-mirror/code-mirror.toml --generate-config
 python3 Tools/code-mirror/code_mirror.py --config Tools/code-mirror/code-mirror.toml
 python3 Tools/code-mirror/code_mirror.py --config Tools/code-mirror/code-mirror.toml --push
+python3 Tools/code-mirror/code_mirror.py --config Tools/code-mirror/code-mirror.toml --rebuild --reset-destination --push
 ```
 
 첫 번째 명령은 제외 결과와 변환 대상 커밋 수만 확인합니다. 두 번째 명령은 원본 커밋 해시와 변환된 커밋 해시의 매핑을 `.code-mirror-state.json`에 저장합니다. 세 번째 명령은 상태 저장 후 대상 Git 원격 저장소에 push합니다. `--dry-run`도 Git 객체를 계산하기 위해 로컬 객체 데이터베이스에 도달 불가능 객체를 만들 수는 있지만, 참조·상태 파일·원격 저장소는 변경하지 않습니다.
@@ -48,7 +49,9 @@ python3 Tools/code-mirror/code_mirror.py --config Tools/code-mirror/code-mirror.
 
 ## 지속 동기화와 상태
 
-상태 파일은 원본 커밋 해시 → 미러 커밋 해시 매핑, 마지막으로 확인한 원본 참조, 마지막 push 결과, 필터링 설정 지문을 직렬화합니다. 같은 설정으로 다시 실행하면 기존 객체를 재사용하며 새 원본 커밋과 새 참조를 반영합니다. 원본의 강제 push나 새 브랜치 때문에 브랜치 범위 규칙의 결과가 달라질 수 있으므로, 매 실행마다 전체 원본 그래프를 다시 판정합니다. 대상 참조가 상태 파일에 기록된 값과 다르면 외부 변경으로 보고 push를 거부합니다.
+상태 파일은 원본 커밋 해시 → 미러 커밋 해시 매핑, 마지막으로 확인한 원본 참조, 마지막 push 결과, 대상 URL과 필터링 설정 지문을 직렬화합니다. 같은 설정으로 다시 실행하면 기존 객체를 재사용하며 새 원본 커밋과 새 참조를 반영합니다. 원본의 강제 push나 새 브랜치 때문에 브랜치 범위 규칙의 결과가 달라질 수 있으므로, 매 실행마다 전체 원본 그래프를 다시 판정합니다. 대상 참조가 상태 파일에 기록된 값과 다르면 외부 변경으로 보고 push를 거부합니다.
+
+대상 URL을 변경했거나 대상 원격 저장소를 의도적으로 다시 초기화해야 하면, 먼저 `--dry-run --rebuild`로 변환 결과를 검토합니다. 그 다음 `--rebuild --reset-destination --push`를 실행하면 이전 대상의 push 기록을 사용하지 않고, 현재 대상에 있는 동명 참조를 검토한 변환 결과로 덮어씁니다. 이 옵션은 원격에만 있는 참조를 삭제하지 않습니다. `--reset-destination`은 `--rebuild`와 `--push`를 함께 지정해야만 사용할 수 있습니다. 상태 파일이 대상 URL을 기록하지 않았던 이전 형식이면, 처음 한 번은 이 옵션으로 대상 전송 기준을 명시적으로 다시 설정합니다.
 
 필터링 설정이 바뀌면 대상 이력도 달라질 수 있습니다. 이때 도구는 중단하며, `--dry-run --rebuild`로 결과를 검토한 뒤 `--rebuild --push`를 명시해야 합니다. 삭제된 원본 브랜치·태그는 안전을 위해 대상 원격 저장소에서 자동 삭제하지 않습니다.
 
