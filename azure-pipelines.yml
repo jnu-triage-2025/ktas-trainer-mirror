@@ -55,6 +55,7 @@ stages:
           # checkout cannot provide a complete source history.
           - checkout: self
             fetchDepth: 0
+            persistCredentials: true
           - powershell: |
               $mirrorScript = Join-Path '$(Build.SourcesDirectory)' 'Tools\CI\mirror-code.ps1'
               if (-not (Test-Path -LiteralPath $mirrorScript -PathType Leaf)) {
