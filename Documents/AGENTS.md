@@ -48,6 +48,8 @@ For item 1, the result must also be output directly in the interface (typically 
 
 `type`에는 변경 목적을 나타내는 유형을 작성하고, `summary`에는 변경 내용을 간결하게 작성한다. 예를 들어 문서를 추가하거나 수정한 경우에는 `docs: clarify commit message format`과 같이 작성한다.
 
+커밋 메시지는 영어로 작성한다. 제목과 본문 모두 영어를 사용하며, 고유 명사나 코드 식별자 등 부득이하게 다른 언어를 포함해야 하는 경우는 예외로 한다.
+
 ## When System-Level Modifications Are Required
 
 In particular, the modules under /Assets/Modules/MultiplayerInfrastructure/ serve a very critical role in this project. These modules must be designed to be reusable in other projects as well; therefore, any modifications to them must be carried out with great caution.
