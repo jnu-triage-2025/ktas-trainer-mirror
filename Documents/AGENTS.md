@@ -38,6 +38,16 @@ For item 1, the result must also be output directly in the interface (typically 
 
 **도구 사용 불가 시 대응:** 서브모듈이 초기화되지 않았거나 출력 스타일 파일을 읽을 수 없더라도 작업을 중단하지 않는다. 맥락을 충분히 갖춘 완결된 한국어 문장으로 작성하며, 별도 경고 문구는 넣지 않는다.
 
+## 커밋 메시지 형식
+
+커밋 메시지는 다음 형식을 따른다.
+
+```text
+(type): (summary)
+```
+
+`type`에는 변경 목적을 나타내는 유형을 작성하고, `summary`에는 변경 내용을 간결하게 작성한다. 예를 들어 문서를 추가하거나 수정한 경우에는 `docs: clarify commit message format`과 같이 작성한다.
+
 ## When System-Level Modifications Are Required
 
 In particular, the modules under /Assets/Modules/MultiplayerInfrastructure/ serve a very critical role in this project. These modules must be designed to be reusable in other projects as well; therefore, any modifications to them must be carried out with great caution.
