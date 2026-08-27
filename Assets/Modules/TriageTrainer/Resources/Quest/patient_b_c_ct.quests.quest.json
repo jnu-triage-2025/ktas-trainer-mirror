@@ -115,14 +115,14 @@
         {
           "identifier": "move-patient-b",
           "type": "InteractionSignalReceived",
-          "signalId": "carezone_patient_entered_patient_b",
+          "signalId": "patient_bed_positioning_point_latched_bed_b",
           "displayTextContent": "많이 다친 남성 환자 처치 구역 이동",
           "count": 1
         },
         {
           "identifier": "move-patient-c",
           "type": "InteractionSignalReceived",
-          "signalId": "carezone_patient_entered_patient_c",
+          "signalId": "patient_bed_positioning_point_latched_bed_c",
           "displayTextContent": "많이 다친 여성 환자 처치 구역 이동",
           "count": 1
         }

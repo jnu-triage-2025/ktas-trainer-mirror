@@ -436,12 +436,28 @@ namespace TriageTrainer.Tests
         "move-patient-b",
         "move-patient-c"
       }));
+      Assert.That(moveQuest.Tasks.Select(task => task.SignalId), Is.EqualTo(new[]
+      {
+        "patient_bed_positioning_point_latched_bed_b",
+        "patient_bed_positioning_point_latched_bed_c"
+      }), "환자 이동 완료는 환자 콜라이더의 구역 진입 여부가 아니라 각 환자 침대의 스냅으로 판정해야 한다.");
       Assert.That(moveQuest.PresentationBindings.Select(binding =>
         (binding.EntityIdentifier, binding.InteractionIdentifier)), Is.EqualTo(new[]
       {
         ("bed_b", MovingPatientBedController.InteractionIdentifierMoveBed),
         ("bed_c", MovingPatientBedController.InteractionIdentifierMoveBed)
       }));
+      foreach (string waitIdentifier in new[] { "MOVE_A_WAIT", "MOVE_B_WAIT", "MOVE_C_WAIT", "MOVE_D_WAIT" })
+      {
+        var moveWait = graph.Nodes[waitIdentifier] as ScenarioValidatorNode;
+        Assert.That(moveWait, Is.Not.Null, waitIdentifier);
+        Assert.That(moveWait.RootConditions.Single().ValidationRules.Select(rule => rule.RegistryIdentifier),
+          Is.EquivalentTo(new[]
+          {
+            "sig.patient_bed_positioning_point_latched_bed_b",
+            "sig.patient_bed_positioning_point_latched_bed_c"
+          }), $"{waitIdentifier}는 각 환자 침대가 스냅된 시점에 다음 단계로 진행해야 한다.");
+      }
 
       Assert.That(QuestDefinitionRegistry.TryGetGlobal("Quest_Transport_BC_To_CT", out var transportQuest), Is.True);
       Assert.That(transportQuest.Tasks.Select(task => task.Identifier), Is.EqualTo(new[]

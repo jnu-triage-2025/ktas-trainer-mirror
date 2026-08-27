@@ -1123,13 +1123,13 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.carezone_patient_entered_patient_b"
+              "registryIdentifier": "sig.patient_bed_positioning_point_latched_bed_b"
             },
             {
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.carezone_patient_entered_patient_c"
+              "registryIdentifier": "sig.patient_bed_positioning_point_latched_bed_c"
             }
           ]
         }
@@ -1170,13 +1170,13 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.carezone_patient_entered_patient_b"
+              "registryIdentifier": "sig.patient_bed_positioning_point_latched_bed_b"
             },
             {
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.carezone_patient_entered_patient_c"
+              "registryIdentifier": "sig.patient_bed_positioning_point_latched_bed_c"
             }
           ]
         }
@@ -1217,13 +1217,13 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.carezone_patient_entered_patient_b"
+              "registryIdentifier": "sig.patient_bed_positioning_point_latched_bed_b"
             },
             {
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.carezone_patient_entered_patient_c"
+              "registryIdentifier": "sig.patient_bed_positioning_point_latched_bed_c"
             }
           ]
         }
@@ -1264,13 +1264,13 @@
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.carezone_patient_entered_patient_b"
+              "registryIdentifier": "sig.patient_bed_positioning_point_latched_bed_b"
             },
             {
               "type": "Registry",
               "condition": "Contains",
               "registryType": "RuntimeState",
-              "registryIdentifier": "sig.carezone_patient_entered_patient_c"
+              "registryIdentifier": "sig.patient_bed_positioning_point_latched_bed_c"
             }
           ]
         }
