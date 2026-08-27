@@ -348,6 +348,13 @@ namespace TriageTrainer.Scenario
     {
       if (_disasterIntroMvpGraph == null || string.IsNullOrWhiteSpace(_disasterIntroMvpGraphIdentifier))
       {
+        // 등록을 건너뛰면 시나리오를 시작하는 시점에야 "그래프 없음"으로 드러난다.
+        // 원인이 인스펙터 참조 누락이라는 사실을 여기서 남겨 둔다.
+        Debug.LogWarning(
+          "[TriageScenarioEventBootstrap] 시나리오 그래프를 등록하지 못했습니다. "
+          + $"그래프 에셋={(_disasterIntroMvpGraph == null ? "(미할당)" : _disasterIntroMvpGraph.name)}, "
+          + $"식별자='{_disasterIntroMvpGraphIdentifier}'.",
+          this);
         return;
       }
 

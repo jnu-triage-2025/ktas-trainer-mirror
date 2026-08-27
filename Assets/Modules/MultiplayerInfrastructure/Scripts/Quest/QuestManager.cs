@@ -703,6 +703,16 @@ namespace MultiplayerInfrastructure.Quest
         return fromDefinition;
       }
 
+      if (!string.IsNullOrWhiteSpace(resolved.DefinitionIdentifier))
+      {
+        // 정의 식별자를 지정했는데 해석하지 못하면 제목과 과제가 비어 있는 퀘스트가 그대로 등록되고,
+        // 완료 조건이 없으므로 영원히 끝나지 않는다. 조용히 넘어가면 원인을 추적할 수 없다.
+        Debug.LogWarning(
+          $"[QuestManager] 퀘스트 정의 '{resolved.DefinitionIdentifier}' 를 찾지 못했습니다. "
+          + $"퀘스트 '{resolved.Id}' 를 인라인 데이터만으로 등록합니다. "
+          + "정의 식별자의 오타나 include 누락 여부를 확인하세요.");
+      }
+
       if (string.IsNullOrWhiteSpace(resolved.DefinitionIdentifier)
           && !string.IsNullOrWhiteSpace(resolved.Id)
           && TryResolveFromDefinition(resolved.Id, out var fallbackById))
@@ -1279,11 +1289,26 @@ namespace MultiplayerInfrastructure.Quest
       {
         var definition = payload.Definitions[i];
         if (definition == null || string.IsNullOrWhiteSpace(definition.Identifier))
+        {
+          Debug.LogWarning(
+            $"[QuestDefinitionRegistry] {i}번째 퀘스트 정의에 식별자가 없어 등록하지 않습니다.");
           continue;
+        }
 
         var key = ComposeNamespacedIdentifier(payload.Namespace, definition.Identifier);
         if (string.IsNullOrWhiteSpace(key))
+        {
+          Debug.LogWarning(
+            $"[QuestDefinitionRegistry] 퀘스트 정의 '{definition.Identifier}' 의 네임스페이스 결합 결과가 "
+            + "비어 있어 등록하지 않습니다.");
           continue;
+        }
+
+        if (_definitions.ContainsKey(key))
+        {
+          Debug.LogWarning(
+            $"[QuestDefinitionRegistry] 퀘스트 정의 식별자 '{key}' 가 중복되어 이전 정의를 덮어씁니다.");
+        }
 
         var cloned = definition.Clone();
         cloned.Identifier = key;

@@ -315,6 +315,12 @@ namespace MultiplayerInfrastructure.Scenario
     {
       if (_instance != null && _instance != this)
       {
+        // GameObject 전체를 파괴하므로, 같은 오브젝트에 붙은 다른 컴포넌트까지 함께 사라진다.
+        // 조용히 지우면 그 컴포넌트들이 동작하지 않는 이유를 찾을 수 없다.
+        Debug.LogWarning(
+          $"[ScenarioController] 이미 인스턴스가 존재하여 중복 오브젝트 '{name}' 을 파괴합니다. "
+          + $"기존 인스턴스='{_instance.name}'. 이 오브젝트에 붙은 다른 컴포넌트도 함께 제거됩니다.",
+          this);
         Destroy(gameObject);
         return;
       }
@@ -6767,6 +6773,8 @@ namespace MultiplayerInfrastructure.Scenario
 
       if (node == null || string.IsNullOrWhiteSpace(node.CommandLine))
       {
+        Debug.LogWarning(
+          $"[ScenarioController] ExecuteCommand node '{node?.Identifier}' 에 실행할 명령이 없어 건너뜁니다.");
         Advance();
         return;
       }

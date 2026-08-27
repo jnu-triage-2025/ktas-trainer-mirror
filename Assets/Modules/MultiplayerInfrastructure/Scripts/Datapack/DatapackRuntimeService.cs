@@ -417,7 +417,15 @@ namespace MultiplayerInfrastructure.Datapack
         return;
       }
 
-      _chatService.TryExecuteSystemCommand(command, out string result);
+      bool succeeded = _chatService.TryExecuteSystemCommand(command, out string result);
+      if (!succeeded)
+      {
+        Debug.LogWarning(
+          $"[Datapack:{packId}] {origin} 명령 실행에 실패했습니다: {command} -> "
+          + $"{(string.IsNullOrWhiteSpace(result) ? "(사유 없음)" : result)}");
+        return;
+      }
+
       if (!string.IsNullOrWhiteSpace(result))
         Debug.Log($"[Datapack:{packId}] {origin} -> {result}");
     }

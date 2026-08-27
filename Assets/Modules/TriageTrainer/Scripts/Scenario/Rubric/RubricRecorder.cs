@@ -52,12 +52,27 @@ namespace TriageTrainer.Scenario.Rubric
 
     private void OnEnable()
     {
+      // 컨트롤러는 네트워크 스폰 프리팹이라 이 컴포넌트의 Start 보다 늦게 생길 수 있다.
+      // 생성 통지를 먼저 구독해 두어야 늦게 올라온 세션도 놓치지 않는다.
+      ScenarioController.InstanceAvailable -= HandleScenarioControllerAvailable;
+      ScenarioController.InstanceAvailable += HandleScenarioControllerAvailable;
       TrySubscribe();
     }
 
     private void OnDisable()
     {
+      ScenarioController.InstanceAvailable -= HandleScenarioControllerAvailable;
       Unsubscribe();
+    }
+
+    private void HandleScenarioControllerAvailable(ScenarioController controller)
+    {
+      if (controller == null)
+      {
+        return;
+      }
+
+      TrySubscribe();
     }
 
     private void LoadDefinitions()
@@ -97,9 +112,23 @@ namespace TriageTrainer.Scenario.Rubric
           continue;
         }
 
+        if (_itemsById.ContainsKey(item.Id))
+        {
+          Debug.LogWarning(
+            $"[RubricRecorder] 루브릭 항목 식별자 '{item.Id}' 가 중복되어 이전 정의를 덮어씁니다.", this);
+        }
+
         _itemsById[item.Id] = item;
         if (!string.IsNullOrWhiteSpace(item.GateNodeIdentifier))
         {
+          if (_itemsByGateNode.TryGetValue(item.GateNodeIdentifier, out var previousGateItem))
+          {
+            Debug.LogWarning(
+              $"[RubricRecorder] 게이트 노드 '{item.GateNodeIdentifier}' 에 항목 '{previousGateItem.Id}' 와 "
+              + $"'{item.Id}' 가 함께 매핑되어 있습니다. 마지막 항목만 자동 판정되고 나머지는 기록되지 않습니다.",
+              this);
+          }
+
           _itemsByGateNode[item.GateNodeIdentifier] = item;
         }
 
@@ -133,7 +162,7 @@ namespace TriageTrainer.Scenario.Rubric
       _controller = ScenarioController.Instance;
       if (_controller == null)
       {
-        // 컨트롤러가 아직 생성되지 않았을 수 있다. Start 이후 재시도.
+        // 컨트롤러가 아직 생성되지 않았다. InstanceAvailable 통지와 Start 에서 다시 시도한다.
         return;
       }
 
@@ -313,7 +342,14 @@ namespace TriageTrainer.Scenario.Rubric
     /// <summary>사정 퀴즈 오답/재응시 횟수 누적(외부에서 호출).</summary>
     public void RecordRetry(string itemId, string playerId)
     {
-      _store?.IncrementRetry(itemId, playerId);
+      if (_store == null)
+      {
+        Debug.LogWarning(
+          $"[RubricRecorder] 활성 세션이 없어 항목 '{itemId}' 의 재응시 기록을 무시합니다.", this);
+        return;
+      }
+
+      _store.IncrementRetry(itemId, playerId);
     }
 
     [ContextMenu("Export Rubric CSV To Console")]

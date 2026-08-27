@@ -215,6 +215,16 @@ namespace TriageTrainer.Entity.LineConnection
     private void HandleTopologyRequestCompleted(
       int requestId, string firstIdentifier, string secondIdentifier, bool connected, bool accepted)
     {
+      // 서버가 거부해도 보류 요청은 아래에서 함께 정리된다. 다만 거부 사실 자체가 어디에도
+      // 드러나지 않으면 "연결 모드만 풀리고 선은 생기지 않는" 현상의 원인을 추적할 수 없다.
+      if (!accepted)
+      {
+        Debug.LogWarning(
+          $"[LineConnectionService] 서버가 라인 토폴로지 요청을 거부했습니다: "
+          + $"'{firstIdentifier}' -> '{secondIdentifier}' (connected={connected}, requestId={requestId}). "
+          + "식별자가 유효하지 않거나 요청 빈도 제한에 걸렸을 수 있습니다.");
+      }
+
       var completedKeys = new List<int>();
       foreach (var pair in _pendingConnections)
       {
@@ -241,6 +251,10 @@ namespace TriageTrainer.Entity.LineConnection
         var pending = _pendingTopologyChanges[i];
         if (Time.unscaledTime - pending.QueuedAt > 10f)
         {
+          Debug.LogWarning(
+            $"[LineConnectionService] 서버가 보낸 라인 변경을 10초 안에 반영하지 못해 폐기합니다: "
+            + $"'{pending.First}' -> '{pending.Second}' (connected={pending.Connected}, "
+            + $"version={pending.Version}). 해당 연결 지점을 씬에서 찾지 못했습니다.");
           _pendingTopologyChanges.RemoveAt(i);
           continue;
         }
@@ -262,8 +276,15 @@ namespace TriageTrainer.Entity.LineConnection
             && pending.Second == second && pending.Connected == connected)
           return;
       }
-      if (_pendingTopologyChanges.Count < 128)
-        _pendingTopologyChanges.Add(new PendingTopologyChange(version, first, second, connected));
+      if (_pendingTopologyChanges.Count >= 128)
+      {
+        Debug.LogWarning(
+          $"[LineConnectionService] 보류 라인 변경 대기열이 상한(128)에 도달해 변경을 폐기합니다: "
+          + $"'{first}' -> '{second}' (connected={connected}, version={version}).");
+        return;
+      }
+
+      _pendingTopologyChanges.Add(new PendingTopologyChange(version, first, second, connected));
     }
 
     private void QueueDeferredTopologyChange(long version, string first, string second, bool connected)
@@ -275,8 +296,15 @@ namespace TriageTrainer.Entity.LineConnection
             && pending.Second == second && pending.Connected == connected)
           return;
       }
-      if (_deferredTopologyChanges.Count < 128)
-        _deferredTopologyChanges.Add(new PendingTopologyChange(version, first, second, connected));
+      if (_deferredTopologyChanges.Count >= 128)
+      {
+        Debug.LogWarning(
+          $"[LineConnectionService] 지연 라인 변경 대기열이 상한(128)에 도달해 변경을 폐기합니다: "
+          + $"'{first}' -> '{second}' (connected={connected}, version={version}).");
+        return;
+      }
+
+      _deferredTopologyChanges.Add(new PendingTopologyChange(version, first, second, connected));
     }
 
     private IEnumerable<ScenarioNetworkRelay.LineTopologyPair> GetTopologySnapshot()
