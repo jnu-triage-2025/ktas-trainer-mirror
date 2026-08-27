@@ -356,7 +356,9 @@ namespace MultiplayerInfrastructure.Editor
       }
       else
       {
-        data.DestinationIdentifier = EditorGUILayout.TextField("Waypoint Identifier", data.DestinationIdentifier);
+        data.DestinationIdentifier = EditorGUILayout.TextField(
+          data.DestinationType == ScenarioMoveDestinationType.WaypointSet
+            ? "Waypoint Set Identifier" : "Waypoint Identifier", data.DestinationIdentifier);
       }
 
       data.IgnoreGroundCheck = EditorGUILayout.Toggle("Ignore Ground Check", data.IgnoreGroundCheck);
@@ -389,7 +391,9 @@ namespace MultiplayerInfrastructure.Editor
       }
       else
       {
-        data.DestinationIdentifier = EditorGUILayout.TextField("Waypoint Identifier", data.DestinationIdentifier);
+        data.DestinationIdentifier = EditorGUILayout.TextField(
+          data.DestinationType == ScenarioMoveDestinationType.WaypointSet
+            ? "Waypoint Set Identifier" : "Waypoint Identifier", data.DestinationIdentifier);
       }
 
       data.IgnoreGroundCheck = EditorGUILayout.Toggle("Ignore Ground Check", data.IgnoreGroundCheck);
@@ -441,7 +445,8 @@ namespace MultiplayerInfrastructure.Editor
         else
         {
           data.DestinationIdentifier = EditorGUILayout.TextField(
-            "Waypoint Identifier", data.DestinationIdentifier);
+            data.DestinationType == ScenarioMoveDestinationType.WaypointSet
+              ? "Waypoint Set Identifier" : "Waypoint Identifier", data.DestinationIdentifier);
         }
 
         data.IgnoreGroundCheck = EditorGUILayout.Toggle("Ignore Ground Check", data.IgnoreGroundCheck);

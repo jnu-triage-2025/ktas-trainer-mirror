@@ -1248,7 +1248,8 @@
               "type": "string",
               "enum": [
                 "Position",
-                "Waypoint"
+                "Waypoint",
+                "WaypointSet"
               ]
             },
             "destinationIdentifier": {
@@ -1330,7 +1331,7 @@
               "if": {
                 "properties": {
                   "destinationType": {
-                    "const": "Waypoint"
+                    "enum": ["Waypoint", "WaypointSet"]
                   }
                 }
               },
@@ -1422,7 +1423,7 @@
             },
             "destinationType": {
               "type": ["string", "null"],
-              "enum": ["Position", "Waypoint", null]
+              "enum": ["Position", "Waypoint", "WaypointSet", null]
             },
             "destinationIdentifier": {
               "type": ["string", "null"]
@@ -1541,7 +1542,7 @@
               "if": {
                 "properties": {
                   "mode": { "const": "Control" },
-                  "destinationType": { "const": "Waypoint" }
+                  "destinationType": { "enum": ["Waypoint", "WaypointSet"] }
                 },
                 "required": ["mode", "destinationType"]
               },
@@ -1607,7 +1608,8 @@
               "type": "string",
               "enum": [
                 "Position",
-                "Waypoint"
+                "Waypoint",
+                "WaypointSet"
               ]
             },
             "destinationIdentifier": {
@@ -1690,7 +1692,7 @@
               "if": {
                 "properties": {
                   "destinationType": {
-                    "const": "Waypoint"
+                    "enum": ["Waypoint", "WaypointSet"]
                   }
                 }
               },

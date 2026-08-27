@@ -52,6 +52,7 @@ namespace TriageTrainer.Editor.Utils
     private string ctPatientArrivalPerEntitySignalTemplate = OverworldGameObjectInitializer.CtPatientArrivalPerEntitySignalTemplate;
     private Vector2 scrollPosition;
     [SerializeField] private List<StaticEntityLayoutDefinition> staticEntityLayouts = new();
+    [SerializeField] private List<OverworldGameObjectInitializer.WaypointSetDefinition> waypointSets = new();
     [SerializeField] private MonoScript initializerScript;
     private SerializedObject serializedWindow;
 
@@ -131,6 +132,14 @@ namespace TriageTrainer.Editor.Utils
       DrawWaypointFields("Scenario B Doctor Care Area", ref doctorCareAreaWaypointIdentifier, ref doctorCareAreaWaypoint);
       DrawWaypointFields("CT Patient B", ref ctPatientBWaypointIdentifier, ref ctPatientBWaypoint);
       DrawWaypointFields("CT Patient C", ref ctPatientCWaypointIdentifier, ref ctPatientCWaypoint);
+      EditorGUILayout.Space(4f);
+      EditorGUILayout.PropertyField(
+        serializedWindow.FindProperty(nameof(waypointSets)),
+        new GUIContent("Waypoint Sets"), true);
+      EditorGUILayout.HelpBox(
+        "Waypoint Set은 원점의 빈 부모 오브젝트 아래에 목록 순서대로 waypoint를 만듭니다. "
+        + "각 자식은 독립 waypoint로도 사용할 수 있으며, 시나리오 이동 목적지에서 WaypointSet을 선택하면 순서대로 이동합니다.",
+        MessageType.None);
 
       EditorGUILayout.Space(4f);
       EditorGUILayout.LabelField("Scenario Signal Zones", EditorStyles.boldLabel);
@@ -217,7 +226,8 @@ namespace TriageTrainer.Editor.Utils
             triageArrivalPerEntitySignalTemplate,
             ctPatientTargetZoneSize,
             ParseSignalList(ctPatientArrivalEnterSignals),
-            ctPatientArrivalPerEntitySignalTemplate
+            ctPatientArrivalPerEntitySignalTemplate,
+            waypointSets
           );
           var seenIdentifiers = new HashSet<string>();
           foreach (var layout in staticEntityLayouts.Where(value => value != null))
@@ -286,6 +296,7 @@ namespace TriageTrainer.Editor.Utils
       triageArrivalPerEntitySignalTemplate = OverworldGameObjectInitializer.TriageArrivalPerEntitySignalTemplate;
       ctPatientArrivalEnterSignals = string.Join(", ", OverworldGameObjectInitializer.CtPatientArrivalEnterSignals);
       ctPatientArrivalPerEntitySignalTemplate = OverworldGameObjectInitializer.CtPatientArrivalPerEntitySignalTemplate;
+      waypointSets.Clear();
       staticEntityLayouts.Clear();
       staticEntityLayouts.Add(AssetDatabase.LoadAssetAtPath<StaticEntityLayoutDefinition>(
         DefaultStaticLayoutPath));

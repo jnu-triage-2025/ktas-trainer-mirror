@@ -117,6 +117,10 @@ namespace MultiplayerInfrastructure.Quest
 
       Registry.Registry.OnEntryRegistered += HandleRegistryEntryChanged;
       Registry.Registry.OnEntryUnregistered += HandleRegistryEntryRemoved;
+      // 퀘스트 상태 플래그는 상호작용의 노출뿐 아니라, 현재 퀘스트가 어떤 상호작용을
+      // 안내하는지도 바꿀 수 있다. 플래그 복제는 퀘스트 목록 복제와 별도 순서로 도착하므로
+      // 여기서도 다시 조합해 이미 표시 중인 힌트의 아이콘과 대상 주소를 최신 상태로 만든다.
+      PlayerQuestStateFlagService.FlagsChanged += HandleQuestStateFlagsChanged;
       Reconcile(_questManager?.Quests);
     }
 
@@ -134,6 +138,7 @@ namespace MultiplayerInfrastructure.Quest
 
       Registry.Registry.OnEntryRegistered -= HandleRegistryEntryChanged;
       Registry.Registry.OnEntryUnregistered -= HandleRegistryEntryRemoved;
+      PlayerQuestStateFlagService.FlagsChanged -= HandleQuestStateFlagsChanged;
       _interactionBindings.Clear();
       _anchoredBindings.Clear();
       ClearOverheadMarkers();
@@ -320,6 +325,13 @@ namespace MultiplayerInfrastructure.Quest
       if (IsPresentationAffectingRegistry(type))
         Reconcile(_questManager?.Quests);
     }
+
+    /// <summary>
+    /// 플래그 풀은 플레이어별 상태지만, 이 서비스가 가진 퀘스트 표시도 로컬 플레이어별이다.
+    /// 따라서 다른 플레이어의 스냅샷이 먼저 도착한 경우까지 포함해 재조합한다. 재조합 비용은
+    /// 활성 퀘스트 수에 비례하며, 플래그 변화는 단계 전환 때만 발생한다.
+    /// </summary>
+    private void HandleQuestStateFlagsChanged(string _) => Reconcile(_questManager?.Quests);
 
     /// <summary>표시 대상이나 아이콘이 바뀔 수 있는 레지스트리 변경인지 판정한다.</summary>
     private static bool IsPresentationAffectingRegistry(RegistryType type)

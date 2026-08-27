@@ -1081,5 +1081,27 @@ namespace MultiplayerInfrastructure.Tests.Scenario
       Assert.That(reloaded.Waypoints[0].RotationY, Is.EqualTo(90f));
       Assert.That(reloaded.Waypoints[0].DespawnOnScenarioEnd, Is.False);
     }
+
+    [Test]
+    public void WaypointSetMoveDestinationSavesAndRoundTrips()
+    {
+      var graph = new ScenarioGraph { Identifier = "waypoint-set-round-trip", DefaultEntrypoint = "move" };
+      graph.Add(new ScenarioNPCMoveNode
+      {
+        Identifier = "move",
+        NPCIdentifier = "doctor",
+        DestinationType = ScenarioMoveDestinationType.WaypointSet,
+        DestinationIdentifier = "doctor-rounds",
+        MoveMode = ScenarioMoveMode.BySpeed,
+        MoveSpeed = 1.5f
+      });
+
+      var json = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      var reloaded = ScenarioGraphLoader.LoadFromJson(json, validateWithSchema: true);
+      var move = (ScenarioNPCMoveNode)reloaded.Nodes["move"];
+
+      Assert.That(move.DestinationType, Is.EqualTo(ScenarioMoveDestinationType.WaypointSet));
+      Assert.That(move.DestinationIdentifier, Is.EqualTo("doctor-rounds"));
+    }
   }
 }

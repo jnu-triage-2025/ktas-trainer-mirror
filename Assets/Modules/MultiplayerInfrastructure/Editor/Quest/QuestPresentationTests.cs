@@ -347,6 +347,31 @@ namespace MultiplayerInfrastructure.Tests.Quest
     }
 
     [Test]
+    public void QuestStateFlagChangeRefreshesActivePresentation()
+    {
+      const string playerIdentifier = "quest-presentation-flags-changed-player";
+      var managerObject = new GameObject("QuestPresentationTests.FlagRefreshManager");
+      try
+      {
+        managerObject.AddComponent<QuestManager>();
+        var presentation = managerObject.GetComponent<QuestPresentationService>()
+                           ?? managerObject.AddComponent<QuestPresentationService>();
+        int refreshCount = 0;
+        presentation.OnPresentationChanged += () => refreshCount++;
+
+        PlayerQuestStateFlagService.ReplaceFlags(playerIdentifier, new[] { "test.quest-state" });
+
+        Assert.That(refreshCount, Is.EqualTo(1),
+          "퀘스트 플래그 복제는 현재 표시 중인 상호작용 안내도 즉시 다시 계산해야 합니다.");
+      }
+      finally
+      {
+        PlayerQuestStateFlagService.ClearFlags(playerIdentifier);
+        Object.DestroyImmediate(managerObject);
+      }
+    }
+
+    [Test]
     public void ActiveQuestOverridesInteractionAndCompletionRestoresOriginal()
     {
       var managerObject = new GameObject("QuestPresentationTests.Manager");

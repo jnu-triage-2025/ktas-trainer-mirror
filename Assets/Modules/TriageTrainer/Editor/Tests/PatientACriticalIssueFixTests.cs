@@ -1282,6 +1282,33 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void PatientAVitalMonitorStepMarksMonitorAndPatientSelectionInteractions()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+      jsonOptions.Converters.Add(new JsonStringEnumConverter());
+      var definitions = JsonSerializer.Deserialize<QuestDefinitionRegistryPayload>(
+        File.ReadAllText(Path.Combine(projectRoot, PatientAQuestPath)), jsonOptions);
+      var quest = definitions?.Definitions?.SingleOrDefault(
+        definition => definition.Identifier == "Quest_Check_Vital_PatientA");
+
+      Assert.That(quest, Is.Not.Null);
+      var monitorStepBindings = quest.PresentationBindings
+        .Where(binding => binding.Activation == QuestPresentationActivation.CompletionCriteria
+                          && binding.CompletionCriteriaIdentifier == "view-vital-monitor-patient-a")
+        .Select(binding => (binding.EntityIdentifier, binding.InteractionIdentifier))
+        .ToArray();
+
+      CollectionAssert.AreEquivalent(new[]
+      {
+        ("patient_monitor", "select_patient_mode"),
+        ("patient_a", "monitor_select"),
+        ("patient_a", "detail_overlay"),
+      }, monitorStepBindings,
+        "활력징후 모니터 확인 단계에서는 모니터 선택, 대상 환자 선택, 상세 확인 상호작용을 모두 안내해야 합니다.");
+    }
+
+    [Test]
     public void PatientAMoveQuestMarksTreatmentBedWaypointAndPassesOnAnyBedSnap()
     {
       string projectRoot = Directory.GetParent(Application.dataPath).FullName;

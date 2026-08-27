@@ -113,6 +113,24 @@
           "activation": "CompletionCriteria",
           "completionCriteriaIdentifier": "view-vital-monitor-patient-a",
           "targetType": "Interaction",
+          "entityIdentifier": "patient_monitor",
+          "interactionIdentifier": "select_patient_mode",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "view-vital-monitor-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "monitor_select",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "view-vital-monitor-patient-a",
+          "targetType": "Interaction",
           "entityIdentifier": "patient_a",
           "interactionIdentifier": "detail_overlay",
           "iconIdentifier": "quest-interaction",

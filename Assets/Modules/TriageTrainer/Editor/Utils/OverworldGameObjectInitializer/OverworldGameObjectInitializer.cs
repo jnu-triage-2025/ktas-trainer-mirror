@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using MultiplayerInfrastructure.Registry;
 using UnityEngine;
 
@@ -24,6 +25,21 @@ namespace TriageTrainer.Editor.Utils
   /// </remarks>
   public static class OverworldGameObjectInitializer
   {
+    [System.Serializable]
+    public sealed class WaypointSetDefinition
+    {
+      public string identifier = "waypoint-set";
+      public string displayName = "Waypoint Set";
+      public List<WaypointDefinition> waypoints = new();
+    }
+
+    [System.Serializable]
+    public sealed class WaypointDefinition
+    {
+      public string identifier = "waypoint";
+      public Vector3 position;
+    }
+
     // 오버월드 오브젝트 초기화 처리를 추가할 때는 아래 형식처럼 식별자와 처리에 필요한
     // 값을 리터럴로 선언한다. 지침은 클래스 요약 주석 참고.
     public const string BuildingEnteranceIdentifier = "building-enterance";
@@ -157,7 +173,8 @@ namespace TriageTrainer.Editor.Utils
         string triageArrivalPerEntitySignalTemplate,
         Vector3 ctPatientTargetZoneSize,
         string[] ctPatientArrivalEnterSignals,
-        string ctPatientArrivalPerEntitySignalTemplate)
+        string ctPatientArrivalPerEntitySignalTemplate,
+        IReadOnlyList<WaypointSetDefinition> waypointSets = null)
     {
       var generatedRoot = GetOrCreateGeneratedRoot();
       DeleteGeneratedScenarioObjects(generatedRoot.transform);
@@ -199,11 +216,12 @@ namespace TriageTrainer.Editor.Utils
         ctPatientArrivalPerEntitySignalTemplate,
         perEntityPlayersOnly: false);
       CreateSpawnPoint(generatedRoot.transform, commonSpawnPointIdentifier, commonSpawnPoint);
+      CreateWaypointSets(generatedRoot.transform, waypointSets);
     }
 
     public static void Delete()
     {
-      var generatedRoots = Object.FindObjectsByType<GeneratedByOverworldGameObjectInitializerEditor>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+      var generatedRoots = UnityEngine.Object.FindObjectsByType<GeneratedByOverworldGameObjectInitializerEditor>(FindObjectsInactive.Include, FindObjectsSortMode.None);
       foreach (var generated in generatedRoots)
       {
         DestroyObject(generated.gameObject);
@@ -304,12 +322,12 @@ namespace TriageTrainer.Editor.Utils
       if (!Application.isPlaying)
         return (GameObject)PrefabUtility.InstantiatePrefab(prefab);
 #endif
-      return Object.Instantiate(prefab);
+      return UnityEngine.Object.Instantiate(prefab);
     }
 
     private static GeneratedByOverworldGameObjectInitializerEditor GetOrCreateGeneratedRoot()
     {
-      var generatedRoots = Object.FindObjectsByType<GeneratedByOverworldGameObjectInitializerEditor>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+      var generatedRoots = UnityEngine.Object.FindObjectsByType<GeneratedByOverworldGameObjectInitializerEditor>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
       if (generatedRoots.Length == 0)
       {
@@ -369,6 +387,42 @@ namespace TriageTrainer.Editor.Utils
         Undo.RegisterCreatedObjectUndo(waypointObject, "Create Waypoint");
       }
 #endif
+    }
+
+    private static void CreateWaypointSets(
+      Transform parent, IReadOnlyList<WaypointSetDefinition> waypointSets)
+    {
+      if (waypointSets == null)
+        return;
+
+      foreach (var definition in waypointSets)
+      {
+        if (definition == null || string.IsNullOrWhiteSpace(definition.identifier))
+          continue;
+
+        string identifier = definition.identifier.Trim();
+        var setObject = new GameObject(string.IsNullOrWhiteSpace(definition.displayName)
+          ? $"Waypoint Set_{identifier}"
+          : definition.displayName.Trim());
+        setObject.transform.SetParent(parent, false);
+        setObject.transform.localPosition = Vector3.zero;
+        setObject.AddComponent<WaypointSet>().ConfigureIdentifier(identifier);
+
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
+          Undo.RegisterCreatedObjectUndo(setObject, "Create Waypoint Set");
+#endif
+
+        if (definition.waypoints == null)
+          continue;
+
+        foreach (var waypoint in definition.waypoints)
+        {
+          if (waypoint == null || string.IsNullOrWhiteSpace(waypoint.identifier))
+            continue;
+          CreateWaypoint(setObject.transform, waypoint.identifier.Trim(), waypoint.position);
+        }
+      }
     }
 
     private static Transform CreateSpawnPoint(Transform parent, string identifier, Vector3 position)
@@ -431,7 +485,7 @@ namespace TriageTrainer.Editor.Utils
         ?.SetValue(target, value);
     }
 
-    private static void DestroyObject(Object target)
+    private static void DestroyObject(UnityEngine.Object target)
     {
       if (target == null)
         return;
@@ -444,7 +498,7 @@ namespace TriageTrainer.Editor.Utils
       }
 #endif
 
-      Object.Destroy(target);
+      UnityEngine.Object.Destroy(target);
     }
   }
 }

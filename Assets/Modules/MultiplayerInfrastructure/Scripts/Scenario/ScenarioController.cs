@@ -3945,8 +3945,8 @@ namespace MultiplayerInfrastructure.Scenario
     {
       _state = State.ExecutingPlayerMove;
 
-      if (!TryResolveMoveDestination(node.DestinationType, node.DestinationIdentifier,
-            node.DestinationX, node.DestinationY, node.DestinationZ, out var destination))
+      if (!TryResolveMoveDestinations(node.DestinationType, node.DestinationIdentifier,
+            node.DestinationX, node.DestinationY, node.DestinationZ, out var destinations))
       {
         Debug.LogWarning($"[ScenarioController] Waypoint '{node.DestinationIdentifier}' not found. Fallback to no move.");
         Advance();
@@ -3963,7 +3963,7 @@ namespace MultiplayerInfrastructure.Scenario
         Debug.Log($"[ScenarioController] PlayerMove '{node.Identifier}' skipped local movement (not owner or player unavailable).");
 #endif
         float waitSeconds = ComputeMoveDurationSeconds(node.MoveMode, node.MoveSpeed, node.MoveDuration,
-          EstimatePlayerMoveDistance(destination));
+          EstimatePlayerMoveDistance(destinations));
         if (waitSeconds > 0f)
           yield return new WaitForSeconds(waitSeconds);
         Advance();
@@ -3971,7 +3971,7 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
 #if UNITY_EDITOR
-      Debug.Log($"[ScenarioController] Moving player to: {destination} (mode={node.MoveMode})");
+      Debug.Log($"[ScenarioController] Moving player through {destinations.Count} destination(s) (mode={node.MoveMode})");
 #endif
 
       player.BeginScriptedMovement();
@@ -3979,7 +3979,8 @@ namespace MultiplayerInfrastructure.Scenario
       player.canMove = false;
       try
       {
-        yield return MovePlayerRoutine(player, destination, node.MoveMode, node.MoveSpeed, node.MoveDuration, node.IgnoreGroundCheck);
+        yield return MovePlayerDestinationsRoutine(
+          player, destinations, node.MoveMode, node.MoveSpeed, node.MoveDuration, node.IgnoreGroundCheck);
       }
       finally
       {
@@ -4000,7 +4001,7 @@ namespace MultiplayerInfrastructure.Scenario
     /// non-owner 피어에서도 동일한 시작 위치를 참조해 owner와 동일한 이동 시간을 얻는다.
     /// owner 엔티티를 찾지 못하면 0을 반환한다(speed 기반 대기가 0 → 즉시 진행).
     /// </summary>
-    private float EstimatePlayerMoveDistance(Vector3 destination)
+    private float EstimatePlayerMoveDistance(IReadOnlyList<Vector3> destinations)
     {
       // owner가 지정된 경우 owner 플레이어 위치 기준, 아니면 로컬 플레이어 위치 기준.
       int? targetClientId = _scenarioOwnerClientId ?? (int?)InstanceFinder.ClientManager?.Connection?.ClientId;
@@ -4008,7 +4009,7 @@ namespace MultiplayerInfrastructure.Scenario
           && Registry.Registry.TryGetEntityByClientId(targetClientId.Value, out var descriptor)
           && descriptor?.GameObject != null)
       {
-        return HorizontalDistance(descriptor.GameObject.transform.position, destination);
+        return CalculatePathDistance(descriptor.GameObject.transform.position, destinations);
       }
 
       return 0f;
@@ -4041,29 +4042,57 @@ namespace MultiplayerInfrastructure.Scenario
       return null;
     }
 
-    /// <summary>
-    /// 목적지(좌표 또는 웨이포인트)를 해석한다. 실패 시 false.
-    /// </summary>
-    private static bool TryResolveMoveDestination(
+    /// <summary>목적지(좌표·단일 waypoint·waypoint set)를 순서 있는 좌표 목록으로 해석한다.</summary>
+    private static bool TryResolveMoveDestinations(
       ScenarioMoveDestinationType destinationType,
       string destinationIdentifier,
       float x, float y, float z,
-      out Vector3 destination)
+      out List<Vector3> destinations)
     {
+      destinations = new List<Vector3>();
       if (destinationType == ScenarioMoveDestinationType.Position)
       {
-        destination = new Vector3(x, y, z);
+        destinations.Add(new Vector3(x, y, z));
         return true;
       }
 
-      if (Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, destinationIdentifier, out destination)
-          || Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, destinationIdentifier, out destination))
+      Vector3 destination;
+      if (destinationType == ScenarioMoveDestinationType.Waypoint
+          && (Registry.Registry.TryGet<Vector3>(RegistryType.Waypoint, destinationIdentifier, out destination)
+              || Registry.Registry.TryGet<Vector3>(RegistryType.InteractableEntity, destinationIdentifier, out destination)))
       {
+        destinations.Add(destination);
         return true;
       }
 
-      destination = Vector3.zero;
-      return false;
+      if (destinationType != ScenarioMoveDestinationType.WaypointSet
+          || !WaypointSet.TryGet(destinationIdentifier, out var waypointSet))
+        return false;
+
+      var waypoints = waypointSet.Waypoints;
+      for (int i = 0; i < waypoints.Count; i++)
+      {
+        if (waypoints[i] != null)
+          destinations.Add(waypoints[i].transform.position);
+      }
+
+      return destinations.Count > 0;
+    }
+
+    private static float CalculatePathDistance(Vector3 start, IReadOnlyList<Vector3> destinations)
+    {
+      float distance = 0f;
+      Vector3 previous = start;
+      if (destinations == null)
+        return distance;
+
+      for (int i = 0; i < destinations.Count; i++)
+      {
+        distance += HorizontalDistance(previous, destinations[i]);
+        previous = destinations[i];
+      }
+
+      return distance;
     }
 
     /// <summary>
@@ -4138,6 +4167,22 @@ namespace MultiplayerInfrastructure.Scenario
       }
     }
 
+    private IEnumerator MovePlayerDestinationsRoutine(
+      PlayerController player, IReadOnlyList<Vector3> destinations, ScenarioMoveMode mode,
+      float moveSpeed, float moveDuration, bool ignoreGroundCheck)
+    {
+      float totalDistance = CalculatePathDistance(player.transform.position, destinations);
+      for (int i = 0; i < destinations.Count; i++)
+      {
+        float segmentDistance = HorizontalDistance(player.transform.position, destinations[i]);
+        float segmentDuration = mode == ScenarioMoveMode.ByDuration && totalDistance > 0f
+          ? moveDuration * segmentDistance / totalDistance
+          : moveDuration;
+        yield return MovePlayerRoutine(
+          player, destinations[i], mode, moveSpeed, segmentDuration, ignoreGroundCheck);
+      }
+    }
+
     private static Vector3 HorizontalDelta(Vector3 from, Vector3 to)
     {
       var delta = to - from;
@@ -4172,8 +4217,8 @@ namespace MultiplayerInfrastructure.Scenario
         yield break;
       }
 
-      if (!TryResolveMoveDestination(node.DestinationType, node.DestinationIdentifier,
-            node.DestinationX, node.DestinationY, node.DestinationZ, out var destination))
+      if (!TryResolveMoveDestinations(node.DestinationType, node.DestinationIdentifier,
+            node.DestinationX, node.DestinationY, node.DestinationZ, out var destinations))
       {
         Debug.LogWarning($"[ScenarioController] Waypoint '{node.DestinationIdentifier}' not found. Fallback to no move.");
         Advance();
@@ -4181,13 +4226,13 @@ namespace MultiplayerInfrastructure.Scenario
       }
 
 #if UNITY_EDITOR
-      Debug.Log($"[ScenarioController] Moving NPC '{node.NPCIdentifier}' to: {destination} (mode={node.MoveMode})");
+      Debug.Log($"[ScenarioController] Moving NPC '{node.NPCIdentifier}' through {destinations.Count} destination(s) (mode={node.MoveMode})");
 #endif
 
       var animation = npc.GetComponentInChildren<HumanoidAnimationController>(true);
       try
       {
-        yield return MoveNpcRoutine(npc.transform, animation, destination,
+        yield return MoveNpcDestinationsRoutine(npc.transform, animation, destinations,
           node.MoveMode, node.MoveSpeed, node.MoveDuration, node.IgnoreGroundCheck);
       }
       finally
@@ -4238,8 +4283,8 @@ namespace MultiplayerInfrastructure.Scenario
         yield break;
       }
 
-      if (!TryResolveMoveDestination(node.DestinationType, node.DestinationIdentifier,
-            node.DestinationX, node.DestinationY, node.DestinationZ, out var destination))
+      if (!TryResolveMoveDestinations(node.DestinationType, node.DestinationIdentifier,
+            node.DestinationX, node.DestinationY, node.DestinationZ, out var destinations))
       {
         Debug.LogWarning($"[ScenarioController] NPCControl '{node.Identifier}': destination could not be resolved.");
         Advance();
@@ -4249,7 +4294,7 @@ namespace MultiplayerInfrastructure.Scenario
       var animation = npcObject.GetComponentInChildren<HumanoidAnimationController>(true);
       try
       {
-        yield return MoveNpcRoutine(npcObject.transform, animation, destination,
+        yield return MoveNpcDestinationsRoutine(npcObject.transform, animation, destinations,
           node.MoveMode, node.MoveSpeed, node.MoveDuration, node.IgnoreGroundCheck);
       }
       finally
@@ -4400,6 +4445,23 @@ namespace MultiplayerInfrastructure.Scenario
         MoveStep(frameDelta);
 
         yield return null;
+      }
+    }
+
+    private IEnumerator MoveNpcDestinationsRoutine(
+      Transform npcTransform, HumanoidAnimationController animation,
+      IReadOnlyList<Vector3> destinations, ScenarioMoveMode mode,
+      float moveSpeed, float moveDuration, bool ignoreGroundCheck)
+    {
+      float totalDistance = CalculatePathDistance(npcTransform.position, destinations);
+      for (int i = 0; i < destinations.Count; i++)
+      {
+        float segmentDistance = HorizontalDistance(npcTransform.position, destinations[i]);
+        float segmentDuration = mode == ScenarioMoveMode.ByDuration && totalDistance > 0f
+          ? moveDuration * segmentDistance / totalDistance
+          : moveDuration;
+        yield return MoveNpcRoutine(
+          npcTransform, animation, destinations[i], mode, moveSpeed, segmentDuration, ignoreGroundCheck);
       }
     }
 

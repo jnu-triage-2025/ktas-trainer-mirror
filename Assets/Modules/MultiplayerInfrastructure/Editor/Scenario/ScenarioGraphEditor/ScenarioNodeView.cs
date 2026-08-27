@@ -944,9 +944,11 @@ namespace MultiplayerInfrastructure.Editor
           }
         });
         _inlineEditorContainer.Add(destinationField);
-        if (data.DestinationType == ScenarioMoveDestinationType.Waypoint)
+        if (data.DestinationType != ScenarioMoveDestinationType.Position)
         {
-          AddTextField("Waypoint Id", value => data.DestinationIdentifier = value, data.DestinationIdentifier);
+          AddTextField(
+            data.DestinationType == ScenarioMoveDestinationType.WaypointSet ? "Waypoint Set Id" : "Waypoint Id",
+            value => data.DestinationIdentifier = value, data.DestinationIdentifier);
         }
         else
         {
