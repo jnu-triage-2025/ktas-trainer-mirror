@@ -67,8 +67,10 @@ stages:
             workingDirectory: '$(Build.SourcesDirectory)'
             env:
               GIT_HTTP_TOKEN: $(GIT_HTTP_TOKEN)
+          # --auto keeps most runs from repacking the whole source history, and
+          # gc.autoDetach=false keeps the repack from outliving the job.
           - powershell: |
-              git gc --prune=now
+              git -c gc.autoDetach=false gc --auto --prune=now
             displayName: 'Prune mirror workspace (Windows)'
             condition: and(always(), eq(variables['Agent.OS'], 'Windows_NT'))
           - bash: |
@@ -79,7 +81,7 @@ stages:
             env:
               GIT_HTTP_TOKEN: $(GIT_HTTP_TOKEN)
           - bash: |
-              git gc --prune=now
+              git -c gc.autoDetach=false gc --auto --prune=now
             displayName: 'Prune mirror workspace (macOS)'
             condition: and(always(), eq(variables['Agent.OS'], 'Darwin'))
 

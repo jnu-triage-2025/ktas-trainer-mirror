@@ -267,6 +267,27 @@ def write_state(path: Path, state: dict[str, Any]) -> None:
     temporary.replace(path)
 
 
+ANCHOR_PREFIX = "refs/code-mirror/"
+
+
+def anchor_refs(refs: dict[str, str], state: dict[str, Any]) -> None:
+    """Point a private ref namespace at the rewritten commits.
+
+    The rewritten commits are otherwise recorded only in the state file, so they
+    stay unreachable in the source object database. A pruning `git gc` in a
+    reused CI workspace then deletes them, and the next run has to write every
+    rewritten tree again. Keeping them reachable also lets `git gc` pack them
+    instead of leaving one loose object per rewritten tree.
+    """
+    desired = {ANCHOR_PREFIX + ref.removeprefix("refs/"): state["commits"][source] for ref, source in refs.items()}
+    existing = run_git(["for-each-ref", "--format=%(refname)", ANCHOR_PREFIX]).decode().splitlines()
+    commands = [f"update {name} {object_id}\n" for name, object_id in desired.items()]
+    # A stale anchor would keep the rewritten history of a deleted source branch
+    # reachable, which is exactly the garbage the prune is meant to reclaim.
+    commands += [f"delete {name}\n" for name in existing if name not in desired]
+    run_git(["update-ref", "--stdin"], input_bytes="".join(commands).encode())
+
+
 def http_askpass(token_env: str, username: str) -> tuple[Path, dict[str, str]]:
     directory = Path(tempfile.mkdtemp(prefix="code-mirror-askpass-"))
     script = directory / "askpass.py"
@@ -405,6 +426,9 @@ def main() -> int:
         print("Dry run completed. No state was saved and nothing was pushed.")
         return 0
     write_state(state_path, state)
+    # Anchor before pushing so a failed push still leaves the rewritten objects
+    # reachable for the next run.
+    anchor_refs(refs, state)
     if args.push:
         push_refs(config["destination"], refs, state, args.rebuild, args.reset_destination)
         write_state(state_path, state)
