@@ -145,7 +145,9 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
 
     protected virtual void Awake()
     {
-      EnsureInteractionCollider();
+      // Awake 중에는 AddComponent가 금지된다. 콜라이더가 없다면 바로 뒤따르는
+      // OnEnable에서 생성한다.
+      EnsureInteractionCollider(allowCreate: false);
       BuildInteracts();
     }
 

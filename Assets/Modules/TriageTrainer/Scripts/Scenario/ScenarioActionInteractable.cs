@@ -56,11 +56,20 @@ namespace TriageTrainer.Scenario
 
     public bool CanInteract(Transform interactor)
     {
-      if (!_enabled || (_consumeOnce && _completed) || !AreRequiredSignalsRaised())
+      if ((_consumeOnce && _completed) || !AreRequiredSignalsRaised())
         return false;
 
       var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
-      return player != null;
+      if (player == null)
+        return false;
+
+      // patient_a_critical 은 노출을 플레이어별 퀘스트 상태 플래그로 판정한다. 그 시나리오에서는
+      // 이 컴포넌트에 저장된 _enabled 대신 플래그가 유일한 기준이 된다. 다른 시나리오는 그대로다.
+      if (PatientACriticalQuestStateFlags.TryEvaluate(
+            _presentationEntityIdentifier, InteractionIdentifier, player, out bool allowedByFlag))
+        return allowedByFlag;
+
+      return _enabled;
     }
 
     public void Interact(Transform interactor)

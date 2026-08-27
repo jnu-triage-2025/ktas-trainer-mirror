@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "2-implementing"
 status: active
-updated: 2026-08-25
+updated: 2026-08-27
 flags: ["refactor-required"]
 ---
 
@@ -91,7 +91,7 @@ flags: ["refactor-required"]
   - 목표
     1. 서브목표 1
       - 표기: "남성 환자의 활력징후를 측정하기"
-      - 처리: 환자의 활력징후 사정 상호작용(`assess_vital`)을 완료하면 완료 처리
+      - 처리: 환자의 "활력징후 사정" 상호작용(`assess_vital`)을 완료하면 완료 처리
         - 완료 신호: `sig.show_vital_patient_a`
       - 퀘스트 마크: `patient_a` / `assess_vital` (아이콘 `quest-interaction`, `ReplacePrimaryIcon`)
       - Interaction 수행 시 다음 처리
@@ -103,12 +103,16 @@ flags: ["refactor-required"]
             2. Dialogue
               - Speaker: `@s`
               - Content: "(활력징후 측정도구를 찾자.)"
-          - 있다면 측정을 처리하고 이 목표를 완료 처리
+          - 있다면 다음 처리:
+            1. Dialogue
+              - Speaker: `@s`
+              - Content: "(조금 더 정확한 값을 확인하자. 모니터를 연결하자.)"
+            - 측정을 처리하고 이 목표를 완료 처리
       - 기술 노트: 측정도구 획득 신호(`sig.click_vital_set`)를 별도로 기다리던 단계는 제거한다. 물품 보유 여부는 상호작용 시점에 판정한다.
     2. 서브목표 2
       - 표기: "남성 환자의 활력징후를 환자 모니터를 통해 확인하기"
-      - 처리: 환자가 위치한 CareZone의 환자 모니터에서 자세히 보기 상호작용(`monitor_select`)을 수행하면 완료 처리
-      - 퀘스트 마크: 처치실 환자 모니터 / `monitor_select`
+      - 처리: 환자가 위치한 CareZone의 환자 모니터에서 자세히 보기 상호작용(`detail_overlay`)을 수행하면 완료 처리
+      - 퀘스트 마크: `patient_a` / `detail_overlay` (`patient_b_c_ct`의 `close-vital-ui-*` 바인딩과 같은 규약이다.)
       - 기술 노트: 모니터 UI를 시나리오가 직접 여는 `activate_vital_monitor_ui_patient_a`와 활력 정보 연출 `vitalinfo_1_patient_a`는 사용하지 않는다. 환자 B/C와 마찬가지로 플레이어가 모니터를 열고, 닫을 때 발생하는 신호로 다음 단계를 진행한다.
     3. 서브목표 3
       - 표기: "남성 환자의 활력징후를 보고하기"
@@ -683,7 +687,7 @@ flags: ["refactor-required"]
         - 1단계(좌측 18G 캐뉼라 삽입)가 완료되어 있을 것
         - 2단계에서 환자가 누워있는 침대의 Attachment가 활성화되어 있고, 그 Attachment에 생리식염수가 적용되어 있을 것
           - 생리식염수 적용 상태는 Display 플래그와 상태 플래그가 모두 활성화되어 있어야 하나, 활성화 여부 판정은 상태 플래그를 기준으로 한다.
-      - 퀘스트 마크: `patient_a` / `normal_saline_connect`
+      - 퀘스트 마크: `patient_a_cannula_left_port` / `intravenous_line_connect_mode_start`
       - Interaction 수행 시 다음 처리
         - 환자가 누워있는 침대 Attachment의 생리식염수 오브젝트 자식에 있는 Intravenous Line Connection Point 오브젝트와, 환자의 좌측 팔 정맥로의 Intravenous Line Connection Point 오브젝트를 IV Line 연결 처리
     5. 퀘스트 목표 표기를 "남성 환자의 우측 팔에 정맥로 확보하기"로 변경
@@ -1028,7 +1032,7 @@ flags: ["refactor-required"]
   - 목표: ""
   - 퀘스트 발행과 함께 다음 처리 수행:
     1. 퀘스트 목표 표기를 "제세동 카트를 환자 옆으로 가져오기"로 변경
-    2. 카트 이동 완료 신호(`sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient`)를 수신하면 이 목표를 완료 처리
+    2. 카트 이동 완료 신호(`sig.defibrillator_cart_snap_point_reached_defibrillator_cart_a_defibrillatorcart_to_patient`)를 수신하면 이 목표를 완료 처리
       - 퀘스트 마크: 제세동 카트의 손잡이
       - (수정) 기술 노트: 카트 이동과 위치 도달 판정은 `MovingPatientBedController`와 `MovingPatientBedPositioningPoint`의 기존 오버월드 동작을 그대로 사용해서는 안된다. 만약 그러한 구현이 존재하거나 시도되었다면 제거하여야 한다. 제세동 카트는 제세동 카트 전용 이동 컨트롤러(`DefibrillatorCartController`)를 사용하여, 플레이어가 카트를 잡고 이동시키면 카트가 환자 침대에 가까워질 때까지 이동하고, 가까워지면 자동으로 위치를 잡도록 구현한다. 위치 도달 판정은 `MovingPatientBedPositioningPoint`의 기존 오버월드 동작을 그대로 사용하지 않고, 제세동 카트 전용 위치 지정점(`DefibrillatorCartPositioningPoint`)을 사용한다.
     3. 퀘스트 목표 표기를 "남성 환자의 흉부에 제세동 패드 부착하기"로 변경
@@ -1255,7 +1259,7 @@ flags: ["refactor-required"]
   - 제목: "제세동기 조작"
   - 목표
     - 표기: "제세동기를 조작해 역할 부여받기"
-    - 처리: 제세동기 상호작용(`sig.interact_defib`)을 수행하면 제세동기 전원 소리(`defib_on_sound`)를 재생하고, 심전도·에너지 양·감전 주의 세 문항을 1주기와 같은 형식으로 진행한다.
+    - 처리: 제세동기 상호작용(`sig.interact_defibrillator`)을 수행하면 제세동기 전원 소리(`defibrillator_on_sound`)를 재생하고, 심전도·에너지 양·감전 주의 세 문항을 1주기와 같은 형식으로 진행한다.
     - 퀘스트 마크: 제세동기 / 조작 상호작용
     1. Dialogue
       - Speaker: `@s`
@@ -1354,7 +1358,7 @@ flags: ["refactor-required"]
   - 제목: "분류 구역 복귀"
   - 목표
     - 표기: "중증도 분류 구역으로 이동하기"
-    - 처리: `nurse_a` 본인이 분류 구역에 도착해 발생시킨 전용 도착 신호를 수신하면 완료 처리
+    - 처리: `nurse_a` 본인이 분류 구역에 도착해 발생시킨 전용 도착 신호(`sig.arrive_triagearea_patient_a`)를 수신하면 완료 처리
     - 기술 노트: 기존 `ScenarioTriggerZone`을 사용하되, 신호 식별자에 플레이어 식별자를 포함하거나 송신자 범위를 검증한다. 다른 플레이어의 구역 진입으로 `nurse_a`의 퀘스트가 완료되어서는 안 된다.
   - 퀘스트 목표 완료처리, 퀘스트 목표를 "다른 사람들의 처리가 끝날 때까지 기다리기"로 변경
 - `nurse_b`에게 퀘스트 발행 (`Quest_Cut_Clothing`)
@@ -1492,7 +1496,7 @@ flags: ["refactor-required"]
 | 개정 전 | 개정 후 |
 |---|---|
 | `move_patient_a_to_treatmentroom` 연출 이벤트로 환자를 처치실에 배치 | 플레이어가 침대를 밀어 옮기고, 처치실 CareZone 도착 신호 `carezone_patient_entered_patient_a`로 완료 판정 |
-| `activate_vital_monitor_ui_patient_a`, `vitalinfo_1_patient_a`로 모니터 UI를 시나리오가 직접 활성화 | 환자 모니터의 자세히 보기 상호작용(`monitor_select`)을 플레이어가 수행하고, 닫을 때 발생하는 신호로 진행 |
+| `activate_vital_monitor_ui_patient_a`, `vitalinfo_1_patient_a`로 모니터 UI를 시나리오가 직접 활성화 | 환자 모니터의 자세히 보기 상호작용(`detail_overlay`)을 플레이어가 수행하고, 닫을 때 발생하는 신호(`sig.close_vital_ui_a`)로 진행 |
 | `show_checklist_intu` / `hide_checklist_intu`, `show_iv_checklist` / `hide_iv_checklist`, `show_suction_checklist_ui` / `hide_suction_checklist_ui` 체크리스트 UI | 퀘스트 목표 표기와 퀘스트 마크로 대체. 필요 물품은 상호작용 시점의 인벤토리 판정으로 안내 |
 | `sig.click_*` 물품 획득 신호 대기 단계 | 사용·적용·연결·제출 상호작용 시점의 인벤토리 보유 판정 |
 | 환자·의사 위치를 이벤트 안에서 해석 | `scen_a:patient_spawnpoint_a`, `scen_a:doctor_treatment_room_waypoint`, `scen_a:quest_arrival_patient_a` 앵커를 `scen_b:*`와 같은 방식으로 Overworld Initializer에 추가 |
@@ -1511,13 +1515,13 @@ flags: ["refactor-required"]
 ### 이 시나리오 전용으로 유지하는 항목
 
 - Level 1 rapid infuser의 플라즈마 솔루션·혈액백 연결 흐름과 준비 연출(`lv1_ready`)
-- 환자 악화 연출(`patient_crash_ui`)과 리듬 모니터 연출(`defib_ui_irregular`, `asystole_monitor_ui`, `rosc_monitor_ui`)
+- 환자 악화 연출(`patient_crash_ui`)과 리듬 모니터 연출(`defibrillator_ui_irregular`, `asystole_monitor_ui`, `rosc_monitor_ui`)
 - 삽관·중심정맥관 연출(`insert_et_tube`, `remove_stylet`, `insert_central_line_set`)과 처치 연출
   (`insert_18g_left`, `insert_18g_right`, `connect_ns1_left`, `connect_ps1_right`, `apply_gauze_patient_a`,
   `apply_gauze_with_plaster_patient_a`, `connect_tpiece_ready`, `apply_ambu_patient_a`,
-  `start_ambubagging`, `start_chest_compression`, `stop_ambu_and_comp`, `attach_defibpad`)
+  `start_ambubagging`, `start_chest_compression`, `stop_ambu_and_comp`, `attach_defibrillatorpad`)
 - 의사 NPC 제출 상호작용 네 종류와 `sig.pass_*` 완료 신호
-- 사운드 리소스(`tape_sound`, `oxygen_sound`, `defib_on_sound`, `cutting_sound`)
+- 사운드 리소스(`tape_sound`, `oxygen_sound`, `defibrillator_on_sound`, `cutting_sound`)
 
 ### 흐름 구조 변경
 
@@ -1540,10 +1544,12 @@ flags: ["refactor-required"]
    `move_patient_a_to_treatmentroom`의 `_waitForManualPatientATransfer` 경로를 그대로 쓰는 선택지도 있다.
 2. **체크리스트 UI 자산의 처분 여부를 정해야 한다.** 줄글 시나리오에서는 사용하지 않게 되었으나, 이벤트 핸들러와
    UI 패널 자산은 남아 있다. 다른 시나리오에서 쓸 계획이 없다면 제거 대상이다.
+   (2026-08-27: 시나리오 그래프에서 `show_iv_checklist`/`hide_iv_checklist` 호출을 제거했다. 이벤트 핸들러
+   스크립트와 UI 자산 자체의 존치 여부는 아직 결정하지 않았다.)
 3. **`vital_set`을 소모품으로 볼지 도구로 볼지 확정이 필요하다.** 현재 서술은 보유만 확인하고 소모하지 않는
    도구로 취급한다.
-4. **`## 시나리오 본문`의 노드 명세와 `patient_a_critical.scenario.json`은 아직 갱신하지 않았다.** 이번 개정으로
-   노드 수와 Validator 신호 구성이 달라지므로, 변환 작업을 언제 수행할지 결정해야 한다.
+4. **해결(2026-08-27): `patient_a_critical.scenario.json`을 줄글 기준으로 다시 변환했다.** `## 시나리오 본문`은
+   개정 전 명세를 남겨 두는 보존용 절로 표시했다. 처리 내역은 `## 2026-08-27 2차 변환 확정 사항`에 있다.
 
 ## 2026-08-24 수액 연결 흐름 수정 (정맥로 확보 퀘스트)
 
@@ -1564,6 +1570,225 @@ flags: ["refactor-required"]
 조건으로 삼는다. 우측 팔의 플라즈마 솔루션 연결도 같은 구조로 맞췄다. 안내 대사 `N011_3`의 "플라즈마 솔루션
 수액백을 먼저 건 뒤 연결하십시오" 지시와도 일치한다.
 
+## 2026-08-27 2차 변환 확정 사항
+
+`## 줄글 시나리오`의 개정 내용 중 `N011`(정맥로 확보) 이후 구간이 아직 반영되지 않은 채
+`## 시나리오 본문`의 개정 전 노드 명세가 `patient_a_critical.scenario.json`에 남아 있었다. 이번 작업에서
+그 구간을 줄글 기준으로 다시 변환하고, 문서와 JSON 사이에서 어긋나 있던 식별자를 실제 구현 기준으로
+확정했다. 아래 내용이 이후 작업의 기준이다.
+
+### 그래프 재변환 범위
+
+| 구간 | 처리 |
+|---|---|
+| 정맥로 확보·중심정맥관·Level 1 (`Quest_IV_Line_PatientA`, `Quest_Cline_Assist`, `Quest_Lv1_Fluids`) | `시스템` 안내 노드와 물품 획득 대기 게이트를 제거하고, 삽입·연결 게이트만 남겼다 |
+| 심정지 맥박 확인 (`Quest_Check_Pulse`) | 안내 노드를 제거하고 퀘스트 목표 표기로 대체했다 |
+| CPR 1주기 네 브랜치 | 안내 노드와 획득 대기 게이트를 제거하고, 각 문항에 정답 독백 노드를 추가했다 |
+| CPR 2주기 네 브랜치 | 같은 방식으로 처리했다 |
+| ROSC 후속 조치 세 브랜치 | 같은 방식으로 처리하고, 의식 상태 재사정의 관찰 지문을 초기 평가와 같은 독백 노드로 옮겼다 |
+
+제거한 노드는 다음과 같다. 되살리면 안 된다.
+
+- `시스템` 화자 안내 노드 65개: `N011`~`N011_3`, `N012`, `N013`, `N013_1`, `N014`, `N014_1`, `N016`,
+  `N017`~`N017_3`, `N018`, `N019`, `N019_1`, `N020`~`N020_3`, `N021`, `N022`, `N023`~`N023_3`, `N024`,
+  `N025`, `N026`, `N027`, `N028`, `N028_1`, `N028_2`
+- 물품 획득 대기 게이트: `V017`, `V019`, `V023`, `V026`, `V026_1`, `V029`, `V029_1`
+- 체크리스트 UI 이벤트: `E017`(`show_iv_checklist`), `E018`(`hide_iv_checklist`)
+- `V025_1`과 `V033`에서 각각 `sig.click_defibrillatorpad`, `sig.click_scissors` 규칙을 제거하고
+  실제 처치 신호만 남겼다
+
+`sig.click_to_start_comp`는 물품 획득 신호가 아니라 가슴압박 시작 동작 신호이므로 `V024`에 그대로 둔다.
+
+### 오답 처리 문구 통일
+
+개정 전 오답 노드는 정답을 알려주는 교정 문구("오답입니다. 150~200J(줄)이 정답입니다." 등)를 사용했다.
+줄글 시나리오의 규정대로 오답 노드 26개를 모두 `@s` 화자의 `"(아니야. 다시 생각해보자.)"` 한 줄로 바꾸고,
+각 오답 노드가 자신을 호출한 문항으로 되돌아가도록 연결을 맞췄다.
+
+교정 과정에서 CPR 1주기 제세동 문항의 복귀 연결이 잘못되어 있던 것을 함께 고쳤다. `N019_retry_b`는
+에너지 문항(`C017`)이 아니라 심전도 문항(`C016`)으로, `N019_retry_c`는 감전 주의 문항(`C018`)이 아니라
+에너지 문항(`C017`)으로 돌아가고 있었다. CPR 2주기의 같은 구조는 정상이었으므로 변환 과정에서 생긴
+회귀였다.
+
+### 신설한 노드 식별자
+
+정답 독백과 관찰 지문은 초기 평가 구간의 명명 방식(`D_` 접두)을 따른다.
+
+| 구간 | 신설 노드 |
+|---|---|
+| 정맥로 확보 | `D_IV_NS_PREP_A` |
+| 앰부배깅 | `D_AMBU_CONNECTED_A`, `D_AMBU_VOL_R1_OK`, `D_AMBU_RATE_R1_OK`, `D_AMBU_VOL_R2_OK`, `D_AMBU_RATE_R2_OK` |
+| 가슴압박 | `D_COMP_DEPTH_R1_OK`, `D_COMP_LOC_R1_OK`, `D_COMP_RATE_R1_OK`, `D_COMP_RECOIL_R1_OK` 및 `_R2_` 4개 |
+| 제세동기 | `D_DEFIB_PAD_ATTACHED_A`, `D_DEFIB_RHYTHM_R1_OK`, `D_DEFIB_ENERGY_R1_OK`, `D_DEFIB_SAFETY_R1_OK` 및 `_R2_` 3개 |
+| 에피네프린 | `D_EPI_PREP_R1`, `D_EPI_INTERVAL_R1_OK`, `D_EPI_PERIPH_R1_PARTIAL`, `D_EPI_PERIPH_R1_OK` 및 `_R2` 4개 |
+| 의복 제거 | `D_CLOTHING_CUT_A` |
+| ROSC 의식 상태 재사정 | `D_GCS_ROSC_01`~`D_GCS_ROSC_07`, `D_GCS_ROSC_SUM_A`, `D_GCS_ROSC_REPORT_A` |
+| 시나리오 종료 | `L_END_A` (1초 지연) |
+
+### 식별자 확정 사항
+
+1. **`Quest_Grab_Stretcher`를 `Quest_Move_Patient_A`로 바꾸었다.** 들것 손잡이를 잡는 `P002`/`V010_*`
+   흐름이 사라졌으므로 이름이 실제 목표("남성 환자를 처치실로 이동시키기")와 맞지 않았다. Add/Remove 쌍인
+   `Q006`과 `Q006_1`을 함께 갱신했다.
+2. **환자 모니터 자세히 보기 상호작용은 `detail_overlay`다.** 줄글이 적어 두었던 `monitor_select`는
+   `PatientController`가 노출하는 다른 상호작용이며, 활력징후 확인 목표가 사용하는 것은 환자 모니터의
+   `detail_overlay`다. `patient_b_c_ct`의 `close-vital-ui-*` 바인딩과 같은 규약을 따른다.
+3. **양팔 정맥로 연결 상호작용은 좌우 모두 `intravenous_line_connect_mode_start`다.** 줄글은 좌측에
+   `normal_saline_connect`를, 우측에 `intravenous_line_connect_mode_start`를 적어 서로 어긋나 있었다.
+   실제로 `sig.connect_cannula_and_ns1`과 `sig.connect_ps1_right`를 발신하는 것은
+   `IntravenousLineConnectionPoint`이므로, 퀘스트 마크를 `patient_a_cannula_left_port` /
+   `patient_a_cannula_right_port`의 `intravenous_line_connect_mode_start`로 통일했다.
+4. **제세동 용어는 `defibrillator` 계열로 확정한다.** 줄글에 남아 있던 `sig.interact_defib`,
+   `sig.patient_bed_position_reached_defib_cart_a_defibcart_to_patient`, `defib_on_sound`,
+   `defib_ui_irregular`, `attach_defibpad`를 각각 `sig.interact_defibrillator`,
+   `sig.defibrillator_cart_snap_point_reached_defibrillator_cart_a_defibrillatorcart_to_patient`,
+   `defibrillator_on_sound`, `defibrillator_ui_irregular`, `attach_defibrillatorpad`로 갱신했다.
+   카트 이동 판정도 `MovingPatientBedPositioningPoint`가 아니라 `DefibrillatorCartPositioningPoint`를
+   사용하는 현재 구현을 기준으로 한다.
+5. **분류 구역 도착 신호는 `sig.arrive_triagearea_patient_a`다.** `arm_patient_a_triage_return` 이벤트가
+   `quest_arrival_triage_area_{사용자 식별자}` 중 `nurse_a` 보유자의 신호만 이 신호로 전파하므로, 다른
+   플레이어의 구역 진입으로는 완료되지 않는다.
+6. **환자 이송 완료 판정은 `move_patient_a_to_treatmentroom`(E005)을 계속 사용한다.** 개정에서 대체
+   대상으로 적었던 `carezone_patient_entered_patient_a` 신호는 저장소에 구현되어 있지 않다. `인간 작업자
+   확인이 필요한 항목` 1번이 허용한 기존 경로를 택했으므로, `Quest_Move_Patient_A`에는 신호 목표를 두지
+   않는다. 퀘스트가 발행된 동안에는 남성 환자 침대(`bed_a`)의 `move_bed`("침대로 움직이기") 상호작용과
+   이송 목표 지점 마크(`QM_MOVE_A_SHOW`/`QM_MOVE_A_HIDE`)를 함께 표시한다. 처치실 CareZone을 실제로
+   배치하기로 결정하면 그때 목표와 판정 신호를 함께 되살린다.
+
+### 퀘스트 정의 갱신
+
+목표와 퀘스트 마크가 비어 있던 퀘스트 14종에 목표(`tasks`)와 표시 바인딩(`presentationBindings`)을
+채웠다. 대상은 `Quest_Cline_Assist`, `Quest_Ambu_A`, `Quest_ChestComp_B`, `Quest_Defibrillator_C`,
+`Quest_Epi_D`, `Quest_ChestComp_A`, `Quest_Ambu_B`, `Quest_Epi_C`, `Quest_Defibrillator_D`,
+`Quest_Check_Pulse_ROSC`, `Quest_Return_Triage`, `Quest_Cut_Clothing`, `Quest_Check_GCS_ROSC`,
+`Quest_Move_Patient_A`다. `Quest_Wait_Initial_PatientA`, `Quest_Wait_Others_Initial_PatientA`,
+`Quest_Wait_Others_Rosc_PatientA` 세 개는 줄글의 규정대로 목표 없는 대기 퀘스트로 남긴다.
+
+`Quest_Check_GCS_ROSC`의 목표 문구에 남아 있던 내부 식별자 "환자 A"를 "남성 환자"로 바꾸었다.
+
+퀘스트 마크가 실제로 표시되도록 프리팹의 표시 소유자도 함께 배선했다.
+
+- `PatientTypeA.prefab`: `start_ambu_r1`, `start_ambu_r2`, `interact_chest`, `interact_patient_chest`,
+  `click_to_start_comp`, `remove_tpiece`, `remove_patient_clothing` 일곱 개
+  `ScenarioActionInteractable`의 `_presentationEntityIdentifier`에 `patient_a`를 지정했다.
+- `Defibrillator.prefab`: `interact_defibrillator`의 `_presentationEntityIdentifier`에
+  `defibrillator_cart_a`를 지정했다.
+- `PatientTypeA.prefab`의 `assess_pulse_r2`에 줄글의 지문 두 줄을 채웠다.
+
+### 의식 상태 재사정 문항 정정
+
+`C034`의 정답 선택지는 이미 `GCS V NT`로 바뀌어 있었으나, 오답 안내와 요약 문구는 개정 전의 "E로
+표기" 서술을 유지하고 있었다. 요약을 줄글대로 `"E는 2, V는 삽관 중이라 평가할 수 없고, M은 4다."`와
+`"GCS는 E2 / V-NT / M4입니다."` 두 대사로 바꾸었다.
+
+### 정답이 둘인 문항의 처리
+
+말초 투여 절차 문항(`C020`, `C028`)은 줄글에서 "약물 주입 후 생리식염수 주입"과 "약물 주입 후 생리식염수
+주입, 이후 팔 들어올리기"를 모두 정답으로 규정한다. `correctOptionIndex`는 값이 하나뿐이므로, 두 선택지
+모두 각자의 독백을 재생한 뒤 다음 단계로 진행하게 하고, 평가 기록의 의도된 답은 완전한 절차인 후자로
+둔다.
+
+### TTS 프리셋 정책 보완
+
+`TTS 음성 프리셋 정책` 표에 없던 화자가 줄글 개정으로 새로 생겨서 아래와 같이 확정한다.
+
+| SpeakerName | 프리셋 |
+|---|---|
+| 구내방송 | F2 |
+| 남성 환자 | M5 |
+
+또한 화자를 `시스템`에서 `의사`로 바꾸면서 프리셋이 F3으로 남아 있던 `D006`, `D010`, `D037`, `N008_3`을
+M1으로 고치고, `playTTS`가 켜져 있는데 프리셋이 비어 있던 `D006_2`, `D_START_BROADCAST`,
+`D_VITAL_RR_HR_A`, `D_VITAL_BP_A`, `D_VITAL_BT_SPO2_A`, `D_GCS_A_06`에 프리셋을 지정했다.
+줄글이 `TTS: false`로 규정한 `N007_4`의 `playTTS`도 껐다.
+
+- [ ] TTS-5 (인간 작업 필요): 위 변경으로 프리셋이 바뀌거나 새로 생긴 노드의 음성을 다시 bake해야 한다.
+  현재 `Assets/StreamingAssets/TTS/BakedInline/patient_a_critical/`에는 프리셋 디렉터리 밖에 놓인 산출물
+  6개가 남아 있다. bake 창의 속도 배율은 1.15를 사용한다.
+
+### 남은 사람 작업
+
+1. 새로 배선한 퀘스트 마크가 실제 플레이에서 대상 상호작용 위에 표시되는지 확인해야 한다. 특히 제세동
+   카트와 Level 1 rapid infuser는 런타임 생성 오브젝트이므로 식별자 해석 시점을 함께 본다.
+2. 처치실 CareZone 도입 여부를 확정해야 한다. 위 식별자 확정 사항 6번의 결정을 뒤집는 경우
+   `Quest_Move_Patient_A`의 목표와 `E005`의 처리를 함께 바꾼다.
+3. 물품 획득 대기 게이트를 제거했으므로, 각 상호작용이 수행 시점에 인벤토리 보유를 판정하고 부족할 때
+   `(...을 갖고 있지 않다.)`, `(...을 찾자.)` 두 줄을 재생하는지 상호작용 단위로 확인해야 한다.
+4. 위 TTS-5 항목의 재bake가 필요하다.
+
+## 2026-08-27 상호작용 개방을 퀘스트 상태 플래그 풀로 이전
+
+활력징후 측정 퀘스트(`Quest_Check_Vital_PatientA`)가 발행되어도 담당 간호사에게 "활력징후 사정"
+상호작용이 나타나지 않았다. 원인은 단계별 상호작용 개방을 **환자 엔티티에 저장된 활성 플래그**로
+처리하고 있었다는 점이다.
+
+- 환자 인스턴스는 모든 플레이어가 공유하므로, 한 사람의 퀘스트 단계가 다른 사람의 상호작용 목록까지
+  바꾼다. 퀘스트는 플레이어별로 발행되는데 노출 판정은 전역이었다.
+- `PatientController`의 사정 활성 플래그와 `ScenarioActionInteractable._enabled`는 네트워크 동기화
+  대상이 아니다. 서버에서 켜도 원격 클라이언트에는 반영되지 않는다.
+
+### 도입한 구조
+
+플레이어별 **퀘스트 상태 플래그 풀**(`PlayerQuestStateFlagService`)을 추가했다. 플레이어 한 명당
+문자열 집합 하나이며, 어떤 상황을 표현할 때 임의로 정한 식별자를 그 집합에 넣는다. 저장소는
+`PlayerQuestStateFlag` 레지스트리이고 키는 `UserDescriptor.Identifier`다. 역할 태그
+(`PlayerTagService`)와 구조는 같지만 저장소를 분리해, 병렬 브랜치 배정(`requiredPlayerTags`)이
+퀘스트 진행 문자열에 영향을 받지 않게 했다.
+
+- 변경은 서버 권위다. 서버가 값을 바꾸면 `PlayerController`가 전체 옵저버에게 스냅샷을 복제한다.
+- 판정은 각 피어가 자기 플레이어 기준으로 로컬 수행한다.
+- 플래그가 바뀌면 조작 플레이어의 상호작용 힌트를 즉시 다시 계산한다.
+
+### 적용 범위
+
+다른 시나리오의 동작을 건드리지 않도록, 게이트는 `patient_a_critical`이 실행 중일 때만 켠다
+(`PatientACriticalQuestStateFlags`). 게이트가 꺼져 있거나 표에 없는 상호작용은 기존 판정 경로를
+그대로 쓴다.
+
+| 플래그 | 설정 시점 | 대상 | 여는 상호작용 (`patient_a`) |
+|---|---|---|---|
+| `scen_a.assess_vital` | `ACT_VITAL_ASSESS_A` | `nurse_b` | `assess_vital` |
+| `scen_a.assess_avpu_gcs` | `ACT_AVPU_GCS_ASSESS_A` | `nurse_c` | `assess_avpu_gcs` |
+| `scen_a.assess_pulse_r1` | `ACT_ARREST_A` (해제: `E036`) | 전원 | `assess_pulse_r1` |
+| `scen_a.cpr1_actions` | `ACT_ARREST_A` | 전원 | `click_to_start_comp`, `start_ambu_r1`, `interact_patient_chest`, `remove_tpiece` |
+| `scen_a.stylet_removal` | `ACT_STYLET_REMOVE_A` | `nurse_b` 또는 `nurse_a` | `remove_intu_stylet` |
+| `scen_a.tpiece_attach` | `ACT_TPIECE_ATTACH_A` | `nurse_a` | `interact_tpiece` |
+| `scen_a.cpr2_actions` | `ACT_CPR2_A` | 전원 | `interact_chest`, `start_ambu_r2` |
+| `scen_a.clothing_removal` | `ACT_CLOTHING_REMOVE_A` | 전원 | `remove_patient_clothing` |
+| `scen_a.rosc_reassessment` | `E036`(`rosc_monitor_ui`) | 전원 | `assess_pulse_r2`, `assess_gcs_rosc` |
+
+역할 브랜치 안에서 실행되는 개방 이벤트는 그 브랜치의 `requiredPlayerTags`와 같은 역할에만 건다.
+`ByRole` 배정은 해당 태그 보유자에게만 브랜치를 주므로, 브랜치가 실행되면 대상 플레이어가 반드시
+존재한다. 메인 흐름에서 실행되는 개방 이벤트는 이후 병렬 노드가 역할을 다시 배정하므로 전원에게
+건다.
+
+### 함께 바꾼 것
+
+1. **`ACT_VITAL_ASSESS_A`의 `invokeOnRoleClient`를 제거했다.** 플래그 변경은 서버 권위이므로, 배정
+   클라이언트에서만 실행되면 서버가 그 노드를 건너뛰어 아무에게도 반영되지 않는다. 개방 이벤트는
+   모두 서버에서 실행되어야 한다.
+2. **처치 물품 적용(`item_apply`) 게이트의 적용 범위를 이 시나리오로 한정했다.** 판정 근거인 퀘스트
+   표시 바인딩은 이미 피어별이지만, 다른 시나리오의 흐름까지 좁히지 않도록 범위를 맞췄다.
+3. 게이트는 시나리오 시작 시 켜지고 종료 시 꺼지며, 켜고 끌 때 서버가 전원의 플래그 풀을 비운다.
+
+### 에디터에서 확인·조정
+
+플레이 중 하이어라키에서 플레이어를 선택하면 인스펙터의 **Quest State Flags** 구역에 그 플레이어의
+플래그 풀이 나온다. 보유 목록, 임의 식별자 추가란, 시나리오 어휘 토글, 전체 제거 버튼을 제공한다.
+풀은 런타임 상태라 직렬화 미러를 두지 않고 서비스를 직접 읽으므로, 조작 결과가 다음 갱신에 지워지지
+않는다.
+
+- 조작은 서버 권위 규칙을 그대로 따른다. 클라이언트 피어에서는 읽기 전용이고 그 이유를 함께 띄운다.
+- 어휘 토글 목록은 시나리오가 켜져 있는 동안에만 나온다. 그 밖에는 추가란에 임의 식별자를 직접 넣는다.
+
+### 남은 사람 작업
+
+1. 4인 세션에서 `nurse_b`에게만 "활력징후 사정"이 보이는지, 나머지 세 명에게는 보이지 않는지 확인해야
+   한다. 원격 클라이언트와 호스트를 각각 담당으로 두고 두 번 본다. 인스펙터의 Quest State Flags 구역에서
+   플래그를 직접 켜고 꺼 보면 배선 확인이 빠르다.
+2. CPR 1·2주기 처치 동작은 전원에게 열린다. 역할별로 좁히려면 각 주기의 병렬 브랜치가 배정된 뒤
+   플래그를 다시 걸어야 하며, 그때 이 표의 "전원" 항목을 역할별로 나눈다.
+
 ## 기본 정보
 
 | 항목 | 내용 |
@@ -1572,7 +1797,7 @@ flags: ["refactor-required"]
 | 요약 | 환자 A를 처치실로 이동시키고 ABCDE 순서로 처치를 수행한 뒤 ROSC까지 진행한다. |
 | 주요 등장인물 | 플레이어 A/B/C/D, 의사 NPC, 환자 A |
 | 주요 장소 | 처치실 |
-| 리소스 식별자 - 사운드 | tape_sound, oxygen_sound, defib_on_sound, cutting_sound |
+| 리소스 식별자 - 사운드 | tape_sound, oxygen_sound, defibrillator_on_sound, cutting_sound |
 | 리소스 식별자 - 초상화 | 없음 |
 | 리소스 식별자 - 웨이포인트 | wp_treatment_room |
 | 리소스 식별자 - 카메라 타겟 | 없음 |
@@ -1596,6 +1821,8 @@ JSON에서는 각 노드에 `"playTTS": true`와 `"ttsVoiceProfile": { "preset":
 | 간호사 B | F4 | |
 | 간호사 C | M4 | |
 | 간호사 D | F5 | |
+| 구내방송 | F2 | 2026-08-27 확정 |
+| 남성 환자 | M5 | 2026-08-27 확정 |
 
 노드 명명 규칙(알파벳 접두 + 숫자 3자리)에 따른 적용 범위:
 
@@ -2033,7 +2260,13 @@ SPAWN_A
 
 ---
 
-## 시나리오 본문
+## 시나리오 본문 (개정 전 명세 · 보존용)
+
+> 이 절은 2026-08-22 개정 이전의 노드 명세다. 2026-08-27 2차 변환으로
+> `patient_a_critical.scenario.json`이 `## 줄글 시나리오`를 기준으로 다시 작성되었으므로, 이 절의
+> 노드 연결과 문구는 더 이상 구현 기준이 아니다. 개정 전 판정 값과 신호 이름을 확인할 때만 참고하고,
+> 여기의 `시스템` 화자 안내 노드와 `sig.click_*` 획득 대기 단계를 다시 반영해서는 안 된다.
+
 
 ### [D005] DialogueNode
 

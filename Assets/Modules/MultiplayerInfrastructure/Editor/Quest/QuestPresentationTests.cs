@@ -400,6 +400,8 @@ namespace MultiplayerInfrastructure.Tests.Quest
         Assert.That(activeQuest.PresentationBindings[0].ShowWhenUntracked, Is.True);
         Assert.That(Registry.Registry.TryGet<Sprite>(RegistryType.IconSprite, iconIdentifier, out var registeredIcon), Is.True);
         Assert.That(registeredIcon, Is.SameAs(sprite));
+        Assert.That(presentation.HasActiveInteractionBinding("doctor", "report"), Is.True);
+        Assert.That(presentation.HasActiveInteractionBinding("doctor", "unrelated"), Is.False);
         Assert.That(presentation.TryGetPrimaryIconOverride("doctor", "report", out _), Is.True);
         Assert.That(presentation.TryGetPrimaryIconOverride(interact, out var resolved), Is.True);
         Assert.That(resolved, Is.SameAs(sprite));
@@ -408,6 +410,7 @@ namespace MultiplayerInfrastructure.Tests.Quest
         presentation.RefreshPresentation();
         Assert.That(presentation.TryGetPrimaryIconOverride(interact, out _), Is.True);
         presentation.ExpireQuestPresentation("quest");
+        Assert.That(presentation.HasActiveInteractionBinding("doctor", "report"), Is.False);
         Assert.That(presentation.TryGetPrimaryIconOverride(interact, out _), Is.False);
       }
       finally

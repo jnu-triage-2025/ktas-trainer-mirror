@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using MultiplayerInfrastructure.Commons;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Tag;
 using MultiplayerInfrastructure.UI;
+using TriageTrainer.Scenario;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -139,6 +141,15 @@ namespace TriageTrainer.Entity
 
       public bool CanInteract(Transform interactor)
       {
+        // 처치 물품 적용은 퀘스트가 안내 대상으로 올린 동안에만 노출한다. 판정 근거인 퀘스트 목록이
+        // 피어마다 따로 있으므로 이 게이트도 플레이어별로 동작한다. 다른 시나리오의 흐름까지
+        // 좁히지 않도록, 적용 범위는 patient_a_critical 로 한정한다.
+        var presentation = QuestPresentationService.ActiveInstance;
+        if (PatientACriticalQuestStateFlags.IsArmed
+            && presentation != null
+            && !presentation.HasActiveInteractionBinding(_owner.Identifier, InteractIdItemApply))
+          return false;
+
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
         string itemIdentifier = _owner.FindApplicableTreatmentInventoryItem(player);
         if (_owner.IsPatientBCNasalCannulaItem(itemIdentifier))

@@ -308,6 +308,7 @@ namespace TriageTrainer.Scenario
     [SerializeField, Min(0f)] private float _smokeTestStepDelaySeconds = 0.25f;
 
     private readonly List<string> _registeredEventIds = new();
+    private ScenarioController _questStateFlagScopeController;
     private ChatUIController _chatUi;
     private QuestUIController _questUi;
 
@@ -322,6 +323,7 @@ namespace TriageTrainer.Scenario
       EnablePatientATreatmentSignalHandlers();
       RegisterIntroAndPatientAEvents();
       RegisterPatientBCEvents();
+      SubscribeQuestStateFlagScope();
 
       if (_logRegistrySnapshotOnEnable)
       {
@@ -332,6 +334,7 @@ namespace TriageTrainer.Scenario
     private void OnDisable()
     {
       DisablePatientATreatmentSignalHandlers();
+      UnsubscribeQuestStateFlagScope();
       DisposePatientBCFinalFadeOverlay();
       for (int i = 0; i < _registeredEventIds.Count; i++)
       {
@@ -455,6 +458,54 @@ namespace TriageTrainer.Scenario
       Registry.RegisterScenarioEvent(eventId, handler);
       _registeredEventIds.Add(eventId);
     }
+
+    // ── 퀘스트 상태 플래그 게이트 범위 ────────────────────────────────────
+    // patient_a_critical 은 상호작용 노출을 플레이어별 퀘스트 상태 플래그로 판정한다. 게이트는 그
+    // 시나리오가 도는 동안에만 켜져야 하므로, 시나리오 시작·종료에 맞춰 여닫는다. 표시 전용 피어에서도
+    // 같은 이벤트가 발생하므로 별도 분기 없이 모든 피어에서 동일하게 동작한다.
+
+    private void SubscribeQuestStateFlagScope()
+    {
+      ScenarioController.InstanceAvailable += HandleScenarioControllerAvailableForFlagScope;
+      BindQuestStateFlagScope(ScenarioController.Instance);
+    }
+
+    private void UnsubscribeQuestStateFlagScope()
+    {
+      ScenarioController.InstanceAvailable -= HandleScenarioControllerAvailableForFlagScope;
+      UnbindQuestStateFlagScope();
+      PatientACriticalQuestStateFlags.Disarm();
+    }
+
+    private void HandleScenarioControllerAvailableForFlagScope(ScenarioController controller)
+      => BindQuestStateFlagScope(controller);
+
+    private void BindQuestStateFlagScope(ScenarioController controller)
+    {
+      if (controller == null || ReferenceEquals(_questStateFlagScopeController, controller))
+        return;
+
+      UnbindQuestStateFlagScope();
+      _questStateFlagScopeController = controller;
+      controller.OnScenarioStarted += HandleScenarioStartedForFlagScope;
+      controller.OnScenarioEnded += HandleScenarioEndedForFlagScope;
+    }
+
+    private void UnbindQuestStateFlagScope()
+    {
+      if (_questStateFlagScopeController == null)
+        return;
+
+      _questStateFlagScopeController.OnScenarioStarted -= HandleScenarioStartedForFlagScope;
+      _questStateFlagScopeController.OnScenarioEnded -= HandleScenarioEndedForFlagScope;
+      _questStateFlagScopeController = null;
+    }
+
+    private void HandleScenarioStartedForFlagScope()
+      => PatientACriticalQuestStateFlags.ArmFor(_questStateFlagScopeController?.CurrentGraph?.Identifier);
+
+    private void HandleScenarioEndedForFlagScope()
+      => PatientACriticalQuestStateFlags.Disarm();
 
 
 

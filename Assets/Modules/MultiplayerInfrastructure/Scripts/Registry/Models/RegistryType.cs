@@ -34,5 +34,10 @@
     /// 플레이어 태그 레지스트리. 키는 UserDescriptor.Identifier(UUID), 값은 List&lt;string&gt;입니다.
     /// </summary>
     PlayerTag,
+    /// <summary>
+    /// 플레이어별 퀘스트 상태 플래그 풀. 키는 UserDescriptor.Identifier(UUID),
+    /// 값은 HashSet&lt;string&gt;입니다. 역할 태그와 달리 퀘스트 진행 중에만 유지되는 임시 상태를 담습니다.
+    /// </summary>
+    PlayerQuestStateFlag,
   }
 }

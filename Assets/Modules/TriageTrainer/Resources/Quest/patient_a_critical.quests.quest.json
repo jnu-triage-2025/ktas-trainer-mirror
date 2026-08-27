@@ -60,7 +60,17 @@
       "isTrackedByDefault": true,
       "scope": "Player",
       "isOrdinal": false,
-      "tasks": []
+      "tasks": [],
+      "presentationBindings": [
+        {
+          "activation": "WholeQuest",
+          "targetType": "Interaction",
+          "entityIdentifier": "bed_a",
+          "interactionIdentifier": "move_bed",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
     },
     {
       "identifier": "Quest_Check_Vital_PatientA",

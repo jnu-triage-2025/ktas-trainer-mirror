@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
+using TriageTrainer.Scenario;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -95,11 +97,20 @@ namespace TriageTrainer.Entity
       public bool CanInteract(Transform interactor)
       {
         var cfg = Config;
-        if (cfg == null || !cfg.Enabled || !_owner.CanPerformTriageOrAssessment)
+        if (cfg == null || !_owner.CanPerformTriageOrAssessment)
           return false;
 
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
-        return player != null;
+        if (player == null)
+          return false;
+
+        // patient_a_critical 은 노출을 플레이어별 퀘스트 상태 플래그로 판정한다. 그 시나리오에서는
+        // 환자 인스턴스에 공유된 Enabled 대신 플래그가 유일한 기준이 된다.
+        if (PatientACriticalQuestStateFlags.TryEvaluate(
+              _owner.Identifier, _actionIdentifier, player, out bool allowedByFlag))
+          return allowedByFlag;
+
+        return cfg.Enabled;
       }
 
       public void Interact(Transform interactor)
@@ -118,7 +129,7 @@ namespace TriageTrainer.Entity
               : config.FindItemDialogue);
           return;
         }
-        _owner.PerformAssess(_actionIdentifier);
+        _owner.PerformAssess(_actionIdentifier, player);
       }
     }
 
@@ -216,10 +227,16 @@ namespace TriageTrainer.Entity
       return cfg;
     }
 
-    private void PerformAssess(string actionIdentifier)
+    private void PerformAssess(string actionIdentifier, PlayerController player)
     {
       var cfg = GetAssessAction(actionIdentifier);
-      if (cfg == null || !cfg.Enabled || !CanPerformTriageOrAssessment)
+      if (cfg == null || !CanPerformTriageOrAssessment)
+        return;
+
+      // 노출 판정을 플래그 풀이 가져간 시나리오에서는 Enabled 를 다시 보지 않는다.
+      // CanInteract 가 이미 같은 기준으로 통과시킨 호출이다.
+      if (!PatientACriticalQuestStateFlags.TryEvaluate(Identifier, actionIdentifier, null, out _)
+          && !cfg.Enabled)
         return;
 
       // 인스펙터 AssessSignal 우선, 없으면 식별자 규칙 기반 코드 기본값(Reset 무관)으로 폴백.
@@ -227,10 +244,18 @@ namespace TriageTrainer.Entity
           ? cfg.AssessSignal
           : ResolveDefaultAssessSignal(actionIdentifier);
 
+      // 성공 독백을 먼저 표시한다. 신호가 퀘스트/UI를 갱신하면서 상호작용 표시를
+      // 재구성할 수 있으므로, 신호를 먼저 올리면 독백이 유실될 수 있다.
+      PresentAssessDialogue(cfg);
+
+      // patient_a_critical의 플레이어별 게이트를 성공한 플레이어에게만 내린다.
+      // 도구가 없는 경우에는 여기까지 오지 않으므로 재시도할 수 있다.
+      string flag = PatientACriticalQuestStateFlags.FindFlag(Identifier, actionIdentifier);
+      if (!string.IsNullOrWhiteSpace(flag) && player != null)
+        PlayerQuestStateFlagService.Unset(player.UserIdentifier, flag);
+
       if (!string.IsNullOrWhiteSpace(signal))
         MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(signal);
-
-      PresentAssessDialogue(cfg);
     }
 
     private static void PresentAssessDialogue(AssessActionConfig config)

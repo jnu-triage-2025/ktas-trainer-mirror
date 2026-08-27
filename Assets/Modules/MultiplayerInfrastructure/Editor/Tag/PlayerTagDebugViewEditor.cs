@@ -1,4 +1,5 @@
-﻿using MultiplayerInfrastructure.Player;
+﻿using MultiplayerInfrastructure.Editor.Quest;
+using MultiplayerInfrastructure.Player;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,7 +18,16 @@ namespace MultiplayerInfrastructure.Editor.Player
       serializedObject.Update();
 
       DrawDefaultInspector();
+      DrawDebugTags();
 
+      serializedObject.ApplyModifiedProperties();
+
+      // 퀘스트 상태 플래그 풀은 런타임 상태라 직렬화 미러가 없다. 서비스를 직접 읽어 그린다.
+      PlayerQuestStateFlagInspectorSection.Draw(target as PlayerController);
+    }
+
+    private void DrawDebugTags()
+    {
       EditorGUILayout.Space();
       EditorGUILayout.LabelField("Debug Tags", EditorStyles.boldLabel);
 
@@ -31,7 +41,6 @@ namespace MultiplayerInfrastructure.Editor.Player
         if (idProp == null || nameProp == null || hasIdProp == null || tagsProp == null)
         {
           EditorGUILayout.LabelField("(debug tag fields not found)");
-          serializedObject.ApplyModifiedProperties();
           return;
         }
 
@@ -45,18 +54,15 @@ namespace MultiplayerInfrastructure.Editor.Player
         if (tagsProp.arraySize == 0)
         {
           EditorGUILayout.LabelField("(none)");
+          return;
         }
-        else
+
+        for (int i = 0; i < tagsProp.arraySize; i++)
         {
-          for (int i = 0; i < tagsProp.arraySize; i++)
-          {
-            var item = tagsProp.GetArrayElementAtIndex(i);
-            EditorGUILayout.TextField($"[{i}]", item.stringValue);
-          }
+          var item = tagsProp.GetArrayElementAtIndex(i);
+          EditorGUILayout.TextField($"[{i}]", item.stringValue);
         }
       }
-
-      serializedObject.ApplyModifiedProperties();
     }
   }
 }

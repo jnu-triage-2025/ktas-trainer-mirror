@@ -127,7 +127,6 @@ namespace TriageTrainer.Scenario
         if (hasResolvablePoint)
           bed.TryForceSnapToPositioningPoint(pointIdentifier);
 
-        EmitSystemMessage("이동 종료: 플레이어 A, B, C, D는 모두 Left Shift로 침대 조종을 해제하세요.");
         {
           float dismountStartedAt = Time.time;
           while (!ScenarioInteractionSignals.IsRaised(allDismountedSignal))

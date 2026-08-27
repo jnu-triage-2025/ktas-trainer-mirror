@@ -6,6 +6,7 @@ using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.Chat;
 using MultiplayerInfrastructure.ItemSystem;
+using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Server;
 using MultiplayerInfrastructure.Session;
@@ -92,6 +93,7 @@ namespace MultiplayerInfrastructure.Player
       OnStartServer_PlayerModel();
       InitializeRunningSpeedMultiplierServer();
       SyncPlayerTagsToObservers();
+      SyncQuestStateFlagsToObservers();
     }
 
     public override void OnSpawnServer(NetworkConnection connection)
@@ -112,6 +114,7 @@ namespace MultiplayerInfrastructure.Player
       PlayerGamemodeService.UnregisterPlayer(this);
       Registry.Registry.UnregisterEntity(_entityIdentifier.Value);
       PlayerTagService.ClearTags(_userIdentifier.Value);
+      PlayerQuestStateFlagService.ClearFlags(_userIdentifier.Value);
       UserDescriptorService.Unregister(_userIdentifier.Value);
       if (!string.IsNullOrWhiteSpace(displayName))
         BroadcastConnectionMessage($"{displayName}가 나갔습니다.");
@@ -237,6 +240,7 @@ namespace MultiplayerInfrastructure.Player
       OnStopClient_AnyPeer_PlayerModel();
       Registry.Registry.UnregisterEntity(_entityIdentifier.Value);
       PlayerTagService.ClearTags(_userIdentifier.Value);
+      PlayerQuestStateFlagService.ClearFlags(_userIdentifier.Value);
       UserDescriptorService.Unregister(_userIdentifier.Value);
 
       RestoreAllPendingWorldItemDrops();
@@ -272,6 +276,34 @@ namespace MultiplayerInfrastructure.Player
     private void RpcApplyPlayerTags(string userIdentifier, string[] tags)
     {
       PlayerTagService.ReplaceTags(userIdentifier, tags);
+    }
+
+    /// <summary>
+    /// 서버에서 현재 플레이어의 퀘스트 상태 플래그 풀을 모든 옵저버에게 동기화합니다.
+    /// 상호작용 노출 판정이 각 피어에서 로컬로 이뤄지므로, 서버 기록만으로는 화면에 반영되지 않습니다.
+    /// </summary>
+    public void SyncQuestStateFlagsToObservers()
+    {
+      if (!IsServerStarted || string.IsNullOrWhiteSpace(_userIdentifier.Value))
+      {
+        return;
+      }
+
+      var currentFlags = PlayerQuestStateFlagService.GetFlags(_userIdentifier.Value);
+      var snapshot = new string[currentFlags.Count];
+      int index = 0;
+      foreach (string flag in currentFlags)
+      {
+        snapshot[index++] = flag;
+      }
+
+      RpcApplyQuestStateFlags(_userIdentifier.Value, snapshot);
+    }
+
+    [ObserversRpc(BufferLast = true)]
+    private void RpcApplyQuestStateFlags(string userIdentifier, string[] flags)
+    {
+      PlayerQuestStateFlagService.ReplaceFlags(userIdentifier, flags);
     }
 
     // ── Owner 전용 초기화 ─────────────────────────────────────────────────────

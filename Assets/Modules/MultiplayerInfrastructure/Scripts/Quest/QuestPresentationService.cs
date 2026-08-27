@@ -190,6 +190,19 @@ namespace MultiplayerInfrastructure.Quest
     }
 
     /// <summary>
+    /// 현재 활성 퀘스트 또는 시나리오 마크가 지정한 상호작용을 안내 대상으로 등록했는지 반환한다.
+    /// 상호작용 자체의 노출을 현재 퀘스트 단계에 맞춰 제한할 때 사용한다.
+    /// </summary>
+    public bool HasActiveInteractionBinding(string entityIdentifier, string interactionIdentifier)
+    {
+      if (string.IsNullOrWhiteSpace(entityIdentifier) || string.IsNullOrWhiteSpace(interactionIdentifier))
+        return false;
+
+      return _interactionBindings.ContainsKey(new InteractionKey(
+        entityIdentifier.Trim(), interactionIdentifier.Trim()));
+    }
+
+    /// <summary>
     /// 시나리오 그래프의 QuestMark 노드가 켠 마크를 등록한다. 같은 대상에 이미 마크가 있으면 덮어쓴다.
     /// 아이콘 식별자를 비우면 대상 종류별 기본 퀘스트 마크 아이콘을 사용한다.
     /// </summary>

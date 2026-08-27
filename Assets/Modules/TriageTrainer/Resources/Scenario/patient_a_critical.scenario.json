@@ -4354,7 +4354,6 @@
     },
     "ACT_VITAL_ASSESS_A": {
       "eventIdentifier": "activate_patient_a_vital_assess",
-      "invokeOnRoleClient": true,
       "moveNextBehavior": "WaitUntilDone",
       "identifier": "ACT_VITAL_ASSESS_A",
       "nodeType": "InvokeEvent",

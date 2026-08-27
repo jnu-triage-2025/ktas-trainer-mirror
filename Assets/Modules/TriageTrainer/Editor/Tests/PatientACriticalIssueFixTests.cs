@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Scenario;
@@ -23,6 +25,8 @@ namespace TriageTrainer.Tests
       "Assets/Modules/TriageTrainer/Prefabs/Entities/MinecraftBoatLikes/level1_rapid_infuser.prefab";
     private const string PatientAScenarioPath =
       "Assets/Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json";
+    private const string PatientAQuestPath =
+      "Assets/Modules/TriageTrainer/Resources/Quest/patient_a_critical.quests.quest.json";
     private const string PatientAScenarioGlob = "patient_a_critical*.scenario.json";
     private const string PatientAScenarioSourcePath =
       "Documents/requirements/content-definitions/scenario/patient_a_critical.md";
@@ -516,6 +520,8 @@ namespace TriageTrainer.Tests
       Assert.That(vitalAssess, Is.Not.Null);
       Assert.That(vitalAssess.GetType().GetProperty("RequiredItemIdentifier")?.GetValue(vitalAssess),
         Is.EqualTo("vital_set"));
+      Assert.That(vitalAssess.GetType().GetProperty("ActionDialogue")?.GetValue(vitalAssess),
+        Is.EqualTo("(조금 더 정확한 값을 확인하자. 모니터를 연결하자.)"));
 
       string suctionSource = File.ReadAllText(Path.Combine(
         Directory.GetParent(Application.dataPath).FullName,
@@ -1075,6 +1081,169 @@ namespace TriageTrainer.Tests
         "ACT_AVPU_GCS_ASSESS_A", "activate_patient_a_avpu_gcs_assess", "V012");
     }
 
+    /// <summary>
+    /// 단계 개방 이벤트는 플레이어별 퀘스트 상태 플래그 풀을 갱신한다. 풀 변경은 서버 권위이므로
+    /// 배정 클라이언트에서만 실행되면(InvokeOnRoleClient) 아무 플레이어에게도 반영되지 않는다.
+    /// </summary>
+    [Test]
+    public void PatientAStageActivationsRunOnServerSoQuestStateFlagsReplicate()
+    {
+      var graph = ScenarioGraphLoader.LoadFromJson(
+        File.ReadAllText(Path.Combine(Application.dataPath,
+          "Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json")),
+        validateWithSchema: true);
+
+      var activationEvents = new HashSet<string>(StringComparer.Ordinal)
+      {
+        "activate_patient_a_vital_assess",
+        "activate_patient_a_avpu_gcs_assess",
+        "activate_patient_a_arrest_actions",
+        "activate_patient_a_stylet_removal",
+        "activate_patient_a_tpiece_attach",
+        "activate_patient_a_cpr2_actions",
+        "activate_patient_a_clothing_removal",
+        "rosc_monitor_ui",
+      };
+
+      var found = new HashSet<string>(StringComparer.Ordinal);
+      foreach (var pair in graph.Nodes)
+      {
+        if (pair.Value is not ScenarioInvokeEventNode invoke
+            || !activationEvents.Contains(invoke.EventIdentifier))
+          continue;
+
+        found.Add(invoke.EventIdentifier);
+        Assert.That(invoke.InvokeOnRoleClient, Is.False,
+          $"'{pair.Key}'({invoke.EventIdentifier})는 서버에서 실행되어야 퀘스트 상태 플래그가 복제됩니다.");
+      }
+
+      CollectionAssert.AreEquivalent(activationEvents, found,
+        "단계 개방 이벤트가 그래프에서 사라졌습니다.");
+    }
+
+    /// <summary>
+    /// 개방 이벤트가 올리는 플래그와, 그 플래그가 여는 상호작용 표가 서로 맞물려야 한다.
+    /// 어느 한쪽만 바뀌면 상호작용이 영영 열리지 않거나 처음부터 열려 있게 된다.
+    /// </summary>
+    [Test]
+    public void PatientAQuestStateFlagGateCoversEveryStageInteraction()
+    {
+      var expected = new Dictionary<string, string>(StringComparer.Ordinal)
+      {
+        { "patient_a/assess_vital", PatientACriticalQuestStateFlags.VitalAssess },
+        { "patient_a/assess_avpu_gcs", PatientACriticalQuestStateFlags.AvpuGcsAssess },
+        { "patient_a/assess_pulse_r1", PatientACriticalQuestStateFlags.ArrestPulseAssess },
+        { "patient_a/click_to_start_comp", PatientACriticalQuestStateFlags.Cpr1Actions },
+        { "patient_a/start_ambu_r1", PatientACriticalQuestStateFlags.Cpr1Actions },
+        { "patient_a/interact_patient_chest", PatientACriticalQuestStateFlags.Cpr1Actions },
+        { "patient_a/remove_tpiece", PatientACriticalQuestStateFlags.Cpr1Actions },
+        { "patient_a/remove_intu_stylet", PatientACriticalQuestStateFlags.StyletRemoval },
+        { "patient_a/interact_tpiece", PatientACriticalQuestStateFlags.TpieceAttach },
+        { "patient_a/interact_chest", PatientACriticalQuestStateFlags.Cpr2Actions },
+        { "patient_a/start_ambu_r2", PatientACriticalQuestStateFlags.Cpr2Actions },
+        { "patient_a/remove_patient_clothing", PatientACriticalQuestStateFlags.ClothingRemoval },
+        { "patient_a/assess_pulse_r2", PatientACriticalQuestStateFlags.RoscReassessment },
+        { "patient_a/assess_gcs_rosc", PatientACriticalQuestStateFlags.RoscReassessment },
+      };
+
+      CollectionAssert.AreEquivalent(
+        expected.Keys, PatientACriticalQuestStateFlags.GatedInteractionAddresses,
+        "게이트 대상 상호작용 목록이 달라졌습니다.");
+
+      foreach (var pair in expected)
+      {
+        string[] address = pair.Key.Split('/');
+        Assert.That(PatientACriticalQuestStateFlags.FindFlag(address[0], address[1]),
+          Is.EqualTo(pair.Value), $"'{pair.Key}'을 여는 플래그가 달라졌습니다.");
+      }
+    }
+
+    /// <summary>
+    /// 게이트가 꺼져 있으면(다른 시나리오) 판정에 관여하지 않아야 한다. 이 시나리오에서만 적용한다는
+    /// 범위 제한이 코드로 남아 있는지 확인한다.
+    /// </summary>
+    [Test]
+    public void PatientAQuestStateFlagGateIsInertWhileDisarmed()
+    {
+      PatientACriticalQuestStateFlags.Disarm();
+      Assert.That(PatientACriticalQuestStateFlags.IsArmed, Is.False);
+      Assert.That(
+        PatientACriticalQuestStateFlags.TryEvaluate("patient_a", "assess_vital", null, out _),
+        Is.False, "게이트가 꺼져 있으면 기존 판정 경로를 그대로 써야 합니다.");
+
+      PatientACriticalQuestStateFlags.ArmFor("patient_b_c_ct");
+      Assert.That(PatientACriticalQuestStateFlags.IsArmed, Is.False,
+        "다른 시나리오 식별자로는 게이트가 켜지면 안 됩니다.");
+    }
+
+    /// <summary>
+    /// 게이트를 켜면 이 시나리오의 플래그 어휘가 등록되어야 한다. 인스펙터가 목록에서 플래그를 고를 수
+    /// 있게 하는 근거이며, 풀이 아직 비어 있는 시점에도 어떤 값이 의미를 갖는지 알려 준다.
+    /// </summary>
+    [Test]
+    public void ArmingPublishesQuestStateFlagVocabulary()
+    {
+      try
+      {
+        PatientACriticalQuestStateFlags.ArmFor(PatientACriticalQuestStateFlags.ScenarioIdentifier);
+
+        var expected = new[]
+        {
+          PatientACriticalQuestStateFlags.VitalAssess,
+          PatientACriticalQuestStateFlags.AvpuGcsAssess,
+          PatientACriticalQuestStateFlags.ArrestPulseAssess,
+          PatientACriticalQuestStateFlags.Cpr1Actions,
+          PatientACriticalQuestStateFlags.StyletRemoval,
+          PatientACriticalQuestStateFlags.TpieceAttach,
+          PatientACriticalQuestStateFlags.Cpr2Actions,
+          PatientACriticalQuestStateFlags.ClothingRemoval,
+          PatientACriticalQuestStateFlags.RoscReassessment,
+        };
+        CollectionAssert.AreEquivalent(expected, PlayerQuestStateFlagService.KnownFlags);
+      }
+      finally
+      {
+        PatientACriticalQuestStateFlags.Disarm();
+      }
+
+      Assert.That(PlayerQuestStateFlagService.KnownFlags, Is.Empty,
+        "시나리오가 끝나면 어휘도 함께 내려가야 다른 시나리오의 도구 화면을 오염시키지 않습니다.");
+    }
+
+    /// <summary>플래그 풀은 플레이어별 집합이므로, 한 사람의 상태가 다른 사람에게 새면 안 된다.</summary>
+    [Test]
+    public void QuestStateFlagPoolIsScopedPerPlayer()
+    {
+      const string nurseB = "test-user-nurse-b";
+      const string nurseC = "test-user-nurse-c";
+      try
+      {
+        PlayerQuestStateFlagService.ReplaceFlags(
+          nurseB, new[] { PatientACriticalQuestStateFlags.VitalAssess });
+        PlayerQuestStateFlagService.ReplaceFlags(nurseC, Array.Empty<string>());
+
+        Assert.That(
+          PlayerQuestStateFlagService.Has(nurseB, PatientACriticalQuestStateFlags.VitalAssess),
+          Is.True);
+        Assert.That(
+          PlayerQuestStateFlagService.Has(nurseC, PatientACriticalQuestStateFlags.VitalAssess),
+          Is.False);
+
+        // 같은 값을 두 번 넣어도 집합이므로 하나만 남는다.
+        PlayerQuestStateFlagService.ReplaceFlags(nurseC, new[]
+        {
+          PatientACriticalQuestStateFlags.Cpr1Actions,
+          PatientACriticalQuestStateFlags.Cpr1Actions,
+        });
+        Assert.That(PlayerQuestStateFlagService.GetFlags(nurseC).Count, Is.EqualTo(1));
+      }
+      finally
+      {
+        PlayerQuestStateFlagService.ClearFlags(nurseB);
+        PlayerQuestStateFlagService.ClearFlags(nurseC);
+      }
+    }
+
     private static Dictionary<string, bool> ReadAssessActionEnabledStates(PatientController patient)
     {
       var assessActions = typeof(PatientController).GetField(
@@ -1118,6 +1287,22 @@ namespace TriageTrainer.Tests
       string projectRoot = Directory.GetParent(Application.dataPath).FullName;
       string scenarioJson = File.ReadAllText(Path.Combine(projectRoot, PatientAScenarioPath));
       var graph = ScenarioGraphLoader.LoadFromJson(scenarioJson, validateWithSchema: true);
+
+      var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+      jsonOptions.Converters.Add(new JsonStringEnumConverter());
+      var questDefinitions = JsonSerializer.Deserialize<QuestDefinitionRegistryPayload>(
+        File.ReadAllText(Path.Combine(projectRoot, PatientAQuestPath)), jsonOptions);
+      var moveQuest = questDefinitions?.Definitions?.SingleOrDefault(
+        definition => definition.Identifier == "Quest_Move_Patient_A");
+      Assert.That(moveQuest, Is.Not.Null);
+      Assert.That(moveQuest.PresentationBindings.Count(binding =>
+        binding.Activation == QuestPresentationActivation.WholeQuest
+        && binding.TargetType == QuestPresentationTargetType.Interaction
+        && binding.EntityIdentifier == "bed_a"
+        && binding.InteractionIdentifier == "move_bed"
+        && binding.IconIdentifier == "quest-interaction"
+        && binding.IconMode == QuestPresentationIconMode.ReplacePrimaryIcon), Is.EqualTo(1),
+        "남성 환자 이송 퀘스트는 침대의 '침대로 움직이기' 상호작용에만 퀘스트 마크를 표시해야 합니다.");
 
       // 퀘스트 발행 직후 목표 지점 마크를 켠다.
       Assert.That(graph.Nodes["Q006"].NextIdentifier, Is.EqualTo("QM_MOVE_A_SHOW"));
