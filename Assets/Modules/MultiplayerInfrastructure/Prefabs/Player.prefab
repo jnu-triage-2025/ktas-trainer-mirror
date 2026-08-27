@@ -272,7 +272,6 @@ MonoBehaviour:
   _keySpectatorFlyDown: 304
   _keyOpenQuestUI: 106
   _keyDropHeldItem: 113
-  _keyCameraDistanceModifier: 308
   _detector: {fileID: 0}
   _interactableHintUI: {fileID: 0}
   _dialoguePanelUIController: {fileID: 0}
@@ -356,7 +355,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584143054442926748
+  _initializedTimestamp: -8584138123500149648
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1

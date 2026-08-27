@@ -70,7 +70,7 @@ MonoBehaviour:
   _connectedLineObjects: []
   _allowMultipleConnections: 0
   connectionService: {fileID: 0}
-  _identifier: ivlineconnectionpoint
+  _identifier: ivlineconnectionpoint_002
   _autoGenerateIdentifier: 1
   _displayIcon: {fileID: 0}
   _interactConfigs:
@@ -155,6 +155,10 @@ MonoBehaviour:
   _requiredRaisedSignals: []
   _enabled: 0
   _consumeOnce: 1
+  _requiredItemIdentifier: 
+  _consumeRequiredItemCount: 0
+  _missingItemDialogue: 
+  _findItemDialogue: 
   _activateOnInteract: []
   _deactivateOnInteract: []
 --- !u!1 &1381168070861292904
@@ -233,6 +237,10 @@ MonoBehaviour:
   - click_to_start_comp
   _enabled: 0
   _consumeOnce: 1
+  _requiredItemIdentifier: 
+  _consumeRequiredItemCount: 0
+  _missingItemDialogue: 
+  _findItemDialogue: 
   _activateOnInteract: []
   _deactivateOnInteract: []
 --- !u!1 &1533989979856596171
@@ -310,6 +318,10 @@ MonoBehaviour:
   _requiredRaisedSignals: []
   _enabled: 0
   _consumeOnce: 1
+  _requiredItemIdentifier: 
+  _consumeRequiredItemCount: 0
+  _missingItemDialogue: 
+  _findItemDialogue: 
   _activateOnInteract:
   - {fileID: 8316904770520101598}
   - {fileID: 2773350314614107974}
@@ -394,7 +406,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4df3cc4b0f7d4141bd6e9f57d6657ea2, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.OxyLine.OxyLinePairInteractable
   _localEndpoint: {fileID: 1599706029501451718}
   _counterpart: {fileID: 0}
@@ -476,6 +488,10 @@ MonoBehaviour:
   _requiredRaisedSignals: []
   _enabled: 0
   _consumeOnce: 1
+  _requiredItemIdentifier: 
+  _consumeRequiredItemCount: 0
+  _missingItemDialogue: 
+  _findItemDialogue: 
   _activateOnInteract: []
   _deactivateOnInteract: []
 --- !u!1 &2407634092771371427
@@ -553,6 +569,10 @@ MonoBehaviour:
   _requiredRaisedSignals: []
   _enabled: 0
   _consumeOnce: 1
+  _requiredItemIdentifier: 
+  _consumeRequiredItemCount: 0
+  _missingItemDialogue: 
+  _findItemDialogue: 
   _activateOnInteract: []
   _deactivateOnInteract:
   - {fileID: 8803091818943228428}
@@ -631,6 +651,10 @@ MonoBehaviour:
   _requiredRaisedSignals: []
   _enabled: 0
   _consumeOnce: 1
+  _requiredItemIdentifier: 
+  _consumeRequiredItemCount: 0
+  _missingItemDialogue: 
+  _findItemDialogue: 
   _activateOnInteract: []
   _deactivateOnInteract: []
 --- !u!1 &3283719682526545730
@@ -708,6 +732,10 @@ MonoBehaviour:
   _requiredRaisedSignals: []
   _enabled: 0
   _consumeOnce: 1
+  _requiredItemIdentifier: 
+  _consumeRequiredItemCount: 0
+  _missingItemDialogue: 
+  _findItemDialogue: 
   _activateOnInteract: []
   _deactivateOnInteract: []
 --- !u!1 &4077515750642718864
@@ -891,34 +919,66 @@ MonoBehaviour:
     _displayText: "\uD65C\uB825\uC9D5\uD6C4 \uC0AC\uC815"
     _assessSignal: show_vital_patient_a
     _requiredItemIdentifier: vital_set
-    _missingItemDialogue: "\uD65C\uB825\uC9D5\uD6C4 \uCE21\uC815\uB3C4\uAD6C\uB97C \uAC16\uACE0 \uC788\uC9C0 \uC54A\uB2E4."
+    _missingItemDialogue: "\uD65C\uB825\uC9D5\uD6C4 \uCE21\uC815\uB3C4\uAD6C\uB97C
+      \uAC16\uACE0 \uC788\uC9C0 \uC54A\uB2E4."
     _findItemDialogue: "\uD65C\uB825\uC9D5\uD6C4 \uCE21\uC815\uB3C4\uAD6C\uB97C \uCC3E\uC790."
+    _actionDialogue: 
+    _resultDialogue: 
     _enabled: 0
   - _identifier: assess_pulse_r1
     _displayText: "\uB9E5\uBC15 \uD655\uC778"
     _assessSignal: check_pulse_patient_a_r1
-    _actionDialogue: "(\uD658\uC790\uC758 \uBAA9\uC5D0 \uC190\uC744 \uB300\uACE0 \uACBD\uB3D9\uB9E5\uC744 \uCD09\uC9C0\uD55C\uB2E4.)"
+    _requiredItemIdentifier: 
+    _missingItemDialogue: 
+    _findItemDialogue: 
+    _actionDialogue: "(\uD658\uC790\uC758 \uBAA9\uC5D0 \uC190\uC744 \uB300\uACE0
+      \uACBD\uB3D9\uB9E5\uC744 \uCD09\uC9C0\uD55C\uB2E4.)"
     _resultDialogue: "(\uC544\uBB34\uAC83\uB3C4 \uB290\uAEF4\uC9C0\uC9C0 \uC54A\uB294\uB2E4.)"
     _enabled: 0
   - _identifier: assess_pulse_r2
     _displayText: "\uB9E5\uBC15 \uD655\uC778"
     _assessSignal: check_pulse_patient_a_r2
+    _requiredItemIdentifier: 
+    _missingItemDialogue: 
+    _findItemDialogue: 
+    _actionDialogue: 
+    _resultDialogue: 
     _enabled: 0
   - _identifier: assess_gcs_rosc
     _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC7AC\uC0AC\uC815"
     _assessSignal: check_gcs_a_rosc
+    _requiredItemIdentifier: 
+    _missingItemDialogue: 
+    _findItemDialogue: 
+    _actionDialogue: 
+    _resultDialogue: 
     _enabled: 0
   - _identifier: assess_avpu_gcs
     _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC0AC\uC815(AVPU/GCS)"
     _assessSignal: check_avpu_gcs_patient_a
+    _requiredItemIdentifier: 
+    _missingItemDialogue: 
+    _findItemDialogue: 
+    _actionDialogue: 
+    _resultDialogue: 
     _enabled: 0
   - _identifier: assess_pulse
     _displayText: "\uB9E5\uBC15 \uD655\uC778"
     _assessSignal: check_pulse_patient_a
+    _requiredItemIdentifier: 
+    _missingItemDialogue: 
+    _findItemDialogue: 
+    _actionDialogue: 
+    _resultDialogue: 
     _enabled: 0
   - _identifier: assess_gcs
     _displayText: "GCS \uC7AC\uC0AC\uC815"
     _assessSignal: check_gcs_patient_a
+    _requiredItemIdentifier: 
+    _missingItemDialogue: 
+    _findItemDialogue: 
+    _actionDialogue: 
+    _resultDialogue: 
     _enabled: 0
   _capsuleCollider: {fileID: 3415111579364395856}
   _standingCapsuleCenter: {x: 0, y: 0.9, z: 0}
@@ -1023,6 +1083,7 @@ MonoBehaviour:
       v6: 0
   _treatmentState:
     appliedTreatments: []
+  _aedConnectionPoints: []
   _triageConfig:
     _assessable: 0
     _changeAssessableOnAssessDone: 0
@@ -1058,7 +1119,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584143054442926748
+  _initializedTimestamp: -8584138123500149648
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -1414,6 +1475,10 @@ MonoBehaviour:
   _requiredRaisedSignals: []
   _enabled: 0
   _consumeOnce: 1
+  _requiredItemIdentifier: 
+  _consumeRequiredItemCount: 0
+  _missingItemDialogue: 
+  _findItemDialogue: 
   _activateOnInteract:
   - {fileID: 8549509279935089400}
   _deactivateOnInteract:
