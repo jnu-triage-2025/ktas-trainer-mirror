@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 6008763409848515848}
   - component: {fileID: 6016408113005942236}
   - component: {fileID: -2517495696321276197}
+  - component: {fileID: 7304756145376510507}
   m_Layer: 0
   m_Name: PatientMonitorPlane
   m_TagString: Untagged
@@ -297,7 +298,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584137985247902418
+  _initializedTimestamp: -8584137933686777778
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -340,3 +341,24 @@ MonoBehaviour:
   _componentIndexCache: 1
   _addedNetworkObject: {fileID: 6016408113005942236}
   _networkObjectCache: {fileID: 6016408113005942236}
+--- !u!65 &7304756145376510507
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5369227849851395551}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 10.15, y: 0.15, z: 10.2}
+  m_Center: {x: 0, y: 0, z: 0}

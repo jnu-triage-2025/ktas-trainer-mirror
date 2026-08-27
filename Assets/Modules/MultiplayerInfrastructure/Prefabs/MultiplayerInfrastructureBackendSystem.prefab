@@ -54,7 +54,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6477868594539004900}
-  - component: {fileID: 7777777777777777777}
   - component: {fileID: 1090021983889225486}
   - component: {fileID: -2615499957622416118}
   m_Layer: 0
@@ -82,22 +81,6 @@ Transform:
   - {fileID: 7242220265281376202}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7777777777777777777
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6316362055708797182}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d68fa75eaa92245d29715d8b1552ea52, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.FishNetSupports.FishNetSupport
-  networkManager: {fileID: 0}
-  fallbackPlayerPrefab: {fileID: 0}
-  hideNetworkHudCanvasOnSessionStart: 1
-  autoStartFromRegistryWhenNoBootstrapper: 1
 --- !u!114 &1090021983889225486
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -350,20 +350,20 @@ flags: ["refactor-required"]
             1. 설치 신호(`sig.connect_wall_component_1`) 수신 시 이 목표를 완료 처리
             2. Dialogue
               - Speaker: `@s`
-              - Content: "(흡인기를 벽에 설치했다. 앙카우어 팁을 연결하자.)"
-            3. 퀘스트 목표 표기를 "앙카우어 팁을 흡인기에 연결하기"로 변경
-    4. "앙카우어 팁 연결" Interaction 활성화
-      - 퀘스트 마크: 설치된 흡인기 / 앙카우어 팁 연결 상호작용
+              - Content: "(흡인기를 벽에 설치했다. 양카우어 팁을 연결하자.)"
+            3. 퀘스트 목표 표기를 "양카우어 팁을 흡인기에 연결하기"로 변경
+    4. "양카우어 팁 연결" Interaction 활성화
+      - 퀘스트 마크: 설치된 흡인기 / 양카우어 팁 연결 상호작용
       - 기술 노트: `yankauer_suction_ready`는 `suction_line` + `yankauer` 조합 산출물이다. 조합은 노드가 아니라 crafting 시스템으로 처리한다.
       - Interaction 활성화 시 다음 재생
         - 인벤토리에 `yankauer_suction_ready` 아이템이 있는지 확인
           - 없다면 다음 재생
             1. Dialogue
               - Speaker: `@s`
-              - Content: "(석션 라인과 앙카우어 팁을 조립해두지 않았다.)"
+              - Content: "(석션 라인과 양카우어 팁을 조립해두지 않았다.)"
             2. Dialogue
               - Speaker: `@s`
-              - Content: "(석션 라인과 앙카우어 팁을 찾아 조립하자.)"
+              - Content: "(석션 라인과 양카우어 팁을 찾아 조립하자.)"
           - 있다면 다음 처리
             1. Dialogue
               - Speaker: `@s`

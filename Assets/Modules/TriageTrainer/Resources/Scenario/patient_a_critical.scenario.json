@@ -3209,7 +3209,7 @@
     },
     "D_SUCTION_INSTALLED_A": {
       "speakerName": "@s",
-      "dialogueContent": "(흡인기를 벽에 설치했다. 앙카우어 팁을 연결하자.)",
+      "dialogueContent": "(흡인기를 벽에 설치했다. 양카우어 팁을 연결하자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
