@@ -18,10 +18,10 @@ if ($null -eq $python) {
     $pythonArguments = @('-3')
 }
 if ($null -eq $python) {
-    $python = Get-Command python3 -ErrorAction SilentlyContinue
+    $python = Get-Command python -ErrorAction SilentlyContinue
 }
 if ($null -eq $python) {
-    throw 'Python 3 is required to create and push the code mirror.'
+    throw 'Python is required to create and push the code mirror.'
 }
 
 & $python.Source @pythonArguments 'Tools/code-mirror/code_mirror.py' '--config' 'Tools/code-mirror/code-mirror.toml' '--generate-config'
