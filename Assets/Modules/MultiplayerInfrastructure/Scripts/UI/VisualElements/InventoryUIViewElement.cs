@@ -51,6 +51,9 @@ namespace MultiplayerInfrastructure.UI
     private Label _tooltipDetail;
     private Label _tooltipStack;
     private int _hoveredSlotIndex = -1;
+    /// <summary>마지막으로 관측된 포인터의 패널 좌표. 포인터를 움직이지 않은 채 슬롯 내용이
+    /// 바뀌었을 때(핫바 키 교환 등) 툴팁을 같은 위치에 다시 그리기 위해 보관한다.</summary>
+    private Vector2 _lastPointerPanelPosition;
 
     // ── 장비 슬롯 (Equipment Panel) ──────────────────────────────────
     /// <summary>
@@ -700,6 +703,7 @@ namespace MultiplayerInfrastructure.UI
     private void HandleSlotPointerEnter(int slotIndex, PointerEnterEvent evt)
     {
       _hoveredSlotIndex = slotIndex;
+      _lastPointerPanelPosition = evt.position;
 
       // 아이템을 들고 있는 동안에는 ghost가 우선이며 툴팁은 방해되므로 표시하지 않는다.
       if (_heldItem != null)
@@ -717,6 +721,50 @@ namespace MultiplayerInfrastructure.UI
         _hoveredSlotIndex = -1;
 
       HideTooltip();
+    }
+
+    /// <summary>
+    /// 커서가 올라가 있는 인벤토리 슬롯과 지정한 핫바 슬롯의 아이템을 서로 맞바꾼다.
+    /// 핫바는 인벤토리 그리드의 첫 번째 행과 같은 데이터를 공유하므로,
+    /// 핫바 슬롯 인덱스를 그대로 인벤토리 슬롯 인덱스로 사용한다.
+    /// 커서에 아이템을 들고 있는 동안에는 어느 쪽으로 옮길지가 모호하므로 동작하지 않는다.
+    /// </summary>
+    /// <returns>실제로 교환이 일어났으면 true.</returns>
+    public bool TrySwapHoveredSlotWithHotbarSlot(int hotbarSlotIndex)
+    {
+      if (!IsVisible || _heldItem != null)
+        return false;
+
+      // 핫바는 그리드 첫 행이므로 유효 범위는 열 개수로 제한된다.
+      if (hotbarSlotIndex < 0 || hotbarSlotIndex >= _columns || hotbarSlotIndex >= _slotElements.Count)
+        return false;
+
+      // 음수 hover 코드는 장비 슬롯을 의미하므로 교환 대상에서 제외한다.
+      int hoveredIndex = _hoveredSlotIndex;
+      if (hoveredIndex < 0 || hoveredIndex >= _slotElements.Count)
+        return false;
+      if (hoveredIndex == hotbarSlotIndex)
+        return false;
+
+      var hoveredSlot = GetSlotModel(hoveredIndex);
+      var hotbarSlot = GetSlotModel(hotbarSlotIndex);
+      if (hoveredSlot == null || hotbarSlot == null)
+        return false;
+      if (hoveredSlot.IsEmpty && hotbarSlot.IsEmpty)
+        return false;
+
+      var hoveredItem = hoveredSlot.TakeAll();
+      var hotbarItem = hotbarSlot.TakeAll();
+      hoveredSlot.SetItem(hotbarItem);
+      hotbarSlot.SetItem(hoveredItem);
+
+      RefreshSlotVisual(hoveredIndex);
+      RefreshSlotVisual(hotbarSlotIndex);
+      NotifySlotsMutated();
+
+      // 커서 아래 슬롯의 내용이 바뀌었으므로 툴팁을 현재 포인터 위치 기준으로 다시 표시한다.
+      ShowTooltipForSlot(hoveredIndex, _lastPointerPanelPosition);
+      return true;
     }
 
     private void ShowTooltipForSlot(int slotIndex, Vector2 panelPosition)
@@ -831,6 +879,8 @@ namespace MultiplayerInfrastructure.UI
 
     private void OnPointerMoveForTooltip(PointerMoveEvent evt)
     {
+      _lastPointerPanelPosition = evt.position;
+
       if (_tooltip == null || _tooltip.style.display.value == DisplayStyle.None)
         return;
 

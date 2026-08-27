@@ -32,6 +32,9 @@ namespace MultiplayerInfrastructure.UI
       get { return _selectedSlot; }
     }
 
+    /// <summary>현재 핫바가 실제로 표시 중인 슬롯 수. 초기화 전에는 설정값을 반환한다.</summary>
+    public int SlotCount => _hotbar != null ? _hotbar.SlotCount : hotbarSlotCount;
+
     public void SetupHotbarUI()
     {
       if (_uiDocument.IsUnityNull())

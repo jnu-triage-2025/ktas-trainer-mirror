@@ -209,6 +209,14 @@ namespace MultiplayerInfrastructure.UI
 
     public void ToggleRoot(bool visible) => _view?.SetVisible(visible);
 
+    /// <summary>
+    /// 커서가 올라가 있는 인벤토리 슬롯과 지정한 핫바 슬롯의 아이템을 서로 맞바꾼다.
+    /// 인벤토리가 열려 있는 동안 핫바 숫자 키 입력을 처리하기 위해 PlayerController 가 호출한다.
+    /// </summary>
+    /// <returns>실제로 교환이 일어났으면 true.</returns>
+    public bool TrySwapHoveredSlotWithHotbarSlot(int hotbarSlotIndex)
+      => _view != null && _view.TrySwapHoveredSlotWithHotbarSlot(hotbarSlotIndex);
+
     public void OnOverlayPushed()
     {
       // 캐시된 뷰가 현재 활성 패널에서 분리된 상태라면(예: network 프리팹 재활성으로

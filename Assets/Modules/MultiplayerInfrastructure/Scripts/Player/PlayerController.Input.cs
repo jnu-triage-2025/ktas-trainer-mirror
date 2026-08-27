@@ -64,6 +64,10 @@ namespace MultiplayerInfrastructure.Player
       if (HandleOpenQuestUIInput())
         return;
 
+      // 인벤토리가 열려 있는 동안에는 핫바 숫자 키가 선택 변경 대신 슬롯 교환으로 동작한다.
+      if (HandleInventoryHotbarSwapInput())
+        return;
+
       if (!UIOverlayStack.IsEmpty())
         return;
 
