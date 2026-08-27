@@ -12,7 +12,7 @@ remote = "origin"
 [destination]
 # Any Git remote URL is supported. SSH URLs need no token when the key has write access.
 # For HTTPS, configure the provider's token and username in Tools/code-mirror/.env.
-url = "https://github.com/jnu-triage-2025/ktas-trainer-mirrortest.git"
+url = "https://github.com/jnu-triage-2025/ktas-trainer-mirror.git"
 token_env = "GIT_HTTP_TOKEN"
 http_username = "git"
 
@@ -65,10 +65,11 @@ preserve_meta = true
 force = true
 scope = { mode = "always" }
 
-# Minecraft-derived item assets. Related C# gameplay code remains included.
+# Minecraft-derived texture assets in MultiplayerInfrastructure. Related C# gameplay code remains included.
 [[rules]]
 match = { paths = [
-  "**/stone_block.*", "**/wood_block.*", "**/StoneBlock.asset", "**/WoodBlock.asset",
+  "Assets/Modules/MultiplayerInfrastructure/Resources/Textures/Items/stone_block.png",
+  "Assets/Modules/MultiplayerInfrastructure/Resources/Textures/Items/wood_block.png",
 ] }
 preserve_meta = true
 force = true
