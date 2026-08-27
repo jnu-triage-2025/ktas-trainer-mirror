@@ -1,6 +1,7 @@
 name: ktas-trainer-$(Date:yyyyMMdd)$(Rev:.r)
 
 trigger:
+  batch: true
   branches:
     include:
       - '*'
@@ -26,6 +27,10 @@ parameters:
     displayName: 'Build macOS player'
     type: boolean
     default: false
+  - name: mirrorAgentPool
+    displayName: 'Self-hosted pool for code mirroring'
+    type: string
+    default: 'windowsAgentPool'
 
 variables:
   buildName: 'ktas-trainer'
@@ -33,6 +38,33 @@ variables:
   windowsAgentPool: 'windowsAgentPool'
 
 stages:
+  - stage: Mirror
+    displayName: 'Code mirror'
+    condition: and(succeeded(), ${{ eq(parameters.agentMode, 'selfHosted') }})
+    jobs:
+      - job: PushCodeMirror
+        displayName: 'Create and push filtered Git mirror'
+        pool:
+          name: ${{ parameters.mirrorAgentPool }}
+        steps:
+          # The mirror reads every remote-tracking branch and tag, so a shallow
+          # checkout cannot provide a complete source history.
+          - checkout: self
+            fetchDepth: 0
+          - powershell: |
+              & .\Tools\CI\mirror-code.ps1
+            displayName: 'Create and push code mirror (Windows)'
+            condition: eq(variables['Agent.OS'], 'Windows_NT')
+            env:
+              GIT_HTTP_TOKEN: $(GIT_HTTP_TOKEN)
+          - bash: |
+              chmod +x Tools/CI/mirror-code.sh
+              Tools/CI/mirror-code.sh
+            displayName: 'Create and push code mirror (macOS)'
+            condition: eq(variables['Agent.OS'], 'Darwin')
+            env:
+              GIT_HTTP_TOKEN: $(GIT_HTTP_TOKEN)
+
   - stage: Lint
     displayName: 'C# lint'
     jobs:
