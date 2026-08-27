@@ -230,7 +230,11 @@ def excluded_paths(config: dict[str, Any], commit: str, branches: set[str]) -> l
         # generic size and extension rules.
         force_include = policy == "include" or excluded_module_meta
         force_exclude = any(rule.get("force", False) and matches(rule, path, size) for rule in active)
-        if kind != "blob" or force_exclude or not allowed_by_default(config, path) or (not force_include and any(matches(rule, path, size) for rule in active)):
+        # Keep explicitly allowed submodule gitlinks so directories such as
+        # Tools remain visible in the filtered mirror. Other tree entry kinds
+        # are still excluded because they cannot be represented safely here.
+        explicitly_allowed_gitlink = kind == "commit" and allowed_by_default(config, path)
+        if (kind != "blob" and not explicitly_allowed_gitlink) or force_exclude or not allowed_by_default(config, path) or (not force_include and any(matches(rule, path, size) for rule in active)):
             result.append(path)
     return result
 

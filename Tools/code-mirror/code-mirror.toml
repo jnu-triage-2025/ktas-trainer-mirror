@@ -25,7 +25,7 @@ extensions = [
   ".uxml", ".uss", ".csproj", ".props", ".targets", ".sln", ".gitignore", ".gitattributes",
 ]
 file_names = ["LICENSE", "LICENSE.*", "NOTICE", "NOTICE.*", "README", "README.*", ".gitmodules"]
-paths = []
+paths = ["Tools/**"]
 
 # These manual policies have higher priority than code-mirror.gen.toml.
 # Included modules bypass the allow-list and all generic exclusion rules.

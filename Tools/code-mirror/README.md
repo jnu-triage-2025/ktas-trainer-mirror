@@ -57,4 +57,4 @@ python3 Tools/code-mirror/code_mirror.py --config Tools/code-mirror/code-mirror.
 
 ## 한계
 
-Git 서명, 원본 커밋 해시, Git LFS 객체 자체는 복제하지 않습니다. 원본 annotated tag는 변환된 커밋을 가리키는 lightweight tag가 되므로 태그 메시지와 서명도 보존하지 않습니다. 서브모듈 gitlink와 심볼릭 링크도 기본 허용 목록에 포함되지 않습니다. 필요하면 `paths` 허용 목록으로 검토 후 추가할 수 있습니다.
+Git 서명, 원본 커밋 해시, Git LFS 객체 자체는 복제하지 않습니다. 원본 annotated tag는 변환된 커밋을 가리키는 lightweight tag가 되므로 태그 메시지와 서명도 보존하지 않습니다. 서브모듈 gitlink와 심볼릭 링크는 기본 허용 목록에 포함되지 않지만, `paths` 허용 목록으로 명시한 경로의 gitlink는 유지됩니다.
