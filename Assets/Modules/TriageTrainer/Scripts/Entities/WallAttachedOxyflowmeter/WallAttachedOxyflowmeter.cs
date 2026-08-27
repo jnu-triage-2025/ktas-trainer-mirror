@@ -36,7 +36,8 @@ namespace TriageTrainer.Entity
   /// </para>
   /// </summary>
   [DisallowMultipleComponent]
-  public class WallAttachedOxyflowmeter : StaticObjectDisplayment, INearestOnlyInteract
+  public class WallAttachedOxyflowmeter : StaticObjectDisplayment, INearestOnlyInteract,
+    IAttachCompletionSignalConfigurable
   {
     public const string QuestPresentationInteractionIdentifier = "oxyflowmeter";
     public const string UnmarkedInteractionIdentifier = "oxyflowmeter_unmarked";
@@ -419,6 +420,15 @@ namespace TriageTrainer.Entity
         $"Oxygen flowmeter attachment state: entity={EntityIdentifier}, attached={attached}",
         EntityIdentifier);
       AttachmentStateChanged?.Invoke(this, attached);
+    }
+
+    /// <summary>
+    /// 배치 데이터가 설치 완료 신호를 다시 주입할 때 호출한다. 이 값을 프리팹 오버라이드로만
+    /// 남기면 레이아웃을 다시 생성할 때 지워지므로, 재생성 경로에서 항상 이 메서드로 복원한다.
+    /// </summary>
+    public void SetAttachCompletionSignalForEditor(string signal)
+    {
+      _attachCompletionSignal = signal == null ? string.Empty : signal.Trim();
     }
 
     private void RaiseCompletionSignalIfAny()

@@ -39,6 +39,10 @@ namespace TriageTrainer.Tests
     private const string WallSuctionItemPath =
       "Assets/Modules/TriageTrainer/ScriptableObjects/ItemBaseModels/wall_suction.asset";
     private const string OverworldScenePath = "Assets/Scenes/OverworldScene.unity";
+    private const string StaticEntityLayoutPath =
+      "Assets/Modules/TriageTrainer/ScriptableObjects/StaticEntityLayouts/OverworldPatientSupports.asset";
+    private const string OverworldInitializerPath =
+      "Assets/Modules/TriageTrainer/Editor/Utils/OverworldGameObjectInitializer/OverworldGameObjectInitializer.cs";
 
     [Test]
     public void PatientAInstantiationAppliesInitialTreatmentDisplayState()
@@ -1475,6 +1479,45 @@ namespace TriageTrainer.Tests
         "- target: \\{fileID: 1599417147604718707, guid: 207c22358b94b49dc9fbd62684abe676, type: 3\\}\\s+" +
         "propertyPath: _attachCompletionSignal\\s+value: connect_wall_component_1",
         scene);
+
+      // 씬의 배치는 레이아웃 정의에서 다시 생성되므로, 배치 데이터가 신호를 갖고 있어야
+      // 재생성 후에도 값이 남는다.
+      Assert.That(FindLayoutEntity("zone_a:wall_suction").attachCompletionSignal,
+        Is.EqualTo("connect_wall_component_1"),
+        "배치 데이터가 흡인기 설치 완료 신호를 갖고 있어야 레이아웃 재생성에도 값이 유지됩니다.");
+    }
+
+    [Test]
+    public void StaticEntityLayoutRegenerationRestoresWallAttachmentCompletionSignals()
+    {
+      // 설치 완료 신호를 씬의 프리팹 오버라이드로만 두면 레이아웃을 다시 생성할 때 지워진다.
+      // 배치 데이터가 값을 갖고, 재생성 경로가 그 값을 다시 주입해야 재발을 막을 수 있다.
+      var layout = AssetDatabase.LoadAssetAtPath<StaticEntityLayoutDefinition>(StaticEntityLayoutPath);
+      Assert.That(layout, Is.Not.Null, $"레이아웃 정의를 찾지 못했습니다: {StaticEntityLayoutPath}");
+      Assert.That(layout.Validate(out var validationError), Is.True, validationError);
+
+      Assert.That(typeof(IAttachCompletionSignalConfigurable).IsAssignableFrom(typeof(WallAttachedOxyflowmeter)),
+        Is.True, "유량계는 배치 데이터가 설치 완료 신호를 주입할 수 있어야 합니다.");
+      Assert.That(typeof(IAttachCompletionSignalConfigurable).IsAssignableFrom(typeof(WallAttachedWallSuction)),
+        Is.True, "흡인기는 배치 데이터가 설치 완료 신호를 주입할 수 있어야 합니다.");
+
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string initializerSource = File.ReadAllText(Path.Combine(projectRoot, OverworldInitializerPath));
+      StringAssert.Contains("SetAttachCompletionSignalForEditor(entity.attachCompletionSignal)", initializerSource,
+        "레이아웃 재생성 경로가 배치 데이터의 설치 완료 신호를 다시 주입해야 합니다.");
+    }
+
+    private static StaticEntityTransformDefinition FindLayoutEntity(string identifier)
+    {
+      var layout = AssetDatabase.LoadAssetAtPath<StaticEntityLayoutDefinition>(StaticEntityLayoutPath);
+      Assert.That(layout, Is.Not.Null, $"레이아웃 정의를 찾지 못했습니다: {StaticEntityLayoutPath}");
+
+      var matches = (layout.groups ?? new List<StaticEntityLayoutGroup>())
+        .SelectMany(group => group.entities ?? new List<StaticEntityTransformDefinition>())
+        .Where(entity => string.Equals(entity.identifier?.Trim(), identifier, StringComparison.Ordinal))
+        .ToArray();
+      Assert.That(matches.Length, Is.EqualTo(1), $"배치 데이터에서 '{identifier}' 항목을 하나만 찾아야 합니다.");
+      return matches[0];
     }
 
     [Test]
@@ -1489,6 +1532,12 @@ namespace TriageTrainer.Tests
         "- target: \\{fileID: 5049346019555613618, guid: 1c79c98d39b2746bea8a2d4cc857559d, type: 3\\}\\s+" +
         "propertyPath: _attachCompletionSignal\\s+value: connect_wall_component_2",
         scene);
+
+      // 씬의 배치는 레이아웃 정의에서 다시 생성되므로, 배치 데이터가 신호를 갖고 있어야
+      // 재생성 후에도 값이 남는다.
+      Assert.That(FindLayoutEntity("zone_a:oxyflowmeter").attachCompletionSignal,
+        Is.EqualTo("connect_wall_component_2"),
+        "배치 데이터가 유량계 설치 완료 신호를 갖고 있어야 레이아웃 재생성에도 값이 유지됩니다.");
 
       // 퀘스트 표시 바인딩(patient_a_oxyflowmeter / oxyflowmeter)이 실제 상호작용과 맞물려야 한다.
       string oxyflowmeterSource = File.ReadAllText(Path.Combine(projectRoot,

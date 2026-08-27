@@ -323,7 +323,7 @@ namespace TriageTrainer.Editor.Utils
               entity.useDefaultZoneSize ? new Vector3(3f, 3.5f, 3f) : entity.zoneSize);
           }
           else if (entity.type == StaticEntityLayoutType.WallSuction || entity.type == StaticEntityLayoutType.Oxyflowmeter)
-            SetStaticObjectIdentifier(instance, entity.identifier);
+            ConfigureWallAttachment(instance, entity);
 #if UNITY_EDITOR
           if (!Application.isPlaying)
             Undo.RegisterCreatedObjectUndo(instance, "Create Static Entity");
@@ -332,10 +332,16 @@ namespace TriageTrainer.Editor.Utils
       }
     }
 
-    private static void SetStaticObjectIdentifier(GameObject instance, string identifier)
+    private static void ConfigureWallAttachment(GameObject instance, StaticEntityTransformDefinition entity)
     {
       var component = instance.GetComponent<MultiplayerInfrastructure.ItemSystem.StaticObjectDisplayment>();
-      component?.SetEntityIdentifier(identifier);
+      component?.SetEntityIdentifier(entity.identifier);
+
+      // 설치 완료 신호를 씬의 프리팹 오버라이드로만 두면, 레이아웃을 다시 생성할 때 인스턴스가
+      // 통째로 교체되면서 값이 사라진다. 그러면 설치해도 신호가 올라가지 않아 퀘스트 목표와
+      // 시나리오 검증 노드가 영구히 대기한다. 배치 데이터를 진실 원천으로 삼아 매번 다시 주입한다.
+      var signalTarget = instance.GetComponent<IAttachCompletionSignalConfigurable>();
+      signalTarget?.SetAttachCompletionSignalForEditor(entity.attachCompletionSignal);
     }
 
     private static GameObject InstantiatePrefab(GameObject prefab)

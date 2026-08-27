@@ -17,6 +17,8 @@ namespace TriageTrainer.Editor
         rows += 2;
       if (type == StaticEntityLayoutType.PatientCareDescriptionZone)
         rows += 2;
+      if (StaticEntityLayoutDefinition.SupportsAttachCompletionSignal(type))
+        rows += 1;
       return rows * EditorGUIUtility.singleLineHeight + (rows - 1) * Gap;
     }
 
@@ -42,6 +44,11 @@ namespace TriageTrainer.Editor
         DrawOptional(position, ref y, line, property.FindPropertyRelative("useDefaultZoneCenter"), property.FindPropertyRelative("zoneCenter"), "Zone Center");
         DrawOptional(position, ref y, line, property.FindPropertyRelative("useDefaultZoneSize"), property.FindPropertyRelative("zoneSize"), "Zone Size");
       }
+
+      // 설치 완료 신호는 벽면 설치 장비에만 의미가 있다. 이 값을 배치 데이터에 두어야
+      // 레이아웃을 다시 생성해도 신호 설정이 남는다.
+      if (StaticEntityLayoutDefinition.SupportsAttachCompletionSignal(type))
+        Draw(position, ref y, line, property.FindPropertyRelative("attachCompletionSignal"), "Attach Completion Signal");
 
       EditorGUI.EndProperty();
     }

@@ -31,6 +31,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 0, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 0, y: 0, z: 0}
+      attachCompletionSignal: 
     - type: 2
       identifier: zone_0:oxyflowmeter
       useDefaultPosition: 0
@@ -45,6 +46,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 0, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 0, y: 0, z: 0}
+      attachCompletionSignal: 
     - type: 1
       identifier: zone_0:wall_suction
       useDefaultPosition: 0
@@ -59,6 +61,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 0, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 0, y: 0, z: 0}
+      attachCompletionSignal: 
     - type: 3
       identifier: zone_0:zone
       useDefaultPosition: 0
@@ -73,6 +76,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 1.5, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 2.2, y: 3.5, z: 3}
+      attachCompletionSignal: 
   - entities:
     - type: 0
       identifier: zone_1:bed_snap_point
@@ -88,6 +92,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 0, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 0, y: 0, z: 0}
+      attachCompletionSignal: 
     - type: 2
       identifier: zone_1:oxyflowmeter
       useDefaultPosition: 0
@@ -102,6 +107,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 0, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 0, y: 0, z: 0}
+      attachCompletionSignal: 
     - type: 1
       identifier: zone_1:wall_suction
       useDefaultPosition: 0
@@ -116,6 +122,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 0, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 0, y: 0, z: 0}
+      attachCompletionSignal: 
     - type: 3
       identifier: zone_1:zone
       useDefaultPosition: 0
@@ -130,6 +137,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 1.5, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 2.2, y: 3.5, z: 3}
+      attachCompletionSignal: 
   - entities:
     - type: 0
       identifier: zone_2:bed_snap_point
@@ -145,6 +153,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 0, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 0, y: 0, z: 0}
+      attachCompletionSignal: 
     - type: 2
       identifier: zone_2:oxyflowmeter
       useDefaultPosition: 0
@@ -159,6 +168,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 0, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 0, y: 0, z: 0}
+      attachCompletionSignal: 
     - type: 1
       identifier: zone_2:wall_suction
       useDefaultPosition: 0
@@ -173,6 +183,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 0, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 0, y: 0, z: 0}
+      attachCompletionSignal: 
     - type: 3
       identifier: zone_2:zone
       useDefaultPosition: 0
@@ -187,6 +198,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 1.5, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 2.2, y: 3.5, z: 3}
+      attachCompletionSignal: 
   - entities:
     - type: 0
       identifier: zone_3:bed_snap_point
@@ -202,6 +214,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 0, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 0, y: 0, z: 0}
+      attachCompletionSignal: 
     - type: 2
       identifier: zone_3:oxyflowmeter
       useDefaultPosition: 0
@@ -216,6 +229,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 0, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 0, y: 0, z: 0}
+      attachCompletionSignal: 
     - type: 1
       identifier: zone_3:wall_suction
       useDefaultPosition: 0
@@ -230,6 +244,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 0, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 0, y: 0, z: 0}
+      attachCompletionSignal: 
     - type: 3
       identifier: zone_3:zone
       useDefaultPosition: 0
@@ -244,6 +259,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 1.5, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 2.2, y: 3.5, z: 3}
+      attachCompletionSignal: 
   - entities:
     - type: 0
       identifier: zone_a:bed_snap_point
@@ -259,6 +275,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 0, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 0, y: 0, z: 0}
+      attachCompletionSignal: 
     - type: 2
       identifier: zone_a:oxyflowmeter
       useDefaultPosition: 0
@@ -273,6 +290,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 0, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 0, y: 0, z: 0}
+      attachCompletionSignal: connect_wall_component_2
     - type: 1
       identifier: zone_a:wall_suction
       useDefaultPosition: 0
@@ -287,6 +305,7 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 0, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 0, y: 0, z: 0}
+      attachCompletionSignal: connect_wall_component_1
     - type: 3
       identifier: zone_a:zone
       useDefaultPosition: 0
@@ -301,3 +320,4 @@ MonoBehaviour:
       zoneCenter: {x: 0, y: 1.5, z: 0}
       useDefaultZoneSize: 0
       zoneSize: {x: 2.2, y: 3.5, z: 3.6}
+      attachCompletionSignal: 

@@ -3964,6 +3964,8 @@ SPAWN_A
 - [x] (a) 자동 계측 가능 — 에디터 Identifier 정합만 필요: sig.connect_wall_component_2 [연결지점(IntravenousLineConnectionPoint 자동), spec §5.1~5.3]. **2026-07-29 완료.
 -> **2026-08-27 재수정. 배치 데이터를 다시 생성하면서 zone_a:oxyflowmeter의 Attach Completion Signal 설정값이 지워졌고, 그 결과 설치해도 sig.connect_wall_component_2가 올라가지 않아 퀘스트 목표 "산소 유량계를 벽에 설치하기"와 V015_2 게이트가 계속 대기했다. 설정값을 다시 넣고, 회귀 테스트로 고정했다.
 
+-> **2026-08-28 재발 및 근본 대응. 같은 원인으로 다시 지워졌다(커밋 74549f31에서 씬 배치를 재생성하면서 zone_a:oxyflowmeter와 zone_a:wall_suction의 설정값이 함께 사라졌다). 설치 완료 신호를 씬의 프리팹 오버라이드에만 두면 레이아웃을 다시 생성할 때마다 사라지므로, 배치 데이터(`StaticEntityTransformDefinition.attachCompletionSignal`)에 신호를 보관하고 `OverworldGameObjectInitializer`가 재생성 시점마다 `IAttachCompletionSignalConfigurable`을 통해 값을 다시 주입하도록 바꾸었다. 씬의 설정값도 함께 복구했다.
+
 
 ---
 
