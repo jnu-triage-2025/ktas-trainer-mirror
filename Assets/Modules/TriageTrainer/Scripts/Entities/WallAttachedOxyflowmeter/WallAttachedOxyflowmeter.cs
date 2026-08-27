@@ -85,13 +85,25 @@ namespace TriageTrainer.Entity
     /// </summary>
     [SerializeField] private bool _isAttached;
     public bool IsAttached => _isAttached;
-    public override string PresentationEntityIdentifier => EntityIdentifier;
+
+    /// <summary>
+    /// 환자 A 시나리오가 지시하는 벽면 설치 지점인지 여부. 유량계 프리팹은 모든 구역이 공유하므로
+    /// 설치 완료 신호로 구분한다(흡인기의 <c>connect_wall_component_1</c> 판정과 같은 방식).
+    /// </summary>
+    private bool IsPatientAInstallationTarget =>
+      string.Equals(_attachCompletionSignal, "connect_wall_component_2", StringComparison.Ordinal);
+
+    public override string PresentationEntityIdentifier =>
+      IsPatientAInstallationTarget ? "patient_a_oxyflowmeter" : EntityIdentifier;
     public override string InteractionIdentifier
     {
       get
       {
         if (IsDetachInteraction)
           return DetachInteractionIdentifier;
+        // 환자 A는 설치와 유량 조절이 모두 퀘스트 목표다. 회수 상태가 아니면 항상 퀘스트 표시 대상이다.
+        if (IsPatientAInstallationTarget)
+          return QuestPresentationInteractionIdentifier;
         return IsQuestOxygenConnectionTarget()
           ? QuestPresentationInteractionIdentifier
           : UnmarkedInteractionIdentifier;
