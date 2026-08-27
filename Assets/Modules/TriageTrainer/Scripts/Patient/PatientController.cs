@@ -369,6 +369,7 @@ namespace TriageTrainer.Entity
                StringComparison.Ordinal))
       {
         _clineIvAttachmentPoint.SetAllowsMultipleConnections(false);
+        _clineIvAttachmentPoint.SetAllInteractionsEnabled(false);
         return;
       }
 
@@ -382,6 +383,7 @@ namespace TriageTrainer.Entity
         {
           _clineIvAttachmentPoint = candidates[i];
           _clineIvAttachmentPoint.SetAllowsMultipleConnections(false);
+          _clineIvAttachmentPoint.SetAllInteractionsEnabled(false);
           return;
         }
       }
@@ -404,6 +406,7 @@ namespace TriageTrainer.Entity
       _clineIvAttachmentPoint = pointObject.AddComponent<IntravenousLineConnectionPoint>();
       _clineIvAttachmentPoint.SetIdentifier(ClineIvConnectionPointIdentifier);
       _clineIvAttachmentPoint.SetAllowsMultipleConnections(false);
+      _clineIvAttachmentPoint.SetAllInteractionsEnabled(false);
     }
 
     private GameObject FindClineVisualChild()

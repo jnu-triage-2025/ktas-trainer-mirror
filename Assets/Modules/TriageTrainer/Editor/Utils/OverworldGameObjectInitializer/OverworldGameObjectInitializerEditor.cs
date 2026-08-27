@@ -22,6 +22,7 @@ namespace TriageTrainer.Editor.Utils
     private Vector3 patientASpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientASpawnWaypoint;
     private Vector3 patientAArrivalWaypoint = OverworldGameObjectInitializer.DefaultPatientAArrivalWaypoint;
     private Vector3 patientADoctorWaypoint = OverworldGameObjectInitializer.DefaultPatientADoctorWaypoint;
+    private Vector3 patientADoctorEnteredWaypoint = OverworldGameObjectInitializer.DefaultPatientADoctorEnteredWaypoint;
     private Vector3 patientBSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientBSpawnWaypoint;
     private Vector3 patientCSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientCSpawnWaypoint;
     private Vector3 patientDummyDBSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientDummyDBSpawnWaypoint;
@@ -33,7 +34,10 @@ namespace TriageTrainer.Editor.Utils
     private string patientBSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientBSpawnWaypointIdentifier;
     private string patientASpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientASpawnWaypointIdentifier;
     private string patientAArrivalWaypointIdentifier = OverworldGameObjectInitializer.PatientAArrivalWaypointIdentifier;
-    private string patientADoctorWaypointIdentifier = OverworldGameObjectInitializer.PatientADoctorWaypointIdentifier;
+    private string patientADoctorWaypointIdentifier =
+      OverworldGameObjectInitializer.PatientADoctorTreatroomEnteranceWaypointIdentifier;
+    private string patientADoctorEnteredWaypointIdentifier =
+      OverworldGameObjectInitializer.PatientADocterTreatroomEnteredWaypointIdentifier;
     private string patientCSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientCSpawnWaypointIdentifier;
     private string patientDummyDBSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientDummyDBSpawnWaypointIdentifier;
     private string triageArrivalWaypointIdentifier = OverworldGameObjectInitializer.TriageArrivalWaypointIdentifier;
@@ -126,7 +130,8 @@ namespace TriageTrainer.Editor.Utils
       DrawWaypointFields("Treatment Room Entrance", ref treatmentIdentifier, ref treatmentRoomEnterance);
       DrawWaypointFields("Patient A Spawn", ref patientASpawnWaypointIdentifier, ref patientASpawnWaypoint);
       DrawWaypointFields("Patient A Arrival", ref patientAArrivalWaypointIdentifier, ref patientAArrivalWaypoint);
-      DrawWaypointFields("Patient A Doctor", ref patientADoctorWaypointIdentifier, ref patientADoctorWaypoint);
+      DrawWaypointFields("Patient A Doctor Treatroom Enterance", ref patientADoctorWaypointIdentifier, ref patientADoctorWaypoint);
+      DrawWaypointFields("Patient A Doctor Treatroom Entered", ref patientADoctorEnteredWaypointIdentifier, ref patientADoctorEnteredWaypoint);
       DrawWaypointFields("Patient B Spawn", ref patientBSpawnWaypointIdentifier, ref patientBSpawnWaypoint);
       DrawWaypointFields("Patient C Spawn", ref patientCSpawnWaypointIdentifier, ref patientCSpawnWaypoint);
       DrawWaypointFields("Patient Dummy D B Spawn", ref patientDummyDBSpawnWaypointIdentifier, ref patientDummyDBSpawnWaypoint);
@@ -211,6 +216,7 @@ namespace TriageTrainer.Editor.Utils
             patientASpawnWaypointIdentifier, patientASpawnWaypoint,
             patientAArrivalWaypointIdentifier, patientAArrivalWaypoint,
             patientADoctorWaypointIdentifier, patientADoctorWaypoint,
+            patientADoctorEnteredWaypointIdentifier, patientADoctorEnteredWaypoint,
             patientBSpawnWaypointIdentifier, patientBSpawnWaypoint,
             patientCSpawnWaypointIdentifier, patientCSpawnWaypoint,
             patientDummyDBSpawnWaypointIdentifier, patientDummyDBSpawnWaypoint,
@@ -274,6 +280,7 @@ namespace TriageTrainer.Editor.Utils
       patientASpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientASpawnWaypoint;
       patientAArrivalWaypoint = OverworldGameObjectInitializer.DefaultPatientAArrivalWaypoint;
       patientADoctorWaypoint = OverworldGameObjectInitializer.DefaultPatientADoctorWaypoint;
+      patientADoctorEnteredWaypoint = OverworldGameObjectInitializer.DefaultPatientADoctorEnteredWaypoint;
       patientBSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientBSpawnWaypoint;
       patientCSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientCSpawnWaypoint;
       patientDummyDBSpawnWaypoint = OverworldGameObjectInitializer.DefaultPatientDummyDBSpawnWaypoint;
@@ -285,7 +292,10 @@ namespace TriageTrainer.Editor.Utils
       patientBSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientBSpawnWaypointIdentifier;
       patientASpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientASpawnWaypointIdentifier;
       patientAArrivalWaypointIdentifier = OverworldGameObjectInitializer.PatientAArrivalWaypointIdentifier;
-      patientADoctorWaypointIdentifier = OverworldGameObjectInitializer.PatientADoctorWaypointIdentifier;
+      patientADoctorWaypointIdentifier =
+        OverworldGameObjectInitializer.PatientADoctorTreatroomEnteranceWaypointIdentifier;
+      patientADoctorEnteredWaypointIdentifier =
+        OverworldGameObjectInitializer.PatientADocterTreatroomEnteredWaypointIdentifier;
       patientCSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientCSpawnWaypointIdentifier;
       patientDummyDBSpawnWaypointIdentifier = OverworldGameObjectInitializer.PatientDummyDBSpawnWaypointIdentifier;
       triageArrivalWaypointIdentifier = OverworldGameObjectInitializer.TriageArrivalWaypointIdentifier;

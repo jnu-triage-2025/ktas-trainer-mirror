@@ -113,8 +113,8 @@ namespace TriageTrainer.Scenario
       if (ResolveEntityObject(null, doctorIdentifier) != null)
         return;
 
-      Vector3 position = FindWaypoint(PatientADoctorAnchorId) != null
-        ? FindWaypoint(PatientADoctorAnchorId).transform.position
+      Vector3 position = FindWaypoint(PatientADoctorTreatroomEnteredAnchorId) != null
+        ? FindWaypoint(PatientADoctorTreatroomEnteredAnchorId).transform.position
         : _patientATreatmentRoomPoint != null ? _patientATreatmentRoomPoint.position : Vector3.zero;
       if (!Registry.TrySpawnEntityPreset(
             "npc_doctor_preset", position, Quaternion.Euler(0f, 180f, 0f), doctorIdentifier,

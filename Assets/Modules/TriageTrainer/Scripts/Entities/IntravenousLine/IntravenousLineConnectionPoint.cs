@@ -453,6 +453,18 @@ namespace TriageTrainer.Entity.IntravenousLine
       return false;
     }
 
+    /// <summary>이 연결 지점이 제공하는 모든 플레이어 상호작용을 일괄로 켜거나 끈다.</summary>
+    public void SetAllInteractionsEnabled(bool enabled)
+    {
+      EnsureDefaults();
+      for (int i = 0; i < _interactConfigs.Count; i++)
+      {
+        if (_interactConfigs[i] != null)
+          _interactConfigs[i].Enabled = enabled;
+      }
+      RebuildInteractConfigMap();
+    }
+
     /// <summary>
     /// 연결 작업 시작(한 점 연결)을 알린다. C# 이벤트를 발화하고, 인게임 서버에
     /// 이 지점 Identifier 와 함께 "연결 시도" 시그널을 올린다.

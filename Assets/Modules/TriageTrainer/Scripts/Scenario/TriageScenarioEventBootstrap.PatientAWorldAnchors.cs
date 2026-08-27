@@ -11,7 +11,8 @@ namespace TriageTrainer.Scenario
   {
     private const string PatientASpawnAnchorId = "scen_a:patient_spawnpoint_a";
     private const string PatientAArrivalAnchorId = "scen_a:quest_arrival_patient_a";
-    private const string PatientADoctorAnchorId = "scen_a:doctor_treatment_room_waypoint";
+    private const string PatientADoctorTreatroomEnteranceAnchorId = "scen_a:doctor_treatment_room_waypoint_enterance";
+    private const string PatientADoctorTreatroomEnteredAnchorId = "scen_a:doctor_treatment_room_waypoint_entered";
 
     /// <summary>
     /// 환자 이동 퀘스트가 목표 지점을 가리킬 때 쓰는 앵커. 표시 전용이며 퀘스트 통과 판정과는 무관하다.
@@ -26,7 +27,8 @@ namespace TriageTrainer.Scenario
     private static void EnsurePatientAWorldAnchors()
     {
       EnsureWaypoint(PatientASpawnAnchorId, new Vector3(-71.73906f, 0.01f, 0.07443f));
-      EnsureWaypoint(PatientADoctorAnchorId, new Vector3(-67f, 1f, -15.5f));
+      EnsureWaypoint(PatientADoctorTreatroomEnteranceAnchorId, new Vector3(-68f, 1f, -10f));
+      EnsureWaypoint(PatientADoctorTreatroomEnteredAnchorId, new Vector3(-61.5f, 1f, -10f));
 
       EnsureWaypoint(PatientAArrivalAnchorId, new Vector3(-72.525f, 0f, 0.7f));
       EnsureWaypoint(PatientATreatmentBedMarkerAnchorId, new Vector3(-60.759f, 1f, -8.354f));

@@ -4,7 +4,7 @@ doc_type: requirement
 domain: content-definitions
 progress: "2-implementing"
 status: active
-updated: 2026-08-27
+updated: 2026-08-28
 flags: ["refactor-required"]
 ---
 
@@ -32,12 +32,16 @@ flags: ["refactor-required"]
   1. 환자 도착 지점에 남성 환자를 스폰한다.
     - 노드 식별자: `SPAWN_A`, 프리셋 `patient_a`, 스폰된 엔티티 식별자 `patient_a`
     - 스폰 지점 식별자: `scen_a:patient_spawnpoint_a`
-  2. 의사 NPC를 의사 전용 스폰 지점에 스폰한 뒤 처치실의 의사 위치로 이동시킨다.
+  2. 의사 NPC를 의사 전용 스폰 지점에 스폰한 뒤, 남성 환자의 침대가 처치실 스냅 포인트에 정박하면 처치실의 의사 위치까지 이동시킨다.
     - NPC 식별자: `npc-doctor-patient-a-critical`
     - 스폰 지점 식별자: `scen_b:doctor_spawnpoint`
     - 노드 식별자: `SPAWN_DOCTOR`, `npc_doctor_preset`을 위 식별자 지점의 위치에 스폰한다.
-    - 환자가 처치실로 이동한 뒤 `overworld:doctor-route` waypoint set을 속도 2.5로 순서대로 이동시킨다.
+    - 환자 침대가 정박하면 다음 세 구간을 순서대로 속도 2.5로 이동시킨다(노드 `MOVE_DOCTOR_TO_CARE_AREA_A` → `MOVE_DOCTOR_TO_TREATROOM_ENTERANCE` → `MOVE_DOCTOR_TO_TREATROOM_ENTERED`).
+      1. `overworld:doctor-route` waypoint set
+      2. `scen_a:doctor_treatment_room_waypoint_enterance`
+      3. `scen_a:doctor_treatment_room_waypoint_entered`
     - 의사 NPC의 위치에는 이후 후두경, 기관내관, 5cc 주사기, C-line set을 의사에게 제출하기 위한 상호작용 네 종류를 제공한다.
+    - 기술 노트: 의사가 이동하는 동안에는 아래 "환자 이동시키기" 항목에서 설명하는 `Quest_Wait_Doctor_PatientA` 퀘스트가 전체 인물에게 발행되어 있다.
   3. 남성 환자의 의료 상태를 사전설정한다(`PRESET_A`).
     - 남성 35세, GCS 8점(Stupor), 동공 반응 정상, 호흡 8회/분 불규칙, 맥박 140회/분 약함, 혈압 70/40mmHg, 피부 창백하고 차가움, 체온 35.9도, SpO2 82%, 심정지 아님
   4. (스폰이 완료되면 시작):
@@ -59,16 +63,27 @@ flags: ["refactor-required"]
   - 제목: "환자 이동"
   - 목표
     - 표기: "남성 환자를 처치실로 이동시키기"
-    - 처리: 남성 환자를 처치실로 이동시키면 완료 처리
-      - 기술 노트: 처치실 CareZone 구현이 있는지, waypoint로 처리해야 하는지는 확인해 보아야 한다.
-      - CareZone 구현이 있다면 이를 따르되, 관련하여 대비된 것이 없으므로 OverworldInitializer에 내용을 추가해 두어야 한다.
+    - 처리: 남성 환자의 침대가 처치실 스냅 포인트(`MovingPatientBedPositioningPoint`)에 정박하면, 의사의 도착 여부와 무관하게 즉시 완료 처리한다.
+      - 기술 노트: 침대가 스냅되면 `patient_bed_positioning_point_latched_*`, `patient_bed_position_reached_*` 신호가 함께 올라가므로, 이 신호로 완료 여부를 판정한다.
+      - 노드 식별자: `E005`(이동 이벤트) → `QM_MOVE_A_HIDE`(퀘스트 마크 제거) → `Q006_1`(퀘스트 제거)
 - 위 퀘스트를 발행하면서 함께 재생
   - DisinteractableDialogue
     - Speaker: `@s`
     - Content: "(출혈이 심하다. 빨리 처치실로 옮기자.)"
     - TTS: false
 
-위 퀘스트 완료 시 (*1) 내용 시작
+위 퀘스트가 완료되면(`Q006_1` 직후), 전체 인물을 상대로 대기 퀘스트를 이어서 발행한다.
+
+- 전체 인물을 상대로 퀘스트 발행
+  - 제목: "의사 대기"
+  - 퀘스트 식별자: `Quest_Wait_Doctor_PatientA`
+  - 목표
+    - 표기: "의사가 도착할 때까지 기다리기"
+    - 처리: 의사 NPC가 처치실 입장 지점(`scen_a:doctor_treatment_room_waypoint_entered`)까지 이동을 마치면 완료 처리한다.
+      - 노드 식별자: `Q_WAIT_DOCTOR_ADD`(발행) → `MOVE_DOCTOR_TO_CARE_AREA_A` → `MOVE_DOCTOR_TO_TREATROOM_ENTERANCE` → `MOVE_DOCTOR_TO_TREATROOM_ENTERED` → `Q_WAIT_DOCTOR_REMOVE`(완료 처리)
+      - 기술 노트: "환자 이동" 퀘스트와 "의사 대기" 퀘스트를 분리해 둔 이유는, 침대를 옮긴 플레이어가 침대 정박 즉시 보상을 확인할 수 있게 하면서도, 의사가 도착하기 전까지는 다음 대사(*1)로 넘어가지 않도록 별도의 대기 상태를 표시하기 위해서다.
+
+위 대기 퀘스트 완료 시 (*1) 내용 시작
 
 ### 초기 평가: 활력징후, 의식 상태, 경추 고정과 구강 흡인
 

@@ -2569,7 +2569,7 @@
       "moveNextBehavior": "WaitUntilDone",
       "identifier": "E005",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "MOVE_DOCTOR_TO_CARE_AREA_A"
+      "nextIdentifier": "QM_MOVE_A_HIDE"
     },
     "E019": {
       "eventIdentifier": "insert_18g_left",
@@ -3782,7 +3782,7 @@
     "MOVE_DOCTOR_TO_CARE_AREA_A": {
       "identifier": "MOVE_DOCTOR_TO_CARE_AREA_A",
       "nodeType": "NPCControl",
-      "nextIdentifier": "QM_MOVE_A_HIDE",
+      "nextIdentifier": "MOVE_DOCTOR_TO_TREATROOM_ENTERANCE",
       "mode": "Control",
       "npcIdentifier": "npc-doctor-patient-a-critical",
       "destinationType": "WaypointSet",
@@ -3794,6 +3794,48 @@
       "moveMode": "BySpeed",
       "moveSpeed": 2.5,
       "moveDuration": 0
+    },
+    "MOVE_DOCTOR_TO_TREATROOM_ENTERANCE": {
+      "identifier": "MOVE_DOCTOR_TO_TREATROOM_ENTERANCE",
+      "nodeType": "NPCControl",
+      "nextIdentifier": "MOVE_DOCTOR_TO_TREATROOM_ENTERED",
+      "mode": "Control",
+      "npcIdentifier": "npc-doctor-patient-a-critical",
+      "destinationType": "Waypoint",
+      "destinationIdentifier": "scen_a:doctor_treatment_room_waypoint_enterance",
+      "destinationX": 0,
+      "destinationY": 0,
+      "destinationZ": 0,
+      "ignoreGroundCheck": false,
+      "moveMode": "BySpeed",
+      "moveSpeed": 2.5,
+      "moveDuration": 0
+    },
+    "MOVE_DOCTOR_TO_TREATROOM_ENTERED": {
+      "identifier": "MOVE_DOCTOR_TO_TREATROOM_ENTERED",
+      "nodeType": "NPCControl",
+      "nextIdentifier": "Q_WAIT_DOCTOR_REMOVE",
+      "mode": "Control",
+      "npcIdentifier": "npc-doctor-patient-a-critical",
+      "destinationType": "Waypoint",
+      "destinationIdentifier": "scen_a:doctor_treatment_room_waypoint_entered",
+      "destinationX": 0,
+      "destinationY": 0,
+      "destinationZ": 0,
+      "ignoreGroundCheck": false,
+      "moveMode": "BySpeed",
+      "moveSpeed": 2.5,
+      "moveDuration": 0
+    },
+    "Q_WAIT_DOCTOR_REMOVE": {
+      "operation": "Remove",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "Quest_Wait_Doctor_PatientA",
+      "quest": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q_WAIT_DOCTOR_REMOVE",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "D006"
     },
     "QM_MOVE_A_HIDE": {
       "identifier": "QM_MOVE_A_HIDE",
@@ -4356,7 +4398,17 @@
       "persistProgressOnSessionEnd": false,
       "identifier": "Q006_1",
       "nodeType": "QuestControl",
-      "nextIdentifier": "D006"
+      "nextIdentifier": "Q_WAIT_DOCTOR_ADD"
+    },
+    "Q_WAIT_DOCTOR_ADD": {
+      "operation": "Add",
+      "failureStrategy": "Ignore",
+      "questDefinitionIdentifier": "Quest_Wait_Doctor_PatientA",
+      "quest": null,
+      "persistProgressOnSessionEnd": false,
+      "identifier": "Q_WAIT_DOCTOR_ADD",
+      "nodeType": "QuestControl",
+      "nextIdentifier": "MOVE_DOCTOR_TO_CARE_AREA_A"
     },
     "Q007": {
       "operation": "Add",

@@ -61,8 +61,12 @@ namespace TriageTrainer.Editor.Utils
     public const string PatientAArrivalWaypointIdentifier = "scen_a:quest_arrival_patient_a";
     public static readonly Vector3 DefaultPatientAArrivalWaypoint = new(-72.525f, 0f, 0.7f);
 
-    public const string PatientADoctorWaypointIdentifier = "scen_a:doctor_treatment_room_waypoint";
-    public static readonly Vector3 DefaultPatientADoctorWaypoint = new(-67f, 1f, -15.5f);
+    public const string PatientADoctorTreatroomEnteranceWaypointIdentifier = "scen_a:doctor_treatment_room_waypoint_enterance";
+    public static readonly Vector3 DefaultPatientADoctorWaypoint = new(-68f, 1f, -10f);
+
+    public const string PatientADocterTreatroomEnteredWaypointIdentifier = "scen_a:doctor_treatment_room_waypoint_entered";
+    public static readonly Vector3 DefaultPatientADoctorEnteredWaypoint = new(-61.5f, 1f, -10f);
+
     public static readonly Vector3 DefaultPatientAArrivalZoneSize = new(8f, 3f, 8f);
     public static readonly string[] PatientAArrivalEnterSignals = System.Array.Empty<string>();
     public const string PatientAArrivalPerEntitySignalTemplate = "quest_arrival_patient_a_{id}";
@@ -140,7 +144,8 @@ namespace TriageTrainer.Editor.Utils
         DefaultCommonSpawnPoint,
         PatientASpawnWaypointIdentifier, DefaultPatientASpawnWaypoint,
         PatientAArrivalWaypointIdentifier, DefaultPatientAArrivalWaypoint,
-        PatientADoctorWaypointIdentifier, DefaultPatientADoctorWaypoint,
+        PatientADoctorTreatroomEnteranceWaypointIdentifier, DefaultPatientADoctorWaypoint,
+        PatientADocterTreatroomEnteredWaypointIdentifier, DefaultPatientADoctorEnteredWaypoint,
         PatientBSpawnWaypointIdentifier, DefaultPatientBSpawnWaypoint,
         PatientCSpawnWaypointIdentifier, DefaultPatientCSpawnWaypoint,
         PatientDummyDBSpawnWaypointIdentifier, DefaultPatientDummyDBSpawnWaypoint,
@@ -171,6 +176,7 @@ namespace TriageTrainer.Editor.Utils
         string patientASpawnWaypointIdentifier, Vector3 patientASpawnWaypoint,
         string patientAArrivalWaypointIdentifier, Vector3 patientAArrivalWaypoint,
         string patientADoctorWaypointIdentifier, Vector3 patientADoctorWaypoint,
+        string patientADoctorEnteredWaypointIdentifier, Vector3 patientADoctorEnteredWaypoint,
         string patientBSpawnWaypointIdentifier, Vector3 patientBSpawnWaypoint,
         string patientCSpawnWaypointIdentifier, Vector3 patientCSpawnWaypoint,
         string patientDummyDBSpawnWaypointIdentifier, Vector3 patientDummyDBSpawnWaypoint,
@@ -197,6 +203,7 @@ namespace TriageTrainer.Editor.Utils
       CreateWaypoint(generatedRoot.transform, patientASpawnWaypointIdentifier, patientASpawnWaypoint);
       CreateWaypoint(generatedRoot.transform, patientAArrivalWaypointIdentifier, patientAArrivalWaypoint);
       CreateWaypoint(generatedRoot.transform, patientADoctorWaypointIdentifier, patientADoctorWaypoint);
+      CreateWaypoint(generatedRoot.transform, patientADoctorEnteredWaypointIdentifier, patientADoctorEnteredWaypoint);
       CreateScenarioSignalZone(
         generatedRoot.transform,
         patientAArrivalWaypointIdentifier,
