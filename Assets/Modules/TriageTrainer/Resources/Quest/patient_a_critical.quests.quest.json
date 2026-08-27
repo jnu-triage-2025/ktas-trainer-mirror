@@ -23,9 +23,45 @@
         }
       ]
     },
-    { "identifier": "Quest_Wait_Initial_PatientA", "title": "삽관 준비 대기", "description": "초기 평가가 끝날 때까지 삽관 보조를 준비하며 기다립니다.", "questContent": "다른 사람들의 처리가 끝날 때까지 기다리기", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
-    { "identifier": "Quest_Wait_Others_Initial_PatientA", "title": "초기 평가 대기", "description": "다른 담당자들의 초기 평가가 끝날 때까지 기다립니다.", "questContent": "다른 사람들의 처리가 끝날 때까지 기다리기", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
-    { "identifier": "Quest_Grab_Stretcher", "title": "환자 이동", "description": "남성 환자를 처치실로 이동합니다.", "questContent": "남성 환자를 처치실로 이동시키기", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
+    {
+      "identifier": "Quest_Wait_Initial_PatientA",
+      "title": "삽관 준비 대기",
+      "description": "초기 평가가 끝날 때까지 삽관 보조를 준비하며 기다립니다.",
+      "questContent": "다른 사람들의 처리가 끝날 때까지 기다리기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": []
+    },
+    {
+      "identifier": "Quest_Wait_Others_Initial_PatientA",
+      "title": "초기 평가 대기",
+      "description": "다른 담당자들의 초기 평가가 끝날 때까지 기다립니다.",
+      "questContent": "다른 사람들의 처리가 끝날 때까지 기다리기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": []
+    },
+    {
+      "identifier": "Quest_Move_Patient_A",
+      "title": "환자 이동",
+      "description": "남성 환자를 처치실로 이동시킵니다.",
+      "questContent": "남성 환자를 처치실로 이동시키기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": []
+    },
     {
       "identifier": "Quest_Check_Vital_PatientA",
       "title": "환자 활력징후 확인",
@@ -38,12 +74,40 @@
       "scope": "Player",
       "isOrdinal": true,
       "tasks": [
-        { "identifier": "assess-vital-patient-a", "type": "InteractionSignalReceived", "signalId": "show_vital_patient_a", "displayTextContent": "남성 환자의 활력징후를 측정하기", "count": 1 },
-        { "identifier": "view-vital-monitor-patient-a", "type": "InteractionSignalReceived", "signalId": "close_vital_ui_a", "displayTextContent": "남성 환자의 활력징후를 환자 모니터를 통해 확인하기", "count": 1 }
+        {
+          "identifier": "assess-vital-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "show_vital_patient_a",
+          "displayTextContent": "남성 환자의 활력징후를 측정하기",
+          "count": 1
+        },
+        {
+          "identifier": "view-vital-monitor-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "close_vital_ui_a",
+          "displayTextContent": "남성 환자의 활력징후를 환자 모니터를 통해 확인하기",
+          "count": 1
+        }
       ],
       "presentationBindings": [
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "assess-vital-patient-a", "targetType": "Interaction", "entityIdentifier": "patient_a", "interactionIdentifier": "assess_vital", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "view-vital-monitor-patient-a", "targetType": "Interaction", "entityIdentifier": "patient_a", "interactionIdentifier": "detail_overlay", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" }
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "assess-vital-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "assess_vital",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "view-vital-monitor-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "detail_overlay",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
       ]
     },
     {
@@ -58,10 +122,24 @@
       "scope": "Player",
       "isOrdinal": false,
       "tasks": [
-        { "identifier": "assess-gcs-patient-a", "type": "InteractionSignalReceived", "signalId": "check_avpu_gcs_patient_a", "displayTextContent": "남성 환자의 의식 상태를 사정하기", "count": 1 }
+        {
+          "identifier": "assess-gcs-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "check_avpu_gcs_patient_a",
+          "displayTextContent": "남성 환자의 의식 상태를 사정하기",
+          "count": 1
+        }
       ],
       "presentationBindings": [
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "assess-gcs-patient-a", "targetType": "Interaction", "entityIdentifier": "patient_a", "interactionIdentifier": "assess_avpu_gcs", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" }
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "assess-gcs-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "assess_avpu_gcs",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
       ]
     },
     {
@@ -76,16 +154,72 @@
       "scope": "Player",
       "isOrdinal": true,
       "tasks": [
-        { "identifier": "stabilize-patient-a", "type": "InteractionSignalReceived", "signalId": "apply_stabilizer_patient_a", "displayTextContent": "남성 환자의 경추를 고정하기", "count": 1 },
-        { "identifier": "install-suction-patient-a", "type": "InteractionSignalReceived", "signalId": "connect_wall_component_1", "displayTextContent": "흡인기를 벽에 설치하기", "count": 1 },
-        { "identifier": "connect-yankauer-patient-a", "type": "InteractionSignalReceived", "signalId": "connect_wall_component_and_yankauer", "displayTextContent": "앙카우어 팁을 흡인기에 연결하기", "count": 1 },
-        { "identifier": "suction-mouth-patient-a", "type": "InteractionSignalReceived", "signalId": "suction_patient_a", "displayTextContent": "남성 환자의 구강을 흡인하기", "count": 1 }
+        {
+          "identifier": "stabilize-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "apply_stabilizer_patient_a",
+          "displayTextContent": "남성 환자의 경추를 고정하기",
+          "count": 1
+        },
+        {
+          "identifier": "install-suction-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "connect_wall_component_1",
+          "displayTextContent": "흡인기를 벽에 설치하기",
+          "count": 1
+        },
+        {
+          "identifier": "connect-yankauer-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "connect_wall_component_and_yankauer",
+          "displayTextContent": "앙카우어 팁을 흡인기에 연결하기",
+          "count": 1
+        },
+        {
+          "identifier": "suction-mouth-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "suction_patient_a",
+          "displayTextContent": "남성 환자의 구강을 흡인하기",
+          "count": 1
+        }
       ],
       "presentationBindings": [
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "stabilize-patient-a", "targetType": "Interaction", "entityIdentifier": "patient_a", "interactionIdentifier": "item_apply", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "install-suction-patient-a", "targetType": "Interaction", "entityIdentifier": "patient_a_wall_suction", "interactionIdentifier": "wall_suction_install", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "connect-yankauer-patient-a", "targetType": "Interaction", "entityIdentifier": "patient_a_wall_suction", "interactionIdentifier": "connect_yankauer", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "suction-mouth-patient-a", "targetType": "Interaction", "entityIdentifier": "patient_a", "interactionIdentifier": "item_apply", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" }
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "stabilize-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "item_apply",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "install-suction-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a_wall_suction",
+          "interactionIdentifier": "wall_suction_install",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "connect-yankauer-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a_wall_suction",
+          "interactionIdentifier": "connect_yankauer",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "suction-mouth-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "item_apply",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
       ]
     },
     {
@@ -100,18 +234,88 @@
       "scope": "Player",
       "isOrdinal": true,
       "tasks": [
-        { "identifier": "submit-laryngoscope-patient-a", "type": "InteractionSignalReceived", "signalId": "pass_laryngoscope", "displayTextContent": "후두경을 조립해 의사에게 전달하기", "count": 1 },
-        { "identifier": "submit-et-tube-patient-a", "type": "InteractionSignalReceived", "signalId": "pass_et_tube_ready", "displayTextContent": "준비한 기관내관을 의사에게 전달하기", "count": 1 },
-        { "identifier": "remove-stylet-patient-a", "type": "InteractionSignalReceived", "signalId": "remove_intu_stylet", "displayTextContent": "삽입된 기관내관에서 스타일렛 제거하기", "count": 1 },
-        { "identifier": "submit-syringe-patient-a", "type": "InteractionSignalReceived", "signalId": "pass_syringe", "displayTextContent": "5cc 주사기를 의사에게 전달하기", "count": 1 },
-        { "identifier": "plaster-intubation-patient-a", "type": "InteractionSignalReceived", "signalId": "apply_plaster_on_intu", "displayTextContent": "기관내관을 플라스터로 고정하기", "count": 1 }
+        {
+          "identifier": "submit-laryngoscope-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "pass_laryngoscope",
+          "displayTextContent": "후두경을 조립해 의사에게 전달하기",
+          "count": 1
+        },
+        {
+          "identifier": "submit-et-tube-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "pass_et_tube_ready",
+          "displayTextContent": "준비한 기관내관을 의사에게 전달하기",
+          "count": 1
+        },
+        {
+          "identifier": "remove-stylet-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "remove_intu_stylet",
+          "displayTextContent": "삽입된 기관내관에서 스타일렛 제거하기",
+          "count": 1
+        },
+        {
+          "identifier": "submit-syringe-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "pass_syringe",
+          "displayTextContent": "5cc 주사기를 의사에게 전달하기",
+          "count": 1
+        },
+        {
+          "identifier": "plaster-intubation-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "apply_plaster_on_intu",
+          "displayTextContent": "기관내관을 플라스터로 고정하기",
+          "count": 1
+        }
       ],
       "presentationBindings": [
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "submit-laryngoscope-patient-a", "targetType": "Interaction", "entityIdentifier": "npc-doctor-patient-a-critical", "interactionIdentifier": "patient-a-doctor-submit-laryngoscope", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "submit-et-tube-patient-a", "targetType": "Interaction", "entityIdentifier": "npc-doctor-patient-a-critical", "interactionIdentifier": "patient-a-doctor-submit-et-tube", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "remove-stylet-patient-a", "targetType": "Interaction", "entityIdentifier": "patient_a", "interactionIdentifier": "remove_intu_stylet", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "submit-syringe-patient-a", "targetType": "Interaction", "entityIdentifier": "npc-doctor-patient-a-critical", "interactionIdentifier": "patient-a-doctor-submit-5cc-syringe", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "plaster-intubation-patient-a", "targetType": "Interaction", "entityIdentifier": "patient_a", "interactionIdentifier": "item_apply", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" }
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "submit-laryngoscope-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "npc-doctor-patient-a-critical",
+          "interactionIdentifier": "patient-a-doctor-submit-laryngoscope",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "submit-et-tube-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "npc-doctor-patient-a-critical",
+          "interactionIdentifier": "patient-a-doctor-submit-et-tube",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "remove-stylet-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "remove_intu_stylet",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "submit-syringe-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "npc-doctor-patient-a-critical",
+          "interactionIdentifier": "patient-a-doctor-submit-5cc-syringe",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "plaster-intubation-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "item_apply",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
       ]
     },
     {
@@ -126,16 +330,72 @@
       "scope": "Player",
       "isOrdinal": true,
       "tasks": [
-        { "identifier": "install-oxyflowmeter-patient-a", "type": "InteractionSignalReceived", "signalId": "connect_wall_component_2", "displayTextContent": "산소 유량계를 벽에 설치하기", "count": 1 },
-        { "identifier": "attach-tpiece-patient-a", "type": "InteractionSignalReceived", "signalId": "interact_tpiece", "displayTextContent": "기관내관에 T-piece를 장착하기", "count": 1 },
-        { "identifier": "connect-oxygen-line-patient-a", "type": "InteractionSignalReceived", "signalId": "connect_tpiece_and_oxyflow", "displayTextContent": "T-piece와 벽면 유량계를 산소줄로 연결하기", "count": 1 },
-        { "identifier": "set-oxygen-flow-patient-a", "type": "InteractionSignalReceived", "signalId": "interact_oxyflow_wall", "displayTextContent": "투여 산소량을 10L로 맞추기", "count": 1 }
+        {
+          "identifier": "install-oxyflowmeter-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "connect_wall_component_2",
+          "displayTextContent": "산소 유량계를 벽에 설치하기",
+          "count": 1
+        },
+        {
+          "identifier": "attach-tpiece-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "interact_tpiece",
+          "displayTextContent": "기관내관에 T-piece를 장착하기",
+          "count": 1
+        },
+        {
+          "identifier": "connect-oxygen-line-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "connect_tpiece_and_oxyflow",
+          "displayTextContent": "T-piece와 벽면 유량계를 산소줄로 연결하기",
+          "count": 1
+        },
+        {
+          "identifier": "set-oxygen-flow-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "interact_oxyflow_wall",
+          "displayTextContent": "투여 산소량을 10L로 맞추기",
+          "count": 1
+        }
       ],
       "presentationBindings": [
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "install-oxyflowmeter-patient-a", "targetType": "Interaction", "entityIdentifier": "patient_a_oxyflowmeter", "interactionIdentifier": "oxyflowmeter", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "attach-tpiece-patient-a", "targetType": "Interaction", "entityIdentifier": "patient_a", "interactionIdentifier": "interact_tpiece", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "connect-oxygen-line-patient-a", "targetType": "Interaction", "entityIdentifier": "patient_a", "interactionIdentifier": "connect_oxygen_line", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "set-oxygen-flow-patient-a", "targetType": "Interaction", "entityIdentifier": "patient_a_oxyflowmeter", "interactionIdentifier": "oxyflowmeter", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" }
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "install-oxyflowmeter-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a_oxyflowmeter",
+          "interactionIdentifier": "oxyflowmeter",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "attach-tpiece-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "interact_tpiece",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "connect-oxygen-line-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "connect_oxygen_line",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "set-oxygen-flow-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a_oxyflowmeter",
+          "interactionIdentifier": "oxyflowmeter",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
       ]
     },
     {
@@ -150,13 +410,47 @@
       "scope": "Player",
       "isOrdinal": true,
       "tasks": [
-        { "identifier": "wear-sterile-gloves-patient-a", "type": "InteractionSignalReceived", "signalId": "wear_glove", "displayTextContent": "멸균장갑 착용하기", "count": 1 },
-        { "identifier": "apply-gauze-patient-a", "type": "InteractionSignalReceived", "signalId": "apply_gauze", "displayTextContent": "출혈 부위에 거즈를 대고 압박하기", "count": 1 },
-        { "identifier": "apply-plaster-gauze-patient-a", "type": "InteractionSignalReceived", "signalId": "apply_plaster_on_gauze", "displayTextContent": "거즈를 플라스터로 고정하기", "count": 1 }
+        {
+          "identifier": "wear-sterile-gloves-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "wear_glove",
+          "displayTextContent": "멸균장갑 착용하기",
+          "count": 1
+        },
+        {
+          "identifier": "apply-gauze-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "apply_gauze",
+          "displayTextContent": "출혈 부위에 거즈를 대고 압박하기",
+          "count": 1
+        },
+        {
+          "identifier": "apply-plaster-gauze-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "apply_plaster_on_gauze",
+          "displayTextContent": "거즈를 플라스터로 고정하기",
+          "count": 1
+        }
       ],
       "presentationBindings": [
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "apply-gauze-patient-a", "targetType": "Interaction", "entityIdentifier": "patient_a", "interactionIdentifier": "item_apply", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "apply-plaster-gauze-patient-a", "targetType": "Interaction", "entityIdentifier": "patient_a", "interactionIdentifier": "item_apply", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" }
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "apply-gauze-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "item_apply",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "apply-plaster-gauze-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "item_apply",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
       ]
     },
     {
@@ -171,19 +465,106 @@
       "scope": "Player",
       "isOrdinal": true,
       "tasks": [
-        { "identifier": "patient-a-iv-left", "type": "InteractionSignalReceived", "signalId": "insert_iv_patient_a_left", "displayTextContent": "남성 환자의 좌측 팔에 정맥로 확보하기", "count": 1 },
-        { "identifier": "patient-a-ns-left", "type": "InteractionSignalReceived", "signalId": "connect_cannula_and_ns1", "displayTextContent": "좌측 팔에 생리식염수 연결하기", "count": 1 },
-        { "identifier": "patient-a-iv-right", "type": "InteractionSignalReceived", "signalId": "insert_iv_patient_a_right", "displayTextContent": "남성 환자의 우측 팔에 정맥로 확보하기", "count": 1 },
-        { "identifier": "patient-a-ps-right", "type": "InteractionSignalReceived", "signalId": "connect_ps1_right", "displayTextContent": "우측 팔에 플라즈마 솔루션 연결하기", "count": 1 }
+        {
+          "identifier": "patient-a-iv-left",
+          "type": "InteractionSignalReceived",
+          "signalId": "insert_iv_patient_a_left",
+          "displayTextContent": "남성 환자의 좌측 팔에 정맥로 확보하기",
+          "count": 1
+        },
+        {
+          "identifier": "patient-a-ns-left",
+          "type": "InteractionSignalReceived",
+          "signalId": "connect_cannula_and_ns1",
+          "displayTextContent": "좌측 팔에 생리식염수 연결하기",
+          "count": 1
+        },
+        {
+          "identifier": "patient-a-iv-right",
+          "type": "InteractionSignalReceived",
+          "signalId": "insert_iv_patient_a_right",
+          "displayTextContent": "남성 환자의 우측 팔에 정맥로 확보하기",
+          "count": 1
+        },
+        {
+          "identifier": "patient-a-ps-right",
+          "type": "InteractionSignalReceived",
+          "signalId": "connect_ps1_right",
+          "displayTextContent": "우측 팔에 플라즈마 솔루션 연결하기",
+          "count": 1
+        }
       ],
       "presentationBindings": [
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "patient-a-iv-left", "targetType": "Interaction", "entityIdentifier": "patient_a", "interactionIdentifier": "intravenous_line_cannula", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "patient-a-ns-left", "targetType": "Interaction", "entityIdentifier": "patient_a_cannula_left_port", "interactionIdentifier": "intravenous_line_connect_mode_start", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "patient-a-iv-right", "targetType": "Interaction", "entityIdentifier": "patient_a", "interactionIdentifier": "intravenous_line_cannula", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "patient-a-ps-right", "targetType": "Interaction", "entityIdentifier": "patient_a_cannula_right_port", "interactionIdentifier": "intravenous_line_connect_mode_start", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" }
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-a-iv-left",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "intravenous_line_cannula",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-a-ns-left",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a_cannula_left_port",
+          "interactionIdentifier": "intravenous_line_connect_mode_start",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-a-iv-right",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "intravenous_line_cannula",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-a-ps-right",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a_cannula_right_port",
+          "interactionIdentifier": "intravenous_line_connect_mode_start",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
       ]
     },
-    { "identifier": "Quest_Cline_Assist", "title": "중심정맥관 삽입 보조", "description": "중심정맥관 세트를 전달합니다.", "questContent": "중심정맥관 삽입을 보조하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
+    {
+      "identifier": "Quest_Cline_Assist",
+      "title": "중심정맥관 삽입 보조",
+      "description": "C-line set을 의사에게 전달하기",
+      "questContent": "C-line set을 의사에게 전달하기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "identifier": "submit-central-line-set-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "pass_central_line_set",
+          "displayTextContent": "C-line set을 의사에게 전달하기",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "submit-central-line-set-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "npc-doctor-patient-a-critical",
+          "interactionIdentifier": "patient-a-doctor-submit-central-line-set",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
+    },
     {
       "identifier": "Quest_Lv1_Fluids",
       "title": "대량 수액 공급",
@@ -196,14 +577,56 @@
       "scope": "Player",
       "isOrdinal": true,
       "tasks": [
-        { "identifier": "level1-add-plasma", "type": "InteractionSignalReceived", "signalId": "connect_ps1_to_lv1", "displayTextContent": "Level 1 rapid infuser에 플라즈마 솔루션 연결하기", "count": 1 },
-        { "identifier": "level1-add-blood", "type": "InteractionSignalReceived", "signalId": "connect_blood_to_lv1", "displayTextContent": "Level 1 rapid infuser에 혈액백 연결하기", "count": 1 },
-        { "identifier": "level1-connect-cline", "type": "InteractionSignalReceived", "signalId": "connect_cline_to_lv1", "displayTextContent": "Level 1 rapid infuser를 환자의 C-line에 연결하기", "count": 1 }
+        {
+          "identifier": "level1-add-plasma",
+          "type": "InteractionSignalReceived",
+          "signalId": "connect_ps1_to_lv1",
+          "displayTextContent": "Level 1 rapid infuser에 플라즈마 솔루션 연결하기",
+          "count": 1
+        },
+        {
+          "identifier": "level1-add-blood",
+          "type": "InteractionSignalReceived",
+          "signalId": "connect_blood_to_lv1",
+          "displayTextContent": "Level 1 rapid infuser에 혈액백 연결하기",
+          "count": 1
+        },
+        {
+          "identifier": "level1-connect-cline",
+          "type": "InteractionSignalReceived",
+          "signalId": "connect_cline_to_lv1",
+          "displayTextContent": "Level 1 rapid infuser를 환자의 C-line에 연결하기",
+          "count": 1
+        }
       ],
       "presentationBindings": [
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "level1-add-plasma", "targetType": "Interaction", "entityIdentifier": "level1_rapid_infuser_a", "interactionIdentifier": "level1_add_plasma_solution", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "level1-add-blood", "targetType": "Interaction", "entityIdentifier": "level1_rapid_infuser_a", "interactionIdentifier": "level1_add_blood_bag", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" },
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "level1-connect-cline", "targetType": "Interaction", "entityIdentifier": "level1_rapid_infuser_a", "interactionIdentifier": "level1_connect_cline", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" }
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "level1-add-plasma",
+          "targetType": "Interaction",
+          "entityIdentifier": "level1_rapid_infuser_a",
+          "interactionIdentifier": "level1_add_plasma_solution",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "level1-add-blood",
+          "targetType": "Interaction",
+          "entityIdentifier": "level1_rapid_infuser_a",
+          "interactionIdentifier": "level1_add_blood_bag",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "level1-connect-cline",
+          "targetType": "Interaction",
+          "entityIdentifier": "level1_rapid_infuser_a",
+          "interactionIdentifier": "level1_connect_cline",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
       ]
     },
     {
@@ -218,24 +641,461 @@
       "scope": "Player",
       "isOrdinal": false,
       "tasks": [
-        { "identifier": "assess-pulse-patient-a-r1", "type": "InteractionSignalReceived", "signalId": "check_pulse_patient_a_r1", "displayTextContent": "남성 환자의 경동맥을 촉지해 맥박 확인하기", "count": 1 }
+        {
+          "identifier": "assess-pulse-patient-a-r1",
+          "type": "InteractionSignalReceived",
+          "signalId": "check_pulse_patient_a_r1",
+          "displayTextContent": "남성 환자의 경동맥을 촉지해 맥박 확인하기",
+          "count": 1
+        }
       ],
       "presentationBindings": [
-        { "activation": "CompletionCriteria", "completionCriteriaIdentifier": "assess-pulse-patient-a-r1", "targetType": "Interaction", "entityIdentifier": "patient_a", "interactionIdentifier": "assess_pulse_r1", "iconIdentifier": "quest-interaction", "iconMode": "ReplacePrimaryIcon" }
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "assess-pulse-patient-a-r1",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "assess_pulse_r1",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
       ]
     },
-    { "identifier": "Quest_Ambu_A", "title": "앰부배깅 수행", "description": "간호사 A가 앰부백을 연결하고 환기합니다.", "questContent": "앰부배깅을 시작하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
-    { "identifier": "Quest_ChestComp_B", "title": "가슴압박 수행", "description": "간호사 B가 가슴압박을 시행합니다.", "questContent": "가슴압박을 시작하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
-    { "identifier": "Quest_Defibrillator_C", "title": "제세동기 연결", "description": "간호사 C가 제세동 패드를 부착합니다.", "questContent": "제세동기를 환자에게 연결하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
-    { "identifier": "Quest_Epi_D", "title": "에피네프린 투여", "description": "간호사 D가 에피네프린과 생리식염수를 투여합니다.", "questContent": "에피네프린 1mg을 투여하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
-    { "identifier": "Quest_ChestComp_A", "title": "가슴압박 교대", "description": "간호사 A가 가슴압박을 이어받습니다.", "questContent": "가슴압박을 교대하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
-    { "identifier": "Quest_Ambu_B", "title": "앰부배깅 교대", "description": "간호사 B가 앰부배깅을 이어받습니다.", "questContent": "앰부배깅을 교대하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
-    { "identifier": "Quest_Epi_C", "title": "에피네프린 재투여", "description": "간호사 C가 에피네프린과 생리식염수를 투여합니다.", "questContent": "에피네프린을 재투여하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
-    { "identifier": "Quest_Defibrillator_D", "title": "제세동기 조작", "description": "간호사 D가 제세동기를 확인하고 조작합니다.", "questContent": "제세동기를 준비하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
-    { "identifier": "Quest_Check_Pulse_ROSC", "title": "ROSC 맥박 확인", "description": "소생술 후 환자 A의 맥박을 확인합니다.", "questContent": "ROSC 여부를 확인하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
-    { "identifier": "Quest_Return_Triage", "title": "분류 구역 복귀", "description": "간호사 A가 분류 구역으로 복귀합니다.", "questContent": "분류 구역으로 이동하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
-    { "identifier": "Quest_Cut_Clothing", "title": "환자 의복 제거", "description": "가위로 환자 A의 의복을 제거해 전신을 노출합니다.", "questContent": "환자의 의복을 제거하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
-    { "identifier": "Quest_Check_GCS_ROSC", "title": "ROSC 후 신경학적 사정", "description": "ROSC 후 환자 A의 GCS를 다시 평가합니다.", "questContent": "환자 A의 GCS를 재평가하세요.", "isTrackable": true, "isAutoComplete": false, "persistProgressOnSessionEnd": false, "isTrackedByDefault": true, "scope": "Player", "isOrdinal": false, "tasks": [] },
+    {
+      "identifier": "Quest_Ambu_A",
+      "title": "앰부배깅 수행",
+      "description": "기관내관에서 T-piece 분리하기",
+      "questContent": "기관내관에서 T-piece 분리하기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "identifier": "detach-tpiece-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "remove_tpiece",
+          "displayTextContent": "기관내관에서 T-piece 분리하기",
+          "count": 1
+        },
+        {
+          "identifier": "connect-ambubag-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "connect_o2_to_ambu",
+          "displayTextContent": "기관내관에 앰부백 연결하기",
+          "count": 1
+        },
+        {
+          "identifier": "start-ambubagging-r1-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "start_ambu_r1",
+          "displayTextContent": "앰부백으로 산소 공급하기",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "detach-tpiece-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "remove_tpiece",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "start-ambubagging-r1-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "start_ambu_r1",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
+    },
+    {
+      "identifier": "Quest_ChestComp_B",
+      "title": "가슴압박 수행",
+      "description": "남성 환자에게 가슴압박을 수행하기",
+      "questContent": "남성 환자에게 가슴압박을 수행하기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "identifier": "start-chest-compression-r1-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "click_to_start_comp",
+          "displayTextContent": "남성 환자에게 가슴압박을 수행하기",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "start-chest-compression-r1-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "click_to_start_comp",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
+    },
+    {
+      "identifier": "Quest_Defibrillator_C",
+      "title": "제세동기 연결",
+      "description": "제세동 카트를 환자 옆으로 가져오기",
+      "questContent": "제세동 카트를 환자 옆으로 가져오기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "identifier": "move-defibrillator-cart-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "defibrillator_cart_snap_point_reached_defibrillator_cart_a_defibrillatorcart_to_patient",
+          "displayTextContent": "제세동 카트를 환자 옆으로 가져오기",
+          "count": 1
+        },
+        {
+          "identifier": "attach-defibrillator-pad-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "interact_patient_chest",
+          "displayTextContent": "남성 환자의 흉부에 제세동 패드 부착하기",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "attach-defibrillator-pad-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "interact_patient_chest",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
+    },
+    {
+      "identifier": "Quest_Epi_D",
+      "title": "에피네프린 투여",
+      "description": "중심정맥관으로 에피네프린 1mg 투여하기",
+      "questContent": "중심정맥관으로 에피네프린 1mg 투여하기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "identifier": "push-epinephrine-r1-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "push_epi_r1",
+          "displayTextContent": "중심정맥관으로 에피네프린 1mg 투여하기",
+          "count": 1
+        },
+        {
+          "identifier": "push-normal-saline-r1-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "push_ns_r1",
+          "displayTextContent": "생리식염수 20cc로 루멘 내 잔여 약물 밀어넣기",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "push-epinephrine-r1-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "item_apply",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "push-normal-saline-r1-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "item_apply",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
+    },
+    {
+      "identifier": "Quest_ChestComp_A",
+      "title": "가슴압박 교대",
+      "description": "남성 환자에게 가슴압박을 수행하기",
+      "questContent": "남성 환자에게 가슴압박을 수행하기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "identifier": "start-chest-compression-r2-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "interact_chest",
+          "displayTextContent": "남성 환자에게 가슴압박을 수행하기",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "start-chest-compression-r2-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "interact_chest",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
+    },
+    {
+      "identifier": "Quest_Ambu_B",
+      "title": "앰부배깅 교대",
+      "description": "앰부백으로 산소를 공급하기",
+      "questContent": "앰부백으로 산소를 공급하기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "identifier": "start-ambubagging-r2-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "start_ambu_r2",
+          "displayTextContent": "앰부백으로 산소를 공급하기",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "start-ambubagging-r2-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "start_ambu_r2",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
+    },
+    {
+      "identifier": "Quest_Epi_C",
+      "title": "에피네프린 재투여",
+      "description": "중심정맥관으로 에피네프린 1mg 투여하기",
+      "questContent": "중심정맥관으로 에피네프린 1mg 투여하기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "identifier": "push-epinephrine-r2-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "push_epi_r2",
+          "displayTextContent": "중심정맥관으로 에피네프린 1mg 투여하기",
+          "count": 1
+        },
+        {
+          "identifier": "push-normal-saline-r2-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "push_ns_r2",
+          "displayTextContent": "생리식염수 20cc로 루멘 내 잔여 약물 밀어넣기",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "push-epinephrine-r2-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "item_apply",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "push-normal-saline-r2-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "item_apply",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
+    },
+    {
+      "identifier": "Quest_Defibrillator_D",
+      "title": "제세동기 조작",
+      "description": "제세동기를 조작해 역할 부여받기",
+      "questContent": "제세동기를 조작해 역할 부여받기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "identifier": "operate-defibrillator-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "interact_defibrillator",
+          "displayTextContent": "제세동기를 조작해 역할 부여받기",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "operate-defibrillator-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "defibrillator_cart_a",
+          "interactionIdentifier": "interact_defibrillator",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
+    },
+    {
+      "identifier": "Quest_Check_Pulse_ROSC",
+      "title": "ROSC 맥박 확인",
+      "description": "남성 환자의 경동맥을 촉지해 맥박 확인하기",
+      "questContent": "남성 환자의 경동맥을 촉지해 맥박 확인하기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "identifier": "assess-pulse-patient-a-r2",
+          "type": "InteractionSignalReceived",
+          "signalId": "check_pulse_patient_a_r2",
+          "displayTextContent": "남성 환자의 경동맥을 촉지해 맥박 확인하기",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "assess-pulse-patient-a-r2",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "assess_pulse_r2",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
+    },
+    {
+      "identifier": "Quest_Return_Triage",
+      "title": "분류 구역 복귀",
+      "description": "중증도 분류 구역으로 이동하기",
+      "questContent": "중증도 분류 구역으로 이동하기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "identifier": "return-triage-area-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "arrive_triagearea_patient_a",
+          "displayTextContent": "중증도 분류 구역으로 이동하기",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "identifier": "Quest_Cut_Clothing",
+      "title": "환자 의복 제거",
+      "description": "남성 환자의 의복을 제거하고 추가 손상 확인하기",
+      "questContent": "남성 환자의 의복을 제거하고 추가 손상 확인하기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "identifier": "remove-clothing-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "remove_patient_clothing",
+          "displayTextContent": "남성 환자의 의복을 제거하고 추가 손상 확인하기",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "remove-clothing-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "remove_patient_clothing",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
+    },
+    {
+      "identifier": "Quest_Check_GCS_ROSC",
+      "title": "ROSC 후 신경학적 사정",
+      "description": "남성 환자의 의식 상태를 다시 사정하기",
+      "questContent": "남성 환자의 의식 상태를 다시 사정하기",
+      "isTrackable": true,
+      "isAutoComplete": false,
+      "persistProgressOnSessionEnd": false,
+      "isTrackedByDefault": true,
+      "scope": "Player",
+      "isOrdinal": false,
+      "tasks": [
+        {
+          "identifier": "assess-gcs-rosc-patient-a",
+          "type": "InteractionSignalReceived",
+          "signalId": "check_gcs_a_rosc",
+          "displayTextContent": "남성 환자의 의식 상태를 다시 사정하기",
+          "count": 1
+        }
+      ],
+      "presentationBindings": [
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "assess-gcs-rosc-patient-a",
+          "targetType": "Interaction",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "assess_gcs_rosc",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        }
+      ]
+    },
     {
       "identifier": "Quest_Wait_Others_Rosc_PatientA",
       "title": "처치 정리",

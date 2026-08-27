@@ -6,6 +6,14 @@
     { "name": "DisableInteractionInRecognitionCheck", "value": "false" }
   ],
   "commandAliases": [
+    { "name": "a", "target": "/tag add @self nurse_a" },
+    { "name": "b", "target": "/tag add @self nurse_b" },
+    { "name": "c", "target": "/tag add @self nurse_c" },
+    { "name": "d", "target": "/tag add @self nurse_d" },
+    { "name": "간호사a", "target": "/tag add @self nurse_a" },
+    { "name": "간호사b", "target": "/tag add @self nurse_b" },
+    { "name": "간호사c", "target": "/tag add @self nurse_c" },
+    { "name": "간호사d", "target": "/tag add @self nurse_d" },
     { "name": "nurse_a", "target": "/tag add @self nurse_a" },
     { "name": "nurse_b", "target": "/tag add @self nurse_b" },
     { "name": "nurse_c", "target": "/tag add @self nurse_c" },
