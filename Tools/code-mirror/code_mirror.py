@@ -123,12 +123,33 @@ def source_refs(source: dict[str, Any]) -> dict[str, str]:
     return refs
 
 
-def commit_order(refs: Iterable[str]) -> list[str]:
-    return run_git(["rev-list", "--topo-order", "--reverse", *refs]).decode().splitlines()
+def commit_graph(refs: Iterable[str]) -> list[tuple[str, list[str]]]:
+    """Return every reachable commit in topological order with its parents.
+
+    Reading the parents from the same traversal avoids spawning one `git show`
+    per commit, which is a large share of the runtime on a long history.
+    """
+    rows = run_git(["rev-list", "--topo-order", "--reverse", "--parents", *refs]).decode().splitlines()
+    graph: list[tuple[str, list[str]]] = []
+    for row in rows:
+        commit, *parents = row.split()
+        graph.append((commit, parents))
+    return graph
 
 
-def commit_parents(commit: str) -> list[str]:
-    return run_git(["show", "-s", "--format=%P", commit]).decode().strip().split()
+def existing_commits(object_ids: Iterable[str]) -> set[str]:
+    """Report which of the recorded mirror commits the object database still has.
+
+    A single batch query keeps this cheap even when the state file maps every
+    commit of a long history.
+    """
+    unique = sorted(set(object_ids))
+    if not unique:
+        return set()
+    output = run_git(["cat-file", "--batch-check=%(objectname) %(objecttype)"], input_bytes="\n".join(unique).encode() + b"\n")
+    # A missing object is reported as "<query> missing", so requiring the commit
+    # type also filters those out.
+    return {parts[0] for parts in (line.split(" ") for line in output.decode().splitlines()) if len(parts) == 2 and parts[1] == "commit"}
 
 
 def commit_metadata(commit: str) -> tuple[dict[str, str], bytes]:
@@ -395,7 +416,11 @@ def main() -> int:
     config = load_config(config_path)
     load_dotenv((config_path.parent / config.get("dotenv_file", ".env")).resolve())
     refs = source_refs(config.get("source", {}))
-    memberships = branch_membership(refs)
+    # Only branch-scoped rules can change a commit's filtering result without the
+    # commit or the configuration itself changing, so everything below reuses the
+    # recorded rewrite unless such a rule is configured.
+    branch_scoped = any(rule.get("scope", {}).get("mode") == "branches" for rule in config.get("rules", []))
+    memberships = branch_membership(refs) if branch_scoped else {}
     state_path = (config_path.parent / config.get("state_file", ".code-mirror-state.json")).resolve()
     state = load_state(state_path)
     fingerprint = config_fingerprint(config)
@@ -404,24 +429,36 @@ def main() -> int:
     if args.push:
         validate_destination_state(state, str(config["destination"]["url"]), args.reset_destination)
 
-    commits = commit_order(refs.values())
+    graph = commit_graph(refs.values())
+    # A rewritten commit is a pure function of its source commit and the
+    # filtering configuration, so an unchanged fingerprint makes every recorded
+    # rewrite still correct. Recomputing one that was pruned from the object
+    # database yields the same hash again, which keeps its children valid too.
+    reusable: set[str] = set()
+    if not args.rebuild and not branch_scoped and state.get("config_fingerprint") == fingerprint:
+        reusable = existing_commits(state["commits"].values())
     removed_count = 0
     new_count = 0
+    reused_count = 0
     with tempfile.TemporaryDirectory(prefix="code-mirror-index-") as tempdir:
-        for index, source in enumerate(commits, start=1):
-            removed = excluded_paths(config, source, memberships.get(source, set()))
-            removed_count += len(removed)
-            index_file = Path(tempdir) / source
-            tree = filtered_tree(source, removed, index_file)
-            parents = [state["commits"][parent] for parent in commit_parents(source)]
-            mirrored = create_commit(tree, parents, source)
-            if state["commits"].get(source) != mirrored:
-                new_count += 1
-            state["commits"][source] = mirrored
-            if index % 100 == 0 or index == len(commits):
-                print(f"Processed {index}/{len(commits)} source commits.", flush=True)
+        for index, (source, source_parents) in enumerate(graph, start=1):
+            recorded = state["commits"].get(source)
+            if recorded in reusable:
+                reused_count += 1
+            else:
+                removed = excluded_paths(config, source, memberships.get(source, set()))
+                removed_count += len(removed)
+                index_file = Path(tempdir) / source
+                tree = filtered_tree(source, removed, index_file)
+                parents = [state["commits"][parent] for parent in source_parents]
+                mirrored = create_commit(tree, parents, source)
+                if recorded != mirrored:
+                    new_count += 1
+                state["commits"][source] = mirrored
+            if index % 100 == 0 or index == len(graph):
+                print(f"Processed {index}/{len(graph)} source commits.", flush=True)
     state.update({"version": 1, "config_fingerprint": fingerprint, "refs": refs})
-    print(f"Source commits: {len(commits)}; excluded file instances: {removed_count}; changed mirror commits: {new_count}")
+    print(f"Source commits: {len(graph)}; reused rewrites: {reused_count}; excluded file instances: {removed_count}; changed mirror commits: {new_count}")
     if args.dry_run:
         print("Dry run completed. No state was saved and nothing was pushed.")
         return 0
