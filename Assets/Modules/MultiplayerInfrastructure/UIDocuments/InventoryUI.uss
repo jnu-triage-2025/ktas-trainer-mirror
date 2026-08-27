@@ -18,10 +18,17 @@
   overflow: hidden;
 }
 
-/* ScrollView 콘텐츠 컨테이너: 가로·세로 중앙 정렬 (C#에서 클래스 추가).
+/* ScrollView 콘텐츠 컨테이너: 가로·세로 중앙 정렬 (C#에서 클래스 추가 + 인라인 지정).
  * 인벤토리 창(루트)을 뷰포트 중앙에 배치한다.
+ *
+ * 세로 중앙 정렬(justify-content)은 컨테이너가 뷰포트 높이를 실제로 차지할 때만 의미가 있다.
+ * min-height 의 백분율만으로는 부모(뷰포트) 높이가 확정되기 전에 해석되지 않아 컨테이너가
+ * 내용 높이에 머무를 수 있으므로, 남는 세로 공간을 flex-grow 로 흡수해 확실히 채운다.
+ * flex-shrink: 0 은 내용이 뷰포트보다 클 때 인벤토리 창이 눌리지 않게 한다.
  * 세로 넘침 시 상단이 잘릴 수 있으나, 현재 인벤토리 높이는 대부분의 해상도에 맞는다. */
 .inventory-scroll-content {
+  flex-grow: 1;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   min-height: 100%;

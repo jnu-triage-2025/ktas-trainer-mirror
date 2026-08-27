@@ -100,11 +100,11 @@ namespace MultiplayerInfrastructure.UI
       _view.name = string.IsNullOrEmpty(_view.name) ? "InventoryRoot" : _view.name;
       _view.Initialize(columns, rows, slotTemplate, defaultIcon);
 
-      // ScrollView 콘텐츠 컨테이너에 수직 중앙 정렬 클래스를 적용한다.
+      // ScrollView 콘텐츠 컨테이너에 가로·세로 중앙 정렬을 적용한다.
       // UXML의 ScrollView가 뷰를 감싸고 있으며, 해상도 부족 시 가로 스크롤을 제공한다.
       var scrollView = root.Q<ScrollView>("InventoryScrollView");
       if (scrollView != null)
-        scrollView.contentContainer.AddToClassList("inventory-scroll-content");
+        ApplyScrollContentCentering(scrollView.contentContainer);
 
       _view.SlotsMutated += HandleSlotsMutated;
       _view.ItemDroppedOutside += HandleItemDroppedOutside;
@@ -113,6 +113,31 @@ namespace MultiplayerInfrastructure.UI
 
       // 조합 패널 콜백 주입: 보유 수량 조회 + 조합 실행.
       _view.SetCraftingCallbacks(ResolveHeldCount, HandleCraftRequest);
+    }
+
+    /// <summary>
+    /// 인벤토리 창을 ScrollView 뷰포트의 가로·세로 중앙에 배치한다.
+    ///
+    /// 콘텐츠 컨테이너는 ScrollView가 내부적으로 만드는 요소라 UXML에서 지정할 수 없고,
+    /// UI Toolkit 기본 테마가 이 요소(<c>unity-content-container</c>)에 자체 스타일을 적용한다.
+    /// 정렬 값이 테마 규칙에 밀리지 않도록, USS 클래스(<c>inventory-scroll-content</c>)와 함께
+    /// 항상 우선하는 인라인 스타일로도 지정한다. 두 정의는 같은 값을 유지해야 한다.
+    ///
+    /// 세로 중앙 정렬(justify-content)은 컨테이너가 뷰포트 높이를 실제로 차지할 때만 의미가 있으므로,
+    /// min-height 백분율에만 기대지 않고 flex-grow로 남는 세로 공간을 흡수한다.
+    /// </summary>
+    private static void ApplyScrollContentCentering(VisualElement content)
+    {
+      if (content == null)
+        return;
+
+      content.AddToClassList("inventory-scroll-content");
+
+      content.style.flexGrow = 1f;
+      content.style.flexShrink = 0f;
+      content.style.minHeight = Length.Percent(100f);
+      content.style.justifyContent = Justify.Center;
+      content.style.alignItems = Align.Center;
     }
 
     private void DetachViewEvents()
