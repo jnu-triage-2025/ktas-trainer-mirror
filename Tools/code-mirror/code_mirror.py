@@ -341,6 +341,22 @@ def validate_destination_state(state: dict[str, Any], destination_url: str, rese
         )
 
 
+def check_destination_conflicts(refs: dict[str, str], state: dict[str, Any], current: dict[str, str], rebuild: bool, reset_destination: bool) -> None:
+    """Refuse to overwrite destination refs this tool did not last publish.
+
+    Nothing here depends on the rewrite, so main() runs it before rewriting to
+    report the conflict immediately instead of after a full history rewrite.
+    """
+    pushed = {} if reset_destination else state.get("pushed_refs", {})
+    for ref in refs:
+        actual = current.get(ref)
+        expected = pushed.get(ref)
+        if expected is None and actual is not None and not rebuild:
+            raise MirrorError(f"Destination already has {ref}. Use --rebuild only after reviewing the rewrite.")
+        if expected is not None and actual != expected:
+            raise MirrorError(f"Destination {ref} changed outside this tool; refusing to overwrite it.")
+
+
 def push_refs(destination: dict[str, Any], refs: dict[str, str], state: dict[str, Any], rebuild: bool, reset_destination: bool) -> None:
     url = str(destination["url"])
     env = os.environ.copy()
@@ -350,16 +366,10 @@ def push_refs(destination: dict[str, Any], refs: dict[str, str], state: dict[str
         askpass_dir, env = http_askpass(str(token_name), str(destination.get("http_username", "git")))
     try:
         current = destination_refs(url)
-        pushed = {} if reset_destination else state.get("pushed_refs", {})
-        leases: list[str] = []
-        for ref in refs:
-            actual = current.get(ref)
-            expected = pushed.get(ref)
-            if expected is None and actual is not None and not rebuild:
-                raise MirrorError(f"Destination already has {ref}. Use --rebuild only after reviewing the rewrite.")
-            if expected is not None and actual != expected:
-                raise MirrorError(f"Destination {ref} changed outside this tool; refusing to overwrite it.")
-            leases.append(f"--force-with-lease={ref}:{actual or ''}")
+        # Re-checked here because the destination can change between the early
+        # check in main() and this push.
+        check_destination_conflicts(refs, state, current, rebuild, reset_destination)
+        leases = [f"--force-with-lease={ref}:{current.get(ref) or ''}" for ref in refs]
         refspecs = [f"{state['commits'][source]}:{ref}" for ref, source in refs.items()]
         run_git(["push", *leases, url, *refspecs], env=env)
         state["pushed_refs"] = {ref: state["commits"][source] for ref, source in refs.items()}
@@ -427,7 +437,11 @@ def main() -> int:
     if state.get("config_fingerprint") not in (None, fingerprint) and not args.rebuild:
         raise MirrorError("Filtering configuration changed. Review the result and rerun with --rebuild to rewrite the mirror.")
     if args.push:
-        validate_destination_state(state, str(config["destination"]["url"]), args.reset_destination)
+        destination_url = str(config["destination"]["url"])
+        validate_destination_state(state, destination_url, args.reset_destination)
+        # Rewriting a long history costs far more than one ls-remote, so a
+        # destination conflict is reported before any of that work starts.
+        check_destination_conflicts(refs, state, destination_refs(destination_url), args.rebuild, args.reset_destination)
 
     graph = commit_graph(refs.values())
     # A rewritten commit is a pure function of its source commit and the
