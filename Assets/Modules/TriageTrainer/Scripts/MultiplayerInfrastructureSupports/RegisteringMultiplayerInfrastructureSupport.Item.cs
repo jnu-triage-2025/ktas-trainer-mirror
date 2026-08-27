@@ -220,7 +220,7 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
           .Requires(IntravenousSet.Identifier, 1)
           .Produces(1));
 
-      // 석션 라인 1개 + 양카우어 석션 팁 1개 → 조립된 양카우어 팁 1개
+      // 석션 라인 1개 + 양커 석션 팁 1개 → 조립된 양커 팁 1개
       // (시나리오 구식 산출물명 yankauer_ready)
       ItemCombineRecipeRegistry.Register(
         new ItemCombineRecipe(YankauerSuctionReady.Identifier)

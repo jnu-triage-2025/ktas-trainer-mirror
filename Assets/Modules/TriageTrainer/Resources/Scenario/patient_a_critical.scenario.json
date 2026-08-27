@@ -3167,7 +3167,7 @@
     },
     "N007_3": {
       "speakerName": "@s",
-      "dialogueContent": "(조립한 양카우어 팁을 흡인기에 연결하자)",
+      "dialogueContent": "(조립한 양커 팁을 흡인기에 연결하자)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3193,7 +3193,7 @@
       },
       "identifier": "N007_4",
       "nodeType": "Dialogue",
-      "nextIdentifier": "V013_4"
+      "nextIdentifier": "D009"
     },
     "D_STABILIZER_APPLIED_A": {
       "speakerName": "@s",
@@ -3209,7 +3209,7 @@
     },
     "D_SUCTION_INSTALLED_A": {
       "speakerName": "@s",
-      "dialogueContent": "(흡인기를 벽에 설치했다. 양카우어 팁을 연결하자.)",
+      "dialogueContent": "(흡인기를 벽에 설치했다. 양커 팁을 연결하자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -5563,7 +5563,7 @@
       "onWaitTimeout": null,
       "identifier": "V013_3",
       "nodeType": "Validator",
-      "nextIdentifier": "N007_4"
+      "nextIdentifier": "V013_4"
     },
     "V013_4": {
       "rootConditions": [
@@ -5590,7 +5590,7 @@
       "onWaitTimeout": null,
       "identifier": "V013_4",
       "nodeType": "Validator",
-      "nextIdentifier": "D009"
+      "nextIdentifier": "N007_4"
     },
     "V014_1": {
       "rootConditions": [

@@ -42,7 +42,7 @@ namespace TriageTrainer.Entity
     {
       private readonly WallAttachedWallSuction _owner;
       public YankauerConnectionInteract(WallAttachedWallSuction owner) => _owner = owner;
-      public string DisplayText => _owner._yankauerConnected ? "양카우어를 흡인기에서 분리" : "양카우어 팁 연결";
+      public string DisplayText => _owner._yankauerConnected ? "양커를 흡인기에서 분리" : "양커 팁 연결";
       public string PresentationEntityIdentifier => "patient_a_wall_suction";
       public string InteractionIdentifier => "connect_yankauer";
       public Sprite DisplayIcon => null;
@@ -92,10 +92,18 @@ namespace TriageTrainer.Entity
 
     [Tooltip("자동 석션 라인 연결에 사용할 장비 측 포트입니다.")]
     [SerializeField] private SuctionLineConnectionPoint _suctionLineConnectionPoint;
+
+    [Tooltip("양커 라인이 플레이어 쪽에서 붙는 지점의 로컬 위치입니다. 연결 시 이 위치에 전용 지점을 만들어 플레이어를 따라다니게 합니다.")]
+    [SerializeField] private Vector3 _yankauerHolderPointLocalPosition = new(0f, 0.9f, 0.35f);
+
     [SerializeField] private bool _yankauerConnected;
     private PlayerController _yankauerHolder;
+    private Transform _yankauerHolderPoint;
     private LineRenderer _yankauerLine;
     private YankauerConnectionInteract _yankauerInteract;
+
+    /// <summary>양커 라인의 플레이어 측 지점으로 사용할 자식 오브젝트 이름입니다.</summary>
+    private const string YankauerHolderPointName = "YankauerSuctionLinePoint";
 
     public override IInteract[] Interacts => new IInteract[]
     {
@@ -226,14 +234,15 @@ namespace TriageTrainer.Entity
       var dialogue = MultiplayerInfrastructure.Registry.Registry.Get<DialoguePanelUIController>(
         MultiplayerInfrastructure.Registry.RegistryType.UI,
         MultiplayerInfrastructure.Registry.Registry.TypeKey<DialoguePanelUIController>());
-      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(석션 라인과 양카우어 팁을 조립해두지 않았다.)");
-      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(석션 라인과 양카우어 팁을 찾아 조립하자.)");
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(석션 라인과 양커 팁을 조립해두지 않았다.)");
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(석션 라인과 양커 팁을 찾아 조립하자.)");
     }
 
     private void ConnectYankauer(PlayerController player)
     {
       _yankauerConnected = true;
       _yankauerHolder = player;
+      _yankauerHolderPoint = ResolveYankauerHolderPoint(player);
       var lineObject = new GameObject("PatientA_YankauerSuctionLine");
       lineObject.transform.SetParent(transform, false);
       _yankauerLine = lineObject.AddComponent<LineRenderer>();
@@ -251,26 +260,47 @@ namespace TriageTrainer.Entity
       player.RefreshInteractableHintsNow();
     }
 
+    /// <summary>
+      /// 양커 라인이 플레이어 쪽에서 붙을 지점을 확보한다. 플레이어 하위에 전용 자식 오브젝트를 두므로,
+    /// 플레이어가 이동하거나 회전해도 지점이 함께 따라간다. 이미 만들어 둔 지점이 있으면 그대로 재사용한다.
+    /// </summary>
+    private Transform ResolveYankauerHolderPoint(PlayerController player)
+    {
+      var existing = player.transform.Find(YankauerHolderPointName);
+      if (existing != null)
+        return existing;
+
+      var point = new GameObject(YankauerHolderPointName).transform;
+      point.SetParent(player.transform, false);
+      point.localPosition = _yankauerHolderPointLocalPosition;
+      point.localRotation = Quaternion.identity;
+      return point;
+    }
+
     private void LateUpdate()
     {
       if (!_yankauerConnected)
         return;
-      if (_yankauerHolder == null
-          || _yankauerHolder.CountItemInInventory("yankauer_suction_ready") < 1)
+
+      // 연결은 "양커를 흡인기에서 분리" 상호작용으로만 끊는다. 구강 흡인으로 양커가
+      // 인벤토리에서 소비되어도 라인은 플레이어 지점에 그대로 붙어 있어야 하므로, 인벤토리 수량으로
+      // 연결을 끊지 않는다. 연결 상대가 사라진 경우(퇴장·디스폰)에만 그릴 대상이 없으므로 정리한다.
+      if (_yankauerHolder == null || _yankauerHolderPoint == null)
       {
         DisconnectYankauer();
         return;
       }
+
       UpdateYankauerLine();
     }
 
     private void UpdateYankauerLine()
     {
-      if (_yankauerLine == null || _yankauerHolder == null)
+      if (_yankauerLine == null || _yankauerHolderPoint == null)
         return;
       _yankauerLine.SetPosition(0,
         _suctionLineConnectionPoint != null ? _suctionLineConnectionPoint.transform.position : transform.position);
-      _yankauerLine.SetPosition(1, _yankauerHolder.transform.position + Vector3.up * 0.9f);
+      _yankauerLine.SetPosition(1, _yankauerHolderPoint.position);
     }
 
     private void DisconnectYankauer()
@@ -279,6 +309,9 @@ namespace TriageTrainer.Entity
         return;
       _yankauerConnected = false;
       _yankauerHolder = null;
+      if (_yankauerHolderPoint != null)
+        Destroy(_yankauerHolderPoint.gameObject);
+      _yankauerHolderPoint = null;
       if (_yankauerLine != null)
         Destroy(_yankauerLine.gameObject);
       _yankauerLine = null;

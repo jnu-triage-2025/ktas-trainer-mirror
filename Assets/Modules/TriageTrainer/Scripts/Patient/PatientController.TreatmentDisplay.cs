@@ -155,6 +155,29 @@ namespace TriageTrainer.Entity
       { "normal_saline_20ml",  new ItemUseEffect(TreatmentDisplay.None, "push_ns") },
     };
 
+    // 환자에게 적용하는 처치가 아니므로 환자 대상 item_apply 후보에서 제외하는 아이템이다.
+    // 장갑은 장비 슬롯 착용 경로가 wear_glove 신호를 담당한다. 앰플과 생리식염수 20ml, 조립 전
+    // 양커 팁은 조합 재료여서, 환자에게 그대로 사용하면 조합 재료가 사라지거나 조립·연결 절차를
+    // 건너뛰고 처치 신호가 발신된다. 우클릭 아이템 사용 경로(CanApplyItemUse)의 기존 동작은 그대로
+    // 두고, 상호작용 후보에서만 제외한다.
+    private static readonly HashSet<string> NonPatientApplicationItems = new(System.StringComparer.Ordinal)
+    {
+      "sterile_gloves",
+      "contaminated_gloves",
+      "epinephrine_ampule",
+      "normal_saline_20ml",
+      "yankauer",
+      "yankauer_ready",
+    };
+
+    // 조합 완제품 주사기는 ItemUseEffects 가 아니라 ApplyItemUse 의 회차별 분기가 처리하므로,
+    // 손에 들지 않고 인벤토리에만 있는 경우에도 찾을 수 있도록 후보를 따로 열거한다.
+    private static readonly string[] AdditionalPatientApplicationItems =
+    {
+      Epinephrine5ccSyringe.Identifier,
+      NormalSaline20ccSyringe.Identifier,
+    };
+
     private int _resuscitationMedicationRound = 1;
 
     /// <summary>동일한 조합 주사기를 사용하는 소생술 투여 회차를 전환합니다.</summary>
@@ -348,10 +371,19 @@ namespace TriageTrainer.Entity
       return point != null && point.CanAcceptAdditionalConnection;
     }
 
+    /// <summary>
+    /// 환자 대상 <c>item_apply</c> 상호작용이 이 아이템을 적용 후보로 노출할지 판정한다.
+    /// 노출 기준이 실제 적용 기준(<see cref="CanApplyItemUse"/>)보다 좁으면 시각 표현이 없는 처치
+    /// (구강 흡인, 기관내관 플라스터 고정, 소생술 약물 투여)가 퀘스트 마크만 남고 수행할 수 없게 되므로,
+    /// 두 기준을 일치시키고 환자에게 적용하는 물품이 아닌 항목만 별도로 제외한다.
+    /// </summary>
     internal bool CanApplyHeldTreatmentItem(string itemIdentifier)
     {
-      return TryResolveItemUse(itemIdentifier, out _, out _, out var resolvedDisplay)
-             && resolvedDisplay != TreatmentDisplay.None;
+      if (string.IsNullOrWhiteSpace(itemIdentifier)
+          || NonPatientApplicationItems.Contains(itemIdentifier))
+        return false;
+
+      return CanApplyItemUse(itemIdentifier);
     }
 
     internal string FindApplicableTreatmentInventoryItem(PlayerController player)
@@ -367,6 +399,13 @@ namespace TriageTrainer.Entity
       {
         if (player.CountItemInInventory(pair.Key) > 0 && CanApplyHeldTreatmentItem(pair.Key))
           return pair.Key;
+      }
+
+      for (int i = 0; i < AdditionalPatientApplicationItems.Length; i++)
+      {
+        string identifier = AdditionalPatientApplicationItems[i];
+        if (player.CountItemInInventory(identifier) > 0 && CanApplyHeldTreatmentItem(identifier))
+          return identifier;
       }
       return null;
     }

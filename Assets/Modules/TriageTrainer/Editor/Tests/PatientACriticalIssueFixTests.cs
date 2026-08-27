@@ -21,6 +21,8 @@ namespace TriageTrainer.Tests
   {
     private const string PatientAPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeA.prefab";
+    private const string PatientBMalePrefabPath =
+      "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeBMale.prefab";
     private const string RapidInfuserPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/MinecraftBoatLikes/level1_rapid_infuser.prefab";
     private const string PatientAScenarioPath =
@@ -533,6 +535,124 @@ namespace TriageTrainer.Tests
       StringAssert.Contains("connect_wall_component_and_yankauer", suctionSource);
       StringAssert.Contains("LineRenderer", suctionSource);
       StringAssert.Contains("DisconnectYankauer", suctionSource);
+
+      // 양커 라인은 플레이어 하위의 전용 지점에 붙고, 명시적 분리 상호작용으로만 끊어야 한다.
+      // 매 프레임 인벤토리 수량을 보고 연결을 끊으면 구강 흡인으로 팁이 소비되는 순간 라인이 사라진다.
+      StringAssert.Contains("YankauerSuctionLinePoint", suctionSource);
+      var lateUpdateBody = Regex.Match(suctionSource,
+        @"private void LateUpdate\(\)\s*\{(?<body>.*?)\n    \}", RegexOptions.Singleline);
+      Assert.That(lateUpdateBody.Success, Is.True, "WallAttachedWallSuction.LateUpdate 를 찾지 못했습니다.");
+      StringAssert.DoesNotContain("CountItemInInventory", lateUpdateBody.Groups["body"].Value);
+    }
+
+    /// <summary>
+    /// 시각 표현이 없는 처치(구강 흡인, 소생술 약물 투여)도 환자 대상 item_apply 상호작용의 후보여야 한다.
+    /// 노출 기준이 실제 적용 기준보다 좁으면 퀘스트 마크만 남고 신호를 올릴 수 없다.
+    /// </summary>
+    [Test]
+    public void PatientAItemApplyExposesTreatmentsWithoutVisualDisplay()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+
+      var instance = UnityEngine.Object.Instantiate(prefab);
+      try
+      {
+        var controller = instance.GetComponent<PatientController>();
+        Assert.That(controller, Is.Not.Null);
+        typeof(PatientController).GetMethod(
+          "InitializeTreatmentDisplaysFromConfiguredState",
+          BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(controller, null);
+
+        var canApply = typeof(PatientController).GetMethod(
+          "CanApplyHeldTreatmentItem", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(canApply, Is.Not.Null);
+
+        foreach (string applicable in new[]
+                 {
+                   "cervical_collar",
+                   "yankauer_suction_ready",
+                   "epinephrine_5cc_syringe",
+                   "normal_saline_20cc_syringe"
+                 })
+          Assert.That((bool)canApply.Invoke(controller, new object[] { applicable }), Is.True,
+            $"'{applicable}' 은 환자 A의 처치 물품 적용 후보여야 한다.");
+
+        // 장갑은 장비 슬롯 착용 경로가 담당하고, 앰플과 생리식염수 20ml, 조립 전 양커 팁은
+        // 조합 재료이므로 환자에게 직접 적용하는 후보에서 제외한다.
+        foreach (string excluded in new[]
+                 {
+                   "sterile_gloves",
+                   "contaminated_gloves",
+                   "epinephrine_ampule",
+                   "normal_saline_20ml",
+                   "yankauer"
+                 })
+          Assert.That((bool)canApply.Invoke(controller, new object[] { excluded }), Is.False,
+            $"'{excluded}' 은 환자에게 적용하는 물품이 아니므로 후보에서 제외되어야 한다.");
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(instance);
+      }
+    }
+
+    /// <summary>
+    /// 환자 B/C의 처치 물품 적용 후보는 단계 게이트(CanApplyPatientBCItem)가 그대로 결정해야 한다.
+    /// 환자 A 흐름을 열기 위한 정정이 B/C 단계 순서를 건너뛰게 만들면 안 된다.
+    /// </summary>
+    [Test]
+    public void PatientBCItemApplyStillFollowsTreatmentStageGate()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientBMalePrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+
+      var instance = UnityEngine.Object.Instantiate(prefab);
+      try
+      {
+        var controller = instance.GetComponent<PatientController>();
+        Assert.That(controller, Is.Not.Null);
+        typeof(PatientController).GetField("_identifier", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.SetValue(controller, "patient_b");
+
+        var canApply = typeof(PatientController).GetMethod(
+          "CanApplyHeldTreatmentItem", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(canApply, Is.Not.Null);
+
+        // 단계가 Inactive 이므로 B/C가 사용하는 세 물품도, 환자 A 전용 물품도 모두 거부되어야 한다.
+        foreach (string blocked in new[]
+                 {
+                   "gauze",
+                   "plaster",
+                   "nasal_cannula",
+                   "yankauer_suction_ready",
+                   "epinephrine_5cc_syringe",
+                   "sterile_gloves"
+                 })
+          Assert.That((bool)canApply.Invoke(controller, new object[] { blocked }), Is.False,
+            $"단계가 열리지 않은 환자 B/C에서는 '{blocked}' 적용이 노출되면 안 된다.");
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(instance);
+      }
+    }
+
+    /// <summary>
+    /// 구강 흡인 독백은 흡인을 마쳤다는 결과 서술이므로 흡인 신호를 받은 뒤에 재생해야 한다.
+    /// 신호 대기보다 앞에 있으면 양커 팁을 연결한 직후에 재생되어 이미 흡인을 마친 것처럼 보인다.
+    /// </summary>
+    [Test]
+    public void PatientASuctionNarrationPlaysAfterSuctionSignal()
+    {
+      string path = Path.Combine(Application.dataPath,
+        "Modules/TriageTrainer/Resources/Scenario/patient_a_critical.scenario.json");
+      var graph = ScenarioGraphLoader.LoadFromJson(File.ReadAllText(path), validateWithSchema: true);
+
+      Assert.That(graph.Nodes["V013_3"].NextIdentifier, Is.EqualTo("V013_4"));
+      Assert.That(graph.Nodes["V013_4"].NextIdentifier, Is.EqualTo("N007_4"));
+      Assert.That(graph.Nodes["N007_4"].NextIdentifier, Is.EqualTo("D009"));
+      Assert.That(graph.Nodes["D009"].NextIdentifier, Is.EqualTo("Q009_1"));
     }
 
     [Test]
@@ -1298,6 +1418,40 @@ namespace TriageTrainer.Tests
         "- target: \\{fileID: 1599417147604718707, guid: 207c22358b94b49dc9fbd62684abe676, type: 3\\}\\s+" +
         "propertyPath: _attachCompletionSignal\\s+value: connect_wall_component_1",
         scene);
+    }
+
+    [Test]
+    public void PatientAOxyflowmeterEmitsInstallationSignalAndCarriesQuestPresentationIdentity()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+
+      // 설치 완료 신호가 없으면 "산소 유량계를 벽에 설치하기" 목표가 영구히 미완료로 남는다.
+      string scene = File.ReadAllText(Path.Combine(projectRoot, OverworldScenePath));
+      StringAssert.IsMatch(
+        "(?s)propertyPath: _entityIdentifier\\s+value: zone_a:oxyflowmeter\\s+objectReference: \\{fileID: 0\\}\\s+" +
+        "- target: \\{fileID: 5049346019555613618, guid: 1c79c98d39b2746bea8a2d4cc857559d, type: 3\\}\\s+" +
+        "propertyPath: _attachCompletionSignal\\s+value: connect_wall_component_2",
+        scene);
+
+      // 퀘스트 표시 바인딩(patient_a_oxyflowmeter / oxyflowmeter)이 실제 상호작용과 맞물려야 한다.
+      string oxyflowmeterSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Entities/WallAttachedOxyflowmeter/WallAttachedOxyflowmeter.cs"));
+      StringAssert.Contains("connect_wall_component_2", oxyflowmeterSource);
+      StringAssert.Contains("patient_a_oxyflowmeter", oxyflowmeterSource);
+
+      var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+      jsonOptions.Converters.Add(new JsonStringEnumConverter());
+      var definitions = JsonSerializer.Deserialize<QuestDefinitionRegistryPayload>(
+        File.ReadAllText(Path.Combine(projectRoot, PatientAQuestPath)), jsonOptions);
+      var quest = definitions?.Definitions?.SingleOrDefault(
+        definition => definition.Identifier == "Quest_Oxygen_PatientA");
+
+      Assert.That(quest, Is.Not.Null);
+      var installTask = quest.Tasks?.SingleOrDefault(
+        task => task.Identifier == "install-oxyflowmeter-patient-a");
+      Assert.That(installTask, Is.Not.Null);
+      Assert.That(installTask.SignalId, Is.EqualTo("connect_wall_component_2"),
+        "유량계 설치 목표는 설치 완료 신호를 기다려야 합니다.");
     }
 
     [Test]

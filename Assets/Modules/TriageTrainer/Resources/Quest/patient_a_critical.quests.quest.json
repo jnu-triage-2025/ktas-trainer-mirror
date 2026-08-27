@@ -200,7 +200,7 @@
           "identifier": "connect-yankauer-patient-a",
           "type": "InteractionSignalReceived",
           "signalId": "connect_wall_component_and_yankauer",
-          "displayTextContent": "양카우어 팁을 흡인기에 연결하기",
+          "displayTextContent": "양커 팁을 흡인기에 연결하기",
           "count": 1
         },
         {

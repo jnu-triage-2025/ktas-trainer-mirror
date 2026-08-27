@@ -130,8 +130,8 @@ TriageTrainer에 정의된 모든 의료 아이템 목록입니다.
 | `WallSuction` | `wall_suction` | 석션 유닛 |
 | `SuctionLine` | `suction_line` | 석션 라인 |
 | `SuctionCatheter` | `suction_catheter` | 석션 카테터 |
-| `Yankauer` | `yankauer` | 양카우어 석션 팁 |
-| `YankauerSuctionReady` | `yankauer_suction_ready` | 조립된 양카우어 팁 |
+| `Yankauer` | `yankauer` | 양커 석션 팁 |
+| `YankauerSuctionReady` | `yankauer_suction_ready` | 조립된 양커 팁 |
 
 ### 5.6 심전도/제세동 (Cardiac Monitoring)
 
