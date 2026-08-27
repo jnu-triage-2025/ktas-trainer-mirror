@@ -270,7 +270,8 @@ def write_state(path: Path, state: dict[str, Any]) -> None:
 def http_askpass(token_env: str, username: str) -> tuple[Path, dict[str, str]]:
     directory = Path(tempfile.mkdtemp(prefix="code-mirror-askpass-"))
     script = directory / "askpass.py"
-    script.write_text("#!/usr/bin/env python3\nimport os, sys\nprint(os.environ[os.environ['CODE_MIRROR_TOKEN_ENV']] if 'Password' in sys.argv[1] else os.environ['CODE_MIRROR_HTTP_USERNAME'])\n", encoding="utf-8")
+    interpreter = "python" if sys.platform == "win32" else "python3"
+    script.write_text(f"#!/usr/bin/env {interpreter}\nimport os, sys\nprint(os.environ[os.environ['CODE_MIRROR_TOKEN_ENV']] if 'Password' in sys.argv[1] else os.environ['CODE_MIRROR_HTTP_USERNAME'])\n", encoding="utf-8")
     script.chmod(0o700)
     env = os.environ.copy()
     env.update({"GIT_ASKPASS": str(script), "GIT_TERMINAL_PROMPT": "0", "CODE_MIRROR_TOKEN_ENV": token_env, "CODE_MIRROR_HTTP_USERNAME": username})
