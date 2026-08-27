@@ -99,6 +99,7 @@ namespace MultiplayerInfrastructure.UI
       }
 
       _questPanel.OnTrackToggled += HandleTrackToggled;
+      _questPanel.OnCloseRequested += HandleCloseRequested;
     }
 
     private void EnsurePanel()
@@ -160,6 +161,12 @@ namespace MultiplayerInfrastructure.UI
     private void HandleTrackToggled(string questId, bool targetState)
     {
       _questManager?.SetTracked(questId, targetState);
+    }
+
+    /// <summary>패널 헤더의 × 버튼. 오버레이 스택을 통해 J 키·Esc 와 동일한 경로로 닫는다.</summary>
+    private void HandleCloseRequested()
+    {
+      Close();
     }
 
     private void ShowPanel()

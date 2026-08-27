@@ -1,0 +1,675 @@
+/* ============================================================
+   퀘스트 패널 UI — QuestPanelUI.uss
+
+   레이아웃: 화면 전체를 덮는 딤 배경 위에 저널(journal) 창 하나.
+     · 헤더   : 제목 + 추적 수 / 필터 탭(전체·진행 중·완료) / × 닫기
+     · 좌측   : 분류별 임무 목록(추적 중 · 진행 중 · 완료)
+     · 우측   : 선택한 임무의 상세(현재 목표 → 설명 → 세부 목표 → 정보 타일 → 고지 → 추적 토글)
+
+   팔레트는 ItemSubmissionUI / InventoryUI 와 통일한다(navy 계열).
+     표면 #16213e, 내부 면 rgba(6,16,32,0.75), 카드 rgba(11,22,40,0.95)
+     테두리 #2d4373 / #1f3a63, 강조 #4a9eff, 완료 #2ecc71, 고지 #e6a23c
+   ============================================================ */
+
+/* ── 루트: 화면 전체 딤 + 중앙 정렬 ─────────────────────────── */
+.quest-root {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.55);
+}
+
+/* 열림/닫힘 상태 클래스. 코드에서도 인라인 display 를 함께 토글한다. */
+.quest-root.collapsed {
+  display: none;
+}
+
+.quest-root.expanded {
+  display: flex;
+}
+
+/* ── 저널 창 본체 ───────────────────────────────────────────── */
+/* PanelSettings 의 기준 해상도(1200×800)에 맞춰 비율 + 상한으로 크기를 잡는다. */
+.quest-journal {
+  width: 94%;
+  max-width: 1120px;
+  height: 90%;
+  max-height: 760px;
+  flex-direction: column;
+  padding: 18px;
+  background-color: #16213e;
+  border-width: 2px;
+  border-color: #2d4373;
+  border-radius: 14px;
+}
+
+/* ── 헤더 ───────────────────────────────────────────────────── */
+.quest-journal__header {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom-width: 2px;
+  border-bottom-color: rgba(74, 158, 255, 0.35);
+}
+
+.quest-journal__title-group {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.quest-journal__title {
+  font-size: 22px;
+  -unity-font-style: bold;
+  color: #f0f4ff;
+}
+
+.quest-journal__count {
+  font-size: 12px;
+  color: #a9b4c8;
+}
+
+.quest-journal__count--over {
+  color: #ff6b6b;
+}
+
+/* 필터 탭: 헤더 가운데. SettingsUI 의 탭 바 규칙을 따른다. */
+.quest-journal__tabs {
+  flex-direction: row;
+  gap: 6px;
+}
+
+.quest-tab {
+  height: 30px;
+  min-width: 84px;
+  margin: 0;
+  padding: 0 16px;
+  font-size: 12px;
+  color: #9aa5b8;
+  background-color: rgba(11, 22, 40, 0.95);
+  border-width: 1px;
+  border-color: #1f3a63;
+  border-radius: 8px;
+  transition-duration: 0.12s;
+  transition-property: background-color, color, border-color;
+}
+
+.quest-tab:hover {
+  color: #f0f4ff;
+  border-color: #2d4373;
+}
+
+.quest-tab--active {
+  color: #4a9eff;
+  background-color: rgba(74, 158, 255, 0.14);
+  border-color: #4a9eff;
+  -unity-font-style: bold;
+}
+
+.quest-journal__close-x {
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  padding: 0;
+  font-size: 20px;
+  color: #9aa5b8;
+  background-color: rgba(255, 255, 255, 0.04);
+  border-width: 0;
+  border-radius: 15px;
+  -unity-text-align: middle-center;
+  transition-duration: 0.12s;
+  transition-property: background-color, color;
+}
+
+.quest-journal__close-x:hover {
+  color: #ff6b6b;
+  background-color: rgba(255, 107, 107, 0.18);
+}
+
+/* ── 본문: 좌(목록) + 우(상세) 2단 ──────────────────────────── */
+/* min-height:0 이 없으면 스크롤 영역이 창 높이를 밀어낸다. */
+.quest-journal__body {
+  flex-direction: row;
+  flex-grow: 1;
+  min-height: 0;
+  gap: 16px;
+}
+
+/* ── 좌측: 임무 목록 ────────────────────────────────────────── */
+.quest-list-pane {
+  width: 352px;
+  flex-shrink: 0;
+  flex-direction: column;
+  min-height: 0;
+  padding: 12px 8px 12px 12px;
+  background-color: rgba(6, 16, 32, 0.75);
+  border-width: 1px;
+  border-color: #1f3a63;
+  border-radius: 12px;
+}
+
+.quest-list {
+  flex-grow: 1;
+  min-height: 0;
+  background-color: transparent;
+}
+
+.quest-list__empty {
+  font-size: 12px;
+  color: #6b7891;
+  -unity-font-style: italic;
+  -unity-text-align: middle-center;
+  white-space: normal;
+  margin-top: 24px;
+}
+
+/* 분류 헤더: 마름모 마커 + 분류명 + 개수 */
+.quest-group {
+  margin-bottom: 16px;
+}
+
+.quest-group__header {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-left: 2px;
+}
+
+.quest-group__marker {
+  width: 8px;
+  height: 8px;
+  rotate: 45deg;
+  background-color: #4a9eff;
+  flex-shrink: 0;
+}
+
+.quest-group__label {
+  font-size: 11px;
+  -unity-font-style: bold;
+  letter-spacing: 2px;
+  color: #4a9eff;
+}
+
+.quest-group__count {
+  font-size: 10px;
+  color: #6b7891;
+}
+
+.quest-group--completed .quest-group__marker {
+  background-color: #2ecc71;
+}
+
+.quest-group--completed .quest-group__label {
+  color: #2ecc71;
+}
+
+/* ── 목록 항목 ──────────────────────────────────────────────── */
+.quest-entry {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  padding: 10px 12px;
+  background-color: rgba(11, 22, 40, 0.95);
+  border-width: 1px;
+  border-color: #1f3a63;
+  border-radius: 10px;
+  transition-duration: 0.12s;
+  transition-property: background-color, border-color;
+}
+
+.quest-entry:hover {
+  background-color: rgba(20, 38, 66, 0.95);
+  border-color: #2d4373;
+}
+
+.quest-entry--selected {
+  background-color: rgba(26, 48, 84, 0.98);
+  border-color: #4a9eff;
+}
+
+.quest-entry--completed {
+  opacity: 0.72;
+}
+
+.quest-entry__marker {
+  width: 9px;
+  height: 9px;
+  rotate: 45deg;
+  flex-shrink: 0;
+  background-color: rgba(74, 158, 255, 0.25);
+  border-width: 1px;
+  border-color: #2d4373;
+}
+
+.quest-entry__marker--tracked {
+  background-color: #4a9eff;
+  border-color: #4a9eff;
+}
+
+.quest-entry__marker--completed {
+  background-color: #2ecc71;
+  border-color: #2ecc71;
+}
+
+.quest-entry__text {
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.quest-entry__title {
+  font-size: 14px;
+  -unity-font-style: bold;
+  color: #f0f4ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quest-entry__objective {
+  font-size: 11px;
+  color: #a9b4c8;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quest-entry__objective--tracked {
+  color: #4a9eff;
+}
+
+.quest-entry__objective--completed {
+  color: #2ecc71;
+}
+
+/* 우측 배지: 추적 중 / 완료 / 고정 불가 */
+.quest-entry__badge {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #4a9eff;
+  background-color: rgba(74, 158, 255, 0.14);
+  border-width: 1px;
+  border-color: rgba(74, 158, 255, 0.45);
+  border-radius: 6px;
+}
+
+.quest-entry__badge--completed {
+  color: #2ecc71;
+  background-color: rgba(46, 204, 113, 0.12);
+  border-color: rgba(46, 204, 113, 0.45);
+}
+
+.quest-entry__badge--locked {
+  color: #e6a23c;
+  background-color: rgba(230, 162, 60, 0.12);
+  border-color: rgba(230, 162, 60, 0.45);
+}
+
+/* ── 우측: 상세 ─────────────────────────────────────────────── */
+.quest-detail-pane {
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  padding: 18px;
+  background-color: rgba(6, 16, 32, 0.75);
+  border-width: 1px;
+  border-color: #1f3a63;
+  border-radius: 12px;
+}
+
+.quest-detail__header {
+  flex-shrink: 0;
+}
+
+.quest-detail__title {
+  font-size: 20px;
+  -unity-font-style: bold;
+  color: #f0f4ff;
+  white-space: normal;
+}
+
+.quest-detail__meta {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.quest-detail__meta-item {
+  font-size: 11px;
+  color: #6b7891;
+}
+
+/* 현재 목표 줄: 좌측 강조선 + 마름모 마커 */
+.quest-detail__objective {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  margin-top: 14px;
+  padding: 10px 14px;
+  background-color: rgba(74, 158, 255, 0.10);
+  border-left-width: 3px;
+  border-left-color: #4a9eff;
+  border-radius: 4px 8px 8px 4px;
+}
+
+.quest-detail__objective--completed {
+  background-color: rgba(46, 204, 113, 0.10);
+  border-left-color: #2ecc71;
+}
+
+.quest-detail__objective-marker {
+  width: 8px;
+  height: 8px;
+  rotate: 45deg;
+  flex-shrink: 0;
+  background-color: #4a9eff;
+}
+
+.quest-detail__objective--completed .quest-detail__objective-marker {
+  background-color: #2ecc71;
+}
+
+.quest-detail__objective-text {
+  flex-grow: 1;
+  font-size: 14px;
+  color: #f0f4ff;
+  white-space: normal;
+}
+
+/* 스크롤 본문 */
+.quest-detail__scroll {
+  flex-grow: 1;
+  min-height: 0;
+  margin-top: 14px;
+  background-color: transparent;
+}
+
+.quest-detail__description {
+  font-size: 13px;
+  color: #a9b4c8;
+  white-space: normal;
+}
+
+.quest-detail__section-label {
+  font-size: 11px;
+  -unity-font-style: bold;
+  letter-spacing: 2px;
+  color: #4a9eff;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+/* ── 세부 목표 ──────────────────────────────────────────────── */
+.quest-task {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 5px 0;
+}
+
+.quest-task--child {
+  margin-left: 18px;
+}
+
+.quest-task__check {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  background-color: rgba(11, 22, 40, 0.95);
+  border-width: 1px;
+  border-color: #2d4373;
+  border-radius: 4px;
+}
+
+.quest-task__check--current {
+  border-color: #4a9eff;
+  background-color: rgba(74, 158, 255, 0.25);
+}
+
+.quest-task__check--done {
+  background-color: #2ecc71;
+  border-color: #2ecc71;
+}
+
+.quest-task__text {
+  flex-grow: 1;
+  flex-shrink: 1;
+  font-size: 13px;
+  color: #cdd6e6;
+  white-space: normal;
+}
+
+.quest-task__text--current {
+  color: #f0f4ff;
+  -unity-font-style: bold;
+}
+
+.quest-task__text--done {
+  color: #6b7891;
+}
+
+.quest-task__progress {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #a9b4c8;
+  margin-top: 1px;
+}
+
+/* ── 정보 타일 행 ───────────────────────────────────────────── */
+.quest-info-tiles {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.quest-info-tile {
+  min-width: 92px;
+  align-items: center;
+  padding: 10px 14px;
+  background-color: rgba(11, 22, 40, 0.95);
+  border-width: 1px;
+  border-color: #1f3a63;
+  border-radius: 10px;
+}
+
+.quest-info-tile__value {
+  font-size: 16px;
+  -unity-font-style: bold;
+  color: #f0f4ff;
+}
+
+.quest-info-tile__caption {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #6b7891;
+  margin-top: 4px;
+}
+
+/* ── 고지 배너 ──────────────────────────────────────────────── */
+.quest-detail__notice {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  margin-top: 14px;
+  padding: 10px 14px;
+  background-color: rgba(64, 44, 16, 0.9);
+  border-width: 1px;
+  border-color: rgba(230, 162, 60, 0.45);
+  border-radius: 8px;
+}
+
+.quest-detail__notice-marker {
+  width: 9px;
+  height: 9px;
+  rotate: 45deg;
+  flex-shrink: 0;
+  background-color: #e6a23c;
+}
+
+.quest-detail__notice-text {
+  flex-grow: 1;
+  font-size: 12px;
+  color: #f0d9ac;
+  white-space: normal;
+}
+
+.quest-detail__notice--completed {
+  background-color: rgba(20, 52, 36, 0.95);
+  border-color: rgba(46, 204, 113, 0.45);
+}
+
+.quest-detail__notice--completed .quest-detail__notice-marker {
+  background-color: #2ecc71;
+}
+
+.quest-detail__notice--completed .quest-detail__notice-text {
+  color: #eafff0;
+}
+
+/* ── 상세 푸터: 추적 토글 + 안내 ────────────────────────────── */
+.quest-detail__footer {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top-width: 1px;
+  border-top-color: #1f3a63;
+}
+
+.quest-track-button {
+  height: 34px;
+  min-width: 132px;
+  margin: 0;
+  padding: 0 18px;
+  font-size: 12px;
+  -unity-font-style: bold;
+  color: #f0f4ff;
+  background-color: rgba(74, 158, 255, 0.14);
+  border-width: 1px;
+  border-color: #2d4373;
+  border-radius: 8px;
+  transition-duration: 0.12s;
+  transition-property: background-color, color, border-color;
+}
+
+.quest-track-button:hover {
+  border-color: #4a9eff;
+  background-color: rgba(74, 158, 255, 0.26);
+}
+
+.quest-track-button--tracked {
+  color: #0b1628;
+  background-color: #4a9eff;
+  border-color: #4a9eff;
+}
+
+.quest-track-button--tracked:hover {
+  background-color: #6bb0ff;
+}
+
+.quest-track-button:disabled {
+  color: rgba(180, 180, 180, 0.7);
+  background-color: rgba(80, 80, 80, 0.5);
+  border-color: rgba(80, 80, 80, 0.8);
+  opacity: 1;
+}
+
+.quest-detail__hint {
+  font-size: 11px;
+  color: #6b7891;
+  -unity-text-align: middle-right;
+  white-space: normal;
+  flex-shrink: 1;
+  margin-left: 12px;
+}
+
+/* ── 빈 상태(선택된 임무 없음) ──────────────────────────────── */
+.quest-detail__empty {
+  flex-grow: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.quest-detail__empty-text {
+  font-size: 13px;
+  color: #6b7891;
+  -unity-font-style: italic;
+  -unity-text-align: middle-center;
+  white-space: normal;
+}
+
+/* ── 스크롤바(얇은 형태) ────────────────────────────────────── */
+/* ChatPanelUI · InventoryUI 의 얇은 스크롤바 패턴을 그대로 적용한다. */
+.quest-list .unity-scroll-view__viewport,
+.quest-detail__scroll .unity-scroll-view__viewport {
+  padding-right: 4px;
+}
+
+.quest-list .unity-scroller > .unity-scroller__low-button,
+.quest-list .unity-scroller > .unity-scroller__high-button,
+.quest-detail__scroll .unity-scroller > .unity-scroller__low-button,
+.quest-detail__scroll .unity-scroller > .unity-scroller__high-button {
+  width: 0;
+  height: 0;
+  min-width: 0;
+  min-height: 0;
+  display: none;
+}
+
+.quest-list .unity-scroller--vertical,
+.quest-detail__scroll .unity-scroller--vertical {
+  width: 6px;
+  min-width: 0;
+  margin: 0;
+}
+
+.quest-list .unity-scroller--vertical > .unity-scroller__slider,
+.quest-detail__scroll .unity-scroller--vertical > .unity-scroller__slider {
+  width: 6px;
+  min-width: 0;
+  margin: 0;
+}
+
+.quest-list .unity-base-slider__tracker,
+.quest-detail__scroll .unity-base-slider__tracker {
+  background-color: rgba(74, 158, 255, 0.15);
+  border-color: transparent;
+}
+
+.quest-list .unity-base-slider .unity-base-slider__dragger,
+.quest-detail__scroll .unity-base-slider .unity-base-slider__dragger {
+  border-width: 0;
+  border-color: transparent;
+  border-radius: 3px;
+}
+
+.quest-list .unity-scroller--vertical .unity-base-slider__dragger,
+.quest-detail__scroll .unity-scroller--vertical .unity-base-slider__dragger {
+  left: 0;
+  width: 6px;
+  margin-left: 0;
+  margin-right: 0;
+  background-color: rgba(74, 158, 255, 0.55);
+}
