@@ -42,7 +42,7 @@ namespace TriageTrainer.Entity
     {
       private readonly WallAttachedWallSuction _owner;
       public YankauerConnectionInteract(WallAttachedWallSuction owner) => _owner = owner;
-      public string DisplayText => _owner._yankauerConnected ? "양카우어를 흡인기에서 분리" : "앙카우어 팁 연결";
+      public string DisplayText => _owner._yankauerConnected ? "양카우어를 흡인기에서 분리" : "양카우어 팁 연결";
       public string PresentationEntityIdentifier => "patient_a_wall_suction";
       public string InteractionIdentifier => "connect_yankauer";
       public Sprite DisplayIcon => null;
@@ -118,7 +118,7 @@ namespace TriageTrainer.Entity
       IsPatientAInstallationTarget ? "patient_a_wall_suction" : base.PresentationEntityIdentifier;
     public override string InteractionIdentifier =>
       IsPatientAInstallationTarget ? "wall_suction_install" : base.InteractionIdentifier;
-    private Sprite _heldItemIcon;
+    private Sprite _installationItemIcon;
 
     protected override string EntityIdPrefix => "wall_suction";
     // 미설치 활성화 후보가 구역 경계에서 여러 개 감지되어도 PlayerController가 같은 그룹 중
@@ -127,7 +127,7 @@ namespace TriageTrainer.Entity
     public Transform NearestOnlyDistanceOrigin => transform;
     public Collider NearestOnlyCollider => GetComponent<Collider>();
     public int NearestOnlyTieBreaker => GetInstanceID();
-    public override IReadOnlyList<Sprite> DisplayIcons => new[] { Icon.ClearRightBottom, _heldItemIcon };
+    public override IReadOnlyList<Sprite> DisplayIcons => new[] { Icon.ClearRightBottom, ResolveInstallationItemIcon() };
 
     public override string DisplayText
     {
@@ -166,12 +166,20 @@ namespace TriageTrainer.Entity
 
       if (IsAttached)
       {
-        _heldItemIcon = null;
         return true;
       }
 
-      _heldItemIcon = player.HandlingItem?.CurrentItemIconTexture;
       return true;
+    }
+
+    private Sprite ResolveInstallationItemIcon()
+    {
+      if (_installationItemIcon != null)
+        return _installationItemIcon;
+
+      _installationItemIcon = MultiplayerInfrastructure.Registry.Registry.CreateItemInstance(
+        RequiredItemIdentifier)?.CurrentItemIconTexture;
+      return _installationItemIcon;
     }
 
     // ── IInteract ─────────────────────────────────────────────────────────────
@@ -218,8 +226,8 @@ namespace TriageTrainer.Entity
       var dialogue = MultiplayerInfrastructure.Registry.Registry.Get<DialoguePanelUIController>(
         MultiplayerInfrastructure.Registry.RegistryType.UI,
         MultiplayerInfrastructure.Registry.Registry.TypeKey<DialoguePanelUIController>());
-      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(석션 라인과 앙카우어 팁을 조립해두지 않았다.)");
-      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(석션 라인과 앙카우어 팁을 찾아 조립하자.)");
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(석션 라인과 양카우어 팁을 조립해두지 않았다.)");
+      dialogue?.TryPresentTransientDialogue("{PLAYER_NAME}", "(석션 라인과 양카우어 팁을 찾아 조립하자.)");
     }
 
     private void ConnectYankauer(PlayerController player)

@@ -147,7 +147,7 @@ namespace TriageTrainer.Entity
     private string _cachedAttachedInteractSignalSource;
     /// <summary>산소 라인 자동 연결에 사용할 유량계 측 포트. 프리팹에 설정되지 않으면 null이다.</summary>
     public OxyLineConnectionPoint OxyLineConnectionPoint => _oxyLineConnectionPoint;
-    private Sprite _heldItemIcon;
+    private Sprite _installationItemIcon;
 
     protected override string EntityIdPrefix => "wall_oxyflowmeter";
     // 미설치 활성화 후보가 구역 경계에서 여러 개 감지되어도 PlayerController가 같은 그룹 중
@@ -156,7 +156,7 @@ namespace TriageTrainer.Entity
     public Transform NearestOnlyDistanceOrigin => transform;
     public Collider NearestOnlyCollider => GetComponent<Collider>();
     public int NearestOnlyTieBreaker => GetInstanceID();
-    public override IReadOnlyList<Sprite> DisplayIcons => new[] { Icon.ClearRightBottom, _heldItemIcon };
+    public override IReadOnlyList<Sprite> DisplayIcons => new[] { Icon.ClearRightBottom, ResolveInstallationItemIcon() };
 
     public override string DisplayText
     {
@@ -209,12 +209,20 @@ namespace TriageTrainer.Entity
 
       if (IsAttached)
       {
-        _heldItemIcon = null;
         return true;
       }
 
-      _heldItemIcon = player.HandlingItem?.CurrentItemIconTexture;
       return true;
+    }
+
+    private Sprite ResolveInstallationItemIcon()
+    {
+      if (_installationItemIcon != null)
+        return _installationItemIcon;
+
+      _installationItemIcon = MultiplayerInfrastructure.Registry.Registry.CreateItemInstance(
+        RequiredItemIdentifier)?.CurrentItemIconTexture;
+      return _installationItemIcon;
     }
 
     // ── IInteract ─────────────────────────────────────────────────────────────
