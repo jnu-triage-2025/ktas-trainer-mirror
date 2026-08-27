@@ -642,6 +642,25 @@ namespace MultiplayerInfrastructure.Command
     }
   }
 
+  public sealed class CommandDefinition_ScenarioAlias : IChatCommandModel
+  {
+    private readonly CommandDefinition_Scenario _scenario;
+
+    public CommandDefinition_ScenarioAlias(CommandDefinition_Scenario scenario)
+    {
+      _scenario = scenario;
+    }
+
+    public string CommandEntry => "scen";
+    public string Description => "Alias for /scenario.";
+    public string PermissionIdentifier => "scenario";
+
+    public void Execute(NetworkConnection sender, string[] args)
+    {
+      _scenario.Execute(sender, args);
+    }
+  }
+
   public class CommandDefinition_ProblemSheet : IChatCommandModel, IChatCommandPipelineCommand, IChatCommandUsage
   {
     public string CommandEntry => "problemsheet";

@@ -27,7 +27,9 @@ namespace MultiplayerInfrastructure.Command
       RegisterCommand(new CommandDefinition_Clean(_chatManager));
       RegisterCommand(new CommandDefinition_Tag(_chatManager));
       RegisterCommand(new CommandDefinition_Scoreboard(_chatManager));
-      RegisterCommand(new CommandDefinition_Scenario(_chatManager));
+      var scenarioCommand = new CommandDefinition_Scenario(_chatManager);
+      RegisterCommand(scenarioCommand);
+      RegisterCommand(new CommandDefinition_ScenarioAlias(scenarioCommand));
       RegisterCommand(new CommandDefinition_Signal(_chatManager));
       RegisterCommand(new CommandDefinition_ProblemSheet(_chatManager));
       RegisterCommand(new CommandDefinition_Character(_chatManager));
