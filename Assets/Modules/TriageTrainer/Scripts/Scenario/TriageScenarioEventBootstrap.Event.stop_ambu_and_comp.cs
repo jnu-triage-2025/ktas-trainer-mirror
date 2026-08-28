@@ -13,6 +13,7 @@ namespace TriageTrainer.Scenario
     {
       SetAnimatorsBool(_ambuBaggingAnimators, _ambuBaggingBoolName, false);
       SetAnimatorsBool(_chestCompressionAnimators, _chestCompressionBoolName, false);
+      CompletePatientACprCycle();
       EmitSystemMessage("앰부배깅/가슴압박 애니메이션을 중지했습니다.");
       yield break;
     }

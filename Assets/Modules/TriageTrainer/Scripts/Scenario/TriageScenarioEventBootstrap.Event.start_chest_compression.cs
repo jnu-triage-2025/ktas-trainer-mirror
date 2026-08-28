@@ -12,6 +12,7 @@ namespace TriageTrainer.Scenario
     private IEnumerator Event_StartChestCompression()
     {
       SetAnimatorsBool(_chestCompressionAnimators, _chestCompressionBoolName, true);
+      PlayPatientAChestCompressionAnimation();
       EmitSystemMessage("가슴 압박 애니메이션을 시작했습니다.");
       yield break;
     }

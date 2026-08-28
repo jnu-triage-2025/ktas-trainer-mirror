@@ -183,6 +183,9 @@ namespace TriageTrainer.Scenario
     [SerializeField] private string _ambuBaggingBoolName = "IsAmbuBagging";
     [SerializeField] private Animator[] _chestCompressionAnimators;
     [SerializeField] private string _chestCompressionBoolName = "IsChestCompressing";
+    [Header("patient_a_critical CPR animation clips")]
+    [SerializeField] private AnimationClip _chestCompressionAnimationClip;
+    [SerializeField] private AnimationClip _cprReceivingPatientAnimationClip;
 
     [Header("patient_b_c_ct intro (MVP)")]
     [SerializeField] private string _patientBEntityIdentifier = "patientB";
@@ -323,6 +326,7 @@ namespace TriageTrainer.Scenario
 
     private void OnEnable()
     {
+      ScenarioActionInteractable.OnInteractionCompleted += HandleScenarioActionInteractionCompleted;
       EnablePatientATreatmentSignalHandlers();
       RegisterIntroAndPatientAEvents();
       RegisterPatientBCEvents();
@@ -336,6 +340,8 @@ namespace TriageTrainer.Scenario
 
     private void OnDisable()
     {
+      ScenarioActionInteractable.OnInteractionCompleted -= HandleScenarioActionInteractionCompleted;
+      StopPatientACprAnimations();
       DisablePatientATreatmentSignalHandlers();
       UnsubscribeQuestStateFlagScope();
       DisposePatientBCFinalFadeOverlay();

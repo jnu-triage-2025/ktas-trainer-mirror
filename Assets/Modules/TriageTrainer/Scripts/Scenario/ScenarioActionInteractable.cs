@@ -15,6 +15,8 @@ namespace TriageTrainer.Scenario
   [RequireComponent(typeof(Collider))]
   public sealed class ScenarioActionInteractable : MonoBehaviour, IInteractable, IInteract, IInteractorConditional, IInteractToggleable, IInteractDisplayIcons, IQuestPresentationTarget
   {
+    public static event Action<ScenarioActionInteractable, PlayerController> OnInteractionCompleted;
+
     [Header("Scenario Action")]
     [SerializeField] private string _displayText = "상호작용";
     [SerializeField] private Sprite _displayIcon;
@@ -26,6 +28,8 @@ namespace TriageTrainer.Scenario
     [SerializeField] private string _interactionIdentifier;
     [Tooltip("이 상호작용을 노출하기 전에 RuntimeState에 이미 있어야 하는 시나리오 신호입니다.")]
     [SerializeField] private string[] _requiredRaisedSignals = Array.Empty<string>();
+    [Tooltip("이 상호작용을 수행할 수 있는 플레이어 역할 태그입니다. 비우면 역할을 제한하지 않습니다.")]
+    [SerializeField] private string _requiredPlayerTag;
     [SerializeField] private bool _enabled = true;
     [SerializeField] private bool _consumeOnce = true;
     [Tooltip("상호작용에 필요한 인벤토리 아이템 식별자입니다. 비우면 아이템을 요구하지 않습니다.")]
@@ -49,6 +53,7 @@ namespace TriageTrainer.Scenario
     public string InteractionIdentifier => string.IsNullOrWhiteSpace(_interactionIdentifier)
       ? _completionSignal
       : _interactionIdentifier;
+    public string RequiredPlayerTag => _requiredPlayerTag;
     public Sprite DisplayIcon => _displayIcon;
     public IReadOnlyList<Sprite> DisplayIcons => _displayIcons;
     public bool AllowDisplayIconFallback => true;
@@ -61,6 +66,11 @@ namespace TriageTrainer.Scenario
 
       var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
       if (player == null)
+        return false;
+      if (!string.IsNullOrWhiteSpace(_requiredPlayerTag)
+          && !string.IsNullOrWhiteSpace(player.UserIdentifier)
+          && !MultiplayerInfrastructure.Tag.PlayerTagService.HasTag(
+            player.UserIdentifier, _requiredPlayerTag))
         return false;
 
       // patient_a_critical 은 노출을 플레이어별 퀘스트 상태 플래그로 판정한다. 그 시나리오에서는
@@ -98,6 +108,7 @@ namespace TriageTrainer.Scenario
         ScenarioInteractionSignals.Raise(_completionSignal);
 
       _completed = true;
+      OnInteractionCompleted?.Invoke(this, player);
     }
 
     private void ShowMissingItemDialogue()

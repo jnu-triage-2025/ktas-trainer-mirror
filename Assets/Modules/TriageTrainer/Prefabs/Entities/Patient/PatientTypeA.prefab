@@ -142,6 +142,7 @@ MonoBehaviour:
   _presentationEntityIdentifier: patient_a
   _interactionIdentifier: 
   _requiredRaisedSignals: []
+  _requiredPlayerTag: 
   _enabled: 0
   _consumeOnce: 1
   _requiredItemIdentifier: 
@@ -216,7 +217,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "\uAC00\uC2B4\uC555\uBC15 \uC2DC\uC791"
+  _displayText: "\uAC00\uC2B4\uC555\uBC15 \uC218\uD589"
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: interact_chest
@@ -224,6 +225,7 @@ MonoBehaviour:
   _interactionIdentifier: 
   _requiredRaisedSignals:
   - click_to_start_comp
+  _requiredPlayerTag: nurse_a
   _enabled: 0
   _consumeOnce: 1
   _requiredItemIdentifier: 
@@ -305,6 +307,7 @@ MonoBehaviour:
   _presentationEntityIdentifier: patient_a
   _interactionIdentifier: 
   _requiredRaisedSignals: []
+  _requiredPlayerTag: 
   _enabled: 0
   _consumeOnce: 1
   _requiredItemIdentifier: 
@@ -475,6 +478,7 @@ MonoBehaviour:
   _presentationEntityIdentifier: patient_a
   _interactionIdentifier: 
   _requiredRaisedSignals: []
+  _requiredPlayerTag: 
   _enabled: 0
   _consumeOnce: 1
   _requiredItemIdentifier: 
@@ -556,6 +560,7 @@ MonoBehaviour:
   _presentationEntityIdentifier: patient_a
   _interactionIdentifier: 
   _requiredRaisedSignals: []
+  _requiredPlayerTag: 
   _enabled: 0
   _consumeOnce: 1
   _requiredItemIdentifier: 
@@ -638,6 +643,7 @@ MonoBehaviour:
   _presentationEntityIdentifier: patient_a
   _interactionIdentifier: 
   _requiredRaisedSignals: []
+  _requiredPlayerTag: 
   _enabled: 0
   _consumeOnce: 1
   _requiredItemIdentifier: 
@@ -712,13 +718,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "\uAC00\uC2B4\uC555\uBC15 \uC2DC\uC791"
+  _displayText: "\uAC00\uC2B4\uC555\uBC15 \uC218\uD589"
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: click_to_start_comp
   _presentationEntityIdentifier: patient_a
   _interactionIdentifier: 
   _requiredRaisedSignals: []
+  _requiredPlayerTag: nurse_b
   _enabled: 0
   _consumeOnce: 1
   _requiredItemIdentifier: 
@@ -1111,7 +1118,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584137282985528968
+  _initializedTimestamp: -8584137094147911788
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -1272,6 +1279,7 @@ MonoBehaviour:
   _presentationEntityIdentifier: patient_a
   _interactionIdentifier: interact_tpiece
   _requiredRaisedSignals: []
+  _requiredPlayerTag: 
   _enabled: 0
   _consumeOnce: 1
   _requiredItemIdentifier: tpiece_set
@@ -1465,6 +1473,7 @@ MonoBehaviour:
   _presentationEntityIdentifier: patient_a
   _interactionIdentifier: remove_intu_stylet
   _requiredRaisedSignals: []
+  _requiredPlayerTag: 
   _enabled: 0
   _consumeOnce: 1
   _requiredItemIdentifier: 
