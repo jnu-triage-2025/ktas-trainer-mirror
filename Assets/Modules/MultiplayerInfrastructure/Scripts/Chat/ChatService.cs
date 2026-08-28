@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
 using MultiplayerInfrastructure.Command;
@@ -172,6 +173,12 @@ namespace MultiplayerInfrastructure.Chat
     /// </summary>
     public bool TrySetDebugIntCprPlayingEscapeKeyServer(bool enabled)
     {
+      if (InstanceFinder.IsOffline)
+      {
+        ApplyDebugIntCprPlayingEscapeKey(enabled);
+        return true;
+      }
+
       if (!IsServerInitialized)
         return false;
 

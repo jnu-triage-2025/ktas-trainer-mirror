@@ -39,7 +39,7 @@ namespace MultiplayerInfrastructure.Command
       if (_chat == null)
         return;
 
-      if (!InstanceFinder.IsServerStarted)
+      if (!InstanceFinder.IsServerStarted && !InstanceFinder.IsOffline)
       {
         _chat.SendSystemMessage(sender, "gamerule can only be configured on the server.");
         return;

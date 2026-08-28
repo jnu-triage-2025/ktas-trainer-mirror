@@ -263,12 +263,18 @@ namespace TriageTrainer.Tests
         "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.PatientACprAnimations.cs"));
 
       StringAssert.Contains("state.Player.IsOwner", source);
+      StringAssert.Contains("InstanceFinder.IsOffline", source,
+        "오프라인 단독 디버깅에서는 네트워크 소유권 없이도 Escape 입력을 처리해야 합니다.");
       StringAssert.Contains("Input.GetKeyDown(KeyCode.LeftShift)", source);
       StringAssert.Contains("state.DebugEscaped = true", source);
       StringAssert.Contains("state.DebugEscapePosition = state.Player.transform.position", source);
       StringAssert.Contains("StopPatientACprPerformerAnimation(state.Player)", source);
-      StringAssert.Contains("state.Anchor.position = state.DebugEscapePosition", source,
+      StringAssert.Contains("MoveToPositionPreservingForcedFollowAnchor(state.DebugEscapePosition)", source,
         "정상 CPR 종료 시에는 디버그로 위치 고정을 해제했던 장소로 복귀해야 합니다.");
+      Assert.That(source, Does.Not.Contain("state.Player.SetForcedFollowAnchor(state.Anchor);\n          }"),
+        "디버그 복귀가 이후에 설정된 다른 이동 시스템의 앵커를 덮어써서는 안 됩니다.");
+      StringAssert.Contains("ApplyPatientACprAnimationPositionOffsets();", source,
+        "RootT 곡선이 오프셋을 덮어쓰지 않도록 재생 중에도 위치 보정을 유지해야 합니다.");
       Assert.That(source, Does.Not.Contain("TryDebugEscapePatientACprPerformer(state);\n      _patientACprPerformers.Clear"),
         "디버그 Escape가 시스템상 CPR 수행 상태를 제거해서는 안 됩니다.");
     }

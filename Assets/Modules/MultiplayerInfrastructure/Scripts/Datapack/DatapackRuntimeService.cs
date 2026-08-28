@@ -218,7 +218,7 @@ namespace MultiplayerInfrastructure.Datapack
           if (rule != null && !string.IsNullOrWhiteSpace(rule.name) && rule.value != null)
           {
             var pending = new PendingGameRule { PackId = definition.packId, Name = rule.name, Value = rule.value };
-            if (InstanceFinder.IsServerStarted)
+            if (InstanceFinder.IsServerStarted || InstanceFinder.IsOffline)
               ExecuteGameRule(pending);
             else
               _pendingGameRules.Add(pending);
@@ -269,9 +269,35 @@ namespace MultiplayerInfrastructure.Datapack
           _eventBaseHandlers.Remove(injected.EventIdentifier);
       }
 
+      _pendingGameRules.RemoveAll(x => string.Equals(x.PackId, packId, StringComparison.Ordinal));
       _loaded.Remove(packId);
+      RestoreDebugCprEscapeRuleAfterUnload(loaded);
       Debug.Log($"[DatapackRuntimeService] Unregistered datapack '{packId}'.");
       return true;
+    }
+
+    private void RestoreDebugCprEscapeRuleAfterUnload(LoadedDatapack unloaded)
+    {
+      const string ruleName = "DEBUG_INT_CPR_PLAYING_ESCAPE_KEY";
+      if (unloaded?.Definition?.gameRules == null
+          || !unloaded.Definition.gameRules.Any(x => x != null
+            && string.Equals(x.name, ruleName, StringComparison.OrdinalIgnoreCase)))
+        return;
+
+      string value = "false";
+      foreach (var remaining in _loaded.Values)
+      {
+        var replacement = remaining?.Definition?.gameRules?.LastOrDefault(x => x != null
+          && string.Equals(x.name, ruleName, StringComparison.OrdinalIgnoreCase));
+        if (replacement?.value != null)
+          value = replacement.value;
+      }
+
+      if (!bool.TryParse(value, out bool enabled))
+        enabled = false;
+
+      if (_chatService == null || !_chatService.TrySetDebugIntCprPlayingEscapeKeyServer(enabled))
+        ScenarioGameRules.DEBUG_INT_CPR_PLAYING_ESCAPE_KEY = enabled;
     }
 
     public IReadOnlyCollection<string> GetLoadedDatapackIds()

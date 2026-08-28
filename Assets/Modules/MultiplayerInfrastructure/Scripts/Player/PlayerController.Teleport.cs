@@ -27,6 +27,15 @@ namespace MultiplayerInfrastructure.Player
       if (!IsServerStarted)
         ClearForcedFollowAnchor();
 
+      MoveToPositionPreservingForcedFollowAnchor(position);
+    }
+
+    /// <summary>
+    /// 현재 forced-follow 소유자를 변경하지 않고 로컬 플레이어 위치를 안전하게 갱신한다.
+    /// 다른 시스템이 플레이어를 고정하고 있을 수 있는 표현 복귀 경로에서 사용한다.
+    /// </summary>
+    public void MoveToPositionPreservingForcedFollowAnchor(Vector3 position)
+    {
       // CharacterController 가 활성화된 상태에서 transform.position 을 직접 바꾸면
       // 내부 상태와 충돌이 발생할 수 있으므로 일시 비활성화 후 이동한다.
       bool wasEnabled = _characterController != null && _characterController.enabled;

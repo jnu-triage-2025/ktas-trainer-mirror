@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FishNet;
 using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Tag;
@@ -27,6 +28,7 @@ namespace TriageTrainer.Scenario
 
     private readonly Dictionary<Animator, PlayableGraph> _patientACprAnimationGraphs = new();
     private readonly Dictionary<Animator, Vector3> _patientACprAnimationBasePositions = new();
+    private readonly Dictionary<Animator, Vector3> _patientACprAnimationPositionOffsets = new();
     private readonly Dictionary<PlayerController, PatientACprPerformerState> _patientACprPerformers = new();
 
     private void PlayPatientAChestCompressionAnimation()
@@ -135,6 +137,7 @@ namespace TriageTrainer.Scenario
 
       _patientACprAnimationGraphs.Clear();
       _patientACprAnimationBasePositions.Clear();
+      _patientACprAnimationPositionOffsets.Clear();
       ReleasePatientACprPerformers();
     }
 
@@ -177,6 +180,8 @@ namespace TriageTrainer.Scenario
         if (!state.DebugEscaped)
           AlignPatientACprPerformer(state);
       }
+
+      ApplyPatientACprAnimationPositionOffsets();
     }
 
     /// <summary>
@@ -188,7 +193,7 @@ namespace TriageTrainer.Scenario
     private bool TryDebugEscapePatientACprPerformer(PatientACprPerformerState state)
     {
       if (state?.Player == null || state.Anchor == null || state.DebugEscaped
-          || !state.Player.IsOwner
+          || (!InstanceFinder.IsOffline && !state.Player.IsOwner)
           || !ScenarioGameRules.DEBUG_INT_CPR_PLAYING_ESCAPE_KEY
           || !Input.GetKeyDown(KeyCode.LeftShift))
         return false;
@@ -240,8 +245,9 @@ namespace TriageTrainer.Scenario
           // 이동 중인 현재 위치가 아니라, 디버그로 위치 고정을 해제했던 장소로 먼저 복귀시킨다.
           if (state.DebugEscaped && state.Anchor != null)
           {
-            state.Anchor.position = state.DebugEscapePosition;
-            state.Player.SetForcedFollowAnchor(state.Anchor);
+            // 디버그 이탈 중 다른 이동 시스템이 앵커를 획득했을 수 있으므로 CPR 앵커를
+            // 재설정하지 않는다. CharacterController만 안전하게 우회하여 저장 위치로 복귀한다.
+            state.Player.MoveToPositionPreservingForcedFollowAnchor(state.DebugEscapePosition);
           }
 
           state.Player.ClearForcedFollowAnchor(state.Anchor);
@@ -309,11 +315,23 @@ namespace TriageTrainer.Scenario
         // AnimationOffsetPlayable is no longer publicly accessible in Unity 6.
         // Apply the equivalent local root offset to the authored target instead.
         _patientACprAnimationBasePositions[animator] = animator.transform.localPosition;
-        animator.transform.localPosition += positionOffset;
+        _patientACprAnimationPositionOffsets[animator] = positionOffset;
         output.SetSourcePlayable(playable);
       }
       graph.Play();
       _patientACprAnimationGraphs[animator] = graph;
+    }
+
+    private void ApplyPatientACprAnimationPositionOffsets()
+    {
+      // CPR 클립에는 RootT 곡선이 있으므로 재생 전에 한 번 이동하는 방식은 그래프 평가 때
+      // 덮어써진다. Animator 평가가 끝난 LateUpdate에서 기준 위치와 오프셋을 계속 유지한다.
+      foreach (var pair in _patientACprAnimationPositionOffsets)
+      {
+        Animator animator = pair.Key;
+        if (animator != null && _patientACprAnimationBasePositions.TryGetValue(animator, out var basePosition))
+          animator.transform.localPosition = basePosition + pair.Value;
+      }
     }
 
     private void RestoreAnimationBasePosition(Animator animator)
@@ -322,6 +340,7 @@ namespace TriageTrainer.Scenario
         animator.transform.localPosition = basePosition;
 
       _patientACprAnimationBasePositions.Remove(animator);
+      _patientACprAnimationPositionOffsets.Remove(animator);
     }
   }
 }
