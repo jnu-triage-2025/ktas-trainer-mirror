@@ -44,6 +44,11 @@ namespace MultiplayerInfrastructure.UI
       ApplyDefaultTimes();
       BindElement();
       HideAll();
+
+      // 타이틀/액션바는 표시만 하는 HUD이므로 포인터 입력을 받지 않는다.
+      // 이 문서는 sortingOrder 가 5 라서 아래쪽 문서(퀘스트 패널 4 등)보다 위에 놓이며,
+      // 문서 루트가 픽킹을 유지하면 아래 문서의 클릭과 휠을 가로챌 수 있다.
+      SetDocumentRootPickingEnabled(_uiDocument, false);
     }
 
     public void SetTimes(int fadeInTicks, int stayTicks, int fadeOutTicks)

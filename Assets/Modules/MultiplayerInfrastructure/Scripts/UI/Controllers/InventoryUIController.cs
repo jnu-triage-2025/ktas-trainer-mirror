@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Player;
@@ -32,6 +33,12 @@ namespace MultiplayerInfrastructure.UI
     /// 인벤토리 배치(슬롯 변화)가 감지되면 이 아이템의 지연 획득 훅(OnGet)을 발행한다.
     /// </summary>
     private ItemSystem.Item _pendingAcquisition;
+
+    /// <summary>
+    /// 인벤토리가 열려 있는지 여부. 문서 루트의 픽킹 상태를 결정하는 기준이며,
+    /// UIDocument가 root를 다시 만들어 뷰를 재바인딩할 때에도 이 값으로 상태를 복원한다.
+    /// </summary>
+    private bool _isOpened;
 
     public bool IsOpened => _view != null && _view.IsVisible;
 
@@ -68,6 +75,11 @@ namespace MultiplayerInfrastructure.UI
         _document = GetComponent<UIDocument>();
 
       BindViewToCurrentDocumentRoot();
+
+      // rootVisualElement 생성이 늦어져 바인딩이 미뤄지는 경우에도
+      // 닫혀 있는 인벤토리 문서가 아래 문서의 클릭과 휠을 가로채지 않도록 한다.
+      if (!_isOpened)
+        StartCoroutine(NeutralizeDocumentRootWhenReady(_document));
     }
 
     private void BindViewToCurrentDocumentRoot()
@@ -113,6 +125,26 @@ namespace MultiplayerInfrastructure.UI
 
       // 조합 패널 콜백 주입: 보유 수량 조회 + 조합 실행.
       _view.SetCraftingCallbacks(ResolveHeldCount, HandleCraftRequest);
+
+      // 뷰를 다시 바인딩한 직후에도 문서의 픽킹 상태를 현재 열림 여부와 맞춘다.
+      ApplyDocumentInteractable(_isOpened);
+    }
+
+    /// <summary>
+    /// 인벤토리 문서 전체의 표시와 포인터 히트테스트 상태를 함께 전환한다.
+    ///
+    /// InventoryUI 문서는 화면 전체를 채우는 래퍼(<c>InventoryUIWrapper</c>)와 ScrollView를 항상 가지고 있고,
+    /// sortingOrder 가 6 이라서 그보다 아래에 있는 문서(퀘스트 패널 4, 크로스헤어 1, 핫바 등)보다 위에 놓인다.
+    /// 인벤토리 뷰만 display:none 으로 숨기면 이 래퍼와 ScrollView 가 그대로 남아
+    /// 화면 어디를 클릭하거나 휠을 굴려도 아래 문서 대신 인벤토리 문서가 입력을 가져간다.
+    /// 따라서 닫혀 있는 동안에는 문서 루트까지 함께 비활성화해야 한다.
+    /// </summary>
+    private void ApplyDocumentInteractable(bool interactable)
+    {
+      if (_document == null)
+        _document = GetComponent<UIDocument>();
+
+      SetDocumentVisible(_document, interactable);
     }
 
     /// <summary>
@@ -232,7 +264,12 @@ namespace MultiplayerInfrastructure.UI
       _view.UpdateCraftableRecipes(player != null ? player.GetCraftableRecipes() : null);
     }
 
-    public void ToggleRoot(bool visible) => _view?.SetVisible(visible);
+    public void ToggleRoot(bool visible)
+    {
+      _isOpened = visible;
+      _view?.SetVisible(visible);
+      ApplyDocumentInteractable(visible);
+    }
 
     /// <summary>
     /// 커서가 올라가 있는 인벤토리 슬롯과 지정한 핫바 슬롯의 아이템을 서로 맞바꾼다.
@@ -249,14 +286,18 @@ namespace MultiplayerInfrastructure.UI
       if (_view == null || _view.panel == null)
         BindViewToCurrentDocumentRoot();
 
+      _isOpened = true;
+      ApplyDocumentInteractable(true);
       _view?.SetVisible(true);
       OverlayPushed?.Invoke();
     }
 
     public void OnOverlayPopped()
     {
+      _isOpened = false;
       _view?.SetVisible(false);
       _view?.ReturnHeldItemToInventoryOnClose();
+      ApplyDocumentInteractable(false);
       OverlayPopped?.Invoke();
     }
 
