@@ -669,6 +669,7 @@ namespace MultiplayerInfrastructure.Scenario
           MoveMode = ParseMoveMode(dto.MoveMode),
           MoveSpeed = dto.MoveSpeed ?? 0f,
           MoveDuration = dto.MoveDuration ?? 0f,
+          FacingYawDegrees = dto.FacingYawDegrees,
           NextIdentifier = dto.NextIdentifier
         };
 
@@ -1894,6 +1895,7 @@ namespace MultiplayerInfrastructure.Scenario
           MoveMode = node.MoveMode.ToString(),
           MoveSpeed = node.MoveSpeed,
           MoveDuration = node.MoveDuration,
+          FacingYawDegrees = node.FacingYawDegrees,
           NextIdentifier = node.NextIdentifier
         };
 

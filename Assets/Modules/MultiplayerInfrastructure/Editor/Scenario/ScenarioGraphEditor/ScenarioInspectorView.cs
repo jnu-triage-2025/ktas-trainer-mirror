@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Globalization;
+using System.Linq;
 using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
@@ -456,6 +457,9 @@ namespace MultiplayerInfrastructure.Editor
         else if (data.MoveMode == ScenarioMoveMode.ByDuration)
           data.MoveDuration = EditorGUILayout.FloatField("Move Duration", data.MoveDuration);
       }
+
+      // 이동은 도착 지점만 정하고 방향은 정하지 않는다. 도착 후 방향이 중요한 연출은 여기서 지정한다.
+      data.FacingYawDegrees = NullableFloatField("Facing Yaw (Y°)", data.FacingYawDegrees);
 
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
@@ -1529,6 +1533,20 @@ namespace MultiplayerInfrastructure.Editor
       if (string.IsNullOrWhiteSpace(text))
         return null;
       return int.TryParse(text, out var parsed) ? parsed : current;
+    }
+
+    /// <summary>
+    /// null 허용 float 필드 편집기. 빈 문자열 입력 시 null을 반환한다.
+    /// </summary>
+    private static float? NullableFloatField(string label, float? current)
+    {
+      var text = EditorGUILayout.TextField(
+        label, current.HasValue ? current.Value.ToString(CultureInfo.InvariantCulture) : string.Empty);
+      if (string.IsNullOrWhiteSpace(text))
+        return null;
+      return float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed)
+        ? parsed
+        : current;
     }
 
     /// <summary>

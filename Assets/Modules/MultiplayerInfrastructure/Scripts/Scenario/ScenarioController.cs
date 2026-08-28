@@ -52,6 +52,12 @@ namespace MultiplayerInfrastructure.Scenario
     public static ScenarioController Instance => _instance;
     public static event Action<ScenarioController> InstanceAvailable;
 
+    // NPC 이동과 수동 진입은 모두 메인 스레드에서 실행된다. 공통 버퍼로 일반적인 접지 검사에서
+    // RaycastAll 배열 할당을 피한다. 충돌면이 이 수보다 많은 드문 경우에는 아래에서 정확성을
+    // 우선해 RaycastAll로 다시 검사한다.
+    private const int GroundRaycastHitCapacity = 32;
+    private static readonly RaycastHit[] GroundRaycastHits = new RaycastHit[GroundRaycastHitCapacity];
+
     // WaitMode.All/Any 병렬 노드가 분기 완료를 기다리는 동안 외부 자동 진행이
     // 병렬 부모의 NextIdentifier로 건너뛰지 못하게 한다.
     private int _parallelAdvanceBlockDepth;
@@ -4282,6 +4288,7 @@ namespace MultiplayerInfrastructure.Scenario
         {
           _stateStore[node.ResultStateKey.Trim()] = interactableFound ? "true" : "false";
         }
+        ApplyNpcFacing(npcObject, node.FacingYawDegrees);
         ScenarioNetworkRelay.PublishNPCControlUpdate(
           npc.GetComponentInParent<NetworkObject>(), node);
 
@@ -4309,7 +4316,24 @@ namespace MultiplayerInfrastructure.Scenario
           animation.SetBool(NpcWalkAnimationParameterName, false);
       }
 
+      // 이동 경로는 도착 지점만 정하고 방향은 정하지 않는다. 방향까지 지정한 노드는
+      // 이동이 끝난 뒤에 적용해야 마지막 이동 방향에 덮이지 않는다.
+      ApplyNpcFacing(npcObject, node.FacingYawDegrees);
+
       Advance();
+    }
+
+    /// <summary>
+    /// NPC가 바라볼 방향을 월드 Y축 회전으로 지정한다. 값이 없으면 회전을 건드리지 않는다.
+    /// X/Z 회전은 유지해서, 프리팹이 가진 기울기 설정을 이 지시가 지우지 않게 한다.
+    /// </summary>
+    private static void ApplyNpcFacing(GameObject npcObject, float? facingYawDegrees)
+    {
+      if (npcObject == null || !facingYawDegrees.HasValue)
+        return;
+
+      var euler = npcObject.transform.rotation.eulerAngles;
+      npcObject.transform.rotation = Quaternion.Euler(euler.x, facingYawDegrees.Value, euler.z);
     }
 
     internal static bool ApplyNPCControlUpdate(
@@ -4411,7 +4435,7 @@ namespace MultiplayerInfrastructure.Scenario
         else
         {
           Vector3 next = npcTransform.position + horizontalDelta;
-          if (!ignoreGroundCheck && TryRaycastGround(next, ownColliders, out float groundY))
+          if (!ignoreGroundCheck && TryFindGroundY(next, ownColliders, out float groundY))
           {
             next.y = groundY;
           }
@@ -4472,20 +4496,35 @@ namespace MultiplayerInfrastructure.Scenario
     }
 
     /// <summary>
-    /// 지정 위치 상공에서 하향 레이캐스트로 지면 y를 찾는다.
-    /// 트리거는 무시하고, NPC 자신의 콜라이더에 맞은 히트는 건너뛴다.
+    /// 지정 위치 아래의 가장 높은 비트리거 충돌면을 찾는다. 일반적인 경우에는 재사용 버퍼를
+    /// 사용해 할당하지 않으며, 버퍼가 가득 찬 경우에만 정확한 결과를 위해 전체 히트를 다시 읽는다.
     /// </summary>
-    private static bool TryRaycastGround(Vector3 position, Collider[] ownColliders, out float groundY)
+    public static bool TryFindGroundY(Vector3 position, Collider[] ignoredColliders, out float groundY)
     {
       groundY = position.y;
-      var hits = Physics.RaycastAll(position + Vector3.up * 2f, Vector3.down, 10f, ~0, QueryTriggerInteraction.Ignore);
+      int hitCount = Physics.RaycastNonAlloc(position + Vector3.up * 2f, Vector3.down,
+        GroundRaycastHits, 10f, ~0, QueryTriggerInteraction.Ignore);
+      if (hitCount == GroundRaycastHits.Length)
+      {
+        var hits = Physics.RaycastAll(position + Vector3.up * 2f, Vector3.down, 10f,
+          ~0, QueryTriggerInteraction.Ignore);
+        return TryFindHighestGroundY(hits, hits.Length, ignoredColliders, position.y, out groundY);
+      }
+
+      return TryFindHighestGroundY(GroundRaycastHits, hitCount, ignoredColliders, position.y, out groundY);
+    }
+
+    private static bool TryFindHighestGroundY(
+      RaycastHit[] hits, int hitCount, Collider[] ignoredColliders, float defaultGroundY, out float groundY)
+    {
+      groundY = defaultGroundY;
       float best = float.NegativeInfinity;
       bool found = false;
 
-      for (int i = 0; i < hits.Length; i++)
+      for (int i = 0; i < hitCount; i++)
       {
         var hit = hits[i];
-        if (IsOwnCollider(hit.collider, ownColliders))
+        if (IsOwnCollider(hit.collider, ignoredColliders))
           continue;
 
         if (!found || hit.point.y > best)
@@ -5446,6 +5485,18 @@ namespace MultiplayerInfrastructure.Scenario
         case ScenarioParallelNode nestedParallel:
           // 중첩 병렬: 내부 브랜치 완료까지 대기(말미의 전역 Advance 는 억제됨).
           yield return ExecuteParallelNode(nestedParallel);
+          break;
+        case ScenarioPatientMedicalStatePresetNode patientPreset:
+          // 수동 진입 준비 체인이 환자 의료 상태를 복원할 때 쓴다. 메인 경로와 같은 실행기를
+          // 대기시켜야, 프리셋 적용과 RPC 전파가 끝난 뒤 다음 준비 노드로 넘어간다.
+          yield return ExecutePatientMedicalStatePresetNode(patientPreset);
+          break;
+        case ScenarioTimeControlNode timeControl:
+          ExecuteTimeControlNode(timeControl);
+          break;
+        case ScenarioLifecycleNode lifecycle:
+          // 종료/재시작은 전역 커서를 바꾼다. 그 경우 아래 _currentGraph 재확인에서 체인이 끝난다.
+          ExecuteLifecycleNode(lifecycle);
           break;
         case ScenarioManualEntrypointNode:
           // 표식일 뿐이라 브랜치 안에서는 통과시킨다. 준비 체인은 명령 진입 경로에서만 돈다.

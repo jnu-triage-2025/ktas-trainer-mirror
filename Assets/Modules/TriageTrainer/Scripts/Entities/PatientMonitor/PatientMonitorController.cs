@@ -342,6 +342,27 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       SetCloseRequestedHandler(HandleScenarioCloseRequested);
     }
 
+    /// <summary>
+    /// 시나리오 수동 진입 준비 체인이 모니터를 단계 이전 상태로 되돌릴 때 호출한다.
+    /// 열려 있던 상세 오버레이를 닫고, 이전 단계에서 걸어 둔 닫기 완료 신호 arm 을 해제한다.
+    /// arm 이 남아 있으면 다음 단계에서 모니터를 닫는 순간 지나간 단계의 완료 신호가 다시 올라간다.
+    /// </summary>
+    public void CloseForScenarioReset()
+    {
+      CloseSingleDetail();
+      SetCloseRequestedHandler(null);
+      _scenarioCloseHandler = null;
+      _scenarioClosePatientIdentifier = null;
+      _scenarioCloseSignal = null;
+      _scenarioCloseArmed = false;
+      if (InstanceFinder.IsOffline || IsServerStarted)
+      {
+        _serverScenarioClosePatientIdentifier = null;
+        _serverScenarioCloseSignal = null;
+        _serverScenarioCloseArmed = false;
+      }
+    }
+
     private void ArmScenarioCloseOnServer(string patientIdentifier, string normalizedSignal)
     {
       _serverScenarioClosePatientIdentifier = patientIdentifier;

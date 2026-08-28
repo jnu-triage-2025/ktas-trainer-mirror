@@ -2011,6 +2011,28 @@
       "moveNextBehavior": "WaitUntilDone",
       "identifier": "SETUP_DOC_INST_PREPARE",
       "nodeType": "InvokeEvent",
+      "nextIdentifier": "SETUP_DOC_INST_PRESET"
+    },
+    "SETUP_DOC_INST_PRESET": {
+      "targetEntityIdentifier": "patient_a",
+      "sex": "Male",
+      "age": 35,
+      "consciousnessGcs": 8,
+      "consciousnessLocLabel": "Stupor",
+      "consciousnessPupillaryResponse": "Normal",
+      "respirationAwRR": 8,
+      "respirationType": "Irregular",
+      "pulseRate": 140,
+      "pulseForceType": "Weak",
+      "bloodPressureSystolic": 70,
+      "bloodPressureDiastolic": 40,
+      "skinColorHue": "Pale",
+      "skinTemperatureType": "Cold",
+      "bodyTemperatureCelsius": 35.9,
+      "spo2": 82,
+      "isCardiacArrest": false,
+      "identifier": "SETUP_DOC_INST_PRESET",
+      "nodeType": "PatientMedicalStatePreset",
       "nextIdentifier": "SETUP_MANUAL_RETURN"
     },
     "SETUP_ARREST_PREPARE": {
@@ -3825,7 +3847,8 @@
       "ignoreGroundCheck": false,
       "moveMode": "BySpeed",
       "moveSpeed": 2.5,
-      "moveDuration": 0
+      "moveDuration": 0,
+      "facingYawDegrees": 0
     },
     "Q_WAIT_DOCTOR_REMOVE": {
       "operation": "Remove",

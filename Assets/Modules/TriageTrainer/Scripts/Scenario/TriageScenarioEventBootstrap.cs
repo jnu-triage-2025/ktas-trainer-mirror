@@ -61,6 +61,9 @@ namespace TriageTrainer.Scenario
     [SerializeField] private bool _autoAttachPatientAToTreatmentBed = true;
     [SerializeField] private bool _waitForManualPatientATransfer = true;
     [SerializeField] private string _patientATreatmentPositioningPointIdentifier = "treatmentroom_patient_a";
+    [Tooltip("수동 진입에서 환자 A 침대를 정박시킬 포지셔닝 포인트입니다. 일반 진행의 이송 목표와 달리 " +
+             "수동 진입은 침대를 밀고 오는 과정이 없으므로, 이 포인트로 바로 붙입니다.")]
+    [SerializeField] private string _patientAManualEntryBedSnapPointIdentifier = "zone_a:bed_snap_point";
     [SerializeField, Min(0f)] private float _patientATransferWaitTimeoutSeconds = 0f;
     [SerializeField, Min(0f)] private float _patientADismountWaitTimeoutSeconds = 0f;
 

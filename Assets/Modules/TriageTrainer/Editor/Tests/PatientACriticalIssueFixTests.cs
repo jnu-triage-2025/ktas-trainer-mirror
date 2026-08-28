@@ -35,6 +35,8 @@ namespace TriageTrainer.Tests
       "Documents/requirements/content-definitions/scenario/patient_a_critical.md";
     private const string PatientMovingBedPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/MinecraftBoatLikes/PatientMovingBed.prefab";
+    private const string DoctorNpcPrefabPath =
+      "Assets/Modules/TriageTrainer/Prefabs/Entities/NPC/DoctorNPCHat.prefab";
     private const string PatientATreatmentBedMarkerIdentifier = "scen_a:patient_a_treatment_bed_marker";
     private const string WallSuctionItemPath =
       "Assets/Modules/TriageTrainer/ScriptableObjects/ItemBaseModels/wall_suction.asset";
@@ -43,6 +45,8 @@ namespace TriageTrainer.Tests
       "Assets/Modules/TriageTrainer/ScriptableObjects/StaticEntityLayouts/OverworldPatientSupports.asset";
     private const string OverworldInitializerPath =
       "Assets/Modules/TriageTrainer/Editor/Utils/OverworldGameObjectInitializer/OverworldGameObjectInitializer.cs";
+    private const string ScenarioControllerPath =
+      "Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/ScenarioController.cs";
 
     [Test]
     public void PatientAInstantiationAppliesInitialTreatmentDisplayState()
@@ -1500,6 +1504,269 @@ namespace TriageTrainer.Tests
       Assert.That(FindLayoutEntity("zone_a:wall_suction").attachCompletionSignal,
         Is.EqualTo("connect_wall_component_1"),
         "배치 데이터가 흡인기 설치 완료 신호를 갖고 있어야 레이아웃 재생성에도 값이 유지됩니다.");
+    }
+
+    /// <summary>
+    /// 수동 진입 준비 체인은 메인 흐름이 아니라 브랜치 실행기로 돈다. 브랜치 실행기가 어떤 노드
+    /// 타입을 모르면 그 노드는 경고 한 줄만 남기고 조용히 건너뛰어, 준비 체인이 절반만 수행된다.
+    /// </summary>
+    [Test]
+    public void BranchChainExecutorHandlesEveryMainFlowNodeType()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string source = File.ReadAllText(Path.Combine(projectRoot, ScenarioControllerPath));
+
+      var mainCases = ReadSwitchNodeCases(source, "private void ExecuteNode(IScenarioNode node)");
+      var branchCases = ReadSwitchNodeCases(source,
+        "private IEnumerator ExecuteBranchNode(IScenarioNode node, BranchChainContext context)");
+
+      Assert.That(mainCases, Is.Not.Empty, "메인 실행기의 노드 케이스를 읽지 못했습니다.");
+      Assert.That(branchCases, Is.Not.Empty, "브랜치 실행기의 노드 케이스를 읽지 못했습니다.");
+
+      var missing = mainCases.Except(branchCases).OrderBy(name => name, StringComparer.Ordinal).ToArray();
+      Assert.That(missing, Is.Empty,
+        "브랜치 실행기가 처리하지 않는 노드 타입: " + string.Join(", ", missing));
+    }
+
+    /// <summary>
+    /// `doc-inst`는 `scen-entry`의 준비 상태를 포함해야 하므로, 준비 체인이 환자 의료 상태를
+    /// 같은 사전설정 값으로 복원해야 한다. 복원 노드가 없으면 진입해도 활력징후가 이전 상태로 남는다.
+    /// </summary>
+    [Test]
+    public void PatientADocInstManualEntryRestoresScenEntryMedicalState()
+    {
+      var graph = ScenarioGraphLoader.LoadFromJson(
+        File.ReadAllText(PatientAScenarioPath), validateWithSchema: true);
+
+      var entrypoint = graph.Nodes["doc-inst"] as ScenarioManualEntrypointNode;
+      Assert.That(entrypoint, Is.Not.Null);
+      Assert.That(entrypoint.ManualEnterSetupIdentifier, Is.EqualTo("SETUP_DOC_INST_PREPARE"));
+
+      var preset = CollectSetupChain(graph, entrypoint.ManualEnterSetupIdentifier)
+        .OfType<ScenarioPatientMedicalStatePresetNode>()
+        .SingleOrDefault();
+      Assert.That(preset, Is.Not.Null,
+        "doc-inst 준비 체인에 환자 의료 상태 복원 노드가 있어야 합니다.");
+
+      var scenEntryPreset = CollectSetupChain(graph, "SETUP_SCEN_ENTRY_PREPARE")
+        .OfType<ScenarioPatientMedicalStatePresetNode>()
+        .SingleOrDefault();
+      Assert.That(scenEntryPreset, Is.Not.Null);
+
+      Assert.That(preset.TargetEntityIdentifier, Is.EqualTo("patient_a"));
+      Assert.That(preset.ConsciousnessGcs, Is.EqualTo(scenEntryPreset.ConsciousnessGcs));
+      Assert.That(preset.RespirationAwRR, Is.EqualTo(scenEntryPreset.RespirationAwRR));
+      Assert.That(preset.PulseRate, Is.EqualTo(scenEntryPreset.PulseRate));
+      Assert.That(preset.BloodPressureSystolic, Is.EqualTo(scenEntryPreset.BloodPressureSystolic));
+      Assert.That(preset.BloodPressureDiastolic, Is.EqualTo(scenEntryPreset.BloodPressureDiastolic));
+      Assert.That(preset.Spo2, Is.EqualTo(scenEntryPreset.Spo2));
+      Assert.That(preset.IsCardiacArrest, Is.EqualTo(scenEntryPreset.IsCardiacArrest));
+    }
+
+    /// <summary>
+    /// 준비 체인은 단계 밖 표시와 상호작용을 스스로 정리해야 한다. 남아 있으면 초기 평가용
+    /// 퀘스트 마크와 상호작용이 의사 지시 단계까지 따라온다.
+    /// </summary>
+    [Test]
+    public void PatientAManualEntryClearsStagePresentationAndPlacesBedDeterministically()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string source = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.prepare_patient_a_manual_entry.cs"));
+
+      StringAssert.Contains("QuestPresentationService.ClearScenarioMarks()", source,
+        "준비 체인이 이전 단계의 퀘스트 마크를 지워야 합니다.");
+      StringAssert.Contains("PlayerQuestStateFlagService.ClearAll()", source,
+        "준비 체인이 단계 밖 상호작용 플래그를 내려야 합니다.");
+      StringAssert.Contains("CloseForScenarioReset()", source,
+        "준비 체인이 활력징후 모니터를 닫힌 상태로 두어야 합니다.");
+      StringAssert.Contains("TryForceSnapToPositioningPoint(pointIdentifier, teleportToPoint: true)", source,
+        "준비 체인이 이동 신호에 기대지 않고 침대를 처치실 확정 위치에 두어야 합니다.");
+      StringAssert.Contains("_patientAManualEntryBedSnapPointIdentifier", source,
+        "침대 정박 지점은 일반 진행의 이송 목표가 아니라 수동 진입 전용 설정값을 따라야 합니다.");
+
+      // 의사는 이미 월드에 있어도 도착 지점으로 옮겨야 한다. 이전 단계의 이동 경로 위에
+      // 서 있는 의사를 그대로 두면, 진입 직후 대사를 하는 의사가 처치실 밖에 있게 된다.
+      int doctorMethod = source.IndexOf("private void EnsurePatientADoctorForManualEntry()", StringComparison.Ordinal);
+      Assert.That(doctorMethod, Is.GreaterThanOrEqualTo(0));
+      string doctorBody = source.Substring(doctorMethod);
+      StringAssert.Contains("SnapPatientADoctorToGround(doctorObject.transform, position)", doctorBody,
+        "수동 진입 의사는 처치실 도착 지점에서 지면 높이로 보정해야 합니다.");
+      StringAssert.Contains("PatientADoctorTreatroomEnteredAnchorId", doctorBody,
+        "의사는 처치실 진입 완료 앵커에 배치되어야 합니다.");
+      StringAssert.Contains("ScenarioController.TryFindGroundY", source,
+        "수동 진입 의사는 일반 NPC 이동과 같은 접지 함수를 사용해야 합니다.");
+
+      string scenarioControllerSource = File.ReadAllText(Path.Combine(projectRoot, ScenarioControllerPath));
+      StringAssert.Contains("Physics.RaycastNonAlloc", scenarioControllerSource,
+        "일반적인 NPC 접지 검사는 배열 할당 없이 수행해야 합니다.");
+      StringAssert.Contains("QueryTriggerInteraction.Ignore", scenarioControllerSource,
+        "접지 보정은 트리거를 지면으로 취급하지 않아야 합니다.");
+    }
+
+    [Test]
+    public void NpcGroundingFindsTheGroundAndIgnoresTheNpcCollider()
+    {
+      var ground = new GameObject("PatientACriticalIssueFixTests.Ground");
+      var doctor = new GameObject("PatientACriticalIssueFixTests.Doctor");
+      try
+      {
+        ground.transform.position = Vector3.zero;
+        ground.AddComponent<BoxCollider>();
+        doctor.transform.position = new Vector3(0f, 2f, 0f);
+        var doctorCollider = doctor.AddComponent<CapsuleCollider>();
+        Physics.SyncTransforms();
+
+        bool found = ScenarioController.TryFindGroundY(
+          new Vector3(0f, 2f, 0f), new Collider[] { doctorCollider }, out float groundY);
+
+        Assert.That(found, Is.True);
+        Assert.That(groundY, Is.EqualTo(0.5f).Within(0.001f),
+          "의사 자신의 콜라이더가 아니라 실제 지면의 윗면을 찾아야 합니다.");
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(doctor);
+        UnityEngine.Object.DestroyImmediate(ground);
+      }
+    }
+
+    [Test]
+    public void PatientADoctorUsesCharacterControllerForGroundedScenarioMovement()
+    {
+      var doctorPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(DoctorNpcPrefabPath);
+      Assert.That(doctorPrefab, Is.Not.Null);
+
+      var characterController = doctorPrefab.GetComponent<CharacterController>();
+      Assert.That(characterController, Is.Not.Null,
+        "의사 NPC는 시나리오 이동 중 중력과 충돌을 처리할 CharacterController가 필요합니다.");
+      Assert.That(characterController.height, Is.EqualTo(1.8f));
+      Assert.That(characterController.radius, Is.EqualTo(0.35f));
+      Assert.That(characterController.center, Is.EqualTo(new Vector3(0f, 0.9f, 0f)));
+      Assert.That(doctorPrefab.GetComponent<CapsuleCollider>(), Is.Null,
+        "CharacterController와 중복되는 CapsuleCollider를 함께 두지 않아야 합니다.");
+
+      string source = File.ReadAllText(Path.Combine(
+        Directory.GetParent(Application.dataPath).FullName,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.prepare_patient_a_manual_entry.cs"));
+      StringAssert.Contains("characterController.enabled = false", source,
+        "수동 텔레포트는 CharacterController 내부 상태 충돌을 피해야 합니다.");
+    }
+
+    [Test]
+    public void PatientADoctorCharacterControllerStopsOnGround()
+    {
+      var doctorPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(DoctorNpcPrefabPath);
+      var ground = new GameObject("PatientACriticalIssueFixTests.CharacterControllerGround");
+      var doctor = PrefabUtility.InstantiatePrefab(doctorPrefab) as GameObject;
+      try
+      {
+        Assert.That(doctor, Is.Not.Null);
+        ground.AddComponent<BoxCollider>();
+        doctor.transform.position = new Vector3(0f, 3f, 0f);
+        Physics.SyncTransforms();
+
+        var characterController = doctor.GetComponent<CharacterController>();
+        Assert.That(characterController, Is.Not.Null);
+        CollisionFlags flags = characterController.Move(Vector3.down * 5f);
+
+        Assert.That(flags & CollisionFlags.Below, Is.EqualTo(CollisionFlags.Below),
+          "의사 CharacterController는 바닥과 충돌해야 합니다.");
+        Assert.That(doctor.transform.position.y, Is.EqualTo(0.5f).Within(0.02f),
+          "의사는 바닥 윗면에서 멈춰야 합니다.");
+      }
+      finally
+      {
+        if (doctor != null)
+          UnityEngine.Object.DestroyImmediate(doctor);
+        UnityEngine.Object.DestroyImmediate(ground);
+      }
+    }
+
+    /// <summary>
+    /// 이동 지시는 도착 지점만 정하고 방향은 정하지 않는다. 그래서 처치실에 도착한 의사의 방향은
+    /// 스폰 회전값이 그대로 남아 정의되지 않은 상태였다. 도착 노드가 방향까지 지정해야 하고,
+    /// 수동 진입도 같은 방향으로 끝나야 한다.
+    /// </summary>
+    [Test]
+    public void PatientADoctorFacesTheTreatmentRoomAfterArriving()
+    {
+      var graph = ScenarioGraphLoader.LoadFromJson(
+        File.ReadAllText(PatientAScenarioPath), validateWithSchema: true);
+
+      var arrival = graph.Nodes["MOVE_DOCTOR_TO_TREATROOM_ENTERED"] as ScenarioNPCControlNode;
+      Assert.That(arrival, Is.Not.Null);
+      Assert.That(arrival.DestinationIdentifier,
+        Is.EqualTo("scen_a:doctor_treatment_room_waypoint_entered"));
+      Assert.That(arrival.FacingYawDegrees, Is.EqualTo(180f),
+        "처치실 도착 노드가 의사의 방향을 Y=180 으로 지정해야 합니다.");
+
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string manualEntrySource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.prepare_patient_a_manual_entry.cs"));
+      StringAssert.Contains("PatientADoctorTreatroomFacingYawDegrees = 180f", manualEntrySource,
+        "수동 진입도 일반 진행과 같은 방향으로 의사를 배치해야 합니다.");
+
+      // 방향 지정이 실제로 적용되는 경로가 있어야 한다. 값만 있고 실행기가 읽지 않으면 무효다.
+      string controllerSource = File.ReadAllText(Path.Combine(projectRoot, ScenarioControllerPath));
+      StringAssert.Contains("ApplyNpcFacing(npcObject, node.FacingYawDegrees)", controllerSource,
+        "NPCControl 실행기가 지정된 방향을 적용해야 합니다.");
+    }
+
+    /// <summary>
+    /// 수동 진입 준비 체인이 사용하는 앵커와 정박 지점은 실제로 배치되는 식별자여야 한다.
+    /// 씬에 없는 식별자를 가리키면 준비 체인이 조용히 폴백해서 위치가 어긋난다.
+    /// </summary>
+    [Test]
+    public void PatientAManualEntryPlacementTargetsExistInWorldData()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+
+      var layout = AssetDatabase.LoadAssetAtPath<StaticEntityLayoutDefinition>(StaticEntityLayoutPath);
+      Assert.That(layout, Is.Not.Null);
+      bool hasBedSnapPoint = (layout.groups ?? new List<StaticEntityLayoutGroup>())
+        .SelectMany(group => group.entities ?? new List<StaticEntityTransformDefinition>())
+        .Any(entity => string.Equals(entity.identifier?.Trim(), "zone_a:bed_snap_point", StringComparison.Ordinal)
+                       && entity.type == StaticEntityLayoutType.MovingPatientBedPositioningPoint);
+      Assert.That(hasBedSnapPoint, Is.True,
+        "배치 데이터에 zone_a:bed_snap_point 포지셔닝 포인트가 있어야 합니다.");
+
+      string anchorSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.PatientAWorldAnchors.cs"));
+      StringAssert.Contains("scen_a:doctor_treatment_room_waypoint_entered", anchorSource,
+        "의사 도착 앵커가 런타임 앵커 보장 목록에 있어야 합니다.");
+
+      string bootstrapSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs"));
+      StringAssert.Contains("_patientAManualEntryBedSnapPointIdentifier = \"zone_a:bed_snap_point\"", bootstrapSource,
+        "수동 진입 정박 지점의 기본값은 zone_a:bed_snap_point 여야 합니다.");
+    }
+
+    private static IEnumerable<IScenarioNode> CollectSetupChain(ScenarioGraph graph, string startIdentifier)
+    {
+      var visited = new HashSet<string>(StringComparer.Ordinal);
+      string cursor = startIdentifier;
+      while (!string.IsNullOrWhiteSpace(cursor) && visited.Add(cursor) && graph.TryGetNode(cursor, out var node))
+      {
+        yield return node;
+        cursor = node.NextIdentifier;
+      }
+    }
+
+    private static string[] ReadSwitchNodeCases(string source, string methodSignature)
+    {
+      int start = source.IndexOf(methodSignature, StringComparison.Ordinal);
+      if (start < 0)
+        return System.Array.Empty<string>();
+
+      // 다음 메서드 선언 전까지를 이 실행기의 본문으로 본다. 실행기는 파일에서
+      // switch 하나만 담고 있으므로 이 범위로 케이스 목록이 온전히 잡힌다.
+      int end = source.IndexOf("\n    private ", start + methodSignature.Length, StringComparison.Ordinal);
+      string body = end < 0 ? source.Substring(start) : source.Substring(start, end - start);
+      return Regex.Matches(body, @"case (Scenario[A-Za-z]*Node)")
+        .Select(match => match.Groups[1].Value)
+        .Distinct(StringComparer.Ordinal)
+        .ToArray();
     }
 
     [Test]

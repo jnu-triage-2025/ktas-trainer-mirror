@@ -23,5 +23,7 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("moveMode")] public string MoveMode { get; set; }
     [JsonPropertyName("moveSpeed")] public float? MoveSpeed { get; set; }
     [JsonPropertyName("moveDuration")] public float? MoveDuration { get; set; }
+
+    [JsonPropertyName("facingYawDegrees")] public float? FacingYawDegrees { get; set; }
   }
 }
