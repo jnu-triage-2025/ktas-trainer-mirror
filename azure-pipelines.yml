@@ -31,6 +31,13 @@ parameters:
     displayName: 'Self-hosted pool for code mirroring'
     type: string
     default: 'windowsAgentPool'
+  # Enable this only for a deliberate, reviewed run. It overwrites the branches
+  # already published on the mirror destination, which is required once after a
+  # filtering change alters the rewritten history.
+  - name: rebuildMirror
+    displayName: 'Republish the code mirror after a filtering change'
+    type: boolean
+    default: false
 
 variables:
   - group: ci-mirroring
@@ -72,6 +79,8 @@ stages:
             workingDirectory: '$(Build.SourcesDirectory)'
             env:
               GIT_HTTP_TOKEN: $(GIT_HTTP_TOKEN)
+              ${{ if eq(parameters.rebuildMirror, true) }}:
+                CODE_MIRROR_REBUILD: 'true'
           # --auto keeps most runs from repacking the whole source history, and
           # gc.autoDetach=false keeps the repack from outliving the job.
           - powershell: |
@@ -85,6 +94,8 @@ stages:
             condition: eq(variables['Agent.OS'], 'Darwin')
             env:
               GIT_HTTP_TOKEN: $(GIT_HTTP_TOKEN)
+              ${{ if eq(parameters.rebuildMirror, true) }}:
+                CODE_MIRROR_REBUILD: 'true'
           - bash: |
               git -c gc.autoDetach=false gc --auto --prune=now
             displayName: 'Prune mirror workspace (macOS)'

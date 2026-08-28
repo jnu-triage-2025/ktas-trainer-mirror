@@ -29,12 +29,22 @@ if ($LASTEXITCODE -ne 0) {
     throw 'Generating the code-mirror configuration failed.'
 }
 
-& $python.Source @pythonArguments 'Tools/code-mirror/code_mirror.py' '--config' 'Tools/code-mirror/code-mirror.toml' '--dry-run'
+# Republishing rewritten history is opt-in, because it overwrites the branches
+# already published on the destination. The caller sets CODE_MIRROR_REBUILD only
+# after a filtering change makes the recorded destination refs obsolete.
+$reviewArguments = @()
+$publishArguments = @()
+if ($env:CODE_MIRROR_REBUILD -eq 'true') {
+    $reviewArguments = @('--rebuild')
+    $publishArguments = @('--rebuild', '--reset-destination')
+}
+
+& $python.Source @pythonArguments 'Tools/code-mirror/code_mirror.py' '--config' 'Tools/code-mirror/code-mirror.toml' '--dry-run' @reviewArguments
 if ($LASTEXITCODE -ne 0) {
     throw 'Validating the code-mirror result failed.'
 }
 
-& $python.Source @pythonArguments 'Tools/code-mirror/code_mirror.py' '--config' 'Tools/code-mirror/code-mirror.toml' '--push'
+& $python.Source @pythonArguments 'Tools/code-mirror/code_mirror.py' '--config' 'Tools/code-mirror/code-mirror.toml' '--push' @publishArguments
 if ($LASTEXITCODE -ne 0) {
     throw 'Pushing the code mirror failed.'
 }
