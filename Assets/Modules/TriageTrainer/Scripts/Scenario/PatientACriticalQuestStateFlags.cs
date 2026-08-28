@@ -61,6 +61,8 @@ namespace TriageTrainer.Scenario
       { Address("patient_a", "start_ambu_r1"), Cpr1Actions },
       { Address("patient_a", "interact_patient_chest"), Cpr1Actions },
       { Address("patient_a", "remove_tpiece"), Cpr1Actions },
+      { Address("patient_a", "connect_ambubag"), Cpr1Actions },
+      { Address("patient_a", "connect_o2_to_ambu"), Cpr1Actions },
       { Address("patient_a", "remove_intu_stylet"), StyletRemoval },
       { Address("patient_a", "interact_tpiece"), TpieceAttach },
       { Address("patient_a", "interact_chest"), Cpr2Actions },

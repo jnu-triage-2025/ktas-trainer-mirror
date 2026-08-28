@@ -570,6 +570,173 @@ MonoBehaviour:
   _activateOnInteract: []
   _deactivateOnInteract:
   - {fileID: 8803091818943228428}
+--- !u!1 &2683400969937958946
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 225633107515043043}
+  - component: {fileID: 4837070754434250309}
+  - component: {fileID: 1471788064717750025}
+  m_Layer: 0
+  m_Name: AmbuBagConnectInteractPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &225633107515043043
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2683400969937958946}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.003}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4919284887355661886}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &4837070754434250309
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2683400969937958946}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.3, y: 0.3, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1471788064717750025
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2683400969937958946}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
+  _displayText: "기관내관에 앰부백 연결"
+  _displayIcon: {fileID: 0}
+  _displayIcons: []
+  _completionSignal: connect_ambubag
+  _presentationEntityIdentifier: patient_a
+  _interactionIdentifier:
+  _requiredRaisedSignals:
+  - remove_tpiece
+  _requiredPlayerTag:
+  _enabled: 0
+  _consumeOnce: 1
+  _requiredItemIdentifier:
+  _consumeRequiredItemCount: 0
+  _missingItemDialogue:
+  _findItemDialogue:
+  _activateOnInteract:
+  - {fileID: 8264803836134063233}
+  _deactivateOnInteract: []
+--- !u!1 &5536518702275176135
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 356329490738936366}
+  - component: {fileID: 747821738913170105}
+  - component: {fileID: 4859090575072212568}
+  m_Layer: 0
+  m_Name: AmbuO2ConnectInteractPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &356329490738936366
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5536518702275176135}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.003}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4919284887355661886}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &747821738913170105
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5536518702275176135}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.3, y: 0.3, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &4859090575072212568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5536518702275176135}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
+  _displayText: "앰부백에 산소 저장낭 연결"
+  _displayIcon: {fileID: 0}
+  _displayIcons: []
+  _completionSignal: connect_o2_to_ambu
+  _presentationEntityIdentifier: patient_a
+  _interactionIdentifier:
+  _requiredRaisedSignals:
+  - connect_ambubag
+  _requiredPlayerTag:
+  _enabled: 0
+  _consumeOnce: 1
+  _requiredItemIdentifier:
+  _consumeRequiredItemCount: 0
+  _missingItemDialogue:
+  _findItemDialogue:
+  _activateOnInteract: []
+  _deactivateOnInteract: []
 --- !u!1 &2799302206937971700
 GameObject:
   m_ObjectHideFlags: 0
@@ -2801,6 +2968,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4119068775169196016, guid: d4174b4e5c88443ff8db6f952e6ca386, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7820200844335860656}
+    - targetCorrespondingSourceObject: {fileID: 4119068775169196016, guid: d4174b4e5c88443ff8db6f952e6ca386, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 225633107515043043}
+    - targetCorrespondingSourceObject: {fileID: 4119068775169196016, guid: d4174b4e5c88443ff8db6f952e6ca386, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 356329490738936366}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 524614307319040962, guid: d4174b4e5c88443ff8db6f952e6ca386, type: 3}
       insertIndex: -1
