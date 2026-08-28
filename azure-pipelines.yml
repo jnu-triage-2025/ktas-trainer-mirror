@@ -84,8 +84,19 @@ stages:
           # --auto keeps most runs from repacking the whole source history, and
           # gc.autoDetach=false keeps the repack from outliving the job.
           - powershell: |
-              git -c gc.autoDetach=false gc --auto --prune=now
-            displayName: 'Prune mirror workspace (Windows)'
+              git -c gc.autoDetach=false -c gc.autoPackLimit=12 gc --auto --prune=now
+              git count-objects -vH
+              foreach ($name in @('.git', 'Library', 'Temp', 'artifacts', 'build', 'Assets')) {
+                $path = Join-Path '$(Build.SourcesDirectory)' $name
+                if (Test-Path -LiteralPath $path) {
+                  $sum = (Get-ChildItem -LiteralPath $path -Recurse -Force -File -ErrorAction SilentlyContinue |
+                    Measure-Object -Property Length -Sum).Sum
+                  Write-Host ("{0,-12} {1,10:N2} GB" -f $name, ($sum / 1GB))
+                } else {
+                  Write-Host ("{0,-12} {1,10}" -f $name, 'absent')
+                }
+              }
+            displayName: 'Prune and measure mirror workspace (Windows)'
             condition: and(always(), eq(variables['Agent.OS'], 'Windows_NT'))
           - bash: |
               chmod +x Tools/CI/mirror-code.sh
@@ -97,8 +108,10 @@ stages:
               ${{ if eq(parameters.rebuildMirror, true) }}:
                 CODE_MIRROR_REBUILD: 'true'
           - bash: |
-              git -c gc.autoDetach=false gc --auto --prune=now
-            displayName: 'Prune mirror workspace (macOS)'
+              git -c gc.autoDetach=false -c gc.autoPackLimit=12 gc --auto --prune=now
+              git count-objects -vH
+              du -sh -- .git Library Temp artifacts build Assets 2>/dev/null || true
+            displayName: 'Prune and measure mirror workspace (macOS)'
             condition: and(always(), eq(variables['Agent.OS'], 'Darwin'))
 
   - stage: Lint
