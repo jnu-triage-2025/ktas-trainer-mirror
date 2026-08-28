@@ -101,7 +101,7 @@ namespace TriageTrainer.Scenario
     ///
     /// <para>맞추는 항목은 세 가지다. (1) 처치 구역의 환자 모니터가 이 환자를 감시하고,
     /// (2) 처치 구역의 산소 유량계가 설치·조작된 채 이 환자에게 연결되어 있고,
-    /// (3) 환자가 누워 있는 침대의 N/S 수액이 걸려 있고 그 수액이 환자 정맥로에 연결되어 있어야 한다.</para>
+    /// (3) 환자가 누워 있는 침대의 생리식염수가 걸려 있고 그 수액이 환자 정맥로에 연결되어 있어야 한다.</para>
     ///
     /// <para>모두 성립하면 true 를 돌려준다. 아직이면 <paramref name="unmetReason"/> 에 남은 조건을
     /// 담아 false 를 돌려주고, 호출자가 다음 프레임에 다시 시도한다.</para>
@@ -166,7 +166,7 @@ namespace TriageTrainer.Scenario
         }
       }
 
-      // ── (3) 침대 N/S 수액 → 환자 정맥로 ──
+      // ── (3) 침대 생리식염수 → 환자 정맥로 ──
       bed.EnsureNormalSalineInstalledForScenario();
       ApplyTreatmentDisplayOnce(patient, cannulaDisplay);
 
@@ -220,7 +220,7 @@ namespace TriageTrainer.Scenario
 
       if (!salineInstalled)
       {
-        unmetReason = "침대 N/S 수액이 설치되지 않았다";
+        unmetReason = "침대 생리식염수가 설치되지 않았다";
         return false;
       }
 
@@ -232,7 +232,7 @@ namespace TriageTrainer.Scenario
 
       if (!patientIvPoint.IsPhysicallyConnectedTo(salinePoint))
       {
-        unmetReason = "환자 정맥로와 N/S 수액이 아직 연결되지 않았다";
+        unmetReason = "환자 정맥로와 생리식염수가 아직 연결되지 않았다";
         return false;
       }
 

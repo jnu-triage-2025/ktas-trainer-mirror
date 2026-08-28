@@ -1176,19 +1176,19 @@ _2026-08-19 Updated_
         - 플레이어 인벤토리의 20G 캐뉼라를 1개 소모
         - 환자 Display State Descriptor에서 좌측 팔 정맥로 확보 상태를 표시하는 오브젝트, 상태 플래그를 활성화
         - 환자 상태값에 20G 캐뉼라가 삽입되었다는(혹은 정맥로가 확보되었다는) 상태 플래그 활성화
-    2. 환자에게 삽입한 20G 캐뉼라를 PS와 IV Line으로 연결하는 행위
+    2. 환자에게 삽입한 20G 캐뉼라를 플라즈마 솔루션과 IV Line으로 연결하는 행위
         - 환자가 누워있는 침대의 Attachment가 활성화되어있어야 함.
-        - 환자가 누워있는 침대의 Attachment에 PS가 적용되어있어야 함(Display 플래그와 상태 플래그 모두 활성화되어있어야 하나, 활성화 여부 판단은 상태플래그를 기준으로 함)
-        - "1. 환자에게 20G 캐뉼라 삽입 행위"가 완료되어있고, 환자가 누워있는 침대의 Attachment에 PS가 활성화되어있으면, "플라즈마 솔루션 연결" 인터렉션을 추가(혹은 가시화)
-        - 이 인터렉션을 수행하면, 환자가 누워있는 침대 Attachment의 PS의 자식에 있는 Intravenous Line Connection Point 오브젝트와 환자의 좌측 팔 정맥로의 Intravenous Line Connection Point 오브젝트를 IV Line Connection 처리
+        - 환자가 누워있는 침대의 Attachment에 플라즈마 솔루션이 적용되어있어야 함(Display 플래그와 상태 플래그 모두 활성화되어있어야 하나, 활성화 여부 판단은 상태플래그를 기준으로 함)
+        - "1. 환자에게 20G 캐뉼라 삽입 행위"가 완료되어있고, 환자가 누워있는 침대의 Attachment에 플라즈마 솔루션이 활성화되어있으면, "플라즈마 솔루션 연결" 인터렉션을 추가(혹은 가시화)
+        - 이 인터렉션을 수행하면, 환자가 누워있는 침대 Attachment의 플라즈마 솔루션의 자식에 있는 Intravenous Line Connection Point 오브젝트와 환자의 좌측 팔 정맥로의 Intravenous Line Connection Point 오브젝트를 IV Line Connection 처리
           - **(2026-08-20 변경)** 환자 측 포인트를 식별자(`patient_b:iv_point_vein`)로 쿼리하던 기획은 폐기했다. 환자 유형별 컴포넌트(`PatientTypeBMaleState` / `PatientTypeBFemaleState`)의 `Intravenous Line Connection Point` 참조 필드로 직접 가져온다
-- "1. 환자에게 20G 캐뉼라 삽입 행위"가 완료된 후, 환자에게 삽입한 20G 캐뉼라를 PS와 연결하는 행위를 플레이어에게 지시하기 위해, 
-     - (위 시나리오 사이에 추가) 20G 캐뉼라 삽입 행위 이후에 "Plasma Solution을 연결하기" 퀘스트 서브목표를 추가 (AI 지시: 우선 위 내용에서 적절히 텍스트를 추가하여라)
-     - (위 시나리오 사이에 추가) 위의 퀘스트 서브목표 추가 동작과 함께, Dialogue로 본인의 이름이 발화자로 된 Dialogue, Content Text가 "(환자에게 Plasma Solution을 연결해두자.)"인 다이얼로그도 발생
+- "1. 환자에게 20G 캐뉼라 삽입 행위"가 완료된 후, 환자에게 삽입한 20G 캐뉼라를 플라즈마 솔루션과 연결하는 행위를 플레이어에게 지시하기 위해,
+     - (위 시나리오 사이에 추가) 20G 캐뉼라 삽입 행위 이후에 "플라즈마 솔루션을 연결하기" 퀘스트 서브목표를 추가한다.
+     - (위 시나리오 사이에 추가) 위의 퀘스트 서브목표 추가 동작과 함께, Dialogue로 본인의 이름이 발화자로 된 Dialogue, Content Text가 "(환자에게 플라즈마 솔루션을 연결해두자.)"인 다이얼로그도 발생
 
 ### 이후 작업 반영 목록 (2026-08-19, 구현 세션에서 읽는 항목)
 
-위 기획은 `### 환자 B 처치` 본문에 **우측 팔 + 생리식염수(N/S)** 로 확정 반영했다(2026-08-19 사용자 확정. 이 문서의 "좌측 팔"·"PS(플라즈마 솔루션)" 표기는 각각 환자 C 서술 참고/다른 시나리오 물품 참고로 판단하여 N/S로 치환). 아래 항목을 scenario.json과 C#에 반영한다. 환자 C(좌측 팔)도 동일한 2단계 구조로 미러링한다.
+위 기획은 `### 환자 B 처치` 본문에 **우측 팔 + 생리식염수**로 확정 반영했다(2026-08-19 사용자 확정. 이 문서의 "좌측 팔"·"플라즈마 솔루션" 표기는 각각 환자 C 서술 참고/다른 시나리오 물품 참고로 판단하여 생리식염수로 치환). 아래 항목을 scenario.json과 C#에 반영한다. 환자 C(좌측 팔)도 동일한 2단계 구조로 미러링한다.
 
 - `Assets/Modules/TriageTrainer/Resources/Scenario/patient_b_c_ct.scenario.json`
   - `C_IV_WAIT`(sig.insert_iv_patient_b_right 대기) 통과 직후에 아래 2개 노드를 끼워 넣고 `C_NS_WAIT`(sig.connect_cannula_and_ns1_patient_b 대기)로 재배선

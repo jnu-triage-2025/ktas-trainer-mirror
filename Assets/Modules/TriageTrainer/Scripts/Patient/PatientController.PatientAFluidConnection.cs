@@ -12,7 +12,7 @@ namespace TriageTrainer.Entity
 {
   /// <summary>
   /// 환자 A의 수액 연결 상호작용 부분 구현. 좌측 정맥로에는 생리식염수(N/S)를, 우측 정맥로에는
-  /// 플라즈마 솔루션(P/S)을 연결한다.
+  /// 플라즈마 솔루션을 연결한다.
   ///
   /// <para>
   /// 예전에는 플레이어가 <c>IntravenousLineConnectionPoint</c> 의 "수액 줄 연결 시작"과

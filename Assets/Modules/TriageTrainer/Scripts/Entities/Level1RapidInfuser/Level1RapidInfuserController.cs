@@ -118,10 +118,10 @@ namespace TriageTrainer.Entity
       }
 
       public string DisplayText => _kind == FluidKind.NormalSaline
-        ? "Normal Saline 추가"
+        ? "생리식염수 추가"
         : _kind == FluidKind.PlasmaSolution
-          ? "Plasma Solution 연결"
-          : "혈액백 연결";
+          ? "급속주입기에 플라즈마 솔루션 연결"
+          : "급속주입기에 혈액백 연결";
       public string PresentationEntityIdentifier => _owner.Identifier;
       public string InteractionIdentifier => _kind switch
       {

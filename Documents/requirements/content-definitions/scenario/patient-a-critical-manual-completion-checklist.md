@@ -11,7 +11,7 @@
 | 1. 체크리스트 UI | 불가 | 세 주요 씬에 할당 가능한 흡인·기관삽관·IV 패널 객체가 없음 | UI 제작·배치 후 참조 할당 |
 | 2. SPAWN_A 자식 | 부분 완료 | `PatientTypeA.prefab`의 enum 기반 `ChildGameObjects`에 처치 결과 객체가 이미 직렬화되어 있음을 확인 | 단계별 표시 정책 확정과 Play Mode 검수 |
 | 4. 거즈·플라스터 | 완료(참조) | `IndevScene`, `OverworldScene` bootstrap을 환자 A의 `GauzeOnPatient_A`, `GauzeWithPlaster_A` 인스턴스에 연결 | 순서·신호·네트워크 검수 |
-| 5. 양측 18G | 부분 완료(참조) | 두 씬 bootstrap을 환자 A의 `18g_left`, `18g_right` 인스턴스에 연결 | NS/PS 라인 표현 제작·배선 및 물리 연결 검수 |
+| 5. 양측 18G | 부분 완료(참조) | 두 씬 bootstrap을 환자 A의 `18g_left`, `18g_right` 인스턴스에 연결 | 생리식염수·플라즈마 솔루션 라인 표현 제작·배선 및 물리 연결 검수 |
 | 6. 중심정맥관 | 완료(참조) | 두 씬 bootstrap을 환자 A의 `Cline_A` 인스턴스에 연결 | 제출 인원 정책과 네트워크 검수 |
 | 7. Level 1 | 불가 | 표시 자식과 `IntravenousLineConnectionPoint` 대상 컴포넌트가 프리팹에 없음 | 모델·포트 객체를 먼저 제작 |
 | 8. 앰부백 | 부분 완료(참조) | 두 씬 bootstrap을 환자 A의 `Ambu_ready_A` 인스턴스에 연결 | 실제 양 끝 연결점과 신호 검수 |

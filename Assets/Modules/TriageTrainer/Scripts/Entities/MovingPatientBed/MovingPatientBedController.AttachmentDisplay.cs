@@ -42,8 +42,8 @@ namespace TriageTrainer.Entity
       }
 
       public string DisplayText => _kind == IntravenousFluidKind.NormalSaline
-        ? "N/S 수액 걸기"
-        : "P/S 수액 걸기";
+        ? "생리식염수 수액 걸기"
+        : "플라즈마 솔루션 수액 걸기";
       public Sprite DisplayIcon => null;
       public IReadOnlyList<Sprite> DisplayIcons => new[] { Icon.ClearRightBottom, _heldItemIcon };
       public bool AllowDisplayIconFallback => true;
@@ -76,7 +76,7 @@ namespace TriageTrainer.Entity
     [SerializeField] private IntravenousLineConnectionPoint _plasmaSolutionConnectionPoint;
 
     [Header("Intravenous fluid item identifiers")]
-    [Tooltip("Normal Saline으로 인식해 수액걸이에 설치할 수 있는 모든 아이템 식별자입니다.")]
+    [Tooltip("생리식염수로 인식해 수액걸이에 설치할 수 있는 모든 아이템 식별자입니다.")]
     [SerializeField]
     private List<string> _normalSalineItemIdentifiers = new()
     {
@@ -88,7 +88,7 @@ namespace TriageTrainer.Entity
       "normal_saline_22g_5cc_syringe", "normal_saline_22g_20cc_syringe", "normal_saline_22g_50cc_syringe",
       "normal_saline_24g_5cc_syringe", "normal_saline_24g_20cc_syringe", "normal_saline_24g_50cc_syringe",
     };
-    [Tooltip("Plasma Solution으로 인식해 수액걸이에 설치할 수 있는 모든 아이템 식별자입니다.")]
+    [Tooltip("플라즈마 솔루션으로 인식해 수액걸이에 설치할 수 있는 모든 아이템 식별자입니다.")]
     [SerializeField]
     private List<string> _plasmaSolutionItemIdentifiers = new()
     {
@@ -138,7 +138,7 @@ namespace TriageTrainer.Entity
     public bool IsNormalSalineConnectionPoint(IntravenousLineConnectionPoint point) =>
       point != null && ReferenceEquals(point, _normalSalineConnectionPoint);
 
-    /// <summary>시나리오 수동 진입용으로 N/S 수액걸이를 즉시 준비한다.</summary>
+    /// <summary>시나리오 수동 진입용으로 생리식염수 수액걸이를 즉시 준비한다.</summary>
     public void EnsureNormalSalineInstalledForScenario()
     {
       if (IsNormalSalineInstalled)
