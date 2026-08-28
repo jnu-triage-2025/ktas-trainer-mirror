@@ -25,7 +25,6 @@ namespace TriageTrainer.Scenario
 
       ConnectPatientADefibrillatorPads(patient);
 
-      EmitSystemMessage("환자 A 제세동 패드 부착 연출을 적용했습니다.");
       yield break;
     }
 

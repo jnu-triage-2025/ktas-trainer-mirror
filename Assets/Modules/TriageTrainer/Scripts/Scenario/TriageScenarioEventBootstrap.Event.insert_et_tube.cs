@@ -17,7 +17,6 @@ namespace TriageTrainer.Scenario
         "endotracheal_tube_stylet_inserted",
         true,
         TriageTrainer.Entity.PatientController.TreatmentDisplay.EndotrachealTubeStyletInserted);
-      EmitSystemMessage("환자 A 기관내관 삽입 연출을 적용했습니다.");
       yield break;
     }
   }

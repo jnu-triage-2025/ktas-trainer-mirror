@@ -12,7 +12,6 @@ namespace TriageTrainer.Scenario
     private IEnumerator Event_ApplyAmbuPatientA()
     {
       SetActiveIfPresent(_patientAAmbuConnectedVisual, true);
-      EmitSystemMessage("환자 A 앰부백 연결 연출을 적용했습니다.");
       yield break;
     }
   }

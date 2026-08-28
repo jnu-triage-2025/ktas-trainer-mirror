@@ -12,7 +12,6 @@ namespace TriageTrainer.Scenario
     private IEnumerator Event_Insert20gLeftPatientC()
     {
       SetActiveIfPresent(_patientC20gLeftVisual, true);
-      EmitSystemMessage("환자 C 좌측 20G 삽입 연출을 적용했습니다.");
       yield break;
     }
   }

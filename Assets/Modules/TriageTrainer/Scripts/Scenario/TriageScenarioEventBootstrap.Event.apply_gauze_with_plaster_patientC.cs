@@ -13,7 +13,6 @@ namespace TriageTrainer.Scenario
     {
       SetActiveIfPresent(_patientCGauzeVisual, false);
       SetActiveIfPresent(_patientCGauzeWithPlasterVisual, true);
-      EmitSystemMessage("환자 C 거즈+플라스터 연출을 적용했습니다.");
       yield break;
     }
   }

@@ -12,7 +12,6 @@ namespace TriageTrainer.Scenario
     private IEnumerator Event_ApplyGauzePatientA()
     {
       SetActiveIfPresent(_patientAGauzeVisual, true);
-      EmitSystemMessage("환자 A 거즈 적용 연출을 적용했습니다.");
       yield break;
     }
   }

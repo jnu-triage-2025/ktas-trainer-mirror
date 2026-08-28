@@ -12,7 +12,6 @@ namespace TriageTrainer.Scenario
     private IEnumerator Event_ConnectPs1Right()
     {
       SetActiveIfPresent(_patientAPs1RightConnectedVisual, true);
-      EmitSystemMessage("환자 A 우측 플라즈마 연결 연출을 적용했습니다.");
       yield break;
     }
   }

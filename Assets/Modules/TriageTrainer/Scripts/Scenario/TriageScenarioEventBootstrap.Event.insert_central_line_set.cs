@@ -16,7 +16,6 @@ namespace TriageTrainer.Scenario
       ResolvePatientAController()?.ApplyScenarioDisplayState(
         nameof(PatientController.TreatmentDisplay.CentralVenousCatheterInsertedIntoSubclavian),
         true);
-      EmitSystemMessage("환자 A 중심정맥관 삽입 연출을 적용했습니다.");
       yield break;
     }
   }

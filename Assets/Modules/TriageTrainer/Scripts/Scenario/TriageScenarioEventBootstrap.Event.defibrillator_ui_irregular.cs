@@ -12,8 +12,7 @@ namespace TriageTrainer.Scenario
     private IEnumerator Event_DefibrillatorUiIrregular()
     {
       SetActiveIfPresent(_defibrillatorIrregularUiPanel, true);
-      yield return ApplyPatientAMonitorProfile(_patientADefibrillatorIrregularMonitorParameters,
-        "제세동기 비정상 리듬 화면 연출을 적용했습니다.");
+      yield return ApplyPatientAMonitorProfile(_patientADefibrillatorIrregularMonitorParameters, null);
     }
   }
 }

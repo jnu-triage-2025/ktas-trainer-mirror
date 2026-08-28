@@ -14,7 +14,6 @@ namespace TriageTrainer.Scenario
       SetActiveIfPresent(_patientATPieceConnectedVisual, true);
       var patient = ResolvePatientAController();
       patient?.SetTreatmentApplied("oxygen_line_connected", true);
-      EmitSystemMessage("환자 A T-piece 연결 연출을 적용했습니다.");
       yield break;
     }
   }
