@@ -174,7 +174,7 @@
       "positionY": 0,
       "positionZ": 0,
       "rotationX": 0,
-      "rotationY": 180,
+      "rotationY": 0,
       "rotationZ": 0,
       "spawnOnStart": false,
       "despawnOnScenarioEnd": true,
@@ -2578,6 +2578,21 @@
       "identifier": "D037",
       "nodeType": "Dialogue",
       "nextIdentifier": "E038"
+    },
+    "D038": {
+      "speakerName": "의사",
+      "dialogueContent": "C-Line 확보했습니다.",
+      "portraitSpriteIdentifier": null,
+      "autoAdvanceSeconds": null,
+      "interactionRequired": null,
+      "playTTS": true,
+      "ttsVoiceIdentifier": null,
+      "ttsVoiceProfile": {
+        "preset": "M1"
+      },
+      "identifier": "D038",
+      "nodeType": "Dialogue",
+      "nextIdentifier": "E023"
     },
     "E038": {
       "eventIdentifier": "show_patient_a_completion_title",
@@ -6188,7 +6203,7 @@
       "onWaitTimeout": null,
       "identifier": "V018",
       "nodeType": "Validator",
-      "nextIdentifier": "E023"
+      "nextIdentifier": "D038"
     },
     "V019_1": {
       "rootConditions": [

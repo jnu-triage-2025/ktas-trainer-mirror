@@ -137,6 +137,50 @@ namespace TriageTrainer.Tests
       StringAssert.IsMatch("(?s)\"D021\".*?\"speakerName\": \"@s\"", json);
     }
 
+    /// <summary>
+    /// C-line set 전달 이후 흐름: 의사가 확보 대사를 말한 다음에 중심정맥관 삽입 이벤트가 돌게 한다.
+    /// 대사 노드가 빠지면 삽입 표현이 아무 설명 없이 먼저 나타난다.
+    /// </summary>
+    [Test]
+    public void PatientAScenarioAnnouncesCLineSecuredBeforeInsertingIt()
+    {
+      string json = File.ReadAllText(PatientAScenarioPath);
+      StringAssert.IsMatch("(?s)\"V018\".*?\"nextIdentifier\": \"D038\"", json);
+      StringAssert.IsMatch(
+        "(?s)\"D038\".*?\"speakerName\": \"\uC758\uC0AC\".*?\"dialogueContent\": \"C-Line "
+        + "\uD655\uBCF4\uD588\uC2B5\uB2C8\uB2E4\\.\".*?\"nextIdentifier\": \"E023\"",
+        json);
+      StringAssert.IsMatch("(?s)\"E023\".*?\"eventIdentifier\": \"insert_central_line_set\"", json);
+    }
+
+    /// <summary>
+    /// 환자 A는 시나리오가 <c>patient_a</c> 프리셋으로 스폰한다. 이벤트 부트스트랩이
+    /// 씬에 남아 있는 비활성 배치본을 직접 참조하면, 중심정맥관 삽입처럼 이벤트만으로
+    /// 처치를 반영하는 흐름이 살아 있는 환자가 아니라 배치본에 적용되어 조용히 사라진다.
+    /// Level 1 급속 주입기는 레지스트리의 <c>patient_a</c> 를 보므로
+    /// C-line 연결 상호작용도 함께 나타나지 않는다.
+    /// </summary>
+    [Test]
+    public void OverworldBootstrapResolvesPatientAFromRegistryInsteadOfScenePlacement()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string scene = File.ReadAllText(Path.Combine(projectRoot, OverworldScenePath));
+
+      var bindings = Regex.Matches(scene, @"^\s*_patientAObject: \{fileID: (\d+)\}\s*$",
+          RegexOptions.Multiline)
+        .Cast<Match>()
+        .Select(match => match.Groups[1].Value)
+        .ToArray();
+
+      Assert.That(bindings, Is.Not.Empty,
+        "OverworldScene\uC5D0 \uC774\uBCA4\uD2B8 \uBD80\uD2B8\uC2A4\uD2B8\uB7A9\uC774 "
+        + "\uC788\uC5B4\uC57C \uD569\uB2C8\uB2E4.");
+      Assert.That(bindings, Is.All.EqualTo("0"),
+        "\uD658\uC790 A \uCC38\uC870\uB294 \uBE44\uC6CC \uB450\uACE0 "
+        + "\uB808\uC9C0\uC2A4\uD2B8\uB9AC\uC5D0\uC11C \uCC3E\uC544\uC57C \uD569\uB2C8\uB2E4.");
+      StringAssert.IsMatch(@"(?m)^\s*_autoResolveReferencesFromRegistry: 1\s*$", scene);
+    }
+
     [TestCase("PlasmaSolution", "sig.connect_ps1_to_lv1")]
     [TestCase("BloodBag", "sig.connect_blood_to_lv1")]
     public void RapidInfuserCompletionRaisesScenarioSignal(string kindName, string expectedSignal)
