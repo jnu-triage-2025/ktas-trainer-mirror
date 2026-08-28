@@ -225,6 +225,15 @@ namespace TriageTrainer.Entity
     private const float InteractionDistance = 3f;
     private const float FluidConfirmationRetrySeconds = 1f;
 
+    /// <summary>C라인을 이을 수 있는 두 연결 지점 사이의 최대 거리.</summary>
+    private const float CLineConnectionDistance = 5f;
+
+    /// <summary>C라인 연결 상호작용 노출 조건을 다시 확인하는 간격(초).</summary>
+    private const float CLineAvailabilityCheckInterval = 0.25f;
+
+    private bool _cLineConnectionAvailable;
+    private float _nextCLineAvailabilityCheckAt;
+
     public const string InteractIdAddNormalSaline = "level1_add_normal_saline";
     public const string InteractIdAddPlasmaSolution = "level1_add_plasma_solution";
     public const string InteractIdAddBloodBag = "level1_add_blood_bag";
@@ -301,6 +310,7 @@ namespace TriageTrainer.Entity
       Update_MinecraftBoatLikeControl();
       if (IsServerStarted)
         RetryPendingFluidConfirmations();
+      RefreshCLineHintOnAvailabilityChange();
     }
 
     public override void OnStartServer()
@@ -617,7 +627,7 @@ namespace TriageTrainer.Entity
           descriptor?.GameObject == null ||
           !descriptor.GameObject.TryGetComponent<PatientController>(out var patient))
         return;
-      if (Vector3.Distance(patient.transform.position, IvConnectionPoint.position) > 5f)
+      if (!IsWithinCLineConnectionDistance(patient))
         return;
 
       _connectedPatientIdentifier.Value = patient.Identifier;
@@ -859,11 +869,49 @@ namespace TriageTrainer.Entity
       if (!descriptor.GameObject.TryGetComponent<PatientController>(out var patient))
         return null;
 
-      float sqrDistance = (patient.transform.position - transform.position).sqrMagnitude;
-      if (sqrDistance > InteractionDistance * InteractionDistance)
-        return null;
+      return IsWithinCLineConnectionDistance(patient) ? patient : null;
+    }
 
-      return patient;
+    /// <summary>
+    /// C라인을 이을 수 있는 거리인지 판정한다. 거리는 주입기와 환자의 원점이 아니라 실제로
+    /// 이어질 두 연결 지점 사이에서 잰다. 주입기를 침대 발치나 머리맡에 세우면 원점 사이
+    /// 거리가 아이템 상호작용 반경(<see cref="InteractionDistance"/>)을 쉽게 넘겨서, 다른
+    /// 조건이 모두 갖춰졌는데도 연결 상호작용이 조용히 사라졌다. 기준값은 서버가 환자 결합을
+    /// 검증할 때 쓰던 값과 같은 <see cref="CLineConnectionDistance"/> 이다.
+    /// </summary>
+    private bool IsWithinCLineConnectionDistance(PatientController patient)
+    {
+      if (patient == null)
+        return false;
+
+      var patientPoint = patient.CentralLineAttachmentPoint;
+      Vector3 patientPosition = patientPoint != null
+        ? patientPoint.transform.position
+        : patient.transform.position;
+
+      return (patientPosition - IvConnectionPoint.position).sqrMagnitude
+             <= CLineConnectionDistance * CLineConnectionDistance;
+    }
+
+    /// <summary>
+    /// C라인 연결 상호작용의 노출 여부를 감시한다. 힌트 목록은 감지된 상호작용 대상 집합이
+    /// 달라질 때만 다시 만들어지므로, 플레이어가 주입기 옆에 선 채로 의사가 중심정맥관을
+    /// 삽입하거나 침대가 자리를 잡으면 조건이 충족되어도 목록이 갱신되지 않는다.
+    /// 노출 여부가 바뀐 순간에 로컬 플레이어의 힌트를 다시 그리게 한다.
+    /// </summary>
+    private void RefreshCLineHintOnAvailabilityChange()
+    {
+      if (Time.unscaledTime < _nextCLineAvailabilityCheckAt)
+        return;
+      _nextCLineAvailabilityCheckAt = Time.unscaledTime + CLineAvailabilityCheckInterval;
+
+      bool available = CanAttemptCLineConnection();
+      if (available == _cLineConnectionAvailable)
+        return;
+
+      _cLineConnectionAvailable = available;
+      LogFlow($"C-line connection availability changed to {available}");
+      FindLocalOwnerPlayer()?.RefreshInteractableHintsNow();
     }
 
     private void RequestCLineConnection()

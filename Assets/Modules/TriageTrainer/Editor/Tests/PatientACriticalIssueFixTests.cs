@@ -330,13 +330,13 @@ namespace TriageTrainer.Tests
         Assert.That(controller, Is.Not.Null);
 
         var controllerType = typeof(Level1RapidInfuserController);
-        var ivPoint = controllerType.GetField("_ivConnectionPoint", BindingFlags.Instance | BindingFlags.NonPublic)
-          ?.GetValue(controller) as TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint;
-        Assert.That(ivPoint, Is.Not.Null,
-          "level1_rapid_infuser 프리팹에 _ivConnectionPoint 가 배선되어야 합니다(환자 라인 연결).");
-        Assert.That(ivPoint.GetComponent<SphereCollider>(), Is.Not.Null,
-          "IV 연결 지점에 접근 가능한 SphereCollider 가 있어야 합니다.");
-        Assert.That(ivPoint.GetComponent<SphereCollider>().isTrigger, Is.True);
+        var centralLinePoint = controllerType.GetField("_centralLineConnectionPoint", BindingFlags.Instance | BindingFlags.NonPublic)
+          ?.GetValue(controller) as TriageTrainer.Entity.CentralLine.CentralLineConnectionPoint;
+        Assert.That(centralLinePoint, Is.Not.Null,
+          "level1_rapid_infuser 프리팹에 _centralLineConnectionPoint 가 배선되어야 합니다.");
+        Assert.That(centralLinePoint.GetComponent<SphereCollider>(), Is.Not.Null,
+          "C-line 연결 지점에 접근 가능한 SphereCollider 가 있어야 합니다.");
+        Assert.That(centralLinePoint.GetComponent<SphereCollider>().isTrigger, Is.True);
 
         foreach (var fieldName in new[] { "_normalSalineDisplay", "_plasmaSolutionDisplay", "_bloodBagDisplay" })
         {
