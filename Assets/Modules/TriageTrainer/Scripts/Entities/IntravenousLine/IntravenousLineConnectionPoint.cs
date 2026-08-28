@@ -322,7 +322,8 @@ namespace TriageTrainer.Entity.IntravenousLine
       _interacts.Clear();
       _interacts.Add(new StartConnectionInteract(this));
       _interacts.Add(new ConnectHereInteract(this));
-      _interacts.Add(new DisconnectInteract(this));
+      // 플레이어 경험을 위해 수액 줄 해제 인터랙션은 사용하지 않는 것으로 결정했다.
+      // _interacts.Add(new DisconnectInteract(this));
     }
 
     private void EnsureDefaults()
@@ -332,7 +333,8 @@ namespace TriageTrainer.Entity.IntravenousLine
 
       EnsureInteractConfig(InteractIdStartConnectionMode, false);
       EnsureInteractConfig(InteractIdConnectHere, false);
-      EnsureInteractConfig(InteractIdDisconnect, true);
+      // 플레이어 경험을 위해 수액 줄 해제 인터랙션은 사용하지 않는 것으로 결정했다.
+      // EnsureInteractConfig(InteractIdDisconnect, true);
       RebuildInteractConfigMap();
     }
 

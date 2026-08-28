@@ -78,8 +78,6 @@ MonoBehaviour:
     _enabled: 1
   - _identifier: intravenous_line_connect_here
     _enabled: 1
-  - _identifier: intravenous_line_disconnect
-    _enabled: 1
 --- !u!1 &1880450324985045122
 GameObject:
   m_ObjectHideFlags: 0
@@ -277,8 +275,6 @@ MonoBehaviour:
   - _identifier: intravenous_line_connect_mode_start
     _enabled: 1
   - _identifier: intravenous_line_connect_here
-    _enabled: 1
-  - _identifier: intravenous_line_disconnect
     _enabled: 1
 --- !u!1 &3939562134775454969
 GameObject:
@@ -599,7 +595,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584137282985528968
+  _initializedTimestamp: -8584137094147911788
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
