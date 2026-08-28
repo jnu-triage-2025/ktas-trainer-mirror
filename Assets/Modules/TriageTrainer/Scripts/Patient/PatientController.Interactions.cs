@@ -276,6 +276,7 @@ namespace TriageTrainer.Entity
       AddRecognitionCheckInteract();
       AddIntravenousLineCannulaInteract();
       _interacts.Add(new PatientNormalSalineConnectInteract(this));
+      AddPatientAFluidConnectInteracts();
     }
 
     private bool IsPatientBCNasalCannulaItem(string itemIdentifier) =>

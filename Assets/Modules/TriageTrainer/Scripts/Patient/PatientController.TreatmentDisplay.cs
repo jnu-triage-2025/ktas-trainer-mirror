@@ -1496,17 +1496,30 @@ namespace TriageTrainer.Entity
       string requiredRoleTag,
       out PlayerController player,
       out string actorIdentifier,
+      out string actorDisplayName) =>
+      TryResolveTreatmentActor(sender, requiredRoleTag, out player, out actorIdentifier, out actorDisplayName);
+
+    /// <summary>
+    /// 처치 요청을 보낸 접속자를 서버에서 확인한다. <paramref name="requiredRoleTag"/> 가 비어 있으면
+    /// 역할 태그를 요구하지 않고, 접속자 정보와 환자와의 거리만 확인한다.
+    /// </summary>
+    private bool TryResolveTreatmentActor(
+      NetworkConnection sender,
+      string requiredRoleTag,
+      out PlayerController player,
+      out string actorIdentifier,
       out string actorDisplayName)
     {
       player = null;
       actorIdentifier = null;
       actorDisplayName = null;
+      bool requiresRole = !string.IsNullOrWhiteSpace(requiredRoleTag);
       if (sender == null
           || !sender.IsValid
           || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
           || descriptor == null
           || string.IsNullOrWhiteSpace(descriptor.Identifier)
-          || !PlayerTagService.HasTag(descriptor.Identifier, requiredRoleTag))
+          || (requiresRole && !PlayerTagService.HasTag(descriptor.Identifier, requiredRoleTag)))
         return false;
 
       var players = FindObjectsByType<PlayerController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);

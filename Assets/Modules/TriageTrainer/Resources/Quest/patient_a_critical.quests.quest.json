@@ -549,8 +549,8 @@
           "activation": "CompletionCriteria",
           "completionCriteriaIdentifier": "patient-a-ns-left",
           "targetType": "Interaction",
-          "entityIdentifier": "patient_a_cannula_left_port",
-          "interactionIdentifier": "intravenous_line_connect_mode_start",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "patient_a_normal_saline_connect",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         },
@@ -567,8 +567,8 @@
           "activation": "CompletionCriteria",
           "completionCriteriaIdentifier": "patient-a-ps-right",
           "targetType": "Interaction",
-          "entityIdentifier": "patient_a_cannula_right_port",
-          "interactionIdentifier": "intravenous_line_connect_mode_start",
+          "entityIdentifier": "patient_a",
+          "interactionIdentifier": "patient_a_plasma_solution_connect",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         }

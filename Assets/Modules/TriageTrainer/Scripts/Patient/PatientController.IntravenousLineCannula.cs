@@ -1,11 +1,9 @@
 ﻿using System;
 using MultiplayerInfrastructure.InteractableEntity;
 using MultiplayerInfrastructure.Player;
-using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.UI;
-using TriageTrainer.Scenario;
 using UnityEngine;
 
 namespace TriageTrainer.Entity
@@ -103,27 +101,16 @@ namespace TriageTrainer.Entity
       _intravenousLineCannulaInteractable = interactable;
     }
 
-    /// <summary>
-    /// patient_a_critical에서는 현재 플레이어에게 활성화된 정맥로 확보 퀘스트 단계에서만
-    /// 캐뉼라 상호작용을 노출한다. 다른 시나리오는 기존의 환자별 진행 상태를 그대로 사용한다.
-    /// </summary>
+    /// <summary>정맥라인 캐뉼라 상호작용의 공통 표시 조건이다.</summary>
     private bool CanDisplayIntravenousLineCannula(PlayerController player)
     {
-      if (!CanInteractIntravenousLineCannula || player == null)
-        return false;
-
-      var presentation = QuestPresentationService.ActiveInstance;
-      if (PatientACriticalQuestStateFlags.IsArmed
-          && string.Equals(Identifier, "patient_a", StringComparison.Ordinal)
-          && presentation != null
-          && !presentation.HasActiveInteractionBinding(Identifier, InteractIdIntravenousLineCannula))
-        return false;
-
-      return true;
+      // 퀘스트 UI 바인딩은 아이콘 표시용 정보다. 이를 상호작용 노출 조건으로 사용하면
+      // 아이콘 등록이나 바인딩 갱신이 늦어진 순간 활성 퀘스트의 처치도 함께 사라진다.
+      return CanInteractIntravenousLineCannula && player != null;
     }
 
     /// <summary>
-    /// 정맥라인 캐뉼라 상호작용 항목. 대상 퀘스트가 활성화된 환자에게만 노출되며,
+    /// 정맥라인 캐뉼라 상호작용 항목. 환자 설정과 시나리오 진행 상태가 허용할 때 노출되며,
     /// 캐뉼라 보유 여부는 상호작용 실행 시 안내/완료를 판정한다.
     /// </summary>
     private sealed class PatientIntravenousLineCannulaInteract : IInteract, IInteractorConditional, IQuestPresentationTarget

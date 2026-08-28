@@ -231,6 +231,29 @@ namespace TriageTrainer.Entity.IntravenousLine
     public const string InteractIdConnectHere = "intravenous_line_connect_here";
     public const string InteractIdDisconnect = "intravenous_line_disconnect";
 
+    /// <summary>
+    /// 플레이어가 직접 수액 줄을 잇는 상호작용("수액 줄 연결 시작" · "여기에 수액 줄 연결")은
+    /// 유형과 무관하게 모든 연결 지점에서 항상 잠근다. 프리팹·씬에 저장된 InteractConfig 값이
+    /// 켜져 있거나 <see cref="SetAllInteractionsEnabled"/> 로 일괄로 켜더라도 노출되지 않는다.
+    /// 수액 줄 연결은 환자·장비 쪽 전용 상호작용과 시나리오 처리로만 이루어진다.
+    /// </summary>
+    private static readonly string[] AlwaysDisabledInteractIds =
+    {
+      InteractIdStartConnectionMode,
+      InteractIdConnectHere,
+    };
+
+    private static bool IsAlwaysDisabledInteract(string identifier)
+    {
+      for (int i = 0; i < AlwaysDisabledInteractIds.Length; i++)
+      {
+        if (string.Equals(identifier, AlwaysDisabledInteractIds[i], StringComparison.Ordinal))
+          return true;
+      }
+
+      return false;
+    }
+
     /// <summary>연결 작업 시작(한 점 연결) 시 인게임 서버로 올리는 신호 접두사. 뒤에 지점 Identifier 가 붙는다.</summary>
     public const string ConnectStartSignalPrefix = "iv_connect_start_";
 
@@ -307,8 +330,8 @@ namespace TriageTrainer.Entity.IntravenousLine
       EnsureRuntimeCollections();
       EnsureIdentifier();
 
-      EnsureInteractConfig(InteractIdStartConnectionMode, true);
-      EnsureInteractConfig(InteractIdConnectHere, true);
+      EnsureInteractConfig(InteractIdStartConnectionMode, false);
+      EnsureInteractConfig(InteractIdConnectHere, false);
       EnsureInteractConfig(InteractIdDisconnect, true);
       RebuildInteractConfigMap();
     }
@@ -447,6 +470,9 @@ namespace TriageTrainer.Entity.IntravenousLine
       if (string.IsNullOrWhiteSpace(identifier))
         return false;
 
+      if (IsAlwaysDisabledInteract(identifier))
+        return false;
+
       if (_interactConfigMap.TryGetValue(identifier, out var cfg))
         return cfg.Enabled;
 
@@ -460,7 +486,7 @@ namespace TriageTrainer.Entity.IntravenousLine
       for (int i = 0; i < _interactConfigs.Count; i++)
       {
         if (_interactConfigs[i] != null)
-          _interactConfigs[i].Enabled = enabled;
+          _interactConfigs[i].Enabled = enabled && !IsAlwaysDisabledInteract(_interactConfigs[i].Identifier);
       }
       RebuildInteractConfigMap();
     }
