@@ -984,7 +984,9 @@ flags: ["refactor-required"]
 - 정상 CPR 종료 이벤트가 도착하면 수행자 애니메이션을 Idle 상태로 되돌리고 `MinecraftBoatLikeControl`의 조작 해제와 같은 앵커 해제 경로로 위치 고정을 종료한다.
 - `/gamerule DEBUG_INT_CPR_PLAYING_ESCAPE_KEY true`는 혼자 시나리오를 점검할 때만 사용하는 디버그 규칙이다. 기본값은 `false`이며, `debugging` 데이터팩은 이 값을 `true`로 설정한다.
 - 이 규칙이 `true`이면 CPR을 수행 중인 로컬 소유 플레이어가 `Left Shift`를 눌러 자신의 CPR 애니메이션과 위치 고정만 임시로 해제할 수 있다. 이 동작은 CPR 완료 신호, 시나리오 진행 상태, 다른 플레이어의 연출을 변경하지 않는다.
+- CPR 위치 고정 중에는 같은 `Left Shift` 입력이 침대·카트의 하차 입력으로 함께 처리되지 않도록 탑승 해제를 별도로 억제한다. 디버그 Escape 또는 정상 CPR 종료 시에는 CPR이 소유한 억제 상태만 해제한다.
 - 디버그 Escape 시점의 위치를 별도로 저장한다. 시스템상 CPR 종료 이벤트가 나중에 도착하면 플레이어를 저장한 위치로 되돌린 다음 정상 위치 고정 해제 처리를 수행한다. 디버그 Escape 직후 수행자 상태를 제거하거나 정상 종료 처리를 미리 실행하면 이 복귀 동작이 사라지므로 그렇게 변경해서는 안 된다.
+- 환자 CPR 높이 보정은 `PatientTypeA` 엔티티 루트나 Animator Transform을 직접 이동하지 않고, Patient A 프리팹의 `CPRModelOffsetRoot`에만 적용한다. 이 루트는 Patient A 전용이며 Patient B·Dummy 프리팹과 공통 `PatientController`에는 추가하지 않는다.
 
     1. ChoiceDialogue
       - Speaker: `@s`

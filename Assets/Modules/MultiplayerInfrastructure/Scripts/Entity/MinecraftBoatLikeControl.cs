@@ -626,7 +626,8 @@ namespace MultiplayerInfrastructure.Entity
 
       foreach (var pair in _localParticipants)
       {
-        if (pair.Value?.Player == null || !pair.Value.Player.IsOwner)
+        if (pair.Value?.Player == null || !pair.Value.Player.IsOwner
+            || pair.Value.Player.IsRidableExitSuppressed)
           continue;
         Toggle(pair.Value.Player.transform);
         break;

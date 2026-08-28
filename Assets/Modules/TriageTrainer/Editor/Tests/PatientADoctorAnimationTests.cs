@@ -145,15 +145,7 @@ namespace TriageTrainer.Tests
     [Test]
     public void PatientCprPositionOffsetUsesCalibratedBedHeight()
     {
-      const float firstOffsetY = 0.8823103f;
-      const float firstObservedScenarioFinalY = 1.764621f;
-      const float secondOffsetY = -0.0323107f;
-      const float secondObservedScenarioFinalY = -0.0646214f;
       const float targetScenarioFinalY = 0.85f;
-      float observedScale =
-        (firstObservedScenarioFinalY - secondObservedScenarioFinalY) / (firstOffsetY - secondOffsetY);
-      float observedIntercept = firstObservedScenarioFinalY - observedScale * firstOffsetY;
-      float calibratedOffsetY = (targetScenarioFinalY - observedIntercept) / observedScale;
 
       var bootstrapObject = new GameObject("PatientACprOffsetTest");
       try
@@ -162,11 +154,9 @@ namespace TriageTrainer.Tests
         var serialized = new SerializedObject(bootstrap);
         Vector3 offset = serialized.FindProperty("_cprReceivingPatientPositionOffset").vector3Value;
 
-        Assert.That(observedScale, Is.EqualTo(2f).Within(0.0001f));
-        Assert.That(observedIntercept, Is.EqualTo(0f).Within(0.0001f));
         Assert.That(offset.x, Is.Zero);
-        Assert.That(offset.y, Is.EqualTo(calibratedOffsetY).Within(0.0001f),
-          "환자 CPR 애니메이션은 침대 위에서 보정한 Scenario1_final 높이를 유지해야 합니다.");
+        Assert.That(offset.y, Is.EqualTo(targetScenarioFinalY).Within(0.0001f),
+          "전용 모델 루트의 오프셋은 목표 침대 높이를 1:1로 적용해야 합니다.");
         Assert.That(offset.z, Is.Zero);
       }
       finally
@@ -189,9 +179,11 @@ namespace TriageTrainer.Tests
       StringAssert.Contains("state.Patient.transform.eulerAngles.y + 180f", source,
         "CPR 수행자는 환자와 반대 방향을 바라보도록 Y 회전을 180도 보정해야 합니다.");
       StringAssert.Contains("SetMovementSuppressed(state.Anchor, true)", source);
+      StringAssert.Contains("SetRidableExitSuppressed(state.Anchor, true)", source);
       StringAssert.Contains("ClearForcedFollowAnchor(state.Anchor)", source,
         "CPR 종료는 MinecraftBoatLikeControl 하차와 같은 앵커 해제 경로를 사용해야 합니다.");
       StringAssert.Contains("SetMovementSuppressed(state.Anchor, false)", source);
+      StringAssert.Contains("SetRidableExitSuppressed(state.Anchor, false)", source);
 
       var bootstrapObject = new GameObject("PatientACprPerformerHeightTest");
       try
@@ -236,6 +228,63 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void PlayerRidableExitSuppressionIsOwnerScoped()
+    {
+      var playerObject = new GameObject("RidableExitSuppressionTest");
+      var firstOwner = new GameObject("FirstRidableExitOwner");
+      var secondOwner = new GameObject("SecondRidableExitOwner");
+      try
+      {
+        var player = playerObject.AddComponent<PlayerController>();
+        player.SetRidableExitSuppressed(firstOwner, true);
+        player.SetRidableExitSuppressed(secondOwner, true);
+        Assert.That(player.IsRidableExitSuppressed, Is.True);
+
+        player.SetRidableExitSuppressed(firstOwner, false);
+        Assert.That(player.IsRidableExitSuppressed, Is.True);
+
+        player.SetRidableExitSuppressed(secondOwner, false);
+        Assert.That(player.IsRidableExitSuppressed, Is.False);
+      }
+      finally
+      {
+        Object.DestroyImmediate(playerObject);
+        Object.DestroyImmediate(firstOwner);
+        Object.DestroyImmediate(secondOwner);
+      }
+    }
+
+    [Test]
+    public void PatientACprOffsetRootIsIsolatedFromOtherPatientPrefabs()
+    {
+      const string patientAPath =
+        "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeA.prefab";
+      GameObject patientA = AssetDatabase.LoadAssetAtPath<GameObject>(patientAPath);
+      Assert.That(patientA, Is.Not.Null);
+
+      Transform offsetRoot = patientA.transform.Find("CPRModelOffsetRoot");
+      Assert.That(offsetRoot, Is.Not.Null);
+      Animator patientAAnimator = patientA.GetComponentInChildren<Animator>(true);
+      Assert.That(patientAAnimator, Is.Not.Null);
+      Assert.That(patientAAnimator.transform.IsChildOf(offsetRoot), Is.True,
+        "Patient A의 CPR 오프셋은 엔티티 루트가 아닌 모델 계층에만 적용해야 합니다.");
+
+      string[] unaffectedPatientPaths =
+      {
+        "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeBFemale.prefab",
+        "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeBMale.prefab",
+        "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeDDummyA.prefab"
+      };
+      foreach (string path in unaffectedPatientPaths)
+      {
+        GameObject patient = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        Assert.That(patient, Is.Not.Null, path);
+        Assert.That(patient.transform.Find("CPRModelOffsetRoot"), Is.Null,
+          $"Patient A 전용 CPR 루트가 다른 환자 프리팹에 추가되어서는 안 됩니다: {path}");
+      }
+    }
+
+    [Test]
     public void DebugCprEscapeRuleIsOptInAndDebuggingDatapackEnablesIt()
     {
       string projectRoot = Directory.GetParent(Application.dataPath).FullName;
@@ -273,8 +322,8 @@ namespace TriageTrainer.Tests
         "정상 CPR 종료 시에는 디버그로 위치 고정을 해제했던 장소로 복귀해야 합니다.");
       Assert.That(source, Does.Not.Contain("state.Player.SetForcedFollowAnchor(state.Anchor);\n          }"),
         "디버그 복귀가 이후에 설정된 다른 이동 시스템의 앵커를 덮어써서는 안 됩니다.");
-      StringAssert.Contains("ApplyPatientACprAnimationPositionOffsets();", source,
-        "RootT 곡선이 오프셋을 덮어쓰지 않도록 재생 중에도 위치 보정을 유지해야 합니다.");
+      StringAssert.Contains("ResolvePatientACprModelOffsetRoot(animator)", source,
+        "RootT 곡선과 침대 attachment가 충돌하지 않도록 전용 부모 루트에 오프셋을 적용해야 합니다.");
       Assert.That(source, Does.Not.Contain("TryDebugEscapePatientACprPerformer(state);\n      _patientACprPerformers.Clear"),
         "디버그 Escape가 시스템상 CPR 수행 상태를 제거해서는 안 됩니다.");
     }

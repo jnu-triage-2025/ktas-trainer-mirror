@@ -842,7 +842,7 @@
       "persistProgressOnSessionEnd": false,
       "isTrackedByDefault": true,
       "scope": "Player",
-      "isOrdinal": false,
+      "isOrdinal": true,
       "tasks": [
         {
           "identifier": "move-defibrillator-cart-patient-a",
@@ -881,7 +881,7 @@
       "persistProgressOnSessionEnd": false,
       "isTrackedByDefault": true,
       "scope": "Player",
-      "isOrdinal": false,
+      "isOrdinal": true,
       "tasks": [
         {
           "identifier": "push-epinephrine-r1-patient-a",

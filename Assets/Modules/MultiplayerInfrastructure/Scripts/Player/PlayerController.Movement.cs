@@ -61,6 +61,7 @@ namespace MultiplayerInfrastructure.Player
     private Transform _forcedFollowAnchor;
     private UnityEngine.Object _activeRidableControl;
     private readonly HashSet<UnityEngine.Object> _movementSuppressionOwners = new();
+    private readonly HashSet<UnityEngine.Object> _ridableExitSuppressionOwners = new();
     private bool _jumpAnimationRequestedThisFrame;
 
     // 시나리오 등 스크립트가 플레이어 위치를 직접 제어하는 동안 true.
@@ -70,6 +71,7 @@ namespace MultiplayerInfrastructure.Player
 
     public bool IsMovementPositionOverridden => _forcedFollowAnchor != null;
     public bool IsRidableControlActive => _activeRidableControl != null;
+    public bool IsRidableExitSuppressed => _ridableExitSuppressionOwners.Count > 0;
     public bool IsMovementSuppressed => _movementSuppressionOwners.Count > 0;
     private bool CanProcessMovementInput => canMove && !IsMovementSuppressed;
 
@@ -283,6 +285,21 @@ namespace MultiplayerInfrastructure.Player
         _movementSuppressionOwners.Remove(owner);
 
       _moveDirection = Vector3.zero;
+    }
+
+    /// <summary>
+    /// 특정 시스템이 플레이어 입력을 점유하는 동안 같은 키를 사용하는 탑승 해제를 막는다.
+    /// 소유자별로 관리하므로 한 시스템의 해제가 다른 시스템의 억제 상태를 제거하지 않는다.
+    /// </summary>
+    public void SetRidableExitSuppressed(UnityEngine.Object owner, bool suppressed)
+    {
+      if (owner == null)
+        return;
+
+      if (suppressed)
+        _ridableExitSuppressionOwners.Add(owner);
+      else
+        _ridableExitSuppressionOwners.Remove(owner);
     }
 
     internal void SetRidableControlActive(UnityEngine.Object control)

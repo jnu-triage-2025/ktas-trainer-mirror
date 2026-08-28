@@ -25,10 +25,11 @@ namespace TriageTrainer.Scenario
     private const string PatientACprRoundTwoNodeIdentifier = "E033";
     private const string PatientACprRoundOneNurseTag = "nurse_b";
     private const string PatientACprRoundTwoNurseTag = "nurse_a";
+    private const string PatientACprModelOffsetRootName = "CPRModelOffsetRoot";
 
     private readonly Dictionary<Animator, PlayableGraph> _patientACprAnimationGraphs = new();
-    private readonly Dictionary<Animator, Vector3> _patientACprAnimationBasePositions = new();
-    private readonly Dictionary<Animator, Vector3> _patientACprAnimationPositionOffsets = new();
+    private readonly Dictionary<Animator, Transform> _patientACprAnimationOffsetRoots = new();
+    private readonly Dictionary<Animator, Vector3> _patientACprAnimationOffsetBasePositions = new();
     private readonly Dictionary<PlayerController, PatientACprPerformerState> _patientACprPerformers = new();
 
     private void PlayPatientAChestCompressionAnimation()
@@ -132,12 +133,12 @@ namespace TriageTrainer.Scenario
         if (pair.Value.IsValid())
           pair.Value.Destroy();
 
-        RestoreAnimationBasePosition(pair.Key);
+        RestoreAnimationPositionOffset(pair.Key);
       }
 
       _patientACprAnimationGraphs.Clear();
-      _patientACprAnimationBasePositions.Clear();
-      _patientACprAnimationPositionOffsets.Clear();
+      _patientACprAnimationOffsetRoots.Clear();
+      _patientACprAnimationOffsetBasePositions.Clear();
       ReleasePatientACprPerformers();
     }
 
@@ -164,6 +165,7 @@ namespace TriageTrainer.Scenario
 
       AlignPatientACprPerformer(state);
       player.SetMovementSuppressed(state.Anchor, true);
+      player.SetRidableExitSuppressed(state.Anchor, true);
     }
 
     private void LateUpdate()
@@ -180,8 +182,6 @@ namespace TriageTrainer.Scenario
         if (!state.DebugEscaped)
           AlignPatientACprPerformer(state);
       }
-
-      ApplyPatientACprAnimationPositionOffsets();
     }
 
     /// <summary>
@@ -202,6 +202,7 @@ namespace TriageTrainer.Scenario
       state.DebugEscapePosition = state.Player.transform.position;
       state.Player.ClearForcedFollowAnchor(state.Anchor);
       state.Player.SetMovementSuppressed(state.Anchor, false);
+      state.Player.SetRidableExitSuppressed(state.Anchor, false);
       StopPatientACprPerformerAnimation(state.Player);
       return true;
     }
@@ -216,7 +217,7 @@ namespace TriageTrainer.Scenario
         graph.Destroy();
 
       _patientACprAnimationGraphs.Remove(animator);
-      RestoreAnimationBasePosition(animator);
+      RestoreAnimationPositionOffset(animator);
     }
 
     private void AlignPatientACprPerformer(PatientACprPerformerState state)
@@ -252,6 +253,7 @@ namespace TriageTrainer.Scenario
 
           state.Player.ClearForcedFollowAnchor(state.Anchor);
           state.Player.SetMovementSuppressed(state.Anchor, false);
+          state.Player.SetRidableExitSuppressed(state.Anchor, false);
         }
 
         if (state?.Anchor != null)
@@ -297,7 +299,22 @@ namespace TriageTrainer.Scenario
       if (_patientACprAnimationGraphs.TryGetValue(animator, out var previous) && previous.IsValid())
       {
         previous.Destroy();
-        RestoreAnimationBasePosition(animator);
+        RestoreAnimationPositionOffset(animator);
+      }
+
+      Transform offsetRoot = null;
+      if (positionOffset != Vector3.zero)
+      {
+        offsetRoot = ResolvePatientACprModelOffsetRoot(animator);
+        if (offsetRoot == null)
+        {
+          // 전용 루트가 없는 환자나 모델에는 루트 위치 곡선이 포함된 CPR 클립을 적용하지 않는다.
+          // Animator Transform을 직접 보정하는 fallback은 침대 attachment와 다시 충돌한다.
+          Debug.LogWarning(
+            $"[TriageScenarioEventBootstrap] CPR model offset root was not found ({targetDescription}).",
+            animator);
+          return;
+        }
       }
 
       var graph = PlayableGraph.Create($"patient_a_critical:{clip.name}:{animator.GetInstanceID()}");
@@ -312,35 +329,36 @@ namespace TriageTrainer.Scenario
       }
       else
       {
-        // AnimationOffsetPlayable is no longer publicly accessible in Unity 6.
-        // Apply the equivalent local root offset to the authored target instead.
-        _patientACprAnimationBasePositions[animator] = animator.transform.localPosition;
-        _patientACprAnimationPositionOffsets[animator] = positionOffset;
+        _patientACprAnimationOffsetRoots[animator] = offsetRoot;
+        _patientACprAnimationOffsetBasePositions[animator] = offsetRoot.localPosition;
+        offsetRoot.localPosition += positionOffset;
         output.SetSourcePlayable(playable);
       }
       graph.Play();
       _patientACprAnimationGraphs[animator] = graph;
     }
 
-    private void ApplyPatientACprAnimationPositionOffsets()
+    private static Transform ResolvePatientACprModelOffsetRoot(Animator animator)
     {
-      // CPR 클립에는 RootT 곡선이 있으므로 재생 전에 한 번 이동하는 방식은 그래프 평가 때
-      // 덮어써진다. Animator 평가가 끝난 LateUpdate에서 기준 위치와 오프셋을 계속 유지한다.
-      foreach (var pair in _patientACprAnimationPositionOffsets)
-      {
-        Animator animator = pair.Key;
-        if (animator != null && _patientACprAnimationBasePositions.TryGetValue(animator, out var basePosition))
-          animator.transform.localPosition = basePosition + pair.Value;
-      }
+      for (Transform current = animator != null ? animator.transform.parent : null;
+           current != null;
+           current = current.parent)
+        if (current.name == PatientACprModelOffsetRootName)
+          return current;
+
+      return null;
     }
 
-    private void RestoreAnimationBasePosition(Animator animator)
+    private void RestoreAnimationPositionOffset(Animator animator)
     {
-      if (animator != null && _patientACprAnimationBasePositions.TryGetValue(animator, out var basePosition))
-        animator.transform.localPosition = basePosition;
+      if (animator != null
+          && _patientACprAnimationOffsetRoots.TryGetValue(animator, out var offsetRoot)
+          && offsetRoot != null
+          && _patientACprAnimationOffsetBasePositions.TryGetValue(animator, out var basePosition))
+        offsetRoot.localPosition = basePosition;
 
-      _patientACprAnimationBasePositions.Remove(animator);
-      _patientACprAnimationPositionOffsets.Remove(animator);
+      _patientACprAnimationOffsetRoots.Remove(animator);
+      _patientACprAnimationOffsetBasePositions.Remove(animator);
     }
   }
 }

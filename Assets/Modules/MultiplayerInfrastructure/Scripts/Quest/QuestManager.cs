@@ -38,6 +38,7 @@ namespace MultiplayerInfrastructure.Quest
     private PlayerController _ownerPlayer;
     private NetworkManager _networkManager;
     private bool _subscribedToSessionLifecycle;
+    private bool _evaluatingSignalProgress;
 
     public event Action<IReadOnlyList<QuestData>> OnQuestListChanged;
     public event Action<IReadOnlyList<QuestData>> OnTrackedQuestsChanged;
@@ -95,6 +96,7 @@ namespace MultiplayerInfrastructure.Quest
     private void Awake()
     {
       Registry.Registry.Register(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>(), this);
+      ScenarioInteractionSignals.OnSignalRegistered += HandleScenarioSignalRegistered;
       if (GetComponent<QuestPresentationService>() == null)
         gameObject.AddComponent<QuestPresentationService>();
       _definitionRegistry = Registry.Registry.Get<QuestDefinitionRegistry>(RegistryType.Service, Registry.Registry.TypeKey<QuestDefinitionRegistry>());
@@ -104,8 +106,27 @@ namespace MultiplayerInfrastructure.Quest
 
     private void OnDestroy()
     {
+      ScenarioInteractionSignals.OnSignalRegistered -= HandleScenarioSignalRegistered;
       UnsubscribeFromSessionLifecycle();
       Registry.Registry.Unregister(RegistryType.Service, Registry.Registry.TypeKey<QuestManager>());
+    }
+
+    private void HandleScenarioSignalRegistered(string signalIdentifier)
+    {
+      // 신호가 퀘스트 목표를 완료한 직후 진행 상태와 프리뷰를 갱신한다.
+      // 다음 시나리오 노드가 실행되기 전에 이전 목표가 한 프레임 이상 남지 않도록 한다.
+      if (_evaluatingSignalProgress)
+        return;
+
+      _evaluatingSignalProgress = true;
+      try
+      {
+        EvaluateAllQuestProgress();
+      }
+      finally
+      {
+        _evaluatingSignalProgress = false;
+      }
     }
 
     private void Start()
