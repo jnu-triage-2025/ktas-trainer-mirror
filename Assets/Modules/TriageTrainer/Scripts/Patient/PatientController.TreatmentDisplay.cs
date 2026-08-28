@@ -389,6 +389,16 @@ namespace TriageTrainer.Entity
       return CanApplyItemUse(itemIdentifier);
     }
 
+    /// <summary>
+    /// 지금 이 물품을 적용하면 실제로 어떤 처치가 되는지 돌려준다(적용할 수 없으면 <c>null</c>).
+    /// 플라스터처럼 하나의 물품이 상태에 따라 거즈 고정·기관내관 고정으로 갈리는 경우, 물품별
+    /// 사용 상호작용이 자기 문구와 일치하는 처치일 때만 노출되도록 판정 근거를 공유한다.
+    /// </summary>
+    internal string ResolveTreatmentIdentifierForItem(string itemIdentifier)
+      => TryResolveItemUse(itemIdentifier, out _, out string treatmentIdentifier, out _)
+        ? treatmentIdentifier
+        : null;
+
     internal string FindApplicableTreatmentInventoryItem(PlayerController player)
     {
       if (player == null)

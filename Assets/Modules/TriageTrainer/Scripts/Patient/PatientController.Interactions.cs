@@ -141,6 +141,13 @@ namespace TriageTrainer.Entity
 
       public bool CanInteract(Transform interactor)
       {
+        // patient_a_critical 의 환자 A는 서브목표가 요구하는 물품마다 "환자에게 {아이템명} 사용"
+        // 상호작용을 따로 두므로(<see cref="PatientAItemUseInteract"/>), 무엇이 적용될지 문구로
+        // 알 수 없는 이 통합 상호작용은 그 범위에서 노출하지 않는다. 다른 시나리오와 환자 B/C는
+        // 계속 이 경로를 쓴다.
+        if (_owner.IsPatientAItemUseArmed)
+          return false;
+
         // 처치 물품 적용은 퀘스트가 안내 대상으로 올린 동안에만 노출한다. 판정 근거인 퀘스트 목록이
         // 피어마다 따로 있으므로 이 게이트도 플레이어별로 동작한다. 다른 시나리오의 흐름까지
         // 좁히지 않도록, 적용 범위는 patient_a_critical 로 한정한다.
@@ -159,6 +166,9 @@ namespace TriageTrainer.Entity
 
       public void Interact(Transform interactor)
       {
+        if (_owner.IsPatientAItemUseArmed)
+          return;
+
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
         string itemIdentifier = _owner.FindApplicableTreatmentInventoryItem(player);
         if (player?.PlayerEntity != null && _owner.CanApplyHeldTreatmentItem(itemIdentifier))
@@ -277,6 +287,7 @@ namespace TriageTrainer.Entity
       AddIntravenousLineCannulaInteract();
       _interacts.Add(new PatientNormalSalineConnectInteract(this));
       AddPatientAFluidConnectInteracts();
+      AddPatientAItemUseInteracts();
     }
 
     private bool IsPatientBCNasalCannulaItem(string itemIdentifier) =>

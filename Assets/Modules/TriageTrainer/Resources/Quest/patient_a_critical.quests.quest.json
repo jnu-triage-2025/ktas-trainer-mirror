@@ -230,7 +230,7 @@
           "completionCriteriaIdentifier": "stabilize-patient-a",
           "targetType": "Interaction",
           "entityIdentifier": "patient_a",
-          "interactionIdentifier": "item_apply",
+          "interactionIdentifier": "patient_a_use_cervical_collar",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         },
@@ -353,7 +353,7 @@
           "completionCriteriaIdentifier": "plaster-intubation-patient-a",
           "targetType": "Interaction",
           "entityIdentifier": "patient_a",
-          "interactionIdentifier": "item_apply",
+          "interactionIdentifier": "patient_a_use_plaster_on_intubation",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         }
@@ -479,7 +479,7 @@
           "completionCriteriaIdentifier": "apply-gauze-patient-a",
           "targetType": "Interaction",
           "entityIdentifier": "patient_a",
-          "interactionIdentifier": "item_apply",
+          "interactionIdentifier": "patient_a_use_gauze",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         },
@@ -488,7 +488,7 @@
           "completionCriteriaIdentifier": "apply-plaster-gauze-patient-a",
           "targetType": "Interaction",
           "entityIdentifier": "patient_a",
-          "interactionIdentifier": "item_apply",
+          "interactionIdentifier": "patient_a_use_plaster_on_gauze",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         }
@@ -861,7 +861,7 @@
           "completionCriteriaIdentifier": "push-epinephrine-r1-patient-a",
           "targetType": "Interaction",
           "entityIdentifier": "patient_a",
-          "interactionIdentifier": "item_apply",
+          "interactionIdentifier": "patient_a_use_epinephrine_5cc_syringe",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         },
@@ -870,7 +870,7 @@
           "completionCriteriaIdentifier": "push-normal-saline-r1-patient-a",
           "targetType": "Interaction",
           "entityIdentifier": "patient_a",
-          "interactionIdentifier": "item_apply",
+          "interactionIdentifier": "patient_a_use_normal_saline_20cc_syringe",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         }
@@ -973,7 +973,7 @@
           "completionCriteriaIdentifier": "push-epinephrine-r2-patient-a",
           "targetType": "Interaction",
           "entityIdentifier": "patient_a",
-          "interactionIdentifier": "item_apply",
+          "interactionIdentifier": "patient_a_use_epinephrine_5cc_syringe",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         },
@@ -982,7 +982,7 @@
           "completionCriteriaIdentifier": "push-normal-saline-r2-patient-a",
           "targetType": "Interaction",
           "entityIdentifier": "patient_a",
-          "interactionIdentifier": "item_apply",
+          "interactionIdentifier": "patient_a_use_normal_saline_20cc_syringe",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         }
