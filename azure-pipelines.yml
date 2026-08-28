@@ -130,9 +130,17 @@ stages:
           # cache as well as the code mirror state. Rebuilding those needs the
           # Unity package registry on every run, which makes the job fail
           # whenever that host is unreachable.
+          # A shallow fetch marks that shared repository shallow, which the
+          # mirror job then has to undo to see the full history again. Fetching
+          # the full history costs nothing here because the mirror job already
+          # put it in this very repository; only a fresh hosted agent needs the
+          # shallow fetch.
           - checkout: self
-            fetchDepth: 1
             clean: false
+            ${{ if eq(parameters.agentMode, 'hosted') }}:
+              fetchDepth: 1
+            ${{ else }}:
+              fetchDepth: 0
           - powershell: |
               if (-not (Test-Path -LiteralPath 'Tools/CI/lint-csharp.ps1' -PathType Leaf)) {
                 throw 'Tools/CI/lint-csharp.ps1 was not found.'
@@ -158,11 +166,14 @@ stages:
           UNITY_TEST_RESULTS_PATH: 'artifacts/unity-editmode-results.xml'
           UNITY_TEST_LOG_PATH: 'artifacts/unity-editmode.log'
         steps:
-          # Keeps the imported Library and package cache between runs; see the
-          # lint job for why cleaning this shared workspace is costly.
+          # Keeps the imported Library and package cache between runs, and keeps
+          # the shared repository from being marked shallow; see the lint job.
           - checkout: self
-            fetchDepth: 1
             clean: false
+            ${{ if eq(parameters.agentMode, 'hosted') }}:
+              fetchDepth: 1
+            ${{ else }}:
+              fetchDepth: 0
           - powershell: |
               if (-not (Test-Path -LiteralPath 'Tools/CI/test-unity.ps1' -PathType Leaf)) {
                 throw 'Tools/CI/test-unity.ps1 was not found.'
@@ -200,11 +211,14 @@ stages:
           BUILD_TARGET: 'StandaloneWindows64'
           UNITY_LOG_ARTIFACT_PATH: 'artifacts/unity-StandaloneWindows64.log'
         steps:
-          # Keeps the imported Library and package cache between runs; see the
-          # lint job for why cleaning this shared workspace is costly.
+          # Keeps the imported Library and package cache between runs, and keeps
+          # the shared repository from being marked shallow; see the lint job.
           - checkout: self
-            fetchDepth: 1
             clean: false
+            ${{ if eq(parameters.agentMode, 'hosted') }}:
+              fetchDepth: 1
+            ${{ else }}:
+              fetchDepth: 0
           - powershell: |
               if (-not (Test-Path -LiteralPath 'Tools/CI/build-unity.ps1' -PathType Leaf)) {
                 throw 'Tools/CI/build-unity.ps1 was not found.'

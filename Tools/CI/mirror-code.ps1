@@ -4,6 +4,21 @@ $ErrorActionPreference = 'Stop'
 $projectPath = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 Set-Location $projectPath
 
+# Jobs that share this workspace can leave the repository shallow. Mirroring a
+# shallow repository would silently publish a truncated history, so restore the
+# full history first.
+$gitDirectory = git rev-parse --git-dir
+if ($LASTEXITCODE -ne 0) {
+    throw 'Locating the Git directory for the code mirror failed.'
+}
+if (Test-Path -LiteralPath (Join-Path $gitDirectory 'shallow')) {
+    Write-Host 'The repository is shallow; restoring the full history before mirroring.'
+    git fetch --unshallow origin
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Restoring the full history before mirroring failed.'
+    }
+}
+
 git fetch origin '+refs/heads/*:refs/remotes/origin/*' --tags
 if ($LASTEXITCODE -ne 0) {
     throw 'Fetching origin branches and tags for the code mirror failed.'
