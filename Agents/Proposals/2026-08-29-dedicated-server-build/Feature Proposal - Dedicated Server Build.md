@@ -50,6 +50,14 @@ FishNet의 `NetworkManager`는 서버 빌드에서 `Start` 시점에 서버를 �
 
 `IngameSceneBootstrapper`는 데디케이티드 모드에서 연결 실패 오버레이 씬(`NetworkSessionFailureScene`)을 요구하지 않습니다. 이 오버레이는 접속에 실패한 사용자에게 상황을 안내하는 화면이므로, 표시 대상이 없는 서버에서는 필요하지 않습니다. `SceneUIIntroSceneController`도 데디케이티드 모드에서는 UI를 구성하지 않고 비활성화됩니다. 그리고 `RecognitionCheckMicrophoneInput`은 실행 초기에 운영체제의 마이크 권한을 요청하는데, 입력 장치도 대화 상자도 없는 서버에서는 이 요청을 건너뜁니다.
 
+### 4. 데이터팩
+
+데이터팩은 서버가 실행하는 주기 명령과 게임 규칙을 담고 있으므로, 데디케이티드 서버에서도 반드시 불러올 수 있어야 합니다. `DatapackRuntimeService`는 내장 데이터팩(`Assets/StreamingAssets/DataPacks/`)을 런타임 폴더로 복사한 뒤, 그 폴더에서 외장 데이터팩과 함께 읽고 식별자로 선택하는 구조를 이미 갖추고 있습니다. 다만 그 폴더가 `persistentDataPath` 아래에 있어서 운영자가 접근하기 어렵다는 문제가 있었습니다.
+
+그래서 `DatapackRuntimeService`에 `DatapackRootPath`와 `TrySetDatapackRootOverride`를 추가하여 폴더 경로를 지정할 수 있게 했습니다. 데디케이티드 서버는 실행 파일과 같은 위치의 `DataPacks` 폴더를 사용하고, `-datapacksPath`로 다른 경로를 지정할 수도 있습니다. 경로를 지정하지 않는 클라이언트의 동작은 이전과 같습니다.
+
+활성화 목록은 `-datapacks identifier-a,identifier-b`로 지정하며, 지정하지 않으면 `session.config.json`의 `datapacks` 항목이 기본값이 됩니다. 기본값까지 무시하려면 `-noDatapacks`를 사용합니다. 이때 빈 목록을 레지스트리에 등록해야 합니다. 등록하지 않으면 `DatapackRuntimeService`가 세션 설정 파일의 목록으로 대체하기 때문입니다.
+
 ## 자세한 달성 목표
 
 | 목표 | 달성 방법 |
@@ -57,12 +65,14 @@ FishNet의 `NetworkManager`는 서버 빌드에서 `Start` 시점에 서버를 �
 | 서버 빌드 산출 | `BUILD_SUBTARGET=Server`로 `Tools/CI/build-unity.*` 실행 |
 | 클라이언트 빌드 영향 없음 | 서브타겟 기본값 `Player` 유지, 빌드 후 이전 서브타겟 복원 |
 | 무인 실행 | `DedicatedServerRuntime`이 IntroScene UI 없이 세션 개방 |
-| 운영 설정 | 포트, 바인딩 주소, 세션 이름, 데이터팩, LAN 브로드캐스트, 프레임 레이트를 인자로 지정 |
+| 운영 설정 | 포트, 바인딩 주소, 세션 이름, LAN 브로드캐스트, 프레임 레이트를 인자로 지정 |
+| 데이터팩 | 실행 파일 옆 `DataPacks` 폴더에서 내장·외장 데이터팩을 식별자로 활성화 |
 | CI 검증 | `buildDedicatedServer` 매개변수로 Windows 서버 빌드 작업 실행 |
 
 ## 문서화
 
 - 운영 및 빌드 절차: `Documents/guide/DedicatedServer.md`를 신규 작성했습니다.
+- 데이터팩 폴더 API: `Documents/api-references/MultiplayerInfrastructure.Datapack.DatapackRuntimeService.md`에 폴더 관련 절을 추가했습니다.
 - 변경 기록: `Documents/changes/2026-08-29-dedicated-server-build.md`를 신규 작성했습니다.
 - 색인: `Documents/README.md`의 변경 기록 목록과 `Documents/changes/README.md`의 DOC-INDEX 블록을 갱신했습니다.
 
@@ -75,7 +85,7 @@ FishNet의 `NetworkManager`는 서버 빌드에서 `Start` 시점에 서버를 �
 
 검증 항목은 다음과 같습니다.
 
-- EditMode 테스트 `DedicatedServerOptionsTests` 11종으로 인자 해석과 모드 판별을 검증합니다.
+- EditMode 테스트 `DedicatedServerOptionsTests` 14종으로 인자 해석과 모드 판별을 검증합니다.
 - 일반 플레이어 빌드를 `-batchmode -nographics -dedicatedServer`로 실행하여 서버 개방과 클라이언트 접속을 확인합니다.
 - 서버 서브타겟 빌드를 실제로 산출하여 실행 파일이 생성되는지 확인합니다. 이 항목은 Dedicated Server 빌드 지원 모듈이 설치된 컴퓨터에서 수행해야 합니다.
 
@@ -85,6 +95,7 @@ FishNet의 `NetworkManager`는 서버 빌드에서 `Start` 시점에 서버를 �
 - 수용 기준 2: 생성된 실행 파일을 `-port 37891` 등의 인자와 함께 실행하면, 창이 뜨지 않은 상태로 서버가 개방되고 로그에 `[DedicatedServer]` 항목이 기록된다.
 - 수용 기준 3: 클라이언트 빌드에서 해당 서버에 접속하면 플레이어가 스폰되고, 서버는 로컬 플레이어를 생성하지 않는다.
 - 수용 기준 4: 기존 호스트 방식(IntroScene의 호스트 버튼)으로 세션을 여는 동작이 이전과 동일하게 유지된다.
+- 수용 기준 5: 실행 파일 옆 `DataPacks` 폴더에 넣은 외장 데이터팩이 `-datapacks`로 활성화되고, 로그에 활성화 목록이 기록된다.
 - 성공 지표: 진행자용 호스트 컴퓨터 없이 실습 세션을 운영할 수 있고, 서버 프로세스가 세션 도중 종료되지 않는다.
 
 ## 링크, 참고사항

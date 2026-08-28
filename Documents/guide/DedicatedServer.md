@@ -68,7 +68,9 @@ Windows에서는 다음과 같이 실행합니다.
 | `-port <번호>` | `session.config.json`의 값 또는 `37891` | 서버가 수신할 포트를 지정합니다. |
 | `-bindAddress <주소>`, `-bind <주소>` | `0.0.0.0` | 서버 소켓이 바인딩할 주소입니다. 기본값은 모든 네트워크 인터페이스에서 접속을 받습니다. |
 | `-sessionName <이름>` | `session.config.json`의 값 또는 `KTAS Dedicated Server` | LAN 목록과 로그에 표시할 세션 이름입니다. |
-| `-datapacks <목록>` | `session.config.json`의 값 | 쉼표로 구분한 데이터팩 식별자 목록입니다. |
+| `-datapacks <목록>` | `session.config.json`의 `datapacks` | 쉼표로 구분한 데이터팩 식별자 목록입니다. |
+| `-noDatapacks` | 없음 | 데이터팩을 하나도 활성화하지 않습니다. |
+| `-datapacksPath <경로>` | 실행 파일과 같은 위치의 `DataPacks` | 데이터팩을 읽어 들일 폴더입니다. |
 | `-lanBroadcast <true\|false>`, `-noLanBroadcast` | `true` | LAN 검색 브로드캐스트 사용 여부입니다. |
 | `-targetFrameRate <숫자>`, `-fps <숫자>` | `60` | 서버 루프의 목표 프레임 레이트입니다. 0 이하이면 제한하지 않습니다. |
 | `-startScene <이름>` | `IngameScene` | 서버가 진입할 시작 씬입니다. 특별한 사정이 없으면 변경하지 않습니다. |
@@ -89,12 +91,67 @@ Windows에서는 다음과 같이 실행합니다.
 
 `Mode=DedicatedServer`가 기록되면 서버가 로컬 클라이언트 없이 개방된 것입니다. 클라이언트는 기존과 동일하게 LAN 목록이나 직접 접속으로 참가하며, 접속 주소에는 서버 컴퓨터의 실제 IP 주소를 사용합니다.
 
+## 데이터팩
+
+데디케이티드 서버도 클라이언트와 동일한 방식으로 데이터팩을 불러옵니다. 내장 데이터팩과 외장 데이터팩은 같은 폴더에 모이며, 둘 다 식별자로 활성화합니다.
+
+### 데이터팩 폴더
+
+서버는 실행 파일과 같은 위치의 `DataPacks` 폴더를 사용합니다. 이 폴더는 서버를 처음 실행할 때 자동으로 만들어집니다.
+
+```text
+ktas-trainer-server.exe
+ktas-trainer-server_Data/
+DataPacks/
+  ├─ usability.datapack.json      (내장 데이터팩, 실행할 때마다 갱신됨)
+  ├─ debugging.datapack.json      (내장 데이터팩, 실행할 때마다 갱신됨)
+  ├─ DefaultTraining.datapack.json (내장 데이터팩, 실행할 때마다 갱신됨)
+  └─ my-training.datapack.json    (운영자가 추가한 외장 데이터팩)
+```
+
+폴더를 다른 위치로 옮기려면 `-datapacksPath /srv/ktas/DataPacks`처럼 지정합니다. 지정한 폴더를 만들 수 없으면 경고를 기록하고 기본 경로(`persistentDataPath/DataPacks`)를 사용합니다.
+
+### 내장 데이터팩
+
+`Assets/StreamingAssets/DataPacks/`에 포함된 데이터팩은 서버를 실행할 때마다 위 폴더로 복사됩니다. 현재 포함된 식별자는 `usability`, `debugging`, `DefaultTraining`입니다. 복사는 덮어쓰기이므로, 내장 데이터팩의 내용을 바꾸어 사용하려면 다른 파일 이름과 다른 `packId`로 저장해야 합니다.
+
+### 외장 데이터팩
+
+`*.datapack.json` 파일을 위 폴더에 넣으면 됩니다. 하위 폴더에 넣어도 함께 검색됩니다. 식별자는 파일 이름이 아니라 JSON의 `packId` 값이며, 내장 데이터팩과 같은 방식으로 활성화합니다.
+
+### 활성화와 기본값
+
+활성화할 데이터팩은 식별자 목록으로 지정합니다.
+
+```bash
+./ktas-trainer-server -datapacks "identifier-a, identifier-b"
+```
+
+인자를 지정하지 않으면 `Assets/StreamingAssets/Session/session.config.json`의 `datapacks` 항목이 기본값이 됩니다. 현재 기본값은 다음과 같습니다.
+
+```json
+{
+  "datapacks": ["usability", "debugging"]
+}
+```
+
+목록에 없는 데이터팩은 폴더에 들어 있어도 불러오지 않습니다. 기본값까지 무시하고 아무것도 불러오지 않으려면 `-noDatapacks`를 지정합니다.
+
+실행 로그에서 적용 결과를 확인할 수 있습니다.
+
+```text
+[DedicatedServer] 데이터팩 폴더: /srv/ktas/DataPacks
+[DedicatedServer] 활성화할 데이터팩: usability, debugging
+```
+
 ## 동작 방식
 
 1. `DedicatedServerRuntime`이 실행 초기에 커맨드라인 인자를 해석하고 데디케이티드 모드 여부를 판단합니다.
 2. 데디케이티드 모드이면 IntroScene UI를 구성하지 않고, 세션 정보를 런타임 레지스트리에 등록한 뒤 `IngameScene`으로 전환합니다.
 3. `IngameSceneBootstrapper`가 `OverworldScene`과 `SystemOverlayScene`을 불러온 다음, `FishNetSupport.StartDedicatedServer`를 호출합니다.
 4. 서버는 개방되지만 로컬 클라이언트는 시작되지 않으므로, 서버 프로세스에는 플레이어가 스폰되지 않습니다.
+
+데이터팩은 `SystemOverlayScene`의 `DatapackRuntimeService`가 불러옵니다. 이 서비스는 폴더를 준비하고, 활성화 목록에 있는 데이터팩만 등록합니다.
 
 ## 알려진 제약
 

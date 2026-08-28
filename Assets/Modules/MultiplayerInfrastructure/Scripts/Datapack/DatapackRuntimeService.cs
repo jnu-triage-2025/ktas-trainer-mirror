@@ -26,6 +26,56 @@ namespace MultiplayerInfrastructure.Datapack
     private readonly List<PendingGameRule> _pendingGameRules = new();
     private NetworkManager _networkManager;
 
+    private static string _datapackRootOverride;
+
+    /// <summary>
+    /// 런타임 데이터팩 폴더의 경로입니다.
+    /// 내장 데이터팩이 이 폴더로 복사되고, 외부에서 추가한 데이터팩도 이 폴더에서 읽습니다.
+    /// 기본값은 <see cref="GameLogService.DatapackRootPath"/>이며,
+    /// <see cref="TrySetDatapackRootOverride"/>로 다른 폴더를 지정할 수 있습니다.
+    /// </summary>
+    public static string DatapackRootPath =>
+      string.IsNullOrWhiteSpace(_datapackRootOverride) ? GameLogService.DatapackRootPath : _datapackRootOverride;
+
+    /// <summary>
+    /// 런타임 데이터팩 폴더를 다른 경로로 지정합니다.
+    /// 데디케이티드 서버처럼 persistentDataPath가 운영자에게 드러나지 않는 실행 환경에서,
+    /// 실행 파일 옆의 폴더를 사용하기 위한 진입점입니다.
+    /// 폴더를 만들 수 없으면 기본 경로를 유지하고 <c>false</c>를 반환합니다.
+    /// </summary>
+    public static bool TrySetDatapackRootOverride(string path, out string error)
+    {
+      error = string.Empty;
+
+      if (string.IsNullOrWhiteSpace(path))
+      {
+        _datapackRootOverride = null;
+        return true;
+      }
+
+      string fullPath;
+      try
+      {
+        fullPath = Path.GetFullPath(path);
+        Directory.CreateDirectory(fullPath);
+      }
+      catch (Exception ex)
+      {
+        error = ex.Message;
+        return false;
+      }
+
+      _datapackRootOverride = fullPath;
+      return true;
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetDatapackRootOverride()
+    {
+      // 도메인 리로드가 비활성인 환경에서 이전 실행의 경로가 남지 않도록 초기화한다.
+      _datapackRootOverride = null;
+    }
+
     private sealed class PendingGameRule
     {
       public string PackId;
@@ -308,7 +358,7 @@ namespace MultiplayerInfrastructure.Datapack
     public static List<DatapackFileInfo> ScanDatapacks()
     {
       var result = new List<DatapackFileInfo>();
-      string root = GameLogService.DatapackRootPath;
+      string root = DatapackRootPath;
       if (!Directory.Exists(root))
         return result;
 
@@ -352,7 +402,7 @@ namespace MultiplayerInfrastructure.Datapack
 
     public static void EnsureRuntimeDatapackFolder()
     {
-      string root = GameLogService.DatapackRootPath;
+      string root = DatapackRootPath;
       try
       { Directory.CreateDirectory(root); }
       catch (Exception ex)

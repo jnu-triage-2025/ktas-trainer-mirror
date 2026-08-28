@@ -87,6 +87,23 @@
 
 ---
 
+## 5-1. 데이터팩 폴더
+
+`Start()`는 먼저 `EnsureRuntimeDatapackFolder()`를 호출하여 런타임 데이터팩 폴더를 준비합니다. 이 폴더에는 `Assets/StreamingAssets/DataPacks/`의 내장 데이터팩이 실행할 때마다 복사되며, 외부에서 추가한 `*.datapack.json` 파일도 같은 폴더에서 함께 읽습니다. 따라서 내장 데이터팩과 외장 데이터팩은 모두 `packId` 식별자로 동일하게 선택됩니다.
+
+| 멤버 | 설명 |
+|---|---|
+| `DatapackRootPath` | 현재 사용 중인 런타임 데이터팩 폴더입니다. 기본값은 `GameLogService.DatapackRootPath`(`persistentDataPath/DataPacks`)입니다. |
+| `TrySetDatapackRootOverride(path, out error)` | 폴더를 다른 경로로 지정합니다. 폴더를 만들 수 없으면 기본 경로를 유지하고 `false`를 반환합니다. |
+| `EnsureRuntimeDatapackFolder()` | 폴더를 만들고 내장 데이터팩을 복사합니다. |
+| `ScanDatapacks()` | 폴더를 재귀적으로 검색하여 `DatapackFileInfo` 목록을 반환합니다. `packId`가 중복되면 뒤에 읽힌 파일이 오류로 표시됩니다. |
+
+경로 지정은 데디케이티드 서버를 위해 추가되었습니다. 서버는 `persistentDataPath`가 운영자에게 드러나지 않으므로, 실행 파일과 같은 위치의 `DataPacks` 폴더를 사용합니다. 자세한 내용은 [데디케이티드 서버 가이드](../guide/DedicatedServer.md)를 참고하시기 바랍니다.
+
+내장 데이터팩은 실행할 때마다 덮어쓰이므로, 폴더에서 직접 수정한 내용은 유지되지 않습니다. 내용을 바꾸어 사용하려면 다른 파일 이름과 다른 `packId`로 저장해야 합니다.
+
+---
+
 ## 6. 제약 및 주의점
 
 1. 현재는 런타임 서비스/모델만 제공되며, 인게임 등록 UI/명령은 별도 구현 필요

@@ -42,6 +42,12 @@ namespace MultiplayerInfrastructure.Server
     /// <summary>세션에서 사용할 데이터팩 식별자 목록입니다.</summary>
     public IReadOnlyList<string> DatapackIds { get; private set; } = Array.Empty<string>();
 
+    /// <summary>
+    /// 런타임 데이터팩 폴더의 경로입니다.
+    /// 값이 없으면 실행 파일과 같은 위치의 <c>DataPacks</c> 폴더를 사용합니다.
+    /// </summary>
+    public string DatapacksPath { get; private set; }
+
     /// <summary>서버 루프의 목표 프레임 레이트입니다. 0 이하이면 제한하지 않습니다.</summary>
     public int TargetFrameRate { get; private set; } = DefaultTargetFrameRate;
 
@@ -92,6 +98,15 @@ namespace MultiplayerInfrastructure.Server
 
           case "datapacks":
             options.DatapackIds = ParseDatapackIds(ReadValue(args, ref i, inlineValue), options.DatapackIds);
+            break;
+
+          case "nodatapacks":
+            options.DatapackIds = Array.Empty<string>();
+            break;
+
+          case "datapackspath":
+          case "datapackpath":
+            options.DatapacksPath = NormalizeText(ReadValue(args, ref i, inlineValue), options.DatapacksPath);
             break;
 
           case "lanbroadcast":
@@ -261,9 +276,11 @@ namespace MultiplayerInfrastructure.Server
     /// <summary>로그에 남길 요약 문자열을 만듭니다.</summary>
     public override string ToString()
     {
-      var datapacks = DatapackIds.Count == 0 ? "<all-from-config>" : string.Join(",", DatapackIds);
+      var datapacks = DatapackIds.Count == 0 ? "<none>" : string.Join(",", DatapackIds);
+      var datapacksPath = string.IsNullOrWhiteSpace(DatapacksPath) ? "<default>" : DatapacksPath;
       return $"bind={BindAddress}:{Port}, session='{SessionName}', lanBroadcast={UseLanDiscovery}, " +
-             $"targetFrameRate={TargetFrameRate}, startScene={StartScene}, datapacks=[{datapacks}]";
+             $"targetFrameRate={TargetFrameRate}, startScene={StartScene}, " +
+             $"datapacks=[{datapacks}], datapacksPath={datapacksPath}";
     }
   }
 }

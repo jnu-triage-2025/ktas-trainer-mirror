@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 using FishNet.Managing;
+using MultiplayerInfrastructure.Datapack;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.Session;
 using UnityEngine;
@@ -20,6 +22,9 @@ namespace MultiplayerInfrastructure.Server
   /// </summary>
   public static class DedicatedServerRuntime
   {
+    /// <summary>실행 파일과 같은 위치에 만드는 기본 데이터팩 폴더의 이름입니다.</summary>
+    public const string DefaultDatapackFolderName = "DataPacks";
+
     /// <summary>현재 실행이 데디케이티드 서버 모드인지 여부입니다.</summary>
     public static bool IsActive { get; private set; }
 
@@ -64,6 +69,7 @@ namespace MultiplayerInfrastructure.Server
         Debug.LogWarning($"[DedicatedServer] {options.Warnings[i]}");
 
       ApplyRuntimeSettings(options);
+      ApplyDatapackRoot(options);
       RegisterLaunchRequest(options);
 
       // NetworkManager는 서버 빌드에서 Start 시점에 서버를 자동으로 개방한다.
@@ -134,6 +140,50 @@ namespace MultiplayerInfrastructure.Server
     }
 
     /// <summary>
+    /// 런타임 데이터팩 폴더를 결정하고 적용합니다.
+    /// 인자로 경로를 지정하지 않으면 실행 파일과 같은 위치의 <c>DataPacks</c> 폴더를 사용합니다.
+    /// 폴더를 만들 수 없으면 기본 경로(persistentDataPath)를 그대로 사용합니다.
+    /// </summary>
+    private static void ApplyDatapackRoot(DedicatedServerOptions options)
+    {
+      var requestedPath = ResolveDatapackRootPath(options);
+      if (string.IsNullOrWhiteSpace(requestedPath))
+      {
+        Debug.Log($"[DedicatedServer] 데이터팩 폴더: {DatapackRuntimeService.DatapackRootPath}");
+        return;
+      }
+
+      if (!DatapackRuntimeService.TrySetDatapackRootOverride(requestedPath, out var error))
+      {
+        Debug.LogWarning(
+          $"[DedicatedServer] 데이터팩 폴더 '{requestedPath}'를 사용할 수 없어 " +
+          $"기본 폴더 '{DatapackRuntimeService.DatapackRootPath}'를 사용합니다. 원인: {error}");
+        return;
+      }
+
+      Debug.Log($"[DedicatedServer] 데이터팩 폴더: {DatapackRuntimeService.DatapackRootPath}");
+    }
+
+    /// <summary>
+    /// 사용할 데이터팩 폴더 경로를 결정합니다.
+    /// 반환값이 비어 있으면 기본 경로를 그대로 사용한다는 뜻입니다.
+    /// </summary>
+    private static string ResolveDatapackRootPath(DedicatedServerOptions options)
+    {
+      if (!string.IsNullOrWhiteSpace(options.DatapacksPath))
+        return options.DatapacksPath;
+
+      // 에디터에서는 프로젝트 폴더를 오염시키지 않도록 기본 경로를 유지한다.
+      if (Application.isEditor)
+        return null;
+
+      var installDirectory = Directory.GetParent(Application.dataPath);
+      return installDirectory == null
+        ? null
+        : Path.Combine(installDirectory.FullName, DefaultDatapackFolderName);
+    }
+
+    /// <summary>
     /// IntroScene이 등록하던 실행 정보를 커맨드라인 옵션으로부터 직접 등록합니다.
     /// IngameSceneBootstrapper는 이 값을 읽어 세션을 시작합니다.
     /// </summary>
@@ -147,13 +197,16 @@ namespace MultiplayerInfrastructure.Server
       Registry.Registry.Register(RegistryType.RuntimeState, RegistryGlobalKeys.LoadedFromIntroScene, true);
       Registry.Registry.Register(RegistryType.RuntimeState, RegistryGlobalKeys.IsDedicatedServer, true);
 
-      if (options.DatapackIds.Count > 0)
-      {
-        Registry.Registry.Register(
-          RegistryType.RuntimeState,
-          RegistryGlobalKeys.SelectedDatapackIds,
-          new List<string>(options.DatapackIds));
-      }
+      // 선택 목록은 비어 있더라도 등록한다. 등록하지 않으면 DatapackRuntimeService가
+      // 세션 설정 파일의 목록으로 대체하므로, -noDatapacks를 지정한 의도가 사라진다.
+      Registry.Registry.Register(
+        RegistryType.RuntimeState,
+        RegistryGlobalKeys.SelectedDatapackIds,
+        new List<string>(options.DatapackIds));
+
+      Debug.Log(options.DatapackIds.Count == 0
+        ? "[DedicatedServer] 활성화할 데이터팩이 없습니다."
+        : $"[DedicatedServer] 활성화할 데이터팩: {string.Join(", ", options.DatapackIds)}");
     }
 
     /// <summary>커맨드라인 옵션으로 세션 정보를 구성합니다.</summary>

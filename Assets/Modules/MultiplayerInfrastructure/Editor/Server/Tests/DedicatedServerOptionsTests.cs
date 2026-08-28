@@ -40,6 +40,12 @@ namespace MultiplayerInfrastructure.Tests.Server
     }
 
     [Test]
+    public void DefaultDatapackFolderNameIsStable()
+    {
+      Assert.That(DedicatedServerRuntime.DefaultDatapackFolderName, Is.EqualTo("DataPacks"));
+    }
+
+    [Test]
     public void CommandLineArgumentsOverrideSessionConfiguration()
     {
       var configuration = new SessionConfiguration
@@ -74,6 +80,25 @@ namespace MultiplayerInfrastructure.Tests.Server
       var options = DedicatedServerOptions.Parse(new[] { "-datapacks", "pack-a, pack-b ,pack-a" });
 
       Assert.That(options.DatapackIds, Is.EqualTo(new[] { "pack-a", "pack-b" }));
+    }
+
+    [Test]
+    public void DatapackSelectionCanBeClearedExplicitly()
+    {
+      var configuration = new SessionConfiguration { datapacks = new[] { "pack-a" } };
+
+      var options = DedicatedServerOptions.Parse(new[] { "-noDatapacks" }, configuration);
+
+      Assert.That(options.DatapackIds, Is.Empty);
+    }
+
+    [Test]
+    public void DatapackFolderCanBeOverridden()
+    {
+      Assert.That(DedicatedServerOptions.Parse(new string[0]).DatapacksPath, Is.Null);
+      Assert.That(
+        DedicatedServerOptions.Parse(new[] { "-datapacksPath", "/srv/ktas/DataPacks" }).DatapacksPath,
+        Is.EqualTo("/srv/ktas/DataPacks"));
     }
 
     [Test]

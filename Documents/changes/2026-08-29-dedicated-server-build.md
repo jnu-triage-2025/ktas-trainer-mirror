@@ -42,15 +42,29 @@
 
 FishNet의 `NetworkManager`는 서버 빌드에서 `Start` 시점에 서버를 자동으로 개방한다. 그 시점에는 포트와 바인딩 주소가 아직 적용되지 않았기 때문에, 데디케이티드 모드에서는 자동 개방을 차단하고 세션 부트스트랩이 전송 설정을 마친 뒤에 서버를 개방한다.
 
+## 데이터팩
+
+데디케이티드 서버도 클라이언트와 동일한 경로로 데이터팩을 불러온다. 내장 데이터팩(`Assets/StreamingAssets/DataPacks/`)은 실행할 때마다 런타임 폴더로 복사되고, 외장 데이터팩은 같은 폴더에서 함께 읽힌다. 둘 다 JSON의 `packId` 식별자로 활성화한다.
+
+| 항목 | 내용 |
+|---|---|
+| 폴더 기본값 | 실행 파일과 같은 위치의 `DataPacks`. 에디터에서는 기존 경로(`persistentDataPath/DataPacks`)를 유지한다 |
+| 폴더 지정 | `-datapacksPath <경로>`. 폴더를 만들 수 없으면 경고를 남기고 기본 경로를 사용한다 |
+| 활성화 | `-datapacks identifier-a,identifier-b` |
+| 활성화 기본값 | `session.config.json`의 `datapacks`(현재 `usability`, `debugging`) |
+| 전체 해제 | `-noDatapacks` |
+
+`DatapackRuntimeService`에 `DatapackRootPath`와 `TrySetDatapackRootOverride`를 추가하여 폴더 경로를 지정할 수 있게 했다. 지정하지 않으면 기존 경로를 그대로 사용하므로 클라이언트 동작은 달라지지 않는다. 선택 목록은 비어 있더라도 레지스트리에 등록한다. 등록하지 않으면 세션 설정 파일의 목록으로 대체되어 `-noDatapacks`의 의도가 사라지기 때문이다.
+
 ## 지원 인자
 
-`-dedicatedServer`(`-server`), `-port`, `-bindAddress`(`-bind`), `-sessionName`, `-datapacks`, `-lanBroadcast`, `-noLanBroadcast`, `-targetFrameRate`(`-fps`), `-startScene`를 지원한다. 인자는 대소문자를 구분하지 않으며, `-port 37891`과 `-port=37891` 형식을 모두 허용한다. 값을 해석하지 못하면 기본값을 사용하고 경고를 기록한다. 기본값은 `Assets/StreamingAssets/Session/session.config.json`의 값을 우선 사용한다.
+`-dedicatedServer`(`-server`), `-port`, `-bindAddress`(`-bind`), `-sessionName`, `-datapacks`, `-noDatapacks`, `-datapacksPath`, `-lanBroadcast`, `-noLanBroadcast`, `-targetFrameRate`(`-fps`), `-startScene`를 지원한다. 인자는 대소문자를 구분하지 않으며, `-port 37891`과 `-port=37891` 형식을 모두 허용한다. 값을 해석하지 못하면 기본값을 사용하고 경고를 기록한다. 기본값은 `Assets/StreamingAssets/Session/session.config.json`의 값을 우선 사용한다.
 
 ## 검증 결과
 
 - `Assembly-CSharp`, `Assembly-CSharp-Editor` 컴파일 오류 0건
-- `DedicatedServerOptionsTests` 11종 추가
-- 인자 해석 로직 30개 항목 통과
+- `DedicatedServerOptionsTests` 14종 추가
+- 인자 해석 로직 35개 항목 통과
 
 ## 후속 확인 항목
 
