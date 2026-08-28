@@ -370,7 +370,7 @@ namespace TriageTrainer.Entity
     {
       if (!IsDisplayActive(TreatmentDisplay.CentralVenousCatheterInsertedIntoSubclavian))
         return false;
-      var point = ClineIvAttachmentPoint;
+      var point = CentralLineAttachmentPoint;
       return point != null && point.CanAcceptAdditionalConnection;
     }
 

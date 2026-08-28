@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using TriageTrainer.Entity.AEDLine;
+using TriageTrainer.Entity.CentralLine;
 using TriageTrainer.Entity.ElectricalLine;
 using TriageTrainer.Entity.IntravenousLine;
 using TriageTrainer.Entity.LineConnection;
@@ -29,6 +30,7 @@ namespace TriageTrainer.Editor
     private enum LineType
     {
       Intravenous,
+      CentralLine,
       AED,
       Electrical,
       Oxy,
@@ -40,6 +42,7 @@ namespace TriageTrainer.Editor
     private MonoScript _implementation;
     private Material _material;
     private Material _intravenousMaterial;
+    private Material _centralLineMaterial;
     private Material _aedMaterial;
     private Material _electricalMaterial;
     private Material _oxyMaterial;
@@ -72,6 +75,7 @@ namespace TriageTrainer.Editor
       new Dictionary<LineType, Type>
       {
         { LineType.Intravenous, typeof(IntravenousLineConnectionPoint) },
+        { LineType.CentralLine, typeof(CentralLineConnectionPoint) },
         { LineType.AED, typeof(AEDLineConnectionPoint) },
         { LineType.Electrical, typeof(ElectricalLineConnectionPoint) },
         { LineType.Oxy, typeof(OxyLineConnectionPoint) },
@@ -166,6 +170,7 @@ namespace TriageTrainer.Editor
     private void LoadDefaultLineMaterials()
     {
       _intravenousMaterial = IntravenousLineConnectionPoint.DefaultMaterial;
+      _centralLineMaterial = CentralLineConnectionPoint.DefaultMaterial;
       _aedMaterial = AEDLineConnectionPoint.DefaultMaterial;
       _electricalMaterial = ElectricalLineConnectionPoint.DefaultMaterial;
       _oxyMaterial = OxyLineConnectionPoint.DefaultMaterial;
@@ -366,6 +371,9 @@ namespace TriageTrainer.Editor
         case LineType.Intravenous:
           _intravenousMaterial = _material;
           break;
+        case LineType.CentralLine:
+          _centralLineMaterial = _material;
+          break;
         case LineType.AED:
           _aedMaterial = _material;
           break;
@@ -386,6 +394,7 @@ namespace TriageTrainer.Editor
       return _lineType switch
       {
         LineType.Intravenous => _intravenousMaterial,
+        LineType.CentralLine => _centralLineMaterial,
         LineType.AED => _aedMaterial,
         LineType.Electrical => _electricalMaterial,
         LineType.Oxy => _oxyMaterial,
@@ -399,6 +408,7 @@ namespace TriageTrainer.Editor
       return lineType switch
       {
         LineType.Intravenous => IntravenousLineConnectionPoint.LineWidth,
+        LineType.CentralLine => CentralLineConnectionPoint.LineWidth,
         LineType.AED => AEDLineConnectionPoint.LineWidth,
         LineType.Electrical => ElectricalLineConnectionPoint.LineWidth,
         LineType.Oxy => OxyLineConnectionPoint.LineWidth,
@@ -412,6 +422,7 @@ namespace TriageTrainer.Editor
       return lineType switch
       {
         LineType.Intravenous => IntravenousLineConnectionPoint.Elasticity,
+        LineType.CentralLine => CentralLineConnectionPoint.Elasticity,
         LineType.AED => AEDLineConnectionPoint.Elasticity,
         LineType.Electrical => ElectricalLineConnectionPoint.Elasticity,
         LineType.Oxy => OxyLineConnectionPoint.Elasticity,

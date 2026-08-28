@@ -7,6 +7,7 @@ using MultiplayerInfrastructure.Player;
 using MultiplayerInfrastructure.Registry;
 using MultiplayerInfrastructure.UI;
 using TriageTrainer.Entity.IntravenousLine;
+using TriageTrainer.Entity.CentralLine;
 using TriageTrainer.Entity.OxyLine;
 using TriageTrainer.Entity.Patient;
 using TriageTrainer.Entity.SuctionLine;
@@ -40,8 +41,8 @@ namespace TriageTrainer.Entity
     [Tooltip("환자 B/C 정맥로(캐뉼라 삽입 부위) 측 IV 연결 지점입니다. 환자 유형별 State 컴포넌트" +
              "(PatientTypeBMaleState 등)의 참조 필드에서 주입되며, 식별자 문자열로 검색하지 않습니다.")]
     [SerializeField] private IntravenousLineConnectionPoint _patientBCIvAttachmentPoint;
-    [Tooltip("C-line(중심정맥관) 환자 측 IV 연결 지점입니다. Patient A의 Cline_A 자식 연결점을 직접 참조합니다.")]
-    [SerializeField] private IntravenousLineConnectionPoint _clineIvAttachmentPoint;
+    [Tooltip("C-line(중심정맥관) 환자 측 전용 연결 지점입니다. Patient A의 Cline_A 자식 연결점을 직접 참조합니다.")]
+    [SerializeField] private CentralLineConnectionPoint _centralLineAttachmentPoint;
     [Tooltip("설치된 산소 마스크에 포함된 환자 측 산소 라인 포트입니다.")]
     [SerializeField] private OxyLineConnectionPoint _oxygenMaskAttachmentPoint;
     [Tooltip("환자 측 석션 라인 포트입니다.")]
@@ -79,13 +80,13 @@ namespace TriageTrainer.Entity
         return _ivAttachmentPoint;
       }
     }
-    /// <summary>C-line(중심정맥관) 환자 측 IV 연결 지점. 단일 연결만 허용한다.</summary>
-    public IntravenousLineConnectionPoint ClineIvAttachmentPoint
+    /// <summary>C-line(중심정맥관) 환자 측 전용 연결 지점. 단일 연결만 허용한다.</summary>
+    public CentralLineConnectionPoint CentralLineAttachmentPoint
     {
       get
       {
-        ConfigureClineIvAttachmentPoint();
-        return _clineIvAttachmentPoint;
+        ConfigureCentralLineAttachmentPoint();
+        return _centralLineAttachmentPoint;
       }
     }
     /// <summary>설치된 산소 마스크의 환자 측 산소 라인 포트. 설정되지 않으면 null이다.</summary>
@@ -114,7 +115,7 @@ namespace TriageTrainer.Entity
       Awake_Animation();
       EnsureCarryAttachPoint();
       EnsureIvAttachmentPoint();
-      ConfigureClineIvAttachmentPoint();
+      ConfigureCentralLineAttachmentPoint();
       InitializeCollider();
       EnsureMedicalStateDefaults();
       InitializeTreatmentDisplaysFromConfiguredState();
@@ -301,8 +302,6 @@ namespace TriageTrainer.Entity
       _carryAttachPoint.localRotation = Quaternion.identity;
     }
 
-    private const string ClineIvConnectionPointIdentifier = "cline_iv_connection_point";
-
     /// <summary>
     /// 환자 B/C 정맥로(캐뉼라 삽입 부위) 측 IV 연결 지점.
     ///
@@ -347,8 +346,7 @@ namespace TriageTrainer.Entity
         for (int i = 0; i < candidates.Length; i++)
         {
           if (candidates[i] == null
-              || ReferenceEquals(candidates[i], _clineIvAttachmentPoint)
-              || string.Equals(candidates[i].Identifier, ClineIvConnectionPointIdentifier,
+              || string.Equals(candidates[i].Identifier, "cline_iv_connection_point",
                    StringComparison.Ordinal))
             continue;
 
@@ -359,7 +357,7 @@ namespace TriageTrainer.Entity
 
       // C-line 연결점을 일반 IV 연결점으로 잘못 선택하지 않도록 제외한다.
       if (_ivAttachmentPoint != null
-          && string.Equals(_ivAttachmentPoint.Identifier, ClineIvConnectionPointIdentifier,
+          && string.Equals(_ivAttachmentPoint.Identifier, "cline_iv_connection_point",
                StringComparison.Ordinal))
         _ivAttachmentPoint = null;
 
@@ -375,15 +373,12 @@ namespace TriageTrainer.Entity
       _ivAttachmentPoint.SetAllowsMultipleConnections(true);
     }
 
-    private void ConfigureClineIvAttachmentPoint()
+    private void ConfigureCentralLineAttachmentPoint()
     {
-      if (_clineIvAttachmentPoint == null)
+      if (_centralLineAttachmentPoint == null)
         return;
 
-        // Cline_A 메시 프리팹의 기본 localPosition 기준
-      _clineIvAttachmentPoint.SetIdentifier(ClineIvConnectionPointIdentifier);
-      _clineIvAttachmentPoint.SetAllowsMultipleConnections(false);
-      _clineIvAttachmentPoint.SetAllInteractionsEnabled(false);
+      _centralLineAttachmentPoint.SetAllowsMultipleConnections(false);
     }
 
     protected override void OnValidate()

@@ -315,7 +315,7 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
-    public void RapidInfuserPrefabWiresIvConnectionPointAndFluidDisplays()
+    public void RapidInfuserPrefabWiresCentralLineConnectionPointAndFluidDisplays()
     {
       var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RapidInfuserPrefabPath);
       Assert.That(prefab, Is.Not.Null);
@@ -705,10 +705,9 @@ namespace TriageTrainer.Tests
       Assert.That(prefab, Is.Not.Null);
 
       var controller = prefab.GetComponent<PatientController>();
-      var point = controller.ClineIvAttachmentPoint;
+      var point = controller.CentralLineAttachmentPoint;
 
       Assert.That(point, Is.Not.Null);
-      Assert.That(point.Identifier, Is.EqualTo("cline_iv_connection_point"));
       Assert.That(point.transform.parent, Is.Not.Null);
       Assert.That(point.transform.parent.name, Is.EqualTo("Cline_A"));
       Assert.That(prefab.transform.Find("ClineIVAttachmentPoint"), Is.Null);

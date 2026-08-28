@@ -238,7 +238,7 @@ MonoBehaviour:
     _oxyflowmeters: []
   _ivAttachmentPoint: {fileID: 0}
   _patientBCIvAttachmentPoint: {fileID: 7373929579115856596}
-  _clineIvAttachmentPoint: {fileID: 0}
+  _centralLineAttachmentPoint: {fileID: 0}
   _oxygenMaskAttachmentPoint: {fileID: 4673562941832867291}
   _suctionLineAttachmentPoint: {fileID: 0}
   _carryAttachPoint: {fileID: 5489750353886828385}

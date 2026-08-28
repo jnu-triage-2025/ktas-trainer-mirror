@@ -8,6 +8,7 @@ using MultiplayerInfrastructure.Scenario;
 using MultiplayerInfrastructure.Session;
 using MultiplayerInfrastructure.Tag;
 using TriageTrainer.Entity.AEDLine;
+using TriageTrainer.Entity.CentralLine;
 using TriageTrainer.Entity.ElectricalLine;
 using TriageTrainer.Entity.IntravenousLine;
 using TriageTrainer.Entity.OxyLine;
@@ -1146,6 +1147,7 @@ namespace TriageTrainer.Entity.LineConnection
       var material = point switch
       {
         IntravenousLineConnectionPoint => IntravenousLineConnectionPoint.DefaultMaterial,
+        CentralLineConnectionPoint => CentralLineConnectionPoint.DefaultMaterial,
         AEDLineConnectionPoint => AEDLineConnectionPoint.DefaultMaterial,
         ElectricalLineConnectionPoint => ElectricalLineConnectionPoint.DefaultMaterial,
         OxyLineConnectionPoint => OxyLineConnectionPoint.DefaultMaterial,
@@ -1162,6 +1164,7 @@ namespace TriageTrainer.Entity.LineConnection
       return point switch
       {
         IntravenousLineConnectionPoint => IntravenousLineConnectionPoint.Elasticity,
+        CentralLineConnectionPoint => CentralLineConnectionPoint.Elasticity,
         AEDLineConnectionPoint => AEDLineConnectionPoint.Elasticity,
         ElectricalLineConnectionPoint => ElectricalLineConnectionPoint.Elasticity,
         OxyLineConnectionPoint => OxyLineConnectionPoint.Elasticity,
@@ -1175,6 +1178,7 @@ namespace TriageTrainer.Entity.LineConnection
       return point switch
       {
         IntravenousLineConnectionPoint => IntravenousLineConnectionPoint.LineWidth,
+        CentralLineConnectionPoint => CentralLineConnectionPoint.LineWidth,
         AEDLineConnectionPoint => AEDLineConnectionPoint.LineWidth,
         ElectricalLineConnectionPoint => ElectricalLineConnectionPoint.LineWidth,
         OxyLineConnectionPoint => OxyLineConnectionPoint.LineWidth,
