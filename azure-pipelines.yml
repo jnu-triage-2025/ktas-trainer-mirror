@@ -112,8 +112,14 @@ stages:
           ${{ else }}:
             name: $(windowsAgentPool)
         steps:
+          # Every job of this pipeline shares one workspace on a self-hosted
+          # agent, so cleaning here discards Unity's imported Library and package
+          # cache as well as the code mirror state. Rebuilding those needs the
+          # Unity package registry on every run, which makes the job fail
+          # whenever that host is unreachable.
           - checkout: self
             fetchDepth: 1
+            clean: false
           - powershell: |
               if (-not (Test-Path -LiteralPath 'Tools/CI/lint-csharp.ps1' -PathType Leaf)) {
                 throw 'Tools/CI/lint-csharp.ps1 was not found.'
@@ -139,8 +145,11 @@ stages:
           UNITY_TEST_RESULTS_PATH: 'artifacts/unity-editmode-results.xml'
           UNITY_TEST_LOG_PATH: 'artifacts/unity-editmode.log'
         steps:
+          # Keeps the imported Library and package cache between runs; see the
+          # lint job for why cleaning this shared workspace is costly.
           - checkout: self
             fetchDepth: 1
+            clean: false
           - powershell: |
               if (-not (Test-Path -LiteralPath 'Tools/CI/test-unity.ps1' -PathType Leaf)) {
                 throw 'Tools/CI/test-unity.ps1 was not found.'
@@ -178,8 +187,11 @@ stages:
           BUILD_TARGET: 'StandaloneWindows64'
           UNITY_LOG_ARTIFACT_PATH: 'artifacts/unity-StandaloneWindows64.log'
         steps:
+          # Keeps the imported Library and package cache between runs; see the
+          # lint job for why cleaning this shared workspace is costly.
           - checkout: self
             fetchDepth: 1
+            clean: false
           - powershell: |
               if (-not (Test-Path -LiteralPath 'Tools/CI/build-unity.ps1' -PathType Leaf)) {
                 throw 'Tools/CI/build-unity.ps1 was not found.'
