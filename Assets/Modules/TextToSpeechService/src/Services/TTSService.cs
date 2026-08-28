@@ -152,8 +152,46 @@ namespace TextToSpeechService
     // Unity 라이프사이클
     // =========================================================================
 
+    /// <summary>
+    /// 초기화 코루틴을 시작할 때 켜고 게임 오브젝트가 비활성화될 때 끄는 표시.
+    /// 같은 활성화 구간에서 Awake와 OnEnable이 연달아 호출되어도 코루틴이 중복 실행되지 않게 한다.
+    /// </summary>
+    private bool _initializationRunning;
+
     private void Awake()
     {
+      TryStartInitialization();
+    }
+
+    /// <summary>
+    /// 게임 오브젝트가 다시 활성화될 때 초기화를 이어서 진행한다.
+    ///
+    /// 이 컴포넌트는 씬에 배치된 NetworkObject 계층에 속하는데, FishNet은 NetworkManager가
+    /// 시작되기 전까지 해당 계층을 비활성화한다. Unity는 게임 오브젝트가 비활성화되는 순간
+    /// 실행 중이던 코루틴을 정지시키고 재활성화되어도 재개하지 않으므로, Awake에서만 초기화를
+    /// 시작하면 초기화가 영구히 완료되지 않는다. 그래서 활성화될 때마다 상태를 확인해 필요하면
+    /// 초기화를 다시 시작한다.
+    /// </summary>
+    private void OnEnable()
+    {
+      TryStartInitialization();
+    }
+
+    private void OnDisable()
+    {
+      // 비활성화되는 순간 Unity가 초기화 코루틴을 정지시킨다.
+      // 다음 OnEnable에서 다시 시작할 수 있도록 진행 중 표시를 해제한다.
+      _initializationRunning = false;
+    }
+
+    /// <summary>
+    /// 아직 초기화가 끝나지도 실패하지도 않았고 진행 중이지도 않다면 초기화 코루틴을 시작한다.
+    /// </summary>
+    private void TryStartInitialization()
+    {
+      if (IsReady || IsInitializationFailed || _initializationRunning)
+        return;
+
       string sa = Application.streamingAssetsPath;
       string onnxDir = TTSCore.GetOnnxDir(sa);
 
@@ -166,6 +204,7 @@ namespace TextToSpeechService
         return;
       }
 
+      _initializationRunning = true;
       StartCoroutine(InitializeCoroutine());
     }
 
@@ -262,7 +301,10 @@ namespace TextToSpeechService
       {
         lock (_synthesisLock)
         {
-          _core = new TTSCore(onnxDir, styleAbsPath);
+          // 초기화가 한 번 중단된 뒤 다시 시작되었을 때, 앞선 시도가 남긴 코어를 그대로 쓴다.
+          // 캐시에 이미 담긴 AudioClip이 그 코어의 SampleRate로 만들어졌고,
+          // ONNX 세션을 중복 적재하면 메모리만 낭비되기 때문이다.
+          _core ??= new TTSCore(onnxDir, styleAbsPath);
 
           // 추가 voice profile 코어 초기화
           if (voiceProfiles != null)
@@ -785,7 +827,11 @@ namespace TextToSpeechService
         if (!_inlineSynthesisWorkerRunning)
         {
           _inlineSynthesisWorkerRunning = true;
-          _ = Task.Run(ProcessInlineSynthesisQueue, cancellationToken);
+          // 작업자는 큐가 비면 스스로 종료하므로 취소 토큰을 넘기지 않는다.
+          // 토큰이 이미 취소되었거나 작업자가 실행되기 전에 취소되면 Task.Run이 본문을 실행하지
+          // 않은 채 종료하는데, 그러면 _inlineSynthesisWorkerRunning이 true로 남아
+          // 이후의 모든 합성 요청이 큐에 쌓인 채 처리되지 않는다.
+          _ = Task.Run(ProcessInlineSynthesisQueue);
         }
         return request.Completion.Task;
       }
