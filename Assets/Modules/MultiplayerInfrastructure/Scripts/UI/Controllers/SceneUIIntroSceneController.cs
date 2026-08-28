@@ -2,6 +2,7 @@
 using System.Linq;
 using MultiplayerInfrastructure.Definitions;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Server;
 using MultiplayerInfrastructure.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -83,6 +84,15 @@ namespace MultiplayerInfrastructure.UI
 
     private void Awake()
     {
+      // 데디케이티드 서버에서는 IntroScene UI를 구성하지 않는다.
+      // DedicatedServerRuntime이 커맨드라인 옵션으로 세션을 구성하고 시작 씬으로 전환한다.
+      if (DedicatedServerRuntime.IsActive)
+      {
+        SetDocumentVisible(GetComponent<UIDocument>(), false);
+        enabled = false;
+        return;
+      }
+
       var sessionConfiguration = SessionConfigurationService.Current;
       defaultAddress = sessionConfiguration.address;
       defaultPort = sessionConfiguration.port;

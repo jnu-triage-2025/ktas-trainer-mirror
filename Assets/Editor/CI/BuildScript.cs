@@ -8,7 +8,34 @@ using UnityEngine;
 
 public static class GitLabBuild
 {
+  /// <summary>
+  /// Builds the player described by the BUILD_* environment variables.
+  /// BUILD_SUBTARGET selects between the normal player ("Player") and the
+  /// dedicated headless server ("Server").
+  /// </summary>
   public static void Build()
+  {
+    string subtargetName = GetEnvironmentVariable("BUILD_SUBTARGET", StandaloneBuildSubtarget.Player.ToString());
+    if (!Enum.TryParse(subtargetName, true, out StandaloneBuildSubtarget subtarget)
+        || !Enum.IsDefined(typeof(StandaloneBuildSubtarget), subtarget))
+    {
+      throw new InvalidOperationException(
+          $"Unsupported BUILD_SUBTARGET: {subtargetName}. Use 'Player' or 'Server'.");
+    }
+
+    BuildWithSubtarget(subtarget);
+  }
+
+  /// <summary>
+  /// Convenience entry point for dedicated server builds. Equivalent to
+  /// running <see cref="Build"/> with BUILD_SUBTARGET=Server.
+  /// </summary>
+  public static void BuildDedicatedServer()
+  {
+    BuildWithSubtarget(StandaloneBuildSubtarget.Server);
+  }
+
+  private static void BuildWithSubtarget(StandaloneBuildSubtarget subtarget)
   {
     string targetName = GetEnvironmentVariable("BUILD_TARGET", EditorUserBuildSettings.activeBuildTarget.ToString());
     string buildName = GetEnvironmentVariable("BUILD_NAME", "ktas-trainer");
@@ -32,8 +59,12 @@ public static class GitLabBuild
       throw new InvalidOperationException("Could not resolve the Unity project directory.");
     }
 
+    bool isServer = subtarget == StandaloneBuildSubtarget.Server;
     string projectPath = projectDirectory.FullName;
-    string outputDirectory = Path.Combine(projectPath, buildDirectory, target.ToString());
+    string outputDirectory = Path.Combine(
+        projectPath,
+        buildDirectory,
+        isServer ? $"{target}-Server" : target.ToString());
     Directory.CreateDirectory(outputDirectory);
 
     string locationPath = GetLocationPath(target, outputDirectory, buildName);
@@ -47,19 +78,35 @@ public static class GitLabBuild
       throw new InvalidOperationException("No enabled scenes are configured in EditorBuildSettings.");
     }
 
-    Debug.Log($"Building {targetName} to {locationPath}");
-    BuildReport report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
-    {
-      scenes = scenes,
-      locationPathName = locationPath,
-      target = target,
-      options = BuildOptions.StrictMode
-    });
+    // The subtarget has to be applied to the editor state as well, otherwise the
+    // player is compiled without the UNITY_SERVER scripting define.
+    StandaloneBuildSubtarget previousSubtarget = EditorUserBuildSettings.standaloneBuildSubtarget;
+    EditorUserBuildSettings.standaloneBuildSubtarget = subtarget;
 
-    Debug.Log($"Build result: {report.summary.result}, size: {report.summary.totalSize} bytes");
-    if (report.summary.result != BuildResult.Succeeded)
+    try
     {
-      throw new InvalidOperationException($"Unity build failed with result: {report.summary.result}");
+      Debug.Log($"Building {targetName} ({subtarget}) to {locationPath}");
+      BuildReport report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+      {
+        scenes = scenes,
+        locationPathName = locationPath,
+        target = target,
+        subtarget = (int)subtarget,
+        options = BuildOptions.StrictMode
+      });
+
+      Debug.Log($"Build result: {report.summary.result}, size: {report.summary.totalSize} bytes");
+      if (report.summary.result != BuildResult.Succeeded)
+      {
+        string hint = isServer
+            ? " Dedicated server builds also require the 'Dedicated Server Build Support' module for the selected platform."
+            : string.Empty;
+        throw new InvalidOperationException($"Unity build failed with result: {report.summary.result}.{hint}");
+      }
+    }
+    finally
+    {
+      EditorUserBuildSettings.standaloneBuildSubtarget = previousSubtarget;
     }
   }
 

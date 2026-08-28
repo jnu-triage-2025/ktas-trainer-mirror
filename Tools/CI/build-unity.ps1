@@ -7,6 +7,17 @@ if ([string]::IsNullOrWhiteSpace($env:BUILD_TARGET)) {
     throw 'BUILD_TARGET must be set to a Unity BuildTarget.'
 }
 
+# 'Player' builds the normal client; 'Server' builds the dedicated headless server.
+if ([string]::IsNullOrWhiteSpace($env:BUILD_SUBTARGET)) {
+    $env:BUILD_SUBTARGET = 'Player'
+}
+
+switch ($env:BUILD_SUBTARGET.Trim().ToLowerInvariant()) {
+    'player' { $env:BUILD_SUBTARGET = 'Player' }
+    'server' { $env:BUILD_SUBTARGET = 'Server' }
+    default { throw "BUILD_SUBTARGET must be 'Player' or 'Server', but was '$($env:BUILD_SUBTARGET)'." }
+}
+
 if ([string]::IsNullOrWhiteSpace($env:BUILD_NAME)) {
     $env:BUILD_NAME = 'ktas-trainer'
 }
@@ -31,7 +42,7 @@ $logArtifactPath = if ($env:UNITY_LOG_ARTIFACT_PATH) {
 $logPath = if ($logArtifactPath) {
     $logArtifactPath
 } else {
-    Join-Path $buildPath "unity-$($env:BUILD_TARGET).log"
+    Join-Path $buildPath "unity-$($env:BUILD_TARGET)-$($env:BUILD_SUBTARGET).log"
 }
 
 if ([string]::IsNullOrWhiteSpace($env:UNITY_EXECUTABLE)) {
@@ -64,6 +75,7 @@ try {
         -quit `
         -projectPath $projectPath `
         -buildTarget $env:BUILD_TARGET `
+        -standaloneBuildSubtarget $env:BUILD_SUBTARGET `
         -executeMethod GitLabBuild.Build `
         -logFile $logPath
 
@@ -77,7 +89,12 @@ finally {
         Set-Content -LiteralPath $logPath -Value 'Unity did not create a log file.'
     }
 
-    if (Test-Path -LiteralPath $buildPath) {
+    # CI agents discard the player to keep the workspace small. Set
+    # KEEP_BUILD_OUTPUT=1 when the build output itself is the deliverable,
+    # which is the usual case for a dedicated server build.
+    $keepBuildOutputValue = if ($env:KEEP_BUILD_OUTPUT) { $env:KEEP_BUILD_OUTPUT.Trim().ToLowerInvariant() } else { '' }
+    $keepBuildOutput = @('1', 'true', 'yes') -contains $keepBuildOutputValue
+    if (-not $keepBuildOutput -and (Test-Path -LiteralPath $buildPath)) {
         Remove-Item -LiteralPath $buildPath -Recurse -Force
     }
 }

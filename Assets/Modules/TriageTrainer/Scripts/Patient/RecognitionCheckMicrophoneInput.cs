@@ -101,6 +101,11 @@ namespace TriageTrainer.Entity
       var host = new GameObject(nameof(RecognitionCheckMicrophoneInput));
       DontDestroyOnLoad(host);
       _instance = host.AddComponent<RecognitionCheckMicrophoneInput>();
+
+      // 데디케이티드 서버에는 입력 장치와 권한 대화 상자가 없으므로 마이크 권한을 요청하지 않는다.
+      if (MultiplayerInfrastructure.Server.DedicatedServerRuntime.IsActive)
+        return;
+
       _instance.StartCoroutine(_instance.RequestPermissionEarly());
     }
 

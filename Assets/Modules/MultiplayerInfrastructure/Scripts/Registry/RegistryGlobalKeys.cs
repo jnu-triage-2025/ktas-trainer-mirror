@@ -15,5 +15,11 @@
     /// </summary>
     public const string UserDisplayName = "UserDisplayName";
     public const string SelectedDatapackIds = "SelectedDatapackIds";
+
+    /// <summary>
+    /// 데디케이티드 서버(헤드리스) 모드로 실행 중인지 여부.
+    /// DedicatedServerRuntime이 등록하며, 부트스트랩 흐름에서 클라이언트 전용 처리를 건너뛰는 데 사용됩니다.
+    /// </summary>
+    public const string IsDedicatedServer = "IsDedicatedServer";
   }
 }

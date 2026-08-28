@@ -27,6 +27,10 @@ parameters:
     displayName: 'Build macOS player'
     type: boolean
     default: false
+  - name: buildDedicatedServer
+    displayName: 'Build Windows dedicated server'
+    type: boolean
+    default: false
   - name: mirrorAgentPool
     displayName: 'Self-hosted pool for code mirroring'
     type: string
@@ -231,6 +235,45 @@ stages:
             inputs:
               PathtoPublish: '$(Build.SourcesDirectory)/artifacts'
               ArtifactName: 'unity-StandaloneWindows64-artifacts'
+              publishLocation: 'Container'
+
+      - job: BuildDedicatedServer
+        displayName: 'Build Windows dedicated server'
+        condition: and(succeeded(), ${{ eq(parameters.buildDedicatedServer, true) }})
+        pool:
+          ${{ if eq(parameters.agentMode, 'hosted') }}:
+            vmImage: 'windows-2022'
+          ${{ else }}:
+            name: $(windowsAgentPool)
+        variables:
+          CI_PROJECT_DIR: '$(Build.SourcesDirectory)'
+          BUILD_NAME: '$(buildName)-server'
+          BUILD_PATH: '$(buildPath)'
+          BUILD_TARGET: 'StandaloneWindows64'
+          # Requires the 'Windows Dedicated Server Build Support' module on the agent.
+          BUILD_SUBTARGET: 'Server'
+          UNITY_LOG_ARTIFACT_PATH: 'artifacts/unity-StandaloneWindows64-Server.log'
+        steps:
+          # Keeps the imported Library and package cache between runs, and keeps
+          # the shared repository from being marked shallow; see the lint job.
+          - checkout: self
+            clean: false
+            ${{ if eq(parameters.agentMode, 'hosted') }}:
+              fetchDepth: 1
+            ${{ else }}:
+              fetchDepth: 0
+          - powershell: |
+              if (-not (Test-Path -LiteralPath 'Tools/CI/build-unity.ps1' -PathType Leaf)) {
+                throw 'Tools/CI/build-unity.ps1 was not found.'
+              }
+              & .\Tools\CI\build-unity.ps1
+            displayName: 'Build Windows dedicated server'
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish dedicated server build log'
+            condition: always()
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts'
+              ArtifactName: 'unity-StandaloneWindows64-Server-artifacts'
               publishLocation: 'Container'
 
       - job: BuildMacos

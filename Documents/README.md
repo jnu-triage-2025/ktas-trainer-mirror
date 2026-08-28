@@ -31,6 +31,7 @@
 
 <br />
 
+- [데디케이티드 서버 (헤드리스 서버)](./guide/DedicatedServer.md): 서버 전용 빌드 산출과 커맨드라인 실행 방법
 - [시나리오 그래프 노드 전체 스펙](./guide/ScenarioGraph.md): 모든 ScenarioGraph 노드 타입의 필드/동작 레퍼런스
 - [시나리오의 프로그래밍 표현](./requirements/content-definitions/scenario/scenario-graph-spec.md)
 - [시나리오 작성 가이드](./requirements/content-definitions/scenario/scenario-authoring-guide.md)
@@ -54,3 +55,4 @@
 - [2026-03-26: Registry Preloader Validation 도구 개편](./changes/2026-03-26-registry-preloader-validation-tooling.md)
 - [2026-06-29: Scenario Graph Editor runtime highlight](./changes/2026-06-29-scenario-graph-editor-runtime-highlight.md)
 - [2026-08-03: MPPM 메모리 최적화](./changes/2026-08-03-mppm-memory-optimization.md)
+- [2026-08-29: 데디케이티드 서버 빌드](./changes/2026-08-29-dedicated-server-build.md)

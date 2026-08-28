@@ -5,9 +5,21 @@ set -euo pipefail
 : "${BUILD_TARGET:?BUILD_TARGET must be set to a Unity BuildTarget}"
 : "${BUILD_NAME:=ktas-trainer}"
 : "${BUILD_PATH:=build}"
+# 'Player' builds the normal client; 'Server' builds the dedicated headless server.
+: "${BUILD_SUBTARGET:=Player}"
+: "${KEEP_BUILD_OUTPUT:=0}"
+
+case "$(printf '%s' "${BUILD_SUBTARGET}" | tr '[:upper:]' '[:lower:]')" in
+  player) BUILD_SUBTARGET='Player' ;;
+  server) BUILD_SUBTARGET='Server' ;;
+  *)
+    echo "BUILD_SUBTARGET must be 'Player' or 'Server', but was '${BUILD_SUBTARGET}'." >&2
+    exit 1
+    ;;
+esac
 
 project_path="${CI_PROJECT_DIR:-$(pwd)}"
-log_path="${project_path}/${BUILD_PATH}/unity-${BUILD_TARGET}.log"
+log_path="${project_path}/${BUILD_PATH}/unity-${BUILD_TARGET}-${BUILD_SUBTARGET}.log"
 
 find_unity_executable() {
   if [[ -n "${UNITY_EXECUTABLE:-}" ]]; then
@@ -45,9 +57,16 @@ case "${build_directory}" in
     ;;
 esac
 
-log_path="${build_directory}/unity-${BUILD_TARGET}.log"
+log_path="${build_directory}/unity-${BUILD_TARGET}-${BUILD_SUBTARGET}.log"
 mkdir -p "${build_directory}"
-trap 'rm -rf -- "${build_directory}"' EXIT
+
+# CI agents discard the player to keep the workspace small. Set
+# KEEP_BUILD_OUTPUT=1 when the build output itself is the deliverable,
+# which is the usual case for a dedicated server build.
+case "$(printf '%s' "${KEEP_BUILD_OUTPUT}" | tr '[:upper:]' '[:lower:]')" in
+  1 | true | yes) ;;
+  *) trap 'rm -rf -- "${build_directory}"' EXIT ;;
+esac
 
 "${unity_executable}" \
   -batchmode \
@@ -56,5 +75,6 @@ trap 'rm -rf -- "${build_directory}"' EXIT
   -quit \
   -projectPath "${project_path}" \
   -buildTarget "${BUILD_TARGET}" \
+  -standaloneBuildSubtarget "${BUILD_SUBTARGET}" \
   -executeMethod GitLabBuild.Build \
   -logFile "${log_path}"

@@ -104,6 +104,31 @@ namespace MultiplayerInfrastructure.FishNetSupports
       Debug.Log($"[FishNetSupport] Transport configured for {sessionInformation.Address}:{sessionInformation.Port}");
     }
 
+    /// <summary>
+    /// 서버 소켓이 바인딩할 주소를 설정합니다.
+    /// 데디케이티드 서버는 클라이언트 접속 주소가 아니라 이 값으로 수신 인터페이스를 결정합니다.
+    /// </summary>
+    public void ConfigureServerBindAddress(string bindAddress)
+    {
+      if (string.IsNullOrWhiteSpace(bindAddress))
+        return;
+
+      if (!ResolveNetworkManagerInHierarchy())
+        return;
+
+      var transport = networkManager.TransportManager?.Transport;
+      if (transport == null)
+      {
+        Debug.LogWarning("[FishNetSupport] No transport found on NetworkManager.");
+        return;
+      }
+
+      var addressType = bindAddress.Contains(":") ? IPAddressType.IPv6 : IPAddressType.IPv4;
+      transport.SetServerBindAddress(bindAddress, addressType);
+
+      Debug.Log($"[FishNetSupport] Server bind address configured to {bindAddress} ({addressType}).");
+    }
+
     public void PrepareDeferredPlayerSpawning()
     {
       if (_deferredPlayerSpawningPrepared)

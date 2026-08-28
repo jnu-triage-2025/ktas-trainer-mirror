@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using MultiplayerInfrastructure.Registry;
+using MultiplayerInfrastructure.Server;
 using MultiplayerInfrastructure.Session;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -116,8 +117,13 @@ namespace MultiplayerInfrastructure.FishNetSupports
 
     /// <summary>
     /// Applies launch info and starts host/client according to the mode.
+    /// When <paramref name="startLocalClient"/> is false the local client is skipped,
+    /// which is how a dedicated (headless) server runs.
     /// </summary>
-    public bool StartSession(SessionInformationModel sessionInformation, bool isOpeningServer)
+    public bool StartSession(
+      SessionInformationModel sessionInformation,
+      bool isOpeningServer,
+      bool startLocalClient = true)
     {
       if (sessionInformation == null)
       {
@@ -139,12 +145,35 @@ namespace MultiplayerInfrastructure.FishNetSupports
         StartServer();
       }
 
-      StartClient();
+      if (startLocalClient)
+        StartClient();
 
       if (hideNetworkHudCanvasOnSessionStart)
         SetNetworkHudCanvasVisible(false);
 
       return true;
+    }
+
+    /// <summary>
+    /// 데디케이티드 서버(헤드리스)로 세션을 시작합니다.
+    /// 로컬 클라이언트를 붙이지 않으며, 지정한 주소로 서버 소켓을 바인딩합니다.
+    /// </summary>
+    public bool StartDedicatedServer(SessionInformationModel sessionInformation, string bindAddress)
+    {
+      if (sessionInformation == null)
+      {
+        Debug.LogWarning("[FishNetSupport] StartDedicatedServer called with null sessionInformation.");
+        return false;
+      }
+
+      if (!ResolveNetworkManagerInHierarchy())
+      {
+        Debug.LogWarning("[FishNetSupport] NetworkManager was not found in hierarchy.");
+        return false;
+      }
+
+      ConfigureServerBindAddress(bindAddress);
+      return StartSession(sessionInformation, isOpeningServer: true, startLocalClient: false);
     }
 
     public bool IsServerStarted => networkManager != null && networkManager.ServerManager.Started;
@@ -185,10 +214,35 @@ namespace MultiplayerInfrastructure.FishNetSupports
       StartSession(sessionInformation, isOpeningServer);
     }
 
+    /// <summary>
+    /// 데디케이티드 서버 모드에서 레지스트리에 등록된 실행 정보로 서버 전용 세션을 시작합니다.
+    /// </summary>
+    private void StartDedicatedServerFromRegistry()
+    {
+      var sessionInformation = Registry.Registry.Get<SessionInformationModel>(
+        RegistryType.RuntimeState, RegistryGlobalKeys.SessionInformation);
+      if (sessionInformation == null)
+      {
+        Debug.LogError("[FishNetSupport] 데디케이티드 서버 실행 정보가 없어 세션을 시작할 수 없습니다.");
+        return;
+      }
+
+      var bindAddress = DedicatedServerRuntime.Options?.BindAddress ?? sessionInformation.Address;
+      if (!StartDedicatedServer(sessionInformation, bindAddress))
+        Debug.LogError("[FishNetSupport] 데디케이티드 서버 세션을 시작하지 못했습니다.");
+    }
+
     private IEnumerator HandleSessionInformationAlreadyConfiguredRoutine()
     {
       if (!Registry.Registry.Get<bool>(RegistryType.RuntimeState, RegistryGlobalKeys.LoadedFromIntroScene))
         yield break;
+
+      // 데디케이티드 서버에는 표시할 UI가 없으므로 연결 실패 오버레이 씬을 요구하지 않는다.
+      if (DedicatedServerRuntime.IsActive)
+      {
+        StartDedicatedServerFromRegistry();
+        yield break;
+      }
 
       const string failureSceneName = "NetworkSessionFailureScene";
       var failureScene = SceneManager.GetSceneByName(failureSceneName);
