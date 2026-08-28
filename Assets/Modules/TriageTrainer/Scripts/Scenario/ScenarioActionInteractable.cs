@@ -129,6 +129,18 @@ namespace TriageTrainer.Scenario
         _completed = false;
     }
 
+    /// <summary>
+    /// 시나리오 수동 진입 준비 체인이 단계를 되돌릴 때 "이미 수행함" 표시만 지운다.
+    /// <see cref="_consumeOnce"/> 상호작용은 한 번 수행하면 다시 노출되지 않으므로, 같은 세션에서
+    /// 이전 단계를 다시 재생하면 그 단계의 상호작용을 수행할 수 없게 된다.
+    /// <see cref="SetEnabled"/> 와 달리 노출 기준값(<see cref="_enabled"/>)은 건드리지 않는다.
+    /// 노출 판정을 플래그 풀에 맡긴 시나리오에서 이 값을 함께 켜면 단계 밖 상호작용이 열린다.
+    /// </summary>
+    public void ResetCompletionForScenario()
+    {
+      _completed = false;
+    }
+
     private bool AreRequiredSignalsRaised()
     {
       if (_requiredRaisedSignals == null)

@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using MultiplayerInfrastructure.Player;
 using NUnit.Framework;
 using TriageTrainer.Entity;
 using TriageTrainer.Scenario;
@@ -139,6 +140,137 @@ namespace TriageTrainer.Tests
       Assert.That(receiving.isLooping, Is.True);
       Assert.That(compression.length, Is.EqualTo(0.9666667f).Within(0.001f));
       Assert.That(receiving.length, Is.EqualTo(8.633334f).Within(0.001f));
+    }
+
+    [Test]
+    public void PatientCprPositionOffsetUsesCalibratedBedHeight()
+    {
+      const float firstOffsetY = 0.8823103f;
+      const float firstObservedScenarioFinalY = 1.764621f;
+      const float secondOffsetY = -0.0323107f;
+      const float secondObservedScenarioFinalY = -0.0646214f;
+      const float targetScenarioFinalY = 0.85f;
+      float observedScale =
+        (firstObservedScenarioFinalY - secondObservedScenarioFinalY) / (firstOffsetY - secondOffsetY);
+      float observedIntercept = firstObservedScenarioFinalY - observedScale * firstOffsetY;
+      float calibratedOffsetY = (targetScenarioFinalY - observedIntercept) / observedScale;
+
+      var bootstrapObject = new GameObject("PatientACprOffsetTest");
+      try
+      {
+        var bootstrap = bootstrapObject.AddComponent<TriageScenarioEventBootstrap>();
+        var serialized = new SerializedObject(bootstrap);
+        Vector3 offset = serialized.FindProperty("_cprReceivingPatientPositionOffset").vector3Value;
+
+        Assert.That(observedScale, Is.EqualTo(2f).Within(0.0001f));
+        Assert.That(observedIntercept, Is.EqualTo(0f).Within(0.0001f));
+        Assert.That(offset.x, Is.Zero);
+        Assert.That(offset.y, Is.EqualTo(calibratedOffsetY).Within(0.0001f),
+          "환자 CPR 애니메이션은 침대 위에서 보정한 Scenario1_final 높이를 유지해야 합니다.");
+        Assert.That(offset.z, Is.Zero);
+      }
+      finally
+      {
+        Object.DestroyImmediate(bootstrapObject);
+      }
+    }
+
+    [Test]
+    public void PatientCprPerformerUsesInteractionPatientAnchorAndBoatStyleRelease()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string source = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.PatientACprAnimations.cs"));
+
+      StringAssert.Contains("action.GetComponentInParent<PatientController>(true)", source,
+        "CPR 수행자 위치는 상호작용을 발행한 환자 엔티티를 기준으로 정해야 합니다.");
+      StringAssert.Contains("patientPosition.x, patientPosition.y + _cprPerformingPlayerHeightOffset", source);
+      StringAssert.Contains("patientPosition.z", source);
+      StringAssert.Contains("state.Patient.transform.eulerAngles.y + 180f", source,
+        "CPR 수행자는 환자와 반대 방향을 바라보도록 Y 회전을 180도 보정해야 합니다.");
+      StringAssert.Contains("SetMovementSuppressed(state.Anchor, true)", source);
+      StringAssert.Contains("ClearForcedFollowAnchor(state.Anchor)", source,
+        "CPR 종료는 MinecraftBoatLikeControl 하차와 같은 앵커 해제 경로를 사용해야 합니다.");
+      StringAssert.Contains("SetMovementSuppressed(state.Anchor, false)", source);
+
+      var bootstrapObject = new GameObject("PatientACprPerformerHeightTest");
+      try
+      {
+        var bootstrap = bootstrapObject.AddComponent<TriageScenarioEventBootstrap>();
+        var serialized = new SerializedObject(bootstrap);
+        Assert.That(serialized.FindProperty("_cprPerformingPlayerHeightOffset").floatValue,
+          Is.EqualTo(0.85f).Within(0.0001f));
+      }
+      finally
+      {
+        Object.DestroyImmediate(bootstrapObject);
+      }
+    }
+
+    [Test]
+    public void PlayerMovementSuppressionIsOwnerScoped()
+    {
+      var playerObject = new GameObject("MovementSuppressionTest");
+      var firstOwner = new GameObject("FirstMovementOwner");
+      var secondOwner = new GameObject("SecondMovementOwner");
+      try
+      {
+        var player = playerObject.AddComponent<PlayerController>();
+        player.SetMovementSuppressed(firstOwner, true);
+        player.SetMovementSuppressed(secondOwner, true);
+        Assert.That(player.IsMovementSuppressed, Is.True);
+
+        player.SetMovementSuppressed(firstOwner, false);
+        Assert.That(player.IsMovementSuppressed, Is.True,
+          "한 시스템의 이동 제한 해제가 다른 시스템의 이동 제한까지 해제해서는 안 됩니다.");
+
+        player.SetMovementSuppressed(secondOwner, false);
+        Assert.That(player.IsMovementSuppressed, Is.False);
+      }
+      finally
+      {
+        Object.DestroyImmediate(playerObject);
+        Object.DestroyImmediate(firstOwner);
+        Object.DestroyImmediate(secondOwner);
+      }
+    }
+
+    [Test]
+    public void DebugCprEscapeRuleIsOptInAndDebuggingDatapackEnablesIt()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string rulesSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/ScenarioGameRules.cs"));
+      string commandSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Command/CommandDefinitions/CommandDefinition.Gamerule.cs"));
+      string debuggingDatapack = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/StreamingAssets/DataPacks/debugging.datapack.json"));
+
+      StringAssert.Contains("DEBUG_INT_CPR_PLAYING_ESCAPE_KEY { get; set; }", rulesSource,
+        "명시적인 초기값이 없는 bool 게임룰은 기본적으로 false여야 합니다.");
+      StringAssert.Contains("gamerule DEBUG_INT_CPR_PLAYING_ESCAPE_KEY [true|false]", commandSource);
+      StringAssert.Contains("TrySetDebugIntCprPlayingEscapeKeyServer(enabled)", commandSource,
+        "서버에서 변경한 디버그 게임룰은 소유 클라이언트에도 동기화해야 합니다.");
+      StringAssert.Contains("\"name\": \"DEBUG_INT_CPR_PLAYING_ESCAPE_KEY\", \"value\": \"true\"",
+        debuggingDatapack);
+    }
+
+    [Test]
+    public void DebugCprEscapeOnlyReleasesLocalPresentationUntilSystemStop()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string source = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.PatientACprAnimations.cs"));
+
+      StringAssert.Contains("state.Player.IsOwner", source);
+      StringAssert.Contains("Input.GetKeyDown(KeyCode.LeftShift)", source);
+      StringAssert.Contains("state.DebugEscaped = true", source);
+      StringAssert.Contains("state.DebugEscapePosition = state.Player.transform.position", source);
+      StringAssert.Contains("StopPatientACprPerformerAnimation(state.Player)", source);
+      StringAssert.Contains("state.Anchor.position = state.DebugEscapePosition", source,
+        "정상 CPR 종료 시에는 디버그로 위치 고정을 해제했던 장소로 복귀해야 합니다.");
+      Assert.That(source, Does.Not.Contain("TryDebugEscapePatientACprPerformer(state);\n      _patientACprPerformers.Clear"),
+        "디버그 Escape가 시스템상 CPR 수행 상태를 제거해서는 안 됩니다.");
     }
 
     [TestCase("lisa")]

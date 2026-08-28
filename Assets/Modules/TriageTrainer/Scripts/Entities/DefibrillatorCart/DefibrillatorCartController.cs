@@ -265,6 +265,31 @@ namespace TriageTrainer.Entity
 
     // ── Snap point ─────────────────────────────────────────────────────
 
+    /// <summary>
+    /// 시나리오 수동 진입 준비 체인이 카트를 지정한 자리로 옮길 때 사용한다.
+    /// 정박 판정은 <see cref="TrySnapToSnapPoint"/> 가 매 프레임 거리로 수행하므로, 이 메서드는
+    /// 위치만 서버 권위로 옮기고 정박·도달 신호는 올리지 않는다. 신호는 "플레이어가 카트를 실제로
+    /// 밀고 왔다"는 근거이므로 준비 체인이 대신 만들어서는 안 된다.
+    ///
+    /// <para>
+    /// 이전 회차에서 어딘가에 정박해 있었다면 그 참조를 먼저 끊는다. 정박 참조가 남아 있으면
+    /// 다음 프레임의 판정이 이탈 처리를 거치면서 정박 해제 신호를 한 번 더 올린다.
+    /// </para>
+    /// </summary>
+    public void PlaceForScenario(Vector3 position, Quaternion rotation)
+    {
+      if (!IsServerStarted && IsClientStarted)
+      {
+        Debug.LogWarning("[DefibrillatorCart] 시나리오 배치는 서버 권위 경로에서만 수행할 수 있습니다.", this);
+        return;
+      }
+
+      _latchedSnapPoint = null;
+      _pendingSnapPointIdentifier = null;
+      SetAuthoritativeSnapPointIdentifier(string.Empty);
+      SetAuthoritativeTransform(position, rotation);
+    }
+
     private void TrySnapToSnapPoint()
     {
       if (!_enableSnap || (!IsServerStarted && IsClientStarted))

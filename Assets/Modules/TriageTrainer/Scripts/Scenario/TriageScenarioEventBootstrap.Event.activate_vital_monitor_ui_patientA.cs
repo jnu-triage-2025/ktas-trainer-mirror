@@ -36,7 +36,9 @@ namespace TriageTrainer.Scenario
         _patientAVitalMonitorController.enabled = true;
       }
 
-      EmitSystemMessage("환자 A 활력징후 모니터를 활성화했습니다.");
+#if UNITY_EDITOR
+      Debug.Log("[EmitSystemMessage] 환자 A 활력징후 모니터를 활성화했습니다.");
+#endif
       yield break;
     }
   }

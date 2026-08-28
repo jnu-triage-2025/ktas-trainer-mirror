@@ -165,6 +165,32 @@ namespace MultiplayerInfrastructure.Chat
       _uiController.AppendMessage($"<color=#FFD700>[System]</color> {message}", showToastWhenHidden: true);
     }
 
+    /// <summary>
+    /// CPR 디버그 Escape 규칙을 서버와 모든 관찰 클라이언트에 동일하게 적용한다.
+    /// 게임룰 명령은 서버에서만 실행되지만 Escape 입력은 각 소유 클라이언트가 판정하므로,
+    /// static 값만 변경해서는 원격 디버그 플레이어에게 규칙이 전달되지 않는다.
+    /// </summary>
+    public bool TrySetDebugIntCprPlayingEscapeKeyServer(bool enabled)
+    {
+      if (!IsServerInitialized)
+        return false;
+
+      ApplyDebugIntCprPlayingEscapeKey(enabled);
+      SyncDebugIntCprPlayingEscapeKeyObserversRpc(enabled);
+      return true;
+    }
+
+    [ObserversRpc(BufferLast = true)]
+    private void SyncDebugIntCprPlayingEscapeKeyObserversRpc(bool enabled)
+    {
+      ApplyDebugIntCprPlayingEscapeKey(enabled);
+    }
+
+    private static void ApplyDebugIntCprPlayingEscapeKey(bool enabled)
+    {
+      ScenarioGameRules.DEBUG_INT_CPR_PLAYING_ESCAPE_KEY = enabled;
+    }
+
     [TargetRpc]
     private void TargetRunScenario(
       NetworkConnection conn,

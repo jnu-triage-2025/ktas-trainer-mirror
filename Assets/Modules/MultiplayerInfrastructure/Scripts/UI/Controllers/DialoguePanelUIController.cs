@@ -90,13 +90,15 @@ namespace MultiplayerInfrastructure.UI
       public readonly string Content;
       public readonly string PortraitIdentifier;
       public readonly float Duration;
+      public readonly Action OnFinished;
 
-      public TransientDialogueRequest(string speakerName, string content, string portraitIdentifier, float duration)
+      public TransientDialogueRequest(string speakerName, string content, string portraitIdentifier, float duration, Action onFinished)
       {
         SpeakerName = speakerName;
         Content = content;
         PortraitIdentifier = portraitIdentifier;
         Duration = duration;
+        OnFinished = onFinished;
       }
     }
 
@@ -441,7 +443,8 @@ namespace MultiplayerInfrastructure.UI
       string speakerName,
       string dialogueContent,
       float duration = 3f,
-      string portraitIdentifier = null)
+      string portraitIdentifier = null,
+      Action onFinished = null)
     {
       if (_dialoguePanel == null || _dialogueTextLabel == null)
         CacheVisualElements();
@@ -455,7 +458,8 @@ namespace MultiplayerInfrastructure.UI
         speakerName ?? string.Empty,
         dialogueContent ?? string.Empty,
         portraitIdentifier,
-        Mathf.Max(0f, duration)));
+        Mathf.Max(0f, duration),
+        onFinished));
       TryStartQueuedTransientDialogue();
       return true;
     }
@@ -489,6 +493,7 @@ namespace MultiplayerInfrastructure.UI
       }
       HideDisinteractableDialogue();
       _transientDialogueRoutine = null;
+      request.OnFinished?.Invoke();
     }
 
     /// <summary>

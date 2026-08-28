@@ -12,7 +12,9 @@ namespace TriageTrainer.Scenario
     private IEnumerator Event_StartAmbuBagging()
     {
       SetAnimatorsBool(_ambuBaggingAnimators, _ambuBaggingBoolName, true);
-      EmitSystemMessage("앰부배깅 애니메이션을 시작했습니다.");
+#if UNITY_EDITOR
+      Debug.Log("[EmitSystemMessage] 앰부배깅 애니메이션을 시작했습니다.");
+#endif
       yield break;
     }
   }

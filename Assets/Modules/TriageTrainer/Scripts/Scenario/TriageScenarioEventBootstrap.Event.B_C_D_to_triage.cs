@@ -29,7 +29,9 @@ namespace TriageTrainer.Scenario
         yield return MoveTransformTo(_nurseDTransform, _triageArrivalPoint, _bcdMoveDurationSeconds);
       }
 
-      EmitSystemMessage("간호사 B/C/D가 트리아지 구역으로 이동했습니다.");
+#if UNITY_EDITOR
+      Debug.Log("[EmitSystemMessage] 간호사 B/C/D가 트리아지 구역으로 이동했습니다.");
+#endif
       yield break;
     }
   }

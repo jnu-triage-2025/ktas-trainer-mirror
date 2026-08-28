@@ -43,7 +43,9 @@ namespace TriageTrainer.Scenario
         }
       }
 
-      EmitSystemMessage("환자 B/C를 CT 구역으로 이동시켰습니다.");
+#if UNITY_EDITOR
+      Debug.Log("[EmitSystemMessage] 환자 B/C를 CT 구역으로 이동시켰습니다.");
+#endif
       yield break;
     }
   }

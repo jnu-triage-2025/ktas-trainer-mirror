@@ -30,7 +30,9 @@ namespace TriageTrainer.Scenario
         SnapToIfPresent(moveTarget, _patientCTreatmentRoomPoint);
       }
 
-      EmitSystemMessage("환자 C를 처치 구역으로 이동시켰습니다.");
+#if UNITY_EDITOR
+      Debug.Log("[EmitSystemMessage] 환자 C를 처치 구역으로 이동시켰습니다.");
+#endif
       yield break;
     }
   }

@@ -1,4 +1,5 @@
-﻿using FishNet.Object;
+﻿using System.Collections.Generic;
+using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.UI;
@@ -59,6 +60,7 @@ namespace MultiplayerInfrastructure.Player
 
     private Transform _forcedFollowAnchor;
     private UnityEngine.Object _activeRidableControl;
+    private readonly HashSet<UnityEngine.Object> _movementSuppressionOwners = new();
     private bool _jumpAnimationRequestedThisFrame;
 
     // 시나리오 등 스크립트가 플레이어 위치를 직접 제어하는 동안 true.
@@ -68,6 +70,8 @@ namespace MultiplayerInfrastructure.Player
 
     public bool IsMovementPositionOverridden => _forcedFollowAnchor != null;
     public bool IsRidableControlActive => _activeRidableControl != null;
+    public bool IsMovementSuppressed => _movementSuppressionOwners.Count > 0;
+    private bool CanProcessMovementInput => canMove && !IsMovementSuppressed;
 
     public Vector3 CurrentMoveInputVector
       => new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
@@ -177,12 +181,12 @@ namespace MultiplayerInfrastructure.Player
       _rightSpeed = transform.TransformDirection(Vector3.right);
 
       float movementSpeed = _isRunning ? _walkingSpeed * _runningSpeedMultiplier.Value : _walkingSpeed;
-      float curSpeedX = canMove ? movementSpeed * Input.GetAxis("Vertical") : 0;
-      float curSpeedY = canMove ? movementSpeed * Input.GetAxis("Horizontal") : 0;
+      float curSpeedX = CanProcessMovementInput ? movementSpeed * Input.GetAxis("Vertical") : 0;
+      float curSpeedY = CanProcessMovementInput ? movementSpeed * Input.GetAxis("Horizontal") : 0;
       float movementDirectionY = _moveDirection.y;
       _moveDirection = (_forwardSpeed * curSpeedX) + (_rightSpeed * curSpeedY);
 
-      if (IsJumpInputHeld() && canMove && _characterController.isGrounded)
+      if (IsJumpInputHeld() && CanProcessMovementInput && _characterController.isGrounded)
       {
         _moveDirection.y = _jumpSpeed;
         if (IsJumpInputPressedThisFrame())
@@ -205,7 +209,7 @@ namespace MultiplayerInfrastructure.Player
 
     private void ComputeSpectatorMovement()
     {
-      if (!canMove)
+      if (!CanProcessMovementInput)
         return;
       if (_isSpectateFollowing)
         return;
@@ -230,7 +234,7 @@ namespace MultiplayerInfrastructure.Player
     {
       if (_cameraAttachPoint.IsUnityNull())
         return;
-      if (!canMove)
+      if (!CanProcessMovementInput)
         return;
       if (_isSpectateFollowing)
         return;
@@ -265,6 +269,19 @@ namespace MultiplayerInfrastructure.Player
         return;
 
       _forcedFollowAnchor = null;
+      _moveDirection = Vector3.zero;
+    }
+
+    public void SetMovementSuppressed(UnityEngine.Object owner, bool suppressed)
+    {
+      if (owner == null)
+        return;
+
+      if (suppressed)
+        _movementSuppressionOwners.Add(owner);
+      else
+        _movementSuppressionOwners.Remove(owner);
+
       _moveDirection = Vector3.zero;
     }
 

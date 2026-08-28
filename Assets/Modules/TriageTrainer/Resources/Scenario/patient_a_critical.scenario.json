@@ -1957,9 +1957,9 @@
       "identifier": "cpr_1st_cycle",
       "nodeType": "ManualEntrypoint",
       "entrypointIdentifier": "cpr_1st_cycle",
-      "manualEnterSetupIdentifier": "SETUP_CPR1_PREPARE",
+      "manualEnterSetupIdentifier": "SETUP_CPR1_PRESET",
       "description": "PEA 확인 뒤 CPR 1주기 수동 진입.",
-      "nextIdentifier": "P005"
+      "nextIdentifier": "D022"
     },
     "cpr_2nd_cycle": {
       "identifier": "cpr_2nd_cycle",
@@ -2041,6 +2041,29 @@
       "identifier": "SETUP_ARREST_PREPARE",
       "nodeType": "InvokeEvent",
       "nextIdentifier": "SETUP_MANUAL_RETURN"
+    },
+    "SETUP_CPR1_PRESET": {
+      "targetEntityIdentifier": "patient_a",
+      "sex": "Male",
+      "age": 35,
+      "consciousnessGcs": 8,
+      "consciousnessLocLabel": "Stupor",
+      "consciousnessPupillaryResponse": "Normal",
+      "respirationAwRR": 8,
+      "respirationType": "Irregular",
+      "pulseRate": 140,
+      "pulseForceType": "Weak",
+      "bloodPressureSystolic": 70,
+      "bloodPressureDiastolic": 40,
+      "skinColorHue": "Pale",
+      "skinTemperatureType": "Cold",
+      "bodyTemperatureCelsius": 35.9,
+      "spo2": 82,
+      "isCardiacArrest": false,
+      "description": "심정지 이전의 환자 A 기술 상태를 복원한다. 이어지는 준비 이벤트가 심정지 플래그와 모니터 측정 불가 채널을 덮어쓰므로, 이 노드가 준비 이벤트보다 먼저 실행되어야 한다.",
+      "identifier": "SETUP_CPR1_PRESET",
+      "nodeType": "PatientMedicalStatePreset",
+      "nextIdentifier": "SETUP_CPR1_PREPARE"
     },
     "SETUP_CPR1_PREPARE": {
       "eventIdentifier": "prepare_patient_a_manual_cpr_1st_cycle",

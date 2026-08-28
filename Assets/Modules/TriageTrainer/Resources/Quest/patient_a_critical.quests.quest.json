@@ -549,6 +549,15 @@
           "activation": "CompletionCriteria",
           "completionCriteriaIdentifier": "patient-a-ns-left",
           "targetType": "Interaction",
+          "entityIdentifier": "bed_a",
+          "interactionIdentifier": "hang_normal_saline",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-a-ns-left",
+          "targetType": "Interaction",
           "entityIdentifier": "patient_a",
           "interactionIdentifier": "patient_a_normal_saline_connect",
           "iconIdentifier": "quest-interaction",
@@ -560,6 +569,15 @@
           "targetType": "Interaction",
           "entityIdentifier": "patient_a",
           "interactionIdentifier": "intravenous_line_cannula",
+          "iconIdentifier": "quest-interaction",
+          "iconMode": "ReplacePrimaryIcon"
+        },
+        {
+          "activation": "CompletionCriteria",
+          "completionCriteriaIdentifier": "patient-a-ps-right",
+          "targetType": "Interaction",
+          "entityIdentifier": "bed_a",
+          "interactionIdentifier": "hang_plasma_solution",
           "iconIdentifier": "quest-interaction",
           "iconMode": "ReplacePrimaryIcon"
         },
@@ -712,7 +730,7 @@
       "persistProgressOnSessionEnd": false,
       "isTrackedByDefault": true,
       "scope": "Player",
-      "isOrdinal": false,
+      "isOrdinal": true,
       "tasks": [
         {
           "identifier": "detach-tpiece-patient-a",

@@ -1,6 +1,9 @@
 {
   "packId": "debugging",
   "displayName": "디버깅 데이터팩",
+  "gameRules": [
+    { "name": "DEBUG_INT_CPR_PLAYING_ESCAPE_KEY", "value": "true" }
+  ],
   "commandAliases": [
     { "name": "nurseall", "target": "/tag add @self nurse_a; /tag add @self nurse_b; /tag add @self nurse_c; /tag add @self nurse_d" },
     { "name": "scen-a", "target": "/scenario execute @a patient_a_critical" },

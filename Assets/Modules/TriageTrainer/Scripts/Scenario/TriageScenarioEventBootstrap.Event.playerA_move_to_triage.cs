@@ -22,7 +22,9 @@ namespace TriageTrainer.Scenario
         SnapTransformTo(_nurseATransform, _playerATriagePoint);
       }
 
-      EmitSystemMessage("간호사 A를 트리아지 구역으로 이동시켰습니다.");
+#if UNITY_EDITOR
+      Debug.Log("[EmitSystemMessage] 간호사 A를 트리아지 구역으로 이동시켰습니다.");
+#endif
       yield break;
     }
   }

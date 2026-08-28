@@ -153,7 +153,9 @@ namespace TriageTrainer.Scenario
         SnapToIfPresent(moveTarget, _patientATreatmentRoomPoint);
       }
 
-      EmitSystemMessage("환자 A를 처치 구역으로 이동시켰습니다.");
+#if UNITY_EDITOR
+      Debug.Log("[EmitSystemMessage] 환자 A를 처치 구역으로 이동시켰습니다.");
+#endif
     }
 
     /// <summary>씬에 배치된 침대 정박 포인트를 식별자로 찾는다. 없으면 null 을 돌려준다.</summary>

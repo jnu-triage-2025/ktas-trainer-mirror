@@ -14,6 +14,12 @@
     /// </summary>
     public static bool AllowMultipleRoleBranchesForSinglePlayer { get; set; } = true;
 
+    /// <summary>
+    /// true이면 로컬 플레이어가 CPR 수행 애니메이션과 위치 고정 상태를 Left Shift로 임시 해제할 수 있다.
+    /// 이 값은 디버깅 편의를 위한 표현 규칙일 뿐이며, 시나리오의 CPR 진행·완료 상태는 변경하지 않는다.
+    /// </summary>
+    public static bool DEBUG_INT_CPR_PLAYING_ESCAPE_KEY { get; set; }
+
     /// <summary>의식 확인 상호작용에서 로컬 마이크 음량 입력을 허용한다.</summary>
     public static bool UseMicInRecognitionCheck { get; private set; }
 

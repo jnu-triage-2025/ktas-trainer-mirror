@@ -246,7 +246,12 @@ namespace TriageTrainer.Entity
 
       // 성공 독백을 먼저 표시한다. 신호가 퀘스트/UI를 갱신하면서 상호작용 표시를
       // 재구성할 수 있으므로, 신호를 먼저 올리면 독백이 유실될 수 있다.
-      PresentAssessDialogue(cfg);
+      PresentAssessDialogue(cfg, () => RaiseAssessSignal(signal, player, actionIdentifier));
+      return;
+    }
+
+    private void RaiseAssessSignal(string signal, PlayerController player, string actionIdentifier)
+    {
 
       // patient_a_critical의 플레이어별 게이트를 성공한 플레이어에게만 내린다.
       // 도구가 없는 경우에는 여기까지 오지 않으므로 재시도할 수 있다.
@@ -258,18 +263,23 @@ namespace TriageTrainer.Entity
         MultiplayerInfrastructure.Scenario.ScenarioInteractionSignals.Raise(signal);
     }
 
-    private static void PresentAssessDialogue(AssessActionConfig config)
+    private static void PresentAssessDialogue(AssessActionConfig config, Action onFinished)
     {
       if (config == null || (string.IsNullOrWhiteSpace(config.ActionDialogue)
                             && string.IsNullOrWhiteSpace(config.ResultDialogue)))
+      {
+        onFinished?.Invoke();
         return;
+      }
 
       var dialogue = Registry.Get<DialoguePanelUIController>(
         RegistryType.UI, Registry.TypeKey<DialoguePanelUIController>());
       if (!string.IsNullOrWhiteSpace(config.ActionDialogue))
         dialogue?.TryPresentTransientDialogue(DialoguePanelUIController.PlayerNamePlaceholder, config.ActionDialogue);
       if (!string.IsNullOrWhiteSpace(config.ResultDialogue))
-        dialogue?.TryPresentTransientDialogue(string.Empty, config.ResultDialogue);
+        dialogue?.TryPresentTransientDialogue(string.Empty, config.ResultDialogue, onFinished: onFinished);
+      else
+        onFinished?.Invoke();
     }
 
     /// <summary>시나리오 진행에 따라 특정 사정 동작의 노출을 켜고 끈다.</summary>

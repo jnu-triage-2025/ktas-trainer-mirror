@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Diagnostics;
 
 namespace TriageTrainer.Scenario
 {
@@ -13,7 +14,7 @@ namespace TriageTrainer.Scenario
     {
       SetAnimatorsBool(_chestCompressionAnimators, _chestCompressionBoolName, true);
       PlayPatientAChestCompressionAnimation();
-      EmitSystemMessage("가슴 압박 애니메이션을 시작했습니다.");
+      Debug.Log("[EmitSystemMessage] 가슴 압박 애니메이션을 시작했습니다.");
       yield break;
     }
   }

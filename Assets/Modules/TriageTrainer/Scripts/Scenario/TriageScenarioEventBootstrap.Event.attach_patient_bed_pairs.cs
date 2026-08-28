@@ -81,7 +81,9 @@ namespace TriageTrainer.Scenario
       }
 
       int attached = pairs.Count - unresolvedPairIndices.Count;
-      EmitSystemMessage($"환자-침대 결합 재설정 완료 ({attached}/{pairs.Count}).");
+#if UNITY_EDITOR
+      Debug.Log($"[EmitSystemMessage] 환자-침대 결합 재설정 완료 ({attached}/{pairs.Count}).");
+#endif
 
       yield break;
     }

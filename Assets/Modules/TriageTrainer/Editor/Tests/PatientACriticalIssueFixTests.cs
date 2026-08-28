@@ -35,6 +35,8 @@ namespace TriageTrainer.Tests
       "Documents/requirements/content-definitions/scenario/patient_a_critical.md";
     private const string PatientMovingBedPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/MinecraftBoatLikes/PatientMovingBed.prefab";
+    private const string DefibrillatorCartPrefabPath =
+      "Assets/Modules/TriageTrainer/Prefabs/Entities/MinecraftBoatLikes/Defibrillator.prefab";
     private const string DoctorNpcPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/NPC/DoctorNPCHat.prefab";
     private const string PatientATreatmentBedMarkerIdentifier = "scen_a:patient_a_treatment_bed_marker";
@@ -1605,6 +1607,163 @@ namespace TriageTrainer.Tests
       Assert.That(preset.BloodPressureDiastolic, Is.EqualTo(scenEntryPreset.BloodPressureDiastolic));
       Assert.That(preset.Spo2, Is.EqualTo(scenEntryPreset.Spo2));
       Assert.That(preset.IsCardiacArrest, Is.EqualTo(scenEntryPreset.IsCardiacArrest));
+    }
+
+    /// <summary>
+    /// `cpr_1st_cycle`은 `arrest` 이후의 상태를 복원해야 한다. 준비 이벤트가 PEA 상태를 쓰기
+    /// 때문에 심정지 이전의 기술 상태(활력징후·의식·피부)는 별도 복원 노드가 필요하고, 그 노드가
+    /// 준비 이벤트보다 먼저 실행되어야 한다. 순서가 뒤바뀌면 프리셋이 심정지 플래그를 지운다.
+    /// </summary>
+    [Test]
+    public void PatientACpr1ManualEntryRestoresMedicalStateBeforeArrestPreparation()
+    {
+      var graph = ScenarioGraphLoader.LoadFromJson(
+        File.ReadAllText(PatientAScenarioPath), validateWithSchema: true);
+
+      var entrypoint = graph.Nodes["cpr_1st_cycle"] as ScenarioManualEntrypointNode;
+      Assert.That(entrypoint, Is.Not.Null);
+
+      var chain = CollectSetupChain(graph, entrypoint.ManualEnterSetupIdentifier).ToArray();
+      int presetIndex = System.Array.FindIndex(chain, node => node is ScenarioPatientMedicalStatePresetNode);
+      int prepareIndex = System.Array.FindIndex(chain,
+        node => node is ScenarioInvokeEventNode invoke
+                && invoke.EventIdentifier == "prepare_patient_a_manual_cpr_1st_cycle");
+
+      Assert.That(presetIndex, Is.GreaterThanOrEqualTo(0),
+        "cpr_1st_cycle 준비 체인에 환자 의료 상태 복원 노드가 있어야 합니다.");
+      Assert.That(prepareIndex, Is.GreaterThanOrEqualTo(0),
+        "cpr_1st_cycle 준비 체인이 준비 이벤트를 호출해야 합니다.");
+      Assert.That(presetIndex, Is.LessThan(prepareIndex),
+        "의료 상태 복원은 PEA 상태를 쓰는 준비 이벤트보다 먼저 실행되어야 합니다.");
+
+      var preset = (ScenarioPatientMedicalStatePresetNode)chain[presetIndex];
+      var scenEntryPreset = CollectSetupChain(graph, "SETUP_SCEN_ENTRY_PREPARE")
+        .OfType<ScenarioPatientMedicalStatePresetNode>()
+        .Single();
+
+      Assert.That(preset.TargetEntityIdentifier, Is.EqualTo("patient_a"));
+      Assert.That(preset.ConsciousnessGcs, Is.EqualTo(scenEntryPreset.ConsciousnessGcs));
+      Assert.That(preset.RespirationAwRR, Is.EqualTo(scenEntryPreset.RespirationAwRR));
+      Assert.That(preset.PulseRate, Is.EqualTo(scenEntryPreset.PulseRate));
+      Assert.That(preset.BloodPressureSystolic, Is.EqualTo(scenEntryPreset.BloodPressureSystolic));
+      Assert.That(preset.BloodPressureDiastolic, Is.EqualTo(scenEntryPreset.BloodPressureDiastolic));
+      Assert.That(preset.Spo2, Is.EqualTo(scenEntryPreset.Spo2));
+      Assert.That(preset.IsCardiacArrest, Is.False,
+        "준비 이벤트가 심정지를 설정하므로 프리셋은 심정지 이전 상태로 두어야 합니다.");
+    }
+
+    /// <summary>
+    /// CPR 1주기 수동 진입은 앞 단계에서 성립한 장비 설치와 라인 연결까지 되돌려야 한다.
+    /// 처치 표현만 켜면 화면은 맞지만 T-piece 분리·앰부백 연결 같은 후속 상호작용이 조용히 실패한다.
+    /// </summary>
+    [Test]
+    public void PatientACpr1ManualEntryRestoresEquipmentAndLineConnections()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string source = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.prepare_patient_a_manual_entry.cs"));
+      string equipmentSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.PatientAManualEntryEquipment.cs"));
+
+      int cpr1Case = source.IndexOf("case ManualPatientAStage.Cpr1:", StringComparison.Ordinal);
+      Assert.That(cpr1Case, Is.GreaterThanOrEqualTo(0));
+      string cpr1Body = source.Substring(cpr1Case,
+        source.IndexOf("case ManualPatientAStage.Cpr2:", StringComparison.Ordinal) - cpr1Case);
+
+      StringAssert.Contains("RestorePatientAPreArrestEquipment(patient)", cpr1Body,
+        "CPR 1주기 진입은 앞 단계의 장비·라인 연결을 되돌려야 합니다.");
+      StringAssert.Contains("ApplyPeaState(patient)", cpr1Body,
+        "CPR 1주기 진입은 PEA 의료 상태로 끝나야 합니다.");
+      StringAssert.Contains("OpenPatientACpr1Actions()", cpr1Body,
+        "CPR 1주기 진입은 그 단계의 처치 상호작용을 열어야 합니다.");
+
+      StringAssert.Contains("RestorePatientAOxygenLine", equipmentSource,
+        "T-piece 산소 라인을 되돌려야 합니다.");
+      StringAssert.Contains("RestorePatientAIntravenousLines", equipmentSource,
+        "양측 정맥로 수액 연결을 되돌려야 합니다.");
+      StringAssert.Contains("RestorePatientALevel1RapidInfuser", equipmentSource,
+        "Level 1 급속 주입기 상태와 C-line 연결을 되돌려야 합니다.");
+      StringAssert.Contains("TryCreateAutomaticConnection", equipmentSource,
+        "라인 연결은 LineConnectionService 의 서버 권위 경로를 사용해야 합니다.");
+      StringAssert.Contains("EnsurePlasmaSolutionInstalledForScenario", equipmentSource,
+        "우측 정맥로 연결에는 플라즈마 솔루션이 걸려 있어야 합니다.");
+    }
+
+    /// <summary>
+    /// CPR 1주기 진입 시점에는 첫 맥박 확인이 이미 끝나 있고, 그 단계의 처치 상호작용만 열려야 한다.
+    /// 맥박 확인을 함께 열면 CPR 1주기 목표와 지나간 단계의 메뉴가 동시에 노출된다.
+    /// </summary>
+    [Test]
+    public void PatientACpr1ManualEntryOpensOnlyCpr1Actions()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string source = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.prepare_patient_a_manual_entry.cs"));
+
+      int method = source.IndexOf("private void OpenPatientACpr1Actions()", StringComparison.Ordinal);
+      Assert.That(method, Is.GreaterThanOrEqualTo(0));
+      string body = source.Substring(method,
+        source.IndexOf("\n    private ", method + 1, StringComparison.Ordinal) - method);
+
+      StringAssert.Contains("PatientACriticalQuestStateFlags.Cpr1Actions", body,
+        "CPR 1주기 처치 상호작용 플래그를 올려야 합니다.");
+      Assert.That(body, Does.Not.Contain("ArrestPulseAssess"),
+        "이미 끝난 첫 맥박 확인 상호작용을 다시 열어서는 안 됩니다.");
+      StringAssert.Contains("PlacePatientADefibrillatorCartAtInitialPosition()", body,
+        "제세동기 카트를 환자 침대에서 상호작용 가능한 초기 위치에 두어야 합니다.");
+
+      StringAssert.Contains("PatientAStageArrestPulseChecked", source,
+        "첫 맥박 확인은 완료 상태로 기록되어야 합니다.");
+    }
+
+    /// <summary>
+    /// 제세동기 카트를 정박 지점 위에 그대로 두면 도달 신호가 즉시 올라가서, CPR 1주기의
+    /// "카트를 환자 옆으로 옮기기" 목표가 아무 행동 없이 통과한다.
+    /// </summary>
+    [Test]
+    public void PatientAManualEntryLeavesDefibrillatorCartUnlatched()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string equipmentSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.PatientAManualEntryEquipment.cs"));
+
+      int method = equipmentSource.IndexOf(
+        "private void PlacePatientADefibrillatorCartAtInitialPosition()", StringComparison.Ordinal);
+      Assert.That(method, Is.GreaterThanOrEqualTo(0));
+      string body = equipmentSource.Substring(method,
+        equipmentSource.IndexOf("\n    /// <summary>", method + 1, StringComparison.Ordinal) - method);
+
+      StringAssert.Contains("snapPoint.SnapDistance + PatientADefibrillatorCartInitialOffsetMeters", body,
+        "카트는 정박 판정 거리 밖에 두어야 합니다.");
+      StringAssert.Contains("cart.PlaceForScenario(position, snapPoint.Rotation)", body,
+        "카트 위치는 서버 권위 배치 경로로 옮겨야 합니다.");
+      Assert.That(body, Does.Not.Contain("ScenarioInteractionSignals.Raise"),
+        "준비 체인이 카트 도달 신호를 직접 올려서는 안 됩니다.");
+    }
+
+    /// <summary>
+    /// "이미 수행함" 표시 초기화는 환자뿐 아니라 제세동 카트의 상호작용에도 적용되어야 한다.
+    /// `interact_defibrillator` 는 한 번만 수행할 수 있고 CPR 2주기의 `V030` 게이트가 그 신호를
+    /// 기다리므로, 표시가 남아 있으면 같은 세션에서 다시 진입했을 때 그 단계를 통과할 수 없다.
+    /// </summary>
+    [Test]
+    public void PatientAManualEntryResetsDefibrillatorCartActionConsumption()
+    {
+      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(DefibrillatorCartPrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+
+      var cartAction = prefab.GetComponentsInChildren<ScenarioActionInteractable>(true)
+        .SingleOrDefault(action => action.CompletionSignal == "interact_defibrillator");
+      Assert.That(cartAction, Is.Not.Null,
+        "제세동 카트 프리팹에 'interact_defibrillator' 상호작용이 있어야 합니다.");
+
+      var identifiers = typeof(TriageScenarioEventBootstrap).GetField(
+        "PatientAScenarioEntityIdentifiers",
+        BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as string[];
+      Assert.That(identifiers, Is.Not.Null,
+        "준비 체인이 초기화 대상 엔티티 식별자 목록을 갖고 있어야 합니다.");
+      Assert.That(identifiers, Contains.Item(cartAction.PresentationEntityIdentifier),
+        "제세동 카트의 상호작용도 '이미 수행함' 표시 초기화 대상이어야 합니다.");
     }
 
     /// <summary>

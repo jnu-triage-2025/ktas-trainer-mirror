@@ -155,6 +155,50 @@ namespace TriageTrainer.Entity
     }
 
     /// <summary>
+    /// 시나리오 수동 진입용으로 해당 팔의 수액 연결을 서버 권위로 복원한다.
+    ///
+    /// <para>
+    /// 플레이어 상호작용 경로와 달리 수액세트를 소비하지 않고, 단계 진행 신호
+    /// (<c>connect_cannula_and_ns1</c>·<c>connect_ps1_right</c>)도 올리지 않는다. 준비 체인은
+    /// 지나간 단계의 신호를 다시 발생시켜 다음 단계를 통과시키는 방식을 쓰지 않고 상태만 목표
+    /// 단계에 맞춘다. 다만 줄이 실제로 만들어지면 연결 지점 자신이 <c>iv_connected_</c> 접두사
+    /// 신호를 올리는데, 이는 연결이 성립한 결과이고 이 시나리오의 게이트가 참조하지 않는다.
+    /// 캐뉼라 삽입 표시와 침대 수액 설치가 선행되어야 하며, 이미 연결되어 있으면 아무것도 하지
+    /// 않고 <c>true</c> 를 돌려준다.
+    /// </para>
+    /// </summary>
+    public bool RestorePatientAFluidConnectionForScenario(bool isLeftArm)
+    {
+      if (!IsPatientA)
+        return false;
+
+      if (IsFishNetClientInitialized && !IsFishNetServerStarted)
+      {
+        Debug.LogWarning(
+          "[PatientController] 환자 A 수액 연결 복원은 서버 권위 경로에서만 수행할 수 있습니다.", this);
+        return false;
+      }
+
+      if (!IsPatientACannulaInserted(isLeftArm)
+          || !TryGetPatientAFluidConnectionPoints(isLeftArm, out var patientPoint, out var fluidPoint))
+        return false;
+
+      if (patientPoint.IsPhysicallyConnectedTo(fluidPoint))
+      {
+        SetIVFluidConnection(isLeftArm, fluidPoint);
+        return true;
+      }
+
+      var service = LineConnectionService.TopologyService
+                    ?? FindFirstObjectByType<LineConnectionService>(FindObjectsInactive.Include);
+      if (service == null || !service.TryCreateAutomaticConnection(fluidPoint, patientPoint))
+        return false;
+
+      SetIVFluidConnection(isLeftArm, fluidPoint);
+      return true;
+    }
+
+    /// <summary>
     /// 수액 연결 상호작용을 처리한다. 수액세트를 갖고 있어야 하며, 클라이언트에서는 서버에
     /// 처리를 요청한다.
     /// </summary>

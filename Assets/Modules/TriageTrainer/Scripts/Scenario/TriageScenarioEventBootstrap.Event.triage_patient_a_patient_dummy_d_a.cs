@@ -53,7 +53,9 @@ namespace TriageTrainer.Scenario
         }
       }
 
-      EmitSystemMessage("환자 A/patient_dummy_d_a 및 이동식 침대가 트리아지 구역에 배치되었습니다.");
+#if UNITY_EDITOR
+      Debug.Log("[EmitSystemMessage] 환자 A/patient_dummy_d_a 및 이동식 침대가 트리아지 구역에 배치되었습니다.");
+#endif
       yield break;
     }
   }

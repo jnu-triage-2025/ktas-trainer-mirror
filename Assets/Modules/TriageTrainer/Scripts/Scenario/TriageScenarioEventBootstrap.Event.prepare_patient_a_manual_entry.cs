@@ -170,6 +170,7 @@ namespace TriageTrainer.Scenario
     {
       QuestPresentationService.ClearScenarioMarks();
       PlayerQuestStateFlagService.ClearAll();
+      ResetPatientAScenarioActionConsumption();
 
       ResolvePatientVitalMonitor(_patientAObject,
         ref _patientAVitalMonitorObject,
@@ -178,6 +179,53 @@ namespace TriageTrainer.Scenario
         _patientAVitalMonitorController.CloseForScenarioReset();
       SetActiveIfPresent(_patientAVitalPanel, false);
     }
+
+    /// <summary>
+    /// 환자 A의 단계별 상호작용에서 "이미 수행함" 표시를 지운다. 이 상호작용들은 한 번 수행하면
+    /// 다시 노출되지 않으므로, 같은 세션에서 앞 단계로 수동 진입하면 그 단계의 처치를 수행할 수
+    /// 없게 된다. 노출 여부는 플레이어별 퀘스트 상태 플래그가 계속 결정하므로, 표시만 지워도
+    /// 단계 밖 상호작용이 열리지는 않는다.
+    ///
+    /// <para>
+    /// 상호작용은 환자 자식뿐 아니라 제세동 카트에도 붙어 있다. 계층으로는 한 번에 고를 수 없으므로
+    /// 이 시나리오가 사용하는 엔티티 식별자 목록으로 판정한다. 제세동 카트의 "제세동기 담당 역할
+    /// 부여받기"(<c>interact_defibrillator</c>)를 빠뜨리면, 그 상호작용을 한 번 수행한 세션에서
+    /// 다시 진입했을 때 CPR 2주기의 <c>V030</c> 게이트가 영구히 통과되지 않는다.
+    /// </para>
+    /// </summary>
+    private static void ResetPatientAScenarioActionConsumption()
+    {
+      foreach (var action in FindObjectsByType<ScenarioActionInteractable>(
+                 FindObjectsInactive.Include, FindObjectsSortMode.None))
+      {
+        if (action != null && IsPatientAScenarioEntity(action.PresentationEntityIdentifier))
+          action.ResetCompletionForScenario();
+      }
+    }
+
+    private static bool IsPatientAScenarioEntity(string entityIdentifier)
+    {
+      for (int i = 0; i < PatientAScenarioEntityIdentifiers.Length; i++)
+      {
+        if (string.Equals(entityIdentifier, PatientAScenarioEntityIdentifiers[i],
+              System.StringComparison.Ordinal))
+          return true;
+      }
+      return false;
+    }
+
+    /// <summary>퀘스트 표시와 상호작용 게이트가 환자 A를 가리킬 때 쓰는 엔티티 식별자.</summary>
+    private const string PatientAScenarioEntityIdentifier = "patient_a";
+
+    /// <summary>
+    /// 이 시나리오의 단계별 <see cref="ScenarioActionInteractable"/> 이 소속된 엔티티 식별자.
+    /// 환자 프리팹과 제세동 카트 프리팹 양쪽에 상호작용이 배치되어 있다.
+    /// </summary>
+    private static readonly string[] PatientAScenarioEntityIdentifiers =
+    {
+      PatientAScenarioEntityIdentifier,
+      PatientADefibrillatorCartEntityId,
+    };
 
     /// <summary>ScenarioController 의 NPC 보행 애니메이션 파라미터와 같은 이름이다.</summary>
     private const string ManualEntryNpcWalkAnimationParameterName = "walk";
@@ -289,14 +337,22 @@ namespace TriageTrainer.Scenario
           return;
         case ManualPatientAStage.PreArrest:
           ApplyPreArrestTreatmentState(patient);
+          RestorePatientAPreArrestEquipment(patient);
           return;
         case ManualPatientAStage.Cpr1:
           ApplyPreArrestTreatmentState(patient);
+          // 스냅샷 교체를 장비 복원보다 먼저 수행한다. ApplyCpr1EntryTreatmentState 는 처치 상태값
+          // 집합을 통째로 덮어쓰므로, 복원 과정이 기록한 값(산소 라인 연결 등) 가운데 목록에 없는
+          // 것이 뒤에 오면 조용히 지워진다.
+          ApplyCpr1EntryTreatmentState(patient);
+          RestorePatientAPreArrestEquipment(patient);
           ApplyPeaState(patient);
+          OpenPatientACpr1Actions();
           return;
         case ManualPatientAStage.Cpr2:
         case ManualPatientAStage.RoscFollowup:
           ApplyPreArrestTreatmentState(patient);
+          RestorePatientAPreArrestEquipment(patient);
           ApplyCpr1TreatmentState(patient);
           ApplyCpr2TreatmentState(patient);
           ApplyPeaState(patient);
@@ -304,10 +360,16 @@ namespace TriageTrainer.Scenario
       }
     }
 
+    /// <summary>
+    /// 초기 평가(P003) 완료 상태. 경추 고정과 구강 흡인이 끝난 것으로 기록한다.
+    /// 처치 상태값에는 실제 처치 경로가 쓰는 식별자를 함께 넣는다. 이 값이 비어 있으면
+    /// 이미 끝난 처치를 다시 적용할 수 있고(경추 고정기 재적용 등), 물품 적용 상호작용도
+    /// 그 판정을 <see cref="PatientController.IsTreatmentApplied"/> 로 수행한다.
+    /// </summary>
     private void ApplyInitialAssessmentState(PatientController patient)
     {
       ApplyDisplay(patient, PatientController.TreatmentDisplay.CervicalCollarOnNeck);
-      ApplyManualTreatmentSnapshot(patient, "initial_assessment_complete");
+      ApplyManualTreatmentSnapshot(patient, PatientAInitialAssessmentTreatments);
     }
 
     private void ApplyPreArrestTreatmentState(PatientController patient)
@@ -322,13 +384,49 @@ namespace TriageTrainer.Scenario
       ApplyDisplay(patient, PatientController.TreatmentDisplay.GauzeDressingDoneOnThorax);
       SetActiveIfPresent(_patientAEtTubeWithoutStyletVisual, true);
       SetActiveIfPresent(_patientATPieceConnectedVisual, true);
+      SetActiveIfPresent(_patientAGauzeWithPlasterVisual, true);
       SetActiveIfPresent(_patientA18gLeftVisual, true);
       SetActiveIfPresent(_patientANs1LeftConnectedVisual, true);
       SetActiveIfPresent(_patientA18gRightVisual, true);
       SetActiveIfPresent(_patientAPs1RightConnectedVisual, true);
       SetActiveIfPresent(_patientACentralLineVisual, true);
       SetActiveIfPresent(_level1ReadyVisual, true);
-      ApplyManualTreatmentSnapshot(patient, "initial_assessment_complete", "oxygen_line_connected", "pre_arrest_treatment_complete");
+      ApplyManualTreatmentSnapshot(patient, PatientAPreArrestTreatments);
+    }
+
+    /// <summary>
+    /// CPR 1주기 진입 시점의 처치 상태값. 처치 표현은 <see cref="ApplyPreArrestTreatmentState"/> 와
+    /// 같지만(T-piece가 아직 붙어 있고 앰부백·패드는 없다), 심정지 직후의 첫 맥박 확인은 이미
+    /// 끝난 처치이므로 완료 상태로 함께 기록한다.
+    ///
+    /// <para>
+    /// 이 기록이 맥박 확인 상호작용을 닫는 것은 아니다. 그 노출은
+    /// <see cref="PatientACriticalQuestStateFlags.ArrestPulseAssess"/> 플래그만으로 결정되고,
+    /// 준비 체인이 앞서 모든 플래그를 내려 둔 뒤 다시 올리지 않기 때문에 닫혀 있다.
+    /// 여기서의 상태값은 단계 진행 기록일 뿐이다.
+    /// </para>
+    /// </summary>
+    private void ApplyCpr1EntryTreatmentState(PatientController patient)
+    {
+      ApplyManualTreatmentSnapshot(patient, PatientACpr1EntryTreatments);
+    }
+
+    /// <summary>
+    /// CPR 1주기 처치 동작(T-piece 분리·앰부백 연결·산소 저장낭 연결·가슴압박·제세동 패드)을
+    /// 전원에게 연다. 일반 진행에서는 <c>activate_patient_a_arrest_actions</c> 가 이 역할을 하지만
+    /// 수동 진입은 그 노드를 건너뛰므로 준비 체인이 직접 열어야 한다. 역할 배정은 이어지는
+    /// 병렬 노드(P005)가 다시 수행한다.
+    ///
+    /// <para>
+    /// 같은 이벤트가 여는 첫 맥박 확인(<c>assess_pulse_r1</c>)은 열지 않는다. 그 확인은 CPR 1주기
+    /// 진입 전에 이미 끝난 처치이고, 열어 둔 채 진입하면 CPR 1주기 목표와 맥박 확인 메뉴가 함께
+    /// 노출된다. 준비 체인은 앞서 모든 플래그를 내려 두므로 여기서 따로 닫을 필요는 없다.
+    /// </para>
+    /// </summary>
+    private void OpenPatientACpr1Actions()
+    {
+      PlayerQuestStateFlagService.SetForAll(PatientACriticalQuestStateFlags.Cpr1Actions);
+      PlacePatientADefibrillatorCartAtInitialPosition();
     }
 
     private void ApplyCpr1TreatmentState(PatientController patient)
@@ -336,12 +434,14 @@ namespace TriageTrainer.Scenario
       ApplyDisplay(patient, PatientController.TreatmentDisplay.TPieceAttachedToNasalCannula);
       SetActiveIfPresent(_patientATPieceConnectedVisual, true);
       ApplyDisplay(patient, PatientController.TreatmentDisplay.AmbuBagAttachedToEndotrachealTube);
-      ApplyManualTreatmentSnapshot(patient, "initial_assessment_complete", "oxygen_line_connected", "pre_arrest_treatment_complete", "cpr_1_complete");
+      ApplyManualTreatmentSnapshot(patient, PatientACpr1Treatments);
     }
 
     private void ApplyCpr2TreatmentState(PatientController patient)
     {
       // CPR 2주기부터는 T-piece가 분리되고 앰부백/패드와 1주기 처치가 완료된 상태다.
+      // 준비 체인이 되돌린 T-piece 산소 라인도 함께 끊어야 상태와 라인이 어긋나지 않는다.
+      DisconnectPatientAOxygenLineForCpr2(patient);
       patient.ApplyScenarioDisplayState(PatientController.TreatmentDisplay.TPieceAttachedToNasalCannula.ToString(), false);
       SetActiveIfPresent(_patientATPieceConnectedVisual, false);
       ApplyDisplay(patient, PatientController.TreatmentDisplay.AmbuBagAttachedToEndotrachealTube);
@@ -351,10 +451,7 @@ namespace TriageTrainer.Scenario
       patient.SetNamedChildActive("defibrillatorpad_subclavicle_A", true);
       SetAnimatorsBool(_ambuBaggingAnimators, _ambuBaggingBoolName, false);
       SetAnimatorsBool(_chestCompressionAnimators, _chestCompressionBoolName, false);
-      ApplyManualTreatmentSnapshot(patient,
-        "initial_assessment_complete", "oxygen_line_connected", "pre_arrest_treatment_complete",
-        "cpr_1_complete", "cpr_2_complete", "defibrillator_pads_attached",
-        "epinephrine_round_1_complete", "normal_saline_round_1_complete", "defibrillation_round_1_complete");
+      ApplyManualTreatmentSnapshot(patient, PatientACpr2Treatments);
     }
 
     private void ApplyPeaState(PatientController patient)
@@ -379,6 +476,125 @@ namespace TriageTrainer.Scenario
     {
       patient.ApplyScenarioDisplayState(display.ToString(), true);
     }
+
+    // ── 처치 상태값 식별자 ─────────────────────────────────────────────────
+    //
+    // 처치 상태값은 처치 표현과 별개로 "이 처치가 끝났는지"를 보관한다. 물품 적용 경로
+    // (PatientController.TryResolveItemUse)가 이 값으로 중복 적용을 막으므로, 준비 체인이
+    // 단계 요약 식별자만 넣으면 이미 끝난 처치를 다시 수행할 수 있다. 아래 목록은 일반
+    // 진행에서 실제로 기록되는 식별자와 단계 요약을 함께 담는다.
+
+    /// <summary>경추 고정기 적용. 물품 적용 경로가 쓰는 아이템 식별자와 같다.</summary>
+    private const string PatientATreatmentCervicalCollar = TriageTrainer.ItemDefinitions.CervicalCollar.Identifier;
+
+    /// <summary>구강 흡인 수행. 조립된 양커 팁 사용이 기록하는 식별자다.</summary>
+    private const string PatientATreatmentSuction = TriageTrainer.ItemDefinitions.YankauerSuctionReady.Identifier;
+
+    /// <summary>기관내관 삽관 완료(스타일렛 제거까지).</summary>
+    private const string PatientATreatmentEtTubeDone = "endotracheal_tube_insert_done";
+
+    /// <summary>기관내관 플라스터 고정.</summary>
+    private const string PatientATreatmentPlasterOnIntubation = PatientController.TreatmentPlasterOnIntubation;
+
+    /// <summary>T-piece 장착.</summary>
+    private const string PatientATreatmentTPieceAttached = "tpiece_attached";
+
+    /// <summary>T-piece와 벽면 유량계의 산소 연결.</summary>
+    private const string PatientATreatmentOxygenLine = "oxygen_line_connected";
+
+    /// <summary>흉부 거즈 압박 지혈.</summary>
+    private const string PatientATreatmentGauze = PatientController.TreatmentGauze;
+
+    /// <summary>거즈 플라스터 고정.</summary>
+    private const string PatientATreatmentPlasterOnGauze = PatientController.TreatmentPlasterOnGauze;
+
+    /// <summary>초기 평가 단계(P003) 완료 요약.</summary>
+    private const string PatientAStageInitialAssessment = "initial_assessment_complete";
+
+    /// <summary>의사 지시와 역할별 처치(P004) 완료 요약.</summary>
+    private const string PatientAStagePreArrest = "pre_arrest_treatment_complete";
+
+    /// <summary>심정지 직후 첫 맥박 확인 완료.</summary>
+    private const string PatientAStageArrestPulseChecked = "arrest_pulse_checked";
+
+    /// <summary>CPR 1주기 완료 요약.</summary>
+    private const string PatientAStageCpr1 = "cpr_1_complete";
+
+    /// <summary>CPR 2주기 완료 요약.</summary>
+    private const string PatientAStageCpr2 = "cpr_2_complete";
+
+    private static readonly string[] PatientAInitialAssessmentTreatments =
+    {
+      PatientAStageInitialAssessment,
+      PatientATreatmentCervicalCollar,
+      PatientATreatmentSuction,
+    };
+
+    private static readonly string[] PatientAPreArrestTreatments =
+    {
+      PatientAStageInitialAssessment,
+      PatientATreatmentCervicalCollar,
+      PatientATreatmentSuction,
+      PatientATreatmentEtTubeDone,
+      PatientATreatmentPlasterOnIntubation,
+      PatientATreatmentTPieceAttached,
+      PatientATreatmentOxygenLine,
+      PatientATreatmentGauze,
+      PatientATreatmentPlasterOnGauze,
+      PatientAStagePreArrest,
+    };
+
+    private static readonly string[] PatientACpr1EntryTreatments =
+    {
+      PatientAStageInitialAssessment,
+      PatientATreatmentCervicalCollar,
+      PatientATreatmentSuction,
+      PatientATreatmentEtTubeDone,
+      PatientATreatmentPlasterOnIntubation,
+      PatientATreatmentTPieceAttached,
+      PatientATreatmentOxygenLine,
+      PatientATreatmentGauze,
+      PatientATreatmentPlasterOnGauze,
+      PatientAStagePreArrest,
+      PatientAStageArrestPulseChecked,
+    };
+
+    private static readonly string[] PatientACpr1Treatments =
+    {
+      PatientAStageInitialAssessment,
+      PatientATreatmentCervicalCollar,
+      PatientATreatmentSuction,
+      PatientATreatmentEtTubeDone,
+      PatientATreatmentPlasterOnIntubation,
+      PatientATreatmentTPieceAttached,
+      PatientATreatmentOxygenLine,
+      PatientATreatmentGauze,
+      PatientATreatmentPlasterOnGauze,
+      PatientAStagePreArrest,
+      PatientAStageArrestPulseChecked,
+      PatientAStageCpr1,
+    };
+
+    private static readonly string[] PatientACpr2Treatments =
+    {
+      PatientAStageInitialAssessment,
+      PatientATreatmentCervicalCollar,
+      PatientATreatmentSuction,
+      PatientATreatmentEtTubeDone,
+      PatientATreatmentPlasterOnIntubation,
+      PatientATreatmentTPieceAttached,
+      PatientATreatmentOxygenLine,
+      PatientATreatmentGauze,
+      PatientATreatmentPlasterOnGauze,
+      PatientAStagePreArrest,
+      PatientAStageArrestPulseChecked,
+      PatientAStageCpr1,
+      PatientAStageCpr2,
+      "defibrillator_pads_attached",
+      "epinephrine_round_1_complete",
+      "normal_saline_round_1_complete",
+      "defibrillation_round_1_complete",
+    };
 
     private void ResetManualVisualState(PatientController patient)
     {
@@ -411,3 +627,4 @@ namespace TriageTrainer.Scenario
       => patient.SetTreatmentStateSnapshot(identifiers ?? System.Array.Empty<string>());
   }
 }
+

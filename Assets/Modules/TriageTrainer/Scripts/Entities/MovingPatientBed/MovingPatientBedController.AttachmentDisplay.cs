@@ -16,6 +16,12 @@ namespace TriageTrainer.Entity
     private const float IntravenousFluidInteractionDistance = 3f;
     private const float PendingIntravenousFluidLifetimeSeconds = 10f;
 
+    /// <summary>생리식염수 수액 걸기 상호작용 식별자. 퀘스트 표시 바인딩에서 참조한다.</summary>
+    public const string InteractIdHangNormalSaline = "hang_normal_saline";
+
+    /// <summary>플라즈마 솔루션 수액 걸기 상호작용 식별자. 퀘스트 표시 바인딩에서 참조한다.</summary>
+    public const string InteractIdHangPlasmaSolution = "hang_plasma_solution";
+
     private enum IntravenousFluidKind : byte
     {
       NormalSaline,
@@ -29,7 +35,8 @@ namespace TriageTrainer.Entity
       public float CreatedAt;
     }
 
-    private sealed class HangIntravenousFluidInteract : IInteract, IInteractorConditional, IInteractDisplayIcons
+    private sealed class HangIntravenousFluidInteract :
+      IInteract, IInteractorConditional, IInteractDisplayIcons, IQuestPresentationTarget
     {
       private readonly MovingPatientBedController _owner;
       private readonly IntravenousFluidKind _kind;
@@ -40,6 +47,11 @@ namespace TriageTrainer.Entity
         _owner = owner;
         _kind = kind;
       }
+
+      public string PresentationEntityIdentifier => _owner.Identifier;
+      public string InteractionIdentifier => _kind == IntravenousFluidKind.NormalSaline
+        ? InteractIdHangNormalSaline
+        : InteractIdHangPlasmaSolution;
 
       public string DisplayText => _kind == IntravenousFluidKind.NormalSaline
         ? "생리식염수 수액 걸기"
@@ -152,6 +164,23 @@ namespace TriageTrainer.Entity
 
     public bool IsPlasmaSolutionConnectionPoint(IntravenousLineConnectionPoint point) =>
       point != null && ReferenceEquals(point, _plasmaSolutionConnectionPoint);
+
+    /// <summary>
+    /// 시나리오 수동 진입용으로 플라즈마 솔루션 수액걸이를 즉시 준비한다.
+    /// 생리식염수 쪽과 같은 규약이며, 수액이 걸려 있지 않으면
+    /// <see cref="TryGetPlasmaSolutionConnectionPoint"/> 가 연결 지점을 돌려주지 않아
+    /// 우측 정맥로 복원이 조용히 실패한다.
+    /// </summary>
+    public void EnsurePlasmaSolutionInstalledForScenario()
+    {
+      if (IsPlasmaSolutionInstalled)
+        return;
+
+      if (IsServerStarted)
+        SetIntravenousFluidInstalledOnServer(IntravenousFluidKind.PlasmaSolution);
+      else if (!IsClientStarted)
+        SetIntravenousFluidInstalledOffline(IntravenousFluidKind.PlasmaSolution);
+    }
 
     private void InitializeIntravenousAttachmentDisplay() => ApplyIntravenousAttachmentDisplays();
 

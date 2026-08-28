@@ -30,7 +30,9 @@ namespace TriageTrainer.Scenario
         SnapToIfPresent(_patientDummyDBObject, _patientDummyDBSpawnPoint);
       }
 
-      EmitSystemMessage("환자 B/C 및 patient_dummy_d_b가 트리아지 구역에 도착했습니다.");
+#if UNITY_EDITOR
+      Debug.Log("[EmitSystemMessage] 환자 B/C 및 patient_dummy_d_b가 트리아지 구역에 도착했습니다.");
+#endif
       yield break;
     }
   }
