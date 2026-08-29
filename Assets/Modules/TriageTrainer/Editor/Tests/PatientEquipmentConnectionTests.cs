@@ -81,6 +81,84 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void DefibrillatorResolutionTreatsPartialColliderOverlapAsInsideZone()
+    {
+      var root = new GameObject("defibrillator-overlap-test");
+      root.transform.position = new Vector3(12000f, 9000f, -8000f);
+      try
+      {
+        var zoneObject = new GameObject("care-zone");
+        zoneObject.transform.SetParent(root.transform, false);
+        var zone = zoneObject.AddComponent<PatientCareDescriptionZone>();
+        zone.ConfigureArea(Vector3.zero, new Vector3(4f, 4f, 4f));
+
+        var patientObject = new GameObject("patient");
+        patientObject.transform.SetParent(root.transform, false);
+        var patient = patientObject.AddComponent<PatientController>();
+
+        var overlappingObject = new GameObject("partially-overlapping-cart");
+        overlappingObject.transform.SetParent(root.transform, false);
+        overlappingObject.transform.localPosition = new Vector3(2.5f, 0f, 0f);
+        var overlappingCollider = overlappingObject.AddComponent<BoxCollider>();
+        overlappingCollider.size = new Vector3(2f, 1f, 1f);
+        var overlappingCart = overlappingObject.AddComponent<DefibrillatorCartController>();
+
+        var outsideObject = new GameObject("outside-cart");
+        outsideObject.transform.SetParent(root.transform, false);
+        outsideObject.transform.localPosition = new Vector3(2.1f, 0f, 0f);
+        outsideObject.AddComponent<BoxCollider>().size = Vector3.one * 0.1f;
+        outsideObject.AddComponent<DefibrillatorCartController>();
+
+        var resolve = typeof(TriageScenarioEventBootstrap).GetMethod(
+          "ResolveDefibrillatorCart", BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.That(resolve, Is.Not.Null);
+        Assert.That(resolve.Invoke(null, new object[] { patient }), Is.SameAs(overlappingCart),
+          "카트 원점이 밖에 있어도 Collider 일부가 Zone과 겹치면 Zone 내부 장비가 우선되어야 합니다.");
+        Assert.That(zone.DefibrillatorCarts, Does.Contain(overlappingCart));
+      }
+      finally
+      {
+        Object.DestroyImmediate(root);
+      }
+    }
+
+    [Test]
+    public void DefibrillatorFallbackUsesWorldPositionDistance()
+    {
+      var root = new GameObject("defibrillator-world-position-fallback-test");
+      root.SetActive(false);
+      root.transform.position = new Vector3(15000f, -6000f, 11000f);
+      try
+      {
+        var patientObject = new GameObject("patient");
+        patientObject.transform.SetParent(root.transform, false);
+        patientObject.transform.localPosition = new Vector3(20f, 0f, 0f);
+        var patient = patientObject.AddComponent<PatientController>();
+
+        var worldNearObject = new GameObject("world-near-cart");
+        worldNearObject.transform.position = patient.transform.position + Vector3.right;
+        var worldNearCart = worldNearObject.AddComponent<DefibrillatorCartController>();
+
+        var localLookingNearObject = new GameObject("local-looking-near-cart");
+        localLookingNearObject.transform.SetParent(root.transform, false);
+        localLookingNearObject.transform.localPosition = Vector3.zero;
+        localLookingNearObject.AddComponent<DefibrillatorCartController>();
+
+        var resolve = typeof(TriageScenarioEventBootstrap).GetMethod(
+          "ResolveDefibrillatorCart", BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.That(resolve, Is.Not.Null);
+        Assert.That(resolve.Invoke(null, new object[] { patient }), Is.SameAs(worldNearCart),
+          "CareZone이 없을 때 fallback 거리는 환자와 카트의 global position으로 계산해야 합니다.");
+
+        Object.DestroyImmediate(worldNearObject);
+      }
+      finally
+      {
+        Object.DestroyImmediate(root);
+      }
+    }
+
+    [Test]
     public void ClearIVFluidConnectionIgnoresStaleEquipmentSource()
     {
       var patientObject = new GameObject("patient-equipment-test");

@@ -136,6 +136,11 @@ namespace TriageTrainer.Entity
     {
       get
       {
+        // Unity objects can remain in nearby-interactable snapshots after their native
+        // object has been destroyed. Avoid touching Component APIs in that state.
+        if (this == null)
+          return Array.Empty<IInteract>();
+
         var result = new List<IInteract>();
         if (_interacts != null)
         {

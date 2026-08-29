@@ -873,9 +873,36 @@ namespace TriageTrainer.Entity
       for (int i = 0; i < carts.Length; i++)
       {
         DefibrillatorCartController cart = carts[i];
-        if (cart != null && IsEquipmentInZone(cart))
+        if (cart != null && DoesEquipmentOverlapZone(cart))
           _defibrillatorCarts.Add(cart);
       }
+    }
+
+    /// <summary>
+    /// 이동식 장비는 transform 원점이 구역 밖에 있더라도 실제 외형의 일부가 구역에 걸칠 수 있다.
+    /// 자식 Collider까지 포함한 월드 Bounds가 Zone Collider와 겹치면 구역 장비로 판정한다.
+    /// Collider가 없는 예외적인 테스트/배치 오브젝트만 기존 원점 판정으로 되돌린다.
+    /// </summary>
+    private bool DoesEquipmentOverlapZone(Component equipment)
+    {
+      if (equipment == null)
+        return false;
+
+      _collider ??= GetComponent<BoxCollider>();
+      Collider[] equipmentColliders = equipment.GetComponentsInChildren<Collider>(true);
+      if (_collider != null && equipmentColliders.Length > 0)
+      {
+        Bounds zoneBounds = _collider.bounds;
+        for (int i = 0; i < equipmentColliders.Length; i++)
+        {
+          Collider equipmentCollider = equipmentColliders[i];
+          if (equipmentCollider != null && zoneBounds.Intersects(equipmentCollider.bounds))
+            return true;
+        }
+        return false;
+      }
+
+      return IsEquipmentInZone(equipment);
     }
 
     private bool IsPatientSupportedInZone(PatientController patient)
