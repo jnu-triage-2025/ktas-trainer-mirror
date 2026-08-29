@@ -61,6 +61,19 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>조합 목록을 격자로 배치할 때 한 줄에 놓는 슬롯 개수.</summary>
     private const int CraftingRecipeColumns = 4;
 
+    // ── 조합 가능 목록의 표시 줄 수 ─────────────────────────────────
+    // 목록은 2.8줄까지만 보여주고 그 이상은 스크롤한다. 마지막 줄이 일부만 보이므로
+    // 아래에 더 있다는 것이 드러난다. 아래 값들은 InventoryUI.uss 의
+    // .crafting-recipe-slot / .crafting-recipe-list / .crafting-recipe-scroll 정의와 일치해야 한다.
+    /// <summary>한 번에 보여줄 줄 수. 소수부는 다음 줄을 일부만 노출하기 위한 것이다.</summary>
+    private const float CraftingRecipeVisibleRows = 2.8f;
+    /// <summary>.crafting-recipe-slot 의 height.</summary>
+    private const float CraftingRecipeSlotHeight = 42f;
+    /// <summary>.crafting-recipe-list 의 gap(줄 간격).</summary>
+    private const float CraftingRecipeRowGap = 5f;
+    /// <summary>.crafting-recipe-list 의 padding-top + .crafting-recipe-scroll 의 상하 border.</summary>
+    private const float CraftingRecipeScrollChrome = 8f;
+
     // ── "필요 아이템" 영역 높이 예약 ────────────────────────────────
     // 레시피를 선택하면 필요 아이템 칸이 생기면서 이 영역이 세로로 늘어나고,
     // 그만큼 조합 패널(=인벤토리 UI 전체) 높이가 함께 늘어난다.
@@ -130,6 +143,7 @@ namespace MultiplayerInfrastructure.UI
       _craftingRecipeScroll.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
       _craftingRecipeScroll.verticalScrollerVisibility = ScrollerVisibility.Auto;
       _craftingRecipeScroll.AddToClassList("crafting-recipe-scroll");
+      ApplyRecipeScrollVisibleRows();
       _craftingPanel.Add(_craftingRecipeScroll);
 
       // 실제 슬롯이 배치되는 격자 컨테이너.
@@ -254,6 +268,20 @@ namespace MultiplayerInfrastructure.UI
         slot.RegisterCallback<PointerLeaveEvent>(_ => HideTooltip());
 
         currentRow.Add(slot);
+      }
+
+      // 마지막 줄이 덜 찼으면 빈 칸으로 채운다. 줄이 항상 같은 개수의 칸을 가지므로
+      // 좌우 끝에 맞춰 분배되는 간격(.crafting-recipe-row: space-between)이 모든 줄에서 같아진다.
+      int remainder = _craftableRecipes.Count % CraftingRecipeColumns;
+      if (remainder != 0 && currentRow != null)
+      {
+        for (int i = remainder; i < CraftingRecipeColumns; i++)
+        {
+          var filler = new VisualElement { pickingMode = PickingMode.Ignore };
+          filler.AddToClassList("crafting-recipe-slot");
+          filler.AddToClassList("crafting-recipe-slot--placeholder");
+          currentRow.Add(filler);
+        }
       }
     }
 
@@ -396,6 +424,21 @@ namespace MultiplayerInfrastructure.UI
 
       _craftingRequirements.style.minHeight =
         CraftingRequirementSlotHeight + CraftingRequirementBoxPadding;
+    }
+
+    /// <summary>
+    /// 조합 가능 목록의 표시 높이를 <see cref="CraftingRecipeVisibleRows"/> 줄로 제한한다.
+    /// 목록이 더 길면 스크롤되며, 마지막 줄이 일부만 보여 스크롤 가능함이 드러난다.
+    /// </summary>
+    private void ApplyRecipeScrollVisibleRows()
+    {
+      if (_craftingRecipeScroll == null)
+        return;
+
+      _craftingRecipeScroll.style.maxHeight =
+        CraftingRecipeVisibleRows * CraftingRecipeSlotHeight +
+        (CraftingRecipeVisibleRows - 1f) * CraftingRecipeRowGap +
+        CraftingRecipeScrollChrome;
     }
 
     private void RenderRequirements()
