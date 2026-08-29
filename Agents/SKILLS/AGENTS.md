@@ -41,8 +41,14 @@ Check the local environment and install the following tools if they are not alre
 - 대상 원격 저장소에 push하거나 기존 참조를 재작성하는 작업은 사용자에게 명시적으로 요청받은 경우에만 수행한다.
 - 절대로 Tool 사용 중에 `GIT_HTTP_TOKEN` 환경 변수를 직접 액세스하려고 시도해서는 안된다.
 
+## Scenario JSON Validation
+
+- `*.scenario.json`의 구조 또는 JSON Schema 명세를 변경할 때에는, 기존 시나리오 데이터와의 호환성을 확인하기 위해 `scenario-json-validation` 스킬을 사용한다.
+- 스키마 변경 전후에 영향을 받는 기존 시나리오를 CLI로 검증하고, 오류가 발생하면 데이터 변경 또는 하위 호환 가능한 스키마 조정 여부를 검토한다.
+
 ## Index
 
 - [Unity.md](./Unity.md) : When using Unity
 - [fluent-korean/](./fluent-korean/) : 명확하고 자연스러운 한국어 출력 스타일
 - [cellular/](./cellular/) : 코드 구성 색인·트리맵 시각화
+- [scenario-json-validation/](./scenario-json-validation/) : 시나리오 JSON 스키마 및 기존 데이터 호환성 검증

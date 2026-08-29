@@ -13,14 +13,33 @@ namespace MultiplayerInfrastructure.Scenario
   {
     private static JsonSchema _schema;
 
+#if UNITY_5_3_OR_NEWER
     public static void Validate(string json)
+    {
+      Validate(
+        json,
+        ScenarioJsonSchemaProvider.SchemaText,
+        nodeType => Enum.TryParse(nodeType, ignoreCase: false, out ScenarioNodeType _),
+        interactionType => Enum.TryParse(interactionType, ignoreCase: false, out ScenarioActingNpcInteractionType _));
+    }
+#endif
+
+    /// <summary>
+    /// Unity Resources에 의존하지 않고 시나리오 JSON과 schema text를 검증합니다.
+    /// CLI 등 Unity 밖의 호출자는 schema text와 discriminator 값 판별기를 전달합니다.
+    /// </summary>
+    internal static void Validate(
+      string json,
+      string schemaText,
+      Func<string, bool> isKnownNodeType,
+      Func<string, bool> isKnownInteractionType)
     {
       if (string.IsNullOrWhiteSpace(json))
       {
         throw new ScenarioSchemaValidationException("Scenario JSON text is null or empty.");
       }
 
-      EnsureSchemaLoaded();
+      EnsureSchemaLoaded(schemaText);
 
       JsonDocument document;
       try
@@ -60,7 +79,12 @@ namespace MultiplayerInfrastructure.Scenario
             Location = detail.InstanceLocation.ToString(),
             Message = error.Value
           }))
-          .Where(error => !IsNonApplicableDiscriminatorPredicateError(document.RootElement, error.Location, error.Message))
+          .Where(error => !IsNonApplicableDiscriminatorPredicateError(
+            document.RootElement,
+            error.Location,
+            error.Message,
+            isKnownNodeType,
+            isKnownInteractionType))
           .ToList();
 
         if (actionableErrors.Count == 0)
@@ -83,7 +107,9 @@ namespace MultiplayerInfrastructure.Scenario
     private static bool IsNonApplicableDiscriminatorPredicateError(
       JsonElement root,
       string instanceLocation,
-      string message)
+      string message,
+      Func<string, bool> isKnownNodeType,
+      Func<string, bool> isKnownInteractionType)
     {
       if (string.IsNullOrEmpty(instanceLocation) || string.IsNullOrEmpty(message))
         return false;
@@ -91,7 +117,7 @@ namespace MultiplayerInfrastructure.Scenario
       if (instanceLocation.StartsWith("/nodes/", StringComparison.Ordinal)
           && instanceLocation.EndsWith("/nodeType", StringComparison.Ordinal))
       {
-        return IsKnownNodeTypePredicateError(root, instanceLocation, message);
+        return IsKnownNodeTypePredicateError(root, instanceLocation, message, isKnownNodeType);
       }
 
       if (instanceLocation.StartsWith("/nodes/", StringComparison.Ordinal)
@@ -108,7 +134,8 @@ namespace MultiplayerInfrastructure.Scenario
         if (!message.StartsWith("Value should match one of the values specified by the enum", StringComparison.Ordinal))
           return false;
         return TryResolveStringAtPointer(root, instanceLocation, out var interactionType)
-               && Enum.TryParse(interactionType, ignoreCase: false, out ScenarioActingNpcInteractionType _);
+               && isKnownInteractionType != null
+               && isKnownInteractionType(interactionType);
       }
 
       return false;
@@ -165,7 +192,8 @@ namespace MultiplayerInfrastructure.Scenario
     private static bool IsKnownNodeTypePredicateError(
       JsonElement root,
       string instanceLocation,
-      string message)
+      string message,
+      Func<string, bool> isKnownNodeType)
     {
       if (message.StartsWith("Expected ", StringComparison.Ordinal))
         return true;
@@ -173,7 +201,8 @@ namespace MultiplayerInfrastructure.Scenario
         return false;
 
       return TryResolveStringAtPointer(root, instanceLocation, out var nodeType)
-             && Enum.TryParse(nodeType, ignoreCase: false, out ScenarioNodeType _);
+             && isKnownNodeType != null
+             && isKnownNodeType(nodeType);
     }
 
     private static bool TryResolveStringAtPointer(JsonElement root, string pointer, out string value)
@@ -234,7 +263,7 @@ namespace MultiplayerInfrastructure.Scenario
       return true;
     }
 
-    private static void EnsureSchemaLoaded()
+    private static void EnsureSchemaLoaded(string schemaText)
     {
       if (_schema != null)
       {
@@ -249,7 +278,7 @@ namespace MultiplayerInfrastructure.Scenario
         // local registry keeps the rebuild isolated while still allowing the schema
         // to register its own internal resources and anchors.
         _schema = JsonSchema.FromText(
-          ScenarioJsonSchemaProvider.SchemaText,
+          schemaText,
           new BuildOptions { SchemaRegistry = new SchemaRegistry() });
       }
       catch (Exception ex)
