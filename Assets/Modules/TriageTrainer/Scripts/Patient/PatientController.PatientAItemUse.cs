@@ -133,8 +133,9 @@ namespace TriageTrainer.Entity
         if (player?.PlayerEntity == null)
           return;
 
+        string itemIdentifier = ResolveInventoryItemIdentifier(player);
         string particle = Josa.ObjectParticle(_spec.ItemDisplayName);
-        if (player.CountItemInInventory(_spec.ItemIdentifier) < 1)
+        if (itemIdentifier == null)
         {
           PresentHint(
             $"({_spec.ItemDisplayName}{particle} 갖고 있지 않다.)",
@@ -142,27 +143,36 @@ namespace TriageTrainer.Entity
           return;
         }
 
-        if (!CanApplyNow())
+        if (!CanApplyNow(itemIdentifier))
         {
           PresentHint($"(지금은 {_spec.ItemDisplayName}{particle} 사용할 수 없다.)");
           return;
         }
 
-        _owner.OnItemUsed(player.PlayerEntity, _spec.ItemIdentifier);
+        _owner.OnItemUsed(player.PlayerEntity, itemIdentifier);
+      }
+
+      private string ResolveInventoryItemIdentifier(PlayerController player)
+      {
+        if (string.Equals(_spec.InteractionIdentifier, InteractIdPatientAUseEpinephrineSyringe,
+              System.StringComparison.Ordinal))
+          return player.FindFirstInventoryItem(IsEpinephrineSyringeIdentifier);
+
+        return player.CountItemInInventory(_spec.ItemIdentifier) > 0 ? _spec.ItemIdentifier : null;
       }
 
       /// <summary>
       /// 지금 이 물품을 적용하면 이 상호작용의 문구대로 처치가 이루어지는지 확인한다. 같은 물품이
       /// 상태에 따라 다른 처치가 되는 경우(플라스터)에는 처치 대상까지 일치해야 한다.
       /// </summary>
-      private bool CanApplyNow()
+      private bool CanApplyNow(string itemIdentifier)
       {
-        if (!_owner.CanApplyHeldTreatmentItem(_spec.ItemIdentifier))
+        if (!_owner.CanApplyHeldTreatmentItem(itemIdentifier))
           return false;
 
         return _spec.RequiredTreatmentIdentifier == null
                || string.Equals(
-                 _owner.ResolveTreatmentIdentifierForItem(_spec.ItemIdentifier),
+                 _owner.ResolveTreatmentIdentifierForItem(itemIdentifier),
                  _spec.RequiredTreatmentIdentifier,
                  System.StringComparison.Ordinal);
       }

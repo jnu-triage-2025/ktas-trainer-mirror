@@ -183,6 +183,13 @@ namespace TriageTrainer.Entity
 
     private int _resuscitationMedicationRound = 1;
 
+    internal static bool IsEpinephrineSyringeIdentifier(string itemIdentifier)
+    {
+      return !string.IsNullOrWhiteSpace(itemIdentifier)
+             && itemIdentifier.StartsWith("epinephrine_", System.StringComparison.Ordinal)
+             && itemIdentifier.EndsWith("_syringe", System.StringComparison.Ordinal);
+    }
+
     /// <summary>동일한 조합 주사기를 사용하는 소생술 투여 회차를 전환합니다.</summary>
     public void SetResuscitationMedicationRound(int round)
     {
@@ -195,7 +202,7 @@ namespace TriageTrainer.Entity
     /// </summary>
     private bool CanApplyItemUse(string itemIdentifier)
     {
-      if (string.Equals(itemIdentifier, Epinephrine5ccSyringe.Identifier, System.StringComparison.Ordinal)
+      if (IsEpinephrineSyringeIdentifier(itemIdentifier)
           || string.Equals(itemIdentifier, NormalSaline20ccSyringe.Identifier, System.StringComparison.Ordinal))
         return IsPatientA;
 
@@ -207,7 +214,7 @@ namespace TriageTrainer.Entity
       // 조합 완료 주사기는 동일 아이템을 1·2차 투여에 재사용하므로 현재 소생술 회차에
       // 맞는 신호를 동적으로 발신한다. 두 회차 신호를 동시에 올리면 후속 게이트가
       // 실제 재투여 없이 통과하므로 반드시 한 회차만 발신한다.
-      if (string.Equals(itemIdentifier, Epinephrine5ccSyringe.Identifier, System.StringComparison.Ordinal))
+      if (IsEpinephrineSyringeIdentifier(itemIdentifier))
       {
         if (!IsPatientA)
           return false;
@@ -420,6 +427,10 @@ namespace TriageTrainer.Entity
         if (player.CountItemInInventory(identifier) > 0 && CanApplyHeldTreatmentItem(identifier))
           return identifier;
       }
+
+      string epinephrineSyringe = player.FindFirstInventoryItem(IsEpinephrineSyringeIdentifier);
+      if (epinephrineSyringe != null && CanApplyHeldTreatmentItem(epinephrineSyringe))
+        return epinephrineSyringe;
       return null;
     }
 
