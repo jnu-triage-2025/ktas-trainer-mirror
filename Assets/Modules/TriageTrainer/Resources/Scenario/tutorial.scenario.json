@@ -452,6 +452,7 @@
     "D_TUT_PACKAGE_PROMPT": {
       "speakerName": null,
       "dialogueContent": "아이템 앞에서 F 키를 눌러 택배를 획득하자.",
+      "dialogueContentTTSPassing": "아이템 앞에서 에프 키를 눌러 택배를 획득하자.",
       "portraitSpriteIdentifier": null,
       "fadeInDuration": {
         "value": 0.20000000000000001,

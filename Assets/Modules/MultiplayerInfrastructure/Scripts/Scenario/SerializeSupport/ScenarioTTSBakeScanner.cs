@@ -217,32 +217,35 @@ namespace MultiplayerInfrastructure.Scenario
         switch (node)
         {
           case ScenarioDialogueNode dialogue when dialogue.PlayTTS:
-            AddJob(graph.Identifier, dialogue.Identifier, dialogue.DialogueContent, streamingAssetsPath, result,
+            AddJob(graph.Identifier, dialogue.Identifier, SelectTTSText(dialogue.DialogueContent, dialogue.DialogueContentTTSPassing), streamingAssetsPath, result,
               voiceIdentifier: dialogue.TtsVoiceIdentifier);
             break;
 
           case ScenarioDisinteractableDialogueNode disinteractable when disinteractable.PlayTTS:
-            AddJob(graph.Identifier, disinteractable.Identifier, disinteractable.DialogueContent, streamingAssetsPath, result,
+            AddJob(graph.Identifier, disinteractable.Identifier, SelectTTSText(disinteractable.DialogueContent, disinteractable.DialogueContentTTSPassing), streamingAssetsPath, result,
               voiceIdentifier: disinteractable.TtsVoiceIdentifier);
             break;
 
           case ScenarioChoiceNode choice when choice.PlayTTS:
-            AddJob(graph.Identifier, choice.Identifier, choice.DialogueContent, streamingAssetsPath, result,
+            AddJob(graph.Identifier, choice.Identifier, SelectTTSText(choice.DialogueContent, choice.DialogueContentTTSPassing), streamingAssetsPath, result,
               voiceIdentifier: choice.TtsVoiceIdentifier);
             break;
 
           case ScenarioQuizNode quiz when quiz.PlayTTS:
-            AddJob(graph.Identifier, quiz.Identifier, quiz.Question, streamingAssetsPath, result,
+            AddJob(graph.Identifier, quiz.Identifier, SelectTTSText(quiz.Question, quiz.QuestionTTSPassing), streamingAssetsPath, result,
               voiceIdentifier: quiz.TtsVoiceIdentifier);
             // 피드백 텍스트는 런타임에서 별도 노드 식별자 접미어로 재생된다.
-            AddJob(graph.Identifier, quiz.Identifier + "_feedbackCorrect", quiz.FeedbackCorrect, streamingAssetsPath, result,
+            AddJob(graph.Identifier, quiz.Identifier + "_feedbackCorrect", SelectTTSText(quiz.FeedbackCorrect, quiz.FeedbackCorrectTTSPassing), streamingAssetsPath, result,
               voiceIdentifier: quiz.TtsVoiceIdentifier);
-            AddJob(graph.Identifier, quiz.Identifier + "_feedbackIncorrect", quiz.FeedbackIncorrect, streamingAssetsPath, result,
+            AddJob(graph.Identifier, quiz.Identifier + "_feedbackIncorrect", SelectTTSText(quiz.FeedbackIncorrect, quiz.FeedbackIncorrectTTSPassing), streamingAssetsPath, result,
               voiceIdentifier: quiz.TtsVoiceIdentifier);
             break;
         }
       }
     }
+
+    private static string SelectTTSText(string content, string ttsPassing) =>
+      string.IsNullOrWhiteSpace(ttsPassing) ? content : ttsPassing;
 
     private static void AddJob(
       string scenarioId, string nodeId, string text, string streamingAssetsPath, ScanResult result,

@@ -525,6 +525,7 @@ namespace MultiplayerInfrastructure.Editor
     {
       AddTextField("Speaker", value => data.SpeakerName = value, data.SpeakerName);
       AddTextAreaField("Dialogue", value => data.DialogueContent = value, data.DialogueContent);
+      AddTextAreaField("Dialogue TTS Passing", value => data.DialogueContentTTSPassing = NullIfWhiteSpace(value), data.DialogueContentTTSPassing);
       AddToggleField("Interaction Required", value => data.InteractionRequired = value, data.InteractionRequired);
       AddOptionalFloatField("Auto Advance (sec)", value => data.AutoAdvanceSeconds = value, data.AutoAdvanceSeconds);
       AddToggleField("Play TTS", value => data.PlayTTS = value, data.PlayTTS);
@@ -616,6 +617,7 @@ namespace MultiplayerInfrastructure.Editor
     {
       AddTextField("Speaker", value => data.SpeakerName = value, data.SpeakerName);
       AddTextAreaField("Dialogue", value => data.DialogueContent = value, data.DialogueContent);
+      AddTextAreaField("Dialogue TTS Passing", value => data.DialogueContentTTSPassing = NullIfWhiteSpace(value), data.DialogueContentTTSPassing);
       AddTimeValueField("Fade In", data.FadeInDuration, value => data.FadeInDuration = value);
       AddTimeValueField("Display", data.DisplayDuration, value => data.DisplayDuration = value);
       AddTimeValueField("Fade Out", data.FadeOutDuration, value => data.FadeOutDuration = value);
@@ -629,6 +631,7 @@ namespace MultiplayerInfrastructure.Editor
       data.Options ??= new List<ScenarioChoiceOption>();
       AddTextField("Speaker", value => data.SpeakerName = value, data.SpeakerName);
       AddTextAreaField("Dialogue", value => data.DialogueContent = value, data.DialogueContent);
+      AddTextAreaField("Dialogue TTS Passing", value => data.DialogueContentTTSPassing = NullIfWhiteSpace(value), data.DialogueContentTTSPassing);
       AddToggleField("Play TTS", value => data.PlayTTS = value, data.PlayTTS);
       AddVoiceProfileField(data, value => data.TtsVoiceProfile = value, value => data.TtsVoiceIdentifier = value);
       AddTextField("Option 1", value =>
@@ -652,6 +655,9 @@ namespace MultiplayerInfrastructure.Editor
     private void BuildQuizInlineEditor(ScenarioQuizNode data)
     {
       AddTextAreaField("Question", value => data.Question = value, data.Question);
+      AddTextAreaField("Question TTS Passing", value => data.QuestionTTSPassing = NullIfWhiteSpace(value), data.QuestionTTSPassing);
+      AddTextField("Correct Feedback TTS Passing", value => data.FeedbackCorrectTTSPassing = NullIfWhiteSpace(value), data.FeedbackCorrectTTSPassing);
+      AddTextField("Incorrect Feedback TTS Passing", value => data.FeedbackIncorrectTTSPassing = NullIfWhiteSpace(value), data.FeedbackIncorrectTTSPassing);
       AddToggleField("Play TTS", value => data.PlayTTS = value, data.PlayTTS);
       AddVoiceProfileField(data, value => data.TtsVoiceProfile = value, value => data.TtsVoiceIdentifier = value);
       AddNextIdentifierField(data);
@@ -1051,6 +1057,9 @@ namespace MultiplayerInfrastructure.Editor
       field.RegisterValueChangedCallback(evt => setter(evt.newValue));
       _inlineEditorContainer.Add(field);
     }
+
+    private static string NullIfWhiteSpace(string value) =>
+      string.IsNullOrWhiteSpace(value) ? null : value;
 
     private void AddToggleField(string label, System.Action<bool> setter, bool current)
     {

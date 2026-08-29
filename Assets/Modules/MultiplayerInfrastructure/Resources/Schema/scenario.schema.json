@@ -980,6 +980,9 @@
             "dialogueContent": {
               "type": "string"
             },
+            "dialogueContentTTSPassing": {
+              "type": ["string", "null"]
+            },
             "portraitSpriteIdentifier": {
               "type": [
                 "string",
@@ -1055,6 +1058,9 @@
             "dialogueContent": {
               "type": "string"
             },
+            "dialogueContentTTSPassing": {
+              "type": ["string", "null"]
+            },
             "portraitSpriteIdentifier": {
               "type": ["string", "null"]
             },
@@ -1100,6 +1106,9 @@
             },
             "dialogueContent": {
               "type": "string"
+            },
+            "dialogueContentTTSPassing": {
+              "type": ["string", "null"]
             },
             "portraitSpriteIdentifier": {
               "type": [
@@ -2505,6 +2514,9 @@
             "question": {
               "type": "string"
             },
+            "questionTTSPassing": {
+              "type": ["string", "null"]
+            },
             "options": {
               "type": "array",
               "minItems": 2,
@@ -2535,11 +2547,17 @@
                 "null"
               ]
             },
+            "feedbackCorrectTTSPassing": {
+              "type": ["string", "null"]
+            },
             "feedbackIncorrect": {
               "type": [
                 "string",
                 "null"
               ]
+            },
+            "feedbackIncorrectTTSPassing": {
+              "type": ["string", "null"]
             },
             "playTTS": {
               "type": [

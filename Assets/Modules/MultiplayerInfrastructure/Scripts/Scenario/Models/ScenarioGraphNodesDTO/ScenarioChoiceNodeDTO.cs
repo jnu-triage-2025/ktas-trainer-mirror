@@ -11,6 +11,10 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("dialogueContent")]
     public string DialogueContent { get; set; }
 
+    [JsonPropertyName("dialogueContentTTSPassing")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string DialogueContentTTSPassing { get; set; }
+
     [JsonPropertyName("portraitSpriteIdentifier")]
     public string PortraitSpriteIdentifier { get; set; }
 

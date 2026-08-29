@@ -1341,6 +1341,7 @@
       "nextIdentifier": "DOC_D",
       "speakerName": "의사",
       "dialogueContent": "@t=[nurse_c, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 IV 확보해 주세요.",
+      "dialogueContentTTSPassing": "@t=[nurse_c, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 아이 브이 확보해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
       "playTTS": true,
@@ -1352,6 +1353,7 @@
       "nextIdentifier": "P_B_CARE",
       "speakerName": "의사",
       "dialogueContent": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요.",
+      "dialogueContentTTSPassing": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3리터 주시고 지혈해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
       "playTTS": true,
@@ -1741,6 +1743,7 @@
       "nextIdentifier": "A_GCS_E",
       "speakerName": "@s",
       "dialogueContent": "아니야, 이 환자는 정확하게 답변을 하지 못하고 있어. V로 분류해야해.",
+      "dialogueContentTTSPassing": "아니야, 이 환자는 정확하게 답변을 하지 못하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -1751,6 +1754,7 @@
       "nextIdentifier": "A_GCS_E",
       "speakerName": "@s",
       "dialogueContent": "아니야, 이 환자는 대답도 하고 있어. V로 분류해야해.",
+      "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -1761,6 +1765,7 @@
       "nextIdentifier": "A_GCS_E",
       "speakerName": "@s",
       "dialogueContent": "아니야, 이 환자는 대답도 하고 있어. V로 분류해야해.",
+      "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -1771,6 +1776,7 @@
       "nextIdentifier": "A_GCS_E",
       "speakerName": "@s",
       "dialogueContent": "질문에 대답은 하지만 정확한 답변을 하지 못하고 있으니 V로 분류하자.",
+      "dialogueContentTTSPassing": "질문에 대답은 하지만 정확한 답변을 하지 못하고 있으니 브이로 분류하자.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -1809,6 +1815,7 @@
       "nextIdentifier": "A_GCS_V",
       "speakerName": "@s",
       "dialogueContent": "아니야, 이 환자는 소리에 반응하고 있어. E 3으로 분류해야해.",
+      "dialogueContentTTSPassing": "아니야, 이 환자는 소리에 반응하고 있어. 이 쓰리로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -1819,6 +1826,7 @@
       "nextIdentifier": "A_GCS_V",
       "speakerName": "@s",
       "dialogueContent": "맞아, 이 환자는 소리에 반응하고 있어. E 3으로 분류하자.",
+      "dialogueContentTTSPassing": "맞아, 이 환자는 소리에 반응하고 있어. 이 쓰리로 분류하자.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -1861,6 +1869,7 @@
       "nextIdentifier": "A_GCS_M",
       "speakerName": "@s",
       "dialogueContent": "아니야, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류해야해.",
+      "dialogueContentTTSPassing": "아니야, 이 환자는 혼란스러운 대답을 하고 있어. 브이 포로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -1871,6 +1880,7 @@
       "nextIdentifier": "A_GCS_M",
       "speakerName": "@s",
       "dialogueContent": "맞아, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류하자.",
+      "dialogueContentTTSPassing": "맞아, 이 환자는 혼란스러운 대답을 하고 있어. 브이 포로 분류하자.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -1917,6 +1927,7 @@
       "nextIdentifier": "A_GCS_SUM1",
       "speakerName": "@s",
       "dialogueContent": "아니야, 이 환자는 지시를 따라주었어. M 6으로 분류해야해.",
+      "dialogueContentTTSPassing": "아니야, 이 환자는 지시를 따라주었어. 엠 식스로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -1927,6 +1938,7 @@
       "nextIdentifier": "A_GCS_SUM1",
       "speakerName": "@s",
       "dialogueContent": "맞아, 이 환자는 지시를 따라주었어. M 6으로 분류하자.",
+      "dialogueContentTTSPassing": "맞아, 이 환자는 지시를 따라주었어. 엠 식스로 분류하자.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -1937,6 +1949,7 @@
       "nextIdentifier": "A_GCS_SUM2",
       "speakerName": "@s",
       "dialogueContent": "E는 3, V는 4.. M은 6이었으니까..",
+      "dialogueContentTTSPassing": "이는 쓰리, 브이는 포.. 엠은 식스였으니까..",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 1,
       "playTTS": false
@@ -1947,6 +1960,7 @@
       "nextIdentifier": "A_STRENGTH_TRANSITION",
       "speakerName": "@s",
       "dialogueContent": "E3 / V4 / M6, GCS 13점입니다.",
+      "dialogueContentTTSPassing": "이 쓰리, 브이 포, 엠 식스, 지 씨 에스 13점입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -2181,6 +2195,7 @@
       "nextIdentifier": "A_STRENGTH_WAIT_UPDATE",
       "speakerName": "@s",
       "dialogueContent": "이 환자 GCS 13점, Motor Grade 우측 5, 좌측 3 입니다.",
+      "dialogueContentTTSPassing": "이 환자 지 씨 에스 13점, 모터 그레이드 우측 5, 좌측 3입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -2347,6 +2362,7 @@
       "nextIdentifier": "B_TEMP",
       "speakerName": "@s",
       "dialogueContent": "(혈압은 140/86mmHg였어.)",
+      "dialogueContentTTSPassing": "(혈압은 140에 86 밀리미터 머큐리였어.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -2357,6 +2373,7 @@
       "nextIdentifier": "B_TEMP",
       "speakerName": "@s",
       "dialogueContent": "(혈압 140/86mmHg로 보고하고 기록했다.)",
+      "dialogueContentTTSPassing": "(혈압 140에 86 밀리미터 머큐리로 보고하고 기록했다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -2898,6 +2915,7 @@
       "nextIdentifier": "C_DOC_D",
       "speakerName": "의사",
       "dialogueContent": "@t=[nurse_c, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 IV 확보해 주세요.",
+      "dialogueContentTTSPassing": "@t=[nurse_c, ???]선생님, 이 환자 동공반사 확인하고 생리식염수로 아이 브이 확보해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
       "playTTS": true,
@@ -2909,6 +2927,7 @@
       "nextIdentifier": "P_C_CARE",
       "speakerName": "의사",
       "dialogueContent": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3L 주시고 지혈해 주세요.",
+      "dialogueContentTTSPassing": "@t=[nurse_d, ???]선생님, 산포도가 낮으니 비강 캐뉼라로 3리터 주시고 지혈해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
       "playTTS": true,
@@ -3298,6 +3317,7 @@
       "nextIdentifier": "C_A_GCS_E",
       "speakerName": "@s",
       "dialogueContent": "아니야, 이 환자는 정확하게 답변을 하지 못하고 있어. V로 분류해야해.",
+      "dialogueContentTTSPassing": "아니야, 이 환자는 정확하게 답변을 하지 못하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -3308,6 +3328,7 @@
       "nextIdentifier": "C_A_GCS_E",
       "speakerName": "@s",
       "dialogueContent": "아니야, 이 환자는 대답도 하고 있어. V로 분류해야해.",
+      "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -3318,6 +3339,7 @@
       "nextIdentifier": "C_A_GCS_E",
       "speakerName": "@s",
       "dialogueContent": "아니야, 이 환자는 대답도 하고 있어. V로 분류해야해.",
+      "dialogueContentTTSPassing": "아니야, 이 환자는 대답도 하고 있어. 브이로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -3328,6 +3350,7 @@
       "nextIdentifier": "C_A_GCS_E",
       "speakerName": "@s",
       "dialogueContent": "질문에 대답은 하지만 정확한 답변을 하지 못하고 있으니 V로 분류하자.",
+      "dialogueContentTTSPassing": "질문에 대답은 하지만 정확한 답변을 하지 못하고 있으니 브이로 분류하자.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -3366,6 +3389,7 @@
       "nextIdentifier": "C_A_GCS_V",
       "speakerName": "@s",
       "dialogueContent": "아니야, 이 환자는 소리에 반응하고 있어. E 3으로 분류해야해.",
+      "dialogueContentTTSPassing": "아니야, 이 환자는 소리에 반응하고 있어. 이 쓰리로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -3376,6 +3400,7 @@
       "nextIdentifier": "C_A_GCS_V",
       "speakerName": "@s",
       "dialogueContent": "맞아, 이 환자는 소리에 반응하고 있어. E 3으로 분류하자.",
+      "dialogueContentTTSPassing": "맞아, 이 환자는 소리에 반응하고 있어. 이 쓰리로 분류하자.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -3418,6 +3443,7 @@
       "nextIdentifier": "C_A_GCS_M",
       "speakerName": "@s",
       "dialogueContent": "아니야, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류해야해.",
+      "dialogueContentTTSPassing": "아니야, 이 환자는 혼란스러운 대답을 하고 있어. 브이 포로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -3428,6 +3454,7 @@
       "nextIdentifier": "C_A_GCS_M",
       "speakerName": "@s",
       "dialogueContent": "맞아, 이 환자는 혼란스러운 대답을 하고 있어. V 4로 분류하자.",
+      "dialogueContentTTSPassing": "맞아, 이 환자는 혼란스러운 대답을 하고 있어. 브이 포로 분류하자.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -3474,6 +3501,7 @@
       "nextIdentifier": "C_A_GCS_SUM1",
       "speakerName": "@s",
       "dialogueContent": "아니야, 이 환자는 지시를 따라주었어. M 6으로 분류해야해.",
+      "dialogueContentTTSPassing": "아니야, 이 환자는 지시를 따라주었어. 엠 식스로 분류해야 해.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -3484,6 +3512,7 @@
       "nextIdentifier": "C_A_GCS_SUM1",
       "speakerName": "@s",
       "dialogueContent": "맞아, 이 환자는 지시를 따라주었어. M 6으로 분류하자.",
+      "dialogueContentTTSPassing": "맞아, 이 환자는 지시를 따라주었어. 엠 식스로 분류하자.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -3494,6 +3523,7 @@
       "nextIdentifier": "C_A_GCS_SUM2",
       "speakerName": "@s",
       "dialogueContent": "E는 3, V는 4.. M은 6이었으니까..",
+      "dialogueContentTTSPassing": "이는 쓰리, 브이는 포.. 엠은 식스이었으니까..",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 1,
       "playTTS": false
@@ -3504,6 +3534,7 @@
       "nextIdentifier": "C_A_STRENGTH_TRANSITION",
       "speakerName": "@s",
       "dialogueContent": "E3 / V4 / M6, GCS 13점입니다.",
+      "dialogueContentTTSPassing": "이 쓰리, 브이 포, 엠 식스, 지 씨 에스 13점입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -3738,6 +3769,7 @@
       "nextIdentifier": "C_A_STRENGTH_WAIT_UPDATE",
       "speakerName": "@s",
       "dialogueContent": "이 환자 GCS 13점, Motor Grade 좌측 5, 우측 3 입니다.",
+      "dialogueContentTTSPassing": "이 환자 지 씨 에스 13점, 모터 그레이드 좌측 5, 우측 3입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -3904,6 +3936,7 @@
       "nextIdentifier": "C_B_TEMP",
       "speakerName": "@s",
       "dialogueContent": "(혈압은 140/86mmHg였어.)",
+      "dialogueContentTTSPassing": "(혈압은 140에 86 밀리미터 머큐리였어.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -3914,6 +3947,7 @@
       "nextIdentifier": "C_B_TEMP",
       "speakerName": "@s",
       "dialogueContent": "(혈압 140/86mmHg로 보고하고 기록했다.)",
+      "dialogueContentTTSPassing": "(혈압 140에 86 밀리미터 머큐리로 보고하고 기록했다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": false
@@ -4532,6 +4566,7 @@
       "nextIdentifier": "CT_DOCTOR_C_SUMMARY",
       "speakerName": "의사",
       "dialogueContent": "남성 환자는 E3, V4, M6으로 GCS 13점입니다. 근력은 우측 5점, 좌측 3점이며, 호흡수는 분당 24회, 맥박은 분당 120회, 혈압은 140/86mmHg, 체온은 37.8도, 산소포화도는 93%입니다.",
+      "dialogueContentTTSPassing": "남성 환자는 이 쓰리, 브이 포, 엠 식스로 지 씨 에스 13점입니다. 근력은 우측 5점, 좌측 3점이며, 호흡수는 분당 24회, 맥박은 분당 120회, 혈압은 140에 86 밀리미터 머큐리, 체온은 37.8도, 산소포화도는 93퍼센트입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": true,
@@ -4543,6 +4578,7 @@
       "nextIdentifier": "CT_DOCTOR_ORDER",
       "speakerName": "의사",
       "dialogueContent": "여성 환자는 E3 / V4 / M6, GCS 13점, 근력 좌측 5점, 우측 3점, 호흡수 24, 맥박 120, 혈압 140/86, 체온 37.8, 산소포화도 93%...",
+      "dialogueContentTTSPassing": "여성 환자는 이 쓰리, 브이 포, 엠 식스, 지 씨 에스 13점, 근력 좌측 5점, 우측 3점, 호흡수 24, 맥박 120, 혈압 140에 86, 체온 37.8, 산소포화도 93퍼센트...",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": true,
@@ -4554,6 +4590,7 @@
       "nextIdentifier": "CT_DOCTOR_MARK_HIDE",
       "speakerName": "의사",
       "dialogueContent": "두 분 다 뇌손상이 의심되니 브레인 CT 찍어봅시다. 환자들을 CT실로 옮겨주세요.",
+      "dialogueContentTTSPassing": "두 분 다 뇌손상이 의심되니 브레인 씨티 찍어봅시다. 환자들을 씨티실로 옮겨주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": true,

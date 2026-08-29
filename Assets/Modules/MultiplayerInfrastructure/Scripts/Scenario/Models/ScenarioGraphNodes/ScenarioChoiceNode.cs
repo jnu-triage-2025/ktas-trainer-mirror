@@ -10,6 +10,7 @@ namespace MultiplayerInfrastructure.Scenario
 
     public string SpeakerName { get; set; }
     public string DialogueContent { get; set; }
+    public string DialogueContentTTSPassing { get; set; }
     public string PortraitSpriteIdentifier { get; set; }
 
     public List<ScenarioChoiceOption> Options { get; set; }

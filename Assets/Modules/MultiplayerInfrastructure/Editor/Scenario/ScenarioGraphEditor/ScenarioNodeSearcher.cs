@@ -74,6 +74,7 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioDialogueNode d:
           Add("speakerName", d.SpeakerName);
           Add("dialogueContent", d.DialogueContent);
+          Add("dialogueContentTTSPassing", d.DialogueContentTTSPassing);
           Add("portraitSpriteIdentifier", d.PortraitSpriteIdentifier);
           Add("ttsVoiceIdentifier", d.TtsVoiceIdentifier);
           break;
@@ -81,12 +82,14 @@ namespace MultiplayerInfrastructure.Editor
         case ScenarioDisinteractableDialogueNode d:
           Add("speakerName", d.SpeakerName);
           Add("dialogueContent", d.DialogueContent);
+          Add("dialogueContentTTSPassing", d.DialogueContentTTSPassing);
           Add("portraitSpriteIdentifier", d.PortraitSpriteIdentifier);
           break;
 
         case ScenarioChoiceNode c:
           Add("speakerName", c.SpeakerName);
           Add("dialogueContent", c.DialogueContent);
+          Add("dialogueContentTTSPassing", c.DialogueContentTTSPassing);
           Add("portraitSpriteIdentifier", c.PortraitSpriteIdentifier);
           Add("ttsVoiceIdentifier", c.TtsVoiceIdentifier);
           if (c.Options != null)
@@ -267,10 +270,13 @@ namespace MultiplayerInfrastructure.Editor
 
         case ScenarioQuizNode quiz:
           Add("question", quiz.Question);
+          Add("questionTTSPassing", quiz.QuestionTTSPassing);
           Add("onCorrectNextIdentifier", quiz.OnCorrectNextIdentifier);
           Add("onIncorrectNextIdentifier", quiz.OnIncorrectNextIdentifier);
           Add("feedbackCorrect", quiz.FeedbackCorrect);
+          Add("feedbackCorrectTTSPassing", quiz.FeedbackCorrectTTSPassing);
           Add("feedbackIncorrect", quiz.FeedbackIncorrect);
+          Add("feedbackIncorrectTTSPassing", quiz.FeedbackIncorrectTTSPassing);
           Add("ttsVoiceIdentifier", quiz.TtsVoiceIdentifier);
           if (quiz.Options != null)
             for (int i = 0; i < quiz.Options.Count; i++)

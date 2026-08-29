@@ -8,6 +8,7 @@
 
     public string SpeakerName { get; set; }
     public string DialogueContent { get; set; }
+    public string DialogueContentTTSPassing { get; set; }
     public string PortraitSpriteIdentifier { get; set; }
     public ScenarioTimeValue FadeInDuration { get; set; } = ScenarioTimeValue.Seconds(0.5d);
     public ScenarioTimeValue DisplayDuration { get; set; } = ScenarioTimeValue.Seconds(1.5d);

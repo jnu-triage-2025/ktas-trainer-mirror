@@ -17,8 +17,22 @@ namespace TriageTrainer.Scenario
       public PlayerController Player;
       public PatientController Patient;
       public Transform Anchor;
+      public Vector3 EntryPosition;
+      public Quaternion EntryRotation;
       public bool DebugEscaped;
       public Vector3 DebugEscapePosition;
+    }
+
+    private readonly struct AnimationRootPose
+    {
+      public readonly Vector3 LocalPosition;
+      public readonly Quaternion LocalRotation;
+
+      public AnimationRootPose(Transform target)
+      {
+        LocalPosition = target.localPosition;
+        LocalRotation = target.localRotation;
+      }
     }
 
     private const string PatientACprRoundOneNodeIdentifier = "E028";
@@ -30,6 +44,7 @@ namespace TriageTrainer.Scenario
     private readonly Dictionary<Animator, PlayableGraph> _patientACprAnimationGraphs = new();
     private readonly Dictionary<Animator, Transform> _patientACprAnimationOffsetRoots = new();
     private readonly Dictionary<Animator, Vector3> _patientACprAnimationOffsetBasePositions = new();
+    private readonly Dictionary<Animator, AnimationRootPose> _patientACprAnimationBaseRootPoses = new();
     private readonly Dictionary<PlayerController, PatientACprPerformerState> _patientACprPerformers = new();
 
     private void PlayPatientAChestCompressionAnimation()
@@ -139,6 +154,7 @@ namespace TriageTrainer.Scenario
       _patientACprAnimationGraphs.Clear();
       _patientACprAnimationOffsetRoots.Clear();
       _patientACprAnimationOffsetBasePositions.Clear();
+      _patientACprAnimationBaseRootPoses.Clear();
       ReleasePatientACprPerformers();
     }
 
@@ -154,7 +170,9 @@ namespace TriageTrainer.Scenario
         {
           Player = player,
           Patient = patient,
-          Anchor = anchorObject.transform
+          Anchor = anchorObject.transform,
+          EntryPosition = player.transform.position,
+          EntryRotation = player.transform.rotation
         };
         _patientACprPerformers[player] = state;
       }
@@ -242,16 +260,15 @@ namespace TriageTrainer.Scenario
         PatientACprPerformerState state = pair.Value;
         if (state?.Player != null)
         {
-          // 디버그 Escape는 시스템상 CPR을 끝내지 않는다. 따라서 정상 종료가 도착하면
-          // 이동 중인 현재 위치가 아니라, 디버그로 위치 고정을 해제했던 장소로 먼저 복귀시킨다.
-          if (state.DebugEscaped && state.Anchor != null)
-          {
-            // 디버그 이탈 중 다른 이동 시스템이 앵커를 획득했을 수 있으므로 CPR 앵커를
-            // 재설정하지 않는다. CharacterController만 안전하게 우회하여 저장 위치로 복귀한다.
-            state.Player.MoveToPositionPreservingForcedFollowAnchor(state.DebugEscapePosition);
-          }
-
           state.Player.ClearForcedFollowAnchor(state.Anchor);
+          // 정상 종료 시 침대 중앙에 그대로 두면 플레이어가 환자·침대와 겹친다. CPR 진입 전
+          // 위치로 복귀시켜 X/Z 퇴장 위치를 확보한다. 디버그 Escape는 기존 요구대로 해제 지점으로 복귀한다.
+          Vector3 releasePosition = state.DebugEscaped
+            ? state.DebugEscapePosition
+            : state.EntryPosition;
+          state.Player.MoveToPositionPreservingForcedFollowAnchor(releasePosition);
+          if (!state.DebugEscaped)
+            state.Player.transform.rotation = state.EntryRotation;
           state.Player.SetMovementSuppressed(state.Anchor, false);
           state.Player.SetRidableExitSuppressed(state.Anchor, false);
         }
@@ -317,6 +334,8 @@ namespace TriageTrainer.Scenario
         }
       }
 
+      _patientACprAnimationBaseRootPoses[animator] = new AnimationRootPose(animator.transform);
+
       var graph = PlayableGraph.Create($"patient_a_critical:{clip.name}:{animator.GetInstanceID()}");
       graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
       var playable = AnimationClipPlayable.Create(graph, clip);
@@ -352,6 +371,12 @@ namespace TriageTrainer.Scenario
     private void RestoreAnimationPositionOffset(Animator animator)
     {
       if (animator != null
+          && _patientACprAnimationBaseRootPoses.TryGetValue(animator, out var rootPose))
+      {
+        animator.transform.SetLocalPositionAndRotation(rootPose.LocalPosition, rootPose.LocalRotation);
+      }
+
+      if (animator != null
           && _patientACprAnimationOffsetRoots.TryGetValue(animator, out var offsetRoot)
           && offsetRoot != null
           && _patientACprAnimationOffsetBasePositions.TryGetValue(animator, out var basePosition))
@@ -359,6 +384,7 @@ namespace TriageTrainer.Scenario
 
       _patientACprAnimationOffsetRoots.Remove(animator);
       _patientACprAnimationOffsetBasePositions.Remove(animator);
+      _patientACprAnimationBaseRootPoses.Remove(animator);
     }
   }
 }

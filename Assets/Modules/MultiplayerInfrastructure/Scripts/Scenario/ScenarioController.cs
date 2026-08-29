@@ -1712,6 +1712,11 @@ namespace MultiplayerInfrastructure.Scenario
       return ScenarioTextResolver.Resolve(value, clientId);
     }
 
+    private string ResolveTTSText(string content, string ttsPassing, int? explicitClientId = null)
+    {
+      return ResolveScenarioText(string.IsNullOrWhiteSpace(ttsPassing) ? content : ttsPassing, explicitClientId);
+    }
+
     private void RecordChoiceAssessment(ScenarioChoiceNode node, int selectedIndex)
     {
       if (node == null || string.IsNullOrWhiteSpace(node.AssessmentIdentifier))
@@ -2200,7 +2205,7 @@ namespace MultiplayerInfrastructure.Scenario
       string content = ResolveScenarioText(node.DialogueContent);
       _uiController.DisplayDialogue(speaker, content, node.PortraitSpriteIdentifier, node.InteractionRequired);
       if (node.PlayTTS)
-        PlayInlineTTS(node.Identifier, content, node.TtsVoiceIdentifier);
+        PlayInlineTTS(node.Identifier, ResolveTTSText(node.DialogueContent, node.DialogueContentTTSPassing), node.TtsVoiceIdentifier);
     }
 
     private IEnumerator DialogueAutoAdvanceRoutine(float seconds, bool interactionRequired)
@@ -2248,7 +2253,7 @@ namespace MultiplayerInfrastructure.Scenario
           content,
           node.PortraitSpriteIdentifier);
         if (node.PlayTTS)
-          PlayInlineTTS(node.Identifier, content, node.TtsVoiceIdentifier);
+          PlayInlineTTS(node.Identifier, ResolveTTSText(node.DialogueContent, node.DialogueContentTTSPassing), node.TtsVoiceIdentifier);
         yield return FadeDisinteractableDialogue(0f, 1f, fadeInSeconds);
       }
       else
@@ -2342,7 +2347,7 @@ namespace MultiplayerInfrastructure.Scenario
           node.Options);
 
         if (node.PlayTTS)
-          PlayInlineTTS(node.Identifier, ResolveScenarioText(node.DialogueContent), node.TtsVoiceIdentifier);
+          PlayInlineTTS(node.Identifier, ResolveTTSText(node.DialogueContent, node.DialogueContentTTSPassing), node.TtsVoiceIdentifier);
       }
 
       _activeOptions = new List<ScenarioChoiceOption>(node.Options);
@@ -2732,7 +2737,7 @@ namespace MultiplayerInfrastructure.Scenario
         _uiController.DisplayChoice("Quiz", node.Question ?? string.Empty, null, options);
 
         if (node.PlayTTS)
-          PlayInlineTTS(node.Identifier, node.Question, node.TtsVoiceIdentifier);
+          PlayInlineTTS(node.Identifier, ResolveTTSText(node.Question, node.QuestionTTSPassing), node.TtsVoiceIdentifier);
       }
     }
 
@@ -2752,7 +2757,8 @@ namespace MultiplayerInfrastructure.Scenario
       if (node.PlayTTS)
       {
         string feedbackNodeId = node.Identifier + (isCorrect ? "_feedbackCorrect" : "_feedbackIncorrect");
-        PlayInlineTTS(feedbackNodeId, feedback, node.TtsVoiceIdentifier);
+        string feedbackTTSPassing = isCorrect ? node.FeedbackCorrectTTSPassing : node.FeedbackIncorrectTTSPassing;
+        PlayInlineTTS(feedbackNodeId, ResolveTTSText(feedback, feedbackTTSPassing), node.TtsVoiceIdentifier);
       }
     }
 
@@ -3743,11 +3749,11 @@ namespace MultiplayerInfrastructure.Scenario
         switch (node)
         {
           case ScenarioDialogueNode dialogue when dialogue.PlayTTS:
-            text = ResolveScenarioText(dialogue.DialogueContent);
+            text = ResolveTTSText(dialogue.DialogueContent, dialogue.DialogueContentTTSPassing);
             voiceIdentifier = dialogue.TtsVoiceIdentifier;
             break;
           case ScenarioDisinteractableDialogueNode dialogue when dialogue.PlayTTS:
-            text = ResolveScenarioText(dialogue.DialogueContent);
+            text = ResolveTTSText(dialogue.DialogueContent, dialogue.DialogueContentTTSPassing);
             voiceIdentifier = dialogue.TtsVoiceIdentifier;
             break;
           default:
@@ -5759,7 +5765,7 @@ namespace MultiplayerInfrastructure.Scenario
             node.PortraitSpriteIdentifier,
             node.InteractionRequired);
           if (node.PlayTTS)
-            PlayInlineTTS(node.Identifier, dialogueContent, node.TtsVoiceIdentifier);
+            PlayInlineTTS(node.Identifier, ResolveTTSText(node.DialogueContent, node.DialogueContentTTSPassing, context.OwnerClientId), node.TtsVoiceIdentifier);
         }
 
         _branchDialogueAdvanceInterceptors[dialogueOwnerClientId] = advanceBranchDialogue;

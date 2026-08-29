@@ -215,10 +215,11 @@ namespace MultiplayerInfrastructure.Editor
       data.SpeakerName = EditorGUILayout.TextField("Speaker", data.SpeakerName);
       EditorGUILayout.PrefixLabel("Dialogue");
       data.DialogueContent = EditorGUILayout.TextArea(data.DialogueContent, GUILayout.Height(60));
+      data.DialogueContentTTSPassing = DrawOptionalTTSPassing(data.DialogueContentTTSPassing);
       data.PortraitSpriteIdentifier = EditorGUILayout.TextField("Portrait Sprite", data.PortraitSpriteIdentifier);
       data.PlayTTS = EditorGUILayout.Toggle("Play TTS", data.PlayTTS);
       data.TtsVoiceProfile = DrawTtsVoiceProfile(data.TtsVoiceProfile);
-      DrawTTSBakeHint(data.PlayTTS, data.DialogueContent);
+      DrawTTSBakeHint(data.PlayTTS, SelectTTSText(data.DialogueContent, data.DialogueContentTTSPassing));
     }
 
     private void DrawDisinteractableDialogueFields(ScenarioDisinteractableDialogueNode data)
@@ -226,12 +227,14 @@ namespace MultiplayerInfrastructure.Editor
       data.SpeakerName = EditorGUILayout.TextField("Speaker", data.SpeakerName);
       EditorGUILayout.PrefixLabel("Dialogue");
       data.DialogueContent = EditorGUILayout.TextArea(data.DialogueContent, GUILayout.Height(60));
+      data.DialogueContentTTSPassing = DrawOptionalTTSPassing(data.DialogueContentTTSPassing);
       data.PortraitSpriteIdentifier = EditorGUILayout.TextField("Portrait Sprite", data.PortraitSpriteIdentifier);
       data.FadeInDuration = DrawTimeValue("Fade In", data.FadeInDuration);
       data.DisplayDuration = DrawTimeValue("Display", data.DisplayDuration);
       data.FadeOutDuration = DrawTimeValue("Fade Out", data.FadeOutDuration);
       data.PlayTTS = EditorGUILayout.Toggle("Play TTS", data.PlayTTS);
       data.TtsVoiceProfile = DrawTtsVoiceProfile(data.TtsVoiceProfile);
+      DrawTTSBakeHint(data.PlayTTS, SelectTTSText(data.DialogueContent, data.DialogueContentTTSPassing));
       EditorGUILayout.LabelField("Next Node", data.NextIdentifier ?? "(미연결)");
     }
 
@@ -291,15 +294,26 @@ namespace MultiplayerInfrastructure.Editor
       }
     }
 
+    private static string DrawOptionalTTSPassing(string value)
+    {
+      EditorGUILayout.PrefixLabel("TTS Passing (optional)");
+      string edited = EditorGUILayout.TextArea(value ?? string.Empty, GUILayout.Height(44));
+      return string.IsNullOrWhiteSpace(edited) ? null : edited;
+    }
+
+    private static string SelectTTSText(string content, string ttsPassing) =>
+      string.IsNullOrWhiteSpace(ttsPassing) ? content : ttsPassing;
+
     private void DrawChoiceFields(ScenarioChoiceNode data)
     {
       data.SpeakerName = EditorGUILayout.TextField("Speaker", data.SpeakerName);
       EditorGUILayout.PrefixLabel("Dialogue");
       data.DialogueContent = EditorGUILayout.TextArea(data.DialogueContent, GUILayout.Height(60));
+      data.DialogueContentTTSPassing = DrawOptionalTTSPassing(data.DialogueContentTTSPassing);
       data.PortraitSpriteIdentifier = EditorGUILayout.TextField("Portrait Sprite", data.PortraitSpriteIdentifier);
       data.PlayTTS = EditorGUILayout.Toggle("Play TTS", data.PlayTTS);
       data.TtsVoiceProfile = DrawTtsVoiceProfile(data.TtsVoiceProfile);
-      DrawTTSBakeHint(data.PlayTTS, data.DialogueContent);
+      DrawTTSBakeHint(data.PlayTTS, SelectTTSText(data.DialogueContent, data.DialogueContentTTSPassing));
 
       EditorGUILayout.Space();
       EditorGUILayout.LabelField("Options", EditorStyles.boldLabel);
@@ -1235,6 +1249,7 @@ namespace MultiplayerInfrastructure.Editor
     private void DrawQuizFields(ScenarioQuizNode data)
     {
       data.Question = EditorGUILayout.TextField("Question", data.Question);
+      data.QuestionTTSPassing = EditorGUILayout.TextField("Question TTS Passing", data.QuestionTTSPassing);
 
       if (data.Options == null)
       {
@@ -1274,7 +1289,9 @@ namespace MultiplayerInfrastructure.Editor
 
       data.CorrectIndex = EditorGUILayout.IntField("Correct Index", data.CorrectIndex);
       data.FeedbackCorrect = EditorGUILayout.TextField("Feedback Correct", data.FeedbackCorrect);
+      data.FeedbackCorrectTTSPassing = EditorGUILayout.TextField("Feedback Correct TTS Passing", data.FeedbackCorrectTTSPassing);
       data.FeedbackIncorrect = EditorGUILayout.TextField("Feedback Incorrect", data.FeedbackIncorrect);
+      data.FeedbackIncorrectTTSPassing = EditorGUILayout.TextField("Feedback Incorrect TTS Passing", data.FeedbackIncorrectTTSPassing);
       data.PlayTTS = EditorGUILayout.Toggle("Play TTS", data.PlayTTS);
       data.TtsVoiceProfile = DrawTtsVoiceProfile(data.TtsVoiceProfile);
       DrawTTSBakeHint(data.PlayTTS, data.Question);

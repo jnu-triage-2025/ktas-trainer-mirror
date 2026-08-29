@@ -9,12 +9,15 @@ namespace MultiplayerInfrastructure.Scenario
     public string NextIdentifier { get; set; }
 
     public string Question { get; set; }
+    public string QuestionTTSPassing { get; set; }
     public IReadOnlyList<string> Options { get; set; }
     public int CorrectIndex { get; set; }
     public string OnCorrectNextIdentifier { get; set; }
     public string OnIncorrectNextIdentifier { get; set; }
     public string FeedbackCorrect { get; set; }
+    public string FeedbackCorrectTTSPassing { get; set; }
     public string FeedbackIncorrect { get; set; }
+    public string FeedbackIncorrectTTSPassing { get; set; }
 
     /// <summary>
     /// true이면 <see cref="Question"/> (및 피드백 텍스트)를 표시할 때 TTS로 함께 재생한다.

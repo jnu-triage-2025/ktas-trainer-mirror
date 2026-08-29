@@ -182,6 +182,84 @@ namespace MultiplayerInfrastructure.Tests.Scenario
     }
 
     [Test]
+    public void TtsPassingFieldsLoadAndRoundTripWithoutChangingDisplayedContent()
+    {
+      const string sourceJson = @"{
+        ""identifier"": ""tts-passing-round-trip"",
+        ""defaultEntrypoint"": ""dialogue"",
+        ""nodes"": {
+          ""dialogue"": {
+            ""identifier"": ""dialogue"",
+            ""nodeType"": ""Dialogue"",
+            ""speakerName"": ""의사"",
+            ""dialogueContent"": ""FAST 검사 결과입니다."",
+            ""dialogueContentTTSPassing"": ""패스트 검사 결과입니다."",
+            ""playTTS"": true,
+            ""nextIdentifier"": ""disinteractable""
+          },
+          ""disinteractable"": {
+            ""identifier"": ""disinteractable"",
+            ""nodeType"": ""DisinteractableDialogue"",
+            ""speakerName"": ""의사"",
+            ""dialogueContent"": ""IV를 확보합니다."",
+            ""dialogueContentTTSPassing"": ""아이 브이를 확보합니다."",
+            ""playTTS"": true,
+            ""nextIdentifier"": ""choice""
+          },
+          ""choice"": {
+            ""identifier"": ""choice"",
+            ""nodeType"": ""Choice"",
+            ""speakerName"": ""의사"",
+            ""dialogueContent"": ""CT를 촬영할까요?"",
+            ""dialogueContentTTSPassing"": ""씨 티를 촬영할까요?"",
+            ""options"": [{
+              ""displayText"": ""예"",
+              ""displayIconIdentifier"": null,
+              ""displayColor"": { ""r"": 1, ""g"": 1, ""b"": 1, ""a"": 1 },
+              ""nextNodeIdentifier"": ""quiz""
+            }],
+            ""playTTS"": true,
+            ""nextIdentifier"": null
+          },
+          ""quiz"": {
+            ""identifier"": ""quiz"",
+            ""nodeType"": ""Quiz"",
+            ""question"": ""ABCDE란?"",
+            ""questionTTSPassing"": ""에이 비 씨 디 이란?"",
+            ""options"": [""A"", ""B""],
+            ""correctIndex"": 0,
+            ""onCorrectNextIdentifier"": null,
+            ""feedbackCorrect"": ""FAST를 시행합니다."",
+            ""feedbackCorrectTTSPassing"": ""패스트를 시행합니다."",
+            ""feedbackIncorrect"": ""CPR이 필요합니다."",
+            ""feedbackIncorrectTTSPassing"": ""씨 피 알이 필요합니다."",
+            ""playTTS"": true
+          }
+        }
+      }";
+
+      var graph = ScenarioGraphLoader.LoadFromJson(sourceJson, validateWithSchema: true);
+      var dialogue = (ScenarioDialogueNode)graph.Nodes["dialogue"];
+      var disinteractable = (ScenarioDisinteractableDialogueNode)graph.Nodes["disinteractable"];
+      var choice = (ScenarioChoiceNode)graph.Nodes["choice"];
+      var quiz = (ScenarioQuizNode)graph.Nodes["quiz"];
+
+      Assert.That(dialogue.DialogueContent, Is.EqualTo("FAST 검사 결과입니다."));
+      Assert.That(dialogue.DialogueContentTTSPassing, Is.EqualTo("패스트 검사 결과입니다."));
+      Assert.That(disinteractable.DialogueContentTTSPassing, Is.EqualTo("아이 브이를 확보합니다."));
+      Assert.That(choice.DialogueContentTTSPassing, Is.EqualTo("씨 티를 촬영할까요?"));
+      Assert.That(quiz.QuestionTTSPassing, Is.EqualTo("에이 비 씨 디 이란?"));
+      Assert.That(quiz.FeedbackCorrectTTSPassing, Is.EqualTo("패스트를 시행합니다."));
+      Assert.That(quiz.FeedbackIncorrectTTSPassing, Is.EqualTo("씨 피 알이 필요합니다."));
+
+      string savedJson = ScenarioGraphLoader.SaveToJson(graph, validateWithSchema: true);
+      Assert.That(savedJson, Does.Contain("dialogueContentTTSPassing"));
+      Assert.That(savedJson, Does.Contain("questionTTSPassing"));
+      Assert.That(savedJson, Does.Contain("feedbackCorrectTTSPassing"));
+      Assert.That(savedJson, Does.Contain("feedbackIncorrectTTSPassing"));
+    }
+
+    [Test]
     public void ScenarioActingNpcsSaveAndRoundTrip()
     {
       var graph = new ScenarioGraph

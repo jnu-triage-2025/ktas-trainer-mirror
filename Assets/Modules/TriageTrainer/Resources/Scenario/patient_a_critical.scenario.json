@@ -2125,6 +2125,7 @@
     "D008": {
       "speakerName": "@s",
       "dialogueContent": "AVPU 중 P이며, GCS는 E2 / V2 / M4로 총 8점입니다.",
+      "dialogueContentTTSPassing": "에이 브이 피 유 중 피이며, 지 씨 에스는 이 투, 브이 투, 엠 포로 총 8점입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2155,6 +2156,7 @@
     "D010": {
       "speakerName": "의사",
       "dialogueContent": "정리하면 GCS 8점, 혈압 70/40mmHg, 맥박 분당 140회로 빠르고 약하며, 호흡수 분당 8회, 체온 35.9도, 산소포화도 82%이고, 경추 고정, 구강 흡인 끝났고, 삽관 준비 된거네요.",
+      "dialogueContentTTSPassing": "정리하면 지 씨 에스 8점, 혈압 70에 40 밀리미터 머큐리, 맥박 분당 140회로 빠르고 약하며, 호흡수 분당 8회, 체온 35.9도, 산소포화도 82퍼센트이고, 경추 고정, 구강 흡인 끝났고, 삽관 준비 된 거네요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2170,6 +2172,7 @@
     "D011": {
       "speakerName": "의사",
       "dialogueContent": "기도 확보를 위해 intubation을 시행하겠습니다. @t=[nurse_b, ???]선생님은 보조해주세요.",
+      "dialogueContentTTSPassing": "기도 확보를 위해 인튜베이션을 시행하겠습니다. @t=[nurse_b, ???]선생님은 보조해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2200,6 +2203,7 @@
     "D013": {
       "speakerName": "의사",
       "dialogueContent": "@t=[nurse_d, ???]선생님은 수액 투여를 위해 양팔에 IV 라인을 확보해주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션을 연결하겠습니다.",
+      "dialogueContentTTSPassing": "@t=[nurse_d, ???]선생님은 수액 투여를 위해 양팔에 아이 브이 라인을 확보해 주세요. 혈관을 보고 18게이지로 잡고, 수액은 생리식염수와 플라즈마 솔루션을 연결하겠습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2215,6 +2219,7 @@
     "D014": {
       "speakerName": "@s",
       "dialogueContent": "삽입된 깊이 23cm, 기관내관 고정되었습니다.",
+      "dialogueContentTTSPassing": "삽입된 깊이 23센티미터, 기관내관 고정되었습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2230,6 +2235,7 @@
     "D015": {
       "speakerName": "의사",
       "dialogueContent": "삽관이 끝났고, 자발호흡이 있으니 @t=[nurse_a, ???]선생님이 T-piece를 연결하고 산소 10L를 공급하며 산소포화도를 모니터링해주세요.",
+      "dialogueContentTTSPassing": "삽관이 끝났고, 자발호흡이 있으니 @t=[nurse_a, ???]선생님이 티 피스를 연결하고 산소 10리터를 공급하며 산소포화도를 모니터링해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2290,6 +2296,7 @@
     "D019": {
       "speakerName": "의사",
       "dialogueContent": "그래도 혈압이 잡히지 않네요. C-line 잡아서 수액을 빠르게 투여하겠습니다. @t=[nurse_d, @s]선생님, C-line set 건네주세요.",
+      "dialogueContentTTSPassing": "그래도 혈압이 잡히지 않네요. 씨 라인 잡아서 수액을 빠르게 투여하겠습니다. @t=[nurse_d, @s]선생님, 씨 라인 세트 건네주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2305,6 +2312,7 @@
     "D020": {
       "speakerName": "의사",
       "dialogueContent": "@t=[nurse_d, @s]선생님, Level 1 rapid infuser에 플라즈마 솔루션과 혈액백 연결시켜주세요.",
+      "dialogueContentTTSPassing": "@t=[nurse_d, @s]선생님, 레벨 원 래피드 인퓨저에 플라즈마 솔루션과 혈액백 연결시켜 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2320,6 +2328,7 @@
     "D021": {
       "speakerName": "@s",
       "dialogueContent": "Level 1에 플라즈마 솔루션과 혈액백을 연결하고, 환자의 C-line에도 연결했습니다.",
+      "dialogueContentTTSPassing": "레벨 원에 플라즈마 솔루션과 혈액백을 연결하고, 환자의 씨 라인에도 연결했습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2380,6 +2389,7 @@
     "D025": {
       "speakerName": "의사",
       "dialogueContent": "PEA입니다. CPR 하겠습니다. 제가 팀 리더를 맡겠습니다. @t=[nurse_a, ???]선생님은 앰부백 짜주시고, @t=[nurse_b, ???]선생님은 가슴압박 해주세요. @t=[nurse_c, ???]선생님은 제세동기 연결해주시고, @t=[nurse_d, ???]선생님은 C-line으로 에피네프린 1mg 투여해주세요.",
+      "dialogueContentTTSPassing": "피 이 에이입니다. 씨 피 알 하겠습니다. 제가 팀 리더를 맡겠습니다. @t=[nurse_a, ???]선생님은 앰부백 짜 주시고, @t=[nurse_b, ???]선생님은 가슴압박 해 주세요. @t=[nurse_c, ???]선생님은 제세동기 연결해 주시고, @t=[nurse_d, ???]선생님은 씨 라인으로 에피네프린 1밀리그램 투여해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2405,11 +2415,12 @@
       },
       "identifier": "D026",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L007"
+      "nextIdentifier": "C016"
     },
     "D027": {
       "speakerName": "@s",
       "dialogueContent": "에피네프린 1mg 투여했습니다.",
+      "dialogueContentTTSPassing": "에피네프린 1밀리그램 투여했습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2425,6 +2436,7 @@
     "D027_1": {
       "speakerName": "@s",
       "dialogueContent": "생리식염수 20cc 투여했습니다.",
+      "dialogueContentTTSPassing": "생리식염수 20씨씨 투여했습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2435,7 +2447,7 @@
       },
       "identifier": "D027_1",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L010"
+      "nextIdentifier": "C019"
     },
     "D028": {
       "speakerName": "의사",
@@ -2455,6 +2467,7 @@
     "D029": {
       "speakerName": "의사",
       "dialogueContent": "Asystole입니다. 가슴압박과 앰부배깅 하시던 @t=[nurse_a, ???]선생님, @t=[nurse_b, ???]선생님끼리 교대 후 계속 가슴압박 해주세요. @t=[nurse_c, ???]선생님, @t=[nurse_d, ???]선생님께서도 교대해서 역할을 수행해 주세요.",
+      "dialogueContentTTSPassing": "에이시스톨입니다. 가슴압박과 앰부배깅 하시던 @t=[nurse_a, ???]선생님, @t=[nurse_b, ???]선생님끼리 교대 후 계속 가슴압박 해 주세요. @t=[nurse_c, ???]선생님, @t=[nurse_d, ???]선생님께서도 교대해서 역할을 수행해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2470,6 +2483,7 @@
     "D030": {
       "speakerName": "의사",
       "dialogueContent": "에피네프린 첫 투여 시점부터 4분 지났습니다. @t=[nurse_c, @s]선생님, 바로 에피네프린과 생리식염수 20cc 투여해주세요.",
+      "dialogueContentTTSPassing": "에피네프린 첫 투여 시점부터 4분 지났습니다. @t=[nurse_c, @s]선생님, 바로 에피네프린과 생리식염수 20씨씨 투여해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2485,6 +2499,7 @@
     "D031": {
       "speakerName": "@s",
       "dialogueContent": "에피네프린 1mg 투여했습니다.",
+      "dialogueContentTTSPassing": "에피네프린 1밀리그램 투여했습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2500,6 +2515,7 @@
     "D031_1": {
       "speakerName": "@s",
       "dialogueContent": "생리식염수 20cc 투여했습니다.",
+      "dialogueContentTTSPassing": "생리식염수 20씨씨 투여했습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4.0,
       "interactionRequired": null,
@@ -2510,7 +2526,7 @@
       },
       "identifier": "D031_1",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L018"
+      "nextIdentifier": "C027"
     },
     "D032": {
       "speakerName": "@s",
@@ -2525,7 +2541,7 @@
       },
       "identifier": "D032",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L020"
+      "nextIdentifier": "C029"
     },
     "D033": {
       "speakerName": "의사",
@@ -2545,6 +2561,7 @@
     "D034": {
       "speakerName": "의사",
       "dialogueContent": "QRS 보입니다. @t=[nurse_a, ???]선생님, 환자 맥박 있는지 확인해주세요.",
+      "dialogueContentTTSPassing": "큐 알 에스 보입니다. @t=[nurse_a, ???]선생님, 환자 맥박 있는지 확인해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2575,6 +2592,7 @@
     "D036": {
       "speakerName": "의사",
       "dialogueContent": "환자 ROSC 되었습니다. 제가 검사랑 협진 의뢰 할테니 @t=[nurse_d, ???]선생님이 의식상태 확인해주세요. @t=[nurse_b, ???]선생님, 의복 제거해서 추가 손상 있는지 사정해주세요. @t=[nurse_a, ???]선생님께서는 다시 분류구역으로 이동해서 환자 분류해주세요.",
+      "dialogueContentTTSPassing": "환자 로스크 되었습니다. 제가 검사랑 협진 의뢰 할 테니 @t=[nurse_d, ???]선생님이 의식 상태 확인해 주세요. @t=[nurse_b, ???]선생님, 의복 제거해서 추가 손상 있는지 사정해 주세요. @t=[nurse_a, ???]선생님께서는 다시 분류 구역으로 이동해서 환자 분류해 주세요.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2605,6 +2623,7 @@
     "D038": {
       "speakerName": "의사",
       "dialogueContent": "C-Line 확보했습니다.",
+      "dialogueContentTTSPassing": "씨 라인 확보했습니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -2699,14 +2718,14 @@
       "moveNextBehavior": "Immediately",
       "identifier": "E027",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "L001"
+      "nextIdentifier": "C010"
     },
     "E028": {
       "eventIdentifier": "start_chest_compression",
       "moveNextBehavior": "Immediately",
       "identifier": "E028",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "L003"
+      "nextIdentifier": "C012"
     },
     "E029": {
       "eventIdentifier": "attach_defibrillatorpad",
@@ -2748,14 +2767,14 @@
       "moveNextBehavior": "Immediately",
       "identifier": "E033",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "L012"
+      "nextIdentifier": "C021"
     },
     "E034": {
       "eventIdentifier": "start_ambubagging",
       "moveNextBehavior": "Immediately",
       "identifier": "E034",
       "nodeType": "InvokeEvent",
-      "nextIdentifier": "L016"
+      "nextIdentifier": "C025"
     },
     "E035": {
       "eventIdentifier": "stop_ambu_and_comp",
@@ -2873,229 +2892,10 @@
       "nodeType": "ItemSubmissionConfig",
       "nextIdentifier": "V014_4"
     },
-    "L001": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L001",
-      "nodeType": "Delay",
-      "nextIdentifier": "C010"
-    },
-    "L002": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L002",
-      "nodeType": "Delay",
-      "nextIdentifier": "C011"
-    },
-    "L003": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L003",
-      "nodeType": "Delay",
-      "nextIdentifier": "C012"
-    },
-    "L004": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L004",
-      "nodeType": "Delay",
-      "nextIdentifier": "C013"
-    },
-    "L005": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L005",
-      "nodeType": "Delay",
-      "nextIdentifier": "C014"
-    },
-    "L006": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L006",
-      "nodeType": "Delay",
-      "nextIdentifier": "C015"
-    },
-    "L007": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L007",
-      "nodeType": "Delay",
-      "nextIdentifier": "C016"
-    },
-    "L008": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L008",
-      "nodeType": "Delay",
-      "nextIdentifier": "C017"
-    },
-    "L009": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L009",
-      "nodeType": "Delay",
-      "nextIdentifier": "C018"
-    },
-    "L010": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L010",
-      "nodeType": "Delay",
-      "nextIdentifier": "C019"
-    },
-    "L011": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L011",
-      "nodeType": "Delay",
-      "nextIdentifier": "C020"
-    },
-    "L012": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L012",
-      "nodeType": "Delay",
-      "nextIdentifier": "C021"
-    },
-    "L013": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L013",
-      "nodeType": "Delay",
-      "nextIdentifier": "C022"
-    },
-    "L014": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L014",
-      "nodeType": "Delay",
-      "nextIdentifier": "C023"
-    },
-    "L015": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L015",
-      "nodeType": "Delay",
-      "nextIdentifier": "C024"
-    },
-    "L016": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L016",
-      "nodeType": "Delay",
-      "nextIdentifier": "C025"
-    },
-    "L017": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L017",
-      "nodeType": "Delay",
-      "nextIdentifier": "C026"
-    },
-    "L018": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L018",
-      "nodeType": "Delay",
-      "nextIdentifier": "C027"
-    },
-    "L019": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L019",
-      "nodeType": "Delay",
-      "nextIdentifier": "C028"
-    },
-    "L020": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L020",
-      "nodeType": "Delay",
-      "nextIdentifier": "C029"
-    },
-    "L021": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L021",
-      "nodeType": "Delay",
-      "nextIdentifier": "C030"
-    },
-    "L022": {
-      "duration": {
-        "value": 4,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L022",
-      "nodeType": "Delay",
-      "nextIdentifier": "C031"
-    },
     "N006_3": {
       "speakerName": "@s",
       "dialogueContent": "(다른 자극에는 반응이 없다가 통증에만 반응했으니 P로 분류하자.)",
+      "dialogueContentTTSPassing": "(다른 자극에는 반응이 없다가 통증에만 반응했으니 피로 분류하자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3111,6 +2911,7 @@
     "N006_4": {
       "speakerName": "@s",
       "dialogueContent": "(통증 자극에만 눈을 떴으니 E 2로 분류하자.)",
+      "dialogueContentTTSPassing": "(통증 자극에만 눈을 떴으니 이투로 분류하자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3126,6 +2927,7 @@
     "N006_5": {
       "speakerName": "@s",
       "dialogueContent": "(이해할 수 없는 신음소리만 내고 있으니 GCS V 2로 분류하자.)",
+      "dialogueContentTTSPassing": "(이해할 수 없는 신음소리만 내고 있으니 지 씨 에스 브이 투로 분류하자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3141,6 +2943,7 @@
     "N006_6": {
       "speakerName": "@s",
       "dialogueContent": "(통증 자극에서 팔을 굽혀 피했으니 GCS M 4로 분류하자.)",
+      "dialogueContentTTSPassing": "(통증 자극에서 팔을 굽혀 피했으니 지 씨 에스 엠 포로 분류하자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3156,6 +2959,7 @@
     "D_GCS_SUM_A": {
       "speakerName": "@s",
       "dialogueContent": "GCS는 E 2, V 2, M 4니까..",
+      "dialogueContentTTSPassing": "지 씨 에스는 이 투, 브이 투, 엠 포니까..",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -3342,6 +3146,7 @@
     "N009_CORRECT": {
       "speakerName": "@s",
       "dialogueContent": "(처방대로 10L로 맞추자.)",
+      "dialogueContentTTSPassing": "(처방대로 10리터로 맞추자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -5355,6 +5160,7 @@
     "N_VITAL_BP_RETRY_A": {
       "speakerName": "@s",
       "dialogueContent": "(아니야. 혈압은 70/40mmHg였어.)",
+      "dialogueContentTTSPassing": "(아니야. 혈압은 70에 40 밀리미터 머큐리였어.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -5367,6 +5173,7 @@
     "D_VITAL_BP_A": {
       "speakerName": "@s",
       "dialogueContent": "혈압은 70/40mmHg입니다.",
+      "dialogueContentTTSPassing": "혈압은 70에 40 밀리미터 머큐리입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -6057,7 +5864,7 @@
       "onWaitTimeout": null,
       "identifier": "V016_3",
       "nodeType": "Validator",
-      "nextIdentifier": "L_PLASTER_APPLIED_A"
+      "nextIdentifier": "D_PLASTER_APPLIED_A"
     },
     "D_GAUZE_APPLIED_A": {
       "speakerName": "@s",
@@ -6070,16 +5877,6 @@
       "identifier": "D_GAUZE_APPLIED_A",
       "nodeType": "Dialogue",
       "nextIdentifier": "V016_3"
-    },
-    "L_PLASTER_APPLIED_A": {
-      "duration": {
-        "value": 1,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L_PLASTER_APPLIED_A",
-      "nodeType": "Delay",
-      "nextIdentifier": "D_PLASTER_APPLIED_A"
     },
     "D_PLASTER_APPLIED_A": {
       "speakerName": "@s",
@@ -6828,7 +6625,7 @@
           "requiredPlayerTagsMatchMode": "All"
         }
       ],
-      "nextIdentifier": "L_END_A"
+      "nextIdentifier": "D037"
     },
     "QC_ROSC_WAIT_C_REMOVE": {
       "operation": "Remove",
@@ -6846,16 +6643,6 @@
       "identifier": "PREPARE_TRIAGE_RETURN_A",
       "nodeType": "InvokeEvent",
       "nextIdentifier": "V032"
-    },
-    "L_END_A": {
-      "duration": {
-        "value": 1,
-        "unit": "Seconds"
-      },
-      "waitUntil": "WaitUntilDone",
-      "identifier": "L_END_A",
-      "nodeType": "Delay",
-      "nextIdentifier": "D037"
     },
     "D_IV_NS_PREP_A": {
       "speakerName": "@s",
@@ -6884,6 +6671,7 @@
     "D_AMBU_VOL_R1_OK": {
       "speakerName": "@s",
       "dialogueContent": "(Tidal Volume을 고려해 약 600ml로 짜자.)",
+      "dialogueContentTTSPassing": "(타이달 볼륨을 고려해 약 600밀리리터로 짜자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -6891,7 +6679,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_AMBU_VOL_R1_OK",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L002"
+      "nextIdentifier": "C011"
     },
     "D_AMBU_RATE_R1_OK": {
       "speakerName": "@s",
@@ -6908,6 +6696,7 @@
     "D_COMP_DEPTH_R1_OK": {
       "speakerName": "@s",
       "dialogueContent": "(약 5cm 깊이로 누르자.)",
+      "dialogueContentTTSPassing": "(약 5센티미터 깊이로 누르자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -6915,7 +6704,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_COMP_DEPTH_R1_OK",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L004"
+      "nextIdentifier": "C013"
     },
     "D_COMP_LOC_R1_OK": {
       "speakerName": "@s",
@@ -6927,7 +6716,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_COMP_LOC_R1_OK",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L005"
+      "nextIdentifier": "C014"
     },
     "D_COMP_RATE_R1_OK": {
       "speakerName": "@s",
@@ -6939,7 +6728,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_COMP_RATE_R1_OK",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L006"
+      "nextIdentifier": "C015"
     },
     "D_COMP_RECOIL_R1_OK": {
       "speakerName": "@s",
@@ -6968,6 +6757,7 @@
     "D_DEFIB_RHYTHM_R1_OK": {
       "speakerName": "@s",
       "dialogueContent": "(제세동이 필요한 심전도는 VF야.)",
+      "dialogueContentTTSPassing": "(제세동이 필요한 심전도는 브이 에프야.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -6975,11 +6765,12 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_DEFIB_RHYTHM_R1_OK",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L008"
+      "nextIdentifier": "C017"
     },
     "D_DEFIB_ENERGY_R1_OK": {
       "speakerName": "@s",
       "dialogueContent": "(이상파형이면 150~200J야.)",
+      "dialogueContentTTSPassing": "(이상파형이면 150에서 200줄이야.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -6987,7 +6778,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_DEFIB_ENERGY_R1_OK",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L009"
+      "nextIdentifier": "C018"
     },
     "D_DEFIB_SAFETY_R1_OK": {
       "speakerName": "@s",
@@ -7004,6 +6795,7 @@
     "D_EPI_PREP_R1": {
       "speakerName": "@s",
       "dialogueContent": "(에피네프린 앰퓰과 5cc 주사기를 조합해서 약물을 준비하자.)",
+      "dialogueContentTTSPassing": "(에피네프린 앰퓰과 5씨씨 주사기를 조합해서 약물을 준비하자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7023,7 +6815,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_EPI_INTERVAL_R1_OK",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L011"
+      "nextIdentifier": "C020"
     },
     "D_EPI_PERIPH_R1_PARTIAL": {
       "speakerName": "@s",
@@ -7052,6 +6844,7 @@
     "D_COMP_DEPTH_R2_OK": {
       "speakerName": "@s",
       "dialogueContent": "(약 5cm 깊이로 누르자.)",
+      "dialogueContentTTSPassing": "(약 5센티미터 깊이로 누르자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7059,7 +6852,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_COMP_DEPTH_R2_OK",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L013"
+      "nextIdentifier": "C022"
     },
     "D_COMP_LOC_R2_OK": {
       "speakerName": "@s",
@@ -7071,7 +6864,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_COMP_LOC_R2_OK",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L014"
+      "nextIdentifier": "C023"
     },
     "D_COMP_RATE_R2_OK": {
       "speakerName": "@s",
@@ -7083,7 +6876,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_COMP_RATE_R2_OK",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L015"
+      "nextIdentifier": "C024"
     },
     "D_COMP_RECOIL_R2_OK": {
       "speakerName": "@s",
@@ -7100,6 +6893,7 @@
     "D_AMBU_VOL_R2_OK": {
       "speakerName": "@s",
       "dialogueContent": "(Tidal Volume을 고려해 약 600ml로 짜자.)",
+      "dialogueContentTTSPassing": "(타이달 볼륨을 고려해 약 600밀리리터로 짜자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7107,7 +6901,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_AMBU_VOL_R2_OK",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L017"
+      "nextIdentifier": "C026"
     },
     "D_AMBU_RATE_R2_OK": {
       "speakerName": "@s",
@@ -7124,6 +6918,7 @@
     "D_EPI_PREP_R2": {
       "speakerName": "@s",
       "dialogueContent": "(에피네프린 앰퓰과 5cc 주사기를 조합해서 약물을 준비하자.)",
+      "dialogueContentTTSPassing": "(에피네프린 앰퓰과 5씨씨 주사기를 조합해서 약물을 준비하자.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7143,7 +6938,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_EPI_INTERVAL_R2_OK",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L019"
+      "nextIdentifier": "C028"
     },
     "D_EPI_PERIPH_R2_PARTIAL": {
       "speakerName": "@s",
@@ -7172,6 +6967,7 @@
     "D_DEFIB_RHYTHM_R2_OK": {
       "speakerName": "@s",
       "dialogueContent": "(제세동이 필요한 심전도는 VF야.)",
+      "dialogueContentTTSPassing": "(제세동이 필요한 심전도는 브이 에프야.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7179,11 +6975,12 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_DEFIB_RHYTHM_R2_OK",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L021"
+      "nextIdentifier": "C030"
     },
     "D_DEFIB_ENERGY_R2_OK": {
       "speakerName": "@s",
       "dialogueContent": "(이상파형이면 150~200J야.)",
+      "dialogueContentTTSPassing": "(이상파형이면 150에서 200줄이야.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7191,7 +6988,7 @@
       "ttsVoiceIdentifier": null,
       "identifier": "D_DEFIB_ENERGY_R2_OK",
       "nodeType": "Dialogue",
-      "nextIdentifier": "L022"
+      "nextIdentifier": "C031"
     },
     "D_DEFIB_SAFETY_R2_OK": {
       "speakerName": "@s",
@@ -7304,6 +7101,7 @@
     "D_GCS_ROSC_SUM_A": {
       "speakerName": "@s",
       "dialogueContent": "E는 2, V는 삽관 중이라 평가할 수 없고, M은 4다.",
+      "dialogueContentTTSPassing": "이는 투, 브이는 삽관 중이라 평가할 수 없고, 엠은 포다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,
@@ -7316,6 +7114,7 @@
     "D_GCS_ROSC_REPORT_A": {
       "speakerName": "@s",
       "dialogueContent": "GCS는 E2 / V-NT / M4입니다.",
+      "dialogueContentTTSPassing": "지 씨 에스는 이 투, 브이 엔 티, 엠 포입니다.",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
       "interactionRequired": null,

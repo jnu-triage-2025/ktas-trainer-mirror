@@ -187,7 +187,7 @@ namespace TriageTrainer.Scenario
     [SerializeField] private AnimationClip _chestCompressionAnimationClip;
     [SerializeField] private AnimationClip _cprReceivingPatientAnimationClip;
     [SerializeField] private Vector3 _cprReceivingPatientPositionOffset =
-      new Vector3(0f, 0.85f, 0f);
+      new Vector3(0f, 0.425f, 0f);
     [SerializeField, Min(0f)] private float _cprPerformingPlayerHeightOffset = 0.85f;
 
     [Header("patient_b_c_ct intro (MVP)")]

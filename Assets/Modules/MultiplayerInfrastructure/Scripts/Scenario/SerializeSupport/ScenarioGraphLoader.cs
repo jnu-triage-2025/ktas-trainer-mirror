@@ -516,6 +516,7 @@ namespace MultiplayerInfrastructure.Scenario
           Identifier = dto.Identifier,
           SpeakerName = dto.SpeakerName,
           DialogueContent = dto.DialogueContent,
+          DialogueContentTTSPassing = dto.DialogueContentTTSPassing,
           PortraitSpriteIdentifier = dto.PortraitSpriteIdentifier,
           FadeInDuration = dto.FadeInDuration ?? ScenarioTimeValue.Seconds(0.5d),
           DisplayDuration = dto.DisplayDuration ?? ScenarioTimeValue.Seconds(1.5d),
@@ -532,6 +533,7 @@ namespace MultiplayerInfrastructure.Scenario
           Identifier = dto.Identifier,
           SpeakerName = dto.SpeakerName,
           DialogueContent = dto.DialogueContent,
+          DialogueContentTTSPassing = dto.DialogueContentTTSPassing,
           PortraitSpriteIdentifier = dto.PortraitSpriteIdentifier,
           AutoAdvanceSeconds = dto.AutoAdvanceSeconds,
           InteractionRequired = dto.InteractionRequired ?? false,
@@ -556,6 +558,9 @@ namespace MultiplayerInfrastructure.Scenario
 
     private static string ResolveVoiceIdentifier(string legacyIdentifier, ScenarioTTSVoiceProfileDTO profile) =>
       profile == null ? (string.IsNullOrWhiteSpace(legacyIdentifier) ? null : legacyIdentifier) : ConvertVoiceProfile(profile).ToServiceProfile().VoiceIdentifier;
+
+    private static string NullIfWhiteSpace(string value) =>
+      string.IsNullOrWhiteSpace(value) ? null : value;
 
     private static ScenarioChoiceNode ConvertChoice(ScenarioChoiceNodeDTO dto)
     {
@@ -595,6 +600,7 @@ namespace MultiplayerInfrastructure.Scenario
         Identifier = dto.Identifier,
         SpeakerName = dto.SpeakerName,
         DialogueContent = dto.DialogueContent,
+        DialogueContentTTSPassing = dto.DialogueContentTTSPassing,
         PortraitSpriteIdentifier = dto.PortraitSpriteIdentifier,
         PlayTTS = dto.PlayTTS ?? false,
         TtsVoiceProfile = ConvertVoiceProfile(dto.TtsVoiceProfile),
@@ -915,12 +921,15 @@ namespace MultiplayerInfrastructure.Scenario
         {
           Identifier = dto.Identifier,
           Question = dto.Question,
+          QuestionTTSPassing = dto.QuestionTTSPassing,
           Options = dto.Options ?? new List<string>(),
           CorrectIndex = dto.CorrectIndex ?? 0,
           OnCorrectNextIdentifier = dto.OnCorrectNextIdentifier,
           OnIncorrectNextIdentifier = dto.OnIncorrectNextIdentifier,
           FeedbackCorrect = dto.FeedbackCorrect,
+          FeedbackCorrectTTSPassing = dto.FeedbackCorrectTTSPassing,
           FeedbackIncorrect = dto.FeedbackIncorrect,
+          FeedbackIncorrectTTSPassing = dto.FeedbackIncorrectTTSPassing,
           PlayTTS = dto.PlayTTS ?? false,
           TtsVoiceProfile = ConvertVoiceProfile(dto.TtsVoiceProfile),
           TtsVoiceIdentifier = ResolveVoiceIdentifier(dto.TtsVoiceIdentifier, dto.TtsVoiceProfile),
@@ -1723,6 +1732,7 @@ namespace MultiplayerInfrastructure.Scenario
           Identifier = node.Identifier,
           SpeakerName = node.SpeakerName,
           DialogueContent = node.DialogueContent,
+          DialogueContentTTSPassing = NullIfWhiteSpace(node.DialogueContentTTSPassing),
           PortraitSpriteIdentifier = node.PortraitSpriteIdentifier,
           FadeInDuration = node.FadeInDuration,
           DisplayDuration = node.DisplayDuration,
@@ -1750,6 +1760,7 @@ namespace MultiplayerInfrastructure.Scenario
           Identifier = node.Identifier,
           SpeakerName = node.SpeakerName,
           DialogueContent = node.DialogueContent,
+          DialogueContentTTSPassing = NullIfWhiteSpace(node.DialogueContentTTSPassing),
           PortraitSpriteIdentifier = node.PortraitSpriteIdentifier,
           AutoAdvanceSeconds = node.AutoAdvanceSeconds,
           InteractionRequired = node.InteractionRequired ? true : (bool?)null,
@@ -1767,6 +1778,7 @@ namespace MultiplayerInfrastructure.Scenario
         Identifier = node.Identifier,
         SpeakerName = node.SpeakerName,
         DialogueContent = node.DialogueContent,
+        DialogueContentTTSPassing = NullIfWhiteSpace(node.DialogueContentTTSPassing),
         PortraitSpriteIdentifier = node.PortraitSpriteIdentifier,
         PlayTTS = node.PlayTTS ? true : (bool?)null,
         TtsVoiceIdentifier = string.IsNullOrEmpty(node.TtsVoiceIdentifier) ? null : node.TtsVoiceIdentifier,
@@ -2120,12 +2132,15 @@ namespace MultiplayerInfrastructure.Scenario
           NodeType = "Quiz",
           Identifier = node.Identifier,
           Question = node.Question,
+          QuestionTTSPassing = NullIfWhiteSpace(node.QuestionTTSPassing),
           Options = node.Options?.ToList() ?? new List<string>(),
           CorrectIndex = node.CorrectIndex,
           OnCorrectNextIdentifier = node.OnCorrectNextIdentifier,
           OnIncorrectNextIdentifier = node.OnIncorrectNextIdentifier,
           FeedbackCorrect = node.FeedbackCorrect,
+          FeedbackCorrectTTSPassing = NullIfWhiteSpace(node.FeedbackCorrectTTSPassing),
           FeedbackIncorrect = node.FeedbackIncorrect,
+          FeedbackIncorrectTTSPassing = NullIfWhiteSpace(node.FeedbackIncorrectTTSPassing),
           PlayTTS = node.PlayTTS ? true : (bool?)null,
           TtsVoiceIdentifier = string.IsNullOrEmpty(node.TtsVoiceIdentifier) ? null : node.TtsVoiceIdentifier,
           TtsVoiceProfile = ConvertVoiceProfileToDTO(node.TtsVoiceProfile),

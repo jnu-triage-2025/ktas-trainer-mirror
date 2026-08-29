@@ -8,6 +8,10 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("question")]
     public string Question { get; set; }
 
+    [JsonPropertyName("questionTTSPassing")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string QuestionTTSPassing { get; set; }
+
     [JsonPropertyName("options")]
     public List<string> Options { get; set; }
 
@@ -23,8 +27,16 @@ namespace MultiplayerInfrastructure.Scenario
     [JsonPropertyName("feedbackCorrect")]
     public string FeedbackCorrect { get; set; }
 
+    [JsonPropertyName("feedbackCorrectTTSPassing")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string FeedbackCorrectTTSPassing { get; set; }
+
     [JsonPropertyName("feedbackIncorrect")]
     public string FeedbackIncorrect { get; set; }
+
+    [JsonPropertyName("feedbackIncorrectTTSPassing")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string FeedbackIncorrectTTSPassing { get; set; }
 
     [JsonPropertyName("playTTS")]
     public bool? PlayTTS { get; set; }

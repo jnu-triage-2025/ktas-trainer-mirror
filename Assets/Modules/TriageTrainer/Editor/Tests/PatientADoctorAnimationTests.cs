@@ -145,7 +145,7 @@ namespace TriageTrainer.Tests
     [Test]
     public void PatientCprPositionOffsetUsesCalibratedBedHeight()
     {
-      const float targetScenarioFinalY = 0.85f;
+      const float calibratedModelOffsetY = 0.425f;
 
       var bootstrapObject = new GameObject("PatientACprOffsetTest");
       try
@@ -155,8 +155,8 @@ namespace TriageTrainer.Tests
         Vector3 offset = serialized.FindProperty("_cprReceivingPatientPositionOffset").vector3Value;
 
         Assert.That(offset.x, Is.Zero);
-        Assert.That(offset.y, Is.EqualTo(targetScenarioFinalY).Within(0.0001f),
-          "전용 모델 루트의 오프셋은 목표 침대 높이를 1:1로 적용해야 합니다.");
+        Assert.That(offset.y, Is.EqualTo(calibratedModelOffsetY).Within(0.0001f),
+          "Patient A 모델은 간호사 아래이면서 침대 위인 CPR 높이를 유지해야 합니다.");
         Assert.That(offset.z, Is.Zero);
       }
       finally
@@ -184,6 +184,12 @@ namespace TriageTrainer.Tests
         "CPR 종료는 MinecraftBoatLikeControl 하차와 같은 앵커 해제 경로를 사용해야 합니다.");
       StringAssert.Contains("SetMovementSuppressed(state.Anchor, false)", source);
       StringAssert.Contains("SetRidableExitSuppressed(state.Anchor, false)", source);
+      StringAssert.Contains("EntryPosition = player.transform.position", source,
+        "CPR 종료 시 침대 중앙이 아닌 진입 전 X/Z 위치로 복귀해야 합니다.");
+      StringAssert.Contains("? state.DebugEscapePosition", source);
+      StringAssert.Contains(": state.EntryPosition", source);
+      StringAssert.Contains("SetLocalPositionAndRotation(rootPose.LocalPosition, rootPose.LocalRotation)", source,
+        "RootT/RootQ가 포함된 CPR 그래프를 제거할 때 Animator 루트 자세를 복원해야 합니다.");
 
       var bootstrapObject = new GameObject("PatientACprPerformerHeightTest");
       try
@@ -318,7 +324,7 @@ namespace TriageTrainer.Tests
       StringAssert.Contains("state.DebugEscaped = true", source);
       StringAssert.Contains("state.DebugEscapePosition = state.Player.transform.position", source);
       StringAssert.Contains("StopPatientACprPerformerAnimation(state.Player)", source);
-      StringAssert.Contains("MoveToPositionPreservingForcedFollowAnchor(state.DebugEscapePosition)", source,
+      StringAssert.Contains("state.DebugEscapePosition", source,
         "정상 CPR 종료 시에는 디버그로 위치 고정을 해제했던 장소로 복귀해야 합니다.");
       Assert.That(source, Does.Not.Contain("state.Player.SetForcedFollowAnchor(state.Anchor);\n          }"),
         "디버그 복귀가 이후에 설정된 다른 이동 시스템의 앵커를 덮어써서는 안 됩니다.");

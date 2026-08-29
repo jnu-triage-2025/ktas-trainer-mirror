@@ -8,6 +8,7 @@
 
     public string SpeakerName { get; set; }
     public string DialogueContent { get; set; }
+    public string DialogueContentTTSPassing { get; set; }
     public string PortraitSpriteIdentifier { get; set; }
     public bool InteractionRequired { get; set; }
 
