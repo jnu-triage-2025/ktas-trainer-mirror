@@ -1745,29 +1745,21 @@ namespace TriageTrainer.Tests
         "준비 체인이 카트 도달 신호를 직접 올려서는 안 됩니다.");
     }
 
-    /// <summary>
-    /// "이미 수행함" 표시 초기화는 환자뿐 아니라 제세동 카트의 상호작용에도 적용되어야 한다.
-    /// `interact_defibrillator` 는 한 번만 수행할 수 있고 CPR 2주기의 `V030` 게이트가 그 신호를
-    /// 기다리므로, 표시가 남아 있으면 같은 세션에서 다시 진입했을 때 그 단계를 통과할 수 없다.
-    /// </summary>
     [Test]
-    public void PatientAManualEntryResetsDefibrillatorCartActionConsumption()
+    public void PatientASecondCprRoundStartsDefibrillationWithoutRoleAssignmentInteraction()
     {
       var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(DefibrillatorCartPrefabPath);
       Assert.That(prefab, Is.Not.Null);
+      Assert.That(prefab.GetComponentsInChildren<ScenarioActionInteractable>(true)
+          .Any(action => action.CompletionSignal == "interact_defibrillator"), Is.False,
+        "제세동 카트에는 역할 부여 상호작용이 없어야 합니다.");
 
-      var cartAction = prefab.GetComponentsInChildren<ScenarioActionInteractable>(true)
-        .SingleOrDefault(action => action.CompletionSignal == "interact_defibrillator");
-      Assert.That(cartAction, Is.Not.Null,
-        "제세동 카트 프리팹에 'interact_defibrillator' 상호작용이 있어야 합니다.");
-
-      var identifiers = typeof(TriageScenarioEventBootstrap).GetField(
-        "PatientAScenarioEntityIdentifiers",
-        BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null) as string[];
-      Assert.That(identifiers, Is.Not.Null,
-        "준비 체인이 초기화 대상 엔티티 식별자 목록을 갖고 있어야 합니다.");
-      Assert.That(identifiers, Contains.Item(cartAction.PresentationEntityIdentifier),
-        "제세동 카트의 상호작용도 '이미 수행함' 표시 초기화 대상이어야 합니다.");
+      string scenario = File.ReadAllText(PatientAScenarioPath);
+      string quests = File.ReadAllText(PatientAQuestPath);
+      Assert.That(scenario, Does.Not.Contain("interact_defibrillator"));
+      Assert.That(quests, Does.Not.Contain("interact_defibrillator"));
+      StringAssert.IsMatch("(?s)\"Q026\".*?\"nodeType\": \"Sound\".*?\"nextIdentifier\": \"D032\"", scenario);
+      StringAssert.IsMatch("(?s)\"D_DEFIB_SAFETY_R2_OK\".*?\"nextIdentifier\": \"CC_D_defibrillator\"", scenario);
     }
 
     /// <summary>

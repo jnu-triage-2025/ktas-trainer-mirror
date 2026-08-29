@@ -48,10 +48,6 @@ namespace TriageTrainer.Entity
     [FormerlySerializedAs("_allowedPositioningPointIdentifiers")]
     [SerializeField] private List<string> _allowedSnapPointIdentifiers = new();
 
-    [Header("Scenario Action")]
-    [Tooltip("제세동기 담당 역할 부여받기 상호작용입니다. 카트 조종 중에는 자동으로 숨겨집니다.")]
-    [SerializeField] private ScenarioActionInteractable _scenarioActionInteractable;
-
     [Header("AED Connection")]
     [Tooltip("환자에게 부착한 제세동 패드와 연결할 AED 라인 연결 지점들입니다. 비워 두면 자식 오브젝트에서 AEDLineConnectionPoint 를 찾는 fallback 을 사용합니다.")]
     [SerializeField]
@@ -101,12 +97,9 @@ namespace TriageTrainer.Entity
 
         _staticPlacedItem ??= GetComponent<StaticPlacedItem>();
 
-        // 제세동기 담당 역할 부여받기 상호작용도 조종 중에는 숨긴다.
         var list = new List<IInteract> { this };
         if (_staticPlacedItem != null)
           list.Add(_staticPlacedItem);
-        if (_scenarioActionInteractable != null)
-          list.Add(_scenarioActionInteractable);
         return list.ToArray();
       }
     }
@@ -319,7 +312,7 @@ namespace TriageTrainer.Entity
         SetAuthoritativeSnapPointIdentifier(string.Empty);
         if (IsServerStarted)
           RpcApplyUnlatchedState();
-        TriageWorldInteractionSignals.RaiseDefibrillatorCartSnapPointUnlatched(Identifier, previousPointIdentifier);
+        TriageTrainer.Scenario.TriageWorldInteractionSignals.RaiseDefibrillatorCartSnapPointUnlatched(Identifier, previousPointIdentifier);
       }
 
       DefibrillatorCartSnapPoint nearest = FindNearestSnapPoint();
@@ -333,7 +326,7 @@ namespace TriageTrainer.Entity
       SetAuthoritativeTransform(nearest.Position, nearest.Rotation);
       ReleaseParticipantsAfterSnapIfConfigured(nearest);
       PublishAuthoritativeSnappedState(nearest);
-      TriageWorldInteractionSignals.RaiseDefibrillatorCartSnapPointLatched(Identifier, nearest.Identifier);
+      TriageTrainer.Scenario.TriageWorldInteractionSignals.RaiseDefibrillatorCartSnapPointLatched(Identifier, nearest.Identifier);
       PublishSnapPointReached(nearest);
     }
 

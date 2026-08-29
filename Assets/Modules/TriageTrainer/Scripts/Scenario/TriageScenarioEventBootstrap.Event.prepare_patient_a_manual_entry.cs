@@ -186,12 +186,6 @@ namespace TriageTrainer.Scenario
     /// 없게 된다. 노출 여부는 플레이어별 퀘스트 상태 플래그가 계속 결정하므로, 표시만 지워도
     /// 단계 밖 상호작용이 열리지는 않는다.
     ///
-    /// <para>
-    /// 상호작용은 환자 자식뿐 아니라 제세동 카트에도 붙어 있다. 계층으로는 한 번에 고를 수 없으므로
-    /// 이 시나리오가 사용하는 엔티티 식별자 목록으로 판정한다. 제세동 카트의 "제세동기 담당 역할
-    /// 부여받기"(<c>interact_defibrillator</c>)를 빠뜨리면, 그 상호작용을 한 번 수행한 세션에서
-    /// 다시 진입했을 때 CPR 2주기의 <c>V030</c> 게이트가 영구히 통과되지 않는다.
-    /// </para>
     /// </summary>
     private static void ResetPatientAScenarioActionConsumption()
     {
@@ -219,12 +213,10 @@ namespace TriageTrainer.Scenario
 
     /// <summary>
     /// 이 시나리오의 단계별 <see cref="ScenarioActionInteractable"/> 이 소속된 엔티티 식별자.
-    /// 환자 프리팹과 제세동 카트 프리팹 양쪽에 상호작용이 배치되어 있다.
     /// </summary>
     private static readonly string[] PatientAScenarioEntityIdentifiers =
     {
       PatientAScenarioEntityIdentifier,
-      PatientADefibrillatorCartEntityId,
     };
 
     /// <summary>ScenarioController 의 NPC 보행 애니메이션 파라미터와 같은 이름이다.</summary>
@@ -426,7 +418,6 @@ namespace TriageTrainer.Scenario
     private void OpenPatientACpr1Actions()
     {
       PlayerQuestStateFlagService.SetForAll(PatientACriticalQuestStateFlags.Cpr1Actions);
-      PlacePatientADefibrillatorCartAtInitialPosition();
     }
 
     private void ApplyCpr1TreatmentState(PatientController patient)

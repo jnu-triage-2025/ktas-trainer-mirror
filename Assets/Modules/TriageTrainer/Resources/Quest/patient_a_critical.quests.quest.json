@@ -1032,38 +1032,6 @@
       ]
     },
     {
-      "identifier": "Quest_Defibrillator_D",
-      "title": "제세동기 조작",
-      "description": "제세동기를 조작해 역할 부여받기",
-      "questContent": "제세동기를 조작해 역할 부여받기",
-      "isTrackable": true,
-      "isAutoComplete": false,
-      "persistProgressOnSessionEnd": false,
-      "isTrackedByDefault": true,
-      "scope": "Player",
-      "isOrdinal": false,
-      "tasks": [
-        {
-          "identifier": "operate-defibrillator-patient-a",
-          "type": "InteractionSignalReceived",
-          "signalId": "interact_defibrillator",
-          "displayTextContent": "제세동기를 조작해 역할 부여받기",
-          "count": 1
-        }
-      ],
-      "presentationBindings": [
-        {
-          "activation": "CompletionCriteria",
-          "completionCriteriaIdentifier": "operate-defibrillator-patient-a",
-          "targetType": "Interaction",
-          "entityIdentifier": "defibrillator_cart_a",
-          "interactionIdentifier": "interact_defibrillator",
-          "iconIdentifier": "quest-interaction",
-          "iconMode": "ReplacePrimaryIcon"
-        }
-      ]
-    },
-    {
       "identifier": "Quest_Check_Pulse_ROSC",
       "title": "ROSC 맥박 확인",
       "description": "남성 환자의 경동맥을 촉지해 맥박 확인하기",

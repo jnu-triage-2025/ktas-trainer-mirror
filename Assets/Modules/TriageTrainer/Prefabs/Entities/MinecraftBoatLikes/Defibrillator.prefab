@@ -182,7 +182,6 @@ GameObject:
   - component: {fileID: 5564673943300397563}
   - component: {fileID: 3975287895335882444}
   - component: {fileID: 7009785598046843437}
-  - component: {fileID: 2381286549320826917}
   m_Layer: 0
   m_Name: Defibrillator
   m_TagString: Untagged
@@ -321,7 +320,6 @@ MonoBehaviour:
   _enableSnap: 1
   _snapReleasePadding: 0.2
   _allowedSnapPointIdentifiers: []
-  _scenarioActionInteractable: {fileID: 2381286549320826917}
   _aedConnectionPoints: []
 --- !u!114 &7009785598046843437
 MonoBehaviour:
@@ -352,34 +350,6 @@ MonoBehaviour:
   _vanishBehavior: 0
   _autoLoadModel: 0
   _vanishPresentationRoot: {fileID: 5918076727521928491}
---- !u!114 &2381286549320826917
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8599765504921325498}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "\uC81C\uC138\uB3D9\uAE30 \uB2F4\uB2F9 \uC5ED\uD560 \uBD80\uC5EC\uBC1B\uAE30"
-  _displayIcon: {fileID: 0}
-  _displayIcons: []
-  _completionSignal: interact_defibrillator
-  _presentationEntityIdentifier: defibrillator_cart_a
-  _interactionIdentifier: 
-  _requiredRaisedSignals: []
-  _requiredPlayerTag: 
-  _enabled: 1
-  _consumeOnce: 1
-  _requiredItemIdentifier: 
-  _consumeRequiredItemCount: 0
-  _missingItemDialogue: 
-  _findItemDialogue: 
-  _activateOnInteract: []
-  _deactivateOnInteract: []
 --- !u!1 &9062602989742409466
 GameObject:
   m_ObjectHideFlags: 0
