@@ -107,7 +107,6 @@ MonoBehaviour:
   - {fileID: 5757268981635084215}
   - {fileID: 4285661680897093736}
   - {fileID: 2384611455480762286}
-  - {fileID: 3811695509650800645}
   RuntimeParentNetworkBehaviour: {fileID: 0}
   RuntimeChildNetworkBehaviours: []
   _isNetworked: 1
@@ -1658,34 +1657,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6991845508164549003, guid: 8d64abfc7a71439c8605eb9c82e11549, type: 3}
-      propertyPath: _addedNetworkObject
-      value: 
-      objectReference: {fileID: 1090021983889225486}
-    - target: {fileID: 6991845508164549004, guid: 8d64abfc7a71439c8605eb9c82e11549, type: 3}
-      propertyPath: SceneId
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6991845508164549004, guid: 8d64abfc7a71439c8605eb9c82e11549, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6991845508164549004, guid: 8d64abfc7a71439c8605eb9c82e11549, type: 3}
-      propertyPath: <IsNested>k__BackingField
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6991845508164549004, guid: 8d64abfc7a71439c8605eb9c82e11549, type: 3}
-      propertyPath: <PrefabId>k__BackingField
-      value: 65535
-      objectReference: {fileID: 0}
-    - target: {fileID: 6991845508164549004, guid: 8d64abfc7a71439c8605eb9c82e11549, type: 3}
-      propertyPath: <ComponentIndex>k__BackingField
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 6991845508164549004, guid: 8d64abfc7a71439c8605eb9c82e11549, type: 3}
-      propertyPath: InitializedParentNetworkBehaviour
-      value: 
-      objectReference: {fileID: -2615499957622416118}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1696,17 +1667,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6991845508164549002, guid: 8d64abfc7a71439c8605eb9c82e11549, type: 3}
   m_PrefabInstance: {fileID: 6191845508164549001}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &3811695509650800645 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6991845508164549004, guid: 8d64abfc7a71439c8605eb9c82e11549, type: 3}
-  m_PrefabInstance: {fileID: 6191845508164549001}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FishNet.Runtime::FishNet.Object.NetworkObject
 --- !u!1001 &6516610067230931058
 PrefabInstance:
   m_ObjectHideFlags: 0
