@@ -48,8 +48,11 @@ namespace TriageTrainer.Scenario
     /// <summary>의복 제거.</summary>
     public const string ClothingRemoval = "scen_a.clothing_removal";
 
-    /// <summary>ROSC 이후 맥박·의식상태 재사정.</summary>
-    public const string RoscReassessment = "scen_a.rosc_reassessment";
+    /// <summary>ROSC 이후 맥박 재사정.</summary>
+    public const string RoscPulseAssess = "scen_a.rosc_pulse_assess";
+
+    /// <summary>ROSC 이후 의식상태 재사정.</summary>
+    public const string RoscGcsAssess = "scen_a.rosc_gcs_assess";
 
     /// <summary>이 시나리오에서 플래그가 여닫는 상호작용. 키는 `엔티티/상호작용` 주소다.</summary>
     private static readonly Dictionary<string, string> FlagByInteraction = new(StringComparer.Ordinal)
@@ -68,8 +71,8 @@ namespace TriageTrainer.Scenario
       { Address("patient_a", "interact_chest"), Cpr2Actions },
       { Address("patient_a", "start_ambu_r2"), Cpr2Actions },
       { Address("patient_a", "remove_patient_clothing"), ClothingRemoval },
-      { Address("patient_a", "assess_pulse_r2"), RoscReassessment },
-      { Address("patient_a", "assess_gcs_rosc"), RoscReassessment },
+      { Address("patient_a", "assess_pulse_r2"), RoscPulseAssess },
+      { Address("patient_a", "assess_gcs_rosc"), RoscGcsAssess },
     };
 
     /// <summary>이 시나리오가 실행 중이라 플래그 판정이 켜져 있는지 여부.</summary>
@@ -132,6 +135,16 @@ namespace TriageTrainer.Scenario
       return FlagByInteraction.TryGetValue(
         Address(entityIdentifier.Trim(), interactionIdentifier.Trim()), out string flag) ? flag : null;
     }
+
+    /// <summary>
+    /// 단계 플래그뿐 아니라 현재 퀘스트의 표시 바인딩까지 활성화되어야 하는 상호작용인지 반환한다.
+    /// 제세동 패드는 CPR 1주기 공용 플래그가 열린 동안에도 담당자의 제세동기 퀘스트에서만 보여야 한다.
+    /// </summary>
+    public static bool RequiresActiveQuestBinding(
+      string entityIdentifier, string interactionIdentifier)
+      => IsArmed
+         && string.Equals(entityIdentifier?.Trim(), "patient_a", StringComparison.Ordinal)
+         && string.Equals(interactionIdentifier?.Trim(), "interact_patient_chest", StringComparison.Ordinal);
 
     /// <summary>테스트와 진단용. 게이트 대상 상호작용 주소를 모두 반환한다.</summary>
     public static IReadOnlyCollection<string> GatedInteractionAddresses => FlagByInteraction.Keys;

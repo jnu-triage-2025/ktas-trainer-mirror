@@ -1146,10 +1146,12 @@ namespace TriageTrainer.Scenario
 
       if (monitorController == null)
       {
+#if UNITY_EDITOR
         Debug.LogWarning(
           $"[TriageScenarioEventBootstrap] 활력징후 모니터 컨트롤러 참조가 없습니다. (monitor='{(monitorObject != null ? monitorObject.name : "<null>")}')",
           this);
-        EmitSystemMessage(string.IsNullOrWhiteSpace(message) ? null : message + " (모니터 컨트롤러 참조 없음)");
+        Debug.Log("[EmitSystemMessage] " + string.IsNullOrWhiteSpace(message) ? null : message + " (모니터 컨트롤러 참조 없음)");
+#endif
         yield break;
       }
 
@@ -1159,7 +1161,9 @@ namespace TriageTrainer.Scenario
       }
 
       monitorController.enabled = true;
-      EmitSystemMessage(message);
+#if UNITY_EDITOR
+      Debug.Log("[EmitSystemMessage] " + string.IsNullOrWhiteSpace(message) ? null : message);
+#endif
       yield break;
     }
 

@@ -35,7 +35,8 @@ namespace TriageTrainer.Scenario
       // 메인 흐름 이벤트이므로 전원의 플래그를 갱신한다.
       PlayerQuestStateFlagService.SetForAll(
         PatientACriticalQuestStateFlags.ArrestPulseAssess, value: false);
-      PlayerQuestStateFlagService.SetForAll(PatientACriticalQuestStateFlags.RoscReassessment);
+      PlayerQuestStateFlagService.SetForAll(PatientACriticalQuestStateFlags.RoscPulseAssess);
+      PlayerQuestStateFlagService.SetForAll(PatientACriticalQuestStateFlags.RoscGcsAssess);
 
       yield return ApplyPatientAMonitorProfile(_patientARoscMonitorParameters, "환자 A ROSC 모니터 프로필을 적용했습니다.");
     }

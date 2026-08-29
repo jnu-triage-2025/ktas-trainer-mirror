@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using MultiplayerInfrastructure.Camera;
 using MultiplayerInfrastructure.InteractableEntity;
+using MultiplayerInfrastructure.Quest;
 using MultiplayerInfrastructure.UI;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -56,6 +57,10 @@ namespace MultiplayerInfrastructure.Player
 
       if (_interactableHintUI != null)
         _interactableHintUI.InteractionClicked += HandleInteractionMenuClicked;
+
+      // 순차 퀘스트의 완료 조건이 바뀌면 같은 감지 범위 안에서도 다음 상호작용을 즉시 다시 고른다.
+      // 표시 UI만 다시 그리면 CanInteract 결과는 이전 목록에 고정되어 범위를 나갔다 들어와야 갱신된다.
+      QuestPresentationService.PresentationChanged += RefreshInteractableHintsNow;
     }
 
     private void OnDestroy()
@@ -69,6 +74,8 @@ namespace MultiplayerInfrastructure.Player
 
       if (_interactableHintUI != null)
         _interactableHintUI.InteractionClicked -= HandleInteractionMenuClicked;
+
+      QuestPresentationService.PresentationChanged -= RefreshInteractableHintsNow;
 
       OnDestroy_Item();
       OnDestroy_PlaceableItemPreview();

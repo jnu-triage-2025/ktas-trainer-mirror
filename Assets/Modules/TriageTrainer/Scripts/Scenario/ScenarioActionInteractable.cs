@@ -77,7 +77,21 @@ namespace TriageTrainer.Scenario
       // 이 컴포넌트에 저장된 _enabled 대신 플래그가 유일한 기준이 된다. 다른 시나리오는 그대로다.
       if (PatientACriticalQuestStateFlags.TryEvaluate(
             _presentationEntityIdentifier, InteractionIdentifier, player, out bool allowedByFlag))
-        return allowedByFlag;
+      {
+        if (!allowedByFlag)
+          return false;
+
+        if (PatientACriticalQuestStateFlags.RequiresActiveQuestBinding(
+              _presentationEntityIdentifier, InteractionIdentifier))
+        {
+          var presentation = MultiplayerInfrastructure.Quest.QuestPresentationService.ActiveInstance;
+          return presentation != null
+                 && presentation.HasActiveInteractionBinding(
+                   _presentationEntityIdentifier, InteractionIdentifier);
+        }
+
+        return true;
+      }
 
       return _enabled;
     }

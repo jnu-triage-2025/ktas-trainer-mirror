@@ -1395,8 +1395,8 @@ namespace TriageTrainer.Tests
         { "patient_a/interact_chest", PatientACriticalQuestStateFlags.Cpr2Actions },
         { "patient_a/start_ambu_r2", PatientACriticalQuestStateFlags.Cpr2Actions },
         { "patient_a/remove_patient_clothing", PatientACriticalQuestStateFlags.ClothingRemoval },
-        { "patient_a/assess_pulse_r2", PatientACriticalQuestStateFlags.RoscReassessment },
-        { "patient_a/assess_gcs_rosc", PatientACriticalQuestStateFlags.RoscReassessment },
+        { "patient_a/assess_pulse_r2", PatientACriticalQuestStateFlags.RoscPulseAssess },
+        { "patient_a/assess_gcs_rosc", PatientACriticalQuestStateFlags.RoscGcsAssess },
       };
 
       CollectionAssert.AreEquivalent(
@@ -1409,6 +1409,10 @@ namespace TriageTrainer.Tests
         Assert.That(PatientACriticalQuestStateFlags.FindFlag(address[0], address[1]),
           Is.EqualTo(pair.Value), $"'{pair.Key}'을 여는 플래그가 달라졌습니다.");
       }
+
+      Assert.That(PatientACriticalQuestStateFlags.RoscPulseAssess,
+        Is.Not.EqualTo(PatientACriticalQuestStateFlags.RoscGcsAssess),
+        "ROSC 맥박 확인을 마쳐도 뒤의 의식상태 재사정이 잠기지 않도록 두 단계는 독립 플래그를 써야 합니다.");
     }
 
     /// <summary>
@@ -1450,7 +1454,8 @@ namespace TriageTrainer.Tests
           PatientACriticalQuestStateFlags.TpieceAttach,
           PatientACriticalQuestStateFlags.Cpr2Actions,
           PatientACriticalQuestStateFlags.ClothingRemoval,
-          PatientACriticalQuestStateFlags.RoscReassessment,
+          PatientACriticalQuestStateFlags.RoscPulseAssess,
+          PatientACriticalQuestStateFlags.RoscGcsAssess,
         };
         CollectionAssert.AreEquivalent(expected, PlayerQuestStateFlagService.KnownFlags);
       }
@@ -1828,6 +1833,31 @@ namespace TriageTrainer.Tests
         UnityEngine.Object.DestroyImmediate(doctor);
         UnityEngine.Object.DestroyImmediate(ground);
       }
+
+      Assert.That(
+        PatientACriticalQuestStateFlags.RequiresActiveQuestBinding(
+          "patient_a", "interact_patient_chest"),
+        Is.EqualTo(PatientACriticalQuestStateFlags.IsArmed));
+      Assert.That(
+        PatientACriticalQuestStateFlags.RequiresActiveQuestBinding(
+          "patient_a", "click_to_start_comp"),
+        Is.False,
+        "제세동 패드 외 CPR 동작은 각 담당 퀘스트의 표시 바인딩에 종속되면 안 됩니다.");
+    }
+
+    [Test]
+    public void QuestPresentationChangesRefreshNearbyInteractionCandidates()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string source = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Player/PlayerController.Interactables.cs"));
+
+      StringAssert.Contains(
+        "QuestPresentationService.PresentationChanged += RefreshInteractableHintsNow", source,
+        "순차 퀘스트가 다음 완료 조건으로 넘어가면 감지 범위를 벗어나지 않아도 후보를 다시 계산해야 합니다.");
+      StringAssert.Contains(
+        "QuestPresentationService.PresentationChanged -= RefreshInteractableHintsNow", source,
+        "플레이어가 파괴될 때 정적 표시 변경 이벤트 구독을 해제해야 합니다.");
     }
 
     [Test]
