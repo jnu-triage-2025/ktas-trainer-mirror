@@ -187,7 +187,7 @@ MonoBehaviour:
     - type: 3
       identifier: zone_2:zone
       useDefaultPosition: 0
-      position: {x: -64, y: 0, z: -19.45}
+      position: {x: -64, y: 0, z: -19.35}
       useDefaultRotation: 0
       rotationEuler: {x: 0, y: -90, z: 0}
       useDefaultOccupiedSize: 0
