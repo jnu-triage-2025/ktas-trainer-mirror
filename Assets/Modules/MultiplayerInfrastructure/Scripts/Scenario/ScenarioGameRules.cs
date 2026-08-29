@@ -1,7 +1,17 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace MultiplayerInfrastructure.Scenario
 {
+  [Flags]
+  public enum CareZoneMissingEquipmentFallback
+  {
+    None = 0,
+    WallSuction = 1 << 0,
+    Oxyflowmeter = 1 << 1,
+    Defibrillator = 1 << 2,
+  }
+
   /// <summary>시나리오 실행에 적용되는 서버 게임 규칙.</summary>
   public static class ScenarioGameRules
   {
@@ -9,6 +19,7 @@ namespace MultiplayerInfrastructure.Scenario
     private static void ResetRuntimeDefaults()
     {
       DEBUG_INT_CPR_PLAYING_ESCAPE_KEY = false;
+      MissingCareZoneEquipmentFallback = CareZoneMissingEquipmentFallback.Defibrillator;
     }
 
     /// <summary>
@@ -33,6 +44,69 @@ namespace MultiplayerInfrastructure.Scenario
 
     /// <summary>의식 확인의 직접 상호작용 경로를 숨긴다. 마이크 경로가 켜진 경우에만 허용된다.</summary>
     public static bool DisableInteractionInRecognitionCheck { get; private set; }
+
+    public static CareZoneMissingEquipmentFallback MissingCareZoneEquipmentFallback { get; private set; }
+      = CareZoneMissingEquipmentFallback.Defibrillator;
+
+    public static bool AllowsMissingCareZoneEquipmentFallback(CareZoneMissingEquipmentFallback equipment)
+      => (MissingCareZoneEquipmentFallback & equipment) == equipment;
+
+    public static bool TrySetMissingCareZoneEquipmentFallback(string value, out string error)
+    {
+      if (value == null)
+      {
+        error = "CareZoneMissingEquipmentFallback must be a comma-separated list of wall_suction, oxyflowmeter, defibrillator, or none.";
+        return false;
+      }
+
+      CareZoneMissingEquipmentFallback parsed = CareZoneMissingEquipmentFallback.None;
+      string[] values = value.Split(',');
+      for (int i = 0; i < values.Length; i++)
+      {
+        string entry = values[i].Trim();
+        if (string.Equals(entry, "none", StringComparison.OrdinalIgnoreCase))
+        {
+          if (values.Length != 1)
+          {
+            error = "CareZoneMissingEquipmentFallback cannot combine none with equipment values.";
+            return false;
+          }
+          continue;
+        }
+
+        if (string.Equals(entry, "wall_suction", StringComparison.OrdinalIgnoreCase))
+          parsed |= CareZoneMissingEquipmentFallback.WallSuction;
+        else if (string.Equals(entry, "oxyflowmeter", StringComparison.OrdinalIgnoreCase))
+          parsed |= CareZoneMissingEquipmentFallback.Oxyflowmeter;
+        else if (string.Equals(entry, "defibrillator", StringComparison.OrdinalIgnoreCase))
+          parsed |= CareZoneMissingEquipmentFallback.Defibrillator;
+        else
+        {
+          error = "CareZoneMissingEquipmentFallback must be a comma-separated list of wall_suction, oxyflowmeter, defibrillator, or none.";
+          return false;
+        }
+      }
+
+      MissingCareZoneEquipmentFallback = parsed;
+      error = null;
+      return true;
+    }
+
+    public static string FormatMissingCareZoneEquipmentFallback()
+    {
+      if (MissingCareZoneEquipmentFallback == CareZoneMissingEquipmentFallback.None)
+        return "none";
+
+      string[] values = new string[3];
+      int count = 0;
+      if (AllowsMissingCareZoneEquipmentFallback(CareZoneMissingEquipmentFallback.WallSuction))
+        values[count++] = "wall_suction";
+      if (AllowsMissingCareZoneEquipmentFallback(CareZoneMissingEquipmentFallback.Oxyflowmeter))
+        values[count++] = "oxyflowmeter";
+      if (AllowsMissingCareZoneEquipmentFallback(CareZoneMissingEquipmentFallback.Defibrillator))
+        values[count++] = "defibrillator";
+      return string.Join(",", values, 0, count);
+    }
 
     public static bool TrySetUseMicInRecognitionCheck(bool value, out string error)
     {

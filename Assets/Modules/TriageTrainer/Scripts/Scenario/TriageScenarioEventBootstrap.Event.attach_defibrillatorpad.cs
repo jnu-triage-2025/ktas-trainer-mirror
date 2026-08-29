@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using FishNet;
 using MultiplayerInfrastructure.Logging;
+using MultiplayerInfrastructure.Scenario;
 using TriageTrainer.Entity;
 using TriageTrainer.Entity.LineConnection;
 using UnityEngine;
@@ -85,6 +86,10 @@ namespace TriageTrainer.Scenario
       PatientCareDescriptionZone careZone = FindCareZone(null, patient);
       if (careZone == null)
       {
+        if (!ScenarioGameRules.AllowsMissingCareZoneEquipmentFallback(
+              CareZoneMissingEquipmentFallback.Defibrillator))
+          return null;
+
         DefibrillatorCartController[] fallbackCarts = FindObjectsByType<DefibrillatorCartController>(
           FindObjectsInactive.Include, FindObjectsSortMode.None);
         return FindClosestDefibrillatorCart(fallbackCarts, patient.transform.position);
@@ -94,6 +99,10 @@ namespace TriageTrainer.Scenario
         careZone.DefibrillatorCarts, careZone.WorldCenter);
       if (cart != null)
         return cart;
+
+      if (!ScenarioGameRules.AllowsMissingCareZoneEquipmentFallback(
+            CareZoneMissingEquipmentFallback.Defibrillator))
+        return null;
 
       DefibrillatorCartController[] allCarts = FindObjectsByType<DefibrillatorCartController>(
         FindObjectsInactive.Include, FindObjectsSortMode.None);

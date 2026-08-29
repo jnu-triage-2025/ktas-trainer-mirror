@@ -16,6 +16,28 @@ namespace TriageTrainer.Tests
   public sealed class PatientEquipmentConnectionTests
   {
     [Test]
+    public void CareZoneMissingEquipmentFallbackGameRuleParsesCommaSeparatedValues()
+    {
+      try
+      {
+        Assert.That(ScenarioGameRules.TrySetMissingCareZoneEquipmentFallback(
+          "oxyflowmeter,wall_suction", out _), Is.True);
+        Assert.That(ScenarioGameRules.AllowsMissingCareZoneEquipmentFallback(
+          CareZoneMissingEquipmentFallback.WallSuction), Is.True);
+        Assert.That(ScenarioGameRules.AllowsMissingCareZoneEquipmentFallback(
+          CareZoneMissingEquipmentFallback.Oxyflowmeter), Is.True);
+        Assert.That(ScenarioGameRules.AllowsMissingCareZoneEquipmentFallback(
+          CareZoneMissingEquipmentFallback.Defibrillator), Is.False);
+        Assert.That(ScenarioGameRules.FormatMissingCareZoneEquipmentFallback(),
+          Is.EqualTo("wall_suction,oxyflowmeter"));
+      }
+      finally
+      {
+        ScenarioGameRules.TrySetMissingCareZoneEquipmentFallback("defibrillator", out _);
+      }
+    }
+
+    [Test]
     public void DefibrillatorResolutionPrefersCareZoneCartThenNearestFallback()
     {
       var root = new GameObject("defibrillator-resolution-test");

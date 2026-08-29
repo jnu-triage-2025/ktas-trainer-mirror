@@ -83,9 +83,12 @@ namespace TriageTrainer.Entity
 
     public PatientController GetPatientForOxyflowmeter(WallAttachedOxyflowmeter flowmeter)
     {
-      if (flowmeter == null || _activePatient == null || !IsEquipmentInZone(flowmeter))
+      if (flowmeter == null || _activePatient == null)
         return null;
-      return _activePatient;
+      return IsEquipmentInZone(flowmeter)
+             || ReferenceEquals(_activePatient.ConnectedOxyflowmeter, flowmeter)
+        ? _activePatient
+        : null;
     }
 
     public bool ContainsWorldPosition(Vector3 worldPosition)
@@ -446,8 +449,8 @@ namespace TriageTrainer.Entity
       if (refreshEquipment)
         RefreshEquipment();
       WarnIfConfigurationInvalid();
-      IReadOnlyList<WallAttachedWallSuction> suction = GetUsableWallSuctionSources();
-      IReadOnlyList<WallAttachedOxyflowmeter> flowmeter = GetUsableOxyflowmeterSources();
+      IReadOnlyList<WallAttachedWallSuction> suction = GetWallSuctionSourcesWithFallback();
+      IReadOnlyList<WallAttachedOxyflowmeter> flowmeter = GetOxyflowmeterSourcesWithFallback();
       _connectedWallSuction = suction != null && suction.Count == 1 ? suction[0] : null;
       _connectedOxyflowmeter = flowmeter != null && flowmeter.Count == 1 ? flowmeter[0] : null;
       patient.SetConnectedWallSuctionConnections(suction);
@@ -713,6 +716,74 @@ namespace TriageTrainer.Entity
         _warnedMultipleOxyflowmeter = true;
       }
       return null;
+    }
+
+    private IReadOnlyList<WallAttachedWallSuction> GetWallSuctionSourcesWithFallback()
+    {
+      IReadOnlyList<WallAttachedWallSuction> sources = GetUsableWallSuctionSources();
+      if (sources == null || sources.Count != 0
+          || !ScenarioGameRules.AllowsMissingCareZoneEquipmentFallback(
+            CareZoneMissingEquipmentFallback.WallSuction))
+        return sources;
+
+      WallAttachedWallSuction closest = FindClosestWallSuction();
+      return closest != null ? new[] { closest } : sources;
+    }
+
+    private IReadOnlyList<WallAttachedOxyflowmeter> GetOxyflowmeterSourcesWithFallback()
+    {
+      IReadOnlyList<WallAttachedOxyflowmeter> sources = GetUsableOxyflowmeterSources();
+      if (sources == null || sources.Count != 0
+          || !ScenarioGameRules.AllowsMissingCareZoneEquipmentFallback(
+            CareZoneMissingEquipmentFallback.Oxyflowmeter))
+        return sources;
+
+      WallAttachedOxyflowmeter closest = FindClosestOxyflowmeter();
+      return closest != null ? new[] { closest } : sources;
+    }
+
+    private WallAttachedWallSuction FindClosestWallSuction()
+    {
+      WallAttachedWallSuction closest = null;
+      float closestDistanceSquared = float.PositiveInfinity;
+      WallAttachedWallSuction[] candidates = FindObjectsByType<WallAttachedWallSuction>(
+        FindObjectsInactive.Include, FindObjectsSortMode.None);
+      for (int i = 0; i < candidates.Length; i++)
+      {
+        WallAttachedWallSuction candidate = candidates[i];
+        if (candidate == null)
+          continue;
+
+        float distanceSquared = (candidate.transform.position - WorldCenter).sqrMagnitude;
+        if (distanceSquared < closestDistanceSquared)
+        {
+          closest = candidate;
+          closestDistanceSquared = distanceSquared;
+        }
+      }
+      return closest;
+    }
+
+    private WallAttachedOxyflowmeter FindClosestOxyflowmeter()
+    {
+      WallAttachedOxyflowmeter closest = null;
+      float closestDistanceSquared = float.PositiveInfinity;
+      WallAttachedOxyflowmeter[] candidates = FindObjectsByType<WallAttachedOxyflowmeter>(
+        FindObjectsInactive.Include, FindObjectsSortMode.None);
+      for (int i = 0; i < candidates.Length; i++)
+      {
+        WallAttachedOxyflowmeter candidate = candidates[i];
+        if (candidate == null)
+          continue;
+
+        float distanceSquared = (candidate.transform.position - WorldCenter).sqrMagnitude;
+        if (distanceSquared < closestDistanceSquared)
+        {
+          closest = candidate;
+          closestDistanceSquared = distanceSquared;
+        }
+      }
+      return closest;
     }
 
     private void RefreshEquipment()

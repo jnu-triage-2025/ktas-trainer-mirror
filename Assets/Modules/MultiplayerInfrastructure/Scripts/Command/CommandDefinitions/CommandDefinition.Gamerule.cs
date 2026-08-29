@@ -26,6 +26,7 @@ namespace MultiplayerInfrastructure.Command
       new UsageLine("gamerule UseMicInRecognitionCheck [true|false]", "Allow microphone volume for patient recognition checks (default false)."),
       new UsageLine("gamerule DisableInteractionInRecognitionCheck [true|false]", "Disable click interaction for recognition checks; microphone must be enabled."),
       new UsageLine("gamerule DEBUG_INT_CPR_PLAYING_ESCAPE_KEY [true|false]", "Allow the local CPR performer to release animation and position lock with Left Shift (default false)."),
+      new UsageLine("gamerule CareZoneMissingEquipmentFallback [wall_suction,oxyflowmeter,defibrillator|none]", "Use nearest equipment when expected CareZone equipment is absent (default defibrillator)."),
     };
 
     public string PermissionIdentifier => "gamerule";
@@ -48,7 +49,7 @@ namespace MultiplayerInfrastructure.Command
       if (args == null || args.Length == 0)
       {
         _chat.SendSystemMessage(sender,
-          $"Game rules:\n  runningSpeedMultiplier = {Format(PlayerController.ServerRunningSpeedMultiplier)}\n  IgnoreTagAssignFullSatisfactionOnScenarioPlay = {ScenarioGameRules.IgnoreTagAssignFullSatisfactionOnScenarioPlay}\n  AllowMultipleRoleBranchesForSinglePlayer = {ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer}\n  UseMicInRecognitionCheck = {ScenarioGameRules.UseMicInRecognitionCheck}\n  DisableInteractionInRecognitionCheck = {ScenarioGameRules.DisableInteractionInRecognitionCheck}\n  DEBUG_INT_CPR_PLAYING_ESCAPE_KEY = {ScenarioGameRules.DEBUG_INT_CPR_PLAYING_ESCAPE_KEY}");
+          $"Game rules:\n  runningSpeedMultiplier = {Format(PlayerController.ServerRunningSpeedMultiplier)}\n  IgnoreTagAssignFullSatisfactionOnScenarioPlay = {ScenarioGameRules.IgnoreTagAssignFullSatisfactionOnScenarioPlay}\n  AllowMultipleRoleBranchesForSinglePlayer = {ScenarioGameRules.AllowMultipleRoleBranchesForSinglePlayer}\n  UseMicInRecognitionCheck = {ScenarioGameRules.UseMicInRecognitionCheck}\n  DisableInteractionInRecognitionCheck = {ScenarioGameRules.DisableInteractionInRecognitionCheck}\n  DEBUG_INT_CPR_PLAYING_ESCAPE_KEY = {ScenarioGameRules.DEBUG_INT_CPR_PLAYING_ESCAPE_KEY}\n  CareZoneMissingEquipmentFallback = {ScenarioGameRules.FormatMissingCareZoneEquipmentFallback()}");
         return;
       }
 
@@ -130,6 +131,26 @@ namespace MultiplayerInfrastructure.Command
         }
 
         _chat.SendSystemMessage(sender, $"Set DEBUG_INT_CPR_PLAYING_ESCAPE_KEY to {enabled}.");
+        return;
+      }
+
+      if (string.Equals(args[0], "CareZoneMissingEquipmentFallback", System.StringComparison.OrdinalIgnoreCase))
+      {
+        if (args.Length == 1)
+        {
+          _chat.SendSystemMessage(sender,
+            $"CareZoneMissingEquipmentFallback = {ScenarioGameRules.FormatMissingCareZoneEquipmentFallback()}");
+          return;
+        }
+
+        if (args.Length != 2 || !ScenarioGameRules.TrySetMissingCareZoneEquipmentFallback(args[1], out string error))
+        {
+          _chat.SendSystemMessage(sender, error ?? "CareZoneMissingEquipmentFallback accepts wall_suction, oxyflowmeter, defibrillator, or none.");
+          return;
+        }
+
+        _chat.SendSystemMessage(sender,
+          $"Set CareZoneMissingEquipmentFallback to {ScenarioGameRules.FormatMissingCareZoneEquipmentFallback()}.");
         return;
       }
 
