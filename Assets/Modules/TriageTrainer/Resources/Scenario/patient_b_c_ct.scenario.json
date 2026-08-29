@@ -58,6 +58,12 @@
       "interactions": []
     }
   ],
+  "ttsVoiceProfiles": [
+    { "preset": "F1", "voiceIdentifier": "narrator", "voiceStyleName": "F1" },
+    { "preset": "M1", "voiceIdentifier": "dispatcher", "voiceStyleName": "M1" },
+    { "preset": "M2", "voiceIdentifier": "doctor", "voiceStyleName": "M2" },
+    { "preset": "F3", "voiceIdentifier": "patient", "voiceStyleName": "F3" }
+  ],
   "nodes": {
     "GIVE_CHECKLIST_PAPER_IF_MISSING": {
       "identifier": "GIVE_CHECKLIST_PAPER_IF_MISSING",
@@ -420,7 +426,7 @@
       "interactionRequired": false,
       "autoAdvanceSeconds": 3,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F1" }
+      "ttsVoiceProfile": { "preset": "M1" }
     },
     "P_ARRIVAL": {
       "identifier": "P_ARRIVAL",
@@ -814,7 +820,7 @@
       "identifier": "TRIAGE_WRONG",
       "nodeType": "Dialogue",
       "nextIdentifier": "TRIAGE_RESET",
-      "speakerName": null,
+      "speakerName": "self",
       "dialogueContent": "(중증도가 잘못 분류된 것 같다. 다시 분류하자..)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
@@ -832,7 +838,7 @@
       "identifier": "TRIAGE_RESET_REMOVE",
       "nodeType": "Dialogue",
       "nextIdentifier": "TRIAGE_RESET_ADD",
-      "speakerName": null,
+      "speakerName": "self",
       "dialogueContent": "(중증도가 잘못 분류된 것 같다. 다시 분류하자..)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
@@ -850,7 +856,7 @@
       "identifier": "TRIAGE_REENABLE_B",
       "nodeType": "Dialogue",
       "nextIdentifier": "TRIAGE_REENABLE_C",
-      "speakerName": null,
+      "speakerName": "self",
       "dialogueContent": "(중증도가 잘못 분류된 것 같다. 다시 분류하자..)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
@@ -1345,7 +1351,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M1" }
+      "ttsVoiceProfile": { "preset": "M2" }
     },
     "DOC_D": {
       "identifier": "DOC_D",
@@ -1357,7 +1363,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M1" }
+      "ttsVoiceProfile": { "preset": "M2" }
     },
     "P_B_CARE": {
       "identifier": "P_B_CARE",
@@ -1476,13 +1482,13 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M2" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "A_REC1_NOTE": {
       "identifier": "A_REC1_NOTE",
       "nodeType": "Dialogue",
       "nextIdentifier": "A_REC2_ACT",
-      "speakerName": null,
+      "speakerName": "self",
       "dialogueContent": "(환자는 잠시 눈을 뜨더니 다시 눈을 감는다.)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
@@ -1536,7 +1542,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M2" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "A_REC2_NOTE": {
       "identifier": "A_REC2_NOTE",
@@ -1596,7 +1602,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M2" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "A_REC3_DOTS": {
       "identifier": "A_REC3_DOTS",
@@ -1666,7 +1672,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M2" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "A_REC4_NOTE": {
       "identifier": "A_REC4_NOTE",
@@ -2899,7 +2905,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M1" }
+      "ttsVoiceProfile": { "preset": "M2" }
     },
     "care_patient_c": {
       "identifier": "care_patient_c",
@@ -2919,7 +2925,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M1" }
+      "ttsVoiceProfile": { "preset": "M2" }
     },
     "C_DOC_D": {
       "identifier": "C_DOC_D",
@@ -2931,7 +2937,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M1" }
+      "ttsVoiceProfile": { "preset": "M2" }
     },
     "P_C_CARE": {
       "identifier": "P_C_CARE",
@@ -3050,13 +3056,13 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F2" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "C_A_REC1_NOTE": {
       "identifier": "C_A_REC1_NOTE",
       "nodeType": "Dialogue",
       "nextIdentifier": "C_A_REC2_ACT",
-      "speakerName": null,
+      "speakerName": "self",
       "dialogueContent": "(환자는 잠시 눈을 뜨더니 다시 눈을 감는다.)",
       "portraitSpriteIdentifier": null,
       "interactionRequired": false,
@@ -3110,7 +3116,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F2" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "C_A_REC2_NOTE": {
       "identifier": "C_A_REC2_NOTE",
@@ -3170,7 +3176,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F2" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "C_A_REC3_DOTS": {
       "identifier": "C_A_REC3_DOTS",
@@ -3240,7 +3246,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 2,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F2" }
+      "ttsVoiceProfile": { "preset": "F3" }
     },
     "C_A_REC4_NOTE": {
       "identifier": "C_A_REC4_NOTE",
@@ -4473,7 +4479,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 3,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M1" }
+      "ttsVoiceProfile": { "preset": "M2" }
     },
     "move_patients": {
       "identifier": "move_patients",
@@ -4558,7 +4564,7 @@
       "displayDuration": { "value": 1, "unit": "Seconds" },
       "fadeOutDuration": { "value": 0.2, "unit": "Seconds" },
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M1" }
+      "ttsVoiceProfile": { "preset": "M2" }
     },
     "CT_DOCTOR_B_SUMMARY": {
       "identifier": "CT_DOCTOR_B_SUMMARY",
@@ -4570,7 +4576,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M1" }
+      "ttsVoiceProfile": { "preset": "M2" }
     },
     "CT_DOCTOR_C_SUMMARY": {
       "identifier": "CT_DOCTOR_C_SUMMARY",
@@ -4582,7 +4588,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M1" }
+      "ttsVoiceProfile": { "preset": "M2" }
     },
     "CT_DOCTOR_ORDER": {
       "identifier": "CT_DOCTOR_ORDER",
@@ -4594,7 +4600,7 @@
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": 4,
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "M1" }
+      "ttsVoiceProfile": { "preset": "M2" }
     },
     "CT_DOCTOR_MARK_HIDE": {
       "identifier": "CT_DOCTOR_MARK_HIDE",
@@ -4775,7 +4781,7 @@
       "displayDuration": { "value": 3, "unit": "Seconds" },
       "fadeOutDuration": { "value": 0.2, "unit": "Seconds" },
       "playTTS": true,
-      "ttsVoiceProfile": { "preset": "F3" }
+      "ttsVoiceProfile": { "preset": "F1" }
     }
   }
 }
