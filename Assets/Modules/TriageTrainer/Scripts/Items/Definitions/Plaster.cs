@@ -11,7 +11,7 @@
 
     public new const bool HasDurability = true;
     public new const bool EnabledDeltaDurability = true;
-    public new const int MaxDurability = 30;
+    public new const int MaxDurability = 16;
     public new const int DeltaDurabilityOnUse = -1;
   }
 }

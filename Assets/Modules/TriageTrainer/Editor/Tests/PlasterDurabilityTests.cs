@@ -12,20 +12,20 @@ namespace TriageTrainer.Tests
   public class PlasterDurabilityTests
   {
     [Test]
-    public void PlasterStartsWithThirtyDurabilityAndLosesOnePerUse()
+    public void PlasterStartsWithSixteenDurabilityAndLosesOnePerUse()
     {
       var plaster = new Plaster();
 
       Assert.That(plaster.HasCurrentDurability, Is.True);
-      Assert.That(plaster.CurrentMaxDurability, Is.EqualTo(30));
-      Assert.That(plaster.CurrentDurability, Is.EqualTo(30));
+      Assert.That(plaster.CurrentMaxDurability, Is.EqualTo(16));
+      Assert.That(plaster.CurrentDurability, Is.EqualTo(16));
       Assert.That(plaster.CurrentDurabilityDeltaOnUse, Is.EqualTo(-1));
 
-      for (int use = 1; use < 30; use++)
+      for (int use = 1; use < 16; use++)
       {
         Assert.That(plaster.TryApplyDurabilityOnUse(out bool depleted), Is.True);
-        Assert.That(plaster.CurrentDurability, Is.EqualTo(30 - use));
-        Assert.That(depleted, Is.False, "30번째 사용 전에는 플라스터가 소진되면 안 됩니다.");
+        Assert.That(plaster.CurrentDurability, Is.EqualTo(16 - use));
+        Assert.That(depleted, Is.False, "16번째 사용 전에는 플라스터가 소진되면 안 됩니다.");
       }
 
       Assert.That(plaster.TryApplyDurabilityOnUse(out bool depletedOnLastUse), Is.True);
@@ -38,16 +38,31 @@ namespace TriageTrainer.Tests
     {
       var plaster = new Plaster { CurrentStackCount = 2 };
 
-      for (int use = 1; use <= 30; use++)
+      for (int use = 1; use <= 16; use++)
         Assert.That(plaster.TryConsumeDurabilityOnUse(out _), Is.True);
 
       Assert.That(plaster.CurrentStackCount, Is.EqualTo(1));
-      Assert.That(plaster.CurrentDurability, Is.EqualTo(30));
+      Assert.That(plaster.CurrentDurability, Is.EqualTo(16));
 
       Assert.That(plaster.TryConsumeDurabilityOnUse(out bool stackDepleted), Is.True);
       Assert.That(stackDepleted, Is.False);
       Assert.That(plaster.CurrentStackCount, Is.EqualTo(1));
-      Assert.That(plaster.CurrentDurability, Is.EqualTo(29));
+      Assert.That(plaster.CurrentDurability, Is.EqualTo(15));
+    }
+
+    [Test]
+    public void ScissorsStartsWithSixteenDurabilityAndLosesOnePerUse()
+    {
+      var scissors = new Scissors();
+
+      Assert.That(scissors.HasCurrentDurability, Is.True);
+      Assert.That(scissors.CurrentMaxDurability, Is.EqualTo(16));
+      Assert.That(scissors.CurrentDurability, Is.EqualTo(16));
+      Assert.That(scissors.CurrentDurabilityDeltaOnUse, Is.EqualTo(-1));
+
+      Assert.That(scissors.TryApplyDurabilityOnUse(out bool depleted), Is.True);
+      Assert.That(scissors.CurrentDurability, Is.EqualTo(15));
+      Assert.That(depleted, Is.False);
     }
 
     [Test]
