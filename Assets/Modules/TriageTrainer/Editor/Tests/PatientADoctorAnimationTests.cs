@@ -29,6 +29,13 @@ namespace TriageTrainer.Tests
     private const string ChestCompressionClipGuid = "d534f618ed2984abe9dbc1b5eb29b15a";
     private const string PatientPrefabPath =
       "Assets/Modules/TriageTrainer/Prefabs/Entities/Patient/PatientTypeA.prefab";
+    private const string IngameScenePath = "Assets/Scenes/IngameScene.unity";
+    private const string OverworldScenePath = "Assets/Scenes/OverworldScene.unity";
+    private const string IngameSceneBootstrapperSourcePath =
+      "Assets/Modules/UnitySceneSupports/IngameScene/Scripts/IngameSceneBootstrapper.cs";
+    private const string ScenarioEventBootstrapSourcePath =
+      "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.cs";
+    private const string ScenarioEventBootstrapScriptGuid = "35d5ee3a6e42c417da2b33a6fa829dbd";
 
     [Test]
     public void DoctorPrefabUsesHumanoidDoctorWithScenarioController()
@@ -523,6 +530,73 @@ namespace TriageTrainer.Tests
       Assert.That(source, Does.Not.Contain("preservePatientAnimation"),
         "E031에서 환자 CPR 애니메이션만 남기는 예외 경로를 두어서는 안 됩니다.");
     }
+
+    /// <summary>
+    /// IngameScene 은 OverworldScene 을 Additive 로 로드한다. 두 씬이 모두 부트스트랩을 들고 있으면
+    /// 상호작용 static 이벤트는 두 인스턴스가 모두 처리하는 반면 시나리오 이벤트는 마지막 등록만
+    /// 남으므로, CPR PlayableGraph 와 모델 Y 오프셋을 두 번 걸고 한 번만 해제하게 된다.
+    /// </summary>
+    [Test]
+    public void OnlyOverworldSceneCarriesTheScenarioEventBootstrap()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string scriptReference =
+        $"m_Script: {{fileID: 11500000, guid: {ScenarioEventBootstrapScriptGuid}, type: 3}}";
+
+      string ingameScene = File.ReadAllText(Path.Combine(projectRoot, IngameScenePath));
+      string overworldScene = File.ReadAllText(Path.Combine(projectRoot, OverworldScenePath));
+
+      Assert.That(CountOccurrences(ingameScene, scriptReference), Is.EqualTo(0),
+        "IngameScene 은 OverworldScene 을 Additive 로 로드하므로, 여기에도 부트스트랩을 두면 "
+        + "인스턴스가 둘이 되어 CPR 연출 정리가 한쪽에서만 실행됩니다.");
+      Assert.That(CountOccurrences(overworldScene, scriptReference), Is.EqualTo(1),
+        "환자 연출 참조를 보유한 OverworldScene 의 부트스트랩 하나만 남아 있어야 합니다.");
+
+      string ingameBootstrapperSource =
+        File.ReadAllText(Path.Combine(projectRoot, IngameSceneBootstrapperSourcePath));
+      Assert.That(ingameBootstrapperSource,
+        Does.Not.Contain("AddComponent<TriageScenarioEventBootstrap>"),
+        "런타임에 부트스트랩을 덧붙이면 씬에서 제거해도 인스턴스가 다시 둘이 됩니다.");
+    }
+
+    /// <summary>
+    /// 씬 구성이 다시 어긋나더라도 인스턴스가 둘로 늘어나지 않도록, 나중에 활성화된 인스턴스는
+    /// 아무것도 구독·등록하지 않은 채 스스로 비활성화되어야 한다.
+    /// </summary>
+    [Test]
+    public void ScenarioEventBootstrapKeepsOnlyOneActiveInstance()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string source = File.ReadAllText(Path.Combine(projectRoot, ScenarioEventBootstrapSourcePath));
+
+      StringAssert.Contains("private static TriageScenarioEventBootstrap _activeInstance;", source,
+        "활성 인스턴스를 판별할 기준값이 있어야 중복을 걸러낼 수 있습니다.");
+
+      int enableIndex = source.IndexOf("private void OnEnable()", StringComparison.Ordinal);
+      Assert.That(enableIndex, Is.GreaterThanOrEqualTo(0));
+      int claimIndex = source.IndexOf("TryBecomeActiveInstance()", enableIndex, StringComparison.Ordinal);
+      int subscribeIndex = source.IndexOf(
+        "ScenarioActionInteractable.OnInteractionCompleted +=", enableIndex, StringComparison.Ordinal);
+      Assert.That(claimIndex, Is.GreaterThanOrEqualTo(0));
+      Assert.That(subscribeIndex, Is.GreaterThanOrEqualTo(0));
+      Assert.That(claimIndex, Is.LessThan(subscribeIndex),
+        "중복 판정은 static 상호작용 이벤트를 구독하기 전에 끝나야 합니다. "
+        + "순서가 뒤바뀌면 중복 인스턴스도 CPR PlayableGraph 를 만들게 됩니다.");
+
+      int disableIndex = source.IndexOf("private void OnDisable()", StringComparison.Ordinal);
+      Assert.That(disableIndex, Is.GreaterThanOrEqualTo(0));
+      int guardIndex = source.IndexOf("_activeInstance != this", disableIndex, StringComparison.Ordinal);
+      int unsubscribeIndex = source.IndexOf(
+        "ScenarioActionInteractable.OnInteractionCompleted -=", disableIndex, StringComparison.Ordinal);
+      Assert.That(guardIndex, Is.GreaterThanOrEqualTo(0));
+      Assert.That(unsubscribeIndex, Is.GreaterThanOrEqualTo(0));
+      Assert.That(guardIndex, Is.LessThan(unsubscribeIndex),
+        "중복으로 판정된 인스턴스의 OnDisable 은 해제를 수행하면 안 됩니다. "
+        + "활성 인스턴스가 등록해 둔 시나리오 이벤트까지 함께 지워집니다.");
+    }
+
+    private static int CountOccurrences(string source, string value)
+      => source.Split(new[] { value }, StringSplitOptions.None).Length - 1;
 
     [TestCase("lisa")]
     [TestCase("maya")]
