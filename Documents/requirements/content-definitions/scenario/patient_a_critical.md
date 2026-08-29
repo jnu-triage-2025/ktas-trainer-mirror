@@ -985,10 +985,11 @@ flags: ["refactor-required"]
 - `/gamerule DEBUG_INT_CPR_PLAYING_ESCAPE_KEY true`는 혼자 시나리오를 점검할 때만 사용하는 디버그 규칙이다. 기본값은 `false`이며, `debugging` 데이터팩은 이 값을 `true`로 설정한다.
 - 이 규칙이 `true`이면 CPR을 수행 중인 로컬 소유 플레이어가 `Left Shift`를 눌러 자신의 CPR 애니메이션과 위치 고정만 임시로 해제할 수 있다. 이 동작은 CPR 완료 신호, 시나리오 진행 상태, 다른 플레이어의 연출을 변경하지 않는다.
 - CPR 위치 고정 중에는 같은 `Left Shift` 입력이 침대·카트의 하차 입력으로 함께 처리되지 않도록 탑승 해제를 별도로 억제한다. 디버그 Escape 또는 정상 CPR 종료 시에는 CPR이 소유한 억제 상태만 해제한다.
-- 디버그 Escape 시점의 위치를 별도로 저장한다. 시스템상 CPR 종료 이벤트가 나중에 도착하면 플레이어를 저장한 위치로 되돌린 다음 정상 위치 고정 해제 처리를 수행한다. 디버그 Escape 직후 수행자 상태를 제거하거나 정상 종료 처리를 미리 실행하면 이 복귀 동작이 사라지므로 그렇게 변경해서는 안 된다.
+- 디버그 Escape 순간의 위치는 저장하거나 정상 종료 위치로 사용하지 않는다. 시스템상 CPR 종료 이벤트가 나중에 도착하면 플레이어를 CPR 진입 직전 위치와 Y 회전으로 복귀시킨다. Escape 이후에도 시스템상 수행 상태만 유지하며, Escape 지점 좌표를 종료 처리에 섞어서는 안 된다.
 - 정상 CPR 종료 시에는 수행자를 환자 중심의 CPR 앵커에 남겨 두지 않고 CPR 진입 직전 위치와 Y 회전으로 복귀시킨다. 이를 통해 침대·환자와 겹치지 않는 X/Z 퇴장 위치를 확보한다.
 - 환자 CPR 높이 보정은 `PatientTypeA` 엔티티 루트나 Animator Transform을 직접 이동하지 않고, Patient A 프리팹의 `CPRModelOffsetRoot`에만 적용한다. 이 루트는 Patient A 전용이며 Patient B·Dummy 프리팹과 공통 `PatientController`에는 추가하지 않는다.
 - CPR 클립의 `RootT`와 `RootQ`는 PlayableGraph 종료 후 Animator Transform에 남을 수 있으므로, 환자와 수행자 모두 그래프 재생 직전의 로컬 위치·회전을 저장하고 종료 시 복원한다.
+- `E031`과 `E035`의 `stop_ambu_and_comp`에서는 수행자와 환자의 CPR `PlayableGraph`를 모두 종료하고 `CPRModelOffsetRoot` 높이 보정을 원래 값으로 복원한다. 그래프 종료와 높이 복원은 동일한 종료 경로에서 처리해야 하며, 높이 보정만 제거되어 환자가 CPR 골격 자세로 남아서는 안 된다. 그래프 제거 직후 기존 Animator Controller를 평가하여 환자 자세를 즉시 정상 상태로 되돌린다.
 
     1. ChoiceDialogue
       - Speaker: `@s`

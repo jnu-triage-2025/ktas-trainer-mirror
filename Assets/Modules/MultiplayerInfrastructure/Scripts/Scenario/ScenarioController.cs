@@ -633,6 +633,25 @@ namespace MultiplayerInfrastructure.Scenario
         yield return StartCoroutine(routine);
     }
 
+    /// <summary>
+    /// 서버가 실행한 연출 전용 이벤트를 표시 피어에서도 실행한다.
+    /// <see cref="ScenarioNetworkRelay.InvokePresentationEventAuthoritative"/> 가 호출한다.
+    /// 그래프 순회는 서버가 담당하므로 이 경로는 노드를 진행시키지 않는다.
+    /// </summary>
+    public void RunPresentationEvent(string graphIdentifier, string eventIdentifier)
+    {
+      // 그래프를 직접 순회하는 피어는 같은 이벤트를 이미 스스로 실행했다. 여기서 또 실행하면
+      // 같은 연출이 두 번 적용된다(RPC 는 ExcludeServer 로도 막지만 이중 방어).
+      if (_executionMode != ExecutionMode.ClientPresentation)
+        return;
+
+      if (_currentGraph == null
+          || !string.Equals(_currentGraph.Identifier, graphIdentifier, StringComparison.Ordinal))
+        return;
+
+      StartCoroutine(ExecutePresentationEvent(eventIdentifier));
+    }
+
     /// <summary>서버가 종료를 통지한 클라이언트 표시 상태만 정리한다.</summary>
     public void EndPresentationScenario(string graphIdentifier)
     {

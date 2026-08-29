@@ -368,6 +368,36 @@ namespace MultiplayerInfrastructure.Scenario
         ScenarioController.Instance.DismissPresentationUI(graphIdentifier);
     }
 
+    /// <summary>
+    /// 서버가 실행한 연출 전용 이벤트를 표시 피어에서도 실행시킨다.
+    ///
+    /// 역할 브랜치 밖의 일반 InvokeEvent 노드는 그래프를 순회하는 권위 피어에서만 실행된다.
+    /// 반면 상호작용에서 시작되는 연출은 상호작용한 피어의 로컬 상태로 남으므로, 그 연출을 끝내는
+    /// 이벤트를 전달하지 않으면 해당 피어에서 연출과 입력 제약이 영구히 남는다. 시작을 로컬에서
+    /// 수행하고 종료만 서버가 통지하는 연출은 이 중계를 통해 종료를 전 피어에 도달시킨다.
+    /// </summary>
+    public static void InvokePresentationEventAuthoritative(string eventIdentifier)
+    {
+      if (_instance == null || !InstanceFinder.IsServerStarted
+          || string.IsNullOrWhiteSpace(eventIdentifier))
+        return;
+
+      string graphIdentifier = ScenarioController.Instance?.CurrentGraph?.Identifier;
+      if (string.IsNullOrWhiteSpace(graphIdentifier))
+        return;
+
+      _instance.ObserversInvokePresentationEvent(graphIdentifier, eventIdentifier);
+    }
+
+    // ExcludeServer: 호스트는 권위 경로에서 같은 이벤트를 이미 실행했다. RPC 까지 받으면 같은
+    // 연출 종료가 두 번 적용된다.
+    [ObserversRpc(BufferLast = false, ExcludeServer = true)]
+    private void ObserversInvokePresentationEvent(string graphIdentifier, string eventIdentifier)
+    {
+      if (ScenarioController.Instance != null)
+        ScenarioController.Instance.RunPresentationEvent(graphIdentifier, eventIdentifier);
+    }
+
     /// <summary>서버가 권위 시나리오의 종료를 표시 참여자에게 전달한다.</summary>
     public static void EndAuthoritativePresentation(string graphIdentifier)
     {

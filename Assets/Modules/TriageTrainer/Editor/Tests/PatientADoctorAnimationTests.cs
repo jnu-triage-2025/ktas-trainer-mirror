@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using MultiplayerInfrastructure.Player;
@@ -47,7 +48,7 @@ namespace TriageTrainer.Tests
       Assert.That(animation, Is.Not.Null);
       Assert.That(animation.Animator, Is.SameAs(animator));
 
-      GameObject instance = Object.Instantiate(prefab);
+      GameObject instance = UnityEngine.Object.Instantiate(prefab);
       try
       {
         Animator runtimeAnimator = instance.GetComponentInChildren<Animator>(true);
@@ -58,7 +59,7 @@ namespace TriageTrainer.Tests
       }
       finally
       {
-        Object.DestroyImmediate(instance);
+        UnityEngine.Object.DestroyImmediate(instance);
       }
     }
 
@@ -94,7 +95,7 @@ namespace TriageTrainer.Tests
     public void DoctorAnimatorSwitchesBetweenIdleWalkAndCprAtRuntime()
     {
       GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(DoctorPrefabPath);
-      GameObject instance = Object.Instantiate(prefab);
+      GameObject instance = UnityEngine.Object.Instantiate(prefab);
       try
       {
         Animator animator = instance.GetComponentInChildren<Animator>(true);
@@ -117,7 +118,7 @@ namespace TriageTrainer.Tests
       }
       finally
       {
-        Object.DestroyImmediate(instance);
+        UnityEngine.Object.DestroyImmediate(instance);
       }
     }
 
@@ -161,7 +162,7 @@ namespace TriageTrainer.Tests
       }
       finally
       {
-        Object.DestroyImmediate(bootstrapObject);
+        UnityEngine.Object.DestroyImmediate(bootstrapObject);
       }
     }
 
@@ -184,10 +185,13 @@ namespace TriageTrainer.Tests
         "CPR 종료는 MinecraftBoatLikeControl 하차와 같은 앵커 해제 경로를 사용해야 합니다.");
       StringAssert.Contains("SetMovementSuppressed(state.Anchor, false)", source);
       StringAssert.Contains("SetRidableExitSuppressed(state.Anchor, false)", source);
-      StringAssert.Contains("EntryPosition = player.transform.position", source,
-        "CPR 종료 시 침대 중앙이 아닌 진입 전 X/Z 위치로 복귀해야 합니다.");
-      StringAssert.Contains("? state.DebugEscapePosition", source);
-      StringAssert.Contains(": state.EntryPosition", source);
+      StringAssert.Contains("EntryPosition = ResolvePatientACprPerformerEntryPosition(player, patient)",
+        source, "CPR 종료 시 침대 중앙이 아닌 진입 전 X/Z 위치로 복귀해야 합니다.");
+      StringAssert.Contains("Vector3 entryPosition = player.transform.position", source,
+        "진입 위치의 기준은 CPR 진입 직전 플레이어 위치여야 합니다.");
+      StringAssert.Contains("MoveToPositionPreservingForcedFollowAnchor(state.EntryPosition)", source);
+      Assert.That(source, Does.Not.Contain("DebugEscapePosition"),
+        "Left Shift 순간의 좌표는 CPR 종료 위치로 기록하거나 사용해서는 안 됩니다.");
       StringAssert.Contains("SetLocalPositionAndRotation(rootPose.LocalPosition, rootPose.LocalRotation)", source,
         "RootT/RootQ가 포함된 CPR 그래프를 제거할 때 Animator 루트 자세를 복원해야 합니다.");
 
@@ -201,7 +205,7 @@ namespace TriageTrainer.Tests
       }
       finally
       {
-        Object.DestroyImmediate(bootstrapObject);
+        UnityEngine.Object.DestroyImmediate(bootstrapObject);
       }
     }
 
@@ -227,9 +231,9 @@ namespace TriageTrainer.Tests
       }
       finally
       {
-        Object.DestroyImmediate(playerObject);
-        Object.DestroyImmediate(firstOwner);
-        Object.DestroyImmediate(secondOwner);
+        UnityEngine.Object.DestroyImmediate(playerObject);
+        UnityEngine.Object.DestroyImmediate(firstOwner);
+        UnityEngine.Object.DestroyImmediate(secondOwner);
       }
     }
 
@@ -254,9 +258,9 @@ namespace TriageTrainer.Tests
       }
       finally
       {
-        Object.DestroyImmediate(playerObject);
-        Object.DestroyImmediate(firstOwner);
-        Object.DestroyImmediate(secondOwner);
+        UnityEngine.Object.DestroyImmediate(playerObject);
+        UnityEngine.Object.DestroyImmediate(firstOwner);
+        UnityEngine.Object.DestroyImmediate(secondOwner);
       }
     }
 
@@ -322,16 +326,198 @@ namespace TriageTrainer.Tests
         "오프라인 단독 디버깅에서는 네트워크 소유권 없이도 Escape 입력을 처리해야 합니다.");
       StringAssert.Contains("Input.GetKeyDown(KeyCode.LeftShift)", source);
       StringAssert.Contains("state.DebugEscaped = true", source);
-      StringAssert.Contains("state.DebugEscapePosition = state.Player.transform.position", source);
       StringAssert.Contains("StopPatientACprPerformerAnimation(state.Player)", source);
-      StringAssert.Contains("state.DebugEscapePosition", source,
-        "정상 CPR 종료 시에는 디버그로 위치 고정을 해제했던 장소로 복귀해야 합니다.");
+      StringAssert.Contains("MoveToPositionPreservingForcedFollowAnchor(state.EntryPosition)", source,
+        "정상 CPR 종료 시에는 Escape 순간이 아니라 CPR 진입 직전 위치로 복귀해야 합니다.");
+      Assert.That(source, Does.Not.Contain("DebugEscapePosition"));
+
+      int escapeIndex = source.IndexOf("state.DebugEscaped = true", StringComparison.Ordinal);
+      int escapeReturnIndex = source.IndexOf(
+        "ReturnPatientACprPerformerToEntry(state)", escapeIndex, StringComparison.Ordinal);
+      Assert.That(escapeReturnIndex, Is.GreaterThan(escapeIndex),
+        "Escape로 앵커만 풀면 수행자가 침대 안에 남아 Y로 솟아오르므로, 진입 직전 위치로 되돌려야 합니다.");
+      StringAssert.Contains("state.ReturnedToEntry", source,
+        "이미 퇴장한 수행자를 정상 종료 시점에 다시 끌어와서는 안 됩니다.");
+      StringAssert.Contains("ResolvePatientACprPerformerEntryPosition(player, patient)", source,
+        "환자·침대와 겹치는 좌표는 퇴장 위치로 기록하지 않고 X/Z를 밀어내야 합니다.");
       Assert.That(source, Does.Not.Contain("state.Player.SetForcedFollowAnchor(state.Anchor);\n          }"),
         "디버그 복귀가 이후에 설정된 다른 이동 시스템의 앵커를 덮어써서는 안 됩니다.");
       StringAssert.Contains("ResolvePatientACprModelOffsetRoot(animator)", source,
         "RootT 곡선과 침대 attachment가 충돌하지 않도록 전용 부모 루트에 오프셋을 적용해야 합니다.");
       Assert.That(source, Does.Not.Contain("TryDebugEscapePatientACprPerformer(state);\n      _patientACprPerformers.Clear"),
         "디버그 Escape가 시스템상 CPR 수행 상태를 제거해서는 안 됩니다.");
+    }
+
+    /// <summary>
+    /// 디버그 Escape 상태는 새로 시작된 가슴압박 연출을 넘어 유지되면 안 된다.
+    /// 유지되면 <c>TryDebugEscapePatientACprPerformer</c> 가 곧바로 실패하고 <c>LateUpdate</c> 의
+    /// 매 프레임 정렬도 건너뛰므로, 진입 시 한 번 걸린 앵커가 해제되지 않아 수행자가 CPR 좌표에
+    /// 고정된 채 조작 불능이 된다. (1주기 nurse_b 로 Escape 한 뒤 2주기 nurse_a 로 재진입하는 상황)
+    /// </summary>
+    [Test]
+    public void DebugCprEscapeDoesNotSurviveANewChestCompressionPresentation()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string source = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.PatientACprAnimations.cs"));
+
+      int reuseIndex = source.IndexOf("state.Patient = patient;", StringComparison.Ordinal);
+      Assert.That(reuseIndex, Is.GreaterThan(0),
+        "기존 수행자 상태를 재사용하는 분기를 찾지 못했습니다.");
+      int reuseResetIndex = source.IndexOf(
+        "state.DebugEscaped = false;", reuseIndex, StringComparison.Ordinal);
+      Assert.That(reuseResetIndex, Is.GreaterThan(reuseIndex),
+        "기존 수행자 상태를 재사용해 다시 진입할 때 디버그 Escape 상태를 초기화해야 합니다.");
+
+      int returnedToEntryResetIndex = source.IndexOf(
+        "state.ReturnedToEntry = false;", reuseIndex, StringComparison.Ordinal);
+      Assert.That(returnedToEntryResetIndex, Is.LessThan(reuseResetIndex),
+        "Escape 상태 초기화가 퇴장 위치 복귀 여부(ReturnedToEntry) 분기 안에 갇혀서는 안 됩니다.");
+
+      StringAssert.Contains("private void RestorePatientACprPerformerFromDebugEscape(PlayerController player)",
+        source,
+        "상호작용과 별개로 연출을 다시 거는 경로(E028/E033)에서도 Escape 상태를 되돌려야 합니다.");
+      int restoreCallCount = source.Split(
+        new[] { "RestorePatientACprPerformerFromDebugEscape(player);" },
+        StringSplitOptions.None).Length - 1;
+      Assert.That(restoreCallCount, Is.GreaterThanOrEqualTo(2),
+        "태그 기준 연출 경로와 수행자 기준 연출 경로 모두에서 Escape 상태를 되돌려야 합니다.");
+    }
+
+    /// <summary>
+    /// CPR 수행자 고정과 연출은 가슴압박에 상호작용한 피어가 로컬로 시작한다. 반면 종료 이벤트인
+    /// <c>stop_ambu_and_comp</c>(E031/E035)는 역할 브랜치 밖의 InvokeEvent 노드라서 그래프를
+    /// 순회하는 권위 피어에서만 실행된다. 종료를 전 피어에 전달하지 않으면 상호작용한 클라이언트에서
+    /// 앵커 고정과 연출이 풀리지 않고, 다음 주기가 이전 주기의 수행자 상태를 그대로 재사용한다.
+    /// </summary>
+    [Test]
+    public void CprStopReachesEveryPeerThatStartedThePresentationLocally()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string stopEventSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.stop_ambu_and_comp.cs"));
+      string relaySource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/ScenarioNetworkRelay.cs"));
+      string controllerSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/MultiplayerInfrastructure/Scripts/Scenario/ScenarioController.cs"));
+
+      StringAssert.Contains(
+        "ScenarioNetworkRelay.InvokePresentationEventAuthoritative(StopAmbuAndCompEventIdentifier)",
+        stopEventSource,
+        "CPR 종료는 권위 피어뿐 아니라 연출을 로컬로 시작한 피어에도 도달해야 합니다.");
+
+      StringAssert.Contains("public static void InvokePresentationEventAuthoritative(string eventIdentifier)",
+        relaySource);
+      StringAssert.Contains("!InstanceFinder.IsServerStarted", relaySource,
+        "연출 이벤트 통지는 서버 컨텍스트에서만 나가야 합니다.");
+      int broadcastIndex = relaySource.IndexOf(
+        "public static void InvokePresentationEventAuthoritative", StringComparison.Ordinal);
+      int excludeServerIndex = relaySource.IndexOf(
+        "[ObserversRpc(BufferLast = false, ExcludeServer = true)]", broadcastIndex, StringComparison.Ordinal);
+      int rpcIndex = relaySource.IndexOf(
+        "private void ObserversInvokePresentationEvent", broadcastIndex, StringComparison.Ordinal);
+      Assert.That(excludeServerIndex, Is.GreaterThan(broadcastIndex).And.LessThan(rpcIndex),
+        "호스트가 같은 연출 종료를 두 번 적용하지 않도록 ExcludeServer 로 보내야 합니다.");
+
+      StringAssert.Contains("public void RunPresentationEvent(string graphIdentifier, string eventIdentifier)",
+        controllerSource);
+      int runIndex = controllerSource.IndexOf(
+        "public void RunPresentationEvent(", StringComparison.Ordinal);
+      int guardIndex = controllerSource.IndexOf(
+        "_executionMode != ExecutionMode.ClientPresentation", runIndex, StringComparison.Ordinal);
+      Assert.That(guardIndex, Is.GreaterThan(runIndex),
+        "그래프를 직접 순회하는 피어는 통지받은 연출 이벤트를 다시 실행해서는 안 됩니다.");
+    }
+
+    /// <summary>
+    /// CPR 시작 연출도 모든 피어에 도달해야 한다. 라운드마다 가슴압박 역할이 다른데 표시 피어에는
+    /// InvokeEvent 노드가 <c>CurrentNode</c> 로 남지 않으므로, 라운드 판정을 표시 피어에 맡기면
+    /// 2주기에도 1주기 역할의 연출이 재생된다. 권위 피어가 판정한 라운드를 라운드별 연출 이벤트로
+    /// 구분해서 통지해야 한다.
+    /// </summary>
+    [Test]
+    public void CprStartReachesEveryPeerWithTheRoundResolvedByTheAuthority()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string startSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.start_chest_compression.cs"));
+      string ambuSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.Event.start_ambubagging.cs"));
+      string animationSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.PatientACprAnimations.cs"));
+
+      StringAssert.Contains("\"present_patient_a_cpr_round_one\"", startSource);
+      StringAssert.Contains("\"present_patient_a_cpr_round_two\"", startSource);
+      Assert.That(
+        startSource.Split(new[] { "\"start_chest_compression\"" }, StringSplitOptions.None).Length - 1,
+        Is.EqualTo(1),
+        "라운드별 연출 이벤트가 시나리오 이벤트와 같은 식별자를 쓰면 표시 피어가 라운드를 구분하지 못합니다.");
+      Assert.That(animationSource, Does.Not.Contain("PatientACprRoundOnePresentationEventIdentifier ="),
+        "라운드별 연출 이벤트 식별자는 한 곳에서만 선언해야 합니다.");
+      Assert.That(animationSource, Does.Not.Contain("PatientACprRoundTwoPresentationEventIdentifier ="),
+        "라운드별 연출 이벤트 식별자는 한 곳에서만 선언해야 합니다.");
+
+      StringAssert.Contains(
+        "Register(PatientACprRoundOnePresentationEventIdentifier, Event_PresentPatientACprRoundOne)",
+        startSource);
+      StringAssert.Contains(
+        "Register(PatientACprRoundTwoPresentationEventIdentifier, Event_PresentPatientACprRoundTwo)",
+        startSource);
+      StringAssert.Contains("ScenarioNetworkRelay.InvokePresentationEventAuthoritative(", startSource,
+        "가슴압박 시작도 연출을 보지 못하는 피어에 도달해야 합니다.");
+      StringAssert.Contains("ResolvePatientACprRoundPresentationEventIdentifier())", startSource,
+        "통지에는 권위 피어가 판정한 라운드가 실려야 합니다.");
+      StringAssert.Contains(
+        "ScenarioNetworkRelay.InvokePresentationEventAuthoritative(StartAmbuBaggingEventIdentifier)",
+        ambuSource,
+        "앰부배깅 애니메이터는 피어마다 따로 있으므로 시작도 전 피어에 도달해야 합니다.");
+
+      // 표시 피어는 수행자 고정을 만들지 않는다. 위치는 NetworkTransform 이 복제하므로, 원격에서
+      // 앵커를 걸면 복제 위치와 충돌한다.
+      Assert.That(startSource, Does.Not.Contain("PositionPatientACprPerformer"),
+        "통지받은 연출 경로가 원격 피어에서 수행자 위치 고정을 만들어서는 안 됩니다.");
+
+      StringAssert.Contains("_patientACprAnimationClips", animationSource,
+        "같은 연출의 중복 시작을 걸러내려면 재생 중인 클립을 알아야 합니다.");
+      int guardIndex = animationSource.IndexOf("playingClip == clip", StringComparison.Ordinal);
+      Assert.That(guardIndex, Is.GreaterThan(0),
+        "상호작용한 피어는 로컬 시작 직후 같은 연출 통지를 받으므로, 재시작으로 클립이 되감기면 안 됩니다.");
+    }
+
+    [Test]
+    public void CprStopEndsPatientPresentationAndRestoresOffsetTogether()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string source = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/TriageScenarioEventBootstrap.PatientACprAnimations.cs"));
+
+      StringAssert.Contains("StopPatientACprAnimations()", source);
+      StringAssert.Contains("StopAndRestoreAnimation(animator)", source,
+        "CPR 그래프 종료와 환자 높이 복원은 분리되지 않은 하나의 경로여야 합니다.");
+      StringAssert.Contains("graph.Destroy()", source,
+        "stop_ambu_and_comp에서 환자 CPR PlayableGraph를 실제로 종료해야 합니다.");
+      StringAssert.Contains("animator.Update(0f)", source,
+        "그래프 종료 직후 Animator Controller를 평가하여 CPR 골격 자세가 남지 않게 해야 합니다.");
+      StringAssert.Contains("animator.Rebind()", source,
+        "그래프를 제거하는 것만으로는 Animator가 자기 Controller 재생으로 돌아오지 않습니다.");
+      StringAssert.Contains("RestoreAnimationPositionOffset(animator)", source,
+        "CPR 애니메이션 종료 후 RootT/RootQ와 모델 Y 오프셋을 원래 값으로 복원해야 합니다.");
+
+      int stopIndex = source.IndexOf(
+        "private void StopAndRestoreAnimation(Animator animator)", StringComparison.Ordinal);
+      Assert.That(stopIndex, Is.GreaterThanOrEqualTo(0));
+      int playbackRestoreIndex = source.IndexOf(
+        "RestorePatientACprAnimatorPlayback(animator)", stopIndex, StringComparison.Ordinal);
+      int offsetRestoreIndex = source.IndexOf(
+        "RestoreAnimationPositionOffset(animator)", stopIndex, StringComparison.Ordinal);
+      Assert.That(playbackRestoreIndex, Is.GreaterThanOrEqualTo(0));
+      Assert.That(playbackRestoreIndex, Is.LessThan(offsetRestoreIndex),
+        "Y 보정 제거는 CPR 자세 종료(컨트롤러 재생 복귀) 이후에만 이뤄져야 합니다. "
+        + "순서가 뒤바뀌면 환자가 CPR 자세를 유지한 채 침대 아래로 내려앉습니다.");
+      StringAssert.Contains("ReleasePatientACprPerformers()", source,
+        "CPR 종료 시 수행자의 위치 고정도 해제해야 합니다.");
+      Assert.That(source, Does.Not.Contain("preservePatientAnimation"),
+        "E031에서 환자 CPR 애니메이션만 남기는 예외 경로를 두어서는 안 됩니다.");
     }
 
     [TestCase("lisa")]
