@@ -96,10 +96,19 @@ namespace TriageTrainer.Scenario
         return;
       }
       if (!string.IsNullOrWhiteSpace(_requiredItemIdentifier)
-          && _consumeRequiredItemCount > 0
-          && player.RemoveItemFromInventory(
-               _requiredItemIdentifier, _consumeRequiredItemCount) != _consumeRequiredItemCount)
-        return;
+          && _consumeRequiredItemCount > 0)
+      {
+        if (_consumeRequiredItemCount == 1)
+        {
+          if (!player.TryConsumeItemUse(_requiredItemIdentifier, out var receipt))
+            return;
+          player.CompleteConsumedItemUse(receipt, accepted: true);
+        }
+        else if (player.RemoveItemFromInventory(
+                   _requiredItemIdentifier, _consumeRequiredItemCount)
+                 != _consumeRequiredItemCount)
+          return;
+      }
 
       SetObjectsActive(_activateOnInteract, true);
       SetObjectsActive(_deactivateOnInteract, false);
