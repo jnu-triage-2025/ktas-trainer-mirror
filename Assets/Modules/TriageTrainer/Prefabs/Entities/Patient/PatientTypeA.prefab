@@ -151,6 +151,38 @@ MonoBehaviour:
   _findItemDialogue: 
   _activateOnInteract: []
   _deactivateOnInteract: []
+--- !u!1 &909999999999999991
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 909999999999999992}
+  m_Layer: 0
+  m_Name: CPRModelOffsetRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &909999999999999992
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 909999999999999991}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2641697381257004268}
+  m_Father: {fileID: 1827749486389943084}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1381168070861292904
 GameObject:
   m_ObjectHideFlags: 0
@@ -634,108 +666,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "기관내관에 앰부백 연결"
+  _displayText: "\uAE30\uAD00\uB0B4\uAD00\uC5D0 \uC570\uBD80\uBC31 \uC5F0\uACB0"
   _displayIcon: {fileID: 0}
   _displayIcons: []
   _completionSignal: connect_ambubag
   _presentationEntityIdentifier: patient_a
-  _interactionIdentifier:
+  _interactionIdentifier: 
   _requiredRaisedSignals:
   - remove_tpiece
-  _requiredPlayerTag:
+  _requiredPlayerTag: 
   _enabled: 0
   _consumeOnce: 1
-  _requiredItemIdentifier:
+  _requiredItemIdentifier: 
   _consumeRequiredItemCount: 0
-  _missingItemDialogue:
-  _findItemDialogue:
+  _missingItemDialogue: 
+  _findItemDialogue: 
   _activateOnInteract:
   - {fileID: 8264803836134063233}
-  _deactivateOnInteract: []
---- !u!1 &5536518702275176135
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 356329490738936366}
-  - component: {fileID: 747821738913170105}
-  - component: {fileID: 4859090575072212568}
-  m_Layer: 0
-  m_Name: AmbuO2ConnectInteractPoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &356329490738936366
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5536518702275176135}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.18607676, y: -0.052287944, z: 0.27733514}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 8270195728276674159}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &747821738913170105
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5536518702275176135}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.2, y: 0.2, z: 0.2}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &4859090575072212568
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5536518702275176135}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
-  _displayText: "앰부백에 산소 저장낭 연결"
-  _displayIcon: {fileID: 0}
-  _displayIcons: []
-  _completionSignal: connect_o2_to_ambu
-  _presentationEntityIdentifier: patient_a
-  _interactionIdentifier:
-  _requiredRaisedSignals:
-  - connect_ambubag
-  _requiredPlayerTag:
-  _enabled: 0
-  _consumeOnce: 1
-  _requiredItemIdentifier:
-  _consumeRequiredItemCount: 0
-  _missingItemDialogue:
-  _findItemDialogue:
-  _activateOnInteract: []
   _deactivateOnInteract: []
 --- !u!1 &2799302206937971700
 GameObject:
@@ -940,38 +889,6 @@ Transform:
   - {fileID: 7300000000000000002}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &909999999999999991
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 909999999999999992}
-  m_Layer: 0
-  m_Name: CPRModelOffsetRoot
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &909999999999999992
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 909999999999999991}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 2641697381257004268}
-  m_Father: {fileID: 1827749486389943084}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6000008013074765727
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1127,9 +1044,8 @@ MonoBehaviour:
     _requiredItemIdentifier: 
     _missingItemDialogue: 
     _findItemDialogue: 
-    _actionDialogue: "(\uD658\uC790\uC758 \uBAA9\uC5D0 \uC190\uC744 \uB300\uACE0
-      \uACBD\uB3D9\uB9E5\uC744 \uCD09\uC9C0\uD55C\uB2E4.)"
-    _resultDialogue: "(\uC544\uBB34\uAC83\uB3C4 \uB290\uAEF4\uC9C0\uC9C0 \uC54A\uB294\uB2E4.)"
+    _actionDialogue: 
+    _resultDialogue: 
     _enabled: 0
   - _identifier: assess_pulse_r2
     _displayText: "\uB9E5\uBC15 \uD655\uC778"
@@ -1137,10 +1053,8 @@ MonoBehaviour:
     _requiredItemIdentifier: 
     _missingItemDialogue: 
     _findItemDialogue: 
-    _actionDialogue: "(\uD658\uC790\uC758 \uBAA9\uC5D0 \uC190\uC744 \uB300\uACE0
-      \uACBD\uB3D9\uB9E5\uC744 \uCD09\uC9C0\uD55C\uB2E4.)"
-    _resultDialogue: "(\uC190\uB05D\uC5D0 \uADDC\uCE59\uC801\uC778 \uBC15\uB3D9\uC774
-      \uC7A1\uD78C\uB2E4.)"
+    _actionDialogue: 
+    _resultDialogue: 
     _enabled: 0
   - _identifier: assess_gcs_rosc
     _displayText: "\uC758\uC2DD\uC0C1\uD0DC \uC7AC\uC0AC\uC815"
@@ -1317,7 +1231,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584137094147911788
+  _initializedTimestamp: -8584136229459782568
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -1345,6 +1259,89 @@ MonoBehaviour:
     Rotation: {x: 0, y: 0, z: 0, w: 1}
     Scale: {x: 1, y: 1, z: 1}
     IsValid: 1
+--- !u!1 &5536518702275176135
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 356329490738936366}
+  - component: {fileID: 747821738913170105}
+  - component: {fileID: 4859090575072212568}
+  m_Layer: 0
+  m_Name: AmbuO2ConnectInteractPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &356329490738936366
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5536518702275176135}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.18607676, y: -0.052287944, z: 0.27733514}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8270195728276674159}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &747821738913170105
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5536518702275176135}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.2, y: 0.2, z: 0.2}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &4859090575072212568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5536518702275176135}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a209fa35a64aa43e7b85a5f64a42efdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
+  _displayText: "\uC570\uBD80\uBC31\uC5D0 \uC0B0\uC18C \uC800\uC7A5\uB0AD \uC5F0\uACB0"
+  _displayIcon: {fileID: 0}
+  _displayIcons: []
+  _completionSignal: connect_o2_to_ambu
+  _presentationEntityIdentifier: patient_a
+  _interactionIdentifier: 
+  _requiredRaisedSignals:
+  - connect_ambubag
+  _requiredPlayerTag: 
+  _enabled: 0
+  _consumeOnce: 1
+  _requiredItemIdentifier: 
+  _consumeRequiredItemCount: 0
+  _missingItemDialogue: 
+  _findItemDialogue: 
+  _activateOnInteract: []
+  _deactivateOnInteract: []
 --- !u!1 &7300000000000000001
 GameObject:
   m_ObjectHideFlags: 0

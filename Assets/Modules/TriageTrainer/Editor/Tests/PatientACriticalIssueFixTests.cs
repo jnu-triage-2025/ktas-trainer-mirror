@@ -869,8 +869,12 @@ namespace TriageTrainer.Tests
       }
 
       Assert.That(pulseAction, Is.Not.Null);
-      Assert.That(pulseAction.ActionDialogue, Is.EqualTo("(환자의 목에 손을 대고 경동맥을 촉지한다.)"));
-      Assert.That(pulseAction.ResultDialogue, Is.EqualTo("(아무것도 느껴지지 않는다.)"));
+      Assert.That(pulseAction.ActionDialogue, Is.Null.Or.Empty);
+      Assert.That(pulseAction.ResultDialogue, Is.Null.Or.Empty);
+      StringAssert.Contains("\"identifier\": \"D_PULSE_R1_ACTION\"", scenario);
+      StringAssert.Contains("\"dialogueContent\": \"(환자의 목에 손을 대고 경동맥을 촉지한다.)\"", scenario);
+      StringAssert.Contains("\"identifier\": \"D_PULSE_R1_RESULT\"", scenario);
+      StringAssert.Contains("\"dialogueContent\": \"(아무것도 느껴지지 않는다.)\"", scenario);
     }
 
     [Test]
