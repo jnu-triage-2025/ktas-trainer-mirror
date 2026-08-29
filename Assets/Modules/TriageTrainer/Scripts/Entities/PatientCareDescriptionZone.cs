@@ -46,6 +46,7 @@ namespace TriageTrainer.Entity
     private readonly HashSet<MovingPatientBedController> _snappedBeds = new();
     private readonly List<WallAttachedWallSuction> _wallSuction = new();
     private readonly List<WallAttachedOxyflowmeter> _oxyflowmeters = new();
+    private readonly List<DefibrillatorCartController> _defibrillatorCarts = new();
     private readonly HashSet<WallAttachedWallSuction> _newlyInstalledWallSuction = new();
     private readonly HashSet<string> _warnedAutomaticLineFailures = new();
     private bool _warnedMultipleWallSuction;
@@ -64,8 +65,21 @@ namespace TriageTrainer.Entity
 
     public IReadOnlyList<WallAttachedWallSuction> WallSuction => _wallSuction;
     public IReadOnlyList<WallAttachedOxyflowmeter> Oxyflowmeters => _oxyflowmeters;
+    /// <summary>
+    /// 이 구역 범위 안에 있는 제세동 카트 목록입니다.
+    /// 이동식 장비이므로 조회 직전에 위치를 다시 확인합니다.
+    /// </summary>
+    public IReadOnlyList<DefibrillatorCartController> DefibrillatorCarts
+    {
+      get
+      {
+        RefreshDefibrillatorCarts();
+        return _defibrillatorCarts;
+      }
+    }
     public string Identifier => _identifier;
     public PatientController CurrentPatient => _activePatient;
+    public Vector3 WorldCenter => transform.TransformPoint(_center);
 
     public PatientController GetPatientForOxyflowmeter(WallAttachedOxyflowmeter flowmeter)
     {
@@ -771,6 +785,25 @@ namespace TriageTrainer.Entity
       {
         // 장비가 정상 인식되면 플래그 리셋하여 다음 상태 전이 시 다시 로그 출력.
         _loggedEquipmentScanDiagnostic = false;
+      }
+
+      RefreshDefibrillatorCarts();
+    }
+
+    /// <summary>
+    /// 제세동 카트는 이동식이므로 이벤트에서 현재 구역 소속 여부를 판단할 수 있도록
+    /// transform 위치로 매번 목록을 갱신합니다.
+    /// </summary>
+    private void RefreshDefibrillatorCarts()
+    {
+      _defibrillatorCarts.Clear();
+      DefibrillatorCartController[] carts = FindObjectsByType<DefibrillatorCartController>(
+        FindObjectsInactive.Include, FindObjectsSortMode.None);
+      for (int i = 0; i < carts.Length; i++)
+      {
+        DefibrillatorCartController cart = carts[i];
+        if (cart != null && IsEquipmentInZone(cart))
+          _defibrillatorCarts.Add(cart);
       }
     }
 

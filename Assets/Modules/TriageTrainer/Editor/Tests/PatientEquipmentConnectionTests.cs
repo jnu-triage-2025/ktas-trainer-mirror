@@ -8,12 +8,56 @@ using TriageTrainer.Entity;
 using TriageTrainer.Entity.IntravenousLine;
 using TriageTrainer.Entity.LineConnection;
 using TriageTrainer.Entity.OxyLine;
+using TriageTrainer.Scenario;
 using UnityEngine;
 
 namespace TriageTrainer.Tests
 {
   public sealed class PatientEquipmentConnectionTests
   {
+    [Test]
+    public void DefibrillatorResolutionPrefersCareZoneCartThenNearestFallback()
+    {
+      var root = new GameObject("defibrillator-resolution-test");
+      root.SetActive(false);
+      root.transform.position = new Vector3(10000f, 10000f, 10000f);
+      try
+      {
+        var zoneObject = new GameObject("care-zone");
+        zoneObject.transform.SetParent(root.transform, false);
+        var zone = zoneObject.AddComponent<PatientCareDescriptionZone>();
+        zone.ConfigureArea(Vector3.zero, new Vector3(4f, 4f, 4f));
+
+        var patientObject = new GameObject("patient");
+        patientObject.transform.SetParent(root.transform, false);
+        var patient = patientObject.AddComponent<PatientController>();
+
+        var inZoneObject = new GameObject("in-zone-cart");
+        inZoneObject.transform.SetParent(root.transform, false);
+        var inZoneCart = inZoneObject.AddComponent<DefibrillatorCartController>();
+
+        var nearerFallbackObject = new GameObject("nearer-fallback-cart");
+        nearerFallbackObject.transform.SetParent(root.transform, false);
+        nearerFallbackObject.transform.localPosition = new Vector3(5f, 0f, 0f);
+        var nearerFallbackCart = nearerFallbackObject.AddComponent<DefibrillatorCartController>();
+
+        var resolve = typeof(TriageScenarioEventBootstrap).GetMethod(
+          "ResolveDefibrillatorCart", BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.That(resolve, Is.Not.Null);
+        Assert.That(resolve.Invoke(null, new object[] { patient }), Is.SameAs(inZoneCart),
+          "CareZone 안의 제세동 카트가 구역 밖 카트보다 우선되어야 합니다.");
+
+        inZoneObject.transform.localPosition = new Vector3(10f, 0f, 0f);
+        Assert.That(resolve.Invoke(null, new object[] { patient }), Is.SameAs(nearerFallbackCart),
+          "CareZone 안에 카트가 없으면 구역 중심에서 가장 가까운 카트를 사용해야 합니다.");
+        Assert.That(zone.DefibrillatorCarts, Is.Empty);
+      }
+      finally
+      {
+        Object.DestroyImmediate(root);
+      }
+    }
+
     [Test]
     public void ClearIVFluidConnectionIgnoresStaleEquipmentSource()
     {

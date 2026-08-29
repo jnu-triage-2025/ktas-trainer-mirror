@@ -319,5 +319,5 @@ MonoBehaviour:
       useDefaultZoneCenter: 0
       zoneCenter: {x: 0, y: 1.5, z: 0}
       useDefaultZoneSize: 0
-      zoneSize: {x: 2.2, y: 3.5, z: 3.6}
+      zoneSize: {x: 4.25, y: 3.5, z: 3.6}
       attachCompletionSignal: 

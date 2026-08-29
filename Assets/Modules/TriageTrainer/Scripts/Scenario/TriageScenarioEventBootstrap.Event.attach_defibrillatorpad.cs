@@ -9,8 +9,6 @@ namespace TriageTrainer.Scenario
 {
   public partial class TriageScenarioEventBootstrap
   {
-    private const string PatientADefibrillatorCartEntityId = "defibrillator_cart_a";
-
     private void RegisterEvent_AttachDefibrillatorPad()
     {
       Register("attach_defibrillatorpad", Event_AttachDefibrillatorPad);
@@ -39,8 +37,7 @@ namespace TriageTrainer.Scenario
       if (patient == null || (!InstanceFinder.IsOffline && !InstanceFinder.IsServerStarted))
         return;
 
-      var cartObject = ResolveEntityObject(null, PatientADefibrillatorCartEntityId);
-      var cart = cartObject != null ? cartObject.GetComponent<DefibrillatorCartController>() : null;
+      var cart = ResolveDefibrillatorCart(patient);
       var padPoints = patient.AedConnectionPoints;
       var cartPoints = cart != null ? cart.AedConnectionPoints : System.Array.Empty<TriageTrainer.Entity.AEDLine.AEDLineConnectionPoint>();
       if (padPoints.Count == 0 || cartPoints.Count == 0)
@@ -75,8 +72,54 @@ namespace TriageTrainer.Scenario
       }
 
       GameLogService.WriteScenario(
-        $"Patient A defibrillator pads connected to {PatientADefibrillatorCartEntityId} with {connectedCount} AED line(s).",
+        $"Patient A defibrillator pads connected to {cart.Identifier} with {connectedCount} AED line(s).",
         "patient_a_critical");
+    }
+
+    /// <summary>
+    /// 환자가 있는 CareZone 안의 카트를 먼저 사용한다. 구역 안에 카트가 없으면
+    /// 해당 구역 중심에 가장 가까운 카트를 선택해, 씬 탐색 순서에 연결 대상이 좌우되지 않게 한다.
+    /// </summary>
+    private static DefibrillatorCartController ResolveDefibrillatorCart(PatientController patient)
+    {
+      PatientCareDescriptionZone careZone = FindCareZone(null, patient);
+      if (careZone == null)
+      {
+        DefibrillatorCartController[] fallbackCarts = FindObjectsByType<DefibrillatorCartController>(
+          FindObjectsInactive.Include, FindObjectsSortMode.None);
+        return FindClosestDefibrillatorCart(fallbackCarts, patient.transform.position);
+      }
+
+      DefibrillatorCartController cart = FindClosestDefibrillatorCart(
+        careZone.DefibrillatorCarts, careZone.WorldCenter);
+      if (cart != null)
+        return cart;
+
+      DefibrillatorCartController[] allCarts = FindObjectsByType<DefibrillatorCartController>(
+        FindObjectsInactive.Include, FindObjectsSortMode.None);
+      return FindClosestDefibrillatorCart(allCarts, careZone.WorldCenter);
+    }
+
+    private static DefibrillatorCartController FindClosestDefibrillatorCart(
+      System.Collections.Generic.IReadOnlyList<DefibrillatorCartController> carts,
+      Vector3 origin)
+    {
+      DefibrillatorCartController closest = null;
+      float closestDistanceSquared = float.PositiveInfinity;
+      for (int i = 0; i < carts.Count; i++)
+      {
+        DefibrillatorCartController candidate = carts[i];
+        if (candidate == null)
+          continue;
+
+        float distanceSquared = (candidate.transform.position - origin).sqrMagnitude;
+        if (distanceSquared < closestDistanceSquared)
+        {
+          closest = candidate;
+          closestDistanceSquared = distanceSquared;
+        }
+      }
+      return closest;
     }
   }
 }
