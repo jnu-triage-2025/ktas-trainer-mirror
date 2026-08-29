@@ -1295,7 +1295,7 @@ namespace TriageTrainer.Tests
 
       // AddAssessInteracts는 프리팹에 없는 표준 사정 동작을 코드 기본값(활성)으로 보충한다.
       // 따라서 노출을 막으려면 프리팹에 항목을 명시하고 비활성으로 저장해야 한다.
-      foreach (string identifier in new[] { "assess_vital", "assess_avpu_gcs", "assess_pulse", "assess_gcs" })
+      foreach (string identifier in new[] { "assess_vital", "assess_avpu_gcs", "assess_pulse", "assess_gcs", "assess_gcs_rosc" })
       {
         Assert.That(enabledByAssessIdentifier, Contains.Key(identifier),
           $"사정 동작 '{identifier}'을 프리팹에 명시해야 코드 기본값 보충이 활성 상태로 되살리지 않습니다.");

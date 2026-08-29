@@ -165,6 +165,7 @@ namespace TriageTrainer.Entity
       ("assess_avpu_gcs", "의식상태 사정(AVPU/GCS)"),
       ("assess_pulse", "맥박 확인"),
       ("assess_gcs", "GCS 재사정"),
+      ("assess_gcs_rosc", "의식상태 재사정"),
       ("assess_vital", "활력징후 사정"),
     };
 
@@ -297,6 +298,7 @@ namespace TriageTrainer.Entity
       { "assess_avpu_gcs", "check_avpu_gcs_{id}" },
       { "assess_pulse", "check_pulse_{id}" },
       { "assess_gcs", "check_gcs_{id}" },
+      { "assess_gcs_rosc", "check_gcs_a_rosc" },
       { "assess_vital", "check_vital_{id}" },
     };
 
