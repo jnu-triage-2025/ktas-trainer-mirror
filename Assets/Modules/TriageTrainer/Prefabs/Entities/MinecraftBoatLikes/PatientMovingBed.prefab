@@ -70,13 +70,15 @@ MonoBehaviour:
   _connectedLineObjects: []
   _allowMultipleConnections: 0
   connectionService: {fileID: 0}
-  _identifier: bed_iv_point_ps_002
+  _identifier: bed_iv_point_ps_001
   _autoGenerateIdentifier: 1
   _displayIcon: {fileID: 0}
   _interactConfigs:
   - _identifier: intravenous_line_connect_mode_start
     _enabled: 1
   - _identifier: intravenous_line_connect_here
+    _enabled: 1
+  - _identifier: intravenous_line_disconnect
     _enabled: 1
 --- !u!1 &1880450324985045122
 GameObject:
@@ -268,13 +270,15 @@ MonoBehaviour:
   _connectedLineObjects: []
   _allowMultipleConnections: 0
   connectionService: {fileID: 0}
-  _identifier: bed_iv_point_ns_002
+  _identifier: bed_iv_point_ns_001
   _autoGenerateIdentifier: 1
   _displayIcon: {fileID: 0}
   _interactConfigs:
   - _identifier: intravenous_line_connect_mode_start
     _enabled: 1
   - _identifier: intravenous_line_connect_here
+    _enabled: 1
+  - _identifier: intravenous_line_disconnect
     _enabled: 1
 --- !u!1 &3939562134775454969
 GameObject:
@@ -595,7 +599,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584137094147911788
+  _initializedTimestamp: -8584136229459782568
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
