@@ -23,6 +23,10 @@ namespace MultiplayerInfrastructure.UI
     private const float ContentFadeWidth = 44f;
     // 텍스트는 배경 우측 끝을 지나서도 일정 거리까지 읽을 수 있게 한다.
     private const float ContentTextMaxWidth = 300f;
+    // 한 줄에 다 담기지 않는 문구는 두 번째 줄까지 개행을 허용한 뒤, 그래도
+    // 넘치는 경우에만 말줄임(...) 처리한다.
+    private const int ContentTextMaxLines = 2;
+    private const float ContentTextLineHeight = 18f;
 
     private const string MouseScrollHintIconPath = "Textures/Icons/mouse-scroll";
     private static Texture2D _mouseScrollHintIcon;
@@ -152,9 +156,10 @@ namespace MultiplayerInfrastructure.UI
       // 텍스트가 이어지되, 지나치게 긴 문구는 그 이후에만 말줄임 처리한다.
       _contentText.style.width = ContentTextMaxWidth;
       _contentText.style.maxWidth = ContentTextMaxWidth;
+      _contentText.style.maxHeight = ContentTextLineHeight * ContentTextMaxLines;
       _contentText.style.flexShrink = 0;
       _contentText.style.flexGrow = 0;
-      _contentText.style.whiteSpace = WhiteSpace.NoWrap;
+      _contentText.style.whiteSpace = WhiteSpace.Normal;
       _contentText.style.overflow = Overflow.Hidden;
       _contentText.style.textOverflow = TextOverflow.Ellipsis;
       contentWrapper.Add(_contentText);

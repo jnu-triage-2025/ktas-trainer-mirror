@@ -10,7 +10,7 @@ namespace MultiplayerInfrastructure.Registry
     {
       ("message-circle", $"{IconResourceRoot}/message-circle"),
       ("quest-interaction", $"{IconResourceRoot}/exclamation-mark__yellow"),
-      ("quest-marker", $"{IconResourceRoot}/exclamation-mark__yellow")
+      ("quest-marker", $"{IconResourceRoot}/quest")
     };
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
