@@ -2808,14 +2808,14 @@
       "nextIdentifier": "Q028_1"
     },
     "ISC_PASS_CENTRAL_LINE_SET": {
-      "presetIdentifier": null,
+      "presetIdentifier": "patient_a_item_submission",
       "spawnedEntityIdentifier": null,
       "positionSourceEntityIdentifier": null,
       "positionX": 0,
       "positionY": 0,
       "positionZ": 0,
       "targetIdentifier": "patient-a-doctor-submit-central-line-set",
-      "targetStateKey": null,
+      "targetStateKey": "patient_a.entityId",
       "requiredItems": [
         {
           "itemIdentifier": "central_line_set",
@@ -2830,14 +2830,14 @@
       "nextIdentifier": "V018"
     },
     "ISC_PASS_ET_TUBE": {
-      "presetIdentifier": null,
+      "presetIdentifier": "patient_a_item_submission",
       "spawnedEntityIdentifier": null,
       "positionSourceEntityIdentifier": null,
       "positionX": 0,
       "positionY": 0,
       "positionZ": 0,
       "targetIdentifier": "patient-a-doctor-submit-et-tube",
-      "targetStateKey": null,
+      "targetStateKey": "patient_a.entityId",
       "requiredItems": [
         {
           "itemIdentifier": "endotracheal_tube_ready",
@@ -2852,14 +2852,14 @@
       "nextIdentifier": "V014_2"
     },
     "ISC_PASS_LARYNGOSCOPE": {
-      "presetIdentifier": null,
+      "presetIdentifier": "patient_a_item_submission",
       "spawnedEntityIdentifier": null,
       "positionSourceEntityIdentifier": null,
       "positionX": 0,
       "positionY": 0,
       "positionZ": 0,
       "targetIdentifier": "patient-a-doctor-submit-laryngoscope",
-      "targetStateKey": null,
+      "targetStateKey": "patient_a.entityId",
       "requiredItems": [
         {
           "itemIdentifier": "laryngoscope",
@@ -2874,14 +2874,14 @@
       "nextIdentifier": "V014_1"
     },
     "ISC_PASS_SYRINGE": {
-      "presetIdentifier": null,
+      "presetIdentifier": "patient_a_item_submission",
       "spawnedEntityIdentifier": null,
       "positionSourceEntityIdentifier": null,
       "positionX": 0,
       "positionY": 0,
       "positionZ": 0,
       "targetIdentifier": "patient-a-doctor-submit-5cc-syringe",
-      "targetStateKey": null,
+      "targetStateKey": "patient_a.entityId",
       "requiredItems": [
         {
           "itemIdentifier": "syringe_5cc",
@@ -3960,6 +3960,7 @@
     },
     "PRESET_A": {
       "targetEntityIdentifier": "patient_a",
+      "transitionDurationSeconds": 1,
       "name": null,
       "sex": "Male",
       "age": 35,
