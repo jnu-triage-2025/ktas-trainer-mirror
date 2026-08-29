@@ -917,9 +917,13 @@ namespace MultiplayerInfrastructure.UI
       if (slotIndex < 0 || slotIndex >= _slotElements.Count)
         return;
 
-      // 우클릭: 전역 우클릭 핸들러(장비 장착)로 버블링 허용
+      // 우클릭: 스택 절반 집기 / 1개 내려놓기. 처리하지 못한 경우에만
+      // 전역 우클릭 핸들러(장비 장착)로 버블링을 허용한다.
       if (evt.button == 1)
+      {
+        HandleSlotRightClicked(slotIndex, evt);
         return;
+      }
 
       // Shift + 좌클릭: [Equippable*] 아이템을 장비 슬롯에 바로 장착
       if (evt.shiftKey && _heldItem == null)
@@ -962,6 +966,98 @@ namespace MultiplayerInfrastructure.UI
       RefreshSlotVisual(slotIndex);
       UpdateHeldItemGhostVisual(_heldItem);
       NotifySlotsMutated();
+    }
+
+    /// <summary>
+    /// 슬롯 우클릭 처리.
+    ///   · 손이 비어 있고 슬롯에 아이템이 있으면 → 스택의 절반을 집는다(홀수면 커서 쪽이 1개 더 많다).
+    ///   · 아이템을 들고 있고 슬롯이 비어 있으면 → 들고 있는 스택에서 1개만 내려놓는다.
+    /// 장비 가능(장갑) 아이템을 들고 있을 때는 기존의 우클릭 장착 동작을 유지해야 하므로
+    /// 여기서 처리하지 않고 전역 우클릭 핸들러(<see cref="OnRightClickEquipToSlot"/>)로 버블링한다.
+    /// </summary>
+    private void HandleSlotRightClicked(int slotIndex, PointerDownEvent evt)
+    {
+      if (_heldItem == null || _heldItem.IsEmpty)
+      {
+        if (!TryPickUpHalfFromSlot(slotIndex))
+          return;
+
+        evt.StopPropagation();
+        UpdateHeldItemGhostPosition(evt.position);
+        HideTooltip();
+        return;
+      }
+
+      if (EquipmentAttributeHelper.IsEquippableGlove(_heldItem.ItemInstance))
+        return;
+
+      if (!TryPlaceSingleHeldItemIntoSlot(slotIndex))
+        return;
+
+      evt.StopPropagation();
+      UpdateHeldItemGhostPosition(evt.position);
+
+      // 마지막 1개를 내려놓아 손이 비었으면 해당 슬롯의 툴팁을 다시 표시한다.
+      if (_heldItem != null)
+        HideTooltip();
+      else
+        ShowTooltipForSlot(slotIndex, evt.position);
+    }
+
+    /// <summary>
+    /// 슬롯 스택의 절반을 커서로 집는다. 홀수 개면 커서 쪽이 1개 더 많다(예: 5개 → 커서 3 / 슬롯 2).
+    /// </summary>
+    /// <returns>실제로 집었으면 true.</returns>
+    private bool TryPickUpHalfFromSlot(int slotIndex)
+    {
+      var slotModel = GetSlotModel(slotIndex);
+      if (slotModel == null || slotModel.IsEmpty)
+        return false;
+
+      int total = slotModel.ItemInstance.CurrentStackCount;
+      var taken = slotModel.Pop((total + 1) / 2);
+      if (taken == null)
+        return false;
+
+      _heldItem = new InventorySlotModelDTO(taken);
+
+      RefreshSlotVisual(slotIndex);
+      UpdateHeldItemGhostVisual(_heldItem);
+      NotifySlotsMutated();
+      return true;
+    }
+
+    /// <summary>
+    /// 들고 있는 스택에서 아이템 1개만 빈 슬롯에 내려놓는다.
+    /// </summary>
+    /// <returns>실제로 내려놓았으면 true.</returns>
+    private bool TryPlaceSingleHeldItemIntoSlot(int slotIndex)
+    {
+      if (_heldItem == null || _heldItem.IsEmpty)
+        return false;
+
+      var target = GetSlotModel(slotIndex);
+      if (target == null)
+        target = _slotDataBuffer[slotIndex] = new InventorySlotModelDTO();
+
+      // 요구사항상 대상은 빈 슬롯에 한정한다(이미 아이템이 있는 슬롯은 기존 동작 유지).
+      if (!target.IsEmpty)
+        return false;
+
+      var single = _heldItem.Pop(1);
+      if (single == null)
+        return false;
+
+      target.SetItem(single);
+      RefreshSlotVisual(slotIndex);
+
+      if (_heldItem.IsEmpty)
+        ClearHeldItem();
+      else
+        UpdateHeldItemGhostVisual(_heldItem);
+
+      NotifySlotsMutated();
+      return true;
     }
 
     private void TryPlaceHeldItemIntoSlot(int slotIndex)

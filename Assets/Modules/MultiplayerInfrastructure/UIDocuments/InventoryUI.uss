@@ -294,6 +294,11 @@
   flex-shrink: 0;
 }
 
+/* 필요 아이템 영역. 레시피 선택 여부와 무관하게 높이가 "재료 칸 한 줄"로 유지되어야 한다.
+ * 선택 전에는 자리만 차지하는 빈 칸(.crafting-req-slot--placeholder)이 그 높이를 만들고,
+ * min-height 는 InventoryUIView.ApplyRequirementsReservedHeight() 에서 같은 기준으로 덮어쓴다.
+ * 아래 값(.crafting-req-slot height 48px + padding 5px·border 1px = 60px)을 바꾸면
+ * InventoryUIViewElement.Crafting.cs 의 CraftingRequirement* 상수도 함께 맞춰야 한다. */
 .crafting-requirements {
   flex-direction: row;
   flex-wrap: wrap;
@@ -305,17 +310,28 @@
   border-color: #1f3a63;
   border-radius: 10px;
   background-color: rgba(6, 16, 32, 0.75);
-  min-height: 48px;
+  min-height: 60px;
   flex-shrink: 0;
 }
 
+/* 선택 전 안내 문구. 영역 높이는 아래 placeholder 칸이 결정해야 하므로,
+ * 문구 자체는 레이아웃에서 빠지도록 절대 배치해 빈 칸 위에 겹쳐 그린다. */
 .crafting-requirements__empty {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: 5px;
+  bottom: 5px;
   font-size: 10px;
   color: #6b7891;
   -unity-font-style: italic;
   white-space: normal;
   -unity-text-align: middle-center;
-  flex-grow: 1;
+}
+
+/* 선택 전에도 필요 아이템 영역 높이를 한 줄로 유지하기 위한, 자리만 차지하는 빈 칸. */
+.crafting-req-slot--placeholder {
+  visibility: hidden;
 }
 
 /* 필요 아이템 칸: 아이콘 + "보유/요구" 수량 */

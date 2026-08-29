@@ -61,6 +61,16 @@ namespace MultiplayerInfrastructure.UI
     /// <summary>조합 목록을 격자로 배치할 때 한 줄에 놓는 슬롯 개수.</summary>
     private const int CraftingRecipeColumns = 4;
 
+    // ── "필요 아이템" 영역 높이 예약 ────────────────────────────────
+    // 레시피를 선택하면 필요 아이템 칸이 생기면서 이 영역이 세로로 늘어나고,
+    // 그만큼 조합 패널(=인벤토리 UI 전체) 높이가 함께 늘어난다.
+    // 이를 막기 위해 선택 전(idle)에도 "재료 칸 한 줄" 높이를 그대로 확보해 둔다.
+    // 실제 높이는 자리만 차지하는 빈 칸(placeholder)이 결정하므로 선택 전후가 항상 같고,
+    // 아래 값은 그 높이가 무너지지 않도록 하는 하한(min-height)이다.
+    // (InventoryUI.uss 의 .crafting-req-slot height 48px + .crafting-requirements padding 5px·border 1px)
+    private const float CraftingRequirementSlotHeight = 48f;
+    private const float CraftingRequirementBoxPadding = 12f;
+
     private readonly List<CraftableRecipeDisplay> _craftableRecipes = new();
 
     private string _selectedRecipeOutputId;
@@ -98,6 +108,7 @@ namespace MultiplayerInfrastructure.UI
 
       _craftingRequirements = new VisualElement { name = "CraftingRequirements" };
       _craftingRequirements.AddToClassList("crafting-requirements");
+      ApplyRequirementsReservedHeight();
       _craftingPanel.Add(_craftingRequirements);
 
       // 구분선
@@ -373,6 +384,20 @@ namespace MultiplayerInfrastructure.UI
       RenderRequirements();
     }
 
+    /// <summary>
+    /// "필요 아이템" 영역 높이의 하한을 재료 칸 한 줄 기준으로 확보한다.
+    /// 선택 전에는 <see cref="RenderRequirements"/> 가 넣는 빈 칸이 같은 높이를 차지하므로,
+    /// 레시피를 선택해도 조합 패널과 인벤토리 UI 전체가 세로로 늘어나지 않는다.
+    /// </summary>
+    private void ApplyRequirementsReservedHeight()
+    {
+      if (_craftingRequirements == null)
+        return;
+
+      _craftingRequirements.style.minHeight =
+        CraftingRequirementSlotHeight + CraftingRequirementBoxPadding;
+    }
+
     private void RenderRequirements()
     {
       if (_craftingRequirements == null)
@@ -383,7 +408,14 @@ namespace MultiplayerInfrastructure.UI
       var recipe = FindRecipe(_selectedRecipeOutputId);
       if (recipe == null || recipe.Ingredients == null || recipe.Ingredients.Count == 0)
       {
-        var empty = new Label { text = "조합할 아이템을 선택하세요." };
+        // 선택 전에도 재료 칸 한 줄만큼의 높이를 그대로 차지하도록 빈 칸을 넣는다.
+        // 안내 문구는 절대 배치라 높이에 관여하지 않으므로, 선택 전후의 높이가 항상 같다.
+        var placeholder = new VisualElement { name = "ReqPlaceholder", pickingMode = PickingMode.Ignore };
+        placeholder.AddToClassList("crafting-req-slot");
+        placeholder.AddToClassList("crafting-req-slot--placeholder");
+        _craftingRequirements.Add(placeholder);
+
+        var empty = new Label { text = "조합할 아이템을 선택하세요.", pickingMode = PickingMode.Ignore };
         empty.AddToClassList("crafting-requirements__empty");
         _craftingRequirements.Add(empty);
         return;
