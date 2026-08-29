@@ -17,7 +17,10 @@ namespace MultiplayerInfrastructure.Performance
   public class TexturePerformanceService : MonoBehaviour
   {
     private const string PlayerPrefsKey = "MultiplayerInfrastructure.GraphicsSettings.v2";
+    private const float GammaVolumePriority = 10000f;
     private GraphicsSettingsData _currentSettings;
+    private static Volume _gammaVolume;
+    private static LiftGammaGain _liftGammaGain;
 
     public event Action<TextureQuality> OnQualityChanged;
     public event Action<GraphicsSettingsData> OnSettingsChanged;
@@ -42,6 +45,7 @@ namespace MultiplayerInfrastructure.Performance
     private void OnDestroy()
     {
       SceneManager.sceneLoaded -= HandleSceneLoaded;
+      DestroyGammaVolume();
       Registry.Registry.Unregister(
         RegistryType.Service,
         Registry.Registry.TypeKey<TexturePerformanceService>());
@@ -134,6 +138,7 @@ namespace MultiplayerInfrastructure.Performance
 
       ApplyUrpSettings(settings);
       ApplySceneSettings(settings);
+      ApplyGamma(settings);
 
       if (applyDisplay)
       {
@@ -202,12 +207,55 @@ namespace MultiplayerInfrastructure.Performance
         camera.allowMSAA = settings.AntiAliasing != GraphicsAntiAliasing.Disabled;
         camera.allowDynamicResolution = settings.DynamicResolution;
         if (camera.TryGetComponent<UniversalAdditionalCameraData>(out var cameraData))
-          cameraData.renderPostProcessing = settings.PostProcessing;
+          cameraData.renderPostProcessing = settings.PostProcessing || !Mathf.Approximately(settings.Gamma, 1f);
       }
 
       var mainCamera = MainCameraController.Instance?.Camera;
       if (mainCamera != null)
         mainCamera.fieldOfView = settings.FieldOfView;
+    }
+
+    private static void ApplyGamma(GraphicsSettingsData settings)
+    {
+      if (settings == null || MppmLiteMode.IsActive)
+        return;
+
+      EnsureGammaVolume();
+      if (_liftGammaGain == null)
+        return;
+
+      _liftGammaGain.gamma.overrideState = true;
+      _liftGammaGain.gamma.value = new Vector4(settings.Gamma, settings.Gamma, settings.Gamma, 0f);
+    }
+
+    private static void EnsureGammaVolume()
+    {
+      if (_liftGammaGain != null)
+        return;
+
+      var volumeObject = new GameObject("[Runtime Gamma Volume]");
+      volumeObject.hideFlags = HideFlags.DontSave;
+      DontDestroyOnLoad(volumeObject);
+      _gammaVolume = volumeObject.AddComponent<Volume>();
+      _gammaVolume.isGlobal = true;
+      _gammaVolume.priority = GammaVolumePriority;
+      _gammaVolume.profile = ScriptableObject.CreateInstance<VolumeProfile>();
+      _gammaVolume.profile.hideFlags = HideFlags.DontSave;
+      _liftGammaGain = _gammaVolume.profile.Add<LiftGammaGain>(true);
+    }
+
+    private static void DestroyGammaVolume()
+    {
+      if (_gammaVolume == null)
+        return;
+
+      var volumeObject = _gammaVolume.gameObject;
+      _gammaVolume = null;
+      _liftGammaGain = null;
+      if (Application.isPlaying)
+        Destroy(volumeObject);
+      else
+        DestroyImmediate(volumeObject);
     }
 
     private static UnityEngine.Camera[] FindAllCameras()
@@ -237,6 +285,7 @@ namespace MultiplayerInfrastructure.Performance
       destination.FullScreenMode = source.FullScreenMode;
       destination.RefreshRate = source.RefreshRate;
       destination.FieldOfView = source.FieldOfView;
+      destination.Gamma = source.Gamma;
     }
 
     private static void Save(GraphicsSettingsData settings)

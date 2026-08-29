@@ -39,6 +39,7 @@ namespace MultiplayerInfrastructure.Editor.Performance.Tests
       Assert.That(settings.ShadowCascades,
         Is.EqualTo(1).Or.EqualTo(2).Or.EqualTo(4));
       Assert.That(settings.TextureStreamingBudgetMb, Is.InRange(64, 2048));
+      Assert.That(settings.Gamma, Is.EqualTo(1f));
     }
 
     [Test]
@@ -92,6 +93,16 @@ namespace MultiplayerInfrastructure.Editor.Performance.Tests
 
       Assert.That(original.RenderScale, Is.EqualTo(0.75f));
       Assert.That(clone.RenderScale, Is.EqualTo(2f));
+    }
+
+    [Test]
+    public void Gamma_IsClampedToSupportedRange()
+    {
+      var settings = new GraphicsSettingsData { Gamma = 3f };
+
+      settings.Sanitize();
+
+      Assert.That(settings.Gamma, Is.EqualTo(1.5f));
     }
 
     [Test]

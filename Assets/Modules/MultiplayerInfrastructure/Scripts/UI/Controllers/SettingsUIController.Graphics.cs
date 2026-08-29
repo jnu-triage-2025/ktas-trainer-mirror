@@ -135,7 +135,7 @@ namespace MultiplayerInfrastructure.UI
 
     private void BuildRenderingSection()
     {
-      var section = AddSection("렌더링", "내부 해상도와 URP 카메라 버퍼 및 후처리를 설정합니다.");
+      var section = AddSection("렌더링", "내부 해상도, 감마, URP 카메라 버퍼 및 후처리를 설정합니다.");
       AddFloat(section, "렌더 스케일", _pendingGraphics.RenderScale, 0.5f, 2f,
         value => _pendingGraphics.RenderScale = value);
       AddEnum(section, "안티앨리어싱", _pendingGraphics.AntiAliasing,
@@ -147,6 +147,8 @@ namespace MultiplayerInfrastructure.UI
       AddToggle(section, "동적 해상도", _pendingGraphics.DynamicResolution, value => _pendingGraphics.DynamicResolution = value);
       AddFloat(section, "카메라 시야각 (FOV)", _pendingGraphics.FieldOfView, 40f, 100f,
         value => _pendingGraphics.FieldOfView = value, affectsProfile: false);
+      AddFloat(section, "감마", _pendingGraphics.Gamma, 0.5f, 1.5f,
+        value => _pendingGraphics.Gamma = value, affectsProfile: false);
     }
 
     private void BuildTextureSection()
@@ -343,6 +345,7 @@ namespace MultiplayerInfrastructure.UI
       destination.FullScreenMode = source.FullScreenMode;
       destination.RefreshRate = source.RefreshRate;
       destination.FieldOfView = source.FieldOfView;
+      destination.Gamma = source.Gamma;
     }
 
     private void PopulateUIScaleOptions()

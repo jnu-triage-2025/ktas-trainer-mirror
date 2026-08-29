@@ -63,6 +63,7 @@ namespace MultiplayerInfrastructure.Performance
     public bool PostProcessing;
     public bool DynamicResolution;
     [Range(40f, 100f)] public float FieldOfView = 60f;
+    [Range(0.5f, 1.5f)] public float Gamma = 1f;
 
     [Header("Textures")]
     [Range(0, 3)] public int TextureMipmapLimit = 2;
@@ -100,6 +101,7 @@ namespace MultiplayerInfrastructure.Performance
       FrameRateLimit = Mathf.Clamp(FrameRateLimit, 0, 1000);
       RenderScale = Mathf.Clamp(RenderScale, 0.5f, 2f);
       FieldOfView = Mathf.Clamp(FieldOfView, 40f, 100f);
+      Gamma = Mathf.Clamp(Gamma, 0.5f, 1.5f);
       TextureMipmapLimit = Mathf.Clamp(TextureMipmapLimit, 0, 3);
       TextureStreamingBudgetMb = Mathf.Clamp(TextureStreamingBudgetMb, 64, 2048);
       ShadowDistance = Mathf.Clamp(ShadowDistance, 0f, 200f);
