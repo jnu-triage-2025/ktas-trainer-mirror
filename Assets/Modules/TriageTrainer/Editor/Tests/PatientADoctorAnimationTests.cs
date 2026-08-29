@@ -1,7 +1,11 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using MultiplayerInfrastructure.Player;
+using MultiplayerInfrastructure.Quest;
+using MultiplayerInfrastructure.Scenario;
+using MultiplayerInfrastructure.Tag;
 using NUnit.Framework;
 using TriageTrainer.Entity;
 using TriageTrainer.Scenario;
@@ -554,6 +558,65 @@ namespace TriageTrainer.Tests
       Assert.That(roundOne.RequiredPlayerTag, Is.EqualTo("nurse_b"));
       Assert.That(roundTwo.DisplayText, Is.EqualTo("가슴압박 수행"));
       Assert.That(roundTwo.RequiredPlayerTag, Is.EqualTo("nurse_a"));
+    }
+
+    [Test]
+    public void ChestCompressionInteractionsAreVisibleOnlyToTheirAssignedRole()
+    {
+      GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientPrefabPath);
+      Assert.That(prefab, Is.Not.Null);
+
+      GameObject patient = UnityEngine.Object.Instantiate(prefab);
+      var nurseAObject = new GameObject("nurse-a");
+      var nurseBObject = new GameObject("nurse-b");
+      const string nurseAIdentifier = "test-cpr-nurse-a";
+      const string nurseBIdentifier = "test-cpr-nurse-b";
+      try
+      {
+        PlayerController nurseA = nurseAObject.AddComponent<PlayerController>();
+        PlayerController nurseB = nurseBObject.AddComponent<PlayerController>();
+        SetUserIdentifier(nurseA, nurseAIdentifier);
+        SetUserIdentifier(nurseB, nurseBIdentifier);
+        PlayerTagService.ReplaceTags(nurseAIdentifier, new[] { "nurse_a" });
+        PlayerTagService.ReplaceTags(nurseBIdentifier, new[] { "nurse_b" });
+
+        ScenarioActionInteractable[] actions =
+          patient.GetComponentsInChildren<ScenarioActionInteractable>(true);
+        ScenarioActionInteractable roundOne = actions.Single(action =>
+          action.CompletionSignal == "click_to_start_comp");
+        ScenarioActionInteractable roundTwo = actions.Single(action =>
+          action.CompletionSignal == "interact_chest");
+        roundOne.SetEnabled(true);
+        roundTwo.SetEnabled(true);
+        ScenarioInteractionSignals.Raise("click_to_start_comp");
+
+        Assert.That(roundOne.CanInteract(nurseB.transform), Is.True);
+        Assert.That(roundOne.CanInteract(nurseA.transform), Is.False,
+          "1주기 가슴압박은 nurse_b가 아닌 플레이어에게 노출되면 안 됩니다.");
+        Assert.That(roundTwo.CanInteract(nurseA.transform), Is.True);
+        Assert.That(roundTwo.CanInteract(nurseB.transform), Is.False,
+          "교대 후 가슴압박은 nurse_a가 아닌 플레이어에게 노출되면 안 됩니다.");
+      }
+      finally
+      {
+        ScenarioInteractionSignals.Clear("click_to_start_comp");
+        PlayerTagService.ClearTags(nurseAIdentifier);
+        PlayerTagService.ClearTags(nurseBIdentifier);
+        UnityEngine.Object.DestroyImmediate(nurseAObject);
+        UnityEngine.Object.DestroyImmediate(nurseBObject);
+        UnityEngine.Object.DestroyImmediate(patient);
+      }
+    }
+
+    private static void SetUserIdentifier(PlayerController player, string identifier)
+    {
+      FieldInfo field = typeof(PlayerController).GetField(
+        "_userIdentifier", BindingFlags.Instance | BindingFlags.NonPublic);
+      Assert.That(field, Is.Not.Null);
+      object syncVar = field.GetValue(player);
+      PropertyInfo value = syncVar.GetType().GetProperty("Value");
+      Assert.That(value, Is.Not.Null);
+      value.SetValue(syncVar, identifier);
     }
 
     [TestCase("Assets/Scenes/OverworldScene.unity")]

@@ -321,14 +321,44 @@ namespace TriageTrainer.Scenario
     private ChatUIController _chatUi;
     private QuestUIController _questUi;
 
+    /// <summary>
+    /// 활성화된 부트스트랩 인스턴스. 두 번째 인스턴스가 붙는 상황을 막기 위한 기준값이다.
+    ///
+    /// <para>
+    /// 상호작용 처리는 <c>ScenarioActionInteractable.OnInteractionCompleted</c> 라는 static 이벤트를
+    /// 거치므로 살아 있는 인스턴스가 모두 실행하는 반면, 시나리오 이벤트 핸들러 사전은 식별자마다
+    /// 마지막 등록만 남긴다. 그래서 인스턴스가 둘이면 CPR PlayableGraph 와 모델 Y 오프셋을 두 번
+    /// 걸어 놓고 한 번만 해제하게 되어, 환자가 CPR 자세를 유지한 채 침대 아래로 내려앉는다.
+    /// </para>
+    ///
+    /// <para>
+    /// 먼저 활성화된 인스턴스를 유지하고 나중에 올라온 쪽을 비활성화한다. 반대로 처리하면 이미
+    /// 등록해 둔 이벤트를 나중 인스턴스가 덮어쓴 뒤 앞선 인스턴스의 <c>OnDisable</c> 이 같은
+    /// 식별자를 그대로 지워 버려서, 시나리오 이벤트가 아무 데도 남지 않는다.
+    /// </para>
+    /// </summary>
+    private static TriageScenarioEventBootstrap _activeInstance;
+
     private void Awake()
     {
+      // 여기서는 활성 인스턴스를 선점하지 않는다. 비활성 상태로 배치된 컴포넌트도 Awake 는 실행되므로,
+      // 선점해 버리면 정작 켜져 있는 인스턴스가 중복으로 판정된다. 선점은 OnEnable 에서 수행한다.
+      if (IsSupersededByActiveInstance())
+      {
+        return;
+      }
+
       EnsurePatientAWorldAnchors();
       RegisterScenarioGraphs();
     }
 
     private void OnEnable()
     {
+      if (!TryBecomeActiveInstance())
+      {
+        return;
+      }
+
       ScenarioActionInteractable.OnInteractionCompleted += HandleScenarioActionInteractionCompleted;
       EnablePatientATreatmentSignalHandlers();
       RegisterIntroAndPatientAEvents();
@@ -341,8 +371,57 @@ namespace TriageTrainer.Scenario
       }
     }
 
+    /// <summary>
+    /// 이 인스턴스를 활성 인스턴스로 삼을 수 있으면 <c>true</c> 를 반환한다. 이미 다른 인스턴스가
+    /// 활성 상태라면 자기 자신을 비활성화한 뒤 <c>false</c> 를 반환한다. 앞선 인스턴스가 파괴되어
+    /// 참조가 비어 있으면 이 인스턴스가 그 자리를 이어받는다.
+    /// </summary>
+    private bool TryBecomeActiveInstance()
+    {
+      if (_activeInstance == this)
+      {
+        return true;
+      }
+
+      if (IsSupersededByActiveInstance())
+      {
+        return false;
+      }
+
+      _activeInstance = this;
+      return true;
+    }
+
+    /// <summary>
+    /// 다른 인스턴스가 이미 활성 상태이면 경고를 남기고 이 인스턴스를 비활성화한 뒤 <c>true</c> 를
+    /// 반환한다.
+    /// </summary>
+    private bool IsSupersededByActiveInstance()
+    {
+      if (_activeInstance == null || _activeInstance == this)
+      {
+        return false;
+      }
+
+      Debug.LogWarning(
+        "[TriageScenarioEventBootstrap] 부트스트랩 인스턴스가 이미 활성 상태이므로 이 인스턴스를 "
+        + $"비활성화합니다. (활성='{_activeInstance.gameObject.scene.name}/{_activeInstance.name}', "
+        + $"중복='{gameObject.scene.name}/{name}') 씬 구성에서 중복된 컴포넌트를 제거해 주세요.",
+        this);
+      enabled = false;
+      return true;
+    }
+
     private void OnDisable()
     {
+      // 중복으로 판정되어 비활성화된 인스턴스는 아무것도 구독하거나 등록한 적이 없다. 여기서 해제를
+      // 수행하면 활성 인스턴스가 등록해 둔 시나리오 이벤트까지 함께 지워진다.
+      if (_activeInstance != this)
+      {
+        return;
+      }
+
+      _activeInstance = null;
       ScenarioActionInteractable.OnInteractionCompleted -= HandleScenarioActionInteractionCompleted;
       StopPatientACprAnimations();
       DisablePatientATreatmentSignalHandlers();
@@ -1150,7 +1229,7 @@ namespace TriageTrainer.Scenario
         Debug.LogWarning(
           $"[TriageScenarioEventBootstrap] 활력징후 모니터 컨트롤러 참조가 없습니다. (monitor='{(monitorObject != null ? monitorObject.name : "<null>")}')",
           this);
-        Debug.Log("[EmitSystemMessage] " + string.IsNullOrWhiteSpace(message) ? null : message + " (모니터 컨트롤러 참조 없음)");
+        Debug.Log("[EmitSystemMessage] " + (string.IsNullOrWhiteSpace(message) ? null : message + " (모니터 컨트롤러 참조 없음)"));
 #endif
         yield break;
       }
@@ -1162,7 +1241,7 @@ namespace TriageTrainer.Scenario
 
       monitorController.enabled = true;
 #if UNITY_EDITOR
-      Debug.Log("[EmitSystemMessage] " + string.IsNullOrWhiteSpace(message) ? null : message);
+      Debug.Log("[EmitSystemMessage] " + (string.IsNullOrWhiteSpace(message) ? null : message));
 #endif
       yield break;
     }

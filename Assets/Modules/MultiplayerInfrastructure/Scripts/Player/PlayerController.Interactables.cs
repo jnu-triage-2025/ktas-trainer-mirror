@@ -91,6 +91,7 @@ namespace MultiplayerInfrastructure.Player
 
       var interacts = CollectAvailableInteracts(nearby);
       KeepNearestExclusiveInteracts(interacts, _detector != null ? _detector.DetectionPosition : transform.position);
+      OrderInteractsByDisplayPriority(interacts);
 
       // UpdateInteractables를 사용하여 모드에 따라 적절히 처리
       _interactableHintUI.UpdateInteractables(interacts);
@@ -137,6 +138,33 @@ namespace MultiplayerInfrastructure.Player
           interacts.RemoveAt(i);
       }
     }
+
+    /// <summary>
+    /// 우선순위를 명시한 항목만 앞으로 이동한다. 같은 우선순위의 기존 감지 순서를 보존하여
+    /// 주기적인 Physics 조회 결과가 선택 항목을 불필요하게 흔들지 않게 한다.
+    /// </summary>
+    public static void OrderInteractsByDisplayPriority(List<IInteract> interacts)
+    {
+      if (interacts == null || interacts.Count < 2)
+        return;
+
+      for (int i = 1; i < interacts.Count; i++)
+      {
+        var candidate = interacts[i];
+        int candidatePriority = GetDisplayPriority(candidate);
+        int insertAt = i;
+        while (insertAt > 0 && GetDisplayPriority(interacts[insertAt - 1]) < candidatePriority)
+        {
+          interacts[insertAt] = interacts[insertAt - 1];
+          insertAt--;
+        }
+
+        interacts[insertAt] = candidate;
+      }
+    }
+
+    private static int GetDisplayPriority(IInteract interact)
+      => interact is IInteractDisplayPriority prioritized ? prioritized.DisplayPriority : 0;
 
     public void RefreshInteractableHintsNow()
     {
@@ -202,6 +230,7 @@ namespace MultiplayerInfrastructure.Player
       _detector.QueryCurrentInteractables(currentlyNearby);
       var current = CollectAvailableInteracts(currentlyNearby);
       KeepNearestExclusiveInteracts(current, _detector.DetectionPosition);
+      OrderInteractsByDisplayPriority(current);
       for (int i = 0; i < current.Count; i++)
       {
         if (ReferenceEquals(current[i], selected))

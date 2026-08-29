@@ -13,7 +13,7 @@ namespace TriageTrainer.Scenario
   /// </summary>
   [DisallowMultipleComponent]
   [RequireComponent(typeof(Collider))]
-  public sealed class ScenarioActionInteractable : MonoBehaviour, IInteractable, IInteract, IInteractorConditional, IInteractToggleable, IInteractDisplayIcons, IQuestPresentationTarget
+  public sealed class ScenarioActionInteractable : MonoBehaviour, IInteractable, IInteract, IInteractorConditional, IInteractToggleable, IInteractDisplayIcons, IInteractDisplayPriority, IQuestPresentationTarget
   {
     public static event Action<ScenarioActionInteractable, PlayerController> OnInteractionCompleted;
 
@@ -58,6 +58,8 @@ namespace TriageTrainer.Scenario
     public IReadOnlyList<Sprite> DisplayIcons => _displayIcons;
     public bool AllowDisplayIconFallback => true;
     public Color DisplayColor => Color.white;
+    public int DisplayPriority => PatientACriticalQuestStateFlags.GetInteractionDisplayPriority(
+      _presentationEntityIdentifier, InteractionIdentifier);
 
     public bool CanInteract(Transform interactor)
     {
@@ -68,9 +70,9 @@ namespace TriageTrainer.Scenario
       if (player == null)
         return false;
       if (!string.IsNullOrWhiteSpace(_requiredPlayerTag)
-          && !string.IsNullOrWhiteSpace(player.UserIdentifier)
-          && !MultiplayerInfrastructure.Tag.PlayerTagService.HasTag(
-            player.UserIdentifier, _requiredPlayerTag))
+          && (string.IsNullOrWhiteSpace(player.UserIdentifier)
+              || !MultiplayerInfrastructure.Tag.PlayerTagService.HasTag(
+                player.UserIdentifier, _requiredPlayerTag)))
         return false;
 
       // patient_a_critical 은 노출을 플레이어별 퀘스트 상태 플래그로 판정한다. 그 시나리오에서는

@@ -146,6 +146,25 @@ namespace TriageTrainer.Scenario
          && string.Equals(entityIdentifier?.Trim(), "patient_a", StringComparison.Ordinal)
          && string.Equals(interactionIdentifier?.Trim(), "interact_patient_chest", StringComparison.Ordinal);
 
+    /// <summary>
+    /// 환자 A의 단계별 상호작용 가운데 목록 상단에 고정해야 하는 항목의 표시 우선순위입니다.
+    /// 게이트가 켜진 동안에만 적용되므로 다른 시나리오의 같은 식별자에는 영향을 주지 않습니다.
+    /// </summary>
+    public static int GetInteractionDisplayPriority(
+      string entityIdentifier, string interactionIdentifier)
+    {
+      if (!IsArmed
+          || !string.Equals(entityIdentifier?.Trim(), "patient_a", StringComparison.Ordinal))
+        return 0;
+
+      return interactionIdentifier?.Trim() switch
+      {
+        "start_ambu_r1" => 1000,
+        "remove_patient_clothing" => 900,
+        _ => 0
+      };
+    }
+
     /// <summary>테스트와 진단용. 게이트 대상 상호작용 주소를 모두 반환한다.</summary>
     public static IReadOnlyCollection<string> GatedInteractionAddresses => FlagByInteraction.Keys;
   }
