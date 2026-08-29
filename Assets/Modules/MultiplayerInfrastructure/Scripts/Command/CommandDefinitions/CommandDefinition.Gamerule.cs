@@ -143,7 +143,8 @@ namespace MultiplayerInfrastructure.Command
           return;
         }
 
-        if (args.Length != 2 || !ScenarioGameRules.TrySetMissingCareZoneEquipmentFallback(args[1], out string error))
+        string error = null;
+        if (args.Length != 2 || !ScenarioGameRules.TrySetMissingCareZoneEquipmentFallback(args[1], out error))
         {
           _chat.SendSystemMessage(sender, error ?? "CareZoneMissingEquipmentFallback accepts wall_suction, oxyflowmeter, defibrillator, or none.");
           return;
