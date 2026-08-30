@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 224606f98db594c64986c51aeb43b734, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelDominic
-  _animatorControllerObject: {fileID: 0}
+  _animatorControllerObject: {fileID: 8226381282539709611}
   _heldItemAttachPointObject: {fileID: 933482639442719897}
 --- !u!1 &7563418303766034822
 GameObject:
@@ -149,7 +149,13 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6524335364161150155, guid: 7c004f7bf40837f48a546116576ca205, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1135483667550554841}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5986117623479635003, guid: 7c004f7bf40837f48a546116576ca205, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8226381282539709611}
+    - targetCorrespondingSourceObject: {fileID: 5986117623479635003, guid: 7c004f7bf40837f48a546116576ca205, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8226381282539709612}
   m_SourcePrefab: {fileID: 100100000, guid: 7c004f7bf40837f48a546116576ca205, type: 3}
 --- !u!4 &2868200860749232792 stripped
 Transform:
@@ -161,3 +167,42 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4342276048161227665, guid: 7c004f7bf40837f48a546116576ca205, type: 3}
   m_PrefabInstance: {fileID: 9027180743057827411}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &8226381282539709610 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5986117623479635003, guid: 7c004f7bf40837f48a546116576ca205, type: 3}
+  m_PrefabInstance: {fileID: 9027180743057827411}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8226381282539709611
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8226381282539709610}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b876157dc26904a43b95c4324911f786, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelAnimatorControllerObject
+--- !u!95 &8226381282539709612
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8226381282539709610}
+  m_Enabled: 1
+  m_Avatar: {fileID: 9000000, guid: 683877f3be27faa49bdb188f7f08a491, type: 3}
+  m_Controller: {fileID: 9100000, guid: 168bd517d468d4d61a605dc1ea630cb6, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage:
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
