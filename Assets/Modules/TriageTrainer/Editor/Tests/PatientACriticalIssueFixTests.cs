@@ -2212,6 +2212,87 @@ namespace TriageTrainer.Tests
       StringAssert.Contains("new Vector3(-60.759f, 1f, -8.354f)", anchorSource);
     }
 
+    [Test]
+    public void PatientAActionInteractionsRestoreDedicatedIconsAfterQuestMarkOverride()
+    {
+      var patientPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
+      Assert.That(patientPrefab, Is.Not.Null);
+
+      var expectedIcons = new Dictionary<string, string>
+      {
+        { "remove_tpiece", "unlink" },
+        { "click_to_start_comp", "cpr" },
+        { "interact_chest", "cpr" },
+        { "remove_patient_clothing", "cut-cloth" }
+      };
+      var interactions = patientPrefab.GetComponentsInChildren<ScenarioActionInteractable>(true);
+      foreach (var expected in expectedIcons)
+      {
+        var interaction = interactions.Single(each => each.CompletionSignal == expected.Key);
+        Assert.That(interaction.DisplayIcon, Is.Not.Null, $"{expected.Key} 아이콘이 지정되어야 합니다.");
+        Assert.That(interaction.DisplayIcon.name, Is.EqualTo(expected.Value));
+      }
+
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+      jsonOptions.Converters.Add(new JsonStringEnumConverter());
+      var definitions = JsonSerializer.Deserialize<QuestDefinitionRegistryPayload>(
+        File.ReadAllText(Path.Combine(projectRoot, PatientAQuestPath)), jsonOptions);
+      var questIcons = definitions.Definitions
+        .SelectMany(definition => definition.PresentationBindings)
+        .Where(binding => expectedIcons.ContainsKey(binding.InteractionIdentifier ?? string.Empty))
+        .ToDictionary(binding => binding.InteractionIdentifier, binding => binding.IconIdentifier);
+      foreach (string interactionIdentifier in expectedIcons.Keys)
+      {
+        Assert.That(questIcons[interactionIdentifier], Is.EqualTo("quest-interaction"),
+          $"{interactionIdentifier}의 활성 퀘스트 마크는 기본 아이콘을 일시적으로 덮어써야 합니다.");
+      }
+    }
+
+    [Test]
+    public void PatientAAmbuOxygenConnectionUsesAmbuBagIconAndAllowsQuestOverride()
+    {
+      var patientPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientAPrefabPath);
+      Assert.That(patientPrefab, Is.Not.Null);
+
+      var interaction = patientPrefab.GetComponentsInChildren<ScenarioActionInteractable>(true)
+        .Single(each => each.CompletionSignal == "connect_o2_to_ambu");
+      Assert.That(interaction.DisplayIcon, Is.Not.Null,
+        "산소 저장낭 연결 상호작용은 fallback 대신 앰부백 아이템 아이콘을 사용해야 합니다.");
+      Assert.That(AssetDatabase.GetAssetPath(interaction.DisplayIcon),
+        Is.EqualTo("Assets/Modules/TriageTrainer/Resources/Textures/Items/ambubag.png"));
+
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+      jsonOptions.Converters.Add(new JsonStringEnumConverter());
+      var definitions = JsonSerializer.Deserialize<QuestDefinitionRegistryPayload>(
+        File.ReadAllText(Path.Combine(projectRoot, PatientAQuestPath)), jsonOptions);
+      var binding = definitions.Definitions
+        .SelectMany(definition => definition.PresentationBindings)
+        .Single(each => each.EntityIdentifier == "patient_a"
+                        && each.InteractionIdentifier == "connect_o2_to_ambu");
+      Assert.That(binding.IconIdentifier, Is.EqualTo("quest-interaction"));
+      Assert.That(binding.IconMode, Is.EqualTo(QuestPresentationIconMode.ReplacePrimaryIcon),
+        "퀘스트 활성 중에는 퀘스트 마크가 기본 앰부백 아이콘을 덮어쓰고, 해제 후 복원되어야 합니다.");
+    }
+
+    [Test]
+    public void PatientAFluidHangInteractionResolvesHeldItemIconAndTriageReturnResetsArrivalSignal()
+    {
+      string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+      string fluidSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Entities/MovingPatientBed/"
+        + "MovingPatientBedController.AttachmentDisplay.cs"));
+      StringAssert.Contains("CurrentItemIconTexture", fluidSource);
+      StringAssert.Contains("_heldItemIcon =", fluidSource);
+
+      string triageReturnSource = File.ReadAllText(Path.Combine(projectRoot,
+        "Assets/Modules/TriageTrainer/Scripts/Scenario/"
+        + "TriageScenarioEventBootstrap.Event.arm_patient_a_triage_return.cs"));
+      StringAssert.Contains("ScenarioInteractionSignals.Clear(sourceSignal);", triageReturnSource,
+        "초기 분류 구역 방문에서 남은 플레이어별 도착 신호를 복귀 퀘스트 전에 내려야 합니다.");
+    }
+
     private static bool IsRapidInfuserItemAccepted(string kindName, string itemIdentifier)
     {
       var familyMethod = typeof(Level1RapidInfuserController).GetMethod(

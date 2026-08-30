@@ -65,8 +65,13 @@ namespace TriageTrainer.Entity
       {
         var player = interactor != null ? interactor.GetComponentInParent<PlayerController>() : null;
         _heldItemIcon = null;
-        return !_owner.IsIntravenousFluidInstalled(_kind) &&
-               _owner.FindIntravenousFluidInventoryItem(player, _kind) != null;
+        string itemIdentifier = _owner.FindIntravenousFluidInventoryItem(player, _kind);
+        if (_owner.IsIntravenousFluidInstalled(_kind) || string.IsNullOrWhiteSpace(itemIdentifier))
+          return false;
+
+        _heldItemIcon = MultiplayerInfrastructure.Registry.Registry.CreateItemInstance(
+          itemIdentifier)?.CurrentItemIconTexture;
+        return true;
       }
 
       public void Interact(Transform interactor)

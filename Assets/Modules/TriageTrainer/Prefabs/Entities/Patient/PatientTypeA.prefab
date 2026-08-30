@@ -250,7 +250,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "\uAC00\uC2B4\uC555\uBC15 \uC218\uD589"
-  _displayIcon: {fileID: 0}
+  _displayIcon: {fileID: 21300000, guid: 11637d2a4b61b43b59182a32ecb43170, type: 3}
   _displayIcons: []
   _completionSignal: interact_chest
   _presentationEntityIdentifier: patient_a
@@ -586,7 +586,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "T-piece \uC5F0\uACB0 \uD574\uC81C"
-  _displayIcon: {fileID: 0}
+  _displayIcon: {fileID: 21300000, guid: 1fb930eb96e97443592d1c1267b53c08, type: 3}
   _displayIcons: []
   _completionSignal: remove_tpiece
   _presentationEntityIdentifier: patient_a
@@ -753,7 +753,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "\uC758\uBCF5 \uC81C\uAC70"
-  _displayIcon: {fileID: 0}
+  _displayIcon: {fileID: 21300000, guid: 9d37de109ae6d464c9b9134bd71cfd5e, type: 3}
   _displayIcons: []
   _completionSignal: remove_patient_clothing
   _presentationEntityIdentifier: patient_a
@@ -835,7 +835,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "\uAC00\uC2B4\uC555\uBC15 \uC218\uD589"
-  _displayIcon: {fileID: 0}
+  _displayIcon: {fileID: 21300000, guid: 11637d2a4b61b43b59182a32ecb43170, type: 3}
   _displayIcons: []
   _completionSignal: click_to_start_comp
   _presentationEntityIdentifier: patient_a
@@ -1326,7 +1326,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Scenario.ScenarioActionInteractable
   _displayText: "\uC570\uBD80\uBC31\uC5D0 \uC0B0\uC18C \uC800\uC7A5\uB0AD \uC5F0\uACB0"
-  _displayIcon: {fileID: 0}
+  _displayIcon: {fileID: 21300000, guid: bfd4cba41c2ec41d0bfe83c418e7f542, type: 3}
   _displayIcons: []
   _completionSignal: connect_o2_to_ambu
   _presentationEntityIdentifier: patient_a
