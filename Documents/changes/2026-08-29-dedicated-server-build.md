@@ -12,7 +12,7 @@
 | 산출 위치 | `build/<BuildTarget>-Server/` |
 | 산출물 보존 | `KEEP_BUILD_OUTPUT=1`을 지정하면 빌드 후 삭제하지 않는다 |
 | 배치 진입점 | `GitLabBuild.Build` 또는 `GitLabBuild.BuildDedicatedServer` |
-| CI 작업 | `buildDedicatedServer` 매개변수로 `BuildDedicatedServer` 작업 실행 |
+| CI 작업 | Windows/macOS × 클라이언트/서버의 네 독립 매개변수로 필요한 작업만 실행 |
 
 `GitLabBuild`는 `EditorUserBuildSettings.standaloneBuildSubtarget`과 `BuildPlayerOptions.subtarget`을 함께 설정한다. 에디터 상태에 서브타겟이 반영되어야 `UNITY_SERVER` 스크립팅 정의가 적용된 상태로 스크립트가 컴파일되기 때문이다. 빌드가 끝나면 이전 서브타겟을 복원하므로 클라이언트 빌드 경로에는 영향을 주지 않는다.
 

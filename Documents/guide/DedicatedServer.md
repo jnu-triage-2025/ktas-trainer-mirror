@@ -22,11 +22,13 @@ $env:KEEP_BUILD_OUTPUT = '1'
 .\Tools\CI\build-unity.ps1
 ```
 
-macOS 및 Linux(bash):
+macOS(bash):
 
 ```bash
-BUILD_TARGET=StandaloneLinux64 BUILD_SUBTARGET=Server BUILD_NAME=ktas-trainer-server KEEP_BUILD_OUTPUT=1 Tools/CI/build-unity.sh
+BUILD_TARGET=StandaloneOSX BUILD_SUBTARGET=Server BUILD_NAME=ktas-trainer-server KEEP_BUILD_OUTPUT=1 Tools/CI/build-unity.sh
 ```
+
+일반 클라이언트를 빌드할 때는 `BUILD_SUBTARGET=Player`를 지정하거나 생략합니다. Windows는 `StandaloneWindows64`, macOS는 `StandaloneOSX`를 `BUILD_TARGET`으로 사용합니다.
 
 산출물은 `build/<BuildTarget>-Server/` 아래에 생성됩니다. 예를 들어 위 Windows 예시에서는 `build/StandaloneWindows64-Server/ktas-trainer-server.exe`가 만들어집니다.
 
@@ -38,7 +40,16 @@ Unity 에디터의 Build Profiles 창에서 플랫폼을 **Dedicated Server**로
 
 ### CI에서 빌드
 
-Azure Pipelines 실행 시 **Build Windows dedicated server** 매개변수를 켜면 `BuildDedicatedServer` 작업이 실행됩니다. 이 작업은 빌드가 성공하는지 확인하고 로그를 아티팩트로 게시하며, 실행 파일 자체는 보관하지 않습니다. 빌드 에이전트에도 Dedicated Server Build Support 모듈이 설치되어 있어야 합니다.
+Azure Pipelines는 다음 네 매개변수를 독립적으로 제공합니다. 필요한 조합만 켜면 각 빌드가 별도 headless 배치 작업으로 실행됩니다.
+
+| 매개변수 | 빌드 대상 |
+|---|---|
+| `buildWindowsClient` | Windows 일반 클라이언트 |
+| `buildWindowsDedicatedServer` | Windows 데디케이티드 서버 |
+| `buildMacosClient` | macOS 일반 클라이언트 |
+| `buildMacosDedicatedServer` | macOS 데디케이티드 서버 |
+
+네 작업은 같은 빌드 작업 템플릿을 사용하며, `BUILD_TARGET`과 `BUILD_SUBTARGET`만 다르게 설정합니다. 로그는 대상별 아티팩트로 게시합니다. 서버 작업을 실행하는 에이전트에는 해당 운영체제의 Dedicated Server Build Support 모듈이 설치되어 있어야 합니다.
 
 ## 실행하기
 
