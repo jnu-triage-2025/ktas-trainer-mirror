@@ -123,6 +123,46 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void DefibrillatorResolutionUsesPatientWorldPositionInsideCareZone()
+    {
+      var root = new GameObject("defibrillator-patient-distance-test");
+      root.transform.position = new Vector3(14000f, -3000f, 7000f);
+      try
+      {
+        var zoneObject = new GameObject("care-zone");
+        zoneObject.transform.SetParent(root.transform, false);
+        var zone = zoneObject.AddComponent<PatientCareDescriptionZone>();
+        zone.ConfigureArea(Vector3.zero, new Vector3(20f, 4f, 4f));
+
+        var patientObject = new GameObject("patient");
+        patientObject.transform.SetParent(root.transform, false);
+        patientObject.transform.localPosition = new Vector3(8f, 0f, 0f);
+        var patient = patientObject.AddComponent<PatientController>();
+
+        var zoneCenterCartObject = new GameObject("zone-center-cart");
+        zoneCenterCartObject.transform.SetParent(root.transform, false);
+        var zoneCenterCart = zoneCenterCartObject.AddComponent<DefibrillatorCartController>();
+
+        var patientNearCartObject = new GameObject("patient-near-cart");
+        patientNearCartObject.transform.SetParent(root.transform, false);
+        patientNearCartObject.transform.localPosition = new Vector3(7f, 0f, 0f);
+        var patientNearCart = patientNearCartObject.AddComponent<DefibrillatorCartController>();
+
+        var resolve = typeof(TriageScenarioEventBootstrap).GetMethod(
+          "ResolveDefibrillatorCart", BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.That(resolve, Is.Not.Null);
+        Assert.That(zone.DefibrillatorCarts, Does.Contain(zoneCenterCart));
+        Assert.That(zone.DefibrillatorCarts, Does.Contain(patientNearCart));
+        Assert.That(resolve.Invoke(null, new object[] { patient }), Is.SameAs(patientNearCart),
+          "CareZone 안의 복수 카트 중 환자의 월드 좌표에서 가장 가까운 카트를 선택해야 합니다.");
+      }
+      finally
+      {
+        Object.DestroyImmediate(root);
+      }
+    }
+
+    [Test]
     public void DefibrillatorFallbackUsesWorldPositionDistance()
     {
       var root = new GameObject("defibrillator-world-position-fallback-test");

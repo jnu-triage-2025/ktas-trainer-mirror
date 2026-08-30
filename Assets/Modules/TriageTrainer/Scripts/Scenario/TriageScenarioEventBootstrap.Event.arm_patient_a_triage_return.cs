@@ -38,6 +38,10 @@ namespace TriageTrainer.Scenario
       // nurse_a 홀더의 신호만 시나리오 게이트 신호로 전파한다. 이렇게 하면 다른 플레이어의
       // 구역 진입이 nurse_a의 퀘스트를 완료시키지 않는다(송신자 범위 검증).
       string sourceSignal = TriageArrivalPerPlayerSignalTemplate.Replace("{id}", nurseAUserIdentifier);
+      // 시나리오 초반 분류 구역 방문 때 같은 플레이어별 신호가 이미 올라와 있을 수 있다.
+      // 상태 신호를 내리지 않으면 복귀 시 같은 신호를 다시 올려도 새 전이로 처리되지 않아
+      // 조건부 리스너가 호출되지 않는다.
+      ScenarioInteractionSignals.Clear(sourceSignal);
       ScenarioConditionalSignalListeners.Register(
         PatientATriageReturnGateListenerId,
         sourceSignal,

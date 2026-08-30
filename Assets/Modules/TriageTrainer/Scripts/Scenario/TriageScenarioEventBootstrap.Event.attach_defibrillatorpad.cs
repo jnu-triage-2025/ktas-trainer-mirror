@@ -78,8 +78,10 @@ namespace TriageTrainer.Scenario
     }
 
     /// <summary>
-    /// 환자가 있는 CareZone 안의 카트를 먼저 사용한다. 구역 안에 카트가 없으면
-    /// 해당 구역 중심에 가장 가까운 카트를 선택해, 씬 탐색 순서에 연결 대상이 좌우되지 않게 한다.
+    /// 환자가 있는 CareZone 안의 카트를 먼저 사용한다. 복수의 후보가 있으면
+    /// 구역 중심이 아닌 환자의 월드 좌표에서 가장 가까운 카트를 선택한다.
+    /// 구역 안에 카트가 없을 때 허용되는 fallback도 같은 기준을 사용해,
+    /// 씬 탐색 순서나 트랜스폼 계층에 연결 대상이 좌우되지 않게 한다.
     /// </summary>
     private static DefibrillatorCartController ResolveDefibrillatorCart(PatientController patient)
     {
@@ -96,7 +98,7 @@ namespace TriageTrainer.Scenario
       }
 
       DefibrillatorCartController cart = FindClosestDefibrillatorCart(
-        careZone.DefibrillatorCarts, careZone.WorldCenter);
+        careZone.DefibrillatorCarts, patient.transform.position);
       if (cart != null)
         return cart;
 
@@ -106,7 +108,7 @@ namespace TriageTrainer.Scenario
 
       DefibrillatorCartController[] allCarts = FindObjectsByType<DefibrillatorCartController>(
         FindObjectsInactive.Include, FindObjectsSortMode.None);
-      return FindClosestDefibrillatorCart(allCarts, careZone.WorldCenter);
+      return FindClosestDefibrillatorCart(allCarts, patient.transform.position);
     }
 
     private static DefibrillatorCartController FindClosestDefibrillatorCart(

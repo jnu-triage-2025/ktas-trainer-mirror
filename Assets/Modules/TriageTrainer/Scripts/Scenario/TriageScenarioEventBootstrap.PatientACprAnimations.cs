@@ -35,6 +35,21 @@ namespace TriageTrainer.Scenario
       }
     }
 
+    private readonly struct AnimationPoseAnchor
+    {
+      public readonly Transform Transform;
+      public readonly Transform ReferenceFrame;
+      public readonly Vector3 BasePosition;
+
+      public AnimationPoseAnchor(Transform transform, Transform referenceFrame,
+        Vector3 basePosition)
+      {
+        Transform = transform;
+        ReferenceFrame = referenceFrame;
+        BasePosition = basePosition;
+      }
+    }
+
     /// <summary>
     /// CPR PlayableGraph가 Animator를 점유하기 직전의 Animator Controller 재생 상태.
     /// 그래프를 제거한 뒤 Rebind로 컨트롤러 재생을 되돌릴 때 파라미터와 상태를 되돌리는 데 사용한다.
@@ -103,6 +118,7 @@ namespace TriageTrainer.Scenario
     private readonly Dictionary<Animator, Transform> _patientACprAnimationOffsetRoots = new();
     private readonly Dictionary<Animator, Vector3> _patientACprAnimationOffsetBasePositions = new();
     private readonly Dictionary<Animator, AnimationRootPose> _patientACprAnimationBaseRootPoses = new();
+    private readonly Dictionary<Animator, AnimationPoseAnchor> _patientACprAnimationPoseAnchors = new();
     private readonly Dictionary<Animator, AnimatorPlaybackState> _patientACprAnimatorPlaybackStates = new();
     private readonly Dictionary<PlayerController, PatientACprPerformerState> _patientACprPerformers = new();
 
@@ -239,6 +255,7 @@ namespace TriageTrainer.Scenario
       _patientACprAnimationOffsetRoots.Clear();
       _patientACprAnimationOffsetBasePositions.Clear();
       _patientACprAnimationBaseRootPoses.Clear();
+      _patientACprAnimationPoseAnchors.Clear();
       _patientACprAnimatorPlaybackStates.Clear();
       ReleasePatientACprPerformers();
     }
@@ -288,6 +305,8 @@ namespace TriageTrainer.Scenario
 
     private void LateUpdate()
     {
+      StabilizePatientACprAnimationRootPoses();
+
       foreach (var pair in _patientACprPerformers)
       {
         PatientACprPerformerState state = pair.Value;
@@ -299,6 +318,37 @@ namespace TriageTrainer.Scenario
 
         if (!state.DebugEscaped)
           AlignPatientACprPerformer(state);
+      }
+    }
+
+    /// <summary>
+    /// Humanoid CPR 클립의 RootT는 Animator Transform이 아니라 Hips에 적용된다. 그래프 평가 후
+    /// Hips가 재생 전 기준점에 남도록 전용 모델 루트를 보정한다. 시작 시 적용한 모델 오프셋은
+    /// RootT 침하를 상쇄하기 위한 초기값일 뿐 목표 높이에 다시 더하지 않는다.
+    /// 기준점을 침대에 붙은 부모 좌표계에 기록하므로 침대가 이동하거나 회전해도 함께 따라간다.
+    /// </summary>
+    private void StabilizePatientACprAnimationRootPoses()
+    {
+      foreach (var pair in _patientACprAnimationBaseRootPoses)
+      {
+        Animator animator = pair.Key;
+        if (animator == null
+            || !_patientACprAnimationGraphs.TryGetValue(animator, out var graph)
+            || !graph.IsValid())
+          continue;
+
+        AnimationRootPose rootPose = pair.Value;
+        animator.transform.SetLocalPositionAndRotation(rootPose.LocalPosition, rootPose.LocalRotation);
+
+        if (!_patientACprAnimationPoseAnchors.TryGetValue(animator, out AnimationPoseAnchor anchor)
+            || anchor.Transform == null || anchor.ReferenceFrame == null
+            || !_patientACprAnimationOffsetRoots.TryGetValue(animator, out Transform offsetRoot)
+            || offsetRoot == null)
+          continue;
+
+        Vector3 expectedPosition = anchor.BasePosition;
+        Vector3 currentPosition = anchor.ReferenceFrame.InverseTransformPoint(anchor.Transform.position);
+        offsetRoot.localPosition += expectedPosition - currentPosition;
       }
     }
 
@@ -516,6 +566,19 @@ namespace TriageTrainer.Scenario
       if (!_patientACprAnimationBaseRootPoses.ContainsKey(animator))
         _patientACprAnimationBaseRootPoses[animator] = new AnimationRootPose(animator.transform);
 
+      if (offsetRoot != null && !_patientACprAnimationPoseAnchors.ContainsKey(animator))
+      {
+        Transform referenceFrame = offsetRoot.parent;
+        Transform poseAnchor = animator.isHuman
+          ? animator.GetBoneTransform(HumanBodyBones.Hips)
+          : animator.transform;
+        if (referenceFrame != null && poseAnchor != null)
+        {
+          _patientACprAnimationPoseAnchors[animator] = new AnimationPoseAnchor(
+            poseAnchor, referenceFrame, referenceFrame.InverseTransformPoint(poseAnchor.position));
+        }
+      }
+
       CapturePatientACprAnimatorPlayback(animator);
 
       var graph = PlayableGraph.Create($"patient_a_critical:{clip.name}:{animator.GetInstanceID()}");
@@ -572,6 +635,7 @@ namespace TriageTrainer.Scenario
       _patientACprAnimationOffsetRoots.Remove(animator);
       _patientACprAnimationOffsetBasePositions.Remove(animator);
       _patientACprAnimationBaseRootPoses.Remove(animator);
+      _patientACprAnimationPoseAnchors.Remove(animator);
     }
 
     private void StopAndRestoreAnimation(Animator animator)

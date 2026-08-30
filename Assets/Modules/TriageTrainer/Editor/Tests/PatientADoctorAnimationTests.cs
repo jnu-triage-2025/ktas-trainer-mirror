@@ -12,6 +12,7 @@ using TriageTrainer.Scenario;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
+using UnityEngine.Playables;
 
 namespace TriageTrainer.Tests
 {
@@ -174,6 +175,71 @@ namespace TriageTrainer.Tests
       finally
       {
         UnityEngine.Object.DestroyImmediate(bootstrapObject);
+      }
+    }
+
+    [Test]
+    public void PatientCprPlaybackKeepsModelHeightStableAndRestoresItsPose()
+    {
+      GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PatientPrefabPath);
+      AnimationClip clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(ReceivingCprClipPath);
+      GameObject patient = UnityEngine.Object.Instantiate(prefab);
+      var bootstrapObject = new GameObject("PatientACprPlaybackStabilityTest");
+      try
+      {
+        var bootstrap = bootstrapObject.AddComponent<TriageScenarioEventBootstrap>();
+        Animator animator = patient.GetComponentInChildren<Animator>(true);
+        Transform offsetRoot = patient.transform.Find("CPRModelOffsetRoot");
+        Assert.That(animator, Is.Not.Null);
+        Assert.That(offsetRoot, Is.Not.Null);
+        Assert.That(animator.isHuman, Is.True);
+        Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+        Assert.That(hips, Is.Not.Null);
+
+        animator.Rebind();
+        animator.Update(0f);
+        Vector3 animatorStartLocalPosition = animator.transform.localPosition;
+        Quaternion animatorStartLocalRotation = animator.transform.localRotation;
+        Transform referenceFrame = offsetRoot.parent;
+        Vector3 hipsStartPosition = referenceFrame.InverseTransformPoint(hips.position);
+
+        MethodInfo play = typeof(TriageScenarioEventBootstrap).GetMethod(
+          "PlayLoopingClip", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(play, Is.Not.Null);
+        play.Invoke(bootstrap, new object[] { animator, clip, "patient A test", new Vector3(0f, 0.425f, 0f) });
+
+        FieldInfo graphsField = typeof(TriageScenarioEventBootstrap).GetField(
+          "_patientACprAnimationGraphs", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(graphsField, Is.Not.Null);
+        var graphs = (System.Collections.IDictionary)graphsField.GetValue(bootstrap);
+        var graph = (PlayableGraph)graphs[animator];
+        MethodInfo lateUpdate = typeof(TriageScenarioEventBootstrap).GetMethod(
+          "LateUpdate", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(lateUpdate, Is.Not.Null);
+
+        for (int i = 0; i < 12; i++)
+        {
+          graph.Evaluate(0.25f);
+          lateUpdate.Invoke(bootstrap, null);
+          Vector3 hipsPosition = referenceFrame.InverseTransformPoint(hips.position);
+          Assert.That(Vector3.Distance(hipsPosition, hipsStartPosition), Is.LessThan(0.001f),
+            $"CPR 클립의 RootT가 {i + 1}번째 평가에서 Hips를 침하시키거나 공중으로 띄우면 안 됩니다.");
+        }
+
+        MethodInfo stop = typeof(TriageScenarioEventBootstrap).GetMethod(
+          "StopAndRestoreAnimation", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(stop, Is.Not.Null);
+        stop.Invoke(bootstrap, new object[] { animator });
+
+        Assert.That(offsetRoot.localPosition, Is.EqualTo(Vector3.zero));
+        Assert.That(animator.transform.localPosition, Is.EqualTo(animatorStartLocalPosition));
+        Assert.That(Quaternion.Angle(animator.transform.localRotation, animatorStartLocalRotation),
+          Is.LessThan(0.01f));
+      }
+      finally
+      {
+        UnityEngine.Object.DestroyImmediate(bootstrapObject);
+        UnityEngine.Object.DestroyImmediate(patient);
       }
     }
 
