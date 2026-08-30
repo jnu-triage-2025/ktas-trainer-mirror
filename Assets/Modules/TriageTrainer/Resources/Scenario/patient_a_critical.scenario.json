@@ -2814,14 +2814,14 @@
       "nextIdentifier": "Q028_1"
     },
     "ISC_PASS_CENTRAL_LINE_SET": {
-      "presetIdentifier": "patient_a_item_submission",
+      "presetIdentifier": null,
       "spawnedEntityIdentifier": null,
       "positionSourceEntityIdentifier": null,
       "positionX": 0,
       "positionY": 0,
       "positionZ": 0,
       "targetIdentifier": "patient-a-doctor-submit-central-line-set",
-      "targetStateKey": "patient_a.entityId",
+      "targetStateKey": null,
       "requiredItems": [
         {
           "itemIdentifier": "central_line_set",
@@ -2836,14 +2836,14 @@
       "nextIdentifier": "V018"
     },
     "ISC_PASS_ET_TUBE": {
-      "presetIdentifier": "patient_a_item_submission",
+      "presetIdentifier": null,
       "spawnedEntityIdentifier": null,
       "positionSourceEntityIdentifier": null,
       "positionX": 0,
       "positionY": 0,
       "positionZ": 0,
       "targetIdentifier": "patient-a-doctor-submit-et-tube",
-      "targetStateKey": "patient_a.entityId",
+      "targetStateKey": null,
       "requiredItems": [
         {
           "itemIdentifier": "endotracheal_tube_ready",
@@ -2858,14 +2858,14 @@
       "nextIdentifier": "V014_2"
     },
     "ISC_PASS_LARYNGOSCOPE": {
-      "presetIdentifier": "patient_a_item_submission",
+      "presetIdentifier": null,
       "spawnedEntityIdentifier": null,
       "positionSourceEntityIdentifier": null,
       "positionX": 0,
       "positionY": 0,
       "positionZ": 0,
       "targetIdentifier": "patient-a-doctor-submit-laryngoscope",
-      "targetStateKey": "patient_a.entityId",
+      "targetStateKey": null,
       "requiredItems": [
         {
           "itemIdentifier": "laryngoscope",
@@ -2880,14 +2880,14 @@
       "nextIdentifier": "V014_1"
     },
     "ISC_PASS_SYRINGE": {
-      "presetIdentifier": "patient_a_item_submission",
+      "presetIdentifier": null,
       "spawnedEntityIdentifier": null,
       "positionSourceEntityIdentifier": null,
       "positionX": 0,
       "positionY": 0,
       "positionZ": 0,
       "targetIdentifier": "patient-a-doctor-submit-5cc-syringe",
-      "targetStateKey": "patient_a.entityId",
+      "targetStateKey": null,
       "requiredItems": [
         {
           "itemIdentifier": "syringe_5cc",
@@ -5246,7 +5246,7 @@
       "nextIdentifier": "D_GCS_A_02"
     },
     "D_GCS_A_02": {
-      "speakerName": "self",
+      "speakerName": "@s",
       "dialogueContent": "(환자는 아무 반응도 하지 않는다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -5270,7 +5270,7 @@
       "nextIdentifier": "D_GCS_A_04"
     },
     "D_GCS_A_04": {
-      "speakerName": "self",
+      "speakerName": "@s",
       "dialogueContent": "(환자가 불편해하며 자극을 피하려 한다. 눈을 잠시 떴다가 다시 감는다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -5321,7 +5321,7 @@
       "nextIdentifier": "D_GCS_A_08"
     },
     "D_GCS_A_08": {
-      "speakerName": "self",
+      "speakerName": "@s",
       "dialogueContent": "(환자가 팔을 재빨리 굽혀 자극을 피한다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -6071,7 +6071,7 @@
       "nextIdentifier": "D_PULSE_R1_RESULT"
     },
     "D_PULSE_R1_RESULT": {
-      "speakerName": "self",
+      "speakerName": "@s",
       "dialogueContent": "(아무것도 느껴지지 않는다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -6454,7 +6454,7 @@
       "nextIdentifier": "D_PULSE_R2_RESULT"
     },
     "D_PULSE_R2_RESULT": {
-      "speakerName": "self",
+      "speakerName": "@s",
       "dialogueContent": "(손끝에 규칙적인 박동이 잡힌다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -6974,7 +6974,7 @@
       "nextIdentifier": "D_GCS_ROSC_02"
     },
     "D_GCS_ROSC_02": {
-      "speakerName": "self",
+      "speakerName": "@s",
       "dialogueContent": "(환자는 아무 반응도 하지 않는다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -6998,7 +6998,7 @@
       "nextIdentifier": "D_GCS_ROSC_04"
     },
     "D_GCS_ROSC_04": {
-      "speakerName": "self",
+      "speakerName": "@s",
       "dialogueContent": "(환자가 불편해하며 자극을 피한다. 눈을 잠시 떴다가 다시 감는다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,
@@ -7034,7 +7034,7 @@
       "nextIdentifier": "D_GCS_ROSC_07"
     },
     "D_GCS_ROSC_07": {
-      "speakerName": "self",
+      "speakerName": "@s",
       "dialogueContent": "(환자가 움찔거리며 자극에서 벗어나려 한다.)",
       "portraitSpriteIdentifier": null,
       "autoAdvanceSeconds": null,

@@ -522,6 +522,29 @@ namespace TriageTrainer.Tests
     }
 
     [Test]
+    public void PatientADoctorSubmissionNodesConfigureExistingNpcInteractions()
+    {
+      var graph = ScenarioGraphLoader.LoadFromJson(
+        File.ReadAllText(PatientAScenarioPath), validateWithSchema: true);
+
+      foreach (string nodeIdentifier in new[]
+               {
+                 "ISC_PASS_LARYNGOSCOPE",
+                 "ISC_PASS_ET_TUBE",
+                 "ISC_PASS_SYRINGE",
+                 "ISC_PASS_CENTRAL_LINE_SET"
+               })
+      {
+        var node = graph.Nodes[nodeIdentifier] as ScenarioItemSubmissionConfigNode;
+        Assert.That(node, Is.Not.Null, nodeIdentifier);
+        Assert.That(node.PresetIdentifier, Is.Null,
+          $"{nodeIdentifier}는 존재하지 않는 프리셋을 스폰하지 않고 의사 NPC의 기존 상호작용을 설정해야 합니다.");
+        Assert.That(node.TargetIdentifier, Is.Not.Null.And.Not.Empty, nodeIdentifier);
+        Assert.That(node.Enabled, Is.True, nodeIdentifier);
+      }
+    }
+
+    [Test]
     public void PatientAStartWaitsForEveryActiveNurseArrival()
     {
       string projectRoot = Directory.GetParent(Application.dataPath).FullName;
