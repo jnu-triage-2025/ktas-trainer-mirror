@@ -39,7 +39,8 @@ namespace TriageTrainer.Entity
   public class WallAttachedWallSuction : StaticObjectDisplayment, INearestOnlyInteract,
     IAttachCompletionSignalConfigurable
   {
-    private sealed class YankauerConnectionInteract : IInteract, IInteractorConditional, IQuestPresentationTarget
+    private sealed class YankauerConnectionInteract : IInteract, IInteractorConditional,
+      IInteractDisplayIcons, IQuestPresentationTarget
     {
       private readonly WallAttachedWallSuction _owner;
       public YankauerConnectionInteract(WallAttachedWallSuction owner) => _owner = owner;
@@ -47,6 +48,7 @@ namespace TriageTrainer.Entity
       public string PresentationEntityIdentifier => "patient_a_wall_suction";
       public string InteractionIdentifier => "connect_yankauer";
       public Sprite DisplayIcon => null;
+      public IReadOnlyList<Sprite> DisplayIcons => _owner.YankauerConnectionDisplayIcons;
       public bool AllowDisplayIconFallback => true;
       public Color DisplayColor => Color.white;
       public bool CanInteract(Transform interactor) =>
@@ -128,6 +130,7 @@ namespace TriageTrainer.Entity
     public override string InteractionIdentifier =>
       IsPatientAInstallationTarget ? "wall_suction_install" : base.InteractionIdentifier;
     private Sprite _installationItemIcon;
+    private Sprite _yankauerItemIcon;
 
     protected override string EntityIdPrefix => "wall_suction";
     // 미설치 활성화 후보가 구역 경계에서 여러 개 감지되어도 PlayerController가 같은 그룹 중
@@ -189,6 +192,27 @@ namespace TriageTrainer.Entity
       _installationItemIcon = MultiplayerInfrastructure.Registry.Registry.CreateItemInstance(
         RequiredItemIdentifier)?.CurrentItemIconTexture;
       return _installationItemIcon;
+    }
+
+    private IReadOnlyList<Sprite> YankauerConnectionDisplayIcons
+    {
+      get
+      {
+        var yankauerIcon = ResolveYankauerItemIcon();
+        return _yankauerConnected
+          ? new[] { Icon.ClearRightBottom, yankauerIcon }
+          : new[] { yankauerIcon };
+      }
+    }
+
+    private Sprite ResolveYankauerItemIcon()
+    {
+      if (_yankauerItemIcon != null)
+        return _yankauerItemIcon;
+
+      _yankauerItemIcon = MultiplayerInfrastructure.Registry.Registry.CreateItemInstance(
+        TriageTrainer.ItemDefinitions.YankauerSuctionReady.Identifier)?.CurrentItemIconTexture;
+      return _yankauerItemIcon;
     }
 
     // ── IInteract ─────────────────────────────────────────────────────────────
