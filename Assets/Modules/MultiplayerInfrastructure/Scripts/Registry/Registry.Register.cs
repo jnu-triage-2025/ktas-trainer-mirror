@@ -9,7 +9,7 @@ namespace MultiplayerInfrastructure.Registry
     private static readonly (string Identifier, string Path)[] IconLiterals =
     {
       ("message-circle", $"{IconResourceRoot}/message-circle"),
-      ("quest-interaction", $"{IconResourceRoot}/exclamation-mark__yellow"),
+      ("quest-interaction", $"{IconResourceRoot}/quest"),
       ("quest-marker", $"{IconResourceRoot}/quest")
     };
 

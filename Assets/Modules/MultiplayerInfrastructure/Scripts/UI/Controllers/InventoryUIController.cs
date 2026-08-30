@@ -320,6 +320,11 @@ namespace MultiplayerInfrastructure.UI
       _hotbarUI?.BindInventory(_view?.BoundSlots);
       OnItemAtSelectedSlotChanged?.Invoke();
 
+      // 조합 결과물을 포함해 UI가 슬롯을 직접 변경하는 경로는 PlayerController의 인벤토리
+      // 변경 공통 처리를 거치지 않는다. 소지 아이템을 조건으로 하는 주변 상호작용이 현재
+      // 감지 범위 안에서도 즉시 나타나거나 사라지도록 힌트를 다시 계산한다.
+      ResolveOwningPlayer()?.RefreshInteractableHintsNow();
+
       // 슬롯 변화(집기/놓기/조합)에 따라 조합 가능 목록/필요 아이템 표시를 즉시 갱신.
       RefreshCraftableRecipes();
 
