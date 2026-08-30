@@ -35,6 +35,7 @@ namespace MultiplayerInfrastructure.Player
     [SerializeField] private string _viewmodelLayerName = "Viewmodel";
 
     private Transform _viewmodelRoot;
+    private Transform _heldItemAttachPoint;
     private GameObject _viewmodelInstance;
     private ItemSystem.Item _viewmodelItem;
     private Coroutine _viewmodelAnim;
@@ -440,17 +441,45 @@ namespace MultiplayerInfrastructure.Player
         return;
 
       if (_viewmodelRoot != null)
+      {
+        ApplyViewmodelRootParentAndPose();
         return;
+      }
 
-      if (CameraAttachPoint?.PivotTransform == null)
+      if (_heldItemAttachPoint == null && CameraAttachPoint?.PivotTransform == null)
         return;
 
       var go = new GameObject("HeldItemViewmodelRoot");
-      go.transform.SetParent(CameraAttachPoint.PivotTransform, false);
-      go.transform.localPosition = _viewmodelLocalPosition;
-      go.transform.localRotation = Quaternion.Euler(_viewmodelLocalEuler);
-      go.transform.localScale = _viewmodelLocalScale;
       _viewmodelRoot = go.transform;
+      ApplyViewmodelRootParentAndPose();
+    }
+
+    private void SetHeldItemAttachPoint(Transform attachPoint)
+    {
+      _heldItemAttachPoint = attachPoint;
+
+      if (!IsOwner || MppmLiteMode.IsHeadless)
+        return;
+
+      EnsureViewmodelRoot();
+    }
+
+    private void ApplyViewmodelRootParentAndPose()
+    {
+      if (_viewmodelRoot == null)
+        return;
+
+      Transform parent = _heldItemAttachPoint != null
+        ? _heldItemAttachPoint
+        : CameraAttachPoint?.PivotTransform;
+      if (parent == null)
+        return;
+
+      _viewmodelRoot.SetParent(parent, false);
+      bool isAttachedToHand = _heldItemAttachPoint != null;
+      _viewmodelRoot.localPosition = isAttachedToHand ? Vector3.zero : _viewmodelLocalPosition;
+      _viewmodelRoot.localRotation = isAttachedToHand ? Quaternion.identity : Quaternion.Euler(_viewmodelLocalEuler);
+      _viewmodelRoot.localScale = isAttachedToHand ? Vector3.one : _viewmodelLocalScale;
     }
 
     private void RefreshViewmodel()
@@ -604,8 +633,7 @@ namespace MultiplayerInfrastructure.Player
         yield return null;
       }
 
-      _viewmodelRoot.localPosition = _viewmodelLocalPosition;
-      _viewmodelRoot.localRotation = Quaternion.Euler(_viewmodelLocalEuler);
+      ApplyViewmodelRootParentAndPose();
       _viewmodelAnim = null;
     }
   }

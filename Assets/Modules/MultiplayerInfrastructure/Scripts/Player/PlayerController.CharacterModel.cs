@@ -148,6 +148,7 @@ namespace MultiplayerInfrastructure.Player
       }
 
       SetCharacterModelAnimator(playerCharacterModel.Animator);
+      SetHeldItemAttachPoint(playerCharacterModel.HeldItemAttachPoint);
 
       if (!applyCharacterControllerCenter)
         return;
@@ -165,6 +166,7 @@ namespace MultiplayerInfrastructure.Player
 
       playerCharacterModelAttachPoint.ClearAttachedModel();
       SetCharacterModelAnimator(null);
+      SetHeldItemAttachPoint(null);
     }
 
     private static bool TryResolvePlayerModelObject(string modelIdentifier, out GameObject playerModelObject)
