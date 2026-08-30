@@ -45,6 +45,52 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69c1d64f2026847bbab9580c99afeda9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelBrian
+  _animatorControllerObject: {fileID: 0}
+  _heldItemAttachPointObject: {fileID: 5701329543181013253}
+--- !u!1 &5169752208010901588
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4212739601551515184}
+  - component: {fileID: 5701329543181013253}
+  m_Layer: 0
+  m_Name: HoldItemAttachment
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4212739601551515184
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5169752208010901588}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.0031183877, y: 0.0113683315, z: 0.0064928858, w: 0.9999095}
+  m_LocalPosition: {x: 0.0485, y: 0.135, z: 0.0215}
+  m_LocalScale: {x: 100.000015, y: 100.00009, z: 100}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5860645389807441538}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5701329543181013253
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5169752208010901588}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be91b41c4d46948b0951c90ed513a38e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelHoldingItemAttachPoint
 --- !u!1001 &855166729613527625
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -99,11 +145,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 6524335364161150155, guid: ebfaffc500b96f945915c8526d9d6b8a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4212739601551515184}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ebfaffc500b96f945915c8526d9d6b8a, type: 3}
 --- !u!4 &4007346681204869592 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4342276048161227665, guid: ebfaffc500b96f945915c8526d9d6b8a, type: 3}
+  m_PrefabInstance: {fileID: 855166729613527625}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &5860645389807441538 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6524335364161150155, guid: ebfaffc500b96f945915c8526d9d6b8a, type: 3}
   m_PrefabInstance: {fileID: 855166729613527625}
   m_PrefabAsset: {fileID: 0}

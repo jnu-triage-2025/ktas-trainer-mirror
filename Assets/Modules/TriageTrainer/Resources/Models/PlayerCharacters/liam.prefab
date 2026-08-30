@@ -45,7 +45,52 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3973bd8be2ad41c884ef5b717b6ac78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelLiam
-  _animator: {fileID: 2346608322823083704}
+  _animatorControllerObject: {fileID: 1824684089202636636}
+  _heldItemAttachPointObject: {fileID: 6945019711448941297}
+--- !u!1 &8971643060692224622
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7477044707200370997}
+  - component: {fileID: 6945019711448941297}
+  m_Layer: 0
+  m_Name: HoldItemAttachment
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7477044707200370997
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8971643060692224622}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.00000006332992, y: -0.000000029802315, z: -0.00000014202666, w: 1}
+  m_LocalPosition: {x: 0.0005, y: 0.00144, z: 0.00016}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5743243492228743947}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6945019711448941297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8971643060692224622}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be91b41c4d46948b0951c90ed513a38e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelHoldingItemAttachPoint
 --- !u!1001 &2117428243031798140
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -94,22 +139,49 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4463716022101370820, guid: 2747d8ab465d1cb43a562feaa719f62c, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5156426834569296056, guid: 2747d8ab465d1cb43a562feaa719f62c, type: 3}
       propertyPath: m_Name
       value: Chr_Sergeon_Male_03_Prefab
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 5969103776262681207, guid: 2747d8ab465d1cb43a562feaa719f62c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7477044707200370997}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6942776471528138500, guid: 2747d8ab465d1cb43a562feaa719f62c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1824684089202636636}
   m_SourcePrefab: {fileID: 100100000, guid: 2747d8ab465d1cb43a562feaa719f62c, type: 3}
---- !u!95 &2346608322823083704 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 4463716022101370820, guid: 2747d8ab465d1cb43a562feaa719f62c, type: 3}
-  m_PrefabInstance: {fileID: 2117428243031798140}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &2361350780896766481 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4442706210297961325, guid: 2747d8ab465d1cb43a562feaa719f62c, type: 3}
   m_PrefabInstance: {fileID: 2117428243031798140}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &5743243492228743947 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5969103776262681207, guid: 2747d8ab465d1cb43a562feaa719f62c, type: 3}
+  m_PrefabInstance: {fileID: 2117428243031798140}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &9023858703460587128 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6942776471528138500, guid: 2747d8ab465d1cb43a562feaa719f62c, type: 3}
+  m_PrefabInstance: {fileID: 2117428243031798140}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1824684089202636636
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9023858703460587128}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b876157dc26904a43b95c4324911f786, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelAnimatorControllerObject

@@ -1,5 +1,49 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5098819562839014914
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3243874027287722559}
+  - component: {fileID: 4936341089517922286}
+  m_Layer: 0
+  m_Name: HoldItemAttachment
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3243874027287722559
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5098819562839014914}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.0037550307, y: 0.013009785, z: -0.007955101, w: 0.99987674}
+  m_LocalPosition: {x: 0.00055, y: 0.00133, z: 0.00027}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5722233807884549506}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4936341089517922286
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5098819562839014914}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be91b41c4d46948b0951c90ed513a38e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelHoldingItemAttachPoint
 --- !u!1 &9000126146280538170
 GameObject:
   m_ObjectHideFlags: 0
@@ -45,7 +89,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6088c7255ca5d4eba9393db838e91ed8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelMaya
-  _animator: {fileID: 6344039979770211811}
+  _animatorControllerObject: {fileID: 1140973259224073483}
+  _heldItemAttachPointObject: {fileID: 4936341089517922286}
 --- !u!1001 &5312861212074359483
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -104,12 +149,35 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 491567781747410745, guid: 2a24c2fdcb1a0b641b30d4c34fb7a33c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3243874027287722559}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5483803078270211992, guid: 2a24c2fdcb1a0b641b30d4c34fb7a33c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1140973259224073483}
   m_SourcePrefab: {fileID: 100100000, guid: 2a24c2fdcb1a0b641b30d4c34fb7a33c, type: 3}
---- !u!95 &6344039979770211811 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 1274973482151630680, guid: 2a24c2fdcb1a0b641b30d4c34fb7a33c, type: 3}
+--- !u!1 &405731643766730019 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5483803078270211992, guid: 2a24c2fdcb1a0b641b30d4c34fb7a33c, type: 3}
+  m_PrefabInstance: {fileID: 5312861212074359483}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1140973259224073483
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 405731643766730019}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b876157dc26904a43b95c4324911f786, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelAnimatorControllerObject
+--- !u!4 &5722233807884549506 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 491567781747410745, guid: 2a24c2fdcb1a0b641b30d4c34fb7a33c, type: 3}
   m_PrefabInstance: {fileID: 5312861212074359483}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &9174757124389468306 stripped

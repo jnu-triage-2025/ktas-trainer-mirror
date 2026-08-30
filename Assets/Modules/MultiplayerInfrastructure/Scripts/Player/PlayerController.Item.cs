@@ -14,6 +14,7 @@ namespace MultiplayerInfrastructure.Player
   public partial class PlayerController
   {
     private const string RapidInfuserFlowTag = "RapidInfuserFlow";
+    private const float HoldingItemScaleOffset = 0.009f;
     private void LogRapidInfuser(string message, bool warning = false)
     {
       string full = $"[PlayerRapidInfuser] player='{name}' owner={IsOwner} server={IsServerStarted} client={IsClientStarted} {message}";
@@ -479,7 +480,7 @@ namespace MultiplayerInfrastructure.Player
       bool isAttachedToHand = _heldItemAttachPoint != null;
       _viewmodelRoot.localPosition = isAttachedToHand ? Vector3.zero : _viewmodelLocalPosition;
       _viewmodelRoot.localRotation = isAttachedToHand ? Quaternion.identity : Quaternion.Euler(_viewmodelLocalEuler);
-      _viewmodelRoot.localScale = isAttachedToHand ? Vector3.one : _viewmodelLocalScale;
+      _viewmodelRoot.localScale = isAttachedToHand ? Vector3.one * HoldingItemScaleOffset : _viewmodelLocalScale;
     }
 
     private void RefreshViewmodel()

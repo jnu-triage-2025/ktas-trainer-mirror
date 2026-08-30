@@ -6,6 +6,8 @@ namespace MultiplayerInfrastructure.Player
   {
     public Vector3 CharacterControllerCenter => Vector3.zero;
     public Animator Animator => null;
+    public PlayerCharacterModelAnimatorControllerObject AnimatorControllerObject => null;
     public Transform HeldItemAttachPoint => null;
+    public PlayerCharacterModelHoldingItemAttachPoint HeldItemAttachPointObject => null;
   }
 }

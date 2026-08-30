@@ -1,5 +1,49 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3976820146760796490
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6959812455629654153}
+  - component: {fileID: 4397311005757589928}
+  m_Layer: 0
+  m_Name: HoldItemAttachment
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6959812455629654153
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3976820146760796490}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.0030270289, y: 0.002260044, z: 0.019372622, w: 0.9998053}
+  m_LocalPosition: {x: 0.06, y: 0.16, z: 0.04}
+  m_LocalScale: {x: 100.00005, y: 100.00009, z: 100}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2289890126080754866}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4397311005757589928
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3976820146760796490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be91b41c4d46948b0951c90ed513a38e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelHoldingItemAttachPoint
 --- !u!1 &8246434791077451387
 GameObject:
   m_ObjectHideFlags: 0
@@ -45,7 +89,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c1b4b21b38974466caf17b32e0c148ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelJeb
-  _animator: {fileID: 2745950141820185429}
+  _animatorControllerObject: {fileID: 9082416532258887582}
+  _heldItemAttachPointObject: {fileID: 4397311005757589928}
 --- !u!1001 &3703570647601465233
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -108,12 +153,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 3216391530355786531, guid: c217e88e350127b4091443bae01d78eb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6959812455629654153}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5248336800429435908, guid: c217e88e350127b4091443bae01d78eb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 9082416532258887582}
   m_SourcePrefab: {fileID: 100100000, guid: c217e88e350127b4091443bae01d78eb, type: 3}
---- !u!95 &2745950141820185429 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 1548722580544384196, guid: c217e88e350127b4091443bae01d78eb, type: 3}
+--- !u!4 &2289890126080754866 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3216391530355786531, guid: c217e88e350127b4091443bae01d78eb, type: 3}
   m_PrefabInstance: {fileID: 3703570647601465233}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &3812099184959722247 stripped
@@ -121,3 +172,20 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 541265262067700886, guid: c217e88e350127b4091443bae01d78eb, type: 3}
   m_PrefabInstance: {fileID: 3703570647601465233}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &8912746133188357013 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5248336800429435908, guid: c217e88e350127b4091443bae01d78eb, type: 3}
+  m_PrefabInstance: {fileID: 3703570647601465233}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &9082416532258887582
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8912746133188357013}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b876157dc26904a43b95c4324911f786, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelAnimatorControllerObject

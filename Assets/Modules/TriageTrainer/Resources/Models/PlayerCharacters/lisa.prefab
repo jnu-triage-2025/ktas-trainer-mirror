@@ -45,7 +45,52 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b998c7f1896534a60b8237231f18ecdd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelLisa
-  _animator: {fileID: 824017596446152008}
+  _animatorControllerObject: {fileID: 4008926038742155377}
+  _heldItemAttachPointObject: {fileID: 6098178717256703319}
+--- !u!1 &7300430258534279957
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5307303516915022482}
+  - component: {fileID: 6098178717256703319}
+  m_Layer: 0
+  m_Name: HoldItemAttachment
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5307303516915022482
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7300430258534279957}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.0037550307, y: 0.013009785, z: -0.007955101, w: 0.99987674}
+  m_LocalPosition: {x: 0.00055, y: 0.00135, z: 0.00024}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2021135778217461033}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6098178717256703319
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7300430258534279957}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be91b41c4d46948b0951c90ed513a38e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelHoldingItemAttachPoint
 --- !u!1001 &1936233392889184784
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -104,12 +149,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 491567781747410745, guid: f4e2ebb8ef45c8f41b4f2e36fe8993c1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5307303516915022482}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5483803078270211992, guid: f4e2ebb8ef45c8f41b4f2e36fe8993c1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4008926038742155377}
   m_SourcePrefab: {fileID: 100100000, guid: f4e2ebb8ef45c8f41b4f2e36fe8993c1, type: 3}
---- !u!95 &824017596446152008 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 1274973482151630680, guid: f4e2ebb8ef45c8f41b4f2e36fe8993c1, type: 3}
+--- !u!4 &2021135778217461033 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 491567781747410745, guid: f4e2ebb8ef45c8f41b4f2e36fe8993c1, type: 3}
   m_PrefabInstance: {fileID: 1936233392889184784}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &3185938167337025593 stripped
@@ -117,3 +168,20 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3956513294655898153, guid: f4e2ebb8ef45c8f41b4f2e36fe8993c1, type: 3}
   m_PrefabInstance: {fileID: 1936233392889184784}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &6252267160443655560 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5483803078270211992, guid: f4e2ebb8ef45c8f41b4f2e36fe8993c1, type: 3}
+  m_PrefabInstance: {fileID: 1936233392889184784}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4008926038742155377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6252267160443655560}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b876157dc26904a43b95c4324911f786, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelAnimatorControllerObject

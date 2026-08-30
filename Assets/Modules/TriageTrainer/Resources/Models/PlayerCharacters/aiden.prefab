@@ -1,5 +1,49 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4565111349041109122
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8035211318727833340}
+  - component: {fileID: 7400923859036113298}
+  m_Layer: 0
+  m_Name: HoldItemAttachment
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8035211318727833340
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4565111349041109122}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.00049, y: 0.00153, z: 0.00002}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7332420944150552357}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7400923859036113298
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4565111349041109122}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be91b41c4d46948b0951c90ed513a38e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelHoldingItemAttachPoint
 --- !u!1 &7345567265429600410
 GameObject:
   m_ObjectHideFlags: 0
@@ -45,7 +89,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7360e8213e6c476fba6e6e3e34fda4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelAiden
-  _animator: {fileID: 785094935739910806}
+  _animatorControllerObject: {fileID: 8543640844582681446}
+  _heldItemAttachPointObject: {fileID: 7400923859036113298}
 --- !u!1001 &3969775452229086546
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -104,16 +149,39 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 5969103776262681207, guid: 4f78f7f37c7ddf64fb4c5475780ed459, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8035211318727833340}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6942776471528138500, guid: 4f78f7f37c7ddf64fb4c5475780ed459, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8543640844582681446}
   m_SourcePrefab: {fileID: 100100000, guid: 4f78f7f37c7ddf64fb4c5475780ed459, type: 3}
 --- !u!4 &770344781067155007 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4442706210297961325, guid: 4f78f7f37c7ddf64fb4c5475780ed459, type: 3}
   m_PrefabInstance: {fileID: 3969775452229086546}
   m_PrefabAsset: {fileID: 0}
---- !u!95 &785094935739910806 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 4463716022101370820, guid: 4f78f7f37c7ddf64fb4c5475780ed459, type: 3}
+--- !u!1 &6291189854440114774 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6942776471528138500, guid: 4f78f7f37c7ddf64fb4c5475780ed459, type: 3}
+  m_PrefabInstance: {fileID: 3969775452229086546}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8543640844582681446
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6291189854440114774}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b876157dc26904a43b95c4324911f786, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelAnimatorControllerObject
+--- !u!4 &7332420944150552357 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5969103776262681207, guid: 4f78f7f37c7ddf64fb4c5475780ed459, type: 3}
   m_PrefabInstance: {fileID: 3969775452229086546}
   m_PrefabAsset: {fileID: 0}

@@ -45,7 +45,52 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4566625674cd49be913614454927b2c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelSofia
-  _animator: {fileID: 4549582370455359934}
+  _animatorControllerObject: {fileID: 7412519674611014360}
+  _heldItemAttachPointObject: {fileID: 6348462665212668955}
+--- !u!1 &8272900437527135250
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2794945454557996850}
+  - component: {fileID: 6348462665212668955}
+  m_Layer: 0
+  m_Name: HoldItemAttachment
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2794945454557996850
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8272900437527135250}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.000105772146, y: 0.026865656, z: -0.0031711978, w: 0.999634}
+  m_LocalPosition: {x: 0.00051, y: 0.00134, z: 0.00019}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 754663048099462158}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6348462665212668955
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8272900437527135250}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be91b41c4d46948b0951c90ed513a38e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelHoldingItemAttachPoint
 --- !u!1001 &4205075360948355332
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -104,16 +149,39 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 3468466371892346122, guid: a4218cf84493a8f4bbfb6825629c76cb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2794945454557996850}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6400684574585753722, guid: a4218cf84493a8f4bbfb6825629c76cb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7412519674611014360}
   m_SourcePrefab: {fileID: 100100000, guid: a4218cf84493a8f4bbfb6825629c76cb, type: 3}
+--- !u!4 &754663048099462158 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3468466371892346122, guid: a4218cf84493a8f4bbfb6825629c76cb, type: 3}
+  m_PrefabInstance: {fileID: 4205075360948355332}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &3072522254548927111 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1222911418941834115, guid: a4218cf84493a8f4bbfb6825629c76cb, type: 3}
   m_PrefabInstance: {fileID: 4205075360948355332}
   m_PrefabAsset: {fileID: 0}
---- !u!95 &4549582370455359934 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 394118625701400762, guid: a4218cf84493a8f4bbfb6825629c76cb, type: 3}
+--- !u!1 &7100102348052271486 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6400684574585753722, guid: a4218cf84493a8f4bbfb6825629c76cb, type: 3}
   m_PrefabInstance: {fileID: 4205075360948355332}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7412519674611014360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7100102348052271486}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b876157dc26904a43b95c4324911f786, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.MultiplayerInfrastructureSupports.PlayerCharacterModelAnimatorControllerObject

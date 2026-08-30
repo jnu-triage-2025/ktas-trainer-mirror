@@ -5,12 +5,24 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
 {
   public abstract class PlayerCharacterModelBase : MonoBehaviour, IPlayerCharacterModelObject
   {
-    [SerializeField] private Animator _animator;
-    [SerializeField] private Transform _heldItemAttachPoint;
+    [SerializeField] private PlayerCharacterModelAnimatorControllerObject _animatorControllerObject;
+    [SerializeField] private PlayerCharacterModelHoldingItemAttachPoint _heldItemAttachPointObject;
 
     public virtual Vector3 CharacterControllerCenter => new Vector3(0f, 1f, 0f);
-    public Animator Animator => _animator;
-    public Transform HeldItemAttachPoint => _heldItemAttachPoint;
+    public Animator Animator => _animatorControllerObject != null
+      ? _animatorControllerObject.GetComponent<Animator>()
+      : null;
+    public PlayerCharacterModelAnimatorControllerObject AnimatorControllerObject => _animatorControllerObject;
+    public Transform HeldItemAttachPoint => _heldItemAttachPointObject != null
+      ? _heldItemAttachPointObject.transform
+      : null;
+    public PlayerCharacterModelHoldingItemAttachPoint HeldItemAttachPointObject => _heldItemAttachPointObject;
+
+    protected virtual void Reset()
+    {
+      _animatorControllerObject = GetComponentInChildren<PlayerCharacterModelAnimatorControllerObject>(true);
+      _heldItemAttachPointObject = GetComponentInChildren<PlayerCharacterModelHoldingItemAttachPoint>(true);
+    }
 
     protected virtual void Awake()
     {
@@ -26,10 +38,11 @@ namespace TriageTrainer.MultiplayerInfrastructureSupports
 
     protected void DisableRootMotionIfAvailable()
     {
-      if (_animator == null)
+      Animator animator = Animator;
+      if (animator == null)
         return;
 
-      _animator.applyRootMotion = false;
+      animator.applyRootMotion = false;
     }
   }
 }
