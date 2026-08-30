@@ -1,0 +1,72 @@
+parameters:
+  - name: jobName
+    type: string
+  - name: displayName
+    type: string
+  - name: enabled
+    type: boolean
+  - name: agentMode
+    type: string
+  - name: host
+    type: string
+  - name: buildTarget
+    type: string
+  - name: buildSubtarget
+    type: string
+  - name: buildName
+    type: string
+  - name: buildPath
+    type: string
+  - name: windowsAgentPool
+    type: string
+
+jobs:
+  - job: ${{ parameters.jobName }}
+    displayName: ${{ parameters.displayName }}
+    condition: and(succeeded(), ${{ eq(parameters.enabled, true) }})
+    pool:
+      ${{ if eq(parameters.host, 'windows') }}:
+        ${{ if eq(parameters.agentMode, 'hosted') }}:
+          vmImage: 'windows-2022'
+        ${{ else }}:
+          name: ${{ parameters.windowsAgentPool }}
+      ${{ if eq(parameters.host, 'macos') }}:
+        vmImage: 'macos-latest'
+    variables:
+      CI_PROJECT_DIR: '$(Build.SourcesDirectory)'
+      BUILD_NAME: ${{ parameters.buildName }}
+      BUILD_PATH: ${{ parameters.buildPath }}
+      BUILD_TARGET: ${{ parameters.buildTarget }}
+      BUILD_SUBTARGET: ${{ parameters.buildSubtarget }}
+      UNITY_LOG_ARTIFACT_PATH: artifacts/unity-${{ parameters.buildTarget }}-${{ parameters.buildSubtarget }}.log
+    steps:
+      - checkout: self
+        clean: false
+        ${{ if eq(parameters.host, 'windows') }}:
+          ${{ if eq(parameters.agentMode, 'hosted') }}:
+            fetchDepth: 1
+          ${{ else }}:
+            fetchDepth: 0
+        ${{ if eq(parameters.host, 'macos') }}:
+          fetchDepth: 1
+      - powershell: |
+          if (-not (Test-Path -LiteralPath 'Tools/CI/build-unity.ps1' -PathType Leaf)) {
+            throw 'Tools/CI/build-unity.ps1 was not found.'
+          }
+          & .\Tools\CI\build-unity.ps1
+        displayName: ${{ parameters.displayName }}
+        condition: eq(variables['Agent.OS'], 'Windows_NT')
+      - bash: |
+          set -euo pipefail
+          test -f Tools/CI/build-unity.sh
+          chmod +x Tools/CI/build-unity.sh
+          Tools/CI/build-unity.sh
+        displayName: ${{ parameters.displayName }}
+        condition: eq(variables['Agent.OS'], 'Darwin')
+      - task: PublishBuildArtifacts@1
+        displayName: 'Publish Unity build log'
+        condition: always()
+        inputs:
+          PathtoPublish: '$(Build.SourcesDirectory)/artifacts'
+          ArtifactName: unity-${{ parameters.buildTarget }}-${{ parameters.buildSubtarget }}-artifacts
+          publishLocation: 'Container'
