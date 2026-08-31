@@ -276,6 +276,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
         StaticPlacedItemService.ClearAll();
         StaticObjectDisplaymentService.ClearAll();
         ConnectionGateService.ResetState();
+        MultiplayerInfrastructure.Variable.SessionVariableService.ClearSessionState();
 
         _deferredPlayerSpawningPrepared = false;
         PrepareDeferredPlayerSpawning();
@@ -291,6 +292,7 @@ namespace MultiplayerInfrastructure.FishNetSupports
         StaticPlacedItemService.ClearAll();
         StaticObjectDisplaymentService.ClearAll();
         ConnectionGateService.ResetState();
+        MultiplayerInfrastructure.Variable.SessionVariableService.ClearSessionState();
         _deferredPlayerSpawningPrepared = false;
         _systemSceneObserverPrepared = false;
       }

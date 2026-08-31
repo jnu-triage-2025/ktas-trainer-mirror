@@ -88,6 +88,12 @@ namespace MultiplayerInfrastructure.Variable
     public static IReadOnlyCollection<ObjectiveDefinition> GetObjectives()
       => _objectives.Values;
 
+    public static void ClearSessionState()
+    {
+      _objectives.Clear();
+      _scoresByObjective.Clear();
+    }
+
     public static bool ContainsObjective(string objective)
       => !string.IsNullOrWhiteSpace(objective) && _objectives.ContainsKey(objective);
 

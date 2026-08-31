@@ -61,8 +61,16 @@ namespace TriageTrainer.Entity
     private bool _recordingFailed;
     private readonly float[] _samples = new float[SampleCount];
     private IAdapter _adapter = new UnityAdapter();
-
+    private Coroutine _retryRoutine;
+    private int _retryGeneration;
     internal static event Action AvailabilityChanged;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetOnSubsystemRegistration()
+    {
+      _instance = null;
+      AvailabilityChanged = null;
+    }
 
     internal static Availability CurrentAvailability
     {
@@ -129,7 +137,12 @@ namespace TriageTrainer.Entity
     public static void Retry(Action<Availability> completed)
     {
       EnsureCreated();
-      _instance.StartCoroutine(_instance.RetryRecording(completed));
+      _instance._retryGeneration++;
+      if (_instance._retryRoutine != null)
+        _instance.StopCoroutine(_instance._retryRoutine);
+      var callbackTarget = completed?.Target as UnityEngine.Object;
+      _instance._retryRoutine = _instance.StartCoroutine(
+        _instance.RetryRecording(_instance._retryGeneration, callbackTarget, completed));
     }
 
     internal static void SetAdapterForTests(IAdapter adapter)
@@ -303,7 +316,10 @@ namespace TriageTrainer.Entity
       NotifyAvailabilityChanged(before);
     }
 
-    private IEnumerator RetryRecording(Action<Availability> completed)
+    private IEnumerator RetryRecording(
+      int generation,
+      UnityEngine.Object callbackTarget,
+      Action<Availability> completed)
     {
       Availability before = ResolveAvailability();
       StopRecording();
@@ -314,11 +330,25 @@ namespace TriageTrainer.Entity
       if (!_adapter.HasPermission)
         yield return _adapter.RequestPermission();
 
+      if (generation != _retryGeneration)
+        yield break;
+
       _permissionRequestCompleted = true;
       EnsureRecording();
       Availability availability = ResolveAvailability();
       NotifyAvailabilityChanged(Availability.Pending);
-      completed?.Invoke(availability);
+      _retryRoutine = null;
+      if (!(callbackTarget is not null && callbackTarget == null))
+        completed?.Invoke(availability);
+    }
+
+    private void OnDestroy()
+    {
+      _retryGeneration++;
+      _retryRoutine = null;
+      StopRecording();
+      if (_instance == this)
+        _instance = null;
     }
 
     private Availability ResolveAvailability()

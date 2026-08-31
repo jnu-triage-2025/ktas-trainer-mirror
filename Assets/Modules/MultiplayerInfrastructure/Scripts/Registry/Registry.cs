@@ -32,6 +32,33 @@ namespace MultiplayerInfrastructure.Registry
     public static event Action<RegistryType, string, object> OnEntryRegistered;
     public static event Action<RegistryType, string> OnEntryUnregistered;
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetOnSubsystemRegistration()
+    {
+      _itemRegistry.Clear();
+      _scenarioEventRegistry.Clear();
+      _scenarioGraphRegistry.Clear();
+      _iconSpriteRegistry.Clear();
+      _npcRegistry.Clear();
+      _waypointRegistry.Clear();
+      _spawnPointRegistry.Clear();
+      _entityRegistry.Clear();
+      _serviceRegistry.Clear();
+      _runtimeStateRegistry.Clear();
+      _interactableEntityRegistry.Clear();
+      _uiRegistry.Clear();
+      _playerModelRegistry.Clear();
+      _entityPresetRegistry.Clear();
+      _problemSetRegistry.Clear();
+      _problemFigureRegistry.Clear();
+      _playerTagRegistry.Clear();
+      _playerQuestStateFlagRegistry.Clear();
+      _playerEntityIdentifierByOwnerUserIdentifier.Clear();
+      _builtInRegistryInitialized = false;
+      OnEntryRegistered = null;
+      OnEntryUnregistered = null;
+    }
+
     static partial void RegisterBuiltInLiterals();
 
     private static void EnsureBuiltInRegistryInitialized()

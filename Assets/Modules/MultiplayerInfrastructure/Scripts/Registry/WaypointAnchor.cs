@@ -95,6 +95,14 @@ namespace MultiplayerInfrastructure.Registry
         return;
 
       _registeredIdentifier = identifier;
+      if (_anchorsByIdentifier.TryGetValue(_registeredIdentifier, out var existing)
+          && existing != null
+          && !ReferenceEquals(existing, this))
+      {
+        Debug.LogError($"[WaypointAnchor] Duplicate identifier '{_registeredIdentifier}'. Registration was rejected.", this);
+        _registeredIdentifier = null;
+        return;
+      }
       Registry.Register(RegistryType.Waypoint, _registeredIdentifier, transform.position);
       Registry.Register(RegistryType.InteractableEntity, _registeredIdentifier, transform.position);
       Registry.RegisterEntity(_registeredIdentifier, EntityType.Waypoint, gameObject, displayName: gameObject.name);
@@ -106,11 +114,42 @@ namespace MultiplayerInfrastructure.Registry
       if (string.IsNullOrWhiteSpace(_registeredIdentifier))
         return;
 
-      Registry.Unregister(RegistryType.Waypoint, _registeredIdentifier);
-      Registry.Unregister(RegistryType.InteractableEntity, _registeredIdentifier);
-      Registry.UnregisterEntity(_registeredIdentifier);
-      _anchorsByIdentifier.Remove(_registeredIdentifier);
+      string releasedIdentifier = _registeredIdentifier;
+      bool releasedOwner = false;
+      if (_anchorsByIdentifier.TryGetValue(_registeredIdentifier, out var current)
+          && ReferenceEquals(current, this))
+      {
+        Registry.Unregister(RegistryType.Waypoint, _registeredIdentifier);
+        Registry.Unregister(RegistryType.InteractableEntity, _registeredIdentifier);
+        Registry.UnregisterEntity(_registeredIdentifier);
+        _anchorsByIdentifier.Remove(_registeredIdentifier);
+        releasedOwner = true;
+      }
       _registeredIdentifier = null;
+
+      if (releasedOwner)
+        PromoteUniqueActiveCandidate(releasedIdentifier, this);
+    }
+
+    private static void PromoteUniqueActiveCandidate(string releasedIdentifier, WaypointAnchor released)
+    {
+      WaypointAnchor candidate = null;
+      var anchors = FindObjectsByType<WaypointAnchor>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
+      foreach (var anchor in anchors)
+      {
+        if (anchor == null || ReferenceEquals(anchor, released) || !anchor.isActiveAndEnabled
+            || !string.Equals(anchor.identifier, releasedIdentifier, StringComparison.Ordinal))
+          continue;
+
+        if (candidate != null)
+        {
+          Debug.LogError($"[WaypointAnchor] Multiple active successors for identifier '{releasedIdentifier}'. Promotion was rejected.");
+          return;
+        }
+        candidate = anchor;
+      }
+
+      candidate?.RegisterToRegistry();
     }
 
     private void OnDrawGizmos()

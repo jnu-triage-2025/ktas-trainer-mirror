@@ -41,6 +41,7 @@ namespace TriageTrainer.Scenario.Rubric
 
     private RubricResultStore _store;
     private ScenarioController _controller;
+    private bool _signalRegisteredSubscribed;
 
     /// <summary>현재 세션의 결과 저장소. 세션 시작 전에는 null.</summary>
     public RubricResultStore Store => _store;
@@ -170,7 +171,11 @@ namespace TriageTrainer.Scenario.Rubric
       _controller.OnScenarioEnded += HandleScenarioEnded;
       _controller.OnNodeChanged += HandleNodeChanged;
       _controller.OnValidatorWaitTimeout += HandleValidatorWaitTimeout;
-      ScenarioInteractionSignals.OnSignalRegistered += HandleSignalRegistered;
+      if (!_signalRegisteredSubscribed)
+      {
+        ScenarioInteractionSignals.OnSignalRegistered += HandleSignalRegistered;
+        _signalRegisteredSubscribed = true;
+      }
     }
 
     private void Start()
@@ -181,16 +186,18 @@ namespace TriageTrainer.Scenario.Rubric
 
     private void Unsubscribe()
     {
-      if (_controller == null)
+      if (_controller != null)
       {
-        return;
+        _controller.OnScenarioStarted -= HandleScenarioStarted;
+        _controller.OnScenarioEnded -= HandleScenarioEnded;
+        _controller.OnNodeChanged -= HandleNodeChanged;
+        _controller.OnValidatorWaitTimeout -= HandleValidatorWaitTimeout;
       }
-
-      _controller.OnScenarioStarted -= HandleScenarioStarted;
-      _controller.OnScenarioEnded -= HandleScenarioEnded;
-      _controller.OnNodeChanged -= HandleNodeChanged;
-      _controller.OnValidatorWaitTimeout -= HandleValidatorWaitTimeout;
-      ScenarioInteractionSignals.OnSignalRegistered -= HandleSignalRegistered;
+      if (_signalRegisteredSubscribed)
+      {
+        ScenarioInteractionSignals.OnSignalRegistered -= HandleSignalRegistered;
+        _signalRegisteredSubscribed = false;
+      }
       _controller = null;
     }
 

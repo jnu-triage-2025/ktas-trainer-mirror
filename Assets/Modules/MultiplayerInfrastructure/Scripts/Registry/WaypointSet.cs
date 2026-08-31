@@ -22,6 +22,9 @@ namespace MultiplayerInfrastructure.Registry
     public string Identifier => _identifier;
     public IReadOnlyList<WaypointAnchor> Waypoints => _waypoints;
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStaticSets() => _setsByIdentifier.Clear();
+
     public void ConfigureIdentifier(string identifier)
     {
       string trimmed = identifier?.Trim() ?? string.Empty;
@@ -73,16 +76,53 @@ namespace MultiplayerInfrastructure.Registry
         return;
 
       _registeredIdentifier = _identifier.Trim();
+      if (_setsByIdentifier.TryGetValue(_registeredIdentifier, out var existing)
+          && existing != null
+          && !ReferenceEquals(existing, this))
+      {
+        Debug.LogError($"[WaypointSet] Duplicate identifier '{_registeredIdentifier}'. Registration was rejected.", this);
+        _registeredIdentifier = null;
+        return;
+      }
       _setsByIdentifier[_registeredIdentifier] = this;
     }
 
     private void Unregister()
     {
+      string releasedIdentifier = _registeredIdentifier;
+      bool releasedOwner = false;
       if (!string.IsNullOrWhiteSpace(_registeredIdentifier)
           && _setsByIdentifier.TryGetValue(_registeredIdentifier, out var current)
           && ReferenceEquals(current, this))
+      {
         _setsByIdentifier.Remove(_registeredIdentifier);
+        releasedOwner = true;
+      }
       _registeredIdentifier = null;
+
+      if (releasedOwner)
+        PromoteUniqueActiveCandidate(releasedIdentifier, this);
+    }
+
+    private static void PromoteUniqueActiveCandidate(string releasedIdentifier, WaypointSet released)
+    {
+      WaypointSet candidate = null;
+      var sets = FindObjectsByType<WaypointSet>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
+      foreach (var set in sets)
+      {
+        if (set == null || ReferenceEquals(set, released) || !set.isActiveAndEnabled
+            || !string.Equals(set._identifier, releasedIdentifier, StringComparison.Ordinal))
+          continue;
+
+        if (candidate != null)
+        {
+          Debug.LogError($"[WaypointSet] Multiple active successors for identifier '{releasedIdentifier}'. Promotion was rejected.");
+          return;
+        }
+        candidate = set;
+      }
+
+      candidate?.Register();
     }
   }
 }
