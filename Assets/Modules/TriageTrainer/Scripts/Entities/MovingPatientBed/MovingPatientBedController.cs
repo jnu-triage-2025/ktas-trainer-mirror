@@ -471,6 +471,7 @@ namespace TriageTrainer.Entity
       MovingPatientBedPositioningPoint[] points = FindObjectsByType<MovingPatientBedPositioningPoint>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
       MovingPatientBedPositioningPoint nearest = null;
       float nearestDistanceSquared = float.MaxValue;
+      bool ambiguousNearest = false;
 
       for (int i = 0; i < points.Length; i++)
       {
@@ -488,9 +489,19 @@ namespace TriageTrainer.Entity
         {
           nearest = point;
           nearestDistanceSquared = distanceSquared;
+          ambiguousNearest = false;
+        }
+        else if (Mathf.Approximately(distanceSquared, nearestDistanceSquared))
+        {
+          ambiguousNearest = true;
         }
       }
 
+      if (ambiguousNearest)
+      {
+        Debug.LogError($"[MovingPatientBed] Multiple positioning points are equally near bed '{Identifier}'. Automatic snap was skipped.", this);
+        return null;
+      }
       return nearest;
     }
 
@@ -551,8 +562,12 @@ namespace TriageTrainer.Entity
 
         if (string.Equals(candidate.Identifier, trimmed, StringComparison.Ordinal))
         {
+          if (point != null)
+          {
+            Debug.LogError($"[MovingPatientBed] Duplicate positioning point identifier '{trimmed}'. Forced snap was rejected.", this);
+            return false;
+          }
           point = candidate;
-          break;
         }
       }
 
@@ -1082,6 +1097,7 @@ namespace TriageTrainer.Entity
       if (_reposeAnchor == null)
         _reposeAnchor = transform;
       RebuildAttachableVisualMap();
+      RecoverIntravenousAttachmentDisplayReferences();
 
       for (int i = PatientAttachPoints.Count - 1; i >= 0; i--)
       {

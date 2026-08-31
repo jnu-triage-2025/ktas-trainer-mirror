@@ -64,7 +64,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
   _lineMaterial: {fileID: 0}
   _connectedLineObjects: []
@@ -122,7 +122,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c9108ec2e2e434b4481a055bb4c01c12, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.MovingPatientBedPatientAttachPointObject
 --- !u!1 &2342050430586237982
 GameObject:
@@ -198,7 +198,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c462e7d8162364f8489893316884570b, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Entity.RidableAttachPointObject
 --- !u!1 &2801514707132521176
 GameObject:
@@ -264,7 +264,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5c9189f79787d48ddaf47bb1c9018512, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.IntravenousLine.IntravenousLineConnectionPoint
   _lineMaterial: {fileID: 0}
   _connectedLineObjects: []
@@ -322,7 +322,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c462e7d8162364f8489893316884570b, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Entity.RidableAttachPointObject
 --- !u!1 &4235046091223111487
 GameObject:
@@ -398,7 +398,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c462e7d8162364f8489893316884570b, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::MultiplayerInfrastructure.Entity.RidableAttachPointObject
 --- !u!1 &4463210634004056944
 GameObject:
@@ -513,9 +513,9 @@ MonoBehaviour:
   - {fileID: 2119104018315133438}
   - {fileID: 6854001561358226897}
   - {fileID: 1163232382078520351}
-  _intravenousStandReference: {fileID: 6032575468207879380}
-  _intravenousHangerHangedNormalSalineReference: {fileID: 4814252600140772689}
-  _intravenousHangerHangedPlasmaSolutionReference: {fileID: 2915987674690095969}
+  _intravenousStandReference: {fileID: 730000000000000001}
+  _intravenousHangerHangedNormalSalineReference: {fileID: 720000000000000001}
+  _intravenousHangerHangedPlasmaSolutionReference: {fileID: 710000000000000001}
   _normalSalineConnectionPoint: {fileID: 4595216109222723486}
   _plasmaSolutionConnectionPoint: {fileID: 3842447579649307989}
   _normalSalineItemIdentifiers:
@@ -753,7 +753,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: a8c35f08ac0c44f8c9dafbdf9fc5adc5, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3388511909320211884}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a8c35f08ac0c44f8c9dafbdf9fc5adc5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 710000000000000001}
   m_SourcePrefab: {fileID: 100100000, guid: a8c35f08ac0c44f8c9dafbdf9fc5adc5, type: 3}
 --- !u!4 &2539040610948633051 stripped
 Transform:
@@ -765,6 +768,18 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: a8c35f08ac0c44f8c9dafbdf9fc5adc5, type: 3}
   m_PrefabInstance: {fileID: 2645515715320165936}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &710000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2915987674690095969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a10bed5d15a44f7a922849e1c0a00003, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.MovingPatientBedPlasmaSolutionDisplay
 --- !u!1001 &5624645098008020992
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -835,13 +850,28 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 24c0ebb0fa3a841c2acca70cc66081c7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7431564702786382103}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 24c0ebb0fa3a841c2acca70cc66081c7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 720000000000000001}
   m_SourcePrefab: {fileID: 100100000, guid: 24c0ebb0fa3a841c2acca70cc66081c7, type: 3}
 --- !u!1 &4814252600140772689 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 24c0ebb0fa3a841c2acca70cc66081c7, type: 3}
   m_PrefabInstance: {fileID: 5624645098008020992}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &720000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4814252600140772689}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a10bed5d15a44f7a922849e1c0a00002, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.MovingPatientBedNormalSalineDisplay
 --- !u!4 &5297492751155490795 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 24c0ebb0fa3a841c2acca70cc66081c7, type: 3}
@@ -909,13 +939,28 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3077871467300661432, guid: 6f43f75233b7b4ad7b3d0da6850a4403, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2539040610948633051}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2449143898509177346, guid: 6f43f75233b7b4ad7b3d0da6850a4403, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 730000000000000001}
   m_SourcePrefab: {fileID: 100100000, guid: 6f43f75233b7b4ad7b3d0da6850a4403, type: 3}
 --- !u!1 &6032575468207879380 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2449143898509177346, guid: 6f43f75233b7b4ad7b3d0da6850a4403, type: 3}
   m_PrefabInstance: {fileID: 8234013931072407254}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &730000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6032575468207879380}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a10bed5d15a44f7a922849e1c0a00001, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TriageTrainer.Entity.MovingPatientBedIntravenousStandDisplay
 --- !u!4 &6409699523747409518 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3077871467300661432, guid: 6f43f75233b7b4ad7b3d0da6850a4403, type: 3}

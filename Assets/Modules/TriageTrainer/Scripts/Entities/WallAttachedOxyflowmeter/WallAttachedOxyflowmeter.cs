@@ -87,6 +87,13 @@ namespace TriageTrainer.Entity
     [SerializeField] private bool _isAttached;
     public bool IsAttached => _isAttached;
 
+    public override bool TryGetServerSharedItemExchange(out string itemIdentifier, out int consumeCount)
+    {
+      itemIdentifier = RequiredItemIdentifier;
+      consumeCount = Mathf.Max(1, _consumeCount);
+      return true;
+    }
+
     /// <summary>
     /// 환자 A 시나리오가 지시하는 벽면 설치 지점인지 여부. 유량계 프리팹은 모든 구역이 공유하므로
     /// 설치 완료 신호로 구분한다(흡인기의 <c>connect_wall_component_1</c> 판정과 같은 방식).

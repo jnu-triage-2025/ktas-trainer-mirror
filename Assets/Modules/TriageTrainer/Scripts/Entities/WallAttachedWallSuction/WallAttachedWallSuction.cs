@@ -39,6 +39,12 @@ namespace TriageTrainer.Entity
   public class WallAttachedWallSuction : StaticObjectDisplayment, INearestOnlyInteract,
     IAttachCompletionSignalConfigurable
   {
+    public override bool TryGetServerSharedItemExchange(out string itemIdentifier, out int consumeCount)
+    {
+      itemIdentifier = RequiredItemIdentifier;
+      consumeCount = Mathf.Max(1, _consumeCount);
+      return true;
+    }
     private sealed class YankauerConnectionInteract : IInteract, IInteractorConditional,
       IInteractDisplayIcons, IQuestPresentationTarget
     {

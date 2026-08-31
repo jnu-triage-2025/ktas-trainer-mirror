@@ -20,10 +20,9 @@ namespace MultiplayerInfrastructure.Player
   ///
   /// 흐름(픽업의 예약/확정 구조와 동일):
   /// 1. (Owner) <see cref="TryApplyStaticObjectDisplayment"/> → 서버로 요청.
-  /// 2. (Server) 거리/중복 검증 후 <b>예약</b> 하고 요청자에게 소비 확정(TargetRpc).
-  /// 3. (Claimant) 요구 아이템을 인벤토리에서 소비하고 성공/실패 보고.
-  /// 4a. (Server) 성공 보고 시: 표시 상태를 확정하고 모든 클라이언트에 표시(Show)를 브로드캐스트.
-  /// 4b. (Server) 실패 보고/접속 종료 시: 예약을 제거(상태 변이 없음).
+  /// 2. (Server) 거리/중복/서버 인벤토리를 검증하고 요구 아이템을 차감합니다.
+  /// 3. (Server) 표시 상태를 확정하고 모든 클라이언트에 표시(Show)를 브로드캐스트합니다.
+  /// 4. (Claimant) TargetRpc 로 서버의 소비 결과를 로컬 인벤토리에 반영합니다.
   /// </summary>
   public partial class PlayerController
   {
@@ -74,6 +73,9 @@ namespace MultiplayerInfrastructure.Player
       if (!TryGetStaticObjectDisplayment(entityIdentifier, out var displayment) || displayment == null ||
           !StaticObjectDisplaymentService.IsShown(entityIdentifier))
         return;
+      if (!displayment.TryGetServerSharedItemExchange(out string authoritativeItemIdentifier, out _)
+          || !string.Equals(itemIdentifier, authoritativeItemIdentifier, StringComparison.Ordinal))
+        return;
       float sqrDistance = (displayment.transform.position - ResolveServerPickupOriginPosition()).sqrMagnitude;
       if (sqrDistance > MaxStaticObjectDisplaymentApplyDistanceSqr)
         return;
@@ -82,7 +84,7 @@ namespace MultiplayerInfrastructure.Player
 
       displayment.OnHiddenConfirmed();
       RpcHideStaticObjectDisplaymentGlobal(entityIdentifier);
-      TargetGrantStaticObjectDisplaymentItem(claimant, itemIdentifier);
+      TargetGrantStaticObjectDisplaymentItem(claimant, authoritativeItemIdentifier);
     }
 
     [TargetRpc]
@@ -157,6 +159,11 @@ namespace MultiplayerInfrastructure.Player
 
       if (!TryGetStaticObjectDisplayment(entityIdentifier, out var displayment) || displayment == null)
         return;
+      if (!displayment.TryGetServerSharedItemExchange(
+            out string authoritativeItemIdentifier, out int authoritativeConsumeCount)
+          || !string.Equals(requiredItemIdentifier, authoritativeItemIdentifier, StringComparison.Ordinal)
+          || consumeCount != authoritativeConsumeCount)
+        return;
 
       // 이미 표시(설치/적용)된 상태면 무시(멱등, 중복 소비 방지).
       if (StaticObjectDisplaymentService.IsShown(entityIdentifier))
@@ -177,9 +184,23 @@ namespace MultiplayerInfrastructure.Player
         return;
       }
 
+      // 공유 상태를 클라이언트의 성공 보고만으로 바꾸지 않는다. 서버 인스턴스가 실제 수량을
+      // 확인하고 차감할 수 있을 때만 설치를 확정한다. 서버에 인벤토리 근거가 없는 원격
+      // 클라이언트 요청은 실패 안전 방식으로 거부된다.
+      if (!string.IsNullOrWhiteSpace(authoritativeItemIdentifier) && authoritativeConsumeCount > 0)
+      {
+        if (CountItemInInventory(authoritativeItemIdentifier) < authoritativeConsumeCount)
+          return;
+        if (RemoveItemFromInventory(authoritativeItemIdentifier, authoritativeConsumeCount)
+            != authoritativeConsumeCount)
+          return;
+      }
+
       _pendingStaticObjectApplies[entityIdentifier] = claimant.ClientId;
 
-      TargetConfirmApplyStaticObjectDisplayment(claimant, entityIdentifier, requiredItemIdentifier ?? string.Empty, consumeCount);
+      TargetConfirmApplyStaticObjectDisplayment(
+        claimant, entityIdentifier, authoritativeItemIdentifier, authoritativeConsumeCount);
+      ServerConfirmStaticObjectApplySuccess(entityIdentifier, claimant);
     }
 
     // ── 요청자 확정: 아이템 소비 후 성공/실패 보고 ────────────────────────────
@@ -188,26 +209,19 @@ namespace MultiplayerInfrastructure.Player
     private void TargetConfirmApplyStaticObjectDisplayment(
       NetworkConnection conn, string entityIdentifier, string requiredItemIdentifier, int consumeCount)
     {
-      // 요구 아이템이 지정된 경우에만 소비를 검증/수행한다.
-      if (!string.IsNullOrWhiteSpace(requiredItemIdentifier) && consumeCount > 0)
-      {
-        if (CountItemInInventory(requiredItemIdentifier) < consumeCount)
-        {
-          ReportStaticObjectApplyFailure(entityIdentifier);
-          return;
-        }
+      ClearInFlightStaticObjectApply(entityIdentifier);
 
+      // 호스트는 위 서버 처리와 같은 PlayerController 인스턴스를 사용하므로 다시 차감하지 않는다.
+      // 원격 소유자는 서버가 이미 확정한 소비 결과를 로컬 표현에 반영한다.
+      if (!IsServerStarted && !string.IsNullOrWhiteSpace(requiredItemIdentifier) && consumeCount > 0)
+      {
         int removed = RemoveItemFromInventory(requiredItemIdentifier, consumeCount);
         if (removed < consumeCount)
         {
-          Debug.LogWarning(
-            $"[PlayerController] Static object apply '{entityIdentifier}': item consume shortfall ({removed}/{consumeCount}).");
-          ReportStaticObjectApplyFailure(entityIdentifier);
-          return;
+          Debug.LogError(
+            $"[PlayerController] Static object apply '{entityIdentifier}': local inventory diverged from server ({removed}/{consumeCount}).");
         }
       }
-
-      AcknowledgeStaticObjectApplySuccess(entityIdentifier);
     }
 
     private void AcknowledgeStaticObjectApplySuccess(string entityIdentifier)

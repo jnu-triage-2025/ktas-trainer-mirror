@@ -366,8 +366,15 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       if (!IsPatientTrackingMethodEnabled(PatientTrackingMethod.DependsOnPatientCareZone))
         return;
 
-      _patientCareZone = FindObjectsByType<PatientCareDescriptionZone>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
-        .FirstOrDefault(zone => zone != null && zone.ContainsWorldPosition(transform.position));
+      var matchingZones = FindObjectsByType<PatientCareDescriptionZone>(FindObjectsInactive.Exclude, FindObjectsSortMode.InstanceID)
+        .Where(zone => zone != null && zone.ContainsWorldPosition(transform.position))
+        .ToArray();
+      if (matchingZones.Length > 1)
+      {
+        Debug.LogError($"[PatientMonitorController] Monitor '{name}' overlaps {matchingZones.Length} patient care zones. Tracking was not configured.", this);
+        return;
+      }
+      _patientCareZone = matchingZones.FirstOrDefault();
       if (_patientCareZone == null)
         return;
 

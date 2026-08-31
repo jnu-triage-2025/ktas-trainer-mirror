@@ -70,6 +70,13 @@ namespace MultiplayerInfrastructure.ItemSystem
     /// <summary>현재 로컬 표현이 표시(보임) 상태인지 여부입니다.</summary>
     public bool IsVisible { get; private set; }
 
+    public virtual bool TryGetServerSharedItemExchange(out string itemIdentifier, out int consumeCount)
+    {
+      itemIdentifier = string.Empty;
+      consumeCount = 0;
+      return false;
+    }
+
     private string _registeredIdentifier;
 
     protected virtual void Awake()

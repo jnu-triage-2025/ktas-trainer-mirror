@@ -58,6 +58,13 @@ namespace TriageTrainer.Entity.PatientMonitor
 
     protected override string EntityIdPrefix => "patient-monitor-mount";
 
+    public override bool TryGetServerSharedItemExchange(out string itemIdentifier, out int consumeCount)
+    {
+      itemIdentifier = PatientMonitorItem.Identifier;
+      consumeCount = 1;
+      return true;
+    }
+
     public PatientMonitorMountPoint()
     {
       _installInteract = new InstallInteract(this);

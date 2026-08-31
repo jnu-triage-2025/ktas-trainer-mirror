@@ -395,6 +395,37 @@ namespace MultiplayerInfrastructure.Player
       return removed;
     }
 
+    private bool TryConsumeMatchingInventoryDrop(
+      string itemIdentifier,
+      int stackCount,
+      int durability,
+      float cooldownRemainingMilliseconds,
+      string serializedDerivedAttributes)
+    {
+      if (stackCount <= 0)
+        return false;
+
+      foreach (var slot in _slots)
+      {
+        var item = slot?.ItemInstance;
+        if (item == null || slot.IsEmpty
+            || !string.Equals(item.CurrentIdentifier, itemIdentifier, StringComparison.Ordinal)
+            || item.CurrentStackCount < stackCount
+            || item.CurrentDurability != durability
+            || !Mathf.Approximately(item.CurrentCooldownRemainingMilliseconds, cooldownRemainingMilliseconds)
+            || !string.Equals(item.CurrentSerializedDerivedAttributes ?? string.Empty,
+              serializedDerivedAttributes ?? string.Empty, StringComparison.Ordinal))
+          continue;
+
+        item.CurrentStackCount -= stackCount;
+        if (item.CurrentStackCount <= 0)
+          slot.Clear();
+        OnInventoryChangedAndReturn(true);
+        return true;
+      }
+      return false;
+    }
+
     /// <summary>
     /// 아이템 사용 1회를 소비합니다. 내구도 변화가 활성화된 아이템은 수량 대신 내구도를
     /// 변경하며, 내구도가 0에 도달한 경우에만 슬롯에서 제거합니다.

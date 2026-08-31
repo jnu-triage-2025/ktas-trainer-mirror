@@ -377,7 +377,17 @@ namespace TriageTrainer.Entity.PatientMonitor.Models
       // arm 자체는 권한이 아니라 '시나리오가 이 모니터를 열었다'는 사실 기록이다.
       // 실제 권한 검증은 완료(CmdCompleteScenarioClose) 시점에 수행된다.
       if (sender == null
-          || !UserDescriptorService.TryGetByClientId(sender.ClientId, out _))
+          || !UserDescriptorService.TryGetByClientId(sender.ClientId, out var descriptor)
+          || descriptor == null
+          || !PlayerTagService.HasTag(descriptor.Identifier, "nurse_b")
+          || !IsValidPatientBCMonitorClose(patientIdentifier, normalizedSignal))
+        return;
+
+      var patient = FindPatient(patientIdentifier);
+      if (patient == null
+          || !IsAuthoritativeCareZoneMonitorForPatient(this, patient)
+          || ScenarioController.Instance == null
+          || !ScenarioController.Instance.CanAcceptPatientBCMonitorClose(sender.ClientId, normalizedSignal))
         return;
 
       ArmScenarioCloseOnServer(patientIdentifier, normalizedSignal);

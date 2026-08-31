@@ -326,16 +326,34 @@ namespace TriageTrainer.Entity.LineConnection
       if (string.IsNullOrWhiteSpace(identifier))
         return false;
       var points = FindObjectsByType<LineConnectionPoint>(
-        FindObjectsInactive.Include, FindObjectsSortMode.None);
+        FindObjectsInactive.Include, FindObjectsSortMode.InstanceID);
+      LineConnectionPoint match = null;
       for (int i = 0; i < points.Length; i++)
       {
         if (points[i] != null && string.Equals(points[i].ConnectionIdentifier, identifier, StringComparison.Ordinal))
         {
-          point = points[i];
-          return true;
+          if (match != null)
+          {
+            Debug.LogError(
+              $"[LineConnectionService] 연결 지점 식별자 '{identifier}'가 중복되어 토폴로지 변경을 거부합니다. "
+              + $"첫 번째='{GetHierarchyPath(match.transform)}', 두 번째='{GetHierarchyPath(points[i].transform)}'.");
+            return false;
+          }
+          match = points[i];
         }
       }
-      return false;
+      point = match;
+      return point != null;
+    }
+
+    private static string GetHierarchyPath(Transform target)
+    {
+      if (target == null)
+        return "<null>";
+      string path = target.name;
+      for (Transform parent = target.parent; parent != null; parent = parent.parent)
+        path = parent.name + "/" + path;
+      return target.gameObject.scene.name + "/" + path;
     }
 
     private void OnValidate()

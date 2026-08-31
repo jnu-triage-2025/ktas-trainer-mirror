@@ -84,9 +84,9 @@ namespace TriageTrainer.Entity
     }
 
     [Header("Attachment Display")]
-    [SerializeField] private GameObject _intravenousStandReference;
-    [SerializeField] private GameObject _intravenousHangerHangedNormalSalineReference;
-    [SerializeField] private GameObject _intravenousHangerHangedPlasmaSolutionReference;
+    [SerializeField] private MovingPatientBedIntravenousStandDisplay _intravenousStandReference;
+    [SerializeField] private MovingPatientBedNormalSalineDisplay _intravenousHangerHangedNormalSalineReference;
+    [SerializeField] private MovingPatientBedPlasmaSolutionDisplay _intravenousHangerHangedPlasmaSolutionReference;
 
     [Header("Intravenous line points")]
     [SerializeField] private IntravenousLineConnectionPoint _normalSalineConnectionPoint;
@@ -187,7 +187,35 @@ namespace TriageTrainer.Entity
         SetIntravenousFluidInstalledOffline(IntravenousFluidKind.PlasmaSolution);
     }
 
-    private void InitializeIntravenousAttachmentDisplay() => ApplyIntravenousAttachmentDisplays();
+    private void InitializeIntravenousAttachmentDisplay()
+    {
+      RecoverIntravenousAttachmentDisplayReferences();
+      ApplyIntravenousAttachmentDisplays();
+    }
+
+    private void RecoverIntravenousAttachmentDisplayReferences()
+    {
+      _intravenousStandReference = RecoverUniqueAttachmentDisplay(_intravenousStandReference);
+      _intravenousHangerHangedNormalSalineReference =
+        RecoverUniqueAttachmentDisplay(_intravenousHangerHangedNormalSalineReference);
+      _intravenousHangerHangedPlasmaSolutionReference =
+        RecoverUniqueAttachmentDisplay(_intravenousHangerHangedPlasmaSolutionReference);
+    }
+
+    private T RecoverUniqueAttachmentDisplay<T>(T current) where T : Component
+    {
+      if (current != null)
+        return current;
+
+      var candidates = GetComponentsInChildren<T>(true);
+      if (candidates.Length == 1)
+        return candidates[0];
+
+      if (candidates.Length > 1)
+        Debug.LogError($"{name}: {typeof(T).Name} marker must be unique, but found {candidates.Length}.", this);
+
+      return null;
+    }
 
     private IEnumerable<IInteract> IntravenousFluidInteracts => _intravenousFluidInteracts ??= new IInteract[]
     {
@@ -389,11 +417,11 @@ namespace TriageTrainer.Entity
     private void ApplyIntravenousAttachmentDisplays()
     {
       if (_intravenousStandReference != null)
-        _intravenousStandReference.SetActive(IsIntravenousStandInstalled);
+        _intravenousStandReference.gameObject.SetActive(IsIntravenousStandInstalled);
       if (_intravenousHangerHangedNormalSalineReference != null)
-        _intravenousHangerHangedNormalSalineReference.SetActive(IsNormalSalineInstalled);
+        _intravenousHangerHangedNormalSalineReference.gameObject.SetActive(IsNormalSalineInstalled);
       if (_intravenousHangerHangedPlasmaSolutionReference != null)
-        _intravenousHangerHangedPlasmaSolutionReference.SetActive(IsPlasmaSolutionInstalled);
+        _intravenousHangerHangedPlasmaSolutionReference.gameObject.SetActive(IsPlasmaSolutionInstalled);
     }
 
     private static PlayerController FindIntravenousAttachmentPlayer(int clientId)
